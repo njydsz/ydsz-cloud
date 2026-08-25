@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.SpaceMemberDO;
+import com.njydsz.nextwiki.infra.entity.SpaceMember;
 
 /**
  * 空间成员 Mapper
@@ -17,7 +17,7 @@ import com.njydsz.nextwiki.infra.entity.SpaceMemberDO;
  * @since 1.0.0
  */
 @Mapper
-public interface SpaceMemberMapper extends BaseMapper<SpaceMemberDO> {
+public interface SpaceMemberMapper extends BaseMapper<SpaceMember> {
 
   /**
    * 查询空间的成员列表（按角色优先级排序）。
@@ -25,7 +25,7 @@ public interface SpaceMemberMapper extends BaseMapper<SpaceMemberDO> {
    * @param spaceId 空间ID
    * @return 成员列表
    */
-  List<SpaceMemberDO> selectBySpaceId(@Param("spaceId") String spaceId);
+  List<SpaceMember> selectBySpaceId(@Param("spaceId") String spaceId);
 
   /**
    * 查询用户参与的空间列表。
@@ -33,7 +33,7 @@ public interface SpaceMemberMapper extends BaseMapper<SpaceMemberDO> {
    * @param userId 用户ID
    * @return 成员列表
    */
-  List<SpaceMemberDO> selectByUserId(@Param("userId") String userId);
+  List<SpaceMember> selectByUserId(@Param("userId") String userId);
 
   /**
    * 根据空间ID和用户ID查找成员。
@@ -42,7 +42,7 @@ public interface SpaceMemberMapper extends BaseMapper<SpaceMemberDO> {
    * @param userId 用户ID
    * @return 成员实体
    */
-  SpaceMemberDO selectBySpaceIdAndUserId(
+  SpaceMember selectBySpaceIdAndUserId(
       @Param("spaceId") String spaceId, @Param("userId") String userId);
 
   /**

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowEventSubscriptionRepository;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
+import com.njydsz.workflow.infra.entity.FlowEventSubscription;
 import com.njydsz.workflow.infra.mapper.FlowEventSubscriptionMapper;
 
 /**
@@ -41,7 +41,7 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
 
   @Override
   public FlowEventSubscriptionVO save(FlowEventSubscriptionVO vo) {
-    FlowEventSubscriptionDO entity = converter.entityToDO(vo);
+    FlowEventSubscription entity = converter.entityToEntity(vo);
     eventSubscriptionMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -56,19 +56,19 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
   public List<FlowEventSubscriptionVO> findByInstanceId(String instanceId) {
     return converter.flowEventSubscriptionListToVO(
         eventSubscriptionMapper.selectList(
-            new LambdaQueryWrapper<FlowEventSubscriptionDO>()
-                .eq(FlowEventSubscriptionDO::getInstanceId, instanceId)
-                .eq(FlowEventSubscriptionDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowEventSubscription>()
+                .eq(FlowEventSubscription::getInstanceId, instanceId)
+                .eq(FlowEventSubscription::getDeleted, 0)));
   }
 
   @Override
   public List<FlowEventSubscriptionVO> findByInstanceAndNode(String instanceId, String nodeCode) {
     return converter.flowEventSubscriptionListToVO(
         eventSubscriptionMapper.selectList(
-            new LambdaQueryWrapper<FlowEventSubscriptionDO>()
-                .eq(FlowEventSubscriptionDO::getInstanceId, instanceId)
-                .eq(FlowEventSubscriptionDO::getNodeCode, nodeCode)
-                .eq(FlowEventSubscriptionDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowEventSubscription>()
+                .eq(FlowEventSubscription::getInstanceId, instanceId)
+                .eq(FlowEventSubscription::getNodeCode, nodeCode)
+                .eq(FlowEventSubscription::getDeleted, 0)));
   }
 
   @Override
@@ -79,13 +79,13 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
   @Override
   public void deleteByInstanceId(String instanceId) {
     eventSubscriptionMapper.delete(
-        new LambdaQueryWrapper<FlowEventSubscriptionDO>()
-            .eq(FlowEventSubscriptionDO::getInstanceId, instanceId));
+        new LambdaQueryWrapper<FlowEventSubscription>()
+            .eq(FlowEventSubscription::getInstanceId, instanceId));
   }
 
   @Override
   public FlowEventSubscriptionVO update(FlowEventSubscriptionVO vo) {
-    FlowEventSubscriptionDO entity = converter.entityToDO(vo);
+    FlowEventSubscription entity = converter.entityToEntity(vo);
     eventSubscriptionMapper.updateById(entity);
     return vo;
   }
@@ -94,11 +94,11 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
   public List<FlowEventSubscriptionVO> findWaitingByEvent(String eventType, String flowCode) {
     return converter.flowEventSubscriptionListToVO(
         eventSubscriptionMapper.selectList(
-            new LambdaQueryWrapper<FlowEventSubscriptionDO>()
-                .eq(FlowEventSubscriptionDO::getEventType, eventType)
-                .eq(FlowEventSubscriptionDO::getFlowCode, flowCode)
-                .eq(FlowEventSubscriptionDO::getSubscriptionStatus, "WAITING")
-                .eq(FlowEventSubscriptionDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowEventSubscription>()
+                .eq(FlowEventSubscription::getEventType, eventType)
+                .eq(FlowEventSubscription::getFlowCode, flowCode)
+                .eq(FlowEventSubscription::getSubscriptionStatus, "WAITING")
+                .eq(FlowEventSubscription::getDeleted, 0)));
   }
 
   @Override
@@ -110,7 +110,7 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
 
   @Override
   public void markTriggered(String id) {
-    FlowEventSubscriptionDO update = new FlowEventSubscriptionDO();
+    FlowEventSubscription update = new FlowEventSubscription();
     update.setSubscriptionStatus("COMPLETED");
     update.setTriggeredAt(LocalDateTime.now());
     update.setId(id);
@@ -125,7 +125,7 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
 
   @Override
   public void resetToWaiting(String id) {
-    FlowEventSubscriptionDO update = new FlowEventSubscriptionDO();
+    FlowEventSubscription update = new FlowEventSubscription();
     update.setSubscriptionStatus("WAITING");
     update.setTriggeredAt(null);
     update.setId(id);
@@ -146,9 +146,9 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
   public List<FlowEventSubscriptionVO> findByInstanceOrderByCreatedAtDesc(String instanceId) {
     return converter.flowEventSubscriptionListToVO(
         eventSubscriptionMapper.selectList(
-            new LambdaQueryWrapper<FlowEventSubscriptionDO>()
-                .eq(FlowEventSubscriptionDO::getInstanceId, instanceId)
-                .eq(FlowEventSubscriptionDO::getDeleted, 0)
-                .orderByDesc(FlowEventSubscriptionDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowEventSubscription>()
+                .eq(FlowEventSubscription::getInstanceId, instanceId)
+                .eq(FlowEventSubscription::getDeleted, 0)
+                .orderByDesc(FlowEventSubscription::getCreatedAt)));
   }
 }

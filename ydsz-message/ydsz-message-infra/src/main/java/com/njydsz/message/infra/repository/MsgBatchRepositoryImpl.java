@@ -11,7 +11,7 @@ import com.njydsz.message.domain.query.MsgBatchQuery;
 import com.njydsz.message.domain.repository.MsgBatchRepository;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgBatchDO;
+import com.njydsz.message.infra.entity.MsgBatch;
 import com.njydsz.message.infra.mapper.batch.MsgBatchMapper;
 
 /**
@@ -32,7 +32,7 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
 
   @Override
   public boolean save(MsgBatchVO vo) {
-    MsgBatchDO entity = voToDO(vo);
+    MsgBatch entity = voToDO(vo);
     return msgBatchMapper.insert(entity) > 0;
   }
 
@@ -43,13 +43,13 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
 
   @Override
   public boolean update(MsgBatchVO vo) {
-    MsgBatchDO entity = voToDO(vo);
+    MsgBatch entity = voToDO(vo);
     return msgBatchMapper.updateById(entity) > 0;
   }
 
   @Override
   public List<MsgBatchVO> findList(MsgBatchQuery query) {
-    QueryWrapper<MsgBatchDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgBatch> wrapper = new QueryWrapper<>();
     if (query.getBatchId() != null && !query.getBatchId().isBlank()) {
       wrapper.eq("batch_id", query.getBatchId());
     }
@@ -70,11 +70,11 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
     return converter.batchDoListToVO(msgBatchMapper.selectList(wrapper));
   }
 
-  private MsgBatchDO voToDO(MsgBatchVO vo) {
+  private MsgBatch voToDO(MsgBatchVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgBatchDO entity = new MsgBatchDO();
+    MsgBatch entity = new MsgBatch();
     entity.setId(vo.getId());
     entity.setBatchId(vo.getBatchId());
     entity.setBatchName(vo.getBatchName());

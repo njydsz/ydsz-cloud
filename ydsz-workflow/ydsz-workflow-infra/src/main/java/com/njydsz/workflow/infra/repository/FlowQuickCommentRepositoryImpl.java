@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowQuickCommentRepository;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
+import com.njydsz.workflow.infra.entity.FlowQuickComment;
 import com.njydsz.workflow.infra.mapper.FlowQuickCommentMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
 
   @Override
   public FlowQuickCommentVO save(FlowQuickCommentVO vo) {
-    FlowQuickCommentDO entity = converter.entityToDO(vo);
+    FlowQuickComment entity = converter.entityToEntity(vo);
     quickCommentMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -53,7 +53,7 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
 
   @Override
   public FlowQuickCommentVO update(FlowQuickCommentVO vo) {
-    FlowQuickCommentDO entity = converter.entityToDO(vo);
+    FlowQuickComment entity = converter.entityToEntity(vo);
     quickCommentMapper.updateById(entity);
     return vo;
   }
@@ -67,19 +67,19 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
   public List<FlowQuickCommentVO> findActiveByUser(String userId, String tenantId) {
     return converter.flowQuickCommentListToVO(
         quickCommentMapper.selectList(
-            new LambdaQueryWrapper<FlowQuickCommentDO>()
-                .eq(FlowQuickCommentDO::getUserId, userId)
-                .eq(FlowQuickCommentDO::getTenantId, tenantId)
-                .eq(FlowQuickCommentDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowQuickComment>()
+                .eq(FlowQuickComment::getUserId, userId)
+                .eq(FlowQuickComment::getTenantId, tenantId)
+                .eq(FlowQuickComment::getDeleted, 0)));
   }
 
   @Override
   public List<FlowQuickCommentVO> findActiveSystemByTenant(String tenantId) {
     return converter.flowQuickCommentListToVO(
         quickCommentMapper.selectList(
-            new LambdaQueryWrapper<FlowQuickCommentDO>()
-                .eq(FlowQuickCommentDO::getIsSystem, 1)
-                .eq(FlowQuickCommentDO::getTenantId, tenantId)
-                .eq(FlowQuickCommentDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowQuickComment>()
+                .eq(FlowQuickComment::getIsSystem, 1)
+                .eq(FlowQuickComment::getTenantId, tenantId)
+                .eq(FlowQuickComment::getDeleted, 0)));
   }
 }

@@ -11,7 +11,7 @@ import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
+import com.njydsz.nextwiki.infra.entity.StorageQuota;
 import com.njydsz.nextwiki.infra.mapper.StorageQuotaMapper;
 
 /**
@@ -39,7 +39,7 @@ public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
 
   @Override
   public StorageQuotaVO save(StorageQuotaDTO dto) {
-    StorageQuotaDO entity = converter.dtoToEntity(dto);
+    StorageQuota entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }

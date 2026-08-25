@@ -39,7 +39,7 @@ import lombok.Data;
  * <ul>
  *   <li>本 VO 兼具领域聚合根与展示视图职责，适用于当前单体架构
  *   <li>未来微服务拆分时，可将展示字段抽取为 {@code FileNodeView}
- *   <li>数据持久化通过 {@code FileNodeDTO} → {@code FileNodeDO} 转换实现
+ *   <li>数据持久化通过 {@code FileNodeDTO} → {@code FileNode} 转换实现
  * </ul>
  *
  * @author ydsz-team

@@ -7,7 +7,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.njydsz.message.infra.entity.MsgLog;
-import com.njydsz.message.infra.entity.MsgLogDO;
 
 /**
  * 消息发送日志 Mapper
@@ -35,7 +34,7 @@ import com.njydsz.message.infra.entity.MsgLogDO;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgLogMapper extends BaseMapper<MsgLogDO> {
+public interface MsgLogMapper extends BaseMapper<MsgLog> {
 
   /**
    * 批量插入消息日志。
@@ -45,5 +44,5 @@ public interface MsgLogMapper extends BaseMapper<MsgLogDO> {
    * @param records 消息日志列表
    * @return 影响行数
    */
-  int insertBatch(@Param("records") List<MsgLogDO> records);
+  int insertBatch(@Param("records") List<MsgLog> records);
 }

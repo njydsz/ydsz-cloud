@@ -327,10 +327,10 @@ public class WebAuthnService {
     credentialRepository.save(credential);
 
     // 清除已使用的挑战码
-    deleteChallenge(challenge);
+    deleteChallenge(command.challenge());
 
-    log.info("WebAuthn 凭证注册成功: userId={}, credentialId={}", userId,
-        credentialId.substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credentialId.length())));
+    log.info("WebAuthn 凭证注册成功: userId={}, credentialId={}", command.userId(),
+        command.credentialId().substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, command.credentialId().length())));
   }
 
   /**

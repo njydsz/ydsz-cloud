@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -19,14 +19,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <ul>
  *   <li>采用「关系实体」模式（带审计字段），便于追溯归属关系变更
  *   <li>由 {@code CompanyDeptController} 维护（批量绑定/解绑）
- *   <li>主归属逻辑由 {@link DepartmentDO#getLeaderId()} 维护（非本中间表）
+ *   <li>主归属逻辑由 {@link Department#getLeaderId()} 维护（非本中间表）
  * </ul>
  *
- * <p><b>与 {@link UserDeptDO} 的区别：</b>
+ * <p><b>与 {@link UserDept} 的区别：</b>
  *
  * <ul>
- *   <li>{@code CompanyDeptDO}：组织结构维度（公司 → 部门）
- *   <li>{@code UserDeptDO}：人员归属维度（用户 → 部门）
+ *   <li>{@code CompanyDept}：组织结构维度（公司 → 部门）
+ *   <li>{@code UserDept}：人员归属维度（用户 → 部门）
  *   <li>两者正交，可独立维护
  * </ul>
  *
@@ -35,8 +35,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <pre>{@code
  * // 查询某公司所有部门 ID
  * List<String> deptIds = companyDeptMapper.selectList(
- *     new LambdaQueryWrapper<CompanyDeptDO>().eq(CompanyDeptDO::getCompanyId, companyId)
- * ).stream().map(CompanyDeptDO::getDeptId).collect(Collectors.toList());
+ *     new LambdaQueryWrapper<CompanyDept>().eq(CompanyDept::getCompanyId, companyId)
+ * ).stream().map(CompanyDept::getDeptId).collect(Collectors.toList());
  * }</pre>
  *
  * <p><b>索引设计：</b>普通索引 {@code idx_company_id}（{@code company_id}）、 {@code idx_dept_id}（{@code
@@ -44,19 +44,20 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see CompanyDO 公司实体
- * @see DepartmentDO 部门实体
+ * @see Company 公司实体
+ * @see Department 部门实体
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_company_dept")
-public class CompanyDeptDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class CompanyDept extends MpBaseEntity<String> {
 
-  /** 公司 ID，关联 {@link CompanyDO#getId()} */
+  /** 公司 ID，关联 {@link Company#getId()} */
   private String companyId;
 
-  /** 部门 ID，关联 {@link DepartmentDO#getId()} */
+  /** 部门 ID，关联 {@link Department#getId()} */
   private String deptId;
 }

@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.SpaceDO;
+import com.njydsz.nextwiki.infra.entity.Space;
 
 /**
  * 知识库空间 Mapper
@@ -19,7 +19,7 @@ import com.njydsz.nextwiki.infra.entity.SpaceDO;
  * @since 1.0.0
  */
 @Mapper
-public interface SpaceMapper extends BaseMapper<SpaceDO> {
+public interface SpaceMapper extends BaseMapper<Space> {
 
   /**
    * 根据租户ID查询空间列表（按排序号升序）。
@@ -27,7 +27,7 @@ public interface SpaceMapper extends BaseMapper<SpaceDO> {
    * @param tenantId 租户ID
    * @return 空间列表
    */
-  List<SpaceDO> selectByTenantId(@Param("tenantId") String tenantId);
+  List<Space> selectByTenantId(@Param("tenantId") String tenantId);
 
   /**
    * 分页查询租户下的空间列表。
@@ -38,8 +38,8 @@ public interface SpaceMapper extends BaseMapper<SpaceDO> {
    * @param limit 每页数量
    * @return 空间分页结果
    */
-  IPage<SpaceDO> selectByTenantIdWithPage(
-      Page<SpaceDO> page,
+  IPage<Space> selectByTenantIdWithPage(
+      Page<Space> page,
       @Param("tenantId") String tenantId,
       @Param("offset") int offset,
       @Param("limit") int limit);
@@ -51,7 +51,7 @@ public interface SpaceMapper extends BaseMapper<SpaceDO> {
    * @param name 空间名称
    * @return 空间实体
    */
-  SpaceDO selectByTenantIdAndName(
+  Space selectByTenantIdAndName(
       @Param("tenantId") String tenantId, @Param("name") String name);
 
   /**

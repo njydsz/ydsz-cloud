@@ -11,7 +11,7 @@ import com.njydsz.message.domain.query.MsgUserChannelQuery;
 import com.njydsz.message.domain.repository.MsgUserChannelRepository;
 import com.njydsz.message.domain.vo.MsgUserChannelVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgUserChannelDO;
+import com.njydsz.message.infra.entity.MsgUserChannel;
 import com.njydsz.message.infra.mapper.config.MsgUserChannelMapper;
 
 /**
@@ -32,13 +32,13 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
 
   @Override
   public boolean save(MsgUserChannelVO vo) {
-    MsgUserChannelDO entity = voToDO(vo);
+    MsgUserChannel entity = voToDO(vo);
     return msgUserChannelMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgUserChannelVO vo) {
-    MsgUserChannelDO entity = voToDO(vo);
+    MsgUserChannel entity = voToDO(vo);
     return msgUserChannelMapper.updateById(entity) > 0;
   }
 
@@ -49,18 +49,18 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
 
   @Override
   public Optional<MsgUserChannelVO> findOne(MsgUserChannelQuery query) {
-    QueryWrapper<MsgUserChannelDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgUserChannel> wrapper = buildWrapper(query);
     return Optional.ofNullable(msgUserChannelMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
   @Override
   public List<MsgUserChannelVO> findList(MsgUserChannelQuery query) {
-    QueryWrapper<MsgUserChannelDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgUserChannel> wrapper = buildWrapper(query);
     return converter.userChannelDoListToVO(msgUserChannelMapper.selectList(wrapper));
   }
 
-  private QueryWrapper<MsgUserChannelDO> buildWrapper(MsgUserChannelQuery query) {
-    QueryWrapper<MsgUserChannelDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgUserChannel> buildWrapper(MsgUserChannelQuery query) {
+    QueryWrapper<MsgUserChannel> wrapper = new QueryWrapper<>();
     if (query.getUserId() != null && !query.getUserId().isBlank()) {
       wrapper.eq("user_id", query.getUserId());
     }
@@ -74,11 +74,11 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
     return wrapper;
   }
 
-  private MsgUserChannelDO voToDO(MsgUserChannelVO vo) {
+  private MsgUserChannel voToDO(MsgUserChannelVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgUserChannelDO entity = new MsgUserChannelDO();
+    MsgUserChannel entity = new MsgUserChannel();
     entity.setId(vo.getId());
     entity.setUserId(vo.getUserId());
     entity.setChannelType(vo.getChannelType());

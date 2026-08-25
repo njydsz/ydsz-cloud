@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -12,12 +12,12 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 角色实体
  *
  * <p>对应数据库表 {@code ydsz_role}，是 RBAC（基于角色的访问控制）模型的核心实体。 一个角色可被多个用户共享，一个角色可拥有多个菜单/权限点，通过中间表 {@link
- * UserRoleDO} 和 {@link RolePermissionDO} 维护多对多关系。
+ * UserRole} 和 {@link RolePermission} 维护多对多关系。
  *
  * <p><b>RBAC 链路示意：</b>
  *
  * <pre>
- *   UserAccountDO ─(N)── UserRoleDO ──(N)── RoleDO ─(N)── RolePermissionDO ─(N)── MenuDO
+ *   UserAccount ─(N)── UserRole ──(N)── Role ─(N)── RolePermission ─(N)── Menu
  *       用户              中间表          角色              中间表             权限点
  * </pre>
  *
@@ -47,8 +47,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserRoleDO 用户-角色中间表
- * @see RolePermissionDO 角色-权限中间表
+ * @see UserRole 用户-角色中间表
+ * @see RolePermission 角色-权限中间表
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller
  */
 @Data
@@ -56,7 +56,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_role")
-public class RoleDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class Role extends MpBaseEntity<String> {
 
   /** 角色编码（业务侧引用，全局唯一，建议格式 {@code ROLE_XXX}） */
   private String roleCode;

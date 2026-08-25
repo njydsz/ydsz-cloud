@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -28,7 +28,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_saml_idp_config")
-public class SamlIdpConfigDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class SamlIdpConfig extends MpBaseEntity<String> {
 
   /** IdP 显示名称（如 "企业微信 SAML"、"飞书 SAML"） */
   private String name;

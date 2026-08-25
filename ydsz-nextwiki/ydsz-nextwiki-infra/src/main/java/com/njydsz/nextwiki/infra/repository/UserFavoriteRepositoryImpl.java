@@ -11,7 +11,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.UserFavoriteDTO;
 import com.njydsz.nextwiki.domain.repository.UserFavoriteRepository;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.UserFavoriteDO;
+import com.njydsz.nextwiki.infra.entity.UserFavorite;
 import com.njydsz.nextwiki.infra.mapper.UserFavoriteMapper;
 
 /**
@@ -36,7 +36,7 @@ public class UserFavoriteRepositoryImpl implements UserFavoriteRepository {
     if (dto.getId() == null || dto.getId().isEmpty()) {
       dto.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    UserFavoriteDO entity = nextwikiConverter.toUserFavoriteDO(dto);
+    UserFavorite entity = nextwikiConverter.toUserFavorite(dto);
     return userFavoriteMapper.insert(entity);
   }
 
@@ -48,7 +48,7 @@ public class UserFavoriteRepositoryImpl implements UserFavoriteRepository {
 
   @Override
   public List<UserFavoriteDTO> findByUserId(String userId, String tenantId) {
-    List<UserFavoriteDO> entities =
+    List<UserFavorite> entities =
         userFavoriteMapper.selectByUserId(userId, tenantId);
     return entities.stream()
         .map(nextwikiConverter::toUserFavoriteDTO)
@@ -58,7 +58,7 @@ public class UserFavoriteRepositoryImpl implements UserFavoriteRepository {
   @Override
   public List<UserFavoriteDTO> findByUserIdWithPage(
       String userId, String tenantId, int offset, int limit) {
-    List<UserFavoriteDO> entities =
+    List<UserFavorite> entities =
         userFavoriteMapper.selectByUserIdWithPage(userId, tenantId, offset, limit);
     return entities.stream()
         .map(nextwikiConverter::toUserFavoriteDTO)

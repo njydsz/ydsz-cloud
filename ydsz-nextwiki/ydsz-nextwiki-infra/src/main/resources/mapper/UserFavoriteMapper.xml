@@ -23,7 +23,7 @@
   <!-- 查询用户收藏列表（按排序号升序，未删除） -->
   <select id="selectByUserId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM nw_user_favorite
+    FROM ydsz_nw_user_favorite
     WHERE user_id = #{userId} AND deleted = FALSE
     ORDER BY sort_order ASC, created_at DESC
   </select>
@@ -31,7 +31,7 @@
   <!-- 分页查询用户收藏列表 -->
   <select id="selectByUserIdWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM nw_user_favorite
+    FROM ydsz_nw_user_favorite
     WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
     ORDER BY sort_order ASC, created_at DESC
     LIMIT #{limit} OFFSET #{offset}
@@ -40,33 +40,33 @@
   <!-- 统计用户收藏数量 -->
   <select id="countByUserId" resultType="int">
     SELECT COUNT(*)
-    FROM nw_user_favorite
+    FROM ydsz_nw_user_favorite
     WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
   </select>
 
   <!-- 查询用户的最大排序号 -->
   <select id="selectMaxSortOrder" resultType="int">
     SELECT COALESCE(MAX(sort_order), 0)
-    FROM nw_user_favorite
+    FROM ydsz_nw_user_favorite
     WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
   </select>
 
   <!-- 检查节点是否已被用户收藏 -->
   <select id="existsByUserIdAndNodeId" resultType="boolean">
     SELECT COUNT(*) > 0
-    FROM nw_user_favorite
+    FROM ydsz_nw_user_favorite
     WHERE user_id = #{userId} AND node_id = #{nodeId} AND tenant_id = #{tenantId} AND deleted = FALSE
   </select>
 
   <!-- 根据用户ID和节点ID删除收藏记录（物理删除） -->
   <delete id="deleteByUserIdAndNodeId">
-    DELETE FROM nw_user_favorite
+    DELETE FROM ydsz_nw_user_favorite
     WHERE user_id = #{userId} AND node_id = #{nodeId}
   </delete>
 
   <!-- 更新排序号 -->
   <update id="updateSortOrder">
-    UPDATE nw_user_favorite
+    UPDATE ydsz_nw_user_favorite
     SET sort_order = #{sortOrder}, updated_at = NOW()
     WHERE user_id = #{userId} AND node_id = #{nodeId} AND deleted = FALSE
   </update>

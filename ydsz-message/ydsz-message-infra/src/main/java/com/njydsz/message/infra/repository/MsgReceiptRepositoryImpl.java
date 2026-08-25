@@ -10,7 +10,7 @@ import com.njydsz.message.domain.query.MsgReceiptQuery;
 import com.njydsz.message.domain.repository.MsgReceiptRepository;
 import com.njydsz.message.domain.vo.MsgReceiptVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgReceiptDO;
+import com.njydsz.message.infra.entity.MsgReceipt;
 import com.njydsz.message.infra.mapper.receipt.MsgReceiptMapper;
 
 /**
@@ -31,13 +31,13 @@ public class MsgReceiptRepositoryImpl implements MsgReceiptRepository {
 
   @Override
   public boolean save(MsgReceiptVO vo) {
-    MsgReceiptDO entity = voToDO(vo);
+    MsgReceipt entity = voToDO(vo);
     return msgReceiptMapper.insert(entity) > 0;
   }
 
   @Override
   public List<MsgReceiptVO> findList(MsgReceiptQuery query) {
-    QueryWrapper<MsgReceiptDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgReceipt> wrapper = new QueryWrapper<>();
     if (query.getLogId() != null && !query.getLogId().isBlank()) {
       wrapper.eq("log_id", query.getLogId());
     }
@@ -52,11 +52,11 @@ public class MsgReceiptRepositoryImpl implements MsgReceiptRepository {
     return converter.receiptDoListToVO(msgReceiptMapper.selectList(wrapper));
   }
 
-  private MsgReceiptDO voToDO(MsgReceiptVO vo) {
+  private MsgReceipt voToDO(MsgReceiptVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgReceiptDO entity = new MsgReceiptDO();
+    MsgReceipt entity = new MsgReceipt();
     entity.setId(vo.getId());
     entity.setLogId(vo.getLogId());
     entity.setProviderTraceId(vo.getProviderTraceId());

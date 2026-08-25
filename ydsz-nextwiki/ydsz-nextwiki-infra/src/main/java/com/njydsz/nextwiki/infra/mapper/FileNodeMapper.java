@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.FileNode;
 import com.njydsz.nextwiki.domain.vo.FileStatVO;
 
 /**
@@ -35,25 +35,25 @@ import com.njydsz.nextwiki.domain.vo.FileStatVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.nextwiki.infra.entity.FileNodeDO 文件节点实体
+ * @see com.njydsz.nextwiki.infra.entity.FileNode 文件节点实体
  * @see com.njydsz.nextwiki.server.service.FileApplicationService 文件应用服务
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
+public interface FileNodeMapper extends BaseMapper<FileNode> {
 
   /** 批量插入节点（P1-3：单条 SQL 批量写入，替代循环 insert，适用于文件夹批量复制场景） */
-  int insertBatch(@Param("list") List<FileNodeDO> entities);
+  int insertBatch(@Param("list") List<FileNode> entities);
 
   /** 查询子节点（未删除） */
-  List<FileNodeDO> selectChildren(
+  List<FileNode> selectChildren(
       @Param("parentId") String parentId, @Param("tenantId") String tenantId);
 
   /** 带 revision 乐观锁的更新（更新失败返回 0） */
-  int updateWithRevision(@Param("node") FileNodeDO node);
+  int updateWithRevision(@Param("node") FileNode node);
 
   /** 按路径前缀查询（用于递归操作，P1-7：显式带租户过滤） */
-  List<FileNodeDO> selectByPathPrefix(
+  List<FileNode> selectByPathPrefix(
       @Param("pathPrefix") String pathPrefix, @Param("tenantId") String tenantId);
 
   /**
@@ -67,8 +67,8 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
    * @param tenantId 租户 ID（P1-7：显式租户过滤，注解/XML SQL 不受 MP 租户拦截器增强）
    * @return 分页结果
    */
-  IPage<FileNodeDO> selectPageByParentId(
-      IPage<FileNodeDO> page,
+  IPage<FileNode> selectPageByParentId(
+      IPage<FileNode> page,
       @Param("parentId") String parentId,
       @Param("nodeType") String nodeType,
       @Param("sortBy") String sortBy,
@@ -183,7 +183,7 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
   int updateSize(@Param("id") String id, @Param("sizeDelta") Long sizeDelta);
 
   /** 查询用户根目录 */
-  FileNodeDO selectRootByUser(
+  FileNode selectRootByUser(
       @Param("createdBy") String createdBy, @Param("tenantId") String tenantId);
 
   /** 统计用户文件数量 */
@@ -205,7 +205,7 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
   @Select(
       "SELECT * FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' "
           + "ORDER BY size DESC LIMIT #{limit}")
-  List<FileNodeDO> findTopLargeFilesByUser(@Param("userId") String userId, @Param("limit") int limit);
+  List<FileNode> findTopLargeFilesByUser(@Param("userId") String userId, @Param("limit") int limit);
 
   /** 按后缀统计文件数量和大小 */
   @Select(
@@ -218,13 +218,13 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
   @Select(
       "SELECT * FROM nw_file_node WHERE file_hash = #{fileHash} "
           + "AND tenant_id = #{tenantId} AND deleted = 0 AND node_type = 'file' LIMIT 1")
-  FileNodeDO findByFileHash(@Param("fileHash") String fileHash, @Param("tenantId") String tenantId);
+  FileNode findByFileHash(@Param("fileHash") String fileHash, @Param("tenantId") String tenantId);
 
   /** 按 createdBy + parentId 查询同名文件 */
   @Select(
       "SELECT * FROM nw_file_node WHERE name = #{name} AND parent_id = #{parentId} "
           + "AND created_by = #{createdBy} AND tenant_id = #{tenantId} AND deleted = 0")
-  List<FileNodeDO> findByNameAndParent(
+  List<FileNode> findByNameAndParent(
       @Param("name") String name,
       @Param("parentId") String parentId,
       @Param("createdBy") String createdBy,
@@ -245,7 +245,7 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
       "SELECT * FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
           + "AND deleted = 0 AND tenant_id = #{tenantId} "
           + "ORDER BY level ASC, sort ASC LIMIT #{limit} OFFSET #{offset}")
-  List<FileNodeDO> selectDescendantsByPage(
+  List<FileNode> selectDescendantsByPage(
       @Param("folderPath") String folderPath,
       @Param("offset") int offset,
       @Param("limit") int limit,
@@ -285,7 +285,7 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
           + "</if>"
           + "ORDER BY updated_at ASC LIMIT #{limit}"
           + "</script>")
-  List<FileNodeDO> selectColdCandidates(
+  List<FileNode> selectColdCandidates(
       @Param("threshold") LocalDateTime threshold,
       @Param("excludeSuffixes") String excludeSuffixes,
       @Param("excludeSuffixesList") List<String> excludeSuffixesList,
@@ -311,5 +311,5 @@ public interface FileNodeMapper extends BaseMapper<FileNodeDO> {
    * @param page MyBatis-Plus 分页对象
    * @return 分页结果
    */
-  IPage<FileNodeDO> selectAllWithPage(IPage<FileNodeDO> page);
+  IPage<FileNode> selectAllWithPage(IPage<FileNode> page);
 }

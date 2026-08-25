@@ -31,17 +31,17 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.domain.vo.FileTagVO;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
-import com.njydsz.nextwiki.infra.entity.FileAclDO;
-import com.njydsz.nextwiki.infra.entity.FileCommentDO;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
-import com.njydsz.nextwiki.infra.entity.FileTagDO;
-import com.njydsz.nextwiki.infra.entity.FileVersionDO;
-import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
-import com.njydsz.nextwiki.infra.entity.ShareAccessLogDO;
-import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
-import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
-import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
-import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.infra.entity.FileAcl;
+import com.njydsz.nextwiki.infra.entity.FileComment;
+import com.njydsz.nextwiki.infra.entity.FileNode;
+import com.njydsz.nextwiki.infra.entity.FileTag;
+import com.njydsz.nextwiki.infra.entity.FileVersion;
+import com.njydsz.nextwiki.infra.entity.SearchIndex;
+import com.njydsz.nextwiki.infra.entity.ShareAccessLog;
+import com.njydsz.nextwiki.infra.entity.ShareLink;
+import com.njydsz.nextwiki.infra.entity.ShareRecipient;
+import com.njydsz.nextwiki.infra.entity.StorageQuota;
+import com.njydsz.nextwiki.infra.entity.Tag;
 
 /**
  * Nextwiki 模块统一 MapStruct 转换器
@@ -73,7 +73,7 @@ public interface NextwikiConverter {
    * @param entity 文件节点实体
    * @return 文件节点 VO
    */
-  FileNodeVO entityToVO(FileNodeDO entity);
+  FileNodeVO entityToVO(FileNode entity);
 
   /**
    * 文件节点实体列表 → 文件节点 VO 列表
@@ -81,7 +81,7 @@ public interface NextwikiConverter {
    * @param entities 文件节点实体列表
    * @return 文件节点 VO 列表
    */
-  List<FileNodeVO> fileNodeListToVO(List<FileNodeDO> entities);
+  List<FileNodeVO> fileNodeListToVO(List<FileNode> entities);
 
   /**
    * 文件节点 DTO → 文件节点实体（创建场景）
@@ -94,7 +94,7 @@ public interface NextwikiConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileNodeDO dtoToEntity(FileNodeDTO dto);
+  FileNode dtoToEntity(FileNodeDTO dto);
 
   /**
    * 文件节点 DTO（含 ID）→ 文件节点实体（更新场景）
@@ -105,7 +105,7 @@ public interface NextwikiConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileNodeDO dtoToEntityWithId(FileNodeDTO dto);
+  FileNode dtoToEntityWithId(FileNodeDTO dto);
 
   /**
    * 文件节点 DTO 列表 → 文件节点实体列表
@@ -122,7 +122,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  List<FileNodeDO> fileNodeDtosToEntities(List<FileNodeDTO> dtos);
+  List<FileNode> fileNodeDtosToEntities(List<FileNodeDTO> dtos);
 
   // ===== FileVersion =====
 
@@ -132,7 +132,7 @@ public interface NextwikiConverter {
    * @param entity 文件版本实体
    * @return 文件版本 VO
    */
-  FileVersionVO entityToVO(FileVersionDO entity);
+  FileVersionVO entityToVO(FileVersion entity);
 
   /**
    * 文件版本实体列表 → 文件版本 VO 列表
@@ -140,7 +140,7 @@ public interface NextwikiConverter {
    * @param entities 文件版本实体列表
    * @return 文件版本 VO 列表
    */
-  List<FileVersionVO> fileVersionListToVO(List<FileVersionDO> entities);
+  List<FileVersionVO> fileVersionListToVO(List<FileVersion> entities);
 
   /**
    * 文件版本 DTO → 文件版本实体（创建场景）
@@ -156,7 +156,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileVersionDO dtoToEntity(FileVersionDTO dto);
+  FileVersion dtoToEntity(FileVersionDTO dto);
 
   /**
    * 文件版本 DTO（含 ID）→ 文件版本实体（更新场景）
@@ -169,7 +169,7 @@ public interface NextwikiConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileVersionDO dtoToEntityWithId(FileVersionDTO dto);
+  FileVersion dtoToEntityWithId(FileVersionDTO dto);
 
   // ===== FileComment =====
 
@@ -179,7 +179,7 @@ public interface NextwikiConverter {
    * @param entity 文件评论实体
    * @return 文件评论 VO
    */
-  FileCommentVO entityToVO(FileCommentDO entity);
+  FileCommentVO entityToVO(FileComment entity);
 
   /**
    * 文件评论实体列表 → 文件评论 VO 列表
@@ -187,7 +187,7 @@ public interface NextwikiConverter {
    * @param entities 文件评论实体列表
    * @return 文件评论 VO 列表
    */
-  List<FileCommentVO> fileCommentListToVO(List<FileCommentDO> entities);
+  List<FileCommentVO> fileCommentListToVO(List<FileComment> entities);
 
   /**
    * 文件评论 DTO → 文件评论实体（创建场景）
@@ -203,7 +203,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileCommentDO dtoToEntity(FileCommentDTO dto);
+  FileComment dtoToEntity(FileCommentDTO dto);
 
   /**
    * 文件评论 DTO（含 ID）→ 文件评论实体（更新场景）
@@ -216,7 +216,7 @@ public interface NextwikiConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileCommentDO dtoToEntityWithId(FileCommentDTO dto);
+  FileComment dtoToEntityWithId(FileCommentDTO dto);
 
   // ===== FileAcl =====
 
@@ -226,7 +226,7 @@ public interface NextwikiConverter {
    * @param entity 文件 ACL 实体
    * @return 文件 ACL VO
    */
-  FileAclVO entityToVO(FileAclDO entity);
+  FileAclVO entityToVO(FileAcl entity);
 
   /**
    * 文件 ACL 实体列表 → 文件 ACL VO 列表
@@ -234,7 +234,7 @@ public interface NextwikiConverter {
    * @param entities 文件 ACL 实体列表
    * @return 文件 ACL VO 列表
    */
-  List<FileAclVO> fileAclListToVO(List<FileAclDO> entities);
+  List<FileAclVO> fileAclListToVO(List<FileAcl> entities);
 
   /**
    * 文件 ACL DTO → 文件 ACL 实体（创建场景）
@@ -251,7 +251,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileAclDO dtoToEntity(FileAclDTO dto);
+  FileAcl dtoToEntity(FileAclDTO dto);
 
   /**
    * 文件 ACL DTO（含 ID）→ 文件 ACL 实体（更新场景）
@@ -264,7 +264,7 @@ public interface NextwikiConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileAclDO dtoToEntityWithId(FileAclDTO dto);
+  FileAcl dtoToEntityWithId(FileAclDTO dto);
 
   /**
    * 文件 ACL DTO 列表 → 文件 ACL 实体列表
@@ -281,7 +281,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  List<FileAclDO> fileAclDtosToEntities(List<FileAclDTO> dtos);
+  List<FileAcl> fileAclDtosToEntities(List<FileAclDTO> dtos);
 
   // ===== TrashItem =====
 
@@ -291,7 +291,7 @@ public interface NextwikiConverter {
    * @param entity 回收站条目实体
    * @return 回收站条目 VO
    */
-  com.njydsz.nextwiki.domain.vo.TrashItemVO entityToVO(com.njydsz.nextwiki.infra.entity.TrashItemDO entity);
+  com.njydsz.nextwiki.domain.vo.TrashItemVO entityToVO(com.njydsz.nextwiki.infra.entity.TrashItem entity);
 
   /**
    * 回收站条目实体列表 → 回收站条目 VO 列表
@@ -300,7 +300,7 @@ public interface NextwikiConverter {
    * @return 回收站条目 VO 列表
    */
   List<com.njydsz.nextwiki.domain.vo.TrashItemVO> trashItemListToVO(
-      List<com.njydsz.nextwiki.infra.entity.TrashItemDO> entities);
+      List<com.njydsz.nextwiki.infra.entity.TrashItem> entities);
 
   /**
    * 回收站条目 DTO → 回收站条目实体（创建场景）
@@ -317,7 +317,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  com.njydsz.nextwiki.infra.entity.TrashItemDO dtoToEntity(
+  com.njydsz.nextwiki.infra.entity.TrashItem dtoToEntity(
       com.njydsz.nextwiki.domain.dto.TrashItemDTO dto);
 
   /**
@@ -331,7 +331,7 @@ public interface NextwikiConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  com.njydsz.nextwiki.infra.entity.TrashItemDO dtoToEntityWithId(
+  com.njydsz.nextwiki.infra.entity.TrashItem dtoToEntityWithId(
       com.njydsz.nextwiki.domain.dto.TrashItemDTO dto);
 
   /**
@@ -349,7 +349,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  List<com.njydsz.nextwiki.infra.entity.TrashItemDO> trashItemDtosToEntities(
+  List<com.njydsz.nextwiki.infra.entity.TrashItem> trashItemDtosToEntities(
       List<com.njydsz.nextwiki.domain.dto.TrashItemDTO> dtos);
 
   // ===== VO → DTO 转换（定时任务使用） =====
@@ -398,7 +398,7 @@ public interface NextwikiConverter {
    * @param entity 标签实体
    * @return 标签 VO
    */
-  TagVO entityToVO(TagDO entity);
+  TagVO entityToVO(Tag entity);
 
   /**
    * 标签实体列表 → 标签 VO 列表
@@ -406,7 +406,7 @@ public interface NextwikiConverter {
    * @param entities 标签实体列表
    * @return 标签 VO 列表
    */
-  List<TagVO> tagListToVO(List<TagDO> entities);
+  List<TagVO> tagListToVO(List<Tag> entities);
 
   /**
    * 标签 DTO → 标签实体（创建场景）
@@ -422,7 +422,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  TagDO dtoToEntity(TagDTO dto);
+  Tag dtoToEntity(TagDTO dto);
 
   /**
    * 标签 DTO（含 ID）→ 标签实体（更新场景）
@@ -435,7 +435,7 @@ public interface NextwikiConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  TagDO dtoToEntityWithId(TagDTO dto);
+  Tag dtoToEntityWithId(TagDTO dto);
 
   // ===== FileTag =====
 
@@ -445,7 +445,7 @@ public interface NextwikiConverter {
    * @param entity 文件-标签关联实体
    * @return 文件-标签关联 VO
    */
-  FileTagVO entityToVO(FileTagDO entity);
+  FileTagVO entityToVO(FileTag entity);
 
   /**
    * 文件-标签关联实体列表 → 文件-标签关联 VO 列表
@@ -453,7 +453,7 @@ public interface NextwikiConverter {
    * @param entities 文件-标签关联实体列表
    * @return 文件-标签关联 VO 列表
    */
-  List<FileTagVO> fileTagListToVO(List<FileTagDO> entities);
+  List<FileTagVO> fileTagListToVO(List<FileTag> entities);
 
   /**
    * 文件-标签关联 DTO → 文件-标签关联实体（创建场景）
@@ -470,7 +470,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileTagDO dtoToEntity(FileTagDTO dto);
+  FileTag dtoToEntity(FileTagDTO dto);
 
   /**
    * 文件-标签关联 DTO（含 ID）→ 文件-标签关联实体（更新场景）
@@ -483,7 +483,7 @@ public interface NextwikiConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FileTagDO dtoToEntityWithId(FileTagDTO dto);
+  FileTag dtoToEntityWithId(FileTagDTO dto);
 
   /**
    * 文件-标签关联 DTO 列表 → 文件-标签关联实体列表
@@ -500,7 +500,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  List<FileTagDO> fileTagDtosToEntities(List<FileTagDTO> dtos);
+  List<FileTag> fileTagDtosToEntities(List<FileTagDTO> dtos);
 
   // ===== StorageQuota =====
 
@@ -510,7 +510,7 @@ public interface NextwikiConverter {
    * @param entity 存储配额实体
    * @return 存储配额 VO
    */
-  StorageQuotaVO entityToVO(StorageQuotaDO entity);
+  StorageQuotaVO entityToVO(StorageQuota entity);
 
   /**
    * 存储配额 DTO → 存储配额实体（创建场景）
@@ -526,7 +526,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  StorageQuotaDO dtoToEntity(StorageQuotaDTO dto);
+  StorageQuota dtoToEntity(StorageQuotaDTO dto);
 
   /**
    * 存储配额 DTO（含 ID）→ 存储配额实体（更新场景）
@@ -539,7 +539,7 @@ public interface NextwikiConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  StorageQuotaDO dtoToEntityWithId(StorageQuotaDTO dto);
+  StorageQuota dtoToEntityWithId(StorageQuotaDTO dto);
 
   // ===== ShareLink =====
 
@@ -549,7 +549,7 @@ public interface NextwikiConverter {
    * @param entity 分享链接实体
    * @return 分享链接 VO
    */
-  ShareLinkVO entityToVO(ShareLinkDO entity);
+  ShareLinkVO entityToVO(ShareLink entity);
 
   /**
    * 分享链接实体列表 → 分享链接 VO 列表
@@ -557,7 +557,7 @@ public interface NextwikiConverter {
    * @param entities 分享链接实体列表
    * @return 分享链接 VO 列表
    */
-  List<ShareLinkVO> shareLinkListToVO(List<ShareLinkDO> entities);
+  List<ShareLinkVO> shareLinkListToVO(List<ShareLink> entities);
 
   /**
    * 分享链接 DTO → 分享链接实体（创建场景）
@@ -573,7 +573,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  ShareLinkDO dtoToEntity(ShareLinkDTO dto);
+  ShareLink dtoToEntity(ShareLinkDTO dto);
 
   /**
    * 分享链接 DTO（含 ID）→ 分享链接实体（更新场景）
@@ -586,7 +586,7 @@ public interface NextwikiConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  ShareLinkDO dtoToEntityWithId(ShareLinkDTO dto);
+  ShareLink dtoToEntityWithId(ShareLinkDTO dto);
 
   // ===== ShareRecipient =====
 
@@ -596,7 +596,7 @@ public interface NextwikiConverter {
    * @param entity 分享目标用户实体
    * @return 分享目标用户 VO
    */
-  ShareRecipientVO entityToVO(ShareRecipientDO entity);
+  ShareRecipientVO entityToVO(ShareRecipient entity);
 
   /**
    * 分享目标用户实体列表 → 分享目标用户 VO 列表
@@ -604,7 +604,7 @@ public interface NextwikiConverter {
    * @param entities 分享目标用户实体列表
    * @return 分享目标用户 VO 列表
    */
-  List<ShareRecipientVO> shareRecipientListToVO(List<ShareRecipientDO> entities);
+  List<ShareRecipientVO> shareRecipientListToVO(List<ShareRecipient> entities);
 
   /**
    * 分享目标用户 DTO → 分享目标用户实体（创建场景）
@@ -620,7 +620,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  ShareRecipientDO dtoToEntity(ShareRecipientDTO dto);
+  ShareRecipient dtoToEntity(ShareRecipientDTO dto);
 
   /**
    * 分享目标用户 DTO 列表 → 分享目标用户实体列表
@@ -636,7 +636,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  List<ShareRecipientDO> shareRecipientDtosToEntities(List<ShareRecipientDTO> dtos);
+  List<ShareRecipient> shareRecipientDtosToEntities(List<ShareRecipientDTO> dtos);
 
   // ===== ShareAccessLog =====
 
@@ -646,7 +646,7 @@ public interface NextwikiConverter {
    * @param entity 分享访问日志实体
    * @return 分享访问日志 VO
    */
-  ShareAccessLogVO entityToVO(ShareAccessLogDO entity);
+  ShareAccessLogVO entityToVO(ShareAccessLog entity);
 
   /**
    * 分享访问日志实体列表 → 分享访问日志 VO 列表
@@ -654,7 +654,7 @@ public interface NextwikiConverter {
    * @param entities 分享访问日志实体列表
    * @return 分享访问日志 VO 列表
    */
-  List<ShareAccessLogVO> shareAccessLogListToVO(List<ShareAccessLogDO> entities);
+  List<ShareAccessLogVO> shareAccessLogListToVO(List<ShareAccessLog> entities);
 
   /**
    * 分享访问日志 DTO → 分享访问日志实体（创建场景）
@@ -670,7 +670,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  ShareAccessLogDO dtoToEntity(ShareAccessLogDTO dto);
+  ShareAccessLog dtoToEntity(ShareAccessLogDTO dto);
 
   // ===== SearchIndex =====
 
@@ -680,7 +680,7 @@ public interface NextwikiConverter {
    * @param entity 搜索索引实体
    * @return 搜索索引 VO
    */
-  SearchIndexVO entityToVO(SearchIndexDO entity);
+  SearchIndexVO entityToVO(SearchIndex entity);
 
   /**
    * 搜索索引实体列表 → 搜索索引 VO 列表
@@ -688,7 +688,7 @@ public interface NextwikiConverter {
    * @param entities 搜索索引实体列表
    * @return 搜索索引 VO 列表
    */
-  List<SearchIndexVO> searchIndexListToVO(List<SearchIndexDO> entities);
+  List<SearchIndexVO> searchIndexListToVO(List<SearchIndex> entities);
 
   /**
    * 搜索索引 DTO → 搜索索引实体（创建场景）
@@ -704,7 +704,7 @@ public interface NextwikiConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  SearchIndexDO dtoToEntity(SearchIndexDTO dto);
+  SearchIndex dtoToEntity(SearchIndexDTO dto);
 
   // ===== UserFavorite / UserRecent（S2-P1-06） =====
 
@@ -715,7 +715,7 @@ public interface NextwikiConverter {
    * @return 用户收藏夹 DTO
    */
   com.njydsz.nextwiki.domain.dto.UserFavoriteDTO toUserFavoriteDTO(
-      com.njydsz.nextwiki.infra.entity.UserFavoriteDO entity);
+      com.njydsz.nextwiki.infra.entity.UserFavorite entity);
 
   /**
    * 用户收藏夹 DTO → 用户收藏夹实体
@@ -723,7 +723,7 @@ public interface NextwikiConverter {
    * @param dto 用户收藏夹 DTO
    * @return 用户收藏夹实体
    */
-  com.njydsz.nextwiki.infra.entity.UserFavoriteDO toUserFavoriteDO(
+  com.njydsz.nextwiki.infra.entity.UserFavorite toUserFavorite(
       com.njydsz.nextwiki.domain.dto.UserFavoriteDTO dto);
 
   /**
@@ -733,7 +733,7 @@ public interface NextwikiConverter {
    * @return 用户最近访问 DTO
    */
   com.njydsz.nextwiki.domain.dto.UserRecentDTO toUserRecentDTO(
-      com.njydsz.nextwiki.infra.entity.UserRecentDO entity);
+      com.njydsz.nextwiki.infra.entity.UserRecent entity);
 
   /**
    * 用户最近访问 DTO → 用户最近访问实体
@@ -741,7 +741,7 @@ public interface NextwikiConverter {
    * @param dto 用户最近访问 DTO
    * @return 用户最近访问实体
    */
-  com.njydsz.nextwiki.infra.entity.UserRecentDO toUserRecentDO(
+  com.njydsz.nextwiki.infra.entity.UserRecent toUserRecent(
       com.njydsz.nextwiki.domain.dto.UserRecentDTO dto);
 
   // ===== Space / SpaceMember（S3-P2-01） =====
@@ -752,7 +752,7 @@ public interface NextwikiConverter {
    * @param dto 空间 DTO
    * @return 空间实体
    */
-  com.njydsz.nextwiki.infra.entity.SpaceDO toSpaceDO(
+  com.njydsz.nextwiki.infra.entity.Space toSpace(
       com.njydsz.nextwiki.domain.dto.SpaceDTO dto);
 
   /**
@@ -762,7 +762,7 @@ public interface NextwikiConverter {
    * @return 空间 DTO
    */
   com.njydsz.nextwiki.domain.dto.SpaceDTO toSpaceDTO(
-      com.njydsz.nextwiki.infra.entity.SpaceDO entity);
+      com.njydsz.nextwiki.infra.entity.Space entity);
 
   /**
    * 空间实体 → 空间 VO
@@ -770,7 +770,7 @@ public interface NextwikiConverter {
    * @param entity 空间实体
    * @return 空间 VO
    */
-  SpaceVO entityToVO(com.njydsz.nextwiki.infra.entity.SpaceDO entity);
+  SpaceVO entityToVO(com.njydsz.nextwiki.infra.entity.Space entity);
 
   /**
    * 空间实体列表 → 空间 VO 列表
@@ -778,7 +778,7 @@ public interface NextwikiConverter {
    * @param entities 空间实体列表
    * @return 空间 VO 列表
    */
-  List<SpaceVO> spaceListToVO(List<com.njydsz.nextwiki.infra.entity.SpaceDO entities);
+  List<SpaceVO> spaceListToVO(List<com.njydsz.nextwiki.infra.entity.Space entities);
 
   /**
    * 空间成员 DTO → 空间成员实体
@@ -786,7 +786,7 @@ public interface NextwikiConverter {
    * @param dto 空间成员 DTO
    * @return 空间成员实体
    */
-  com.njydsz.nextwiki.infra.entity.SpaceMemberDO toSpaceMemberDO(
+  com.njydsz.nextwiki.infra.entity.SpaceMember toSpaceMember(
       com.njydsz.nextwiki.domain.dto.SpaceMemberDTO dto);
 
   /**
@@ -796,7 +796,7 @@ public interface NextwikiConverter {
    * @return 空间成员 DTO
    */
   com.njydsz.nextwiki.domain.dto.SpaceMemberDTO toSpaceMemberDTO(
-      com.njydsz.nextwiki.infra.entity.SpaceMemberDO entity);
+      com.njydsz.nextwiki.infra.entity.SpaceMember entity);
 
   // ===== SpaceTemplate（S4-P3-02） =====
 
@@ -807,7 +807,7 @@ public interface NextwikiConverter {
    * @return 空间模板 DTO
    */
   com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO toSpaceTemplateDTO(
-      com.njydsz.nextwiki.infra.entity.SpaceTemplateDO entity);
+      com.njydsz.nextwiki.infra.entity.SpaceTemplate entity);
 
   /**
    * 空间模板 DTO → 空间模板实体
@@ -815,6 +815,6 @@ public interface NextwikiConverter {
    * @param dto 空间模板 DTO
    * @return 空间模板实体
    */
-  com.njydsz.nextwiki.infra.entity.SpaceTemplateDO toSpaceTemplateDO(
+  com.njydsz.nextwiki.infra.entity.SpaceTemplate toSpaceTemplate(
       com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO dto);
 }

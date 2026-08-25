@@ -124,7 +124,7 @@ public class ShareController {
   /**
    * 验证分享链接的访问权限。
    *
-   * <p>对外公开接口（无需登录），传入 shareCode + 提取码 + 密码进行三重校验。 验证通过后返回 {@link ShareLinkDO}，同时记录访问日志。
+   * <p>对外公开接口（无需登录），传入 shareCode + 提取码 + 密码进行三重校验。 验证通过后返回 {@link ShareLink}，同时记录访问日志。
    *
    * @param request 验证请求（shareCode / extractCode / password）
    * @param httpRequest HTTP 请求（用于获取 IP 和 UA）

@@ -39,6 +39,9 @@ public class UserInfoRbacService implements RbacUserInfoService {
   /** 本地二级缓存最大容量 */
   private static final long LOCAL_CACHE_MAX_SIZE = 10000;
 
+  /** 日志中 Token 前缀长度 */
+  private static final int TOKEN_LOG_PREFIX_LENGTH = 8;
+
   private final RedisHashOps redisHashOps;
 
   /** P1-5: 本地二级缓存（accessToken → 用户信息 Map） */

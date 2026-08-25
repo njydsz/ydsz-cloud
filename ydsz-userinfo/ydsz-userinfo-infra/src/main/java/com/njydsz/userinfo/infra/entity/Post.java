@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -17,9 +17,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>岗位 vs 部门 vs 角色：</b>
  *
  * <ul>
- *   <li>部门（{@link DepartmentDO}）：组织归属，回答「你属于哪个团队」
- *   <li>岗位（{@link PostDO}）：职责描述，回答「你负责什么工作」
- *   <li>角色（{@link RoleDO}）：权限集合，回答「你能操作哪些功能」
+ *   <li>部门（{@link Department}）：组织归属，回答「你属于哪个团队」
+ *   <li>岗位（{@link Post}）：职责描述，回答「你负责什么工作」
+ *   <li>角色（{@link Role}）：权限集合，回答「你能操作哪些功能」
  * </ul>
  *
  * 一个用户可同时属于多个部门、担任多个岗位、拥有多个角色，三者正交。
@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>典型使用：</b>
  *
  * <ul>
- *   <li>审批人展开：{@code UserAccountDO.positionCode} + {@code position:xxx}
+ *   <li>审批人展开：{@code UserAccount.positionCode} + {@code position:xxx}
  *   <li>工时统计：按岗位统计工作量与产出
  *   <li>汇报关系：岗位决定审批链中的角色定位
  * </ul>
@@ -36,8 +36,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserPostDO 用户-岗位中间表
- * @see UserAccountDO 用户实体（含 {@code positionCode} 字段）
+ * @see UserPost 用户-岗位中间表
+ * @see UserAccount 用户实体（含 {@code positionCode} 字段）
  * @see com.njydsz.userinfo.web.controller.PostController 岗位 Controller
  */
 @Data
@@ -45,7 +45,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_post")
-public class PostDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class Post extends MpBaseEntity<String> {
 
   /** 岗位名称（前端展示，如「项目经理」「后端开发工程师」） */
   private String postName;

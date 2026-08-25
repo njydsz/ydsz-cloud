@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -19,7 +19,7 @@ import lombok.Data;
  */
 @Data
 @TableName("ydsz_user_credential")
-public class WebAuthnCredentialDO implements Serializable {
+public class WebAuthnCredential implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

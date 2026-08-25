@@ -22,7 +22,7 @@
   <!-- 查询空间的成员列表（按角色优先级排序，未删除） -->
   <select id="selectBySpaceId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM nw_space_member
+    FROM ydsz_nw_space_member
     WHERE space_id = #{spaceId} AND deleted = FALSE
     ORDER BY
       CASE role
@@ -38,7 +38,7 @@
   <!-- 查询用户参与的空间列表 -->
   <select id="selectByUserId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM nw_space_member
+    FROM ydsz_nw_space_member
     WHERE user_id = #{userId} AND deleted = FALSE
     ORDER BY joined_at DESC
   </select>
@@ -46,7 +46,7 @@
   <!-- 根据空间ID和用户ID查找成员 -->
   <select id="selectBySpaceIdAndUserId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM nw_space_member
+    FROM ydsz_nw_space_member
     WHERE space_id = #{spaceId} AND user_id = #{userId} AND deleted = FALSE
     LIMIT 1
   </select>
@@ -54,27 +54,27 @@
   <!-- 统计空间成员数量 -->
   <select id="countBySpaceId" resultType="int">
     SELECT COUNT(*)
-    FROM nw_space_member
+    FROM ydsz_nw_space_member
     WHERE space_id = #{spaceId} AND deleted = FALSE
   </select>
 
   <!-- 检查用户是否在空间中 -->
   <select id="existsBySpaceIdAndUserId" resultType="boolean">
     SELECT COUNT(*) > 0
-    FROM nw_space_member
+    FROM ydsz_nw_space_member
     WHERE space_id = #{spaceId} AND user_id = #{userId} AND deleted = FALSE
   </select>
 
   <!-- 更新成员角色 -->
   <update id="updateRole">
-    UPDATE nw_space_member
+    UPDATE ydsz_nw_space_member
     SET role = #{role}, updated_at = NOW(), updated_by = #{userId}
     WHERE space_id = #{spaceId} AND user_id = #{userId} AND deleted = FALSE
   </update>
 
   <!-- 删除成员 -->
   <delete id="deleteBySpaceIdAndUserId">
-    DELETE FROM nw_space_member
+    DELETE FROM ydsz_nw_space_member
     WHERE space_id = #{spaceId} AND user_id = #{userId}
   </delete>
 

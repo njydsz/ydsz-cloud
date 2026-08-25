@@ -55,6 +55,9 @@ public class UserExcelServiceImpl implements UserExcelService {
   /** 默认导入上限 */
   private static final int DEFAULT_IMPORT_LIMIT = 1000;
 
+  /** 初始容量 */
+  private static final int INITIAL_CAPACITY = 16;
+
   private final UserAccountService userAccountService;
   private final UserAccountRepository userAccountRepository;
   private final DepartmentRepository departmentRepository;

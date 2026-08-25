@@ -13,7 +13,7 @@ import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 
 /**
@@ -43,7 +43,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
 
   @Override
   public FlowDefinitionVO save(FlowDefinitionDTO dto) {
-    FlowDefinitionDO entity = converter.dtoToDO(dto);
+    FlowDefinition entity = converter.dtoToEntity(dto);
     definitionMapper.insert(entity);
     return converter.entityToVO(entity);
   }
@@ -51,7 +51,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   @Override
   @Deprecated
   public FlowDefinitionVO save(FlowDefinitionVO vo) {
-    FlowDefinitionDO entity = converter.entityToDO(vo);
+    FlowDefinition entity = converter.entityToEntity(vo);
     definitionMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -66,13 +66,13 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   public Optional<FlowDefinitionVO> findPublished(String flowCode, String version, String tenantId) {
     return definitionMapper
         .selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(FlowDefinitionDO::getStatus, "PUBLISHED")
-                .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
-                .eq(version != null, FlowDefinitionDO::getFlowVersion, version)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getFlowVersion)
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(FlowDefinition::getFlowCode, flowCode)
+                .eq(FlowDefinition::getStatus, "PUBLISHED")
+                .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
+                .eq(version != null, FlowDefinition::getFlowVersion, version)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getFlowVersion)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -83,20 +83,20 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   public List<FlowDefinitionVO> findByFlowCode(String flowCode) {
     return converter.flowDefinitionListToVO(
         definitionMapper.selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getFlowVersion)));
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(FlowDefinition::getFlowCode, flowCode)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getFlowVersion)));
   }
 
   @Override
   public Optional<FlowDefinitionVO> findByFlowCodeAndVersion(String flowCode, String version) {
     return definitionMapper
         .selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(FlowDefinitionDO::getFlowVersion, version)
-                .eq(FlowDefinitionDO::getDeleted, 0)
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(FlowDefinition::getFlowCode, flowCode)
+                .eq(FlowDefinition::getFlowVersion, version)
+                .eq(FlowDefinition::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -110,7 +110,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
 
   @Override
   public FlowDefinitionVO update(FlowDefinitionDTO dto) {
-    FlowDefinitionDO entity = converter.dtoToDO(dto);
+    FlowDefinition entity = converter.dtoToEntity(dto);
     definitionMapper.updateById(entity);
     return converter.entityToVO(entity);
   }
@@ -118,7 +118,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   @Override
   @Deprecated
   public FlowDefinitionVO update(FlowDefinitionVO vo) {
-    FlowDefinitionDO entity = converter.entityToDO(vo);
+    FlowDefinition entity = converter.entityToEntity(vo);
     definitionMapper.updateById(entity);
     return vo;
   }
@@ -128,34 +128,34 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
       String flowCode, String flowName, String tenantId, int offset, int limit) {
     return converter.flowDefinitionListToVO(
         definitionMapper.selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(flowCode != null, FlowDefinitionDO::getFlowCode, flowCode)
-                .like(flowName != null, FlowDefinitionDO::getFlowName, flowName)
-                .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getCreatedAt)
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(flowCode != null, FlowDefinition::getFlowCode, flowCode)
+                .like(flowName != null, FlowDefinition::getFlowName, flowName)
+                .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
 
   @Override
   public long countPage(String flowCode, String flowName, String tenantId) {
     return definitionMapper.selectCount(
-        new LambdaQueryWrapper<FlowDefinitionDO>()
-            .eq(flowCode != null, FlowDefinitionDO::getFlowCode, flowCode)
-            .like(flowName != null, FlowDefinitionDO::getFlowName, flowName)
-            .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
-            .eq(FlowDefinitionDO::getDeleted, 0));
+        new LambdaQueryWrapper<FlowDefinition>()
+            .eq(flowCode != null, FlowDefinition::getFlowCode, flowCode)
+            .like(flowName != null, FlowDefinition::getFlowName, flowName)
+            .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
+            .eq(FlowDefinition::getDeleted, 0));
   }
 
   @Override
   public Optional<FlowDefinitionVO> findLatestByCode(String flowCode, String tenantId) {
     return definitionMapper
         .selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getCreatedAt)
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(FlowDefinition::getFlowCode, flowCode)
+                .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getCreatedAt)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -166,13 +166,13 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   public List<FlowDefinitionVO> findEnabledByCategory(String categoryCode, String tenantId) {
     return converter.flowDefinitionListToVO(
         definitionMapper.selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(FlowDefinitionDO::getCategory, categoryCode)
-                .eq(FlowDefinitionDO::getTenantId, tenantId)
-                .eq(FlowDefinitionDO::getActivityStatus, 1)
-                .eq(FlowDefinitionDO::getIsPublish, 1)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(FlowDefinition::getCategory, categoryCode)
+                .eq(FlowDefinition::getTenantId, tenantId)
+                .eq(FlowDefinition::getActivityStatus, 1)
+                .eq(FlowDefinition::getIsPublish, 1)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getCreatedAt)));
   }
 
   @Override
@@ -180,14 +180,14 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
       int pageNo, int pageSize, String category, String flowCode) {
     return converter.flowDefinitionListToVO(
         definitionMapper.selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
+            new LambdaQueryWrapper<FlowDefinition>()
                 .eq(StringUtils.hasText(category),
-                    FlowDefinitionDO::getCategory, category)
+                    FlowDefinition::getCategory, category)
                 .like(StringUtils.hasText(flowCode),
-                    FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(FlowDefinitionDO::getActivityStatus, 1)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getCreatedAt)
+                    FlowDefinition::getFlowCode, flowCode)
+                .eq(FlowDefinition::getActivityStatus, 1)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getCreatedAt)
                 .last("LIMIT " + pageSize + " OFFSET " + (long) (pageNo - 1) * pageSize)));
   }
 
@@ -195,11 +195,11 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   public List<FlowDefinitionVO> findByFlowCodeAndTenantId(String flowCode, String tenantId) {
     return converter.flowDefinitionListToVO(
         definitionMapper.selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getFlowVersion)));
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(FlowDefinition::getFlowCode, flowCode)
+                .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getFlowVersion)));
   }
 
   @Override
@@ -230,7 +230,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
 
   @Override
   public void updateActivityStatus(String definitionId, int activityStatus) {
-    FlowDefinitionDO entity = new FlowDefinitionDO();
+    FlowDefinition entity = new FlowDefinition();
     entity.setId(definitionId);
     entity.setActivityStatus(activityStatus);
     definitionMapper.updateById(entity);
@@ -241,14 +241,14 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
       String flowCode, String tenantId, String excludeDefinitionId) {
     return definitionMapper
         .selectList(
-            new LambdaQueryWrapper<FlowDefinitionDO>()
-                .eq(FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(tenantId != null, FlowDefinitionDO::getTenantId, tenantId)
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(FlowDefinition::getFlowCode, flowCode)
+                .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
                 .ne(StringUtils.hasText(excludeDefinitionId),
-                    FlowDefinitionDO::getId, excludeDefinitionId)
-                .eq(FlowDefinitionDO::getIsPublish, 1)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getCreatedAt)
+                    FlowDefinition::getId, excludeDefinitionId)
+                .eq(FlowDefinition::getIsPublish, 1)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getCreatedAt)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()

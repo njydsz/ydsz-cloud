@@ -91,7 +91,7 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
 @RequiredArgsConstructor
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "标签管理",
-    description = "标签创建、绑定、智能推荐") // FQN-OK: name conflict with TagDO entity
+    description = "标签创建、绑定、智能推荐") // FQN-OK: name conflict with Tag entity
 public class TagController {
 
   /** 标签应用服务（封装标签 CRUD + 绑定 + 推荐） */
@@ -104,7 +104,7 @@ public class TagController {
    *
    * @param request 创建标签请求（name / color）
    * @param userId 当前用户 ID
-   * @return 统一响应结果，data 为新创建的 {@link TagDO}
+   * @return 统一响应结果，data 为新创建的 {@link Tag}
    */
   @Audit(
       module = "标签管理",
@@ -127,7 +127,7 @@ public class TagController {
    *
    * <p>返回全局可见的标签集合，供前端"标签选择器"组件渲染。
    *
-   * @return 统一响应结果，data 为 {@link TagDO} 列表
+   * @return 统一响应结果，data 为 {@link Tag} 列表
    */
   @GetMapping
   @Operation(summary = "查询所有标签")
@@ -165,7 +165,7 @@ public class TagController {
    * 查询指定文件已绑定的所有标签。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 统一响应结果，data 为 {@link TagDO} 列表
+   * @return 统一响应结果，data 为 {@link Tag} 列表
    */
   @GetMapping("/file/{fileNodeId}")
   @Operation(summary = "查询文件的标签")
@@ -180,7 +180,7 @@ public class TagController {
    * <p>通常基于文件标题/正文/AI Summary 做关键词提取，匹配现有标签库， 返回 TopN 推荐结果。建议前端在用户上传后自动调用此接口预填标签。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 统一响应结果，data 为推荐的 {@link TagDO} 列表
+   * @return 统一响应结果，data 为推荐的 {@link Tag} 列表
    */
   @GetMapping("/recommend/{fileNodeId}")
   @Operation(summary = "推荐标签")

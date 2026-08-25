@@ -34,7 +34,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class FileVersionDomainService {
+public class FileVersionmainService {
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -109,7 +109,7 @@ public class FileVersionDomainService {
     node.setUpdatedBy(userId);
 
     log.info(
-        "[FileVersionDomainService] 创建版本: fileNodeId={}, version={}",
+        "[FileVersionmainService] 创建版本: fileNodeId={}, version={}",
         node.getId(),
         nextVersion);
     return new VersionCreateResult(version, node);
@@ -178,7 +178,7 @@ public class FileVersionDomainService {
     node.setUpdatedBy(userId);
 
     log.info(
-        "[FileVersionDomainService] 版本回滚: fileNodeId={}, targetVersion={}, newVersion={}",
+        "[FileVersionmainService] 版本回滚: fileNodeId={}, targetVersion={}, newVersion={}",
         node.getId(),
         targetVersion.getVersionNumber(),
         nextVersion);

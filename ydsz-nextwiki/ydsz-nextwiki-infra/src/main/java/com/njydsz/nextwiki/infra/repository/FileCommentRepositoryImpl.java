@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
 import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileCommentDO;
+import com.njydsz.nextwiki.infra.entity.FileComment;
 import com.njydsz.nextwiki.infra.mapper.FileCommentMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FileCommentRepositoryImpl implements FileCommentRepository {
 
   @Override
   public FileCommentVO save(FileCommentDTO dto) {
-    FileCommentDO entity = converter.dtoToEntity(dto);
+    FileComment entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
@@ -65,7 +65,7 @@ public class FileCommentRepositoryImpl implements FileCommentRepository {
 
   @Override
   public void update(FileCommentDTO dto) {
-    FileCommentDO entity = converter.dtoToEntityWithId(dto);
+    FileComment entity = converter.dtoToEntityWithId(dto);
     fileCommentMapper.updateFileComment(entity);
   }
 

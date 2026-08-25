@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
-import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
+import com.njydsz.nextwiki.domain.service.ShareLinkmainService;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
@@ -31,7 +31,7 @@ public class ShareExpiryReminderTask {
   /** 到期提醒提前小时数 */
   private static final int EXPIRY_REMINDER_HOURS = 24;
 
-  private final ShareLinkDomainService shareLinkDomainService;
+  private final ShareLinkmainService ShareLinkmainService;
   private final ShareLinkRepository shareLinkRepository;
   private final NextwikiConverter nextwikiConverter;
 
@@ -52,7 +52,7 @@ public class ShareExpiryReminderTask {
 
       // 转换为 DTO 并调用领域服务过滤（仅 Active 状态 + 未发送提醒）
       List<ShareLinkDTO> expiringDTOs = nextwikiConverter.shareLinkListToDTO(expiringVOs);
-      List<ShareLinkDTO> toRemind = shareLinkDomainService.findExpiringShares(expiringDTOs, EXPIRY_REMINDER_HOURS);
+      List<ShareLinkDTO> toRemind = ShareLinkmainService.findExpiringShares(expiringDTOs, EXPIRY_REMINDER_HOURS);
 
       if (toRemind.isEmpty()) {
         return;
@@ -62,7 +62,7 @@ public class ShareExpiryReminderTask {
 
       for (ShareLinkDTO share : toRemind) {
         // 标记提醒已发送（通过领域服务修改状态，然后持久化）
-        shareLinkDomainService.markReminderSent(share);
+        ShareLinkmainService.markReminderSent(share);
         shareLinkRepository.update(share);
         log.info(
             "[ShareExpiryReminder] 分享即将到期: shareId={}, shareCode={}, expireTime={}",

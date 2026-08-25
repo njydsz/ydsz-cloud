@@ -22,7 +22,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.FileStatVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileNodeDO;
+import com.njydsz.nextwiki.infra.entity.FileNode;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
 
 /**
@@ -61,8 +61,8 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public PageResponse<List<FileNodeVO>> findPageChildren(FileNodeQuery query) {
-    Page<FileNodeDO> pageParam = new Page<>(query.getPage(), query.getPageSize());
-    IPage<FileNodeDO> result =
+    Page<FileNode> pageParam = new Page<>(query.getPage(), query.getPageSize());
+    IPage<FileNode> result =
         fileNodeMapper.selectPageByParentId(
             pageParam,
             query.getParentId(),
@@ -97,7 +97,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public FileNodeVO save(FileNodeDTO dto) {
-    FileNodeDO entity = converter.dtoToEntity(dto);
+    FileNode entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
@@ -110,10 +110,10 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     if (dtos == null || dtos.isEmpty()) {
       return 0;
     }
-    List<FileNodeDO> entities = converter.fileNodeDtosToEntities(dtos);
+    List<FileNode> entities = converter.fileNodeDtosToEntities(dtos);
     LocalDateTime now = LocalDateTime.now();
     String tenantId = TenantContextHolder.getTenantId();
-    for (FileNodeDO entity : entities) {
+    for (FileNode entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
         entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }
@@ -142,7 +142,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public void update(FileNodeDTO dto) {
-    FileNodeDO entity = converter.dtoToEntityWithId(dto);
+    FileNode entity = converter.dtoToEntityWithId(dto);
     if (entity.getRevision() == null) {
       fileNodeMapper.updateById(entity);
       return;
@@ -225,17 +225,17 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public FileNodeVO findOrCreateRoot(String userId) {
-    FileNodeDO root = fileNodeMapper.selectRootByUser(userId, TenantContextHolder.getTenantId());
+    FileNode root = fileNodeMapper.selectRootByUser(userId, TenantContextHolder.getTenantId());
     if (root != null) {
       return converter.entityToVO(root);
     }
 
     root =
-        FileNodeDO.builder()
+        FileNode.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .parentId("0")
             .name("root")
-            .nodeType(FileNodeDO.TYPE_FOLDER)
+            .nodeType(FileNode.TYPE_FOLDER)
             .size(0L)
             .path("/")
             .level(0)
@@ -295,7 +295,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public List<FileNodeVO> findAllDescendants(String folderId) {
-    FileNodeDO folder = fileNodeMapper.selectById(folderId);
+    FileNode folder = fileNodeMapper.selectById(folderId);
     if (folder == null || !folder.isFolder()) {
       return new ArrayList<>();
     }
@@ -325,8 +325,8 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit) {
-    Page<FileNodeDO> pageParam = new Page<>(offset / limit + 1, limit);
-    IPage<FileNodeDO> result = fileNodeMapper.selectAllWithPage(pageParam);
+    Page<FileNode> pageParam = new Page<>(offset / limit + 1, limit);
+    IPage<FileNode> result = fileNodeMapper.selectAllWithPage(pageParam);
     List<FileNodeVO> vos = converter.fileNodeListToVO(result.getRecords());
     Page<FileNodeVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);

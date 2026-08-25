@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
+import com.njydsz.nextwiki.infra.entity.ShareRecipient;
 
 /**
  * 分享目标用户 Mapper。
@@ -16,7 +16,7 @@ import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
  * @since 1.0.0
  */
 @Mapper
-public interface ShareRecipientMapper extends BaseMapper<ShareRecipientDO> {
+public interface ShareRecipientMapper extends BaseMapper<ShareRecipient> {
 
   /**
    * 查询分享链接的目标用户列表。
@@ -24,7 +24,7 @@ public interface ShareRecipientMapper extends BaseMapper<ShareRecipientDO> {
    * @param shareId 分享链接 ID
    * @return 目标用户列表
    */
-  List<ShareRecipientDO> selectByShareId(@Param("shareId") String shareId);
+  List<ShareRecipient> selectByShareId(@Param("shareId") String shareId);
 
   /**
    * 查询用户作为接收者的分享列表。
@@ -32,7 +32,7 @@ public interface ShareRecipientMapper extends BaseMapper<ShareRecipientDO> {
    * @param recipientId 接收者用户 ID
    * @return 分享接收记录列表
    */
-  List<ShareRecipientDO> selectByRecipientId(@Param("recipientId") String recipientId);
+  List<ShareRecipient> selectByRecipientId(@Param("recipientId") String recipientId);
 
   /**
    * 标记用户已查看分享。

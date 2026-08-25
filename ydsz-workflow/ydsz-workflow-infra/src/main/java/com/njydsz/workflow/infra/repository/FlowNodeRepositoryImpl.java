@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
 
   @Override
   public FlowNodeVO save(FlowNodeVO vo) {
-    FlowNodeDO entity = converter.entityToDO(vo);
+    FlowNode entity = converter.entityToEntity(vo);
     nodeMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -48,7 +48,7 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
 
   @Override
   public List<FlowNodeVO> saveBatch(List<FlowNodeVO> nodes) {
-    List<FlowNodeDO> entities = nodes.stream().map(converter::entityToDO).toList();
+    List<FlowNode> entities = nodes.stream().map(converter::entityToEntity).toList();
     entities.forEach(nodeMapper::insert);
     return nodes;
   }
@@ -62,10 +62,10 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
   public Optional<FlowNodeVO> findByCode(String definitionId, String nodeCode) {
     return nodeMapper
         .selectList(
-            new LambdaQueryWrapper<FlowNodeDO>()
-                .eq(FlowNodeDO::getDefinitionId, definitionId)
-                .eq(FlowNodeDO::getNodeCode, nodeCode)
-                .eq(FlowNodeDO::getDeleted, 0)
+            new LambdaQueryWrapper<FlowNode>()
+                .eq(FlowNode::getDefinitionId, definitionId)
+                .eq(FlowNode::getNodeCode, nodeCode)
+                .eq(FlowNode::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -76,15 +76,15 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
   public List<FlowNodeVO> findByDefinitionId(String definitionId) {
     return converter.flowNodeListToVO(
         nodeMapper.selectList(
-            new LambdaQueryWrapper<FlowNodeDO>()
-                .eq(FlowNodeDO::getDefinitionId, definitionId)
-                .eq(FlowNodeDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowNode>()
+                .eq(FlowNode::getDefinitionId, definitionId)
+                .eq(FlowNode::getDeleted, 0)));
   }
 
   @Override
   public void deleteByDefinitionId(String definitionId) {
     nodeMapper.delete(
-        new LambdaQueryWrapper<FlowNodeDO>().eq(FlowNodeDO::getDefinitionId, definitionId));
+        new LambdaQueryWrapper<FlowNode>().eq(FlowNode::getDefinitionId, definitionId));
   }
 
   @Override

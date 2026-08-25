@@ -21,7 +21,7 @@
   <!-- 查询用户最近访问列表（按访问时间倒序，未删除） -->
   <select id="selectByUserIdOrderByAccessedAt" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM nw_user_recent
+    FROM ydsz_nw_user_recent
     WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
     ORDER BY accessed_at DESC
     LIMIT #{limit}
@@ -30,7 +30,7 @@
   <!-- 分页查询用户最近访问列表 -->
   <select id="selectByUserIdWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM nw_user_recent
+    FROM ydsz_nw_user_recent
     WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
     ORDER BY accessed_at DESC
     LIMIT #{limit} OFFSET #{offset}
@@ -39,23 +39,23 @@
   <!-- 统计用户最近访问记录数量 -->
   <select id="countByUserId" resultType="int">
     SELECT COUNT(*)
-    FROM nw_user_recent
+    FROM ydsz_nw_user_recent
     WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
   </select>
 
   <!-- 更新节点访问时间（访问记录已存在时） -->
   <update id="updateAccessTime">
-    UPDATE nw_user_recent
+    UPDATE ydsz_nw_user_recent
     SET access_type = #{accessType}, accessed_at = NOW(), updated_at = NOW()
     WHERE user_id = #{userId} AND node_id = #{nodeId} AND deleted = FALSE
   </update>
 
   <!-- 删除用户最早的最近访问记录（超出容量限制时清理） -->
   <delete id="deleteEarliestRecords">
-    DELETE FROM nw_user_recent
+    DELETE FROM ydsz_nw_user_recent
     WHERE user_id = #{userId} AND tenant_id = #{tenantId}
       AND id NOT IN (
-        SELECT id FROM nw_user_recent
+        SELECT id FROM ydsz_nw_user_recent
         WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
         ORDER BY accessed_at DESC
         LIMIT #{keepCount}
@@ -64,7 +64,7 @@
 
   <!-- 根据用户ID和节点ID删除访问记录（物理删除） -->
   <delete id="deleteByUserIdAndNodeId">
-    DELETE FROM nw_user_recent
+    DELETE FROM ydsz_nw_user_recent
     WHERE user_id = #{userId} AND node_id = #{nodeId}
   </delete>
 

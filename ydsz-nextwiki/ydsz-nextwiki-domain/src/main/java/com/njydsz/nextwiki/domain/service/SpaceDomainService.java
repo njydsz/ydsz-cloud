@@ -18,7 +18,7 @@ import com.njydsz.nextwiki.domain.vo.SpaceVO;
  * @since 1.0.0
  */
 @Slf4j
-public class SpaceDomainService {
+public class SpacemainService {
 
   /**
    * 校验空间名称是否合法（纯领域逻辑）。

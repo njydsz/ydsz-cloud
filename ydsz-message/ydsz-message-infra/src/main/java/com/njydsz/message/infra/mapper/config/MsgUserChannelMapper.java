@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgUserChannelDO;
+import com.njydsz.message.infra.entity.MsgUserChannel;
 
 /**
  * 用户通道绑定 Mapper
@@ -30,4 +30,4 @@ import com.njydsz.message.infra.entity.MsgUserChannelDO;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgUserChannelMapper extends BaseMapper<MsgUserChannelDO> {}
+public interface MsgUserChannelMapper extends BaseMapper<MsgUserChannel> {}

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
 import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 
 /**
@@ -41,7 +41,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
 
   @Override
   public FlowDelegateAuthVO save(FlowDelegateAuthVO vo) {
-    FlowDelegateAuthDO entity = converter.entityToDO(vo);
+    FlowDelegateAuth entity = converter.entityToEntity(vo);
     delegateAuthMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -56,19 +56,19 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   public List<FlowDelegateAuthVO> findByDelegatorId(String delegatorId) {
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
-            new LambdaQueryWrapper<FlowDelegateAuthDO>()
-                .eq(FlowDelegateAuthDO::getDelegatorId, delegatorId)
-                .eq(FlowDelegateAuthDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowDelegateAuth>()
+                .eq(FlowDelegateAuth::getDelegatorId, delegatorId)
+                .eq(FlowDelegateAuth::getDeleted, 0)));
   }
 
   @Override
   public List<FlowDelegateAuthVO> findByDelegatorAndFlow(String delegatorId, String flowCode) {
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
-            new LambdaQueryWrapper<FlowDelegateAuthDO>()
-                .eq(FlowDelegateAuthDO::getDelegatorId, delegatorId)
-                .eq(FlowDelegateAuthDO::getFlowCode, flowCode)
-                .eq(FlowDelegateAuthDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowDelegateAuth>()
+                .eq(FlowDelegateAuth::getDelegatorId, delegatorId)
+                .eq(FlowDelegateAuth::getFlowCode, flowCode)
+                .eq(FlowDelegateAuth::getDeleted, 0)));
   }
 
   @Override
@@ -78,7 +78,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
 
   @Override
   public FlowDelegateAuthVO update(FlowDelegateAuthVO vo) {
-    FlowDelegateAuthDO entity = converter.entityToDO(vo);
+    FlowDelegateAuth entity = converter.entityToEntity(vo);
     delegateAuthMapper.updateById(entity);
     return vo;
   }
@@ -87,12 +87,12 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   public List<FlowDelegateAuthVO> findActiveByOwner(String ownerId, LocalDateTime now) {
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
-            new LambdaQueryWrapper<FlowDelegateAuthDO>()
-                .eq(FlowDelegateAuthDO::getOwnerUserId, ownerId)
-                .eq(FlowDelegateAuthDO::getAuthStatus, "ACTIVE")
-                .le(FlowDelegateAuthDO::getStartTime, now)
-                .and(w -> w.isNull(FlowDelegateAuthDO::getEndTime).or().ge(FlowDelegateAuthDO::getEndTime, now))
-                .eq(FlowDelegateAuthDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowDelegateAuth>()
+                .eq(FlowDelegateAuth::getOwnerUserId, ownerId)
+                .eq(FlowDelegateAuth::getAuthStatus, "ACTIVE")
+                .le(FlowDelegateAuth::getStartTime, now)
+                .and(w -> w.isNull(FlowDelegateAuth::getEndTime).or().ge(FlowDelegateAuth::getEndTime, now))
+                .eq(FlowDelegateAuth::getDeleted, 0)));
   }
 
   @Override
@@ -100,18 +100,18 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
       String ownerId, String flowCode, LocalDateTime now) {
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
-            new LambdaQueryWrapper<FlowDelegateAuthDO>()
-                .eq(FlowDelegateAuthDO::getOwnerUserId, ownerId)
-                .eq(FlowDelegateAuthDO::getFlowCode, flowCode)
-                .eq(FlowDelegateAuthDO::getAuthStatus, "ENABLED")
-                .le(FlowDelegateAuthDO::getStartTime, now)
-                .ge(FlowDelegateAuthDO::getEndTime, now)
-                .eq(FlowDelegateAuthDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowDelegateAuth>()
+                .eq(FlowDelegateAuth::getOwnerUserId, ownerId)
+                .eq(FlowDelegateAuth::getFlowCode, flowCode)
+                .eq(FlowDelegateAuth::getAuthStatus, "ENABLED")
+                .le(FlowDelegateAuth::getStartTime, now)
+                .ge(FlowDelegateAuth::getEndTime, now)
+                .eq(FlowDelegateAuth::getDeleted, 0)));
   }
 
   @Override
   public void updateStatus(String id, String status) {
-    FlowDelegateAuthDO update = new FlowDelegateAuthDO();
+    FlowDelegateAuth update = new FlowDelegateAuth();
     update.setAuthStatus(status);
     update.setId(id);
     delegateAuthMapper.updateById(update);
@@ -121,12 +121,12 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   public List<FlowDelegateAuthVO> selectByOwner(String tenantId, String ownerUserId, String status) {
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
-            new LambdaQueryWrapper<FlowDelegateAuthDO>()
-                .eq(FlowDelegateAuthDO::getTenantId, tenantId)
-                .eq(FlowDelegateAuthDO::getOwnerUserId, ownerUserId)
-                .eq(status != null, FlowDelegateAuthDO::getAuthStatus, status)
-                .eq(FlowDelegateAuthDO::getDeleted, 0)
-                .orderByDesc(FlowDelegateAuthDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowDelegateAuth>()
+                .eq(FlowDelegateAuth::getTenantId, tenantId)
+                .eq(FlowDelegateAuth::getOwnerUserId, ownerUserId)
+                .eq(status != null, FlowDelegateAuth::getAuthStatus, status)
+                .eq(FlowDelegateAuth::getDeleted, 0)
+                .orderByDesc(FlowDelegateAuth::getCreatedAt)));
   }
 
   @Override
@@ -134,12 +134,12 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
       String tenantId, String delegateUserId, String status) {
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
-            new LambdaQueryWrapper<FlowDelegateAuthDO>()
-                .eq(FlowDelegateAuthDO::getTenantId, tenantId)
-                .eq(FlowDelegateAuthDO::getDelegateUserId, delegateUserId)
-                .eq(status != null, FlowDelegateAuthDO::getAuthStatus, status)
-                .eq(FlowDelegateAuthDO::getDeleted, 0)
-                .orderByDesc(FlowDelegateAuthDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowDelegateAuth>()
+                .eq(FlowDelegateAuth::getTenantId, tenantId)
+                .eq(FlowDelegateAuth::getDelegateUserId, delegateUserId)
+                .eq(status != null, FlowDelegateAuth::getAuthStatus, status)
+                .eq(FlowDelegateAuth::getDeleted, 0)
+                .orderByDesc(FlowDelegateAuth::getCreatedAt)));
   }
 
   @Override

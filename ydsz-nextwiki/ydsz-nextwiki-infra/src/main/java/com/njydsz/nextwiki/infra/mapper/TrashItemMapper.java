@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.TrashItemDO;
+import com.njydsz.nextwiki.infra.entity.TrashItem;
 
 /**
  * 回收站 Mapper
@@ -29,12 +29,12 @@ import com.njydsz.nextwiki.infra.entity.TrashItemDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.nextwiki.infra.entity.TrashItemDO 回收项实体
+ * @see com.njydsz.nextwiki.infra.entity.TrashItem 回收项实体
  * @see com.njydsz.nextwiki.server.service.TrashItemService 回收站 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface TrashItemMapper extends BaseMapper<TrashItemDO> {
+public interface TrashItemMapper extends BaseMapper<TrashItem> {
 
   /**
    * 按原文件节点 ID 查询其对应的回收站条目。
@@ -42,7 +42,7 @@ public interface TrashItemMapper extends BaseMapper<TrashItemDO> {
    * @param fileNodeId 原文件节点 ID
    * @return 命中的回收站实体；不存在则返回 null
    */
-  TrashItemDO findByFileNodeId(@Param("fileNodeId") String fileNodeId);
+  TrashItem findByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /**
    * 查询某用户的活跃回收站条目列表（未过期、未彻底删除），用于回收站页面展示。
@@ -50,7 +50,7 @@ public interface TrashItemMapper extends BaseMapper<TrashItemDO> {
    * @param userId 用户 ID
    * @return 活跃回收站条目列表
    */
-  List<TrashItemDO> findActiveTrash(@Param("userId") String userId);
+  List<TrashItem> findActiveTrash(@Param("userId") String userId);
 
   /**
    * 查询已过期的回收站条目（用于定时清理任务），limit 限制单次批处理量以避免长事务。
@@ -58,7 +58,7 @@ public interface TrashItemMapper extends BaseMapper<TrashItemDO> {
    * @param limit 返回数量上限
    * @return 已过期待清理的回收站条目列表
    */
-  List<TrashItemDO> findExpiredItems(@Param("limit") int limit);
+  List<TrashItem> findExpiredItems(@Param("limit") int limit);
 
   /**
    * 统计某用户的活跃回收站条目数量（未过期、未彻底删除），用于回收站角标提示。
@@ -69,7 +69,7 @@ public interface TrashItemMapper extends BaseMapper<TrashItemDO> {
   int countActiveTrash(@Param("userId") String userId);
 
   /** 带 revision 乐观锁的更新（更新失败返回 0） */
-  int updateWithRevision(@Param("trashItem") TrashItemDO TrashItemDO);
+  int updateWithRevision(@Param("trashItem") TrashItem TrashItem);
 
   /**
    * 批量插入回收站条目（用于批量删除场景）。
@@ -77,5 +77,5 @@ public interface TrashItemMapper extends BaseMapper<TrashItemDO> {
    * @param items 回收站实体列表
    * @return 实际插入条数
    */
-  int insertBatch(@Param("items") List<TrashItemDO> items);
+  int insertBatch(@Param("items") List<TrashItem> items);
 }

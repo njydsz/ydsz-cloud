@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowAutoTriggerRepository;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
+import com.njydsz.workflow.infra.entity.FlowAutoTrigger;
 import com.njydsz.workflow.infra.mapper.FlowAutoTriggerMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
 
   @Override
   public FlowAutoTriggerVO save(FlowAutoTriggerVO vo) {
-    FlowAutoTriggerDO entity = converter.entityToDO(vo);
+    FlowAutoTrigger entity = converter.entityToEntity(vo);
     autoTriggerMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -55,18 +55,18 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
   public List<FlowAutoTriggerVO> findByFlowCode(String flowCode) {
     return converter.flowAutoTriggerListToVO(
         autoTriggerMapper.selectList(
-            new LambdaQueryWrapper<FlowAutoTriggerDO>()
-                .eq(FlowAutoTriggerDO::getFlowCode, flowCode)
-                .eq(FlowAutoTriggerDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowAutoTrigger>()
+                .eq(FlowAutoTrigger::getFlowCode, flowCode)
+                .eq(FlowAutoTrigger::getDeleted, 0)));
   }
 
   @Override
   public List<FlowAutoTriggerVO> findByTriggerType(String triggerType) {
     return converter.flowAutoTriggerListToVO(
         autoTriggerMapper.selectList(
-            new LambdaQueryWrapper<FlowAutoTriggerDO>()
-                .eq(FlowAutoTriggerDO::getTriggerType, triggerType)
-                .eq(FlowAutoTriggerDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowAutoTrigger>()
+                .eq(FlowAutoTrigger::getTriggerType, triggerType)
+                .eq(FlowAutoTrigger::getDeleted, 0)));
   }
 
   @Override
@@ -76,7 +76,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
 
   @Override
   public FlowAutoTriggerVO update(FlowAutoTriggerVO vo) {
-    FlowAutoTriggerDO entity = converter.entityToDO(vo);
+    FlowAutoTrigger entity = converter.entityToEntity(vo);
     autoTriggerMapper.updateById(entity);
     return vo;
   }
@@ -85,26 +85,26 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
   public List<FlowAutoTriggerVO> findEnabledBySourceFlowCode(String sourceFlowCode) {
     return converter.flowAutoTriggerListToVO(
         autoTriggerMapper.selectList(
-            new LambdaQueryWrapper<FlowAutoTriggerDO>()
-                .eq(FlowAutoTriggerDO::getSourceFlowCode, sourceFlowCode)
-                .eq(FlowAutoTriggerDO::getEnabled, 1)
-                .eq(FlowAutoTriggerDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowAutoTrigger>()
+                .eq(FlowAutoTrigger::getSourceFlowCode, sourceFlowCode)
+                .eq(FlowAutoTrigger::getEnabled, 1)
+                .eq(FlowAutoTrigger::getDeleted, 0)));
   }
 
   @Override
   public void deleteBySourceFlowCode(String sourceFlowCode) {
     autoTriggerMapper.delete(
-        new LambdaQueryWrapper<FlowAutoTriggerDO>()
-            .eq(FlowAutoTriggerDO::getSourceFlowCode, sourceFlowCode));
+        new LambdaQueryWrapper<FlowAutoTrigger>()
+            .eq(FlowAutoTrigger::getSourceFlowCode, sourceFlowCode));
   }
 
   @Override
   public List<FlowAutoTriggerVO> findAllOrderBySort() {
     return converter.flowAutoTriggerListToVO(
         autoTriggerMapper.selectList(
-            new LambdaQueryWrapper<FlowAutoTriggerDO>()
-                .eq(FlowAutoTriggerDO::getDeleted, 0)
-                .orderByAsc(FlowAutoTriggerDO::getSortOrder)
-                .orderByAsc(FlowAutoTriggerDO::getId)));
+            new LambdaQueryWrapper<FlowAutoTrigger>()
+                .eq(FlowAutoTrigger::getDeleted, 0)
+                .orderByAsc(FlowAutoTrigger::getSortOrder)
+                .orderByAsc(FlowAutoTrigger::getId)));
   }
 }

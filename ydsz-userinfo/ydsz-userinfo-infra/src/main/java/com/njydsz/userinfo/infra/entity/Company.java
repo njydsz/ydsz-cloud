@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -11,8 +11,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 公司实体
  *
- * <p>对应数据库表 {@code ydsz_company}，存储组织架构的最高级单位。 一个公司可包含多个部门（{@link DepartmentDO}），通过 {@link
- * CompanyDeptDO} 中间表维护多对多关系。
+ * <p>对应数据库表 {@code ydsz_company}，存储组织架构的最高级单位。 一个公司可包含多个部门（{@link Department}），通过 {@link
+ * CompanyDept} 中间表维护多对多关系。
  *
  * <p><b>核心字段：</b>
  *
@@ -36,8 +36,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see CompanyDeptDO 公司-部门中间表
- * @see DepartmentDO 部门实体
+ * @see CompanyDept 公司-部门中间表
+ * @see Department 部门实体
  * @see com.njydsz.userinfo.web.controller.CompanyController 公司 Controller
  */
 @Data
@@ -45,7 +45,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_company")
-public class CompanyDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class Company extends MpBaseEntity<String> {
 
   /** 公司名称（前端展示） */
   private String companyName;

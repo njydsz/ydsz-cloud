@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
+import com.njydsz.workflow.infra.entity.FlowAuditLog;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
 
   @Override
   public FlowAuditLogVO save(FlowAuditLogVO vo) {
-    FlowAuditLogDO entity = converter.entityToDO(vo);
+    FlowAuditLog entity = converter.entityToEntity(vo);
     auditLogMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -55,31 +55,31 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
   public List<FlowAuditLogVO> findByInstanceId(String instanceId) {
     return converter.flowAuditLogListToVO(
         auditLogMapper.selectList(
-            new LambdaQueryWrapper<FlowAuditLogDO>()
-                .eq(FlowAuditLogDO::getInstanceId, instanceId)
-                .eq(FlowAuditLogDO::getDeleted, 0)
-                .orderByDesc(FlowAuditLogDO::getOperatedAt)));
+            new LambdaQueryWrapper<FlowAuditLog>()
+                .eq(FlowAuditLog::getInstanceId, instanceId)
+                .eq(FlowAuditLog::getDeleted, 0)
+                .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 
   @Override
   public List<FlowAuditLogVO> findByInstanceIdAndAction(String instanceId, String action) {
     return converter.flowAuditLogListToVO(
         auditLogMapper.selectList(
-            new LambdaQueryWrapper<FlowAuditLogDO>()
-                .eq(FlowAuditLogDO::getInstanceId, instanceId)
-                .eq(FlowAuditLogDO::getAction, action)
-                .eq(FlowAuditLogDO::getDeleted, 0)
-                .orderByDesc(FlowAuditLogDO::getOperatedAt)));
+            new LambdaQueryWrapper<FlowAuditLog>()
+                .eq(FlowAuditLog::getInstanceId, instanceId)
+                .eq(FlowAuditLog::getAction, action)
+                .eq(FlowAuditLog::getDeleted, 0)
+                .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 
   @Override
   public List<FlowAuditLogVO> findByTaskId(String taskId) {
     return converter.flowAuditLogListToVO(
         auditLogMapper.selectList(
-            new LambdaQueryWrapper<FlowAuditLogDO>()
-                .eq(FlowAuditLogDO::getTaskId, taskId)
-                .eq(FlowAuditLogDO::getDeleted, 0)
-                .orderByDesc(FlowAuditLogDO::getOperatedAt)));
+            new LambdaQueryWrapper<FlowAuditLog>()
+                .eq(FlowAuditLog::getTaskId, taskId)
+                .eq(FlowAuditLog::getDeleted, 0)
+                .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 
   @Override
@@ -92,10 +92,10 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
       String businessType, String operatorId, int offset, int limit) {
     return converter.flowAuditLogListToVO(
         auditLogMapper.selectList(
-            new LambdaQueryWrapper<FlowAuditLogDO>()
-                .eq(FlowAuditLogDO::getBusinessType, businessType)
-                .eq(FlowAuditLogDO::getOperatorId, operatorId)
-                .orderByDesc(FlowAuditLogDO::getCreatedAt)
+            new LambdaQueryWrapper<FlowAuditLog>()
+                .eq(FlowAuditLog::getBusinessType, businessType)
+                .eq(FlowAuditLog::getOperatorId, operatorId)
+                .orderByDesc(FlowAuditLog::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
 
@@ -104,10 +104,10 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
       String businessType, String targetId, int offset, int limit) {
     return converter.flowAuditLogListToVO(
         auditLogMapper.selectList(
-            new LambdaQueryWrapper<FlowAuditLogDO>()
-                .eq(FlowAuditLogDO::getBusinessType, businessType)
-                .eq(FlowAuditLogDO::getTargetId, targetId)
-                .orderByDesc(FlowAuditLogDO::getCreatedAt)
+            new LambdaQueryWrapper<FlowAuditLog>()
+                .eq(FlowAuditLog::getBusinessType, businessType)
+                .eq(FlowAuditLog::getTargetId, targetId)
+                .orderByDesc(FlowAuditLog::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
 
@@ -119,11 +119,11 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
       LocalDateTime startTime,
       LocalDateTime endTime) {
     return auditLogMapper.selectCount(
-        new LambdaQueryWrapper<FlowAuditLogDO>()
-            .eq(FlowAuditLogDO::getBusinessType, businessType)
-            .eq(tenantId != null, FlowAuditLogDO::getTenantId, tenantId)
-            .in(FlowAuditLogDO::getAction, actions)
-            .ge(startTime != null, FlowAuditLogDO::getCreatedAt, startTime)
-            .le(endTime != null, FlowAuditLogDO::getCreatedAt, endTime));
+        new LambdaQueryWrapper<FlowAuditLog>()
+            .eq(FlowAuditLog::getBusinessType, businessType)
+            .eq(tenantId != null, FlowAuditLog::getTenantId, tenantId)
+            .in(FlowAuditLog::getAction, actions)
+            .ge(startTime != null, FlowAuditLog::getCreatedAt, startTime)
+            .le(endTime != null, FlowAuditLog::getCreatedAt, endTime));
   }
 }

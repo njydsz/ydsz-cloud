@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowSkipDO;
+import com.njydsz.workflow.infra.entity.FlowSkip;
 import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
 
   @Override
   public FlowSkipVO save(FlowSkipVO vo) {
-    FlowSkipDO entity = converter.entityToDO(vo);
+    FlowSkip entity = converter.entityToEntity(vo);
     skipMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -55,9 +55,9 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
   public List<FlowSkipVO> findByInstanceId(String instanceId) {
     return converter.flowSkipListToVO(
         skipMapper.selectList(
-            new LambdaQueryWrapper<FlowSkipDO>()
-                .eq(FlowSkipDO::getInstanceId, instanceId)
-                .eq(FlowSkipDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowSkip>()
+                .eq(FlowSkip::getInstanceId, instanceId)
+                .eq(FlowSkip::getDeleted, 0)));
   }
 
   @Override
@@ -67,7 +67,7 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
 
   @Override
   public FlowSkipVO update(FlowSkipVO vo) {
-    FlowSkipDO entity = converter.entityToDO(vo);
+    FlowSkip entity = converter.entityToEntity(vo);
     skipMapper.updateById(entity);
     return vo;
   }
@@ -76,18 +76,18 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
   public List<FlowSkipVO> findByDefinitionIdAndNodeCode(String definitionId, String nodeCode) {
     return converter.flowSkipListToVO(
         skipMapper.selectList(
-            new LambdaQueryWrapper<FlowSkipDO>()
-                .eq(FlowSkipDO::getDefinitionId, definitionId)
-                .eq(FlowSkipDO::getNextNodeCode, nodeCode)
-                .eq(FlowSkipDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowSkip>()
+                .eq(FlowSkip::getDefinitionId, definitionId)
+                .eq(FlowSkip::getNextNodeCode, nodeCode)
+                .eq(FlowSkip::getDeleted, 0)));
   }
 
   @Override
   public List<FlowSkipVO> findByDefinitionId(String definitionId) {
     return converter.flowSkipListToVO(
         skipMapper.selectList(
-            new LambdaQueryWrapper<FlowSkipDO>()
-                .eq(FlowSkipDO::getDefinitionId, definitionId)
-                .eq(FlowSkipDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowSkip>()
+                .eq(FlowSkip::getDefinitionId, definitionId)
+                .eq(FlowSkip::getDeleted, 0)));
   }
 }

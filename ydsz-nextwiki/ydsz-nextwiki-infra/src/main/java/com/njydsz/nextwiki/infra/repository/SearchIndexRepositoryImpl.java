@@ -17,7 +17,7 @@ import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.SearchIndexDO;
+import com.njydsz.nextwiki.infra.entity.SearchIndex;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
 
 /**
@@ -44,7 +44,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
 
   @Override
   public void upsert(SearchIndexDTO dto) {
-    SearchIndexDO entity = converter.dtoToEntity(dto);
+    SearchIndex entity = converter.dtoToEntity(dto);
     searchIndexMapper.upsert(entity);
   }
 
@@ -66,8 +66,8 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
 
   @Override
   public PageResponse<List<SearchIndexVO>> searchPage(SearchIndexQuery query) {
-    Page<SearchIndexDO> pageParam = new Page<>(query.getPage(), query.getPageSize());
-    IPage<SearchIndexDO> result =
+    Page<SearchIndex> pageParam = new Page<>(query.getPage(), query.getPageSize());
+    IPage<SearchIndex> result =
         searchIndexMapper.searchPage(
             pageParam, query.getKeyword(), query.getCreatedBy(), query.getScope());
     List<SearchIndexVO> vos = converter.searchIndexListToVO(result.getRecords());
@@ -78,10 +78,10 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
 
   @Override
   public PageResponse<List<SearchIndexVO>> searchAdvanced(SearchQuery query) {
-    Page<SearchIndexDO> pageParam = new Page<>(
+    Page<SearchIndex> pageParam = new Page<>(
         query.getPage() != null ? query.getPage() : 1,
         query.getPageSize() != null ? query.getPageSize() : 20);
-    IPage<SearchIndexDO> result =
+    IPage<SearchIndex> result =
         searchIndexMapper.searchAdvanced(pageParam, query);
     List<SearchIndexVO> vos = converter.searchIndexListToVO(result.getRecords());
     Page<SearchIndexVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());

@@ -8,7 +8,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowInstance;
 
 /**
  * 流程实例仓储专用 MapStruct 转换器（Infra 层）。
@@ -33,7 +33,7 @@ public interface WorkflowRepositoryConverter {
   /** MapStruct 单例实例 */
   WorkflowRepositoryConverter INSTANT = Mappers.getMapper(WorkflowRepositoryConverter.class);
 
-  // ===== DO ↔ VO =====
+  // ===== Entity ↔ VO =====
 
   /**
    * 流程实例实体 → 流程实例 VO。
@@ -41,7 +41,7 @@ public interface WorkflowRepositoryConverter {
    * @param entity 流程实例实体
    * @return 流程实例 VO
    */
-  FlowInstanceVO entityToVO(FlowInstanceDO entity);
+  FlowInstanceVO entityToVO(FlowInstance entity);
 
   /**
    * 流程实例实体列表 → 流程实例 VO 列表。
@@ -49,7 +49,7 @@ public interface WorkflowRepositoryConverter {
    * @param entities 流程实例实体列表
    * @return 流程实例 VO 列表
    */
-  List<FlowInstanceVO> flowInstanceListToVO(List<FlowInstanceDO> entities);
+  List<FlowInstanceVO> flowInstanceListToVO(List<FlowInstance> entities);
 
   // ===== DTO → Entity =====
 
@@ -69,7 +69,7 @@ public interface WorkflowRepositoryConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FlowInstanceDO dtoToEntity(FlowInstanceDTO dto);
+  FlowInstance dtoToEntity(FlowInstanceDTO dto);
 
   /**
    * 流程实例 DTO（含 ID）→ 流程实例实体（更新场景）。
@@ -84,7 +84,7 @@ public interface WorkflowRepositoryConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  FlowInstanceDO dtoToEntityWithId(FlowInstanceDTO dto);
+  FlowInstance dtoToEntityWithId(FlowInstanceDTO dto);
 
   // ===== DTO → VO =====
 

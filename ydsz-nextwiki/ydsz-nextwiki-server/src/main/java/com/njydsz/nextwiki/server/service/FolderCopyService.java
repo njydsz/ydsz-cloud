@@ -17,7 +17,7 @@ import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
-import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
+import com.njydsz.nextwiki.domain.service.FileVersionmainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
@@ -45,7 +45,7 @@ public class FolderCopyService {
 
   private final FileNodeRepository fileNodeRepository;
   private final FileVersionRepository versionRepository;
-  private final FileVersionDomainService versionDomainService;
+  private final FileVersionmainService versionDomainService;
   private final StorageReferenceService storageReferenceService;
   private final QuotaDomainService quotaDomainService;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -258,7 +258,7 @@ public class FolderCopyService {
             versionRepository.findByFileNodeId(newNode.getId()));
         // 将DTO转换为VO用于版本创建
         FileNodeVO newNodeVO = NextwikiConverter.INSTANT.dtoToVO(newNode);
-        FileVersionDomainService.VersionCreateResult versionResult =
+        FileVersionmainService.VersionCreateResult versionResult =
             versionDomainService.createVersion(
                 newNodeVO,
                 existingVersionDTOs,

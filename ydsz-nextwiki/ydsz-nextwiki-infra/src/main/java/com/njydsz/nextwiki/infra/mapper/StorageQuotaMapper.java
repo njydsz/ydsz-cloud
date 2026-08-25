@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
+import com.njydsz.nextwiki.infra.entity.StorageQuota;
 
 /**
  * 存储配额 Mapper
@@ -26,12 +26,12 @@ import com.njydsz.nextwiki.infra.entity.StorageQuotaDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.nextwiki.infra.entity.StorageQuotaDO 存储配额实体
+ * @see com.njydsz.nextwiki.infra.entity.StorageQuota 存储配额实体
  * @see com.njydsz.nextwiki.server.service.StorageQuotaService 配额 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface StorageQuotaMapper extends BaseMapper<StorageQuotaDO> {
+public interface StorageQuotaMapper extends BaseMapper<StorageQuota> {
 
   /**
    * 按配额维度查询配额记录，用于上传/删除前的容量校验与用量读取。
@@ -40,7 +40,7 @@ public interface StorageQuotaMapper extends BaseMapper<StorageQuotaDO> {
    * @param scopeId 维度 ID（对应维度的具体对象 ID）
    * @return 命中的配额实体；不存在则返回 null
    */
-  StorageQuotaDO selectByScope(
+  StorageQuota selectByScope(
       @Param("scopeType") String scopeType, @Param("scopeId") String scopeId);
 
   /**
@@ -85,5 +85,5 @@ public interface StorageQuotaMapper extends BaseMapper<StorageQuotaDO> {
       @Param("fileCountDelta") int fileCountDelta);
 
   /** 带 revision 乐观锁的更新（更新失败返回 0） */
-  int updateWithRevision(@Param("quota") StorageQuotaDO quota);
+  int updateWithRevision(@Param("quota") StorageQuota quota);
 }

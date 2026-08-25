@@ -17,7 +17,7 @@ import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
  * 站内通知领域实体 — 系统消息/待办/预警/公告统一入口。
  *
  * <p>对应数据库表 {@code ydsz_msg_notification}。
- * 与 {@code MsgNotificationDO} 的区别：
+ * 与 {@code MsgNotification} 的区别：
  * <ul>
  *   <li>去除 MyBatis-Plus 持久化注解
  *   <li>级别/分类/优先级/撤回状态字段使用枚举类型替代 String

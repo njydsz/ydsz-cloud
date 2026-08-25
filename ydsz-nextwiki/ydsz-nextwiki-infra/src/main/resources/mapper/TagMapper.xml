@@ -25,22 +25,22 @@
     </resultMap>
 
     <select id="selectByName" resultMap="TagResult">
-        SELECT * FROM nw_tag WHERE name = #{name} AND deleted = 0
+        SELECT * FROM ydsz_nw_tag WHERE name = #{name} AND deleted = 0
     </select>
 
     <select id="selectAll" resultMap="TagResult">
-        SELECT * FROM nw_tag WHERE deleted = 0 ORDER BY usage_count DESC, name ASC
+        SELECT * FROM ydsz_nw_tag WHERE deleted = 0 ORDER BY usage_count DESC, name ASC
     </select>
 
     <select id="selectByFileNodeId" resultMap="TagResult">
-        SELECT t.* FROM nw_tag t
-        INNER JOIN nw_file_tag ft ON t.id = ft.tag_id
+        SELECT t.* FROM ydsz_nw_tag t
+        INNER JOIN ydsz_nw_file_tag ft ON t.id = ft.tag_id
         WHERE ft.file_node_id = #{fileNodeId} AND t.deleted = 0 AND ft.deleted = 0
         ORDER BY t.name ASC
     </select>
 
     <select id="selectFileTagsByFileNodeId" resultMap="FileTagResult">
-        SELECT * FROM nw_file_tag WHERE file_node_id = #{fileNodeId} AND deleted = 0
+        SELECT * FROM ydsz_nw_file_tag WHERE file_node_id = #{fileNodeId} AND deleted = 0
     </select>
 
 </mapper>

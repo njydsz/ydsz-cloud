@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -18,7 +18,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <ul>
  *   <li>{@code parentId}：父菜单 ID，支持无限级树形结构（{@code "0" = 根节点}）
  *   <li>{@code menuCode}：菜单编码（业务侧引用，全局唯一）
- *   <li>{@code menuType}：菜单类型（DIR=目录 / MenuDO=菜单 / BUTTON=按钮）
+ *   <li>{@code menuType}：菜单类型（DIR=目录 / Menu=菜单 / BUTTON=按钮）
  *   <li>{@code path} / {@code component}：前端路由路径与组件路径
  *   <li>{@code icon}：菜单图标（Iconify / Element Plus 图标名）
  *   <li>{@code permissionCode}：权限码（{@code "system:user:create"} 格式，被后端 {@code @AuthApiPermission}
@@ -30,9 +30,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>典型使用：</b>
  *
  * <ul>
- *   <li>前端管理系统按 menuType=MenuDO/PERMISSION 渲染菜单树
+ *   <li>前端管理系统按 menuType=Menu/PERMISSION 渲染菜单树
  *   <li>后端通过 {@code @AuthApiPermission(apiCodes = "system:user:create")} 引用 permissionCode 做接口鉴权
- *   <li>角色-菜单关联通过 {@link RolePermissionDO} 中间表维护
+ *   <li>角色-菜单关联通过 {@link RolePermission} 中间表维护
  * </ul>
  *
  * <p><b>索引设计：</b>唯一索引 {@code uk_menu_code}（{@code menu_code}），普通索引 {@code idx_parent_id}（{@code
@@ -40,7 +40,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RolePermissionDO 角色-菜单权限中间表
+ * @see RolePermission 角色-菜单权限中间表
  * @see com.njydsz.userinfo.web.controller.MenuController 菜单 Controller
  */
 @Data
@@ -48,7 +48,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_menu")
-public class MenuDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class Menu extends MpBaseEntity<String> {
 
   /** 父菜单 ID，根节点为 {@code "0"}，支持无限级树形结构 */
   private String parentId;
@@ -59,13 +60,13 @@ public class MenuDO extends MpBaseEntity<String> {
   /** 菜单编码（业务侧引用，全局唯一） */
   private String menuCode;
 
-  /** 菜单类型（DIR=目录 / MenuDO=菜单 / BUTTON=按钮） */
+  /** 菜单类型（DIR=目录 / Menu=菜单 / BUTTON=按钮） */
   private String menuType;
 
-  /** 前端路由路径（menuType=MenuDO 时使用） */
+  /** 前端路由路径（menuType=Menu 时使用） */
   private String path;
 
-  /** 前端组件路径（menuType=MenuDO 时使用，如 {@code "system/user/index"}） */
+  /** 前端组件路径（menuType=Menu 时使用，如 {@code "system/user/index"}） */
   private String component;
 
   /** 菜单图标（Iconify / Element Plus 图标名） */

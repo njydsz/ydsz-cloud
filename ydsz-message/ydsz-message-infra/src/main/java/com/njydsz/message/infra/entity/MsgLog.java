@@ -20,7 +20,7 @@ import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
  *
  * <p>对应数据库表 {@code ydsz_msg_log}，是消息中心的核心事实表。
  *
- * <p>与 {@code MsgLogDO} 的区别：
+ * <p>与 {@code MsgLog} 的区别：
  * <ul>
  *   <li>去除 MyBatis-Plus 持久化注解（{@code @TableName} 等）
  *   <li>状态/优先级/通道字段使用枚举类型替代 String

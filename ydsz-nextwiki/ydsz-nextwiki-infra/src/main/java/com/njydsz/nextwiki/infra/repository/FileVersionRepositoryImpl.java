@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.domain.query.FileVersionQuery;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileVersionDO;
+import com.njydsz.nextwiki.infra.entity.FileVersion;
 import com.njydsz.nextwiki.infra.mapper.FileVersionMapper;
 
 /**
@@ -42,7 +42,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
 
   @Override
   public FileVersionVO save(FileVersionDTO dto) {
-    FileVersionDO entity = converter.dtoToEntity(dto);
+    FileVersion entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
@@ -52,7 +52,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
 
   @Override
   public void update(FileVersionDTO dto) {
-    FileVersionDO entity = converter.dtoToEntityWithId(dto);
+    FileVersion entity = converter.dtoToEntityWithId(dto);
     fileVersionMapper.updateById(entity);
   }
 
@@ -87,7 +87,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
 
   @Override
   public int deleteExcessVersions(String fileNodeId, int keepCount) {
-    List<FileVersionDO> excessVersions =
+    List<FileVersion> excessVersions =
         fileVersionMapper.selectOldestVersions(
             fileNodeId, fileVersionMapper.countByFileNodeId(fileNodeId) - keepCount);
 
@@ -96,7 +96,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
     }
 
     List<String> ids = new ArrayList<>();
-    for (FileVersionDO v : excessVersions) {
+    for (FileVersion v : excessVersions) {
       ids.add(v.getId());
     }
 

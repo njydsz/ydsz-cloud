@@ -12,7 +12,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.UserRecentDO;
+import com.njydsz.nextwiki.infra.entity.UserRecent;
 import com.njydsz.nextwiki.infra.mapper.UserRecentMapper;
 
 /**
@@ -50,7 +50,7 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
     if (dto.getAccessedAt() == null) {
       dto.setAccessedAt(LocalDateTime.now());
     }
-    UserRecentDO entity = nextwikiConverter.toUserRecentDO(dto);
+    UserRecent entity = nextwikiConverter.toUserRecent(dto);
     int inserted = userRecentMapper.insert(entity);
 
     // 清理超出容量限制的旧记录
@@ -63,7 +63,7 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
   @Override
   public List<UserRecentDTO> findByUserIdOrderByAccessedAt(
       String userId, String tenantId, int limit) {
-    List<UserRecentDO> entities =
+    List<UserRecent> entities =
         userRecentMapper.selectByUserIdOrderByAccessedAt(userId, tenantId, limit);
     return entities.stream()
         .map(nextwikiConverter::toUserRecentDTO)
@@ -73,7 +73,7 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
   @Override
   public List<UserRecentDTO> findByUserIdWithPage(
       String userId, String tenantId, int offset, int limit) {
-    List<UserRecentDO> entities =
+    List<UserRecent> entities =
         userRecentMapper.selectByUserIdWithPage(userId, tenantId, offset, limit);
     return entities.stream()
         .map(nextwikiConverter::toUserRecentDTO)

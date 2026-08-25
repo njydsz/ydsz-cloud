@@ -60,7 +60,7 @@ public class SearchQuery implements Serializable {
   @Singular
   private List<String> phrases;
 
-  /** 搜索作用域（all / name / content / TagDO / Path） */
+  /** 搜索作用域（all / name / content / Tag / Path） */
   @Schema(description = "搜索作用域")
   private String scope;
 
@@ -88,7 +88,7 @@ public class SearchQuery implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 字段名（name / content / TagDO / path / suffix） */
+    /** 字段名（name / content / Tag / path / suffix） */
     @Schema(description = "字段名")
     private String field;
 

@@ -16,7 +16,7 @@ import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
  * 消息模板领域实体 — 支持 {@code ${var}} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景。
  *
  * <p>对应数据库表 {@code ydsz_msg_template}。
- * 与 {@code MsgTemplateDO} 的区别：
+ * 与 {@code MsgTemplate} 的区别：
  * <ul>
  *   <li>去除 MyBatis-Plus 持久化注解
  *   <li>通道/状态/审核状态字段使用枚举类型替代 String

@@ -12,7 +12,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.repository.SpaceMemberRepository;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.SpaceMemberDO;
+import com.njydsz.nextwiki.infra.entity.SpaceMember;
 import com.njydsz.nextwiki.infra.mapper.SpaceMemberMapper;
 
 /**
@@ -35,7 +35,7 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
     if (dto.getId() == null || dto.getId().isEmpty()) {
       dto.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    SpaceMemberDO entity = nextwikiConverter.toSpaceMemberDO(dto);
+    SpaceMember entity = nextwikiConverter.toSpaceMember(dto);
     return spaceMemberMapper.insert(entity);
   }
 
@@ -51,13 +51,13 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
 
   @Override
   public Optional<SpaceMemberDTO> findBySpaceIdAndUserId(String spaceId, String userId) {
-    SpaceMemberDO entity = spaceMemberMapper.selectBySpaceIdAndUserId(spaceId, userId);
+    SpaceMember entity = spaceMemberMapper.selectBySpaceIdAndUserId(spaceId, userId);
     return Optional.ofNullable(entity).map(nextwikiConverter::toSpaceMemberDTO);
   }
 
   @Override
   public List<SpaceMemberDTO> findBySpaceId(String spaceId) {
-    List<SpaceMemberDO> entities = spaceMemberMapper.selectBySpaceId(spaceId);
+    List<SpaceMember> entities = spaceMemberMapper.selectBySpaceId(spaceId);
     return entities.stream()
         .map(nextwikiConverter::toSpaceMemberDTO)
         .collect(Collectors.toList());
@@ -65,7 +65,7 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
 
   @Override
   public List<SpaceMemberDTO> findByUserId(String userId) {
-    List<SpaceMemberDO> entities = spaceMemberMapper.selectByUserId(userId);
+    List<SpaceMember> entities = spaceMemberMapper.selectByUserId(userId);
     return entities.stream()
         .map(nextwikiConverter::toSpaceMemberDTO)
         .collect(Collectors.toList());

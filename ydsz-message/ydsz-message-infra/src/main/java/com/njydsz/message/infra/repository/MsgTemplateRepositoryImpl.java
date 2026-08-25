@@ -15,7 +15,7 @@ import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgTemplateDO;
+import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
 
 /**
@@ -36,7 +36,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
 
   @Override
   public boolean save(MsgTemplateDTO dto) {
-    MsgTemplateDO entity = converter.dtoToDO(dto);
+    MsgTemplate entity = converter.dtoToDO(dto);
     return msgTemplateMapper.insert(entity) > 0;
   }
 
@@ -47,7 +47,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
 
   @Override
   public boolean update(MsgTemplateDTO dto) {
-    MsgTemplateDO entity = converter.dtoToDO(dto);
+    MsgTemplate entity = converter.dtoToDO(dto);
     return msgTemplateMapper.updateById(entity) > 0;
   }
 
@@ -58,22 +58,22 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
 
   @Override
   public Optional<MsgTemplateVO> findOne(TemplateQueryDTO query) {
-    QueryWrapper<MsgTemplateDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgTemplate> wrapper = buildWrapper(query);
     return Optional.ofNullable(msgTemplateMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
   @Override
   public PageResponse<List<MsgTemplateVO>> findPage(TemplateQueryDTO query) {
-    Page<MsgTemplateDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<MsgTemplateDO> wrapper = buildWrapper(query);
+    Page<MsgTemplate> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgTemplate> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    IPage<MsgTemplateDO> entityPage = msgTemplateMapper.selectPage(page, wrapper);
+    IPage<MsgTemplate> entityPage = msgTemplateMapper.selectPage(page, wrapper);
     List<MsgTemplateVO> vos = converter.templateDoListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
-  private QueryWrapper<MsgTemplateDO> buildWrapper(TemplateQueryDTO query) {
-    QueryWrapper<MsgTemplateDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgTemplate> buildWrapper(TemplateQueryDTO query) {
+    QueryWrapper<MsgTemplate> wrapper = new QueryWrapper<>();
     if (query.getTemplateCode() != null && !query.getTemplateCode().isBlank()) {
       wrapper.eq("template_code", query.getTemplateCode());
     }

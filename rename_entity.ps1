@@ -64,16 +64,14 @@ foreach ($pair in $renames) {
     $content = $content -replace 'SamlIdpConfigDO', 'SamlIdpConfig'
     $content = $content -replace 'UserAccountDO', 'UserAccount'
     
-    # 2. Add @SuppressWarnings("unchecked") if @SuperBuilder is present
-    if ($content -match '@SuperBuilder' -and $content -notmatch '@SuppressWarnings') {
-        # Add import after the last lombok import
-        $content = $content -replace '(import lombok\.experimental\.SuperBuilder;\r?\n)', "`$1import java.util.SuppressWarnings;`r`n"
-        # Actually, SuppressWarnings is in java.lang, no import needed. Just add annotation.
-        $content = $content -replace '(@SuperBuilder\r?\n)', "@SuppressWarnings(""unchecked"")`r`n$1"
+    # 2. Add @SuppressWarnings("unchecked") if @SuperBuilder is present and not already there
+    if ($content -match '@SuperBuilder' -and $content -notmatch '@SuppressWarnings\("unchecked"\)') {
+        # Add @SuppressWarnings("unchecked") right before the class declaration
+        $content = $content -replace '(public class)', "@SuppressWarnings(""unchecked"")`r`n$1"
     }
     
     # Write new file
-    Set-Content -Path $newFile -Value $content -Encoding UTF8 -NoNewline
+    [System.IO.File]::WriteAllText($newFile, $content, [System.Text.Encoding]::UTF8)
     Write-Host "Created: $newFile"
 }
 

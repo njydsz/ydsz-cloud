@@ -18,8 +18,8 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
-import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
-import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
+import com.njydsz.nextwiki.domain.service.ShareAccessLogmainService;
+import com.njydsz.nextwiki.domain.service.ShareLinkmainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
@@ -30,8 +30,8 @@ import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
  *
  * <p>创建/校验/撤销分享链接，管理访问日志与目标用户。
  *
- * <p>按职责拆分为 {@link ShareLinkDomainService}（链接生命周期）和 {@link
- * ShareAccessLogDomainService}（日志构造）两个领域服务。数据访问由本层通过 Repository 接口完成。
+ * <p>按职责拆分为 {@link ShareLinkmainService}（链接生命周期）和 {@link
+ * ShareAccessLogmainService}（日志构造）两个领域服务。数据访问由本层通过 Repository 接口完成。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -50,8 +50,8 @@ public class ShareApplicationService {
   /** 锁定时长（分钟） */
   private static final long LOCK_DURATION_MINUTES = 30;
 
-  private final ShareLinkDomainService shareLinkDomainService;
-  private final ShareAccessLogDomainService shareAccessLogDomainService;
+  private final ShareLinkmainService ShareLinkmainService;
+  private final ShareAccessLogmainService ShareAccessLogmainService;
   private final ShareLinkRepository shareLinkRepository;
   private final ShareAccessLogRepository shareAccessLogRepository;
   private final ShareRecipientRepository shareRecipientRepository;
@@ -70,7 +70,7 @@ public class ShareApplicationService {
    * @param maxAccessCount 最大访问次数（可为空表示不限）
    * @param userId 创建者 ID
    * @return 分享链接 VO
-   * @throws 由 {@link ShareLinkDomainService} 在节点不存在/无权限时抛出的业务异常
+   * @throws 由 {@link ShareLinkmainService} 在节点不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    */
   @Transactional(rollbackFor = Exception.class)
@@ -88,7 +88,7 @@ public class ShareApplicationService {
     // DDD 合规：密码哈希由应用层（基础设施）完成后传入 domain 层
     String hashedPassword =
         password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null;
-    ShareLinkDomainService.CreateShareResult result = shareLinkDomainService.createShare(
+    ShareLinkmainService.CreateShareResult result = ShareLinkmainService.createShare(
         node, shareType, hashedPassword, expireTime, maxAccessCount, userId);
     ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
     if (result.recipients() != null && !result.recipients().isEmpty()) {
@@ -127,7 +127,7 @@ public class ShareApplicationService {
     // DDD 合规：密码哈希由应用层（基础设施）完成后传入 domain 层
     String hashedPassword =
         password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null;
-    ShareLinkDomainService.CreateShareResult result = shareLinkDomainService.createShare(
+    ShareLinkmainService.CreateShareResult result = ShareLinkmainService.createShare(
         node, shareType, hashedPassword, expireTime, maxAccessCount, targetUserIds, title, userId);
     ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
     if (result.recipients() != null && !result.recipients().isEmpty()) {
@@ -161,7 +161,7 @@ public class ShareApplicationService {
     }
 
     // 领域层验证（状态/过期/访问次数/提取码）
-    ShareLinkDTO verified = shareLinkDomainService.verifyAccess(dto, extractCode);
+    ShareLinkDTO verified = ShareLinkmainService.verifyAccess(dto, extractCode);
 
     // DDD 合规：密码匹配由应用层（BCrypt 基础设施）负责
     if (verified.getPassword() != null && !verified.getPassword().isEmpty()) {
@@ -186,7 +186,7 @@ public class ShareApplicationService {
    *
    * @param shareId 分享 ID
    * @param userId 操作者 ID（需具备该分享的撤销权限）
-   * @throws 由 {@link ShareLinkDomainService} 在分享不存在/无权限时抛出的业务异常
+   * @throws 由 {@link ShareLinkmainService} 在分享不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    */
   @Transactional(rollbackFor = Exception.class)
@@ -194,7 +194,7 @@ public class ShareApplicationService {
     ShareLinkVO vo = shareLinkRepository.findById(shareId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SHARE_NOT_FOUND).data("shareId", shareId));
     ShareLinkDTO dto = shareLinkToDTO(vo);
-    shareLinkDomainService.revoke(dto, userId);
+    ShareLinkmainService.revoke(dto, userId);
     shareLinkRepository.update(dto);
   }
 
@@ -267,7 +267,7 @@ public class ShareApplicationService {
       String failReason) {
     try {
       ShareAccessLogDTO accessLog =
-          shareAccessLogDomainService.buildAccessLog(
+          ShareAccessLogmainService.buildAccessLog(
               shareId, shareCode, fileNodeId, visitorId, visitorIp, userAgent, accessType, status,
               failReason);
       shareAccessLogRepository.save(accessLog);

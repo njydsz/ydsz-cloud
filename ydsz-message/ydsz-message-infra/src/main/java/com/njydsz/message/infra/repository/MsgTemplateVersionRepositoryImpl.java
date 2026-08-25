@@ -11,7 +11,7 @@ import com.njydsz.message.domain.query.MsgTemplateVersionQuery;
 import com.njydsz.message.domain.repository.MsgTemplateVersionRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgTemplateVersionDO;
+import com.njydsz.message.infra.entity.MsgTemplateVersion;
 import com.njydsz.message.infra.mapper.template.MsgTemplateVersionMapper;
 
 /**
@@ -32,13 +32,13 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
 
   @Override
   public boolean save(MsgTemplateVersionVO vo) {
-    MsgTemplateVersionDO entity = voToDO(vo);
+    MsgTemplateVersion entity = voToDO(vo);
     return msgTemplateVersionMapper.insert(entity) > 0;
   }
 
   @Override
   public List<MsgTemplateVersionVO> findList(MsgTemplateVersionQuery query) {
-    QueryWrapper<MsgTemplateVersionDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgTemplateVersion> wrapper = new QueryWrapper<>();
     if (query.getTemplateCode() != null && !query.getTemplateCode().isBlank()) {
       wrapper.eq("template_code", query.getTemplateCode());
     }
@@ -52,7 +52,7 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
 
   @Override
   public Optional<MsgTemplateVersionVO> findOne(MsgTemplateVersionQuery query) {
-    QueryWrapper<MsgTemplateVersionDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgTemplateVersion> wrapper = new QueryWrapper<>();
     if (query.getTemplateCode() != null && !query.getTemplateCode().isBlank()) {
       wrapper.eq("template_code", query.getTemplateCode());
     }
@@ -63,11 +63,11 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
     return Optional.ofNullable(msgTemplateVersionMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
-  private MsgTemplateVersionDO voToDO(MsgTemplateVersionVO vo) {
+  private MsgTemplateVersion voToDO(MsgTemplateVersionVO vo) {
     if (vo == null) {
       return null;
     }
-    MsgTemplateVersionDO entity = new MsgTemplateVersionDO();
+    MsgTemplateVersion entity = new MsgTemplateVersion();
     entity.setId(vo.getId());
     entity.setTemplateCode(vo.getTemplateCode());
     entity.setVersion(vo.getVersion());

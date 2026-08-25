@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -12,7 +12,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 部门实体
  *
  * <p>对应数据库表 {@code ydsz_department}，存储组织架构的部门节点，支持无限级树形结构。 部门是组织维度（区别于角色维度的「权限点」），与用户通过 {@link
- * UserDeptDO} 中间表关联。
+ * UserDept} 中间表关联。
  *
  * <p><b>核心字段：</b>
  *
@@ -23,17 +23,17 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code sortOrder}：同级排序序号（升序）
  * </ul>
  *
- * <p><b>树形查询：</b>前端通过 {@code /api/v1/DepartmentDO/tree} 接口获取整棵部门树（递归构建）。
+ * <p><b>树形查询：</b>前端通过 {@code /api/v1/Department/tree} 接口获取整棵部门树（递归构建）。
  *
- * <p><b>数据权限：</b>{@link RoleDO#dataScope} 通过部门树实现 「本部门及子部门」「仅本部门」「自定义部门」三种隔离范围。
+ * <p><b>数据权限：</b>{@link Role#dataScope} 通过部门树实现 「本部门及子部门」「仅本部门」「自定义部门」三种隔离范围。
  *
  * <p><b>索引设计：</b>唯一索引 {@code uk_dept_code}（{@code dept_code}）， 普通索引 {@code idx_parent_id}（{@code
  * parent_id}）、{@code idx_leader_id}（{@code leader_id}）。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserDeptDO 用户-部门中间表
- * @see UserAccountDO 用户实体（含 {@code deptId} 字段，支持 {@code dept:xxx} 审批人展开）
+ * @see UserDept 用户-部门中间表
+ * @see UserAccount 用户实体（含 {@code deptId} 字段，支持 {@code dept:xxx} 审批人展开）
  * @see com.njydsz.userinfo.web.controller.DepartmentController 部门 Controller
  */
 @Data
@@ -41,7 +41,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_department")
-public class DepartmentDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class Department extends MpBaseEntity<String> {
 
   /** 父部门 ID，根节点为 {@code "0"}，支持无限级树形结构 */
   private String parentId;
@@ -68,7 +69,7 @@ public class DepartmentDO extends MpBaseEntity<String> {
   /**
    * 部门负责人用户 ID。
    *
-   * <p>关联 {@link UserAccountDO#getId()}，用于：① 部门负责人审批；② 部门负责人主页跳转； ③ 部门工作汇报关系链。
+   * <p>关联 {@link UserAccount#getId()}，用于：① 部门负责人审批；② 部门负责人主页跳转； ③ 部门工作汇报关系链。
    */
   private String leaderId;
 }

@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.SpaceTemplateDO;
+import com.njydsz.nextwiki.infra.entity.SpaceTemplate;
 
 /**
  * 空间模板 Mapper
@@ -15,7 +15,7 @@ import com.njydsz.nextwiki.infra.entity.SpaceTemplateDO;
  * @since 1.0.0
  */
 @Mapper
-public interface SpaceTemplateMapper extends BaseMapper<SpaceTemplateDO> {
+public interface SpaceTemplateMapper extends BaseMapper<SpaceTemplate> {
 
   /**
    * 查询可用模板（系统公开模板 + 租户自定义模板，按排序号升序）。
@@ -24,7 +24,7 @@ public interface SpaceTemplateMapper extends BaseMapper<SpaceTemplateDO> {
    * @param category 分类
    * @return 模板列表
    */
-  List<SpaceTemplateDO> selectAvailableTemplates(
+  List<SpaceTemplate> selectAvailableTemplates(
       @Param("tenantId") String tenantId, @Param("category") String category);
 
   /**
@@ -36,7 +36,7 @@ public interface SpaceTemplateMapper extends BaseMapper<SpaceTemplateDO> {
    * @param limit 每页数量
    * @return 模板列表
    */
-  List<SpaceTemplateDO> selectWithPage(
+  List<SpaceTemplate> selectWithPage(
       @Param("tenantId") String tenantId,
       @Param("category") String category,
       @Param("offset") int offset,

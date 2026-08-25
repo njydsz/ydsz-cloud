@@ -10,7 +10,7 @@ import com.njydsz.message.domain.query.MsgVariableSourceQuery;
 import com.njydsz.message.domain.repository.MsgVariableSourceRepository;
 import com.njydsz.message.domain.vo.MsgVariableSourceVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgVariableSourceDO;
+import com.njydsz.message.infra.entity.MsgVariableSource;
 import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
 
 /**
@@ -31,7 +31,7 @@ public class MsgVariableSourceRepositoryImpl implements MsgVariableSourceReposit
 
   @Override
   public List<MsgVariableSourceVO> findList(MsgVariableSourceQuery query) {
-    QueryWrapper<MsgVariableSourceDO> wrapper = new QueryWrapper<>();
+    QueryWrapper<MsgVariableSource> wrapper = new QueryWrapper<>();
     if (query.getTemplateCode() != null && !query.getTemplateCode().isBlank()) {
       wrapper.eq("template_code", query.getTemplateCode());
     }

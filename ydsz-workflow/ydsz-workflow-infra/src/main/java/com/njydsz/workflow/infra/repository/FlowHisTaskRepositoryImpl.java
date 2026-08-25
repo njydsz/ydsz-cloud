@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
+import com.njydsz.workflow.infra.entity.FlowHisTask;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 
 /**
@@ -42,7 +42,7 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
 
   @Override
   public FlowHisTaskVO save(FlowHisTaskVO vo) {
-    FlowHisTaskDO entity = converter.entityToDO(vo);
+    FlowHisTask entity = converter.entityToEntity(vo);
     hisTaskMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -57,10 +57,10 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
   public List<FlowHisTaskVO> findByInstanceId(String instanceId) {
     return converter.flowHisTaskListToVO(
         hisTaskMapper.selectList(
-            new LambdaQueryWrapper<FlowHisTaskDO>()
-                .eq(FlowHisTaskDO::getInstanceId, instanceId)
-                .eq(FlowHisTaskDO::getDeleted, 0)
-                .orderByDesc(FlowHisTaskDO::getOperatedAt)));
+            new LambdaQueryWrapper<FlowHisTask>()
+                .eq(FlowHisTask::getInstanceId, instanceId)
+                .eq(FlowHisTask::getDeleted, 0)
+                .orderByDesc(FlowHisTask::getOperatedAt)));
   }
 
   @Override
@@ -72,10 +72,10 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
   public List<FlowHisTaskVO> findByInstanceAndNode(String instanceId, String nodeCode) {
     return converter.flowHisTaskListToVO(
         hisTaskMapper.selectList(
-            new LambdaQueryWrapper<FlowHisTaskDO>()
-                .eq(FlowHisTaskDO::getInstanceId, instanceId)
-                .eq(FlowHisTaskDO::getNodeCode, nodeCode)
-                .eq(FlowHisTaskDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowHisTask>()
+                .eq(FlowHisTask::getInstanceId, instanceId)
+                .eq(FlowHisTask::getNodeCode, nodeCode)
+                .eq(FlowHisTask::getDeleted, 0)));
   }
 
   @Override
@@ -87,9 +87,9 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
   public List<FlowHisTaskVO> findByAssignee(String userId, int limit) {
     return converter.flowHisTaskListToVO(
         hisTaskMapper.selectList(
-            new LambdaQueryWrapper<FlowHisTaskDO>()
-                .eq(FlowHisTaskDO::getAssigneeId, userId)
-                .orderByDesc(FlowHisTaskDO::getFinishAt)
+            new LambdaQueryWrapper<FlowHisTask>()
+                .eq(FlowHisTask::getAssigneeId, userId)
+                .orderByDesc(FlowHisTask::getFinishAt)
                 .last("LIMIT " + limit)));
   }
 
@@ -168,13 +168,13 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
       String tenantId, String flowCode, LocalDateTime startTime, LocalDateTime endTime, int limit) {
     return converter.flowHisTaskListToVO(
         hisTaskMapper.selectList(
-            new LambdaQueryWrapper<FlowHisTaskDO>()
-                .eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
-                .eq(flowCode != null, FlowHisTaskDO::getFlowCode, flowCode)
-                .ge(startTime != null, FlowHisTaskDO::getFinishAt, startTime)
-                .le(endTime != null, FlowHisTaskDO::getFinishAt, endTime)
-                .eq(FlowHisTaskDO::getDeleted, 0)
-                .orderByDesc(FlowHisTaskDO::getFinishAt)
+            new LambdaQueryWrapper<FlowHisTask>()
+                .eq(tenantId != null, FlowHisTask::getTenantId, tenantId)
+                .eq(flowCode != null, FlowHisTask::getFlowCode, flowCode)
+                .ge(startTime != null, FlowHisTask::getFinishAt, startTime)
+                .le(endTime != null, FlowHisTask::getFinishAt, endTime)
+                .eq(FlowHisTask::getDeleted, 0)
+                .orderByDesc(FlowHisTask::getFinishAt)
                 .last("LIMIT " + limit)));
   }
 
@@ -182,10 +182,10 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
   public List<FlowHisTaskVO> selectRecentByTenant(String tenantId, int limit) {
     return converter.flowHisTaskListToVO(
         hisTaskMapper.selectList(
-            new LambdaQueryWrapper<FlowHisTaskDO>()
-                .eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
-                .eq(FlowHisTaskDO::getDeleted, 0)
-                .orderByDesc(FlowHisTaskDO::getFinishAt)
+            new LambdaQueryWrapper<FlowHisTask>()
+                .eq(tenantId != null, FlowHisTask::getTenantId, tenantId)
+                .eq(FlowHisTask::getDeleted, 0)
+                .orderByDesc(FlowHisTask::getFinishAt)
                 .last("LIMIT " + limit)));
   }
 }

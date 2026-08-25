@@ -45,7 +45,7 @@ import com.njydsz.nextwiki.server.service.TrashApplicationService;
  * <ul>
  *   <li>软删除：{@code FileController#delete} 不会立即清理物理文件，而是移入回收站
  *   <li>保留期：默认 30 天，超期由定时任务自动永久删除（{@code NextwikiScheduledJobs}）
- *   <li>恢复语义：恢复后节点回到删除前的父目录（parentId 已记录在 TrashItemDO 中）
+ *   <li>恢复语义：恢复后节点回到删除前的父目录（parentId 已记录在 TrashItem 中）
  *   <li>级联恢复：恢复文件夹会递归恢复其下所有文件
  * </ul>
  *
@@ -103,7 +103,7 @@ public class TrashController {
    * <p>按删除时间倒序返回该用户的所有回收站项目，包含文件/文件夹的原始信息及删除时间/路径。
    *
    * @param userId 当前用户 ID
-   * @return 统一响应结果，data 为 {@link TrashItemDO} 列表
+   * @return 统一响应结果，data 为 {@link TrashItem} 列表
    */
   @GetMapping("/list")
   @Operation(summary = "查询回收站列表")
@@ -166,7 +166,7 @@ public class TrashController {
   /**
    * 永久删除回收站中的单个项目（不可恢复）。
    *
-   * <p>会级联删除：节点记录 + 历史版本 + 物理文件 + 关联 ACL/TagDO/Comment 等。 高危操作，需 NEXTWIKI_TRASH_PURGE 权限。
+   * <p>会级联删除：节点记录 + 历史版本 + 物理文件 + 关联 ACL/Tag/Comment 等。 高危操作，需 NEXTWIKI_TRASH_PURGE 权限。
    *
    * @param trashItemId 回收站项目 ID
    * @param userId 当前用户 ID

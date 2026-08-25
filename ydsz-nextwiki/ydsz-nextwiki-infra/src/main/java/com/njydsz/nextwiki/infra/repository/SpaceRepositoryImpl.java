@@ -16,7 +16,7 @@ import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.repository.SpaceRepository;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.SpaceDO;
+import com.njydsz.nextwiki.infra.entity.Space;
 import com.njydsz.nextwiki.infra.mapper.SpaceMapper;
 
 /**
@@ -47,38 +47,38 @@ public class SpaceRepositoryImpl implements SpaceRepository {
     if (dto.getId() == null || dto.getId().isEmpty()) {
       dto.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    SpaceDO entity = nextwikiConverter.toSpaceDO(dto);
+    Space entity = nextwikiConverter.toSpace(dto);
     return spaceMapper.insert(entity);
   }
 
   @Override
   public int update(SpaceDTO dto) {
-    SpaceDO entity = nextwikiConverter.toSpaceDO(dto);
+    Space entity = nextwikiConverter.toSpace(dto);
     return spaceMapper.updateById(entity);
   }
 
   @Override
   public Optional<SpaceVO> findById(String id) {
-    SpaceDO entity = spaceMapper.selectById(id);
+    Space entity = spaceMapper.selectById(id);
     return Optional.ofNullable(entity).map(nextwikiConverter::entityToVO);
   }
 
   @Override
   public Optional<SpaceVO> findByTenantIdAndName(String tenantId, String name) {
-    SpaceDO entity = spaceMapper.selectByTenantIdAndName(tenantId, name);
+    Space entity = spaceMapper.selectByTenantIdAndName(tenantId, name);
     return Optional.ofNullable(entity).map(nextwikiConverter::entityToVO);
   }
 
   @Override
   public List<SpaceVO> findByTenantId(String tenantId) {
-    List<SpaceDO> entities = spaceMapper.selectByTenantId(tenantId);
+    List<Space> entities = spaceMapper.selectByTenantId(tenantId);
     return nextwikiConverter.spaceListToVO(entities);
   }
 
   @Override
   public PageResponse<List<SpaceVO>> findByTenantIdWithPage(String tenantId, int offset, int limit) {
-    Page<SpaceDO> pageParam = new Page<>(offset / limit + 1, limit);
-    IPage<SpaceDO> result = spaceMapper.selectByTenantIdWithPage(pageParam, tenantId, offset, limit);
+    Page<Space> pageParam = new Page<>(offset / limit + 1, limit);
+    IPage<Space> result = spaceMapper.selectByTenantIdWithPage(pageParam, tenantId, offset, limit);
     List<SpaceVO> vos = nextwikiConverter.spaceListToVO(result.getRecords());
     Page<SpaceVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);

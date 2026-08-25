@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowUserDO;
+import com.njydsz.workflow.infra.entity.FlowUser;
 import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
 
   @Override
   public FlowUserVO save(FlowUserVO vo) {
-    FlowUserDO entity = converter.entityToDO(vo);
+    FlowUser entity = converter.entityToEntity(vo);
     userMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -48,7 +48,7 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
 
   @Override
   public List<FlowUserVO> saveBatch(List<FlowUserVO> users) {
-    List<FlowUserDO> entities = users.stream().map(converter::entityToDO).toList();
+    List<FlowUser> entities = users.stream().map(converter::entityToEntity).toList();
     entities.forEach(userMapper::insert);
     return users;
   }
@@ -62,19 +62,19 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
   public List<FlowUserVO> findByInstanceId(String instanceId) {
     return converter.flowUserListToVO(
         userMapper.selectList(
-            new LambdaQueryWrapper<FlowUserDO>()
-                .eq(FlowUserDO::getInstanceId, instanceId)
-                .eq(FlowUserDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowUser>()
+                .eq(FlowUser::getInstanceId, instanceId)
+                .eq(FlowUser::getDeleted, 0)));
   }
 
   @Override
   public List<FlowUserVO> findByInstanceAndType(String instanceId, String userType) {
     return converter.flowUserListToVO(
         userMapper.selectList(
-            new LambdaQueryWrapper<FlowUserDO>()
-                .eq(FlowUserDO::getInstanceId, instanceId)
-                .eq(FlowUserDO::getUserType, userType)
-                .eq(FlowUserDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowUser>()
+                .eq(FlowUser::getInstanceId, instanceId)
+                .eq(FlowUser::getUserType, userType)
+                .eq(FlowUser::getDeleted, 0)));
   }
 
   @Override
@@ -84,7 +84,7 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
 
   @Override
   public FlowUserVO update(FlowUserVO vo) {
-    FlowUserDO entity = converter.entityToDO(vo);
+    FlowUser entity = converter.entityToEntity(vo);
     userMapper.updateById(entity);
     return vo;
   }

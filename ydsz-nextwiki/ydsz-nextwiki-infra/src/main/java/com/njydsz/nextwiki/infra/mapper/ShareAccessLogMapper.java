@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.ShareAccessLogDO;
+import com.njydsz.nextwiki.infra.entity.ShareAccessLog;
 
 /**
  * 分享访问日志 Mapper。
@@ -16,7 +16,7 @@ import com.njydsz.nextwiki.infra.entity.ShareAccessLogDO;
  * @since 1.0.0
  */
 @Mapper
-public interface ShareAccessLogMapper extends BaseMapper<ShareAccessLogDO> {
+public interface ShareAccessLogMapper extends BaseMapper<ShareAccessLog> {
 
   /**
    * 查询分享链接的访问日志列表。
@@ -25,7 +25,7 @@ public interface ShareAccessLogMapper extends BaseMapper<ShareAccessLogDO> {
    * @param limit 返回条数限制
    * @return 访问日志列表
    */
-  List<ShareAccessLogDO> selectByShareId(@Param("shareId") String shareId, @Param("limit") int limit);
+  List<ShareAccessLog> selectByShareId(@Param("shareId") String shareId, @Param("limit") int limit);
 
   /**
    * 统计分享链接的访问次数（按日期分组）。

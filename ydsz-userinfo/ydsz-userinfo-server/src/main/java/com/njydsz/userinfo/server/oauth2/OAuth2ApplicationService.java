@@ -93,7 +93,7 @@ public class OAuth2ApplicationService {
     OAuth2Application saved = applicationRepository.save(application);
 
     // 返回包含明文密钥的应用对象（仅创建时返回）
-    log.info("OAuth2 application registered: clientId={}, clientName={}", clientId, clientName);
+    log.info("OAuth2 application registered: clientId={}, clientName={}", clientId, command.clientName());
     return saved.withPlainSecret(plainClientSecret);
   }
 

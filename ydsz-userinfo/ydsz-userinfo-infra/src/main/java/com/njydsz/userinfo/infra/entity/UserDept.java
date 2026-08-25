@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -32,9 +32,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <pre>{@code
  * // 查询用户主部门 ID
  * String primaryDeptId = userDeptMapper.selectOne(
- *     new LambdaQueryWrapper<UserDeptDO>()
- *         .eq(UserDeptDO::getUserId, userId)
- *         .eq(UserDeptDO::getIsPrimary, 1)
+ *     new LambdaQueryWrapper<UserDept>()
+ *         .eq(UserDept::getUserId, userId)
+ *         .eq(UserDept::getIsPrimary, 1)
  * ).getDeptId();
  * }</pre>
  *
@@ -42,20 +42,21 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserAccountDO 用户实体
- * @see DepartmentDO 部门实体
+ * @see UserAccount 用户实体
+ * @see Department 部门实体
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_user_dept")
-public class UserDeptDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class UserDept extends MpBaseEntity<String> {
 
-  /** 用户 ID，关联 {@link UserAccountDO#getId()} */
+  /** 用户 ID，关联 {@link UserAccount#getId()} */
   private String userId;
 
-  /** 部门 ID，关联 {@link DepartmentDO#getId()} */
+  /** 部门 ID，关联 {@link Department#getId()} */
   private String deptId;
 
   /**

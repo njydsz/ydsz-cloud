@@ -15,7 +15,7 @@ import com.njydsz.message.domain.dto.MsgLogDTO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgLogDO;
+import com.njydsz.message.infra.entity.MsgLog;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 
 /**
@@ -47,25 +47,25 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
 
   @Override
   public boolean save(MsgLogDTO dto) {
-    MsgLogDO entity = converter.dtoToDO(dto);
+    MsgLog entity = converter.dtoToDO(dto);
     return msgLogMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean save(MsgLogVO vo) {
-    MsgLogDO entity = converter.voToDO(vo);
+    MsgLog entity = converter.voToDO(vo);
     return msgLogMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgLogDTO dto) {
-    MsgLogDO entity = converter.dtoToDO(dto);
+    MsgLog entity = converter.dtoToDO(dto);
     return msgLogMapper.updateById(entity) > 0;
   }
 
   @Override
   public boolean update(MsgLogVO vo) {
-    MsgLogDO entity = converter.voToDO(vo);
+    MsgLog entity = converter.voToDO(vo);
     return msgLogMapper.updateById(entity) > 0;
   }
 
@@ -78,37 +78,37 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
 
   @Override
   public Optional<MsgLogVO> findById(String id) {
-    MsgLogDO entity = msgLogMapper.selectById(id);
+    MsgLog entity = msgLogMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::doToVO);
   }
 
   @Override
   public Optional<MsgLogVO> findOne(MessageLogQueryDTO query) {
-    QueryWrapper<MsgLogDO> wrapper = buildWrapper(query);
-    MsgLogDO entity = msgLogMapper.selectOne(wrapper);
+    QueryWrapper<MsgLog> wrapper = buildWrapper(query);
+    MsgLog entity = msgLogMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::doToVO);
   }
 
   @Override
   public PageResponse<List<MsgLogVO>> findPage(MessageLogQueryDTO query) {
-    Page<MsgLogDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<MsgLogDO> wrapper = buildWrapper(query);
+    Page<MsgLog> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgLog> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    IPage<MsgLogDO> entityPage = msgLogMapper.selectPage(page, wrapper);
+    IPage<MsgLog> entityPage = msgLogMapper.selectPage(page, wrapper);
     List<MsgLogVO> vos = converter.logDoListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override
   public List<MsgLogVO> findList(MessageLogQueryDTO query) {
-    QueryWrapper<MsgLogDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgLog> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     return converter.logDoListToVO(msgLogMapper.selectList(wrapper));
   }
 
   @Override
   public long count(MessageLogQueryDTO query) {
-    QueryWrapper<MsgLogDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgLog> wrapper = buildWrapper(query);
     Long count = msgLogMapper.selectCount(wrapper);
     return count != null ? count : 0L;
   }
@@ -118,14 +118,14 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     if (list == null || list.isEmpty()) {
       return false;
     }
-    List<MsgLogDO> entities = converter.logDtoListToDO(list);
+    List<MsgLog> entities = converter.logDtoListToDO(list);
     return msgLogMapper.insertBatch(entities) > 0;
   }
 
   // ===== 私有辅助方法 =====
 
-  private QueryWrapper<MsgLogDO> buildWrapper(MessageLogQueryDTO query) {
-    QueryWrapper<MsgLogDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgLog> buildWrapper(MessageLogQueryDTO query) {
+    QueryWrapper<MsgLog> wrapper = new QueryWrapper<>();
     if (query == null) {
       return wrapper;
     }

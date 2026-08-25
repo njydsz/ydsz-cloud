@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
 import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
 import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.ShareAccessLogDO;
+import com.njydsz.nextwiki.infra.entity.ShareAccessLog;
 import com.njydsz.nextwiki.infra.mapper.ShareAccessLogMapper;
 
 /**
@@ -40,7 +40,7 @@ public class ShareAccessLogRepositoryImpl implements ShareAccessLogRepository {
 
   @Override
   public ShareAccessLogVO save(ShareAccessLogDTO dto) {
-    ShareAccessLogDO entity = converter.dtoToEntity(dto);
+    ShareAccessLog entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }

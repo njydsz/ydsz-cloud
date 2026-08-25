@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowTemplateDO;
+import com.njydsz.workflow.infra.entity.FlowTemplate;
 
 /**
  * 流程模板 Mapper
@@ -29,12 +29,12 @@ import com.njydsz.workflow.infra.entity.FlowTemplateDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowTemplateDO 流程模板实体
+ * @see com.njydsz.workflow.infra.entity.FlowTemplate 流程模板实体
  * @see com.njydsz.workflow.server.service.FlowTemplateService 流程模板 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowTemplateMapper extends BaseMapper<FlowTemplateDO> {
+public interface FlowTemplateMapper extends BaseMapper<FlowTemplate> {
 
   /**
    * 按分类查询模板列表（按 sort_order 升序）
@@ -44,7 +44,7 @@ public interface FlowTemplateMapper extends BaseMapper<FlowTemplateDO> {
    * @param category 分类（可空，为空查全部）
    * @return 模板列表
    */
-  List<FlowTemplateDO> selectByCategory(@Param("category") String category);
+  List<FlowTemplate> selectByCategory(@Param("category") String category);
 
   /**
    * 按模板编码查询最新版本
@@ -54,7 +54,7 @@ public interface FlowTemplateMapper extends BaseMapper<FlowTemplateDO> {
    * @param templateCode 模板编码
    * @return 模板实体（最新版本），不存在返回 null
    */
-  FlowTemplateDO selectByTemplateCode(@Param("templateCode") String templateCode);
+  FlowTemplate selectByTemplateCode(@Param("templateCode") String templateCode);
 
   /**
    * 增加模板使用次数
@@ -70,7 +70,7 @@ public interface FlowTemplateMapper extends BaseMapper<FlowTemplateDO> {
    * @param templateCode 模板编码
    * @return 全部版本列表（最新版本在首位）
    */
-  List<FlowTemplateDO> selectVersionsByTemplateCode(@Param("templateCode") String templateCode);
+  List<FlowTemplate> selectVersionsByTemplateCode(@Param("templateCode") String templateCode);
 
   /**
    * P2-9: 按父模板 ID 查询继承关系列表。
@@ -78,7 +78,7 @@ public interface FlowTemplateMapper extends BaseMapper<FlowTemplateDO> {
    * @param parentTemplateId 父模板主键 ID
    * @return 继承自父模板的子模板列表
    */
-  List<FlowTemplateDO> selectByParentTemplateId(@Param("parentTemplateId") String parentTemplateId);
+  List<FlowTemplate> selectByParentTemplateId(@Param("parentTemplateId") String parentTemplateId);
 
   /**
    * P2-9: 将指定 template_code 的所有版本标记为非最新（is_latest=0）。

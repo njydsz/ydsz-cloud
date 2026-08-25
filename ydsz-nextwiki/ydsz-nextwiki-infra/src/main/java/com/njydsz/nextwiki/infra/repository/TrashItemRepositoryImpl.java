@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.TrashItemDO;
+import com.njydsz.nextwiki.infra.entity.TrashItem;
 import com.njydsz.nextwiki.infra.mapper.TrashItemMapper;
 
 /**
@@ -40,7 +40,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
 
   @Override
   public TrashItemVO save(TrashItemDTO dto) {
-    TrashItemDO entity = converter.dtoToEntity(dto);
+    TrashItem entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
@@ -53,9 +53,9 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
     if (dtos == null || dtos.isEmpty()) {
       return 0;
     }
-    List<TrashItemDO> entities = converter.trashItemDtosToEntities(dtos);
+    List<TrashItem> entities = converter.trashItemDtosToEntities(dtos);
     int count = 0;
-    for (TrashItemDO entity : entities) {
+    for (TrashItem entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
         entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }
@@ -88,7 +88,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
 
   @Override
   public void update(TrashItemDTO dto) {
-    TrashItemDO entity = converter.dtoToEntityWithId(dto);
+    TrashItem entity = converter.dtoToEntityWithId(dto);
     trashItemMapper.updateById(entity);
   }
 

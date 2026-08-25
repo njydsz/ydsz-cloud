@@ -33,7 +33,7 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
  * <p>提供网盘文件的综合搜索能力，支持多维度（文件名/路径/标签/内容）搜索：
  *
  * <ul>
- *   <li>{@code POST /search} - 综合搜索（支持 scope 限定：name/content/TagDO/all）
+ *   <li>{@code POST /search} - 综合搜索（支持 scope 限定：name/content/Tag/all）
  *   <li>{@code POST /search/rebuild} - 重建全量索引（运维/修复用）
  * </ul>
  *

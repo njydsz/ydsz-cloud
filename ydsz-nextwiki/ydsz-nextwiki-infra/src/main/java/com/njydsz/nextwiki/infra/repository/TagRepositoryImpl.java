@@ -13,8 +13,8 @@ import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.vo.FileTagVO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileTagDO;
-import com.njydsz.nextwiki.infra.entity.TagDO;
+import com.njydsz.nextwiki.infra.entity.FileTag;
+import com.njydsz.nextwiki.infra.entity.Tag;
 import com.njydsz.nextwiki.infra.mapper.TagMapper;
 
 /**
@@ -42,7 +42,7 @@ public class TagRepositoryImpl implements TagRepository {
 
   @Override
   public TagVO save(TagDTO dto) {
-    TagDO entity = converter.dtoToEntity(dto);
+    Tag entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
@@ -67,8 +67,8 @@ public class TagRepositoryImpl implements TagRepository {
 
   @Override
   public void bindTag(String fileNodeId, String tagId) {
-    FileTagDO fileTag =
-        FileTagDO.builder()
+    FileTag fileTag =
+        FileTag.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .fileNodeId(fileNodeId)
             .tagId(tagId)

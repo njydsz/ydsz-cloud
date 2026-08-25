@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.ShareLinkDO;
+import com.njydsz.nextwiki.infra.entity.ShareLink;
 import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
 
 /**
@@ -40,7 +40,7 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
 
   @Override
   public ShareLinkVO save(ShareLinkDTO dto) {
-    ShareLinkDO entity = converter.dtoToEntity(dto);
+    ShareLink entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
@@ -71,7 +71,7 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
 
   @Override
   public void update(ShareLinkDTO dto) {
-    ShareLinkDO entity = converter.dtoToEntityWithId(dto);
+    ShareLink entity = converter.dtoToEntityWithId(dto);
     shareLinkMapper.updateById(entity);
   }
 

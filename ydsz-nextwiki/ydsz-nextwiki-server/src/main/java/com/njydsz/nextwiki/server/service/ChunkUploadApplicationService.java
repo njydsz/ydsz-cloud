@@ -43,7 +43,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
-import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
+import com.njydsz.nextwiki.domain.service.FileVersionmainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
@@ -76,7 +76,7 @@ public class ChunkUploadApplicationService {
   private final FileVersionRepository versionRepository;
   private final QuotaDomainService quotaDomainService;
   private final StorageQuotaRepository storageQuotaRepository;
-  private final FileVersionDomainService versionDomainService;
+  private final FileVersionmainService versionDomainService;
   private final FolderDomainService folderDomainService;
   private final ApplicationEventPublisher eventPublisher;
   private final NextwikiProperties properties;
@@ -115,7 +115,7 @@ public class ChunkUploadApplicationService {
       FileVersionRepository versionRepository,
       QuotaDomainService quotaDomainService,
       StorageQuotaRepository storageQuotaRepository,
-      FileVersionDomainService versionDomainService,
+      FileVersionmainService versionDomainService,
       FolderDomainService folderDomainService,
       ApplicationEventPublisher eventPublisher,
       NextwikiProperties properties,
@@ -370,7 +370,7 @@ public class ChunkUploadApplicationService {
       List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
       FileNodeVO savedVO = saved;
-      FileVersionDomainService.VersionCreateResult versionResult =
+      FileVersionmainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               savedVO,
               existingVersionDTOs,
@@ -430,7 +430,7 @@ public class ChunkUploadApplicationService {
       List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
       FileNodeVO savedVO = saved;
-      FileVersionDomainService.VersionCreateResult versionResult =
+      FileVersionmainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               savedVO,
               existingVersionDTOs,

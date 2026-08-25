@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.domain.query.FileAclQuery;
 import com.njydsz.nextwiki.domain.repository.FileAclRepository;
 import com.njydsz.nextwiki.domain.vo.FileAclVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileAclDO;
+import com.njydsz.nextwiki.infra.entity.FileAcl;
 import com.njydsz.nextwiki.infra.mapper.FileAclMapper;
 
 /**
@@ -41,7 +41,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
 
   @Override
   public FileAclVO save(FileAclDTO dto) {
-    FileAclDO entity = converter.dtoToEntity(dto);
+    FileAcl entity = converter.dtoToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
@@ -82,8 +82,8 @@ public class FileAclRepositoryImpl implements FileAclRepository {
     if (dtos == null || dtos.isEmpty()) {
       return;
     }
-    List<FileAclDO> entities = converter.fileAclDtosToEntities(dtos);
-    for (FileAclDO entity : entities) {
+    List<FileAcl> entities = converter.fileAclDtosToEntities(dtos);
+    for (FileAcl entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
         entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }

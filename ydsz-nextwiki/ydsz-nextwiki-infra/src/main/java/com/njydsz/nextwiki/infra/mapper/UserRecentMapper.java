@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.UserRecentDO;
+import com.njydsz.nextwiki.infra.entity.UserRecent;
 
 /**
  * 用户最近访问 Mapper
@@ -29,7 +29,7 @@ import com.njydsz.nextwiki.infra.entity.UserRecentDO;
  * @since 1.0.0
  */
 @Mapper
-public interface UserRecentMapper extends BaseMapper<UserRecentDO> {
+public interface UserRecentMapper extends BaseMapper<UserRecent> {
 
   /**
    * 查询用户最近访问列表（按访问时间倒序）。
@@ -39,7 +39,7 @@ public interface UserRecentMapper extends BaseMapper<UserRecentDO> {
    * @param limit 返回数量限制
    * @return 最近访问列表
    */
-  List<UserRecentDO> selectByUserIdOrderByAccessedAt(
+  List<UserRecent> selectByUserIdOrderByAccessedAt(
       @Param("userId") String userId,
       @Param("tenantId") String tenantId,
       @Param("limit") int limit);
@@ -53,7 +53,7 @@ public interface UserRecentMapper extends BaseMapper<UserRecentDO> {
    * @param limit 每页数量
    * @return 最近访问分页列表
    */
-  List<UserRecentDO> selectByUserIdWithPage(
+  List<UserRecent> selectByUserIdWithPage(
       @Param("userId") String userId,
       @Param("tenantId") String tenantId,
       @Param("offset") int offset,

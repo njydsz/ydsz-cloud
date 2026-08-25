@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowAdminRoleRepository;
 import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
+import com.njydsz.workflow.infra.entity.FlowAdminRole;
 import com.njydsz.workflow.infra.mapper.FlowAdminRoleMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
 
   @Override
   public FlowAdminRoleVO save(FlowAdminRoleVO vo) {
-    FlowAdminRoleDO entity = converter.entityToDO(vo);
+    FlowAdminRole entity = converter.entityToEntity(vo);
     adminRoleMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -55,18 +55,18 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
   public List<FlowAdminRoleVO> findByUserId(String userId) {
     return converter.flowAdminRoleListToVO(
         adminRoleMapper.selectList(
-            new LambdaQueryWrapper<FlowAdminRoleDO>()
-                .eq(FlowAdminRoleDO::getUserId, userId)
-                .eq(FlowAdminRoleDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowAdminRole>()
+                .eq(FlowAdminRole::getUserId, userId)
+                .eq(FlowAdminRole::getDeleted, 0)));
   }
 
   @Override
   public List<FlowAdminRoleVO> findByRoleCode(String roleCode) {
     return converter.flowAdminRoleListToVO(
         adminRoleMapper.selectList(
-            new LambdaQueryWrapper<FlowAdminRoleDO>()
-                .eq(FlowAdminRoleDO::getRoleCode, roleCode)
-                .eq(FlowAdminRoleDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowAdminRole>()
+                .eq(FlowAdminRole::getRoleCode, roleCode)
+                .eq(FlowAdminRole::getDeleted, 0)));
   }
 
   @Override
@@ -76,7 +76,7 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
 
   @Override
   public FlowAdminRoleVO update(FlowAdminRoleVO vo) {
-    FlowAdminRoleDO entity = converter.entityToDO(vo);
+    FlowAdminRole entity = converter.entityToEntity(vo);
     adminRoleMapper.updateById(entity);
     return vo;
   }
@@ -85,10 +85,10 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
   public Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode) {
     return adminRoleMapper
         .selectList(
-            new LambdaQueryWrapper<FlowAdminRoleDO>()
-                .eq(FlowAdminRoleDO::getUserId, userId)
-                .eq(FlowAdminRoleDO::getRoleCode, roleCode)
-                .eq(FlowAdminRoleDO::getDeleted, 0)
+            new LambdaQueryWrapper<FlowAdminRole>()
+                .eq(FlowAdminRole::getUserId, userId)
+                .eq(FlowAdminRole::getRoleCode, roleCode)
+                .eq(FlowAdminRole::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -99,11 +99,11 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
   public Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode, String tenantId) {
     return adminRoleMapper
         .selectList(
-            new LambdaQueryWrapper<FlowAdminRoleDO>()
-                .eq(FlowAdminRoleDO::getUserId, userId)
-                .eq(FlowAdminRoleDO::getRoleCode, roleCode)
-                .eq(tenantId != null, FlowAdminRoleDO::getTenantId, tenantId)
-                .eq(FlowAdminRoleDO::getDeleted, 0)
+            new LambdaQueryWrapper<FlowAdminRole>()
+                .eq(FlowAdminRole::getUserId, userId)
+                .eq(FlowAdminRole::getRoleCode, roleCode)
+                .eq(tenantId != null, FlowAdminRole::getTenantId, tenantId)
+                .eq(FlowAdminRole::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -114,9 +114,9 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
   public List<FlowAdminRoleVO> findByUserId(String userId, String tenantId) {
     return converter.flowAdminRoleListToVO(
         adminRoleMapper.selectList(
-            new LambdaQueryWrapper<FlowAdminRoleDO>()
-                .eq(FlowAdminRoleDO::getUserId, userId)
-                .eq(tenantId != null, FlowAdminRoleDO::getTenantId, tenantId)
-                .eq(FlowAdminRoleDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowAdminRole>()
+                .eq(FlowAdminRole::getUserId, userId)
+                .eq(tenantId != null, FlowAdminRole::getTenantId, tenantId)
+                .eq(FlowAdminRole::getDeleted, 0)));
   }
 }

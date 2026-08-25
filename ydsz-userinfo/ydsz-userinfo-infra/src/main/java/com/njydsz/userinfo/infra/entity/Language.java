@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -26,9 +26,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>典型使用：</b>
  *
  * <ul>
- *   <li>前端 i18n 加载：从 {@code /api/v1/LanguageDO/list} 获取所有启用语言，构造语言切换器
+ *   <li>前端 i18n 加载：从 {@code /api/v1/Language/list} 获取所有启用语言，构造语言切换器
  *   <li>后端消息文案：通过 {@code LocaleContextHolder} 获取当前语言，匹配 {@code ydsz_i18n_message} 表
- *   <li>浏览器语言探测：根据 {@code Accept-LanguageDO} 头选择最匹配语言
+ *   <li>浏览器语言探测：根据 {@code Accept-Language} 头选择最匹配语言
  * </ul>
  *
  * <p><b>索引设计：</b>唯一索引 {@code uk_language_code}（{@code language_code}）。
@@ -42,7 +42,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_language")
-public class LanguageDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class Language extends MpBaseEntity<String> {
 
   /**
    * 语言编码（ISO 639-1 + ISO 3166-1 区域码）。

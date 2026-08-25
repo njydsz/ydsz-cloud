@@ -15,7 +15,7 @@ import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgNotificationDO;
+import com.njydsz.message.infra.entity.MsgNotification;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
 
 /**
@@ -39,7 +39,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     if (list == null || list.isEmpty()) {
       return false;
     }
-    List<MsgNotificationDO> entities = converter.notificationDtoListToDO(list);
+    List<MsgNotification> entities = converter.notificationDtoListToDO(list);
     return msgNotificationMapper.insertBatch(entities) > 0;
   }
 
@@ -50,30 +50,30 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
 
   @Override
   public boolean update(MsgNotificationDTO dto) {
-    MsgNotificationDO entity = converter.dtoToDO(dto);
+    MsgNotification entity = converter.dtoToDO(dto);
     return msgNotificationMapper.updateById(entity) > 0;
   }
 
   @Override
   public PageResponse<List<MsgNotificationVO>> findPage(NotificationQueryDTO query) {
-    Page<MsgNotificationDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    QueryWrapper<MsgNotificationDO> wrapper = buildWrapper(query);
+    Page<MsgNotification> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgNotification> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    IPage<MsgNotificationDO> entityPage = msgNotificationMapper.selectPage(page, wrapper);
+    IPage<MsgNotification> entityPage = msgNotificationMapper.selectPage(page, wrapper);
     List<MsgNotificationVO> vos = converter.notificationDoListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override
   public List<MsgNotificationVO> findList(NotificationQueryDTO query) {
-    QueryWrapper<MsgNotificationDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgNotification> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     return converter.notificationDoListToVO(msgNotificationMapper.selectList(wrapper));
   }
 
   @Override
   public long count(NotificationQueryDTO query) {
-    QueryWrapper<MsgNotificationDO> wrapper = buildWrapper(query);
+    QueryWrapper<MsgNotification> wrapper = buildWrapper(query);
     Long count = msgNotificationMapper.selectCount(wrapper);
     return count != null ? count : 0L;
   }
@@ -99,8 +99,8 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     return count != null ? count : 0L;
   }
 
-  private QueryWrapper<MsgNotificationDO> buildWrapper(NotificationQueryDTO query) {
-    QueryWrapper<MsgNotificationDO> wrapper = new QueryWrapper<>();
+  private QueryWrapper<MsgNotification> buildWrapper(NotificationQueryDTO query) {
+    QueryWrapper<MsgNotification> wrapper = new QueryWrapper<>();
     if (query.getCategory() != null && !query.getCategory().isBlank()) {
       wrapper.eq("category", query.getCategory());
     }

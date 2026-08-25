@@ -12,7 +12,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
 import com.njydsz.nextwiki.domain.repository.SpaceTemplateRepository;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.SpaceTemplateDO;
+import com.njydsz.nextwiki.infra.entity.SpaceTemplate;
 import com.njydsz.nextwiki.infra.mapper.SpaceTemplateMapper;
 
 /**
@@ -35,25 +35,25 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
     if (dto.getId() == null || dto.getId().isEmpty()) {
       dto.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    SpaceTemplateDO entity = nextwikiConverter.toSpaceTemplateDO(dto);
+    SpaceTemplate entity = nextwikiConverter.toSpaceTemplate(dto);
     return spaceTemplateMapper.insert(entity);
   }
 
   @Override
   public int update(SpaceTemplateDTO dto) {
-    SpaceTemplateDO entity = nextwikiConverter.toSpaceTemplateDO(dto);
+    SpaceTemplate entity = nextwikiConverter.toSpaceTemplate(dto);
     return spaceTemplateMapper.updateById(entity);
   }
 
   @Override
   public Optional<SpaceTemplateDTO> findById(String id) {
-    SpaceTemplateDO entity = spaceTemplateMapper.selectById(id);
+    SpaceTemplate entity = spaceTemplateMapper.selectById(id);
     return Optional.ofNullable(entity).map(nextwikiConverter::toSpaceTemplateDTO);
   }
 
   @Override
   public List<SpaceTemplateDTO> findAvailableTemplates(String tenantId, String category) {
-    List<SpaceTemplateDO> entities = spaceTemplateMapper.selectAvailableTemplates(tenantId, category);
+    List<SpaceTemplate> entities = spaceTemplateMapper.selectAvailableTemplates(tenantId, category);
     return entities.stream()
         .map(nextwikiConverter::toSpaceTemplateDTO)
         .collect(Collectors.toList());
@@ -61,7 +61,7 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
 
   @Override
   public List<SpaceTemplateDTO> findWithPage(String tenantId, String category, int offset, int limit) {
-    List<SpaceTemplateDO> entities = spaceTemplateMapper.selectWithPage(tenantId, category, offset, limit);
+    List<SpaceTemplate> entities = spaceTemplateMapper.selectWithPage(tenantId, category, offset, limit);
     return entities.stream()
         .map(nextwikiConverter::toSpaceTemplateDTO)
         .collect(Collectors.toList());
@@ -74,7 +74,7 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
 
   @Override
   public int incrementUsageCount(String id) {
-    SpaceTemplateDO entity = spaceTemplateMapper.selectById(id);
+    SpaceTemplate entity = spaceTemplateMapper.selectById(id);
     if (entity != null) {
       int count = entity.getUsageCount() != null ? entity.getUsageCount() : 0;
       entity.setUsageCount(count + 1);

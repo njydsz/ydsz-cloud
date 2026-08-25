@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import java.util.List;
 import java.util.Set;
@@ -33,7 +33,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_oauth2_application", autoResultMap = true)
-public class OAuth2ApplicationDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class OAuth2Application extends MpBaseEntity<String> {
 
   /** 客户端 ID（唯一标识） */
   private String clientId;

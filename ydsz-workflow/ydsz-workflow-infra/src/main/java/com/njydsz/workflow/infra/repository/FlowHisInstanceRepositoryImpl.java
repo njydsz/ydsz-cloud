@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowHisInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowHisInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowHisInstance;
 import com.njydsz.workflow.infra.mapper.FlowHisInstanceMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowHisInstanceRepositoryImpl implements FlowHisInstanceRepository 
 
   @Override
   public FlowHisInstanceVO save(FlowHisInstanceVO vo) {
-    FlowHisInstanceDO entity = converter.entityToDO(vo);
+    FlowHisInstance entity = converter.entityToEntity(vo);
     hisInstanceMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;

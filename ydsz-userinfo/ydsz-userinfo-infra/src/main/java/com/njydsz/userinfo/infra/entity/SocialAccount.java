@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import java.time.LocalDateTime;
 
@@ -41,7 +41,8 @@ import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_social_account")
-public class SocialAccountDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class SocialAccount extends MpBaseEntity<String> {
 
   /** 关联用户 ID（关联 {@code ydsz_user_account.id}） */
   private String userId;

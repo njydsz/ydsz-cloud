@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.template;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgTemplateVersionDO;
+import com.njydsz.message.infra.entity.MsgTemplateVersion;
 
 /**
  * 消息模板版本历史 Mapper
@@ -30,4 +30,4 @@ import com.njydsz.message.infra.entity.MsgTemplateVersionDO;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface MsgTemplateVersionMapper extends BaseMapper<MsgTemplateVersionDO> {}
+public interface MsgTemplateVersionMapper extends BaseMapper<MsgTemplateVersion> {}

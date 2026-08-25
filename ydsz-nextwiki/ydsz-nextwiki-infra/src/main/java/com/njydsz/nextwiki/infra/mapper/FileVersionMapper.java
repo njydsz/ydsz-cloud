@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.FileVersionDO;
+import com.njydsz.nextwiki.infra.entity.FileVersion;
 
 /**
  * 文件版本 Mapper
@@ -31,22 +31,22 @@ import com.njydsz.nextwiki.infra.entity.FileVersionDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.nextwiki.infra.entity.FileVersionDO 文件版本实体
+ * @see com.njydsz.nextwiki.infra.entity.FileVersion 文件版本实体
  * @see com.njydsz.nextwiki.server.service.FileVersionService 文件版本 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FileVersionMapper extends BaseMapper<FileVersionDO> {
+public interface FileVersionMapper extends BaseMapper<FileVersion> {
 
   /** 查询文件的版本历史 */
-  List<FileVersionDO> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
+  List<FileVersion> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /** 查询指定版本 */
-  FileVersionDO selectByVersion(
+  FileVersion selectByVersion(
       @Param("fileNodeId") String fileNodeId, @Param("versionNumber") Integer versionNumber);
 
   /** 查询活跃版本 */
-  FileVersionDO selectActiveVersion(@Param("fileNodeId") String fileNodeId);
+  FileVersion selectActiveVersion(@Param("fileNodeId") String fileNodeId);
 
   /** 设置活跃版本（-1 表示全部设为非活跃） */
   @Update(
@@ -59,7 +59,7 @@ public interface FileVersionMapper extends BaseMapper<FileVersionDO> {
   int countByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /** 查询最旧版本（按版本号升序） */
-  List<FileVersionDO> selectOldestVersions(
+  List<FileVersion> selectOldestVersions(
       @Param("fileNodeId") String fileNodeId, @Param("limit") int limit);
 
   /**
@@ -84,5 +84,5 @@ public interface FileVersionMapper extends BaseMapper<FileVersionDO> {
       @Param("fileNodeId") String fileNodeId, @Param("keepCount") int keepCount);
 
   /** 带 revision 乐观锁的更新（更新失败返回 0） */
-  int updateWithRevision(@Param("version") FileVersionDO version);
+  int updateWithRevision(@Param("version") FileVersion version);
 }

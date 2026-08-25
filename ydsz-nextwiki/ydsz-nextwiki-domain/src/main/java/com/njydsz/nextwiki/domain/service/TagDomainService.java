@@ -24,7 +24,7 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class TagDomainService {
+public class TagmainService {
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;

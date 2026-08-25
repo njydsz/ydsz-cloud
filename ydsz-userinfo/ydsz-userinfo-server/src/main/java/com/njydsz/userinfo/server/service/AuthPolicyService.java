@@ -144,7 +144,7 @@ public class AuthPolicyService {
     vo.setCaptchaEnabled(true);
     vo.setAllowedIdentityProviders("LOCAL");
     vo.setMaxSessionsPerUser(DEFAULT_MAX_SESSIONS_PER_USER);
-    vo.setSessionTimeoutSeconds(DEFAULT_SESSION_TIMEOUT_SECONDS);
+    vo.setSessionTimeoutSeconds((int) DEFAULT_SESSION_TIMEOUT_SECONDS);
     vo.setRemark("硬编码兜底策略");
     return vo;
   }

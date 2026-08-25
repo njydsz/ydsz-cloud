@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -26,8 +26,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <pre>{@code
  * // 查询用户所有角色 ID
  * List<String> roleIds = userRoleMapper.selectList(
- *     new LambdaQueryWrapper<UserRoleDO>().eq(UserRoleDO::getUserId, userId)
- * ).stream().map(UserRoleDO::getRoleId).collect(Collectors.toList());
+ *     new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, userId)
+ * ).stream().map(UserRole::getRoleId).collect(Collectors.toList());
  * }</pre>
  *
  * <p><b>索引设计：</b>普通索引 {@code idx_user_id}（{@code user_id}）、 {@code idx_role_id}（{@code
@@ -35,8 +35,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserAccountDO 用户实体
- * @see RoleDO 角色实体
+ * @see UserAccount 用户实体
+ * @see Role 角色实体
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（含 {@code assignRoles}
  *     接口）
  */
@@ -45,11 +45,12 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_user_role")
-public class UserRoleDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class UserRole extends MpBaseEntity<String> {
 
-  /** 用户 ID，关联 {@code UserAccountDO.id} */
+  /** 用户 ID，关联 {@code UserAccount.id} */
   private String userId;
 
-  /** 角色 ID，关联 {@code RoleDO.id} */
+  /** 角色 ID，关联 {@code Role.id} */
   private String roleId;
 }

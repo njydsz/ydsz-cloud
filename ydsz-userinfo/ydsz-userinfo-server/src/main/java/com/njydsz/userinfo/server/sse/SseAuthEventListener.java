@@ -49,6 +49,9 @@ import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
 @RequiredArgsConstructor
 public class SseAuthEventListener implements UserAuthEventListener {
 
+  /** 监听器优先级 */
+  private static final int LISTENER_ORDER = 50;
+
   private final SseEmitterRegistry emitterRegistry;
 
   @Override

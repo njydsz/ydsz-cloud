@@ -14,7 +14,7 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowRepositoryConverter;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowInstance;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 
 /**
@@ -47,12 +47,12 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   public FlowInstanceVO save(FlowInstanceDTO dto) {
     if (dto.getId() == null) {
       // 新增：DTO → entity (忽略 id)，insert 后回填 id 到 DTO
-      FlowInstanceDO entity = converter.dtoToEntity(dto);
+      FlowInstance entity = converter.dtoToEntity(dto);
       instanceMapper.insert(entity);
       dto.setId(entity.getId());
     } else {
       // 更新：DTO → entity (含 id)，按 id 更新
-      FlowInstanceDO entity = converter.dtoToEntityWithId(dto);
+      FlowInstance entity = converter.dtoToEntityWithId(dto);
       instanceMapper.updateById(entity);
     }
     return converter.dtoToVO(dto);
@@ -75,48 +75,48 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   public List<FlowInstanceVO> findByInitiatorId(String initiatorId) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
-            new LambdaQueryWrapper<FlowInstanceDO>()
-                .eq(FlowInstanceDO::getInitiatorId, initiatorId)
-                .eq(FlowInstanceDO::getDeleted, 0)
-                .orderByDesc(FlowInstanceDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowInstance>()
+                .eq(FlowInstance::getInitiatorId, initiatorId)
+                .eq(FlowInstance::getDeleted, 0)
+                .orderByDesc(FlowInstance::getCreatedAt)));
   }
 
   @Override
   public List<FlowInstanceVO> selectByInitiator(String initiatorId, String flowCode) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
-            new LambdaQueryWrapper<FlowInstanceDO>()
-                .eq(FlowInstanceDO::getInitiatorId, initiatorId)
-                .eq(flowCode != null, FlowInstanceDO::getFlowCode, flowCode)
-                .eq(FlowInstanceDO::getDeleted, 0)
-                .orderByDesc(FlowInstanceDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowInstance>()
+                .eq(FlowInstance::getInitiatorId, initiatorId)
+                .eq(flowCode != null, FlowInstance::getFlowCode, flowCode)
+                .eq(FlowInstance::getDeleted, 0)
+                .orderByDesc(FlowInstance::getCreatedAt)));
   }
 
   @Override
   public List<FlowInstanceVO> findChildren(String parentInstanceId) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
-            new LambdaQueryWrapper<FlowInstanceDO>()
-                .eq(FlowInstanceDO::getParentInstanceId, parentInstanceId)
-                .eq(FlowInstanceDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowInstance>()
+                .eq(FlowInstance::getParentInstanceId, parentInstanceId)
+                .eq(FlowInstance::getDeleted, 0)));
   }
 
   @Override
   public long countByStatus(String flowStatus) {
     return instanceMapper.selectCount(
-        new LambdaQueryWrapper<FlowInstanceDO>()
-            .eq(FlowInstanceDO::getFlowStatus, flowStatus)
-            .eq(FlowInstanceDO::getDeleted, 0));
+        new LambdaQueryWrapper<FlowInstance>()
+            .eq(FlowInstance::getFlowStatus, flowStatus)
+            .eq(FlowInstance::getDeleted, 0));
   }
 
   @Override
   public List<FlowInstanceVO> findSuspendedBefore(LocalDateTime before, int limit) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
-            new LambdaQueryWrapper<FlowInstanceDO>()
-                .eq(FlowInstanceDO::getFlowStatus, "SUSPENDED")
-                .le(FlowInstanceDO::getUpdatedAt, before)
-                .eq(FlowInstanceDO::getDeleted, 0)
+            new LambdaQueryWrapper<FlowInstance>()
+                .eq(FlowInstance::getFlowStatus, "SUSPENDED")
+                .le(FlowInstance::getUpdatedAt, before)
+                .eq(FlowInstance::getDeleted, 0)
                 .last("LIMIT " + limit)));
   }
 
@@ -201,27 +201,27 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   public List<FlowInstanceVO> findRunningChildrenByParentId(String parentInstanceId) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
-            new LambdaQueryWrapper<FlowInstanceDO>()
-                .eq(FlowInstanceDO::getParentInstanceId, parentInstanceId)
-                .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
-                .eq(FlowInstanceDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowInstance>()
+                .eq(FlowInstance::getParentInstanceId, parentInstanceId)
+                .eq(FlowInstance::getFlowStatus, "RUNNING")
+                .eq(FlowInstance::getDeleted, 0)));
   }
 
   @Override
   public List<FlowInstanceVO> findRunningByDefinition(String definitionId, String tenantId) {
-    LambdaQueryWrapper<FlowInstanceDO> wrapper = new LambdaQueryWrapper<FlowInstanceDO>()
-        .eq(FlowInstanceDO::getDefinitionId, definitionId)
-        .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
-        .eq(FlowInstanceDO::getDeleted, 0);
+    LambdaQueryWrapper<FlowInstance> wrapper = new LambdaQueryWrapper<FlowInstance>()
+        .eq(FlowInstance::getDefinitionId, definitionId)
+        .eq(FlowInstance::getFlowStatus, "RUNNING")
+        .eq(FlowInstance::getDeleted, 0);
     if (tenantId != null) {
-      wrapper.eq(FlowInstanceDO::getTenantId, tenantId);
+      wrapper.eq(FlowInstance::getTenantId, tenantId);
     }
     return converter.flowInstanceListToVO(instanceMapper.selectList(wrapper));
   }
 
   @Override
   public FlowInstanceVO update(FlowInstanceVO vo) {
-    FlowInstanceDO entity = converter.entityToDOWithId(vo);
+    FlowInstance entity = converter.entityToEntity(vo);
     instanceMapper.updateById(entity);
     return vo;
   }
@@ -231,11 +231,11 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
       List<String> statuses, LocalDateTime threshold, int limit) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
-            new LambdaQueryWrapper<FlowInstanceDO>()
-                .in(FlowInstanceDO::getFlowStatus, statuses)
-                .lt(FlowInstanceDO::getEndAt, threshold)
-                .eq(FlowInstanceDO::getDeleted, 0)
-                .orderByAsc(FlowInstanceDO::getEndAt)
+            new LambdaQueryWrapper<FlowInstance>()
+                .in(FlowInstance::getFlowStatus, statuses)
+                .lt(FlowInstance::getEndAt, threshold)
+                .eq(FlowInstance::getDeleted, 0)
+                .orderByAsc(FlowInstance::getEndAt)
                 .last("LIMIT " + limit)));
   }
 
@@ -243,12 +243,12 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   public List<FlowInstanceVO> findLongRunning(String tenantId, LocalDateTime threshold, int limit) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
-            new LambdaQueryWrapper<FlowInstanceDO>()
-                .eq(tenantId != null, FlowInstanceDO::getTenantId, tenantId)
-                .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
-                .lt(FlowInstanceDO::getStartAt, threshold)
-                .eq(FlowInstanceDO::getDeleted, 0)
-                .orderByAsc(FlowInstanceDO::getStartAt)
+            new LambdaQueryWrapper<FlowInstance>()
+                .eq(tenantId != null, FlowInstance::getTenantId, tenantId)
+                .eq(FlowInstance::getFlowStatus, "RUNNING")
+                .lt(FlowInstance::getStartAt, threshold)
+                .eq(FlowInstance::getDeleted, 0)
+                .orderByAsc(FlowInstance::getStartAt)
                 .last("LIMIT " + limit)));
   }
 }

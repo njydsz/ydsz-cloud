@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowCommentRepository;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowCommentDO;
+import com.njydsz.workflow.infra.entity.FlowComment;
 import com.njydsz.workflow.infra.mapper.FlowCommentMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
 
   @Override
   public FlowCommentVO save(FlowCommentVO vo) {
-    FlowCommentDO entity = converter.entityToDO(vo);
+    FlowComment entity = converter.entityToEntity(vo);
     commentMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -55,19 +55,19 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
   public List<FlowCommentVO> findByInstanceId(String instanceId) {
     return converter.flowCommentListToVO(
         commentMapper.selectList(
-            new LambdaQueryWrapper<FlowCommentDO>()
-                .eq(FlowCommentDO::getInstanceId, instanceId)
-                .eq(FlowCommentDO::getDeleted, 0)
-                .orderByDesc(FlowCommentDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowComment>()
+                .eq(FlowComment::getInstanceId, instanceId)
+                .eq(FlowComment::getDeleted, 0)
+                .orderByDesc(FlowComment::getCreatedAt)));
   }
 
   @Override
   public List<FlowCommentVO> findByTaskId(String taskId) {
     return converter.flowCommentListToVO(
         commentMapper.selectList(
-            new LambdaQueryWrapper<FlowCommentDO>()
-                .eq(FlowCommentDO::getTaskId, taskId)
-                .eq(FlowCommentDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowComment>()
+                .eq(FlowComment::getTaskId, taskId)
+                .eq(FlowComment::getDeleted, 0)));
   }
 
   @Override
@@ -77,7 +77,7 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
 
   @Override
   public FlowCommentVO update(FlowCommentVO vo) {
-    FlowCommentDO entity = converter.entityToDO(vo);
+    FlowComment entity = converter.entityToEntity(vo);
     commentMapper.updateById(entity);
     return vo;
   }
@@ -86,43 +86,43 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
   public List<FlowCommentVO> findRootComments(String instanceId) {
     return converter.flowCommentListToVO(
         commentMapper.selectList(
-            new LambdaQueryWrapper<FlowCommentDO>()
-                .eq(FlowCommentDO::getInstanceId, instanceId)
-                .isNull(FlowCommentDO::getParentCommentId)
-                .eq(FlowCommentDO::getDeleted, 0)
-                .orderByAsc(FlowCommentDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowComment>()
+                .eq(FlowComment::getInstanceId, instanceId)
+                .isNull(FlowComment::getParentCommentId)
+                .eq(FlowComment::getDeleted, 0)
+                .orderByAsc(FlowComment::getCreatedAt)));
   }
 
   @Override
   public List<FlowCommentVO> findReplies(String commentId) {
     return converter.flowCommentListToVO(
         commentMapper.selectList(
-            new LambdaQueryWrapper<FlowCommentDO>()
-                .eq(FlowCommentDO::getParentCommentId, commentId)
-                .eq(FlowCommentDO::getDeleted, 0)
-                .orderByAsc(FlowCommentDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowComment>()
+                .eq(FlowComment::getParentCommentId, commentId)
+                .eq(FlowComment::getDeleted, 0)
+                .orderByAsc(FlowComment::getCreatedAt)));
   }
 
   @Override
   public List<FlowCommentVO> findByInstanceAndTenant(String tenantId, String instanceId) {
     return converter.flowCommentListToVO(
         commentMapper.selectList(
-            new LambdaQueryWrapper<FlowCommentDO>()
-                .eq(FlowCommentDO::getTenantId, tenantId)
-                .eq(FlowCommentDO::getInstanceId, instanceId)
-                .eq(FlowCommentDO::getDeleted, 0)
-                .orderByAsc(FlowCommentDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowComment>()
+                .eq(FlowComment::getTenantId, tenantId)
+                .eq(FlowComment::getInstanceId, instanceId)
+                .eq(FlowComment::getDeleted, 0)
+                .orderByAsc(FlowComment::getCreatedAt)));
   }
 
   @Override
   public List<FlowCommentVO> findRootCommentsByTenant(String tenantId, String instanceId) {
     return converter.flowCommentListToVO(
         commentMapper.selectList(
-            new LambdaQueryWrapper<FlowCommentDO>()
-                .eq(FlowCommentDO::getTenantId, tenantId)
-                .eq(FlowCommentDO::getInstanceId, instanceId)
-                .isNull(FlowCommentDO::getParentCommentId)
-                .eq(FlowCommentDO::getDeleted, 0)
-                .orderByAsc(FlowCommentDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowComment>()
+                .eq(FlowComment::getTenantId, tenantId)
+                .eq(FlowComment::getInstanceId, instanceId)
+                .isNull(FlowComment::getParentCommentId)
+                .eq(FlowComment::getDeleted, 0)
+                .orderByAsc(FlowComment::getCreatedAt)));
   }
 }

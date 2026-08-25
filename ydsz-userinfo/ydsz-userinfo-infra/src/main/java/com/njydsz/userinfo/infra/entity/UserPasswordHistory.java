@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import java.time.LocalDateTime;
 
@@ -37,7 +37,8 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @TableName("ydsz_user_password_history")
-public class UserPasswordHistoryDO {
+@SuppressWarnings("unchecked")
+public class UserPasswordHistory {
 
   /** 主键 ID（雪花算法） */
   @TableId(type = IdType.ASSIGN_ID)

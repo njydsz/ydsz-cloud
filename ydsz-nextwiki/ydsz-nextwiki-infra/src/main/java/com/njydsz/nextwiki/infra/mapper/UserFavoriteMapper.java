@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.UserFavoriteDO;
+import com.njydsz.nextwiki.infra.entity.UserFavorite;
 
 /**
  * 用户收藏夹 Mapper
@@ -28,7 +28,7 @@ import com.njydsz.nextwiki.infra.entity.UserFavoriteDO;
  * @since 1.0.0
  */
 @Mapper
-public interface UserFavoriteMapper extends BaseMapper<UserFavoriteDO> {
+public interface UserFavoriteMapper extends BaseMapper<UserFavorite> {
 
   /**
    * 查询用户收藏列表（按排序号升序）。
@@ -37,7 +37,7 @@ public interface UserFavoriteMapper extends BaseMapper<UserFavoriteDO> {
    * @param tenantId 租户ID
    * @return 收藏列表
    */
-  List<UserFavoriteDO> selectByUserId(
+  List<UserFavorite> selectByUserId(
       @Param("userId") String userId, @Param("tenantId") String tenantId);
 
   /**
@@ -49,7 +49,7 @@ public interface UserFavoriteMapper extends BaseMapper<UserFavoriteDO> {
    * @param limit 每页数量
    * @return 收藏分页列表
    */
-  List<UserFavoriteDO> selectByUserIdWithPage(
+  List<UserFavorite> selectByUserIdWithPage(
       @Param("userId") String userId,
       @Param("tenantId") String tenantId,
       @Param("offset") int offset,

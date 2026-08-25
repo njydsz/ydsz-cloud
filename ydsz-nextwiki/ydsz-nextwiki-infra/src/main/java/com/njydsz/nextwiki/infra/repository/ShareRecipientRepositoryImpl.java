@@ -11,7 +11,7 @@ import com.njydsz.nextwiki.domain.dto.ShareRecipientDTO;
 import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
 import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
 import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.ShareRecipientDO;
+import com.njydsz.nextwiki.infra.entity.ShareRecipient;
 import com.njydsz.nextwiki.infra.mapper.ShareRecipientMapper;
 
 /**
@@ -42,8 +42,8 @@ public class ShareRecipientRepositoryImpl implements ShareRecipientRepository {
     if (dtos == null || dtos.isEmpty()) {
       return;
     }
-    List<ShareRecipientDO> entities = converter.shareRecipientDtosToEntities(dtos);
-    for (ShareRecipientDO entity : entities) {
+    List<ShareRecipient> entities = converter.shareRecipientDtosToEntities(dtos);
+    for (ShareRecipient entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
         entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       }

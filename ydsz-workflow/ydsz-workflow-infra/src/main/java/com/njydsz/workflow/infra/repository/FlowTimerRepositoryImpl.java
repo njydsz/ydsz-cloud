@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowTimerRepository;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowTimerDO;
+import com.njydsz.workflow.infra.entity.FlowTimer;
 import com.njydsz.workflow.infra.mapper.FlowTimerMapper;
 
 /**
@@ -41,7 +41,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
 
   @Override
   public FlowTimerVO save(FlowTimerVO vo) {
-    FlowTimerDO entity = converter.entityToDO(vo);
+    FlowTimer entity = converter.entityToEntity(vo);
     timerMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -56,9 +56,9 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
   public Optional<FlowTimerVO> findByTaskId(String taskId) {
     return timerMapper
         .selectList(
-            new LambdaQueryWrapper<FlowTimerDO>()
-                .eq(FlowTimerDO::getTaskId, taskId)
-                .eq(FlowTimerDO::getDeleted, 0)
+            new LambdaQueryWrapper<FlowTimer>()
+                .eq(FlowTimer::getTaskId, taskId)
+                .eq(FlowTimer::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -69,9 +69,9 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
   public List<FlowTimerVO> findByInstanceId(String instanceId) {
     return converter.flowTimerListToVO(
         timerMapper.selectList(
-            new LambdaQueryWrapper<FlowTimerDO>()
-                .eq(FlowTimerDO::getInstanceId, instanceId)
-                .eq(FlowTimerDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowTimer>()
+                .eq(FlowTimer::getInstanceId, instanceId)
+                .eq(FlowTimer::getDeleted, 0)));
   }
 
   @Override
@@ -82,12 +82,12 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
   @Override
   public void deleteByInstanceId(String instanceId) {
     timerMapper.delete(
-        new LambdaQueryWrapper<FlowTimerDO>().eq(FlowTimerDO::getInstanceId, instanceId));
+        new LambdaQueryWrapper<FlowTimer>().eq(FlowTimer::getInstanceId, instanceId));
   }
 
   @Override
   public FlowTimerVO update(FlowTimerVO vo) {
-    FlowTimerDO entity = converter.entityToDO(vo);
+    FlowTimer entity = converter.entityToEntity(vo);
     timerMapper.updateById(entity);
     return vo;
   }
@@ -96,17 +96,17 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
   public List<FlowTimerVO> findDueTimers(LocalDateTime now, int limit) {
     return converter.flowTimerListToVO(
         timerMapper.selectList(
-            new LambdaQueryWrapper<FlowTimerDO>()
-                .le(FlowTimerDO::getFireAt, now)
-                .eq(FlowTimerDO::getTimerStatus, "PENDING")
-                .eq(FlowTimerDO::getDeleted, 0)
-                .orderByAsc(FlowTimerDO::getFireAt)
+            new LambdaQueryWrapper<FlowTimer>()
+                .le(FlowTimer::getFireAt, now)
+                .eq(FlowTimer::getTimerStatus, "PENDING")
+                .eq(FlowTimer::getDeleted, 0)
+                .orderByAsc(FlowTimer::getFireAt)
                 .last("LIMIT " + limit)));
   }
 
   @Override
   public void markFired(String id) {
-    FlowTimerDO update = new FlowTimerDO();
+    FlowTimer update = new FlowTimer();
     update.setTimerStatus("FIRED");
     update.setFiredAt(LocalDateTime.now());
     update.setId(id);
@@ -115,51 +115,51 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
 
   @Override
   public void cancelByTask(String taskId) {
-    FlowTimerDO update = new FlowTimerDO();
+    FlowTimer update = new FlowTimer();
     update.setTimerStatus("CANCELLED");
     update.setCancelReason("TASK_COMPLETED");
     timerMapper.update(
         update,
-        new LambdaQueryWrapper<FlowTimerDO>()
-            .eq(FlowTimerDO::getBoundaryTaskId, taskId)
-            .eq(FlowTimerDO::getTimerStatus, "PENDING"));
+        new LambdaQueryWrapper<FlowTimer>()
+            .eq(FlowTimer::getBoundaryTaskId, taskId)
+            .eq(FlowTimer::getTimerStatus, "PENDING"));
   }
 
   @Override
   public List<FlowTimerVO> findByInstanceIdOrderByFireTime(String instanceId) {
     return converter.flowTimerListToVO(
         timerMapper.selectList(
-            new LambdaQueryWrapper<FlowTimerDO>()
-                .eq(FlowTimerDO::getInstanceId, instanceId)
-                .eq(FlowTimerDO::getDeleted, 0)
-                .orderByAsc(FlowTimerDO::getFireAt)));
+            new LambdaQueryWrapper<FlowTimer>()
+                .eq(FlowTimer::getInstanceId, instanceId)
+                .eq(FlowTimer::getDeleted, 0)
+                .orderByAsc(FlowTimer::getFireAt)));
   }
 
   @Override
   public int cancelByInstance(String instanceId, String reason) {
-    FlowTimerDO update = new FlowTimerDO();
+    FlowTimer update = new FlowTimer();
     update.setTimerStatus("CANCELLED");
     update.setCancelReason(reason);
     return timerMapper.update(
         update,
-        new LambdaQueryWrapper<FlowTimerDO>()
-            .eq(FlowTimerDO::getInstanceId, instanceId)
-            .eq(FlowTimerDO::getTimerStatus, "PENDING")
-            .eq(FlowTimerDO::getDeleted, 0));
+        new LambdaQueryWrapper<FlowTimer>()
+            .eq(FlowTimer::getInstanceId, instanceId)
+            .eq(FlowTimer::getTimerStatus, "PENDING")
+            .eq(FlowTimer::getDeleted, 0));
   }
 
   @Override
   public long countPendingByInstance(String instanceId) {
     return timerMapper.selectCount(
-        new LambdaQueryWrapper<FlowTimerDO>()
-            .eq(FlowTimerDO::getInstanceId, instanceId)
-            .eq(FlowTimerDO::getTimerStatus, "PENDING")
-            .eq(FlowTimerDO::getDeleted, 0));
+        new LambdaQueryWrapper<FlowTimer>()
+            .eq(FlowTimer::getInstanceId, instanceId)
+            .eq(FlowTimer::getTimerStatus, "PENDING")
+            .eq(FlowTimer::getDeleted, 0));
   }
 
   @Override
   public void markSnoozed(String id, LocalDateTime nextTime) {
-    FlowTimerDO update = new FlowTimerDO();
+    FlowTimer update = new FlowTimer();
     update.setFireAt(nextTime);
     update.setTimerStatus("PENDING");
     update.setId(id);
@@ -170,9 +170,9 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
   public List<FlowTimerVO> findByInstanceOrderByCreatedAtDesc(String instanceId) {
     return converter.flowTimerListToVO(
         timerMapper.selectList(
-            new LambdaQueryWrapper<FlowTimerDO>()
-                .eq(FlowTimerDO::getInstanceId, instanceId)
-                .eq(FlowTimerDO::getDeleted, 0)
-                .orderByDesc(FlowTimerDO::getCreatedAt)));
+            new LambdaQueryWrapper<FlowTimer>()
+                .eq(FlowTimer::getInstanceId, instanceId)
+                .eq(FlowTimer::getDeleted, 0)
+                .orderByDesc(FlowTimer::getCreatedAt)));
   }
 }

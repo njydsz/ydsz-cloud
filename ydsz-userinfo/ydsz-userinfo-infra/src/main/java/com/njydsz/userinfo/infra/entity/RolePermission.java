@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -12,13 +12,13 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 角色-权限关联实体
  *
  * <p>对应数据库表 {@code ydsz_role_permission}，是 RBAC 模型中连接角色与权限的多对多中间表。 「权限」在系统中由 {@link
- * MenuDO#getPermissionCode()} 表示（{@code "system:user:create"} 格式）， 既可以是菜单级权限，也可以是按钮级权限。
+ * Menu#getPermissionCode()} 表示（{@code "system:user:create"} 格式）， 既可以是菜单级权限，也可以是按钮级权限。
  *
  * <p><b>设计要点：</b>
  *
  * <ul>
  *   <li>每条记录表示「该角色拥有该权限」
- *   <li>{@code permissionId} 实际指向 {@link MenuDO#getId()}，但语义上不局限于菜单
+ *   <li>{@code permissionId} 实际指向 {@link Menu#getId()}，但语义上不局限于菜单
  *   <li>{@code menuId} 可为空：纯按钮级权限无对应菜单节点
  *   <li>由 {@link com.njydsz.userinfo.web.controller.RoleController#assignPermissions} 维护
  * </ul>
@@ -37,8 +37,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RoleDO 角色实体
- * @see MenuDO 菜单/权限实体
+ * @see Role 角色实体
+ * @see Menu 菜单/权限实体
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller（含 {@code assignPermissions}
  *     接口）
  */
@@ -47,13 +47,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_role_permission")
-public class RolePermissionDO extends MpBaseEntity<String> {
+@SuppressWarnings("unchecked")
+public class RolePermission extends MpBaseEntity<String> {
 
-  /** 角色 ID，关联 {@link RoleDO#getId()} */
+  /** 角色 ID，关联 {@link Role#getId()} */
   private String roleId;
 
   /**
-   * 权限 ID，实际指向 {@link MenuDO#getId()}。
+   * 权限 ID，实际指向 {@link Menu#getId()}。
    *
    * <p>语义上为「权限点」而非「菜单节点」，但物理外键指向 {@code ydsz_menu.id}。
    */

@@ -6,14 +6,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
-import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
+import com.njydsz.nextwiki.domain.service.FileVersionmainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
-import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
-import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
-import com.njydsz.nextwiki.domain.service.SpaceDomainService;
-import com.njydsz.nextwiki.domain.service.TagDomainService;
+import com.njydsz.nextwiki.domain.service.ShareAccessLogmainService;
+import com.njydsz.nextwiki.domain.service.ShareLinkmainService;
+import com.njydsz.nextwiki.domain.service.SpacemainService;
+import com.njydsz.nextwiki.domain.service.TagmainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.server.service.SearchQueryParser;
 
@@ -36,7 +36,7 @@ public class NextwikiBeanConfig {
   /**
    * 注册 BCrypt 密码编码器 Bean。
    *
-   * <p>用于对分享链接的访问密码进行安全散列存储与校验，供 {@link ShareLinkDomainService} 使用。
+   * <p>用于对分享链接的访问密码进行安全散列存储与校验，供 {@link ShareLinkmainService} 使用。
    *
    * @return BCryptPasswordEncoder 实例（线程安全，可全局复用）
    */
@@ -65,48 +65,48 @@ public class NextwikiBeanConfig {
    * 注册标签领域服务 Bean。
    *
    * @param snowflakeIdGenerator 分布式 ID 生成器
-   * @return TagDomainService 实例
+   * @return TagmainService 实例
    */
   @Bean
-  public TagDomainService tagDomainService(SnowflakeIdGenerator snowflakeIdGenerator) {
-    return new TagDomainService(snowflakeIdGenerator);
+  public TagmainService TagmainService(SnowflakeIdGenerator snowflakeIdGenerator) {
+    return new TagmainService(snowflakeIdGenerator);
   }
 
   /**
    * 注册知识库空间领域服务 Bean。
    *
-   * @return SpaceDomainService 实例
+   * @return SpacemainService 实例
    */
   @Bean
-  public SpaceDomainService spaceDomainService() {
-    return new SpaceDomainService();
+  public SpacemainService SpacemainService() {
+    return new SpacemainService();
   }
 
   /**
    * 注册分享链接领域服务 Bean。
    *
-   * <p><b>DDD 合规：</b>domain 层 {@link ShareLinkDomainService} 不依赖 Redis 或 BCrypt，
+   * <p><b>DDD 合规：</b>domain 层 {@link ShareLinkmainService} 不依赖 Redis 或 BCrypt，
    * 密码哈希由应用层通过 {@code BCryptPasswordEncoder} 完成后传入，Redis 防暴力破解由应用层负责。
    *
    * @param snowflakeIdGenerator 分布式 ID 生成器
-   * @return ShareLinkDomainService 实例
+   * @return ShareLinkmainService 实例
    */
   @Bean
-  public ShareLinkDomainService shareLinkDomainService(
+  public ShareLinkmainService ShareLinkmainService(
       SnowflakeIdGenerator snowflakeIdGenerator) {
-    return new ShareLinkDomainService(snowflakeIdGenerator);
+    return new ShareLinkmainService(snowflakeIdGenerator);
   }
 
   /**
    * 注册分享访问日志领域服务 Bean。
    *
    * @param snowflakeIdGenerator 分布式 ID 生成器
-   * @return ShareAccessLogDomainService 实例
+   * @return ShareAccessLogmainService 实例
    */
   @Bean
-  public ShareAccessLogDomainService shareAccessLogDomainService(
+  public ShareAccessLogmainService ShareAccessLogmainService(
       SnowflakeIdGenerator snowflakeIdGenerator) {
-    return new ShareAccessLogDomainService(snowflakeIdGenerator);
+    return new ShareAccessLogmainService(snowflakeIdGenerator);
   }
 
   /**
@@ -155,12 +155,12 @@ public class NextwikiBeanConfig {
    * 注册文件版本领域服务 Bean。
    *
    * @param snowflakeIdGenerator 分布式 ID 生成器
-   * @return FileVersionDomainService 实例
+   * @return FileVersionmainService 实例
    */
   @Bean
-  public FileVersionDomainService fileVersionDomainService(
+  public FileVersionmainService FileVersionmainService(
       SnowflakeIdGenerator snowflakeIdGenerator) {
-    return new FileVersionDomainService(snowflakeIdGenerator);
+    return new FileVersionmainService(snowflakeIdGenerator);
   }
 
   /**

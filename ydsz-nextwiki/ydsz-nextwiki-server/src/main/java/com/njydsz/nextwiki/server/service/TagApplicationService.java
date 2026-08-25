@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.nextwiki.domain.dto.TagDTO;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
-import com.njydsz.nextwiki.domain.service.TagDomainService;
+import com.njydsz.nextwiki.domain.service.TagmainService;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 
 /**
@@ -26,7 +26,7 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
 public class TagApplicationService {
 
   /** 标签领域服务 */
-  private final TagDomainService tagDomainService;
+  private final TagmainService TagmainService;
 
   /** 标签仓储 */
   private final TagRepository tagRepository;
@@ -38,15 +38,15 @@ public class TagApplicationService {
    * @param color 标签展示颜色（如 "#RRGGBB"，用于前端标识）
    * @param userId 创建者 ID
    * @return 新建标签DTO
-   * @throws 由 {@link TagDomainService} 在名称非法或重复时抛出的业务异常
+   * @throws 由 {@link TagmainService} 在名称非法或重复时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次标签写入）
-   * @note 委托 {@link TagDomainService} 实现
+   * @note 委托 {@link TagmainService} 实现
    */
   @Transactional(rollbackFor = Exception.class)
   public TagDTO createTag(String name, String color, String userId) {
     // 领域服务校验并构建标签（含名称非空校验、ID 生成）
-    TagVO tag = tagDomainService.buildTag(name, color, userId);
+    TagVO tag = TagmainService.buildTag(name, color, userId);
     // 组装 DTO 并持久化（仓储只接受领域 DTO）
     TagDTO dto = new TagDTO();
     dto.setId(tag.getId());
@@ -76,10 +76,10 @@ public class TagApplicationService {
    * @param tagIds 标签 ID 列表（可空；为空表示解绑全部）
    * @param userId 操作者 ID
    * @return 无返回值
-   * @throws 由 {@link TagDomainService} 在节点不存在/无权限时抛出的业务异常
+   * @throws 由 {@link TagmainService} 在节点不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(tagIds.size())（逐条建立关系）
-   * @note 委托 {@link TagDomainService} 实现；绑定后影响搜索标签聚合
+   * @note 委托 {@link TagmainService} 实现；绑定后影响搜索标签聚合
    */
   @Transactional(rollbackFor = Exception.class)
   public void batchBindTags(String fileNodeId, List<String> tagIds, String userId) {
@@ -104,7 +104,7 @@ public class TagApplicationService {
    * @param fileNodeId 文件节点 ID
    * @return 推荐标签列表（可能为空，非 {@code null}）
    * @complexity 取决于推荐策略（可能为内容提取 + 匹配）
-   * @note 只读推荐，不自动绑定；委托 {@link TagDomainService} 实现
+   * @note 只读推荐，不自动绑定；委托 {@link TagmainService} 实现
    */
   public List<TagVO> recommendTags(String fileNodeId) {
     return List.of();

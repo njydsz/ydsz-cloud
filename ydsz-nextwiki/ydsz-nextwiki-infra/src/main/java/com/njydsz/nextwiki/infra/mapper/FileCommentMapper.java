@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.FileCommentDO;
+import com.njydsz.nextwiki.infra.entity.FileComment;
 
 /**
  * 文件评论 Mapper
@@ -25,10 +25,10 @@ import com.njydsz.nextwiki.infra.entity.FileCommentDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.nextwiki.infra.entity.FileCommentDO 文件评论实体
+ * @see com.njydsz.nextwiki.infra.entity.FileComment 文件评论实体
  */
 @Mapper
-public interface FileCommentMapper extends BaseMapper<FileCommentDO> {
+public interface FileCommentMapper extends BaseMapper<FileComment> {
 
   /** 插入评论 */
   @Insert(
@@ -36,30 +36,30 @@ public interface FileCommentMapper extends BaseMapper<FileCommentDO> {
           + "created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id) "
           + "VALUES (#{id}, #{fileNodeId}, #{content}, #{parentCommentId}, #{resolved}, #{position}, #{edited}, "
           + "#{createdBy}, NOW(), #{updatedBy}, NOW(), 0, 0, #{tenantId})")
-  int insertFileComment(FileCommentDO entity);
+  int insertFileComment(FileComment entity);
 
   /** 按 ID 查询评论（未删除） */
   @Select(
       "SELECT * FROM nw_file_comment WHERE id = #{id} AND deleted = 0")
-  FileCommentDO selectFileCommentById(@Param("id") String id);
+  FileComment selectFileCommentById(@Param("id") String id);
 
   /** 查询某文件节点的全部顶级评论（按时间正序） */
   @Select(
       "SELECT * FROM nw_file_comment WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
           + "AND parent_comment_id IS NULL ORDER BY created_at ASC")
-  List<FileCommentDO> selectFileCommentsByFileNodeId(@Param("fileNodeId") String fileNodeId);
+  List<FileComment> selectFileCommentsByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /** 查询某评论的回复列表（按时间正序） */
   @Select(
       "SELECT * FROM nw_file_comment WHERE parent_comment_id = #{parentCommentId} AND deleted = 0 "
           + "ORDER BY created_at ASC")
-  List<FileCommentDO> selectFileCommentReplies(@Param("parentCommentId") String parentCommentId);
+  List<FileComment> selectFileCommentReplies(@Param("parentCommentId") String parentCommentId);
 
   /** 更新评论内容与编辑标记 */
   @Update(
       "UPDATE nw_file_comment SET content = #{content}, edited = TRUE, updated_by = #{updatedBy}, "
           + "updated_at = NOW(), revision = revision + 1 WHERE id = #{id} AND deleted = 0")
-  int updateFileComment(FileCommentDO entity);
+  int updateFileComment(FileComment entity);
 
   /** 逻辑删除评论（及其回复由调用方级联处理） */
   @Update(

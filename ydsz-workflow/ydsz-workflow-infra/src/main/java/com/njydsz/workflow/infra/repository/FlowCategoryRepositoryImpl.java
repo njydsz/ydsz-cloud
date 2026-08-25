@@ -11,8 +11,8 @@ import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowCategoryDO;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
+import com.njydsz.workflow.infra.entity.FlowCategory;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
 import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 
@@ -45,7 +45,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
 
   @Override
   public FlowCategoryVO save(FlowCategoryDTO dto) {
-    FlowCategoryDO entity = converter.dtoToDO(dto);
+    FlowCategory entity = converter.dtoToEntity(dto);
     categoryMapper.insert(entity);
     return converter.entityToVO(entity);
   }
@@ -53,7 +53,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
   @Override
   @Deprecated
   public FlowCategoryVO save(FlowCategoryVO vo) {
-    FlowCategoryDO entity = converter.entityToDO(vo);
+    FlowCategory entity = converter.entityToEntity(vo);
     categoryMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -68,9 +68,9 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
   public Optional<FlowCategoryVO> findByCode(String code) {
     return categoryMapper
         .selectList(
-            new LambdaQueryWrapper<FlowCategoryDO>()
-                .eq(FlowCategoryDO::getCode, code)
-                .eq(FlowCategoryDO::getDeleted, 0)
+            new LambdaQueryWrapper<FlowCategory>()
+                .eq(FlowCategory::getCode, code)
+                .eq(FlowCategory::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -81,20 +81,20 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
   public List<FlowCategoryVO> findAll(String tenantId) {
     return converter.flowCategoryListToVO(
         categoryMapper.selectList(
-            new LambdaQueryWrapper<FlowCategoryDO>()
-                .eq(tenantId != null, FlowCategoryDO::getTenantId, tenantId)
-                .eq(FlowCategoryDO::getDeleted, 0)
-                .orderByAsc(FlowCategoryDO::getSortOrder)));
+            new LambdaQueryWrapper<FlowCategory>()
+                .eq(tenantId != null, FlowCategory::getTenantId, tenantId)
+                .eq(FlowCategory::getDeleted, 0)
+                .orderByAsc(FlowCategory::getSortOrder)));
   }
 
   @Override
   public List<FlowCategoryVO> findByParentId(String parentId) {
     return converter.flowCategoryListToVO(
         categoryMapper.selectList(
-            new LambdaQueryWrapper<FlowCategoryDO>()
-                .eq(FlowCategoryDO::getParentId, parentId)
-                .eq(FlowCategoryDO::getDeleted, 0)
-                .orderByAsc(FlowCategoryDO::getSortOrder)));
+            new LambdaQueryWrapper<FlowCategory>()
+                .eq(FlowCategory::getParentId, parentId)
+                .eq(FlowCategory::getDeleted, 0)
+                .orderByAsc(FlowCategory::getSortOrder)));
   }
 
   @Override
@@ -104,7 +104,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
 
   @Override
   public FlowCategoryVO update(FlowCategoryDTO dto) {
-    FlowCategoryDO entity = converter.dtoToDO(dto);
+    FlowCategory entity = converter.dtoToEntity(dto);
     categoryMapper.updateById(entity);
     return converter.entityToVO(entity);
   }
@@ -112,7 +112,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
   @Override
   @Deprecated
   public FlowCategoryVO update(FlowCategoryVO vo) {
-    FlowCategoryDO entity = converter.entityToDO(vo);
+    FlowCategory entity = converter.entityToEntity(vo);
     categoryMapper.updateById(entity);
     return vo;
   }
@@ -120,25 +120,25 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
   @Override
   public long countByCodeAndTenantId(String code, String tenantId) {
     return categoryMapper.selectCount(
-        new LambdaQueryWrapper<FlowCategoryDO>()
-            .eq(FlowCategoryDO::getCategoryCode, code)
-            .eq(tenantId != null, FlowCategoryDO::getTenantId, tenantId)
-            .eq(FlowCategoryDO::getDeleted, 0));
+        new LambdaQueryWrapper<FlowCategory>()
+            .eq(FlowCategory::getCategoryCode, code)
+            .eq(tenantId != null, FlowCategory::getTenantId, tenantId)
+            .eq(FlowCategory::getDeleted, 0));
   }
 
   @Override
   public long countByParentId(String parentId) {
     return categoryMapper.selectCount(
-        new LambdaQueryWrapper<FlowCategoryDO>()
-            .eq(FlowCategoryDO::getParentId, parentId)
-            .eq(FlowCategoryDO::getDeleted, 0));
+        new LambdaQueryWrapper<FlowCategory>()
+            .eq(FlowCategory::getParentId, parentId)
+            .eq(FlowCategory::getDeleted, 0));
   }
 
   @Override
   public long countDefinitionsByCategory(String categoryId) {
     return definitionMapper.selectCount(
-        new LambdaQueryWrapper<FlowDefinitionDO>()
-            .eq(FlowDefinitionDO::getCategory, categoryId)
-            .eq(FlowDefinitionDO::getDeleted, 0));
+        new LambdaQueryWrapper<FlowDefinition>()
+            .eq(FlowDefinition::getCategory, categoryId)
+            .eq(FlowDefinition::getDeleted, 0));
   }
 }

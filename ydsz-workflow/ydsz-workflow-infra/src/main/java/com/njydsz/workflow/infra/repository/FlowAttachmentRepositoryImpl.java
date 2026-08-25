@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.repository.FlowAttachmentRepository;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAttachmentDO;
+import com.njydsz.workflow.infra.entity.FlowAttachment;
 import com.njydsz.workflow.infra.mapper.FlowAttachmentMapper;
 
 /**
@@ -40,7 +40,7 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
 
   @Override
   public FlowAttachmentVO save(FlowAttachmentVO vo) {
-    FlowAttachmentDO entity = converter.entityToDO(vo);
+    FlowAttachment entity = converter.entityToEntity(vo);
     attachmentMapper.insert(entity);
     vo.setId(entity.getId());
     return vo;
@@ -55,18 +55,18 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
   public List<FlowAttachmentVO> findByInstanceId(String instanceId) {
     return converter.flowAttachmentListToVO(
         attachmentMapper.selectList(
-            new LambdaQueryWrapper<FlowAttachmentDO>()
-                .eq(FlowAttachmentDO::getInstanceId, instanceId)
-                .eq(FlowAttachmentDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowAttachment>()
+                .eq(FlowAttachment::getInstanceId, instanceId)
+                .eq(FlowAttachment::getDeleted, 0)));
   }
 
   @Override
   public List<FlowAttachmentVO> findByTaskId(String taskId) {
     return converter.flowAttachmentListToVO(
         attachmentMapper.selectList(
-            new LambdaQueryWrapper<FlowAttachmentDO>()
-                .eq(FlowAttachmentDO::getTaskId, taskId)
-                .eq(FlowAttachmentDO::getDeleted, 0)));
+            new LambdaQueryWrapper<FlowAttachment>()
+                .eq(FlowAttachment::getTaskId, taskId)
+                .eq(FlowAttachment::getDeleted, 0)));
   }
 
   @Override
@@ -76,7 +76,7 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
 
   @Override
   public FlowAttachmentVO update(FlowAttachmentVO vo) {
-    FlowAttachmentDO entity = converter.entityToDO(vo);
+    FlowAttachment entity = converter.entityToEntity(vo);
     attachmentMapper.updateById(entity);
     return vo;
   }
