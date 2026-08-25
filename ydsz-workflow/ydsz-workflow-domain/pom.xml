@@ -39,6 +39,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydsz-common-util（MessageUtils i18n 支持） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- swagger-annotations-jakarta: DTO/VO 上的 @Schema 注解 -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
