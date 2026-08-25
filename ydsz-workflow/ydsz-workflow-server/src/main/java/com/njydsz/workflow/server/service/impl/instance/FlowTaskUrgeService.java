@@ -14,7 +14,7 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
@@ -63,11 +63,11 @@ public class FlowTaskUrgeService {
           .message("error.workflow.msg_75474a57")
           .build();
     }
-    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
+    List<FlowRunTask> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
         .map(converter::entityToDO)
         .collect(Collectors.toList());
     List<String> urged = new ArrayList<>();
-    for (FlowRunTaskDO task : pendingTasks) {
+    for (FlowRunTask task : pendingTasks) {
       urged.add(task.getAssigneeId());
       support.audit(task, "URGE", operatorId, null, comment);
     }
@@ -101,11 +101,11 @@ public class FlowTaskUrgeService {
             .build();
       }
     }
-    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByNode(instanceId, nodeCode).stream()
+    List<FlowRunTask> pendingTasks = taskRepository.findPendingByNode(instanceId, nodeCode).stream()
         .map(converter::entityToDO)
         .collect(Collectors.toList());
     List<String> urged = new ArrayList<>();
-    for (FlowRunTaskDO task : pendingTasks) {
+    for (FlowRunTask task : pendingTasks) {
       urged.add(task.getAssigneeId());
       support.audit(task, "URGE", operatorId, null, comment);
       // P2-3: 节点级催办事件

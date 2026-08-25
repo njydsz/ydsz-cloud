@@ -474,7 +474,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     // 5. 迭代构建树 + 自动填充 level/path（避免递归栈溢出）
     //    使用栈存储 (节点, 层级, 路径) 三元组
-    Deque<Object[]> stack = new ArrayDeque<>();
+    Deque<StackFrame<T>> stack = new ArrayDeque<>();
     for (T root : roots) {
       String rootId = idGetter.apply(root);
       // 设置根节点的 level 和 path
@@ -488,18 +488,17 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
       List<T> children = parentIdMap.get(rootId);
       if (children != null) {
         for (int i = children.size() - 1; i >= 0; i--) {
-          stack.push(new Object[] {children.get(i), TreeNode.ROOT_LEVEL + 1, "/" + rootId + "/"});
+          stack.push(new StackFrame<>(children.get(i), TreeNode.ROOT_LEVEL + 1, "/" + rootId + "/"));
         }
       }
     }
 
     // 迭代处理子节点
     while (!stack.isEmpty()) {
-      Object[] frame = stack.pop();
-      @SuppressWarnings("unchecked")
-      T node = (T) frame[0];
-      int level = (int) frame[1];
-      String parentPath = (String) frame[2];
+      StackFrame<T> frame = stack.pop();
+      T node = frame.node();
+      int level = frame.level();
+      String parentPath = frame.parentPath();
 
       String nodeId = idGetter.apply(node);
       String nodePath = parentPath + nodeId + "/";
@@ -521,7 +520,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         childrenSetter.accept(node, children);
         // 将子节点压栈（逆序保证顺序）
         for (int i = children.size() - 1; i >= 0; i--) {
-          stack.push(new Object[] {children.get(i), level + 1, nodePath});
+          stack.push(new StackFrame<>(children.get(i), level + 1, nodePath));
         }
       } else {
         // 无子节点，设置空列表
@@ -545,4 +544,15 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     return roots;
   }
+
+  /**
+   * 树构建栈帧（节点 + 层级 + 路径三元组）。
+   *
+   * @param <T> 节点类型
+   * @param node 当前节点
+   * @param level 当前层级
+   * @param parentPath 父路径
+   * @since 1.0.0
+   */
+  private record StackFrame<T>(T node, int level, String parentPath) {}
 }

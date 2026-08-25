@@ -9,7 +9,7 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 
 /**
@@ -85,7 +85,7 @@ public class FlowTaskNotificationService {
    * @param variables        流程变量
    */
   public void fireTaskPersonalCompleted(
-      FlowRunTaskDO task,
+      FlowRunTask task,
       String personalUserId,
       String action,
       int approveFinished,

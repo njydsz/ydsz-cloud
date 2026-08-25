@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.StorageQuotaMapper">
 
-    <resultMap id="StorageQuotaResult" type="com.njydsz.nextwiki.infra.entity.StorageQuotaDO">
+    <resultMap id="StorageQuotaResult" type="com.njydsz.nextwiki.infra.entity.StorageQuota">
         <id column="id" property="id"/>
         <result column="scope_type" property="scopeType"/>
         <result column="scope_id" property="scopeId"/>

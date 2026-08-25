@@ -16,8 +16,8 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
@@ -26,7 +26,7 @@ import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
  * 服务节点执行服务
  *
  * <p>从 {@link com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService} 中抽出的
- * 服务节点执行逻辑，承担运行时任务（{@link FlowRunTaskDO}）的 HTTP/SCRIPT/AUTO_PASS 自动执行职责。
+ * 服务节点执行逻辑，承担运行时任务（{@link FlowRunTask}）的 HTTP/SCRIPT/AUTO_PASS 自动执行职责。
  *
  * <p><b>核心能力：</b>
  *
@@ -126,7 +126,7 @@ public class ServiceNodeExecuteService {
    * @return 任务 ID
    */
   public String executeServiceNode(
-      FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
+      FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
     // 1. 执行服务节点逻辑
     FlowServiceNodeExecutor.ServiceExecutionResult result;
     try {
@@ -144,7 +144,7 @@ public class ServiceNodeExecuteService {
     }
 
     // 2. 创建任务记录（用于审计追溯）
-    FlowRunTaskDO task = new FlowRunTaskDO();
+    FlowRunTask task = new FlowRunTask();
     task.setInstanceId(instance.getId());
     task.setFlowCode(instance.getFlowCode());
     task.setDefinitionId(instance.getDefinitionId());
@@ -235,19 +235,19 @@ public class ServiceNodeExecuteService {
    * @return 是否成功触发 error boundary
    */
   private boolean triggerErrorBoundaryIfExists(
-      FlowInstanceVO instance, FlowNodeDO serviceNode, String errorMsg) {
+      FlowInstanceVO instance, FlowNode serviceNode, String errorMsg) {
     if (eventSubscriptionService == null) {
       return false;
     }
     try {
-      List<FlowNodeDO> allNodes =
+      List<FlowNode> allNodes =
           nodeRepository.findByDefinitionId(instance.getDefinitionId()).stream()
               .map(converter::entityToDO)
               .toList();
       if (allNodes == null || allNodes.isEmpty()) {
         return false;
       }
-      List<FlowNodeDO> errorBoundaries =
+      List<FlowNode> errorBoundaries =
           allNodes.stream()
               .filter(
                   n -> {
@@ -263,7 +263,7 @@ public class ServiceNodeExecuteService {
       if (errorBoundaries.isEmpty()) {
         return false;
       }
-      for (FlowNodeDO boundary : errorBoundaries) {
+      for (FlowNode boundary : errorBoundaries) {
         String errorRef = FlowNodeExt.getErrorRef(boundary.getExt());
         eventSubscriptionService.throwError(
             instance.getTenantId(), instance.getId(), errorRef, errorMsg);
@@ -293,7 +293,7 @@ public class ServiceNodeExecuteService {
    * @param variables 参数说明
    */
   private void advanceAfterSuccess(
-      FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
+      FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
     if (advanceCallback != null) {
       advanceCallback.apply(new AdvanceContext(instance, node, variables));
     }
@@ -306,10 +306,10 @@ public class ServiceNodeExecuteService {
    */
   public static class AdvanceContext {
     private final FlowInstanceVO instance;
-    private final FlowNodeDO node;
+    private final FlowNode node;
     private final Map<String, Object> variables;
 
-    public AdvanceContext(FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
+    public AdvanceContext(FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
       this.instance = instance;
       this.node = node;
       this.variables = variables;
@@ -319,7 +319,7 @@ public class ServiceNodeExecuteService {
       return instance;
     }
 
-    public FlowNodeDO getNode() {
+    public FlowNode getNode() {
       return node;
     }
 

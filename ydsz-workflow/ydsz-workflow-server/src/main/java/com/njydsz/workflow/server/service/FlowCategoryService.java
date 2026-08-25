@@ -31,7 +31,7 @@ import com.njydsz.workflow.domain.vo.FlowCategoryVO;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.workflow.server.service.impl.FlowCategoryServiceImpl 实现类
- * @see com.njydsz.workflow.infra.entity.FlowDefinitionDO 流程定义（{@code category} 字段引用本表分类编码）
+ * @see com.njydsz.workflow.infra.entity.FlowDefinition 流程定义（{@code category} 字段引用本表分类编码）
  */
 public interface FlowCategoryService {
 

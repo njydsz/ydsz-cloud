@@ -26,8 +26,8 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 
 /**
@@ -162,16 +162,16 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
           .message("sourceDefId/targetDefId 不能为空")
           .build();
     }
-    List<FlowNodeDO> sourceNodes = nodeRepository.findByDefinitionId(String.valueOf(sourceDefId)).stream().map(converter::entityToDO).toList();
-    List<FlowNodeDO> targetNodes = nodeRepository.findByDefinitionId(String.valueOf(targetDefId)).stream().map(converter::entityToDO).toList();
+    List<FlowNode> sourceNodes = nodeRepository.findByDefinitionId(String.valueOf(sourceDefId)).stream().map(converter::entityToDO).toList();
+    List<FlowNode> targetNodes = nodeRepository.findByDefinitionId(String.valueOf(targetDefId)).stream().map(converter::entityToDO).toList();
     if (sourceNodes == null || targetNodes == null) {
       return Collections.emptyMap();
     }
     // 目标节点编码集合，便于快速判断
-    Map<String, FlowNodeDO> targetNodeMap =
-        targetNodes.stream().collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
+    Map<String, FlowNode> targetNodeMap =
+        targetNodes.stream().collect(Collectors.toMap(FlowNode::getNodeCode, n -> n, (a, b) -> a));
     Map<String, String> mapping = new LinkedHashMap<>();
-    for (FlowNodeDO src : sourceNodes) {
+    for (FlowNode src : sourceNodes) {
       String code = src.getNodeCode();
       if (StringUtils.hasText(code) && targetNodeMap.containsKey(code)) {
         // 编码相同，自动配对
@@ -219,11 +219,11 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     validateFlowCodeConsistency(sourceDef, targetDef);
 
     // 预加载目标定义的节点编码集合
-    List<FlowNodeDO> targetNodes = nodeRepository.findByDefinitionId(targetDefId).stream()
+    List<FlowNode> targetNodes = nodeRepository.findByDefinitionId(targetDefId).stream()
         .map(converter::entityToDO).toList();
-    Map<String, FlowNodeDO> targetNodeMap = targetNodes.isEmpty()
+    Map<String, FlowNode> targetNodeMap = targetNodes.isEmpty()
         ? Collections.emptyMap()
-        : targetNodes.stream().collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
+        : targetNodes.stream().collect(Collectors.toMap(FlowNode::getNodeCode, n -> n, (a, b) -> a));
 
     // 查询源定义下所有运行中实例并逐实例迁移
     List<FlowInstanceVO> instances = instanceRepository.findRunningByDefinition(sourceDefId, tenantId);
@@ -309,7 +309,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   private void migrateSingleInstance(FlowInstanceVO instance, List<MigrationDetail> details,
       MigrationCounters counters, boolean dryRun, String targetDefId,
       FlowDefinitionVO targetDef, Map<String, String> nodeMapping,
-      Map<String, FlowNodeDO> targetNodeMap) {
+      Map<String, FlowNode> targetNodeMap) {
     MigrationDetail detail = new MigrationDetail();
     detail.setInstanceId(String.valueOf(instance.getId()));
     detail.setInstanceTitle(instance.getTitle());
@@ -360,11 +360,11 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
    */
   private void performMigration(FlowInstanceVO instance, String targetDefId,
       FlowDefinitionVO targetDef, String oldNodeCode, String newNodeCode,
-      Map<String, String> nodeMapping, Map<String, FlowNodeDO> targetNodeMap) {
+      Map<String, String> nodeMapping, Map<String, FlowNode> targetNodeMap) {
     instance.setDefinitionId(targetDefId);
     instance.setFlowVersion(targetDef.getFlowVersion());
     instance.setCurrentNodeCode(newNodeCode);
-    FlowNodeDO targetNode = targetNodeMap.get(newNodeCode);
+    FlowNode targetNode = targetNodeMap.get(newNodeCode);
     if (targetNode != null) {
       instance.setCurrentNodeName(targetNode.getNodeName());
     }
@@ -423,7 +423,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
    * @return 新节点编码，null 表示无法解析
    */
   private String resolveNewNodeCode(
-      String oldNodeCode, Map<String, String> nodeMapping, Map<String, FlowNodeDO> targetNodeMap) {
+      String oldNodeCode, Map<String, String> nodeMapping, Map<String, FlowNode> targetNodeMap) {
     if (!StringUtils.hasText(oldNodeCode)) {
       // 当前节点为空（理论上不应发生），返回 null 由调用方跳过
       return null;
@@ -477,13 +477,13 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
       String oldInstNode,
       String newInstNode,
       Map<String, String> nodeMapping,
-      Map<String, FlowNodeDO> targetNodeMap) {
-    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream().map(converter::entityToDO).toList();
+      Map<String, FlowNode> targetNodeMap) {
+    List<FlowRunTask> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream().map(converter::entityToDO).toList();
     if (pendingTasks.isEmpty()) {
       return 0;
     }
     int migrated = 0;
-    for (FlowRunTaskDO task : pendingTasks) {
+    for (FlowRunTask task : pendingTasks) {
       String oldTaskNode = task.getNodeCode();
       String newTaskNode =
           resolveTaskNodeCode(oldTaskNode, oldInstNode, newInstNode, nodeMapping, targetNodeMap);
@@ -497,7 +497,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
       }
       task.setDefinitionId(targetDefId);
       task.setNodeCode(newTaskNode);
-      FlowNodeDO targetNode = targetNodeMap.get(newTaskNode);
+      FlowNode targetNode = targetNodeMap.get(newTaskNode);
       if (targetNode != null) {
         task.setNodeName(targetNode.getNodeName());
       }
@@ -531,7 +531,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
       String oldInstNode,
       String newInstNode,
       Map<String, String> nodeMapping,
-      Map<String, FlowNodeDO> targetNodeMap) {
+      Map<String, FlowNode> targetNodeMap) {
     if (!StringUtils.hasText(oldTaskNode)) {
       return null;
     }

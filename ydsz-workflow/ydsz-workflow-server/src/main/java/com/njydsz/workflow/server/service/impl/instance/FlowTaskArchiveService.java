@@ -12,8 +12,8 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowHisTask;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 
 /**
@@ -47,7 +47,7 @@ public class FlowTaskArchiveService {
    * @param task 任务（会被原地修改状态/时间/时长）
    * @param comment 审批意见
    */
-  public void completeAndArchive(FlowRunTaskDO task, String comment) {
+  public void completeAndArchive(FlowRunTask task, String comment) {
     LocalDateTime now = LocalDateTime.now();
     Long durationMs =
         task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), now).toMillis();
@@ -73,8 +73,8 @@ public class FlowTaskArchiveService {
    * @param src 源任务
    * @param finalStatus 归档时的最终状态（用于历史表 taskStatus 字段）
    */
-  public void archiveToHistory(FlowRunTaskDO src, FlowTaskStatus finalStatus) {
-    FlowHisTaskDO his = new FlowHisTaskDO();
+  public void archiveToHistory(FlowRunTask src, FlowTaskStatus finalStatus) {
+    FlowHisTask his = new FlowHisTask();
     his.setInstanceId(src.getInstanceId());
     his.setTaskId(src.getId());
     his.setFlowCode(src.getFlowCode());

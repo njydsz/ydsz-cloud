@@ -11,7 +11,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.workflow.infra.entity.FlowTemplateDO;
+import com.njydsz.workflow.infra.entity.FlowTemplate;
 import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
 
 /**
@@ -23,7 +23,7 @@ import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WorkflowSearchProvider implements SearchProvider<FlowTemplateDO> {
+public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
 
     /** 模板名称匹配权重 */
   private static final float FIELD_WEIGHT = 3.0f;
@@ -41,7 +41,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplateDO> {
   }
 
   @Override
-  public IndexDocument toIndexDocument(FlowTemplateDO entity) {
+  public IndexDocument toIndexDocument(FlowTemplate entity) {
     if (entity == null || entity.getId() == null) {
       return null;
     }
@@ -98,7 +98,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplateDO> {
   }
 
   @Override
-  public FlowTemplateDO loadById(String id) {
+  public FlowTemplate loadById(String id) {
     return flowTemplateMapper.selectById(id);
   }
 }

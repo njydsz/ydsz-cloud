@@ -63,8 +63,8 @@ import com.njydsz.workflow.infra.converter.WorkflowConverter;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskServiceImpl 任务服务门面
- * @see FlowRunTaskDO 运行时任务实体
- * @see FlowHisTaskDO 历史任务实体
+ * @see FlowRunTask 运行时任务实体
+ * @see FlowHisTask 历史任务实体
  */
 @Slf4j
 @Service

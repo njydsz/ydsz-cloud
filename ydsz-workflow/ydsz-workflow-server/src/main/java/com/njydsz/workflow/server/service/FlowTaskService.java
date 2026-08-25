@@ -8,13 +8,13 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 
 /**
  * 待办任务 Service
  *
- * <p>流程任务（{@link FlowRunTaskDO}）是工作流引擎的<b>调度核心</b>，本 Service 负责任务的整个生命周期：
+ * <p>流程任务（{@link FlowRunTask}）是工作流引擎的<b>调度核心</b>，本 Service 负责任务的整个生命周期：
  * 创建、查询、签收、通过、驳回、转办、委派、加签/减签等。
  *
  * <p><b>核心职责：</b>
@@ -36,7 +36,7 @@ import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
  * <ul>
  *   <li>悲观锁：{@code pass/reject} 时 {@code SELECT ... FOR UPDATE} 锁任务行，避免并发办理
  *   <li>分布式锁：跨实例的全局锁（如「同发起人同时只能有一个流程」场景）由 {@code Redisson} 实现
- *   <li>乐观锁：{@link FlowRunTaskDO} 继承 {@code MpBaseEntity.revision}，并发更新自动重试
+ *   <li>乐观锁：{@link FlowRunTask} 继承 {@code MpBaseEntity.revision}，并发更新自动重试
  * </ul>
  *
  * <p><b>性能优化：</b>
@@ -57,7 +57,7 @@ public interface FlowTaskService {
   /**
    * 创建任务（流程推进到审批节点时由路由引擎调用）
    *
-   * <p>根据流程节点 {@code node} 解析审批人（角色/部门/岗位/直属上级/Spec 表达式）， 写入 {@link FlowRunTaskDO} 表。会签节点（{@code
+   * <p>根据流程节点 {@code node} 解析审批人（角色/部门/岗位/直属上级/Spec 表达式）， 写入 {@link FlowRunTask} 表。会签节点（{@code
    * performType=ALL/PARALLEL}）按 {@code approvers} 数量 生成多条子任务，单人节点生成单条任务。
    *
    * @param instanceId 流程实例 ID
@@ -66,7 +66,7 @@ public interface FlowTaskService {
    * @param variables 流程变量（用于解析审批人 Spec 表达式，如 ${starter}）
    * @return 新创建的任务 ID（单人节点）或首个任务 ID（会签节点）
    */
-  String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables);
+  String createTask(String instanceId, FlowNode node, Map<String, Object> variables);
 
   /**
    * P2-20: 按 ID 查任务（任务详情查询）
@@ -349,7 +349,7 @@ public interface FlowTaskService {
    * @param task 任务 DO
    * @return 任务视图 VO（含基础字段 + 富化字段）
    */
-  FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task);
+  FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTask task);
 
   /**
    * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）

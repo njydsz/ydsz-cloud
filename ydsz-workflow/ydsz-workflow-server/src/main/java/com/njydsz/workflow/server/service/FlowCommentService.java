@@ -6,7 +6,7 @@ import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
-import com.njydsz.workflow.infra.entity.FlowCommentDO;
+import com.njydsz.workflow.infra.entity.FlowComment;
 
 /**
  * P2-2: 流程评论 Service（含常用语能力）
@@ -29,8 +29,8 @@ import com.njydsz.workflow.infra.entity.FlowCommentDO;
  * <p><b>与审计日志的区别：</b>
  *
  * <ul>
- *   <li>评论（{@link FlowCommentDO}）：用户视角，可修改可删除
- *   <li>审计日志（{@code FlowAuditLogDO}）：系统视角，不可修改不可删除
+ *   <li>评论（{@link FlowComment}）：用户视角，可修改可删除
+ *   <li>审计日志（{@code FlowAuditLog}）：系统视角，不可修改不可删除
  * </ul>
  *
  * <p><b>事务边界：</b>{@link #addComment} 开启 {@code @Transactional}， 确保「评论写入 + @通知 + 提及人索引」原子性。
@@ -46,7 +46,7 @@ import com.njydsz.workflow.infra.entity.FlowCommentDO;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.workflow.server.service.impl.FlowCommentServiceImpl 实现类
- * @see FlowAuditLogDO 流程审计日志
+ * @see FlowAuditLog 流程审计日志
  */
 public interface FlowCommentService {
 

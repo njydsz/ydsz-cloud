@@ -201,7 +201,6 @@ public class SseMcpClientProvider implements McpClientProvider {
   }
 
   /** 解析工具列表响应 */
-  @SuppressWarnings("unchecked")
   private List<McpToolAdapter.McpToolDescriptor> parseToolList(String responseBody) {
     Map<String, Object> responseMap = YdszJson.parseMap(responseBody);
     Object resultObj = responseMap.get("result");
@@ -229,7 +228,6 @@ public class SseMcpClientProvider implements McpClientProvider {
   }
 
   /** 提取工具调用结果 */
-  @SuppressWarnings("unchecked")
   private String extractCallResult(String responseBody) {
     Map<String, Object> responseMap = YdszJson.parseMap(responseBody);
     Object resultObj = responseMap.get("result");

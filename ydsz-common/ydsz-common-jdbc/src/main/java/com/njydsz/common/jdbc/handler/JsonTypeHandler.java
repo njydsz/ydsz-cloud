@@ -84,9 +84,13 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
    *
    * <p>当字段类型无法在注册阶段解析时，MyBatis 可能通过无参构造创建处理器， 此时默认以 {@code Object.class} 反序列化（运行时再按字段类型擦除处理）。
    */
-  @SuppressWarnings("unchecked")
   public JsonTypeHandler() {
-    this((Class<T>) Object.class);
+    this(rawClass(Object.class));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> Class<T> rawClass(Class<?> clazz) {
+    return (Class<T>) clazz;
   }
 
   /**

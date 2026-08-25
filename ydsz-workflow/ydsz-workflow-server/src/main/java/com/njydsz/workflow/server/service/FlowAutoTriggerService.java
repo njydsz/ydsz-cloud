@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
-import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
+import com.njydsz.workflow.infra.entity.FlowAutoTrigger;
 
 /**
  * 流程自动触发服务。
@@ -49,7 +49,7 @@ public interface FlowAutoTriggerService {
    *
    * @return 触发规则 DO 列表
    */
-  List<FlowAutoTriggerDO> listAll();
+  List<FlowAutoTrigger> listAll();
 
   /**
    * 查询所有触发规则（返回 VO，符合 DDD 分层规范）

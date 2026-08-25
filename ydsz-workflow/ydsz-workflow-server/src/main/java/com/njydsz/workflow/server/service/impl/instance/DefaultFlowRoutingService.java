@@ -20,8 +20,8 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowAuditLog;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
 
 /**
@@ -149,12 +149,12 @@ public class DefaultFlowRoutingService {
   // ============================== 私有方法 ==============================
 
   private void detectTimeout(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowRunTaskDO> tasks = taskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
+    List<FlowRunTask> tasks = taskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
     if (tasks == null || tasks.isEmpty()) {
       return;
     }
     LocalDateTime now = LocalDateTime.now();
-    for (FlowRunTaskDO task : tasks) {
+    for (FlowRunTask task : tasks) {
       if (task.getDueAt() == null) {
         continue;
       }
@@ -184,12 +184,12 @@ public class DefaultFlowRoutingService {
   }
 
   private void detectStuck(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowRunTaskDO> tasks = taskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
+    List<FlowRunTask> tasks = taskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
     if (tasks == null || tasks.isEmpty()) {
       return;
     }
     LocalDateTime now = LocalDateTime.now();
-    for (FlowRunTaskDO task : tasks) {
+    for (FlowRunTask task : tasks) {
       if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
         continue;
       }
@@ -216,7 +216,7 @@ public class DefaultFlowRoutingService {
   }
 
   private void detectLoop(String instanceId, List<Map<String, Object>> anomalies) {
-    List<FlowAuditLogDO> logs = auditLogRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
+    List<FlowAuditLog> logs = auditLogRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
     if (logs == null || logs.isEmpty()) {
       return;
     }
@@ -226,14 +226,14 @@ public class DefaultFlowRoutingService {
             .filter(log -> log.getNodeCode() != null)
             .collect(
                 Collectors.groupingBy(
-                    FlowAuditLogDO::getNodeCode, LinkedHashMap::new, Collectors.counting()));
+                    FlowAuditLog::getNodeCode, LinkedHashMap::new, Collectors.counting()));
     for (Map.Entry<String, Long> entry : rejectCountByNode.entrySet()) {
       if (entry.getValue() > MAX_REJECT_COUNT) {
         String nodeName =
             logs.stream()
                 .filter(log -> entry.getKey().equals(log.getNodeCode()))
                 .filter(log -> log.getNodeName() != null)
-                .map(FlowAuditLogDO::getNodeName)
+                .map(FlowAuditLog::getNodeName)
                 .findFirst()
                 .orElse(entry.getKey());
         Map<String, Object> anomaly = new LinkedHashMap<>();

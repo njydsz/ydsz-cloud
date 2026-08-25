@@ -25,8 +25,8 @@ import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.infra.entity.FlowAuditLog;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -92,7 +92,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowDelegateAuthService 接口定义
- * @see com.njydsz.workflow.infra.entity.FlowDelegateAuthDO 委派代理实体
+ * @see com.njydsz.workflow.infra.entity.FlowDelegateAuth 委派代理实体
  * @see FlowOfflineAutoForwardService 离线自动转交服务（与委派不同：离线是自动转交，委派是主动授权）
  * @see FlowTaskAuditService 任务审计服务
  */
@@ -125,7 +125,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    * @return 返回值说明
    */
   @Override
-  public FlowDelegateAuthDO postDtoToEntity(FlowDelegateAuthPostDTO dto) {
+  public FlowDelegateAuth postDtoToEntity(FlowDelegateAuthPostDTO dto) {
     return converter.postDtoToEntity(dto);
   }
 
@@ -148,7 +148,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(FlowDelegateAuthDO auth) {
+  public String create(FlowDelegateAuth auth) {
     validateDelegateAuth(auth);
     fillDefaultValues(auth);
 
@@ -169,7 +169,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    *
    * @param auth 参数说明
    */
-  private void validateDelegateAuth(FlowDelegateAuthDO auth) {
+  private void validateDelegateAuth(FlowDelegateAuth auth) {
     if (auth == null) {
       throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_fdf18ac3").build();
     }
@@ -199,7 +199,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    *
    * @param auth 参数说明
    */
-  private void validateScopeFields(FlowDelegateAuthDO auth) {
+  private void validateScopeFields(FlowDelegateAuth auth) {
     switch (auth.getScopeType()) {
       case "FLOW" -> {
         if (!StringUtils.hasText(auth.getFlowCode())) {
@@ -227,7 +227,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    *
    * @param auth 参数说明
    */
-  private void fillDefaultValues(FlowDelegateAuthDO auth) {
+  private void fillDefaultValues(FlowDelegateAuth auth) {
     if (auth.getTenantId() == null) {
       auth.setTenantId(AuthContextUtils.getTenantIdOrDefault());
     }
@@ -272,7 +272,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_7804c8f2")
           .build();
     }
-    FlowDelegateAuthDO auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
+    FlowDelegateAuth auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
     if (auth == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -318,7 +318,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_7678ad83")
           .build();
     }
-    FlowDelegateAuthDO auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
+    FlowDelegateAuth auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
     if (auth == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -352,7 +352,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowDelegateAuthDO> listMine(String ownerUserId, String tenantId, String status) {
+  public List<FlowDelegateAuth> listMine(String ownerUserId, String tenantId, String status) {
     if (ownerUserId == null) {
       return List.of();
     }
@@ -372,7 +372,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowDelegateAuthDO> listAsDelegate(
+  public List<FlowDelegateAuth> listAsDelegate(
       String delegateUserId, String tenantId, String status) {
     if (delegateUserId == null) {
       return List.of();
@@ -428,7 +428,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public FlowDelegateAuthDO matchAuth(
+  public FlowDelegateAuth matchAuth(
       String tenantId, String ownerUserId, String flowCode, String nodeCode) {
     if (tenantId == null || ownerUserId == null) {
       return null;
@@ -505,7 +505,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
-    List<FlowAuditLogDO> list = auditLogRepository
+    List<FlowAuditLog> list = auditLogRepository
         .findByBusinessTypeAndOperator(
             FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY, delegateUserId,
             (safePage - 1) * safeSize, safeSize)
@@ -534,7 +534,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
-    List<FlowAuditLogDO> list = auditLogRepository
+    List<FlowAuditLog> list = auditLogRepository
         .findByBusinessTypeAndTarget(
             FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY, ownerUserId,
             (safePage - 1) * safeSize, safeSize)
@@ -581,7 +581,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     int depth = 0;
 
     while (depth < MAX_CHAIN_DEPTH) {
-      FlowDelegateAuthDO matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
+      FlowDelegateAuth matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
       if (matched == null) {
         // 无进一步委派，当前用户即为最终代理人
         break;

@@ -41,10 +41,10 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowAuditLog;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
@@ -195,7 +195,7 @@ public class FlowInstanceLifecycleManager {
     }
 
     // 查定义并构建实例
-    FlowDefinitionDO def = findPublishedDefinition(dto, tenantId);
+    FlowDefinition def = findPublishedDefinition(dto, tenantId);
     FlowInstanceDTO instanceDto = buildInstanceDto(dto, def);
     FlowInstanceVO savedInstance = instanceRepository.save(instanceDto);
     String instanceId = savedInstance.getId();
@@ -263,8 +263,8 @@ public class FlowInstanceLifecycleManager {
    * @param tenantId 参数说明
    * @return 返回值说明
    */
-  private FlowDefinitionDO findPublishedDefinition(FlowStartProcessDTO dto, String tenantId) {
-    FlowDefinitionDO def = definitionService.getPublished(dto.getFlowCode(),
+  private FlowDefinition findPublishedDefinition(FlowStartProcessDTO dto, String tenantId) {
+    FlowDefinition def = definitionService.getPublished(dto.getFlowCode(),
         StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : null, tenantId);
     if (def == null) {
       throw SysException.builder()
@@ -283,7 +283,7 @@ public class FlowInstanceLifecycleManager {
    * @param def 参数说明
    * @return 返回值说明
    */
-  private FlowInstanceDTO buildInstanceDto(FlowStartProcessDTO dto, FlowDefinitionDO def) {
+  private FlowInstanceDTO buildInstanceDto(FlowStartProcessDTO dto, FlowDefinition def) {
     FlowInstanceDTO instanceDto = new FlowInstanceDTO();
     instanceDto.setFlowCode(def.getFlowCode());
     instanceDto.setFlowName(def.getFlowName());
@@ -537,7 +537,7 @@ public class FlowInstanceLifecycleManager {
           .build();
     }
     // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
-    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
+    List<FlowRunTask> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
         .map(converter::entityToDO)
         .collect(Collectors.toList());
     boolean anyProcessed =
@@ -631,7 +631,7 @@ public class FlowInstanceLifecycleManager {
           .build();
     }
     // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
-    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
+    List<FlowRunTask> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
         .map(converter::entityToDO)
         .collect(Collectors.toList());
     boolean anyProcessed =
@@ -831,7 +831,7 @@ public class FlowInstanceLifecycleManager {
     instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
     instanceRepository.save(converter.doToDto(instance));
     // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
-    FlowAuditLogDO audit = new FlowAuditLogDO();
+    FlowAuditLog audit = new FlowAuditLog();
     audit.setInstanceId(instanceId);
     audit.setFlowCode(instance.getFlowCode());
     audit.setBusinessType(instance.getBusinessType());
@@ -939,8 +939,8 @@ public class FlowInstanceLifecycleManager {
     if (nextNodes == null || nextNodes.isEmpty()) {
       return;
     }
-    List<FlowNodeDO> doNodes = nextNodes.stream().map(converter::entityToDO).toList();
-    for (FlowNodeDO node : doNodes) {
+    List<FlowNode> doNodes = nextNodes.stream().map(converter::entityToDO).toList();
+    for (FlowNode node : doNodes) {
       // P0-2: 优先判断事件捕获节点（boundaryEvent / intermediateCatchEvent）
       if (eventSubscriptionService.isEventCatchNode(node)) {
         String boundaryTaskId = resolveBoundaryTaskId(node, instanceId);
@@ -1087,7 +1087,7 @@ public class FlowInstanceLifecycleManager {
     // 5. 启动新实例
     String newInstanceId = start(dto);
     // 6. 在原实例上追加 REDO 审计日志（保留原轨迹，仅追加）
-    FlowAuditLogDO audit = new FlowAuditLogDO();
+    FlowAuditLog audit = new FlowAuditLog();
     audit.setInstanceId(instanceId);
     audit.setFlowCode(instance.getFlowCode());
     audit.setBusinessType(instance.getBusinessType());
@@ -1126,7 +1126,7 @@ public class FlowInstanceLifecycleManager {
    * @param boundaryTaskId 参数说明
    */
   private void scheduleBoundaryTimerIfPresent(
-      FlowNodeDO node, String instanceId, String boundaryTaskId) {
+      FlowNode node, String instanceId, String boundaryTaskId) {
     if (timerService == null || boundaryTaskId == null) {
       return;
     }
@@ -1206,7 +1206,7 @@ public class FlowInstanceLifecycleManager {
   }
 
   /** P0-2: 解析节点 ext JSON 为 Map（容错） */
-  private Map<String, Object> parseExtMap(FlowNodeDO node) {
+  private Map<String, Object> parseExtMap(FlowNode node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return Collections.emptyMap();
     }
@@ -1228,7 +1228,7 @@ public class FlowInstanceLifecycleManager {
    * @param instanceId 参数说明
    * @return 返回值说明
    */
-  private String resolveBoundaryTaskId(FlowNodeDO node, String instanceId) {
+  private String resolveBoundaryTaskId(FlowNode node, String instanceId) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return null;
     }
@@ -1242,7 +1242,7 @@ public class FlowInstanceLifecycleManager {
         return null;
       }
       // 查找被附着节点的当前 PENDING 任务
-      List<FlowRunTaskDO> tasks = taskRepository.findPendingByNode(instanceId, attachedToRef).stream()
+      List<FlowRunTask> tasks = taskRepository.findPendingByNode(instanceId, attachedToRef).stream()
           .map(converter::entityToDO)
           .collect(Collectors.toList());
       return tasks.isEmpty() ? null : tasks.get(0).getId();
@@ -1261,7 +1261,7 @@ public class FlowInstanceLifecycleManager {
    * @param node 参数说明
    * @return 返回值说明
    */
-  private boolean isCallActivity(FlowNodeDO node) {
+  private boolean isCallActivity(FlowNode node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return false;
     }

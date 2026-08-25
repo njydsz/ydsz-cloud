@@ -95,9 +95,13 @@ public class ListTypeHandler<E> extends BaseTypeHandler<List<E>> {
    * <p>当通过 {@code @TableField(typeHandler = ListTypeHandler.class)} 等方式使用时， MyBatis
    * 通过反射调用无参构造，此时元素类型 fallback 到 {@link Object.class}， 反序列化行为与旧版一致（元素为 LinkedHashMap / 基本类型）。
    */
-  @SuppressWarnings("unchecked")
   public ListTypeHandler() {
-    this((Class<E>) Object.class);
+    this(rawClass(Object.class));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> Class<T> rawClass(Class<?> clazz) {
+    return (Class<T>) clazz;
   }
 
   /**
@@ -164,14 +168,15 @@ public class ListTypeHandler<E> extends BaseTypeHandler<List<E>> {
    * @param json JSON 字符串
    * @return 反序列化后的 List 对象，null 或空字符串时返回 null
    */
-  @SuppressWarnings("unchecked")
   private List<E> parse(String json) {
     if (json == null || json.isEmpty()) {
       return null;
     }
     if (elementType == Object.class) {
       // 向后兼容：无参构造 fallback，行为与旧版一致
-      return (List<E>) JsonParserUtil.parseArray(json);
+      @SuppressWarnings("unchecked")
+      List<E> result = (List<E>) JsonParserUtil.parseArray(json);
+      return result;
     }
     // 有参构造：使用 YdszJson 类型安全反序列化，确保元素类型正确
     return YdszJson.parseArray(json, elementType);

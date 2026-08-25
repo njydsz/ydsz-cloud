@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowTemplateRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowTemplateDO;
+import com.njydsz.workflow.infra.entity.FlowInstance;
+import com.njydsz.workflow.infra.entity.FlowTemplate;
 import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
 
 /**
@@ -74,7 +74,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     int limit = Math.min(topN, 10);
 
     // 1. 获取全部模板（最新版本）
-    List<FlowTemplateDO> allTemplates = templateRepository.findLatestByCategory(null).stream()
+    List<FlowTemplate> allTemplates = templateRepository.findLatestByCategory(null).stream()
         .map(converter::entityToDO)
         .toList();
     if (allTemplates == null || allTemplates.isEmpty()) {
@@ -84,11 +84,11 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     // 2. 获取用户历史发起记录
     Map<String, Integer> userFlowCount = new LinkedHashMap<>();
     try {
-      List<FlowInstanceDO> instances = instanceRepository.selectByInitiator(userId, null).stream()
+      List<FlowInstance> instances = instanceRepository.selectByInitiator(userId, null).stream()
           .map(converter::entityToDO)
           .toList();
       if (instances != null) {
-        for (FlowInstanceDO inst : instances) {
+        for (FlowInstance inst : instances) {
           String flowCode = inst.getFlowCode();
           userFlowCount.merge(flowCode, 1, Integer::sum);
         }
@@ -106,7 +106,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             .orElse(1);
 
     List<Map<String, Object>> scored = new ArrayList<>();
-    for (FlowTemplateDO template : allTemplates) {
+    for (FlowTemplate template : allTemplates) {
       double score = 0.0;
       String reason = "";
 
@@ -163,7 +163,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             businessType != null ? businessType.toUpperCase() : "", "GENERAL");
 
     // 获取该分类的模板
-    List<FlowTemplateDO> templates = templateRepository.findLatestByCategory(targetCategory).stream()
+    List<FlowTemplate> templates = templateRepository.findLatestByCategory(targetCategory).stream()
         .map(converter::entityToDO)
         .toList();
     if (templates.isEmpty()) {
@@ -177,17 +177,17 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     }
 
     // 按 use_count 降序排序
-    List<FlowTemplateDO> sorted =
+    List<FlowTemplate> sorted =
         templates.stream()
             .sorted(
                 Comparator.comparing(
-                    (FlowTemplateDO t) -> t.getUseCount() != null ? t.getUseCount() : 0,
+                    (FlowTemplate t) -> t.getUseCount() != null ? t.getUseCount() : 0,
                     Comparator.reverseOrder()))
             .limit(limit)
             .collect(Collectors.toList());
 
     List<Map<String, Object>> result = new ArrayList<>();
-    for (FlowTemplateDO template : sorted) {
+    for (FlowTemplate template : sorted) {
       Map<String, Object> item = new LinkedHashMap<>();
       item.put("templateCode", template.getTemplateCode());
       item.put("templateName", template.getTemplateName());

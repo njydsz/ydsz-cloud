@@ -29,6 +29,7 @@ import com.njydsz.literule.domain.enums.RuleStatusEnum;
  * @since 1.0.0
  */
 @Data
+@SuppressWarnings("unchecked")
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

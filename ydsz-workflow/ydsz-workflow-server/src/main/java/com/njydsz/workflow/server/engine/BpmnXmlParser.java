@@ -24,8 +24,8 @@ import org.xml.sax.SAXException;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowSkipDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowSkip;
 
 /**
  * BPMN 2.0 解析器（门面类）
@@ -173,8 +173,8 @@ public class BpmnXmlParser {
    * @param model 参数说明
    */
   private void parseProcessChildren(NodeList children, BpmnModel model) {
-    List<FlowNodeDO> nodes = new ArrayList<>(children.getLength());
-    List<FlowSkipDO> skips = new ArrayList<>(children.getLength());
+    List<FlowNode> nodes = new ArrayList<>(children.getLength());
+    List<FlowSkip> skips = new ArrayList<>(children.getLength());
     model.setNodes(nodes);
     model.setSkips(skips);
 
@@ -188,12 +188,12 @@ public class BpmnXmlParser {
         local = elem.getNodeName();
       }
       if (bpmnElementHelper.isFlowNode(local)) {
-        FlowNodeDO nodeDo = bpmnNodeParser.parseNode(elem, local);
+        FlowNode nodeDo = bpmnNodeParser.parseNode(elem, local);
         if (nodeDo != null) {
           nodes.add(nodeDo);
         }
       } else if ("sequenceFlow".equalsIgnoreCase(local)) {
-        FlowSkipDO skip = bpmnSkipParser.parseSkip(elem);
+        FlowSkip skip = bpmnSkipParser.parseSkip(elem);
         if (skip != null) {
           skips.add(skip);
         }
@@ -208,13 +208,13 @@ public class BpmnXmlParser {
    * @param nodes 参数说明
    * @param skips 参数说明
    */
-  private void fillSkipNextNodeType(List<FlowNodeDO> nodes, List<FlowSkipDO> skips) {
-    Map<String, FlowNodeDO> nodeByCode = new HashMap<>(nodes.size());
-    for (FlowNodeDO n : nodes) {
+  private void fillSkipNextNodeType(List<FlowNode> nodes, List<FlowSkip> skips) {
+    Map<String, FlowNode> nodeByCode = new HashMap<>(nodes.size());
+    for (FlowNode n : nodes) {
       nodeByCode.put(n.getNodeCode(), n);
     }
-    for (FlowSkipDO s : skips) {
-      FlowNodeDO target = nodeByCode.get(s.getNextNodeCode());
+    for (FlowSkip s : skips) {
+      FlowNode target = nodeByCode.get(s.getNextNodeCode());
       if (target != null) {
         s.setNextNodeType(target.getNodeType());
       }
@@ -227,8 +227,8 @@ public class BpmnXmlParser {
    * @param model 参数说明
    */
   private void validateParseResult(BpmnModel model) {
-    List<FlowNodeDO> nodes = model.getNodes();
-    Set<String> uniqueCodes = nodes.stream().map(FlowNodeDO::getNodeCode).collect(Collectors.toSet());
+    List<FlowNode> nodes = model.getNodes();
+    Set<String> uniqueCodes = nodes.stream().map(FlowNode::getNodeCode).collect(Collectors.toSet());
     if (uniqueCodes.size() != nodes.size()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)

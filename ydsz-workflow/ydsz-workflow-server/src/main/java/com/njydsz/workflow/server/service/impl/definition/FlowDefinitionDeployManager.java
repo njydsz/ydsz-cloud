@@ -31,9 +31,9 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowSkipDO;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowSkip;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
@@ -50,7 +50,7 @@ import com.njydsz.workflow.server.engine.FlowGraphValidator;
  *
  * <ul>
  *   <li><b>双模式部署</b>：支持 BPMN 2.0 标准 XML（{@code bpmnXml}）与轻量 JSON（{@code nodes+skips}）两种模型，
- *       通过 {@link BpmnXmlParser} 解析后统一转写为 {@link FlowNodeDO} / {@link FlowSkipDO} 实体
+ *       通过 {@link BpmnXmlParser} 解析后统一转写为 {@link FlowNode} / {@link FlowSkip} 实体
  *   <li><b>拓扑校验</b>：部署前调用 {@link FlowGraphValidator} 校验连通性、死节点、环路口等结构规则，
  *       校验失败立即阻断写入
  *   <li><b>三方写入</b>：{@code ydsz_flow_definition + ydsz_flow_node + ydsz_flow_skip} 事务原子性
@@ -163,8 +163,8 @@ public class FlowDefinitionDeployManager {
           .build();
     }
 
-    List<FlowNodeDO> nodes;
-    List<FlowSkipDO> skips;
+    List<FlowNode> nodes;
+    List<FlowSkip> skips;
     if (hasBpmn) {
       nodes = parseBpmnNodes(dto, version);
       skips = parseBpmnSkips(dto);
@@ -209,7 +209,7 @@ public class FlowDefinitionDeployManager {
    * @param tenantId 参数说明
    */
   private void checkVersionConflict(String flowCode, String version, String tenantId) {
-    FlowDefinitionDO existing = definitionRepository.findPublished(flowCode, version, tenantId)
+    FlowDefinition existing = definitionRepository.findPublished(flowCode, version, tenantId)
         .map(converter::entityToDO)
         .orElse(null);
     if (existing != null) {
@@ -227,7 +227,7 @@ public class FlowDefinitionDeployManager {
    * @param version 参数说明
    * @return 返回值说明
    */
-  private List<FlowNodeDO> parseBpmnNodes(FlowDeployProcessDTO dto, String version) {
+  private List<FlowNode> parseBpmnNodes(FlowDeployProcessDTO dto, String version) {
     BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
     if (StringUtils.hasText(bpmnModel.getProcessId())
         && !bpmnModel.getProcessId().equals(dto.getFlowCode())) {
@@ -240,7 +240,7 @@ public class FlowDefinitionDeployManager {
     if (!StringUtils.hasText(dto.getFlowName()) || dto.getFlowName().equals(dto.getFlowCode())) {
       dto.setFlowName(bpmnModel.getProcessName());
     }
-    List<FlowNodeDO> nodes = new ArrayList<>(bpmnModel.getNodes());
+    List<FlowNode> nodes = new ArrayList<>(bpmnModel.getNodes());
     injectNodeCoordinates(nodes, bpmnModel);
     return nodes;
   }
@@ -251,12 +251,12 @@ public class FlowDefinitionDeployManager {
    * @param nodes 参数说明
    * @param bpmnModel 参数说明
    */
-  private void injectNodeCoordinates(List<FlowNodeDO> nodes, BpmnModel bpmnModel) {
+  private void injectNodeCoordinates(List<FlowNode> nodes, BpmnModel bpmnModel) {
     Map<String, BpmnModel.NodeCoordinate> nodeCoords = bpmnModel.getNodeCoordinates();
     if (nodeCoords == null || nodeCoords.isEmpty()) {
       return;
     }
-    for (FlowNodeDO n : nodes) {
+    for (FlowNode n : nodes) {
       BpmnModel.NodeCoordinate coord = nodeCoords.get(n.getNodeCode());
       if (coord != null) {
         n.setCoordinate(YdszJson.toJson(Map.of("x", coord.getX(), "y", coord.getY(),
@@ -272,7 +272,7 @@ public class FlowDefinitionDeployManager {
    * @param dto 参数说明
    * @return 返回值说明
    */
-  private List<FlowSkipDO> parseBpmnSkips(FlowDeployProcessDTO dto) {
+  private List<FlowSkip> parseBpmnSkips(FlowDeployProcessDTO dto) {
     BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
     return new ArrayList<>(bpmnModel.getSkips());
   }
@@ -283,10 +283,10 @@ public class FlowDefinitionDeployManager {
    * @param dto 参数说明
    * @return 返回值说明
    */
-  private List<FlowNodeDO> parseJsonNodes(FlowDeployProcessDTO dto) {
-    List<FlowNodeDO> nodes = new ArrayList<>();
+  private List<FlowNode> parseJsonNodes(FlowDeployProcessDTO dto) {
+    List<FlowNode> nodes = new ArrayList<>();
     for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
-      FlowNodeDO node = new FlowNodeDO();
+      FlowNode node = new FlowNode();
       node.setNodeCode(n.getNodeCode());
       node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
       node.setNodeType(n.getNodeType() == null ? FlowNodeType.APPROVAL.getCode() : n.getNodeType());
@@ -303,7 +303,7 @@ public class FlowDefinitionDeployManager {
    *
    * @param nodes 参数说明
    */
-  private void validateJsonNodes(List<FlowNodeDO> nodes) {
+  private void validateJsonNodes(List<FlowNode> nodes) {
     boolean hasStart = nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
     if (!hasStart) {
       throw SysException.builder()
@@ -311,7 +311,7 @@ public class FlowDefinitionDeployManager {
           .message("流程定义必须包含开始节点（nodeType=0）")
           .build();
     }
-    long uniqueCount = nodes.stream().map(FlowNodeDO::getNodeCode).distinct().count();
+    long uniqueCount = nodes.stream().map(FlowNode::getNodeCode).distinct().count();
     if (uniqueCount != nodes.size()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -326,11 +326,11 @@ public class FlowDefinitionDeployManager {
    * @param dto 参数说明
    * @return 返回值说明
    */
-  private List<FlowSkipDO> parseJsonSkips(FlowDeployProcessDTO dto) {
-    List<FlowSkipDO> skips = new ArrayList<>();
+  private List<FlowSkip> parseJsonSkips(FlowDeployProcessDTO dto) {
+    List<FlowSkip> skips = new ArrayList<>();
     if (dto.getSkips() != null) {
       for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
-        FlowSkipDO skip = new FlowSkipDO();
+        FlowSkip skip = new FlowSkip();
         skip.setSkipName(s.getSkipName());
         skip.setSkipType(StringUtils.hasText(s.getSkipType()) ? s.getSkipType() : FlowSkipType.PASS.name());
         skip.setSkipCondition(s.getSkipCondition());
@@ -351,7 +351,7 @@ public class FlowDefinitionDeployManager {
    * @return 返回值说明
    */
   private FlowDefinitionVO saveDefinition(FlowDeployProcessDTO dto, String version, String tenantId) {
-    FlowDefinitionDO def = new FlowDefinitionDO();
+    FlowDefinition def = new FlowDefinition();
     def.setFlowCode(dto.getFlowCode());
     def.setFlowName(dto.getFlowName());
     def.setCategory(dto.getCategory());
@@ -376,9 +376,9 @@ public class FlowDefinitionDeployManager {
    * @param tenantId 参数说明
    * @param providerTraceId 参数说明
    */
-  private void saveNodes(List<FlowNodeDO> nodes, String definitionId, String flowCode,
+  private void saveNodes(List<FlowNode> nodes, String definitionId, String flowCode,
       String tenantId, String providerTraceId) {
-    for (FlowNodeDO node : nodes) {
+    for (FlowNode node : nodes) {
       node.setDefinitionId(definitionId);
       node.setFlowCode(flowCode);
       node.setTenantId(tenantId);
@@ -396,9 +396,9 @@ public class FlowDefinitionDeployManager {
    * @param tenantId 参数说明
    * @param providerTraceId 参数说明
    */
-  private void saveSkips(List<FlowSkipDO> skips, String definitionId, String flowCode,
+  private void saveSkips(List<FlowSkip> skips, String definitionId, String flowCode,
       String tenantId, String providerTraceId) {
-    for (FlowSkipDO skip : skips) {
+    for (FlowSkip skip : skips) {
       skip.setDefinitionId(definitionId);
       skip.setFlowCode(flowCode);
       skip.setTenantId(tenantId);

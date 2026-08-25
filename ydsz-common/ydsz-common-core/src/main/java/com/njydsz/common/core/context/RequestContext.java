@@ -526,7 +526,6 @@ public final class RequestContext {
    * @return 可变的缓存 Map
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked")
   public static Map<String, Object> createCachedUserInfoMap() {
     Map<String, Object> map = new LinkedHashMap<>(8);
     CACHE_HOLDER.set(map);
@@ -541,7 +540,6 @@ public final class RequestContext {
    * @return 缓存 Map（可变），未创建返回 null
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked")
   public static Map<String, Object> getCachedUserInfoMap() {
     return CACHE_HOLDER.get();
   }

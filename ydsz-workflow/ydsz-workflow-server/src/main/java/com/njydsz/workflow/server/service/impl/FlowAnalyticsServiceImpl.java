@@ -93,8 +93,8 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
  * @see FlowAnalyticsService 接口定义
  * @see FlowEfficiencyService 效率分析服务（与本服务数据有重叠但视角不同）
  * @see TenantContext 租户上下文
- * @see com.njydsz.workflow.infra.entity.FlowRunTaskDO 运行时任务实体
- * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowRunTask 运行时任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTask 历史任务实体
  */
 @Slf4j
 @Service

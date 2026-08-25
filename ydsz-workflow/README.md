@@ -65,7 +65,7 @@
 ## 数据库表设计
 
 实体共映射 **21 张主表** + 1 张已废弃的 `ydsz_flow_dmn_rule` 表（仅有 Mapper XML，无 Java 实体/Mapper 接口），
-数据库实体位于 `ydsz-workflow-infra` 模块的 `com.njydsz.workflow.infra.entity` 包下，命名使用 `DO` 后缀（如 `FlowDefinitionDO`）。
+数据库实体位于 `ydsz-workflow-infra` 模块的 `com.njydsz.workflow.infra.entity` 包下，命名使用 `DO` 后缀（如 `FlowDefinition`）。
 DDL 由各部署环境统一维护，不在模块内。
 
 | 业务域 | 表名 | 说明 |

@@ -211,11 +211,11 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
    * <p>通过反射调用 {@code getKeys()} 方法。由于 {@link #onApplicationEvent} 已通过类名 确认事件类型，且 Bean 创建时
    * {@code @ConditionalOnClass} 已保证 Spring Cloud 在 classpath 中， 因此反射调用是安全的。
    */
-  @SuppressWarnings("unchecked")
   private Set<String> extractChangedKeys(ApplicationEvent event) {
     try {
       // 已知 event 是 EnvironmentChangeEvent，直接调用 getKeys()
       Method getKeys = event.getClass().getMethod("getKeys");
+      @SuppressWarnings("unchecked")
       Set<String> keys = (Set<String>) getKeys.invoke(event);
       return keys != null ? keys : Set.of();
     } catch (Exception e) {

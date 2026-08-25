@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
 
 /**
  * 子流程服务。
@@ -26,7 +26,7 @@ public interface FlowSubProcessService {
    * @return 子流程实例 ID
    */
   String startSubProcess(
-      FlowInstanceVO parentInstance, FlowNodeDO callActivityNode, Map<String, Object> variables);
+      FlowInstanceVO parentInstance, FlowNode callActivityNode, Map<String, Object> variables);
 
   /**
    * 子流程完成事件回调（由 ProjectInitiationFlowListener 调用）

@@ -319,7 +319,6 @@ public class YdszJson {
    *
    * @param <T> 泛型类型
    */
-  @SuppressWarnings("unchecked")
   public static <T> T fromJson(String json, Class<?> collectionClass, Class<?> elementClass) {
     if (json == null || json.isBlank()) {
       return null;
@@ -330,7 +329,9 @@ public class YdszJson {
     Type type =
         com.njydsz.common.json.type.TypeFactory.getInstance()
             .constructCollectionType(collectionClass, elementClass);
-    return (T) fromJson(json, type);
+    @SuppressWarnings("unchecked")
+    T result = (T) fromJson(json, type);
+    return result;
   }
 
   // ==================== 自定义序列化器注册 ====================

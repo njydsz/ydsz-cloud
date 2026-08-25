@@ -32,8 +32,8 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
 import com.njydsz.workflow.server.form.FlowFormSchema;
@@ -84,8 +84,8 @@ import com.njydsz.workflow.server.service.impl.FlowTaskAuditService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskServiceImpl 任务门面（上层委托入口）
- * @see FlowRunTaskDO 运行时任务实体
- * @see FlowNodeDO 流程节点实体
+ * @see FlowRunTask 运行时任务实体
+ * @see FlowNode 流程节点实体
  * @see DefaultFlowAdvancer 流程推进引擎
  */
 @Slf4j
@@ -203,7 +203,7 @@ public class FlowTaskCoreService {
    * @return 新创建的任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
-  public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
+  public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
     return flowTaskCreateService.createTask(instanceId, node, variables);
   }
 
@@ -219,7 +219,7 @@ public class FlowTaskCoreService {
   @Transactional(rollbackFor = Exception.class)
   public String createTask(
       String instanceId,
-      FlowNodeDO node,
+      FlowNode node,
       Map<String, Object> variables,
       List<String> explicitAssignees) {
     return flowTaskCreateService.createTask(instanceId, node, variables, explicitAssignees);
@@ -247,7 +247,7 @@ public class FlowTaskCoreService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void pass(FlowTaskOperateDTO dto) {
-    FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
     validateTaskNotFinished(task);
 
     Map<String, Object> variables = dto.getVariables() == null ? Collections.emptyMap() : dto.getVariables();
@@ -289,7 +289,7 @@ public class FlowTaskCoreService {
 
   @Transactional(rollbackFor = Exception.class)
   public void reject(FlowTaskOperateDTO dto) {
-    FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
     validateTaskNotFinishedReject(task);
 
     LocalDateTime now = LocalDateTime.now();
@@ -331,7 +331,7 @@ public class FlowTaskCoreService {
    *
    * @param task 运行时任务实体
    */
-  private void validateTaskNotFinished(FlowRunTaskDO task) {
+  private void validateTaskNotFinished(FlowRunTask task) {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -346,7 +346,7 @@ public class FlowTaskCoreService {
    *
    * @param task 运行时任务实体
    */
-  private void validateTaskNotFinishedReject(FlowRunTaskDO task) {
+  private void validateTaskNotFinishedReject(FlowRunTask task) {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -361,7 +361,7 @@ public class FlowTaskCoreService {
    * @param task 运行时任务实体
    * @return true=委派状态且有指派人；false=非委派状态或无指派人
    */
-  private boolean isDelegatedWithAssignor(FlowRunTaskDO task) {
+  private boolean isDelegatedWithAssignor(FlowRunTask task) {
     return FlowTaskStatus.DELEGATED.name().equals(task.getTaskStatus()) && task.getAssignorId() != null;
   }
 
@@ -371,7 +371,7 @@ public class FlowTaskCoreService {
    * @param task 运行时任务实体
    * @return 任务执行策略枚举（OR/AND 等）
    */
-  private FlowPerformType resolvePerformType(FlowRunTaskDO task) {
+  private FlowPerformType resolvePerformType(FlowRunTask task) {
     return FlowPerformType.valueOf(
         task.getPerformType() == null ? FlowPerformType.OR.name() : task.getPerformType());
   }
@@ -382,7 +382,7 @@ public class FlowTaskCoreService {
    * @param task 运行时任务实体
    * @param dto 任务操作 DTO
    */
-  private void markUserProcessed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+  private void markUserProcessed(FlowRunTask task, FlowTaskOperateDTO dto) {
     if (dto.getUserId() != null) {
       taskRepository.markProcessed(task.getId(), String.valueOf(dto.getUserId()), dto.getComment(), LocalDateTime.now());
     }
@@ -394,7 +394,7 @@ public class FlowTaskCoreService {
    * @param task 运行时任务实体
    * @param dto 任务操作 DTO（含 attachments）
    */
-  private void savePassAttachments(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+  private void savePassAttachments(FlowRunTask task, FlowTaskOperateDTO dto) {
     attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
         AUDIT_TYPE_TASK, dto.getUserId(), dto.getUserName(), dto.getAttachments(),
         task.getTenantId(), task.getProviderTraceId());
@@ -406,7 +406,7 @@ public class FlowTaskCoreService {
    * @param task 运行时任务实体
    * @param dto 任务操作 DTO（含 attachments）
    */
-  private void saveRejectAttachments(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+  private void saveRejectAttachments(FlowRunTask task, FlowTaskOperateDTO dto) {
     attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
         AUDIT_TYPE_TASK, dto.getUserId(), dto.getUserName(), dto.getAttachments(),
         task.getTenantId(), task.getProviderTraceId());
@@ -419,7 +419,7 @@ public class FlowTaskCoreService {
    * @param dto 任务操作 DTO
    * @param performType 任务执行策略（OR/AND 等）
    */
-  private void applyCountersignStrategy(FlowRunTaskDO task, FlowTaskOperateDTO dto, FlowPerformType performType) {
+  private void applyCountersignStrategy(FlowRunTask task, FlowTaskOperateDTO dto, FlowPerformType performType) {
     CountersignStrategy strategy = strategyFactory.getStrategy(performType);
     strategy.preCheck(task, dto);
     strategy.onUserPassed(task, dto);
@@ -433,7 +433,7 @@ public class FlowTaskCoreService {
    * @param performType 任务执行策略（OR/AND 等）
    * @return true=应推进流程；false=会签未完成，不推进
    */
-  private boolean shouldAdvance(FlowRunTaskDO task, FlowTaskOperateDTO dto, FlowPerformType performType) {
+  private boolean shouldAdvance(FlowRunTask task, FlowTaskOperateDTO dto, FlowPerformType performType) {
     CountersignStrategy strategy = strategyFactory.getStrategy(performType);
     boolean advance = strategy.shouldAdvance(task);
     if (advance) {
@@ -448,7 +448,7 @@ public class FlowTaskCoreService {
    * @param performType 任务执行策略（OR/AND 等）
    * @param task 运行时任务实体
    */
-  private void logPartialPass(FlowPerformType performType, FlowRunTaskDO task) {
+  private void logPartialPass(FlowPerformType performType, FlowRunTask task) {
     support.audit(task, performType.name() + "_PASS", null, null, null, null);
     log.info("[Flow] {} 部分通过: taskId={} finished={}/{}",
         performType, task.getId(), task.getApproveFinished(), task.getApproveCount());
@@ -461,7 +461,7 @@ public class FlowTaskCoreService {
    * @param metrics Prometheus 指标收集器
    * @param dto 任务操作 DTO
    */
-  private void pushTaskCompleted(FlowRunTaskDO task, FlowMetrics metrics, FlowTaskOperateDTO dto) {
+  private void pushTaskCompleted(FlowRunTask task, FlowMetrics metrics, FlowTaskOperateDTO dto) {
     if (todoCountPushService != null) {
       todoCountPushService.pushTaskCompleted(task, dto.getUserId());
     }
@@ -479,7 +479,7 @@ public class FlowTaskCoreService {
    * @param now 当前时间
    * @param durationMs 任务处理耗时（毫秒）
    */
-  private void markTaskRejected(FlowRunTaskDO task, FlowTaskOperateDTO dto, LocalDateTime now, Long durationMs) {
+  private void markTaskRejected(FlowRunTask task, FlowTaskOperateDTO dto, LocalDateTime now, Long durationMs) {
     task.setTaskStatus(FlowTaskStatus.REJECTED.name());
     task.setComment(dto.getComment());
     task.setCompletedAt(now);
@@ -514,7 +514,7 @@ public class FlowTaskCoreService {
    * @param mergedVars 合并后的流程变量
    * @return 驳回目标节点列表
    */
-  private List<FlowNodeVO> resolveRejectTargets(FlowRunTaskDO task, FlowTaskOperateDTO dto,
+  private List<FlowNodeVO> resolveRejectTargets(FlowRunTask task, FlowTaskOperateDTO dto,
       FlowInstanceVO instance, Map<String, Object> mergedVars) {
     boolean multiReject = dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1;
     if (multiReject) {
@@ -533,7 +533,7 @@ public class FlowTaskCoreService {
    * @param dto 任务操作 DTO
    * @param now 当前时间
    */
-  private void handleRejectToEnd(FlowRunTaskDO task, FlowInstanceVO instance, FlowTaskOperateDTO dto, LocalDateTime now) {
+  private void handleRejectToEnd(FlowRunTask task, FlowInstanceVO instance, FlowTaskOperateDTO dto, LocalDateTime now) {
     instanceRepository.updateStatus(instance.getId(), FlowInstanceStatus.REJECTED.name(),
         null, null, now, instance.getStartAt() == null ? null : Duration.between(instance.getStartAt(), now).toMillis());
     taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
@@ -680,7 +680,7 @@ public class FlowTaskCoreService {
    * @param task 参数说明
    * @param dto 参数说明
    */
-  private void handleDelegateReturn(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+  private void handleDelegateReturn(FlowRunTask task, FlowTaskOperateDTO dto) {
     auditService.logDelegateOperation(task, AUDIT_TYPE_DELEGATE_RETURN);
     task.setAssigneeId(String.valueOf(task.getAssignorId()));
     task.setAssigneeName(task.getAssignorName());
@@ -701,8 +701,8 @@ public class FlowTaskCoreService {
    * @param instance 参数说明
    */
   private void validateFormFieldPerms(
-      FlowRunTaskDO task, Map<String, Object> variables, FlowInstanceVO instance) {
-    FlowNodeDO formNode = nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).map(converter::entityToDO).orElse(null);
+      FlowRunTask task, Map<String, Object> variables, FlowInstanceVO instance) {
+    FlowNode formNode = nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).map(converter::entityToDO).orElse(null);
     if (formNode == null) {
       return;
     }
@@ -733,11 +733,11 @@ public class FlowTaskCoreService {
    */
   private void advanceProcess(
       FlowInstanceVO instance,
-      FlowRunTaskDO task,
+      FlowRunTask task,
       Map<String, Object> vars,
       FlowPerformType performType,
       FlowTaskOperateDTO dto) {
-    List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(), AUDIT_TYPE_PASS, null, vars);
+    List<FlowNode> nextNodes = advancer.advance(instance, task.getNodeCode(), AUDIT_TYPE_PASS, null, vars);
     instanceService.generateTasksForNodes(task.getInstanceId(), nextNodes, vars);
     updateInstanceNode(instance, nextNodes);
     notificationService.fireTaskCompleted(task.getId(), AUDIT_TYPE_PASS, vars);
@@ -757,7 +757,7 @@ public class FlowTaskCoreService {
    * @param instance 参数说明
    * @param nextNodes 参数说明
    */
-  private void updateInstanceNode(FlowInstanceVO instance, List<FlowNodeDO> nextNodes) {
+  private void updateInstanceNode(FlowInstanceVO instance, List<FlowNode> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
       instanceRepository.updateStatus(
           instance.getId(),
@@ -779,7 +779,7 @@ public class FlowTaskCoreService {
    * @param variables  合并后的流程变量
    */
   private void firePersonalCompletedEvent(
-      FlowRunTaskDO task, FlowTaskOperateDTO dto, Map<String, Object> variables) {
+      FlowRunTask task, FlowTaskOperateDTO dto, Map<String, Object> variables) {
     try {
       String nodeExt = nodeRepository
           .findByCode(task.getDefinitionId(), task.getNodeCode())

@@ -13,8 +13,8 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -95,7 +95,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowOfflineAutoForwardService 接口定义
- * @see com.njydsz.workflow.infra.entity.FlowDelegateAuthDO 委派代理实体（优先使用其配置）
+ * @see com.njydsz.workflow.infra.entity.FlowDelegateAuth 委派代理实体（优先使用其配置）
  * @see FlowTaskService 流程任务服务（转交后触发新的待办）
  * @see com.njydsz.workflow.server.service.FlowDelegateAuthService 委派代理服务
  */
@@ -119,7 +119,7 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
   /**
    * 根据授权 ID 自动转交待办
    *
-   * <p>查询 {@link FlowDelegateAuthDO} 授权配置，校验：
+   * <p>查询 {@link FlowDelegateAuth} 授权配置，校验：
    *
    * <ul>
    *   <li>授权状态为 {@code ACTIVE}
@@ -137,7 +137,7 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
     if (!StringUtils.hasText(authId)) {
       return 0;
     }
-    FlowDelegateAuthDO auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
+    FlowDelegateAuth auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
     if (auth == null) {
       log.warn("[OfflineForward] 代理授权不存在: authId={}", authId);
       return 0;
@@ -215,7 +215,7 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
       String reason,
       String operatorId) {
     // 查询原办理人名下的待办
-    List<FlowRunTaskDO> tasks = taskRepository.selectPendingByAssignee(userId, flowCode, tenantId).stream()
+    List<FlowRunTask> tasks = taskRepository.selectPendingByAssignee(userId, flowCode, tenantId).stream()
         .map(converter::entityToDO)
         .toList();
     if (tasks.isEmpty()) {
@@ -224,7 +224,7 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
     }
 
     int successCount = 0;
-    for (FlowRunTaskDO task : tasks) {
+    for (FlowRunTask task : tasks) {
       try {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(task.getId());

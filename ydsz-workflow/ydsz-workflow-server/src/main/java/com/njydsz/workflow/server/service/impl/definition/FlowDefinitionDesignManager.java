@@ -26,9 +26,9 @@ import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowSkipDO;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowSkip;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
@@ -122,7 +122,7 @@ public class FlowDefinitionDesignManager {
           .message("definitionId/nodeCode 不能为空")
           .build();
     }
-    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
+    FlowNode node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -155,7 +155,7 @@ public class FlowDefinitionDesignManager {
           .message("definitionId/dto 不能为空")
           .build();
     }
-    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinition def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -191,8 +191,8 @@ public class FlowDefinitionDesignManager {
       skipRepository.findByDefinitionId(definitionId).forEach(s -> skipRepository.deleteById(s.getId()));
       nodeRepository.deleteByDefinitionId(definitionId);
 
-      List<FlowNodeDO> nodes = new ArrayList<>();
-      List<FlowSkipDO> skips = new ArrayList<>();
+      List<FlowNode> nodes = new ArrayList<>();
+      List<FlowSkip> skips = new ArrayList<>();
 
       if (hasBpmn) {
         BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
@@ -200,7 +200,7 @@ public class FlowDefinitionDesignManager {
         skips.addAll(bpmnModel.getSkips());
       } else {
         for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
-          FlowNodeDO node = new FlowNodeDO();
+          FlowNode node = new FlowNode();
           node.setNodeCode(n.getNodeCode());
           node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
           node.setNodeType(
@@ -211,7 +211,7 @@ public class FlowDefinitionDesignManager {
         }
         if (dto.getSkips() != null) {
           for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
-            FlowSkipDO skip = new FlowSkipDO();
+            FlowSkip skip = new FlowSkip();
             skip.setSkipName(s.getSkipName());
             skip.setSkipType(
                 StringUtils.hasText(s.getSkipType()) ? s.getSkipType() : FlowSkipType.PASS.name());
@@ -223,14 +223,14 @@ public class FlowDefinitionDesignManager {
         }
       }
 
-      for (FlowNodeDO node : nodes) {
+      for (FlowNode node : nodes) {
         node.setDefinitionId(definitionId);
         node.setFlowCode(def.getFlowCode());
         node.setTenantId(def.getTenantId());
         node.setProviderTraceId(dto.getProviderTraceId());
         nodeRepository.save(converter.entityToVO(node));
       }
-      for (FlowSkipDO skip : skips) {
+      for (FlowSkip skip : skips) {
         skip.setDefinitionId(definitionId);
         skip.setFlowCode(def.getFlowCode());
         skip.setTenantId(def.getTenantId());
@@ -259,10 +259,10 @@ public class FlowDefinitionDesignManager {
       return Collections.emptyMap();
     }
     Map<String, Object> result = new LinkedHashMap<>(detail);
-    List<FlowSkipDO> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkipDO.class);
+    List<FlowSkip> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkip.class);
     if (skips != null) {
       List<Map<String, Object>> edges = new ArrayList<>();
-      for (FlowSkipDO skip : skips) {
+      for (FlowSkip skip : skips) {
         Map<String, Object> edge = new LinkedHashMap<>();
         edge.put("id", skip.getId());
         String source = null;
@@ -298,7 +298,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(rollbackFor = Exception.class)
   public void saveDesignerData(String definitionId, Map<String, Object> designerData) {
-    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinition def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -322,7 +322,7 @@ public class FlowDefinitionDesignManager {
         Object coord = nodeData.get("coordinate");
         if (coord != null) {
           String coordStr = coord instanceof String ? (String) coord : YdszJson.toJson(coord);
-          FlowNodeDO nodeForCoord = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
+          FlowNode nodeForCoord = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
           if (nodeForCoord != null) {
             nodeForCoord.setCoordinate(coordStr);
             nodeRepository.update(converter.entityToVO(nodeForCoord));
@@ -330,7 +330,7 @@ public class FlowDefinitionDesignManager {
         }
         Object nodeName = nodeData.get("nodeName");
         if (nodeName != null) {
-          FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
+          FlowNode node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
           if (node != null) {
             node.setNodeName((String) nodeName);
             Object permFlag = nodeData.get("permissionFlag");
@@ -364,7 +364,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(readOnly = true)
   public String getFormConfig(String definitionId, String nodeCode) {
-    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
+    FlowNode node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -384,7 +384,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(rollbackFor = Exception.class)
   public void saveFormConfig(String definitionId, String nodeCode, String formFieldsConfig) {
-    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
+    FlowNode node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -407,7 +407,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(readOnly = true)
   public String getSlaConfig(String definitionId, String nodeCode) {
-    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
+    FlowNode node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -427,7 +427,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(rollbackFor = Exception.class)
   public void saveSlaConfig(String definitionId, String nodeCode, String slaConfig) {
-    FlowNodeDO node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
+    FlowNode node = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -462,7 +462,7 @@ public class FlowDefinitionDesignManager {
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }
-    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinition def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -487,7 +487,7 @@ public class FlowDefinitionDesignManager {
       return true;
     }
 
-    FlowDefinitionDO latest = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinition latest = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (latest == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -539,7 +539,7 @@ public class FlowDefinitionDesignManager {
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }
-    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinition def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -559,7 +559,7 @@ public class FlowDefinitionDesignManager {
       return true;
     }
 
-    FlowDefinitionDO latest = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinition latest = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (latest == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -592,7 +592,7 @@ public class FlowDefinitionDesignManager {
           .message("error.workflow.msg_d6e7f8a9")
           .build();
     }
-    FlowDefinitionDO def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinition def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       return null;
     }

@@ -93,7 +93,7 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
  * @see FlowTaskService 任务服务门面
  * @see WorkflowFacade 工作流门面（业务编排）
  * @see FlowTaskOperateDTO 任务操作 DTO
- * @see FlowRunTaskDO 运行时任务实体
+ * @see FlowRunTask 运行时任务实体
  */
 @Slf4j
 @RestController
@@ -1049,7 +1049,7 @@ public class FlowTaskController {
    * @return 抄送分页结果
    */
   @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-  @RateLimit(resource = "workflow.FlowCcDO.pageCc", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCc.pageCc", threshold = 50)
   @Idempotent(key = "ydsz:workflow:cc:page", ttlSeconds = 5)
   @PostMapping("/cc/page")
   @Audit(
@@ -1088,7 +1088,7 @@ public class FlowTaskController {
    * @return 操作结果
    */
   @Idempotent(key = "ydsz:workflow:cc:markRead", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCcDO.ccMarkRead", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCc.ccMarkRead", threshold = 50)
   @PostMapping("/cc/{id}/read")
   @Audit(
       module = "流程抄送",
@@ -1109,7 +1109,7 @@ public class FlowTaskController {
    * @return 已标记已读的记录数
    */
   @Idempotent(key = "ydsz:workflow:cc:markAllRead", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCcDO.ccMarkAllRead", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCc.ccMarkAllRead", threshold = 50)
   @PostMapping("/cc/readAll")
   @Audit(
       module = "流程抄送",
@@ -1157,7 +1157,7 @@ public class FlowTaskController {
    * @return 空响应
    */
   @Idempotent(key = "ydsz:workflow:attachment:delete", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowAttachmentDO.delete", threshold = 50)
+  @RateLimit(resource = "workflow.FlowAttachment.delete", threshold = 50)
   @DeleteMapping("/attachment/{attachmentId}")
   @Audit(
       module = "流程附件",

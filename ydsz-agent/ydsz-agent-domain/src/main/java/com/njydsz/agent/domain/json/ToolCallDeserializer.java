@@ -19,20 +19,22 @@ import com.njydsz.common.json.reader.JSONReader;
 public class ToolCallDeserializer implements JsonDeserializer<ToolCall> {
 
   @Override
-  @SuppressWarnings("unchecked")
   public ToolCall deserialize(JSONReader in) {
     String raw = in.readRawValue();
     Map<String, Object> m = YdszJson.fromJson(raw, Map.class);
     String id = (String) m.get("id");
-    Map<String, Object> function =
-        m.get("function") instanceof Map ? (Map<String, Object>) m.get("function") : null;
+    Object functionObj = m.get("function");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> function = functionObj instanceof Map ? (Map<String, Object>) functionObj : null;
     String name = function != null ? (String) function.get("name") : null;
     Object argsRaw = function != null ? function.get("arguments") : null;
     Map<String, Object> arguments;
     if (argsRaw instanceof String) {
       arguments = YdszJson.fromJson((String) argsRaw, Map.class);
     } else if (argsRaw instanceof Map) {
-      arguments = (Map<String, Object>) argsRaw;
+      @SuppressWarnings("unchecked")
+      Map<String, Object> castArgs = (Map<String, Object>) argsRaw;
+      arguments = castArgs;
     } else {
       arguments = Map.of();
     }

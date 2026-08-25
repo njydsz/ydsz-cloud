@@ -122,7 +122,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果，包含流程定义 ID
    */
   @Idempotent(key = "ydsz:workflow:definition:deploy", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowDefinitionDO.deploy", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinition.deploy", threshold = 50)
   @PostMapping("/definition/deploy")
   @Audit(
       module = "流程定义",
@@ -195,7 +195,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:definition:deprecate", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowDefinitionDO.deprecate", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinition.deprecate", threshold = 50)
   @PostMapping("/definition/{id}/deprecate")
   @Audit(
       module = "流程定义",
@@ -306,7 +306,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:definition:enable", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowDefinitionDO.enable", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinition.enable", threshold = 50)
   @PostMapping("/definition/{id}/enable")
   @Audit(
       module = "流程定义",
@@ -327,7 +327,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:definition:disable", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowDefinitionDO.disable", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinition.disable", threshold = 50)
   @PostMapping("/definition/{id}/disable")
   @Audit(
       module = "流程定义",
@@ -395,7 +395,7 @@ public class FlowDefinitionController {
   @Idempotent(
       key = "ydsz:workflow:FlowDefinitionController:updateNodeCoordinate:lock",
       ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowDefinitionDO.updateNodeCoordinate", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinition.updateNodeCoordinate", threshold = 50)
   @PostMapping("/definition/{id}/node/{nodeCode}/coordinate")
   @Audit(
       module = "流程定义",
@@ -420,7 +420,7 @@ public class FlowDefinitionController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:definition:update", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowDefinitionDO.updateDefinition", threshold = 50)
+  @RateLimit(resource = "workflow.FlowDefinition.updateDefinition", threshold = 50)
   @PutMapping("/definition/{id}")
   @Audit(
       module = "流程定义",

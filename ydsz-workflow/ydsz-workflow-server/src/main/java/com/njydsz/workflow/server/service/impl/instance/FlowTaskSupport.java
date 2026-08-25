@@ -14,8 +14,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowAuditLog;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
@@ -74,7 +74,7 @@ import com.njydsz.workflow.server.engine.listener.FlowListenerPluginExecutor;
  *
  * <pre>{@code
  * // 1. 任务校验（子 Service 内）
- * FlowRunTaskDO task = flowTaskSupport.getTaskOrThrow(taskId);
+ * FlowRunTask task = flowTaskSupport.getTaskOrThrow(taskId);
  *
  * // 2. 审计日志（PASS 操作）
  * flowTaskSupport.audit(task, "PASS", operatorId, task.getAssigneeId(),
@@ -90,8 +90,8 @@ import com.njydsz.workflow.server.engine.listener.FlowListenerPluginExecutor;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskServiceImpl FlowTask 门面（拆分入口）
- * @see FlowRunTaskDO 运行时任务实体
- * @see FlowAuditLogDO 审计日志实体
+ * @see FlowRunTask 运行时任务实体
+ * @see FlowAuditLog 审计日志实体
  * @see FlowEventListener 事件监听器 SPI
  * @see FlowWorkflowEvent Spring 异步事件
  * @see FlowSensitiveMasker 敏感数据脱敏器
@@ -154,12 +154,12 @@ public class FlowTaskSupport {
    * <p>子 Service 在执行任何写操作前必须先调用本方法获取任务，避免在「任务不存在」 的情况下误更新其他数据。本方法是子 Service 的「准入校验」入口。
    *
    * @param id 任务主键 ID（雪花算法生成的字符串）
-   * @return 任务实体（{@link FlowRunTaskDO}），一定非空
+   * @return 任务实体（{@link FlowRunTask}），一定非空
    * @throws SysException 当任务不存在时抛出，错误码 {@code NOT_FOUND}， 错误信息 key 为 {@code
    *     error.workflow.msg_6541ab08}（i18n 资源键）
    */
-  public FlowRunTaskDO getTaskOrThrow(String id) {
-    FlowRunTaskDO task = taskRepository.findById(id).map(converter::entityToDO).orElse(null);
+  public FlowRunTask getTaskOrThrow(String id) {
+    FlowRunTask task = taskRepository.findById(id).map(converter::entityToDO).orElse(null);
     if (task == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -175,7 +175,7 @@ public class FlowTaskSupport {
   /**
    * 写审计日志（无意见分类）
    *
-   * <p>适用于无需区分意见类型的操作（如「转办 / 委派 / 加签 / 撤回 / 催办」等 流程性操作），内部委托 {@link #audit(FlowRunTaskDO, String,
+   * <p>适用于无需区分意见类型的操作（如「转办 / 委派 / 加签 / 撤回 / 催办」等 流程性操作），内部委托 {@link #audit(FlowRunTask, String,
    * String, String, String, String)}。
    *
    * @param task 任务实体（用于提取 instanceId / nodeCode / tenantId 等上下文）
@@ -185,7 +185,7 @@ public class FlowTaskSupport {
    * @param comment 审批意见 / 操作备注（自动脱敏）
    */
   public void audit(
-      FlowRunTaskDO task, String action, String operatorId, String targetId, String comment) {
+      FlowRunTask task, String action, String operatorId, String targetId, String comment) {
     audit(task, action, operatorId, targetId, comment, null);
   }
 
@@ -216,14 +216,14 @@ public class FlowTaskSupport {
    *     INQUIRE}（询问），可空
    */
   public void audit(
-      FlowRunTaskDO task,
+      FlowRunTask task,
       String action,
       String operatorId,
       String targetId,
       String comment,
       String commentType) {
     try {
-      FlowAuditLogDO log = new FlowAuditLogDO();
+      FlowAuditLog log = new FlowAuditLog();
       log.setInstanceId(task.getInstanceId());
       log.setTaskId(task.getId());
       log.setFlowCode(task.getFlowCode());

@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.FileVersionMapper">
 
-    <resultMap id="FileVersionResult" type="com.njydsz.nextwiki.infra.entity.FileVersionDO">
+    <resultMap id="FileVersionResult" type="com.njydsz.nextwiki.infra.entity.FileVersion">
         <id column="id" property="id"/>
         <result column="file_node_id" property="fileNodeId"/>
         <result column="version_number" property="versionNumber"/>

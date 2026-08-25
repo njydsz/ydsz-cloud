@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 
 /**
  * 待办智能排序服务。
@@ -50,15 +50,15 @@ public class FlowTodoSmartSortService {
    * @param tasks 待办任务列表
    * @return 排序后的列表（分值高的在前）
    */
-  public List<FlowRunTaskDO> smartSort(List<FlowRunTaskDO> tasks) {
+  public List<FlowRunTask> smartSort(List<FlowRunTask> tasks) {
     if (tasks == null || tasks.size() <= 1) {
       return tasks;
     }
     LocalDateTime now = LocalDateTime.now();
     return tasks.stream()
         .sorted(
-            Comparator.comparingInt((FlowRunTaskDO t) -> -calculateScore(t, now)) // 降序
-                .thenComparing(FlowRunTaskDO::getCreatedAt)) // 同分按创建时间
+            Comparator.comparingInt((FlowRunTask t) -> -calculateScore(t, now)) // 降序
+                .thenComparing(FlowRunTask::getCreatedAt)) // 同分按创建时间
         .collect(Collectors.toList());
   }
 
@@ -69,7 +69,7 @@ public class FlowTodoSmartSortService {
    * @param now 参数说明
    * @return 返回值说明
    */
-  public int calculateScore(FlowRunTaskDO task, LocalDateTime now) {
+  public int calculateScore(FlowRunTask task, LocalDateTime now) {
     int score = 0;
 
     // 1. 基础优先级

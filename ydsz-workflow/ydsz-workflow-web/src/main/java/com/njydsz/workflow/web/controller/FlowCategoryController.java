@@ -111,7 +111,7 @@ public class FlowCategoryController {
    * @return 新建分类 ID
    */
   @Idempotent(key = "ydsz:workflow:category:create", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCategoryDO.create", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCategory.create", threshold = 50)
   @PostMapping
   @Audit(
       module = "流程分类",
@@ -136,7 +136,7 @@ public class FlowCategoryController {
    * @return 空响应
    */
   @Idempotent(key = "ydsz:workflow:category:update", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCategoryDO.update", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCategory.update", threshold = 50)
   @PutMapping
   @Audit(
       module = "流程分类",
@@ -167,7 +167,7 @@ public class FlowCategoryController {
    * @return 空响应
    */
   @Idempotent(key = "ydsz:workflow:category:delete", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCategoryDO.delete", threshold = 50)
+  @RateLimit(resource = "workflow.FlowCategory.delete", threshold = 50)
   @DeleteMapping("/{id}")
   @Audit(
       module = "流程分类",

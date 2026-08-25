@@ -24,7 +24,7 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
 
 /**
  * 流程定义查询服务
@@ -181,7 +181,7 @@ public class FlowDefinitionQueryService {
    */
   @Transactional(readOnly = true)
   public List<Map<String, Object>> listVersions(String definitionId) {
-    FlowDefinitionDO def =
+    FlowDefinition def =
         definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
     if (def == null) {
       throw SysException.builder()
@@ -190,12 +190,12 @@ public class FlowDefinitionQueryService {
           .build();
     }
     String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
-    List<FlowDefinitionDO> versions =
+    List<FlowDefinition> versions =
         definitionRepository.findByFlowCodeAndTenantId(def.getFlowCode(), tenantId).stream()
             .map(converter::entityToDO)
             .toList();
     List<Map<String, Object>> result = new ArrayList<>(versions.size());
-    for (FlowDefinitionDO v : versions) {
+    for (FlowDefinition v : versions) {
       Map<String, Object> map = new LinkedHashMap<>();
       map.put("id", v.getId());
       map.put("version", v.getFlowVersion());

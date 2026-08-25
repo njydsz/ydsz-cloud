@@ -20,10 +20,10 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.infra.entity.FlowInstanceDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowHisInstance;
+import com.njydsz.workflow.infra.entity.FlowHisTask;
+import com.njydsz.workflow.infra.entity.FlowInstance;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 
@@ -103,8 +103,8 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  * @since 1.0.0
  * @see FlowHistoryArchiveService 接口定义
  * @see com.njydsz.workflow.server.config.FlowProperties.History 历史数据配置
- * @see com.njydsz.workflow.infra.entity.FlowHisInstanceDO 历史实例实体
- * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisInstance 历史实例实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTask 历史任务实体
  */
 @Slf4j
 @Service
@@ -153,7 +153,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         FlowInstanceStatus.TERMINATED.name(),
         FlowInstanceStatus.REJECTED.name());
 
-    List<FlowInstanceDO> candidates;
+    List<FlowInstance> candidates;
     try {
       candidates = instanceRepository.findArchiveCandidates(statuses, threshold, batch).stream()
           .map(converter::entityToDO)
@@ -181,7 +181,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     int errors = 0;
     List<String> archivedIds = new ArrayList<>();
 
-    for (FlowInstanceDO instance : candidates) {
+    for (FlowInstance instance : candidates) {
       if (System.currentTimeMillis() - start > maxMs) {
         log.warn(
             "[FlowHistoryArchive] 达到耗时上限，剩余 {} 个待下次处理",
@@ -254,7 +254,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     LocalDateTime threshold = LocalDateTime.now().minusDays(days);
 
     // 1. 查询待清理的归档实例
-    List<FlowHisInstanceDO> candidates;
+    List<FlowHisInstance> candidates;
     try {
       // 每批最多 500 条，避免单次事务过大
       candidates = hisInstanceRepository.findArchivedBefore(threshold, ARCHIVE_BATCH_SIZE).stream()
@@ -277,7 +277,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     }
 
     // 2. 批量删除 his_instance
-    List<String> instanceIds = candidates.stream().map(FlowHisInstanceDO::getId).toList();
+    List<String> instanceIds = candidates.stream().map(FlowHisInstance::getId).toList();
     int purgedInstances = 0;
     try {
       purgedInstances = hisInstanceRepository.deleteByIds(instanceIds);
@@ -318,24 +318,24 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
    * @return 返回值说明
    */
   @Transactional(rollbackFor = Exception.class)
-  public boolean archiveOne(FlowInstanceDO instance) {
+  public boolean archiveOne(FlowInstance instance) {
     String instanceId = instance.getId();
 
     // 1. 校验所有任务都已归档到 his_task
-    List<FlowRunTaskDO> tasks = taskRepository.findByInstanceId(instanceId).stream()
+    List<FlowRunTask> tasks = taskRepository.findByInstanceId(instanceId).stream()
         .map(converter::entityToDO).toList();
-    List<FlowHisTaskDO> hisTasks = hisTaskRepository.findByInstanceId(instanceId).stream()
+    List<FlowHisTask> hisTasks = hisTaskRepository.findByInstanceId(instanceId).stream()
         .map(converter::entityToDO).toList();
     Set<String> archivedTaskIds = new HashSet<>();
     if (hisTasks != null) {
-      for (FlowHisTaskDO his : hisTasks) {
+      for (FlowHisTask his : hisTasks) {
         if (his.getTaskId() != null) {
           archivedTaskIds.add(his.getTaskId());
         }
       }
     }
     if (tasks != null) {
-      for (FlowRunTaskDO task : tasks) {
+      for (FlowRunTask task : tasks) {
         if (task.getId() != null
             && !archivedTaskIds.contains(task.getId())
             && !isTerminalTaskStatus(task.getTaskStatus())) {
@@ -350,7 +350,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     }
 
     // 2. 写入归档表（his_instance，variable 以 JSON blob 存储）
-    FlowHisInstanceDO hisInstance = toHisInstance(instance);
+    FlowHisInstance hisInstance = toHisInstance(instance);
     hisInstanceRepository.save(converter.entityToVO(hisInstance));
 
     log.info(
@@ -369,8 +369,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
    * @param ins 参数说明
    * @return 返回值说明
    */
-  private FlowHisInstanceDO toHisInstance(FlowInstanceDO ins) {
-    FlowHisInstanceDO his = new FlowHisInstanceDO();
+  private FlowHisInstance toHisInstance(FlowInstance ins) {
+    FlowHisInstance his = new FlowHisInstance();
     his.setId(ins.getId()); // 保留原 ID，方便按业务 ID 反查
     his.setFlowCode(ins.getFlowCode());
     his.setFlowName(ins.getFlowName());

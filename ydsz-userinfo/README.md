@@ -113,12 +113,12 @@ ydsz-userinfo/
 | `/api/v1/user` | 用户 CRUD + 分页 + 密码管理 + 角色分配 + 批量操作 + Excel 导入导出 |
 | `/api/v1/user/{userId}/login-history` | 用户登录历史查询 |
 | `/api/v1/profile` | 用户个人信息更新 |
-| `/api/v1/RoleDO` | 角色 CRUD + 权限分配 |
+| `/api/v1/Role` | 角色 CRUD + 权限分配 |
 | `/api/v1/dept` | 部门 CRUD + 树形结构 |
-| `/api/v1/MenuDO` | 菜单 CRUD + 树形结构 |
-| `/api/v1/CompanyDO` | 公司 CRUD |
-| `/api/v1/PostDO` | 岗位 CRUD |
-| `/api/v1/LanguageDO` | 语言 CRUD |
+| `/api/v1/Menu` | 菜单 CRUD + 树形结构 |
+| `/api/v1/Company` | 公司 CRUD |
+| `/api/v1/Post` | 岗位 CRUD |
+| `/api/v1/Language` | 语言 CRUD |
 | `/api/v1/captcha` | 图形验证码生成/校验 |
 | `/api/v1/oauth2/authorize` `/token` | OAuth2 授权码模式（支持 PKCE + scope 细粒度） |
 | `/api/v1/admin/oauth2/applications` | OAuth2 应用注册管理 |

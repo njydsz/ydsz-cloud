@@ -10,7 +10,7 @@ import lombok.Data;
 /**
  * 流程任务视图对象
  *
- * <p>用于 Controller 层返回待办/已办任务数据，对应实体 {@link com.njydsz.workflow.infra.entity.FlowRunTaskDO}。
+ * <p>用于 Controller 层返回待办/已办任务数据，对应实体 {@link com.njydsz.workflow.infra.entity.FlowRunTask}。
  *
  * @author ydsz-team
  * @since 1.0.0

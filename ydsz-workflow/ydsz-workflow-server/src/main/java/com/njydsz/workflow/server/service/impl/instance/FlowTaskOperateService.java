@@ -23,9 +23,9 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowHisTask;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -95,7 +95,7 @@ public class FlowTaskOperateService {
           .message("error.workflow.msg_6ddae4d1")
           .build();
     }
-    FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
     String originalAssignorId = parseAssignorId(task.getAssigneeId());
     String originalAssignorName = task.getAssigneeName();
     task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
@@ -135,7 +135,7 @@ public class FlowTaskOperateService {
           .message("error.workflow.msg_d4faa79e")
           .build();
     }
-    FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
     String originalAssigneeId = parseAssignorId(task.getAssigneeId());
     String originalAssigneeName = task.getAssigneeName();
     task.setAssignorId(originalAssigneeId);
@@ -173,7 +173,7 @@ public class FlowTaskOperateService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void jump(FlowTaskOperateDTO dto) {
-    FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -196,7 +196,7 @@ public class FlowTaskOperateService {
           .build();
     }
     // 校验目标节点存在
-    FlowNodeDO targetNode = nodeRepository.findByCode(task.getDefinitionId(), dto.getTargetNodeCode()).map(converter::entityToDO).orElse(null);
+    FlowNode targetNode = nodeRepository.findByCode(task.getDefinitionId(), dto.getTargetNodeCode()).map(converter::entityToDO).orElse(null);
     if (targetNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -257,7 +257,7 @@ public class FlowTaskOperateService {
   @Transactional(rollbackFor = Exception.class)
   public String retract(String hisTaskId, String operatorId, String comment) {
     // 1. 查询并校验历史任务
-    FlowHisTaskDO hisTask = findHisTaskOrThrow(hisTaskId);
+    FlowHisTask hisTask = findHisTaskOrThrow(hisTaskId);
     validateRetractPermission(hisTask, operatorId);
 
     // 2. 校验实例存在且为 RUNNING
@@ -271,7 +271,7 @@ public class FlowTaskOperateService {
     taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
 
     // 5. 重新生成本节点的 PENDING 任务
-    FlowRunTaskDO newTask = recreateRetractTask(hisTask, instance, comment);
+    FlowRunTask newTask = recreateRetractTask(hisTask, instance, comment);
 
     // 6. 更新实例 currentNodeCode 回退到本节点
     instanceRepository.updateStatus(instance.getId(), null, hisTask.getNodeCode(), hisTask.getNodeName(), null, null);
@@ -299,8 +299,8 @@ public class FlowTaskOperateService {
    * @param hisTaskId 参数说明
    * @return 返回值说明
    */
-  private FlowHisTaskDO findHisTaskOrThrow(String hisTaskId) {
-    FlowHisTaskDO hisTask = hisTaskRepository.findById(hisTaskId).map(converter::entityToDO).orElse(null);
+  private FlowHisTask findHisTaskOrThrow(String hisTaskId) {
+    FlowHisTask hisTask = hisTaskRepository.findById(hisTaskId).map(converter::entityToDO).orElse(null);
     if (hisTask == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -317,7 +317,7 @@ public class FlowTaskOperateService {
    * @param hisTask 参数说明
    * @param operatorId 参数说明
    */
-  private void validateRetractPermission(FlowHisTaskDO hisTask, String operatorId) {
+  private void validateRetractPermission(FlowHisTask hisTask, String operatorId) {
     if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -369,7 +369,7 @@ public class FlowTaskOperateService {
    * @param instanceId 参数说明
    */
   private void validateNextTasksAllPending(String instanceId) {
-    List<FlowRunTaskDO> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
+    List<FlowRunTask> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
         .map(converter::entityToDO)
         .collect(Collectors.toList());
     boolean anyProcessed = pendingTasks.stream()
@@ -391,8 +391,8 @@ public class FlowTaskOperateService {
    * @param comment 参数说明
    * @return 返回值说明
    */
-  private FlowRunTaskDO recreateRetractTask(FlowHisTaskDO hisTask, FlowInstanceVO instance, String comment) {
-    FlowRunTaskDO newTask = new FlowRunTaskDO();
+  private FlowRunTask recreateRetractTask(FlowHisTask hisTask, FlowInstanceVO instance, String comment) {
+    FlowRunTask newTask = new FlowRunTask();
     newTask.setInstanceId(instance.getId());
     newTask.setFlowCode(instance.getFlowCode());
     newTask.setDefinitionId(instance.getDefinitionId());
@@ -426,7 +426,7 @@ public class FlowTaskOperateService {
    * @param comment 参数说明
    */
   private void markHisTaskRetracted(String hisTaskId, String comment) {
-    FlowHisTaskDO update = new FlowHisTaskDO();
+    FlowHisTask update = new FlowHisTask();
     update.setId(hisTaskId);
     update.setTaskStatus("RETRACTED");
     update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
@@ -454,7 +454,7 @@ public class FlowTaskOperateService {
    * @param node 参数说明
    * @return 返回值说明
    */
-  private boolean isFreeJumpEnabled(FlowNodeDO node) {
+  private boolean isFreeJumpEnabled(FlowNode node) {
     Map<String, Object> ext = parseExtConfig(node.getExt());
     Object val = ext.get("freeJump");
     if (val == null) {

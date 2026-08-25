@@ -23,9 +23,9 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowEventSubscription;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
@@ -90,7 +90,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowEventSubscriptionService 接口定义
- * @see com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO 事件订阅实体
+ * @see com.njydsz.workflow.infra.entity.FlowEventSubscription 事件订阅实体
  * @see com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer 流程推进引擎
  * @see FlowInstanceService 流程实例服务
  */
@@ -123,7 +123,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String createSubscription(
-      String instanceId, FlowNodeDO node, Map<String, Object> variables, String boundaryTaskId) {
+      String instanceId, FlowNode node, Map<String, Object> variables, String boundaryTaskId) {
     if (instanceId == null || node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -149,7 +149,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
     String correlationKey = extractCorrelationKey(ext, variables);
 
-    FlowEventSubscriptionDO subscription = new FlowEventSubscriptionDO();
+    FlowEventSubscription subscription = new FlowEventSubscription();
     subscription.setTenantId(instance.getTenantId());
     subscription.setInstanceId(instanceId);
     subscription.setDefinitionId(instance.getDefinitionId());
@@ -187,7 +187,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
-    List<FlowEventSubscriptionDO> subscriptions =
+    List<FlowEventSubscription> subscriptions =
         subscriptionRepository.findWaitingByEvent(tid, "MESSAGE", messageName).stream()
             .map(converter::entityToDO).toList();
 
@@ -197,7 +197,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     int triggered = 0;
-    for (FlowEventSubscriptionDO sub : subscriptions) {
+    for (FlowEventSubscription sub : subscriptions) {
       try {
         triggerSubscription(sub, payload, "API");
         triggered++;
@@ -229,7 +229,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
-    List<FlowEventSubscriptionDO> subscriptions =
+    List<FlowEventSubscription> subscriptions =
         subscriptionRepository.findWaitingByEvent(tid, "ERROR", errorCode).stream()
             .map(converter::entityToDO).toList();
 
@@ -239,7 +239,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     int triggered = 0;
-    for (FlowEventSubscriptionDO sub : subscriptions) {
+    for (FlowEventSubscription sub : subscriptions) {
       try {
         triggerSubscription(sub, payload, "API");
         triggered++;
@@ -275,7 +275,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   @Override
   @Transactional(readOnly = true)
-  public List<FlowEventSubscriptionDO> listByInstance(String instanceId) {
+  public List<FlowEventSubscription> listByInstance(String instanceId) {
     if (instanceId == null) {
       return Collections.emptyList();
     }
@@ -297,7 +297,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   }
 
   @Override
-  public boolean isEventCatchNode(FlowNodeDO node) {
+  public boolean isEventCatchNode(FlowNode node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return false;
     }
@@ -320,7 +320,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
    * @param triggerSource 参数说明
    */
   private void triggerSubscription(
-      FlowEventSubscriptionDO sub, String payload, String triggerSource) {
+      FlowEventSubscription sub, String payload, String triggerSource) {
     // 1. 标记订阅已触发
     subscriptionRepository.markTriggered(sub.getId(), payload, triggerSource, LocalDateTime.now());
 
@@ -356,13 +356,13 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     // 5. 从事件捕获节点推进流程
-    FlowNodeDO catchNode = nodeRepository.findByCode(instance.getDefinitionId(), sub.getNodeCode()).map(converter::entityToDO).orElse(null);
+    FlowNode catchNode = nodeRepository.findByCode(instance.getDefinitionId(), sub.getNodeCode()).map(converter::entityToDO).orElse(null);
     if (catchNode == null) {
       log.warn("[Flow] 事件捕获节点不存在: subId={} nodeCode={}", sub.getId(), sub.getNodeCode());
       return;
     }
 
-    List<FlowNodeDO> nextNodes =
+    List<FlowNode> nextNodes =
         advancer.advance(instance, sub.getNodeCode(), "PASS", null, variables);
     if (nextNodes.isEmpty()) {
       log.info("[Flow] 事件触发后无下游节点: subId={} instanceId={}", sub.getId(), sub.getInstanceId());
@@ -398,7 +398,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
    * @param errorCode 参数说明
    */
   private void cancelBoundaryTask(String taskId, String errorCode) {
-    FlowRunTaskDO task = taskRepository.findById(taskId).map(converter::entityToDO).orElse(null);
+    FlowRunTask task = taskRepository.findById(taskId).map(converter::entityToDO).orElse(null);
     if (task == null) {
       return;
     }
@@ -409,7 +409,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     log.info("[Flow] 边界事件取消任务: taskId={} errorCode={}", taskId, errorCode);
   }
 
-  private Map<String, Object> parseExt(FlowNodeDO node) {
+  private Map<String, Object> parseExt(FlowNode node) {
     return FlowNodeExt.parseSafe(node.getExt());
   }
 

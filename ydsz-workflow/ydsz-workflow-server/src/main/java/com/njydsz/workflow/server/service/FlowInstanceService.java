@@ -38,7 +38,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
  *
  * <ul>
  *   <li>「我的发起」「我的待办」使用 {@code ydsz_flow_instance} 复合索引（{@code idx_initiator}）
- *   <li>待办列表使用 {@link FlowRunTaskDO} 索引（{@code idx_assignee}）避免 JOIN
+ *   <li>待办列表使用 {@link FlowRunTask} 索引（{@code idx_assignee}）避免 JOIN
  *   <li>实例详情通过冗余字段（{@code initiatorName/currentNodeName}）减少 JOIN
  * </ul>
  *

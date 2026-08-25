@@ -289,7 +289,7 @@ public class FlowTemplateController {
    */
   @Operation(summary = "P2-9: 子模板同步父模板最新版本")
   @Idempotent(key = "ydsz:workflow:template:syncFromParent", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowTemplateDO.syncFromParent", threshold = 50)
+  @RateLimit(resource = "workflow.FlowTemplate.syncFromParent", threshold = 50)
   @PostMapping("/{childTemplateCode}/sync")
   @Audit(
       module = "流程模板",

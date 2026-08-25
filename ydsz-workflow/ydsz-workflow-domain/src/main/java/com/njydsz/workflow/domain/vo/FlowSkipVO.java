@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.json.YdszJson;
 
 /**
- * FlowSkipDO 视图对象。
+ * FlowSkip 视图对象。
  *
  * <p>提供 ext JSON 的懒解析 getter 方法，避免调用方重复编写解析逻辑。
  * 解析结果缓存在 {@code parsedExt} 中，同一 VO 多次调用只解析一次。

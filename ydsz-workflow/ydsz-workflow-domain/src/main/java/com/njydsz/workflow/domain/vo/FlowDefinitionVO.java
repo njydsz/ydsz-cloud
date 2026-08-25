@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * 流程定义视图对象
  *
- * <p>用于 Controller 层返回流程定义数据，对应实体 {@link com.njydsz.workflow.infra.entity.FlowDefinitionDO}。
+ * <p>用于 Controller 层返回流程定义数据，对应实体 {@link com.njydsz.workflow.infra.entity.FlowDefinition}。
  *
  * @author ydsz-team
  * @since 1.0.0

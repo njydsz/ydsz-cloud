@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.ShareLinkMapper">
 
-    <resultMap id="ShareLinkResult" type="com.njydsz.nextwiki.infra.entity.ShareLinkDO">
+    <resultMap id="ShareLinkResult" type="com.njydsz.nextwiki.infra.entity.ShareLink">
         <id column="id" property="id"/>
         <result column="file_node_id" property="fileNodeId"/>
         <result column="share_code" property="shareCode"/>

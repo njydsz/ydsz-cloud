@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.ShareRecipientMapper">
 
-    <resultMap id="ShareRecipientResult" type="com.njydsz.nextwiki.infra.entity.ShareRecipientDO">
+    <resultMap id="ShareRecipientResult" type="com.njydsz.nextwiki.infra.entity.ShareRecipient">
         <id column="id" property="id"/>
         <result column="share_id" property="shareId"/>
         <result column="recipient_type" property="recipientType"/>

@@ -258,7 +258,6 @@ public class HumanApprovalService {
   }
 
   /** 将 VO 转换为内存请求对象。 */
-  @SuppressWarnings("unchecked")
   private ApprovalRequest toRequest(AgentApprovalVO vo) {
     Map<String, Object> context = null;
     if (vo.getContextJson() != null && !vo.getContextJson().isBlank()) {

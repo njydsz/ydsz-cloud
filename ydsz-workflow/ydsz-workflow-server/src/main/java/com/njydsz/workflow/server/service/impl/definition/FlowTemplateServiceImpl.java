@@ -23,10 +23,10 @@ import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.repository.FlowTemplateRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowSkipDO;
-import com.njydsz.workflow.infra.entity.FlowTemplateDO;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowSkip;
+import com.njydsz.workflow.infra.entity.FlowTemplate;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
@@ -54,7 +54,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
  *         <li>{@link #inheritFromParent} — 继承父模板（{@code inheritType=INHERIT}）， 保留父子关联
  *         <li>{@link #syncFromParent} — 子模板同步父模板最新内容，生成 {@code -synced} 版本
  *       </ul>
- *   <li><b>BPMN 2.0 转换</b>：{@link #generateBpmnXml} — 将内部 {@code FlowNodeDO/FlowSkipDO} 模型 序列化为标准 BPMN
+ *   <li><b>BPMN 2.0 转换</b>：{@link #generateBpmnXml} — 将内部 {@code FlowNode/FlowSkip} 模型 序列化为标准 BPMN
  *       2.0 XML（兼容 Flowable 命名空间）
  * </ul>
  *
@@ -100,7 +100,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTemplateService 接口定义
- * @see FlowTemplateDO 模板实体（含版本与继承字段）
+ * @see FlowTemplate 模板实体（含版本与继承字段）
  * @see FlowDefinitionService 流程定义服务（模板导入时调用 deploy）
  */
 @Slf4j
@@ -189,12 +189,12 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   @Transactional(readOnly = true)
   public List<Map<String, Object>> listTemplates(String category) {
     try {
-      List<FlowTemplateDO> templates = templateRepository.findLatestByCategory(category).stream()
+      List<FlowTemplate> templates = templateRepository.findLatestByCategory(category).stream()
           .map(converter::entityToDO)
           .toList();
       return templates.stream().map(this::toSummaryMap).collect(Collectors.toList());
     } catch (Exception e) {
-      log.error("[FlowTemplateDO] 列出模板异常: category={} err={}", category, e.getMessage(), e);
+      log.error("[FlowTemplate] 列出模板异常: category={} err={}", category, e.getMessage(), e);
       return List.of();
     }
   }
@@ -224,7 +224,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (cached != null) {
         return cached;
       }
-      FlowTemplateDO template = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplate template = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
       if (template == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -238,7 +238,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     } catch (SysException e) {
       throw e;
     } catch (Exception e) {
-      log.error("[FlowTemplateDO] 获取模板详情异常: templateCode={} err={}", templateCode, e.getMessage(), e);
+      log.error("[FlowTemplate] 获取模板详情异常: templateCode={} err={}", templateCode, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_c2642700")
@@ -292,7 +292,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       }
       // P6: 导入会递增 use_count，先失效缓存确保下次读取回源最新数据
       evictTemplateCache(templateCode);
-      FlowTemplateDO template = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplate template = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
       if (template == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -326,7 +326,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       templateRepository.incrementUseCount(templateCode);
 
       log.info(
-          "[FlowTemplateDO] 模板导入成功: templateCode={} definitionId={} flowName={}",
+          "[FlowTemplate] 模板导入成功: templateCode={} definitionId={} flowName={}",
           templateCode,
           definitionId,
           dto.getFlowName());
@@ -334,7 +334,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     } catch (SysException e) {
       throw e;
     } catch (Exception e) {
-      log.error("[FlowTemplateDO] 模板导入异常: templateCode={} err={}", templateCode, e.getMessage(), e);
+      log.error("[FlowTemplate] 模板导入异常: templateCode={} err={}", templateCode, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_ecc1169b")
@@ -389,7 +389,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
 
-      FlowDefinitionDO definition = (FlowDefinitionDO) detail.get("definition");
+      FlowDefinition definition = (FlowDefinition) detail.get("definition");
       if (definition == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -405,13 +405,13 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       String bpmnXml = generateBpmnXml(detail);
 
       // 检查是否已存在（最新版本）
-      FlowTemplateDO existing = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplate existing = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
       if (existing != null) {
         // P2-9: 已存在 → 创建新版本，旧版本统一降级为 is_latest=0
         templateRepository.markAsNotLatest(templateCode);
         int newVersion = templateRepository.selectMaxVersion(templateCode).map(v -> v + 1).orElse(1);
 
-        FlowTemplateDO template = new FlowTemplateDO();
+        FlowTemplate template = new FlowTemplate();
         template.setTemplateCode(templateCode);
         template.setTemplateName(templateName);
         template.setCategory(StringUtils.hasText(category) ? category : "GENERAL");
@@ -430,13 +430,13 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         templateRepository.save(converter.entityToVO(template));
         syncSearchIndex(template);
         log.info(
-            "[FlowTemplateDO] 模板新版本已创建: templateCode={} version={} definitionId={}",
+            "[FlowTemplate] 模板新版本已创建: templateCode={} version={} definitionId={}",
             templateCode,
             newVersion,
             definitionId);
       } else {
         // 新建模板（version=1, is_latest=1, inherit_type=STANDALONE）
-        FlowTemplateDO template = new FlowTemplateDO();
+        FlowTemplate template = new FlowTemplate();
         template.setTemplateCode(templateCode);
         template.setTemplateName(templateName);
         template.setCategory(StringUtils.hasText(category) ? category : "GENERAL");
@@ -453,14 +453,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         templateRepository.save(converter.entityToVO(template));
         syncSearchIndex(template);
         log.info(
-            "[FlowTemplateDO] 模板已创建: templateCode={} version=1 definitionId={}",
+            "[FlowTemplate] 模板已创建: templateCode={} version=1 definitionId={}",
             templateCode,
             definitionId);
       }
     } catch (SysException e) {
       throw e;
     } catch (Exception e) {
-      log.error("[FlowTemplateDO] 导出模板异常: definitionId={} err={}", definitionId, e.getMessage(), e);
+      log.error("[FlowTemplate] 导出模板异常: definitionId={} err={}", definitionId, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_d119b2ed")
@@ -488,14 +488,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .message("error.workflow.msg_f68a3fa3")
             .build();
       }
-      List<FlowTemplateDO> versions = templateRepository.findVersionsByTemplateCode(templateCode).stream()
+      List<FlowTemplate> versions = templateRepository.findVersionsByTemplateCode(templateCode).stream()
           .map(converter::entityToDO)
           .toList();
       return versions.stream().map(this::toSummaryMap).collect(Collectors.toList());
     } catch (SysException e) {
       throw e;
     } catch (Exception e) {
-      log.error("[FlowTemplateDO] 列出版本异常: templateCode={} err={}", templateCode, e.getMessage(), e);
+      log.error("[FlowTemplate] 列出版本异常: templateCode={} err={}", templateCode, e.getMessage(), e);
       return List.of();
     }
   }
@@ -520,7 +520,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       }
       // version 为空 → 返回最新版本（保持与 getTemplate 一致的语义）
       if (version == null) {
-        FlowTemplateDO latest = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
+        FlowTemplate latest = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
         if (latest == null) {
           throw SysException.builder()
               .resultCode(YdszResultCode.NOT_FOUND)
@@ -538,7 +538,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 在所有版本中筛选指定版本
-      List<FlowTemplateDO> versions = templateRepository.findVersionsByTemplateCode(templateCode).stream()
+      List<FlowTemplate> versions = templateRepository.findVersionsByTemplateCode(templateCode).stream()
           .map(converter::entityToDO)
           .toList();
       if (versions.isEmpty()) {
@@ -563,7 +563,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       throw e;
     } catch (Exception e) {
       log.error(
-          "[FlowTemplateDO] 获取模板版本异常: templateCode={} version={} err={}",
+          "[FlowTemplate] 获取模板版本异常: templateCode={} version={} err={}",
           templateCode,
           version,
           e.getMessage(),
@@ -598,7 +598,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取当前最新版本作为复制源
-      FlowTemplateDO source = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplate source = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
       if (source == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -617,7 +617,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       templateRepository.markAsNotLatest(templateCode);
       int newVersion = templateRepository.selectMaxVersion(templateCode).map(v -> v + 1).orElse(1);
 
-      FlowTemplateDO newVer = new FlowTemplateDO();
+      FlowTemplate newVer = new FlowTemplate();
       newVer.setTemplateCode(templateCode);
       newVer.setTemplateName(source.getTemplateName());
       newVer.setCategory(source.getCategory());
@@ -639,7 +639,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       syncSearchIndex(newVer);
 
       log.info(
-          "[FlowTemplateDO] 新版本已创建: templateCode={} oldVersion={} newVersion={} label={}",
+          "[FlowTemplate] 新版本已创建: templateCode={} oldVersion={} newVersion={} label={}",
           templateCode,
           source.getVersion(),
           newVersion,
@@ -648,7 +648,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     } catch (SysException e) {
       throw e;
     } catch (Exception e) {
-      log.error("[FlowTemplateDO] 创建新版本异常: templateCode={} err={}", templateCode, e.getMessage(), e);
+      log.error("[FlowTemplate] 创建新版本异常: templateCode={} err={}", templateCode, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_c2642700")
@@ -740,7 +740,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取源模板最新版本
-      FlowTemplateDO source = templateRepository.findByTemplateCode(sourceTemplateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplate source = templateRepository.findByTemplateCode(sourceTemplateCode).map(converter::entityToDO).orElse(null);
       if (source == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -749,7 +749,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 校验新编码未占用
-      FlowTemplateDO existing = templateRepository.findByTemplateCode(newTemplateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplate existing = templateRepository.findByTemplateCode(newTemplateCode).map(converter::entityToDO).orElse(null);
       if (existing != null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
@@ -758,7 +758,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 复制为新模板（version=1, is_latest=1, inherit_type=CLONE/INHERIT, parent_template_id=源模板 id）
-      FlowTemplateDO newTemplate = new FlowTemplateDO();
+      FlowTemplate newTemplate = new FlowTemplate();
       newTemplate.setTemplateCode(newTemplateCode);
       newTemplate.setTemplateName(newTemplateName);
       newTemplate.setCategory(
@@ -779,7 +779,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       syncSearchIndex(newTemplate);
 
       log.info(
-          "[FlowTemplateDO] 模板{}成功: source={} newCode={} parentId={} inheritType={}",
+          "[FlowTemplate] 模板{}成功: source={} newCode={} parentId={} inheritType={}",
           "CLONE".equals(inheritType) ? "克隆" : "继承",
           sourceTemplateCode,
           newTemplateCode,
@@ -790,7 +790,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       throw e;
     } catch (Exception e) {
       log.error(
-          "[FlowTemplateDO] 复制模板异常: source={} newCode={} inheritType={} err={}",
+          "[FlowTemplate] 复制模板异常: source={} newCode={} inheritType={} err={}",
           sourceTemplateCode,
           newTemplateCode,
           inheritType,
@@ -822,7 +822,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 先查出父模板主键 ID
-      FlowTemplateDO parent = templateRepository.findByTemplateCode(parentTemplateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplate parent = templateRepository.findByTemplateCode(parentTemplateCode).map(converter::entityToDO).orElse(null);
       if (parent == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -830,7 +830,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .params(parentTemplateCode)
             .build();
       }
-      List<FlowTemplateDO> children = templateRepository.findByParentTemplateId(parent.getId()).stream()
+      List<FlowTemplate> children = templateRepository.findByParentTemplateId(parent.getId()).stream()
           .map(converter::entityToDO)
           .toList();
       return children.stream().map(this::toSummaryMap).collect(Collectors.toList());
@@ -838,7 +838,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       throw e;
     } catch (Exception e) {
       log.error(
-          "[FlowTemplateDO] 列出继承子模板异常: parentTemplateCode={} err={}",
+          "[FlowTemplate] 列出继承子模板异常: parentTemplateCode={} err={}",
           parentTemplateCode,
           e.getMessage(),
           e);
@@ -869,7 +869,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取子模板最新版本
-      FlowTemplateDO child = templateRepository.findByTemplateCode(childTemplateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplate child = templateRepository.findByTemplateCode(childTemplateCode).map(converter::entityToDO).orElse(null);
       if (child == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -895,7 +895,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .params(childTemplateCode)
             .build();
       }
-      FlowTemplateDO parent = templateRepository.findById(parentId).map(converter::entityToDO).orElse(null);
+      FlowTemplate parent = templateRepository.findById(parentId).map(converter::entityToDO).orElse(null);
       if (parent == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -915,7 +915,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       int newVersion = templateRepository.selectMaxVersion(childTemplateCode).map(v -> v + 1).orElse(1);
 
       // 以父模板内容创建子模板新版本，保留子模板自身编码/名称/分类/排序
-      FlowTemplateDO newVer = new FlowTemplateDO();
+      FlowTemplate newVer = new FlowTemplate();
       newVer.setTemplateCode(child.getTemplateCode());
       newVer.setTemplateName(child.getTemplateName());
       newVer.setCategory(child.getCategory());
@@ -935,7 +935,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       syncSearchIndex(newVer);
 
       log.info(
-          "[FlowTemplateDO] 子模板同步父模板成功: childCode={} parentCode={} newVersion={} parentId={}",
+          "[FlowTemplate] 子模板同步父模板成功: childCode={} parentCode={} newVersion={} parentId={}",
           childTemplateCode,
           parent.getTemplateCode(),
           newVersion,
@@ -945,7 +945,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       throw e;
     } catch (Exception e) {
       log.error(
-          "[FlowTemplateDO] 同步父模板异常: childCode={} err={}", childTemplateCode, e.getMessage(), e);
+          "[FlowTemplate] 同步父模板异常: childCode={} err={}", childTemplateCode, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_c2642700")
@@ -961,7 +961,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    *
    * <p>P2-9: 包含版本与继承元信息。
    */
-  private Map<String, Object> toSummaryMap(FlowTemplateDO t) {
+  private Map<String, Object> toSummaryMap(FlowTemplate t) {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("templateCode", t.getTemplateCode());
     map.put("templateName", t.getTemplateName());
@@ -985,7 +985,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    *
    * <p>P2-9: 包含版本与继承元信息。
    */
-  private Map<String, Object> toDetailMap(FlowTemplateDO t) {
+  private Map<String, Object> toDetailMap(FlowTemplate t) {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("templateCode", t.getTemplateCode());
     map.put("templateName", t.getTemplateName());
@@ -1035,14 +1035,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    */
   private String generateBpmnXml(Map<String, Object> detail) {
     Object defObj = detail.get("definition");
-    if (!(defObj instanceof FlowDefinitionDO definition)) {
+    if (!(defObj instanceof FlowDefinition definition)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("流程定义详情缺少 definition")
           .build();
     }
-    List<FlowNodeDO> nodes = MapUtils.safeCastList(detail.get("nodes"), FlowNodeDO.class);
-    List<FlowSkipDO> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkipDO.class);
+    List<FlowNode> nodes = MapUtils.safeCastList(detail.get("nodes"), FlowNode.class);
+    List<FlowSkip> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkip.class);
 
     String processId = definition.getFlowCode();
     String processName = definition.getFlowName();
@@ -1060,7 +1060,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     // 输出节点
     if (nodes != null) {
-      for (FlowNodeDO node : nodes) {
+      for (FlowNode node : nodes) {
         String nodeCode = node.getNodeCode();
         String nodeName = node.getNodeName();
         Integer nodeType = node.getNodeType();
@@ -1084,7 +1084,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     // 输出跳转
     if (skips != null) {
-      for (FlowSkipDO skip : skips) {
+      for (FlowSkip skip : skips) {
         // 从 ext JSON 中解析 sourceRef
         String fromNodeCode = extractSourceRef(skip.getExt());
         String toNodeCode = skip.getNextNodeCode();
@@ -1171,7 +1171,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   /**
    * 从 skip 的 ext JSON 中提取 sourceRef（源节点编码）
    *
-   * <p>{@code FlowSkipDO} 表中 {@code ext} 字段以 JSON 存储 BPMN 序列流属性， 解析失败时返回 {@code
+   * <p>{@code FlowSkip} 表中 {@code ext} 字段以 JSON 存储 BPMN 序列流属性， 解析失败时返回 {@code
    * null}，由上层使用空字符串兜底（BPMN 工具可识别）。
    *
    * @param ext skip 的 ext JSON 字符串
@@ -1220,7 +1220,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    *
    * @param template 流程模板实体
    */
-  private void syncSearchIndex(FlowTemplateDO template) {
+  private void syncSearchIndex(FlowTemplate template) {
     SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
     if (bridge != null) {
       bridge.indexUpsert("workflow", template);

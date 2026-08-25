@@ -12,7 +12,7 @@ import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
 
 /**
- * FlowDelegateAuthDO 修改请求 DTO。
+ * FlowDelegateAuth 修改请求 DTO。
  *
  * @author ydsz-team
  * @since 1.0.0

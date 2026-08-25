@@ -10,15 +10,15 @@ import org.springframework.stereotype.Service;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 
 /**
  * 审批人为空兜底策略服务
  *
  * <p>从 {@link com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService} 中抽出的
- * 审批人为空兜底逻辑，承担运行时任务（{@link FlowRunTaskDO}）的办理人为空时策略分发职责。
+ * 审批人为空兜底逻辑，承担运行时任务（{@link FlowRunTask}）的办理人为空时策略分发职责。
  *
  * <p><b>核心能力：</b>
  *
@@ -112,7 +112,7 @@ public class EmptyAssigneeStrategyService {
    * @return 任务 ID
    */
   public String handleEmptyAssignee(
-      FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
+      FlowRunTask task, FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
     String emptyStrategy = FlowNodeExt.getEmptyStrategy(node.getExt());
 
     return switch (emptyStrategy) {
@@ -147,7 +147,7 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String handleAutoPass(
-      FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
+      FlowRunTask task, FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
     task.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
     task.setAssigneeId("0");
     task.setAssigneeName("SYSTEM_AUTO_PASS");
@@ -176,9 +176,9 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String assignToFallbackUser(
-      FlowRunTaskDO task,
+      FlowRunTask task,
       FlowInstanceVO instance,
-      FlowNodeDO node,
+      FlowNode node,
       String userId,
       String fallbackName,
       String logMsg) {
@@ -200,7 +200,7 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String fallbackToResolveAssignee(
-      FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
+      FlowRunTask task, FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
     taskRepository.save(converter.entityToVO(task));
     resolveAssignee(task, node, variables, null, instance);
     taskRepository.update(converter.entityToVO(task));
@@ -217,8 +217,8 @@ public class EmptyAssigneeStrategyService {
    * @param instance 参数说明
    */
   private void resolveAssignee(
-      FlowRunTaskDO task,
-      FlowNodeDO node,
+      FlowRunTask task,
+      FlowNode node,
       Map<String, Object> variables,
       com.njydsz.workflow.domain.dto.FlowAssigneeDTO explicit,
       FlowInstanceVO instance) {
@@ -233,7 +233,7 @@ public class EmptyAssigneeStrategyService {
    * @param variables 参数说明
    */
   private void advanceAfterAutoPass(
-      FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
+      FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
     if (advanceCallback != null) {
       advanceCallback.apply(new AdvanceContext(instance, node, variables));
     }
@@ -246,10 +246,10 @@ public class EmptyAssigneeStrategyService {
    */
   public static class AdvanceContext {
     private final FlowInstanceVO instance;
-    private final FlowNodeDO node;
+    private final FlowNode node;
     private final Map<String, Object> variables;
 
-    public AdvanceContext(FlowInstanceVO instance, FlowNodeDO node, Map<String, Object> variables) {
+    public AdvanceContext(FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
       this.instance = instance;
       this.node = node;
       this.variables = variables;
@@ -259,7 +259,7 @@ public class EmptyAssigneeStrategyService {
       return instance;
     }
 
-    public FlowNodeDO getNode() {
+    public FlowNode getNode() {
       return node;
     }
 

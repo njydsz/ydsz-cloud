@@ -35,7 +35,7 @@ import com.njydsz.workflow.server.service.FlowCommentService;
  * P2-2: 流程评论与常用语统一 Controller
  *
  * <p>审批评论多级回复 + 审批常用语管理 HTTP 接口，对标钉钉 / 飞书审批评论区与常用语能力。
- * 评论数据独立于审计日志（{@code FlowAuditLogDO}）：用户视角可修改 / 删除，系统视角只读不可改。
+ * 评论数据独立于审计日志（{@code FlowAuditLog}）：用户视角可修改 / 删除，系统视角只读不可改。
  * 常用语提供系统预设 + 用户自定义双轨制，使用次数智能排序。
  *
  * <p><b>接口分组：</b>
@@ -70,7 +70,7 @@ import com.njydsz.workflow.server.service.FlowCommentService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowCommentService 评论服务（含常用语能力）
- * @see FlowCommentDO 评论实体
+ * @see FlowComment 评论实体
  * @see FlowCommentCreateDTO 评论创建 DTO
  */
 @Slf4j
@@ -90,7 +90,7 @@ public class FlowCommentController {
    * @return 统一响应结果，包含新评论 ID
    */
   @Idempotent(key = "ydsz:workflow:comment:add", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCommentDO.addComment", threshold = 50)
+  @RateLimit(resource = "workflow.FlowComment.addComment", threshold = 50)
   @PostMapping
   @Audit(
       module = "流程评论",
@@ -151,7 +151,7 @@ public class FlowCommentController {
    * @return 统一响应结果，包含是否删除成功
    */
   @Idempotent(key = "ydsz:workflow:comment:delete", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCommentDO.deleteComment", threshold = 50)
+  @RateLimit(resource = "workflow.FlowComment.deleteComment", threshold = 50)
   @DeleteMapping("/{commentId}")
   @Audit(
       module = "流程评论",
@@ -187,7 +187,7 @@ public class FlowCommentController {
    * @return 新建常用语 ID
    */
   @Idempotent(key = "ydsz:workflow:quickComment:create", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowQuickCommentDO.create", threshold = 50)
+  @RateLimit(resource = "workflow.FlowQuickComment.create", threshold = 50)
   @PostMapping("/quick")
   @Audit(
       module = "流程评论",
@@ -208,7 +208,7 @@ public class FlowCommentController {
    * @return 空响应
    */
   @Idempotent(key = "ydsz:workflow:quickComment:update", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowQuickCommentDO.update", threshold = 50)
+  @RateLimit(resource = "workflow.FlowQuickComment.update", threshold = 50)
   @PutMapping("/quick")
   @Audit(
       module = "流程评论",
@@ -229,7 +229,7 @@ public class FlowCommentController {
    * @return 空响应
    */
   @Idempotent(key = "ydsz:workflow:quickComment:delete", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowQuickCommentDO.delete", threshold = 50)
+  @RateLimit(resource = "workflow.FlowQuickComment.delete", threshold = 50)
   @DeleteMapping("/quick/{id}")
   @Audit(
       module = "流程评论",
@@ -252,7 +252,7 @@ public class FlowCommentController {
   @Idempotent(
       key = "ydsz:workflow:FlowCommentController:incrementUseCount:lock",
       ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowQuickCommentDO.incrementUseCount", threshold = 50)
+  @RateLimit(resource = "workflow.FlowQuickComment.incrementUseCount", threshold = 50)
   @PostMapping("/quick/{id}/use")
   @Audit(
       module = "流程评论",

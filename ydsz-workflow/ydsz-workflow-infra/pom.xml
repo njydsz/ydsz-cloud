@@ -16,7 +16,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-domain</artifactId>
         </dependency>
-        <!-- ydsz-common-jdbc: MpBaseEntity 基类（FlowInstanceDO 等实体继承） -->
+        <!-- ydsz-common-jdbc: MpBaseEntity 基类（FlowInstance 等实体继承） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-jdbc</artifactId>

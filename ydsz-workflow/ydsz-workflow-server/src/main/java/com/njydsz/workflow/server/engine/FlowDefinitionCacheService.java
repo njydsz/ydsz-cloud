@@ -21,8 +21,8 @@ import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowSkipDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowSkip;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
@@ -239,7 +239,7 @@ public class FlowDefinitionCacheService {
   private List<FlowNodeVO> loadNodes(String cacheKey) {
     // P0-3: cacheKey 格式为 tenantId:definitionId
     String definitionId = extractDefinitionId(cacheKey);
-    List<FlowNodeDO> nodes = flowNodeMapper.selectByDefinitionId(definitionId);
+    List<FlowNode> nodes = flowNodeMapper.selectByDefinitionId(definitionId);
     List<FlowNodeVO> result = convertNodes(nodes);
     log.debug(
         "[FlowCache] load nodes: definitionId={} count={}",
@@ -251,7 +251,7 @@ public class FlowDefinitionCacheService {
   private List<FlowSkipVO> loadSkips(String cacheKey) {
     // P0-3: cacheKey 格式为 tenantId:definitionId
     String definitionId = extractDefinitionId(cacheKey);
-    List<FlowSkipDO> skips = flowSkipMapper.selectByDefinitionId(definitionId);
+    List<FlowSkip> skips = flowSkipMapper.selectByDefinitionId(definitionId);
     List<FlowSkipVO> result = convertSkips(skips);
     log.debug(
         "[FlowCache] load skips: definitionId={} count={}",
@@ -332,12 +332,12 @@ public class FlowDefinitionCacheService {
   // ============================== DO → VO 转换 ==============================
 
   /**
-   * 将 FlowNodeDO 列表转换为 FlowNodeVO 列表（engine 层对外不暴露 DO）。
+   * 将 FlowNode 列表转换为 FlowNodeVO 列表（engine 层对外不暴露 DO）。
    *
    * @param nodes 参数说明
    * @return 返回值说明
    */
-  private List<FlowNodeVO> convertNodes(List<FlowNodeDO> nodes) {
+  private List<FlowNodeVO> convertNodes(List<FlowNode> nodes) {
     if (nodes == null || nodes.isEmpty()) {
       return Collections.emptyList();
     }
@@ -345,12 +345,12 @@ public class FlowDefinitionCacheService {
   }
 
   /**
-   * 将 FlowSkipDO 列表转换为 FlowSkipVO 列表（engine 层对外不暴露 DO）。
+   * 将 FlowSkip 列表转换为 FlowSkipVO 列表（engine 层对外不暴露 DO）。
    *
    * @param skips 参数说明
    * @return 返回值说明
    */
-  private List<FlowSkipVO> convertSkips(List<FlowSkipDO> skips) {
+  private List<FlowSkipVO> convertSkips(List<FlowSkip> skips) {
     if (skips == null || skips.isEmpty()) {
       return Collections.emptyList();
     }

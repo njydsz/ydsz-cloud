@@ -512,7 +512,6 @@ public class JsonMapper {
    * @return 反序列化后的对象
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked")
   public <T> T toObject(byte[] bytes, Type type) {
     if (bytes == null || bytes.length == 0) {
       return null;
@@ -520,7 +519,9 @@ public class JsonMapper {
     validateJsonSizeBytes(bytes.length);
     ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
     try {
-      return (T) DeserializationProvider.deserializeToObject(bytes, type);
+      @SuppressWarnings("unchecked")
+      T result = (T) DeserializationProvider.deserializeToObject(bytes, type);
+      return result;
     } finally {
       if (snapshot != null) {
         restoreConfig(snapshot);

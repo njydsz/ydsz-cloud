@@ -16,8 +16,8 @@ import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -57,7 +57,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskService 接口定义
- * @see FlowRunTaskDO 待办任务实体
+ * @see FlowRunTask 待办任务实体
  * @see FlowTaskQueryServiceImpl 查询子服务
  * @see FlowTaskCoreService 核心操作子服务
  * @see FlowTaskSignServiceImpl 加签减签子服务
@@ -85,7 +85,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   // ============================== 创建任务 ==============================
 
   @Override
-  public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
+  public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
     return completeService.createTask(instanceId, node, variables);
   }
 
@@ -403,7 +403,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   // ============================== 视图转换 / 统计 ==============================
 
   @Override
-  public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task) {
+  public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTask task) {
     return queryService.toView(WorkflowConverter.INSTANT.entityToVO(task));
   }
 

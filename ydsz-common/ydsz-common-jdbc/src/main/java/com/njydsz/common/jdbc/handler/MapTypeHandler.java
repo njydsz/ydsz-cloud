@@ -90,9 +90,13 @@ public class MapTypeHandler<V> extends BaseTypeHandler<Map<String, V>> {
    * <p>当通过 {@code @TableField(typeHandler = MapTypeHandler.class)} 等方式使用时， MyBatis 通过反射调用无参构造，此时值类型
    * fallback 到 {@link Object.class}， 反序列化行为与旧版一致（值为 LinkedHashMap / 基本类型）。
    */
-  @SuppressWarnings("unchecked")
   public MapTypeHandler() {
-    this((Class<V>) Object.class);
+    this(rawClass(Object.class));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> Class<T> rawClass(Class<?> clazz) {
+    return (Class<T>) clazz;
   }
 
   /**
@@ -161,14 +165,15 @@ public class MapTypeHandler<V> extends BaseTypeHandler<Map<String, V>> {
    * @param json JSON 字符串
    * @return 反序列化后的 Map 对象，null 或空字符串时返回 null
    */
-  @SuppressWarnings("unchecked")
   private Map<String, V> parse(String json) {
     if (json == null || json.isEmpty()) {
       return null;
     }
     if (valueType == Object.class) {
       // 向后兼容：无参构造 fallback，行为与旧版一致
-      return (Map<String, V>) JsonParserUtil.parseObject(json);
+      @SuppressWarnings("unchecked")
+      Map<String, V> result = (Map<String, V>) JsonParserUtil.parseObject(json);
+      return result;
     }
     // 有参构造：使用 YdszJson 类型安全反序列化，确保值类型正确
     return YdszJson.fromJsonToMap(json, String.class, valueType);

@@ -25,6 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @since 1.0.0
  */
 @Data
+@SuppressWarnings("unchecked")
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

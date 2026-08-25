@@ -117,7 +117,7 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'启动流程:' + #dto.flowCode")
-  @RateLimit(resource = "workflow.FlowInstanceDO.startProcess", threshold = 50)
+  @RateLimit(resource = "workflow.FlowInstance.startProcess", threshold = 50)
   @PostMapping("/instance/start")
   @Operation(summary = "启动流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
@@ -189,7 +189,7 @@ public class FlowInstanceController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:instance:suspend", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowInstanceDO.suspend", threshold = 50)
+  @RateLimit(resource = "workflow.FlowInstance.suspend", threshold = 50)
   @PostMapping("/instance/{id}/suspend")
   @Audit(
       module = "流程实例",
@@ -210,7 +210,7 @@ public class FlowInstanceController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:instance:activate", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowInstanceDO.activate", threshold = 50)
+  @RateLimit(resource = "workflow.FlowInstance.activate", threshold = 50)
   @PostMapping("/instance/{id}/activate")
   @Audit(
       module = "流程实例",
@@ -488,7 +488,7 @@ public class FlowInstanceController {
    * @return 统一响应结果
    */
   @Idempotent(key = "ydsz:workflow:instance:setVariables", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowInstanceDO.setVariables", threshold = 50)
+  @RateLimit(resource = "workflow.FlowInstance.setVariables", threshold = 50)
   @PostMapping("/instance/{id}/variables")
   @Audit(
       module = "流程变量",
@@ -653,7 +653,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "创建触发规则")
   @Idempotent(key = "ydsz:workflow:trigger:create", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowAutoTriggerDO.create", threshold = 50)
+  @RateLimit(resource = "workflow.FlowAutoTrigger.create", threshold = 50)
   @PostMapping("/instance/trigger")
   @Audit(
       module = "自动触发",
@@ -680,7 +680,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "删除触发规则")
   @Idempotent(key = "ydsz:workflow:trigger:delete", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowAutoTriggerDO.delete", threshold = 50)
+  @RateLimit(resource = "workflow.FlowAutoTrigger.delete", threshold = 50)
   @DeleteMapping("/instance/trigger/{id}")
   @Audit(
       module = "自动触发",

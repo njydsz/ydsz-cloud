@@ -21,8 +21,8 @@ import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowNode;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
@@ -133,7 +133,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String startSubProcess(
-      FlowInstanceVO parentInstance, FlowNodeDO callActivityNode, Map<String, Object> variables) {
+      FlowInstanceVO parentInstance, FlowNode callActivityNode, Map<String, Object> variables) {
     if (parentInstance == null || callActivityNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -149,7 +149,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
           .build();
     }
     // 2. 校验子流程定义存在且已发布
-    FlowDefinitionDO subDef =
+    FlowDefinition subDef =
         definitionService.getPublished(subFlowCode, null, parentInstance.getTenantId());
     if (subDef == null) {
       throw SysException.builder()
@@ -255,7 +255,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
     // 推进父流程到 callActivity 节点的下一节点
     Map<String, Object> variables = parseVariables(parent.getVariable());
-    List<FlowNodeDO> nextNodes = advancer.advance(parent, parentNodeCode, "PASS", null, variables);
+    List<FlowNode> nextNodes = advancer.advance(parent, parentNodeCode, "PASS", null, variables);
     if (nextNodes.isEmpty()) {
       // 父流程无下一节点：完成
       instanceService.complete(parent.getId(), parentNodeCode);
@@ -266,7 +266,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
     ((FlowInstanceServiceImpl) instanceService)
         .generateTasksForNodes(parent.getId(), nextNodes, variables);
-    FlowNodeDO first = nextNodes.get(0);
+    FlowNode first = nextNodes.get(0);
     instanceRepository.updateStatus(
         parent.getId(),
         parent.getFlowStatus(),
@@ -419,7 +419,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
    * @param node 参数说明
    * @return 返回值说明
    */
-  private String extractSubFlowCode(FlowNodeDO node) {
+  private String extractSubFlowCode(FlowNode node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }
@@ -445,7 +445,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
    * @param node 参数说明
    * @return 返回值说明
    */
-  private Double extractSubProcessTimeout(FlowNodeDO node) {
+  private Double extractSubProcessTimeout(FlowNode node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }

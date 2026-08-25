@@ -20,7 +20,7 @@
         </foreach>
     </insert>
 
-    <resultMap id="FileNodeResult" type="com.njydsz.nextwiki.infra.entity.FileNodeDO">
+    <resultMap id="FileNodeResult" type="com.njydsz.nextwiki.infra.entity.FileNode">
         <id column="id" property="id"/>
         <result column="parent_id" property="parentId"/>
         <result column="name" property="name"/>

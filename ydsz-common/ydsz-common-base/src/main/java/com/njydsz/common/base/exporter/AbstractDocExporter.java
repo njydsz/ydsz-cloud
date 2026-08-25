@@ -244,7 +244,6 @@ public abstract class AbstractDocExporter implements DocExporter {
    * @param value 待转换对象
    * @return 转换后的 Map，类型不匹配返回 null
    */
-  @SuppressWarnings("unchecked")
   protected static Map<String, Object> asMap(Object value) {
     if (value instanceof Map<?, ?> raw) {
       Map<String, Object> result = new LinkedHashMap<>();

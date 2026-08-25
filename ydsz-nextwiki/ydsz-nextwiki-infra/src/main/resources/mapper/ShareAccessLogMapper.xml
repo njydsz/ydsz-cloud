@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.ShareAccessLogMapper">
 
-    <resultMap id="ShareAccessLogResult" type="com.njydsz.nextwiki.infra.entity.ShareAccessLogDO">
+    <resultMap id="ShareAccessLogResult" type="com.njydsz.nextwiki.infra.entity.ShareAccessLog">
         <id column="id" property="id"/>
         <result column="share_id" property="shareId"/>
         <result column="share_code" property="shareCode"/>

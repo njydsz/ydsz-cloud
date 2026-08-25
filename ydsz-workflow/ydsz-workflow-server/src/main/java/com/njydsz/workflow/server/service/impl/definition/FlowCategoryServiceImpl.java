@@ -18,7 +18,7 @@ import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowCategoryDO;
+import com.njydsz.workflow.infra.entity.FlowCategory;
 import com.njydsz.workflow.server.service.FlowCategoryService;
 
 /**
@@ -66,7 +66,7 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  *
  * <pre>{@code
  * // 查询全部分类
- * List<FlowCategoryDO> list = flowCategoryService.listAll(tenantId);
+ * List<FlowCategory> list = flowCategoryService.listAll(tenantId);
  *
  * // 查询分类树形结构
  * List<FlowCategoryTreeVO> tree = flowCategoryService.tree(tenantId);
@@ -82,9 +82,9 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowCategoryService 接口定义
- * @see FlowCategoryDO 分类实体
+ * @see FlowCategory 分类实体
  * @see FlowCategoryDTO 分类 DTO
- * @see FlowDefinitionDO 流程定义（{@code category} 字段引用本表 ID）
+ * @see FlowDefinition 流程定义（{@code category} 字段引用本表 ID）
  */
 @Slf4j
 @Service
@@ -109,7 +109,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   public List<FlowCategoryVO> listAllVO(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    List<FlowCategoryDO> doList = categoryRepository.findAll(tid).stream()
+    List<FlowCategory> doList = categoryRepository.findAll(tid).stream()
         .map(converter::entityToDO)
         .toList();
     doList.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
@@ -130,7 +130,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   public List<FlowCategoryTreeVO> tree(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    List<FlowCategoryDO> all = categoryRepository.findAll(tid).stream()
+    List<FlowCategory> all = categoryRepository.findAll(tid).stream()
         .map(converter::entityToDO)
         .toList();
     all.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
@@ -155,7 +155,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    *
    * <ol>
    *   <li>校验同租户下 {@code categoryCode} 唯一性
-   *   <li>构建 {@link FlowCategoryDO} 实体，{@code sortNum} 为空时默认 {@code 0}
+   *   <li>构建 {@link FlowCategory} 实体，{@code sortNum} 为空时默认 {@code 0}
    *   <li>写入数据库并返回新 ID
    * </ol>
    *
@@ -178,7 +178,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .build();
     }
 
-    FlowCategoryDO category = new FlowCategoryDO();
+    FlowCategory category = new FlowCategory();
     category.setCategoryCode(dto.getCategoryCode());
     category.setCategoryName(dto.getCategoryName());
     category.setParentId(dto.getParentId());
@@ -188,7 +188,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     category.setTenantId(tid);
     categoryRepository.save(converter.entityToVO(category));
     log.info(
-        "[FlowCategoryDO] 新增分类: code={} name={} id={}",
+        "[FlowCategory] 新增分类: code={} name={} id={}",
         category.getCategoryCode(),
         category.getCategoryName(),
         category.getId());
@@ -213,7 +213,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .message("error.workflow.msg_id_required")
           .build();
     }
-    FlowCategoryDO existing = categoryRepository.findById(dto.getId()).map(converter::entityToDO).orElse(null);
+    FlowCategory existing = categoryRepository.findById(dto.getId()).map(converter::entityToDO).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -244,7 +244,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    *
    * <ul>
    *   <li>校验是否有<b>子分类</b>（{@code parentId} 指向当前分类）
-   *   <li>校验是否有关联的<b>流程定义</b>（{@code FlowDefinitionDO.category} 引用当前分类）
+   *   <li>校验是否有关联的<b>流程定义</b>（{@code FlowDefinition.category} 引用当前分类）
    * </ul>
    *
    * 任一校验不通过立即抛异常阻断。校验通过后置 {@code deleted=1}（逻辑删除），保留审计轨迹。
@@ -257,7 +257,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void delete(String id) {
-    FlowCategoryDO existing = categoryRepository.findById(id).map(converter::entityToDO).orElse(null);
+    FlowCategory existing = categoryRepository.findById(id).map(converter::entityToDO).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       return;
     }

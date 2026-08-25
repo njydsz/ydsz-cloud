@@ -20,7 +20,7 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
+import com.njydsz.workflow.infra.entity.FlowHisTask;
 import com.njydsz.workflow.server.service.FlowExportService;
 
 /**
@@ -83,7 +83,7 @@ import com.njydsz.workflow.server.service.FlowExportService;
  * @since 1.0.0
  * @see FlowExportService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowInstanceVO 流程实例视图对象
- * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTask 历史任务实体
  */
 @Slf4j
 @Service
@@ -111,7 +111,7 @@ public class FlowExportServiceImpl implements FlowExportService {
   @Override
   public String exportHtml(String instanceId, String userId, String userName) {
     FlowInstanceVO instance = loadInstance(instanceId);
-    List<FlowHisTaskDO> history = loadHistory(instanceId);
+    List<FlowHisTask> history = loadHistory(instanceId);
     Map<String, Object> formData = parseVariables(instance.getVariable());
     String watermark = buildWatermark(userName != null ? userName : userId, instanceId);
 
@@ -226,12 +226,12 @@ public class FlowExportServiceImpl implements FlowExportService {
    * @param html 参数说明
    * @param history 参数说明
    */
-  private void appendTimeline(StringBuilder html, List<FlowHisTaskDO> history) {
+  private void appendTimeline(StringBuilder html, List<FlowHisTask> history) {
     html.append("<h2>审批轨迹</h2><div class=\"timeline\">");
     if (history.isEmpty()) {
       html.append("<div class=\"timeline-item\" style=\"color:#999;\">暂无审批记录</div>");
     } else {
-      for (FlowHisTaskDO task : history) {
+      for (FlowHisTask task : history) {
         appendTimelineItem(html, task);
       }
     }
@@ -244,7 +244,7 @@ public class FlowExportServiceImpl implements FlowExportService {
    * @param html 参数说明
    * @param task 参数说明
    */
-  private void appendTimelineItem(StringBuilder html, FlowHisTaskDO task) {
+  private void appendTimelineItem(StringBuilder html, FlowHisTask task) {
     html.append("<div class=\"timeline-item\">");
     html.append("<span class=\"timeline-node\">")
         .append(escapeHtml(task.getNodeName() != null ? task.getNodeName() : "-"))
@@ -295,8 +295,8 @@ public class FlowExportServiceImpl implements FlowExportService {
     return instance;
   }
 
-  private List<FlowHisTaskDO> loadHistory(String instanceId) {
-    List<FlowHisTaskDO> history = hisTaskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
+  private List<FlowHisTask> loadHistory(String instanceId) {
+    List<FlowHisTask> history = hisTaskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
     return history != null ? history : new ArrayList<>();
   }
 

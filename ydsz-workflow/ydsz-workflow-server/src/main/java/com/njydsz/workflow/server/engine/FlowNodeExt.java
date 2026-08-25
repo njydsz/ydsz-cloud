@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.json.YdszJson;
 
 /**
- * FlowNodeDO ext JSON 字段提取工具。
+ * FlowNode ext JSON 字段提取工具。
  *
  * <p>集中处理节点 ext JSON 的解析，供引擎层各组件（service executor、empty strategy、
  * BPMN 解析器等）统一调用。返回结果在首次解析后缓存，避免重复解析。

@@ -7,16 +7,16 @@ import org.springframework.util.StringUtils;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
-import com.njydsz.workflow.infra.entity.FlowRunTaskDO;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 
 /**
  * 长期授权委派改写服务
  *
  * <p>从 {@link com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService} 中抽出的委派改写逻辑，
- * 承担运行时任务（{@link FlowRunTaskDO}）的长期授权委派改写职责。
+ * 承担运行时任务（{@link FlowRunTask}）的长期授权委派改写职责。
  *
  * <p><b>核心能力：</b>
  *
@@ -71,7 +71,7 @@ public class DelegateRedirectService {
    * @param node 当前流程节点（用于获取节点编码匹配委派规则）
    */
   public void applyDelegateRedirect(
-      FlowRunTaskDO task, FlowInstanceVO instance, FlowNodeDO node) {
+      FlowRunTask task, FlowInstanceVO instance, FlowNode node) {
     try {
       if (delegateAuthService == null) {
         return;
@@ -90,7 +90,7 @@ public class DelegateRedirectService {
         return;
       }
       // 仍需匹配首条授权规则用于审计记录
-      FlowDelegateAuthDO matched =
+      FlowDelegateAuth matched =
           delegateAuthService.matchAuth(
               instance.getTenantId(), currentUserId, instance.getFlowCode(), node.getNodeCode());
       task.setAssignorId(currentUserId);
