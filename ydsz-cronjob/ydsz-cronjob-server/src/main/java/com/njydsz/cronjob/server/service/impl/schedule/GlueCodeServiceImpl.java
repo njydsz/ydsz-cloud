@@ -449,12 +449,4 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     }
     return diffs;
   }
-
-  // ==================== Entity <-> VO 转换 ====================
-
-  /** 身份转换（infra 实体已无引用，保留方法以便兼容可能的外部调用）。 */
-  @SuppressWarnings("unused")
-  private GlueCodeVO entityToVo(GlueCodeVO vo) {
-    return vo;
-  }
 }
