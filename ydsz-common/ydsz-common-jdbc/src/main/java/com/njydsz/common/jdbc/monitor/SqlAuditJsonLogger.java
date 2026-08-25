@@ -82,14 +82,14 @@ public final class SqlAuditJsonLogger {
     try {
       StringBuilder json = new StringBuilder(256);
       json.append('{');
-      appendField(json, "timestamp", LocalDateTime.now().format(ISO_FORMATTER), true);
-      appendField(json, "sql_id", sqlId, true);
-      appendField(json, "command_type", commandType, true);
-      appendField(json, "elapsed_ms", elapsedMs, false);
-      appendField(json, "affected_rows", affectedRows, false);
-      appendField(json, "sql_fingerprint", SqlFingerprint.fingerprint(sql), true);
-      appendField(json, "sql", sql, true);
-      appendField(json, "parameter", formatParameter(parameter), true);
+      appendField(json, "timestamp", LocalDateTime.now().format(ISO_FORMATTER));
+      appendField(json, "sql_id", sqlId);
+      appendField(json, "command_type", commandType);
+      appendField(json, "elapsed_ms", elapsedMs);
+      appendField(json, "affected_rows", affectedRows);
+      appendField(json, "sql_fingerprint", SqlFingerprint.fingerprint(sql));
+      appendField(json, "sql", sql);
+      appendField(json, "parameter", formatParameter(parameter));
       json.append('}');
       AUDIT_JSON_LOG.info(json.toString());
     } catch (Exception e) {
@@ -114,16 +114,16 @@ public final class SqlAuditJsonLogger {
     try {
       StringBuilder json = new StringBuilder(512);
       json.append('{');
-      appendField(json, "timestamp", LocalDateTime.now().format(ISO_FORMATTER), true);
-      appendField(json, "sql_id", sqlId, true);
-      appendField(json, "command_type", commandType, true);
-      appendField(json, "elapsed_ms", elapsedMs, false);
-      appendField(json, "status", "ERROR", true);
-      appendField(json, "sql_fingerprint", SqlFingerprint.fingerprint(sql), true);
-      appendField(json, "sql", sql, true);
+      appendField(json, "timestamp", LocalDateTime.now().format(ISO_FORMATTER));
+      appendField(json, "sql_id", sqlId);
+      appendField(json, "command_type", commandType);
+      appendField(json, "elapsed_ms", elapsedMs);
+      appendField(json, "status", "ERROR");
+      appendField(json, "sql_fingerprint", SqlFingerprint.fingerprint(sql));
+      appendField(json, "sql", sql);
       String message = exception != null ? exception.getMessage() : null;
-      appendField(json, "exception", message, true);
-      appendField(json, "stack_trace", getStackTraceString(exception), true);
+      appendField(json, "exception", message);
+      appendField(json, "stack_trace", getStackTraceString(exception));
       json.append('}');
       AUDIT_JSON_LOG.error(json.toString());
     } catch (Exception e) {
@@ -136,20 +136,15 @@ public final class SqlAuditJsonLogger {
   // ====================================================================
 
   /**
-   * 追加一个 JSON 字段
+   * 追加一个 JSON 字段（字符串类型）
    *
    * @param json StringBuilder
    * @param key 字段名
    * @param value 字段值（字符串类型，会被转义）
-   * @param isString true 表示值应加引号
    */
-  private static void appendField(StringBuilder json, String key, String value, boolean isString) {
+  private static void appendField(StringBuilder json, String key, String value) {
     json.append(',').append('"').append(escapeJson(key)).append("\":");
-    if (isString) {
-      json.append(value == null ? "null" : '"' + escapeJson(value) + '"');
-    } else {
-      json.append(value == null ? "null" : value);
-    }
+    json.append(value == null ? "null" : '"' + escapeJson(value) + '"');
   }
 
   /**
@@ -159,7 +154,7 @@ public final class SqlAuditJsonLogger {
    * @param key 字段名
    * @param value 数值
    */
-  private static void appendField(StringBuilder json, String key, long value, boolean unused) {
+  private static void appendField(StringBuilder json, String key, long value) {
     json.append(',').append('"').append(escapeJson(key)).append("\":").append(value);
   }
 
@@ -170,7 +165,7 @@ public final class SqlAuditJsonLogger {
    * @param key 字段名
    * @param value 整数值（可为 null）
    */
-  private static void appendField(StringBuilder json, String key, Integer value, boolean unused) {
+  private static void appendField(StringBuilder json, String key, Integer value) {
     json.append(',').append('"').append(escapeJson(key)).append("\":");
     json.append(value == null ? "null" : value);
   }
@@ -182,9 +177,7 @@ public final class SqlAuditJsonLogger {
    * @param key 字段名
    * @param value Map 值
    */
-  @SuppressWarnings("unused")
-  private static void appendField(
-      StringBuilder json, String key, Map<String, ?> value, boolean unused) {
+  private static void appendField(StringBuilder json, String key, Map<String, ?> value) {
     json.append(',').append('"').append(escapeJson(key)).append("\":");
     if (value == null) {
       json.append("null");
@@ -199,8 +192,7 @@ public final class SqlAuditJsonLogger {
         appendField(
             json,
             entry.getKey(),
-            entry.getValue() != null ? entry.getValue().toString() : null,
-            true);
+            entry.getValue() != null ? entry.getValue().toString() : null);
       }
       json.append('}');
     }
