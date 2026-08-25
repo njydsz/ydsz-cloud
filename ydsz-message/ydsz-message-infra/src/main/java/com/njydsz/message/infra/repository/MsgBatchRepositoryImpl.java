@@ -32,7 +32,7 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
 
   @Override
   public boolean save(MsgBatchVO vo) {
-    MsgBatch entity = voToDO(vo);
+    MsgBatch entity = voToEntity(vo);
     return msgBatchMapper.insert(entity) > 0;
   }
 
@@ -43,7 +43,7 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
 
   @Override
   public boolean update(MsgBatchVO vo) {
-    MsgBatch entity = voToDO(vo);
+    MsgBatch entity = voToEntity(vo);
     return msgBatchMapper.updateById(entity) > 0;
   }
 
@@ -67,10 +67,10 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
     }
     wrapper.eq("deleted", 0);
     wrapper.orderByDesc("created_at");
-    return converter.batchDoListToVO(msgBatchMapper.selectList(wrapper));
+    return converter.batchListToVO(msgBatchMapper.selectList(wrapper));
   }
 
-  private MsgBatch voToDO(MsgBatchVO vo) {
+  private MsgBatch voToEntity(MsgBatchVO vo) {
     if (vo == null) {
       return null;
     }

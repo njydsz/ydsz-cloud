@@ -39,7 +39,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     if (list == null || list.isEmpty()) {
       return false;
     }
-    List<MsgNotification> entities = converter.notificationDtoListToDO(list);
+    List<MsgNotification> entities = converter.notificationDtoListToEntity(list);
     return msgNotificationMapper.insertBatch(entities) > 0;
   }
 
@@ -50,7 +50,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
 
   @Override
   public boolean update(MsgNotificationDTO dto) {
-    MsgNotification entity = converter.dtoToDO(dto);
+    MsgNotification entity = converter.dtoToEntity(dto);
     return msgNotificationMapper.updateById(entity) > 0;
   }
 
@@ -60,7 +60,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     QueryWrapper<MsgNotification> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgNotification> entityPage = msgNotificationMapper.selectPage(page, wrapper);
-    List<MsgNotificationVO> vos = converter.notificationDoListToVO(entityPage.getRecords());
+    List<MsgNotificationVO> vos = converter.notificationListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
@@ -68,7 +68,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   public List<MsgNotificationVO> findList(NotificationQueryDTO query) {
     QueryWrapper<MsgNotification> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    return converter.notificationDoListToVO(msgNotificationMapper.selectList(wrapper));
+    return converter.notificationListToVO(msgNotificationMapper.selectList(wrapper));
   }
 
   @Override
@@ -115,4 +115,3 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   }
 
 }
-
