@@ -104,6 +104,6 @@ public interface CheckpointService {
   /** 对象下载函数接口 */
   @FunctionalInterface
   interface ObjectDownloader {
-    InputStream download(String bucketName, String objectName) throws Throwable;
+    InputStream download(String bucketName, String objectName);
   }
 }

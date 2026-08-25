@@ -33,7 +33,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class RedisNodeRegistry implements NodeRegistry {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RedisNodeRegistry.class);
+  private static final Logger log = LoggerFactory.getLogger(RedisNodeRegistry.class);
 
   /** Redis Hash key：存储所有节点信息 */
   private static final String NODES_KEY = "literule:nodes";
@@ -66,9 +66,9 @@ public class RedisNodeRegistry implements NodeRegistry {
     try {
       RMap<String, String> map = redissonClient.getMap(NODES_KEY);
       map.put(node.getNodeId(), YdszJson.toJson(node));
-      LOG.info("[Distributed-Redis] 节点已注册: {}", node.getNodeId());
+      log.info("[Distributed-Redis] 节点已注册: {}", node.getNodeId());
     } catch (Exception e) {
-      LOG.warn("[Distributed-Redis] 节点注册失败: {}", e.getMessage());
+      log.warn("[Distributed-Redis] 节点注册失败: {}", e.getMessage());
     }
   }
 
@@ -80,9 +80,9 @@ public class RedisNodeRegistry implements NodeRegistry {
     try {
       RMap<String, String> map = redissonClient.getMap(NODES_KEY);
       map.remove(nodeId);
-      LOG.info("[Distributed-Redis] 节点已注销: {}", nodeId);
+      log.info("[Distributed-Redis] 节点已注销: {}", nodeId);
     } catch (Exception e) {
-      LOG.warn("[Distributed-Redis] 节点注销失败: {}", e.getMessage());
+      log.warn("[Distributed-Redis] 节点注销失败: {}", e.getMessage());
     }
   }
 
@@ -102,7 +102,7 @@ public class RedisNodeRegistry implements NodeRegistry {
         }
       }
     } catch (Exception e) {
-      LOG.debug("[Distributed-Redis] 心跳更新失败: {}", e.getMessage());
+      log.debug("[Distributed-Redis] 心跳更新失败: {}", e.getMessage());
     }
   }
 
@@ -127,7 +127,7 @@ public class RedisNodeRegistry implements NodeRegistry {
             deadNodeIds.add(entry.getKey());
           }
         } catch (Exception parseEx) {
-          LOG.debug("[Distributed-Redis] 节点信息解析失败: {}", parseEx.getMessage());
+          log.debug("[Distributed-Redis] 节点信息解析失败: {}", parseEx.getMessage());
           deadNodeIds.add(entry.getKey());
         }
       }
@@ -135,7 +135,7 @@ public class RedisNodeRegistry implements NodeRegistry {
       // 惰性清理超时节点
       if (!deadNodeIds.isEmpty()) {
         map.fastRemove(deadNodeIds.toArray(new String[0]));
-        LOG.debug("[Distributed-Redis] 清理超时节点: count={}", deadNodeIds.size());
+        log.debug("[Distributed-Redis] 清理超时节点: count={}", deadNodeIds.size());
       }
 
       // 按 nodeId 排序，保证一致性 hash 环稳定
@@ -152,7 +152,7 @@ public class RedisNodeRegistry implements NodeRegistry {
               })
           .collect(Collectors.toList());
     } catch (Exception e) {
-      LOG.warn("[Distributed-Redis] 获取节点列表失败: {}", e.getMessage());
+      log.warn("[Distributed-Redis] 获取节点列表失败: {}", e.getMessage());
       return Collections.emptyList();
     }
   }
@@ -186,11 +186,11 @@ public class RedisNodeRegistry implements NodeRegistry {
 
       if (!deadNodeIds.isEmpty()) {
         map.fastRemove(deadNodeIds.toArray(new String[0]));
-        LOG.info("[Distributed-Redis] 主动清理超时节点: count={}", deadNodeIds.size());
+        log.info("[Distributed-Redis] 主动清理超时节点: count={}", deadNodeIds.size());
       }
       return deadNodeIds.size();
     } catch (Exception e) {
-      LOG.warn("[Distributed-Redis] 清理超时节点失败: {}", e.getMessage());
+      log.warn("[Distributed-Redis] 清理超时节点失败: {}", e.getMessage());
       return 0;
     }
   }

@@ -34,7 +34,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 @ConditionalOnProperty(prefix = "ydsz.literule.distributed", name = "enabled", havingValue = "true")
 public class DistributedAutoConfiguration {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DistributedAutoConfiguration.class);
+  private static final Logger log = LoggerFactory.getLogger(DistributedAutoConfiguration.class);
 
   private ScheduledExecutorService scheduler;
 
@@ -68,7 +68,7 @@ public class DistributedAutoConfiguration {
     // 注册自身
     ClusterNode self = new ClusterNode(nodeId, nodeId);
     registry.register(self);
-    LOG.info("[Distributed] 节点注册表已初始化（self={}, type=Redis）", nodeId);
+    log.info("[Distributed] 节点注册表已初始化（self={}, type=Redis）", nodeId);
     return registry;
   }
 
@@ -86,7 +86,7 @@ public class DistributedAutoConfiguration {
         new RedisRuleConfigBroadcaster(redissonClient, nodeId, eventPublisher);
     // 启动时订阅 Topic
     broadcaster.subscribe();
-    LOG.info("[Distributed] 规则配置广播器已初始化（self={}, type=Redis）", nodeId);
+    log.info("[Distributed] 规则配置广播器已初始化（self={}, type=Redis）", nodeId);
     return broadcaster;
   }
 
@@ -100,7 +100,7 @@ public class DistributedAutoConfiguration {
   @ConditionalOnProperty(prefix = "ydsz.literule.distributed", name = "sharder-enabled", havingValue = "true")
   public ConsistentHashSharder consistentHashSharder() {
     ConsistentHashSharder sharder = new ConsistentHashSharder();
-    LOG.info("[Distributed] 一致性 Hash 分片器已初始化（vnodes={}）", ConsistentHashSharder.DEFAULT_VNODES);
+    log.info("[Distributed] 一致性 Hash 分片器已初始化（vnodes={}）", ConsistentHashSharder.DEFAULT_VNODES);
     return sharder;
   }
 
@@ -135,14 +135,14 @@ public class DistributedAutoConfiguration {
             nodeRegistry.heartbeat(nodeId);
             engine.refreshNodes();
           } catch (Exception e) {
-            LOG.warn("[Distributed] 节点刷新失败: {}", e.getMessage());
+            log.warn("[Distributed] 节点刷新失败: {}", e.getMessage());
           }
         },
         heartbeatIntervalMs,
         refreshIntervalMs,
         TimeUnit.MILLISECONDS);
 
-    LOG.info(
+    log.info(
         "[Distributed] 分片感知规则引擎已初始化（self={}, clusterSize={}）", nodeId, engine.getClusterSize());
     return engine;
   }
@@ -157,7 +157,7 @@ public class DistributedAutoConfiguration {
   public void destroy() {
     if (scheduler != null) {
       scheduler.shutdown();
-      LOG.info("[Distributed] 节点刷新任务已关闭");
+      log.info("[Distributed] 节点刷新任务已关闭");
     }
   }
 }

@@ -49,7 +49,7 @@ public class ConsistentHashSharder {
   /** 字节无符号化掩码（0xFF） */
   private static final int BYTE_UNSIGNED_MASK = 0xFF;
 
-  private static final Logger LOG = LoggerFactory.getLogger(ConsistentHashSharder.class);
+  private static final Logger log = LoggerFactory.getLogger(ConsistentHashSharder.class);
 
   /** 默认虚拟节点数 */
   public static final int DEFAULT_VNODES = 150;

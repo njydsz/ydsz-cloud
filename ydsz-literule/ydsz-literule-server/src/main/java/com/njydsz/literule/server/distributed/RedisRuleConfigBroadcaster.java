@@ -37,7 +37,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  */
 public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RedisRuleConfigBroadcaster.class);
+  private static final Logger log = LoggerFactory.getLogger(RedisRuleConfigBroadcaster.class);
 
   /** Redis Topic 名称 */
   private static final String TOPIC_NAME = "literule:config:refresh";
@@ -71,13 +71,13 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
       String json = YdszJson.toJson(message);
       RTopic topic = redissonClient.getTopic(TOPIC_NAME);
       topic.publish(json);
-      LOG.info(
+      log.info(
           "[Distributed-Redis] 规则变更事件已广播: ruleCode={}, changeType={}, source={}",
           event.getRuleCode(),
           event.getChangeType(),
           sourceId);
     } catch (Exception e) {
-      LOG.warn("[Distributed-Redis] 规则变更事件广播失败: {}", e.getMessage());
+      log.warn("[Distributed-Redis] 规则变更事件广播失败: {}", e.getMessage());
     }
   }
 
@@ -87,7 +87,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
       redissonClient.getTopic(TOPIC_NAME).countListeners();
       return true;
     } catch (Exception e) {
-      LOG.warn("[RedisRuleConfigBroadcaster] Redis 广播器不可用: {}", e.getMessage(), e);
+      log.warn("[RedisRuleConfigBroadcaster] Redis 广播器不可用: {}", e.getMessage(), e);
       return false;
     }
   }
@@ -118,9 +118,9 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
             }
           });
       subscribed = true;
-      LOG.info("[Distributed-Redis] 已订阅规则变更广播 Topic: {}", TOPIC_NAME);
+      log.info("[Distributed-Redis] 已订阅规则变更广播 Topic: {}", TOPIC_NAME);
     } catch (Exception e) {
-      LOG.warn("[Distributed-Redis] 订阅广播 Topic 失败: {}", e.getMessage());
+      log.warn("[Distributed-Redis] 订阅广播 Topic 失败: {}", e.getMessage());
     }
   }
 
@@ -138,7 +138,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
       if (selfNodeId.equals(message.getSourceNodeId())) {
         return;
       }
-      LOG.info(
+      log.info(
           "[Distributed-Redis] 收到规则变更广播: ruleCode={}, changeType={}, source={}",
           message.getEvent().getRuleCode(),
           message.getEvent().getChangeType(),
@@ -148,7 +148,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
         eventPublisher.publishEvent(message.getEvent());
       }
     } catch (Exception e) {
-      LOG.warn("[Distributed-Redis] 广播消息处理失败: {}", e.getMessage());
+      log.warn("[Distributed-Redis] 广播消息处理失败: {}", e.getMessage());
     }
   }
 

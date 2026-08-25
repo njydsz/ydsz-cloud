@@ -122,16 +122,20 @@
         <spotbugs.version>4.8.6.4</spotbugs.version>
         <findsecbugs.version>1.13.0</findsecbugs.version>
         <spotbugs.skip>true</spotbugs.skip>
-        <!-- P0-2 OWASP Dependency-Check：依赖漏洞扫描。默认关闭，首次需联网下载 NVD 漏洞库。 -->
+        <!-- P0-2 OWASP Dependency-Check：依赖漏洞扫描。默认关闭，首次需联网下载 NVD 漏洞库。
+             failBuildOnCVSS 默认 11（报告模式不阻断），quality-enforce profile 下调至 7 强制门禁。 -->
         <owasp-dc.version>10.0.4</owasp-dc.version>
         <owasp.skip>true</owasp.skip>
+        <owasp.failBuildOnCVSS>11</owasp.failBuildOnCVSS>
         <!-- P0-3 CycloneDX SBOM：物料清单生成（合规产出，默认启用，产出 bom.json）。 -->
         <cyclonedx.version>2.8.2</cyclonedx.version>
         <sbom.skip>false</sbom.skip>
-        <!-- P0-4 JaCoCo 覆盖率门禁（§14.5：核心≥80% / 分支≥70%）。默认关闭，补测试后启用。 -->
+        <!-- P0-4 JaCoCo 覆盖率门禁（§14.5：核心≥80% / 分支≥70%）。默认关闭，补测试后启用。
+             两步启用：报告模式 mvn verify -Pquality；门禁模式 mvn verify -Pquality-enforce；
+             或手动 -Djacoco.skip=false -Djacoco.check.skip=false。 -->
         <jacoco.version>0.8.12</jacoco.version>
         <jacoco.skip>true</jacoco.skip>
-        <jacoco.enforce>false</jacoco.enforce>
+        <jacoco.check.skip>true</jacoco.check.skip>
     </properties>
 
     <dependencyManagement>
@@ -1386,15 +1390,15 @@
 
         <!-- ============ P0-2 构建期守护：OWASP Dependency-Check ============ -->
         <!-- 依赖漏洞扫描。默认 owasp.skip=true（首次需联网下载 NVD 漏洞库，渐进启用），
-             激活：mvn verify -Dowasp.skip=false；failBuildOnCVSS=11 表示默认不阻断，
-             清理基线后下调阈值（如 7）以强制门禁。 -->
+             激活：mvn verify -Pquality 或 -Dowasp.skip=false；failBuildOnCVSS 默认 11
+             （报告模式不阻断），quality-enforce profile 下调至 7 强制门禁。 -->
         <plugin>
             <groupId>org.owasp</groupId>
             <artifactId>dependency-check-maven</artifactId>
             <version>${owasp-dc.version}</version>
             <configuration>
                 <skip>${owasp.skip}</skip>
-                <failBuildOnCVSS>11</failBuildOnCVSS>
+                <failBuildOnCVSS>${owasp.failBuildOnCVSS}</failBuildOnCVSS>
                 <suppressionFile>${maven.multiModuleProjectDirectory}/docs/owasp-suppressions.xml</suppressionFile>
                 <formats>
                     <format>HTML</format>
@@ -1441,9 +1445,10 @@
         </plugin>
 
         <!-- ============ P0-4 构建期守护：JaCoCo 覆盖率门禁（云顶规范 §14.5）============ -->
-        <!-- 核心业务覆盖率≥80%、分支覆盖率≥70%。默认 jacoco.skip=true（不采集），
-             jacoco.enforce=false（不强制门禁）。补测试后两步启用：
-             mvn verify -Djacoco.skip=false -Djacoco.enforce=true -->
+        <!-- 核心业务覆盖率≥80%、分支覆盖率≥70%。默认 jacoco.skip=true（不采集）、
+             jacoco.check.skip=true（不强制门禁）。两步启用：
+             报告模式：mvn verify -Pquality
+             门禁模式：mvn verify -Pquality-enforce -->
         <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
@@ -1473,7 +1478,7 @@
                         <goal>check</goal>
                     </goals>
                     <configuration>
-                        <skip>${jacoco.enforce}</skip>
+                        <skip>${jacoco.check.skip}</skip>
                         <rules>
                             <rule>
                                 <element>BUNDLE</element>
@@ -1497,6 +1502,72 @@
         </plugin>
     </plugins>
     </build>
+
+    <profiles>
+        <!-- ============ quality：质量守护报告模式（一键开启，不阻断） ============
+             用法：mvn verify -Pquality
+             效果：SpotBugs + OWASP DC + JaCoCo 报告全量产出（OWASP 不阻断），Spotless 格式校验绑定 validate。
+             用于 CI 周期性巡检与基线清理，不影响日常构建。 -->
+        <profile>
+            <id>quality</id>
+            <properties>
+                <spotbugs.skip>false</spotbugs.skip>
+                <owasp.skip>false</owasp.skip>
+                <jacoco.skip>false</jacoco.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Spotless 格式校验：仅在 quality profile 下绑定 validate 阶段（日常构建不受影响） -->
+                    <plugin>
+                        <groupId>com.diffplug.spotless</groupId>
+                        <artifactId>spotless-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>spotless-check</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- ============ quality-enforce：质量守护门禁模式（阻断） ============
+             用法：mvn verify -Pquality-enforce
+             前置：先以 -Pquality 清理基线（覆盖率不足 / 漏洞未豁免会在此模式阻断）。
+             效果：在 quality 基础上启用 JaCoCo 覆盖率门禁（行≥80% / 分支≥70%，§14.5），
+             OWASP failBuildOnCVSS 下调至 7 强制阻断。 -->
+        <profile>
+            <id>quality-enforce</id>
+            <properties>
+                <spotbugs.skip>false</spotbugs.skip>
+                <owasp.skip>false</owasp.skip>
+                <jacoco.skip>false</jacoco.skip>
+                <jacoco.check.skip>false</jacoco.check.skip>
+                <owasp.failBuildOnCVSS>7</owasp.failBuildOnCVSS>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.diffplug.spotless</groupId>
+                        <artifactId>spotless-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>spotless-check</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <repositories>
         <repository>

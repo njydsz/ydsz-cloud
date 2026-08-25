@@ -41,7 +41,7 @@ import com.njydsz.literule.api.RuleResult;
  */
 public class ShardAwareRuleEngine implements RuleEngine {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ShardAwareRuleEngine.class);
+  private static final Logger log = LoggerFactory.getLogger(ShardAwareRuleEngine.class);
 
   /** 被装饰的规则引擎 */
   private final RuleEngine delegate;
@@ -82,10 +82,10 @@ public class ShardAwareRuleEngine implements RuleEngine {
     if (count <= 1) {
       // 单节点或无节点：全部本地执行
       shardingEnabled = false;
-      LOG.info("[ShardEngine] 集群规模 ≤1，分片关闭，全部本地执行 (nodes={})", count);
+      log.info("[ShardEngine] 集群规模 ≤1，分片关闭，全部本地执行 (nodes={})", count);
     } else {
       shardingEnabled = true;
-      LOG.info("[ShardEngine] 集群规模={}，分片已启用，当前节点={}", count, nodeRegistry.getSelfNodeId());
+      log.info("[ShardEngine] 集群规模={}，分片已启用，当前节点={}", count, nodeRegistry.getSelfNodeId());
     }
   }
 

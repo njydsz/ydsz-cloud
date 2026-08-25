@@ -62,7 +62,7 @@ public class ConfigRuleProvider implements RateLimitRuleProvider {
 
   @Override
   public List<RateLimitRule> getAllRules() {
-    return ruleMap.values().stream().collect(Collectors.toList());
+    return ruleMap.values().toList();
   }
 
   @Override

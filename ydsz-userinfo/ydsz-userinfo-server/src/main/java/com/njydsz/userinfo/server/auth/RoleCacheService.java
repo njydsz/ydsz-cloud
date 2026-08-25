@@ -112,6 +112,6 @@ public class RoleCacheService {
     if (roleIds.isEmpty()) {
       return List.of();
     }
-    return roleRepository.findByIds(roleIds.stream().collect(Collectors.toList()));
+    return roleRepository.findByIds(roleIds);
   }
 }

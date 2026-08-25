@@ -403,7 +403,7 @@ public class NextwikiCacheService {
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 缓存读取异常: key={}, err={}", key, e.getMessage(), e);
     }
-    return null;
+    return Optional.empty();
   }
 
   /**

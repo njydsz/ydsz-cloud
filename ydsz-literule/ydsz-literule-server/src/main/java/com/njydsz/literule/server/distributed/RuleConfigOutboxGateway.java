@@ -36,7 +36,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 public class RuleConfigOutboxGateway implements EventPublishGateway {
 
   /** 日志实例 */
-  private static final Logger LOG = LoggerFactory.getLogger(RuleConfigOutboxGateway.class);
+  private static final Logger log = LoggerFactory.getLogger(RuleConfigOutboxGateway.class);
 
   /** 规则配置广播器（Redis Pub/Sub） */
   private final RuleConfigBroadcaster broadcaster;
@@ -71,26 +71,26 @@ public class RuleConfigOutboxGateway implements EventPublishGateway {
       return false;
     }
     if (broadcaster == null || !broadcaster.isAvailable()) {
-      LOG.warn(
+      log.warn(
           "[LiteRule-Outbox] 广播器不可用，Outbox 消息进入重试: id={}", message.getId());
       return false;
     }
     try {
       DomainEvent domainEvent = YdszJson.fromJson(message.getPayload(), DomainEvent.class);
       if (domainEvent == null) {
-        LOG.warn("[LiteRule-Outbox] 消息反序列化为空，跳过: id={}", message.getId());
+        log.warn("[LiteRule-Outbox] 消息反序列化为空，跳过: id={}", message.getId());
         return true;
       }
       RuleConfigRefreshEvent event = RuleConfigRefreshEvent.from(domainEvent);
       broadcaster.broadcast(event, nodeId);
-      LOG.info(
+      log.info(
           "[LiteRule-Outbox] Outbox 消息已投递: id={}, ruleCode={}, changeType={}",
           message.getId(),
           event.getRuleCode(),
           event.getChangeType());
       return true;
     } catch (Exception e) {
-      LOG.warn(
+      log.warn(
           "[LiteRule-Outbox] Outbox 消息投递失败: id={}, err={}", message.getId(), e.getMessage());
       return false;
     }

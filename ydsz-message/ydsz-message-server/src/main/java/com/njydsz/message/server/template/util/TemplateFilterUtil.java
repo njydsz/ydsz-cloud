@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TemplateFilterUtil {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TemplateFilterUtil.class);
+  private static final Logger log = LoggerFactory.getLogger(TemplateFilterUtil.class);
 
   private TemplateFilterUtil() {
     // 工具类禁止实例化
@@ -108,7 +108,7 @@ public class TemplateFilterUtil {
             .format(formatter);
       }
     } catch (Exception e) {
-      LOG.debug("[TemplateFilter] 日期格式化降级为原始值, value={}, err={}", value, e.getMessage());
+      log.debug("[TemplateFilter] 日期格式化降级为原始值, value={}, err={}", value, e.getMessage());
       return String.valueOf(value);
     }
     return String.valueOf(value);
@@ -139,7 +139,7 @@ public class TemplateFilterUtil {
         return df.format(new BigDecimal(str));
       }
     } catch (Exception e) {
-      LOG.debug("[TemplateFilter] 数字格式化降级为原始值, value={}, err={}", value, e.getMessage());
+      log.debug("[TemplateFilter] 数字格式化降级为原始值, value={}, err={}", value, e.getMessage());
       return String.valueOf(value);
     }
     return String.valueOf(value);

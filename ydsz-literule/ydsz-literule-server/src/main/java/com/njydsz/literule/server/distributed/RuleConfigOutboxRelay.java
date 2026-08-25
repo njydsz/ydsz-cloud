@@ -37,7 +37,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 public class RuleConfigOutboxRelay {
 
   /** 日志实例 */
-  private static final Logger LOG = LoggerFactory.getLogger(RuleConfigOutboxRelay.class);
+  private static final Logger log = LoggerFactory.getLogger(RuleConfigOutboxRelay.class);
 
   /** 规则配置广播器（Redis Pub/Sub） */
   private final RuleConfigBroadcaster broadcaster;
@@ -77,14 +77,14 @@ public class RuleConfigOutboxRelay {
       return;
     }
     if (broadcaster == null || !broadcaster.isAvailable()) {
-      LOG.warn(
+      log.warn(
           "[LiteRule-Outbox] 广播器不可用，等待 OutboxProcessor 兜底重试: id={}", message.getId());
       return;
     }
     try {
       DomainEvent domainEvent = YdszJson.fromJson(message.getPayload(), DomainEvent.class);
       if (domainEvent == null) {
-        LOG.warn("[LiteRule-Outbox] 消息反序列化为空，跳过低延迟广播: id={}", message.getId());
+        log.warn("[LiteRule-Outbox] 消息反序列化为空，跳过低延迟广播: id={}", message.getId());
         return;
       }
       RuleConfigRefreshEvent event = RuleConfigRefreshEvent.from(domainEvent);
@@ -92,15 +92,15 @@ public class RuleConfigOutboxRelay {
       // 广播成功：标记为 SENT，避免 OutboxProcessor 下一轮询周期重复广播
       if (outboxRepository != null) {
         outboxRepository.markAsSent(message.getId());
-        LOG.debug("[LiteRule-Outbox] 消息已标记 SENT: id={}", message.getId());
+        log.debug("[LiteRule-Outbox] 消息已标记 SENT: id={}", message.getId());
       }
-      LOG.info(
+      log.info(
           "[LiteRule-Outbox] 低延迟广播完成: id={}, ruleCode={}, changeType={}",
           message.getId(),
           event.getRuleCode(),
           event.getChangeType());
     } catch (Exception e) {
-      LOG.warn(
+      log.warn(
           "[LiteRule-Outbox] 低延迟广播失败，由 OutboxProcessor 兜底重试: id={}, err={}",
           message.getId(),
           e.getMessage());

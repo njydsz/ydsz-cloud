@@ -54,7 +54,7 @@ import com.njydsz.common.util.id.RandomUtils;
  */
 public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GrayLoadBalancer.class);
+  private static final Logger log = LoggerFactory.getLogger(GrayLoadBalancer.class);
 
   /**
    * 灰度标签请求头名，同时作为 Gateway exchange attribute key。
@@ -136,7 +136,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 
     ServiceInstanceListSupplier supplier = supplierProvider.getIfAvailable();
     if (supplier == null) {
-      LOG.warn("[GrayLB] 服务 {} 无可用 ServiceInstanceListSupplier", serviceId);
+      log.warn("[GrayLB] 服务 {} 无可用 ServiceInstanceListSupplier", serviceId);
       return Mono.just(new EmptyResponse());
     }
 
@@ -146,7 +146,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
         .map(instances -> getInstanceResponse(instances, grayTag))
         .onErrorResume(
             e -> {
-              LOG.warn("[GrayLB] 服务 {} 获取实例列表失败: {}", serviceId, e.getMessage());
+              log.warn("[GrayLB] 服务 {} 获取实例列表失败: {}", serviceId, e.getMessage());
               return Mono.just(new EmptyResponse());
             });
   }
@@ -227,7 +227,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   private Response<ServiceInstance> getInstanceResponse(
       List<ServiceInstance> instances, String grayTag) {
     if (instances == null || instances.isEmpty()) {
-      LOG.warn("[GrayLB] 服务 {} 无可用实例", serviceId);
+      log.warn("[GrayLB] 服务 {} 无可用实例", serviceId);
       return new EmptyResponse();
     }
 
@@ -255,7 +255,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
     // 降级:灰度实例不存在时使用全量实例,避免 503
     if (filtered.isEmpty()) {
       if (wantGray) {
-        LOG.warn("[GrayLB] 服务 {} 灰度实例不存在,降级到全量实例(共 {} 个)", serviceId, instances.size());
+        log.warn("[GrayLB] 服务 {} 灰度实例不存在,降级到全量实例(共 {} 个)", serviceId, instances.size());
       }
       filtered = instances;
     }
@@ -263,11 +263,11 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
     // P0-B3: 加权随机选择（Alias Method，读取 Nacos metadata 中的 weight 字段）
     ServiceInstance selected = selectByWeight(filtered);
 
-    if (LOG.isDebugEnabled()) {
+    if (log.isDebugEnabled()) {
       Map<String, String> meta = selected.getMetadata();
       String selectedVersion = meta == null ? null : meta.get(METADATA_VERSION);
       String selectedWeight = meta == null ? null : meta.get(METADATA_WEIGHT);
-      LOG.debug(
+      log.debug(
           "[GrayLB] 服务 {} 选择实例 {} (grayTag={}, version={}, weight={}, 候选 {} 个)",
           serviceId,
           selected.getInstanceId(),
