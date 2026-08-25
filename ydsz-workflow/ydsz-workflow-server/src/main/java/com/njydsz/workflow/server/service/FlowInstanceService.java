@@ -294,6 +294,40 @@ public interface FlowInstanceService {
       String instanceId, List<FlowNodeVO> nextNodes, Map<String, Object> variables);
 
   /**
+   * GAP-V2-03: 动态追加节点（对标 flowlong executeAppendNodeModel）。
+   *
+   * <p>在运行中的流程实例上动态追加一个审批节点，<b>不</b>修改流程定义。
+   * 适用于"发起后才发现需要加一个审批环节"的场景。
+   *
+   * <p><b>行为约定：</b>
+   *
+   * <ul>
+   *   <li>在当前节点与下一节点之间插入新节点</li>
+   *   <li>新节点审批完成后，流程继续按原定义推进</li>
+   *   <li>仅 RUNNING 状态的实例可追加节点</li>
+   *   <li>追加的节点信息记录到实例 variable JSON 中（{@code appendedNodes}）</li>
+   * </ul>
+   *
+   * @param instanceId    流程实例 ID
+   * @param currentNodeCode 当前节点编码（插入位置参考点）
+   * @param nodeName      新节点名称
+   * @param assigneeType  办理人类型
+   * @param assigneeId    办理人 ID
+   * @param operatorId    操作人 ID
+   * @param comment       追加原因
+   * @return 新创建的任务 ID
+   * @since 1.0.0
+   */
+  String appendNode(
+      String instanceId,
+      String currentNodeCode,
+      String nodeName,
+      String assigneeType,
+      String assigneeId,
+      String operatorId,
+      String comment);
+
+  /**
    * GAP-V2-02: 获取表单渲染数据 — 根据当前任务所在节点返回字段权限配置
    *
    * <p>审批人打开待办时，前端调用本接口获取当前节点的表单字段权限（EDIT/READONLY/HIDDEN）， 结合业务表单实现运行时表单渲染。

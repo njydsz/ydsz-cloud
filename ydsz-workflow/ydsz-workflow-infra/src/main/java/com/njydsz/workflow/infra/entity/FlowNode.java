@@ -50,7 +50,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *       TRANSFER_ADMIN} / {@code ASSIGN_SPECIFIED}）
  *   <li>{@code collection} — 会签人员集合变量名（如 {@code ${approvers}}）
  *   <li>{@code votePassRate} — 通过率（{@code 0~1}，默认 0.5 表示过半数）
- *   <li>{@code userWeights} — 加权投票权重映射（{@code userId -> weight}）
+ *   <li>{@code userWeights} — 票签模式加权投票权重映射（{@code userId -> weight}），未配置默认 1
  *   <li>{@code autoDedup} — 是否启用跨节点办理人去重
  *   <li>GAP-P2-9 {@code freeJump} — 是否允许自由流跳转到该节点（{@code true/false}，默认 {@code false}）
  * </ul>

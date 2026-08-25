@@ -321,6 +321,31 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   }
 
   /**
+   * GAP-V2-03: 动态追加节点（对标 flowlong executeAppendNodeModel）。
+   *
+   * @param instanceId     流程实例 ID
+   * @param currentNodeCode 当前节点编码
+   * @param nodeName       新节点名称
+   * @param assigneeType   办理人类型
+   * @param assigneeId     办理人 ID
+   * @param operatorId     操作人 ID
+   * @param comment        追加原因
+   * @return 新创建的任务 ID
+   */
+  @Override
+  public String appendNode(
+      String instanceId,
+      String currentNodeCode,
+      String nodeName,
+      String assigneeType,
+      String assigneeId,
+      String operatorId,
+      String comment) {
+    return lifecycleManager.appendNode(
+        instanceId, currentNodeCode, nodeName, assigneeType, assigneeId, operatorId, comment);
+  }
+
+  /**
    * GAP-V2-02: 获取表单渲染数据 — 根据当前任务所在节点返回字段权限配置
    *
    * @param instanceId 流程实例 ID

@@ -36,6 +36,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <ul>
  *   <li>{@code OR}：或签（任一人同意即推进）
  *   <li>{@code PARALLEL}：并行会签（所有人同意才推进）
+ *   <li>{@code WEIGHTED}：票签（加权投票，{@code approveWeight / totalWeight ≥ votePassRate} 时推进）
  * </ul>
  *
  * <p><b>SLA 催办（P1-6）：</b>

@@ -25,6 +25,7 @@ import com.njydsz.workflow.infra.entity.FlowRunTask;
  * <ul>
  *   <li>{@link OrCountersignStrategy} — OR（或签 / 任一通过）
  *   <li>{@link ParallelCountersignStrategy} — PARALLEL（并行会签 / 全部通过）
+ *   <li>{@link WeightedCountersignStrategy} — WEIGHTED（票签 / 加权投票，通过权重比例达标后推进）
  * </ul>
  *
  * <p><b>调用契约（顺序）：</b>
