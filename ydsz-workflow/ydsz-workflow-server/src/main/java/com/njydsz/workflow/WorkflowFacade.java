@@ -120,7 +120,7 @@ public interface WorkflowFacade {
   /**
    * 查询用户待办任务列表（分页）
    *
-   * <p>对标钉钉/飞书审批中心「我的待办」Tab，查询当前用户名下所有 PENDING / CLAIMED 状态的任务。 结果按创建时间降序排列，支持分页。
+   * <p>查询当前用户名下所有 PENDING / CLAIMED 状态的任务。 结果按创建时间降序排列，支持分页。
    *
    * @param userId 用户 ID
    * @param page 页码（从 1 开始）
@@ -133,7 +133,7 @@ public interface WorkflowFacade {
   /**
    * 查询用户已办任务列表（分页）
    *
-   * <p>对标钉钉/飞书审批中心「我已审批」Tab，查询当前用户处理过的历史任务（APPROVED / REJECTED / DELEGATED）。 数据来源为 {@code
+   * <p>查询当前用户处理过的历史任务（APPROVED / REJECTED / DELEGATED）。 数据来源为 {@code
    * ydsz_flow_his_task} 归档表，结果按完成时间降序排列。
    *
    * @param userId 用户 ID
@@ -146,7 +146,7 @@ public interface WorkflowFacade {
   /**
    * GAP-P0-1: 查全部流程实例（管理员视图）
    *
-   * <p>对标钉钉/飞书/企微审批中心的"全部"Tab，管理员可查看当前租户下所有流程实例。 非管理员调用应由上层权限拦截（需要 workflow:monitor:view 权限）。
+   * <p>管理员可查看当前租户下所有流程实例。 非管理员调用应由上层权限拦截（需要 workflow:monitor:view 权限）。
    *
    * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code YdszResponse<Map>}， 保留 total / page /
    * size，避免前端假分页。
@@ -170,7 +170,7 @@ public interface WorkflowFacade {
   /**
    * 前加签 — 在当前审批人之前插入额外审批人
    *
-   * <p>对标钉钉/飞书「前加签」能力。加签后流程变为：被加签人 → 原审批人 → 下一节点。 被加签人审批通过后，流程回到原审批人继续办理。
+   * <p>前加签能力。加签后流程变为：被加签人 → 原审批人 → 下一节点。 被加签人审批通过后，流程回到原审批人继续办理。
    *
    * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
    */
@@ -179,7 +179,7 @@ public interface WorkflowFacade {
   /**
    * 后加签 — 在当前审批人之后插入额外审批人
    *
-   * <p>对标钉钉/飞书「后加签」能力。加签后流程变为：原审批人 → 被加签人 → 下一节点。 原审批人审批通过后，流程流转到被加签人办理，而非直接进入下一节点。
+   * <p>后加签能力。加签后流程变为：原审批人 → 被加签人 → 下一节点。 原审批人审批通过后，流程流转到被加签人办理，而非直接进入下一节点。
    *
    * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
    */
@@ -195,7 +195,7 @@ public interface WorkflowFacade {
   /**
    * 催办 — 向实例下所有待办任务的办理人发送催办通知
    *
-   * <p>对标钉钉/飞书「催办」按钮。催办通过 IM 通道（钉钉/飞书/企微）发送提醒消息， 同时记录催办日志。催办频率受 SLA 配置的 {@code maxUrges} 上限控制。
+   * <p>催办功能。催办通过 IM 通道发送提醒消息， 同时记录催办日志。催办频率受 SLA 配置的 {@code maxUrges} 上限控制。
    *
    * @param instanceId 流程实例 ID
    * @param operatorId 催办人 ID
@@ -218,7 +218,7 @@ public interface WorkflowFacade {
   /**
    * 撤回流程 — 发起人撤回正在运行中的流程实例
    *
-   * <p>对标钉钉/飞书「撤回」能力。仅当流程处于 RUNNING 状态且当前待办节点尚未被审批时允许撤回。 撤回后流程回到发起人，发起人可修改表单后重新提交。
+   * <p>撤回能力。仅当流程处于 RUNNING 状态且当前待办节点尚未被审批时允许撤回。 撤回后流程回到发起人，发起人可修改表单后重新提交。
    *
    * @param processInstanceId 流程实例 ID
    * @param initiatorId 发起人 ID（仅发起人本人可撤回）
@@ -280,7 +280,7 @@ public interface WorkflowFacade {
   /**
    * GAP-P0-4: 一键通过所有待办 — 查询当前用户全部待办（上限 100 条）并逐一通过。
    *
-   * <p>对标钉钉/飞书审批中心"一键通过"按钮。内部委托 {@link #batchPassTasks} 保证原子性。
+   * <p>审批中心"一键通过"按钮。内部委托 {@link #batchPassTasks} 保证原子性。
    *
    * @param userId 操作人 ID
    * @param comment 审批意见（可选）
@@ -311,7 +311,7 @@ public interface WorkflowFacade {
   /**
    * 暂存待审 — 审批人保存审批意见草稿
    *
-   * <p>对标钉钉/飞书「暂存」能力。审批人可在正式提交前先保存审批意见和附件， 草稿存储在 Redis 中（TTL 7 天），提交后自动清除。
+   * <p>暂存能力。审批人可在正式提交前先保存审批意见和附件， 草稿存储在 Redis 中（TTL 7 天），提交后自动清除。
    *
    * @param dto 任务操作参数（需含 taskId + comment + attachments）
    */
@@ -320,7 +320,7 @@ public interface WorkflowFacade {
   /**
    * 追加处理人 — 在已有会签任务中追加审批人
    *
-   * <p>对标钉钉/飞书「加人」能力。在任务进入会签节点后，动态追加新的审批人参与会签， 不影响已有审批人的审批状态。
+   * <p>加人能力。在任务进入会签节点后，动态追加新的审批人参与会签， 不影响已有审批人的审批状态。
    *
    * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
    */
@@ -329,7 +329,7 @@ public interface WorkflowFacade {
   /**
    * 减签 — 从会签任务中移除指定审批人
    *
-   * <p>对标钉钉/飞书「减签」能力。将会签任务中尚未办理的指定审批人移除， 已办理的审批人不受影响。移除后会签完成条件相应调整。
+   * <p>减签能力。将会签任务中尚未办理的指定审批人移除， 已办理的审批人不受影响。移除后会签完成条件相应调整。
    *
    * @param dto 任务操作参数（需含 taskId + targetUserId）
    */
@@ -338,7 +338,7 @@ public interface WorkflowFacade {
   /**
    * 已阅 — 标记任务已阅
    *
-   * <p>对标钉钉/飞书「已阅」能力。抄送任务（CC）或会签任务中非办理人可以标记已阅， 标记后不再在「待办」列表中展示该任务。
+   * <p>已阅能力。抄送任务（CC）或会签任务中非办理人可以标记已阅， 标记后不再在「待办」列表中展示该任务。
    *
    * @param taskId 任务 ID
    * @param userId 操作人 ID
@@ -348,7 +348,7 @@ public interface WorkflowFacade {
   /**
    * 沟通 — 在任务下添加沟通评论
    *
-   * <p>对标钉钉/飞书「沟通」能力。审批人可在任务下发起沟通，@提及其他同事提供意见， 被沟通人收到通知后可回复评论。沟通不阻塞流程推进。
+   * <p>沟通能力。审批人可在任务下发起沟通，@提及其他同事提供意见， 被沟通人收到通知后可回复评论。沟通不阻塞流程推进。
    *
    * @param dto 任务操作参数（需含 taskId + comment + targetUserId）
    */

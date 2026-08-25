@@ -135,7 +135,7 @@ public class FlowAdvancedController {
    *
    * <p>幂等保护 5 秒；限流 50 QPS。
    *
-   * <p>触发周报推送：按租户下管理员配置的接收人列表，通过 {@code ydsz-message} 通知中心 发送 IM 消息（钉钉 / 飞书 / 企微）+ 邮件。
+   * <p>触发周报推送：按租户下管理员配置的接收人列表，通过 {@code ydsz-message} 通知中心 发送 IM 消息 + 邮件。
    *
    * <p>要求 {@link PermissionCodes#WORKFLOW_INSTANCE_CONTROL} 权限。
    *
@@ -405,7 +405,7 @@ public class FlowAdvancedController {
   /**
    * P2-8: 查询催办剩余冷却时间
    *
-   * <p>对标钉钉/飞书审批「催一下」按钮的禁用逻辑：催办后默认冷却期 30 分钟， 此端点返回当前用户对该实例的剩余冷却秒数 / 是否可催办。
+   * <p>审批「催一下」按钮的禁用逻辑：催办后默认冷却期 30 分钟， 此端点返回当前用户对该实例的剩余冷却秒数 / 是否可催办。
    *
    * <p>前端依据返回结果置灰或启用催办按钮。
    *

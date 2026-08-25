@@ -128,7 +128,7 @@ public class FlowInstanceController {
   /**
    * P2-6: 批量启动流程实例。
    *
-   * <p>对标钉钉/飞书"批量发起审批"能力：一次性提交多个流程实例，每个实例独立事务， 单个失败不影响其他实例的发起。
+   * <p>批量发起审批能力：一次性提交多个流程实例，每个实例独立事务， 单个失败不影响其他实例的发起。
    *
    * @param dtos 流程启动参数列表
    * @return 统一响应结果，包含 successCount / failedCount / instanceIds / failedItems
@@ -444,7 +444,7 @@ public class FlowInstanceController {
   /**
    * GAP-P0-1: 全部流程实例查询（管理员视图）
    *
-   * <p>对标钉钉/飞书/企微审批中心"全部"Tab。需要 {@code workflow:monitor:view} 权限。
+   * <p>审批中心"全部"Tab。需要 {@code workflow:monitor:view} 权限。
    *
    * @param page 页码
    * @param size 每页大小
