@@ -42,8 +42,6 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  *
  * <ul>
  *   <li>LangChain HumanInTheLoopCallback
- *   <li>Dify 人工审批节点
- *   <li>Coze 卡片交互
  *   <li>AutoGen UserProxyAgent
  * </ul>
  *

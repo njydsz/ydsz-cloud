@@ -137,8 +137,10 @@ public class FlowTaskStateMachine {
           "状态流转校验参数不能为空: current=" + current + ", target=" + target);
     }
     if (!validateTransition(current, target)) {
-      throw BusinessException.of(
-          WorkflowExceptionCode.ILLEGAL_STATE_TRANSITION, current.name(), target.name());
+      throw BusinessException.builder()
+          .resultCode(WorkflowExceptionCode.ILLEGAL_STATE_TRANSITION)
+          .params(current.name(), target.name())
+          .build();
     }
   }
 

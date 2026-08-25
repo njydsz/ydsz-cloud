@@ -27,7 +27,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <ul>
  *   <li>LangChain ConversationSummaryBufferMemory
  *   <li>OpenAI Assistants Thread（自动截断 + 摘要）
- *   <li>Dify 对话记忆压缩
  * </ul>
  *
  * <h3>执行流程</h3>

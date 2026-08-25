@@ -32,7 +32,7 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
 /**
  * 流程分类管理 Controller
  *
- * <p>对标钉钉 / 飞书审批的「流程分类管理」能力，提供流程分类的 CRUD HTTP 接口。 分类数据是设计器左侧导航树、发起审批时分类筛选的数据源。
+ * <p>提供流程分类的 CRUD HTTP 接口。 分类数据是设计器左侧导航树、发起审批时分类筛选的数据源。
  *
  * <p><b>接口分组：</b>
  *

@@ -842,9 +842,9 @@ public class FlowInstanceLifecycleManager {
           .message("error.workflow.msg_reopen_target_required")
           .build();
     }
-    List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(instanceId);
+    List<Map<String, Object>> passedNodes = hisTaskRepository.listPassedNodes(instanceId);
     boolean nodeExists =
-        hisTasks.stream().anyMatch(t -> targetNodeCode.equals(t.getNodeCode()));
+        passedNodes.stream().anyMatch(t -> targetNodeCode.equals(String.valueOf(t.getOrDefault("nodeCode", ""))));
     if (!nodeExists) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -861,7 +861,7 @@ public class FlowInstanceLifecycleManager {
     instanceRepository.save(converter.doToDto(instance));
 
     // 6. 在目标节点创建新的待办任务
-    FlowNode targetNode =
+    FlowNodeVO targetNodeVO =
         nodeRepository
             .findByCode(instance.getDefinitionId(), targetNodeCode)
             .orElseThrow(
@@ -871,6 +871,14 @@ public class FlowInstanceLifecycleManager {
                         .key("error.workflow.msg_reopen_node_missing")
                         .params(targetNodeCode)
                         .build());
+    FlowNode targetNode = new FlowNode();
+    targetNode.setDefinitionId(instance.getDefinitionId());
+    targetNode.setFlowCode(instance.getFlowCode());
+    targetNode.setNodeCode(targetNodeVO.getNodeCode());
+    targetNode.setNodeName(targetNodeVO.getNodeName());
+    targetNode.setNodeType(targetNodeVO.getNodeType());
+    targetNode.setPermissionFlag(targetNodeVO.getPermissionFlag());
+    targetNode.setExt(targetNodeVO.getExt());
     Map<String, Object> variables = variableManager.getVariables(instanceId);
     taskService.createTask(instanceId, targetNode, variables);
 

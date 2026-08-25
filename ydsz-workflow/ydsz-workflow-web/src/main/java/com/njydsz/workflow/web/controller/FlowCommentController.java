@@ -34,7 +34,7 @@ import com.njydsz.workflow.server.service.FlowCommentService;
 /**
  * P2-2: 流程评论与常用语统一 Controller
  *
- * <p>审批评论多级回复 + 审批常用语管理 HTTP 接口，对标钉钉 / 飞书审批评论区与常用语能力。
+ * <p>审批评论多级回复 + 审批常用语管理 HTTP 接口。
  * 评论数据独立于审计日志（{@code FlowAuditLog}）：用户视角可修改 / 删除，系统视角只读不可改。
  * 常用语提供系统预设 + 用户自定义双轨制，使用次数智能排序。
  *
