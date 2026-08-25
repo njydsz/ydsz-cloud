@@ -38,7 +38,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public boolean save(OutboxEvent event) {
-    OutboxEvent entity = toDO(event);
+    OutboxEvent entity = toEntity(event);
     return outboxEventMapper.insert(entity) > 0;
   }
 
@@ -107,7 +107,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
         events);
   }
 
-  /** DO → Event 转换。 */
+  /** Entity → Event 转换。 */
   private OutboxEvent toEvent(OutboxEvent entity) {
     OutboxEvent event = new OutboxEvent();
     event.setId(entity.getId());
@@ -123,8 +123,8 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
     return event;
   }
 
-  /** Event → DO 转换。 */
-  private OutboxEvent toDO(OutboxEvent event) {
+  /** Event → Entity 转换。 */
+  private OutboxEvent toEntity(OutboxEvent event) {
     OutboxEvent entity = new OutboxEvent();
     entity.setId(event.getId());
     entity.setAggregateType(event.getAggregateType());

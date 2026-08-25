@@ -42,6 +42,6 @@ public class MsgVariableSourceRepositoryImpl implements MsgVariableSourceReposit
       wrapper.eq("source_type", query.getSourceType());
     }
     wrapper.eq("deleted", 0);
-    return converter.variableSourceDoListToVO(msgVariableSourceMapper.selectList(wrapper));
+    return converter.variableSourceListToVO(msgVariableSourceMapper.selectList(wrapper));
   }
 }

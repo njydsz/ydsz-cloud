@@ -31,7 +31,7 @@ public class MsgTraceRepositoryImpl implements MsgTraceRepository {
 
   @Override
   public boolean save(MsgTraceVO vo) {
-    MsgTrace entity = voToDO(vo);
+    MsgTrace entity = voToEntity(vo);
     return msgTraceMapper.insert(entity) > 0;
   }
 
@@ -52,10 +52,10 @@ public class MsgTraceRepositoryImpl implements MsgTraceRepository {
     }
     wrapper.eq("deleted", 0);
     wrapper.orderByAsc("event_at");
-    return converter.traceDoListToVO(msgTraceMapper.selectList(wrapper));
+    return converter.traceListToVO(msgTraceMapper.selectList(wrapper));
   }
 
-  private MsgTrace voToDO(MsgTraceVO vo) {
+  private MsgTrace voToEntity(MsgTraceVO vo) {
     if (vo == null) {
       return null;
     }

@@ -27,9 +27,9 @@ import com.njydsz.message.infra.mapper.core.MsgLogMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link MessageConverter} 实现 DO ↔ VO ↔ DTO 的双向转换
+ *   <li>通过 {@link MessageConverter} 实现 Entity ↔ VO ↔ DTO 的双向转换
  *   <li>查询入参使用领域 Query（{@link MessageLogQueryDTO}），返回领域 VO（{@link MsgLogVO}）
- *   <li>CUD 入参使用领域 DTO（{@link MsgLogDTO}），通过 Converter 转换为 DO
+ *   <li>CUD 入参使用领域 DTO（{@link MsgLogDTO}），通过 Converter 转换为 Entity
  * </ul>
  *
  * @author ydsz-team
@@ -47,25 +47,25 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
 
   @Override
   public boolean save(MsgLogDTO dto) {
-    MsgLog entity = converter.dtoToDO(dto);
+    MsgLog entity = converter.dtoToEntity(dto);
     return msgLogMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean save(MsgLogVO vo) {
-    MsgLog entity = converter.voToDO(vo);
+    MsgLog entity = converter.voToEntity(vo);
     return msgLogMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgLogDTO dto) {
-    MsgLog entity = converter.dtoToDO(dto);
+    MsgLog entity = converter.dtoToEntity(dto);
     return msgLogMapper.updateById(entity) > 0;
   }
 
   @Override
   public boolean update(MsgLogVO vo) {
-    MsgLog entity = converter.voToDO(vo);
+    MsgLog entity = converter.voToEntity(vo);
     return msgLogMapper.updateById(entity) > 0;
   }
 
@@ -95,7 +95,7 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     QueryWrapper<MsgLog> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgLog> entityPage = msgLogMapper.selectPage(page, wrapper);
-    List<MsgLogVO> vos = converter.logDoListToVO(entityPage.getRecords());
+    List<MsgLogVO> vos = converter.logListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
@@ -103,7 +103,7 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   public List<MsgLogVO> findList(MessageLogQueryDTO query) {
     QueryWrapper<MsgLog> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
-    return converter.logDoListToVO(msgLogMapper.selectList(wrapper));
+    return converter.logListToVO(msgLogMapper.selectList(wrapper));
   }
 
   @Override
@@ -118,7 +118,7 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     if (list == null || list.isEmpty()) {
       return false;
     }
-    List<MsgLog> entities = converter.logDtoListToDO(list);
+    List<MsgLog> entities = converter.logDtoListToEntity(list);
     return msgLogMapper.insertBatch(entities) > 0;
   }
 

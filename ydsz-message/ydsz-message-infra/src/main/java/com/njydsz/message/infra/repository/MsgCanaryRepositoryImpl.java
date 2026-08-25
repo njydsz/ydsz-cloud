@@ -22,7 +22,7 @@ import com.njydsz.message.infra.mapper.MsgCanaryMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link MessageConverter} 实现 DO ↔ VO ↔ DTO 的双向转换
+ *   <li>通过 {@link MessageConverter} 实现 Entity ↔ VO ↔ DTO 的双向转换
  *   <li>CUD 入参使用领域 DTO，返回值使用领域 VO
  * </ul>
  *
@@ -39,13 +39,13 @@ public class MsgCanaryRepositoryImpl implements MsgCanaryRepository {
 
   @Override
   public boolean save(MsgCanaryDTO dto) {
-    MsgCanary entity = converter.dtoToDO(dto);
+    MsgCanary entity = converter.dtoToEntity(dto);
     return msgCanaryMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgCanaryDTO dto) {
-    MsgCanary entity = converter.dtoToDO(dto);
+    MsgCanary entity = converter.dtoToEntity(dto);
     return msgCanaryMapper.updateById(entity) > 0;
   }
 

@@ -32,7 +32,7 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
 
   @Override
   public boolean save(MsgTemplateVersionVO vo) {
-    MsgTemplateVersion entity = voToDO(vo);
+    MsgTemplateVersion entity = voToEntity(vo);
     return msgTemplateVersionMapper.insert(entity) > 0;
   }
 
@@ -47,7 +47,7 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
     }
     wrapper.eq("deleted", 0);
     wrapper.orderByDesc("version");
-    return converter.templateVersionDoListToVO(msgTemplateVersionMapper.selectList(wrapper));
+    return converter.templateVersionListToVO(msgTemplateVersionMapper.selectList(wrapper));
   }
 
   @Override
@@ -63,7 +63,7 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
     return Optional.ofNullable(msgTemplateVersionMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
-  private MsgTemplateVersion voToDO(MsgTemplateVersionVO vo) {
+  private MsgTemplateVersion voToEntity(MsgTemplateVersionVO vo) {
     if (vo == null) {
       return null;
     }

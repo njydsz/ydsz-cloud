@@ -32,13 +32,13 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
 
   @Override
   public boolean save(MsgUserChannelVO vo) {
-    MsgUserChannel entity = voToDO(vo);
+    MsgUserChannel entity = voToEntity(vo);
     return msgUserChannelMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgUserChannelVO vo) {
-    MsgUserChannel entity = voToDO(vo);
+    MsgUserChannel entity = voToEntity(vo);
     return msgUserChannelMapper.updateById(entity) > 0;
   }
 
@@ -56,7 +56,7 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
   @Override
   public List<MsgUserChannelVO> findList(MsgUserChannelQuery query) {
     QueryWrapper<MsgUserChannel> wrapper = buildWrapper(query);
-    return converter.userChannelDoListToVO(msgUserChannelMapper.selectList(wrapper));
+    return converter.userChannelListToVO(msgUserChannelMapper.selectList(wrapper));
   }
 
   private QueryWrapper<MsgUserChannel> buildWrapper(MsgUserChannelQuery query) {
@@ -74,7 +74,7 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
     return wrapper;
   }
 
-  private MsgUserChannel voToDO(MsgUserChannelVO vo) {
+  private MsgUserChannel voToEntity(MsgUserChannelVO vo) {
     if (vo == null) {
       return null;
     }

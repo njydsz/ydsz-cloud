@@ -48,15 +48,15 @@ import com.njydsz.message.infra.entity.MsgVariableSource;
 /**
  * 消息模块统一 MapStruct 转换器（Infra 层）。
  *
- * <p>承担「消息模块」所有 DO ↔ VO ↔ DTO 的双向转换，遵循云顶编码规范的<b>单一转换器</b>模式：
+ * <p>承担「消息模块」所有 Entity ↔ VO ↔ DTO 的双向转换，遵循云顶编码规范的<b>单一转换器</b>模式：
  * 同一业务域的转换规则集中维护，避免散落在各 Service 的 BeanUtils.copyProperties 调用。
  *
  * <p><b>设计要点：</b>
  *
  * <ul>
- *   <li>DO → VO 方向：用于查询结果转换</li>
- *   <li>VO → DO 方向：用于 Repository 层将 VO 转换为 DO</li>
- *   <li>DTO → DO 方向：用于 Repository 层将 CUD 入参 DTO 转换为 DO</li>
+ *   <li>Entity → VO 方向：用于查询结果转换</li>
+ *   <li>VO → Entity 方向：用于 Repository 层将 VO 转换为 Entity</li>
+ *   <li>DTO → Entity 方向：用于 Repository 层将 CUD 入参 DTO 转换为 Entity</li>
  *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射</li>
  * </ul>
  *
@@ -72,7 +72,7 @@ public interface MessageConverter {
   // ===== MsgLog =====
   MsgLogVO doToVO(MsgLog entity);
 
-  List<MsgLogVO> logDoListToVO(List<MsgLog> entities);
+  List<MsgLogVO> logListToVO(List<MsgLog> entities);
 
   /**
    * 消息发送日志 VO → 消息发送日志（领域实体）。
@@ -87,156 +87,156 @@ public interface MessageConverter {
   // ===== MsgNotification =====
   MsgNotificationVO doToVO(MsgNotification entity);
 
-  List<MsgNotificationVO> notificationDoListToVO(List<MsgNotification> entities);
+  List<MsgNotificationVO> notificationListToVO(List<MsgNotification> entities);
 
   // ===== MsgTemplate =====
   MsgTemplateVO doToVO(MsgTemplate entity);
 
-  List<MsgTemplateVO> templateDoListToVO(List<MsgTemplate> entities);
+  List<MsgTemplateVO> templateListToVO(List<MsgTemplate> entities);
 
   // ===== MsgRouteRule =====
   MsgRouteRuleVO doToVO(MsgRouteRule entity);
 
-  List<MsgRouteRuleVO> routeRuleDoListToVO(List<MsgRouteRule> entities);
+  List<MsgRouteRuleVO> routeRuleListToVO(List<MsgRouteRule> entities);
 
   // ===== MsgOffline =====
   MsgOfflineVO doToVO(MsgOffline entity);
 
-  List<MsgOfflineVO> offlineDoListToVO(List<MsgOffline> entities);
+  List<MsgOfflineVO> offlineListToVO(List<MsgOffline> entities);
 
   // ===== MsgSubscription =====
   MsgSubscriptionVO doToVO(MsgSubscription entity);
 
-  List<MsgSubscriptionVO> subscriptionDoListToVO(List<MsgSubscription> entities);
+  List<MsgSubscriptionVO> subscriptionListToVO(List<MsgSubscription> entities);
 
   // ===== MsgPreference =====
   MsgPreferenceVO doToVO(MsgPreference entity);
 
-  List<MsgPreferenceVO> preferenceDoListToVO(List<MsgPreference> entities);
+  List<MsgPreferenceVO> preferenceListToVO(List<MsgPreference> entities);
 
   // ===== MsgUserChannel =====
   MsgUserChannelVO doToVO(MsgUserChannel entity);
 
-  List<MsgUserChannelVO> userChannelDoListToVO(List<MsgUserChannel> entities);
+  List<MsgUserChannelVO> userChannelListToVO(List<MsgUserChannel> entities);
 
   // ===== MsgTrace =====
   MsgTraceVO doToVO(MsgTrace entity);
 
-  List<MsgTraceVO> traceDoListToVO(List<MsgTrace> entities);
+  List<MsgTraceVO> traceListToVO(List<MsgTrace> entities);
 
   // ===== MsgReceipt =====
   MsgReceiptVO doToVO(MsgReceipt entity);
 
-  List<MsgReceiptVO> receiptDoListToVO(List<MsgReceipt> entities);
+  List<MsgReceiptVO> receiptListToVO(List<MsgReceipt> entities);
 
   // ===== MsgFeedback =====
   MsgFeedbackVO doToVO(MsgFeedback entity);
 
-  List<MsgFeedbackVO> feedbackDoListToVO(List<MsgFeedback> entities);
+  List<MsgFeedbackVO> feedbackListToVO(List<MsgFeedback> entities);
 
   // ===== MsgBatch =====
   MsgBatchVO doToVO(MsgBatch entity);
 
-  List<MsgBatchVO> batchDoListToVO(List<MsgBatch> entities);
+  List<MsgBatchVO> batchListToVO(List<MsgBatch> entities);
 
   // ===== MsgAggregate =====
   MsgAggregateVO doToVO(MsgAggregate entity);
 
-  List<MsgAggregateVO> aggregateDoListToVO(List<MsgAggregate> entities);
+  List<MsgAggregateVO> aggregateListToVO(List<MsgAggregate> entities);
 
   // ===== MsgTemplateVersion =====
   MsgTemplateVersionVO doToVO(MsgTemplateVersion entity);
 
-  List<MsgTemplateVersionVO> templateVersionDoListToVO(List<MsgTemplateVersion> entities);
+  List<MsgTemplateVersionVO> templateVersionListToVO(List<MsgTemplateVersion> entities);
 
   // ===== MsgVariableSource =====
   MsgVariableSourceVO doToVO(MsgVariableSource entity);
 
-  List<MsgVariableSourceVO> variableSourceDoListToVO(List<MsgVariableSource> entities);
+  List<MsgVariableSourceVO> variableSourceListToVO(List<MsgVariableSource> entities);
 
-  // ===== VO → DO 方向（用于 Repository 层转换） =====
+  // ===== VO → Entity 方向（用于 Repository 层转换） =====
 
   /**
-   * 消息发送日志 VO → 消息发送日志 DO。
+   * 消息发送日志 VO → 消息发送日志 Entity。
    *
-   * <p>用于 Repository 层将 VO 转换为 DO 后委托 Mapper 执行数据库操作。
+   * <p>用于 Repository 层将 VO 转换为 Entity 后委托 Mapper 执行数据库操作。
    *
    * @param vo 消息发送日志 VO
-   * @return 消息发送日志 DO
+   * @return 消息发送日志 Entity
    */
-  MsgLog voToDO(MsgLogVO vo);
+  MsgLog voToEntity(MsgLogVO vo);
 
   /**
-   * 消息发送日志 VO 列表 → 消息发送日志 DO 列表。
+   * 消息发送日志 VO 列表 → 消息发送日志 Entity 列表。
    *
    * <p>用于 Repository 层批量转换。
    *
    * @param vos 消息发送日志 VO 列表
-   * @return 消息发送日志 DO 列表
+   * @return 消息发送日志 Entity 列表
    */
-  List<MsgLog> logVoListToDO(List<MsgLogVO> vos);
+  List<MsgLog> logVoListToEntity(List<MsgLogVO> vos);
 
-  // ===== DTO → DO 方向（用于 Repository 层 CUD 操作） =====
+  // ===== DTO → Entity 方向（用于 Repository 层 CUD 操作） =====
 
   /**
-   * 消息发送日志 DTO → 消息发送日志 DO。
+   * 消息发送日志 DTO → 消息发送日志 Entity。
    *
-   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 DO 后委托 Mapper 执行数据库操作。
+   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 Entity 后委托 Mapper 执行数据库操作。
    *
    * @param dto 消息发送日志 DTO
-   * @return 消息发送日志 DO
+   * @return 消息发送日志 Entity
    */
-  MsgLog dtoToDO(MsgLogDTO dto);
+  MsgLog dtoToEntity(MsgLogDTO dto);
 
   /**
-   * 消息发送日志 DTO 列表 → 消息发送日志 DO 列表。
+   * 消息发送日志 DTO 列表 → 消息发送日志 Entity 列表。
    *
    * <p>用于 Repository 层批量转换。
    *
    * @param dtos 消息发送日志 DTO 列表
-   * @return 消息发送日志 DO 列表
+   * @return 消息发送日志 Entity 列表
    */
-  List<MsgLog> logDtoListToDO(List<MsgLogDTO> dtos);
+  List<MsgLog> logDtoListToEntity(List<MsgLogDTO> dtos);
 
   /**
-   * 站内通知 DTO → 站内通知 DO。
+   * 站内通知 DTO → 站内通知 Entity。
    *
-   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 DO 后委托 Mapper 执行数据库操作。
+   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 Entity 后委托 Mapper 执行数据库操作。
    *
    * @param dto 站内通知 DTO
-   * @return 站内通知 DO
+   * @return 站内通知 Entity
    */
-  MsgNotification dtoToDO(MsgNotificationDTO dto);
+  MsgNotification dtoToEntity(MsgNotificationDTO dto);
 
   /**
-   * 站内通知 DTO 列表 → 站内通知 DO 列表。
+   * 站内通知 DTO 列表 → 站内通知 Entity 列表。
    *
    * <p>用于 Repository 层批量转换。
    *
    * @param dtos 站内通知 DTO 列表
-   * @return 站内通知 DO 列表
+   * @return 站内通知 Entity 列表
    */
-  List<MsgNotification> notificationDtoListToDO(List<MsgNotificationDTO> dtos);
+  List<MsgNotification> notificationDtoListToEntity(List<MsgNotificationDTO> dtos);
 
   /**
-   * 消息模板 DTO → 消息模板 DO。
+   * 消息模板 DTO → 消息模板 Entity。
    *
-   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 DO 后委托 Mapper 执行数据库操作。
+   * <p>用于 Repository 层将 CUD 入参 DTO 转换为 Entity 后委托 Mapper 执行数据库操作。
    *
    * @param dto 消息模板 DTO
-   * @return 消息模板 DO
+   * @return 消息模板 Entity
    */
-  MsgTemplate dtoToDO(MsgTemplateDTO dto);
+  MsgTemplate dtoToEntity(MsgTemplateDTO dto);
 
   // ===== MsgTenantConfig =====
   MsgTenantConfigVO doToVO(MsgTenantConfig entity);
 
-  MsgTenantConfig dtoToDO(MsgTenantConfigDTO dto);
+  MsgTenantConfig dtoToEntity(MsgTenantConfigDTO dto);
 
   // ===== MsgCanary =====
   MsgCanaryVO doToVO(MsgCanary entity);
 
-  MsgCanary dtoToDO(MsgCanaryDTO dto);
+  MsgCanary dtoToEntity(MsgCanaryDTO dto);
 
   // ===== 通用类型转换 =====
 
