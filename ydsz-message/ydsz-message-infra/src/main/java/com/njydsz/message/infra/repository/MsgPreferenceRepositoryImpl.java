@@ -32,13 +32,13 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
 
   @Override
   public boolean save(MsgPreferenceVO vo) {
-    MsgPreference entity = voToDO(vo);
+    MsgPreference entity = voToEntity(vo);
     return msgPreferenceMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgPreferenceVO vo) {
-    MsgPreference entity = voToDO(vo);
+    MsgPreference entity = voToEntity(vo);
     return msgPreferenceMapper.updateById(entity) > 0;
   }
 
@@ -56,7 +56,7 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
   @Override
   public List<MsgPreferenceVO> findList(MsgPreferenceQuery query) {
     QueryWrapper<MsgPreference> wrapper = buildWrapper(query);
-    return converter.preferenceDoListToVO(msgPreferenceMapper.selectList(wrapper));
+    return converter.preferenceListToVO(msgPreferenceMapper.selectList(wrapper));
   }
 
   private QueryWrapper<MsgPreference> buildWrapper(MsgPreferenceQuery query) {
@@ -77,7 +77,7 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
     return wrapper;
   }
 
-  private MsgPreference voToDO(MsgPreferenceVO vo) {
+  private MsgPreference voToEntity(MsgPreferenceVO vo) {
     if (vo == null) {
       return null;
     }

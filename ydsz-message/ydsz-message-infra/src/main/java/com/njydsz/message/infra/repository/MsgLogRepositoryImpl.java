@@ -27,7 +27,7 @@ import com.njydsz.message.infra.mapper.core.MsgLogMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link MessageConverter} 实现 Entity ↔ VO ↔ DTO 的双向转换
+ *   <li>通过 {@link MessageConverter} 实现 VO ↔ Entity ↔ DTO 的双向转换
  *   <li>查询入参使用领域 Query（{@link MessageLogQueryDTO}），返回领域 VO（{@link MsgLogVO}）
  *   <li>CUD 入参使用领域 DTO（{@link MsgLogDTO}），通过 Converter 转换为 Entity
  * </ul>

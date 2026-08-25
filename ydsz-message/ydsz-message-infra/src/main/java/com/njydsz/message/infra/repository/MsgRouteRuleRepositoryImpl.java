@@ -26,8 +26,8 @@ import com.njydsz.message.infra.mapper.config.MsgRouteRuleMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link MessageConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 VO 通过 {@link MessageConverter} 转换为 DO 后执行数据库操作
+ *   <li>通过 {@link MessageConverter} 将 Entity 转换为 VO 后返回
+ *   <li>CUD 入参 VO 通过 {@link MessageConverter} 转换为 Entity 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -43,7 +43,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
 
   @Override
   public boolean save(MsgRouteRuleVO vo) {
-    MsgRouteRule entity = voToDO(vo);
+    MsgRouteRule entity = voToEntity(vo);
     return msgRouteRuleMapper.insert(entity) > 0;
   }
 
@@ -54,7 +54,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
 
   @Override
   public boolean update(MsgRouteRuleVO vo) {
-    MsgRouteRule entity = voToDO(vo);
+    MsgRouteRule entity = voToEntity(vo);
     return msgRouteRuleMapper.updateById(entity) > 0;
   }
 
@@ -82,7 +82,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
       wrapper.eq("status", query.getStatus());
     }
     wrapper.eq("deleted", 0);
-    return converter.routeRuleDoListToVO(msgRouteRuleMapper.selectList(wrapper));
+    return converter.routeRuleListToVO(msgRouteRuleMapper.selectList(wrapper));
   }
 
   @Override
@@ -107,11 +107,11 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     wrapper.eq("deleted", 0);
     wrapper.orderByAsc("sort_order");
     IPage<MsgRouteRule> entityPage = msgRouteRuleMapper.selectPage(page, wrapper);
-    List<MsgRouteRuleVO> vos = converter.routeRuleDoListToVO(entityPage.getRecords());
+    List<MsgRouteRuleVO> vos = converter.routeRuleListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
-  private MsgRouteRule voToDO(MsgRouteRuleVO vo) {
+  private MsgRouteRule voToEntity(MsgRouteRuleVO vo) {
     if (vo == null) {
       return null;
     }

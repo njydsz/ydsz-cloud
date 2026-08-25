@@ -35,13 +35,13 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
 
   @Override
   public boolean save(MsgSubscriptionVO vo) {
-    MsgSubscription entity = voToDO(vo);
+    MsgSubscription entity = voToEntity(vo);
     return msgSubscriptionMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgSubscriptionVO vo) {
-    MsgSubscription entity = voToDO(vo);
+    MsgSubscription entity = voToEntity(vo);
     return msgSubscriptionMapper.updateById(entity) > 0;
   }
 
@@ -54,7 +54,7 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
   @Override
   public List<MsgSubscriptionVO> findList(MsgSubscriptionQuery query) {
     QueryWrapper<MsgSubscription> wrapper = buildWrapper(query);
-    return converter.subscriptionDoListToVO(msgSubscriptionMapper.selectList(wrapper));
+    return converter.subscriptionListToVO(msgSubscriptionMapper.selectList(wrapper));
   }
 
   @Override
@@ -70,7 +70,7 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
     QueryWrapper<MsgSubscription> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgSubscription> entityPage = msgSubscriptionMapper.selectPage(page, wrapper);
-    List<MsgSubscriptionVO> vos = converter.subscriptionDoListToVO(entityPage.getRecords());
+    List<MsgSubscriptionVO> vos = converter.subscriptionListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
@@ -92,7 +92,7 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
     return wrapper;
   }
 
-  private MsgSubscription voToDO(MsgSubscriptionVO vo) {
+  private MsgSubscription voToEntity(MsgSubscriptionVO vo) {
     if (vo == null) {
       return null;
     }

@@ -31,7 +31,7 @@ public class MsgReceiptRepositoryImpl implements MsgReceiptRepository {
 
   @Override
   public boolean save(MsgReceiptVO vo) {
-    MsgReceipt entity = voToDO(vo);
+    MsgReceipt entity = voToEntity(vo);
     return msgReceiptMapper.insert(entity) > 0;
   }
 
@@ -49,10 +49,10 @@ public class MsgReceiptRepositoryImpl implements MsgReceiptRepository {
     }
     wrapper.eq("deleted", 0);
     wrapper.orderByDesc("receipt_time");
-    return converter.receiptDoListToVO(msgReceiptMapper.selectList(wrapper));
+    return converter.receiptListToVO(msgReceiptMapper.selectList(wrapper));
   }
 
-  private MsgReceipt voToDO(MsgReceiptVO vo) {
+  private MsgReceipt voToEntity(MsgReceiptVO vo) {
     if (vo == null) {
       return null;
     }

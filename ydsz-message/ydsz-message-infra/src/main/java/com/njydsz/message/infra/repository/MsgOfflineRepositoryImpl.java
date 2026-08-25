@@ -1,6 +1,7 @@
 package com.njydsz.message.infra.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -37,7 +38,7 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
     if (list == null || list.isEmpty()) {
       return false;
     }
-    List<MsgOffline> entities = list.stream().map(this::voToDO).toList();
+    List<MsgOffline> entities = list.stream().map(this::voToEntity).toList();
     return msgOfflineMapper.insertBatch(entities) > 0;
   }
 
@@ -54,7 +55,7 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
   @Override
   public List<MsgOfflineVO> findList(MsgOfflineQuery query) {
     QueryWrapper<MsgOffline> wrapper = buildWrapper(query);
-    return converter.offlineDoListToVO(msgOfflineMapper.selectList(wrapper));
+    return converter.offlineListToVO(msgOfflineMapper.selectList(wrapper));
   }
 
   @Override
@@ -63,7 +64,7 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
     QueryWrapper<MsgOffline> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgOffline> entityPage = msgOfflineMapper.selectPage(page, wrapper);
-    List<MsgOfflineVO> vos = converter.offlineDoListToVO(entityPage.getRecords());
+    List<MsgOfflineVO> vos = converter.offlineListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
@@ -82,7 +83,7 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
     return wrapper;
   }
 
-  private MsgOffline voToDO(MsgOfflineVO vo) {
+  private MsgOffline voToEntity(MsgOfflineVO vo) {
     if (vo == null) {
       return null;
     }

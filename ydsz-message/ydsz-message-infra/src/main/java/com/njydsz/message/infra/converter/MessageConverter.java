@@ -48,7 +48,7 @@ import com.njydsz.message.infra.entity.MsgVariableSource;
 /**
  * 消息模块统一 MapStruct 转换器（Infra 层）。
  *
- * <p>承担「消息模块」所有 Entity ↔ VO ↔ DTO 的双向转换，遵循云顶编码规范的<b>单一转换器</b>模式：
+ * <p>承担「消息模块」所有 VO ↔ Entity ↔ DTO 的双向转换，遵循云顶编码规范的<b>单一转换器</b>模式：
  * 同一业务域的转换规则集中维护，避免散落在各 Service 的 BeanUtils.copyProperties 调用。
  *
  * <p><b>设计要点：</b>

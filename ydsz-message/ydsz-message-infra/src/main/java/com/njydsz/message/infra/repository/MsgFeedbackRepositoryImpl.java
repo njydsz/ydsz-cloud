@@ -34,14 +34,14 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
 
   @Override
   public boolean save(MsgFeedbackVO vo) {
-    MsgFeedback entity = voToDO(vo);
+    MsgFeedback entity = voToEntity(vo);
     return msgFeedbackMapper.insert(entity) > 0;
   }
 
   @Override
   public List<MsgFeedbackVO> findList(MsgFeedbackQuery query) {
     QueryWrapper<MsgFeedback> wrapper = buildWrapper(query);
-    return converter.feedbackDoListToVO(msgFeedbackMapper.selectList(wrapper));
+    return converter.feedbackListToVO(msgFeedbackMapper.selectList(wrapper));
   }
 
   @Override
@@ -50,7 +50,7 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
     QueryWrapper<MsgFeedback> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgFeedback> entityPage = msgFeedbackMapper.selectPage(page, wrapper);
-    List<MsgFeedbackVO> vos = converter.feedbackDoListToVO(entityPage.getRecords());
+    List<MsgFeedbackVO> vos = converter.feedbackListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
@@ -75,7 +75,7 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
     return wrapper;
   }
 
-  private MsgFeedback voToDO(MsgFeedbackVO vo) {
+  private MsgFeedback voToEntity(MsgFeedbackVO vo) {
     if (vo == null) {
       return null;
     }

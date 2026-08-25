@@ -22,7 +22,7 @@ import com.njydsz.message.infra.mapper.MsgTenantConfigMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link MessageConverter} 实现 DO ↔ VO ↔ DTO 的双向转换
+ *   <li>通过 {@link MessageConverter} 实现 VO ↔ Entity ↔ DTO 的双向转换
  *   <li>CUD 入参使用领域 DTO，返回值使用领域 VO
  * </ul>
  *
@@ -39,13 +39,13 @@ public class MsgTenantConfigRepositoryImpl implements MsgTenantConfigRepository 
 
   @Override
   public boolean save(MsgTenantConfigDTO dto) {
-    MsgTenantConfig entity = converter.dtoToDO(dto);
+    MsgTenantConfig entity = converter.dtoToEntity(dto);
     return msgTenantConfigMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean update(MsgTenantConfigDTO dto) {
-    MsgTenantConfig entity = converter.dtoToDO(dto);
+    MsgTenantConfig entity = converter.dtoToEntity(dto);
     return msgTenantConfigMapper.updateById(entity) > 0;
   }
 

@@ -36,7 +36,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
 
   @Override
   public boolean save(MsgTemplateDTO dto) {
-    MsgTemplate entity = converter.dtoToDO(dto);
+    MsgTemplate entity = converter.dtoToEntity(dto);
     return msgTemplateMapper.insert(entity) > 0;
   }
 
@@ -47,7 +47,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
 
   @Override
   public boolean update(MsgTemplateDTO dto) {
-    MsgTemplate entity = converter.dtoToDO(dto);
+    MsgTemplate entity = converter.dtoToEntity(dto);
     return msgTemplateMapper.updateById(entity) > 0;
   }
 
@@ -68,7 +68,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
     QueryWrapper<MsgTemplate> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgTemplate> entityPage = msgTemplateMapper.selectPage(page, wrapper);
-    List<MsgTemplateVO> vos = converter.templateDoListToVO(entityPage.getRecords());
+    List<MsgTemplateVO> vos = converter.templateListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
@@ -100,4 +100,3 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
   }
 
 }
-
