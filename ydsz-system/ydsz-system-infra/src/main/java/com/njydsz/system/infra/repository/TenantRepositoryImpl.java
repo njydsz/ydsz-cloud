@@ -13,7 +13,7 @@ import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.repository.TenantRepository;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.TenantDO;
+import com.njydsz.system.infra.entity.Tenant;
 import com.njydsz.system.infra.mapper.TenantMapper;
 
 
@@ -50,31 +50,31 @@ public class TenantRepositoryImpl implements TenantRepository {
 
   @Override
   public PageResponse<List<TenantVO>> findByPage(TenantPageQuery query) {
-    Page<TenantDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<TenantDO> wrapper = new LambdaQueryWrapper<>();
+    Page<Tenant> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
     if (query.getTenantName() != null && !query.getTenantName().isBlank()) {
-      wrapper.like(TenantDO::getTenantName, query.getTenantName());
+      wrapper.like(Tenant::getTenantName, query.getTenantName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(TenantDO::getStatus, query.getStatus());
+      wrapper.eq(Tenant::getStatus, query.getStatus());
     }
-    wrapper.orderByDesc(TenantDO::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<TenantDO> result = tenantMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(Tenant::getCreatedAt);
+    com.baomidou.mybatisplus.core.metadata.IPage<Tenant> result = tenantMapper.selectPage(page, wrapper);
     List<TenantVO> vos = converter.tenantListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override
   public long countByCondition(TenantPageQuery query) {
-    LambdaQueryWrapper<TenantDO> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
     if (query.getTenantName() != null && !query.getTenantName().isBlank()) {
-      wrapper.like(TenantDO::getTenantName, query.getTenantName());
+      wrapper.like(Tenant::getTenantName, query.getTenantName());
     }
     if (query.getTenantCode() != null && !query.getTenantCode().isBlank()) {
-      wrapper.eq(TenantDO::getTenantCode, query.getTenantCode());
+      wrapper.eq(Tenant::getTenantCode, query.getTenantCode());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(TenantDO::getStatus, query.getStatus());
+      wrapper.eq(Tenant::getStatus, query.getStatus());
     }
     Long count = tenantMapper.selectCount(wrapper);
     return count != null ? count : 0L;
@@ -82,13 +82,13 @@ public class TenantRepositoryImpl implements TenantRepository {
 
   @Override
   public boolean insert(TenantDTO dto) {
-    TenantDO entity = converter.dtoToEntity(dto);
+    Tenant entity = converter.dtoToEntity(dto);
     return tenantMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateById(TenantDTO dto) {
-    TenantDO entity = converter.dtoToEntityWithId(dto);
+    Tenant entity = converter.dtoToEntityWithId(dto);
     return tenantMapper.updateById(entity) > 0;
   }
 

@@ -46,7 +46,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_tenant_plan")
 @SuppressWarnings("unchecked")
-public class TenantPlanDO extends MpBaseEntity<String> {
+public class TenantPlan extends MpBaseEntity<String> {
 
   /** 套餐编码（唯一标识，如 {@code TRIAL} / {@code STANDARD} / {@code ENTERPRISE}） */
   private String planCode;

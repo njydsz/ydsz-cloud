@@ -43,7 +43,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_tenant")
 @SuppressWarnings("unchecked")
-public class TenantDO extends MpBaseEntity<String> {
+public class Tenant extends MpBaseEntity<String> {
 
   /** 租户编码（唯一业务标识，租户登录/调用使用） */
   private String tenantCode;

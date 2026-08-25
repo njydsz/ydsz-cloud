@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.system.infra.entity.TenantDO;
+import com.njydsz.system.infra.entity.Tenant;
 
 
 
@@ -30,12 +30,12 @@ import com.njydsz.system.infra.entity.TenantDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see TenantDO 租户实体
+ * @see Tenant 租户实体
  * @see com.njydsz.system.server.service.TenantService 租户 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface TenantMapper extends BaseMapper<TenantDO> {
+public interface TenantMapper extends BaseMapper<Tenant> {
 
   /**
    * 原子停用所有已到期租户（P1-3 租户到期自动锁定）。

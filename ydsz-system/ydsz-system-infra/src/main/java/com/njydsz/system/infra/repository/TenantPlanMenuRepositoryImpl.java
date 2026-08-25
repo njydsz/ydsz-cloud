@@ -10,7 +10,7 @@ import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.TenantPlanMenuDO;
+import com.njydsz.system.infra.entity.TenantPlanMenu;
 import com.njydsz.system.infra.mapper.TenantPlanMenuMapper;
 
 
@@ -45,25 +45,25 @@ public class TenantPlanMenuRepositoryImpl implements TenantPlanMenuRepository {
 
   @Override
   public List<TenantPlanMenuVO> findByPlanId(String planId) {
-    LambdaQueryWrapper<TenantPlanMenuDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(TenantPlanMenuDO::getPlanId, planId);
+    LambdaQueryWrapper<TenantPlanMenu> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(TenantPlanMenu::getPlanId, planId);
     return converter.planMenuListToVO(tenantPlanMenuMapper.selectList(wrapper));
   }
 
   @Override
   public boolean deleteByPlanId(String planId) {
-    LambdaQueryWrapper<TenantPlanMenuDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(TenantPlanMenuDO::getPlanId, planId);
+    LambdaQueryWrapper<TenantPlanMenu> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(TenantPlanMenu::getPlanId, planId);
     return tenantPlanMenuMapper.delete(wrapper) > 0;
   }
 
   @Override
   public boolean insertBatch(TenantPlanMenuDTO dto) {
-    List<TenantPlanMenuDO> entities =
+    List<TenantPlanMenu> entities =
         new ArrayList<>(dto.getMenuIds() != null ? dto.getMenuIds().size() : DEFAULT_INITIAL_CAPACITY);
     if (dto.getMenuIds() != null) {
       for (String menuId : dto.getMenuIds()) {
-        TenantPlanMenuDO entity = converter.dtoToEntity(dto.getPlanId(), menuId);
+        TenantPlanMenu entity = converter.dtoToEntity(dto.getPlanId(), menuId);
         entities.add(entity);
       }
     }

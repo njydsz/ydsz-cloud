@@ -12,7 +12,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 字典项实体
  *
- * <p>对应数据库表 {@code ydsz_dict_item}，字段与 DDL 完全对齐。 字典项是字典类型的具体枚举值，每条记录属于某个 {@link DictTypeDO}。
+ * <p>对应数据库表 {@code ydsz_dict_item}，字段与 DDL 完全对齐。 字典项是字典类型的具体枚举值，每条记录属于某个 {@link DictType}。
  *
  * <p><b>字段说明：</b>
  *
@@ -32,7 +32,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see DictTypeDO 字典类型实体（字典两级体系上层）
+ * @see DictType 字典类型实体（字典两级体系上层）
  */
 @Data
 @SuperBuilder
@@ -40,7 +40,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_dict_item")
 @SuppressWarnings("unchecked")
-public class DictItemDO extends MpBaseEntity<String> {
+public class DictItem extends MpBaseEntity<String> {
 
   /** 所属字典类型编码（逻辑外键 → {@code ydsz_dict_type.type_code}） */
   private String typeCode;

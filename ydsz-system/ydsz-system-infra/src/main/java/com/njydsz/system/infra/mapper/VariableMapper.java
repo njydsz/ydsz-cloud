@@ -2,7 +2,7 @@ package com.njydsz.system.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.system.infra.entity.VariableDO;
+import com.njydsz.system.infra.entity.Variable;
 
 
 
@@ -25,9 +25,9 @@ import com.njydsz.system.infra.entity.VariableDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see VariableDO 变量实体
+ * @see Variable 变量实体
  * @see com.njydsz.system.server.service.VariableService 变量 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface VariableMapper extends BaseMapper<VariableDO> {}
+public interface VariableMapper extends BaseMapper<Variable> {}

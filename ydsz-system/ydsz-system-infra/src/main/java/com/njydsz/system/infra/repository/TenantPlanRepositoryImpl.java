@@ -14,7 +14,7 @@ import com.njydsz.system.domain.query.TenantPlanQuery;
 import com.njydsz.system.domain.repository.TenantPlanRepository;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.TenantPlanDO;
+import com.njydsz.system.infra.entity.TenantPlan;
 import com.njydsz.system.infra.mapper.TenantPlanMapper;
 
 
@@ -51,44 +51,44 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
 
   @Override
   public PageResponse<List<TenantPlanVO>> findByPage(TenantPlanPageQuery query) {
-    Page<TenantPlanDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<TenantPlanDO> wrapper = new LambdaQueryWrapper<>();
+    Page<TenantPlan> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
     if (query.getPlanName() != null && !query.getPlanName().isBlank()) {
-      wrapper.like(TenantPlanDO::getPlanName, query.getPlanName());
+      wrapper.like(TenantPlan::getPlanName, query.getPlanName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(TenantPlanDO::getStatus, query.getStatus());
+      wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }
-    wrapper.orderByAsc(TenantPlanDO::getSortOrder);
-    com.baomidou.mybatisplus.core.metadata.IPage<TenantPlanDO> result = tenantPlanMapper.selectPage(page, wrapper);
+    wrapper.orderByAsc(TenantPlan::getSortOrder);
+    com.baomidou.mybatisplus.core.metadata.IPage<TenantPlan> result = tenantPlanMapper.selectPage(page, wrapper);
     List<TenantPlanVO> vos = converter.planListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
   @Override
   public List<TenantPlanVO> findList(TenantPlanQuery query) {
-    LambdaQueryWrapper<TenantPlanDO> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
     if (query.getPlanName() != null && !query.getPlanName().isBlank()) {
-      wrapper.like(TenantPlanDO::getPlanName, query.getPlanName());
+      wrapper.like(TenantPlan::getPlanName, query.getPlanName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(TenantPlanDO::getStatus, query.getStatus());
+      wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }
-    wrapper.orderByAsc(TenantPlanDO::getSortOrder);
+    wrapper.orderByAsc(TenantPlan::getSortOrder);
     return converter.planListToVO(tenantPlanMapper.selectList(wrapper));
   }
 
   @Override
   public long countByCondition(TenantPlanQuery query) {
-    LambdaQueryWrapper<TenantPlanDO> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
     if (query.getPlanName() != null && !query.getPlanName().isBlank()) {
-      wrapper.like(TenantPlanDO::getPlanName, query.getPlanName());
+      wrapper.like(TenantPlan::getPlanName, query.getPlanName());
     }
     if (query.getPlanCode() != null && !query.getPlanCode().isBlank()) {
-      wrapper.eq(TenantPlanDO::getPlanCode, query.getPlanCode());
+      wrapper.eq(TenantPlan::getPlanCode, query.getPlanCode());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(TenantPlanDO::getStatus, query.getStatus());
+      wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }
     Long count = tenantPlanMapper.selectCount(wrapper);
     return count != null ? count : 0L;
@@ -96,13 +96,13 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
 
   @Override
   public boolean insert(TenantPlanDTO dto) {
-    TenantPlanDO entity = converter.dtoToEntity(dto);
+    TenantPlan entity = converter.dtoToEntity(dto);
     return tenantPlanMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateById(TenantPlanDTO dto) {
-    TenantPlanDO entity = converter.dtoToEntityWithId(dto);
+    TenantPlan entity = converter.dtoToEntityWithId(dto);
     return tenantPlanMapper.updateById(entity) > 0;
   }
 

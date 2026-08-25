@@ -13,7 +13,7 @@ import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.repository.VariableRepository;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.VariableDO;
+import com.njydsz.system.infra.entity.Variable;
 import com.njydsz.system.infra.mapper.VariableMapper;
 
 
@@ -47,9 +47,9 @@ public class VariableRepositoryImpl implements VariableRepository {
   public Optional<VariableVO> findEnabledByKey(String variableKey) {
     return Optional.ofNullable(
         variableMapper.selectOne(
-            new LambdaQueryWrapper<VariableDO>()
-                .eq(VariableDO::getVariableKey, variableKey)
-                .eq(VariableDO::getStatus, STATUS_ENABLED)
+            new LambdaQueryWrapper<Variable>()
+                .eq(Variable::getVariableKey, variableKey)
+                .eq(Variable::getStatus, STATUS_ENABLED)
                 .last("LIMIT 1")))
         .map(converter::entityToVO);
   }
@@ -58,9 +58,9 @@ public class VariableRepositoryImpl implements VariableRepository {
   public Optional<VariableVO> findByKeyIgnoreStatus(String variableKey) {
     return Optional.ofNullable(
         variableMapper.selectOne(
-            new LambdaQueryWrapper<VariableDO>()
-                .eq(VariableDO::getVariableKey, variableKey)
-                .eq(VariableDO::getDeleted, 0)
+            new LambdaQueryWrapper<Variable>()
+                .eq(Variable::getVariableKey, variableKey)
+                .eq(Variable::getDeleted, 0)
                 .last("LIMIT 1")))
         .map(converter::entityToVO);
   }
@@ -72,16 +72,16 @@ public class VariableRepositoryImpl implements VariableRepository {
 
   @Override
   public PageResponse<List<VariableVO>> findByPage(VariablePageQuery query) {
-    Page<VariableDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<VariableDO> wrapper = new LambdaQueryWrapper<>();
+    Page<Variable> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<Variable> wrapper = new LambdaQueryWrapper<>();
     if (query.getVariableKey() != null && !query.getVariableKey().isBlank()) {
-      wrapper.like(VariableDO::getVariableKey, query.getVariableKey());
+      wrapper.like(Variable::getVariableKey, query.getVariableKey());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(VariableDO::getStatus, query.getStatus());
+      wrapper.eq(Variable::getStatus, query.getStatus());
     }
-    wrapper.orderByDesc(VariableDO::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<VariableDO> result = variableMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(Variable::getCreatedAt);
+    com.baomidou.mybatisplus.core.metadata.IPage<Variable> result = variableMapper.selectPage(page, wrapper);
     List<VariableVO> vos = converter.variableListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
@@ -93,13 +93,13 @@ public class VariableRepositoryImpl implements VariableRepository {
 
   @Override
   public boolean insert(VariableDTO dto) {
-    VariableDO entity = converter.dtoToEntity(dto);
+    Variable entity = converter.dtoToEntity(dto);
     return variableMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateById(VariableDTO dto) {
-    VariableDO entity = converter.dtoToEntityWithId(dto);
+    Variable entity = converter.dtoToEntityWithId(dto);
     return variableMapper.updateById(entity) > 0;
   }
 

@@ -53,7 +53,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_variable")
 @SuppressWarnings("unchecked")
-public class VariableDO extends MpBaseEntity<String> {
+public class Variable extends MpBaseEntity<String> {
 
   /** 状态常量：启用 */
   public static final String STATUS_ENABLED = "ENABLED";

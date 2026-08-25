@@ -2,7 +2,7 @@ package com.njydsz.system.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.system.infra.entity.DictTypeDO;
+import com.njydsz.system.infra.entity.DictType;
 
 
 
@@ -25,9 +25,9 @@ import com.njydsz.system.infra.entity.DictTypeDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see DictTypeDO 字典类型实体
+ * @see DictType 字典类型实体
  * @see com.njydsz.system.server.service.DictTypeService 字典类型 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface DictTypeMapper extends BaseMapper<DictTypeDO> {}
+public interface DictTypeMapper extends BaseMapper<DictType> {}

@@ -2,7 +2,7 @@ package com.njydsz.system.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.system.infra.entity.TenantPlanDO;
+import com.njydsz.system.infra.entity.TenantPlan;
 
 
 
@@ -25,9 +25,9 @@ import com.njydsz.system.infra.entity.TenantPlanDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see TenantPlanDO 套餐实体
+ * @see TenantPlan 套餐实体
  * @see com.njydsz.system.server.service.TenantPlanService 套餐 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface TenantPlanMapper extends BaseMapper<TenantPlanDO> {}
+public interface TenantPlanMapper extends BaseMapper<TenantPlan> {}

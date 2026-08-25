@@ -28,7 +28,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see DictItemDO 字典项实体（字典两级体系下层）
+ * @see DictItem 字典项实体（字典两级体系下层）
  * @see com.njydsz.system.server.service.DictVersionService 字典版本管理
  */
 @Data
@@ -37,7 +37,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_dict_type")
 @SuppressWarnings("unchecked")
-public class DictTypeDO extends MpBaseEntity<String> {
+public class DictType extends MpBaseEntity<String> {
 
   /** 类型编码（唯一标识，用于业务引用） */
   private String typeCode;

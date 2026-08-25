@@ -17,8 +17,8 @@ import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.DictItemDO;
-import com.njydsz.system.infra.entity.DictTypeDO;
+import com.njydsz.system.infra.entity.DictItem;
+import com.njydsz.system.infra.entity.DictType;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 import com.njydsz.system.infra.mapper.DictTypeMapper;
 
@@ -55,19 +55,19 @@ public class DictRepositoryImpl implements DictRepository {
 
   @Override
   public PageResponse<List<DictTypeVO>> findTypePage(DictPageQuery query) {
-    Page<DictTypeDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<DictTypeDO> wrapper = new LambdaQueryWrapper<>();
+    Page<DictType> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<DictType> wrapper = new LambdaQueryWrapper<>();
     if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
-      wrapper.eq(DictTypeDO::getTypeCode, query.getTypeCode());
+      wrapper.eq(DictType::getTypeCode, query.getTypeCode());
     }
     if (query.getTypeName() != null && !query.getTypeName().isBlank()) {
-      wrapper.like(DictTypeDO::getTypeName, query.getTypeName());
+      wrapper.like(DictType::getTypeName, query.getTypeName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(DictTypeDO::getStatus, query.getStatus());
+      wrapper.eq(DictType::getStatus, query.getStatus());
     }
-    wrapper.orderByDesc(DictTypeDO::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<DictTypeDO> result = dictTypeMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(DictType::getCreatedAt);
+    com.baomidou.mybatisplus.core.metadata.IPage<DictType> result = dictTypeMapper.selectPage(page, wrapper);
     List<DictTypeVO> vos = converter.dictTypeListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
@@ -84,23 +84,23 @@ public class DictRepositoryImpl implements DictRepository {
 
   @Override
   public boolean existsTypeCode(String typeCode, String excludeId) {
-    LambdaQueryWrapper<DictTypeDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictTypeDO::getTypeCode, typeCode);
+    LambdaQueryWrapper<DictType> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DictType::getTypeCode, typeCode);
     if (excludeId != null) {
-      wrapper.ne(DictTypeDO::getId, excludeId);
+      wrapper.ne(DictType::getId, excludeId);
     }
     return dictTypeMapper.selectCount(wrapper) > 0;
   }
 
   @Override
   public boolean insertType(DictTypeDTO dto) {
-    DictTypeDO entity = converter.dtoToEntity(dto);
+    DictType entity = converter.dtoToEntity(dto);
     return dictTypeMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateTypeById(DictTypeDTO dto) {
-    DictTypeDO entity = converter.dtoToEntityWithId(dto);
+    DictType entity = converter.dtoToEntityWithId(dto);
     return dictTypeMapper.updateById(entity) > 0;
   }
 
@@ -112,7 +112,7 @@ public class DictRepositoryImpl implements DictRepository {
   @Override
   public long countItemsByTypeCode(String typeCode) {
     Long count =
-        dictItemMapper.selectCount(new LambdaQueryWrapper<DictItemDO>().eq(DictItemDO::getTypeCode, typeCode));
+        dictItemMapper.selectCount(new LambdaQueryWrapper<DictItem>().eq(DictItem::getTypeCode, typeCode));
     return count != null ? count : 0L;
   }
 
@@ -136,33 +136,33 @@ public class DictRepositoryImpl implements DictRepository {
 
   @Override
   public List<DictItemVO> findItemsByParentId(String parentId) {
-    LambdaQueryWrapper<DictItemDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItemDO::getParentId, parentId).orderByAsc(DictItemDO::getSortOrder);
+    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DictItem::getParentId, parentId).orderByAsc(DictItem::getSortOrder);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
   public List<DictItemVO> findItemsByTypeCode(String typeCode) {
-    LambdaQueryWrapper<DictItemDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItemDO::getTypeCode, typeCode).orderByAsc(DictItemDO::getSortOrder);
+    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DictItem::getTypeCode, typeCode).orderByAsc(DictItem::getSortOrder);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
   public PageResponse<List<DictItemVO>> findItemPage(DictItemPageQuery query) {
-    Page<DictItemDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<DictItemDO> wrapper = new LambdaQueryWrapper<>();
+    Page<DictItem> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
     if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
-      wrapper.eq(DictItemDO::getTypeCode, query.getTypeCode());
+      wrapper.eq(DictItem::getTypeCode, query.getTypeCode());
     }
     if (query.getItemCode() != null && !query.getItemCode().isBlank()) {
-      wrapper.like(DictItemDO::getItemCode, query.getItemCode());
+      wrapper.like(DictItem::getItemCode, query.getItemCode());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(DictItemDO::getStatus, query.getStatus());
+      wrapper.eq(DictItem::getStatus, query.getStatus());
     }
-    wrapper.orderByDesc(DictItemDO::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<DictItemDO> result = dictItemMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(DictItem::getCreatedAt);
+    com.baomidou.mybatisplus.core.metadata.IPage<DictItem> result = dictItemMapper.selectPage(page, wrapper);
     List<DictItemVO> vos = converter.dictItemListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
@@ -174,38 +174,38 @@ public class DictRepositoryImpl implements DictRepository {
 
   @Override
   public List<DictItemVO> findItemsForExport(String typeCode) {
-    LambdaQueryWrapper<DictItemDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItemDO::getDeleted, 0);
+    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DictItem::getDeleted, 0);
     if (typeCode != null && !typeCode.isBlank()) {
-      wrapper.eq(DictItemDO::getTypeCode, typeCode);
+      wrapper.eq(DictItem::getTypeCode, typeCode);
     }
-    wrapper.orderByAsc(DictItemDO::getTypeCode, DictItemDO::getSortOrder);
+    wrapper.orderByAsc(DictItem::getTypeCode, DictItem::getSortOrder);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
   public List<DictItemVO> findItemsByTypeCodes(Set<String> typeCodes) {
-    LambdaQueryWrapper<DictItemDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.select(DictItemDO::getTypeCode, DictItemDO::getItemCode).in(DictItemDO::getTypeCode, typeCodes);
+    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
+    wrapper.select(DictItem::getTypeCode, DictItem::getItemCode).in(DictItem::getTypeCode, typeCodes);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
   public boolean existsItemByTypeAndCode(String typeCode, String itemCode) {
-    LambdaQueryWrapper<DictItemDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItemDO::getTypeCode, typeCode).eq(DictItemDO::getItemCode, itemCode);
+    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DictItem::getTypeCode, typeCode).eq(DictItem::getItemCode, itemCode);
     return dictItemMapper.selectCount(wrapper) > 0;
   }
 
   @Override
   public boolean insertItem(DictItemDTO dto) {
-    DictItemDO entity = converter.dtoToEntity(dto);
+    DictItem entity = converter.dtoToEntity(dto);
     return dictItemMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateItemById(DictItemDTO dto) {
-    DictItemDO entity = converter.dtoToEntityWithId(dto);
+    DictItem entity = converter.dtoToEntityWithId(dto);
     return dictItemMapper.updateById(entity) > 0;
   }
 
@@ -216,7 +216,7 @@ public class DictRepositoryImpl implements DictRepository {
 
   @Override
   public boolean insertItemsBatch(List<DictItemDTO> items) {
-    List<DictItemDO> entities = converter.dictItemDtosToEntities(items);
+    List<DictItem> entities = converter.dictItemDtosToEntities(items);
     return dictItemMapper.insertBatch(entities) > 0;
   }
 
@@ -227,8 +227,8 @@ public class DictRepositoryImpl implements DictRepository {
 
   @Override
   public List<DictItemVO> findEnabledItems() {
-    LambdaQueryWrapper<DictItemDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItemDO::getStatus, "ENABLED").eq(DictItemDO::getDeleted, 0);
+    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DictItem::getStatus, "ENABLED").eq(DictItem::getDeleted, 0);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 }

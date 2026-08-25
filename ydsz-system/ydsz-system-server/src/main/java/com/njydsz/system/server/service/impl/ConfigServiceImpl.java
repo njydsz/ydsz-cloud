@@ -86,7 +86,7 @@ import com.njydsz.system.server.util.SystemVersionUtils;
  * @author ydsz-team
  * @since 1.0.0
  * @see ConfigService 配置 Service 接口
- * @see com.njydsz.system.infra.entity.ConfigDO 系统配置实体
+ * @see com.njydsz.system.infra.entity.Config 系统配置实体
  * @see com.njydsz.system.domain.enums.ConfigValueType 值类型枚举
  */
 @Slf4j

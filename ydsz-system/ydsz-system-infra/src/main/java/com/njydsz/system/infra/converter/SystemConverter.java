@@ -24,15 +24,15 @@ import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.domain.vo.VariableVO;
-import com.njydsz.system.infra.entity.AppInfoDO;
-import com.njydsz.system.infra.entity.ConfigDO;
-import com.njydsz.system.infra.entity.DictItemDO;
-import com.njydsz.system.infra.entity.DictTypeDO;
-import com.njydsz.system.infra.entity.EntityVersionDO;
-import com.njydsz.system.infra.entity.TenantDO;
-import com.njydsz.system.infra.entity.TenantPlanDO;
-import com.njydsz.system.infra.entity.TenantPlanMenuDO;
-import com.njydsz.system.infra.entity.VariableDO;
+import com.njydsz.system.infra.entity.AppInfo;
+import com.njydsz.system.infra.entity.Config;
+import com.njydsz.system.infra.entity.DictItem;
+import com.njydsz.system.infra.entity.DictType;
+import com.njydsz.system.infra.entity.EntityVersion;
+import com.njydsz.system.infra.entity.Tenant;
+import com.njydsz.system.infra.entity.TenantPlan;
+import com.njydsz.system.infra.entity.TenantPlanMenu;
+import com.njydsz.system.infra.entity.Variable;
 
 
 
@@ -66,21 +66,21 @@ import com.njydsz.system.infra.entity.VariableDO;
  * <p><b>覆盖范围（8 大实体 / 16 个方法）：</b>
  *
  * <ul>
- *   <li>{@link AppInfoDO} → {@link AppInfoVO}
- *   <li>{@link ConfigDO} → {@link ConfigVO}
- *   <li>{@link DictItemDO} → {@link DictItemVO}
- *   <li>{@link DictTypeDO} → {@link DictTypeVO}
- *   <li>{@link EntityVersionDO} → {@link EntityVersionVO}
- *   <li>{@link TenantDO} → {@link TenantVO}
- *   <li>{@link TenantPlanDO} → {@link TenantPlanVO}
- *   <li>{@link TenantPlanMenuDO} → {@link TenantPlanMenuVO}
- *   <li>{@link VariableDO} → {@link VariableVO}
+ *   <li>{@link AppInfo} → {@link AppInfoVO}
+ *   <li>{@link Config} → {@link ConfigVO}
+ *   <li>{@link DictItem} → {@link DictItemVO}
+ *   <li>{@link DictType} → {@link DictTypeVO}
+ *   <li>{@link EntityVersion} → {@link EntityVersionVO}
+ *   <li>{@link Tenant} → {@link TenantVO}
+ *   <li>{@link TenantPlan} → {@link TenantPlanVO}
+ *   <li>{@link TenantPlanMenu} → {@link TenantPlanMenuVO}
+ *   <li>{@link Variable} → {@link VariableVO}
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.system.infra.entity AppInfoDO / ConfigDO / DictItemDO / DictTypeDO / EntityVersionDO /
- *     VariableDO
+ * @see com.njydsz.system.infra.entity AppInfo / Config / DictItem / DictType / EntityVersion /
+ *     Variable
  * @see com.njydsz.system.domain.vo AppInfoVO / ConfigVO / DictItemVO / DictTypeVO / EntityVersionVO /
  *     VariableVO
  */
@@ -100,7 +100,7 @@ public interface SystemConverter {
    * @param entity 应用信息实体
    * @return 应用信息 VO
    */
-  AppInfoVO entityToVO(AppInfoDO entity);
+  AppInfoVO entityToVO(AppInfo entity);
 
   /**
    * 应用信息实体列表 → 应用信息 VO 列表
@@ -108,7 +108,7 @@ public interface SystemConverter {
    * @param entities 应用信息实体列表
    * @return 应用信息 VO 列表
    */
-  List<AppInfoVO> appInfoListToVO(List<AppInfoDO> entities);
+  List<AppInfoVO> appInfoListToVO(List<AppInfo> entities);
 
   /**
    * 应用信息 DTO → 应用信息实体
@@ -126,7 +126,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  AppInfoDO dtoToEntity(AppInfoDTO dto);
+  AppInfo dtoToEntity(AppInfoDTO dto);
 
   /**
    * 应用信息 DTO（含 ID）→ 应用信息实体
@@ -143,7 +143,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  AppInfoDO dtoToEntityWithId(AppInfoDTO dto);
+  AppInfo dtoToEntityWithId(AppInfoDTO dto);
 
   /**
    * 应用信息 VO → 应用信息 DTO
@@ -161,7 +161,7 @@ public interface SystemConverter {
    * @param entity 系统配置实体
    * @return 系统配置 VO
    */
-  ConfigVO entityToVO(ConfigDO entity);
+  ConfigVO entityToVO(Config entity);
 
   /**
    * 系统配置实体列表 → 系统配置 VO 列表
@@ -169,7 +169,7 @@ public interface SystemConverter {
    * @param entities 系统配置实体列表
    * @return 系统配置 VO 列表
    */
-  List<ConfigVO> configListToVO(List<ConfigDO> entities);
+  List<ConfigVO> configListToVO(List<Config> entities);
 
   /**
    * 系统配置 DTO → 系统配置实体
@@ -187,7 +187,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  ConfigDO dtoToEntity(ConfigDTO dto);
+  Config dtoToEntity(ConfigDTO dto);
 
   /**
    * 系统配置 VO → 系统配置 DTO
@@ -212,7 +212,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  ConfigDO dtoToEntityWithId(ConfigDTO dto);
+  Config dtoToEntityWithId(ConfigDTO dto);
 
   /**
    * 系统配置 DTO 列表 → 系统配置实体列表
@@ -221,7 +221,7 @@ public interface SystemConverter {
    * @return 系统配置实体列表
    */
   @IterableMapping(qualifiedByName = "configDtoToEntity")
-  List<ConfigDO> configDtosToEntities(List<ConfigDTO> dtos);
+  List<Config> configDtosToEntities(List<ConfigDTO> dtos);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
@@ -232,7 +232,7 @@ public interface SystemConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Named("configDtoToEntity")
-  ConfigDO configDtoToEntityInternal(ConfigDTO dto);
+  Config configDtoToEntityInternal(ConfigDTO dto);
 
   // ===== DictItem =====
 
@@ -245,7 +245,7 @@ public interface SystemConverter {
   @Mapping(target = "children", ignore = true)
   @Mapping(target = "level", ignore = true)
   @Mapping(target = "path", ignore = true)
-  DictItemVO entityToVO(DictItemDO entity);
+  DictItemVO entityToVO(DictItem entity);
 
   /**
    * 字典项实体列表 → 字典项 VO 列表
@@ -253,7 +253,7 @@ public interface SystemConverter {
    * @param entities 字典项实体列表
    * @return 字典项 VO 列表
    */
-  List<DictItemVO> dictItemListToVO(List<DictItemDO> entities);
+  List<DictItemVO> dictItemListToVO(List<DictItem> entities);
 
   /**
    * 字典项 DTO → 字典项实体
@@ -271,7 +271,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DictItemDO dtoToEntity(DictItemDTO dto);
+  DictItem dtoToEntity(DictItemDTO dto);
 
   /**
    * 字典项 DTO（含 ID）→ 字典项实体
@@ -288,7 +288,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DictItemDO dtoToEntityWithId(DictItemDTO dto);
+  DictItem dtoToEntityWithId(DictItemDTO dto);
 
   /**
    * 字典项 DTO 列表 → 字典项实体列表
@@ -297,7 +297,7 @@ public interface SystemConverter {
    * @return 字典项实体列表
    */
   @IterableMapping(qualifiedByName = "dictItemDtoToEntity")
-  List<DictItemDO> dictItemDtosToEntities(List<DictItemDTO> dtos);
+  List<DictItem> dictItemDtosToEntities(List<DictItemDTO> dtos);
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
@@ -308,7 +308,7 @@ public interface SystemConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Named("dictItemDtoToEntity")
-  DictItemDO dictItemDtoToEntityInternal(DictItemDTO dto);
+  DictItem dictItemDtoToEntityInternal(DictItemDTO dto);
 
   // ===== DictType =====
 
@@ -318,7 +318,7 @@ public interface SystemConverter {
    * @param entity 字典类型实体
    * @return 字典类型 VO
    */
-  DictTypeVO entityToVO(DictTypeDO entity);
+  DictTypeVO entityToVO(DictType entity);
 
   /**
    * 字典类型实体列表 → 字典类型 VO 列表
@@ -326,7 +326,7 @@ public interface SystemConverter {
    * @param entities 字典类型实体列表
    * @return 字典类型 VO 列表
    */
-  List<DictTypeVO> dictTypeListToVO(List<DictTypeDO> entities);
+  List<DictTypeVO> dictTypeListToVO(List<DictType> entities);
 
   /**
    * 字典类型 DTO → 字典类型实体
@@ -344,7 +344,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DictTypeDO dtoToEntity(DictTypeDTO dto);
+  DictType dtoToEntity(DictTypeDTO dto);
 
   /**
    * 字典类型 DTO（含 ID）→ 字典类型实体
@@ -361,7 +361,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DictTypeDO dtoToEntityWithId(DictTypeDTO dto);
+  DictType dtoToEntityWithId(DictTypeDTO dto);
 
   // ===== EntityVersion =====
 
@@ -371,7 +371,7 @@ public interface SystemConverter {
    * @param entity 实体版本
    * @return 实体版本 VO
    */
-  EntityVersionVO entityVersionToVO(EntityVersionDO entity);
+  EntityVersionVO entityVersionToVO(EntityVersion entity);
 
   /**
    * 实体版本列表 → 实体版本 VO 列表
@@ -379,7 +379,7 @@ public interface SystemConverter {
    * @param entities 实体版本列表
    * @return 实体版本 VO 列表
    */
-  List<EntityVersionVO> entityVersionListToVO(List<EntityVersionDO> entities);
+  List<EntityVersionVO> entityVersionListToVO(List<EntityVersion> entities);
 
   /**
    * 实体版本创建 DTO → 实体版本实体
@@ -399,7 +399,7 @@ public interface SystemConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "effectiveDate", ignore = true)
-  EntityVersionDO dtoToEntity(EntityVersionDTO dto);
+  EntityVersion dtoToEntity(EntityVersionDTO dto);
 
   // ===== Tenant =====
 
@@ -409,7 +409,7 @@ public interface SystemConverter {
    * @param entity 租户实体
    * @return 租户 VO
    */
-  TenantVO entityToVO(TenantDO entity);
+  TenantVO entityToVO(Tenant entity);
 
   /**
    * 租户实体列表 → 租户 VO 列表
@@ -417,7 +417,7 @@ public interface SystemConverter {
    * @param entities 租户实体列表
    * @return 租户 VO 列表
    */
-  List<TenantVO> tenantListToVO(List<TenantDO> entities);
+  List<TenantVO> tenantListToVO(List<Tenant> entities);
 
   /**
    * 租户 DTO → 租户实体
@@ -435,7 +435,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  TenantDO dtoToEntity(TenantDTO dto);
+  Tenant dtoToEntity(TenantDTO dto);
 
   /**
    * 租户 DTO（含 ID）→ 租户实体
@@ -452,7 +452,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  TenantDO dtoToEntityWithId(TenantDTO dto);
+  Tenant dtoToEntityWithId(TenantDTO dto);
 
   // ===== TenantPlan =====
 
@@ -462,7 +462,7 @@ public interface SystemConverter {
    * @param entity 套餐实体
    * @return 套餐 VO
    */
-  TenantPlanVO entityToVO(TenantPlanDO entity);
+  TenantPlanVO entityToVO(TenantPlan entity);
 
   /**
    * 套餐实体列表 → 套餐 VO 列表
@@ -470,7 +470,7 @@ public interface SystemConverter {
    * @param entities 套餐实体列表
    * @return 套餐 VO 列表
    */
-  List<TenantPlanVO> planListToVO(List<TenantPlanDO> entities);
+  List<TenantPlanVO> planListToVO(List<TenantPlan> entities);
 
   /**
    * 套餐 DTO → 套餐实体
@@ -488,7 +488,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  TenantPlanDO dtoToEntity(TenantPlanDTO dto);
+  TenantPlan dtoToEntity(TenantPlanDTO dto);
 
   /**
    * 套餐 DTO（含 ID）→ 套餐实体
@@ -505,7 +505,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  TenantPlanDO dtoToEntityWithId(TenantPlanDTO dto);
+  TenantPlan dtoToEntityWithId(TenantPlanDTO dto);
 
   // ===== TenantPlanMenu =====
 
@@ -515,7 +515,7 @@ public interface SystemConverter {
    * @param entity 套餐-菜单关联实体
    * @return 套餐-菜单关联 VO
    */
-  TenantPlanMenuVO entityToVO(TenantPlanMenuDO entity);
+  TenantPlanMenuVO entityToVO(TenantPlanMenu entity);
 
   /**
    * 套餐-菜单关联实体列表 → 套餐-菜单关联 VO 列表
@@ -523,7 +523,7 @@ public interface SystemConverter {
    * @param entities 套餐-菜单关联实体列表
    * @return 套餐-菜单关联 VO 列表
    */
-  List<TenantPlanMenuVO> planMenuListToVO(List<TenantPlanMenuDO> entities);
+  List<TenantPlanMenuVO> planMenuListToVO(List<TenantPlanMenu> entities);
 
   /**
    * 套餐 ID + 菜单 ID → 套餐-菜单关联实体
@@ -543,7 +543,7 @@ public interface SystemConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "status", ignore = true)
-  TenantPlanMenuDO dtoToEntity(String planId, String menuId);
+  TenantPlanMenu dtoToEntity(String planId, String menuId);
 
   // ===== Variable =====
 
@@ -554,7 +554,7 @@ public interface SystemConverter {
    * @return 系统变量 VO
    */
   @Mapping(target = "status", ignore = true)
-  VariableVO entityToVO(VariableDO entity);
+  VariableVO entityToVO(Variable entity);
 
   /**
    * 系统变量实体列表 → 系统变量 VO 列表
@@ -562,7 +562,7 @@ public interface SystemConverter {
    * @param entities 系统变量实体列表
    * @return 系统变量 VO 列表
    */
-  List<VariableVO> variableListToVO(List<VariableDO> entities);
+  List<VariableVO> variableListToVO(List<Variable> entities);
 
   /**
    * 系统变量 DTO → 系统变量实体
@@ -580,7 +580,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  VariableDO dtoToEntity(VariableDTO dto);
+  Variable dtoToEntity(VariableDTO dto);
 
   /**
    * 系统变量 DTO（含 ID）→ 系统变量实体
@@ -597,5 +597,5 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  VariableDO dtoToEntityWithId(VariableDTO dto);
+  Variable dtoToEntityWithId(VariableDTO dto);
 }
