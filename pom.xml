@@ -29,6 +29,7 @@
         <module>ydsz-literule</module>
         <module>ydsz-nextwiki</module>
         <module>ydsz-agent</module>
+        <module>ydsz-nacos</module>
     </modules>
 
     <properties>
@@ -116,6 +117,8 @@
         <jmh.version>1.37</jmh.version>
         <!-- Aviator 表达式引擎（工作流条件表达式求值） -->
         <aviator.version>5.4.3</aviator.version>
+        <!-- ArchUnit 架构测试（P3-2：与 ydsz-common/pom.xml 保持同版本） -->
+        <archunit.version>1.4.2</archunit.version>
 
         <!-- ============ 构建期守护（云顶规范红线：最小化外部依赖 + 绝对可控）============ -->
         <!-- P0-1 SpotBugs + findsecbugs：字节码缺陷 / 安全反模式扫描。默认关闭，渐进启用。 -->
@@ -188,6 +191,14 @@
                 <groupId>com.googlecode.aviator</groupId>
                 <artifactId>aviator</artifactId>
                 <version>${aviator.version}</version>
+            </dependency>
+            <!-- ArchUnit 架构测试（P3-2：DDD 分层依赖方向与红线兜底的构建期守护，
+                 各业务模块 -web 子模块 ArchitectureTest / common-util L1 纯度测试） -->
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit.version}</version>
+                <scope>test</scope>
             </dependency>
 
             <!-- 内部模块：ydsz-common 多模块拆分 -->
