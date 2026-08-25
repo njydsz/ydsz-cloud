@@ -117,11 +117,10 @@ public class JustAuthHttpClient {
    * @param body 响应体 JSON 字符串
    * @return 解析后的 Map
    */
-  @SuppressWarnings("unchecked")
   private Map<String, Object> parseResponse(String body) {
     if (body == null || body.isBlank()) {
       return new HashMap<>();
     }
-    return YdszJson.fromJson(body, Map.class);
+    return YdszJson.fromJsonToMap(body, String.class, Object.class);
   }
 }

@@ -94,7 +94,18 @@ public class MapTypeHandler<V> extends BaseTypeHandler<Map<String, V>> {
     this(rawClass(Object.class));
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * 将 Class<?> 转换为 Class<T>。
+   *
+   * <p>这是一个常见的类型安全转换模式：Class 的泛型参数在运行时是协变的，
+   * 且 Class 实例本身不包含泛型类型的运行时信息，因此该转换在逻辑上是安全的。
+   * 无参构造中调用此方法时，目标类型 T 已被擦除为 Object，与传入的 Object.class 一致。
+   *
+   * @param clazz 原始 Class 对象
+   * @param <T> 目标泛型类型
+   * @return 转换后的 Class 对象
+   */
+  @SuppressWarnings("unchecked") // Class 泛型转换惯用法：Class<?> → Class<T>，运行时 T 已被擦除，逻辑上安全
   private static <T> Class<T> rawClass(Class<?> clazz) {
     return (Class<T>) clazz;
   }
@@ -171,7 +182,8 @@ public class MapTypeHandler<V> extends BaseTypeHandler<Map<String, V>> {
     }
     if (valueType == Object.class) {
       // 向后兼容：无参构造 fallback，行为与旧版一致
-      @SuppressWarnings("unchecked")
+      // JsonParserUtil.parseObject 返回原始 Map，无法在编译期验证泛型；仅在后端兼容路径使用，类型安全由调用方保证
+      @SuppressWarnings("unchecked") // JsonParserUtil 返回原始 Map，无法在编译期验证泛型类型
       Map<String, V> result = (Map<String, V>) JsonParserUtil.parseObject(json);
       return result;
     }

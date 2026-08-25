@@ -184,7 +184,6 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
    * @param json JSON 字符串
    * @return 权限集合；解析失败返回 null
    */
-  @SuppressWarnings("unchecked")
   private RolePermissions deserialize(String json) {
     try {
       Map<String, Object> map = YdszJson.parseMap(json);

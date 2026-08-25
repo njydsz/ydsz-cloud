@@ -26,7 +26,7 @@ import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
  * @author ydsz-team
  * @since 1.0.0
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 @Data
 @SuperBuilder
 @NoArgsConstructor

@@ -329,7 +329,7 @@ public class YdszJson {
     Type type =
         com.njydsz.common.json.type.TypeFactory.getInstance()
             .constructCollectionType(collectionClass, elementClass);
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // 核心基础模块：泛型擦除导致无法在编译期验证类型安全
     T result = (T) fromJson(json, type);
     return result;
   }

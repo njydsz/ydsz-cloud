@@ -585,8 +585,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
         if (!(item instanceof Map)) {
           continue;
         }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> map = (Map<String, Object>) item;
+        Map<String, Object> map = Map.class.cast(item);
         int id = parseTaskId(map.get("id"));
         String type = String.valueOf(map.getOrDefault("type", "REACT")).trim().toUpperCase();
         String description = String.valueOf(map.getOrDefault("description", ""));

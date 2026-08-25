@@ -216,8 +216,8 @@ public interface ChineseTokenizer {
 
         // segmenter.process(text, SegMode.SEARCH)
         Method processMethod = segmenterClass.getMethod("process", String.class, segModeClass);
-        @SuppressWarnings("unchecked")
-        List<Object> segTokens = (List<Object>) processMethod.invoke(segmenter, text, searchMode);
+        Object invokeResult = processMethod.invoke(segmenter, text, searchMode);
+        List<Object> segTokens = invokeResult instanceof List ? List.class.cast(invokeResult) : List.of();
 
         // 获取 SegToken.getWord() 方法
         Class<?> segTokenClass = Class.forName(SEG_TOKEN_CLASS);
@@ -249,8 +249,8 @@ public interface ChineseTokenizer {
 
         // segmenter.sentenceProcess(text)
         Method sentenceProcessMethod = segmenterClass.getMethod("sentenceProcess", String.class);
-        @SuppressWarnings("unchecked")
-        List<String> sentences = (List<String>) sentenceProcessMethod.invoke(segmenter, text);
+        Object keywordResult = sentenceProcessMethod.invoke(segmenter, text);
+        List<String> sentences = keywordResult instanceof List ? List.class.cast(keywordResult) : List.of();
 
         return sentences.stream().map(String::toLowerCase).distinct().limit(topK).toList();
       } catch (Exception e) {

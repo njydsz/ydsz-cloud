@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import lombok.Data;
 
+import com.njydsz.common.util.message.MessageUtils;
+
 /**
  * 字段差异记录
  *
@@ -47,16 +49,26 @@ public class FieldDiff implements Serializable {
     return new FieldDiff(fieldName, fieldLabel, oldValue, newValue, sensitive);
   }
 
+  /** 空值占位符 i18n key */
+  private static final String KEY_EMPTY_PLACEHOLDER = "diff.empty.placeholder";
+
+  /** 变更分隔符 i18n key */
+  private static final String KEY_CHANGE_SEPARATOR = "diff.change.separator";
+
   /**
    * 生成可读的差异描述
+   *
+   * <p>支持多语言：空值占位符和分隔符通过 {@link MessageUtils} 按当前 Locale 解析。 未接入 Spring MessageSource 时使用中文默认值。
    *
    * @return 格式如 "用户名: 张三 → 李四"
    */
   public String toReadableString() {
+    String emptyPlaceholder = MessageUtils.getMessage(KEY_EMPTY_PLACEHOLDER, "(空)");
+    String separator = MessageUtils.getMessage(KEY_CHANGE_SEPARATOR, " → ");
     return fieldLabel
         + ": "
-        + (oldValue == null ? "(空)" : oldValue)
-        + " → "
-        + (newValue == null ? "(空)" : newValue);
+        + (oldValue == null ? emptyPlaceholder : oldValue)
+        + separator
+        + (newValue == null ? emptyPlaceholder : newValue);
   }
 }

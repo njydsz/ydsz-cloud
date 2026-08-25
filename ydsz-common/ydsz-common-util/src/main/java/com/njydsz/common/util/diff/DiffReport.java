@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.message.MessageUtils;
 
 /**
  * 差异报告
@@ -66,17 +67,24 @@ public class DiffReport implements Serializable {
     return YdszJson.toJson(diffs);
   }
 
+  /** 无变更提示文本 i18n key */
+  private static final String KEY_NO_CHANGES = "diff.no.changes";
+
+  /** 多条变更之间的分隔符 i18n key */
+  private static final String KEY_DIFF_SEPARATOR = "diff.separator";
+
   /**
    * 生成可读文本格式的差异报告
    *
-   * <p>格式：每行一个变更，如 "用户名: 张三 → 李四"
+   * <p>格式：每行一个变更，如 "用户名: 张三 → 李四"。支持多语言，通过 {@link MessageUtils} 按当前 Locale 解析。
    *
    * @return 可读文本
    */
   public String toReadableText() {
     if (diffs.isEmpty()) {
-      return "无变更";
+      return MessageUtils.getMessage(KEY_NO_CHANGES, "无变更");
     }
-    return diffs.stream().map(FieldDiff::toReadableString).collect(Collectors.joining("; "));
+    String separator = MessageUtils.getMessage(KEY_DIFF_SEPARATOR, "; ");
+    return diffs.stream().map(FieldDiff::toReadableString).collect(Collectors.joining(separator));
   }
 }

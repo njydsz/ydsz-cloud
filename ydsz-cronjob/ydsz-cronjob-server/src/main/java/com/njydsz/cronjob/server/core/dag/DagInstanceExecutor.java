@@ -799,8 +799,8 @@ public class DagInstanceExecutor {
       return new LinkedHashMap<>();
     }
     ObjectNode parsed = parseContextJson(instance.getContextJson());
-    @SuppressWarnings("unchecked")
-    Map<String, Object> result = (Map<String, Object>) parsed.asValue();
+    Object ctxValue = parsed.asValue();
+    Map<String, Object> result = ctxValue instanceof Map ? Map.class.cast(ctxValue) : new LinkedHashMap<>();
     return result;
   }
 }

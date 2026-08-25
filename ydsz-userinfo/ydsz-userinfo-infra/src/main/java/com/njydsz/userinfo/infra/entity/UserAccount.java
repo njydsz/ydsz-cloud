@@ -54,7 +54,7 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_user_account")
-@SuppressWarnings("unchecked")
+@SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 public class UserAccount extends MpBaseEntity<String> {
 
   /** 登录用户名（全局唯一） */

@@ -88,7 +88,18 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
     this(rawClass(Object.class));
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * 将 Class<?> 转换为 Class<T>。
+   *
+   * <p>这是一个常见的类型安全转换模式：Class 的泛型参数在运行时是协变的，
+   * 且 Class 实例本身不包含泛型类型的运行时信息，因此该转换在逻辑上是安全的。
+   * 无参构造中调用此方法时，目标类型 T 已被擦除为 Object，与传入的 Object.class 一致。
+   *
+   * @param clazz 原始 Class 对象
+   * @param <T> 目标泛型类型
+   * @return 转换后的 Class 对象
+   */
+  @SuppressWarnings("unchecked") // Class 泛型转换惯用法：Class<?> → Class<T>，运行时 T 已被擦除，逻辑上安全
   private static <T> Class<T> rawClass(Class<?> clazz) {
     return (Class<T>) clazz;
   }
@@ -181,6 +192,7 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
     if (json == null || json.isEmpty()) {
       return null;
     }
+    // YdszJson.fromJson 返回 type 指定的类型，与 T 一致（由构造参数保证）
     return YdszJson.fromJson(json, type);
   }
 }

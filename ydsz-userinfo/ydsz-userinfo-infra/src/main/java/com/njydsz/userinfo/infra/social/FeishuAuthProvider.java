@@ -106,14 +106,16 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
 
     // 飞书返回嵌套结构：data.access_token
     Object data = tokenResponse.get("data");
-    if (!(data instanceof Map)) {
+    if (!(data instanceof Map<?, ?> rawMap)) {
       Integer codeObj = getInt(tokenResponse, "code", null);
       String msg = getStr(tokenResponse, "msg");
       throw new SocialAuthException("飞书获取 access_token 失败: " + codeObj + " - " + msg);
     }
 
-    @SuppressWarnings("unchecked")
-    Map<String, Object> dataMap = (Map<String, Object>) data;
+    Map<String, Object> dataMap = new HashMap<>(rawMap.size());
+    for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+      dataMap.put(entry.getKey() != null ? entry.getKey().toString() : null, entry.getValue());
+    }
     String accessToken = getStr(dataMap, "access_token");
     if (accessToken == null || accessToken.isBlank()) {
       throw new SocialAuthException("飞书获取 access_token 失败：响应中未包含 access_token");
@@ -137,12 +139,14 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
         userInfoUrl, token.accessToken(), null);
 
     Object data = userResponse.get("data");
-    if (!(data instanceof Map)) {
+    if (!(data instanceof Map<?, ?> rawMap)) {
       throw new SocialAuthException("飞书获取用户信息失败");
     }
 
-    @SuppressWarnings("unchecked")
-    Map<String, Object> dataMap = (Map<String, Object>) data;
+    Map<String, Object> dataMap = new HashMap<>(rawMap.size());
+    for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+      dataMap.put(entry.getKey() != null ? entry.getKey().toString() : null, entry.getValue());
+    }
 
     String name = getStr(dataMap, "name");
     String avatar = getStr(dataMap, "avatar_url");

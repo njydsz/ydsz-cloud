@@ -62,13 +62,12 @@ public class WebhookOutboxSubscriber implements Consumer<OutboxEventVO> {
    * @param payloadJson payload JSON 字符串
    * @return 解析后的 Map（解析失败返回空 Map）
    */
-  @SuppressWarnings("unchecked")
   private Map<String, Object> parsePayload(String payloadJson) {
     if (payloadJson == null || payloadJson.isBlank()) {
       return Collections.emptyMap();
     }
     try {
-      return YdszJson.fromJson(payloadJson, Map.class);
+      return YdszJson.fromJsonToMap(payloadJson, String.class, Object.class);
     } catch (Exception e) {
       log.warn("[WebhookSubscriber] payload 解析失败: {}", e.getMessage());
       return Collections.emptyMap();

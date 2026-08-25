@@ -25,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@SuppressWarnings("unchecked")
+@SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 public class MpBaseIdEntity<T extends Serializable> implements Serializable {
 
   private static final long serialVersionUID = 1L;

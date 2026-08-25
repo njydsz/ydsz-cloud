@@ -19,7 +19,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
  * @since 1.0.0
  */
 @Data
-@SuppressWarnings("unchecked")
+@SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

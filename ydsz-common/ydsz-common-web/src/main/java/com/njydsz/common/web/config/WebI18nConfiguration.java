@@ -24,6 +24,6 @@ public class WebI18nConfiguration extends BaseI18nConfiguration {
    */
   @Override
   protected String[] getBasenames() {
-    return new String[] {"i18n.messages"};
+    return new String[] {"i18n.messages", "i18n/diff-messages"};
   }
 }

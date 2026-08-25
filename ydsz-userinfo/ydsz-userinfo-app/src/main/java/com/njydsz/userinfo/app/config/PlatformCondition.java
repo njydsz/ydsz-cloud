@@ -18,7 +18,6 @@ public class PlatformCondition implements Condition {
 
   private static final String PLATFORM_PROPERTY = "ydsz.userinfo.platform";
 
-  @SuppressWarnings("unchecked")
   @Override
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
     Map<String, Object> platformValue = metadata.getAnnotationAttributes(
