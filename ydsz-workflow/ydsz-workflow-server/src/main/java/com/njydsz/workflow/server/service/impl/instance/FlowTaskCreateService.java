@@ -47,6 +47,7 @@ import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
+import com.njydsz.workflow.server.service.FlowGroupResolver;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
@@ -213,6 +214,9 @@ public class FlowTaskCreateService {
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
+
+  /** P2-2: 分组办理人解析器（业务系统实现注入时使用自定义逻辑；未注入时使用默认降级为用户 ID） */
+  private final FlowGroupResolver groupResolver;
 
   /** P1-2: 办理人解析服务（从本类抽出，组合模式接入） */
   private final AssigneeResolutionService assigneeResolutionService;
@@ -386,6 +390,12 @@ public class FlowTaskCreateService {
             ? new ArrayList<>(explicitAssignees)
             : expandAssignees(node, variables);
     FlowPerformType performType = resolvePerformType(node);
+
+    // P2-2: 分组策略 — GROUP_CLAIM 强制 OR（抢办），GROUP_ALL 强制 PARALLEL（全办）
+    FlowPerformType groupPerformType = resolveGroupPerformType(node);
+    if (groupPerformType != null && userIds.size() > 1) {
+      performType = groupPerformType;
+    }
 
     // P1-5: 跨节点办理人去重
     boolean autoDedup = isAutoDedupEnabled(node);
@@ -1393,10 +1403,13 @@ public class FlowTaskCreateService {
 
   /**
    * 展开办理人为用户列表
-   * 
+   *
    * <p>P0-2 增强：当节点 ext 配置 {@code selfSelect: true} 时，优先从流程变量中 读取发起人自选审批人（{@code
    * _selfSelect_<nodeCode>}），无需在 permissionFlag 中显式配置 {@code self_select:} 前缀。自选变量为空时回退到
    * permissionFlag 解析。
+   *
+   * <p>P2-2 分组策略：当节点 ext.assigneeType 为 {@code GROUP_CLAIM} / {@code GROUP_ALL} 时，
+   * 通过 {@link FlowGroupResolver} 查询分组成员列表。
    *
    * @param node 参数说明
    * @param variables 参数说明
@@ -1415,6 +1428,12 @@ public class FlowTaskCreateService {
     List<String> collectionResult = tryExpandCollectionAssignees(node, variables, nodeExt);
     if (collectionResult != null) {
       return collectionResult;
+    }
+
+    // P2-2: 分组策略 — 节点 ext.assigneeType = GROUP_CLAIM / GROUP_ALL
+    List<String> groupResult = tryExpandGroupAssignees(node, variables, nodeExt);
+    if (groupResult != null) {
+      return groupResult;
     }
 
     // 回退到 permissionFlag 解析
@@ -1481,6 +1500,81 @@ public class FlowTaskCreateService {
     }
     log.warn("[Flow] collection 变量为空: nodeCode={} var={}", node.getNodeCode(), varName);
     return Collections.emptyList();
+  }
+
+  /**
+   * P2-2: 解析分组节点的会签类型。
+   *
+   * <p>GROUP_CLAIM → OR（抢办，第一人签收即获得处理权）；
+   * GROUP_ALL → PARALLEL（全办，全员审批）；其他返回 null。
+   *
+   * @param node 流程节点
+   * @return 分组会签类型，非分组节点返回 null
+   */
+  private FlowPerformType resolveGroupPerformType(FlowNode node) {
+    if (node.getExt() == null) {
+      return null;
+    }
+    try {
+      Map<?, ?> ext = FlowNodeExt.parseSafe(node.getExt());
+      Object atObj = ext.get("assigneeType");
+      if (atObj instanceof String assigneeType) {
+        if (FlowAssigneeType.GROUP_CLAIM.name().equals(assigneeType)) {
+          return FlowPerformType.OR;
+        }
+        if (FlowAssigneeType.GROUP_ALL.name().equals(assigneeType)) {
+          return FlowPerformType.PARALLEL;
+        }
+      }
+    } catch (Exception ignored) {
+      log.debug("[FlowTaskCreateService] 解析分组类型失败，跳过: {}", ignored.getMessage());
+    }
+    return null;
+  }
+
+  /**
+   * P2-2: 分组策略 — 尝试从 ext.assigneeType 展开分组成员。
+   *
+   * <p>当 ext.assigneeType 为 {@code GROUP_CLAIM} 或 {@code GROUP_ALL} 时，
+   * 通过 {@link FlowGroupResolver} 查询分组成员列表。未配置分组类型时返回 null，
+   * 回退到后续逻辑。
+   *
+   * @param node      参数说明
+   * @param variables 参数说明
+   * @param nodeExt   参数说明
+   * @return 返回值说明
+   */
+  private List<String> tryExpandGroupAssignees(
+      FlowNode node, Map<String, Object> variables, Map<String, Object> nodeExt) {
+    if (nodeExt == null) {
+      return null;
+    }
+    Object assigneeTypeObj = nodeExt.get("assigneeType");
+    if (!(assigneeTypeObj instanceof String assigneeType)) {
+      return null;
+    }
+    if (!FlowAssigneeType.GROUP_CLAIM.name().equals(assigneeType)
+        && !FlowAssigneeType.GROUP_ALL.name().equals(assigneeType)) {
+      return null;
+    }
+    Object groupCodeObj = nodeExt.get("groupCode");
+    String groupCode =
+        groupCodeObj != null ? String.valueOf(groupCodeObj) : node.getPermissionFlag();
+    if (groupCode == null || groupCode.isBlank()) {
+      log.warn("[Flow] P2-2 分组节点未配置 groupCode: nodeCode={}", node.getNodeCode());
+      return Collections.emptyList();
+    }
+    String tenantId =
+        variables != null ? String.valueOf(variables.getOrDefault("tenantId", "")) : "";
+    List<String> members = groupResolver.resolveGroupMembers(groupCode, tenantId);
+    if (members == null || members.isEmpty()) {
+      log.warn("[Flow] P2-2 分组成员为空: nodeCode={} groupCode={}", node.getNodeCode(), groupCode);
+      return Collections.emptyList();
+    }
+    log.info(
+        "[Flow] P2-2 分组展开: nodeCode={} groupCode={} count={}",
+        node.getNodeCode(), groupCode, members.size());
+    return members;
   }
 
   /**

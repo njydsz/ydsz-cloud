@@ -15,6 +15,7 @@ import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.health.FlowHealthIndicator;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
+import com.njydsz.workflow.server.service.FlowGroupResolver;
 
 /**
  * 工作流模块自动配置。
@@ -69,6 +70,20 @@ public class FlowAutoConfiguration {
       ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
       ObjectProvider<FlowRunTaskMapper> taskMapperProvider) {
     return new FlowMetrics(instanceMapperProvider, taskMapperProvider);
+  }
+
+  /**
+   * P2-2: 分组办理人解析器默认实现 Bean。
+   *
+   * <p>将分组编码直接作为单个办理人 ID 返回（降级兼容）。业务系统实现自定义 {@link FlowGroupResolver} 并注册为 Bean
+   * 即可覆盖本默认实现，接入自身的用户分组/团队服务。
+   *
+   * @return 默认分组解析器
+   */
+  @Bean
+  @ConditionalOnMissingBean(FlowGroupResolver.class)
+  public FlowGroupResolver flowGroupResolver() {
+    return new FlowGroupResolver.DefaultFlowGroupResolver();
   }
 
   // P0-1: flowQueueExecutor 线程池已迁移到 ydsz-common-thread 统一管理
