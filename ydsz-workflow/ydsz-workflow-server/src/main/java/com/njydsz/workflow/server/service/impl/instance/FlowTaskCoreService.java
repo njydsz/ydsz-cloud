@@ -168,10 +168,10 @@ public class FlowTaskCoreService {
   /**
    * 创建任务（向后兼容重载）
    *
-   * @param instanceId 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param node 流程节点（含 nodeId、nodeCode、nodeName 等）
+   * @param variables 流程变量 Map
+   * @return 新创建的任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
@@ -181,11 +181,11 @@ public class FlowTaskCoreService {
   /**
    * 创建任务（支持显式指定办理人）
    *
-   * @param instanceId 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @param explicitAssignees 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param node 流程节点（含 nodeId、nodeCode、nodeName 等）
+   * @param variables 流程变量 Map
+   * @param explicitAssignees 显式指定的办理人 ID 列表
+   * @return 新创建的任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public String createTask(
@@ -201,8 +201,8 @@ public class FlowTaskCoreService {
   /**
    * 任务签收
    *
-   * @param taskId 参数说明
-   * @param userId 参数说明
+   * @param taskId 任务 ID
+   * @param userId 签收用户 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public void claim(String taskId, String userId) {
@@ -300,7 +300,7 @@ public class FlowTaskCoreService {
   /**
    * 校验任务未处于终态。
    *
-   * @param task 参数说明
+   * @param task 运行时任务实体
    */
   private void validateTaskNotFinished(FlowRunTaskDO task) {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
@@ -315,7 +315,7 @@ public class FlowTaskCoreService {
   /**
    * 校验任务未处于终态（驳回专用）。
    *
-   * @param task 参数说明
+   * @param task 运行时任务实体
    */
   private void validateTaskNotFinishedReject(FlowRunTaskDO task) {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
@@ -329,8 +329,8 @@ public class FlowTaskCoreService {
   /**
    * 判断任务是否为委派状态且有指派人。
    *
-   * @param task 参数说明
-   * @return 返回值说明
+   * @param task 运行时任务实体
+   * @return true=委派状态且有指派人；false=非委派状态或无指派人
    */
   private boolean isDelegatedWithAssignor(FlowRunTaskDO task) {
     return FlowTaskStatus.DELEGATED.name().equals(task.getTaskStatus()) && task.getAssignorId() != null;
@@ -339,8 +339,8 @@ public class FlowTaskCoreService {
   /**
    * 解析任务执行策略，默认 OR。
    *
-   * @param task 参数说明
-   * @return 返回值说明
+   * @param task 运行时任务实体
+   * @return 任务执行策略枚举（OR/AND 等）
    */
   private FlowPerformType resolvePerformType(FlowRunTaskDO task) {
     return FlowPerformType.valueOf(
@@ -350,8 +350,8 @@ public class FlowTaskCoreService {
   /**
    * 标记当前用户已处理。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
+   * @param task 运行时任务实体
+   * @param dto 任务操作 DTO
    */
   private void markUserProcessed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     if (dto.getUserId() != null) {
@@ -362,8 +362,8 @@ public class FlowTaskCoreService {
   /**
    * 保存通过附件。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
+   * @param task 运行时任务实体
+   * @param dto 任务操作 DTO（含 attachments）
    */
   private void savePassAttachments(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
@@ -374,8 +374,8 @@ public class FlowTaskCoreService {
   /**
    * 保存驳回附件。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
+   * @param task 运行时任务实体
+   * @param dto 任务操作 DTO（含 attachments）
    */
   private void saveRejectAttachments(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
     attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
@@ -386,9 +386,9 @@ public class FlowTaskCoreService {
   /**
    * 应用会签策略：preCheck + onUserPassed。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
-   * @param performType 参数说明
+   * @param task 运行时任务实体
+   * @param dto 任务操作 DTO
+   * @param performType 任务执行策略（OR/AND 等）
    */
   private void applyCountersignStrategy(FlowRunTaskDO task, FlowTaskOperateDTO dto, FlowPerformType performType) {
     CountersignStrategy strategy = strategyFactory.getStrategy(performType);
@@ -399,10 +399,10 @@ public class FlowTaskCoreService {
   /**
    * 判断是否应推进流程。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
-   * @param performType 参数说明
-   * @return 返回值说明
+   * @param task 运行时任务实体
+   * @param dto 任务操作 DTO
+   * @param performType 任务执行策略（OR/AND 等）
+   * @return true=应推进流程；false=会签未完成，不推进
    */
   private boolean shouldAdvance(FlowRunTaskDO task, FlowTaskOperateDTO dto, FlowPerformType performType) {
     CountersignStrategy strategy = strategyFactory.getStrategy(performType);
@@ -416,8 +416,8 @@ public class FlowTaskCoreService {
   /**
    * 记录部分通过日志。
    *
-   * @param performType 参数说明
-   * @param task 参数说明
+   * @param performType 任务执行策略（OR/AND 等）
+   * @param task 运行时任务实体
    */
   private void logPartialPass(FlowPerformType performType, FlowRunTaskDO task) {
     support.audit(task, performType.name() + "_PASS", null, null, null, null);
@@ -428,9 +428,9 @@ public class FlowTaskCoreService {
   /**
    * WebSocket 推送 + Prometheus 指标。
    *
-   * @param task 参数说明
-   * @param metrics 参数说明
-   * @param dto 参数说明
+   * @param task 运行时任务实体
+   * @param metrics Prometheus 指标收集器
+   * @param dto 任务操作 DTO
    */
   private void pushTaskCompleted(FlowRunTaskDO task, FlowMetrics metrics, FlowTaskOperateDTO dto) {
     if (todoCountPushService != null) {
@@ -445,10 +445,10 @@ public class FlowTaskCoreService {
   /**
    * 标记任务为驳回状态并更新。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
-   * @param now 参数说明
-   * @param durationMs 参数说明
+   * @param task 运行时任务实体
+   * @param dto 任务操作 DTO
+   * @param now 当前时间
+   * @param durationMs 任务处理耗时（毫秒）
    */
   private void markTaskRejected(FlowRunTaskDO task, FlowTaskOperateDTO dto, LocalDateTime now, Long durationMs) {
     task.setTaskStatus(FlowTaskStatus.REJECTED.name());
@@ -461,8 +461,8 @@ public class FlowTaskCoreService {
   /**
    * 处理驳回目标为发起人的场景。
    *
-   * @param dto 参数说明
-   * @param instance 参数说明
+   * @param dto 任务操作 DTO
+   * @param instance 流程实例 VO
    */
   private void resolveRejectToInitiator(FlowTaskOperateDTO dto, FlowInstanceVO instance) {
     if (Boolean.TRUE.equals(dto.getRejectToInitiator())) {
@@ -479,11 +479,11 @@ public class FlowTaskCoreService {
   /**
    * 解析驳回目标节点列表（多节点同退或单节点）。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
-   * @param instance 参数说明
-   * @param mergedVars 参数说明
-   * @return 返回值说明
+   * @param task 运行时任务实体
+   * @param dto 任务操作 DTO
+   * @param instance 流程实例 VO
+   * @param mergedVars 合并后的流程变量
+   * @return 驳回目标节点列表
    */
   private List<FlowNodeVO> resolveRejectTargets(FlowRunTaskDO task, FlowTaskOperateDTO dto,
       FlowInstanceVO instance, Map<String, Object> mergedVars) {
@@ -499,10 +499,10 @@ public class FlowTaskCoreService {
   /**
    * 驳回到终止状态处理。
    *
-   * @param task 参数说明
-   * @param instance 参数说明
-   * @param dto 参数说明
-   * @param now 参数说明
+   * @param task 运行时任务实体
+   * @param instance 流程实例 VO
+   * @param dto 任务操作 DTO
+   * @param now 当前时间
    */
   private void handleRejectToEnd(FlowRunTaskDO task, FlowInstanceVO instance, FlowTaskOperateDTO dto, LocalDateTime now) {
     instanceRepository.updateStatus(instance.getId(), FlowInstanceStatus.REJECTED.name(),
@@ -523,7 +523,7 @@ public class FlowTaskCoreService {
   /**
    * 任务转办
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId 等）
    */
   @Transactional(rollbackFor = Exception.class)
   public void transfer(FlowTaskOperateDTO dto) {
@@ -535,7 +535,7 @@ public class FlowTaskCoreService {
   /**
    * 任务委派
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId 等）
    */
   @Transactional(rollbackFor = Exception.class)
   public void delegate(FlowTaskOperateDTO dto) {
@@ -547,7 +547,7 @@ public class FlowTaskCoreService {
   /**
    * 自由跳转
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetNodeCode 等）
    */
   @Transactional(rollbackFor = Exception.class)
   public void jump(FlowTaskOperateDTO dto) {
@@ -559,10 +559,10 @@ public class FlowTaskCoreService {
   /**
    * 取回（已审批后取回）
    *
-   * @param hisTaskId 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param hisTaskId 历史任务 ID
+   * @param operatorId 取回操作人 ID
+   * @param comment 取回原因
+   * @return 新创建的任务 ID（取回失败时返回 null）
    */
   @Transactional(rollbackFor = Exception.class)
   public String retract(String hisTaskId, String operatorId, String comment) {
@@ -574,10 +574,10 @@ public class FlowTaskCoreService {
   /**
    * 实例级催办
    *
-   * @param instanceId 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param operatorId 催办操作人 ID
+   * @param comment 催办意见
+   * @return 被催办的任务 ID 列表
    */
   public List<String> urge(String instanceId, String operatorId, String comment) {
     return flowTaskUrgeService.urge(instanceId, operatorId, comment);
@@ -586,11 +586,11 @@ public class FlowTaskCoreService {
   /**
    * 节点级催办
    *
-   * @param instanceId 参数说明
-   * @param nodeCode 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 节点编码
+   * @param operatorId 催办操作人 ID
+   * @param comment 催办意见
+   * @return 被催办的任务 ID 列表
    */
   public List<String> urgeByNode(
       String instanceId, String nodeCode, String operatorId, String comment) {

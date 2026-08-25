@@ -101,8 +101,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 任务签收加分布式锁，防止多人同时签收同一任务
    *
-   * @param taskId 参数说明
-   * @param userId 参数说明
+   * @param taskId 任务 ID
+   * @param userId 签收用户 ID
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:claim:' + #taskId", waitTime = 3, leaseTime = 30)
@@ -115,7 +115,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 任务通过加分布式锁，防止并发审批导致状态不一致
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、comment、variables 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -126,7 +126,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 任务驳回加分布式锁
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、comment、variables 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -137,7 +137,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 任务转办加分布式锁
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId、comment 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -148,7 +148,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 任务委派加分布式锁
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId、comment 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -171,11 +171,11 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P2-3 (GAP-13): 节点级催办
    *
-   * @param instanceId 参数说明
-   * @param nodeCode 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 节点编码
+   * @param operatorId 催办操作人 ID
+   * @param comment 催办意见
+   * @return 被催办的任务 ID 列表
    */
   @Override
   public List<String> urgeByNode(
@@ -186,7 +186,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 自由跳转加分布式锁
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetNodeCode 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -239,7 +239,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 前加签加分布式锁
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -250,7 +250,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 后加签加分布式锁
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -261,7 +261,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * GAP-P0-3: 并加签 — 委托给 signService
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -272,7 +272,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 减签加分布式锁
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -283,7 +283,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P0-1: 追加处理人加分布式锁
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId、userId、targetUserId 等）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
@@ -294,10 +294,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P1-3: 取回审批 — 加分布式锁防止并发
    *
-   * @param hisTaskId 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param hisTaskId 历史任务 ID
+   * @param operatorId 取回操作人 ID
+   * @param comment 取回原因
+   * @return 新创建的任务 ID（取回失败时返回 null）
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:retract:' + #hisTaskId", waitTime = 3, leaseTime = 30)
@@ -308,9 +308,9 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P2-1: 任务级挂起 — 加分布式锁防止并发
    *
-   * @param taskId 参数说明
-   * @param operatorId 参数说明
-   * @param reason 参数说明
+   * @param taskId 任务 ID
+   * @param operatorId 挂起操作人 ID
+   * @param reason 挂起原因
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
@@ -321,8 +321,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   /**
    * P2-1: 任务级激活 — 加分布式锁防止并发
    *
-   * @param taskId 参数说明
-   * @param operatorId 参数说明
+   * @param taskId 任务 ID
+   * @param operatorId 激活操作人 ID
    */
   @Override
   @YdszDistributedLock(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)

@@ -260,9 +260,9 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   /**
    * 内部方法：传入 now 以便测试和复用
    *
-   * @param task 参数说明
-   * @param now 参数说明
-   * @return 返回值说明
+   * @param task 超期任务（含 taskId、dueAt、taskStatus 等）
+   * @param now 当前时间（便于测试时注入固定时间）
+   * @return true=已处理（REMIND / 最终动作），false=跳过（未到期 / 已完成 / 状态不符）
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
   public boolean processOverdue(FlowRunTaskDO task, LocalDateTime now) {
@@ -323,16 +323,17 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   }
 
   /**
-   * 发送 SLA 提醒
-   * 
-   * 
+   * 发送 SLA 提醒通知给任务办理人
    *
-   * @param task 参数说明
-   * @param action 参数说明
-   * @param newUrgeCount 参数说明
-   * @param maxUrges 参数说明
-   * @param now 参数说明
-   * @return 返回值说明
+   * <p>通知内容包含流程名称、节点名称、截止时间和提醒次数。通知发送失败时返回 false，
+   * 由调用方决定是否重试。
+   *
+   * @param task 超期任务（含 taskId、flowName、nodeName、dueAt、assigneeId 等）
+   * @param action SLA 动作类型（REMIND / ESCALATE / AUTO_PASS / AUTO_REJECT）
+   * @param newUrgeCount 本次提醒后的累计提醒次数
+   * @param maxUrges 最大提醒次数（达到后执行最终动作）
+   * @param now 当前时间（用于更新 lastUrgedAt）
+   * @return true=通知发送成功；false=发送失败或 assigneeId 为空
    */
   private boolean sendUrge(
       FlowRunTaskDO task, FlowSlaAction action, int newUrgeCount, int maxUrges, LocalDateTime now) {
@@ -371,23 +372,23 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
   /**
    * 执行最终动作（NOTIFY / AUTO_PASS / AUTO_REJECT / ESCALATE）
-   * 
+   *
    * <p>P1-3 闭环语义：每个 action 必须有明确终态，禁止"标记 TIMEOUT 但流程卡死"。
-   * 
+   *
    * <ul>
-   * <li>NOTIFY — 通知管理员介入，任务保持 PENDING（人工处理）
-   * <li>ESCALATE — 转办给 escalateUserId，任务保持 PENDING（新办理人处理）
-   * <li>AUTO_PASS — 系统自动通过，流程推进到下一节点
-   * <li>AUTO_REJECT — 系统自动驳回，流程终止
-   * <li>REMIND — 兼容旧配置，等同于 NOTIFY（不再标记 TIMEOUT）
+   *   <li>NOTIFY — 通知管理员介入，任务保持 PENDING（人工处理）
+   *   <li>ESCALATE — 转办给 escalateUserId，任务保持 PENDING（新办理人处理）
+   *   <li>AUTO_PASS — 系统自动通过，流程推进到下一节点
+   *   <li>AUTO_REJECT — 系统自动驳回，流程终止
+   *   <li>REMIND — 兼容旧配置，等同于 NOTIFY（不再标记 TIMEOUT）
    * </ul>
    *
-   * @param task 参数说明
-   * @param node 参数说明
-   * @param action 参数说明
-   * @param config 参数说明
-   * @param now 参数说明
-   * @return 返回值说明
+   * @param task 超期任务（含 taskId、flowCode、nodeCode 等）
+   * @param node 流程节点（含 slaConfig 配置）
+   * @param action SLA 最终动作类型
+   * @param config SLA 配置 Map（含 escalateUserId、autoComment 等）
+   * @param now 当前时间（用于更新 dueAt 等字段）
+   * @return true=动作执行成功；false=执行失败或未知动作
    */
   private boolean executeFinalAction(
       FlowRunTaskDO task,
@@ -418,10 +419,13 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   /**
    * 自动通过：以系统身份调用 pass()
    *
-   * @param task 参数说明
-   * @param config 参数说明
-   * @param now 参数说明
-   * @return 返回值说明
+   * <p>使用系统用户（ID="0"）身份执行通过操作，并记录 SLA 动作日志。
+   * 通过成功后更新 slaAction 标记，避免重复执行。
+   *
+   * @param task 超期任务（含 taskId、flowCode、nodeCode 等）
+   * @param config SLA 配置 Map（含 autoComment 审批意见）
+   * @param now 当前时间（用于记录动作时间）
+   * @return true=自动通过成功；false=执行失败
    */
   private boolean doAutoPass(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
@@ -449,10 +453,13 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   /**
    * 自动驳回：以系统身份调用 reject()
    *
-   * @param task 参数说明
-   * @param config 参数说明
-   * @param now 参数说明
-   * @return 返回值说明
+   * <p>使用系统用户（ID="0"）身份执行驳回操作，并记录 SLA 动作日志。
+   * 驳回成功后更新 slaAction 标记，避免重复执行。
+   *
+   * @param task 超期任务（含 taskId、flowCode、nodeCode 等）
+   * @param config SLA 配置 Map（含 autoComment 审批意见）
+   * @param now 当前时间（用于记录动作时间）
+   * @return true=自动驳回成功；false=执行失败
    */
   private boolean doAutoReject(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
@@ -480,10 +487,13 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   /**
    * 升级：转办给 escalateUserId（默认管理员）
    *
-   * @param task 参数说明
-   * @param config 参数说明
-   * @param now 参数说明
-   * @return 返回值说明
+   * <p>通过 transfer 接口将任务转给升级用户，并重置 SLA 计时器（urgeCount=0、
+   * lastUrgedAt=null、dueAt=now+timeoutMinutes）。转办失败时降级为通知升级用户。
+   *
+   * @param task 超期任务（含 taskId、flowCode、nodeCode、assigneeId 等）
+   * @param config SLA 配置 Map（含 escalateUserId、timeoutMinutes 等）
+   * @param now 当前时间（用于计算新的 dueAt）
+   * @return true=升级成功（转办或通知）；false=执行失败
    */
   private boolean doEscalate(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
@@ -591,11 +601,11 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
   /**
    * 解析 NOTIFY 通知目标列表
-   * 
+   *
    * <p>优先级：notifyUserIds（逗号分隔）→ escalateUserId → 默认管理员
    *
-   * @param config 参数说明
-   * @return 返回值说明
+   * @param config SLA 配置 Map（含 notifyUserIds、escalateUserId 等）
+   * @return 通知目标用户 ID 列表（非空，最低返回默认管理员）
    */
   private List<String> resolveNotifyTargets(Map<String, Object> config) {
     String notifyUserIds = readString(config, "notifyUserIds", null);

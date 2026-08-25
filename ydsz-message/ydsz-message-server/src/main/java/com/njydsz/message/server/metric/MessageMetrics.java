@@ -24,7 +24,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 public class MessageMetrics extends SentryMetricsAdapter {
 
   public MessageMetrics() {
-    super("ydsz.message.");
+    super("ydsz_message_");
   }
 
   /**

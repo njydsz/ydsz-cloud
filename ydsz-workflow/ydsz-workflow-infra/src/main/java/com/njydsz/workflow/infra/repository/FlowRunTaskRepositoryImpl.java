@@ -40,6 +40,26 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 @RequiredArgsConstructor
 public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
 
+  // ============================== 任务状态常量 ==============================
+
+  /** 任务状态：待处理 */
+  private static final String TASK_STATUS_PENDING = "PENDING";
+
+  /** 任务状态：已签收 */
+  private static final String TASK_STATUS_CLAIMED = "CLAIMED";
+
+  /** 任务状态：已冻结 */
+  private static final String TASK_STATUS_FROZEN = "FROZEN";
+
+  /** 任务状态：已完成 */
+  private static final String TASK_STATUS_COMPLETED = "COMPLETED";
+
+  /** 任务状态：已驳回 */
+  private static final String TASK_STATUS_REJECTED = "REJECTED";
+
+  /** 流程定时器默认审批意见 */
+  private static final String FLOW_TIMER_COMMENT = "FLOW_TIMER";
+
   private final FlowRunTaskMapper taskMapper;
 
   private final WorkflowConverter converter;
@@ -77,7 +97,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         taskMapper.selectList(
             new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getInstanceId, instanceId)
-                .eq(FlowRunTaskDO::getTaskStatus, "PENDING")
+                .eq(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING)
                 .eq(FlowRunTaskDO::getDeleted, 0)));
   }
 
@@ -88,7 +108,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getInstanceId, instanceId)
                 .eq(FlowRunTaskDO::getNodeCode, nodeCode)
-                .eq(FlowRunTaskDO::getTaskStatus, "PENDING")
+                .eq(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING)
                 .eq(FlowRunTaskDO::getDeleted, 0)));
   }
 
