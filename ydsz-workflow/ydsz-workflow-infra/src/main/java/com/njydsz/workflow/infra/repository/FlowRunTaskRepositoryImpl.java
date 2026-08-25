@@ -60,6 +60,14 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   /** 流程定时器默认审批意见 */
   private static final String FLOW_TIMER_COMMENT = "FLOW_TIMER";
 
+  // ============================== 排序方向常量 ==============================
+
+  /** 排序方向：升序 */
+  private static final String ORDER_DIRECTION_ASC = "ASC";
+
+  /** 排序方向：降序 */
+  private static final String ORDER_DIRECTION_DESC = "DESC";
+
   private final FlowRunTaskMapper taskMapper;
 
   private final WorkflowConverter converter;
@@ -214,7 +222,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         .eq(FlowRunTaskDO::getDeleted, 0);
 
     // 排序处理
-    if ("ASC".equalsIgnoreCase(query.getOrderDirection())) {
+    if (ORDER_DIRECTION_ASC.equalsIgnoreCase(query.getOrderDirection())) {
       wrapper.orderByAsc(
           query.getOrderBy() != null ? FlowRunTaskDO::getCreatedAt : FlowRunTaskDO::getCreatedAt);
     } else {

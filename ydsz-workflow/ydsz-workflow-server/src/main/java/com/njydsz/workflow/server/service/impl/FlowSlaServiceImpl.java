@@ -181,6 +181,25 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   /** SLA 配置键：自动审批意见 */
   private static final String SLA_CONFIG_KEY_AUTO_COMMENT = "autoComment";
 
+  // ============================== 通知内容模板 ==============================
+
+  /** 升级通知内容模板 */
+  private static final String ESCALATE_COMMENT_TEMPLATE = "系统升级：原办理人未在 SLA 时限内处理，已转办给用户 %s";
+
+  /** 催办通知内容模板 */
+  private static final String URGE_COMMENT_TEMPLATE = "【%s】%s 已超过截止时间 %s，请尽快处理（第 %d/%d 次提醒）";
+
+  /** 超时通知内容模板 */
+  private static final String NOTIFY_COMMENT_TEMPLATE = "【%s】%s 已超过 SLA 时限未处理（任务 ID=%s，办理人=%s），请尽快介入处理。";
+
+  // ============================== 指标类型常量 ==============================
+
+  /** 指标类型：SLA 超时错误 */
+  private static final String METRIC_ERROR_SLA_TIMEOUT = "sla_timeout";
+
+  /** 指标类型：自动处理 */
+  private static final String METRIC_TASK_AUTO_HANDLED = "auto_handled";
+
   /**
    * 解析节点的 SLA 配置 JSON 字符串
    *
@@ -414,7 +433,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       String title = URGE_TITLE;
       String content =
           String.format(
-              "【%s】%s 已超过截止时间 %s，请尽快处理（第 %d/%d 次提醒）",
+              URGE_COMMENT_TEMPLATE,
               nullSafe(task.getFlowName()),
               nullSafe(task.getNodeName()),
               task.getDueAt(),
@@ -513,8 +532,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       log.info("[FlowSla] 自动通过: taskId={} comment={}", task.getId(), comment);
       // P2-3: Prometheus 指标
       if (flowMetrics != null) {
-        flowMetrics.incError(task.getFlowCode(), "sla_timeout");
-        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
+      flowMetrics.incError(task.getFlowCode(), METRIC_ERROR_SLA_TIMEOUT);
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), METRIC_TASK_AUTO_HANDLED);
       }
       return true;
     } catch (Exception e) {
@@ -547,8 +566,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       log.info("[FlowSla] 自动驳回: taskId={} comment={}", task.getId(), comment);
       // P2-3: Prometheus 指标
       if (flowMetrics != null) {
-        flowMetrics.incError(task.getFlowCode(), "sla_timeout");
-        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
+      flowMetrics.incError(task.getFlowCode(), METRIC_ERROR_SLA_TIMEOUT);
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), METRIC_TASK_AUTO_HANDLED);
       }
       return true;
     } catch (Exception e) {
@@ -578,7 +597,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       if (escalateUserId == null) {
         escalateUserId = DEFAULT_ADMIN_USER_ID;
       }
-      String comment = String.format("系统升级：原办理人未在 SLA 时限内处理，已转办给用户 %s", escalateUserId);
+      String comment = String.format(ESCALATE_COMMENT_TEMPLATE, escalateUserId);
       // 通过转办接口将任务转给升级用户
       FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
       dto.setTaskId(task.getId());
@@ -604,8 +623,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         log.info("[FlowSla] 升级成功: taskId={} escalateUserId={}", task.getId(), escalateUserId);
         // P2-3: Prometheus 指标
         if (flowMetrics != null) {
-        flowMetrics.incError(task.getFlowCode(), "sla_timeout");
-        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
+      flowMetrics.incError(task.getFlowCode(), METRIC_ERROR_SLA_TIMEOUT);
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), METRIC_TASK_AUTO_HANDLED);
         }
         return true;
       } catch (Exception transferEx) {
@@ -646,7 +665,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       String title = NOTIFY_TITLE;
       String content =
           String.format(
-              "【%s】%s 已超过 SLA 时限未处理（任务 ID=%s，办理人=%s），请尽快介入处理。",
+              NOTIFY_COMMENT_TEMPLATE,
               nullSafe(task.getFlowName()),
               nullSafe(task.getNodeName()),
               task.getId(),
@@ -662,8 +681,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
           task.getNodeCode());
       // P2-3: Prometheus 指标
       if (flowMetrics != null) {
-        flowMetrics.incError(task.getFlowCode(), "sla_timeout");
-        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
+      flowMetrics.incError(task.getFlowCode(), METRIC_ERROR_SLA_TIMEOUT);
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), METRIC_TASK_AUTO_HANDLED);
       }
       return true;
     } catch (Exception e) {
