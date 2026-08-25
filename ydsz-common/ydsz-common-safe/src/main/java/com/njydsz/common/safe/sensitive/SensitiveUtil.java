@@ -10,8 +10,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 敏感数据脱敏工具类
@@ -30,9 +29,8 @@ import org.slf4j.LoggerFactory;
  * @since 1.0.0
  * @see SensitiveType
  */
+@Slf4j
 public final class SensitiveUtil {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SensitiveUtil.class);
 
   private static final char ASTERISK = '*';
 
@@ -603,7 +601,8 @@ public final class SensitiveUtil {
     if (text == null || text.isEmpty()) {
       return List.of();
     }
-    List<PiiMatch> matches = new ArrayList<>();
+    // PII 扫描模式数量有限（5种），预估匹配数较少，初始容量设为 8
+    List<PiiMatch> matches = new ArrayList<>(8);
     for (Map.Entry<Pattern, SensitiveType> entry : PII_SCAN_PATTERNS.entrySet()) {
       Pattern pattern = entry.getKey();
       SensitiveType type = entry.getValue();
@@ -675,7 +674,7 @@ public final class SensitiveUtil {
         result = sb.toString();
       }
     } catch (Exception e) {
-      LOG.warn("[SensitiveUtil] PII 扫描脱敏异常，返回原文: err={}", e.getMessage());
+      log.warn("[SensitiveUtil] PII 扫描脱敏异常，返回原文: err={}", e.getMessage());
       return text;
     }
     return result;
