@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.entity;
+package com.njydsz.userinfo.infra.entity;
 
 import java.time.LocalDateTime;
 
@@ -55,7 +55,6 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_user_account")
-@SuppressWarnings("unchecked")
 public class UserAccount extends MpBaseEntity<String> {
 
   /** 登录用户名（全局唯一） */

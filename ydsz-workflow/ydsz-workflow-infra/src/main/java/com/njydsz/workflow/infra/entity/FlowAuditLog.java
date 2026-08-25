@@ -61,7 +61,6 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  */
 @Data
 @SuperBuilder
-@SuppressWarnings("unchecked")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_audit_log")

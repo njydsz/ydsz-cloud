@@ -22,7 +22,6 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@SuppressWarnings("unchecked")
 @TableName(value = "ydsz_rule_execution_trace", autoResultMap = true)
 public class RuleExecutionTrace extends MpBaseIdEntity<String> {
 

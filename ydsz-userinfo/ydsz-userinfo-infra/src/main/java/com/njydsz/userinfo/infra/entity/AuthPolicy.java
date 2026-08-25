@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.entity;
+package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -21,9 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- */
-@SuppressWarnings("unchecked")
-@Data
+ */@Data
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

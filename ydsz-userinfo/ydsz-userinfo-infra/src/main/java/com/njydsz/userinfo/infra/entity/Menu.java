@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.entity;
+package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -48,7 +48,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_menu")
-@SuppressWarnings("unchecked")
 public class Menu extends MpBaseEntity<String> {
 
   /** 父菜单 ID，根节点为 {@code "0"}，支持无限级树形结构 */

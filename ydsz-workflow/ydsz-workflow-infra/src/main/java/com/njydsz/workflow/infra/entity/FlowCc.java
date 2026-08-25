@@ -50,7 +50,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  */
 @Data
 @SuperBuilder
-@SuppressWarnings("unchecked")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_cc")

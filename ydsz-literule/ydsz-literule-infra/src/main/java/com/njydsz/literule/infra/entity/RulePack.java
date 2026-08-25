@@ -24,7 +24,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@SuppressWarnings("unchecked")
 @TableName("ydsz_rule_pack")
 public class RulePack extends MpBaseEntity<String> {
 

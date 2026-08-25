@@ -530,10 +530,10 @@ public final class BeanMapper {
    * @throws IllegalArgumentException 无无参构造器或实例化失败
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked")
   public static <T> T createInstance(Class<T> clazz) {
     try {
-      return clazz.getDeclaredConstructor().newInstance();
+      Constructor<T> constructor = clazz.getDeclaredConstructor();
+      return constructor.newInstance();
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
           "Class " + clazz.getName() + " 缺少无参构造器，无法通过 BeanMapper.toBean 转换", e);

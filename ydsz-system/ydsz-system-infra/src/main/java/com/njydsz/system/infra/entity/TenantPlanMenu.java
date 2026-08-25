@@ -41,7 +41,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_tenant_plan_menu")
-@SuppressWarnings("unchecked")
 public class TenantPlanMenu extends MpBaseEntity<String> {
 
   /** 套餐 ID（{@code ydsz_tenant_plan.id}） */

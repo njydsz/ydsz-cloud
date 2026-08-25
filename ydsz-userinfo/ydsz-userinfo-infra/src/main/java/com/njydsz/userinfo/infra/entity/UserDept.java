@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.entity;
+package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -50,7 +50,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_user_dept")
-@SuppressWarnings("unchecked")
 public class UserDept extends MpBaseEntity<String> {
 
   /** 用户 ID，关联 {@link UserAccount#getId()} */

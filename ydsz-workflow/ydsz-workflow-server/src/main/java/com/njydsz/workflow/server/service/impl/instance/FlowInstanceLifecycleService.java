@@ -1448,11 +1448,6 @@ public class FlowInstanceLifecycleService {
    * @param m 原始 Map
    * @return 强转后的 Map
    */
-  @SuppressWarnings("unchecked")
-  private static Map<String, Object> castToStringObjectMap(Map<?, ?> m) {
-    return MapUtils.toStringObjectMap(m);
-  }
-
   // ============================== 事件触发 ==============================
 
   /**

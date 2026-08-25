@@ -50,7 +50,6 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_config")
-@SuppressWarnings("unchecked")
 public class Config extends MpBaseEntity<String> {
 
   /** 配置分组（用于按业务域分类管理配置） */

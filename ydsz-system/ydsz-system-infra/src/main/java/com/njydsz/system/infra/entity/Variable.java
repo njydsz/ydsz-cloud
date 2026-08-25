@@ -52,7 +52,6 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_variable")
-@SuppressWarnings("unchecked")
 public class Variable extends MpBaseEntity<String> {
 
   /** 状态常量：启用 */

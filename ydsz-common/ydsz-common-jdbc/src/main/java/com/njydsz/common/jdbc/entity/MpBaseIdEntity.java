@@ -25,6 +25,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@SuppressWarnings("unchecked")
 public class MpBaseIdEntity<T extends Serializable> implements Serializable {
 
   private static final long serialVersionUID = 1L;

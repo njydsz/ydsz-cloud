@@ -36,7 +36,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_dict_type")
-@SuppressWarnings("unchecked")
 public class DictType extends MpBaseEntity<String> {
 
   /** 类型编码（唯一标识，用于业务引用） */

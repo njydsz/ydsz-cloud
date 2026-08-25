@@ -124,7 +124,6 @@ public class RateLimitAspect {
    * @param request 当前 HTTP 请求（用于判空）
    * @return HttpServletResponse；不可用时返回 null
    */
-  @SuppressWarnings("unchecked")
   private static HttpServletResponse response(HttpServletRequest request) {
     if (request == null) {
       return null;

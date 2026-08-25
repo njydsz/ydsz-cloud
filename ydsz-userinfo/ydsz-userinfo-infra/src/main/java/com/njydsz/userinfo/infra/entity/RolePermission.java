@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.entity;
+package com.njydsz.userinfo.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -47,7 +47,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_role_permission")
-@SuppressWarnings("unchecked")
 public class RolePermission extends MpBaseEntity<String> {
 
   /** 角色 ID，关联 {@link Role#getId()} */

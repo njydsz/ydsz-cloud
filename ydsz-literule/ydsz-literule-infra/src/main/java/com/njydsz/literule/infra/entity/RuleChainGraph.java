@@ -28,7 +28,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@SuppressWarnings("unchecked")
 @TableName("ydsz_rule_chain_graph")
 public class RuleChainGraph extends MpBaseEntity<String> {
 

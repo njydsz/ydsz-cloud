@@ -26,9 +26,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- */
-@SuppressWarnings("unchecked")
-@Data
+ */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @TableName("ydsz_nw_share_link")

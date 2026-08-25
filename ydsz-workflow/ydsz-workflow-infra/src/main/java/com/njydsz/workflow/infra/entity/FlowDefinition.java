@@ -61,7 +61,6 @@ import com.njydsz.workflow.domain.vo.FlowViews;
  */
 @Data
 @SuperBuilder
-@SuppressWarnings("unchecked")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_definition")

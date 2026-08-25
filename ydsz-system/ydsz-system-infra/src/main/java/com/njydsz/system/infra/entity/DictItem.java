@@ -39,7 +39,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_dict_item")
-@SuppressWarnings("unchecked")
 public class DictItem extends MpBaseEntity<String> {
 
   /** 所属字典类型编码（逻辑外键 → {@code ydsz_dict_type.type_code}） */

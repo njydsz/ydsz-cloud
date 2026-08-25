@@ -57,7 +57,6 @@ import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
  */
 @Data
 @SuperBuilder
-@SuppressWarnings("unchecked")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_instance")
