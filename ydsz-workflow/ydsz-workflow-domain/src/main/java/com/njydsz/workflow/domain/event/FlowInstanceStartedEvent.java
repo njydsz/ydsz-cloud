@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.event;
 
+import static java.util.Collections.emptyMap;
+
 import java.io.Serial;
 import java.util.Map;
 
