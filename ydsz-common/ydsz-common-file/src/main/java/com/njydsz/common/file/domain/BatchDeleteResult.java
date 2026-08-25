@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.util.message.MessageUtils;
+
 /**
  * 批量删除结果
  *
@@ -47,13 +49,20 @@ public record BatchDeleteResult(List<String> successList, Map<String, String> fa
     return failedList.isEmpty();
   }
 
+  /** 全部成功提示文本 i18n key */
+  private static final String KEY_ALL_SUCCESS = "file.batch.allSuccess";
+
+  /** 多条失败记录之间的分隔符 i18n key */
+  private static final String KEY_FAILURE_SEPARATOR = "file.batch.failureSeparator";
+
   /** 获取失败摘要信息 */
   public String getFailureSummary() {
     if (failedList.isEmpty()) {
-      return "全部成功";
+      return MessageUtils.getMessage(KEY_ALL_SUCCESS, "全部成功");
     }
+    String separator = MessageUtils.getMessage(KEY_FAILURE_SEPARATOR, "; ");
     return failedList.entrySet().stream()
         .map(e -> e.getKey() + ": " + e.getValue())
-        .collect(Collectors.joining("; "));
+        .collect(Collectors.joining(separator));
   }
 }

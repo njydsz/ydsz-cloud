@@ -2,7 +2,9 @@ package com.njydsz.message.infra.converter;
 
 import java.util.List;
 
+import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.message.domain.dto.MsgCanaryDTO;
@@ -82,6 +84,7 @@ public interface MessageConverter {
    * @param vo 消息发送日志 VO
    * @return 消息发送日志领域实体
    */
+  @Named("voToLog")
   MsgLog voToLog(MsgLogVO vo);
 
   // ===== MsgNotification =====
@@ -164,6 +167,7 @@ public interface MessageConverter {
    * @param vo 消息发送日志 VO
    * @return 消息发送日志 Entity
    */
+  @Named("voToEntity")
   MsgLog voToEntity(MsgLogVO vo);
 
   /**
@@ -174,6 +178,7 @@ public interface MessageConverter {
    * @param vos 消息发送日志 VO 列表
    * @return 消息发送日志 Entity 列表
    */
+  @IterableMapping(qualifiedByName = "voToEntity")
   List<MsgLog> logVoListToEntity(List<MsgLogVO> vos);
 
   // ===== DTO → Entity 方向（用于 Repository 层 CUD 操作） =====
