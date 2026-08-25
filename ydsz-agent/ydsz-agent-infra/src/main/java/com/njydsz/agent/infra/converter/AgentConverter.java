@@ -22,13 +22,13 @@ import com.njydsz.agent.domain.vo.AgentTraceVO;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
 import com.njydsz.agent.domain.vo.PromptVersionVO;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
-import com.njydsz.agent.infra.entity.AgentApprovalDO;
-import com.njydsz.agent.infra.entity.AgentDefinitionDO;
-import com.njydsz.agent.infra.entity.AgentTraceDO;
-import com.njydsz.agent.infra.entity.AgentTraceStepDO;
-import com.njydsz.agent.infra.entity.PromptTemplateDO;
-import com.njydsz.agent.infra.entity.PromptVersionDO;
-import com.njydsz.agent.infra.entity.TokenUsageRecordDO;
+import com.njydsz.agent.infra.entity.AgentApproval;
+import com.njydsz.agent.infra.entity.AgentDefinition;
+import com.njydsz.agent.infra.entity.AgentTrace;
+import com.njydsz.agent.infra.entity.AgentTraceStep;
+import com.njydsz.agent.infra.entity.PromptTemplate;
+import com.njydsz.agent.infra.entity.PromptVersion;
+import com.njydsz.agent.infra.entity.TokenUsageRecord;
 
 /**
  * agent 模块统一 MapStruct 转换器。
@@ -62,7 +62,7 @@ public interface AgentConverter {
    * @param entity 数据库实体
    * @return 视图对象
    */
-  AgentDefinitionVO entityToVO(AgentDefinitionDO entity);
+  AgentDefinitionVO entityToVO(AgentDefinition entity);
 
   /**
    * Entity 列表 → VO 列表转换
@@ -70,7 +70,7 @@ public interface AgentConverter {
    * @param entities 实体列表
    * @return VO 列表
    */
-  List<AgentDefinitionVO> agentDefinitionListToVO(List<AgentDefinitionDO> entities);
+  List<AgentDefinitionVO> agentDefinitionListToVO(List<AgentDefinition> entities);
 
   /**
    * DTO → Entity 转换（创建场景，系统字段自动忽略）
@@ -86,7 +86,7 @@ public interface AgentConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  AgentDefinitionDO dtoToEntity(AgentDefinitionDTO dto);
+  AgentDefinition dtoToEntity(AgentDefinitionDTO dto);
 
   /**
    * DTO（含 ID）→ Entity 转换（更新场景，系统字段自动忽略）
@@ -101,7 +101,7 @@ public interface AgentConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  AgentDefinitionDO dtoToEntityWithId(AgentDefinitionDTO dto);
+  AgentDefinition dtoToEntityWithId(AgentDefinitionDTO dto);
 
   // ===== AgentTrace =====
 
@@ -111,7 +111,7 @@ public interface AgentConverter {
    * @param entity 数据库实体
    * @return 视图对象
    */
-  AgentTraceVO entityToVO(AgentTraceDO entity);
+  AgentTraceVO entityToVO(AgentTrace entity);
 
   /**
    * Entity 列表 → VO 列表转换
@@ -119,7 +119,7 @@ public interface AgentConverter {
    * @param entities 实体列表
    * @return VO 列表
    */
-  List<AgentTraceVO> agentTraceListToVO(List<AgentTraceDO> entities);
+  List<AgentTraceVO> agentTraceListToVO(List<AgentTrace> entities);
 
   /**
    * DTO → Entity 转换（创建场景）
@@ -127,8 +127,8 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO
    * @return 数据库实体
    */
-  // P1 修复：返回类型原误写为 AgentTraceDTO（复制粘贴错误），应转换为 AgentTraceDO
-  AgentTraceDO dtoToEntity(AgentTraceDTO dto);
+  // P1 修复：返回类型原误写为 AgentTraceDTO（复制粘贴错误），应转换为 AgentTrace
+  AgentTrace dtoToEntity(AgentTraceDTO dto);
 
   /**
    * DTO（含 ID）→ Entity 转换（更新场景）
@@ -136,7 +136,7 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO（含 traceId）
    * @return 数据库实体
    */
-  AgentTraceDO dtoToEntityWithId(AgentTraceDTO dto);
+  AgentTrace dtoToEntityWithId(AgentTraceDTO dto);
 
   // ===== AgentTraceStep =====
 
@@ -146,7 +146,7 @@ public interface AgentConverter {
    * @param entity 数据库实体
    * @return 视图对象
    */
-  AgentTraceStepVO entityToVO(AgentTraceStepDO entity);
+  AgentTraceStepVO entityToVO(AgentTraceStep entity);
 
   /**
    * Entity 列表 → VO 列表转换
@@ -154,7 +154,7 @@ public interface AgentConverter {
    * @param entities 实体列表
    * @return VO 列表
    */
-  List<AgentTraceStepVO> agentTraceStepListToVO(List<AgentTraceStepDO> entities);
+  List<AgentTraceStepVO> agentTraceStepListToVO(List<AgentTraceStep> entities);
 
   /**
    * DTO → Entity 转换
@@ -162,7 +162,7 @@ public interface AgentConverter {
    * @param dto Agent 执行链路步骤 DTO
    * @return 数据库实体
    */
-  AgentTraceStepDO dtoToEntity(AgentTraceStepDTO dto);
+  AgentTraceStep dtoToEntity(AgentTraceStepDTO dto);
 
   // ===== AgentApproval =====
 
@@ -172,7 +172,7 @@ public interface AgentConverter {
    * @param entity 数据库实体
    * @return 视图对象
    */
-  AgentApprovalVO entityToVO(AgentApprovalDO entity);
+  AgentApprovalVO entityToVO(AgentApproval entity);
 
   /**
    * Entity 列表 → VO 列表转换
@@ -180,7 +180,7 @@ public interface AgentConverter {
    * @param entities 实体列表
    * @return VO 列表
    */
-  List<AgentApprovalVO> agentApprovalListToVO(List<AgentApprovalDO> entities);
+  List<AgentApprovalVO> agentApprovalListToVO(List<AgentApproval> entities);
 
   /**
    * DTO → Entity 转换（创建场景）
@@ -190,7 +190,7 @@ public interface AgentConverter {
    */
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
-  AgentApprovalDO dtoToEntity(AgentApprovalDTO dto);
+  AgentApproval dtoToEntity(AgentApprovalDTO dto);
 
   /**
    * DTO（含 ID）→ Entity 转换（更新场景）
@@ -200,7 +200,7 @@ public interface AgentConverter {
    */
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
-  AgentApprovalDO dtoToEntityWithId(AgentApprovalDTO dto);
+  AgentApproval dtoToEntityWithId(AgentApprovalDTO dto);
 
   // ===== PromptTemplate =====
 
@@ -210,7 +210,7 @@ public interface AgentConverter {
    * @param entity 数据库实体
    * @return 视图对象
    */
-  PromptTemplateVO entityToVO(PromptTemplateDO entity);
+  PromptTemplateVO entityToVO(PromptTemplate entity);
 
   /**
    * Entity 列表 → VO 列表转换
@@ -218,7 +218,7 @@ public interface AgentConverter {
    * @param entities 实体列表
    * @return VO 列表
    */
-  List<PromptTemplateVO> promptTemplateListToVO(List<PromptTemplateDO> entities);
+  List<PromptTemplateVO> promptTemplateListToVO(List<PromptTemplate> entities);
 
   /**
    * DTO → Entity 转换（创建场景，系统字段自动忽略）
@@ -234,7 +234,7 @@ public interface AgentConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  PromptTemplateDO dtoToEntity(PromptTemplateDTO dto);
+  PromptTemplate dtoToEntity(PromptTemplateDTO dto);
 
   /**
    * DTO（含 ID）→ Entity 转换（更新场景，系统字段自动忽略）
@@ -249,7 +249,7 @@ public interface AgentConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  PromptTemplateDO dtoToEntityWithId(PromptTemplateDTO dto);
+  PromptTemplate dtoToEntityWithId(PromptTemplateDTO dto);
 
   // ===== PromptVersion =====
 
@@ -259,7 +259,7 @@ public interface AgentConverter {
    * @param entity 数据库实体
    * @return 视图对象
    */
-  PromptVersionVO entityToVO(PromptVersionDO entity);
+  PromptVersionVO entityToVO(PromptVersion entity);
 
   /**
    * Entity 列表 → VO 列表转换
@@ -267,7 +267,7 @@ public interface AgentConverter {
    * @param entities 实体列表
    * @return VO 列表
    */
-  List<PromptVersionVO> promptVersionListToVO(List<PromptVersionDO> entities);
+  List<PromptVersionVO> promptVersionListToVO(List<PromptVersion> entities);
 
   /**
    * DTO → Entity 转换（创建场景，系统字段自动忽略）
@@ -283,7 +283,7 @@ public interface AgentConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  PromptVersionDO dtoToEntity(PromptVersionDTO dto);
+  PromptVersion dtoToEntity(PromptVersionDTO dto);
 
   // ===== TokenUsageRecord =====
 
@@ -293,7 +293,7 @@ public interface AgentConverter {
    * @param entity 数据库实体
    * @return 视图对象
    */
-  TokenUsageRecordVO entityToVO(TokenUsageRecordDO entity);
+  TokenUsageRecordVO entityToVO(TokenUsageRecord entity);
 
   /**
    * Entity 列表 → VO 列表转换
@@ -301,7 +301,7 @@ public interface AgentConverter {
    * @param entities 实体列表
    * @return VO 列表
    */
-  List<TokenUsageRecordVO> tokenUsageRecordListToVO(List<TokenUsageRecordDO> entities);
+  List<TokenUsageRecordVO> tokenUsageRecordListToVO(List<TokenUsageRecord> entities);
 
   /**
    * DTO → Entity 转换（创建场景，系统字段自动忽略）
@@ -317,5 +317,5 @@ public interface AgentConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  TokenUsageRecordDO dtoToEntity(TokenUsageRecordDTO dto);
+  TokenUsageRecord dtoToEntity(TokenUsageRecordDTO dto);
 }

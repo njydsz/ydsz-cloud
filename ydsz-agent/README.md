@@ -115,7 +115,7 @@ ydsz-agent/
 │   └── src/main/java/com/njydsz/agent/infra/
 │       ├── checkpoint/                # 检查点存储（RedisDagCheckpointStore）
 │       ├── converter/                 # 对象转换器（AgentConverter — MapStruct）
-│       ├── entity/                    # 数据库实体（AgentApprovalDO / AgentDefinitionDO / AgentTraceDO / AgentTraceStepDO / PromptTemplateDO / PromptVersionDO / TokenUsageRecordDO）
+│       ├── entity/                    # 数据库实体（AgentApproval / AgentDefinition / AgentTrace / AgentTraceStep / PromptTemplate / PromptVersion / TokenUsageRecord）
 │       ├── guardrail/                 # 护栏实现（PiiMaskingGuardrail / PromptInjectionGuardrail）
 │       ├── llm/                       # LLM 客户端（CachedLlmClient / LlmClientRouter / OpenAiCompatibleClient / SemanticCacheConfig / SemanticLlmCache）
 │       ├── mapper/                    # MyBatis Mapper（7 个 Mapper 接口）

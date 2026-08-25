@@ -11,7 +11,7 @@ import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.AgentDefinitionDO;
+import com.njydsz.agent.infra.entity.AgentDefinition;
 import com.njydsz.agent.infra.mapper.AgentDefinitionMapper;
 
 /**
@@ -46,7 +46,7 @@ public class AgentDefinitionRepositoryImpl implements AgentDefinitionRepository 
   public Optional<AgentDefinitionVO> findByCode(String agentCode) {
     return Optional.ofNullable(
             agentDefinitionMapper.selectOne(
-                new LambdaQueryWrapper<AgentDefinitionDO>().eq(AgentDefinitionDO::getAgentCode, agentCode)))
+                new LambdaQueryWrapper<AgentDefinition>().eq(AgentDefinition::getAgentCode, agentCode)))
         .map(converter::entityToVO);
   }
 
@@ -54,20 +54,20 @@ public class AgentDefinitionRepositoryImpl implements AgentDefinitionRepository 
   public List<AgentDefinitionVO> findActive() {
     return converter.agentDefinitionListToVO(
         agentDefinitionMapper.selectList(
-            new LambdaQueryWrapper<AgentDefinitionDO>()
-                .eq(AgentDefinitionDO::getStatus, "ACTIVE")
-                .orderByDesc(AgentDefinitionDO::getCreatedAt)));
+            new LambdaQueryWrapper<AgentDefinition>()
+                .eq(AgentDefinition::getStatus, "ACTIVE")
+                .orderByDesc(AgentDefinition::getCreatedAt)));
   }
 
   @Override
   public boolean insert(AgentDefinitionDTO dto) {
-    AgentDefinitionDO entity = converter.dtoToEntity(dto);
+    AgentDefinition entity = converter.dtoToEntity(dto);
     return agentDefinitionMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateById(AgentDefinitionDTO dto) {
-    AgentDefinitionDO entity = converter.dtoToEntityWithId(dto);
+    AgentDefinition entity = converter.dtoToEntityWithId(dto);
     return agentDefinitionMapper.updateById(entity) > 0;
   }
 

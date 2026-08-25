@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.agent.infra.entity.AgentTraceDO;
-import com.njydsz.agent.infra.entity.AgentTraceStepDO;
+import com.njydsz.agent.infra.entity.AgentTrace;
+import com.njydsz.agent.infra.entity.AgentTraceStep;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.mapper.AgentTraceMapper;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
@@ -63,8 +63,8 @@ public class PgTraceRecorder implements TraceRecorder {
   @Override
   public String startTrace(String conversationId, String agentId) {
     String traceId = TraceIdGenerator.generateSortableTraceId();
-    AgentTraceDO trace =
-        AgentTraceDO.builder()
+    AgentTrace trace =
+        AgentTrace.builder()
             .traceId(traceId)
             .conversationId(conversationId)
             .agentId(agentId)
@@ -103,8 +103,8 @@ public class PgTraceRecorder implements TraceRecorder {
     String inputJson = truncateJson(toJsonString(input));
     String outputJson = truncateJson(toJsonString(output));
 
-    AgentTraceStepDO step =
-        AgentTraceStepDO.builder()
+    AgentTraceStep step =
+        AgentTraceStep.builder()
             .traceId(traceId)
             .stepIndex(nextIndex)
             .stepType(stepType)
@@ -126,7 +126,7 @@ public class PgTraceRecorder implements TraceRecorder {
 
   @Override
   public void endTrace(String traceId, String status) {
-    AgentTraceDO trace = traceMapper.selectById(traceId);
+    AgentTrace trace = traceMapper.selectById(traceId);
     if (trace == null) {
       log.warn("[Trace] 链路不存在，无法结束: traceId={}", traceId);
       cleanup(traceId);
@@ -145,11 +145,11 @@ public class PgTraceRecorder implements TraceRecorder {
 
   @Override
   public List<TraceStep> getSteps(String traceId) {
-    List<AgentTraceStepDO> steps =
+    List<AgentTraceStep> steps =
         traceStepMapper.selectList(
-            new LambdaQueryWrapper<AgentTraceStepDO>()
-                .eq(AgentTraceStepDO::getTraceId, traceId)
-                .orderByAsc(AgentTraceStepDO::getStepIndex));
+            new LambdaQueryWrapper<AgentTraceStep>()
+                .eq(AgentTraceStep::getTraceId, traceId)
+                .orderByAsc(AgentTraceStep::getStepIndex));
     return steps.stream().map(this::toTraceStep).toList();
   }
 
@@ -204,7 +204,7 @@ public class PgTraceRecorder implements TraceRecorder {
    * @param step 步骤 DO
    * @return 不可变 TraceStep
    */
-  private TraceStep toTraceStep(AgentTraceStepDO step) {
+  private TraceStep toTraceStep(AgentTraceStep step) {
     return new TraceStep(
         step.getTraceId(),
         step.getStepIndex() != null ? step.getStepIndex() : 0,

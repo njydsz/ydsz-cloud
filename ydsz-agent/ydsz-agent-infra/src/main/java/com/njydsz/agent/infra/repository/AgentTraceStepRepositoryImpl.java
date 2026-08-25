@@ -10,7 +10,7 @@ import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.vo.AgentTraceStepVO;
 import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.AgentTraceStepDO;
+import com.njydsz.agent.infra.entity.AgentTraceStep;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 
 /**
@@ -38,7 +38,7 @@ public class AgentTraceStepRepositoryImpl implements AgentTraceStepRepository {
 
   @Override
   public boolean insert(AgentTraceStepDTO dto) {
-    AgentTraceStepDO entity = converter.dtoToEntity(dto);
+    AgentTraceStep entity = converter.dtoToEntity(dto);
     return agentTraceStepMapper.insert(entity) > 0;
   }
 
@@ -46,9 +46,9 @@ public class AgentTraceStepRepositoryImpl implements AgentTraceStepRepository {
   public List<AgentTraceStepVO> findByTraceId(String traceId) {
     return converter.agentTraceStepListToVO(
         agentTraceStepMapper.selectList(
-            new LambdaQueryWrapper<AgentTraceStepDO>()
-                .eq(AgentTraceStepDO::getTraceId, traceId)
-                .orderByAsc(AgentTraceStepDO::getStepIndex)));
+            new LambdaQueryWrapper<AgentTraceStep>()
+                .eq(AgentTraceStep::getTraceId, traceId)
+                .orderByAsc(AgentTraceStep::getStepIndex)));
   }
 
   /**

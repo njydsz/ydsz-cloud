@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.infra.entity.PromptTemplateDO;
+import com.njydsz.agent.infra.entity.PromptTemplate;
 
 /**
  * Prompt 模板 Mapper
@@ -23,4 +23,4 @@ import com.njydsz.agent.infra.entity.PromptTemplateDO;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface PromptTemplateMapper extends BaseMapper<PromptTemplateDO> {}
+public interface PromptTemplateMapper extends BaseMapper<PromptTemplate> {}

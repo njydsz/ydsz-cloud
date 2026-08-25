@@ -11,7 +11,7 @@ import com.njydsz.agent.domain.dto.PromptVersionDTO;
 import com.njydsz.agent.domain.repository.PromptVersionRepository;
 import com.njydsz.agent.domain.vo.PromptVersionVO;
 import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.PromptVersionDO;
+import com.njydsz.agent.infra.entity.PromptVersion;
 import com.njydsz.agent.infra.mapper.PromptVersionMapper;
 
 /**
@@ -39,7 +39,7 @@ public class PromptVersionRepositoryImpl implements PromptVersionRepository {
 
   @Override
   public boolean insert(PromptVersionDTO dto) {
-    PromptVersionDO entity = converter.dtoToEntity(dto);
+    PromptVersion entity = converter.dtoToEntity(dto);
     return promptVersionMapper.insert(entity) > 0;
   }
 
@@ -47,9 +47,9 @@ public class PromptVersionRepositoryImpl implements PromptVersionRepository {
   public Optional<PromptVersionVO> findByTemplateCodeAndVersion(String templateCode, int version) {
     return Optional.ofNullable(
             promptVersionMapper.selectOne(
-                new LambdaQueryWrapper<PromptVersionDO>()
-                    .eq(PromptVersionDO::getTemplateCode, templateCode)
-                    .eq(PromptVersionDO::getVersion, version)))
+                new LambdaQueryWrapper<PromptVersion>()
+                    .eq(PromptVersion::getTemplateCode, templateCode)
+                    .eq(PromptVersion::getVersion, version)))
         .map(converter::entityToVO);
   }
 
@@ -57,8 +57,8 @@ public class PromptVersionRepositoryImpl implements PromptVersionRepository {
   public List<PromptVersionVO> findByTemplateCode(String templateCode) {
     return converter.promptVersionListToVO(
         promptVersionMapper.selectList(
-            new LambdaQueryWrapper<PromptVersionDO>()
-                .eq(PromptVersionDO::getTemplateCode, templateCode)
-                .orderByAsc(PromptVersionDO::getVersion)));
+            new LambdaQueryWrapper<PromptVersion>()
+                .eq(PromptVersion::getTemplateCode, templateCode)
+                .orderByAsc(PromptVersion::getVersion)));
   }
 }

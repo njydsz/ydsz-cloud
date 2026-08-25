@@ -11,7 +11,7 @@ import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.domain.vo.AgentTraceVO;
 import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.AgentTraceDO;
+import com.njydsz.agent.infra.entity.AgentTrace;
 import com.njydsz.agent.infra.mapper.AgentTraceMapper;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 import com.njydsz.agent.infra.trace.PgTraceRecorder;
@@ -41,7 +41,7 @@ public class AgentTraceRepositoryImpl implements AgentTraceRepository {
 
   @Override
   public boolean insert(AgentTraceDTO dto) {
-    AgentTraceDO entity = converter.dtoToEntity(dto);
+    AgentTrace entity = converter.dtoToEntity(dto);
     return agentTraceMapper.insert(entity) > 0;
   }
 
@@ -52,7 +52,7 @@ public class AgentTraceRepositoryImpl implements AgentTraceRepository {
 
   @Override
   public boolean updateById(AgentTraceDTO dto) {
-    AgentTraceDO entity = converter.dtoToEntityWithId(dto);
+    AgentTrace entity = converter.dtoToEntityWithId(dto);
     return agentTraceMapper.updateById(entity) > 0;
   }
 

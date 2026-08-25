@@ -2,7 +2,6 @@ package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

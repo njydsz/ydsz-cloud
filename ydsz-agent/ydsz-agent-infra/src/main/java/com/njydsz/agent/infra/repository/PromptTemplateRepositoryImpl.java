@@ -11,7 +11,7 @@ import com.njydsz.agent.domain.dto.PromptTemplateDTO;
 import com.njydsz.agent.domain.repository.PromptTemplateRepository;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
 import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.PromptTemplateDO;
+import com.njydsz.agent.infra.entity.PromptTemplate;
 import com.njydsz.agent.infra.mapper.PromptTemplateMapper;
 
 /**
@@ -39,13 +39,13 @@ public class PromptTemplateRepositoryImpl implements PromptTemplateRepository {
 
   @Override
   public boolean insert(PromptTemplateDTO dto) {
-    PromptTemplateDO entity = converter.dtoToEntity(dto);
+    PromptTemplate entity = converter.dtoToEntity(dto);
     return promptTemplateMapper.insert(entity) > 0;
   }
 
   @Override
   public boolean updateById(PromptTemplateDTO dto) {
-    PromptTemplateDO entity = converter.dtoToEntityWithId(dto);
+    PromptTemplate entity = converter.dtoToEntityWithId(dto);
     return promptTemplateMapper.updateById(entity) > 0;
   }
 
@@ -58,8 +58,8 @@ public class PromptTemplateRepositoryImpl implements PromptTemplateRepository {
   public Optional<PromptTemplateVO> findByCode(String templateCode) {
     return Optional.ofNullable(
             promptTemplateMapper.selectOne(
-                new LambdaQueryWrapper<PromptTemplateDO>()
-                    .eq(PromptTemplateDO::getTemplateCode, templateCode)))
+                new LambdaQueryWrapper<PromptTemplate>()
+                    .eq(PromptTemplate::getTemplateCode, templateCode)))
         .map(converter::entityToVO);
   }
 
@@ -67,6 +67,6 @@ public class PromptTemplateRepositoryImpl implements PromptTemplateRepository {
   public List<PromptTemplateVO> findAllActive() {
     return converter.promptTemplateListToVO(
         promptTemplateMapper.selectList(
-            new LambdaQueryWrapper<PromptTemplateDO>().orderByDesc(PromptTemplateDO::getCreatedAt)));
+            new LambdaQueryWrapper<PromptTemplate>().orderByDesc(PromptTemplate::getCreatedAt)));
   }
 }

@@ -11,7 +11,7 @@ import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
 import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.TokenUsageRecordDO;
+import com.njydsz.agent.infra.entity.TokenUsageRecord;
 import com.njydsz.agent.infra.mapper.TokenUsageRecordMapper;
 
 /**
@@ -39,7 +39,7 @@ public class TokenUsageRecordRepositoryImpl implements TokenUsageRecordRepositor
 
   @Override
   public boolean insert(TokenUsageRecordDTO dto) {
-    TokenUsageRecordDO entity = converter.dtoToEntity(dto);
+    TokenUsageRecord entity = converter.dtoToEntity(dto);
     return tokenUsageRecordMapper.insert(entity) > 0;
   }
 
@@ -47,9 +47,9 @@ public class TokenUsageRecordRepositoryImpl implements TokenUsageRecordRepositor
   public List<TokenUsageRecordVO> findByCreatedAtRange(LocalDateTime startTime, LocalDateTime endTime) {
     return converter.tokenUsageRecordListToVO(
         tokenUsageRecordMapper.selectList(
-            new LambdaQueryWrapper<TokenUsageRecordDO>()
-                .ge(TokenUsageRecordDO::getCreatedAt, startTime)
-                .le(TokenUsageRecordDO::getCreatedAt, endTime)
-                .orderByAsc(TokenUsageRecordDO::getCreatedAt)));
+            new LambdaQueryWrapper<TokenUsageRecord>()
+                .ge(TokenUsageRecord::getCreatedAt, startTime)
+                .le(TokenUsageRecord::getCreatedAt, endTime)
+                .orderByAsc(TokenUsageRecord::getCreatedAt)));
   }
 }

@@ -13,7 +13,7 @@ import com.njydsz.agent.domain.dto.AgentApprovalDTO;
 import com.njydsz.agent.domain.repository.AgentApprovalRepository;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
 import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.AgentApprovalDO;
+import com.njydsz.agent.infra.entity.AgentApproval;
 import com.njydsz.agent.infra.mapper.AgentApprovalMapper;
 
 /**
@@ -41,7 +41,7 @@ public class AgentApprovalRepositoryImpl implements AgentApprovalRepository {
 
   @Override
   public boolean insert(AgentApprovalDTO dto) {
-    AgentApprovalDO entity = converter.dtoToEntity(dto);
+    AgentApproval entity = converter.dtoToEntity(dto);
     return agentApprovalMapper.insert(entity) > 0;
   }
 
@@ -54,15 +54,15 @@ public class AgentApprovalRepositoryImpl implements AgentApprovalRepository {
   public List<AgentApprovalVO> findPending(String status) {
     return converter.agentApprovalListToVO(
         agentApprovalMapper.selectList(
-            new LambdaQueryWrapper<AgentApprovalDO>()
-                .eq(AgentApprovalDO::getStatus, status)
-                .orderByDesc(AgentApprovalDO::getCreatedAt)));
+            new LambdaQueryWrapper<AgentApproval>()
+                .eq(AgentApproval::getStatus, status)
+                .orderByDesc(AgentApproval::getCreatedAt)));
   }
 
   @Override
   public boolean updateStatus(
       String id, String status, String approver, String comment, LocalDateTime resolvedAt) {
-    AgentApprovalDO update = AgentApprovalDO.builder()
+    AgentApproval update = AgentApproval.builder()
         .id(id)
         .status(status)
         .approver(approver)
@@ -75,11 +75,11 @@ public class AgentApprovalRepositoryImpl implements AgentApprovalRepository {
   @Override
   public int expirePendingBefore(
       String status, LocalDateTime cutoff, String expiredStatus, LocalDateTime now) {
-    LambdaUpdateWrapper<AgentApprovalDO> wrapper = new LambdaUpdateWrapper<AgentApprovalDO>()
-        .eq(AgentApprovalDO::getStatus, status)
-        .lt(AgentApprovalDO::getCreatedAt, cutoff)
-        .set(AgentApprovalDO::getStatus, expiredStatus)
-        .set(AgentApprovalDO::getResolvedAt, now);
+    LambdaUpdateWrapper<AgentApproval> wrapper = new LambdaUpdateWrapper<AgentApproval>()
+        .eq(AgentApproval::getStatus, status)
+        .lt(AgentApproval::getCreatedAt, cutoff)
+        .set(AgentApproval::getStatus, expiredStatus)
+        .set(AgentApproval::getResolvedAt, now);
     agentApprovalMapper.update(null, wrapper);
     return wrapper.getEntity() != null ? 1 : 0;
   }
