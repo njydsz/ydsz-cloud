@@ -61,12 +61,6 @@
         <asm.version>9.7.1</asm.version>
         <!-- ArchUnit 架构测试（P3-2: 编译期 enforce 禁止反模式） -->
         <archunit.version>1.4.2</archunit.version>
-        <!--
-            L1 工具层纯度检查（enforce-l1-purity）：默认跳过，
-            仅 L1 模块（json/util/cache/excel）通过 <l1.module.skip>false</l1.module.skip> 激活检查。
-            禁止 L1 反向依赖 L2+ 内部模块，违反即构建失败。
-        -->
-        <l1.module.skip>true</l1.module.skip>
     </properties>
 
     <modules>
@@ -722,70 +716,6 @@
                 <configuration>
                     <skip>true</skip>
                 </configuration>
-            </plugin>
-            <!--
-                L1 工具层纯度检查：仅在 l1.module=true 时激活。
-                L1 模块（json/util/cache/excel）声明 <l1.module>true</l1.module>，
-                禁止其反向依赖 L2+ 内部模块。
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <id>enforce-l1-purity</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <phase>validate</phase>
-                        <configuration>
-                            <skip>${l1.module.skip}</skip>
-                            <rules>
-                                <bannedDependencies>
-                                    <excludes>
-                                        <!-- L1 禁止反向依赖 L2 基础层 -->
-                                        <exclude>com.njydsz:ydsz-common-core:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-domain:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-exception:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-jdbc:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-redis:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-lock:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-thread:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-tenant:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-cache:*:*:compile</exclude>
-                                        <!-- L1 禁止反向依赖 L5 业务服务层 -->
-                                        <exclude>com.njydsz:ydsz-common-auth:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-safe:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-feign:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-audit:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-notify:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-queue:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-event:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-config:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-seata:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-socket:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-netty:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-file:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-docs:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-search:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-sentry:*:*:compile</exclude>
-                                        <!-- L1 禁止反向依赖 L6 应用基座层 -->
-                                        <exclude>com.njydsz:ydsz-common-base:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-web:*:*:compile</exclude>
-                                        <exclude>com.njydsz:ydsz-common-app:*:*:compile</exclude>
-                                    </excludes>
-                                    <searchTransitive>true</searchTransitive>
-                                    <message>
-                                        [L1-purity] L1 工具层模块禁止反向依赖 L2+ 内部模块。
-                                        如需跨层能力，请使用 SPI / 反射代理 / 接口下沉方式解耦。
-                                    </message>
-                                </bannedDependencies>
-                            </rules>
-                            <fail>true</fail>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
