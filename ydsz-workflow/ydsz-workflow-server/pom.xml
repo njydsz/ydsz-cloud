@@ -131,9 +131,5 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-infra</artifactId>
-        </dependency>
     </dependencies>
 </project>

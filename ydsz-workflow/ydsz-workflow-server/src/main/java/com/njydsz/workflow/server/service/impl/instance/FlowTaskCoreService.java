@@ -136,6 +136,9 @@ public class FlowTaskCoreService {
   /** 指标类型：实例已驳回 */
   private static final String METRIC_INSTANCE_REJECTED = "rejected";
 
+  /** 审计类型：任务 */
+  private static final String AUDIT_TYPE_TASK = "TASK";
+
   // ============================== 通过 / 驳回所需依赖 ==============================
 
   /** 运行时任务仓储，查询/更新任务状态 */
