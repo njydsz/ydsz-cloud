@@ -3,6 +3,8 @@ package com.njydsz.workflow.server.service.impl.strategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.infra.entity.FlowRunTask;
@@ -33,8 +35,10 @@ public class OrCountersignStrategy implements CountersignStrategy {
 
   @Override
   public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
-    // 完成 + 归档
-    archiveService.completeAndArchive(task, dto.getComment());
+    // 完成 + 归档（P2-1: 支持穿越时空补录审批）
+    LocalDateTime effectiveTime =
+        Boolean.TRUE.equals(dto.getBackdated()) ? dto.getEffectiveTime() : null;
+    archiveService.completeAndArchive(task, dto.getComment(), effectiveTime);
   }
 
   @Override

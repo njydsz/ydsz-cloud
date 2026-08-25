@@ -31,7 +31,23 @@ public enum FlowAssigneeType {
   /** P2-38: 发起人自选审批人：assignee_id = 流程变量名（如 self_select:approvers） */
   SELF_SELECT("发起人自选"),
   /** P2-39: 多级上级：assignee_id = 级数（如 multi_leader:3 表示连续 3 级上级） */
-  MULTI_LEADER("多级上级");
+  MULTI_LEADER("多级上级"),
+  /**
+   * P2-2: 分组抢办（对标 flowlong 分组策略）。
+   *
+   * <p>assignee_id = 分组编码（如 team_code）。系统查询该分组的成员列表，
+   * 创建任务后<b>第一个签收</b>的办理人获得处理权，其他成员的任务自动取消。
+   * 适用于"客服组接工单"、"抢单"等场景。
+   */
+  GROUP_CLAIM("分组抢办"),
+  /**
+   * P2-2: 分组全办（对标 flowlong 分组策略）。
+   *
+   * <p>assignee_id = 分组编码（如 team_code）。系统查询该分组的成员列表，
+   * <b>每位成员</b>都会收到待办，默认使用 PARALLEL 会签（全部通过才推进）。
+   * 可通过 {@code performType} 指定其他会签模式。
+   */
+  GROUP_ALL("分组全办");
 
   /** 设计器显示名称 */
   private final String desc;

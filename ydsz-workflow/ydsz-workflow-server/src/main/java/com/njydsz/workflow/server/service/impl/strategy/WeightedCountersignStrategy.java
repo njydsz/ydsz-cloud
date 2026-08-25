@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.strategy;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +89,10 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
           .params(task.getId())
           .build();
     }
-    archiveService.completeAndArchive(task, dto.getComment());
+    // P2-1: 支持穿越时空补录审批
+    LocalDateTime effectiveTime =
+        Boolean.TRUE.equals(dto.getBackdated()) ? dto.getEffectiveTime() : null;
+    archiveService.completeAndArchive(task, dto.getComment(), effectiveTime);
   }
 
   @Override

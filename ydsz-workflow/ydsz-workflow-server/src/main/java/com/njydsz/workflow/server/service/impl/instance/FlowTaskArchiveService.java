@@ -48,13 +48,29 @@ public class FlowTaskArchiveService {
    * @param comment 审批意见
    */
   public void completeAndArchive(FlowRunTask task, String comment) {
-    LocalDateTime now = LocalDateTime.now();
+    completeAndArchive(task, comment, null);
+  }
+
+  /**
+   * 完成任务 + 归档到历史表 + 取消边界事件订阅（支持补录审批）。
+   *
+   * <p>当 {@code effectiveTime} 非空时，使用补录时间作为 {@code finishAt}（穿越时空/补录审批）， 否则使用当前系统时间。
+   *
+   * @param task          任务（会被原地修改状态/时间/时长）
+   * @param comment       审批意见
+   * @param effectiveTime 补录生效时间，{@code null} 表示即时生效
+   */
+  public void completeAndArchive(FlowRunTask task, String comment, LocalDateTime effectiveTime) {
+    LocalDateTime finishTime = effectiveTime != null ? effectiveTime : LocalDateTime.now();
     Long durationMs =
-        task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), now).toMillis();
+        task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), finishTime).toMillis();
     task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
     task.setComment(comment);
-    task.setFinishAt(now);
+    task.setFinishAt(finishTime);
     task.setDurationMs(durationMs);
+    if (effectiveTime != null) {
+      task.setEffectiveTime(effectiveTime);
+    }
     taskRepository.update(converter.entityToVO(task));
     archiveToHistory(task, FlowTaskStatus.COMPLETED);
     // P0-1: 任务完成后取消关联的边界事件订阅
@@ -100,6 +116,8 @@ public class FlowTaskArchiveService {
     his.setClaimAt(src.getClaimAt());
     his.setFinishAt(src.getFinishAt());
     his.setDurationMs(src.getDurationMs());
+    // P2-1: 穿越时空（补录审批）— 复制生效时间到历史表
+    his.setEffectiveTime(src.getEffectiveTime());
     his.setTenantId(src.getTenantId());
     his.setProviderTraceId(src.getProviderTraceId());
     // GAP-P2-10: 归档保留 iter_var，FOREACH 任务审批历史可追溯
