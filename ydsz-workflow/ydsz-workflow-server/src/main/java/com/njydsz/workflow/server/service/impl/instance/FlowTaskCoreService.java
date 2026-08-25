@@ -110,6 +110,32 @@ public class FlowTaskCoreService {
   /** 超时 / 挂起 / 激活 / 取消服务（超时 / 挂起 / 激活 / 取消逻辑委托） */
   @Lazy private final FlowTaskTimeoutService flowTaskTimeoutService;
 
+  // ============================== 审计和指标类型常量 ==============================
+
+  /** 审计类型：通过 */
+  private static final String AUDIT_TYPE_PASS = "PASS";
+
+  /** 审计类型：驳回 */
+  private static final String AUDIT_TYPE_REJECT = "REJECT";
+
+  /** 审计类型：委派回归 */
+  private static final String AUDIT_TYPE_DELEGATE_RETURN = "DELEGATE_RETURN";
+
+  /** 指标类型：已通过 */
+  private static final String METRIC_TASK_PASSED = "passed";
+
+  /** 指标类型：已驳回 */
+  private static final String METRIC_TASK_REJECTED = "rejected";
+
+  /** 指标类型：已通过（记录耗时） */
+  private static final String METRIC_TASK_STATUS_PASSED = "PASSED";
+
+  /** 指标类型：已驳回（记录耗时） */
+  private static final String METRIC_TASK_STATUS_REJECTED = "REJECTED";
+
+  /** 指标类型：实例已驳回 */
+  private static final String METRIC_INSTANCE_REJECTED = "rejected";
+
   // ============================== 通过 / 驳回所需依赖 ==============================
 
   /** 运行时任务仓储，查询/更新任务状态 */
@@ -286,7 +312,7 @@ public class FlowTaskCoreService {
     instanceService.generateTasksForNodes(instance.getId(), rejectTargets, mergedVars);
     instanceRepository.updateStatus(instance.getId(), instance.getFlowStatus(),
         rejectTargets.get(0).getNodeCode(), rejectTargets.get(0).getNodeName(), null, null);
-    support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+    support.audit(task, AUDIT_TYPE_REJECT, dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     log.info("[Flow] 退回任务: taskId={} targets={} multi={}", task.getId(),
         rejectTargets.stream().map(FlowNodeVO::getNodeCode).toList(),
         dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1);
@@ -509,7 +535,7 @@ public class FlowTaskCoreService {
         null, null, now, instance.getStartAt() == null ? null : Duration.between(instance.getStartAt(), now).toMillis());
     taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
     notificationService.fireInstanceRejected(instance.getId(), dto.getComment());
-    support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+    support.audit(task, AUDIT_TYPE_REJECT, dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     if (flowMetrics != null) {
       flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "rejected");
       flowMetrics.recordTaskDuration(converter.entityToVO(task), "REJECTED");
