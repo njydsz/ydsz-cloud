@@ -13,7 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.literule.domain.enums.RuleStatusEnum;
 
 /**
- * LiteRule 规则定义 DO
+ * LiteRule 规则定义
  *
  * <p>映射 ydsz_rule_def 表，存储可配置规则的全部元信息。 封装规则生命周期状态流转行为，避免逻辑散落在 Service 层。
  *
@@ -32,8 +32,9 @@ import com.njydsz.literule.domain.enums.RuleStatusEnum;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuppressWarnings("unchecked")
 @TableName("ydsz_rule_def")
-public class RuleDefinitionDO extends MpBaseEntity<String> {
+public class RuleDefinition extends MpBaseEntity<String> {
 
   /** 规则编码，业务唯一 */
   private String ruleCode;
