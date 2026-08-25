@@ -119,7 +119,6 @@ public final class BeanMapper {
    * @return 填充后的 Bean 实例
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked")
   public static <T> T toBeanInternal(Map<String, Object> map, Class<T> targetClass) {
     if (map == null) {
       throw new IllegalArgumentException("map cannot be null");
@@ -585,9 +584,12 @@ public final class BeanMapper {
     /**
      * 获取原始类型（擦除泛型后的 Class）。
      *
+     * <p>通过类型系统安全提取：若 type 本身是 Class 则直接返回；若为 ParameterizedType 则取其 rawType。
+     * 由于泛型擦除，运行时无法验证 T 与 rawType 的一致性，但逻辑上 type 来源保证了一致性。
+     *
      * @return 原始类型 Class
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // 泛型擦除导致无法在运行时验证 T 与 rawType 的一致性，逻辑上由 TypeReference 构造保证
     public Class<T> getRawType() {
       if (type instanceof Class<?> c) {
         return (Class<T>) c;
@@ -682,7 +684,7 @@ public final class BeanMapper {
    * @return 转换后的对象
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // 泛型擦除：convertListWithType/convertMapWithType 返回 List<Object>/Map<String,Object>，无法在编译期验证与 T 的一致性
   public static <T> T toBean(Object source, TypeReference<T> typeRef) {
     Objects.requireNonNull(typeRef, "typeRef must not be null");
     Type type = typeRef.getType();
@@ -710,7 +712,7 @@ public final class BeanMapper {
     // 非参数化类型，退化为 Class 版本（经 toBeanOrRecord 支持 Record 类型）
     if (type instanceof Class<?> clazz) {
       if (source instanceof Map<?, ?> rawMap) {
-        @SuppressWarnings("unchecked")
+        // clazz 已由 typeRef.getType() 确认为 Class<T>，此处强转安全
         Class<T> target = (Class<T>) clazz;
         return toBeanOrRecord(toStringObjectMap(rawMap), target);
       }

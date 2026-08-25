@@ -578,7 +578,6 @@ public class FlowDefinitionMigrationManager {
   }
 
   /** 构建版本差异结果 Map（包含 summary）。 */
-  @SuppressWarnings("unchecked")
   private Map<String, Object> buildDiffResult(Integer version1, Integer version2,
       Map<String, Object> nodeDiff, Map<String, Object> skipDiff) {
     Map<String, Object> result = new LinkedHashMap<>();
@@ -587,11 +586,11 @@ public class FlowDefinitionMigrationManager {
     result.put("nodeChanges", nodeDiff);
     result.put("skipChanges", skipDiff);
 
-    List<Map<String, Object>> addedNodes = (List<Map<String, Object>>) nodeDiff.get("added");
-    List<Map<String, Object>> removedNodes = (List<Map<String, Object>>) nodeDiff.get("removed");
-    List<Map<String, Object>> modifiedNodes = (List<Map<String, Object>>) nodeDiff.get("modified");
-    List<Map<String, Object>> addedSkips = (List<Map<String, Object>>) skipDiff.get("added");
-    List<Map<String, Object>> removedSkips = (List<Map<String, Object>>) skipDiff.get("removed");
+    List<Map<String, Object>> addedNodes = MapUtils.getListOfMaps(nodeDiff, "added");
+    List<Map<String, Object>> removedNodes = MapUtils.getListOfMaps(nodeDiff, "removed");
+    List<Map<String, Object>> modifiedNodes = MapUtils.getListOfMaps(nodeDiff, "modified");
+    List<Map<String, Object>> addedSkips = MapUtils.getListOfMaps(skipDiff, "added");
+    List<Map<String, Object>> removedSkips = MapUtils.getListOfMaps(skipDiff, "removed");
 
     Map<String, Object> summary = new LinkedHashMap<>();
     summary.put("totalNodeChanges",
@@ -612,14 +611,13 @@ public class FlowDefinitionMigrationManager {
    * @param nodeDiff 参数说明
    * @param skipDiff 参数说明
    */
-  @SuppressWarnings("unchecked")
   private void logDiffResult(String flowCode, Integer version1, Integer version2,
       Map<String, Object> nodeDiff, Map<String, Object> skipDiff) {
-    List<Map<String, Object>> addedNodes = (List<Map<String, Object>>) nodeDiff.get("added");
-    List<Map<String, Object>> removedNodes = (List<Map<String, Object>>) nodeDiff.get("removed");
-    List<Map<String, Object>> modifiedNodes = (List<Map<String, Object>>) nodeDiff.get("modified");
-    List<Map<String, Object>> addedSkips = (List<Map<String, Object>>) skipDiff.get("added");
-    List<Map<String, Object>> removedSkips = (List<Map<String, Object>>) skipDiff.get("removed");
+    List<Map<String, Object>> addedNodes = MapUtils.getListOfMaps(nodeDiff, "added");
+    List<Map<String, Object>> removedNodes = MapUtils.getListOfMaps(nodeDiff, "removed");
+    List<Map<String, Object>> modifiedNodes = MapUtils.getListOfMaps(nodeDiff, "modified");
+    List<Map<String, Object>> addedSkips = MapUtils.getListOfMaps(skipDiff, "added");
+    List<Map<String, Object>> removedSkips = MapUtils.getListOfMaps(skipDiff, "removed");
 
     log.info(
         "[Flow] 版本差异对比: flowCode={} v1={} v2={} "

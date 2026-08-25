@@ -46,7 +46,6 @@ public final class FlowListenerConfigReader {
    * @param nodeExt 节点 ext JSON 字符串
    * @return 监听器配置列表，无配置时返回空列表
    */
-  @SuppressWarnings("unchecked")
   public static List<FlowListenerConfig> readListeners(String nodeExt) {
     if (!StringUtils.hasText(nodeExt)) {
       return Collections.emptyList();

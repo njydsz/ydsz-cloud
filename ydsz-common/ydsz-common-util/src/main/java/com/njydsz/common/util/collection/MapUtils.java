@@ -293,7 +293,6 @@ public final class MapUtils {
    * @return 转换后的对象
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked")
   public static <T> T toBean(Object source, BeanMapper.TypeReference<T> typeRef) {
     return BeanMapper.toBean(source, typeRef);
   }
