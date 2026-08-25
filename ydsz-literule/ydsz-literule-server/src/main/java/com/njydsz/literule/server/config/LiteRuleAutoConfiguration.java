@@ -348,7 +348,6 @@ public class LiteRuleAutoConfiguration {
    * @return 守护线程池
    * @since 1.0.0
    */
-  @SuppressWarnings("PMD.AvoidThreadGroup")
   private static ExecutorService createFallbackTimeoutExecutor(int poolSize) {
     // 使用 common-thread ExecutorUtils 创建超时线程池（符合云顶规范 15.4）
     return ExecutorUtils.builder()

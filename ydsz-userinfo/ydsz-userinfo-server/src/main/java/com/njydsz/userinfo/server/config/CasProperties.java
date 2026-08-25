@@ -33,7 +33,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.cas")
-@SuppressWarnings("checkstyle:MagicNumber")
 public class CasProperties {
   /** TGT 默认有效期：8 小时 */
   private static final Duration DEFAULT_TGT_TTL = Duration.ofHours(8);

@@ -54,7 +54,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.sso")
-@SuppressWarnings("checkstyle:MagicNumber")
 public class CrossDomainSsoProperties {
 
   /** 默认cookieMaxAge值（可被配置文件覆盖） */

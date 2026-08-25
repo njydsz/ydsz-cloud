@@ -49,12 +49,12 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
  * @author ydsz-team
  * @since 1.0.0
  */
-@SuppressWarnings("deprecation")
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_user_account")
+@SuppressWarnings("unchecked")
 public class UserAccount extends MpBaseEntity<String> {
 
   /** 登录用户名（全局唯一） */

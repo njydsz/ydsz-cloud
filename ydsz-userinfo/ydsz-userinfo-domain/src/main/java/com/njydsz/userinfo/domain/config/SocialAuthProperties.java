@@ -41,7 +41,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.social")
-@SuppressWarnings("checkstyle:MagicNumber")
 public class SocialAuthProperties {
 
   /** 社交认证全局开关（默认 false，需显式开启）。 */

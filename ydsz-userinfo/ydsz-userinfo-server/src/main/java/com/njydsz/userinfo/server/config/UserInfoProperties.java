@@ -54,7 +54,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo")
-@SuppressWarnings("checkstyle:MagicNumber")
 public class UserInfoProperties {
 
   /** 默认riskIpWeight值（可被配置文件覆盖） */

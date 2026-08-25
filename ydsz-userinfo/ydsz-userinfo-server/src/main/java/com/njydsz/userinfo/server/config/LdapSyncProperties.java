@@ -41,7 +41,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.ldap.sync")
-@SuppressWarnings("checkstyle:MagicNumber")
 public class LdapSyncProperties {
 
   /** 默认 cron 表达式：每天凌晨 2 点执行。 */

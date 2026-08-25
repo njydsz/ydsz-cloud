@@ -23,7 +23,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.auth.ldap")
-@SuppressWarnings("checkstyle:MagicNumber")
 public class LdapProperties {
 
   /** 默认readTimeoutMs值（可被配置文件覆盖） */
