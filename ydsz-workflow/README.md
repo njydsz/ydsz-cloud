@@ -111,7 +111,7 @@ DDL 由各部署环境统一维护，不在模块内。
 |---|---|
 | ✅ 支持 | PC Web（`ydsz-frontend`，Vue 3.5 + Element Plus，桌面浏览器 ≥ 1280px） |
 | ❌ 不支持 | 原生 iOS/Android App、uni-app / Taro 移动端、独立的移动 H5 子应用、PWA 移动模式 |
-| 🔁 移动端审批替代方案 | ① 对接企业微信 / 钉钉 / 飞书（签名工具位于 `ydsz-common-notify` 模块）；② 独立「轻审批 H5」应用 |
+| 🔁 移动端审批替代方案 | ① 对接企业微信 / IM 平台（签名工具位于 `ydsz-common-notify` 模块）；② 独立「轻审批 H5」应用 |
 
 **为什么不做移动端适配**：
 1. 流程设计器（bpmn-js）强依赖桌面交互
@@ -327,5 +327,5 @@ mvn -pl ydsz-workflow -am spring-boot:run
 
 ---
 
-> **本模块是 PC 端专属，移动端审批请走 IM 通道（企业微信 / 钉钉 / 飞书）。**
+> **本模块是 PC 端专属，移动端审批请走 IM 通道。**
 > 任何 PR 引入移动端适配代码都会被立即驳回。

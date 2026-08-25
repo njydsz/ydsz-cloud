@@ -58,7 +58,7 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 | L5 | [common-safe](ydsz-common-safe/README.md) | @SensitiveData 脱敏（fail-closed）、@Sensitive、@RateLimit、CSRF、SQL 注入防护、安全事件告警、API 签名（query 入签）、SSRF 防护 |
 | L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断（参数可配置）、动态客户端 |
 | L5 | [common-audit](ydsz-common-audit/README.md) | @OperationLog + @Audit、异步队列批量落库、时间分表（日/月/年）、磁盘兜底 |
-| L5 | [common-notify](ydsz-common-notify/README.md) | 6 种通知渠道（邮件/短信/企微/钉钉/飞书/站内）、SpEL 模板引擎、重试队列、DKIM 签名 |
+| L5 | [common-notify](ydsz-common-notify/README.md) | 6 种通知渠道（邮件/短信/企微/IM/站内）、SpEL 模板引擎、重试队列、DKIM 签名 |
 | L5 | [common-queue](ydsz-common-queue/README.md) | 6 种 MQ（Redis Stream/List/PubSub + Kafka/RocketMQ/RabbitMQ）、死信队列、消息轨迹、去重 |
 | L5 | [common-event](ydsz-common-event/README.md) | 事务性 Outbox 模式、可靠事件投递、Outbox 处理器、健康检查 |
 | L5 | [common-config](ydsz-common-config/README.md) | 配置变更桥接（底层加解密由 jasypt-spring-boot-starter 承担）、配置健康检查 |
@@ -205,7 +205,7 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-seata | `DistributedTransactionManager` | 分布式事务管理器（AT/TCC/Local） | `@ConditionalOnMissingBean` |
 | common-seata | `TccAction<T>` **SPI** | TCC Try/Confirm/Cancel 动作 | `@Component` |
 | common-sentry | `MetricsCollector` **SPI** | 指标采集（Micrometer/其他） | `@ConditionalOnMissingBean` |
-| common-sentry | `AlertPublisher` **SPI** | 告警发布（PagerDuty/钉钉/企微） | `@ConditionalOnMissingBean` |
+| common-sentry | `AlertPublisher` **SPI** | 告警发布（PagerDuty/企微/IM） | `@ConditionalOnMissingBean` |
 | common-sentry | `LogPublisher` **SPI** | 日志发布（ELK/Loki/Kafka） | `@ConditionalOnMissingBean` |
 | common-sentry | `SlaCollector` **SPI** | SLA 指标计算 | `@ConditionalOnMissingBean` |
 | common-sentry | `TraceContext` **SPI** | 链路追踪（SkyWalking/OpenTelemetry） | `@ConditionalOnMissingBean` |
