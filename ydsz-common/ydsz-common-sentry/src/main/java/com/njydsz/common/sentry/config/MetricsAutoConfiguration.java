@@ -1,8 +1,6 @@
 package com.njydsz.common.sentry.config;
 
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
