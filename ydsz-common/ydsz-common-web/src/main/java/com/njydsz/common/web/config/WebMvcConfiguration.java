@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
-import com.njydsz.common.base.config.BaseAutoConfiguration;
+import com.njydsz.common.base.config.YdszAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
@@ -48,7 +48,7 @@ import com.njydsz.common.web.metrics.WebMetrics;
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnPlatform(PlatformMode.WEB)
-@AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})
+@AutoConfigureBefore({YdszAutoConfiguration.class, SafeConfiguration.class})
 @EnableConfigurationProperties({WebContentCacheProperties.class})
 public class WebMvcConfiguration extends BaseMvcConfiguration {
 

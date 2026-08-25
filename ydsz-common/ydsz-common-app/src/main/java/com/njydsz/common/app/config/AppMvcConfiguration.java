@@ -29,7 +29,7 @@ import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.handler.AbstractAuthHandler;
 import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.metrics.AuthMetrics;
-import com.njydsz.common.base.config.BaseAutoConfiguration;
+import com.njydsz.common.base.config.YdszAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
@@ -57,7 +57,7 @@ import com.njydsz.common.safe.config.SafeConfiguration;
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)
-@AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})
+@AutoConfigureBefore({YdszAutoConfiguration.class, SafeConfiguration.class})
 @EnableConfigurationProperties({
   AppCorsProperties.class,
   AppTraceProperties.class,

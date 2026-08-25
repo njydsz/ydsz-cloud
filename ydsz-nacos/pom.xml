@@ -13,6 +13,8 @@
     <properties>
         <!--nacos-->
         <nacos.version>2.3.2-OEM</nacos.version>
+        <!-- Spring Boot 版本（与根 pom 保持一致，供 dependencyManagement import 解析） -->
+        <spring-boot.version>4.1.0</spring-boot.version>
     </properties>
 
     <dependencies>
