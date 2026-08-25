@@ -118,7 +118,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         taskMapper.selectList(
             new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getAssigneeId, assigneeId)
-                .eq(FlowRunTaskDO::getTaskStatus, "PENDING")
+                .eq(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING)
                 .eq(FlowRunTaskDO::getDeleted, 0)
                 .orderByDesc(FlowRunTaskDO::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
@@ -129,7 +129,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return taskMapper.selectCount(
         new LambdaQueryWrapper<FlowRunTaskDO>()
             .eq(FlowRunTaskDO::getAssigneeId, assigneeId)
-            .eq(FlowRunTaskDO::getTaskStatus, "PENDING")
+            .eq(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING)
             .eq(FlowRunTaskDO::getDeleted, 0));
   }
 
