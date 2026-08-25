@@ -172,6 +172,15 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   /** SLA 配置键：超时时间（分钟） */
   private static final String SLA_CONFIG_KEY_TIMEOUT_MINUTES = "timeoutMinutes";
 
+  /** SLA 配置键：最大提醒次数 */
+  private static final String SLA_CONFIG_KEY_MAX_URGES = "maxUrges";
+
+  /** SLA 配置键：提醒间隔（分钟） */
+  private static final String SLA_CONFIG_KEY_URGE_INTERVAL_MINUTES = "urgeIntervalMinutes";
+
+  /** SLA 配置键：自动审批意见 */
+  private static final String SLA_CONFIG_KEY_AUTO_COMMENT = "autoComment";
+
   /**
    * 解析节点的 SLA 配置 JSON 字符串
    *
@@ -221,7 +230,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     if (config.isEmpty()) {
       return; // 未配置 SLA
     }
-    Integer timeoutMinutes = readInt(config, "timeoutMinutes", null);
+    Integer timeoutMinutes = readInt(config, SLA_CONFIG_KEY_TIMEOUT_MINUTES, null);
     if (timeoutMinutes == null || timeoutMinutes <= 0) {
       return; // 必须配置 timeoutMinutes 才算开启 SLA
     }
@@ -231,7 +240,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             : task.getCreatedAt().plusMinutes(timeoutMinutes);
     task.setDueAt(dueAt);
     // 记录 slaAction 预期值（仅用于审计，不强制）
-    String actionStr = (String) config.get("action");
+    String actionStr = (String) config.get(SLA_CONFIG_KEY_ACTION);
     if (StringUtils.hasText(actionStr)) {
       try {
         FlowSlaAction action = FlowSlaAction.valueOf(actionStr.toUpperCase());
@@ -245,7 +254,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         task.getId(),
         node.getNodeCode(),
         timeoutMinutes,
-        config.get("action"),
+        config.get(SLA_CONFIG_KEY_ACTION),
         dueAt);
   }
 
@@ -358,7 +367,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
           "[FlowSla] 任务已超期但无 SLA 配置: taskId={} nodeCode={}", fresh.getId(), fresh.getNodeCode());
       return false;
     }
-    String actionStr = ((String) config.getOrDefault(SLA_CONFIG_KEY_ACTION, "REMIND")).toUpperCase();
+    String actionStr = ((String) config.getOrDefault(SLA_CONFIG_KEY_ACTION, FlowSlaAction.REMIND.name())).toUpperCase();
     FlowSlaAction action;
     try {
       action = FlowSlaAction.valueOf(actionStr);
@@ -366,8 +375,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       log.warn("[FlowSla] 未知 action: taskId={} action={}", fresh.getId(), actionStr);
       return false;
     }
-    int maxUrges = readInt(config, "maxUrges", DEFAULT_MAX_REMINDERS);
-    int urgeIntervalMin = readInt(config, "urgeIntervalMinutes", DEFAULT_REMINDER_INTERVAL_MINUTES);
+    int maxUrges = readInt(config, SLA_CONFIG_KEY_MAX_URGES, DEFAULT_MAX_REMINDERS);
+    int urgeIntervalMin = readInt(config, SLA_CONFIG_KEY_URGE_INTERVAL_MINUTES, DEFAULT_REMINDER_INTERVAL_MINUTES);
     int currentUrges = fresh.getUrgeCount() == null ? 0 : fresh.getUrgeCount();
     LocalDateTime lastUrgedAt = fresh.getLastUrgedAt();
     // 4. 距离最后一次提醒未到间隔，不重复提醒
@@ -493,7 +502,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    */
   private boolean doAutoPass(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
-      String comment = (String) config.getOrDefault("autoComment", AUTO_PASS_DEFAULT_COMMENT);
+      String comment = (String) config.getOrDefault(SLA_CONFIG_KEY_AUTO_COMMENT, AUTO_PASS_DEFAULT_COMMENT);
       FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
       dto.setTaskId(task.getId());
       dto.setUserId(SYSTEM_USER_ID);
@@ -527,7 +536,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    */
   private boolean doAutoReject(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
-      String comment = (String) config.getOrDefault("autoComment", AUTO_REJECT_DEFAULT_COMMENT);
+      String comment = (String) config.getOrDefault(SLA_CONFIG_KEY_AUTO_COMMENT, AUTO_REJECT_DEFAULT_COMMENT);
       FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
       dto.setTaskId(task.getId());
       dto.setUserId(SYSTEM_USER_ID);
@@ -588,7 +597,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
           afterTransfer.setUrgeCount(0);
           afterTransfer.setLastUrgedAt(null);
           // 给新任务一个新的 dueAt（基于当前时间 + timeoutMinutes）
-          Integer timeoutMinutes = readInt(config, "timeoutMinutes", DEFAULT_TIMEOUT_MINUTES);
+          Integer timeoutMinutes = readInt(config, SLA_CONFIG_KEY_TIMEOUT_MINUTES, DEFAULT_TIMEOUT_MINUTES);
           afterTransfer.setDueAt(now.plusMinutes(timeoutMinutes));
           taskRepository.update(converter.entityToVO(afterTransfer));
         }
