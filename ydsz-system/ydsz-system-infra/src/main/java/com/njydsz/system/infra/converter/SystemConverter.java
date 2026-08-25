@@ -242,6 +242,9 @@ public interface SystemConverter {
    * @param entity 字典项实体
    * @return 字典项 VO
    */
+  @Mapping(target = "children", ignore = true)
+  @Mapping(target = "level", ignore = true)
+  @Mapping(target = "path", ignore = true)
   DictItemVO entityToVO(DictItemDO entity);
 
   /**
@@ -394,6 +397,8 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "effectiveDate", ignore = true)
   EntityVersionDO dtoToEntity(EntityVersionDTO dto);
 
   // ===== Tenant =====
@@ -537,6 +542,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "status", ignore = true)
   TenantPlanMenuDO dtoToEntity(String planId, String menuId);
 
   // ===== Variable =====
@@ -547,6 +553,7 @@ public interface SystemConverter {
    * @param entity 系统变量实体
    * @return 系统变量 VO
    */
+  @Mapping(target = "status", ignore = true)
   VariableVO entityToVO(VariableDO entity);
 
   /**

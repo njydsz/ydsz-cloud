@@ -58,6 +58,8 @@ public enum WorkflowExceptionCode implements ExceptionCode {
   TASK_ALREADY_HANDLED("B72003", "workflow.task.already.handled"),
   /** Task approver duplicate */
   TASK_APPROVER_DUPLICATE("B72004", "workflow.task.approver.duplicate"),
+  /** Illegal state transition */
+  ILLEGAL_STATE_TRANSITION("B72005", "workflow.task.illegal.state.transition"),
 
   // ==================== B73001-B73099 委托授权 ====================
   /** Delegate auth not found */
