@@ -1,5 +1,7 @@
 package com.njydsz.common.excel.exception;
 
+import com.njydsz.common.util.message.MessageUtils;
+
 /**
  * Excel 读取异常类
  *
@@ -98,8 +100,10 @@ public class ExcelReadException extends ExcelException {
    * @return 返回值说明
    */
   public static ExcelReadException fileNotFound(String filePath) {
+    String message = MessageUtils.getMessage(
+        "excel.read.fileNotFound.detail", new Object[] {}, "Excel文件不存在");
     ExcelReadException ex =
-        new ExcelReadException(ExcelExceptionCode.READ_FILE_NOT_FOUND, "Excel文件不存在");
+        new ExcelReadException(ExcelExceptionCode.READ_FILE_NOT_FOUND, message);
     ex.setContext(new Object[] {filePath});
     return ex;
   }
@@ -112,8 +116,10 @@ public class ExcelReadException extends ExcelException {
    * @return 返回值说明
    */
   public static ExcelReadException invalidFormat(String filePath, String reason) {
+    String message = MessageUtils.getMessage(
+        "excel.read.invalidFormat.detail", new Object[] {reason}, "Excel文件格式无效: " + reason);
     ExcelReadException ex =
-        new ExcelReadException(ExcelExceptionCode.READ_INVALID_FORMAT, "Excel文件格式无效: " + reason);
+        new ExcelReadException(ExcelExceptionCode.READ_INVALID_FORMAT, message);
     ex.setContext(new Object[] {filePath, reason});
     return ex;
   }
@@ -130,13 +136,14 @@ public class ExcelReadException extends ExcelException {
    */
   public static ExcelReadException conversionFailed(
       int row, int col, Object rawValue, Class<?> targetType, Throwable cause) {
+    String message = MessageUtils.getMessage(
+        "excel.read.conversionFailed.detail",
+        new Object[] {row, col, rawValue, targetType.getSimpleName()},
+        String.format(
+            "数据类型转换失败: 行=%d, 列=%d, 值=%s, 目标类型=%s",
+            row, col, rawValue, targetType.getSimpleName()));
     ExcelReadException ex =
-        new ExcelReadException(
-            ExcelExceptionCode.READ_CONVERSION_FAILED,
-            String.format(
-                "数据类型转换失败: 行=%d, 列=%d, 值=%s, 目标类型=%s",
-                row, col, rawValue, targetType.getSimpleName()),
-            cause);
+        new ExcelReadException(ExcelExceptionCode.READ_CONVERSION_FAILED, message, cause);
     ex.setRowNumber(row);
     ex.setColumnNumber(col);
     ex.setRawCellValue(rawValue);
@@ -154,10 +161,12 @@ public class ExcelReadException extends ExcelException {
    */
   public static ExcelReadException validationFailed(
       int row, String fieldName, Object value, String reason) {
+    String message = MessageUtils.getMessage(
+        "excel.read.validationFailed.detail",
+        new Object[] {row, fieldName, value, reason},
+        String.format("数据验证失败: 行=%d, 字段=%s, 值=%s, 原因=%s", row, fieldName, value, reason));
     ExcelReadException ex =
-        new ExcelReadException(
-            ExcelExceptionCode.READ_VALIDATION_FAILED,
-            String.format("数据验证失败: 行=%d, 字段=%s, 值=%s, 原因=%s", row, fieldName, value, reason));
+        new ExcelReadException(ExcelExceptionCode.READ_VALIDATION_FAILED, message);
     ex.setRowNumber(row);
     return ex;
   }
@@ -170,9 +179,11 @@ public class ExcelReadException extends ExcelException {
    * @return 文件过大异常实例
    */
   public static ExcelReadException fileTooLarge(long actualSizeMB, int maxSizeMB) {
-    return new ExcelReadException(
-        ExcelExceptionCode.READ_FILE_TOO_LARGE,
+    String message = MessageUtils.getMessage(
+        "excel.read.fileTooLarge.detail",
+        new Object[] {actualSizeMB, maxSizeMB},
         String.format("Excel文件过大: %dMB, 超过最大限制 %dMB", actualSizeMB, maxSizeMB));
+    return new ExcelReadException(ExcelExceptionCode.READ_FILE_TOO_LARGE, message);
   }
 
   /**
@@ -183,9 +194,12 @@ public class ExcelReadException extends ExcelException {
    * @return IO 错误异常实例
    */
   public static ExcelReadException ioError(int row, Throwable cause) {
+    String message = MessageUtils.getMessage(
+        "excel.read.ioError.detail",
+        new Object[] {row},
+        String.format("Excel读取IO异常: 当前行=%d", row));
     ExcelReadException ex =
-        new ExcelReadException(
-            ExcelExceptionCode.READ_IO_ERROR, String.format("Excel读取IO异常: 当前行=%d", row), cause);
+        new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, message, cause);
     ex.setRowNumber(row);
     return ex;
   }
@@ -197,8 +211,11 @@ public class ExcelReadException extends ExcelException {
    * @return 内存溢出异常实例
    */
   public static ExcelReadException outOfMemory(Throwable cause) {
-    return new ExcelReadException(
-        ExcelExceptionCode.READ_OUT_OF_MEMORY, "Excel文件过大导致内存溢出, 请限制读取行数或分批处理", cause);
+    String message = MessageUtils.getMessage(
+        "excel.read.outOfMemory.detail",
+        new Object[] {},
+        "Excel文件过大导致内存溢出, 请限制读取行数或分批处理");
+    return new ExcelReadException(ExcelExceptionCode.READ_OUT_OF_MEMORY, message, cause);
   }
 
   @Override

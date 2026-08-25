@@ -83,6 +83,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- ydsz-common-util（MessageUtils i18n 支持） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Web（可选，Web 下载支持） -->
         <dependency>
             <groupId>org.springframework</groupId>

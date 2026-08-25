@@ -31,6 +31,12 @@
             <artifactId>ydsz-common-safe</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- ydsz-common-util（MessageUtils i18n 支持） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>

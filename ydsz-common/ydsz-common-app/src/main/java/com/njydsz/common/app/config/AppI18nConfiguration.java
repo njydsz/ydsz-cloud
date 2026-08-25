@@ -34,6 +34,6 @@ public class AppI18nConfiguration extends BaseI18nConfiguration {
    */
   @Override
   protected String[] getBasenames() {
-    return new String[] {"i18n/app-messages", "i18n/diff-messages", "i18n/file-messages"};
+    return new String[] {"i18n/app-messages", "i18n/diff-messages", "i18n/file-messages", "i18n/search-messages", "i18n/messages"};
   }
 }

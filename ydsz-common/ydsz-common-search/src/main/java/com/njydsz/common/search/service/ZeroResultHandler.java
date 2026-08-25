@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.config.SearchProperties;
+import com.njydsz.common.util.message.MessageUtils;
 
 /**
  * 零结果页体验优化处理器。
@@ -123,7 +124,10 @@ public class ZeroResultHandler {
       return null;
     }
 
-    return String.format("当前使用了 %d 个筛选条件，试试减少筛选条件搜索更多结果？", userFilterCount);
+    return MessageUtils.getMessage(
+        "search.zeroResult.filterSuggestion",
+        new Object[] {userFilterCount},
+        "当前使用了 " + userFilterCount + " 个筛选条件，试试减少筛选条件搜索更多结果？");
   }
 
   /**

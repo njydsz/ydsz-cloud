@@ -684,7 +684,9 @@ public final class BeanMapper {
    * @return 转换后的对象
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked") // 泛型擦除：convertListWithType/convertMapWithType 返回 List<Object>/Map<String,Object>，无法在编译期验证与 T 的一致性
+  // 泛型擦除：convertListWithType/convertMapWithType 返回 List<Object>/Map<String,Object>，
+  // 无法在编译期验证与 T 的一致性
+  @SuppressWarnings("unchecked")
   public static <T> T toBean(Object source, TypeReference<T> typeRef) {
     Objects.requireNonNull(typeRef, "typeRef must not be null");
     Type type = typeRef.getType();

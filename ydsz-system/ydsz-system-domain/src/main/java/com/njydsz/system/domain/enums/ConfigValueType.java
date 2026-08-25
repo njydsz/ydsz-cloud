@@ -2,6 +2,8 @@ package com.njydsz.system.domain.enums;
 
 import java.util.regex.Pattern;
 
+import com.njydsz.common.util.message.MessageUtils;
+
 /**
  * 配置值类型枚举
  *
@@ -103,7 +105,8 @@ public enum ConfigValueType {
     try {
       type = ConfigValueType.valueOf(valueType.toUpperCase());
     } catch (IllegalArgumentException e) {
-      return "未知的值类型: " + valueType;
+      return MessageUtils.getMessage("system.excel.unknownValueType",
+          new Object[] {valueType}, "未知的值类型: " + valueType);
     }
     return type.validateValue(value);
   }
@@ -116,9 +119,14 @@ public enum ConfigValueType {
    */
   private String validateValue(String value) {
     return switch (this) {
-      case STRING -> value.length() > MAX_STRING_LENGTH ? "字符串长度超过限制 " + MAX_STRING_LENGTH : null;
+      case STRING -> value.length() > MAX_STRING_LENGTH
+          ? MessageUtils.getMessage("system.excel.stringTooLong",
+              new Object[] {MAX_STRING_LENGTH}, "字符串长度超过限制 " + MAX_STRING_LENGTH)
+          : null;
       case NUMBER -> validateNumber(value);
-      case BOOLEAN -> BOOLEAN_PATTERN.matcher(value.trim()).matches() ? null : "布尔值必须是 true/false";
+      case BOOLEAN -> BOOLEAN_PATTERN.matcher(value.trim()).matches()
+          ? null
+          : MessageUtils.getMessage("system.excel.booleanInvalid", "布尔值必须是 true/false");
       case JSON -> validateJson(value);
     };
   }
@@ -129,10 +137,11 @@ public enum ConfigValueType {
     try {
       v = Double.parseDouble(value.trim());
     } catch (NumberFormatException e) {
-      return "数值格式非法";
+      return MessageUtils.getMessage("system.excel.numberFormat.invalid", "数值格式非法");
     }
     if (v < MIN_NUMBER || v > MAX_NUMBER) {
-      return "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
+      return MessageUtils.getMessage("system.excel.numberOutOfRange",
+          new Object[] {MIN_NUMBER, MAX_NUMBER}, "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]");
     }
     return null;
   }

@@ -15,6 +15,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -175,14 +176,15 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
    * @return 错误描述；通过返回 null
    */
   private String validateRequiredFields(ConfigExcelVO excelRow, int rowNum) {
+    String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
     if (excelRow.getConfigGroup() == null || excelRow.getConfigGroup().isBlank()) {
-      return "第 " + rowNum + " 行: 配置分组不能为空";
+      return rowPrefix + MessageUtils.getMessage("system.excel.configGroup.required", "配置分组不能为空");
     }
     if (excelRow.getConfigKey() == null || excelRow.getConfigKey().isBlank()) {
-      return "第 " + rowNum + " 行: 配置键不能为空";
+      return rowPrefix + MessageUtils.getMessage("system.excel.configKey.required", "配置键不能为空");
     }
     if (excelRow.getConfigValue() == null || excelRow.getConfigValue().isBlank()) {
-      return "第 " + rowNum + " 行: 配置值不能为空";
+      return rowPrefix + MessageUtils.getMessage("system.excel.configValue.required", "配置值不能为空");
     }
     return null;
   }

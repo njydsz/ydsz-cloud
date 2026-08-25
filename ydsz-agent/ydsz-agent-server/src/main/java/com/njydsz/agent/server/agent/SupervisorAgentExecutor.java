@@ -26,6 +26,7 @@ import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.message.MessageUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -632,19 +633,23 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   /** 汇总子任务结果生成最终回答 */
   private String synthesizeResults(String originalTask, List<String> results, String convId) {
     if (results.isEmpty()) {
-      return "抱歉，无法完成您的任务。";
+      return MessageUtils.getMessage("agent.supervisor.noResult", "抱歉，无法完成您的任务。");
     }
     if (results.size() == 1) {
       return results.get(0);
     }
     // 多任务结果拼接 + 最终总结
+    String header = MessageUtils.getMessage("agent.supervisor.multiTaskHeader", "以下是各子任务的执行结果：\n\n");
+    String taskPrefix = MessageUtils.getMessage("agent.supervisor.taskPrefix", "## 任务 ");
+    String footer = MessageUtils.getMessage("agent.supervisor.footer", new Object[] {originalTask},
+        "---\n这就是针对您的请求\"" + originalTask + "\"的处理结果。");
     StringBuilder sb = new StringBuilder();
-    sb.append("以下是各子任务的执行结果：\n\n");
+    sb.append(header);
     for (int i = 0; i < results.size(); i++) {
-      sb.append("## 任务 ").append(i + 1).append("\n");
+      sb.append(taskPrefix).append(i + 1).append("\n");
       sb.append(results.get(i)).append("\n\n");
     }
-    sb.append("---\n以上就是针对您的请求\"").append(originalTask).append("\"的处理结果。");
+    sb.append(footer);
     return sb.toString();
   }
 

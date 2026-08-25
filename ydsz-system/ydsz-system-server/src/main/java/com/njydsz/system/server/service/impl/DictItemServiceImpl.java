@@ -21,6 +21,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -555,19 +556,21 @@ public class DictItemServiceImpl implements DictItemService {
    * @return 错误描述；校验通过返回 null
    */
   private String validateExcelRow(DictItemExcelVO excelRow, int rowNum) {
+    String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
     if (excelRow.getTypeCode() == null || excelRow.getTypeCode().isBlank()) {
-      return "第 " + rowNum + " 行: 字典类型编码不能为空";
+      return rowPrefix + MessageUtils.getMessage("system.excel.dictTypeCode.required", "字典类型编码不能为空");
     }
     if (excelRow.getItemCode() == null || excelRow.getItemCode().isBlank()) {
-      return "第 " + rowNum + " 行: 字典项编码不能为空";
+      return rowPrefix + MessageUtils.getMessage("system.excel.dictItemCode.required", "字典项编码不能为空");
     }
     if (excelRow.getItemValue() == null || excelRow.getItemValue().isBlank()) {
-      return "第 " + rowNum + " 行: 字典项展示值不能为空";
+      return rowPrefix + MessageUtils.getMessage("system.excel.dictItemValue.required", "字典项展示值不能为空");
     }
     // DB 唯一性校验
     if (dictRepository.existsItemByTypeAndCode(excelRow.getTypeCode(), excelRow.getItemCode())) {
-      return "第 " + rowNum + " 行: 字典项已存在("
-          + excelRow.getTypeCode() + "/" + excelRow.getItemCode() + ")";
+      return rowPrefix + MessageUtils.getMessage("system.excel.dictItem.duplicate",
+          new Object[] {excelRow.getTypeCode(), excelRow.getItemCode()},
+          "字典项已存在(" + excelRow.getTypeCode() + "/" + excelRow.getItemCode() + ")");
     }
     return null;
   }
