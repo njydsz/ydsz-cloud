@@ -94,6 +94,9 @@ public class FlowInstanceLifecycleManager {
   /** P2-3: 管理员回滚权限编码 */
   private static final String PERM_INSTANCE_ROLLBACK = "workflow:instance:rollback";
 
+  /** P3-1: 管理员重审权限编码 */
+  private static final String PERM_INSTANCE_REOPEN = "workflow:instance:reopen";
+
   /** P2-6: 单次批量发起的最大数量限制（防止事务过多） */
   private static final int BATCH_START_MAX_SIZE = 100;
 
@@ -776,6 +779,147 @@ public class FlowInstanceLifecycleManager {
 
     // 9. 发布 Spring 异步事件
     publishWorkflowEvent("INSTANCE_ROLLED_BACK", instanceId, null);
+
+    return true;
+  }
+
+  /**
+   * P3-1: 重审已结束实例（对标 flowlong reopen）。
+   *
+   * <p>将已完成（COMPLETED）的流程实例重新打开，回填到指定历史节点重新审批。
+   * 与 {@link #rollback} 的区别：rollback 是"撤销"（实例变为 ROLLED_BACK 终态），
+   * reopen 是"重审"（实例恢复为 RUNNING 态，继续推进）。
+   *
+   * @param instanceId    实例 ID
+   * @param operatorId    操作人 ID（发起人或管理员）
+   * @param targetNodeCode 目标节点编码（回填到哪个历史节点）
+   * @param reason        重审原因
+   * @return 是否重审成功
+   */
+  @Transactional(rollbackFor = Exception.class)
+  @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+  public boolean reopen(
+      String instanceId, String operatorId, String targetNodeCode, String reason) {
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
+
+    // 1. 校验：仅 COMPLETED 状态可重审
+    if (!FlowInstanceStatus.COMPLETED.name().equals(instance.getFlowStatus())) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .key("error.workflow.msg_a1b2c3d4")
+          .params("仅已完成实例可重审，当前状态=" + instance.getFlowStatus())
+          .build();
+    }
+
+    // 2. 校验：仅发起人或管理员可重审
+    boolean isInitiator =
+        instance.getInitiatorId() != null
+            && String.valueOf(instance.getInitiatorId()).equals(operatorId);
+    boolean isAdmin = false;
+    LoginUser user = AuthContextUtils.getCurrentOrNull();
+    if (user != null) {
+      isAdmin = user.isSuperAdmin() || user.hasPermission(PERM_INSTANCE_REOPEN);
+    }
+    if (!isInitiator && !isAdmin) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.FORBIDDEN)
+          .message("error.workflow.msg_reopen_forbidden")
+          .build();
+    }
+
+    // 3. 校验：重审原因不能为空
+    if (!StringUtils.hasText(reason)) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_reopen_reason_required")
+          .build();
+    }
+
+    // 4. 校验：目标节点必须是该实例已办过的历史节点
+    if (!StringUtils.hasText(targetNodeCode)) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_reopen_target_required")
+          .build();
+    }
+    List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(instanceId);
+    boolean nodeExists =
+        hisTasks.stream().anyMatch(t -> targetNodeCode.equals(t.getNodeCode()));
+    if (!nodeExists) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .key("error.workflow.msg_reopen_node_not_found")
+          .params(targetNodeCode)
+          .build();
+    }
+
+    // 5. 更新实例状态为 RUNNING
+    LocalDateTime now = LocalDateTime.now();
+    instance.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+    instance.setCurrentNodeCode(targetNodeCode);
+    instance.setEndAt(null);
+    instanceRepository.save(converter.doToDto(instance));
+
+    // 6. 在目标节点创建新的待办任务
+    FlowNode targetNode =
+        nodeRepository
+            .findByCode(instance.getDefinitionId(), targetNodeCode)
+            .orElseThrow(
+                () ->
+                    SysException.builder()
+                        .resultCode(YdszResultCode.NOT_FOUND)
+                        .key("error.workflow.msg_reopen_node_missing")
+                        .params(targetNodeCode)
+                        .build());
+    Map<String, Object> variables = variableManager.getVariables(instanceId);
+    taskService.createTask(instanceId, targetNode, variables);
+
+    // 7. 记录重审元信息到 variable JSON
+    try {
+      Map<String, Object> vars = variableManager.parseVariables(instance.getVariable());
+      Map<String, Object> reopenInfo = new LinkedHashMap<>();
+      reopenInfo.put("operatorId", operatorId);
+      reopenInfo.put("reason", reason);
+      reopenInfo.put("reopenedAt", now.toString());
+      reopenInfo.put("targetNodeCode", targetNodeCode);
+      reopenInfo.put("byAdmin", isAdmin && !isInitiator);
+      vars.put("_reopen", reopenInfo);
+      instanceRepository.updateVariable(instanceId, YdszJson.toJson(vars));
+    } catch (Exception e) {
+      log.warn("[Flow] 重审元信息持久化失败: instanceId={} err={}", instanceId, e.getMessage());
+    }
+
+    // 8. 写审计日志
+    FlowAuditLog audit = new FlowAuditLog();
+    audit.setInstanceId(instanceId);
+    audit.setFlowCode(instance.getFlowCode());
+    audit.setBusinessType(instance.getBusinessType());
+    audit.setBusinessId(instance.getBusinessId());
+    audit.setAction("REOPEN");
+    audit.setNodeCode(targetNodeCode);
+    audit.setOperatorId(operatorId);
+    audit.setComment(reason);
+    audit.setProviderTraceId(MDC.get("traceId"));
+    auditLogRepository.save(audit);
+
+    log.info(
+        "[Flow] 重审流程: instanceId={} operatorId={} targetNode={} reason={} isAdmin={}",
+        instanceId,
+        operatorId,
+        targetNodeCode,
+        reason,
+        isAdmin && !isInitiator);
+
+    // 9. Prometheus 指标
+    if (flowMetrics != null) {
+      flowMetrics.incInstance(instance.getFlowCode(), "reopened");
+    }
+
+    // 10. 触发 onInstanceReopened 事件
+    fireEvent(l -> l.onInstanceReopened(instanceId, operatorId, targetNodeCode, reason));
+
+    // 11. 发布 Spring 异步事件
+    publishWorkflowEvent("INSTANCE_REOPENED", instanceId, null);
 
     return true;
   }

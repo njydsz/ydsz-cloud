@@ -117,6 +117,19 @@ public interface FlowEventListener {
   default void onInstanceRolledBack(String instanceId, String operatorId, String reason) {}
 
   /**
+   * P3-1: 实例重审时触发（已完成实例被重新打开并回填到指定节点）
+   *
+   * <p>业务侧可监听本事件执行补偿逻辑：例如流程审批通过后又被重审，需将相关业务状态调整为"审批中"。
+   *
+   * @param instanceId    实例 ID
+   * @param operatorId    操作人 ID（发起人或管理员）
+   * @param targetNodeCode 重审目标节点编码
+   * @param reason        重审原因
+   */
+  default void onInstanceReopened(
+      String instanceId, String operatorId, String targetNodeCode, String reason) {}
+
+  /**
    * 任务转办时触发
    *
    * @param taskId 参数说明
