@@ -49,6 +49,7 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 @Data
 @SuperBuilder
 @NoArgsConstructor

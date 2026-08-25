@@ -1,7 +1,9 @@
 package com.njydsz.userinfo.infra.converter;
 
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
@@ -25,6 +27,7 @@ public interface OAuth2ApplicationConverter {
    * @param entity 应用实体
    * @return 应用领域模型
    */
+  @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE)
   @Mapping(target = "id", source = "id")
   @Mapping(target = "clientId", source = "clientId")
   @Mapping(target = "clientName", source = "clientName")
@@ -47,6 +50,7 @@ public interface OAuth2ApplicationConverter {
    * @param domain 应用领域模型
    * @return 应用实体
    */
+  @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE)
   @Mapping(target = "id", source = "id")
   @Mapping(target = "clientId", source = "clientId")
   @Mapping(target = "clientName", source = "clientName")
