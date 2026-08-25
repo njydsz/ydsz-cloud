@@ -20,7 +20,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_nw_share_recipient")
+@TableName("ydsz_share_recipient")
 public class ShareRecipient extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

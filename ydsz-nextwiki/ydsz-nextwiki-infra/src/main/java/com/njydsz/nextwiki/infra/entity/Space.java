@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@TableName("ydsz_nw_space")
+@TableName("ydsz_space")
 public class Space implements Serializable {
 
   private static final long serialVersionUID = 1L;

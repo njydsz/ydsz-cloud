@@ -17,7 +17,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_nw_file_tag")
+@TableName("ydsz_file_tag")
 public class FileTag extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

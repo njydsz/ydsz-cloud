@@ -22,7 +22,7 @@
 
     <!-- 新增或更新索引（PostgreSQL ON CONFLICT 语义，以 file_node_id 为唯一键） -->
     <insert id="upsert">
-        INSERT INTO ydsz_nw_search_index
+        INSERT INTO ydsz_search_index
             (id, file_node_id, name, path, content, suffix, mime_type, size, tags,
              created_by, created_at, updated_at, revision, deleted)
         VALUES
@@ -43,22 +43,22 @@
 
     <!-- 根据文件节点ID删除索引（物理删除） -->
     <delete id="deleteByFileNodeId">
-        DELETE FROM ydsz_nw_search_index WHERE file_node_id = #{fileNodeId}
+        DELETE FROM ydsz_search_index WHERE file_node_id = #{fileNodeId}
     </delete>
 
     <!-- 根据文件节点ID查询索引 -->
     <select id="selectByFileNodeId" resultMap="SearchIndexResult">
-        SELECT * FROM ydsz_nw_search_index WHERE file_node_id = #{fileNodeId} AND deleted = 0 LIMIT 1
+        SELECT * FROM ydsz_search_index WHERE file_node_id = #{fileNodeId} AND deleted = 0 LIMIT 1
     </select>
 
     <!-- 查询所有未删除的索引记录 -->
     <select id="selectAll" resultMap="SearchIndexResult">
-        SELECT * FROM ydsz_nw_search_index WHERE deleted = 0 ORDER BY created_at ASC
+        SELECT * FROM ydsz_search_index WHERE deleted = 0 ORDER BY created_at ASC
     </select>
 
     <!-- 数据库分页搜索索引（支持 name/path/content/tags 多维度 LIKE 搜索） -->
     <select id="searchPage" resultMap="SearchIndexResult">
-        SELECT * FROM ydsz_nw_search_index
+        SELECT * FROM ydsz_search_index
         WHERE deleted = 0
         AND created_by = #{createdBy}
         <choose>
@@ -86,7 +86,7 @@
 
     <!-- 统计搜索结果总数 -->
     <select id="countSearchResults" resultType="long">
-        SELECT COUNT(*) FROM ydsz_nw_search_index
+        SELECT COUNT(*) FROM ydsz_search_index
         WHERE deleted = 0
         AND created_by = #{createdBy}
         <choose>
@@ -115,7 +115,7 @@
         调用前由 SearchIndexRepositoryImpl.searchAdvanced 将 SearchQuery 转为各参数
     -->
     <select id="searchAdvanced" resultMap="SearchIndexResult">
-        SELECT * FROM ydsz_nw_search_index
+        SELECT * FROM ydsz_search_index
         WHERE deleted = 0
         AND created_by = #{query.createdBy}
         <!-- 全文词模糊匹配（name/path/content/tags，任意一词命中即匹配） -->

@@ -24,36 +24,36 @@
     </resultMap>
 
     <select id="selectByFileNodeId" resultMap="FileVersionResult">
-        SELECT * FROM ydsz_nw_file_version
+        SELECT * FROM ydsz_file_version
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
         ORDER BY version_number DESC
     </select>
 
     <select id="selectByVersion" resultMap="FileVersionResult">
-        SELECT * FROM ydsz_nw_file_version
+        SELECT * FROM ydsz_file_version
         WHERE file_node_id = #{fileNodeId} AND version_number = #{versionNumber} AND deleted = 0
     </select>
 
     <select id="selectActiveVersion" resultMap="FileVersionResult">
-        SELECT * FROM ydsz_nw_file_version
+        SELECT * FROM ydsz_file_version
         WHERE file_node_id = #{fileNodeId} AND is_active = TRUE AND deleted = 0
         LIMIT 1
     </select>
 
     <select id="countByFileNodeId" resultType="int">
-        SELECT COUNT(*) FROM ydsz_nw_file_version
+        SELECT COUNT(*) FROM ydsz_file_version
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
     </select>
 
     <select id="selectOldestVersions" resultMap="FileVersionResult">
-        SELECT * FROM ydsz_nw_file_version
+        SELECT * FROM ydsz_file_version
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
         ORDER BY version_number ASC
         LIMIT #{limit}
     </select>
 
     <update id="updateWithRevision">
-        UPDATE ydsz_nw_file_version
+        UPDATE ydsz_file_version
         SET
             file_node_id = #{version.fileNodeId},
             version_number = #{version.versionNumber},

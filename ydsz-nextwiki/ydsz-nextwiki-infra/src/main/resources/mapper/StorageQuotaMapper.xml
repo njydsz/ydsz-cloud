@@ -21,13 +21,13 @@
     </resultMap>
 
     <select id="selectByScope" resultMap="StorageQuotaResult">
-        SELECT * FROM ydsz_nw_storage_quota
+        SELECT * FROM ydsz_storage_quota
         WHERE scope_type = #{scopeType} AND scope_id = #{scopeId} AND deleted = 0
         LIMIT 1
     </select>
 
     <update id="updateWithRevision">
-        UPDATE ydsz_nw_storage_quota
+        UPDATE ydsz_storage_quota
         SET
             scope_type = #{quota.scopeType},
             scope_id = #{quota.scopeId},

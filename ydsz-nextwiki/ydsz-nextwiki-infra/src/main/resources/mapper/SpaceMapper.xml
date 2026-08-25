@@ -34,7 +34,7 @@
   <!-- 根据租户ID查询空间列表（按排序号升序，未删除） -->
   <select id="selectByTenantId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM ydsz_nw_space
+    FROM ydsz_space
     WHERE tenant_id = #{tenantId} AND deleted = FALSE
     ORDER BY sort_order ASC, created_at DESC
   </select>
@@ -42,7 +42,7 @@
   <!-- 分页查询租户下的空间列表 -->
   <select id="selectByTenantIdWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM ydsz_nw_space
+    FROM ydsz_space
     WHERE tenant_id = #{tenantId} AND deleted = FALSE
     ORDER BY sort_order ASC, created_at DESC
   </select>
@@ -50,7 +50,7 @@
   <!-- 根据租户ID和名称查询空间 -->
   <select id="selectByTenantIdAndName" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM ydsz_nw_space
+    FROM ydsz_space
     WHERE tenant_id = #{tenantId} AND name = #{name} AND deleted = FALSE
     LIMIT 1
   </select>
@@ -58,7 +58,7 @@
   <!-- 统计租户下的空间数量 -->
   <select id="countByTenantId" resultType="int">
     SELECT COUNT(*)
-    FROM ydsz_nw_space
+    FROM ydsz_space
     WHERE tenant_id = #{tenantId} AND deleted = FALSE
   </select>
 

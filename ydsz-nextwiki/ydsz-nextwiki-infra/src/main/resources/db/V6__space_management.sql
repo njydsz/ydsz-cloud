@@ -4,7 +4,7 @@
 -- ============================================================
 
 -- 知识库空间表
-CREATE TABLE IF NOT EXISTS ydsz_nw_space (
+CREATE TABLE IF NOT EXISTS ydsz_space (
     id              VARCHAR(32)     PRIMARY KEY,
     name            VARCHAR(128)    NOT NULL,
     description     VARCHAR(512)    DEFAULT '',
@@ -27,30 +27,30 @@ CREATE TABLE IF NOT EXISTS ydsz_nw_space (
     deleted_time    TIMESTAMP       DEFAULT NULL
 );
 
-COMMENT ON TABLE ydsz_nw_space IS '知识库空间（S3-P2-01：空间管理聚合根）';
-COMMENT ON COLUMN ydsz_nw_space.name IS '空间名称';
-COMMENT ON COLUMN ydsz_nw_space.owner_id IS '空间所有者（创建者）';
-COMMENT ON COLUMN ydsz_nw_space.status IS '空间状态：active-活跃 / archived-归档 / deleted-已删除';
-COMMENT ON COLUMN ydsz_nw_space.visibility IS '可见性：private-私有 / organization-组织 / public-公开';
-COMMENT ON COLUMN ydsz_nw_space.quota_limit IS '空间独立配额（字节，NULL 表示使用租户配额）';
+COMMENT ON TABLE ydsz_space IS '知识库空间（S3-P2-01：空间管理聚合根）';
+COMMENT ON COLUMN ydsz_space.name IS '空间名称';
+COMMENT ON COLUMN ydsz_space.owner_id IS '空间所有者（创建者）';
+COMMENT ON COLUMN ydsz_space.status IS '空间状态：active-活跃 / archived-归档 / deleted-已删除';
+COMMENT ON COLUMN ydsz_space.visibility IS '可见性：private-私有 / organization-组织 / public-公开';
+COMMENT ON COLUMN ydsz_space.quota_limit IS '空间独立配额（字节，NULL 表示使用租户配额）';
 
 -- 唯一索引：同一租户下空间名称唯一
-CREATE UNIQUE INDEX uk_ydsz_nw_space_tenant_name
-    ON ydsz_nw_space (tenant_id, name)
+CREATE UNIQUE INDEX uk_ydsz_space_tenant_name
+    ON ydsz_space (tenant_id, name)
     WHERE deleted = FALSE;
 
 -- 查询索引：按租户查空间列表
-CREATE INDEX idx_ydsz_nw_space_tenant_sort
-    ON ydsz_nw_space (tenant_id, sort_order)
+CREATE INDEX idx_ydsz_space_tenant_sort
+    ON ydsz_space (tenant_id, sort_order)
     WHERE deleted = FALSE;
 
 -- 所有者索引
-CREATE INDEX idx_ydsz_nw_space_owner
-    ON ydsz_nw_space (owner_id)
+CREATE INDEX idx_ydsz_space_owner
+    ON ydsz_space (owner_id)
     WHERE deleted = FALSE;
 
 -- 空间成员表
-CREATE TABLE IF NOT EXISTS ydsz_nw_space_member (
+CREATE TABLE IF NOT EXISTS ydsz_space_member (
     id              VARCHAR(32)     PRIMARY KEY,
     space_id        VARCHAR(32)     NOT NULL,
     user_id         VARCHAR(64)     NOT NULL,
@@ -63,26 +63,26 @@ CREATE TABLE IF NOT EXISTS ydsz_nw_space_member (
     deleted         BOOLEAN         NOT NULL DEFAULT FALSE
 );
 
-COMMENT ON TABLE ydsz_nw_space_member IS '空间成员（S3-P2-01：空间角色管理）';
-COMMENT ON COLUMN ydsz_nw_space_member.role IS '角色：owner-所有者 / admin-管理员 / editor-编辑者 / viewer-查看者';
+COMMENT ON TABLE ydsz_space_member IS '空间成员（S3-P2-01：空间角色管理）';
+COMMENT ON COLUMN ydsz_space_member.role IS '角色：owner-所有者 / admin-管理员 / editor-编辑者 / viewer-查看者';
 
 -- 唯一索引：同一用户在同一空间只有一个角色
-CREATE UNIQUE INDEX uk_ydsz_nw_space_member_space_user
-    ON ydsz_nw_space_member (space_id, user_id)
+CREATE UNIQUE INDEX uk_ydsz_space_member_space_user
+    ON ydsz_space_member (space_id, user_id)
     WHERE deleted = FALSE;
 
 -- 查询索引：按空间查成员列表
-CREATE INDEX idx_ydsz_nw_space_member_space_role
-    ON ydsz_nw_space_member (space_id, role)
+CREATE INDEX idx_ydsz_space_member_space_role
+    ON ydsz_space_member (space_id, role)
     WHERE deleted = FALSE;
 
 -- 用户索引：查询用户参与的空间
-CREATE INDEX idx_ydsz_nw_space_member_user
-    ON ydsz_nw_space_member (user_id)
+CREATE INDEX idx_ydsz_space_member_user
+    ON ydsz_space_member (user_id)
     WHERE deleted = FALSE;
 
 -- 空间模板表（S4-P3-02）
-CREATE TABLE IF NOT EXISTS ydsz_nw_space_template (
+CREATE TABLE IF NOT EXISTS ydsz_space_template (
     id              VARCHAR(32)     PRIMARY KEY,
     name            VARCHAR(128)    NOT NULL,
     description     VARCHAR(512)    DEFAULT '',
@@ -101,16 +101,16 @@ CREATE TABLE IF NOT EXISTS ydsz_nw_space_template (
     deleted         BOOLEAN         NOT NULL DEFAULT FALSE
 );
 
-COMMENT ON TABLE ydsz_nw_space_template IS '空间模板（S4-P3-02：文档模板体系）';
-COMMENT ON COLUMN ydsz_nw_space_template.category IS '模板分类：general-通用 / project-项目 / meeting-会议 / knowledge-知识库';
-COMMENT ON COLUMN ydsz_nw_space_template.structure_json IS '模板结构 JSON：定义目录树、初始页面等';
+COMMENT ON TABLE ydsz_space_template IS '空间模板（S4-P3-02：文档模板体系）';
+COMMENT ON COLUMN ydsz_space_template.category IS '模板分类：general-通用 / project-项目 / meeting-会议 / knowledge-知识库';
+COMMENT ON COLUMN ydsz_space_template.structure_json IS '模板结构 JSON：定义目录树、初始页面等';
 
 -- 查询索引：按租户和分类查模板
-CREATE INDEX idx_ydsz_nw_space_template_tenant_category
-    ON ydsz_nw_space_template (tenant_id, category)
+CREATE INDEX idx_ydsz_space_template_tenant_category
+    ON ydsz_space_template (tenant_id, category)
     WHERE deleted = FALSE;
 
 -- 系统模板索引
-CREATE INDEX idx_ydsz_nw_space_template_system
-    ON ydsz_nw_space_template (is_system, is_public)
+CREATE INDEX idx_ydsz_space_template_system
+    ON ydsz_space_template (is_system, is_public)
     WHERE deleted = FALSE;

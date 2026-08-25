@@ -29,7 +29,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_nw_share_link")
+@TableName("ydsz_share_link")
 public class ShareLink extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

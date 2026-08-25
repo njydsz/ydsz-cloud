@@ -21,18 +21,18 @@
     </resultMap>
 
     <select id="selectByFileNodeId" resultMap="FileAclResult">
-        SELECT * FROM ydsz_nw_file_acl
+        SELECT * FROM ydsz_file_acl
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
     </select>
 
     <select id="selectByFileNodeIdAndGrantee" resultMap="FileAclResult">
-        SELECT * FROM ydsz_nw_file_acl
+        SELECT * FROM ydsz_file_acl
         WHERE file_node_id = #{fileNodeId} AND grantee_type = #{granteeType}
         AND grantee_id = #{granteeId} AND deleted = 0
     </select>
 
     <select id="selectEffectivePermissions" resultMap="FileAclResult">
-        SELECT DISTINCT a.* FROM ydsz_nw_file_acl a
+        SELECT DISTINCT a.* FROM ydsz_file_acl a
         WHERE a.deleted = 0 AND a.file_node_id = #{fileNodeId}
         AND (
             (a.grantee_type = 'user' AND a.grantee_id = #{userId})
@@ -46,7 +46,7 @@
     </select>
 
     <insert id="batchInsert">
-        INSERT INTO ydsz_nw_file_acl (id, file_node_id, grantee_type, grantee_id,
+        INSERT INTO ydsz_file_acl (id, file_node_id, grantee_type, grantee_id,
             permission_mask, inherited, is_owner, status, created_by, created_at,
             updated_by, updated_at, revision, deleted)
         VALUES

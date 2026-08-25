@@ -19,7 +19,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_nw_storage_quota")
+@TableName("ydsz_storage_quota")
 public class StorageQuota extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;
