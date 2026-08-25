@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.vo;
+﻿package com.njydsz.userinfo.domain.vo;
 
 import java.time.LocalDateTime;
 
@@ -8,7 +8,7 @@ import lombok.Data;
  * 用户账号认证凭据 VO
  *
  * <p>专用于认证场景，包含密码哈希、锁定状态等敏感字段。
- * 由 {@code UserInfoConverter#entityToCredentialVO(UserAccountDO)} 从 {@code UserAccountDO} 转换而来。
+ * 由 {@code UserInfoConverter#entityToCredentialVO(UserAccount)} 从 {@code UserAccount} 转换而来。
  *
  * <p><b>安全注意：</b>本 VO 包含密码哈希，仅在认证服务内部使用，禁止返回给前端或跨服务传输。
  *

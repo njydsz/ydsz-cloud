@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
+import com.njydsz.workflow.infra.entity.FlowAuditLog;
 
 /**
  * 流程审计日志 Mapper
@@ -29,12 +29,12 @@ import com.njydsz.workflow.infra.entity.FlowAuditLogDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowAuditLogDO 审计日志实体
+ * @see com.njydsz.workflow.infra.entity.FlowAuditLog 审计日志实体
  * @see com.njydsz.workflow.server.service.FlowAuditService 审计 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
+public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLog> {
 
   /**
    * 查某实例的全部审计日志（按时间正序）
@@ -42,7 +42,7 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
    * @param instanceId 参数说明
    * @return 返回值说明
    */
-  List<FlowAuditLogDO> selectByInstanceId(@Param("instanceId") String instanceId);
+  List<FlowAuditLog> selectByInstanceId(@Param("instanceId") String instanceId);
 
   /**
    * 查某任务的操作记录
@@ -50,7 +50,7 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
    * @param taskId 参数说明
    * @return 返回值说明
    */
-  List<FlowAuditLogDO> selectByTaskId(@Param("taskId") String taskId);
+  List<FlowAuditLog> selectByTaskId(@Param("taskId") String taskId);
 
   /**
    * 查某操作人的审计日志（P1-8: 加签历史查询）
@@ -62,7 +62,7 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
    * @param endTime 操作时间上界（含，可选）
    * @return 审计日志列表
    */
-  List<FlowAuditLogDO> selectByOperatorId(
+  List<FlowAuditLog> selectByOperatorId(
       @Param("operatorId") String operatorId,
       @Param("startTime") LocalDateTime startTime,
       @Param("endTime") LocalDateTime endTime);
@@ -77,7 +77,7 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
    * @param endTime 操作时间上界（含，可选）
    * @return 审计日志列表
    */
-  List<FlowAuditLogDO> selectByTargetId(
+  List<FlowAuditLog> selectByTargetId(
       @Param("targetId") String targetId,
       @Param("startTime") LocalDateTime startTime,
       @Param("endTime") LocalDateTime endTime);

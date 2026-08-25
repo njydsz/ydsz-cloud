@@ -1,9 +1,9 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.infra.entity.DepartmentDO;
+import com.njydsz.userinfo.infra.entity.Department;
 
 /**
  * 部门 Mapper 接口
@@ -27,8 +27,8 @@ import com.njydsz.userinfo.infra.entity.DepartmentDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.infra.entity.DepartmentDO 部门实体
+ * @see com.njydsz.userinfo.infra.entity.Department 部门实体
  * @see com.njydsz.userinfo.infra.mapper.UserDeptMapper 用户-部门关联 Mapper
  */
 @Mapper
-public interface DepartmentMapper extends BaseMapper<DepartmentDO> {}
+public interface DepartmentMapper extends BaseMapper<Department> {}

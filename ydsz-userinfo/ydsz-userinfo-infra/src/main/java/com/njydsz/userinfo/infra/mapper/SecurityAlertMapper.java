@@ -1,9 +1,9 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.infra.entity.SecurityAlertDO;
+import com.njydsz.userinfo.infra.entity.SecurityAlert;
 
 /**
  * 安全告警 Mapper 接口。
@@ -14,4 +14,4 @@ import com.njydsz.userinfo.infra.entity.SecurityAlertDO;
  * @since 1.0.0
  */
 @Mapper
-public interface SecurityAlertMapper extends BaseMapper<SecurityAlertDO> {}
+public interface SecurityAlertMapper extends BaseMapper<SecurityAlert> {}

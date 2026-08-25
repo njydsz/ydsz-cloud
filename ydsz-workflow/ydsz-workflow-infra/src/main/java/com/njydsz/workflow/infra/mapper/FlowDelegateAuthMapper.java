@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
 
 /**
  * 流程委派代理 Mapper
@@ -30,12 +30,12 @@ import com.njydsz.workflow.infra.entity.FlowDelegateAuthDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowDelegateAuthDO 委派代理实体
+ * @see com.njydsz.workflow.infra.entity.FlowDelegateAuth 委派代理实体
  * @see com.njydsz.workflow.server.service.FlowDelegateService 委派 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {
+public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuth> {
 
   /**
    * 按授权人查询授权列表
@@ -46,7 +46,7 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {
    * @param status 参数说明
    * @return 返回值说明
    */
-  List<FlowDelegateAuthDO> selectByOwner(
+  List<FlowDelegateAuth> selectByOwner(
       @Param("tenantId") String tenantId,
       @Param("ownerUserId") String ownerUserId,
       @Param("status") String status);
@@ -59,7 +59,7 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {
    * @param status 参数说明
    * @return 返回值说明
    */
-  List<FlowDelegateAuthDO> selectByDelegate(
+  List<FlowDelegateAuth> selectByDelegate(
       @Param("tenantId") String tenantId,
       @Param("delegateUserId") String delegateUserId,
       @Param("status") String status);
@@ -82,7 +82,7 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {
    * @param now 当前时间（用于区间校验）
    * @return 命中的代理规则（无则 null）
    */
-  FlowDelegateAuthDO matchAuth(
+  FlowDelegateAuth matchAuth(
       @Param("tenantId") String tenantId,
       @Param("ownerUserId") String ownerUserId,
       @Param("flowCode") String flowCode,
@@ -96,7 +96,7 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {
    * @param limit 参数说明
    * @return 返回值说明
    */
-  List<FlowDelegateAuthDO> selectExpired(@Param("now") LocalDateTime now, @Param("limit") int limit);
+  List<FlowDelegateAuth> selectExpired(@Param("now") LocalDateTime now, @Param("limit") int limit);
 
   /**
    * 批量标记过期

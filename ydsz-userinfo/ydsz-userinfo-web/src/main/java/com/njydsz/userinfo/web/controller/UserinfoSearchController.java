@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.controller;
+﻿package com.njydsz.userinfo.web.controller;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +37,7 @@ import com.njydsz.userinfo.web.dto.UserSearchQuery;
  *
  * <ul>
  *   <li>{@code GET /} — 用户全文检索（高亮 + 模糊匹配 + 权限过滤）
- *   <li>{@code PostDO /rebuild} — 重建/失效用户搜索索引（运维用）
+ *   <li>{@code Post /rebuild} — 重建/失效用户搜索索引（运维用）
  * </ul>
  *
  * <p><b>权限模型：</b>

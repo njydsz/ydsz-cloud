@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.dto;
+﻿package com.njydsz.userinfo.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -42,18 +42,18 @@ public class MenuDTO implements Serializable {
   @Xss(message = "menuCode包含非法内容")
   private String menuCode;
 
-  /** 菜单类型（DIR=目录 / MenuDO=菜单 / BUTTON=按钮） */
+  /** 菜单类型（DIR=目录 / Menu=菜单 / BUTTON=按钮） */
   @NotBlank(message = "菜单类型不能为空")
   @Size(max = 20, message = "菜单类型长度不能超过 20 个字符")
   @Xss(message = "menuType包含非法内容")
   private String menuType;
 
-  /** 前端路由路径（menuType=MenuDO 时必填） */
+  /** 前端路由路径（menuType=Menu 时必填） */
   @Size(max = 255, message = "路径长度不能超过 255 个字符")
   @Xss(message = "path包含非法内容")
   private String path;
 
-  /** 前端组件路径（menuType=MenuDO 时必填，如 {@code "system/user/index"}） */
+  /** 前端组件路径（menuType=Menu 时必填，如 {@code "system/user/index"}） */
   @Size(max = 255, message = "组件路径长度不能超过 255 个字符")
   @Xss(message = "component包含非法内容")
   private String component;

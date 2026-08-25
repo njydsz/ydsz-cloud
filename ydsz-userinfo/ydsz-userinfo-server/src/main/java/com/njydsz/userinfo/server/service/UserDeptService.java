@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.service;
+﻿package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ import com.njydsz.userinfo.domain.vo.UserDeptVO;
  * <ul>
  *   <li>用户管理页面维护「所属部门」字段（支持多选 + 标记主部门）
  *   <li>审批人展开：{@code dept:xxx} 触发时匹配用户-部门关联表所有部门
- *   <li>数据权限：{@code RoleDO.dataScope} 配合部门树实现隔离
+ *   <li>数据权限：{@code Role.dataScope} 配合部门树实现隔离
  * </ul>
  *
  * <p><b>事务：</b>所有写操作（{@code save/updateById/removeById}）开启 {@code @Transactional(rollbackFor =

@@ -1,16 +1,16 @@
-package com.njydsz.userinfo.infra.converter;
+﻿package com.njydsz.userinfo.infra.converter;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
-import com.njydsz.userinfo.infra.entity.SocialClientDO;
+import com.njydsz.userinfo.infra.entity.SocialClient;
 
 /**
  * 社交平台客户端配置 MapStruct 转换器（P1-1）。
  *
- * <p>提供 SocialClientDO → SocialClientVO 的转换方法。
+ * <p>提供 SocialClient → SocialClientVO 的转换方法。
  * 使用 Spring 注入模式，替代静态单例 INSTANT，提升可测试性。
  *
  * @author ydsz-team
@@ -38,5 +38,5 @@ public interface SocialClientConverter {
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "updatedAt", source = "updatedAt")
   @Mapping(target = "createdBy", source = "createdBy")
-  SocialClientVO entityToVo(SocialClientDO entity);
+  SocialClientVO entityToVo(SocialClient entity);
 }

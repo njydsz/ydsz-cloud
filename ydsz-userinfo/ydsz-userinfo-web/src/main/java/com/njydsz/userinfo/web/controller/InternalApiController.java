@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.controller;
+﻿package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 import java.util.Map;
@@ -41,18 +41,18 @@ import com.njydsz.userinfo.web.annotation.RequireInternal;
  * <p><b>核心能力分组：</b>
  *
  * <ul>
- *   <li><b>用户查询</b>：{@code /user/info}、{@code /user/leader}、{@code /user/RoleDO-codes}、 {@code
- *       /user/dept-ids}、{@code /user/list-by-RoleDO}、{@code /user/list-by-position}
+ *   <li><b>用户查询</b>：{@code /user/info}、{@code /user/leader}、{@code /user/Role-codes}、 {@code
+ *       /user/dept-ids}、{@code /user/list-by-Role}、{@code /user/list-by-position}
  *   <li><b>部门查询</b>：{@code /dept/tree}、{@code /dept/list}、 {@code /dept/leader-by-id}、{@code
  *       /dept/leader-by-code}
  *   <li><b>NameAssembler 批量富化</b>：{@code /user/batch-names}、 {@code /dept/batch-names}、{@code
- *       /RoleDO/batch-names}、{@code /PostDO/batch-names}、{@code /CompanyDO/batch-names}
+ *       /Role/batch-names}、{@code /Post/batch-names}、{@code /Company/batch-names}
  * </ul>
  *
  * <p><b>工作流联动说明：</b>
  *
  * <ul>
- *   <li>{@code RoleDO:xxx} 节点 → 调用 {@code /user/list-by-RoleDO}
+ *   <li>{@code Role:xxx} 节点 → 调用 {@code /user/list-by-Role}
  *   <li>{@code position:xxx} 节点 → 调用 {@code /user/list-by-position}
  *   <li>{@code leader:xxx} 节点 → 调用 {@code /user/leader}
  *   <li>{@code dept:数字} 节点 → 调用 {@code /dept/leader-by-id}
@@ -134,7 +134,7 @@ public class InternalApiController {
   /**
    * 按角色编码查询用户 ID 列表
    *
-   * <p>对应工作流节点表达式 {@code RoleDO:xxx} 的展开逻辑。
+   * <p>对应工作流节点表达式 {@code Role:xxx} 的展开逻辑。
    *
    * <p>工作流引擎在计算审批人时调用该接口，将角色编码解析为具体用户 ID 列表。
    *

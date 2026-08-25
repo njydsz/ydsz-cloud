@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.repository.CompanyRepository;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
-import com.njydsz.userinfo.infra.entity.CompanyDO;
+import com.njydsz.userinfo.infra.entity.Company;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 
 /**
@@ -36,23 +36,23 @@ public class CompanyRepositoryImpl implements CompanyRepository {
 
   @Override
   public Optional<CompanyVO> findById(String id) {
-    CompanyDO entity = companyMapper.selectById(id);
+    Company entity = companyMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<CompanyVO> findByCompanyCode(String companyCode) {
-    LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(CompanyDO::getCompanyCode, companyCode);
-    CompanyDO entity = companyMapper.selectOne(wrapper);
+    LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Company::getCompanyCode, companyCode);
+    Company entity = companyMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public PageResponse<List<CompanyVO>> page(CompanyPageQuery query) {
-    Page<CompanyDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<CompanyDO> wrapper = buildWrapper(query);
-    Page<CompanyDO> result = companyMapper.selectPage(page, wrapper);
+    Page<Company> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<Company> wrapper = buildWrapper(query);
+    Page<Company> result = companyMapper.selectPage(page, wrapper);
     List<CompanyVO> vos = converter.companyListToVO(result.getRecords());
     return PageResponse.success(
         result.getTotal(),
@@ -63,25 +63,25 @@ public class CompanyRepositoryImpl implements CompanyRepository {
 
   @Override
   public List<CompanyVO> list(CompanyPageQuery query) {
-    LambdaQueryWrapper<CompanyDO> wrapper = buildWrapper(query);
-    List<CompanyDO> entities = companyMapper.selectList(wrapper);
+    LambdaQueryWrapper<Company> wrapper = buildWrapper(query);
+    List<Company> entities = companyMapper.selectList(wrapper);
     return converter.companyListToVO(entities);
   }
 
   @Override
   public List<CompanyVO> listByIds(Collection<String> ids) {
-    List<CompanyDO> entities = companyMapper.selectBatchIds(ids);
+    List<Company> entities = companyMapper.selectBatchIds(ids);
     return converter.companyListToVO(entities);
   }
 
   @Override
   public CompanyVO save(CompanyDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
-      CompanyDO entity = converter.dtoToEntity(dto);
+      Company entity = converter.dtoToEntity(dto);
       companyMapper.insert(entity);
       return converter.entityToVO(entity);
     } else {
-      CompanyDO entity = converter.dtoToEntityWithId(dto);
+      Company entity = converter.dtoToEntityWithId(dto);
       companyMapper.updateById(entity);
       return converter.entityToVO(entity);
     }
@@ -94,20 +94,20 @@ public class CompanyRepositoryImpl implements CompanyRepository {
 
   @Override
   public long countByQuery(CompanyPageQuery query) {
-    LambdaQueryWrapper<CompanyDO> wrapper = buildWrapper(query);
+    LambdaQueryWrapper<Company> wrapper = buildWrapper(query);
     return companyMapper.selectCount(wrapper);
   }
 
-  private LambdaQueryWrapper<CompanyDO> buildWrapper(CompanyPageQuery query) {
-    LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
+  private LambdaQueryWrapper<Company> buildWrapper(CompanyPageQuery query) {
+    LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
     if (query.getCompanyCode() != null && !query.getCompanyCode().isBlank()) {
-      wrapper.like(CompanyDO::getCompanyCode, query.getCompanyCode());
+      wrapper.like(Company::getCompanyCode, query.getCompanyCode());
     }
     if (query.getCompanyName() != null && !query.getCompanyName().isBlank()) {
-      wrapper.like(CompanyDO::getCompanyName, query.getCompanyName());
+      wrapper.like(Company::getCompanyName, query.getCompanyName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(CompanyDO::getStatus, query.getStatus());
+      wrapper.eq(Company::getStatus, query.getStatus());
     }
     return wrapper;
   }

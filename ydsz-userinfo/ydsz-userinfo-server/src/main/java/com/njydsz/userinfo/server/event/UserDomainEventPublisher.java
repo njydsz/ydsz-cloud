@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.event;
+﻿package com.njydsz.userinfo.server.event;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -298,11 +298,11 @@ public class UserDomainEventPublisher {
     publish(
         UserDomainEventType.ROLE_CHANGED,
         roleVO.getId(),
-        "RoleDO",
+        "Role",
         new UserDomainEvent(
             UserDomainEventType.ROLE_CHANGED,
             roleVO.getId(),
-            "RoleDO",
+            "Role",
             Map.of("roleId", roleVO.getId(), "roleCode", orEmpty(roleVO.getRoleCode()), "action", action)));
   }
 
@@ -319,11 +319,11 @@ public class UserDomainEventPublisher {
     publish(
         UserDomainEventType.ORG_STRUCTURE_CHANGED,
         deptVO.getId(),
-        "DepartmentDO",
+        "Department",
         new UserDomainEvent(
             UserDomainEventType.ORG_STRUCTURE_CHANGED,
             deptVO.getId(),
-            "DepartmentDO",
+            "Department",
             Map.of(
                 "deptId",
                 deptVO.getId(),

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.service;
+﻿package com.njydsz.userinfo.server.service;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -19,7 +19,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p><b>缓存策略：</b>
  *
  * <ul>
- *   <li>RoleDO:xxx → 用户列表：TTL 5 分钟
+ *   <li>Role:xxx → 用户列表：TTL 5 分钟
  *   <li>position:xxx → 用户列表：TTL 5 分钟
  *   <li>leader:xxx → 上级 ID：TTL 5 分钟
  *   <li>dept:xxx → 部门负责人：TTL 10 分钟（变更频率低）
@@ -28,7 +28,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p><b>缓存失效触发：</b>
  *
  * <ul>
- *   <li>用户角色分配变更 → 失效 RoleDO 相关缓存
+ *   <li>用户角色分配变更 → 失效 Role 相关缓存
  *   <li>用户岗位/上级变更 → 失效 position/leader 相关缓存
  *   <li>部门负责人变更 → 失效 dept 相关缓存
  * </ul>
@@ -68,7 +68,7 @@ public class WorkflowApproverCacheService {
       return Collections.emptyList();
     }
 
-    String cacheKey = "userinfo:workflow:RoleDO:" + roleCode;
+    String cacheKey = "userinfo:workflow:Role:" + roleCode;
 
     // 尝试从缓存获取
     try {
@@ -80,7 +80,7 @@ public class WorkflowApproverCacheService {
         }
       }
     } catch (Exception e) {
-      log.warn("Workflow cache read failed for RoleDO: {}", roleCode);
+      log.warn("Workflow cache read failed for Role: {}", roleCode);
     }
 
     // 查询数据库
@@ -91,7 +91,7 @@ public class WorkflowApproverCacheService {
       redisStringOps.set(
           cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(CACHE_TTL_ROLE_USERS));
     } catch (Exception e) {
-      log.warn("Workflow cache write failed for RoleDO: {}", roleCode);
+      log.warn("Workflow cache write failed for Role: {}", roleCode);
     }
 
     return userIds;
@@ -255,12 +255,12 @@ public class WorkflowApproverCacheService {
   public void evictRoleCache(String roleCode) {
     try {
       if (roleCode != null) {
-        redisStringOps.del("userinfo:workflow:RoleDO:" + roleCode);
+        redisStringOps.del("userinfo:workflow:Role:" + roleCode);
       } else {
-        redisStringOps.delByPattern("userinfo:workflow:RoleDO:*");
+        redisStringOps.delByPattern("userinfo:workflow:Role:*");
       }
     } catch (Exception e) {
-      log.warn("Failed to evict RoleDO cache: {}", e.getMessage());
+      log.warn("Failed to evict Role cache: {}", e.getMessage());
     }
   }
 

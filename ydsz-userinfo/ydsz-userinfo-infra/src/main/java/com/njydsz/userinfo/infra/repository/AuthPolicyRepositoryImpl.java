@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +13,7 @@ import com.njydsz.userinfo.domain.query.AuthPolicyPageQuery;
 import com.njydsz.userinfo.domain.repository.AuthPolicyRepository;
 import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
 import com.njydsz.userinfo.infra.converter.AuthPolicyConverter;
-import com.njydsz.userinfo.infra.entity.AuthPolicyDO;
+import com.njydsz.userinfo.infra.entity.AuthPolicy;
 import com.njydsz.userinfo.infra.mapper.AuthPolicyMapper;
 
 /**
@@ -36,7 +36,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
   @Override
   public Optional<AuthPolicyVO> findByTenantId(String tenantId) {
     String tid = (tenantId == null || tenantId.isBlank()) ? null : tenantId;
-    AuthPolicyDO entity = mapper.selectByTenantId(tid);
+    AuthPolicy entity = mapper.selectByTenantId(tid);
     return entity != null
         ? Optional.of(authPolicyConverter.entityToVo(entity))
         : Optional.empty();
@@ -44,13 +44,13 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
 
   @Override
   public List<AuthPolicyVO> findByPage(AuthPolicyPageQuery query) {
-    LambdaQueryWrapper<AuthPolicyDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(AuthPolicyDO::getDeleted, false)
+    LambdaQueryWrapper<AuthPolicy> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(AuthPolicy::getDeleted, false)
         .like(query.getName() != null && !query.getName().isBlank(),
-            AuthPolicyDO::getName, query.getName())
-        .orderByAsc(AuthPolicyDO::getTenantId);
+            AuthPolicy::getName, query.getName())
+        .orderByAsc(AuthPolicy::getTenantId);
 
-    List<AuthPolicyDO> entities = mapper.selectList(wrapper);
+    List<AuthPolicy> entities = mapper.selectList(wrapper);
     return entities.stream()
         .map(authPolicyConverter::entityToVo)
         .toList();
@@ -59,7 +59,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
   @Override
   public void save(AuthPolicyDTO dto) {
     String tid = (dto.getTenantId() == null || dto.getTenantId().isBlank()) ? null : dto.getTenantId();
-    AuthPolicyDO existing = mapper.selectByTenantId(tid);
+    AuthPolicy existing = mapper.selectByTenantId(tid);
     if (existing == null) {
       createNew(dto);
     } else {
@@ -73,7 +73,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
    * @param dto 待创建数据
    */
   private void createNew(AuthPolicyDTO dto) {
-    AuthPolicyDO entity = new AuthPolicyDO();
+    AuthPolicy entity = new AuthPolicy();
     entity.setTenantId(dto.getTenantId());
     entity.setName(dto.getName());
     entity.setPasswordMinLength(dto.getPasswordMinLength());
@@ -96,7 +96,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
    * @param existing 已有实体
    * @param dto 待更新数据
    */
-  private void updateExisting(AuthPolicyDO existing, AuthPolicyDTO dto) {
+  private void updateExisting(AuthPolicy existing, AuthPolicyDTO dto) {
     applyBasicFields(existing, dto);
     applySecurityFields(existing, dto);
     mapper.updateById(existing);
@@ -109,7 +109,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
    * @param existing 已有实体
    * @param dto 待更新数据
    */
-  private void applyBasicFields(AuthPolicyDO existing, AuthPolicyDTO dto) {
+  private void applyBasicFields(AuthPolicy existing, AuthPolicyDTO dto) {
     if (dto.getName() != null) {
       existing.setName(dto.getName());
     }
@@ -124,7 +124,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
    * @param existing 已有实体
    * @param dto 待更新数据
    */
-  private void applySecurityFields(AuthPolicyDO existing, AuthPolicyDTO dto) {
+  private void applySecurityFields(AuthPolicy existing, AuthPolicyDTO dto) {
     if (dto.getPasswordMinLength() != null) {
       existing.setPasswordMinLength(dto.getPasswordMinLength());
     }
@@ -154,7 +154,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
   @Override
   public void deleteByTenantId(String tenantId) {
     String tid = (tenantId == null || tenantId.isBlank()) ? null : tenantId;
-    AuthPolicyDO entity = mapper.selectByTenantId(tid);
+    AuthPolicy entity = mapper.selectByTenantId(tid);
     if (entity != null) {
       entity.setDeleted(1);
       mapper.updateById(entity);

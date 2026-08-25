@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +12,7 @@ import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
 import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
 import com.njydsz.userinfo.domain.vo.RolePermissionVO;
 import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
-import com.njydsz.userinfo.infra.entity.RolePermissionDO;
+import com.njydsz.userinfo.infra.entity.RolePermission;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 
 /**
@@ -33,40 +33,40 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
 
   @Override
   public List<RolePermissionVO> findByRoleId(String roleId) {
-    LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RolePermissionDO::getRoleId, roleId);
-    List<RolePermissionDO> entities = rolePermissionMapper.selectList(wrapper);
+    LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RolePermission::getRoleId, roleId);
+    List<RolePermission> entities = rolePermissionMapper.selectList(wrapper);
     return converter.rolePermissionListToVO(entities);
   }
 
   @Override
   public List<String> findPermissionIdsByRoleId(String roleId) {
-    LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RolePermissionDO::getRoleId, roleId);
+    LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RolePermission::getRoleId, roleId);
     return rolePermissionMapper.selectList(wrapper).stream()
-        .map(RolePermissionDO::getPermissionId)
+        .map(RolePermission::getPermissionId)
         .collect(Collectors.toList());
   }
 
   @Override
   public Optional<RolePermissionVO> findByRoleIdAndPermissionId(String roleId, String permissionId) {
-    LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RolePermissionDO::getRoleId, roleId);
-    wrapper.eq(RolePermissionDO::getPermissionId, permissionId);
-    RolePermissionDO entity = rolePermissionMapper.selectOne(wrapper);
+    LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RolePermission::getRoleId, roleId);
+    wrapper.eq(RolePermission::getPermissionId, permissionId);
+    RolePermission entity = rolePermissionMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public RolePermissionVO create(RolePermissionDTO dto) {
-    RolePermissionDO entity = converter.dtoToEntity(dto);
+    RolePermission entity = converter.dtoToEntity(dto);
     rolePermissionMapper.insert(entity);
     return converter.entityToVO(entity);
   }
 
   @Override
   public int batchInsert(List<RolePermissionDTO> dtoList) {
-    List<RolePermissionDO> entities = dtoList.stream()
+    List<RolePermission> entities = dtoList.stream()
         .map(converter::dtoToEntity)
         .collect(Collectors.toList());
     return rolePermissionMapper.batchInsert(entities);
@@ -74,16 +74,16 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
 
   @Override
   public int deleteByRoleId(String roleId) {
-    LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RolePermissionDO::getRoleId, roleId);
+    LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RolePermission::getRoleId, roleId);
     return rolePermissionMapper.delete(wrapper);
   }
 
   @Override
   public int deleteByRoleIdAndPermissionId(String roleId, String permissionId) {
-    LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RolePermissionDO::getRoleId, roleId);
-    wrapper.eq(RolePermissionDO::getPermissionId, permissionId);
+    LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RolePermission::getRoleId, roleId);
+    wrapper.eq(RolePermission::getPermissionId, permissionId);
     return rolePermissionMapper.delete(wrapper);
   }
 }

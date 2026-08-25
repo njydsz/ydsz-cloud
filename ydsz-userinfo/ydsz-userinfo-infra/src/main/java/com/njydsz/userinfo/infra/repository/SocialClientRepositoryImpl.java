@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +14,7 @@ import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.repository.SocialClientRepository;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
 import com.njydsz.userinfo.infra.converter.SocialClientConverter;
-import com.njydsz.userinfo.infra.entity.SocialClientDO;
+import com.njydsz.userinfo.infra.entity.SocialClient;
 import com.njydsz.userinfo.infra.mapper.SocialClientMapper;
 
 /**
@@ -37,17 +37,17 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
 
   @Override
   public List<SocialClientVO> findByPage(SocialClientPageQuery query) {
-    LambdaQueryWrapper<SocialClientDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SocialClientDO::getDeleted, false)
+    LambdaQueryWrapper<SocialClient> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SocialClient::getDeleted, false)
         .like(query.getPlatform() != null && !query.getPlatform().isBlank(),
-            SocialClientDO::getPlatform, query.getPlatform())
+            SocialClient::getPlatform, query.getPlatform())
         .like(query.getPlatformName() != null && !query.getPlatformName().isBlank(),
-            SocialClientDO::getPlatformName, query.getPlatformName())
+            SocialClient::getPlatformName, query.getPlatformName())
         .eq(query.getStatus() != null && !query.getStatus().isBlank(),
-            SocialClientDO::getStatus, query.getStatus())
-        .orderByAsc(SocialClientDO::getSortOrder);
+            SocialClient::getStatus, query.getStatus())
+        .orderByAsc(SocialClient::getSortOrder);
 
-    List<SocialClientDO> entities = mapper.selectList(wrapper);
+    List<SocialClient> entities = mapper.selectList(wrapper);
     return entities.stream()
         .map(socialClientConverter::entityToVo)
         .toList();
@@ -55,7 +55,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
 
   @Override
   public List<SocialClientVO> findEnabled() {
-    List<SocialClientDO> entities = mapper.selectEnabledClients();
+    List<SocialClient> entities = mapper.selectEnabledClients();
     return entities.stream()
         .map(socialClientConverter::entityToVo)
         .toList();
@@ -63,7 +63,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
 
   @Override
   public Optional<SocialClientVO> findByPlatform(String platform) {
-    SocialClientDO entity = mapper.selectByPlatform(platform.toUpperCase());
+    SocialClient entity = mapper.selectByPlatform(platform.toUpperCase());
     return entity != null
         ? Optional.of(socialClientConverter.entityToVo(entity))
         : Optional.empty();
@@ -71,7 +71,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
 
   @Override
   public void save(SocialClientDTO dto) {
-    SocialClientDO existing = mapper.selectByPlatform(dto.getPlatform().toUpperCase());
+    SocialClient existing = mapper.selectByPlatform(dto.getPlatform().toUpperCase());
     if (existing != null) {
       updateExisting(existing, dto);
     } else {
@@ -85,7 +85,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
    * @param existing 已有实体
    * @param dto 待更新数据
    */
-  private void updateExisting(SocialClientDO existing, SocialClientDTO dto) {
+  private void updateExisting(SocialClient existing, SocialClientDTO dto) {
     if (dto.getPlatformName() != null) {
       existing.setPlatformName(dto.getPlatformName());
     }
@@ -120,7 +120,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
    * @param dto 待创建数据
    */
   private void createNew(SocialClientDTO dto) {
-    SocialClientDO entity = new SocialClientDO();
+    SocialClient entity = new SocialClient();
     entity.setPlatform(dto.getPlatform().toUpperCase());
     entity.setPlatformName(dto.getPlatformName());
     entity.setAppId(dto.getAppId());
@@ -148,10 +148,10 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
 
   @Override
   public void deleteByPlatform(String platform) {
-    LambdaQueryWrapper<SocialClientDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SocialClientDO::getPlatform, platform.toUpperCase())
-        .eq(SocialClientDO::getDeleted, false);
-    SocialClientDO entity = mapper.selectOne(wrapper);
+    LambdaQueryWrapper<SocialClient> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SocialClient::getPlatform, platform.toUpperCase())
+        .eq(SocialClient::getDeleted, false);
+    SocialClient entity = mapper.selectOne(wrapper);
     if (entity != null) {
       entity.setDeleted(1);
       mapper.updateById(entity);

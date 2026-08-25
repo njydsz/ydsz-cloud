@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
+import com.njydsz.workflow.infra.entity.FlowAdminRole;
 
 /**
  * 流程管理员角色 Mapper（P1-6）
@@ -28,12 +28,12 @@ import com.njydsz.workflow.infra.entity.FlowAdminRoleDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowAdminRoleDO 流程管理员实体
+ * @see com.njydsz.workflow.infra.entity.FlowAdminRole 流程管理员实体
  * @see com.njydsz.workflow.server.service.FlowAdminService 流程管理员 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowAdminRoleMapper extends BaseMapper<FlowAdminRoleDO> {
+public interface FlowAdminRoleMapper extends BaseMapper<FlowAdminRole> {
 
   /**
    * 查询用户在指定租户下的所有有效角色。
@@ -42,7 +42,7 @@ public interface FlowAdminRoleMapper extends BaseMapper<FlowAdminRoleDO> {
    * @param tenantId 参数说明
    * @return 返回值说明
    */
-  List<FlowAdminRoleDO> selectByUserId(
+  List<FlowAdminRole> selectByUserId(
       @Param("userId") String userId, @Param("tenantId") String tenantId);
 
   /**
@@ -53,7 +53,7 @@ public interface FlowAdminRoleMapper extends BaseMapper<FlowAdminRoleDO> {
    * @param tenantId 参数说明
    * @return 返回值说明
    */
-  FlowAdminRoleDO selectByUserAndRole(
+  FlowAdminRole selectByUserAndRole(
       @Param("userId") String userId,
       @Param("roleCode") String roleCode,
       @Param("tenantId") String tenantId);

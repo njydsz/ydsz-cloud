@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
+import com.njydsz.userinfo.infra.entity.UserAccount;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 
 /**
@@ -45,29 +45,29 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   @Override
   public Optional<UserAccountVO> findById(String id) {
-    UserAccountDO entity = userAccountMapper.selectById(id);
+    UserAccount entity = userAccountMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<UserAccountVO> findByUsername(String username) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getUsername, username);
-    UserAccountDO entity = userAccountMapper.selectOne(wrapper);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccount::getUsername, username);
+    UserAccount entity = userAccountMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<UserAccountCredentialVO> findCredentialByUsername(String username) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getUsername, username);
-    UserAccountDO entity = userAccountMapper.selectOne(wrapper);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccount::getUsername, username);
+    UserAccount entity = userAccountMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToCredentialVO);
   }
 
   @Override
   public Optional<UserAccountCredentialVO> findCredentialById(String id) {
-    UserAccountDO entity = userAccountMapper.selectById(id);
+    UserAccount entity = userAccountMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToCredentialVO);
   }
 
@@ -75,12 +75,12 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   public UserAccountVO save(UserAccountDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
       // 创建场景
-      UserAccountDO entity = converter.dtoToEntity(dto);
+      UserAccount entity = converter.dtoToEntity(dto);
       userAccountMapper.insert(entity);
       return converter.entityToVO(entity);
     } else {
       // 更新场景
-      UserAccountDO entity = converter.dtoToEntityWithId(dto);
+      UserAccount entity = converter.dtoToEntityWithId(dto);
       // P1-6: 检查乐观锁冲突（entity.revision 非 null 时 MP 自动带 WHERE revision = ?）
       int affected = userAccountMapper.updateById(entity);
       if (affected == 0) {
@@ -97,9 +97,9 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   @Override
   public PageResponse<List<UserAccountVO>> page(UserAccountPageQuery query) {
-    Page<UserAccountDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
-    Page<UserAccountDO> result = userAccountMapper.selectPage(page, wrapper);
+    Page<UserAccount> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<UserAccount> wrapper = buildWrapper(query);
+    Page<UserAccount> result = userAccountMapper.selectPage(page, wrapper);
     List<UserAccountVO> vos = converter.userAccountListToVO(result.getRecords());
     return PageResponse.success(
         result.getTotal(),
@@ -110,34 +110,34 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   @Override
   public List<UserAccountVO> list(UserAccountPageQuery query) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
-    List<UserAccountDO> entities = userAccountMapper.selectList(wrapper);
+    LambdaQueryWrapper<UserAccount> wrapper = buildWrapper(query);
+    List<UserAccount> entities = userAccountMapper.selectList(wrapper);
     return converter.userAccountListToVO(entities);
   }
 
   @Override
   public List<UserAccountVO> listByIds(Collection<String> ids) {
-    List<UserAccountDO> entities = userAccountMapper.selectBatchIds(ids);
+    List<UserAccount> entities = userAccountMapper.selectBatchIds(ids);
     return converter.userAccountListToVO(entities);
   }
 
   @Override
   public long count(UserAccountPageQuery query) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = buildWrapper(query);
+    LambdaQueryWrapper<UserAccount> wrapper = buildWrapper(query);
     return userAccountMapper.selectCount(wrapper);
   }
 
   @Override
   public boolean existsByUsername(String username) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getUsername, username);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccount::getUsername, username);
     return userAccountMapper.selectCount(wrapper) > 0;
   }
 
   @Override
   public long countByTenantId(String tenantId) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getTenantId, tenantId);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccount::getTenantId, tenantId);
     return userAccountMapper.selectCount(wrapper);
   }
 
@@ -181,7 +181,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     if (id == null || id.isBlank() || status == null) {
       return 0;
     }
-    UpdateWrapper<UserAccountDO> wrapper = new UpdateWrapper<>();
+    UpdateWrapper<UserAccount> wrapper = new UpdateWrapper<>();
     wrapper.eq("id", id).set("status", convertLifecycleStatusToString(status));
     return userAccountMapper.update(null, wrapper);
   }
@@ -211,7 +211,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   @Override
   public Optional<UserAccountVO> findByIdWithBan(String id) {
-    UserAccountDO entity = userAccountMapper.selectById(id);
+    UserAccount entity = userAccountMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
@@ -222,59 +222,59 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   @Override
   public Optional<UserAccountVO> findByPhone(String phone) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getPhone, phone);
-    UserAccountDO entity = userAccountMapper.selectOne(wrapper);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccount::getPhone, phone);
+    UserAccount entity = userAccountMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<UserAccountVO> findByEmail(String email) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getEmail, email);
-    UserAccountDO entity = userAccountMapper.selectOne(wrapper);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccount::getEmail, email);
+    UserAccount entity = userAccountMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public long countLockedUsers() {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.isNotNull(UserAccountDO::getLockedUntil);
-    wrapper.gt(UserAccountDO::getLockedUntil, LocalDateTime.now());
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.isNotNull(UserAccount::getLockedUntil);
+    wrapper.gt(UserAccount::getLockedUntil, LocalDateTime.now());
     return userAccountMapper.selectCount(wrapper);
   }
 
   @Override
   public long countBannedUsers() {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.isNotNull(UserAccountDO::getBanType);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.isNotNull(UserAccount::getBanType);
     // 永久封禁 或 临时封禁未过期
-    wrapper.and(w -> w.eq(UserAccountDO::getBanType, "PERMANENT")
+    wrapper.and(w -> w.eq(UserAccount::getBanType, "PERMANENT")
         .or()
-        .eq(UserAccountDO::getBanType, "TEMPORARY")
-        .gt(UserAccountDO::getBanExpireAt, LocalDateTime.now()));
+        .eq(UserAccount::getBanType, "TEMPORARY")
+        .gt(UserAccount::getBanExpireAt, LocalDateTime.now()));
     return userAccountMapper.selectCount(wrapper);
   }
 
   @Override
   public List<String> findIdsByBanTypeAndExpireAtBefore(String banType, LocalDateTime expireAt) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccountDO::getBanType, banType);
-    wrapper.le(UserAccountDO::getBanExpireAt, expireAt);
-    wrapper.select(UserAccountDO::getId);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserAccount::getBanType, banType);
+    wrapper.le(UserAccount::getBanExpireAt, expireAt);
+    wrapper.select(UserAccount::getId);
     return userAccountMapper.selectList(wrapper).stream()
-        .map(UserAccountDO::getId)
+        .map(UserAccount::getId)
         .collect(Collectors.toList());
   }
 
   @Override
   public List<String> findIdsByLockedUntilBefore(LocalDateTime now) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.isNotNull(UserAccountDO::getLockedUntil);
-    wrapper.le(UserAccountDO::getLockedUntil, now);
-    wrapper.select(UserAccountDO::getId);
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.isNotNull(UserAccount::getLockedUntil);
+    wrapper.le(UserAccount::getLockedUntil, now);
+    wrapper.select(UserAccount::getId);
     return userAccountMapper.selectList(wrapper).stream()
-        .map(UserAccountDO::getId)
+        .map(UserAccount::getId)
         .collect(Collectors.toList());
   }
 
@@ -284,11 +284,11 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
    * @param query 分页查询参数
    * @return LambdaQueryWrapper
    */
-  private LambdaQueryWrapper<UserAccountDO> buildWrapper(UserAccountPageQuery query) {
-    LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+  private LambdaQueryWrapper<UserAccount> buildWrapper(UserAccountPageQuery query) {
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     applyLikeFilters(wrapper, query);
     applyEqFilters(wrapper, query);
-    wrapper.orderByAsc(UserAccountDO::getCreatedAt);
+    wrapper.orderByAsc(UserAccount::getCreatedAt);
     return wrapper;
   }
 
@@ -298,19 +298,19 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
    * @param wrapper 查询条件构造器
    * @param query 分页查询参数
    */
-  private void applyLikeFilters(LambdaQueryWrapper<UserAccountDO> wrapper,
+  private void applyLikeFilters(LambdaQueryWrapper<UserAccount> wrapper,
       UserAccountPageQuery query) {
     if (query.getUsername() != null && !query.getUsername().isBlank()) {
-      wrapper.like(UserAccountDO::getUsername, query.getUsername());
+      wrapper.like(UserAccount::getUsername, query.getUsername());
     }
     if (query.getRealName() != null && !query.getRealName().isBlank()) {
-      wrapper.like(UserAccountDO::getRealName, query.getRealName());
+      wrapper.like(UserAccount::getRealName, query.getRealName());
     }
     if (query.getPhone() != null && !query.getPhone().isBlank()) {
-      wrapper.like(UserAccountDO::getPhone, query.getPhone());
+      wrapper.like(UserAccount::getPhone, query.getPhone());
     }
     if (query.getEmail() != null && !query.getEmail().isBlank()) {
-      wrapper.like(UserAccountDO::getEmail, query.getEmail());
+      wrapper.like(UserAccount::getEmail, query.getEmail());
     }
   }
 
@@ -320,25 +320,25 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
    * @param wrapper 查询条件构造器
    * @param query 分页查询参数
    */
-  private void applyEqFilters(LambdaQueryWrapper<UserAccountDO> wrapper,
+  private void applyEqFilters(LambdaQueryWrapper<UserAccount> wrapper,
       UserAccountPageQuery query) {
     if (hasText(query.getStatus())) {
-      wrapper.eq(UserAccountDO::getStatus, query.getStatus());
+      wrapper.eq(UserAccount::getStatus, query.getStatus());
     }
     if (hasText(query.getUserType())) {
-      wrapper.eq(UserAccountDO::getUserType, query.getUserType());
+      wrapper.eq(UserAccount::getUserType, query.getUserType());
     }
     if (hasText(query.getCompanyId())) {
-      wrapper.eq(UserAccountDO::getCompanyId, query.getCompanyId());
+      wrapper.eq(UserAccount::getCompanyId, query.getCompanyId());
     }
     if (hasText(query.getDeptId())) {
-      wrapper.eq(UserAccountDO::getDeptId, query.getDeptId());
+      wrapper.eq(UserAccount::getDeptId, query.getDeptId());
     }
     if (hasText(query.getLeaderId())) {
-      wrapper.eq(UserAccountDO::getLeaderId, query.getLeaderId());
+      wrapper.eq(UserAccount::getLeaderId, query.getLeaderId());
     }
     if (hasText(query.getPositionCode())) {
-      wrapper.eq(UserAccountDO::getPositionCode, query.getPositionCode());
+      wrapper.eq(UserAccount::getPositionCode, query.getPositionCode());
     }
   }
 

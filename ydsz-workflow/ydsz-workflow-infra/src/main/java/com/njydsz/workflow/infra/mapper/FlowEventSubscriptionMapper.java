@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
+import com.njydsz.workflow.infra.entity.FlowEventSubscription;
 
 /**
  * 工作流事件订阅 Mapper
@@ -29,12 +29,12 @@ import com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowEventSubscriptionDO 事件订阅实体
+ * @see com.njydsz.workflow.infra.entity.FlowEventSubscription 事件订阅实体
  * @see com.njydsz.workflow.server.service.FlowEventService 事件 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowEventSubscriptionMapper extends BaseMapper<FlowEventSubscriptionDO> {
+public interface FlowEventSubscriptionMapper extends BaseMapper<FlowEventSubscription> {
 
   /**
    * 按事件类型 + 引用匹配 WAITING 订阅
@@ -44,7 +44,7 @@ public interface FlowEventSubscriptionMapper extends BaseMapper<FlowEventSubscri
    * @param eventRef 事件引用标识
    * @return 匹配的订阅列表
    */
-  List<FlowEventSubscriptionDO> selectWaitingByEvent(
+  List<FlowEventSubscription> selectWaitingByEvent(
       @Param("tenantId") String tenantId,
       @Param("eventType") String eventType,
       @Param("eventRef") String eventRef);
@@ -56,7 +56,7 @@ public interface FlowEventSubscriptionMapper extends BaseMapper<FlowEventSubscri
    * @param correlationKey 参数说明
    * @return 返回值说明
    */
-  List<FlowEventSubscriptionDO> selectWaitingByCorrelation(
+  List<FlowEventSubscription> selectWaitingByCorrelation(
       @Param("tenantId") String tenantId, @Param("correlationKey") String correlationKey);
 
   /**

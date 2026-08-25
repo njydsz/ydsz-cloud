@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.userinfo.infra.entity.UserRoleDO;
+import com.njydsz.userinfo.infra.entity.UserRole;
 
 /**
  * 用户-角色关联表 Mapper
@@ -30,12 +30,12 @@ import com.njydsz.userinfo.infra.entity.UserRoleDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.infra.entity.UserRoleDO 用户-角色关联实体
+ * @see com.njydsz.userinfo.infra.entity.UserRole 用户-角色关联实体
  * @see com.njydsz.userinfo.server.service.UserRoleService 用户-角色 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
+public interface UserRoleMapper extends BaseMapper<UserRole> {
 
   /**
    * 批量插入用户-角色关联。
@@ -50,5 +50,5 @@ public interface UserRoleMapper extends BaseMapper<UserRoleDO> {
           + "(#{item.id}, #{item.userId}, #{item.roleId}, #{item.tenantId}, 0)"
           + "</foreach>"
           + "</script>")
-  int batchInsert(@Param("list") List<UserRoleDO> list);
+  int batchInsert(@Param("list") List<UserRole> list);
 }

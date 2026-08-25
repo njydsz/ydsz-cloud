@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.enums;
+﻿package com.njydsz.userinfo.domain.enums;
 
 import lombok.Getter;
 
@@ -115,43 +115,43 @@ public enum UserInfoExceptionCode implements ExceptionCode {
 
   // ==================== B31xxx 组织架构 ====================
   /** 部门不存在 */
-  DEPARTMENT_NOT_FOUND("B30101", "userinfo.DepartmentDO.not.found", 404),
+  DEPARTMENT_NOT_FOUND("B30101", "userinfo.Department.not.found", 404),
   /** 该部门下存在子部门，无法删除 */
-  DEPARTMENT_HAS_CHILDREN("B30102", "userinfo.DepartmentDO.has.children"),
+  DEPARTMENT_HAS_CHILDREN("B30102", "userinfo.Department.has.children"),
   /** 该部门下存在人员，无法删除 */
-  DEPARTMENT_HAS_USERS("B30103", "userinfo.DepartmentDO.has.users"),
+  DEPARTMENT_HAS_USERS("B30103", "userinfo.Department.has.users"),
   /** 部门编码已存在 */
-  DEPARTMENT_CODE_DUPLICATE("B30104", "userinfo.DepartmentDO.code.duplicate"),
+  DEPARTMENT_CODE_DUPLICATE("B30104", "userinfo.Department.code.duplicate"),
   /** 公司不存在 */
-  COMPANY_NOT_FOUND("B30105", "userinfo.CompanyDO.not.found", 404),
+  COMPANY_NOT_FOUND("B30105", "userinfo.Company.not.found", 404),
   /** 公司编码已存在 */
-  COMPANY_CODE_DUPLICATE("B30106", "userinfo.CompanyDO.code.duplicate"),
+  COMPANY_CODE_DUPLICATE("B30106", "userinfo.Company.code.duplicate"),
   /** 用户-部门关联不存在 */
   USER_DEPT_NOT_FOUND("B30107", "userinfo.UserDeptVO.not.found", 404),
 
   // ==================== B32xxx RBAC ====================
   /** 角色不存在 */
-  ROLE_NOT_FOUND("B32001", "userinfo.RoleDO.not.found", 404),
+  ROLE_NOT_FOUND("B32001", "userinfo.Role.not.found", 404),
   /** 角色编码已存在 */
-  ROLE_CODE_DUPLICATE("B32002", "userinfo.RoleDO.code.duplicate"),
+  ROLE_CODE_DUPLICATE("B32002", "userinfo.Role.code.duplicate"),
   /** 内置角色不允许删除 */
-  ROLE_BUILTIN_CANNOT_DELETE("B32003", "userinfo.RoleDO.builtin.cannot.delete"),
+  ROLE_BUILTIN_CANNOT_DELETE("B32003", "userinfo.Role.builtin.cannot.delete"),
   /** 该角色下存在用户，无法删除 */
-  ROLE_HAS_USERS("B32004", "userinfo.RoleDO.has.users"),
+  ROLE_HAS_USERS("B32004", "userinfo.Role.has.users"),
   /** 权限不存在 */
   PERMISSION_NOT_FOUND("B32005", "userinfo.permission.not.found", 404),
   /** 菜单不存在 */
-  MENU_NOT_FOUND("B32006", "userinfo.MenuDO.not.found", 404),
+  MENU_NOT_FOUND("B32006", "userinfo.Menu.not.found", 404),
   /** 该菜单下存在子菜单，无法删除 */
-  MENU_HAS_CHILDREN("B32011", "userinfo.MenuDO.has.children"),
+  MENU_HAS_CHILDREN("B32011", "userinfo.Menu.has.children"),
   /** 岗位不存在 */
-  POST_NOT_FOUND("B32007", "userinfo.PostDO.not.found", 404),
+  POST_NOT_FOUND("B32007", "userinfo.Post.not.found", 404),
   /** 岗位编码已存在 */
-  POST_CODE_DUPLICATE("B32008", "userinfo.PostDO.code.duplicate"),
+  POST_CODE_DUPLICATE("B32008", "userinfo.Post.code.duplicate"),
   /** 语言不存在 */
-  LANGUAGE_NOT_FOUND("B32009", "userinfo.LanguageDO.not.found", 404),
+  LANGUAGE_NOT_FOUND("B32009", "userinfo.Language.not.found", 404),
   /** 语言编码已存在 */
-  LANGUAGE_CODE_DUPLICATE("B32010", "userinfo.LanguageDO.code.duplicate"),
+  LANGUAGE_CODE_DUPLICATE("B32010", "userinfo.Language.code.duplicate"),
 
   // ==================== A20xxx 安全认证（二次认证/会话控制） ====================
   /** 该设备类型会话数已达上限 */

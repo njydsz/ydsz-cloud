@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +12,7 @@ import com.njydsz.userinfo.domain.dto.UserPostDTO;
 import com.njydsz.userinfo.domain.repository.UserPostRepository;
 import com.njydsz.userinfo.domain.vo.UserPostVO;
 import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.entity.UserPostDO;
+import com.njydsz.userinfo.infra.entity.UserPost;
 import com.njydsz.userinfo.infra.mapper.UserPostMapper;
 
 /**
@@ -33,55 +33,55 @@ public class UserPostRepositoryImpl implements UserPostRepository {
 
   @Override
   public Optional<UserPostVO> findById(String id) {
-    UserPostDO entity = userPostMapper.selectById(id);
+    UserPost entity = userPostMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public List<UserPostVO> findByUserId(String userId) {
-    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPostDO::getUserId, userId);
-    List<UserPostDO> entities = userPostMapper.selectList(wrapper);
+    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPost::getUserId, userId);
+    List<UserPost> entities = userPostMapper.selectList(wrapper);
     return converter.userPostListToVO(entities);
   }
 
   @Override
   public List<String> findPostIdsByUserId(String userId) {
-    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPostDO::getUserId, userId);
+    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPost::getUserId, userId);
     return userPostMapper.selectList(wrapper).stream()
-        .map(UserPostDO::getPostId)
+        .map(UserPost::getPostId)
         .collect(Collectors.toList());
   }
 
   @Override
   public Optional<UserPostVO> findByUserIdAndPostId(String userId, String postId) {
-    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPostDO::getUserId, userId);
-    wrapper.eq(UserPostDO::getPostId, postId);
-    UserPostDO entity = userPostMapper.selectOne(wrapper);
+    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPost::getUserId, userId);
+    wrapper.eq(UserPost::getPostId, postId);
+    UserPost entity = userPostMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public UserPostVO create(UserPostDTO dto) {
-    UserPostDO entity = converter.dtoToEntity(dto);
+    UserPost entity = converter.dtoToEntity(dto);
     userPostMapper.insert(entity);
     return converter.entityToVO(entity);
   }
 
   @Override
   public int deleteByUserId(String userId) {
-    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPostDO::getUserId, userId);
+    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPost::getUserId, userId);
     return userPostMapper.delete(wrapper);
   }
 
   @Override
   public int deleteByUserIdAndPostId(String userId, String postId) {
-    LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserPostDO::getUserId, userId);
-    wrapper.eq(UserPostDO::getPostId, postId);
+    LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserPost::getUserId, userId);
+    wrapper.eq(UserPost::getPostId, postId);
     return userPostMapper.delete(wrapper);
   }
 

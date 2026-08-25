@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
+import com.njydsz.workflow.infra.entity.FlowAutoTrigger;
 
 /**
  * 流程自动触发规则 Mapper
@@ -28,12 +28,12 @@ import com.njydsz.workflow.infra.entity.FlowAutoTriggerDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowAutoTriggerDO 自动触发规则实体
+ * @see com.njydsz.workflow.infra.entity.FlowAutoTrigger 自动触发规则实体
  * @see com.njydsz.workflow.server.service.FlowAutoTriggerService 自动触发 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowAutoTriggerMapper extends BaseMapper<FlowAutoTriggerDO> {
+public interface FlowAutoTriggerMapper extends BaseMapper<FlowAutoTrigger> {
 
   /**
    * 按源流程编码查询所有启用的触发规则
@@ -41,6 +41,6 @@ public interface FlowAutoTriggerMapper extends BaseMapper<FlowAutoTriggerDO> {
    * @param sourceFlowCode 源流程编码
    * @return 启用的触发规则列表
    */
-  List<FlowAutoTriggerDO> selectEnabledBySourceFlowCode(
+  List<FlowAutoTrigger> selectEnabledBySourceFlowCode(
       @Param("sourceFlowCode") String sourceFlowCode);
 }

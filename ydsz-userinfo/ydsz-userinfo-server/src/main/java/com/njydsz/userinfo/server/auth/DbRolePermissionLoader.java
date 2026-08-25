@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.auth;
+﻿package com.njydsz.userinfo.server.auth;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,7 +32,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * <p><b>缓存策略（P0-1 修复）：</b>
  *
  * <ul>
- *   <li>DB 查询结果写入 Redis（key {@code userinfo:permission:RoleDO:{roleCode}}，TTL 由
+ *   <li>DB 查询结果写入 Redis（key {@code userinfo:permission:Role:{roleCode}}，TTL 由
  *       {@code ydsz.userinfo.permission-cache-ttl-seconds} 外部化配置，默认 10 分钟）
  *   <li>菜单/角色/权限分配变更时调用 {@link #invalidate(String)} / {@link #invalidateAll()}
  *       主动失效，保证权限变更即时生效，不再依赖 TTL 自然过期
@@ -47,11 +47,11 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @RequiredArgsConstructor
 public class DbRolePermissionLoader implements RolePermissionLoader {
 
-  /** 权限分类数（MenuDO / BUTTON / API 三类）。 */
+  /** 权限分类数（Menu / BUTTON / API 三类）。 */
   private static final int PERMISSION_CATEGORY_COUNT = 3;
 
   /** 角色权限缓存 Redis Key 前缀。 */
-  private static final String CACHE_KEY_PREFIX = "userinfo:permission:RoleDO:";
+  private static final String CACHE_KEY_PREFIX = "userinfo:permission:Role:";
 
   private final MenuRepository menuRepository;
   private final RoleRepository roleRepository;
@@ -125,7 +125,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
     Map<String, Set<String>> categorized = categorizePermissions(menus);
 
     return new RolePermissions(
-        Collections.unmodifiableSet(categorized.get("MenuDO")),
+        Collections.unmodifiableSet(categorized.get("Menu")),
         Collections.unmodifiableSet(categorized.get("BUTTON")),
         Collections.unmodifiableSet(categorized.get("API")));
   }
@@ -165,14 +165,14 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
   }
 
   /**
-   * 序列化权限集合为 JSON（{@code {"MenuDO":[],"button":[],"api":[]}}）。
+   * 序列化权限集合为 JSON（{@code {"Menu":[],"button":[],"api":[]}}）。
    *
    * @param permissions 权限集合
    * @return JSON 字符串
    */
   private String serialize(RolePermissions permissions) {
     Map<String, Object> map = new HashMap<>(PERMISSION_CATEGORY_COUNT);
-    map.put("MenuDO", permissions.getMenuPermissions());
+    map.put("Menu", permissions.getMenuPermissions());
     map.put("button", permissions.getButtonPermissions());
     map.put("api", permissions.getApiPermissions());
     return YdszJson.toJson(map);
@@ -191,7 +191,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
       if (map == null) {
         return null;
       }
-      Set<String> menuPerms = toStringSet(map.get("MenuDO"));
+      Set<String> menuPerms = toStringSet(map.get("Menu"));
       Set<String> buttonPerms = toStringSet(map.get("button"));
       Set<String> apiPerms = toStringSet(map.get("api"));
       return new RolePermissions(
@@ -221,7 +221,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
    * 按菜单类型分类权限码。
    *
    * @param menus 菜单列表
-   * @return 分类后的权限码映射（MenuDO/BUTTON/API）
+   * @return 分类后的权限码映射（Menu/BUTTON/API）
    */
   private Map<String, Set<String>> categorizePermissions(List<MenuVO> menus) {
     Set<String> menuPerms = new HashSet<>();
@@ -243,7 +243,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
       }
     }
     Map<String, Set<String>> result = new HashMap<>(PERMISSION_CATEGORY_COUNT);
-    result.put("MenuDO", menuPerms);
+    result.put("Menu", menuPerms);
     result.put("BUTTON", buttonPerms);
     result.put("API", apiPerms);
     return result;

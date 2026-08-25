@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.event;
+﻿package com.njydsz.userinfo.domain.event;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -41,7 +41,7 @@ public class UserDomainEvent extends DomainEvent {
    *
    * @param eventType 事件类型枚举（{@link UserDomainEventType}）
    * @param aggregateId 聚合根 ID
-   * @param aggregateType 聚合根类型（USER / RoleDO / DepartmentDO）
+   * @param aggregateType 聚合根类型（USER / Role / Department）
    * @param metadata 扩展元数据
    */
   public UserDomainEvent(

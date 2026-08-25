@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.controller;
+﻿package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ import com.njydsz.userinfo.server.service.PostService;
  *
  * <p>提供岗位的完整管理能力（CRUD）。 岗位是「职责维度」，描述用户做什么事（如 PM、DEV、QA），区别于角色（权限维度）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/PostDO}
+ * <p><b>接口路径：</b>{@code /api/v1/Post}
  *
  * <p><b>核心能力：</b>
  *
@@ -112,7 +112,7 @@ public class PostController {
       action = AuditAction.CREATE,
       content = "'创建岗位: ' + #dto.postName")
   @Idempotent(key = "ydsz:userinfo:PostController:create:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.PostDO.create", threshold = 50)
+  @RateLimit(resource = "userinfo.Post.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建岗位")
   public YdszResponse<String> create(@Valid @RequestBody PostDTO dto) {
@@ -137,7 +137,7 @@ public class PostController {
       action = AuditAction.UPDATE,
       content = "'更新岗位: ' + #dto.id")
   @Idempotent(key = "ydsz:userinfo:PostController:update:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.PostDO.update", threshold = 50)
+  @RateLimit(resource = "userinfo.Post.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新岗位")
   public YdszResponse<Boolean> update(@Valid @RequestBody PostDTO dto) {
@@ -166,7 +166,7 @@ public class PostController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'删除岗位: ' + #id")
-  @RateLimit(resource = "userinfo.PostDO.remove", threshold = 50)
+  @RateLimit(resource = "userinfo.Post.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:PostController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除岗位")

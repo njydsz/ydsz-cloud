@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.enums;
+﻿package com.njydsz.userinfo.domain.enums;
 
 import java.util.Arrays;
 import java.util.List;
@@ -154,7 +154,7 @@ public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatu
    * <p>兼容三种格式：
    *
    * <ul>
-   *   <li>遗留整数格式：{@code "0"}（禁用）/ {@code "1"}（启用）—— UserAccountDO 表的历史兼容
+   *   <li>遗留整数格式：{@code "0"}（禁用）/ {@code "1"}（启用）—— UserAccount 表的历史兼容
    *   <li>旧枚举字面量：{@code "ENABLED"} / {@code "DISABLED"}
    *   <li>新枚举字面量：{@code "PENDING"} / {@code "SUSPENDED"} / {@code "RESIGNED"}
    * </ul>
@@ -166,7 +166,7 @@ public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatu
     if (value == null || value.isBlank()) {
       return null;
     }
-    // 遗留 0/1 兼容（UserAccountDO 表历史数据）
+    // 遗留 0/1 兼容（UserAccount 表历史数据）
     if ("0".equals(value)) {
       return DISABLED;
     }

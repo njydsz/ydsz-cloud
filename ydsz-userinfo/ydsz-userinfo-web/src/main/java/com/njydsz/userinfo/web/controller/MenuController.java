@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.controller;
+﻿package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  * <p>提供菜单的完整管理能力（CRUD）、菜单树查询、当前用户菜单查询。 菜单（{@code ydsz_menu}）是 RBAC 模型中最细粒度的「权限点」，既可以表示前端路由节点，
  * 也可以表示后端接口权限码（如 {@code system:user:create}）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/MenuDO}
+ * <p><b>接口路径：</b>{@code /api/v1/Menu}
  *
  * <p><b>核心能力：</b>
  *
@@ -136,7 +136,7 @@ public class MenuController {
       action = AuditAction.CREATE,
       content = "'创建菜单: ' + #dto.menuName")
   @Idempotent(key = "ydsz:userinfo:MenuController:create:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.MenuDO.create", threshold = 50)
+  @RateLimit(resource = "userinfo.Menu.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建菜单")
   public YdszResponse<String> create(@Valid @RequestBody MenuDTO dto) {
@@ -161,7 +161,7 @@ public class MenuController {
       action = AuditAction.UPDATE,
       content = "'更新菜单: ' + #dto.id")
   @Idempotent(key = "ydsz:userinfo:MenuController:update:lock", ttlSeconds = 5)
-  @RateLimit(resource = "userinfo.MenuDO.update", threshold = 50)
+  @RateLimit(resource = "userinfo.Menu.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新菜单")
   public YdszResponse<Boolean> update(@Valid @RequestBody MenuDTO dto) {
@@ -190,7 +190,7 @@ public class MenuController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'删除菜单: ' + #id")
-  @RateLimit(resource = "userinfo.MenuDO.remove", threshold = 50)
+  @RateLimit(resource = "userinfo.Menu.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:MenuController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除菜单")

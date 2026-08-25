@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
-import com.njydsz.userinfo.infra.entity.RoleDO;
+import com.njydsz.userinfo.infra.entity.Role;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 
 /**
@@ -38,21 +38,21 @@ public class RoleRepositoryImpl implements RoleRepository {
 
   @Override
   public Optional<RoleVO> findById(String id) {
-    RoleDO entity = roleMapper.selectById(id);
+    Role entity = roleMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<RoleVO> findByRoleCode(String roleCode) {
-    LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RoleDO::getRoleCode, roleCode);
-    RoleDO entity = roleMapper.selectOne(wrapper);
+    LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Role::getRoleCode, roleCode);
+    Role entity = roleMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public List<RoleVO> findByIds(Collection<String> ids) {
-    List<RoleDO> entities = roleMapper.selectBatchIds(ids);
+    List<Role> entities = roleMapper.selectBatchIds(ids);
     return converter.roleListToVO(entities);
   }
 
@@ -61,15 +61,15 @@ public class RoleRepositoryImpl implements RoleRepository {
     if (ids == null || ids.isEmpty()) {
       return Collections.emptyList();
     }
-    List<RoleDO> list = roleMapper.selectBatchIds(ids);
+    List<Role> list = roleMapper.selectBatchIds(ids);
     return list.stream().map(converter::entityToVO).collect(Collectors.toList());
   }
 
   @Override
   public PageResponse<List<RoleVO>> page(RolePageQuery query) {
-    Page<RoleDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<RoleDO> wrapper = buildWrapper(query);
-    Page<RoleDO> result = roleMapper.selectPage(page, wrapper);
+    Page<Role> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<Role> wrapper = buildWrapper(query);
+    Page<Role> result = roleMapper.selectPage(page, wrapper);
     List<RoleVO> vos = converter.roleListToVO(result.getRecords());
     return PageResponse.success(
         result.getTotal(),
@@ -80,8 +80,8 @@ public class RoleRepositoryImpl implements RoleRepository {
 
   @Override
   public List<RoleVO> list(RolePageQuery query) {
-    LambdaQueryWrapper<RoleDO> wrapper = buildWrapper(query);
-    List<RoleDO> entities = roleMapper.selectList(wrapper);
+    LambdaQueryWrapper<Role> wrapper = buildWrapper(query);
+    List<Role> entities = roleMapper.selectList(wrapper);
     return converter.roleListToVO(entities);
   }
 
@@ -89,12 +89,12 @@ public class RoleRepositoryImpl implements RoleRepository {
   public RoleVO save(RoleDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
       // 创建场景
-      RoleDO entity = converter.dtoToEntity(dto);
+      Role entity = converter.dtoToEntity(dto);
       roleMapper.insert(entity);
       return converter.entityToVO(entity);
     } else {
       // 更新场景
-      RoleDO entity = converter.dtoToEntityWithId(dto);
+      Role entity = converter.dtoToEntityWithId(dto);
       roleMapper.updateById(entity);
       return converter.entityToVO(entity);
     }
@@ -107,23 +107,23 @@ public class RoleRepositoryImpl implements RoleRepository {
 
   @Override
   public long countByQuery(RolePageQuery query) {
-    LambdaQueryWrapper<RoleDO> wrapper = buildWrapper(query);
+    LambdaQueryWrapper<Role> wrapper = buildWrapper(query);
     return roleMapper.selectCount(wrapper);
   }
 
-  private LambdaQueryWrapper<RoleDO> buildWrapper(RolePageQuery query) {
-    LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
+  private LambdaQueryWrapper<Role> buildWrapper(RolePageQuery query) {
+    LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
     if (query.getRoleCode() != null && !query.getRoleCode().isBlank()) {
-      wrapper.like(RoleDO::getRoleCode, query.getRoleCode());
+      wrapper.like(Role::getRoleCode, query.getRoleCode());
     }
     if (query.getRoleName() != null && !query.getRoleName().isBlank()) {
-      wrapper.like(RoleDO::getRoleName, query.getRoleName());
+      wrapper.like(Role::getRoleName, query.getRoleName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(RoleDO::getStatus, query.getStatus());
+      wrapper.eq(Role::getStatus, query.getStatus());
     }
     if (query.getTenantId() != null && !query.getTenantId().isBlank()) {
-      wrapper.eq(RoleDO::getTenantId, query.getTenantId());
+      wrapper.eq(Role::getTenantId, query.getTenantId());
     }
     return wrapper;
   }

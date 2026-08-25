@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.social;
+﻿package com.njydsz.userinfo.domain.social;
 
 /**
  * 社交认证提供者接口（统一抽象层）。
@@ -22,7 +22,7 @@ public interface SocialAuthProvider {
   /**
    * 获取平台标识。
    *
-   * <p>返回值与 {@code SocialAccountDO.getPlatform()} 对应，如 {@code WECHAT}、{@code DINGTALK}、
+   * <p>返回值与 {@code SocialAccount.getPlatform()} 对应，如 {@code WECHAT}、{@code DINGTALK}、
    * {@code ENTERPRISE_WECHAT}、{@code GITHUB}。全局唯一，用作 Map 键和配置键。
    *
    * @return 平台标识字符串（大写枚举风格）

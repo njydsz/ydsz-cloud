@@ -1,11 +1,11 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.AuthPolicyDO;
+import com.njydsz.userinfo.infra.entity.AuthPolicy;
 
 /**
  * 认证策略 Mapper 接口（P3-1）。
@@ -22,7 +22,7 @@ import com.njydsz.userinfo.infra.entity.AuthPolicyDO;
  * @since 1.0.0
  */
 @Mapper
-public interface AuthPolicyMapper extends BaseMapper<AuthPolicyDO> {
+public interface AuthPolicyMapper extends BaseMapper<AuthPolicy> {
 
   /**
    * 根据租户 ID 查询认证策略。
@@ -35,5 +35,5 @@ public interface AuthPolicyMapper extends BaseMapper<AuthPolicyDO> {
   @Select("SELECT * FROM ydsz_auth_policy "
       + "WHERE (tenant_id = #{tenantId} OR (#{tenantId} IS NULL AND tenant_id IS NULL)) "
       + "AND deleted = 0 LIMIT 1")
-  AuthPolicyDO selectByTenantId(@Param("tenantId") String tenantId);
+  AuthPolicy selectByTenantId(@Param("tenantId") String tenantId);
 }

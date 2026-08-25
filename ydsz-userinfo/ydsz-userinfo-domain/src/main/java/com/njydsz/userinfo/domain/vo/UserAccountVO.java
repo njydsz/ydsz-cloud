@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.vo;
+﻿package com.njydsz.userinfo.domain.vo;
 
 import java.time.LocalDateTime;
 
@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.enums.BanType;
 /**
  * 用户账号 VO，用于 Controller 返回，不包含密码、盐值等敏感字段。
  *
- * <p>由 {@code UserInfoConverter.entityToVO()} 从 {@code UserAccountDO} 实体转换而来， 供前端展示和跨模块查询使用。
+ * <p>由 {@code UserInfoConverter.entityToVO()} 从 {@code UserAccount} 实体转换而来， 供前端展示和跨模块查询使用。
  *
  * @author ydsz-team
  * @since 1.0.0

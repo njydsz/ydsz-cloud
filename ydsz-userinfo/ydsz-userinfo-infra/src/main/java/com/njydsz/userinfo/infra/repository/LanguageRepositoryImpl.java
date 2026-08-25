@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +14,7 @@ import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.repository.LanguageRepository;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
-import com.njydsz.userinfo.infra.entity.LanguageDO;
+import com.njydsz.userinfo.infra.entity.Language;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 
 /**
@@ -35,31 +35,31 @@ public class LanguageRepositoryImpl implements LanguageRepository {
 
   @Override
   public Optional<LanguageVO> findById(String id) {
-    LanguageDO entity = languageMapper.selectById(id);
+    Language entity = languageMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<LanguageVO> findByLanguageCode(String languageCode) {
-    LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(LanguageDO::getLanguageCode, languageCode);
-    LanguageDO entity = languageMapper.selectOne(wrapper);
+    LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Language::getLanguageCode, languageCode);
+    Language entity = languageMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<LanguageVO> findDefault() {
-    LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(LanguageDO::getIsDefault, 1);
-    LanguageDO entity = languageMapper.selectOne(wrapper);
+    LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Language::getIsDefault, 1);
+    Language entity = languageMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public PageResponse<List<LanguageVO>> page(LanguagePageQuery query) {
-    Page<LanguageDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<LanguageDO> wrapper = buildWrapper(query);
-    Page<LanguageDO> result = languageMapper.selectPage(page, wrapper);
+    Page<Language> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<Language> wrapper = buildWrapper(query);
+    Page<Language> result = languageMapper.selectPage(page, wrapper);
     List<LanguageVO> vos = converter.languageListToVO(result.getRecords());
     return PageResponse.success(
         result.getTotal(),
@@ -70,19 +70,19 @@ public class LanguageRepositoryImpl implements LanguageRepository {
 
   @Override
   public List<LanguageVO> list(LanguagePageQuery query) {
-    LambdaQueryWrapper<LanguageDO> wrapper = buildWrapper(query);
-    List<LanguageDO> entities = languageMapper.selectList(wrapper);
+    LambdaQueryWrapper<Language> wrapper = buildWrapper(query);
+    List<Language> entities = languageMapper.selectList(wrapper);
     return converter.languageListToVO(entities);
   }
 
   @Override
   public LanguageVO save(LanguageDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
-      LanguageDO entity = converter.dtoToEntity(dto);
+      Language entity = converter.dtoToEntity(dto);
       languageMapper.insert(entity);
       return converter.entityToVO(entity);
     } else {
-      LanguageDO entity = converter.dtoToEntityWithId(dto);
+      Language entity = converter.dtoToEntityWithId(dto);
       languageMapper.updateById(entity);
       return converter.entityToVO(entity);
     }
@@ -95,20 +95,20 @@ public class LanguageRepositoryImpl implements LanguageRepository {
 
   @Override
   public long countByQuery(LanguagePageQuery query) {
-    LambdaQueryWrapper<LanguageDO> wrapper = buildWrapper(query);
+    LambdaQueryWrapper<Language> wrapper = buildWrapper(query);
     return languageMapper.selectCount(wrapper);
   }
 
-  private LambdaQueryWrapper<LanguageDO> buildWrapper(LanguagePageQuery query) {
-    LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
+  private LambdaQueryWrapper<Language> buildWrapper(LanguagePageQuery query) {
+    LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
     if (query.getLanguageCode() != null && !query.getLanguageCode().isBlank()) {
-      wrapper.like(LanguageDO::getLanguageCode, query.getLanguageCode());
+      wrapper.like(Language::getLanguageCode, query.getLanguageCode());
     }
     if (query.getLanguageName() != null && !query.getLanguageName().isBlank()) {
-      wrapper.like(LanguageDO::getLanguageName, query.getLanguageName());
+      wrapper.like(Language::getLanguageName, query.getLanguageName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(LanguageDO::getStatus, query.getStatus());
+      wrapper.eq(Language::getStatus, query.getStatus());
     }
     return wrapper;
   }

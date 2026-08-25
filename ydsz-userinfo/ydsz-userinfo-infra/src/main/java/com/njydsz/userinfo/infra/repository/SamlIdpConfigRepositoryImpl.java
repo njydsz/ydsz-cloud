@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +13,7 @@ import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.repository.SamlIdpConfigRepository;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.infra.converter.SamlIdpConfigConverter;
-import com.njydsz.userinfo.infra.entity.SamlIdpConfigDO;
+import com.njydsz.userinfo.infra.entity.SamlIdpConfig;
 import com.njydsz.userinfo.infra.mapper.SamlIdpConfigMapper;
 
 /**
@@ -35,7 +35,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
 
   @Override
   public Optional<SamlIdpConfigVO> findByEntityId(String entityId) {
-    SamlIdpConfigDO entity = mapper.selectByEntityId(entityId);
+    SamlIdpConfig entity = mapper.selectByEntityId(entityId);
     return entity != null
         ? Optional.of(samlIdpConfigConverter.entityToVo(entity))
         : Optional.empty();
@@ -43,15 +43,15 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
 
   @Override
   public List<SamlIdpConfigVO> findByPage(SamlIdpPageQuery query) {
-    LambdaQueryWrapper<SamlIdpConfigDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SamlIdpConfigDO::getDeleted, false)
+    LambdaQueryWrapper<SamlIdpConfig> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SamlIdpConfig::getDeleted, false)
         .like(query.getName() != null && !query.getName().isBlank(),
-            SamlIdpConfigDO::getName, query.getName())
+            SamlIdpConfig::getName, query.getName())
         .eq(query.getStatus() != null && !query.getStatus().isBlank(),
-            SamlIdpConfigDO::getStatus, query.getStatus())
-        .orderByAsc(SamlIdpConfigDO::getSortOrder);
+            SamlIdpConfig::getStatus, query.getStatus())
+        .orderByAsc(SamlIdpConfig::getSortOrder);
 
-    List<SamlIdpConfigDO> entities = mapper.selectList(wrapper);
+    List<SamlIdpConfig> entities = mapper.selectList(wrapper);
     return entities.stream()
         .map(samlIdpConfigConverter::entityToVo)
         .toList();
@@ -59,7 +59,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
 
   @Override
   public List<SamlIdpConfigVO> findEnabled() {
-    List<SamlIdpConfigDO> entities = mapper.selectEnabledConfigs();
+    List<SamlIdpConfig> entities = mapper.selectEnabledConfigs();
     return entities.stream()
         .map(samlIdpConfigConverter::entityToVo)
         .toList();
@@ -67,7 +67,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
 
   @Override
   public void save(SamlIdpDTO dto) {
-    SamlIdpConfigDO existing = mapper.selectByEntityId(dto.getEntityId());
+    SamlIdpConfig existing = mapper.selectByEntityId(dto.getEntityId());
     if (existing == null) {
       createNew(dto);
     } else {
@@ -81,7 +81,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
    * @param dto 待创建数据
    */
   private void createNew(SamlIdpDTO dto) {
-    SamlIdpConfigDO entity = new SamlIdpConfigDO();
+    SamlIdpConfig entity = new SamlIdpConfig();
     entity.setName(dto.getName());
     entity.setEntityId(dto.getEntityId());
     entity.setSsoUrl(dto.getSsoUrl());
@@ -103,7 +103,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
    * @param existing 已有实体
    * @param dto 待更新数据
    */
-  private void updateExisting(SamlIdpConfigDO existing, SamlIdpDTO dto) {
+  private void updateExisting(SamlIdpConfig existing, SamlIdpDTO dto) {
     if (dto.getName() != null) {
       existing.setName(dto.getName());
     }
@@ -135,10 +135,10 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
 
   @Override
   public void deleteByEntityId(String entityId) {
-    LambdaQueryWrapper<SamlIdpConfigDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SamlIdpConfigDO::getEntityId, entityId)
-        .eq(SamlIdpConfigDO::getDeleted, false);
-    SamlIdpConfigDO entity = mapper.selectOne(wrapper);
+    LambdaQueryWrapper<SamlIdpConfig> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SamlIdpConfig::getEntityId, entityId)
+        .eq(SamlIdpConfig::getDeleted, false);
+    SamlIdpConfig entity = mapper.selectOne(wrapper);
     if (entity != null) {
       entity.setDeleted(1);
       mapper.updateById(entity);

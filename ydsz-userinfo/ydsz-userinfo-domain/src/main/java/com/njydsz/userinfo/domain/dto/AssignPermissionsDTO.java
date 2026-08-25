@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.dto;
+﻿package com.njydsz.userinfo.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -10,7 +10,7 @@ import lombok.Data;
 /**
  * 分配角色权限请求 DTO。
  *
- * <p>用于 {@code PostDO /api/v1/RoleDO/{roleId}/permissions} 接口，为指定角色分配权限。 采用<b>全量覆盖</b>策略：传入的权限 ID
+ * <p>用于 {@code Post /api/v1/Role/{roleId}/permissions} 接口，为指定角色分配权限。 采用<b>全量覆盖</b>策略：传入的权限 ID
  * 列表将完全替换角色原有权限关联。
  *
  * <p><b>注意事项：</b>

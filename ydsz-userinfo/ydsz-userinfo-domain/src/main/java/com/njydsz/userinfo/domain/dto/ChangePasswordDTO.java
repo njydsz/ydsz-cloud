@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.dto;
+﻿package com.njydsz.userinfo.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * 修改密码请求 DTO（用户自助修改）。
  *
- * <p>用于 {@code PostDO /api/v1/user/change-password} 接口，用户自行修改登录密码。 服务端会校验旧密码是否正确，新密码须符合密码策略（长度+复杂度）。
+ * <p>用于 {@code Post /api/v1/user/change-password} 接口，用户自行修改登录密码。 服务端会校验旧密码是否正确，新密码须符合密码策略（长度+复杂度）。
  *
  * <p><b>安全说明：</b>修改密码成功后，当前会话 Token 不会被撤销， 如需强制下线请调用管理员重置密码接口。
  *

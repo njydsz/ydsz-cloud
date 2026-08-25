@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.query;
+﻿package com.njydsz.userinfo.domain.query;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,7 +23,7 @@ public class MenuPageQuery extends PageQuery {
   /** 菜单名称，模糊查询 */
   private String menuName;
 
-  /** 菜单类型过滤：DIRECTORY/MenuDO/BUTTON */
+  /** 菜单类型过滤：DIRECTORY/Menu/BUTTON */
   private String menuType;
 
   /** 状态过滤：ENABLE/DISABLE */

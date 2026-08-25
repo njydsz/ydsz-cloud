@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.workflow.infra.entity.FlowCommentDO;
+import com.njydsz.workflow.infra.entity.FlowComment;
 
 /**
  * P2-2 流程评论 Mapper
@@ -29,12 +29,12 @@ import com.njydsz.workflow.infra.entity.FlowCommentDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowCommentDO 评论实体
+ * @see com.njydsz.workflow.infra.entity.FlowComment 评论实体
  * @see com.njydsz.workflow.server.service.FlowCommentService 评论 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {
+public interface FlowCommentMapper extends BaseMapper<FlowComment> {
 
   /**
    * 查询实例下全部一级评论（按创建时间正序）。
@@ -48,7 +48,7 @@ public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {
           + "WHERE tenant_id = #{tenantId} AND instance_id = #{instanceId} "
           + "AND parent_comment_id IS NULL AND deleted = 0 "
           + "ORDER BY created_at ASC")
-  List<FlowCommentDO> listRootComments(
+  List<FlowComment> listRootComments(
       @Param("tenantId") String tenantId, @Param("instanceId") String instanceId);
 
   /**
@@ -63,7 +63,7 @@ public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {
       "SELECT * FROM ydsz_flow_comment "
           + "WHERE parent_comment_id = #{parentCommentId} AND deleted = 0 "
           + "ORDER BY created_at ASC")
-  List<FlowCommentDO> listReplies(@Param("parentCommentId") String parentCommentId);
+  List<FlowComment> listReplies(@Param("parentCommentId") String parentCommentId);
 
   /**
    * 查询实例下全部评论（一级 + 回复，按创建时间正序）。
@@ -78,6 +78,6 @@ public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {
       "SELECT * FROM ydsz_flow_comment "
           + "WHERE tenant_id = #{tenantId} AND instance_id = #{instanceId} "
           + "AND deleted = 0 ORDER BY created_at ASC")
-  List<FlowCommentDO> listByInstance(
+  List<FlowComment> listByInstance(
       @Param("tenantId") String tenantId, @Param("instanceId") String instanceId);
 }

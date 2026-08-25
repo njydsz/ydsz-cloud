@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.repository.MenuRepository;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
-import com.njydsz.userinfo.infra.entity.MenuDO;
+import com.njydsz.userinfo.infra.entity.Menu;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
 
 /**
@@ -36,29 +36,29 @@ public class MenuRepositoryImpl implements MenuRepository {
 
   @Override
   public Optional<MenuVO> findById(String id) {
-    MenuDO entity = menuMapper.selectById(id);
+    Menu entity = menuMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public List<MenuVO> findByIds(Collection<String> ids) {
-    List<MenuDO> entities = menuMapper.selectBatchIds(ids);
+    List<Menu> entities = menuMapper.selectBatchIds(ids);
     return converter.menuListToVO(entities);
   }
 
   @Override
   public List<MenuVO> findByParentId(String parentId) {
-    LambdaQueryWrapper<MenuDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(MenuDO::getParentId, parentId);
-    List<MenuDO> entities = menuMapper.selectList(wrapper);
+    LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Menu::getParentId, parentId);
+    List<Menu> entities = menuMapper.selectList(wrapper);
     return converter.menuListToVO(entities);
   }
 
   @Override
   public PageResponse<List<MenuVO>> page(MenuPageQuery query) {
-    Page<MenuDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<MenuDO> wrapper = buildWrapper(query);
-    Page<MenuDO> result = menuMapper.selectPage(page, wrapper);
+    Page<Menu> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<Menu> wrapper = buildWrapper(query);
+    Page<Menu> result = menuMapper.selectPage(page, wrapper);
     List<MenuVO> vos = converter.menuListToVO(result.getRecords());
     return PageResponse.success(
         result.getTotal(),
@@ -69,19 +69,19 @@ public class MenuRepositoryImpl implements MenuRepository {
 
   @Override
   public List<MenuVO> list(MenuPageQuery query) {
-    LambdaQueryWrapper<MenuDO> wrapper = buildWrapper(query);
-    List<MenuDO> entities = menuMapper.selectList(wrapper);
+    LambdaQueryWrapper<Menu> wrapper = buildWrapper(query);
+    List<Menu> entities = menuMapper.selectList(wrapper);
     return converter.menuListToVO(entities);
   }
 
   @Override
   public MenuVO save(MenuDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
-      MenuDO entity = converter.dtoToEntity(dto);
+      Menu entity = converter.dtoToEntity(dto);
       menuMapper.insert(entity);
       return converter.entityToVO(entity);
     } else {
-      MenuDO entity = converter.dtoToEntityWithId(dto);
+      Menu entity = converter.dtoToEntityWithId(dto);
       menuMapper.updateById(entity);
       return converter.entityToVO(entity);
     }
@@ -94,23 +94,23 @@ public class MenuRepositoryImpl implements MenuRepository {
 
   @Override
   public long countByQuery(MenuPageQuery query) {
-    LambdaQueryWrapper<MenuDO> wrapper = buildWrapper(query);
+    LambdaQueryWrapper<Menu> wrapper = buildWrapper(query);
     return menuMapper.selectCount(wrapper);
   }
 
-  private LambdaQueryWrapper<MenuDO> buildWrapper(MenuPageQuery query) {
-    LambdaQueryWrapper<MenuDO> wrapper = new LambdaQueryWrapper<>();
+  private LambdaQueryWrapper<Menu> buildWrapper(MenuPageQuery query) {
+    LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
     if (query.getMenuCode() != null && !query.getMenuCode().isBlank()) {
-      wrapper.like(MenuDO::getMenuCode, query.getMenuCode());
+      wrapper.like(Menu::getMenuCode, query.getMenuCode());
     }
     if (query.getMenuName() != null && !query.getMenuName().isBlank()) {
-      wrapper.like(MenuDO::getMenuName, query.getMenuName());
+      wrapper.like(Menu::getMenuName, query.getMenuName());
     }
     if (query.getMenuType() != null && !query.getMenuType().isBlank()) {
-      wrapper.eq(MenuDO::getMenuType, query.getMenuType());
+      wrapper.eq(Menu::getMenuType, query.getMenuType());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(MenuDO::getStatus, query.getStatus());
+      wrapper.eq(Menu::getStatus, query.getStatus());
     }
     return wrapper;
   }

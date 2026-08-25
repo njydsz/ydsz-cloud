@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowNodeDO;
+import com.njydsz.workflow.infra.entity.FlowNode;
 
 /**
  * 流程节点 Mapper
@@ -28,12 +28,12 @@ import com.njydsz.workflow.infra.entity.FlowNodeDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowNodeDO 流程节点实体
+ * @see com.njydsz.workflow.infra.entity.FlowNode 流程节点实体
  * @see com.njydsz.workflow.server.service.FlowNodeService 流程节点 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowNodeMapper extends BaseMapper<FlowNodeDO> {
+public interface FlowNodeMapper extends BaseMapper<FlowNode> {
 
   /**
    * 根据定义 ID 查全部节点
@@ -41,7 +41,7 @@ public interface FlowNodeMapper extends BaseMapper<FlowNodeDO> {
    * @param definitionId 参数说明
    * @return 返回值说明
    */
-  List<FlowNodeDO> selectByDefinitionId(@Param("definitionId") String definitionId);
+  List<FlowNode> selectByDefinitionId(@Param("definitionId") String definitionId);
 
   /**
    * 根据 definitionId + nodeCode 查单节点
@@ -50,7 +50,7 @@ public interface FlowNodeMapper extends BaseMapper<FlowNodeDO> {
    * @param nodeCode 参数说明
    * @return 返回值说明
    */
-  FlowNodeDO selectByCode(
+  FlowNode selectByCode(
       @Param("definitionId") String definitionId, @Param("nodeCode") String nodeCode);
 
   /**
@@ -59,7 +59,7 @@ public interface FlowNodeMapper extends BaseMapper<FlowNodeDO> {
    * @param definitionId 参数说明
    * @return 返回值说明
    */
-  FlowNodeDO selectStartNode(@Param("definitionId") String definitionId);
+  FlowNode selectStartNode(@Param("definitionId") String definitionId);
 
   /**
    * 查结束节点列表
@@ -67,7 +67,7 @@ public interface FlowNodeMapper extends BaseMapper<FlowNodeDO> {
    * @param definitionId 参数说明
    * @return 返回值说明
    */
-  List<FlowNodeDO> selectEndNodes(@Param("definitionId") String definitionId);
+  List<FlowNode> selectEndNodes(@Param("definitionId") String definitionId);
 
   /**
    * 删除某定义的全部节点（重定义时用）

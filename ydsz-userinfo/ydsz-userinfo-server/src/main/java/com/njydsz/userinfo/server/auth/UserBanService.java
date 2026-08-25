@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.auth;
+﻿package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -28,10 +28,10 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * <p><b>核心规则：</b>
  *
  * <ul>
- *   <li>封禁逻辑封装在 {@code UserAccountDO} 充血模型内部，本服务负责流程编排与持久化</li>
+ *   <li>封禁逻辑封装在 {@code UserAccount} 充血模型内部，本服务负责流程编排与持久化</li>
  *   <li>封禁操作禁止针对超级管理员（角色编码 SUPER_ADMIN）和当前登录管理员自身</li>
  *   <li>临时封禁必须有明确的到期时间，永久封禁不设置到期时间</li>
- *   <li>临时封禁在 {@code UserAccountDO#isBanned()} 调用时通过懒检查自动过期</li>
+ *   <li>临时封禁在 {@code UserAccount#isBanned()} 调用时通过懒检查自动过期</li>
  *   <li>封禁操作同步驱逐用户全部活跃会话，强制下线</li>
  * </ul>
  *

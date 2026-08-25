@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
+import com.njydsz.workflow.infra.entity.FlowHisTask;
 
 /**
  * 历史任务 Mapper
@@ -31,12 +31,12 @@ import com.njydsz.workflow.infra.entity.FlowHisTaskDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowHisTaskDO 历史任务实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisTask 历史任务实体
  * @see com.njydsz.workflow.server.service.FlowTaskHistoryService 已办 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
+public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
 
   /**
    * 查用户已办（历史）
@@ -45,7 +45,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
    * @param tenantId 参数说明
    * @return 返回值说明
    */
-  List<FlowHisTaskDO> selectDoneByAssignee(
+  List<FlowHisTask> selectDoneByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
   /**
@@ -58,7 +58,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
    * @param limit 参数说明
    * @return 返回值说明
    */
-  List<FlowHisTaskDO> selectDoneByAssigneePage(
+  List<FlowHisTask> selectDoneByAssigneePage(
       @Param("assigneeId") String assigneeId,
       @Param("tenantId") String tenantId,
       @Param("offset") int offset,
@@ -80,7 +80,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
    * @param instanceId 参数说明
    * @return 返回值说明
    */
-  List<FlowHisTaskDO> selectByInstanceId(@Param("instanceId") String instanceId);
+  List<FlowHisTask> selectByInstanceId(@Param("instanceId") String instanceId);
 
   /**
    * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）
@@ -106,7 +106,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
    * @param limit 参数说明
    * @return 返回值说明
    */
-  List<FlowHisTaskDO> selectDonePage(
+  List<FlowHisTask> selectDonePage(
       @Param("assigneeId") String assigneeId,
       @Param("businessType") String businessType,
       @Param("flowCode") String flowCode,

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
+import com.njydsz.userinfo.infra.entity.UserLoginHistory;
 import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 
 /**
@@ -32,47 +32,47 @@ public class UserLoginHistoryRepositoryImpl implements UserLoginHistoryRepositor
 
   @Override
   public UserLoginHistoryVO create(UserLoginHistoryDTO dto) {
-    UserLoginHistoryDO entity = converter.dtoToEntity(dto);
+    UserLoginHistory entity = converter.dtoToEntity(dto);
     userLoginHistoryMapper.insert(entity);
     return converter.entityToVO(entity);
   }
 
   @Override
   public int countRecentFailures(String userId, int windowMinutes) {
-    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserLoginHistoryDO::getUserId, userId);
-    wrapper.eq(UserLoginHistoryDO::getLoginResult, "FAILED");
-    wrapper.ge(UserLoginHistoryDO::getCreatedAt,
+    LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserLoginHistory::getUserId, userId);
+    wrapper.eq(UserLoginHistory::getLoginResult, "FAILED");
+    wrapper.ge(UserLoginHistory::getCreatedAt,
         java.time.LocalDateTime.now().minusMinutes(windowMinutes));
     return Math.toIntExact(userLoginHistoryMapper.selectCount(wrapper));
   }
 
   @Override
   public List<UserLoginHistoryVO> findRecentByUserId(String userId, int limit) {
-    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserLoginHistoryDO::getUserId, userId);
-    wrapper.orderByDesc(UserLoginHistoryDO::getCreatedAt);
+    LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserLoginHistory::getUserId, userId);
+    wrapper.orderByDesc(UserLoginHistory::getCreatedAt);
     wrapper.last("LIMIT " + Math.min(limit, 100));
-    List<UserLoginHistoryDO> entities = userLoginHistoryMapper.selectList(wrapper);
+    List<UserLoginHistory> entities = userLoginHistoryMapper.selectList(wrapper);
     return converter.userLoginHistoryListToVO(entities);
   }
 
   @Override
   public List<UserLoginHistoryVO> findByUserId(String userId) {
-    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserLoginHistoryDO::getUserId, userId);
-    List<UserLoginHistoryDO> entities = userLoginHistoryMapper.selectList(wrapper);
+    LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserLoginHistory::getUserId, userId);
+    List<UserLoginHistory> entities = userLoginHistoryMapper.selectList(wrapper);
     return converter.userLoginHistoryListToVO(entities);
   }
 
   @Override
   public long countByResultAndTimeRange(
       LocalDateTime startTime, LocalDateTime endTime, String result) {
-    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.ge(UserLoginHistoryDO::getCreatedAt, startTime);
-    wrapper.lt(UserLoginHistoryDO::getCreatedAt, endTime);
+    LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.ge(UserLoginHistory::getCreatedAt, startTime);
+    wrapper.lt(UserLoginHistory::getCreatedAt, endTime);
     if (result != null) {
-      wrapper.eq(UserLoginHistoryDO::getLoginResult, result);
+      wrapper.eq(UserLoginHistory::getLoginResult, result);
     }
     return userLoginHistoryMapper.selectCount(wrapper);
   }
@@ -80,24 +80,24 @@ public class UserLoginHistoryRepositoryImpl implements UserLoginHistoryRepositor
   @Override
   public int countByFailReasonAndTimeRange(
       LocalDateTime startTime, LocalDateTime endTime, String failReason) {
-    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.ge(UserLoginHistoryDO::getCreatedAt, startTime);
-    wrapper.lt(UserLoginHistoryDO::getCreatedAt, endTime);
-    wrapper.eq(UserLoginHistoryDO::getLoginResult, "FAILED");
+    LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.ge(UserLoginHistory::getCreatedAt, startTime);
+    wrapper.lt(UserLoginHistory::getCreatedAt, endTime);
+    wrapper.eq(UserLoginHistory::getLoginResult, "FAILED");
     if (failReason != null) {
-      wrapper.eq(UserLoginHistoryDO::getFailReason, failReason);
+      wrapper.eq(UserLoginHistory::getFailReason, failReason);
     }
     return Math.toIntExact(userLoginHistoryMapper.selectCount(wrapper));
   }
 
   @Override
   public List<UserLoginHistoryVO> findRecentFailedLogins(LocalDateTime since, int limit) {
-    LambdaQueryWrapper<UserLoginHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.ge(UserLoginHistoryDO::getCreatedAt, since);
-    wrapper.eq(UserLoginHistoryDO::getLoginResult, "FAILED");
-    wrapper.orderByDesc(UserLoginHistoryDO::getCreatedAt);
+    LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.ge(UserLoginHistory::getCreatedAt, since);
+    wrapper.eq(UserLoginHistory::getLoginResult, "FAILED");
+    wrapper.orderByDesc(UserLoginHistory::getCreatedAt);
     wrapper.last("LIMIT " + Math.min(limit, 100));
-    List<UserLoginHistoryDO> entities = userLoginHistoryMapper.selectList(wrapper);
+    List<UserLoginHistory> entities = userLoginHistoryMapper.selectList(wrapper);
     return converter.userLoginHistoryListToVO(entities);
   }
 

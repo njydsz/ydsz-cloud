@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.controller;
+﻿package com.njydsz.userinfo.web.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -53,9 +53,9 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
  *
  * <ol>
  *   <li>{@code GET /authorize} — 资源拥有者（用户）授权阶段，需携带已登录的 access_token， 签发短期授权码（5 分钟有效）
- *   <li>{@code PostDO /token} — 授权码换取 token（grant_type=authorization_code），或 refresh_token 轮换（grant_type=refresh_token）
- *   <li>{@code PostDO /revoke} — 撤销 token（RFC 7009）
- *   <li>{@code PostDO /introspect} — 校验 token 元数据（RFC 7662，资源服务器用）
+ *   <li>{@code Post /token} — 授权码换取 token（grant_type=authorization_code），或 refresh_token 轮换（grant_type=refresh_token）
+ *   <li>{@code Post /revoke} — 撤销 token（RFC 7009）
+ *   <li>{@code Post /introspect} — 校验 token 元数据（RFC 7662，资源服务器用）
  *   <li>{@code GET /userinfo} — 当前用户信息（OIDC userinfo 风格）
  * </ol>
  *

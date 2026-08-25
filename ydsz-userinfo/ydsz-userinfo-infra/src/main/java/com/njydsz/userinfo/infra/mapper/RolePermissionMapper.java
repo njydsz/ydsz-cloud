@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.userinfo.infra.entity.RolePermissionDO;
+import com.njydsz.userinfo.infra.entity.RolePermission;
 
 /**
  * 角色-权限关联表 Mapper
@@ -30,12 +30,12 @@ import com.njydsz.userinfo.infra.entity.RolePermissionDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.infra.entity.RolePermissionDO 角色-权限关联实体
+ * @see com.njydsz.userinfo.infra.entity.RolePermission 角色-权限关联实体
  * @see com.njydsz.userinfo.server.service.RolePermissionService 角色-权限 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RolePermissionMapper extends BaseMapper<RolePermissionDO> {
+public interface RolePermissionMapper extends BaseMapper<RolePermission> {
 
   /**
    * 批量插入角色-权限关联。
@@ -50,5 +50,5 @@ public interface RolePermissionMapper extends BaseMapper<RolePermissionDO> {
           + "(#{item.id}, #{item.roleId}, #{item.permissionId}, #{item.tenantId}, 0)"
           + "</foreach>"
           + "</script>")
-  int batchInsert(@Param("list") List<RolePermissionDO> list);
+  int batchInsert(@Param("list") List<RolePermission> list);
 }

@@ -1,15 +1,15 @@
-package com.njydsz.userinfo.infra.converter;
+﻿package com.njydsz.userinfo.infra.converter;
 
 import org.mapstruct.Mapper;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
-import com.njydsz.userinfo.infra.entity.SamlIdpConfigDO;
+import com.njydsz.userinfo.infra.entity.SamlIdpConfig;
 
 /**
  * SAML IdP 配置 MapStruct 转换器（P2-1）。
  *
- * <p>提供 SamlIdpConfigDO → SamlIdpConfigVO 的转换方法。
+ * <p>提供 SamlIdpConfig → SamlIdpConfigVO 的转换方法。
  * 使用 Spring 注入模式，替代静态单例 INSTANT，提升可测试性。
  *
  * @author ydsz-team
@@ -25,5 +25,5 @@ public interface SamlIdpConfigConverter {
    * @param entity IdP 配置实体
    * @return IdP 配置 VO
    */
-  SamlIdpConfigVO entityToVo(SamlIdpConfigDO entity);
+  SamlIdpConfigVO entityToVo(SamlIdpConfig entity);
 }

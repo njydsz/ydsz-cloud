@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.converter;
+﻿package com.njydsz.userinfo.infra.converter;
 
 import java.util.List;
 
@@ -15,10 +15,10 @@ import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.domain.vo.RolePermissionVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
-import com.njydsz.userinfo.infra.entity.LanguageDO;
-import com.njydsz.userinfo.infra.entity.MenuDO;
-import com.njydsz.userinfo.infra.entity.RoleDO;
-import com.njydsz.userinfo.infra.entity.RolePermissionDO;
+import com.njydsz.userinfo.infra.entity.Language;
+import com.njydsz.userinfo.infra.entity.Menu;
+import com.njydsz.userinfo.infra.entity.Role;
+import com.njydsz.userinfo.infra.entity.RolePermission;
 
 /**
  * 认证权限领域 MapStruct 转换器。
@@ -35,7 +35,7 @@ import com.njydsz.userinfo.infra.entity.RolePermissionDO;
 @Component
 public interface UserInfoAuthConverter {
 
-  // ===== RoleDO =====
+  // ===== Role =====
 
   /**
    * 角色实体 → 角色 VO
@@ -43,7 +43,7 @@ public interface UserInfoAuthConverter {
    * @param entity 角色实体
    * @return 角色 VO
    */
-  RoleVO entityToVO(RoleDO entity);
+  RoleVO entityToVO(Role entity);
 
   /**
    * 角色实体列表 → 角色 VO 列表
@@ -51,7 +51,7 @@ public interface UserInfoAuthConverter {
    * @param entities 角色实体列表
    * @return 角色 VO 列表
    */
-  List<RoleVO> roleListToVO(List<RoleDO> entities);
+  List<RoleVO> roleListToVO(List<Role> entities);
 
   /**
    * 角色 DTO → 角色实体（创建场景）
@@ -67,7 +67,7 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  RoleDO dtoToEntity(RoleDTO dto);
+  Role dtoToEntity(RoleDTO dto);
 
   /**
    * 角色 DTO → 角色实体（更新场景）
@@ -80,9 +80,9 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  RoleDO dtoToEntityWithId(RoleDTO dto);
+  Role dtoToEntityWithId(RoleDTO dto);
 
-  // ===== RolePermissionDO =====
+  // ===== RolePermission =====
 
   /**
    * 角色-权限关联实体 → VO
@@ -90,7 +90,7 @@ public interface UserInfoAuthConverter {
    * @param entity 角色-权限关联实体
    * @return 角色-权限关联 VO
    */
-  RolePermissionVO entityToVO(RolePermissionDO entity);
+  RolePermissionVO entityToVO(RolePermission entity);
 
   /**
    * 角色-权限关联实体列表 → VO 列表
@@ -98,7 +98,7 @@ public interface UserInfoAuthConverter {
    * @param entities 角色-权限关联实体列表
    * @return 角色-权限关联 VO 列表
    */
-  List<RolePermissionVO> rolePermissionListToVO(List<RolePermissionDO> entities);
+  List<RolePermissionVO> rolePermissionListToVO(List<RolePermission> entities);
 
   /**
    * 角色-权限关联 DTO → 实体
@@ -114,9 +114,9 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  RolePermissionDO dtoToEntity(RolePermissionDTO dto);
+  RolePermission dtoToEntity(RolePermissionDTO dto);
 
-  // ===== MenuDO =====
+  // ===== Menu =====
 
   /**
    * 菜单实体 → 菜单 VO（扁平结构）
@@ -124,7 +124,7 @@ public interface UserInfoAuthConverter {
    * @param entity 菜单实体
    * @return 菜单 VO
    */
-  MenuVO entityToVO(MenuDO entity);
+  MenuVO entityToVO(Menu entity);
 
   /**
    * 菜单实体列表 → 菜单 VO 列表
@@ -132,7 +132,7 @@ public interface UserInfoAuthConverter {
    * @param entities 菜单实体列表
    * @return 菜单 VO 列表
    */
-  List<MenuVO> menuListToVO(List<MenuDO> entities);
+  List<MenuVO> menuListToVO(List<Menu> entities);
 
   /**
    * 菜单实体 → 菜单树形 VO（含 children 字段）
@@ -140,7 +140,7 @@ public interface UserInfoAuthConverter {
    * @param entity 菜单实体
    * @return 菜单树形 VO
    */
-  MenuTreeVO entityToMenuTreeVO(MenuDO entity);
+  MenuTreeVO entityToMenuTreeVO(Menu entity);
 
   /**
    * 菜单实体列表 → 菜单树形 VO 列表
@@ -148,7 +148,7 @@ public interface UserInfoAuthConverter {
    * @param entities 菜单实体列表
    * @return 菜单树形 VO 列表
    */
-  List<MenuTreeVO> menuTreeListToVO(List<MenuDO> entities);
+  List<MenuTreeVO> menuTreeListToVO(List<Menu> entities);
 
   /**
    * 菜单 DTO → 菜单实体（创建场景）
@@ -164,7 +164,7 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  MenuDO dtoToEntity(MenuDTO dto);
+  Menu dtoToEntity(MenuDTO dto);
 
   /**
    * 菜单 DTO → 菜单实体（更新场景）
@@ -177,9 +177,9 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  MenuDO dtoToEntityWithId(MenuDTO dto);
+  Menu dtoToEntityWithId(MenuDTO dto);
 
-  // ===== LanguageDO =====
+  // ===== Language =====
 
   /**
    * 语言实体 → 语言 VO
@@ -187,7 +187,7 @@ public interface UserInfoAuthConverter {
    * @param entity 语言实体
    * @return 语言 VO
    */
-  LanguageVO entityToVO(LanguageDO entity);
+  LanguageVO entityToVO(Language entity);
 
   /**
    * 语言实体列表 → 语言 VO 列表
@@ -195,7 +195,7 @@ public interface UserInfoAuthConverter {
    * @param entities 语言实体列表
    * @return 语言 VO 列表
    */
-  List<LanguageVO> languageListToVO(List<LanguageDO> entities);
+  List<LanguageVO> languageListToVO(List<Language> entities);
 
   /**
    * 语言 DTO → 语言实体（创建场景）
@@ -211,7 +211,7 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  LanguageDO dtoToEntity(LanguageDTO dto);
+  Language dtoToEntity(LanguageDTO dto);
 
   /**
    * 语言 DTO → 语言实体（更新场景）
@@ -224,5 +224,5 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  LanguageDO dtoToEntityWithId(LanguageDTO dto);
+  Language dtoToEntityWithId(LanguageDTO dto);
 }

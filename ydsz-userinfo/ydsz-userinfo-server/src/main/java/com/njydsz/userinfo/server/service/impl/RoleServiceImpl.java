@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.service.impl;
+﻿package com.njydsz.userinfo.server.service.impl;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ import com.njydsz.userinfo.server.service.RoleService;
 public class RoleServiceImpl implements RoleService {
 
   /** 角色权限缓存 Redis key 前缀 */
-  private static final String CACHE_KEY_ROLE_PERMISSIONS_PREFIX = "userinfo:RoleDO:permissions:";
+  private static final String CACHE_KEY_ROLE_PERMISSIONS_PREFIX = "userinfo:Role:permissions:";
 
   /** 角色权限缓存过期时间（秒）：10 分钟 */
   private static final long CACHE_TTL_ROLE_PERMISSIONS = 600;

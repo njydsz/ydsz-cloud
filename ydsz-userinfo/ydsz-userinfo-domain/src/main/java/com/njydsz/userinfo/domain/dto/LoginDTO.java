@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.dto;
+﻿package com.njydsz.userinfo.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * 登录请求 DTO。
  *
- * <p>用于 {@code PostDO /api/v1/auth/login} 接口，支持用户名+密码登录， 可选携带图形验证码进行人机校验。
+ * <p>用于 {@code Post /api/v1/auth/login} 接口，支持用户名+密码登录， 可选携带图形验证码进行人机校验。
  *
  * <p><b>校验规则：</b>
  *

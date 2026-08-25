@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.dto;
+﻿package com.njydsz.userinfo.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -8,7 +8,7 @@ import com.njydsz.common.safe.annotation.SensitiveLevel;
 /**
  * 场景化二级认证请求体（P0-2 标准化）。
  *
- * <p>前端调用 {@code PostDO /api/v1/auth/secondary-auth} 接口时传入，包含当前用户密码和目标场景标识。
+ * <p>前端调用 {@code Post /api/v1/auth/secondary-auth} 接口时传入，包含当前用户密码和目标场景标识。
  *
  * @author ydsz-team
  * @since 1.0.0

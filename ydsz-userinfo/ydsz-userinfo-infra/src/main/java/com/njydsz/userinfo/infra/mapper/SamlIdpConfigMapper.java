@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.SamlIdpConfigDO;
+import com.njydsz.userinfo.infra.entity.SamlIdpConfig;
 
 /**
  * SAML 身份提供者配置 Mapper 接口（P2-1）。
@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.entity.SamlIdpConfigDO;
  * @since 1.0.0
  */
 @Mapper
-public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfigDO> {
+public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfig> {
 
   /**
    * 根据 Entity Id 查询 IdP 配置。
@@ -32,7 +32,7 @@ public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfigDO> {
    * @return IdP 配置 DO；不存在返回 null
    */
   @Select("SELECT * FROM ydsz_saml_idp_config WHERE entity_id = #{entityId} AND deleted = 0")
-  SamlIdpConfigDO selectByEntityId(String entityId);
+  SamlIdpConfig selectByEntityId(String entityId);
 
   /**
    * 查询所有已启用的 IdP 配置（按 sort_order 升序）。
@@ -40,5 +40,5 @@ public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfigDO> {
    * @return 已启用的 IdP 配置列表
    */
   @Select("SELECT * FROM ydsz_saml_idp_config WHERE status = 'ENABLED' AND deleted = 0 ORDER BY sort_order ASC")
-  List<SamlIdpConfigDO> selectEnabledConfigs();
+  List<SamlIdpConfig> selectEnabledConfigs();
 }

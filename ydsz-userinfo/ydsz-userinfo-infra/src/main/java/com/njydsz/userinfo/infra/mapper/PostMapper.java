@@ -1,9 +1,9 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.infra.entity.PostDO;
+import com.njydsz.userinfo.infra.entity.Post;
 
 /**
  * 岗位 Mapper 接口
@@ -26,8 +26,8 @@ import com.njydsz.userinfo.infra.entity.PostDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.infra.entity.PostDO 岗位实体
+ * @see com.njydsz.userinfo.infra.entity.Post 岗位实体
  * @see com.njydsz.userinfo.infra.mapper.UserPostMapper 用户-岗位关联 Mapper
  */
 @Mapper
-public interface PostMapper extends BaseMapper<PostDO> {}
+public interface PostMapper extends BaseMapper<Post> {}

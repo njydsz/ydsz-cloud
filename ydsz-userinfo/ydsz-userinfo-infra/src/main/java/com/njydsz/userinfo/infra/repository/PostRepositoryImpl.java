@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.query.PostPageQuery;
 import com.njydsz.userinfo.domain.repository.PostRepository;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
-import com.njydsz.userinfo.infra.entity.PostDO;
+import com.njydsz.userinfo.infra.entity.Post;
 import com.njydsz.userinfo.infra.mapper.PostMapper;
 
 /**
@@ -36,23 +36,23 @@ public class PostRepositoryImpl implements PostRepository {
 
   @Override
   public Optional<PostVO> findById(String id) {
-    PostDO entity = postMapper.selectById(id);
+    Post entity = postMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<PostVO> findByPostCode(String postCode) {
-    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(PostDO::getPostCode, postCode);
-    PostDO entity = postMapper.selectOne(wrapper);
+    LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Post::getPostCode, postCode);
+    Post entity = postMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public PageResponse<List<PostVO>> page(PostPageQuery query) {
-    Page<PostDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<PostDO> wrapper = buildWrapper(query);
-    Page<PostDO> result = postMapper.selectPage(page, wrapper);
+    Page<Post> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<Post> wrapper = buildWrapper(query);
+    Page<Post> result = postMapper.selectPage(page, wrapper);
     List<PostVO> vos = converter.postListToVO(result.getRecords());
     return PageResponse.success(
         result.getTotal(),
@@ -63,25 +63,25 @@ public class PostRepositoryImpl implements PostRepository {
 
   @Override
   public List<PostVO> list(PostPageQuery query) {
-    LambdaQueryWrapper<PostDO> wrapper = buildWrapper(query);
-    List<PostDO> entities = postMapper.selectList(wrapper);
+    LambdaQueryWrapper<Post> wrapper = buildWrapper(query);
+    List<Post> entities = postMapper.selectList(wrapper);
     return converter.postListToVO(entities);
   }
 
   @Override
   public List<PostVO> listByIds(Collection<String> ids) {
-    List<PostDO> entities = postMapper.selectBatchIds(ids);
+    List<Post> entities = postMapper.selectBatchIds(ids);
     return converter.postListToVO(entities);
   }
 
   @Override
   public PostVO save(PostDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
-      PostDO entity = converter.dtoToEntity(dto);
+      Post entity = converter.dtoToEntity(dto);
       postMapper.insert(entity);
       return converter.entityToVO(entity);
     } else {
-      PostDO entity = converter.dtoToEntityWithId(dto);
+      Post entity = converter.dtoToEntityWithId(dto);
       postMapper.updateById(entity);
       return converter.entityToVO(entity);
     }
@@ -94,20 +94,20 @@ public class PostRepositoryImpl implements PostRepository {
 
   @Override
   public long countByQuery(PostPageQuery query) {
-    LambdaQueryWrapper<PostDO> wrapper = buildWrapper(query);
+    LambdaQueryWrapper<Post> wrapper = buildWrapper(query);
     return postMapper.selectCount(wrapper);
   }
 
-  private LambdaQueryWrapper<PostDO> buildWrapper(PostPageQuery query) {
-    LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
+  private LambdaQueryWrapper<Post> buildWrapper(PostPageQuery query) {
+    LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
     if (query.getPostCode() != null && !query.getPostCode().isBlank()) {
-      wrapper.like(PostDO::getPostCode, query.getPostCode());
+      wrapper.like(Post::getPostCode, query.getPostCode());
     }
     if (query.getPostName() != null && !query.getPostName().isBlank()) {
-      wrapper.like(PostDO::getPostName, query.getPostName());
+      wrapper.like(Post::getPostName, query.getPostName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(PostDO::getStatus, query.getStatus());
+      wrapper.eq(Post::getStatus, query.getStatus());
     }
     return wrapper;
   }

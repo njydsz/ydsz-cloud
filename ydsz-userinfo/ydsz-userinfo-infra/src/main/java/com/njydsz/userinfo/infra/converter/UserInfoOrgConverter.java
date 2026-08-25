@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.converter;
+﻿package com.njydsz.userinfo.infra.converter;
 
 import java.util.List;
 
@@ -16,10 +16,10 @@ import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.PostVO;
-import com.njydsz.userinfo.infra.entity.CompanyDO;
-import com.njydsz.userinfo.infra.entity.CompanyDeptDO;
-import com.njydsz.userinfo.infra.entity.DepartmentDO;
-import com.njydsz.userinfo.infra.entity.PostDO;
+import com.njydsz.userinfo.infra.entity.Company;
+import com.njydsz.userinfo.infra.entity.CompanyDept;
+import com.njydsz.userinfo.infra.entity.Department;
+import com.njydsz.userinfo.infra.entity.Post;
 
 /**
  * 组织机构领域 MapStruct 转换器。
@@ -36,7 +36,7 @@ import com.njydsz.userinfo.infra.entity.PostDO;
 @Component
 public interface UserInfoOrgConverter {
 
-  // ===== CompanyDO =====
+  // ===== Company =====
 
   /**
    * 公司实体 → 公司 VO
@@ -44,7 +44,7 @@ public interface UserInfoOrgConverter {
    * @param entity 公司实体
    * @return 公司 VO（不含 deleted/createdBy 等内部字段）
    */
-  CompanyVO entityToVO(CompanyDO entity);
+  CompanyVO entityToVO(Company entity);
 
   /**
    * 公司实体列表 → 公司 VO 列表
@@ -52,7 +52,7 @@ public interface UserInfoOrgConverter {
    * @param entities 公司实体列表
    * @return 公司 VO 列表
    */
-  List<CompanyVO> companyListToVO(List<CompanyDO> entities);
+  List<CompanyVO> companyListToVO(List<Company> entities);
 
   /**
    * 公司实体 → 公司树形 VO（含 children 字段）
@@ -60,7 +60,7 @@ public interface UserInfoOrgConverter {
    * @param entity 公司实体
    * @return 公司树形 VO
    */
-  CompanyTreeVO entityToTreeVO(CompanyDO entity);
+  CompanyTreeVO entityToTreeVO(Company entity);
 
   /**
    * 公司实体列表 → 公司树形 VO 列表
@@ -68,7 +68,7 @@ public interface UserInfoOrgConverter {
    * @param entities 公司实体列表
    * @return 公司树形 VO 列表
    */
-  List<CompanyTreeVO> companyTreeListToVO(List<CompanyDO> entities);
+  List<CompanyTreeVO> companyTreeListToVO(List<Company> entities);
 
   /**
    * 公司 DTO → 公司实体（创建场景）
@@ -87,7 +87,7 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  CompanyDO dtoToEntity(CompanyDTO dto);
+  Company dtoToEntity(CompanyDTO dto);
 
   /**
    * 公司 DTO → 公司实体（更新场景）
@@ -102,9 +102,9 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  CompanyDO dtoToEntityWithId(CompanyDTO dto);
+  Company dtoToEntityWithId(CompanyDTO dto);
 
-  // ===== DepartmentDO =====
+  // ===== Department =====
 
   /**
    * 部门实体 → 部门 VO（扁平结构）
@@ -112,7 +112,7 @@ public interface UserInfoOrgConverter {
    * @param entity 部门实体
    * @return 部门 VO
    */
-  DepartmentVO entityToVO(DepartmentDO entity);
+  DepartmentVO entityToVO(Department entity);
 
   /**
    * 部门实体列表 → 部门 VO 列表
@@ -120,7 +120,7 @@ public interface UserInfoOrgConverter {
    * @param entities 部门实体列表
    * @return 部门 VO 列表
    */
-  List<DepartmentVO> departmentListToVO(List<DepartmentDO> entities);
+  List<DepartmentVO> departmentListToVO(List<Department> entities);
 
   /**
    * 部门实体 → 部门树形 VO（含 children 字段）
@@ -128,7 +128,7 @@ public interface UserInfoOrgConverter {
    * @param entity 部门实体
    * @return 部门树形 VO
    */
-  DepartmentTreeVO entityToTreeVO(DepartmentDO entity);
+  DepartmentTreeVO entityToTreeVO(Department entity);
 
   /**
    * 部门实体列表 → 部门树形 VO 列表
@@ -136,7 +136,7 @@ public interface UserInfoOrgConverter {
    * @param entities 部门实体列表
    * @return 部门树形 VO 列表
    */
-  List<DepartmentTreeVO> departmentTreeListToVO(List<DepartmentDO> entities);
+  List<DepartmentTreeVO> departmentTreeListToVO(List<Department> entities);
 
   /**
    * 部门 DTO → 部门实体（创建场景）
@@ -152,7 +152,7 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DepartmentDO dtoToEntity(DepartmentDTO dto);
+  Department dtoToEntity(DepartmentDTO dto);
 
   /**
    * 部门 DTO → 部门实体（更新场景）
@@ -165,9 +165,9 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DepartmentDO dtoToEntityWithId(DepartmentDTO dto);
+  Department dtoToEntityWithId(DepartmentDTO dto);
 
-  // ===== CompanyDeptDO =====
+  // ===== CompanyDept =====
 
   /**
    * 公司-部门关联实体 → VO
@@ -175,7 +175,7 @@ public interface UserInfoOrgConverter {
    * @param entity 公司-部门关联实体
    * @return 公司-部门关联 VO
    */
-  CompanyDeptVO entityToVO(CompanyDeptDO entity);
+  CompanyDeptVO entityToVO(CompanyDept entity);
 
   /**
    * 公司-部门关联实体列表 → VO 列表
@@ -183,7 +183,7 @@ public interface UserInfoOrgConverter {
    * @param entities 公司-部门关联实体列表
    * @return 公司-部门关联 VO 列表
    */
-  List<CompanyDeptVO> companyDeptListToVO(List<CompanyDeptDO> entities);
+  List<CompanyDeptVO> companyDeptListToVO(List<CompanyDept> entities);
 
   /**
    * 公司-部门关联 DTO → 实体（创建场景）
@@ -199,7 +199,7 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  CompanyDeptDO dtoToEntity(CompanyDeptDTO dto);
+  CompanyDept dtoToEntity(CompanyDeptDTO dto);
 
   /**
    * 公司-部门关联 DTO → 实体（更新场景）
@@ -214,9 +214,9 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  CompanyDeptDO dtoToEntityWithId(CompanyDeptDTO dto);
+  CompanyDept dtoToEntityWithId(CompanyDeptDTO dto);
 
-  // ===== PostDO =====
+  // ===== Post =====
 
   /**
    * 岗位实体 → 岗位 VO
@@ -224,7 +224,7 @@ public interface UserInfoOrgConverter {
    * @param entity 岗位实体
    * @return 岗位 VO
    */
-  PostVO entityToVO(PostDO entity);
+  PostVO entityToVO(Post entity);
 
   /**
    * 岗位实体列表 → 岗位 VO 列表
@@ -232,7 +232,7 @@ public interface UserInfoOrgConverter {
    * @param entities 岗位实体列表
    * @return 岗位 VO 列表
    */
-  List<PostVO> postListToVO(List<PostDO> entities);
+  List<PostVO> postListToVO(List<Post> entities);
 
   /**
    * 岗位 DTO → 岗位实体（创建场景）
@@ -248,7 +248,7 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  PostDO dtoToEntity(PostDTO dto);
+  Post dtoToEntity(PostDTO dto);
 
   /**
    * 岗位 DTO → 岗位实体（更新场景）
@@ -261,5 +261,5 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  PostDO dtoToEntityWithId(PostDTO dto);
+  Post dtoToEntityWithId(PostDTO dto);
 }

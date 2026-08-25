@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +12,7 @@ import com.njydsz.userinfo.domain.dto.UserRoleDTO;
 import com.njydsz.userinfo.domain.repository.UserRoleRepository;
 import com.njydsz.userinfo.domain.vo.UserRoleVO;
 import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.entity.UserRoleDO;
+import com.njydsz.userinfo.infra.entity.UserRole;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 
 /**
@@ -33,48 +33,48 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
 
   @Override
   public List<UserRoleVO> findByUserId(String userId) {
-    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRoleDO::getUserId, userId);
-    List<UserRoleDO> entities = userRoleMapper.selectList(wrapper);
+    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRole::getUserId, userId);
+    List<UserRole> entities = userRoleMapper.selectList(wrapper);
     return converter.userRoleListToVO(entities);
   }
 
   @Override
   public List<UserRoleVO> findByRoleId(String roleId) {
-    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRoleDO::getRoleId, roleId);
-    List<UserRoleDO> entities = userRoleMapper.selectList(wrapper);
+    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRole::getRoleId, roleId);
+    List<UserRole> entities = userRoleMapper.selectList(wrapper);
     return converter.userRoleListToVO(entities);
   }
 
   @Override
   public List<String> findRoleIdsByUserId(String userId) {
-    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRoleDO::getUserId, userId);
+    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRole::getUserId, userId);
     return userRoleMapper.selectList(wrapper).stream()
-        .map(UserRoleDO::getRoleId)
+        .map(UserRole::getRoleId)
         .collect(Collectors.toList());
   }
 
   @Override
   public Optional<UserRoleVO> findByUserIdAndRoleId(String userId, String roleId) {
-    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRoleDO::getUserId, userId);
-    wrapper.eq(UserRoleDO::getRoleId, roleId);
-    UserRoleDO entity = userRoleMapper.selectOne(wrapper);
+    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRole::getUserId, userId);
+    wrapper.eq(UserRole::getRoleId, roleId);
+    UserRole entity = userRoleMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public UserRoleVO create(UserRoleDTO dto) {
-    UserRoleDO entity = converter.dtoToEntity(dto);
+    UserRole entity = converter.dtoToEntity(dto);
     userRoleMapper.insert(entity);
     return converter.entityToVO(entity);
   }
 
   @Override
   public int batchInsert(List<UserRoleDTO> dtoList) {
-    List<UserRoleDO> entities = dtoList.stream()
+    List<UserRole> entities = dtoList.stream()
         .map(converter::dtoToEntity)
         .collect(Collectors.toList());
     return userRoleMapper.batchInsert(entities);
@@ -82,23 +82,23 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
 
   @Override
   public int deleteByUserId(String userId) {
-    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRoleDO::getUserId, userId);
+    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRole::getUserId, userId);
     return userRoleMapper.delete(wrapper);
   }
 
   @Override
   public int deleteByUserIdAndRoleId(String userId, String roleId) {
-    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRoleDO::getUserId, userId);
-    wrapper.eq(UserRoleDO::getRoleId, roleId);
+    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRole::getUserId, userId);
+    wrapper.eq(UserRole::getRoleId, roleId);
     return userRoleMapper.delete(wrapper);
   }
 
   @Override
   public long countByRoleId(String roleId) {
-    LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRoleDO::getRoleId, roleId);
+    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserRole::getRoleId, roleId);
     return userRoleMapper.selectCount(wrapper);
   }
 }

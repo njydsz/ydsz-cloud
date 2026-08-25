@@ -3,7 +3,7 @@ package com.njydsz.workflow.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
+import com.njydsz.workflow.infra.entity.FlowQuickComment;
 
 /**
  * 审批常用语 Mapper
@@ -25,9 +25,9 @@ import com.njydsz.workflow.infra.entity.FlowQuickCommentDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowQuickCommentDO 常用语实体
+ * @see com.njydsz.workflow.infra.entity.FlowQuickComment 常用语实体
  * @see com.njydsz.workflow.server.service.FlowCommentService 评论服务（含常用语能力）
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowQuickCommentMapper extends BaseMapper<FlowQuickCommentDO> {}
+public interface FlowQuickCommentMapper extends BaseMapper<FlowQuickComment> {}

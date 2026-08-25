@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.SocialAccountDO;
+import com.njydsz.userinfo.infra.entity.SocialAccount;
 
 /**
  * 社交账号绑定 Mapper 接口。
@@ -27,11 +27,11 @@ import com.njydsz.userinfo.infra.entity.SocialAccountDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.userinfo.infra.entity.SocialAccountDO 社交账号绑定实体
+ * @see com.njydsz.userinfo.infra.entity.SocialAccount 社交账号绑定实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface SocialAccountMapper extends BaseMapper<SocialAccountDO> {
+public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
 
   /**
    * 根据平台标识和 openId 查询社交账号绑定。
@@ -43,7 +43,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccountDO> {
   @Select(
       "SELECT * FROM ydsz_social_account "
           + "WHERE platform = #{platform} AND open_id = #{openId} AND deleted = 0")
-  SocialAccountDO selectByPlatformAndOpenId(
+  SocialAccount selectByPlatformAndOpenId(
       @Param("platform") String platform, @Param("openId") String openId);
 
   /**
@@ -56,7 +56,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccountDO> {
   @Select(
       "SELECT * FROM ydsz_social_account "
           + "WHERE user_id = #{userId} AND platform = #{platform} AND deleted = 0")
-  SocialAccountDO selectByUserIdAndPlatform(
+  SocialAccount selectByUserIdAndPlatform(
       @Param("userId") String userId, @Param("platform") String platform);
 
   /**
@@ -66,7 +66,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccountDO> {
    * @return 社交账号绑定实体列表
    */
   @Select("SELECT * FROM ydsz_social_account WHERE user_id = #{userId} AND deleted = 0")
-  List<SocialAccountDO> selectByUserId(@Param("userId") String userId);
+  List<SocialAccount> selectByUserId(@Param("userId") String userId);
 
   /**
    * 逻辑删除用户在某平台的社交账号绑定。

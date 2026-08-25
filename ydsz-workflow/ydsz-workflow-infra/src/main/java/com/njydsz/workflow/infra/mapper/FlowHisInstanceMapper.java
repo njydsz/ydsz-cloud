@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowHisInstanceDO;
+import com.njydsz.workflow.infra.entity.FlowHisInstance;
 
 /**
  * P2-3 流程实例归档 Mapper
@@ -30,12 +30,12 @@ import com.njydsz.workflow.infra.entity.FlowHisInstanceDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowHisInstanceDO 流程实例归档实体
+ * @see com.njydsz.workflow.infra.entity.FlowHisInstance 流程实例归档实体
  * @see com.njydsz.workflow.server.service.FlowArchiveService 归档 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstanceDO> {
+public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstance> {
 
   /**
    * 批量插入归档实例
@@ -43,7 +43,7 @@ public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstanceDO> {
    * @param instances 待归档实例列表
    * @return 实际插入行数
    */
-  int batchInsert(@Param("list") List<FlowHisInstanceDO> instances);
+  int batchInsert(@Param("list") List<FlowHisInstance> instances);
 
   /**
    * 按主表 ID 列表删除已归档的实例
@@ -68,6 +68,6 @@ public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstanceDO> {
    * @param limit 参数说明
    * @return 返回值说明
    */
-  List<FlowHisInstanceDO> selectByArchivedAtBefore(
+  List<FlowHisInstance> selectByArchivedAtBefore(
       @Param("threshold") LocalDateTime threshold, @Param("limit") int limit);
 }

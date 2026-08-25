@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowCcDO;
+import com.njydsz.workflow.infra.entity.FlowCc;
 
 /**
  * 流程抄送 Mapper
@@ -29,12 +29,12 @@ import com.njydsz.workflow.infra.entity.FlowCcDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowCcDO 抄送实体
+ * @see com.njydsz.workflow.infra.entity.FlowCc 抄送实体
  * @see com.njydsz.workflow.server.service.FlowCcService 抄送 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
+public interface FlowCcMapper extends BaseMapper<FlowCc> {
 
   /**
    * 查"抄送我的"（分页）
@@ -48,7 +48,7 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
    * @param limit 参数说明
    * @return 返回值说明
    */
-  List<FlowCcDO> selectCcByUserPage(
+  List<FlowCc> selectCcByUserPage(
       @Param("tenantId") String tenantId,
       @Param("ccUserId") String ccUserId,
       @Param("readStatus") String readStatus,
@@ -122,6 +122,6 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
    * @param instanceId 参数说明
    * @return 返回值说明
    */
-  List<FlowCcDO> selectByInstanceId(
+  List<FlowCc> selectByInstanceId(
       @Param("tenantId") String tenantId, @Param("instanceId") String instanceId);
 }

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
-import com.njydsz.userinfo.infra.entity.DepartmentDO;
+import com.njydsz.userinfo.infra.entity.Department;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 
 /**
@@ -36,31 +36,31 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
 
   @Override
   public Optional<DepartmentVO> findById(String id) {
-    DepartmentDO entity = departmentMapper.selectById(id);
+    Department entity = departmentMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public List<DepartmentVO> findByParentId(String parentId) {
-    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DepartmentDO::getParentId, parentId);
-    List<DepartmentDO> entities = departmentMapper.selectList(wrapper);
+    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Department::getParentId, parentId);
+    List<Department> entities = departmentMapper.selectList(wrapper);
     return converter.departmentListToVO(entities);
   }
 
   @Override
   public Optional<DepartmentVO> findByDeptCode(String deptCode) {
-    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DepartmentDO::getDeptCode, deptCode);
-    DepartmentDO entity = departmentMapper.selectOne(wrapper);
+    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Department::getDeptCode, deptCode);
+    Department entity = departmentMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public PageResponse<List<DepartmentVO>> page(DepartmentPageQuery query) {
-    Page<DepartmentDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-    LambdaQueryWrapper<DepartmentDO> wrapper = buildWrapper(query);
-    Page<DepartmentDO> result = departmentMapper.selectPage(page, wrapper);
+    Page<Department> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<Department> wrapper = buildWrapper(query);
+    Page<Department> result = departmentMapper.selectPage(page, wrapper);
     List<DepartmentVO> vos = converter.departmentListToVO(result.getRecords());
     return PageResponse.success(
         result.getTotal(),
@@ -71,25 +71,25 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
 
   @Override
   public List<DepartmentVO> list(DepartmentPageQuery query) {
-    LambdaQueryWrapper<DepartmentDO> wrapper = buildWrapper(query);
-    List<DepartmentDO> entities = departmentMapper.selectList(wrapper);
+    LambdaQueryWrapper<Department> wrapper = buildWrapper(query);
+    List<Department> entities = departmentMapper.selectList(wrapper);
     return converter.departmentListToVO(entities);
   }
 
   @Override
   public List<DepartmentVO> listByIds(Collection<String> ids) {
-    List<DepartmentDO> entities = departmentMapper.selectBatchIds(ids);
+    List<Department> entities = departmentMapper.selectBatchIds(ids);
     return converter.departmentListToVO(entities);
   }
 
   @Override
   public DepartmentVO save(DepartmentDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
-      DepartmentDO entity = converter.dtoToEntity(dto);
+      Department entity = converter.dtoToEntity(dto);
       departmentMapper.insert(entity);
       return converter.entityToVO(entity);
     } else {
-      DepartmentDO entity = converter.dtoToEntityWithId(dto);
+      Department entity = converter.dtoToEntityWithId(dto);
       departmentMapper.updateById(entity);
       return converter.entityToVO(entity);
     }
@@ -102,27 +102,27 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
 
   @Override
   public int deleteByParentId(String parentId) {
-    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DepartmentDO::getParentId, parentId);
+    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Department::getParentId, parentId);
     return departmentMapper.delete(wrapper);
   }
 
   @Override
   public long countByQuery(DepartmentPageQuery query) {
-    LambdaQueryWrapper<DepartmentDO> wrapper = buildWrapper(query);
+    LambdaQueryWrapper<Department> wrapper = buildWrapper(query);
     return departmentMapper.selectCount(wrapper);
   }
 
-  private LambdaQueryWrapper<DepartmentDO> buildWrapper(DepartmentPageQuery query) {
-    LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+  private LambdaQueryWrapper<Department> buildWrapper(DepartmentPageQuery query) {
+    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
     if (query.getDeptCode() != null && !query.getDeptCode().isBlank()) {
-      wrapper.like(DepartmentDO::getDeptCode, query.getDeptCode());
+      wrapper.like(Department::getDeptCode, query.getDeptCode());
     }
     if (query.getDeptName() != null && !query.getDeptName().isBlank()) {
-      wrapper.like(DepartmentDO::getDeptName, query.getDeptName());
+      wrapper.like(Department::getDeptName, query.getDeptName());
     }
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq(DepartmentDO::getStatus, query.getStatus());
+      wrapper.eq(Department::getStatus, query.getStatus());
     }
     return wrapper;
   }

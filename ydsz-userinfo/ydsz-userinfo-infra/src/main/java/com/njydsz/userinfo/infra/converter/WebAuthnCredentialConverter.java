@@ -1,11 +1,11 @@
-package com.njydsz.userinfo.infra.converter;
+﻿package com.njydsz.userinfo.infra.converter;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
-import com.njydsz.userinfo.infra.entity.WebAuthnCredentialDO;
+import com.njydsz.userinfo.infra.entity.WebAuthnCredential;
 
 /**
  * WebAuthn 凭证 MapStruct 转换器（P1-2 统一 Converter 策略）。
@@ -27,7 +27,7 @@ public interface WebAuthnCredentialConverter {
    * @return 视图对象
    */
   @Mapping(target = "signCount", source = "signCount")
-  WebAuthnCredentialVO toVO(WebAuthnCredentialDO entity);
+  WebAuthnCredentialVO toVO(WebAuthnCredential entity);
 
   /**
    * VO → DO 转换。
@@ -39,5 +39,5 @@ public interface WebAuthnCredentialConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  WebAuthnCredentialDO toDO(WebAuthnCredentialVO vo);
+  WebAuthnCredential toDO(WebAuthnCredentialVO vo);
 }

@@ -1,9 +1,9 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.infra.entity.WebAuthnCredentialDO;
+import com.njydsz.userinfo.infra.entity.WebAuthnCredential;
 
 /**
  * WebAuthn 凭证 Mapper
@@ -14,7 +14,7 @@ import com.njydsz.userinfo.infra.entity.WebAuthnCredentialDO;
  * @since 1.0.0
  */
 @Mapper
-public interface WebAuthnCredentialMapper extends BaseMapper<WebAuthnCredentialDO> {
+public interface WebAuthnCredentialMapper extends BaseMapper<WebAuthnCredential> {
   // 继承 BaseMapper 提供的标准 CRUD 操作
   // 自定义 SQL 可在此接口中声明
 }

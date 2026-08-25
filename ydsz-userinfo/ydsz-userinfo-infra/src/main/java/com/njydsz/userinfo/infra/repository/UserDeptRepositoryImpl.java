@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +12,7 @@ import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.repository.UserDeptRepository;
 import com.njydsz.userinfo.domain.vo.UserDeptVO;
 import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.entity.UserDeptDO;
+import com.njydsz.userinfo.infra.entity.UserDept;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 
 /**
@@ -33,62 +33,62 @@ public class UserDeptRepositoryImpl implements UserDeptRepository {
 
   @Override
   public Optional<UserDeptVO> findById(String id) {
-    UserDeptDO entity = userDeptMapper.selectById(id);
+    UserDept entity = userDeptMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public List<UserDeptVO> findByUserId(String userId) {
-    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserDeptDO::getUserId, userId);
-    List<UserDeptDO> entities = userDeptMapper.selectList(wrapper);
+    LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDept::getUserId, userId);
+    List<UserDept> entities = userDeptMapper.selectList(wrapper);
     return converter.userDeptListToVO(entities);
   }
 
   @Override
   public List<String> findDeptIdsByUserId(String userId) {
-    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserDeptDO::getUserId, userId);
+    LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDept::getUserId, userId);
     return userDeptMapper.selectList(wrapper).stream()
-        .map(UserDeptDO::getDeptId)
+        .map(UserDept::getDeptId)
         .collect(Collectors.toList());
   }
 
   @Override
   public Optional<UserDeptVO> findByUserIdAndDeptId(String userId, String deptId) {
-    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserDeptDO::getUserId, userId);
-    wrapper.eq(UserDeptDO::getDeptId, deptId);
-    UserDeptDO entity = userDeptMapper.selectOne(wrapper);
+    LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDept::getUserId, userId);
+    wrapper.eq(UserDept::getDeptId, deptId);
+    UserDept entity = userDeptMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public UserDeptVO create(UserDeptDTO dto) {
-    UserDeptDO entity = converter.dtoToEntity(dto);
+    UserDept entity = converter.dtoToEntity(dto);
     userDeptMapper.insert(entity);
     return converter.entityToVO(entity);
   }
 
   @Override
   public UserDeptVO update(UserDeptDTO dto) {
-    UserDeptDO entity = converter.userDeptDtoToEntityWithId(dto);
+    UserDept entity = converter.userDeptDtoToEntityWithId(dto);
     userDeptMapper.updateById(entity);
     return converter.entityToVO(entity);
   }
 
   @Override
   public int deleteByUserId(String userId) {
-    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserDeptDO::getUserId, userId);
+    LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDept::getUserId, userId);
     return userDeptMapper.delete(wrapper);
   }
 
   @Override
   public int deleteByUserIdAndDeptId(String userId, String deptId) {
-    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserDeptDO::getUserId, userId);
-    wrapper.eq(UserDeptDO::getDeptId, deptId);
+    LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDept::getUserId, userId);
+    wrapper.eq(UserDept::getDeptId, deptId);
     return userDeptMapper.delete(wrapper);
   }
 
@@ -99,8 +99,8 @@ public class UserDeptRepositoryImpl implements UserDeptRepository {
 
   @Override
   public long countByDeptId(String deptId) {
-    LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserDeptDO::getDeptId, deptId);
+    LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(UserDept::getDeptId, deptId);
     return userDeptMapper.selectCount(wrapper);
   }
 }

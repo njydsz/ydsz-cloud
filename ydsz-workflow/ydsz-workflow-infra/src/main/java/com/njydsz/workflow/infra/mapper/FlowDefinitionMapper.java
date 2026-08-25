@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
 
 /**
  * 流程定义 Mapper
@@ -30,12 +30,12 @@ import com.njydsz.workflow.infra.entity.FlowDefinitionDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.infra.entity.FlowDefinitionDO 流程定义实体
+ * @see com.njydsz.workflow.infra.entity.FlowDefinition 流程定义实体
  * @see com.njydsz.workflow.server.service.FlowDefinitionService 流程定义 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
+public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
 
   /**
    * 根据 flowCode + version 查最新已发布版本
@@ -45,7 +45,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
    * @param tenantId 参数说明
    * @return 返回值说明
    */
-  FlowDefinitionDO selectPublished(
+  FlowDefinition selectPublished(
       @Param("flowCode") String flowCode,
       @Param("version") String version,
       @Param("tenantId") String tenantId);
@@ -57,7 +57,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
    * @param tenantId 参数说明
    * @return 返回值说明
    */
-  FlowDefinitionDO selectLatestByCode(
+  FlowDefinition selectLatestByCode(
       @Param("flowCode") String flowCode, @Param("tenantId") String tenantId);
 
   /**
@@ -98,7 +98,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
    * @param tenantId 租户 ID
    * @return 灰度中定义列表（按 version desc）
    */
-  List<FlowDefinitionDO> selectCanaryingByCode(
+  List<FlowDefinition> selectCanaryingByCode(
       @Param("flowCode") String flowCode, @Param("tenantId") String tenantId);
 
   /**
@@ -108,7 +108,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
    * @param tenantId 租户 ID
    * @return 所有定义列表
    */
-  List<FlowDefinitionDO> selectByFlowCode(
+  List<FlowDefinition> selectByFlowCode(
       @Param("flowCode") String flowCode, @Param("tenantId") String tenantId);
 
   /**

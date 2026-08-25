@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.auth;
+﻿package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
 import java.util.List;
@@ -21,12 +21,12 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
  * <p>负责用户 → 角色列表的加载与缓存（Redis，TTL 10 分钟），角色分配变更时主动失效。 从 {@link AuthServiceImpl}
  * 拆分（P0-5），聚焦「角色加载与缓存一致性」单一职责。
  *
- * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → Hash{roles: List&lt;RoleDO&gt;}
+ * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → Hash{roles: List&lt;Role&gt;}
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UserRoleDO 用户-角色关联实体
- * @see RoleDO 角色实体
+ * @see UserRole 用户-角色关联实体
+ * @see Role 角色实体
  */
 @Slf4j
 @Component

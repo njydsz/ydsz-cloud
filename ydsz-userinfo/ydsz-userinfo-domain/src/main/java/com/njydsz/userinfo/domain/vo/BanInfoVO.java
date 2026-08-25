@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.vo;
+﻿package com.njydsz.userinfo.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * 账号封禁信息 VO。
  *
- * <p>用于封装账号的封禁状态，由 {@link com.njydsz.userinfo.infra.entity.UserAccountDO#toBanInfo()} 转换而来。
+ * <p>用于封装账号的封禁状态，由 {@link com.njydsz.userinfo.infra.entity.UserAccount#toBanInfo()} 转换而来。
  * 供管理端 API 返回，展示封禁类型、原因、到期时间、操作人等信息。
  *
  * <p><b>字段语义：</b>

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.dto.SocialAccountDTO;
 import com.njydsz.userinfo.domain.repository.SocialAccountRepository;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.entity.SocialAccountDO;
+import com.njydsz.userinfo.infra.entity.SocialAccount;
 import com.njydsz.userinfo.infra.mapper.SocialAccountMapper;
 
 /**
@@ -32,19 +32,19 @@ public class SocialAccountRepositoryImpl implements SocialAccountRepository {
 
   @Override
   public Optional<SocialAccountVO> findByPlatformAndOpenId(String platform, String openId) {
-    SocialAccountDO entity = socialAccountMapper.selectByPlatformAndOpenId(platform, openId);
+    SocialAccount entity = socialAccountMapper.selectByPlatformAndOpenId(platform, openId);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<SocialAccountVO> findByUserIdAndPlatform(String userId, String platform) {
-    SocialAccountDO entity = socialAccountMapper.selectByUserIdAndPlatform(userId, platform);
+    SocialAccount entity = socialAccountMapper.selectByUserIdAndPlatform(userId, platform);
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public List<SocialAccountVO> listByUserId(String userId) {
-    List<SocialAccountDO> entities = socialAccountMapper.selectByUserId(userId);
+    List<SocialAccount> entities = socialAccountMapper.selectByUserId(userId);
     if (entities == null || entities.isEmpty()) {
       return Collections.emptyList();
     }
@@ -53,7 +53,7 @@ public class SocialAccountRepositoryImpl implements SocialAccountRepository {
 
   @Override
   public void save(SocialAccountDTO dto) {
-    SocialAccountDO entity = converter.dtoToEntity(dto);
+    SocialAccount entity = converter.dtoToEntity(dto);
     socialAccountMapper.insert(entity);
   }
 

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.service.impl;
+﻿package com.njydsz.userinfo.server.service.impl;
 
 import java.util.List;
 
@@ -58,7 +58,7 @@ public class UserPostServiceImpl implements UserPostService {
   /**
    * {@inheritDoc}
    *
-   * <p>将 {@link UserPostDO} 属性拷贝到 {@link UserPostDTO} 后调用 {@link UserPostRepository#create}。
+   * <p>将 {@link UserPost} 属性拷贝到 {@link UserPostDTO} 后调用 {@link UserPostRepository#create}。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)

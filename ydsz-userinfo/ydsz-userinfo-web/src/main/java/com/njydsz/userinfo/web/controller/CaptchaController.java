@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.controller;
+﻿package com.njydsz.userinfo.web.controller;
 
 import java.util.Map;
 import java.util.UUID;
@@ -28,7 +28,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
  *
  * <ul>
  *   <li>{@code GET /generate} — 生成图形验证码，返回 captchaKey + Base64 PNG
- *   <li>{@code PostDO /validate} — 校验用户输入的验证码（登录前置）
+ *   <li>{@code Post /validate} — 校验用户输入的验证码（登录前置）
  * </ul>
  *
  * <p><b>典型流程：</b>

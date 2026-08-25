@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.converter;
+﻿package com.njydsz.userinfo.infra.converter;
 
 import java.util.List;
 
@@ -22,13 +22,13 @@ import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.domain.vo.UserPasswordHistoryVO;
 import com.njydsz.userinfo.domain.vo.UserPostVO;
 import com.njydsz.userinfo.domain.vo.UserRoleVO;
-import com.njydsz.userinfo.infra.entity.SocialAccountDO;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
-import com.njydsz.userinfo.infra.entity.UserDeptDO;
-import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
-import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
-import com.njydsz.userinfo.infra.entity.UserPostDO;
-import com.njydsz.userinfo.infra.entity.UserRoleDO;
+import com.njydsz.userinfo.infra.entity.SocialAccount;
+import com.njydsz.userinfo.infra.entity.UserAccount;
+import com.njydsz.userinfo.infra.entity.UserDept;
+import com.njydsz.userinfo.infra.entity.UserLoginHistory;
+import com.njydsz.userinfo.infra.entity.UserPasswordHistory;
+import com.njydsz.userinfo.infra.entity.UserPost;
+import com.njydsz.userinfo.infra.entity.UserRole;
 
 /**
  * 用户领域 MapStruct 转换器。
@@ -46,7 +46,7 @@ import com.njydsz.userinfo.infra.entity.UserRoleDO;
 @Component
 public interface UserInfoUserConverter {
 
-  // ===== UserAccountDO =====
+  // ===== UserAccount =====
 
   /**
    * 用户账号实体 → 用户账号 VO
@@ -56,7 +56,7 @@ public interface UserInfoUserConverter {
    * @param entity 用户账号实体
    * @return 用户账号 VO（已脱敏）
    */
-  UserAccountVO entityToVO(UserAccountDO entity);
+  UserAccountVO entityToVO(UserAccount entity);
 
   /**
    * 用户账号实体列表 → 用户账号 VO 列表
@@ -64,7 +64,7 @@ public interface UserInfoUserConverter {
    * @param entities 用户账号实体列表
    * @return 用户账号 VO 列表（已脱敏）
    */
-  List<UserAccountVO> userAccountListToVO(List<UserAccountDO> entities);
+  List<UserAccountVO> userAccountListToVO(List<UserAccount> entities);
 
   /**
    * 用户统一 DTO → 用户账号实体（创建场景）
@@ -82,7 +82,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserAccountDO dtoToEntity(UserAccountDTO dto);
+  UserAccount dtoToEntity(UserAccountDTO dto);
 
   /**
    * 用户统一 DTO → 用户账号实体（更新场景）
@@ -99,7 +99,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserAccountDO dtoToEntityWithId(UserAccountDTO dto);
+  UserAccount dtoToEntityWithId(UserAccountDTO dto);
 
   /**
    * 用户实体 → 用户认证凭据 VO
@@ -109,9 +109,9 @@ public interface UserInfoUserConverter {
    * @param entity 用户账号实体
    * @return 用户认证凭据 VO
    */
-  UserAccountCredentialVO entityToCredentialVO(UserAccountDO entity);
+  UserAccountCredentialVO entityToCredentialVO(UserAccount entity);
 
-  // ===== UserRoleDO =====
+  // ===== UserRole =====
 
   /**
    * 用户-角色关联实体 → VO
@@ -119,7 +119,7 @@ public interface UserInfoUserConverter {
    * @param entity 用户-角色关联实体
    * @return 用户-角色关联 VO
    */
-  UserRoleVO entityToVO(UserRoleDO entity);
+  UserRoleVO entityToVO(UserRole entity);
 
   /**
    * 用户-角色关联实体列表 → VO 列表
@@ -127,7 +127,7 @@ public interface UserInfoUserConverter {
    * @param entities 用户-角色关联实体列表
    * @return 用户-角色关联 VO 列表
    */
-  List<UserRoleVO> userRoleListToVO(List<UserRoleDO> entities);
+  List<UserRoleVO> userRoleListToVO(List<UserRole> entities);
 
   /**
    * 用户-角色关联 DTO → 实体
@@ -143,9 +143,9 @@ public interface UserInfoUserConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserRoleDO dtoToEntity(UserRoleDTO dto);
+  UserRole dtoToEntity(UserRoleDTO dto);
 
-  // ===== UserPostDO =====
+  // ===== UserPost =====
 
   /**
    * 用户-岗位关联实体 → VO
@@ -153,7 +153,7 @@ public interface UserInfoUserConverter {
    * @param entity 用户-岗位关联实体
    * @return 用户-岗位关联 VO
    */
-  UserPostVO entityToVO(UserPostDO entity);
+  UserPostVO entityToVO(UserPost entity);
 
   /**
    * 用户-岗位关联实体列表 → VO 列表
@@ -161,7 +161,7 @@ public interface UserInfoUserConverter {
    * @param entities 用户-岗位关联实体列表
    * @return 用户-岗位关联 VO 列表
    */
-  List<UserPostVO> userPostListToVO(List<UserPostDO> entities);
+  List<UserPostVO> userPostListToVO(List<UserPost> entities);
 
   /**
    * 用户-岗位关联 DTO → 实体
@@ -177,9 +177,9 @@ public interface UserInfoUserConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserPostDO dtoToEntity(UserPostDTO dto);
+  UserPost dtoToEntity(UserPostDTO dto);
 
-  // ===== UserDeptDO =====
+  // ===== UserDept =====
 
   /**
    * 用户-部门关联实体 → VO
@@ -187,7 +187,7 @@ public interface UserInfoUserConverter {
    * @param entity 用户-部门关联实体
    * @return 用户-部门关联 VO
    */
-  UserDeptVO entityToVO(UserDeptDO entity);
+  UserDeptVO entityToVO(UserDept entity);
 
   /**
    * 用户-部门关联实体列表 → VO 列表
@@ -195,7 +195,7 @@ public interface UserInfoUserConverter {
    * @param entities 用户-部门关联实体列表
    * @return 用户-部门关联 VO 列表
    */
-  List<UserDeptVO> userDeptListToVO(List<UserDeptDO> entities);
+  List<UserDeptVO> userDeptListToVO(List<UserDept> entities);
 
   /**
    * 用户-部门关联 DTO → 实体
@@ -211,7 +211,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserDeptDO dtoToEntity(UserDeptDTO dto);
+  UserDept dtoToEntity(UserDeptDTO dto);
 
   /**
    * 用户-部门关联 DTO → 实体（更新场景）
@@ -224,9 +224,9 @@ public interface UserInfoUserConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  UserDeptDO userDeptDtoToEntityWithId(UserDeptDTO dto);
+  UserDept userDeptDtoToEntityWithId(UserDeptDTO dto);
 
-  // ===== UserPasswordHistoryDO =====
+  // ===== UserPasswordHistory =====
 
   /**
    * 密码历史实体 → VO
@@ -234,7 +234,7 @@ public interface UserInfoUserConverter {
    * @param entity 密码历史实体
    * @return 密码历史 VO
    */
-  UserPasswordHistoryVO entityToVO(UserPasswordHistoryDO entity);
+  UserPasswordHistoryVO entityToVO(UserPasswordHistory entity);
 
   /**
    * 密码历史实体列表 → VO 列表
@@ -242,7 +242,7 @@ public interface UserInfoUserConverter {
    * @param entities 密码历史实体列表
    * @return 密码历史 VO 列表
    */
-  List<UserPasswordHistoryVO> userPasswordHistoryListToVO(List<UserPasswordHistoryDO> entities);
+  List<UserPasswordHistoryVO> userPasswordHistoryListToVO(List<UserPasswordHistory> entities);
 
   /**
    * 密码历史 DTO → 实体
@@ -253,9 +253,9 @@ public interface UserInfoUserConverter {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
-  UserPasswordHistoryDO dtoToEntity(UserPasswordHistoryDTO dto);
+  UserPasswordHistory dtoToEntity(UserPasswordHistoryDTO dto);
 
-  // ===== UserLoginHistoryDO =====
+  // ===== UserLoginHistory =====
 
   /**
    * 登录历史实体 → VO
@@ -263,7 +263,7 @@ public interface UserInfoUserConverter {
    * @param entity 登录历史实体
    * @return 登录历史 VO
    */
-  UserLoginHistoryVO entityToVO(UserLoginHistoryDO entity);
+  UserLoginHistoryVO entityToVO(UserLoginHistory entity);
 
   /**
    * 登录历史实体列表 → VO 列表
@@ -271,7 +271,7 @@ public interface UserInfoUserConverter {
    * @param entities 登录历史实体列表
    * @return 登录历史 VO 列表
    */
-  List<UserLoginHistoryVO> userLoginHistoryListToVO(List<UserLoginHistoryDO> entities);
+  List<UserLoginHistoryVO> userLoginHistoryListToVO(List<UserLoginHistory> entities);
 
   /**
    * 登录历史 DTO → 实体
@@ -281,9 +281,9 @@ public interface UserInfoUserConverter {
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
-  UserLoginHistoryDO dtoToEntity(UserLoginHistoryDTO dto);
+  UserLoginHistory dtoToEntity(UserLoginHistoryDTO dto);
 
-  // ===== SocialAccountDO =====
+  // ===== SocialAccount =====
 
   /**
    * 社交账号绑定创建 DTO → 社交账号绑定实体。
@@ -301,7 +301,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  SocialAccountDO dtoToEntity(SocialAccountDTO dto);
+  SocialAccount dtoToEntity(SocialAccountDTO dto);
 
   /**
    * 社交账号绑定实体 → 社交账号绑定 VO。
@@ -311,7 +311,7 @@ public interface UserInfoUserConverter {
    * @param entity 社交账号绑定实体
    * @return 社会交账号绑定 VO（已脱敏）
    */
-  SocialAccountVO entityToVO(SocialAccountDO entity);
+  SocialAccountVO entityToVO(SocialAccount entity);
 
   /**
    * 社交账号绑定实体列表 → 社交账号绑定 VO 列表。
@@ -319,9 +319,9 @@ public interface UserInfoUserConverter {
    * @param entities 社交账号绑定实体列表
    * @return 社交账号绑定 VO 列表（已脱敏）
    */
-  List<SocialAccountVO> socialAccountListToVO(List<SocialAccountDO> entities);
+  List<SocialAccountVO> socialAccountListToVO(List<SocialAccount> entities);
 
-  // ===== UserAccountDO → LoginVO.UserInfoVO =====
+  // ===== UserAccount → LoginVO.UserInfoVO =====
 
   /**
    * 用户实体 → 登录响应中的用户基本信息 VO。
@@ -342,5 +342,5 @@ public interface UserInfoUserConverter {
   @Mapping(target = "userId", source = "id")
   @Mapping(target = "roleCode", ignore = true)
   @Mapping(target = "roleName", ignore = true)
-  LoginVO.UserInfoVO entityToUserInfoVO(UserAccountDO entity);
+  LoginVO.UserInfoVO entityToUserInfoVO(UserAccount entity);
 }

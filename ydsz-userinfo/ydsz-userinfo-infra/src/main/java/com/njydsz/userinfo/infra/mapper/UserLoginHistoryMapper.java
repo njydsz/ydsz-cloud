@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.mapper;
+﻿package com.njydsz.userinfo.infra.mapper;
 
 import java.time.LocalDateTime;
 
@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
+import com.njydsz.userinfo.infra.entity.UserLoginHistory;
 
 /**
  * 用户登录历史 Mapper 接口
@@ -26,7 +26,7 @@ import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
  * @since 1.0.0
  */
 @Mapper
-public interface UserLoginHistoryMapper extends BaseMapper<UserLoginHistoryDO> {
+public interface UserLoginHistoryMapper extends BaseMapper<UserLoginHistory> {
 
   /**
    * 统计指定时间范围内有登录失败记录的去重用户数。

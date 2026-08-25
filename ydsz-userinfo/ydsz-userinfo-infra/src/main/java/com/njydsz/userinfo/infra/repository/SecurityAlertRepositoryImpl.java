@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.repository;
+﻿package com.njydsz.userinfo.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,7 +14,7 @@ import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.infra.converter.SecurityAlertConverter;
-import com.njydsz.userinfo.infra.entity.SecurityAlertDO;
+import com.njydsz.userinfo.infra.entity.SecurityAlert;
 import com.njydsz.userinfo.infra.mapper.SecurityAlertMapper;
 
 /**
@@ -34,7 +34,7 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
 
   @Override
   public SecurityAlert save(SecurityAlert alert) {
-    SecurityAlertDO entity = converter.domainToEntity(alert);
+    SecurityAlert entity = converter.domainToEntity(alert);
     if (alert.id() == null) {
       securityAlertMapper.insert(entity);
     } else {
@@ -45,7 +45,7 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
 
   @Override
   public Optional<SecurityAlert> findById(String id) {
-    SecurityAlertDO entity = securityAlertMapper.selectById(id);
+    SecurityAlert entity = securityAlertMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToDomain);
   }
 
@@ -53,22 +53,22 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   public PageResponse<List<SecurityAlert>> page(SecurityAlertPageQuery query) {
     int pageNum = query.getPageNum();
     int pageSize = query.getPageSize();
-    Page<SecurityAlertDO> page = new Page<>(pageNum, pageSize);
-    LambdaQueryWrapper<SecurityAlertDO> wrapper = new LambdaQueryWrapper<>();
+    Page<SecurityAlert> page = new Page<>(pageNum, pageSize);
+    LambdaQueryWrapper<SecurityAlert> wrapper = new LambdaQueryWrapper<>();
     if (query.getAlertStatus() != null) {
-      wrapper.eq(SecurityAlertDO::getStatus, query.getAlertStatus().name());
+      wrapper.eq(SecurityAlert::getStatus, query.getAlertStatus().name());
     }
     if (query.getRiskLevel() != null) {
-      wrapper.eq(SecurityAlertDO::getRiskLevel, query.getRiskLevel().name());
+      wrapper.eq(SecurityAlert::getRiskLevel, query.getRiskLevel().name());
     }
     if (query.effectiveStartTime() != null) {
-      wrapper.ge(SecurityAlertDO::getCreatedAt, query.effectiveStartTime());
+      wrapper.ge(SecurityAlert::getCreatedAt, query.effectiveStartTime());
     }
     if (query.effectiveEndTime() != null) {
-      wrapper.le(SecurityAlertDO::getCreatedAt, query.effectiveEndTime());
+      wrapper.le(SecurityAlert::getCreatedAt, query.effectiveEndTime());
     }
-    wrapper.orderByDesc(SecurityAlertDO::getCreatedAt);
-    Page<SecurityAlertDO> result = securityAlertMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(SecurityAlert::getCreatedAt);
+    Page<SecurityAlert> result = securityAlertMapper.selectPage(page, wrapper);
     List<SecurityAlert> alerts = result.getRecords().stream()
         .map(converter::entityToDomain)
         .toList();
@@ -85,23 +85,23 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
       String userId,
       String sourceIp,
       LocalDateTime since) {
-    LambdaQueryWrapper<SecurityAlertDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SecurityAlertDO::getAlertType, alertType.name());
+    LambdaQueryWrapper<SecurityAlert> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SecurityAlert::getAlertType, alertType.name());
     if (userId != null) {
-      wrapper.eq(SecurityAlertDO::getUserId, userId);
+      wrapper.eq(SecurityAlert::getUserId, userId);
     }
     if (sourceIp != null) {
-      wrapper.eq(SecurityAlertDO::getSourceIp, sourceIp);
+      wrapper.eq(SecurityAlert::getSourceIp, sourceIp);
     }
     if (since != null) {
-      wrapper.ge(SecurityAlertDO::getCreatedAt, since);
+      wrapper.ge(SecurityAlert::getCreatedAt, since);
     }
     return securityAlertMapper.selectCount(wrapper);
   }
 
   @Override
   public boolean updateStatus(String id, SecurityAlert.AlertStatus status, String handlerNote) {
-    SecurityAlertDO entity = new SecurityAlertDO();
+    SecurityAlert entity = new SecurityAlert();
     entity.setId(id);
     entity.setStatus(status.name());
     entity.setHandledAt(LocalDateTime.now());
@@ -111,14 +111,14 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
 
   @Override
   public List<SecurityAlert> findPendingAlerts(SecurityAlert.RiskLevel riskLevel, int limit) {
-    LambdaQueryWrapper<SecurityAlertDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SecurityAlertDO::getStatus, SecurityAlert.AlertStatus.PENDING.name());
+    LambdaQueryWrapper<SecurityAlert> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SecurityAlert::getStatus, SecurityAlert.AlertStatus.PENDING.name());
     if (riskLevel != null) {
-      wrapper.eq(SecurityAlertDO::getRiskLevel, riskLevel.name());
+      wrapper.eq(SecurityAlert::getRiskLevel, riskLevel.name());
     }
-    wrapper.orderByDesc(SecurityAlertDO::getCreatedAt);
+    wrapper.orderByDesc(SecurityAlert::getCreatedAt);
     wrapper.last("LIMIT " + limit);
-    List<SecurityAlertDO> entities = securityAlertMapper.selectList(wrapper);
+    List<SecurityAlert> entities = securityAlertMapper.selectList(wrapper);
     return entities.stream()
         .map(converter::entityToDomain)
         .toList();

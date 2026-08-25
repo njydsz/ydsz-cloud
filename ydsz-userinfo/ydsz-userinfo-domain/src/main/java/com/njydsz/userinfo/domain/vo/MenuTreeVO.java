@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.vo;
+﻿package com.njydsz.userinfo.domain.vo;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class MenuTreeVO {
   /** 菜单编码 */
   private String menuCode;
 
-  /** 菜单类型：DIRECTORY-目录、MenuDO-菜单、BUTTON-按钮 */
+  /** 菜单类型：DIRECTORY-目录、Menu-菜单、BUTTON-按钮 */
   private String menuType;
 
   /** 前端路由路径 */
