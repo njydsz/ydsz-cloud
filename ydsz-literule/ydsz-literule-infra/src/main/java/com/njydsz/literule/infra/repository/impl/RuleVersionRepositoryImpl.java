@@ -18,7 +18,7 @@ import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
+import com.njydsz.literule.infra.entity.RuleDefinition;
 import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.infra.mapper.RuleVersionHistoryMapper;
@@ -91,7 +91,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     }
 
     // 2. 查询当前规则定义
-    RuleDefinitionDO currentRule = ruleDefinitionMapper.selectByCode(ruleCode);
+    RuleDefinition currentRule = ruleDefinitionMapper.selectByCode(ruleCode);
     if (currentRule == null) {
       log.warn("[LiteRule] 回滚时规则定义不存在: ruleCode={}", ruleCode);
       return Optional.empty();
@@ -120,7 +120,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
       throw new IllegalStateException("回滚失败：目标版本 JSON 解析异常", e);
     }
 
-    RuleDefinitionDO updateEntity = doFromApi(targetDefinition);
+    RuleDefinition updateEntity = doFromApi(targetDefinition);
     updateEntity.setId(currentRule.getId());
     updateEntity.setRuleCode(ruleCode);
     // 新版本号 = 当前最大版本号 + 1，保持递增
@@ -151,7 +151,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
         ruleCode, version, updateEntity.getVersion(), operator);
 
     // 6. 返回回滚后的规则定义 VO
-    RuleDefinitionDO refreshedRule = ruleDefinitionMapper.selectByCode(ruleCode);
+    RuleDefinition refreshedRule = ruleDefinitionMapper.selectByCode(ruleCode);
     return Optional.ofNullable(converter.entityToVO(refreshedRule));
   }
 
@@ -173,71 +173,71 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
   }
 
   /**
-   * RuleDefinitionDO → RuleDefinition (api) 转换
+   * RuleDefinition → RuleDefinition (api) 转换
    *
-   * @param ruleDO 规则定义 DO
+   * @param rule 规则定义
    * @return RuleDefinition api 定义
    */
-  private RuleDefinition apiFromDo(RuleDefinitionDO ruleDO) {
+  private RuleDefinition apiFromDo(RuleDefinition rule) {
     RuleDefinition def = new RuleDefinition();
-    def.setCode(ruleDO.getRuleCode());
-    def.setName(ruleDO.getRuleName());
-    def.setCategory(ruleDO.getCategory());
-    def.setCategoryPath(ruleDO.getCategoryPath());
-    def.setOwner(ruleDO.getOwner());
-    def.setDescription(ruleDO.getDescription());
-    def.setConditionExpression(ruleDO.getConditionExpression());
-    def.setSeverityExpression(ruleDO.getSeverityExpression());
+    def.setCode(rule.getRuleCode());
+    def.setName(rule.getRuleName());
+    def.setCategory(rule.getCategory());
+    def.setCategoryPath(rule.getCategoryPath());
+    def.setOwner(rule.getOwner());
+    def.setDescription(rule.getDescription());
+    def.setConditionExpression(rule.getConditionExpression());
+    def.setSeverityExpression(rule.getSeverityExpression());
     def.setDefaultSeverity(
-        ruleDO.getDefaultSeverity() != null
-            ? com.njydsz.literule.api.RuleSeverity.fromCode(ruleDO.getDefaultSeverity())
+        rule.getDefaultSeverity() != null
+            ? com.njydsz.literule.api.RuleSeverity.fromCode(rule.getDefaultSeverity())
             : null);
-    def.setTitleTemplate(ruleDO.getTitleTemplate());
-    def.setDescriptionTemplate(ruleDO.getDescriptionTemplate());
-    def.setPriority(ruleDO.getPriority());
-    def.setEnabled(ruleDO.getEnabled() != null && ruleDO.getEnabled());
-    def.setScope(ruleDO.getScope());
-    def.setMutexGroup(ruleDO.getMutexGroup());
-    def.setVersion(ruleDO.getVersion() != null ? ruleDO.getVersion() : 1);
-    def.setStatus(ruleDO.getStatus());
-    def.setEffectiveFrom(ruleDO.getEffectiveFrom());
-    def.setEffectiveTo(ruleDO.getEffectiveTo());
-    def.setReviewedBy(ruleDO.getReviewedBy());
-    def.setReviewedAt(ruleDO.getReviewedAt());
-    def.setReviewComment(ruleDO.getReviewComment());
-    def.setCanaryRatio(ruleDO.getCanaryRatio() != null ? ruleDO.getCanaryRatio() : 0.0);
-    def.setCanaryConditionExpression(ruleDO.getCanaryConditionExpression());
-    def.setCanarySeverityExpression(ruleDO.getCanarySeverityExpression());
+    def.setTitleTemplate(rule.getTitleTemplate());
+    def.setDescriptionTemplate(rule.getDescriptionTemplate());
+    def.setPriority(rule.getPriority());
+    def.setEnabled(rule.getEnabled() != null && rule.getEnabled());
+    def.setScope(rule.getScope());
+    def.setMutexGroup(rule.getMutexGroup());
+    def.setVersion(rule.getVersion() != null ? rule.getVersion() : 1);
+    def.setStatus(rule.getStatus());
+    def.setEffectiveFrom(rule.getEffectiveFrom());
+    def.setEffectiveTo(rule.getEffectiveTo());
+    def.setReviewedBy(rule.getReviewedBy());
+    def.setReviewedAt(rule.getReviewedAt());
+    def.setReviewComment(rule.getReviewComment());
+    def.setCanaryRatio(rule.getCanaryRatio() != null ? rule.getCanaryRatio() : 0.0);
+    def.setCanaryConditionExpression(rule.getCanaryConditionExpression());
+    def.setCanarySeverityExpression(rule.getCanarySeverityExpression());
     return def;
   }
 
   /**
-   * RuleDefinition (api) → RuleDefinitionDO 转换
+   * RuleDefinition (api) → RuleDefinition 转换
    *
    * @param def api 规则定义
-   * @return RuleDefinitionDO
+   * @return RuleDefinition
    */
-  private RuleDefinitionDO doFromApi(RuleDefinition def) {
-    RuleDefinitionDO ruleDO = new RuleDefinitionDO();
-    ruleDO.setRuleCode(def.getCode());
-    ruleDO.setRuleName(def.getName());
-    ruleDO.setCategory(def.getCategory());
-    ruleDO.setCategoryPath(def.getCategoryPath());
-    ruleDO.setOwner(def.getOwner());
-    ruleDO.setDescription(def.getDescription());
-    ruleDO.setConditionExpression(def.getConditionExpression());
-    ruleDO.setSeverityExpression(def.getSeverityExpression());
-    ruleDO.setDefaultSeverity(
+  private RuleDefinition doFromApi(RuleDefinition def) {
+    RuleDefinition rule = new RuleDefinition();
+    rule.setRuleCode(def.getCode());
+    rule.setRuleName(def.getName());
+    rule.setCategory(def.getCategory());
+    rule.setCategoryPath(def.getCategoryPath());
+    rule.setOwner(def.getOwner());
+    rule.setDescription(def.getDescription());
+    rule.setConditionExpression(def.getConditionExpression());
+    rule.setSeverityExpression(def.getSeverityExpression());
+    rule.setDefaultSeverity(
         def.getDefaultSeverity() != null ? def.getDefaultSeverity().getCode() : null);
-    ruleDO.setTitleTemplate(def.getTitleTemplate());
-    ruleDO.setDescriptionTemplate(def.getDescriptionTemplate());
-    ruleDO.setPriority(def.getPriority());
-    ruleDO.setEnabled(def.isEnabled());
-    ruleDO.setScope(def.getScope());
-    ruleDO.setMutexGroup(def.getMutexGroup());
-    ruleDO.setStatus(def.getStatus());
-    ruleDO.setEffectiveFrom(def.getEffectiveFrom());
-    ruleDO.setEffectiveTo(def.getEffectiveTo());
-    return ruleDO;
+    rule.setTitleTemplate(def.getTitleTemplate());
+    rule.setDescriptionTemplate(def.getDescriptionTemplate());
+    rule.setPriority(def.getPriority());
+    rule.setEnabled(def.isEnabled());
+    rule.setScope(def.getScope());
+    rule.setMutexGroup(def.getMutexGroup());
+    rule.setStatus(def.getStatus());
+    rule.setEffectiveFrom(def.getEffectiveFrom());
+    rule.setEffectiveTo(def.getEffectiveTo());
+    return rule;
   }
 }

@@ -18,8 +18,8 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.entity.DecisionTableDO;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleDependencyDO;
-import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
-import com.njydsz.literule.infra.entity.RulePackDO;
+import com.njydsz.literule.infra.entity.RuleExecutionTrace;
+import com.njydsz.literule.infra.entity.RulePack;
 import com.njydsz.literule.infra.entity.RuleTestCaseDO;
 import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
 
@@ -42,15 +42,15 @@ public interface RuleSupportConverter {
 
   List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependencyDO> entities);
 
-  // ===== RuleExecutionTraceDO =====
-  RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity);
+  // ===== RuleExecutionTrace =====
+  RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity);
 
-  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities);
+  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities);
 
-  // ===== RulePackDO =====
-  RulePackVO entityToVO(RulePackDO entity);
+  // ===== RulePack =====
+  RulePackVO entityToVO(RulePack entity);
 
-  List<RulePackVO> rulePackListToVO(List<RulePackDO> entities);
+  List<RulePackVO> rulePackListToVO(List<RulePack> entities);
 
   // ===== RuleTestCaseDO =====
   RuleTestCaseVO entityToVO(RuleTestCaseDO entity);

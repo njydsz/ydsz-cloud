@@ -32,11 +32,11 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.entity.DecisionTableDO;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleABRollbackDO;
-import com.njydsz.literule.infra.entity.RuleChainGraphDO;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
+import com.njydsz.literule.infra.entity.RuleChainGraph;
+import com.njydsz.literule.infra.entity.RuleDefinition;
 import com.njydsz.literule.infra.entity.RuleDependencyDO;
-import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
-import com.njydsz.literule.infra.entity.RulePackDO;
+import com.njydsz.literule.infra.entity.RuleExecutionTrace;
+import com.njydsz.literule.infra.entity.RulePack;
 import com.njydsz.literule.infra.entity.RuleTemplateDO;
 import com.njydsz.literule.infra.entity.RuleTestCaseDO;
 import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
@@ -96,21 +96,21 @@ public class LiteruleConverter {
     return component.ruleABRollbackListToVO(entities);
   }
 
-  // ===== RuleChainGraphDO =====
-  public RuleChainGraphVO entityToVO(RuleChainGraphDO entity) {
+  // ===== RuleChainGraph =====
+  public RuleChainGraphVO entityToVO(RuleChainGraph entity) {
     return component.entityToVO(entity);
   }
 
-  public List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities) {
+  public List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraph> entities) {
     return component.ruleChainGraphListToVO(entities);
   }
 
-  // ===== RuleDefinitionDO =====
-  public RuleDefinitionVO entityToVO(RuleDefinitionDO entity) {
+  // ===== RuleDefinition =====
+  public RuleDefinitionVO entityToVO(RuleDefinition entity) {
     return core.entityToVO(entity);
   }
 
-  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDO> entities) {
+  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinition> entities) {
     return core.ruleDefinitionListToVO(entities);
   }
 
@@ -123,21 +123,21 @@ public class LiteruleConverter {
     return support.ruleDependencyListToVO(entities);
   }
 
-  // ===== RuleExecutionTraceDO =====
-  public RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity) {
+  // ===== RuleExecutionTrace =====
+  public RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities) {
+  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities) {
     return support.ruleExecutionTraceListToVO(entities);
   }
 
-  // ===== RulePackDO =====
-  public RulePackVO entityToVO(RulePackDO entity) {
+  // ===== RulePack =====
+  public RulePackVO entityToVO(RulePack entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RulePackVO> rulePackListToVO(List<RulePackDO> entities) {
+  public List<RulePackVO> rulePackListToVO(List<RulePack> entities) {
     return support.rulePackListToVO(entities);
   }
 

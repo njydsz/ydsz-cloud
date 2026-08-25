@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.literule.infra.mapper.RuleDefinitionMapper">
 
-    <select id="selectByCode" resultType="com.njydsz.literule.infra.entity.RuleDefinitionDO">
+    <select id="selectByCode" resultType="com.njydsz.literule.infra.entity.RuleDefinition">
         SELECT id, rule_code, rule_name, category, category_path, owner, description,
                condition_expression, severity_expression, default_severity,
                title_template, description_template, priority, enabled, scope, mutex_group,
@@ -14,7 +14,7 @@
     </select>
 
     <!-- 全文搜索规则（数据库级 LIKE 查询） -->
-    <select id="searchRules" resultType="com.njydsz.literule.infra.entity.RuleDefinitionDO">
+    <select id="searchRules" resultType="com.njydsz.literule.infra.entity.RuleDefinition">
         SELECT id, rule_code, rule_name, category, category_path, owner, description,
                condition_expression, severity_expression, default_severity,
                title_template, description_template, priority, enabled, scope, mutex_group,

@@ -17,8 +17,8 @@ ydsz:
       - com.njydsz.literule.api.RuleDefinition
       - com.njydsz.literule.server.spi.RuleVersion
       - com.njydsz.literule.server.version.RuleVersionDiff
-      - com.njydsz.literule.domain.entity.RulePackDO
-      - com.njydsz.literule.domain.entity.RuleChainGraphDO
+      - com.njydsz.literule.domain.entity.RulePack
+      - com.njydsz.literule.domain.entity.RuleChainGraph
   # 统一线程池配置（common-thread）
   thread:
     enabled: true
