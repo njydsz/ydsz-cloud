@@ -12,16 +12,8 @@
     <name>ydsz-message-server</name>
     <description>DDD Module</description>
 
-    <dependencyManagement>
-        <dependencies>
-            <!-- P2-5: 强制统一 rocketmq 传递引入的 fastjson2 版本，解决 DependencyConvergence 冲突 -->
-            <dependency>
-                <groupId>com.alibaba.fastjson2</groupId>
-                <artifactId>fastjson2</artifactId>
-                <version>2.0.62</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <!-- P2-5 冗余 DM 已移除：fastjson2 版本统一由根 pom dependencyManagement 管理
+         （${fastjson2.version}=2.0.62，解决 rocketmq 传递依赖的版本收敛），子模块无需重复声明 -->
 
     <dependencies>
         <!-- P1-2: 移除 server 对 infra 的直接依赖，符合 DDD 分层（server 仅依赖 domain，infra 由 web 层引入并通过 Spring 自动装配注入 Repository 实现） -->

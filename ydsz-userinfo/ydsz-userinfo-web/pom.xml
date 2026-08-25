@@ -58,6 +58,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
+            <!-- ArchUnit 架构测试（P3-2：DDD 分层依赖方向守护，见 UserinfoArchitectureTest） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
