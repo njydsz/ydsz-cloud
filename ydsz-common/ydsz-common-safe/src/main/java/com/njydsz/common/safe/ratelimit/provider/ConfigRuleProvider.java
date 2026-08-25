@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +61,7 @@ public class ConfigRuleProvider implements RateLimitRuleProvider {
 
   @Override
   public List<RateLimitRule> getAllRules() {
-    return ruleMap.values().toList();
+    return List.copyOf(ruleMap.values());
   }
 
   @Override

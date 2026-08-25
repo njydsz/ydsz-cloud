@@ -236,9 +236,10 @@ ydsz-{module}/
 
 1. **端口冲突（部署约束）**：`ydsz-nextwiki-web`（:9003）与 `ydsz-userinfo-app`（:9003）默认端口相同。两者通常不会同机部署（Web 控制台与移动端入口），但若需同机运行，须通过 Nacos 配置将其中一个改为其他端口。
 2. **禁止 Flyway / Liquibase**：全仓统一禁止 schema-migration 框架。各模块数据库 DDL 以 SQL 脚本形式管理在 `deploy/sql/` 或模块 `src/main/resources/sql/` 下，**需手动执行**初始化，不存在自动迁移。早期个别模块 README 曾出现"由 Flyway 维护"的措辞，已校准为手动执行（见 `ydsz-nextwiki`、`ydsz-agent` README 对应说明）。
-3. **common 分层口径**：`ydsz-common` 的分层（L1-L6）以 `ydsz-common/pom.xml` 的 `<modules>` 注释为生效口径（json/util/cache/excel 为 L1，core 为 L2）。编码规范 §22.2 中 core/ util/json 的层级标注与 pom 不一致，以 pom 构建机制为准。
+3. **common 分层口径**：`ydsz-common` 的分层（L1-L6）以 `ydsz-common/pom.xml` 的 `<modules>` 声明为生效口径（json/util/cache/excel 为 L1，core 为 L2）。历史版本中编码规范 §22.2 与 pom 注释存在层级标注差异，**2026-08 已校准**：规范 §22.2 表格与 pom 构建机制、`enforce-l1-purity` 检查三方一致，无遗留差异。
 4. **`ydsz-common-metrics` 为占位条目**：该坐标仅出现在 `ydsz-common/pom.xml` 的 `dependencyManagement` 中，无对应模块目录，也无任何消费者，并非真实子模块（common 实际为 30 个子模块）。
 5. **gateway 不依赖 `common-web`**：网关为 WebFlux 反应式栈，按需挑选 11 个细粒度 common 子模块，不引入 servlet 栈的 `common-web`。
+6. **质量守护分层启用**：默认构建仅启用 Checkstyle + Enforcer + L1 纯度 + SBOM（红线级，阻断）；SpotBugs / OWASP DC / JaCoCo / Spotless 通过 Maven profile 按需开启——`mvn verify -Pquality`（报告模式，不阻断，用于基线巡检）、`mvn verify -Pquality-enforce`（门禁模式：JaCoCo 行≥80%/分支≥70% + OWASP CVSS≥7 阻断 + SpotBugs failOnError）。
 
 ---
 
@@ -246,7 +247,8 @@ ydsz-{module}/
 
 欢迎参与 Ydsz Cloud 的建设。提交代码前请阅读并遵守以下约定：
 
-- **编码规范**：所有 Java 代码须通过 `docs/云顶编码规范.md` 的 Checkstyle 校验（见 `docs/checkstyle.xml`）与 common 层 L1 纯度（`enforce-l1-purity`）构建检查。
+- **编码规范**：所有 Java 代码须通过 `docs/云顶编码规范.md` 的 Checkstyle 校验（见 `docs/checkstyle.xml`）与 common 层 L1 纯度（`enforce-l1-purity`）构建检查；架构分层依赖方向由 ArchUnit 测试守护（各业务模块 `-web` 子模块 `ArchitectureTest`，对应规范 §22.1 / §34）。
+- **质量门禁**：日常构建跑红线校验；提交 PR 前建议执行 `mvn verify -Pquality`（SpotBugs / OWASP / JaCoCo 报告 + Spotless 格式校验），基线达标后由维护者以 `-Pquality-enforce` 强制门禁。
 - **文档同步**：代码变更若影响模块能力、端口、配置项，须同步更新对应 `README.md`，确保文档与代码事实一致（杜绝虚构条目）。
 - **提交流程**：Fork → 分支开发 → 本地 `mvn clean verify` 通过 → 发起 Pull Request → Code Review 通过后方可合入。
 - **依赖约束**：业务模块禁止直引第三方 JSON / Caffeine / POI 等（须使用 `ydsz-common-*` 自研封装）；公共依赖变更影响全部 9 个部署单元，须充分联调。
