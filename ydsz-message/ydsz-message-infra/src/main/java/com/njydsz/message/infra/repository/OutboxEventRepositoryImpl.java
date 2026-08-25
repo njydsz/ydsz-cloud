@@ -54,7 +54,8 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
             .eq(com.njydsz.message.infra.entity.OutboxEvent::getStatus, "PENDING")
             .le(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt, beforeTime)
             .orderByAsc(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt);
-    List<com.njydsz.message.infra.entity.OutboxEvent> records = outboxEventMapper.selectPage(page, wrapper).getRecords();
+    List<com.njydsz.message.infra.entity.OutboxEvent> records =
+        outboxEventMapper.selectPage(page, wrapper).getRecords();
     return records.stream().map(this::toEvent).toList();
   }
 

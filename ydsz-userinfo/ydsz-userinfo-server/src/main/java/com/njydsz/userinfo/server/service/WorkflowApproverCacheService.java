@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.service;
+package com.njydsz.userinfo.server.service;
 
 import java.time.Duration;
 import java.util.Collections;

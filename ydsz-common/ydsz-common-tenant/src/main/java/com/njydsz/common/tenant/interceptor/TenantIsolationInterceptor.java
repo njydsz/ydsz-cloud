@@ -412,7 +412,8 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
           } else if (insert.getValues() != null && insert.getValues().getExpressions() != null) {
             // INSERT ... VALUES 形式：向 VALUES 列表末尾追加租户字段值，
             // 保持列数与值数一致，防止列数不匹配导致 SQL 执行失败
-            @SuppressWarnings("unchecked")
+            // JSqlParser Values.getExpressions() 返回原始类型 List，无法避免强转；后续仅添加 Expression 子类，类型安全
+            @SuppressWarnings("unchecked") // JSqlParser API 返回原始 List，无法在编译期保证泛型类型
             List<Expression> valueExprs = (List<Expression>) insert.getValues().getExpressions();
             valueExprs.add(new StringValue(String.valueOf(tfv.value)));
           } else {
