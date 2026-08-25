@@ -35,7 +35,7 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
 
   @Override
   public boolean save(MsgAggregateVO vo) {
-    MsgAggregate entity = voToDO(vo);
+    MsgAggregate entity = voToEntity(vo);
     return msgAggregateMapper.insert(entity) > 0;
   }
 
@@ -46,14 +46,14 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
 
   @Override
   public boolean update(MsgAggregateVO vo) {
-    MsgAggregate entity = voToDO(vo);
+    MsgAggregate entity = voToEntity(vo);
     return msgAggregateMapper.updateById(entity) > 0;
   }
 
   @Override
   public List<MsgAggregateVO> findList(MsgAggregateQuery query) {
     QueryWrapper<MsgAggregate> wrapper = buildWrapper(query);
-    return converter.aggregateDoListToVO(msgAggregateMapper.selectList(wrapper));
+    return converter.aggregateListToVO(msgAggregateMapper.selectList(wrapper));
   }
 
   @Override
@@ -62,7 +62,7 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
     QueryWrapper<MsgAggregate> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
     IPage<MsgAggregate> entityPage = msgAggregateMapper.selectPage(page, wrapper);
-    List<MsgAggregateVO> vos = converter.aggregateDoListToVO(entityPage.getRecords());
+    List<MsgAggregateVO> vos = converter.aggregateListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
@@ -84,7 +84,7 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
     return wrapper;
   }
 
-  private MsgAggregate voToDO(MsgAggregateVO vo) {
+  private MsgAggregate voToEntity(MsgAggregateVO vo) {
     if (vo == null) {
       return null;
     }

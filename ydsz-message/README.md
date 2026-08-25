@@ -138,7 +138,7 @@ ydsz-message/
 ├── ydsz-message-infra/              # 基础设施层（Entity + Mapper + 仓储实现）
 │   └── src/main/java/com/njydsz/message/infra/
 │       ├── converter/               # MessageConverter
-│       ├── entity/                  # 18 个 DO（@TableName）
+│       ├── entity/                  # 18 个 Entity（@TableName）
 │       ├── mapper/                  # batch / canary / config / core / receipt / template
 │       └── repository/              # 18 个 RepositoryImpl
 │   └── resources/
