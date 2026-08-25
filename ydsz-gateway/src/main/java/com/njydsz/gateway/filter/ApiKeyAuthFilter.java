@@ -181,7 +181,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     if (apiKey == null || apiKey.isBlank()) {
       return false;
     }
-    return hashedKeys.contains(sha256Hex(apiKey.trim()));
+    return hashedKeys.contains(DigestUtils.sha256Hex(apiKey.trim()));
   }
 
   /** 检查路径是否需要 API Key 认证 */

@@ -463,8 +463,8 @@ public class FlowTaskCoreService {
       todoCountPushService.pushTaskCompleted(task, dto.getUserId());
     }
     if (metrics != null) {
-      metrics.incTask(task.getFlowCode(), task.getNodeCode(), "passed");
-      metrics.recordTaskDuration(converter.entityToVO(task), "PASSED");
+      metrics.incTask(task.getFlowCode(), task.getNodeCode(), METRIC_TASK_PASSED);
+      metrics.recordTaskDuration(converter.entityToVO(task), METRIC_TASK_STATUS_PASSED);
     }
   }
 
@@ -515,11 +515,11 @@ public class FlowTaskCoreService {
       FlowInstanceVO instance, Map<String, Object> mergedVars) {
     boolean multiReject = dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1;
     if (multiReject) {
-      return advancer.advanceMulti(instance, task.getNodeCode(), "REJECT", dto.getTargetNodeCodes(), mergedVars);
+      return advancer.advanceMulti(instance, task.getNodeCode(), AUDIT_TYPE_REJECT, dto.getTargetNodeCodes(), mergedVars);
     }
     String singleTarget = dto.getTargetNodeCodes() != null && !dto.getTargetNodeCodes().isEmpty()
         ? dto.getTargetNodeCodes().get(0) : dto.getTargetNodeCode();
-    return advancer.advance(instance, task.getNodeCode(), "REJECT", singleTarget, mergedVars);
+    return advancer.advance(instance, task.getNodeCode(), AUDIT_TYPE_REJECT, singleTarget, mergedVars);
   }
 
   /**
@@ -537,10 +537,10 @@ public class FlowTaskCoreService {
     notificationService.fireInstanceRejected(instance.getId(), dto.getComment());
     support.audit(task, AUDIT_TYPE_REJECT, dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     if (flowMetrics != null) {
-      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "rejected");
-      flowMetrics.recordTaskDuration(converter.entityToVO(task), "REJECTED");
-      flowMetrics.incInstance(instance.getFlowCode(), "rejected");
-      flowMetrics.recordInstanceDuration(instance, "REJECTED");
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), METRIC_TASK_REJECTED);
+      flowMetrics.recordTaskDuration(converter.entityToVO(task), METRIC_TASK_STATUS_REJECTED);
+      flowMetrics.incInstance(instance.getFlowCode(), METRIC_INSTANCE_REJECTED);
+      flowMetrics.recordInstanceDuration(instance, METRIC_TASK_STATUS_REJECTED);
     }
   }
 
@@ -678,7 +678,7 @@ public class FlowTaskCoreService {
    * @param dto 参数说明
    */
   private void handleDelegateReturn(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
-    auditService.logDelegateOperation(task, "DELEGATE_RETURN");
+    auditService.logDelegateOperation(task, AUDIT_TYPE_DELEGATE_RETURN);
     task.setAssigneeId(String.valueOf(task.getAssignorId()));
     task.setAssigneeName(task.getAssignorName());
     task.setAssignorId(null);
@@ -686,7 +686,7 @@ public class FlowTaskCoreService {
     task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
     taskRepository.update(converter.entityToVO(task));
     support.audit(
-        task, "DELEGATE_RETURN", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+        task, AUDIT_TYPE_DELEGATE_RETURN, dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     log.info("[Flow] 委派回归: taskId={} → 原办理人={}", task.getId(), task.getAssigneeId());
   }
 
