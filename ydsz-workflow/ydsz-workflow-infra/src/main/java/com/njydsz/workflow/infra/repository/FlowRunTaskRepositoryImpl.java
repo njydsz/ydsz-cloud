@@ -136,23 +136,23 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   @Override
   public int freezeByInstance(String instanceId) {
     FlowRunTaskDO update = new FlowRunTaskDO();
-    update.setTaskStatus("FROZEN");
+    update.setTaskStatus(TASK_STATUS_FROZEN);
     return taskMapper.update(
         update,
         new LambdaQueryWrapper<FlowRunTaskDO>()
             .eq(FlowRunTaskDO::getInstanceId, instanceId)
-            .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED"));
+            .in(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED));
   }
 
   @Override
   public int unfreezeByInstance(String instanceId) {
     FlowRunTaskDO update = new FlowRunTaskDO();
-    update.setTaskStatus("PENDING");
+    update.setTaskStatus(TASK_STATUS_PENDING);
     return taskMapper.update(
         update,
         new LambdaQueryWrapper<FlowRunTaskDO>()
             .eq(FlowRunTaskDO::getInstanceId, instanceId)
-            .eq(FlowRunTaskDO::getTaskStatus, "FROZEN"));
+            .eq(FlowRunTaskDO::getTaskStatus, TASK_STATUS_FROZEN));
   }
 
   @Override
@@ -163,7 +163,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         update,
         new LambdaQueryWrapper<FlowRunTaskDO>()
             .eq(FlowRunTaskDO::getInstanceId, instanceId)
-            .eq(FlowRunTaskDO::getTaskStatus, "PENDING"));
+            .eq(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING));
   }
 
   @Override
@@ -190,7 +190,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getAssigneeId, userId)
                 .eq(FlowRunTaskDO::getTenantId, tenantId)
-                .eq(FlowRunTaskDO::getTaskStatus, "PENDING")
+                .eq(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING)
                 .eq(FlowRunTaskDO::getDeleted, 0)
                 .orderByDesc(FlowRunTaskDO::getCreatedAt)
                 .last("LIMIT " + limit)));
@@ -298,7 +298,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   public long countPending() {
     return taskMapper.selectCount(
         new LambdaQueryWrapper<FlowRunTaskDO>()
-            .eq(FlowRunTaskDO::getTaskStatus, "PENDING")
+            .eq(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING)
             .eq(FlowRunTaskDO::getDeleted, 0));
   }
 
@@ -308,7 +308,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         taskMapper.selectList(
             new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getDeleted, 0)
-                .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+                .in(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
                 .le(FlowRunTaskDO::getCreatedAt, thresholdTime)
                 .last("LIMIT " + limit)));
   }
@@ -331,7 +331,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
 
   @Override
   public void completeTask(String taskId, String taskStatus, LocalDateTime finishAt, Long durationMs) {
-    taskMapper.completeTask(taskId, taskStatus, "FLOW_TIMER", finishAt, durationMs);
+    taskMapper.completeTask(taskId, taskStatus, FLOW_TIMER_COMMENT, finishAt, durationMs);
   }
 
   @Override
@@ -362,7 +362,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getInstanceId, instanceId)
                 .eq(FlowRunTaskDO::getNodeCode, nodeCode)
-                .in(FlowRunTaskDO::getTaskStatus, "COMPLETED", "REJECTED")
+                .in(FlowRunTaskDO::getTaskStatus, TASK_STATUS_COMPLETED, TASK_STATUS_REJECTED)
                 .eq(FlowRunTaskDO::getDeleted, 0)));
   }
 
@@ -399,7 +399,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return taskMapper.selectCount(
         new LambdaQueryWrapper<FlowRunTaskDO>()
             .eq(FlowRunTaskDO::getTenantId, tenantId)
-            .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED"));
+            .in(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED));
   }
 
   @Override
@@ -424,7 +424,7 @@ public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
           new LambdaQueryWrapper<FlowRunTaskDO>()
               .eq(FlowRunTaskDO::getAssigneeId, assigneeId)
               .eq(FlowRunTaskDO::getDeleted, 0)
-              .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")));
+              .in(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)));
 }
 
   @Override
@@ -439,7 +439,7 @@ public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
             new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getAssigneeId, assigneeId)
                 .eq(FlowRunTaskDO::getDeleted, 0)
-                .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+                .in(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
                 .eq(StringUtils.hasText(flowCode), FlowRunTaskDO::getFlowCode, flowCode)
                 .eq(StringUtils.hasText(tenantId), FlowRunTaskDO::getTenantId, tenantId)));
   }
@@ -450,7 +450,7 @@ public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
         taskMapper.selectList(
             new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(tenantId != null, FlowRunTaskDO::getTenantId, tenantId)
-                .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+                .in(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
                 .lt(FlowRunTaskDO::getCreatedAt, threshold)
                 .eq(FlowRunTaskDO::getDeleted, 0)
                 .orderByAsc(FlowRunTaskDO::getCreatedAt)
@@ -463,7 +463,7 @@ public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
         new LambdaQueryWrapper<FlowRunTaskDO>()
             .eq(FlowRunTaskDO::getTenantId, tenantId)
             .eq(FlowRunTaskDO::getDeleted, 0)
-            .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+            .in(FlowRunTaskDO::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
             .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now()));
   }
 }

@@ -108,6 +108,70 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   private static final int DEFAULT_TIMEOUT_MINUTES = 24 * 60;
   private static final String DEFAULT_ADMIN_USER_ID = "1";
 
+  // ============================== 任务状态常量 ==============================
+
+  /** 任务状态：待处理 */
+  private static final String TASK_STATUS_PENDING = "PENDING";
+
+  /** 任务状态：已签收 */
+  private static final String TASK_STATUS_CLAIMED = "CLAIMED";
+
+  // ============================== 系统用户常量 ==============================
+
+  /** 系统用户 ID（用于自动操作） */
+  private static final String SYSTEM_USER_ID = "0";
+
+  // ============================== 通知内容常量 ==============================
+
+  /** 催办通知标题 */
+  private static final String URGE_TITLE = "审批任务即将超时";
+
+  /** 超时通知标题 */
+  private static final String NOTIFY_TITLE = "审批任务 SLA 超时需人工介入";
+
+  /** 升级通知标题 */
+  private static final String ESCALATE_TITLE = "审批任务已升级";
+
+  /** 自动通过默认审批意见 */
+  private static final String AUTO_PASS_DEFAULT_COMMENT = "系统自动通过：超过 SLA 时限未处理";
+
+  /** 自动驳回默认审批意见 */
+  private static final String AUTO_REJECT_DEFAULT_COMMENT = "系统自动驳回：超过 SLA 时限未处理";
+
+  // ============================== 通知渠道和类型常量 ==============================
+
+  /** 通知渠道：站内信 */
+  private static final String NOTIFY_CHANNEL_INAPP = "INAPP";
+
+  /** 通知类型：工作流超时 */
+  private static final String NOTIFY_TYPE_WORKFLOW_TIMEOUT = "WORKFLOW_TIMEOUT";
+
+  /** 通知级别：警告 */
+  private static final String NOTIFY_LEVEL_WARN = "WARN";
+
+  /** 通知类型：任务升级 */
+  private static final String NOTIFY_TYPE_WORKFLOW_TASK_ESCALATED = "WORKFLOW_TASK_ESCALATED";
+
+  /** 通知级别：紧急 */
+  private static final String NOTIFY_LEVEL_URGENT = "URGENT";
+
+  /** 通知类型：工作流催办 */
+  private static final String NOTIFY_TYPE_WORKFLOW_URGE = "WORKFLOW_URGE";
+
+  // ============================== SLA 配置键名常量 ==============================
+
+  /** SLA 配置键：动作 */
+  private static final String SLA_CONFIG_KEY_ACTION = "action";
+
+  /** SLA 配置键：升级用户 ID */
+  private static final String SLA_CONFIG_KEY_ESCALATE_USER_ID = "escalateUserId";
+
+  /** SLA 配置键：通知用户 ID 列表 */
+  private static final String SLA_CONFIG_KEY_NOTIFY_USER_IDS = "notifyUserIds";
+
+  /** SLA 配置键：超时时间（分钟） */
+  private static final String SLA_CONFIG_KEY_TIMEOUT_MINUTES = "timeoutMinutes";
+
   /**
    * 解析节点的 SLA 配置 JSON 字符串
    *
@@ -274,7 +338,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     if (fresh == null) {
       return false;
     }
-    if (!"PENDING".equals(fresh.getTaskStatus()) && !"CLAIMED".equals(fresh.getTaskStatus())) {
+    if (!TASK_STATUS_PENDING.equals(fresh.getTaskStatus()) && !TASK_STATUS_CLAIMED.equals(fresh.getTaskStatus())) {
       return false; // 已完成
     }
     if (fresh.getDueAt() == null) {
@@ -294,7 +358,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
           "[FlowSla] 任务已超期但无 SLA 配置: taskId={} nodeCode={}", fresh.getId(), fresh.getNodeCode());
       return false;
     }
-    String actionStr = ((String) config.getOrDefault("action", "REMIND")).toUpperCase();
+    String actionStr = ((String) config.getOrDefault(SLA_CONFIG_KEY_ACTION, "REMIND")).toUpperCase();
     FlowSlaAction action;
     try {
       action = FlowSlaAction.valueOf(actionStr);
@@ -338,7 +402,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   private boolean sendUrge(
       FlowRunTaskDO task, FlowSlaAction action, int newUrgeCount, int maxUrges, LocalDateTime now) {
     try {
-      String title = "审批任务即将超时";
+      String title = URGE_TITLE;
       String content =
           String.format(
               "【%s】%s 已超过截止时间 %s，请尽快处理（第 %d/%d 次提醒）",
@@ -355,7 +419,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             task.getAssigneeId());
         return false;
       }
-      notificationService.notify("INAPP", receiverId, title, content, "WORKFLOW_TIMEOUT", "WARN");
+      notificationService.notify(NOTIFY_CHANNEL_INAPP, receiverId, title, content, NOTIFY_TYPE_WORKFLOW_TIMEOUT, NOTIFY_LEVEL_WARN);
       log.info(
           "[FlowSla] 发送 SLA 提醒: taskId={} receiver={} count={}/{} action={}",
           task.getId(),
@@ -429,10 +493,10 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    */
   private boolean doAutoPass(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
-      String comment = (String) config.getOrDefault("autoComment", "系统自动通过：超过 SLA 时限未处理");
+      String comment = (String) config.getOrDefault("autoComment", AUTO_PASS_DEFAULT_COMMENT);
       FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
       dto.setTaskId(task.getId());
-      dto.setUserId("0"); // 0 = 系统用户
+      dto.setUserId(SYSTEM_USER_ID);
       dto.setComment(comment);
       dto.setVariables(Collections.emptyMap());
       taskService.pass(dto);
@@ -463,10 +527,10 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    */
   private boolean doAutoReject(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
-      String comment = (String) config.getOrDefault("autoComment", "系统自动驳回：超过 SLA 时限未处理");
+      String comment = (String) config.getOrDefault("autoComment", AUTO_REJECT_DEFAULT_COMMENT);
       FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
       dto.setTaskId(task.getId());
-      dto.setUserId("0");
+      dto.setUserId(SYSTEM_USER_ID);
       dto.setComment(comment);
       dto.setVariables(Collections.emptyMap());
       taskService.reject(dto);
@@ -501,7 +565,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         log.info("[FlowSla] 任务已升级，跳过重复升级: taskId={}", task.getId());
         return false;
       }
-      String escalateUserId = readString(config, "escalateUserId", null);
+      String escalateUserId = readString(config, SLA_CONFIG_KEY_ESCALATE_USER_ID, null);
       if (escalateUserId == null) {
         escalateUserId = DEFAULT_ADMIN_USER_ID;
       }
@@ -509,7 +573,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       // 通过转办接口将任务转给升级用户
       FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
       dto.setTaskId(task.getId());
-      dto.setUserId("0");
+      dto.setUserId(SYSTEM_USER_ID);
       dto.setTargetUserId(escalateUserId);
       dto.setComment(comment);
       dto.setVariables(Collections.emptyMap());
@@ -539,7 +603,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         // transfer 失败时降级：仅通知目标用户，标记升级
         log.warn("[FlowSla] 转办失败，改用通知: taskId={} err={}", task.getId(), transferEx.getMessage());
         notificationService.notify(
-            "INAPP", escalateUserId, "审批任务已升级", comment, "WORKFLOW_TASK_ESCALATED", "URGENT");
+            NOTIFY_CHANNEL_INAPP, escalateUserId, ESCALATE_TITLE, comment, NOTIFY_TYPE_WORKFLOW_TASK_ESCALATED, NOTIFY_LEVEL_URGENT);
         taskRepository.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
         return true;
       }
@@ -570,7 +634,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
   private boolean doNotify(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
     try {
       List<String> targets = resolveNotifyTargets(config);
-      String title = "审批任务 SLA 超时需人工介入";
+      String title = NOTIFY_TITLE;
       String content =
           String.format(
               "【%s】%s 已超过 SLA 时限未处理（任务 ID=%s，办理人=%s），请尽快介入处理。",
@@ -578,7 +642,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
               nullSafe(task.getNodeName()),
               task.getId(),
               nullSafe(task.getAssigneeId()));
-      notificationService.notifyBatch("INAPP", targets, title, content, "WORKFLOW_URGE", "URGENT");
+      notificationService.notifyBatch(NOTIFY_CHANNEL_INAPP, targets, title, content, NOTIFY_TYPE_WORKFLOW_URGE, NOTIFY_LEVEL_URGENT);
       // 标记 slaAction=NOTIFY（slaEscalated=0 表示任务仍活跃，未转办）
       taskRepository.markSlaAction(task.getId(), FlowSlaAction.NOTIFY.name(), 0);
       log.info(
@@ -608,7 +672,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @return 通知目标用户 ID 列表（非空，最低返回默认管理员）
    */
   private List<String> resolveNotifyTargets(Map<String, Object> config) {
-    String notifyUserIds = readString(config, "notifyUserIds", null);
+    String notifyUserIds = readString(config, SLA_CONFIG_KEY_NOTIFY_USER_IDS, null);
     if (StringUtils.hasText(notifyUserIds)) {
       String[] ids = notifyUserIds.split(",");
       List<String> targets = new ArrayList<>(ids.length);
@@ -622,7 +686,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         return targets;
       }
     }
-    String escalateUserId = readString(config, "escalateUserId", null);
+    String escalateUserId = readString(config, SLA_CONFIG_KEY_ESCALATE_USER_ID, null);
     if (StringUtils.hasText(escalateUserId)) {
       return Collections.singletonList(escalateUserId);
     }
