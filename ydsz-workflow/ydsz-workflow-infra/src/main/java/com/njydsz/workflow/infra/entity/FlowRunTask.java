@@ -138,6 +138,20 @@ public class FlowRunTask extends MpBaseEntity<String> {
   /** 通过率阈值（{@code 0~1}，默认 {@code 0.5} 表示过半数） */
   private BigDecimal votePassRate;
 
+  /**
+   * 当前办理人的权重值。
+   *
+   * <p>仅当 {@code performType=WEIGHTED} 时有效，从节点 {@code ext.userWeights} 中按 userId 查找，
+   * 未配置时默认为 {@code 1}。用于票签场景的加权计票。
+   */
+  private Integer userWeight;
+
+  /** 累计已通过权重（票签模式：每次通过时累加 {@code userWeight}） */
+  private Integer approveWeight;
+
+  /** 节点总权重（票签模式：所有办理人权重之和，用于计算通过率） */
+  private Integer totalWeight;
+
   /** 任务状态（{@link com.njydsz.workflow.domain.enums.FlowTaskStatus}.name） */
   private String taskStatus;
 
