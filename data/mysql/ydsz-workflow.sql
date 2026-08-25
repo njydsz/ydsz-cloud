@@ -8,7 +8,7 @@
 -- @author  : ydsz-team
 -- ----------------------------------------------------------------------------
 -- 说明：
---   1. 实体基于 warm-flow 工作流引擎扩展，表名统一前缀 ydsz_flow_。
+--   1. 表名统一前缀 ydsz_flow_。
 --   2. 继承 MpBaseEntity<String> 的实体含全量公共列
 --      （tenant_id / status / deleted / revision / created_by / created_at /
 --       updated_by / updated_at）。
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_category (
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程分类表（树形结构，流程定义分组归类）';
 
--- 流程定义表（工作流模板层，对标 Warm-Flow flow_definition，支持灰度发布与协同编辑锁定）
+-- 流程定义表（工作流模板层，支持灰度发布与协同编辑锁定）
 CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id           VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     flow_name           VARCHAR(128)    NOT NULL COMMENT '流程名称（前端展示）',
     category            VARCHAR(64)     DEFAULT NULL COMMENT '流程类别（用于分类筛选，如「项目类」「合同类」「人事类」）',
     flow_version        VARCHAR(32)     NOT NULL COMMENT '流程版本号（如 v1 / v2，同一 flowCode 下不同版本独立发布）',
-    model_value         VARCHAR(32)     DEFAULT NULL COMMENT '设计器模型（CLASSICS=经典横向流转图，MIMIC=仿钉钉纵向审批面板）',
+    model_value         VARCHAR(32)     DEFAULT NULL COMMENT '设计器模型（CLASSICS=经典横向流转图，MIMIC=纵向审批面板）',
     form_custom         VARCHAR(8)      DEFAULT NULL COMMENT '审批表单是否自定义（Y=自定义表单，N=系统内置表单）',
     form_path           VARCHAR(1024)   DEFAULT NULL COMMENT '审批表单路径（formCustom=Y 时为 Vue 组件路径，否则为表单定义 ID）',
     activity_status     INT             NOT NULL DEFAULT 1 COMMENT '激活状态（0=挂起不可发起新实例，1=激活正常接收新实例）',
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     CONSTRAINT uk_flow_code_version UNIQUE (flow_code, flow_version, tenant_id),
     INDEX idx_category (category),
     INDEX idx_tenant_deleted (tenant_id, deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程定义表（流程模板元数据，对标 Warm-Flow flow_definition）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程定义表（流程模板元数据）';
 
 -- 流程模板表（模板市场预置模板，含 BPMN 2.0 XML，支持继承与版本化）
 CREATE TABLE IF NOT EXISTS ydsz_flow_template (
@@ -136,9 +136,9 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_node (
     CONSTRAINT uk_definition_node_code UNIQUE (definition_id, node_code),
     INDEX idx_flow_code (flow_code),
     INDEX idx_tenant_deleted (tenant_id, deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程节点表（流程定义结构最小单元，对标 Warm-Flow flow_node）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程节点表（流程定义结构最小单元）';
 
--- 节点跳转关联表（流程图有向边，对标 Warm-Flow flow_skip / BPMN sequenceFlow）
+-- 节点跳转关联表（流程图有向边，对应 BPMN sequenceFlow）
 CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id           VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     INDEX idx_flow_code (flow_code),
     INDEX idx_source_node_code (source_node_code),
     INDEX idx_tenant_deleted (tenant_id, deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='节点跳转关联表（流程图有向边，对标 Warm-Flow flow_skip）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='节点跳转关联表（流程图有向边）';
 
 -- 流程自动触发规则表（源流程终态后按条件自动启动目标流程）
 CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (

@@ -1,6 +1,6 @@
 # ydsz-cronjob
 
-> 分布式任务调度引擎（自研），对标 XXL-Job / PowerJob / ElasticJob / SchedulerX
+> 分布式任务调度引擎（自研）
 
 ## 模块定位
 
@@ -15,7 +15,7 @@
 
 ## 核心职责
 
-本模块是 YDSZ 的**自研分布式任务调度引擎**，对标 XXL-Job + PowerJob + ElasticJob + SchedulerX。
+本模块是 YDSZ 的**自研分布式任务调度引擎**。
 
 ### 1. 核心能力
 

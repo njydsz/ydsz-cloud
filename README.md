@@ -24,9 +24,9 @@
 
 - **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10
 - **DDD 分层架构**：严格 `api` / `domain` / `infra` / `server` / `app` / `web` 六层分离，依赖方向单向收敛（gateway 为单模块 reactive 栈，不拆分 DDD 层）
-- **自研引擎矩阵**：「规则引擎（对标 Drools + LiteFlow）+ 任务调度（对标 XXL-Job + PowerJob）+ 工作流（BPMN 2.0）+ AI Agent 框架」——四大引擎全部自研，开箱即用
+- **自研引擎矩阵**：「规则引擎 + 任务调度 + 工作流（BPMN 2.0）+ AI Agent 框架」——四大引擎全部自研，开箱即用
 - **多租户隔离**：支持 SINGLE（共享表）、MULTI（字段隔离）、ISOLATE_DB（独立数据库）三种策略
-- **全渠道消息**：6 种通知渠道（短信/邮件/Push/企微/钉钉/飞书等），支持 DAG 编排与跨渠道抑制
+- **全渠道消息**：6 种通知渠道（短信/邮件/Push/企微/IM等），支持 DAG 编排与跨渠道抑制
 - **安全纵深防御**：JWT + RBAC + 数据权限 + PII 脱敏 + XSS/SQL 注入/CSRF 防护 + 敏感配置加密（AES-256-GCM）
 - **生产可观测**：Prometheus + Grafana + Sentry + ELK/Loki + Micrometer Tracing（W3C TraceContext）
 
@@ -272,9 +272,6 @@ ydsz-{module}/
 
 - [Spring Boot](https://spring.io/projects/spring-boot) &amp; [Spring Cloud](https://spring.io/projects/spring-cloud) —— Java 微服务生态基石
 - [Spring Cloud Alibaba](https://github.com/alibaba/spring-cloud-alibaba) —— 微服务一站式解决方案
-- [XXL-Job](https://github.com/xuxueli/xxl-job) &amp; [PowerJob](https://github.com/PowerJob/PowerJob) —— 分布式任务调度标杆
-- [Drools](https://www.drools.org/) &amp; [LiteFlow](https://liteflow.cc/) —— 规则引擎领域先驱
-- [Flowable](https://www.flowable.com/) &amp; [Camunda](https://camunda.com/) —— BPMN 工作流引擎参考
 
 ---
 
