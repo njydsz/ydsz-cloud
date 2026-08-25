@@ -240,6 +240,11 @@ ydsz-{module}/
 4. **`ydsz-common-metrics` 为占位条目**：该坐标仅出现在 `ydsz-common/pom.xml` 的 `dependencyManagement` 中，无对应模块目录，也无任何消费者，并非真实子模块（common 实际为 30 个子模块）。
 5. **gateway 不依赖 `common-web`**：网关为 WebFlux 反应式栈，按需挑选 11 个细粒度 common 子模块，不引入 servlet 栈的 `common-web`。
 6. **质量守护分层启用**：默认构建仅启用 Checkstyle + Enforcer + L1 纯度 + SBOM（红线级，阻断）；SpotBugs / OWASP DC / JaCoCo / Spotless 通过 Maven profile 按需开启——`mvn verify -Pquality`（报告模式，不阻断，用于基线巡检）、`mvn verify -Pquality-enforce`（门禁模式：JaCoCo 行≥80%/分支≥70% + OWASP CVSS≥7 阻断 + SpotBugs failOnError）。
+7. **存量分层穿透（技术债，ArchUnit 规则已降级守护）**：以下源码级跨层引用为历史存量，ArchUnit 规则已按现状降级并在测试类中以 TODO 标注，修复后应收紧为硬性红线：
+    - `ydsz-userinfo` / `ydsz-workflow`：`api -> domain`（Feign Client 引用 domain VO/DTO，待契约模型下沉 api 模块）；
+    - `ydsz-agent`：`infra -> server`（`infra.tool` 引用 `server.config.AgentProperties`，待配置类下沉）；
+    - `ydsz-message` / `ydsz-cronjob` / `ydsz-agent`：`web -> infra` 源码引用（转换器/实体/LLM 客户端直用，待编排逻辑下沉 app/server 层）。
+    注：`ydsz-system-web` 对 `ydsz-system-infra` 的 pom 依赖为**运行时装配依赖**（Spring 自动装配注入 Repository 实现至 server 层接口），web 源码零 import（由 ArchUnit 规则守护），不属穿透。
 
 ---
 
