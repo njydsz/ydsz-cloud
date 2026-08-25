@@ -358,9 +358,10 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
         case JSON -> validateJsonValue(configValue);
       };
     } catch (NumberFormatException e) {
-      return "数值格式非法";
+      return MessageUtils.getMessage("system.excel.numberFormat.invalid", "数值格式非法");
     } catch (IllegalArgumentException e) {
-      return "未知的值类型: " + valueType;
+      return MessageUtils.getMessage("system.excel.unknownValueType",
+          new Object[] {valueType}, "未知的值类型: " + valueType);
     } catch (Exception e) {
       return e.getMessage() != null ? e.getMessage() : "校验异常";
     }
@@ -369,7 +370,8 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   /** 校验 STRING 类型长度（私有）。 */
   private static String validateStringValue(String configValue) {
     return configValue.length() > MAX_STRING_LENGTH
-        ? "字符串长度超过限制 " + MAX_STRING_LENGTH
+        ? MessageUtils.getMessage("system.excel.stringTooLong",
+            new Object[] {MAX_STRING_LENGTH}, "字符串长度超过限制 " + MAX_STRING_LENGTH)
         : null;
   }
 
@@ -377,7 +379,8 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private static String validateNumberValue(String configValue) {
     double v = Double.parseDouble(configValue.trim());
     if (v < MIN_NUMBER || v > MAX_NUMBER) {
-      return "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
+      return MessageUtils.getMessage("system.excel.numberOutOfRange",
+          new Object[] {MIN_NUMBER, MAX_NUMBER}, "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]");
     }
     return null;
   }
@@ -386,7 +389,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private static String validateBooleanValue(String configValue) {
     return BOOLEAN_PATTERN.matcher(configValue.trim()).matches()
         ? null
-        : "布尔值必须是 true/false";
+        : MessageUtils.getMessage("system.excel.booleanInvalid", "布尔值必须是 true/false");
   }
 
   /** 校验 JSON 类型合法性与长度（私有）。 */

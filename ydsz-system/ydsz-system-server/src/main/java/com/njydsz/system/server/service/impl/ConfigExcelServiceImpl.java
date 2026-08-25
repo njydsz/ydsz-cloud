@@ -162,8 +162,10 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
       return typeError;
     }
     if (configRepository.existsByGroupAndKey(excelRow.getConfigGroup(), excelRow.getConfigKey())) {
-      return "第 " + rowNum + " 行: 配置已存在("
-          + excelRow.getConfigGroup() + "/" + excelRow.getConfigKey() + ")";
+      String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
+      return rowPrefix + MessageUtils.getMessage("system.excel.configKey.exists",
+          new Object[] {excelRow.getConfigGroup() + "/" + excelRow.getConfigKey()},
+          "配置已存在(" + excelRow.getConfigGroup() + "/" + excelRow.getConfigKey() + ")");
     }
     return null;
   }
@@ -204,7 +206,9 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
       ConfigValueType.validate(excelRow.getValueType());
       return null;
     } catch (IllegalArgumentException e) {
-      return "第 " + rowNum + " 行: 值类型不合法: " + excelRow.getValueType();
+      String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
+      return rowPrefix + MessageUtils.getMessage("system.excel.valueType.invalid",
+          new Object[] {excelRow.getValueType()}, "值类型不合法: " + excelRow.getValueType());
     }
   }
 

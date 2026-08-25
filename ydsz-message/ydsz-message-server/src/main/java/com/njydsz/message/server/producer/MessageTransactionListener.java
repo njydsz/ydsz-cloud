@@ -15,6 +15,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.service.template.TemplateService;
@@ -162,25 +163,28 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
    */
   private String validateRequest(MessageRequest req) {
     if (!StringUtils.hasText(req.getChannel())) {
-      return "通道为空";
+      return MessageUtils.getMessage("message.send.channelEmpty", "通道为空");
     }
     if (!StringUtils.hasText(req.getTemplateCode())) {
-      return "模板编码为空";
+      return MessageUtils.getMessage("message.send.templateCodeEmpty", "模板编码为空");
     }
     if (!StringUtils.hasText(req.getReceiver())) {
-      return "接收人为空";
+      return MessageUtils.getMessage("message.send.receiverEmpty", "接收人为空");
     }
     if (!channelRouter.isChannelEnabled(req.getChannel())) {
-      return "通道未启用: " + req.getChannel();
+      return MessageUtils.getMessage("message.send.channelDisabled",
+          new Object[] {req.getChannel()}, "通道未启用: " + req.getChannel());
     }
     MsgTemplateVO tpl =
         templateService.loadByCodeAndChannel(
             req.getTemplateCode(), req.getChannel(), null, TenantContextHolder.getTenantId());
     if (tpl == null) {
-      return "模板不存在: " + req.getTemplateCode();
+      return MessageUtils.getMessage("message.send.templateNotExist",
+          new Object[] {req.getTemplateCode()}, "模板不存在: " + req.getTemplateCode());
     }
     if (!"ENABLED".equals(tpl.getStatus())) {
-      return "模板未启用: " + tpl.getStatus();
+      return MessageUtils.getMessage("message.send.templateDisabled",
+          new Object[] {tpl.getStatus()}, "模板未启用: " + tpl.getStatus());
     }
     return null;
   }

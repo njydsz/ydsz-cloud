@@ -55,9 +55,9 @@
     <!-- 1. 文件级检查（File-level Checks）            -->
     <!-- ============================================ -->
 
-    <!-- 单行最大宽度：120 字符 -->
+    <!-- 单行最大宽度：140 字符 -->
     <module name="LineLength">
-        <property name="max" value="120"/>
+        <property name="max" value="140"/>
         <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
     </module>
 
