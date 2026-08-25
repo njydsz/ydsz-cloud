@@ -11,6 +11,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.workflow.infra.entity.FlowTemplate;
 import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
 
@@ -37,7 +38,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
 
   @Override
   public String getTypeLabel() {
-    return "流程模板";
+    return MessageUtils.getMessage("workflow.search.typeLabel", "流程模板");
   }
 
   @Override
@@ -73,7 +74,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
     return List.of(
         SearchField.builder()
             .name("title")
-            .label("模板名称")
+            .label(MessageUtils.getMessage("workflow.search.field.name", "模板名称"))
             .type(FieldType.TEXT)
             .weight(FIELD_WEIGHT)
             .searchable(true)
@@ -82,7 +83,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
             .build(),
         SearchField.builder()
             .name("subtitle")
-            .label("分类")
+            .label(MessageUtils.getMessage("workflow.search.field.category", "分类"))
             .type(FieldType.KEYWORD)
             .weight(2.0f)
             .searchable(true)
@@ -90,7 +91,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
             .build(),
         SearchField.builder()
             .name("content")
-            .label("描述")
+            .label(MessageUtils.getMessage("workflow.search.field.description", "描述"))
             .type(FieldType.TEXT)
             .weight(1.0f)
             .searchable(true)

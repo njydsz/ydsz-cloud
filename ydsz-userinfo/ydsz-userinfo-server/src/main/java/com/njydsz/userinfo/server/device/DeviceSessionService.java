@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.SessionManager;
@@ -152,7 +153,7 @@ public class DeviceSessionService {
    */
   private String maskUserAgent(String userAgent) {
     if (userAgent == null || userAgent.isBlank()) {
-      return "未知设备";
+      return MessageUtils.getMessage("userinfo.device.unknown", "未知设备");
     }
     if (userAgent.length() <= USER_AGENT_MAX_LENGTH) {
       return userAgent;

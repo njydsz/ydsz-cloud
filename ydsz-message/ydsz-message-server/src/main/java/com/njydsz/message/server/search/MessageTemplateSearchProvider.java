@@ -11,6 +11,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 
@@ -40,7 +41,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
 
   @Override
   public String getTypeLabel() {
-    return "消息模板";
+    return MessageUtils.getMessage("message.search.typeLabel", "消息模板");
   }
 
   @Override
@@ -76,7 +77,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
     return List.of(
         SearchField.builder()
             .name("title")
-            .label("模板主题")
+            .label(MessageUtils.getMessage("message.search.field.subject", "模板主题"))
             .type(FieldType.TEXT)
             .weight(NAME_WEIGHT)
             .searchable(true)
@@ -85,7 +86,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .build(),
         SearchField.builder()
             .name("subtitle")
-            .label("模板编码")
+            .label(MessageUtils.getMessage("message.search.field.code", "模板编码"))
             .type(FieldType.KEYWORD)
             .weight(2.0f)
             .searchable(true)
@@ -93,14 +94,14 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .build(),
         SearchField.builder()
             .name("content")
-            .label("模板内容")
+            .label(MessageUtils.getMessage("message.search.field.content", "模板内容"))
             .type(FieldType.TEXT)
             .weight(1.0f)
             .searchable(true)
             .build(),
         SearchField.builder()
             .name("status")
-            .label("状态")
+            .label(MessageUtils.getMessage("message.search.field.status", "状态"))
             .type(FieldType.KEYWORD)
             .weight(CONTENT_WEIGHT)
             .searchable(false)

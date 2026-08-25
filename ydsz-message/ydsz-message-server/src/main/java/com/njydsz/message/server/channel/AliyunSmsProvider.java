@@ -295,7 +295,9 @@ public class AliyunSmsProvider implements SmsProvider {
             if ("DELIVERED".equals(sendStatus)) {
               return MessageResult.ok("SMS", providerTraceId);
             } else if ("FAILED".equals(sendStatus)) {
-              MessageResult r = MessageResult.fail("SMS", MessageUtils.getMessage("sms.send.failed", new Object[] {errMsg}, "发送失败: " + errMsg));
+              String failMsg = MessageUtils.getMessage("sms.send.failed",
+                  new Object[] {errMsg}, "发送失败: " + errMsg);
+              MessageResult r = MessageResult.fail("SMS", failMsg);
               r.setProviderTraceId(providerTraceId);
               return r;
             }

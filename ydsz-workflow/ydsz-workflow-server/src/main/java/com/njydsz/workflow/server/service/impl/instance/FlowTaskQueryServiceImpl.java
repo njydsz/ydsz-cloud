@@ -18,6 +18,7 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
@@ -438,18 +439,18 @@ public class FlowTaskQueryServiceImpl {
    * @param action 参数说明
    * @return 返回值说明
    */
-  private String getActionName(String action) {
+private String getActionName(String action) {
     if (action == null) {
-      return "未知";
+        return MessageUtils.getMessage("workflow.countersign.unknown", "未知");
     }
     return switch (action) {
-      case "COUNTERSIGN_BEFORE" -> "前加签";
-      case "COUNTERSIGN_AFTER" -> "后加签";
-      case "COUNTERSIGN_PARALLEL" -> "并加签";
-      case "COUNTERSIGN_REMOVE" -> "减签";
-      default -> "未知加签操作";
+        case "COUNTERSIGN_BEFORE" -> MessageUtils.getMessage("workflow.countersign.before", "前加签");
+        case "COUNTERSIGN_AFTER" -> MessageUtils.getMessage("workflow.countersign.after", "后加签");
+        case "COUNTERSIGN_PARALLEL" -> MessageUtils.getMessage("workflow.countersign.parallel", "并加签");
+        case "COUNTERSIGN_REMOVE" -> MessageUtils.getMessage("workflow.countersign.remove", "减签");
+        default -> MessageUtils.getMessage("workflow.countersign.unknownAction", "未知加签操作");
     };
-  }
+}
 
   // ============================== 监控聚合查询（供 Controller 层使用，避免 DO 泄漏） ==============================
 

@@ -4,7 +4,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.infra.entity.SecurityAlert;
 
 /**
@@ -26,18 +25,18 @@ public interface SecurityAlertConverter {
    * @return 安全告警领域模型
    */
   @Mapping(target = "id", source = "id")
-  @Mapping(target = "alertType", expression = "java(SecurityAlert.AlertType.valueOf(entity.getAlertType()))")
-  @Mapping(target = "riskLevel", expression = "java(SecurityAlert.RiskLevel.valueOf(entity.getRiskLevel()))")
+  @Mapping(target = "alertType", expression = "java(com.njydsz.userinfo.domain.alert.SecurityAlert.AlertType.valueOf(entity.getAlertType()))")
+  @Mapping(target = "riskLevel", expression = "java(com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel.valueOf(entity.getRiskLevel()))")
   @Mapping(target = "userId", source = "userId")
   @Mapping(target = "username", source = "username")
   @Mapping(target = "sourceIp", source = "sourceIp")
   @Mapping(target = "title", source = "title")
   @Mapping(target = "content", source = "content")
-  @Mapping(target = "status", expression = "java(SecurityAlert.AlertStatus.valueOf(entity.getStatus()))")
+  @Mapping(target = "status", expression = "java(com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus.valueOf(entity.getStatus()))")
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "handledAt", source = "handledAt")
   @Mapping(target = "handlerNote", source = "handlerNote")
-  SecurityAlert entityToDomain(SecurityAlert entity);
+  com.njydsz.userinfo.domain.alert.SecurityAlert entityToDomain(SecurityAlert entity);
 
   /**
    * 安全告警领域模型 → 实体。
@@ -60,5 +59,5 @@ public interface SecurityAlertConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
-  SecurityAlert domainToEntity(SecurityAlert domain);
+  SecurityAlert domainToEntity(com.njydsz.userinfo.domain.alert.SecurityAlert domain);
 }
