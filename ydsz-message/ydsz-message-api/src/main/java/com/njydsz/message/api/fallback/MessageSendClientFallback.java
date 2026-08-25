@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.api.client.MessageSendClient;
 
 /**
@@ -30,11 +31,13 @@ public class MessageSendClientFallback implements FallbackFactory<MessageSendCli
     return new MessageSendClient() {
       @Override
       public YdszResponse<String> sendMessage(MessageRequest request) {
+        String errorMsg = MessageUtils.getMessage("message.service.unavailable", "消息中心服务不可用");
         log.warn(
-            "[MessageSendClient] sendMessage 降级: receiver={}, subject={}, reason=消息中心服务不可用",
+            "[MessageSendClient] sendMessage 降级: receiver={}, subject={}, reason={}",
             request == null ? null : request.getReceiver(),
-            request == null ? null : request.getSubject());
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+            request == null ? null : request.getSubject(),
+            errorMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, errorMsg);
       }
     };
   }
