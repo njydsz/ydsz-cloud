@@ -734,10 +734,10 @@ public class FlowTaskCoreService {
       Map<String, Object> vars,
       FlowPerformType performType,
       FlowTaskOperateDTO dto) {
-    List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(), "PASS", null, vars);
+    List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(), AUDIT_TYPE_PASS, null, vars);
     instanceService.generateTasksForNodes(task.getInstanceId(), nextNodes, vars);
     updateInstanceNode(instance, nextNodes);
-    notificationService.fireTaskCompleted(task.getId(), "PASS", vars);
+    notificationService.fireTaskCompleted(task.getId(), AUDIT_TYPE_PASS, vars);
     support.audit(
         task,
         performType.name() + "_PASS_ALL",
@@ -784,7 +784,7 @@ public class FlowTaskCoreService {
           .orElse(null);
       int finished = task.getApproveFinished() == null ? 1 : task.getApproveFinished();
       int count = task.getApproveCount() == null ? 1 : task.getApproveCount();
-      notificationService.fireTaskPersonalCompleted(task, dto.getUserId(), "PASS", finished, count,
+      notificationService.fireTaskPersonalCompleted(task, dto.getUserId(), AUDIT_TYPE_PASS, finished, count,
           nodeExt, variables);
     } catch (Exception e) {
       log.warn("[Flow] 触发个人完成事件失败: taskId={} err={}", task.getId(), e.getMessage());
