@@ -55,8 +55,8 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
     int pageSize = query.getPageSize();
     Page<SecurityAlertDO> page = new Page<>(pageNum, pageSize);
     LambdaQueryWrapper<SecurityAlertDO> wrapper = new LambdaQueryWrapper<>();
-    if (query.getStatus() != null) {
-      wrapper.eq(SecurityAlertDO::getStatus, query.getStatus().name());
+    if (query.getAlertStatus() != null) {
+      wrapper.eq(SecurityAlertDO::getStatus, query.getAlertStatus().name());
     }
     if (query.getRiskLevel() != null) {
       wrapper.eq(SecurityAlertDO::getRiskLevel, query.getRiskLevel().name());

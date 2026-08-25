@@ -22,11 +22,12 @@ import lombok.experimental.SuperBuilder;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("unchecked")
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @TableName("nw_user_recent")
-public class UserRecentDO implements Serializable {
+public class UserRecent implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

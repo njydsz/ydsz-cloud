@@ -30,6 +30,7 @@ import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("unchecked")
 @Data
 @SuperBuilder
 @NoArgsConstructor

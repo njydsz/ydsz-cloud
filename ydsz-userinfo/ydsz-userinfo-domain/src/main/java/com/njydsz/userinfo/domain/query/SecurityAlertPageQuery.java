@@ -25,7 +25,7 @@ import com.njydsz.userinfo.domain.alert.SecurityAlert;
 public class SecurityAlertPageQuery extends PageQuery {
 
   /** 告警状态过滤（可为 null 表示不过滤） */
-  private SecurityAlert.AlertStatus status;
+  private SecurityAlert.AlertStatus alertStatus;
 
   /** 风险等级过滤（可为 null 表示不过滤） */
   private SecurityAlert.RiskLevel riskLevel;
