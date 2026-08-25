@@ -15,11 +15,11 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 /**
  * 系统变量实体
  *
- * <p>对应数据库表 {@code ydsz_variable}，存储系统级动态变量。 与 {@link ConfigDO} 的区别：
+ * <p>对应数据库表 {@code ydsz_variable}，存储系统级动态变量。 与 {@link Config} 的区别：
  *
  * <ul>
  *   <li>Variable 面向业务侧（前端/ISV 通过 Feign 调用）
- *   <li>ConfigDO 面向后端模块（按 group 消费）
+   * <li>Config 面向后端
  *   <li>Variable 强调「按 key 高频查询」（缓存命中优先）
  * </ul>
  *
@@ -45,7 +45,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see ConfigDO 系统配置实体（面向后端）
+ * @see Config 系统配置实体（面向后端）
  */
 @Data
 @SuperBuilder

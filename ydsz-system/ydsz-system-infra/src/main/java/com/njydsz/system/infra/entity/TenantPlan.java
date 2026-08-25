@@ -13,7 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 租户套餐实体
  *
  * <p>对应数据库表 {@code ydsz_tenant_plan}，定义 SaaS 多租户体系下的<b>套餐/订阅计划</b>。 一个套餐对应一组「功能菜单 + 资源配额 + 计费规则」，供
- * {@link TenantDO#getPlanId()} 引用。
+ * {@link Tenant#getPlanId()} 引用。
  *
  * <p><b>典型使用：</b>
  *
@@ -26,19 +26,19 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>关联关系：</b>
  *
  * <ul>
- *   <li>{@link TenantDO} → {@link TenantPlanDO}：多对一，一个租户订阅一个套餐
- *   <li>{@link TenantPlanDO} → {@link TenantPlanMenuDO}：一对多，套餐与菜单权限多对多关联
+ *   <li>{@link Tenant} → {@link TenantPlan}：多对一，一个租户订阅一个套餐
+ *   <li>{@link TenantPlan} → {@link TenantPlanMenu}：一对多，套餐与菜单权限多对多关联
  * </ul>
  *
- * <p><b>配额实现：</b>功能 / 配额规则存储在 {@link TenantPlanMenuDO} 关联表，运行时由 {@code TenantQuotaAspect} AOP
+ * <p><b>配额实现：</b>功能 / 配额规则存储在 {@link TenantPlanMenu} 关联表，运行时由 {@code TenantQuotaAspect} AOP
  * 拦截校验；超限抛 {@code TenantQuotaExceededException}。
  *
  * <p><b>索引设计：</b>唯一索引 {@code uk_plan_code}（{@code plan_code}）保证套餐编码全局唯一。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see TenantDO 租户实体
- * @see TenantPlanMenuDO 套餐-菜单关联
+ * @see Tenant 租户实体
+ * @see TenantPlanMenu 套餐-菜单关联
  */
 @Data
 @SuperBuilder

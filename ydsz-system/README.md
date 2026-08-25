@@ -61,15 +61,15 @@ ydsz-system/
 ├── ydsz-system-infra/                  # 基础设施层：MyBatis Mapper + Entity + Repository 实现 + Converter
 │   └── src/main/java/com/njydsz/system/infra/
 │       ├── entity/                     # 持久化实体（9 个，继承 MpBaseEntity）
-│       │   ├── ConfigDO.java           # 系统配置（充血模型：validate / getTypedValue / validateValueFormat 等领域方法）
-│       │   ├── DictItemDO.java         # 字典项
-│       │   ├── DictTypeDO.java         # 字典类型
-│       │   ├── EntityVersionDO.java    # 通用实体版本快照
-│       │   ├── AppInfoDO.java          # OAuth2 应用注册
-│       │   ├── VariableDO.java         # 系统变量
-│       │   ├── TenantDO.java           # 租户
-│       │   ├── TenantPlanDO.java       # 租户套餐
-│       │   └── TenantPlanMenuDO.java   # 套餐菜单关联
+│       │   ├── Config.java            # 系统配置（充血模型：validate / getTypedValue / validateValueFormat 等领域方法）
+│       │   ├── DictItem.java          # 字典项
+│       │   ├── DictType.java          # 字典类型
+│       │   ├── EntityVersion.java     # 通用实体版本快照
+│       │   ├── AppInfo.java           # OAuth2 应用注册
+│       │   ├── Variable.java          # 系统变量
+│       │   ├── Tenant.java            # 租户
+│       │   ├── TenantPlan.java        # 租户套餐
+│       │   └── TenantPlanMenu.java    # 套餐菜单关联
 │       ├── mapper/                     # 9 个 MyBatis Mapper（含自定义 XML）
 │       ├── repository/                 # 8 个仓储实现
 │       └── converter/                  # SystemConverter（MapStruct）

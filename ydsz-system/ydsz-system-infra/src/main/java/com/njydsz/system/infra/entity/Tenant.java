@@ -25,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li><b>ISOLATE_DB：</b>独立数据库，通过 {@link #datasourceKey} 字段路由到独立 DataSource， 适用于金融/医疗等高隔离要求的客户
  * </ul>
  *
- * <p><b>套餐与配额：</b>{@link #planId} 关联 {@link TenantPlanDO}，定义该租户的功能权限和资源配额 （如最大用户数、最大项目数、最大存储空间）。
+ * <p><b>套餐与配额：</b>{@link #planId} 关联 {@link TenantPlan}，定义该租户的功能权限和资源配额 （如最大用户数、最大项目数、最大存储空间）。
  *
  * <p><b>生命周期：</b>租户创建 → 套餐订阅（{@code planId} + {@code expireAt}）→ 续费 / 到期降级 / 释放。
  *
@@ -34,7 +34,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see TenantPlanDO 租户套餐
+ * @see TenantPlan 租户套餐
  * @see com.njydsz.common.core.context.RequestContext 请求上下文
  */
 @Data
@@ -60,7 +60,7 @@ public class Tenant extends MpBaseEntity<String> {
   /** 联系邮箱（脱敏返回） */
   private String contactEmail;
 
-  /** 关联套餐 ID（{@link TenantPlanDO#getId()}） */
+  /** 关联套餐 ID（{@link TenantPlan#getId()}） */
   private String planId;
 
   /** 订阅到期时间（到期后租户被自动锁定/降级） */
