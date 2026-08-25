@@ -504,11 +504,16 @@ public final class RequestContext {
    * @return 虚拟请求头 Map（不可变），不存在返回空 Map
    * @since 1.0.0
    */
-  @SuppressWarnings("unchecked")
   public static Map<String, String> getExtraHeaders() {
     Object obj = get(BizContextKeys.KEY_EXTRA_HEADERS);
-    if (obj instanceof Map) {
-      return Collections.unmodifiableMap((Map<String, String>) obj);
+    if (obj instanceof Map<?, ?> raw) {
+      Map<String, String> result = new LinkedHashMap<>();
+      for (Map.Entry<?, ?> entry : raw.entrySet()) {
+        if (entry.getKey() instanceof String k && entry.getValue() instanceof String v) {
+          result.put(k, v);
+        }
+      }
+      return Collections.unmodifiableMap(result);
     }
     return Collections.emptyMap();
   }
