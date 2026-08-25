@@ -32,7 +32,7 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
  *   <li><b>安全防护</b>：IP 黑/白名单 + WebSocket 认证 + Payload 校验 + 安全响应头
  *   <li><b>链路追踪</b>：W3C Trace Context（traceparent）+ X-Trace-Id 兼容
  *   <li><b>灰度发布</b>：基于 Nacos metadata 的灰度路由 + 加权轮询
- *   <li><b>监控告警</b>：Prometheus 指标 + 钉钉/飞书 IM 告警
+ *   <li><b>监控告警</b>：Prometheus 指标 + IM 告警
  * </ol>
  *
  * <h3>过滤器执行顺序</h3>

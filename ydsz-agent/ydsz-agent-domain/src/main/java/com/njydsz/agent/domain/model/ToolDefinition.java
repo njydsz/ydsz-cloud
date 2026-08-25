@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 工具定义（对标 OpenAI tools schema 中的 function definition）
+ * 工具定义
  *
  * <p>描述一个可供 LLM 调用的工具，包含名称、描述和 JSON Schema 参数定义。
  *

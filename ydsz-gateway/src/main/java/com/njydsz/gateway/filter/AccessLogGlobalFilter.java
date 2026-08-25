@@ -31,7 +31,7 @@ import com.njydsz.gateway.config.GatewayMetrics;
 /**
  * 网关访问日志全局过滤器（P0-2 + P0-8 敏感参数脱敏）
  *
- * <p>记录每个经过网关的请求的结构化访问日志，对标大厂网关（阿里云 API 网关 / Netflix Zuul）的 access log。
+ * <p>记录每个经过网关的请求的结构化访问日志。
  *
  * <h3>日志字段</h3>
  *
