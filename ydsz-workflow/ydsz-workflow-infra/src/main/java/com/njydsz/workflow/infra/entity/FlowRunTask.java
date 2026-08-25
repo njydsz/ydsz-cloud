@@ -165,6 +165,16 @@ public class FlowRunTask extends MpBaseEntity<String> {
   /** 完成时间 */
   private LocalDateTime finishAt;
 
+  /**
+   * 生效时间（P2-1 穿越时空/补录审批）。
+   *
+   * <p>默认为 {@code null}，表示即时生效。当非空时，表示该审批"补录"到指定的过去时间，
+   * 流程引擎会将此任务的历史顺序按照 {@code effectiveTime} 重新计算。
+   *
+   * <p>应用场景：线下已审批完成后在系统中补录、或审批日期有特殊追溯需求。
+   */
+  private LocalDateTime effectiveTime;
+
   /** 耗时（毫秒，{@code finishAt - claimAt}） */
   private Long durationMs;
 

@@ -68,7 +68,7 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
     }
     wrapper.orderByDesc(SecurityAlert::getCreatedAt);
     Page<SecurityAlert> result = securityAlertMapper.selectPage(page, wrapper);
-    List<SecurityAlert> alerts = result.getRecords().stream()
+    List<com.njydsz.userinfo.domain.alert.SecurityAlert> alerts = result.getRecords().stream()
         .map(converter::entityToDomain)
         .toList();
     return PageResponse.success(

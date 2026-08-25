@@ -1018,6 +1018,103 @@ public class FlowInstanceLifecycleManager {
     }
   }
 
+  /**
+   * GAP-V2-03: 动态追加节点（对标 flowlong executeAppendNodeModel）。
+   *
+   * <p>在运行中的流程实例上动态追加一个审批节点，不修改流程定义。
+   * 新节点作为"插入节点"在当前节点之后、下一节点之前执行。
+   *
+   * <p><b>实现原理：</b>
+   *
+   * <ol>
+   *   <li>校验实例状态为 RUNNING</li>
+   *   <li>构建临时 FlowNode（nodeType=APPROVAL）</li>
+   *   <li>调用 taskService.createTask 创建待办</li>
+   *   <li>记录追加信息到实例 variable（appendedNodes）</li>
+   *   <li>写审计日志</li>
+   * </ol>
+   *
+   * @param instanceId     流程实例 ID
+   * @param currentNodeCode 当前节点编码
+   * @param nodeName       新节点名称
+   * @param assigneeType   办理人类型
+   * @param assigneeId     办理人 ID
+   * @param operatorId     操作人 ID
+   * @param comment        追加原因
+   * @return 新创建的任务 ID
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public String appendNode(
+      String instanceId,
+      String currentNodeCode,
+      String nodeName,
+      String assigneeType,
+      String assigneeId,
+      String operatorId,
+      String comment) {
+    FlowInstanceVO instance = getByIdOrThrow(instanceId);
+    FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
+    if (status != FlowInstanceStatus.RUNNING) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .key("error.workflow.msg_c9d0e1f2")
+          .params("仅运行中实例可追加节点，当前状态=" + instance.getFlowStatus())
+          .build();
+    }
+
+    String appendedNodeCode = "appended_" + currentNodeCode + "_" + System.currentTimeMillis();
+
+    FlowNode appendedNode = new FlowNode();
+    appendedNode.setDefinitionId(instance.getDefinitionId());
+    appendedNode.setFlowCode(instance.getFlowCode());
+    appendedNode.setNodeType(FlowNodeType.APPROVAL.getCode());
+    appendedNode.setNodeCode(appendedNodeCode);
+    appendedNode.setNodeName(nodeName);
+    appendedNode.setPermissionFlag(assigneeType.toLowerCase() + ":" + assigneeId);
+
+    Map<String, Object> variables = variableManager.getVariables(instanceId);
+    String taskId = taskService.createTask(instanceId, appendedNode, variables);
+
+    Map<String, Object> appendedInfo = new HashMap<>();
+    appendedInfo.put("nodeCode", appendedNodeCode);
+    appendedInfo.put("nodeName", nodeName);
+    appendedInfo.put("assigneeType", assigneeType);
+    appendedInfo.put("assigneeId", assigneeId);
+    appendedInfo.put("operatorId", operatorId);
+    appendedInfo.put("comment", comment);
+    appendedInfo.put("createdAt", LocalDateTime.now().toString());
+
+    Map<String, Object> vars = variableManager.getVariables(instanceId);
+    List<Map<String, Object>> appendedNodes = new ArrayList<>();
+    Object existing = vars.get("appendedNodes");
+    if (existing instanceof List<?> list) {
+      for (Object item : list) {
+        if (item instanceof Map) {
+          @SuppressWarnings("unchecked")
+          Map<String, Object> map = (Map<String, Object>) item;
+          appendedNodes.add(map);
+        }
+      }
+    }
+    appendedNodes.add(appendedInfo);
+    variableManager.setVariable(instanceId, "appendedNodes", appendedNodes);
+
+    FlowAuditLog audit = new FlowAuditLog();
+    audit.setInstanceId(instanceId);
+    audit.setFlowCode(instance.getFlowCode());
+    audit.setBusinessType(instance.getBusinessType());
+    audit.setBusinessId(instance.getBusinessId());
+    audit.setAction("APPEND_NODE");
+    audit.setNodeCode(appendedNodeCode);
+    audit.setOperatorId(operatorId);
+    audit.setComment(comment);
+    audit.setProviderTraceId(MDC.get("traceId"));
+    auditLogRepository.save(audit);
+
+    log.info("[Flow] 动态追加节点: instanceId={} nodeCode={} taskId={}", instanceId, appendedNodeCode, taskId);
+    return taskId;
+  }
+
   // ============================== 私有辅助方法 ==============================
 
   private FlowInstanceVO getByIdOrThrow(String id) {

@@ -103,4 +103,21 @@ public class FlowTaskOperateDTO implements Serializable {
 
   /** 链路追踪 ID */
   private String providerTraceId;
+
+  /**
+   * P2-1: 穿越时空（补录审批）。
+   *
+   * <p>当为 {@code true} 时，表示该审批是"补录"的，可将任务完成时间向前追溯至 {@link #effectiveTime}。
+   * {@code null} 或 {@code false} 表示即时审批，按当前系统时间处理。
+   */
+  private Boolean backdated;
+
+  /**
+   * P2-1: 补录生效时间。
+   *
+   * <p>当 {@link #backdated} 为 {@code true} 时，该字段指定补录的目标时间（过去时间）。
+   * 引擎将在归档时将此任务的 {@code effectiveTime} 设置为该值，影响后续查询排序。
+   * 为空则使用当前系统时间作为生效时间。
+   */
+  private LocalDateTime effectiveTime;
 }

@@ -72,7 +72,7 @@ public class OAuth2ApplicationRepositoryImpl implements OAuth2ApplicationReposit
     }
     wrapper.orderByDesc(OAuth2Application::getCreatedAt);
     Page<OAuth2Application> result = oauth2ApplicationMapper.selectPage(page, wrapper);
-    List<OAuth2Application> applications = result.getRecords().stream()
+    List<com.njydsz.userinfo.domain.oauth2.OAuth2Application> applications = result.getRecords().stream()
         .map(converter::entityToDomain)
         .toList();
     return PageResponse.success(

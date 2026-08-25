@@ -116,6 +116,14 @@ public class FlowHisTask extends MpBaseIdEntity<String> {
   /** 完成时间（终态时刻） */
   private LocalDateTime finishAt;
 
+  /**
+   * 生效时间（P2-1 穿越时空/补录审批，从源 task 复制）。
+   *
+   * <p>当源 task 的 {@code effectiveTime} 非空时，归档时一并复制，
+   * 历史查询与排序以该时间为准。为 {@code null} 表示即时生效。
+   */
+  private LocalDateTime effectiveTime;
+
   /** 耗时（毫秒） */
   private Long durationMs;
 
