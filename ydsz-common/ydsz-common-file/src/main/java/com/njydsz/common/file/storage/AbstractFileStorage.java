@@ -46,8 +46,8 @@ import com.njydsz.common.file.service.FileDedupService;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.VirusScanner;
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.common.util.security.HexUtils;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 文件存储抽象基类

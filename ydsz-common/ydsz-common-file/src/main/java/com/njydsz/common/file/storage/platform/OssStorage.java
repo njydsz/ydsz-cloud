@@ -23,7 +23,6 @@ import com.aliyun.oss.model.ListObjectsRequest;
 import com.aliyun.oss.model.ListPartsRequest;
 import com.aliyun.oss.model.OSSObject;
 import com.aliyun.oss.model.ObjectListing;
-import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PartETag;
 import com.aliyun.oss.model.PartSummary;
 import com.aliyun.oss.model.UploadPartRequest;
