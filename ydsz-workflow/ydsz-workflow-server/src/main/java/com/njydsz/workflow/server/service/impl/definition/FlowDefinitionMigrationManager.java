@@ -481,7 +481,6 @@ public class FlowDefinitionMigrationManager {
   }
 
   /** 计算节点差异，返回 {added, removed, modified} Map。 */
-  @SuppressWarnings("unchecked")
   private Map<String, Object> diffNodes(Map<String, FlowNode> nodeMapV1,
       Map<String, FlowNode> nodeMapV2) {
     List<Map<String, Object>> addedNodes = new ArrayList<>();
@@ -556,7 +555,6 @@ public class FlowDefinitionMigrationManager {
   }
 
   /** 计算连线差异，返回 {added, removed} Map。 */
-  @SuppressWarnings("unchecked")
   private Map<String, Object> diffSkips(Map<String, FlowSkip> skipMapV1,
       Map<String, FlowSkip> skipMapV2) {
     List<Map<String, Object>> addedSkips = new ArrayList<>();

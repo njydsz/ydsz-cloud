@@ -15,7 +15,6 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.event.OutboxEvent;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
-import com.njydsz.message.infra.entity.OutboxEvent;
 import com.njydsz.message.infra.mapper.OutboxEventMapper;
 
 /**
@@ -38,7 +37,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public boolean save(OutboxEvent event) {
-    OutboxEvent entity = toEntity(event);
+    com.njydsz.message.infra.entity.OutboxEvent entity = toEntity(event);
     return outboxEventMapper.insert(entity) > 0;
   }
 
@@ -49,19 +48,19 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public List<OutboxEvent> findPending(int limit, LocalDateTime beforeTime) {
-    Page<OutboxEvent> page = new Page<>(1, limit);
-    LambdaQueryWrapper<OutboxEvent> wrapper =
-        new LambdaQueryWrapper<OutboxEvent>()
-            .eq(OutboxEvent::getStatus, "PENDING")
-            .le(OutboxEvent::getCreatedAt, beforeTime)
-            .orderByAsc(OutboxEvent::getCreatedAt);
-    List<OutboxEvent> records = outboxEventMapper.selectPage(page, wrapper).getRecords();
+    Page<com.njydsz.message.infra.entity.OutboxEvent> page = new Page<>(1, limit);
+    LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent> wrapper =
+        new LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent>()
+            .eq(com.njydsz.message.infra.entity.OutboxEvent::getStatus, "PENDING")
+            .le(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt, beforeTime)
+            .orderByAsc(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt);
+    List<com.njydsz.message.infra.entity.OutboxEvent> records = outboxEventMapper.selectPage(page, wrapper).getRecords();
     return records.stream().map(this::toEvent).toList();
   }
 
   @Override
   public boolean markPublishing(String id) {
-    OutboxEvent current = outboxEventMapper.selectById(id);
+    com.njydsz.message.infra.entity.OutboxEvent current = outboxEventMapper.selectById(id);
     if (current == null) {
       return false;
     }
@@ -92,13 +91,13 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public PageResponse<List<OutboxEvent>> findPage(String status, int pageNum, int pageSize) {
-    Page<OutboxEvent> page = new Page<>(pageNum, Math.min(pageSize, 100));
-    LambdaQueryWrapper<OutboxEvent> wrapper = new LambdaQueryWrapper<>();
+    Page<com.njydsz.message.infra.entity.OutboxEvent> page = new Page<>(pageNum, Math.min(pageSize, 100));
+    LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent> wrapper = new LambdaQueryWrapper<>();
     if (status != null && !status.isBlank()) {
-      wrapper.eq(OutboxEvent::getStatus, status);
+      wrapper.eq(com.njydsz.message.infra.entity.OutboxEvent::getStatus, status);
     }
-    wrapper.orderByDesc(OutboxEvent::getCreatedAt);
-    Page<OutboxEvent> resultPage = outboxEventMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt);
+    Page<com.njydsz.message.infra.entity.OutboxEvent> resultPage = outboxEventMapper.selectPage(page, wrapper);
     List<OutboxEvent> events = resultPage.getRecords().stream().map(this::toEvent).toList();
     return PageResponse.success(
         resultPage.getTotal(),
@@ -108,7 +107,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   }
 
   /** Entity → Event 转换。 */
-  private OutboxEvent toEvent(OutboxEvent entity) {
+  private OutboxEvent toEvent(com.njydsz.message.infra.entity.OutboxEvent entity) {
     OutboxEvent event = new OutboxEvent();
     event.setId(entity.getId());
     event.setAggregateType(entity.getAggregateType());
@@ -124,8 +123,8 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   }
 
   /** Event → Entity 转换。 */
-  private OutboxEvent toEntity(OutboxEvent event) {
-    OutboxEvent entity = new OutboxEvent();
+  private com.njydsz.message.infra.entity.OutboxEvent toEntity(OutboxEvent event) {
+    com.njydsz.message.infra.entity.OutboxEvent entity = new com.njydsz.message.infra.entity.OutboxEvent();
     entity.setId(event.getId());
     entity.setAggregateType(event.getAggregateType());
     entity.setAggregateId(event.getAggregateId());

@@ -2,8 +2,6 @@ package com.njydsz.message.infra.entity;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,31 +36,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_msg_canary")
-public class MsgCanary implements Serializable {
+public class MsgCanary extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
-
-  /** 主键 ID（雪花算法） */
-  @TableId(type = IdType.ASSIGN_ID)
-  private String id;
-
-  /** 租户 ID */
-  private String tenantId;
-
-  /** 创建人 ID */
-  private String createdBy;
-
-  /** 创建时间 */
-  private LocalDateTime createdAt;
-
-  /** 更新人 ID */
-  private String updatedBy;
-
-  /** 更新时间 */
-  private LocalDateTime updatedAt;
-
-  /** 删除标识: false 未删除 / true 已删除 */
-  private Boolean deleted;
 
   /** 灰度实验唯一键，格式：canary_{templateCode}_{timestamp} */
   private String canaryKey;
