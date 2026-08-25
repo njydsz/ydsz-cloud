@@ -43,6 +43,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_app_info")
+@SuppressWarnings("unchecked")
 public class AppInfoDO extends MpBaseEntity<String> {
 
   /** 应用业务编码（对外展示 / 业务标识，全局唯一） */

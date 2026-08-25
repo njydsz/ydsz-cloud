@@ -139,6 +139,8 @@ public interface SystemConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   AppInfoDO dtoToEntityWithId(AppInfoDTO dto);
@@ -206,6 +208,8 @@ public interface SystemConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   ConfigDO dtoToEntityWithId(ConfigDTO dto);
@@ -277,6 +281,8 @@ public interface SystemConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   DictItemDO dtoToEntityWithId(DictItemDTO dto);
@@ -348,6 +354,8 @@ public interface SystemConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   DictTypeDO dtoToEntityWithId(DictTypeDTO dto);
@@ -435,6 +443,8 @@ public interface SystemConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   TenantDO dtoToEntityWithId(TenantDTO dto);
@@ -486,6 +496,8 @@ public interface SystemConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   TenantPlanDO dtoToEntityWithId(TenantPlanDTO dto);
@@ -574,6 +586,8 @@ public interface SystemConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   VariableDO dtoToEntityWithId(VariableDTO dto);

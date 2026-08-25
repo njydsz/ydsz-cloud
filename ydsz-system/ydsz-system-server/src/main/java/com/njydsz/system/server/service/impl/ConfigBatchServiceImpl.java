@@ -71,6 +71,9 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   /** 日志截断最大长度 */
   private static final int MAX_LOG_ABBREVIATE_LENGTH = 128;
 
+  /** 结果 Map 初始容量（successCount, totalCount, message 三个键值对） */
+  private static final int RESULT_MAP_CAPACITY = 3;
+
   /** 配置仓储（用于批量插入 + 唯一性校验） */
   private final ConfigRepository configRepository;
 

@@ -54,6 +54,9 @@ import com.njydsz.system.server.util.SystemVersionUtils;
 @RequiredArgsConstructor
 public class DictItemBatchServiceImpl implements DictItemBatchService {
 
+  /** 结果 Map 初始容量（successCount, totalCount, message 三个键值对） */
+  private static final int RESULT_MAP_CAPACITY = 3;
+
   /** 字典仓储（用于批量插入 + 唯一性校验） */
   private final DictRepository dictRepository;
 
