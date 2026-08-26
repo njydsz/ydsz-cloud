@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -44,6 +46,8 @@ import com.njydsz.workflow.server.config.FlowProperties;
 @Slf4j
 @Component
 public class FlowDefinitionCacheService {
+
+  private static final Logger log = LoggerFactory.getLogger(FlowDefinitionCacheService.class);
 
   private final FlowNodeRepository flowNodeRepository;
   private final FlowSkipRepository flowSkipRepository;
@@ -323,11 +327,51 @@ public class FlowDefinitionCacheService {
   /** 流程定义完整元数据，包含节点、跳转及其索引。 */
   @Getter
   @Setter
-  private static class FlowDefinitionMetadata {
+  public static class FlowDefinitionMetadata {
     private List<FlowNodeVO> nodes;
     private List<FlowSkipVO> skips;
     private Map<String, FlowNodeVO> nodeByCode;
     private Map<String, List<FlowSkipVO>> skipsBySource;
     private Map<String, List<FlowSkipVO>> skipsByTarget;
+
+    public List<FlowNodeVO> getNodes() {
+      return nodes;
+    }
+
+    public void setNodes(List<FlowNodeVO> nodes) {
+      this.nodes = nodes;
+    }
+
+    public List<FlowSkipVO> getSkips() {
+      return skips;
+    }
+
+    public void setSkips(List<FlowSkipVO> skips) {
+      this.skips = skips;
+    }
+
+    public Map<String, FlowNodeVO> getNodeByCode() {
+      return nodeByCode;
+    }
+
+    public void setNodeByCode(Map<String, FlowNodeVO> nodeByCode) {
+      this.nodeByCode = nodeByCode;
+    }
+
+    public Map<String, List<FlowSkipVO>> getSkipsBySource() {
+      return skipsBySource;
+    }
+
+    public void setSkipsBySource(Map<String, List<FlowSkipVO>> skipsBySource) {
+      this.skipsBySource = skipsBySource;
+    }
+
+    public Map<String, List<FlowSkipVO>> getSkipsByTarget() {
+      return skipsByTarget;
+    }
+
+    public void setSkipsByTarget(Map<String, List<FlowSkipVO>> skipsByTarget) {
+      this.skipsByTarget = skipsByTarget;
+    }
   }
 }

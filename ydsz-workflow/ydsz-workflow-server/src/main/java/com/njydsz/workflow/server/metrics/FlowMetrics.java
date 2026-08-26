@@ -8,6 +8,8 @@ import java.util.function.Supplier;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
@@ -52,6 +54,8 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 @Slf4j
 @ConditionalOnClass(MeterRegistry.class)
 public class FlowMetrics extends SentryMetricsAdapter {
+
+  private static final Logger log = LoggerFactory.getLogger(FlowMetrics.class);
 
   /** Gauge 查询 30s TTL 缓存（避免 Prometheus 每次抓取都打 DB） */
   private static final long GAUGE_CACHE_TTL_NS = 30_000_000_000L;

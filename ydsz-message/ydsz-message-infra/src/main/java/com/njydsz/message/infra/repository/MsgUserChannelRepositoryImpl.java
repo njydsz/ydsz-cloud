@@ -50,12 +50,16 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
   @Override
   public Optional<MsgUserChannelVO> findOne(MsgUserChannelQuery query) {
     QueryWrapper<MsgUserChannel> wrapper = buildWrapper(query);
+    if (query.isPrimaryFirst()) {
+      wrapper.orderByDesc("is_primary");
+    }
     return Optional.ofNullable(msgUserChannelMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
   @Override
   public List<MsgUserChannelVO> findList(MsgUserChannelQuery query) {
     QueryWrapper<MsgUserChannel> wrapper = buildWrapper(query);
+    wrapper.orderByDesc("is_primary");
     return converter.userChannelListToVO(msgUserChannelMapper.selectList(wrapper));
   }
 

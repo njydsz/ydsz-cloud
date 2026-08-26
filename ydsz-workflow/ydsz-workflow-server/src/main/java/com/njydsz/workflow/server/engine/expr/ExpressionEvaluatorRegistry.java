@@ -7,6 +7,8 @@ import java.util.Map;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +39,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class ExpressionEvaluatorRegistry {
+
+  private static final Logger log = LoggerFactory.getLogger(ExpressionEvaluatorRegistry.class);
 
   /** 所有表达式求值器实现 */
   private final List<ExpressionEvaluator> evaluators;

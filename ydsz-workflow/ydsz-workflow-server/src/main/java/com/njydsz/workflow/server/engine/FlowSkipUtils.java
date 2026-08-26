@@ -3,6 +3,8 @@ package com.njydsz.workflow.server.engine;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
@@ -21,6 +23,8 @@ import com.njydsz.workflow.infra.entity.FlowSkip;
  */
 @Slf4j
 public final class FlowSkipUtils {
+
+  private static final Logger log = LoggerFactory.getLogger(FlowSkipUtils.class);
 
   private FlowSkipUtils() {
     throw new AssertionError("工具类禁止实例化");

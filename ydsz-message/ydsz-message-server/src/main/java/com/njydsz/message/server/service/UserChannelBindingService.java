@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.config;
 import java.util.List;
 
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
-import com.njydsz.message.domain.entity.config.MsgUserChannel;
+import com.njydsz.message.domain.vo.MsgUserChannelVO;
 
 /**
  * 用户渠道绑定服务接口。
@@ -19,9 +19,9 @@ public interface UserChannelBindingService {
    * 新增或更新通道绑定（按 userId + channelType 唯一约束 upsert）。
    *
    * @param dto 绑定参数
-   * @return 绑定实体
+   * @return 绑定视图对象
    */
-  MsgUserChannel upsert(UserChannelBindingDTO dto);
+  MsgUserChannelVO upsert(UserChannelBindingDTO dto);
 
   /**
    * 删除通道绑定（逻辑删除）。
@@ -34,18 +34,18 @@ public interface UserChannelBindingService {
    * 查询用户所有通道绑定。
    *
    * @param userId 用户 ID
-   * @return 绑定列表
+   * @return 绑定视图对象列表
    */
-  List<MsgUserChannel> listByUser(String userId);
+  List<MsgUserChannelVO> listByUser(String userId);
 
   /**
    * 按用户 + 通道类型查询绑定（优先返回主绑定）。
    *
    * @param userId 用户 ID
    * @param channelType 通道类型
-   * @return 绑定实体；无绑定时返回 null
+   * @return 绑定视图对象；无绑定时返回 null
    */
-  MsgUserChannel getByUserAndChannel(String userId, String channelType);
+  MsgUserChannelVO getByUserAndChannel(String userId, String channelType);
 
   /**
    * P0-1 核心方法：按用户 + 通道类型解析通道用户标识。

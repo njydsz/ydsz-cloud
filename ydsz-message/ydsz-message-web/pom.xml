@@ -16,6 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-server</artifactId>
         </dependency>
+        <!-- P1-2: web 层引入 infra，通过组件扫描注入 Repository 实现到 server 层接口 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-message-infra</artifactId>
+        </dependency>
         <!-- ydsz-common-domain: explicit declaration (controllers use PageResponse/BaseStatusEnum, was transitive via server→jdbc) -->
         <dependency>
             <groupId>com.njydsz</groupId>

@@ -7,7 +7,7 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 用户通道绑定分页查询 Query。
+ * 用户通道绑定查询 Query。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,4 +24,7 @@ public class MsgUserChannelQuery extends PageQuery {
 
   /** 状态（ACTIVE/INACTIVE） */
   @Xss private String status;
+
+  /** 是否优先查询主绑定（isPrimary=1） */
+  private boolean primaryFirst;
 }

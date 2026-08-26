@@ -1,6 +1,8 @@
 package com.njydsz.workflow.server.health;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,6 +40,8 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
     havingValue = "true",
     matchIfMissing = true)
 public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
+
+  private static final Logger log = LoggerFactory.getLogger(FlowHealthIndicator.class);
 
   private final FlowInstanceRepository instanceRepository;
   private final FlowRunTaskRepository runTaskRepository;

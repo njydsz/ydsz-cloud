@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.impl.config;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,10 +9,10 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
+import com.njydsz.message.domain.query.MsgUserChannelQuery;
 import com.njydsz.message.domain.repository.MsgUserChannelRepository;
-import com.njydsz.message.infra.entity.MsgUserChannel;
+import com.njydsz.message.domain.vo.MsgUserChannelVO;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 /**
@@ -38,16 +37,15 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
 
   /**
    * {@inheritDoc}
-   * 
-   * <p>按 userId + channelType 查找已有绑定：存在则更新 channelUserId/verified/isPrimary/extra，
-   * 不存在则新建。channelType 统一转大写存储，tenantId 从 {@link TenantContext} 获取。
-   * 
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * <p>按 userId + channelType 查找已有绑定：存在则更新 channelUserId/verified/isPrimary/extra，
+   * 不存在则新建。channelType 统一转大写存储。
+   *
+   * @param dto 绑定参数
+   * @return 绑定视图对象
    */
   @Override
-  public MsgUserChannel upsert(UserChannelBindingDTO dto) {
+  public MsgUserChannelVO upsert(UserChannelBindingDTO dto) {
     if (dto == null
         || !StringUtils.hasText(dto.getUserId())
         || !StringUtils.hasText(dto.getChannelType())) {
@@ -56,11 +54,10 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
           .message("用户ID和通道类型不能为空")
           .build();
     }
-    String tenantId = TenantContextHolder.getTenantId();
     String channelType = dto.getChannelType().trim().toUpperCase();
 
     // 查找已有绑定
-    MsgUserChannel existing = getByUserAndChannel(dto.getUserId(), channelType);
+    MsgUserChannelVO existing = getByUserAndChannel(dto.getUserId(), channelType);
     if (existing != null) {
       existing.setChannelUserId(dto.getChannelUserId());
       if (dto.getVerified() != null) {
@@ -72,7 +69,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
       if (dto.getExtra() != null) {
         existing.setExtra(dto.getExtra());
       }
-      msgUserChannelRepository.updateById(existing);
+      msgUserChannelRepository.update(existing);
       log.info(
           "[UserChannelBinding] 更新绑定: userId={} channel={} channelUserId={}",
           dto.getUserId(),
@@ -81,29 +78,28 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
       return existing;
     }
 
-    MsgUserChannel entity = new MsgUserChannel();
-    entity.setUserId(dto.getUserId());
-    entity.setChannelType(channelType);
-    entity.setChannelUserId(dto.getChannelUserId());
-    entity.setVerified(dto.getVerified() != null ? dto.getVerified() : 0);
-    entity.setIsPrimary(dto.getIsPrimary() != null ? dto.getIsPrimary() : 0);
-    entity.setExtra(dto.getExtra());
-    entity.setTenantId(tenantId);
-    msgUserChannelRepository.insert(entity);
+    MsgUserChannelVO vo = new MsgUserChannelVO();
+    vo.setUserId(dto.getUserId());
+    vo.setChannelType(channelType);
+    vo.setChannelUserId(dto.getChannelUserId());
+    vo.setVerified(dto.getVerified() != null ? dto.getVerified() : 0);
+    vo.setIsPrimary(dto.getIsPrimary() != null ? dto.getIsPrimary() : 0);
+    vo.setExtra(dto.getExtra());
+    msgUserChannelRepository.save(vo);
     log.info(
         "[UserChannelBinding] 新增绑定: userId={} channel={} channelUserId={}",
         dto.getUserId(),
         channelType,
         dto.getChannelUserId());
-    return entity;
+    return vo;
   }
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>按 ID 逻辑删除绑定记录，id 为空时直接返回。
    *
-   * @param id 参数说明
+   * @param id 绑定 ID
    */
   @Override
   public void delete(String id) {
@@ -116,45 +112,40 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
   /**
    * {@inheritDoc}
    *
-   * <p>按 tenantId 隔离，结果按 isPrimary 降序、createdAt 降序排列。
+   * <p>按 userId 隔离，返回用户的所有通道绑定列表。
    *
    * @param userId 用户 ID
-   * @return 绑定列表，userId 为空时返回空列表
+   * @return 绑定视图对象列表，userId 为空时返回空列表
    */
   @Override
-  public List<MsgUserChannel> listByUser(String userId) {
+  public List<MsgUserChannelVO> listByUser(String userId) {
     if (!StringUtils.hasText(userId)) {
       return List.of();
     }
-    return msgUserChannelRepository.selectList(
-        new LambdaQueryWrapper<MsgUserChannel>()
-            .eq(MsgUserChannel::getUserId, userId)
-            .eq(MsgUserChannel::getTenantId, TenantContextHolder.getTenantId())
-            .orderByDesc(MsgUserChannel::getIsPrimary)
-            .orderByDesc(MsgUserChannel::getCreatedAt));
+    MsgUserChannelQuery query = new MsgUserChannelQuery();
+    query.setUserId(userId);
+    return msgUserChannelRepository.findList(query);
   }
 
   /**
    * {@inheritDoc}
    *
-   * <p>channelType 统一转大写查询，按 tenantId 隔离，优先返回 isPrimary=1 的记录。
+   * <p>channelType 统一转大写查询，按 userId 隔离，优先返回 isPrimary=1 的记录。
    *
    * @param userId 用户 ID
    * @param channelType 通道类型（不区分大小写）
-   * @return 绑定记录，不存在时返回 null
+   * @return 绑定视图对象；无绑定时返回 null
    */
   @Override
-  public MsgUserChannel getByUserAndChannel(String userId, String channelType) {
+  public MsgUserChannelVO getByUserAndChannel(String userId, String channelType) {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(channelType)) {
       return null;
     }
-    return msgUserChannelRepository.selectOne(
-        new LambdaQueryWrapper<MsgUserChannel>()
-            .eq(MsgUserChannel::getUserId, userId)
-            .eq(MsgUserChannel::getChannelType, channelType.trim().toUpperCase())
-            .eq(MsgUserChannel::getTenantId, TenantContextHolder.getTenantId())
-            .orderByDesc(MsgUserChannel::getIsPrimary)
-            .last("LIMIT 1"));
+    MsgUserChannelQuery query = new MsgUserChannelQuery();
+    query.setUserId(userId);
+    query.setChannelType(channelType.trim().toUpperCase());
+    query.setPrimaryFirst(true);
+    return msgUserChannelRepository.findOne(query).orElse(null);
   }
 
   /**
@@ -171,7 +162,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(channelType)) {
       return null;
     }
-    MsgUserChannel binding = getByUserAndChannel(userId, channelType);
+    MsgUserChannelVO binding = getByUserAndChannel(userId, channelType);
     if (binding == null) {
       log.debug(
           "[UserChannelBinding] 无通道绑定,降级使用原 receiver: userId={} channel={}", userId, channelType);

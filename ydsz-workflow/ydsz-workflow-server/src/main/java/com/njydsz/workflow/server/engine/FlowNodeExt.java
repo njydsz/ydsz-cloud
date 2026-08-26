@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -23,6 +25,8 @@ import com.njydsz.common.json.YdszJson;
 @Slf4j
 @Component
 public final class FlowNodeExt {
+
+  private static final Logger log = LoggerFactory.getLogger(FlowNodeExt.class);
 
   /** 节点默认优先级（1~100 中位值） */
   private static final int DEFAULT_PRIORITY = 50;

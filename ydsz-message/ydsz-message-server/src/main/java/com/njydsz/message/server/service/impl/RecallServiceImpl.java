@@ -14,13 +14,13 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.domain.enums.core.MsgTraceNodeEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.MessageRecalledEvent;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
-import com.njydsz.message.infra.entity.MsgTrace;
 import com.njydsz.message.server.channel.recall.RecallChannel;
 import com.njydsz.message.server.channel.recall.RecallChannelRouter;
 import com.njydsz.message.server.event.DomainEventPublisher;
@@ -137,7 +137,7 @@ public class RecallServiceImpl implements RecallService {
       // P0-2: 记录撤回轨迹
       messageTraceService.recordTrace(
           logDO.getMsgId(),
-          MsgTrace.Node.RECALLED,
+          MsgTraceNodeEnum.RECALLED.name(),
           "SUCCESS",
           logDO.getChannel(),
           "消息已撤回: logId=" + logId);
@@ -210,7 +210,7 @@ public class RecallServiceImpl implements RecallService {
     // P0-2: 记录撤回轨迹
     messageTraceService.recordTrace(
         msgId,
-        MsgTraceDO.Node.RECALLED,
+        MsgTraceNodeEnum.RECALLED.name(),
         "SUCCESS",
         logDO.getChannel(),
         "消息已撤回: msgId=" + msgId + ", platformRecall=" + recallResult.platformRecallSucceeded());

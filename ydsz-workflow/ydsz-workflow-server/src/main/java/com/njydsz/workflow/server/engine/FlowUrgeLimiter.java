@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +36,8 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
 @Slf4j
 @Component
 public class FlowUrgeLimiter {
+
+  private static final Logger log = LoggerFactory.getLogger(FlowUrgeLimiter.class);
 
   /** 默认冷却窗口 30 分钟 */
   public static final long DEFAULT_COOLDOWN_SECONDS = 30 * 60L;

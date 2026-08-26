@@ -9,26 +9,27 @@ import org.springframework.stereotype.Component;
 import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
- * POST 回调通道（POST）撤回实现。
+ * 飞书（FEISHU）撤回实现。
  *
- * <p>通过 IM 开放平台 API 撤回已发送的群机器人消息。
+ * <p>通过飞书开放平台 API 撤回已发送的群机器人消息。
  *
- * <p>时效窗口：消息发送后 1 分钟内可撤回。部分平台撤回窗口较短，超过后仅做本地标记。
+ * <p>时效窗口：消息发送后 1 分钟内可撤回。飞书的撤回窗口较短，超过后仅做本地标记。
  *
- * <p>实际生产环境需调用平台消息撤回接口，本实现为模拟框架，预留 API 调用位。
+ * <p>实际生产环境需调用 {@code /im/v1/messages/{message_id}} DELETE 接口，
+ * 本实现为模拟框架，预留 API 调用位。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 @Component
-public class PostRecallChannel implements RecallChannel {
+public class FeishuRecallChannel implements RecallChannel {
 
-  /** POST 通道撤回时效窗口：1 分钟 */
+  /** 飞书撤回时效窗口：1 分钟 */
   private static final Duration RECALL_WINDOW = Duration.ofMinutes(1);
 
   /** 通道类型标识 */
-  private static final String CHANNEL_TYPE = "POST";
+  private static final String CHANNEL_TYPE = "FEISHU";
 
   @Override
   public String channelType() {
@@ -38,34 +39,34 @@ public class PostRecallChannel implements RecallChannel {
   @Override
   public RecallResult recall(MsgLogVO log) {
     log.debug(
-        "[RecallChannel] POST 撤回尝试: msgId={} traceId={}",
+        "[RecallChannel] FEISHU 撤回尝试: msgId={} traceId={}",
         log.getMsgId(),
         log.getTraceId());
 
     // 时效窗口检查
     if (isBeyondRecallWindow(log)) {
       log.warn(
-          "[RecallChannel] POST 超出撤回时效窗口({}分钟),仅本地标记: msgId={}",
+          "[RecallChannel] FEISHU 超出撤回时效窗口({}分钟),仅本地标记: msgId={}",
           RECALL_WINDOW.toMinutes(),
           log.getMsgId());
       return RecallResult.localOnly();
     }
 
-    // 获取消息唯一标识（message_id），用于撤回 API 调用
-    String postMsgId = resolvePostMsgId(log);
-    if (postMsgId == null || postMsgId.isBlank()) {
+    // 获取飞书消息唯一标识（message_id），用于撤回 API 调用
+    String feishuMsgId = resolveFeishuMsgId(log);
+    if (feishuMsgId == null || feishuMsgId.isBlank()) {
       log.warn(
-          "[RecallChannel] POST 无法获取消息 ID,仅本地标记: msgId={}",
+          "[RecallChannel] FEISHU 无法获取飞书消息 ID,仅本地标记: msgId={}",
           log.getMsgId());
       return RecallResult.localOnly();
     }
 
-    // TODO: 调用平台消息撤回接口实现真正的平台撤回
+    // TODO: 调用飞书 /im/v1/messages/{message_id} DELETE 接口实现真正的平台撤回
     // 当前为模拟实现，假设撤回成功
     log.info(
-        "[RecallChannel] POST 平台撤回成功(模拟): msgId={} postMsgId={}",
+        "[RecallChannel] FEISHU 平台撤回成功(模拟): msgId={} feishuMsgId={}",
         log.getMsgId(),
-        postMsgId);
+        feishuMsgId);
     return RecallResult.platformSuccess();
   }
 
@@ -84,14 +85,14 @@ public class PostRecallChannel implements RecallChannel {
   }
 
   /**
-   * 解析消息唯一标识。
+   * 解析飞书消息唯一标识。
    *
    * <p>优先使用 providerTraceId（服务商回执 ID），回退到 traceId。
    *
    * @param log 消息日志
-   * @return 消息 ID，无法获取时返回 null
+   * @return 飞书消息 ID，无法获取时返回 null
    */
-  private String resolvePostMsgId(MsgLogVO log) {
+  private String resolveFeishuMsgId(MsgLogVO log) {
     if (log.getProviderTraceId() != null && !log.getProviderTraceId().isBlank()) {
       return log.getProviderTraceId();
     }

@@ -16,16 +16,10 @@
          （${fastjson2.version}=2.0.62，解决 rocketmq 传递依赖的版本收敛），子模块无需重复声明 -->
 
     <dependencies>
-        <!-- P1-2: 移除 server 对 infra 的直接依赖，符合 DDD 分层（server 仅依赖 domain，infra 由 web 层引入并通过 Spring 自动装配注入 Repository 实现） -->
+        <!-- P1-2: 遵循 DDD 分层，server 层不直接依赖 infra 层；infra 实现由 web/app 层通过组件扫描注入 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-domain</artifactId>
-        </dependency>
-        <!-- 临时添加：server层引用了infra实体（完整DDD重构需将领域实体移到domain层） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-message-infra</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <!-- P2-3: 显式声明 common-util（多渠道发送使用 FileTypeUtils/DateUtils 等工具类） -->
         <dependency>

@@ -9,6 +9,8 @@ import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
@@ -27,7 +29,7 @@ import com.njydsz.common.exception.custom.SysException;
  * <ul>
  *   <li><b>禁用反射特性</b> — 通过自定义 {@link AviatorEvaluatorInstance} 禁用 {@link Feature#NewInstance} 与
  *       {@link Feature#Module}，防止恶意表达式通过反射调用 {@code Runtime.getRuntime().exec(...)}
- *   <li><b>表达式长度限制</b> — 单表达式上限 4KB（通过 {@link Options#MAX_LENGTH}），防止超长表达式耗尽 CPU
+ *   <li><b>表达式长度限制</b> — 单表达式上限 4KB（通过 maxLength 选项），防止超长表达式耗尽 CPU
  *   <li><b>缓存编译结果</b> — 使用 {@link ConcurrentHashMap} 缓存编译后的 {@link Expression}，避免重复编译开销
  * </ul>
  *
@@ -41,6 +43,8 @@ import com.njydsz.common.exception.custom.SysException;
 @ConditionalOnClass(AviatorEvaluator.class)
 @ConditionalOnMissingBean(ExpressionEvaluator.class)
 public class AviatorExpressionEvaluator implements ExpressionEvaluator {
+
+  private static final Logger log = LoggerFactory.getLogger(AviatorExpressionEvaluator.class);
 
   /** 表达式最大长度限制（字节），防止超长表达式攻击 */
   private static final int MAX_EXPRESSION_LENGTH = 4096;
@@ -70,7 +74,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
     this.instance.disableFeature(Feature.NewInstance);
     this.instance.disableFeature(Feature.Module);
     // 设置表达式长度上限
-    this.instance.setOption(Options.MAX_LENGTH, MAX_EXPRESSION_LENGTH);
+    this.instance.setOption("maxLength", MAX_EXPRESSION_LENGTH);
     // 关闭追踪（生产环境不需要）
     this.instance.setOption(Options.TRACE_EVAL, false);
     log.info("[Flow][Aviator] 安全加固求值器已初始化（禁用 NewInstance/Module 反射特性，MAX_LENGTH={}）",
