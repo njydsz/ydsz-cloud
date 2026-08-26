@@ -146,7 +146,7 @@ public class FlowDefinitionController {
   @PostMapping(value = "/definition/batchDeployZip", consumes = "multipart/form-data")
   @Operation(summary = "BPMN 部署包 .zip 批量导入")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
-  public YdszResponse<FlowBatchDeployResultVO> batchDeployFromZip(
+  public YdszResponse<Map<String, Object>> batchDeployFromZip(
       @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "zip 文件不能为空");

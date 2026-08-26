@@ -29,7 +29,6 @@
         <module>ydsz-literule</module>
         <module>ydsz-nextwiki</module>
         <module>ydsz-agent</module>
-        <module>ydsz-nacos</module>
     </modules>
 
     <properties>

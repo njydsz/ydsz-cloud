@@ -520,7 +520,7 @@ public class FlowMonitorDashboardController {
           item.put("currentNodeName", inst.getCurrentNodeName());
           item.put("startTime", inst.getStartAt() == null ? null : inst.getStartAt().toString());
         }
-      } catch (NumberFormatException | RuntimeException e) {
+      } catch (NumberFormatException e) {
         // 实例查询失败不阻塞，降级使用 detectAnomalies 返回的字段
         log.warn("[FlowMonitor] 实例查询失败，降级使用异常检测字段: {}", e.getMessage());
       }
