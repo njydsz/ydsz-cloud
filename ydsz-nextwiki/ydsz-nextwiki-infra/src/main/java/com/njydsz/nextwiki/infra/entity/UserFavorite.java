@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@TableName("ydsz_user_favorite")
+@TableName("ydsz_wiki_user_favorite")
 public class UserFavorite implements Serializable {
 
   private static final long serialVersionUID = 1L;

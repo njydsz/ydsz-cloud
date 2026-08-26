@@ -29,7 +29,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  * <ul>
  *   <li>ydsz_job_log：任务执行日志（含 is_slow 慢任务标记）
  *   <li>ydsz_job_log_content：任务日志内容（在线日志白屏化）
- *   <li>ydsz_job_alert_log：告警日志
+ *   <li>ydsz_alert_dispatch：告警派发日志（含告警规则命中与发送结果，P3-1-merge 后统一落此表）
  *   <li>ydsz_job_task：MapReduce 子任务记录
  *   <li>ydsz_job_history：任务配置历史版本
  *   <li>sys_audit_log：审计日志（1.0.0 新增，由 ydsz-common-audit 模块提供清理能力）
@@ -167,7 +167,7 @@ public class LogCleaner {
         cleanTable(
             "ydsz_job_log_content", before, batchSize, jobLogContentRepository::cleanExpiredLogs);
     totalCleaned +=
-        cleanTable("ydsz_job_alert_log", before, batchSize, jobAlertLogRepository::cleanExpiredLogs);
+        cleanTable("ydsz_alert_dispatch", before, batchSize, jobAlertLogRepository::cleanExpiredLogs);
     totalCleaned += cleanTable("ydsz_job_task", before, batchSize, jobTaskRepository::cleanExpiredLogs);
     totalCleaned +=
         cleanTable("ydsz_job_history", before, batchSize, jobHistoryRepository::cleanExpiredLogs);
