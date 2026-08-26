@@ -253,7 +253,6 @@ public class FlowCcServiceImpl implements FlowCcService {
     }
     FlowCcQuery q = new FlowCcQuery();
     q.setReadStatus(query.getReadStatus());
-    q.setFlowCode(query.getFlowCode());
     q.setPageNum(query.getPageNum());
     q.setPageSize(query.getPageSize());
     return pageMyCc(tenantId, userId, q);
@@ -276,7 +275,6 @@ public class FlowCcServiceImpl implements FlowCcService {
     }
     FlowCcQuery q = new FlowCcQuery();
     q.setReadStatus(query.getReadStatus());
-    q.setFlowCode(query.getFlowCode());
     return countMyCc(tenantId, userId, q);
   }
 

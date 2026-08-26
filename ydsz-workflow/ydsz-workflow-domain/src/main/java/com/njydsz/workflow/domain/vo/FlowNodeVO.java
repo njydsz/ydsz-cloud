@@ -40,6 +40,8 @@ public class FlowNodeVO implements Serializable {
   private String formFieldsConfig;
   private String slaConfig;
   private String providerTraceId;
+  /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
+  private String tenantId;
   private String createdBy;
   private LocalDateTime createdAt;
   private String updatedBy;

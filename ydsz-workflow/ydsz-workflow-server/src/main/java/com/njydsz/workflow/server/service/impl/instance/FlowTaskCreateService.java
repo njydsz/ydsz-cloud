@@ -269,7 +269,6 @@ public class FlowTaskCreateService {
     this.serviceNodeExecuteService = new ServiceNodeExecuteService(
         serviceNodeExecutor,
         taskRepository,
-        converter,
         archiveService,
         support,
         eventSubscriptionService,

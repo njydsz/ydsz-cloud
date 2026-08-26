@@ -429,7 +429,7 @@ public class FlowTaskOperateService {
     update.setId(hisTaskId);
     update.setTaskStatus("RETRACTED");
     update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
-    hisTaskRepository.save(update);
+    hisTaskRepository.save(converter.entityToVO(update));
   }
 
   // ============================== 私有辅助 ==============================

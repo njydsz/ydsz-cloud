@@ -24,6 +24,10 @@ public class FlowQuickCommentVO implements Serializable {
   private Integer sortNum;
   private Integer useCount;
   private Integer isSystem;
+  /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
+  private String tenantId;
+  /** 逻辑删除标记（对齐实体继承链 MpBaseEntity.deleted） */
+  private Integer deleted;
   private String createdBy;
   private LocalDateTime createdAt;
   private String updatedBy;

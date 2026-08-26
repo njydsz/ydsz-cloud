@@ -127,7 +127,7 @@ public final class RuleContext implements Serializable {
   }
 
   /**
-   * 从 Map 构建上下文（默认租户 "1"）
+   * 从 Map 构建上下文（默认租户 "0"）
    *
    * @param facts 事实数据
    * @param scenario 业务场景
@@ -141,7 +141,7 @@ public final class RuleContext implements Serializable {
   }
 
   /**
-   * 从 Map 构建上下文（默认租户 "1"）
+   * 从 Map 构建上下文（默认租户 "0"）
    *
    * @param facts 事实数据
    * @param scenario 业务场景
@@ -154,7 +154,7 @@ public final class RuleContext implements Serializable {
   }
 
   /**
-   * 从 Map 构建上下文（默认场景为 DEFAULT、租户 "1"）
+   * 从 Map 构建上下文（默认场景为 DEFAULT、租户 "0"）
    *
    * @param facts 事实数据
    * @return RuleContext 实例

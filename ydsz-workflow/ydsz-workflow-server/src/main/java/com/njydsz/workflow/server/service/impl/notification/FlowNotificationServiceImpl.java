@@ -341,13 +341,13 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     payload.put("content", content);
     payload.put("channel", "PUSH");
     try {
-      notificationClient.notify(
-        asString(payload.get("channel")),
-        asString(payload.get("userId")),
-        asString(payload.get("title")),
-        asString(payload.get("content")),
-        asString(payload.get("bizType")),
-        asString(payload.get("level")));
+      MessageRequest req = new MessageRequest();
+      req.setChannel(asString(payload.get("channel")));
+      req.setReceiver(asString(payload.get("userId")));
+      req.setSubject(asString(payload.get("title")));
+      req.setContent(asString(payload.get("content")));
+      req.setBizType(asString(payload.get("bizType")));
+      notificationClient.sendMessage(req);
     } catch (Exception e) {
       log.warn(
           "[FlowNotify][INAPP] Feign 调用降级为日志: userId={} title={} err={}",
@@ -380,13 +380,13 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       payload.put("receiver", receiver);
     }
     try {
-      notificationClient.notify(
-        asString(payload.get("channel")),
-        asString(payload.get("userId")),
-        asString(payload.get("title")),
-        asString(payload.get("content")),
-        asString(payload.get("bizType")),
-        asString(payload.get("level")));
+      MessageRequest req = new MessageRequest();
+      req.setChannel("EMAIL");
+      req.setReceiver(asString(payload.get("receiver") != null ? payload.get("receiver") : payload.get("userId")));
+      req.setSubject(asString(payload.get("title")));
+      req.setContent(asString(payload.get("content")));
+      req.setBizType(asString(payload.get("bizType")));
+      notificationClient.sendMessage(req);
     } catch (Exception e) {
       log.warn(
           "[FlowNotify][EMAIL] Feign 调用降级为日志: userId={} title={} err={}",

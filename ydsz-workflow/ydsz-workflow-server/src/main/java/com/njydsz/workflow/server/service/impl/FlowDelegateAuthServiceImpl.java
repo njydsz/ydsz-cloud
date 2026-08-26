@@ -24,9 +24,7 @@ import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLog;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
+import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -107,9 +105,6 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   /** 委托授权仓储（domain 层契约），管理 ydsz_flow_delegate_auth 表 CRUD */
   private final FlowDelegateAuthRepository authRepository;
 
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
-
   /** 审计日志仓储（domain 层契约），提供基础 CRUD 方法 */
   private final FlowAuditLogRepository auditLogRepository;
 
@@ -126,7 +121,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   public FlowDelegateAuthVO postDtoToEntity(FlowDelegateAuthPostDTO dto) {
-    return converter.entityToVO(converter.postDtoToEntity(dto));
+    return converter.postDtoToEntity(dto);
   }
 
   /**
@@ -153,11 +148,11 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     validateDelegateAuth(entity);
     fillDefaultValues(entity);
 
-    authRepository.save(auth);
+    authRepository.save(converter.entityToVO(entity));
     log.info("[FlowDelegate] 创建授权: owner={} delegate={} scope={} flow={} node={} role={} time=[{},{}]",
-        auth.getOwnerUserId(), auth.getDelegateUserId(), auth.getScopeType(),
-        auth.getFlowCode(), auth.getNodeCode(), auth.getRoleCode(),
-        auth.getStartTime(), auth.getEndTime());
+        entity.getOwnerUserId(), entity.getDelegateUserId(), entity.getScopeType(),
+        entity.getFlowCode(), entity.getNodeCode(), entity.getRoleCode(),
+        entity.getStartTime(), entity.getEndTime());
 
     // P2-5: 代理授权创建后，自动转发已有的在途待办
     tryOfflineAutoForward(entity.getId());

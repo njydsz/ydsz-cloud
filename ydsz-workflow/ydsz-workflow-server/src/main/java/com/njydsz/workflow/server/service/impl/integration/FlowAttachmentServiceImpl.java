@@ -192,22 +192,12 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
    * @param taskId 参数说明
    * @return 返回值说明
    */
-  @Override
-  public List<FlowAttachmentVO> listByTaskVO(String taskId) {
-    return listByTask(taskId);
-  }
-
   /**
    * {@inheritDoc}
    *
    * @param instanceId 参数说明
    * @return 返回值说明
    */
-  @Override
-  public List<FlowAttachmentVO> listByInstanceVO(String instanceId) {
-    return listByInstance(instanceId);
-  }
-
   @Override
   public void delete(String attachmentId, String operatorId) {
     FlowAttachmentVO entity = attachmentRepository.findById(attachmentId).orElse(null);

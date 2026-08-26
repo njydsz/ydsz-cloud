@@ -24,8 +24,6 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
-import com.njydsz.workflow.infra.entity.FlowNode;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
@@ -269,7 +267,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
     ((FlowInstanceServiceImpl) instanceService)
         .generateTasksForNodes(parent.getId(), nextNodes, variables);
-    FlowNode first = nextNodes.get(0);
+    FlowNodeVO first = nextNodes.get(0);
     instanceRepository.updateStatus(
         parent.getId(),
         parent.getFlowStatus(),

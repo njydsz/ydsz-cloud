@@ -83,6 +83,12 @@ public class FlowDefinitionVO implements Serializable {
   private LocalDateTime lockedAt;
 
   /** 创建人 */
+  /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
+  private String tenantId;
+  /** 逻辑删除标记（对齐实体继承链 MpBaseEntity.deleted） */
+  private Integer deleted;
+  /** 乐观锁版本号（对齐实体继承链 MpBaseEntity.revision） */
+  private Integer revision;
   private String createdBy;
 
   /** 创建时间 */

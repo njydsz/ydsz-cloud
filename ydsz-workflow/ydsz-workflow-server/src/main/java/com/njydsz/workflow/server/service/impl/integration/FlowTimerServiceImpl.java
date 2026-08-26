@@ -210,10 +210,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
     // CAS 标记 FIRED，避免多节点并发扫描时重复触发
     timerRepository.markFired(timer.getId());
-    if (updated == 0) {
-      log.debug("[FlowTimer] 定时器已被处理: id={}", timer.getId());
-      return false;
-    }
+    log.debug("[FlowTimer] 定时器标记 FIRED: id={}", timer.getId());
     try {
       if ("INTERMEDIATE".equalsIgnoreCase(timer.getTimerType())) {
         // 中间定时器：推进流程

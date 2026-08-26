@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
-import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -31,8 +30,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.event.api.DomainEvent;
@@ -56,8 +53,6 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.ExecutorConfig;
 import com.njydsz.cronjob.server.config.RemoteConfig;
-import com.njydsz.cronjob.server.core.JobLockManager;
-import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.cronjob.server.core.alert.AlertContext;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
@@ -111,7 +106,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
   private final ApplicationContext applicationContext;
-  private final RedisTemplate<String, Object> redisTemplate;
   private final CronjobProperties cronjobProperties;
 
   /** P1-3: 下次触发时间计算器（统一 cron 解析与时区处理） */
@@ -186,17 +180,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P1-A2: 线程池注册表（集中管理线程池生命周期，消除反射强耦合） */
   private final ObjectProvider<CronjobThreadPoolRegistry> threadPoolRegistryProvider;
 
-  /** P0-A2: 任务锁管理器（common-lock 封装，WatchDog 续期，替代 RedisTemplate 直调） */
-  private final ObjectProvider<JobLockManager> jobLockManagerProvider;
-
-  /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
-  private static final String INSTANCE_ID = initInstanceId();
-
-  /** P0-A4: Lua 脚本统一引用 LockKeyUtil 常量，消除内联 Lua 字符串 */
-  private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
-
-  /** P1-5: 幂等锁 key 前缀（防止相同参数的任务重复执行） */
-  private static final String IDEMPOTENT_LOCK_PREFIX = "ydsz:job:idempotent:";
+  /** P1-1: 任务锁守卫（任务锁/幂等锁原语，自 DefaultTaskDispatcher 拆分，职责单一可单测） */
+  private final JobLockGuard jobLockGuard;
 
   /** 远程派发最大尝试节点数硬上限（防止配置过大导致派发耗时不可控） */
   private static final int MAX_DISPATCH_ATTEMPTS_LIMIT = 5;
@@ -207,26 +192,11 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** 执行线程池空闲线程存活时间（秒） */
   private static final long EXECUTOR_KEEP_ALIVE_SECONDS = 60L;
 
-  /** P0-A2: 幂等锁句柄（锁 key + 持有者标识，供释放使用） */
-  private record IdempotentLockHandle(String key, String value) {}
-
-  /** P0-A2: 获取任务锁管理器（未配置时返回 null，走兼容的 RedisTemplate 路径）。 */
-  private JobLockManager jobLockManager() {
-    return jobLockManagerProvider.getIfAvailable();
-  }
-
   /** 中断等待超时（毫秒）：等待线程响应中断的最长时间 */
   private static final long INTERRUPT_WAIT_TIMEOUT_MS = 1000L;
 
   /** 中断轮询间隔（毫秒）：检查线程是否已终止的 sleep 间隔 */
   private static final long INTERRUPT_POLL_INTERVAL_MS = 10L;
-
-  private static DefaultRedisScript<Long> initReleaseScript() {
-    DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-    script.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
-    script.setResultType(Long.class);
-    return script;
-  }
 
   /** P0-2: 执行节点 ID（hostname:port），用于故障转移时定位任务所在节点 */
   private String nodeId;
@@ -664,16 +634,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     String lockKey = null;
     String shardValue = null;
     if (holdLock) {
-      lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey(), shardIndex);
-      Duration ttl = resolveLockTtl(job);
-      // P0-A2: 优先使用 JobLockManager（common-lock，WatchDog 续期）；未配置时回退 RedisTemplate SETNX
-      JobLockManager lockManager = jobLockManager();
-      if (lockManager != null) {
-        shardValue = lockManager.tryAcquireLock(job.getJobKey(), shardIndex, ttl.toMillis());
-      } else {
-        Boolean acquired = redisTemplate.opsForValue().setIfAbsent(lockKey, INSTANCE_ID, ttl);
-        shardValue = Boolean.TRUE.equals(acquired) ? INSTANCE_ID : null;
-      }
+      JobLockGuard.AcquiredLock lock = jobLockGuard.acquireJobLock(job, shardIndex);
+      lockKey = lock.key();
+      shardValue = lock.value();
       if (shardValue == null) {
         log.info("[Dispatcher] 分片锁被其他实例持有, 跳过: key={} shard={}", job.getJobKey(), shardIndex);
         return null;
@@ -688,7 +651,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           job.getJobKey(),
           shardIndex,
           triggerType);
-      releaseJobLock(lockKey, job.getJobKey(), shardIndex, shardValue);
+      jobLockGuard.jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), shardIndex, shardValue);
       return null;
     }
 
@@ -705,7 +668,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
     // P0-A2: 锁切换后持锁者为 JobLockManager 返回的 clientId（Lua 仅做 value 匹配，兼容）
     if (lockKey != null) {
-      log0.setLockHolder(shardValue != null ? shardValue : INSTANCE_ID);
+      log0.setLockHolder(shardValue != null ? shardValue : JobLockGuard.INSTANCE_ID);
     }
     // P0-2: 记录执行节点 ID 和线程 ID，供故障转移和超时清理定位
     log0.setExecNodeId(nodeId);
@@ -1098,16 +1061,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     String lockKey = null;
     String lockValue = null;
     if (holdLock) {
-      lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
-      Duration ttl = resolveLockTtl(job);
-      // P0-A2: 优先使用 JobLockManager（common-lock，WatchDog 续期）；未配置时回退 RedisTemplate SETNX
-      JobLockManager lockManager = jobLockManager();
-      if (lockManager != null) {
-        lockValue = lockManager.tryAcquireLock(job.getJobKey(), null, ttl.toMillis());
-      } else {
-        Boolean acquired = redisTemplate.opsForValue().setIfAbsent(lockKey, INSTANCE_ID, ttl);
-        lockValue = Boolean.TRUE.equals(acquired) ? INSTANCE_ID : null;
-      }
+      JobLockGuard.AcquiredLock lock = jobLockGuard.acquireJobLock(job, null);
+      lockKey = lock.key();
+      lockValue = lock.value();
       if (lockValue == null) {
         // P1-2: 锁被持有时根据阻塞策略决定行为
         String strategy = job.getBlockStrategy();
@@ -1138,7 +1094,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     boolean globalConcurrencyAcquired = tryAcquireGlobalConcurrency();
     if (!globalConcurrencyAcquired) {
       log.warn("[Dispatcher] 全局并发已满, 拒绝执行: key={} triggerType={}", job.getJobKey(), triggerType);
-      releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
+      jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
       return null;
     }
 
@@ -1157,7 +1113,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
     // P0-A2: 锁切换后持锁者为 JobLockManager 返回的 clientId（Lua 仅做 value 匹配，兼容）
     if (lockKey != null) {
-      log0.setLockHolder(lockValue != null ? lockValue : INSTANCE_ID);
+      log0.setLockHolder(lockValue != null ? lockValue : JobLockGuard.INSTANCE_ID);
     }
     // P0-2: 记录执行节点 ID 和线程 ID，供故障转移和超时清理定位
     log0.setExecNodeId(nodeId);
@@ -1186,10 +1142,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     shardingCtx.setLogId(log0.getId());
 
     // P1-5: 获取幂等锁（基于 handler + params），防止相同参数的任务重复执行
-    IdempotentLockHandle idempotentLock = acquireIdempotentLockForJob(job);
+    JobLockGuard.IdempotentLockHandle idempotentLock = acquireIdempotentLockForJob(job);
     if (idempotentLock == null) {
       // 幂等锁被持有，释放任务锁并跳过执行
-      releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
+      jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
       return null;
     }
 
@@ -1204,7 +1160,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       executeAndFinalize(job, lockKey, lockValue, holdLock, triggerType, retryCount, log0, jobLogger, shardingCtx);
     } finally {
       // P1-5: 释放幂等锁（确保异常时也释放）
-      releaseIdempotentLock(idempotentLock);
+      jobLockGuard.releaseIdempotentLock(idempotentLock);
     }
     return log0.getId();
   }
@@ -1217,16 +1173,16 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @param job 任务定义
    * @return 幂等锁句柄（key + value，供后续释放）；锁被持有时返回 null（应跳过执行）；降级时返回空句柄（继续执行）
    */
-  private IdempotentLockHandle acquireIdempotentLockForJob(JobVO job) {
+  private JobLockGuard.IdempotentLockHandle acquireIdempotentLockForJob(JobVO job) {
     try {
       JobHandler handler = resolveHandler(job);
-      String idempotentLockKey = buildIdempotentLockKey(handler, job);
+      String idempotentLockKey = jobLockGuard.buildIdempotentLockKey(handler, job);
       if (idempotentLockKey == null) {
         // handler 未提供幂等键，降级继续执行
-        return new IdempotentLockHandle("", "");
+        return new JobLockGuard.IdempotentLockHandle("", "");
       }
-      Duration ttl = resolveLockTtl(job);
-      String lockValue = tryAcquireIdempotentLock(idempotentLockKey, ttl);
+      Duration ttl = jobLockGuard.resolveLockTtl(job);
+      String lockValue = jobLockGuard.tryAcquireIdempotentLock(idempotentLockKey, ttl);
       if (lockValue == null) {
         log.info(
             "[Dispatcher] 幂等锁被其他实例持有, 跳过重复执行: key={} handler={}",
@@ -1234,11 +1190,11 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             job.getHandler());
         return null;
       }
-      return new IdempotentLockHandle(idempotentLockKey, lockValue);
+      return new JobLockGuard.IdempotentLockHandle(idempotentLockKey, lockValue);
     } catch (Exception e) {
       // 处理器解析失败时不影响主流程（降级放行）
       log.warn("[Dispatcher] 幂等锁获取异常, 降级放行: key={} reason={}", job.getJobKey(), e.getMessage());
-      return new IdempotentLockHandle("", "");
+      return new JobLockGuard.IdempotentLockHandle("", "");
     }
   }
 
@@ -1496,7 +1452,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     if (runningLog == null) {
       // 无 RUNNING 日志，可能锁是异常残留（如节点崩溃未释放），尝试释放并重新执行
       log.warn("[Dispatcher] COVER 策略未找到 RUNNING 日志, 尝试释放残留锁: key={}", job.getJobKey());
-      safeReleaseLock(lockKey, INSTANCE_ID);
+      jobLockGuard.releaseLockByValue(lockKey, JobLockGuard.INSTANCE_ID);
       // 短暂 sleep 后重新派发（让锁释放生效）
       sleepBriefly(COVER_REDISPATCH_DELAY_MS);
       COVER_REDISPATCHING.set(true);
@@ -1529,8 +1485,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
     // 4. 通过 Lua 脚本安全释放锁（仅当 lockHolder 匹配时才 delete）
     String lockHolder = runningLog.getLockHolder();
-    String releaseHolder = (lockHolder != null) ? lockHolder : INSTANCE_ID;
-    safeReleaseLock(lockKey, releaseHolder);
+    String releaseHolder = (lockHolder != null) ? lockHolder : JobLockGuard.INSTANCE_ID;
+    jobLockGuard.releaseLockByValue(lockKey, releaseHolder);
     // 5. 短暂 sleep 避免竞态（让被中断的线程有机会释放资源），然后重新派发新任务
     sleepBriefly(COVER_REDISPATCH_DELAY_MS);
     log.info("[Dispatcher] COVER 策略: 已中断旧任务, 重新派发新任务: key={}", job.getJobKey());
@@ -1605,19 +1561,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     return !target.isAlive();
   }
 
-  /**
-   * P2-6: 通过 Lua 脚本安全释放锁（仅当 lockHolder 匹配时才 delete）。
-   *
-   * @param lockKey 锁 key
-   * @param lockHolder 持锁者标识
-   */
-  private void safeReleaseLock(String lockKey, String lockHolder) {
-    try {
-      redisTemplate.execute(RELEASE_LOCK_SCRIPT, Collections.singletonList(lockKey), lockHolder);
-    } catch (Exception e) {
-      log.warn("[Dispatcher] COVER 释放锁失败(将等待 TTL 自动过期): key={} reason={}", lockKey, e.getMessage());
-    }
-  }
 
   /**
    * P2-6: 短暂 sleep（避免竞态，让被中断的线程有机会释放资源）。
@@ -1747,135 +1690,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     controller.release();
   }
 
-  /**
-   * 安全释放任务持有的分布式锁。
-   *
-   * <p>在全局并发控制拒绝执行或需要提前退出时调用，避免锁泄漏。
-   *
-   * @param lockKey 锁 key（为 null 时跳过）
-   * @param jobKey 任务 KEY（JobLockManager 释放需要）
-   * @param shardIndex 分片索引（null=非分片任务）
-   * @param lockValue 锁持有者标识（{@code tryAcquireLock} 返回值；可能为 null）
-   */
-  private void releaseJobLock(String lockKey, String jobKey, Integer shardIndex, String lockValue) {
-    releaseLockQuietly(lockKey, jobKey, shardIndex, lockValue);
-  }
 
-  /**
-   * P0-A2: 统一锁释放入口。
-   *
-   * <p>优先使用 {@link JobLockManager}（common-lock 可重入锁，仅持有者可释放，WatchDog 自动停止）；
-   * JobLockManager 不可用或释放异常时回退 Lua 脚本（value 匹配删除）。Lua 仅做 value 相等判断，
-   * 与持锁者标识（INSTANCE_ID 或 clientId）无关，兼容两种获取路径。
-   */
-  private void releaseLockQuietly(
-      String lockKey, String jobKey, Integer shardIndex, String lockValue) {
-    if (lockKey == null) {
-      return;
-    }
-    JobLockManager lockManager = jobLockManager();
-    if (lockManager != null && lockValue != null) {
-      try {
-        lockManager.releaseLock(jobKey, shardIndex, lockValue);
-        return;
-      } catch (Exception e) {
-        log.warn(
-            "[Dispatcher] JobLockManager 释放锁失败, 回退 Lua 脚本: key={} reason={}",
-            lockKey,
-            e.getMessage());
-      }
-    }
-    try {
-      redisTemplate.execute(
-          RELEASE_LOCK_SCRIPT,
-          Collections.singletonList(lockKey),
-          lockValue != null ? lockValue : INSTANCE_ID);
-    } catch (Exception e) {
-      log.warn(
-          "[Dispatcher] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}", lockKey, e.getMessage());
-    }
-  }
 
-  /**
-   * P1-5: 获取幂等锁 key。
-   *
-   * <p>基于 handler 的 {@link JobHandler#idempotentKey(String)} 方法生成， 用于防止相同参数的任务在集群中重复执行。
-   *
-   * @param handler 任务处理器
-   * @param job 任务定义
-   * @return 幂等锁 key；handler 为 null 时返回 null
-   */
-  private String buildIdempotentLockKey(JobHandler handler, JobVO job) {
-    if (handler == null) {
-      return null;
-    }
-    String idempotentKey = handler.idempotentKey(job.getParamsJson());
-    return IDEMPOTENT_LOCK_PREFIX + idempotentKey;
-  }
 
-  /**
-   * P1-5: 尝试获取幂等锁。
-   *
-   * <p>幂等锁与任务锁（job lock）互补：任务锁按 jobKey 去重，幂等锁按 handler+params 去重。 当同一 handler 以相同参数被多次触发时（如重复 cron
-   * 扫描、手动重试）， 幂等锁保证只有一个实例执行。
-   *
-   * <p>P0-A2: 优先使用 {@link JobLockManager}（通用 key 版本，WatchDog 续期），未配置时回退 RedisTemplate SETNX。
-   *
-   * @param idempotentLockKey 幂等锁 key
-   * @param ttl 锁 TTL
-   * @return 锁持有者标识；获取失败返回 null；异常降级返回空字符串（放行）
-   */
-  private String tryAcquireIdempotentLock(String idempotentLockKey, Duration ttl) {
-    if (idempotentLockKey == null) {
-      return "";
-    }
-    try {
-      JobLockManager lockManager = jobLockManager();
-      if (lockManager != null) {
-        return lockManager.tryAcquireLock(idempotentLockKey, ttl.toMillis());
-      }
-      Boolean acquired = redisTemplate.opsForValue().setIfAbsent(idempotentLockKey, INSTANCE_ID, ttl);
-      return Boolean.TRUE.equals(acquired) ? INSTANCE_ID : null;
-    } catch (Exception e) {
-      log.warn("[Dispatcher] 获取幂等锁异常, 降级放行: key={} reason={}", idempotentLockKey, e.getMessage());
-      return "";
-    }
-  }
 
-  /**
-   * P1-5: 释放幂等锁。
-   *
-   * <p>任务执行完成后释放，或等待 TTL 自动过期。
-   *
-   * @param idempotentLock 幂等锁句柄（key + value；为空或降级句柄时跳过）
-   */
-  private void releaseIdempotentLock(IdempotentLockHandle idempotentLock) {
-    if (idempotentLock == null
-        || idempotentLock.key() == null
-        || idempotentLock.key().isEmpty()) {
-      return;
-    }
-    try {
-      JobLockManager lockManager = jobLockManager();
-      if (lockManager != null
-          && idempotentLock.value() != null
-          && !idempotentLock.value().isEmpty()) {
-        lockManager.releaseLock(idempotentLock.key(), idempotentLock.value());
-        return;
-      }
-      redisTemplate.execute(
-          RELEASE_LOCK_SCRIPT,
-          Collections.singletonList(idempotentLock.key()),
-          idempotentLock.value() != null && !idempotentLock.value().isEmpty()
-              ? idempotentLock.value()
-              : INSTANCE_ID);
-    } catch (Exception e) {
-      log.warn(
-          "[Dispatcher] 释放幂等锁失败(将等待 TTL 自动过期): key={} reason={}",
-          idempotentLock.key(),
-          e.getMessage());
-    }
-  }
 
   /**
    * P6-2: 记录任务执行指标。
@@ -1923,13 +1741,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   }
 
   /** 解析任务实际使用的锁 TTL。 */
-  private Duration resolveLockTtl(JobVO job) {
-    Duration taskLevel = null;
-    if (job.getLockTtlMs() != null && job.getLockTtlMs() > 0) {
-      taskLevel = Duration.ofMillis(job.getLockTtlMs());
-    }
-    return cronjobProperties.normalizeTtl(taskLevel);
-  }
 
   /**
    * 计算下次触发时间（P1-3: 统一委托 {@link NextFireTimeCalculator}，支持任务级时区）。
@@ -1957,10 +1768,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     return count > 0;
   }
 
-  private static String initInstanceId() {
-    String name = ManagementFactory.getRuntimeMXBean().getName();
-    return name != null ? name : "unknown:" + ProcessHandle.current().pid();
-  }
 
   /**
    * 重试执行入口（供 RetryScheduler 回调）。

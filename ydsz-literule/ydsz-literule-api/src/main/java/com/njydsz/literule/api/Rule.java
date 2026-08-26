@@ -1,5 +1,7 @@
 package com.njydsz.literule.api;
 
+import com.njydsz.common.core.constant.SystemConstants;
+
 /**
  * 规则接口
  *
@@ -88,14 +90,15 @@ public interface Rule {
    * <p>1.5.0 起启用运行时租户过滤：{@link com.njydsz.literule.server.core.DefaultRuleEngine} 在评估前会比较 {@code
    * rule.getTenantId()} 与 {@link RuleContext#getTenantId()}， 仅当两者匹配时才评估该规则。
    *
-   * <p>默认返回 {@code "1"}（单租户部署），向后兼容。 {@link com.njydsz.literule.server.impl.ExpressionRule} 等基于
-   * {@link RuleDefinition} 的规则会覆写此方法返回定义中的 tenantId。
+   * <p>默认返回 {@link SystemConstants#DEFAULT_TENANT_ID}（"0"，单租户部署），与 {@link RuleContext}
+   * 的默认租户保持一致（P0-2 对齐修复：原默认 "1" 会导致编码规则在默认租户上下文中被过滤掉）。
+   * {@link com.njydsz.literule.server.impl.ExpressionRule} 等基于 {@link RuleDefinition} 的规则会覆写此方法返回定义中的 tenantId。
    *
-   * @return 租户 ID；默认 "1"
+   * @return 租户 ID；默认 "0"
    * @since 1.0.0
    */
   default String getTenantId() {
-    return "1";
+    return SystemConstants.DEFAULT_TENANT_ID;
   }
 
   /**

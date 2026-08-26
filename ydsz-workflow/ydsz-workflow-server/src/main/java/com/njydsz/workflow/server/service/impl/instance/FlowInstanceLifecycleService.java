@@ -41,14 +41,11 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLog;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
@@ -150,9 +147,6 @@ public class FlowInstanceLifecycleService {
 
   /** 历史任务仓储，负责 ydsz_flow_his_task 的领域持久化 */
   private final FlowHisTaskRepository hisTaskRepository;
-
-  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /**
    * P0-2: 定时器服务 — boundaryEvent 含 timer 配置时注册边界定时器自动触发
@@ -673,7 +667,7 @@ public class FlowInstanceLifecycleService {
 
     FlowInstanceVO instance = getByIdOrThrow(instanceId);
     validateRecallPermission(instance, initiatorId);
-    List<FlowRunTask> pendingTasks = validateNextTasksAllPending(instanceId);
+    List<FlowRunTaskVO> pendingTasks = validateNextTasksAllPending(instanceId);
 
     // 校验：targetNodeCode 必须在可撤回节点列表中
     validateTargetNodeRecallable(instanceId, targetNodeCode);
@@ -740,10 +734,8 @@ public class FlowInstanceLifecycleService {
    * @param instanceId 参数说明
    * @return 返回值说明
    */
-  private List<FlowRunTask> validateNextTasksAllPending(String instanceId) {
-    List<FlowRunTask> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
-        .map(converter::entityToDO)
-        .collect(Collectors.toList());
+  private List<FlowRunTaskVO> validateNextTasksAllPending(String instanceId) {
+    List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByInstance(instanceId);
     boolean anyProcessed = pendingTasks.stream()
         .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
             || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
@@ -974,9 +966,9 @@ public class FlowInstanceLifecycleService {
     instance.setEndAt(null);
     instance.setRejectReason(null);
     instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
-    instanceRepository.save(converter.voToDto(instance));
+    instanceRepository.save(instance);
     // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
-    FlowAuditLog audit = new FlowAuditLog();
+    FlowAuditLogVO audit = new FlowAuditLogVO();
     audit.setInstanceId(instanceId);
     audit.setFlowCode(instance.getFlowCode());
     audit.setBusinessType(instance.getBusinessType());
@@ -988,7 +980,7 @@ public class FlowInstanceLifecycleService {
     audit.setTenantId(instance.getTenantId());
     audit.setProviderTraceId(instance.getProviderTraceId());
     audit.setOperatedAt(LocalDateTime.now());
-    auditLogRepository.save(converter.entityToVO(audit));
+    auditLogRepository.save(audit);
     // 6. 从开始节点重新推进（复用 advancer.start，保留 ydsz_flow_user/his_task 历史）
     try {
       advancer.start(instanceId);
@@ -1084,12 +1076,12 @@ public class FlowInstanceLifecycleService {
     if (nextNodes == null || nextNodes.isEmpty()) {
       return;
     }
-    List<FlowNode> doNodes = nextNodes.stream().map(converter::entityToDO).toList();
-    for (FlowNode node : doNodes) {
+    List<FlowNodeVO> doNodes = nextNodes;
+    for (FlowNodeVO node : doNodes) {
       // P0-2: 优先判断事件捕获节点（boundaryEvent / intermediateCatchEvent）
-      if (eventSubscriptionService.isEventCatchNode(converter.entityToVO(node))) {
+      if (eventSubscriptionService.isEventCatchNode(node)) {
         String boundaryTaskId = resolveBoundaryTaskId(node, instanceId);
-        eventSubscriptionService.createSubscription(instanceId, converter.entityToVO(node), variables, boundaryTaskId);
+        eventSubscriptionService.createSubscription(instanceId, node, variables, boundaryTaskId);
         // P0-2: 如果 ext.timer 存在，注册边界定时器自动触发（timer boundary 语义）
         scheduleBoundaryTimerIfPresent(node, instanceId, boundaryTaskId);
         // 更新实例当前节点为事件捕获节点（流程在此等待事件触发）
