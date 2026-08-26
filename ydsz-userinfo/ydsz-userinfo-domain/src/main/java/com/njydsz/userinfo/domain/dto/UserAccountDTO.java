@@ -68,10 +68,10 @@ public class UserAccountDTO implements Serializable {
   /** 用户类型（{@code PLATFORM}=平台用户 / {@code TENANT_ADMIN}=租户管理员 / {@code REGULAR}=普通用户） */
   private String userType;
 
-  /** 所属公司 ID（关联 {@code ydsz_company.id}） */
+  /** 所属公司 ID（关联 {@code ydsz_org_company.id}） */
   private String companyId;
 
-  /** 所属部门 ID（关联 {@code ydsz_department.id}，支持审批人展开） */
+  /** 所属部门 ID（关联 {@code ydsz_org_department.id}，支持审批人展开） */
   private String deptId;
 
   /** 直属上级用户 ID（关联 {@code ydsz_acct_user.id}，支持 leader: 审批人展开） */

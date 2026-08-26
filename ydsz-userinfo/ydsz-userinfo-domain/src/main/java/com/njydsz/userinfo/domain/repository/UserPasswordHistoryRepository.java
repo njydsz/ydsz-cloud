@@ -9,7 +9,7 @@ import com.njydsz.userinfo.domain.vo.UserPasswordHistoryVO;
 /**
  * 密码历史 Repository 接口
  *
- * <p>封装密码历史表（{@code ydsz_user_password_history}）的数据访问操作。
+ * <p>封装密码历史表（{@code ydsz_acct_password_history}）的数据访问操作。
  *
  * <p>入参为 DTO / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *

@@ -12,7 +12,7 @@ import com.njydsz.userinfo.domain.vo.CompanyVO;
 /**
  * 公司 Repository 接口
  *
- * <p>封装公司表（{@code ydsz_company}）的数据访问操作，为 Service 层提供业务语义化的数据访问方法。
+ * <p>封装公司表（{@code ydsz_org_company}）的数据访问操作，为 Service 层提供业务语义化的数据访问方法。
  *
  * <p>入参为 DTO / Query / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *

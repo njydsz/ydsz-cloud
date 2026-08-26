@@ -9,7 +9,7 @@ import com.njydsz.userinfo.domain.vo.UserDeptVO;
 /**
  * 用户-部门关联 Repository 接口
  *
- * <p>封装用户-部门关联表（{@code ydsz_user_dept}）的数据访问操作。
+ * <p>封装用户-部门关联表（{@code ydsz_acct_user_dept}）的数据访问操作。
  *
  * <p>入参为 DTO / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *

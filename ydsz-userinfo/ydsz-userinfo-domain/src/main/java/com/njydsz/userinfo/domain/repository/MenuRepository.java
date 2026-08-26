@@ -12,7 +12,7 @@ import com.njydsz.userinfo.domain.vo.MenuVO;
 /**
  * 菜单/权限 Repository 接口
  *
- * <p>封装菜单表（{@code ydsz_menu}）的数据访问操作，为 Service 层提供业务语义化的数据访问方法。
+ * <p>封装菜单表（{@code ydsz_rbac_menu}）的数据访问操作，为 Service 层提供业务语义化的数据访问方法。
  *
  * <p>入参为 DTO / Query / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *

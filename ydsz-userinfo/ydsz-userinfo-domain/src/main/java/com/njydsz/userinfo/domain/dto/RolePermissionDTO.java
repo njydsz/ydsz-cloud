@@ -21,7 +21,7 @@ public class RolePermissionDTO implements Serializable {
   /** 角色 ID */
   private String roleId;
 
-  /** 权限 ID（指向 ydsz_menu.id） */
+  /** 权限 ID（指向 ydsz_rbac_menu.id） */
   private String permissionId;
 
   /** 关联菜单 ID（可空 */
