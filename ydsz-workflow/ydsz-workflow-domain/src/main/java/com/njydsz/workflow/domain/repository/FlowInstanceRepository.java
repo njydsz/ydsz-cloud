@@ -173,12 +173,12 @@ public interface FlowInstanceRepository {
   /**
    * 查询某流程定义下运行中的实例，按当前节点分组。
    *
-   * <p>返回 Map，key 为 nodeCode，value 为该节点上的运行中实例数量。
+   * <p>返回列表，每项含 currentNodeCode / currentNodeName / cnt。
    *
    * @param definitionId 流程定义 ID
-   * @return 节点 → 实例数映射
+   * @return 节点分组统计列表
    */
-  Map<String, Long> countRunningGroupByNode(String definitionId);
+  List<Map<String, Object>> countRunningGroupByNode(String definitionId);
 
   /**
    * 查询某流程定义下运行中的实例，按当前节点分组（含节点名称）。

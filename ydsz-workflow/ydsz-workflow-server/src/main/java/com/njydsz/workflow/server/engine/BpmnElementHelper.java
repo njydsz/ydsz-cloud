@@ -27,7 +27,7 @@ import com.njydsz.workflow.infra.entity.FlowNode;
 @Component
 public class BpmnElementHelper {
 
-  /** BPMN 扩展属性命名空间（兼容 flowable/camunda/activiti 约定） */
+  /** BPMN 扩展属性命名空间 */
   public static final String BPMN_EXT_NS = "http://flowable.org/bpmn";
 
   /**

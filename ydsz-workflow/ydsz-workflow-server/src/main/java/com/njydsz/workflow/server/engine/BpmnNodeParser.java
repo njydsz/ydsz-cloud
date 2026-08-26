@@ -404,7 +404,7 @@ public class BpmnNodeParser {
             e.getAttributeNS(BpmnElementHelper.BPMN_EXT_NS, "collection");
         String elementVariable =
             e.getAttributeNS(BpmnElementHelper.BPMN_EXT_NS, "elementVariable");
-        // GAP-P2-10: flowable:foreach="true" 标记为 FOREACH 循环节点（独立 task 模式）
+        // GAP-P2-10: foreach="true" 标记为 FOREACH 循环节点（独立 task 模式）
         String foreachFlag =
             e.getAttributeNS(BpmnElementHelper.BPMN_EXT_NS, "foreach");
         boolean isForeach = "true".equalsIgnoreCase(foreachFlag);

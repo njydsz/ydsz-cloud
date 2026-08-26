@@ -47,7 +47,7 @@ public class BpmnSkipParser {
     ext.put("sourceRef", sourceRef);
     ext.put("targetRef", targetRef);
     ext.put("sequenceFlowId", elem.getAttribute("id"));
-    // P0-4: 边上的 flowable:skipExpression（条件）
+    // P0-4: 边上的 skipExpression（条件）
     String skipExpr =
         elem.getAttributeNS(BpmnElementHelper.BPMN_EXT_NS, "skipExpression");
     if (skipExpr != null && !skipExpr.isBlank()) {

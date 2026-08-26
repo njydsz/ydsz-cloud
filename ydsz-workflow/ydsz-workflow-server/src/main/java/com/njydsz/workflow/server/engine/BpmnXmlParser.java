@@ -65,7 +65,7 @@ import com.njydsz.workflow.infra.entity.FlowSkip;
  *   <li>extensionElements - 任意自定义扩展（写入 ext JSON）
  * </ul>
  *
- * <p>不依赖任何第三方 BPMN 库，零外部依赖。
+ * <p>不依赖任何第三方 BPMN 库，零外部兼容。
  *
  * @since 1.0.0
  * @author ydsz-team
