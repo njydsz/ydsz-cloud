@@ -28,10 +28,10 @@ public class JobAlertLogVO implements Serializable {
   /** 触发源类型（cronjob 告警固定为 CRONJOB） */
   private String sourceType;
 
-  /** 规则 ID（映射到 ydsz_alert_dispatch.rule_id） */
+  /** 规则 ID（映射到 ydsz_job_alert_dispatch.rule_id） */
   private String ruleId;
 
-  /** 规则名称（映射到 ydsz_alert_dispatch.title） */
+  /** 规则名称（映射到 ydsz_job_alert_dispatch.title） */
   private String ruleName;
 
   /** 任务 ID（NULL 表示全局告警；映射到 source_id） */

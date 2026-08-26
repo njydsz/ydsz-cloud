@@ -44,7 +44,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  *   <li><b>通道路由</b>：解析规则配置的 channels JSON，逐通道构建 MessageRequest
  *   <li><b>统一派发</b>：通过 NotificationClient Feign 委托到 message 模块， 由 message
  *       模块路由到具体通道实现，单个通道失败不影响其他通道（status=PARTIAL）
- *   <li><b>日志持久化</b>：将告警派发结果记录到 {@code ydsz_alert_dispatch}（P3-1-merge 后统一落此表），便于审计与效果统计
+ *   <li><b>日志持久化</b>：将告警派发结果记录到 {@code ydsz_job_alert_dispatch}（P3-1-merge 后统一落此表），便于审计与效果统计
  *   <li><b>实时广播</b>：通过 NotificationClient Feign 广播告警到前端 WebSocket
  * </ol>
  *
@@ -523,7 +523,7 @@ public class AlertDispatcher {
     }
   }
 
-  /** 持久化告警日志（P3-1-merge: 写入 ydsz_alert_dispatch 表）。 */
+  /** 持久化告警日志（P3-1-merge: 写入 ydsz_job_alert_dispatch 表）。 */
   private void persistAlertLog(
       AlertContext context, JobAlertRuleVO rule, String status, String errorMessage) {
     try {
