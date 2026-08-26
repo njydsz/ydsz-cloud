@@ -13,7 +13,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * 嵌套 {@code messages} / {@code tools} 委托全局引擎，分别命中 {@link ChatMessageSerializer} / {@link
  * ToolDefinitionSerializer}。
  *
- * <p><b>注意：</b>{@code stream_options} 由 {@code OpenAiCompatibleClient#buildRequestBody} 按调用态
+ * <p><b>注意：</b>{@code stream_options} 由 {@code CompatibleLlmClient#buildRequestBody} 按调用态
  * 动态附加（ChatRequest 不持有 stream 标志），故本序列化器不输出该字段。
  *
  * @author ydsz-team

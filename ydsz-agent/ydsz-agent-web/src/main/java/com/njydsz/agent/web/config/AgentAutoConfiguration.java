@@ -32,7 +32,7 @@ import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.llm.CachedLlmClient;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
-import com.njydsz.agent.infra.llm.OpenAiCompatibleClient;
+import com.njydsz.agent.infra.llm.CompatibleLlmClient;
 import com.njydsz.agent.infra.llm.SemanticLlmCache;
 import com.njydsz.agent.domain.repository.AgentTraceRepository;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
@@ -42,7 +42,7 @@ import com.njydsz.agent.infra.memory.SummaryConversationMemory;
 import com.njydsz.agent.infra.rag.HybridRetriever;
 import com.njydsz.agent.infra.rag.IdentityReranker;
 import com.njydsz.agent.infra.rag.InMemoryVectorStore;
-import com.njydsz.agent.infra.rag.OpenAiEmbeddingClient;
+import com.njydsz.agent.infra.rag.CompatibleEmbeddingClient;
 import com.njydsz.agent.infra.rag.PgVectorStore;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
@@ -116,8 +116,8 @@ public class AgentAutoConfiguration {
     AgentProperties.Llm llmConfig = properties.getLlm();
 
     // 注册默认 Provider
-    OpenAiCompatibleClient defaultClient =
-        new OpenAiCompatibleClient(
+    CompatibleLlmClient defaultClient =
+        new CompatibleLlmClient(
             llmConfig.getDefaultProvider(),
             llmConfig.getBaseUrl(),
             llmConfig.getApiKey(),
@@ -132,8 +132,8 @@ public class AgentAutoConfiguration {
           continue;
         }
         String providerName = pc.getName() != null ? pc.getName() : entry.getKey();
-        OpenAiCompatibleClient client =
-            new OpenAiCompatibleClient(
+        CompatibleLlmClient client =
+            new CompatibleLlmClient(
                 providerName, pc.getBaseUrl(), pc.getApiKey(), llmConfig.getTimeoutSeconds());
         router.register(client);
       }
@@ -285,7 +285,7 @@ public class AgentAutoConfiguration {
         ragConfig.getEmbeddingBaseUrl().isEmpty()
             ? properties.getLlm().getBaseUrl()
             : ragConfig.getEmbeddingBaseUrl();
-    return new OpenAiEmbeddingClient(
+    return new CompatibleEmbeddingClient(
         baseUrl, apiKey, ragConfig.getEmbeddingModel(), ragConfig.getDimension());
   }
 

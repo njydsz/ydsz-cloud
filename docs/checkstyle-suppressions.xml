@@ -92,6 +92,10 @@
     <!-- gateway：ApiKeyAuthFilter 的 @Value SpEL 表达式为单行字符串（Spring EL 语法限制，不可拆行） -->
     <suppress files="ApiKeyAuthFilter\.java" checks="LineLength"/>
 
+    <!-- userinfo MapStruct Converter：enum 导入仅用于 expression 字符串，UnusedImports 静态分析无法识别，豁免 -->
+    <suppress files="OAuth2ApplicationConverter\.java|SecurityAlertConverter\.java"
+              checks="UnusedImports"/>
+
     <!-- 业务模块（system/userinfo/cronjob/message/workflow/literule/nextwiki/agent）：
          批量处理/配额计算等业务逻辑的算法类规则豁免，红线规则（IllegalImport/FQN/NeedBraces/Javadoc 强制）保留 -->
     <suppress files="ydsz-system[\\/]src[\\/]main[\\/]"

@@ -169,20 +169,20 @@ ydsz:
   agent:
     enabled: true
     llm:
-      default-provider: ${LLM_PROVIDER:openai}      # openai / deepseek / qwen / ollama
-      default-model: ${LLM_MODEL:gpt-4o-mini}
+      default-provider: ${LLM_PROVIDER:default}      # 默认 / deepseek / qwen / ollama
+      default-model: ${LLM_MODEL:default}
       api-key: ${LLM_API_KEY:}
-      base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
+      base-url: ${LLM_BASE_URL:}
       temperature: ${LLM_TEMPERATURE:0.7}
       max-tokens: ${LLM_MAX_TOKENS:2048}
       timeout-seconds: ${LLM_TIMEOUT:60}
       # 多 Provider 配置（key = provider 名称）
       providers:
-        openai:
-          name: openai
-          api-key: ${OPENAI_API_KEY:}
-          base-url: https://api.openai.com/v1
-          models: [gpt-4o-mini, gpt-4o]
+        default:
+          name: default
+          api-key: ${LLM_API_KEY:}
+          base-url: ${LLM_BASE_URL:}
+          models: [default-model]
           enabled: true
         deepseek:
           name: deepseek
@@ -192,8 +192,7 @@ ydsz:
           enabled: true
       # 模型价格配置（key = 模型名前缀，value = 每千 token 价格 USD）
       model-prices:
-        gpt-4o-mini: 0.00015
-        gpt-4o: 0.005
+        default-model: 0.00015
     memory:
       ttl-hours: 24
       max-messages: 20

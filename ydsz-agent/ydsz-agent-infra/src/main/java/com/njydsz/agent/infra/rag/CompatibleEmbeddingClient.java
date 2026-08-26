@@ -24,7 +24,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  * @since 1.0.0
  */
 @Slf4j
-public class OpenAiEmbeddingClient implements EmbeddingClient {
+public class CompatibleEmbeddingClient implements EmbeddingClient {
 
   /** API 基础地址 */
   private final String baseUrl;
@@ -41,7 +41,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
   /** HTTP 客户端 */
   private final RestClient restClient;
 
-  public OpenAiEmbeddingClient(String baseUrl, String apiKey, String model, int dimension) {
+  public CompatibleEmbeddingClient(String baseUrl, String apiKey, String model, int dimension) {
     this.baseUrl = baseUrl != null ? baseUrl : "";
     this.apiKey = apiKey;
     this.model = model != null ? model : "text-embedding-3-small";
