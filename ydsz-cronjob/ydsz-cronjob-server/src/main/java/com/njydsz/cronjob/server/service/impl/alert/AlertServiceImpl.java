@@ -144,7 +144,7 @@ public class AlertServiceImpl implements AlertService {
     dto.setJobKey(exists.getJobKey());
     dto.setAlertType(exists.getAlertType());
     dto.setAlertLevel(exists.getAlertLevel());
-    dto.setThreshold(exists.getThreshold() != null ? exists.getThreshold().doubleValue() : null);
+    dto.setThreshold(exists.getThreshold());
     dto.setTimeWindowMinutes(exists.getTimeWindowMinutes());
     dto.setChannels(exists.getChannels());
     dto.setReceivers(exists.getReceivers());

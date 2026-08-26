@@ -44,7 +44,7 @@ public class WebhookOutboxSubscriber implements Consumer<OutboxEventVO> {
         log.warn("[WebhookSubscriber] payload 中 jobKey 为空, eventKey={}", event.getEventKey());
         return;
       }
-      String eventType = event.getEventType() != null ? event.getEventType().name() : "UNKNOWN";
+      String eventType = event.getEventType() != null ? event.getEventType() : "UNKNOWN";
       webhookEventDispatcher.dispatchEvent(eventType, jobKey, payload);
       log.debug("[WebhookSubscriber] WebHook 事件推送完成: eventKey={} eventType={}", event.getEventKey(), eventType);
     } catch (Exception e) {

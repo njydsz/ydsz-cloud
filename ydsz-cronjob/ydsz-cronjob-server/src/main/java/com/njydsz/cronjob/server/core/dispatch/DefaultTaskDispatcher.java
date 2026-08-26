@@ -1284,7 +1284,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       updateCircuitBreaker(job, success);
 
       // 释放分布式锁（P0-A2: 优先 JobLockManager，回退 Lua 脚本安全释放）
-      releaseLockQuietly(lockKey, job.getJobKey(), null, lockValue);
+      jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
 
       // P0-2: 释放全局并发配额
       releaseGlobalConcurrency();
@@ -1794,7 +1794,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         jobRepository.incrementConsecutiveFail(job.getId());
         Integer maxFails = job.getMaxConsecutiveFails();
         if (maxFails != null && maxFails > 0) {
-          Integer current = jobRepository.findConsecutiveFailCount(job.getId());
+          Integer current = jobRepository.findConsecutiveFailCount(job.getId()).orElse(0);
           if (current != null && current >= maxFails) {
             jobRepository.markAutoPaused(job.getId());
             log.warn(
@@ -1821,7 +1821,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       String hostname = InetAddress.getLocalHost().getHostName();
       this.nodeId = hostname + ":" + serverPort;
     } catch (Exception e) {
-      this.nodeId = INSTANCE_ID;
+      this.nodeId = JobLockGuard.INSTANCE_ID;
     }
     // P1-7: 初始化任务执行线程池（隔离调度线程与执行线程）
     // P0-3: 使用 PriorityBlockingQueue 实现优先级调度
@@ -1847,7 +1847,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log.info(
         "[Dispatcher] 节点 ID 初始化完成: nodeId={} instanceId={} serverPort={}",
         nodeId,
-        INSTANCE_ID,
+        JobLockGuard.INSTANCE_ID,
         serverPort);
     log.info(
         "[Dispatcher] P1-7 执行线程池初始化: core={} max={} queue={} policy=CallerRunsPolicy",

@@ -32,6 +32,9 @@ public interface ScanTask {
    */
   String name();
 
+  /** 默认扫描间隔（毫秒，5s） */
+  long DEFAULT_SCAN_INTERVAL_MS = 5000L;
+
   /**
    * 执行一次扫描。
    *

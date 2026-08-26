@@ -26,6 +26,15 @@ public class MetricsOutboxSubscriber implements Consumer<OutboxEventVO> {
 
   private final CronjobMetrics cronjobMetrics;
 
+  /** 事件类型：任务执行成功（发布方约定的事件类型字符串） */
+  private static final String JOB_SUCCESS = "JOB_SUCCESS";
+
+  /** 事件类型：任务执行失败 */
+  private static final String JOB_FAILED = "JOB_FAILED";
+
+  /** 事件类型：任务执行超时 */
+  private static final String JOB_TIMEOUT = "JOB_TIMEOUT";
+
   @Override
   public void accept(OutboxEventVO event) {
     if (!TOPIC.equals(event.getTopic())) {

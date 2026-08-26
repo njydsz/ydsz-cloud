@@ -78,7 +78,7 @@ import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 @ConditionalOnMissingBean(GlueJobHandler.class)
 public class GlueJobHandler implements JobHandler {
   /** 脚本执行超时（秒） */
-  private static final long SCRIPT_TIMEOUT_SECONDS = 300;
+  private static final int SCRIPT_TIMEOUT_SECONDS = 300;
 
 
   /** Bean 名称，dispatcher 在 jobType=GLUE 时路由到此 handler */

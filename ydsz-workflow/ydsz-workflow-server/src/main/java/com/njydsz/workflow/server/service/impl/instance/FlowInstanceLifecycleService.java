@@ -966,7 +966,7 @@ public class FlowInstanceLifecycleService {
     instance.setEndAt(null);
     instance.setRejectReason(null);
     instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
-    instanceRepository.save(instance);
+    instanceRepository.save(converter.voToDto(instance));
     // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
     FlowAuditLogVO audit = new FlowAuditLogVO();
     audit.setInstanceId(instanceId);

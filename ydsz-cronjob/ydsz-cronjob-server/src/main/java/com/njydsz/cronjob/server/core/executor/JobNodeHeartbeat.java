@@ -21,6 +21,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.NodeConfig;
 import com.njydsz.cronjob.server.core.metrics.SystemMetricsCollector;
 
 /**
@@ -110,7 +111,7 @@ public class JobNodeHeartbeat {
       if (existing.isPresent()) {
         // 更新已有记录
         newNode.setLastHeartbeat(LocalDateTime.now());
-        newNode.setStatus("ONLINE");
+        newNode.setNodeStatus("ONLINE");
         int updated = jobNodeRepository.updateByNodeId(newNode);
         if (updated > 0) {
           log.info(
@@ -124,7 +125,7 @@ public class JobNodeHeartbeat {
         }
       } else {
         // 插入新记录
-        newNode.setStatus("ONLINE");
+        newNode.setNodeStatus("ONLINE");
         newNode.setLastHeartbeat(LocalDateTime.now());
         newNode.setRunningCount(0);
         jobNodeRepository.insert(newNode);
@@ -140,16 +141,26 @@ public class JobNodeHeartbeat {
 
   /** 构建当前节点的 JobNodeVO。 */
   private JobNodeVO buildNodeInfo() {
-    CronjobProperties.Leader leader = cronjobProperties.getLeader();
+    NodeConfig nodeConfig = cronjobProperties.getNode();
     JobNodeVO node = new JobNodeVO();
     node.setNodeId(resolveNodeId());
-    node.setAppName(leader.getAppname());
-    node.setNodeRole(leader.getRole());
+    node.setAppName(nodeConfig.getAppName());
+    node.setNodeRole(cronjobProperties.getLeader().getRole());
     node.setHost(resolveHost());
-    node.setPort(leader.getPort());
+    node.setPort(nodeConfig.getPort());
     node.setRunningCount(0);
-    node.setStatus("ONLINE");
+    node.setNodeStatus("ONLINE");
     return node;
+  }
+
+  /**
+   * 获取本节点 ID（供 WorkerNodeSelector 解析本地节点时使用）。
+   *
+   * @return 节点 ID（未注册时返回 null）
+   */
+  public String getNodeId() {
+    JobNodeVO info = nodeInfo.get();
+    return info != null ? info.getNodeId() : null;
   }
 
   /** 启动心跳循环（fixedRate, 每次以 daemon 线程执行）。 */
@@ -224,11 +235,11 @@ public class JobNodeHeartbeat {
 
   /** 解析节点 ID（node-id 配置 > hostname:port > appId:port）。 */
   private String resolveNodeId() {
-    CronjobProperties.Leader leader = cronjobProperties.getLeader();
-    if (leader.getNodeId() != null && !leader.getNodeId().isBlank()) {
-      return leader.getNodeId();
+    NodeConfig nodeConfig = cronjobProperties.getNode();
+    if (nodeConfig.getNodeId() != null && !nodeConfig.getNodeId().isBlank()) {
+      return nodeConfig.getNodeId();
     }
-    return leader.getAppname() + ":" + leader.getPort();
+    return nodeConfig.getAppName() + ":" + nodeConfig.getPort();
   }
 
   /** 尝试解析本机 hostname；解析失败时回退到 "unknown"。 */

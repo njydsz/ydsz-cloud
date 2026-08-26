@@ -29,6 +29,9 @@ public class JobNodeVO implements Serializable {
   /** 应用名称 */
   private String appName;
 
+  /** 节点角色（ydsz-job-scheduler 等） */
+  private String nodeRole;
+
   /** 主机名 */
   private String host;
 

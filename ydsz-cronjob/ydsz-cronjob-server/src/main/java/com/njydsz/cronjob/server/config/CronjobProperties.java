@@ -67,6 +67,9 @@ public class CronjobProperties {
   /** Leader 选举配置 */
   private LeaderConfig leader = new LeaderConfig();
 
+  /** 节点配置（本机身份与心跳频率，供 JobNodeHeartbeat 使用） */
+  private NodeConfig node = new NodeConfig();
+
   /** 任务扫描器配置 */
   private ScannerConfig scanner = new ScannerConfig();
 

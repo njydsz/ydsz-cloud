@@ -30,6 +30,8 @@ public class FlowUserVO implements Serializable {
   private Integer weight;
   private String signType;
   private String providerTraceId;
+  /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
+  private String tenantId;
   private String createdBy;
   private LocalDateTime createdAt;
   private String updatedBy;

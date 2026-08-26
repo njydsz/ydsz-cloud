@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.service.impl.dag;
 
 import java.time.LocalDateTime;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +91,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   @Override
   @Transactional(readOnly = true)
   public List<JobDagNodeInstanceVO> listNodes(String dagInstanceId) {
-    return dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
+    return jobDagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
   }
 
   @Override
