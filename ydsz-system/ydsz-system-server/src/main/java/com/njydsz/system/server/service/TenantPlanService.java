@@ -11,7 +11,7 @@ import com.njydsz.system.domain.vo.TenantPlanVO;
 /**
  * 租户套餐 Service 接口
  *
- * <p>提供套餐（{@code ydsz_tenant_plan}）的 CRUD、分页查询等能力。 套餐定义租户的功能 / 容量 / 价格，是 SaaS 多租户定价模型的核心。
+ * <p>提供套餐（{@code ydsz_sys_tenant_plan}）的 CRUD、分页查询等能力。 套餐定义租户的功能 / 容量 / 价格，是 SaaS 多租户定价模型的核心。
  *
  * <p><b>核心职责：</b>
  *

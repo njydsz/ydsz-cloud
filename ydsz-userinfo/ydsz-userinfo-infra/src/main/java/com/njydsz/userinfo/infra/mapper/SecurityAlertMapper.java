@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.SecurityAlert;
 /**
  * 安全告警 Mapper 接口。
  *
- * <p>对应数据表 {@code ydsz_security_alert}，提供安全告警记录的 CRUD 操作。
+ * <p>对应数据表 {@code ydsz_idp_security_alert}，提供安全告警记录的 CRUD 操作。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -52,7 +52,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  *   <li>角色启用/禁用（{@code /enable} / {@code /disable}）
  * </ul>
  *
- * <p><b>权限分配设计：</b>角色 → 菜单（{@code ydsz_menu}）通过 {@code ydsz_role_menu} 中间表多对多关联。 分配权限实际是写中间表，{@code
+ * <p><b>权限分配设计：</b>角色 → 菜单（{@code ydsz_rbac_menu}）通过 {@code ydsz_role_menu} 中间表多对多关联。 分配权限实际是写中间表，{@code
  * assignPermissions} 接口一次性清空旧关联并写入新关联（事务保证）。
  *
  * <p><b>安全特性：</b>

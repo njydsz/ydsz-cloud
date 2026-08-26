@@ -7,7 +7,7 @@ import lombok.experimental.SuperBuilder;
 /**
  * 租户套餐 VO（视图对象）
  *
- * <p>对应 {@code ydsz_tenant_plan} 表的展示视图，是「套餐管理」列表 / 详情接口的响应载体。
+ * <p>对应 {@code ydsz_sys_tenant_plan} 表的展示视图，是「套餐管理」列表 / 详情接口的响应载体。
  *
  * <p><b>字段语义：</b>
  *

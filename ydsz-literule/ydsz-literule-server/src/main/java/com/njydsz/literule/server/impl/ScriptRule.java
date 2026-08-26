@@ -107,8 +107,11 @@ public class ScriptRule implements Rule {
   private final CompiledScript compiledScript;
   private final ScriptEngine scriptEngine;
 
-  /** 沙箱模式脚本执行超时时间（毫秒），防止死循环 */
-  private static final long SANDBOX_TIMEOUT_MS = 5000;
+  /** 脚本执行超时（毫秒），防止死循环；默认 {@link #DEFAULT_SANDBOX_TIMEOUT_MS}，可构造器覆盖（P0-4） */
+  private final long sandboxTimeoutMs;
+
+  /** 默认脚本执行超时（毫秒） */
+  public static final long DEFAULT_SANDBOX_TIMEOUT_MS = 5000;
 
   /**
    * 脚本执行虚拟线程池（JDK 21 虚拟线程）。
@@ -200,6 +203,44 @@ public class ScriptRule implements Rule {
       String script,
       String language,
       boolean sandboxEnabled) {
+    this(
+        code,
+        name,
+        category,
+        priority,
+        scope,
+        defaultSeverity,
+        script,
+        language,
+        sandboxEnabled,
+        DEFAULT_SANDBOX_TIMEOUT_MS);
+  }
+
+  /**
+   * 构建脚本规则（带执行超时配置，P0-4）
+   *
+   * @param code 规则编码
+   * @param name 规则名称
+   * @param category 规则类别
+   * @param priority 优先级
+   * @param scope 作用域
+   * @param defaultSeverity 默认严重度
+   * @param script 脚本内容
+   * @param language 脚本语言（groovy/javascript/python）
+   * @param sandboxEnabled 是否启用沙箱
+   * @param sandboxTimeoutMs 脚本执行超时（毫秒，≤0 时使用默认值）
+   */
+  public ScriptRule(
+      String code,
+      String name,
+      String category,
+      int priority,
+      String scope,
+      RuleSeverity defaultSeverity,
+      String script,
+      String language,
+      boolean sandboxEnabled,
+      long sandboxTimeoutMs) {
     this.code = code;
     this.name = name;
     this.category = category;
@@ -209,6 +250,15 @@ public class ScriptRule implements Rule {
     this.script = script;
     this.language = normalizeLanguage(language);
     this.sandboxEnabled = sandboxEnabled;
+    this.sandboxTimeoutMs = sandboxTimeoutMs > 0 ? sandboxTimeoutMs : DEFAULT_SANDBOX_TIMEOUT_MS;
+    // 非 groovy 语言仅有正则黑名单防护（P0-4 安全提示）
+    if (sandboxEnabled && !"groovy".equals(this.language)) {
+      log.warn(
+          "[LiteRule-Script] 脚本规则 {} 使用语言 {}，其沙箱仅为正则黑名单防护（弱于 Groovy 的 AST 级防护），"
+              + "请确保脚本内容受信任或升级为 Groovy",
+          code,
+          this.language);
+    }
     this.scriptEngine = getEngine(this.language);
     this.compiledScript = compileScript(script, sandboxEnabled, this.scriptEngine, this.language);
   }
@@ -317,21 +367,21 @@ public class ScriptRule implements Rule {
       bindings.put("description", null);
 
       Object result;
-      // P0-2：沙箱模式下使用虚拟线程 + 超时中断，防止死循环
+      // P0-2：沙箱模式下使用虚拟线程 + 超时中断，防止死循环（P0-4 超时可配置）
       if (sandboxEnabled) {
         CompletableFuture<Object> future =
             CompletableFuture.supplyAsync(() -> evalScript(bindings), SCRIPT_EXECUTOR);
         try {
-          result = future.get(SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+          result = future.get(sandboxTimeoutMs, TimeUnit.MILLISECONDS);
         } catch (TimeoutException te) {
           future.cancel(true);
-          log.warn("[LiteRule] 脚本规则 {} 执行超时（{}ms），已中断", code, SANDBOX_TIMEOUT_MS);
+          log.warn("[LiteRule] 脚本规则 {} 执行超时（{}ms），已中断", code, sandboxTimeoutMs);
           return RuleResult.builder()
               .ruleCode(code)
               .ruleName(name)
               .category(category)
               .triggered(false)
-              .description("脚本执行超时（" + SANDBOX_TIMEOUT_MS + "ms），可能存在死循环")
+              .description("脚本执行超时（" + sandboxTimeoutMs + "ms），可能存在死循环")
               .triggeredAt(LocalDateTime.now())
               .elapsedMs(elapsedMs(start))
               .build();

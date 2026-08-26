@@ -13,7 +13,7 @@ import com.njydsz.userinfo.infra.entity.SocialAccount;
 /**
  * 社交账号绑定 Mapper 接口。
  *
- * <p>对应数据表 {@code ydsz_social_account}，存储用户与第三方社交平台的绑定关系。
+ * <p>对应数据表 {@code ydsz_auth_social_account}，存储用户与第三方社交平台的绑定关系。
  * 继承 MyBatis-Plus {@code BaseMapper} 提供标准 CRUD 操作。
  *
  * <p><b>主要索引：</b>
@@ -41,7 +41,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
    * @return 社交账号绑定实体；不存在返回 null
    */
   @Select(
-      "SELECT * FROM ydsz_social_account "
+      "SELECT * FROM ydsz_auth_social_account "
           + "WHERE platform = #{platform} AND open_id = #{openId} AND deleted = 0")
   SocialAccount selectByPlatformAndOpenId(
       @Param("platform") String platform, @Param("openId") String openId);
@@ -54,7 +54,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
    * @return 社交账号绑定实体；不存在返回 null
    */
   @Select(
-      "SELECT * FROM ydsz_social_account "
+      "SELECT * FROM ydsz_auth_social_account "
           + "WHERE user_id = #{userId} AND platform = #{platform} AND deleted = 0")
   SocialAccount selectByUserIdAndPlatform(
       @Param("userId") String userId, @Param("platform") String platform);
@@ -65,7 +65,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
    * @param userId 用户 ID
    * @return 社交账号绑定实体列表
    */
-  @Select("SELECT * FROM ydsz_social_account WHERE user_id = #{userId} AND deleted = 0")
+  @Select("SELECT * FROM ydsz_auth_social_account WHERE user_id = #{userId} AND deleted = 0")
   List<SocialAccount> selectByUserId(@Param("userId") String userId);
 
   /**
@@ -76,7 +76,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
    * @return 影响行数
    */
   @Delete(
-      "UPDATE ydsz_social_account SET deleted = 1, updated_at = CURRENT_TIMESTAMP "
+      "UPDATE ydsz_auth_social_account SET deleted = 1, updated_at = CURRENT_TIMESTAMP "
           + "WHERE user_id = #{userId} AND platform = #{platform} AND deleted = 0")
   int logicDeleteByUserIdAndPlatform(
       @Param("userId") String userId, @Param("platform") String platform);

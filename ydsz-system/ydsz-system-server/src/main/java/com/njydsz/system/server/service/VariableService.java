@@ -13,7 +13,7 @@ import com.njydsz.system.domain.vo.VariableVO;
 /**
  * 系统变量 Service 接口
  *
- * <p>提供系统变量（{@code ydsz_variable}）的 CRUD、按 key 查询值、分页查询等能力。 集成 Redis 缓存和缓存穿透防护。
+ * <p>提供系统变量（{@code ydsz_sys_variable}）的 CRUD、按 key 查询值、分页查询等能力。 集成 Redis 缓存和缓存穿透防护。
  *
  * <p><b>核心职责：</b>
  *

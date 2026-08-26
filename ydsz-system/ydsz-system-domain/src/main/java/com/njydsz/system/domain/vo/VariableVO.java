@@ -7,7 +7,7 @@ import lombok.experimental.SuperBuilder;
 /**
  * 系统变量 VO（视图对象）
  *
- * <p>对应 {@code ydsz_variable} 表的展示视图，是「系统变量中心」列表 / 详情接口的响应载体。
+ * <p>对应 {@code ydsz_sys_variable} 表的展示视图，是「系统变量中心」列表 / 详情接口的响应载体。
  *
  * <p><b>字段语义：</b>
  *

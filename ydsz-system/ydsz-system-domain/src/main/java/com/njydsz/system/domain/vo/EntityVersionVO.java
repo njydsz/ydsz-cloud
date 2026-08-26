@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 统一实体版本 VO
  *
- * <p>对应 {@code ydsz_entity_version} 表的展示视图，是「版本管理」列表 / 详情接口的返回值类型。
+ * <p>对应 {@code ydsz_sys_entity_version} 表的展示视图，是「版本管理」列表 / 详情接口的返回值类型。
  *
  * @author ydsz-team
  * @since 1.0.0

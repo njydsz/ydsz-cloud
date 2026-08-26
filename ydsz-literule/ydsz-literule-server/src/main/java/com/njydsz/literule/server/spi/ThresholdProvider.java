@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 /**
  * 规则阈值提供者接口（SPI）
  *
- * <p>由消费方实现，从配置中心（如 ydsz_config 表）读取规则阈值。 修复原 AlertRuleEngine 与 ydsz_config 表脱节的问题：
+ * <p>由消费方实现，从配置中心（如 ydsz_sys_config 表）读取规则阈值。 修复原 AlertRuleEngine 与 ydsz_sys_config 表脱节的问题：
  * 引擎不再使用硬编码常量，而是通过此接口获取可配置阈值。
  *
  * @since 1.0.0
