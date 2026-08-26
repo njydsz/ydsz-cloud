@@ -16,7 +16,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.engine.FlowNodeExt;
 import com.njydsz.workflow.engine.FlowServiceNodeExecutor;
-import com.njydsz.workflow.server.service.FlowTaskCoreService;
+import com.njydsz.workflow.server.service.impl.instance.FlowTaskCoreService;
 
 /**
  * 自动审批服务

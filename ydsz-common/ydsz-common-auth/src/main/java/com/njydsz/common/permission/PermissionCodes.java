@@ -80,6 +80,9 @@ public final class PermissionCodes {
   /** CRONJOB_CONNECTOR_TEST */
   public static final String CRONJOB_CONNECTOR_TEST = "cronjob:connector:test";
 
+  /** CRONJOB_AUDIT_VIEW — 操作审计视图（P1-14） */
+  public static final String CRONJOB_AUDIT_VIEW = "cronjob:audit:view";
+
   /** MESSAGE_AGGREGATE_LIST */
   public static final String MESSAGE_AGGREGATE_LIST = "message:aggregate:list";
 

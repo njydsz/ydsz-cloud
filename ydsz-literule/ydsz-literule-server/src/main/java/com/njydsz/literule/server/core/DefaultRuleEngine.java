@@ -413,153 +413,18 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /**
    * 并行注入事实数据与模型输出（P0-2 并行优化）
    *
-   * <p>当事实注册表和模型注册表均注册了 provider 时，并行执行两者。 仅一方有 provider 时走串行路径（避免线程切换开销）。
-   *
-   * <p>注意：模型注入使用原始上下文（不依赖事实采集结果），两者结果独立合并。 若业务上模型需要读取事实采集结果，应在 FactProviderRegistry 的 provider 内部调用模型服务。
+   * <p>当 {@link #factInjectionService} 已注入时，委托给 {@link FactInjectionService#injectDataInParallel}。
+   * 未注入时，使用原始上下文（向后兼容）。
    *
    * @param context 原始评估上下文
    * @return 合并后的上下文
    */
   private RuleContext injectDataInParallel(RuleContext context) {
-    FactProviderRegistry factRegistry = this.factProviderRegistry;
-    ModelInputRegistry modelRegistry = this.modelInputRegistry;
-
-    boolean hasFacts = factRegistry != null && factRegistry.hasProviders();
-    boolean hasModels = modelRegistry != null && modelRegistry.hasProviders();
-
-    // 两者都为空，直接返回
-    if (!hasFacts && !hasModels) {
-      return context;
+    if (factInjectionService != null) {
+      return factInjectionService.injectDataInParallel(context);
     }
-
-    // 仅事实注入，走串行（避免线程切换开销）
-    if (hasFacts && !hasModels) {
-      return injectFactsIfNeeded(context);
-    }
-
-    // 仅模型注入，走串行
-    if (!hasFacts && hasModels) {
-      return injectModelOutputsIfNeeded(context);
-    }
-
-    // 两者都有，并行执行
-    CompletableFuture<Map<String, Object>> factsFuture =
-        CompletableFuture.supplyAsync(
-            () -> collectFactsSafely(factRegistry, context), injectionExecutor);
-    CompletableFuture<Map<String, Object>> modelFuture =
-        CompletableFuture.supplyAsync(
-            () -> collectModelsSafely(modelRegistry, context), injectionExecutor);
-
-    // 等待两者完成（异常隔离：各自已在内部处理）
-    Map<String, Object> externalFacts;
-    Map<String, Object> modelOutputs;
-    try {
-      externalFacts = factsFuture.get();
-      modelOutputs = modelFuture.get();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      log.warn("[LiteRule] 并行注入被中断，降级为串行");
-      return injectFactsThenModel(context);
-    } catch (ExecutionException e) {
-      log.warn("[LiteRule] 并行注入异常，降级为串行: {}", e.getMessage());
-      return injectFactsThenModel(context);
-    }
-
-    return mergeInjectedData(context, externalFacts, modelOutputs);
-  }
-
-  /**
-   * 串行降级路径：先事实后模型
-   *
-   * @param context 原始上下文
-   * @return 合并后的上下文
-   */
-  private RuleContext injectFactsThenModel(RuleContext context) {
-    RuleContext enriched = injectFactsIfNeeded(context);
-    return injectModelOutputsIfNeeded(enriched);
-  }
-
-  /**
-   * 安全采集事实数据（异常隔离）
-   *
-   * @param registry 事实注册表
-   * @param context 上下文
-   * @return 事实数据 Map；异常时返回空 Map
-   */
-  private Map<String, Object> collectFactsSafely(
-      FactProviderRegistry registry, RuleContext context) {
-    try {
-      return registry.collectAllFacts(context);
-    } catch (FactCollectionException e) {
-      log.warn("[LiteRule-Fact] 事实采集失败（fallbackOnError=false），中断评估: {}", e.getMessage());
-      throw RuleEvaluationException.evaluationError("fact-collection", e);
-    }
-  }
-
-  /**
-   * 安全采集模型输出（异常隔离）
-   *
-   * @param registry 模型注册表
-   * @param context 上下文
-   * @return 模型输出 Map；异常时返回空 Map
-   */
-  private Map<String, Object> collectModelsSafely(
-      ModelInputRegistry registry, RuleContext context) {
-    try {
-      return registry.collectAllModelOutputs(context);
-    } catch (ModelInvocationException e) {
-      log.warn("[LiteRule-Model] 模型调用失败（fallbackOnError=false），中断评估: {}", e.getMessage());
-      throw RuleEvaluationException.evaluationError("model-invocation", e);
-    }
-  }
-
-  /**
-   * 合并事实数据与模型输出到上下文
-   *
-   * @param context 原始上下文
-   * @param externalFacts 外部事实数据
-   * @param modelOutputs 模型输出
-   * @return 合并后的上下文
-   */
-  private RuleContext mergeInjectedData(
-      RuleContext context,
-      Map<String, Object> externalFacts,
-      Map<String, Object> modelOutputs) {
-    boolean hasFacts = externalFacts != null && !externalFacts.isEmpty();
-    boolean hasModels = modelOutputs != null && !modelOutputs.isEmpty();
-
-    if (!hasFacts && !hasModels) {
-      return context;
-    }
-
-    Map<String, Object> mergedFacts = new LinkedHashMap<>(context.getFacts());
-    if (hasFacts) {
-      mergedFacts.putAll(externalFacts);
-    }
-    if (hasModels) {
-      // 扁平 key（"model.score"）转换为嵌套结构（{"model": {"score": ...}}）
-      Map<String, Object> nestedModel = new LinkedHashMap<>();
-      for (Map.Entry<String, Object> entry : modelOutputs.entrySet()) {
-        String key = entry.getKey();
-        if (key.startsWith(ModelInputRegistry.MODEL_KEY_PREFIX)) {
-          nestedModel.put(
-              key.substring(ModelInputRegistry.MODEL_KEY_PREFIX.length()), entry.getValue());
-        } else {
-          nestedModel.put(key, entry.getValue());
-        }
-      }
-      if (!nestedModel.isEmpty()) {
-        mergedFacts.put("model", nestedModel);
-      }
-    }
-
-    return RuleContext.of(
-        mergedFacts,
-        context.getScenario(),
-        context.getSource(),
-        context.getTraceId(),
-        context.getTenantId(),
-        context.getEnvironment());
+    // 未注入 FactInjectionService 时，使用原始上下文（向后兼容）
+    return context;
   }
 
   /**
@@ -714,31 +579,19 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /**
    * 解析规则对应的灰度候选定义
    *
-   * <p>仅当以下条件全部满足时返回非 null：
-   *
-   * <ul>
-   *   <li>canaryEnabled = true
-   *   <li>canaryRouter 已注入
-   *   <li>规则暴露了 RuleDefinition（即 {@code rule.getRuleDefinition()} 非空）
-   *   <li>canaryRatio > 0 且配置了候选表达式（条件或严重度）
-   * </ul>
+   * <p>当 {@link #canaryEvaluator} 已注入时，委托给 {@link CanaryEvaluator#resolveCanaryDefinition}。
+   * 未注入时，返回 null（向后兼容）。
    *
    * @param rule 规则
    * @return 灰度定义；不满足条件返回 null
    * @since 1.0.0
    */
   private RuleDefinition resolveCanaryDefinition(Rule rule) {
-    if (!canaryEnabled || canaryRouter == null) {
-      return null;
+    if (canaryEvaluator != null) {
+      return canaryEvaluator.resolveCanaryDefinition(rule);
     }
-    RuleDefinition def = rule.getRuleDefinition();
-    if (def == null || def.getCanaryRatio() <= 0) {
-      return null;
-    }
-    if (def.getCanaryConditionExpression() == null && def.getCanarySeverityExpression() == null) {
-      return null;
-    }
-    return def;
+    // 未注入 CanaryEvaluator 时，返回 null（向后兼容）
+    return null;
   }
 
   /**
@@ -1502,19 +1355,19 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
     // 灰度路由：仅对带 canaryRatio 的表达式规则生效
     RuleDefinition canaryDef = resolveCanaryDefinition(rule);
-    if (canaryDef != null) {
-      boolean goCanary = canaryRouter.shouldRouteToCanary(canaryDef, context);
-      canaryRouter.recordBucket(rule.getCode(), goCanary);
+    if (canaryDef != null && canaryEvaluator != null) {
+      boolean goCanary = canaryEvaluator.shouldRouteToCanary(canaryDef, context);
+      canaryEvaluator.recordBucket(rule.getCode(), goCanary);
       if (goCanary) {
         routedToCanary = true;
-        Rule canaryRule = canaryRouter.buildCanaryRule(canaryDef);
+        Rule canaryRule = canaryEvaluator.buildCanaryRule(canaryDef);
         try {
           result = evaluateWithOptionalTimeout(canaryRule, context);
         } catch (Exception e) {
           caughtException = e;
         }
         if (result != null) {
-          canaryRouter.markCanary(result);
+          canaryEvaluator.markCanary(result);
         }
         if (log.isDebugEnabled()) {
           log.debug("{} 规则 {} 命中灰度桶，评估候选版本", logTag, rule.getCode());
@@ -1696,11 +1549,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         Thread.currentThread().interrupt();
       }
     }
-    if (modelInputRegistry != null) {
-      modelInputRegistry.destroy();
-    }
-    if (factProviderRegistry != null) {
-      factProviderRegistry.destroy();
+    // 销毁事实注入服务（P1-1：委托给 FactInjectionService）
+    if (factInjectionService != null) {
+      factInjectionService.destroy();
     }
   }
 

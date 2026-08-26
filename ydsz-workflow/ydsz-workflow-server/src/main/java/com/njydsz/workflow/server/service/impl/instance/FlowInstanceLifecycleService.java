@@ -32,7 +32,7 @@ import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 import com.njydsz.workflow.server.service.FlowTimerService;
-import com.njydsz.workflow.server.service.instance.FlowTaskSupport;
+import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
 
 /**
  * 流程实例生命周期服务
