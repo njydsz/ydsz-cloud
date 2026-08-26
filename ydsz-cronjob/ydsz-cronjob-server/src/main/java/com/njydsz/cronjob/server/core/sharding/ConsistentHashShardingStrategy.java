@@ -42,11 +42,11 @@ import org.springframework.context.annotation.Configuration;
     name = "ydsz.cronjob.sharding.strategy",
     havingValue = "consistent_hash")
 public class ConsistentHashShardingStrategy implements ShardingStrategy {
-  /** FNV-1a 哈希偏移基数 */
-  private static final int FNV_OFFSET_BASIS = FNV_OFFSET_BASIS;
+  /** FNV-1a 哈希偏移基数（0x811C9DC5） */
+  private static final int FNV_OFFSET_BASIS = 0x811c9dc5;
 
-  /** FNV-1a 哈希质数 */
-  private static final int FNV_PRIME = FNV_PRIME;
+  /** FNV-1a 哈希质数（0x01000193） */
+  private static final int FNV_PRIME = 0x01000193;
 
   /** FNV 字节掩码 */
   private static final int FNV_BYTE_MASK = 0xff;

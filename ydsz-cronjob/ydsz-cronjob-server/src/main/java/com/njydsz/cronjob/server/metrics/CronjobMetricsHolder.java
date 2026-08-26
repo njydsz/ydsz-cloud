@@ -15,6 +15,7 @@ import com.njydsz.common.base.metrics.AbstractMetricsHolder;
  * <ul>
  *   <li>{@code cronjob.execution_total{job_name}} — 任务执行计数
  *   <li>{@code cronjob.execution_duration{job_name}} — 任务执行耗时分布
+ *   <li>{@code cronjob.dispatch_delay{job_name}} — 调度触发延迟分布（next_fire_time 到实际派发，衡量调度精度）
  *   <li>{@code cronjob.shard_success_total{job_name,shard_index}} — 分片成功计数
  *   <li>{@code cronjob.shard_failure_total{job_name,shard_index}} — 分片失败计数
  * </ul>
@@ -52,6 +53,23 @@ public final class CronjobMetricsHolder extends AbstractMetricsHolder {
    */
   public static void recordExecutionDuration(String jobName, long millis) {
     recordDuration(METRIC_PREFIX, "execution_duration", millis, "job_name", safe(jobName));
+  }
+
+  // ======================== 调度触发延迟 ========================
+
+  /**
+   * 记录调度触发延迟（{@code cronjob.dispatch_delay}）。
+   *
+   * <p>延迟 = 实际派发时刻 - next_fire_time（毫秒），用于衡量调度精度：
+   * 5s 扫描模式下 P99 接近扫描周期，启用秒级预读（preload）后显著下降，
+   * 为 preload/扫描间隔调优提供数据依据。
+   *
+   * @param jobName 任务名称
+   * @param delayMillis 触发延迟（毫秒，>= 0）
+   */
+  public static void recordDispatchDelay(String jobName, long delayMillis) {
+    recordDuration(
+        METRIC_PREFIX, "dispatch_delay", Math.max(delayMillis, 0L), "job_name", safe(jobName));
   }
 
   // ======================== 分片成功计数 ========================

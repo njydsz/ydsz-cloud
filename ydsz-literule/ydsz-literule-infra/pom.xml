@@ -41,5 +41,10 @@
             <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- ydsz-common-jdbc：MpBaseEntity 基类 / JsonTypeHandler 等 JDBC 基础设施（实体类直接依赖，显式声明避免隐式传递） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
     </dependencies>
 </project>

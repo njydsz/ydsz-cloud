@@ -75,7 +75,7 @@ import com.njydsz.workflow.server.engine.listener.FlowListenerPluginExecutor;
  *
  * <pre>{@code
  * // 1. 任务校验（子 Service 内）
- * FlowRunTask task = flowTaskSupport.getTaskOrThrow(taskId);
+ * FlowRunTaskVO task = flowTaskSupport.getTaskOrThrow(taskId);
  *
  * // 2. 审计日志（PASS 操作）
  * flowTaskSupport.audit(task, "PASS", operatorId, task.getAssigneeId(),
@@ -155,7 +155,7 @@ public class FlowTaskSupport {
    * <p>子 Service 在执行任何写操作前必须先调用本方法获取任务，避免在「任务不存在」 的情况下误更新其他数据。本方法是子 Service 的「准入校验」入口。
    *
    * @param id 任务主键 ID（雪花算法生成的字符串）
-   * @return 任务实体（{@link FlowRunTask}），一定非空
+   * @return 运行时任务视图对象（{@link FlowRunTaskVO}），一定非空
    * @throws SysException 当任务不存在时抛出，错误码 {@code NOT_FOUND}， 错误信息 key 为 {@code
    *     error.workflow.msg_6541ab08}（i18n 资源键）
    */
@@ -176,7 +176,7 @@ public class FlowTaskSupport {
   /**
    * 写审计日志（无意见分类）
    *
-   * <p>适用于无需区分意见类型的操作（如「转办 / 委派 / 加签 / 撤回 / 催办」等 流程性操作），内部委托 {@link #audit(FlowRunTask, String,
+   * <p>适用于无需区分意见类型的操作（如「转办 / 委派 / 加签 / 撤回 / 催办」等 流程性操作），内部委托 {@link #audit(FlowRunTaskVO, String,
    * String, String, String, String)}。
    *
    * @param task 任务实体（用于提取 instanceId / nodeCode / tenantId 等上下文）

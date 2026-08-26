@@ -113,7 +113,7 @@ public class FlowTaskRejectService {
     task.setComment(dto.getComment());
     task.setCompletedAt(now);
     task.setDurationMs(durationMs);
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     archiveService.archiveToHistory(task, FlowTaskStatus.REJECTED);
 
     // P1-6: 保存驳回附件
@@ -174,7 +174,7 @@ public class FlowTaskRejectService {
       support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
       if (flowMetrics != null) {
         flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "rejected");
-        flowMetrics.recordTaskDuration(converter.entityToVO(task), "REJECTED");
+        flowMetrics.recordTaskDuration(task, "REJECTED");
         flowMetrics.incInstance(instance.getFlowCode(), "rejected");
         flowMetrics.recordInstanceDuration(instance, "REJECTED");
       }
@@ -200,7 +200,7 @@ public class FlowTaskRejectService {
     }
     if (flowMetrics != null) {
       flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "rejected");
-      flowMetrics.recordTaskDuration(converter.entityToVO(task), "REJECTED");
+      flowMetrics.recordTaskDuration(task, "REJECTED");
     }
   }
 

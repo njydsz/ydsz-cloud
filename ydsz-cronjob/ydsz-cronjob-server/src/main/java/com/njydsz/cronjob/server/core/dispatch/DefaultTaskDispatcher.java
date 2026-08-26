@@ -83,6 +83,7 @@ import com.njydsz.cronjob.server.core.scheduler.NextFireTimeCalculator;
 import com.njydsz.cronjob.server.core.sharding.ShardAssignment;
 import com.njydsz.cronjob.server.core.sharding.ShardingStrategy;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
+import com.njydsz.cronjob.server.metrics.CronjobMetricsHolder;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
@@ -301,6 +302,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    */
   @Override
   public String dispatch(JobVO job, String executorNode, String triggerType) {
+    // P1-2: 记录调度触发延迟指标（衡量调度精度，为 preload/扫描间隔调优提供依据）
+    recordDispatchDelay(job, triggerType);
     // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
     boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
     // P1-2: CONCURRENT 策略不加锁
@@ -417,6 +420,28 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * <p>仅对 CRON/RETRY/DEPENDENT/MISFIRED 触发类型调用（MANUAL 不检查）。 配额超限时抛 {@link SysException}，任务不会被派发。
    * 配额服务不可用时降级放行（不影响任务执行）。
    */
+  /**
+   * 记录调度触发延迟指标（{@code cronjob.dispatch_delay}）。
+   *
+   * <p>延迟 = 实际派发时刻 - next_fire_time。仅对定时类触发（CRON/MISFIRED/RETRY/DEPENDENT/FAILOVER）
+   * 记录；MANUAL/API/EVENT 由外部即时触发，next_fire_time 无调度精度语义，不记录。
+   *
+   * @param job 任务定义
+   * @param triggerType 触发类型
+   */
+  private void recordDispatchDelay(JobVO job, String triggerType) {
+    if (job == null || job.getNextFireTime() == null) {
+      return;
+    }
+    if (TRIGGER_MANUAL.equals(triggerType)
+        || TRIGGER_API.equals(triggerType)
+        || TRIGGER_EVENT.equals(triggerType)) {
+      return;
+    }
+    long delayMillis = Duration.between(job.getNextFireTime(), LocalDateTime.now()).toMillis();
+    CronjobMetricsHolder.recordDispatchDelay(job.getJobName(), delayMillis);
+  }
+
   private void checkExecutionQuota(JobVO job) {
     TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
     if (quotaService == null) {

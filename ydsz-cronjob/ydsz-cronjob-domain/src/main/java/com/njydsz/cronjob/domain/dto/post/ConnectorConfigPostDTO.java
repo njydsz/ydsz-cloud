@@ -38,6 +38,9 @@ public class ConnectorConfigPostDTO implements Serializable {
   /** 额外配置属性 */
   private Map<String, String> extraProps;
 
+  /** 默认读取超时（秒），与 ConnectorConfig 默认值保持一致 */
+  private static final int DEFAULT_READ_TIMEOUT_SECONDS = 30;
+
   /** 连接超时（秒） */
   private int connectTimeoutSeconds = 10;
 

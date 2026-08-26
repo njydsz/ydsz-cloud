@@ -56,7 +56,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskService 接口定义
- * @see FlowRunTask 待办任务实体
+ * @see FlowRunTaskVO 运行时任务视图对象
  * @see FlowTaskQueryServiceImpl 查询子服务
  * @see FlowTaskCoreService 核心操作子服务
  * @see FlowTaskSignServiceImpl 加签减签子服务

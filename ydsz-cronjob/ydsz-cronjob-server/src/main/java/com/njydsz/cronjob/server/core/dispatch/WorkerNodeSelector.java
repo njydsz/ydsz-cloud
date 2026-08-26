@@ -119,7 +119,8 @@ public class WorkerNodeSelector {
   /**
    * 最小负载选择 Worker 节点。
    *
-   * <p>选择 runningCount 最小的节点；runningCount 相同时按 nodeId 升序（保证确定性）。
+   * <p>优先选择 runningCount 最小的节点；并列时选择 cpu_usage 最低的节点（基于心跳上报的
+   * {@link JobNodeVO#getCpuUsage()}，null 视为 0 即最低优先）；仍并列时按 nodeId 升序（保证确定性）。
    *
    * @param workers 可用 Worker 列表
    * @return 选中的 Worker 节点
@@ -131,6 +132,14 @@ public class WorkerNodeSelector {
               int loadA = a.getRunningCount() != null ? a.getRunningCount() : 0;
               int loadB = b.getRunningCount() != null ? b.getRunningCount() : 0;
               int cmp = Integer.compare(loadA, loadB);
+              if (cmp != 0) {
+                return cmp;
+              }
+              java.math.BigDecimal cpuA =
+                  a.getCpuUsage() != null ? a.getCpuUsage() : java.math.BigDecimal.ZERO;
+              java.math.BigDecimal cpuB =
+                  b.getCpuUsage() != null ? b.getCpuUsage() : java.math.BigDecimal.ZERO;
+              cmp = cpuA.compareTo(cpuB);
               return cmp != 0 ? cmp : a.getNodeId().compareTo(b.getNodeId());
             })
         .orElse(workers.get(0));

@@ -103,7 +103,7 @@ public class FlowTaskOperateService {
     task.setAssignorId(originalAssignorId);
     task.setAssignorName(originalAssignorName);
     task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(task, "TRANSFER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info("[Flow] 转办任务: taskId={} → userId={}", task.getId(), dto.getTargetUserId());
     if (flowMetrics != null) {
@@ -143,7 +143,7 @@ public class FlowTaskOperateService {
     task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
     task.setAssigneeName(dto.getTargetUserName());
     task.setTaskStatus(FlowTaskStatus.DELEGATED.name());
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(task, "DELEGATE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info(
         "[Flow] 委派任务: taskId={} → 被委派人={} (处理完回到 {})",
@@ -271,7 +271,7 @@ public class FlowTaskOperateService {
     taskRepository.updateStatusByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
 
     // 5. 重新生成本节点的 PENDING 任务
-    FlowRunTask newTask = recreateRetractTask(hisTask, instance, comment);
+    FlowRunTaskVO newTask = recreateRetractTask(hisTask, instance, comment);
 
     // 6. 更新实例 currentNodeCode 回退到本节点
     instanceRepository.updateStatus(instance.getId(), null, hisTask.getNodeCode(), hisTask.getNodeName(), null, null);
@@ -413,7 +413,7 @@ public class FlowTaskOperateService {
     newTask.setTenantId(instance.getTenantId());
     newTask.setProviderTraceId(instance.getProviderTraceId());
     newTask.setComment(comment);
-    taskRepository.save(converter.entityToVO(newTask));
+    taskRepository.save(newTask);
     return newTask;
   }
 
@@ -428,7 +428,7 @@ public class FlowTaskOperateService {
     update.setId(hisTaskId);
     update.setTaskStatus("RETRACTED");
     update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
-    hisTaskRepository.update(converter.entityToVO(update));
+    hisTaskRepository.update(update);
   }
 
   // ============================== 私有辅助 ==============================

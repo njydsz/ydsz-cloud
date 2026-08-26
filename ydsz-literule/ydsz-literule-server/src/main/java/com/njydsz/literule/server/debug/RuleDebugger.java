@@ -94,7 +94,7 @@ public class RuleDebugger {
    * @return 调试器实例；未配置时返回 null（调用方应做 null 判断）
    */
   public static RuleDebugger get() {
-    return INSTANCE;
+    return instance;
   }
 
   // ==================== 当前评估规则上下文 ====================
