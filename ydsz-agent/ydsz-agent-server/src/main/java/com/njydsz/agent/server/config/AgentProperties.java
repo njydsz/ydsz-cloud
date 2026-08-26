@@ -143,10 +143,10 @@ public class AgentProperties {
   /** LLM 相关配置组（默认 Provider、模型、密钥、价格等）。 */
   public static class Llm {
 /** 默认 Provider */
-private String defaultProvider = "openai";
+private String defaultProvider = "default";
 
     /** 默认模型名称 */
-    private String defaultModel = "gpt-4o-mini";
+    private String defaultModel = "default-model";
 
     /** API Key */
     private String apiKey = "";
