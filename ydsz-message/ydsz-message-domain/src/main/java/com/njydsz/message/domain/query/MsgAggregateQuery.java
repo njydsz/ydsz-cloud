@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.query;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -27,4 +29,7 @@ public class MsgAggregateQuery extends PageQuery {
 
   /** 批次状态 */
   @Xss private String batchStatus;
+
+  /** 计划发送时间（小于等于此时间的记录） */
+  private LocalDateTime scheduledSendAtBefore;
 }

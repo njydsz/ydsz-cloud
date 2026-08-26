@@ -54,8 +54,8 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_account PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_user_account_username UNIQUE (username)
+    CONSTRAINT pk_ydsz_acct_user PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_acct_user_username UNIQUE (username)
 );
 
 COMMENT ON TABLE ydsz_acct_user IS '用户账号主表';
@@ -89,10 +89,10 @@ COMMENT ON COLUMN ydsz_acct_user.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_acct_user.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_acct_user.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_account_phone ON ydsz_acct_user (phone);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_account_dept_id ON ydsz_acct_user (dept_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_account_company_id ON ydsz_acct_user (company_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_account_tenant_deleted ON ydsz_acct_user (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_phone ON ydsz_acct_user (phone);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_id ON ydsz_acct_user (dept_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_company_id ON ydsz_acct_user (company_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_tenant_deleted ON ydsz_acct_user (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_org_company (
     id                       VARCHAR(32)             ,
@@ -110,8 +110,8 @@ CREATE TABLE IF NOT EXISTS ydsz_org_company (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_company PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_company_company_code UNIQUE (company_code)
+    CONSTRAINT pk_ydsz_org_company PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_org_company_company_code UNIQUE (company_code)
 );
 
 COMMENT ON TABLE ydsz_org_company IS '公司表';
@@ -131,8 +131,8 @@ COMMENT ON COLUMN ydsz_org_company.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_org_company.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_org_company.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_company_parent_id ON ydsz_org_company (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_company_tenant_deleted ON ydsz_org_company (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_parent_id ON ydsz_org_company (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_tenant_deleted ON ydsz_org_company (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_org_department (
     id                       VARCHAR(32)             ,
@@ -150,8 +150,8 @@ CREATE TABLE IF NOT EXISTS ydsz_org_department (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_department PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_department_dept_code UNIQUE (dept_code)
+    CONSTRAINT pk_ydsz_org_department PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_org_department_dept_code UNIQUE (dept_code)
 );
 
 COMMENT ON TABLE ydsz_org_department IS '部门表';
@@ -171,9 +171,9 @@ COMMENT ON COLUMN ydsz_org_department.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_org_department.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_org_department.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_department_parent_id ON ydsz_org_department (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_department_leader_id ON ydsz_org_department (leader_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_department_tenant_deleted ON ydsz_org_department (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_department_parent_id ON ydsz_org_department (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_department_leader_id ON ydsz_org_department (leader_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_department_tenant_deleted ON ydsz_org_department (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rbac_role (
     id                       VARCHAR(32)             ,
@@ -191,8 +191,8 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_role (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_role PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_role_role_code UNIQUE (role_code, tenant_id)
+    CONSTRAINT pk_ydsz_rbac_role PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_rbac_role_role_code UNIQUE (role_code, tenant_id)
 );
 
 COMMENT ON TABLE ydsz_rbac_role IS '角色表';
@@ -212,7 +212,7 @@ COMMENT ON COLUMN ydsz_rbac_role.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rbac_role.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_rbac_role.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_role_tenant_deleted ON ydsz_rbac_role (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_tenant_deleted ON ydsz_rbac_role (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rbac_menu (
     id                       VARCHAR(32)             ,
@@ -234,8 +234,8 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_menu (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_menu PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_menu_menu_code UNIQUE (menu_code)
+    CONSTRAINT pk_ydsz_rbac_menu PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_rbac_menu_menu_code UNIQUE (menu_code)
 );
 
 COMMENT ON TABLE ydsz_rbac_menu IS '菜单/权限表';
@@ -259,9 +259,9 @@ COMMENT ON COLUMN ydsz_rbac_menu.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rbac_menu.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_rbac_menu.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_menu_parent_id ON ydsz_rbac_menu (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_menu_permission_code ON ydsz_rbac_menu (permission_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_menu_tenant_deleted ON ydsz_rbac_menu (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_menu_parent_id ON ydsz_rbac_menu (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_menu_permission_code ON ydsz_rbac_menu (permission_code);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_menu_tenant_deleted ON ydsz_rbac_menu (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rbac_post (
     id                       VARCHAR(32)             ,
@@ -277,8 +277,8 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_post (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_post PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_post_post_code UNIQUE (post_code)
+    CONSTRAINT pk_ydsz_rbac_post PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_rbac_post_post_code UNIQUE (post_code)
 );
 
 COMMENT ON TABLE ydsz_rbac_post IS '岗位表';
@@ -296,7 +296,7 @@ COMMENT ON COLUMN ydsz_rbac_post.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rbac_post.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_rbac_post.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_post_tenant_deleted ON ydsz_rbac_post (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_post_tenant_deleted ON ydsz_rbac_post (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_user_language (
     id                       VARCHAR(32)             ,
@@ -312,8 +312,8 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_language (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_language PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_language_language_code UNIQUE (language_code)
+    CONSTRAINT pk_ydsz_acct_user_language PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_acct_user_language_language_code UNIQUE (language_code)
 );
 
 COMMENT ON TABLE ydsz_acct_user_language IS '语言配置表';
@@ -331,7 +331,7 @@ COMMENT ON COLUMN ydsz_acct_user_language.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_acct_user_language.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_acct_user_language.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_language_tenant_deleted ON ydsz_acct_user_language (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_language_tenant_deleted ON ydsz_acct_user_language (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_user_role (
     id                       VARCHAR(32)             ,
@@ -345,7 +345,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_role (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_role PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_user_role PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_acct_user_role IS '用户-角色关联表';
@@ -361,9 +361,9 @@ COMMENT ON COLUMN ydsz_acct_user_role.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_acct_user_role.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_acct_user_role.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_role_user_id ON ydsz_acct_user_role (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_role_role_id ON ydsz_acct_user_role (role_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_role_tenant_deleted ON ydsz_acct_user_role (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_role_user_id ON ydsz_acct_user_role (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_role_role_id ON ydsz_acct_user_role (role_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_role_tenant_deleted ON ydsz_acct_user_role (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_user_post (
     id                       VARCHAR(32)             ,
@@ -377,7 +377,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_post (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_post PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_user_post PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_acct_user_post IS '用户-岗位关联表';
@@ -393,9 +393,9 @@ COMMENT ON COLUMN ydsz_acct_user_post.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_acct_user_post.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_acct_user_post.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_post_user_id ON ydsz_acct_user_post (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_post_post_id ON ydsz_acct_user_post (post_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_post_tenant_deleted ON ydsz_acct_user_post (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_post_user_id ON ydsz_acct_user_post (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_post_post_id ON ydsz_acct_user_post (post_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_post_tenant_deleted ON ydsz_acct_user_post (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_user_dept (
     id                       VARCHAR(32)             ,
@@ -410,7 +410,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_dept (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_dept PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_user_dept PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_acct_user_dept IS '用户-部门关联表';
@@ -427,9 +427,9 @@ COMMENT ON COLUMN ydsz_acct_user_dept.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_acct_user_dept.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_acct_user_dept.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_dept_user_id ON ydsz_acct_user_dept (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_dept_dept_id ON ydsz_acct_user_dept (dept_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_dept_tenant_deleted ON ydsz_acct_user_dept (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_user_id ON ydsz_acct_user_dept (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_dept_id ON ydsz_acct_user_dept (dept_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_tenant_deleted ON ydsz_acct_user_dept (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_org_company_dept (
     id                       VARCHAR(32)             ,
@@ -443,7 +443,7 @@ CREATE TABLE IF NOT EXISTS ydsz_org_company_dept (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_company_dept PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_org_company_dept PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_org_company_dept IS '公司-部门关联表';
@@ -459,9 +459,9 @@ COMMENT ON COLUMN ydsz_org_company_dept.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_org_company_dept.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_org_company_dept.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_company_dept_company_id ON ydsz_org_company_dept (company_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_company_dept_dept_id ON ydsz_org_company_dept (dept_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_company_dept_tenant_deleted ON ydsz_org_company_dept (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_dept_company_id ON ydsz_org_company_dept (company_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_dept_dept_id ON ydsz_org_company_dept (dept_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_dept_tenant_deleted ON ydsz_org_company_dept (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rbac_role_permission (
     id                       VARCHAR(32)             ,
@@ -476,7 +476,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_role_permission (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_role_permission PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rbac_role_permission PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_rbac_role_permission IS '角色-权限关联表';
@@ -493,10 +493,10 @@ COMMENT ON COLUMN ydsz_rbac_role_permission.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rbac_role_permission.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_rbac_role_permission.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_role_permission_role_id ON ydsz_rbac_role_permission (role_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_role_permission_permission_id ON ydsz_rbac_role_permission (permission_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_role_permission_menu_id ON ydsz_rbac_role_permission (menu_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_role_permission_tenant_deleted ON ydsz_rbac_role_permission (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_role_id ON ydsz_rbac_role_permission (role_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_permission_id ON ydsz_rbac_role_permission (permission_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_menu_id ON ydsz_rbac_role_permission (menu_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_tenant_deleted ON ydsz_rbac_role_permission (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_login_history (
     id                       VARCHAR(32)             ,
@@ -507,7 +507,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_login_history (
     fail_reason              VARCHAR(255)             DEFAULT NULL,
     user_agent               VARCHAR(512)             DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_login_history PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_login_history PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_acct_login_history IS '用户登录历史表';
@@ -520,9 +520,9 @@ COMMENT ON COLUMN ydsz_acct_login_history.fail_reason IS '失败原因（成功�
 COMMENT ON COLUMN ydsz_acct_login_history.user_agent IS '用户代理（浏览器/设备信息）';
 COMMENT ON COLUMN ydsz_acct_login_history.created_at IS '登录时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_login_history_user_id_created_at ON ydsz_acct_login_history (user_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_login_history_ip ON ydsz_acct_login_history (login_ip);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_login_history_created_at ON ydsz_acct_login_history (created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_login_history_user_id_created_at ON ydsz_acct_login_history (user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_login_history_ip ON ydsz_acct_login_history (login_ip);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_login_history_created_at ON ydsz_acct_login_history (created_at);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_password_history (
     id                       VARCHAR(32)             ,
@@ -530,7 +530,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_password_history (
     password_hash            VARCHAR(255)             NOT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    CONSTRAINT pk_ydsz_user_password_history PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_password_history PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_acct_password_history IS '密码历史表';
@@ -540,8 +540,8 @@ COMMENT ON COLUMN ydsz_acct_password_history.password_hash IS 'BCrypt 加密后�
 COMMENT ON COLUMN ydsz_acct_password_history.created_at IS '创建时间（该密码被设置的日期）';
 COMMENT ON COLUMN ydsz_acct_password_history.deleted IS '逻辑删除标记（0=未删除，1=已删除，用于软删除兼容）';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_password_history_user_id_created_at ON ydsz_acct_password_history (user_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_password_history_user_id ON ydsz_acct_password_history (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_password_history_user_id_created_at ON ydsz_acct_password_history (user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_password_history_user_id ON ydsz_acct_password_history (user_id);
 
 CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
     id                       VARCHAR(64)             ,
@@ -611,8 +611,8 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_social_client (
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     revision                 INTEGER                  DEFAULT 0,
-    CONSTRAINT pk_ydsz_social_client PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_social_client_platform UNIQUE (platform)
+    CONSTRAINT pk_ydsz_auth_social_client PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_auth_social_client_platform UNIQUE (platform)
 );
 
 COMMENT ON TABLE ydsz_auth_social_client IS '社交平台客户端配置表';
@@ -634,8 +634,8 @@ COMMENT ON COLUMN ydsz_auth_social_client.created_by IS '创建者用户 ID';
 COMMENT ON COLUMN ydsz_auth_social_client.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_auth_social_client.revision IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_social_client_status ON ydsz_auth_social_client (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_social_client_tenant_deleted ON ydsz_auth_social_client (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_client_status ON ydsz_auth_social_client (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_client_tenant_deleted ON ydsz_auth_social_client (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_idp_saml_config (
     id                       VARCHAR(64)             ,
@@ -655,8 +655,8 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_saml_config (
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     revision                 INTEGER                  DEFAULT 0,
-    CONSTRAINT pk_ydsz_saml_idp_config PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_saml_idp_config_entity_id UNIQUE (entity_id)
+    CONSTRAINT pk_ydsz_idp_saml_config PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idp_saml_config_entity_id UNIQUE (entity_id)
 );
 
 COMMENT ON TABLE ydsz_idp_saml_config IS 'SAML 2.0 身份提供者配置表';
@@ -678,8 +678,8 @@ COMMENT ON COLUMN ydsz_idp_saml_config.created_by IS '创建者用户 ID';
 COMMENT ON COLUMN ydsz_idp_saml_config.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_idp_saml_config.revision IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_saml_idp_config_status ON ydsz_idp_saml_config (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_saml_idp_config_tenant_deleted ON ydsz_idp_saml_config (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_saml_config_status ON ydsz_idp_saml_config (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_saml_config_tenant_deleted ON ydsz_idp_saml_config (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_idp_oauth2_application (
     id                       VARCHAR(64)             ,
@@ -700,8 +700,8 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_oauth2_application (
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     revision                 INTEGER                  DEFAULT 0,
-    CONSTRAINT pk_ydsz_oauth2_application PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_oauth2_application_client_id UNIQUE (client_id)
+    CONSTRAINT pk_ydsz_idp_oauth2_application PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idp_oauth2_application_client_id UNIQUE (client_id)
 );
 
 COMMENT ON TABLE ydsz_idp_oauth2_application IS 'OAuth2 应用注册表';
@@ -724,8 +724,8 @@ COMMENT ON COLUMN ydsz_idp_oauth2_application.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_idp_oauth2_application.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_idp_oauth2_application.revision IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_oauth2_application_status ON ydsz_idp_oauth2_application (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_oauth2_application_tenant_deleted ON ydsz_idp_oauth2_application (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_oauth2_application_status ON ydsz_idp_oauth2_application (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_oauth2_application_tenant_deleted ON ydsz_idp_oauth2_application (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_auth_social_account (
     id                       VARCHAR(32)             ,
@@ -746,8 +746,8 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_social_account (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_social_account PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_social_account_platform_open_id UNIQUE (platform, open_id)
+    CONSTRAINT pk_ydsz_auth_social_account PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_auth_social_account_platform_open_id UNIQUE (platform, open_id)
 );
 
 COMMENT ON TABLE ydsz_auth_social_account IS '社交账号绑定表';
@@ -770,8 +770,8 @@ COMMENT ON COLUMN ydsz_auth_social_account.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_auth_social_account.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_auth_social_account.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_social_account_user_id ON ydsz_auth_social_account (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_social_account_tenant_deleted ON ydsz_auth_social_account (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_account_user_id ON ydsz_auth_social_account (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_account_tenant_deleted ON ydsz_auth_social_account (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_idp_security_alert (
     id                       VARCHAR(64)             ,
@@ -792,7 +792,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_security_alert (
     deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     revision                 INTEGER                  DEFAULT 0,
-    CONSTRAINT pk_ydsz_security_alert PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_idp_security_alert PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_idp_security_alert IS '安全告警表';
@@ -815,11 +815,11 @@ COMMENT ON COLUMN ydsz_idp_security_alert.deleted IS '逻辑删除标记（0=未
 COMMENT ON COLUMN ydsz_idp_security_alert.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_idp_security_alert.revision IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_security_alert_status_risk ON ydsz_idp_security_alert (status, risk_level);
-CREATE INDEX IF NOT EXISTS idx_ydsz_security_alert_type_time ON ydsz_idp_security_alert (alert_type, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_security_alert_user_id ON ydsz_idp_security_alert (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_security_alert_source_ip ON ydsz_idp_security_alert (source_ip);
-CREATE INDEX IF NOT EXISTS idx_ydsz_security_alert_tenant_deleted ON ydsz_idp_security_alert (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_status_risk ON ydsz_idp_security_alert (status, risk_level);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_type_time ON ydsz_idp_security_alert (alert_type, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_user_id ON ydsz_idp_security_alert (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_source_ip ON ydsz_idp_security_alert (source_ip);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_tenant_deleted ON ydsz_idp_security_alert (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_auth_credential (
     id                       BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,
@@ -835,8 +835,8 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_credential (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    CONSTRAINT pk_ydsz_user_credential PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_user_credential_credential_id UNIQUE (credential_id)
+    CONSTRAINT pk_ydsz_auth_credential PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_auth_credential_credential_id UNIQUE (credential_id)
 );
 
 COMMENT ON TABLE ydsz_auth_credential IS 'WebAuthn 凭证表';
@@ -854,14 +854,14 @@ COMMENT ON COLUMN ydsz_auth_credential.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_auth_credential.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_auth_credential.deleted IS '删除标记（软删除，0=未删除，1=已删除）';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_credential_user_id ON ydsz_auth_credential (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_auth_credential_user_id ON ydsz_auth_credential (user_id);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
 -- ============================================================================
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_user_account_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_acct_user_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -869,14 +869,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_user_account_updated_at ON ydsz_acct_user;
-CREATE TRIGGER trg_ydsz_user_account_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_acct_user_updated_at ON ydsz_acct_user;
+CREATE TRIGGER trg_ydsz_acct_user_updated_at
 BEFORE UPDATE ON ydsz_acct_user
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_user_account_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_acct_user_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_company_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_org_company_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -884,14 +884,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_company_updated_at ON ydsz_org_company;
-CREATE TRIGGER trg_ydsz_company_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_org_company_updated_at ON ydsz_org_company;
+CREATE TRIGGER trg_ydsz_org_company_updated_at
 BEFORE UPDATE ON ydsz_org_company
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_company_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_org_company_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_department_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_org_department_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -899,14 +899,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_department_updated_at ON ydsz_org_department;
-CREATE TRIGGER trg_ydsz_department_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_org_department_updated_at ON ydsz_org_department;
+CREATE TRIGGER trg_ydsz_org_department_updated_at
 BEFORE UPDATE ON ydsz_org_department
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_department_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_org_department_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_role_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_rbac_role_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -914,14 +914,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_role_updated_at ON ydsz_rbac_role;
-CREATE TRIGGER trg_ydsz_role_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_rbac_role_updated_at ON ydsz_rbac_role;
+CREATE TRIGGER trg_ydsz_rbac_role_updated_at
 BEFORE UPDATE ON ydsz_rbac_role
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_role_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_rbac_role_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_menu_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_rbac_menu_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -929,14 +929,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_menu_updated_at ON ydsz_rbac_menu;
-CREATE TRIGGER trg_ydsz_menu_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_rbac_menu_updated_at ON ydsz_rbac_menu;
+CREATE TRIGGER trg_ydsz_rbac_menu_updated_at
 BEFORE UPDATE ON ydsz_rbac_menu
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_menu_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_rbac_menu_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_post_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_rbac_post_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -944,14 +944,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_post_updated_at ON ydsz_rbac_post;
-CREATE TRIGGER trg_ydsz_post_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_rbac_post_updated_at ON ydsz_rbac_post;
+CREATE TRIGGER trg_ydsz_rbac_post_updated_at
 BEFORE UPDATE ON ydsz_rbac_post
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_post_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_rbac_post_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_language_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_acct_user_language_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -959,14 +959,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_language_updated_at ON ydsz_acct_user_language;
-CREATE TRIGGER trg_ydsz_language_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_acct_user_language_updated_at ON ydsz_acct_user_language;
+CREATE TRIGGER trg_ydsz_acct_user_language_updated_at
 BEFORE UPDATE ON ydsz_acct_user_language
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_language_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_acct_user_language_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_user_role_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_acct_user_role_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -974,14 +974,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_user_role_updated_at ON ydsz_acct_user_role;
-CREATE TRIGGER trg_ydsz_user_role_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_acct_user_role_updated_at ON ydsz_acct_user_role;
+CREATE TRIGGER trg_ydsz_acct_user_role_updated_at
 BEFORE UPDATE ON ydsz_acct_user_role
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_user_role_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_acct_user_role_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_user_post_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_acct_user_post_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -989,14 +989,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_user_post_updated_at ON ydsz_acct_user_post;
-CREATE TRIGGER trg_ydsz_user_post_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_acct_user_post_updated_at ON ydsz_acct_user_post;
+CREATE TRIGGER trg_ydsz_acct_user_post_updated_at
 BEFORE UPDATE ON ydsz_acct_user_post
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_user_post_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_acct_user_post_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_user_dept_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_acct_user_dept_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1004,14 +1004,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_user_dept_updated_at ON ydsz_acct_user_dept;
-CREATE TRIGGER trg_ydsz_user_dept_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_acct_user_dept_updated_at ON ydsz_acct_user_dept;
+CREATE TRIGGER trg_ydsz_acct_user_dept_updated_at
 BEFORE UPDATE ON ydsz_acct_user_dept
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_user_dept_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_acct_user_dept_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_company_dept_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_org_company_dept_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1019,14 +1019,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_company_dept_updated_at ON ydsz_org_company_dept;
-CREATE TRIGGER trg_ydsz_company_dept_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_org_company_dept_updated_at ON ydsz_org_company_dept;
+CREATE TRIGGER trg_ydsz_org_company_dept_updated_at
 BEFORE UPDATE ON ydsz_org_company_dept
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_company_dept_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_org_company_dept_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_role_permission_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_rbac_role_permission_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1034,11 +1034,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_role_permission_updated_at ON ydsz_rbac_role_permission;
-CREATE TRIGGER trg_ydsz_role_permission_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_rbac_role_permission_updated_at ON ydsz_rbac_role_permission;
+CREATE TRIGGER trg_ydsz_rbac_role_permission_updated_at
 BEFORE UPDATE ON ydsz_rbac_role_permission
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_role_permission_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_rbac_role_permission_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
 CREATE OR REPLACE FUNCTION fn_ydsz_auth_policy_set_updated_at()
@@ -1056,7 +1056,7 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_auth_policy_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_social_client_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_auth_social_client_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1064,14 +1064,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_social_client_updated_at ON ydsz_auth_social_client;
-CREATE TRIGGER trg_ydsz_social_client_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_auth_social_client_updated_at ON ydsz_auth_social_client;
+CREATE TRIGGER trg_ydsz_auth_social_client_updated_at
 BEFORE UPDATE ON ydsz_auth_social_client
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_social_client_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_auth_social_client_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_saml_idp_config_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_idp_saml_config_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1079,14 +1079,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_saml_idp_config_updated_at ON ydsz_idp_saml_config;
-CREATE TRIGGER trg_ydsz_saml_idp_config_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_idp_saml_config_updated_at ON ydsz_idp_saml_config;
+CREATE TRIGGER trg_ydsz_idp_saml_config_updated_at
 BEFORE UPDATE ON ydsz_idp_saml_config
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_saml_idp_config_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_idp_saml_config_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_oauth2_application_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_idp_oauth2_application_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1094,14 +1094,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_oauth2_application_updated_at ON ydsz_idp_oauth2_application;
-CREATE TRIGGER trg_ydsz_oauth2_application_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_idp_oauth2_application_updated_at ON ydsz_idp_oauth2_application;
+CREATE TRIGGER trg_ydsz_idp_oauth2_application_updated_at
 BEFORE UPDATE ON ydsz_idp_oauth2_application
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_oauth2_application_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_idp_oauth2_application_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_social_account_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_auth_social_account_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1109,14 +1109,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_social_account_updated_at ON ydsz_auth_social_account;
-CREATE TRIGGER trg_ydsz_social_account_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_auth_social_account_updated_at ON ydsz_auth_social_account;
+CREATE TRIGGER trg_ydsz_auth_social_account_updated_at
 BEFORE UPDATE ON ydsz_auth_social_account
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_social_account_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_auth_social_account_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_security_alert_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_idp_security_alert_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1124,14 +1124,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_security_alert_updated_at ON ydsz_idp_security_alert;
-CREATE TRIGGER trg_ydsz_security_alert_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_idp_security_alert_updated_at ON ydsz_idp_security_alert;
+CREATE TRIGGER trg_ydsz_idp_security_alert_updated_at
 BEFORE UPDATE ON ydsz_idp_security_alert
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_security_alert_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_idp_security_alert_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_user_credential_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_auth_credential_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1139,8 +1139,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_user_credential_updated_at ON ydsz_auth_credential;
-CREATE TRIGGER trg_ydsz_user_credential_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_auth_credential_updated_at ON ydsz_auth_credential;
+CREATE TRIGGER trg_ydsz_auth_credential_updated_at
 BEFORE UPDATE ON ydsz_auth_credential
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_user_credential_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_auth_credential_set_updated_at();

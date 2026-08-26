@@ -50,6 +50,14 @@ public interface MsgBatchRepository {
   boolean update(MsgBatchVO vo);
 
   /**
+   * 按条件查询单条消息批次。
+   *
+   * @param query 查询参数
+   * @return 批次 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<MsgBatchVO> findOne(MsgBatchQuery query);
+
+  /**
    * 按条件查询消息批次列表。
    *
    * @param query 查询参数

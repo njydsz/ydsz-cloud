@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_prompt_template PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_prompt_template_template_code UNIQUE (template_code, tenant_id)
+    CONSTRAINT pk_ydsz_agt_prompt_template PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_agt_prompt_template_template_code UNIQUE (template_code, tenant_id)
 );
 
 COMMENT ON TABLE ydsz_agt_prompt_template IS 'Prompt 模板主表';
@@ -58,8 +58,8 @@ COMMENT ON COLUMN ydsz_agt_prompt_template.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_agt_prompt_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_prompt_template.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_template_category ON ydsz_agt_prompt_template (category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_template_tenant_deleted ON ydsz_agt_prompt_template (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_template_category ON ydsz_agt_prompt_template (category);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_template_tenant_deleted ON ydsz_agt_prompt_template (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     id                       VARCHAR(32)             ,
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_prompt_version PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_prompt_version_template_version UNIQUE (template_code, version, tenant_id)
+    CONSTRAINT pk_ydsz_agt_prompt_version PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_agt_prompt_version_template_version UNIQUE (template_code, version, tenant_id)
 );
 
 COMMENT ON TABLE ydsz_agt_prompt_version IS 'Prompt 模板版本历史表';
@@ -94,7 +94,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_version.created_by IS '操作人';
 COMMENT ON COLUMN ydsz_agt_prompt_version.updated_at IS '版本更新时间';
 COMMENT ON COLUMN ydsz_agt_prompt_version.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_version_template_code ON ydsz_agt_prompt_version (template_code);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_version_template_code ON ydsz_agt_prompt_version (template_code);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     id                       VARCHAR(32)             ,
@@ -115,8 +115,8 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_agent_definition PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_agent_definition_agent_code UNIQUE (agent_code, tenant_id)
+    CONSTRAINT pk_ydsz_agt_definition PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_agt_definition_agent_code UNIQUE (agent_code, tenant_id)
 );
 
 COMMENT ON TABLE ydsz_agt_definition IS 'Agent 定义（Agent 的完整配置信息）';
@@ -139,8 +139,8 @@ COMMENT ON COLUMN ydsz_agt_definition.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_agt_definition.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_definition.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_definition_agent_type ON ydsz_agt_definition (agent_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_definition_tenant_deleted ON ydsz_agt_definition (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_definition_agent_type ON ydsz_agt_definition (agent_type);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_definition_tenant_deleted ON ydsz_agt_definition (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     trace_id                 VARCHAR(64)             ,
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     agent_id                 VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL,
     total_duration_ms        BIGINT                   DEFAULT NULL,
-    CONSTRAINT pk_ydsz_agent_trace PRIMARY KEY (trace_id)
+    CONSTRAINT pk_ydsz_agt_trace PRIMARY KEY (trace_id)
 );
 
 COMMENT ON TABLE ydsz_agt_trace IS 'Agent 执行链路（记录一次 Agent 执行的完整元数据）';
@@ -158,9 +158,9 @@ COMMENT ON COLUMN ydsz_agt_trace.agent_id IS 'Agent 类型标识（CHAT/REACT/RA
 COMMENT ON COLUMN ydsz_agt_trace.status IS '执行状态（RUNNING/SUCCESS/FAILED/MAX_ITERATIONS/GUARDRAIL_REJECTED）';
 COMMENT ON COLUMN ydsz_agt_trace.total_duration_ms IS '总耗时（毫秒）';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_conversation ON ydsz_agt_trace (conversation_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_agent ON ydsz_agt_trace (agent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_status ON ydsz_agt_trace (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_trace_conversation ON ydsz_agt_trace (conversation_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_trace_agent ON ydsz_agt_trace (agent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_trace_status ON ydsz_agt_trace (status);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     trace_id                 VARCHAR(64)              NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     output_json              JSONB                    DEFAULT NULL,
     duration_ms              BIGINT                   DEFAULT NULL,
     cost                     NUMERIC(12,6)            NOT NULL DEFAULT 0.0,
-    CONSTRAINT pk_ydsz_agent_trace_step PRIMARY KEY (trace_id, step_index)
+    CONSTRAINT pk_ydsz_agt_trace_step PRIMARY KEY (trace_id, step_index)
 );
 
 COMMENT ON TABLE ydsz_agt_trace_step IS 'Agent 执行链路步骤（记录单个执行步骤，支持回放与调试）';
@@ -184,7 +184,7 @@ COMMENT ON COLUMN ydsz_agt_trace_step.output_json IS '步骤输出（JSON 字符
 COMMENT ON COLUMN ydsz_agt_trace_step.duration_ms IS '耗时（毫秒）';
 COMMENT ON COLUMN ydsz_agt_trace_step.cost IS 'Token 成本（USD，精确到 6 位小数；非 LLM 调用步骤为 0）';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_step_trace_step_cost ON ydsz_agt_trace_step (cost);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_step_trace_step_cost ON ydsz_agt_trace_step (cost);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     id                       VARCHAR(64)             ,
@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     tenant_id                VARCHAR(64)              NOT NULL DEFAULT '0',
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at              TIMESTAMP                DEFAULT NULL,
-    CONSTRAINT pk_ydsz_agent_approval PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_agt_approval PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_agt_approval IS 'Agent 人工审批请求（Human-in-the-Loop 审批持久化）';
@@ -214,10 +214,10 @@ COMMENT ON COLUMN ydsz_agt_approval.tenant_id IS '租户 ID';
 COMMENT ON COLUMN ydsz_agt_approval.created_at IS '请求创建时间';
 COMMENT ON COLUMN ydsz_agt_approval.resolved_at IS '审批完成时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_conversation ON ydsz_agt_approval (conversation_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_trace ON ydsz_agt_approval (trace_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_status ON ydsz_agt_approval (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_tenant ON ydsz_agt_approval (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_conversation ON ydsz_agt_approval (conversation_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_trace ON ydsz_agt_approval (trace_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_status ON ydsz_agt_approval (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_tenant ON ydsz_agt_approval (tenant_id);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     id                       VARCHAR(32)             ,
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_agent_token_usage PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_agt_token_usage PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_agt_token_usage IS 'Token 用量记录（LLM 调用 Token 消耗明细）';
@@ -253,8 +253,8 @@ COMMENT ON COLUMN ydsz_agt_token_usage.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_agt_token_usage.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_token_usage.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_conversation_created ON ydsz_agt_token_usage (conversation_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_tenant_deleted ON ydsz_agt_token_usage (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_conversation_created ON ydsz_agt_token_usage (conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_tenant_deleted ON ydsz_agt_token_usage (tenant_id, deleted);
 
 -- ============================================================================
 -- RAG 向量文档块表 ydsz_agt_document_chunk（pgvector 专用）
@@ -280,7 +280,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
     tenant_id                VARCHAR(64)              DEFAULT NULL,
     deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
     created_at               TIMESTAMPTZ              NOT NULL DEFAULT NOW(),
-    CONSTRAINT pk_ydsz_agent_document_chunk PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_agt_document_chunk PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_agt_document_chunk IS 'RAG 文档分块向量表（pgvector：HybridRetriever 全文检素 + PgVectorStore 向量检素共用）';
@@ -297,9 +297,9 @@ COMMENT ON COLUMN ydsz_agt_document_chunk.tenant_id IS '租户 ID（多租户隔
 COMMENT ON COLUMN ydsz_agt_document_chunk.deleted IS '逻辑删除标识（HybridRetriever 全文检素 WHERE deleted = false）';
 COMMENT ON COLUMN ydsz_agt_document_chunk.created_at IS '创建时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_document_id ON ydsz_agt_document_chunk (document_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_tenant ON ydsz_agt_document_chunk (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_document_id ON ydsz_agt_document_chunk (document_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_tenant ON ydsz_agt_document_chunk (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
 
 INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
 VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, FALSE);
@@ -318,7 +318,7 @@ VALUES ('100000000000000004', '0', 'REACT_SYSTEM', 1, '你是 YDSZ 项目管理�
 -- ============================================================================
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_prompt_template_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_agt_prompt_template_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -326,14 +326,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_prompt_template_updated_at ON ydsz_agt_prompt_template;
-CREATE TRIGGER trg_ydsz_prompt_template_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_agt_prompt_template_updated_at ON ydsz_agt_prompt_template;
+CREATE TRIGGER trg_ydsz_agt_prompt_template_updated_at
 BEFORE UPDATE ON ydsz_agt_prompt_template
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_prompt_template_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_agt_prompt_template_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_agent_definition_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_agt_definition_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -341,14 +341,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_agent_definition_updated_at ON ydsz_agt_definition;
-CREATE TRIGGER trg_ydsz_agent_definition_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_agt_definition_updated_at ON ydsz_agt_definition;
+CREATE TRIGGER trg_ydsz_agt_definition_updated_at
 BEFORE UPDATE ON ydsz_agt_definition
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_agent_definition_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_agt_definition_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_agent_token_usage_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_agt_token_usage_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -356,8 +356,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_agent_token_usage_updated_at ON ydsz_agt_token_usage;
-CREATE TRIGGER trg_ydsz_agent_token_usage_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_agt_token_usage_updated_at ON ydsz_agt_token_usage;
+CREATE TRIGGER trg_ydsz_agt_token_usage_updated_at
 BEFORE UPDATE ON ydsz_agt_token_usage
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_agent_token_usage_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_agt_token_usage_set_updated_at();

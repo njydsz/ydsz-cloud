@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_tenant PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_tenant_tenant_code UNIQUE (tenant_code)
+    CONSTRAINT pk_ydsz_sys_tenant PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_tenant_tenant_code UNIQUE (tenant_code)
 );
 
 COMMENT ON TABLE ydsz_sys_tenant IS '租户主表';
@@ -66,8 +66,8 @@ COMMENT ON COLUMN ydsz_sys_tenant.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_tenant.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_id ON ydsz_sys_tenant (plan_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_tenant_deleted ON ydsz_sys_tenant (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_id ON ydsz_sys_tenant (plan_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_tenant_deleted ON ydsz_sys_tenant (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
     id                       VARCHAR(32)             ,
@@ -85,8 +85,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_tenant_plan PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_tenant_plan_plan_code UNIQUE (plan_code)
+    CONSTRAINT pk_ydsz_sys_tenant_plan PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_tenant_plan_plan_code UNIQUE (plan_code)
 );
 
 COMMENT ON TABLE ydsz_sys_tenant_plan IS '租户套餐表';
@@ -106,7 +106,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_tenant_deleted ON ydsz_sys_tenant_plan (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_tenant_deleted ON ydsz_sys_tenant_plan (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     id                       VARCHAR(32)             ,
@@ -120,8 +120,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_tenant_plan_menu PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_tenant_plan_menu_plan_menu UNIQUE (plan_id, menu_id)
+    CONSTRAINT pk_ydsz_sys_tenant_plan_menu PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_tenant_plan_menu_plan_menu UNIQUE (plan_id, menu_id)
 );
 
 COMMENT ON TABLE ydsz_sys_tenant_plan_menu IS '租户套餐菜单关联表';
@@ -137,7 +137,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_menu_tenant_deleted ON ydsz_sys_tenant_plan_menu (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_menu_tenant_deleted ON ydsz_sys_tenant_plan_menu (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
     id                       VARCHAR(32)             ,
@@ -152,8 +152,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_dict_type PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_dict_type_type_code UNIQUE (type_code)
+    CONSTRAINT pk_ydsz_sys_dict_type PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_dict_type_type_code UNIQUE (type_code)
 );
 
 COMMENT ON TABLE ydsz_sys_dict_type IS '字典类型表';
@@ -170,7 +170,7 @@ COMMENT ON COLUMN ydsz_sys_dict_type.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_dict_type.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_dict_type.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_dict_type_tenant_deleted ON ydsz_sys_dict_type (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_type_tenant_deleted ON ydsz_sys_dict_type (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     id                       VARCHAR(32)             ,
@@ -189,8 +189,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_dict_item PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_dict_item_type_item_code UNIQUE (type_code, item_code)
+    CONSTRAINT pk_ydsz_sys_dict_item PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_dict_item_type_item_code UNIQUE (type_code, item_code)
 );
 
 COMMENT ON TABLE ydsz_sys_dict_item IS '字典项表';
@@ -211,8 +211,8 @@ COMMENT ON COLUMN ydsz_sys_dict_item.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_dict_item.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_dict_item.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_dict_item_parent_id ON ydsz_sys_dict_item (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_dict_item_tenant_deleted ON ydsz_sys_dict_item (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_item_parent_id ON ydsz_sys_dict_item (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_item_tenant_deleted ON ydsz_sys_dict_item (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     id                       VARCHAR(32)             ,
@@ -232,8 +232,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_config PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_config_config_group_key UNIQUE (config_group, config_key)
+    CONSTRAINT pk_ydsz_sys_config PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_config_config_group_key UNIQUE (config_group, config_key)
 );
 
 COMMENT ON TABLE ydsz_sys_config IS '系统配置表';
@@ -255,7 +255,7 @@ COMMENT ON COLUMN ydsz_sys_config.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_config.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_config.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_config_tenant_deleted ON ydsz_sys_config (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_config_tenant_deleted ON ydsz_sys_config (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
     id                       VARCHAR(32)             ,
@@ -271,8 +271,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_variable PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_variable_variable_key UNIQUE (variable_key)
+    CONSTRAINT pk_ydsz_sys_variable PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_variable_variable_key UNIQUE (variable_key)
 );
 
 COMMENT ON TABLE ydsz_sys_variable IS '系统变量表';
@@ -290,7 +290,7 @@ COMMENT ON COLUMN ydsz_sys_variable.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_variable.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_variable.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_variable_tenant_deleted ON ydsz_sys_variable (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_variable_tenant_deleted ON ydsz_sys_variable (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
     id                       VARCHAR(32)             ,
@@ -310,9 +310,9 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_app_info PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_app_info_app_code UNIQUE (app_code),
-    CONSTRAINT uk_ydsz_app_info_tenant_app_key UNIQUE (tenant_id, app_key)
+    CONSTRAINT pk_ydsz_sys_app_info PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_app_info_app_code UNIQUE (app_code),
+    CONSTRAINT uk_ydsz_sys_app_info_tenant_app_key UNIQUE (tenant_id, app_key)
 );
 
 COMMENT ON TABLE ydsz_sys_app_info IS '应用信息表';
@@ -334,7 +334,7 @@ COMMENT ON COLUMN ydsz_sys_app_info.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_app_info.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_app_info.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_app_info_tenant_deleted ON ydsz_sys_app_info (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_app_info_tenant_deleted ON ydsz_sys_app_info (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
     id                       VARCHAR(32)             ,
@@ -353,7 +353,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_entity_version PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_sys_entity_version PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_sys_entity_version IS '统一实体版本表';
@@ -374,15 +374,15 @@ COMMENT ON COLUMN ydsz_sys_entity_version.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_entity_version.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_entity_version.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_entity_version_resource_type_key_version ON ydsz_sys_entity_version (resource_type, resource_key, version);
-CREATE INDEX IF NOT EXISTS idx_ydsz_entity_version_tenant_deleted ON ydsz_sys_entity_version (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_entity_version_resource_type_key_version ON ydsz_sys_entity_version (resource_type, resource_key, version);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_entity_version_tenant_deleted ON ydsz_sys_entity_version (tenant_id, deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
 -- ============================================================================
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_tenant_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_tenant_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -390,14 +390,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_tenant_updated_at ON ydsz_sys_tenant;
-CREATE TRIGGER trg_ydsz_tenant_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_tenant_updated_at ON ydsz_sys_tenant;
+CREATE TRIGGER trg_ydsz_sys_tenant_updated_at
 BEFORE UPDATE ON ydsz_sys_tenant
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_tenant_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_tenant_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_tenant_plan_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_tenant_plan_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -405,14 +405,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_tenant_plan_updated_at ON ydsz_sys_tenant_plan;
-CREATE TRIGGER trg_ydsz_tenant_plan_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_tenant_plan_updated_at ON ydsz_sys_tenant_plan;
+CREATE TRIGGER trg_ydsz_sys_tenant_plan_updated_at
 BEFORE UPDATE ON ydsz_sys_tenant_plan
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_tenant_plan_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_tenant_plan_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_tenant_plan_menu_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_tenant_plan_menu_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -420,14 +420,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_tenant_plan_menu_updated_at ON ydsz_sys_tenant_plan_menu;
-CREATE TRIGGER trg_ydsz_tenant_plan_menu_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_tenant_plan_menu_updated_at ON ydsz_sys_tenant_plan_menu;
+CREATE TRIGGER trg_ydsz_sys_tenant_plan_menu_updated_at
 BEFORE UPDATE ON ydsz_sys_tenant_plan_menu
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_tenant_plan_menu_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_tenant_plan_menu_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_dict_type_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_dict_type_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -435,14 +435,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_dict_type_updated_at ON ydsz_sys_dict_type;
-CREATE TRIGGER trg_ydsz_dict_type_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_dict_type_updated_at ON ydsz_sys_dict_type;
+CREATE TRIGGER trg_ydsz_sys_dict_type_updated_at
 BEFORE UPDATE ON ydsz_sys_dict_type
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_dict_type_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_dict_type_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_dict_item_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_dict_item_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -450,14 +450,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_dict_item_updated_at ON ydsz_sys_dict_item;
-CREATE TRIGGER trg_ydsz_dict_item_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_dict_item_updated_at ON ydsz_sys_dict_item;
+CREATE TRIGGER trg_ydsz_sys_dict_item_updated_at
 BEFORE UPDATE ON ydsz_sys_dict_item
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_dict_item_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_dict_item_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_config_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_config_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -465,14 +465,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_config_updated_at ON ydsz_sys_config;
-CREATE TRIGGER trg_ydsz_config_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_config_updated_at ON ydsz_sys_config;
+CREATE TRIGGER trg_ydsz_sys_config_updated_at
 BEFORE UPDATE ON ydsz_sys_config
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_config_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_config_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_variable_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_variable_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -480,14 +480,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_variable_updated_at ON ydsz_sys_variable;
-CREATE TRIGGER trg_ydsz_variable_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_variable_updated_at ON ydsz_sys_variable;
+CREATE TRIGGER trg_ydsz_sys_variable_updated_at
 BEFORE UPDATE ON ydsz_sys_variable
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_variable_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_variable_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_app_info_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_app_info_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -495,14 +495,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_app_info_updated_at ON ydsz_sys_app_info;
-CREATE TRIGGER trg_ydsz_app_info_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_app_info_updated_at ON ydsz_sys_app_info;
+CREATE TRIGGER trg_ydsz_sys_app_info_updated_at
 BEFORE UPDATE ON ydsz_sys_app_info
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_app_info_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_app_info_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_entity_version_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_entity_version_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -510,8 +510,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_entity_version_updated_at ON ydsz_sys_entity_version;
-CREATE TRIGGER trg_ydsz_entity_version_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_sys_entity_version_updated_at ON ydsz_sys_entity_version;
+CREATE TRIGGER trg_ydsz_sys_entity_version_updated_at
 BEFORE UPDATE ON ydsz_sys_entity_version
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_entity_version_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_sys_entity_version_set_updated_at();

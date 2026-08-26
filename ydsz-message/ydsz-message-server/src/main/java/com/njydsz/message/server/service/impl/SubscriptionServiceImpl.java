@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.impl.config;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,6 +13,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
+import com.njydsz.message.domain.query.MsgSubscriptionQuery;
 import com.njydsz.message.domain.repository.MsgSubscriptionRepository;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 import com.njydsz.message.server.service.config.SubscriptionService;
@@ -58,13 +58,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
           .message("用户 ID、主题编码与通道不能为空")
           .build();
     }
-    MsgSubscriptionVO existing =
-        msgSubscriptionRepository.selectOne(
-            new LambdaQueryWrapper<MsgSubscriptionVO>()
-                .eq(MsgSubscriptionVO::getUserId, dto.getUserId())
-                .eq(MsgSubscriptionVO::getTopicCode, dto.getTopicCode())
-                .eq(MsgSubscriptionVO::getChannel, dto.getChannel())
-                .last("LIMIT 1"));
+    MsgSubscriptionQuery query = new MsgSubscriptionQuery();
+    query.setUserId(dto.getUserId());
+    query.setTopicCode(dto.getTopicCode());
+    query.setChannel(dto.getChannel());
+    MsgSubscriptionVO existing = msgSubscriptionRepository.findOne(query).orElse(null);
     String status =
         StringUtils.hasText(dto.getStatus())
             ? dto.getStatus()
@@ -78,7 +76,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       entity.setRoleScope(dto.getRoleScope());
       entity.setExtra(dto.getExtra());
       entity.setTenantId(TenantContextHolder.getTenantId());
-      msgSubscriptionRepository.insert(entity);
+      msgSubscriptionRepository.save(entity);
       log.info(
           "[Subscription] 新建订阅: user={} topic={} channel={}",
           dto.getUserId(),
@@ -96,7 +94,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         && existing.getUnsubscribedAt() == null) {
       existing.setUnsubscribedAt(LocalDateTime.now());
     }
-    msgSubscriptionRepository.updateById(existing);
+    msgSubscriptionRepository.update(existing);
     return existing;
   }
 
@@ -111,10 +109,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     if (!StringUtils.hasText(userId)) {
       return List.of();
     }
-    return msgSubscriptionRepository.selectList(
-        new LambdaQueryWrapper<MsgSubscriptionVO>()
-            .eq(MsgSubscriptionVO::getUserId, userId)
-            .orderByDesc(MsgSubscriptionVO::getCreatedAt));
+    MsgSubscriptionQuery query = new MsgSubscriptionQuery();
+    query.setUserId(userId);
+    query.addDescOrder("created_at");
+    return msgSubscriptionRepository.findList(query);
   }
 
   /**
@@ -129,14 +127,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     if (!StringUtils.hasText(topicCode)) {
       return List.of();
     }
-    LambdaQueryWrapper<MsgSubscriptionVO> w =
-        new LambdaQueryWrapper<MsgSubscriptionVO>()
-            .eq(MsgSubscriptionVO::getTopicCode, topicCode)
-            .eq(MsgSubscriptionVO::getStatus, SubscriptionStatusEnum.SUBSCRIBED.name());
+    MsgSubscriptionQuery query = new MsgSubscriptionQuery();
+    query.setTopicCode(topicCode);
+    query.setStatus(SubscriptionStatusEnum.SUBSCRIBED.name());
     if (StringUtils.hasText(channel)) {
-      w.eq(MsgSubscriptionVO::getChannel, channel);
+      query.setChannel(channel);
     }
-    return msgSubscriptionRepository.selectList(w);
+    return msgSubscriptionRepository.findList(query);
   }
 
   /**
@@ -152,14 +149,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode)) {
       return false;
     }
-    Long count =
-        msgSubscriptionRepository.selectCount(
-            new LambdaQueryWrapper<MsgSubscriptionVO>()
-                .eq(MsgSubscriptionVO::getUserId, userId)
-                .eq(MsgSubscriptionVO::getTopicCode, topicCode)
-                .eq(StringUtils.hasText(channel), MsgSubscriptionVO::getChannel, channel)
-                .eq(MsgSubscriptionVO::getStatus, SubscriptionStatusEnum.SUBSCRIBED.name()));
-    return count != null && count > 0;
+    MsgSubscriptionQuery query = new MsgSubscriptionQuery();
+    query.setUserId(userId);
+    query.setTopicCode(topicCode);
+    if (StringUtils.hasText(channel)) {
+      query.setChannel(channel);
+    }
+    query.setStatus(SubscriptionStatusEnum.SUBSCRIBED.name());
+    return msgSubscriptionRepository.count(query) > 0;
   }
 
   /**
@@ -175,14 +172,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode)) {
       return false;
     }
-    Long count =
-        msgSubscriptionRepository.selectCount(
-            new LambdaQueryWrapper<MsgSubscriptionVO>()
-                .eq(MsgSubscriptionVO::getUserId, userId)
-                .eq(MsgSubscriptionVO::getTopicCode, topicCode)
-                .eq(StringUtils.hasText(channel), MsgSubscriptionVO::getChannel, channel)
-                .eq(MsgSubscriptionVO::getStatus, SubscriptionStatusEnum.UNSUBSCRIBED.name()));
-    return count != null && count > 0;
+    MsgSubscriptionQuery query = new MsgSubscriptionQuery();
+    query.setUserId(userId);
+    query.setTopicCode(topicCode);
+    if (StringUtils.hasText(channel)) {
+      query.setChannel(channel);
+    }
+    query.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
+    return msgSubscriptionRepository.count(query) > 0;
   }
 
   /**
@@ -206,13 +203,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
           .message("用户 ID、主题编码与通道不能为空")
           .build();
     }
-    MsgSubscriptionVO existing =
-        msgSubscriptionRepository.selectOne(
-            new LambdaQueryWrapper<MsgSubscriptionVO>()
-                .eq(MsgSubscriptionVO::getUserId, userId)
-                .eq(MsgSubscriptionVO::getTopicCode, topicCode)
-                .eq(MsgSubscriptionVO::getChannel, channel)
-                .last("LIMIT 1"));
+    MsgSubscriptionQuery query = new MsgSubscriptionQuery();
+    query.setUserId(userId);
+    query.setTopicCode(topicCode);
+    query.setChannel(channel);
+    MsgSubscriptionVO existing = msgSubscriptionRepository.findOne(query).orElse(null);
     if (existing == null) {
       // P1-5: 无订阅记录时也要创建 UNSUBSCRIBED 记录,否则 isBlocked 永远返回 false,
       // 用户点击退订后仍会被发送(默认订阅语义)。修复此 latent bug。
@@ -223,13 +218,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       entity.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
       entity.setUnsubscribedAt(LocalDateTime.now());
       entity.setTenantId(TenantContextHolder.getTenantId());
-      msgSubscriptionRepository.insert(entity);
+      msgSubscriptionRepository.save(entity);
       log.info("[Subscription] 退订(新建记录): user={} topic={} channel={}", userId, topicCode, channel);
       return entity;
     }
     existing.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
     existing.setUnsubscribedAt(LocalDateTime.now());
-    msgSubscriptionRepository.updateById(existing);
+    msgSubscriptionRepository.update(existing);
     return existing;
   }
 }

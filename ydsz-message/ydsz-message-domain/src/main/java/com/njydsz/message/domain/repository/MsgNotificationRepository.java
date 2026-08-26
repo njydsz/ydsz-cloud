@@ -28,6 +28,14 @@ import com.njydsz.message.domain.vo.MsgNotificationVO;
 public interface MsgNotificationRepository {
 
   /**
+   * 保存单条站内通知。
+   *
+   * @param dto 站内通知 DTO
+   * @return 保存成功返回 {@code true}
+   */
+  boolean save(MsgNotificationDTO dto);
+
+  /**
    * 批量保存站内通知。
    *
    * @param list 站内通知 DTO 列表
@@ -100,6 +108,17 @@ public interface MsgNotificationRepository {
    * @return 本批影响行数
    */
   int markAllRead(String userId, int batchSize);
+
+  /**
+   * 标记用户全部未读通知为已读（可按业务类型过滤）。
+   *
+   * <p>仅更新 {@code readStatus=0 且 recallStatus='NONE'} 的通知。
+   *
+   * @param userId 接收人 ID
+   * @param bizType 业务类型（可选，为空表示全部业务）
+   * @return 实际更新的通知条数
+   */
+  int markAllReadByBizType(String userId, String bizType);
 
   /**
    * 统计用户未读通知数。

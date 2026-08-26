@@ -51,6 +51,14 @@ public interface MsgAggregateRepository {
   boolean update(MsgAggregateVO vo);
 
   /**
+   * 按条件查询单条聚合批次。
+   *
+   * @param query 查询参数
+   * @return 聚合批次 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<MsgAggregateVO> findOne(MsgAggregateQuery query);
+
+  /**
    * 按条件查询聚合批次列表。
    *
    * @param query 查询参数
@@ -65,4 +73,25 @@ public interface MsgAggregateRepository {
    * @return 分页结果（VO 分页）
    */
   PageResponse<List<MsgAggregateVO>> findPage(MsgAggregateQuery query);
+
+  /**
+   * CAS 更新单条聚合批次状态（占有式更新，防止并发冲突）。
+   *
+   * @param id 批次 ID
+   * @param fromStatus 当前状态（期望值）
+   * @param toStatus 目标状态
+   * @return 影响行数（0 表示已被其他实例占有）
+   */
+  int updateStatus(String id, String fromStatus, String toStatus);
+
+  /**
+   * 按聚合组和接收人批量 CAS 更新状态。
+   *
+   * @param group 聚合组
+   * @param receiver 接收人
+   * @param fromStatus 当前状态（期望值）
+   * @param toStatus 目标状态
+   * @return 影响行数
+   */
+  int updateStatusByGroup(String group, String receiver, String fromStatus, String toStatus);
 }

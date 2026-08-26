@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.OrderItem;
 import com.njydsz.message.domain.query.MsgSubscriptionQuery;
 import com.njydsz.message.domain.repository.MsgSubscriptionRepository;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
@@ -89,6 +90,18 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
       wrapper.eq("status", query.getStatus());
     }
     wrapper.eq("deleted", 0);
+    // 处理排序
+    if (query.getOrderItems() != null) {
+      for (OrderItem item : query.getOrderItems()) {
+        if (item != null && item.getColumn() != null && !item.getColumn().isBlank()) {
+          if (item.getDirection() == OrderItem.Direction.ASC) {
+            wrapper.orderByAsc(item.getColumn());
+          } else {
+            wrapper.orderByDesc(item.getColumn());
+          }
+        }
+      }
+    }
     return wrapper;
   }
 

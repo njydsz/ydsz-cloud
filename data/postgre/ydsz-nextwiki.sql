@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_node (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_node PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_wiki_file_node PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_wiki_file_node IS '网盘文件节点（统一表示文件和目录，构成目录树的核心节点）';
@@ -86,15 +86,15 @@ COMMENT ON COLUMN ydsz_wiki_file_node.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_file_node.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_node.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_parent_id ON ydsz_wiki_file_node (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_tenant_deleted ON ydsz_wiki_file_node (tenant_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_parent_deleted_updated ON ydsz_wiki_file_node (parent_id, deleted, updated_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_parent_deleted_type_updated ON ydsz_wiki_file_node (parent_id, deleted, node_type, updated_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_path ON ydsz_wiki_file_node (left(path, 255));
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_created_deleted_type ON ydsz_wiki_file_node (created_by, deleted, node_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_file_hash ON ydsz_wiki_file_node (file_hash);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_not_deleted ON ydsz_wiki_file_node (id, parent_id, tenant_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_node_storage_class ON ydsz_wiki_file_node (node_type, deleted, storage_class, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_id ON ydsz_wiki_file_node (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_tenant_deleted ON ydsz_wiki_file_node (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_deleted_updated ON ydsz_wiki_file_node (parent_id, deleted, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_deleted_type_updated ON ydsz_wiki_file_node (parent_id, deleted, node_type, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_path ON ydsz_wiki_file_node (left(path, 255));
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_created_deleted_type ON ydsz_wiki_file_node (created_by, deleted, node_type);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_file_hash ON ydsz_wiki_file_node (file_hash);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_not_deleted ON ydsz_wiki_file_node (id, parent_id, tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_storage_class ON ydsz_wiki_file_node (node_type, deleted, storage_class, updated_at);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_file_version (
     id                       VARCHAR(32)              NOT NULL,
@@ -115,8 +115,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_version (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_version PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_version_file_node_version UNIQUE (file_node_id, version_number)
+    CONSTRAINT pk_ydsz_wiki_file_version PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_file_version_file_node_version UNIQUE (file_node_id, version_number)
 );
 
 COMMENT ON TABLE ydsz_wiki_file_version IS '文件版本历史（每次文件更新生成一条版本记录，支持版本回溯）';
@@ -139,7 +139,7 @@ COMMENT ON COLUMN ydsz_wiki_file_version.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_file_version.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_version.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_version_tenant_deleted ON ydsz_wiki_file_version (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_version_tenant_deleted ON ydsz_wiki_file_version (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_tag (
     id                       VARCHAR(32)              NOT NULL,
@@ -155,8 +155,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_tag (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_tag PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_tag_tenant_tag_name UNIQUE (tenant_id, name)
+    CONSTRAINT pk_ydsz_wiki_tag PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_tag_tenant_tag_name UNIQUE (tenant_id, name)
 );
 
 COMMENT ON TABLE ydsz_wiki_tag IS '标签（对文件/文件夹打标签，用于知识库分类和检索）';
@@ -174,7 +174,7 @@ COMMENT ON COLUMN ydsz_wiki_tag.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_tag.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_tag.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_tag_tenant_deleted ON ydsz_wiki_tag (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_tag_tenant_deleted ON ydsz_wiki_tag (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_file_tag (
     id                       VARCHAR(32)              NOT NULL,
@@ -188,8 +188,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_tag (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_tag PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_tag_file_node_tag UNIQUE (file_node_id, tag_id)
+    CONSTRAINT pk_ydsz_wiki_file_tag PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_file_tag_file_node_tag UNIQUE (file_node_id, tag_id)
 );
 
 COMMENT ON TABLE ydsz_wiki_file_tag IS '文件-标签关联（多对多）';
@@ -205,8 +205,8 @@ COMMENT ON COLUMN ydsz_wiki_file_tag.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_file_tag.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_tag.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_tag_tag_id ON ydsz_wiki_file_tag (tag_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_tag_tenant_deleted ON ydsz_wiki_file_tag (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_tag_tag_id ON ydsz_wiki_file_tag (tag_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_tag_tenant_deleted ON ydsz_wiki_file_tag (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_file_comment (
     id                       VARCHAR(32)              NOT NULL,
@@ -224,7 +224,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_comment (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_comment PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_wiki_file_comment PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_wiki_file_comment IS '文件评论（支持文件级别的评论和回复，用于知识库协作讨论）';
@@ -244,9 +244,9 @@ COMMENT ON COLUMN ydsz_wiki_file_comment.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_file_comment.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_comment.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_comment_file_node_id ON ydsz_wiki_file_comment (file_node_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_comment_parent_comment_id ON ydsz_wiki_file_comment (parent_comment_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_comment_tenant_deleted ON ydsz_wiki_file_comment (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_file_node_id ON ydsz_wiki_file_comment (file_node_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_parent_comment_id ON ydsz_wiki_file_comment (parent_comment_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_tenant_deleted ON ydsz_wiki_file_comment (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_file_acl (
     id                       VARCHAR(32)              NOT NULL,
@@ -264,8 +264,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_acl (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_acl PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_acl_file_grantee UNIQUE (file_node_id, grantee_type, grantee_id)
+    CONSTRAINT pk_ydsz_wiki_file_acl PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_file_acl_file_grantee UNIQUE (file_node_id, grantee_type, grantee_id)
 );
 
 COMMENT ON TABLE ydsz_wiki_file_acl IS '文件级 ACL 权限（文件/文件夹级别的细粒度权限控制）';
@@ -285,8 +285,8 @@ COMMENT ON COLUMN ydsz_wiki_file_acl.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_file_acl.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_acl.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_acl_grantee ON ydsz_wiki_file_acl (grantee_type, grantee_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_file_acl_tenant_deleted ON ydsz_wiki_file_acl (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_acl_grantee ON ydsz_wiki_file_acl (grantee_type, grantee_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_acl_tenant_deleted ON ydsz_wiki_file_acl (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_share_link (
     id                       VARCHAR(32)              NOT NULL,
@@ -309,8 +309,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_link (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_share_link PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_share_link_share_code UNIQUE (share_code)
+    CONSTRAINT pk_ydsz_wiki_share_link PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_share_link_share_code UNIQUE (share_code)
 );
 
 COMMENT ON TABLE ydsz_wiki_share_link IS '文件分享链接（带密码和过期时间的文件级临时授权机制）';
@@ -335,9 +335,9 @@ COMMENT ON COLUMN ydsz_wiki_share_link.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_share_link.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_share_link.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_link_file_node_id ON ydsz_wiki_share_link (file_node_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_link_expire_reminder ON ydsz_wiki_share_link (status, expire_time, reminder_sent);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_link_tenant_deleted ON ydsz_wiki_share_link (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_file_node_id ON ydsz_wiki_share_link (file_node_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_expire_reminder ON ydsz_wiki_share_link (status, expire_time, reminder_sent);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_tenant_deleted ON ydsz_wiki_share_link (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_share_recipient (
     id                       VARCHAR(32)              NOT NULL,
@@ -354,8 +354,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_recipient (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_share_recipient PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_share_recipient_share_recipient UNIQUE (share_id, recipient_type, recipient_id)
+    CONSTRAINT pk_ydsz_wiki_share_recipient PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_share_recipient_share_recipient UNIQUE (share_id, recipient_type, recipient_id)
 );
 
 COMMENT ON TABLE ydsz_wiki_share_recipient IS '分享目标用户（定向分享，记录分享链接的目标接收者）';
@@ -374,9 +374,9 @@ COMMENT ON COLUMN ydsz_wiki_share_recipient.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_recipient_share ON ydsz_wiki_share_recipient (share_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_recipient_user ON ydsz_wiki_share_recipient (recipient_id, status, deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_recipient_tenant_deleted ON ydsz_wiki_share_recipient (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_share ON ydsz_wiki_share_recipient (share_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_user ON ydsz_wiki_share_recipient (recipient_id, status, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_tenant_deleted ON ydsz_wiki_share_recipient (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log (
     id                       VARCHAR(32)              NOT NULL,
@@ -399,7 +399,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_share_access_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_wiki_share_access_log PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_wiki_share_access_log IS '分享链接访问日志（记录每次分享链接被访问的详细信息，用于安全审计和访问统计）';
@@ -424,11 +424,11 @@ COMMENT ON COLUMN ydsz_wiki_share_access_log.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_share_access_log.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_share_access_log.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_access_time ON ydsz_wiki_share_access_log (access_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_share_id ON ydsz_wiki_share_access_log (share_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_created ON ydsz_wiki_share_access_log (created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_visitor ON ydsz_wiki_share_access_log (visitor_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_tenant_deleted ON ydsz_wiki_share_access_log (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_access_time ON ydsz_wiki_share_access_log (access_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_share_id ON ydsz_wiki_share_access_log (share_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_created ON ydsz_wiki_share_access_log (created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_visitor ON ydsz_wiki_share_access_log (visitor_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_tenant_deleted ON ydsz_wiki_share_access_log (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log_archive (
     id                       VARCHAR(32)              NOT NULL,
@@ -446,7 +446,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log_archive (
     access_time              TIMESTAMP                NOT NULL,
     deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_share_access_log_archive PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_wiki_share_access_log_archive PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_wiki_share_access_log_archive IS '分享访问日志归档表（归档 90 天前访问日志，防止主表无限膨胀）';
@@ -466,10 +466,10 @@ COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.access_time IS '访问时�
 COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.created_at IS '创建时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_archive_archive_share_created ON ydsz_wiki_share_access_log_archive (share_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_archive_archive_created ON ydsz_wiki_share_access_log_archive (created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_archive_archive_access_time ON ydsz_wiki_share_access_log_archive (access_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_share_access_log_archive_tenant_deleted ON ydsz_wiki_share_access_log_archive (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_share_created ON ydsz_wiki_share_access_log_archive (share_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_created ON ydsz_wiki_share_access_log_archive (created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_access_time ON ydsz_wiki_share_access_log_archive (access_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_tenant_deleted ON ydsz_wiki_share_access_log_archive (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
     id                       VARCHAR(32)              NOT NULL,
@@ -492,8 +492,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_space PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_space_tenant_name UNIQUE (tenant_id, name)
+    CONSTRAINT pk_ydsz_wiki_space PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_space_tenant_name UNIQUE (tenant_id, name)
 );
 
 COMMENT ON TABLE ydsz_wiki_space IS '知识库空间（空间管理聚合根，文件节点的顶级容器）';
@@ -518,9 +518,9 @@ COMMENT ON COLUMN ydsz_wiki_space.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_space.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_tenant_sort ON ydsz_wiki_space (tenant_id, sort_order);
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_owner ON ydsz_wiki_space (owner_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_tenant_deleted ON ydsz_wiki_space (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_tenant_sort ON ydsz_wiki_space (tenant_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_owner ON ydsz_wiki_space (owner_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_tenant_deleted ON ydsz_wiki_space (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_space_member (
     id                       VARCHAR(32)              NOT NULL,
@@ -534,8 +534,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_member (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_space_member PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_space_member_space_user UNIQUE (space_id, user_id)
+    CONSTRAINT pk_ydsz_wiki_space_member PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_space_member_space_user UNIQUE (space_id, user_id)
 );
 
 COMMENT ON TABLE ydsz_wiki_space_member IS '空间成员（记录用户与空间的归属关系及角色）';
@@ -551,9 +551,9 @@ COMMENT ON COLUMN ydsz_wiki_space_member.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_space_member.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space_member.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_member_space_role ON ydsz_wiki_space_member (space_id, role);
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_member_user ON ydsz_wiki_space_member (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_member_tenant_deleted ON ydsz_wiki_space_member (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_space_role ON ydsz_wiki_space_member (space_id, role);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_user ON ydsz_wiki_space_member (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_tenant_deleted ON ydsz_wiki_space_member (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     id                       VARCHAR(32)              NOT NULL,
@@ -572,7 +572,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_space_template PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_wiki_space_template PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_wiki_space_template IS '空间模板（预定义可复用的空间结构模板）';
@@ -593,9 +593,9 @@ COMMENT ON COLUMN ydsz_wiki_space_template.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_space_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space_template.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_template_tenant_category ON ydsz_wiki_space_template (tenant_id, category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_template_system ON ydsz_wiki_space_template (is_system, is_public);
-CREATE INDEX IF NOT EXISTS idx_ydsz_space_template_tenant_deleted ON ydsz_wiki_space_template (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_tenant_category ON ydsz_wiki_space_template (tenant_id, category);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_system ON ydsz_wiki_space_template (is_system, is_public);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_tenant_deleted ON ydsz_wiki_space_template (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_trash_item (
     id                       VARCHAR(32)              NOT NULL,
@@ -615,7 +615,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_trash_item (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_trash_item PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_wiki_trash_item PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_wiki_trash_item IS '回收站条目（记录被逻辑删除的文件/文件夹，支持恢复和自动清理）';
@@ -637,10 +637,10 @@ COMMENT ON COLUMN ydsz_wiki_trash_item.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_trash_item.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_trash_item.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_trash_item_file_node_id ON ydsz_wiki_trash_item (file_node_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_trash_item_deleted_time ON ydsz_wiki_trash_item (deleted_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_trash_item_purge_time ON ydsz_wiki_trash_item (purge_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_trash_item_tenant_deleted ON ydsz_wiki_trash_item (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_file_node_id ON ydsz_wiki_trash_item (file_node_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_deleted_time ON ydsz_wiki_trash_item (deleted_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_purge_time ON ydsz_wiki_trash_item (purge_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_tenant_deleted ON ydsz_wiki_trash_item (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_search_index (
     id                       VARCHAR(32)              NOT NULL,
@@ -660,8 +660,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_search_index (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_search_index PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_search_index_file_node_id UNIQUE (file_node_id)
+    CONSTRAINT pk_ydsz_wiki_search_index PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_search_index_file_node_id UNIQUE (file_node_id)
 );
 
 COMMENT ON TABLE ydsz_wiki_search_index IS '文件搜索索引（数据库 fallback 搜索，ES 不可用时提供文件名/路径/内容搜索）';
@@ -684,8 +684,8 @@ COMMENT ON COLUMN ydsz_wiki_search_index.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_search_index.updated_by IS '最后更新人';
 
 -- 原 MySQL FULLTEXT 索引, 转 GIN 全文索引 (to_tsvector, simple 分词)
-CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_ft_search_name_content ON ydsz_wiki_search_index USING GIN (to_tsvector('simple', COALESCE(name, '') || ' ' || COALESCE(content, '')));
-CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_tenant_deleted ON ydsz_wiki_search_index (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_search_index_ft_search_name_content ON ydsz_wiki_search_index USING GIN (to_tsvector('simple', COALESCE(name, '') || ' ' || COALESCE(content, '')));
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_search_index_tenant_deleted ON ydsz_wiki_search_index (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     id                       VARCHAR(32)              NOT NULL,
@@ -699,8 +699,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_user_favorite PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_user_favorite_user_node UNIQUE (user_id, node_id)
+    CONSTRAINT pk_ydsz_wiki_user_favorite PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_user_favorite_user_node UNIQUE (user_id, node_id)
 );
 
 COMMENT ON TABLE ydsz_wiki_user_favorite IS '用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
@@ -716,8 +716,8 @@ COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_favorite_user_sort ON ydsz_wiki_user_favorite (user_id, sort_order);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_favorite_tenant_deleted ON ydsz_wiki_user_favorite (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_favorite_user_sort ON ydsz_wiki_user_favorite (user_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_favorite_tenant_deleted ON ydsz_wiki_user_favorite (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_user_recent (
     id                       VARCHAR(32)              NOT NULL,
@@ -729,8 +729,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_recent (
     deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_recent PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_user_recent_user_node UNIQUE (user_id, node_id)
+    CONSTRAINT pk_ydsz_wiki_user_recent PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_user_recent_user_node UNIQUE (user_id, node_id)
 );
 
 COMMENT ON TABLE ydsz_wiki_user_recent IS '用户最近访问记录（同一节点只保留一条，支持按访问时间倒序查询）';
@@ -744,9 +744,9 @@ COMMENT ON COLUMN ydsz_wiki_user_recent.deleted IS '逻辑删除标识（0=未�
 COMMENT ON COLUMN ydsz_wiki_user_recent.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_user_recent.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_recent_user_accessed ON ydsz_wiki_user_recent (user_id, accessed_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_recent_access_type ON ydsz_wiki_user_recent (user_id, access_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_user_recent_tenant_deleted ON ydsz_wiki_user_recent (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_user_accessed ON ydsz_wiki_user_recent (user_id, accessed_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_access_type ON ydsz_wiki_user_recent (user_id, access_type);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_tenant_deleted ON ydsz_wiki_user_recent (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_storage_quota (
     id                       VARCHAR(32)              NOT NULL,
@@ -764,8 +764,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_storage_quota (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_storage_quota PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_storage_quota_scope UNIQUE (scope_type, scope_id)
+    CONSTRAINT pk_ydsz_wiki_storage_quota PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_wiki_storage_quota_scope UNIQUE (scope_type, scope_id)
 );
 
 COMMENT ON TABLE ydsz_wiki_storage_quota IS '存储配额（按用户/租户/项目维度设置存储上限，上传时校验配额）';
@@ -785,14 +785,14 @@ COMMENT ON COLUMN ydsz_wiki_storage_quota.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_storage_quota_tenant_deleted ON ydsz_wiki_storage_quota (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_storage_quota_tenant_deleted ON ydsz_wiki_storage_quota (tenant_id, deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
 -- ============================================================================
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_file_node_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_node_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -800,14 +800,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_file_node_updated_at ON ydsz_wiki_file_node;
-CREATE TRIGGER trg_ydsz_file_node_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_node_updated_at ON ydsz_wiki_file_node;
+CREATE TRIGGER trg_ydsz_wiki_file_node_updated_at
 BEFORE UPDATE ON ydsz_wiki_file_node
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_file_node_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_file_node_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_file_version_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_version_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -815,14 +815,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_file_version_updated_at ON ydsz_wiki_file_version;
-CREATE TRIGGER trg_ydsz_file_version_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_version_updated_at ON ydsz_wiki_file_version;
+CREATE TRIGGER trg_ydsz_wiki_file_version_updated_at
 BEFORE UPDATE ON ydsz_wiki_file_version
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_file_version_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_file_version_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_tag_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_tag_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -830,14 +830,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_tag_updated_at ON ydsz_wiki_tag;
-CREATE TRIGGER trg_ydsz_tag_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_tag_updated_at ON ydsz_wiki_tag;
+CREATE TRIGGER trg_ydsz_wiki_tag_updated_at
 BEFORE UPDATE ON ydsz_wiki_tag
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_tag_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_tag_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_file_tag_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_tag_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -845,14 +845,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_file_tag_updated_at ON ydsz_wiki_file_tag;
-CREATE TRIGGER trg_ydsz_file_tag_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_tag_updated_at ON ydsz_wiki_file_tag;
+CREATE TRIGGER trg_ydsz_wiki_file_tag_updated_at
 BEFORE UPDATE ON ydsz_wiki_file_tag
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_file_tag_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_file_tag_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_file_comment_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_comment_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -860,14 +860,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_file_comment_updated_at ON ydsz_wiki_file_comment;
-CREATE TRIGGER trg_ydsz_file_comment_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_comment_updated_at ON ydsz_wiki_file_comment;
+CREATE TRIGGER trg_ydsz_wiki_file_comment_updated_at
 BEFORE UPDATE ON ydsz_wiki_file_comment
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_file_comment_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_file_comment_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_file_acl_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_acl_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -875,14 +875,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_file_acl_updated_at ON ydsz_wiki_file_acl;
-CREATE TRIGGER trg_ydsz_file_acl_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_acl_updated_at ON ydsz_wiki_file_acl;
+CREATE TRIGGER trg_ydsz_wiki_file_acl_updated_at
 BEFORE UPDATE ON ydsz_wiki_file_acl
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_file_acl_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_file_acl_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_share_link_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_share_link_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -890,14 +890,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_share_link_updated_at ON ydsz_wiki_share_link;
-CREATE TRIGGER trg_ydsz_share_link_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_share_link_updated_at ON ydsz_wiki_share_link;
+CREATE TRIGGER trg_ydsz_wiki_share_link_updated_at
 BEFORE UPDATE ON ydsz_wiki_share_link
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_share_link_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_share_link_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_share_recipient_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_share_recipient_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -905,14 +905,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_share_recipient_updated_at ON ydsz_wiki_share_recipient;
-CREATE TRIGGER trg_ydsz_share_recipient_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_share_recipient_updated_at ON ydsz_wiki_share_recipient;
+CREATE TRIGGER trg_ydsz_wiki_share_recipient_updated_at
 BEFORE UPDATE ON ydsz_wiki_share_recipient
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_share_recipient_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_share_recipient_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_share_access_log_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_share_access_log_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -920,14 +920,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_share_access_log_updated_at ON ydsz_wiki_share_access_log;
-CREATE TRIGGER trg_ydsz_share_access_log_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_share_access_log_updated_at ON ydsz_wiki_share_access_log;
+CREATE TRIGGER trg_ydsz_wiki_share_access_log_updated_at
 BEFORE UPDATE ON ydsz_wiki_share_access_log
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_share_access_log_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_share_access_log_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_space_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_space_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -935,14 +935,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_space_updated_at ON ydsz_wiki_space;
-CREATE TRIGGER trg_ydsz_space_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_space_updated_at ON ydsz_wiki_space;
+CREATE TRIGGER trg_ydsz_wiki_space_updated_at
 BEFORE UPDATE ON ydsz_wiki_space
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_space_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_space_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_space_member_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_space_member_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -950,14 +950,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_space_member_updated_at ON ydsz_wiki_space_member;
-CREATE TRIGGER trg_ydsz_space_member_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_space_member_updated_at ON ydsz_wiki_space_member;
+CREATE TRIGGER trg_ydsz_wiki_space_member_updated_at
 BEFORE UPDATE ON ydsz_wiki_space_member
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_space_member_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_space_member_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_space_template_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_space_template_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -965,14 +965,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_space_template_updated_at ON ydsz_wiki_space_template;
-CREATE TRIGGER trg_ydsz_space_template_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_space_template_updated_at ON ydsz_wiki_space_template;
+CREATE TRIGGER trg_ydsz_wiki_space_template_updated_at
 BEFORE UPDATE ON ydsz_wiki_space_template
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_space_template_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_space_template_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_trash_item_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_trash_item_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -980,14 +980,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_trash_item_updated_at ON ydsz_wiki_trash_item;
-CREATE TRIGGER trg_ydsz_trash_item_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_trash_item_updated_at ON ydsz_wiki_trash_item;
+CREATE TRIGGER trg_ydsz_wiki_trash_item_updated_at
 BEFORE UPDATE ON ydsz_wiki_trash_item
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_trash_item_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_trash_item_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_search_index_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_search_index_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -995,14 +995,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_search_index_updated_at ON ydsz_wiki_search_index;
-CREATE TRIGGER trg_ydsz_search_index_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_search_index_updated_at ON ydsz_wiki_search_index;
+CREATE TRIGGER trg_ydsz_wiki_search_index_updated_at
 BEFORE UPDATE ON ydsz_wiki_search_index
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_search_index_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_search_index_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_user_favorite_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_user_favorite_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1010,14 +1010,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_user_favorite_updated_at ON ydsz_wiki_user_favorite;
-CREATE TRIGGER trg_ydsz_user_favorite_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_user_favorite_updated_at ON ydsz_wiki_user_favorite;
+CREATE TRIGGER trg_ydsz_wiki_user_favorite_updated_at
 BEFORE UPDATE ON ydsz_wiki_user_favorite
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_user_favorite_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_user_favorite_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_user_recent_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_user_recent_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1025,14 +1025,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_user_recent_updated_at ON ydsz_wiki_user_recent;
-CREATE TRIGGER trg_ydsz_user_recent_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_user_recent_updated_at ON ydsz_wiki_user_recent;
+CREATE TRIGGER trg_ydsz_wiki_user_recent_updated_at
 BEFORE UPDATE ON ydsz_wiki_user_recent
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_user_recent_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_user_recent_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_storage_quota_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_wiki_storage_quota_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1040,8 +1040,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_storage_quota_updated_at ON ydsz_wiki_storage_quota;
-CREATE TRIGGER trg_ydsz_storage_quota_updated_at
+DROP TRIGGER IF EXISTS trg_ydsz_wiki_storage_quota_updated_at ON ydsz_wiki_storage_quota;
+CREATE TRIGGER trg_ydsz_wiki_storage_quota_updated_at
 BEFORE UPDATE ON ydsz_wiki_storage_quota
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_storage_quota_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_wiki_storage_quota_set_updated_at();

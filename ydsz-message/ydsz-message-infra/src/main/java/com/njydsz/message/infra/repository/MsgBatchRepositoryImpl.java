@@ -48,6 +48,30 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
   }
 
   @Override
+  public Optional<MsgBatchVO> findOne(MsgBatchQuery query) {
+    QueryWrapper<MsgBatch> wrapper = new QueryWrapper<>();
+    if (query.getBatchId() != null && !query.getBatchId().isBlank()) {
+      wrapper.eq("batch_id", query.getBatchId());
+    }
+    if (query.getChannel() != null && !query.getChannel().isBlank()) {
+      wrapper.eq("channel", query.getChannel());
+    }
+    if (query.getBizType() != null && !query.getBizType().isBlank()) {
+      wrapper.eq("biz_type", query.getBizType());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
+    }
+    if (query.getSenderId() != null && !query.getSenderId().isBlank()) {
+      wrapper.eq("sender_id", query.getSenderId());
+    }
+    wrapper.eq("deleted", 0);
+    wrapper.last("LIMIT 1");
+    MsgBatch entity = msgBatchMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(converter::doToVO);
+  }
+
+  @Override
   public List<MsgBatchVO> findList(MsgBatchQuery query) {
     QueryWrapper<MsgBatch> wrapper = new QueryWrapper<>();
     if (query.getBatchId() != null && !query.getBatchId().isBlank()) {
