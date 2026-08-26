@@ -178,8 +178,8 @@ public class FlowDefinitionDeployManager {
 
     FlowDefinitionVO savedDef = saveDefinition(dto, version, tenantId);
     String definitionId = savedDef.getId();
-    saveNodes(nodes.stream().map(converter::entityToVO).toList(), definitionId, dto.getFlowCode(), tenantId, dto.getProviderTraceId());
-    saveSkips(skips.stream().map(converter::entityToVO).toList(), definitionId, dto.getFlowCode(), tenantId, dto.getProviderTraceId());
+    saveNodes(nodes, definitionId, dto.getFlowCode(), tenantId, dto.getProviderTraceId());
+    saveSkips(skips, definitionId, dto.getFlowCode(), tenantId, dto.getProviderTraceId());
 
     log.info("[Flow] 部署流程成功: code={} version={} defId={} mode={} nodes={} skips={}",
         dto.getFlowCode(), version, definitionId, hasBpmn ? "BPMN" : "JSON",
