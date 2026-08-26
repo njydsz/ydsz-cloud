@@ -25,18 +25,18 @@ public class FlowStartProcessDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 流程编码（必填，如 project_initiation） */
-  @NotBlank(message = "{validation.workflow.msg_ebccbe46}")
+  @NotBlank(message = "{validation.workflow.start.flowCode.required}")
   private String flowCode;
 
   /** 流程版本（不填则取最新已发布） */
   private String version;
 
   /** 业务类型（必填） */
-  @NotBlank(message = "{validation.workflow.msg_63149825}")
+  @NotBlank(message = "{validation.workflow.start.bizType.required}")
   private String businessType;
 
   /** 业务单据 ID（必填） */
-  @NotBlank(message = "{validation.workflow.msg_ed0127c6}")
+  @NotBlank(message = "{validation.workflow.start.bizId.required}")
   private String businessId;
 
   /** 业务单据编号 */

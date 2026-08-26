@@ -25,11 +25,11 @@ public class FlowTaskOperateDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 任务 ID（必填） */
-  @NotNull(message = "{validation.workflow.msg_5a190a79}")
+  @NotNull(message = "{validation.workflow.operate.taskId.required}")
   private String taskId;
 
   /** 操作人 ID */
-  @NotNull(message = "{validation.workflow.msg_f65f41e7}")
+  @NotNull(message = "{validation.workflow.operate.userId.required}")
   private String userId;
 
   /** 操作人姓名 */

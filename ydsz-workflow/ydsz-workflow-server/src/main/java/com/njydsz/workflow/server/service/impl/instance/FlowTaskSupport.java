@@ -153,7 +153,7 @@ public class FlowTaskSupport {
    * @param id 任务主键 ID（雪花算法生成的字符串）
    * @return 运行时任务视图对象（{@link FlowRunTaskVO}），一定非空
    * @throws SysException 当任务不存在时抛出，错误码 {@code NOT_FOUND}， 错误信息 key 为 {@code
-   *     error.workflow.msg_6541ab08}（i18n 资源键）
+   *     error.workflow.task.not.found}（i18n 资源键）
    */
   public FlowRunTaskVO getTaskOrThrow(String id) {
     FlowRunTaskVO task = taskRepository.findById(id).orElse(null);

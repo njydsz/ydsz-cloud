@@ -17,6 +17,8 @@ import com.njydsz.cronjob.server.service.job.JobService;
  *
  * <p>接收外部事件（如 MQ 消息）并触发对应的定时任务执行。 使用 Redis SETNX 进行消息去重，确保同一事件不会重复触发。
  *
+ * <p><b>P0-10</b>：强制要求调用方传 {@code msgId}，无 msgId 时拒绝触发，避免去重失效导致任务重复执行。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -37,19 +39,26 @@ public class EventDrivenScheduler {
    *
    * <p>使用 Redis SETNX 进行去重，同一 msgId 在 TTL 内不会重复触发。
    *
-   * @param jobKey 任务 Key
-   * @param msgId 消息 ID（用于去重）
-   * @param payload 负载数据
-   * @return true 表示触发成功，false 表示已去重或触发失败
+   * <p><b>P0-10</b>：msgId 为必填参数，为空时拒绝触发并返回 false，避免去重键退化为 {@code jobKey:timestamp} 导致
+   * 同一事件重复触发。调用方应保证 msgId 全局唯一（如 MQ messageId、业务流水号）。
+   *
+   * @param jobKey 任务 Key（必填）
+   * @param msgId 消息 ID（<b>必填</b>，用于去重，建议全局唯一）
+   * @param payload 负载数据（可为 null）
+   * @return true 表示触发成功，false 表示已去重、msgId 为空或触发失败
    */
   public boolean triggerByEvent(String jobKey, String msgId, String payload) {
     if (jobKey == null || jobKey.isBlank()) {
       log.warn("[EventScheduler] jobKey 为空, 跳过触发");
       return false;
     }
+    // P0-10: 强制要求 msgId，避免去重失效
+    if (msgId == null || msgId.isBlank()) {
+      log.warn("[EventScheduler] msgId 为空, 拒绝触发（P0-10 强制要求）: jobKey={}", jobKey);
+      return false;
+    }
 
-    String dedupKey =
-        DEDUP_KEY_PREFIX + (msgId != null ? msgId : jobKey + ":" + System.currentTimeMillis());
+    String dedupKey = DEDUP_KEY_PREFIX + msgId;
     Boolean acquired = redisStringOps.setIfAbsent(dedupKey, "1", DEDUP_TTL.toSeconds());
     if (Boolean.FALSE.equals(acquired)) {
       log.info("[EventScheduler] 事件已去重, 跳过触发: jobKey={} msgId={}", jobKey, msgId);

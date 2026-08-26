@@ -265,7 +265,7 @@ public class FlowDefinitionMigrationManager {
     if (!StringUtils.hasText(oldDefinitionId) || !StringUtils.hasText(newDefinitionId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_c2d3e4f5")
+          .message("error.workflow.migration.params.required")
           .build();
     }
 
@@ -273,7 +273,7 @@ public class FlowDefinitionMigrationManager {
     if (oldDef == null || (oldDef.getDeleted() != null && oldDef.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_e7f8a9b0")
+          .key("error.workflow.migration.definition.not.found")
           .params(oldDefinitionId)
           .build();
     }
@@ -281,14 +281,14 @@ public class FlowDefinitionMigrationManager {
     if (newDef == null || (newDef.getDeleted() != null && newDef.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_e7f8a9b0")
+          .key("error.workflow.migration.definition.not.found")
           .params(newDefinitionId)
           .build();
     }
     if (!Objects.equals(oldDef.getFlowCode(), newDef.getFlowCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d3e4f5a6")
+          .message("error.workflow.migration.flowcode.mismatch")
           .build();
     }
 

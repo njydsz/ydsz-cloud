@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.infra.entity.dag.JobDagContext;
@@ -25,6 +26,8 @@ public interface JobDagContextMapper extends BaseMapper<JobDagContext> {
    * @param dagInstanceId DAG 实例 ID
    * @return 节点上下文列表
    */
+  @Select(
+      "SELECT * FROM ydsz_job_dag_context WHERE dag_instance_id = #{dagInstanceId} AND deleted = 0")
   List<JobDagContext> selectByDagInstanceId(@Param("dagInstanceId") String dagInstanceId);
 
   /**
@@ -34,16 +37,10 @@ public interface JobDagContextMapper extends BaseMapper<JobDagContext> {
    * @param nodeKey 节点 KEY
    * @return 节点上下文，不存在返回 null
    */
+  @Select(
+      "SELECT * FROM ydsz_job_dag_context WHERE dag_instance_id = #{dagInstanceId} AND node_key = #{nodeKey} AND deleted = 0 LIMIT 1")
   JobDagContext selectByDagInstanceAndNodeKey(
       @Param("dagInstanceId") String dagInstanceId, @Param("nodeKey") String nodeKey);
-
-  /**
-   * 批量插入节点上下文（忽略已存在记录）。
-   *
-   * @param contexts 节点上下文列表
-   * @return 插入行数
-   */
-  int insertBatch(@Param("list") List<JobDagContext> contexts);
 
   /**
    * 根据 DAG 实例 ID 删除所有节点上下文。
@@ -51,5 +48,22 @@ public interface JobDagContextMapper extends BaseMapper<JobDagContext> {
    * @param dagInstanceId DAG 实例 ID
    * @return 删除行数
    */
+  @Select("UPDATE ydsz_job_dag_context SET deleted = 1 WHERE dag_instance_id = #{dagInstanceId}")
   int deleteByDagInstanceId(@Param("dagInstanceId") String dagInstanceId);
+
+  /**
+   * 批量插入节点上下文（忽略已存在记录）。
+   *
+   * <p>使用 default 方法实现，逐条插入。大数据量场景可优化为 INSERT ... ON DUPLICATE KEY UPDATE。
+   *
+   * @param contexts 节点上下文列表
+   */
+  default void insertBatch(List<JobDagContext> contexts) {
+    if (contexts == null || contexts.isEmpty()) {
+      return;
+    }
+    for (JobDagContext context : contexts) {
+      insert(context);
+    }
+  }
 }

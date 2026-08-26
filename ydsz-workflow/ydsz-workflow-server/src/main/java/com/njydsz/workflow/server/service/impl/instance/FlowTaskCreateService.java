@@ -471,7 +471,7 @@ public class FlowTaskCreateService {
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_fc4b1c16")
+          .key("error.workflow.instance.not.found")
           .params(instanceId)
           .build();
     }
@@ -1096,7 +1096,7 @@ public class FlowTaskCreateService {
       log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .message("error.workflow.msg_fcd55e62")
+          .message("error.workflow.task.autopass.depth.exceeded")
           .build();
     }
     AUTO_PASS_DEPTH.set(depth + 1);

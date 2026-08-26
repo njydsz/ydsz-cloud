@@ -153,14 +153,14 @@ public class FlowInstanceQueryService {
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_cc712a3a")
+          .message("error.workflow.instance.recall.not.initiator")
           .build();
     }
     // 校验：仅运行中可查询
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_3095a676")
+          .message("error.workflow.instance.recall.not.running")
           .build();
     }
     // 查历史已办节点
@@ -253,7 +253,7 @@ public class FlowInstanceQueryService {
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_fc4b1c16")
+          .key("error.workflow.instance.not.found")
           .params(instanceId)
           .build();
     }
@@ -268,7 +268,7 @@ public class FlowInstanceQueryService {
       if (task == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_6541ab08")
+            .key("error.workflow.task.not.found")
             .params(taskId)
             .build();
       }
@@ -398,7 +398,7 @@ public class FlowInstanceQueryService {
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_67a10717")
+          .key("error.workflow.instance.not.found")
           .params(id)
           .build();
     }

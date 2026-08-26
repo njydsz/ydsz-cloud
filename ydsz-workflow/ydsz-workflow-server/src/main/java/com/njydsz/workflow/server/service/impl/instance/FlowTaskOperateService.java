@@ -188,7 +188,7 @@ public class FlowTaskOperateService {
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_fc4b1c16")
+          .key("error.workflow.instance.not.found")
           .params(task.getInstanceId())
           .build();
     }

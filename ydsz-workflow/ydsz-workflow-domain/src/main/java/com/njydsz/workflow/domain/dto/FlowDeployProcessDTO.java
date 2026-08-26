@@ -26,11 +26,11 @@ public class FlowDeployProcessDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 流程编码 */
-  @NotBlank(message = "{validation.workflow.msg_ebccbe46}")
+  @NotBlank(message = "{validation.workflow.deploy.flowCode.required}")
   private String flowCode;
 
   /** 流程名称 */
-  @NotBlank(message = "{validation.workflow.msg_4acb383d}")
+  @NotBlank(message = "{validation.workflow.deploy.flowName.required}")
   private String flowName;
 
   /** 流程版本 */

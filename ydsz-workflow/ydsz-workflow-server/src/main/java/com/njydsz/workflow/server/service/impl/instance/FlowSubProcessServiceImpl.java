@@ -160,7 +160,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (nestingDepth >= maxNestingDepth) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_14aff96e")
+          .key("error.workflow.subprocess.nesting.exceeded")
           .params(maxNestingDepth, nestingDepth, parentInstance.getId())
           .build();
     }

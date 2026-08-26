@@ -75,6 +75,14 @@ public class TaskPreloadScheduler {
   /** 已注册的预读任务: jobId → ScheduledFuture（防止重复注册） */
   private final ConcurrentHashMap<String, ScheduledFuture<?>> pendingJobs = new ConcurrentHashMap<>();
 
+  /**
+   * P0-2: 预读任务注册时的 Leader 任期号（epoch）。
+   *
+   * <p>fireJob 触发时校验当前 epoch 与注册时一致，若 epoch 变化说明 Leader 已切换，
+   * 跳过派发避免双主双写。key = jobId, value = epoch at schedule time。
+   */
+  private final ConcurrentHashMap<String, Long> scheduledEpochs = new ConcurrentHashMap<>();
+
   @PostConstruct
   public void init() {
     this.precisionScheduler = ExecutorUtils.newScheduledThreadPool(1, "job-preload-");
@@ -136,23 +144,45 @@ public class TaskPreloadScheduler {
   private void schedulePreciseFire(JobVO job, LocalDateTime now) {
     long delayMs = Math.max(0, Duration.between(now, job.getNextFireTime()).toMillis());
     try {
+      // P0-2: 记录注册时的 epoch，fireJob 时校验
+      long currentEpoch = leaderElector.getEpoch(cronjobProperties.getLeader().getRole());
       ScheduledFuture<?> future =
-          precisionScheduler.schedule(() -> fireJob(job), delayMs, TimeUnit.MILLISECONDS);
+          precisionScheduler.schedule(() -> fireJob(job, currentEpoch), delayMs, TimeUnit.MILLISECONDS);
       pendingJobs.put(job.getId(), future);
+      scheduledEpochs.put(job.getId(), currentEpoch);
       log.debug(
-          "[Preload] 注册秒级触发: key={} nextFire={} delay={}ms",
+          "[Preload] 注册秒级触发: key={} nextFire={} delay={}ms epoch={}",
           job.getJobKey(),
           job.getNextFireTime(),
-          delayMs);
+          delayMs,
+          currentEpoch);
     } catch (RejectedExecutionException e) {
       log.warn("[Preload] 预读调度器已关闭, 交由主扫描器兜底: key={}", job.getJobKey());
     }
   }
 
-  /** 精准触发：CAS 推进 next_fire_time 后派发（CAS 失败说明已被主扫描器处理，跳过）。 */
-  private void fireJob(JobVO job) {
+  /**
+   * 精准触发：CAS 推进 next_fire_time 后派发（CAS 失败说明已被主扫描器处理，跳过）。
+   *
+   * <p>P0-2: 触发前校验 epoch，若 Leader 已切换则跳过派发，避免双主双写。
+   *
+   * @param job 任务
+   * @param scheduleEpoch 注册时的 Leader 任期号
+   */
+  private void fireJob(JobVO job, long scheduleEpoch) {
     pendingJobs.remove(job.getId());
+    scheduledEpochs.remove(job.getId());
     try {
+      // P0-2: epoch 校验 — 若当前 epoch 与注册时不一致，说明 Leader 已切换，跳过
+      long currentEpoch = leaderElector.getEpoch(cronjobProperties.getLeader().getRole());
+      if (currentEpoch != scheduleEpoch) {
+        log.info(
+            "[Preload] Leader 已切换(epoch {}→{}), 跳过秒级派发交由新 Leader: key={}",
+            scheduleEpoch,
+            currentEpoch,
+            job.getJobKey());
+        return;
+      }
       LocalDateTime now = LocalDateTime.now();
       LocalDateTime oldNext = job.getNextFireTime();
       LocalDateTime newNext = nextFireTimeCalculator.calculate(job);

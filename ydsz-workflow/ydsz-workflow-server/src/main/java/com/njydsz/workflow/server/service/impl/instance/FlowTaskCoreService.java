@@ -329,7 +329,7 @@ public class FlowTaskCoreService {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_7f4098fb")
+          .key("error.workflow.task.already.handled")
           .params(task.getTaskStatus())
           .build();
     }
@@ -344,7 +344,7 @@ public class FlowTaskCoreService {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_b35e6ea3")
+          .message("error.workflow.task.reject.target.invalid")
           .build();
     }
   }

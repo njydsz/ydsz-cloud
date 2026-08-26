@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -20,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
  * 基于 Redisson 的 Leader 选举实现。
@@ -73,6 +75,9 @@ public class RedissonLeaderElector implements LeaderElector {
   private final RedissonClient redissonClient;
   private final CronjobProperties cronjobProperties;
 
+  /** P0-2: 指标收集器（可选注入，避免未启用 Metrics 时异常） */
+  private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
+
   /** 当前节点持有的 Leader 锁（role -> RLock） */
   private final Map<String, RLock> heldLocks = new ConcurrentHashMap<>();
 
@@ -85,6 +90,15 @@ public class RedissonLeaderElector implements LeaderElector {
   /** P0-5: 服务端口 */
   @Value("${server.port:0}")
   private int serverPort;
+
+  public RedissonLeaderElector(
+      RedissonClient redissonClient,
+      CronjobProperties cronjobProperties,
+      ObjectProvider<CronjobMetrics> cronjobMetricsProvider) {
+    this.redissonClient = redissonClient;
+    this.cronjobProperties = cronjobProperties;
+    this.cronjobMetricsProvider = cronjobMetricsProvider;
+  }
 
   /**
    * 初始化当前节点 ID（hostname:port）
@@ -122,6 +136,7 @@ public class RedissonLeaderElector implements LeaderElector {
   public boolean tryAcquire(String role, Duration lease) {
     String key = LOCK_KEY_PREFIX + role;
     RLock lock = redissonClient.getLock(key);
+    long startNanos = System.nanoTime();
     try {
       // leaseTime=-1：由 Redisson WatchDog 自动续期，避免显式租约到期导致 Leader 身份漂移
       boolean acquired = lock.tryLock(0, -1, TimeUnit.MILLISECONDS);
@@ -139,12 +154,39 @@ public class RedissonLeaderElector implements LeaderElector {
             lease.toMillis(),
             nodeId,
             epoch);
+        // P0-2: 记录选举成功指标
+        reportElectionMetrics(role, startNanos, epoch, true);
+      } else {
+        // P0-2: 记录选举失败指标
+        reportElectionMetrics(role, startNanos, -1, false);
       }
       return acquired;
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       log.warn("[LeaderElector] 抢占 Leader 被中断: role={}", role);
+      reportElectionMetrics(role, startNanos, -1, false);
       return false;
+    }
+  }
+
+  /**
+   * P0-2: 上报 Leader 选举指标。
+   *
+   * @param role Leader 角色
+   * @param startNanos 选举开始时间（纳秒）
+   * @param epoch 选举后的 epoch（失败时为 -1）
+   * @param success 是否选举成功
+   */
+  private void reportElectionMetrics(String role, long startNanos, long epoch, boolean success) {
+    CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+    if (metrics == null) {
+      return;
+    }
+    long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000;
+    metrics.incLeaderElection(role, success ? "SUCCESS" : "FAILED");
+    if (success) {
+      metrics.recordLeaderElectionDuration(role, elapsedMs);
+      metrics.setLeaderEpoch(role, epoch);
     }
   }
 

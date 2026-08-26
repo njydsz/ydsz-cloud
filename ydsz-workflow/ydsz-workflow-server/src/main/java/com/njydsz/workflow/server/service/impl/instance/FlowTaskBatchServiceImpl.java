@@ -43,7 +43,7 @@ public class FlowTaskBatchServiceImpl {
     if (taskIds == null || taskIds.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_a02f7864")
+          .message("error.workflow.task.batch.empty")
           .build();
     }
     for (String taskId : taskIds) {
@@ -73,7 +73,7 @@ public class FlowTaskBatchServiceImpl {
     if (taskIds == null || taskIds.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_a02f7864")
+          .message("error.workflow.task.batch.empty")
           .build();
     }
     for (String taskId : taskIds) {
@@ -114,7 +114,7 @@ public class FlowTaskBatchServiceImpl {
     if (taskIds == null || taskIds.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_a02f7864")
+          .message("error.workflow.task.batch.empty")
           .build();
     }
     for (String taskId : taskIds) {
@@ -149,7 +149,7 @@ public class FlowTaskBatchServiceImpl {
     if (instanceIds == null || instanceIds.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_a02f7864")
+          .message("error.workflow.task.batch.empty")
           .build();
     }
     int success = 0;

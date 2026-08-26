@@ -21,7 +21,7 @@ public class FlowAutoTriggerCreateDTO {
       description = "源流程编码",
       requiredMode = Schema.RequiredMode.REQUIRED,
       example = "LEAVE_APPLY")
-  @NotBlank(message = "{validation.workflow.msg_b2f3a4b4}")
+  @NotBlank(message = "{validation.workflow.trigger.sourceFlowCode.required}")
   private String sourceFlowCode;
 
   /** 目标流程编码（自动启动的流程） */
@@ -29,7 +29,7 @@ public class FlowAutoTriggerCreateDTO {
       description = "目标流程编码",
       requiredMode = Schema.RequiredMode.REQUIRED,
       example = "LEAVE_NOTIFY")
-  @NotBlank(message = "{validation.workflow.msg_c3a4b5c5}")
+  @NotBlank(message = "{validation.workflow.trigger.targetFlowCode.required}")
   private String targetFlowCode;
 
   /** 触发条件表达式（可选，为空表示无条件触发） */

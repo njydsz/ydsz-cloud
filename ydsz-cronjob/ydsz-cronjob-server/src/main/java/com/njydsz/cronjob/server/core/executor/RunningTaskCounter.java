@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
 
 /**
  * 运行中任务数计数器（Redis 维护，替代 Gauge 的 DB 查询）。
@@ -21,6 +21,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <p>与 {@link GlobalConcurrencyController} 的区别：后者是配额限制（有上限），本组件是纯计数（无上限，仅用于监控）。
  *
+ * <p>P0-8: 使用 {@link CronjobRedisOps} 收敛 Redis 操作，统一 key 前缀与异常降级。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -29,8 +31,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @Component
 public class RunningTaskCounter {
 
-  /** Redis Key：运行中任务数 */
-  public static final String RUNNING_COUNT_KEY = "ydsz:job:running:count";
+  /** Redis Key segment：运行中任务数（完整 key = ydzs:job:running:count） */
+  private static final String RUNNING_COUNT_SEGMENT = "running:count";
 
   /** 计数器 TTL（秒）：防异常退出后永久残留，由 {@link #renewTtl()} 定期续期保证长期运行不归零 */
   private static final long INITIAL_TTL_SECONDS = 3600;
@@ -39,7 +41,7 @@ public class RunningTaskCounter {
   @Value("${ydsz.cronjob.executor.running-counter-renew-ms:600000}")
   private long renewIntervalMs;
 
-  private final RedisStringOps redisStringOps;
+  private final CronjobRedisOps cronjobRedisOps;
 
   /**
    * 定时续期计数器 TTL（默认每 10 分钟）。
@@ -51,7 +53,7 @@ public class RunningTaskCounter {
   @Scheduled(fixedDelayString = "${ydsz.cronjob.executor.running-counter-renew-ms:600000}")
   public void renewTtl() {
     try {
-      redisStringOps.expire(RUNNING_COUNT_KEY, INITIAL_TTL_SECONDS);
+      cronjobRedisOps.expire(RUNNING_COUNT_SEGMENT, INITIAL_TTL_SECONDS);
     } catch (Exception e) {
       // key 不存在时 EXPIRE 返回 0 属正常（异常退出后已清理），仅记录 debug
       log.debug("[RunningTaskCounter] 续期失败(可能 key 不存在): reason={}", e.getMessage());
@@ -65,10 +67,10 @@ public class RunningTaskCounter {
    */
   public long increment() {
     try {
-      Long count = redisStringOps.incr(RUNNING_COUNT_KEY, 1);
+      Long count = cronjobRedisOps.incr(RUNNING_COUNT_SEGMENT, 1);
       if (count != null && count == 1) {
         // 首次创建时设置 TTL（防止异常退出后永久残留）
-        redisStringOps.expire(RUNNING_COUNT_KEY, INITIAL_TTL_SECONDS);
+        cronjobRedisOps.expire(RUNNING_COUNT_SEGMENT, INITIAL_TTL_SECONDS);
       }
       return count != null ? count : 0;
     } catch (Exception e) {
@@ -84,9 +86,9 @@ public class RunningTaskCounter {
    */
   public long decrement() {
     try {
-      long current = redisStringOps.decr(RUNNING_COUNT_KEY, 1);
+      long current = cronjobRedisOps.decr(RUNNING_COUNT_SEGMENT, 1);
       if (current < 0) {
-        redisStringOps.set(RUNNING_COUNT_KEY, "0");
+        cronjobRedisOps.setLong(RUNNING_COUNT_SEGMENT, 0);
         log.warn("[RunningTaskCounter] 计数器为负, 已修正为 0");
         return 0;
       }
@@ -104,11 +106,7 @@ public class RunningTaskCounter {
    */
   public long getCount() {
     try {
-      String value = redisStringOps.get(RUNNING_COUNT_KEY, String.class);
-      if (value == null) {
-        return 0;
-      }
-      return Long.parseLong(value);
+      return cronjobRedisOps.getLong(RUNNING_COUNT_SEGMENT);
     } catch (Exception e) {
       log.debug("[RunningTaskCounter] 读取失败: reason={}", e.getMessage());
       return 0;

@@ -453,14 +453,14 @@ public class FlowDefinitionDesignManager {
     if (!StringUtils.hasText(definitionId) || !StringUtils.hasText(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d6e7f8a9")
+          .message("error.workflow.designer.params.required")
           .build();
     }
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_e7f8a9b0")
+          .key("error.workflow.designer.definition.not.found")
           .params(definitionId)
           .build();
     }
@@ -485,7 +485,7 @@ public class FlowDefinitionDesignManager {
     if (latest == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_e7f8a9b0")
+          .key("error.workflow.designer.definition.not.found")
           .params(definitionId)
           .build();
     }
@@ -505,13 +505,13 @@ public class FlowDefinitionDesignManager {
       }
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_f8a9b0c1")
+          .key("error.workflow.designer.lock.held")
           .params(holder)
           .build();
     }
     throw SysException.builder()
         .resultCode(YdszResultCode.BAD_REQUEST)
-        .message("error.workflow.msg_a9b0c1d2")
+          .message("error.workflow.designer.lock.failed")
         .build();
   }
 
@@ -530,14 +530,14 @@ public class FlowDefinitionDesignManager {
     if (!StringUtils.hasText(definitionId) || !StringUtils.hasText(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d6e7f8a9")
+          .message("error.workflow.designer.params.required")
           .build();
     }
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
     if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_e7f8a9b0")
+          .key("error.workflow.designer.definition.not.found")
           .params(definitionId)
           .build();
     }
@@ -557,7 +557,7 @@ public class FlowDefinitionDesignManager {
     if (latest == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_e7f8a9b0")
+          .key("error.workflow.designer.definition.not.found")
           .params(definitionId)
           .build();
     }
@@ -565,7 +565,7 @@ public class FlowDefinitionDesignManager {
     if (StringUtils.hasText(holder) && !holder.equals(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .key("error.workflow.msg_b1c2d3e4")
+          .key("error.workflow.designer.unlock.no.permission")
           .params(holder)
           .build();
     }
@@ -583,7 +583,7 @@ public class FlowDefinitionDesignManager {
     if (!StringUtils.hasText(definitionId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d6e7f8a9")
+          .message("error.workflow.designer.params.required")
           .build();
     }
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);

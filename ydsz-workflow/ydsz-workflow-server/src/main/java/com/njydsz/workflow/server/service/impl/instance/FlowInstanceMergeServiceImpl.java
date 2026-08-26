@@ -137,7 +137,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     if (instanceIds == null || instanceIds.size() < 2) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_5a6b7c8d")
+          .message("error.workflow.merge.count.insufficient")
           .build();
     }
     String tid = tenantId != null ? tenantId : "1";
@@ -149,14 +149,14 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         if (instance == null) {
           throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_9e8f0a1b")
+            .key("error.workflow.merge.instance.not.found")
             .params(instanceId)
             .build();
       }
       if (!"RUNNING".equals(instance.getFlowStatus())) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_2b3c4d5e")
+            .message("error.workflow.merge.instance.not.running")
             .build();
       }
       flowCodes.add(instance.getFlowCode());
@@ -164,7 +164,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     if (flowCodes.size() > 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_6c7d8e9f")
+          .message("error.workflow.merge.flowcode.mismatch")
           .build();
     }
 

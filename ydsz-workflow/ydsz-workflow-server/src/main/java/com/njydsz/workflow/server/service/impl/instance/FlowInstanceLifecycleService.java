@@ -188,7 +188,7 @@ public class FlowInstanceLifecycleService {
         || !StringUtils.hasText(dto.getBusinessId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_208e3c66")
+          .message("error.workflow.instance.start.params.invalid")
           .build();
     }
 
@@ -217,7 +217,7 @@ public class FlowInstanceLifecycleService {
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_add8d012")
+          .key("error.workflow.instance.definition.not.found")
           .params(dto.getFlowCode())
           .build();
     }
@@ -306,7 +306,7 @@ public class FlowInstanceLifecycleService {
     if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_2246960b")
+          .message("error.workflow.instance.already.finished")
           .build();
     }
     LocalDateTime now = LocalDateTime.now();
@@ -361,7 +361,7 @@ public class FlowInstanceLifecycleService {
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_543fc92f")
+          .message("error.workflow.instance.suspend.not.running")
           .build();
     }
     instanceRepository.updateStatus(
@@ -396,7 +396,7 @@ public class FlowInstanceLifecycleService {
     if (!FlowInstanceStatus.SUSPENDED.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_ab594c75")
+          .message("error.workflow.instance.activate.not.suspended")
           .build();
     }
     instanceRepository.updateStatus(
@@ -454,14 +454,14 @@ public class FlowInstanceLifecycleService {
     if (!StringUtils.hasText(key)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_fae06125")
+          .message("error.workflow.instance.variable.key.required")
           .build();
     }
     FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_67a10717")
+          .key("error.workflow.instance.not.found")
           .params(instanceId)
           .build();
     }
@@ -486,7 +486,7 @@ public class FlowInstanceLifecycleService {
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_67a10717")
+          .key("error.workflow.instance.not.found")
           .params(instanceId)
           .build();
     }
@@ -518,13 +518,13 @@ public class FlowInstanceLifecycleService {
     if (dtos == null || dtos.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_e4f5a6b7")
+          .message("error.workflow.batch.empty")
           .build();
     }
     if (dtos.size() > 100) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_f5a6b7c8")
+          .key("error.workflow.batch.size.exceeded")
           .params(dtos.size(), 100)
           .build();
     }
@@ -696,7 +696,7 @@ public class FlowInstanceLifecycleService {
       log.error("[Flow] 撤回后重新推进失败: instanceId={}", instanceId, e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_3d726320")
+          .key("error.workflow.instance.recall.failed")
           .params(e.getMessage())
           .build();
     }
@@ -715,13 +715,13 @@ public class FlowInstanceLifecycleService {
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_cc712a3a")
+          .message("error.workflow.instance.recall.not.initiator")
           .build();
     }
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_3095a676")
+          .message("error.workflow.instance.recall.not.running")
           .build();
     }
   }
@@ -740,7 +740,7 @@ public class FlowInstanceLifecycleService {
     if (anyProcessed) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_c55fe642")
+          .message("error.workflow.instance.recall.next.processed")
           .build();
     }
     return pendingTasks;
@@ -766,7 +766,7 @@ public class FlowInstanceLifecycleService {
     if (!recallableCodes.contains(targetNodeCode)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_e5f6a7b8")
+          .key("error.workflow.instance.recall.target.invalid")
           .params(targetNodeCode)
           .build();
     }
@@ -787,7 +787,7 @@ public class FlowInstanceLifecycleService {
       log.error("[Flow] 撤回到指定节点失败: instanceId={} targetNodeCode={}", instance.getId(), targetNodeCode, e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_3d726320")
+          .key("error.workflow.instance.recall.failed")
           .params(e.getMessage())
           .build();
     }
@@ -825,7 +825,7 @@ public class FlowInstanceLifecycleService {
     if (!FlowInstanceStatus.COMPLETED.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_a1b2c3d4")
+          .key("error.workflow.instance.not.completed")
           .params(instance.getFlowStatus())
           .build();
     }
@@ -841,7 +841,7 @@ public class FlowInstanceLifecycleService {
     if (!isInitiator && !isAdmin) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_b2c3d4e5")
+          .message("error.workflow.instance.rollback.no.permission")
           .build();
     }
 
@@ -849,7 +849,7 @@ public class FlowInstanceLifecycleService {
     if (!StringUtils.hasText(reason)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d4e5f6a7")
+          .message("error.workflow.instance.rollback.reason.required")
           .build();
     }
 
@@ -860,7 +860,7 @@ public class FlowInstanceLifecycleService {
       if (elapsedDays > days) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_c3d4e5f6")
+            .key("error.workflow.instance.rollback.time.exceeded")
             .params(days)
             .build();
       }
@@ -934,7 +934,7 @@ public class FlowInstanceLifecycleService {
     if (status != FlowInstanceStatus.REJECTED) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_7f4098fb")
+          .key("error.workflow.instance.resubmit.not.rejected")
           .params("仅被驳回实例可重审，当前状态=" + instance.getFlowStatus())
           .build();
     }
@@ -943,7 +943,7 @@ public class FlowInstanceLifecycleService {
         && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .key("error.workflow.msg_d65b2814")
+          .key("error.workflow.instance.resubmit.not.initiator")
           .params("仅发起人可重审")
           .build();
     }
@@ -1143,7 +1143,7 @@ public class FlowInstanceLifecycleService {
               e);
           throw SysException.builder()
               .resultCode(YdszResultCode.INTERNAL_ERROR)
-              .key("error.workflow.msg_f2bd498c")
+              .key("error.workflow.instance.subprocess.start.failed")
               .params(e.getMessage())
               .build();
         }
@@ -1160,7 +1160,7 @@ public class FlowInstanceLifecycleService {
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_67a10717")
+          .key("error.workflow.instance.not.found")
           .params(id)
           .build();
     }
@@ -1204,7 +1204,7 @@ public class FlowInstanceLifecycleService {
     if (status == FlowInstanceStatus.RUNNING || status == FlowInstanceStatus.SUSPENDED) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_c9d0e1f2")
+          .key("error.workflow.instance.appendnode.not.running")
           .params("运行中/挂起的实例不可重做，当前状态=" + instance.getFlowStatus())
           .build();
     }
@@ -1213,7 +1213,7 @@ public class FlowInstanceLifecycleService {
         && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .key("error.workflow.msg_d65b2814")
+          .key("error.workflow.instance.resubmit.not.initiator")
           .params("仅发起人可重做")
           .build();
     }

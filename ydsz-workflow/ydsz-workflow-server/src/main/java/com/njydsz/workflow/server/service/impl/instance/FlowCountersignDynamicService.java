@@ -77,7 +77,7 @@ public class FlowCountersignDynamicService {
     if (!StringUtils.hasText(taskId) || approveCount == null || approveCount < 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_e1f2a3b4")
+          .message("error.workflow.countersign.params.invalid")
           .build();
     }
 
@@ -85,7 +85,7 @@ public class FlowCountersignDynamicService {
     if (task == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_c9d0e1f2")
+          .key("error.workflow.countersign.task.not.found")
           .params(taskId)
           .build();
     }
@@ -123,7 +123,7 @@ public class FlowCountersignDynamicService {
         || votePassRate.compareTo(BigDecimal.ONE) > 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_vote_pass_rate_invalid")
+          .message("error.workflow.countersign.vote.rate.invalid")
           .build();
     }
 
@@ -131,7 +131,7 @@ public class FlowCountersignDynamicService {
     if (task == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_c9d0e1f2")
+          .key("error.workflow.countersign.task.not.found")
           .params(taskId)
           .build();
     }

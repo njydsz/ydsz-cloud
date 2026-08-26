@@ -74,14 +74,14 @@ public class FlowInstanceVariableManager {
     if (!StringUtils.hasText(key)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_fae06125")
+          .message("error.workflow.instance.variable.key.required")
           .build();
     }
     FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_67a10717")
+          .key("error.workflow.instance.not.found")
           .params(instanceId)
           .build();
     }
@@ -106,7 +106,7 @@ public class FlowInstanceVariableManager {
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_67a10717")
+          .key("error.workflow.instance.not.found")
           .params(instanceId)
           .build();
     }

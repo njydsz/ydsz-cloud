@@ -421,7 +421,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       return;
     }
     long delayMillis = Duration.between(job.getNextFireTime(), LocalDateTime.now()).toMillis();
-    CronjobMetricsHolder.recordDispatchDelay(job.getJobName(), delayMillis);
+    CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+    if (metrics != null) {
+      metrics.recordDispatchDelay(job.getJobKey(), delayMillis);
+    }
   }
 
   private void checkExecutionQuota(JobVO job) {

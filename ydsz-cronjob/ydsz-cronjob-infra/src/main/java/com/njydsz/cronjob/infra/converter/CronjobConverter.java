@@ -424,4 +424,45 @@ public interface CronjobConverter {
   OutboxEvent voToEntity(OutboxEventVO vo);
 
   List<OutboxEvent> outboxEventVOsToEntities(List<OutboxEventVO> vos);
+
+  // ===== JobDagContext（P0-13：DAG 节点上下文独立存储） =====
+
+  /**
+   * 将 DAG 节点上下文实体转换为 VO。
+   *
+   * @param entity 节点上下文实体
+   * @return 节点上下文 VO
+   */
+  JobDagContextVO jobDagContextEntityToVO(JobDagContext entity);
+
+  /**
+   * 将 DAG 节点上下文实体列表转换为 VO 列表。
+   *
+   * @param entities 节点上下文实体列表
+   * @return 节点上下文 VO 列表
+   */
+  List<JobDagContextVO> jobDagContextListToVO(List<JobDagContext> entities);
+
+  /**
+   * 将 DAG 节点上下文 VO 转换为实体。
+   *
+   * @param vo 节点上下文 VO
+   * @return 节点上下文实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobDagContext jobDagContextVOToEntity(JobDagContextVO vo);
+
+  /**
+   * 将 DAG 节点上下文 VO 列表转换为实体列表。
+   *
+   * @param vos 节点上下文 VO 列表
+   * @return 节点上下文实体列表
+   */
+  List<JobDagContext> jobDagContextListVOToEntity(List<JobDagContextVO> vos);
 }

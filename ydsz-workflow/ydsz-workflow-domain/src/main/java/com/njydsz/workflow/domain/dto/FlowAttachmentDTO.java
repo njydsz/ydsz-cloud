@@ -21,7 +21,7 @@ public class FlowAttachmentDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 原始文件名 */
-  @NotBlank(message = "{validation.workflow.msg_3c1a8b22}")
+  @NotBlank(message = "{validation.workflow.attachment.fileName.required}")
   private String fileName;
 
   /** 文件扩展名（jpg/pdf/docx...，可空时由 fileName 推断） */
@@ -34,7 +34,7 @@ public class FlowAttachmentDTO implements Serializable {
   private String contentType;
 
   /** 存储 key（OSS / COS / MinIO 对象 key，或本地相对路径） */
-  @NotBlank(message = "{validation.workflow.msg_3c1a8b23}")
+  @NotBlank(message = "{validation.workflow.attachment.storageKey.required}")
   private String storageKey;
 
   /** 存储类型: OSS / MINIO / LOCAL（默认 OSS） */

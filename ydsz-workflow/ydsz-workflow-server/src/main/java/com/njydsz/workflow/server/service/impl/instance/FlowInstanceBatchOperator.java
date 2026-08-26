@@ -65,13 +65,13 @@ public class FlowInstanceBatchOperator {
     if (dtos == null || dtos.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_e4f5a6b7")
+          .message("error.workflow.batch.empty")
           .build();
     }
     if (dtos.size() > 100) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_f5a6b7c8")
+          .key("error.workflow.batch.size.exceeded")
           .params(dtos.size(), 100)
           .build();
     }

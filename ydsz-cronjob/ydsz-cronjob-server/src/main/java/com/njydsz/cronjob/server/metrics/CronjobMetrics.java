@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -116,6 +117,17 @@ public class CronjobMetrics extends SentryMetricsAdapter {
     this.cronjobProperties = cronjobProperties;
     registerGauges();
     log.info("[CronjobMetrics] 初始化完成，Prometheus 端点可访问 /actuator/prometheus");
+  }
+
+  /**
+   * P0-6/11: 注册自身引用到 CronjobMetricsHolder，使旧静态方法委托到本 Bean。
+   *
+   * <p>兼容过渡期使用，新代码应直接注入 {@link CronjobMetrics}。
+   */
+  @PostConstruct
+  public void registerAsHolderDelegate() {
+    CronjobMetricsHolder.setCronjobMetrics(this);
+    log.info("[CronjobMetrics] 已注册为 CronjobMetricsHolder 委托目标");
   }
 
   // ===========================================
@@ -259,6 +271,87 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   }
 
   // ===========================================
+  // P0-6/11: 从 CronjobMetricsHolder 迁移的指标方法
+  // ===========================================
+
+  /**
+   * P0-6/11: 递增任务执行计数（按 job_key 分类）。
+   *
+   * <p>原 {@code CronjobMetricsHolder.incrementExecution} 迁移至此，统一使用 {@code ydsz_cronjob_} 前缀。
+   *
+   * @param jobKey 任务 KEY
+   */
+  public void incJobExecution(String jobKey) {
+    counter("job_execution_total", "job_key", safe(jobKey)).increment();
+  }
+
+  /**
+   * P0-6/11: 记录任务执行耗时分布（按 job_key 分类）。
+   *
+   * <p>原 {@code CronjobMetricsHolder.recordExecutionDuration} 迁移至此。
+   *
+   * @param jobKey 任务 KEY
+   * @param millis 执行耗时（毫秒）
+   */
+  public void recordExecutionDuration(String jobKey, long millis) {
+    if (millis < 0) {
+      return;
+    }
+    timer("job_execution_duration_ms", "job_key", safe(jobKey)).record(Duration.ofMillis(millis));
+  }
+
+  /**
+   * P0-6/11: 记录调度触发延迟（next_fire_time 到实际派发的延迟）。
+   *
+   * <p>原 {@code CronjobMetricsHolder.recordDispatchDelay} 迁移至此。
+   *
+   * @param jobKey 任务 KEY
+   * @param delayMillis 触发延迟（毫秒，>= 0）
+   */
+  public void recordDispatchDelay(String jobKey, long delayMillis) {
+    if (delayMillis < 0) {
+      return;
+    }
+    timer("job_dispatch_delay_ms", "job_key", safe(jobKey)).record(Duration.ofMillis(delayMillis));
+  }
+
+  /**
+   * P0-6/11: 递增分片成功计数。
+   *
+   * <p>原 {@code CronjobMetricsHolder.incrementShardSuccess} 迁移至此。
+   *
+   * @param jobKey 任务 KEY
+   * @param shardIndex 分片索引
+   */
+  public void incShardSuccess(String jobKey, int shardIndex) {
+    counter(
+            "shard_success_total",
+            "job_key",
+            safe(jobKey),
+            "shard_index",
+            String.valueOf(shardIndex))
+        .increment();
+  }
+
+  /**
+   * P0-6/11: 递增分片失败计数。
+   *
+   * <p>原 {@code CronjobMetricsHolder.incrementShardFailure} 迁移至此。
+   *
+   * @param jobKey 任务 KEY
+   * @param shardIndex 分片索引
+   */
+  public void incShardFailure(String jobKey, int shardIndex) {
+    counter(
+            "shard_failure_total",
+            "job_key",
+            safe(jobKey),
+            "shard_index",
+            String.valueOf(shardIndex))
+        .increment();
+  }
+
+  // ===========================================
   // Timer：耗时
   // ===========================================
 
@@ -275,6 +368,46 @@ public class CronjobMetrics extends SentryMetricsAdapter {
     }
     timer("job_duration_ms", "job_key", safe(jobKey), "status", safe(status))
         .record(Duration.ofMillis(millis));
+  }
+
+  // ===========================================
+  // P0-2: Leader 选举指标
+  // ===========================================
+
+  /** 当前 Leader 任期号（epoch/fencing token），Gauge 回调读取 */
+  private final AtomicLong leaderEpoch = new AtomicLong(0);
+
+  /**
+   * P0-2: 递增 Leader 选举次数（每次抢占/重新抢占时调用）。
+   *
+   * @param role Leader 角色
+   * @param result 选举结果：SUCCESS / FAILED
+   */
+  public void incLeaderElection(String role, String result) {
+    counter("leader_election_total", "role", safe(role), "result", safe(result)).increment();
+  }
+
+  /**
+   * P0-2: 记录 Leader 选举耗时（从开始抢占到成功的耗时）。
+   *
+   * @param role Leader 角色
+   * @param millis 选举耗时（毫秒）
+   */
+  public void recordLeaderElectionDuration(String role, long millis) {
+    if (millis < 0) {
+      return;
+    }
+    timer("leader_election_duration_ms", "role", safe(role)).record(Duration.ofMillis(millis));
+  }
+
+  /**
+   * P0-2: 更新当前 Leader 任期号（epoch/fencing token）。
+   *
+   * @param role Leader 角色
+   * @param epoch 当前任期号
+   */
+  public void setLeaderEpoch(String role, long epoch) {
+    leaderEpoch.set(epoch);
   }
 
   // ===========================================
@@ -436,6 +569,9 @@ public class CronjobMetrics extends SentryMetricsAdapter {
 
     // P1-1: 系统负载评分（0-1000，除以1000得到 0-1）
     gaugeRef("system_load_score", systemLoadScore, AtomicLong::doubleValue);
+
+    // P0-2: Leader 任期号（epoch/fencing token）
+    gaugeRef("leader_epoch", leaderEpoch, AtomicLong::doubleValue);
   }
 
   /**

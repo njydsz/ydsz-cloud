@@ -208,7 +208,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(templateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_f68a3fa3")
+            .message("error.workflow.template.code.required")
             .build();
       }
       // P6: 缓存命中直接返回，未命中则查库并回填
@@ -220,7 +220,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (template == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_c16cb047")
+            .key("error.workflow.template.not.found")
             .params(templateCode)
             .build();
       }
@@ -233,7 +233,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       log.error("[FlowTemplate] 获取模板详情异常: templateCode={} err={}", templateCode, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_c2642700")
+          .key("error.workflow.template.internal.error")
           .params(e.getMessage())
           .build();
     }
@@ -279,7 +279,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(templateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_f68a3fa3")
+            .message("error.workflow.template.code.required")
             .build();
       }
       // P6: 导入会递增 use_count，先失效缓存确保下次读取回源最新数据
@@ -288,14 +288,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (template == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_c16cb047")
+            .key("error.workflow.template.not.found")
             .params(templateCode)
             .build();
       }
       if (!StringUtils.hasText(template.getBpmnXml())) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_f407e561")
+            .key("error.workflow.template.bpmn.empty")
             .params(templateCode)
             .build();
       }
@@ -329,7 +329,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       log.error("[FlowTemplate] 模板导入异常: templateCode={} err={}", templateCode, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_ecc1169b")
+          .key("error.workflow.template.version.desc.required")
           .params(templateCode, e.getMessage())
           .build();
     }
@@ -361,13 +361,13 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (definitionId == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_375a4677")
+            .message("error.workflow.template.version.create.failed")
             .build();
       }
       if (!StringUtils.hasText(templateName)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_bbbf759d")
+            .message("error.workflow.template.version.already.latest")
             .build();
       }
 
@@ -376,7 +376,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (detail == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_690c83d8")
+            .key("error.workflow.template.version.not.found")
             .params(definitionId)
             .build();
       }
@@ -385,7 +385,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (definition == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_690c83d8")
+            .key("error.workflow.template.version.not.found")
             .params(definitionId)
             .build();
       }
@@ -455,7 +455,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       log.error("[FlowTemplate] 导出模板异常: definitionId={} err={}", definitionId, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_d119b2ed")
+          .key("error.workflow.template.clone.failed")
           .params(e.getMessage())
           .build();
     }
@@ -477,7 +477,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(templateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_f68a3fa3")
+            .message("error.workflow.template.code.required")
             .build();
       }
       List<FlowTemplateVO> versions = templateRepository.findVersionsByTemplateCode(templateCode);
@@ -505,7 +505,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(templateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_f68a3fa3")
+            .message("error.workflow.template.code.required")
             .build();
       }
       // version 为空 → 返回最新版本（保持与 getTemplate 一致的语义）
@@ -514,7 +514,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         if (latest == null) {
           throw SysException.builder()
               .resultCode(YdszResultCode.NOT_FOUND)
-              .key("error.workflow.msg_c16cb047")
+              .key("error.workflow.template.not.found")
               .params(templateCode)
               .build();
         }
@@ -523,7 +523,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (version < 1) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_a9b0c1d3")
+            .key("error.workflow.template.clone.duplicate")
             .params(version)
             .build();
       }
@@ -532,7 +532,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (versions.isEmpty()) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_c16cb047")
+            .key("error.workflow.template.not.found")
             .params(templateCode)
             .build();
       }
@@ -544,7 +544,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
               () ->
                   SysException.builder()
                       .resultCode(YdszResultCode.NOT_FOUND)
-                      .key("error.workflow.msg_f4a5b6c8")
+                      .key("error.workflow.template.version.not.found")
                       .params(templateCode, version)
                       .build());
     } catch (SysException e) {
@@ -558,7 +558,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
           e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_c2642700")
+          .key("error.workflow.template.internal.error")
           .params(e.getMessage())
           .build();
     }
@@ -582,7 +582,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(templateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_f68a3fa3")
+            .message("error.workflow.template.code.required")
             .build();
       }
       // 读取当前最新版本作为复制源
@@ -590,14 +590,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (source == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_c16cb047")
+            .key("error.workflow.template.not.found")
             .params(templateCode)
             .build();
       }
       if (!StringUtils.hasText(source.getBpmnXml())) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_f407e561")
+            .key("error.workflow.template.bpmn.empty")
             .params(templateCode)
             .build();
       }
@@ -639,7 +639,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       log.error("[FlowTemplate] 创建新版本异常: templateCode={} err={}", templateCode, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_c2642700")
+          .key("error.workflow.template.internal.error")
           .params(e.getMessage())
           .build();
     }
@@ -712,19 +712,19 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(sourceTemplateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_f68a3fa3")
+            .message("error.workflow.template.code.required")
             .build();
       }
       if (!StringUtils.hasText(newTemplateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_d2e3f4a6")
+            .message("error.workflow.template.clone.code.required")
             .build();
       }
       if (!StringUtils.hasText(newTemplateName)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_b6c7d8e0")
+            .message("error.workflow.template.clone.name.required")
             .build();
       }
       // 读取源模板最新版本
@@ -732,7 +732,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (source == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_e3f4a5b7")
+            .key("error.workflow.template.clone.source.not.found")
             .params(sourceTemplateCode)
             .build();
       }
@@ -741,7 +741,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (existing != null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_c1d2e3f5")
+            .key("error.workflow.template.clone.code.duplicate")
             .params(newTemplateCode)
             .build();
       }
@@ -786,7 +786,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
           e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_c2642700")
+          .key("error.workflow.template.internal.error")
           .params(e.getMessage())
           .build();
     }
@@ -806,7 +806,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(parentTemplateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_f68a3fa3")
+            .message("error.workflow.template.code.required")
             .build();
       }
       // 先查出父模板主键 ID
@@ -814,7 +814,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (parent == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_b0c1d2e4")
+            .key("error.workflow.template.parent.not.found")
             .params(parentTemplateCode)
             .build();
       }
@@ -851,7 +851,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(childTemplateCode)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_f68a3fa3")
+            .message("error.workflow.template.code.required")
             .build();
       }
       // 读取子模板最新版本
@@ -859,7 +859,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (child == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_c16cb047")
+            .key("error.workflow.template.not.found")
             .params(childTemplateCode)
             .build();
       }
@@ -867,7 +867,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!"INHERIT".equals(child.getInheritType())) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_d5e6f7a9")
+            .key("error.workflow.template.sync.not.inherit")
             .params(
                 childTemplateCode, child.getInheritType() != null ? child.getInheritType() : "null")
             .build();
@@ -877,7 +877,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (!StringUtils.hasText(parentId)) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_e6f7a8b0")
+            .key("error.workflow.template.sync.parent.missing")
             .params(childTemplateCode)
             .build();
       }
@@ -885,14 +885,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       if (parent == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_f7a8b9c1")
+            .key("error.workflow.template.sync.parent.not.found")
             .params(parentId)
             .build();
       }
       if (!StringUtils.hasText(parent.getBpmnXml())) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_f407e561")
+            .key("error.workflow.template.bpmn.empty")
             .params(parent.getTemplateCode())
             .build();
       }
@@ -934,7 +934,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
           "[FlowTemplate] 同步父模板异常: childCode={} err={}", childTemplateCode, e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_c2642700")
+          .key("error.workflow.template.internal.error")
           .params(e.getMessage())
           .build();
     }

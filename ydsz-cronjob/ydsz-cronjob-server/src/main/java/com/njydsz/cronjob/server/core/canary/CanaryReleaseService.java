@@ -2,6 +2,7 @@ package com.njydsz.cronjob.server.core.canary;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -173,21 +174,28 @@ public class CanaryReleaseService {
 
   /**
    * 灰度任务运行统计。
+   *
+   * <p>P0-12: 使用 {@link LongAdder} 替代 {@code synchronized}，消除高并发下统计更新的锁竞争。
+   * 平均耗时使用 CAS 增量更新，P95 由外部定时聚合计算（此处保留字段供查询）。
    */
   public static class CanaryStats {
 
     private final String jobKey;
     private final String canaryHandler;
     private int initialRatio;
-    private long totalExecutions;
-    private long successCount;
-    private long failureCount;
-    private double avgDurationMs;
-    private long p95DurationMs;
+    private final LongAdder totalExecutions = new LongAdder();
+    private final LongAdder successCount = new LongAdder();
+    private final LongAdder failureCount = new LongAdder();
+    private final LongAdder durationSum = new LongAdder();
+    private volatile double avgDurationMs;
+    private volatile long p95DurationMs;
     private final LocalDateTime startTime;
 
     CanaryStats(String jobKey, String canaryHandler, int initialRatio) {
-      this(jobKey, canaryHandler, initialRatio, 0, 0, 0, 0.0, 0, LocalDateTime.now());
+      this.jobKey = jobKey;
+      this.canaryHandler = canaryHandler;
+      this.initialRatio = initialRatio;
+      this.startTime = LocalDateTime.now();
     }
 
     CanaryStats(
@@ -203,9 +211,9 @@ public class CanaryReleaseService {
       this.jobKey = jobKey;
       this.canaryHandler = canaryHandler;
       this.initialRatio = initialRatio;
-      this.totalExecutions = totalExecutions;
-      this.successCount = successCount;
-      this.failureCount = failureCount;
+      this.totalExecutions.add(totalExecutions);
+      this.successCount.add(successCount);
+      this.failureCount.add(failureCount);
       this.avgDurationMs = avgDurationMs;
       this.p95DurationMs = p95DurationMs;
       this.startTime = startTime;
@@ -215,18 +223,26 @@ public class CanaryReleaseService {
       initialRatio = newRatio;
     }
 
-    synchronized void recordExecution(boolean success, long durationMs) {
-      totalExecutions++;
+    /**
+     * P0-12: 记录执行结果（无锁，使用 LongAdder）。
+     *
+     * @param success 是否成功
+     * @param durationMs 执行耗时
+     */
+    void recordExecution(boolean success, long durationMs) {
+      totalExecutions.increment();
       if (success) {
-        successCount++;
+        successCount.increment();
       } else {
-        failureCount++;
+        failureCount.increment();
       }
-      avgDurationMs = (avgDurationMs * (totalExecutions - 1) + durationMs) / totalExecutions;
+      durationSum.add(durationMs);
+      avgDurationMs = durationSum.sum() / (double) totalExecutions.sum();
     }
 
     public double getSuccessRate() {
-      return totalExecutions == 0 ? 0.0 : (successCount * 100.0) / totalExecutions;
+      long total = totalExecutions.sum();
+      return total == 0 ? 0.0 : (successCount.sum() * 100.0) / total;
     }
 
     public String jobKey() {
@@ -242,15 +258,15 @@ public class CanaryReleaseService {
     }
 
     public long getTotalExecutions() {
-      return totalExecutions;
+      return totalExecutions.sum();
     }
 
     public long getSuccessCount() {
-      return successCount;
+      return successCount.sum();
     }
 
     public long getFailureCount() {
-      return failureCount;
+      return failureCount.sum();
     }
 
     public double getAvgDurationMs() {

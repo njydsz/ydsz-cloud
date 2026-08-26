@@ -8,6 +8,20 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * <p>实现 {@link BaseStatusEnum} 契约，提供 {@link #canTransitTo} 状态流转校验 与 {@link #isTerminal()} 终态判定，供
  * DAG 执行引擎与业务层复用。
  *
+ * <h3>状态分类</h3>
+ *
+ * <ul>
+ *   <li><b>进行中</b>：PENDING、RUNNING、RETRYING、WAITING_FOR_APPROVAL
+ *   <li><b>终态</b>：SUCCESS、FAILED、SKIPPED、TIMEOUT、APPROVAL_REJECTED
+ * </ul>
+ *
+ * <h3>使用场景</h3>
+ *
+ * <ul>
+ *   <li>{@link #WAITING_FOR_APPROVAL} / {@link #APPROVAL_REJECTED}：审批工作流（{@code DagInstanceControlService}）
+ *   <li>{@link #RETRYING}：节点级重试（{@code DagInstanceExecutor} 重试前过渡态）
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -17,11 +31,23 @@ public enum DagNodeStatus implements BaseStatusEnum<DagNodeStatus> {
   PENDING,
   /** 执行中 */
   RUNNING,
-  /** 等待审批 */
+  /**
+   * 等待审批。
+   *
+   * <p>用于审批工作流，节点执行前需人工审批通过。
+   */
   WAITING_FOR_APPROVAL,
-  /** 审批驳回 */
+  /**
+   * 审批驳回（终态）。
+   *
+   * <p>审批人驳回后进入此状态，等同于节点执行失败。
+   */
   APPROVAL_REJECTED,
-  /** 重试中 */
+  /**
+   * 重试中。
+   *
+   * <p>节点失败后等待 DAG 执行器重新触发的过渡态。
+   */
   RETRYING,
   /** 成功 */
   SUCCESS,

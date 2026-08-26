@@ -27,19 +27,19 @@ public class EmbeddedApprovalActionDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 业务类型（必填） */
-  @NotBlank(message = "{validation.workflow.msg_63149825}")
+  @NotBlank(message = "{validation.workflow.embedded.bizType.required}")
   private String businessType;
 
   /** 业务 ID（必填） */
-  @NotBlank(message = "{validation.workflow.msg_ed0127c6}")
+  @NotBlank(message = "{validation.workflow.embedded.bizId.required}")
   private String businessId;
 
   /** 操作：PASS/REJECT/TRANSFER/DELEGATE/URGE/WITHDRAW */
-  @NotBlank(message = "{validation.workflow.msg_1a62e7c7}")
+  @NotBlank(message = "{validation.workflow.embedded.action.required}")
   private String action;
 
   /** 操作人 ID（必填） */
-  @NotNull(message = "{validation.workflow.msg_f65f41e7}")
+  @NotNull(message = "{validation.workflow.embedded.userId.required}")
   private String userId;
 
   /** 操作人姓名 */

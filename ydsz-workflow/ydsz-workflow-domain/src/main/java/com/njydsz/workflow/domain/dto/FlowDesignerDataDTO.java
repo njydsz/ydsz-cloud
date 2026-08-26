@@ -23,6 +23,6 @@ public class FlowDesignerDataDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 设计器数据 JSON 字符串（含 nodes + edges，前端已序列化好） */
-  @NotBlank(message = "{validation.workflow.msg_a8b9c0d7}")
+  @NotBlank(message = "{validation.workflow.designer.data.required}")
   private String designerData;
 }

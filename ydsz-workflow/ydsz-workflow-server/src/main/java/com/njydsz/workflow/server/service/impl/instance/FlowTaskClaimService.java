@@ -52,7 +52,7 @@ public class FlowTaskClaimService {
     if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_5873f2ae")
+          .key("error.workflow.task.claim.not.pending")
           .params(task.getTaskStatus())
           .build();
     }
