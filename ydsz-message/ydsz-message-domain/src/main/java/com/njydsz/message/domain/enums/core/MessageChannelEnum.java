@@ -10,8 +10,8 @@ package com.njydsz.message.domain.enums.core;
  *
  * <ul>
  *   <li><b>传统通道</b>：SMS（短信）、EMAIL（邮件）、PUSH（App 推送）、INAPP（站内信）
- *   <li><b>IM 通道</b>：DINGTALK（钉钉群机器人）、DINGTALK_WORK（钉钉工作通知）、
- *       WECOM（企业微信群机器人）、WECOM_APP（企业微信应用消息）、FEISHU（飞书）
+ *   <li><b>IM 通道</b>：HMAC（HMAC 签名群机器人）、HMAC_WORK（HMAC 工作通知）、
+ *       WECOM（企业微信群机器人）、WECOM_APP（企业微信应用消息）、POST（Post 消息群机器人）
  *   <li><b>扩展通道</b>：WEBHOOK（自定义 Webhook）
  * </ul>
  *
@@ -32,16 +32,16 @@ public enum MessageChannelEnum {
   INAPP,
   /** Webhook */
   WEBHOOK,
-  /** 钉钉群机器人 */
-  DINGTALK,
-  /** 钉钉工作通知(企业内部应用) */
-  DINGTALK_WORK,
+  /** HMAC 签名群机器人 */
+  HMAC,
+  /** HMAC 工作通知(企业内部应用) */
+  HMAC_WORK,
   /** 企业微信群机器人 */
   WECOM,
   /** 企业微信应用消息(企业内部应用) */
   WECOM_APP,
-  /** 飞书群机器人 */
-  FEISHU,
+  /** Post 消息群机器人 */
+  POST,
   /** 微信小程序订阅消息 */
   WX_MINI,
   /** 支付宝小程序模板消息 */

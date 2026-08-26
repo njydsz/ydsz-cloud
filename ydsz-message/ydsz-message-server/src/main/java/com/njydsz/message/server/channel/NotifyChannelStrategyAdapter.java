@@ -17,8 +17,8 @@ import com.njydsz.common.notify.template.TemplateEngine;
 /**
  * 通道策略适配器：将消息服务的 {@link MessageChannel} 适配为 common-notify 的 {@link NotifyChannelStrategy}。
  *
- * <p>通过此适配器，消息服务的所有通道实现（EmailChannel / SmsChannel / DingTalkChannel / WeComAppChannel /
- * FeishuChannel / InAppChannel） 自动注册为 {@link NotifyChannelStrategy} Bean，供 common-notify 的 {@code
+ * <p>通过此适配器，消息服务的所有通道实现（EmailChannel / SmsChannel / HmacChannel / WeComAppChannel /
+ * PostChannel / InAppChannel） 自动注册为 {@link NotifyChannelStrategy} Bean，供 common-notify 的 {@code
  * NotifyService} 统一调用，消除两套平行通道体系。
  *
  * <p>仅支持在 {@link NotifyChannel} 枚举中有对应值的通道类型， PUSH / WEBHOOK 等无对应枚举值的通道不会被适配。
