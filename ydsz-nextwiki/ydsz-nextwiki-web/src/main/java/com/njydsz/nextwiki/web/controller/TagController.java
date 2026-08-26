@@ -78,7 +78,7 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
  *                                            ↓
  *                                   ydsz-nextwiki-infra.TagMapper
  *                                            ↓
- *                                   ydsz_tag / ydsz_file_tag
+ *                                   ydsz_wiki_tag / ydsz_wiki_file_tag
  * </pre>
  *
  * @author ydsz-team

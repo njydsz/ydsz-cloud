@@ -11,7 +11,7 @@ import com.njydsz.system.domain.vo.TenantVO;
 /**
  * 租户 Service 接口
  *
- * <p>提供租户（{@code ydsz_tenant}）的 CRUD、分页查询等能力。 租户是系统多租户隔离的最高层，支持套餐绑定、配额管理、到期控制。
+ * <p>提供租户（{@code ydsz_sys_tenant}）的 CRUD、分页查询等能力。 租户是系统多租户隔离的最高层，支持套餐绑定、配额管理、到期控制。
  *
  * <p><b>核心职责：</b>
  *

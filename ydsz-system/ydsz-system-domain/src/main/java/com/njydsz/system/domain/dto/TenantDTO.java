@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 租户创建/更新 DTO
  *
- * <p>对应 {@code ydsz_tenant} 表的写入参数。 创建时 {@code id} 为空（由雪花算法自动生成），更新时 {@code id} 必填。
+ * <p>对应 {@code ydsz_sys_tenant} 表的写入参数。 创建时 {@code id} 为空（由雪花算法自动生成），更新时 {@code id} 必填。
  *
  * <p><b>字段约束：</b>
  *

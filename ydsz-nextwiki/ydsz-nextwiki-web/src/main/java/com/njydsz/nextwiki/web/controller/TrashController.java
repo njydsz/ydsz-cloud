@@ -80,7 +80,7 @@ import com.njydsz.nextwiki.server.service.TrashApplicationService;
  *                                            ↓
  *                                   ydsz-nextwiki-infra.TrashItemMapper
  *                                            ↓
- *                                   ydsz_trash_item
+ *                                   ydsz_wiki_trash_item
  * </pre>
  *
  * @author ydsz-team

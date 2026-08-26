@@ -19,14 +19,14 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 /**
  * 搜索领域服务
  *
- * <p>维护 {@code ydsz_search_index} 表，提供基于数据库的文件名/路径/标签搜索能力。
+ * <p>维护 {@code ydsz_wiki_search_index} 表，提供基于数据库的文件名/路径/标签搜索能力。
  *
  * <p><b>职责定位（双索引架构）：</b>
  *
  * <ul>
- *   <li>{@code ydsz_search_index} 表 — 搜索引擎不可用时的 <b>DB 降级存储</b>，仅在统一搜索（{@code
+ *   <li>{@code ydsz_wiki_search_index} 表 — 搜索引擎不可用时的 <b>DB 降级存储</b>，仅在统一搜索（{@code
  *       ydsz-common-search}）不可用时提供 LIKE 兜底
- *   <li>{@code ydsz_search_index} 表（{@code WikiSearchProvider} 维护）— 统一搜索引擎的主索引，支持全文检索、高亮、聚合、权重排序
+ *   <li>{@code ydsz_wiki_search_index} 表（{@code WikiSearchProvider} 维护）— 统一搜索引擎的主索引，支持全文检索、高亮、聚合、权重排序
  * </ul>
  *
  * <p><b>搜索优先级：</b>

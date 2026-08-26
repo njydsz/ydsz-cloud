@@ -11,7 +11,7 @@ import com.njydsz.system.domain.repository.TenantRepository;
 /**
  * 租户到期自动锁定调度任务（P1-3 多租户能力补课）。
  *
- * <p>周期性扫描 {@code ydsz_tenant} 中已到期（{@code expire_at < now}）且仍处于 {@code ENABLED}
+ * <p>周期性扫描 {@code ydsz_sys_tenant} 中已到期（{@code expire_at < now}）且仍处于 {@code ENABLED}
  * 状态的租户，统一置为 {@code DISABLED}，实现「订阅到期 → 自动降级锁定」的生命周期闭环，避免过期租户
  * 继续占用资源。
  *

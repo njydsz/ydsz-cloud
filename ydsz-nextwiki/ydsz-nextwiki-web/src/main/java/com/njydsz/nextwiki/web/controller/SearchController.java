@@ -71,7 +71,7 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
  *                                       ├── WikiSearchProvider (ES 适配)
  *                                       └── SearchDomainService (DB LIKE 降级)
  *                                            ↓
- *                                   Elasticsearch / ydsz_search_index
+ *                                   Elasticsearch / ydsz_wiki_search_index
  * </pre>
  *
  * @author ydsz-team

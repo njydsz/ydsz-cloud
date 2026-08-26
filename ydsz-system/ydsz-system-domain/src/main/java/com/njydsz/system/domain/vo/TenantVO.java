@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 租户 VO
  *
- * <p>对应 {@code ydsz_tenant} 表的展示视图，是「租户管理」列表 / 详情接口的返回值类型。 由 {@link
+ * <p>对应 {@code ydsz_sys_tenant} 表的展示视图，是「租户管理」列表 / 详情接口的返回值类型。 由 {@link
  * com.njydsz.system.domain.converter.SystemConverter} 从 {@link
  * com.njydsz.system.domain.entity.Tenant} 实体转换而来。
  *

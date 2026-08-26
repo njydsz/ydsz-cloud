@@ -11,7 +11,7 @@ import com.njydsz.system.infra.entity.Tenant;
 /**
  * 租户 Mapper
  *
- * <p>对应数据表 <code>ydsz_tenant</code>。
+ * <p>对应数据表 <code>ydsz_sys_tenant</code>。
  *
  * <p>租户是系统多租户隔离的最高层（每条业务数据都通过 {@code tenant_id} 关联），租户状态/计划/到期时间集中管理。
  *
@@ -21,7 +21,7 @@ import com.njydsz.system.infra.entity.Tenant;
  *   <li>uk_tenant_code — 租户编码唯一索引
  * </ul>
  *
- * <p><b>多租户：</b>{@code ydsz_tenant} 为平台级表（P1-4），应加入 {@code ydsz.tenant.ignore-tables}
+ * <p><b>多租户：</b>{@code ydsz_sys_tenant} 为平台级表（P1-4），应加入 {@code ydsz.tenant.ignore-tables}
  * 配置使其绕过租户拦截器；平台级查询（{@code TenantServiceImpl}）依赖该配置或超级管理员上下文。
  * 原生 {@link #disableExpiredTenants} 通过 {@code @InterceptorIgnore(tenantLine = "true")} 显式豁免，
  * 不依赖部署配置即可保证全量扫描。
@@ -50,7 +50,7 @@ public interface TenantMapper extends BaseMapper<Tenant> {
    */
   @InterceptorIgnore(tenantLine = "true")
   @Update(
-      "UPDATE ydsz_tenant SET status = 'DISABLED', updated_by = 'system', updated_at = NOW() "
+      "UPDATE ydsz_sys_tenant SET status = 'DISABLED', updated_by = 'system', updated_at = NOW() "
           + "WHERE status = 'ENABLED' AND expire_at IS NOT NULL AND expire_at < NOW() "
           + "AND deleted = 0")
   int disableExpiredTenants();
