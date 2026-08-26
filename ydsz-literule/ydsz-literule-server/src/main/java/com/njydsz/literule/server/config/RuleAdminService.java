@@ -377,7 +377,7 @@ public class RuleAdminService {
             : RuleConfigRefreshEvent.ChangeType.CREATE;
     publishRefreshEvent(RuleConfigRefreshEvent.of(saved.getCode(), changeType, operator));
 
-    // 同步到统一搜索索引（ydsz_search_index）
+    // 同步到统一搜索索引（ydsz_wiki_search_index）
     syncSearchIndex(saved);
 
     log.info(
@@ -854,7 +854,7 @@ public class RuleAdminService {
   }
 
   /**
-   * 将规则数据同步到统一搜索索引（ydsz_search_index）。
+   * 将规则数据同步到统一搜索索引（ydsz_wiki_search_index）。
    *
    * <p>通过 {@link SearchIndexEventBridge} 异步写入，不阻塞主业务流程。 未引入 {@code ydsz-common-search} 时桥接器为空，跳过同步。
    *

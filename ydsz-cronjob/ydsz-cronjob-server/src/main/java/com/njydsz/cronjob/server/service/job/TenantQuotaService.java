@@ -12,7 +12,7 @@ import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
  * <h3>配额优先级</h3>
  *
  * <ol>
- *   <li>DB 记录（{@code ydsz_tenant_quota} 表对应租户的配置）
+ *   <li>DB 记录（{@code ydsz_job_tenant_quota} 表对应租户的配置）
  *   <li>全局默认（{@code ydsz.cronjob.quota.default-max-*} 配置）
  *   <li>Unlimited（未启用配额检查或上限为 null）
  * </ol>

@@ -23,7 +23,7 @@ import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
  *
  * <p><b>告警规则：</b>每条规则绑定一个或多个任务 ID,配置触发条件(规则表达式)、 通知通道(支持组合)、接收人(角色/用户/部门)。规则修改不影响历史告警日志。
  *
- * <p><b>告警日志：</b>触发后写入 {@code ydsz_alert_dispatch}（P3-1-merge，source_type='CRONJOB'），包含触发时间、条件命中值、通知发送结果。
+ * <p><b>告警日志：</b>触发后写入 {@code ydsz_job_alert_dispatch}（P3-1-merge，source_type='CRONJOB'），包含触发时间、条件命中值、通知发送结果。
  *
  * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *

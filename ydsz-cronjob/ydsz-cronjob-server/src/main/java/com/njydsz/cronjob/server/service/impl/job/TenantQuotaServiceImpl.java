@@ -22,7 +22,7 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 /**
  * 租户配额服务实现。
  *
- * <p>管理租户的任务配额 ({@code ydsz_tenant_quota})：并发任务数上限、日调度次数上限、
+ * <p>管理租户的任务配额 ({@code ydsz_job_tenant_quota})：并发任务数上限、日调度次数上限、
  *
  * <p>单租户 Worker 数量、跨租户任务隔离。
  *
