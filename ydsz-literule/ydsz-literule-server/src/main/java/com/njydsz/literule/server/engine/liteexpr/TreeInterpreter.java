@@ -23,6 +23,8 @@ import com.njydsz.literule.server.debug.RuleDebugger;
  *   <li><b>空值安全</b>：null.x 返回 null 而非 NPE
  *   <li><b>函数调用</b>：通过 {@link FunctionRegistry} 查找并执行
  *   <li><b>追踪树构建</b>：求值过程中同步构建 {@link ExprTraceBuilder} 追踪树
+ *   <li><b>线程安全</b>：解释器为无状态单例，每次求值的变量上下文/追踪器/递归深度存放于
+ *       {@link ThreadLocal} 会话中（P0-2 并发修复），并发求值互不干扰
  * </ul>
  *
  * @since 1.0.0
@@ -30,7 +32,7 @@ import com.njydsz.literule.server.debug.RuleDebugger;
  */
 public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
-    /** 最小递归深度限制 */
+  /** 最小递归深度限制 */
   private static final int MIN_RECURSION_DEPTH = 16;
 
   /**
@@ -42,14 +44,27 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   public static final int DEFAULT_MAX_RECURSION_DEPTH = 128;
 
   private final FunctionRegistry functionRegistry;
-  private Map<String, Object> variables;
-  private ExprTraceBuilder traceBuilder;
 
-  /** 当前递归深度（每次 visit 开始时 +1，结束时 -1） */
-  private int currentDepth = 0;
+  /** 单次求值会话（ThreadLocal，保证并发安全） */
+  private final ThreadLocal<EvalSession> session = new ThreadLocal<>();
 
   /** 递归深度上限（可通过系统属性覆盖） */
   private final int maxRecursionDepth;
+
+  /**
+   * 单次求值会话：承载变量上下文、追踪树构建器与递归深度，随求值调用创建与销毁。
+   *
+   * @param variables 变量上下文（facts）
+   */
+  private static final class EvalSession {
+    final Map<String, Object> variables;
+    ExprTraceBuilder traceBuilder;
+    int currentDepth = 0;
+
+    EvalSession(Map<String, Object> variables) {
+      this.variables = variables;
+    }
+  }
 
   public TreeInterpreter(FunctionRegistry functionRegistry) {
     this(functionRegistry, DEFAULT_MAX_RECURSION_DEPTH);
@@ -67,12 +82,37 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   }
 
   /**
+   * 开启一次求值会话
+   *
+   * @param facts 变量上下文
+   * @return 会话实例
+   */
+  private EvalSession beginSession(Map<String, Object> facts) {
+    EvalSession evalSession = new EvalSession(facts);
+    session.set(evalSession);
+    return evalSession;
+  }
+
+  /**
+   * 获取当前线程的求值会话
+   *
+   * @return 会话实例
+   */
+  private EvalSession requireSession() {
+    EvalSession evalSession = session.get();
+    if (evalSession == null) {
+      throw new IllegalStateException("LiteExpr 求值会话未初始化，请在 eval/evalWithTrace 调用链内使用");
+    }
+    return evalSession;
+  }
+
+  /**
    * 检查递归深度是否超限
    *
    * @throws LiteExprException 超过递归深度上限时
    */
   private void checkRecursionDepth(ExprNode node) {
-    if (currentDepth >= maxRecursionDepth) {
+    if (requireSession().currentDepth >= maxRecursionDepth) {
       throw new LiteExprException(
           String.format("表达式递归深度超过上限 %d，请检查表达式是否存在过深嵌套或循环引用", maxRecursionDepth),
           node != null ? node.line() : 0,
@@ -88,9 +128,13 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
    * @return 求值结果
    */
   public Object eval(ExprNode ast, Map<String, Object> facts) {
-    this.variables = facts;
-    this.traceBuilder = null;
-    return ast.accept(this);
+    EvalSession evalSession = beginSession(facts);
+    try {
+      evalSession.traceBuilder = null;
+      return ast.accept(this);
+    } finally {
+      session.remove();
+    }
   }
 
   /**
@@ -101,11 +145,15 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
    * @return 追踪结果（含最终值和追踪树）
    */
   public TraceEvalResult evalWithTrace(ExprNode ast, Map<String, Object> facts) {
-    this.variables = facts;
-    this.traceBuilder = new ExprTraceBuilder();
-    Object result = ast.accept(this);
-    ExprTraceBuilder.TraceNode traceTree = traceBuilder.buildRoot(ast, result);
-    return new TraceEvalResult(result, traceTree);
+    EvalSession evalSession = beginSession(facts);
+    try {
+      evalSession.traceBuilder = new ExprTraceBuilder();
+      Object result = ast.accept(this);
+      ExprTraceBuilder.TraceNode traceTree = evalSession.traceBuilder.buildRoot(ast, result);
+      return new TraceEvalResult(result, traceTree);
+    } finally {
+      session.remove();
+    }
   }
 
   // ===== Visitor 方法 =====
@@ -118,9 +166,10 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   @Override
   public Object visitVariable(VariableNode node) {
     debugCheckNode(node, "VARIABLE");
-    Object value = variables.get(node.name());
-    if (traceBuilder != null) {
-      traceBuilder.recordVariable(node.name(), value);
+    EvalSession evalSession = requireSession();
+    Object value = evalSession.variables.get(node.name());
+    if (evalSession.traceBuilder != null) {
+      evalSession.traceBuilder.recordVariable(node.name(), value);
     }
     return value;
   }
@@ -128,7 +177,8 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   @Override
   public Object visitBinaryOp(BinaryOpNode node) {
     checkRecursionDepth(node);
-    currentDepth++;
+    EvalSession evalSession = requireSession();
+    evalSession.currentDepth++;
     try {
       String op = node.operator();
       // F1 断点调试：比较/逻辑/算术节点求值前挂起（仅调试会话激活时生效）
@@ -139,15 +189,15 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
         Object leftVal = node.left().accept(this);
         boolean leftBool = BuiltinFunctions.toBool(leftVal);
         if (!leftBool) {
-          if (traceBuilder != null) {
-            traceBuilder.recordLogical(op, false, true, node);
+          if (evalSession.traceBuilder != null) {
+            evalSession.traceBuilder.recordLogical(op, false, true, node);
           }
           return false;
         }
         Object rightVal = node.right().accept(this);
         boolean rightBool = BuiltinFunctions.toBool(rightVal);
-        if (traceBuilder != null) {
-          traceBuilder.recordLogical(op, rightBool, false, node);
+        if (evalSession.traceBuilder != null) {
+          evalSession.traceBuilder.recordLogical(op, rightBool, false, node);
         }
         return rightBool;
       }
@@ -156,15 +206,15 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
         Object leftVal = node.left().accept(this);
         boolean leftBool = BuiltinFunctions.toBool(leftVal);
         if (leftBool) {
-          if (traceBuilder != null) {
-            traceBuilder.recordLogical(op, true, true, node);
+          if (evalSession.traceBuilder != null) {
+            evalSession.traceBuilder.recordLogical(op, true, true, node);
           }
           return true;
         }
         Object rightVal = node.right().accept(this);
         boolean rightBool = BuiltinFunctions.toBool(rightVal);
-        if (traceBuilder != null) {
-          traceBuilder.recordLogical(op, rightBool, false, node);
+        if (evalSession.traceBuilder != null) {
+          evalSession.traceBuilder.recordLogical(op, rightBool, false, node);
         }
         return rightBool;
       }
@@ -174,19 +224,20 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       Object rightVal = node.right().accept(this);
       Object result = applyBinaryOp(op, leftVal, rightVal);
 
-      if (traceBuilder != null) {
-        traceBuilder.recordBinary(op, leftVal, rightVal, result, node);
+      if (evalSession.traceBuilder != null) {
+        evalSession.traceBuilder.recordBinary(op, leftVal, rightVal, result, node);
       }
       return result;
     } finally {
-      currentDepth--;
+      evalSession.currentDepth--;
     }
   }
 
   @Override
   public Object visitUnaryOp(UnaryOpNode node) {
     checkRecursionDepth(node);
-    currentDepth++;
+    EvalSession evalSession = requireSession();
+    evalSession.currentDepth++;
     try {
       Object operandVal = node.operand().accept(this);
       String op = node.operator();
@@ -201,36 +252,38 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       } else {
         throw new LiteExprException("未知一元运算符: " + op, node.line(), node.column());
       }
-      if (traceBuilder != null) {
-        traceBuilder.recordUnary(op, operandVal, result, node);
+      if (evalSession.traceBuilder != null) {
+        evalSession.traceBuilder.recordUnary(op, operandVal, result, node);
       }
       return result;
     } finally {
-      currentDepth--;
+      evalSession.currentDepth--;
     }
   }
 
   @Override
   public Object visitTernary(TernaryNode node) {
     checkRecursionDepth(node);
-    currentDepth++;
+    EvalSession evalSession = requireSession();
+    evalSession.currentDepth++;
     try {
       Object condVal = node.condition().accept(this);
       boolean cond = BuiltinFunctions.toBool(condVal);
       Object result = cond ? node.thenExpr().accept(this) : node.elseExpr().accept(this);
-      if (traceBuilder != null) {
-        traceBuilder.recordTernary(cond, result, node);
+      if (evalSession.traceBuilder != null) {
+        evalSession.traceBuilder.recordTernary(cond, result, node);
       }
       return result;
     } finally {
-      currentDepth--;
+      evalSession.currentDepth--;
     }
   }
 
   @Override
   public Object visitFunctionCall(FunctionCallNode node) {
     checkRecursionDepth(node);
-    currentDepth++;
+    EvalSession evalSession = requireSession();
+    evalSession.currentDepth++;
     try {
       debugCheckNode(node, "FUNCTION_CALL");
       String funcName = node.functionName();
@@ -247,8 +300,8 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
       try {
         Object result = function.call(argValues);
-        if (traceBuilder != null) {
-          traceBuilder.recordFunctionCall(funcName, argValues, result, node);
+        if (evalSession.traceBuilder != null) {
+          evalSession.traceBuilder.recordFunctionCall(funcName, argValues, result, node);
         }
         return result;
       } catch (LiteExprException e) {
@@ -258,14 +311,15 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
             "函数 '" + funcName + "' 执行失败: " + e.getMessage(), node.line(), node.column(), e);
       }
     } finally {
-      currentDepth--;
+      evalSession.currentDepth--;
     }
   }
 
   @Override
   public Object visitMemberAccess(MemberAccessNode node) {
     checkRecursionDepth(node);
-    currentDepth++;
+    EvalSession evalSession = requireSession();
+    evalSession.currentDepth++;
     try {
       Object target = node.target().accept(this);
       if (target == null) {
@@ -289,19 +343,20 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
         result = getFieldValue(target, member);
       }
 
-      if (traceBuilder != null) {
-        traceBuilder.recordMemberAccess(target, member, result, node);
+      if (evalSession.traceBuilder != null) {
+        evalSession.traceBuilder.recordMemberAccess(target, member, result, node);
       }
       return result;
     } finally {
-      currentDepth--;
+      evalSession.currentDepth--;
     }
   }
 
   @Override
   public Object visitIndex(IndexNode node) {
     checkRecursionDepth(node);
-    currentDepth++;
+    EvalSession evalSession = requireSession();
+    evalSession.currentDepth++;
     try {
       Object target = node.target().accept(this);
       if (target == null) {
@@ -328,14 +383,15 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
       return result;
     } finally {
-      currentDepth--;
+      evalSession.currentDepth--;
     }
   }
 
   @Override
   public Object visitList(ListNode node) {
     checkRecursionDepth(node);
-    currentDepth++;
+    EvalSession evalSession = requireSession();
+    evalSession.currentDepth++;
     try {
       List<Object> result = new ArrayList<>(node.elements().size());
       for (ExprNode element : node.elements()) {
@@ -343,14 +399,15 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       }
       return result;
     } finally {
-      currentDepth--;
+      evalSession.currentDepth--;
     }
   }
 
   @Override
   public Object visitMap(MapNode node) {
     checkRecursionDepth(node);
-    currentDepth++;
+    EvalSession evalSession = requireSession();
+    evalSession.currentDepth++;
     try {
       Map<Object, Object> result = new LinkedHashMap<>(node.entries().size());
       for (Map.Entry<ExprNode, ExprNode> entry : node.entries().entrySet()) {
@@ -360,24 +417,25 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       }
       return result;
     } finally {
-      currentDepth--;
+      evalSession.currentDepth--;
     }
   }
 
   @Override
   public Object visitLambda(LambdaNode node) {
-    // Lambda 转为 LiteExprFunction
+    // Lambda 转为 LiteExprFunction（闭包绑定当前会话的变量上下文）
+    EvalSession evalSession = requireSession();
     return (LiteExprFunction)
         args -> {
-          // 将 lambda 参数加入变量上下文
-          Object oldValue = variables.put(node.parameter(), args[0]);
+          Map<String, Object> captured = evalSession.variables;
+          Object oldValue = captured.put(node.parameter(), args[0]);
           try {
             return node.body().accept(this);
           } finally {
             if (oldValue != null) {
-              variables.put(node.parameter(), oldValue);
+              captured.put(node.parameter(), oldValue);
             } else {
-              variables.remove(node.parameter());
+              captured.remove(node.parameter());
             }
           }
         };
@@ -516,7 +574,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       return;
     }
     try {
-      debugger.checkExpressionBreakpoint(ruleCode, nodeType, node.exprText(), variables);
+      debugger.checkExpressionBreakpoint(ruleCode, nodeType, node.exprText(), requireSession().variables);
     } catch (Exception e) {
       // 断点挂起异常不应中断求值（调试器故障隔离）
       if (e instanceof InterruptedException) {

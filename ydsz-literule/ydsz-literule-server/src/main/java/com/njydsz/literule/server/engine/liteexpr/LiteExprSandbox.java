@@ -1,11 +1,12 @@
 package com.njydsz.literule.server.engine.liteexpr;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * LiteExpr AST 级别沙箱
@@ -86,17 +87,14 @@ public class LiteExprSandbox {
           "ObjectInputStream",
           "ObjectOutputStream");
 
-  /** 允许的变量名白名单 */
-  private final Set<String> allowedVariables = new HashSet<>();
+  /** 允许的函数名白名单（由 FunctionRegistry 初始化，并发安全） */
+  private final Set<String> allowedFunctions = ConcurrentHashMap.newKeySet();
 
-  /** 允许的函数名白名单（由 FunctionRegistry 初始化） */
-  private final Set<String> allowedFunctions = new HashSet<>();
+  /** 扩展危险方法名（O2 配置外置化，可热更新追加，并发安全） */
+  private final Set<String> extraForbiddenMethods = ConcurrentHashMap.newKeySet();
 
-  /** 扩展危险方法名（O2 配置外置化，可热更新追加） */
-  private final Set<String> extraForbiddenMethods = new HashSet<>();
-
-  /** 扩展危险属性链根标识符（O2 配置外置化，可热更新追加） */
-  private final Set<String> extraForbiddenRoots = new HashSet<>();
+  /** 扩展危险属性链根标识符（O2 配置外置化，可热更新追加，并发安全） */
+  private final Set<String> extraForbiddenRoots = ConcurrentHashMap.newKeySet();
 
   /**
    * 沙箱校验结果缓存（P1-3 性能优化）
@@ -105,8 +103,10 @@ public class LiteExprSandbox {
    * 同一表达式返回相同对象引用）。 校验结果仅依赖静态 {@code FORBIDDEN_*} 集合， 与运行时白名单状态无关（白名单仅抑制误报，不产生新的违规项），因此可安全缓存。
    *
    * <p>缓存容量无限制，依赖 {@link LiteExprCompiler} 的编译缓存（默认 4096 条）作为天然上界。
+   * 使用同步包装（P0-2 并发修复），避免并发求值下 IdentityHashMap 结构损坏。
    */
-  private final Map<ExprNode, SandboxResult> checkCache = new IdentityHashMap<>();
+  private final Map<ExprNode, SandboxResult> checkCache =
+      Collections.synchronizedMap(new IdentityHashMap<>());
 
   public LiteExprSandbox() {}
 
@@ -183,41 +183,6 @@ public class LiteExprSandbox {
     extraForbiddenMethods.clear();
     extraForbiddenRoots.clear();
     clearCache();
-  }
-
-  /** 添加变量到白名单
-   * @param name 参数说明
-   */
-  public void addAllowedVariable(String name) {
-    if (name != null && !name.isBlank()) {
-      allowedVariables.add(name);
-    }
-  }
-
-  /** 批量添加变量
-   * @param names 参数说明
-   */
-  public void addAllowedVariables(Iterable<String> names) {
-    if (names == null) {
-      return;
-    }
-    for (String n : names) {
-      addAllowedVariable(n);
-    }
-  }
-
-  /**
-   * 同步 facts key 到白名单（P0-T4：每次调用先清空再添加，防止高基数场景下 Set 无限增长）
-   *
-   * <p>每次评估前调用此方法，将当前 facts 的 key 替换为白名单内容。 避免不同请求的 facts key（如 traceId、时间戳等高基数 key）在 Set
-   * 中累积导致内存泄漏。
-      * @param facts 参数说明
-   */
-  public void syncFacts(Map<String, Object> facts) {
-    allowedVariables.clear();
-    if (facts != null) {
-      allowedVariables.addAll(facts.keySet());
-    }
   }
 
   /**
@@ -331,12 +296,7 @@ public class LiteExprSandbox {
       case LambdaNode ln -> checkNode(ln.body(), violations);
       case TemplateStringNode tsn -> tsn.parts().forEach(p -> checkNode(p, violations));
       case VariableNode vn -> {
-        // 变量白名单检查（仅当白名单非空时检查）
-        if (!allowedVariables.isEmpty()
-            && !allowedVariables.contains(vn.name())
-            && !FORBIDDEN_ROOTS.contains(vn.name())) {
-          // 未注册变量不阻断，仅记录（向后兼容）
-        }
+        // 危险类根标识符直接阻断；普通变量不做白名单拦截（向后兼容，由表达式校验层做变量空间检查）
         if (FORBIDDEN_ROOTS.contains(vn.name()) || extraForbiddenRoots.contains(vn.name())) {
           violations.add("禁止引用危险类: " + vn.name());
         }

@@ -75,9 +75,6 @@ public class LiteExprEngine implements ExpressionEngine {
     }
     try {
       ExprNode ast = compileAndCheck(expression);
-      if (sandboxEnabled && context != null) {
-        sandbox.syncFacts(context.getFacts());
-      }
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
       Object result = interpreter.eval(ast, facts);
       if (result instanceof Boolean b) {
@@ -106,9 +103,6 @@ public class LiteExprEngine implements ExpressionEngine {
     }
     try {
       ExprNode ast = compileAndCheck(expression);
-      if (sandboxEnabled && context != null) {
-        sandbox.syncFacts(context.getFacts());
-      }
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
       return interpreter.eval(ast, facts);
     } catch (SecurityException e) {
@@ -204,9 +198,6 @@ public class LiteExprEngine implements ExpressionEngine {
     long start = System.nanoTime();
     try {
       ExprNode ast = compileAndCheck(expression);
-      if (sandboxEnabled && context != null) {
-        sandbox.syncFacts(context.getFacts());
-      }
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
       TreeInterpreter.TraceEvalResult traceResult = interpreter.evalWithTrace(ast, facts);
       long elapsed = System.nanoTime() - start;
