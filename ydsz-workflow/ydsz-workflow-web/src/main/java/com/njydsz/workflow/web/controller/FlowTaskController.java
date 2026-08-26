@@ -432,7 +432,7 @@ public class FlowTaskController {
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "批量通过任务")
   public YdszResponse<Void> batchPass(@RequestBody List<String> taskIds) {
-    workflowFacade.batchPass(taskIds, AuthContextUtils.getUserId(), AuthContextUtils.getUsername());
+        workflowFacade.batchPassTasks(taskIds, AuthContextUtils.getUserId(), null);
     return YdszResponse.success();
   }
 
@@ -638,7 +638,7 @@ public class FlowTaskController {
       @RequestParam(required = false) String flowCode,
       @RequestParam(required = false) LocalDateTime startTime,
       @RequestParam(required = false) LocalDateTime endTime) {
-    return YdszResponse.success(taskService.nodeDurationStats(flowCode, startTime, endTime));
+    return YdszResponse.success(taskService.nodeDurationStats(flowCode, AuthContextUtils.getTenantIdOrDefault()));
   }
 
   /**
@@ -1025,7 +1025,7 @@ public class FlowTaskController {
     String ownerId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(
-        delegateAuthService.listMineVO(ownerId, tenantId, status));
+        delegateAuthService.listMine(ownerId, tenantId, status));
   }
 
   /**
@@ -1041,7 +1041,7 @@ public class FlowTaskController {
     String delegateUserId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(
-        delegateAuthService.listAsDelegateVO(delegateUserId, tenantId, status));
+        delegateAuthService.listAsDelegate(delegateUserId, tenantId, status));
   }
 
   // ============== P0-3: 抄送中心 ==============
@@ -1138,7 +1138,7 @@ public class FlowTaskController {
   @GetMapping("/attachment/task/{taskId}")
   @Operation(summary = "查询任务附件")
   public YdszResponse<List<FlowAttachmentVO>> listByTask(@PathVariable String taskId) {
-    return YdszResponse.success(attachmentService.listByTaskVO(taskId));
+    return YdszResponse.success(attachmentService.listByTask(taskId));
   }
 
   /**
@@ -1150,7 +1150,7 @@ public class FlowTaskController {
   @GetMapping("/attachment/instance/{instanceId}")
   @Operation(summary = "查询实例附件")
   public YdszResponse<List<FlowAttachmentVO>> listByInstance(@PathVariable String instanceId) {
-    return YdszResponse.success(attachmentService.listByInstanceVO(instanceId));
+    return YdszResponse.success(attachmentService.listByInstance(instanceId));
   }
 
   /**

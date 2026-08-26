@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS ydsz_prompt_template (
     description              VARCHAR(512)             DEFAULT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
     current_version          INTEGER                  NOT NULL DEFAULT 1,
-    deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
@@ -48,7 +50,9 @@ COMMENT ON COLUMN ydsz_prompt_template.content IS '模板内容，支持 #{var} 
 COMMENT ON COLUMN ydsz_prompt_template.description IS '模板描述';
 COMMENT ON COLUMN ydsz_prompt_template.category IS '分类（用于分组检索）';
 COMMENT ON COLUMN ydsz_prompt_template.current_version IS '当前版本号，自 1 起每次更新递增';
-COMMENT ON COLUMN ydsz_prompt_template.deleted IS '逻辑删除标识';
+COMMENT ON COLUMN ydsz_prompt_template.status IS '状态标识';
+COMMENT ON COLUMN ydsz_prompt_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_prompt_template.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_prompt_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_prompt_template.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_prompt_template.created_by IS '创建人';
@@ -64,8 +68,13 @@ CREATE TABLE IF NOT EXISTS ydsz_prompt_version (
     version                  INTEGER                  NOT NULL,
     content                  TEXT                     NOT NULL,
     change_note              VARCHAR(512)             DEFAULT NULL,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_prompt_version PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_prompt_version_template_version UNIQUE (template_code, version, tenant_id)
 );
@@ -77,8 +86,13 @@ COMMENT ON COLUMN ydsz_prompt_version.template_code IS '所属模板编码（关
 COMMENT ON COLUMN ydsz_prompt_version.version IS '版本号（与 template 的 current_version 对应）';
 COMMENT ON COLUMN ydsz_prompt_version.content IS '该版本的模板内容快照';
 COMMENT ON COLUMN ydsz_prompt_version.change_note IS '版本备注（描述本次变更内容）';
+COMMENT ON COLUMN ydsz_prompt_version.status IS '状态标识';
+COMMENT ON COLUMN ydsz_prompt_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_prompt_version.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_prompt_version.created_at IS '版本创建时间';
 COMMENT ON COLUMN ydsz_prompt_version.created_by IS '操作人';
+COMMENT ON COLUMN ydsz_prompt_version.updated_at IS '版本更新时间';
+COMMENT ON COLUMN ydsz_prompt_version.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_version_template_code ON ydsz_prompt_version (template_code);
 
@@ -241,6 +255,51 @@ COMMENT ON COLUMN ydsz_agent_token_usage.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_conversation_created ON ydsz_agent_token_usage (conversation_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_tenant_deleted ON ydsz_agent_token_usage (tenant_id, deleted);
+
+-- ============================================================================
+-- RAG 向量文档块表 ydsz_agent_document_chunk（pgvector 专用）
+--
+-- 无 MyBatis-Plus @TableName 实体：由 PgVectorStore（向量检素）与
+-- HybridRetriever（全文检素）通过 JdbcTemplate 原生 SQL 直接读写，
+-- 不走 MP 租户拦截器，故租户隔离由 SQL 自带 tenant_id 条件显式保证。
+--
+-- 注意：embedding 为 pgvector 类型，执行本脚本前需先：
+--   CREATE EXTENSION IF NOT EXISTS vector;
+-- 该表依赖 pgvector 扩展，仅 PostgreSQL 方言提供（MySQL/Oracle 无对应类型）。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS ydsz_agent_document_chunk (
+    id                       VARCHAR(64)              NOT NULL,
+    document_id              VARCHAR(64)              NOT NULL,
+    content                  TEXT                     NOT NULL,
+    embedding                vector(1536)             DEFAULT NULL,
+    chunk_index              INTEGER                  DEFAULT NULL,
+    token_count              INTEGER                  DEFAULT NULL,
+    document_title           VARCHAR(256)             DEFAULT NULL,
+    source                   VARCHAR(128)             DEFAULT NULL,
+    metadata                 JSONB                    DEFAULT NULL,
+    tenant_id                VARCHAR(64)              DEFAULT NULL,
+    deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
+    created_at               TIMESTAMPTZ              NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_ydsz_agent_document_chunk PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE ydsz_agent_document_chunk IS 'RAG 文档分块向量表（pgvector：HybridRetriever 全文检素 + PgVectorStore 向量检素共用）';
+COMMENT ON COLUMN ydsz_agent_document_chunk.id IS '分块主键 ID';
+COMMENT ON COLUMN ydsz_agent_document_chunk.document_id IS '所属文档 ID';
+COMMENT ON COLUMN ydsz_agent_document_chunk.content IS '分块文本内容';
+COMMENT ON COLUMN ydsz_agent_document_chunk.embedding IS '文本向量（vector(1536)，用于相似度检素）';
+COMMENT ON COLUMN ydsz_agent_document_chunk.chunk_index IS '分块序号（从 0 开始）';
+COMMENT ON COLUMN ydsz_agent_document_chunk.token_count IS 'Token 数';
+COMMENT ON COLUMN ydsz_agent_document_chunk.document_title IS '文档标题（冗余，全文检素展示用）';
+COMMENT ON COLUMN ydsz_agent_document_chunk.source IS '来源标识（文件路径/URL 等）';
+COMMENT ON COLUMN ydsz_agent_document_chunk.metadata IS '分块元数据 JSONB';
+COMMENT ON COLUMN ydsz_agent_document_chunk.tenant_id IS '租户 ID（多租户隔离，原生 SQL 显式过滤）';
+COMMENT ON COLUMN ydsz_agent_document_chunk.deleted IS '逻辑删除标识（HybridRetriever 全文检素 WHERE deleted = false）';
+COMMENT ON COLUMN ydsz_agent_document_chunk.created_at IS '创建时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_document_id ON ydsz_agent_document_chunk (document_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_tenant ON ydsz_agent_document_chunk (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_embedding ON ydsz_agent_document_chunk USING ivfflat (embedding vector_cosine_ops);
 
 INSERT INTO ydsz_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
 VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, FALSE);

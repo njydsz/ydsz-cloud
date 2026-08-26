@@ -32,7 +32,9 @@ CREATE TABLE ydsz_prompt_template (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     current_version          NUMBER(10)               NOT NULL DEFAULT 1,
+    status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -50,7 +52,9 @@ COMMENT ON COLUMN ydsz_prompt_template.content IS '模板内容，支持 #{var} 
 COMMENT ON COLUMN ydsz_prompt_template.description IS '模板描述';
 COMMENT ON COLUMN ydsz_prompt_template.category IS '分类（用于分组检索）';
 COMMENT ON COLUMN ydsz_prompt_template.current_version IS '当前版本号，自 1 起每次更新递增';
-COMMENT ON COLUMN ydsz_prompt_template.deleted IS '逻辑删除标识';
+COMMENT ON COLUMN ydsz_prompt_template.status IS '状态标识';
+COMMENT ON COLUMN ydsz_prompt_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_prompt_template.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_prompt_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_prompt_template.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_prompt_template.created_by IS '创建人';
@@ -66,8 +70,13 @@ CREATE TABLE ydsz_prompt_version (
     version                  NUMBER(10)               NOT NULL,
     content                  CLOB                     NOT NULL,
     change_note              VARCHAR2(512 CHAR)       DEFAULT NULL,
+    status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
+    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_prompt_version PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_prompt_version_template_version UNIQUE (template_code, version, tenant_id)
 );
@@ -79,8 +88,13 @@ COMMENT ON COLUMN ydsz_prompt_version.template_code IS '所属模板编码（关
 COMMENT ON COLUMN ydsz_prompt_version.version IS '版本号（与 template 的 current_version 对应）';
 COMMENT ON COLUMN ydsz_prompt_version.content IS '该版本的模板内容快照';
 COMMENT ON COLUMN ydsz_prompt_version.change_note IS '版本备注（描述本次变更内容）';
+COMMENT ON COLUMN ydsz_prompt_version.status IS '状态标识';
+COMMENT ON COLUMN ydsz_prompt_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_prompt_version.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_prompt_version.created_at IS '版本创建时间';
 COMMENT ON COLUMN ydsz_prompt_version.created_by IS '操作人';
+COMMENT ON COLUMN ydsz_prompt_version.updated_at IS '版本更新时间';
+COMMENT ON COLUMN ydsz_prompt_version.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_prompt_version_template_code ON ydsz_prompt_version (template_code);
 

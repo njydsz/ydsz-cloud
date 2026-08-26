@@ -641,7 +641,7 @@ public class FlowInstanceController {
   @Operation(summary = "列出所有触发规则")
   @GetMapping("/instance/trigger/list")
   public YdszResponse<List<FlowAutoTriggerVO>> listTriggers() {
-    return YdszResponse.success(autoTriggerService.listAllVO());
+    return YdszResponse.success(autoTriggerService.listAll());
   }
 
   /**

@@ -278,6 +278,31 @@ public interface WorkflowFacade {
   void batchPassTasks(List<String> taskIds, String userId, String comment);
 
   /**
+   * 批量驳回 — 对多个任务逐一执行 reject，@Transactional 保证原子性。
+   *
+   * @param dtos 任务操作参数列表（可含 targetNodeCode 指定驳回目标）
+   */
+  void batchReject(List<FlowTaskOperateDTO> dtos);
+
+  /**
+   * 批量转办 — 对多个任务逐一执行 transfer，@Transactional 保证原子性。
+   *
+   * @param dtos 任务操作参数列表（需含 targetUserId / targetUserName）
+   */
+  void batchTransfer(List<FlowTaskOperateDTO> dtos);
+
+  /**
+   * 批量催办 — 对多个实例逐一执行 urge，单个失败不影响其他。
+   *
+   * @param instanceIds 流程实例 ID 列表
+   * @param operatorId 操作人 ID
+   * @param comment 催办说明
+   * @return 结果 VO（含 successCount / failedIds）
+   */
+  com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO batchUrge(
+      List<String> instanceIds, String operatorId, String comment);
+
+  /**
    * GAP-P0-4: 一键通过所有待办 — 查询当前用户全部待办（上限 100 条）并逐一通过。
    *
    * <p>审批中心"一键通过"按钮。内部委托 {@link #batchPassTasks} 保证原子性。
@@ -353,18 +378,6 @@ public interface WorkflowFacade {
    * @param dto 任务操作参数（需含 taskId + comment + targetUserId）
    */
   void communicateTask(FlowTaskOperateDTO dto);
-
-  /**
-   * P2-2 (GAP-10): 驳回后快速重审 — 基于被驳回的原实例重新提交
-   *
-   * @param instanceId 被驳回的实例 ID
-   * @param initiatorId 发起人 ID
-   * @param variables 重审时新增/覆盖的变量（可空）
-   * @param comment 重审说明（可选）
-   * @return 实例 ID
-   */
-  String resubmitProcess(
-      String instanceId, String initiatorId, Map<String, Object> variables, String comment);
 
   /**
    * P1-8: 流程重做 — 支持 redoMode 指定重做策略（RESTART / NEW_INSTANCE）。

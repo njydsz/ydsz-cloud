@@ -1,5 +1,7 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
+import java.math.BigDecimal;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -97,6 +99,52 @@ public class FlowCountersignDynamicService {
         taskId,
         oldCount,
         approveCount,
+        operatorId);
+  }
+
+  /**
+   * 动态更新会签通过率阈值
+   *
+   * <p>运行时调整进行中会签任务的「通过率」完成条件（如把 80% 调到 60%）。
+   * 后续会签投票按新阈值判定：达成即推进流程，未达成继续等。
+   *
+   * <p><b>事务边界：</b>开启 {@code @Transactional(rollbackForException.class)}，
+   * 「参数校验 + 任务更新」原子性。
+   *
+   * @param taskId 任务 ID
+   * @param votePassRate 新的通过率阈值（0~1 之间的 BigDecimal）
+   * @param operatorId 操作人 ID（用于审计日志）
+   * @throws SysException 当参数非法或任务不存在时抛出
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public void updateCompletionCondition(String taskId, BigDecimal votePassRate, String operatorId) {
+    if (!StringUtils.hasText(taskId) || votePassRate == null
+        || votePassRate.compareTo(BigDecimal.ZERO) < 0
+        || votePassRate.compareTo(BigDecimal.ONE) > 0) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_vote_pass_rate_invalid")
+          .build();
+    }
+
+    FlowRunTaskVO task = taskRepository.findById(taskId).orElse(null);
+    if (task == null) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.NOT_FOUND)
+          .key("error.workflow.msg_c9d0e1f2")
+          .params(taskId)
+          .build();
+    }
+
+    BigDecimal oldRate = task.getVotePassRate();
+    task.setVotePassRate(votePassRate);
+    taskRepository.update(task);
+
+    log.info(
+        "[FlowCountersign] P2-6 动态修改通过率阈值: taskId={} oldRate={} → newRate={} operator={}",
+        taskId,
+        oldRate,
+        votePassRate,
         operatorId);
   }
 }
