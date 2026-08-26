@@ -287,7 +287,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * <p>根据任务类型和配置选择执行路径：
    *
    * <ol>
-   *   <li>跨集群任务：通过 CrossClusterDispatcher 派发到目标集群
    *   <li>分片任务：通过 ShardingStrategy 分配到多个节点执行
    *   <li>调度器-执行器分离模式：通过 WorkerNodeSelector 选择 Worker 节点远程派发
    *   <li>默认：本地执行（MANUAL 同步，其他异步）

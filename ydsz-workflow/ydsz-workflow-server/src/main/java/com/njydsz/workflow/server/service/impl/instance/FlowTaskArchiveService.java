@@ -71,7 +71,7 @@ public class FlowTaskArchiveService {
     if (effectiveTime != null) {
       task.setEffectiveTime(effectiveTime);
     }
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     archiveToHistory(task, FlowTaskStatus.COMPLETED);
     // P0-1: 任务完成后取消关联的边界事件订阅
     try {
@@ -122,6 +122,6 @@ public class FlowTaskArchiveService {
     his.setProviderTraceId(src.getProviderTraceId());
     // GAP-P2-10: 归档保留 iter_var，FOREACH 任务审批历史可追溯
     his.setIterVar(src.getIterVar());
-    hisTaskRepository.save(converter.entityToVO(his));
+    hisTaskRepository.save(his);
   }
 }
