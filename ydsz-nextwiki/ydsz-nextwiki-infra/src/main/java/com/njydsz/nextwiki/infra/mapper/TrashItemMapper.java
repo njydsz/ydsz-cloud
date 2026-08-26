@@ -11,7 +11,7 @@ import com.njydsz.nextwiki.infra.entity.TrashItem;
 /**
  * 回收站 Mapper
  *
- * <p>对应数据表 <code>ydsz_trash_item</code>。
+ * <p>对应数据表 <code>ydsz_wiki_trash_item</code>。
  *
  * <p>回收站支持文件恢复/彻底删除/过期自动清理，是文件删除的软删除层。
  *

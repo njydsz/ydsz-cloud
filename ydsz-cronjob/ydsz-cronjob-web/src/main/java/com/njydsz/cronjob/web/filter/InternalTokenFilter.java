@@ -24,7 +24,8 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  * <h3>行为约定</h3>
  *
  * <ul>
- *   <li>配置 token 为空（默认）：不校验，直接放行（向后兼容，仅限可信内网部署）
+ *   <li>配置 token 为空且 {@code ydsz.cronjob.remote.allow-empty-token=false}（默认）：fail-closed，直接拒绝返回 401
+ *   <li>配置 token 为空且 allow-empty-token=true：放行（仅限可信内网开发环境显式开启）
  *   <li>配置 token 非空：强制校验，令牌不匹配或缺失返回 401
  *   <li>非 internal 路径：直接放行，不参与过滤
  * </ul>
@@ -68,9 +69,15 @@ public class InternalTokenFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
     String expectedToken = cronjobProperties.getRemote().getAccessToken();
-    // 未配置令牌：兼容旧行为，放行（生产环境应配置 access-token）
+    // 未配置令牌：默认 fail-closed 拒绝（云顶安全规范），仅 allow-empty-token=true 时放行（可信内网开发环境）
     if (expectedToken == null || expectedToken.isBlank()) {
-      filterChain.doFilter(request, response);
+      if (cronjobProperties.getRemote().isAllowEmptyToken()) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+      log.warn("[InternalTokenFilter] 未配置 access-token 且未开启 allow-empty-token, 拒绝内部请求: uri={} from={}",
+          request.getRequestURI(), request.getRemoteAddr());
+      reject(response);
       return;
     }
     String providedToken = request.getHeader(CronjobConstants.INTERNAL_TOKEN_HEADER);

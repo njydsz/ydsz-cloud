@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -86,6 +88,7 @@ public class JobDiagnosisController {
    * @return 诊断信息 Map
    */
   @Operation(summary = "诊断指定任务的运行状态")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/{jobKey}")
   public YdszResponse<Map<String, Object>> diagnose(
       @Parameter(description = "任务 KEY", required = true) @PathVariable String jobKey) {

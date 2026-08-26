@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.infra.entity.FileVersion;
 /**
  * 文件版本 Mapper
  *
- * <p>对应数据表 <code>ydsz_file_version</code>。
+ * <p>对应数据表 <code>ydsz_wiki_file_version</code>。
  *
  * <p>文件每次编辑保存新版本（content + 元数据），支持回滚、对比、审计。
  *

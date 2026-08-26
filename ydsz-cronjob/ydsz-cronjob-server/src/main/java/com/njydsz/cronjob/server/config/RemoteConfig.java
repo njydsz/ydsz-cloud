@@ -42,6 +42,14 @@ public class RemoteConfig {
   /** 内部通信鉴权令牌（节点间 HTTP 派发的共享密钥，对应请求头 X-Ydsz-Internal-Token）。 为空表示不鉴权（仅限可信内网，生产环境建议配置）；非空时接收端强制校验。 */
   private String accessToken = "";
 
+  /**
+   * 是否允许"未配置令牌"时放行内部请求（默认 false = fail-closed）。
+   *
+   * <p>云顶安全规范要求默认拒绝：access-token 未配置时，内部派发端点直接返回 401，
+   * 防止节点间通信在无鉴权状态下开放。仅限可信内网开发环境可显式置为 true 恢复旧行为。
+   */
+  private boolean allowEmptyToken = false;
+
   /** HTTP 连接超时（秒） */
   private int connectTimeoutSeconds = DEFAULT_CONNECT_TIMEOUT_SECONDS;
 

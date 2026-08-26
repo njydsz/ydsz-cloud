@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.enums.JobTaskStatusEnum;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobTaskRepository;
@@ -59,6 +61,7 @@ public class JobTaskController {
    * @return 子任务列表（按 created_at 升序）
    */
   @Operation(summary = "查询子任务列表")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/list")
   public YdszResponse<List<JobTaskVO>> list(@RequestParam String logId) {
     // 通过 Repository 查询（返回 VO 列表）
@@ -76,6 +79,7 @@ public class JobTaskController {
    * @return 子任务分页数据
    */
   @Operation(summary = "分页查询子任务")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<JobTaskVO>>> page(
       @RequestParam String logId,
@@ -100,6 +104,7 @@ public class JobTaskController {
    * @return 进度汇总（total/pending/running/success/failed/progressPercent）
    */
   @Operation(summary = "查询子任务执行进度")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/progress")
   public YdszResponse<Map<String, Object>> progress(@RequestParam String logId) {
     // 通过 Repository 统计各状态子任务数量（避免拉取全量列表）

@@ -16,9 +16,9 @@ import com.njydsz.nextwiki.infra.entity.Tag;
 /**
  * 标签 Mapper
  *
- * <p>对应数据表 <code>ydsz_tag</code>。
+ * <p>对应数据表 <code>ydsz_wiki_tag</code>。
  *
- * <p>标签是文件分类/检索的辅助手段，与文件是多对多关系（{@code ydsz_file_tag}）。
+ * <p>标签是文件分类/检索的辅助手段，与文件是多对多关系（{@code ydsz_wiki_file_tag}）。
  *
  * <p><b>主要索引：</b>
  *

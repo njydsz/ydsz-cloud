@@ -23,7 +23,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 /**
  * 分布式模式自动配置。
  *
- * <p>集群模式下的自动装配：基于 ZooKeeper/Redis 的规则分发、节点注册、心跳维护。
+ * <p>集群模式下的自动装配：基于 Redis 的规则分发、节点注册、心跳维护（当前实现仅 Redis，无 ZooKeeper 支持）。
  *
  * <p>保证多个节点之间规则一致性与故障节点自动剔除。
  *

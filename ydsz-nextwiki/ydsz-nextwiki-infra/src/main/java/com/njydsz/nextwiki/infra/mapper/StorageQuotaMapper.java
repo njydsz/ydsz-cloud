@@ -10,7 +10,7 @@ import com.njydsz.nextwiki.infra.entity.StorageQuota;
 /**
  * 存储配额 Mapper
  *
- * <p>对应数据表 <code>ydsz_storage_quota</code>。
+ * <p>对应数据表 <code>ydsz_wiki_storage_quota</code>。
  *
  * <p>配额按租户限制总存储容量/单文件大小/文件数量，是多租户资源隔离的关键。
  *

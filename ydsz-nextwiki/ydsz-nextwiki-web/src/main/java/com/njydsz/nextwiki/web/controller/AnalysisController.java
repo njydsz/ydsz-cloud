@@ -76,7 +76,7 @@ import com.njydsz.nextwiki.server.service.StorageAnalysisApplicationService;
  *                                            ↓
  *                                   ydsz-nextwiki-infra Mapper
  *                                            ↓
- *                                   ydsz_file_node (聚合查询)
+ *                                   ydsz_wiki_file_node (聚合查询)
  * </pre>
  *
  * @author ydsz-team

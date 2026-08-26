@@ -39,6 +39,7 @@ import com.njydsz.literule.domain.model.ModelInputRegistry;
 import com.njydsz.literule.domain.repository.ABTestRepository;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
+import com.njydsz.literule.domain.repository.RuleExecutionTraceRepository;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.server.approval.ApprovalPermissionChecker;
 import com.njydsz.literule.server.approval.RuleApprovalService;
@@ -499,15 +500,19 @@ public class LiteRuleAutoConfiguration {
    *
    * @param repository A/B 策略仓库
    * @param ruleAdminService 规则管理服务
+   * @param traceRepositoryProvider 执行轨迹仓库（可选，P0-2 真实指标源；嵌入式无持久化场景可为空）
    * @return ABTestAutoRollbackProvider 实例
    * @since 1.0.0
    */
   @Bean
   @ConditionalOnMissingBean
   public ABTestAutoRollbackProvider abTestAutoRollbackProvider(
-      ABTestRepository repository, RuleAdminService ruleAdminService) {
+      ABTestRepository repository,
+      RuleAdminService ruleAdminService,
+      ObjectProvider<RuleExecutionTraceRepository> traceRepositoryProvider) {
     log.info("[LiteRule] A/B 测试自动回滚已初始化");
-    return new DefaultABTestAutoRollbackProvider(repository, ruleAdminService);
+    RuleExecutionTraceRepository traceRepository = traceRepositoryProvider.getIfAvailable();
+    return new DefaultABTestAutoRollbackProvider(repository, ruleAdminService, traceRepository);
   }
 
   /**

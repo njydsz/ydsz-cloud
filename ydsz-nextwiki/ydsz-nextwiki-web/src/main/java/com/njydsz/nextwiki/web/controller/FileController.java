@@ -90,7 +90,7 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
  *                                            ↓
  *                                    ydsz-nextwiki-infra Mapper
  *                                            ↓
- *                                    ydsz_file_node / ydsz_file_version
+ *                                    ydsz_wiki_file_node / ydsz_wiki_file_version
  * </pre>
  *
  * @author ydsz-team
@@ -118,7 +118,7 @@ public class FileController {
    * Idempotent} 拦截。
    *
    * @param file 源文件（{@code multipart/form-data}）
-   * @param parentId 父目录 ID（{@code ydsz_file_node.id}，可空表示根目录）
+   * @param parentId 父目录 ID（{@code ydsz_wiki_file_node.id}，可空表示根目录）
    * @param rename 重命名（可选；为空则保留原文件名）
    * @param versionRemark 版本备注（可选，描述本次上传的变更点）
    * @param userId 当前用户 ID（从 {@code X-User-Id} 头获取）
@@ -251,7 +251,7 @@ public class FileController {
   /**
    * 删除文件或文件夹（软删除，移入回收站）。
    *
-   * <p>删除操作不会立即清理物理文件，而是将节点移入回收站（{@code ydsz_trash_item}）， 保留 30 天可由 {@code TrashController}
+   * <p>删除操作不会立即清理物理文件，而是将节点移入回收站（{@code ydsz_wiki_trash_item}）， 保留 30 天可由 {@code TrashController}
    * 恢复或彻底删除。文件夹下文件会被级联移入回收站。
    *
    * @param nodeId 节点 ID

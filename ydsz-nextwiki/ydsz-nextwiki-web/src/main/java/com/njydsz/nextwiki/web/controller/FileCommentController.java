@@ -78,14 +78,14 @@ import com.njydsz.nextwiki.server.mention.MentionService;
  *                                            ↓
  *                                   ydsz-nextwiki-infra Mapper
  *                                            ↓
- *                                   ydsz_file_comment
+ *                                   ydsz_wiki_file_comment
  * </pre>
  *
  * <h3>实现状态</h3>
  *
  * <p>当前为 stub 实现，infra 层 {@link FileCommentRepository} 仅有空壳 Bean， 所有接口写操作会返回 501 错误。详见 P1-5 待排期。
  *
- * <p>TODO: 待接入 {@code ydsz_file_comment} 表 + FileCommentMapper 后启用完整评论能力
+ * <p>TODO: 待接入 {@code ydsz_wiki_file_comment} 表 + FileCommentMapper 后启用完整评论能力
  *
  * @author ydsz-team
  * @since 1.0.0

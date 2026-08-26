@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.infra.entity.SearchIndex;
 /**
  * 搜索索引 Mapper
  *
- * <p>对应数据表 <code>ydsz_search_index</code>。
+ * <p>对应数据表 <code>ydsz_wiki_search_index</code>。
  *
  * <p>索引按文件版本同步（ES/PG 全文索引），支持全文检索/高亮/排序/聚合。
  *

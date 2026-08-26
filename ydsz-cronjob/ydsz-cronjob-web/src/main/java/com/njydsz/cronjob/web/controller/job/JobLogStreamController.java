@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.server.core.logger.LogStreamManager;
 
 /**
@@ -48,6 +50,7 @@ public class JobLogStreamController {
    * @return SSE 推送流
    */
   @Operation(summary = "订阅执行日志实时推送（SSE）")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping(value = "/stream/{logId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter stream(@PathVariable("logId") String logId) {
     if (logId == null || logId.isBlank()) {

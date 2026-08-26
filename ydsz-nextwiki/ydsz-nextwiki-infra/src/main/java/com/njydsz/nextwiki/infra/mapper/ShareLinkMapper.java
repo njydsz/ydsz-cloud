@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.infra.entity.ShareLink;
 /**
  * 分享链接 Mapper
  *
- * <p>对应数据表 <code>ydsz_share_link</code>。
+ * <p>对应数据表 <code>ydsz_wiki_share_link</code>。
  *
  * <p>分享链接是文件的对外可访问入口（含 token/过期时间/访问次数/密码），支持匿名访问与审计。
  *

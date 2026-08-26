@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.infra.entity.FileAcl;
 /**
  * 文件权限 ACL Mapper
  *
- * <p>对应数据表 <code>ydsz_file_acl</code>。
+ * <p>对应数据表 <code>ydsz_wiki_file_acl</code>。
  *
  * <p>ACL 按 (主体, 文件, 权限) 三元组定义访问规则（读/写/管理），是 NextWiki 安全模型的核心。
  *
