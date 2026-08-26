@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * 流程管理员权限服务 — 基于角色的流程管理权限校验
  *
- * <p>对标钉钉/飞书「流程管理员」体系。通过角色编码（FLOW_ADMIN / FLOW_DESIGNER / FLOW_AUDITOR） 实现细粒度的流程管理权限控制，区别于 RBAC
+ * <p>流程管理员体系。通过角色编码（FLOW_ADMIN / FLOW_DESIGNER / FLOW_AUDITOR） 实现细粒度的流程管理权限控制，区别于 RBAC
  * 权限中心的全局权限，专注于流程引擎内部的角色判定。
  *
  * <p><b>角色定义：</b>

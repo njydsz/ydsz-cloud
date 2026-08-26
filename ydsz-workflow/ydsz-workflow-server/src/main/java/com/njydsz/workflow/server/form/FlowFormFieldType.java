@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.form;
 /**
  * 表单字段类型（P0-3 表单引擎 MVP）
  *
- * <p>对标钉钉/飞书审批表单设计器的字段类型体系。
+ * <p>审批表单设计器的字段类型体系。
  *
  * @since 1.0.0
  * @author ydsz-team

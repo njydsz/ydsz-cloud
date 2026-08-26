@@ -12,7 +12,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 /**
  * GAP-P1: 流程抄送服务
  *
- * <p>对标钉钉/飞书的"抄送我的"独立 Tab，提供流程抄送的完整业务能力。
+ * <p>提供流程抄送的完整业务能力，包括"抄送我的"独立 Tab。
  *
  * <p><b>核心职责：</b>
  *

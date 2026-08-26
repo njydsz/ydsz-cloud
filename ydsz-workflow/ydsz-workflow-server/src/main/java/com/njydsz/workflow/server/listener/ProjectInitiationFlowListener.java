@@ -43,7 +43,7 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
  *
  * <ol>
  *   <li>业务流程联动（通过 MQ 发布立项状态变更事件，跨服务异步解耦）
- *   <li>通知触达（对标用友 BPM / 钉钉审批的实时通知能力）
+ *   <li>通知触达
  * </ol>
  *
  * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，

@@ -35,7 +35,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
  *   <li>第三次催办：任务创建后 72 小时未处理（同时通知发起人）
  * </ul>
  *
- * <p>催办通知通过 {@link FlowNotificationService} 推送，覆盖站内信 + IM（钉钉/企微）双通道。 分布式锁通过 {@link
+ * <p>催办通知通过 {@link FlowNotificationService} 推送，覆盖站内信 + IM 双通道。 分布式锁通过 {@link
  * DistributedScheduled} 保证集群只有一个节点执行。
  *
  * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
@@ -57,7 +57,7 @@ public class FlowAutoUrgeScheduler {
   /** P3-3.4: 自动催办配置统一从 FlowProperties 读取 */
   private final FlowProperties flowProperties;
 
-  /** IM 通道：钉钉 */
+  /** IM 通道 */
   private static final String CHANNEL_DINGTALK = "DINGTALK";
 
   /** IM 通道：企业微信 */
@@ -154,7 +154,7 @@ public class FlowAutoUrgeScheduler {
       log.debug("[AutoUrge] 催办限流: instanceId={} err={}", instanceId, e.getMessage());
     }
 
-    // 推送 IM 通知（钉钉 + 企业微信）
+    // 推送 IM 通知
     String title =
         "【审批催办】" + (instance.getTitle() != null ? instance.getTitle() : instance.getFlowName());
     long pendingHours =
@@ -173,7 +173,7 @@ public class FlowAutoUrgeScheduler {
     notificationService.notifyBatch(
         "INAPP", receiverIds, title, content, "WORKFLOW_URGE", "URGENT");
 
-    // 额外推送 IM 通道（钉钉/企微）
+    // 额外推送 IM 通道
     for (String receiverId : receiverIds) {
       pushImNotification(receiverId, title, content, instanceId);
     }
@@ -187,7 +187,7 @@ public class FlowAutoUrgeScheduler {
   }
 
   /**
-   * 推送 IM 通知（钉钉/企业微信）。
+   * 推送 IM 通知。
    * 
    * <p>通过 NotificationHelper 的 send 方法发送到 DINGTALK/WECHAT 通道。 实际推送由通知中心服务异步执行，此处只负责投递消息。
    *
