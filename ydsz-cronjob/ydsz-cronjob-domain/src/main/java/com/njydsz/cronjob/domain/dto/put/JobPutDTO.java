@@ -86,4 +86,7 @@ public class JobPutDTO implements Serializable {
 
   @Schema(description = "目标集群名称（P3-12 跨集群调度，null=本地集群）")
   private String cluster;
+
+  @Schema(description = "租户 ID（null 时由服务端从 TenantContextHolder 注入）")
+  private String tenantId;
 }
