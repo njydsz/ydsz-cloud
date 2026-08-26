@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.server.engine.BpmnModel.NodeCoordinate;
+import com.njydsz.workflow.engine.BpmnModel.NodeCoordinate;
 import com.njydsz.workflow.server.service.FlowChartService;
 
 /**

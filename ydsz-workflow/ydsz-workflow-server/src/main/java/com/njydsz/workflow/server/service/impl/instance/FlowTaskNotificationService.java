@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.server.engine.FlowEventContext;
+import com.njydsz.workflow.engine.FlowEventContext;
 
 /**
  * 流程任务通知服务实现。

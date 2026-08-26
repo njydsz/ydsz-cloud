@@ -113,4 +113,18 @@ public class DagNodeInstanceRepositoryImpl implements DagNodeInstanceRepository 
     }
     return converter.jobDagNodeInstanceListToVO(entities);
   }
+
+  @Override
+  public int markWaitingForApproval(String nodeId, LocalDateTime waitingAt) {
+    return dagNodeInstanceMapper.markWaitingForApproval(nodeId, waitingAt);
+  }
+
+  @Override
+  public List<JobDagNodeInstanceVO> findWaitingApprovalNodes(int limit) {
+    List<JobDagNodeInstance> entities = dagNodeInstanceMapper.findWaitingApprovalNodes(limit);
+    if (entities == null || entities.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return converter.jobDagNodeInstanceListToVO(entities);
+  }
 }

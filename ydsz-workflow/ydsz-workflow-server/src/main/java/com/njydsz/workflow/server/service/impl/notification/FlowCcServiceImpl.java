@@ -24,8 +24,8 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
-import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
+import com.njydsz.workflow.engine.FlowAssigneeResolver;
+import com.njydsz.workflow.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.service.FlowCcService;
 
 /**

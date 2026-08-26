@@ -574,30 +574,35 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 实例节点上下文表：节点级结果存储，避免 CAS 更新整行 context_json';
 
 -- ----------------------------------------------------------------------------
--- 20. Webhook 投递重试补偿表（保障 Webhook 出站投递最终一致性）
+-- 20. Webhook 重试补偿表（P1-3 Webhook 投递保障）
+--       当 WebhookEventDispatcher 实时推送失败（重试耗尽）时写入本表，
+--       由 WebhookRetryScanTask 周期性扫描并重试，实现最终一致性。
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id                    VARCHAR(64)     PRIMARY KEY COMMENT '主键（雪花 ID）',
     tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
-    webhook_id            VARCHAR(32)     NOT NULL COMMENT 'Webhook 配置 ID（关联 ydsz_job_webhook.id）',
-    event_type            VARCHAR(64)     NOT NULL COMMENT '事件类型',
-    event_key             VARCHAR(128)    NOT NULL COMMENT '事件 KEY（幂等去重）',
-    callback_url          VARCHAR(1024)   NOT NULL COMMENT '回调 URL（冗余，避免连表）',
-    headers_json          JSON            DEFAULT NULL COMMENT '请求头 JSON',
-    secret                VARCHAR(256)    DEFAULT NULL COMMENT '密钥（用于签名）',
-    payload_json          TEXT            NOT NULL COMMENT '请求体 JSON',
-    retry_count           INT             NOT NULL DEFAULT 0 COMMENT '已重试次数',
+    webhook_id            VARCHAR(64)     NOT NULL COMMENT 'Webhook 订阅 ID（关联 ydsz_job_webhook.id）',
+    event_type            VARCHAR(32)     NOT NULL COMMENT '事件类型: TASK_STARTED/TASK_SUCCESS/TASK_FAILED/TASK_TIMEOUT/DAG_COMPLETED',
+    job_key               VARCHAR(128)    DEFAULT NULL COMMENT '任务 KEY',
+    log_id                VARCHAR(64)     DEFAULT NULL COMMENT '任务执行日志 ID',
+    callback_url          VARCHAR(512)    NOT NULL COMMENT '请求 URL',
+    http_method           VARCHAR(16)     DEFAULT 'POST' COMMENT '请求方法',
+    headers               TEXT            DEFAULT NULL COMMENT '请求头 JSON',
+    webhook_secret        VARCHAR(256)    DEFAULT NULL COMMENT '签名密钥',
+    payload_json          MEDIUMTEXT      COMMENT '请求体 JSON',
+    retry_count           INT             NOT NULL DEFAULT 0 COMMENT '当前重试次数',
     max_retries           INT             NOT NULL DEFAULT 5 COMMENT '最大重试次数',
     next_retry_time       DATETIME        NOT NULL COMMENT '下次重试时间',
-    last_error            TEXT            DEFAULT NULL COMMENT '最后一次错误信息',
-    retry_status          VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '重试状态: PENDING / SUCCESS / EXHAUSTED',
+    retry_status          VARCHAR(16)     NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING/SUCCESS/DEAD',
+    last_error            VARCHAR(1024)   DEFAULT NULL COMMENT '最后错误信息',
+    last_retry_time       DATETIME        DEFAULT NULL COMMENT '最后重试时间',
     created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_wrr_retry_status (retry_status, next_retry_time),
-    INDEX idx_wrr_webhook_id (webhook_id),
+    INDEX idx_wrr_status_next (retry_status, next_retry_time),
+    INDEX idx_wrr_webhook (webhook_id),
     INDEX idx_tenant_deleted (tenant_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Webhook 投递重试补偿表：失败的 Webhook 投递记录通过后台扫描补偿';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Webhook 重试补偿表（P1-3 Webhook 投递保障）';
 
 -- ----------------------------------------------------------------------------
 -- 21. 任务主表 add 索引（覆盖诊断查询: 按 job_key + created_at 倒序）
@@ -610,17 +615,20 @@ ALTER TABLE ydsz_job ADD INDEX idx_job_key_created (job_key, created_at);
 ALTER TABLE ydsz_job_log_content ADD INDEX idx_jlc_log_line (log_id, line_no);
 
 -- ----------------------------------------------------------------------------
--- 23. 任务执行日志表按月分区（MySQL 8.0+ RANGE COLUMNS 分区）
---    注意: 仅在新建表或允许停机窗口时执行；已有数据表需先创建分区表后迁移数据
+-- 23. 任务执行日志表按月 RANGE 分区（MySQL 8.0+）
+--    注意: 此步骤为可选，仅在新建表或允许停机窗口时执行。
+--    已存在的表可使用 pt-online-schema-change 或 gh-ost 在线重分区。
 -- ----------------------------------------------------------------------------
--- 分区策略说明:
---   - 按月分区，保留最近 12 个月
---   - 每月 1 日执行事件自动添加下月分区
---   - 过期分区通过 ALTER TABLE ... DROP PARTITION 秒级清理
---
--- 示例（新表建表语句，已有表请参阅在线重分区方案）:
+
+-- 在线重分区方案（已有数据表）:
 /*
-ALTER TABLE ydsz_job_log PARTITION BY RANGE (TO_DAYS(start_time)) (
+-- 步骤 1: 创建结构相同的临时分区表
+CREATE TABLE ydsz_job_log_new LIKE ydsz_job_log;
+ALTER TABLE ydsz_job_log_new DROP INDEX idx_jl_status_start;
+ALTER TABLE ydsz_job_log_new DROP INDEX idx_jl_jobkey_start;
+ALTER TABLE ydsz_job_log_new DROP INDEX idx_jl_node_status;
+ALTER TABLE ydsz_job_log_new
+  PARTITION BY RANGE (TO_DAYS(start_time)) (
     PARTITION p202601 VALUES LESS THAN (TO_DAYS('2026-02-01')),
     PARTITION p202602 VALUES LESS THAN (TO_DAYS('2026-03-01')),
     PARTITION p202603 VALUES LESS THAN (TO_DAYS('2026-04-01')),
@@ -634,5 +642,97 @@ ALTER TABLE ydsz_job_log PARTITION BY RANGE (TO_DAYS(start_time)) (
     PARTITION p202611 VALUES LESS THAN (TO_DAYS('2026-12-01')),
     PARTITION p202612 VALUES LESS THAN (TO_DAYS('2027-01-01')),
     PARTITION pmax    VALUES LESS THAN MAXVALUE
-);
+  );
+
+-- 步骤 2: 分批迁移数据（避免长事务）
+-- INSERT INTO ydsz_job_log_new SELECT * FROM ydsz_job_log WHERE start_time >= '2026-08-01' AND start_time < '2026-09-01';
+-- ... 按月分批迁移历史数据
+
+-- 步骤 3: 原子切换表名
+-- RENAME TABLE ydsz_job_log TO ydsz_job_log_old, ydsz_job_log_new TO ydsz_job_log;
+
+-- 步骤 4: 验证后删除旧表
+-- DROP TABLE ydsz_job_log_old;
 */
+
+-- ----------------------------------------------------------------------------
+-- 24. 分区维护事件（每月自动添加下月分区）
+--    启用事件调度器: SET GLOBAL event_scheduler = ON;
+-- ----------------------------------------------------------------------------
+
+/*
+DELIMITER $$
+
+CREATE EVENT IF NOT EXISTS evt_add_job_log_partition
+ON SCHEDULE EVERY 1 MONTH
+STARTS '2026-09-01 00:00:00'
+DO
+BEGIN
+  DECLARE v_next_month DATE;
+  DECLARE v_partition_name VARCHAR(20);
+  DECLARE v_less_than DATE;
+
+  SET v_next_month = DATE_ADD(LAST_DAY(NOW()), INTERVAL 1 DAY);
+  SET v_partition_name = CONCAT('p', DATE_FORMAT(v_next_month, '%Y%m'));
+  SET v_less_than = DATE_ADD(v_next_month, INTERVAL 1 MONTH);
+
+  SET @sql = CONCAT(
+    'ALTER TABLE ydsz_job_log REORGANIZE PARTITION pmax INTO (',
+    'PARTITION ', v_partition_name, ' VALUES LESS THAN (TO_DAYS(''',
+    DATE_FORMAT(v_less_than, '%Y-%m-%d'), ''')),',
+    'PARTITION pmax VALUES LESS THAN MAXVALUE)'
+  );
+
+  PREPARE stmt FROM @sql;
+  EXECUTE stmt;
+  DEALLOCATE PREPARE stmt;
+END$$
+
+DELIMITER ;
+*/
+
+-- ----------------------------------------------------------------------------
+-- 25. 过期分区清理（替代 LogCleaner 全表扫描，O(1) 秒级删除）
+--    每月 1 日执行，删除 12 个月前的分区
+-- ----------------------------------------------------------------------------
+
+/*
+DELIMITER $$
+
+CREATE EVENT IF NOT EXISTS evt_drop_old_job_log_partition
+ON SCHEDULE EVERY 1 MONTH
+STARTS '2026-09-01 02:00:00'
+DO
+BEGIN
+  DECLARE v_old_partition VARCHAR(20);
+  SET v_old_partition = CONCAT('p', DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 12 MONTH), '%Y%m'));
+
+  -- 先归档到冷存储（可选）
+  -- SELECT * FROM ydsz_job_log PARTITION (v_old_partition) INTO OUTFILE ...
+
+  SET @sql = CONCAT('ALTER TABLE ydsz_job_log DROP PARTITION ', v_old_partition);
+  PREPARE stmt FROM @sql;
+  EXECUTE stmt;
+  DEALLOCATE PREPARE stmt;
+END$$
+
+DELIMITER ;
+*/
+
+-- ----------------------------------------------------------------------------
+-- 26. 非分区环境的批量清理方案（LogCleaner 使用）
+--    按主键范围分批删除，每批 1000 行，避免长事务和锁等待
+-- ----------------------------------------------------------------------------
+-- 使用方式（在 LogCleaner 中实现）:
+--
+-- DELETE FROM ydsz_job_log
+-- WHERE start_time < DATE_SUB(NOW(), INTERVAL 30 DAY)
+--   AND id <= (
+--     SELECT id FROM (
+--       SELECT id FROM ydsz_job_log
+--       WHERE start_time < DATE_SUB(NOW(), INTERVAL 30 DAY)
+--       ORDER BY id ASC
+--       LIMIT 999, 1
+--     ) tmp
+--   );
+-- 循环执行直到 affected_rows = 0

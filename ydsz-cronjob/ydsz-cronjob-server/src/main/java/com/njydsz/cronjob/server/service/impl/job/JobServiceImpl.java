@@ -788,6 +788,100 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   }
 
   /**
+   * P1-13: 批量修改任务分组。
+   *
+   * <p>逐个读取任务、修改分组、写回 DB。分组变更不影响调度器注册，无需重新调度。
+   * 单条失败不影响其他任务。
+   *
+   * @param jobIds 任务 ID 列表
+   * @param newGroup 目标分组名称
+   * @return 批量操作结果（含成功/失败明细）
+   */
+  @Override
+  public BatchResult<String> batchUpdateGroup(List<String> jobIds, String newGroup) {
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    int success = 0;
+    for (String jobId : jobIds) {
+      try {
+        JobVO vo =
+            jobRepository
+                .findById(jobId)
+                .orElseThrow(
+                    () ->
+                        SysException.builder()
+                            .resultCode(YdszResultCode.NOT_FOUND)
+                            .message("任务不存在")
+                            .build());
+        JobVO j = voToJob(vo);
+        j.setJobGroup(newGroup);
+        jobRepository.updateById(j);
+        details.add(BatchResult.ItemResult.success(jobId));
+        success++;
+      } catch (Exception e) {
+        log.warn("[Cronjob] 批量修改分组失败: jobId={} reason={}", jobId, e.getMessage());
+        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+      }
+    }
+    log.info("[Cronjob] 批量修改分组完成: total={} success={} group={}", jobIds.size(), success, newGroup);
+    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+  }
+
+  /**
+   * P1-13: 批量修改 Cron 表达式。
+   *
+   * <p>逐个读取任务、校验 Cron 合法性、更新 DB、重新注册调度器。
+   * 仅对 scheduleType=CRON 的任务生效，非 CRON 类型跳过（标记为失败）。
+   *
+   * @param jobIds 任务 ID 列表
+   * @param cronExpression 新 Cron 表达式
+   * @return 批量操作结果（含成功/失败明细）
+   */
+  @Override
+  public BatchResult<String> batchUpdateCron(List<String> jobIds, String cronExpression) {
+    // 先统一校验一次 Cron 表达式合法性，避免逐个校验重复
+    validateCron(cronExpression);
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    int success = 0;
+    for (String jobId : jobIds) {
+      try {
+        JobVO vo =
+            jobRepository
+                .findById(jobId)
+                .orElseThrow(
+                    () ->
+                        SysException.builder()
+                            .resultCode(YdszResultCode.NOT_FOUND)
+                            .message("任务不存在")
+                            .build());
+        JobVO j = voToJob(vo);
+        // 仅 CRON 类型任务支持修改 Cron 表达式
+        ScheduleType type = ScheduleType.parse(j.getScheduleType());
+        if (type != ScheduleType.CRON) {
+          details.add(
+              BatchResult.ItemResult.failure(jobId, "仅 CRON 类型任务支持修改 Cron 表达式"));
+          continue;
+        }
+        // 更新 Cron 并重新计算下次触发时间
+        j.setCronExpression(cronExpression);
+        j.setNextFireTime(nextFireTime(j));
+        jobRepository.updateById(j);
+        // 重新注册调度器
+        unregister(j.getJobKey());
+        if ("NORMAL".equals(j.getStatus())) {
+          registerInternal(j);
+        }
+        details.add(BatchResult.ItemResult.success(jobId));
+        success++;
+      } catch (Exception e) {
+        log.warn("[Cronjob] 批量修改 Cron 失败: jobId={} reason={}", jobId, e.getMessage());
+        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+      }
+    }
+    log.info("[Cronjob] 批量修改 Cron 完成: total={} success={} cron={}", jobIds.size(), success, cronExpression);
+    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+  }
+
+  /**
    * 注册到调度器（从 DB 加载/动态新增）。
    *
    * <p>根据 {@code scheduleType} 分发到不同调度器：

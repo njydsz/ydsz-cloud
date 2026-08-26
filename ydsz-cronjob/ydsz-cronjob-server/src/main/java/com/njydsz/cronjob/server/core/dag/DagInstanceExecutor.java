@@ -258,10 +258,15 @@ public class DagInstanceExecutor {
   }
 
   /**
-   * 派发单个 DAG 节点任务。
+   * 派发单个 DAG 节点。
    *
-   * <p>所有节点类型（TASK / SUB_WORKFLOW / APPROVAL）均通过 {@link TaskDispatcher#dispatch} 执行，
-   * 区别由 {@link com.njydsz.cronjob.domain.job.JobHandler} 实现内部处理。
+   * <p>根据节点类型分发到不同的处理逻辑：
+   *
+   * <ul>
+   *   <li>{@link DagNode.NodeType#TASK}：调用任务 handler 执行</li>
+   *   <li>{@link DagNode.NodeType#SUB_WORKFLOW}：嵌套触发子 DAG 实例（P1-5）</li>
+   *   <li>{@link DagNode.NodeType#APPROVAL}：标记为 WAITING_FOR_APPROVAL，等待人工审批（P2-4）</li>
+   * </ul>
    *
    * @param dagInstanceId DAG 实例 ID
    * @param dagId DAG 定义 ID
@@ -270,7 +275,63 @@ public class DagInstanceExecutor {
    */
   private void dispatchNode(
       String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
-    dispatchTaskNode(dagInstanceId, dagId, node, definition);
+    DagNode.NodeType nodeType = node.resolveNodeType();
+    if (nodeType == DagNode.NodeType.APPROVAL) {
+      dispatchApprovalNode(dagInstanceId, node);
+    } else if (nodeType == DagNode.NodeType.SUB_WORKFLOW) {
+      dispatchSubWorkflowNode(dagInstanceId, dagId, node, definition);
+    } else {
+      dispatchTaskNode(dagInstanceId, dagId, node, definition);
+    }
+  }
+
+  /**
+   * P2-4: 派发 APPROVAL 审批节点。
+   *
+   * <p>审批节点不调用任务 handler，而是将节点状态标记为 {@link DagNodeStatus#WAITING_FOR_APPROVAL}，
+   * 等待人工通过 {@link DagInstanceControlService#approveNode} 审批。
+   *
+   * <p>审批超时由定时扫描任务检查：若节点在 WAITING_FOR_APPROVAL 状态超过 {@code approvalTimeoutMinutes} 分钟，
+   * 自动标记为 {@link DagNodeStatus#APPROVAL_REJECTED}。
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @param node 审批节点
+   */
+  private void dispatchApprovalNode(String dagInstanceId, DagNode node) {
+    JobDagNodeInstanceVO nodeInstance =
+        dagNodeInstanceRepository.findByDagInstanceAndJobKey(dagInstanceId, node.jobKey());
+    if (nodeInstance == null) {
+      log.warn("[DagInstance] 审批节点实例不存在: instanceId={} jobKey={}", dagInstanceId, node.jobKey());
+      return;
+    }
+    // 标记节点为 WAITING_FOR_APPROVAL
+    dagNodeInstanceRepository.markWaitingForApproval(nodeInstance.getId(), LocalDateTime.now());
+    log.info(
+        "[DagInstance] 审批节点等待审批: instanceId={} jobKey={} approvers={} timeoutMinutes={}",
+        dagInstanceId,
+        node.jobKey(),
+        node.approvalUsers(),
+        node.approvalTimeoutMinutes());
+  }
+
+  /**
+   * P2-4: 派发 SUB_WORKFLOW 子工作流节点（P1-5 预留，当前暂不支持）。
+   *
+   * <p>TODO: 触发子 DAG 实例，等待子 DAG 完成后继续当前 DAG。
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @param dagId DAG 定义 ID
+   * @param node 子工作流节点
+   * @param definition DAG 定义
+   */
+  private void dispatchSubWorkflowNode(
+      String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
+    log.warn(
+        "[DagInstance] 子工作流节点类型暂不支持, 标记 SKIPPED: instanceId={} jobKey={} subWorkflowDagKey={}",
+        dagInstanceId,
+        node.jobKey(),
+        node.subWorkflowDagKey());
+    markNodeSkipped(dagInstanceId, node.jobKey());
   }
 
   /** 派发 TASK 类型节点（现有逻辑：调用 handler 执行）。 */
@@ -829,6 +890,18 @@ public class DagInstanceExecutor {
     }
     int idx = jobKey.indexOf("#loop");
     return idx > 0 ? jobKey.substring(0, idx) : jobKey;
+  }
+
+  /**
+   * P2-4: 审批节点拒绝后的回调。
+   *
+   * <p>审批超时自动拒绝或人工拒绝后调用，递增失败计数器并尝试终结 DAG 实例。
+   * 审批拒绝在 DAG 语义中等同于节点执行失败，按 DAG 级 failStrategy 处理。
+   *
+   * @param dagInstanceId DAG 实例 ID
+   */
+  public void onApprovalRejected(String dagInstanceId) {
+    incrementCounterAndTryFinalize(dagInstanceId, "failed");
   }
 
   /**

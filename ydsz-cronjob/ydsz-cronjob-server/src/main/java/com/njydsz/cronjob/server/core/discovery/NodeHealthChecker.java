@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.NodeHealthConfig;
 import com.njydsz.cronjob.server.core.maintenance.ScanTask;
 
 /**
@@ -168,14 +169,14 @@ public class NodeHealthChecker implements ScanTask {
   }
 
   private int getConsecutiveFailureThreshold() {
-    CronjobProperties.NodeHealthConfig config = cronjobProperties.getNode().getNodeHealth();
+    NodeHealthConfig config = cronjobProperties.getNode().getNodeHealth();
     return config != null && config.getConsecutiveFailureThreshold() > 0
         ? config.getConsecutiveFailureThreshold()
         : DEFAULT_CONSECUTIVE_FAILURE_THRESHOLD;
   }
 
   private long getResponseTimeThresholdMs() {
-    CronjobProperties.NodeHealthConfig config = cronjobProperties.getNode().getNodeHealth();
+    NodeHealthConfig config = cronjobProperties.getNode().getNodeHealth();
     return config != null && config.getResponseTimeThresholdMs() > 0
         ? config.getResponseTimeThresholdMs()
         : DEFAULT_RESPONSE_TIME_THRESHOLD_MS;

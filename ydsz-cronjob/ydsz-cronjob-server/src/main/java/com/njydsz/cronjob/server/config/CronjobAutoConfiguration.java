@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
 import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
 import com.njydsz.cronjob.server.core.config.ThreadPoolMetricsEndpoint;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
@@ -45,12 +47,16 @@ public class CronjobAutoConfiguration {
       ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
       ObjectProvider<LeaderElector> leaderElectorProvider,
       ObjectProvider<JobRepository> jobRepositoryProvider,
+      ObjectProvider<JobNodeRepository> jobNodeRepositoryProvider,
+      ObjectProvider<WebhookRetryRepository> webhookRetryRepositoryProvider,
       ObjectProvider<CronjobMetrics> cronjobMetricsProvider,
       CronjobProperties cronjobProperties) {
     return new CronjobHealthIndicator(
         redisConnectionFactoryProvider,
         leaderElectorProvider,
         jobRepositoryProvider,
+        jobNodeRepositoryProvider,
+        webhookRetryRepositoryProvider,
         cronjobMetricsProvider,
         cronjobProperties);
   }

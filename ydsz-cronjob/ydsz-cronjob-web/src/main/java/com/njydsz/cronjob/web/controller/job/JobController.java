@@ -37,6 +37,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.dto.BatchResult;
 import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
+import com.njydsz.cronjob.domain.dto.job.JobBatchUpdateDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
@@ -365,6 +366,51 @@ public class JobController {
   @PostMapping("/batch/trigger")
   public YdszResponse<BatchResult<String>> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
     return YdszResponse.success(jobService.batchTrigger(dto.getJobIds()));
+  }
+
+  /**
+   * P1-13: 批量修改任务分组。
+   *
+   * <p>将多个任务同时移动到目标分组。分组变更不影响调度器注册，无需重新调度。
+   *
+   * @param dto 批量修改请求（含任务 ID 列表 + 目标分组）
+   * @return 批量操作结果
+   */
+  @Operation(summary = "批量修改任务分组")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
+  @Idempotent(key = "ydsz:cronjob:JobController:batchUpdateGroup:lock", ttlSeconds = 5)
+  @Audit(
+      module = "任务管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'batchUpdateGroup'")
+  @RateLimit(resource = "cronjob.job.batchUpdateGroup", threshold = 50)
+  @PostMapping("/batch/updateGroup")
+  public YdszResponse<BatchResult<String>> batchUpdateGroup(@RequestBody @Valid JobBatchUpdateDTO dto) {
+    return YdszResponse.success(jobService.batchUpdateGroup(dto.getJobIds(), dto.getJobGroup()));
+  }
+
+  /**
+   * P1-13: 批量修改 Cron 表达式。
+   *
+   * <p>将多个 CRON 类型任务的 Cron 表达式同时更新。自动校验合法性并重新注册调度器。
+   * 非 CRON 类型任务会被跳过（标记为失败）。
+   *
+   * @param dto 批量修改请求（含任务 ID 列表 + 新 Cron 表达式）
+   * @return 批量操作结果
+   */
+  @Operation(summary = "批量修改 Cron 表达式")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
+  @Idempotent(key = "ydsz:cronjob:JobController:batchUpdateCron:lock", ttlSeconds = 5)
+  @Audit(
+      module = "任务管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'batchUpdateCron'")
+  @RateLimit(resource = "cronjob.job.batchUpdateCron", threshold = 50)
+  @PostMapping("/batch/updateCron")
+  public YdszResponse<BatchResult<String>> batchUpdateCron(@RequestBody @Valid JobBatchUpdateDTO dto) {
+    return YdszResponse.success(jobService.batchUpdateCron(dto.getJobIds(), dto.getCronExpression()));
   }
 
   /**

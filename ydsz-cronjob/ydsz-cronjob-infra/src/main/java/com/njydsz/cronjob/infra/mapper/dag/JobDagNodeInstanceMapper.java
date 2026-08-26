@@ -230,6 +230,40 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       @Param("dagInstanceId") String dagInstanceId, @Param("status") String status);
 
   /**
+   * P2-4: 标记节点进入等待审批状态（PENDING → WAITING_FOR_APPROVAL）。
+   *
+   * @param id 节点实例 ID
+   * @param waitingAt 进入等待状态的时间
+   * @return 受影响行数（0 表示状态非 PENDING 或节点不存在）
+   */
+  @Update(
+      "UPDATE ydsz_job_dag_node_instance SET node_status = 'WAITING_FOR_APPROVAL', "
+          + "       started_at = #{waitingAt}, updated_at = CURRENT_TIMESTAMP "
+          + "WHERE id = #{id} AND node_status = 'PENDING' AND deleted = 0")
+  int markWaitingForApproval(@Param("id") String id, @Param("waitingAt") LocalDateTime waitingAt);
+
+  /**
+   * P2-4: 查询所有 WAITING_FOR_APPROVAL 状态的节点（不限超时）。
+   *
+   * <p>因各审批节点的超时时间配置在 DAG 定义 JSON 中（非节点实例表），
+   * Mapper 层无法按超时阈值过滤，仅按状态 + 时间升序返回候选集，
+   * 供 Java 层逐一加载 DAG 定义后精确判断是否超时。
+   *
+   * @param limit 最大返回条数
+   * @return WAITING_FOR_APPROVAL 状态的节点实例列表（按 started_at 升序）
+   */
+  @Select(
+      "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
+          + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
+          + "       result_json, error_message, "
+          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "FROM ydsz_job_dag_node_instance "
+          + "WHERE node_status = 'WAITING_FOR_APPROVAL' AND deleted = 0 "
+          + "ORDER BY started_at ASC "
+          + "LIMIT #{limit}")
+  List<JobDagNodeInstance> findWaitingApprovalNodes(@Param("limit") int limit);
+
+  /**
    * 批量插入节点实例。
    *
    * @param nodes 节点实例列表

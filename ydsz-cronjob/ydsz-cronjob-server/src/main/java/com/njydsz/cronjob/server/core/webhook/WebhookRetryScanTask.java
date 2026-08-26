@@ -20,6 +20,7 @@ import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookRetryVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.WebhookRetryConfig;
 import com.njydsz.cronjob.server.core.maintenance.ScanTask;
 
 /**
@@ -82,7 +83,7 @@ public class WebhookRetryScanTask implements ScanTask {
 
   @Override
   public void scan() {
-    CronjobProperties.WebhookRetryConfig config = cronjobProperties.getWebhookRetry();
+    WebhookRetryConfig config = cronjobProperties.getWebhookRetry();
     int batchSize = config.getBatchSize();
 
     List<JobWebhookRetryVO> pendingRetries =

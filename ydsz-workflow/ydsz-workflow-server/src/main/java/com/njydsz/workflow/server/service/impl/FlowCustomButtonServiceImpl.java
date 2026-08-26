@@ -21,7 +21,7 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
+import com.njydsz.workflow.engine.FlowNodeExt;
 import com.njydsz.workflow.server.service.FlowCustomButtonService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 

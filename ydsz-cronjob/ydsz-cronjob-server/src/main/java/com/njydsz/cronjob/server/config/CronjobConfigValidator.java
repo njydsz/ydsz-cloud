@@ -81,7 +81,7 @@ public class CronjobConfigValidator {
     Set<ConstraintViolation<Object>> violations = validator.validate(bean);
     if (!violations.isEmpty()) {
       StringBuilder sb = new StringBuilder();
-      sb.append("配置校验失败 [").append(prefix.append("]:\n"));
+      sb.append("配置校验失败 [").append(prefix).append("]:\n");
       for (ConstraintViolation<Object> violation : violations) {
         sb.append("  - ").append(violation.getPropertyPath())
           .append(": ").append(violation.getMessage()).append("\n");

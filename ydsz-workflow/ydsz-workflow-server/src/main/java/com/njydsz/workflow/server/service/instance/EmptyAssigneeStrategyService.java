@@ -11,7 +11,7 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
+import com.njydsz.workflow.engine.FlowNodeExt;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
 

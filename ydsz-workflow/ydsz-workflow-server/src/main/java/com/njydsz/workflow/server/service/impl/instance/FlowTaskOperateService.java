@@ -26,7 +26,7 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
+import com.njydsz.workflow.engine.FlowNodeExt;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
 /**

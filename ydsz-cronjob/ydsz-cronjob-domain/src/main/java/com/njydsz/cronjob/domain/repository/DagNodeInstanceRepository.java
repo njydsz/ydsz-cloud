@@ -127,4 +127,24 @@ public interface DagNodeInstanceRepository {
    * @return 受影响行数
    */
   int updateById(JobDagNodeInstanceVO vo);
+
+  /**
+   * P2-4: 标记节点进入等待审批状态（PENDING → WAITING_FOR_APPROVAL）。
+   *
+   * @param nodeId 节点实例 ID
+   * @param waitingAt 进入等待状态的时间
+   * @return 受影响行数（0 表示状态非 PENDING，CAS 失败）
+   */
+  int markWaitingForApproval(String nodeId, LocalDateTime waitingAt);
+
+  /**
+   * P2-4: 查询所有 WAITING_FOR_APPROVAL 状态的节点（不限超时）。
+   *
+   * <p>因各审批节点的超时时间配置在 DAG 定义 JSON 中（非节点实例表），
+   * 本方法仅按状态返回候选集（按 started_at 升序），供调用方逐一加载 DAG 定义后精确判断是否超时。
+   *
+   * @param limit 最大返回条数
+   * @return WAITING_FOR_APPROVAL 状态的节点实例 VO 列表
+   */
+  List<JobDagNodeInstanceVO> findWaitingApprovalNodes(int limit);
 }

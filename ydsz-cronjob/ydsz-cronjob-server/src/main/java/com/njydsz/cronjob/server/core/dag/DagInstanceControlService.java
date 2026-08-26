@@ -347,8 +347,13 @@ public class DagInstanceControlService {
             dagInstanceId,
             jobKey,
             comment);
-        // 触发后继节点检查
-        dagInstanceExecutor.execute(dagInstanceId);
+        if (approved) {
+          // 审批通过：触发后继节点派发
+          dagInstanceExecutor.redeliverPendingNodes(dagInstanceId);
+        } else {
+          // 审批拒绝：触发 DAG 实例终结检查（按 failStrategy 处理）
+          dagInstanceExecutor.onApprovalRejected(dagInstanceId);
+        }
         return true;
       }
     }

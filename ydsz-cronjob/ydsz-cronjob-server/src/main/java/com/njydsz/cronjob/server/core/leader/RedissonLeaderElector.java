@@ -91,15 +91,6 @@ public class RedissonLeaderElector implements LeaderElector {
   @Value("${server.port:0}")
   private int serverPort;
 
-  public RedissonLeaderElector(
-      RedissonClient redissonClient,
-      CronjobProperties cronjobProperties,
-      ObjectProvider<CronjobMetrics> cronjobMetricsProvider) {
-    this.redissonClient = redissonClient;
-    this.cronjobProperties = cronjobProperties;
-    this.cronjobMetricsProvider = cronjobMetricsProvider;
-  }
-
   /**
    * 初始化当前节点 ID（hostname:port）
    *

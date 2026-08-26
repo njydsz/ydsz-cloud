@@ -5,6 +5,7 @@ import java.util.List;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.job.JobBatchUpdateDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
@@ -153,6 +154,29 @@ public interface JobService {
    * @return 批量操作结果（含成功明细）
    */
   BatchResult<String> batchDelete(List<String> jobIds);
+
+  /**
+   * P1-13: 批量修改任务分组。
+   *
+   * <p>将多个任务同时移动到目标分组。不修改调度器注册信息，无需重新调度。
+   *
+   * @param jobIds 任务 ID 列表
+   * @param newGroup 目标分组名称
+   * @return 批量操作结果（含成功明细）
+   */
+  BatchResult<String> batchUpdateGroup(List<String> jobIds, String newGroup);
+
+  /**
+   * P1-13: 批量修改 Cron 表达式。
+   *
+   * <p>将多个任务的 Cron 表达式同时更新为目标值。会自动校验 Cron 合法性，
+   * 更新后重新注册调度器。仅对 scheduleType=CRON 的任务生效。
+   *
+   * @param jobIds 任务 ID 列表
+   * @param cronExpression 新 Cron 表达式
+   * @return 批量操作结果（含成功明细）
+   */
+  BatchResult<String> batchUpdateCron(List<String> jobIds, String cronExpression);
 
   /**
    * 注册到调度器（从 DB 加载/动态新增）
