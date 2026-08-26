@@ -27,8 +27,6 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.domain.vo.FlowTemplateVO;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowSkip;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
@@ -1029,8 +1027,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
           .message("流程定义详情缺少 definition")
           .build();
     }
-    List<FlowNode> nodes = MapUtils.safeCastList(detail.get("nodes"), FlowNode.class);
-    List<FlowSkip> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkip.class);
+    List<FlowNodeVO> nodes = MapUtils.safeCastList(detail.get("nodes"), FlowNodeVO.class);
+    List<FlowSkipVO> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkipVO.class);
 
     String processId = definition.getFlowCode();
     String processName = definition.getFlowName();
@@ -1048,7 +1046,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     // 输出节点
     if (nodes != null) {
-      for (FlowNode node : nodes) {
+      for (FlowNodeVO node : nodes) {
         String nodeCode = node.getNodeCode();
         String nodeName = node.getNodeName();
         Integer nodeType = node.getNodeType();
@@ -1072,7 +1070,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     // 输出跳转
     if (skips != null) {
-      for (FlowSkip skip : skips) {
+      for (FlowSkipVO skip : skips) {
         // 从 ext JSON 中解析 sourceRef
         String fromNodeCode = extractSourceRef(skip.getExt());
         String toNodeCode = skip.getNextNodeCode();

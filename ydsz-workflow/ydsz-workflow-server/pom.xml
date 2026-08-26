@@ -16,11 +16,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-domain</artifactId>
         </dependency>
-        <!-- server 依赖 infra 以使用实体类和转换器（仓储实现通过 Spring 自动装配注入） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-infra</artifactId>
-        </dependency>
+        <!-- 遵循 DDD 分层，server 层不直接依赖 infra 层，仓储实现由 web 层注入 -->
         <!-- P2-3: 显式声明 common-util（多文件使用 FileTypeUtils/DateUtils 等工具类） -->
         <dependency>
             <groupId>com.njydsz</groupId>
