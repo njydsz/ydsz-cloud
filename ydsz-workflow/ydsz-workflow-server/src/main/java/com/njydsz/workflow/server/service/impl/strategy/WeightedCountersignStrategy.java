@@ -14,7 +14,7 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 
@@ -75,7 +75,7 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
+  public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     int weight = task.getUserWeight() == null ? 1 : task.getUserWeight();
     int currentApproved = task.getApproveWeight() == null ? 0 : task.getApproveWeight();
     int newApproved = currentApproved + weight;
@@ -96,7 +96,7 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public boolean shouldAdvance(FlowRunTask task) {
+  public boolean shouldAdvance(FlowRunTaskVO task) {
     int approved = task.getApproveWeight() == null ? 0 : task.getApproveWeight();
     int total = task.getTotalWeight() == null || task.getTotalWeight() <= 0
         ? (task.getApproveCount() == null ? 1 : task.getApproveCount())
@@ -124,7 +124,7 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public void onAdvance(FlowRunTask task, FlowTaskOperateDTO dto) {
+  public void onAdvance(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     int approved = task.getApproveWeight() == null ? 0 : task.getApproveWeight();
     int total = task.getTotalWeight() == null ? 0 : task.getTotalWeight();
     log.info(

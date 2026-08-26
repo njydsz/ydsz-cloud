@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisTask;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 
 /**
@@ -47,7 +47,7 @@ public class FlowTaskArchiveService {
    * @param task 任务（会被原地修改状态/时间/时长）
    * @param comment 审批意见
    */
-  public void completeAndArchive(FlowRunTask task, String comment) {
+  public void completeAndArchive(FlowRunTaskVO task, String comment) {
     completeAndArchive(task, comment, null);
   }
 
@@ -60,7 +60,7 @@ public class FlowTaskArchiveService {
    * @param comment       审批意见
    * @param effectiveTime 补录生效时间，{@code null} 表示即时生效
    */
-  public void completeAndArchive(FlowRunTask task, String comment, LocalDateTime effectiveTime) {
+  public void completeAndArchive(FlowRunTaskVO task, String comment, LocalDateTime effectiveTime) {
     LocalDateTime finishTime = effectiveTime != null ? effectiveTime : LocalDateTime.now();
     Long durationMs =
         task.getCreatedAt() == null ? null : Duration.between(task.getCreatedAt(), finishTime).toMillis();
@@ -89,8 +89,8 @@ public class FlowTaskArchiveService {
    * @param src 源任务
    * @param finalStatus 归档时的最终状态（用于历史表 taskStatus 字段）
    */
-  public void archiveToHistory(FlowRunTask src, FlowTaskStatus finalStatus) {
-    FlowHisTask his = new FlowHisTask();
+  public void archiveToHistory(FlowRunTaskVO src, FlowTaskStatus finalStatus) {
+    FlowHisTaskVO his = new FlowHisTaskVO();
     his.setInstanceId(src.getInstanceId());
     his.setTaskId(src.getId());
     his.setFlowCode(src.getFlowCode());

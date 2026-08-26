@@ -22,10 +22,10 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowHisTask;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -95,7 +95,7 @@ public class FlowTaskOperateService {
           .message("error.workflow.msg_6ddae4d1")
           .build();
     }
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     String originalAssignorId = parseAssignorId(task.getAssigneeId());
     String originalAssignorName = task.getAssigneeName();
     task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
@@ -135,7 +135,7 @@ public class FlowTaskOperateService {
           .message("error.workflow.msg_d4faa79e")
           .build();
     }
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     String originalAssigneeId = parseAssignorId(task.getAssigneeId());
     String originalAssigneeName = task.getAssigneeName();
     task.setAssignorId(originalAssigneeId);
@@ -173,7 +173,7 @@ public class FlowTaskOperateService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void jump(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -196,7 +196,7 @@ public class FlowTaskOperateService {
           .build();
     }
     // 校验目标节点存在
-    FlowNode targetNode = nodeRepository.findByCode(task.getDefinitionId(), dto.getTargetNodeCode()).map(converter::entityToDO).orElse(null);
+    FlowNodeVO targetNode = nodeRepository.findByCode(task.getDefinitionId(), dto.getTargetNodeCode()).orElse(null);
     if (targetNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -369,9 +369,7 @@ public class FlowTaskOperateService {
    * @param instanceId 参数说明
    */
   private void validateNextTasksAllPending(String instanceId) {
-    List<FlowRunTask> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
-        .map(converter::entityToDO)
-        .collect(Collectors.toList());
+    List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByInstance(instanceId);
     boolean anyProcessed = pendingTasks.stream()
         .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
             || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
@@ -391,8 +389,8 @@ public class FlowTaskOperateService {
    * @param comment 参数说明
    * @return 返回值说明
    */
-  private FlowRunTask recreateRetractTask(FlowHisTask hisTask, FlowInstanceVO instance, String comment) {
-    FlowRunTask newTask = new FlowRunTask();
+  private FlowRunTaskVO recreateRetractTask(FlowHisTask hisTask, FlowInstanceVO instance, String comment) {
+    FlowRunTaskVO newTask = new FlowRunTaskVO();
     newTask.setInstanceId(instance.getId());
     newTask.setFlowCode(instance.getFlowCode());
     newTask.setDefinitionId(instance.getDefinitionId());
@@ -454,7 +452,7 @@ public class FlowTaskOperateService {
    * @param node 参数说明
    * @return 返回值说明
    */
-  private boolean isFreeJumpEnabled(FlowNode node) {
+  private boolean isFreeJumpEnabled(FlowNodeVO node) {
     Map<String, Object> ext = parseExtConfig(node.getExt());
     Object val = ext.get("freeJump");
     if (val == null) {

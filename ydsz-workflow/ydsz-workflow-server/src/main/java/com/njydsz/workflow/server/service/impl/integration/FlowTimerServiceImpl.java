@@ -179,7 +179,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
           .message("流程实例不存在: " + instanceId)
           .build();
     }
-    FlowNode node =
+    FlowNodeVO node =
         nodeCode != null ? nodeRepository.findByCode(instance.getDefinitionId(), nodeCode).orElse(null) : null;
     FlowTimerVO timer = new FlowTimerVO();
     timer.setTenantId(instance.getTenantId());

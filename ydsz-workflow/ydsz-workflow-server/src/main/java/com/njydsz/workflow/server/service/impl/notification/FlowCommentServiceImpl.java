@@ -23,9 +23,9 @@ import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.repository.FlowCommentRepository;
 import com.njydsz.workflow.domain.repository.FlowQuickCommentRepository;
+import com.njydsz.workflow.domain.vo.FlowCommentVO;
+import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowComment;
-import com.njydsz.workflow.infra.entity.FlowQuickComment;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowCommentService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -39,9 +39,9 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * <p><b>与审计日志的区别：</b>
  *
  * <ul>
- *   <li><b>评论（{@link FlowComment}）</b>：业务方的<b>讨论</b>，<b>可回复</b>（{@code parentCommentId}）、
+ *   <li><b>评论（{@link FlowCommentVO}）</b>：业务方的<b>讨论</b>，<b>可回复</b>（{@code parentCommentId}）、
  *       <b>可删除</b>（{@code deleted} 软删）、<b>支持 @提及</b>（{@code @\{userId\}}）
- *   <li><b>审计日志（{@code FlowAuditLog}）</b>：系统的<b>操作轨迹</b>，<b>不可变</b>、 不可回复、不可删除，用于合规审计
+ *   <li><b>审计日志（{@code FlowAuditLogVO}）</b>：系统的<b>操作轨迹</b>，<b>不可变</b>、 不可回复、不可删除，用于合规审计
  * </ul>
  *
  * <p><b>核心职责：</b>
@@ -90,8 +90,8 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowCommentService 接口定义
- * @see FlowComment 评论实体
- * @see FlowAuditLog 审计日志实体（操作轨迹，与评论分离）
+ * @see FlowCommentVO 评论值对象
+ * @see FlowAuditLogVO 审计日志值对象（操作轨迹，与评论分离）
  * @see FlowSensitiveMasker 敏感数据脱敏器
  * @see FlowNotificationService 通知服务（@提及通知）
  */
@@ -131,8 +131,8 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     }
     // 回复场景：校验父评论存在且属于同一实例
     if (StringUtils.hasText(dto.getParentCommentId())) {
-      FlowComment parent =
-          commentRepository.findById(dto.getParentCommentId()).map(converter::entityToDO).orElse(null);
+      FlowCommentVO parent =
+          commentRepository.findById(dto.getParentCommentId()).orElse(null);
       if (parent == null || parent.getDeleted() == 1) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -148,7 +148,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
       }
     }
 
-    FlowComment comment = new FlowComment();
+    FlowCommentVO comment = new FlowCommentVO();
     comment.setTenantId(tenantId != null ? tenantId : "1");
     comment.setInstanceId(dto.getInstanceId());
     comment.setTaskId(dto.getTaskId());
@@ -161,7 +161,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     comment.setReplyToUserName(dto.getReplyToUserName());
     // 评论类型默认 COMMENT（吸收 task_comment 功能后新增字段）
     comment.setType("COMMENT");
-    commentRepository.save(converter.entityToVO(comment));
+    commentRepository.save(comment);
     log.info(
         "[FlowComment] 新增评论: commentId={} instanceId={} userId={} isReply={}",
         comment.getId(),
@@ -223,27 +223,24 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   }
 
   @Override
-  public List<FlowComment> listByInstance(String tenantId, String instanceId) {
-    return commentRepository.findByInstanceAndTenant(tenantId, instanceId).stream()
-        .map(converter::entityToDO).toList();
+  public List<FlowCommentVO> listByInstance(String tenantId, String instanceId) {
+    return commentRepository.findByInstanceAndTenant(tenantId, instanceId);
   }
 
   @Override
-  public List<FlowComment> listRootComments(String tenantId, String instanceId) {
-    return commentRepository.findRootCommentsByTenant(tenantId, instanceId).stream()
-        .map(converter::entityToDO).toList();
+  public List<FlowCommentVO> listRootComments(String tenantId, String instanceId) {
+    return commentRepository.findRootCommentsByTenant(tenantId, instanceId);
   }
 
   @Override
-  public List<FlowComment> listReplies(String parentCommentId) {
-    return commentRepository.findReplies(parentCommentId).stream()
-        .map(converter::entityToDO).toList();
+  public List<FlowCommentVO> listReplies(String parentCommentId) {
+    return commentRepository.findReplies(parentCommentId);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean deleteComment(String commentId, String userId) {
-    FlowComment comment = commentRepository.findById(commentId).map(converter::entityToDO).orElse(null);
+    FlowCommentVO comment = commentRepository.findById(commentId).orElse(null);
     if (comment == null || comment.getDeleted() == 1) {
       return false;
     }
@@ -255,7 +252,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .build();
     }
     comment.setDeleted(1);
-    commentRepository.update(converter.entityToVO(comment));
+    commentRepository.update(comment);
     log.info("[FlowComment] 删除评论: commentId={} userId={}", commentId, userId);
     return true;
   }
@@ -303,22 +300,20 @@ public class FlowCommentServiceImpl implements FlowCommentService {
    * @return 常用语列表（已合并 + 已排序），无数据返回空列表
    */
   @Override
-  public List<FlowQuickComment> listQuickComments(String userId, String tenantId) {
+  public List<FlowQuickCommentVO> listQuickComments(String userId, String tenantId) {
     if (!StringUtils.hasText(userId)) {
       return List.of();
     }
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
     // 查询：用户自定义 + 系统预设（isSystem=1）
-    List<FlowQuickComment> list = quickCommentRepository.findActiveByUser(userId, tid).stream()
-        .map(converter::entityToDO).toList();
+    List<FlowQuickCommentVO> list = quickCommentRepository.findActiveByUser(userId, tid);
     // 系统预设（全局）
-    List<FlowQuickComment> systemList = quickCommentRepository.findActiveSystemByTenant(tid).stream()
-        .map(converter::entityToDO).toList();
+    List<FlowQuickCommentVO> systemList = quickCommentRepository.findActiveSystemByTenant(tid);
     list.addAll(systemList);
     // 排序：sortNum 升序, useCount 降序
     list.sort(
-        Comparator.comparingInt(FlowQuickComment::getSortNum)
-            .thenComparing(Comparator.comparingInt(FlowQuickComment::getUseCount).reversed()));
+        Comparator.comparingInt(FlowQuickCommentVO::getSortNum)
+            .thenComparing(Comparator.comparingInt(FlowQuickCommentVO::getUseCount).reversed()));
     return list;
   }
 
@@ -343,7 +338,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .message("error.workflow.msg_user_required")
           .build();
     }
-    FlowQuickComment comment = new FlowQuickComment();
+    FlowQuickCommentVO comment = new FlowQuickCommentVO();
     comment.setUserId(userId);
     comment.setContent(dto.getContent());
     comment.setCommentType(dto.getCommentType());
@@ -351,7 +346,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     comment.setUseCount(0);
     comment.setIsSystem(0);
     comment.setTenantId(tenantId != null ? tenantId : TenantContextHolder.getTenantId());
-    quickCommentRepository.save(converter.entityToVO(comment));
+    quickCommentRepository.save(comment);
     log.info("[FlowQuickComment] 新增常用语: userId={} id={}", userId, comment.getId());
     return comment.getId();
   }
@@ -374,8 +369,8 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .message("error.workflow.msg_id_required")
           .build();
     }
-    FlowQuickComment existing = quickCommentRepository.findById(dto.getId())
-        .map(converter::entityToDO).orElse(null);
+    FlowQuickCommentVO existing = quickCommentRepository.findById(dto.getId())
+        .orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -396,7 +391,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (dto.getSortNum() != null) {
       existing.setSortNum(dto.getSortNum());
     }
-    quickCommentRepository.update(converter.entityToVO(existing));
+    quickCommentRepository.update(existing);
   }
 
   /**
@@ -416,8 +411,8 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteQuickComment(String id, String userId) {
-    FlowQuickComment existing = quickCommentRepository.findById(id)
-        .map(converter::entityToDO).orElse(null);
+    FlowQuickCommentVO existing = quickCommentRepository.findById(id)
+        .orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       return;
     }
@@ -435,7 +430,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .build();
     }
     existing.setDeleted(1);
-    quickCommentRepository.update(converter.entityToVO(existing));
+    quickCommentRepository.update(existing);
   }
 
   /**
@@ -454,11 +449,11 @@ public class FlowCommentServiceImpl implements FlowCommentService {
       return;
     }
     try {
-      FlowQuickComment existing = quickCommentRepository.findById(id)
-          .map(converter::entityToDO).orElse(null);
+      FlowQuickCommentVO existing = quickCommentRepository.findById(id)
+          .orElse(null);
       if (existing != null && existing.getDeleted() == 0) {
         existing.setUseCount((existing.getUseCount() == null ? 0 : existing.getUseCount()) + 1);
-        quickCommentRepository.update(converter.entityToVO(existing));
+        quickCommentRepository.update(existing);
       }
     } catch (Exception e) {
       log.warn("[FlowQuickComment] 增加使用次数失败: id={} err={}", id, e.getMessage());

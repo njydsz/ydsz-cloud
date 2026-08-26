@@ -14,8 +14,8 @@ import com.njydsz.workflow.domain.enums.FlowSignType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowUserRepository;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.infra.entity.FlowUser;
 
 /**
@@ -109,7 +109,7 @@ public class FlowTaskSignServiceImpl {
    */
   @Transactional(rollbackFor = Exception.class)
   public void countersignBefore(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -166,7 +166,7 @@ public class FlowTaskSignServiceImpl {
    */
   @Transactional(rollbackFor = Exception.class)
   public void countersignAfter(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -225,7 +225,7 @@ public class FlowTaskSignServiceImpl {
    */
   @Transactional(rollbackFor = Exception.class)
   public void countersignParallel(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -284,7 +284,7 @@ public class FlowTaskSignServiceImpl {
    */
   @Transactional(rollbackFor = Exception.class)
   public void countersignRemove(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -333,7 +333,7 @@ public class FlowTaskSignServiceImpl {
    */
   @Transactional(rollbackFor = Exception.class)
   public void markRead(String taskId, String userId) {
-    FlowRunTask task = support.getTaskOrThrow(taskId);
+    FlowRunTaskVO task = support.getTaskOrThrow(taskId);
     support.audit(task, "READ", userId, null, null);
     log.info("[Flow] 已阅: taskId={} userId={}", taskId, userId);
   }
@@ -349,7 +349,7 @@ public class FlowTaskSignServiceImpl {
    */
   @Transactional(rollbackFor = Exception.class)
   public void communicate(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     support.audit(
         task, "COMMUNICATE", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     log.info(
@@ -373,7 +373,7 @@ public class FlowTaskSignServiceImpl {
    */
   @Transactional(rollbackFor = Exception.class)
   public void saveDraft(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -413,7 +413,7 @@ public class FlowTaskSignServiceImpl {
    */
   @Transactional(rollbackFor = Exception.class)
   public void addApprover(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)

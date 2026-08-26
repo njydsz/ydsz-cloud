@@ -14,10 +14,9 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -85,7 +84,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   // ============================== 创建任务 ==============================
 
   @Override
-  public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
+  public String createTask(String instanceId, FlowNodeVO node, Map<String, Object> variables) {
     return completeService.createTask(instanceId, node, variables);
   }
 
@@ -403,8 +402,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   // ============================== 视图转换 / 统计 ==============================
 
   @Override
-  public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTask task) {
-    return queryService.toView(WorkflowConverter.INSTANT.entityToVO(task));
+  public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskVO task) {
+    return queryService.toView(task);
   }
 
   @Override
@@ -535,6 +534,6 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     if (task == null) {
       return null;
     }
-    return slaService.processOverdue(WorkflowConverter.INSTANT.entityToDO(task));
+    return slaService.processOverdue(task);
   }
 }

@@ -122,6 +122,24 @@ public class FlowRunTaskVO implements Serializable {
   /** 迭代变量 */
   private String iterVar;
 
+  /** 租户 ID */
+  private String tenantId;
+
+  /** 当前办理人的权重值（票签模式） */
+  private Integer userWeight;
+
+  /** 累计已通过权重（票签模式） */
+  private Integer approveWeight;
+
+  /** 节点总权重（票签模式） */
+  private Integer totalWeight;
+
+  /** 生效时间（P2-1 穿越时空/补录审批） */
+  private LocalDateTime effectiveTime;
+
+  /** 完成时间（驳回场景使用） */
+  private LocalDateTime completedAt;
+
   /** 外部追踪 ID */
   private String providerTraceId;
 

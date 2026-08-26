@@ -14,9 +14,9 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAuditLog;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
@@ -91,8 +91,8 @@ import com.njydsz.workflow.server.engine.listener.FlowListenerPluginExecutor;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTaskServiceImpl FlowTask 门面（拆分入口）
- * @see FlowRunTask 运行时任务实体
- * @see FlowAuditLog 审计日志实体
+ * @see FlowRunTaskVO 运行时任务视图对象
+ * @see FlowAuditLogVO 审计日志视图对象
  * @see FlowEventListener 事件监听器 SPI
  * @see FlowWorkflowEvent Spring 异步事件
  * @see FlowSensitiveMasker 敏感数据脱敏器
@@ -159,8 +159,8 @@ public class FlowTaskSupport {
    * @throws SysException 当任务不存在时抛出，错误码 {@code NOT_FOUND}， 错误信息 key 为 {@code
    *     error.workflow.msg_6541ab08}（i18n 资源键）
    */
-  public FlowRunTask getTaskOrThrow(String id) {
-    FlowRunTask task = taskRepository.findById(id).map(converter::entityToDO).orElse(null);
+  public FlowRunTaskVO getTaskOrThrow(String id) {
+    FlowRunTaskVO task = taskRepository.findById(id);
     if (task == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -186,7 +186,7 @@ public class FlowTaskSupport {
    * @param comment 审批意见 / 操作备注（自动脱敏）
    */
   public void audit(
-      FlowRunTask task, String action, String operatorId, String targetId, String comment) {
+      FlowRunTaskVO task, String action, String operatorId, String targetId, String comment) {
     audit(task, action, operatorId, targetId, comment, null);
   }
 
@@ -217,14 +217,14 @@ public class FlowTaskSupport {
    *     INQUIRE}（询问），可空
    */
   public void audit(
-      FlowRunTask task,
+      FlowRunTaskVO task,
       String action,
       String operatorId,
       String targetId,
       String comment,
       String commentType) {
     try {
-      FlowAuditLog log = new FlowAuditLog();
+      FlowAuditLogVO log = new FlowAuditLogVO();
       log.setInstanceId(task.getInstanceId());
       log.setTaskId(task.getId());
       log.setFlowCode(task.getFlowCode());

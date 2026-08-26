@@ -20,7 +20,6 @@ import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.repository.FlowAttachmentRepository;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAttachment;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 
@@ -86,7 +85,7 @@ import com.njydsz.workflow.server.service.FlowAttachmentService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowAttachmentService 接口定义
- * @see com.njydsz.workflow.infra.entity.FlowAttachment 附件实体
+ * @see com.njydsz.workflow.domain.vo.FlowAttachmentVO 附件值对象
  * @see com.njydsz.workflow.domain.dto.FlowAttachmentDTO 附件 DTO
  * @see com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO 附件预览 VO
  */
@@ -135,12 +134,12 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     if (attachments == null || attachments.isEmpty()) {
       return;
     }
-    List<FlowAttachment> entities = new ArrayList<>(attachments.size());
+    List<FlowAttachmentVO> entities = new ArrayList<>(attachments.size());
     for (FlowAttachmentDTO dto : attachments) {
       if (dto == null || dto.getStorageKey() == null || dto.getStorageKey().isBlank()) {
         continue;
       }
-      FlowAttachment entity = new FlowAttachment();
+      FlowAttachmentVO entity = new FlowAttachmentVO();
       entity.setInstanceId(instanceId);
       entity.setTaskId(taskId);
       entity.setNodeCode(nodeCode);
@@ -165,10 +164,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
       entities.add(entity);
     }
     if (!entities.isEmpty()) {
-      List<com.njydsz.workflow.domain.vo.FlowAttachmentVO> voList = entities.stream()
-          .map(converter::entityToVO)
-          .collect(Collectors.toList());
-      attachmentRepository.saveBatch(voList);
+      attachmentRepository.saveBatch(entities);
       log.info(
           "[Flow] 审批附件落库: instanceId={} taskId={} count={}", instanceId, taskId, entities.size());
     }
@@ -176,18 +172,14 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-  public List<FlowAttachment> listByTask(String taskId) {
-    return attachmentRepository.findByTaskId(taskId).stream()
-        .map(converter::entityToDO)
-        .collect(Collectors.toList());
+  public List<FlowAttachmentVO> listByTask(String taskId) {
+    return attachmentRepository.findByTaskId(taskId);
   }
 
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-  public List<FlowAttachment> listByInstance(String instanceId) {
-    return attachmentRepository.findByInstanceId(instanceId).stream()
-        .map(converter::entityToDO)
-        .collect(Collectors.toList());
+  public List<FlowAttachmentVO> listByInstance(String instanceId) {
+    return attachmentRepository.findByInstanceId(instanceId);
   }
 
   /**
@@ -200,25 +192,23 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
    */
   @Override
   public List<FlowAttachmentVO> listByTaskVO(String taskId) {
-    return converter.flowAttachmentListToVO(listByTask(taskId));
+    return listByTask(taskId);
   }
 
   /**
    * {@inheritDoc}
-   * 
-   * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
    *
    * @param instanceId 参数说明
    * @return 返回值说明
    */
   @Override
   public List<FlowAttachmentVO> listByInstanceVO(String instanceId) {
-    return converter.flowAttachmentListToVO(listByInstance(instanceId));
+    return listByInstance(instanceId);
   }
 
   @Override
   public void delete(String attachmentId, String operatorId) {
-    FlowAttachment entity = attachmentRepository.findById(attachmentId).map(converter::entityToDO).orElse(null);
+    FlowAttachmentVO entity = attachmentRepository.findById(attachmentId).orElse(null);
     if (entity != null && (entity.getDeleted() == null || entity.getDeleted() == 0)) {
       attachmentRepository.deleteById(attachmentId);
       log.info("[Flow] 附件删除: attachmentId={} operator={}", attachmentId, operatorId);
@@ -227,7 +217,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   @Override
   public FlowAttachmentPreviewVO previewAttachment(String attachmentId) {
-    FlowAttachment attachment = attachmentRepository.findById(attachmentId).map(converter::entityToDO).orElse(null);
+    FlowAttachmentVO attachment = attachmentRepository.findById(attachmentId).orElse(null);
     if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)

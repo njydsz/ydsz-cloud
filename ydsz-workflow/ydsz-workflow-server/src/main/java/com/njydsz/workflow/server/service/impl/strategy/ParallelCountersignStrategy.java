@@ -11,7 +11,7 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 
@@ -44,7 +44,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
+  public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
     task.setApproveFinished(finished);
     int updated = taskRepository.update(converter.entityToVO(task)) != null ? 1 : 0;
@@ -63,7 +63,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public boolean shouldAdvance(FlowRunTask task) {
+  public boolean shouldAdvance(FlowRunTaskVO task) {
     int finished = task.getApproveFinished() == null ? 0 : task.getApproveFinished();
     int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
     return finished >= required;

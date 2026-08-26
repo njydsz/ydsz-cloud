@@ -23,8 +23,8 @@ import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowSlaService;
@@ -71,7 +71,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @since 1.0.0
  * @see FlowSlaService SLA Service 接口
  * @see FlowSlaAction SLA 动作枚举
- * @see com.njydsz.workflow.infra.entity.FlowRunTask 运行时任务实体
+ * @see com.njydsz.workflow.domain.vo.FlowRunTaskVO 运行时任务值对象
  */
 @Slf4j
 @Service
@@ -241,7 +241,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @param node 当前节点（含 {@code slaConfig}）
    */
   @Override
-  public void applySlaConfig(FlowRunTask task, FlowNode node) {
+  public void applySlaConfig(FlowRunTaskVO task, FlowNodeVO node) {
     if (task == null || node == null) {
       return;
     }
@@ -301,14 +301,12 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       int iterations = 0;
       // P1-6: 游标分页 — 循环处理多批，直到无候选或达到最大迭代次数
       while (iterations < MAX_SCAN_ITERATIONS) {
-        List<FlowRunTask> candidates = taskRepository.selectSlaCandidates(SCAN_BATCH_SIZE).stream()
-            .map(converter::entityToDO)
-            .toList();
+        List<FlowRunTaskVO> candidates = taskRepository.selectSlaCandidates(SCAN_BATCH_SIZE);
         if (candidates == null || candidates.isEmpty()) {
           break;
         }
         int batchProcessed = 0;
-        for (FlowRunTask task : candidates) {
+        for (FlowRunTaskVO task : candidates) {
           try {
             if (processOverdue(task, now)) {
               batchProcessed++;
@@ -345,7 +343,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    */
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-  public boolean processOverdue(FlowRunTask task) {
+  public boolean processOverdue(FlowRunTaskVO task) {
     return processOverdue(task, LocalDateTime.now());
   }
 
@@ -357,12 +355,12 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @return true=已处理（REMIND / 最终动作），false=跳过（未到期 / 已完成 / 状态不符）
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-  public boolean processOverdue(FlowRunTask task, LocalDateTime now) {
+  public boolean processOverdue(FlowRunTaskVO task, LocalDateTime now) {
     if (task == null || task.getId() == null) {
       return false;
     }
     // 1. 重新查一遍任务，避免读到陈旧数据
-    FlowRunTask fresh = taskRepository.findById(task.getId()).map(converter::entityToDO).orElse(null);
+    FlowRunTaskVO fresh = taskRepository.findById(task.getId());
     if (fresh == null) {
       return false;
     }
@@ -377,7 +375,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       return false;
     }
     // 3. 解析节点 SLA 配置
-    FlowNode node = nodeRepository.findByCode(fresh.getDefinitionId(), fresh.getNodeCode()).map(converter::entityToDO).orElse(null);
+    FlowNodeVO node = nodeRepository.findByCode(fresh.getDefinitionId(), fresh.getNodeCode()).orElse(null);
     Map<String, Object> config =
         node == null ? Collections.emptyMap() : parseSlaConfig(node.getSlaConfig());
     // 无配置：默认仅 NOTIFY（但因 FlowSlaService 只对配了 dueAt 的任务扫描，这种情况不应出现）
@@ -428,7 +426,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @return true=通知发送成功；false=发送失败或 assigneeId 为空
    */
   private boolean sendUrge(
-      FlowRunTask task, FlowSlaAction action, int newUrgeCount, int maxUrges, LocalDateTime now) {
+      FlowRunTaskVO task, FlowSlaAction action, int newUrgeCount, int maxUrges, LocalDateTime now) {
     try {
       String title = URGE_TITLE;
       String content =
@@ -483,8 +481,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @return true=动作执行成功；false=执行失败或未知动作
    */
   private boolean executeFinalAction(
-      FlowRunTask task,
-      FlowNode node,
+      FlowRunTaskVO task,
+      FlowNodeVO node,
       FlowSlaAction action,
       Map<String, Object> config,
       LocalDateTime now) {
@@ -519,7 +517,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @param now 当前时间（用于记录动作时间）
    * @return true=自动通过成功；false=执行失败
    */
-  private boolean doAutoPass(FlowRunTask task, Map<String, Object> config, LocalDateTime now) {
+  private boolean doAutoPass(FlowRunTaskVO task, Map<String, Object> config, LocalDateTime now) {
     try {
       String comment = (String) config.getOrDefault(SLA_CONFIG_KEY_AUTO_COMMENT, AUTO_PASS_DEFAULT_COMMENT);
       FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -553,7 +551,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @param now 当前时间（用于记录动作时间）
    * @return true=自动驳回成功；false=执行失败
    */
-  private boolean doAutoReject(FlowRunTask task, Map<String, Object> config, LocalDateTime now) {
+  private boolean doAutoReject(FlowRunTaskVO task, Map<String, Object> config, LocalDateTime now) {
     try {
       String comment = (String) config.getOrDefault(SLA_CONFIG_KEY_AUTO_COMMENT, AUTO_REJECT_DEFAULT_COMMENT);
       FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -587,7 +585,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @param now 当前时间（用于计算新的 dueAt）
    * @return true=升级成功（转办或通知）；false=执行失败
    */
-  private boolean doEscalate(FlowRunTask task, Map<String, Object> config, LocalDateTime now) {
+  private boolean doEscalate(FlowRunTaskVO task, Map<String, Object> config, LocalDateTime now) {
     try {
       if (task.getSlaEscalated() != null && task.getSlaEscalated() == 1) {
         log.info("[FlowSla] 任务已升级，跳过重复升级: taskId={}", task.getId());
@@ -610,7 +608,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         taskService.transfer(dto);
         taskRepository.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
         // 转办后：升级后的任务重新计 SLA
-        FlowRunTask afterTransfer = taskRepository.findById(task.getId()).map(converter::entityToDO).orElse(null);
+        FlowRunTaskVO afterTransfer = taskRepository.findById(task.getId());
         if (afterTransfer != null) {
           afterTransfer.setSlaEscalated(1);
           afterTransfer.setUrgeCount(0);
@@ -618,7 +616,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
           // 给新任务一个新的 dueAt（基于当前时间 + timeoutMinutes）
           Integer timeoutMinutes = readInt(config, SLA_CONFIG_KEY_TIMEOUT_MINUTES, DEFAULT_TIMEOUT_MINUTES);
           afterTransfer.setDueAt(now.plusMinutes(timeoutMinutes));
-          taskRepository.update(converter.entityToVO(afterTransfer));
+          taskRepository.update(afterTransfer);
         }
         log.info("[FlowSla] 升级成功: taskId={} escalateUserId={}", task.getId(), escalateUserId);
         // P2-3: Prometheus 指标
@@ -659,7 +657,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @param now 当前时间
    * @return true=通知已发送；false=发送异常
    */
-  private boolean doNotify(FlowRunTask task, Map<String, Object> config, LocalDateTime now) {
+  private boolean doNotify(FlowRunTaskVO task, Map<String, Object> config, LocalDateTime now) {
     try {
       List<String> targets = resolveNotifyTargets(config);
       String title = NOTIFY_TITLE;

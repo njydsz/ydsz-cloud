@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 
@@ -34,7 +34,7 @@ public class OrCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
+  public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     // 完成 + 归档（P2-1: 支持穿越时空补录审批）
     LocalDateTime effectiveTime =
         Boolean.TRUE.equals(dto.getBackdated()) ? dto.getEffectiveTime() : null;
@@ -42,7 +42,7 @@ public class OrCountersignStrategy implements CountersignStrategy {
   }
 
   @Override
-  public boolean shouldAdvance(FlowRunTask task) {
+  public boolean shouldAdvance(FlowRunTaskVO task) {
     // OR 模式：一人通过即推进
     return true;
   }

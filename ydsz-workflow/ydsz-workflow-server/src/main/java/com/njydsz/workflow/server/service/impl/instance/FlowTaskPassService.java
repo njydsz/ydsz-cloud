@@ -23,9 +23,9 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
 import com.njydsz.workflow.server.form.FlowFormSchema;
@@ -104,7 +104,7 @@ public class FlowTaskPassService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void pass(FlowTaskOperateDTO dto) {
-    FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
+    FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -184,7 +184,7 @@ public class FlowTaskPassService {
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {
       flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "passed");
-      flowMetrics.recordTaskDuration(converter.entityToVO(task), "PASSED");
+      flowMetrics.recordTaskDuration(task, "PASSED");
     }
   }
 
@@ -194,14 +194,14 @@ public class FlowTaskPassService {
    * @param task 参数说明
    * @param dto 参数说明
    */
-  private void handleDelegateReturn(FlowRunTask task, FlowTaskOperateDTO dto) {
+  private void handleDelegateReturn(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     auditService.logDelegateOperation(task, "DELEGATE_RETURN");
     task.setAssigneeId(String.valueOf(task.getAssignorId()));
     task.setAssigneeName(task.getAssignorName());
     task.setAssignorId(null);
     task.setAssignorName(null);
     task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(
         task, "DELEGATE_RETURN", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     log.info("[Flow] 委派回归: taskId={} → 原办理人={}", task.getId(), task.getAssigneeId());
@@ -215,8 +215,8 @@ public class FlowTaskPassService {
    * @param instance 参数说明
    */
   private void validateFormFieldPerms(
-      FlowRunTask task, Map<String, Object> variables, FlowInstanceVO instance) {
-    FlowNode formNode = nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).map(converter::entityToDO).orElse(null);
+      FlowRunTaskVO task, Map<String, Object> variables, FlowInstanceVO instance) {
+    FlowNodeVO formNode = nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).orElse(null);
     if (formNode == null) {
       return;
     }
@@ -247,11 +247,11 @@ public class FlowTaskPassService {
    */
   private void advanceProcess(
       FlowInstanceVO instance,
-      FlowRunTask task,
+      FlowRunTaskVO task,
       Map<String, Object> vars,
       FlowPerformType performType,
       FlowTaskOperateDTO dto) {
-    List<FlowNode> nextNodes = advancer.advance(instance, task.getNodeCode(), "PASS", null, vars);
+    List<FlowNodeVO> nextNodes = advancer.advance(instance, task.getNodeCode(), "PASS", null, vars);
     instanceService.generateTasksForNodes(task.getInstanceId(), nextNodes, vars);
     updateInstanceNode(instance, nextNodes);
     notificationService.fireTaskCompleted(task.getId(), "PASS", vars);
@@ -271,7 +271,7 @@ public class FlowTaskPassService {
    * @param instance 参数说明
    * @param nextNodes 参数说明
    */
-  private void updateInstanceNode(FlowInstanceVO instance, List<FlowNode> nextNodes) {
+  private void updateInstanceNode(FlowInstanceVO instance, List<FlowNodeVO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
       instanceRepository.updateStatus(
           instance.getId(),
@@ -293,7 +293,7 @@ public class FlowTaskPassService {
    * @param variables  合并后的流程变量
    */
   private void firePersonalCompletedEvent(
-      FlowRunTask task, FlowTaskOperateDTO dto, Map<String, Object> variables) {
+      FlowRunTaskVO task, FlowTaskOperateDTO dto, Map<String, Object> variables) {
     try {
       String nodeExt = nodeRepository
           .findByCode(task.getDefinitionId(), task.getNodeCode())
