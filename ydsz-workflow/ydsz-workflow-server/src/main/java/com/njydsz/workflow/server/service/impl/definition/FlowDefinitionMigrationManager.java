@@ -431,13 +431,13 @@ public class FlowDefinitionMigrationManager {
 
   /** 版本差异上下文：持有两个版本的节点和连线映射。 */
   private static class VersionDiffContext {
-    final Map<String, FlowNode> nodeMapV1;
-    final Map<String, FlowNode> nodeMapV2;
-    final Map<String, FlowSkip> skipMapV1;
-    final Map<String, FlowSkip> skipMapV2;
+    final Map<String, FlowNodeVO> nodeMapV1;
+    final Map<String, FlowNodeVO> nodeMapV2;
+    final Map<String, FlowSkipVO> skipMapV1;
+    final Map<String, FlowSkipVO> skipMapV2;
 
-    VersionDiffContext(Map<String, FlowNode> nodeMapV1, Map<String, FlowNode> nodeMapV2,
-        Map<String, FlowSkip> skipMapV1, Map<String, FlowSkip> skipMapV2) {
+    VersionDiffContext(Map<String, FlowNodeVO> nodeMapV1, Map<String, FlowNodeVO> nodeMapV2,
+        Map<String, FlowSkipVO> skipMapV1, Map<String, FlowSkipVO> skipMapV2) {
       this.nodeMapV1 = nodeMapV1;
       this.nodeMapV2 = nodeMapV2;
       this.skipMapV1 = skipMapV1;
@@ -452,53 +452,49 @@ public class FlowDefinitionMigrationManager {
    * @param defV2 参数说明
    * @return 返回值说明
    */
-  private VersionDiffContext loadVersionContext(FlowDefinition defV1, FlowDefinition defV2) {
-    List<FlowNode> nodesV1 = nodeRepository.findByDefinitionId(defV1.getId()).stream()
-        .map(converter::entityToDO).toList();
-    List<FlowNode> nodesV2 = nodeRepository.findByDefinitionId(defV2.getId()).stream()
-        .map(converter::entityToDO).toList();
-    List<FlowSkip> skipsV1 = skipRepository.findByDefinitionId(defV1.getId()).stream()
-        .map(converter::entityToDO).toList();
-    List<FlowSkip> skipsV2 = skipRepository.findByDefinitionId(defV2.getId()).stream()
-        .map(converter::entityToDO).toList();
+  private VersionDiffContext loadVersionContext(FlowDefinitionVO defV1, FlowDefinitionVO defV2) {
+    List<FlowNodeVO> nodesV1 = nodeRepository.findByDefinitionId(defV1.getId());
+    List<FlowNodeVO> nodesV2 = nodeRepository.findByDefinitionId(defV2.getId());
+    List<FlowSkipVO> skipsV1 = skipRepository.findByDefinitionId(defV1.getId());
+    List<FlowSkipVO> skipsV2 = skipRepository.findByDefinitionId(defV2.getId());
 
-    Map<String, FlowNode> nodeMapV1 = nodesV1.stream()
-        .collect(Collectors.toMap(FlowNode::getNodeCode, n -> n, (a, b) -> a));
-    Map<String, FlowNode> nodeMapV2 = nodesV2.stream()
-        .collect(Collectors.toMap(FlowNode::getNodeCode, n -> n, (a, b) -> a));
-    Map<String, FlowSkip> skipMapV1 = buildSkipKeyMap(skipsV1);
-    Map<String, FlowSkip> skipMapV2 = buildSkipKeyMap(skipsV2);
+    Map<String, FlowNodeVO> nodeMapV1 = nodesV1.stream()
+        .collect(Collectors.toMap(FlowNodeVO::getNodeCode, n -> n, (a, b) -> a));
+    Map<String, FlowNodeVO> nodeMapV2 = nodesV2.stream()
+        .collect(Collectors.toMap(FlowNodeVO::getNodeCode, n -> n, (a, b) -> a));
+    Map<String, FlowSkipVO> skipMapV1 = buildSkipKeyMap(skipsV1);
+    Map<String, FlowSkipVO> skipMapV2 = buildSkipKeyMap(skipsV2);
 
     return new VersionDiffContext(nodeMapV1, nodeMapV2, skipMapV1, skipMapV2);
   }
 
   /** 计算节点差异，返回 {added, removed, modified} Map。 */
-  private Map<String, Object> diffNodes(Map<String, FlowNode> nodeMapV1,
-      Map<String, FlowNode> nodeMapV2) {
+  private Map<String, Object> diffNodes(Map<String, FlowNodeVO> nodeMapV1,
+      Map<String, FlowNodeVO> nodeMapV2) {
     List<Map<String, Object>> addedNodes = new ArrayList<>();
-    for (Map.Entry<String, FlowNode> entry : nodeMapV2.entrySet()) {
+    for (Map.Entry<String, FlowNodeVO> entry : nodeMapV2.entrySet()) {
       if (!nodeMapV1.containsKey(entry.getKey())) {
-        FlowNode n = entry.getValue();
+        FlowNodeVO n = entry.getValue();
         addedNodes.add(Map.of("nodeCode", n.getNodeCode(),
             "nodeName", n.getNodeName() != null ? n.getNodeName() : ""));
       }
     }
 
     List<Map<String, Object>> removedNodes = new ArrayList<>();
-    for (Map.Entry<String, FlowNode> entry : nodeMapV1.entrySet()) {
+    for (Map.Entry<String, FlowNodeVO> entry : nodeMapV1.entrySet()) {
       if (!nodeMapV2.containsKey(entry.getKey())) {
-        FlowNode n = entry.getValue();
+        FlowNodeVO n = entry.getValue();
         removedNodes.add(Map.of("nodeCode", n.getNodeCode(),
             "nodeName", n.getNodeName() != null ? n.getNodeName() : ""));
       }
     }
 
     List<Map<String, Object>> modifiedNodes = new ArrayList<>();
-    for (Map.Entry<String, FlowNode> entry : nodeMapV1.entrySet()) {
+    for (Map.Entry<String, FlowNodeVO> entry : nodeMapV1.entrySet()) {
       String code = entry.getKey();
       if (nodeMapV2.containsKey(code)) {
-        FlowNode n1 = entry.getValue();
-        FlowNode n2 = nodeMapV2.get(code);
+        FlowNodeVO n1 = entry.getValue();
+        FlowNodeVO n2 = nodeMapV2.get(code);
         Map<String, Map<String, Object>> changes = diffNodeFields(n1, n2);
         if (!changes.isEmpty()) {
           Map<String, Object> modEntry = new LinkedHashMap<>();
@@ -516,8 +512,8 @@ public class FlowDefinitionMigrationManager {
     return nodeChanges;
   }
 
-  /** 逐字段比较两个 FlowNode，返回变更 Map（空 Map 表示无变化）。 */
-  private Map<String, Map<String, Object>> diffNodeFields(FlowNode n1, FlowNode n2) {
+  /** 逐字段比较两个 FlowNodeVO，返回变更 Map（空 Map 表示无变化）。 */
+  private Map<String, Map<String, Object>> diffNodeFields(FlowNodeVO n1, FlowNodeVO n2) {
     Map<String, Map<String, Object>> changes = new LinkedHashMap<>();
     compareField(changes, "nodeName", n1.getNodeName(), n2.getNodeName());
     compareField(changes, "nodeType", String.valueOf(n1.getNodeType()), String.valueOf(n2.getNodeType()));
@@ -547,17 +543,17 @@ public class FlowDefinitionMigrationManager {
   }
 
   /** 计算连线差异，返回 {added, removed} Map。 */
-  private Map<String, Object> diffSkips(Map<String, FlowSkip> skipMapV1,
-      Map<String, FlowSkip> skipMapV2) {
+  private Map<String, Object> diffSkips(Map<String, FlowSkipVO> skipMapV1,
+      Map<String, FlowSkipVO> skipMapV2) {
     List<Map<String, Object>> addedSkips = new ArrayList<>();
-    for (Map.Entry<String, FlowSkip> entry : skipMapV2.entrySet()) {
+    for (Map.Entry<String, FlowSkipVO> entry : skipMapV2.entrySet()) {
       if (!skipMapV1.containsKey(entry.getKey())) {
         addedSkips.add(skipToMap(entry.getValue()));
       }
     }
 
     List<Map<String, Object>> removedSkips = new ArrayList<>();
-    for (Map.Entry<String, FlowSkip> entry : skipMapV1.entrySet()) {
+    for (Map.Entry<String, FlowSkipVO> entry : skipMapV1.entrySet()) {
       if (!skipMapV2.containsKey(entry.getKey())) {
         removedSkips.add(skipToMap(entry.getValue()));
       }
@@ -621,9 +617,9 @@ public class FlowDefinitionMigrationManager {
   }
 
   /** 构建连线 key 映射：sourceRef + "->" + nextNodeCode */
-  private Map<String, FlowSkip> buildSkipKeyMap(List<FlowSkip> skips) {
-    Map<String, FlowSkip> map = new LinkedHashMap<>();
-    for (FlowSkip skip : skips) {
+  private Map<String, FlowSkipVO> buildSkipKeyMap(List<FlowSkipVO> skips) {
+    Map<String, FlowSkipVO> map = new LinkedHashMap<>();
+    for (FlowSkipVO skip : skips) {
       String key = buildSkipKey(skip);
       if (key != null) {
         map.put(key, skip);
@@ -638,7 +634,7 @@ public class FlowDefinitionMigrationManager {
    * @param skip 参数说明
    * @return 返回值说明
    */
-  private String buildSkipKey(FlowSkip skip) {
+  private String buildSkipKey(FlowSkipVO skip) {
     String sourceRef = null;
     if (StringUtils.hasText(skip.getExt())) {
       try {
@@ -655,7 +651,7 @@ public class FlowDefinitionMigrationManager {
   }
 
   /** 将连线转为 Map 表示 */
-  private Map<String, Object> skipToMap(FlowSkip skip) {
+  private Map<String, Object> skipToMap(FlowSkipVO skip) {
     String sourceRef = null;
     if (StringUtils.hasText(skip.getExt())) {
       try {

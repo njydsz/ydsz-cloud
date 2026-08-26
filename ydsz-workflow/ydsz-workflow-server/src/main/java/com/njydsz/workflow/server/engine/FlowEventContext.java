@@ -25,6 +25,9 @@ public class FlowEventContext {
   /** 任务 ID */
   private String taskId;
 
+  /** 节点编码（事件触发节点） */
+  private String nodeCode;
+
   /** 操作人 ID */
   private String operatorId;
 
