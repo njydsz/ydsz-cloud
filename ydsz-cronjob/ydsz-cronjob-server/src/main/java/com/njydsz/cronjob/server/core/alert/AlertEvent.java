@@ -13,7 +13,7 @@ import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
  *   <li>匹配规则（{@link #rule}）
  *   <li>冷却窗口去重判断（CAS 更新 {@code last_alert_at}）
  *   <li>调用 {@link com.njydsz.common.feign.NotificationClient} 派发多通道通知
- *   <li>记录 {@code ydsz_job_alert_log} 日志
+ *   <li>记录 {@code ydsz_alert_dispatch} 告警派发日志（P3-1-merge 后统一落此表，source_type='CRONJOB'）
  * </ol>
  *
  * <p>使用事件驱动解耦触发点与告警派发逻辑，避免阻塞任务执行主流程。

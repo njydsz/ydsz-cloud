@@ -15,7 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import com.njydsz.common.json.YdszJson;
 
@@ -513,8 +515,19 @@ public final class RuleDslParser {
     }
   }
 
+  /**
+   * 构造 YAML 解析器（P0-7 安全加固）
+   *
+   * <p>显式使用 {@link SafeConstructor} 而非 {@code new Yaml()} 默认全功能构造器：
+   * 禁止 YAML 反序列化实例化任意 Java 类型（防 RCE 链）；同时限制集合别名数量与
+   * 文档码点上限（防 billion-laughs 别名炸弹与超大文档内存耗尽）。
+   */
   private static Yaml newYaml() {
-    return new Yaml();
+    LoaderOptions options = new LoaderOptions();
+    options.setMaxAliasesForCollections(50);
+    options.setCodePointLimit(2 * 1024 * 1024);
+    options.setAllowDuplicateKeys(false);
+    return new Yaml(new SafeConstructor(options));
   }
 
   private static RuleDsl emptyDsl() {
