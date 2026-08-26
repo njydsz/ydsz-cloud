@@ -202,7 +202,10 @@ public class JobScanner {
       metrics.setScanning(true);
     }
     try {
-      doScan();
+      // P1-F4: 捕获 Leader 任期号（epoch/fencing token），doScan 派发前逐任务比对，
+      // 若任期号已变化说明 Leader 已被其他节点接管（Redis 主从切换窗口），立即中止本轮派发
+      long scanEpoch = leaderElector.getEpoch(leaderRole);
+      doScan(scanEpoch);
     } catch (Exception e) {
       log.error("[JobScanner] 扫描异常: role={} reason={}", leaderRole, e.getMessage(), e);
     } finally {
@@ -229,7 +232,7 @@ public class JobScanner {
    * job_log.trace_id 时能取到非空值， 实现"扫描 → 派发 → 执行 → 日志"全链路 traceId 串联。 单个任务派发完成后立即清理 MDC，避免 traceId
    * 串任务。
    */
-  private void doScan() {
+  private void doScan(long scanEpoch) {
     LocalDateTime now = LocalDateTime.now();
     int batchSize = cronjobProperties.getScanner().getBatchSize();
     List<JobVO> dueJobs = jobTransactionService.acquireDueJobs(now, batchSize);
@@ -245,9 +248,9 @@ public class JobScanner {
 
     // P0-2: 并行派发模式
     if (cronjobProperties.getScanner().isParallelDispatchEnabled() && dispatchPool != null) {
-      doParallelDispatch(dueJobs, now, metrics);
+      doParallelDispatch(dueJobs, now, metrics, scanEpoch);
     } else {
-      doSequentialDispatch(dueJobs, now, metrics);
+      doSequentialDispatch(dueJobs, now, metrics, scanEpoch);
     }
   }
 
@@ -261,7 +264,8 @@ public class JobScanner {
    * @param now 扫描时间
    * @param metrics 指标收集器（可空）
    */
-  private void doParallelDispatch(List<JobVO> dueJobs, LocalDateTime now, CronjobMetrics metrics) {
+  private void doParallelDispatch(
+      List<JobVO> dueJobs, LocalDateTime now, CronjobMetrics metrics, long scanEpoch) {
     AtomicInteger successCount = new AtomicInteger(0);
     AtomicInteger skipCount = new AtomicInteger(0);
     AtomicInteger failCount = new AtomicInteger(0);
@@ -269,7 +273,7 @@ public class JobScanner {
     for (JobVO job : dueJobs) {
       CompletableFuture<Void> f =
           CompletableFuture.runAsync(
-              () -> dispatchSingleJob(job, now, metrics, successCount, skipCount, failCount),
+              () -> dispatchSingleJob(job, now, metrics, successCount, skipCount, failCount, scanEpoch),
               dispatchPool);
       futures.add(f);
     }
@@ -284,9 +288,10 @@ public class JobScanner {
   }
 
   /** P0-2: 串行派发（兼容模式，parallelDispatchEnabled=false 时使用）。 */
-  private void doSequentialDispatch(List<JobVO> dueJobs, LocalDateTime now, CronjobMetrics metrics) {
+  private void doSequentialDispatch(
+      List<JobVO> dueJobs, LocalDateTime now, CronjobMetrics metrics, long scanEpoch) {
     for (JobVO job : dueJobs) {
-      dispatchSingleJob(job, now, metrics, null, null, null);
+      dispatchSingleJob(job, now, metrics, null, null, null, scanEpoch);
     }
   }
 
@@ -301,7 +306,21 @@ public class JobScanner {
       CronjobMetrics metrics,
       AtomicInteger successCount,
       AtomicInteger skipCount,
-      AtomicInteger failCount) {
+      AtomicInteger failCount,
+      long scanEpoch) {
+    // P1-F4: Leader 任期号 fencing —— 若 Leader 已被其他节点接管（epoch 变化），
+    // 中止本次派发，防止 Redis 主从切换窗口内双主双写（getEpoch=-1 表示选举器不支持 fencing，跳过）
+    if (scanEpoch >= 0 && leaderElector.getEpoch(leaderRole) != scanEpoch) {
+      log.warn(
+          "[JobScanner] Leader 任期号已变更, 中止派发(fencing): key={} scanEpoch={} currentEpoch={}",
+          job.getJobKey(),
+          scanEpoch,
+          leaderElector.getEpoch(leaderRole));
+      if (skipCount != null) {
+        skipCount.incrementAndGet();
+      }
+      return;
+    }
     // P2-9: 分区调度过滤 — 非本节点分区的任务跳过
     PartitionLeaderManager partitionManager = partitionLeaderManagerProvider.getIfAvailable();
     if (partitionManager != null && !partitionManager.isMyPartition(job)) {

@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>主部门唯一性约束：</b>应在 Service 层校验「同一用户只允许一个主部门」， 通过事务保证 + 加锁实现。SQL 层可通过部分唯一索引实现：
  *
  * <pre>{@code
- * CREATE UNIQUE INDEX uk_user_primary_dept ON ydsz_user_dept (user_id) WHERE is_primary = 1;
+ * CREATE UNIQUE INDEX uk_user_primary_dept ON ydsz_acct_user_dept (user_id) WHERE is_primary = 1;
  * }</pre>
  *
  * <p><b>典型使用：</b>

@@ -44,7 +44,7 @@ public class UserPasswordHistory {
   @TableId(type = IdType.ASSIGN_ID)
   private String id;
 
-  /** 用户 ID（关联 ydsz_user_account.id） */
+  /** 用户 ID（关联 ydsz_acct_user.id） */
   private String userId;
 
   /** BCrypt 加密后的历史密码哈希 */

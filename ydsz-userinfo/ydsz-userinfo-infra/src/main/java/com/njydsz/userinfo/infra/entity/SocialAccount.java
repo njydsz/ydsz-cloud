@@ -43,7 +43,7 @@ import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 @TableName("ydsz_auth_social_account")
 public class SocialAccount extends MpBaseEntity<String> {
 
-  /** 关联用户 ID（关联 {@code ydsz_user_account.id}） */
+  /** 关联用户 ID（关联 {@code ydsz_acct_user.id}） */
   private String userId;
 
   /** 平台标识（WECHAT/DINGTALK/ENTERPRISE_WECHAT/GITHUB） */

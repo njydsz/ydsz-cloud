@@ -98,7 +98,7 @@ public class UserAccount extends MpBaseEntity<String> {
   /** 用户类型（PLATFORM/ISV/TENANT_ADMIN/REGULAR 等） */
   private String userType;
 
-  /** 所属公司 ID（关联 {@code ydsz_company.id}） */
+  /** 所属公司 ID（关联 {@code ydsz_org_company.id}） */
   private String companyId;
 
   /** 最近登录时间 */
@@ -113,10 +113,10 @@ public class UserAccount extends MpBaseEntity<String> {
   /** 账号锁定截止时间（解锁后自动清零 loginFailCount） */
   private LocalDateTime lockedUntil;
 
-  /** 所属部门 ID（关联 ydsz_department.id，支持 dept: 审批人展开） */
+  /** 所属部门 ID（关联 ydsz_org_department.id，支持 dept: 审批人展开） */
   private String deptId;
 
-  /** 直属上级用户 ID（关联 ydsz_user_account.id，支持 leader: 审批人展开） */
+  /** 直属上级用户 ID（关联 ydsz_acct_user.id，支持 leader: 审批人展开） */
   private String leaderId;
 
   /** 岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开） */
