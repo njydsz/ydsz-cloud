@@ -13,7 +13,7 @@
 --      （tenant_id / status / deleted / revision / created_by / created_at /
 --       updated_by / updated_at）。
 --   3. 历史归档/审计类实体（FlowHisTask / FlowHisInstance / FlowAuditLog）
---      仅继承 MpBaseIdEntity<String>，只含主键 id，无公共列。
+--      同样继承 MpBaseEntity<String>，含全量公共列。
 -- ----------------------------------------------------------------------------
 
 -- ============================================================================
@@ -454,6 +454,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     comment                  VARCHAR(512)             DEFAULT NULL,
     claim_at                 TIMESTAMP                DEFAULT NULL,
     finish_at                TIMESTAMP                DEFAULT NULL,
+    effective_time           TIMESTAMP                DEFAULT NULL,
     duration_ms              BIGINT                   DEFAULT NULL,
     due_at                   TIMESTAMP                DEFAULT NULL,
     priority                 INTEGER                  NOT NULL DEFAULT 50,
@@ -696,6 +697,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_tenant_deleted ON yd
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     id                       VARCHAR(32)             ,
+    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
@@ -719,14 +721,23 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     comment                  VARCHAR(512)             DEFAULT NULL,
     claim_at                 TIMESTAMP                DEFAULT NULL,
     finish_at                TIMESTAMP                DEFAULT NULL,
+    effective_time           TIMESTAMP                DEFAULT NULL,
     duration_ms              BIGINT                   DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     iter_var                 VARCHAR(128)             DEFAULT NULL,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
+    updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_his_task PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_flow_his_task IS '历史任务表（已完成任务归档，按月分区）';
 COMMENT ON COLUMN ydsz_flow_his_task.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_flow_his_task.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_flow_his_task.instance_id IS '流程实例 ID（归档时从 ydsz_flow_run_task.instance_id 复制）';
 COMMENT ON COLUMN ydsz_flow_his_task.task_id IS '原始任务 ID（指向源 ydsz_flow_run_task.id，归档后源表清理前可关联）';
 COMMENT ON COLUMN ydsz_flow_his_task.flow_code IS '流程编码';
@@ -750,17 +761,27 @@ COMMENT ON COLUMN ydsz_flow_his_task.task_status IS '任务状态（终态：APP
 COMMENT ON COLUMN ydsz_flow_his_task.comment IS '审批意见（终态时填写）';
 COMMENT ON COLUMN ydsz_flow_his_task.claim_at IS '签收时间';
 COMMENT ON COLUMN ydsz_flow_his_task.finish_at IS '完成时间（终态时刻）';
+COMMENT ON COLUMN ydsz_flow_his_task.effective_time IS '生效时间（P2-1 穿越时空/补录审批，从源 task 复制，NULL=即时生效）';
 COMMENT ON COLUMN ydsz_flow_his_task.duration_ms IS '耗时（毫秒）';
 COMMENT ON COLUMN ydsz_flow_his_task.provider_trace_id IS '链路追踪 ID（保留原始 trace 便于历史回溯）';
 COMMENT ON COLUMN ydsz_flow_his_task.iter_var IS 'FOREACH 迭代元素值（从源 task 复制，非循环节点为 NULL）';
+COMMENT ON COLUMN ydsz_flow_his_task.status IS '状态标识';
+COMMENT ON COLUMN ydsz_flow_his_task.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_his_task.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_flow_his_task.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_flow_his_task.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_flow_his_task.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_flow_his_task.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_instance_id ON ydsz_flow_his_task (instance_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_assignee_id ON ydsz_flow_his_task (assignee_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_business ON ydsz_flow_his_task (business_type, business_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_finish_at ON ydsz_flow_his_task (finish_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_tenant_deleted ON ydsz_flow_his_task (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     id                       VARCHAR(32)             ,
+    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     flow_code                VARCHAR(64)              NOT NULL,
     flow_name                VARCHAR(128)             DEFAULT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
@@ -781,12 +802,20 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     duration_ms              BIGINT                   DEFAULT NULL,
     archived_at              TIMESTAMP                DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
+    updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_his_instance PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_his_instance_business_type_id UNIQUE (business_type, business_id)
 );
 
 COMMENT ON TABLE ydsz_flow_his_instance IS '历史流程实例表（终态实例冷数据归档，按月分区）';
 COMMENT ON COLUMN ydsz_flow_his_instance.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_flow_his_instance.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_flow_his_instance.flow_code IS '流程编码';
 COMMENT ON COLUMN ydsz_flow_his_instance.flow_name IS '流程名称（冗余）';
 COMMENT ON COLUMN ydsz_flow_his_instance.definition_id IS '流程定义 ID';
@@ -807,9 +836,17 @@ COMMENT ON COLUMN ydsz_flow_his_instance.end_at IS '结束时间';
 COMMENT ON COLUMN ydsz_flow_his_instance.duration_ms IS '流程耗时（毫秒）';
 COMMENT ON COLUMN ydsz_flow_his_instance.archived_at IS '归档时间（由调度器在迁移时填充）';
 COMMENT ON COLUMN ydsz_flow_his_instance.provider_trace_id IS '链路追踪 ID（保留原始 trace 便于历史回溯）';
+COMMENT ON COLUMN ydsz_flow_his_instance.status IS '状态标识';
+COMMENT ON COLUMN ydsz_flow_his_instance.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_his_instance.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_flow_his_instance.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_flow_his_instance.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_flow_his_instance.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_flow_his_instance.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_archived_at ON ydsz_flow_his_instance (archived_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_end_at ON ydsz_flow_his_instance (end_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_tenant_deleted ON ydsz_flow_his_instance (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
     id                       VARCHAR(32)             ,
@@ -1161,6 +1198,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_admin_role_tenant_deleted ON ydsz_flow_
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     id                       VARCHAR(32)             ,
+    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              DEFAULT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
@@ -1177,11 +1215,19 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     comment_type             VARCHAR(32)              DEFAULT NULL,
     operated_at              TIMESTAMP                NOT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
+    updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_audit_log PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE ydsz_flow_audit_log IS '流程审计日志表（全生命周期操作轨迹，只追加）';
 COMMENT ON COLUMN ydsz_flow_audit_log.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_flow_audit_log.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_flow_audit_log.instance_id IS '流程实例 ID';
 COMMENT ON COLUMN ydsz_flow_audit_log.task_id IS '任务 ID（实例级操作可为空）';
 COMMENT ON COLUMN ydsz_flow_audit_log.flow_code IS '流程编码';
@@ -1198,11 +1244,19 @@ COMMENT ON COLUMN ydsz_flow_audit_log.comment IS '审批意见';
 COMMENT ON COLUMN ydsz_flow_audit_log.comment_type IS '审批意见分类（AGREE=同意，DISAGREE=不同意，SUGGEST=建议，INQUIRE=询问）';
 COMMENT ON COLUMN ydsz_flow_audit_log.operated_at IS '操作时间（精确到毫秒）';
 COMMENT ON COLUMN ydsz_flow_audit_log.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_flow_audit_log.status IS '状态标识';
+COMMENT ON COLUMN ydsz_flow_audit_log.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_audit_log.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_flow_audit_log.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_flow_audit_log.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_flow_audit_log.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_flow_audit_log.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_instance_id ON ydsz_flow_audit_log (instance_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_business ON ydsz_flow_audit_log (business_type, business_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_operator_id ON ydsz_flow_audit_log (operator_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_operated_at ON ydsz_flow_audit_log (operated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_tenant_deleted ON ydsz_flow_audit_log (tenant_id, deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
@@ -1477,3 +1531,48 @@ CREATE TRIGGER trg_ydsz_flow_admin_role_updated_at
 BEFORE UPDATE ON ydsz_flow_admin_role
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_flow_admin_role_set_updated_at();
+
+-- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP，历史归档表补列后追加）
+CREATE OR REPLACE FUNCTION fn_ydsz_flow_his_task_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_ydsz_flow_his_task_updated_at ON ydsz_flow_his_task;
+CREATE TRIGGER trg_ydsz_flow_his_task_updated_at
+BEFORE UPDATE ON ydsz_flow_his_task
+FOR EACH ROW
+EXECUTE FUNCTION fn_ydsz_flow_his_task_set_updated_at();
+
+-- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP，历史归档表补列后追加）
+CREATE OR REPLACE FUNCTION fn_ydsz_flow_his_instance_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_ydsz_flow_his_instance_updated_at ON ydsz_flow_his_instance;
+CREATE TRIGGER trg_ydsz_flow_his_instance_updated_at
+BEFORE UPDATE ON ydsz_flow_his_instance
+FOR EACH ROW
+EXECUTE FUNCTION fn_ydsz_flow_his_instance_set_updated_at();
+
+-- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP，审计日志表补列后追加）
+CREATE OR REPLACE FUNCTION fn_ydsz_flow_audit_log_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_ydsz_flow_audit_log_updated_at ON ydsz_flow_audit_log;
+CREATE TRIGGER trg_ydsz_flow_audit_log_updated_at
+BEFORE UPDATE ON ydsz_flow_audit_log
+FOR EACH ROW
+EXECUTE FUNCTION fn_ydsz_flow_audit_log_set_updated_at();

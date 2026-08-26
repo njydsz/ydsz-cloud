@@ -834,18 +834,55 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   @Override
   public String resubmitProcess(
-      String instanceId, String initiatorId, Map<String, Object> variables, String comment) {
-    return instanceService.resubmit(instanceId, initiatorId, variables, comment);
-  }
-
-  @Override
-  public String resubmitProcess(
       String instanceId,
       String initiatorId,
       Map<String, Object> variables,
       String comment,
       String redoMode) {
     return instanceService.resubmit(instanceId, initiatorId, variables, comment, redoMode);
+  }
+
+  @Override
+  public void batchReject(List<FlowTaskOperateDTO> dtos) {
+    if (dtos == null || dtos.isEmpty()) {
+      return;
+    }
+    String userId = dtos.get(0).getUserId();
+    String comment = dtos.get(0).getComment();
+    String targetNodeCode = dtos.get(0).getTargetNodeCode();
+    List<String> taskIds = new ArrayList<>(dtos.size());
+    for (FlowTaskOperateDTO dto : dtos) {
+      taskIds.add(dto.getTaskId());
+    }
+    taskService.batchReject(taskIds, userId, comment, targetNodeCode);
+  }
+
+  @Override
+  public void batchTransfer(List<FlowTaskOperateDTO> dtos) {
+    if (dtos == null || dtos.isEmpty()) {
+      return;
+    }
+    String userId = dtos.get(0).getUserId();
+    String comment = dtos.get(0).getComment();
+    String targetUserId = dtos.get(0).getTargetUserId();
+    String targetUserName = dtos.get(0).getTargetUserName();
+    List<String> taskIds = new ArrayList<>(dtos.size());
+    for (FlowTaskOperateDTO dto : dtos) {
+      taskIds.add(dto.getTaskId());
+    }
+    taskService.batchTransfer(taskIds, userId, comment, targetUserId, targetUserName);
+  }
+
+  @Override
+  public com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO batchUrge(
+      List<String> instanceIds, String operatorId, String comment) {
+    int successCount = taskService.batchUrge(instanceIds, operatorId, comment);
+    com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO result =
+        new com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO();
+    result.setTotalCount(instanceIds == null ? 0 : instanceIds.size());
+    result.setSuccessCount(successCount);
+    result.setFailedCount(result.getTotalCount() - successCount);
+    return result;
   }
 
   @Override

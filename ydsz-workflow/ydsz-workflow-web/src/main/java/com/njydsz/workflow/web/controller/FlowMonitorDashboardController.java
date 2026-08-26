@@ -25,8 +25,10 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
 import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
 import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
+import com.njydsz.workflow.domain.vo.FlowEfficiencyStatsVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.server.service.FlowEfficiencyService;
@@ -144,11 +146,11 @@ public class FlowMonitorDashboardController {
 
     List<Map<String, Object>> all = new ArrayList<>(100);
     try {
-      List<Map<String, Object>> detected =
+      List<FlowAnomalyVO> detected =
           efficiencyService.detectAnomalies(
               tenantId, 100, STUCK_HOURS_THRESHOLD, LONG_RUNNING_DAYS);
       if (detected != null) {
-        for (Map<String, Object> a : detected) {
+        for (FlowAnomalyVO a : detected) {
           Map<String, Object> item = mapAnomaly(a);
           if (item == null) {
             continue;
@@ -312,7 +314,7 @@ public class FlowMonitorDashboardController {
     }
 
     try {
-      List<Map<String, Object>> anomalies =
+      List<FlowAnomalyVO> anomalies =
           efficiencyService.detectAnomalies(
               tenantId, ANOMALY_TOP_N, STUCK_HOURS_THRESHOLD, LONG_RUNNING_DAYS);
       dashboard.put("anomalyTop5", anomalies != null ? anomalies : new ArrayList<>());
@@ -402,7 +404,7 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "审批效率统计")
   @GetMapping("/efficiency/stats")
-  public YdszResponse<Map<String, Object>> efficiencyStats(
+  public YdszResponse<FlowEfficiencyStatsVO> efficiencyStats(
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
@@ -487,8 +489,8 @@ public class FlowMonitorDashboardController {
    * @param a 原始异常数据
    * @return 映射后的前端 DTO 结构
    */
-  private Map<String, Object> mapAnomaly(Map<String, Object> a) {
-    String type = String.valueOf(a.getOrDefault("type", "UNKNOWN"));
+  private Map<String, Object> mapAnomaly(FlowAnomalyVO a) {
+    String type = a.getType() != null ? a.getType() : "UNKNOWN";
     Map<String, Object> item = new LinkedHashMap<>();
     String anomalyType;
     switch (type) {
@@ -499,15 +501,16 @@ public class FlowMonitorDashboardController {
     }
     item.put("anomalyType", anomalyType);
 
-    Object instanceId = a.get("instanceId");
+    String instanceId = a.getInstanceId();
     if (instanceId == null) {
-      instanceId = a.get("taskId");
+      instanceId = a.getTaskId();
     }
     item.put("id", instanceId == null ? 0 : toLong(instanceId));
 
-    if (instanceId instanceof Number n) {
+    if (instanceId != null) {
       try {
-        FlowInstanceVO inst = instanceService.getById(String.valueOf(n.longValue()));
+        long idLong = Long.parseLong(instanceId);
+        FlowInstanceVO inst = instanceService.getById(String.valueOf(idLong));
         if (inst != null) {
           item.put("flowCode", inst.getFlowCode());
           item.put("flowName", inst.getFlowName());
@@ -517,23 +520,16 @@ public class FlowMonitorDashboardController {
           item.put("currentNodeName", inst.getCurrentNodeName());
           item.put("startTime", inst.getStartAt() == null ? null : inst.getStartAt().toString());
         }
-      } catch (Exception e) {
+      } catch (NumberFormatException | RuntimeException e) {
         // 实例查询失败不阻塞，降级使用 detectAnomalies 返回的字段
         log.warn("[FlowMonitor] 实例查询失败，降级使用异常检测字段: {}", e.getMessage());
       }
     }
-    item.putIfAbsent("flowCode", a.get("flowCode"));
-    item.putIfAbsent("flowName", a.get("flowName"));
-    item.putIfAbsent(
-        "currentNodeName",
-        a.get("nodeName") != null ? a.get("nodeName") : a.get("currentNodeName"));
+    item.putIfAbsent("currentNodeName", a.getNodeName());
 
-    Object stuckHours = a.get("stuckHours");
-    Object runningDays = a.get("runningDays");
-    if (runningDays instanceof Number d) {
-      item.put("overdueDays", d.longValue());
-    } else if (stuckHours instanceof Number h) {
-      item.put("overdueDays", h.longValue() / HOURS_PER_DAY);
+    Long stuckHours = a.getStuckHours();
+    if (stuckHours != null) {
+      item.put("overdueDays", stuckHours / HOURS_PER_DAY);
     }
 
     long days = item.get("overdueDays") instanceof Number d ? d.longValue() : 0;
@@ -551,7 +547,7 @@ public class FlowMonitorDashboardController {
     }
     item.put("warnLevel", warnLevel);
 
-    item.put("description", a.get("description"));
+    item.put("description", a.getDescription());
     return item;
   }
 

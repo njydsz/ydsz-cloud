@@ -47,9 +47,7 @@ import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
-import com.njydsz.workflow.domain.vo.FlowRejectableNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.domain.vo.FlowTaskDetailVO;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 import com.njydsz.workflow.server.service.FlowCcService;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
@@ -148,7 +146,7 @@ public class FlowTaskController {
             description = "无权限查看该任务",
             content = @Content(schema = @Schema(hidden = true)))
       })
-  public YdszResponse<FlowTaskDetailVO> taskDetail(
+  public YdszResponse<Map<String, Object>> taskDetail(
       @Parameter(description = "任务 ID", required = true, example = "task-abc123")
           @PathVariable String taskId) {
     return YdszResponse.success(workflowFacade.getTaskDetail(taskId));
@@ -243,12 +241,12 @@ public class FlowTaskController {
    */
   @GetMapping("/task/{taskId}/rejectableNodes")
   @Operation(summary = "查询任务所属实例的历史节点")
-  public YdszResponse<List<FlowRejectableNodeVO>> rejectableNodes(@PathVariable String taskId) {
+  public YdszResponse<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
     String instanceId = taskService.getTaskInstanceId(taskId);
     if (instanceId == null) {
       return YdszResponse.success(List.of());
     }
-    List<FlowRejectableNodeVO> nodes = taskService.listPassedNodes(instanceId);
+    List<Map<String, Object>> nodes = taskService.listPassedNodes(instanceId);
     return YdszResponse.success(nodes);
   }
 
@@ -452,11 +450,22 @@ public class FlowTaskController {
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "批量驳回任务")
   public YdszResponse<Void> batchReject(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
+    String userId = AuthContextUtils.getUserId();
+    List<String> taskIds = new java.util.ArrayList<>();
+    String comment = null;
+    String targetNodeCode = null;
     for (FlowTaskOperateDTO dto : dtos) {
-      dto.setUserId(AuthContextUtils.getUserId());
+      dto.setUserId(userId);
       dto.setUserName(AuthContextUtils.getUsername());
+      taskIds.add(dto.getTaskId());
+      if (comment == null && dto.getComment() != null) {
+        comment = dto.getComment();
+      }
+      if (targetNodeCode == null && dto.getTargetNodeCode() != null) {
+        targetNodeCode = dto.getTargetNodeCode();
+      }
     }
-    workflowFacade.batchReject(dtos);
+    taskService.batchReject(taskIds, userId, comment, targetNodeCode);
     return YdszResponse.success();
   }
 
@@ -476,11 +485,24 @@ public class FlowTaskController {
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "批量转办任务")
   public YdszResponse<Void> batchTransfer(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
+    String userId = AuthContextUtils.getUserId();
+    List<String> taskIds = new java.util.ArrayList<>();
+    String comment = null;
+    String targetUserId = null;
+    String targetUserName = null;
     for (FlowTaskOperateDTO dto : dtos) {
-      dto.setUserId(AuthContextUtils.getUserId());
+      dto.setUserId(userId);
       dto.setUserName(AuthContextUtils.getUsername());
+      taskIds.add(dto.getTaskId());
+      if (comment == null && dto.getComment() != null) {
+        comment = dto.getComment();
+      }
+      if (targetUserId == null && dto.getTargetUserId() != null) {
+        targetUserId = dto.getTargetUserId();
+        targetUserName = dto.getTargetUserName();
+      }
     }
-    workflowFacade.batchTransfer(dtos);
+    taskService.batchTransfer(taskIds, userId, comment, targetUserId, targetUserName);
     return YdszResponse.success();
   }
 
@@ -502,8 +524,13 @@ public class FlowTaskController {
   @Operation(summary = "批量催办任务")
   public YdszResponse<FlowBatchUrgeResultVO> batchUrge(
       @RequestBody List<String> instanceIds, @RequestParam(required = false) String comment) {
-    return YdszResponse.success(
-        workflowFacade.batchUrge(instanceIds, AuthContextUtils.getUserId(), comment));
+    String userId = AuthContextUtils.getUserId();
+    int successCount = taskService.batchUrge(instanceIds, userId, comment);
+    FlowBatchUrgeResultVO result = new FlowBatchUrgeResultVO();
+    result.setTotalCount(instanceIds == null ? 0 : instanceIds.size());
+    result.setSuccessCount(successCount);
+    result.setFailedCount(result.getTotalCount() - successCount);
+    return YdszResponse.success(result);
   }
 
   /**
@@ -627,18 +654,15 @@ public class FlowTaskController {
    * P2-31: 节点耗时统计
    *
    * @param flowCode 流程编码（可选）
-   * @param startTime 统计开始时间（可选）
-   * @param endTime 统计结束时间（可选）
    * @return 统一响应结果，包含节点耗时统计列表
    */
   @GetMapping("/stats/nodeDuration")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "节点耗时统计")
   public YdszResponse<List<Map<String, Object>>> nodeDurationStats(
-      @RequestParam(required = false) String flowCode,
-      @RequestParam(required = false) LocalDateTime startTime,
-      @RequestParam(required = false) LocalDateTime endTime) {
-    return YdszResponse.success(taskService.nodeDurationStats(flowCode, AuthContextUtils.getTenantIdOrDefault()));
+      @RequestParam(required = false) String flowCode) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
+    return YdszResponse.success(taskService.nodeDurationStats(flowCode, tenantId));
   }
 
   /**

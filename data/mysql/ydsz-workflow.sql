@@ -13,7 +13,7 @@
 --      （tenant_id / status / deleted / revision / created_by / created_at /
 --       updated_by / updated_at）。
 --   3. 历史归档/审计类实体（FlowHisTask / FlowHisInstance / FlowAuditLog）
---      仅继承 MpBaseIdEntity<String>，只含主键 id，无公共列。
+--      同样继承 MpBaseEntity<String>，含全量公共列。
 -- ----------------------------------------------------------------------------
 
 -- ============================================================================
@@ -267,6 +267,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     comment             VARCHAR(512)    DEFAULT NULL COMMENT '审批意见',
     claim_at            DATETIME        DEFAULT NULL COMMENT '签收时间（多人会签时记录每个办理人的签收时间）',
     finish_at           DATETIME        DEFAULT NULL COMMENT '完成时间',
+    effective_time      DATETIME        DEFAULT NULL COMMENT '生效时间（P2-1 穿越时空/补录审批，NULL=即时生效）',
     duration_ms         BIGINT          DEFAULT NULL COMMENT '耗时（毫秒，finishAt - claimAt）',
     due_at              DATETIME        DEFAULT NULL COMMENT '截止时间（SLA 阈值，由 slaConfig.timeoutMinutes 计算）',
     priority            INT             NOT NULL DEFAULT 50 COMMENT '任务优先级（1-100，默认 50，待办按 priority DESC, created_at ASC 排序）',
@@ -382,12 +383,13 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流事件订阅表（消息/错误/信号事件运行时等待）';
 
 -- ============================================================================
--- 历史归档（仅继承 MpBaseIdEntity，无公共审计/租户列）
+-- 历史归档（继承 MpBaseEntity<String>，含完整公共列）
 -- ============================================================================
 
 -- 历史任务表（已完成任务归档，按月分区，审批历史查询表）
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    tenant_id           VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID（归档时从 ydsz_flow_run_task.instance_id 复制）',
     task_id             VARCHAR(32)     NOT NULL COMMENT '原始任务 ID（指向源 ydsz_flow_run_task.id，归档后源表清理前可关联）',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
@@ -411,9 +413,17 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     comment             VARCHAR(512)    DEFAULT NULL COMMENT '审批意见（终态时填写）',
     claim_at            DATETIME        DEFAULT NULL COMMENT '签收时间',
     finish_at           DATETIME        DEFAULT NULL COMMENT '完成时间（终态时刻）',
+    effective_time      DATETIME        DEFAULT NULL COMMENT '生效时间（P2-1 穿越时空/补录审批，从源 task 复制，NULL=即时生效）',
     duration_ms         BIGINT          DEFAULT NULL COMMENT '耗时（毫秒）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（保留原始 trace 便于历史回溯）',
     iter_var            VARCHAR(128)    DEFAULT NULL COMMENT 'FOREACH 迭代元素值（从源 task 复制，非循环节点为 NULL）',
+    status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
+    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by          VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_instance_id (instance_id),
     INDEX idx_assignee_id (assignee_id),
     INDEX idx_business (business_type, business_id),
@@ -423,6 +433,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
 -- 历史流程实例表（终态实例冷数据归档，按月分区）
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    tenant_id           VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
     flow_name           VARCHAR(128)    DEFAULT NULL COMMENT '流程名称（冗余）',
     definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
@@ -443,6 +454,13 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     duration_ms         BIGINT          DEFAULT NULL COMMENT '流程耗时（毫秒）',
     archived_at         DATETIME        DEFAULT NULL COMMENT '归档时间（由调度器在迁移时填充）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（保留原始 trace 便于历史回溯）',
+    status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
+    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by          VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_business_type_id UNIQUE (business_type, business_id),
     INDEX idx_archived_at (archived_at),
     INDEX idx_end_at (end_at)
@@ -649,6 +667,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
 -- 流程审计日志表（全生命周期操作轨迹，只追加，禁止修改删除）
 CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    tenant_id           VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
     task_id             VARCHAR(32)     DEFAULT NULL COMMENT '任务 ID（实例级操作可为空）',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
@@ -665,6 +684,13 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     comment_type        VARCHAR(32)     DEFAULT NULL COMMENT '审批意见分类（AGREE=同意，DISAGREE=不同意，SUGGEST=建议，INQUIRE=询问）',
     operated_at         DATETIME        NOT NULL COMMENT '操作时间（精确到毫秒）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
+    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by          VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_instance_id (instance_id),
     INDEX idx_business (business_type, business_id),
     INDEX idx_operator_id (operator_id),

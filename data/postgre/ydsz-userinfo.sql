@@ -556,10 +556,12 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
     max_sessions_per_user    INTEGER                  DEFAULT 3,
     session_timeout_seconds  INTEGER                  DEFAULT 7200,
     remark                   VARCHAR(256)             DEFAULT NULL,
-    deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     revision                 INTEGER                  DEFAULT 0,
     CONSTRAINT pk_ydsz_auth_policy PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_auth_policy_tenant_id UNIQUE (tenant_id)
@@ -578,15 +580,17 @@ COMMENT ON COLUMN ydsz_auth_policy.allowed_identity_providers IS '允许的身�
 COMMENT ON COLUMN ydsz_auth_policy.max_sessions_per_user IS '每个用户最大会话数';
 COMMENT ON COLUMN ydsz_auth_policy.session_timeout_seconds IS '会话超时时间（秒）';
 COMMENT ON COLUMN ydsz_auth_policy.remark IS '备注说明';
-COMMENT ON COLUMN ydsz_auth_policy.deleted IS '逻辑删除标记';
+COMMENT ON COLUMN ydsz_auth_policy.status IS '状态标识';
+COMMENT ON COLUMN ydsz_auth_policy.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_auth_policy.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_auth_policy.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_auth_policy.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_auth_policy.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_auth_policy.revision IS '乐观锁版本号';
 
 
 INSERT INTO ydsz_auth_policy (id, tenant_id, name, password_min_length, password_require_uppercase, password_require_digit, mfa_enabled, captcha_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, deleted, revision)
-VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, TRUE, TRUE, FALSE, TRUE, 'LOCAL', 3, 7200, '系统全局默认策略，租户未配置时继承', FALSE, 0)
+VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, TRUE, TRUE, FALSE, TRUE, 'LOCAL', 3, 7200, '系统全局默认策略，租户未配置时继承', 0, 0)
 ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS ydsz_social_client (
@@ -601,10 +605,11 @@ CREATE TABLE IF NOT EXISTS ydsz_social_client (
     sort_order               INTEGER                  DEFAULT 100,
     remark                   VARCHAR(256)             DEFAULT NULL,
     tenant_id                VARCHAR(64)              DEFAULT NULL,
-    deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     revision                 INTEGER                  DEFAULT 0,
     CONSTRAINT pk_ydsz_social_client PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_social_client_platform UNIQUE (platform)
@@ -622,10 +627,11 @@ COMMENT ON COLUMN ydsz_social_client.status IS '状态：ENABLED/DISABLED';
 COMMENT ON COLUMN ydsz_social_client.sort_order IS '排序权重（越小越靠前）';
 COMMENT ON COLUMN ydsz_social_client.remark IS '备注说明';
 COMMENT ON COLUMN ydsz_social_client.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_social_client.deleted IS '逻辑删除标记';
+COMMENT ON COLUMN ydsz_social_client.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_social_client.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_social_client.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_social_client.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_social_client.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_social_client.revision IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_social_client_status ON ydsz_social_client (status);
@@ -643,10 +649,11 @@ CREATE TABLE IF NOT EXISTS ydsz_saml_idp_config (
     sort_order               INTEGER                  DEFAULT 100,
     remark                   VARCHAR(256)             DEFAULT NULL,
     tenant_id                VARCHAR(64)              DEFAULT NULL,
-    deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     revision                 INTEGER                  DEFAULT 0,
     CONSTRAINT pk_ydsz_saml_idp_config PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_saml_idp_config_entity_id UNIQUE (entity_id)
@@ -664,10 +671,11 @@ COMMENT ON COLUMN ydsz_saml_idp_config.status IS '状态：ENABLED/DISABLED';
 COMMENT ON COLUMN ydsz_saml_idp_config.sort_order IS '排序权重（越小越靠前）';
 COMMENT ON COLUMN ydsz_saml_idp_config.remark IS '备注说明';
 COMMENT ON COLUMN ydsz_saml_idp_config.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_saml_idp_config.deleted IS '逻辑删除标记';
+COMMENT ON COLUMN ydsz_saml_idp_config.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_saml_idp_config.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_saml_idp_config.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_saml_idp_config.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_saml_idp_config.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_saml_idp_config.revision IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_saml_idp_config_status ON ydsz_saml_idp_config (status);
@@ -688,8 +696,9 @@ CREATE TABLE IF NOT EXISTS ydsz_oauth2_application (
     created_by               VARCHAR(64)              DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tenant_id                VARCHAR(64)              DEFAULT NULL,
-    deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     revision                 INTEGER                  DEFAULT 0,
     CONSTRAINT pk_ydsz_oauth2_application PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_oauth2_application_client_id UNIQUE (client_id)
@@ -710,8 +719,9 @@ COMMENT ON COLUMN ydsz_oauth2_application.icon_url IS '应用图标 URL';
 COMMENT ON COLUMN ydsz_oauth2_application.created_by IS '创建者用户 ID';
 COMMENT ON COLUMN ydsz_oauth2_application.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_oauth2_application.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_oauth2_application.deleted IS '逻辑删除标记';
+COMMENT ON COLUMN ydsz_oauth2_application.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_oauth2_application.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_oauth2_application.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_oauth2_application.revision IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_oauth2_application_status ON ydsz_oauth2_application (status);
@@ -777,7 +787,9 @@ CREATE TABLE IF NOT EXISTS ydsz_security_alert (
     handled_at               TIMESTAMP                DEFAULT NULL,
     handler_note             VARCHAR(512)             DEFAULT NULL,
     tenant_id                VARCHAR(64)              DEFAULT NULL,
-    deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     revision                 INTEGER                  DEFAULT 0,
     CONSTRAINT pk_ydsz_security_alert PRIMARY KEY (id)
@@ -797,7 +809,9 @@ COMMENT ON COLUMN ydsz_security_alert.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_security_alert.handled_at IS '处理时间';
 COMMENT ON COLUMN ydsz_security_alert.handler_note IS '处理备注';
 COMMENT ON COLUMN ydsz_security_alert.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_security_alert.deleted IS '逻辑删除标记';
+COMMENT ON COLUMN ydsz_security_alert.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_security_alert.updated_by IS '更新者用户 ID';
+COMMENT ON COLUMN ydsz_security_alert.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_security_alert.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_security_alert.revision IS '乐观锁版本号';
 

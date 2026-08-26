@@ -35,13 +35,8 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionDiffVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionVersionVO;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
-import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
-import com.njydsz.workflow.domain.vo.FlowRollbackResultVO;
 import com.njydsz.workflow.server.service.FlowConditionExprService;
 import com.njydsz.workflow.server.service.FlowCustomButtonService;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
@@ -253,7 +248,7 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}")
   @Operation(summary = "查询流程定义详情（含节点与跳转）")
-  public YdszResponse<FlowDefinitionDetailVO> getDefinitionDetail(@PathVariable String id) {
+  public YdszResponse<Map<String, Object>> getDefinitionDetail(@PathVariable String id) {
     return YdszResponse.success(definitionService.getDetail(id));
   }
 
@@ -268,9 +263,9 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/preview")
   @Operation(summary = "流程定义预览（只读）")
-  public YdszResponse<FlowDefinitionDetailVO> getDefinitionPreview(@PathVariable String id) {
-    FlowDefinitionDetailVO detail = definitionService.getDetail(id);
-    detail.setReadOnly(true);
+  public YdszResponse<Map<String, Object>> getDefinitionPreview(@PathVariable String id) {
+    Map<String, Object> detail = definitionService.getDetail(id);
+    detail.put("readOnly", true);
     return YdszResponse.success(detail);
   }
 
@@ -349,7 +344,7 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/versions")
   @Operation(summary = "列出流程定义的所有历史版本")
-  public YdszResponse<List<FlowDefinitionVersionVO>> listVersions(@PathVariable String id) {
+  public YdszResponse<List<Map<String, Object>>> listVersions(@PathVariable String id) {
     return YdszResponse.success(definitionService.listVersions(id));
   }
 
@@ -363,7 +358,7 @@ public class FlowDefinitionController {
    */
   @GetMapping("/definition/{id}/diff")
   @Operation(summary = "流程定义版本差异对比")
-  public YdszResponse<FlowDefinitionDiffVO> diffVersions(
+  public YdszResponse<Map<String, Object>> diffVersions(
       @PathVariable String id, @RequestParam Integer v1, @RequestParam Integer v2) {
     return YdszResponse.success(definitionService.diffVersions(id, v1, v2));
   }
@@ -379,7 +374,7 @@ public class FlowDefinitionController {
   @PostMapping("/definition/rollback")
   @Operation(summary = "一键回滚流程定义到上一版本")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public YdszResponse<FlowRollbackResultVO> rollbackDefinition(@RequestParam String flowCode) {
+  public YdszResponse<Map<String, Object>> rollbackDefinition(@RequestParam String flowCode) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(definitionService.rollbackDefinition(flowCode, tenantId));
   }
@@ -490,7 +485,7 @@ public class FlowDefinitionController {
   @GetMapping("/definition/migrationImpact")
   @Operation(summary = "变更影响分析报告（评估版本升级对在途实例的影响）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public YdszResponse<FlowMigrationImpactVO> analyzeMigrationImpact(
+  public YdszResponse<Map<String, Object>> analyzeMigrationImpact(
       @RequestParam String oldDefinitionId, @RequestParam String newDefinitionId) {
     return YdszResponse.success(
         definitionService.analyzeMigrationImpact(oldDefinitionId, newDefinitionId));
