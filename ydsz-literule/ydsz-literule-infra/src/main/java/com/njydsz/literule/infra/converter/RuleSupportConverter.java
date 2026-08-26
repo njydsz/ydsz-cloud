@@ -7,20 +7,17 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
-import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.entity.DecisionTableDO;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleDependencyDO;
-import com.njydsz.literule.infra.entity.RuleExecutionTrace;
-import com.njydsz.literule.infra.entity.RulePack;
-import com.njydsz.literule.infra.entity.RuleTestCaseDO;
+import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
+import com.njydsz.literule.infra.entity.RulePackDO;
 import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
 
 /**
@@ -42,20 +39,15 @@ public interface RuleSupportConverter {
 
   List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependencyDO> entities);
 
-  // ===== RuleExecutionTrace =====
-  RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity);
+  // ===== RuleExecutionTraceDO =====
+  RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity);
 
-  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities);
+  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities);
 
-  // ===== RulePack =====
-  RulePackVO entityToVO(RulePack entity);
+  // ===== RulePackDO =====
+  RulePackVO entityToVO(RulePackDO entity);
 
-  List<RulePackVO> rulePackListToVO(List<RulePack> entities);
-
-  // ===== RuleTestCaseDO =====
-  RuleTestCaseVO entityToVO(RuleTestCaseDO entity);
-
-  List<RuleTestCaseVO> ruleTestCaseListToVO(List<RuleTestCaseDO> entities);
+  List<RulePackVO> rulePackListToVO(List<RulePackDO> entities);
 
   // ===== RuleVersionHistoryDO → RuleVersionVO =====
   @Mapping(target = "id", source = "id")
@@ -72,17 +64,6 @@ public interface RuleSupportConverter {
   // ===== RuleVersionSaveDTO → RuleVersionHistoryDO =====
   @Mapping(target = "id", ignore = true)
   RuleVersionHistoryDO postDtoToEntity(RuleVersionSaveDTO dto);
-
-  // ===== RuleTestCase PostDTO → Entity =====
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  RuleTestCaseDO postDtoToEntity(RuleTestCasePostDTO dto);
 
   // ===== DecisionTableDO PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)

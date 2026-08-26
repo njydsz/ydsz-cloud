@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.literule.domain.repository.RuleExecutionTraceRepository;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
-import com.njydsz.literule.infra.entity.RuleExecutionTrace;
+import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
 import com.njydsz.literule.infra.mapper.RuleExecutionTraceMapper;
 
 /**
@@ -37,42 +37,42 @@ public class RuleExecutionTraceRepositoryImpl implements RuleExecutionTraceRepos
 
   @Override
   public List<RuleExecutionTraceVO> findByTraceId(String traceId) {
-    List<RuleExecutionTrace> entities =
+    List<RuleExecutionTraceDO> entities =
         ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTrace>()
-                .eq(RuleExecutionTrace::getTraceId, traceId)
-                .orderByAsc(RuleExecutionTrace::getId));
+            new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                .eq(RuleExecutionTraceDO::getTraceId, traceId)
+                .orderByAsc(RuleExecutionTraceDO::getId));
     return converter.ruleExecutionTraceListToVO(entities);
   }
 
   @Override
   public List<RuleExecutionTraceVO> findByRuleCode(String ruleCode, int limit) {
-    List<RuleExecutionTrace> entities =
+    List<RuleExecutionTraceDO> entities =
         ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTrace>()
-                .eq(RuleExecutionTrace::getRuleCode, ruleCode)
-                .orderByDesc(RuleExecutionTrace::getId)
+            new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
+                .orderByDesc(RuleExecutionTraceDO::getId)
                 .last("LIMIT " + limit));
     return converter.ruleExecutionTraceListToVO(entities);
   }
 
   @Override
   public List<RuleExecutionTraceVO> findRecent(int limit) {
-    List<RuleExecutionTrace> entities =
+    List<RuleExecutionTraceDO> entities =
         ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTrace>()
-                .orderByDesc(RuleExecutionTrace::getId)
+            new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                .orderByDesc(RuleExecutionTraceDO::getId)
                 .last("LIMIT " + limit));
     return converter.ruleExecutionTraceListToVO(entities);
   }
 
   @Override
   public List<RuleExecutionTraceVO> findRecentByRuleCode(String ruleCode, int limit) {
-    List<RuleExecutionTrace> entities =
+    List<RuleExecutionTraceDO> entities =
         ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTrace>()
-                .eq(RuleExecutionTrace::getRuleCode, ruleCode)
-                .orderByDesc(RuleExecutionTrace::getId)
+            new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
+                .orderByDesc(RuleExecutionTraceDO::getId)
                 .last("LIMIT " + limit));
     return converter.ruleExecutionTraceListToVO(entities);
   }

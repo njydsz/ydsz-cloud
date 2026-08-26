@@ -217,7 +217,6 @@ public class GlueJobHandler implements JobHandler {
             "java.math.RoundingMode",
             "com.njydsz.cronjob.domain.job.JobHandler",
             "com.njydsz.cronjob.domain.job.JobExecutionContext",
-            "com.njydsz.cronjob.domain.job.JobExecutionContext",
             "com.njydsz.cronjob.domain.job.ProcessResult");
     customizer.setImportsWhitelist(importsWhitelist);
 
@@ -237,8 +236,10 @@ public class GlueJobHandler implements JobHandler {
             System.class.getName(),
             Runtime.class.getName(),
             ProcessBuilder.class.getName(),
+            Process.class.getName(),
             Thread.class.getName(),
             ClassLoader.class.getName(),
+            Class.class.getName(),
             File.class.getName(),
             Path.class.getName(),
             Files.class.getName(),

@@ -10,7 +10,6 @@ import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.expression.ExpressionFunctionDef;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
@@ -27,18 +26,16 @@ import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
-import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.entity.DecisionTableDO;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleABRollbackDO;
-import com.njydsz.literule.infra.entity.RuleChainGraph;
-import com.njydsz.literule.infra.entity.RuleDefinition;
+import com.njydsz.literule.infra.entity.RuleChainGraphDO;
+import com.njydsz.literule.infra.entity.RuleDefinitionDO;
 import com.njydsz.literule.infra.entity.RuleDependencyDO;
-import com.njydsz.literule.infra.entity.RuleExecutionTrace;
-import com.njydsz.literule.infra.entity.RulePack;
+import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
+import com.njydsz.literule.infra.entity.RulePackDO;
 import com.njydsz.literule.infra.entity.RuleTemplateDO;
-import com.njydsz.literule.infra.entity.RuleTestCaseDO;
 import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
 
 /**
@@ -96,21 +93,21 @@ public class LiteruleConverter {
     return component.ruleABRollbackListToVO(entities);
   }
 
-  // ===== RuleChainGraph =====
-  public RuleChainGraphVO entityToVO(RuleChainGraph entity) {
+  // ===== RuleChainGraphDO =====
+  public RuleChainGraphVO entityToVO(RuleChainGraphDO entity) {
     return component.entityToVO(entity);
   }
 
-  public List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraph> entities) {
+  public List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities) {
     return component.ruleChainGraphListToVO(entities);
   }
 
-  // ===== RuleDefinition =====
-  public RuleDefinitionVO entityToVO(RuleDefinition entity) {
+  // ===== RuleDefinitionDO =====
+  public RuleDefinitionVO entityToVO(RuleDefinitionDO entity) {
     return core.entityToVO(entity);
   }
 
-  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinition> entities) {
+  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDO> entities) {
     return core.ruleDefinitionListToVO(entities);
   }
 
@@ -123,21 +120,21 @@ public class LiteruleConverter {
     return support.ruleDependencyListToVO(entities);
   }
 
-  // ===== RuleExecutionTrace =====
-  public RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity) {
+  // ===== RuleExecutionTraceDO =====
+  public RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities) {
+  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities) {
     return support.ruleExecutionTraceListToVO(entities);
   }
 
-  // ===== RulePack =====
-  public RulePackVO entityToVO(RulePack entity) {
+  // ===== RulePackDO =====
+  public RulePackVO entityToVO(RulePackDO entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RulePackVO> rulePackListToVO(List<RulePack> entities) {
+  public List<RulePackVO> rulePackListToVO(List<RulePackDO> entities) {
     return support.rulePackListToVO(entities);
   }
 
@@ -148,15 +145,6 @@ public class LiteruleConverter {
 
   public List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplateDO> entities) {
     return component.ruleTemplateListToVO(entities);
-  }
-
-  // ===== RuleTestCaseDO =====
-  public RuleTestCaseVO entityToVO(RuleTestCaseDO entity) {
-    return support.entityToVO(entity);
-  }
-
-  public List<RuleTestCaseVO> ruleTestCaseListToVO(List<RuleTestCaseDO> entities) {
-    return support.ruleTestCaseListToVO(entities);
   }
 
   // ===== RuleVersionHistoryDO → RuleVersionVO =====
@@ -206,11 +194,6 @@ public class LiteruleConverter {
   // ===== ExpressionFunctionDef (api.expr) → ExpressionFunctionDefVO =====
   public ExpressionFunctionDefVO entityToVO(ExpressionFunctionDef entity) {
     return core.entityToVO(entity);
-  }
-
-  // ===== RuleTestCase PostDTO → Entity =====
-  public RuleTestCaseDO postDtoToEntity(RuleTestCasePostDTO dto) {
-    return support.postDtoToEntity(dto);
   }
 
   // ===== DecisionTableDO PostDTO → Entity =====

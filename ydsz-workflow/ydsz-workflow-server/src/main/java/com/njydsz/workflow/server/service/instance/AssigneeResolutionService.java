@@ -9,15 +9,15 @@ import org.springframework.util.StringUtils;
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 
 /**
  * 办理人解析服务
  *
  * <p>从 {@link com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService} 中抽出的办理人解析逻辑，
- * 承担运行时任务（{@link FlowRunTask}）的办理人字段解析与填充职责。
+ * 承担运行时任务（{@link FlowRunTaskVO}）的办理人字段解析与填充职责。
  *
  * <p><b>核心能力：</b>
  *
@@ -63,8 +63,8 @@ public class AssigneeResolutionService {
    * @param instance 流程实例（用于获取发起人 ID 兜底）
    */
   public void resolveAssignee(
-      FlowRunTask task,
-      FlowNode node,
+      FlowRunTaskVO task,
+      FlowNodeVO node,
       Map<String, Object> variables,
       FlowAssigneeDTO explicit,
       FlowInstanceVO instance) {

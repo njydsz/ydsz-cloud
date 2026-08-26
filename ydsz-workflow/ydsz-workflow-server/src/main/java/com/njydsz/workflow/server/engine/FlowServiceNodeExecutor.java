@@ -10,8 +10,6 @@ import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -62,7 +60,6 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 @Component
 public class FlowServiceNodeExecutor {
 
-  private static final Logger log = LoggerFactory.getLogger(FlowServiceNodeExecutor.class);
 
   /** HTTP 连接超时时间（秒） */
   private static final int CONNECT_TIMEOUT_SECONDS = 5;

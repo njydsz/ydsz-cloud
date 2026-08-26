@@ -36,6 +36,7 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
+import com.njydsz.literule.domain.repository.ABTestRepository;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
@@ -46,6 +47,10 @@ import com.njydsz.literule.server.audit.RuleAuditLogService;
 import com.njydsz.literule.server.benchmark.RuleStressTestService;
 import com.njydsz.literule.server.cache.CachingRuleConfigProvider;
 import com.njydsz.literule.server.cep.CEPEngine;
+import com.njydsz.literule.server.config.ABTestService;
+import com.njydsz.literule.server.config.DefaultABTestAutoRollbackProvider;
+import com.njydsz.literule.server.config.DefaultABTestRepository;
+import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
 import com.njydsz.literule.server.core.AsyncTraceRecorder;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
 import com.njydsz.literule.server.core.EvaluationResultCache;
@@ -477,6 +482,35 @@ public class LiteRuleAutoConfiguration {
   public ABTestService abTestService(ExpressionEngine evaluator) {
     log.info("[LiteRule] A/B 测试服务已初始化");
     return new ABTestService(evaluator);
+  }
+
+  /**
+   * A/B 测试策略仓库（默认内存实现，可被数据库实现覆盖）
+   *
+   * @return ABTestRepository 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public ABTestRepository abTestRepository() {
+    log.info("[LiteRule] A/B 测试仓库已初始化（默认内存实现）");
+    return new DefaultABTestRepository();
+  }
+
+  /**
+   * A/B 测试自动回滚提供者
+   *
+   * @param repository A/B 策略仓库
+   * @param ruleAdminService 规则管理服务
+   * @return ABTestAutoRollbackProvider 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public ABTestAutoRollbackProvider abTestAutoRollbackProvider(
+      ABTestRepository repository, RuleAdminService ruleAdminService) {
+    log.info("[LiteRule] A/B 测试自动回滚已初始化");
+    return new DefaultABTestAutoRollbackProvider(repository, ruleAdminService);
   }
 
   /**

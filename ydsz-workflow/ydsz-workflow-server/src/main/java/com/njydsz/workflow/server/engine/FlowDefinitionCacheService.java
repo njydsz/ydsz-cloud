@@ -10,8 +10,6 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -47,7 +45,6 @@ import com.njydsz.workflow.server.config.FlowProperties;
 @Component
 public class FlowDefinitionCacheService {
 
-  private static final Logger log = LoggerFactory.getLogger(FlowDefinitionCacheService.class);
 
   private final FlowNodeRepository flowNodeRepository;
   private final FlowSkipRepository flowSkipRepository;

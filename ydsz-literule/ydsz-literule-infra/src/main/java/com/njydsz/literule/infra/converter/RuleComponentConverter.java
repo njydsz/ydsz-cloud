@@ -13,7 +13,7 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.infra.entity.DecisionTableDO;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleABRollbackDO;
-import com.njydsz.literule.infra.entity.RuleChainGraph;
+import com.njydsz.literule.infra.entity.RuleChainGraphDO;
 import com.njydsz.literule.infra.entity.RuleTemplateDO;
 
 /**
@@ -45,10 +45,10 @@ public interface RuleComponentConverter {
 
   List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollbackDO> entities);
 
-  // ===== RuleChainGraph =====
-  RuleChainGraphVO entityToVO(RuleChainGraph entity);
+  // ===== RuleChainGraphDO =====
+  RuleChainGraphVO entityToVO(RuleChainGraphDO entity);
 
-  List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraph> entities);
+  List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities);
 
   // ===== RuleTemplateDO =====
   RuleTemplateVO entityToVO(RuleTemplateDO entity);

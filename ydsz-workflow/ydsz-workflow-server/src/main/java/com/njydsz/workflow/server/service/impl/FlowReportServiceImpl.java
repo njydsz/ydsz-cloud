@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowReportService;
@@ -167,7 +168,7 @@ public class FlowReportServiceImpl implements FlowReportService {
     report.put("generatedAt", now);
 
     // 聚合核心指标
-    Map<String, Object> overview = analyticsService.overview(startTime, endTime, tid);
+    FlowAnalyticsOverviewVO overview = analyticsService.overview(startTime, endTime, tid);
     report.put("overview", overview);
 
     // 审批趋势（按天）
@@ -208,7 +209,7 @@ public class FlowReportServiceImpl implements FlowReportService {
     report.put("generatedAt", now);
 
     // 聚合核心指标
-    Map<String, Object> overview = analyticsService.overview(startTime, endTime, tid);
+    FlowAnalyticsOverviewVO overview = analyticsService.overview(startTime, endTime, tid);
     report.put("overview", overview);
 
     // 审批趋势（按周）

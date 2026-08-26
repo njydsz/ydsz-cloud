@@ -125,8 +125,8 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    * @return 返回值说明
    */
   @Override
-  public FlowDelegateAuth postDtoToEntity(FlowDelegateAuthPostDTO dto) {
-    return converter.postDtoToEntity(dto);
+  public FlowDelegateAuthVO postDtoToEntity(FlowDelegateAuthPostDTO dto) {
+    return converter.entityToVO(converter.postDtoToEntity(dto));
   }
 
   /**
@@ -148,20 +148,21 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public String create(FlowDelegateAuth auth) {
-    validateDelegateAuth(auth);
-    fillDefaultValues(auth);
+  public String create(FlowDelegateAuthVO auth) {
+    FlowDelegateAuth entity = converter.entityToEntity(auth);
+    validateDelegateAuth(entity);
+    fillDefaultValues(entity);
 
-    authRepository.save(converter.entityToVO(auth));
+    authRepository.save(auth);
     log.info("[FlowDelegate] 创建授权: owner={} delegate={} scope={} flow={} node={} role={} time=[{},{}]",
         auth.getOwnerUserId(), auth.getDelegateUserId(), auth.getScopeType(),
         auth.getFlowCode(), auth.getNodeCode(), auth.getRoleCode(),
         auth.getStartTime(), auth.getEndTime());
 
     // P2-5: 代理授权创建后，自动转发已有的在途待办
-    tryOfflineAutoForward(auth.getId());
+    tryOfflineAutoForward(entity.getId());
 
-    return auth.getId();
+    return entity.getId();
   }
 
   /**
@@ -286,9 +287,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_f121ff85")
           .build();
     }
-    int n = authRepository.updateStatus(authId, "REVOKED");
+    authRepository.updateStatus(authId, "REVOKED");
     log.info(
-        "[FlowDelegate] 撤回授权: authId={} owner={} affected={}", authId, auth.getOwnerUserId(), n);
+        "[FlowDelegate] 撤回授权: authId={} owner={}", authId, auth.getOwnerUserId());
   }
 
   /**
@@ -333,13 +334,12 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_d6a95488")
           .build();
     }
-    int n = authRepository.updateStatus(authId, status);
+    authRepository.updateStatus(authId, status);
     log.info(
-        "[FlowDelegate] 更新授权状态: authId={} status={} operator={} affected={}",
+        "[FlowDelegate] 更新授权状态: authId={} status={} operator={}",
         authId,
         status,
-        operatorId,
-        n);
+        operatorId);
   }
 
   /**
@@ -352,14 +352,12 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowDelegateAuth> listMine(String ownerUserId, String tenantId, String status) {
+  public List<FlowDelegateAuthVO> listMine(String ownerUserId, String tenantId, String status) {
     if (ownerUserId == null) {
       return List.of();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return authRepository.selectByOwner(tid, ownerUserId, status).stream()
-        .map(converter::entityToDO)
-        .toList();
+    return authRepository.selectByOwner(tid, ownerUserId, status);
   }
 
   /**
@@ -372,15 +370,13 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<FlowDelegateAuth> listAsDelegate(
+  public List<FlowDelegateAuthVO> listAsDelegate(
       String delegateUserId, String tenantId, String status) {
     if (delegateUserId == null) {
       return List.of();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    return authRepository.selectByDelegate(tid, delegateUserId, status).stream()
-        .map(converter::entityToDO)
-        .toList();
+    return authRepository.selectByDelegate(tid, delegateUserId, status);
   }
 
   /**
@@ -393,9 +389,8 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    * @param status 参数说明
    * @return 返回值说明
    */
-  @Override
   public List<FlowDelegateAuthVO> listMineVO(String ownerUserId, String tenantId, String status) {
-    return converter.flowDelegateAuthListToVO(listMine(ownerUserId, tenantId, status));
+    return listMine(ownerUserId, tenantId, status);
   }
 
   /**
@@ -408,10 +403,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    * @param status 参数说明
    * @return 返回值说明
    */
-  @Override
   public List<FlowDelegateAuthVO> listAsDelegateVO(
       String delegateUserId, String tenantId, String status) {
-    return converter.flowDelegateAuthListToVO(listAsDelegate(delegateUserId, tenantId, status));
+    return listAsDelegate(delegateUserId, tenantId, status);
   }
 
   /**
@@ -428,14 +422,13 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   @Transactional(readOnly = true)
-  public FlowDelegateAuth matchAuth(
+  public FlowDelegateAuthVO matchAuth(
       String tenantId, String ownerUserId, String flowCode, String nodeCode) {
     if (tenantId == null || ownerUserId == null) {
       return null;
     }
     try {
       return authRepository.matchAuthByScope(tenantId, ownerUserId, flowCode, nodeCode, LocalDateTime.now())
-          .map(converter::entityToDO)
           .orElse(null);
     } catch (Exception e) {
       log.error(
@@ -581,7 +574,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     int depth = 0;
 
     while (depth < MAX_CHAIN_DEPTH) {
-      FlowDelegateAuth matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
+      FlowDelegateAuthVO matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
       if (matched == null) {
         // 无进一步委派，当前用户即为最终代理人
         break;

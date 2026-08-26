@@ -26,7 +26,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_pack")
-public class RulePack extends MpBaseEntity<String> {
+public class RulePackDO extends MpBaseEntity<String> {
 
   /** 规则集编码（全局唯一，用于版本间关联） */
   private String packCode;

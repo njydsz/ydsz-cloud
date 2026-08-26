@@ -11,15 +11,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.alibaba.ttl.TtlRunnable;
@@ -38,26 +35,24 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.domain.vo.JobNodeVO;
-import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.cronjob.domain.job.ExecutionContextScope;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobHandler;
-import com.njydsz.cronjob.domain.job.ExecutionContextScope;
 import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.domain.job.ShardingContext;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobNodeVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.ExecutorConfig;
 import com.njydsz.cronjob.server.config.RemoteConfig;
@@ -203,6 +198,15 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P1-5: 幂等锁 key 前缀（防止相同参数的任务重复执行） */
   private static final String IDEMPOTENT_LOCK_PREFIX = "ydsz:job:idempotent:";
 
+  /** 远程派发最大尝试节点数硬上限（防止配置过大导致派发耗时不可控） */
+  private static final int MAX_DISPATCH_ATTEMPTS_LIMIT = 5;
+
+  /** COVER 策略中断旧任务后重新派发前的等待时间（毫秒，等待旧线程退出释放锁） */
+  private static final long COVER_REDISPATCH_DELAY_MS = 50L;
+
+  /** 执行线程池空闲线程存活时间（秒） */
+  private static final long EXECUTOR_KEEP_ALIVE_SECONDS = 60L;
+
   /** P0-A2: 幂等锁句柄（锁 key + 持有者标识，供释放使用） */
   private record IdempotentLockHandle(String key, String value) {}
 
@@ -241,8 +245,11 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   private ThreadPoolExecutor taskExecutorPool;
 
   /** P2-6: COVER 策略防递归标记（ThreadLocal），避免重新派发时锁仍被持有导致无限递归 */
-  private static final ThreadLocal<Boolean> COVER_REDISPATCHING =
-      ThreadLocal.withInitial(() -> false);
+  private static final ThreadLocal<Boolean> COVER_REDISPATCHING;
+
+  static {
+    COVER_REDISPATCHING = ThreadLocal.withInitial(() -> false);
+  }
 
   /**
    * P1-A4: 正在执行任务（含分片）的线程注册表（threadId → Thread）。
@@ -257,8 +264,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** 触发类型常量 */
   public static final String TRIGGER_CRON = "CRON";
 
+  /** 手动触发（控制台/API 手动执行时使用） */
   public static final String TRIGGER_MANUAL = "MANUAL";
+
+  /** 失败重试触发（RetryScheduler 重新派发时使用） */
   public static final String TRIGGER_RETRY = "RETRY";
+
+  /** 依赖触发（上游任务完成事件驱动下游任务时使用） */
   public static final String TRIGGER_DEPENDENT = "DEPENDENT";
 
   /** P2-2: Misfire 触发（合并执行时使用，日志可识别） */
@@ -534,103 +546,119 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         localNodeId);
 
     String firstLogId = null;
+    // P2-4: 本地分片直接执行；远程分片按节点聚合后批量派发（一次 HTTP 携带该节点全部分片）
+    Map<String, List<ShardAssignment>> remoteShardsByNode = new HashMap<>();
     for (ShardAssignment assignment : assignments) {
       String assignedNodeId = assignment.nodeId();
-      String logId;
       if (localNodeId != null && localNodeId.equals(assignedNodeId)) {
         // 本地分片：直接执行
-        logId = executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+        String logId = executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+        if (firstLogId == null && logId != null) {
+          firstLogId = logId;
+        }
       } else {
-        // P1-4: 远程分片：通过 HTTP 派发到执行器节点
-        logId = dispatchShardRemotely(job, assignment, shardTotal, holdLock, triggerType, nodeMap);
+        remoteShardsByNode
+            .computeIfAbsent(assignedNodeId, k -> new ArrayList<>())
+            .add(assignment);
       }
-      if (firstLogId == null && logId != null) {
-        firstLogId = logId;
+    }
+    // 远程分片：按节点批量派发（单节点内一次 HTTP 往返）
+    for (Map.Entry<String, List<ShardAssignment>> entry : remoteShardsByNode.entrySet()) {
+      JobNodeVO node = nodeMap.get(entry.getKey());
+      List<String> logIds =
+          dispatchShardsBatch(job, node, entry.getValue(), shardTotal, holdLock, triggerType);
+      if (logIds == null) {
+        continue;
+      }
+      for (String logId : logIds) {
+        if (firstLogId == null && logId != null) {
+          firstLogId = logId;
+        }
       }
     }
     return firstLogId;
   }
 
   /**
-   * P1-4: 远程派发分片到执行器节点。
+   * P2-4: 批量派发同一节点的多个远程分片。
    *
-   * <p>通过 {@link RemoteTaskClient} 将分片任务 HTTP 派发到选定的执行器节点。 执行器节点收到请求后调用 {@link #executeLocally}
-   * 在本地执行。
-   *
-   * <p>降级策略：当 {@code remote.fallbackToLocal=true} 且远程派发失败时 （连接拒绝、超时、HTTP 错误），Leader 在本地执行该分片。 由
-   * Redis 分布式锁保证不会重复执行（远程节点已持锁时本地执行也会跳过）。
+   * <p>通过 {@link RemoteTaskClient#dispatchBatch} 一次 HTTP 携带该节点全部分片；整批失败或
+   * {@code remote.fallbackToLocal=true} 时逐分片降级本地执行。单分片失败（列表元素为 null）时同样按
+   * fallbackToLocal 决定是否本地补执行，保证分片不丢失。
    *
    * @param job 任务定义
-   * @param assignment 分片分配结果
+   * @param node 目标执行器节点（可为 null，缺失时全部本地执行）
+   * @param assignments 该节点承担的分片列表
    * @param shardTotal 分片总数
-   * @param holdLock 是否需要抢占分布式锁（MANUAL 触发为 false，其他触发为 true）
+   * @param holdLock 是否需要抢占分布式锁
    * @param triggerType 触发类型
-   * @param nodeMap 在线节点映射（nodeId → JobNode）
-   * @return 执行日志 ID；派发失败且未降级返回 null
+   * @return 各分片 logId 列表；远程派发禁用/客户端缺失/整批失败且未降级时返回 null
    */
-  private String dispatchShardRemotely(
+  private List<String> dispatchShardsBatch(
       JobVO job,
-      ShardAssignment assignment,
+      JobNodeVO node,
+      List<ShardAssignment> assignments,
       int shardTotal,
       boolean holdLock,
-      String triggerType,
-      Map<String, JobNodeVO> nodeMap) {
+      String triggerType) {
     RemoteConfig remoteConfig = cronjobProperties.getRemote();
-    if (!remoteConfig.isEnabled()) {
-      // 远程派发未启用：本地执行该分片（兼容旧行为）
-      return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
-    }
     RemoteTaskClient client = remoteTaskClientProvider.getIfAvailable();
-    if (client == null) {
-      log.debug(
-          "[Dispatcher] RemoteTaskClient 不可用, 本地执行: key={} shard={}",
-          job.getJobKey(),
-          assignment.shardIndex());
-      return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+    boolean remoteAvailable =
+        remoteConfig.isEnabled()
+            && client != null
+            && node != null
+            && node.getHost() != null
+            && node.getPort() != null;
+    if (!remoteAvailable) {
+      // 远程不可用（未启用/客户端缺失/节点信息缺失）：全部分片本地执行
+      List<String> logIds = new ArrayList<>(assignments.size());
+      for (ShardAssignment assignment : assignments) {
+        logIds.add(
+            executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType));
+      }
+      return logIds;
     }
-    JobNodeVO node = nodeMap.get(assignment.nodeId());
-    if (node == null || node.getHost() == null || node.getPort() == null) {
-      log.warn(
-          "[Dispatcher] 节点信息缺失, 降级本地执行: key={} shard={} nodeId={}",
-          job.getJobKey(),
-          assignment.shardIndex(),
-          assignment.nodeId());
-      return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+    List<RemoteTaskRequest> requests = new ArrayList<>(assignments.size());
+    for (ShardAssignment assignment : assignments) {
+      requests.add(
+          new RemoteTaskRequest(
+              job, triggerType, assignment.shardIndex(), shardTotal, TracerUtils.getTraceId()));
     }
-    RemoteTaskRequest request =
-        new RemoteTaskRequest(
-            job, triggerType, assignment.shardIndex(), shardTotal, TracerUtils.getTraceId());
-    String logId = client.dispatch(node, request);
-    if (logId == null && remoteConfig.isFallbackToLocal()) {
-      log.info(
-          "[Dispatcher] 远程派发失败, 降级本地执行: key={} shard={} nodeId={}",
-          job.getJobKey(),
-          assignment.shardIndex(),
-          assignment.nodeId());
-      return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+    List<String> logIds = client.dispatchBatch(node, requests);
+    if (logIds == null) {
+      // 整批派发失败：按 fallbackToLocal 决定是否全部降级本地
+      if (remoteConfig.isFallbackToLocal()) {
+        log.info(
+            "[Dispatcher] 批量远程派发失败, 降级本地执行: key={} nodeId={} shards={}",
+            job.getJobKey(),
+            node.getNodeId(),
+            assignments.size());
+        List<String> localLogIds = new ArrayList<>(assignments.size());
+        for (ShardAssignment assignment : assignments) {
+          localLogIds.add(
+              executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType));
+        }
+        return localLogIds;
+      }
+      return null;
     }
-    if (logId != null) {
-      log.debug(
-          "[Dispatcher] 远程分片派发成功: key={} shard={} nodeId={} logId={}",
-          job.getJobKey(),
-          assignment.shardIndex(),
-          assignment.nodeId(),
-          logId);
+    // 单个分片失败（元素为 null）：按 fallbackToLocal 本地补执行
+    for (int i = 0; i < logIds.size(); i++) {
+      if (logIds.get(i) == null && remoteConfig.isFallbackToLocal()) {
+        log.info(
+            "[Dispatcher] 远程分片派发失败, 降级本地执行: key={} shard={} nodeId={}",
+            job.getJobKey(),
+            assignments.get(i).shardIndex(),
+            node.getNodeId());
+        logIds.set(
+            i,
+            executeShard(
+                job, assignments.get(i).shardIndex(), shardTotal, holdLock, triggerType));
+      }
     }
-    return logId;
+    return logIds;
   }
 
-  /**
-   * 执行单个分片（P3）。
-   *
-   * <p>与 {@link #executeJob} 类似，区别：
-   *
-   * <ul>
-   *   <li>锁 key 含分片索引: {@code ydsz:job:lock:{jobKey}:shard:{shardIndex}}
-   *   <li>构造 {@link ShardingContext} 传入 handler
-   *   <li>不推进 next_fire_time（由 JobScanner 统一推进）
-   * </ul>
-   */
   private String executeShard(
       JobVO job, int shardIndex, int shardTotal, boolean holdLock, String triggerType) {
     String lockKey = null;
@@ -911,7 +939,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
     int maxAttempts =
         cronjobProperties.getSchedulerExecutorSeparation().getMaxDispatchAttempts();
-    maxAttempts = Math.max(1, Math.min(maxAttempts, 5));
+    maxAttempts = Math.max(1, Math.min(maxAttempts, MAX_DISPATCH_ATTEMPTS_LIMIT));
 
     Set<String> excludedNodeIds = new HashSet<>(maxAttempts);
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -1011,10 +1039,19 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   }
 
   /**
-   * P1-6: 灰度处理器路由。
+   * P1-6: 灰度处理器路由（P2-2 改造：稳定哈希替代随机数）。
    *
-   * <p>当任务配置了 canaryRatio (>0) 且 canaryHandler 非空时， 按 canaryRatio% 概率返回 canaryHandler，否则返回原
-   * handler。
+   * <p>当任务配置了 canaryRatio (>0) 且 canaryHandler 非空时， 按 {@code jobKey.hashCode() % 100 <
+   * canaryRatio} 决策灰度 handler。
+   *
+   * <p><b>设计说明</b>：原实现使用 {@code RandomUtils.randomInt(100) < ratio} 概率路由，同一任务每次执行随机切换
+   * handler，灰度结论不可复现（新旧 handler 混跑结果不可比）。改为以 jobKey 稳定哈希分桶后：
+   *
+   * <ul>
+   *   <li>同一任务的所有执行实例稳定命中同一 handler——灰度结果可对比、可复现
+   *   <li>调整 canaryRatio 即整体放量/回滚，无需改任务配置
+   *   <li>审计日志记录 bucket，便于确认灰度归属
+   * </ul>
    *
    * @param job 任务定义
    * @return 实际使用的 handler Bean 名称
@@ -1025,12 +1062,17 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         && job.getCanaryHandler() != null
         && !job.getCanaryHandler().isBlank()) {
       int ratio = Math.min(100, Math.max(0, job.getCanaryRatio()));
-      if (RandomUtils.randomInt(100) < ratio) {
+      // 稳定分桶：同一 jobKey 永远落入同一桶（Java String.hashCode 跨 JVM 稳定）
+      int bucket = Math.floorMod(job.getJobKey().hashCode(), 100);
+      if (bucket < ratio) {
         log.info(
-            "[Dispatcher] 灰度路由命中: jobKey={} canaryHandler={} ratio={}%",
-            job.getJobKey(), job.getCanaryHandler(), ratio);
+            "[Dispatcher] 灰度路由命中: jobKey={} canaryHandler={} ratio={}% bucket={}",
+            job.getJobKey(), job.getCanaryHandler(), ratio, bucket);
         return job.getCanaryHandler();
       }
+      log.debug(
+          "[Dispatcher] 灰度路由未命中: jobKey={} handler={} ratio={}% bucket={}",
+          job.getJobKey(), job.getHandler(), ratio, bucket);
     }
     return job.getHandler();
   }
@@ -1456,7 +1498,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       log.warn("[Dispatcher] COVER 策略未找到 RUNNING 日志, 尝试释放残留锁: key={}", job.getJobKey());
       safeReleaseLock(lockKey, INSTANCE_ID);
       // 短暂 sleep 后重新派发（让锁释放生效）
-      sleepBriefly(50);
+      sleepBriefly(COVER_REDISPATCH_DELAY_MS);
       COVER_REDISPATCHING.set(true);
       try {
         return executeJob(job, true, triggerType, retryCount);
@@ -1490,7 +1532,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     String releaseHolder = (lockHolder != null) ? lockHolder : INSTANCE_ID;
     safeReleaseLock(lockKey, releaseHolder);
     // 5. 短暂 sleep 避免竞态（让被中断的线程有机会释放资源），然后重新派发新任务
-    sleepBriefly(50);
+    sleepBriefly(COVER_REDISPATCH_DELAY_MS);
     log.info("[Dispatcher] COVER 策略: 已中断旧任务, 重新派发新任务: key={}", job.getJobKey());
     // 锁已释放，executeJob 会重新走 setIfAbsent 流程获取锁
     COVER_REDISPATCHING.set(true);
@@ -1984,7 +2026,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         ExecutorUtils.builder()
             .corePoolSize(corePoolSize)
             .maxPoolSize(maxPoolSize)
-            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .keepAliveTime(EXECUTOR_KEEP_ALIVE_SECONDS, TimeUnit.SECONDS)
             .queueCapacity(queueCapacity)
             .queueType(
                 queueCapacity == 0

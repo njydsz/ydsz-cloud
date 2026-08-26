@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +40,7 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
@@ -199,7 +201,7 @@ public class FlowInstanceLifecycleManager {
     }
 
     // 查定义并构建实例
-    FlowDefinition def = findPublishedDefinition(dto, tenantId);
+    FlowDefinitionVO def = findPublishedDefinition(dto, tenantId);
     FlowInstanceDTO instanceDto = buildInstanceDto(dto, def);
     FlowInstanceVO savedInstance = instanceRepository.save(instanceDto);
     String instanceId = savedInstance.getId();
@@ -267,8 +269,8 @@ public class FlowInstanceLifecycleManager {
    * @param tenantId 参数说明
    * @return 返回值说明
    */
-  private FlowDefinition findPublishedDefinition(FlowStartProcessDTO dto, String tenantId) {
-    FlowDefinition def = definitionService.getPublished(dto.getFlowCode(),
+  private FlowDefinitionVO findPublishedDefinition(FlowStartProcessDTO dto, String tenantId) {
+    FlowDefinitionVO def = definitionService.getPublished(dto.getFlowCode(),
         StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : null, tenantId);
     if (def == null) {
       throw SysException.builder()
@@ -859,7 +861,7 @@ public class FlowInstanceLifecycleManager {
     instance.setFlowStatus(FlowInstanceStatus.RUNNING.name());
     instance.setCurrentNodeCode(targetNodeCode);
     instance.setEndAt(null);
-    instanceRepository.save(converter.doToDto(instance));
+    instanceRepository.save(converter.voToDto(instance));
 
     // 6. 在目标节点创建新的待办任务
     FlowNodeVO targetNodeVO =
@@ -872,16 +874,8 @@ public class FlowInstanceLifecycleManager {
                         .key("error.workflow.msg_reopen_node_missing")
                         .params(targetNodeCode)
                         .build());
-    FlowNode targetNode = new FlowNode();
-    targetNode.setDefinitionId(instance.getDefinitionId());
-    targetNode.setFlowCode(instance.getFlowCode());
-    targetNode.setNodeCode(targetNodeVO.getNodeCode());
-    targetNode.setNodeName(targetNodeVO.getNodeName());
-    targetNode.setNodeType(targetNodeVO.getNodeType());
-    targetNode.setPermissionFlag(targetNodeVO.getPermissionFlag());
-    targetNode.setExt(targetNodeVO.getExt());
     Map<String, Object> variables = variableManager.getVariables(instanceId);
-    taskService.createTask(instanceId, targetNode, variables);
+    taskService.createTask(instanceId, targetNodeVO, variables);
 
     // 7. 记录重审元信息到 variable JSON
     try {
@@ -909,7 +903,7 @@ public class FlowInstanceLifecycleManager {
     audit.setOperatorId(operatorId);
     audit.setComment(reason);
     audit.setProviderTraceId(MDC.get("traceId"));
-    auditLogRepository.save(audit);
+    auditLogRepository.save(converter.entityToVO(audit));
 
     log.info(
         "[Flow] 重审流程: instanceId={} operatorId={} targetNode={} reason={} isAdmin={}",
@@ -982,7 +976,7 @@ public class FlowInstanceLifecycleManager {
     instance.setEndAt(null);
     instance.setRejectReason(null);
     instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
-    instanceRepository.save(converter.doToDto(instance));
+    instanceRepository.save(converter.voToDto(instance));
     // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
     FlowAuditLog audit = new FlowAuditLog();
     audit.setInstanceId(instanceId);
@@ -1068,7 +1062,7 @@ public class FlowInstanceLifecycleManager {
       return null;
     }
     for (FlowNodeVO node : nextNodes) {
-      taskService.createTask(instanceId, converter.entityToDO(node), variables);
+      taskService.createTask(instanceId, node, variables);
     }
     instanceRepository.updateStatus(
         instanceId,
@@ -1095,9 +1089,9 @@ public class FlowInstanceLifecycleManager {
     List<FlowNode> doNodes = nextNodes.stream().map(converter::entityToDO).toList();
     for (FlowNode node : doNodes) {
       // P0-2: 优先判断事件捕获节点（boundaryEvent / intermediateCatchEvent）
-      if (eventSubscriptionService.isEventCatchNode(node)) {
+      if (eventSubscriptionService.isEventCatchNode(converter.entityToVO(node))) {
         String boundaryTaskId = resolveBoundaryTaskId(node, instanceId);
-        eventSubscriptionService.createSubscription(instanceId, node, variables, boundaryTaskId);
+        eventSubscriptionService.createSubscription(instanceId, converter.entityToVO(node), variables, boundaryTaskId);
         // P0-2: 如果 ext.timer 存在，注册边界定时器自动触发（timer boundary 语义）
         scheduleBoundaryTimerIfPresent(node, instanceId, boundaryTaskId);
         // 更新实例当前节点为事件捕获节点（流程在此等待事件触发）
@@ -1113,7 +1107,7 @@ public class FlowInstanceLifecycleManager {
       if (node.getNodeType().equals(FlowNodeType.CC.getCode())) {
         // GAP-P1: 抄送节点 — 展开接收人并写入 ydsz_flow_cc，然后自动推进到下一节点
         try {
-          ccService.handleCcNode(instanceId, node, variables);
+          ccService.handleCcNode(instanceId, converter.entityToVO(node), variables);
           log.info("[Flow] 抄送节点处理完成: instanceId={} node={}", instanceId, node.getNodeCode());
         } catch (Exception e) {
           log.warn(
@@ -1141,7 +1135,7 @@ public class FlowInstanceLifecycleManager {
       if (node.getNodeType().equals(FlowNodeType.SUBPROCESS.getCode()) || isCallActivity(node)) {
         try {
           FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
-          subProcessService.startSubProcess(instance, node, variables);
+          subProcessService.startSubProcess(instance, converter.entityToVO(node), variables);
           // 子流程启动后，父流程"停在" callActivity 节点，更新 currentNodeCode
           instanceRepository.updateStatus(
               instanceId,
@@ -1167,7 +1161,7 @@ public class FlowInstanceLifecycleManager {
         }
         continue;
       }
-      taskService.createTask(instanceId, node, variables);
+      taskService.createTask(instanceId, converter.entityToVO(node), variables);
     }
   }
 
@@ -1226,7 +1220,7 @@ public class FlowInstanceLifecycleManager {
     appendedNode.setPermissionFlag(assigneeType.toLowerCase() + ":" + assigneeId);
 
     Map<String, Object> variables = variableManager.getVariables(instanceId);
-    String taskId = taskService.createTask(instanceId, appendedNode, variables);
+    String taskId = taskService.createTask(instanceId, converter.entityToVO(appendedNode), variables);
 
     Map<String, Object> appendedInfo = new HashMap<>();
     appendedInfo.put("nodeCode", appendedNodeCode);
@@ -1262,7 +1256,7 @@ public class FlowInstanceLifecycleManager {
     audit.setOperatorId(operatorId);
     audit.setComment(comment);
     audit.setProviderTraceId(MDC.get("traceId"));
-    auditLogRepository.save(audit);
+    auditLogRepository.save(converter.entityToVO(audit));
 
     log.info("[Flow] 动态追加节点: instanceId={} nodeCode={} taskId={}", instanceId, appendedNodeCode, taskId);
     return taskId;

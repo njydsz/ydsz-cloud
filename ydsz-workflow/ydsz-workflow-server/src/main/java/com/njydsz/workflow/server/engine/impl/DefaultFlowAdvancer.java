@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +40,6 @@ import com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingServic
 @Component
 public class DefaultFlowAdvancer {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultFlowAdvancer.class);
 
   /** P1: 流程定义元数据缓存（节点 + skip），替代直查 nodeMapper/skipMapper */
   private final FlowDefinitionCacheService flowDefinitionCacheService;

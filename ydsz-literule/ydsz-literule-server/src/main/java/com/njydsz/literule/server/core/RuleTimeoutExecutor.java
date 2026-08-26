@@ -88,7 +88,7 @@ public class RuleTimeoutExecutor {
       if (cause instanceof RuntimeException re) {
         throw re;
       }
-      throw RuleEvaluationException.timeout(rule.getCode(), cause);
+      throw RuleEvaluationException.timeout(rule.getCode(), effectiveTimeout);
     }
   }
 

@@ -204,4 +204,39 @@ public class NacosRuleSource implements RuleSource {
       return List.of();
     }
   }
+
+  /**
+   * 根据编码查询单条规则定义
+   *
+   * <p>数据源为全量加载模型，此处通过已加载的启用规则列表过滤匹配，O(n) 复杂度。
+   *
+   * @param ruleCode 规则编码
+   * @return 规则定义；不存在返回 null
+   */
+  @Override
+  public RuleDefinition findByCode(String ruleCode) {
+    if (ruleCode == null) {
+      return null;
+    }
+    return loadEnabledRules().stream()
+        .filter(r -> ruleCode.equals(r.getCode()))
+        .findFirst()
+        .orElse(null);
+  }
+
+
+  /**
+   * 切换规则启停状态（配置中心数据源为只读，不支持写入操作）
+   *
+   * @param ruleCode 规则编码
+   * @param enabled 是否启用
+   * @param operator 操作人
+   */
+  @Override
+  public void toggleEnabled(String ruleCode, boolean enabled, String operator) {
+    log.warn(
+        "[{}] 配置中心数据源为只读，忽略 toggleEnabled 调用: ruleCode={}, enabled={}, operator={}",
+        getClass().getSimpleName(), ruleCode, enabled, operator);
+  }
+
 }

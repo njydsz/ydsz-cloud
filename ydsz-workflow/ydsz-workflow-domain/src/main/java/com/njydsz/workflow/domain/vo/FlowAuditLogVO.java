@@ -34,6 +34,8 @@ public class FlowAuditLogVO implements Serializable {
   private String commentType;
   private LocalDateTime operatedAt;
   private String providerTraceId;
+  /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
+  private String tenantId;
   private String createdBy;
   private LocalDateTime createdAt;
   private String updatedBy;

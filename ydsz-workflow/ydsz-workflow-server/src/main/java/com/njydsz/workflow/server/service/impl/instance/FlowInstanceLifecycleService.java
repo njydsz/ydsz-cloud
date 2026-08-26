@@ -41,6 +41,7 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
@@ -216,7 +217,7 @@ public class FlowInstanceLifecycleService {
     }
 
     // 1. 查定义 - 直接查询最新已发布流程定义
-    FlowDefinition def =
+    FlowDefinitionVO def =
         definitionService.getPublished(
             dto.getFlowCode(),
             StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : null,
@@ -973,7 +974,7 @@ public class FlowInstanceLifecycleService {
     instance.setEndAt(null);
     instance.setRejectReason(null);
     instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
-    instanceRepository.save(converter.doToDto(instance));
+    instanceRepository.save(converter.voToDto(instance));
     // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
     FlowAuditLog audit = new FlowAuditLog();
     audit.setInstanceId(instanceId);
@@ -1059,7 +1060,7 @@ public class FlowInstanceLifecycleService {
       return null;
     }
     for (FlowNodeVO node : nextNodes) {
-      taskService.createTask(instanceId, converter.entityToDO(node), variables);
+      taskService.createTask(instanceId, node, variables);
     }
     instanceRepository.updateStatus(
         instanceId,
@@ -1086,9 +1087,9 @@ public class FlowInstanceLifecycleService {
     List<FlowNode> doNodes = nextNodes.stream().map(converter::entityToDO).toList();
     for (FlowNode node : doNodes) {
       // P0-2: 优先判断事件捕获节点（boundaryEvent / intermediateCatchEvent）
-      if (eventSubscriptionService.isEventCatchNode(node)) {
+      if (eventSubscriptionService.isEventCatchNode(converter.entityToVO(node))) {
         String boundaryTaskId = resolveBoundaryTaskId(node, instanceId);
-        eventSubscriptionService.createSubscription(instanceId, node, variables, boundaryTaskId);
+        eventSubscriptionService.createSubscription(instanceId, converter.entityToVO(node), variables, boundaryTaskId);
         // P0-2: 如果 ext.timer 存在，注册边界定时器自动触发（timer boundary 语义）
         scheduleBoundaryTimerIfPresent(node, instanceId, boundaryTaskId);
         // 更新实例当前节点为事件捕获节点（流程在此等待事件触发）
@@ -1104,7 +1105,7 @@ public class FlowInstanceLifecycleService {
       if (node.getNodeType().equals(FlowNodeType.CC.getCode())) {
         // GAP-P1: 抄送节点 — 展开接收人并写入 ydsz_flow_cc，然后自动推进到下一节点
         try {
-          ccService.handleCcNode(instanceId, node, variables);
+          ccService.handleCcNode(instanceId, converter.entityToVO(node), variables);
           log.info("[Flow] 抄送节点处理完成: instanceId={} node={}", instanceId, node.getNodeCode());
         } catch (Exception e) {
           log.warn(
@@ -1132,7 +1133,7 @@ public class FlowInstanceLifecycleService {
       if (node.getNodeType().equals(FlowNodeType.SUBPROCESS.getCode()) || isCallActivity(node)) {
         try {
           FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
-          subProcessService.startSubProcess(instance, node, variables);
+          subProcessService.startSubProcess(instance, converter.entityToVO(node), variables);
           // 子流程启动后，父流程"停在" callActivity 节点，更新 currentNodeCode
           instanceRepository.updateStatus(
               instanceId,
@@ -1158,7 +1159,7 @@ public class FlowInstanceLifecycleService {
         }
         continue;
       }
-      taskService.createTask(instanceId, node, variables);
+      taskService.createTask(instanceId, converter.entityToVO(node), variables);
     }
   }
 

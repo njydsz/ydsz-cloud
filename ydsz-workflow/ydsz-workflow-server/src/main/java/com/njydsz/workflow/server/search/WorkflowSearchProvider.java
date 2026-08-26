@@ -40,11 +40,6 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplateVO> {
   }
 
   @Override
-  public String getTypeLabel() {
-    return MessageUtils.getMessage("workflow.search.typeLabel", "流程模板");
-  }
-
-  @Override
   public IndexDocument toIndexDocument(FlowTemplateVO vo) {
     if (vo == null || vo.getId() == null) {
       return null;
@@ -56,7 +51,7 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplateVO> {
         .subtitle(vo.getCategory())
         .content(vo.getDescription())
         .snippet(vo.getTemplateCode())
-        .status(vo.getStatus())
+        .status(vo.getStatus() != null ? String.valueOf(vo.getStatus()) : null)
         .path("/workflow/template/" + vo.getId())
         .tenantId(vo.getTenantId())
         .createdBy(vo.getCreatedBy())
@@ -72,37 +67,14 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplateVO> {
         .build();
   }
 
+  /**
+   * 全量加载模板（用于全量索引重建），对齐 {@link SearchProvider#loadAll(String)} SPI 契约。
+   *
+   * @param tenantId 租户 ID；为空表示全量
+   * @return 模板列表
+   */
   @Override
-  public List<SearchField> getSearchableFields() {
-    return List.of(
-        SearchField.builder()
-            .name("title")
-            .label(MessageUtils.getMessage("workflow.search.field.name", "模板名称"))
-            .type(FieldType.TEXT)
-            .weight(FIELD_WEIGHT)
-            .searchable(true)
-            .highlightable(true)
-            .sortable(true)
-            .build(),
-        SearchField.builder()
-            .name("subtitle")
-            .label(MessageUtils.getMessage("workflow.search.field.category", "分类"))
-            .type(FieldType.KEYWORD)
-            .weight(2.0f)
-            .searchable(true)
-            .aggregatable(true)
-            .build(),
-        SearchField.builder()
-            .name("content")
-            .label(MessageUtils.getMessage("workflow.search.field.description", "描述"))
-            .type(FieldType.TEXT)
-            .weight(1.0f)
-            .searchable(true)
-            .build());
-  }
-
-  @Override
-  public FlowTemplateVO loadById(String id) {
-    return flowTemplateRepository.findById(id).orElse(null);
+  public List<FlowTemplateVO> loadAll(String tenantId) {
+    return flowTemplateRepository.findAll(tenantId);
   }
 }

@@ -22,6 +22,9 @@ public class FlowInstanceVO implements Serializable {
   /** 主键 ID */
   private String id;
 
+  /** 租户标识（对齐实体 MpBaseEntity.tenantId） */
+  private String tenantId;
+
   /** 流程编码 */
   private String flowCode;
 

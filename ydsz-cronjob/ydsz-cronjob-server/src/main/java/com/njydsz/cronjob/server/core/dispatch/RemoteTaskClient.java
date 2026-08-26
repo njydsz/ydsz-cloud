@@ -7,12 +7,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.constants.CronjobConstants;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
@@ -67,6 +71,9 @@ public class RemoteTaskClient {
 
   /** 子任务执行接口路径（与 InternalJobController#executeSubTask 保持一致） */
   private static final String INTERNAL_SUB_TASK_PATH = CronjobConstants.INTERNAL_SUB_TASK_PATH;
+
+  /** 批量执行接口路径（与 InternalJobController#executeBatch 保持一致） */
+  private static final String INTERNAL_BATCH_PATH = CronjobConstants.INTERNAL_BATCH_PATH;
 
   private final CronjobProperties cronjobProperties;
 
@@ -150,7 +157,7 @@ public class RemoteTaskClient {
    * @param request 子任务派发请求（jobId/logId/jobKey/handler/taskName/taskParams/traceId）
    * @return 子任务执行结果 JSON（含 success/result/errorMessage）；派发失败返回 null
    */
-  public String dispatchSubTask(JobNode node, RemoteSubTaskRequest request) {
+  public String dispatchSubTask(JobNodeVO node, RemoteSubTaskRequest request) {
     if (node == null || node.getHost() == null || node.getPort() == null) {
       log.warn(
           "[RemoteClient] 子任务节点地址不完整, 跳过远程派发: nodeId={}", node == null ? "null" : node.getNodeId());
@@ -197,6 +204,129 @@ public class RemoteTaskClient {
       log.warn("[RemoteClient] 子任务远程派发异常: url={} reason={}", url, e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * P2-4: 批量派发多个分片到远程执行器节点（一次 HTTP 往返）。
+   *
+   * <p>将同一节点承担的多个分片聚合为一次 POST，减少逐分片派发的连接开销与派发线程占用。
+   * 接收端 {@code InternalJobController#executeBatch} 逐个本地执行并返回各分片 logId。
+   *
+   * <p>返回语义：null 表示整批派发失败（HTTP 错误/超时/解析失败，调用方按 fallbackToLocal 逐分片降级）；
+   * 否则返回与入参等长的列表，元素为对应分片的 logId，单个分片失败（锁被持有/执行异常）时为 null。
+   *
+   * @param node 执行器节点（含 host 和 port）
+   * @param requests 分片派发请求列表（非空）
+   * @return 各分片 logId 列表（失败元素为 null）；整批失败返回 null；入参为空返回空列表
+   */
+  public List<String> dispatchBatch(JobNodeVO node, List<RemoteTaskRequest> requests) {
+    if (node == null || node.getHost() == null || node.getPort() == null) {
+      log.warn(
+          "[RemoteClient] 节点地址不完整, 跳过批量派发: nodeId={}",
+          node == null ? "null" : node.getNodeId());
+      return null;
+    }
+    if (requests == null || requests.isEmpty()) {
+      return Collections.emptyList();
+    }
+    String url = buildBatchUrl(node.getHost(), node.getPort());
+    String requestBody = YdszJson.toJson(requests);
+    RemoteConfig remoteConfig = cronjobProperties.getRemote();
+
+    try {
+      HttpRequest.Builder requestBuilder =
+          HttpRequest.newBuilder()
+              .uri(URI.create(url))
+              .timeout(Duration.ofSeconds(remoteConfig.getRequestTimeoutSeconds()))
+              .header("Content-Type", "application/json; charset=UTF-8")
+              .POST(HttpRequest.BodyPublishers.ofString(requestBody));
+      addAuthHeader(requestBuilder, remoteConfig);
+      HttpRequest httpRequest = requestBuilder.build();
+
+      HttpResponse<String> response =
+          httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+      int status = response.statusCode();
+      String body = response.body();
+
+      if (status == HTTP_OK) {
+        return parseLogIdsFromBody(body, requests.size());
+      }
+      log.warn(
+          "[RemoteClient] 批量远程派发 HTTP {}: url={} shards={} body={}",
+          status,
+          url,
+          requests.size(),
+          truncateBody(body));
+      return null;
+    } catch (ConnectException e) {
+      log.warn("[RemoteClient] 批量派发连接拒绝(节点可能已下线): url={} reason={}", url, e.getMessage());
+      return null;
+    } catch (HttpTimeoutException e) {
+      log.warn(
+          "[RemoteClient] 批量派发请求超时: url={} timeout={}s",
+          url,
+          remoteConfig.getRequestTimeoutSeconds());
+      return null;
+    } catch (Exception e) {
+      log.warn("[RemoteClient] 批量派发异常: url={} reason={}", url, e.getMessage());
+      return null;
+    }
+  }
+
+  /** 构造批量执行接口 URL。 */
+  private String buildBatchUrl(String host, int port) {
+    return "http://" + host + ":" + port + INTERNAL_BATCH_PATH;
+  }
+
+  /**
+   * P2-4: 从批量派发响应体解析各分片 logId。
+   *
+   * <p>响应格式为 {@code {"code":0,"data":["logId1","logId2",null,...],"message":"success"}}，
+   * data 为与请求等长的数组，元素为对应分片的 logId（null 表示该分片被跳过或失败）。
+   *
+   * @param body HTTP 响应体
+   * @param expectedSize 请求分片数
+   * @return logId 列表；整批解析失败返回 null
+   */
+  private List<String> parseLogIdsFromBody(String body, int expectedSize) {
+    if (body == null || body.isBlank()) {
+      return null;
+    }
+    try {
+      ObjectNode json = YdszJson.parseObject(body);
+      int code = json.getIntegerOrDefault("code", -1);
+      if (code != 0) {
+        log.warn("[RemoteClient] 批量远程执行业务失败: code={} message={}", code, json.getString("message"));
+        return null;
+      }
+      Object data = json.get("data");
+      if (!(data instanceof ArrayNode arrayNode)) {
+        log.warn("[RemoteClient] 批量响应 data 非数组, 解析失败: body={}", truncateBody(body));
+        return null;
+      }
+      List<String> logIds = new ArrayList<>(expectedSize);
+      for (int i = 0; i < expectedSize; i++) {
+        if (arrayNode.has(i)) {
+          String value = arrayNode.get(i).asText();
+          logIds.add(value == null || value.isBlank() || "null".equals(value) ? null : value);
+        } else {
+          logIds.add(null);
+        }
+      }
+      return logIds;
+    } catch (Exception e) {
+      log.warn(
+          "[RemoteClient] 批量响应解析失败: body={} reason={}", truncateBody(body), e.getMessage());
+      return null;
+    }
+  }
+
+  /** 截断过长响应体（防日志刷屏）。 */
+  private String truncateBody(String body) {
+    if (body == null) {
+      return "";
+    }
+    return body.length() > BODY_LOG_MAX_LENGTH ? body.substring(0, BODY_LOG_MAX_LENGTH) : body;
   }
 
   /** 构造子任务执行接口 URL。 */

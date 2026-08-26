@@ -15,9 +15,8 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
@@ -57,9 +56,6 @@ public class ServiceNodeExecuteService {
   /** 运行时任务仓储，创建/更新待办任务 */
   private final FlowRunTaskRepository taskRepository;
 
-  /** MapStruct 转换器（DO/VO/DTO 转换） */
-  private final WorkflowConverter converter;
-
   /** 任务归档服务，完成任务后写入历史任务表 */
   private final FlowTaskArchiveService archiveService;
 
@@ -98,7 +94,6 @@ public class ServiceNodeExecuteService {
   public ServiceNodeExecuteService(
       FlowServiceNodeExecutor serviceNodeExecutor,
       FlowRunTaskRepository taskRepository,
-      WorkflowConverter converter,
       FlowTaskArchiveService archiveService,
       FlowTaskSupport support,
       FlowEventSubscriptionService eventSubscriptionService,
@@ -107,7 +102,6 @@ public class ServiceNodeExecuteService {
       Function<ServiceNodeExecuteService.AdvanceContext, Void> advanceCallback) {
     this.serviceNodeExecutor = serviceNodeExecutor;
     this.taskRepository = taskRepository;
-    this.converter = converter;
     this.archiveService = archiveService;
     this.support = support;
     this.eventSubscriptionService = eventSubscriptionService;
@@ -128,7 +122,7 @@ public class ServiceNodeExecuteService {
    * @return 任务 ID
    */
   public String executeServiceNode(
-      FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
+      FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     // 1. 执行服务节点逻辑
     FlowServiceNodeExecutor.ServiceExecutionResult result;
     try {
@@ -146,7 +140,7 @@ public class ServiceNodeExecuteService {
     }
 
     // 2. 创建任务记录（用于审计追溯）
-    FlowRunTask task = new FlowRunTask();
+    FlowRunTaskVO task = new FlowRunTaskVO();
     task.setInstanceId(instance.getId());
     task.setFlowCode(instance.getFlowCode());
     task.setDefinitionId(instance.getDefinitionId());
@@ -175,7 +169,7 @@ public class ServiceNodeExecuteService {
       // 3a. 成功：标记 COMPLETED，归档，审计，推进
       task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
       task.setComment(result.message());
-      taskRepository.save(converter.entityToVO(task));
+      taskRepository.save(task);
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "SERVICE_EXECUTE", null, null, "服务节点执行成功: " + result.message());
       log.info(
@@ -194,7 +188,7 @@ public class ServiceNodeExecuteService {
       } else {
         task.setComment("服务节点执行失败: " + result.message());
       }
-      taskRepository.save(converter.entityToVO(task));
+      taskRepository.save(task);
       archiveService.archiveToHistory(task, FlowTaskStatus.TIMEOUT);
       if (errorBoundaryTriggered) {
         support.audit(
@@ -237,19 +231,17 @@ public class ServiceNodeExecuteService {
    * @return 是否成功触发 error boundary
    */
   private boolean triggerErrorBoundaryIfExists(
-      FlowInstanceVO instance, FlowNode serviceNode, String errorMsg) {
+      FlowInstanceVO instance, FlowNodeVO serviceNode, String errorMsg) {
     if (eventSubscriptionService == null) {
       return false;
     }
     try {
-      List<FlowNode> allNodes =
-          nodeRepository.findByDefinitionId(instance.getDefinitionId()).stream()
-              .map(converter::entityToDO)
-              .toList();
+      List<FlowNodeVO> allNodes =
+          nodeRepository.findByDefinitionId(instance.getDefinitionId());
       if (allNodes == null || allNodes.isEmpty()) {
         return false;
       }
-      List<FlowNode> errorBoundaries =
+      List<FlowNodeVO> errorBoundaries =
           allNodes.stream()
               .filter(
                   n -> {
@@ -265,7 +257,7 @@ public class ServiceNodeExecuteService {
       if (errorBoundaries.isEmpty()) {
         return false;
       }
-      for (FlowNode boundary : errorBoundaries) {
+      for (FlowNodeVO boundary : errorBoundaries) {
         String errorRef = FlowNodeExt.getErrorRef(boundary.getExt());
         eventSubscriptionService.throwError(
             instance.getTenantId(), instance.getId(), errorRef, errorMsg);
@@ -295,7 +287,7 @@ public class ServiceNodeExecuteService {
    * @param variables 参数说明
    */
   private void advanceAfterSuccess(
-      FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
+      FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     if (advanceCallback != null) {
       advanceCallback.apply(new AdvanceContext(instance, node, variables));
     }
@@ -308,10 +300,10 @@ public class ServiceNodeExecuteService {
    */
   public static class AdvanceContext {
     private final FlowInstanceVO instance;
-    private final FlowNode node;
+    private final FlowNodeVO node;
     private final Map<String, Object> variables;
 
-    public AdvanceContext(FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
+    public AdvanceContext(FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
       this.instance = instance;
       this.node = node;
       this.variables = variables;
@@ -321,7 +313,7 @@ public class ServiceNodeExecuteService {
       return instance;
     }
 
-    public FlowNode getNode() {
+    public FlowNodeVO getNode() {
       return node;
     }
 

@@ -10,8 +10,6 @@ import java.util.Queue;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -42,7 +40,6 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
 @Component
 public class FlowGraphValidator {
 
-  private static final Logger log = LoggerFactory.getLogger(FlowGraphValidator.class);
 
   /**
    * 校验流程定义图结构
@@ -57,7 +54,7 @@ public class FlowGraphValidator {
     }
 
     // 1. 构建节点索引
-    Map<String, FlowNode> nodeMap = buildNodeIndex(nodes);
+    Map<String, FlowNodeVO> nodeMap = buildNodeIndex(nodes);
 
     // 2. 检查 START / END 节点
     String startCode = validateStartAndEndNodes(nodes);
@@ -204,7 +201,7 @@ public class FlowGraphValidator {
     }
     List<String> cannotReachEnd = nodes.stream()
         .filter(n -> FlowNodeType.END.getCode() != n.getNodeType())
-        .map(FlowNode::getNodeCode)
+        .map(FlowNodeVO::getNodeCode)
         .filter(code -> !canReachEnd.contains(code))
         .toList();
     if (!cannotReachEnd.isEmpty()) {

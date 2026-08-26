@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.literule.api.Rule;
 
 /**
@@ -28,6 +30,7 @@ import com.njydsz.literule.api.Rule;
  * @since 1.0.0
  * @author ydsz-team
  */
+@Slf4j
 public final class ChainGraphConverter {
 
   private ChainGraphConverter() {}

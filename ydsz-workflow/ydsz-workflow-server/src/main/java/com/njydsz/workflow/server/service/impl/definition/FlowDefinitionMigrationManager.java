@@ -528,7 +528,7 @@ public class FlowDefinitionMigrationManager {
   private Map<String, Map<String, Object>> diffNodeFields(FlowNode n1, FlowNode n2) {
     Map<String, Map<String, Object>> changes = new LinkedHashMap<>();
     compareField(changes, "nodeName", n1.getNodeName(), n2.getNodeName());
-    compareField(changes, "nodeType", n1.getNodeType(), n2.getNodeType());
+    compareField(changes, "nodeType", String.valueOf(n1.getNodeType()), String.valueOf(n2.getNodeType()));
     compareField(changes, "permissionFlag", n1.getPermissionFlag(), n2.getPermissionFlag());
     compareField(changes, "formFieldsConfig", n1.getFormFieldsConfig(), n2.getFormFieldsConfig());
     compareField(changes, "ext", n1.getExt(), n2.getExt());

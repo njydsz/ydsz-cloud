@@ -5,8 +5,6 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -32,7 +30,6 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 @RequiredArgsConstructor
 public class BpmnNodeParser {
 
-  private static final Logger log = LoggerFactory.getLogger(BpmnNodeParser.class);
 
   private final BpmnElementHelper bpmnElementHelper;
 

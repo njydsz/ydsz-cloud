@@ -19,7 +19,9 @@ import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.infra.entity.FlowDefinition;
 import com.njydsz.workflow.infra.entity.FlowNode;
@@ -133,7 +135,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String startSubProcess(
-      FlowInstanceVO parentInstance, FlowNode callActivityNode, Map<String, Object> variables) {
+      FlowInstanceVO parentInstance, FlowNodeVO callActivityNode, Map<String, Object> variables) {
     if (parentInstance == null || callActivityNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -149,7 +151,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
           .build();
     }
     // 2. 校验子流程定义存在且已发布
-    FlowDefinition subDef =
+    FlowDefinitionVO subDef =
         definitionService.getPublished(subFlowCode, null, parentInstance.getTenantId());
     if (subDef == null) {
       throw SysException.builder()
@@ -419,7 +421,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
    * @param node 参数说明
    * @return 返回值说明
    */
-  private String extractSubFlowCode(FlowNode node) {
+  private String extractSubFlowCode(FlowNodeVO node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }

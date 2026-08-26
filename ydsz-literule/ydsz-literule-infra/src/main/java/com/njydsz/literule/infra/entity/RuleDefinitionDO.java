@@ -34,7 +34,7 @@ import com.njydsz.literule.domain.enums.RuleStatusEnum;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_def")
-public class RuleDefinition extends MpBaseEntity<String> {
+public class RuleDefinitionDO extends MpBaseEntity<String> {
 
   /** 规则编码，业务唯一 */
   private String ruleCode;

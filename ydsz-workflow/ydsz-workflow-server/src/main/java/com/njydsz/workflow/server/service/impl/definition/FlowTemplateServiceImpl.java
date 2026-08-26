@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -143,7 +144,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
   /** P6: 模板详情二级缓存（Caffeine，按 templateCode 缓存，加速高频模板查询） */
-  private final YdszCache templateCache;
+  private final Cache<String, Map<String, Object>> templateCache;
 
   /** 流程模块配置（缓存 TTL 与容量） */
   private final FlowProperties flowProperties;
@@ -169,11 +170,11 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     this.searchIndexEventBridgeProvider = searchIndexEventBridgeProvider;
     this.flowProperties = flowProperties;
     this.templateCache =
-        YdszCache.newBuilder()
+        YdszCache.<String, Map<String, Object>>newBuilder()
             .type(CacheType.STRIPED)
             .name("flow:template-detail")
-            .expireAfterWrite(flowProperties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
-            .maximumSize(flowProperties.getDefinitionCacheMaxSize())
+            .expireAfterWrite(flowProperties.getDefinitionCache().getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
+            .maximumSize(flowProperties.getDefinitionCache().getDefinitionCacheMaxSize())
             .build();
   }
 
@@ -256,7 +257,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    */
   private void evictTemplateCache(String templateCode) {
     if (StringUtils.hasText(templateCode)) {
-      templateCache.invalidate(templateCode);
+      templateCache.remove(templateCode);
     }
   }
 

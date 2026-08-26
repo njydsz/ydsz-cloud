@@ -130,7 +130,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     node.setCoordinate(coordinate);
-    nodeRepository.update(converter.entityToVO(node));
+    nodeRepository.save(converter.entityToVO(node));
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 更新节点坐标: defId={} node={} coordinate={}", definitionId, nodeCode, coordinate);
   }
@@ -196,8 +196,8 @@ public class FlowDefinitionDesignManager {
 
       if (hasBpmn) {
         BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
-        nodes.addAll(bpmnModel.getNodes());
-        skips.addAll(bpmnModel.getSkips());
+        nodes.addAll(bpmnModel.getNodes().stream().map(converter::entityToDO).toList());
+        skips.addAll(bpmnModel.getSkips().stream().map(converter::entityToDO).toList());
       } else {
         for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
           FlowNode node = new FlowNode();
@@ -325,7 +325,7 @@ public class FlowDefinitionDesignManager {
           FlowNode nodeForCoord = nodeRepository.findByCode(definitionId, nodeCode).map(converter::entityToDO).orElse(null);
           if (nodeForCoord != null) {
             nodeForCoord.setCoordinate(coordStr);
-            nodeRepository.update(converter.entityToVO(nodeForCoord));
+            nodeRepository.save(converter.entityToVO(nodeForCoord));
           }
         }
         Object nodeName = nodeData.get("nodeName");
@@ -341,7 +341,7 @@ public class FlowDefinitionDesignManager {
             if (ext != null) {
               node.setExt(ext instanceof String ? (String) ext : YdszJson.toJson(ext));
             }
-            nodeRepository.update(converter.entityToVO(node));
+            nodeRepository.save(converter.entityToVO(node));
           }
         }
       }
@@ -392,7 +392,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     node.setFormFieldsConfig(formFieldsConfig);
-    nodeRepository.update(converter.entityToVO(node));
+    nodeRepository.save(converter.entityToVO(node));
     flowDefinitionCacheService.evict(definitionId);
     log.info("[Flow] 表单字段配置已保存: definitionId={} nodeCode={}", definitionId, nodeCode);
   }
@@ -435,7 +435,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     node.setSlaConfig(slaConfig);
-    nodeRepository.update(converter.entityToVO(node));
+    nodeRepository.save(converter.entityToVO(node));
     flowDefinitionCacheService.evict(definitionId);
     log.info(
         "[Flow] SLA 配置已保存: definitionId={} nodeCode={} slaConfig={}",

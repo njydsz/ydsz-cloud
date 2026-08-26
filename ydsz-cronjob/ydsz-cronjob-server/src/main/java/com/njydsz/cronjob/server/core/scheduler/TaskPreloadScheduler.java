@@ -36,8 +36,9 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  *   <li><b>方案</b>：本调度器由 Leader 每 {@code scanIntervalMs}（默认 3s）预读
  *       {@code next_fire_time ∈ [now, now + windowSeconds]} 的 CRON 任务，注册到内存
  *       {@code ScheduledExecutorService}，到期精确触发（毫秒级精度）
- *   <li><b>兜底</b>：主扫描器 JobScanner 保持不变（负责到期任务 + FIXED_RATE/FIXED_DELAY/API 类型），
- *       预读调度器仅处理 CRON 窗口任务；CAS 推进失败时自动让位主扫描器，无重复派发风险
+ *   <li><b>兜底</b>：主扫描器 JobScanner 保持不变（负责到期任务 + FIXED_DELAY/API 类型），
+ *       预读调度器仅处理 CRON/FIXED_RATE 窗口任务（P2-5 起 FIXED_RATE 秒级任务纳入毫秒级预读）；
+ *       CAS 推进失败时自动让位主扫描器，无重复派发风险
  * </ul>
  *
  * <h3>防重复派发</h3>

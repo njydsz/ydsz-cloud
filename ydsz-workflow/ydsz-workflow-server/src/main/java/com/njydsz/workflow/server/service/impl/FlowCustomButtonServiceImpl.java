@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
@@ -150,7 +151,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
       extJson.put("customButtons", buttons);
     }
     node.setExt(YdszJson.toJson(extJson));
-    nodeRepository.update(converter.entityToVO(node));
+    nodeRepository.save(converter.entityToVO(node));
     // 失效缓存
     definitionCacheService.evict(definitionId);
     log.info(

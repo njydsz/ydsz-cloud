@@ -160,7 +160,7 @@ public class FlowTaskSupport {
    *     error.workflow.msg_6541ab08}（i18n 资源键）
    */
   public FlowRunTaskVO getTaskOrThrow(String id) {
-    FlowRunTaskVO task = taskRepository.findById(id);
+    FlowRunTaskVO task = taskRepository.findById(id).orElse(null);
     if (task == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -240,7 +240,7 @@ public class FlowTaskSupport {
       log.setOperatedAt(LocalDateTime.now());
       log.setTenantId(task.getTenantId());
       log.setProviderTraceId(task.getProviderTraceId());
-      auditLogRepository.save(converter.entityToVO(log));
+      auditLogRepository.save(log);
     } catch (Exception e) {
       FlowTaskSupport.log.warn("[Flow] 审计日志写入失败: {}", e.getMessage());
     }

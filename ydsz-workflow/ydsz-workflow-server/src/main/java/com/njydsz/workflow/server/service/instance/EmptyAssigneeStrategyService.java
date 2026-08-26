@@ -9,9 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
@@ -51,9 +50,6 @@ public class EmptyAssigneeStrategyService {
   /** 运行时任务仓储，创建/更新待办任务 */
   private final FlowRunTaskRepository taskRepository;
 
-  /** MapStruct 转换器（DO/VO/DTO 转换） */
-  private final WorkflowConverter converter;
-
   /** 任务归档服务，完成任务后写入历史任务表 */
   private final FlowTaskArchiveService archiveService;
 
@@ -82,13 +78,11 @@ public class EmptyAssigneeStrategyService {
    * @param advanceCallback 参数说明   */
   public EmptyAssigneeStrategyService(
       FlowRunTaskRepository taskRepository,
-      WorkflowConverter converter,
       FlowTaskArchiveService archiveService,
       FlowTaskSupport support,
       AssigneeResolutionService assigneeResolutionService,
       Function<AdvanceContext, Void> advanceCallback) {
     this.taskRepository = taskRepository;
-    this.converter = converter;
     this.archiveService = archiveService;
     this.support = support;
     this.assigneeResolutionService = assigneeResolutionService;
@@ -114,7 +108,7 @@ public class EmptyAssigneeStrategyService {
    * @return 任务 ID
    */
   public String handleEmptyAssignee(
-      FlowRunTask task, FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
+      FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     String emptyStrategy = FlowNodeExt.getEmptyStrategy(node.getExt());
 
     return switch (emptyStrategy) {
@@ -149,7 +143,7 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String handleAutoPass(
-      FlowRunTask task, FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
+      FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     task.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
     task.setAssigneeId("0");
     task.setAssigneeName("SYSTEM_AUTO_PASS");
@@ -178,16 +172,16 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String assignToFallbackUser(
-      FlowRunTask task,
+      FlowRunTaskVO task,
       FlowInstanceVO instance,
-      FlowNode node,
+      FlowNodeVO node,
       String userId,
       String fallbackName,
       String logMsg) {
     task.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
     task.setAssigneeId(userId);
     task.setAssigneeName(fallbackName);
-    taskRepository.save(converter.entityToVO(task));
+    taskRepository.save(task);
     log.info(logMsg, instance.getId(), node.getNodeCode(), userId);
     return task.getId();
   }
@@ -202,10 +196,10 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String fallbackToResolveAssignee(
-      FlowRunTask task, FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
-    taskRepository.save(converter.entityToVO(task));
+      FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
+    taskRepository.save(task);
     resolveAssignee(task, node, variables, null, instance);
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     return task.getId();
   }
 
@@ -219,8 +213,8 @@ public class EmptyAssigneeStrategyService {
    * @param instance 参数说明
    */
   private void resolveAssignee(
-      FlowRunTask task,
-      FlowNode node,
+      FlowRunTaskVO task,
+      FlowNodeVO node,
       Map<String, Object> variables,
       com.njydsz.workflow.domain.dto.FlowAssigneeDTO explicit,
       FlowInstanceVO instance) {
@@ -235,7 +229,7 @@ public class EmptyAssigneeStrategyService {
    * @param variables 参数说明
    */
   private void advanceAfterAutoPass(
-      FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
+      FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     if (advanceCallback != null) {
       advanceCallback.apply(new AdvanceContext(instance, node, variables));
     }
@@ -248,10 +242,10 @@ public class EmptyAssigneeStrategyService {
    */
   public static class AdvanceContext {
     private final FlowInstanceVO instance;
-    private final FlowNode node;
+    private final FlowNodeVO node;
     private final Map<String, Object> variables;
 
-    public AdvanceContext(FlowInstanceVO instance, FlowNode node, Map<String, Object> variables) {
+    public AdvanceContext(FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
       this.instance = instance;
       this.node = node;
       this.variables = variables;
@@ -261,7 +255,7 @@ public class EmptyAssigneeStrategyService {
       return instance;
     }
 
-    public FlowNode getNode() {
+    public FlowNodeVO getNode() {
       return node;
     }
 

@@ -12,9 +12,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -107,9 +106,6 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
   /** 委托授权仓储（domain 层契约），管理 ydsz_flow_delegate_auth 表 */
   private final FlowDelegateAuthRepository authRepository;
 
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
-
   /** 运行时任务仓储（domain 层契约），查询原办理人名下的待办任务 */
   private final FlowRunTaskRepository taskRepository;
 
@@ -137,7 +133,7 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
     if (!StringUtils.hasText(authId)) {
       return 0;
     }
-    FlowDelegateAuth auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
+    FlowDelegateAuthVO auth = authRepository.findById(authId).orElse(null);
     if (auth == null) {
       log.warn("[OfflineForward] 代理授权不存在: authId={}", authId);
       return 0;
@@ -215,16 +211,14 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
       String reason,
       String operatorId) {
     // 查询原办理人名下的待办
-    List<FlowRunTask> tasks = taskRepository.selectPendingByAssignee(userId, flowCode, tenantId).stream()
-        .map(converter::entityToDO)
-        .toList();
+    List<FlowRunTaskVO> tasks = taskRepository.selectPendingByAssignee(userId, flowCode, tenantId);
     if (tasks.isEmpty()) {
       log.info("[OfflineForward] 无待办需要转发: userId={} flowCode={}", userId, flowCode);
       return 0;
     }
 
     int successCount = 0;
-    for (FlowRunTask task : tasks) {
+    for (FlowRunTaskVO task : tasks) {
       try {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(task.getId());

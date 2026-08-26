@@ -69,7 +69,7 @@ public class FlowTaskUrgeService {
     List<String> urged = new ArrayList<>();
     for (FlowRunTask task : pendingTasks) {
       urged.add(task.getAssigneeId());
-      support.audit(task, "URGE", operatorId, null, comment);
+      support.audit(converter.entityToVO(task), "URGE", operatorId, null, comment);
     }
     log.info("[Flow] 催办: instanceId={} 被催办人={}", instanceId, urged);
     recordUrgeMetrics(instanceId);
@@ -107,7 +107,7 @@ public class FlowTaskUrgeService {
     List<String> urged = new ArrayList<>();
     for (FlowRunTask task : pendingTasks) {
       urged.add(task.getAssigneeId());
-      support.audit(task, "URGE", operatorId, null, comment);
+      support.audit(converter.entityToVO(task), "URGE", operatorId, null, comment);
       // P2-3: 节点级催办事件
       support.fireEvent(l -> l.onTaskUrged(instanceId, task.getId()), task.getId());
       support.publishWorkflowEvent("TASK_URGED", instanceId, task.getId());

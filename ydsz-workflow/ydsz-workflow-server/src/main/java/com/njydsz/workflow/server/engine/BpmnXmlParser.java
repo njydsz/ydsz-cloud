@@ -15,8 +15,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -79,7 +77,6 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
 @RequiredArgsConstructor
 public class BpmnXmlParser {
 
-  private static final Logger log = LoggerFactory.getLogger(BpmnXmlParser.class);
 
   private final BpmnElementHelper bpmnElementHelper;
   private final BpmnNodeParser bpmnNodeParser;
@@ -199,7 +196,7 @@ public class BpmnXmlParser {
           nodes.add(nodeDo);
         }
       } else if ("sequenceFlow".equalsIgnoreCase(local)) {
-        FlowSkip skip = bpmnSkipParser.parseSkip(elem);
+        FlowSkipVO skip = bpmnSkipParser.parseSkip(elem);
         if (skip != null) {
           skips.add(skip);
         }

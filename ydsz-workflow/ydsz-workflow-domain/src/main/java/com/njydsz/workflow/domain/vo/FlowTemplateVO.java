@@ -32,6 +32,10 @@ public class FlowTemplateVO implements Serializable {
   private String versionLabel;
   private String inheritType;
   private Integer isLatest;
+  /** 状态（对齐实体 MpBaseEntity.status） */
+  private Integer status;
+  /** 租户标识（对齐实体 MpBaseEntity.tenantId） */
+  private String tenantId;
   private String createdBy;
   private LocalDateTime createdAt;
   private String updatedBy;

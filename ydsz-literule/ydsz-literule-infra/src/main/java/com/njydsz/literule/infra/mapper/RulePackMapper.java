@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RulePack;
+import com.njydsz.literule.infra.entity.RulePackDO;
 
 /**
  * 规则包 Mapper
@@ -28,12 +28,12 @@ import com.njydsz.literule.infra.entity.RulePack;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RulePack 规则包实体
+ * @see RulePackDO 规则包实体
  * @see com.njydsz.literule.server.service.RulePackService 规则包 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RulePackMapper extends BaseMapper<RulePack> {
+public interface RulePackMapper extends BaseMapper<RulePackDO> {
 
   /**
    * 按规则集编码查询所有版本（按版本号倒序）。
@@ -41,7 +41,7 @@ public interface RulePackMapper extends BaseMapper<RulePack> {
    * @param packCode 规则集编码
    * @return 版本列表（最新版本在前）
    */
-  List<RulePack> selectByPackCode(@Param("packCode") String packCode);
+  List<RulePackDO> selectByPackCode(@Param("packCode") String packCode);
 
   /**
    * 按规则集编码 + 版本号精确查询（P2-8 知识包版本管理）。
@@ -50,7 +50,7 @@ public interface RulePackMapper extends BaseMapper<RulePack> {
    * @param packVersion 规则集版本号
    * @return 规则集实体；不存在时返回 null
    */
-  RulePack selectByPackCodeVersion(
+  RulePackDO selectByPackCodeVersion(
       @Param("packCode") String packCode, @Param("packVersion") String packVersion);
 
   /**
@@ -59,7 +59,7 @@ public interface RulePackMapper extends BaseMapper<RulePack> {
    * @param industry 行业编码（如 FINANCE / MANUFACTURING）
    * @return 匹配行业的规则集列表
    */
-  List<RulePack> selectByIndustry(@Param("industry") String industry);
+  List<RulePackDO> selectByIndustry(@Param("industry") String industry);
 
   /**
    * 递增下载次数（+1）。

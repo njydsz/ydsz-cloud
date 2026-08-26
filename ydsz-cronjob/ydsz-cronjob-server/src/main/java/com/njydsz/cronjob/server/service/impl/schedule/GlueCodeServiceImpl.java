@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;

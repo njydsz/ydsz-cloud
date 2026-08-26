@@ -451,6 +451,14 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
   FlowInstanceDTO entityToDto(FlowInstance entity);
 
   /**
+   * 流程实例 VO → 流程实例 DTO（更新场景，供 Repository.save 使用）。
+   *
+   * @param vo 流程实例视图对象
+   * @return 流程实例 DTO
+   */
+  FlowInstanceDTO voToDto(FlowInstanceVO vo);
+
+  /**
    * 运行时任务 → 运行时任务 DTO（更新场景，如有需要）。
    *
    * @param entity 参数说明

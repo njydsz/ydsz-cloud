@@ -360,7 +360,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       return false;
     }
     // 1. 重新查一遍任务，避免读到陈旧数据
-    FlowRunTaskVO fresh = taskRepository.findById(task.getId());
+    FlowRunTaskVO fresh = taskRepository.findById(task.getId()).orElse(null);
     if (fresh == null) {
       return false;
     }
@@ -608,7 +608,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         taskService.transfer(dto);
         taskRepository.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
         // 转办后：升级后的任务重新计 SLA
-        FlowRunTaskVO afterTransfer = taskRepository.findById(task.getId());
+        FlowRunTaskVO afterTransfer = taskRepository.findById(task.getId()).orElse(null);
         if (afterTransfer != null) {
           afterTransfer.setSlaEscalated(1);
           afterTransfer.setUrgeCount(0);

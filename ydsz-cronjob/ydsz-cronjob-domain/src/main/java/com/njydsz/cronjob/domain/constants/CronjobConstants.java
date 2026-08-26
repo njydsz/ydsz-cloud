@@ -66,6 +66,9 @@ public final class CronjobConstants {
   /** 远程子任务执行接口路径（InternalJobController#executeSubTask）。 */
   public static final String INTERNAL_SUB_TASK_PATH = INTERNAL_API_PREFIX + "/executeSubTask";
 
+  /** 远程批量执行接口路径（InternalJobController#executeBatch，一次携带多个分片）。 */
+  public static final String INTERNAL_BATCH_PATH = INTERNAL_API_PREFIX + "/executeBatch";
+
   /** 内部通信鉴权请求头（值来自 ydsz.cronjob.remote.access-token，为空时不校验）。 */
   public static final String INTERNAL_TOKEN_HEADER = "X-Ydsz-Internal-Token";
 }

@@ -1,5 +1,9 @@
 package com.njydsz.cronjob.web.controller.job;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -181,6 +185,132 @@ public class InternalJobController {
       action = AuditAction.OTHER,
       content = "'executeSubTask'")
   public YdszResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
+    if (request == null || request.getJobKey() == null || request.getHandler() == null) {
+      log.warn("[InternalJob] 子任务请求参数为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "请求参数为空");
+    }
+    String traceId = request.getTraceId();
+    if (traceId != null && !traceId.isBlank()) {
+      TracerUtils.setTraceId(traceId);
+    } else {
+      TracerUtils.getOrCreateTraceId();
+    }
+    try {
+      log.info(
+          "[InternalJob] 接收子任务派发: key={} taskName={} handler={} traceId={}",
+          request.getJobKey(),
+          request.getTaskName(),
+          request.getHandler(),
+          TracerUtils.getTraceId());
+      // 获取 MapProcessor Bean
+      MapProcessor processor;
+      try {
+        processor = applicationContext.getBean(request.getHandler(), MapProcessor.class);
+      } catch (Exception e) {
+        log.error(
+            "[InternalJob] 获取 MapProcessor Bean 失败: handler={} reason={}",
+            request.getHandler(),
+            e.getMessage());
+        return YdszResponse.success(
+            ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
+      }
+      // 构造子任务上下文并执行
+      MapContext context = new MapContext();
+      context.setJobId(request.getJobId());
+      context.setLogId(request.getLogId());
+      context.setJobKey(request.getJobKey());
+      context.setTaskName(request.getTaskName());
+      context.setTaskParams(request.getTaskParams());
+      context.setRoot(false);
+      ProcessResult result;
+      try {
+        result = processor.process(context);
+        if (result == null) {
+          result = ProcessResult.success();
+        }
+      } catch (Exception e) {
+        log.error(
+            "[InternalJob] 子任务执行异常: key={} taskName={} reason={}",
+            request.getJobKey(),
+            request.getTaskName(),
+            e.getMessage(),
+            e);
+        result = ProcessResult.failed(e.getClass().getSimpleName() + ": " + e.getMessage());
+      }
+      return YdszResponse.success(result);
+    } finally {
+      TracerUtils.clear();
+    }
+  }
+
+  /**
+   * P2-4: 接收远程批量派发请求并在本地逐个执行。
+   *
+   * <p>Leader 将同一节点承担的多个分片聚合为一次请求（{@code List<RemoteTaskRequest>}），
+   * 本端点逐个调用 {@link TaskDispatcher#executeLocally} 执行，返回各分片 logId 列表。
+   *
+   * <p>返回语义与单发 {@link #execute} 一致：某分片锁被持有或执行失败时，对应元素为 null
+   * （执行器端已记录 FAILED 日志），整批始终返回 200 + code=0。
+   *
+   * @param requests 分片派发请求列表（非空）
+   * @return 统一响应结果，data 为各分片执行日志 ID 列表（失败元素为 null）
+   */
+  @Operation(summary = "接收远程批量派发请求并本地逐个执行")
+  @IdempotentExempt("定时触发接口，无需幂等")
+  @RateLimit(resource = "cronjob.internaljob.executeBatch", threshold = 50)
+  @PostMapping("/executeBatch")
+  @Audit(
+      module = "任务管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.OTHER,
+      content = "'executeBatch'")
+  public YdszResponse<List<String>> executeBatch(@RequestBody List<RemoteTaskRequest> requests) {
+    if (requests == null || requests.isEmpty()) {
+      log.warn("[InternalJob] 批量派发请求为空");
+      return YdszResponse.success(Collections.emptyList());
+    }
+    log.info(
+        "[InternalJob] 接收批量派发: shards={} firstKey={} traceId={}",
+        requests.size(),
+        requests.get(0).getJob() != null ? requests.get(0).getJob().getJobKey() : "null",
+        TracerUtils.getOrCreateTraceId());
+    List<String> logIds = new ArrayList<>(requests.size());
+    for (RemoteTaskRequest request : requests) {
+      if (request == null || request.getJob() == null || request.getJob().getJobKey() == null) {
+        log.warn("[InternalJob] 批量请求中存在空项, 跳过");
+        logIds.add(null);
+        continue;
+      }
+      // 恢复 traceId 到 MDC（批量内逐分片独立链路，执行后清理避免串扰）
+      String traceId = request.getTraceId();
+      if (traceId != null && !traceId.isBlank()) {
+        TracerUtils.setTraceId(traceId);
+      } else {
+        TracerUtils.getOrCreateTraceId();
+      }
+      try {
+        String logId =
+            taskDispatcher.executeLocally(
+                request.getJob(),
+                request.getTriggerType(),
+                request.getShardIndex(),
+                request.getShardTotal());
+        logIds.add(logId);
+      } catch (Exception e) {
+        log.error(
+            "[InternalJob] 批量派发分片执行异常: key={} shard={} reason={}",
+            request.getJob().getJobKey(),
+            request.getShardIndex(),
+            e.getMessage());
+        // 与单发语义一致：执行异常不返回 error，执行器端已记录 FAILED 日志
+        logIds.add(null);
+      } finally {
+        TracerUtils.clear();
+      }
+    }
+    return YdszResponse.success(logIds);
+  }
+}
     if (request == null || request.getJobKey() == null || request.getHandler() == null) {
       log.warn("[InternalJob] 子任务请求参数为空");
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "请求参数为空");

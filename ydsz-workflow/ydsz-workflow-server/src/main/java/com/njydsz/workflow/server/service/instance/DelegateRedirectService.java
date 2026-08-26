@@ -6,10 +6,9 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
 
@@ -17,7 +16,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
  * 长期授权委派改写服务
  *
  * <p>从 {@link com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService} 中抽出的委派改写逻辑，
- * 承担运行时任务（{@link FlowRunTask}）的长期授权委派改写职责。
+ * 承担运行时任务（{@link FlowRunTaskVO}）的长期授权委派改写职责。
  *
  * <p><b>核心能力：</b>
  *
@@ -44,20 +43,15 @@ public class DelegateRedirectService {
   /** 运行时任务仓储，更新委派改写后的任务 */
   private final FlowRunTaskRepository taskRepository;
 
-  /** MapStruct 转换器（DO/VO/DTO 转换） */
-  private final WorkflowConverter converter;
-
   /** 跨子 Service 共享的任务校验/审计/事件辅助 */
   private final FlowTaskSupport support;
 
   public DelegateRedirectService(
       FlowDelegateAuthService delegateAuthService,
       FlowRunTaskRepository taskRepository,
-      WorkflowConverter converter,
       FlowTaskSupport support) {
     this.delegateAuthService = delegateAuthService;
     this.taskRepository = taskRepository;
-    this.converter = converter;
     this.support = support;
   }
 
@@ -72,7 +66,7 @@ public class DelegateRedirectService {
    * @param node 当前流程节点（用于获取节点编码匹配委派规则）
    */
   public void applyDelegateRedirect(
-      FlowRunTask task, FlowInstanceVO instance, FlowNode node) {
+      FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node) {
     try {
       if (delegateAuthService == null) {
         return;
@@ -91,7 +85,7 @@ public class DelegateRedirectService {
         return;
       }
       // 仍需匹配首条授权规则用于审计记录
-      FlowDelegateAuth matched =
+      FlowDelegateAuthVO matched =
           delegateAuthService.matchAuth(
               instance.getTenantId(), currentUserId, instance.getFlowCode(), node.getNodeCode());
       task.setAssignorId(currentUserId);
@@ -99,7 +93,7 @@ public class DelegateRedirectService {
       task.setAssigneeId(finalDelegateId);
       // 最终代理人姓名：优先从链路末端匹配记录获取
       task.setAssigneeName(matched != null ? matched.getDelegateUserName() : finalDelegateId);
-      taskRepository.update(converter.entityToVO(task));
+      taskRepository.update(task);
       String authId = matched != null ? matched.getId() : "CHAIN_RESOLVED";
       String scopeType = matched != null ? matched.getScopeType() : "CHAIN";
       support.audit(

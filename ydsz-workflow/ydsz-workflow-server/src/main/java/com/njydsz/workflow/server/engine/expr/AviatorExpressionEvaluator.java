@@ -9,8 +9,6 @@ import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
@@ -44,7 +42,6 @@ import com.njydsz.common.exception.custom.SysException;
 @ConditionalOnMissingBean(ExpressionEvaluator.class)
 public class AviatorExpressionEvaluator implements ExpressionEvaluator {
 
-  private static final Logger log = LoggerFactory.getLogger(AviatorExpressionEvaluator.class);
 
   /** 表达式最大长度限制（字节），防止超长表达式攻击 */
   private static final int MAX_EXPRESSION_LENGTH = 4096;
@@ -140,7 +137,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
           throw SysException.builder()
               .resultCode(YdszResultCode.BAD_REQUEST)
               .message("workflow.expr.syntax_error")
-              .params((Object) e.getMessage())
+              .params(new Object[] {e.getMessage()})
               .build();
         }
       });
@@ -152,7 +149,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("workflow.expr.eval_failed")
-          .params((Object) e.getMessage())
+          .params(new Object[] {e.getMessage()})
           .build();
     }
   }

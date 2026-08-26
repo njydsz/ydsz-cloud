@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleChainGraph;
+import com.njydsz.literule.infra.entity.RuleChainGraphDO;
 
 /**
  * 规则链 Mapper
@@ -26,12 +26,12 @@ import com.njydsz.literule.infra.entity.RuleChainGraph;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RuleChainGraph 规则链实体
+ * @see RuleChainGraphDO 规则链实体
  * @see com.njydsz.literule.server.service.RuleChainGraphService 规则链 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RuleChainGraphMapper extends BaseMapper<RuleChainGraph> {
+public interface RuleChainGraphMapper extends BaseMapper<RuleChainGraphDO> {
 
   /**
    * 根据规则编码查询画布
@@ -39,7 +39,7 @@ public interface RuleChainGraphMapper extends BaseMapper<RuleChainGraph> {
    * @param ruleCode 规则编码
    * @return 画布 DO
    */
-  RuleChainGraph selectByRuleCode(@Param("ruleCode") String ruleCode);
+  RuleChainGraphDO selectByRuleCode(@Param("ruleCode") String ruleCode);
 
   /**
    * 根据规则编码删除画布

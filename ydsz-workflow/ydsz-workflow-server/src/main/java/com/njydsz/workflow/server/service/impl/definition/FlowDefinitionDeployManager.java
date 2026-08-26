@@ -173,7 +173,7 @@ public class FlowDefinitionDeployManager {
       skips = parseJsonSkips(dto);
     }
 
-    graphValidator.validate(nodes, skips);
+    graphValidator.validate(nodes.stream().map(converter::entityToVO).toList(), skips.stream().map(converter::entityToVO).toList());
 
     FlowDefinitionVO savedDef = saveDefinition(dto, version, tenantId);
     String definitionId = savedDef.getId();
@@ -240,7 +240,7 @@ public class FlowDefinitionDeployManager {
     if (!StringUtils.hasText(dto.getFlowName()) || dto.getFlowName().equals(dto.getFlowCode())) {
       dto.setFlowName(bpmnModel.getProcessName());
     }
-    List<FlowNode> nodes = new ArrayList<>(bpmnModel.getNodes());
+    List<FlowNode> nodes = bpmnModel.getNodes().stream().map(converter::entityToDO).toList();
     injectNodeCoordinates(nodes, bpmnModel);
     return nodes;
   }
@@ -274,7 +274,7 @@ public class FlowDefinitionDeployManager {
    */
   private List<FlowSkip> parseBpmnSkips(FlowDeployProcessDTO dto) {
     BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
-    return new ArrayList<>(bpmnModel.getSkips());
+    return bpmnModel.getSkips().stream().map(converter::entityToDO).toList();
   }
 
   /**

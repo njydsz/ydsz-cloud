@@ -2,8 +2,6 @@ package com.njydsz.workflow.server.engine;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +31,6 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @Component
 public class FlowDefinitionCacheBroadcaster {
 
-  private static final Logger log = LoggerFactory.getLogger(FlowDefinitionCacheBroadcaster.class);
 
   /** Redis Pub/Sub 频道 */
   private static final String CHANNEL = "flow:definition:cache:invalidate";

@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * P2-3 流程实例归档实体
@@ -27,6 +27,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * </ul>
  *
  * <p><b>字段说明：</b>与 {@link FlowInstance} 字段一一对应（去掉运行态字段）， 新增 {@code archivedAt} 记录归档时间。
+ * 继承 {@link MpBaseEntity}（含审计/乐观锁/租户字段），与运行实例表字段对齐，归档时完整保留审计信息。
  *
  * <p><b>索引设计：</b>
  *
@@ -46,7 +47,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_his_instance")
-public class FlowHisInstance extends MpBaseIdEntity<String> {
+public class FlowHisInstance extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 

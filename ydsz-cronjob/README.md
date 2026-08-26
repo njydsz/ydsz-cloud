@@ -10,7 +10,7 @@
 | **端口** | **9006**（按构建顺序 7/10） |
 | **服务名** | `ydsz-cronjob` |
 | **构建顺序** | 7/10 |
-| **数据库** | PostgreSQL |
+| **数据库** | PostgreSQL / MySQL 8.0+（DDL 基线见 `db/changelog/`，由 `ydsz-common.yaml` 数据源配置决定） |
 | **依赖** | Nacos、PostgreSQL、Redis、MinIO |
 
 ## 核心职责
@@ -90,7 +90,7 @@ Controller 按子包组织，结构如下：
 
 ## 数据库表设计
 
-实体 `@TableName` 共映射 **18 张表**（DDL 由各部署环境统一维护，不在模块内）：
+实体 `@TableName` 共映射 **18 张表**（DDL 基线由模块 `db/changelog/` 版本化管理，初始脚本为 `V1__init_schema.sql`，MySQL 8.0+；PG 部署由环境适配）：
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
