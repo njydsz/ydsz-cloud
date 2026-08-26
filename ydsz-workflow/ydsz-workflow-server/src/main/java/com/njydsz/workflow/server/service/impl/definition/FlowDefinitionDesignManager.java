@@ -25,10 +25,9 @@ import com.njydsz.workflow.domain.enums.FlowSkipType;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowSkip;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
@@ -70,9 +69,6 @@ public class FlowDefinitionDesignManager {
   /** 节点跳转仓储 */
   private final FlowSkipRepository skipRepository;
 
-  /** DO/VO 转换器 */
-  private final WorkflowConverter converter;
-
   /** 流程定义元数据缓存 */
   private final FlowDefinitionCacheService flowDefinitionCacheService;
 
@@ -89,7 +85,6 @@ public class FlowDefinitionDesignManager {
       FlowDefinitionRepository definitionRepository,
       FlowNodeRepository nodeRepository,
       FlowSkipRepository skipRepository,
-      WorkflowConverter converter,
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowProperties flowProperties,
       BpmnXmlParser bpmnXmlParser,
@@ -97,7 +92,6 @@ public class FlowDefinitionDesignManager {
     this.definitionRepository = definitionRepository;
     this.nodeRepository = nodeRepository;
     this.skipRepository = skipRepository;
-    this.converter = converter;
     this.flowDefinitionCacheService = flowDefinitionCacheService;
     this.flowProperties = flowProperties;
     this.bpmnXmlParser = bpmnXmlParser;
