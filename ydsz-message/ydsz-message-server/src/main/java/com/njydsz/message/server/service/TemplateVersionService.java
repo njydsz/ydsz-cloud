@@ -5,7 +5,7 @@ import java.util.List;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
+import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
 
 /**
  * 消息模板版本管理 Service
@@ -26,7 +26,7 @@ import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.template.MsgTemplateVersion 模板版本实体
+ * @see com.njydsz.message.domain.vo.MsgTemplateVersionVO 模板版本 VO
  * @see TemplateService 模板主 Service
  */
 public interface TemplateVersionService {
@@ -37,7 +37,7 @@ public interface TemplateVersionService {
    * @param templateCode 模板编码
    * @return 版本列表（按版本号降序）
    */
-  List<MsgTemplateVersion> listVersions(String templateCode);
+  List<MsgTemplateVersionVO> listVersions(String templateCode);
 
   /**
    * 记录模板版本快照（审核通过/拒绝时调用）。
@@ -50,7 +50,7 @@ public interface TemplateVersionService {
    * @param auditRemark 审核意见
    * @return 版本记录
    */
-  MsgTemplateVersion recordVersion(
+  MsgTemplateVersionVO recordVersion(
       String templateCode,
       String content,
       String variableDefs,

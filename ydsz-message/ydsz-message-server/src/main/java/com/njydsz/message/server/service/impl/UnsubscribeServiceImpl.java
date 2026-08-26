@@ -15,7 +15,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
-import com.njydsz.message.domain.entity.config.MsgSubscription;
+import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
 import com.njydsz.message.domain.repository.MsgSubscriptionRepository;
 import com.njydsz.message.server.config.MessageProperties;
@@ -87,7 +87,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
    * @throws SysException 退订中心关闭或 token 无效时抛出
    */
   @Override
-  public MsgSubscription unsubscribeByToken(String token) {
+  public MsgSubscriptionVO unsubscribeByToken(String token) {
     if (!messageProperties.getUnsubscribe().isEnabled()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -111,33 +111,33 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
    * @return 分页结果
    */
   @Override
-  public PageResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query) {
+  public PageResponse<List<MsgSubscriptionVO>> pageUnsubscribed(UnsubscribeQueryDTO query) {
     if (query == null) {
       query = new UnsubscribeQueryDTO();
     }
-    Page<MsgSubscription> page =
+    Page<MsgSubscriptionVO> page =
         new Page<>(query.getPageNum(), Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    LambdaQueryWrapper<MsgSubscription> w =
-        new LambdaQueryWrapper<MsgSubscription>()
-            .eq(MsgSubscription::getStatus, SubscriptionStatusEnum.UNSUBSCRIBED.name())
+    LambdaQueryWrapper<MsgSubscriptionVO> w =
+        new LambdaQueryWrapper<MsgSubscriptionVO>()
+            .eq(MsgSubscriptionVO::getStatus, SubscriptionStatusEnum.UNSUBSCRIBED.name())
             .eq(
                 StringUtils.hasText(query.getUserId()),
-                MsgSubscription::getUserId,
+                MsgSubscriptionVO::getUserId,
                 query.getUserId())
             .eq(
                 StringUtils.hasText(query.getTopicCode()),
-                MsgSubscription::getTopicCode,
+                MsgSubscriptionVO::getTopicCode,
                 query.getTopicCode())
             .eq(
                 StringUtils.hasText(query.getChannel()),
-                MsgSubscription::getChannel,
+                MsgSubscriptionVO::getChannel,
                 query.getChannel())
             .eq(
                 StringUtils.hasText(query.getTenantId()),
-                MsgSubscription::getTenantId,
+                MsgSubscriptionVO::getTenantId,
                 query.getTenantId())
-            .orderByDesc(MsgSubscription::getUnsubscribedAt);
-    Page<MsgSubscription> result = msgSubscriptionRepository.selectPage(page, w);
+            .orderByDesc(MsgSubscriptionVO::getUnsubscribedAt);
+    Page<MsgSubscriptionVO> result = msgSubscriptionRepository.selectPage(page, w);
     return PageResponses.success(result);
   }
 
@@ -153,7 +153,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
    * @return 退订后的订阅记录
    */
   @Override
-  public MsgSubscription unsubscribe(String userId, String topicCode, String channel, String reason) {
+  public MsgSubscriptionVO unsubscribe(String userId, String topicCode, String channel, String reason) {
     if (StringUtils.hasText(reason)) {
       log.info(
           "[Unsubscribe] 退订原因: user={} topic={} channel={} reason={}",

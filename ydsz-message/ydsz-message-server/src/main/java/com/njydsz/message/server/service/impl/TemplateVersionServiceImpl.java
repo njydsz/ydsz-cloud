@@ -16,7 +16,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
+import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.repository.MsgTemplateVersionRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
@@ -59,7 +59,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
    * @throws SysException templateCode 为空时抛出
    */
   @Override
-  public List<MsgTemplateVersion> listVersions(String templateCode) {
+  public List<MsgTemplateVersionVO> listVersions(String templateCode) {
     if (!StringUtils.hasText(templateCode)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -67,9 +67,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
           .build();
     }
     return versionRepository.selectList(
-        new LambdaQueryWrapper<MsgTemplateVersion>()
-            .eq(MsgTemplateVersion::getTemplateCode, templateCode)
-            .orderByDesc(MsgTemplateVersion::getVersion));
+        new LambdaQueryWrapper<MsgTemplateVersionVO>()
+            .eq(MsgTemplateVersionVO::getTemplateCode, templateCode)
+            .orderByDesc(MsgTemplateVersionVO::getVersion));
   }
 
   /**
@@ -87,7 +87,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public MsgTemplateVersion recordVersion(
+  public MsgTemplateVersionVO recordVersion(
       String templateCode,
       String content,
       String variableDefs,
@@ -104,9 +104,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                     .last("LIMIT 1"))
             .stream()
             .findFirst()
-            .map(MsgTemplateVersion::getVersion)
+            .map(MsgTemplateVersionVO::getVersion)
             .orElse(0);
-    MsgTemplateVersion version = new MsgTemplateVersion();
+    MsgTemplateVersionVO version = new MsgTemplateVersionVO();
     version.setTemplateCode(templateCode);
     version.setVersion(maxVersion + 1);
     version.setContent(content);
@@ -135,11 +135,11 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String rollbackToVersion(String templateCode, int version) {
-    MsgTemplateVersion versionDO =
+    MsgTemplateVersionVO versionDO =
         versionRepository.selectOne(
-            new LambdaQueryWrapper<MsgTemplateVersion>()
-                .eq(MsgTemplateVersion::getTemplateCode, templateCode)
-                .eq(MsgTemplateVersion::getVersion, version)
+            new LambdaQueryWrapper<MsgTemplateVersionVO>()
+                .eq(MsgTemplateVersionVO::getTemplateCode, templateCode)
+                .eq(MsgTemplateVersionVO::getVersion, version)
                 .last("LIMIT 1"));
     if (versionDO == null) {
       throw SysException.builder()
