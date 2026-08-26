@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
-import com.njydsz.message.domain.entity.config.MsgPreference;
+import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -78,7 +78,7 @@ public class UserPreferenceHandler implements SendHandler {
       return true;
     }
     String bizType = ctx.getBizType();
-    MsgPreference pref = preferenceService.getByUser(receiver, channel, bizType);
+    MsgPreferenceVO pref = preferenceService.getByUser(receiver, channel, bizType);
     ctx.setPreference(pref);
     if (pref == null || !Integer.valueOf(1).equals(pref.getDndEnabled())) {
       return true;
@@ -132,7 +132,7 @@ public class UserPreferenceHandler implements SendHandler {
   private boolean handleSmartTiming(
       MessageRequest request,
       SendContext ctx,
-      MsgPreference pref,
+      MsgPreferenceVO pref,
       MessageProperties.SmartTimingConfig stc,
       String channel,
       String receiver) {
@@ -182,7 +182,7 @@ public class UserPreferenceHandler implements SendHandler {
    * @param pref 参数说明
    * @return 返回值说明
    */
-  private boolean isInDndPeriod(MsgPreference pref) {
+  private boolean isInDndPeriod(MsgPreferenceVO pref) {
     String start = pref.getDndStart();
     String end = pref.getDndEnd();
     if (!StringUtils.hasText(start) || !StringUtils.hasText(end)) {

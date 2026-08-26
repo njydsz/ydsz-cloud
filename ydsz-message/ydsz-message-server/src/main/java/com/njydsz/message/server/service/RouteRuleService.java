@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgRouteRule;
+import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 
 /**
  * 消息路由规则 Service
@@ -32,7 +32,7 @@ import com.njydsz.message.domain.entity.config.MsgRouteRule;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.config.MsgRouteRule 路由规则实体
+ * @see com.njydsz.message.domain.vo.MsgRouteRuleVO 路由规则VO
  * @see com.njydsz.message.server.service.core.MessageService 消息发送主流程(调用 match 选择通道/模板)
  */
 public interface RouteRuleService {
@@ -43,7 +43,7 @@ public interface RouteRuleService {
    * @param dto 规则参数
    * @return 已创建的规则
    */
-  MsgRouteRule create(RouteRuleUpsertDTO dto);
+  MsgRouteRuleVO create(RouteRuleUpsertDTO dto);
 
   /**
    * 更新路由规则
@@ -52,7 +52,7 @@ public interface RouteRuleService {
    * @param dto 规则参数
    * @return 更新后的规则
    */
-  MsgRouteRule update(String id, RouteRuleUpsertDTO dto);
+  MsgRouteRuleVO update(String id, RouteRuleUpsertDTO dto);
 
   /**
    * 删除路由规则(逻辑删除)
@@ -67,7 +67,7 @@ public interface RouteRuleService {
    * @param id 规则 ID
    * @return 规则实体
    */
-  MsgRouteRule getById(String id);
+  MsgRouteRuleVO getById(String id);
 
   /**
    * 分页查询路由规则
@@ -75,14 +75,14 @@ public interface RouteRuleService {
    * @param query 分页参数
    * @return 分页结果
    */
-  Page<MsgRouteRule> page(PageQuery query);
+  Page<MsgRouteRuleVO> page(PageQuery query);
 
   /**
    * 查询所有启用的路由规则
    *
    * @return 启用规则列表
    */
-  List<MsgRouteRule> listEnabled();
+  List<MsgRouteRuleVO> listEnabled();
 
   /**
    * 按 priority 升序遍历 enabled 规则,SpEL 求值命中即返回
@@ -90,5 +90,5 @@ public interface RouteRuleService {
    * @param request 消息请求
    * @return 命中的路由规则,未命中返回 null
    */
-  MsgRouteRule match(MessageRequest request);
+  MsgRouteRuleVO match(MessageRequest request);
 }

@@ -10,7 +10,7 @@
 -- ----------------------------------------------------------------------------
 -- 1. 文件节点主表（网盘文件/目录树）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_file_node (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_file_node (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     parent_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '父节点ID（根目录为 "0"）',
@@ -43,19 +43,19 @@ CREATE TABLE IF NOT EXISTS ydsz_file_node (
     PRIMARY KEY (id),
     INDEX idx_parent_id (parent_id),
     INDEX idx_tenant_deleted (tenant_id, deleted),
-    INDEX idx_ydsz_file_node_parent_deleted_updated (parent_id, deleted, updated_at),
-    INDEX idx_ydsz_file_node_parent_deleted_type_updated (parent_id, deleted, node_type, updated_at),
-    INDEX idx_ydsz_file_node_path (path(255)),
-    INDEX idx_ydsz_file_node_created_deleted_type (created_by, deleted, node_type),
-    INDEX idx_ydsz_file_node_file_hash (file_hash),
-    INDEX idx_ydsz_file_node_not_deleted (id, parent_id, tenant_id),
-    INDEX idx_ydsz_file_node_storage_class (node_type, deleted, storage_class, updated_at)
+    INDEX idx_ydsz_wiki_file_node_parent_deleted_updated (parent_id, deleted, updated_at),
+    INDEX idx_ydsz_wiki_file_node_parent_deleted_type_updated (parent_id, deleted, node_type, updated_at),
+    INDEX idx_ydsz_wiki_file_node_path (path(255)),
+    INDEX idx_ydsz_wiki_file_node_created_deleted_type (created_by, deleted, node_type),
+    INDEX idx_ydsz_wiki_file_node_file_hash (file_hash),
+    INDEX idx_ydsz_wiki_file_node_not_deleted (id, parent_id, tenant_id),
+    INDEX idx_ydsz_wiki_file_node_storage_class (node_type, deleted, storage_class, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='网盘文件节点（统一表示文件和目录，构成目录树的核心节点）';
 
 -- ----------------------------------------------------------------------------
 -- 2. 文件版本历史表
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_file_version (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_file_version (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '关联的文件节点ID',
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_version (
 -- ----------------------------------------------------------------------------
 -- 3. 标签表
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_tag (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_tag (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     name            VARCHAR(255)    NOT NULL COMMENT '标签名称',
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS ydsz_tag (
 -- ----------------------------------------------------------------------------
 -- 4. 文件-标签关联表（多对多）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_file_tag (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_file_tag (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点ID',
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_tag (
 -- ----------------------------------------------------------------------------
 -- 5. 文件评论表
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_file_comment (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_file_comment (
     id                VARCHAR(32)   NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id         VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id      VARCHAR(32)   NOT NULL COMMENT '关联的文件节点ID',
@@ -231,7 +231,7 @@ CREATE TABLE IF NOT EXISTS ydsz_share_recipient (
 -- ----------------------------------------------------------------------------
 -- 9. 分享链接访问日志表
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_share_access_log (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
@@ -254,16 +254,16 @@ CREATE TABLE IF NOT EXISTS ydsz_share_access_log (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_access_time (access_time),
-    INDEX idx_ydsz_share_access_log_share_id (share_id, created_at),
-    INDEX idx_ydsz_share_access_log_created (created_at),
-    INDEX idx_ydsz_share_access_log_visitor (visitor_id, created_at),
+    INDEX idx_ydsz_wiki_share_access_log_share_id (share_id, created_at),
+    INDEX idx_ydsz_wiki_share_access_log_created (created_at),
+    INDEX idx_ydsz_wiki_share_access_log_visitor (visitor_id, created_at),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享链接访问日志（记录每次分享链接被访问的详细信息，用于安全审计和访问统计）';
 
 -- ----------------------------------------------------------------------------
 -- 10. 分享访问日志归档表（V5 归档策略，MySQL 以普通表落地，按 access_time/created_at 定期清理归档）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_share_access_log_archive (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log_archive (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',

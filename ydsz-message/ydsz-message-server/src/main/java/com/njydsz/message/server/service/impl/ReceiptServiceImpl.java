@@ -14,7 +14,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
-import com.njydsz.message.domain.entity.receipt.MsgReceipt;
+import com.njydsz.message.domain.vo.MsgReceiptVO;
 import com.njydsz.message.domain.repository.MsgReceiptRepository;
 import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.receipt.ReceiptService;
@@ -61,7 +61,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
     // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(null)) {
-      MsgReceipt entity = new MsgReceipt();
+      MsgReceiptVO entity = new MsgReceiptVO();
       entity.setLogId(dto.getLogId());
       entity.setProviderTraceId(dto.getProviderTraceId());
       entity.setReceiptType(dto.getReceiptType());
@@ -92,13 +92,13 @@ public class ReceiptServiceImpl implements ReceiptService {
    * @return 回执列表（按 receiptTime 降序）；无结果返回空列表
    */
   @Override
-  public List<MsgReceipt> listByLogId(String logId) {
+  public List<MsgReceiptVO> listByLogId(String logId) {
     if (!StringUtils.hasText(logId)) {
       return List.of();
     }
     return msgReceiptRepository.selectList(
-        new LambdaQueryWrapper<MsgReceipt>()
-            .eq(MsgReceipt::getLogId, logId)
-            .orderByDesc(MsgReceipt::getReceiptTime));
+        new LambdaQueryWrapper<MsgReceiptVO>()
+            .eq(MsgReceiptVO::getLogId, logId)
+            .orderByDesc(MsgReceiptVO::getReceiptTime));
   }
 }
