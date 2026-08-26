@@ -35,6 +35,15 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   private final MessageConverter converter;
 
   @Override
+  public boolean save(MsgNotificationDTO dto) {
+    if (dto == null) {
+      return false;
+    }
+    MsgNotification entity = converter.dtoToEntity(dto);
+    return msgNotificationMapper.insert(entity) > 0;
+  }
+
+  @Override
   public boolean saveBatch(List<MsgNotificationDTO> list) {
     if (list == null || list.isEmpty()) {
       return false;
@@ -94,6 +103,21 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   }
 
   @Override
+  public int markAllReadByBizType(String userId, String bizType) {
+    QueryWrapper<MsgNotification> wrapper = new QueryWrapper<>();
+    wrapper.eq("receiver_id", userId);
+    wrapper.eq("read_status", 0);
+    wrapper.eq("recall_status", "NONE");
+    if (bizType != null && !bizType.isBlank()) {
+      wrapper.eq("biz_type", bizType);
+    }
+    MsgNotification entity = new MsgNotification();
+    entity.setReadStatus(1);
+    entity.setReadTime(java.time.LocalDateTime.now());
+    return msgNotificationMapper.update(entity, wrapper);
+  }
+
+  @Override
   public long countUnread(String userId) {
     Long count = msgNotificationMapper.countUnread(userId);
     return count != null ? count : 0L;
@@ -101,6 +125,9 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
 
   private QueryWrapper<MsgNotification> buildWrapper(NotificationQueryDTO query) {
     QueryWrapper<MsgNotification> wrapper = new QueryWrapper<>();
+    if (query.getReceiverId() != null && !query.getReceiverId().isBlank()) {
+      wrapper.eq("receiver_id", query.getReceiverId());
+    }
     if (query.getCategory() != null && !query.getCategory().isBlank()) {
       wrapper.eq("category", query.getCategory());
     }
@@ -109,6 +136,18 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     }
     if (query.getReadStatus() != null) {
       wrapper.eq("read_status", query.getReadStatus());
+    }
+    if (query.getIds() != null && !query.getIds().isEmpty()) {
+      wrapper.in("id", query.getIds());
+    }
+    if (query.getTenantId() != null && !query.getTenantId().isBlank()) {
+      wrapper.eq("tenant_id", query.getTenantId());
+    }
+    if (query.getMessageGroup() != null && !query.getMessageGroup().isBlank()) {
+      wrapper.eq("message_group", query.getMessageGroup());
+    }
+    if (query.getRecallStatus() != null && !query.getRecallStatus().isBlank()) {
+      wrapper.eq("recall_status", query.getRecallStatus());
     }
     wrapper.eq("deleted", 0);
     return wrapper;

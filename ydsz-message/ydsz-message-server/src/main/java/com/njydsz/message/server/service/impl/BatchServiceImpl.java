@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -16,6 +15,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.query.MsgBatchQuery;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -113,7 +113,7 @@ public class BatchServiceImpl implements BatchService {
     batch.setTenantId(TenantContextHolder.getTenantId());
     // P1-A3: 序列化请求列表存入 payload，支持后续断点续传
     batch.setPayload(YdszJson.toJson(requests));
-    msgBatchRepository.insert(batch);
+    msgBatchRepository.save(batch);
     log.info(
         "[Batch] 批次已创建: batchId={} total={} channel={}",
         batchId,
@@ -138,9 +138,9 @@ public class BatchServiceImpl implements BatchService {
           .message("批次 ID 不能为空")
           .build();
     }
-    MsgBatchVO batch =
-        msgBatchRepository.selectOne(
-            new LambdaQueryWrapper<MsgBatchVO>().eq(MsgBatchVO::getBatchId, batchId).last("LIMIT 1"));
+    MsgBatchQuery query = new MsgBatchQuery();
+    query.setBatchId(batchId);
+    MsgBatchVO batch = msgBatchRepository.findOne(query).orElse(null);
     if (batch == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -222,9 +222,9 @@ public class BatchServiceImpl implements BatchService {
    */
   @Override
   public void executeBatch(String batchId) {
-    MsgBatchVO batch =
-        msgBatchRepository.selectOne(
-            new LambdaQueryWrapper<MsgBatchVO>().eq(MsgBatchVO::getBatchId, batchId).last("LIMIT 1"));
+    MsgBatchQuery query = new MsgBatchQuery();
+    query.setBatchId(batchId);
+    MsgBatchVO batch = msgBatchRepository.findOne(query).orElse(null);
     if (batch == null) {
       log.warn("[Batch] 批次不存在: {}", batchId);
       return;
@@ -252,7 +252,7 @@ public class BatchServiceImpl implements BatchService {
         "[Batch] 断点续传: batchId={} processed={} remaining={}", batchId, processed, remaining.size());
     // 重置为 PROCESSING 并异步执行剩余请求
     batch.setStatus("PROCESSING");
-    msgBatchRepository.updateById(batch);
+    msgBatchRepository.update(batch);
     executeBatchAsync(batchId, remaining);
   }
 
@@ -266,9 +266,9 @@ public class BatchServiceImpl implements BatchService {
    * @param incremental true 表示增量累加（断点续传），false 表示全量覆盖（首次执行）
    */
   private void doExecuteBatch(String batchId, List<MessageRequest> requests, boolean incremental) {
-    MsgBatchVO batch =
-        msgBatchRepository.selectOne(
-            new LambdaQueryWrapper<MsgBatchVO>().eq(MsgBatchVO::getBatchId, batchId).last("LIMIT 1"));
+    MsgBatchQuery query = new MsgBatchQuery();
+    query.setBatchId(batchId);
+    MsgBatchVO batch = msgBatchRepository.findOne(query).orElse(null);
     if (batch == null) {
       log.warn("[Batch] 批次不存在: {}", batchId);
       return;
@@ -277,7 +277,7 @@ public class BatchServiceImpl implements BatchService {
     if (batch.getStartedAt() == null) {
       batch.setStartedAt(LocalDateTime.now());
     }
-    msgBatchRepository.updateById(batch);
+    msgBatchRepository.update(batch);
 
     // 逐条串行发送
     int success = 0;
@@ -314,7 +314,7 @@ public class BatchServiceImpl implements BatchService {
     }
     batch.setStatus("COMPLETED");
     batch.setCompletedAt(LocalDateTime.now());
-    msgBatchRepository.updateById(batch);
+    msgBatchRepository.update(batch);
     int totalProcessed =
         (batch.getSuccess() != null ? batch.getSuccess() : 0)
             + (batch.getFailed() != null ? batch.getFailed() : 0)
