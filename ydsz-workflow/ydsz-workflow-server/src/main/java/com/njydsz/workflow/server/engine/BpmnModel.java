@@ -3,8 +3,8 @@ package com.njydsz.workflow.server.engine;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowSkip;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
 
 /**
  * BPMN 2.0 解析结果
@@ -26,10 +26,10 @@ public class BpmnModel {
   private String processName;
 
   /** 节点列表 */
-  private List<FlowNode> nodes;
+  private List<FlowNodeVO> nodes;
 
   /** 跳转列表 */
-  private List<FlowSkip> skips;
+  private List<FlowSkipVO> skips;
 
   /**
    * P3-1：节点坐标映射 — key = nodeCode，value = {@code {x,y,width,height}}。
@@ -61,19 +61,19 @@ public class BpmnModel {
     this.processName = processName;
   }
 
-  public List<FlowNode> getNodes() {
+  public List<FlowNodeVO> getNodes() {
     return nodes;
   }
 
-  public void setNodes(List<FlowNode> nodes) {
+  public void setNodes(List<FlowNodeVO> nodes) {
     this.nodes = nodes;
   }
 
-  public List<FlowSkip> getSkips() {
+  public List<FlowSkipVO> getSkips() {
     return skips;
   }
 
-  public void setSkips(List<FlowSkip> skips) {
+  public void setSkips(List<FlowSkipVO> skips) {
     this.skips = skips;
   }
 

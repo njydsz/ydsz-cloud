@@ -71,10 +71,10 @@ ydsz:
   agent:
     enabled: true
     llm:
-      default-provider: ${LLM_PROVIDER:openai}
-      default-model: ${LLM_MODEL:gpt-4o-mini}
+      default-provider: ${LLM_PROVIDER:default}
+      default-model: ${LLM_MODEL:default-model}
       api-key: ${LLM_API_KEY:}
-      base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
+      base-url: ${LLM_BASE_URL:}
       temperature: ${LLM_TEMPERATURE:0.7}
       max-tokens: ${LLM_MAX_TOKENS:2048}
       timeout-seconds: ${LLM_TIMEOUT:60}
@@ -84,7 +84,7 @@ ydsz:
     rag:
       enabled: ${RAG_ENABLED:false}
       vector-store: ${RAG_VECTOR_STORE:memory}
-      embedding-model: ${EMBEDDING_MODEL:text-embedding-3-small}
+      embedding-model: ${EMBEDDING_MODEL:default-embedding}
       embedding-api-key: ${EMBEDDING_API_KEY:}
       embedding-base-url: ${EMBEDDING_BASE_URL:}
       dimension: ${EMBEDDING_DIMENSION:1536}

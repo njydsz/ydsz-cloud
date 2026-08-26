@@ -110,15 +110,15 @@ public class NotifyHealthIndicator implements HealthIndicator {
         channels.put("wecom", "disabled");
       }
 
-      // HMAC 签名渠道
-      NotifyProperties.HmacConfig hmac = notifyProperties.getHmac();
-      if (hmac != null && hmac.isEnabled()) {
+      // 钉钉渠道
+      NotifyProperties.DingTalkConfig dingtalk = notifyProperties.getDingtalk();
+      if (dingtalk != null && dingtalk.isEnabled()) {
         boolean ready =
-            hmac.getAppKey() != null
-                && !hmac.getAppKey().isEmpty()
-                && hmac.getAppSecret() != null
-                && !hmac.getAppSecret().isEmpty();
-        channels.put("hmac", ready ? "ready" : "misconfigured");
+            dingtalk.getAppKey() != null
+                && !dingtalk.getAppKey().isEmpty()
+                && dingtalk.getAppSecret() != null
+                && !dingtalk.getAppSecret().isEmpty();
+        channels.put("dingtalk", ready ? "ready" : "misconfigured");
         if (ready) {
           configuredCount++;
         }
@@ -126,15 +126,15 @@ public class NotifyHealthIndicator implements HealthIndicator {
         channels.put("hmac", "disabled");
       }
 
-      // Webhook 渠道
-      NotifyProperties.WebhookConfig webhook = notifyProperties.getWebhook();
-      if (webhook != null && webhook.isEnabled()) {
+      // 飞书渠道
+      NotifyProperties.FeishuConfig feishu = notifyProperties.getFeishu();
+      if (feishu != null && feishu.isEnabled()) {
         boolean ready =
-            webhook.getAppId() != null
-                && !webhook.getAppId().isEmpty()
-                && webhook.getAppSecret() != null
-                && !webhook.getAppSecret().isEmpty();
-        channels.put("webhook", ready ? "ready" : "misconfigured");
+            feishu.getAppId() != null
+                && !feishu.getAppId().isEmpty()
+                && feishu.getAppSecret() != null
+                && !feishu.getAppSecret().isEmpty();
+        channels.put("feishu", ready ? "ready" : "misconfigured");
         if (ready) {
           configuredCount++;
         }

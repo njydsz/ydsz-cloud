@@ -9,14 +9,14 @@
     {
       "name": "ydsz.agent.llm.default-provider",
       "type": "java.lang.String",
-      "description": "默认 LLM Provider（openai / deepseek / qwen / ollama）。",
-      "defaultValue": "openai"
+      "description": "默认 LLM Provider（default / deepseek / qwen / ollama）。",
+      "defaultValue": "default"
     },
     {
       "name": "ydsz.agent.llm.default-model",
       "type": "java.lang.String",
       "description": "默认模型名称。",
-      "defaultValue": "gpt-4o-mini"
+      "defaultValue": "default-model"
     },
     {
       "name": "ydsz.agent.llm.api-key",
@@ -27,7 +27,7 @@
       "name": "ydsz.agent.llm.base-url",
       "type": "java.lang.String",
       "description": "LLM API Base URL。",
-      "defaultValue": "https://api.openai.com/v1"
+      "defaultValue": ""
     },
     {
       "name": "ydsz.agent.llm.temperature",
@@ -75,7 +75,7 @@
       "name": "ydsz.agent.rag.embedding-model",
       "type": "java.lang.String",
       "description": "Embedding 模型名称。",
-      "defaultValue": "text-embedding-3-small"
+      "defaultValue": "default-embedding"
     },
     {
       "name": "ydsz.agent.rag.embedding-api-key",

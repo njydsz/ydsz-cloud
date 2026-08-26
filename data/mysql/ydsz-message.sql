@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     template_code   VARCHAR(64)     NOT NULL COMMENT '模板唯一编码（业务标识）',
-    channel         VARCHAR(32)     NOT NULL COMMENT '发送通道（SMS/EMAIL/PUSH/INAPP/WEBHOOK/HMAC/HMAC_WORK/WECOM/WECOM_APP/POST/WX_MINI/ALIPAY_MINI）',
+    channel         VARCHAR(32)     NOT NULL COMMENT '发送通道（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/DINGTALK_WORK/WECOM/WECOM_APP/FEISHU/WX_MINI/ALIPAY_MINI）',
     locale          VARCHAR(16)     DEFAULT 'zh-CN' COMMENT '语言区域（如 zh-CN / en-US，影响 i18n 选择）',
     version         VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '模板版本号',
     category        VARCHAR(64)     DEFAULT NULL COMMENT '模板分类',

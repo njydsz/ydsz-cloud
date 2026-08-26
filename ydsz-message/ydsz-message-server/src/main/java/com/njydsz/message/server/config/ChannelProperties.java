@@ -7,7 +7,8 @@ import org.springframework.stereotype.Component;
 /**
  * 通道相关配置（prefix = {@code ydsz}）。
  *
- * <p>绑定 {@code application.yml} 中 {@code ydsz.webhook.*} 与 {@code ydsz.channel.*} 配置项， 覆盖 Webhook / HMAC / 企业微信 / Post 群机器人的默认地址、密钥与超时。
+ * <p>绑定 {@code application.yml} 中 {@code ydsz.webhook.*} 与 {@code ydsz.channel.*} 配置项， 覆盖 Webhook /
+ * 钉钉 / 企业微信 / 飞书群机器人的默认地址、密钥与超时。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -59,11 +60,11 @@ public class ChannelProperties {
   /** 群机器人通道配置组。 */
   @Data
   public static class ChannelGroup {
-    /** HMAC 签名群机器人配置 */
-    private HmacConfig hmac = new HmacConfig();
+    /** 钉钉群机器人配置 */
+    private DingTalkConfig dingtalk = new DingTalkConfig();
 
-    /** P0-2: HMAC 工作通知(企业内部应用)配置 */
-    private HmacWorkConfig hmacWork = new HmacWorkConfig();
+    /** P0-2: 钉钉工作通知(企业内部应用)配置 */
+    private DingTalkWorkConfig dingtalkWork = new DingTalkWorkConfig();
 
     /** 企业微信群机器人配置 */
     private WechatWorkConfig wechatWork = new WechatWorkConfig();
@@ -71,13 +72,13 @@ public class ChannelProperties {
     /** P0-2: 企业微信应用消息(企业内部应用)配置 */
     private WeComAppConfig wecomApp = new WeComAppConfig();
 
-    /** Post 消息群机器人配置 */
-    private PostConfig post = new PostConfig();
+    /** 飞书群机器人配置 */
+    private FeishuConfig feishu = new FeishuConfig();
   }
 
-  /** HMAC 签名群机器人配置。 */
+  /** 钉钉群机器人配置。 */
   @Data
-  public static class HmacConfig {
+  public static class DingTalkConfig {
     /** 默认 access_token（兜底） */
     private String defaultToken = "";
 
@@ -92,34 +93,34 @@ public class ChannelProperties {
   }
 
   /**
-   * P0-2: HMAC 工作通知(企业内部应用)配置。
+   * P0-2: 钉钉工作通知(企业内部应用)配置。
    *
-   * <p>通过开放平台企业内部应用发送工作通知,需要:
+   * <p>通过钉钉开放平台企业内部应用发送工作通知,需要:
    *
    * <ul>
    *   <li>AppKey + AppSecret → 获取 access_token
    *   <li>AgentId → 企业应用 ID
-   *   <li>receiver 为 userId
+   *   <li>receiver 为钉钉 userId
    * </ul>
    *
    * access_token 缓存在 Redis,有效期 7200s,提前 300 s 续期。
    */
   @Data
-  public static class HmacWorkConfig {
+  public static class DingTalkWorkConfig {
     /** 是否启用工作通知通道(未配置 AppKey 时降级 mock) */
     private boolean enabled = false;
 
-    /** 应用 AppKey */
+    /** 钉钉应用 AppKey */
     private String appKey;
 
-    /** 应用 AppSecret */
+    /** 钉钉应用 AppSecret */
     private String appSecret;
 
-    /** 应用 AgentId */
+    /** 钉钉应用 AgentId */
     private Long agentId;
 
-    /** API base URL */
-    private String baseUrl = "https://oapi.example.com";
+    /** 钉钉 API base URL */
+    private String baseUrl = "https://oapi.dingtalk.com";
 
     /** 连接超时(毫秒) */
     private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -178,9 +179,9 @@ public class ChannelProperties {
     private int readTimeout = DEFAULT_READ_TIMEOUT;
   }
 
-  /** Post 消息群机器人配置。 */
+  /** 飞书群机器人配置。 */
   @Data
-  public static class PostConfig {
+  public static class FeishuConfig {
     /** 默认 hook（兜底，可为完整 URL 或 hook ID） */
     private String defaultHook = "";
 

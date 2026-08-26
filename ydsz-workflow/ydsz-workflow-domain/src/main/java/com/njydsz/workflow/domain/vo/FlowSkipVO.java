@@ -35,6 +35,7 @@ public class FlowSkipVO implements Serializable {
   private String skipCondition;
   private String nextNodeCode;
   private Integer nextNodeType;
+  private String sourceNodeCode;
   private String coordinateNext;
   private String skipList;
   private String ext;

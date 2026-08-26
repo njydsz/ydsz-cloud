@@ -15,13 +15,13 @@ import org.w3c.dom.NodeList;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
-import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
  * BPMN 节点解析器
  *
  * <p>负责将 BPMN 2.0 XML 中的流程元素（如 startEvent、userTask、exclusiveGateway 等）
- * 解析为 {@link FlowNode} 数据对象。处理包括属性映射、扩展属性读取、
+ * 解析为 {@link FlowNodeVO} 数据对象。处理包括属性映射、扩展属性读取、
  * 事件定义解析、多实例配置解析等所有与节点相关的逻辑。
  *
  * @since 1.0.0
@@ -43,8 +43,8 @@ public class BpmnNodeParser {
    * @param localName 元素本地名称
    * @return 解析后的 FlowNode，解析失败返回 null
    */
-  public FlowNode parseNode(Element elem, String localName) {
-    FlowNode node = new FlowNode();
+  public FlowNodeVO parseNode(Element elem, String localName) {
+    FlowNodeVO node = new FlowNodeVO();
     node.setNodeCode(elem.getAttribute("id"));
     node.setNodeName(elem.getAttribute("name"));
     if (node.getNodeName() == null || node.getNodeName().isBlank()) {
@@ -397,7 +397,7 @@ public class BpmnNodeParser {
    * @param node 流程节点（输出参数）
    * @param ext 扩展属性 Map（输出参数）
    */
-  private void parseMultiInstance(Element userTask, FlowNode node, Map<String, Object> ext) {
+  private void parseMultiInstance(Element userTask, FlowNodeVO node, Map<String, Object> ext) {
     NodeList children = userTask.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       Node n = children.item(i);

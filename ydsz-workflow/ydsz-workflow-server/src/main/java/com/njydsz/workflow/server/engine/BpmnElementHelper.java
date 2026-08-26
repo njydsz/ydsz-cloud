@@ -11,6 +11,7 @@ import org.w3c.dom.NodeList;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.infra.entity.FlowNode;
 
 /**
@@ -142,7 +143,7 @@ public class BpmnElementHelper {
    * @param node 流程节点
    * @return ext 属性对应的 Map（非 null）
    */
-  public Map<String, Object> readOrInitExt(FlowNode node) {
+  public Map<String, Object> readOrInitExt(FlowNodeVO node) {
     Map<String, Object> map = new HashMap<>();
     String ext = node.getExt();
     if (ext != null && !ext.isBlank() && !"{}".equals(ext.trim())) {

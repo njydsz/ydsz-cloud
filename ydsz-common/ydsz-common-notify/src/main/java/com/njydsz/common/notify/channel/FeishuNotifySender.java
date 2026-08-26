@@ -1,12 +1,7 @@
 package com.njydsz.common.notify.channel;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,51 +17,47 @@ import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.template.TemplateEngine;
 
 /**
- * HMAC 签名通知发送器
+ * 飞书通知发送器
  *
- * <p>通过群机器人 Webhook 发送消息，支持 HMAC-SHA256 签名校验。
- *
- * <p>支持安全设置：当配置了 secret 时，自动使用 HMAC-SHA256 签名校验， 将 {@code timestamp} 和 {@code sign} 参数拼接到 webhook
- * URL 中。
+ * <p>通过群机器人 Webhook 发送消息。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(prefix = "ydsz.notify.hmac", name = "webhook")
-public class HmacNotifySender implements NotifyChannelStrategy {
+@ConditionalOnProperty(prefix = "ydsz.notify.feishu", name = "url")
+public class FeishuNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HmacNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FeishuNotifySender.class);
 
-  private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
-
-  @Value("${ydsz.notify.hmac.webhook:}")
+  /** 群机器人 Webhook 地址 */
+  @Value("${ydsz.notify.feishu.url:}")
   private String webhook;
 
-  @Value("${ydsz.notify.hmac.secret:}")
-  private String secret;
-
+  /** HTTP 请求客户端 */
   private final RestTemplate restTemplate;
+
+  /** 模板引擎 */
   private final TemplateEngine templateEngine;
 
   /**
-   * 构造 HMAC 签名通知发送器
+   * 构造飞书通知发送器
    *
    * @param restTemplate HTTP 请求客户端
    * @param templateEngine 模板引擎
    */
-  public HmacNotifySender(RestTemplate restTemplate, TemplateEngine templateEngine) {
+  public FeishuNotifySender(RestTemplate restTemplate, TemplateEngine templateEngine) {
     this.restTemplate = restTemplate;
     this.templateEngine = templateEngine;
   }
 
   @Override
   public NotifyChannel getChannel() {
-    return NotifyChannel.HMAC;
+    return NotifyChannel.FEISHU;
   }
 
   /**
-   * 发送通知
+   * 发送飞书通知
    *
    * @param receiver 接收者（Webhook 模式下可为 null）
    * @param title 消息标题
@@ -76,51 +67,32 @@ public class HmacNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult send(String receiver, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("HMAC 通知未启用", getChannel().getName());
+      return NotifySendResult.failure("飞书通知未启用", getChannel().getName());
     }
     try {
       Map<String, Object> body =
           Map.of(
-              "msgtype",
-              "markdown",
-              "markdown",
-              Map.of("title", title, "text", "## " + title + "\n\n" + content));
+              "msg_type",
+              "interactive",
+              "card",
+              Map.of(
+                  "header", Map.of("title", Map.of("content", title, "tag", "plain_text")),
+                  "elements",
+                      List.of(
+                          Map.of(
+                              "tag",
+                              "div",
+                              "text",
+                              Map.of("content", content, "tag", "lark_md")))));
       String json = YdszJson.toJson(body);
-      String signedUrl = signWebhookUrl(webhook);
       String response =
           restTemplate.postForObject(
-              signedUrl, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
-      LOG.debug("HMAC 通知发送成功: {}", title);
+              webhook, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
+      LOG.debug("飞书通知发送成功: {}", title);
       return NotifySendResult.success(response, getChannel().getName());
     } catch (Exception e) {
-      LOG.error("HMAC 通知发送失败: {}", e.getMessage(), e);
+      LOG.error("飞书通知发送失败: {}", e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
-    }
-  }
-
-  /**
-   * 对 webhook URL 进行签名（当配置了 secret 时）
-   *
-   * <p>签名算法：HMAC-SHA256，待签名字符串为 {@code timestamp + "\n" + secret}。
-   *
-   * @param url 原始 webhook URL
-   * @return 带签名参数的 URL
-   */
-  String signWebhookUrl(String url) {
-    if (secret == null || secret.isEmpty()) {
-      return url;
-    }
-    long timestamp = System.currentTimeMillis();
-    try {
-      Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
-      mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256_ALGORITHM));
-      byte[] signData = mac.doFinal((timestamp + "\n" + secret).getBytes(StandardCharsets.UTF_8));
-      String sign =
-          URLEncoder.encode(Base64.getEncoder().encodeToString(signData), StandardCharsets.UTF_8);
-      return url + (url.contains("?") ? "&" : "?") + "timestamp=" + timestamp + "&sign=" + sign;
-    } catch (Exception e) {
-      LOG.error("HMAC webhook 签名失败: {}", e.getMessage(), e);
-      return url;
     }
   }
 

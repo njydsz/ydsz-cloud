@@ -12,7 +12,6 @@ import com.googlecode.aviator.Options;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -21,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
@@ -82,16 +82,16 @@ public class FlowServiceNodeExecutor {
   private final AviatorEvaluatorInstance aviatorInstance;
 
   /**
-   * 构造器：通过 RestTemplateBuilder 构建带超时的 RestTemplate，并初始化 Aviator 沙箱实例。
-   * 
+   * 构造器：构建带超时的 RestTemplate，并初始化 Aviator 沙箱实例。
    *
-   * @param restTemplateBuilder 参数说明   */
-  public FlowServiceNodeExecutor(RestTemplateBuilder restTemplateBuilder) {
-    this.restTemplate =
-        restTemplateBuilder
-            .setConnectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS))
-            .setReadTimeout(Duration.ofSeconds(READ_TIMEOUT_SECONDS))
-            .build();
+   * <p>使用 {@link SimpleClientHttpRequestFactory} 配置超时，替代 Spring Boot 4.x 中已移除的
+   * {@code RestTemplateBuilder}。
+   */
+  public FlowServiceNodeExecutor() {
+    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+    factory.setConnectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS));
+    factory.setReadTimeout(Duration.ofSeconds(READ_TIMEOUT_SECONDS));
+    this.restTemplate = new RestTemplate(factory);
     this.aviatorInstance = AviatorEvaluator.newInstance();
     // 浮点数解析为 Decimal，避免精度丢失
     this.aviatorInstance.setOption(Options.ALWAYS_PARSE_FLOATING_POINT_NUMBER_INTO_DECIMAL, true);
