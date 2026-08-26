@@ -38,7 +38,7 @@ import com.njydsz.workflow.domain.vo.FlowUserVO;
 import com.njydsz.workflow.engine.FlowAssigneeResolver;
 import com.njydsz.workflow.engine.FlowNodeExt;
 import com.njydsz.workflow.engine.FlowServiceNodeExecutor;
-import com.njydsz.workflow.engine.impl.DefaultFlowAdvancer;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;

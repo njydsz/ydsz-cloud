@@ -54,6 +54,8 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  *   <li>Dry-run 仿真（返回全部结果含未触发，不记录统计）
  *   <li>执行轨迹异步记录（1.4.0）
  *   <li>单规则超时与熔断（1.4.0）
+ *   <li>事实/模型并行注入（1.4.0，委托 {@link FactInjectionService}）
+ *   <li>灰度路由评估（1.4.0，委托 {@link CanaryEvaluator}）
  * </ul>
  *
  * @since 1.0.0
@@ -152,6 +154,12 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
   /** 轨迹构建器 */
   private final RuleTraceBuilder traceBuilder = new RuleTraceBuilder();
+
+  /** 事实注入服务（P1-1：从引擎核心拆出事实/模型注入职责） */
+  private volatile FactInjectionService factInjectionService;
+
+  /** 灰度评估器（P1-1：从引擎核心拆出灰度路由职责） */
+  private volatile CanaryEvaluator canaryEvaluator;
 
   /** 评估结果缓存（P1-7：可选，通过 setEvaluationResultCache 注入） */
   private volatile EvaluationResultCache evaluationResultCache;
@@ -1200,6 +1208,53 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
    */
   public RuleIndexer getRuleIndexer() {
     return ruleIndexer;
+  }
+
+  /**
+   * 设置事实注入服务（P1-1：从引擎核心拆出事实/模型注入职责）
+   *
+   * <p>注入后，引擎在评估前调用 {@link FactInjectionService#injectDataInParallel} 注入事实/模型数据。
+   *
+   * @param factInjectionService 事实注入服务
+   * @since 1.4.0
+   */
+  public void setFactInjectionService(FactInjectionService factInjectionService) {
+    this.factInjectionService = factInjectionService;
+  }
+
+  /**
+   * 获取事实注入服务
+   *
+   * @return 事实注入服务；未配置返回 null
+   * @since 1.4.0
+   */
+  public FactInjectionService getFactInjectionService() {
+    return factInjectionService;
+  }
+
+  /**
+   * 设置灰度评估器（P1-1：从引擎核心拆出灰度路由职责）
+   *
+   * <p>注入后，引擎在评估时调用 {@link CanaryEvaluator#resolveCanaryDefinition} 解析灰度定义。
+   *
+   * @param canaryEvaluator 灰度评估器
+   * @since 1.4.0
+   */
+  public void setCanaryEvaluator(CanaryEvaluator canaryEvaluator) {
+    this.canaryEvaluator = canaryEvaluator;
+    if (canaryEvaluator != null) {
+      this.canaryEnabled = canaryEvaluator.isCanaryEnabled();
+    }
+  }
+
+  /**
+   * 获取灰度评估器
+   *
+   * @return 灰度评估器；未配置返回 null
+   * @since 1.4.0
+   */
+  public CanaryEvaluator getCanaryEvaluator() {
+    return canaryEvaluator;
   }
 
   /**

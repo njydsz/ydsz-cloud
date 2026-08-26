@@ -46,7 +46,7 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.engine.FlowEventContext;
 import com.njydsz.workflow.engine.FlowEventListener;
 import com.njydsz.workflow.engine.FlowNodeExt;
-import com.njydsz.workflow.engine.impl.DefaultFlowAdvancer;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowCcService;

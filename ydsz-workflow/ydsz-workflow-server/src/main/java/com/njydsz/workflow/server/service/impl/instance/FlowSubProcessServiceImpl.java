@@ -27,7 +27,7 @@ import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.engine.FlowEventListener;
 import com.njydsz.workflow.engine.FlowNodeExt;
 import com.njydsz.workflow.engine.FlowWorkflowEvent;
-import com.njydsz.workflow.engine.impl.DefaultFlowAdvancer;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
