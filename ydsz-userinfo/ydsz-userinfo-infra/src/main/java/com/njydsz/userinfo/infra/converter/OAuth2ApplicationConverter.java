@@ -6,6 +6,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application.ApplicationStatus;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application.ClientType;
 

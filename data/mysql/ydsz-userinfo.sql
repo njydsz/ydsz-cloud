@@ -341,10 +341,12 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
     remark VARCHAR(256) DEFAULT NULL COMMENT '备注说明',
 
     -- 通用字段（ydsz-common-jdbc MpBaseEntity）
+    status VARCHAR(32) DEFAULT NULL COMMENT '状态标识',
     deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
+    updated_by VARCHAR(64) DEFAULT NULL COMMENT '更新者用户 ID',
     revision INT DEFAULT 0 COMMENT '乐观锁版本号',
 
     -- 索引
@@ -386,6 +388,7 @@ CREATE TABLE IF NOT EXISTS ydsz_social_client (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
+    updated_by VARCHAR(64) DEFAULT NULL COMMENT '更新者用户 ID',
     revision INT DEFAULT 0 COMMENT '乐观锁版本号',
 
     -- 索引
@@ -424,6 +427,7 @@ CREATE TABLE IF NOT EXISTS ydsz_saml_idp_config (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
+    updated_by VARCHAR(64) DEFAULT NULL COMMENT '更新者用户 ID',
     revision INT DEFAULT 0 COMMENT '乐观锁版本号',
 
     -- 索引
@@ -461,6 +465,8 @@ CREATE TABLE IF NOT EXISTS ydsz_oauth2_application (
     tenant_id VARCHAR(64) DEFAULT NULL COMMENT '租户 ID',
     deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
+    updated_by VARCHAR(64) DEFAULT NULL COMMENT '更新者用户 ID',
     revision INT DEFAULT 0 COMMENT '乐观锁版本号',
 
     -- 索引
@@ -529,6 +535,8 @@ CREATE TABLE IF NOT EXISTS ydsz_security_alert (
     tenant_id VARCHAR(64) DEFAULT NULL COMMENT '租户 ID',
     deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
+    updated_by VARCHAR(64) DEFAULT NULL COMMENT '更新者用户 ID',
     revision INT DEFAULT 0 COMMENT '乐观锁版本号',
 
     -- 索引

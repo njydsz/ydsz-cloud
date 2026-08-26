@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertType;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel;

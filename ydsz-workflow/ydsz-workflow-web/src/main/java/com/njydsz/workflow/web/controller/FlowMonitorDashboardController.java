@@ -25,7 +25,10 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
+import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.server.service.FlowEfficiencyService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -415,7 +418,7 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "节点瓶颈排名")
   @GetMapping("/efficiency/bottleneck")
-  public YdszResponse<List<Map<String, Object>>> bottleneckRanking(
+  public YdszResponse<List<FlowBottleneckVO>> bottleneckRanking(
       @RequestParam(required = false) String flowCode,
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
@@ -432,7 +435,7 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "审批人效率排名")
   @GetMapping("/efficiency/approverRanking")
-  public YdszResponse<List<Map<String, Object>>> approverRanking(
+  public YdszResponse<List<FlowApproverEfficiencyVO>> approverRanking(
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime,
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
@@ -451,7 +454,7 @@ public class FlowMonitorDashboardController {
    */
   @Operation(summary = "审批趋势")
   @GetMapping("/efficiency/trend")
-  public YdszResponse<List<Map<String, Object>>> approvalTrend(
+  public YdszResponse<List<FlowTrendVO>> approvalTrend(
       @RequestParam(defaultValue = "DAY") String interval,
       @RequestParam(required = false) String startTime,
       @RequestParam(required = false) String endTime) {
