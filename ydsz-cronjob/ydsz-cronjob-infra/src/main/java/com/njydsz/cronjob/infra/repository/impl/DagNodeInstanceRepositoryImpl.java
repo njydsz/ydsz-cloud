@@ -100,6 +100,12 @@ public class DagNodeInstanceRepositoryImpl implements DagNodeInstanceRepository 
   }
 
   @Override
+  public int updateById(JobDagNodeInstanceVO vo) {
+    JobDagNodeInstance entity = converter.voToEntity(vo);
+    return dagNodeInstanceMapper.updateById(entity);
+  }
+
+  @Override
   public List<JobDagNodeInstanceVO> selectActiveByJobId(String jobId) {
     List<JobDagNodeInstance> entities = dagNodeInstanceMapper.selectActiveByJobId(jobId);
     if (entities == null || entities.isEmpty()) {

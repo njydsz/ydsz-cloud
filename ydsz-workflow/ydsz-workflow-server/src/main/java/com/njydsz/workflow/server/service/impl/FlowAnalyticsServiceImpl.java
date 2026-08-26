@@ -17,7 +17,6 @@ import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
 import com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO;
 import com.njydsz.workflow.domain.vo.FlowNodeDurationVO;
 import com.njydsz.workflow.domain.vo.FlowTrendVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 
 /**
@@ -106,9 +105,6 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
   /** 运行时任务仓储（domain 层契约），提供基础 CRUD 与统计方法 */
   private final FlowRunTaskRepository runTaskRepository;
-
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   @Override
   public FlowAnalyticsOverviewVO overview(

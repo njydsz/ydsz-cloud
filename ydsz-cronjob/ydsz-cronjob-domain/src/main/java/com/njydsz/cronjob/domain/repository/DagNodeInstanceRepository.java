@@ -119,4 +119,12 @@ public interface DagNodeInstanceRepository {
    * @return 节点实例 VO 列表
    */
   List<JobDagNodeInstanceVO> selectActiveByJobId(String jobId);
+
+  /**
+   * 按 ID 更新节点实例（结果/状态等字段更新）。
+   *
+   * @param vo 节点实例 VO（必须含 id）
+   * @return 受影响行数
+   */
+  int updateById(JobDagNodeInstanceVO vo);
 }

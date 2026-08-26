@@ -651,7 +651,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           job.getJobKey(),
           shardIndex,
           triggerType);
-      jobLockGuard.jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), shardIndex, shardValue);
+      jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), shardIndex, shardValue);
       return null;
     }
 

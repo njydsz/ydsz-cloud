@@ -16,7 +16,6 @@ import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
@@ -110,9 +109,6 @@ public class FlowTaskSupport {
 
   /** 审计日志仓储，负责 {@code ydsz_flow_audit_log} 表的写入，承载任务操作审计轨迹 */
   private final FlowAuditLogRepository auditLogRepository;
-
-  /** MapStruct 转换器（DO/VO/DTO 转换） */
-  private final WorkflowConverter converter;
 
   /**
    * 事件监听器列表（Spring 自动注入所有 {@link FlowEventListener} 实现）

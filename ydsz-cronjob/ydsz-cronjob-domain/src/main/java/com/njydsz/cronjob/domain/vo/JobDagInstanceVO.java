@@ -79,4 +79,7 @@ public class JobDagInstanceVO implements Serializable {
 
   /** 更新时间 */
   private LocalDateTime updatedAt;
+
+  /** 租户 ID（多租户隔离） */
+  private String tenantId;
 }

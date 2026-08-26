@@ -22,7 +22,6 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -80,9 +79,6 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
   /** 运行时任务仓储（domain 层契约） */
   private final FlowRunTaskRepository taskRepository;
-
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 流程节点仓储（domain 层契约），读取节点 SLA 配置（slaConfig JSON） */
   private final FlowNodeRepository nodeRepository;
