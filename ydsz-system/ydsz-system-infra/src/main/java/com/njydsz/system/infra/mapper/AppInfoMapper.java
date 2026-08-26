@@ -11,7 +11,7 @@ import com.njydsz.system.infra.entity.AppInfo;
 /**
  * 应用信息 Mapper
  *
- * <p>对应数据表 <code>ydsz_app_info</code>。
+ * <p>对应数据表 <code>ydsz_sys_app_info</code>。
  *
  * <p>应用是系统接入的子系统（业务模块/三方系统），AppId/Secret 用于 API 网关鉴权。
  *
@@ -44,6 +44,6 @@ public interface AppInfoMapper extends BaseMapper<AppInfo> {
    * @return 应用 DO（含 appSecret）；不存在返回 {@code null}
    */
   @Select(
-      "SELECT * FROM ydsz_app_info WHERE app_key = #{appKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
+      "SELECT * FROM ydsz_sys_app_info WHERE app_key = #{appKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
   AppInfo selectEnabledByAppKey(@Param("appKey") String appKey);
 }

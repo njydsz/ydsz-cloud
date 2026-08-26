@@ -41,7 +41,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @TableName("ydsz_sys_dict_item")
 public class DictItem extends MpBaseEntity<String> {
 
-  /** 所属字典类型编码（逻辑外键 → {@code ydsz_dict_type.type_code}） */
+  /** 所属字典类型编码（逻辑外键 → {@code ydsz_sys_dict_type.type_code}） */
   private String typeCode;
 
   /** 字典项编码（同 typeCode 内唯一） */

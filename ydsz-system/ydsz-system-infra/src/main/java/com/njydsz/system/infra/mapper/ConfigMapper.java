@@ -14,7 +14,7 @@ import com.njydsz.system.infra.entity.Config;
 /**
  * 系统配置 Mapper
  *
- * <p>对应数据表 <code>ydsz_config</code>。
+ * <p>对应数据表 <code>ydsz_sys_config</code>。
  *
  * <p>配置项是平台级/租户级配置（功能开关/三方密钥/超时时间），支持热更新。
  *
@@ -47,7 +47,7 @@ public interface ConfigMapper extends BaseMapper<Config> {
    * @return 配置 DO；不存在返回 {@code null}
    */
   @Select(
-      "SELECT * FROM ydsz_config WHERE config_key = #{configKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
+      "SELECT * FROM ydsz_sys_config WHERE config_key = #{configKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
   Config selectByConfigKey(@Param("configKey") String configKey);
 
   /**

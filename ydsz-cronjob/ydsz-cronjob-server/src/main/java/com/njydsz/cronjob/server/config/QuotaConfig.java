@@ -13,7 +13,7 @@ import lombok.Data;
  *   <li>任务派发时检查 maxDailyExecutions（Redis 日计数器，P7-3 实现）
  * </ul>
  *
- * <p>未配置租户配额记录时（{@code ydsz_tenant_quota} 表无对应行），默认不限制（unlimited）。
+ * <p>未配置租户配额记录时（{@code ydsz_job_tenant_quota} 表无对应行），默认不限制（unlimited）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,7 +24,7 @@ public class QuotaConfig {
   /** 是否启用租户级配额检查（false=不检查，所有租户 unlimited） */
   private boolean enabled = false;
 
-  /** 默认任务数上限（当租户未在 ydsz_tenant_quota 表配置时使用，null=unlimited） */
+  /** 默认任务数上限（当租户未在 ydsz_job_tenant_quota 表配置时使用，null=unlimited） */
   private Integer defaultMaxJobs = null;
 
   /** 默认并发执行上限（当租户未配置时使用，null=unlimited） */

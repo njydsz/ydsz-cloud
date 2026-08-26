@@ -10,7 +10,7 @@ import com.njydsz.cronjob.infra.entity.job.TenantQuota;
 /**
  * 租户任务配额 Mapper
  *
- * <p>对应数据表 <code>ydsz_tenant_quota</code>。
+ * <p>对应数据表 <code>ydsz_job_tenant_quota</code>。
  *
  * <p>配额限制租户可创建的任务数/并发数/触发频率，是多租户隔离的资源管控。
  *
@@ -45,7 +45,7 @@ public interface TenantQuotaMapper extends BaseMapper<TenantQuota> {
   @Select(
       "SELECT id, tenant_id, max_jobs, max_concurrent, max_daily_executions, enabled, "
           + "       created_by, created_at, updated_by, updated_at, deleted "
-          + "FROM ydsz_tenant_quota "
+          + "FROM ydsz_job_tenant_quota "
           + "WHERE tenant_id = #{tenantId} AND deleted = 0")
   TenantQuota selectByTenantId(@Param("tenantId") String tenantId);
 }
