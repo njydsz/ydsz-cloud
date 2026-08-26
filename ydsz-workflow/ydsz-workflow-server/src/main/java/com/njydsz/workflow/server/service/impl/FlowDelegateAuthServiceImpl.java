@@ -20,10 +20,13 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.TracerUtils;
+import com.njydsz.workflow.domain.converter.FlowDelegateAuthConverter;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
@@ -121,7 +124,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   public FlowDelegateAuthVO postDtoToEntity(FlowDelegateAuthPostDTO dto) {
-    return converter.postDtoToEntity(dto);
+    return FlowDelegateAuthConverter.INSTANT.postDtoToVO(dto);
   }
 
   /**
@@ -144,20 +147,19 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String create(FlowDelegateAuthVO auth) {
-    FlowDelegateAuth entity = converter.entityToEntity(auth);
-    validateDelegateAuth(entity);
-    fillDefaultValues(entity);
+    validateDelegateAuth(auth);
+    fillDefaultValues(auth);
 
-    authRepository.save(converter.entityToVO(entity));
+    authRepository.save(auth);
     log.info("[FlowDelegate] 创建授权: owner={} delegate={} scope={} flow={} node={} role={} time=[{},{}]",
-        entity.getOwnerUserId(), entity.getDelegateUserId(), entity.getScopeType(),
-        entity.getFlowCode(), entity.getNodeCode(), entity.getRoleCode(),
-        entity.getStartTime(), entity.getEndTime());
+        auth.getOwnerUserId(), auth.getDelegateUserId(), auth.getScopeType(),
+        auth.getFlowCode(), auth.getNodeCode(), auth.getRoleCode(),
+        auth.getStartTime(), auth.getEndTime());
 
     // P2-5: 代理授权创建后，自动转发已有的在途待办
-    tryOfflineAutoForward(entity.getId());
+    tryOfflineAutoForward(auth.getId());
 
-    return entity.getId();
+    return auth.getId();
   }
 
   /**
@@ -165,7 +167,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    *
    * @param auth 参数说明
    */
-  private void validateDelegateAuth(FlowDelegateAuth auth) {
+  private void validateDelegateAuth(FlowDelegateAuthVO auth) {
     if (auth == null) {
       throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_fdf18ac3").build();
     }
@@ -195,7 +197,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    *
    * @param auth 参数说明
    */
-  private void validateScopeFields(FlowDelegateAuth auth) {
+  private void validateScopeFields(FlowDelegateAuthVO auth) {
     switch (auth.getScopeType()) {
       case "FLOW" -> {
         if (!StringUtils.hasText(auth.getFlowCode())) {
@@ -223,7 +225,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    *
    * @param auth 参数说明
    */
-  private void fillDefaultValues(FlowDelegateAuth auth) {
+  private void fillDefaultValues(FlowDelegateAuthVO auth) {
     if (auth.getTenantId() == null) {
       auth.setTenantId(AuthContextUtils.getTenantIdOrDefault());
     }
@@ -268,7 +270,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_7804c8f2")
           .build();
     }
-    FlowDelegateAuth auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
+    FlowDelegateAuthVO auth = authRepository.findById(authId).orElse(null);
     if (auth == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -314,7 +316,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
           .message("error.workflow.msg_7678ad83")
           .build();
     }
-    FlowDelegateAuth auth = authRepository.findById(authId).map(converter::entityToDO).orElse(null);
+    FlowDelegateAuthVO auth = authRepository.findById(authId).orElse(null);
     if (auth == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -493,13 +495,10 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
-    List<FlowAuditLog> list = auditLogRepository
+    List<FlowAuditLogVO> list = auditLogRepository
         .findByBusinessTypeAndOperator(
             FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY, delegateUserId,
-            (safePage - 1) * safeSize, safeSize)
-        .stream()
-        .map(converter::entityToDO)
-        .toList();
+            (safePage - 1) * safeSize, safeSize);
     return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
   }
 
@@ -522,13 +521,10 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
-    List<FlowAuditLog> list = auditLogRepository
+    List<FlowAuditLogVO> list = auditLogRepository
         .findByBusinessTypeAndTarget(
             FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY, ownerUserId,
-            (safePage - 1) * safeSize, safeSize)
-        .stream()
-        .map(converter::entityToDO)
-        .toList();
+            (safePage - 1) * safeSize, safeSize);
     return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
   }
 

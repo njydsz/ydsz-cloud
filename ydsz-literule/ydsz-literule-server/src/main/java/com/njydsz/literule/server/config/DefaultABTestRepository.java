@@ -22,6 +22,9 @@ import com.njydsz.literule.domain.vo.RuleABRollbackVO;
  */
 public class DefaultABTestRepository implements ABTestRepository {
 
+  /** 回滚历史初始容量 */
+  private static final int INITIAL_ROLLBACK_CAPACITY = 4;
+
   /** 策略存储：ruleCode → 策略 VO */
   private final Map<String, RuleABPolicyVO> policies = new ConcurrentHashMap<>();
 
@@ -69,7 +72,7 @@ public class DefaultABTestRepository implements ABTestRepository {
     rollbacks.compute(
         rollback.getRuleCode(),
         (key, list) -> {
-          List<RuleABRollbackVO> target = list == null ? new ArrayList<>(4) : new ArrayList<>(list);
+          List<RuleABRollbackVO> target = list == null ? new ArrayList<>(INITIAL_ROLLBACK_CAPACITY) : new ArrayList<>(list);
           target.add(0, rollback);
           target.sort(Comparator.comparing(RuleABRollbackVO::getCreatedAt).reversed());
           return target;

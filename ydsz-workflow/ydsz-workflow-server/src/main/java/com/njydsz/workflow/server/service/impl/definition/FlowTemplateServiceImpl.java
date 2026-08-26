@@ -27,6 +27,13 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.domain.vo.FlowTemplateVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowDefinition;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowSkip;
+import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.infra.entity.FlowSkip;
+import com.njydsz.workflow.infra.entity.FlowTemplate;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
@@ -131,6 +138,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   private static final int NODE_TYPE_CALL_ACTIVITY = 7;
 
   /** 流程模板仓储（domain 层契约），管理 ydsz_flow_template 表 CRUD */
+  /** entity/VO 转换器 */
+  private final WorkflowConverter converter;
+
   private final FlowTemplateRepository templateRepository;
 
   /** 流程定义服务，模板导入时调用 deploy 部署为草稿定义 */
@@ -145,6 +155,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   /** 流程模块配置（缓存 TTL 与容量） */
   private final FlowProperties flowProperties;
 
+  /** MapStruct 转换器 */
+  private final WorkflowConverter converter;
+
   /**
    * 构造模板服务，初始化二级缓存。
    *
@@ -157,8 +170,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       FlowTemplateRepository templateRepository,
       FlowDefinitionService definitionService,
       ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider,
-      FlowProperties flowProperties) {
+      FlowProperties flowProperties,
+      WorkflowConverter converter) {
     this.templateRepository = templateRepository;
+    this.converter = converter;
     this.definitionService = definitionService;
     this.searchIndexEventBridgeProvider = searchIndexEventBridgeProvider;
     this.flowProperties = flowProperties;
@@ -480,9 +495,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .message("error.workflow.msg_f68a3fa3")
             .build();
       }
-      List<FlowTemplate> versions = templateRepository.findVersionsByTemplateCode(templateCode).stream()
-          .map(converter::entityToDO)
-          .toList();
+      List<FlowTemplateVO> versions = templateRepository.findVersionsByTemplateCode(templateCode);
       return versions.stream().map(this::toSummaryMap).collect(Collectors.toList());
     } catch (SysException e) {
       throw e;
@@ -512,7 +525,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       }
       // version 为空 → 返回最新版本（保持与 getTemplate 一致的语义）
       if (version == null) {
-        FlowTemplate latest = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
+        FlowTemplateVO latest = templateRepository.findByTemplateCode(templateCode).orElse(null);
         if (latest == null) {
           throw SysException.builder()
               .resultCode(YdszResultCode.NOT_FOUND)
@@ -953,7 +966,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    *
    * <p>P2-9: 包含版本与继承元信息。
    */
-  private Map<String, Object> toSummaryMap(FlowTemplate t) {
+  private Map<String, Object> toSummaryMap(FlowTemplateVO t) {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("templateCode", t.getTemplateCode());
     map.put("templateName", t.getTemplateName());
@@ -977,7 +990,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    *
    * <p>P2-9: 包含版本与继承元信息。
    */
-  private Map<String, Object> toDetailMap(FlowTemplate t) {
+  private Map<String, Object> toDetailMap(FlowTemplateVO t) {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("templateCode", t.getTemplateCode());
     map.put("templateName", t.getTemplateName());

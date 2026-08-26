@@ -42,9 +42,12 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.infra.entity.FlowAuditLog;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
+import com.njydsz.workflow.infra.entity.FlowNode;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
@@ -101,6 +104,9 @@ public class FlowInstanceLifecycleService {
   private static final int BATCH_START_MAX_SIZE = 100;
 
   /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
+  /** entity/VO 转换器 */
+  private final WorkflowConverter converter;
+
   private final FlowInstanceRepository instanceRepository;
 
   /** 流程定义服务，启动实例时解析流程定义节点和跳转 */

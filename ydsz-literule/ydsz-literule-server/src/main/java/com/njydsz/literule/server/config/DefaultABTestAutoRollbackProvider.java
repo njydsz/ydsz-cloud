@@ -32,6 +32,15 @@ import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
 @Slf4j
 public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProvider {
 
+  /** 默认错误率阈值 */
+  private static final BigDecimal DEFAULT_ERROR_RATE_THRESHOLD = new BigDecimal("0.30");
+
+  /** 默认最小样本量 */
+  private static final int DEFAULT_MIN_SAMPLE_SIZE = 500;
+
+  /** 默认评估窗口（分钟） */
+  private static final int DEFAULT_CHECK_WINDOW_MINUTES = 30;
+
   /** A/B 策略与回滚历史仓库 */
   private final ABTestRepository repository;
 
@@ -60,9 +69,9 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
     RuleABPolicyVO defaults = new RuleABPolicyVO();
     defaults.setRuleCode(ruleCode);
     defaults.setAutoRollbackEnabled(false);
-    defaults.setErrorRateThreshold(new BigDecimal("0.30"));
-    defaults.setMinSampleSize(500);
-    defaults.setCheckWindowMinutes(30);
+    defaults.setErrorRateThreshold(DEFAULT_ERROR_RATE_THRESHOLD);
+    defaults.setMinSampleSize(DEFAULT_MIN_SAMPLE_SIZE);
+    defaults.setCheckWindowMinutes(DEFAULT_CHECK_WINDOW_MINUTES);
     return defaults;
   }
 

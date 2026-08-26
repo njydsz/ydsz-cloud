@@ -165,9 +165,7 @@ public class RuleDecisionTableController {
    * <p>将指定决策表导出为 .xlsx 文件，便于业务人员离线编辑或备份。
    *
    * @param tableCode 决策表编码
-   * @return xlsx 文件流（Content-Type:
-   *     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
-      * @param response 参数说明
+   * @param response HTTP 响应（写出 Excel 文件流）
    */
   @GetMapping("/decision-tables/{tableCode}/export-excel")
   @AuthApiPermission(apiCodes = "execution:rule:view")
@@ -232,8 +230,7 @@ public class RuleDecisionTableController {
    *
    * <p>返回预填充列结构的 .xlsx 模板，用户填写后通过 /import-excel 上传。
    *
-   * @return xlsx 模板文件流
-      * @param response 参数说明
+   * @param response HTTP 响应（写出模板文件流）
    */
   @GetMapping("/decision-tables/excel-template")
   @AuthApiPermission(apiCodes = "execution:rule:view")

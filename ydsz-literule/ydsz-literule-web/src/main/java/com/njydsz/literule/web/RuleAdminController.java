@@ -364,7 +364,6 @@ public class RuleAdminController {
    *
    * <p>返回结构化的校验结果，包含错误类型、错误位置、错误描述、引用的变量列表， 供前端表达式编辑器渲染错误标记和自动补全提示。
    *
-   * @param expression 条件表达式
    * @return 校验结果
       * @param dto 参数说明
    */
@@ -421,7 +420,6 @@ public class RuleAdminController {
    * <p>对同一事实数据分别评估当前规则版本和候选规则版本，返回对比报告。 用于规则变更前的安全验证。
    *
    * @param ruleCode 规则编码
-   * @param request 请求体，包含 candidate（候选规则定义）和 facts（事实数据）
    * @return A/B 测试报告
       * @param dto 参数说明
    */

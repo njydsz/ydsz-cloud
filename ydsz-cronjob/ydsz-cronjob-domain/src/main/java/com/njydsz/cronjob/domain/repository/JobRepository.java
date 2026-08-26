@@ -279,6 +279,14 @@ public interface JobRepository {
   int updateById(JobVO vo);
 
   /**
+   * 按 ID 逻辑删除任务（MyBatis Plus {@code @TableLogic} 自动置 deleted=1）。
+   *
+   * @param id 任务 ID
+   * @return 受影响行数
+   */
+  int deleteById(String id);
+
+  /**
    * 统计指定条件的任务数量。
    *
    * @param status 状态过滤（可为空）

@@ -244,7 +244,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     j.setHandler(dto.getHandler());
     j.setParamsJson(dto.getParamsJson());
     j.setStatus(dto.getStatus());
-    j.setJobRemark(dto.getJobRemark());
+    j.setJobRemark(dto.getRemark());
     j.setScheduleType(dto.getScheduleType());
     j.setFixedRateMs(dto.getFixedRateMs());
     j.setFixedDelayMs(dto.getFixedDelayMs());
@@ -349,7 +349,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     log.info("[Cronjob] 启动加载任务数量: {}", list.size());
     for (JobVO vo : list) {
       try {
-        register(voToJob(vo));
+        registerInternal(voToJob(vo));
       } catch (Exception e) {
         log.warn("[Cronjob] 注册任务失败: key={} reason={}", vo.getJobKey(), e.getMessage());
       }
@@ -419,7 +419,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       jobRepository.updateById(j);
     }
     if ("NORMAL".equals(j.getStatus())) {
-      register(j);
+      registerInternal(j);
     }
     log.info(
         "[Cronjob] 创建任务: key={} scheduleType={} cron={} handler={} shardTotal={}",
@@ -460,7 +460,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     // P1-6: 保存历史版本（在更新之前保存当前快照）
     JobHistoryService historyService = jobHistoryServiceProvider.getIfAvailable();
     if (historyService != null) {
-      historyService.saveHistory(exists, dto.getUpdatedBy());
+      historyService.saveHistory(exists, exists.getUpdatedBy());
     }
     // P0-3: 同步 scheduleType（空值不覆盖，保持原值）
     if (StringUtils.hasText(dto.getScheduleType())) {
@@ -517,8 +517,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     if (StringUtils.hasText(dto.getStatus())) {
       exists.setStatus(dto.getStatus());
     }
-    if (dto.getJobRemark() != null) {
-      exists.setJobRemark(dto.getJobRemark());
+    if (dto.getRemark() != null) {
+      exists.setJobRemark(dto.getRemark());
     }
     // P0/P2/P3 收尾: 同步 lockTtlMs/timeoutMs/misfirePolicy/shardTotal
     if (dto.getLockTtlMs() != null) {
@@ -543,14 +543,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     // 重新调度：先注销旧的本地调度（CRON/FIXED_RATE/FIXED_DELAY 共用 scheduledMap）
     unregister(exists.getJobKey());
     if ("NORMAL".equals(exists.getStatus())) {
-      register(exists);
+      registerInternal(exists);
     }
     log.info(
         "[Cronjob] 更新任务: key={} scheduleType={}", exists.getJobKey(), exists.getScheduleType());
     // P1-6: 记录版本变更快照（统一走 JobHistoryService）
     JobHistoryService historyService2 = jobHistoryServiceProvider.getIfAvailable();
     if (historyService2 != null) {
-      historyService2.recordVersionChange(exists, exists, "UPDATE", dto.getUpdatedBy(), "任务更新");
+      historyService2.recordVersionChange(exists, exists, "UPDATE", exists.getUpdatedBy(), "任务更新");
     }
     // 同步到统一搜索索引（ydsz-common-search）
     syncSearchIndex("job", exists);
@@ -622,12 +622,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     JobVO j = voToJob(vo);
     if ("NORMAL".equals(j.getStatus())) {
       if (!scheduledMap.containsKey(j.getJobKey())) {
-        register(j);
+        registerInternal(j);
       }
     } else if ("PAUSED".equals(j.getStatus())) {
       j.setStatus("NORMAL");
       jobRepository.updateById(j);
-      register(j);
+      registerInternal(j);
     } else {
       throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)

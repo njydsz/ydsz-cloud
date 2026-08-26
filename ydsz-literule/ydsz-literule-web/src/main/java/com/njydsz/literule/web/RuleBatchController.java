@@ -129,7 +129,6 @@ public class RuleBatchController {
    *
    * <p>P0-5 关键修复：列表加 checkbox 后批量操作接口。 启用时同时校验 status=PUBLISHED，未发布的规则不能启用。
    *
-   * @param request 请求体，包含 ruleCodes / enabled
    * @param operator 操作人
    * @return 成功与失败明细
       * @param dto 参数说明
@@ -178,7 +177,6 @@ public class RuleBatchController {
   /**
    * 批量调整规则优先级
    *
-   * @param request 请求体，包含 ruleCodes / delta（可为负）
    * @param operator 操作人
    * @return 成功与失败明细
       * @param dto 参数说明
@@ -228,7 +226,6 @@ public class RuleBatchController {
   /**
    * 批量调整规则分类
    *
-   * @param request 请求体，包含 ruleCodes / category
    * @param operator 操作人
    * @return 成功与失败明细
       * @param dto 参数说明

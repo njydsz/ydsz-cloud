@@ -30,6 +30,24 @@ import com.njydsz.literule.server.config.RuleAdminService;
 @Slf4j
 public class RuleStressTestService {
 
+  /** 压测整体超时时间（分钟） */
+  private static final long AWAIT_TIMEOUT_MINUTES = 5L;
+
+  /** 毫秒转秒系数 */
+  private static final double MILLIS_PER_SECOND = 1000.0;
+
+  /** P50 分位 */
+  private static final int PERCENTILE_P50 = 50;
+
+  /** P95 分位 */
+  private static final int PERCENTILE_P95 = 95;
+
+  /** P99 分位 */
+  private static final int PERCENTILE_P99 = 99;
+
+  /** 纳秒到毫秒换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   /** 规则管理服务（提供 dry-run 通道） */
   private final RuleAdminService ruleAdminService;
 
@@ -122,7 +140,7 @@ public class RuleStressTestService {
                   } catch (Exception e) {
                     errorCount.increment();
                   } finally {
-                    latencies.add((System.nanoTime() - begin) / 1_000_000L);
+                    latencies.add((System.nanoTime() - begin) / NANOS_PER_MILLI);
                   }
                 }
               } finally {
@@ -130,8 +148,8 @@ public class RuleStressTestService {
               }
             });
       }
-      latch.await(5, TimeUnit.MINUTES);
-      long durationMs = Math.max(1, (System.nanoTime() - startNanos) / 1_000_000L);
+      latch.await(AWAIT_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+      long durationMs = Math.max(1, (System.nanoTime() - startNanos) / NANOS_PER_MILLI);
       return computeResult(
           ruleCode, latencies, successCount.sum(), errorCount.sum(), durationMs, threads);
     } catch (InterruptedException e) {
@@ -162,7 +180,7 @@ public class RuleStressTestService {
       int threads) {
     long total = success + errors;
     double errorRate = total == 0 ? 0.0 : (double) errors / total;
-    double qps = durationMs == 0 ? 0.0 : total * 1000.0 / durationMs;
+    double qps = durationMs == 0 ? 0.0 : total * MILLIS_PER_SECOND / durationMs;
     List<Long> sorted = new ArrayList<>(latencies);
     Collections.sort(sorted);
     return StressTestResult.builder()
@@ -172,9 +190,9 @@ public class RuleStressTestService {
         .failed(errors)
         .errorRate(errorRate)
         .qps(qps)
-        .p50Ms(percentile(sorted, 50))
-        .p95Ms(percentile(sorted, 95))
-        .p99Ms(percentile(sorted, 99))
+        .p50Ms(percentile(sorted, PERCENTILE_P50))
+        .p95Ms(percentile(sorted, PERCENTILE_P95))
+        .p99Ms(percentile(sorted, PERCENTILE_P99))
         .durationMs(durationMs)
         .threads(threads)
         .build();
@@ -196,33 +214,32 @@ public class RuleStressTestService {
   }
 
   /**
-   * 压测结果
-   *
-   * @param ruleCode 规则编码
-   * @param total 总执行次数
-   * @param success 成功次数
-   * @param failed 失败次数
-   * @param errorRate 错误率（0-1）
-   * @param qps 每秒执行次数
-   * @param p50Ms P50 耗时（毫秒）
-   * @param p95Ms P95 耗时（毫秒）
-   * @param p99Ms P99 耗时（毫秒）
-   * @param durationMs 总耗时（毫秒）
-   * @param threads 并发线程数
+   * 压测结果（字段语义见字段注释）。
    */
   @Builder
   @Data
   public static class StressTestResult {
+    /** 规则编码 */
     private String ruleCode;
+    /** 总执行次数 */
     private long total;
+    /** 成功次数 */
     private long success;
+    /** 失败次数 */
     private long failed;
+    /** 错误率（0-1） */
     private double errorRate;
+    /** 每秒执行次数 */
     private double qps;
+    /** P50 耗时（毫秒） */
     private long p50Ms;
+    /** P95 耗时（毫秒） */
     private long p95Ms;
+    /** P99 耗时（毫秒） */
     private long p99Ms;
+    /** 总耗时（毫秒） */
     private long durationMs;
+    /** 并发线程数 */
     private int threads;
   }
 }

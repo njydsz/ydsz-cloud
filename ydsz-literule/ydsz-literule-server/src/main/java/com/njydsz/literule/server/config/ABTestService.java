@@ -175,27 +175,26 @@ public class ABTestService {
   }
 
   /**
-   * A/B 对比报告
-   *
-   * @param ruleCode 规则编码
-   * @param currentTriggered 当前规则是否触发
-   * @param candidateTriggered 候选规则是否触发
-   * @param currentSeverity 当前规则严重度
-   * @param candidateSeverity 候选规则严重度
-   * @param winner 对比胜者
-   * @param conclusion 结论文案
-   * @param evaluatedAt 评估时间
+   * A/B 对比报告（字段语义见字段注释）。
    */
   @Builder
   @Data
   public static class ABTestReport {
+    /** 规则编码 */
     private String ruleCode;
+    /** 当前规则是否触发 */
     private boolean currentTriggered;
+    /** 候选规则是否触发 */
     private boolean candidateTriggered;
+    /** 当前规则严重度 */
     private RuleSeverity currentSeverity;
+    /** 候选规则严重度 */
     private RuleSeverity candidateSeverity;
+    /** 对比胜者 */
     private Winner winner;
+    /** 结论文案 */
     private String conclusion;
+    /** 评估时间 */
     private LocalDateTime evaluatedAt;
   }
 }

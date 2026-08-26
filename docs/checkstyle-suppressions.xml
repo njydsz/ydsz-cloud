@@ -132,6 +132,10 @@
          声明行被 RegexpSinglelineJava 正则匹配属规则误报，豁免 ThreadLocal 检测 -->
     <suppress files="RuleDebugger\.java" checks="RegexpSinglelineJava" message=".*ThreadLocal.*"/>
 
+    <!-- literule TreeInterpreter：ThreadLocal 求值会话在 eval/evalWithTrace 的 finally 块中已 remove
+         （P0-2 并发修复，无状态单例解释器），声明行被 RegexpSinglelineJava 正则匹配属规则误报，豁免 ThreadLocal 检测 -->
+    <suppress files="TreeInterpreter\.java" checks="RegexpSinglelineJava" message=".*ThreadLocal.*"/>
+
     <!-- ============================================ -->
     <!-- 3. 全部 common 子模块：算法类规则通用豁免     -->
     <!--    自研基础库（引擎/工具/配置/异常/领域模型） -->
