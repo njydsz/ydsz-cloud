@@ -13,7 +13,7 @@ import com.njydsz.system.infra.entity.TenantPlanMenu;
 /**
  * 租户套餐-菜单关联 Mapper
  *
- * <p>对应数据表 <code>ydsz_tenant_plan_menu</code>。
+ * <p>对应数据表 <code>ydsz_sys_tenant_plan_menu</code>。
  *
  * <p>租户购买套餐后自动获得关联菜单的访问权限，是 RBAC 的「套餐级」权限分配。
  *

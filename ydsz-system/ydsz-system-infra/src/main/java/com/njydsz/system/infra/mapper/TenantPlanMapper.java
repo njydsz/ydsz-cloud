@@ -9,7 +9,7 @@ import com.njydsz.system.infra.entity.TenantPlan;
 /**
  * 租户套餐 Mapper
  *
- * <p>对应数据表 <code>ydsz_tenant_plan</code>。
+ * <p>对应数据表 <code>ydsz_sys_tenant_plan</code>。
  *
  * <p>套餐定义租户的功能/容量/价格（基础版/企业版/旗舰版），由 {@code TenantPlanMenu} 关联可访问菜单。
  *

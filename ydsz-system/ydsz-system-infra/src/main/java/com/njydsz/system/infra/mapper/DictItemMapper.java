@@ -15,7 +15,7 @@ import com.njydsz.system.infra.entity.DictItem;
 /**
  * 字典项 Mapper 接口
  *
- * <p>提供对 {@code ydsz_dict_item} 表的 CRUD 操作 + 高频查询自定义 SQL。 继承 MyBatis-Plus {@link BaseMapper} 获得基础
+ * <p>提供对 {@code ydsz_sys_dict_item} 表的 CRUD 操作 + 高频查询自定义 SQL。 继承 MyBatis-Plus {@link BaseMapper} 获得基础
  * CRUD 能力； 通过 {@link Select} 注解声明两个高频查询方法。
  *
  * <p><b>自定义 SQL：</b>
@@ -50,7 +50,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
    * @return 字典项 DO；不存在返回 {@code null}
    */
   @Select(
-      "SELECT * FROM ydsz_dict_item WHERE type_code = #{typeCode} AND item_code = #{itemCode} "
+      "SELECT * FROM ydsz_sys_dict_item WHERE type_code = #{typeCode} AND item_code = #{itemCode} "
           + "AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
   DictItem selectByTypeAndCode(
       @Param("typeCode") String typeCode, @Param("itemCode") String itemCode);
@@ -64,7 +64,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
    * @return 字典项列表（按 {@code sort_order} 升序）
    */
   @Select(
-      "SELECT * FROM ydsz_dict_item WHERE type_code = #{typeCode} AND deleted = 0 AND status = 'ENABLED' "
+      "SELECT * FROM ydsz_sys_dict_item WHERE type_code = #{typeCode} AND deleted = 0 AND status = 'ENABLED' "
           + "ORDER BY sort_order ASC")
   List<DictItem> listEnabledByTypeCode(@Param("typeCode") String typeCode);
 
@@ -76,7 +76,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
    * @param typeCode 字典类型编码
    * @return 删除的记录数
    */
-  @Delete("DELETE FROM ydsz_dict_item WHERE type_code = #{typeCode}")
+  @Delete("DELETE FROM ydsz_sys_dict_item WHERE type_code = #{typeCode}")
   int physicalDeleteByTypeCode(@Param("typeCode") String typeCode);
 
   /**

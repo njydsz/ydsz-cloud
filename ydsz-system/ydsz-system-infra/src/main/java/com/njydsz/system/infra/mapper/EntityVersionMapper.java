@@ -14,7 +14,7 @@ import com.njydsz.system.infra.entity.EntityVersion;
 /**
  * 统一实体版本管理 Mapper
  *
- * <p>对应数据表 <code>ydsz_entity_version</code>，为 Config/Dict/Variable 提供统一的版本数据访问能力。
+ * <p>对应数据表 <code>ydsz_sys_entity_version</code>，为 Config/Dict/Variable 提供统一的版本数据访问能力。
  *
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
  *
@@ -39,7 +39,7 @@ public interface EntityVersionMapper extends BaseMapper<EntityVersion> {
    * @return 版本列表（按 {@code effective_date} 倒序）
    */
   @Select(
-      "SELECT * FROM ydsz_entity_version WHERE resource_type = #{resourceType} "
+      "SELECT * FROM ydsz_sys_entity_version WHERE resource_type = #{resourceType} "
           + "AND resource_key = #{resourceKey} AND deleted = 0 "
           + "ORDER BY effective_date DESC")
   List<EntityVersion> listByResourceTypeAndKey(
@@ -54,7 +54,7 @@ public interface EntityVersionMapper extends BaseMapper<EntityVersion> {
    * @return 版本实体，不存在返回 null
    */
   @Select(
-      "SELECT * FROM ydsz_entity_version WHERE resource_type = #{resourceType} "
+      "SELECT * FROM ydsz_sys_entity_version WHERE resource_type = #{resourceType} "
           + "AND resource_key = #{resourceKey} AND version = #{version} "
           + "AND deleted = 0 LIMIT 1")
   EntityVersion selectByTypeAndKeyAndVersion(

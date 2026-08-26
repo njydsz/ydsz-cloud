@@ -9,7 +9,7 @@ import com.njydsz.system.infra.entity.DictType;
 /**
  * 字典类型 Mapper
  *
- * <p>对应数据表 <code>ydsz_dict_type</code>。
+ * <p>对应数据表 <code>ydsz_sys_dict_type</code>。
  *
  * <p>字典类型是字典项的分类（如 gender/job_level/industry），是下拉框/单选/多选等枚举型字段的元数据。
  *

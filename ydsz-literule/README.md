@@ -24,7 +24,7 @@ ydsz-literule/
 ├── ydsz-literule-domain     # 领域层：VO、枚举、领域事件、@LiteRule 注解、ModelInputProvider、Repository 接口
 ├── ydsz-literule-infra      # 基础设施：MyBatis Mapper + XML、Entity DO、Repository 实现、决策表 Excel 导入导出
 ├── ydsz-literule-server     # 应用服务 + 引擎核心：DefaultRuleEngine、LiteExpr、热加载、CEP、回放、审批、SPI Provider 实现
-├── ydsz-literule-web        # Web 层：22 个 REST Controller + Spring Boot 启动类 LiteruleApplication
+├── ydsz-literule-web        # Web 层：21 个 REST Controller + Spring Boot 启动类 LiteruleApplication
 └── ydsz-literule-app        # App 基座：自动配置（LiteRuleAppAutoConfiguration）、健康检查、OpenAPI 预留
 ```
 
@@ -36,12 +36,13 @@ ydsz-literule/
 
 本模块是 YDSZ 的**轻量级规则引擎**，覆盖规则定义、编排、评估、灰度、回放、审批全生命周期。
 
-### 1. 6 种规则类型
+### 1. 7 种规则类型
 
 | 类型 | 实现类 | 适用场景 |
 |---|---|---|
 | **Expression** 表达式 | `ExpressionRule` | 基于 LiteExpr 表达式动态评估，支持 `${var}` 模板渲染与动态严重度 |
 | **DecisionTable** 决策表 | `DecisionTableRule` | 二维表规则，支持 Excel 导入导出 |
+| **CrossDecisionTable** 交叉决策表 | `CrossDecisionTableRule` | 行×列双维度交叉矩阵（费率/风险等级表），支持 DSL 声明 |
 | **DecisionTree** 决策树 | `DecisionTreeRule` | 多层 if-else 树规则 |
 | **Scorecard** 评分卡 | `ScorecardRule` | 多维加权评分 |
 | **Script** 脚本 | `ScriptRule` | JSR-223 脚本规则 |
@@ -54,7 +55,7 @@ ydsz-literule/
 |---|---|---|
 | **LiteExpr 表达式引擎** | 2.0.0 起自研，零外部依赖；含词法/语法分析、AST 编译缓存、常量折叠、短路求值、AST 级安全沙箱 | `LiteExprEngine` / `LiteExprCompiler` / `TreeInterpreter` / `LiteExprSandbox` |
 | **规则链编排** | 5 种语义：THEN/WHEN/IF/ELIF/SWITCH，支持 DSL + DAG 可视化画布 | `RuleChain` / `RuleChainGraph` / `RuleChainDslParser` |
-| **多级缓存** | Caffeine（L1 本地）+ Redis（L2 分布式）装饰器模式 | `CachingRuleConfigProvider` |
+| **多级缓存** | ydsz-common-cache（L1 本地）+ Redis（L2 分布式）装饰器模式 | `CachingRuleConfigProvider` |
 | **热加载** | DB / Nacos / Apollo / ZooKeeper / Redis / File 多源动态刷新 | `RuleHotReloader` / `RuleSourceManager` |
 | **版本管理** | 版本快照 + Diff + 一键回滚 | `RuleVersionRepository` / `RuleVersionDiffService` |
 | **dry-run 仿真** | 不实际执行，只评估结果（不发布事件、不记录统计） | `RuleEngine.dryRun` |
@@ -94,7 +95,7 @@ com.njydsz.literule.server
 ├── approval/        # 多级审批流（SINGLE/COUNTERSIGN/SEQUENCE）
 ├── audit/           # 审计日志
 ├── benchmark/       # 压测服务
-├── cache/           # 多级缓存（Caffeine L1 + Redis L2）
+├── cache/           # 多级缓存（ydsz-common-cache L1 + Redis L2）
 ├── cep/             # 复杂事件处理（CEPEngine / CEPPattern）
 ├── config/          # 自动配置 + 注解注册 + ABTest + 热加载 + 冲突检测
 ├── core/            # 引擎核心（DefaultRuleEngine / 熔断 / 超时 / 灰度 / 索引 / 生命周期 / 异步 Trace / Micrometer 指标 / 并行评估 / 结果缓存 / 统计 / Trace 构建）
@@ -309,7 +310,7 @@ ydsz:
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.literule.cache.enabled` | `true` | 启用多级缓存 |
-| `ydsz.literule.cache.l1-ttl-seconds` | `60` | Caffeine L1 TTL |
+| `ydsz.literule.cache.l1-ttl-seconds` | `60` | ydsz-common-cache L1 TTL |
 | `ydsz.literule.cache.l1-max-size` | `1000` | L1 最大条数 |
 | `ydsz.literule.cache.l2-enabled` | `true` | 启用 Redis L2（需 Redisson） |
 | `ydsz.literule.cache.l2-ttl-seconds` | `300` | Redis L2 TTL |
@@ -396,7 +397,7 @@ ydsz:
 
 ## 数据库
 
-实体 `@TableName` 共映射 **17 张表**（`ydsz_rule_def` / `ydsz_rule_version_history` / `ydsz_rule_template` / `ydsz_rule_test_case` / `ydsz_rule_chain_graph` / `ydsz_rule_dependency` / `ydsz_rule_pack` / `ydsz_rule_pack_install` / `ydsz_rule_variable_def` / `ydsz_rule_execution_trace` / `ydsz_rule_decision_table` / `ydsz_rule_canary_bucket` / `ydsz_rule_scorecard` / `ydsz_rule_decision_tree` / `ydsz_rule_script` / `ydsz_rule_ab_policy` / `ydsz_rule_ab_rollback`），DDL 由各部署环境统一维护，不在仓库内提供 SQL 脚本。
+实体 `@TableName` 共映射 **16 张表**（`ydsz_rule_def` / `ydsz_rule_version_history` / `ydsz_rule_template` / `ydsz_rule_chain_graph` / `ydsz_rule_dependency` / `ydsz_rule_pack` / `ydsz_rule_pack_install` / `ydsz_rule_variable_def` / `ydsz_rule_execution_trace` / `ydsz_rule_decision_table` / `ydsz_rule_canary_bucket` / `ydsz_rule_scorecard` / `ydsz_rule_decision_tree` / `ydsz_rule_script` / `ydsz_rule_ab_policy` / `ydsz_rule_ab_rollback`），DDL 与索引声明见 `sql/schema.sql`（随仓库维护）。
 
 ## SPI 扩展点
 
@@ -461,7 +462,7 @@ mvn -pl ydsz-literule -am test
 | `ydsz-literule-app` | 0 | — |
 | `ydsz-literule-domain` | 0 | — |
 | `ydsz-literule-infra` | 0 | — |
-| `ydsz-literule-server` | 2 | 核心引擎（`DefaultRuleEngineCoreTest`）+ 并行评估（`DefaultRuleEngineParallelTest`） |
+| `ydsz-literule-server` | 4 | 核心引擎（`DefaultRuleEngineTest`）+ 表达式引擎（`LiteExprEngineTest`）+ 并发（`LiteExprConcurrencyTest`）+ A/B（`ABTestServiceTest`） |
 | `ydsz-literule-web` | 0 | — |
 
 > **现状说明**：评分卡 / 表达式引擎 / 热加载等专项测试、其余规则类型与 LiteExpr 的单元测试**尚未补齐**，是后续优化的重点。

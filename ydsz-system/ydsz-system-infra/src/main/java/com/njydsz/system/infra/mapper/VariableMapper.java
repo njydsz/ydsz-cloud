@@ -9,7 +9,7 @@ import com.njydsz.system.infra.entity.Variable;
 /**
  * 系统变量 Mapper
  *
- * <p>对应数据表 <code>ydsz_variable</code>。
+ * <p>对应数据表 <code>ydsz_sys_variable</code>。
  *
  * <p>系统变量是平台配置的 KV（开关/限流阈值/全局配置），由 {@code ConfigService} 提供热加载。
  *
