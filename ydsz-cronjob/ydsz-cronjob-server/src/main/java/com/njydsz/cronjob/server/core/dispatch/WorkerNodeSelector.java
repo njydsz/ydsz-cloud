@@ -59,6 +59,9 @@ public class WorkerNodeSelector {
   /** FNV-1a 32 位哈希：素数 */
   private static final int FNV1A_PRIME = 0x01000193;
 
+  /** byte → 无符号整数掩码（0-255） */
+  private static final int BYTE_UNSIGNED_MASK = 0xff;
+
   public WorkerNodeSelector(
       CronjobProperties cronjobProperties,
       ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider,
@@ -187,7 +190,7 @@ public class WorkerNodeSelector {
     int hash = FNV1A_OFFSET_BASIS;
     byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
     for (byte b : bytes) {
-      hash ^= (b & 0xff);
+      hash ^= (b & BYTE_UNSIGNED_MASK);
       hash *= FNV1A_PRIME;
     }
     return hash;
