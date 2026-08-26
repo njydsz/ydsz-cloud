@@ -9,7 +9,7 @@
         id/审计字段需由调用方预先填充（批量 XML 不走 MyBatis-Plus 拦截器，与 DictItemMapper.insertBatch 一致）。
     -->
     <insert id="insertBatch" parameterType="java.util.List">
-        INSERT INTO ydsz_tenant_plan_menu (
+        INSERT INTO ydsz_sys_tenant_plan_menu (
             id, plan_id, menu_id,
             tenant_id, deleted, created_at, created_by
         ) VALUES

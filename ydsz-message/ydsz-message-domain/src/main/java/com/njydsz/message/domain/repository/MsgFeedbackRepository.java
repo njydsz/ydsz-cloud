@@ -1,6 +1,7 @@
 package com.njydsz.message.domain.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.query.MsgFeedbackQuery;
@@ -48,4 +49,12 @@ public interface MsgFeedbackRepository {
    * @return 分页结果（VO 分页）
    */
   PageResponse<List<MsgFeedbackVO>> findPage(MsgFeedbackQuery query);
+
+  /**
+   * 根据条件查询单条反馈记录。
+   *
+   * @param query 查询参数
+   * @return 反馈 VO，未找到返回 {@code Optional.empty()}
+   */
+  Optional<MsgFeedbackVO> findOne(MsgFeedbackQuery query);
 }

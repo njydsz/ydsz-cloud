@@ -1,11 +1,14 @@
 package com.njydsz.workflow.server.service.impl.notification;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +17,6 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
-import lombok.Data;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 
@@ -572,18 +574,18 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
    * <p>替代原来依赖 {@code com.njydsz.common.feign.dto.NotificationFeignDTO} 的外部类。
    */
   @Data
-  public static class NotificationFeignDTO implements java.io.Serializable {
-    @java.io.Serial private static final long serialVersionUID = 1L;
+  public static class NotificationFeignDTO implements Serializable {
+    @Serial private static final long serialVersionUID = 1L;
     private String title;
     private String content;
     private String level;
     private String category;
     private String senderId;
     private String receiverId;
-    private java.util.List<Long> receiverIds;
+    private List<Long> receiverIds;
     private String bizType;
     private String bizId;
-    private java.time.LocalDateTime expiredAt;
+    private LocalDateTime expiredAt;
     private Boolean emailEnabled;
     private String receiverEmail;
   }

@@ -51,6 +51,12 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
    */
   public static final long DEFAULT_MAX_STEPS = 1_000_000L;
 
+  /** 节点访问预算下限 */
+  private static final long MIN_MAX_STEPS = 1024L;
+
+  /** 墙上时钟超时检查采样间隔（每 N 步检查一次，避免高频 nanoTime 开销） */
+  private static final long DEADLINE_CHECK_INTERVAL = 0xFF;
+
   private final FunctionRegistry functionRegistry;
 
   /** 单次求值会话（ThreadLocal，保证并发安全） */
@@ -105,7 +111,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   public TreeInterpreter(FunctionRegistry functionRegistry, int maxRecursionDepth, long maxSteps) {
     this.functionRegistry = functionRegistry;
     this.maxRecursionDepth = Math.max(MIN_RECURSION_DEPTH, maxRecursionDepth);
-    this.maxSteps = Math.max(1024L, maxSteps);
+    this.maxSteps = Math.max(MIN_MAX_STEPS, maxSteps);
   }
 
   /**
@@ -153,7 +159,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
           node != null ? node.line() : 0,
           node != null ? node.column() : 0);
     }
-    if (evalSession.deadlineNanos > 0 && (steps & 0xFF) == 0) {
+    if (evalSession.deadlineNanos > 0 && (steps & DEADLINE_CHECK_INTERVAL) == 0) {
       if (System.nanoTime() > evalSession.deadlineNanos) {
         throw new LiteExprException(
             "表达式求值超时（超过配置的求值时限），请简化表达式或拆分规则",

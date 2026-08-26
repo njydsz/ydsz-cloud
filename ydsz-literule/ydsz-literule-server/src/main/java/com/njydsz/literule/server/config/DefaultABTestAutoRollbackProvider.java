@@ -49,6 +49,9 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
   /** 单次评估拉取的轨迹样本上限（防内存/IO 放大） */
   private static final int SAMPLE_CAP = 2000;
 
+  /** 错误率计算保留小数位 */
+  private static final int ERROR_RATE_SCALE = 4;
+
   /** A/B 策略与回滚历史仓库 */
   private final ABTestRepository repository;
 
@@ -163,7 +166,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
 
     BigDecimal errorRate =
         BigDecimal.valueOf(errors)
-            .divide(BigDecimal.valueOf(total), 4, RoundingMode.HALF_UP);
+            .divide(BigDecimal.valueOf(total), ERROR_RATE_SCALE, RoundingMode.HALF_UP);
     if (errorRate.compareTo(threshold) >= 0) {
       log.warn(
           "[LiteRule-ABTest] A/B 检测到劣化，建议自动回滚: ruleCode={}, errorRate={}, threshold={}, "

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
-import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**

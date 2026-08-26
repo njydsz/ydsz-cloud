@@ -24,8 +24,8 @@ import com.njydsz.workflow.domain.converter.FlowDelegateAuthConverter;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
-import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -375,28 +375,28 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   }
 
   /**
-   * {@inheritDoc}
-   * 
+   * 查询我发起的委托授权（DO→VO 转换视图）。
+   *
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
    *
-   * @param ownerUserId 参数说明
-   * @param tenantId 参数说明
-   * @param status 参数说明
-   * @return 返回值说明
+   * @param ownerUserId 委托发起人 ID
+   * @param tenantId 租户 ID
+   * @param status 授权状态
+   * @return 委托授权视图列表
    */
   public List<FlowDelegateAuthVO> listMineVO(String ownerUserId, String tenantId, String status) {
     return listMine(ownerUserId, tenantId, status);
   }
 
   /**
-   * {@inheritDoc}
-   * 
+   * 查询我被委托的授权（DO→VO 转换视图）。
+   *
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
    *
-   * @param delegateUserId 参数说明
-   * @param tenantId 参数说明
-   * @param status 参数说明
-   * @return 返回值说明
+   * @param delegateUserId 被委托人 ID
+   * @param tenantId 租户 ID
+   * @param status 授权状态
+   * @return 委托授权视图列表
    */
   public List<FlowDelegateAuthVO> listAsDelegateVO(
       String delegateUserId, String tenantId, String status) {

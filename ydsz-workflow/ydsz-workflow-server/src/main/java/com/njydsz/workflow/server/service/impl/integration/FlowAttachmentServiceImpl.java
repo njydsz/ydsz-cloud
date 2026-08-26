@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -190,9 +189,6 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
    */
   /**
    * {@inheritDoc}
-   *
-   * @param instanceId 参数说明
-   * @return 返回值说明
    */
   @Override
   public void delete(String attachmentId, String operatorId) {

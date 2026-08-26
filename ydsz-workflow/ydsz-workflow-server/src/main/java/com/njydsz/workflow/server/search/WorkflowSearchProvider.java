@@ -8,10 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.core.IndexDocument;
-import com.njydsz.common.search.core.SearchField;
-import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.workflow.domain.repository.FlowTemplateRepository;
 import com.njydsz.workflow.domain.vo.FlowTemplateVO;
 

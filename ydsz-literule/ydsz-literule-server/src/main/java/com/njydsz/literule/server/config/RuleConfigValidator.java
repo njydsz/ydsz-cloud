@@ -7,7 +7,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,12 +36,23 @@ public class RuleConfigValidator {
     /** 事实加载超时上限（毫秒） */
   private static final long MAX_TIMEOUT_MS = 2000;
 
-  @Autowired private LiteRuleProperties properties;
+  private final LiteRuleProperties properties;
 
-  @Autowired private Validator validator;
+  private final Validator validator;
 
   /** 校验错误列表（供监控/测试读取） */
   private final List<String> validationErrors = new ArrayList<>();
+
+  /**
+   * 构造器注入（P1-14：@Autowired 字段注入改构造器注入）
+   *
+   * @param properties 规则引擎配置属性
+   * @param validator JSR-303 校验器
+   */
+  public RuleConfigValidator(LiteRuleProperties properties, Validator validator) {
+    this.properties = properties;
+    this.validator = validator;
+  }
 
   @PostConstruct
   public void validate() {

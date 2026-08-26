@@ -2,9 +2,11 @@ package com.njydsz.literule.server.orchestrator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -139,7 +141,75 @@ public final class RuleGraphValidator {
         issues.add(GraphValidationIssue.warn("ORPHAN_NODE", "孤立节点 " + n.getNodeId() + " 未被任何边连接"));
       }
     }
+
+    // 6. 多节点循环检测（DFS 三色标记，P1-20）：自环已在第 4 步检出，此处捕获长度 ≥2 的环
+    detectCycles(nodes, edges, nodeIds, issues);
     return issues;
+  }
+
+  /**
+   * 基于 DFS 三色标记检测有向环（长度 ≥2）
+   *
+   * <p>0=未访问（白）、1=访问中（灰，路径上）、2=已结束（黑）。 灰节点被再次访问即存在环，输出环上节点路径便于定位。
+   *
+   * @param nodes 画布节点
+   * @param edges 画布边
+   * @param nodeIds 合法节点 ID 集合
+   * @param issues 问题收集器
+   */
+  private static void detectCycles(
+      List<ChainNodeDTO> nodes,
+      List<ChainEdgeDTO> edges,
+      Set<String> nodeIds,
+      List<GraphValidationIssue> issues) {
+    // 邻接表（仅保留两端均合法的边，自环在第 4 步已单独报告）
+    Map<String, List<String>> adjacency = new HashMap<>();
+    for (ChainEdgeDTO e : edges) {
+      if (e.getSourceNodeId() == null
+          || e.getTargetNodeId() == null
+          || e.getSourceNodeId().equals(e.getTargetNodeId())) {
+        continue;
+      }
+      if (nodeIds.contains(e.getSourceNodeId()) && nodeIds.contains(e.getTargetNodeId())) {
+        adjacency.computeIfAbsent(e.getSourceNodeId(), k -> new ArrayList<>())
+            .add(e.getTargetNodeId());
+      }
+    }
+
+    Map<String, Integer> color = new HashMap<>();
+    List<String> path = new ArrayList<>();
+    for (ChainNodeDTO n : nodes) {
+      if (n.getNodeId() != null && color.getOrDefault(n.getNodeId(), 0) == 0) {
+        dfsCycle(n.getNodeId(), adjacency, color, path, issues);
+      }
+    }
+  }
+
+  /** DFS 访问一个节点；发现灰节点回溯输出环路径 */
+  private static void dfsCycle(
+      String nodeId,
+      Map<String, List<String>> adjacency,
+      Map<String, Integer> color,
+      List<String> path,
+      List<GraphValidationIssue> issues) {
+    color.put(nodeId, 1);
+    path.add(nodeId);
+    for (String next : adjacency.getOrDefault(nodeId, List.of())) {
+      int nextColor = color.getOrDefault(next, 0);
+      if (nextColor == 1) {
+        // 找到环：从 path 中截取环路径
+        int startIdx = path.indexOf(next);
+        List<String> cycle = new ArrayList<>(path.subList(startIdx, path.size()));
+        cycle.add(next);
+        issues.add(
+            GraphValidationIssue.error(
+                "CYCLE_DETECTED", "检测到节点循环依赖: " + String.join(" -> ", cycle)));
+      } else if (nextColor == 0) {
+        dfsCycle(next, adjacency, color, path, issues);
+      }
+    }
+    path.remove(path.size() - 1);
+    color.put(nodeId, 2);
   }
 
   /** 画布问题严重度 */

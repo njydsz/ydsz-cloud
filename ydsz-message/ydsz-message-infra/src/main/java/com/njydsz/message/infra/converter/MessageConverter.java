@@ -102,6 +102,10 @@ public interface MessageConverter {
 
   List<MsgRouteRuleVO> routeRuleListToVO(List<MsgRouteRule> entities);
 
+  /** 路由规则 VO → 路由规则 Entity。 */
+  @Named("voToEntity")
+  MsgRouteRule voToRouteRule(MsgRouteRuleVO vo);
+
   // ===== MsgOffline =====
   MsgOfflineVO doToVO(MsgOffline entity);
 
@@ -112,10 +116,18 @@ public interface MessageConverter {
 
   List<MsgSubscriptionVO> subscriptionListToVO(List<MsgSubscription> entities);
 
+  /** 订阅关系 VO → 订阅关系 Entity。 */
+  @Named("voToEntity")
+  MsgSubscription voToSubscription(MsgSubscriptionVO vo);
+
   // ===== MsgPreference =====
   MsgPreferenceVO doToVO(MsgPreference entity);
 
   List<MsgPreferenceVO> preferenceListToVO(List<MsgPreference> entities);
+
+  /** 用户偏好 VO → 用户偏好 Entity。 */
+  @Named("voToEntity")
+  MsgPreference voToPreference(MsgPreferenceVO vo);
 
   // ===== MsgUserChannel =====
   MsgUserChannelVO doToVO(MsgUserChannel entity);
@@ -136,6 +148,10 @@ public interface MessageConverter {
   MsgFeedbackVO doToVO(MsgFeedback entity);
 
   List<MsgFeedbackVO> feedbackListToVO(List<MsgFeedback> entities);
+
+  /** 用户反馈 VO → 用户反馈 Entity。 */
+  @Named("voToEntity")
+  MsgFeedback voToFeedback(MsgFeedbackVO vo);
 
   // ===== MsgBatch =====
   MsgBatchVO doToVO(MsgBatch entity);

@@ -52,6 +52,12 @@ import com.njydsz.common.json.YdszJson;
 @Slf4j
 public final class RuleDslParser {
 
+  /** YAML 集合别名数量上限（防 billion-laughs 别名炸弹） */
+  private static final int YAML_MAX_ALIASES = 50;
+
+  /** YAML 文档码点上限（2 MiB，防超大文档内存耗尽） */
+  private static final int YAML_MAX_CODEPOINTS = 2 * 1024 * 1024;
+
   private RuleDslParser() {}
 
   /**
@@ -539,8 +545,8 @@ public final class RuleDslParser {
    */
   private static Yaml newYaml() {
     LoaderOptions options = new LoaderOptions();
-    options.setMaxAliasesForCollections(50);
-    options.setCodePointLimit(2 * 1024 * 1024);
+    options.setMaxAliasesForCollections(YAML_MAX_ALIASES);
+    options.setCodePointLimit(YAML_MAX_CODEPOINTS);
     options.setAllowDuplicateKeys(false);
     return new Yaml(new SafeConstructor(options));
   }

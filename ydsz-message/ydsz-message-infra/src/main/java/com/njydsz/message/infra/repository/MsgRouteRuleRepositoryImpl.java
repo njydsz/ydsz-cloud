@@ -111,6 +111,28 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
 
+  @Override
+  public Optional<MsgRouteRuleVO> findOne(MsgRouteRuleQuery query) {
+    QueryWrapper<MsgRouteRule> wrapper = new QueryWrapper<>();
+    if (query.getRuleCode() != null && !query.getRuleCode().isBlank()) {
+      wrapper.eq("rule_code", query.getRuleCode());
+    }
+    if (query.getRuleName() != null && !query.getRuleName().isBlank()) {
+      wrapper.like("rule_name", query.getRuleName());
+    }
+    if (query.getBizType() != null && !query.getBizType().isBlank()) {
+      wrapper.eq("biz_type", query.getBizType());
+    }
+    if (query.getChannel() != null && !query.getChannel().isBlank()) {
+      wrapper.eq("channel", query.getChannel());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
+    }
+    wrapper.eq("deleted", 0);
+    return Optional.ofNullable(msgRouteRuleMapper.selectOne(wrapper)).map(converter::doToVO);
+  }
+
   private MsgRouteRule voToEntity(MsgRouteRuleVO vo) {
     if (vo == null) {
       return null;

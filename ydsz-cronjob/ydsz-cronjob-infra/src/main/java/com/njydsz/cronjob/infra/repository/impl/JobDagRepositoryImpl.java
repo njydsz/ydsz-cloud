@@ -60,6 +60,11 @@ public class JobDagRepositoryImpl implements JobDagRepository {
   }
 
   @Override
+  public int advanceNextFireTime(String dagId, LocalDateTime oldNext, LocalDateTime newNext) {
+    return jobDagMapper.advanceNextFireTime(dagId, oldNext, newNext);
+  }
+
+  @Override
   public String insert(JobDagSaveDTO dto) {
     JobDag entity = converter.dtoToEntity(dto);
     jobDagMapper.insert(entity);

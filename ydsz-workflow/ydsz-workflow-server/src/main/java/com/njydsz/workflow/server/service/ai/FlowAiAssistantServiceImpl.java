@@ -27,6 +27,12 @@ public class FlowAiAssistantServiceImpl implements FlowAiAssistantService {
   /** 最大推荐委派目标数 */
   private static final int MAX_DELEGATE_RECOMMENDATIONS = 5;
 
+  /** 从描述提取流程名称的最大长度（超出截断加省略号） */
+  private static final int MAX_FLOW_NAME_LENGTH = 30;
+
+  /** 流程编码前缀长度（用于生成编码后缀） */
+  private static final int FLOW_CODE_PREFIX_LENGTH = 10;
+
   /**
    * AI 生成流程定义草稿。
    *
@@ -143,7 +149,9 @@ public class FlowAiAssistantServiceImpl implements FlowAiAssistantService {
       return "新建流程";
     }
     // 取描述前 30 字符作为名称
-    return description.length() > 30 ? description.substring(0, 30) + "..." : description;
+    return description.length() > MAX_FLOW_NAME_LENGTH
+        ? description.substring(0, MAX_FLOW_NAME_LENGTH) + "..."
+        : description;
   }
 
   /**

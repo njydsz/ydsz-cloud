@@ -393,12 +393,12 @@ mvn -pl ydsz-agent spring-boot:run
 
 | 表名 | 说明 |
 |---|---|
-| `ydsz_agent_definition` | Agent 定义主表（类型、配置、工具列表） |
-| `ydsz_agent_trace` | Agent 执行链路主表 |
-| `ydsz_agent_trace_step` | 链路步骤表（含 cost 字段 — V2 迁移添加） |
-| `ydsz_agent_approval` | 人工审批请求表 |
-| `ydsz_prompt_template` | Prompt 模板主表（支持 #{var} 变量替换） |
-| `ydsz_prompt_version` | Prompt 模板版本历史表 |
+| `ydsz_agt_definition` | Agent 定义主表（类型、配置、工具列表） |
+| `ydsz_agt_trace` | Agent 执行链路主表 |
+| `ydsz_agt_trace_step` | 链路步骤表（含 cost 字段 — V2 迁移添加） |
+| `ydsz_agt_approval` | 人工审批请求表 |
+| `ydsz_agt_prompt_template` | Prompt 模板主表（支持 #{var} 变量替换） |
+| `ydsz_agt_prompt_version` | Prompt 模板版本历史表 |
 | `ydsz_token_usage_record` | Token 用量记录表 |
 
 ## 技术选型
@@ -489,7 +489,7 @@ mvn -pl ydsz-agent spring-boot:run
 
 ### Q10：Prompt 模板变量替换
 
-Prompt 模板使用 `#{var}` 语法声明变量，运行时由 `PromptTemplate` 进行替换。模板存储在 `ydsz_prompt_template` 表，支持版本管理（`ydsz_prompt_version`）。
+Prompt 模板使用 `#{var}` 语法声明变量，运行时由 `PromptTemplate` 进行替换。模板存储在 `ydsz_agt_prompt_template` 表，支持版本管理（`ydsz_agt_prompt_version`）。
 
 ---
 

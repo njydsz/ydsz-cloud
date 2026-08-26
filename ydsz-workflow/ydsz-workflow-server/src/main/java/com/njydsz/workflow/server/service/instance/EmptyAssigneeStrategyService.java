@@ -71,7 +71,6 @@ public class EmptyAssigneeStrategyService {
    * 
    *
    * @param taskRepository 参数说明
-   * @param converter 参数说明
    * @param archiveService 参数说明
    * @param support 参数说明
    * @param assigneeResolutionService 参数说明

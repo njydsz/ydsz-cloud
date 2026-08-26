@@ -22,7 +22,7 @@
   <!-- 查询待发布事件 -->
   <select id="selectPending" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM ydsz_job_outbox
+    FROM ydsz_com_outbox
     WHERE status = 'PENDING'
       AND next_retry_time &lt;= #{now}
       AND retry_count &lt; #{maxRetry}
@@ -32,7 +32,7 @@
 
   <!-- 标记为已发布 -->
   <update id="markPublished">
-    UPDATE ydsz_job_outbox
+    UPDATE ydsz_com_outbox
     SET status = 'PUBLISHED',
         update_time = NOW()
     WHERE id = #{id}
@@ -41,7 +41,7 @@
 
   <!-- 标记为死亡信 -->
   <update id="markDead">
-    UPDATE ydsz_job_outbox
+    UPDATE ydsz_com_outbox
     SET status = 'DEAD',
         update_time = NOW()
     WHERE id = #{id}
@@ -50,7 +50,7 @@
 
   <!-- 递增重试计数 -->
   <update id="incrementRetry">
-    UPDATE ydsz_job_outbox
+    UPDATE ydsz_com_outbox
     SET retry_count = retry_count + 1,
         next_retry_time = #{nextRetry},
         update_time = NOW()
@@ -60,7 +60,7 @@
 
   <!-- 删除已发布历史数据 -->
   <delete id="deletePublishedBefore">
-    DELETE FROM ydsz_job_outbox
+    DELETE FROM ydsz_com_outbox
     WHERE status = 'PUBLISHED'
       AND update_time &lt; #{beforeTime}
   </delete>

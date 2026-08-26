@@ -74,6 +74,19 @@ public interface JobDagRepository {
   int updateResultStats(String dagId, boolean success);
 
   /**
+   * P1-F7: CAS 推进 DAG 下次触发时间（DagCronScheduler 定时触发用）。
+   *
+   * <p>仅当 {@code next_fire_time} 仍为 {@code oldNext} 时更新为 {@code newNext}，与 JobScanner 的任务
+   * 推进语义一致，防止多节点/多路同时触发同一 DAG。
+   *
+   * @param dagId DAG ID
+   * @param oldNext 期望的旧下次触发时间（CAS 条件）
+   * @param newNext 新的下次触发时间
+   * @return 受影响行数（0=已被其他节点推进，本次放弃）
+   */
+  int advanceNextFireTime(String dagId, LocalDateTime oldNext, LocalDateTime newNext);
+
+  /**
    * 新增 DAG。
    *
    * @param dto DAG 保存 DTO

@@ -110,4 +110,24 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
           + "       version = version + 1, updated_at = CURRENT_TIMESTAMP "
           + "WHERE id = #{dagId} AND deleted = 0")
   int updateResultStats(@Param("dagId") String dagId, @Param("success") boolean success);
+
+  /**
+   * P1-F7: CAS 推进 DAG 下次触发时间（DagCronScheduler 定时触发用）。
+   *
+   * <p>仅当 {@code next_fire_time} 仍为 {@code oldNext} 时更新为 {@code newNext}，与 JobScanner 的任务
+   * 推进语义一致：预读/扫描/派发多路互斥，保证同一 DAG 在同一时刻只被一个触发方推进，防止重复触发。
+   *
+   * @param dagId DAG ID
+   * @param oldNext 期望的旧下次触发时间（CAS 条件）
+   * @param newNext 新的下次触发时间
+   * @return 受影响行数（0=已被其他节点/线程推进，本次放弃）
+   */
+  @Update(
+      "UPDATE ydsz_job_dag SET next_fire_time = #{newNext}, version = version + 1, "
+          + "       updated_at = CURRENT_TIMESTAMP "
+          + "WHERE id = #{dagId} AND next_fire_time = #{oldNext} AND deleted = 0")
+  int advanceNextFireTime(
+      @Param("dagId") String dagId,
+      @Param("oldNext") LocalDateTime oldNext,
+      @Param("newNext") LocalDateTime newNext);
 }

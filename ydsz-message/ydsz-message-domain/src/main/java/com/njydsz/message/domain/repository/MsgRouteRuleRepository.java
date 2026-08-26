@@ -73,4 +73,12 @@ public interface MsgRouteRuleRepository {
    * @return 分页结果（VO 分页）
    */
   PageResponse<List<MsgRouteRuleVO>> findPage(MsgRouteRuleQuery query);
+
+  /**
+   * 根据条件查询单条路由规则。
+   *
+   * @param query 查询参数
+   * @return 路由规则 VO，未找到返回 {@code Optional.empty()}
+   */
+  Optional<MsgRouteRuleVO> findOne(MsgRouteRuleQuery query);
 }

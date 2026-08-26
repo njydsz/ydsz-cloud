@@ -45,13 +45,13 @@
 
     <select id="selectByJobKey" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM ydsz_job
+        FROM ydsz_job_main
         WHERE job_key = #{jobKey} AND deleted = 0
     </select>
 
     <select id="selectAllNormal" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM ydsz_job
+        FROM ydsz_job_main
         WHERE status = 'NORMAL' AND deleted = 0
     </select>
 
@@ -60,7 +60,7 @@
     <!-- P1-2: 支持所有 schedule_type（CRON / FIXED_RATE / FIXED_DELAY），固定频率任务统一由 Leader 扫描驱动，具备故障转移能力 -->
     <select id="selectDueJobs" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM ydsz_job
+        FROM ydsz_job_main
         WHERE status = 'NORMAL'
           AND deleted = 0
           AND next_fire_time IS NOT NULL
@@ -75,7 +75,7 @@
     <!-- P2-5: 支持 CRON + FIXED_RATE（秒级 fixed-rate 任务获得毫秒级预读触发，主扫描器兜底） -->
     <select id="selectDueJobsInWindow" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM ydsz_job
+        FROM ydsz_job_main
         WHERE status = 'NORMAL'
           AND deleted = 0
           AND schedule_type IN ('CRON', 'FIXED_RATE')
@@ -89,7 +89,7 @@
 
     <!-- P1-7: CAS 推进 next_fire_time，防止 Leader 切换时重复派发 -->
     <update id="advanceNextFireTime">
-        UPDATE ydsz_job
+        UPDATE ydsz_job_main
         SET next_fire_time = #{newNextFireTime},
             last_fire_time = #{lastFireTime},
             fire_count = fire_count + 1,
@@ -100,7 +100,7 @@
     </update>
 
     <update id="updateStats">
-        UPDATE ydsz_job
+        UPDATE ydsz_job_main
         <set>
             <if test="lastFireTime != null">last_fire_time = #{lastFireTime},</if>
             <if test="nextFireTime != null">next_fire_time = #{nextFireTime},</if>

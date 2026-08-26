@@ -11,10 +11,10 @@ import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDiffVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVersionVO;
 import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
 import com.njydsz.workflow.domain.vo.FlowRollbackResultVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.impl.definition.FlowDefinitionDeployManager;
 import com.njydsz.workflow.server.service.impl.definition.FlowDefinitionDesignManager;
@@ -122,7 +122,9 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
   @Override
   public FlowDefinitionDetailVO getDetail(String definitionId) {
     Map<String, Object> map = queryService.getDetail(definitionId);
-    if (map == null) { return null; }
+    if (map == null) {
+      return null;
+    }
     return YdszJson.convertValue(map, FlowDefinitionDetailVO.class);
   }
 
@@ -194,7 +196,9 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
   @Override
   public List<FlowDefinitionVersionVO> listVersions(String definitionId) {
     List<Map<String, Object>> list = queryService.listVersions(definitionId);
-    if (list == null) { return null; }
+    if (list == null) {
+      return null;
+    }
     return YdszJson.convertValue(list,
         new com.njydsz.common.json.type.JsonType<List<FlowDefinitionVersionVO>>() {});
   }
@@ -202,14 +206,18 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
   @Override
   public FlowDefinitionDiffVO diffVersions(String definitionId, Integer version1, Integer version2) {
     Map<String, Object> map = migrationManager.diffVersions(definitionId, version1, version2);
-    if (map == null) { return null; }
+    if (map == null) {
+      return null;
+    }
     return YdszJson.convertValue(map, FlowDefinitionDiffVO.class);
   }
 
   @Override
   public FlowBatchDeployResultVO batchDeployFromZip(byte[] zipBytes, String tenantId) {
     Map<String, Object> map = deployManager.batchDeployFromZip(zipBytes, tenantId);
-    if (map == null) { return null; }
+    if (map == null) {
+      return null;
+    }
     return YdszJson.convertValue(map, FlowBatchDeployResultVO.class);
   }
 
@@ -231,14 +239,18 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
   @Override
   public FlowMigrationImpactVO analyzeMigrationImpact(String oldDefinitionId, String newDefinitionId) {
     Map<String, Object> map = migrationManager.analyzeMigrationImpact(oldDefinitionId, newDefinitionId);
-    if (map == null) { return null; }
+    if (map == null) {
+      return null;
+    }
     return YdszJson.convertValue(map, FlowMigrationImpactVO.class);
   }
 
   @Override
   public FlowRollbackResultVO rollbackDefinition(String flowCode, String tenantId) {
     Map<String, Object> map = publishManager.rollbackDefinition(flowCode, tenantId);
-    if (map == null) { return null; }
+    if (map == null) {
+      return null;
+    }
     return YdszJson.convertValue(map, FlowRollbackResultVO.class);
   }
 }

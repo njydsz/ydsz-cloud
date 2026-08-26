@@ -1,6 +1,7 @@
 package com.njydsz.message.infra.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -73,6 +74,12 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
     }
     wrapper.eq("deleted", 0);
     return wrapper;
+  }
+
+  @Override
+  public Optional<MsgFeedbackVO> findOne(MsgFeedbackQuery query) {
+    QueryWrapper<MsgFeedback> wrapper = buildWrapper(query);
+    return Optional.ofNullable(msgFeedbackMapper.selectOne(wrapper)).map(converter::doToVO);
   }
 
   private MsgFeedback voToEntity(MsgFeedbackVO vo) {

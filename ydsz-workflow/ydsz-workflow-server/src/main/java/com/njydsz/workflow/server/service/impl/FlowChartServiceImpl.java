@@ -43,6 +43,16 @@ public class FlowChartServiceImpl implements FlowChartService {
   /** 绘图边距 */
   private static final double PADDING = 40;
 
+  /** 自动布局：每行节点数 */
+  private static final int NODES_PER_ROW = 3;
+
+  /** 无坐标兜底画布最小宽/高 */
+  private static final int FALLBACK_SVG_WIDTH = 400;
+  private static final int FALLBACK_SVG_HEIGHT = 300;
+
+  /** 文本垂直偏移（相对节点中心） */
+  private static final int TEXT_V_OFFSET = 4;
+
   /** 已完成节点颜色 */
   private static final String COLOR_DONE = "#52c41a";
   /** 当前节点颜色 */
@@ -100,7 +110,7 @@ public class FlowChartServiceImpl implements FlowChartService {
       double x = PADDING;
       double y = PADDING;
       int count = 0;
-      int nodesPerRow = 3;
+      int nodesPerRow = NODES_PER_ROW;
       for (FlowNodeVO node : nodes) {
         String nodeCode = node.getNodeCode();
         if (nodeCode == null) {
@@ -150,8 +160,8 @@ public class FlowChartServiceImpl implements FlowChartService {
     int svgWidth = (int) (maxX + PADDING);
     int svgHeight = (int) (maxY + PADDING);
     if (svgWidth <= 0 || svgHeight <= 0) {
-      svgWidth = 400;
-      svgHeight = 300;
+      svgWidth = FALLBACK_SVG_WIDTH;
+      svgHeight = FALLBACK_SVG_HEIGHT;
     }
 
     StringBuilder sb = new StringBuilder();
@@ -196,7 +206,7 @@ public class FlowChartServiceImpl implements FlowChartService {
       sb.append(String.format(
           "<text x=\"%.1f\" y=\"%.1f\" text-anchor=\"middle\" font-size=\"11\" "
               + "fill=\"%s\" font-family=\"sans-serif\">%s</text>%n",
-          rx + rw / 2, ry + rh / 2 + 4,
+          rx + rw / 2, ry + rh / 2 + TEXT_V_OFFSET,
           (activeNodes.contains(nodeCode) || doneNodes.contains(nodeCode)) ? "#fff" : "#595959",
           escapeXml(label)));
     }

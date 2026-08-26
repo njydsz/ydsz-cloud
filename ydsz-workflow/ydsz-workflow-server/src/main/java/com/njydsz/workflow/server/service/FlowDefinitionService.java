@@ -8,10 +8,10 @@ import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDiffVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVersionVO;
 import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
 import com.njydsz.workflow.domain.vo.FlowRollbackResultVO;
-import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 
 /**
  * 流程定义 Service

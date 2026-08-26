@@ -25,4 +25,4 @@
 
 | 版本 | 说明 |
 |---|---|
-| V1 | 初始建表：ydsz_job / ydsz_job_glue / ydsz_job_task / ydsz_job_history / ydsz_job_dag / ydsz_job_dag_version / ydsz_job_dag_instance / ydsz_job_dag_node_instance / ydsz_job_log / ydsz_job_log_content / ydsz_alert_dispatch / ydsz_job_alert_rule / ydsz_job_node / ydsz_job_webhook / ydsz_job_artifact / ydsz_job_daily_stats / ydsz_tenant_quota / ydsz_job_outbox（18 张表） |
+| V1 | 初始建表：ydsz_job_main / ydsz_job_glue / ydsz_job_task / ydsz_job_history / ydsz_job_dag / ydsz_job_dag_version / ydsz_job_dag_instance / ydsz_job_dag_node_instance / ydsz_job_log / ydsz_job_log_content / ydsz_job_alert_dispatch / ydsz_job_alert_rule / ydsz_job_node / ydsz_job_webhook / ydsz_job_artifact / ydsz_job_daily_stats / ydsz_job_tenant_quota / ydsz_job_outbox（18 张表） |

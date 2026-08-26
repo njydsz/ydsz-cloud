@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +49,7 @@ public class RuleCanaryRouter {
   private final ExpressionEngine evaluator;
 
   /** 灰度桶计数器：ruleCode -> {PRIMARY: count, CANARY: count} */
-  private final ConcurrentMap<String, long[]> bucketCounts = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, AtomicLongArray> bucketCounts = new ConcurrentHashMap<>();
 
   public RuleCanaryRouter(ExpressionEngine evaluator) {
     this.evaluator = evaluator;
@@ -183,16 +184,14 @@ public class RuleCanaryRouter {
   }
 
   /**
-   * 记录分桶结果
+   * 记录分桶结果（P1-14：以 AtomicLongArray 替代裸 synchronized，消除锁并保持计数原子性）
    *
    * @param ruleCode 规则编码
    * @param canary 是否进入候选桶
    */
   public void recordBucket(String ruleCode, boolean canary) {
-    long[] counts = bucketCounts.computeIfAbsent(ruleCode, k -> new long[2]);
-    synchronized (counts) {
-      counts[canary ? 1 : 0]++;
-    }
+    AtomicLongArray counts = bucketCounts.computeIfAbsent(ruleCode, k -> new AtomicLongArray(2));
+    counts.incrementAndGet(canary ? 1 : 0);
   }
 
   /**
@@ -201,7 +200,10 @@ public class RuleCanaryRouter {
    * @return ruleCode -> [primaryCount, canaryCount]
    */
   public Map<String, long[]> getCanaryBucketStats() {
-    return new HashMap<>(bucketCounts);
+    Map<String, long[]> snapshot = new HashMap<>(bucketCounts.size());
+    bucketCounts.forEach(
+        (code, counts) -> snapshot.put(code, new long[] {counts.get(0), counts.get(1)}));
+    return snapshot;
   }
 
   /** 重置分桶统计 */
