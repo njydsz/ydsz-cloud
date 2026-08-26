@@ -24,7 +24,6 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.PreferenceUpsertDTO;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.config.PreferenceService;
 
 /**
@@ -102,7 +101,7 @@ public class PreferenceController {
   @RateLimit(resource = "message.preference.upsert", threshold = 50)
   @PostMapping
   public YdszResponse<MsgPreferenceVO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
-    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(preferenceService.upsert(dto)));
+    return YdszResponse.success(preferenceService.upsert(dto));
   }
 
   /**
@@ -115,8 +114,7 @@ public class PreferenceController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
   @GetMapping("/{userId}")
   public YdszResponse<List<MsgPreferenceVO>> listByUser(@PathVariable String userId) {
-    return YdszResponse.success(
-        MessageConverter.INSTANT.preferenceListToVO(preferenceService.listByUser(userId)));
+    return YdszResponse.success(preferenceService.listByUser(userId));
   }
 
   /**
@@ -132,8 +130,7 @@ public class PreferenceController {
   @GetMapping("/{userId}/{channel}/{bizType}")
   public YdszResponse<MsgPreferenceVO> getByUser(
       @PathVariable String userId, @PathVariable String channel, @PathVariable String bizType) {
-    return YdszResponse.success(
-        MessageConverter.INSTANT.entityToVO(preferenceService.getByUser(userId, channel, bizType)));
+    return YdszResponse.success(preferenceService.getByUser(userId, channel, bizType));
   }
 
   /**

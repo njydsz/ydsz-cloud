@@ -15,7 +15,7 @@ import com.njydsz.cronjob.domain.job.JobHandler;
 /**
  * 搜索索引全量重建 Job。
  *
- * <p>触发统一搜索索引（ydsz_search_index）的全量重建，适用于：
+ * <p>触发统一搜索索引（ydsz_wiki_search_index）的全量重建，适用于：
  *
  * <ul>
  *   <li>索引丢失/损坏后的恢复

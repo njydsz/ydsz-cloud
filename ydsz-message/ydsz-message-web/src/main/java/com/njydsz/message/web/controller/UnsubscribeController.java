@@ -23,9 +23,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
-import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.config.UnsubscribeService;
 import com.njydsz.message.server.token.UnsubscribeTokenPayload;
 
@@ -109,8 +107,7 @@ public class UnsubscribeController {
     if (token == null || token.isBlank()) {
       return YdszResponse.error(YdszResultCode.BAD_REQUEST, "退订 token 不能为空");
     }
-    return YdszResponse.success(
-        MessageConverter.INSTANT.entityToVO(unsubscribeService.unsubscribeByToken(token)));
+    return YdszResponse.success(unsubscribeService.unsubscribeByToken(token));
   }
 
   /**
@@ -141,9 +138,7 @@ public class UnsubscribeController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<MsgSubscriptionVO>>> page(UnsubscribeQueryDTO query) {
-    PageResponse<List<MsgSubscription>> page = unsubscribeService.pageUnsubscribed(query);
-    List<MsgSubscriptionVO> voList = MessageConverter.INSTANT.subscriptionListToVO(page.getData());
-    return YdszResponse.success(PageResponse.success(page.getTotal(), page.getPageNum(), page.getPageSize(), voList));
+    return YdszResponse.success(unsubscribeService.pageUnsubscribed(query));
   }
 
   /**

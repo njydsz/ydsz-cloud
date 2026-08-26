@@ -12,7 +12,7 @@
         审计字段（created_at, created_by）同理由调用方设置，与单条 insert 保持一致。
     -->
     <insert id="insertBatch" parameterType="java.util.List">
-        INSERT INTO ydsz_dict_item (
+        INSERT INTO ydsz_sys_dict_item (
             id, type_code, item_code, item_value, sort_order,
             parent_id, description, ext_json, status,
             tenant_id, deleted, created_at, created_by

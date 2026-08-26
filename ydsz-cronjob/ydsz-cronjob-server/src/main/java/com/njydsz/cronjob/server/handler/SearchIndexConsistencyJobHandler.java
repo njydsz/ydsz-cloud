@@ -17,7 +17,7 @@ import com.njydsz.cronjob.domain.job.JobHandler;
  *
  * <p>定时对比数据库文档数与搜索索引文档数，检测索引丢失或冗余， 并对不一致项自动修复（丢失文档重新索引，冗余文档删除索引）。
  *
- * <p><b>双重索引巡检：</b>同时检查 nw_search_index（DB 降级存储）和 ydsz_search_index（统一搜索主索引）与实际业务数据的一致性。
+ * <p><b>双重索引巡检：</b>同时检查 nw_search_index（DB 降级存储）和 ydsz_wiki_search_index（统一搜索主索引）与实际业务数据的一致性。
  *
  * <p>Bean 名称 = {@code searchIndexConsistencyJobHandler}， 在 ydsz_job
  * 表插入记录：handler=searchIndexConsistencyJobHandler。

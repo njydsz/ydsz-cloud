@@ -19,7 +19,7 @@ import com.njydsz.common.tenant.config.TenantProperties;
  * public class CustomDatasourceResolver implements DatasourceKeyResolver {
  *     \@Override
  *     public String resolve(String tenantId) {
- *         // 从 ydsz_tenant 表查询 datasource_key
+ *         // 从 ydsz_sys_tenant 表查询 datasource_key
  *         return tenantDatasourceMapper.findKeyByTenantId(tenantId);
  *     }
  * }

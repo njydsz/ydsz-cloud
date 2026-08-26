@@ -21,7 +21,7 @@ import org.springframework.util.StringUtils;
  *
  * <pre>
  * &#64;TenantColumn("org_id")
- * &#64;TableName("ydsz_file_node")
+ * &#64;TableName("ydsz_wiki_file_node")
  * public class FileNodeDO extends MpBaseEntity&lt;String&gt; { ... }
  * </pre>
  *

@@ -120,4 +120,11 @@
 ## 维护约定
 - 表结构变更：同步修改 `V1__baseline.sql` 与 `data/postgre/ydsz-workflow.sql`，不得只改一处。
 - 索引新增：高频查询路径（待办列表、SLA 扫描、历史归档）必须提前评估索引，并在实体 Javadoc 中登记。
-- 变更评审：PR 涉及 DDL 时，CI 应比对本清单与 data/ 副本是否一致。
+- 变更评审：PR 涉及 DDL 时，CI 应比对本清单与 data/ 副本是否一致。## 并发防护审计（P0-2，2026-08-26）
+
+| 项 | 结论 |
+|---|---|
+| 任务完成写库 | 已改走 CAS 条件更新（`completeTask`：`WHERE task_status IN ('PENDING','CLAIMED')`），0 行时跳过重复归档（`FlowTaskArchiveService.completeAndArchive`） |
+| 流程推进并发 | `DefaultFlowAdvancer.advance/start` 已有实例级分布式锁 `flow:instance:op:{instanceId}` 兜底（等锁 5s/持锁 60s） |
+| 会签计数器 | PARALLEL/WEIGHTED 的 `approveFinished/approveWeight` 采用读-改-写，真并发下存在丢更新风险；建议后续接入 `incrementFinished` SQL 原子自增，并以并发集成测试固化（见 P0-1 单测扩展） |
+| 历史表唯一性 | `ydsz_flow_his_task.task_id` 无唯一约束；叠加 CAS 早退后重复归档窗口已极小，若需 DB 级兜底可加 `uk_ydsz_flow_his_task_task_id UNIQUE(task_id)`（存量库需先对账去重） |

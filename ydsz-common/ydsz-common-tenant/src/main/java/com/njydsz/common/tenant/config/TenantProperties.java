@@ -38,7 +38,7 @@ import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
  *     enabled: true
  *     mode: SINGLE
  *     tenant-column: tenant_id
- *     ignore-tables: [ydsz_tenant, ydsz_sys_tenant_plan]
+ *     ignore-tables: [ydsz_sys_tenant, ydsz_sys_tenant_plan]
  *     anon-urls: [/auth/login, /auth/register]
  * </pre>
  *
@@ -72,7 +72,7 @@ import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
  * ydsz:
  *   tenant:
  *     table-column-mapping:
- *       ydsz_file_node: org_id
+ *       ydsz_wiki_file_node: org_id
  * </pre>
  *
  * @author ydsz-team

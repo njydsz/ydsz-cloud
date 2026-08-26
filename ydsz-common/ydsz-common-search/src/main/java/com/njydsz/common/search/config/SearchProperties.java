@@ -26,7 +26,7 @@ import org.springframework.validation.annotation.Validated;
  *       ttl: 60
  *     pg:                            # PG 引擎特定配置
  *       search-config: search_zh
- *       index-table: ydsz_search_index
+ *       index-table: ydsz_wiki_search_index
  *       field-weights: { title: 1.0, subtitle: 0.7, content: 0.4, tags: 0.2 }
  *       time-decay-days: 0
  *     text-processor:                # 文本处理配置
@@ -182,7 +182,7 @@ public class SearchProperties {
     private String searchConfig = "search_zh";
 
     /** 索引表名 */
-    private String indexTable = "ydsz_search_index";
+    private String indexTable = "ydsz_wiki_search_index";
 
     /** 字段权重 */
     private FieldWeights fieldWeights = new FieldWeights();

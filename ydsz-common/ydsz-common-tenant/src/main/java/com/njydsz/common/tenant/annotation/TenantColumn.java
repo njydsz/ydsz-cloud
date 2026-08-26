@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  *
  * <pre>
  * &#64;TenantColumn("org_id")  // 该表用 org_id 而非 tenant_id
- * &#64;TableName("ydsz_file_node")
+ * &#64;TableName("ydsz_wiki_file_node")
  * public class FileNodeDO extends MpBaseEntity&lt;String&gt; { ... }
  * </pre>
  *
