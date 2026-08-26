@@ -20,6 +20,7 @@ import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.vo.JobArtifactVO;
+import com.njydsz.cronjob.domain.vo.JobDagContextVO;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
@@ -31,11 +32,13 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.cronjob.domain.vo.JobWebhookRetryVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 import com.njydsz.cronjob.infra.entity.OutboxEvent;
 import com.njydsz.cronjob.infra.entity.dag.JobDag;
+import com.njydsz.cronjob.infra.entity.dag.JobDagContext;
 import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.infra.entity.dag.JobDagVersion;
@@ -47,6 +50,7 @@ import com.njydsz.cronjob.infra.entity.job.JobHistory;
 import com.njydsz.cronjob.infra.entity.job.JobNode;
 import com.njydsz.cronjob.infra.entity.job.JobTask;
 import com.njydsz.cronjob.infra.entity.job.JobWebhook;
+import com.njydsz.cronjob.infra.entity.job.JobWebhookRetry;
 import com.njydsz.cronjob.infra.entity.job.TenantQuota;
 import com.njydsz.cronjob.infra.entity.log.JobDailyStats;
 import com.njydsz.cronjob.infra.entity.log.JobLog;
@@ -465,4 +469,39 @@ public interface CronjobConverter {
    * @return 节点上下文实体列表
    */
   List<JobDagContext> jobDagContextListVOToEntity(List<JobDagContextVO> vos);
+
+  // ===== JobWebhookRetry（P1-3：Webhook 重试补偿） =====
+
+  /**
+   * 将 Webhook 重试记录实体转换为 VO。
+   *
+   * @param entity 重试记录实体
+   * @return 重试记录 VO
+   */
+  JobWebhookRetryVO jobWebhookRetryEntityToVO(JobWebhookRetry entity);
+
+  /**
+   * 将 Webhook 重试记录实体列表转换为 VO 列表。
+   *
+   * @param entities 重试记录实体列表
+   * @return 重试记录 VO 列表
+   */
+  List<JobWebhookRetryVO> jobWebhookRetryListToVO(List<JobWebhookRetry> entities);
+
+  /**
+   * 将 Webhook 重试记录 VO 转换为实体。
+   *
+   * @param vo 重试记录 VO
+   * @return 重试记录实体
+   */
+  @Mapping(target = "id", ignore = true)
+  JobWebhookRetry jobWebhookRetryVOToEntity(JobWebhookRetryVO vo);
+
+  /**
+   * 将 Webhook 重试记录 VO 列表转换为实体列表。
+   *
+   * @param vos 重试记录 VO 列表
+   * @return 重试记录实体列表
+   */
+  List<JobWebhookRetry> jobWebhookRetryListVOToEntity(List<JobWebhookRetryVO> vos);
 }

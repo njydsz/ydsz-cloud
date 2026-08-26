@@ -25,6 +25,11 @@ import org.springframework.validation.annotation.Validated;
  *   <li>{@link #getExecutor()} 执行器配置
  * </ul>
  *
+ * <h3>P1-12: 配置校验</h3>
+ *
+ * <p>通过 {@code @Validated} 启用 Spring 配置属性校验，结合 {@link CronjobConfigValidator}
+ * 实现启动即报错。子配置类（{@link LeaderConfig}、{@link NodeConfig}）通过字段级 JSR-380 注解约束。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -124,6 +129,9 @@ public class CronjobProperties {
 
   /** P1-P3: 秒级预读调度配置（时间轮式精准触发，提升 CRON 任务调度精度） */
   private PrecisionConfig preload = new PrecisionConfig();
+
+  /** P1-3: Webhook 重试补偿配置 */
+  private WebhookRetryConfig webhookRetry = new WebhookRetryConfig();
 
   /** SpEL 表达式缓存配置（已废弃，1.0.0 移除） */
   @Deprecated

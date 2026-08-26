@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
 import com.njydsz.cronjob.server.service.job.JobService;
 
 /**
@@ -27,10 +27,11 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @RequiredArgsConstructor
 public class EventDrivenScheduler {
 
-  private static final String DEDUP_KEY_PREFIX = "ydsz:job:event:dedup:";
+  /** Redis Key segment：事件去重（完整 key = ydzs:job:event:dedup:{msgId}） */
+  private static final String DEDUP_KEY_SEGMENT = "event:dedup";
   private static final Duration DEDUP_TTL = Duration.ofMinutes(30);
 
-  private final RedisStringOps redisStringOps;
+  private final CronjobRedisOps cronjobRedisOps;
   private final JobRepository jobRepository;
   private final JobService jobService;
 
@@ -58,9 +59,9 @@ public class EventDrivenScheduler {
       return false;
     }
 
-    String dedupKey = DEDUP_KEY_PREFIX + msgId;
-    Boolean acquired = redisStringOps.setIfAbsent(dedupKey, "1", DEDUP_TTL.toSeconds());
-    if (Boolean.FALSE.equals(acquired)) {
+    String dedupKey = DEDUP_KEY_SEGMENT + ":" + msgId;
+    Boolean acquired = cronjobRedisOps.setIfAbsent(dedupKey, "1", DEDUP_TTL.toSeconds());
+    if (!acquired) {
       log.info("[EventScheduler] 事件已去重, 跳过触发: jobKey={} msgId={}", jobKey, msgId);
       return false;
     }

@@ -20,6 +20,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
+import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
+import com.njydsz.cronjob.domain.vo.JobWebhookRetryVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 
 /**
@@ -73,6 +75,7 @@ public class WebhookEventDispatcher {
 
 
   private final JobWebhookRepository jobWebhookRepository;
+  private final WebhookRetryRepository webhookRetryRepository;
   private final HttpClient httpClient =
       HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
 
@@ -97,7 +100,11 @@ public class WebhookEventDispatcher {
       eventBody.put("data", payload);
 
       for (JobWebhookVO webhook : webhooks) {
-        sendWebhookWithRetry(webhook, eventBody);
+        boolean success = sendWebhookWithRetry(webhook, eventBody);
+        if (!success) {
+          // P1-3: 在线重试耗尽后写入补偿表，由 WebhookRetryScanTask 异步重试
+          createRetryRecord(webhook, eventBody);
+        }
       }
     } catch (Exception e) {
       log.error(
@@ -227,6 +234,46 @@ public class WebhookEventDispatcher {
             ? ""
             : response.body().substring(0, Math.min(BODY_LOG_MAX_LENGTH, response.body().length())));
     return false;
+  }
+
+  /**
+   * P1-3: 创建重试补偿记录。
+   *
+   * <p>当在线重试（3 次）全部失败时，将本次推送写入 {@code ydsz_job_webhook_retry} 补偿表，
+   * 由 {@code WebhookRetryScanTask} 周期性扫描并指数退避重试。
+   *
+   * @param webhook Webhook 配置
+   * @param body 请求体
+   */
+  private void createRetryRecord(JobWebhookVO webhook, ObjectNode body) {
+    try {
+      JobWebhookRetryVO retryVO = new JobWebhookRetryVO();
+      retryVO.setWebhookId(webhook.getId());
+      retryVO.setEventType(body.getString("eventType"));
+      retryVO.setJobKey(body.getString("jobKey"));
+      retryVO.setCallbackUrl(webhook.getCallbackUrl());
+      retryVO.setHttpMethod(webhook.getHttpMethod());
+      retryVO.setHeaders(webhook.getHeaders());
+      retryVO.setWebhookSecret(webhook.getSecret());
+      retryVO.setPayloadJson(YdszJson.toJson(body));
+      retryVO.setRetryCount(0);
+      retryVO.setMaxRetries(5);
+      retryVO.setNextRetryTime(LocalDateTime.now().plusSeconds(30));
+      retryVO.setRetryStatus("PENDING");
+      retryVO.setCreatedAt(LocalDateTime.now());
+      webhookRetryRepository.create(retryVO);
+      log.info(
+          "[Webhook] 已写入补偿记录: webhook={} eventType={} url={}",
+          webhook.getName(),
+          body.getString("eventType"),
+          webhook.getCallbackUrl());
+    } catch (Exception e) {
+      log.error(
+          "[Webhook] 写入补偿记录失败: webhook={} reason={}",
+          webhook.getName(),
+          e.getMessage(),
+          e);
+    }
   }
 
   /** 计算 HMAC-SHA256 签名。 */

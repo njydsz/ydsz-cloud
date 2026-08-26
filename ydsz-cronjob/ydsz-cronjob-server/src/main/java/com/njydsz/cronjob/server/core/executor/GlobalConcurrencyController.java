@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
 
 /**
  * P2-16: 全局并发控制（Redis 全局并发计数器）。
@@ -25,8 +25,7 @@ import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
  * <h3>与租户级配额的关系</h3>
  *
  * <ul>
- *   <li>租户级配额（{@link com.njydsz.cronjob.server.service.TenantQuotaService}）： 按租户限制并发，防 noisy
- *       neighbor
+ *   <li>租户级配额（{@link com.njydsz.cronjob.server.service.TenantQuotaService}）：按租户限制并发，防 noisy neighbor
  *   <li>全局并发控制（本组件）：限制集群总并发，防资源耗尽
  *   <li>两者互补，先检查全局再检查租户
  * </ul>
@@ -34,10 +33,12 @@ import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
  * <h3>Redis Key 设计</h3>
  *
  * <ul>
- *   <li>计数器：{@code ydsz:job:global:concurrent}（String 类型，INCR/DECR 原子操作）
+ *   <li>计数器：{@code ydzs:job:global:concurrent}（String 类型，INCR/DECR 原子操作）
  *   <li>无 TTL（持久化），通过 release 保证最终一致
  *   <li>异常场景：进程崩溃未 release 时，通过定期校准任务修正计数器
  * </ul>
+ *
+ * <p>P0-8: 使用 {@link CronjobRedisOps} 收敛 Redis 操作，统一 key 前缀与异常降级。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -49,24 +50,23 @@ public class GlobalConcurrencyController {
   /** 校准锁 TTL（秒） */
   private static final int CALIBRATION_LOCK_TTL = 30;
 
+  /** Redis Key segment：全局并发计数器（完整 key = ydzs:job:global:concurrent） */
+  private static final String GLOBAL_CONCURRENT_SEGMENT = "global:concurrent";
 
-  private final RedisStringOps redisStringOps;
+  /** Redis Key segment：计数器校准锁（完整 key = ydzs:job:global:concurrent:calibration-lock） */
+  private static final String CALIBRATION_LOCK_SEGMENT = "global:concurrent:calibration-lock";
+
+  private final CronjobRedisOps cronjobRedisOps;
   private final CronjobProperties cronjobProperties;
 
   /** 节点发现策略（可选注入，用于动态获取在线节点数） */
   private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
 
-  /** 全局并发计数器 Redis key */
-  private static final String GLOBAL_CONCURRENT_KEY = "ydsz:job:global:concurrent";
-
-  /** 计数器校准锁 key（防止多节点同时校准） */
-  private static final String CALIBRATION_LOCK_KEY = "ydsz:job:global:concurrent:calibration-lock";
-
   /**
    * 估算集群中的在线节点数。
    *
-   * <p>优先通过 {@link NodeDiscoveryStrategy#getOnlineNodes()} 获取实际在线节点数， 不可用时回退到配置值 {@code
-   * ydsz.cronjob.cluster.max-nodes}（默认 3）。
+   * <p>优先通过 {@link NodeDiscoveryStrategy#getOnlineNodes()} 获取实际在线节点数，不可用时回退到配置值
+   * {@code ydsz.cronjob.cluster.max-nodes}（默认 3）。
    *
    * @return 集群在线节点数（至少为 1）
    */
@@ -99,13 +99,13 @@ public class GlobalConcurrencyController {
     int nodeCount = estimateClusterNodeCount();
     int maxGlobal = Math.max(maxConcurrent, maxConcurrent * nodeCount);
     try {
-      Long current = redisStringOps.incr(GLOBAL_CONCURRENT_KEY, 1);
+      Long current = cronjobRedisOps.incr(GLOBAL_CONCURRENT_SEGMENT, 1);
       if (current == null) {
         return true; // Redis 异常时放行
       }
       if (current > maxGlobal) {
         // 超限，回滚
-        redisStringOps.decr(GLOBAL_CONCURRENT_KEY, 1);
+        cronjobRedisOps.decr(GLOBAL_CONCURRENT_SEGMENT, 1);
         log.debug(
             "[GlobalConcurrency] 全局并发已满, 拒绝: current={} max={} nodes={}",
             current,
@@ -127,10 +127,10 @@ public class GlobalConcurrencyController {
    */
   public void release() {
     try {
-      long current = redisStringOps.decr(GLOBAL_CONCURRENT_KEY, 1);
+      long current = cronjobRedisOps.decr(GLOBAL_CONCURRENT_SEGMENT, 1);
       if (current < 0) {
         // 计数器为负，修正为 0
-        redisStringOps.set(GLOBAL_CONCURRENT_KEY, "0");
+        cronjobRedisOps.setLong(GLOBAL_CONCURRENT_SEGMENT, 0);
         log.warn("[GlobalConcurrency] 计数器为负, 已修正为 0");
       }
     } catch (Exception e) {
@@ -145,8 +145,7 @@ public class GlobalConcurrencyController {
    */
   public long getCurrentConcurrent() {
     try {
-      String value = redisStringOps.get(GLOBAL_CONCURRENT_KEY, String.class);
-      return value != null ? Long.parseLong(value) : 0;
+      return cronjobRedisOps.getLong(GLOBAL_CONCURRENT_SEGMENT);
     } catch (Exception e) {
       return -1;
     }
@@ -167,23 +166,23 @@ public class GlobalConcurrencyController {
   /**
    * 强制校准全局并发计数器。
    *
-   * <p>由定时任务定期调用，通过查询 RUNNING 状态的日志数校准计数器。 防止进程崩溃导致的计数器漂移。
+   * <p>由定时任务定期调用，通过查询 RUNNING 状态的日志数校准计数器。防止进程崩溃导致的计数器漂移。
    *
    * @param actualRunningCount 实际运行中的任务数
    */
   public void calibrate(long actualRunningCount) {
     try {
-      boolean acquired = redisStringOps.setIfAbsent(CALIBRATION_LOCK_KEY, "1", CALIBRATION_LOCK_TTL);
+      boolean acquired = cronjobRedisOps.setIfAbsent(CALIBRATION_LOCK_SEGMENT, "1", CALIBRATION_LOCK_TTL);
       if (!acquired) {
         return; // 其他节点正在校准
       }
-      redisStringOps.set(GLOBAL_CONCURRENT_KEY, String.valueOf(actualRunningCount));
+      cronjobRedisOps.setLong(GLOBAL_CONCURRENT_SEGMENT, actualRunningCount);
       log.info("[GlobalConcurrency] 计数器已校准: value={}", actualRunningCount);
     } catch (Exception e) {
       log.warn("[GlobalConcurrency] 校准失败: reason={}", e.getMessage());
     } finally {
       try {
-        redisStringOps.del(CALIBRATION_LOCK_KEY);
+        cronjobRedisOps.delete(CALIBRATION_LOCK_SEGMENT);
       } catch (Exception ignored) {
         log.debug("Caught exception (ignored): {}", ignored.getMessage());
       }
