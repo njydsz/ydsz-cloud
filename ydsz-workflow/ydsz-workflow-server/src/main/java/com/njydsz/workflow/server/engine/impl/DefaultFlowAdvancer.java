@@ -119,7 +119,7 @@ public class DefaultFlowAdvancer {
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_67a10717")
+          .key("error.workflow.instance.not.found")
           .params(instanceId)
           .build();
     }
@@ -127,7 +127,7 @@ public class DefaultFlowAdvancer {
     if (startNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_560bf118")
+          .key("error.workflow.instance.start.node.missing")
           .params(instance.getDefinitionId())
           .build();
     }
@@ -216,7 +216,7 @@ public class DefaultFlowAdvancer {
     if (currentNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_d84d389b")
+          .key("error.workflow.node.not.found")
           .params(currentNodeCode)
           .build();
     }

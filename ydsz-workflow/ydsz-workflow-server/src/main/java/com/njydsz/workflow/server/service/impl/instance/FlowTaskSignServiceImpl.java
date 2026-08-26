@@ -108,7 +108,7 @@ public class FlowTaskSignServiceImpl {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_5ac7f16a")
+          .message("error.workflow.task.already.handled")
           .build();
     }
     // 前加签：在当前节点前插入临时审批人
@@ -165,7 +165,7 @@ public class FlowTaskSignServiceImpl {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_5ac7f16a")
+          .message("error.workflow.task.already.handled")
           .build();
     }
     // P2-29: 后加签真实实现 — 当前审批人通过后，新加签人需要审批，两人都通过后才推进到下一节点
@@ -224,13 +224,13 @@ public class FlowTaskSignServiceImpl {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_5ac7f16a")
+          .message("error.workflow.task.already.handled")
           .build();
     }
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_2deb2e4f")
+          .message("error.workflow.sign.target.user.required")
           .build();
     }
     FlowUserVO fu = new FlowUserVO();
@@ -283,13 +283,13 @@ public class FlowTaskSignServiceImpl {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_ff1454e4")
+          .message("error.workflow.task.already.handled")
           .build();
     }
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_7c4a1bdf")
+          .message("error.workflow.sign.target.user.required")
           .build();
     }
     // 从 ydsz_flow_user 中删除指定用户
@@ -298,7 +298,7 @@ public class FlowTaskSignServiceImpl {
     if (deleted == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_a39adc9d")
+          .key("error.workflow.sign.user.not.found")
           .params(dto.getTargetUserId())
           .build();
     }
@@ -372,7 +372,7 @@ public class FlowTaskSignServiceImpl {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_8913103b")
+          .message("error.workflow.task.already.handled")
           .build();
     }
     // 保存审批意见草稿到 comment 字段，不改变任务状态
@@ -412,13 +412,13 @@ public class FlowTaskSignServiceImpl {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_511d4aaa")
+          .message("error.workflow.task.already.handled")
           .build();
     }
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_2deb2e4f")
+          .message("error.workflow.sign.target.user.required")
           .build();
     }
     // 向 ydsz_flow_user 插入新审批人

@@ -99,7 +99,7 @@ public class FlowTaskRejectService {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_b35e6ea3")
+          .message("error.workflow.task.reject.target.invalid")
           .build();
     }
     LocalDateTime now = LocalDateTime.now();

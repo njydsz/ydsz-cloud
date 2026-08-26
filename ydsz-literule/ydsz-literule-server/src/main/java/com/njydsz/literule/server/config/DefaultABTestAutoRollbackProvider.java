@@ -28,7 +28,15 @@ import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
  *   <li>{@link #evaluateOne} 基于<b>执行轨迹真实指标</b>做劣化判定（P0-2）：
  *       统计最近 {@code checkWindowMinutes} 分钟内该规则的执行轨迹，当样本量 ≥ {@code minSampleSize}
  *       且错误率 ≥ {@code errorRateThreshold} 时判定劣化、返回 true（触发自动回滚）。
- *       未注入 {@link RuleExecutionTraceRepository}（嵌入式无持久化场景）或样本不足时返回 false。
+ * </ul>
+ *
+ * <h3>场景差异</h3>
+ *
+ * <ul>
+ *   <li><b>非嵌入式场景</b>（数据库可用，{@link RuleExecutionTraceRepository} 已注入）：
+ *       {@link #evaluateOne} 正常工作，基于轨迹错误率判定劣化。
+ *   <li><b>嵌入式场景</b>（无持久化，{@link RuleExecutionTraceRepository} 未注入）：
+ *       {@link #evaluateOne} 返回 false 并打印 INFO 日志，自动回滚不可用。
  * </ul>
  *
  * @author ydsz-team

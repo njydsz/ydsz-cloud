@@ -43,9 +43,20 @@ import com.njydsz.literule.api.RuleResult;
  * List&lt;RuleResult&gt; results = engine.evaluate(context);
  * </pre>
  *
+ * <h3>废弃说明</h3>
+ *
+ * <p>自 1.0.0 起提供但<b>从未在业务代码中实际调用</b>（{@link #refreshNodes()} 未被触发，
+ * {@code shardingEnabled} 始终为 false）。规则引擎通常需要全量加载规则以保障优先级编排语义，
+ * 分片执行会破坏此语义，与业务场景不匹配。
+ *
+ * <p>计划在未来版本中移除。如需分布式规则执行，建议通过上游路由（如网关层按租户分流）实现，
+ * 而非在引擎层做规则分片。
+ *
  * @since 1.0.0
  * @author ydsz-team
+ * @deprecated 自 1.4.0 起废弃，计划未来版本移除。原因：业务无多节点规则分摊诉求，且分片执行破坏规则优先级编排语义
  */
+@Deprecated
 public class ShardAwareRuleEngine implements RuleEngine {
 
   private static final Logger log = LoggerFactory.getLogger(ShardAwareRuleEngine.class);

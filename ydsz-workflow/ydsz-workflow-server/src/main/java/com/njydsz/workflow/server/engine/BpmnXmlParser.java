@@ -93,7 +93,7 @@ public class BpmnXmlParser {
     if (bpmnXml == null || bpmnXml.isBlank()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_30c8dc03")
+          .message("error.workflow.bpmn.xml.empty")
           .build();
     }
     Document doc = parseDocument(bpmnXml);
@@ -129,7 +129,7 @@ public class BpmnXmlParser {
     if (!"definitions".equalsIgnoreCase(root.getLocalName())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_a2ed268d")
+          .key("error.workflow.bpmn.root.invalid")
           .params(root.getLocalName())
           .build();
     }
@@ -147,7 +147,7 @@ public class BpmnXmlParser {
     if (process == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d7f0848f")
+          .message("error.workflow.bpmn.process.not.found")
           .build();
     }
     return process;
@@ -275,14 +275,14 @@ public class BpmnXmlParser {
     if (uniqueCodes.size() != nodes.size()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d60cd229")
+          .message("error.workflow.bpmn.node.duplicate")
           .build();
     }
     boolean hasStart = nodes.stream().anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
     if (!hasStart) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_a2f0efff")
+          .message("error.workflow.bpmn.start.missing")
           .build();
     }
   }
@@ -327,7 +327,7 @@ public class BpmnXmlParser {
       log.error("[BpmnParser] XML 格式错误: {}", e.getMessage());
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_3db1015b")
+          .key("error.workflow.bpmn.parse.failed")
           .params("XML 格式错误: " + e.getMessage())
           .build();
     } catch (ParserConfigurationException e) {
@@ -335,7 +335,7 @@ public class BpmnXmlParser {
       log.error("[BpmnParser] 解析器配置异常: {}", e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_3db1015b")
+          .key("error.workflow.bpmn.parse.failed")
           .params("解析器配置异常: " + e.getMessage())
           .build();
     } catch (IOException e) {
@@ -343,7 +343,7 @@ public class BpmnXmlParser {
       log.error("[BpmnParser] IO 异常: {}", e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .key("error.workflow.msg_3db1015b")
+          .key("error.workflow.bpmn.parse.failed")
           .params("读取异常: " + e.getMessage())
           .build();
     } catch (Exception e) {
@@ -351,7 +351,7 @@ public class BpmnXmlParser {
       log.error("[BpmnParser] 解析失败(未知): {}", e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_3db1015b")
+          .key("error.workflow.bpmn.parse.failed")
           .params(e.getMessage())
           .build();
     }

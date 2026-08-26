@@ -113,6 +113,12 @@ public class CronjobProperties {
   /** P1-1: 自适应批量调度配置 */
   private AdaptiveBatchConfig adaptiveBatch = new AdaptiveBatchConfig();
 
+  /** P0-2: Outbox 事务性事件发布配置（扫描间隔可配置化） */
+  private OutboxConfig outbox = new OutboxConfig();
+
+  /** P0-5: Disruptor 日志发布者配置（Ring Buffer 大小可配置化） */
+  private LoggerConfig logger = new LoggerConfig();
+
   /** P1-4: 异常修复统一配置（合并原 Failover + SelfHealing） */
   private AnomalyRecoveryConfig anomalyRecovery = new AnomalyRecoveryConfig();
 

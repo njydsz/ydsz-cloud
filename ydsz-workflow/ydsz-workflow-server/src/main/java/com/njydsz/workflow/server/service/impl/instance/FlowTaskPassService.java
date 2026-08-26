@@ -104,7 +104,7 @@ public class FlowTaskPassService {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_7f4098fb")
+          .key("error.workflow.task.already.handled")
           .params(task.getTaskStatus())
           .build();
     }
