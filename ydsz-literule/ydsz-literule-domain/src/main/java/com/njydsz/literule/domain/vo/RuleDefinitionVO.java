@@ -76,6 +76,9 @@ public class RuleDefinitionVO implements Serializable {
   /** 状态（DRAFT/PENDING_REVIEW/APPROVED/PUBLISHED/REJECTED） */
   private String status;
 
+  /** 租户 ID（多租户隔离，供搜索索引与权限过滤使用） */
+  private String tenantId;
+
   /** 生效起始时间 */
   private LocalDateTime effectiveFrom;
 

@@ -11,8 +11,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
 /**
@@ -35,7 +34,6 @@ public class FlowTaskClaimService {
   private final FlowRunTaskRepository taskRepository;
   private final FlowTaskSupport support;
   private final FlowTaskAuditService auditService;
-  private final WorkflowConverter converter;
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
@@ -50,7 +48,7 @@ public class FlowTaskClaimService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void claim(String taskId, String userId) {
-    FlowRunTask task = support.getTaskOrThrow(taskId);
+    FlowRunTaskVO task = support.getTaskOrThrow(taskId);
     if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -59,7 +57,7 @@ public class FlowTaskClaimService {
           .build();
     }
     applyClaim(task, userId);
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(task, "CLAIM", userId, null, null);
     // P1-4: 记录代理签收日志
     auditService.logDelegateOperation(task, "CLAIM");
@@ -77,7 +75,7 @@ public class FlowTaskClaimService {
    * @param userId 参数说明
    * @return 返回值说明
    */
-  private FlowRunTask applyClaim(FlowRunTask src, String userId) {
+  private FlowRunTaskVO applyClaim(FlowRunTaskVO src, String userId) {
     src.setAssigneeId(String.valueOf(userId));
     src.setTaskStatus(FlowTaskStatus.CLAIMED.name());
     src.setClaimAt(LocalDateTime.now());

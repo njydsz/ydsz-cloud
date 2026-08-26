@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.server.service.FlowConditionExprService;
 
 /**
@@ -90,7 +89,7 @@ import com.njydsz.workflow.server.service.FlowConditionExprService;
  * @since 1.0.0
  * @see FlowConditionExprService 接口定义
  * @see AviatorEvaluator Aviator 表达式引擎
- * @see FlowNode 流程节点（关联条件表达式的实体）
+ * @see FlowNodeVO 流程节点（关联条件表达式的实体）
  */
 @Slf4j
 @Service
@@ -99,9 +98,6 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
   /** 流程节点仓储（domain 层契约），管理 ydsz_flow_node 表 CRUD */
   private final FlowNodeRepository nodeRepository;
-
-  /** DO/VO 转换器 */
-  private final WorkflowConverter converter;
 
   /**
    * 操作符映射：枚举 → Aviator 符号
@@ -590,11 +586,9 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
     // 2. 从流程定义的所有节点表单中提取变量
     try {
-      List<FlowNode> nodes = nodeRepository.findByDefinitionId(definitionId).stream()
-          .map(converter::entityToDO)
-          .toList();
+      List<FlowNodeVO> nodes = nodeRepository.findByDefinitionId(definitionId);
       if (nodes != null && !nodes.isEmpty()) {
-        for (FlowNode node : nodes) {
+        for (FlowNodeVO node : nodes) {
           extractVariablesFromNode(node, result);
         }
       }
@@ -746,7 +740,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
    * @param node 流程节点
    * @param result 累加结果列表（输出参数）
    */
-  private void extractVariablesFromNode(FlowNode node, List<Map<String, String>> result) {
+  private void extractVariablesFromNode(FlowNodeVO node, List<Map<String, String>> result) {
     if (node == null) {
       return;
     }

@@ -12,8 +12,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
 /**
@@ -33,7 +32,6 @@ public class FlowTaskTimeoutService {
 
   private final FlowRunTaskRepository taskRepository;
   private final FlowTaskSupport support;
-  private final WorkflowConverter converter;
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
@@ -48,7 +46,7 @@ public class FlowTaskTimeoutService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void timeoutTask(String taskId, String reason) {
-    FlowRunTask task = support.getTaskOrThrow(taskId);
+    FlowRunTaskVO task = support.getTaskOrThrow(taskId);
     String status = task.getTaskStatus();
     if (!FlowTaskStatus.PENDING.name().equals(status)
         && !FlowTaskStatus.CLAIMED.name().equals(status)) {
@@ -65,7 +63,7 @@ public class FlowTaskTimeoutService {
     task.setComment(reason);
     task.setFinishAt(now);
     task.setDurationMs(durationMs);
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(task, "TIMEOUT", null, null, reason);
     log.info("[Flow] 任务超时: taskId={} reason={}", taskId, reason);
     if (flowMetrics != null) {
@@ -88,7 +86,7 @@ public class FlowTaskTimeoutService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void suspendTask(String taskId, String operatorId, String reason) {
-    FlowRunTask task = support.getTaskOrThrow(taskId);
+    FlowRunTaskVO task = support.getTaskOrThrow(taskId);
     String status = task.getTaskStatus();
     if (!FlowTaskStatus.PENDING.name().equals(status)
         && !FlowTaskStatus.CLAIMED.name().equals(status)) {
@@ -100,7 +98,7 @@ public class FlowTaskTimeoutService {
     }
     task.setTaskStatus(FlowTaskStatus.SUSPENDED.name());
     task.setComment(reason);
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(task, "SUSPEND", operatorId, null, reason);
     log.info("[Flow] 任务挂起: taskId={} operator={} reason={}", taskId, operatorId, reason);
   }
@@ -115,7 +113,7 @@ public class FlowTaskTimeoutService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void activateTask(String taskId, String operatorId) {
-    FlowRunTask task = support.getTaskOrThrow(taskId);
+    FlowRunTaskVO task = support.getTaskOrThrow(taskId);
     String status = task.getTaskStatus();
     if (!FlowTaskStatus.SUSPENDED.name().equals(status)) {
       throw SysException.builder()
@@ -128,7 +126,7 @@ public class FlowTaskTimeoutService {
     task.setAssigneeId(null);
     task.setAssigneeName(null);
     task.setClaimAt(null);
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(task, "ACTIVATE", operatorId, null, null);
     log.info("[Flow] 任务激活: taskId={} operator={}", taskId, operatorId);
   }
