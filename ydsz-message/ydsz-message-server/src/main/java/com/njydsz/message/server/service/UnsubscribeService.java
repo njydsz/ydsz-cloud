@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
-import com.njydsz.message.domain.entity.config.MsgSubscription;
+import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 import com.njydsz.message.server.token.UnsubscribeTokenPayload;
 
 /**
@@ -43,7 +43,7 @@ public interface UnsubscribeService {
    * @param token token 字符串
    * @return 退订后的订阅记录
    */
-  MsgSubscription unsubscribeByToken(String token);
+  MsgSubscriptionVO unsubscribeByToken(String token);
 
   /**
    * 分页查询已退订记录（管理后台）。
@@ -51,7 +51,7 @@ public interface UnsubscribeService {
    * @param query 查询参数
    * @return 分页结果，仅包含 status=UNSUBSCRIBED 的记录
    */
-  PageResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query);
+  PageResponse<List<MsgSubscriptionVO>> pageUnsubscribed(UnsubscribeQueryDTO query);
 
   /**
    * 按用户+主题+通道三元组退订（带退订原因）。
@@ -64,7 +64,7 @@ public interface UnsubscribeService {
    * @param reason 退订原因（可选，供运营分析）
    * @return 退订后的订阅记录
    */
-  MsgSubscription unsubscribe(String userId, String topicCode, String channel, String reason);
+  MsgSubscriptionVO unsubscribe(String userId, String topicCode, String channel, String reason);
 
   /**
    * 恢复订阅（管理后台 / 用户自助）。
