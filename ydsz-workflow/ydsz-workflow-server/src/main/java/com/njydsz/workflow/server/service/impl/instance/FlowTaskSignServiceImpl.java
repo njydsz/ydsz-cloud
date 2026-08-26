@@ -135,7 +135,7 @@ public class FlowTaskSignServiceImpl {
       taskRepository.updateApproveFinished(task.getId(), task.getApproveFinished());
       // approveCount +1
       task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
-      taskRepository.update(converter.entityToVO(task));
+      taskRepository.update(task);
     }
     support.audit(
         task, "COUNTERSIGN_BEFORE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
@@ -196,7 +196,7 @@ public class FlowTaskSignServiceImpl {
       // 切换为并行会签：当前人和加签人都通过后才推进
       task.setPerformType(FlowPerformType.PARALLEL.name());
       task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
-      taskRepository.update(converter.entityToVO(task));
+      taskRepository.update(task);
     }
     support.audit(
         task, "COUNTERSIGN_AFTER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
@@ -254,7 +254,7 @@ public class FlowTaskSignServiceImpl {
     // 强制切换为并行会签：加签人与原审批人并行审批，所有人全部通过才推进
     task.setPerformType(FlowPerformType.PARALLEL.name());
     task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(
         task, "COUNTERSIGN_PARALLEL", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info("[Flow] 并加签: taskId={} → 新增审批人={} (切换为并行会签)", task.getId(), dto.getTargetUserId());
@@ -310,7 +310,7 @@ public class FlowTaskSignServiceImpl {
     // approveCount -1，但不低于 1
     int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
     task.setApproveCount(Math.max(1, currentCount - 1));
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(
         task, "COUNTERSIGN_REMOVE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info(
@@ -382,7 +382,7 @@ public class FlowTaskSignServiceImpl {
     }
     // 保存审批意见草稿到 comment 字段，不改变任务状态
     task.setComment(dto.getComment());
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(
         task, "SAVE_DRAFT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
     log.info("[Flow] 暂存待审: taskId={} userId={}", dto.getTaskId(), dto.getUserId());
@@ -443,7 +443,7 @@ public class FlowTaskSignServiceImpl {
     // approveCount +1
     int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
     task.setApproveCount(currentCount + 1);
-    taskRepository.update(converter.entityToVO(task));
+    taskRepository.update(task);
     support.audit(task, "ADD_APPROVER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info("[Flow] 追加处理人: taskId={} targetUserId={}", task.getId(), dto.getTargetUserId());
     support.fireEvent(

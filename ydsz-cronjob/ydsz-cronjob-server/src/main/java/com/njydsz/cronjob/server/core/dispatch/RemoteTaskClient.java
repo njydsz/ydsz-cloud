@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.cronjob.domain.constants.CronjobConstants;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.RemoteConfig;
@@ -28,7 +29,7 @@ import com.njydsz.cronjob.server.config.RemoteConfig;
  * <pre>
  * Leader.executeShardedJob
  *   └─ RemoteTaskClient.dispatch(node, request)
- *        └─ HTTP POST → http://{node.host}:{node.port}/cronjob/internal/execute
+ *        └─ HTTP POST → http://{node.host}:{node.port}/api/v1/cronjob/internal/execute
  *             └─ Executor.InternalJobController.execute(request)
  *                  └─ TaskDispatcher.executeLocally(job, triggerType, shardIndex, shardTotal)
  *                       └─ executeShard(...) → 返回 logId
@@ -61,11 +62,11 @@ public class RemoteTaskClient {
   private static final int BODY_LOG_MAX_LENGTH = 200;
 
 
-  /** 内部执行接口路径 */
-  private static final String INTERNAL_EXECUTE_PATH = "/cronjob/internal/execute";
+  /** 内部执行接口路径（与 InternalJobController 保持一致） */
+  private static final String INTERNAL_EXECUTE_PATH = CronjobConstants.INTERNAL_EXECUTE_PATH;
 
-  /** P0-1: 子任务执行接口路径 */
-  private static final String INTERNAL_SUB_TASK_PATH = "/cronjob/internal/execute-sub-task";
+  /** 子任务执行接口路径（与 InternalJobController#executeSubTask 保持一致） */
+  private static final String INTERNAL_SUB_TASK_PATH = CronjobConstants.INTERNAL_SUB_TASK_PATH;
 
   private final CronjobProperties cronjobProperties;
 
@@ -104,13 +105,14 @@ public class RemoteTaskClient {
     RemoteConfig remoteConfig = cronjobProperties.getRemote();
 
     try {
-      HttpRequest httpRequest =
+      HttpRequest.Builder requestBuilder =
           HttpRequest.newBuilder()
               .uri(URI.create(url))
               .timeout(Duration.ofSeconds(remoteConfig.getRequestTimeoutSeconds()))
               .header("Content-Type", "application/json; charset=UTF-8")
-              .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-              .build();
+              .POST(HttpRequest.BodyPublishers.ofString(requestBody));
+      addAuthHeader(requestBuilder, remoteConfig);
+      HttpRequest httpRequest = requestBuilder.build();
 
       HttpResponse<String> response =
           httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -159,13 +161,14 @@ public class RemoteTaskClient {
     RemoteConfig remoteConfig = cronjobProperties.getRemote();
 
     try {
-      HttpRequest httpRequest =
+      HttpRequest.Builder requestBuilder =
           HttpRequest.newBuilder()
               .uri(URI.create(url))
               .timeout(Duration.ofSeconds(remoteConfig.getRequestTimeoutSeconds()))
               .header("Content-Type", "application/json; charset=UTF-8")
-              .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-              .build();
+              .POST(HttpRequest.BodyPublishers.ofString(requestBody));
+      addAuthHeader(requestBuilder, remoteConfig);
+      HttpRequest httpRequest = requestBuilder.build();
 
       HttpResponse<String> response =
           httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -236,6 +239,22 @@ public class RemoteTaskClient {
   /** 构造远程执行接口 URL。 */
   private String buildUrl(String host, int port) {
     return "http://" + host + ":" + port + INTERNAL_EXECUTE_PATH;
+  }
+
+  /**
+   * 附加内部通信鉴权头（配置了 access-token 时携带）。
+   *
+   * <p>接收端 {@code InternalTokenFilter} 对 /api/v1/cronjob/internal/** 强制校验该请求头；
+   * 未配置令牌时（access-token 为空）不携带，兼容旧集群节点互调。
+   *
+   * @param builder HTTP 请求构造器
+   * @param remoteConfig 远程派发配置
+   */
+  private void addAuthHeader(HttpRequest.Builder builder, RemoteConfig remoteConfig) {
+    String token = remoteConfig.getAccessToken();
+    if (token != null && !token.isBlank()) {
+      builder.header(CronjobConstants.INTERNAL_TOKEN_HEADER, token);
+    }
   }
 
   /**

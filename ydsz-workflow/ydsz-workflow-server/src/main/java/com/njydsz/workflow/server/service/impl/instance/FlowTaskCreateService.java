@@ -427,7 +427,7 @@ public class FlowTaskCreateService {
     }
 
     // 持久化任务 + 写入 ydsz_flow_user（需 task ID，必须在 insert 之后）
-    taskRepository.save(converter.entityToVO(task));
+    taskRepository.save(task);
     Map<String, Integer> userWeights = parseUserWeights(node.getExt());
     for (String uid : userIds) {
       insertFlowUser(task, instance, node, uid, userWeights);
@@ -549,7 +549,7 @@ public class FlowTaskCreateService {
     LocalDateTime now = LocalDateTime.now();
     task.setFinishAt(now);
     task.setDurationMs(0L);
-    taskRepository.save(converter.entityToVO(task));
+    taskRepository.save(task);
     archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
     support.audit(task, "DEDUP_SKIP", null, null, "办理人去重后为空，自动跳过");
     log.info("[Flow] 办理人去重后为空，自动跳过: instanceId={} node={}", instance.getId(), node.getNodeCode());
@@ -892,7 +892,7 @@ public class FlowTaskCreateService {
     task.setAssigneeId(approvers.get(0));
     task.setAssigneeName("USER:" + approvers.get(0));
     task.setPriority(DEFAULT_TASK_PRIORITY);
-    taskRepository.save(converter.entityToVO(task));
+    taskRepository.save(task);
     for (String uid : approvers) {
       insertFlowUser(task, instance, node, uid, null);
     }
@@ -947,7 +947,7 @@ public class FlowTaskCreateService {
             task.setFinishAt(LocalDateTime.now());
             task.setDurationMs(0L);
           }
-          taskRepository.save(converter.entityToVO(task));
+          taskRepository.save(task);
           if (FlowTaskStatus.COMPLETED.name().equals(task.getTaskStatus())) {
             archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
             support.audit(
@@ -966,7 +966,7 @@ public class FlowTaskCreateService {
           task.setAssigneeType(FlowAssigneeType.USER.name());
           task.setAssigneeId("1");
           task.setAssigneeName("FALLBACK");
-          taskRepository.save(converter.entityToVO(task));
+          taskRepository.save(task);
           log.warn(
               "[Flow] 逐级审批空兜底 FALLBACK: instanceId={} node={}",
               instance.getId(),
@@ -1004,7 +1004,7 @@ public class FlowTaskCreateService {
         autoTask.setTaskStatus(FlowTaskStatus.COMPLETED.name());
         autoTask.setFinishAt(LocalDateTime.now());
         autoTask.setDurationMs(0L);
-        taskRepository.save(converter.entityToVO(autoTask));
+        taskRepository.save(autoTask);
         archiveService.archiveToHistory(autoTask, FlowTaskStatus.COMPLETED);
         support.audit(autoTask, "FOREACH_AUTO_PASS", null, null, "FOREACH 集合为空，自动通过");
         log.info(
@@ -1019,7 +1019,7 @@ public class FlowTaskCreateService {
     String firstTaskId = null;
     for (String element : elements) {
       FlowRunTaskVO task = buildForeachTask(instance, node, element, "USER:" + element, element);
-      taskRepository.save(converter.entityToVO(task));
+      taskRepository.save(task);
       insertFlowUser(task, instance, node, element, null);
       if (flowMetrics != null) {
         flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
@@ -1293,7 +1293,7 @@ public class FlowTaskCreateService {
       LocalDateTime now = LocalDateTime.now();
       task.setFinishAt(now);
       task.setDurationMs(0L);
-      taskRepository.save(converter.entityToVO(task));
+      taskRepository.save(task);
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "AUTO_DEDUP", null, null, "审批人与上一节点相同，自动去重跳过");
       advanceAfterAutoPass(instance, node, variables);

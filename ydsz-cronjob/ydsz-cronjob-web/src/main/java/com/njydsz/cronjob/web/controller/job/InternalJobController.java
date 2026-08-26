@@ -39,7 +39,9 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  * <h3>安全考虑</h3>
  *
  * <ul>
- *   <li>仅限内网调用，生产环境应通过网络策略（K8s NetworkPolicy / SecurityGroup）限制访问来源
+ *   <li>配置 {@code ydsz.cronjob.remote.access-token} 后，{@code InternalTokenFilter} 对本端点强制校验
+ *       {@code X-Ydsz-Internal-Token} 请求头（节点间共享密钥，参照 XXL-Job accessToken 机制）
+ *   <li>未配置令牌时兼容旧行为放行，但生产环境应配置并配合网络策略（K8s NetworkPolicy / SecurityGroup）双保险
  *   <li>不走 {@code @AuthApiPermission} 权限校验，因为是节点间内部通信
  *   <li>请求体由 Leader 节点构造，信任内网来源
  *   <li>对每个请求恢复 traceId 到 MDC，保证全链路追踪
@@ -49,6 +51,7 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  *
  * <ul>
  *   <li>参数校验失败：返回 400 + code!=0
+ *   <li>令牌缺失/不匹配：返回 401（由 InternalTokenFilter 拦截）
  *   <li>锁被持有：返回 200 + code=0 + data=null（正常跳过，不是错误）
  *   <li>执行异常：返回 200 + code=0 + data=null（执行器已记录 FAILED 日志）
  * </ul>
@@ -57,8 +60,8 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  *
  * <pre>
  *   Leader 节点（quartz 调度器）
- *     → RemoteTaskClient（HTTP 派发）
- *       → ydsz-cronjob-web.InternalJobController（本 Controller）
+ *     → RemoteTaskClient（HTTP 派发，携带 X-Ydsz-Internal-Token）
+ *       → ydsz-cronjob-web.InternalJobController（本 Controller，InternalTokenFilter 校验）
  *         → TaskDispatcher.executeLocally
  *           → JobProcessor（GLUE / Bean / Shell 等执行器）
  * </pre>
