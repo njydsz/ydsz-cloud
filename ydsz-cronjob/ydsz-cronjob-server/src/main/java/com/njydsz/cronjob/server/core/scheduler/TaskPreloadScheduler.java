@@ -29,7 +29,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 /**
  * P1-P3: 秒级预读调度器（轻量时间轮，提升 CRON 任务调度精度）。
  *
- * <p>对标 XXL-Job 的 6000ms 预读窗口与 PowerJob 的时间轮设计：
+ * <p>预读窗口与时间轮设计：
  *
  * <ul>
  *   <li><b>现状</b>：JobScanner 每 5s 扫表一次，CRON 任务最差延迟 {@code 5s + 派发延迟}，无法支撑秒级精度

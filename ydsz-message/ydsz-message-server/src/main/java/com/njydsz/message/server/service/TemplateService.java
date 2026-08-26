@@ -114,7 +114,7 @@ public interface TemplateService {
   /**
    * GAP-3: 模板预览 — 渲染模板但不发送，供开发调试使用。
    *
-   * <p>对标钉钉/飞书开放平台的模板预览 API，传入模板编码 + 参数， 返回渲染后的内容预览，不落库不发送。
+   * <p>模板预览 API，传入模板编码 + 参数， 返回渲染后的内容预览，不落库不发送。
    *
    * @param templateCode 模板编码
    * @param channel 通道

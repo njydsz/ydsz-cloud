@@ -4,6 +4,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus;
+import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertType;
+import com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel;
 import com.njydsz.userinfo.infra.entity.SecurityAlert;
 
 /**
@@ -25,14 +28,17 @@ public interface SecurityAlertConverter {
    * @return 安全告警领域模型
    */
   @Mapping(target = "id", source = "id")
-  @Mapping(target = "alertType", expression = "java(com.njydsz.userinfo.domain.alert.SecurityAlert.AlertType.valueOf(entity.getAlertType()))")
-  @Mapping(target = "riskLevel", expression = "java(com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel.valueOf(entity.getRiskLevel()))")
+  @Mapping(target = "alertType",
+      expression = "java(AlertType.valueOf(entity.getAlertType()))")
+  @Mapping(target = "riskLevel",
+      expression = "java(RiskLevel.valueOf(entity.getRiskLevel()))")
   @Mapping(target = "userId", source = "userId")
   @Mapping(target = "username", source = "username")
   @Mapping(target = "sourceIp", source = "sourceIp")
   @Mapping(target = "title", source = "title")
   @Mapping(target = "content", source = "content")
-  @Mapping(target = "status", expression = "java(com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus.valueOf(entity.getStatus()))")
+  @Mapping(target = "status",
+      expression = "java(AlertStatus.valueOf(entity.getStatus()))")
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "handledAt", source = "handledAt")
   @Mapping(target = "handlerNote", source = "handlerNote")

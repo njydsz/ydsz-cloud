@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 一致性哈希分片策略（P1 增强，对标 ElasticJob 的一致性哈希分片）。
+ * 一致性哈希分片策略（P1 增强）。
  *
  * <p>通过配置 {@code ydsz.cronjob.sharding.strategy=consistent_hash} 启用。
  *

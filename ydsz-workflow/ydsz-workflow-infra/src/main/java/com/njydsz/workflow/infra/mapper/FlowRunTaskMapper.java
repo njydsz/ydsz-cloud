@@ -353,4 +353,19 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
       @Param("id") String id,
       @Param("slaAction") String slaAction,
       @Param("slaEscalated") Integer slaEscalated);
+
+  /**
+   * P2-1: 标记任务已处理（补录审批场景）。
+   *
+   * @param id 任务 ID
+   * @param userId 办理人 ID
+   * @param comment 审批意见
+   * @param processedAt 生效时间（补录时间）
+   * @return 受影响行数
+   */
+  int markProcessed(
+      @Param("id") String id,
+      @Param("userId") String userId,
+      @Param("comment") String comment,
+      @Param("processedAt") LocalDateTime processedAt);
 }

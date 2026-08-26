@@ -44,7 +44,7 @@ import com.njydsz.cronjob.server.core.healing.AnomalyRecoveryScanner;
  *   <li>记录节点变更历史，供运维查看
  * </ul>
  *
- * <p>对标 ElasticJob 的分片重平衡机制：实例变更后自动感知并重新分片。
+ * <p>分片重平衡机制：实例变更后自动感知并重新分片。
  *
  * @author ydsz-team
  * @since 1.0.0

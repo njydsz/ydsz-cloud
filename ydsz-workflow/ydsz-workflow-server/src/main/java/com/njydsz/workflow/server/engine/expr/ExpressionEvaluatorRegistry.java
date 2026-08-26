@@ -11,7 +11,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 /**
- * 表达式引擎注册表（对标 warm-flow ListenerStrategy 热插拔机制）。
+ * 表达式引擎注册表（热插拔机制）。
  *
  * <p>自动发现 Spring 容器中所有 {@link ExpressionEvaluator} 实现，按 {@link ExpressionEvalStrategy} 注册，
  * 运行时通过配置动态切换活动引擎。

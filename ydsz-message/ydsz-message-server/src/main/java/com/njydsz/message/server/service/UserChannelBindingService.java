@@ -54,7 +54,7 @@ public interface UserChannelBindingService {
    *
    * @param userId 用户 ID
    * @param channelType 通道类型（大写）
-   * @return 通道用户标识（手机号/邮箱/钉钉userId 等）；无绑定时返回 null
+   * @return 通道用户标识（手机号/邮箱/IM userId 等）；无绑定时返回 null
    */
   String resolveChannelUserId(String userId, String channelType);
 }

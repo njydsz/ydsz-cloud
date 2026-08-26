@@ -16,7 +16,7 @@ import com.njydsz.workflow.server.engine.FlowEventContext;
  * <p>从节点 ext JSON 的 {@code listeners} 配置中，筛选匹配当前事件类型的监听器，
  * 按优先级回调对应的 {@link FlowListenerPlugin} Spring Bean。
  *
- * <p>对标 warm-flow 的监听器机制：设计器配置 → 引擎运行时执行，无需硬编码事件处理逻辑。
+ * <p>监听器机制：设计器配置 → 引擎运行时执行，无需硬编码事件处理逻辑。
  *
  * @author ydsz-team
  * @since 1.0.0

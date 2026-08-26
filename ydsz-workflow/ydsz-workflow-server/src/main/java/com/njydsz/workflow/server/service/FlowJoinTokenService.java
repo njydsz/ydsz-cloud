@@ -22,7 +22,7 @@ public interface FlowJoinTokenService {
   /**
    * P0-3: 初始化 N/M join 令牌（支持部分分支到达即聚合）
    *
-   * <p>对标 BPMN 2.0 复杂网关和钉钉/飞书"部分到达即推进"能力。 例如 5 个分支中 3 个到达即推进 → requiredCount=3。
+   * <p>兼容 BPMN 2.0 复杂网关，支持"部分到达即推进"能力。 例如 5 个分支中 3 个到达即推进 → requiredCount=3。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码

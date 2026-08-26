@@ -1,7 +1,7 @@
 package com.njydsz.workflow.server.engine.expr;
 
 /**
- * 表达式引擎策略枚举（对标 warm-flow ListenerStrategy）。
+ * 表达式引擎策略枚举。
  *
  * <p>定义工作流引擎支持的表达式求值策略，业务方可通过配置 {@code ydsz.flow.expr-strategy} 动态切换。
  *

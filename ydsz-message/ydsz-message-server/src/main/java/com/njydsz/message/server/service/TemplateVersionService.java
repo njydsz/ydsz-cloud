@@ -22,7 +22,7 @@ import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
  *   <li><b>试发</b>：{@link #testSend} — 真实发送一条给测试接收人
  * </ul>
  *
- * <p><b>对标钉钉/飞书开放平台：</b>提供与「消息模板预览 / 试发」相同的能力,方便模板编辑后即时验证效果。
+ * <p>提供消息模板预览 / 试发能力，方便模板编辑后即时验证效果。
  *
  * @author ydsz-team
  * @since 1.0.0

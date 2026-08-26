@@ -86,6 +86,20 @@ public interface WorkflowRepositoryConverter {
   @Mapping(target = "updatedAt", ignore = true)
   FlowInstance dtoToEntityWithId(FlowInstanceDTO dto);
 
+  /**
+   * 流程实例 VO → 流程实例实体（更新场景）。
+   *
+   * <p>用于更新流程实例，将领域层 VO 转换为持久化实体。
+   *
+   * @param vo 流程实例 VO
+   * @return 流程实例实体
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  FlowInstance entityToEntity(FlowInstanceVO vo);
+
   // ===== DTO → VO =====
 
   /**

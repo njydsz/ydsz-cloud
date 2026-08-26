@@ -5,7 +5,7 @@ import java.util.Map;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 
 /**
- * 全局流程监听器 SPI（对标 warm-flow GlobalListener）。
+ * 全局流程监听器 SPI。
  *
  * <p>与 {@link FlowListenerPlugin}（节点级监听器）的区别：
  *

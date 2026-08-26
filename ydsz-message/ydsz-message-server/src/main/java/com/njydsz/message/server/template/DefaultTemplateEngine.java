@@ -269,7 +269,7 @@ public class DefaultTemplateEngine implements TemplateEngine {
   /**
    * GAP-5: 渲染 Markdown 内容为通道原生格式。
    *
-   * <p>钉钉/飞书支持原生 Markdown，直接返回；其他通道降级为纯文本 （简单去除 Markdown 语法标记，保留可读性）。
+   * <p>IM 平台支持原生 Markdown，直接返回；其他通道降级为纯文本 （简单去除 Markdown 语法标记，保留可读性）。
    *
    * @param markdownContent Markdown 原文
    * @param channel 目标通道

@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * 分片策略接口（P3 阶段引入）。
  *
- * <p>根据在线节点列表和总分片数计算分片分配方案。对标 XXL-Job 的分片广播策略 和 PowerJob 的 {@code InstanceContext} 分片机制。
+ * <p>根据在线节点列表和总分片数计算分片分配方案。
  *
  * <h3>设计目标</h3>
  *

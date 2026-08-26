@@ -6,6 +6,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.userinfo.domain.oauth2.OAuth2Application.ApplicationStatus;
+import com.njydsz.userinfo.domain.oauth2.OAuth2Application.ClientType;
 import com.njydsz.userinfo.infra.entity.OAuth2Application;
 
 /**
@@ -31,11 +33,13 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "clientId", source = "clientId")
   @Mapping(target = "clientName", source = "clientName")
   @Mapping(target = "clientSecret", source = "clientSecret")
-  @Mapping(target = "clientType", expression = "java(com.njydsz.userinfo.domain.oauth2.OAuth2Application.ClientType.valueOf(entity.getClientType()))")
+  @Mapping(target = "clientType",
+      expression = "java(ClientType.valueOf(entity.getClientType()))")
   @Mapping(target = "redirectUris", source = "redirectUris")
   @Mapping(target = "allowedScopes", source = "allowedScopes")
   @Mapping(target = "allowedAudiences", source = "allowedAudiences")
-  @Mapping(target = "status", expression = "java(com.njydsz.userinfo.domain.oauth2.OAuth2Application.ApplicationStatus.valueOf(entity.getStatus()))")
+  @Mapping(target = "status",
+      expression = "java(ApplicationStatus.valueOf(entity.getStatus()))")
   @Mapping(target = "description", source = "description")
   @Mapping(target = "iconUrl", source = "iconUrl")
   @Mapping(target = "createdAt", source = "createdAt")

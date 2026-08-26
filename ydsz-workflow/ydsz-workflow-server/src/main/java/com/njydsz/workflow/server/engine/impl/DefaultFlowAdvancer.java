@@ -405,7 +405,7 @@ public class DefaultFlowAdvancer {
   /**
    * GAP-P0-2: 退回多节点同退
    *
-   * <p>对标飞书"退回多节点同退"。当 skipType=REJECT 且 targetNodeCodes 非空时， 在所有指定节点同时创建待办任务，让多个前序节点重新审批。
+   * <p>退回多节点同退能力。当 skipType=REJECT 且 targetNodeCodes 非空时， 在所有指定节点同时创建待办任务，让多个前序节点重新审批。
    * 单节点退回（targetNodeCodes 为空或单元素）降级到原 advance 逻辑。
    *
    * @param currentInstance 当前流程实例

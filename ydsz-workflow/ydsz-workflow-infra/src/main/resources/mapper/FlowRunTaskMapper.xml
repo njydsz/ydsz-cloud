@@ -392,4 +392,16 @@
         ORDER BY t.created_at ASC
         LIMIT #{limit}
     </select>
+
+    <!-- P2-1: 标记任务已处理（补录审批场景，更新办理人、意见、生效时间） -->
+    <update id="markProcessed">
+        UPDATE ydsz_flow_run_task
+        SET assignee_id = #{userId},
+            comment = #{comment},
+            effective_time = #{processedAt},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
 </mapper>

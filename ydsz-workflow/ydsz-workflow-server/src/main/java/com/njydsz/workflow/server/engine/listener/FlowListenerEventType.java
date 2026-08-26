@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.engine.listener;
 /**
  * 流程监听器事件类型
  *
- * <p>对标 warm-flow 的监听器生命周期（CREATE / START / FINISH 等）， 结合 ydsz 已有事件体系扩展。
+ * <p>监听器生命周期（CREATE / START / FINISH 等）， 结合 ydsz 已有事件体系扩展。
  *
  * <p>设计器中每个节点可为此事件类型绑定监听器（Spring Bean 名称），引擎在执行到关键节点时自动回调。
  *

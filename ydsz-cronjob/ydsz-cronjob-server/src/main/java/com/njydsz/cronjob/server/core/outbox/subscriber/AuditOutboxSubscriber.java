@@ -13,7 +13,7 @@ import com.njydsz.cronjob.domain.vo.OutboxEventVO;
  *
  * <p>消费 Outbox 事件中 topic={@code audit} 的事件，记录审计日志。
  *
- * <p>对标 XXL-Job 的操作审计、PowerJob 的任务变更日志。
+ * <p>操作审计与任务变更日志。
  *
  * @author ydsz-team
  * @since 1.0.0

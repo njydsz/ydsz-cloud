@@ -114,7 +114,7 @@ public interface FlowTaskService {
   /**
    * 转办任务（审批人把任务转交给其他人办理，自己退出审批人列表）
    *
-   * <p>对标钉钉/飞书"转办"。原 assignee 解除，转给新 assignee 继续办理。 转办后流程审计日志会记录 {@code TRANSFER} 动作。
+   * <p>转办能力。原 assignee 解除，转给新 assignee 继续办理。 转办后流程审计日志会记录 {@code TRANSFER} 动作。
    *
    * @param dto 任务操作参数（taskId / userId / targetUserId / comment）
    */
@@ -123,7 +123,7 @@ public interface FlowTaskService {
   /**
    * 委派任务（审批人把任务委派给其他人办理，但自己仍是责任人）
    *
-   * <p>对标钉钉/飞书"委派"。被委派人完成后，任务仍由委派人确认。 区别于转办：委派不改变任务 assignee，委派人仍为最终责任人。
+   * <p>委派能力。被委派人完成后，任务仍由委派人确认。 区别于转办：委派不改变任务 assignee，委派人仍为最终责任人。
    *
    * @param dto 任务操作参数（taskId / userId / targetUserId / comment）
    */
@@ -205,7 +205,7 @@ public interface FlowTaskService {
   /**
    * P1-7: 前加签 — 在当前节点前插入临时审批人
    *
-   * <p>对标钉钉/飞书"前加签"。在当前审批节点前插入临时审批人，
+   * <p>前加签能力。在当前审批节点前插入临时审批人，
    * 加签人先审批，全部通过后由原审批人继续。会签模式切换为 PARALLEL。
    *
    * @param dto 任务操作参数（taskId / userId / targetUserId / targetUserName）
@@ -215,7 +215,7 @@ public interface FlowTaskService {
   /**
    * P1-7: 后加签 — 在当前节点通过后、下一节点前插入临时审批人
    *
-   * <p>对标钉钉/飞书"后加签"。原审批人通过后，加签人先于下一节点审批。
+   * <p>后加签能力。原审批人通过后，加签人先于下一节点审批。
    * 加签人通过后流程才推进到下一节点。会签模式切换为 PARALLEL。
    *
    * @param dto 任务操作参数（taskId / userId / targetUserId / targetUserName）
@@ -225,7 +225,7 @@ public interface FlowTaskService {
   /**
    * GAP-P0-3: 并加签 — 动态追加审批人与原审批人并行审批，所有人审完后才推进。
    *
-   * <p>对标钉钉/飞书"并加签"语义。当前审批人尚未审批时动态追加，
+   * <p>并加签能力。当前审批人尚未审批时动态追加，
    * 加签人与原审批人<b>并行</b>审批（performType 强制切换为 PARALLEL），
    * 所有人全部通过后才推进到下一节点。
    *
@@ -240,7 +240,7 @@ public interface FlowTaskService {
   /**
    * GAP-P1: 减签 — 从会签任务中移除指定审批人
    *
-   * <p>对标钉钉/飞书的"减签"功能。从 ydsz_flow_user 中删除指定用户， 并更新任务的 approveCount（应到人数）。
+   * <p>减签功能。从 ydsz_flow_user 中删除指定用户， 并更新任务的 approveCount（应到人数）。
    *
    * @param dto 任务操作参数（需含 taskId + userId 为被减签人）
    */
@@ -426,7 +426,7 @@ public interface FlowTaskService {
   /**
    * GAP-P0: 暂存待审 — 审批人保存审批意见草稿（不改变任务主状态）
    *
-   * <p>将审批意见保存到任务 comment 字段，任务状态保持 PENDING/CLAIMED 不变， 写审计日志记录 SAVE_DRAFT 操作。对标飞书/钉钉审批的"暂存"功能。
+   * <p>将审批意见保存到任务 comment 字段，任务状态保持 PENDING/CLAIMED 不变， 写审计日志记录 SAVE_DRAFT 操作。审批"暂存"功能。
    *
    * @param dto 任务操作参数（需含 taskId + userId + comment）
    */
@@ -445,7 +445,7 @@ public interface FlowTaskService {
   /**
    * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起（不推进、不计超时），激活后回到 PENDING。
    *
-   * <p>对标钉钉/飞书"任务挂起"。与实例级挂起（{@code suspendProcess}）的区别：
+   * <p>任务挂起能力。与实例级挂起（{@code suspendProcess}）的区别：
    *
    * <ul>
    *   <li>实例级挂起：整个实例全部 PENDING/CLAIMED 任务连带冻结为 FROZEN；
@@ -487,7 +487,7 @@ public interface FlowTaskService {
   /**
    * P1-3: 取回 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
    *
-   * <p>对标钉钉/飞书"取回"能力。与发起人撤回（{@link com.njydsz.workflow.server.service.FlowInstanceService#recall})
+   * <p>取回能力。与发起人撤回（{@link com.njydsz.workflow.server.service.FlowInstanceService#recall})
    * 不同， 取回是<b>审批人</b>维度：审批人已 PASS 后，下一节点尚未处理时，可取回自己的审批， 流程退回到审批人所在节点重新审批。
    *
    * <p>校验规则：

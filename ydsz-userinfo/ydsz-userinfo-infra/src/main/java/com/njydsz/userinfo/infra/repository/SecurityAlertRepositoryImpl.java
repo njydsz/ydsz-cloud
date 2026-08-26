@@ -109,7 +109,8 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   }
 
   @Override
-  public List<com.njydsz.userinfo.domain.alert.SecurityAlert> findPendingAlerts(com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel riskLevel, int limit) {
+  public List<com.njydsz.userinfo.domain.alert.SecurityAlert> findPendingAlerts(
+      com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel riskLevel, int limit) {
     LambdaQueryWrapper<SecurityAlert> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(SecurityAlert::getStatus, com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus.PENDING.name());
     if (riskLevel != null) {

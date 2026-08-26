@@ -12,7 +12,7 @@ import com.njydsz.workflow.server.engine.FlowEventContext;
  *
  * <p><b>命名规范：</b>Bean 名称即为插件名称，如 {@code @Component("notifyListenerPlugin")}
  *
- * <p><b>生命周期回调：</b>只需覆写关心的方法，其余走默认空实现（对标 warm-flow 的监听器接口设计）。
+ * <p><b>生命周期回调：</b>只需覆写关心的方法，其余走默认空实现。
  *
  * @author ydsz-team
  * @since 1.0.0

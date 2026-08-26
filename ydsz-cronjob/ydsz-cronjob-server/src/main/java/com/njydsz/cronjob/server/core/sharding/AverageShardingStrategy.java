@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>当 {@code shardTotal > nodeCount} 时，每个节点承担多个分片（取模循环）； 当 {@code shardTotal < nodeCount}
  * 时，部分节点空闲（不分配分片）。
  *
- * <p>对标 XXL-Job 的 ShardingUtil.shardingVo，保证相同节点列表产生稳定分配。
+ * <p>保证相同节点列表产生稳定分配。
  *
  * <p>P1 增强：通过配置 {@code ydsz.cronjob.sharding.strategy=average|consistent_hash} 选择策略。
  * 本实现为默认（matchIfMissing=true）；配置 {@code consistent_hash} 时由

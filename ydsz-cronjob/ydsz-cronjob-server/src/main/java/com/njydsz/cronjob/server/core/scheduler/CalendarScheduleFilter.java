@@ -42,7 +42,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  *   <li>未来扩展：接入第三方节假日 API 或国务院假期公开数据
  * </ul>
  *
- * <p>对标 PowerJob 的日历调度能力。
+ * <p>日历调度能力。
  *
  * @author ydsz-team
  * @since 1.0.0

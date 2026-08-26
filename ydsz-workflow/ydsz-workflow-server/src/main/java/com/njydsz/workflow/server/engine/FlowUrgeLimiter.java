@@ -35,7 +35,7 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
 @Component
 public class FlowUrgeLimiter {
 
-  /** 默认冷却窗口 30 分钟（与对标用友/钉钉审批的 30 分钟冷却一致） */
+  /** 默认冷却窗口 30 分钟 */
   public static final long DEFAULT_COOLDOWN_SECONDS = 30 * 60L;
 
   private final RedisRateLimiter rateLimiter;

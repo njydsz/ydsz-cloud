@@ -3,7 +3,7 @@ package com.njydsz.cronjob.server.core.scheduler;
 /**
  * 调度类型枚举（P0-3）。
  *
- * <p>对标 PowerJob 的调度方式扩展，支持以下四种类型：
+ * <p>支持以下四种调度类型：
  *
  * <ul>
  *   <li>{@link #CRON}: Cron 表达式调度（默认，向后兼容）
