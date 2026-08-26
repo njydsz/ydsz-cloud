@@ -1,8 +1,10 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +21,14 @@ import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
  *
  * <p>当调度器-执行器分离模式启用时，Leader 节点通过本选择器选定 Worker 节点， 将非分片任务远程派发到 Worker 执行。
  *
- * <h3>选择策略</h3>
+ * <h3>选择策略（{@code ydsz.cronjob.scheduler-executor-separation.worker-selection-strategy}）</h3>
  *
  * <ul>
  *   <li>{@code round_robin}（默认）：轮询在线节点列表，均匀分配任务
  *   <li>{@code least_load}：选择当前运行任务数最少的节点（基于 JobNode.runningCount）
+ *   <li>{@code random}：随机选择（无状态，适合大任务量下的近似均匀）
+ *   <li>{@code consistent_hash}：按任务 routingKey（jobKey）FNV-1a 哈希稳定命中节点，
+ *       同一任务在节点列表不变时恒定落在同一 Worker（有状态任务友好）
  * </ul>
  *
  * <h3>容错</h3>
@@ -48,6 +53,12 @@ public class WorkerNodeSelector {
   /** 轮询计数器（round_robin 策略使用） */
   private final AtomicInteger roundRobinCounter = new AtomicInteger(0);
 
+  /** FNV-1a 32 位哈希：偏移基数（offset basis） */
+  private static final int FNV1A_OFFSET_BASIS = 0x811c9dc5;
+
+  /** FNV-1a 32 位哈希：素数 */
+  private static final int FNV1A_PRIME = 0x01000193;
+
   public WorkerNodeSelector(
       CronjobProperties cronjobProperties,
       ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider,
@@ -65,7 +76,7 @@ public class WorkerNodeSelector {
    * @return 选中的 Worker 节点；无可用 Worker 时返回 null
    */
   public JobNodeVO selectWorker() {
-    return selectWorker(Collections.emptySet());
+    return selectWorker(Collections.emptySet(), null);
   }
 
   /**
@@ -77,6 +88,20 @@ public class WorkerNodeSelector {
    * @return 选中的 Worker 节点；无可用 Worker 时返回 null
    */
   public JobNodeVO selectWorker(Set<String> excludedNodeIds) {
+    return selectWorker(excludedNodeIds, null);
+  }
+
+  /**
+   * P1-F10: 选择一个 Worker 节点用于执行任务（排除指定节点 + 路由键）。
+   *
+   * <p>{@code consistent_hash} 策略依赖 routingKey（通常为 jobKey）做稳定哈希路由；
+   * 其余策略忽略 routingKey。
+   *
+   * @param excludedNodeIds 需要排除的节点 ID 集合（已尝试失败的节点）
+   * @param routingKey 路由键（任务 jobKey，可为 null）
+   * @return 选中的 Worker 节点；无可用 Worker 时返回 null
+   */
+  public JobNodeVO selectWorker(Set<String> excludedNodeIds, String routingKey) {
     List<JobNodeVO> onlineNodes = getOnlineNodes();
     if (onlineNodes.isEmpty()) {
       log.debug("[WorkerSelector] 无在线节点");
@@ -101,6 +126,12 @@ public class WorkerNodeSelector {
     if ("least_load".equalsIgnoreCase(strategy)) {
       return selectLeastLoad(workers);
     }
+    if ("random".equalsIgnoreCase(strategy)) {
+      return selectRandom(workers);
+    }
+    if ("consistent_hash".equalsIgnoreCase(strategy)) {
+      return selectConsistentHash(workers, routingKey);
+    }
     // 默认 round_robin
     return selectRoundRobin(workers);
   }
@@ -114,6 +145,52 @@ public class WorkerNodeSelector {
   private JobNodeVO selectRoundRobin(List<JobNodeVO> workers) {
     int idx = Math.abs(roundRobinCounter.getAndIncrement()) % workers.size();
     return workers.get(idx);
+  }
+
+  /**
+   * 随机选择 Worker 节点。
+   *
+   * @param workers 可用 Worker 列表
+   * @return 选中的 Worker 节点
+   */
+  private JobNodeVO selectRandom(List<JobNodeVO> workers) {
+    int idx = ThreadLocalRandom.current().nextInt(workers.size());
+    return workers.get(idx);
+  }
+
+  /**
+   * 按路由键一致哈希选择 Worker 节点。
+   *
+   * <p>同一 routingKey 在节点列表不变时恒定命中同一节点（对 Worker 上下线不敏感，近似一致性）。
+   * 哈希算法与分片策略一致的 FNV-1a 32 位实现，保证同一 jobKey 的哈希值稳定。
+   *
+   * @param workers 可用 Worker 列表
+   * @param routingKey 路由键（jobKey）
+   * @return 选中的 Worker 节点；routingKey 为空时回退轮询
+   */
+  private JobNodeVO selectConsistentHash(List<JobNodeVO> workers, String routingKey) {
+    if (routingKey == null || routingKey.isBlank()) {
+      return selectRoundRobin(workers);
+    }
+    int hash = fnv1a32(routingKey);
+    int idx = Math.floorMod(hash, workers.size());
+    return workers.get(idx);
+  }
+
+  /**
+   * FNV-1a 32 位哈希（与分片策略同源，避免引入第三方依赖）。
+   *
+   * @param input 输入字符串
+   * @return 32 位无符号哈希值
+   */
+  private int fnv1a32(String input) {
+    int hash = FNV1A_OFFSET_BASIS;
+    byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
+    for (byte b : bytes) {
+      hash ^= (b & 0xff);
+      hash *= FNV1A_PRIME;
+    }
+    return hash;
   }
 
   /**
@@ -164,3 +241,4 @@ public class WorkerNodeSelector {
     return heartbeat != null ? heartbeat.getNodeId() : null;
   }
 }
+

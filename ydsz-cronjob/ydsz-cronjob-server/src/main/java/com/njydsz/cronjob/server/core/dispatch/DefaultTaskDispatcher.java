@@ -906,7 +906,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
     Set<String> excludedNodeIds = new HashSet<>(maxAttempts);
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-      JobNodeVO worker = selector.selectWorker(excludedNodeIds);
+      // P1-F10: 传入 jobKey 作为路由键，支持 consistent_hash 稳定路由
+      JobNodeVO worker = selector.selectWorker(excludedNodeIds, job.getJobKey());
       if (worker == null) {
         // 无更多可用 Worker，停止重试
         break;

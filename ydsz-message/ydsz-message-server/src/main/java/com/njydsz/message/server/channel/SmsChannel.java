@@ -170,35 +170,24 @@ public class SmsChannel implements MessageChannel {
     }
     if (templateService != null && StringUtils.hasText(request.getTemplateCode())) {
       try {
-        com.njydsz.message.infra.entity.MsgTemplate entity =
+        MsgTemplateVO vo =
             templateService.loadByCodeAndChannel(
                 request.getTemplateCode(),
                 CHANNEL_TYPE,
                 null,
                 TenantContextHolder.getTenantId());
-        return toTemplateVO(entity);
+        if (vo == null) {
+          return null;
+        }
+        MsgTemplateVO templateVO = new MsgTemplateVO();
+        templateVO.setSignName(vo.getSignName());
+        templateVO.setProviderKey(vo.getProviderKey());
+        return templateVO;
       } catch (Exception e) {
         log.debug(
             "[SmsChannel] 模板查询失败,忽略: code={} err={}", request.getTemplateCode(), e.getMessage());
       }
     }
     return null;
-  }
-
-  /**
-   * 将 infra 层模板实体转换为 domain VO（仅提取 signName / providerKey）。
-   *
-   * @param entity infra 层 MsgTemplate 实体
-   * @return MsgTemplateVO，entity 为 null 时返回 null
-   */
-  private MsgTemplateVO toTemplateVO(
-      com.njydsz.message.infra.entity.MsgTemplate entity) {
-    if (entity == null) {
-      return null;
-    }
-    MsgTemplateVO vo = new MsgTemplateVO();
-    vo.setSignName(entity.getSignName());
-    vo.setProviderKey(entity.getProviderKey());
-    return vo;
   }
 }
