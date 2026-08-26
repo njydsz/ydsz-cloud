@@ -20,8 +20,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.vo.MsgOfflineVO;
 import com.njydsz.message.domain.repository.MsgOfflineRepository;
+import com.njydsz.message.domain.vo.MsgOfflineVO;
 
 /**
  * 离线消息补偿服务（Redis + DB 双层存储）。

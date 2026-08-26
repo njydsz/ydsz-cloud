@@ -14,8 +14,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
-import com.njydsz.message.domain.vo.MsgReceiptVO;
 import com.njydsz.message.domain.repository.MsgReceiptRepository;
+import com.njydsz.message.domain.vo.MsgReceiptVO;
 import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.receipt.ReceiptService;
 

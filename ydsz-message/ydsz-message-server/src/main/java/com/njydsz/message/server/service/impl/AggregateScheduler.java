@@ -13,9 +13,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
+import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**

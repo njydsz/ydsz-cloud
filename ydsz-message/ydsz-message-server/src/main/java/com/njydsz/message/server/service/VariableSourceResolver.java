@@ -18,8 +18,8 @@ import org.springframework.web.client.RestClient;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.vo.MsgVariableSourceVO;
 import com.njydsz.message.domain.repository.MsgVariableSourceRepository;
+import com.njydsz.message.domain.vo.MsgVariableSourceVO;
 
 /**
  * 变量数据源解析器。

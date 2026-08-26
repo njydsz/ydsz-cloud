@@ -13,8 +13,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.PreferenceUpsertDTO;
-import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.domain.repository.MsgPreferenceRepository;
+import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.server.service.config.PreferenceService;
 
 /**
