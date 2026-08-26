@@ -4,7 +4,7 @@
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.FileNodeMapper">
 
     <insert id="insertBatch">
-        INSERT INTO ydsz_file_node
+        INSERT INTO ydsz_wiki_file_node
             (id, parent_id, name, node_type, suffix, size, storage_key, bucket_name, mime_type,
              path, level, sort, current_version, file_hash, thumbnail_key, preview_ready, starred,
              status, share_status, storage_class, deleted_time, original_path,
@@ -51,7 +51,7 @@
     </resultMap>
 
     <select id="selectChildren" resultMap="FileNodeResult">
-        SELECT * FROM ydsz_file_node
+        SELECT * FROM ydsz_wiki_file_node
         WHERE parent_id = #{parentId}
           AND tenant_id = #{tenantId}
           AND deleted = 0
@@ -59,7 +59,7 @@
     </select>
 
     <update id="updateWithRevision">
-        UPDATE ydsz_file_node
+        UPDATE ydsz_wiki_file_node
         SET
             parent_id = #{node.parentId},
             name = #{node.name},
@@ -88,7 +88,7 @@
     </update>
 
     <select id="selectPageByParentId" resultMap="FileNodeResult">
-        SELECT * FROM ydsz_file_node
+        SELECT * FROM ydsz_wiki_file_node
         WHERE parent_id = #{parentId} AND deleted = 0
         AND tenant_id = #{tenantId}
         <if test="nodeType != null and nodeType != '' and nodeType != 'all'">
@@ -118,14 +118,14 @@
     </select>
 
     <select id="selectByPathPrefix" resultMap="FileNodeResult">
-        SELECT * FROM ydsz_file_node
+        SELECT * FROM ydsz_wiki_file_node
         WHERE path LIKE CONCAT(#{pathPrefix}, '%') AND deleted = 0
         AND tenant_id = #{tenantId}
         ORDER BY level ASC, sort ASC
     </select>
 
     <select id="selectRootByUser" resultMap="FileNodeResult">
-        SELECT * FROM ydsz_file_node
+        SELECT * FROM ydsz_wiki_file_node
         WHERE deleted = 0 AND node_type = 'folder' AND parent_id = '0'
         AND created_by = #{createdBy}
         AND tenant_id = #{tenantId}
@@ -134,7 +134,7 @@
 
     <!-- 分页查询全部未删除节点（用于全量索引重建等批量场景，避免 OOM） -->
     <select id="selectAllWithPage" resultMap="FileNodeResult">
-        SELECT * FROM ydsz_file_node
+        SELECT * FROM ydsz_wiki_file_node
         WHERE deleted = 0
         ORDER BY created_at ASC
     </select>

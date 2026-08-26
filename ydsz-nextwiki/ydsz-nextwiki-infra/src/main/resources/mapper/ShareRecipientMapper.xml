@@ -20,13 +20,13 @@
     </resultMap>
 
     <select id="selectByShareId" resultMap="ShareRecipientResult">
-        SELECT * FROM ydsz_share_recipient
+        SELECT * FROM ydsz_wiki_share_recipient
         WHERE share_id = #{shareId} AND deleted = 0
         ORDER BY created_at ASC
     </select>
 
     <select id="selectByRecipientId" resultMap="ShareRecipientResult">
-        SELECT * FROM ydsz_share_recipient
+        SELECT * FROM ydsz_wiki_share_recipient
         WHERE recipient_id = #{recipientId} AND deleted = 0
         ORDER BY created_at DESC
     </select>

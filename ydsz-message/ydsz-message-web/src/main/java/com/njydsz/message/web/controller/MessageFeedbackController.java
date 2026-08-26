@@ -3,7 +3,6 @@ package com.njydsz.message.web.controller.core;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,9 +25,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.MessageFeedbackDTO;
-import com.njydsz.message.domain.entity.config.MsgFeedback;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.core.MessageFeedbackService;
 
 /**
@@ -141,8 +138,7 @@ public class MessageFeedbackController {
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) String channel,
       @RequestParam(required = false) String userId) {
-    Page<MsgFeedback> result = messageFeedbackService.pageFeedback(page, size, channel, userId);
-    return YdszResponse.success(PageResponses.success(result, MessageConverter.INSTANT::entityToVO));
+    return YdszResponse.success(PageResponses.success(messageFeedbackService.pageFeedback(page, size, channel, userId)));
   }
 
   /**

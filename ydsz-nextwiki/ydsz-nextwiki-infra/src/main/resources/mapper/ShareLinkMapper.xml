@@ -26,24 +26,24 @@
     </resultMap>
 
     <select id="selectByShareCode" resultMap="ShareLinkResult">
-        SELECT * FROM ydsz_share_link
+        SELECT * FROM ydsz_wiki_share_link
         WHERE share_code = #{shareCode} AND deleted = 0
     </select>
 
     <select id="selectByFileNodeId" resultMap="ShareLinkResult">
-        SELECT * FROM ydsz_share_link
+        SELECT * FROM ydsz_wiki_share_link
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
         ORDER BY created_at DESC
     </select>
 
     <select id="selectActiveSharesByUserId" resultMap="ShareLinkResult">
-        SELECT * FROM ydsz_share_link
+        SELECT * FROM ydsz_wiki_share_link
         WHERE created_by = #{userId} AND deleted = 0 AND status = 'active'
         ORDER BY created_at DESC
     </select>
 
     <update id="updateWithRevision">
-        UPDATE ydsz_share_link
+        UPDATE ydsz_wiki_share_link
         SET
             file_node_id = #{shareLink.fileNodeId},
             share_code = #{shareLink.shareCode},
@@ -63,7 +63,7 @@
     </update>
 
     <select id="selectExpiringShares" resultMap="ShareLinkResult">
-        SELECT * FROM ydsz_share_link
+        SELECT * FROM ydsz_wiki_share_link
         WHERE status = 'active'
           AND deleted = 0
           AND expire_time IS NOT NULL

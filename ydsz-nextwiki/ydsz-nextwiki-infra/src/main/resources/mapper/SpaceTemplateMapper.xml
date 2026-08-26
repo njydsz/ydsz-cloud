@@ -29,7 +29,7 @@
   <!-- 查询可用模板（系统公开模板 + 租户自定义模板，按排序号升序） -->
   <select id="selectAvailableTemplates" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM ydsz_space_template
+    FROM ydsz_wiki_space_template
     WHERE deleted = FALSE
       AND (
         (is_system = TRUE AND is_public = TRUE)
@@ -43,7 +43,7 @@
   <!-- 分页查询模板列表 -->
   <select id="selectWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
-    FROM ydsz_space_template
+    FROM ydsz_wiki_space_template
     WHERE deleted = FALSE
       AND (
         (is_system = TRUE AND is_public = TRUE)
@@ -58,7 +58,7 @@
   <!-- 统计模板数量 -->
   <select id="countByCondition" resultType="int">
     SELECT COUNT(*)
-    FROM ydsz_space_template
+    FROM ydsz_wiki_space_template
     WHERE deleted = FALSE
       AND (
         (is_system = TRUE AND is_public = TRUE)

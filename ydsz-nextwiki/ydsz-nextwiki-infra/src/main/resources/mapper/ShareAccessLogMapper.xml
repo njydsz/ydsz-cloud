@@ -24,7 +24,7 @@
     </resultMap>
 
     <select id="selectByShareId" resultMap="ShareAccessLogResult">
-        SELECT * FROM ydsz_share_access_log
+        SELECT * FROM ydsz_wiki_share_access_log
         WHERE share_id = #{shareId} AND deleted = 0
         ORDER BY created_at DESC
         LIMIT #{limit}
@@ -33,7 +33,7 @@
     <select id="countDailyAccess" resultType="java.util.Map">
         SELECT TO_CHAR(created_at, 'YYYY-MM-DD') AS access_date,
                COUNT(*) AS access_count
-        FROM ydsz_share_access_log
+        FROM ydsz_wiki_share_access_log
         WHERE share_id = #{shareId}
           AND deleted = 0
           AND created_at &gt;= NOW() - INTERVAL '#{days} days'
