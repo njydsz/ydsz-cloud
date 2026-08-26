@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS ydsz_org_department (
 -- ============================================================================
 
 -- 角色表（RBAC 核心实体，内置角色保护 + 数据权限范围）
-CREATE TABLE IF NOT EXISTS ydsz_role (
+CREATE TABLE IF NOT EXISTS ydsz_rbac_role (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离，"0"=平台级角色，其它值为租户级角色）',
     role_code       VARCHAR(64)     NOT NULL COMMENT '角色编码（业务侧引用，全局唯一，建议格式 ROLE_XXX）',
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_menu (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜单/权限表';
 
 -- 岗位表（职责维度：PM/DEV/QA/SA 等，区别于部门与角色）
-CREATE TABLE IF NOT EXISTS ydsz_post (
+CREATE TABLE IF NOT EXISTS ydsz_rbac_post (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     post_name       VARCHAR(128)    NOT NULL COMMENT '岗位名称（前端展示，如「项目经理」「后端开发工程师」）',
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_role (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_acct_user.id）',
-    role_id         VARCHAR(32)     NOT NULL COMMENT '角色 ID（关联 ydsz_role.id）',
+    role_id         VARCHAR(32)     NOT NULL COMMENT '角色 ID（关联 ydsz_rbac_role.id）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
@@ -211,7 +211,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_post (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_acct_user.id）',
-    post_id         VARCHAR(32)     NOT NULL COMMENT '岗位 ID（关联 ydsz_post.id）',
+    post_id         VARCHAR(32)     NOT NULL COMMENT '岗位 ID（关联 ydsz_rbac_post.id）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
@@ -265,7 +265,7 @@ CREATE TABLE IF NOT EXISTS ydsz_org_company_dept (
 CREATE TABLE IF NOT EXISTS ydsz_rbac_role_permission (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    role_id         VARCHAR(32)     NOT NULL COMMENT '角色 ID（关联 ydsz_role.id）',
+    role_id         VARCHAR(32)     NOT NULL COMMENT '角色 ID（关联 ydsz_rbac_role.id）',
     permission_id   VARCHAR(32)     NOT NULL COMMENT '权限 ID（实际指向 ydsz_rbac_menu.id，语义上为权限点而非菜单节点）',
     menu_id         VARCHAR(32)     DEFAULT NULL COMMENT '关联菜单 ID（可空，纯按钮级权限无对应菜单节点）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
@@ -359,7 +359,7 @@ VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, TRUE, TRUE, F
 ON DUPLICATE KEY UPDATE name = name;
 
 -- ----------------------------------------------------------------------------
---  社交平台客户端配置表 ydsz_social_client
+--  社交平台客户端配置表 ydsz_auth_social_client
 -- ----------------------------------------------------------------------------
 --  存储社交平台 OAuth2 应用的客户端配置（P1-1 热更新支持）
 --
@@ -370,7 +370,7 @@ ON DUPLICATE KEY UPDATE name = name;
 --    - idx_status: 状态索引
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_social_client (
+CREATE TABLE IF NOT EXISTS ydsz_auth_social_client (
     id VARCHAR(64) PRIMARY KEY COMMENT '配置 ID（UUID）',
     platform VARCHAR(32) NOT NULL COMMENT '平台标识（GITHUB/DINGTALK/ENTERPRISE_WECHAT/FEISHU 等）',
     platform_name VARCHAR(64) DEFAULT NULL COMMENT '平台显示名称',
@@ -548,7 +548,7 @@ CREATE TABLE IF NOT EXISTS ydsz_security_alert (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='安全告警表';
 
 -- WebAuthn 凭证表（用户注册的公钥凭证，用于 FIDO2 无密码认证）
-CREATE TABLE IF NOT EXISTS ydsz_user_credential (
+CREATE TABLE IF NOT EXISTS ydsz_auth_credential (
     id              BIGINT          NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '主键 ID（自增）',
     credential_id   VARCHAR(512)    NOT NULL COMMENT '凭证 ID（Base64URL 编码）',
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_acct_user.id）',
