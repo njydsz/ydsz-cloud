@@ -1,8 +1,9 @@
 package com.njydsz.workflow.web.controller.instance;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,8 +21,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,22 +34,12 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
-import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
-import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.query.FlowCcQuery;
-import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO;
-import com.njydsz.workflow.domain.vo.FlowCcVO;
-import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.server.service.FlowAttachmentService;
-import com.njydsz.workflow.server.service.FlowCcService;
-import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 
@@ -114,14 +103,6 @@ public class FlowTaskController {
   /** P1-7: WebSocket 待办数实时推送服务 */
   private final FlowTodoCountPushService todoCountPushService;
 
-  /** P1-4: 长期授权委派服务 */
-  private final FlowDelegateAuthService delegateAuthService;
-
-  /** P0-3: 抄送服务 */
-  private final FlowCcService ccService;
-
-  /** 审批附件服务 */
-  private final FlowAttachmentService attachmentService;
 
   // ============== 任务操作 ==============
 
@@ -451,7 +432,7 @@ public class FlowTaskController {
   @Operation(summary = "批量驳回任务")
   public YdszResponse<Void> batchReject(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     String userId = AuthContextUtils.getUserId();
-    List<String> taskIds = new java.util.ArrayList<>();
+    List<String> taskIds = new ArrayList<>();
     String comment = null;
     String targetNodeCode = null;
     for (FlowTaskOperateDTO dto : dtos) {
@@ -486,7 +467,7 @@ public class FlowTaskController {
   @Operation(summary = "批量转办任务")
   public YdszResponse<Void> batchTransfer(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     String userId = AuthContextUtils.getUserId();
-    List<String> taskIds = new java.util.ArrayList<>();
+    List<String> taskIds = new ArrayList<>();
     String comment = null;
     String targetUserId = null;
     String targetUserName = null;
@@ -959,255 +940,5 @@ public class FlowTaskController {
     int toIndex = Math.min(fromIndex + pageSize, total);
     List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
     return PageResponse.success((long) total, (long) pageNo, (long) pageSize, pageData);
-  }
-
-  // ============== P1-4: 长期授权委派 ==============
-
-  /**
-   * P1-4: 创建长期授权委派
-   *
-   * @param dto 授权参数
-   * @return 授权记录 ID
-   */
-  @Idempotent(key = "ydsz:workflow:delegate:create", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdelegate.createDelegateAuth", threshold = 50)
-  @PostMapping("/delegateAuth/create")
-  @Audit(
-      module = "流程委派",
-      type = AuditType.OPERATION,
-      action = AuditAction.GRANT,
-      content = "'createDelegateAuth'")
-  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-  @Operation(summary = "创建长期授权委派")
-  public YdszResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthPostDTO dto) {
-    var auth = delegateAuthService.postDtoToEntity(dto);
-    if (auth.getOwnerUserId() == null) {
-      auth.setOwnerUserId(AuthContextUtils.getUserId());
-    }
-    String id = delegateAuthService.create(auth);
-    return YdszResponse.success(id);
-  }
-
-  /**
-   * P1-4: 撤回授权。
-   *
-   * @param id 授权记录 ID
-   * @return 空响应
-   */
-  @Idempotent(key = "ydsz:workflow:delegate:revoke", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdelegate.revokeDelegateAuth", threshold = 50)
-  @PostMapping("/delegateAuth/{id}/revoke")
-  @Audit(
-      module = "流程委派",
-      type = AuditType.OPERATION,
-      action = AuditAction.GRANT,
-      content = "'revokeDelegateAuth'")
-  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-  @Operation(summary = "撤回授权")
-  public YdszResponse<Void> revokeDelegateAuth(@PathVariable String id) {
-    String ownerId = AuthContextUtils.getUserId();
-    delegateAuthService.revoke(id, ownerId);
-    return YdszResponse.success();
-  }
-
-  /**
-   * P1-4: 启用/停用授权。
-   *
-   * @param id 授权记录 ID
-   * @param status 目标状态
-   * @return 空响应
-   */
-  @Idempotent(
-      key = "ydsz:workflow:FlowTaskController:updateDelegateAuthStatus:lock",
-      ttlSeconds = 5)
-  @RateLimit(resource = "workflow.flowdelegate.updateDelegateAuthStatus", threshold = 50)
-  @PostMapping("/delegateAuth/{id}/status")
-  @Audit(
-      module = "流程委派",
-      type = AuditType.OPERATION,
-      action = AuditAction.GRANT,
-      content = "'updateDelegateAuthStatus'")
-  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-  @Operation(summary = "启用停用授权")
-  public YdszResponse<Void> updateDelegateAuthStatus(
-      @PathVariable String id, @RequestParam String status) {
-    String operatorId = AuthContextUtils.getUserId();
-    delegateAuthService.updateStatus(id, status, operatorId);
-    return YdszResponse.success();
-  }
-
-  /**
-   * P1-4: 查"我设置的"授权列表。
-   *
-   * @param status 状态筛选（可选）
-   * @return 授权列表
-   */
-  @GetMapping("/delegateAuth/mine")
-  @Operation(summary = "查询我设置的授权列表")
-  public YdszResponse<List<FlowDelegateAuthVO>> listMyDelegateAuths(
-      @RequestParam(required = false) String status) {
-    String ownerId = AuthContextUtils.getUserId();
-    String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return YdszResponse.success(
-        delegateAuthService.listMine(ownerId, tenantId, status));
-  }
-
-  /**
-   * P1-4: 查"代理给我的"授权列表。
-   *
-   * @param status 状态筛选（可选）
-   * @return 授权列表
-   */
-  @GetMapping("/delegateAuth/asDelegate")
-  @Operation(summary = "查询代理给我的授权列表")
-  public YdszResponse<List<FlowDelegateAuthVO>> listAsDelegate(
-      @RequestParam(required = false) String status) {
-    String delegateUserId = AuthContextUtils.getUserId();
-    String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return YdszResponse.success(
-        delegateAuthService.listAsDelegate(delegateUserId, tenantId, status));
-  }
-
-  // ============== P0-3: 抄送中心 ==============
-
-  /**
-   * P0-3: 抄送中心 - 分页查询
-   *
-   * @param query 查询条件
-   * @return 抄送分页结果
-   */
-  @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-  @RateLimit(resource = "workflow.FlowCc.pageCc", threshold = 50)
-  @Idempotent(key = "ydsz:workflow:cc:page", ttlSeconds = 5)
-  @PostMapping("/cc/page")
-  @Audit(
-      module = "流程抄送",
-      type = AuditType.OPERATION,
-      action = AuditAction.CREATE,
-      content = "'pageCc'")
-  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
-  @Operation(summary = "抄送中心分页查询")
-  public YdszResponse<List<FlowCcVO>> pageCc(@Valid @RequestBody FlowCcQuery query) {
-    String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    String userId = AuthContextUtils.getUserId();
-    int pageNo = query.getPageNum();
-    int pageSize = query.getPageSize();
-    return ccService.listCcByUser(
-        userId, query.getReadStatus(), query.getFlowCode(), tenantId, pageNo, pageSize);
-  }
-
-  /**
-   * P0-3: 抄送未读数（前端导航栏徽标）。
-   *
-   * @return 未读抄送条数
-   */
-  @GetMapping("/cc/unreadCount")
-  @Operation(summary = "抄送未读数")
-  public YdszResponse<Long> ccUnreadCount() {
-    String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    String userId = AuthContextUtils.getUserId();
-    return YdszResponse.success(ccService.countUnread(userId, tenantId));
-  }
-
-  /**
-   * P0-3: 抄送标记已读。
-   *
-   * @param id 抄送记录 ID
-   * @return 操作结果
-   */
-  @Idempotent(key = "ydsz:workflow:cc:markRead", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCc.ccMarkRead", threshold = 50)
-  @PostMapping("/cc/{id}/read")
-  @Audit(
-      module = "流程抄送",
-      type = AuditType.OPERATION,
-      action = AuditAction.CREATE,
-      content = "'ccMarkRead'")
-  @Operation(summary = "抄送标记已读")
-  public YdszResponse<Boolean> ccMarkRead(@PathVariable String id) {
-    String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    String userId = AuthContextUtils.getUserId();
-    ccService.markRead(tenantId, userId, id);
-    return YdszResponse.success(Boolean.TRUE);
-  }
-
-  /**
-   * P0-3: 抄送全部标记已读。
-   *
-   * @return 已标记已读的记录数
-   */
-  @Idempotent(key = "ydsz:workflow:cc:markAllRead", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowCc.ccMarkAllRead", threshold = 50)
-  @PostMapping("/cc/readAll")
-  @Audit(
-      module = "流程抄送",
-      type = AuditType.OPERATION,
-      action = AuditAction.CREATE,
-      content = "'ccMarkAllRead'")
-  @Operation(summary = "抄送全部标记已读")
-  public YdszResponse<Integer> ccMarkAllRead() {
-    String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    String userId = AuthContextUtils.getUserId();
-    return YdszResponse.success(ccService.markAllRead(tenantId, userId));
-  }
-
-  // ============== 审批附件 ==============
-
-  /**
-   * 查询任务附件。
-   *
-   * @param taskId 任务 ID
-   * @return 附件列表
-   */
-  @GetMapping("/attachment/task/{taskId}")
-  @Operation(summary = "查询任务附件")
-  public YdszResponse<List<FlowAttachmentVO>> listByTask(@PathVariable String taskId) {
-    return YdszResponse.success(attachmentService.listByTask(taskId));
-  }
-
-  /**
-   * 查询实例附件。
-   *
-   * @param instanceId 流程实例 ID
-   * @return 附件列表
-   */
-  @GetMapping("/attachment/instance/{instanceId}")
-  @Operation(summary = "查询实例附件")
-  public YdszResponse<List<FlowAttachmentVO>> listByInstance(@PathVariable String instanceId) {
-    return YdszResponse.success(attachmentService.listByInstance(instanceId));
-  }
-
-  /**
-   * 删除附件（逻辑删除）
-   *
-   * @param attachmentId 附件 ID
-   * @param operatorId 操作人 ID（用于审计日志）
-   * @return 空响应
-   */
-  @Idempotent(key = "ydsz:workflow:attachment:delete", ttlSeconds = 5)
-  @RateLimit(resource = "workflow.FlowAttachment.delete", threshold = 50)
-  @DeleteMapping("/attachment/{attachmentId}")
-  @Audit(
-      module = "流程附件",
-      type = AuditType.OPERATION,
-      action = AuditAction.DELETE,
-      content = "'delete'")
-  @Operation(summary = "删除附件（逻辑删除）")
-  public YdszResponse<Void> delete(
-      @PathVariable String attachmentId, @RequestParam String operatorId) {
-    attachmentService.delete(attachmentId, operatorId);
-    return YdszResponse.success();
-  }
-
-  /**
-   * P2-3: 附件在线预览 — 根据文件类型返回预览策略与预览 URL。
-   *
-   * @param attachmentId 附件 ID
-   * @return 统一响应结果，包含预览 VO
-   */
-  @GetMapping("/attachment/{attachmentId}/preview")
-  @Operation(summary = "附件在线预览（根据文件类型返回预览策略）")
-  public YdszResponse<FlowAttachmentPreviewVO> preview(@PathVariable String attachmentId) {
-    return YdszResponse.success(attachmentService.previewAttachment(attachmentId));
   }
 }

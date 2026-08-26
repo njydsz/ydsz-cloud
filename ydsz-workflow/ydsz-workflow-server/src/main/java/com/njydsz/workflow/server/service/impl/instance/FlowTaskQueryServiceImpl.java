@@ -76,6 +76,29 @@ public class FlowTaskQueryServiceImpl {
     /** 默认分页大小 */
   private static final int DEFAULT_PAGE_SIZE = 20;
 
+  /**
+   * P1-9: 深翻页保护 — offset 超过该值时拒绝继续下翻（LIMIT/OFFSET 深页性能劣化）。
+   *
+   * <p>达到上限的业务应改用游标分页（P2 演进项：基于 id/时间戳的 keyset 分页）。
+   */
+  private static final int MAX_PAGE_OFFSET = 10_000;
+
+  /**
+   * 计算安全 offset：小于 0 归一为 0，超过 {@link #MAX_PAGE_OFFSET} 时告警并封顶。
+   *
+   * @param page 页码（≥1）
+   * @param size 页大小（>0）
+   * @return 安全 offset
+   */
+  private static int computeSafeOffset(int page, int size) {
+    int offset = (Math.max(1, page) - 1) * size;
+    if (offset > MAX_PAGE_OFFSET) {
+      log.warn("[Flow] 分页 offset 超过上限 {}，已封顶（page={}, size={}）", MAX_PAGE_OFFSET, page, size);
+      return MAX_PAGE_OFFSET;
+    }
+    return offset;
+  }
+
   /** 运行时任务仓储，查询待办/已办任务列表 */
   private final FlowRunTaskRepository taskRepository;
 
@@ -147,12 +170,12 @@ public class FlowTaskQueryServiceImpl {
     Set<FlowRunTaskVO> result = new LinkedHashSet<>();
     // 1. 直接分配给该用户的任务
     result.addAll(taskRepository.selectTodoByAssignee(String.valueOf(userId), tid));
-    // 2. 通过 ydsz_flow_user 关联的任务
+    // 2. 通过 ydsz_flow_user 关联的任务（P1-9: 批量查询，消除逐条 findById 的 N+1）
     List<String> taskIds = userRepository.selectTaskIdsByUser(String.valueOf(userId), tid);
     if (taskIds != null && !taskIds.isEmpty()) {
-      for (String taskId2 : taskIds) {
-        FlowRunTaskVO t = taskRepository.findById(taskId2).orElse(null);
-        if (t != null && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
+      for (FlowRunTaskVO t : taskRepository.findByIds(taskIds, tid)) {
+        if (t.getTaskStatus() != null
+            && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
           result.add(t);
         }
       }
@@ -208,7 +231,7 @@ public class FlowTaskQueryServiceImpl {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
-    int offset = (safePage - 1) * safeSize;
+    int offset = computeSafeOffset(safePage, safeSize);
     List<FlowRunTaskVO> list = taskRepository.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
     long total = taskRepository.countTodoByAssignee(assigneeId, tid);
     return PageResponse.success(total, (long) safePage, (long) safeSize, list);
@@ -229,7 +252,7 @@ public class FlowTaskQueryServiceImpl {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
-    int offset = (safePage - 1) * safeSize;
+    int offset = computeSafeOffset(safePage, safeSize);
     List<FlowHisTaskVO> hisTasks =
         hisTaskRepository.selectDoneByAssigneePage(assigneeId, tid, offset, safeSize);
     List<FlowRunTaskVO> list = new ArrayList<>();
@@ -265,7 +288,7 @@ public class FlowTaskQueryServiceImpl {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     int safePage = Math.max(1, page);
     int safeSize = size > 0 ? size : DEFAULT_PAGE_SIZE;
-    int offset = (safePage - 1) * safeSize;
+    int offset = computeSafeOffset(safePage, safeSize);
     List<FlowHisTaskVO> hisTasks =
         hisTaskRepository.selectDonePage(
             assigneeId, businessType, flowCode, startTime, endTime, tid, offset, safeSize);

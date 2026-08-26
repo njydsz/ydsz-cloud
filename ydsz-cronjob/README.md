@@ -441,6 +441,32 @@ mvn -pl ydsz-common -am install -DskipTests
 mvn -pl ydsz-cronjob spring-boot:run
 ```
 
+## 配置速查（默认开启项与开启门槛）
+
+> 云顶规范 §24：配置项须明确"何时需要改"。下表列出关键开关的**默认状态**与**开启前提**，避免误开引入额外复杂度。
+
+| 配置项 | 默认 | 说明 / 开启门槛 |
+|---|---|---|
+| `ydsz.cronjob.leader.enabled` | `true` | Leader 选举（多实例防重复执行），**保持开启** |
+| `ydsz.cronjob.preload.enabled` | `true` | 秒级预读调度（CRON 毫秒级触发）。与主扫描器 CAS 互斥不重复；保守场景可置 `false` 回退纯 5s 轮询 |
+| `ydsz.cronjob.scheduler-executor-separation.enabled` | `true` | 调度器-执行器分离（需同时 `remote.enabled=true`）。Worker 选择策略：`round_robin`(默认)/`least_load`/`random`/`consistent_hash` |
+| `ydsz.cronjob.scanner.parallel-dispatch-enabled` | `true` | 扫描并行派发；任务量小时可关（省线程） |
+| `ydsz.cronjob.quota.enabled` | `false` | 租户配额（任务数/并发/日执行量）。**多租户强隔离诉求时开启** |
+| `ydsz.cronjob.leader.partition.enabled` | `false` | 分区多 Active Leader。**开启门槛：单表任务 >1 万或扫描周期告警**，否则单 Leader 足够 |
+| `ydsz.cronjob.sandbox.docker-enabled` | `false` | Docker 容器沙箱（需节点可执行 docker CLI）。**生产开启需安全评审** |
+| `ydsz.cronjob.remote.allow-empty-token` | `false` | 内部派发端点 fail-closed：未配置 access-token 默认 401。**仅可信内网开发环境可置 true** |
+| `ydsz.cronjob.anomaly-recovery.failover-enabled` | `true` | 节点下线自动故障转移 |
+
+## 执行记录三表职责（P1-F12 厘清）
+
+| 表 | 职责 | 写入方 | 保留期 |
+|---|---|---|---|
+| `ydsz_job_log` | 任务执行实例（含状态/耗时/错误/traceId/分片信息） | 派发与执行主链路 | 30 天（LogCleaner） |
+| `ydsz_job_task` | MapReduce 子任务明细（logId 维度） | MapTaskExecutor | 30 天（LogCleaner） |
+| `ydsz_job_history` | 任务配置变更历史（版本/diff/回滚） | Job 更新链路 | 30 天（LogCleaner） |
+
+> 三表职责正交：日志看"执行"，任务表看"子任务"，历史看"配置变更"。查询语义不重叠，保留期统一由 `ydsz.cronjob.log-retention.*` 控制。
+
 ## Feign 接口
 
 被 `CronjobServiceClient` 调用（Feign 远程调用任务数据）。

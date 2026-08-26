@@ -1,6 +1,7 @@
 package com.njydsz.workflow.domain.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +58,17 @@ public interface FlowRunTaskRepository {
    * @return 运行时任务 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<FlowRunTaskVO> findById(String id);
+
+  /**
+   * P1-9: 批量查询运行时任务（按 ID 集合 + 租户过滤）。
+   *
+   * <p>用于待办多维匹配等场景，避免逐条 {@code findById} 引发的 N+1 查询。
+   *
+   * @param ids 任务 ID 集合（非 null）
+   * @param tenantId 租户 ID
+   * @return 命中任务列表（按 ID 去重，顺序不保证）
+   */
+  List<FlowRunTaskVO> findByIds(Collection<String> ids, String tenantId);
 
   /**
    * 根据 ID 删除运行时任务。

@@ -1,6 +1,7 @@
 package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +94,18 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   @Override
   public Optional<FlowRunTaskVO> findById(String id) {
     return Optional.ofNullable(taskMapper.selectById(id)).map(converter::entityToVO);
+  }
+
+  @Override
+  public List<FlowRunTaskVO> findByIds(Collection<String> ids, String tenantId) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+    LambdaQueryWrapper<FlowRunTask> wrapper = new LambdaQueryWrapper<FlowRunTask>()
+        .in(FlowRunTask::getId, ids)
+        .eq(StringUtils.hasText(tenantId), FlowRunTask::getTenantId, tenantId)
+        .eq(FlowRunTask::getDeleted, 0);
+    return converter.flowRunTaskListToVO(taskMapper.selectList(wrapper));
   }
 
   @Override
