@@ -62,4 +62,21 @@ public interface LeaderElector {
    * @return Leader 节点 ID；无 Leader 时返回 null
    */
   String getCurrentLeader(String role);
+
+  /**
+   * 获取指定 role 的 Leader 任期号（epoch，即 fencing token）。
+   *
+   * <p>用于脑裂防护：每次 Leader 成功抢占（或重新抢占）时在 Redis 中单调递增任期号，
+   * 派发方在扫描开始时捕获任期号，逐任务派发前比对——若任期号已变化，说明 Leader 身份
+   * 已被其他节点接管（如 Redis 主从切换窗口内的双主场景），应立即中止本轮派发，防止双写。
+   *
+   * <p>默认返回 -1，表示实现不参与 fencing（兼容 {@link #tryAcquire(String, Duration)} 的
+   * 最小实现与测试桩）；基于 Redis 的实现应覆盖此方法。
+   *
+   * @param role 角色
+   * @return 当前节点持有的该 role 任期号；非 Leader 或实现不支持时返回 -1
+   */
+  default long getEpoch(String role) {
+    return -1L;
+  }
 }

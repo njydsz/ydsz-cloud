@@ -67,11 +67,17 @@ public class RedissonLeaderElector implements LeaderElector {
   /** P0-3: Leader 持有者标识 key 前缀（value=nodeId，供 getCurrentLeader 读取） */
   private static final String HOLDER_KEY_PREFIX = "ydsz:job:leader:holder:";
 
+  /** P1-F4: Leader 任期号（epoch/fencing token）key 前缀：每次抢占成功时 INCR 单调递增 */
+  private static final String EPOCH_KEY_PREFIX = "ydsz:job:leader:epoch:";
+
   private final RedissonClient redissonClient;
   private final CronjobProperties cronjobProperties;
 
   /** 当前节点持有的 Leader 锁（role -> RLock） */
   private final Map<String, RLock> heldLocks = new ConcurrentHashMap<>();
+
+  /** P1-F4: 当前节点持有的 Leader 任期号（role -> epoch，随抢占/重新抢占更新） */
+  private final Map<String, Long> heldEpochs = new ConcurrentHashMap<>();
 
   /** P0-3: 当前节点 ID（hostname:port），用于 getCurrentLeader 返回真实节点标识 */
   private String nodeId;
@@ -121,14 +127,18 @@ public class RedissonLeaderElector implements LeaderElector {
       boolean acquired = lock.tryLock(0, -1, TimeUnit.MILLISECONDS);
       if (acquired) {
         heldLocks.put(role, lock);
+        // P1-F4: 抢占成功即递增任期号（fencing token），后续派发前比对，防双主双写
+        long epoch = redissonClient.getAtomicLong(EPOCH_KEY_PREFIX + role).incrementAndGet();
+        heldEpochs.put(role, epoch);
         // P0-3: 写入 Leader 持有者标识，供 getCurrentLeader 返回真实节点
         String holderKey = HOLDER_KEY_PREFIX + role;
         redissonClient.<String>getBucket(holderKey).set(nodeId, lease);
         log.info(
-            "[LeaderElector] 抢占 Leader 成功: role={} lease={}ms nodeId={}",
+            "[LeaderElector] 抢占 Leader 成功: role={} lease={}ms nodeId={} epoch={}",
             role,
             lease.toMillis(),
-            nodeId);
+            nodeId,
+            epoch);
       }
       return acquired;
     } catch (InterruptedException e) {
@@ -197,6 +207,7 @@ public class RedissonLeaderElector implements LeaderElector {
   @Override
   public void release(String role) {
     RLock lock = heldLocks.remove(role);
+    heldEpochs.remove(role);
     if (lock != null && lock.isHeldByCurrentThread()) {
       try {
         lock.unlock();
@@ -230,6 +241,19 @@ public class RedissonLeaderElector implements LeaderElector {
     // 兜底: holder key 不存在（可能未启用 P0-3 改造），检查锁是否存在
     RLock lock = redissonClient.getLock(LOCK_KEY_PREFIX + role);
     return lock.isLocked() ? "unknown" : null;
+  }
+
+  /**
+   * 获取当前节点持有的指定 role 的 Leader 任期号（epoch）。
+   *
+   * <p>仅当本节点持有该 role 的 Leader 锁时返回真实任期号；否则返回 -1（不参与 fencing）。
+   *
+   * @param role Leader 角色
+   * @return 任期号；非 Leader 返回 -1
+   */
+  @Override
+  public long getEpoch(String role) {
+    return heldEpochs.getOrDefault(role, -1L);
   }
 
   /**
