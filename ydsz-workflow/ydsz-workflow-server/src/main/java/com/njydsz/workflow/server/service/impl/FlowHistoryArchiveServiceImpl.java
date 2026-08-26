@@ -19,11 +19,10 @@ import com.njydsz.workflow.domain.repository.FlowHisInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisInstance;
-import com.njydsz.workflow.infra.entity.FlowHisTask;
-import com.njydsz.workflow.infra.entity.FlowInstance;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowHisInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 
@@ -103,8 +102,8 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  * @since 1.0.0
  * @see FlowHistoryArchiveService 接口定义
  * @see com.njydsz.workflow.server.config.FlowProperties.History 历史数据配置
- * @see com.njydsz.workflow.infra.entity.FlowHisInstance 历史实例实体
- * @see com.njydsz.workflow.infra.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.domain.vo.FlowHisInstanceVO 历史实例值对象
+ * @see com.njydsz.workflow.domain.vo.FlowHisTaskVO 历史任务值对象
  */
 @Slf4j
 @Service
@@ -125,9 +124,6 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
   /** 历史实例仓储（domain 层契约），写入/查询/删除归档实例 */
   private final FlowHisInstanceRepository hisInstanceRepository;
-
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 历史归档配置属性，控制保留天数/批大小/最大耗时等 */
   private final FlowProperties.History history;
@@ -153,11 +149,9 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         FlowInstanceStatus.TERMINATED.name(),
         FlowInstanceStatus.REJECTED.name());
 
-    List<FlowInstance> candidates;
+    List<FlowInstanceVO> candidates;
     try {
-      candidates = instanceRepository.findArchiveCandidates(statuses, threshold, batch).stream()
-          .map(converter::entityToDO)
-          .toList();
+      candidates = instanceRepository.findArchiveCandidates(statuses, threshold, batch);
     } catch (Exception e) {
       log.error("[FlowHistoryArchive] 查询历史实例失败: {}", e.getMessage(), e);
       Map<String, Object> err = new HashMap<>();
@@ -181,7 +175,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     int errors = 0;
     List<String> archivedIds = new ArrayList<>();
 
-    for (FlowInstance instance : candidates) {
+    for (FlowInstanceVO instance : candidates) {
       if (System.currentTimeMillis() - start > maxMs) {
         log.warn(
             "[FlowHistoryArchive] 达到耗时上限，剩余 {} 个待下次处理",
@@ -254,12 +248,10 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     LocalDateTime threshold = LocalDateTime.now().minusDays(days);
 
     // 1. 查询待清理的归档实例
-    List<FlowHisInstance> candidates;
+    List<FlowHisInstanceVO> candidates;
     try {
       // 每批最多 500 条，避免单次事务过大
-      candidates = hisInstanceRepository.findArchivedBefore(threshold, ARCHIVE_BATCH_SIZE).stream()
-          .map(converter::entityToDO)
-          .toList();
+      candidates = hisInstanceRepository.findArchivedBefore(threshold, ARCHIVE_BATCH_SIZE);
     } catch (Exception e) {
       log.error("[FlowHistoryPurge] 查询归档实例失败: {}", e.getMessage(), e);
       result.put("ok", false);
@@ -277,7 +269,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     }
 
     // 2. 批量删除 his_instance
-    List<String> instanceIds = candidates.stream().map(FlowHisInstance::getId).toList();
+    List<String> instanceIds = candidates.stream().map(FlowHisInstanceVO::getId).toList();
     int purgedInstances = 0;
     try {
       purgedInstances = hisInstanceRepository.deleteByIds(instanceIds);
@@ -318,24 +310,22 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
    * @return 返回值说明
    */
   @Transactional(rollbackFor = Exception.class)
-  public boolean archiveOne(FlowInstance instance) {
+  public boolean archiveOne(FlowInstanceVO instance) {
     String instanceId = instance.getId();
 
     // 1. 校验所有任务都已归档到 his_task
-    List<FlowRunTask> tasks = taskRepository.findByInstanceId(instanceId).stream()
-        .map(converter::entityToDO).toList();
-    List<FlowHisTask> hisTasks = hisTaskRepository.findByInstanceId(instanceId).stream()
-        .map(converter::entityToDO).toList();
+    List<FlowRunTaskVO> tasks = taskRepository.findByInstanceId(instanceId);
+    List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(instanceId);
     Set<String> archivedTaskIds = new HashSet<>();
     if (hisTasks != null) {
-      for (FlowHisTask his : hisTasks) {
+      for (FlowHisTaskVO his : hisTasks) {
         if (his.getTaskId() != null) {
           archivedTaskIds.add(his.getTaskId());
         }
       }
     }
     if (tasks != null) {
-      for (FlowRunTask task : tasks) {
+      for (FlowRunTaskVO task : tasks) {
         if (task.getId() != null
             && !archivedTaskIds.contains(task.getId())
             && !isTerminalTaskStatus(task.getTaskStatus())) {
@@ -350,8 +340,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     }
 
     // 2. 写入归档表（his_instance，variable 以 JSON blob 存储）
-    FlowHisInstance hisInstance = toHisInstance(instance);
-    hisInstanceRepository.save(converter.entityToVO(hisInstance));
+    FlowHisInstanceVO hisInstance = toHisInstance(instance);
+    hisInstanceRepository.save(hisInstance);
 
     log.info(
         "[FlowHistoryArchive] 归档实例 instanceId={} status={} endAt={} taskCount={} hisCount={}",
@@ -369,8 +359,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
    * @param ins 参数说明
    * @return 返回值说明
    */
-  private FlowHisInstance toHisInstance(FlowInstance ins) {
-    FlowHisInstance his = new FlowHisInstance();
+  private FlowHisInstanceVO toHisInstance(FlowInstanceVO ins) {
+    FlowHisInstanceVO his = new FlowHisInstanceVO();
     his.setId(ins.getId()); // 保留原 ID，方便按业务 ID 反查
     his.setFlowCode(ins.getFlowCode());
     his.setFlowName(ins.getFlowName());

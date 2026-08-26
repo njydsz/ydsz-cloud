@@ -543,9 +543,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 在所有版本中筛选指定版本
-      List<FlowTemplate> versions = templateRepository.findVersionsByTemplateCode(templateCode).stream()
-          .map(converter::entityToDO)
-          .toList();
+      List<FlowTemplateVO> versions = templateRepository.findVersionsByTemplateCode(templateCode);
       if (versions.isEmpty()) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -603,7 +601,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取当前最新版本作为复制源
-      FlowTemplate source = templateRepository.findByTemplateCode(templateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplateVO source = templateRepository.findByTemplateCode(templateCode).orElse(null);
       if (source == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -622,7 +620,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       templateRepository.markAsNotLatest(templateCode);
       int newVersion = templateRepository.selectMaxVersion(templateCode).map(v -> v + 1).orElse(1);
 
-      FlowTemplate newVer = new FlowTemplate();
+      FlowTemplateVO newVer = new FlowTemplateVO();
       newVer.setTemplateCode(templateCode);
       newVer.setTemplateName(source.getTemplateName());
       newVer.setCategory(source.getCategory());
@@ -640,7 +638,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newVer.setInheritType(
           source.getInheritType() != null ? source.getInheritType() : "STANDALONE");
       newVer.setIsLatest(1);
-      templateRepository.save(converter.entityToVO(newVer));
+      templateRepository.save(newVer);
       syncSearchIndex(newVer);
 
       log.info(
@@ -920,7 +918,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       int newVersion = templateRepository.selectMaxVersion(childTemplateCode).map(v -> v + 1).orElse(1);
 
       // 以父模板内容创建子模板新版本，保留子模板自身编码/名称/分类/排序
-      FlowTemplate newVer = new FlowTemplate();
+      FlowTemplateVO newVer = new FlowTemplateVO();
       newVer.setTemplateCode(child.getTemplateCode());
       newVer.setTemplateName(child.getTemplateName());
       newVer.setCategory(child.getCategory());
@@ -936,7 +934,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newVer.setVersionLabel("v" + newVersion + ".0-synced");
       newVer.setInheritType("INHERIT");
       newVer.setIsLatest(1);
-      templateRepository.save(converter.entityToVO(newVer));
+      templateRepository.save(newVer);
       syncSearchIndex(newVer);
 
       log.info(
@@ -1225,7 +1223,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    *
    * @param template 流程模板实体
    */
-  private void syncSearchIndex(FlowTemplate template) {
+  private void syncSearchIndex(FlowTemplateVO template) {
     SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
     if (bridge != null) {
       bridge.indexUpsert("workflow", template);
