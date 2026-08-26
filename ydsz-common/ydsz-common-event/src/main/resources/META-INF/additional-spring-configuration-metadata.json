@@ -10,7 +10,7 @@
       "name": "ydsz.event.outbox.table-name",
       "type": "java.lang.String",
       "description": "Outbox 表名。",
-      "defaultValue": "ydsz_outbox"
+      "defaultValue": "ydsz_com_outbox"
     },
     {
       "name": "ydsz.event.outbox.poll-interval-seconds",

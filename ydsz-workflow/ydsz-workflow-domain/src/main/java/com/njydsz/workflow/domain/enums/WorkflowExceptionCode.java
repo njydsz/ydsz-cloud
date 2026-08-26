@@ -40,6 +40,8 @@ public enum WorkflowExceptionCode implements ExceptionCode {
   DEFINITION_NOT_FOUND("B70004", "workflow.definition.not.found", 404),
   /** Bpmn parse error */
   BPMN_PARSE_ERROR("B70005", "workflow.bpmn.parse.error"),
+  /** Unsupported bpmn element (fail-fast on deploy) */
+  UNSUPPORTED_BPMN_ELEMENT("B70006", "workflow.bpmn.unsupported.element"),
 
   // ==================== B71001-B71099 流程实例 ====================
   /** Instance not found */

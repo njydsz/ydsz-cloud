@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   event:
  *     outbox:
  *       enabled: true
- *       table-name: ydsz_outbox
+ *       table-name: ydsz_com_outbox
  *       poll-interval-seconds: 5
  *       batch-size: 100
  *       max-retries: 5
@@ -41,7 +41,7 @@ public class EventProperties {
   private boolean enabled = true;
 
   /** Outbox 表名 */
-  private String tableName = "ydsz_outbox";
+  private String tableName = "ydsz_com_outbox";
 
   /** 轮询间隔（秒） */
   private long pollIntervalSeconds = 5;

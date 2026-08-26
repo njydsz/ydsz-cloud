@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 定时任务定义
  *
- * <p>对应 ydsz_job 表，描述一个调度任务的处理器、Cron 表达式、参数及执行统计。
+ * <p>对应 ydsz_job_main 表，描述一个调度任务的处理器、Cron 表达式、参数及执行统计。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -26,7 +26,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_job")
+@TableName("ydsz_job_main")
 public class Job extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;

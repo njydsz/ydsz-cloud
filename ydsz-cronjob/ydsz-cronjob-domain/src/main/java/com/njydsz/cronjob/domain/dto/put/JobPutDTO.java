@@ -4,8 +4,10 @@ import java.io.Serial;
 import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 /**
@@ -41,6 +43,7 @@ public class JobPutDTO implements Serializable {
   @Schema(description = "Cron 表达式（scheduleType=CRON 时必填）")
   private String cronExpression;
 
+  @Pattern(regexp = "CRON|FIXED_RATE|FIXED_DELAY|API", message = "调度类型仅支持 CRON/FIXED_RATE/FIXED_DELAY/API")
   @Schema(
       description = "调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)")
   private String scheduleType;
@@ -74,6 +77,7 @@ public class JobPutDTO implements Serializable {
   @Schema(description = "慢任务阈值（毫秒）：null 不检测慢任务；执行耗时超过此值时由 SlowTaskDetector 标记 JobLog.is_slow=1")
   private Long slowThresholdMs;
 
+  @Pattern(regexp = "FIRE_NOW|SKIP|COALESCE", message = "Misfire 策略仅支持 FIRE_NOW/SKIP/COALESCE")
   @Schema(description = "Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行")
   private String misfirePolicy;
 
@@ -95,13 +99,17 @@ public class JobPutDTO implements Serializable {
   @Schema(description = "重试间隔（毫秒）")
   private Long retryIntervalMs;
 
+  @Pattern(regexp = "FIXED|EXPONENTIAL", message = "重试退避策略仅支持 FIXED/EXPONENTIAL")
   @Schema(description = "重试退避策略（FIXED/EXPONENTIAL，null=默认 FIXED）")
   private String retryBackoff;
 
-  @Min(value = 1, message = "SLA 阈值必须为正数")
+  @Min(value = 1, message = "SLA 阈值必须 > 0")
   @Schema(description = "SLA 达标阈值（毫秒）：执行耗时超过此值触发 SLA_WARNING 告警，null=不设 SLA")
   private Long slaMs;
 
+  @Pattern(
+      regexp = "SERIAL|DISCARD|DISCARD_OVERLAPPING|COVER|CONCURRENT",
+      message = "阻塞策略仅支持 SERIAL/DISCARD/DISCARD_OVERLAPPING/COVER/CONCURRENT")
   @Schema(
       description = "阻塞策略: SERIAL 串行跳过(默认) / DISCARD 丢弃本次 / DISCARD_OVERLAPPING 丢弃重叠 / COVER 覆盖执行 / CONCURRENT 并行执行")
   private String blockStrategy;
@@ -110,15 +118,16 @@ public class JobPutDTO implements Serializable {
   @Schema(description = "最大连续失败次数（达到后自动熔断暂停任务，null=不熔断）")
   private Integer maxConsecutiveFails;
 
-  @Min(value = 1, message = "自动恢复延迟必须为正数")
+  @Min(value = 1, message = "自动恢复延迟必须 > 0")
   @Schema(description = "自动恢复延迟（分钟）：熔断后超过此时间自动恢复 NORMAL，null=不自动恢复")
   private Integer autoResumeAfterMinutes;
 
-  @Min(value = 0, message = "优先级不能为负")
+  @Min(value = 0, message = "优先级必须 >= 0")
   @Schema(description = "调度优先级（数值越大越先派发，默认 0）")
   private Integer priority;
 
-  @Min(value = 0, message = "灰度比例必须在 0-100")
+  @Min(value = 0, message = "灰度比例必须 >= 0")
+  @Max(value = 100, message = "灰度比例必须 <= 100")
   @Schema(description = "灰度比例（0-100，jobKey 稳定哈希分桶，null=全量走主 handler）")
   private Integer canaryRatio;
 

@@ -14,8 +14,8 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 /**
  * 任务告警日志实体（P5 告警 + 监控, P3-1-merge 重构）。
  *
- * <p>P3-1-merge: 原对应 {@code ydsz_job_alert_log} 表，现已合并到 {@code ydsz_alert_dispatch}
- * （source_type='CRONJOB'）。本实体映射到 ydsz_alert_dispatch 表，新增字段（alert_code, title, content,
+ * <p>P3-1-merge: 原对应 {@code ydsz_job_alert_log} 表，现已合并到 {@code ydsz_job_alert_dispatch}
+ * （source_type='CRONJOB'）。本实体映射到 ydsz_job_alert_dispatch 表，新增字段（alert_code, title, content,
  * target_role, push_channels 等）在 cronjob 场景下由 AlertDispatcher 填充。
  *
  * <p>记录每次告警派发的实际情况，用于审计、去重判断和告警效果统计。
@@ -28,7 +28,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_alert_dispatch")
+@TableName("ydsz_job_alert_dispatch")
 public class JobAlertLog extends MpBaseIdEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
@@ -39,10 +39,10 @@ public class JobAlertLog extends MpBaseIdEntity<String> {
   /** 触发源类型（cronjob 告警固定为 CRONJOB, P3-1-merge） */
   private String sourceType;
 
-  /** 规则 ID（映射到 ydsz_alert_dispatch.rule_id） */
+  /** 规则 ID（映射到 ydsz_job_alert_dispatch.rule_id） */
   private String ruleId;
 
-  /** 规则名称（映射到 ydsz_alert_dispatch.title） */
+  /** 规则名称（映射到 ydsz_job_alert_dispatch.title） */
   private String ruleName;
 
   /** 任务 ID（NULL 表示全局告警; 映射到 source_id） */
@@ -75,6 +75,6 @@ public class JobAlertLog extends MpBaseIdEntity<String> {
   /** 链路追踪 ID（映射到 provider_trace_id） */
   private String traceId;
 
-  /** 触发该告警的任务日志 ID（关联 ydsz_job_log.id） */
+  /** 触发该告警的任务日志 ID（关联 ydsz_job_main_log.id） */
   private String triggerLogId;
 }

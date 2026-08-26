@@ -17,7 +17,7 @@ import com.njydsz.common.search.core.IndexOperation;
 /**
  * 持久化死信队列 — 将索引写入失败的操作落库到 PostgreSQL。
  *
- * <p>死信表结构（{@code ydsz_search_dead_letter}）：
+ * <p>死信表结构（{@code ydsz_com_search_dead_letter}）：
  *
  * <pre>
  *   id            BIGSERIAL PRIMARY KEY
@@ -56,7 +56,7 @@ import com.njydsz.common.search.core.IndexOperation;
 public class PersistentDeadLetterQueue {
 
   /** 死信表名 */
-  private static final String DLQ_TABLE = "ydsz_search_dead_letter";
+  private static final String DLQ_TABLE = "ydsz_com_search_dead_letter";
 
   /** 最大重试次数（落库后） */
   private static final int MAX_DB_RETRY = 5;

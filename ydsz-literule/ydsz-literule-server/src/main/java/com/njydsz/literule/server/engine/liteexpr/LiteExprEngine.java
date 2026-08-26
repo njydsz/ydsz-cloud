@@ -44,28 +44,51 @@ public class LiteExprEngine implements ExpressionEngine {
   /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
+  /**
+   * 默认单次表达式求值超时（P0-6）
+   *
+   * <p>与 {@code ScriptRule.SANDBOX_TIMEOUT_MS=5000} 对齐，防止恶意/病态表达式无限执行。
+   * 可通过构造器覆盖（如从配置注入）。
+   */
+  public static final long DEFAULT_MAX_EVAL_NANOS = 5_000_000_000L;
+
   private final LiteExprCompiler compiler;
   private final FunctionRegistry functionRegistry;
   private final TreeInterpreter interpreter;
   private final LiteExprSandbox sandbox;
   private final boolean sandboxEnabled;
 
+  /** 单次表达式求值超时（纳秒）；0=不启用墙上时钟超时（节点预算仍生效） */
+  private final long maxEvalNanos;
+
   public LiteExprEngine() {
     this(true);
   }
 
   public LiteExprEngine(boolean sandboxEnabled) {
+    this(sandboxEnabled, DEFAULT_MAX_EVAL_NANOS);
+  }
+
+  /**
+   * 带求值超时的引擎构造器
+   *
+   * @param sandboxEnabled 是否启用 AST 级沙箱
+   * @param maxEvalNanos 单次表达式求值超时（纳秒）；0 或负数 = 不启用墙上时钟超时
+   */
+  public LiteExprEngine(boolean sandboxEnabled, long maxEvalNanos) {
     this.sandboxEnabled = sandboxEnabled;
+    this.maxEvalNanos = Math.max(0L, maxEvalNanos);
     this.compiler = new LiteExprCompiler();
     this.functionRegistry = new FunctionRegistry();
     this.interpreter = new TreeInterpreter(functionRegistry);
     this.sandbox = new LiteExprSandbox();
     this.sandbox.syncFunctions(functionRegistry);
     log.info(
-        "[LiteExpr] 自研表达式引擎已初始化（sandbox={}, functions={}, cacheCapacity={})",
+        "[LiteExpr] 自研表达式引擎已初始化（sandbox={}, functions={}, cacheCapacity={}, maxEvalNanos={})",
         sandboxEnabled,
         functionRegistry.getFunctionNames().size(),
-        CACHE_CAPACITY);
+        CACHE_CAPACITY,
+        this.maxEvalNanos);
   }
 
   @Override
@@ -76,7 +99,7 @@ public class LiteExprEngine implements ExpressionEngine {
     try {
       ExprNode ast = compileAndCheck(expression);
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
-      Object result = interpreter.eval(ast, facts);
+      Object result = interpreter.eval(ast, facts, maxEvalNanos);
       if (result instanceof Boolean b) {
         return b;
       }
@@ -88,7 +111,18 @@ public class LiteExprEngine implements ExpressionEngine {
       }
       return Boolean.parseBoolean(String.valueOf(result));
     } catch (SecurityException e) {
-      log.warn("[LiteExpr] 安全拦截: {}", e.getMessage());
+      // 沙箱拦截 = 表达式内容本身存在风险，属配置事故，须 ERROR 级可观测（P0-8）
+      log.error("[LiteExpr] 安全拦截（请立即检查表达式内容）: expr='{}', error={}", expression, e.getMessage());
+      return false;
+    } catch (LiteExprException e) {
+      // 语法/语义/超时/深度超限 = 表达式配置缺陷，须 ERROR 级可观测（P0-8），
+      // 与"条件不成立（返回 false）"区分开；契约保持 false=未命中不变
+      log.error(
+          "[LiteExpr] 表达式配置错误: expr='{}', line={}, col={}, error={}",
+          expression,
+          e.getLine(),
+          e.getColumn(),
+          e.getMessage());
       return false;
     } catch (Exception e) {
       log.warn("[LiteExpr] 布尔表达式求值失败: expr='{}', error={}", expression, e.getMessage());
@@ -104,9 +138,19 @@ public class LiteExprEngine implements ExpressionEngine {
     try {
       ExprNode ast = compileAndCheck(expression);
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
-      return interpreter.eval(ast, facts);
+      return interpreter.eval(ast, facts, maxEvalNanos);
     } catch (SecurityException e) {
-      log.warn("[LiteExpr] 安全拦截: {}", e.getMessage());
+      // 沙箱拦截 = 表达式内容本身存在风险，属配置事故，须 ERROR 级可观测（P0-8）
+      log.error("[LiteExpr] 安全拦截（请立即检查表达式内容）: expr='{}', error={}", expression, e.getMessage());
+      return null;
+    } catch (LiteExprException e) {
+      // 语法/语义/超时/深度超限 = 表达式配置缺陷，须 ERROR 级可观测（P0-8）
+      log.error(
+          "[LiteExpr] 表达式配置错误: expr='{}', line={}, col={}, error={}",
+          expression,
+          e.getLine(),
+          e.getColumn(),
+          e.getMessage());
       return null;
     } catch (Exception e) {
       log.warn("[LiteExpr] 表达式求值失败: expr='{}', error={}", expression, e.getMessage());
@@ -199,7 +243,8 @@ public class LiteExprEngine implements ExpressionEngine {
     try {
       ExprNode ast = compileAndCheck(expression);
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
-      TreeInterpreter.TraceEvalResult traceResult = interpreter.evalWithTrace(ast, facts);
+      TreeInterpreter.TraceEvalResult traceResult =
+          interpreter.evalWithTrace(ast, facts, maxEvalNanos);
       long elapsed = System.nanoTime() - start;
 
       boolean boolResult;

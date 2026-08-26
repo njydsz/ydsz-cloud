@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 租户级配额实体（P7-2）。
  *
- * <p>对应 {@code ydsz_tenant_quota} 表，存储每个租户的任务数 / 并发数 / 日执行量上限。 表物理位置在 ydsz-cronjob 模块（{@code
+ * <p>对应 {@code ydsz_job_tenant_quota} 表，存储每个租户的任务数 / 并发数 / 日执行量上限。 表物理位置在 ydsz-cronjob 模块（{@code
  * TenantQuotaMapper} 在 ydsz-cronjob-infra）， 因此本实体归属 ydsz-cronjob-domain，不归 ydsz-system。
  *
  * @author ydsz-team
@@ -25,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_tenant_quota")
+@TableName("ydsz_job_tenant_quota")
 public class TenantQuota extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;

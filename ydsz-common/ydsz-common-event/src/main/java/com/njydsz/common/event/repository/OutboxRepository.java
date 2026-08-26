@@ -57,7 +57,7 @@ public class OutboxRepository {
    * 构造函数
    *
    * @param jdbcTemplate JDBC 模板
-   * @param tableName Outbox 表名（默认 ydsz_outbox），需通过正则校验防 SQL 注入
+   * @param tableName Outbox 表名（默认 ydsz_com_outbox），需通过正则校验防 SQL 注入
    */
   public OutboxRepository(JdbcTemplate jdbcTemplate, String tableName) {
     if (tableName == null || !tableName.matches(TABLE_NAME_PATTERN)) {

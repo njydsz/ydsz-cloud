@@ -76,6 +76,7 @@ public class JobPostDTO implements Serializable {
   @Schema(description = "慢任务阈值（毫秒）：null 不检测慢任务；执行耗时超过此值时由 SlowTaskDetector 标记 JobLog.is_slow=1")
   private Long slowThresholdMs;
 
+  @Pattern(regexp = "FIRE_NOW|SKIP|COALESCE", message = "Misfire 策略仅支持 FIRE_NOW/SKIP/COALESCE")
   @Schema(description = "Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行")
   private String misfirePolicy;
 

@@ -170,6 +170,29 @@ public class BpmnXmlParser {
   }
 
   /**
+   * 引擎不支持但具备流程语义的 BPMN 元素（部署时 fail-fast，禁止静默忽略）。
+   *
+   * <p>这些元素一旦出现在流程定义中，意味着流程无法按设计执行，静默丢弃会造成
+   * "定义与运行时行为不一致"的线上事故。解析阶段直接拒绝并提示原因。
+   */
+  private static final Set<String> UNSUPPORTED_SEMANTIC_ELEMENTS = Set.of(
+      // 任务类
+      "businessruletask", "sendtask", "task", "transaction", "adhocsubprocess",
+      // 事件类（当前运行时未执行，仅解析）
+      "terminateeventdefinition", "linkeventdefinition", "conditionalEventDefinition");
+
+  /**
+   * 合法但可安全忽略的容器/文档类元素（不影响执行语义）。
+   *
+   * <p>如协作、泳道、数据对象、注释、图元等，BPMN 工具导出时普遍存在，解析时跳过。
+   */
+  private static final Set<String> IGNORABLE_ELEMENTS = Set.of(
+      "collaboration", "participant", "messages", "signals", "errors", "interfaces",
+      "laneSet", "lane", "dataObject", "dataObjectReference", "dataStoreReference",
+      "textAnnotation", "association", "group", "documentation", "extensionElements",
+      "import", "relationship", "category", "rootElement");
+
+  /**
    * 解析 process 的子元素，填充 nodes 和 skips。
    *
    * @param children 参数说明
@@ -200,6 +223,23 @@ public class BpmnXmlParser {
         if (skip != null) {
           skips.add(skip);
         }
+      } else {
+        // fail-fast：拒绝"具备流程语义但引擎不支持"的元素，防止静默丢弃
+        String normalized = local.toLowerCase();
+        if (UNSUPPORTED_SEMANTIC_ELEMENTS.contains(normalized)) {
+          log.warn("[BpmnParser] 流程定义包含不支持的 BPMN 元素，拒绝部署: <{}>", local);
+          throw SysException.builder()
+              .resultCode(YdszResultCode.BAD_REQUEST)
+              .key("error.workflow.msg_unsupported_bpmn_element")
+              .params(local)
+              .build();
+        }
+        if (IGNORABLE_ELEMENTS.contains(normalized)) {
+          // 合法容器/文档元素，静默跳过
+          continue;
+        }
+        // 其他未知元素：记录 debug，不阻断（兼容工具导出的扩展元素）
+        log.debug("[BpmnParser] 忽略未知 process 子元素: <{}>", local);
       }
     }
     fillSkipNextNodeType(nodes, skips);

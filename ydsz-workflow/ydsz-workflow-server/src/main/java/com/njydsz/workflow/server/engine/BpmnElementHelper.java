@@ -9,8 +9,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
+import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
@@ -61,6 +63,7 @@ public class BpmnElementHelper {
    *
    * @param localName BPMN 元素本地名称
    * @return FlowNodeType 编码值
+   * @throws BusinessException 当元素未在 {@link #isFlowNode} 白名单中时（防御性 fail-fast）
    */
   public int mapNodeType(String localName) {
     return switch (localName.toLowerCase()) {
@@ -80,7 +83,14 @@ public class BpmnElementHelper {
       case "inclusivegateway" -> FlowNodeType.INCLUSIVE.getCode();
       case "intermediatethrowevent", "intermediatecatchevent", "boundaryevent" ->
           FlowNodeType.CC.getCode();
-      default -> FlowNodeType.APPROVAL.getCode();
+      default -> {
+        // 防御性 fail-fast：isFlowNode 白名单外的元素不应到达此处
+        log.warn("[BpmnElementHelper] 未知 BPMN 节点元素，拒绝静默降级: {}", localName);
+        throw BusinessException.builder()
+            .resultCode(WorkflowExceptionCode.UNSUPPORTED_BPMN_ELEMENT)
+            .params(localName)
+            .build();
+      }
     };
   }
 

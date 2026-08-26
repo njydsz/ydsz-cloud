@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.enums;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 流程节点类型
  *
@@ -105,8 +107,8 @@ public enum FlowNodeType {
   /**
    * 根据节点编码解析节点类型。
    *
-   * <p>入参为 {@code null} 或编码无匹配时统一回退为 {@link #APPROVAL}（单人审批）， 保证历史/脏数据可继续流转；调用方需严格校验时应先比对 {@link
-   * #getCode()}。
+   * <p>入参为 {@code null} 或编码无匹配时统一回退为 {@link #APPROVAL}（单人审批）， 保证历史/脏数据可继续流转；调用方需严格校验时应使用
+   * {@link #ofStrict(Integer)}。
    *
    * @param code 节点编码，可为 {@code null}
    * @return 匹配的节点类型；无匹配或入参为 {@code null} 时返回 {@link #APPROVAL}
@@ -121,5 +123,34 @@ public enum FlowNodeType {
       }
     }
     return APPROVAL;
+  }
+
+  /**
+   * 严格解析节点类型：无匹配或入参为 {@code null} 时抛出异常（fail-fast）。
+   *
+   * <p>适用于流程定义解析/部署等需要"非法数据尽早暴露"的路径（如 BPMN 解析、定义反序列化），
+   * 避免未知节点类型被静默降级为 {@link #APPROVAL} 造成线上语义漂移。
+   *
+   * @param code 节点编码，不可为 {@code null}
+   * @return 匹配的节点类型
+   * @throws BusinessException 当入参为 {@code null} 或无匹配时，异常码为
+   *     {@link WorkflowExceptionCode#UNSUPPORTED_BPMN_ELEMENT}
+   */
+  public static FlowNodeType ofStrict(Integer code) {
+    if (code == null) {
+      throw BusinessException.builder()
+          .resultCode(WorkflowExceptionCode.UNSUPPORTED_BPMN_ELEMENT)
+          .params("null")
+          .build();
+    }
+    for (FlowNodeType t : values()) {
+      if (t.code == code) {
+        return t;
+      }
+    }
+    throw BusinessException.builder()
+        .resultCode(WorkflowExceptionCode.UNSUPPORTED_BPMN_ELEMENT)
+        .params(code)
+        .build();
   }
 }
