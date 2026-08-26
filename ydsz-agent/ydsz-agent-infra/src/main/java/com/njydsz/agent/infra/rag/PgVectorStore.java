@@ -18,12 +18,12 @@ import com.njydsz.common.tenant.TenantContextHolder;
 /**
  * PostgreSQL pgvector 向量存储实现
  *
- * <p>使用 PostgreSQL pgvector 扩展存储和检索向量数据。 依赖表 {@code ydsz_agent_document_chunk}（含 vector 类型列）。
+ * <p>使用 PostgreSQL pgvector 扩展存储和检索向量数据。 依赖表 {@code ydsz_agt_document_chunk}（含 vector 类型列）。
  *
  * <p><b>DDL（多租户：需含 tenant_id 列）：</b>
  *
  * <pre>
- * CREATE TABLE ydsz_agent_document_chunk (
+ * CREATE TABLE ydsz_agt_document_chunk (
  *   id           VARCHAR(64) PRIMARY KEY,
  *   document_id  VARCHAR(64) NOT NULL,
  *   content      TEXT NOT NULL,
@@ -36,9 +36,9 @@ import com.njydsz.common.tenant.TenantContextHolder;
  *   tenant_id    VARCHAR(64),
  *   created_at   TIMESTAMPTZ DEFAULT NOW()
  * );
- * CREATE INDEX idx_chunk_embedding ON ydsz_agent_document_chunk USING ivfflat (embedding vector_cosine_ops);
- * CREATE INDEX idx_chunk_doc ON ydsz_agent_document_chunk(document_id);
- * CREATE INDEX idx_chunk_tenant ON ydsz_agent_document_chunk(tenant_id);
+ * CREATE INDEX idx_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
+ * CREATE INDEX idx_chunk_doc ON ydsz_agt_document_chunk(document_id);
+ * CREATE INDEX idx_chunk_tenant ON ydsz_agt_document_chunk(tenant_id);
  * </pre>
  *
  * <p><b>多租户隔离（P0 修复）</b>：本实现走 {@link JdbcTemplate} 原生 SQL，不经过 MyBatis 租户拦截器，因此必须在 SQL 层显式追加 {@code
@@ -88,7 +88,7 @@ public class PgVectorStore implements VectorStore {
   /**
    * 存储文本块到 PostgreSQL 向量表。
    *
-   * <p>写入 {@code ydsz_agent_document_chunk} 表，向量列使用 {@code ::vector} 类型转换，metadata 使用 {@code
+   * <p>写入 {@code ydsz_agt_document_chunk} 表，向量列使用 {@code ::vector} 类型转换，metadata 使用 {@code
    * ::jsonb}； 通过 {@code ON CONFLICT (id) DO UPDATE} 实现幂等 upsert， 重复入库同一文档块时更新内容、向量与元数据。启用租户隔离时写入
    * {@code tenant_id}。
    *
@@ -99,7 +99,7 @@ public class PgVectorStore implements VectorStore {
     String tenantId = resolveTenantId();
     String sql =
         """
-                INSERT INTO ydsz_agent_document_chunk
+                INSERT INTO ydsz_agt_document_chunk
                     (id, document_id, content, embedding, chunk_index, token_count,
                      document_title, source, metadata, tenant_id, created_at)
                 VALUES (?, ?, ?, ?::vector, ?, ?, ?, ?, ?::jsonb, ?, NOW())
@@ -141,7 +141,7 @@ public class PgVectorStore implements VectorStore {
     String tenantId = resolveTenantId();
     String sql =
         """
-                INSERT INTO ydsz_agent_document_chunk
+                INSERT INTO ydsz_agt_document_chunk
                     (id, document_id, content, embedding, chunk_index, token_count,
                      document_title, source, metadata, tenant_id, created_at)
                 VALUES (?, ?, ?, ?::vector, ?, ?, ?, ?, ?::jsonb, ?, NOW())
@@ -195,7 +195,7 @@ public class PgVectorStore implements VectorStore {
                 SELECT id, document_id, content, chunk_index, token_count,
                        document_title, source, metadata,
                        1 - (embedding <=> ?::vector) AS score
-                FROM ydsz_agent_document_chunk
+                FROM ydsz_agt_document_chunk
                 WHERE embedding IS NOT NULL
                   AND (embedding <=> ?::vector) < ?
                 """);
@@ -243,12 +243,12 @@ public class PgVectorStore implements VectorStore {
     String tenantId = resolveTenantId();
     if (tenantId != null) {
       jdbcTemplate.update(
-          "DELETE FROM ydsz_agent_document_chunk WHERE document_id = ? AND tenant_id = ?",
+          "DELETE FROM ydsz_agt_document_chunk WHERE document_id = ? AND tenant_id = ?",
           documentId,
           tenantId);
     } else {
       jdbcTemplate.update(
-          "DELETE FROM ydsz_agent_document_chunk WHERE document_id = ?", documentId);
+          "DELETE FROM ydsz_agt_document_chunk WHERE document_id = ?", documentId);
     }
     log.info("[VectorStore] 删除文档文本块: docId={}, tenantId={}", documentId, tenantId);
   }
@@ -260,13 +260,13 @@ public class PgVectorStore implements VectorStore {
       if (tenantId != null) {
         Long count =
             jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM ydsz_agent_document_chunk WHERE tenant_id = ?",
+                "SELECT COUNT(*) FROM ydsz_agt_document_chunk WHERE tenant_id = ?",
                 Long.class,
                 tenantId);
         return count != null ? count : 0;
       }
       Long count =
-          jdbcTemplate.queryForObject("SELECT COUNT(*) FROM ydsz_agent_document_chunk", Long.class);
+          jdbcTemplate.queryForObject("SELECT COUNT(*) FROM ydsz_agt_document_chunk", Long.class);
       return count != null ? count : 0;
     } catch (Exception e) {
       log.warn("[VectorStore] 统计文本块数量失败, err={}", e.getMessage());
@@ -282,7 +282,7 @@ public class PgVectorStore implements VectorStore {
   @Override
   public boolean isAvailable() {
     try {
-      jdbcTemplate.queryForObject("SELECT 1 FROM ydsz_agent_document_chunk LIMIT 1", Integer.class);
+      jdbcTemplate.queryForObject("SELECT 1 FROM ydsz_agt_document_chunk LIMIT 1", Integer.class);
       return true;
     } catch (Exception e) {
       log.warn("[VectorStore] 可用性检查失败, err={}", e.getMessage());

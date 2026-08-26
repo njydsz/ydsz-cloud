@@ -7,7 +7,7 @@ import com.njydsz.agent.infra.entity.PromptVersion;
 /**
  * Prompt 模板版本 Mapper
  *
- * <p>对应数据表 {@code ydsz_prompt_version}。
+ * <p>对应数据表 {@code ydsz_agt_prompt_version}。
  *
  * <p><b>主要索引：</b>
  *

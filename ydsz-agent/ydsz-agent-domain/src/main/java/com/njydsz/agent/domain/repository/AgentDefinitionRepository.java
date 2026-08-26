@@ -9,7 +9,7 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 /**
  * Agent 定义 Repository
  *
- * <p>封装 {@code ydsz_agent_def} 表的数据库访问，为 server 层提供业务语义化的数据操作接口。
+ * <p>封装 {@code ydsz_agt_def} 表的数据库访问，为 server 层提供业务语义化的数据操作接口。
  *
  * <p><b>主要索引：</b>
  *

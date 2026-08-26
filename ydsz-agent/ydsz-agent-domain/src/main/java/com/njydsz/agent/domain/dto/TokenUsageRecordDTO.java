@@ -20,7 +20,7 @@ public class TokenUsageRecordDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 所属对话 ID（关联 ydsz_agent_conversation） */
+  /** 所属对话 ID（关联 ydsz_agt_conversation） */
   private String conversationId;
 
   /** 使用的模型标识 */

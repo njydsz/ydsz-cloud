@@ -7,7 +7,7 @@ import com.njydsz.agent.infra.entity.PromptTemplate;
 /**
  * Prompt 模板 Mapper
  *
- * <p>对应数据表 {@code ydsz_prompt_template}。
+ * <p>对应数据表 {@code ydsz_agt_prompt_template}。
  *
  * <p><b>主要索引：</b>
  *

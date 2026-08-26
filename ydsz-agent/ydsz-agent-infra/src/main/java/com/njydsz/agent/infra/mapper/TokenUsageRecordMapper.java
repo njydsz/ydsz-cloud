@@ -7,7 +7,7 @@ import com.njydsz.agent.infra.entity.TokenUsageRecord;
 /**
  * Token 用量记录 Mapper
  *
- * <p>对应数据表 {@code ydsz_agent_token_usage}。
+ * <p>对应数据表 {@code ydsz_agt_token_usage}。
  *
  * <p><b>主要索引：</b>
  *

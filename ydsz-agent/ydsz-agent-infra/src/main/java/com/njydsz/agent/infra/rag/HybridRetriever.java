@@ -43,7 +43,7 @@ public class HybridRetriever implements Retriever {
   private static final int RRF_K = 60;
 
   /** 文本块表名 */
-  private static final String TABLE_NAME = "ydsz_agent_document_chunk";
+  private static final String TABLE_NAME = "ydsz_agt_document_chunk";
 
   /** 向量存储 */
   private final VectorStore vectorStore;
@@ -90,7 +90,7 @@ public class HybridRetriever implements Retriever {
    * <p>召回阶段刻意放宽条件——两路各取 {@code topK * 2} 条、向量路阈值降为 {@code minScore * 0.5}，目的是给 RRF 留出足够的重排空间；
    * 单路排名靠后但两路都命中的文档，融合后可能反超单路头部结果。
    *
-   * <p><b>降级策略</b>：建表检查在构造期完成，若 {@code ydsz_agent_document_chunk} 不存在则全程跳过全文检索；全文 SQL 运行期异常也只记 warn
+   * <p><b>降级策略</b>：建表检查在构造期完成，若 {@code ydsz_agt_document_chunk} 不存在则全程跳过全文检索；全文 SQL 运行期异常也只记 warn
    * 并返回空列表， 退化为纯向量检索，不会让整个检索链路失败。
    *
    * @param query 用户查询语句；为 {@code null} 或空白时直接返回空列表，不产生任何 IO

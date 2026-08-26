@@ -8,7 +8,7 @@ import com.njydsz.agent.infra.entity.AgentApproval;
 /**
  * Agent 人工审批请求 Mapper
  *
- * <p>映射 {@code ydsz_agent_approval} 表，持久化 HITL 审批请求。 <b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id}
+ * <p>映射 {@code ydsz_agt_approval} 表，持久化 HITL 审批请求。 <b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id}
  * 过滤条件，本接口不感知。
  *
  * @author ydsz-team

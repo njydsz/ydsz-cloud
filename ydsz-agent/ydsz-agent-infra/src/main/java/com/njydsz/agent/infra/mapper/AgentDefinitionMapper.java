@@ -7,7 +7,7 @@ import com.njydsz.agent.infra.entity.AgentDefinition;
 /**
  * Agent 定义 Mapper
  *
- * <p>对应数据表 <code>ydsz_agent_def</code>。
+ * <p>对应数据表 <code>ydsz_agt_def</code>。
  *
  * <p>Agent 是可调用的 AI 智能体（对话/任务型），由 LLM + Tools + Prompt 组成，按业务场景定义。
  *

@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @TableName("ydsz_agt_token_usage")
 public class TokenUsageRecord extends MpBaseEntity<String> {
 
-  /** 所属对话 ID（关联 ydsz_agent_conversation） */
+  /** 所属对话 ID（关联 ydsz_agt_conversation） */
   private String conversationId;
 
   /** 使用的模型标识 */
