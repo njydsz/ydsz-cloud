@@ -8,9 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
@@ -71,18 +69,17 @@ public class FlowTaskArchiveService {
     if (effectiveTime != null) {
       task.setEffectiveTime(effectiveTime);
     }
-    // P0-2: CAS 并发防护 — 基于 task_status IN ('PENDING','CLAIMED') 条件更新，
-    // 受影响行数为 0 表示任务已被其他请求并发处理完成（如或签双人同时提交），
-    // 直接抛 TASK_ALREADY_HANDLED 触发事务回滚，杜绝重复归档/重复推进。
+    // P0-2（并发审计）: 任务完成写库采用 CAS 条件更新（task_status IN ('PENDING','CLAIMED')）。
+    // 受影响行数为 0 表示该任务已被其他请求并发处理完成（如或签双人同时提交/重复点击），
+    // 此时跳过归档与事件取消，避免产生重复 his_task 历史行；不抛异常，保持并行会签
+    // 多办理人先后完成同一节点的既有语义（推进一致性由 DefaultFlowAdvancer 的实例级
+    // 分布式锁 flow:instance:op:{instanceId} 兜底）。
     int updated =
         taskRepository.completeTaskWithComment(
             task.getId(), FlowTaskStatus.COMPLETED.name(), comment, finishTime, durationMs);
     if (updated == 0) {
-      log.warn("[Flow] 任务已被并发处理完成，终止本请求: taskId={}", task.getId());
-      throw BusinessException.builder()
-          .resultCode(WorkflowExceptionCode.TASK_ALREADY_HANDLED)
-          .params(task.getId())
-          .build();
+      log.info("[Flow] 任务已被并发处理完成，跳过重复归档: taskId={}", task.getId());
+      return;
     }
     archiveToHistory(task, FlowTaskStatus.COMPLETED);
     // P0-1: 任务完成后取消关联的边界事件订阅

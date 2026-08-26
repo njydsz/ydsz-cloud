@@ -2,7 +2,6 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,9 +27,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.config.RouteRuleService;
 
 /**
@@ -100,7 +97,7 @@ public class RouteRuleController {
   @RateLimit(resource = "message.routerule.create", threshold = 50)
   @PostMapping
   public YdszResponse<MsgRouteRuleVO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
-    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(routeRuleService.create(dto)));
+    return YdszResponse.success(routeRuleService.create(dto));
   }
 
   /**
@@ -122,8 +119,7 @@ public class RouteRuleController {
   @PutMapping("/{id}")
   public YdszResponse<MsgRouteRuleVO> update(
       @PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
-    return YdszResponse.success(
-        MessageConverter.INSTANT.entityToVO(routeRuleService.update(id, dto)));
+    return YdszResponse.success(routeRuleService.update(id, dto));
   }
 
   /**
@@ -157,7 +153,7 @@ public class RouteRuleController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
   @GetMapping("/{id}")
   public YdszResponse<MsgRouteRuleVO> getById(@PathVariable String id) {
-    return YdszResponse.success(MessageConverter.INSTANT.entityToVO(routeRuleService.getById(id)));
+    return YdszResponse.success(routeRuleService.getById(id));
   }
 
   /**
@@ -170,8 +166,7 @@ public class RouteRuleController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<MsgRouteRuleVO>>> page(PageQuery query) {
-    Page<MsgRouteRule> page = routeRuleService.page(query);
-    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANT::entityToVO));
+    return YdszResponse.success(PageResponses.success(routeRuleService.page(query)));
   }
 
   /**
@@ -183,7 +178,6 @@ public class RouteRuleController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
   @GetMapping("/enabled")
   public YdszResponse<List<MsgRouteRuleVO>> listEnabled() {
-    return YdszResponse.success(
-        MessageConverter.INSTANT.routeRuleListToVO(routeRuleService.listEnabled()));
+    return YdszResponse.success(routeRuleService.listEnabled());
   }
 }
