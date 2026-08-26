@@ -30,7 +30,6 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -58,9 +57,6 @@ public class FlowTaskRejectService {
 
   /** 流程实例仓储，查询实例状态和流程变量 */
   private final FlowInstanceRepository instanceRepository;
-
-  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 流程推进引擎，驳回后推进到目标节点 */
   private final DefaultFlowAdvancer advancer;

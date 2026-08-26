@@ -966,7 +966,7 @@ public class FlowInstanceLifecycleService {
     instance.setEndAt(null);
     instance.setRejectReason(null);
     instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
-    instanceRepository.save(converter.voToDto(instance));
+    instanceRepository.save(toDto(instance));
     // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
     FlowAuditLogVO audit = new FlowAuditLogVO();
     audit.setInstanceId(instanceId);
@@ -1497,5 +1497,42 @@ public class FlowInstanceLifecycleService {
       ctx.setTraceId(traceId);
     }
     return ctx;
+  }
+
+  /**
+   * 将流程实例 VO 转换为 DTO（用于 Repository 保存操作）。
+   *
+   * <p>DDD 分层规范：Service 层内部完成 VO→DTO 转换，避免依赖 infra 层转换器。
+   *
+   * @param vo 流程实例 VO
+   * @return 流程实例 DTO
+   */
+  private static FlowInstanceDTO toDto(FlowInstanceVO vo) {
+    FlowInstanceDTO dto = new FlowInstanceDTO();
+    dto.setId(vo.getId());
+    dto.setFlowCode(vo.getFlowCode());
+    dto.setFlowName(vo.getFlowName());
+    dto.setDefinitionId(vo.getDefinitionId());
+    dto.setFlowVersion(vo.getFlowVersion());
+    dto.setBusinessType(vo.getBusinessType());
+    dto.setBusinessId(vo.getBusinessId());
+    dto.setBusinessNo(vo.getBusinessNo());
+    dto.setTitle(vo.getTitle());
+    dto.setInitiatorId(vo.getInitiatorId());
+    dto.setInitiatorName(vo.getInitiatorName());
+    dto.setCurrentNodeCode(vo.getCurrentNodeCode());
+    dto.setCurrentNodeName(vo.getCurrentNodeName());
+    dto.setVariable(vo.getVariable());
+    dto.setFlowStatus(vo.getFlowStatus());
+    dto.setActivityStatus(vo.getActivityStatus());
+    dto.setStartAt(vo.getStartAt());
+    dto.setEndAt(vo.getEndAt());
+    dto.setDurationMs(vo.getDurationMs());
+    dto.setParentInstanceId(vo.getParentInstanceId());
+    dto.setParentNodeCode(vo.getParentNodeCode());
+    dto.setProviderTraceId(vo.getProviderTraceId());
+    dto.setDueAt(vo.getDueAt());
+    dto.setRejectReason(vo.getRejectReason());
+    return dto;
   }
 }

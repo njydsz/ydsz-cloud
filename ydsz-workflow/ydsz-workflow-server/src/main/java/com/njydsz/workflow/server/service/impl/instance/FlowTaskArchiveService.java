@@ -13,7 +13,6 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 
 /**
@@ -33,7 +32,6 @@ public class FlowTaskArchiveService {
 
   private final FlowRunTaskRepository taskRepository;
   private final FlowHisTaskRepository hisTaskRepository;
-  private final WorkflowConverter converter;
 
   /** P0-1: 事件订阅服务 — 任务完成时取消关联的边界事件订阅。 使用 @Lazy 避免循环依赖。 */
   @Lazy private final FlowEventSubscriptionService eventSubscriptionService;

@@ -23,7 +23,6 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
@@ -109,9 +108,6 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
   /** 流程实例仓储，查询/更新父实例和子流程实例 */
   private final FlowInstanceRepository instanceRepository;
-
-  /** DO/VO 转换器 */
-  private final WorkflowConverter converter;
 
   /** 流程定义服务，解析子流程的流程定义 */
   private final FlowDefinitionService definitionService;

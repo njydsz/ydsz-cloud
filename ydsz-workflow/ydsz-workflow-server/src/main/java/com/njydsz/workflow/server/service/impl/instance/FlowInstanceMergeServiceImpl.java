@@ -25,7 +25,6 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.StringVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -102,9 +101,6 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
 
   /** 流程实例仓储 */
   private final FlowInstanceRepository instanceRepository;
-
-  /** MapStruct 转换器（DO/VO/DTO 转换） */
-  private final WorkflowConverter converter;
 
   /** 任务服务（查询待办任务） */
   private final FlowTaskService taskService;

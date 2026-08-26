@@ -25,7 +25,6 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
 import com.njydsz.workflow.server.form.FlowFormSchema;
@@ -60,9 +59,6 @@ public class FlowTaskPassService {
 
   /** 流程节点仓储，查询节点配置 */
   private final FlowNodeRepository nodeRepository;
-
-  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 流程推进引擎，会签完成后推进到下一节点 */
   private final DefaultFlowAdvancer advancer;
