@@ -35,7 +35,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
  * 工作流定时器服务实现
  *
  * <p>对 {@link FlowTimerService} 接口的完整实现，承担 BPMN 2.0 规范中 <b>Timer 事件（中间定时器 / 边界定时器）</b>的运行时支持。内部每
- * 30s 扫描到点的 {@code PENDING} 定时器并触发，对标 Activiti / Flowable 的 Job Executor。
+ * 30s 扫描到点的 {@code PENDING} 定时器并触发。
  *
  * <p><b>核心职责：</b>
  *

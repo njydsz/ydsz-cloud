@@ -42,7 +42,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  *
  * <ul>
  *   <li><b>站内通知</b>：未读可彻底删除；已读改为「撤回」状态展示
- *   <li><b>已发送消息</b>：可撤回前提是通道支持（如钉钉/企业微信支持 IM 消息撤回，短信/邮件不可撤回已发出内容）
+ *   <li><b>已发送消息</b>：可撤回前提是通道支持（IM/企业微信支持消息撤回，短信/邮件不可撤回已发出内容）
  *   <li><b>时间窗口</b>：撤回受 {@code ydsz.message.recall-window-minutes}（默认 30 min）限制，超时不允许撤回
  *   <li><b>权限</b>：仅发送者本人 / 管理员可操作，服务层校验
  * </ul>

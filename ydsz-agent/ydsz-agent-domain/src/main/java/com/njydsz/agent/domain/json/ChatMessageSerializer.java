@@ -8,9 +8,9 @@ import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.writer.JSONWriter;
 
 /**
- * {@link ChatMessage} 的 YdszJson 自定义序列化器（JsonModule SPI 落地 + OpenAI message 形状）。
+ * {@link ChatMessage} 的 YdszJson 自定义序列化器（JsonModule SPI 落地）。
  *
- * <p>产出 OpenAI message 结构：{@code
+ * <p>产出 message 结构：{@code
  * {"role":<apiValue>,"content":..,"tool_calls":[...]?,"tool_call_id":..?}}。 仅输出 LLM API 需要的字段（role
  * / content / tool_calls / tool_call_id）， 不包含 {@code createdAt} / {@code conversationId} / {@code
  * tokenUsage} 等内部字段。 嵌套 {@link ToolCall} 通过 {@link YdszJson#toJson(Object)} 委托给 {@link
@@ -18,7 +18,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  *
  * <h3>多模态内容（Vision 模型）</h3>
  *
- * <p>当消息携带 {@link MessageContent} 时，{@code content} 字段序列化为数组格式（OpenAI Vision API 契约）：
+ * <p>当消息携带 {@link MessageContent} 时，{@code content} 字段序列化为数组格式：
  *
  * <pre>{@code
  * "content": [
@@ -70,7 +70,7 @@ public class ChatMessageSerializer implements JsonSerializer<ChatMessage> {
   }
 
   /**
-   * 将多模态内容序列化为 OpenAI Vision API content 数组格式。
+   * 将多模态内容序列化为 content 数组格式。
    *
    * <p>每个 ContentPart 转换为对应的 JSON 对象：文本类型为 {@code {"type":"text","text":"..."}}； 图片类型为 {@code
    * {"type":"image_url","image_url":{"url":"..."}}}。

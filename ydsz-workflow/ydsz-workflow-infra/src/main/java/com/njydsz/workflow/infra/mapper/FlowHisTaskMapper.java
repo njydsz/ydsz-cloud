@@ -172,7 +172,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
   /**
    * P2-7: 流程效率对比 — 按流程编码分组聚合效率指标。
    *
-   * <p>对标钉钉/飞书"流程效率对比"看板。聚合指标：
+   * <p>流程效率对比看板。聚合指标：
    *
    * <ul>
    *   <li>totalCount — 任务总数（COMPLETED + REJECTED）

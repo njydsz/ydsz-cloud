@@ -29,7 +29,7 @@ import com.njydsz.system.server.service.DictService;
  * 字典类型 Service 实现
  *
  * <p>对 {@link DictService} 接口的完整实现，是「字典中心」的核心业务逻辑层。 维护 {@code ydsz_dict_type} 字典类型表，是「字典项」（{@link
- * DictItemServiceImpl}）的父级元数据， 对标大厂「配置中心 / 字典中心」Schema 管理层。
+ * DictItemServiceImpl}）的父级元数据。
  *
  * <p><b>核心职责：</b>
  *

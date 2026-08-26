@@ -32,7 +32,7 @@ import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.PathGuard;
 
 /**
- * 网关熔断全局过滤器（P0-A2，对标 Spring Cloud CircuitBreaker 最佳实践）。
+ * 网关熔断全局过滤器（P0-A2）。
  *
  * <p>基于 Resilience4j {@link CircuitBreakerRegistry}（复用 common-sentry 提供的共享注册中心），
  * 按路由 ID 维护独立熔断器，对下游调用失败率超阈值时快速失败并返回 503，

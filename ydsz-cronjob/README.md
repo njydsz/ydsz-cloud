@@ -30,7 +30,7 @@
 | **故障转移** | `AnomalyRecoveryScanner` 定时扫描 + 节点下线事件即时触发，宕机节点 RUNNING 任务自动转移 |
 | **异常自愈** | `AnomalyRecoveryScanner` 检测卡死任务并自动修复 + 重新派发 |
 | **租户隔离** | `isolation-strategy: tenant` / `job_group` |
-| **告警通道** | 消息中心 Feign + common-notify IM 直推（飞书/钉钉/企业微信），SMS 仅 ERROR/CRITICAL 级别 |
+| **告警通道** | 消息中心 Feign + common-notify IM 直推，SMS 仅 ERROR/CRITICAL 级别 |
 | **日志归档** | 每天凌晨 3 点清理 30 天前的日志 |
 | **配额管理** | 租户级任务数 / 并发 / 日执行量 |
 | **HTTP 任务** | `jobType=HTTP` 内置 HTTP 调用处理器 |
@@ -298,16 +298,16 @@ ydsz-cronjob/                          # 父 POM
 | `ydsz.cronjob.alert.email.from` | `alert@ydszsoft.com` | 发件人邮箱地址 |
 | `ydsz.cronjob.alert.email.service-url` | — | 邮件服务转发 URL |
 | `ydsz.cronjob.alert.email.subject-prefix` | `[YDSZ 告警]` | 邮件主题前缀 |
-| `ydsz.cronjob.alert.dingtalk.enabled` | `true` | 钉钉通道开关 |
-| `ydsz.cronjob.alert.dingtalk.webhook-url` | — | 钉钉机器人 Webhook URL |
-| `ydsz.cronjob.alert.dingtalk.secret` | — | 钉钉机器人加签密钥 |
+| `ydsz.cronjob.alert.dingtalk.enabled` | `true` | IM 通道开关 |
+| `ydsz.cronjob.alert.dingtalk.webhook-url` | — | IM 机器人 Webhook URL |
+| `ydsz.cronjob.alert.dingtalk.secret` | — | IM 机器人加签密钥 |
 | `ydsz.cronjob.alert.wecom.enabled` | `true` | 企业微信通道开关 |
 | `ydsz.cronjob.alert.wecom.webhook-url` | — | 企业微信机器人 Webhook URL |
 | `ydsz.cronjob.alert.webhook.enabled` | `true` | 通用 Webhook 通道开关 |
 | `ydsz.cronjob.alert.webhook.webhook-url` | — | Webhook URL |
 | `ydsz.cronjob.alert.webhook.headers` | — | 自定义请求头（JSON） |
-| `ydsz.cronjob.alert.feishu.enabled` | `false` | 飞书通道开关 |
-| `ydsz.cronjob.alert.feishu.webhook-url` | — | 飞书机器人 Webhook URL |
+| `ydsz.cronjob.alert.feishu.enabled` | `false` | IM 通道开关 |
+| `ydsz.cronjob.alert.feishu.webhook-url` | — | IM 机器人 Webhook URL |
 | `ydsz.cronjob.alert.sms.enabled` | `false` | 短信通道开关 |
 | `ydsz.cronjob.alert.sms.webhook-url` | — | 短信转发 Webhook URL |
 | `ydsz.cronjob.alert.sms.phone-numbers` | — | 默认接收手机号（逗号分隔） |

@@ -3,6 +3,7 @@ package com.njydsz.workflow.infra.repository;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -272,12 +273,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   @Override
-  @Deprecated
-  public List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition) {
-    return findByCondition(convertToQuery(condition));
-  }
-
-  @Override
   public int updateStatusByCondition(
       String instanceId, String nodeCode, String fromStatus, String toStatus) {
     FlowRunTask update = new FlowRunTask();
@@ -420,20 +415,20 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return taskMapper.selectWorkloadByAssignee(tenantId, limit);
   }
 
-@Override
-public void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt) {
-taskMapper.markProcessed(taskId, userId, comment, processedAt);
-}
+  @Override
+  public void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt) {
+    taskMapper.markProcessed(taskId, userId, comment, processedAt);
+  }
 
-@Override
-public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
-  return converter.flowRunTaskListToVO(
-      taskMapper.selectList(
-          new LambdaQueryWrapper<FlowRunTask>()
-              .eq(FlowRunTask::getAssigneeId, assigneeId)
-              .eq(FlowRunTask::getDeleted, 0)
-              .in(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)));
-}
+  @Override
+  public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
+    return converter.flowRunTaskListToVO(
+        taskMapper.selectList(
+            new LambdaQueryWrapper<FlowRunTask>()
+                .eq(FlowRunTask::getAssigneeId, assigneeId)
+                .eq(FlowRunTask::getDeleted, 0)
+                .in(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)));
+  }
 
   @Override
   public void updateApproveFinished(String taskId, int approveFinished) {

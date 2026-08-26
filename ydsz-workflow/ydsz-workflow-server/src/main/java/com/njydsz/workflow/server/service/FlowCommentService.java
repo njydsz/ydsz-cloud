@@ -11,7 +11,7 @@ import com.njydsz.workflow.infra.entity.FlowComment;
 /**
  * P2-2: 流程评论 Service（含常用语能力）
  *
- * <p>提供审批评论的多级回复能力，对标钉钉/飞书审批评论区。
+ * <p>提供审批评论的多级回复能力。
  * 同时集成审批常用语（快捷回复模板）的 CRUD 与使用统计能力。
  *
  * <p><b>核心职责：</b>

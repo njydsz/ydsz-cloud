@@ -57,7 +57,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
     return timerMapper
         .selectList(
             new LambdaQueryWrapper<FlowTimer>()
-                .eq(FlowTimer::getTaskId, taskId)
+                .eq(FlowTimer::getBoundaryTaskId, taskId)
                 .eq(FlowTimer::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()

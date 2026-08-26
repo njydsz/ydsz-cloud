@@ -399,7 +399,7 @@ CREATE TABLE IF NOT EXISTS ydsz_social_client (
 -- ----------------------------------------------------------------------------
 --  存储 SAML 2.0 Identity Provider 的元数据和证书（P2-1 多租户）
 --
---  支持多个 IdP 注册，每个租户可配置独立的 SAML IdP（如企业微信 SAML、飞书 SAML、ADFS）
+--  支持多个 IdP 注册，每个租户可配置独立的 SAML IdP
 --
 --  索引设计：
 --    - uk_entity_id: Entity ID 唯一索引
@@ -408,7 +408,7 @@ CREATE TABLE IF NOT EXISTS ydsz_social_client (
 
 CREATE TABLE IF NOT EXISTS ydsz_saml_idp_config (
     id VARCHAR(64) PRIMARY KEY COMMENT '配置 ID（UUID）',
-    name VARCHAR(64) NOT NULL COMMENT 'IdP 显示名称（如 "企业微信 SAML"、"飞书 SAML"）',
+    name VARCHAR(64) NOT NULL COMMENT 'IdP 显示名称',
     entity_id VARCHAR(512) NOT NULL COMMENT 'IdP Entity ID（SAML 协议中 IdP 的唯一标识 URI）',
     sso_url VARCHAR(512) DEFAULT NULL COMMENT 'IdP SSO 端点 URL',
     certificate TEXT DEFAULT NULL COMMENT 'IdP 公钥证书（PEM 格式，用于验证 SAML Response 签名）',

@@ -20,7 +20,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
 /**
  * P1-8: 请求体安全校验过滤器
  *
- * <p>对标 Kong 的 request-size-limiting 插件，在网关层校验请求体大小与 Content-Type，防止恶意请求导致 OOM。
+ * <p>在网关层校验请求体大小与 Content-Type，防止恶意请求导致 OOM。
  *
  * <h3>校验项</h3>
  *

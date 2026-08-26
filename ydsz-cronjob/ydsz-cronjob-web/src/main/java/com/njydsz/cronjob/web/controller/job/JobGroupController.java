@@ -34,7 +34,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
 /**
  * 任务分组管理 Controller（P1-B4）。
  *
- * <p>对标 XXL-Job / PowerJob 的 JobGroupController，提供按业务域分组的任务批量管理能力。 任务分组（{@code
+ * <p>提供按业务域分组的任务批量管理能力。 任务分组（{@code
  * ydsz_job.job_group}）是按业务域/子系统/环境等维度对任务进行归类的逻辑分组， 用于按组统一查询、批量暂停、批量恢复、批量触发，便于运维按业务域批量管理任务。
  *
  * <h3>核心能力</h3>

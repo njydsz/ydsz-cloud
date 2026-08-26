@@ -56,7 +56,7 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
     return converter.flowSkipListToVO(
         skipMapper.selectList(
             new LambdaQueryWrapper<FlowSkip>()
-                .eq(FlowSkip::getInstanceId, instanceId)
+                .eq(FlowSkip::getDefinitionId, instanceId)
                 .eq(FlowSkip::getDeleted, 0)));
   }
 

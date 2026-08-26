@@ -256,7 +256,7 @@ public interface FlowDefinitionService {
   /**
    * GAP-P1-6: 从 BPMN 部署包 .zip 批量导入流程定义。
    *
-   * <p>对标 Activiti/Flowable 的 `repositoryService.createDeployment().addZipInputStream()` 能力。 遍历 zip
+   * <p>zip 部署能力。遍历 zip
    * 内的 {@code .bpmn} / {@code .bpmn20.xml} 文件，逐个解析并委托 {@link #deploy} 入库。 单个文件失败不影响其他文件（每个 deploy
    * 是独立事务）。
    *
@@ -269,7 +269,7 @@ public interface FlowDefinitionService {
   /**
    * P2-4: 加锁流程定义（设计器协同编辑）。
    *
-   * <p>对标钉钉/飞书流程设计器"编辑锁定"机制：
+   * <p>流程设计器"编辑锁定"机制：
    *
    * <ul>
    *   <li>未锁定 → 加锁成功，返回 true
@@ -315,7 +315,7 @@ public interface FlowDefinitionService {
   /**
    * P2-5: 变更影响分析报告 — 评估老版本定义升级到新版本对在途实例的影响。
    *
-   * <p>对标 Activiti/Flowable 的"流程定义升级影响分析"：
+   * <p>"流程定义升级影响分析"：
    *
    * <ul>
    *   <li>对比两个版本的节点 / 跳转差异（复用 {@link #diffVersions}）
@@ -342,7 +342,7 @@ public interface FlowDefinitionService {
   /**
    * P0-2: 流程定义一键回滚
    *
-   * <p>对标钉钉/飞书"流程定义一键回滚"能力。将指定 flowCode 的激活版本 从当前版本切换回上一个已发布版本，并自动迁移在途实例。
+   * <p>流程定义一键回滚能力。将指定 flowCode 的激活版本 从当前版本切换回上一个已发布版本，并自动迁移在途实例。
    *
    * <p>执行步骤：
    *

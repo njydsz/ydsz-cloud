@@ -1,6 +1,6 @@
 # ydsz-literule
 
-> 独立规则引擎微服务 — 基于 DDD 分层的自研规则引擎，对标 Drools + LiteFlow + 滴滴 Newton
+> 独立规则引擎微服务 — 基于 DDD 分层的自研规则引擎
 
 ## 模块定位
 

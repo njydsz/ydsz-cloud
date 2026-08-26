@@ -31,7 +31,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
 /**
  * P1-3: API Key 认证过滤器
  *
- * <p>支持通过 API Key 认证的外部系统接入，对标主流竞品（Kong key-auth、APISIX key-auth）。
+ * <p>支持通过 API Key 认证的外部系统接入。
  *
  * <h3>认证流程</h3>
  *
@@ -176,7 +176,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     return null;
   }
 
-  /** 验证 API Key 是否有效（P1-B1：SHA-256 摘要比对，避免明文 key 常驻内存，对标 Kong/APISIX） */
+  /** 验证 API Key 是否有效（P1-B1：SHA-256 摘要比对，避免明文 key 常驻内存） */
   private boolean isValidApiKey(String apiKey) {
     if (apiKey == null || apiKey.isBlank()) {
       return false;

@@ -26,11 +26,11 @@
 | **PUSH** 推送 | 个推 Getui / 自研 TCP（common-netty） | `mock` / `getui` |
 | **INAPP** 站内 | WebSocket（common-socket） | 内置 |
 | **WEBHOOK** 通用 | HTTP/HTTPS | 内置 |
-| **DINGTALK** 钉钉 | 群机器人 + 加签 | 内置 |
-| **DINGTALK_WORK** 钉钉企业应用 | 应用消息 | 内置 |
+| **DINGTALK** IM 群机器人 | 群机器人 + 加签 | 内置 |
+| **DINGTALK_WORK** IM 企业应用 | 应用消息 | 内置 |
 | **WECOM** 企业微信 | 群机器人 | 内置 |
 | **WECOM_APP** 企业微信应用 | 应用消息 | 内置 |
-| **FEISHU** 飞书 | 群机器人 + 加签 | 内置 |
+| **FEISHU** IM 平台 | 群机器人 + 加签 | 内置 |
 | **WX_MINI** 微信小程序 | 订阅消息 | `mock` / 内置 |
 | **ALIPAY_MINI** 支付宝小程序 | 模板消息 | `mock` / 内置 |
 
@@ -333,19 +333,19 @@ ydsz-message/
 |---|---|---|---|
 | `ydsz.webhook.default-url` | String | （空） | 默认 Webhook URL |
 | `ydsz.webhook.secret` | String | （空） | Webhook HMAC 签名密钥 |
-| `ydsz.channel.dingtalk.default-token` | String | （空） | 钉钉群机器人 Token |
-| `ydsz.channel.dingtalk.secret` | String | （空） | 钉钉群机器人加签密钥 |
-| `ydsz.channel.dingtalk-work.enabled` | Boolean | false | 钉钉工作通知开关 |
-| `ydsz.channel.dingtalk-work.app-key` | String | — | 钉钉工作通知 AppKey |
-| `ydsz.channel.dingtalk-work.app-secret` | String | — | 钉钉工作通知 AppSecret |
-| `ydsz.channel.dingtalk-work.agent-id` | Long | — | 钉钉工作通知 AgentId |
+| `ydsz.channel.dingtalk.default-token` | String | （空） | IM 群机器人 Token |
+| `ydsz.channel.dingtalk.secret` | String | （空） | IM 群机器人加签密钥 |
+| `ydsz.channel.dingtalk-work.enabled` | Boolean | false | IM 工作通知开关 |
+| `ydsz.channel.dingtalk-work.app-key` | String | — | IM 工作通知 AppKey |
+| `ydsz.channel.dingtalk-work.app-secret` | String | — | IM 工作通知 AppSecret |
+| `ydsz.channel.dingtalk-work.agent-id` | Long | — | IM 工作通知 AgentId |
 | `ydsz.channel.wechat-work.default-key` | String | （空） | 企业微信群机器人 Key |
 | `ydsz.channel.wecom-app.enabled` | Boolean | false | 企业微信应用消息开关 |
 | `ydsz.channel.wecom-app.corp-id` | String | — | 企业微信 CorpID |
 | `ydsz.channel.wecom-app.corp-secret` | String | — | 企业微信应用 Secret |
 | `ydsz.channel.wecom-app.agent-id` | Integer | — | 企业微信应用 AgentId |
-| `ydsz.channel.feishu.default-hook` | String | （空） | 飞书群机器人 Hook |
-| `ydsz.channel.feishu.secret` | String | （空） | 飞书群机器人加签密钥 |
+| `ydsz.channel.feishu.default-hook` | String | （空） | IM 群机器人 Hook |
+| `ydsz.channel.feishu.secret` | String | （空） | IM 群机器人加签密钥 |
 
 ## 启动顺序
 

@@ -26,7 +26,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 /**
  * 多级缓存规则配置提供者（P1-1）
  *
- * <p>装饰器模式实现的 ydsz-common-cache (L1) + Redis (L2) 两级缓存， 对标银行风控/Drools 优化实践，减少 DB 压力。
+ * <p>装饰器模式实现的 ydsz-common-cache (L1) + Redis (L2) 两级缓存，减少 DB 压力。
  *
  * <p>缓存层级：
  *

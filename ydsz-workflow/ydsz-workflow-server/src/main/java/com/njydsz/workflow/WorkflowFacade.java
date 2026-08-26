@@ -17,7 +17,7 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
  * <p><b>设计模式：</b>门面模式（Facade Pattern）— 将引擎内部的 {@code FlowInstanceService}、 {@code
  * FlowTaskService}、{@code FlowDefinitionService} 等多个 Service 的复杂调用编排 封装为统一的粗粒度接口，降低业务模块与引擎的耦合度。
  *
- * <p><b>引擎实现：</b>基于 {@code ydsz_flow_*} 自建表（Warm-Flow 风格）的轻量级流程引擎， 兼容 BPMN 2.0 标准流程文件（通过 {@code
+ * <p><b>引擎实现：</b>基于 {@code ydsz_flow_*} 自建表的轻量级流程引擎， 兼容 BPMN 2.0 标准流程文件（通过 {@code
  * BpmnXmlParser} 解析 startEvent / userTask / gateway / endEvent / sequenceFlow）。
  *
  * <p><b>能力矩阵：</b>

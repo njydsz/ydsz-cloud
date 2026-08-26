@@ -7,7 +7,7 @@ import com.njydsz.agent.domain.gateway.LlmException;
 /**
  * Embedding 客户端接口
  *
- * <p>将文本转换为向量嵌入，用于向量相似度检索。 实现可选择 OpenAI Embeddings、Cohere、BGE、m3e 等。
+ * <p>将文本转换为向量嵌入，用于向量相似度检索。
  *
  * <p><b>线程安全</b>：Embedding 客户端一般为单例且被并发调用，实现须线程安全，且 embed/embedBatch 不应缓存可变中间结果。
  *

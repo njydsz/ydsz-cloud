@@ -29,7 +29,7 @@ import com.njydsz.literule.server.debug.RuleDebugger;
 /**
  * 规则断点调试 Controller（P0-F1 / E2 一站式调试入口）
  *
- * <p>对标 URule Pro / QLExpress4 的断点调试能力，提供：
+ * <p>断点调试能力，提供：
  *
  * <ul>
  *   <li><b>断点管理</b>：新增/删除/查询规则级与表达式节点级断点（含条件断点）

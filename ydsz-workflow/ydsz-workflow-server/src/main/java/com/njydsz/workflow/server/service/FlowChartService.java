@@ -5,7 +5,7 @@ import java.util.Set;
 /**
  * 流程图渲染服务（P2-4）。
  *
- * <p>对标 warm-flow 的 ChartService API：根据流程定义 XML 与当前实例状态，
+ * <p>根据流程定义 XML 与当前实例状态，
  * 生成可视化的流程图（SVG/PNG），用于审批进度展示、通知嵌入、打印归档等场景。
  *
  * <p><b>节点状态着色规则：</b>

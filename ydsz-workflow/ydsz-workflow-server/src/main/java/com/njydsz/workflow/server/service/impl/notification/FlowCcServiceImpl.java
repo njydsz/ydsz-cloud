@@ -30,7 +30,7 @@ import com.njydsz.workflow.server.service.FlowCcService;
 /**
  * GAP-P1: 流程抄送服务实现
  *
- * <p>对 {@link FlowCcService} 接口的完整实现，对标钉钉 / 飞书审批的「抄送我的」独立 Tab。
+ * <p>对 {@link FlowCcService} 接口的完整实现，提供审批的「抄送我的」独立 Tab。
  *
  * <p><b>核心职责：</b>
  *

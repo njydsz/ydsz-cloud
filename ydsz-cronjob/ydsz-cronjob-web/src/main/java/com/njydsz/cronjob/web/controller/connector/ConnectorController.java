@@ -33,7 +33,7 @@ import com.njydsz.cronjob.server.core.connector.JobConnector;
  * 生态连接器 Controller（P2-3）。
  *
  * <p>提供与外部调度系统的集成接口：测试连接、导入任务、导出任务、查询远程任务。 通过 {@link JobConnector} SPI
- * 接入不同的外部调度系统（XXL-Job、PowerJob、Elastic-Job 等）。
+ * 接入不同的外部调度系统。
  *
  * <h3>核心能力</h3>
  *

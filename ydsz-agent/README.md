@@ -36,7 +36,7 @@
 
 | 能力 | 说明 | 关键类 |
 |---|---|---|
-| **LLM Provider 抽象** | `LlmClient` 统一接口 + OpenAI 兼容实现（覆盖 GPT/DeepSeek/Qwen/Moonshot/智谱） | `LlmClient` / `LlmClientRouter` |
+| **LLM Provider 抽象** | `LlmClient` 统一接口 + 多模型兼容实现 | `LlmClient` / `LlmClientRouter` |
 | **Agent 应用门面** | 解耦 Controller 与内部服务（ChatService / AgentFactory / AgentDefinitionService） | `AgentFacade` / `AgentFacadeImpl` |
 | **同步对话** | 完整请求/响应 | `ChatService` |
 | **流式对话（SSE）** | 逐 token 推送，心跳保活 + 断连检测 | `ChatService` + `SseExecutor` |
@@ -117,10 +117,10 @@ ydsz-agent/
 │       ├── converter/                 # 对象转换器（AgentConverter — MapStruct）
 │       ├── entity/                    # 数据库实体（AgentApproval / AgentDefinition / AgentTrace / AgentTraceStep / PromptTemplate / PromptVersion / TokenUsageRecord）
 │       ├── guardrail/                 # 护栏实现（PiiMaskingGuardrail / PromptInjectionGuardrail）
-│       ├── llm/                       # LLM 客户端（CachedLlmClient / LlmClientRouter / OpenAiCompatibleClient / SemanticCacheConfig / SemanticLlmCache）
+│       ├── llm/                       # LLM 客户端（CachedLlmClient / LlmClientRouter / LlmCompatClient / SemanticCacheConfig / SemanticLlmCache）
 │       ├── mapper/                    # MyBatis Mapper（7 个 Mapper 接口）
 │       ├── memory/                    # 记忆实现（RedisConversationMemory / SummaryConversationMemory）
-│       ├── rag/                       # RAG 实现（HybridRetriever / IdentityReranker / InMemoryVectorStore / OpenAiEmbeddingClient / PgVectorStore / SimpleTextChunker）
+│       ├── rag/                       # RAG 实现（HybridRetriever / IdentityReranker / InMemoryVectorStore / EmbeddingClient / PgVectorStore / SimpleTextChunker）
 │       ├── repository/                # 仓储实现（7 个 Repository 实现类）
 │       ├── text2sql/                  # Text2SQL 实现（JdbcText2SQLService）
 │       ├── tool/                      # 工具实现（DefaultToolRegistry / McpClientProvider / McpToolAdapter / SseMcpClientProvider / Text2SQLTool / ToolAnnotationScanner）
@@ -406,7 +406,7 @@ mvn -pl ydsz-agent spring-boot:run
 
 | 决策 | 方案 | 理由 |
 |---|---|---|
-| LLM API | OpenAI 兼容 API | 事实标准，覆盖 90% 国产模型 |
+| LLM API | 标准兼容 API | 事实标准，覆盖 90% 国产模型 |
 | 流式输出 | SseEmitter + WebClient | 非 WebSocket，轻量级 |
 | 多模态输入 | Vision 模型（文本+图片段落） | `MessageContent` / `ContentPart` 封装 |
 | 记忆存储 | Redis List | 滑动窗口 + TTL 自动过期 |

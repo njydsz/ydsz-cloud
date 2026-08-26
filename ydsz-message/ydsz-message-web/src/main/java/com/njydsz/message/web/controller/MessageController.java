@@ -63,7 +63,7 @@ import com.njydsz.message.server.service.core.MessageService;
  * <p><b>异步发送落库机制（P0-3）：</b>为保证消息不丢失， 异步发送会先以 {@code PENDING} 状态写入 {@code ydsz_msg_log}，再投递到 MQ； MQ
  * 消费失败时由 {@code DeadLetterController} 处理，避免「发送即丢」。
  *
- * <p><b>多渠道支持：</b>短信（阿里云 / 腾讯云 / 华为云）/ 邮件（QQ 邮箱 / 阿里邮箱）/ 站内信 / 钉钉 / 飞书 / 企业微信 / WebSocket。 渠道路由由
+ * <p><b>多渠道支持：</b>短信（阿里云 / 腾讯云 / 华为云）/ 邮件 / 站内信 / IM / 企业微信 / WebSocket。 渠道路由由
  * {@code RouteRuleController} 配置。
  *
  * <p><b>安全特性：</b>
@@ -110,7 +110,7 @@ public class MessageController {
   @Operation(
       summary = "统一消息发送",
       description = "通过 strategy 字段区分五种发送模式：SYNC（同步）/ DIRECT（直接）/ ASYNC（异步）/ TRANSACTIONAL（事务）/ BATCH（批量）。"
-          + "支持短信/邮件/站内信/钉钉/飞书/企业微信/WebSocket 共 12 种通道。")
+          + "支持短信/邮件/站内信/IM/企业微信/WebSocket 共 12 种通道。")
   @ApiResponse(responseCode = "200", description = "操作成功")
   @ApiResponse(responseCode = "400", description = "请求参数错误")
   @ApiResponse(responseCode = "429", description = "请求过于频繁")

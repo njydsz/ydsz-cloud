@@ -6,11 +6,10 @@ import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.writer.JSONWriter;
 
 /**
- * {@link ToolDefinition} 的 YdszJson 自定义序列化器（JsonModule SPI 落地 + OpenAI tools 形状）。
+ * {@link ToolDefinition} 的 YdszJson 自定义序列化器（JsonModule SPI 落地）。
  *
- * <p>产出 OpenAI tools 结构： {@code
- * {"type":"function","function":{"name":..,"description":..,"parameters":<json-schema>}}}。 {@code
- * parameters} 字段名（单数）直接对应 OpenAI 契约，而非 Java 字段名 {@code parametersSchema}。
+ * <p>产出 tools 结构： {@code
+ * {"type":"function","function":{"name":..,"description":..,"parameters":<json-schema>}}}。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 历史任务实体
@@ -43,7 +43,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_his_task")
-public class FlowHisTask extends MpBaseIdEntity<String> {
+public class FlowHisTask extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 

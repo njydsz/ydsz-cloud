@@ -33,10 +33,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-domain</artifactId>
         </dependency>
-        <!-- 本模块 Server 层（复用业务服务） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-server</artifactId>
-        </dependency>
+        <!--
+          DDD 合规修正（云顶编码规范 §34.3 / §34.2.5.5）：
+          app 端禁止依赖本模块 server 层（app 与 web 平行，仅通过 api/Feign 或共享 server 能力复用）。
+          经核查 ydsz-workflow-app 源码无任何对 com.njydsz.workflow.server 的引用，故移除该依赖。
+        -->
     </dependencies>
 </project>

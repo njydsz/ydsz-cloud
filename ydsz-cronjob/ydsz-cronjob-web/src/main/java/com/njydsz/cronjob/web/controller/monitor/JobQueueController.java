@@ -21,8 +21,7 @@ import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 /**
  * 任务执行队列实时状态 Controller（P0-A2）。
  *
- * <p>对标 XXL-Job 的 {@code jobTriggerQueue} 和 PowerJob 的 {@code systemMetrics}，
- * 暴露任务执行线程池的实时运行指标，便于运维监控、容量规划和告警配置。
+ * <p>暴露任务执行线程池的实时运行指标，便于运维监控、容量规划和告警配置。
  *
  * <h3>核心能力</h3>
  *

@@ -48,7 +48,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  *
  * <ul>
  *   <li><b>通知发送（{@link #notify}）</b>：将工作流事件（待办 / 抄送 / 超时 / 终止等）转发到 消息通知引擎，由通知引擎负责实际投递
- *   <li><b>多通道支持</b>：INAPP（站内信） / EMAIL（邮件） / WEBHOOK（企业微信/钉钉机器人）
+ *   <li><b>多通道支持</b>：INAPP（站内信） / EMAIL（邮件） / WEBHOOK
  *   <li><b>敏感数据脱敏</b>：通过 {@link FlowSensitiveMasker} 对通知内容脱敏， 避免敏感信息（手机号 / 身份证 / 银行卡）通过 IM 泄露
  *   <li><b>幂等性</b>：通过 {@code providerTraceId} 实现通知幂等， 同一事件多次通知只会发送一次
  *   <li><b>尽力而为语义</b>：所有异常 {@code try-catch} 吞掉，<b>不拖垮主流程事务</b> —— 通知失败不应回滚审批操作
@@ -64,7 +64,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  *   <tr><td>{@code EMAIL}</td><td>{@link NotificationClient} 投递（{@code channel=EMAIL}）</td>
  *       <td>SMTP / 企业邮箱</td></tr>
  *   <tr><td>{@code WEBHOOK}</td><td>{@link NotificationClient#sendMessage} 委托消息中心</td>
- *       <td>发送到 {@code extra.webhookUrl} 指定的企业微信 / 钉钉机器人</td></tr>
+ *       <td>发送到 {@code extra.webhookUrl} 指定的机器人</td></tr>
  * </table>
  *
  * <p><b>事务边界：</b>

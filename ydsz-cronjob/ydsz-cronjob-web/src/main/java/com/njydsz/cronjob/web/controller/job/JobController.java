@@ -137,7 +137,7 @@ public class JobController {
   /**
    * P1-B1+B2: Cron 表达式校验 + 下次触发时间预览。
    *
-   * <p>对标 XXL-Job 的 cronCheck 端点，在保存任务前验证 Cron 表达式合法性， 并返回下次 N 次触发时间，帮助用户确认调度频率正确。
+   * <p>在保存任务前验证 Cron 表达式合法性， 并返回下次 N 次触发时间，帮助用户确认调度频率正确。
    *
    * <p>支持标准 6 位 Spring Cron 表达式（秒 分 时 日 月 周），使用 {@link CronExpression} 解析。 校验失败时返回 {@code
    * valid=false} + 错误信息，不会抛出异常。

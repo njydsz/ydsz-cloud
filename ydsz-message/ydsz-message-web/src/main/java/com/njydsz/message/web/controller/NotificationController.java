@@ -46,7 +46,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * 站内通知 Controller。
  *
  * <p>提供<b>站内通知</b>的完整生命周期 HTTP API：发送 → 收件箱 → 已读 → 撤回 → 实时推送。 站内通知是 ydsz-message 的核心通知类型之一，与短信 / 邮件
- * / 钉钉 / 飞书 / 企业微信 / WebSocket 并列。
+ * / IM / 企业微信 / WebSocket 并列。
  *
  * <p><b>接口路径：</b>{@code /api/v1/message/notifications/**}
  *

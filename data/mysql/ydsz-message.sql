@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     tenant_id         VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID（关联 ydsz_employee.id）',
     channel_type      VARCHAR(32)   NOT NULL COMMENT '通道类型: SMS/EMAIL/PUSH/DINGTALK/WECOM/FEISHU 等',
-    channel_user_id   VARCHAR(128)  NOT NULL COMMENT '通道用户标识（手机号/邮箱/钉钉userId/企微userId/飞书userId/个推cid）',
+    channel_user_id   VARCHAR(128)  NOT NULL COMMENT '通道用户标识（手机号/邮箱/IM userId/企微userId/个推cid）',
     verified          TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否已验证: 0 未验证 / 1 已验证',
     is_primary        TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否主绑定: 0 否 / 1 是（同通道多绑定时优先使用主绑定）',
     extra             JSON          DEFAULT NULL COMMENT '扩展字段（JSON，如 deviceToken / openId 等）',

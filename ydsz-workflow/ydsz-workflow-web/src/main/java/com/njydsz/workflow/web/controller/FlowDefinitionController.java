@@ -52,7 +52,7 @@ import com.njydsz.workflow.server.service.FlowSlaService;
  * 流程定义统一 Controller
  *
  * <p>提供流程定义的部署 / 发布 / 废弃 / 查询 / 版本管理 / 设计器交互 / 导入导出 / 变更影响分析等全套 REST 接口。
- * 是设计器、流程中心、运维控制台的数据入口。所有接口对标 Activiti / Flowable API 风格。
+ * 是设计器、流程中心、运维控制台的数据入口。
  *
  * <p><b>核心能力：</b>
  *
@@ -139,7 +139,7 @@ public class FlowDefinitionController {
   /**
    * GAP-P1-6: BPMN 部署包 .zip 批量导入流程定义。
    *
-   * <p>对标 Activiti/Flowable 的 zip 部署能力。上传 .zip 文件，遍历其中的 {@code .bpmn} / {@code .bpmn20.xml}
+   * <p>zip 部署能力。上传 .zip 文件，遍历其中的 {@code .bpmn} / {@code .bpmn20.xml}
    * 文件逐个部署，单个失败不影响其他文件。
    *
    * @param file zip 文件（multipart/form-data）
@@ -472,7 +472,7 @@ public class FlowDefinitionController {
   /**
    * P2-5: 变更影响分析报告 — 评估老版本定义升级到新版本对在途实例的影响。
    *
-   * <p>对标 Activiti/Flowable 的"流程定义升级影响分析"：
+   * <p>"流程定义升级影响分析"：
    *
    * <ul>
    *   <li>对比两个版本的节点 / 跳转差异

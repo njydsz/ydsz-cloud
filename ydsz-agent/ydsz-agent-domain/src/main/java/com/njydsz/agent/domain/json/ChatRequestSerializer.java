@@ -6,9 +6,9 @@ import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.writer.JSONWriter;
 
 /**
- * {@link ChatRequest} 的 YdszJson 自定义序列化器（JsonModule SPI 落地 + OpenAI 请求体形状）。
+ * {@link ChatRequest} 的 YdszJson 自定义序列化器（JsonModule SPI 落地）。
  *
- * <p>产出 OpenAI Chat Completions 请求体（snake_case）： {@code
+ * <p>产出 Chat Completions 请求体（snake_case）： {@code
  * {"model":..,"temperature":..,"max_tokens":..,"top_p":..,"stream":..,"stop"?:[..],"messages":[..],"tools"?:[..],"tool_choice"?:..}}。
  * 嵌套 {@code messages} / {@code tools} 委托全局引擎，分别命中 {@link ChatMessageSerializer} / {@link
  * ToolDefinitionSerializer}。

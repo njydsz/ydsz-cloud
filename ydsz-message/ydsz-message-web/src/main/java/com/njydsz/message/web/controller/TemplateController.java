@@ -58,7 +58,7 @@ import com.njydsz.message.server.service.template.TemplateService;
  * <p><b>变量替换：</b>模板内容支持 {@code ${var}} 嵌套变量语法，发送时由 {@code TemplateEngine} 替换为实际值。 例如：{@code "您的验证码为
  * ${code}，5 分钟内有效"} → {@code "您的验证码为 123456，5 分钟内有效"}。
  *
- * <p><b>多渠道支持：</b>同一模板可绑定到多个渠道（短信 / 邮件 / 站内信 / 钉钉 / 飞书 / 企业微信）， 每个渠道有独立的 {@code TemplateCode}
+ * <p><b>多渠道支持：</b>同一模板可绑定到多个渠道（短信 / 邮件 / 站内信 / IM / 企业微信）， 每个渠道有独立的 {@code TemplateCode}
  * 与供应商模板 ID。
  *
  * <p><b>安全特性：</b>

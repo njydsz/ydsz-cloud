@@ -14,7 +14,7 @@ import com.njydsz.workflow.infra.entity.FlowCc;
  *
  * <p>对应数据表 <code>ydsz_flow_cc</code>（P0-3），存储流程抄送关系。
  *
- * <p>抄送中心（对标钉钉/飞书的「抄送我的」独立 Tab），被抄送人只读可见，不参与审批。
+ * <p>抄送中心（「抄送我的」独立 Tab），被抄送人只读可见，不参与审批。
  *
  * <p><b>主要索引：</b>
  *

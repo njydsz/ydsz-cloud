@@ -7,7 +7,7 @@
  *
  * <p>关键实现要点：</p>
  * <ul>
- *   <li>{@code OpenAiCompatibleClient} 对接 OpenAI 兼容协议的大模型服务，支持多模型路由（{@code LlmClientRouter}）与语义缓存（{@code SemanticLlmCache}）</li>
+ *   <li>{@code OpenAiCompatibleClient} 对接大模型服务，支持多模型路由（{@code LlmClientRouter}）与语义缓存（{@code SemanticLlmCache}）</li>
  *   <li>{@code PgVectorStore} 基于 PostgreSQL pgvector 扩展实现 {@code VectorStore} 接口，支持混合检索（{@code HybridRetriever}）</li>
  *   <li>{@code RedisConversationMemory} / {@code SummaryConversationMemory} 提供滑动窗口与摘要压缩两种对话记忆策略</li>
  *   <li>{@code DefaultToolRegistry} 通过 {@code ToolAnnotationScanner} 扫描注解自动注册工具</li>
@@ -18,7 +18,7 @@
  * <h3>主要适配器</h3>
  *
  * <ul>
- *   <li>{@code OpenAiCompatibleClient} -- OpenAI 协议兼容的 LLM 客户端</li>
+ *   <li>{@code OpenAiCompatibleClient} -- LLM 客户端</li>
  *   <li>{@code PgVectorStore} -- 基于 pgvector 的向量存储实现</li>
  *   <li>{@code OpenAiEmbeddingClient} -- 嵌入模型客户端</li>
  *   <li>{@code RedisConversationMemory} -- Redis 对话记忆实现</li>

@@ -94,8 +94,7 @@ public class JobTaskController {
   /**
    * P0-A3: 查询子任务执行进度。
    *
-   * <p>对标 XXL-Job 子任务进度页和 PowerJob InstanceDetail.taskList，
-   * 返回各状态子任务数量汇总（total/pending/running/success/failed）以及完成百分比， 便于前端渲染进度条。
+ * <p>返回各状态子任务数量汇总（total/pending/running/success/failed）以及完成百分比， 便于前端渲染进度条。
    *
    * @param logId 执行日志 ID
    * @return 进度汇总（total/pending/running/success/failed/progressPercent）

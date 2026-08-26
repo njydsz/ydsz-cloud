@@ -46,7 +46,7 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
  *
  * <h3>告警通道</h3>
  *
- * 告警通过 {@link AlertChannel} SPI 派发，支持邮件/短信/企业微信/钉钉/飞书/Webhook。 告警冷却（cooldown）防止短时间内重复轰炸。
+ * 告警通过 {@link AlertChannel} SPI 派发，支持邮件/短信/企业微信/IM/Webhook。 告警冷却（cooldown）防止短时间内重复轰炸。
  *
  * <h3>安全与稳定性</h3>
  *

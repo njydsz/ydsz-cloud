@@ -31,7 +31,7 @@ import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
  *
  * <p>支持脚本版本管理、在线编辑、灰度发布、SourceCode 编译为 Class 缓存到本地磁盘，
  *
- * <p>对标 XXL-JOB 的 GLUE 模式，支持 Source / Online 两种加载方式。
+ * <p>支持 Source / Online 两种加载方式。
  *
  * @author ydsz-team
  * @since 1.0.0

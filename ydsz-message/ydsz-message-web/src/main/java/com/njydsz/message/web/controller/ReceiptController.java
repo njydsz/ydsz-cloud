@@ -28,8 +28,8 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
 /**
  * 消息回执（Receipt）Controller。
  *
- * <p>提供<b>三方短信/邮件服务商回执回调</b>与<b>回执查询</b>的 HTTP API。 三方服务商（阿里云 / 腾讯云 / 华为云 / 飞书 / 钉钉 /
- * 企业微信）在送达、阅读、点击等节点 会主动回调 {@code /callback}，本 Controller 将其转化为标准化回执记录写入 {@code ydsz_msg_receipt}，
+ * <p>提供<b>三方短信/邮件服务商回执回调</b>与<b>回执查询</b>的 HTTP API。 三方服务商（阿里云 / 腾讯云 / 华为云 / IM /
+ * 企业微信）在送达、阅读、点击等节点会主动回调 {@code /callback}，本 Controller 将其转化为标准化回执记录写入 {@code ydsz_msg_receipt}，
  * 并更新 {@code ydsz_msg_log.receiptStatus}。
  *
  * <p><b>接口路径：</b>{@code /api/v1/message/receipt/**}
@@ -42,7 +42,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
  *       FAILED 等）
  * </ul>
  *
- * <p><b>回执回调签名校验：</b>不同服务商的签名机制不同（阿里云 HMAC-SHA1 / 腾讯云 HMAC-SHA256 / 飞书 Token 等），由 {@code
+ * <p><b>回执回调签名校验：</b>不同服务商的签名机制不同（阿里云 HMAC-SHA1 / 腾讯云 HMAC-SHA256 / IM Token 等），由 {@code
  * ReceiptService.callback} 内部根据 {@code dto.channel} 路由到对应的验签器。
  *
  * <p><b>回执状态机：</b>{@code NONE → DELIVERED → READ → CLICKED}，任意节点可跳变为 {@code FAILED}。 状态机转换在 {@code

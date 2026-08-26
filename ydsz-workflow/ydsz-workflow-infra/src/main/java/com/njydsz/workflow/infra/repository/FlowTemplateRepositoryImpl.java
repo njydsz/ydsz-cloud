@@ -56,7 +56,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
     return templateMapper
         .selectList(
             new LambdaQueryWrapper<FlowTemplate>()
-                .eq(FlowTemplate::getCode, code)
+                .eq(FlowTemplate::getTemplateCode, code)
                 .eq(FlowTemplate::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
@@ -79,7 +79,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
     return converter.flowTemplateListToVO(
         templateMapper.selectList(
             new LambdaQueryWrapper<FlowTemplate>()
-                .eq(FlowTemplate::getCategoryId, categoryId)
+                .eq(FlowTemplate::getCategory, categoryId)
                 .eq(FlowTemplate::getDeleted, 0)
                 .orderByAsc(FlowTemplate::getSortOrder)));
   }

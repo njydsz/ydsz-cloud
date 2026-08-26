@@ -10,7 +10,7 @@ import com.njydsz.common.json.reader.JSONReader;
 /**
  * {@link ToolCall} 的 YdszJson 自定义反序列化器（验证 P1-1 反序列化引擎修复）。
  *
- * <p>解析 OpenAI 工具调用结构，将 {@code function.arguments}（JSON 字符串）还原为 {@code Map<String, Object>}。与
+ * <p>解析工具调用结构，将 {@code function.arguments}（JSON 字符串）还原为 {@code Map<String, Object>}。与
  * {@link ToolCallSerializer} 互为逆操作。
  *
  * @author ydsz-team

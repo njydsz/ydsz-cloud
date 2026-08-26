@@ -15,7 +15,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 /**
  * SM3 密码杂凑算法工具类
  *
- * <p>杂凑算法，输出 256 位（32 字节）摘要，安全性对标 SHA-256，符合国密标准 GM/T 0004-2012。 纯 BouncyCastle 实现，零 JDK 扩展依赖。
+ * <p>杂凑算法，输出 256 位（32 字节）摘要，符合国密标准 GM/T 0004-2012。 纯 BouncyCastle 实现，零 JDK 扩展依赖。
  *
  * <h2>核心能力</h2>
  *

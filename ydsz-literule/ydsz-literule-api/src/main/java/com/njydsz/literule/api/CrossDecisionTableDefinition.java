@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 /**
  * 交叉决策表定义（决策矩阵，P1-6）
  *
- * <p>对标 URule Pro 的交叉决策表（决策矩阵），支持行和列双维度交叉匹配。
+ * <p>交叉决策表（决策矩阵），支持行和列双维度交叉匹配。
  *
  * <p>与普通决策表（{@link DecisionTableDefinition}）的区别：
  *

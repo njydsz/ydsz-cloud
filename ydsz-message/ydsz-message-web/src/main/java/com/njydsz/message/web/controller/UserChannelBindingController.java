@@ -39,7 +39,7 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
  * <p><b>核心能力：</b>
  *
  * <ul>
- *   <li><b>新增/更新绑定</b>：{@code POST /} — 绑定用户的某通道联系方式（如手机号 / 邮箱 / 钉钉 userId）
+ *   <li><b>新增/更新绑定</b>：{@code POST /} — 绑定用户的某通道联系方式（如手机号 / 邮箱 / IM userId）
  *   <li><b>我的绑定</b>：{@code GET /mine} — 查询当前登录用户的全部绑定（用于「我的通知设置」页面）
  *   <li><b>用户绑定</b>：{@code GET /user/{userId}} — 管理员查询某用户的全部绑定
  *   <li><b>删除绑定</b>：{@code DELETE /{id}} — 解除某条绑定
@@ -57,7 +57,7 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
  * <ul>
  *   <li>{@code userId}：用户 ID
  *   <li>{@code channel}：通道类型（SMS / EMAIL / DINGTALK / FEISHU / WECOM）
- *   <li>{@code contact}：具体联系方式（手机号 / 邮箱地址 / 钉钉 userId 等）
+ *   <li>{@code contact}：具体联系方式（手机号 / 邮箱地址 / IM userId 等）
  *   <li>{@code isPrimary}：是否主联系方式（短信验证码等关键通知优先使用主联系方式）
  *   <li>{@code isVerified}：是否已验证（未验证的联系通道不能用于发送）
  * </ul>
@@ -90,7 +90,7 @@ public class UserChannelBindingController {
   /**
    * 新增或更新用户通道绑定。
    *
-   * <p>绑定/覆盖用户的某通道具体联系方式（手机号 / 邮箱 / 钉钉 userId 等）； 敏感联系方式落库前自动脱敏。需 {@code NOTIF_MESSAGE_SEND} 权限， 启用
+   * <p>绑定/覆盖用户的某通道具体联系方式（手机号 / 邮箱 / IM userId 等）； 敏感联系方式落库前自动脱敏。需 {@code NOTIF_MESSAGE_SEND} 权限， 启用
    * 5s 幂等防重与 50 QPS 限流，并异步记录审计日志。
    *
    * @param dto 绑定信息（经 {@code @Valid} 校验，不可为 null）
