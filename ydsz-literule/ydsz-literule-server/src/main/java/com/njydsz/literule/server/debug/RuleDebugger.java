@@ -16,7 +16,7 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 /**
  * 规则断点调试器（F1 断点调试器）
  *
- * <p>对标 URule Pro / QLExpress4 的断点调试能力，提供规则级与表达式节点级断点：
+ * <p>断点调试能力，提供规则级与表达式节点级断点：
  *
  * <ul>
  *   <li><b>断点管理</b>：按规则编码分组维护断点（新增/删除/启停/查询）

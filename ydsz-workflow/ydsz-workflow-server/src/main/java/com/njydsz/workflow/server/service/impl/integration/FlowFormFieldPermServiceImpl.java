@@ -17,7 +17,7 @@ import com.njydsz.workflow.server.service.FlowFormFieldPermService;
 /**
  * 表单字段权限服务实现（P0-2 落地）
  *
- * <p>对 {@link FlowFormFieldPermService} 接口的完整实现，对标钉钉 / 飞书审批的
+ * <p>对 {@link FlowFormFieldPermService} 接口的完整实现，
  * 「<b>表单字段权限控制</b>」能力。允许业务方为审批表单的每个字段配置权限， 控制不同节点的「可编辑 / 只读 / 隐藏 / 必填」语义，是大厂 B 端工作流 「精细化表单控制」的标准能力。
  *
  * <p><b>核心职责：</b>

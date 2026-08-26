@@ -14,7 +14,7 @@ import com.njydsz.userinfo.domain.social.SocialAuthProvider;
  * 社交认证提供者注册表（P3-4：运行时动态注册预留）。
  *
  * <p>提供运行时注册/注销自定义社交认证 Provider 的能力，作为统一扩展点。
- * 内置 Provider（钉钉、企业微信、飞书）通过 Spring 自动注入，自定义 Provider
+ * 内置 Provider（IM、企业微信）通过 Spring 自动注入，自定义 Provider
  * 可通过 {@link #register(SocialAuthProvider)} 动态注册（如 JustAuth 平台适配）。
  *
  * <p><b>设计要点：</b>

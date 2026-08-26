@@ -35,8 +35,7 @@ import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 /**
  * SHELL/Python 脚本任务处理器（P1-3 SHELL/Python 脚本任务）。
  *
- * <p>支持 {@code jobType=SHELL} 的任务，通过 {@link ProcessBuilder} 执行 Shell / Python 脚本，对标 XXL-Job 的
- * GLUE_SHELL 与 PowerJob 的 Shell 处理器。
+ * <p>支持 {@code jobType=SHELL} 的任务，通过 {@link ProcessBuilder} 执行 Shell / Python 脚本。
  *
  * <h3>paramsJson 格式</h3>
  *

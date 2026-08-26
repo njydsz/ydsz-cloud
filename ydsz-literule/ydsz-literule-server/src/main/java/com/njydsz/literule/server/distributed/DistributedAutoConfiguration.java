@@ -21,9 +21,9 @@ import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 
 /**
- * LiteFlow 分布式模式自动配置。
+ * 分布式模式自动配置。
  *
- * <p>LiteFlow 在集群模式下的自动装配：基于 ZooKeeper/Redis 的规则分发、节点注册、心跳维护。
+ * <p>集群模式下的自动装配：基于 ZooKeeper/Redis 的规则分发、节点注册、心跳维护。
  *
  * <p>保证多个节点之间规则一致性与故障节点自动剔除。
  *

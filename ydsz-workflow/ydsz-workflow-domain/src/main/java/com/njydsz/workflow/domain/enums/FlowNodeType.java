@@ -42,7 +42,7 @@ public enum FlowNodeType {
   /**
    * GAP-P2-10: 循环节点（FOREACH）— 对集合变量中每个元素创建独立子任务，全部完成才推进
    *
-   * <p>对标 BPMN 2.0 multiInstance + 钉钉/飞书"审批人动态集合"能力。 与 {@link #APPROVAL} +
+   * <p>兼容 BPMN 2.0 multiInstance，支持"审批人动态集合"能力。 与 {@link #APPROVAL} +
    * performType=PARALLEL（会签）的区别：
    *
    * <ul>
@@ -64,7 +64,7 @@ public enum FlowNodeType {
   /**
    * P0-4: 逐级审批节点 — 从发起人直属上级开始，逐级向上审批，直到达到 maxLevel 或遇到终止条件
    *
-   * <p>对标钉钉/飞书"逐级审批"节点类型。与 {@link #APPROVAL} + performType=PARALLEL 的区别：
+   * <p>逐级审批节点类型。与 {@link #APPROVAL} + performType=PARALLEL 的区别：
    *
    * <ul>
    *   <li>并行会签：办理人在流程定义时固定（permissionFlag 配置），全部通过才推进

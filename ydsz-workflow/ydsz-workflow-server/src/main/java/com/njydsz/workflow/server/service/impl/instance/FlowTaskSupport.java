@@ -124,7 +124,7 @@ public class FlowTaskSupport {
   /**
    * P2-38: 监听器插件执行器（设计器配置的节点级监听器）
    *
-   * <p>对标 warm-flow 的监听器机制：在 SPI 事件监听器之外，设计上，每个节点可通过
+   * <p>监听器机制：在 SPI 事件监听器之外，设计上，每个节点可通过
    * ext JSON 配置自己的监听器，引擎按事件类型自动回调。
    */
   private final FlowListenerPluginExecutor listenerPluginExecutor;
@@ -280,7 +280,7 @@ public class FlowTaskSupport {
   }
 
   /**
-   * P2-38: 触发节点配置的监听器插件（对标 warm-flow 的可配置监听器机制）
+   * P2-38: 触发节点配置的监听器插件
    *
    * <p>从节点 ext JSON 的 {@code listeners} 配置中，筛选匹配当前事件类型的插件，按优先级依次执行。
    *

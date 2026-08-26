@@ -7,7 +7,7 @@
  *
  * <p>网关接口层通过接口抽象隔离上层业务逻辑与底层实现细节：</p>
  * <ul>
- *   <li>{@code LlmClient} / {@code EmbeddingClient} -- 大模型与嵌入模型调用接口，由基础设施层提供 OpenAI 兼容实现</li>
+ *   <li>{@code LlmClient} / {@code EmbeddingClient} -- 大模型与嵌入模型调用接口，由基础设施层提供兼容实现</li>
  *   <li>{@code VectorStore} / {@code Retriever} / {@code Reranker} / {@code TextChunker} -- RAG 检索管线各阶段接口</li>
  *   <li>{@code ConversationMemory} -- 对话记忆接口，支持基于 Redis 的滑动窗口与摘要压缩等多种实现</li>
  *   <li>{@code ToolRegistry} / {@code ToolExecutor} -- 工具注册与执行接口，支撑 Function Calling 能力</li>

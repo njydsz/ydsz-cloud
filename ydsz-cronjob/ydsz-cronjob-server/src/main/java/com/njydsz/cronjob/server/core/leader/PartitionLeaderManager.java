@@ -37,7 +37,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  *   <li>不属于本节点分区的任务跳过，由对应分区 Leader 负责扫描派发
  * </ul>
  *
- * <p>对标 PowerJob 的多分区调度能力，提升调度吞吐量和可用性。
+ * <p>多分区调度能力，提升调度吞吐量和可用性。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -158,7 +158,7 @@ public class SamlController {
    * 多租户 SSO 发起端点（P2-1）。
    *
    * <p>根据 IdP Entity ID 从 DB 配置中查找对应 IdP 的 SSO 端点，生成 AuthnRequest 并重定向。
-   * 支持不同企业使用不同的 SAML IdP（如企业微信 SAML、飞书 SAML、ADFS）。
+   * 支持不同企业使用不同的 SAML IdP。
    *
    * @param idpEntityId IdP Entity ID（URL 编码）
    * @param response    HTTP 响应对象（用于重定向）

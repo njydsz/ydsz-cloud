@@ -167,7 +167,7 @@ public final class ChatMessage implements Serializable {
   /**
    * 创建用户多模态消息（文本 + 图片，用于 Vision 模型）。
    *
-   * <p>发送给支持视觉的模型（如 gpt-4o、claude-3 等）， 模型可同时理解文本与图片内容。
+   * <p>发送给支持视觉的模型，模型可同时理解文本与图片内容。
    *
    * @param multimodalContent 多模态内容（文本+图片段落）
    * @param conversationId 所属对话 ID

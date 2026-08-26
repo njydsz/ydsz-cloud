@@ -41,8 +41,6 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * <h3>对标竞品</h3>
  *
  * <ul>
- *   <li>LangChain HumanInTheLoopCallback
- *   <li>AutoGen UserProxyAgent
  * </ul>
  *
  * @author ydsz-team

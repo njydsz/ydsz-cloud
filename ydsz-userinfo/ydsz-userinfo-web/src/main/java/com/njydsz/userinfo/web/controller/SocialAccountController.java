@@ -122,8 +122,8 @@ public class SocialAccountController {
   private String getPlatformDisplayName(String platform) {
     return switch (platform.toUpperCase()) {
       case "ENTERPRISE_WECHAT" -> "企业微信";
-      case "DINGTALK" -> "钉钉";
-      case "FEISHU" -> "飞书";
+case "DINGTALK" -> "IM";
+case "FEISHU" -> "IM";
       case "GITHUB" -> "GitHub";
       case "GOOGLE" -> "Google";
       case "WECHAT" -> "微信";

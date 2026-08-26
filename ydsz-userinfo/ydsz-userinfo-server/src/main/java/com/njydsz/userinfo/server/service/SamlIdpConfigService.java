@@ -14,13 +14,13 @@ import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 /**
  * SAML 身份提供者配置服务（P2-1 多租户）。
  *
- * <p>提供 SAML IdP 配置管理能力，支持多租户独立配置 SAML IdP（如企业微信 SAML、飞书 SAML、ADFS）。
+ * <p>提供 SAML IdP 配置管理能力，支持多租户独立配置 SAML IdP。
  *
  * <p><b>使用场景：</b>
  *
  * <ul>
  *   <li>租户 A 对接企业微信 SAML — 配置 entityId、ssoUrl、证书</li>
- *   <li>租户 B 对接飞书 SAML — 独立配置，互不影响</li>
+ *   <li>租户 B 对接独立 SAML — 独立配置，互不影响</li>
  *   <li>全局默认 IdP — 作为未配置 SAML 的租户的回落方案</li>
  * </ul>
  *

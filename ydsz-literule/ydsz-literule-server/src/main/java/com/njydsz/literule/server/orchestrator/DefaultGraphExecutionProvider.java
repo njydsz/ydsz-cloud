@@ -18,7 +18,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 /**
  * 默认画布执行提供者（P0-A2 画布执行后端下沉）
  *
- * <p>literule 自带的画布执行后端默认实现，将可视化规则链画布还原为可执行编排并执行。 对标 URule Pro / LiteFlow
+ * <p>literule 自带的画布执行后端默认实现，将可视化规则链画布还原为可执行编排并执行。
  * 的"画布即执行"能力，不再依赖外部模块提供 {@link GraphExecutionProvider} 实现。
  *
  * <p><b>执行链路</b>：

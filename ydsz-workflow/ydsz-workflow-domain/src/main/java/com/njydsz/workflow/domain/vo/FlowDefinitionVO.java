@@ -34,7 +34,7 @@ public class FlowDefinitionVO implements Serializable {
   /** 流程版本号（如 v1、v2） */
   private String flowVersion;
 
-  /** 设计器模型（CLASSICS 经典 / MIMIC 仿钉钉） */
+  /** 设计器模型（CLASSICS 经典 / MIMIC 纵向审批） */
   private String modelValue;
 
   /** 审批表单是否自定义（Y/N） */

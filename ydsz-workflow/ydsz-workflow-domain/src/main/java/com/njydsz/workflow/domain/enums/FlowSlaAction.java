@@ -3,7 +3,7 @@ package com.njydsz.workflow.domain.enums;
 /**
  * GAP-P1: SLA 超时处理动作
  *
- * <p>当审批任务超过 {@code slaConfig.timeoutMinutes} 后触发的自动处理策略。 对标钉钉/飞书审批的 SLA 超时自动化能力。
+ * <p>当审批任务超过 {@code slaConfig.timeoutMinutes} 后触发的自动处理策略，支持 SLA 超时自动化能力。
  *
  * <p>P1-3 闭环语义：每个动作都必须有明确的终态，不允许"标记超时但流程卡死"。
  *

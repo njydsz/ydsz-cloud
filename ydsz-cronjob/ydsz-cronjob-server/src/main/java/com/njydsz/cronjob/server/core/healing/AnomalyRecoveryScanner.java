@@ -54,7 +54,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  *
  * <h3>对标</h3>
  *
- * <p>对标 XXL-Job 的失败重试 + 分片任务转移、PowerJob 的自愈能力、SchedulerX 的自动恢复机制。
+ * <p>失败重试 + 分片任务转移、自愈能力、自动恢复机制。
  *
  * @author ydsz-team
  * @since 1.0.0

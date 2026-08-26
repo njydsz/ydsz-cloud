@@ -16,9 +16,9 @@ import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
 
 /**
- * OpenAI 兼容 Embedding 客户端
+ * Embedding 客户端实现
  *
- * <p>覆盖 OpenAI text-embedding-3-small/large、DeepSeek、通义千问等兼容 API。
+ * <p>覆盖多种 Embedding API。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -42,7 +42,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
   private final RestClient restClient;
 
   public OpenAiEmbeddingClient(String baseUrl, String apiKey, String model, int dimension) {
-    this.baseUrl = baseUrl != null ? baseUrl : "https://api.openai.com/v1";
+    this.baseUrl = baseUrl != null ? baseUrl : "";
     this.apiKey = apiKey;
     this.model = model != null ? model : "text-embedding-3-small";
     this.dimension = dimension > 0 ? dimension : 1536;

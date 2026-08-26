@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application.ApplicationStatus;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application.ClientType;
-import com.njydsz.userinfo.infra.entity.OAuth2Application;
 
 /**
  * OAuth2 应用 MapStruct 转换器。
@@ -45,7 +44,7 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "updatedAt", source = "updatedAt")
   @Mapping(target = "createdBy", source = "createdBy")
-  com.njydsz.userinfo.domain.oauth2.OAuth2Application entityToDomain(OAuth2Application entity);
+  com.njydsz.userinfo.domain.oauth2.OAuth2Application entityToDomain(com.njydsz.userinfo.infra.entity.OAuth2Application entity);
 
   /**
    * 应用领域模型 → 实体。
@@ -70,5 +69,5 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
-  OAuth2Application domainToEntity(com.njydsz.userinfo.domain.oauth2.OAuth2Application domain);
+  com.njydsz.userinfo.infra.entity.OAuth2Application domainToEntity(com.njydsz.userinfo.domain.oauth2.OAuth2Application domain);
 }

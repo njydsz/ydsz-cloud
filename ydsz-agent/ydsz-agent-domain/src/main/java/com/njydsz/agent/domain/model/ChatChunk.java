@@ -134,12 +134,12 @@ public final class ChatChunk implements Serializable {
   /**
    * 判断流式响应是否已结束。
    *
-   * <p>以 {@code finishReason} 是否非空判定流结束，与 OpenAI SSE 约定一致； {@code null} 表示后续仍有 chunk 到达。
+   * <p>以 {@code finishReason} 是否非空判定流结束，与 SSE 约定一致； {@code null} 表示后续仍有 chunk 到达。
    *
    * @return {@code true} 表示流已结束（收到终止片段）
    */
   public boolean isFinished() {
-    // 以 finishReason 是否非空判定流结束，与 OpenAI SSE 约定一致；null 表示仍有后续 chunk
+        // 以 finishReason 是否非空判定流结束，与 SSE 约定一致；null 表示仍有后续 chunk
     return finishReason != null;
   }
 

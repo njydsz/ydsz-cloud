@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
- * 飞书回调签名验证工具。
+ * IM 平台回调签名验证工具。
  *
  * <p>P0-2: 从 workflow 模块迁移到 common-notify，作为通用 IM 签名能力。 供 workflow 三方审批回调验证、common-notify
  * FeishuNotifySender 等场景共用。
@@ -23,7 +23,7 @@ public final class FeishuSignatureUtil {
   private FeishuSignatureUtil() {}
 
   /**
-   * 验证飞书回调签名
+   * 验证 IM 平台回调签名
    *
    * @param timestamp 时间戳
    * @param nonce 随机串

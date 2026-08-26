@@ -3,7 +3,7 @@ package com.njydsz.common.notify.signature;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
- * 钉钉回调签名验证工具。
+ * IM 平台回调签名验证工具。
  *
  * <p>P0-2: 从 workflow 模块迁移到 common-notify，作为通用 IM 签名能力。 供 workflow 三方审批回调验证、common-notify
  * DingTalkNotifySender 等场景共用。
@@ -18,7 +18,7 @@ public final class DingTalkSignatureUtil {
   private DingTalkSignatureUtil() {}
 
   /**
-   * 验证钉钉回调签名
+   * 验证 IM 平台回调签名
    *
    * @param timestamp 时间戳
    * @param nonce 随机串

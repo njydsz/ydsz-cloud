@@ -192,7 +192,7 @@ public class UserInfoProperties {
   /**
    * 单用户最大并发会话数（P1-9）。
    *
-   * <p>超过上限时自动踢出最早活跃会话，对标钉钉/飞书"最多 N 端在线"策略。0 表示不限制。
+   * <p>超过上限时自动踢出最早活跃会话，"最多 N 端在线"策略。0 表示不限制。
    */
   private int maxSessionsPerUser = DEFAULT_MAX_SESSIONS_PER_USER;
 

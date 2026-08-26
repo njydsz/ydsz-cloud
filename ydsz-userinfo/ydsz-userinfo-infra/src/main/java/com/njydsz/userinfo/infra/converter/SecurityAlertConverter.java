@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertType;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel;
-import com.njydsz.userinfo.infra.entity.SecurityAlert;
 
 /**
  * 安全告警 MapStruct 转换器。
@@ -42,7 +41,7 @@ public interface SecurityAlertConverter {
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "handledAt", source = "handledAt")
   @Mapping(target = "handlerNote", source = "handlerNote")
-  com.njydsz.userinfo.domain.alert.SecurityAlert entityToDomain(SecurityAlert entity);
+  com.njydsz.userinfo.domain.alert.SecurityAlert entityToDomain(com.njydsz.userinfo.infra.entity.SecurityAlert entity);
 
   /**
    * 安全告警领域模型 → 实体。
@@ -65,5 +64,5 @@ public interface SecurityAlertConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
-  SecurityAlert domainToEntity(com.njydsz.userinfo.domain.alert.SecurityAlert domain);
+  com.njydsz.userinfo.infra.entity.SecurityAlert domainToEntity(com.njydsz.userinfo.domain.alert.SecurityAlert domain);
 }

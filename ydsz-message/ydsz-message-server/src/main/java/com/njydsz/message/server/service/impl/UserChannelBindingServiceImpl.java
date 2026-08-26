@@ -21,7 +21,7 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
  *
  * <p>管理用户在各渠道的地址/账号绑定 ({@code ydsz_msg_user_channel})：
  *
- * <p>手机号、邮箱、企业微信 UserID、钉钉 UserID、飞书 UserID、WebSocket SessionId。
+ * <p>手机号、邮箱、企业微信 UserID、IM UserID、WebSocket SessionId。
  *
  * <p>发送前根据用户 ID 解析实际地址，支持多渠道优先级。
  *
