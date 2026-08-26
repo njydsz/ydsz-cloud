@@ -209,6 +209,14 @@ ydsz-cronjob/                          # 父 POM
 
 ## 配置文件
 
+> 配置分三层，按需关注，避免被全量配置项淹没：
+>
+> | 层级 | 范围 | 说明 |
+> |---|---|---|
+> | **必配（≤10 项）** | `leader.enabled/role`、`node-discovery.type`、`remote.access-token`、`scanner.interval-ms/batch-size`、`executor.max-concurrent`、`log-retention.*` | 首次部署必须核对，其余用默认值即可 |
+> | **调优（阈值类）** | `scanner.misfire-grace-minutes`、`anomaly-recovery.*`、`preload.window-seconds`、`alert.*`、`sandbox.*`、`http.*` | 按任务规模与精度要求调整 |
+> | **实验（默认关闭）** | `leader.partition.enabled`（多分区，≥10 节点或日任务量万级再启用）、`adaptive-batch.enabled`（自适应批量，收益待验证）、`quota.enabled`（租户配额）、`sandbox.docker-enabled`（Docker 容器沙箱） | 特性成熟度 Beta，谨慎启用并观察指标 |
+
 ### 分布式锁 & 调度器
 
 | 配置项 | 默认值 | 说明 |

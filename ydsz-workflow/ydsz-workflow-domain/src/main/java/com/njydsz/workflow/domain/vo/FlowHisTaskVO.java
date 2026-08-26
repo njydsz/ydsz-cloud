@@ -43,6 +43,10 @@ public class FlowHisTaskVO implements Serializable {
   private LocalDateTime claimAt;
   private LocalDateTime finishAt;
   private Long durationMs;
+  /** 生效时间（补录审批场景，对齐实体 effectiveTime） */
+  private LocalDateTime effectiveTime;
+  /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
+  private String tenantId;
   private String providerTraceId;
   private String iterVar;
   private String createdBy;

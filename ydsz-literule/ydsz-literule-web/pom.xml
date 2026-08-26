@@ -70,6 +70,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydsz-common-excel：决策表 Excel 导入导出/模板下载（RuleDecisionTableController 直接使用 ExcelWebSupport） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+        </dependency>
             <!-- ArchUnit 架构测试（P3-2：DDD 分层依赖方向守护，见 LiteruleArchitectureTest） -->
         <dependency>
             <groupId>com.tngtech.archunit</groupId>

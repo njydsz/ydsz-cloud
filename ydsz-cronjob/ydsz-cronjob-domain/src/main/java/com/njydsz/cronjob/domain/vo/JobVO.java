@@ -28,6 +28,9 @@ public class JobVO implements Serializable {
   /** 任务分组 */
   private String jobGroup;
 
+  /** 任务状态（NORMAL/PAUSED/AUTO_PAUSED/STOPPED/ERROR/DELETED，见 CronjobConstants） */
+  private String status;
+
   /** 任务唯一标识 */
   private String jobKey;
 

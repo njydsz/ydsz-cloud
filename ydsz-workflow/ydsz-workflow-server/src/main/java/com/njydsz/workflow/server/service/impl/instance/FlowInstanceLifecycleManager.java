@@ -289,7 +289,7 @@ public class FlowInstanceLifecycleManager {
    * @param def 参数说明
    * @return 返回值说明
    */
-  private FlowInstanceDTO buildInstanceDto(FlowStartProcessDTO dto, FlowDefinition def) {
+  private FlowInstanceDTO buildInstanceDto(FlowStartProcessDTO dto, FlowDefinitionVO def) {
     FlowInstanceDTO instanceDto = new FlowInstanceDTO();
     instanceDto.setFlowCode(def.getFlowCode());
     instanceDto.setFlowName(def.getFlowName());

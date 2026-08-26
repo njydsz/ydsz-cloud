@@ -209,7 +209,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
       return false;
     }
     // CAS 标记 FIRED，避免多节点并发扫描时重复触发
-    int updated = timerRepository.markFired(timer.getId());
+    timerRepository.markFired(timer.getId());
     if (updated == 0) {
       log.debug("[FlowTimer] 定时器已被处理: id={}", timer.getId());
       return false;
@@ -368,7 +368,8 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     if (taskId == null) {
       return 0;
     }
-    return timerRepository.cancelByTask(taskId);
+    timerRepository.cancelByTask(taskId);
+    return 1;
   }
 
   @Override

@@ -239,7 +239,6 @@ public class FlowTaskCreateService {
   void initEmptyAssigneeStrategyService() {
     this.emptyAssigneeStrategyService = new EmptyAssigneeStrategyService(
         taskRepository,
-        converter,
         archiveService,
         support,
         assigneeResolutionService,
@@ -904,7 +903,7 @@ public class FlowTaskCreateService {
     }
     support.fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
     support.publishWorkflowEvent("TASK_CREATED", instance.getId(), task.getId());
-    applyDelegateRedirect(task, instance, node);
+    delegateRedirectService.applyDelegateRedirect(task, instance, node);
     log.info(
         "[Flow] 逐级审批任务创建: instanceId={} node={} approvers={}",
         instance.getId(),

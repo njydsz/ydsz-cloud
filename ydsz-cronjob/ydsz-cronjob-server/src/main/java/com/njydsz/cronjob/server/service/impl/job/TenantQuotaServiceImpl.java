@@ -267,8 +267,8 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
    */
   private long countJobsByTenant(String tenantId) {
     try {
-      // 拦截器自动注入 tenant_id 和 deleted 条件
-      return jobRepository.selectCount(new LambdaQueryWrapper<>());
+      // 走 Repository 业务方法（拦截器自动注入 tenant_id 和 deleted 条件），避免直接使用 MyBatis Plus Wrapper 穿透 DDD 分层
+      return jobRepository.countAll();
     } catch (Exception e) {
       log.warn("[Quota] 统计任务数失败, 降级放行: tenant={} reason={}", tenantId, e.getMessage());
       return 0;

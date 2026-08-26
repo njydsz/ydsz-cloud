@@ -25,9 +25,8 @@ import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
-import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
@@ -66,9 +65,6 @@ public class FlowDefinitionPublishManager {
   /** 流程节点仓储 */
   private final FlowNodeRepository nodeRepository;
 
-  /** DO/VO 转换器 */
-  private final WorkflowConverter converter;
-
   /** 流程定义元数据缓存 */
   private final FlowDefinitionCacheService flowDefinitionCacheService;
 
@@ -84,14 +80,12 @@ public class FlowDefinitionPublishManager {
   public FlowDefinitionPublishManager(
       FlowDefinitionRepository definitionRepository,
       FlowNodeRepository nodeRepository,
-      WorkflowConverter converter,
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowProperties flowProperties,
       FlowDefinitionMigrationManager migrationManager,
       @Lazy FlowInstanceMigrationService migrationService) {
     this.definitionRepository = definitionRepository;
     this.nodeRepository = nodeRepository;
-    this.converter = converter;
     this.flowDefinitionCacheService = flowDefinitionCacheService;
     this.flowProperties = flowProperties;
     this.migrationManager = migrationManager;
@@ -128,7 +122,7 @@ public class FlowDefinitionPublishManager {
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   public void publish(String definitionId, boolean force) {
-    FlowDefinition def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -184,7 +178,7 @@ public class FlowDefinitionPublishManager {
           .message("flowCode 不能为空")
           .build();
     }
-    FlowDefinition def = definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -252,8 +246,7 @@ public class FlowDefinitionPublishManager {
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
-    FlowDefinition currentDef = definitionRepository.findPublished(flowCode, null, tid)
-        .map(converter::entityToDO)
+    FlowDefinitionVO currentDef = definitionRepository.findPublished(flowCode, null, tid)
         .orElse(null);
     if (currentDef == null) {
       throw SysException.builder()
@@ -262,8 +255,7 @@ public class FlowDefinitionPublishManager {
           .build();
     }
 
-    FlowDefinition previousDef = definitionRepository.findPreviousPublishedVersion(flowCode, tid, currentDef.getId())
-        .map(converter::entityToDO)
+    FlowDefinitionVO previousDef = definitionRepository.findPreviousPublishedVersion(flowCode, tid, currentDef.getId())
         .orElse(null);
     if (previousDef == null) {
       throw SysException.builder()
@@ -298,15 +290,11 @@ public class FlowDefinitionPublishManager {
       migrateDto.setTargetDefinitionId(previousDef.getId());
       migrateDto.setTenantId(tid);
       Map<String, String> nodeMapping = new HashMap<>();
-      List<FlowNode> oldNodes = nodeRepository.findByDefinitionId(currentDef.getId()).stream()
-          .map(converter::entityToDO)
-          .toList();
-      List<FlowNode> newNodes = nodeRepository.findByDefinitionId(previousDef.getId()).stream()
-          .map(converter::entityToDO)
-          .toList();
+      List<FlowNodeVO> oldNodes = nodeRepository.findByDefinitionId(currentDef.getId());
+      List<FlowNodeVO> newNodes = nodeRepository.findByDefinitionId(previousDef.getId());
       Set<String> newNodeCodes =
-          newNodes.stream().map(FlowNode::getNodeCode).collect(Collectors.toSet());
-      for (FlowNode oldNode : oldNodes) {
+          newNodes.stream().map(FlowNodeVO::getNodeCode).collect(Collectors.toSet());
+      for (FlowNodeVO oldNode : oldNodes) {
         if (newNodeCodes.contains(oldNode.getNodeCode())) {
           nodeMapping.put(oldNode.getNodeCode(), oldNode.getNodeCode());
         }
@@ -352,12 +340,11 @@ public class FlowDefinitionPublishManager {
    * @param def 参数说明
    * @param force 参数说明
    */
-  private void checkPublishCompatibility(FlowDefinition def, boolean force) {
+  private void checkPublishCompatibility(FlowDefinitionVO def, boolean force) {
     String flowCode = def.getFlowCode();
     String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
 
-    FlowDefinition activeDef = definitionRepository.findPublished(flowCode, null, tenantId)
-        .map(converter::entityToDO)
+    FlowDefinitionVO activeDef = definitionRepository.findPublished(flowCode, null, tenantId)
         .orElse(null);
     if (activeDef == null || activeDef.getId().equals(def.getId())) {
       log.debug("[Flow][P1-4] 无前序激活版本，跳过兼容性校验: flowCode={} defId={}", flowCode, def.getId());

@@ -164,7 +164,9 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
       entities.add(entity);
     }
     if (!entities.isEmpty()) {
-      attachmentRepository.saveBatch(entities);
+      for (com.njydsz.workflow.domain.vo.FlowAttachmentVO entity : entities) {
+      attachmentRepository.save(entity);
+    }
       log.info(
           "[Flow] 审批附件落库: instanceId={} taskId={} count={}", instanceId, taskId, entities.size());
     }

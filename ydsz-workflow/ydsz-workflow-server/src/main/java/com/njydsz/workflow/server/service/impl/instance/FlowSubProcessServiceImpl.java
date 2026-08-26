@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
@@ -257,7 +258,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
     // 推进父流程到 callActivity 节点的下一节点
     Map<String, Object> variables = parseVariables(parent.getVariable());
-    List<FlowNode> nextNodes = advancer.advance(parent, parentNodeCode, "PASS", null, variables);
+    List<FlowNodeVO> nextNodes = advancer.advance(parent, parentNodeCode, "PASS", null, variables);
     if (nextNodes.isEmpty()) {
       // 父流程无下一节点：完成
       instanceService.complete(parent.getId(), parentNodeCode);
@@ -447,7 +448,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
    * @param node 参数说明
    * @return 返回值说明
    */
-  private Double extractSubProcessTimeout(FlowNode node) {
+  private Double extractSubProcessTimeout(FlowNodeVO node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
       return null;
     }

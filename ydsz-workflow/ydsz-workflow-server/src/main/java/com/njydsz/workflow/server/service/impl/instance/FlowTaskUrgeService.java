@@ -13,8 +13,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 
@@ -37,7 +36,6 @@ public class FlowTaskUrgeService {
   private final FlowInstanceRepository instanceRepository;
   private final FlowTaskSupport support;
   private final FlowUrgeLimiter urgeLimiter;
-  private final WorkflowConverter converter;
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
@@ -63,13 +61,11 @@ public class FlowTaskUrgeService {
           .message("error.workflow.msg_75474a57")
           .build();
     }
-    List<FlowRunTask> pendingTasks = taskRepository.findPendingByInstance(instanceId).stream()
-        .map(converter::entityToDO)
-        .collect(Collectors.toList());
+    List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByInstance(instanceId);
     List<String> urged = new ArrayList<>();
-    for (FlowRunTask task : pendingTasks) {
+    for (FlowRunTaskVO task : pendingTasks) {
       urged.add(task.getAssigneeId());
-      support.audit(converter.entityToVO(task), "URGE", operatorId, null, comment);
+      support.audit(task, "URGE", operatorId, null, comment);
     }
     log.info("[Flow] 催办: instanceId={} 被催办人={}", instanceId, urged);
     recordUrgeMetrics(instanceId);
@@ -101,13 +97,11 @@ public class FlowTaskUrgeService {
             .build();
       }
     }
-    List<FlowRunTask> pendingTasks = taskRepository.findPendingByNode(instanceId, nodeCode).stream()
-        .map(converter::entityToDO)
-        .collect(Collectors.toList());
+    List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByNode(instanceId, nodeCode);
     List<String> urged = new ArrayList<>();
-    for (FlowRunTask task : pendingTasks) {
+    for (FlowRunTaskVO task : pendingTasks) {
       urged.add(task.getAssigneeId());
-      support.audit(converter.entityToVO(task), "URGE", operatorId, null, comment);
+      support.audit(task, "URGE", operatorId, null, comment);
       // P2-3: 节点级催办事件
       support.fireEvent(l -> l.onTaskUrged(instanceId, task.getId()), task.getId());
       support.publishWorkflowEvent("TASK_URGED", instanceId, task.getId());

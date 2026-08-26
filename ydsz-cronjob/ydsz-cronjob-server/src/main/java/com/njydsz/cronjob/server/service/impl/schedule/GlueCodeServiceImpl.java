@@ -88,7 +88,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     entity.setRemark(remark);
     glueCodeRepository.insert(entity);
     log.info("[Glue] 保存 GLUE 代码: jobId={} version={} remark={}", jobId, nextVersion, remark);
-    return entityToVo(entity);
+    return entity;
   }
 
   /**
@@ -168,7 +168,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     glueCodeRepository.insert(entity);
     log.info(
         "[Glue] 回滚 GLUE 代码: jobId={} fromVersion={} toNewVersion={}", jobId, version, nextVersion);
-    return entityToVo(entity);
+    return entity;
   }
 
   // ==================== P1-1: 在线测试 / 模板 / 差异对比 ====================
@@ -427,7 +427,10 @@ public class GlueCodeServiceImpl implements GlueCodeService {
 
   /** 查询指定版本（返回 VO）。 */
   private GlueCodeVO getVersionVo(String jobId, Integer version) {
-    return glueCodeRepository.findByJobIdAndVersion(jobId, version).orElse(null);
+    return glueCodeRepository.findByJobIdOrderByVersionDesc(jobId).stream()
+        .filter(v -> v.getVersion() != null && v.getVersion().equals(version))
+        .findFirst()
+        .orElse(null);
   }
 
   /** 计算行级差异（简单实现）。 */

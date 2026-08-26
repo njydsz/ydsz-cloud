@@ -40,7 +40,7 @@ public class ScheduleCalendarService {
    * @return 触发时间列表
    */
   public List<LocalDateTime> getUpcomingFireTimes(String jobKey, LocalDateTime from, int maxCount) {
-    JobVO job = jobRepository.selectByJobKey(jobKey);
+    JobVO job = jobRepository.findByJobKey(jobKey).orElse(null);
     if (job == null || job.getCronExpression() == null || job.getCronExpression().isBlank()) {
       return List.of();
     }
@@ -56,7 +56,7 @@ public class ScheduleCalendarService {
    * @return 触发时间列表（含 jobKey）
    */
   public List<ScheduleItem> getScheduleCalendar(LocalDateTime from, int hours, int maxPerJob) {
-    List<JobVO> normalJobs = jobRepository.selectAllNormal();
+    List<JobVO> normalJobs = jobRepository.findAllNormal();
     LocalDateTime to = from.plusHours(hours);
     List<ScheduleItem> items = new ArrayList<>();
     for (JobVO job : normalJobs) {

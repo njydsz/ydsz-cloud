@@ -18,6 +18,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.workflow.domain.query.FlowCcQuery;
+import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.repository.FlowCcRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
@@ -233,6 +234,50 @@ public class FlowCcServiceImpl implements FlowCcService {
       log.error("[FlowCc] countMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
       return 0L;
     }
+  }
+
+  /**
+   * 分页查询「抄送我的」（已废弃 DTO 版本，委托 {@link #pageMyCc(String, String, FlowCcQuery)}）。
+   *
+   * @param tenantId 租户 ID
+   * @param userId 接收人 ID
+   * @param query 查询条件
+   * @return 抄送列表
+   */
+  @Override
+  @Deprecated
+  @Transactional(readOnly = true)
+  public List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
+    if (query == null) {
+      return List.of();
+    }
+    FlowCcQuery q = new FlowCcQuery();
+    q.setReadStatus(query.getReadStatus());
+    q.setFlowCode(query.getFlowCode());
+    q.setPageNum(query.getPageNum());
+    q.setPageSize(query.getPageSize());
+    return pageMyCc(tenantId, userId, q);
+  }
+
+  /**
+   * 统计「抄送我的」总数（已废弃 DTO 版本，委托 {@link #countMyCc(String, String, FlowCcQuery)}）。
+   *
+   * @param tenantId 租户 ID
+   * @param userId 接收人 ID
+   * @param query 查询条件
+   * @return 总数
+   */
+  @Override
+  @Deprecated
+  @Transactional(readOnly = true)
+  public long countMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
+    if (query == null) {
+      return 0L;
+    }
+    FlowCcQuery q = new FlowCcQuery();
+    q.setReadStatus(query.getReadStatus());
+    q.setFlowCode(query.getFlowCode());
+    return countMyCc(tenantId, userId, q);
   }
 
   /**

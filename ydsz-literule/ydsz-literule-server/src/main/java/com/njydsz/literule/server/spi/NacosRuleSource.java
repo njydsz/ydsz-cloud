@@ -239,4 +239,31 @@ public class NacosRuleSource implements RuleSource {
         getClass().getSimpleName(), ruleCode, enabled, operator);
   }
 
+
+  /**
+   * 保存规则定义（配置中心数据源为只读，不支持写入操作）
+   *
+   * @param definition 规则定义
+   * @param operator 操作人
+   * @return 保存后的规则定义
+   */
+  @Override
+  public RuleDefinition save(RuleDefinition definition, String operator) {
+    throw new UnsupportedOperationException(
+        "配置中心数据源为只读，不支持 save 操作: source=" + getClass().getSimpleName());
+  }
+
+
+  /**
+   * 加载全部规则定义（含禁用）
+   *
+   * <p>配置中心数据源不区分启停状态，直接返回全量解析结果。
+   *
+   * @return 全部规则定义列表
+   */
+  @Override
+  public List<RuleDefinition> loadAllRules() {
+    return loadEnabledRules();
+  }
+
 }

@@ -341,7 +341,13 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     payload.put("content", content);
     payload.put("channel", "PUSH");
     try {
-      notificationClient.send(toFeignDTO(payload));
+      notificationClient.notify(
+        asString(payload.get("channel")),
+        asString(payload.get("userId")),
+        asString(payload.get("title")),
+        asString(payload.get("content")),
+        asString(payload.get("bizType")),
+        asString(payload.get("level")));
     } catch (Exception e) {
       log.warn(
           "[FlowNotify][INAPP] Feign 调用降级为日志: userId={} title={} err={}",
@@ -374,7 +380,13 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       payload.put("receiver", receiver);
     }
     try {
-      notificationClient.send(toFeignDTO(payload));
+      notificationClient.notify(
+        asString(payload.get("channel")),
+        asString(payload.get("userId")),
+        asString(payload.get("title")),
+        asString(payload.get("content")),
+        asString(payload.get("bizType")),
+        asString(payload.get("level")));
     } catch (Exception e) {
       log.warn(
           "[FlowNotify][EMAIL] Feign 调用降级为日志: userId={} title={} err={}",

@@ -10,6 +10,7 @@ import com.njydsz.literule.api.RuleEngineStats;
 import com.njydsz.literule.api.RulePack;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.expression.ExpressionFunctionDef;
+import com.njydsz.literule.api.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
@@ -17,6 +18,7 @@ import com.njydsz.literule.domain.vo.CategoryNodeVO;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
+import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
 import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
@@ -146,4 +148,12 @@ public interface LiteruleWebConverter {
 
   // ===== ExpressionFunctionDef (api.expr) → ExpressionFunctionDefVO =====
   ExpressionFunctionDefVO entityToVO(ExpressionFunctionDef entity);
+
+  /**
+   * 表达式校验结果（api.expr）→ VO
+   *
+   * @param entity 校验结果
+   * @return 校验结果 VO
+   */
+  ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity);
 }

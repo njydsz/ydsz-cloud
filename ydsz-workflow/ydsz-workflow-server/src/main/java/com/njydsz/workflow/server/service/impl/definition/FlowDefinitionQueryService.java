@@ -23,8 +23,6 @@ import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
 
 /**
  * 流程定义查询服务
@@ -65,18 +63,13 @@ public class FlowDefinitionQueryService {
   /** 节点跳转仓储 */
   private final FlowSkipRepository skipRepository;
 
-  /** DO/VO 转换器 */
-  private final WorkflowConverter converter;
-
   public FlowDefinitionQueryService(
       FlowDefinitionRepository definitionRepository,
       FlowNodeRepository nodeRepository,
-      FlowSkipRepository skipRepository,
-      WorkflowConverter converter) {
+      FlowSkipRepository skipRepository) {
     this.definitionRepository = definitionRepository;
     this.nodeRepository = nodeRepository;
     this.skipRepository = skipRepository;
-    this.converter = converter;
   }
 
   /**
@@ -181,8 +174,8 @@ public class FlowDefinitionQueryService {
    */
   @Transactional(readOnly = true)
   public List<Map<String, Object>> listVersions(String definitionId) {
-    FlowDefinition def =
-        definitionRepository.findById(definitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinitionVO def =
+        definitionRepository.findById(definitionId).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -190,12 +183,10 @@ public class FlowDefinitionQueryService {
           .build();
     }
     String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
-    List<FlowDefinition> versions =
-        definitionRepository.findByFlowCodeAndTenantId(def.getFlowCode(), tenantId).stream()
-            .map(converter::entityToDO)
-            .toList();
+    List<FlowDefinitionVO> versions =
+        definitionRepository.findByFlowCodeAndTenantId(def.getFlowCode(), tenantId);
     List<Map<String, Object>> result = new ArrayList<>(versions.size());
-    for (FlowDefinition v : versions) {
+    for (FlowDefinitionVO v : versions) {
       Map<String, Object> map = new LinkedHashMap<>();
       map.put("id", v.getId());
       map.put("version", v.getFlowVersion());

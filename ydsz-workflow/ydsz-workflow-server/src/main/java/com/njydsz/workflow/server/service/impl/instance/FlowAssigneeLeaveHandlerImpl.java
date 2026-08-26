@@ -12,9 +12,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.FlowAssigneeLeaveHandler;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -82,8 +81,8 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowAssigneeLeaveHandler 接口定义
- * @see FlowRunTask 运行时任务实体
- * @see FlowDelegateAuth 长期授权委派实体
+ * @see FlowRunTaskVO 运行时任务视图对象
+ * @see FlowDelegateAuthVO 长期授权委派视图对象
  * @see FlowTaskService 流程任务服务（转交通道）
  * @see FlowDelegateAuthService 委派代理服务
  */
@@ -99,9 +98,6 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
 
   /** 委托授权仓储（domain 层契约），查询长期授权委派 */
   private final FlowDelegateAuthRepository delegateAuthRepository;
-
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 流程任务服务，调用 {@code transfer} 接口执行任务转交（注入 {@code FlowTaskService} 门面） */
   private final FlowTaskService taskService;
@@ -169,9 +165,7 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
     }
 
     // 2. 查询待办任务
-    List<FlowRunTask> tasks = taskRepository.findPendingTasksByAssignee(userId).stream()
-        .map(converter::entityToDO)
-        .toList();
+    List<FlowRunTaskVO> tasks = taskRepository.findPendingTasksByAssignee(userId);
 
     if (tasks.isEmpty()) {
       log.info("[LeaveHandler] 无待办需要转交: userId={}", userId);
@@ -181,7 +175,7 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
     // 3. 逐个转交
     int successCount = 0;
     String reason = "RESIGN".equals(leaveType) ? "审批人离职自动转交" : "审批人调岗自动转交";
-    for (FlowRunTask task : tasks) {
+    for (FlowRunTaskVO task : tasks) {
       try {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(task.getId());
@@ -262,9 +256,8 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
    */
   private String findActiveDelegate(String userId) {
     LocalDateTime now = LocalDateTime.now();
-    FlowDelegateAuth auth = delegateAuthRepository.findActiveByOwner(userId, now).stream()
+    FlowDelegateAuthVO auth = delegateAuthRepository.findActiveByOwner(userId, now).stream()
         .findFirst()
-        .map(converter::entityToDO)
         .orElse(null);
     return auth != null ? auth.getDelegateUserId() : null;
   }

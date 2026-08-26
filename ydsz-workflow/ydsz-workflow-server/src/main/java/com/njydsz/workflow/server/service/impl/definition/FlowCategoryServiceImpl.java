@@ -17,8 +17,6 @@ import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowCategory;
 import com.njydsz.workflow.server.service.FlowCategoryService;
 
 /**
@@ -82,9 +80,9 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowCategoryService 接口定义
- * @see FlowCategory 分类实体
+ * @see FlowCategoryVO 分类实体
  * @see FlowCategoryDTO 分类 DTO
- * @see FlowDefinition 流程定义（{@code category} 字段引用本表 ID）
+ * @see com.njydsz.workflow.domain.vo.FlowDefinitionVO 流程定义（{@code category} 字段引用本表 ID）
  */
 @Slf4j
 @Service
@@ -93,9 +91,6 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
 
   /** 流程分类仓储（domain 层契约），管理 ydsz_flow_category 表 CRUD */
   private final FlowCategoryRepository categoryRepository;
-
-  /** DO → VO 转换器（infra 层能力，Service 层允许使用） */
-  private final WorkflowConverter converter;
 
   /**
    * 查询当前租户全部分类
@@ -109,11 +104,9 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   public List<FlowCategoryVO> listAllVO(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    List<FlowCategory> doList = categoryRepository.findAll(tid).stream()
-        .map(converter::entityToDO)
-        .toList();
-    doList.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
-    return converter.flowCategoryListToVO(doList);
+    List<FlowCategoryVO> voList = categoryRepository.findAll(tid);
+    voList.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
+    return voList;
   }
 
   /**
@@ -130,14 +123,14 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   public List<FlowCategoryTreeVO> tree(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
-    List<FlowCategory> all = categoryRepository.findAll(tid).stream()
-        .map(converter::entityToDO)
-        .toList();
+    List<FlowCategoryVO> all = categoryRepository.findAll(tid);
     all.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
     if (all.isEmpty()) {
       return List.of();
     }
-    List<FlowCategoryTreeVO> flatList = converter.flowCategoryListToTreeVO(all);
+    List<FlowCategoryTreeVO> flatList = all.stream()
+        .map(this::toTreeVO)
+        .toList();
     return TreeBuilder.buildSimple(
         flatList,
         FlowCategoryTreeVO::getId,
@@ -178,7 +171,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .build();
     }
 
-    FlowCategory category = new FlowCategory();
+    FlowCategoryVO category = new FlowCategoryVO();
     category.setCategoryCode(dto.getCategoryCode());
     category.setCategoryName(dto.getCategoryName());
     category.setParentId(dto.getParentId());
@@ -186,7 +179,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     category.setIcon(dto.getIcon());
     category.setRemark(dto.getRemark());
     category.setTenantId(tid);
-    categoryRepository.save(converter.entityToVO(category));
+    categoryRepository.save(category);
     log.info(
         "[FlowCategory] 新增分类: code={} name={} id={}",
         category.getCategoryCode(),
@@ -213,7 +206,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .message("error.workflow.msg_id_required")
           .build();
     }
-    FlowCategory existing = categoryRepository.findById(dto.getId()).map(converter::entityToDO).orElse(null);
+    FlowCategoryVO existing = categoryRepository.findById(dto.getId()).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -234,7 +227,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     if (dto.getRemark() != null) {
       existing.setRemark(dto.getRemark());
     }
-    categoryRepository.update(converter.entityToVO(existing));
+    categoryRepository.update(existing);
   }
 
   /**
@@ -257,7 +250,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void delete(String id) {
-    FlowCategory existing = categoryRepository.findById(id).map(converter::entityToDO).orElse(null);
+    FlowCategoryVO existing = categoryRepository.findById(id).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       return;
     }
@@ -278,6 +271,24 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .build();
     }
     existing.setDeleted(1);
-    categoryRepository.update(converter.entityToVO(existing));
+    categoryRepository.update(existing);
+  }
+
+  /**
+   * 将 FlowCategoryVO 转换为 FlowCategoryTreeVO（复制基础字段）。
+   *
+   * @param vo 分类 VO
+   * @return 分类树 VO
+   */
+  private FlowCategoryTreeVO toTreeVO(FlowCategoryVO vo) {
+    FlowCategoryTreeVO treeVO = new FlowCategoryTreeVO();
+    treeVO.setId(vo.getId());
+    treeVO.setParentId(vo.getParentId());
+    treeVO.setCategoryCode(vo.getCategoryCode());
+    treeVO.setCategoryName(vo.getCategoryName());
+    treeVO.setSortNum(vo.getSortNum());
+    treeVO.setIcon(vo.getIcon());
+    treeVO.setRemark(vo.getRemark());
+    return treeVO;
   }
 }

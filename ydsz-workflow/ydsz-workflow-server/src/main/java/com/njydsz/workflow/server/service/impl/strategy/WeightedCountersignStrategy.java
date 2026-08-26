@@ -81,7 +81,7 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
     int newApproved = currentApproved + weight;
     task.setApproveWeight(newApproved);
 
-    int updated = taskRepository.update(converter.entityToVO(task)) != null ? 1 : 0;
+    int updated = taskRepository.update(task) != null ? 1 : 0;
     if (updated == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)

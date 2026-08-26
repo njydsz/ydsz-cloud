@@ -18,9 +18,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisTask;
 import com.njydsz.workflow.server.service.FlowExportService;
 
 /**
@@ -83,7 +82,7 @@ import com.njydsz.workflow.server.service.FlowExportService;
  * @since 1.0.0
  * @see FlowExportService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowInstanceVO 流程实例视图对象
- * @see com.njydsz.workflow.infra.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.domain.vo.FlowHisTaskVO 历史任务视图对象
  */
 @Slf4j
 @Service
@@ -104,14 +103,13 @@ public class FlowExportServiceImpl implements FlowExportService {
 
   private final FlowInstanceRepository instanceRepository;
   private final FlowHisTaskRepository hisTaskRepository;
-  private final WorkflowConverter converter;
 
   private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   @Override
   public String exportHtml(String instanceId, String userId, String userName) {
     FlowInstanceVO instance = loadInstance(instanceId);
-    List<FlowHisTask> history = loadHistory(instanceId);
+    List<FlowHisTaskVO> history = loadHistory(instanceId);
     Map<String, Object> formData = parseVariables(instance.getVariable());
     String watermark = buildWatermark(userName != null ? userName : userId, instanceId);
 
@@ -226,12 +224,12 @@ public class FlowExportServiceImpl implements FlowExportService {
    * @param html 参数说明
    * @param history 参数说明
    */
-  private void appendTimeline(StringBuilder html, List<FlowHisTask> history) {
+  private void appendTimeline(StringBuilder html, List<FlowHisTaskVO> history) {
     html.append("<h2>审批轨迹</h2><div class=\"timeline\">");
     if (history.isEmpty()) {
       html.append("<div class=\"timeline-item\" style=\"color:#999;\">暂无审批记录</div>");
     } else {
-      for (FlowHisTask task : history) {
+      for (FlowHisTaskVO task : history) {
         appendTimelineItem(html, task);
       }
     }
@@ -244,7 +242,7 @@ public class FlowExportServiceImpl implements FlowExportService {
    * @param html 参数说明
    * @param task 参数说明
    */
-  private void appendTimelineItem(StringBuilder html, FlowHisTask task) {
+  private void appendTimelineItem(StringBuilder html, FlowHisTaskVO task) {
     html.append("<div class=\"timeline-item\">");
     html.append("<span class=\"timeline-node\">")
         .append(escapeHtml(task.getNodeName() != null ? task.getNodeName() : "-"))
@@ -295,8 +293,8 @@ public class FlowExportServiceImpl implements FlowExportService {
     return instance;
   }
 
-  private List<FlowHisTask> loadHistory(String instanceId) {
-    List<FlowHisTask> history = hisTaskRepository.findByInstanceId(instanceId).stream().map(converter::entityToDO).collect(Collectors.toList());
+  private List<FlowHisTaskVO> loadHistory(String instanceId) {
+    List<FlowHisTaskVO> history = hisTaskRepository.findByInstanceId(instanceId);
     return history != null ? history : new ArrayList<>();
   }
 

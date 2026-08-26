@@ -23,10 +23,9 @@ import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowSkip;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 
 /**
@@ -63,9 +62,6 @@ public class FlowDefinitionMigrationManager {
   /** 流程实例仓储（变更影响分析） */
   private final FlowInstanceRepository instanceRepository;
 
-  /** DO/VO 转换器 */
-  private final WorkflowConverter converter;
-
   /** 流程定义元数据缓存 */
   private final FlowDefinitionCacheService flowDefinitionCacheService;
 
@@ -80,7 +76,6 @@ public class FlowDefinitionMigrationManager {
       FlowNodeRepository nodeRepository,
       FlowSkipRepository skipRepository,
       FlowInstanceRepository instanceRepository,
-      WorkflowConverter converter,
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowDefinitionDeployManager deployManager,
       FlowDefinitionQueryService queryService) {
@@ -88,7 +83,6 @@ public class FlowDefinitionMigrationManager {
     this.nodeRepository = nodeRepository;
     this.skipRepository = skipRepository;
     this.instanceRepository = instanceRepository;
-    this.converter = converter;
     this.flowDefinitionCacheService = flowDefinitionCacheService;
     this.deployManager = deployManager;
     this.queryService = queryService;
@@ -242,9 +236,9 @@ public class FlowDefinitionMigrationManager {
    */
   @Transactional(readOnly = true)
   public Map<String, Object> diffVersions(String definitionId, Integer version1, Integer version2) {
-    FlowDefinition baseDef = findDefinitionOrThrow(definitionId);
-    FlowDefinition defV1 = findVersionOrThrow(baseDef.getFlowCode(), version1);
-    FlowDefinition defV2 = findVersionOrThrow(baseDef.getFlowCode(), version2);
+    FlowDefinitionVO baseDef = findDefinitionOrThrow(definitionId);
+    FlowDefinitionVO defV1 = findVersionOrThrow(baseDef.getFlowCode(), version1);
+    FlowDefinitionVO defV2 = findVersionOrThrow(baseDef.getFlowCode(), version2);
 
     VersionDiffContext ctx = loadVersionContext(defV1, defV2);
     Map<String, Object> nodeDiff = diffNodes(ctx.nodeMapV1, ctx.nodeMapV2);
@@ -275,7 +269,7 @@ public class FlowDefinitionMigrationManager {
           .build();
     }
 
-    FlowDefinition oldDef = definitionRepository.findById(oldDefinitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinitionVO oldDef = definitionRepository.findById(oldDefinitionId).orElse(null);
     if (oldDef == null || (oldDef.getDeleted() != null && oldDef.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -283,7 +277,7 @@ public class FlowDefinitionMigrationManager {
           .params(oldDefinitionId)
           .build();
     }
-    FlowDefinition newDef = definitionRepository.findById(newDefinitionId).map(converter::entityToDO).orElse(null);
+    FlowDefinitionVO newDef = definitionRepository.findById(newDefinitionId).orElse(null);
     if (newDef == null || (newDef.getDeleted() != null && newDef.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -401,9 +395,8 @@ public class FlowDefinitionMigrationManager {
    * @param definitionId 参数说明
    * @return 返回值说明
    */
-  private FlowDefinition findDefinitionOrThrow(String definitionId) {
-    FlowDefinition def = definitionRepository.findById(definitionId)
-        .map(converter::entityToDO)
+  private FlowDefinitionVO findDefinitionOrThrow(String definitionId) {
+    FlowDefinitionVO def = definitionRepository.findById(definitionId)
         .orElse(null);
     if (def == null) {
       throw SysException.builder()
@@ -421,10 +414,9 @@ public class FlowDefinitionMigrationManager {
    * @param version 参数说明
    * @return 返回值说明
    */
-  private FlowDefinition findVersionOrThrow(String flowCode, Integer version) {
+  private FlowDefinitionVO findVersionOrThrow(String flowCode, Integer version) {
     String versionStr = String.valueOf(version);
-    FlowDefinition def = definitionRepository.findByFlowCode(flowCode).stream()
-        .map(converter::entityToDO)
+    FlowDefinitionVO def = definitionRepository.findByFlowCode(flowCode).stream()
         .filter(d -> versionStr.equals(d.getFlowVersion()))
         .findFirst()
         .orElse(null);

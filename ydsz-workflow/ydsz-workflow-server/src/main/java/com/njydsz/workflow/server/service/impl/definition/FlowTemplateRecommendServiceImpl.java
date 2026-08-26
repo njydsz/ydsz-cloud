@@ -14,9 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowTemplateRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowInstance;
-import com.njydsz.workflow.infra.entity.FlowTemplate;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowTemplateVO;
 import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
 
 /**
@@ -45,7 +44,6 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
 
   private final FlowTemplateRepository templateRepository;
   private final FlowInstanceRepository instanceRepository;
-  private final WorkflowConverter converter;
 
   /** 业务类型到模板分类的映射 */
   private static final Map<String, String> BUSINESS_CATEGORY_MAP = new LinkedHashMap<>();
@@ -74,9 +72,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     int limit = Math.min(topN, 10);
 
     // 1. 获取全部模板（最新版本）
-    List<FlowTemplate> allTemplates = templateRepository.findLatestByCategory(null).stream()
-        .map(converter::entityToDO)
-        .toList();
+    List<FlowTemplateVO> allTemplates = templateRepository.findLatestByCategory(null);
     if (allTemplates == null || allTemplates.isEmpty()) {
       return List.of();
     }
@@ -84,11 +80,9 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     // 2. 获取用户历史发起记录
     Map<String, Integer> userFlowCount = new LinkedHashMap<>();
     try {
-      List<FlowInstance> instances = instanceRepository.selectByInitiator(userId, null).stream()
-          .map(converter::entityToDO)
-          .toList();
+      List<FlowInstanceVO> instances = instanceRepository.selectByInitiator(userId, null);
       if (instances != null) {
-        for (FlowInstance inst : instances) {
+        for (FlowInstanceVO inst : instances) {
           String flowCode = inst.getFlowCode();
           userFlowCount.merge(flowCode, 1, Integer::sum);
         }
@@ -106,7 +100,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             .orElse(1);
 
     List<Map<String, Object>> scored = new ArrayList<>();
-    for (FlowTemplate template : allTemplates) {
+    for (FlowTemplateVO template : allTemplates) {
       double score = 0.0;
       String reason = "";
 
@@ -163,31 +157,27 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             businessType != null ? businessType.toUpperCase() : "", "GENERAL");
 
     // 获取该分类的模板
-    List<FlowTemplate> templates = templateRepository.findLatestByCategory(targetCategory).stream()
-        .map(converter::entityToDO)
-        .toList();
+    List<FlowTemplateVO> templates = templateRepository.findLatestByCategory(targetCategory);
     if (templates.isEmpty()) {
       // 兜底：返回全部模板
-      templates = templateRepository.findLatestByCategory(null).stream()
-          .map(converter::entityToDO)
-          .toList();
+      templates = templateRepository.findLatestByCategory(null);
       if (templates == null || templates.isEmpty()) {
         return List.of();
       }
     }
 
     // 按 use_count 降序排序
-    List<FlowTemplate> sorted =
+    List<FlowTemplateVO> sorted =
         templates.stream()
             .sorted(
                 Comparator.comparing(
-                    (FlowTemplate t) -> t.getUseCount() != null ? t.getUseCount() : 0,
+                    (FlowTemplateVO t) -> t.getUseCount() != null ? t.getUseCount() : 0,
                     Comparator.reverseOrder()))
             .limit(limit)
             .collect(Collectors.toList());
 
     List<Map<String, Object>> result = new ArrayList<>();
-    for (FlowTemplate template : sorted) {
+    for (FlowTemplateVO template : sorted) {
       Map<String, Object> item = new LinkedHashMap<>();
       item.put("templateCode", template.getTemplateCode());
       item.put("templateName", template.getTemplateName());

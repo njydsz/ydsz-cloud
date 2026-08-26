@@ -35,6 +35,8 @@ public class FlowCcVO implements Serializable {
   private String readStatus;
   private LocalDateTime readAt;
   private String providerTraceId;
+  /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
+  private String tenantId;
   private String createdBy;
   private LocalDateTime createdAt;
   private String updatedBy;

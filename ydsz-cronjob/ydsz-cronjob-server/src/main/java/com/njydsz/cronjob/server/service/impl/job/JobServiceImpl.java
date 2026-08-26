@@ -803,7 +803,15 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public boolean register(JobPostDTO dto) {
-    JobVO jobVo = dtoToJob(dto);
+    return registerInternal(dtoToJob(dto));
+  }
+
+  /**
+   * 注册任务到调度器（核心逻辑，基于 JobVO）。
+   *
+   * <p>供 {@link #register(JobPostDTO)} 与 {@link #reschedule(JobPutDTO)} 复用，避免 DTO 类型不一致导致重复实现。
+   */
+  private boolean registerInternal(JobVO jobVo) {
     if (!"NORMAL".equals(jobVo.getStatus())) {
       return false;
     }
@@ -933,7 +941,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   public boolean reschedule(JobPutDTO dto) {
     JobVO jobVo = dtoToJob(dto);
     unregister(jobVo.getJobKey());
-    return register(dto);
+    return registerInternal(jobVo);
   }
 
   /**

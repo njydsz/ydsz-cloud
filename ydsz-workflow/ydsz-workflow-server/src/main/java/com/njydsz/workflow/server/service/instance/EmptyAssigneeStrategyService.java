@@ -151,7 +151,7 @@ public class EmptyAssigneeStrategyService {
     LocalDateTime now = LocalDateTime.now();
     task.setFinishAt(now);
     task.setDurationMs(0L);
-    taskRepository.save(converter.entityToVO(task));
+    taskRepository.save(task);
     archiveService.archiveToHistory(task, com.njydsz.workflow.domain.enums.FlowTaskStatus.COMPLETED);
     support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
     log.info("[Flow] 审批人为空自动通过: instanceId={} node={}", instance.getId(), node.getNodeCode());

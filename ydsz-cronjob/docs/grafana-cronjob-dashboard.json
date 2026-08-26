@@ -1,0 +1,135 @@
+{
+  "__inputs": [],
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "title": "任务执行速率（execution_total rate）",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(cronjob_execution_total[5m]))",
+          "legendFormat": "总执行/s"
+        },
+        {
+          "expr": "topk(10, sum by (job_name) (rate(cronjob_execution_total[5m])))",
+          "legendFormat": "{{job_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops", "custom": { "drawStyle": "line", "lineWidth": 1 } }
+      }
+    },
+    {
+      "title": "任务执行耗时（execution_duration）",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(cronjob_execution_duration_bucket[5m])))",
+          "legendFormat": "P99"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(cronjob_execution_duration_bucket[5m])))",
+          "legendFormat": "P95"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "title": "调度触发延迟（dispatch_delay，调度精度核心指标）",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "description": "next_fire_time 到实际派发的延迟。5s 扫描模式 P99 接近 5s；启用 preload 秒级预读后显著下降。",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(cronjob_dispatch_delay_bucket[5m])))",
+          "legendFormat": "P99"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(cronjob_dispatch_delay_bucket[5m])))",
+          "legendFormat": "P50"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "title": "分片成功/失败（shard_*_total）",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(cronjob_shard_success_total[5m]))",
+          "legendFormat": "分片成功/s"
+        },
+        {
+          "expr": "sum(rate(cronjob_shard_failure_total[5m]))",
+          "legendFormat": "分片失败/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops", "custom": { "drawStyle": "bars" } }
+      }
+    },
+    {
+      "title": "扫描器状态（scanner 指标）",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "cronjob_scanner_scanning",
+          "legendFormat": "扫描中"
+        },
+        {
+          "expr": "cronjob_scanner_last_scan_due_jobs",
+          "legendFormat": "上次扫描待触发数"
+        }
+      ]
+    },
+    {
+      "title": "调度器-执行器线程池",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 16 },
+      "targets": [
+        {
+          "expr": "cronjob_executor_pool_active",
+          "legendFormat": "活跃线程"
+        },
+        {
+          "expr": "cronjob_executor_pool_queue_depth",
+          "legendFormat": "队列深度"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "title": "告警触发（alert 指标）",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(rate(cronjob_alert_total[5m]))",
+          "legendFormat": "告警/s"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ydsz", "cronjob", "scheduler"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "YDSZ CronJob 调度引擎",
+  "uid": "ydsz-cronjob-dashboard",
+  "version": 1
+}

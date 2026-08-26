@@ -47,7 +47,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
   public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
     task.setApproveFinished(finished);
-    int updated = taskRepository.update(converter.entityToVO(task)) != null ? 1 : 0;
+    int updated = taskRepository.update(task) != null ? 1 : 0;
     if (updated == 0) {
       // 乐观锁冲突，抛异常由调用方处理
       throw SysException.builder()
