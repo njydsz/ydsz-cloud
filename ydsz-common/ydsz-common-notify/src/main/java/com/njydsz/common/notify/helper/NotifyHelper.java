@@ -28,8 +28,8 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  * notifyHelper.sendInApp("user-123", "审批提醒", "您有一条待审批任务");
  *
  * // IM 渠道通知
- * notifyHelper.sendDingTalk(webhookUrl, "系统告警", "CPU 使用率超过 90%");
- * notifyHelper.sendFeishu(webhookUrl, "系统告警", "CPU 使用率超过 90%");
+ * notifyHelper.sendHmac(webhookUrl, "系统告警", "CPU 使用率超过 90%");
+ * notifyHelper.sendWebhook(webhookUrl, "系统告警", "CPU 使用率超过 90%");
  * notifyHelper.sendWeCom(webhookUrl, "系统告警", "CPU 使用率超过 90%");
  *
  * // 邮件通知
@@ -113,46 +113,46 @@ public class NotifyHelper {
   }
 
   /**
-   * 发送钉钉通知（通过 Webhook 发送文本消息到钉钉群机器人）。
+   * 发送 HMAC 签名通知（通过 Webhook 发送文本消息到群机器人）。
    *
-   * @param webhookUrl 钉钉群机器人的 Webhook URL（含 access_token）
+   * @param webhookUrl 群机器人的 Webhook URL
    * @param title 消息标题
    * @param content 消息内容（Markdown 格式）
    */
-  public void sendDingTalk(String webhookUrl, String title, String content) {
+  public void sendHmac(String webhookUrl, String title, String content) {
     try {
       NotifySendResult result =
-          notifyService.send(NotifyChannel.DINGTALK, webhookUrl, title, content);
+          notifyService.send(NotifyChannel.HMAC, webhookUrl, title, content);
       if (!result.isSuccess()) {
         log.warn(
-            "[NotifyHelper] 钉钉通知发送失败: receiver={}, reason={}",
+            "[NotifyHelper] HMAC 通知发送失败: receiver={}, reason={}",
             webhookUrl,
             result.getErrorMessage());
       }
     } catch (Exception e) {
-      log.warn("[NotifyHelper] 钉钉通知发送异常: receiver={}, error={}", webhookUrl, e.getMessage(), e);
+      log.warn("[NotifyHelper] HMAC 通知发送异常: receiver={}, error={}", webhookUrl, e.getMessage(), e);
     }
   }
 
   /**
-   * 发送飞书通知（通过 Webhook 发送文本消息到飞书群机器人）。
+   * 发送 Webhook 通知（通过 Webhook 发送文本消息到群机器人）。
    *
-   * @param webhookUrl 飞书群机器人的 Webhook URL（含 key）
+   * @param webhookUrl 群机器人的 Webhook URL
    * @param title 消息标题
    * @param content 消息内容
    */
-  public void sendFeishu(String webhookUrl, String title, String content) {
+  public void sendWebhook(String webhookUrl, String title, String content) {
     try {
       NotifySendResult result =
-          notifyService.send(NotifyChannel.FEISHU, webhookUrl, title, content);
+          notifyService.send(NotifyChannel.WEBHOOK, webhookUrl, title, content);
       if (!result.isSuccess()) {
         log.warn(
-            "[NotifyHelper] 飞书通知发送失败: receiver={}, reason={}",
+            "[NotifyHelper] Webhook 通知发送失败: receiver={}, reason={}",
             webhookUrl,
             result.getErrorMessage());
       }
     } catch (Exception e) {
-      log.warn("[NotifyHelper] 飞书通知发送异常: receiver={}, error={}", webhookUrl, e.getMessage(), e);
+      log.warn("[NotifyHelper] Webhook 通知发送异常: receiver={}, error={}", webhookUrl, e.getMessage(), e);
     }
   }
 

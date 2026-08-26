@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -291,7 +293,7 @@ public class BpmnXmlParser {
       // 解析器配置错误：不可重试（JVM 环境问题）
       log.error("[BpmnParser] 解析器配置异常: {}", e.getMessage(), e);
       throw SysException.builder()
-          .resultCode(YdszResultCode.SYSTEM_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_3db1015b")
           .params("解析器配置异常: " + e.getMessage())
           .build();
@@ -299,7 +301,7 @@ public class BpmnXmlParser {
       // IO 异常：理论上 StringReader 不会触发，作为兜底
       log.error("[BpmnParser] IO 异常: {}", e.getMessage(), e);
       throw SysException.builder()
-          .resultCode(YdszResultCode.SYSTEM_ERROR)
+          .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.msg_3db1015b")
           .params("读取异常: " + e.getMessage())
           .build();

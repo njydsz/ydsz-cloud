@@ -65,7 +65,7 @@ public class FlowTaskAuditService {
       logEntry.setProviderTraceId(task.getProviderTraceId());
       auditLogRepository.save(logEntry);
     } catch (Exception e) {
-      FlowTaskAuditService.log.warn(
+      log.warn(
           "[Flow] 委派代理日志写入失败: taskId={} err={}", task.getId(), e.getMessage());
     }
   }

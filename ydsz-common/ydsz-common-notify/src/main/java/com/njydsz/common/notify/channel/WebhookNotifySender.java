@@ -17,21 +17,21 @@ import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.template.TemplateEngine;
 
 /**
- * 飞书通知发送器
+ * Webhook 通知发送器
  *
- * <p>通过飞书群机器人 Webhook 发送消息。
+ * <p>通过群机器人 Webhook 发送消息。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(prefix = "ydsz.notify.feishu", name = "webhook")
-public class FeishuNotifySender implements NotifyChannelStrategy {
+@ConditionalOnProperty(prefix = "ydsz.notify.webhook", name = "url")
+public class WebhookNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger LOG = LoggerFactory.getLogger(FeishuNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WebhookNotifySender.class);
 
-  /** 飞书群机器人 Webhook 地址 */
-  @Value("${ydsz.notify.feishu.webhook:}")
+  /** 群机器人 Webhook 地址 */
+  @Value("${ydsz.notify.webhook.url:}")
   private String webhook;
 
   /** HTTP 请求客户端 */
@@ -41,33 +41,33 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
   private final TemplateEngine templateEngine;
 
   /**
-   * 构造飞书通知发送器
+   * 构造 Webhook 通知发送器
    *
    * @param restTemplate HTTP 请求客户端
    * @param templateEngine 模板引擎
    */
-  public FeishuNotifySender(RestTemplate restTemplate, TemplateEngine templateEngine) {
+  public WebhookNotifySender(RestTemplate restTemplate, TemplateEngine templateEngine) {
     this.restTemplate = restTemplate;
     this.templateEngine = templateEngine;
   }
 
   @Override
   public NotifyChannel getChannel() {
-    return NotifyChannel.FEISHU;
+    return NotifyChannel.WEBHOOK;
   }
 
   /**
-   * 发送飞书通知
+   * 发送 Webhook 通知
    *
-   * @param receiver 接收者（飞书 Webhook 模式下可为 null）
+   * @param receiver 接收者（Webhook 模式下可为 null）
    * @param title 消息标题
-   * @param content 消息内容（支持 Lark Markdown 语法）
+   * @param content 消息内容
    * @return 发送结果
    */
   @Override
   public NotifySendResult send(String receiver, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("飞书通知未启用", getChannel().getName());
+      return NotifySendResult.failure("Webhook 通知未启用", getChannel().getName());
     }
     try {
       Map<String, Object> body =
@@ -88,16 +88,16 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
       String response =
           restTemplate.postForObject(
               webhook, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
-      LOG.debug("飞书通知发送成功: {}", title);
+      LOG.debug("Webhook 通知发送成功: {}", title);
       return NotifySendResult.success(response, getChannel().getName());
     } catch (Exception e) {
-      LOG.error("飞书通知发送失败: {}", e.getMessage(), e);
+      LOG.error("Webhook 通知发送失败: {}", e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     }
   }
 
   /**
-   * 使用模板发送飞书通知
+   * 使用模板发送通知
    *
    * @param receiver 接收者（可为 null）
    * @param templateCode 模板编码
@@ -113,7 +113,7 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
   }
 
   /**
-   * 批量发送飞书通知
+   * 批量发送通知
    *
    * @param receivers 接收者列表
    * @param title 消息标题
@@ -126,7 +126,7 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
   }
 
   /**
-   * 判断飞书渠道是否启用
+   * 判断渠道是否启用
    *
    * @return 启用返回 true，否则返回 false
    */

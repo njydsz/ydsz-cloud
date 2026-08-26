@@ -14,7 +14,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
-import com.njydsz.common.feign.dto.NotificationFeignDTO;
+import lombok.Data;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 
@@ -106,7 +106,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * @see FlowNotificationService 接口定义
  * @see NotificationClient 通知中心 Feign 客户端
  * @see MessageRequest 消息请求 DTO
- * @see NotificationFeignDTO 通知 Feign DTO
+ * @see FlowNotificationServiceImpl.NotificationFeignDTO 通知 Feign DTO
  * @see FlowSensitiveMasker 敏感数据脱敏器
  * @see MessageResult 消息发送结果
  */
@@ -552,5 +552,27 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       log.warn("[FlowNotificationServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * 通知 Feign DTO — 内部使用，用于封装通知请求参数。
+   *
+   * <p>替代原来依赖 {@code com.njydsz.common.feign.dto.NotificationFeignDTO} 的外部类。
+   */
+  @Data
+  public static class NotificationFeignDTO implements java.io.Serializable {
+    @java.io.Serial private static final long serialVersionUID = 1L;
+    private String title;
+    private String content;
+    private String level;
+    private String category;
+    private String senderId;
+    private String receiverId;
+    private java.util.List<Long> receiverIds;
+    private String bizType;
+    private String bizId;
+    private java.time.LocalDateTime expiredAt;
+    private Boolean emailEnabled;
+    private String receiverEmail;
   }
 }

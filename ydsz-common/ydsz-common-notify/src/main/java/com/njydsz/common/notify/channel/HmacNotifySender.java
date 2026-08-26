@@ -22,9 +22,9 @@ import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.template.TemplateEngine;
 
 /**
- * 钉钉通知发送器
+ * HMAC 签名通知发送器
  *
- * <p>通过钉钉群机器人 Webhook 发送消息。
+ * <p>通过群机器人 Webhook 发送消息，支持 HMAC-SHA256 签名校验。
  *
  * <p>支持安全设置：当配置了 secret 时，自动使用 HMAC-SHA256 签名校验， 将 {@code timestamp} 和 {@code sign} 参数拼接到 webhook
  * URL 中。
@@ -33,42 +33,42 @@ import com.njydsz.common.notify.template.TemplateEngine;
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(prefix = "ydsz.notify.dingtalk", name = "webhook")
-public class DingTalkNotifySender implements NotifyChannelStrategy {
+@ConditionalOnProperty(prefix = "ydsz.notify.hmac", name = "webhook")
+public class HmacNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DingTalkNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HmacNotifySender.class);
 
   private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
 
-  @Value("${ydsz.notify.dingtalk.webhook:}")
+  @Value("${ydsz.notify.hmac.webhook:}")
   private String webhook;
 
-  @Value("${ydsz.notify.dingtalk.secret:}")
+  @Value("${ydsz.notify.hmac.secret:}")
   private String secret;
 
   private final RestTemplate restTemplate;
   private final TemplateEngine templateEngine;
 
   /**
-   * 构造钉钉通知发送器
+   * 构造 HMAC 签名通知发送器
    *
    * @param restTemplate HTTP 请求客户端
    * @param templateEngine 模板引擎
    */
-  public DingTalkNotifySender(RestTemplate restTemplate, TemplateEngine templateEngine) {
+  public HmacNotifySender(RestTemplate restTemplate, TemplateEngine templateEngine) {
     this.restTemplate = restTemplate;
     this.templateEngine = templateEngine;
   }
 
   @Override
   public NotifyChannel getChannel() {
-    return NotifyChannel.DINGTALK;
+    return NotifyChannel.HMAC;
   }
 
   /**
-   * 发送钉钉通知
+   * 发送通知
    *
-   * @param receiver 接收者（钉钉 Webhook 模式下可为 null）
+   * @param receiver 接收者（Webhook 模式下可为 null）
    * @param title 消息标题
    * @param content 消息内容
    * @return 发送结果
@@ -76,7 +76,7 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult send(String receiver, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("钉钉通知未启用", getChannel().getName());
+      return NotifySendResult.failure("HMAC 通知未启用", getChannel().getName());
     }
     try {
       Map<String, Object> body =
@@ -90,18 +90,16 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
       String response =
           restTemplate.postForObject(
               signedUrl, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
-      LOG.debug("钉钉通知发送成功: {}", title);
+      LOG.debug("HMAC 通知发送成功: {}", title);
       return NotifySendResult.success(response, getChannel().getName());
     } catch (Exception e) {
-      LOG.error("钉钉通知发送失败: {}", e.getMessage(), e);
+      LOG.error("HMAC 通知发送失败: {}", e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     }
   }
 
   /**
    * 对 webhook URL 进行签名（当配置了 secret 时）
-   *
-   * <p>钉钉 API 要求：将 timestamp 和 sign 拼接到 URL 查询参数中。
    *
    * <p>签名算法：HMAC-SHA256，待签名字符串为 {@code timestamp + "\n" + secret}。
    *
@@ -121,13 +119,13 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
           URLEncoder.encode(Base64.getEncoder().encodeToString(signData), StandardCharsets.UTF_8);
       return url + (url.contains("?") ? "&" : "?") + "timestamp=" + timestamp + "&sign=" + sign;
     } catch (Exception e) {
-      LOG.error("钉钉 webhook 签名失败: {}", e.getMessage(), e);
+      LOG.error("HMAC webhook 签名失败: {}", e.getMessage(), e);
       return url;
     }
   }
 
   /**
-   * 使用模板发送钉钉通知
+   * 使用模板发送通知
    *
    * @param receiver 接收者（可为 null）
    * @param templateCode 模板编码
@@ -143,7 +141,7 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
   }
 
   /**
-   * 批量发送钉钉通知
+   * 批量发送通知
    *
    * @param receivers 接收者列表
    * @param title 消息标题
@@ -156,7 +154,7 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
   }
 
   /**
-   * 判断钉钉渠道是否启用
+   * 判断渠道是否启用
    *
    * @return 启用返回 true，否则返回 false
    */

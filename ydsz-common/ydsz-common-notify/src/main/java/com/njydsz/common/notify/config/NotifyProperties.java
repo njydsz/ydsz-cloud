@@ -37,11 +37,11 @@ public class NotifyProperties {
   /** 企业微信渠道配置 */
   private WeComConfig wecom = new WeComConfig();
 
-  /** 钉钉渠道配置 */
-  private DingTalkConfig dingtalk = new DingTalkConfig();
+  /** HMAC 签名渠道配置 */
+  private HmacConfig hmac = new HmacConfig();
 
-  /** 飞书渠道配置 */
-  private FeishuConfig feishu = new FeishuConfig();
+  /** Webhook 渠道配置 */
+  private WebhookConfig webhook = new WebhookConfig();
 
   /** 站内信渠道配置 */
   private InsiteConfig insite = new InsiteConfig();
@@ -312,11 +312,11 @@ public class NotifyProperties {
     private long tokenRefreshInterval = 7200;
   }
 
-  /** 钉钉渠道配置 */
+  /** HMAC 签名渠道配置 */
   @Data
-  public static class DingTalkConfig {
+  public static class HmacConfig {
 
-    /** 是否启用钉钉渠道 */
+    /** 是否启用 HMAC 渠道 */
     private boolean enabled;
 
     /** 应用 Key */
@@ -332,11 +332,11 @@ public class NotifyProperties {
     private String webhookSecret;
   }
 
-  /** 飞书渠道配置 */
+  /** Webhook 渠道配置 */
   @Data
-  public static class FeishuConfig {
+  public static class WebhookConfig {
 
-    /** 是否启用飞书渠道 */
+    /** 是否启用 Webhook 渠道 */
     private boolean enabled;
 
     /** 应用 ID */

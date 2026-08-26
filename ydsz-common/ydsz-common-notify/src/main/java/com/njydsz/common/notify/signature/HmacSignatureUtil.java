@@ -3,19 +3,19 @@ package com.njydsz.common.notify.signature;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
- * IM 平台回调签名验证工具。
+ * IM 平台回调签名验证工具（HmacSHA256 算法）。
  *
  * <p>P0-2: 从 workflow 模块迁移到 common-notify，作为通用 IM 签名能力。 供 workflow 三方审批回调验证、common-notify
- * DingTalkNotifySender 等场景共用。
+ * 通知Sender 等场景共用。
  *
  * <p>算法：HmacSHA256，密钥为 appSecret，签名内容为 timestamp + nonce + encrypt， 计算结果经 Base64 编码后与回调签名比对。
  *
  * @since 1.0.0
  * @author ydsz-team
  */
-public final class DingTalkSignatureUtil {
+public final class HmacSignatureUtil {
 
-  private DingTalkSignatureUtil() {}
+  private HmacSignatureUtil() {}
 
   /**
    * 验证 IM 平台回调签名

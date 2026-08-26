@@ -6,21 +6,21 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
- * IM 平台回调签名验证工具。
+ * IM 平台回调签名验证工具（SHA256 算法）。
  *
  * <p>P0-2: 从 workflow 模块迁移到 common-notify，作为通用 IM 签名能力。 供 workflow 三方审批回调验证、common-notify
- * FeishuNotifySender 等场景共用。
+ * 通知Sender 等场景共用。
  *
  * <p>算法：SHA256(timestamp + nonce + encrypt + appSecret)，结果以十六进制小写编码后与回调签名比对。
  *
  * @since 1.0.0
  * @author ydsz-team
  */
-public final class FeishuSignatureUtil {
+public final class Sha256SignatureUtil {
 
-  private static final Logger LOG = LoggerFactory.getLogger(FeishuSignatureUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(Sha256SignatureUtil.class);
 
-  private FeishuSignatureUtil() {}
+  private Sha256SignatureUtil() {}
 
   /**
    * 验证 IM 平台回调签名
@@ -42,7 +42,7 @@ public final class FeishuSignatureUtil {
       String computed = DigestUtils.sha256Hex(data);
       return constantTimeEquals(computed, signature.toLowerCase());
     } catch (Exception e) {
-      LOG.warn("[FeishuSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
+      LOG.warn("[Sha256SignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
       return false;
     }
   }

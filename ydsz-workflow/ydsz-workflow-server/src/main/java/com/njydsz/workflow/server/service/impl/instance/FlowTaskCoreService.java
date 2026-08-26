@@ -39,13 +39,13 @@ import com.njydsz.workflow.server.form.FlowFormEngineService;
 import com.njydsz.workflow.server.form.FlowFormSchema;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
-import com.njydsz.workflow.server.service.FlowDefinitionCacheService;
+import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.service.FlowFormFieldPermService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.CountersignStrategyFactory;
-import com.njydsz.workflow.server.service.impl.FlowTaskAuditService;
+import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
 
 /**
  * 任务核心操作服务（由 FlowTaskPassService + FlowTaskRejectService + FlowTaskCompleteServiceImpl 合并）

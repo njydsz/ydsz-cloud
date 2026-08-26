@@ -28,21 +28,19 @@ import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.ChannelProperties;
 
 /**
- * 飞书群机器人通道。
+ * Post 消息群机器人通道。
  *
- * <p>通过飞书自定义机器人 Webhook 推送通知，支持 text / post 两种消息类型。 启用加签安全模式时，需配置 {@code
- * ydsz.channel.feishu.secret}，通道会自动计算 HMAC-SHA256 签名并将 {@code timestamp / sign} 写入请求体。
+ * <p>通过自定义机器人 Webhook 推送通知，支持 text / post 两种消息类型。 启用加签安全模式时，需配置密钥，通道会自动计算 HMAC-SHA256 签名并将 {@code timestamp / sign} 写入请求体。
  *
  * <p>URL 解析优先级：
  *
  * <ol>
- *   <li>{@code params.feishuHook}（显式 hook，可为完整 URL 或 hook ID，最高优先级）
+ *   <li>{@code params.webhookHook}（显式 hook，可为完整 URL 或 hook ID，最高优先级）
  *   <li>{@code receiver} 以 http 开头时视为完整 Webhook URL，否则视为 hook ID
- *   <li>{@code ydsz.channel.feishu.default-hook}（兜底，可为完整 URL 或 hook ID）
+ *   <li>{@code ydsz.channel.post.default-hook}（兜底，可为完整 URL 或 hook ID）
  * </ol>
  *
- * <p>飞书加签：timestamp 为秒级，签名字符串 {@code timestamp + "\n" + secret}， HMAC-SHA256 密钥为 secret，结果 Base64
- * 编码。
+ * <p>加签：timestamp 为秒级，签名字符串 {@code timestamp + "\n" + secret}， HMAC-SHA256 密钥为 secret，结果 Base64 编码。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -50,7 +48,7 @@ import com.njydsz.message.server.config.ChannelProperties;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FeishuChannel implements MessageChannel {
+public class PostChannel implements MessageChannel {
   /** Map 初始容量：8 */
   private static final int MAP_CAPACITY_8 = 8;
 
@@ -60,12 +58,11 @@ public class FeishuChannel implements MessageChannel {
   /** List 初始容量：4 */
   private static final int LIST_CAPACITY_4 = 4;
 
-
   /** 通道类型 */
-  private static final String CHANNEL_TYPE = "FEISHU";
+  private static final String CHANNEL_TYPE = "POST";
 
-  /** 飞书机器人 Webhook URL 前缀（hook ID 拼接此后缀） */
-  private static final String WEBHOOK_PREFIX = "https://open.feishu.cn/open-apis/bot/v2/hook/";
+  /** 机器人 Webhook URL 前缀（hook ID 拼接此后缀） */
+  private static final String WEBHOOK_PREFIX = "https://open.example.com/open-apis/bot/v2/hook/";
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -76,10 +73,10 @@ public class FeishuChannel implements MessageChannel {
   /** HTTP 客户端，在 {@link #init()} 中按配置超时构建 */
   RestClient restClient;
 
-  /** 注入配置后按 {@code ydsz.channel.feishu.connect-timeout / read-timeout} 构建 RestClient。 */
+  /** 注入配置后按 {@code ydsz.channel.post.connect-timeout / read-timeout} 构建 RestClient。 */
   @PostConstruct
   public void init() {
-    ChannelProperties.FeishuConfig cfg = channelProperties.getChannel().getFeishu();
+    ChannelProperties.PostConfig cfg = channelProperties.getChannel().getPost();
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
     factory.setConnectTimeout(cfg.getConnectTimeout());
     factory.setReadTimeout(cfg.getReadTimeout());
@@ -89,7 +86,7 @@ public class FeishuChannel implements MessageChannel {
   /**
    * 通道类型。
    *
-   * @return FEISHU
+   * @return POST
    */
   @Override
   public String channelType() {
@@ -97,7 +94,7 @@ public class FeishuChannel implements MessageChannel {
   }
 
   /**
-   * 发送飞书消息：构造 text / post 请求体（含可选加签字段）并 POST 到 Webhook URL， 根据响应 code 判断成功 / 失败。
+   * 发送消息：构造 text / post 请求体（含可选加签字段）并 POST 到 Webhook URL， 根据响应 code 判断成功 / 失败。
    *
    * @param request 消息请求
    * @return 发送结果
@@ -106,8 +103,8 @@ public class FeishuChannel implements MessageChannel {
   public MessageResult send(MessageRequest request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
-      log.warn("[FEISHU] 未配置 hook，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, "飞书 hook 未配置");
+      log.warn("[POST] 未配置 hook，跳过发送: receiver={}", request.getReceiver());
+      return MessageResult.fail(CHANNEL_TYPE, "hook 未配置");
     }
 
     try {
@@ -124,26 +121,26 @@ public class FeishuChannel implements MessageChannel {
 
       if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
         Map<String, Object> body = YdszJson.parseMap(response.getBody());
-        // 飞书 v2 hook 返回 {"code":0,"msg":"success"}，0 表示成功
+        // v2 hook 返回 {"code":0,"msg":"success"}，0 表示成功
         int code = ((Number) body.getOrDefault("code", -1)).intValue();
         if (code == 0) {
-          log.info("[FEISHU] 发送成功");
+          log.info("[POST] 发送成功");
           return MessageResult.ok(CHANNEL_TYPE, traceId);
         }
         String msg = (String) body.getOrDefault("msg", "unknown");
-        log.error("[FEISHU] 发送失败: code={} msg={}", code, msg);
+        log.error("[POST] 发送失败: code={} msg={}", code, msg);
         return MessageResult.fail(CHANNEL_TYPE, "code=" + code + ", msg=" + msg);
       }
-      log.error("[FEISHU] 发送失败: status={}", response.getStatusCode());
+      log.error("[POST] 发送失败: status={}", response.getStatusCode());
       return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
     } catch (Exception e) {
-      log.error("[FEISHU] 发送异常: reason={}", e.getMessage(), e);
+      log.error("[POST] 发送异常: reason={}", e.getMessage(), e);
       return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
     }
   }
 
   /**
-   * 构造飞书消息请求体（含可选加签字段 timestamp / sign）。
+   * 构造消息请求体（含可选加签字段 timestamp / sign）。
    *
    * <ul>
    *   <li>msgType=post：post 富文本，含 title 与一段 text 内容
@@ -189,13 +186,13 @@ public class FeishuChannel implements MessageChannel {
       payload.put("content", textContent);
     }
 
-    String secret = channelProperties.getChannel().getFeishu().getSecret();
+    String secret = channelProperties.getChannel().getPost().getSecret();
     if (StringUtils.hasText(secret)) {
       Map<String, String> sign = appendSign(secret);
       if (sign == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.INTERNAL_ERROR)
-            .message("飞书加签失败,请检查 secret 配置")
+            .message("加签失败,请检查 secret 配置")
             .build();
       }
       payload.put("timestamp", sign.get("timestamp"));
@@ -205,7 +202,7 @@ public class FeishuChannel implements MessageChannel {
   }
 
   /**
-   * 解析 Webhook URL，优先级：params.feishuHook &gt; receiver &gt; 默认配置。 hook 值以 http 开头时直接使用，否则拼接到飞书
+   * 解析 Webhook URL，优先级：params.webhookHook > receiver > 默认配置。 hook 值以 http 开头时直接使用，否则拼接到
    * Webhook 前缀。
    *
    * @param request 消息请求
@@ -214,7 +211,7 @@ public class FeishuChannel implements MessageChannel {
   String resolveUrl(MessageRequest request) {
     Map<String, Object> params = request.getParams();
     if (params != null) {
-      Object explicit = params.get("feishuHook");
+      Object explicit = params.get("webhookHook");
       if (explicit instanceof String s && StringUtils.hasText(s)) {
         return normalizeHook(s.trim());
       }
@@ -223,7 +220,7 @@ public class FeishuChannel implements MessageChannel {
     if (StringUtils.hasText(receiver)) {
       return normalizeHook(receiver.trim());
     }
-    String defaultHook = channelProperties.getChannel().getFeishu().getDefaultHook();
+    String defaultHook = channelProperties.getChannel().getPost().getDefaultHook();
     if (StringUtils.hasText(defaultHook)) {
       return normalizeHook(defaultHook.trim());
     }
@@ -244,7 +241,7 @@ public class FeishuChannel implements MessageChannel {
   }
 
   /**
-   * 计算飞书加签。
+   * 计算加签。
    *
    * <p>签名算法：HMAC-SHA256(timestamp + "\n" + secret, secret) → Base64。 timestamp 为秒级。
    *
@@ -265,7 +262,7 @@ public class FeishuChannel implements MessageChannel {
       result.put("sign", sign);
       return result;
     } catch (Exception e) {
-      log.error("[FEISHU] 加签失败,放弃发送: {}", e.getMessage(), e);
+      log.error("[POST] 加签失败,放弃发送: {}", e.getMessage(), e);
       return null;
     }
   }

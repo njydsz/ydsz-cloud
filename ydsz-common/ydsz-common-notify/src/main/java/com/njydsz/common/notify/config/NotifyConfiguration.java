@@ -67,7 +67,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 /**
  * 统一消息通知自动配置类
  *
- * <p>各渠道 Sender（Email/SMS/WeCom/DingTalk/Feishu）通过实现 {@link NotifyChannelStrategy} 接口自动注册。 邮件渠道的
+ * <p>各渠道 Sender（Email/SMS/WeCom/HMAC/Webhook）通过实现 {@link NotifyChannelStrategy} 接口自动注册。 邮件渠道的
  * {@link JavaMailSender} Bean 由本配置类根据 {@code ydsz.notify.email} 配置自动创建。
  *
  * <p>核心能力：密码加密、SMTP 健康探活、XSS 防护、指标埋点、邮件追踪、渠道降级、 HTML 模板注册、DKIM 签名、多提供商抽象、通知偏好、去重、国际化、消息聚合、审计日志、

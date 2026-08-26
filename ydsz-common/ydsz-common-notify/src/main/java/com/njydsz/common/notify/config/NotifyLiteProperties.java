@@ -43,11 +43,11 @@ public class NotifyLiteProperties {
   /** 企业微信渠道配置 */
   private WeComConfig wecom = new WeComConfig();
 
-  /** 钉钉渠道配置 */
-  private DingTalkConfig dingtalk = new DingTalkConfig();
+  /** HMAC 签名渠道配置 */
+  private HmacConfig hmac = new HmacConfig();
 
-  /** 飞书渠道配置 */
-  private FeishuConfig feishu = new FeishuConfig();
+  /** Webhook 渠道配置 */
+  private WebhookConfig webhook = new WebhookConfig();
 
   /** 邮件渠道简化配置 */
   @Data
@@ -110,11 +110,11 @@ public class NotifyLiteProperties {
     private String webhookKey;
   }
 
-  /** 钉钉渠道简化配置 */
+  /** HMAC 签名渠道简化配置 */
   @Data
-  public static class DingTalkConfig {
+  public static class HmacConfig {
 
-    /** 是否启用钉钉渠道 */
+    /** 是否启用 HMAC 渠道 */
     private boolean enabled;
 
     /** 应用 Key */
@@ -130,11 +130,11 @@ public class NotifyLiteProperties {
     private String webhookSecret;
   }
 
-  /** 飞书渠道简化配置 */
+  /** Webhook 渠道简化配置 */
   @Data
-  public static class FeishuConfig {
+  public static class WebhookConfig {
 
-    /** 是否启用飞书渠道 */
+    /** 是否启用 Webhook 渠道 */
     private boolean enabled;
 
     /** 应用 ID */

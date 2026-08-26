@@ -75,8 +75,8 @@ public class FlowDefinitionCacheService {
         YdszCache.<String, FlowDefinitionMetadata>newBuilder()
             .type(CacheType.STRIPED)
             .name("flow:def-metadata")
-            .expireAfterWrite(properties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
-            .maximumSize(properties.getDefinitionCacheMaxSize())
+            .expireAfterWrite(properties.getDefinitionCache().getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
+            .maximumSize(properties.getDefinitionCache().getDefinitionCacheMaxSize())
             .build();
   }
 

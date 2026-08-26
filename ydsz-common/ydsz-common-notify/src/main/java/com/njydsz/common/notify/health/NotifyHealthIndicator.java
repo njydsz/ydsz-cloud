@@ -110,36 +110,36 @@ public class NotifyHealthIndicator implements HealthIndicator {
         channels.put("wecom", "disabled");
       }
 
-      // 钉钉渠道
-      NotifyProperties.DingTalkConfig dingtalk = notifyProperties.getDingtalk();
-      if (dingtalk != null && dingtalk.isEnabled()) {
+      // HMAC 签名渠道
+      NotifyProperties.HmacConfig hmac = notifyProperties.getHmac();
+      if (hmac != null && hmac.isEnabled()) {
         boolean ready =
-            dingtalk.getAppKey() != null
-                && !dingtalk.getAppKey().isEmpty()
-                && dingtalk.getAppSecret() != null
-                && !dingtalk.getAppSecret().isEmpty();
-        channels.put("dingtalk", ready ? "ready" : "misconfigured");
+            hmac.getAppKey() != null
+                && !hmac.getAppKey().isEmpty()
+                && hmac.getAppSecret() != null
+                && !hmac.getAppSecret().isEmpty();
+        channels.put("hmac", ready ? "ready" : "misconfigured");
         if (ready) {
           configuredCount++;
         }
       } else {
-        channels.put("dingtalk", "disabled");
+        channels.put("hmac", "disabled");
       }
 
-      // 飞书渠道
-      NotifyProperties.FeishuConfig feishu = notifyProperties.getFeishu();
-      if (feishu != null && feishu.isEnabled()) {
+      // Webhook 渠道
+      NotifyProperties.WebhookConfig webhook = notifyProperties.getWebhook();
+      if (webhook != null && webhook.isEnabled()) {
         boolean ready =
-            feishu.getAppId() != null
-                && !feishu.getAppId().isEmpty()
-                && feishu.getAppSecret() != null
-                && !feishu.getAppSecret().isEmpty();
-        channels.put("feishu", ready ? "ready" : "misconfigured");
+            webhook.getAppId() != null
+                && !webhook.getAppId().isEmpty()
+                && webhook.getAppSecret() != null
+                && !webhook.getAppSecret().isEmpty();
+        channels.put("webhook", ready ? "ready" : "misconfigured");
         if (ready) {
           configuredCount++;
         }
       } else {
-        channels.put("feishu", "disabled");
+        channels.put("webhook", "disabled");
       }
 
       // 站内信渠道

@@ -24,18 +24,17 @@ import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.ChannelProperties;
 
 /**
- * 钉钉群机器人通道。
+ * HMAC 签名群机器人通道。
  *
- * <p>通过钉钉自定义机器人 Webhook 推送通知，支持 text / markdown 两种消息类型。 启用加签安全模式时，需配置 {@code
- * ydsz.channel.dingtalk.secret}，通道会自动计算 HMAC-SHA256 签名并附加到请求 URL。
+ * <p>通过自定义机器人 Webhook 推送通知，支持 text / markdown 两种消息类型。 启用加签安全模式时，需配置密钥，通道会自动计算 HMAC-SHA256 签名并附加到请求 URL。
  *
  * <p>URL 解析优先级：
  *
  * <ol>
- *   <li>{@code params.dingtalkToken}（显式 access_token，最高优先级）
+ *   <li>{@code params.hmacToken}（显式 access_token，最高优先级）
  *   <li>{@code receiver} 以 http 开头时视为完整 Webhook URL
  *   <li>{@code receiver} 视为 access_token，拼接默认 URL 前缀
- *   <li>{@code ydsz.channel.dingtalk.default-token}（兜底）
+ *   <li>{@code ydsz.channel.hmac.default-token}（兜底）
  * </ol>
  *
  * @author ydsz-team
@@ -44,27 +43,27 @@ import com.njydsz.message.server.config.ChannelProperties;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DingTalkChannel implements MessageChannel {
+public class HmacChannel implements MessageChannel {
 
   /** 通道类型 */
-  private static final String CHANNEL_TYPE = "DINGTALK";
+  private static final String CHANNEL_TYPE = "HMAC";
 
-  /** 钉钉机器人 Webhook URL 前缀 */
-  private static final String WEBHOOK_PREFIX = "https://oapi.dingtalk.com/robot/send?access_token=";
+  /** 机器人 Webhook URL 前缀 */
+  private static final String WEBHOOK_PREFIX = "https://oapi.example.com/robot/send?access_token=";
 
-  /** 通道配置（提供 default-token / secret / 超时） */
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
+  /** 通道配置（提供 default-token / secret / 超时） */
   private final ChannelProperties channelProperties;
 
   /** HTTP 客户端，在 {@link #init()} 中按配置超时构建 */
   RestClient restClient;
 
-  /** 注入配置后按 {@code ydsz.channel.dingtalk.connect-timeout / read-timeout} 构建 RestClient。 */
+  /** 注入配置后按 {@code ydsz.channel.hmac.connect-timeout / read-timeout} 构建 RestClient。 */
   @PostConstruct
   public void init() {
-    ChannelProperties.DingTalkConfig cfg = channelProperties.getChannel().getDingtalk();
+    ChannelProperties.HmacConfig cfg = channelProperties.getChannel().getHmac();
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
     factory.setConnectTimeout(cfg.getConnectTimeout());
     factory.setReadTimeout(cfg.getReadTimeout());
@@ -74,7 +73,7 @@ public class DingTalkChannel implements MessageChannel {
   /**
    * 通道类型。
    *
-   * @return DINGTALK
+   * @return HMAC
    */
   @Override
   public String channelType() {
@@ -82,7 +81,7 @@ public class DingTalkChannel implements MessageChannel {
   }
 
   /**
-   * 发送钉钉消息：构造 text / markdown 请求体并 POST 到 Webhook URL， 根据响应 errcode 判断成功 / 失败。
+   * 发送消息：构造 text / markdown 请求体并 POST 到 Webhook URL， 根据响应 errcode 判断成功 / 失败。
    *
    * @param request 消息请求
    * @return 发送结果
@@ -91,15 +90,15 @@ public class DingTalkChannel implements MessageChannel {
   public MessageResult send(MessageRequest request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
-      log.warn("[DINGTALK] 未配置 access_token，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, "钉钉 access_token 未配置");
+      log.warn("[HMAC] 未配置 access_token，跳过发送: receiver={}", request.getReceiver());
+      return MessageResult.fail(CHANNEL_TYPE, "access_token 未配置");
     }
 
-    String secret = channelProperties.getChannel().getDingtalk().getSecret();
+    String secret = channelProperties.getChannel().getHmac().getSecret();
     if (StringUtils.hasText(secret)) {
       String signedUrl = appendSign(webhookUrl, secret);
       if (signedUrl == null) {
-        return MessageResult.fail(CHANNEL_TYPE, "钉钉加签失败,请检查 secret 配置");
+        return MessageResult.fail(CHANNEL_TYPE, "加签失败,请检查 secret 配置");
       }
       webhookUrl = signedUrl;
     }
@@ -121,23 +120,23 @@ public class DingTalkChannel implements MessageChannel {
         Map<String, Object> body = YdszJson.parseMap(response.getBody());
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
-          log.info("[DINGTALK] 发送成功");
+          log.info("[HMAC] 发送成功");
           return MessageResult.ok(CHANNEL_TYPE, traceId);
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-        log.error("[DINGTALK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
+        log.error("[HMAC] 发送失败: errcode={} errmsg={}", errcode, errmsg);
         return MessageResult.fail(CHANNEL_TYPE, "errcode=" + errcode + ", errmsg=" + errmsg);
       }
-      log.error("[DINGTALK] 发送失败: status={}", response.getStatusCode());
+      log.error("[HMAC] 发送失败: status={}", response.getStatusCode());
       return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
     } catch (Exception e) {
-      log.error("[DINGTALK] 发送异常: reason={}", e.getMessage(), e);
+      log.error("[HMAC] 发送异常: reason={}", e.getMessage(), e);
       return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
     }
   }
 
   /**
-   * 构造钉钉消息请求体。
+   * 构造消息请求体。
    *
    * <ul>
    *   <li>msgType=markdown：{@code {"msgtype":"markdown","markdown":{"title":"标题","text":"内容"}}}
@@ -174,7 +173,7 @@ public class DingTalkChannel implements MessageChannel {
   }
 
   /**
-   * 解析 Webhook URL，优先级：params.dingtalkToken &gt; receiver(http) &gt; receiver(token) &gt; 默认配置。
+   * 解析 Webhook URL，优先级：params.hmacToken > receiver(http) > receiver(token) > 默认配置。
    *
    * @param request 消息请求
    * @return 解析到的 URL，无则返回 null
@@ -182,7 +181,7 @@ public class DingTalkChannel implements MessageChannel {
   String resolveUrl(MessageRequest request) {
     Map<String, Object> params = request.getParams();
     if (params != null) {
-      Object explicit = params.get("dingtalkToken");
+      Object explicit = params.get("hmacToken");
       if (explicit instanceof String s && StringUtils.hasText(s)) {
         return WEBHOOK_PREFIX + s.trim();
       }
@@ -195,7 +194,7 @@ public class DingTalkChannel implements MessageChannel {
       }
       return WEBHOOK_PREFIX + r;
     }
-    String defaultToken = channelProperties.getChannel().getDingtalk().getDefaultToken();
+    String defaultToken = channelProperties.getChannel().getHmac().getDefaultToken();
     if (StringUtils.hasText(defaultToken)) {
       return WEBHOOK_PREFIX + defaultToken.trim();
     }
@@ -222,7 +221,7 @@ public class DingTalkChannel implements MessageChannel {
               DigestUtils.hmacSha256Base64(stringToSign, secret), StandardCharsets.UTF_8);
       return url + "&timestamp=" + timestamp + "&sign=" + sign;
     } catch (Exception e) {
-      log.error("[DINGTALK] 加签失败,放弃发送: {}", e.getMessage(), e);
+      log.error("[HMAC] 加签失败,放弃发送: {}", e.getMessage(), e);
       return null;
     }
   }
