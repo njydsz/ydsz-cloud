@@ -11,7 +11,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 应用注册创建/更新 DTO
  *
- * <p>对应 {@code ydsz_app_info} 表的写入参数，对标 OAuth 2.0 客户端注册模型。 创建时 {@code id} 为空（由雪花算法自动生成），更新时 {@code
+ * <p>对应 {@code ydsz_sys_app_info} 表的写入参数，对标 OAuth 2.0 客户端注册模型。 创建时 {@code id} 为空（由雪花算法自动生成），更新时 {@code
  * id} 必填。
  *
  * <p><b>字段约束：</b>

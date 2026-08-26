@@ -7,7 +7,7 @@ import com.njydsz.common.util.message.MessageUtils;
 /**
  * 配置值类型枚举
  *
- * <p>用于系统配置（{@code ydsz_config}）和系统变量（{@code ydsz_variable}）的值类型校验。 与 DDL CHECK 约束对齐：{@code CHECK
+ * <p>用于系统配置（{@code ydsz_sys_config}）和系统变量（{@code ydsz_sys_variable}）的值类型校验。 与 DDL CHECK 约束对齐：{@code CHECK
  * (value_type IN ('STRING','NUMBER','BOOLEAN','JSON'))}。
  *
  * <p><b>类型说明：</b>

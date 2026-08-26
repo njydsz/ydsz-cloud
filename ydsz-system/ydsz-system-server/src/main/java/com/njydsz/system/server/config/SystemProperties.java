@@ -58,7 +58,7 @@ public class SystemProperties {
   /** 配置缓存配置。 */
   @Data
   public static class ConfigCache {
-    /** 是否启用配置缓存（false 时所有 {@code ydsz_config} 走 DB） */
+    /** 是否启用配置缓存（false 时所有 {@code ydsz_sys_config} 走 DB） */
     private boolean enabled = true;
 
     /**
@@ -75,7 +75,7 @@ public class SystemProperties {
   /** 字典缓存配置。 */
   @Data
   public static class DictCache {
-    /** 是否启用字典缓存（false 时所有 {@code ydsz_dict_item} 走 DB） */
+    /** 是否启用字典缓存（false 时所有 {@code ydsz_sys_dict_item} 走 DB） */
     private boolean enabled = true;
 
     /** 字典缓存 TTL（分钟），影响 {@code DictItemServiceImpl} 所有缓存命中路径 */

@@ -48,7 +48,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  *
  * <ul>
  *   <li>Redis 不可用时降级为仅 L1 缓存（记录 WARN 日志）
- *   <li>Caffeine 始终可用（本地内存）
+ *   <li>ydsz-common-cache 始终可用（本地内存 L1，禁止直接依赖 Caffeine）
  *   <li>构造器参数 {@code redissonClient} 为 null 或 {@code l2Enabled=false} 时禁用 L2
  * </ul>
  *

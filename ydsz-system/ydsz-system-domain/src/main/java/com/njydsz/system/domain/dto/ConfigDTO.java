@@ -11,7 +11,7 @@ import com.njydsz.common.safe.annotation.Xss;
 /**
  * 系统配置创建/更新 DTO
  *
- * <p>对应 {@code ydsz_config} 表的写入参数，是「系统配置中心」创建 / 更新接口的入参载体。 创建时 {@code id} 为空（由雪花算法自动生成），更新时
+ * <p>对应 {@code ydsz_sys_config} 表的写入参数，是「系统配置中心」创建 / 更新接口的入参载体。 创建时 {@code id} 为空（由雪花算法自动生成），更新时
  * {@code id} 必填。
  *
  * <p><b>P1-5 字段重叠处理：</b>本类与 {@link ConfigVO} 字段完全一致，遵循《云顶编码规范》"VO 兼 DTO"模式（字段无差异时不作三分离）。 作为

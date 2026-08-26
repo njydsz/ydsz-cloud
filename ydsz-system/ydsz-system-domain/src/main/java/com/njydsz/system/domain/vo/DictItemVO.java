@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 字典项 VO（视图对象）
  *
- * <p>对应 {@code ydsz_dict_item} 表的展示视图，是「字典中心」列表 / 详情接口的响应载体，
+ * <p>对应 {@code ydsz_sys_dict_item} 表的展示视图，是「字典中心」列表 / 详情接口的响应载体，
  * 也是前端下拉框、单选框、级联选择器、Tag 组件的<b>核心数据载体</b>。
  *
  * <p>使用 {@link com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 构建树形结构，无需继承 {@code TreeNode} 基类，

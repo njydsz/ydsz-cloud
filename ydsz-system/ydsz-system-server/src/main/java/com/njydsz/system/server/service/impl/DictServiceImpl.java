@@ -28,7 +28,7 @@ import com.njydsz.system.server.service.DictService;
 /**
  * 字典类型 Service 实现
  *
- * <p>对 {@link DictService} 接口的完整实现，是「字典中心」的核心业务逻辑层。 维护 {@code ydsz_dict_type} 字典类型表，是「字典项」（{@link
+ * <p>对 {@link DictService} 接口的完整实现，是「字典中心」的核心业务逻辑层。 维护 {@code ydsz_sys_dict_type} 字典类型表，是「字典项」（{@link
  * DictItemServiceImpl}）的父级元数据。
  *
  * <p><b>核心职责：</b>
@@ -131,7 +131,7 @@ public class DictServiceImpl implements DictService {
    * <ol>
    *   <li>DTO 转 DO，默认 {@code status=ENABLED}
    *   <li>唯一性校验：{@code typeCode} 全租户内不能重复
-   *   <li>插入 {@code ydsz_dict_type} 表
+   *   <li>插入 {@code ydsz_sys_dict_type} 表
    * </ol>
    *
    * <p><b>注意：</b>本方法仅创建类型，<b>不挂载字典项</b>，字典项需通过 {@link DictItemServiceImpl#save} 单独添加。
@@ -159,7 +159,7 @@ public class DictServiceImpl implements DictService {
    * <ol>
    *   <li>DTO 转 DO
    *   <li>唯一性校验：{@code typeCode} 变更时不能与现有类型冲突
-   *   <li>更新 {@code ydsz_dict_type} 表
+   *   <li>更新 {@code ydsz_sys_dict_type} 表
    * </ol>
    *
    * <p><b>注意：</b>更新 {@code typeCode} 会导致所有依赖该编码的下游缓存失效， 调用方需主动清理 {@code ydsz:dict:*} 相关 Redis key。

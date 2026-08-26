@@ -86,7 +86,7 @@ import com.njydsz.system.server.vo.DictItemExcelVO;
  *   <li><b>版本快照一致性</b>：快照在字典项变更<b>前</b>由调用方抓取（{@link #createSnapshotVersion}）， 反映变更前的状态，可用于回滚
  *   <li><b>SCAN 防阻塞</b>：缓存失效使用 {@code SCAN} 命令遍历模式匹配 key， 由 {@code @CacheEvict(allEntries=true)}
  *       主动清空
- *   <li><b>软删除</b>：{@code ydsz_dict_item} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）， 删除后通过 {@code
+ *   <li><b>软删除</b>：{@code ydsz_sys_dict_item} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）， 删除后通过 {@code
  *       status=DISABLED} 标记失效
  * </ul>
  *
@@ -118,7 +118,7 @@ import com.njydsz.system.server.vo.DictItemExcelVO;
 @RequiredArgsConstructor
 public class DictItemServiceImpl implements DictItemService {
 
-  /** 字典项仓储（继承 {@code ydsz_dict_item} 表 CRUD） */
+  /** 字典项仓储（继承 {@code ydsz_sys_dict_item} 表 CRUD） */
   private final DictRepository dictRepository;
 
   /** 系统监控指标采集器 */
@@ -217,7 +217,7 @@ public class DictItemServiceImpl implements DictItemService {
    *
    * <p>本方法<b>不走缓存</b>，由调用方按需缓存；树形结构变化频次低，建议调用方做本地缓存。
    *
-   * @param parentId 父字典项 ID（{@code ydsz_dict_item.parent_id}）
+   * @param parentId 父字典项 ID（{@code ydsz_sys_dict_item.parent_id}）
    * @return 子字典项列表（按 sortOrder 升序），无子节点返回空列表
    */
   @Override
@@ -286,7 +286,7 @@ public class DictItemServiceImpl implements DictItemService {
    *   <li>唯一性校验：{@code (typeCode, itemCode)} 组合不能重复
    *   <li>创建版本快照（变更前状态）
    *   <li>DTO 转 DO，默认 {@code status=ENABLED}
-   *   <li>插入 {@code ydsz_dict_item} 表
+   *   <li>插入 {@code ydsz_sys_dict_item} 表
    *   <li>清除该 {@code typeCode} 下的所有缓存
    * </ol>
    *
@@ -319,7 +319,7 @@ public class DictItemServiceImpl implements DictItemService {
    * <ol>
    *   <li>创建版本快照（变更前状态）
    *   <li>DTO 转 DO
-   *   <li>更新 {@code ydsz_dict_item} 表
+   *   <li>更新 {@code ydsz_sys_dict_item} 表
    *   <li>更新成功后精准失效该 {@code typeCode} 下的缓存（含 itemCode 变更时的旧 key）
    * </ol>
    *

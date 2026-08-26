@@ -7,7 +7,7 @@ import com.njydsz.common.json.annotation.JsonIgnore;
 /**
  * 应用注册 VO
  *
- * <p>对应 {@code ydsz_app_info} 表的展示视图，是「应用注册中心」列表 / 详情接口的返回值类型。 由 {@link
+ * <p>对应 {@code ydsz_sys_app_info} 表的展示视图，是「应用注册中心」列表 / 详情接口的返回值类型。 由 {@link
  * com.njydsz.system.domain.converter.SystemConverter} 从 {@link
  * com.njydsz.system.domain.entity.AppInfo} 实体转换而来。
  *

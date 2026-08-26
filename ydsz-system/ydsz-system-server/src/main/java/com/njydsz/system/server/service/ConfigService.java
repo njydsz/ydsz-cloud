@@ -17,7 +17,7 @@ import com.njydsz.system.domain.vo.ImportResult;
 /**
  * 系统配置 Service 接口
  *
- * <p>提供系统配置（{@code ydsz_config}）的 CRUD、按 key / group 查询、公开配置查询、导入导出等能力。 集成 Redis 缓存、Micrometer
+ * <p>提供系统配置（{@code ydsz_sys_config}）的 CRUD、按 key / group 查询、公开配置查询、导入导出等能力。 集成 Redis 缓存、Micrometer
  * 指标、缓存穿透防护和配置变更事件。
  *
  * <p><b>核心职责：</b>

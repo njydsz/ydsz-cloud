@@ -98,7 +98,7 @@ import com.njydsz.system.server.vo.VariableExcelVO;
  * <ul>
  *   <li><b>业务参数化</b>：业务硬编码值（如「每月 1 号出账」）可改为变量，由运营灵活调整
  *   <li><b>行级权限</b>：分页 / 列表查询走 {@code @DataScope}，自动按当前用户的部门 / 人员范围过滤
- *   <li><b>软删除</b>：{@code ydsz_variable} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）
+ *   <li><b>软删除</b>：{@code ydsz_sys_variable} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）
  *   <li><b>启用过滤</b>：{@link #getVariableValue} 仅返回 {@code status=ENABLED} 的变量， 失效的变量视为不存在
  * </ul>
  *
@@ -224,7 +224,7 @@ public class VariableServiceImpl implements VariableService {
    *
    * <ol>
    *   <li>DTO 转 DO，默认 {@code status=ENABLED}
-   *   <li>插入 {@code ydsz_variable} 表
+   *   <li>插入 {@code ydsz_sys_variable} 表
    *   <li>精准失效该 {@code variableKey} 对应的缓存
    * </ol>
    *
@@ -252,7 +252,7 @@ public class VariableServiceImpl implements VariableService {
    *
    * <ol>
    *   <li>DTO 转 DO
-   *   <li>更新 {@code ydsz_variable} 表
+   *   <li>更新 {@code ydsz_sys_variable} 表
    *   <li>更新成功后精准失效该 {@code variableKey} 对应的缓存
    * </ol>
    *

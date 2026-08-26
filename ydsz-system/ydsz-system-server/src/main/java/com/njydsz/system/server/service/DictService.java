@@ -11,7 +11,7 @@ import com.njydsz.system.domain.vo.DictTypeVO;
 /**
  * 字典类型 Service 接口
  *
- * <p>提供字典类型（{@code ydsz_dict_type}）的 CRUD 与全量查询能力。 与 {@link DictItemService} 协同：先创建「类型」，再为其挂载「字典项」。
+ * <p>提供字典类型（{@code ydsz_sys_dict_type}）的 CRUD 与全量查询能力。 与 {@link DictItemService} 协同：先创建「类型」，再为其挂载「字典项」。
  *
  * <p><b>设计要点：</b>
  *

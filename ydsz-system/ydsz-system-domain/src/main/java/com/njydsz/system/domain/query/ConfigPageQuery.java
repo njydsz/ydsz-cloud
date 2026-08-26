@@ -10,7 +10,7 @@ import com.njydsz.common.domain.query.PageQuery;
 /**
  * 系统配置分页查询参数
  *
- * <p>对应 {@code ydsz_config} 表的分页查询条件，由 Controller 接收并透传给 {@code ConfigService.page()}。继承自 {@link
+ * <p>对应 {@code ydsz_sys_config} 表的分页查询条件，由 Controller 接收并透传给 {@code ConfigService.page()}。继承自 {@link
  * PageQuery}，自带 {@code pageNum} / {@code pageSize} / {@code orderBy} / {@code sort} 等通用分页参数。
  *
  * <p><b>字段语义：</b>

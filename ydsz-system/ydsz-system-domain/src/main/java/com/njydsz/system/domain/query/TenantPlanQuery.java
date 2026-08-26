@@ -10,7 +10,7 @@ import com.njydsz.common.domain.query.PageQuery;
 /**
  * 租户套餐查询参数
  *
- * <p>对应 {@code ydsz_tenant_plan} 表的查询条件，用于列表查询和统计场景。
+ * <p>对应 {@code ydsz_sys_tenant_plan} 表的查询条件，用于列表查询和统计场景。
  * 继承自 {@link PageQuery}，自带 {@code pageNum} / {@code pageSize} 等通用分页参数。
  *
  * <p><b>字段语义：</b>

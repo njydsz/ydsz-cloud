@@ -11,7 +11,7 @@ import com.njydsz.system.domain.vo.AppInfoVO;
 /**
  * 应用注册 Service 接口
  *
- * <p>提供应用（{@code ydsz_app_info}）的 CRUD、密钥校验、分页查询等能力。 集成 BCrypt 密钥加密和 Micrometer 指标。
+ * <p>提供应用（{@code ydsz_sys_app_info}）的 CRUD、密钥校验、分页查询等能力。 集成 BCrypt 密钥加密和 Micrometer 指标。
  *
  * <p><b>核心职责：</b>
  *

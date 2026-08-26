@@ -27,7 +27,7 @@ import com.njydsz.system.server.service.AppInfoService;
 /**
  * 应用注册 Service 实现
  *
- * <p>对 {@link AppInfoService} 接口的完整实现，是「应用注册中心」的核心业务逻辑层。 维护 {@code ydsz_app_info} 应用注册表，对标大厂「开放平台 /
+ * <p>对 {@link AppInfoService} 接口的完整实现，是「应用注册中心」的核心业务逻辑层。 维护 {@code ydsz_sys_app_info} 应用注册表，对标大厂「开放平台 /
  * 应用市场」的 AppId/AppSecret 管理体系， 用于客户端身份标识 + 密钥校验（OAuth2 Client Credentials 等场景）。
  *
  * <p><b>核心职责：</b>
@@ -69,7 +69,7 @@ import com.njydsz.system.server.service.AppInfoService;
  *   <li><b>密钥不返回</b>：{@link AppInfoVO} 中 {@code appSecret} 字段为
  *       null（{@code @com.njydsz.common.json.annotation.JsonIgnore}）， 避免泄漏到前端 / 日志
  *   <li><b>租户隔离</b>：管理后台「应用列表」按当前租户自动过滤（MyBatis 拦截器注入 tenant_id），避免跨租户越权查看
- *   <li><b>软删除</b>：{@code ydsz_app_info} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）
+ *   <li><b>软删除</b>：{@code ydsz_sys_app_info} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）
  *   <li><b>密钥不存明文</b>：所有密钥 BCrypt 哈希后存 DB，<b>不可逆</b>，忘记密钥只能重置
  * </ul>
  *
@@ -102,7 +102,7 @@ import com.njydsz.system.server.service.AppInfoService;
 @RequiredArgsConstructor
 public class AppInfoServiceImpl implements AppInfoService {
 
-  /** 应用注册仓储（封装 {@code ydsz_app_info} 表 CRUD） */
+  /** 应用注册仓储（封装 {@code ydsz_sys_app_info} 表 CRUD） */
   private final AppInfoRepository appInfoRepository;
 
   /** 系统监控指标采集器 */
@@ -307,7 +307,7 @@ public class AppInfoServiceImpl implements AppInfoService {
    *   <li>唯一性校验：{@code appKey} 全租户内不能重复
    *   <li>DTO 转 DO，默认 {@code status=ENABLED}
    *   <li><b>密钥 BCrypt 加密</b>（{@code passwordEncoder.encode}）
-   *   <li>插入 {@code ydsz_app_info} 表
+   *   <li>插入 {@code ydsz_sys_app_info} 表
    * </ol>
    *
    * <p><b>密钥管理：</b>原始密钥仅在 {@code DTO.appSecret} 中出现一次， BCrypt 哈希后存
@@ -348,7 +348,7 @@ public class AppInfoServiceImpl implements AppInfoService {
    *         <li>{@code DTO.appSecret} 为空 → 设为 {@code null}， MyBatis-Plus NOT_NULL
    *             策略会跳过此字段，<b>保持原密钥不变</b>
    *       </ul>
-   *   <li>更新 {@code ydsz_app_info} 表
+   *   <li>更新 {@code ydsz_sys_app_info} 表
    * </ol>
    *
    * <p><b>密钥轮换最佳实践：</b>

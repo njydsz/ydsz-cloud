@@ -10,7 +10,7 @@ import com.njydsz.common.domain.query.PageQuery;
 /**
  * 字典项分页查询参数
  *
- * <p>对应 {@code ydsz_dict_item} 表的分页查询条件。继承自 {@link PageQuery}，自带 {@code pageNum} /
+ * <p>对应 {@code ydsz_sys_dict_item} 表的分页查询条件。继承自 {@link PageQuery}，自带 {@code pageNum} /
  * {@code pageSize} / {@code orderBy} / {@code sort} 等通用分页参数。
  *
  * <p><b>字段语义：</b>

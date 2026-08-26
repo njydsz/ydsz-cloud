@@ -13,7 +13,7 @@ import com.njydsz.system.domain.vo.ImportResult;
 /**
  * 字典项 Service 接口
  *
- * <p>提供字典项（{@code ydsz_dict_item}）的 CRUD、按类型查询、树形查询、分页查询等能力。 集成 Redis 缓存、Micrometer
+ * <p>提供字典项（{@code ydsz_sys_dict_item}）的 CRUD、按类型查询、树形查询、分页查询等能力。 集成 Redis 缓存、Micrometer
  * 指标、缓存穿透防护和字典版本快照。
  *
  * <p><b>核心职责：</b>
