@@ -38,7 +38,7 @@
 | F3 | `db/changelog/` 为空目录，`db/README.md` 声称基线 `V1__init_schema.sql` 存在，实际 DDL 在仓库根 `data/mysql/ydsz-cronjob.sql`（18 张表）——Flyway 文档与实现漂移 | 目录 ls 为空 |
 | F4 | Leader 锁无 fencing token / epoch，Redis 主从切换存在理论双主窗口（WatchDog 租约 30s 内） | `RedissonLeaderElector.java` 全文无 epoch 机制 |
 | F5 | 测试仅 5 个（misfire 枚举、cron 计算、2 个分片策略、内网过滤器），核心链路（扫描/派发/选举/故障转移/DAG/Outbox）零测试 | src/test 目录全量 |
-| F6 | 无 RBAC/权限模型；内部 token 未配置时 `InternalTokenFilter` 直接放行 | `InternalTokenFilter.java:72-75` |
+| F6 | ~~无 RBAC~~（**已修正**）：后端 18 个 Controller 中 15 个已有 `@AuthApiPermission` 权限码注解（共 85 处），但 `JobLogStreamController`/`JobTaskController`/`JobDiagnosisController` 三个 Controller **零权限注解**；内部 token 未配置时 `InternalTokenFilter` 直接放行；前端 cronjob-web 无按钮级权限控制 | `JobController.java` 等 vs `InternalTokenFilter.java:72-75`、前端全 src 无 `v-access` |
 | F7 | DAG 仅手动/API 触发，不支持 cron 定时触发 | `JobDagServiceImpl.triggerDag` 为唯一入口 |
 | F8 | 配置面过大：server/config 下 23 个配置类，README 中 151 个 `ydsz.cronjob.*` 配置键 | 统计 |
 | F9 | `AuditOutboxSubscriber` 仅 log.info 占位 | 类内注释自述 |
@@ -156,11 +156,84 @@
 
 ---
 
-## 五、结论
+## 五补、前后端联合分析（ydsz-micro/apps/cronjob-web）
 
-ydsz-cronjob 的能力面已**越过 XXL-Job 社区版**（告警/租户/灰度/诊断/SLA/可靠性均超出），与 PowerJob 各有胜负（胜在治理与告警，负在工作流成熟度与执行器生态），距 SchedulerX 商业级的差距集中在**工作流可视化深度、RBAC、命名空间隔离与工程成熟度**。
+> 前端：pnpm monorepo，自研 micro-kernel 微前端（非 qiankun/模块联邦），Vue3 + element-plus + vxe-table（适配层）+ tailwind，dev 端口 5605，basename `/YDSZ-cron`。实际业务代码约 4,449 行、6 个页面模块，在 8 个微前端中水位倒数第三，且是"后端能力/前端覆盖"落差最大的一个。
 
-当前最值得做的不是继续加功能，而是**三件事**：
-1. **收口正确性与安全**：fencing token、RBAC、死代码清理（P0 项多为低成本高收益）；
-2. **把已有能力"打开"**：预读调度默认开、DAG 定时触发、审计落库——代码都在，只差半步；
-3. **配置与文档做减法**：151 个配置键与 23 个配置类是这个模块最大的维护负债，先于新功能处理。
+### 5补.1 前后端能力缺口（核心事实）
+
+- **API 覆盖**：后端 18 个 REST Controller、约 93 个端点，前端页面实际消费 **33 个（约 35%）**；剔除 InternalJob 后仍有 **12 个能力域完全无前端入口**：
+
+| 完全闲置的能力域 | 闲置端点数 | 后果 |
+|---|---|---|
+| DAG 实例运行态（JobDagInstance + DagInstanceControl + TaskTopology） | 17 | DAG 只建不看：无实例列表、无运行拓扑、无暂停/恢复/取消/节点重试。后端连 cytoscape/mermaid 两种图数据都备好了 |
+| 统计看板（JobStats） | 5 | 无 dashboard；daily/summary/dashboard/recentFailures/heatmap 全闲置，echarts 封装（literule-web 有示范）未复用 |
+| GLUE 在线编辑（GlueCode） | 7 | save/versions/diff/rollback/test/template 全闲置；GLUE 任务建了没法在线写代码 |
+| 任务版本管理（JobHistory） | 4 | 版本/diff/回滚无入口 |
+| SSE 实时日志（JobLogStream） | 1 | 连 API 封装文件都没生成；`shared-auth/src/sse.ts` 通用 SSE 工具无人用 |
+| Webhook 管理 | 6 | 无页面 |
+| 诊断 / 队列监控（JobDiagnosis/JobQueue） | 2 | 无页面 |
+| 日历与触发预览（ScheduleCalendar） | 2 | `getUpcomingFireTimes` 未调用，cron 无"未来 5 次触发"预览 |
+
+- **字段覆盖**：后端可写配置面约 24 个字段，前端表单只暴露 **7 个（约 29%）**。`fixedRateMs/fixedDelayMs/paramsJson/timeoutMs/slowThresholdMs/misfirePolicy/shardTotal/timezone/cluster/lockTtlMs` 等 10 个字段 DTO 已有、只是缺控件（纯前端工作量）；`maxRetries/retryIntervalMs/retryBackoff/blockStrategy/maxConsecutiveFails/autoResumeAfterMinutes/priority/slaMs/canaryRatio/canaryHandler` 等 **10 个字段连 JobPostDTO/JobPutDTO 都没有**，需先动后端契约。FIXED_RATE/FIXED_DELAY 类型选了也没有间隔输入框，**该调度类型实质不可用**。
+
+### 5补.2 已确认的前后端失配 Bug（P0）
+
+| # | Bug | 证据 |
+|---|---|---|
+| B1 | 任务列表/日志列表传 `pageSize`，后端收 `size`——**每页条数永远走后端默认 20** | `views/job/index.vue:95-99`、`views/jobLog/index.vue:62-66` vs `JobController.java:402`、生成的 `api/job.ts:121` 类型声明就是 `size` |
+| B2 | 基座注册表 `redirect: '/YDSZ-cron/jobs'` 与子应用实际路由 `/job/list` 不一致，**激活后首跳 404** | `conf/vite-config/src/micro-apps.config.ts:117` vs `router/routes/modules/cronjob.ts:14-19` |
+| B3 | `models.ts:856,861` 生成器缺陷：`DagDefinition.nodes` 类型生成成 `'TASK' \| 'SUB_WORKFLOW' \| 'APPROVAL'[]`、`DagEdge` 是空接口 | gen-contract.py 对嵌套泛型解析缺陷 |
+
+### 5补.3 UI/UX 对标竞品控制台
+
+| 体验项 | XXL-Job Admin | PowerJob 前端 | SchedulerX 控制台 | cronjob-web 现状 |
+|---|---|---|---|---|
+| 任务列表 | 状态/负责人筛选、下次触发时间、操作列齐全 | 同类 + 运行状态实时刷新 | 多维筛选 + 运行大盘 | 仅 keyword+group 筛选；**无下次触发时间列、无状态筛选、无详情抽屉、无"查看日志"跳转** |
+| 任务表单 | 全量配置（路由/阻塞/超时/重试/子任务） | 全量 + 处理器参数 | 全量 + 标签/告警联动 | 7 个字段；FIXED_RATE/DELAY 无间隔输入框 |
+| DAG/工作流 | 无（父子任务列表） | 可视化画布（拖拽编排） | 商业级画布 + 运行态染色 | **裸 textarea 写 DSL JSON**，无画布、无只读拓扑 |
+| 日志 | 日志详情弹窗 + 滚动查看 | 在线日志实时拉取 | 实时日志 + 诊断 | 只读列表；errorMessage 平铺在列里；无详情、无 SSE |
+| 统计看板 | 简单报表 | 任务/实例趋势图 | 多维大盘 | **无**（后端 5 端点闲置） |
+| 权限 | 登录 + 角色 | 应用级隔离 | RAM | 路由级权限已接（@ydsz/access），**按钮级零控制**；后端权限码已就绪 |
+
+### 5补.4 前端专项优化建议（按优先级）
+
+**P0（修 bug + 补最短板，1 个迭代内）**
+1. 修 B1（pageSize→size）与 B2（redirect 改 `/job/list`）——两行改动，直接影响基本可用性
+2. 任务表单补"DTO 已有"的 10 个字段控件（fixedRate/fixedDelay/paramsJson/timeoutMs/slowThresholdMs/misfirePolicy/shardTotal/timezone/cluster/lockTtlMs），FIXED_RATE/DELAY 立即从不可用变可用
+3. 后端补 JobPostDTO/JobPutDTO 缺失的 10 个字段（重试/阻塞/SLA/优先级/熔断/灰度），重新跑 gen-contract.py 生成契约
+4. 任务列表加：状态筛选、nextFireTime/lastFireTime 列、"查看日志"行内跳转、详情抽屉
+
+**P1（运行态闭环）**
+5. **DAG 运行态三件套**：实例列表页（JobDagInstance 10 端点）+ 实例控制（暂停/恢复/取消/节点重试）+ 只读拓扑图。拓扑图第一步不引重型画布库——后端已输出 mermaid 文本与 cytoscape JSON，用轻量渲染（mermaid.js 或自绘 SVG）即可对齐 PowerJob 的"运行态染色"体验；可编辑画布待 literule 规则流画布选型后统一引入
+6. **日志体验**：日志详情抽屉（errorMessage/resultJson/paramsJson/traceId）+ SSE 实时滚动（复用 `shared-auth/src/sse.ts`，需 gen-contract 支持 SSE 端点或手写封装）
+7. **统计看板**：复用 `@ydsz/plugins/echarts`（literule-web 有完整示范），落地 daily 趋势 + summary 卡片 + recentFailures 列表 + heatmap 四块
+8. **权限补齐**：后端补 JobLogStream/JobTask/JobDiagnosis 三个 Controller 的权限码；前端接入按钮级权限（@ydsz/access 能力对齐其他 app）
+
+**P2（体验对标 SchedulerX）**
+9. GLUE 在线编辑器页（monaco-editor 按需引入，版本列表 + diff + 回滚 + 测试运行，后端 7 端点全就绪）
+10. cron 未来 5 次触发时间预览（scheduleCalendar.getUpcomingFireTimes 现成）+ 日历管理页
+11. Webhook 管理页、诊断/队列监控页
+12. i18n 实装（locales key 已齐但 0 处 `$t` 调用）、vitest 补关键组件测试
+13. 契约生成器修复嵌套泛型解析（B3）
+
+### 5补.5 横向复用机会（monorepo 视角）
+
+- echarts 封装已在 `@ydsz/plugins`，literule-web dashboard 是现成抄板；
+- SSE 工具在 `shared-auth/src/sse.ts`，message-web 若已用可作参考；
+- 全 monorepo **无任何画布库**（workflow-web 也没有流程设计器）——DAG 画布选型（X6/LogicFlow/vue-flow）建议与 literule 规则流画布、workflow 流程设计器**统一决策一次**，避免三个 app 三种库；
+- 统一列表页范式（Page + vxe-grid + useYDSZModal）已成熟，新增页面边际成本低，P1 各页主要是"照范式填内容"。
+
+---
+
+## 六、结论（前后端联合版）
+
+**后端**能力面已越过 XXL-Job 社区版，与 PowerJob 相当；**前端** cronjob-web 只兑现了后端约 1/3 的能力（API 覆盖 35%、可配置字段覆盖 29%），是全模块当前**最大的价值漏损点**——后端的 DAG 运行态、统计看板、GLUE 编辑、实时日志、任务版本管理全部"建成即闲置"。
+
+联合视角下的行动优先级重排：
+1. **先修两个低级但致命的失配 bug**（分页 size、注册表 redirect）；
+2. **表单补全 + DTO 补字段**让既有能力可配置（纯体力活、收益立竿见影）；
+3. **DAG 运行态三件套 + 日志详情/SSE + 统计看板**（P1 三件套）把前端覆盖率从 35% 推到 70%+，体验即可对齐 PowerJob；
+4. 后端自身的 P0 项（fencing token、死代码、预读默认开启、权限码补齐三个 Controller）不变，与前端工作可并行。
+
+GLUE 编辑器与可视化 DAG 画布属 P2——前者需引入 monaco，后者建议与 literule/workflow 两个 app 统一画布选型后再动。

@@ -23,6 +23,7 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
@@ -290,31 +291,33 @@ public class YdszWorkflowFacade implements WorkflowFacade {
       return Collections.emptyMap();
     }
     // 通过 definitionService.getDetail 组装 definition + nodes + skips
-    Map<String, Object> detail = definitionService.getDetail(instance.getDefinitionId());
-    if (detail == null || detail.isEmpty()) {
+    FlowDefinitionDetailVO detail = definitionService.getDetail(instance.getDefinitionId());
+    if (detail == null) {
       return Collections.emptyMap();
     }
     String currentNodeCode = instance.getCurrentNodeCode();
     // 在每个 node 上标注 active: true/false（currentNodeCode 匹配则为 active）
-    Object rawNodes = detail.get("nodes");
-    if (rawNodes instanceof List<?> rawList) {
-      List<Map<String, Object>> nodes = new ArrayList<>(rawList.size());
-      for (Object item : rawList) {
-        if (item instanceof Map<?, ?> m) {
-          Map<String, Object> node = MapUtils.toStringObjectMap(m);
-          boolean active = currentNodeCode != null && currentNodeCode.equals(node.get("nodeCode"));
-          node.put("active", active);
-          nodes.add(node);
-        }
+    List<Map<String, Object>> nodes = new ArrayList<>();
+    if (detail.getNodes() != null) {
+      for (FlowNodeVO n : detail.getNodes()) {
+        Map<String, Object> node = new HashMap<>(MAP_INIT_CAPACITY_8);
+        node.put("nodeCode", n.getNodeCode());
+        node.put("nodeName", n.getNodeName());
+        node.put("nodeType", n.getNodeType());
+        boolean active = currentNodeCode != null && currentNodeCode.equals(n.getNodeCode());
+        node.put("active", active);
+        nodes.add(node);
       }
-      detail.put("nodes", nodes);
     }
     // 附带实例当前状态信息
-    Map<String, Object> result = new HashMap<>(detail.size());
+    Map<String, Object> result = new HashMap<>(MAP_INIT_CAPACITY_8);
     result.put("instanceId", instance.getId());
     result.put("flowStatus", instance.getFlowStatus());
     result.put("currentNodeCode", currentNodeCode);
     result.put("currentNodeName", instance.getCurrentNodeName());
+    result.put("definition", detail.getDefinition());
+    result.put("nodes", nodes);
+    result.put("skips", detail.getSkips());
     return result;
   }
 
@@ -756,11 +759,11 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     if (definitionId == null) {
       return Collections.emptyMap();
     }
-    Map<String, Object> detail = definitionService.getDetail(definitionId);
+    FlowDefinitionDetailVO detail = definitionService.getDetail(definitionId);
     if (detail == null) {
       return Collections.emptyMap();
     }
-    List<FlowNodeVO> nodes = MapUtils.safeCastList(detail.get("nodes"), FlowNodeVO.class);
+    List<FlowNodeVO> nodes = detail.getNodes();
     if (nodes == null || nodes.isEmpty()) {
       return Collections.emptyMap();
     }

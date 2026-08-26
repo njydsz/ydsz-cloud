@@ -23,6 +23,7 @@ import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.repository.FlowTemplateRepository;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
@@ -372,7 +373,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       }
 
       // 获取流程定义详情
-      Map<String, Object> detail = definitionService.getDetail(definitionId);
+      FlowDefinitionDetailVO detail = definitionService.getDetail(definitionId);
       if (detail == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -381,7 +382,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
 
-      FlowDefinitionVO definition = (FlowDefinitionVO) detail.get("definition");
+      FlowDefinitionVO definition = detail.getDefinition();
       if (definition == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -1019,16 +1020,16 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    * @param detail 参数说明
    * @return 返回值说明
    */
-  private String generateBpmnXml(Map<String, Object> detail) {
-    Object defObj = detail.get("definition");
-    if (!(defObj instanceof FlowDefinitionVO definition)) {
+  private String generateBpmnXml(FlowDefinitionDetailVO detail) {
+    FlowDefinitionVO definition = detail.getDefinition();
+    if (definition == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("流程定义详情缺少 definition")
           .build();
     }
-    List<FlowNodeVO> nodes = MapUtils.safeCastList(detail.get("nodes"), FlowNodeVO.class);
-    List<FlowSkipVO> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkipVO.class);
+    List<FlowNodeVO> nodes = detail.getNodes();
+    List<FlowSkipVO> skips = detail.getSkips();
 
     String processId = definition.getFlowCode();
     String processName = definition.getFlowName();
