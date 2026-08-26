@@ -21,7 +21,7 @@
 psql -U postgres -d ydsz_cloud -f ydsz-system/deploy/sql/init.sql
 ```
 
-脚本包含 9 张表（`ydsz_config` / `ydsz_dict_type` / `ydsz_dict_item` / `ydsz_entity_version` / `ydsz_app_info` / `ydsz_variable` / `ydsz_tenant` / `ydsz_tenant_plan` / `ydsz_tenant_plan_menu`）的建表 DDL、索引与初始数据（内置租户、默认套餐、示例字典与配置）。
+脚本包含 9 张表（`ydsz_sys_config` / `ydsz_sys_dict_type` / `ydsz_sys_dict_item` / `ydsz_sys_entity_version` / `ydsz_sys_app_info` / `ydsz_sys_variable` / `ydsz_sys_tenant` / `ydsz_sys_tenant_plan` / `ydsz_sys_tenant_plan_menu`）的建表 DDL、索引与初始数据（内置租户、默认套餐、示例字典与配置）。
 
 ## 核心职责
 
@@ -29,12 +29,12 @@ psql -U postgres -d ydsz_cloud -f ydsz-system/deploy/sql/init.sql
 
 | 业务域 | 说明 |
 |---|---|
-| **系统配置** | 参数配置（`ydsz_config`），支持按 key 查询、按 group 批量查询、公开配置查询、缓存、缓存穿透防护、值类型校验 |
-| **数据字典** | 字典类型（`ydsz_dict_type`）+ 字典项（`ydsz_dict_item`），支持树形字典、缓存、版本管理、批量写入 |
-| **应用注册** | OAuth2 应用注册（`ydsz_app_info`），支持 BCrypt 密钥校验（强度可配置） |
-| **系统变量** | 业务级变量管理（`ydsz_variable`），支持缓存、缓存穿透防护 |
-| **实体版本** | 通用实体变更历史快照（`ydsz_entity_version`），写操作自动记录变更、支持查询审计与回滚 |
-| **多租户** | 租户（`ydsz_tenant`）+ 套餐（`ydsz_tenant_plan`）+ 套餐菜单（`ydsz_tenant_plan_menu`），支持租户级菜单定制与配额管理 |
+| **系统配置** | 参数配置（`ydsz_sys_config`），支持按 key 查询、按 group 批量查询、公开配置查询、缓存、缓存穿透防护、值类型校验 |
+| **数据字典** | 字典类型（`ydsz_sys_dict_type`）+ 字典项（`ydsz_sys_dict_item`），支持树形字典、缓存、版本管理、批量写入 |
+| **应用注册** | OAuth2 应用注册（`ydsz_sys_app_info`），支持 BCrypt 密钥校验（强度可配置） |
+| **系统变量** | 业务级变量管理（`ydsz_sys_variable`），支持缓存、缓存穿透防护 |
+| **实体版本** | 通用实体变更历史快照（`ydsz_sys_entity_version`），写操作自动记录变更、支持查询审计与回滚 |
+| **多租户** | 租户（`ydsz_sys_tenant`）+ 套餐（`ydsz_sys_tenant_plan`）+ 套餐菜单（`ydsz_sys_tenant_plan_menu`），支持租户级菜单定制与配额管理 |
 | **前端初始化** | 聚合公开配置 + 字典数据 + 系统版本号，减少前端启动请求次数 |
 
 ## DDD 分层结构
@@ -169,15 +169,15 @@ ydsz-system/
 
 | 表名 | 说明 |
 |---|---|
-| `ydsz_config` | 系统参数（key-value，含 `tenant_id` 列 + 唯一索引 `uk_config_group_key(tenant_id, config_group, config_key)`，多租户隔离在 schema 层保证） |
-| `ydsz_dict_type` | 字典类型 |
-| `ydsz_dict_item` | 字典项（支持树形 parent_id、扩展 ext_json） |
-| `ydsz_entity_version` | 通用实体版本（配置/变量/字典等变更历史快照，含 tenant_id） |
-| `ydsz_app_info` | 应用注册（OAuth2 client_id/client_secret） |
-| `ydsz_variable` | 系统变量 |
-| `ydsz_tenant` | 租户（多租户隔离的租户主表） |
-| `ydsz_tenant_plan` | 租户套餐（套餐定义，含菜单配额/功能开关） |
-| `ydsz_tenant_plan_menu` | 套餐菜单关联（套餐 → 菜单多对多） |
+| `ydsz_sys_config` | 系统参数（key-value，含 `tenant_id` 列 + 唯一索引 `uk_config_group_key(tenant_id, config_group, config_key)`，多租户隔离在 schema 层保证） |
+| `ydsz_sys_dict_type` | 字典类型 |
+| `ydsz_sys_dict_item` | 字典项（支持树形 parent_id、扩展 ext_json） |
+| `ydsz_sys_entity_version` | 通用实体版本（配置/变量/字典等变更历史快照，含 tenant_id） |
+| `ydsz_sys_app_info` | 应用注册（OAuth2 client_id/client_secret） |
+| `ydsz_sys_variable` | 系统变量 |
+| `ydsz_sys_tenant` | 租户（多租户隔离的租户主表） |
+| `ydsz_sys_tenant_plan` | 租户套餐（套餐定义，含菜单配额/功能开关） |
+| `ydsz_sys_tenant_plan_menu` | 套餐菜单关联（套餐 → 菜单多对多） |
 
 ## 核心能力
 
@@ -215,7 +215,7 @@ ydsz-system/
 
 ### 实体版本管理（EntityVersion）
 - 配置 / 变量 / 字典等实体的写操作（save/update/delete）自动发布 `VersionSnapshotEvent`
-- `VersionSnapshotListener` 在事务提交后（`AFTER_COMMIT`）异步创建版本快照到 `ydsz_entity_version`
+- `VersionSnapshotListener` 在事务提交后（`AFTER_COMMIT`）异步创建版本快照到 `ydsz_sys_entity_version`
 - 版本记录包含实体类型、实体 ID、版本号、变更内容（diff）
 - 支持版本历史查询与**回滚**（`/api/v1/config/version`、`/api/v1/variable/version`、`/api/v1/dict/version`）
 - 回滚策略：`RollbackStrategy` 接口 + 具体实现（ConfigRollbackStrategy / VariableRollbackStrategy / DictItemRollbackStrategy）
@@ -386,12 +386,12 @@ mvn spring-boot:run
 
 ### Q1：配置查询返回 null
 
-检查 `ydsz_config` 表中是否存在对应的 `config_key` 且 `status = 'ENABLED'`、`deleted = 0`。
+检查 `ydsz_sys_config` 表中是否存在对应的 `config_key` 且 `status = 'ENABLED'`、`deleted = 0`。
 配置查询走缓存，空值会缓存（TTL 默认 15 分钟），期间重复查询返回 null。
 
 ### Q2：应用密钥校验失败
 
-1. 确认 `ydsz_app_info` 表中 `app_key` 存在且 `status = 'ENABLED'`
+1. 确认 `ydsz_sys_app_info` 表中 `app_key` 存在且 `status = 'ENABLED'`
 2. 确认 `app_secret` 字段存储的是 BCrypt 加密后的哈希值（非明文）
 3. 创建应用时通过 API 传入明文密钥，Service 会自动 BCrypt 加密
 4. BCrypt 强度可通过 `ydsz.system.app.bcrypt-strength` 配置

@@ -71,7 +71,7 @@ ydsz:
   event:
     outbox:
       enabled: true                    # 是否启用（默认 true）
-      table-name: ydsz_outbox         # Outbox 表名
+      table-name: ydsz_com_outbox         # Outbox 表名
       poll-interval-seconds: 5        # 轮询间隔（秒）
       batch-size: 100                 # 每批最大条数
       max-retries: 5                  # 默认最大重试次数
