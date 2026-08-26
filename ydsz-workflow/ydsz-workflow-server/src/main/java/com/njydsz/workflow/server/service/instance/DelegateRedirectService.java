@@ -11,6 +11,7 @@ import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
 import com.njydsz.workflow.infra.entity.FlowNode;
 import com.njydsz.workflow.infra.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
+import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
 
 /**
  * 长期授权委派改写服务

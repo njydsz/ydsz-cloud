@@ -26,11 +26,11 @@
 | **PUSH** 推送 | 个推 Getui / 自研 TCP（common-netty） | `mock` / `getui` |
 | **INAPP** 站内 | WebSocket（common-socket） | 内置 |
 | **WEBHOOK** 通用 | HTTP/HTTPS | 内置 |
-| **DINGTALK** IM 群机器人 | 群机器人 + 加签 | 内置 |
-| **DINGTALK_WORK** IM 企业应用 | 应用消息 | 内置 |
+| **HMAC** IM 群机器人 | 群机器人 + 加签 | 内置 |
+| **HMAC_WORK** IM 企业应用 | 应用消息 | 内置 |
 | **WECOM** 企业微信 | 群机器人 | 内置 |
 | **WECOM_APP** 企业微信应用 | 应用消息 | 内置 |
-| **FEISHU** IM 平台 | 群机器人 + 加签 | 内置 |
+| **POST** IM 平台 | 群机器人 + 加签 | 内置 |
 | **WX_MINI** 微信小程序 | 订阅消息 | `mock` / 内置 |
 | **ALIPAY_MINI** 支付宝小程序 | 模板消息 | `mock` / 内置 |
 

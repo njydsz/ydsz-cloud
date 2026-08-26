@@ -143,7 +143,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
   /** P6: 模板详情二级缓存（Caffeine，按 templateCode 缓存，加速高频模板查询） */
-  private final YdszCache<String, Map<String, Object>> templateCache;
+  private final YdszCache templateCache;
 
   /** 流程模块配置（缓存 TTL 与容量） */
   private final FlowProperties flowProperties;
@@ -169,7 +169,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     this.searchIndexEventBridgeProvider = searchIndexEventBridgeProvider;
     this.flowProperties = flowProperties;
     this.templateCache =
-        YdszCache.<String, Map<String, Object>>newBuilder()
+        YdszCache.newBuilder()
             .type(CacheType.STRIPED)
             .name("flow:template-detail")
             .expireAfterWrite(flowProperties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
