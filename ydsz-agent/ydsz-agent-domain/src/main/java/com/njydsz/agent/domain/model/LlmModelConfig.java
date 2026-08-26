@@ -21,7 +21,7 @@ public final class LlmModelConfig implements Serializable {
   /** 模型唯一标识 */
   private final String modelId;
 
-  /** Provider 标识（openai/deepseek/qwen/ollama 等） */
+  /** Provider 标识 */
   private final String provider;
 
   /** 模型名称 */

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 多模态消息内容（对标 OpenAI vision API content 数组）
+ * 多模态消息内容
  *
  * <p>支持文本和图片两种内容类型，用于 Vision 模型的输入。 每条消息可由多个内容段落组成（如：文本 + 图片 + 文本）。
  *
@@ -83,7 +83,7 @@ public final class MessageContent implements Serializable {
   /**
    * 估算多模态内容的 Token 字符数。
    *
-   * <p>文本段落按实际字符数计算；图片段落按固定 85 Token（OpenAI Vision 低分辨率单图约 85 Token）估算。
+   * <p>文本段落按实际字符数计算；图片段落按固定 85 Token估算。
    *
    * @return 估算 Token 字符数
    */
@@ -93,7 +93,7 @@ public final class MessageContent implements Serializable {
       if (part.isText() && part.text() != null) {
         chars += part.text().length();
       } else if (part.isImage()) {
-        // OpenAI Vision 低分辨率单图约 85 Token，按 tokenCharRatio 反算字符数
+            // 低分辨率单图约 85 Token，按 tokenCharRatio 反算字符数
         chars += 85 * 2.5;
       }
     }

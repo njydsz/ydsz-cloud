@@ -43,12 +43,11 @@ import com.njydsz.common.json.tree.ObjectNode;
  * <p>覆盖所有兼容 OpenAI Chat Completions API 的 Provider：
  *
  * <ul>
- *   <li>OpenAI（GPT-4o / GPT-4o-mini）
- *   <li>DeepSeek（deepseek-chat / deepseek-coder）
- *   <li>通义千问（qwen-plus / qwen-max）
- *   <li>Moonshot（moonshot-v1-8k / moonshot-v1-32k）
- *   <li>智谱 GLM（glm-4 / glm-4-flash）
- *   <li>Ollama 本地模型（llama3 / qwen2）
+ *   <li>DeepSeek
+ *   <li>通义千问
+ *   <li>Moonshot
+ *   <li>智谱 GLM
+ *   <li>Ollama 本地模型
  * </ul>
  *
  * <h3>同步调用</h3>
@@ -95,7 +94,7 @@ public class OpenAiCompatibleClient implements LlmClient {
   /** 最大重试次数 */
   private final int maxRetries;
 
-  /** SNAKE_CASE 命名策略的 Mapper（OpenAI API 要求 snake_case） */
+    /** SNAKE_CASE 命名策略的 Mapper */
   private final JsonMapper snakeCaseMapper;
 
   public OpenAiCompatibleClient(
@@ -111,7 +110,7 @@ public class OpenAiCompatibleClient implements LlmClient {
       int maxRetries,
       int maxConcurrent) {
     this.provider = provider;
-    this.baseUrl = baseUrl != null ? baseUrl : "https://api.openai.com/v1";
+        this.baseUrl = baseUrl != null ? baseUrl : "";
     this.apiKey = apiKey;
     this.timeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : 60;
     this.maxRetries = maxRetries > 0 ? maxRetries : DEFAULT_MAX_RETRIES;
@@ -308,7 +307,7 @@ public class OpenAiCompatibleClient implements LlmClient {
     // 顶层字段保持显式 snake_case key（Map key 在序列化时原样透传，不受命名策略影响）；
     // 嵌套的 messages / tools 直接放入领域对象，由 AgentJsonModule 注册的
     // ChatMessageSerializer / ToolDefinitionSerializer 在全局 toJson 路径中统一产出
-    // OpenAI 契约形状（role 用 API 枚举值、tool_calls 结构、arguments 为 JSON 字符串），
+        // 契约形状（role 用 API 枚举值、tool_calls 结构、arguments 为 JSON 字符串），
     // 替代原先此处手工拼装 Map 的冗余代码。
     Map<String, Object> body = new LinkedHashMap<>();
     body.put("model", request.getModel());
@@ -420,7 +419,7 @@ public class OpenAiCompatibleClient implements LlmClient {
   /**
    * 解析 delta 中的 tool_calls 数组（流式 Function Calling 场景）。
    *
-   * <p>OpenAI 流式协议下，tool_calls 以增量方式推送：首个 chunk 含 id 和 function name， 后续 chunk 仅含 arguments 的部分
+     * <p>流式协议下，tool_calls 以增量方式推送：首个 chunk 含 id 和 function name， 后续 chunk 仅含 arguments 的部分
    * JSON 字符串。本方法将每个 tool_call 元素解析为 {@link ToolCall} 对象（arguments 可能为空 Map，表示部分
    * JSON，需下游拼接完整后再反序列化）。
    *

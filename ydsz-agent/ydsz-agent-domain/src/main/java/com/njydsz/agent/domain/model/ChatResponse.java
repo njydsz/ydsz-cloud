@@ -7,7 +7,7 @@ import java.util.Objects;
 /**
  * LLM 聊天补全响应
  *
- * <p>对标 OpenAI Chat Completions API 响应体，包含助手回复消息和 Token 用量。
+ * <p>LLM 聊天补全响应体，包含助手回复消息和 Token 用量。
  *
  * <p><b>线程安全</b>：全字段 final 且集合不可变，不可变值对象，可安全跨线程共享。
  *

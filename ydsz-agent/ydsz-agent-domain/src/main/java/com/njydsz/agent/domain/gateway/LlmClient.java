@@ -9,7 +9,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
 /**
  * LLM 客户端接口（Provider 抽象层）
  *
- * <p>统一抽象不同 LLM Provider（OpenAI/DeepSeek/Qwen/Anthropic/Ollama 等）的调用接口。 实现类通过 {@code @Component}
+ * <p>统一抽象不同 LLM Provider 的调用接口。 实现类通过 {@code @Component}
  * 注册，由 {@code LlmClientRouter} 按模型配置路由。
  *
  * <h3>核心能力</h3>
@@ -63,7 +63,7 @@ public interface LlmClient {
   boolean supports(String modelId);
 
   /**
-   * Provider 标识（如 "openai"、"deepseek"、"qwen"）
+     * Provider 标识
    *
    * @return Provider 标识
    */

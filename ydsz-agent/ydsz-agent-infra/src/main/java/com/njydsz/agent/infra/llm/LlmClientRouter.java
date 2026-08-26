@@ -20,7 +20,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
  * <p>按模型配置路由到对应的 {@link LlmClient} 实现，支持：
  *
  * <ul>
- *   <li>按 Provider 匹配（openai / deepseek / qwen / ollama）
+ *   <li>按 Provider 匹配
  *   <li>Fallback 降级：主模型不可用时自动切换备用模型
  *   <li>运行时动态注册/注销 Provider
  * </ul>
@@ -169,7 +169,7 @@ public class LlmClientRouter implements LlmClient {
   /**
    * 获取已注册的全部 Provider 名称。
    *
-   * @return Provider 名称的不可修改列表（如 [openai, qwen, deepseek]）
+     * @return Provider 名称的不可修改列表
    */
   public List<String> getAvailableProviders() {
     return List.copyOf(clients.keySet());

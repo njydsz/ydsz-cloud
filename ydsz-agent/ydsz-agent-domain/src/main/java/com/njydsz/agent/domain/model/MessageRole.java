@@ -1,7 +1,7 @@
 package com.njydsz.agent.domain.model;
 
 /**
- * 消息角色枚举（对标 OpenAI Chat Completions message.role）
+ * 消息角色枚举
  *
  * @author ydsz-team
  * @since 1.0.0

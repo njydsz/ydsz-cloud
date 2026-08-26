@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 工具调用描述（对标 OpenAI tool_calls）
+ * 工具调用描述
  *
  * <p>表示 LLM 决定调用某个工具时产生的调用请求，包含工具名称和参数。
  *

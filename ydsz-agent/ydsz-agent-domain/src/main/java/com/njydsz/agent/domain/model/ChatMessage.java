@@ -9,7 +9,7 @@ import java.util.Objects;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
- * 对话消息值对象（对标 OpenAI Chat Completions message）
+ * 对话消息值对象
  *
  * <p>每条消息包含角色（System/User/Assistant/Tool）、内容、可选的工具调用信息。 不可变值对象，修改操作返回新实例。
  *

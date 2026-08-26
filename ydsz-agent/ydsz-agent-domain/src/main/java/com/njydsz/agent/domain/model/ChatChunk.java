@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * LLM 流式响应片段（对标 OpenAI SSE chunk）
+ * LLM 流式响应片段
  *
  * <p>流式输出时每个 SSE 事件对应一个 ChatChunk，包含增量内容或工具调用增量。
  *
