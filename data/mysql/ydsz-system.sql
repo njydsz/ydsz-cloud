@@ -11,7 +11,7 @@
 -- ============================================================================
 
 -- 租户主表（SaaS 多租户核心元数据）
-CREATE TABLE IF NOT EXISTS ydsz_tenant (
+CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     tenant_code     VARCHAR(64)     NOT NULL COMMENT '租户编码（唯一业务标识，租户登录/调用使用）',
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant (
     contact_name    VARCHAR(64)     DEFAULT NULL COMMENT '联系人姓名',
     contact_phone   VARCHAR(32)     DEFAULT NULL COMMENT '联系电话（脱敏返回）',
     contact_email   VARCHAR(128)    DEFAULT NULL COMMENT '联系邮箱（脱敏返回）',
-    plan_id         VARCHAR(32)     DEFAULT NULL COMMENT '关联套餐 ID（ydsz_tenant_plan.id）',
+    plan_id         VARCHAR(32)     DEFAULT NULL COMMENT '关联套餐 ID（ydsz_sys_tenant_plan.id）',
     expire_at       DATETIME        DEFAULT NULL COMMENT '订阅到期时间（到期后租户被自动锁定/降级）',
     datasource_key  VARCHAR(64)     DEFAULT NULL COMMENT '独立数据源标识（ISOLATE_DB 模式下使用）',
     remark          VARCHAR(512)    DEFAULT NULL COMMENT '备注',
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='租户主表';
 
 -- 租户套餐表（套餐/订阅计划：功能菜单 + 资源配额 + 计费规则）
-CREATE TABLE IF NOT EXISTS ydsz_tenant_plan (
+CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     plan_code       VARCHAR(64)     NOT NULL COMMENT '套餐编码（唯一标识，如 TRIAL/STANDARD/ENTERPRISE）',
@@ -57,10 +57,10 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant_plan (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='租户套餐表';
 
 -- 租户套餐菜单关联表（套餐与菜单权限多对多关联）
-CREATE TABLE IF NOT EXISTS ydsz_tenant_plan_menu (
+CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    plan_id         VARCHAR(32)     NOT NULL COMMENT '套餐 ID（ydsz_tenant_plan.id）',
+    plan_id         VARCHAR(32)     NOT NULL COMMENT '套餐 ID（ydsz_sys_tenant_plan.id）',
     menu_id         VARCHAR(64)     NOT NULL COMMENT '菜单 ID（ydsz_menu.id 或权限码 ydsz:xxx）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant_plan_menu (
 -- ============================================================================
 
 -- 字典类型表（数据字典分类信息）
-CREATE TABLE IF NOT EXISTS ydsz_dict_type (
+CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     type_code       VARCHAR(64)     NOT NULL COMMENT '类型编码（唯一标识，用于业务引用）',
@@ -96,10 +96,10 @@ CREATE TABLE IF NOT EXISTS ydsz_dict_type (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典类型表';
 
 -- 字典项表（字典类型的具体枚举值）
-CREATE TABLE IF NOT EXISTS ydsz_dict_item (
+CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    type_code       VARCHAR(64)     NOT NULL COMMENT '所属字典类型编码（逻辑外键 → ydsz_dict_type.type_code）',
+    type_code       VARCHAR(64)     NOT NULL COMMENT '所属字典类型编码（逻辑外键 → ydsz_sys_dict_type.type_code）',
     item_code       VARCHAR(64)     NOT NULL COMMENT '字典项编码（同 typeCode 内唯一）',
     item_value      VARCHAR(128)    NOT NULL COMMENT '字典项真实值（业务代码引用的枚举值，如 "PAID"）',
     sort_order      INT             NOT NULL DEFAULT 0 COMMENT '展示排序序号（升序）',
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS ydsz_dict_item (
 -- ============================================================================
 
 -- 系统配置表（系统级配置项，面向后端）
-CREATE TABLE IF NOT EXISTS ydsz_config (
+CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     config_group    VARCHAR(64)     NOT NULL COMMENT '配置分组（按业务域分类管理配置）',
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS ydsz_config (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
 
 -- 系统变量表（系统级动态变量，面向业务侧，按 key 高频查询）
-CREATE TABLE IF NOT EXISTS ydsz_variable (
+CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     variable_key    VARCHAR(128)    NOT NULL COMMENT '变量键（唯一标识，全局唯一）',
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS ydsz_variable (
 -- ============================================================================
 
 -- 应用信息表（OAuth2 客户端应用注册信息）
-CREATE TABLE IF NOT EXISTS ydsz_app_info (
+CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     app_code        VARCHAR(64)     NOT NULL COMMENT '应用业务编码（对外展示/业务标识，全局唯一）',
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS ydsz_app_info (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='应用信息表';
 
 -- 统一实体版本表（Config/Dict/Variable 变更历史快照）
-CREATE TABLE IF NOT EXISTS ydsz_entity_version (
+CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     resource_type   VARCHAR(32)     NOT NULL COMMENT '资源类型（CONFIG/DICT/VARIABLE）',

@@ -9,7 +9,7 @@
 -- ----------------------------------------------------------------------------
 -- Prompt 模板主表（沿用 V1__prompt_template.sql 定义）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_prompt_template (
+CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     template_code   VARCHAR(64)     NOT NULL COMMENT '模板唯一编码（业务标识，创建后不可变）',
@@ -35,10 +35,10 @@ CREATE TABLE IF NOT EXISTS ydsz_prompt_template (
 -- ----------------------------------------------------------------------------
 -- Prompt 模板版本历史表（沿用 V1__prompt_template.sql 定义）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_prompt_version (
+CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    template_code   VARCHAR(64)     NOT NULL COMMENT '所属模板编码（关联 ydsz_prompt_template.template_code）',
+    template_code   VARCHAR(64)     NOT NULL COMMENT '所属模板编码（关联 ydsz_agt_prompt_template.template_code）',
     version         INT             NOT NULL COMMENT '版本号（与 template 的 current_version 对应）',
     content         TEXT            NOT NULL COMMENT '该版本的模板内容快照',
     change_note     VARCHAR(512)    DEFAULT NULL COMMENT '版本备注（描述本次变更内容）',
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS ydsz_prompt_version (
 -- ----------------------------------------------------------------------------
 -- Agent 定义表（实体：AgentDefinition extends MpBaseEntity<String>）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_agent_definition (
+CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     agent_code      VARCHAR(64)     NOT NULL COMMENT 'Agent 编码（业务唯一键）',
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_definition (
 -- ----------------------------------------------------------------------------
 -- Agent 执行链路表（实体：AgentTrace，独立主键 trace_id，无公共基类列）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_agent_trace (
+CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     trace_id            VARCHAR(64)     PRIMARY KEY COMMENT '链路唯一 ID（主键，业务生成非自增）',
     conversation_id     VARCHAR(64)     NOT NULL COMMENT '所属对话 ID',
     agent_id            VARCHAR(64)     NOT NULL COMMENT 'Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR）',
@@ -103,8 +103,8 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_trace (
 -- ----------------------------------------------------------------------------
 -- Agent 执行链路步骤表（实体：AgentTraceStep；已合并 V2__trace_step_cost.sql 的 cost 列）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_agent_trace_step (
-    trace_id        VARCHAR(64)     NOT NULL COMMENT '链路 ID（关联 ydsz_agent_trace.trace_id）',
+CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
+    trace_id        VARCHAR(64)     NOT NULL COMMENT '链路 ID（关联 ydsz_agt_trace.trace_id）',
     step_index      INT             NOT NULL COMMENT '步骤序号（从 0 开始递增）',
     step_type       VARCHAR(32)     NOT NULL COMMENT '步骤类型（LLM_CALL/TOOL_CALL/THOUGHT/OBSERVATION/ROUTE/LLM_CALL_ERROR）',
     content         TEXT            DEFAULT NULL COMMENT '步骤内容描述',
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_trace_step (
 -- ----------------------------------------------------------------------------
 -- Agent 人工审批请求表（实体：AgentApproval，独立主键 id，无公共基类列）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_agent_approval (
+CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     id                  VARCHAR(64)     PRIMARY KEY COMMENT '审批请求 ID（主键，业务生成非自增）',
     conversation_id     VARCHAR(64)     DEFAULT NULL COMMENT '所属对话 ID',
     trace_id            VARCHAR(64)     DEFAULT NULL COMMENT '执行链路 ID',
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_approval (
 -- ----------------------------------------------------------------------------
 -- Token 用量记录表（实体：TokenUsageRecord extends MpBaseEntity<String>）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_agent_token_usage (
+CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id           VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     conversation_id     VARCHAR(64)     NOT NULL COMMENT '所属对话 ID（关联 ydsz_agent_conversation）',
@@ -168,22 +168,22 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_token_usage (
 -- ============================================================================
 -- 初始化数据：默认系统 Prompt 模板（沿用 V1__prompt_template.sql）
 -- ============================================================================
-INSERT INTO ydsz_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
 VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt',
         '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。',
         '系统默认的通用助手 Prompt', 'system', 1, FALSE);
 
-INSERT INTO ydsz_prompt_version (id, tenant_id, template_code, version, content, change_note)
+INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
 VALUES ('100000000000000002', '0', 'DEFAULT_SYSTEM', 1,
         '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。',
         '初始版本');
 
-INSERT INTO ydsz_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
 VALUES ('100000000000000003', '0', 'REACT_SYSTEM', 'ReAct Agent Prompt',
         '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。',
         'ReAct 模式下的工具调用助手 Prompt', 'system', 1, FALSE);
 
-INSERT INTO ydsz_prompt_version (id, tenant_id, template_code, version, content, change_note)
+INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
 VALUES ('100000000000000004', '0', 'REACT_SYSTEM', 1,
         '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。',
         '初始版本');
