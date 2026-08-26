@@ -102,7 +102,14 @@ public interface MessageConverter {
 
   List<MsgRouteRuleVO> routeRuleListToVO(List<MsgRouteRule> entities);
 
-  /** 路由规则 VO → 路由规则 Entity。 */
+  /**
+   * 路由规则 VO → 路由规则 Entity。
+   *
+   * <p>用于 Repository 层将 VO 转换为 Entity 后委托 Mapper 执行数据库操作。
+   *
+   * @param vo 路由规则 VO
+   * @return 路由规则 Entity
+   */
   @Named("voToEntity")
   MsgRouteRule voToRouteRule(MsgRouteRuleVO vo);
 
@@ -116,7 +123,14 @@ public interface MessageConverter {
 
   List<MsgSubscriptionVO> subscriptionListToVO(List<MsgSubscription> entities);
 
-  /** 订阅关系 VO → 订阅关系 Entity。 */
+  /**
+   * 订阅关系 VO → 订阅关系 Entity。
+   *
+   * <p>用于 Repository 层将 VO 转换为 Entity 后委托 Mapper 执行数据库操作。
+   *
+   * @param vo 订阅关系 VO
+   * @return 订阅关系 Entity
+   */
   @Named("voToEntity")
   MsgSubscription voToSubscription(MsgSubscriptionVO vo);
 
@@ -125,7 +139,14 @@ public interface MessageConverter {
 
   List<MsgPreferenceVO> preferenceListToVO(List<MsgPreference> entities);
 
-  /** 用户偏好 VO → 用户偏好 Entity。 */
+  /**
+   * 用户偏好 VO → 用户偏好 Entity。
+   *
+   * <p>用于 Repository 层将 VO 转换为 Entity 后委托 Mapper 执行数据库操作。
+   *
+   * @param vo 用户偏好 VO
+   * @return 用户偏好 Entity
+   */
   @Named("voToEntity")
   MsgPreference voToPreference(MsgPreferenceVO vo);
 
@@ -149,7 +170,14 @@ public interface MessageConverter {
 
   List<MsgFeedbackVO> feedbackListToVO(List<MsgFeedback> entities);
 
-  /** 用户反馈 VO → 用户反馈 Entity。 */
+  /**
+   * 用户反馈 VO → 用户反馈 Entity。
+   *
+   * <p>用于 Repository 层将 VO 转换为 Entity 后委托 Mapper 执行数据库操作。
+   *
+   * @param vo 用户反馈 VO
+   * @return 用户反馈 Entity
+   */
   @Named("voToEntity")
   MsgFeedback voToFeedback(MsgFeedbackVO vo);
 

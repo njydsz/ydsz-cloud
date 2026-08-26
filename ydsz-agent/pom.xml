@@ -12,10 +12,10 @@
     <name>ydsz-agent</name>
     <description>AI Agent 智能体服务 - LLM 对话、Agent 编排、Tool Calling、RAG 知识增强、记忆管理</description>
     <modules>
-        <module>ydsz-agent-api</module>
         <module>ydsz-agent-domain</module>
         <module>ydsz-agent-infra</module>
         <module>ydsz-agent-server</module>
+        <module>ydsz-agent-api</module>
         <module>ydsz-agent-app</module>
         <module>ydsz-agent-web</module>
     </modules>

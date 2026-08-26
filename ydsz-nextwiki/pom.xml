@@ -12,10 +12,10 @@
     <name>ydsz-nextwiki</name>
     <description>网盘知识库服务 - 融合文件存储、文档解析、全文搜索、在线预览、版本控制、分享协作的一体化平台</description>
     <modules>
-        <module>ydsz-nextwiki-api</module>
         <module>ydsz-nextwiki-domain</module>
         <module>ydsz-nextwiki-infra</module>
         <module>ydsz-nextwiki-server</module>
+        <module>ydsz-nextwiki-api</module>
         <module>ydsz-nextwiki-web</module>
         <module>ydsz-nextwiki-app</module>
     </modules>
