@@ -14,6 +14,10 @@
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-workflow-engine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-domain</artifactId>
         </dependency>
         <!-- 遵循 DDD 分层，server 层不直接依赖 infra 层，仓储实现由 web 层注入 -->

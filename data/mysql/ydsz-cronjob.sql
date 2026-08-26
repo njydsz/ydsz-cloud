@@ -140,6 +140,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
     mem_usage_pct         DECIMAL(20,6)   DEFAULT NULL COMMENT '内存使用率（百分比，0-100）',
     running_count         INT             NOT NULL DEFAULT 0 COMMENT '当前正在执行的任务数',
     tags                  JSON            DEFAULT NULL COMMENT '节点标签 JSON（用于任务亲和性选择）',
+    response_time_ms      BIGINT          DEFAULT NULL COMMENT '加权平均响应时长（毫秒）：DB ping 延迟的指数移动平均',
+    consecutive_failures  INT             DEFAULT 0 COMMENT '连续失败次数（心跳/健康检查连续失败，超阈值触发自动隔离）',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
@@ -149,6 +151,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
     updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_node_id UNIQUE (node_id),
     INDEX idx_last_heartbeat (last_heartbeat),
+    INDEX idx_jn_status_response (node_status, response_time_ms),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调度节点心跳表';
 
@@ -459,7 +462,10 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     INDEX idx_jl_job_key (job_key),
     INDEX idx_jl_status (status),
     INDEX idx_jl_start_time (start_time),
-    INDEX idx_jl_trace_id (trace_id)
+    INDEX idx_jl_trace_id (trace_id),
+    INDEX idx_jl_status_start (status, start_time),
+    INDEX idx_jl_jobkey_start (job_key, start_time),
+    INDEX idx_jl_node_status (exec_node_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务执行日志表';
 
 -- ----------------------------------------------------------------------------

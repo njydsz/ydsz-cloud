@@ -450,13 +450,13 @@ public interface CronjobConverter {
   /**
    * 将 DAG 节点上下文 VO 转换为实体。
    *
+   * <p>注意：VO 含 {@code tenantId} 字段但实体不含（tenantId 由 MyBatis 拦截器自动注入），
+   * 故仅映射 {@code dagInstanceId}、{@code nodeKey}、{@code resultJson} 三个业务字段。
+   *
    * @param vo 节点上下文 VO
    * @return 节点上下文实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
