@@ -766,7 +766,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           job.getId(), null, null, incFire, incSucc, incFail, success ? null : "ERROR");
 
       // P0-A2: 释放分片锁（优先 JobLockManager，回退 Lua 脚本安全释放）
-      releaseLockQuietly(lockKey, job.getJobKey(), shardIndex, shardValue);
+      jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), shardIndex, shardValue);
 
       // P0-2: 释放全局并发配额
       releaseGlobalConcurrency();
@@ -1061,6 +1061,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     String lockKey = null;
     String lockValue = null;
     if (holdLock) {
+      Duration ttl = jobLockGuard.resolveLockTtl(job);
       JobLockGuard.AcquiredLock lock = jobLockGuard.acquireJobLock(job, null);
       lockKey = lock.key();
       lockValue = lock.value();

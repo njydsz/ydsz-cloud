@@ -136,5 +136,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- server 依赖 infra 以使用 WorkflowConverter 等转换器 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-workflow-infra</artifactId>
+        </dependency>
     </dependencies>
 </project>

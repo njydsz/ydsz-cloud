@@ -163,6 +163,23 @@ public class JobNodeHeartbeat {
     return info != null ? info.getNodeId() : null;
   }
 
+  /**
+   * 任务开始通知（Dispatcher 心跳联动，当前心跳不跟踪运行计数，保留为扩展点）。
+   *
+   * <p>运行中任务数由 {@code SystemMetricsCollector.collectRunningCount()} 从 Redis 集群计数读取，
+   * 无需在心跳组件内维护，故此处为空实现（保留钩子供未来按节点细分统计）。
+   */
+  public void onTaskStart() {
+    // 预留：按节点维护 runningCount 时可在此增量更新节点记录
+  }
+
+  /**
+   * 任务完成通知（Dispatcher 心跳联动，当前为空实现）。
+   */
+  public void onTaskComplete() {
+    // 预留：与 onTaskStart 对称
+  }
+
   /** 启动心跳循环（fixedRate, 每次以 daemon 线程执行）。 */
   private void startHeartbeatLoop() {
     if (!running.compareAndSet(false, true)) {
