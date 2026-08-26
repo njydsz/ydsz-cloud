@@ -51,6 +51,9 @@ public class CrossDomainSsoFilter extends OncePerRequestFilter {
   /** 请求属性名：跨域 SSO 提取到的 Token */
   public static final String CROSS_DOMAIN_TOKEN_ATTR = "CROSS_DOMAIN_SSO_TOKEN";
 
+  /** Bearer Token 前缀长度（"Bearer " 共 7 个字符） */
+  private static final int BEARER_PREFIX_LENGTH = 7;
+
   private final CrossDomainSsoProperties ssoProperties;
   private final CrossDomainTokenService crossDomainTokenService;
 

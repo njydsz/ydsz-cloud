@@ -58,6 +58,9 @@ public class TokenAutoRenewalFilter extends OncePerRequestFilter {
   private final TokenService tokenService;
   private final UserInfoProperties userInfoProperties;
 
+  /** Bearer Token 前缀长度（"Bearer " 共 7 个字符） */
+  private static final int BEARER_PREFIX_LENGTH = 7;
+
   /** 新 Token 响应头名称 */
   public static final String NEW_TOKEN_HEADER = "X-Access-Token";
 

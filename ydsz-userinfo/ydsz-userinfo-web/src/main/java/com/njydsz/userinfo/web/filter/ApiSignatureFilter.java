@@ -64,6 +64,9 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   /** 内部 API 路径前缀 */
   private static final String INTERNAL_PATH_PREFIX = "/api/internal";
 
+  /** 请求体缓存大小（8KB），用于签名校验时缓存请求体 */
+  private static final int REQUEST_BODY_CACHE_SIZE = 8192;
+
   /**
    * 签名校验通过的请求属性名。
    *

@@ -5,6 +5,12 @@ import java.util.Map;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
+import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionDiffVO;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVersionVO;
+import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
+import com.njydsz.workflow.domain.vo.FlowRollbackResultVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 
 /**
@@ -120,9 +126,9 @@ public interface FlowDefinitionService {
    * P2-21: 流程定义详情查询（含节点 + 跳转）
    *
    * @param definitionId 流程定义 ID
-   * @return Map 包含 definition / nodes / skips 三个 key；定义不存在返回 null
+   * @return 流程定义详情 VO；定义不存在返回 null
    */
-  Map<String, Object> getDetail(String definitionId);
+  FlowDefinitionDetailVO getDetail(String definitionId);
 
   /**
    * P2-27: 切换流程定义的激活版本 — 失效同 flowCode 其他已发布版本，激活目标版本
@@ -239,9 +245,9 @@ public interface FlowDefinitionService {
    * 列出流程定义的所有历史版本
    *
    * @param definitionId 流程定义 ID（用于获取 flowCode）
-   * @return 版本列表，每项包含 id / version / flowName / isPublish / activityStatus / createdAt / updatedAt
+   * @return 版本列表
    */
-  List<Map<String, Object>> listVersions(String definitionId);
+  List<FlowDefinitionVersionVO> listVersions(String definitionId);
 
   /**
    * 对比两个版本的节点和连线差异
@@ -249,9 +255,9 @@ public interface FlowDefinitionService {
    * @param definitionId 流程定义 ID（用于获取 flowCode）
    * @param version1 版本号 1（整数）
    * @param version2 版本号 2（整数）
-   * @return Map 包含 version1 / version2 / nodeChanges / skipChanges
+   * @return 版本差异 VO
    */
-  Map<String, Object> diffVersions(String definitionId, Integer version1, Integer version2);
+  FlowDefinitionDiffVO diffVersions(String definitionId, Integer version1, Integer version2);
 
   /**
    * GAP-P1-6: 从 BPMN 部署包 .zip 批量导入流程定义。
@@ -262,9 +268,9 @@ public interface FlowDefinitionService {
    *
    * @param zipBytes zip 文件字节数组
    * @param tenantId 租户 ID（可空，默认从 SecurityContext 获取）
-   * @return 批量导入结果：successCount / failedItems（fileName + reason）
+   * @return 批量导入结果 VO
    */
-  Map<String, Object> batchDeployFromZip(byte[] zipBytes, String tenantId);
+  FlowBatchDeployResultVO batchDeployFromZip(byte[] zipBytes, String tenantId);
 
   /**
    * P2-4: 加锁流程定义（设计器协同编辑）。
@@ -327,17 +333,9 @@ public interface FlowDefinitionService {
    *
    * @param oldDefinitionId 老版本流程定义 ID
    * @param newDefinitionId 新版本流程定义 ID
-   * @return Map 包含：
-   *     <ul>
-   *       <li>{@code oldDefinition} / {@code newDefinition} — 两个版本元信息
-   *       <li>{@code diff} — 节点/跳转差异（同 {@link #diffVersions} 输出结构）
-   *       <li>{@code runningInstances} — 在途实例统计：total / byNode
-   *       <li>{@code impactedInstances} — 受影响实例：stuckInstances（卡死）/ affectedInstances（受影响）
-   *       <li>{@code riskLevel} — 风险等级：HIGH / MEDIUM / LOW / NONE
-   *       <li>{@code recommendations} — 迁移建议列表
-   *     </ul>
+   * @return 迁移影响分析 VO
    */
-  Map<String, Object> analyzeMigrationImpact(String oldDefinitionId, String newDefinitionId);
+  FlowMigrationImpactVO analyzeMigrationImpact(String oldDefinitionId, String newDefinitionId);
 
   /**
    * P0-2: 流程定义一键回滚
@@ -358,14 +356,7 @@ public interface FlowDefinitionService {
    *
    * @param flowCode 流程编码
    * @param tenantId 租户 ID（可空，默认从上下文获取）
-   * @return Map 包含：
-   *     <ul>
-   *       <li>{@code fromDefinition} — 回滚前版本信息
-   *       <li>{@code toDefinition} — 回滚后版本信息
-   *       <li>{@code migrationImpact} — 迁移影响分析报告
-   *       <li>{@code migrationResult} — 实例迁移执行结果
-   *       <li>{@code rollbackTime} — 回滚时间
-   *     </ul>
+   * @return 回滚结果 VO
    */
-  Map<String, Object> rollbackDefinition(String flowCode, String tenantId);
+  FlowRollbackResultVO rollbackDefinition(String flowCode, String tenantId);
 }
