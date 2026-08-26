@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * SAML 身份提供者配置实体（P2-1 多租户 SAML）。
  *
- * <p>对应数据库表 {@code ydsz_saml_idp_config}，存储 SAML IdP 的元数据和证书信息。
+ * <p>对应数据库表 {@code ydsz_idp_saml_config}，存储 SAML IdP 的元数据和证书信息。
  * 支持多租户隔离，不同租户可配置独立的 SAML IdP。
  *
  * <p><b>索引设计：</b>

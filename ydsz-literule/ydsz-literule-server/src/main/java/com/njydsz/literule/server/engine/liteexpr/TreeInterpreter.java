@@ -43,6 +43,14 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
    */
   public static final int DEFAULT_MAX_RECURSION_DEPTH = 128;
 
+  /**
+   * 默认单次求值节点访问预算（P0-6：防御超长平铺结构/循环式递归导致的 CPU 耗尽）
+   *
+   * <p>解释器为树遍历，每访问一个 AST 节点计数一次。典型业务表达式节点数 < 10k，
+   * 100 万节点预算足以覆盖合理场景，同时阻止病态表达式无限执行。
+   */
+  public static final long DEFAULT_MAX_STEPS = 1_000_000L;
+
   private final FunctionRegistry functionRegistry;
 
   /** 单次求值会话（ThreadLocal，保证并发安全） */
@@ -51,8 +59,11 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   /** 递归深度上限（可通过系统属性覆盖） */
   private final int maxRecursionDepth;
 
+  /** 单次求值节点访问预算 */
+  private final long maxSteps;
+
   /**
-   * 单次求值会话：承载变量上下文、追踪树构建器与递归深度，随求值调用创建与销毁。
+   * 单次求值会话：承载变量上下文、追踪树构建器、递归深度与执行预算，随求值调用创建与销毁。
    *
    * @param variables 变量上下文（facts）
    */
@@ -60,6 +71,10 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
     final Map<String, Object> variables;
     ExprTraceBuilder traceBuilder;
     int currentDepth = 0;
+    /** 已访问节点数 */
+    long stepCount = 0;
+    /** 求值截止时间（纳秒）；0=不启用墙上时钟超时 */
+    long deadlineNanos = 0;
 
     EvalSession(Map<String, Object> variables) {
       this.variables = variables;
@@ -67,7 +82,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   }
 
   public TreeInterpreter(FunctionRegistry functionRegistry) {
-    this(functionRegistry, DEFAULT_MAX_RECURSION_DEPTH);
+    this(functionRegistry, DEFAULT_MAX_RECURSION_DEPTH, DEFAULT_MAX_STEPS);
   }
 
   /**
@@ -77,8 +92,20 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
    * @param maxRecursionDepth 递归深度上限（最小 16）
    */
   public TreeInterpreter(FunctionRegistry functionRegistry, int maxRecursionDepth) {
+    this(functionRegistry, maxRecursionDepth, DEFAULT_MAX_STEPS);
+  }
+
+  /**
+   * 带自定义递归深度上限与执行预算的解释器构造器
+   *
+   * @param functionRegistry 函数注册表
+   * @param maxRecursionDepth 递归深度上限（最小 16）
+   * @param maxSteps 单次求值节点访问预算（最小 1024）
+   */
+  public TreeInterpreter(FunctionRegistry functionRegistry, int maxRecursionDepth, long maxSteps) {
     this.functionRegistry = functionRegistry;
     this.maxRecursionDepth = Math.max(MIN_RECURSION_DEPTH, maxRecursionDepth);
+    this.maxSteps = Math.max(1024L, maxSteps);
   }
 
   /**
@@ -107,12 +134,34 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   }
 
   /**
-   * 检查递归深度是否超限
+   * 检查递归深度与执行预算是否超限（P0-6）
    *
-   * @throws LiteExprException 超过递归深度上限时
+   * <p>每访问一个节点计数一次：超过 {@link #maxSteps} 或超过墙上时钟截止时间时，
+   * 抛 {@link LiteExprException} 明确错误而非无限执行。墙上时钟检查每 256 步采样一次，
+   * 避免高频 {@code System.nanoTime()} 开销。
+   *
+   * @param node 当前节点（用于错误行列号定位）
+   * @throws LiteExprException 超过递归深度 / 节点预算 / 求值超时上限时
    */
-  private void checkRecursionDepth(ExprNode node) {
-    if (requireSession().currentDepth >= maxRecursionDepth) {
+  private void guard(ExprNode node) {
+    EvalSession evalSession = requireSession();
+    long steps = ++evalSession.stepCount;
+    if (steps > maxSteps) {
+      throw new LiteExprException(
+          String.format(
+              "表达式节点访问超过上限 %d，请检查是否存在超长平铺结构或循环式递归", maxSteps),
+          node != null ? node.line() : 0,
+          node != null ? node.column() : 0);
+    }
+    if (evalSession.deadlineNanos > 0 && (steps & 0xFF) == 0) {
+      if (System.nanoTime() > evalSession.deadlineNanos) {
+        throw new LiteExprException(
+            "表达式求值超时（超过配置的求值时限），请简化表达式或拆分规则",
+            node != null ? node.line() : 0,
+            node != null ? node.column() : 0);
+      }
+    }
+    if (evalSession.currentDepth >= maxRecursionDepth) {
       throw new LiteExprException(
           String.format("表达式递归深度超过上限 %d，请检查表达式是否存在过深嵌套或循环引用", maxRecursionDepth),
           node != null ? node.line() : 0,
@@ -128,9 +177,22 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
    * @return 求值结果
    */
   public Object eval(ExprNode ast, Map<String, Object> facts) {
+    return eval(ast, facts, 0L);
+  }
+
+  /**
+   * 求值（不带追踪，支持求值超时，P0-6）
+   *
+   * @param ast AST 根节点
+   * @param facts 变量上下文
+   * @param timeoutNanos 求值超时（纳秒）；0 或负数 = 不启用墙上时钟超时（节点预算仍生效）
+   * @return 求值结果
+   */
+  public Object eval(ExprNode ast, Map<String, Object> facts, long timeoutNanos) {
     EvalSession evalSession = beginSession(facts);
     try {
       evalSession.traceBuilder = null;
+      evalSession.deadlineNanos = timeoutNanos > 0 ? System.nanoTime() + timeoutNanos : 0L;
       return ast.accept(this);
     } finally {
       session.remove();
@@ -145,9 +207,22 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
    * @return 追踪结果（含最终值和追踪树）
    */
   public TraceEvalResult evalWithTrace(ExprNode ast, Map<String, Object> facts) {
+    return evalWithTrace(ast, facts, 0L);
+  }
+
+  /**
+   * 求值（带追踪树，支持求值超时，P0-6）
+   *
+   * @param ast AST 根节点
+   * @param facts 变量上下文
+   * @param timeoutNanos 求值超时（纳秒）；0 或负数 = 不启用墙上时钟超时（节点预算仍生效）
+   * @return 追踪结果（含最终值和追踪树）
+   */
+  public TraceEvalResult evalWithTrace(ExprNode ast, Map<String, Object> facts, long timeoutNanos) {
     EvalSession evalSession = beginSession(facts);
     try {
       evalSession.traceBuilder = new ExprTraceBuilder();
+      evalSession.deadlineNanos = timeoutNanos > 0 ? System.nanoTime() + timeoutNanos : 0L;
       Object result = ast.accept(this);
       ExprTraceBuilder.TraceNode traceTree = evalSession.traceBuilder.buildRoot(ast, result);
       return new TraceEvalResult(result, traceTree);
@@ -160,11 +235,13 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitLiteral(LiteralNode node) {
+    guard(node);
     return node.value();
   }
 
   @Override
   public Object visitVariable(VariableNode node) {
+    guard(node);
     debugCheckNode(node, "VARIABLE");
     EvalSession evalSession = requireSession();
     Object value = evalSession.variables.get(node.name());
@@ -176,7 +253,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitBinaryOp(BinaryOpNode node) {
-    checkRecursionDepth(node);
+    guard(node);
     EvalSession evalSession = requireSession();
     evalSession.currentDepth++;
     try {
@@ -235,7 +312,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitUnaryOp(UnaryOpNode node) {
-    checkRecursionDepth(node);
+    guard(node);
     EvalSession evalSession = requireSession();
     evalSession.currentDepth++;
     try {
@@ -263,7 +340,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitTernary(TernaryNode node) {
-    checkRecursionDepth(node);
+    guard(node);
     EvalSession evalSession = requireSession();
     evalSession.currentDepth++;
     try {
@@ -281,7 +358,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitFunctionCall(FunctionCallNode node) {
-    checkRecursionDepth(node);
+    guard(node);
     EvalSession evalSession = requireSession();
     evalSession.currentDepth++;
     try {
@@ -317,7 +394,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitMemberAccess(MemberAccessNode node) {
-    checkRecursionDepth(node);
+    guard(node);
     EvalSession evalSession = requireSession();
     evalSession.currentDepth++;
     try {
@@ -354,7 +431,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitIndex(IndexNode node) {
-    checkRecursionDepth(node);
+    guard(node);
     EvalSession evalSession = requireSession();
     evalSession.currentDepth++;
     try {
@@ -389,7 +466,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitList(ListNode node) {
-    checkRecursionDepth(node);
+    guard(node);
     EvalSession evalSession = requireSession();
     evalSession.currentDepth++;
     try {
@@ -405,7 +482,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitMap(MapNode node) {
-    checkRecursionDepth(node);
+    guard(node);
     EvalSession evalSession = requireSession();
     evalSession.currentDepth++;
     try {
@@ -443,6 +520,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
   @Override
   public Object visitTemplateString(TemplateStringNode node) {
+    guard(node);
     StringBuilder sb = new StringBuilder();
     for (ExprNode part : node.parts()) {
       if (part instanceof LiteralNode ln) {

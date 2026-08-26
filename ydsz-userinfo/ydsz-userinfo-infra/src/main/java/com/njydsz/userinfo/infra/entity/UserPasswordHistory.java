@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 /**
  * 密码历史实体
  *
- * <p>对应数据库表 {@code ydsz_user_password_history}，用于记录用户修改过的密码历史， 防止用户短期内重复使用旧密码，符合信息安全等级保护和密码安全管理要求。
+ * <p>对应数据库表 {@code ydsz_acct_password_history}，用于记录用户修改过的密码历史， 防止用户短期内重复使用旧密码，符合信息安全等级保护和密码安全管理要求。
  *
  * <p><b>设计说明：</b>
  *

@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * OAuth2 应用实体。
  *
- * <p>对应数据库表 {@code ydsz_oauth2_application}，存储 OAuth2 客户端应用注册信息。
+ * <p>对应数据库表 {@code ydsz_idp_oauth2_application}，存储 OAuth2 客户端应用注册信息。
  *
  * <p><b>索引设计：</b>
  *

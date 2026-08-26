@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 用户-部门关联实体
  *
- * <p>对应数据库表 {@code ydsz_user_dept}，是连接用户与部门的多对多中间表。 支持用户兼职多个部门（兼岗），通过 {@link #isPrimary} 字段标识主部门。
+ * <p>对应数据库表 {@code ydsz_acct_user_dept}，是连接用户与部门的多对多中间表。 支持用户兼职多个部门（兼岗），通过 {@link #isPrimary} 字段标识主部门。
  *
  * <p><b>设计要点：</b>
  *

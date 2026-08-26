@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 公司实体
  *
- * <p>对应数据库表 {@code ydsz_company}，存储组织架构的最高级单位。 一个公司可包含多个部门（{@link Department}），通过 {@link
+ * <p>对应数据库表 {@code ydsz_org_company}，存储组织架构的最高级单位。 一个公司可包含多个部门（{@link Department}），通过 {@link
  * CompanyDept} 中间表维护多对多关系。
  *
  * <p><b>核心字段：</b>

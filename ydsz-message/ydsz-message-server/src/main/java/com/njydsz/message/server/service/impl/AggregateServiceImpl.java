@@ -195,7 +195,6 @@ public class AggregateServiceImpl implements AggregateService {
       aggQuery.setPageNum(query.getPageNum());
       aggQuery.setPageSize(Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
     }
-    aggQuery.setOrderItems(List.of(new com.njydsz.common.domain.query.OrderItem("createdAt", false)));
     PageResponse<List<MsgAggregateVO>> response = msgAggregateRepository.findPage(aggQuery);
     Page<MsgAggregateVO> page = new Page<>(
         response.getPageNum().intValue(), response.getPageSize().intValue(), response.getTotal());

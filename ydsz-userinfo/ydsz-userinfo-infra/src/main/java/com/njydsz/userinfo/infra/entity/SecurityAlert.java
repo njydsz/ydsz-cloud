@@ -13,7 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 安全告警实体。
  *
- * <p>对应数据库表 {@code ydsz_security_alert}，存储安全告警事件记录。
+ * <p>对应数据库表 {@code ydsz_idp_security_alert}，存储安全告警事件记录。
  *
  * <p><b>索引设计：</b>
  *

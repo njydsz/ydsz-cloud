@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 用户-岗位关联实体
  *
- * <p>对应数据库表 {@code ydsz_user_post}，是连接用户与岗位的多对多中间表。 一个用户可同时担任多个岗位（PM + SA），一个岗位可被多个用户承担。
+ * <p>对应数据库表 {@code ydsz_acct_user_post}，是连接用户与岗位的多对多中间表。 一个用户可同时担任多个岗位（PM + SA），一个岗位可被多个用户承担。
  *
  * <p><b>设计要点：</b>
  *

@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 /**
  * 用户登录历史实体
  *
- * <p>对应数据库表 {@code ydsz_user_login_history}，记录每次登录尝试的详细信息， 用于安全审计、异常登录检测、登录追溯。
+ * <p>对应数据库表 {@code ydsz_acct_login_history}，记录每次登录尝试的详细信息， 用于安全审计、异常登录检测、登录追溯。
  *
  * <p><b>设计说明：</b>
  *

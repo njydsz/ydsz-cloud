@@ -16,7 +16,7 @@ import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 /**
  * 社交账号绑定实体。
  *
- * <p>对应数据库表 {@code ydsz_social_account}，存储用户与第三方社交平台的绑定关系。
+ * <p>对应数据库表 {@code ydsz_auth_social_account}，存储用户与第三方社交平台的绑定关系。
  * 支持微信、钉钉、企业微信、GitHub 等 OAuth2 平台。
  *
  * <p><b>安全敏感字段：</b>

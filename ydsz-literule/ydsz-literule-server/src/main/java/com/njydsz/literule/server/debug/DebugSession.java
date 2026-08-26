@@ -94,6 +94,10 @@ public class DebugSession {
     }
     this.currentHit = hit;
     this.hits.add(hit);
+    // 每次挂起重建闩锁：单步调试需跨多个断点重复挂起/放行，
+    // 若复用初始化时创建的闩锁，首次 resume() 后计数归零，后续 pause() 的 await() 将立即返回（P0-5）
+    CountDownLatch fresh = new CountDownLatch(1);
+    this.latch = fresh;
     this.state = State.PAUSED;
     this.pendingCommand.set(DebugCommand.RESUME);
     log.info(
@@ -103,8 +107,8 @@ public class DebugSession {
         hit.getNodeType(),
         hit.getExpression());
     try {
-      // 阻塞当前求值线程，等待调试指令
-      latch.await();
+      // 阻塞当前求值线程，等待调试指令（resume 仅在会话处于 PAUSED 后由调试客户端下发，先于 PAUSED 的误调用不影响语义）
+      fresh.await();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
