@@ -75,7 +75,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-excel</artifactId>
         </dependency>
-            <!-- ArchUnit 架构测试（P3-2：DDD 分层依赖方向守护，见 LiteruleArchitectureTest） -->
+            <!-- ArchUnit 架构测试（P3-2：DDD 分层依赖方向守护，TODO：补建 LiteruleArchitectureTest） -->
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>

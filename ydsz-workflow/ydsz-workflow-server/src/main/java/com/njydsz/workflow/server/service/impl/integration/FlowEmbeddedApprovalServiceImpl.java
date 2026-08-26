@@ -208,7 +208,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_afb63fa5")
+          .message("error.workflow.embedded.dto.null")
           .build();
     }
     String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
@@ -217,13 +217,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("error.workflow.msg_b72e8598")
+          .message("error.workflow.embedded.instance.not.found")
           .build();
     }
     if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_8243ec9a")
+          .message("error.workflow.embedded.instance.finished")
           .build();
     }
 
@@ -237,7 +237,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           if (mine == null) {
             throw SysException.builder()
                 .resultCode(YdszResultCode.FORBIDDEN)
-                .message("error.workflow.msg_1440b2f2")
+                .message("error.workflow.embedded.task.not.found")
                 .build();
           }
           FlowTaskOperateDTO op = new FlowTaskOperateDTO();
@@ -258,7 +258,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             if (dto.getTargetUserId() == null) {
               throw SysException.builder()
                   .resultCode(YdszResultCode.BAD_REQUEST)
-                  .message("error.workflow.msg_df306e2b")
+                  .message("error.workflow.embedded.transfer.target.required")
                   .build();
             }
             taskService.transfer(op);
@@ -290,7 +290,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           if (!ok) {
             throw SysException.builder()
                 .resultCode(YdszResultCode.BAD_REQUEST)
-                .message("error.workflow.msg_ad7c50c2")
+                .message("error.workflow.embedded.recall.failed")
                 .build();
           }
           break;
@@ -298,7 +298,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
       default:
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .key("error.workflow.msg_3adf9016")
+            .key("error.workflow.embedded.action.unsupported")
             .params(dto.getAction())
             .build();
     }

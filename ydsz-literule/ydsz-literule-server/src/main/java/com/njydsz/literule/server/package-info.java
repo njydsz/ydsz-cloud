@@ -23,10 +23,9 @@
  * <ul>
  *   <li>{@code DefaultRuleEngine} -- 默认规则引擎实现，支持缓存、熔断、超时控制</li>
  *   <li>{@code RuleLifecycleService} -- 规则生命周期服务，驱动状态流转</li>
- *   <li>{@code RuleTestRunner} -- 规则测试运行器，执行单测与回归用例</li>
  *   <li>{@code RuleDslParser} -- 规则 DSL 解析器</li>
  *   <li>{@code RuleChain} / {@code RuleChainGraph} -- 规则链与图执行模型</li>
- *   <li>{@code ShardAwareRuleEngine} -- 分片感知的分布式规则引擎</li>
+ *   <li>{@code ShardAwareRuleEngine} -- 分片感知的分布式规则引擎（@Deprecated，计划移除）</li>
  *   <li>{@code CEPEngine} -- 复杂事件处理引擎</li>
  *   <li>{@code RuleHotReloader} -- 规则热加载器，监听配置变更事件触发即时生效</li>
  *   <li>{@code LiteRuleSdk} / {@code LiteRuleSdkBuilder} -- SDK 入口，便于第三方接入</li>

@@ -122,7 +122,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (!StringUtils.hasText(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_a7b8c9d0")
+          .message("error.workflow.comment.user.required")
           .build();
     }
     // 回复场景：校验父评论存在且属于同一实例
@@ -132,14 +132,14 @@ public class FlowCommentServiceImpl implements FlowCommentService {
       if (parent == null || parent.getDeleted() == 1) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_f2a3b4c5")
+            .key("error.workflow.comment.parent.not.found")
             .params(dto.getParentCommentId())
             .build();
       }
       if (!parent.getInstanceId().equals(dto.getInstanceId())) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("error.workflow.msg_a3b4c5d6")
+            .message("error.workflow.comment.parent.instance.mismatch")
             .build();
       }
     }
@@ -244,7 +244,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (!comment.getUserId().equals(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_b4c5d6e7")
+          .message("error.workflow.comment.delete.no.permission")
           .build();
     }
     comment.setDeleted(1);
@@ -331,7 +331,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (!StringUtils.hasText(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_user_required")
+          .message("error.workflow.quickcomment.user.required")
           .build();
     }
     FlowQuickCommentVO comment = new FlowQuickCommentVO();
@@ -362,7 +362,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (!StringUtils.hasText(dto.getId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_id_required")
+          .message("error.workflow.quickcomment.id.required")
           .build();
     }
     FlowQuickCommentVO existing = quickCommentRepository.findById(dto.getId())
@@ -370,14 +370,14 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_6541ab08")
+          .key("error.workflow.quickcomment.not.found")
           .params(dto.getId())
           .build();
     }
     if (!userId.equals(existing.getUserId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_no_permission")
+          .message("error.workflow.quickcomment.no.permission")
           .build();
     }
     existing.setContent(dto.getContent());
@@ -416,13 +416,13 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (existing.getIsSystem() != null && existing.getIsSystem() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_system_comment_cannot_delete")
+          .message("error.workflow.quickcomment.system.cannot.delete")
           .build();
     }
     if (!userId.equals(existing.getUserId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_no_permission")
+          .message("error.workflow.quickcomment.no.permission")
           .build();
     }
     existing.setDeleted(1);

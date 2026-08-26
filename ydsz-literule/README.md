@@ -68,10 +68,10 @@ ydsz-literule/
 | **规则依赖** | 依赖关系管理 + 级联禁用预览 | `RuleDependencyProvider` |
 | **规则模板市场** | 模板分类 / 行业模板 / 一键导入 | `RuleTemplateProvider` |
 | **规则包市场** | 规则集打包 / 版本管理 / 批量更新 / 评分 | `RulePackProvider` |
-| **业务测试用例** | 独立于 JUnit 的回归测试体系，存储 facts + expected，支持批量运行 | `RuleTestRunner` / `RuleTestCaseDO` |
+| **业务测试用例** | 独立于 JUnit 的回归测试体系，存储 facts + expected，支持批量运行 | `RuleTestRunner` / `RuleTestCaseDO`（计划中） |
 | **压测** | QPS / P50 / P95 / P99 测量 | `RuleStressTestService` |
 | **规则生命周期** | 休眠检测 / 高错误率检测 / 退役建议 / 一键回滚 | `RuleLifecycleService` |
-| **规则文档生成** | Markdown / HTML 自动生成 | `RuleDocumentationService` |
+| **规则文档生成** | Markdown / HTML 自动生成 | `RuleDocumentationService`（计划中） |
 | **规则+模型融合** | 规则可引用 `model.xxx`，模型不可用降级为纯规则 | `ModelInputRegistry` / `ModelInputProvider` |
 | **动态事实采集** | 评估前从 DB/Redis/HTTP 采集事实，支持超时与降级 | `FactProviderRegistry` / `FactProvider` |
 | **动作分发** | 规则触发后联动通知 / cronjob / 工作流 | `RuleActionDispatcher` / `RuleActionHandler` |
