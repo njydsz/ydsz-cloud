@@ -48,7 +48,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
       // 乐观锁冲突，抛异常由调用方处理
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_199e8ba1")
+          .key("error.workflow.countersign.optimistic.lock")
           .params(task.getId())
           .build();
     }

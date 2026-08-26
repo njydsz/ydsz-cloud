@@ -167,25 +167,25 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   private void validateDelegateAuth(FlowDelegateAuthVO auth) {
     if (auth == null) {
-      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_fdf18ac3").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.auth.null").build();
     }
     if (auth.getOwnerUserId() == null) {
-      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_d65b2814").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.owner.user.required").build();
     }
     if (auth.getDelegateUserId() == null) {
-      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_9999d306").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.target.user.required").build();
     }
     if (auth.getOwnerUserId().equals(auth.getDelegateUserId())) {
-      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_5b0149dc").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.cannot.self").build();
     }
     if (auth.getStartTime() == null || auth.getEndTime() == null) {
-      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_8a268764").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.time.required").build();
     }
     if (!auth.getEndTime().isAfter(auth.getStartTime())) {
-      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_0e756b4f").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.time.invalid").build();
     }
     if (!StringUtils.hasText(auth.getScopeType())) {
-      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_4cfd103d").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.scope.type.required").build();
     }
     validateScopeFields(auth);
   }
@@ -199,22 +199,22 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     switch (auth.getScopeType()) {
       case "FLOW" -> {
         if (!StringUtils.hasText(auth.getFlowCode())) {
-          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_2c8e3391").build();
+          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.flow.code.required").build();
         }
       }
       case "FLOW_NODE" -> {
         if (!StringUtils.hasText(auth.getFlowCode()) || !StringUtils.hasText(auth.getNodeCode())) {
-          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_8722656e").build();
+          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.node.code.required").build();
         }
       }
       case "ROLE" -> {
         if (!StringUtils.hasText(auth.getRoleCode())) {
-          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.msg_19801c0e").build();
+          throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("error.workflow.delegate.role.code.required").build();
         }
       }
       case "ALL" -> { /* no-op */ }
       default -> throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_b0022eba").params(auth.getScopeType()).build();
+          .key("error.workflow.delegate.scope.type.invalid").params(auth.getScopeType()).build();
     }
   }
 
@@ -265,21 +265,21 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     if (authId == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_7804c8f2")
+          .message("error.workflow.delegate.auth.id.required")
           .build();
     }
     FlowDelegateAuthVO auth = authRepository.findById(authId).orElse(null);
     if (auth == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_c47a9632")
+          .key("error.workflow.delegate.auth.not.found")
           .params(authId)
           .build();
     }
     if (ownerUserId != null && !ownerUserId.equals(auth.getOwnerUserId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_f121ff85")
+          .message("error.workflow.delegate.owner.mismatch")
           .build();
     }
     authRepository.updateStatus(authId, "REVOKED");
@@ -305,20 +305,20 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     if (authId == null || !StringUtils.hasText(status)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_40437174")
+          .message("error.workflow.delegate.update.params.required")
           .build();
     }
     if (!"ENABLED".equals(status) && !"DISABLED".equals(status)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_7678ad83")
+          .message("error.workflow.delegate.status.invalid")
           .build();
     }
     FlowDelegateAuthVO auth = authRepository.findById(authId).orElse(null);
     if (auth == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_c47a9632")
+          .key("error.workflow.delegate.auth.not.found")
           .params(authId)
           .build();
     }
@@ -326,7 +326,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     if (operatorId != null && !operatorId.equals(auth.getOwnerUserId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_d6a95488")
+          .message("error.workflow.delegate.operator.mismatch")
           .build();
     }
     authRepository.updateStatus(authId, status);

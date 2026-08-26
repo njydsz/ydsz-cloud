@@ -57,7 +57,7 @@ public class FlowTaskUrgeService {
         && !urgeLimiter.tryAcquire(operatorId, Long.parseLong(instanceId), "INSTANCE")) {
       throw SysException.builder()
           .resultCode(YdszResultCode.TOO_MANY_REQUESTS)
-          .message("error.workflow.msg_75474a57")
+          .message("error.workflow.urge.too.frequent")
           .build();
     }
     List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByInstance(instanceId);
@@ -92,7 +92,7 @@ public class FlowTaskUrgeService {
       if (!urgeLimiter.tryAcquire(operatorId, nodeTarget.hashCode() & Long.MAX_VALUE, "NODE")) {
         throw SysException.builder()
             .resultCode(YdszResultCode.TOO_MANY_REQUESTS)
-            .message("error.workflow.msg_75474a57")
+            .message("error.workflow.urge.too.frequent")
             .build();
       }
     }

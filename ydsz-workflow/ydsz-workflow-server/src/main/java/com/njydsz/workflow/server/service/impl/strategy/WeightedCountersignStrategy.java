@@ -81,7 +81,7 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
     if (updated == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_199e8ba1")
+          .key("error.workflow.countersign.optimistic.lock")
           .params(task.getId())
           .build();
     }

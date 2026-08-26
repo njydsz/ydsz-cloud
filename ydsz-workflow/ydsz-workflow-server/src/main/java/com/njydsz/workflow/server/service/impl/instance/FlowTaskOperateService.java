@@ -89,7 +89,7 @@ public class FlowTaskOperateService {
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_6ddae4d1")
+          .message("error.workflow.transfer.target.user.required")
           .build();
     }
     FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
@@ -129,7 +129,7 @@ public class FlowTaskOperateService {
     if (dto.getTargetUserId() == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d4faa79e")
+          .message("error.workflow.delegate.target.user.required")
           .build();
     }
     FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
@@ -174,14 +174,14 @@ public class FlowTaskOperateService {
     if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_1efc5644")
+          .key("error.workflow.task.already.handled")
           .params(task.getTaskStatus())
           .build();
     }
     if (!StringUtils.hasText(dto.getTargetNodeCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_09c299d0")
+          .message("error.workflow.jump.target.node.required")
           .build();
     }
     FlowInstanceVO instance = instanceRepository.findById(task.getInstanceId()).orElse(null);
@@ -197,7 +197,7 @@ public class FlowTaskOperateService {
     if (targetNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_a35217ba")
+          .key("error.workflow.jump.target.node.not.found")
           .params(dto.getTargetNodeCode())
           .build();
     }
@@ -301,7 +301,7 @@ public class FlowTaskOperateService {
     if (hisTask == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_f1a2b3c4")
+          .key("error.workflow.histask.not.found")
           .params(hisTaskId)
           .build();
     }
@@ -318,14 +318,14 @@ public class FlowTaskOperateService {
     if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_a2b3c4d5")
+          .key("error.workflow.histask.status.invalid")
           .params(hisTask.getTaskStatus())
           .build();
     }
     if (!hisTask.getAssigneeId().equals(operatorId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("error.workflow.msg_b3c4d5e6")
+          .message("error.workflow.retract.no.permission")
           .build();
     }
   }
@@ -340,7 +340,7 @@ public class FlowTaskOperateService {
     return instanceRepository.findById(instanceId)
         .orElseThrow(() -> SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .key("error.workflow.msg_fc4b1c16")
+            .key("error.workflow.instance.not.found")
             .params(instanceId)
             .build());
   }
@@ -354,7 +354,7 @@ public class FlowTaskOperateService {
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_c4d5e6f7")
+          .key("error.workflow.instance.status.invalid")
           .params(instance.getFlowStatus())
           .build();
     }
@@ -373,7 +373,7 @@ public class FlowTaskOperateService {
     if (anyProcessed) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_d5e6f7a8")
+          .message("error.workflow.retract.next.tasks.processed")
           .build();
     }
   }

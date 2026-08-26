@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job (
     updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_job_key UNIQUE (job_key, tenant_id),
     INDEX idx_job_group (job_group),
-    INDEX idx_job_next_fire (next_fire_time),
+    INDEX idx_job_dispatch (status, next_fire_time, tenant_id, deleted),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定时任务定义主表';
 
@@ -549,3 +549,84 @@ CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
     INDEX idx_jo_status_retry (status, next_retry_time),
     INDEX idx_jo_status_created (status, create_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Outbox 事务性事件表：存储待发布的领域事件，保障业务写操作与事件投递的事务一致性';
+
+-- ----------------------------------------------------------------------------
+-- 19. DAG 实例节点上下文表（解决 context_json 行锁竞争与写入放大）
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
+    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
+    dag_instance_id       VARCHAR(32)     NOT NULL COMMENT 'DAG 实例 ID（关联 ydsz_job_dag_instance.id）',
+    node_key              VARCHAR(128)    NOT NULL COMMENT '节点 KEY',
+    result_json           JSON            DEFAULT NULL COMMENT '节点执行结果 JSON（单次写入，避免行锁竞争）',
+    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    CONSTRAINT uk_dci_instance_node UNIQUE (dag_instance_id, node_key),
+    INDEX idx_dci_instance_id (dag_instance_id),
+    INDEX idx_tenant_deleted (tenant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 实例节点上下文表：节点级结果存储，避免 CAS 更新整行 context_json';
+
+-- ----------------------------------------------------------------------------
+-- 20. Webhook 投递重试补偿表（保障 Webhook 出站投递最终一致性）
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
+    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
+    webhook_id            VARCHAR(32)     NOT NULL COMMENT 'Webhook 配置 ID（关联 ydsz_job_webhook.id）',
+    event_type            VARCHAR(64)     NOT NULL COMMENT '事件类型',
+    event_key             VARCHAR(128)    NOT NULL COMMENT '事件 KEY（幂等去重）',
+    callback_url          VARCHAR(1024)   NOT NULL COMMENT '回调 URL（冗余，避免连表）',
+    headers_json          JSON            DEFAULT NULL COMMENT '请求头 JSON',
+    secret                VARCHAR(256)    DEFAULT NULL COMMENT '密钥（用于签名）',
+    payload_json          TEXT            NOT NULL COMMENT '请求体 JSON',
+    retry_count           INT             NOT NULL DEFAULT 0 COMMENT '已重试次数',
+    max_retries           INT             NOT NULL DEFAULT 5 COMMENT '最大重试次数',
+    next_retry_time       DATETIME        NOT NULL COMMENT '下次重试时间',
+    last_error            TEXT            DEFAULT NULL COMMENT '最后一次错误信息',
+    retry_status          VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '重试状态: PENDING / SUCCESS / EXHAUSTED',
+    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_wrr_retry_status (retry_status, next_retry_time),
+    INDEX idx_wrr_webhook_id (webhook_id),
+    INDEX idx_tenant_deleted (tenant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Webhook 投递重试补偿表：失败的 Webhook 投递记录通过后台扫描补偿';
+
+-- ----------------------------------------------------------------------------
+-- 21. 任务主表 add 索引（覆盖诊断查询: 按 job_key + created_at 倒序）
+-- ----------------------------------------------------------------------------
+ALTER TABLE ydsz_job ADD INDEX idx_job_key_created (job_key, created_at);
+
+-- ----------------------------------------------------------------------------
+-- 22. 日志内容表 add 索引（覆盖 SSE 流式查询: 按 log_id + line_no 正序）
+-- ----------------------------------------------------------------------------
+ALTER TABLE ydsz_job_log_content ADD INDEX idx_jlc_log_line (log_id, line_no);
+
+-- ----------------------------------------------------------------------------
+-- 23. 任务执行日志表按月分区（MySQL 8.0+ RANGE COLUMNS 分区）
+--    注意: 仅在新建表或允许停机窗口时执行；已有数据表需先创建分区表后迁移数据
+-- ----------------------------------------------------------------------------
+-- 分区策略说明:
+--   - 按月分区，保留最近 12 个月
+--   - 每月 1 日执行事件自动添加下月分区
+--   - 过期分区通过 ALTER TABLE ... DROP PARTITION 秒级清理
+--
+-- 示例（新表建表语句，已有表请参阅在线重分区方案）:
+/*
+ALTER TABLE ydsz_job_log PARTITION BY RANGE (TO_DAYS(start_time)) (
+    PARTITION p202601 VALUES LESS THAN (TO_DAYS('2026-02-01')),
+    PARTITION p202602 VALUES LESS THAN (TO_DAYS('2026-03-01')),
+    PARTITION p202603 VALUES LESS THAN (TO_DAYS('2026-04-01')),
+    PARTITION p202604 VALUES LESS THAN (TO_DAYS('2026-05-01')),
+    PARTITION p202605 VALUES LESS THAN (TO_DAYS('2026-06-01')),
+    PARTITION p202606 VALUES LESS THAN (TO_DAYS('2026-07-01')),
+    PARTITION p202607 VALUES LESS THAN (TO_DAYS('2026-08-01')),
+    PARTITION p202608 VALUES LESS THAN (TO_DAYS('2026-09-01')),
+    PARTITION p202609 VALUES LESS THAN (TO_DAYS('2026-10-01')),
+    PARTITION p202610 VALUES LESS THAN (TO_DAYS('2026-11-01')),
+    PARTITION p202611 VALUES LESS THAN (TO_DAYS('2026-12-01')),
+    PARTITION p202612 VALUES LESS THAN (TO_DAYS('2027-01-01')),
+    PARTITION pmax    VALUES LESS THAN MAXVALUE
+);
+*/

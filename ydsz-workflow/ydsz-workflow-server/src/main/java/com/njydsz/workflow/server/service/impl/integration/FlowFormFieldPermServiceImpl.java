@@ -141,7 +141,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
           if (submitted.containsKey(fieldKey)) {
             throw SysException.builder()
                 .resultCode(YdszResultCode.BAD_REQUEST)
-                .key("error.workflow.msg_form_field_hidden")
+                .key("error.workflow.form.field.hidden")
                 .params(fieldKey)
                 .build();
           }
@@ -154,7 +154,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
             if (!Objects.equals(existingVal, submittedVal)) {
               throw SysException.builder()
                   .resultCode(YdszResultCode.BAD_REQUEST)
-                  .key("error.workflow.msg_form_field_readonly")
+                  .key("error.workflow.form.field.readonly")
                   .params(fieldKey)
                   .build();
             }
@@ -166,7 +166,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
           if (submittedVal == null || (submittedVal instanceof String s && s.isBlank())) {
             throw SysException.builder()
                 .resultCode(YdszResultCode.BAD_REQUEST)
-                .key("error.workflow.msg_form_field_required")
+                .key("error.workflow.form.field.required")
                 .params(fieldKey)
                 .build();
           }

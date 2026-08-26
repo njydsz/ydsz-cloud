@@ -160,7 +160,7 @@ public class FlowTaskSupport {
     if (task == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_6541ab08")
+          .key("error.workflow.task.not.found")
           .params(id)
           .build();
     }

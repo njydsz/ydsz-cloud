@@ -52,7 +52,7 @@ public class FlowTaskTimeoutService {
         && !FlowTaskStatus.CLAIMED.name().equals(status)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_ecc09732")
+          .key("error.workflow.task.status.invalid.for.timeout")
           .params(status)
           .build();
     }
@@ -92,7 +92,7 @@ public class FlowTaskTimeoutService {
         && !FlowTaskStatus.CLAIMED.name().equals(status)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_d0e1f2a3")
+          .key("error.workflow.task.status.invalid.for.suspend")
           .params(status)
           .build();
     }
@@ -118,7 +118,7 @@ public class FlowTaskTimeoutService {
     if (!FlowTaskStatus.SUSPENDED.name().equals(status)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .key("error.workflow.msg_e1f2a3b4")
+          .key("error.workflow.task.status.invalid.for.activate")
           .params(status)
           .build();
     }

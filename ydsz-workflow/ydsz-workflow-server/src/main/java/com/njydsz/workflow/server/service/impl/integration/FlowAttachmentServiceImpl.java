@@ -205,7 +205,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_c5d6e7f8")
+          .key("error.workflow.attachment.not.found")
           .params(attachmentId)
           .build();
     }

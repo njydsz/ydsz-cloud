@@ -33,15 +33,9 @@ import com.njydsz.literule.api.ScriptDefinition;
 import com.njydsz.literule.server.core.RuleEvaluationException;
 
 /**
- * 脚本规则：基于 JSR-223 多语言脚本动态评估
+ * 脚本规则：基于 JSR-223 Groovy 脚本动态评估
  *
- * <p>1.5.0 起支持多脚本语言：
- *
- * <ul>
- *   <li>{@code groovy}（默认）- Groovy JSR-223，语法灵活，需 groovy-jsr223 依赖
- *   <li>{@code javascript} / {@code js} - Nashorn JSR-223，ECMAScript 语法，需 nashorn-core 依赖
- *   <li>{@code python} - Jython JSR-223，Python 2.7 语法，需 jython 依赖（可选）
- * </ul>
+ * <p>当前仅支持 <b>Groovy</b> 语言（需 {@code groovy-jsr223} 依赖，已在 pom.xml 中标记为 optional）。
  *
  * <p>脚本约定：
  *
@@ -52,13 +46,15 @@ import com.njydsz.literule.server.core.RuleEvaluationException;
  *   <li>脚本可设置 {@code title} 和 {@code description} 变量自定义预警信息
  * </ul>
  *
- * <p>沙箱模式（默认启用）通过正则黑名单拦截危险 API：
+ * <p>沙箱模式（默认启用）：
  *
  * <ul>
- *   <li>禁止 {@code System.exit} / {@code Runtime.exec} / {@code ProcessBuilder}
- *   <li>禁止反射调用 ({@code Class.forName} / {@code loadClass})
- *   <li>禁止文件 I/O ({@code java.io.File} / {@code FileInputStream} / {@code FileOutputStream})
- *   <li>禁止网络访问 ({@code java.net.Socket} / {@code URL.openConnection})
+ *   <li>Groovy：通过 {@code SecureASTCustomizer} 在 AST 级别拦截危险 API（推荐）
+ *   <li>正则黑名单作为兜底防护：
+ *       禁止 {@code System.exit} / {@code Runtime.exec} / {@code ProcessBuilder}
+ *       禁止反射调用 ({@code Class.forName} / {@code loadClass})
+ *       禁止文件 I/O ({@code java.io.File} / {@code FileInputStream} / {@code FileOutputStream})
+ *       禁止网络访问 ({@code java.net.Socket} / {@code URL.openConnection})
  * </ul>
  *
  * <p>Groovy 示例脚本：
@@ -73,18 +69,13 @@ import com.njydsz.literule.server.core.RuleEvaluationException;
  * return false
  * </pre>
  *
- * <p>JavaScript 示例脚本：
+ * <h3>语言支持说明</h3>
  *
- * <pre>
- * var budget = facts.budgetUsedRatio || 0;
- * var spi = facts.spi || 1.0;
- * if (budget >= 0.9 &amp;&amp; spi &lt; 0.85) {
- *     severity = 'RED';
- *     true;
- * } else {
- *     false;
- * }
- * </pre>
+ * <ul>
+ *   <li><b>Groovy</b>：已支持（需 groovy-jsr223 依赖）
+ *   <li><b>JavaScript</b>：JDK 15+ 已移除 Nashorn，不再支持
+ *   <li><b>Python</b>：Jython 仅支持 Python 2.7 且无依赖，不再支持
+ * </ul>
  *
  * @since 1.0.0
  * @author ydsz-team

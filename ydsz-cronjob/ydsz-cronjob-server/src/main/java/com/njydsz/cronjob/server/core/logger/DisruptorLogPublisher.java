@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 /**
@@ -26,13 +27,17 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
  * <h3>Ring Buffer 配置</h3>
  *
  * <ul>
- *   <li>缓冲区大小：1024（2 的幂，Disruptor 要求）
+ *   <li>缓冲区大小：可通过 {@code ydsz.cronjob.logger.ring-buffer-size} 配置（默认 4096，必须为 2 的幂）
  *   <li>线程工厂：{@link DaemonThreadFactory}（守护线程，不阻止 JVM 退出）
  *   <li>等待策略：{@code BlockingWaitStrategy}（CPU 友好，适合日志场景）
  * </ul>
  *
+ * <h3>监控指标</h3>
+ *
+ * <p>剩余容量通过 {@link #getRemainingCapacity()} 暴露，可用于 Prometheus 告警（缓冲区使用率 > 80% 时预警）。
+ *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.0.2
  */
 @Slf4j
 @Component
@@ -46,11 +51,8 @@ public class DisruptorLogPublisher {
   /** Vararg 参数：追加标记索引 */
   private static final int ARG_APPEND_INDEX = 4;
 
-
-  /** Ring Buffer 大小（2 的幂） */
-  private static final int BUFFER_SIZE = 1024;
-
   private final ObjectProvider<JobLogContentService> jobLogContentServiceProvider;
+  private final CronjobProperties cronjobProperties;
 
   /** Disruptor 实例 */
   private Disruptor<DisruptorLogEvent> disruptor;
@@ -59,25 +61,53 @@ public class DisruptorLogPublisher {
   private RingBuffer<DisruptorLogEvent> ringBuffer;
 
   public DisruptorLogPublisher(
-      ObjectProvider<JobLogContentService> jobLogContentServiceProvider) {
+      ObjectProvider<JobLogContentService> jobLogContentServiceProvider,
+      CronjobProperties cronjobProperties) {
     this.jobLogContentServiceProvider = jobLogContentServiceProvider;
+    this.cronjobProperties = cronjobProperties;
   }
 
   /** 初始化 Disruptor 和 Ring Buffer */
   @PostConstruct
   public void init() {
+    int bufferSize = cronjobProperties.getLogger().getNormalizedRingBufferSize();
     disruptor =
         new Disruptor<>(
             new DisruptorLogEventFactory(),
-            BUFFER_SIZE,
+            bufferSize,
             DaemonThreadFactory.INSTANCE,
-            // P0-FIX: ProducerType 位于 dsl 子包（3.4.4），非 com.lmax.disruptor 根包
             com.lmax.disruptor.dsl.ProducerType.MULTI,
             new BlockingWaitStrategy());
     disruptor.handleEventsWith(new DisruptorLogEventHandler(jobLogContentServiceProvider));
     disruptor.start();
     ringBuffer = disruptor.getRingBuffer();
-    log.info("[DisruptorLog] Disruptor 日志发布者初始化完成: bufferSize={}", BUFFER_SIZE);
+    log.info("[DisruptorLog] 日志发布者初始化完成: bufferSize={}", bufferSize);
+  }
+
+  /**
+   * 获取 Ring Buffer 剩余容量。
+   *
+   * <p>用于监控缓冲区使用率，高并发场景下剩余容量低说明消费速度跟不上生产速度。
+   *
+   * @return 剩余容量槽位数
+   */
+  public long getRemainingCapacity() {
+    if (ringBuffer == null) {
+      return 0;
+    }
+    return ringBuffer.remainingCapacity();
+  }
+
+  /**
+   * 获取 Ring Buffer 总容量。
+   *
+   * @return 总容量槽位数
+   */
+  public int getBufferSize() {
+    if (ringBuffer == null) {
+      return cronjobProperties.getLogger().getNormalizedRingBufferSize();
+    }
+    return ringBuffer.getBufferSize();
   }
 
   /**
