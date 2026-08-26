@@ -32,9 +32,9 @@
 | **CAS** | CAS 协议端点（单点登录/登出） |
 | **SCIM 2.0** | 用户供给协议（RFC 7643/7644），支持 HR 系统用户数据同步 |
 | **WebAuthn** | 无密码认证（Passkey / FIDO2） |
-| **登录历史** | 登录/密码变更历史（`ydsz_user_login_history` / `ydsz_user_password_history`） |
+| **登录历史** | 登录/密码变更历史（`ydsz_acct_login_history` / `ydsz_acct_password_history`） |
 | **安全告警** | 暴力破解/密码喷洒检测 + 安全事件告警 |
-| **国际化** | 语言 CRUD（`ydsz_language`） |
+| **国际化** | 语言 CRUD（`ydsz_acct_user_language`） |
 | **全局搜索** | `UserinfoSearchController` 基于用户/部门/角色维度 |
 
 ## DDD 分层结构
@@ -148,27 +148,27 @@ ydsz-userinfo/
 
 | 表名 | 说明 |
 |---|---|
-| `ydsz_user_account` | 用户账号（含登录失败计数/锁定时间/最后登录信息，realName AES-256-GCM 加密） |
-| `ydsz_role` | 角色定义 |
-| `ydsz_menu` | 菜单/按钮/API 权限定义 |
-| `ydsz_user_role` | 用户-角色关联 |
-| `ydsz_role_permission` | 角色-权限关联 |
-| `ydsz_department` | 部门（树形结构） |
-| `ydsz_company` | 公司 |
-| `ydsz_company_dept` | 公司-部门关联 |
-| `ydsz_post` | 岗位 |
-| `ydsz_user_dept` | 用户-部门关联 |
-| `ydsz_user_post` | 用户-岗位关联 |
-| `ydsz_user_login_history` | 登录历史 |
-| `ydsz_user_password_history` | 密码变更历史 |
-| `ydsz_language` | 语言 |
+| `ydsz_acct_user` | 用户账号（含登录失败计数/锁定时间/最后登录信息，realName AES-256-GCM 加密） |
+| `ydsz_rbac_role` | 角色定义 |
+| `ydsz_rbac_menu` | 菜单/按钮/API 权限定义 |
+| `ydsz_acct_user_role` | 用户-角色关联 |
+| `ydsz_rbac_role_permission` | 角色-权限关联 |
+| `ydsz_org_department` | 部门（树形结构） |
+| `ydsz_org_company` | 公司 |
+| `ydsz_org_company_dept` | 公司-部门关联 |
+| `ydsz_rbac_post` | 岗位 |
+| `ydsz_acct_user_dept` | 用户-部门关联 |
+| `ydsz_acct_user_post` | 用户-岗位关联 |
+| `ydsz_acct_login_history` | 登录历史 |
+| `ydsz_acct_password_history` | 密码变更历史 |
+| `ydsz_acct_user_language` | 语言 |
 | `ydsz_auth_policy` | 认证策略 |
-| `ydsz_oauth2_application` | OAuth2 应用注册 |
-| `ydsz_saml_idp_config` | SAML IdP 配置 |
-| `ydsz_security_alert` | 安全告警 |
-| `ydsz_social_account` | 社交账号关联 |
-| `ydsz_social_client` | 社交登录客户端配置 |
-| `ydsz_user_credential` | WebAuthn 凭证 |
+| `ydsz_idp_oauth2_application` | OAuth2 应用注册 |
+| `ydsz_idp_saml_config` | SAML IdP 配置 |
+| `ydsz_idp_security_alert` | 安全告警 |
+| `ydsz_auth_social_account` | 社交账号关联 |
+| `ydsz_auth_social_client` | 社交登录客户端配置 |
+| `ydsz_auth_credential` | WebAuthn 凭证 |
 | `sys_audit_log` | 审计日志（物理表在 common-audit，写操作经 @Audit 记录） |
 | `ydsz_user_session` | 用户会话（Redis 存储，`userinfo:session:user:{userId}`） |
 
@@ -362,7 +362,7 @@ ydsz:
 
 ### Q1：登录失败 "账号或密码错误" 但密码正确
 
-1. 检查 `ydsz_user_account` 中 `status = 'ENABLED'` 且 `deleted = 0`
+1. 检查 `ydsz_acct_user` 中 `status = 'ENABLED'` 且 `deleted = 0`
 2. 检查 `lock_time` 是否在未来（账号被锁定）
 3. 检查 `password` 字段是否为 BCrypt 哈希值
 
@@ -380,7 +380,7 @@ ydsz:
 
 ### Q4：菜单树不显示
 
-1. 检查 `ydsz_menu` 表是否有数据且 `status = 'ENABLED'`
+1. 检查 `ydsz_rbac_menu` 表是否有数据且 `status = 'ENABLED'`
 2. 检查用户角色是否关联了对应菜单权限
 3. 菜单树按 `parent_id` 递归构建，根节点 `parent_id = 0`
 

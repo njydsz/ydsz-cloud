@@ -3,9 +3,9 @@ package com.njydsz.message.server.service.impl.config;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +20,15 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
+import com.njydsz.message.domain.query.MsgRouteRuleQuery;
 import com.njydsz.message.domain.repository.MsgRouteRuleRepository;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 import com.njydsz.message.server.service.config.RouteRuleService;
@@ -79,12 +80,8 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
   /**
    * {@inheritDoc}
-   * 
-   * <p>执行 ruleCode 唯一性校验后插入，并清除路由规则缓存。
-   * 
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * <p>执行 ruleCode 唯一性校验后插入，并清除路由规则缓存。
    */
   @Override
   public MsgRouteRuleVO create(RouteRuleUpsertDTO dto) {
@@ -94,34 +91,26 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .message("规则编码不能为空")
           .build();
     }
-    MsgRouteRuleVO existing =
-        msgRouteRuleRepository.selectOne(
-            new LambdaQueryWrapper<MsgRouteRuleVO>()
-                .eq(MsgRouteRuleVO::getRuleCode, dto.getRuleCode())
-                .eq(MsgRouteRuleVO::getTenantId, TenantContextHolder.getTenantId())
-                .last("LIMIT 1"));
-    if (existing != null) {
+    MsgRouteRuleQuery query = new MsgRouteRuleQuery();
+    query.setRuleCode(dto.getRuleCode());
+    Optional<MsgRouteRuleVO> existing = msgRouteRuleRepository.findOne(query);
+    if (existing.isPresent()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则编码已存在: " + dto.getRuleCode())
           .build();
     }
-    MsgRouteRuleVO entity = toEntity(dto);
-    msgRouteRuleRepository.insert(entity);
+    MsgRouteRuleVO vo = toVO(dto);
+    msgRouteRuleRepository.save(vo);
     evictCache();
     log.info("[RouteRule] 创建规则: code={}", dto.getRuleCode());
-    return entity;
+    return vo;
   }
 
   /**
    * {@inheritDoc}
-   * 
-   * <p>仅更新非 null 字段（动态更新），更新后清除路由规则缓存。
-   * 
    *
-   * @param id 参数说明
-   * @param dto 参数说明
-   * @return 返回值说明
+   * <p>仅更新非 null 字段（动态更新），更新后清除路由规则缓存。
    */
   @Override
   public MsgRouteRuleVO update(String id, RouteRuleUpsertDTO dto) {
@@ -131,49 +120,46 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .message("规则 ID 与参数不能为空")
           .build();
     }
-    MsgRouteRuleVO entity = getById(id);
+    MsgRouteRuleVO vo = getById(id);
     if (StringUtils.hasText(dto.getRuleName())) {
-      entity.setRuleName(dto.getRuleName());
+      vo.setRuleName(dto.getRuleName());
     }
     if (dto.getBizType() != null) {
-      entity.setBizType(dto.getBizType());
+      vo.setBizType(dto.getBizType());
     }
     if (dto.getChannel() != null) {
-      entity.setChannel(dto.getChannel());
+      vo.setChannel(dto.getChannel());
     }
     if (dto.getPriority() != null) {
-      entity.setPriority(dto.getPriority());
+      vo.setPriority(dto.getPriority());
     }
     if (dto.getConditionExpr() != null) {
-      entity.setConditionExpr(dto.getConditionExpr());
+      vo.setConditionExpr(dto.getConditionExpr());
     }
     if (dto.getTargetChannel() != null) {
-      entity.setTargetChannel(dto.getTargetChannel());
+      vo.setTargetChannel(dto.getTargetChannel());
     }
     if (dto.getFallbackChannel() != null) {
-      entity.setFallbackChannel(dto.getFallbackChannel());
+      vo.setFallbackChannel(dto.getFallbackChannel());
     }
     if (StringUtils.hasText(dto.getStatus())) {
-      entity.setStatus(dto.getStatus());
+      vo.setStatus(dto.getStatus());
     }
     if (dto.getDescription() != null) {
-      entity.setDescription(dto.getDescription());
+      vo.setDescription(dto.getDescription());
     }
     if (dto.getSortOrder() != null) {
-      entity.setSortOrder(dto.getSortOrder());
+      vo.setSortOrder(dto.getSortOrder());
     }
-    msgRouteRuleRepository.updateById(entity);
+    msgRouteRuleRepository.update(vo);
     evictCache();
-    return entity;
+    return vo;
   }
 
   /**
    * {@inheritDoc}
-   * 
-   * <p>删除后清除路由规则缓存。
-   * 
    *
-   * @param id 参数说明
+   * <p>删除后清除路由规则缓存。
    */
   @Override
   public void delete(String id) {
@@ -189,10 +175,6 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
   /**
    * {@inheritDoc}
-   * 
-   *
-   * @param id 参数说明
-   * @return 返回值说明
    */
   @Override
   public MsgRouteRuleVO getById(String id) {
@@ -202,14 +184,14 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .message("规则 ID 不能为空")
           .build();
     }
-    MsgRouteRuleVO entity = msgRouteRuleRepository.selectById(id);
-    if (entity == null) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.NOT_FOUND)
-          .message("路由规则不存在: " + id)
-          .build();
-    }
-    return entity;
+    return msgRouteRuleRepository
+        .findById(id)
+        .orElseThrow(
+            () ->
+                SysException.builder()
+                    .resultCode(YdszResultCode.NOT_FOUND)
+                    .message("路由规则不存在: " + id)
+                    .build());
   }
 
   /**
@@ -223,15 +205,16 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    */
   @Override
   public Page<MsgRouteRuleVO> page(PageQuery query) {
-    Page<MsgRouteRuleVO> page =
-        new Page<>(
-            query == null ? 1 : query.getPageNum(),
-            Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    return msgRouteRuleRepository.selectPage(
-        page,
-        new LambdaQueryWrapper<MsgRouteRuleVO>()
-            .orderByAsc(MsgRouteRuleVO::getSortOrder)
-            .orderByDesc(MsgRouteRuleVO::getCreatedAt));
+    MsgRouteRuleQuery routeQuery = new MsgRouteRuleQuery();
+    routeQuery.setPageNum(query == null ? 1 : query.getPageNum());
+    routeQuery.setPageSize(
+        Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
+    PageResponse<List<MsgRouteRuleVO>> pageResponse = msgRouteRuleRepository.findPage(routeQuery);
+    // 将 PageResponse 转换为 MyBatis-Plus Page 以保持接口兼容
+    Page<MsgRouteRuleVO> page = new Page<>(routeQuery.getPageNum(), routeQuery.getPageSize());
+    page.setTotal(pageResponse.getTotal());
+    page.setRecords(pageResponse.getData());
+    return page;
   }
 
   /**
@@ -314,11 +297,9 @@ public class RouteRuleServiceImpl implements RouteRuleService {
       log.warn("[RouteRule] L2 缓存读取失败,回退 DB: {}", e.getMessage(), e);
     }
     // DB 回源
-    List<MsgRouteRuleVO> rules =
-        msgRouteRuleRepository.selectList(
-            new LambdaQueryWrapper<MsgRouteRuleVO>()
-                .eq(MsgRouteRuleVO::getStatus, "ENABLED")
-                .orderByAsc(MsgRouteRuleVO::getPriority));
+    MsgRouteRuleQuery query = new MsgRouteRuleQuery();
+    query.setStatus("ENABLED");
+    List<MsgRouteRuleVO> rules = msgRouteRuleRepository.findList(query);
     List<MsgRouteRuleVO> result = rules == null ? Collections.emptyList() : rules;
     // 回填 L2 + L1
     try {
@@ -340,20 +321,19 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     }
   }
 
-  private MsgRouteRuleVO toEntity(RouteRuleUpsertDTO dto) {
-    MsgRouteRuleVO entity = new MsgRouteRuleVO();
-    entity.setRuleCode(dto.getRuleCode());
-    entity.setRuleName(dto.getRuleName());
-    entity.setBizType(dto.getBizType());
-    entity.setChannel(dto.getChannel());
-    entity.setPriority(dto.getPriority() == null ? 100 : dto.getPriority());
-    entity.setConditionExpr(dto.getConditionExpr());
-    entity.setTargetChannel(dto.getTargetChannel());
-    entity.setFallbackChannel(dto.getFallbackChannel());
-    entity.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "ENABLED");
-    entity.setDescription(dto.getDescription());
-    entity.setSortOrder(dto.getSortOrder() == null ? 100 : dto.getSortOrder());
-    entity.setTenantId(TenantContextHolder.getTenantId());
-    return entity;
+  private MsgRouteRuleVO toVO(RouteRuleUpsertDTO dto) {
+    MsgRouteRuleVO vo = new MsgRouteRuleVO();
+    vo.setRuleCode(dto.getRuleCode());
+    vo.setRuleName(dto.getRuleName());
+    vo.setBizType(dto.getBizType());
+    vo.setChannel(dto.getChannel());
+    vo.setPriority(dto.getPriority() == null ? 100 : dto.getPriority());
+    vo.setConditionExpr(dto.getConditionExpr());
+    vo.setTargetChannel(dto.getTargetChannel());
+    vo.setFallbackChannel(dto.getFallbackChannel());
+    vo.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "ENABLED");
+    vo.setDescription(dto.getDescription());
+    vo.setSortOrder(dto.getSortOrder() == null ? 100 : dto.getSortOrder());
+    return vo;
   }
 }

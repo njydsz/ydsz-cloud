@@ -94,7 +94,7 @@ Controller 按子包组织，结构如下：
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
-| **任务定义** | `ydsz_job` | 任务主表（cron/频率/分片/隔离策略） |
+| **任务定义** | `ydsz_job_main` | 任务主表（cron/频率/分片/隔离策略） |
 | | `ydsz_job_glue` | 胶水代码（Groovy/Java/Python/Shell） |
 | **调度** | `ydsz_job_task` | 调度任务（待派发/运行中） |
 | | `ydsz_job_history` | 历史任务（已完成） |
@@ -104,13 +104,13 @@ Controller 按子包组织，结构如下：
 | | `ydsz_job_dag_node_instance` | DAG 节点实例 |
 | **执行日志** | `ydsz_job_log` | 执行日志（分页） |
 | | `ydsz_job_log_content` | 日志详情（TOAST 大字段） |
-| **告警** | `ydsz_alert_dispatch` | 告警派发日志 |
+| **告警** | `ydsz_job_alert_dispatch` | 告警派发日志 |
 | | `ydsz_job_alert_rule` | 告警规则（失败/超时/阻塞） |
 | **执行器** | `ydsz_job_node` | 执行器节点（注册/心跳） |
 | **Webhook** | `ydsz_job_webhook` | 任务完成回调 |
 | **产物** | `ydsz_job_artifact` | 任务产物（报表/MinIO） |
 | **统计** | `ydsz_job_daily_stats` | 每日统计（成功率/平均耗时） |
-| **配额** | `ydsz_tenant_quota` | 租户级任务数/并发/日执行量 |
+| **配额** | `ydsz_job_tenant_quota` | 租户级任务数/并发/日执行量 |
 | **Outbox 事件** | `ydsz_job_outbox` | 领域事件 Outbox（事务消息） |
 
 ## 目录结构

@@ -1,8 +1,8 @@
 package com.njydsz.message.server.service.impl.config;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,9 +10,9 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.PreferenceUpsertDTO;
+import com.njydsz.message.domain.query.MsgPreferenceQuery;
 import com.njydsz.message.domain.repository.MsgPreferenceRepository;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.server.service.config.PreferenceService;
@@ -37,13 +37,9 @@ public class PreferenceServiceImpl implements PreferenceService {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>按 (userId, channel, bizType) 查找已有偏好：存在则更新，不存在则新建。 bizType 为空时默认 {@link
    * MessageConstants#DEFAULT_BIZ_TYPE}。
-   * 
-   *
-   * @param dto 参数说明
-   * @return 返回值说明
    */
   @Override
   public MsgPreferenceVO upsert(PreferenceUpsertDTO dto) {
@@ -59,51 +55,49 @@ public class PreferenceServiceImpl implements PreferenceService {
         StringUtils.hasText(dto.getBizType())
             ? dto.getBizType()
             : MessageConstants.DEFAULT_BIZ_TYPE;
-    MsgPreferenceVO existing =
-        msgPreferenceRepository.selectOne(
-            new LambdaQueryWrapper<MsgPreferenceVO>()
-                .eq(MsgPreferenceVO::getUserId, dto.getUserId())
-                .eq(MsgPreferenceVO::getChannel, dto.getChannel())
-                .eq(MsgPreferenceVO::getBizType, bizType)
-                .last("LIMIT 1"));
-    if (existing == null) {
-      MsgPreferenceVO entity = new MsgPreferenceVO();
-      entity.setUserId(dto.getUserId());
-      entity.setChannel(dto.getChannel());
-      entity.setBizType(bizType);
-      entity.setEnabled(dto.getEnabled() == null ? 1 : dto.getEnabled());
-      entity.setDndEnabled(dto.getDndEnabled() == null ? 0 : dto.getDndEnabled());
-      entity.setDndStart(dto.getDndStart());
-      entity.setDndEnd(dto.getDndEnd());
-      entity.setDailyLimit(dto.getDailyLimit());
-      entity.setHourlyLimit(dto.getHourlyLimit());
-      entity.setDigestEnabled(dto.getDigestEnabled() == null ? 0 : dto.getDigestEnabled());
-      entity.setDigestFrequency(dto.getDigestFrequency());
-      entity.setLocale(dto.getLocale());
-      entity.setExtra(dto.getExtra());
-      entity.setTenantId(TenantContextHolder.getTenantId());
-      msgPreferenceRepository.insert(entity);
+    MsgPreferenceQuery query = new MsgPreferenceQuery();
+    query.setUserId(dto.getUserId());
+    query.setChannel(dto.getChannel());
+    query.setBizType(bizType);
+    Optional<MsgPreferenceVO> existing = msgPreferenceRepository.findOne(query);
+    if (existing.isEmpty()) {
+      MsgPreferenceVO vo = new MsgPreferenceVO();
+      vo.setUserId(dto.getUserId());
+      vo.setChannel(dto.getChannel());
+      vo.setBizType(bizType);
+      vo.setEnabled(dto.getEnabled() == null ? 1 : dto.getEnabled());
+      vo.setDndEnabled(dto.getDndEnabled() == null ? 0 : dto.getDndEnabled());
+      vo.setDndStart(dto.getDndStart());
+      vo.setDndEnd(dto.getDndEnd());
+      vo.setDailyLimit(dto.getDailyLimit());
+      vo.setHourlyLimit(dto.getHourlyLimit());
+      vo.setDigestEnabled(dto.getDigestEnabled() == null ? 0 : dto.getDigestEnabled());
+      vo.setDigestFrequency(dto.getDigestFrequency());
+      vo.setLocale(dto.getLocale());
+      vo.setExtra(dto.getExtra());
+      msgPreferenceRepository.save(vo);
       log.info(
           "[Preference] 新建偏好: user={} channel={} bizType={}",
           dto.getUserId(),
           dto.getChannel(),
           bizType);
-      return entity;
+      return vo;
     }
-    existing.setEnabled(dto.getEnabled() == null ? existing.getEnabled() : dto.getEnabled());
-    existing.setDndEnabled(
-        dto.getDndEnabled() == null ? existing.getDndEnabled() : dto.getDndEnabled());
-    existing.setDndStart(dto.getDndStart());
-    existing.setDndEnd(dto.getDndEnd());
-    existing.setDailyLimit(dto.getDailyLimit());
-    existing.setHourlyLimit(dto.getHourlyLimit());
-    existing.setDigestEnabled(
-        dto.getDigestEnabled() == null ? existing.getDigestEnabled() : dto.getDigestEnabled());
-    existing.setDigestFrequency(dto.getDigestFrequency());
-    existing.setLocale(dto.getLocale());
-    existing.setExtra(dto.getExtra());
-    msgPreferenceRepository.updateById(existing);
-    return existing;
+    MsgPreferenceVO vo = existing.get();
+    vo.setEnabled(dto.getEnabled() == null ? vo.getEnabled() : dto.getEnabled());
+    vo.setDndEnabled(
+        dto.getDndEnabled() == null ? vo.getDndEnabled() : dto.getDndEnabled());
+    vo.setDndStart(dto.getDndStart());
+    vo.setDndEnd(dto.getDndEnd());
+    vo.setDailyLimit(dto.getDailyLimit());
+    vo.setHourlyLimit(dto.getHourlyLimit());
+    vo.setDigestEnabled(
+        dto.getDigestEnabled() == null ? vo.getDigestEnabled() : dto.getDigestEnabled());
+    vo.setDigestFrequency(dto.getDigestFrequency());
+    vo.setLocale(dto.getLocale());
+    vo.setExtra(dto.getExtra());
+    msgPreferenceRepository.update(vo);
+    return vo;
   }
 
   /**
@@ -123,27 +117,20 @@ public class PreferenceServiceImpl implements PreferenceService {
     }
     String bt = StringUtils.hasText(bizType) ? bizType : MessageConstants.DEFAULT_BIZ_TYPE;
     // 优先精确 bizType
-    MsgPreferenceVO entity =
-        msgPreferenceRepository.selectOne(
-            new LambdaQueryWrapper<MsgPreferenceVO>()
-                .eq(MsgPreferenceVO::getUserId, userId)
-                .eq(MsgPreferenceVO::getChannel, channel)
-                .eq(MsgPreferenceVO::getBizType, bt)
-                .last("LIMIT 1"));
-    if (entity != null) {
-      return entity;
+    MsgPreferenceQuery query = new MsgPreferenceQuery();
+    query.setUserId(userId);
+    query.setChannel(channel);
+    query.setBizType(bt);
+    Optional<MsgPreferenceVO> entity = msgPreferenceRepository.findOne(query);
+    if (entity.isPresent()) {
+      return entity.get();
     }
     // 回退默认
     if (!MessageConstants.DEFAULT_BIZ_TYPE.equals(bt)) {
-      entity =
-          msgPreferenceRepository.selectOne(
-              new LambdaQueryWrapper<MsgPreferenceVO>()
-                  .eq(MsgPreferenceVO::getUserId, userId)
-                  .eq(MsgPreferenceVO::getChannel, channel)
-                  .eq(MsgPreferenceVO::getBizType, MessageConstants.DEFAULT_BIZ_TYPE)
-                  .last("LIMIT 1"));
+      query.setBizType(MessageConstants.DEFAULT_BIZ_TYPE);
+      entity = msgPreferenceRepository.findOne(query);
     }
-    return entity;
+    return entity.orElse(null);
   }
 
   /**
@@ -157,17 +144,13 @@ public class PreferenceServiceImpl implements PreferenceService {
     if (!StringUtils.hasText(userId)) {
       return List.of();
     }
-    return msgPreferenceRepository.selectList(
-        new LambdaQueryWrapper<MsgPreferenceVO>()
-            .eq(MsgPreferenceVO::getUserId, userId)
-            .orderByAsc(MsgPreferenceVO::getChannel));
+    MsgPreferenceQuery query = new MsgPreferenceQuery();
+    query.setUserId(userId);
+    return msgPreferenceRepository.findList(query);
   }
 
   /**
    * {@inheritDoc}
-   * 
-   *
-   * @param id 参数说明
    */
   @Override
   public void delete(String id) {
