@@ -125,6 +125,14 @@ public interface WorkflowConverter {
 
   List<FlowCcRuleVO> flowCcRuleListToVO(List<FlowCcRule> entities);
 
+  /**
+   * 抄送规则 VO → 抄送规则。
+   *
+   * @param vo 参数说明
+   * @return 返回值说明
+   */
+  FlowCcRule entityToEntity(FlowCcRuleVO vo);
+
   // ===== FlowComment =====
   FlowCommentVO entityToVO(FlowComment entity);
 
@@ -407,6 +415,30 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
    * @return 返回值说明
    */
   FlowUser entityToEntity(FlowUserVO vo);
+
+  // ===== entityToDO 别名方法（兼容旧代码中的 converter::entityToDO 方法引用） =====
+
+  default FlowAdminRole entityToDO(FlowAdminRoleVO vo) { return entityToEntity(vo); }
+  default FlowAttachment entityToDO(FlowAttachmentVO vo) { return entityToEntity(vo); }
+  default FlowAuditLog entityToDO(FlowAuditLogVO vo) { return entityToEntity(vo); }
+  default FlowAutoTrigger entityToDO(FlowAutoTriggerVO vo) { return entityToEntity(vo); }
+  default FlowCategory entityToDO(FlowCategoryVO vo) { return entityToEntity(vo); }
+  default FlowCc entityToDO(FlowCcVO vo) { return entityToEntity(vo); }
+  default FlowCcRule entityToDO(FlowCcRuleVO vo) { return entityToEntity(vo); }
+  default FlowComment entityToDO(FlowCommentVO vo) { return entityToEntity(vo); }
+  default FlowDefinition entityToDO(FlowDefinitionVO vo) { return entityToEntity(vo); }
+  default FlowDelegateAuth entityToDO(FlowDelegateAuthVO vo) { return entityToEntity(vo); }
+  default FlowEventSubscription entityToDO(FlowEventSubscriptionVO vo) { return entityToEntity(vo); }
+  default FlowHisInstance entityToDO(FlowHisInstanceVO vo) { return entityToEntity(vo); }
+  default FlowHisTask entityToDO(FlowHisTaskVO vo) { return entityToEntity(vo); }
+  default FlowInstance entityToDO(FlowInstanceVO vo) { return entityToEntity(vo); }
+  default FlowNode entityToDO(FlowNodeVO vo) { return entityToEntity(vo); }
+  default FlowQuickComment entityToDO(FlowQuickCommentVO vo) { return entityToEntity(vo); }
+  default FlowRunTask entityToDO(FlowRunTaskVO vo) { return entityToEntity(vo); }
+  default FlowSkip entityToDO(FlowSkipVO vo) { return entityToEntity(vo); }
+  default FlowTemplate entityToDO(FlowTemplateVO vo) { return entityToEntity(vo); }
+  default FlowTimer entityToDO(FlowTimerVO vo) { return entityToEntity(vo); }
+  default FlowUser entityToDO(FlowUserVO vo) { return entityToEntity(vo); }
 
   // ===== Entity → DTO (updateById 场景) =====
 

@@ -692,6 +692,6 @@ public class DefaultFlowAdvancer {
   }
 
   private List<FlowInstanceViewDTO.FlowTaskViewDTO> loadCurrentTasks(String instanceId) {
-    return taskService.listPendingByInstance(instanceId).stream().map(taskService::toView).toList();
+    return taskService.listPendingByInstance(instanceId).stream().map(task -> taskService.toView(task)).toList();
   }
 }

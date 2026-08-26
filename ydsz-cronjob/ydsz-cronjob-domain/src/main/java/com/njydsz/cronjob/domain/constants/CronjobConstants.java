@@ -54,4 +54,18 @@ public final class CronjobConstants {
 
   /** HTTP 方法：PUT。 */
   public static final String HTTP_METHOD_PUT = "PUT";
+
+  // ============================== 内部通信（节点间派发） ==============================
+
+  /** 内部执行接口基路径（与 InternalJobController RequestMapping 保持一致）。 */
+  public static final String INTERNAL_API_PREFIX = "/api/v1/cronjob/internal";
+
+  /** 远程任务执行接口路径（InternalJobController#execute）。 */
+  public static final String INTERNAL_EXECUTE_PATH = INTERNAL_API_PREFIX + "/execute";
+
+  /** 远程子任务执行接口路径（InternalJobController#executeSubTask）。 */
+  public static final String INTERNAL_SUB_TASK_PATH = INTERNAL_API_PREFIX + "/executeSubTask";
+
+  /** 内部通信鉴权请求头（值来自 ydsz.cronjob.remote.access-token，为空时不校验）。 */
+  public static final String INTERNAL_TOKEN_HEADER = "X-Ydsz-Internal-Token";
 }

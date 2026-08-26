@@ -73,8 +73,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
     // 安全加固：禁用反射特性，防止表达式注入调用任意 Java 方法
     this.instance.disableFeature(Feature.NewInstance);
     this.instance.disableFeature(Feature.Module);
-    // 设置表达式长度上限
-    this.instance.setOption("maxLength", MAX_EXPRESSION_LENGTH);
+    // 注意：Aviator 5.4.3 没有 MAX_LENGTH 选项，表达式长度限制由调用方控制
     // 关闭追踪（生产环境不需要）
     this.instance.setOption(Options.TRACE_EVAL, false);
     log.info("[Flow][Aviator] 安全加固求值器已初始化（禁用 NewInstance/Module 反射特性，MAX_LENGTH={}）",
@@ -141,7 +140,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
           throw SysException.builder()
               .resultCode(YdszResultCode.BAD_REQUEST)
               .message("workflow.expr.syntax_error")
-              .params(e.getMessage())
+              .params((Object) e.getMessage())
               .build();
         }
       });
@@ -153,7 +152,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("workflow.expr.eval_failed")
-          .params(e.getMessage())
+          .params((Object) e.getMessage())
           .build();
     }
   }

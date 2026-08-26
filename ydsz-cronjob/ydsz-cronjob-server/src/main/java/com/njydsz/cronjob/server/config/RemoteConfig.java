@@ -39,6 +39,9 @@ public class RemoteConfig {
   /** 是否启用远程派发（false=所有分片在 Leader 本地执行，兼容旧行为） */
   private boolean enabled = true;
 
+  /** 内部通信鉴权令牌（节点间 HTTP 派发的共享密钥，对应请求头 X-Ydsz-Internal-Token）。 为空表示不鉴权（仅限可信内网，生产环境建议配置）；非空时接收端强制校验。 */
+  private String accessToken = "";
+
   /** HTTP 连接超时（秒） */
   private int connectTimeoutSeconds = DEFAULT_CONNECT_TIMEOUT_SECONDS;
 
