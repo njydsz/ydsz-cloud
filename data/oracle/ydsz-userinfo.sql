@@ -26,7 +26,7 @@
 -- ============================================================================
 
 
-CREATE TABLE ydsz_user_account (
+CREATE TABLE ydsz_acct_user (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     username                 VARCHAR2(64 CHAR)        NOT NULL,
@@ -56,47 +56,47 @@ CREATE TABLE ydsz_user_account (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_account PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_user_account_username UNIQUE (username)
+    CONSTRAINT pk_ydsz_acct_user PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_acct_user_username UNIQUE (username)
 );
 
-COMMENT ON TABLE ydsz_user_account IS '用户账号主表';
-COMMENT ON COLUMN ydsz_user_account.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_user_account.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_user_account.username IS '登录用户名（全局唯一）';
-COMMENT ON COLUMN ydsz_user_account.password IS '登录密码（BCrypt 加密，禁止明文存储/返回）';
-COMMENT ON COLUMN ydsz_user_account.real_name IS '真实姓名（AES-256-GCM 加密存储，密文不可用于条件查询）';
-COMMENT ON COLUMN ydsz_user_account.phone IS '手机号（用于短信验证/找回密码，脱敏返回）';
-COMMENT ON COLUMN ydsz_user_account.email IS '邮箱（用于通知/找回密码，脱敏返回）';
-COMMENT ON COLUMN ydsz_user_account.avatar IS '头像 URL';
-COMMENT ON COLUMN ydsz_user_account.status IS '账号状态（0=禁用，1=启用；另兼容 ENABLED/DISABLED/PENDING/SUSPENDED/RESIGNED 生命周期值）';
-COMMENT ON COLUMN ydsz_user_account.user_type IS '用户类型（PLATFORM/ISV/TENANT_ADMIN/REGULAR 等）';
-COMMENT ON COLUMN ydsz_user_account.company_id IS '所属公司 ID（关联 ydsz_company.id）';
-COMMENT ON COLUMN ydsz_user_account.last_login_at IS '最近登录时间';
-COMMENT ON COLUMN ydsz_user_account.last_login_ip IS '最近登录 IP';
-COMMENT ON COLUMN ydsz_user_account.login_fail_count IS '连续登录失败次数（达到阈值触发账号锁定）';
-COMMENT ON COLUMN ydsz_user_account.locked_until IS '账号锁定截止时间（解锁后自动清零 login_fail_count）';
-COMMENT ON COLUMN ydsz_user_account.dept_id IS '所属部门 ID（关联 ydsz_department.id，支持 dept: 审批人展开）';
-COMMENT ON COLUMN ydsz_user_account.leader_id IS '直属上级用户 ID（关联 ydsz_user_account.id，支持 leader: 审批人展开）';
-COMMENT ON COLUMN ydsz_user_account.position_code IS '岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开）';
-COMMENT ON COLUMN ydsz_user_account.ban_type IS '封禁类型（TEMPORARY/PERMANENT，NULL 表示未封禁）';
-COMMENT ON COLUMN ydsz_user_account.ban_reason IS '封禁原因';
-COMMENT ON COLUMN ydsz_user_account.ban_expire_at IS '封禁到期时间（临时封禁使用，永久封禁为 NULL）';
-COMMENT ON COLUMN ydsz_user_account.banned_by IS '封禁操作人标识';
-COMMENT ON COLUMN ydsz_user_account.banned_at IS '封禁操作时间';
-COMMENT ON COLUMN ydsz_user_account.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_user_account.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_user_account.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_user_account.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_user_account.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_user_account.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_acct_user IS '用户账号主表';
+COMMENT ON COLUMN ydsz_acct_user.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_acct_user.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_acct_user.username IS '登录用户名（全局唯一）';
+COMMENT ON COLUMN ydsz_acct_user.password IS '登录密码（BCrypt 加密，禁止明文存储/返回）';
+COMMENT ON COLUMN ydsz_acct_user.real_name IS '真实姓名（AES-256-GCM 加密存储，密文不可用于条件查询）';
+COMMENT ON COLUMN ydsz_acct_user.phone IS '手机号（用于短信验证/找回密码，脱敏返回）';
+COMMENT ON COLUMN ydsz_acct_user.email IS '邮箱（用于通知/找回密码，脱敏返回）';
+COMMENT ON COLUMN ydsz_acct_user.avatar IS '头像 URL';
+COMMENT ON COLUMN ydsz_acct_user.status IS '账号状态（0=禁用，1=启用；另兼容 ENABLED/DISABLED/PENDING/SUSPENDED/RESIGNED 生命周期值）';
+COMMENT ON COLUMN ydsz_acct_user.user_type IS '用户类型（PLATFORM/ISV/TENANT_ADMIN/REGULAR 等）';
+COMMENT ON COLUMN ydsz_acct_user.company_id IS '所属公司 ID（关联 ydsz_org_company.id）';
+COMMENT ON COLUMN ydsz_acct_user.last_login_at IS '最近登录时间';
+COMMENT ON COLUMN ydsz_acct_user.last_login_ip IS '最近登录 IP';
+COMMENT ON COLUMN ydsz_acct_user.login_fail_count IS '连续登录失败次数（达到阈值触发账号锁定）';
+COMMENT ON COLUMN ydsz_acct_user.locked_until IS '账号锁定截止时间（解锁后自动清零 login_fail_count）';
+COMMENT ON COLUMN ydsz_acct_user.dept_id IS '所属部门 ID（关联 ydsz_org_department.id，支持 dept: 审批人展开）';
+COMMENT ON COLUMN ydsz_acct_user.leader_id IS '直属上级用户 ID（关联 ydsz_acct_user.id，支持 leader: 审批人展开）';
+COMMENT ON COLUMN ydsz_acct_user.position_code IS '岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开）';
+COMMENT ON COLUMN ydsz_acct_user.ban_type IS '封禁类型（TEMPORARY/PERMANENT，NULL 表示未封禁）';
+COMMENT ON COLUMN ydsz_acct_user.ban_reason IS '封禁原因';
+COMMENT ON COLUMN ydsz_acct_user.ban_expire_at IS '封禁到期时间（临时封禁使用，永久封禁为 NULL）';
+COMMENT ON COLUMN ydsz_acct_user.banned_by IS '封禁操作人标识';
+COMMENT ON COLUMN ydsz_acct_user.banned_at IS '封禁操作时间';
+COMMENT ON COLUMN ydsz_acct_user.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_acct_user.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_acct_user.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_acct_user.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_acct_user.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_user_account_phone ON ydsz_user_account (phone);
-CREATE INDEX idx_ydsz_user_account_dept_id ON ydsz_user_account (dept_id);
-CREATE INDEX idx_ydsz_user_account_company_id ON ydsz_user_account (company_id);
-CREATE INDEX idx_ydsz_user_account_tenant_deleted ON ydsz_user_account (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_phone ON ydsz_acct_user (phone);
+CREATE INDEX idx_ydsz_acct_user_dept_id ON ydsz_acct_user (dept_id);
+CREATE INDEX idx_ydsz_acct_user_company_id ON ydsz_acct_user (company_id);
+CREATE INDEX idx_ydsz_acct_user_tenant_deleted ON ydsz_acct_user (tenant_id, deleted);
 
-CREATE TABLE ydsz_company (
+CREATE TABLE ydsz_org_company (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     company_name             VARCHAR2(128 CHAR)       NOT NULL,
@@ -112,31 +112,31 @@ CREATE TABLE ydsz_company (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_company PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_company_company_code UNIQUE (company_code)
+    CONSTRAINT pk_ydsz_org_company PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_org_company_company_code UNIQUE (company_code)
 );
 
-COMMENT ON TABLE ydsz_company IS '公司表';
-COMMENT ON COLUMN ydsz_company.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_company.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_company.company_name IS '公司名称（前端展示）';
-COMMENT ON COLUMN ydsz_company.company_code IS '公司编码（业务侧引用，全局唯一，建议格式 COMP_XXX）';
-COMMENT ON COLUMN ydsz_company.parent_id IS '上级公司 ID（支持集团-子公司多级架构，"0"=顶级公司）';
-COMMENT ON COLUMN ydsz_company.contact_person IS '联系人姓名';
-COMMENT ON COLUMN ydsz_company.contact_phone IS '联系电话';
-COMMENT ON COLUMN ydsz_company.address IS '注册地址';
-COMMENT ON COLUMN ydsz_company.status IS '启用状态（ENABLED/DISABLED，禁用后公司下所有部门和用户均无法登录）';
-COMMENT ON COLUMN ydsz_company.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_company.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_company.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_company.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_company.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_company.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_org_company IS '公司表';
+COMMENT ON COLUMN ydsz_org_company.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_org_company.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_org_company.company_name IS '公司名称（前端展示）';
+COMMENT ON COLUMN ydsz_org_company.company_code IS '公司编码（业务侧引用，全局唯一，建议格式 COMP_XXX）';
+COMMENT ON COLUMN ydsz_org_company.parent_id IS '上级公司 ID（支持集团-子公司多级架构，"0"=顶级公司）';
+COMMENT ON COLUMN ydsz_org_company.contact_person IS '联系人姓名';
+COMMENT ON COLUMN ydsz_org_company.contact_phone IS '联系电话';
+COMMENT ON COLUMN ydsz_org_company.address IS '注册地址';
+COMMENT ON COLUMN ydsz_org_company.status IS '启用状态（ENABLED/DISABLED，禁用后公司下所有部门和用户均无法登录）';
+COMMENT ON COLUMN ydsz_org_company.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_org_company.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_org_company.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_org_company.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_org_company.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_org_company.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_company_parent_id ON ydsz_company (parent_id);
-CREATE INDEX idx_ydsz_company_tenant_deleted ON ydsz_company (tenant_id, deleted);
+CREATE INDEX idx_ydsz_org_company_parent_id ON ydsz_org_company (parent_id);
+CREATE INDEX idx_ydsz_org_company_tenant_deleted ON ydsz_org_company (tenant_id, deleted);
 
-CREATE TABLE ydsz_department (
+CREATE TABLE ydsz_org_department (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
@@ -152,32 +152,32 @@ CREATE TABLE ydsz_department (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_department PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_department_dept_code UNIQUE (dept_code)
+    CONSTRAINT pk_ydsz_org_department PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_org_department_dept_code UNIQUE (dept_code)
 );
 
-COMMENT ON TABLE ydsz_department IS '部门表';
-COMMENT ON COLUMN ydsz_department.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_department.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_department.parent_id IS '父部门 ID（根节点为 "0"，支持无限级树形结构）';
-COMMENT ON COLUMN ydsz_department.dept_name IS '部门名称（前端展示）';
-COMMENT ON COLUMN ydsz_department.dept_code IS '部门编码（业务侧引用，全局唯一，建议格式 DEPT_XXX）';
-COMMENT ON COLUMN ydsz_department.description IS '部门描述（说明部门职责与归属）';
-COMMENT ON COLUMN ydsz_department.sort_order IS '同级排序序号（升序）';
-COMMENT ON COLUMN ydsz_department.leader_id IS '部门负责人用户 ID（关联 ydsz_user_account.id，支持 leader: 审批人展开）';
-COMMENT ON COLUMN ydsz_department.status IS '启用状态（ENABLED/DISABLED，禁用后部门下用户无法被分配新角色）';
-COMMENT ON COLUMN ydsz_department.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_department.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_department.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_department.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_department.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_department.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_org_department IS '部门表';
+COMMENT ON COLUMN ydsz_org_department.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_org_department.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_org_department.parent_id IS '父部门 ID（根节点为 "0"，支持无限级树形结构）';
+COMMENT ON COLUMN ydsz_org_department.dept_name IS '部门名称（前端展示）';
+COMMENT ON COLUMN ydsz_org_department.dept_code IS '部门编码（业务侧引用，全局唯一，建议格式 DEPT_XXX）';
+COMMENT ON COLUMN ydsz_org_department.description IS '部门描述（说明部门职责与归属）';
+COMMENT ON COLUMN ydsz_org_department.sort_order IS '同级排序序号（升序）';
+COMMENT ON COLUMN ydsz_org_department.leader_id IS '部门负责人用户 ID（关联 ydsz_acct_user.id，支持 leader: 审批人展开）';
+COMMENT ON COLUMN ydsz_org_department.status IS '启用状态（ENABLED/DISABLED，禁用后部门下用户无法被分配新角色）';
+COMMENT ON COLUMN ydsz_org_department.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_org_department.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_org_department.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_org_department.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_org_department.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_org_department.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_department_parent_id ON ydsz_department (parent_id);
-CREATE INDEX idx_ydsz_department_leader_id ON ydsz_department (leader_id);
-CREATE INDEX idx_ydsz_department_tenant_deleted ON ydsz_department (tenant_id, deleted);
+CREATE INDEX idx_ydsz_org_department_parent_id ON ydsz_org_department (parent_id);
+CREATE INDEX idx_ydsz_org_department_leader_id ON ydsz_org_department (leader_id);
+CREATE INDEX idx_ydsz_org_department_tenant_deleted ON ydsz_org_department (tenant_id, deleted);
 
-CREATE TABLE ydsz_role (
+CREATE TABLE ydsz_rbac_role (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     role_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -193,30 +193,30 @@ CREATE TABLE ydsz_role (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_role PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_role_role_code UNIQUE (role_code, tenant_id)
+    CONSTRAINT pk_ydsz_rbac_role PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_rbac_role_role_code UNIQUE (role_code, tenant_id)
 );
 
-COMMENT ON TABLE ydsz_role IS '角色表';
-COMMENT ON COLUMN ydsz_role.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_role.tenant_id IS '租户 ID（多租户隔离，"0"=平台级角色，其它值为租户级角色）';
-COMMENT ON COLUMN ydsz_role.role_code IS '角色编码（业务侧引用，全局唯一，建议格式 ROLE_XXX）';
-COMMENT ON COLUMN ydsz_role.role_name IS '角色名称（前端展示）';
-COMMENT ON COLUMN ydsz_role.description IS '角色描述（说明该角色的业务定位与适用场景）';
-COMMENT ON COLUMN ydsz_role.sort_order IS '同级排序序号（升序）';
-COMMENT ON COLUMN ydsz_role.built_in IS '是否内置角色（1=内置，禁止删除/修改编码，如 SUPER_ADMIN/TENANT_ADMIN/AUDITOR/GUEST）';
-COMMENT ON COLUMN ydsz_role.data_scope IS '数据权限范围（ALL/DEPT_AND_CHILD/DEPT/SELF/CUSTOM）';
-COMMENT ON COLUMN ydsz_role.status IS '启用状态（ENABLED/DISABLED，禁用后拥有该角色的用户暂时无法访问系统）';
-COMMENT ON COLUMN ydsz_role.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_role.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_role.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_role.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_role.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_role.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_rbac_role IS '角色表';
+COMMENT ON COLUMN ydsz_rbac_role.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_rbac_role.tenant_id IS '租户 ID（多租户隔离，"0"=平台级角色，其它值为租户级角色）';
+COMMENT ON COLUMN ydsz_rbac_role.role_code IS '角色编码（业务侧引用，全局唯一，建议格式 ROLE_XXX）';
+COMMENT ON COLUMN ydsz_rbac_role.role_name IS '角色名称（前端展示）';
+COMMENT ON COLUMN ydsz_rbac_role.description IS '角色描述（说明该角色的业务定位与适用场景）';
+COMMENT ON COLUMN ydsz_rbac_role.sort_order IS '同级排序序号（升序）';
+COMMENT ON COLUMN ydsz_rbac_role.built_in IS '是否内置角色（1=内置，禁止删除/修改编码，如 SUPER_ADMIN/TENANT_ADMIN/AUDITOR/GUEST）';
+COMMENT ON COLUMN ydsz_rbac_role.data_scope IS '数据权限范围（ALL/DEPT_AND_CHILD/DEPT/SELF/CUSTOM）';
+COMMENT ON COLUMN ydsz_rbac_role.status IS '启用状态（ENABLED/DISABLED，禁用后拥有该角色的用户暂时无法访问系统）';
+COMMENT ON COLUMN ydsz_rbac_role.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rbac_role.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_rbac_role.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rbac_role.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rbac_role.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_rbac_role.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_role_tenant_deleted ON ydsz_role (tenant_id, deleted);
+CREATE INDEX idx_ydsz_rbac_role_tenant_deleted ON ydsz_rbac_role (tenant_id, deleted);
 
-CREATE TABLE ydsz_menu (
+CREATE TABLE ydsz_rbac_menu (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
@@ -236,36 +236,36 @@ CREATE TABLE ydsz_menu (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_menu PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_menu_menu_code UNIQUE (menu_code)
+    CONSTRAINT pk_ydsz_rbac_menu PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_rbac_menu_menu_code UNIQUE (menu_code)
 );
 
-COMMENT ON TABLE ydsz_menu IS '菜单/权限表';
-COMMENT ON COLUMN ydsz_menu.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_menu.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_menu.parent_id IS '父菜单 ID（根节点为 "0"，支持无限级树形结构）';
-COMMENT ON COLUMN ydsz_menu.menu_name IS '菜单名称（前端展示）';
-COMMENT ON COLUMN ydsz_menu.menu_code IS '菜单编码（业务侧引用，全局唯一）';
-COMMENT ON COLUMN ydsz_menu.menu_type IS '菜单类型（DIR=目录/MENU=菜单/BUTTON=按钮）';
-COMMENT ON COLUMN ydsz_menu.path IS '前端路由路径（menuType=MENU 时使用）';
-COMMENT ON COLUMN ydsz_menu.component IS '前端组件路径（menuType=MENU 时使用，如 system/user/index）';
-COMMENT ON COLUMN ydsz_menu.icon IS '菜单图标（Iconify/Element Plus 图标名）';
-COMMENT ON COLUMN ydsz_menu.sort_order IS '同级排序序号（升序）';
-COMMENT ON COLUMN ydsz_menu.permission_code IS '权限码（如 system:user:create，被后端 @AuthApiPermission 引用）';
-COMMENT ON COLUMN ydsz_menu.visible IS '是否前端可见（1=可见，0=隐藏但仍参与鉴权）';
-COMMENT ON COLUMN ydsz_menu.status IS '启用状态（ENABLED/DISABLED）';
-COMMENT ON COLUMN ydsz_menu.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_menu.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_menu.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_menu.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_menu.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_menu.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_rbac_menu IS '菜单/权限表';
+COMMENT ON COLUMN ydsz_rbac_menu.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_rbac_menu.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_rbac_menu.parent_id IS '父菜单 ID（根节点为 "0"，支持无限级树形结构）';
+COMMENT ON COLUMN ydsz_rbac_menu.menu_name IS '菜单名称（前端展示）';
+COMMENT ON COLUMN ydsz_rbac_menu.menu_code IS '菜单编码（业务侧引用，全局唯一）';
+COMMENT ON COLUMN ydsz_rbac_menu.menu_type IS '菜单类型（DIR=目录/MENU=菜单/BUTTON=按钮）';
+COMMENT ON COLUMN ydsz_rbac_menu.path IS '前端路由路径（menuType=MENU 时使用）';
+COMMENT ON COLUMN ydsz_rbac_menu.component IS '前端组件路径（menuType=MENU 时使用，如 system/user/index）';
+COMMENT ON COLUMN ydsz_rbac_menu.icon IS '菜单图标（Iconify/Element Plus 图标名）';
+COMMENT ON COLUMN ydsz_rbac_menu.sort_order IS '同级排序序号（升序）';
+COMMENT ON COLUMN ydsz_rbac_menu.permission_code IS '权限码（如 system:user:create，被后端 @AuthApiPermission 引用）';
+COMMENT ON COLUMN ydsz_rbac_menu.visible IS '是否前端可见（1=可见，0=隐藏但仍参与鉴权）';
+COMMENT ON COLUMN ydsz_rbac_menu.status IS '启用状态（ENABLED/DISABLED）';
+COMMENT ON COLUMN ydsz_rbac_menu.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rbac_menu.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_rbac_menu.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rbac_menu.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rbac_menu.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_rbac_menu.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_menu_parent_id ON ydsz_menu (parent_id);
-CREATE INDEX idx_ydsz_menu_permission_code ON ydsz_menu (permission_code);
-CREATE INDEX idx_ydsz_menu_tenant_deleted ON ydsz_menu (tenant_id, deleted);
+CREATE INDEX idx_ydsz_rbac_menu_parent_id ON ydsz_rbac_menu (parent_id);
+CREATE INDEX idx_ydsz_rbac_menu_permission_code ON ydsz_rbac_menu (permission_code);
+CREATE INDEX idx_ydsz_rbac_menu_tenant_deleted ON ydsz_rbac_menu (tenant_id, deleted);
 
-CREATE TABLE ydsz_post (
+CREATE TABLE ydsz_rbac_post (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     post_name                VARCHAR2(128 CHAR)       NOT NULL,
@@ -279,28 +279,28 @@ CREATE TABLE ydsz_post (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_post PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_post_post_code UNIQUE (post_code)
+    CONSTRAINT pk_ydsz_rbac_post PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_rbac_post_post_code UNIQUE (post_code)
 );
 
-COMMENT ON TABLE ydsz_post IS '岗位表';
-COMMENT ON COLUMN ydsz_post.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_post.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_post.post_name IS '岗位名称（前端展示，如「项目经理」「后端开发工程师」）';
-COMMENT ON COLUMN ydsz_post.post_code IS '岗位编码（业务侧引用，全局唯一，如 PM/DEV/QA/SA）';
-COMMENT ON COLUMN ydsz_post.description IS '岗位描述（说明岗位的工作职责与任职要求）';
-COMMENT ON COLUMN ydsz_post.sort_order IS '同级排序序号（升序）';
-COMMENT ON COLUMN ydsz_post.status IS '启用状态（ENABLED/DISABLED，禁用后岗位不可再被分配给新用户）';
-COMMENT ON COLUMN ydsz_post.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_post.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_post.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_post.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_post.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_post.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_rbac_post IS '岗位表';
+COMMENT ON COLUMN ydsz_rbac_post.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_rbac_post.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_rbac_post.post_name IS '岗位名称（前端展示，如「项目经理」「后端开发工程师」）';
+COMMENT ON COLUMN ydsz_rbac_post.post_code IS '岗位编码（业务侧引用，全局唯一，如 PM/DEV/QA/SA）';
+COMMENT ON COLUMN ydsz_rbac_post.description IS '岗位描述（说明岗位的工作职责与任职要求）';
+COMMENT ON COLUMN ydsz_rbac_post.sort_order IS '同级排序序号（升序）';
+COMMENT ON COLUMN ydsz_rbac_post.status IS '启用状态（ENABLED/DISABLED，禁用后岗位不可再被分配给新用户）';
+COMMENT ON COLUMN ydsz_rbac_post.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rbac_post.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_rbac_post.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rbac_post.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rbac_post.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_rbac_post.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_post_tenant_deleted ON ydsz_post (tenant_id, deleted);
+CREATE INDEX idx_ydsz_rbac_post_tenant_deleted ON ydsz_rbac_post (tenant_id, deleted);
 
-CREATE TABLE ydsz_language (
+CREATE TABLE ydsz_acct_user_language (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     language_code            VARCHAR2(32 CHAR)        NOT NULL,
@@ -314,28 +314,28 @@ CREATE TABLE ydsz_language (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_language PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_language_language_code UNIQUE (language_code)
+    CONSTRAINT pk_ydsz_acct_user_language PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_acct_user_language_language_code UNIQUE (language_code)
 );
 
-COMMENT ON TABLE ydsz_language IS '语言配置表';
-COMMENT ON COLUMN ydsz_language.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_language.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_language.language_code IS '语言编码（ISO 639-1 + 区域码，如 zh-CN/en-US/ja-JP/zh-TW）';
-COMMENT ON COLUMN ydsz_language.language_name IS '语言名称（前端展示，如「简体中文」「English」）';
-COMMENT ON COLUMN ydsz_language.is_default IS '是否默认语言（1=是，0=否，系统全局仅允许 1 个默认语言）';
-COMMENT ON COLUMN ydsz_language.sort_order IS '排序序号（升序，决定语言切换器展示顺序）';
-COMMENT ON COLUMN ydsz_language.status IS '启用状态（ENABLED/DISABLED，禁用后前端语言切换器隐藏该选项）';
-COMMENT ON COLUMN ydsz_language.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_language.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_language.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_language.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_language.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_language.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_acct_user_language IS '语言配置表';
+COMMENT ON COLUMN ydsz_acct_user_language.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_acct_user_language.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_acct_user_language.language_code IS '语言编码（ISO 639-1 + 区域码，如 zh-CN/en-US/ja-JP/zh-TW）';
+COMMENT ON COLUMN ydsz_acct_user_language.language_name IS '语言名称（前端展示，如「简体中文」「English」）';
+COMMENT ON COLUMN ydsz_acct_user_language.is_default IS '是否默认语言（1=是，0=否，系统全局仅允许 1 个默认语言）';
+COMMENT ON COLUMN ydsz_acct_user_language.sort_order IS '排序序号（升序，决定语言切换器展示顺序）';
+COMMENT ON COLUMN ydsz_acct_user_language.status IS '启用状态（ENABLED/DISABLED，禁用后前端语言切换器隐藏该选项）';
+COMMENT ON COLUMN ydsz_acct_user_language.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user_language.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_acct_user_language.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_acct_user_language.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_acct_user_language.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_acct_user_language.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_language_tenant_deleted ON ydsz_language (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_language_tenant_deleted ON ydsz_acct_user_language (tenant_id, deleted);
 
-CREATE TABLE ydsz_user_role (
+CREATE TABLE ydsz_acct_user_role (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -347,27 +347,27 @@ CREATE TABLE ydsz_user_role (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_role PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_user_role PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_user_role IS '用户-角色关联表';
-COMMENT ON COLUMN ydsz_user_role.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_user_role.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_user_role.user_id IS '用户 ID（关联 ydsz_user_account.id）';
-COMMENT ON COLUMN ydsz_user_role.role_id IS '角色 ID（关联 ydsz_role.id）';
-COMMENT ON COLUMN ydsz_user_role.status IS '状态标识';
-COMMENT ON COLUMN ydsz_user_role.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_user_role.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_user_role.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_user_role.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_user_role.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_user_role.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_acct_user_role IS '用户-角色关联表';
+COMMENT ON COLUMN ydsz_acct_user_role.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_acct_user_role.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_acct_user_role.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
+COMMENT ON COLUMN ydsz_acct_user_role.role_id IS '角色 ID（关联 ydsz_rbac_role.id）';
+COMMENT ON COLUMN ydsz_acct_user_role.status IS '状态标识';
+COMMENT ON COLUMN ydsz_acct_user_role.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user_role.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_acct_user_role.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_acct_user_role.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_acct_user_role.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_acct_user_role.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_user_role_user_id ON ydsz_user_role (user_id);
-CREATE INDEX idx_ydsz_user_role_role_id ON ydsz_user_role (role_id);
-CREATE INDEX idx_ydsz_user_role_tenant_deleted ON ydsz_user_role (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_role_user_id ON ydsz_acct_user_role (user_id);
+CREATE INDEX idx_ydsz_acct_user_role_role_id ON ydsz_acct_user_role (role_id);
+CREATE INDEX idx_ydsz_acct_user_role_tenant_deleted ON ydsz_acct_user_role (tenant_id, deleted);
 
-CREATE TABLE ydsz_user_post (
+CREATE TABLE ydsz_acct_user_post (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -379,27 +379,27 @@ CREATE TABLE ydsz_user_post (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_post PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_user_post PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_user_post IS '用户-岗位关联表';
-COMMENT ON COLUMN ydsz_user_post.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_user_post.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_user_post.user_id IS '用户 ID（关联 ydsz_user_account.id）';
-COMMENT ON COLUMN ydsz_user_post.post_id IS '岗位 ID（关联 ydsz_post.id）';
-COMMENT ON COLUMN ydsz_user_post.status IS '状态标识';
-COMMENT ON COLUMN ydsz_user_post.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_user_post.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_user_post.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_user_post.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_user_post.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_user_post.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_acct_user_post IS '用户-岗位关联表';
+COMMENT ON COLUMN ydsz_acct_user_post.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_acct_user_post.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_acct_user_post.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
+COMMENT ON COLUMN ydsz_acct_user_post.post_id IS '岗位 ID（关联 ydsz_rbac_post.id）';
+COMMENT ON COLUMN ydsz_acct_user_post.status IS '状态标识';
+COMMENT ON COLUMN ydsz_acct_user_post.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user_post.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_acct_user_post.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_acct_user_post.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_acct_user_post.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_acct_user_post.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_user_post_user_id ON ydsz_user_post (user_id);
-CREATE INDEX idx_ydsz_user_post_post_id ON ydsz_user_post (post_id);
-CREATE INDEX idx_ydsz_user_post_tenant_deleted ON ydsz_user_post (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_post_user_id ON ydsz_acct_user_post (user_id);
+CREATE INDEX idx_ydsz_acct_user_post_post_id ON ydsz_acct_user_post (post_id);
+CREATE INDEX idx_ydsz_acct_user_post_tenant_deleted ON ydsz_acct_user_post (tenant_id, deleted);
 
-CREATE TABLE ydsz_user_dept (
+CREATE TABLE ydsz_acct_user_dept (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -412,28 +412,28 @@ CREATE TABLE ydsz_user_dept (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_dept PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_user_dept PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_user_dept IS '用户-部门关联表';
-COMMENT ON COLUMN ydsz_user_dept.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_user_dept.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_user_dept.user_id IS '用户 ID（关联 ydsz_user_account.id）';
-COMMENT ON COLUMN ydsz_user_dept.dept_id IS '部门 ID（关联 ydsz_department.id）';
-COMMENT ON COLUMN ydsz_user_dept.is_primary IS '是否主部门（1=是，0=否，一个用户只能有一个主部门，由 Service 层事务保证）';
-COMMENT ON COLUMN ydsz_user_dept.status IS '状态标识';
-COMMENT ON COLUMN ydsz_user_dept.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_user_dept.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_user_dept.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_user_dept.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_user_dept.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_user_dept.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_acct_user_dept IS '用户-部门关联表';
+COMMENT ON COLUMN ydsz_acct_user_dept.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_acct_user_dept.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_acct_user_dept.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
+COMMENT ON COLUMN ydsz_acct_user_dept.dept_id IS '部门 ID（关联 ydsz_org_department.id）';
+COMMENT ON COLUMN ydsz_acct_user_dept.is_primary IS '是否主部门（1=是，0=否，一个用户只能有一个主部门，由 Service 层事务保证）';
+COMMENT ON COLUMN ydsz_acct_user_dept.status IS '状态标识';
+COMMENT ON COLUMN ydsz_acct_user_dept.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user_dept.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_acct_user_dept.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_acct_user_dept.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_acct_user_dept.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_acct_user_dept.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_user_dept_user_id ON ydsz_user_dept (user_id);
-CREATE INDEX idx_ydsz_user_dept_dept_id ON ydsz_user_dept (dept_id);
-CREATE INDEX idx_ydsz_user_dept_tenant_deleted ON ydsz_user_dept (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_dept_user_id ON ydsz_acct_user_dept (user_id);
+CREATE INDEX idx_ydsz_acct_user_dept_dept_id ON ydsz_acct_user_dept (dept_id);
+CREATE INDEX idx_ydsz_acct_user_dept_tenant_deleted ON ydsz_acct_user_dept (tenant_id, deleted);
 
-CREATE TABLE ydsz_company_dept (
+CREATE TABLE ydsz_org_company_dept (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     company_id               VARCHAR2(32 CHAR)        NOT NULL,
@@ -445,27 +445,27 @@ CREATE TABLE ydsz_company_dept (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_company_dept PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_org_company_dept PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_company_dept IS '公司-部门关联表';
-COMMENT ON COLUMN ydsz_company_dept.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_company_dept.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_company_dept.company_id IS '公司 ID（关联 ydsz_company.id）';
-COMMENT ON COLUMN ydsz_company_dept.dept_id IS '部门 ID（关联 ydsz_department.id）';
-COMMENT ON COLUMN ydsz_company_dept.status IS '状态标识';
-COMMENT ON COLUMN ydsz_company_dept.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_company_dept.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_company_dept.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_company_dept.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_company_dept.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_company_dept.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_org_company_dept IS '公司-部门关联表';
+COMMENT ON COLUMN ydsz_org_company_dept.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_org_company_dept.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_org_company_dept.company_id IS '公司 ID（关联 ydsz_org_company.id）';
+COMMENT ON COLUMN ydsz_org_company_dept.dept_id IS '部门 ID（关联 ydsz_org_department.id）';
+COMMENT ON COLUMN ydsz_org_company_dept.status IS '状态标识';
+COMMENT ON COLUMN ydsz_org_company_dept.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_org_company_dept.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_org_company_dept.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_org_company_dept.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_org_company_dept.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_org_company_dept.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_company_dept_company_id ON ydsz_company_dept (company_id);
-CREATE INDEX idx_ydsz_company_dept_dept_id ON ydsz_company_dept (dept_id);
-CREATE INDEX idx_ydsz_company_dept_tenant_deleted ON ydsz_company_dept (tenant_id, deleted);
+CREATE INDEX idx_ydsz_org_company_dept_company_id ON ydsz_org_company_dept (company_id);
+CREATE INDEX idx_ydsz_org_company_dept_dept_id ON ydsz_org_company_dept (dept_id);
+CREATE INDEX idx_ydsz_org_company_dept_tenant_deleted ON ydsz_org_company_dept (tenant_id, deleted);
 
-CREATE TABLE ydsz_role_permission (
+CREATE TABLE ydsz_rbac_role_permission (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     role_id                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -478,29 +478,29 @@ CREATE TABLE ydsz_role_permission (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_role_permission PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rbac_role_permission PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_role_permission IS '角色-权限关联表';
-COMMENT ON COLUMN ydsz_role_permission.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_role_permission.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_role_permission.role_id IS '角色 ID（关联 ydsz_role.id）';
-COMMENT ON COLUMN ydsz_role_permission.permission_id IS '权限 ID（实际指向 ydsz_menu.id，语义上为权限点而非菜单节点）';
-COMMENT ON COLUMN ydsz_role_permission.menu_id IS '关联菜单 ID（可空，纯按钮级权限无对应菜单节点）';
-COMMENT ON COLUMN ydsz_role_permission.status IS '状态标识';
-COMMENT ON COLUMN ydsz_role_permission.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_role_permission.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_role_permission.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_role_permission.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_role_permission.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_role_permission.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_rbac_role_permission IS '角色-权限关联表';
+COMMENT ON COLUMN ydsz_rbac_role_permission.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_rbac_role_permission.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_rbac_role_permission.role_id IS '角色 ID（关联 ydsz_rbac_role.id）';
+COMMENT ON COLUMN ydsz_rbac_role_permission.permission_id IS '权限 ID（实际指向 ydsz_rbac_menu.id，语义上为权限点而非菜单节点）';
+COMMENT ON COLUMN ydsz_rbac_role_permission.menu_id IS '关联菜单 ID（可空，纯按钮级权限无对应菜单节点）';
+COMMENT ON COLUMN ydsz_rbac_role_permission.status IS '状态标识';
+COMMENT ON COLUMN ydsz_rbac_role_permission.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rbac_role_permission.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_rbac_role_permission.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rbac_role_permission.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rbac_role_permission.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_rbac_role_permission.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_role_permission_role_id ON ydsz_role_permission (role_id);
-CREATE INDEX idx_ydsz_role_permission_permission_id ON ydsz_role_permission (permission_id);
-CREATE INDEX idx_ydsz_role_permission_menu_id ON ydsz_role_permission (menu_id);
-CREATE INDEX idx_ydsz_role_permission_tenant_deleted ON ydsz_role_permission (tenant_id, deleted);
+CREATE INDEX idx_ydsz_rbac_role_permission_role_id ON ydsz_rbac_role_permission (role_id);
+CREATE INDEX idx_ydsz_rbac_role_permission_permission_id ON ydsz_rbac_role_permission (permission_id);
+CREATE INDEX idx_ydsz_rbac_role_permission_menu_id ON ydsz_rbac_role_permission (menu_id);
+CREATE INDEX idx_ydsz_rbac_role_permission_tenant_deleted ON ydsz_rbac_role_permission (tenant_id, deleted);
 
-CREATE TABLE ydsz_user_login_history (
+CREATE TABLE ydsz_acct_login_history (
     id                       VARCHAR2(32 CHAR)       ,
     user_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     username                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -509,41 +509,41 @@ CREATE TABLE ydsz_user_login_history (
     fail_reason              VARCHAR2(255 CHAR)       DEFAULT NULL,
     user_agent               VARCHAR2(512 CHAR)       DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_user_login_history PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_login_history PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_user_login_history IS '用户登录历史表';
-COMMENT ON COLUMN ydsz_user_login_history.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_user_login_history.user_id IS '用户 ID（关联 ydsz_user_account.id）';
-COMMENT ON COLUMN ydsz_user_login_history.username IS '用户名（冗余存储，即使用户被删除也可追溯）';
-COMMENT ON COLUMN ydsz_user_login_history.login_ip IS '登录 IP 地址';
-COMMENT ON COLUMN ydsz_user_login_history.login_result IS '登录结果（SUCCESS/FAILED）';
-COMMENT ON COLUMN ydsz_user_login_history.fail_reason IS '失败原因（成功时为 NULL）';
-COMMENT ON COLUMN ydsz_user_login_history.user_agent IS '用户代理（浏览器/设备信息）';
-COMMENT ON COLUMN ydsz_user_login_history.created_at IS '登录时间';
+COMMENT ON TABLE ydsz_acct_login_history IS '用户登录历史表';
+COMMENT ON COLUMN ydsz_acct_login_history.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_acct_login_history.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
+COMMENT ON COLUMN ydsz_acct_login_history.username IS '用户名（冗余存储，即使用户被删除也可追溯）';
+COMMENT ON COLUMN ydsz_acct_login_history.login_ip IS '登录 IP 地址';
+COMMENT ON COLUMN ydsz_acct_login_history.login_result IS '登录结果（SUCCESS/FAILED）';
+COMMENT ON COLUMN ydsz_acct_login_history.fail_reason IS '失败原因（成功时为 NULL）';
+COMMENT ON COLUMN ydsz_acct_login_history.user_agent IS '用户代理（浏览器/设备信息）';
+COMMENT ON COLUMN ydsz_acct_login_history.created_at IS '登录时间';
 
-CREATE INDEX idx_ydsz_user_login_history_user_id_created_at ON ydsz_user_login_history (user_id, created_at);
-CREATE INDEX idx_ydsz_user_login_history_ip ON ydsz_user_login_history (login_ip);
-CREATE INDEX idx_ydsz_user_login_history_created_at ON ydsz_user_login_history (created_at);
+CREATE INDEX idx_ydsz_acct_login_history_user_id_created_at ON ydsz_acct_login_history (user_id, created_at);
+CREATE INDEX idx_ydsz_acct_login_history_ip ON ydsz_acct_login_history (login_ip);
+CREATE INDEX idx_ydsz_acct_login_history_created_at ON ydsz_acct_login_history (created_at);
 
-CREATE TABLE ydsz_user_password_history (
+CREATE TABLE ydsz_acct_password_history (
     id                       VARCHAR2(32 CHAR)       ,
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     password_hash            VARCHAR2(255 CHAR)       NOT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    CONSTRAINT pk_ydsz_user_password_history PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_acct_password_history PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_user_password_history IS '密码历史表';
-COMMENT ON COLUMN ydsz_user_password_history.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_user_password_history.user_id IS '用户 ID（关联 ydsz_user_account.id）';
-COMMENT ON COLUMN ydsz_user_password_history.password_hash IS 'BCrypt 加密后的历史密码哈希';
-COMMENT ON COLUMN ydsz_user_password_history.created_at IS '创建时间（该密码被设置的日期）';
-COMMENT ON COLUMN ydsz_user_password_history.deleted IS '逻辑删除标记（0=未删除，1=已删除，用于软删除兼容）';
+COMMENT ON TABLE ydsz_acct_password_history IS '密码历史表';
+COMMENT ON COLUMN ydsz_acct_password_history.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_acct_password_history.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
+COMMENT ON COLUMN ydsz_acct_password_history.password_hash IS 'BCrypt 加密后的历史密码哈希';
+COMMENT ON COLUMN ydsz_acct_password_history.created_at IS '创建时间（该密码被设置的日期）';
+COMMENT ON COLUMN ydsz_acct_password_history.deleted IS '逻辑删除标记（0=未删除，1=已删除，用于软删除兼容）';
 
-CREATE INDEX idx_ydsz_user_password_history_user_id_created_at ON ydsz_user_password_history (user_id, created_at);
-CREATE INDEX idx_ydsz_user_password_history_user_id ON ydsz_user_password_history (user_id);
+CREATE INDEX idx_ydsz_acct_password_history_user_id_created_at ON ydsz_acct_password_history (user_id, created_at);
+CREATE INDEX idx_ydsz_acct_password_history_user_id ON ydsz_acct_password_history (user_id);
 
 CREATE TABLE ydsz_auth_policy (
     id                       VARCHAR2(64 CHAR)       ,
@@ -600,7 +600,7 @@ WHEN NOT MATCHED THEN
     VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, 1, 1, 0, 1, 'LOCAL', 3, 7200, '系统全局默认策略，租户未配置时继承', 0, 0)
 ;
 
-CREATE TABLE ydsz_social_client (
+CREATE TABLE ydsz_auth_social_client (
     id                       VARCHAR2(64 CHAR)       ,
     platform                 VARCHAR2(32 CHAR)        NOT NULL,
     platform_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -618,33 +618,33 @@ CREATE TABLE ydsz_social_client (
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     revision                 NUMBER(10)               DEFAULT 0,
-    CONSTRAINT pk_ydsz_social_client PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_social_client_platform UNIQUE (platform)
+    CONSTRAINT pk_ydsz_auth_social_client PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_auth_social_client_platform UNIQUE (platform)
 );
 
-COMMENT ON TABLE ydsz_social_client IS '社交平台客户端配置表';
-COMMENT ON COLUMN ydsz_social_client.id IS '配置 ID（UUID）';
-COMMENT ON COLUMN ydsz_social_client.platform IS '平台标识（GITHUB/DINGTALK/ENTERPRISE_WECHAT/FEISHU 等）';
-COMMENT ON COLUMN ydsz_social_client.platform_name IS '平台显示名称';
-COMMENT ON COLUMN ydsz_social_client.app_id IS '应用 ID（平台分配的 appId）';
-COMMENT ON COLUMN ydsz_social_client.app_secret IS '应用密钥（BCrypt 加密存储）';
-COMMENT ON COLUMN ydsz_social_client.scope IS 'OAuth2 授权范围（scope）';
-COMMENT ON COLUMN ydsz_social_client.redirect_uri IS '授权回调地址（redirectUri）';
-COMMENT ON COLUMN ydsz_social_client.status IS '状态：ENABLED/DISABLED';
-COMMENT ON COLUMN ydsz_social_client.sort_order IS '排序权重（越小越靠前）';
-COMMENT ON COLUMN ydsz_social_client.remark IS '备注说明';
-COMMENT ON COLUMN ydsz_social_client.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_social_client.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_social_client.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_social_client.updated_at IS '更新时间';
-COMMENT ON COLUMN ydsz_social_client.created_by IS '创建者用户 ID';
-COMMENT ON COLUMN ydsz_social_client.updated_by IS '更新者用户 ID';
-COMMENT ON COLUMN ydsz_social_client.revision IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_auth_social_client IS '社交平台客户端配置表';
+COMMENT ON COLUMN ydsz_auth_social_client.id IS '配置 ID（UUID）';
+COMMENT ON COLUMN ydsz_auth_social_client.platform IS '平台标识（GITHUB/DINGTALK/ENTERPRISE_WECHAT/FEISHU 等）';
+COMMENT ON COLUMN ydsz_auth_social_client.platform_name IS '平台显示名称';
+COMMENT ON COLUMN ydsz_auth_social_client.app_id IS '应用 ID（平台分配的 appId）';
+COMMENT ON COLUMN ydsz_auth_social_client.app_secret IS '应用密钥（BCrypt 加密存储）';
+COMMENT ON COLUMN ydsz_auth_social_client.scope IS 'OAuth2 授权范围（scope）';
+COMMENT ON COLUMN ydsz_auth_social_client.redirect_uri IS '授权回调地址（redirectUri）';
+COMMENT ON COLUMN ydsz_auth_social_client.status IS '状态：ENABLED/DISABLED';
+COMMENT ON COLUMN ydsz_auth_social_client.sort_order IS '排序权重（越小越靠前）';
+COMMENT ON COLUMN ydsz_auth_social_client.remark IS '备注说明';
+COMMENT ON COLUMN ydsz_auth_social_client.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_auth_social_client.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_auth_social_client.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_auth_social_client.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_auth_social_client.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_auth_social_client.updated_by IS '更新者用户 ID';
+COMMENT ON COLUMN ydsz_auth_social_client.revision IS '乐观锁版本号';
 
-CREATE INDEX idx_ydsz_social_client_status ON ydsz_social_client (status);
-CREATE INDEX idx_ydsz_social_client_tenant_deleted ON ydsz_social_client (tenant_id, deleted);
+CREATE INDEX idx_ydsz_auth_social_client_status ON ydsz_auth_social_client (status);
+CREATE INDEX idx_ydsz_auth_social_client_tenant_deleted ON ydsz_auth_social_client (tenant_id, deleted);
 
-CREATE TABLE ydsz_saml_idp_config (
+CREATE TABLE ydsz_idp_saml_config (
     id                       VARCHAR2(64 CHAR)       ,
     name                     VARCHAR2(64 CHAR)        NOT NULL,
     entity_id                VARCHAR2(512 CHAR)       NOT NULL,
@@ -662,41 +662,41 @@ CREATE TABLE ydsz_saml_idp_config (
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     revision                 NUMBER(10)               DEFAULT 0,
-    CONSTRAINT pk_ydsz_saml_idp_config PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_saml_idp_config_entity_id UNIQUE (entity_id)
+    CONSTRAINT pk_ydsz_idp_saml_config PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idp_saml_config_entity_id UNIQUE (entity_id)
 );
 
-COMMENT ON TABLE ydsz_saml_idp_config IS 'SAML 2.0 身份提供者配置表';
-COMMENT ON COLUMN ydsz_saml_idp_config.id IS '配置 ID（UUID）';
-COMMENT ON COLUMN ydsz_saml_idp_config.name IS 'IdP 显示名称';
-COMMENT ON COLUMN ydsz_saml_idp_config.entity_id IS 'IdP Entity ID（SAML 协议中 IdP 的唯一标识 URI）';
-COMMENT ON COLUMN ydsz_saml_idp_config.sso_url IS 'IdP SSO 端点 URL';
-COMMENT ON COLUMN ydsz_saml_idp_config.certificate IS 'IdP 公钥证书（PEM 格式，用于验证 SAML Response 签名）';
-COMMENT ON COLUMN ydsz_saml_idp_config.email_attribute IS '用户邮箱对应的 SAML Attribute 名称';
-COMMENT ON COLUMN ydsz_saml_idp_config.display_name_attribute IS '用户显示名称对应的 SAML Attribute 名称';
-COMMENT ON COLUMN ydsz_saml_idp_config.status IS '状态：ENABLED/DISABLED';
-COMMENT ON COLUMN ydsz_saml_idp_config.sort_order IS '排序权重（越小越靠前）';
-COMMENT ON COLUMN ydsz_saml_idp_config.remark IS '备注说明';
-COMMENT ON COLUMN ydsz_saml_idp_config.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_saml_idp_config.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_saml_idp_config.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_saml_idp_config.updated_at IS '更新时间';
-COMMENT ON COLUMN ydsz_saml_idp_config.created_by IS '创建者用户 ID';
-COMMENT ON COLUMN ydsz_saml_idp_config.updated_by IS '更新者用户 ID';
-COMMENT ON COLUMN ydsz_saml_idp_config.revision IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_idp_saml_config IS 'SAML 2.0 身份提供者配置表';
+COMMENT ON COLUMN ydsz_idp_saml_config.id IS '配置 ID（UUID）';
+COMMENT ON COLUMN ydsz_idp_saml_config.name IS 'IdP 显示名称';
+COMMENT ON COLUMN ydsz_idp_saml_config.entity_id IS 'IdP Entity ID（SAML 协议中 IdP 的唯一标识 URI）';
+COMMENT ON COLUMN ydsz_idp_saml_config.sso_url IS 'IdP SSO 端点 URL';
+COMMENT ON COLUMN ydsz_idp_saml_config.certificate IS 'IdP 公钥证书（PEM 格式，用于验证 SAML Response 签名）';
+COMMENT ON COLUMN ydsz_idp_saml_config.email_attribute IS '用户邮箱对应的 SAML Attribute 名称';
+COMMENT ON COLUMN ydsz_idp_saml_config.display_name_attribute IS '用户显示名称对应的 SAML Attribute 名称';
+COMMENT ON COLUMN ydsz_idp_saml_config.status IS '状态：ENABLED/DISABLED';
+COMMENT ON COLUMN ydsz_idp_saml_config.sort_order IS '排序权重（越小越靠前）';
+COMMENT ON COLUMN ydsz_idp_saml_config.remark IS '备注说明';
+COMMENT ON COLUMN ydsz_idp_saml_config.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_idp_saml_config.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_idp_saml_config.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_idp_saml_config.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_idp_saml_config.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_idp_saml_config.updated_by IS '更新者用户 ID';
+COMMENT ON COLUMN ydsz_idp_saml_config.revision IS '乐观锁版本号';
 
-CREATE INDEX idx_ydsz_saml_idp_config_status ON ydsz_saml_idp_config (status);
-CREATE INDEX idx_ydsz_saml_idp_config_tenant_deleted ON ydsz_saml_idp_config (tenant_id, deleted);
+CREATE INDEX idx_ydsz_idp_saml_config_status ON ydsz_idp_saml_config (status);
+CREATE INDEX idx_ydsz_idp_saml_config_tenant_deleted ON ydsz_idp_saml_config (tenant_id, deleted);
 
-CREATE TABLE ydsz_oauth2_application (
+CREATE TABLE ydsz_idp_oauth2_application (
     id                       VARCHAR2(64 CHAR)       ,
     client_id                VARCHAR2(128 CHAR)       NOT NULL,
     client_name              VARCHAR2(256 CHAR)       NOT NULL,
     client_secret            VARCHAR2(256 CHAR)       NOT NULL,
     client_type              VARCHAR2(16 CHAR)        NOT NULL,
-    redirect_uris            CLOB                     NOT NULL CONSTRAINT ck_ydsz_oauth2_application_redirect_uris CHECK (redirect_uris IS JSON),
-    allowed_scopes           CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_oauth2_application_allowed_scopes CHECK (allowed_scopes IS JSON),
-    allowed_audiences        CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_oauth2_application_allowed_audiences CHECK (allowed_audiences IS JSON),
+    redirect_uris            CLOB                     NOT NULL CONSTRAINT ck_ydsz_idp_oauth2_application_redirect_uris CHECK (redirect_uris IS JSON),
+    allowed_scopes           CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_idp_oauth2_application_allowed_scopes CHECK (allowed_scopes IS JSON),
+    allowed_audiences        CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_idp_oauth2_application_allowed_audiences CHECK (allowed_audiences IS JSON),
     status                   VARCHAR2(16 CHAR)        NOT NULL DEFAULT 'ENABLED',
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     icon_url                 VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -707,34 +707,34 @@ CREATE TABLE ydsz_oauth2_application (
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     revision                 NUMBER(10)               DEFAULT 0,
-    CONSTRAINT pk_ydsz_oauth2_application PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_oauth2_application_client_id UNIQUE (client_id)
+    CONSTRAINT pk_ydsz_idp_oauth2_application PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idp_oauth2_application_client_id UNIQUE (client_id)
 );
 
-COMMENT ON TABLE ydsz_oauth2_application IS 'OAuth2 应用注册表';
-COMMENT ON COLUMN ydsz_oauth2_application.id IS '应用 ID（UUID）';
-COMMENT ON COLUMN ydsz_oauth2_application.client_id IS '客户端 ID（唯一标识）';
-COMMENT ON COLUMN ydsz_oauth2_application.client_name IS '应用名称';
-COMMENT ON COLUMN ydsz_oauth2_application.client_secret IS '客户端密钥（BCrypt 加密存储）';
-COMMENT ON COLUMN ydsz_oauth2_application.client_type IS '客户端类型：CONFIDENTIAL/PUBLIC';
-COMMENT ON COLUMN ydsz_oauth2_application.redirect_uris IS '授权回调地址白名单（JSON 数组）';
-COMMENT ON COLUMN ydsz_oauth2_application.allowed_scopes IS '允许申请的权限范围（JSON 数组）';
-COMMENT ON COLUMN ydsz_oauth2_application.allowed_audiences IS '允许的受众（JSON 数组）';
-COMMENT ON COLUMN ydsz_oauth2_application.status IS '应用状态：ENABLED/DISABLED';
-COMMENT ON COLUMN ydsz_oauth2_application.description IS '应用描述';
-COMMENT ON COLUMN ydsz_oauth2_application.icon_url IS '应用图标 URL';
-COMMENT ON COLUMN ydsz_oauth2_application.created_by IS '创建者用户 ID';
-COMMENT ON COLUMN ydsz_oauth2_application.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_oauth2_application.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_oauth2_application.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_oauth2_application.updated_at IS '更新时间';
-COMMENT ON COLUMN ydsz_oauth2_application.updated_by IS '更新者用户 ID';
-COMMENT ON COLUMN ydsz_oauth2_application.revision IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_idp_oauth2_application IS 'OAuth2 应用注册表';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.id IS '应用 ID（UUID）';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.client_id IS '客户端 ID（唯一标识）';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.client_name IS '应用名称';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.client_secret IS '客户端密钥（BCrypt 加密存储）';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.client_type IS '客户端类型：CONFIDENTIAL/PUBLIC';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.redirect_uris IS '授权回调地址白名单（JSON 数组）';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.allowed_scopes IS '允许申请的权限范围（JSON 数组）';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.allowed_audiences IS '允许的受众（JSON 数组）';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.status IS '应用状态：ENABLED/DISABLED';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.description IS '应用描述';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.icon_url IS '应用图标 URL';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.updated_by IS '更新者用户 ID';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.revision IS '乐观锁版本号';
 
-CREATE INDEX idx_ydsz_oauth2_application_status ON ydsz_oauth2_application (status);
-CREATE INDEX idx_ydsz_oauth2_application_tenant_deleted ON ydsz_oauth2_application (tenant_id, deleted);
+CREATE INDEX idx_ydsz_idp_oauth2_application_status ON ydsz_idp_oauth2_application (status);
+CREATE INDEX idx_ydsz_idp_oauth2_application_tenant_deleted ON ydsz_idp_oauth2_application (tenant_id, deleted);
 
-CREATE TABLE ydsz_social_account (
+CREATE TABLE ydsz_auth_social_account (
     id                       VARCHAR2(32 CHAR)       ,
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -753,34 +753,34 @@ CREATE TABLE ydsz_social_account (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_social_account PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_social_account_platform_open_id UNIQUE (platform, open_id)
+    CONSTRAINT pk_ydsz_auth_social_account PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_auth_social_account_platform_open_id UNIQUE (platform, open_id)
 );
 
-COMMENT ON TABLE ydsz_social_account IS '社交账号绑定表';
-COMMENT ON COLUMN ydsz_social_account.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_social_account.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_social_account.user_id IS '关联用户 ID（关联 ydsz_user_account.id）';
-COMMENT ON COLUMN ydsz_social_account.platform IS '平台标识（WECHAT/DINGTALK/ENTERPRISE_WECHAT/GITHUB）';
-COMMENT ON COLUMN ydsz_social_account.open_id IS '平台用户唯一标识';
-COMMENT ON COLUMN ydsz_social_account.union_id IS '平台统一应用标识（可选，微信系平台返回）';
-COMMENT ON COLUMN ydsz_social_account.nickname IS '社交昵称（平台侧显示名）';
-COMMENT ON COLUMN ydsz_social_account.avatar_url IS '头像 URL';
-COMMENT ON COLUMN ydsz_social_account.access_token IS '访问令牌（AES-256-GCM 加密存储，密文不可用于条件查询）';
-COMMENT ON COLUMN ydsz_social_account.refresh_token IS '刷新令牌（AES-256-GCM 加密存储，部分平台不返回 refresh_token）';
-COMMENT ON COLUMN ydsz_social_account.expires_at IS '令牌过期时间';
-COMMENT ON COLUMN ydsz_social_account.status IS '状态标识';
-COMMENT ON COLUMN ydsz_social_account.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_social_account.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_social_account.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_social_account.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_social_account.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_social_account.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_auth_social_account IS '社交账号绑定表';
+COMMENT ON COLUMN ydsz_auth_social_account.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_auth_social_account.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_auth_social_account.user_id IS '关联用户 ID（关联 ydsz_acct_user.id）';
+COMMENT ON COLUMN ydsz_auth_social_account.platform IS '平台标识（WECHAT/DINGTALK/ENTERPRISE_WECHAT/GITHUB）';
+COMMENT ON COLUMN ydsz_auth_social_account.open_id IS '平台用户唯一标识';
+COMMENT ON COLUMN ydsz_auth_social_account.union_id IS '平台统一应用标识（可选，微信系平台返回）';
+COMMENT ON COLUMN ydsz_auth_social_account.nickname IS '社交昵称（平台侧显示名）';
+COMMENT ON COLUMN ydsz_auth_social_account.avatar_url IS '头像 URL';
+COMMENT ON COLUMN ydsz_auth_social_account.access_token IS '访问令牌（AES-256-GCM 加密存储，密文不可用于条件查询）';
+COMMENT ON COLUMN ydsz_auth_social_account.refresh_token IS '刷新令牌（AES-256-GCM 加密存储，部分平台不返回 refresh_token）';
+COMMENT ON COLUMN ydsz_auth_social_account.expires_at IS '令牌过期时间';
+COMMENT ON COLUMN ydsz_auth_social_account.status IS '状态标识';
+COMMENT ON COLUMN ydsz_auth_social_account.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_auth_social_account.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_auth_social_account.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_auth_social_account.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_auth_social_account.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_auth_social_account.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_social_account_user_id ON ydsz_social_account (user_id);
-CREATE INDEX idx_ydsz_social_account_tenant_deleted ON ydsz_social_account (tenant_id, deleted);
+CREATE INDEX idx_ydsz_auth_social_account_user_id ON ydsz_auth_social_account (user_id);
+CREATE INDEX idx_ydsz_auth_social_account_tenant_deleted ON ydsz_auth_social_account (tenant_id, deleted);
 
-CREATE TABLE ydsz_security_alert (
+CREATE TABLE ydsz_idp_security_alert (
     id                       VARCHAR2(64 CHAR)       ,
     alert_type               VARCHAR2(32 CHAR)        NOT NULL,
     risk_level               VARCHAR2(16 CHAR)        NOT NULL,
@@ -799,36 +799,36 @@ CREATE TABLE ydsz_security_alert (
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     revision                 NUMBER(10)               DEFAULT 0,
-    CONSTRAINT pk_ydsz_security_alert PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_idp_security_alert PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_security_alert IS '安全告警表';
-COMMENT ON COLUMN ydsz_security_alert.id IS '告警 ID（UUID）';
-COMMENT ON COLUMN ydsz_security_alert.alert_type IS '告警类型：ACCOUNT_LOCKED/ACCOUNT_BANNED/MFA_FAILED/BRUTE_FORCE/ANOMALOUS_LOGIN/PASSWORD_SPRAY';
-COMMENT ON COLUMN ydsz_security_alert.risk_level IS '风险等级：LOW/MEDIUM/HIGH/CRITICAL';
-COMMENT ON COLUMN ydsz_security_alert.user_id IS '关联用户 ID';
-COMMENT ON COLUMN ydsz_security_alert.username IS '关联用户名';
-COMMENT ON COLUMN ydsz_security_alert.source_ip IS '来源 IP';
-COMMENT ON COLUMN ydsz_security_alert.title IS '告警标题';
-COMMENT ON COLUMN ydsz_security_alert.content IS '告警内容';
-COMMENT ON COLUMN ydsz_security_alert.status IS '告警状态：PENDING/ACKNOWLEDGED/RESOLVED/IGNORED';
-COMMENT ON COLUMN ydsz_security_alert.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_security_alert.handled_at IS '处理时间';
-COMMENT ON COLUMN ydsz_security_alert.handler_note IS '处理备注';
-COMMENT ON COLUMN ydsz_security_alert.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_security_alert.created_by IS '创建者用户 ID';
-COMMENT ON COLUMN ydsz_security_alert.updated_by IS '更新者用户 ID';
-COMMENT ON COLUMN ydsz_security_alert.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_security_alert.updated_at IS '更新时间';
-COMMENT ON COLUMN ydsz_security_alert.revision IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_idp_security_alert IS '安全告警表';
+COMMENT ON COLUMN ydsz_idp_security_alert.id IS '告警 ID（UUID）';
+COMMENT ON COLUMN ydsz_idp_security_alert.alert_type IS '告警类型：ACCOUNT_LOCKED/ACCOUNT_BANNED/MFA_FAILED/BRUTE_FORCE/ANOMALOUS_LOGIN/PASSWORD_SPRAY';
+COMMENT ON COLUMN ydsz_idp_security_alert.risk_level IS '风险等级：LOW/MEDIUM/HIGH/CRITICAL';
+COMMENT ON COLUMN ydsz_idp_security_alert.user_id IS '关联用户 ID';
+COMMENT ON COLUMN ydsz_idp_security_alert.username IS '关联用户名';
+COMMENT ON COLUMN ydsz_idp_security_alert.source_ip IS '来源 IP';
+COMMENT ON COLUMN ydsz_idp_security_alert.title IS '告警标题';
+COMMENT ON COLUMN ydsz_idp_security_alert.content IS '告警内容';
+COMMENT ON COLUMN ydsz_idp_security_alert.status IS '告警状态：PENDING/ACKNOWLEDGED/RESOLVED/IGNORED';
+COMMENT ON COLUMN ydsz_idp_security_alert.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_idp_security_alert.handled_at IS '处理时间';
+COMMENT ON COLUMN ydsz_idp_security_alert.handler_note IS '处理备注';
+COMMENT ON COLUMN ydsz_idp_security_alert.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_idp_security_alert.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_idp_security_alert.updated_by IS '更新者用户 ID';
+COMMENT ON COLUMN ydsz_idp_security_alert.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_idp_security_alert.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_idp_security_alert.revision IS '乐观锁版本号';
 
-CREATE INDEX idx_ydsz_security_alert_status_risk ON ydsz_security_alert (status, risk_level);
-CREATE INDEX idx_ydsz_security_alert_type_time ON ydsz_security_alert (alert_type, created_at);
-CREATE INDEX idx_ydsz_security_alert_user_id ON ydsz_security_alert (user_id);
-CREATE INDEX idx_ydsz_security_alert_source_ip ON ydsz_security_alert (source_ip);
-CREATE INDEX idx_ydsz_security_alert_tenant_deleted ON ydsz_security_alert (tenant_id, deleted);
+CREATE INDEX idx_ydsz_idp_security_alert_status_risk ON ydsz_idp_security_alert (status, risk_level);
+CREATE INDEX idx_ydsz_idp_security_alert_type_time ON ydsz_idp_security_alert (alert_type, created_at);
+CREATE INDEX idx_ydsz_idp_security_alert_user_id ON ydsz_idp_security_alert (user_id);
+CREATE INDEX idx_ydsz_idp_security_alert_source_ip ON ydsz_idp_security_alert (source_ip);
+CREATE INDEX idx_ydsz_idp_security_alert_tenant_deleted ON ydsz_idp_security_alert (tenant_id, deleted);
 
-CREATE TABLE ydsz_user_credential (
+CREATE TABLE ydsz_auth_credential (
     id                       NUMBER(19) GENERATED BY DEFAULT AS IDENTITY NOT NULL,
     credential_id            VARCHAR2(512 CHAR)       NOT NULL,
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -842,34 +842,34 @@ CREATE TABLE ydsz_user_credential (
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    CONSTRAINT pk_ydsz_user_credential PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_user_credential_credential_id UNIQUE (credential_id)
+    CONSTRAINT pk_ydsz_auth_credential PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_auth_credential_credential_id UNIQUE (credential_id)
 );
 
-COMMENT ON TABLE ydsz_user_credential IS 'WebAuthn 凭证表';
-COMMENT ON COLUMN ydsz_user_credential.id IS '主键 ID（自增）';
-COMMENT ON COLUMN ydsz_user_credential.credential_id IS '凭证 ID（Base64URL 编码）';
-COMMENT ON COLUMN ydsz_user_credential.user_id IS '用户 ID（关联 ydsz_user_account.id）';
-COMMENT ON COLUMN ydsz_user_credential.public_key IS '公钥（COSE 密钥格式，Base64URL 编码）';
-COMMENT ON COLUMN ydsz_user_credential.sign_count IS '签名计数器（防克隆检测）';
-COMMENT ON COLUMN ydsz_user_credential.credential_type IS '凭证类型（如 public-key）';
-COMMENT ON COLUMN ydsz_user_credential.aaguid IS 'AAGUID（认证器唯一标识）';
-COMMENT ON COLUMN ydsz_user_credential.display_name IS '凭证友好名称';
-COMMENT ON COLUMN ydsz_user_credential.registered_at IS '注册时间';
-COMMENT ON COLUMN ydsz_user_credential.last_used_at IS '最后使用时间';
-COMMENT ON COLUMN ydsz_user_credential.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_user_credential.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_user_credential.deleted IS '删除标记（软删除，0=未删除，1=已删除）';
+COMMENT ON TABLE ydsz_auth_credential IS 'WebAuthn 凭证表';
+COMMENT ON COLUMN ydsz_auth_credential.id IS '主键 ID（自增）';
+COMMENT ON COLUMN ydsz_auth_credential.credential_id IS '凭证 ID（Base64URL 编码）';
+COMMENT ON COLUMN ydsz_auth_credential.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
+COMMENT ON COLUMN ydsz_auth_credential.public_key IS '公钥（COSE 密钥格式，Base64URL 编码）';
+COMMENT ON COLUMN ydsz_auth_credential.sign_count IS '签名计数器（防克隆检测）';
+COMMENT ON COLUMN ydsz_auth_credential.credential_type IS '凭证类型（如 public-key）';
+COMMENT ON COLUMN ydsz_auth_credential.aaguid IS 'AAGUID（认证器唯一标识）';
+COMMENT ON COLUMN ydsz_auth_credential.display_name IS '凭证友好名称';
+COMMENT ON COLUMN ydsz_auth_credential.registered_at IS '注册时间';
+COMMENT ON COLUMN ydsz_auth_credential.last_used_at IS '最后使用时间';
+COMMENT ON COLUMN ydsz_auth_credential.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_auth_credential.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_auth_credential.deleted IS '删除标记（软删除，0=未删除，1=已删除）';
 
-CREATE INDEX idx_ydsz_user_credential_user_id ON ydsz_user_credential (user_id);
+CREATE INDEX idx_ydsz_auth_credential_user_id ON ydsz_auth_credential (user_id);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (Oracle)
 -- ============================================================================
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_user_account_updated_at
-BEFORE UPDATE ON ydsz_user_account
+CREATE OR REPLACE TRIGGER trg_ydsz_acct_user_updated_at
+BEFORE UPDATE ON ydsz_acct_user
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -877,8 +877,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_company_updated_at
-BEFORE UPDATE ON ydsz_company
+CREATE OR REPLACE TRIGGER trg_ydsz_org_company_updated_at
+BEFORE UPDATE ON ydsz_org_company
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -886,8 +886,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_department_updated_at
-BEFORE UPDATE ON ydsz_department
+CREATE OR REPLACE TRIGGER trg_ydsz_org_department_updated_at
+BEFORE UPDATE ON ydsz_org_department
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -895,8 +895,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_role_updated_at
-BEFORE UPDATE ON ydsz_role
+CREATE OR REPLACE TRIGGER trg_ydsz_rbac_role_updated_at
+BEFORE UPDATE ON ydsz_rbac_role
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -904,8 +904,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_menu_updated_at
-BEFORE UPDATE ON ydsz_menu
+CREATE OR REPLACE TRIGGER trg_ydsz_rbac_menu_updated_at
+BEFORE UPDATE ON ydsz_rbac_menu
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -913,8 +913,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_post_updated_at
-BEFORE UPDATE ON ydsz_post
+CREATE OR REPLACE TRIGGER trg_ydsz_rbac_post_updated_at
+BEFORE UPDATE ON ydsz_rbac_post
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -922,8 +922,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_language_updated_at
-BEFORE UPDATE ON ydsz_language
+CREATE OR REPLACE TRIGGER trg_ydsz_acct_user_language_updated_at
+BEFORE UPDATE ON ydsz_acct_user_language
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -931,8 +931,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_user_role_updated_at
-BEFORE UPDATE ON ydsz_user_role
+CREATE OR REPLACE TRIGGER trg_ydsz_acct_user_role_updated_at
+BEFORE UPDATE ON ydsz_acct_user_role
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -940,8 +940,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_user_post_updated_at
-BEFORE UPDATE ON ydsz_user_post
+CREATE OR REPLACE TRIGGER trg_ydsz_acct_user_post_updated_at
+BEFORE UPDATE ON ydsz_acct_user_post
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -949,8 +949,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_user_dept_updated_at
-BEFORE UPDATE ON ydsz_user_dept
+CREATE OR REPLACE TRIGGER trg_ydsz_acct_user_dept_updated_at
+BEFORE UPDATE ON ydsz_acct_user_dept
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -958,8 +958,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_company_dept_updated_at
-BEFORE UPDATE ON ydsz_company_dept
+CREATE OR REPLACE TRIGGER trg_ydsz_org_company_dept_updated_at
+BEFORE UPDATE ON ydsz_org_company_dept
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -967,8 +967,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_role_permission_updated_at
-BEFORE UPDATE ON ydsz_role_permission
+CREATE OR REPLACE TRIGGER trg_ydsz_rbac_role_permission_updated_at
+BEFORE UPDATE ON ydsz_rbac_role_permission
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -985,8 +985,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_social_client_updated_at
-BEFORE UPDATE ON ydsz_social_client
+CREATE OR REPLACE TRIGGER trg_ydsz_auth_social_client_updated_at
+BEFORE UPDATE ON ydsz_auth_social_client
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -994,8 +994,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_saml_idp_config_updated_at
-BEFORE UPDATE ON ydsz_saml_idp_config
+CREATE OR REPLACE TRIGGER trg_ydsz_idp_saml_config_updated_at
+BEFORE UPDATE ON ydsz_idp_saml_config
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1003,8 +1003,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_oauth2_application_updated_at
-BEFORE UPDATE ON ydsz_oauth2_application
+CREATE OR REPLACE TRIGGER trg_ydsz_idp_oauth2_application_updated_at
+BEFORE UPDATE ON ydsz_idp_oauth2_application
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1012,8 +1012,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_social_account_updated_at
-BEFORE UPDATE ON ydsz_social_account
+CREATE OR REPLACE TRIGGER trg_ydsz_auth_social_account_updated_at
+BEFORE UPDATE ON ydsz_auth_social_account
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1021,8 +1021,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_security_alert_updated_at
-BEFORE UPDATE ON ydsz_security_alert
+CREATE OR REPLACE TRIGGER trg_ydsz_idp_security_alert_updated_at
+BEFORE UPDATE ON ydsz_idp_security_alert
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1030,8 +1030,8 @@ END;
 /
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_user_credential_updated_at
-BEFORE UPDATE ON ydsz_user_credential
+CREATE OR REPLACE TRIGGER trg_ydsz_auth_credential_updated_at
+BEFORE UPDATE ON ydsz_auth_credential
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;

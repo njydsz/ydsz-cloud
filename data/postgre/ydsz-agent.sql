@@ -21,7 +21,7 @@
 -- ============================================================================
 
 
-CREATE TABLE IF NOT EXISTS ydsz_prompt_template (
+CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     template_code            VARCHAR(64)              NOT NULL,
@@ -41,27 +41,27 @@ CREATE TABLE IF NOT EXISTS ydsz_prompt_template (
     CONSTRAINT uk_ydsz_prompt_template_template_code UNIQUE (template_code, tenant_id)
 );
 
-COMMENT ON TABLE ydsz_prompt_template IS 'Prompt 模板主表';
-COMMENT ON COLUMN ydsz_prompt_template.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_prompt_template.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_prompt_template.template_code IS '模板唯一编码（业务标识，创建后不可变）';
-COMMENT ON COLUMN ydsz_prompt_template.template_name IS '模板名称（展示用）';
-COMMENT ON COLUMN ydsz_prompt_template.content IS '模板内容，支持 #{var} 占位符';
-COMMENT ON COLUMN ydsz_prompt_template.description IS '模板描述';
-COMMENT ON COLUMN ydsz_prompt_template.category IS '分类（用于分组检索）';
-COMMENT ON COLUMN ydsz_prompt_template.current_version IS '当前版本号，自 1 起每次更新递增';
-COMMENT ON COLUMN ydsz_prompt_template.status IS '状态标识';
-COMMENT ON COLUMN ydsz_prompt_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_prompt_template.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_prompt_template.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_prompt_template.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_prompt_template.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_prompt_template.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_agt_prompt_template IS 'Prompt 模板主表';
+COMMENT ON COLUMN ydsz_agt_prompt_template.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_agt_prompt_template.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_prompt_template.template_code IS '模板唯一编码（业务标识，创建后不可变）';
+COMMENT ON COLUMN ydsz_agt_prompt_template.template_name IS '模板名称（展示用）';
+COMMENT ON COLUMN ydsz_agt_prompt_template.content IS '模板内容，支持 #{var} 占位符';
+COMMENT ON COLUMN ydsz_agt_prompt_template.description IS '模板描述';
+COMMENT ON COLUMN ydsz_agt_prompt_template.category IS '分类（用于分组检索）';
+COMMENT ON COLUMN ydsz_agt_prompt_template.current_version IS '当前版本号，自 1 起每次更新递增';
+COMMENT ON COLUMN ydsz_agt_prompt_template.status IS '状态标识';
+COMMENT ON COLUMN ydsz_agt_prompt_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_prompt_template.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_agt_prompt_template.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_agt_prompt_template.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_agt_prompt_template.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_agt_prompt_template.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_template_category ON ydsz_prompt_template (category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_template_tenant_deleted ON ydsz_prompt_template (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_template_category ON ydsz_agt_prompt_template (category);
+CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_template_tenant_deleted ON ydsz_agt_prompt_template (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_prompt_version (
+CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     template_code            VARCHAR(64)              NOT NULL,
@@ -79,24 +79,24 @@ CREATE TABLE IF NOT EXISTS ydsz_prompt_version (
     CONSTRAINT uk_ydsz_prompt_version_template_version UNIQUE (template_code, version, tenant_id)
 );
 
-COMMENT ON TABLE ydsz_prompt_version IS 'Prompt 模板版本历史表';
-COMMENT ON COLUMN ydsz_prompt_version.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_prompt_version.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_prompt_version.template_code IS '所属模板编码（关联 ydsz_prompt_template.template_code）';
-COMMENT ON COLUMN ydsz_prompt_version.version IS '版本号（与 template 的 current_version 对应）';
-COMMENT ON COLUMN ydsz_prompt_version.content IS '该版本的模板内容快照';
-COMMENT ON COLUMN ydsz_prompt_version.change_note IS '版本备注（描述本次变更内容）';
-COMMENT ON COLUMN ydsz_prompt_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_prompt_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_prompt_version.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_prompt_version.created_at IS '版本创建时间';
-COMMENT ON COLUMN ydsz_prompt_version.created_by IS '操作人';
-COMMENT ON COLUMN ydsz_prompt_version.updated_at IS '版本更新时间';
-COMMENT ON COLUMN ydsz_prompt_version.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_agt_prompt_version IS 'Prompt 模板版本历史表';
+COMMENT ON COLUMN ydsz_agt_prompt_version.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_agt_prompt_version.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_prompt_version.template_code IS '所属模板编码（关联 ydsz_agt_prompt_template.template_code）';
+COMMENT ON COLUMN ydsz_agt_prompt_version.version IS '版本号（与 template 的 current_version 对应）';
+COMMENT ON COLUMN ydsz_agt_prompt_version.content IS '该版本的模板内容快照';
+COMMENT ON COLUMN ydsz_agt_prompt_version.change_note IS '版本备注（描述本次变更内容）';
+COMMENT ON COLUMN ydsz_agt_prompt_version.status IS '状态标识';
+COMMENT ON COLUMN ydsz_agt_prompt_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_prompt_version.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_agt_prompt_version.created_at IS '版本创建时间';
+COMMENT ON COLUMN ydsz_agt_prompt_version.created_by IS '操作人';
+COMMENT ON COLUMN ydsz_agt_prompt_version.updated_at IS '版本更新时间';
+COMMENT ON COLUMN ydsz_agt_prompt_version.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_version_template_code ON ydsz_prompt_version (template_code);
+CREATE INDEX IF NOT EXISTS idx_ydsz_prompt_version_template_code ON ydsz_agt_prompt_version (template_code);
 
-CREATE TABLE IF NOT EXISTS ydsz_agent_definition (
+CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     agent_code               VARCHAR(64)              NOT NULL,
@@ -119,30 +119,30 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_definition (
     CONSTRAINT uk_ydsz_agent_definition_agent_code UNIQUE (agent_code, tenant_id)
 );
 
-COMMENT ON TABLE ydsz_agent_definition IS 'Agent 定义（Agent 的完整配置信息）';
-COMMENT ON COLUMN ydsz_agent_definition.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_agent_definition.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_agent_definition.agent_code IS 'Agent 编码（业务唯一键）';
-COMMENT ON COLUMN ydsz_agent_definition.agent_name IS 'Agent 名称（展示用）';
-COMMENT ON COLUMN ydsz_agent_definition.agent_type IS 'Agent 类型（CHAT/REACT/RAG/PLAN_EXECUTE/ROUTER）';
-COMMENT ON COLUMN ydsz_agent_definition.description IS 'Agent 描述';
-COMMENT ON COLUMN ydsz_agent_definition.system_prompt IS '系统提示词';
-COMMENT ON COLUMN ydsz_agent_definition.model_config IS '模型配置 JSON（temperature/maxTokens/modelId 等）';
-COMMENT ON COLUMN ydsz_agent_definition.tool_names IS '工具名称列表 JSON（["tool1","tool2"]）';
-COMMENT ON COLUMN ydsz_agent_definition.temperature IS '温度参数';
-COMMENT ON COLUMN ydsz_agent_definition.max_tokens IS '最大生成 Token 数';
-COMMENT ON COLUMN ydsz_agent_definition.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agent_definition.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_agent_definition.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_agent_definition.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_agent_definition.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_agent_definition.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_agent_definition.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_agt_definition IS 'Agent 定义（Agent 的完整配置信息）';
+COMMENT ON COLUMN ydsz_agt_definition.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_agt_definition.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_definition.agent_code IS 'Agent 编码（业务唯一键）';
+COMMENT ON COLUMN ydsz_agt_definition.agent_name IS 'Agent 名称（展示用）';
+COMMENT ON COLUMN ydsz_agt_definition.agent_type IS 'Agent 类型（CHAT/REACT/RAG/PLAN_EXECUTE/ROUTER）';
+COMMENT ON COLUMN ydsz_agt_definition.description IS 'Agent 描述';
+COMMENT ON COLUMN ydsz_agt_definition.system_prompt IS '系统提示词';
+COMMENT ON COLUMN ydsz_agt_definition.model_config IS '模型配置 JSON（temperature/maxTokens/modelId 等）';
+COMMENT ON COLUMN ydsz_agt_definition.tool_names IS '工具名称列表 JSON（["tool1","tool2"]）';
+COMMENT ON COLUMN ydsz_agt_definition.temperature IS '温度参数';
+COMMENT ON COLUMN ydsz_agt_definition.max_tokens IS '最大生成 Token 数';
+COMMENT ON COLUMN ydsz_agt_definition.status IS '状态标识';
+COMMENT ON COLUMN ydsz_agt_definition.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_definition.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_agt_definition.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_agt_definition.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_agt_definition.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_agt_definition.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_definition_agent_type ON ydsz_agent_definition (agent_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_definition_tenant_deleted ON ydsz_agent_definition (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_definition_agent_type ON ydsz_agt_definition (agent_type);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_definition_tenant_deleted ON ydsz_agt_definition (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_agent_trace (
+CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     trace_id                 VARCHAR(64)             ,
     conversation_id          VARCHAR(64)              NOT NULL,
     agent_id                 VARCHAR(64)              NOT NULL,
@@ -151,18 +151,18 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_trace (
     CONSTRAINT pk_ydsz_agent_trace PRIMARY KEY (trace_id)
 );
 
-COMMENT ON TABLE ydsz_agent_trace IS 'Agent 执行链路（记录一次 Agent 执行的完整元数据）';
-COMMENT ON COLUMN ydsz_agent_trace.trace_id IS '链路唯一 ID（主键，业务生成非自增）';
-COMMENT ON COLUMN ydsz_agent_trace.conversation_id IS '所属对话 ID';
-COMMENT ON COLUMN ydsz_agent_trace.agent_id IS 'Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR）';
-COMMENT ON COLUMN ydsz_agent_trace.status IS '执行状态（RUNNING/SUCCESS/FAILED/MAX_ITERATIONS/GUARDRAIL_REJECTED）';
-COMMENT ON COLUMN ydsz_agent_trace.total_duration_ms IS '总耗时（毫秒）';
+COMMENT ON TABLE ydsz_agt_trace IS 'Agent 执行链路（记录一次 Agent 执行的完整元数据）';
+COMMENT ON COLUMN ydsz_agt_trace.trace_id IS '链路唯一 ID（主键，业务生成非自增）';
+COMMENT ON COLUMN ydsz_agt_trace.conversation_id IS '所属对话 ID';
+COMMENT ON COLUMN ydsz_agt_trace.agent_id IS 'Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR）';
+COMMENT ON COLUMN ydsz_agt_trace.status IS '执行状态（RUNNING/SUCCESS/FAILED/MAX_ITERATIONS/GUARDRAIL_REJECTED）';
+COMMENT ON COLUMN ydsz_agt_trace.total_duration_ms IS '总耗时（毫秒）';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_conversation ON ydsz_agent_trace (conversation_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_agent ON ydsz_agent_trace (agent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_status ON ydsz_agent_trace (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_conversation ON ydsz_agt_trace (conversation_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_agent ON ydsz_agt_trace (agent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_trace_status ON ydsz_agt_trace (status);
 
-CREATE TABLE IF NOT EXISTS ydsz_agent_trace_step (
+CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     trace_id                 VARCHAR(64)              NOT NULL,
     step_index               INTEGER                  NOT NULL,
     step_type                VARCHAR(32)              NOT NULL,
@@ -174,19 +174,19 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_trace_step (
     CONSTRAINT pk_ydsz_agent_trace_step PRIMARY KEY (trace_id, step_index)
 );
 
-COMMENT ON TABLE ydsz_agent_trace_step IS 'Agent 执行链路步骤（记录单个执行步骤，支持回放与调试）';
-COMMENT ON COLUMN ydsz_agent_trace_step.trace_id IS '链路 ID（关联 ydsz_agent_trace.trace_id）';
-COMMENT ON COLUMN ydsz_agent_trace_step.step_index IS '步骤序号（从 0 开始递增）';
-COMMENT ON COLUMN ydsz_agent_trace_step.step_type IS '步骤类型（LLM_CALL/TOOL_CALL/THOUGHT/OBSERVATION/ROUTE/LLM_CALL_ERROR）';
-COMMENT ON COLUMN ydsz_agent_trace_step.content IS '步骤内容描述';
-COMMENT ON COLUMN ydsz_agent_trace_step.input_json IS '步骤输入（JSON 字符串）';
-COMMENT ON COLUMN ydsz_agent_trace_step.output_json IS '步骤输出（JSON 字符串）';
-COMMENT ON COLUMN ydsz_agent_trace_step.duration_ms IS '耗时（毫秒）';
-COMMENT ON COLUMN ydsz_agent_trace_step.cost IS 'Token 成本（USD，精确到 6 位小数；非 LLM 调用步骤为 0）';
+COMMENT ON TABLE ydsz_agt_trace_step IS 'Agent 执行链路步骤（记录单个执行步骤，支持回放与调试）';
+COMMENT ON COLUMN ydsz_agt_trace_step.trace_id IS '链路 ID（关联 ydsz_agt_trace.trace_id）';
+COMMENT ON COLUMN ydsz_agt_trace_step.step_index IS '步骤序号（从 0 开始递增）';
+COMMENT ON COLUMN ydsz_agt_trace_step.step_type IS '步骤类型（LLM_CALL/TOOL_CALL/THOUGHT/OBSERVATION/ROUTE/LLM_CALL_ERROR）';
+COMMENT ON COLUMN ydsz_agt_trace_step.content IS '步骤内容描述';
+COMMENT ON COLUMN ydsz_agt_trace_step.input_json IS '步骤输入（JSON 字符串）';
+COMMENT ON COLUMN ydsz_agt_trace_step.output_json IS '步骤输出（JSON 字符串）';
+COMMENT ON COLUMN ydsz_agt_trace_step.duration_ms IS '耗时（毫秒）';
+COMMENT ON COLUMN ydsz_agt_trace_step.cost IS 'Token 成本（USD，精确到 6 位小数；非 LLM 调用步骤为 0）';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_step_trace_step_cost ON ydsz_agent_trace_step (cost);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_trace_step_trace_step_cost ON ydsz_agt_trace_step (cost);
 
-CREATE TABLE IF NOT EXISTS ydsz_agent_approval (
+CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     id                       VARCHAR(64)             ,
     conversation_id          VARCHAR(64)              DEFAULT NULL,
     trace_id                 VARCHAR(64)              DEFAULT NULL,
@@ -201,25 +201,25 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_approval (
     CONSTRAINT pk_ydsz_agent_approval PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_agent_approval IS 'Agent 人工审批请求（Human-in-the-Loop 审批持久化）';
-COMMENT ON COLUMN ydsz_agent_approval.id IS '审批请求 ID（主键，业务生成非自增）';
-COMMENT ON COLUMN ydsz_agent_approval.conversation_id IS '所属对话 ID';
-COMMENT ON COLUMN ydsz_agent_approval.trace_id IS '执行链路 ID';
-COMMENT ON COLUMN ydsz_agent_approval.step_description IS '待审批步骤的业务描述';
-COMMENT ON COLUMN ydsz_agent_approval.context_json IS '审批上下文（JSON 字符串，含用户输入、已有结果等）';
-COMMENT ON COLUMN ydsz_agent_approval.status IS '审批状态（PENDING/APPROVED/REJECTED/EXPIRED）';
-COMMENT ON COLUMN ydsz_agent_approval.approver IS '审批人标识';
-COMMENT ON COLUMN ydsz_agent_approval.comment IS '审批意见';
-COMMENT ON COLUMN ydsz_agent_approval.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_agent_approval.created_at IS '请求创建时间';
-COMMENT ON COLUMN ydsz_agent_approval.resolved_at IS '审批完成时间';
+COMMENT ON TABLE ydsz_agt_approval IS 'Agent 人工审批请求（Human-in-the-Loop 审批持久化）';
+COMMENT ON COLUMN ydsz_agt_approval.id IS '审批请求 ID（主键，业务生成非自增）';
+COMMENT ON COLUMN ydsz_agt_approval.conversation_id IS '所属对话 ID';
+COMMENT ON COLUMN ydsz_agt_approval.trace_id IS '执行链路 ID';
+COMMENT ON COLUMN ydsz_agt_approval.step_description IS '待审批步骤的业务描述';
+COMMENT ON COLUMN ydsz_agt_approval.context_json IS '审批上下文（JSON 字符串，含用户输入、已有结果等）';
+COMMENT ON COLUMN ydsz_agt_approval.status IS '审批状态（PENDING/APPROVED/REJECTED/EXPIRED）';
+COMMENT ON COLUMN ydsz_agt_approval.approver IS '审批人标识';
+COMMENT ON COLUMN ydsz_agt_approval.comment IS '审批意见';
+COMMENT ON COLUMN ydsz_agt_approval.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_agt_approval.created_at IS '请求创建时间';
+COMMENT ON COLUMN ydsz_agt_approval.resolved_at IS '审批完成时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_conversation ON ydsz_agent_approval (conversation_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_trace ON ydsz_agent_approval (trace_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_status ON ydsz_agent_approval (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_tenant ON ydsz_agent_approval (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_conversation ON ydsz_agt_approval (conversation_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_trace ON ydsz_agt_approval (trace_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_status ON ydsz_agt_approval (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_approval_approval_tenant ON ydsz_agt_approval (tenant_id);
 
-CREATE TABLE IF NOT EXISTS ydsz_agent_token_usage (
+CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     conversation_id          VARCHAR(64)              NOT NULL,
@@ -237,27 +237,27 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_token_usage (
     CONSTRAINT pk_ydsz_agent_token_usage PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_agent_token_usage IS 'Token 用量记录（LLM 调用 Token 消耗明细）';
-COMMENT ON COLUMN ydsz_agent_token_usage.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_agent_token_usage.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_agent_token_usage.conversation_id IS '所属对话 ID（关联 ydsz_agent_conversation）';
-COMMENT ON COLUMN ydsz_agent_token_usage.model_name IS '使用的模型标识';
-COMMENT ON COLUMN ydsz_agent_token_usage.prompt_tokens IS '提示词 Token 数';
-COMMENT ON COLUMN ydsz_agent_token_usage.completion_tokens IS '补全 Token 数';
-COMMENT ON COLUMN ydsz_agent_token_usage.total_tokens IS '总 Token 数（prompt + completion）';
-COMMENT ON COLUMN ydsz_agent_token_usage.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agent_token_usage.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_agent_token_usage.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_agent_token_usage.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_agent_token_usage.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_agent_token_usage.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_agent_token_usage.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_agt_token_usage IS 'Token 用量记录（LLM 调用 Token 消耗明细）';
+COMMENT ON COLUMN ydsz_agt_token_usage.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_agt_token_usage.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_token_usage.conversation_id IS '所属对话 ID（关联 ydsz_agent_conversation）';
+COMMENT ON COLUMN ydsz_agt_token_usage.model_name IS '使用的模型标识';
+COMMENT ON COLUMN ydsz_agt_token_usage.prompt_tokens IS '提示词 Token 数';
+COMMENT ON COLUMN ydsz_agt_token_usage.completion_tokens IS '补全 Token 数';
+COMMENT ON COLUMN ydsz_agt_token_usage.total_tokens IS '总 Token 数（prompt + completion）';
+COMMENT ON COLUMN ydsz_agt_token_usage.status IS '状态标识';
+COMMENT ON COLUMN ydsz_agt_token_usage.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_token_usage.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_agt_token_usage.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_agt_token_usage.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_agt_token_usage.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_agt_token_usage.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_conversation_created ON ydsz_agent_token_usage (conversation_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_tenant_deleted ON ydsz_agent_token_usage (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_conversation_created ON ydsz_agt_token_usage (conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_tenant_deleted ON ydsz_agt_token_usage (tenant_id, deleted);
 
 -- ============================================================================
--- RAG 向量文档块表 ydsz_agent_document_chunk（pgvector 专用）
+-- RAG 向量文档块表 ydsz_agt_document_chunk（pgvector 专用）
 --
 -- 无 MyBatis-Plus @TableName 实体：由 PgVectorStore（向量检素）与
 -- HybridRetriever（全文检素）通过 JdbcTemplate 原生 SQL 直接读写，
@@ -267,7 +267,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agent_token_usage_tenant_deleted ON ydsz_age
 --   CREATE EXTENSION IF NOT EXISTS vector;
 -- 该表依赖 pgvector 扩展，仅 PostgreSQL 方言提供（MySQL/Oracle 无对应类型）。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS ydsz_agent_document_chunk (
+CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
     id                       VARCHAR(64)              NOT NULL,
     document_id              VARCHAR(64)              NOT NULL,
     content                  TEXT                     NOT NULL,
@@ -283,34 +283,34 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_document_chunk (
     CONSTRAINT pk_ydsz_agent_document_chunk PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_agent_document_chunk IS 'RAG 文档分块向量表（pgvector：HybridRetriever 全文检素 + PgVectorStore 向量检素共用）';
-COMMENT ON COLUMN ydsz_agent_document_chunk.id IS '分块主键 ID';
-COMMENT ON COLUMN ydsz_agent_document_chunk.document_id IS '所属文档 ID';
-COMMENT ON COLUMN ydsz_agent_document_chunk.content IS '分块文本内容';
-COMMENT ON COLUMN ydsz_agent_document_chunk.embedding IS '文本向量（vector(1536)，用于相似度检素）';
-COMMENT ON COLUMN ydsz_agent_document_chunk.chunk_index IS '分块序号（从 0 开始）';
-COMMENT ON COLUMN ydsz_agent_document_chunk.token_count IS 'Token 数';
-COMMENT ON COLUMN ydsz_agent_document_chunk.document_title IS '文档标题（冗余，全文检素展示用）';
-COMMENT ON COLUMN ydsz_agent_document_chunk.source IS '来源标识（文件路径/URL 等）';
-COMMENT ON COLUMN ydsz_agent_document_chunk.metadata IS '分块元数据 JSONB';
-COMMENT ON COLUMN ydsz_agent_document_chunk.tenant_id IS '租户 ID（多租户隔离，原生 SQL 显式过滤）';
-COMMENT ON COLUMN ydsz_agent_document_chunk.deleted IS '逻辑删除标识（HybridRetriever 全文检素 WHERE deleted = false）';
-COMMENT ON COLUMN ydsz_agent_document_chunk.created_at IS '创建时间';
+COMMENT ON TABLE ydsz_agt_document_chunk IS 'RAG 文档分块向量表（pgvector：HybridRetriever 全文检素 + PgVectorStore 向量检素共用）';
+COMMENT ON COLUMN ydsz_agt_document_chunk.id IS '分块主键 ID';
+COMMENT ON COLUMN ydsz_agt_document_chunk.document_id IS '所属文档 ID';
+COMMENT ON COLUMN ydsz_agt_document_chunk.content IS '分块文本内容';
+COMMENT ON COLUMN ydsz_agt_document_chunk.embedding IS '文本向量（vector(1536)，用于相似度检素）';
+COMMENT ON COLUMN ydsz_agt_document_chunk.chunk_index IS '分块序号（从 0 开始）';
+COMMENT ON COLUMN ydsz_agt_document_chunk.token_count IS 'Token 数';
+COMMENT ON COLUMN ydsz_agt_document_chunk.document_title IS '文档标题（冗余，全文检素展示用）';
+COMMENT ON COLUMN ydsz_agt_document_chunk.source IS '来源标识（文件路径/URL 等）';
+COMMENT ON COLUMN ydsz_agt_document_chunk.metadata IS '分块元数据 JSONB';
+COMMENT ON COLUMN ydsz_agt_document_chunk.tenant_id IS '租户 ID（多租户隔离，原生 SQL 显式过滤）';
+COMMENT ON COLUMN ydsz_agt_document_chunk.deleted IS '逻辑删除标识（HybridRetriever 全文检素 WHERE deleted = false）';
+COMMENT ON COLUMN ydsz_agt_document_chunk.created_at IS '创建时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_document_id ON ydsz_agent_document_chunk (document_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_tenant ON ydsz_agent_document_chunk (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_embedding ON ydsz_agent_document_chunk USING ivfflat (embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_document_id ON ydsz_agt_document_chunk (document_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_tenant ON ydsz_agt_document_chunk (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agent_document_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
 
-INSERT INTO ydsz_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
 VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, FALSE);
 
-INSERT INTO ydsz_prompt_version (id, tenant_id, template_code, version, content, change_note)
+INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
 VALUES ('100000000000000002', '0', 'DEFAULT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '初始版本');
 
-INSERT INTO ydsz_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
 VALUES ('100000000000000003', '0', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', 1, FALSE);
 
-INSERT INTO ydsz_prompt_version (id, tenant_id, template_code, version, content, change_note)
+INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
 VALUES ('100000000000000004', '0', 'REACT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', '初始版本');
 
 -- ============================================================================
@@ -326,9 +326,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_prompt_template_updated_at ON ydsz_prompt_template;
+DROP TRIGGER IF EXISTS trg_ydsz_prompt_template_updated_at ON ydsz_agt_prompt_template;
 CREATE TRIGGER trg_ydsz_prompt_template_updated_at
-BEFORE UPDATE ON ydsz_prompt_template
+BEFORE UPDATE ON ydsz_agt_prompt_template
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_prompt_template_set_updated_at();
 
@@ -341,9 +341,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_agent_definition_updated_at ON ydsz_agent_definition;
+DROP TRIGGER IF EXISTS trg_ydsz_agent_definition_updated_at ON ydsz_agt_definition;
 CREATE TRIGGER trg_ydsz_agent_definition_updated_at
-BEFORE UPDATE ON ydsz_agent_definition
+BEFORE UPDATE ON ydsz_agt_definition
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_agent_definition_set_updated_at();
 
@@ -356,8 +356,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_agent_token_usage_updated_at ON ydsz_agent_token_usage;
+DROP TRIGGER IF EXISTS trg_ydsz_agent_token_usage_updated_at ON ydsz_agt_token_usage;
 CREATE TRIGGER trg_ydsz_agent_token_usage_updated_at
-BEFORE UPDATE ON ydsz_agent_token_usage
+BEFORE UPDATE ON ydsz_agt_token_usage
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_agent_token_usage_set_updated_at();

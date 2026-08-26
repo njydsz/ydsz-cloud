@@ -31,7 +31,7 @@
 -- ============================================================================
 
 
-CREATE TABLE IF NOT EXISTS ydsz_job (
+CREATE TABLE IF NOT EXISTS ydsz_job_main (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     job_name                 VARCHAR(128)             NOT NULL,
@@ -80,55 +80,55 @@ CREATE TABLE IF NOT EXISTS ydsz_job (
     CONSTRAINT uk_ydsz_job_job_key UNIQUE (job_key, tenant_id)
 );
 
-COMMENT ON TABLE ydsz_job IS '定时任务定义主表';
-COMMENT ON COLUMN ydsz_job.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_job.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_job.job_name IS '任务名称';
-COMMENT ON COLUMN ydsz_job.job_group IS '任务分组';
-COMMENT ON COLUMN ydsz_job.job_key IS '任务 KEY（唯一）';
-COMMENT ON COLUMN ydsz_job.handler IS '任务处理器 Bean 名称';
-COMMENT ON COLUMN ydsz_job.cron_expression IS 'Cron 表达式';
-COMMENT ON COLUMN ydsz_job.schedule_type IS '调度类型（CRON/FIXED_RATE/FIXED_DELAY）';
-COMMENT ON COLUMN ydsz_job.fixed_rate_ms IS '固定频率执行间隔（毫秒）';
-COMMENT ON COLUMN ydsz_job.fixed_delay_ms IS '固定延迟执行间隔（毫秒）';
-COMMENT ON COLUMN ydsz_job.params_json IS '任务参数 JSON';
-COMMENT ON COLUMN ydsz_job.job_remark IS '任务备注';
-COMMENT ON COLUMN ydsz_job.next_fire_time IS '下次触发时间';
-COMMENT ON COLUMN ydsz_job.last_fire_time IS '上次触发时间';
-COMMENT ON COLUMN ydsz_job.fire_count IS '总触发次数';
-COMMENT ON COLUMN ydsz_job.success_count IS '成功次数';
-COMMENT ON COLUMN ydsz_job.fail_count IS '失败次数';
-COMMENT ON COLUMN ydsz_job.lock_ttl_ms IS '分布式锁 TTL（毫秒）';
-COMMENT ON COLUMN ydsz_job.timeout_ms IS '执行超时时间（毫秒）';
-COMMENT ON COLUMN ydsz_job.sla_ms IS 'SLA 时长（毫秒）';
-COMMENT ON COLUMN ydsz_job.slow_threshold_ms IS '慢任务阈值（毫秒）';
-COMMENT ON COLUMN ydsz_job.misfire_policy IS 'Misfire 处理策略（如 FIRE_ONCE/SKIP）';
-COMMENT ON COLUMN ydsz_job.shard_total IS '分片总数（非分片任务为 NULL）';
-COMMENT ON COLUMN ydsz_job.job_type IS '任务类型（BEAN/GLUE 等）';
-COMMENT ON COLUMN ydsz_job.max_retries IS '最大重试次数';
-COMMENT ON COLUMN ydsz_job.retry_interval_ms IS '重试间隔（毫秒）';
-COMMENT ON COLUMN ydsz_job.retry_backoff IS '重试退避策略（如 FIXED/EXPONENTIAL）';
-COMMENT ON COLUMN ydsz_job.block_strategy IS '阻塞处理策略（如 SERIAL/DISCARD/COVER）';
-COMMENT ON COLUMN ydsz_job.consecutive_fail_count IS '连续失败次数';
-COMMENT ON COLUMN ydsz_job.max_consecutive_fails IS '最大连续失败次数（超过后自动禁用任务）';
-COMMENT ON COLUMN ydsz_job.auto_resume_after_minutes IS '自动恢复时间（分钟）';
-COMMENT ON COLUMN ydsz_job.priority IS '优先级';
-COMMENT ON COLUMN ydsz_job.version IS '配置版本号';
-COMMENT ON COLUMN ydsz_job.timezone IS '时区';
-COMMENT ON COLUMN ydsz_job.cluster IS '执行集群';
-COMMENT ON COLUMN ydsz_job.canary_ratio IS '金丝雀流量比例（百分比 0-100）';
-COMMENT ON COLUMN ydsz_job.canary_handler IS '金丝雀处理器 Bean 名称';
-COMMENT ON COLUMN ydsz_job.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_job.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_job.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_job.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_job.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_job.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_job_main IS '定时任务定义主表';
+COMMENT ON COLUMN ydsz_job_main.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_job_main.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_job_main.job_name IS '任务名称';
+COMMENT ON COLUMN ydsz_job_main.job_group IS '任务分组';
+COMMENT ON COLUMN ydsz_job_main.job_key IS '任务 KEY（唯一）';
+COMMENT ON COLUMN ydsz_job_main.handler IS '任务处理器 Bean 名称';
+COMMENT ON COLUMN ydsz_job_main.cron_expression IS 'Cron 表达式';
+COMMENT ON COLUMN ydsz_job_main.schedule_type IS '调度类型（CRON/FIXED_RATE/FIXED_DELAY）';
+COMMENT ON COLUMN ydsz_job_main.fixed_rate_ms IS '固定频率执行间隔（毫秒）';
+COMMENT ON COLUMN ydsz_job_main.fixed_delay_ms IS '固定延迟执行间隔（毫秒）';
+COMMENT ON COLUMN ydsz_job_main.params_json IS '任务参数 JSON';
+COMMENT ON COLUMN ydsz_job_main.job_remark IS '任务备注';
+COMMENT ON COLUMN ydsz_job_main.next_fire_time IS '下次触发时间';
+COMMENT ON COLUMN ydsz_job_main.last_fire_time IS '上次触发时间';
+COMMENT ON COLUMN ydsz_job_main.fire_count IS '总触发次数';
+COMMENT ON COLUMN ydsz_job_main.success_count IS '成功次数';
+COMMENT ON COLUMN ydsz_job_main.fail_count IS '失败次数';
+COMMENT ON COLUMN ydsz_job_main.lock_ttl_ms IS '分布式锁 TTL（毫秒）';
+COMMENT ON COLUMN ydsz_job_main.timeout_ms IS '执行超时时间（毫秒）';
+COMMENT ON COLUMN ydsz_job_main.sla_ms IS 'SLA 时长（毫秒）';
+COMMENT ON COLUMN ydsz_job_main.slow_threshold_ms IS '慢任务阈值（毫秒）';
+COMMENT ON COLUMN ydsz_job_main.misfire_policy IS 'Misfire 处理策略（如 FIRE_ONCE/SKIP）';
+COMMENT ON COLUMN ydsz_job_main.shard_total IS '分片总数（非分片任务为 NULL）';
+COMMENT ON COLUMN ydsz_job_main.job_type IS '任务类型（BEAN/GLUE 等）';
+COMMENT ON COLUMN ydsz_job_main.max_retries IS '最大重试次数';
+COMMENT ON COLUMN ydsz_job_main.retry_interval_ms IS '重试间隔（毫秒）';
+COMMENT ON COLUMN ydsz_job_main.retry_backoff IS '重试退避策略（如 FIXED/EXPONENTIAL）';
+COMMENT ON COLUMN ydsz_job_main.block_strategy IS '阻塞处理策略（如 SERIAL/DISCARD/COVER）';
+COMMENT ON COLUMN ydsz_job_main.consecutive_fail_count IS '连续失败次数';
+COMMENT ON COLUMN ydsz_job_main.max_consecutive_fails IS '最大连续失败次数（超过后自动禁用任务）';
+COMMENT ON COLUMN ydsz_job_main.auto_resume_after_minutes IS '自动恢复时间（分钟）';
+COMMENT ON COLUMN ydsz_job_main.priority IS '优先级';
+COMMENT ON COLUMN ydsz_job_main.version IS '配置版本号';
+COMMENT ON COLUMN ydsz_job_main.timezone IS '时区';
+COMMENT ON COLUMN ydsz_job_main.cluster IS '执行集群';
+COMMENT ON COLUMN ydsz_job_main.canary_ratio IS '金丝雀流量比例（百分比 0-100）';
+COMMENT ON COLUMN ydsz_job_main.canary_handler IS '金丝雀处理器 Bean 名称';
+COMMENT ON COLUMN ydsz_job_main.status IS '状态标识';
+COMMENT ON COLUMN ydsz_job_main.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_main.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_job_main.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_main.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_job_main.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_job_main.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_job_group ON ydsz_job (job_group);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_job_next_fire ON ydsz_job (next_fire_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_tenant_deleted ON ydsz_job (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_job_group ON ydsz_job_main (job_group);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_job_next_fire ON ydsz_job_main (next_fire_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_tenant_deleted ON ydsz_job_main (tenant_id, deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     id                       VARCHAR(32)             ,
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_glue (
 COMMENT ON TABLE ydsz_job_glue IS 'GLUE 在线编码版本表';
 COMMENT ON COLUMN ydsz_job_glue.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_job_glue.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_job_glue.job_id IS '任务 ID（关联 ydsz_job.id）';
+COMMENT ON COLUMN ydsz_job_glue.job_id IS '任务 ID（关联 ydsz_job_main.id）';
 COMMENT ON COLUMN ydsz_job_glue.source_code IS '源代码（Groovy/Python/Shell/JavaScript 脚本内容）';
 COMMENT ON COLUMN ydsz_job_glue.language IS '语言: GROOVY(默认)/PYTHON/SHELL/JAVASCRIPT/JAVA';
 COMMENT ON COLUMN ydsz_job_glue.version IS '版本号（从 1 递增）';
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
 COMMENT ON TABLE ydsz_job_task IS 'MapReduce 子任务记录表';
 COMMENT ON COLUMN ydsz_job_task.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_job_task.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_job_task.job_id IS '任务 ID（关联 ydsz_job.id）';
+COMMENT ON COLUMN ydsz_job_task.job_id IS '任务 ID（关联 ydsz_job_main.id）';
 COMMENT ON COLUMN ydsz_job_task.log_id IS '执行日志 ID（关联 ydsz_job_log.id）';
 COMMENT ON COLUMN ydsz_job_task.job_key IS '任务 KEY（冗余，便于查询）';
 COMMENT ON COLUMN ydsz_job_task.task_name IS '子任务名称（root task 为 "root"）';
@@ -288,7 +288,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_history (
 
 COMMENT ON TABLE ydsz_job_history IS '任务配置历史版本表';
 COMMENT ON COLUMN ydsz_job_history.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_job_history.job_id IS '任务 ID（关联 ydsz_job.id）';
+COMMENT ON COLUMN ydsz_job_history.job_id IS '任务 ID（关联 ydsz_job_main.id）';
 COMMENT ON COLUMN ydsz_job_history.version IS '版本号（对应更新前的 job.version）';
 COMMENT ON COLUMN ydsz_job_history.snapshot IS '完整 Job JSON 快照（变更后状态; DELETE 时为 NULL）';
 COMMENT ON COLUMN ydsz_job_history.change_type IS '变更类型: CREATE / UPDATE / DELETE';
@@ -456,7 +456,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_ar_job_id ON ydsz_job_alert_r
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_ar_alert_type ON ydsz_job_alert_rule (alert_type);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_tenant_deleted ON ydsz_job_alert_rule (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_tenant_quota (
+CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     max_jobs                 INTEGER                  DEFAULT NULL,
@@ -474,20 +474,20 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant_quota (
     CONSTRAINT uk_ydsz_tenant_quota_tq_tenant UNIQUE (tenant_id)
 );
 
-COMMENT ON TABLE ydsz_tenant_quota IS '租户级配额表';
-COMMENT ON COLUMN ydsz_tenant_quota.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_tenant_quota.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_tenant_quota.max_jobs IS '任务数上限（NULL=unlimited；超过此值拒绝创建新任务）';
-COMMENT ON COLUMN ydsz_tenant_quota.max_concurrent IS '并发执行上限（NULL=unlimited；超过此值拒绝派发）';
-COMMENT ON COLUMN ydsz_tenant_quota.max_daily_executions IS '日执行量上限（NULL=unlimited；超过此值拒绝派发）';
-COMMENT ON COLUMN ydsz_tenant_quota.enabled IS '是否启用配额检查: 0 禁用 / 1 启用';
-COMMENT ON COLUMN ydsz_tenant_quota.status IS '状态标识';
-COMMENT ON COLUMN ydsz_tenant_quota.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_tenant_quota.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_tenant_quota.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_tenant_quota.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_tenant_quota.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_tenant_quota.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_job_tenant_quota IS '租户级配额表';
+COMMENT ON COLUMN ydsz_job_tenant_quota.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_job_tenant_quota.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_job_tenant_quota.max_jobs IS '任务数上限（NULL=unlimited；超过此值拒绝创建新任务）';
+COMMENT ON COLUMN ydsz_job_tenant_quota.max_concurrent IS '并发执行上限（NULL=unlimited；超过此值拒绝派发）';
+COMMENT ON COLUMN ydsz_job_tenant_quota.max_daily_executions IS '日执行量上限（NULL=unlimited；超过此值拒绝派发）';
+COMMENT ON COLUMN ydsz_job_tenant_quota.enabled IS '是否启用配额检查: 0 禁用 / 1 启用';
+COMMENT ON COLUMN ydsz_job_tenant_quota.status IS '状态标识';
+COMMENT ON COLUMN ydsz_job_tenant_quota.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_tenant_quota.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_job_tenant_quota.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_tenant_quota.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_job_tenant_quota.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_job_tenant_quota.updated_by IS '最后更新人';
 
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag (
@@ -832,7 +832,7 @@ COMMENT ON COLUMN ydsz_job_daily_stats.p95_duration_ms IS 'P95 耗时（毫秒�
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_daily_stats_jds_stats_date ON ydsz_job_daily_stats (stats_date);
 
-CREATE TABLE IF NOT EXISTS ydsz_alert_dispatch (
+CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     id                       VARCHAR(32)             ,
     alert_code               VARCHAR(64)              NOT NULL,
     source_type              VARCHAR(32)              NOT NULL,
@@ -853,27 +853,27 @@ CREATE TABLE IF NOT EXISTS ydsz_alert_dispatch (
     CONSTRAINT uk_ydsz_alert_dispatch_ad_alert_code UNIQUE (alert_code)
 );
 
-COMMENT ON TABLE ydsz_alert_dispatch IS '告警派发日志表（cronjob 告警记录，source_type=CRONJOB）';
-COMMENT ON COLUMN ydsz_alert_dispatch.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_alert_dispatch.alert_code IS '预警编码（cronjob 自动生成: CRONJOB-{timestamp}-{ruleId}）';
-COMMENT ON COLUMN ydsz_alert_dispatch.source_type IS '触发源类型（cronjob 告警固定为 CRONJOB）';
-COMMENT ON COLUMN ydsz_alert_dispatch.rule_id IS '规则 ID（映射到 rule_id）';
-COMMENT ON COLUMN ydsz_alert_dispatch.rule_name IS '规则名称（映射到 title）';
-COMMENT ON COLUMN ydsz_alert_dispatch.job_id IS '任务 ID（NULL 表示全局告警; 映射到 source_id）';
-COMMENT ON COLUMN ydsz_alert_dispatch.job_key IS '任务 KEY（冗余）';
-COMMENT ON COLUMN ydsz_alert_dispatch.alert_type IS '告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95';
-COMMENT ON COLUMN ydsz_alert_dispatch.alert_level IS '告警级别: INFO / WARN / ERROR / CRITICAL';
-COMMENT ON COLUMN ydsz_alert_dispatch.trigger_value IS '触发时的实际值（如失败率 85.5、耗时 5000）';
-COMMENT ON COLUMN ydsz_alert_dispatch.threshold IS '规则阈值（冗余）';
-COMMENT ON COLUMN ydsz_alert_dispatch.channels IS '实际发送通道（逗号分隔: INAPP,EMAIL,DINGTALK）';
-COMMENT ON COLUMN ydsz_alert_dispatch.alert_status IS '告警状态: PENDING / SUCCESS / PARTIAL / FAILED / *_RECOVERY';
-COMMENT ON COLUMN ydsz_alert_dispatch.error_message IS '错误信息（部分通道失败时记录; 映射到 fail_reason）';
-COMMENT ON COLUMN ydsz_alert_dispatch.trace_id IS '链路追踪 ID（映射到 provider_trace_id）';
-COMMENT ON COLUMN ydsz_alert_dispatch.trigger_log_id IS '触发该告警的任务日志 ID（关联 ydsz_job_log.id）';
+COMMENT ON TABLE ydsz_job_alert_dispatch IS '告警派发日志表（cronjob 告警记录，source_type=CRONJOB）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.alert_code IS '预警编码（cronjob 自动生成: CRONJOB-{timestamp}-{ruleId}）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.source_type IS '触发源类型（cronjob 告警固定为 CRONJOB）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.rule_id IS '规则 ID（映射到 rule_id）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.rule_name IS '规则名称（映射到 title）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.job_id IS '任务 ID（NULL 表示全局告警; 映射到 source_id）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.job_key IS '任务 KEY（冗余）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.alert_type IS '告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.alert_level IS '告警级别: INFO / WARN / ERROR / CRITICAL';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.trigger_value IS '触发时的实际值（如失败率 85.5、耗时 5000）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.threshold IS '规则阈值（冗余）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.channels IS '实际发送通道（逗号分隔: INAPP,EMAIL,DINGTALK）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.alert_status IS '告警状态: PENDING / SUCCESS / PARTIAL / FAILED / *_RECOVERY';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.error_message IS '错误信息（部分通道失败时记录; 映射到 fail_reason）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.trace_id IS '链路追踪 ID（映射到 provider_trace_id）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.trigger_log_id IS '触发该告警的任务日志 ID（关联 ydsz_job_log.id）';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_ad_rule_id ON ydsz_alert_dispatch (rule_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_ad_job_id ON ydsz_alert_dispatch (job_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_ad_source_status ON ydsz_alert_dispatch (source_type, alert_status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_ad_rule_id ON ydsz_job_alert_dispatch (rule_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_ad_job_id ON ydsz_job_alert_dispatch (job_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_ad_source_status ON ydsz_job_alert_dispatch (source_type, alert_status);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
     id                       BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,
@@ -918,9 +918,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_job_updated_at ON ydsz_job;
+DROP TRIGGER IF EXISTS trg_ydsz_job_updated_at ON ydsz_job_main;
 CREATE TRIGGER trg_ydsz_job_updated_at
-BEFORE UPDATE ON ydsz_job
+BEFORE UPDATE ON ydsz_job_main
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_job_set_updated_at();
 
@@ -1023,9 +1023,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_tenant_quota_updated_at ON ydsz_tenant_quota;
+DROP TRIGGER IF EXISTS trg_ydsz_tenant_quota_updated_at ON ydsz_job_tenant_quota;
 CREATE TRIGGER trg_ydsz_tenant_quota_updated_at
-BEFORE UPDATE ON ydsz_tenant_quota
+BEFORE UPDATE ON ydsz_job_tenant_quota
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_tenant_quota_set_updated_at();
 

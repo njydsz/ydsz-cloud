@@ -4,7 +4,7 @@
 -- 模块：ydsz-common（公共组件，含 ydsz-common-event、ydsz-common-search）
 -- 说明：基于 ydsz-common-event 与 ydsz-common-search 既有 SQL 整理的完整建表脚本。
 --       outbox 表沿用 ydsz-common-event/src/main/resources/db/outbox_mysql.sql 原定义；
---       搜索死信队列表由 PostgreSQL 版本（ydsz_search_dead_letter.sql）转译为 Oracle。
+--       搜索死信队列表由 PostgreSQL 版本（ydsz_com_search_dead_letter.sql）转译为 Oracle。
 -- 数据库：Oracle 12.2+（由 MySQL 8.0 转译）
 -- 日期：2026-08-25
 -- @author ydsz-team
@@ -28,13 +28,13 @@
 -- ============================================================================
 
 
-CREATE TABLE ydsz_outbox (
+CREATE TABLE ydsz_com_outbox (
     id                       VARCHAR2(64 CHAR)        NOT NULL,
     aggregate_type           VARCHAR2(128 CHAR)       NOT NULL,
     aggregate_id             VARCHAR2(128 CHAR)       NOT NULL,
     event_type               VARCHAR2(128 CHAR)       NOT NULL,
     payload                  CLOB                     NOT NULL,
-    status                   VARCHAR2(15 CHAR)        NOT NULL DEFAULT 'PENDING' CONSTRAINT ck_ydsz_outbox_status CHECK (status IN ('PENDING', 'PROCESSING', 'SENT', 'DEAD_LETTER')),
+    status                   VARCHAR2(15 CHAR)        NOT NULL DEFAULT 'PENDING' CONSTRAINT ck_ydsz_com_outbox_status CHECK (status IN ('PENDING', 'PROCESSING', 'SENT', 'DEAD_LETTER')),
     retry_count              NUMBER(10)               NOT NULL DEFAULT 0,
     max_retries              NUMBER(10)               NOT NULL DEFAULT 5,
     next_retry_at            TIMESTAMP(3)            ,
@@ -45,36 +45,36 @@ CREATE TABLE ydsz_outbox (
     created_at               TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sent_at                  TIMESTAMP(3)            ,
-    CONSTRAINT pk_ydsz_outbox PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_com_outbox PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_outbox IS '事务性 Outbox 表：存储领域事件，保障业务写操作与事件投递的事务一致性';
-COMMENT ON COLUMN ydsz_outbox.id IS '消息唯一标识（Snowflake ID）';
-COMMENT ON COLUMN ydsz_outbox.aggregate_type IS '聚合根类型（如 Order, User）';
-COMMENT ON COLUMN ydsz_outbox.aggregate_id IS '聚合根 ID';
-COMMENT ON COLUMN ydsz_outbox.event_type IS '事件类型（如 OrderCreated）';
-COMMENT ON COLUMN ydsz_outbox.payload IS '事件负载 JSON（最大 4MB）';
-COMMENT ON COLUMN ydsz_outbox.status IS '投递状态';
-COMMENT ON COLUMN ydsz_outbox.retry_count IS '当前重试次数';
-COMMENT ON COLUMN ydsz_outbox.max_retries IS '最大重试次数';
-COMMENT ON COLUMN ydsz_outbox.next_retry_at IS '下次重试时间（指数退避）';
-COMMENT ON COLUMN ydsz_outbox.error_message IS '最后一次失败的错误信息';
-COMMENT ON COLUMN ydsz_outbox.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_outbox.trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN ydsz_outbox.deduplication_id IS '幂等去重 ID';
-COMMENT ON COLUMN ydsz_outbox.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_outbox.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_outbox.sent_at IS '投递成功时间';
+COMMENT ON TABLE ydsz_com_outbox IS '事务性 Outbox 表：存储领域事件，保障业务写操作与事件投递的事务一致性';
+COMMENT ON COLUMN ydsz_com_outbox.id IS '消息唯一标识（Snowflake ID）';
+COMMENT ON COLUMN ydsz_com_outbox.aggregate_type IS '聚合根类型（如 Order, User）';
+COMMENT ON COLUMN ydsz_com_outbox.aggregate_id IS '聚合根 ID';
+COMMENT ON COLUMN ydsz_com_outbox.event_type IS '事件类型（如 OrderCreated）';
+COMMENT ON COLUMN ydsz_com_outbox.payload IS '事件负载 JSON（最大 4MB）';
+COMMENT ON COLUMN ydsz_com_outbox.status IS '投递状态';
+COMMENT ON COLUMN ydsz_com_outbox.retry_count IS '当前重试次数';
+COMMENT ON COLUMN ydsz_com_outbox.max_retries IS '最大重试次数';
+COMMENT ON COLUMN ydsz_com_outbox.next_retry_at IS '下次重试时间（指数退避）';
+COMMENT ON COLUMN ydsz_com_outbox.error_message IS '最后一次失败的错误信息';
+COMMENT ON COLUMN ydsz_com_outbox.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_com_outbox.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_com_outbox.deduplication_id IS '幂等去重 ID';
+COMMENT ON COLUMN ydsz_com_outbox.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_com_outbox.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_com_outbox.sent_at IS '投递成功时间';
 
-CREATE INDEX idx_ydsz_outbox_pending ON ydsz_outbox (status, created_at ASC);
-CREATE INDEX idx_ydsz_outbox_retry ON ydsz_outbox (status, next_retry_at);
-CREATE INDEX idx_ydsz_outbox_processing ON ydsz_outbox (status, updated_at);
-CREATE INDEX idx_ydsz_outbox_sent_at ON ydsz_outbox (status, sent_at);
-CREATE INDEX idx_ydsz_outbox_tenant ON ydsz_outbox (tenant_id, status);
-CREATE INDEX idx_ydsz_outbox_dedup ON ydsz_outbox (deduplication_id, status);
-CREATE INDEX idx_ydsz_outbox_aggregate ON ydsz_outbox (aggregate_type, aggregate_id, created_at DESC);
+CREATE INDEX idx_ydsz_com_outbox_pending ON ydsz_com_outbox (status, created_at ASC);
+CREATE INDEX idx_ydsz_com_outbox_retry ON ydsz_com_outbox (status, next_retry_at);
+CREATE INDEX idx_ydsz_com_outbox_processing ON ydsz_com_outbox (status, updated_at);
+CREATE INDEX idx_ydsz_com_outbox_sent_at ON ydsz_com_outbox (status, sent_at);
+CREATE INDEX idx_ydsz_com_outbox_tenant ON ydsz_com_outbox (tenant_id, status);
+CREATE INDEX idx_ydsz_com_outbox_dedup ON ydsz_com_outbox (deduplication_id, status);
+CREATE INDEX idx_ydsz_com_outbox_aggregate ON ydsz_com_outbox (aggregate_type, aggregate_id, created_at DESC);
 
-CREATE TABLE ydsz_search_dead_letter (
+CREATE TABLE ydsz_com_search_dead_letter (
     id                       NUMBER(19) GENERATED BY DEFAULT AS IDENTITY NOT NULL,
     operation                VARCHAR2(20 CHAR)        NOT NULL,
     doc_type                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -85,31 +85,31 @@ CREATE TABLE ydsz_search_dead_letter (
     status                   VARCHAR2(20 CHAR)        NOT NULL DEFAULT 'PENDING',
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at              TIMESTAMP                DEFAULT NULL,
-    CONSTRAINT pk_ydsz_search_dead_letter PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_com_search_dead_letter PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_search_dead_letter IS '搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
-COMMENT ON COLUMN ydsz_search_dead_letter.id IS '自增主键';
-COMMENT ON COLUMN ydsz_search_dead_letter.operation IS '索引操作类型：UPSERT / DELETE / BULK';
-COMMENT ON COLUMN ydsz_search_dead_letter.doc_type IS '实体类型（project/wiki/user 等）';
-COMMENT ON COLUMN ydsz_search_dead_letter.document_id IS '文档主键（DELETE 操作时使用）';
-COMMENT ON COLUMN ydsz_search_dead_letter.document_json IS '文档 JSON（UPSERT/BULK 操作时使用）';
-COMMENT ON COLUMN ydsz_search_dead_letter.error_msg IS '最后一次失败原因（截断 2000 字符）';
-COMMENT ON COLUMN ydsz_search_dead_letter.retry_count IS '已重试次数，达到 5 次升级为 DISCARDED';
-COMMENT ON COLUMN ydsz_search_dead_letter.status IS '状态：PENDING-待处理 / RETRYING-处理中 / RESOLVED-已解决 / DISCARDED-已放弃(需人工介入)';
-COMMENT ON COLUMN ydsz_search_dead_letter.created_at IS '入队时间';
-COMMENT ON COLUMN ydsz_search_dead_letter.resolved_at IS '解决时间';
+COMMENT ON TABLE ydsz_com_search_dead_letter IS '搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.id IS '自增主键';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.operation IS '索引操作类型：UPSERT / DELETE / BULK';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.doc_type IS '实体类型（project/wiki/user 等）';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.document_id IS '文档主键（DELETE 操作时使用）';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.document_json IS '文档 JSON（UPSERT/BULK 操作时使用）';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.error_msg IS '最后一次失败原因（截断 2000 字符）';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.retry_count IS '已重试次数，达到 5 次升级为 DISCARDED';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.status IS '状态：PENDING-待处理 / RETRYING-处理中 / RESOLVED-已解决 / DISCARDED-已放弃(需人工介入)';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.created_at IS '入队时间';
+COMMENT ON COLUMN ydsz_com_search_dead_letter.resolved_at IS '解决时间';
 
-CREATE INDEX idx_ydsz_search_dead_letter_dlq_status_created ON ydsz_search_dead_letter (status, created_at);
-CREATE INDEX idx_ydsz_search_dead_letter_dlq_doc_type ON ydsz_search_dead_letter (doc_type, status);
+CREATE INDEX idx_ydsz_com_search_dead_letter_dlq_status_created ON ydsz_com_search_dead_letter (status, created_at);
+CREATE INDEX idx_ydsz_com_search_dead_letter_dlq_doc_type ON ydsz_com_search_dead_letter (doc_type, status);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (Oracle)
 -- ============================================================================
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_outbox_updated_at
-BEFORE UPDATE ON ydsz_outbox
+CREATE OR REPLACE TRIGGER trg_ydsz_com_outbox_updated_at
+BEFORE UPDATE ON ydsz_com_outbox
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;

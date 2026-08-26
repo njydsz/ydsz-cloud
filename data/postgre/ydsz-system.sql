@@ -23,7 +23,7 @@
 -- ============================================================================
 
 
-CREATE TABLE IF NOT EXISTS ydsz_tenant (
+CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     tenant_code              VARCHAR(64)              NOT NULL,
@@ -46,30 +46,30 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant (
     CONSTRAINT uk_ydsz_tenant_tenant_code UNIQUE (tenant_code)
 );
 
-COMMENT ON TABLE ydsz_tenant IS '租户主表';
-COMMENT ON COLUMN ydsz_tenant.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_tenant.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_tenant.tenant_code IS '租户编码（唯一业务标识，租户登录/调用使用）';
-COMMENT ON COLUMN ydsz_tenant.tenant_name IS '租户名称（展示用）';
-COMMENT ON COLUMN ydsz_tenant.contact_name IS '联系人姓名';
-COMMENT ON COLUMN ydsz_tenant.contact_phone IS '联系电话（脱敏返回）';
-COMMENT ON COLUMN ydsz_tenant.contact_email IS '联系邮箱（脱敏返回）';
-COMMENT ON COLUMN ydsz_tenant.plan_id IS '关联套餐 ID（ydsz_tenant_plan.id）';
-COMMENT ON COLUMN ydsz_tenant.expire_at IS '订阅到期时间（到期后租户被自动锁定/降级）';
-COMMENT ON COLUMN ydsz_tenant.datasource_key IS '独立数据源标识（ISOLATE_DB 模式下使用）';
-COMMENT ON COLUMN ydsz_tenant.remark IS '备注';
-COMMENT ON COLUMN ydsz_tenant.status IS '状态标识（ENABLED/DISABLED，启用状态值）';
-COMMENT ON COLUMN ydsz_tenant.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_tenant.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_tenant.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_tenant.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_tenant.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_tenant.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_tenant IS '租户主表';
+COMMENT ON COLUMN ydsz_sys_tenant.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_tenant.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_tenant.tenant_code IS '租户编码（唯一业务标识，租户登录/调用使用）';
+COMMENT ON COLUMN ydsz_sys_tenant.tenant_name IS '租户名称（展示用）';
+COMMENT ON COLUMN ydsz_sys_tenant.contact_name IS '联系人姓名';
+COMMENT ON COLUMN ydsz_sys_tenant.contact_phone IS '联系电话（脱敏返回）';
+COMMENT ON COLUMN ydsz_sys_tenant.contact_email IS '联系邮箱（脱敏返回）';
+COMMENT ON COLUMN ydsz_sys_tenant.plan_id IS '关联套餐 ID（ydsz_sys_tenant_plan.id）';
+COMMENT ON COLUMN ydsz_sys_tenant.expire_at IS '订阅到期时间（到期后租户被自动锁定/降级）';
+COMMENT ON COLUMN ydsz_sys_tenant.datasource_key IS '独立数据源标识（ISOLATE_DB 模式下使用）';
+COMMENT ON COLUMN ydsz_sys_tenant.remark IS '备注';
+COMMENT ON COLUMN ydsz_sys_tenant.status IS '状态标识（ENABLED/DISABLED，启用状态值）';
+COMMENT ON COLUMN ydsz_sys_tenant.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_tenant.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_tenant.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_tenant.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_tenant.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_tenant.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_id ON ydsz_tenant (plan_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_tenant_deleted ON ydsz_tenant (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_id ON ydsz_sys_tenant (plan_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_tenant_deleted ON ydsz_sys_tenant (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_tenant_plan (
+CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     plan_code                VARCHAR(64)              NOT NULL,
@@ -89,26 +89,26 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant_plan (
     CONSTRAINT uk_ydsz_tenant_plan_plan_code UNIQUE (plan_code)
 );
 
-COMMENT ON TABLE ydsz_tenant_plan IS '租户套餐表';
-COMMENT ON COLUMN ydsz_tenant_plan.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_tenant_plan.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_tenant_plan.plan_code IS '套餐编码（唯一标识，如 TRIAL/STANDARD/ENTERPRISE）';
-COMMENT ON COLUMN ydsz_tenant_plan.plan_name IS '套餐名称（展示用，如「试用版」「企业版」）';
-COMMENT ON COLUMN ydsz_tenant_plan.description IS '套餐描述（包含价格、功能清单、配额上限）';
-COMMENT ON COLUMN ydsz_tenant_plan.sort_order IS '排序号（升序，影响前端套餐选择器顺序）';
-COMMENT ON COLUMN ydsz_tenant_plan.quota_json IS '资源配额 JSON（如 {"maxUsers":50,"maxProjects":10,"storageGb":100}）';
-COMMENT ON COLUMN ydsz_tenant_plan.feature_json IS '功能开关 JSON（如 {"workflow":true,"dataAnalytics":false}）';
-COMMENT ON COLUMN ydsz_tenant_plan.status IS '状态标识';
-COMMENT ON COLUMN ydsz_tenant_plan.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_tenant_plan.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_tenant_plan.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_tenant_plan.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_tenant_plan.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_tenant_plan.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_tenant_plan IS '租户套餐表';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.plan_code IS '套餐编码（唯一标识，如 TRIAL/STANDARD/ENTERPRISE）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.plan_name IS '套餐名称（展示用，如「试用版」「企业版」）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.description IS '套餐描述（包含价格、功能清单、配额上限）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.sort_order IS '排序号（升序，影响前端套餐选择器顺序）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.quota_json IS '资源配额 JSON（如 {"maxUsers":50,"maxProjects":10,"storageGb":100}）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.feature_json IS '功能开关 JSON（如 {"workflow":true,"dataAnalytics":false}）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.status IS '状态标识';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_tenant_deleted ON ydsz_tenant_plan (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_tenant_deleted ON ydsz_sys_tenant_plan (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_tenant_plan_menu (
+CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     plan_id                  VARCHAR(32)              NOT NULL,
@@ -124,22 +124,22 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant_plan_menu (
     CONSTRAINT uk_ydsz_tenant_plan_menu_plan_menu UNIQUE (plan_id, menu_id)
 );
 
-COMMENT ON TABLE ydsz_tenant_plan_menu IS '租户套餐菜单关联表';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.plan_id IS '套餐 ID（ydsz_tenant_plan.id）';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.menu_id IS '菜单 ID（ydsz_menu.id 或权限码 ydsz:xxx）';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.status IS '状态标识';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_tenant_plan_menu.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_tenant_plan_menu IS '租户套餐菜单关联表';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.plan_id IS '套餐 ID（ydsz_sys_tenant_plan.id）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.menu_id IS '菜单 ID（ydsz_menu.id 或权限码 ydsz:xxx）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.status IS '状态标识';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_menu_tenant_deleted ON ydsz_tenant_plan_menu (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_tenant_plan_menu_tenant_deleted ON ydsz_sys_tenant_plan_menu (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_dict_type (
+CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     type_code                VARCHAR(64)              NOT NULL,
@@ -156,23 +156,23 @@ CREATE TABLE IF NOT EXISTS ydsz_dict_type (
     CONSTRAINT uk_ydsz_dict_type_type_code UNIQUE (type_code)
 );
 
-COMMENT ON TABLE ydsz_dict_type IS '字典类型表';
-COMMENT ON COLUMN ydsz_dict_type.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_dict_type.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_dict_type.type_code IS '类型编码（唯一标识，用于业务引用）';
-COMMENT ON COLUMN ydsz_dict_type.type_name IS '类型名称（展示用）';
-COMMENT ON COLUMN ydsz_dict_type.description IS '类型描述';
-COMMENT ON COLUMN ydsz_dict_type.status IS '状态标识';
-COMMENT ON COLUMN ydsz_dict_type.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_dict_type.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_dict_type.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_dict_type.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_dict_type.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_dict_type.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_dict_type IS '字典类型表';
+COMMENT ON COLUMN ydsz_sys_dict_type.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_dict_type.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_dict_type.type_code IS '类型编码（唯一标识，用于业务引用）';
+COMMENT ON COLUMN ydsz_sys_dict_type.type_name IS '类型名称（展示用）';
+COMMENT ON COLUMN ydsz_sys_dict_type.description IS '类型描述';
+COMMENT ON COLUMN ydsz_sys_dict_type.status IS '状态标识';
+COMMENT ON COLUMN ydsz_sys_dict_type.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_dict_type.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_dict_type.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_dict_type.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_dict_type.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_dict_type.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_dict_type_tenant_deleted ON ydsz_dict_type (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_dict_type_tenant_deleted ON ydsz_sys_dict_type (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_dict_item (
+CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     type_code                VARCHAR(64)              NOT NULL,
@@ -193,28 +193,28 @@ CREATE TABLE IF NOT EXISTS ydsz_dict_item (
     CONSTRAINT uk_ydsz_dict_item_type_item_code UNIQUE (type_code, item_code)
 );
 
-COMMENT ON TABLE ydsz_dict_item IS '字典项表';
-COMMENT ON COLUMN ydsz_dict_item.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_dict_item.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_dict_item.type_code IS '所属字典类型编码（逻辑外键 → ydsz_dict_type.type_code）';
-COMMENT ON COLUMN ydsz_dict_item.item_code IS '字典项编码（同 typeCode 内唯一）';
-COMMENT ON COLUMN ydsz_dict_item.item_value IS '字典项真实值（业务代码引用的枚举值，如 "PAID"）';
-COMMENT ON COLUMN ydsz_dict_item.sort_order IS '展示排序序号（升序）';
-COMMENT ON COLUMN ydsz_dict_item.parent_id IS '父级字典项 ID（支持树形字典，如行政区划）';
-COMMENT ON COLUMN ydsz_dict_item.description IS '字典项描述';
-COMMENT ON COLUMN ydsz_dict_item.ext_json IS '扩展属性 JSON（承载自定义属性，如色值、图标、URL 等）';
-COMMENT ON COLUMN ydsz_dict_item.status IS '状态标识';
-COMMENT ON COLUMN ydsz_dict_item.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_dict_item.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_dict_item.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_dict_item.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_dict_item.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_dict_item.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_dict_item IS '字典项表';
+COMMENT ON COLUMN ydsz_sys_dict_item.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_dict_item.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_dict_item.type_code IS '所属字典类型编码（逻辑外键 → ydsz_sys_dict_type.type_code）';
+COMMENT ON COLUMN ydsz_sys_dict_item.item_code IS '字典项编码（同 typeCode 内唯一）';
+COMMENT ON COLUMN ydsz_sys_dict_item.item_value IS '字典项真实值（业务代码引用的枚举值，如 "PAID"）';
+COMMENT ON COLUMN ydsz_sys_dict_item.sort_order IS '展示排序序号（升序）';
+COMMENT ON COLUMN ydsz_sys_dict_item.parent_id IS '父级字典项 ID（支持树形字典，如行政区划）';
+COMMENT ON COLUMN ydsz_sys_dict_item.description IS '字典项描述';
+COMMENT ON COLUMN ydsz_sys_dict_item.ext_json IS '扩展属性 JSON（承载自定义属性，如色值、图标、URL 等）';
+COMMENT ON COLUMN ydsz_sys_dict_item.status IS '状态标识';
+COMMENT ON COLUMN ydsz_sys_dict_item.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_dict_item.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_dict_item.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_dict_item.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_dict_item.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_dict_item.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_dict_item_parent_id ON ydsz_dict_item (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_dict_item_tenant_deleted ON ydsz_dict_item (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_dict_item_parent_id ON ydsz_sys_dict_item (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_dict_item_tenant_deleted ON ydsz_sys_dict_item (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_config (
+CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     config_group             VARCHAR(64)              NOT NULL,
@@ -236,28 +236,28 @@ CREATE TABLE IF NOT EXISTS ydsz_config (
     CONSTRAINT uk_ydsz_config_config_group_key UNIQUE (config_group, config_key)
 );
 
-COMMENT ON TABLE ydsz_config IS '系统配置表';
-COMMENT ON COLUMN ydsz_config.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_config.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_config.config_group IS '配置分组（按业务域分类管理配置）';
-COMMENT ON COLUMN ydsz_config.config_key IS '配置键（同组内唯一标识）';
-COMMENT ON COLUMN ydsz_config.config_value IS '配置值';
-COMMENT ON COLUMN ydsz_config.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
-COMMENT ON COLUMN ydsz_config.default_value IS '默认值（配置未设置时使用）';
-COMMENT ON COLUMN ydsz_config.description IS '配置描述';
-COMMENT ON COLUMN ydsz_config.is_public IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
-COMMENT ON COLUMN ydsz_config.sort_order IS '排序序号';
-COMMENT ON COLUMN ydsz_config.status IS '状态标识';
-COMMENT ON COLUMN ydsz_config.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_config.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_config.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_config.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_config.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_config.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_config IS '系统配置表';
+COMMENT ON COLUMN ydsz_sys_config.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_config.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_config.config_group IS '配置分组（按业务域分类管理配置）';
+COMMENT ON COLUMN ydsz_sys_config.config_key IS '配置键（同组内唯一标识）';
+COMMENT ON COLUMN ydsz_sys_config.config_value IS '配置值';
+COMMENT ON COLUMN ydsz_sys_config.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
+COMMENT ON COLUMN ydsz_sys_config.default_value IS '默认值（配置未设置时使用）';
+COMMENT ON COLUMN ydsz_sys_config.description IS '配置描述';
+COMMENT ON COLUMN ydsz_sys_config.is_public IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
+COMMENT ON COLUMN ydsz_sys_config.sort_order IS '排序序号';
+COMMENT ON COLUMN ydsz_sys_config.status IS '状态标识';
+COMMENT ON COLUMN ydsz_sys_config.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_config.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_config.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_config.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_config.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_config.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_config_tenant_deleted ON ydsz_config (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_config_tenant_deleted ON ydsz_sys_config (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_variable (
+CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     variable_key             VARCHAR(128)             NOT NULL,
@@ -275,24 +275,24 @@ CREATE TABLE IF NOT EXISTS ydsz_variable (
     CONSTRAINT uk_ydsz_variable_variable_key UNIQUE (variable_key)
 );
 
-COMMENT ON TABLE ydsz_variable IS '系统变量表';
-COMMENT ON COLUMN ydsz_variable.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_variable.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_variable.variable_key IS '变量键（唯一标识，全局唯一）';
-COMMENT ON COLUMN ydsz_variable.variable_value IS '变量值（按 valueType 反序列化为 String/Number/Boolean/JSON）';
-COMMENT ON COLUMN ydsz_variable.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
-COMMENT ON COLUMN ydsz_variable.description IS '变量描述（业务含义说明）';
-COMMENT ON COLUMN ydsz_variable.status IS '状态标识（ENABLED/DISABLED）';
-COMMENT ON COLUMN ydsz_variable.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_variable.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_variable.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_variable.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_variable.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_variable.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_variable IS '系统变量表';
+COMMENT ON COLUMN ydsz_sys_variable.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_variable.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_variable.variable_key IS '变量键（唯一标识，全局唯一）';
+COMMENT ON COLUMN ydsz_sys_variable.variable_value IS '变量值（按 valueType 反序列化为 String/Number/Boolean/JSON）';
+COMMENT ON COLUMN ydsz_sys_variable.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
+COMMENT ON COLUMN ydsz_sys_variable.description IS '变量描述（业务含义说明）';
+COMMENT ON COLUMN ydsz_sys_variable.status IS '状态标识（ENABLED/DISABLED）';
+COMMENT ON COLUMN ydsz_sys_variable.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_variable.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_variable.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_variable.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_variable.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_variable.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_variable_tenant_deleted ON ydsz_variable (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_variable_tenant_deleted ON ydsz_sys_variable (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_app_info (
+CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     app_code                 VARCHAR(64)              NOT NULL,
@@ -315,28 +315,28 @@ CREATE TABLE IF NOT EXISTS ydsz_app_info (
     CONSTRAINT uk_ydsz_app_info_tenant_app_key UNIQUE (tenant_id, app_key)
 );
 
-COMMENT ON TABLE ydsz_app_info IS '应用信息表';
-COMMENT ON COLUMN ydsz_app_info.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_app_info.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_app_info.app_code IS '应用业务编码（对外展示/业务标识，全局唯一）';
-COMMENT ON COLUMN ydsz_app_info.app_name IS '应用名称';
-COMMENT ON COLUMN ydsz_app_info.app_key IS '应用唯一标识（认证查询入口，语义等价 OAuth2 client_id，租户内唯一）';
-COMMENT ON COLUMN ydsz_app_info.app_secret IS '应用安全密钥（BCrypt 哈希存储，语义等价 OAuth2 client_secret）';
-COMMENT ON COLUMN ydsz_app_info.redirect_url IS 'OAuth2 授权回调地址';
-COMMENT ON COLUMN ydsz_app_info.scopes IS 'OAuth2 授权范围（CSV 格式，如 "user.read,order.write"）';
-COMMENT ON COLUMN ydsz_app_info.bound_ips IS 'IP 绑定白名单（CSV 格式；为空表示不限制 IP）';
-COMMENT ON COLUMN ydsz_app_info.description IS '应用描述';
-COMMENT ON COLUMN ydsz_app_info.status IS '状态标识';
-COMMENT ON COLUMN ydsz_app_info.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_app_info.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_app_info.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_app_info.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_app_info.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_app_info.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_app_info IS '应用信息表';
+COMMENT ON COLUMN ydsz_sys_app_info.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_app_info.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_app_info.app_code IS '应用业务编码（对外展示/业务标识，全局唯一）';
+COMMENT ON COLUMN ydsz_sys_app_info.app_name IS '应用名称';
+COMMENT ON COLUMN ydsz_sys_app_info.app_key IS '应用唯一标识（认证查询入口，语义等价 OAuth2 client_id，租户内唯一）';
+COMMENT ON COLUMN ydsz_sys_app_info.app_secret IS '应用安全密钥（BCrypt 哈希存储，语义等价 OAuth2 client_secret）';
+COMMENT ON COLUMN ydsz_sys_app_info.redirect_url IS 'OAuth2 授权回调地址';
+COMMENT ON COLUMN ydsz_sys_app_info.scopes IS 'OAuth2 授权范围（CSV 格式，如 "user.read,order.write"）';
+COMMENT ON COLUMN ydsz_sys_app_info.bound_ips IS 'IP 绑定白名单（CSV 格式；为空表示不限制 IP）';
+COMMENT ON COLUMN ydsz_sys_app_info.description IS '应用描述';
+COMMENT ON COLUMN ydsz_sys_app_info.status IS '状态标识';
+COMMENT ON COLUMN ydsz_sys_app_info.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_app_info.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_app_info.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_app_info.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_app_info.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_app_info.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_app_info_tenant_deleted ON ydsz_app_info (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_app_info_tenant_deleted ON ydsz_sys_app_info (tenant_id, deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_entity_version (
+CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     resource_type            VARCHAR(32)              NOT NULL,
@@ -356,26 +356,26 @@ CREATE TABLE IF NOT EXISTS ydsz_entity_version (
     CONSTRAINT pk_ydsz_entity_version PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_entity_version IS '统一实体版本表';
-COMMENT ON COLUMN ydsz_entity_version.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_entity_version.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_entity_version.resource_type IS '资源类型（CONFIG/DICT/VARIABLE）';
-COMMENT ON COLUMN ydsz_entity_version.resource_key IS '资源唯一标识（configKey/typeCode/variableKey）';
-COMMENT ON COLUMN ydsz_entity_version.resource_group IS '资源分组（仅 CONFIG 类型使用，其他为 null）';
-COMMENT ON COLUMN ydsz_entity_version.version IS '版本号字符串';
-COMMENT ON COLUMN ydsz_entity_version.change_log IS '变更说明';
-COMMENT ON COLUMN ydsz_entity_version.snapshot_json IS '变更前 JSON 快照（用于回滚）';
-COMMENT ON COLUMN ydsz_entity_version.effective_date IS '生效时间';
-COMMENT ON COLUMN ydsz_entity_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_entity_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_entity_version.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_entity_version.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_entity_version.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_entity_version.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_entity_version.updated_at IS '最后更新时间';
+COMMENT ON TABLE ydsz_sys_entity_version IS '统一实体版本表';
+COMMENT ON COLUMN ydsz_sys_entity_version.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_entity_version.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_sys_entity_version.resource_type IS '资源类型（CONFIG/DICT/VARIABLE）';
+COMMENT ON COLUMN ydsz_sys_entity_version.resource_key IS '资源唯一标识（configKey/typeCode/variableKey）';
+COMMENT ON COLUMN ydsz_sys_entity_version.resource_group IS '资源分组（仅 CONFIG 类型使用，其他为 null）';
+COMMENT ON COLUMN ydsz_sys_entity_version.version IS '版本号字符串';
+COMMENT ON COLUMN ydsz_sys_entity_version.change_log IS '变更说明';
+COMMENT ON COLUMN ydsz_sys_entity_version.snapshot_json IS '变更前 JSON 快照（用于回滚）';
+COMMENT ON COLUMN ydsz_sys_entity_version.effective_date IS '生效时间';
+COMMENT ON COLUMN ydsz_sys_entity_version.status IS '状态标识';
+COMMENT ON COLUMN ydsz_sys_entity_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_entity_version.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_entity_version.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_entity_version.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_entity_version.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_sys_entity_version.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_entity_version_resource_type_key_version ON ydsz_entity_version (resource_type, resource_key, version);
-CREATE INDEX IF NOT EXISTS idx_ydsz_entity_version_tenant_deleted ON ydsz_entity_version (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_entity_version_resource_type_key_version ON ydsz_sys_entity_version (resource_type, resource_key, version);
+CREATE INDEX IF NOT EXISTS idx_ydsz_entity_version_tenant_deleted ON ydsz_sys_entity_version (tenant_id, deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
@@ -390,9 +390,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_tenant_updated_at ON ydsz_tenant;
+DROP TRIGGER IF EXISTS trg_ydsz_tenant_updated_at ON ydsz_sys_tenant;
 CREATE TRIGGER trg_ydsz_tenant_updated_at
-BEFORE UPDATE ON ydsz_tenant
+BEFORE UPDATE ON ydsz_sys_tenant
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_tenant_set_updated_at();
 
@@ -405,9 +405,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_tenant_plan_updated_at ON ydsz_tenant_plan;
+DROP TRIGGER IF EXISTS trg_ydsz_tenant_plan_updated_at ON ydsz_sys_tenant_plan;
 CREATE TRIGGER trg_ydsz_tenant_plan_updated_at
-BEFORE UPDATE ON ydsz_tenant_plan
+BEFORE UPDATE ON ydsz_sys_tenant_plan
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_tenant_plan_set_updated_at();
 
@@ -420,9 +420,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_tenant_plan_menu_updated_at ON ydsz_tenant_plan_menu;
+DROP TRIGGER IF EXISTS trg_ydsz_tenant_plan_menu_updated_at ON ydsz_sys_tenant_plan_menu;
 CREATE TRIGGER trg_ydsz_tenant_plan_menu_updated_at
-BEFORE UPDATE ON ydsz_tenant_plan_menu
+BEFORE UPDATE ON ydsz_sys_tenant_plan_menu
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_tenant_plan_menu_set_updated_at();
 
@@ -435,9 +435,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_dict_type_updated_at ON ydsz_dict_type;
+DROP TRIGGER IF EXISTS trg_ydsz_dict_type_updated_at ON ydsz_sys_dict_type;
 CREATE TRIGGER trg_ydsz_dict_type_updated_at
-BEFORE UPDATE ON ydsz_dict_type
+BEFORE UPDATE ON ydsz_sys_dict_type
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_dict_type_set_updated_at();
 
@@ -450,9 +450,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_dict_item_updated_at ON ydsz_dict_item;
+DROP TRIGGER IF EXISTS trg_ydsz_dict_item_updated_at ON ydsz_sys_dict_item;
 CREATE TRIGGER trg_ydsz_dict_item_updated_at
-BEFORE UPDATE ON ydsz_dict_item
+BEFORE UPDATE ON ydsz_sys_dict_item
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_dict_item_set_updated_at();
 
@@ -465,9 +465,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_config_updated_at ON ydsz_config;
+DROP TRIGGER IF EXISTS trg_ydsz_config_updated_at ON ydsz_sys_config;
 CREATE TRIGGER trg_ydsz_config_updated_at
-BEFORE UPDATE ON ydsz_config
+BEFORE UPDATE ON ydsz_sys_config
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_config_set_updated_at();
 
@@ -480,9 +480,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_variable_updated_at ON ydsz_variable;
+DROP TRIGGER IF EXISTS trg_ydsz_variable_updated_at ON ydsz_sys_variable;
 CREATE TRIGGER trg_ydsz_variable_updated_at
-BEFORE UPDATE ON ydsz_variable
+BEFORE UPDATE ON ydsz_sys_variable
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_variable_set_updated_at();
 
@@ -495,9 +495,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_app_info_updated_at ON ydsz_app_info;
+DROP TRIGGER IF EXISTS trg_ydsz_app_info_updated_at ON ydsz_sys_app_info;
 CREATE TRIGGER trg_ydsz_app_info_updated_at
-BEFORE UPDATE ON ydsz_app_info
+BEFORE UPDATE ON ydsz_sys_app_info
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_app_info_set_updated_at();
 
@@ -510,8 +510,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_entity_version_updated_at ON ydsz_entity_version;
+DROP TRIGGER IF EXISTS trg_ydsz_entity_version_updated_at ON ydsz_sys_entity_version;
 CREATE TRIGGER trg_ydsz_entity_version_updated_at
-BEFORE UPDATE ON ydsz_entity_version
+BEFORE UPDATE ON ydsz_sys_entity_version
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_entity_version_set_updated_at();
