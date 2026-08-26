@@ -18,7 +18,7 @@ import org.springframework.web.client.RestClient;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.entity.config.MsgVariableSource;
+import com.njydsz.message.domain.vo.MsgVariableSourceVO;
 import com.njydsz.message.domain.repository.MsgVariableSourceRepository;
 
 /**
@@ -48,14 +48,14 @@ public class VariableSourceResolver {
    * @param templateCode 模板编码
    * @return 数据源列表
    */
-  public List<MsgVariableSource> loadByTemplate(String templateCode) {
+  public List<MsgVariableSourceVO> loadByTemplate(String templateCode) {
     if (!StringUtils.hasText(templateCode)) {
       return List.of();
     }
     return variableSourceRepository.selectList(
-        new LambdaQueryWrapper<MsgVariableSource>()
-            .eq(MsgVariableSource::getTemplateCode, templateCode)
-            .eq(MsgVariableSource::getTenantId, TenantContextHolder.getTenantId()));
+        new LambdaQueryWrapper<MsgVariableSourceVO>()
+            .eq(MsgVariableSourceVO::getTemplateCode, templateCode)
+            .eq(MsgVariableSourceVO::getTenantId, TenantContextHolder.getTenantId()));
   }
 
   /**
@@ -70,12 +70,12 @@ public class VariableSourceResolver {
     if (params == null || !StringUtils.hasText(templateCode)) {
       return;
     }
-    List<MsgVariableSource> sources = loadByTemplate(templateCode);
+    List<MsgVariableSourceVO> sources = loadByTemplate(templateCode);
     if (sources.isEmpty()) {
       return;
     }
 
-    for (MsgVariableSource source : sources) {
+    for (MsgVariableSourceVO source : sources) {
       String varName = source.getVariableName();
       // params 中已有值则不覆盖
       if (params.containsKey(varName) && params.get(varName) != null) {
@@ -105,7 +105,7 @@ public class VariableSourceResolver {
    * @param context 参数说明
    * @return 返回值说明
    */
-  private Object resolveOne(MsgVariableSource source, Map<String, Object> context) {
+  private Object resolveOne(MsgVariableSourceVO source, Map<String, Object> context) {
     String type = source.getSourceType();
     String expr = source.getSourceExpr();
     String cacheKey = null;

@@ -533,7 +533,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
 --     ydsz-common/ydsz-common-event/src/main/resources/db/outbox_mysql.sql 风格
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_job_main_outbox (
+CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
     id                    BIGINT          NOT NULL AUTO_INCREMENT COMMENT '事件 ID（自增）',
     event_key             VARCHAR(64)     NOT NULL COMMENT '事件 KEY（幂等去重标识）',
     event_type            VARCHAR(128)    NOT NULL COMMENT '事件类型',

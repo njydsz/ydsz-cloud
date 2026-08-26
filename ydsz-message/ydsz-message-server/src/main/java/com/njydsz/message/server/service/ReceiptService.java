@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.receipt;
 import java.util.List;
 
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
-import com.njydsz.message.domain.entity.receipt.MsgReceipt;
+import com.njydsz.message.domain.vo.MsgReceiptVO;
 
 /**
  * 消息回执 Service
@@ -33,7 +33,7 @@ import com.njydsz.message.domain.entity.receipt.MsgReceipt;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.receipt.MsgReceipt 回执实体
+ * @see com.njydsz.message.domain.vo.MsgReceiptVO 回执VO
  * @see ReadStatusSyncService 已读状态同步服务
  * @see ReadReceiptService 全通道已读回执服务(邮件追踪像素/短信短链)
  */
@@ -52,5 +52,5 @@ public interface ReceiptService {
    * @param logId 日志 ID
    * @return 回执列表
    */
-  List<MsgReceipt> listByLogId(String logId);
+  List<MsgReceiptVO> listByLogId(String logId);
 }

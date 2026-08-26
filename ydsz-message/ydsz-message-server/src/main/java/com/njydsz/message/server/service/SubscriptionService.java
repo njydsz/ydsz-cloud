@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.config;
 import java.util.List;
 
 import com.njydsz.message.domain.dto.SubscriptionUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgSubscription;
+import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 
 /**
  * 订阅关系 Service
@@ -30,7 +30,7 @@ import com.njydsz.message.domain.entity.config.MsgSubscription;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.config.MsgSubscription 订阅实体
+ * @see com.njydsz.message.domain.vo.MsgSubscriptionVO 订阅VO
  * @see UnsubscribeService 退订中心服务(基于签名 token 的一键退订)
  * @see PreferenceService 用户消息偏好服务
  */
@@ -42,7 +42,7 @@ public interface SubscriptionService {
    * @param dto 订阅参数
    * @return 订阅实体
    */
-  MsgSubscription upsert(SubscriptionUpsertDTO dto);
+  MsgSubscriptionVO upsert(SubscriptionUpsertDTO dto);
 
   /**
    * 查询用户所有订阅
@@ -50,7 +50,7 @@ public interface SubscriptionService {
    * @param userId 用户 ID
    * @return 订阅列表
    */
-  List<MsgSubscription> listByUser(String userId);
+  List<MsgSubscriptionVO> listByUser(String userId);
 
   /**
    * 按主题 + 通道查询订阅列表
@@ -59,7 +59,7 @@ public interface SubscriptionService {
    * @param channel 通道
    * @return 订阅列表
    */
-  List<MsgSubscription> listByTopic(String topicCode, String channel);
+  List<MsgSubscriptionVO> listByTopic(String topicCode, String channel);
 
   /**
    * 判断用户是否已订阅指定主题 + 通道
@@ -91,5 +91,5 @@ public interface SubscriptionService {
    * @param channel 通道
    * @return 退订后的订阅实体
    */
-  MsgSubscription unsubscribe(String userId, String topicCode, String channel);
+  MsgSubscriptionVO unsubscribe(String userId, String topicCode, String channel);
 }

@@ -13,7 +13,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.PreferenceUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgPreference;
+import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.domain.repository.MsgPreferenceRepository;
 import com.njydsz.message.server.service.config.PreferenceService;
 
@@ -46,7 +46,7 @@ public class PreferenceServiceImpl implements PreferenceService {
    * @return 返回值说明
    */
   @Override
-  public MsgPreference upsert(PreferenceUpsertDTO dto) {
+  public MsgPreferenceVO upsert(PreferenceUpsertDTO dto) {
     if (dto == null
         || !StringUtils.hasText(dto.getUserId())
         || !StringUtils.hasText(dto.getChannel())) {
@@ -59,15 +59,15 @@ public class PreferenceServiceImpl implements PreferenceService {
         StringUtils.hasText(dto.getBizType())
             ? dto.getBizType()
             : MessageConstants.DEFAULT_BIZ_TYPE;
-    MsgPreference existing =
+    MsgPreferenceVO existing =
         msgPreferenceRepository.selectOne(
-            new LambdaQueryWrapper<MsgPreference>()
-                .eq(MsgPreference::getUserId, dto.getUserId())
-                .eq(MsgPreference::getChannel, dto.getChannel())
-                .eq(MsgPreference::getBizType, bizType)
+            new LambdaQueryWrapper<MsgPreferenceVO>()
+                .eq(MsgPreferenceVO::getUserId, dto.getUserId())
+                .eq(MsgPreferenceVO::getChannel, dto.getChannel())
+                .eq(MsgPreferenceVO::getBizType, bizType)
                 .last("LIMIT 1"));
     if (existing == null) {
-      MsgPreference entity = new MsgPreference();
+      MsgPreferenceVO entity = new MsgPreferenceVO();
       entity.setUserId(dto.getUserId());
       entity.setChannel(dto.getChannel());
       entity.setBizType(bizType);
@@ -117,18 +117,18 @@ public class PreferenceServiceImpl implements PreferenceService {
    * @return 偏好记录，不存在时返回 null
    */
   @Override
-  public MsgPreference getByUser(String userId, String channel, String bizType) {
+  public MsgPreferenceVO getByUser(String userId, String channel, String bizType) {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(channel)) {
       return null;
     }
     String bt = StringUtils.hasText(bizType) ? bizType : MessageConstants.DEFAULT_BIZ_TYPE;
     // 优先精确 bizType
-    MsgPreference entity =
+    MsgPreferenceVO entity =
         msgPreferenceRepository.selectOne(
-            new LambdaQueryWrapper<MsgPreference>()
-                .eq(MsgPreference::getUserId, userId)
-                .eq(MsgPreference::getChannel, channel)
-                .eq(MsgPreference::getBizType, bt)
+            new LambdaQueryWrapper<MsgPreferenceVO>()
+                .eq(MsgPreferenceVO::getUserId, userId)
+                .eq(MsgPreferenceVO::getChannel, channel)
+                .eq(MsgPreferenceVO::getBizType, bt)
                 .last("LIMIT 1"));
     if (entity != null) {
       return entity;
@@ -137,10 +137,10 @@ public class PreferenceServiceImpl implements PreferenceService {
     if (!MessageConstants.DEFAULT_BIZ_TYPE.equals(bt)) {
       entity =
           msgPreferenceRepository.selectOne(
-              new LambdaQueryWrapper<MsgPreference>()
-                  .eq(MsgPreference::getUserId, userId)
-                  .eq(MsgPreference::getChannel, channel)
-                  .eq(MsgPreference::getBizType, MessageConstants.DEFAULT_BIZ_TYPE)
+              new LambdaQueryWrapper<MsgPreferenceVO>()
+                  .eq(MsgPreferenceVO::getUserId, userId)
+                  .eq(MsgPreferenceVO::getChannel, channel)
+                  .eq(MsgPreferenceVO::getBizType, MessageConstants.DEFAULT_BIZ_TYPE)
                   .last("LIMIT 1"));
     }
     return entity;
@@ -153,14 +153,14 @@ public class PreferenceServiceImpl implements PreferenceService {
    * @return 偏好列表，按 channel 升序排列
    */
   @Override
-  public List<MsgPreference> listByUser(String userId) {
+  public List<MsgPreferenceVO> listByUser(String userId) {
     if (!StringUtils.hasText(userId)) {
       return List.of();
     }
     return msgPreferenceRepository.selectList(
-        new LambdaQueryWrapper<MsgPreference>()
-            .eq(MsgPreference::getUserId, userId)
-            .orderByAsc(MsgPreference::getChannel));
+        new LambdaQueryWrapper<MsgPreferenceVO>()
+            .eq(MsgPreferenceVO::getUserId, userId)
+            .orderByAsc(MsgPreferenceVO::getChannel));
   }
 
   /**
