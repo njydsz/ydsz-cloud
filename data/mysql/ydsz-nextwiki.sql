@@ -368,7 +368,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
 -- ----------------------------------------------------------------------------
 -- 14. 回收站条目表
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_trash_item (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_trash_item (
     id                  VARCHAR(32)   NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id           VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id        VARCHAR(32)   NOT NULL COMMENT '原文件节点ID',
@@ -396,7 +396,7 @@ CREATE TABLE IF NOT EXISTS ydsz_trash_item (
 -- ----------------------------------------------------------------------------
 -- 15. 文件搜索索引表（ES 不可用时的数据库 fallback）
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_search_index (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_search_index (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '关联的文件节点ID',
@@ -423,7 +423,7 @@ CREATE TABLE IF NOT EXISTS ydsz_search_index (
 -- ----------------------------------------------------------------------------
 -- 16. 用户收藏夹表
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_user_favorite (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
@@ -436,15 +436,15 @@ CREATE TABLE IF NOT EXISTS ydsz_user_favorite (
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
-    UNIQUE KEY uk_ydsz_user_favorite_user_node (user_id, node_id),
-    INDEX idx_ydsz_user_favorite_user_sort (user_id, sort_order),
+    UNIQUE KEY uk_ydsz_wiki_user_favorite_user_node (user_id, node_id),
+    INDEX idx_ydsz_wiki_user_favorite_user_sort (user_id, sort_order),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
 
 -- ----------------------------------------------------------------------------
 -- 17. 用户最近访问表
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_user_recent (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_user_recent (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
@@ -455,16 +455,16 @@ CREATE TABLE IF NOT EXISTS ydsz_user_recent (
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     PRIMARY KEY (id),
-    UNIQUE KEY uk_ydsz_user_recent_user_node (user_id, node_id),
-    INDEX idx_ydsz_user_recent_user_accessed (user_id, accessed_at),
-    INDEX idx_ydsz_user_recent_access_type (user_id, access_type),
+    UNIQUE KEY uk_ydsz_wiki_user_recent_user_node (user_id, node_id),
+    INDEX idx_ydsz_wiki_user_recent_user_accessed (user_id, accessed_at),
+    INDEX idx_ydsz_wiki_user_recent_access_type (user_id, access_type),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户最近访问记录（同一节点只保留一条，支持按访问时间倒序查询）';
 
 -- ----------------------------------------------------------------------------
 -- 18. 存储配额表
 -- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS ydsz_storage_quota (
+CREATE TABLE IF NOT EXISTS ydsz_wiki_storage_quota (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     scope_type      VARCHAR(32)     NOT NULL COMMENT '配额维度：user / tenant / project',

@@ -182,16 +182,16 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
           .message("用户 ID、主题编码与通道不能为空")
           .build();
     }
-    MsgSubscription existing =
+    MsgSubscriptionVO existing =
         msgSubscriptionRepository.selectOne(
-            new LambdaQueryWrapper<MsgSubscription>()
-                .eq(MsgSubscription::getUserId, userId)
-                .eq(MsgSubscription::getTopicCode, topicCode)
-                .eq(MsgSubscription::getChannel, channel)
+            new LambdaQueryWrapper<MsgSubscriptionVO>()
+                .eq(MsgSubscriptionVO::getUserId, userId)
+                .eq(MsgSubscriptionVO::getTopicCode, topicCode)
+                .eq(MsgSubscriptionVO::getChannel, channel)
                 .last("LIMIT 1"));
     if (existing == null) {
       // 无记录时直接新建 SUBSCRIBED 记录
-      MsgSubscription entity = new MsgSubscription();
+      MsgSubscriptionVO entity = new MsgSubscriptionVO();
       entity.setUserId(userId);
       entity.setTopicCode(topicCode);
       entity.setChannel(channel);
