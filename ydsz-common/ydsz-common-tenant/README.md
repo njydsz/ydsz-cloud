@@ -133,7 +133,7 @@ ydsz:
     mode: SINGLE
     tenant-column: tenant_id
     ignore-tables:
-      - ydsz_tenant
+      - ydsz_sys_tenant
     anon-urls:
       - /auth/login
       - /auth/register
@@ -219,7 +219,7 @@ public class User extends MpBaseEntity<String> {
 
 // 3. 自定义列名
 @TenantColumn("org_id")
-@TableName("ydsz_file_node")
+@TableName("ydsz_wiki_file_node")
 public class FileNode extends MpBaseEntity<String> {
     private String name;
 }
@@ -327,7 +327,7 @@ new Thread(() -> {
     "tenantColumn": "tenant_id",
     "superTenantId": "0",
     "systemTenantId": "0",
-    "ignoreTables": ["ydsz_tenant"],
+    "ignoreTables": ["ydsz_sys_tenant"],
     "anonUrls": ["/auth/login"],
     "interceptPassCount": 1024,
     "interceptBlockedCount": 3,

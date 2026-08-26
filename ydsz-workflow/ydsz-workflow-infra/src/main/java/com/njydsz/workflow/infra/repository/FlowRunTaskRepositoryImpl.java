@@ -338,9 +338,10 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   @Override
-  public void completeTaskWithComment(
+  public int completeTaskWithComment(
       String taskId, String taskStatus, String comment, LocalDateTime finishAt, Long durationMs) {
-    taskMapper.completeTask(taskId, taskStatus, comment, finishAt, durationMs);
+    // 返回受影响行数（CAS 并发防护：0=已被并发处理）
+    return taskMapper.completeTask(taskId, taskStatus, comment, finishAt, durationMs);
   }
 
   @Override

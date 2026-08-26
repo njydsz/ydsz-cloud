@@ -34,11 +34,11 @@
 | **实例迁移** | 流程实例版本迁移 + 预览（dry run） |
 | **设计器** | bpmn-js 拖拽设计 + 表单设计 + 表达式编辑 |
 | **审批扩展** | 评论/常用意见、嵌入式审批面板、合并审批/加签投票/离线转交（advanced 端点） |
-| **办理人类型** | 11 种：USER / ROLE / DEPT / SPEL / INITIATOR / LEADER / POSITION / DEPT_LEADER / SELF_SELECT / MULTI_LEADER |
-| **会签模式** | 或签（OR）/ 并行会签（PARALLEL）|
-| **跳转类型** | PASS / REJECT / FORWARD / BACK / JUMP |
-| **加签类型** | ORIGINAL / BEFORE / AFTER / PARALLEL / ADD |
-| **AI 辅助** | 定义生成 / 实例分析 / 通知优化 / 委派推荐 / 国际化等 AI 能力 |
+| **办理人类型** | 12 种：USER / ROLE / DEPT / SPEL / INITIATOR / LEADER / POSITION / DEPT_LEADER / SELF_SELECT / MULTI_LEADER / GROUP_CLAIM（分组抢办）/ GROUP_ALL（分组全办） |
+| **会签模式** | 或签（OR）/ 并行会签（PARALLEL）/ 票签（WEIGHTED，加权投票） |
+| **跳转类型** | PASS / REJECT / FORWARD / BACK |
+| **加签类型** | ORIGINAL / BEFORE / AFTER / PARALLEL |
+| **AI 辅助** | 定义生成 / 实例分析 / 通知优化 / 委派推荐 / 国际化（当前为**显式降级骨架**：AI 服务未配置时返回基础模板/空分析，不阻塞核心审批链路，待对接 LLM 服务） |
 | **多租户** | 集团 + 公司 + 部门三级隔离（MULTI 模式） |
 | **历史归档** | 定时归档 + 清理（可配置 cron / 阈值天数） |
 | **附件预览** | 外部预览服务集成（kkFileView / Office Online） |
@@ -76,7 +76,7 @@ DDL 由各部署环境统一维护，不在模块内。
 | | `ydsz_flow_node` | 流程节点 |
 | | `ydsz_flow_skip` | 跳过规则 |
 | | `ydsz_flow_timer` | 节点/流程超时定时器（cron） |
-| | `ydsz_flow_dmn_rule` | DMN 规则表（⚠️ 已废弃：仅有 FlowDmnRuleMapper.xml，无对应 Java 实体与 Mapper 接口） |
+| | `ydsz_flow_dmn_rule` | DMN 规则表（⚠️ 已废弃：残留 Mapper XML 已清理，无实体/无 Mapper 接口，待迁移 ydsz-pmis-literule） |
 | **实例** | `ydsz_flow_instance` | 流程实例（运行中） |
 | | `ydsz_flow_his_instance` | 历史实例（已结束） |
 | **任务** | `ydsz_flow_run_task` | 待办/运行任务 |
@@ -153,10 +153,10 @@ ydsz-workflow/
 │       │   ├── FlowNodeType.java        # 节点类型（11 种）
 │       │   ├── FlowInstanceStatus.java  # 实例状态（RUNNING/SUSPENDED/COMPLETED/TERMINATED/REJECTED/ERROR/ROLLED_BACK）
 │       │   ├── FlowTaskStatus.java      # 任务状态（PENDING/COMPLETED/REJECTED 等 11 种）
-│       │   ├── FlowAssigneeType.java    # 办理人类型（11 种）
-│       │   ├── FlowPerformType.java     # 会签类型（OR/PARALLEL）
-│       │   ├── FlowSignType.java        # 加签类型（ORIGINAL/BEFORE/AFTER/PARALLEL/ADD）
-│       │   ├── FlowSkipType.java        # 跳转类型（PASS/REJECT/FORWARD/BACK/JUMP）
+│       │   ├── FlowAssigneeType.java    # 办理人类型（12 种，含 GROUP_CLAIM/GROUP_ALL）
+│       │   ├── FlowPerformType.java     # 会签类型（OR/PARALLEL/WEIGHTED）
+│       │   ├── FlowSignType.java        # 加签类型（ORIGINAL/BEFORE/AFTER/PARALLEL）
+│       │   ├── FlowSkipType.java        # 跳转类型（PASS/REJECT/FORWARD/BACK）
 │       │   ├── FlowSlaAction.java       # SLA 动作（REMIND/NOTIFY/ESCALATE/AUTO_PASS/AUTO_REJECT）
 │       │   └── WorkflowExceptionCode.java # 异常码（B70001-B75099 区间）
 │       ├── event/                       # 领域事件（6 个）

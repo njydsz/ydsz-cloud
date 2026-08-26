@@ -270,15 +270,18 @@ public interface FlowRunTaskRepository {
   /**
    * 完成任务（含备注注释）。
    *
-   * <p>更新 {@code taskStatus, comment, finishAt, durationMs}。
+   * <p>更新 {@code taskStatus, comment, finishAt, durationMs}。基于
+   * {@code WHERE task_status IN ('PENDING','CLAIMED')} 条件更新（CAS 并发防护），
+   * 返回受影响行数：0 表示任务已被其他请求并发处理完成，调用方应终止后续逻辑。
    *
    * @param taskId 任务 ID
    * @param taskStatus 目标状态
    * @param comment 完成备注
    * @param finishAt 完成时间
    * @param durationMs 耗时（毫秒）
+   * @return 受影响行数（0=已被并发处理，1=本请求完成）
    */
-  void completeTaskWithComment(
+  int completeTaskWithComment(
       String taskId, String taskStatus, String comment, LocalDateTime finishAt, Long durationMs);
 
   /**

@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.impl;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.MessageFeedbackDTO;
+import com.njydsz.message.domain.query.MsgFeedbackQuery;
 import com.njydsz.message.domain.repository.MsgFeedbackRepository;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
 import com.njydsz.message.server.service.core.MessageFeedbackService;
@@ -40,7 +40,6 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
   /** 默认评分 */
   private static final double DEFAULT_RATING = 5.0;
 
-
   /** 消息反馈 Repository */
   private final MsgFeedbackRepository msgFeedbackRepository;
 
@@ -52,12 +51,8 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
 
   /**
    * {@inheritDoc}
-   * 
-   * <p>校验 msgId/notificationId、userId、rating（1-5）后落库，tenantId 从 {@link TenantContext} 获取。
-   * 
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * <p>校验 msgId/notificationId、userId、rating（1-5）后落库。
    */
   @Override
   public String submitFeedback(MessageFeedbackDTO dto) {
@@ -93,11 +88,10 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     feedback.setRating(dto.getRating());
     feedback.setFeedbackType(dto.getFeedbackType());
     feedback.setContent(dto.getContent());
-    feedback.setTenantId(TenantContextHolder.getTenantId());
 
     // 通道和业务类型由前端或上游传入，此处不强制补全
 
-    msgFeedbackRepository.insert(feedback);
+    msgFeedbackRepository.save(feedback);
     log.info(
         "[Feedback] 用户反馈已提交: userId={} msgId={} rating={} type={}",
         dto.getUserId(),
@@ -120,12 +114,11 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     if (!StringUtils.hasText(userId)) {
       return 0;
     }
-    List<MsgFeedbackVO> feedbacks =
-        msgFeedbackRepository.selectList(
-            new LambdaQueryWrapper<MsgFeedbackVO>()
-                .eq(MsgFeedbackVO::getUserId, userId)
-                .orderByDesc(MsgFeedbackVO::getCreatedAt)
-                .last("LIMIT 100"));
+    MsgFeedbackQuery query = new MsgFeedbackQuery();
+    query.setUserId(userId);
+    query.setPageNum(1);
+    query.setPageSize(100);
+    List<MsgFeedbackVO> feedbacks = msgFeedbackRepository.findList(query);
     if (feedbacks.isEmpty()) {
       return 0;
     }
@@ -149,12 +142,11 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     if (!StringUtils.hasText(channel)) {
       return 0;
     }
-    List<MsgFeedbackVO> feedbacks =
-        msgFeedbackRepository.selectList(
-            new LambdaQueryWrapper<MsgFeedbackVO>()
-                .eq(MsgFeedbackVO::getChannel, channel)
-                .orderByDesc(MsgFeedbackVO::getCreatedAt)
-                .last("LIMIT 1000"));
+    MsgFeedbackQuery query = new MsgFeedbackQuery();
+    query.setChannel(channel);
+    query.setPageNum(1);
+    query.setPageSize(1000);
+    List<MsgFeedbackVO> feedbacks = msgFeedbackRepository.findList(query);
     if (feedbacks.isEmpty()) {
       return 0;
     }
@@ -167,27 +159,26 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
 
   /**
    * {@inheritDoc}
-   * 
-   * <p>支持按 channel 和 userId 过滤，按创建时间降序排列。
    *
-   * @param page 参数说明
-   * @param size 参数说明
-   * @param channel 参数说明
-   * @param userId 参数说明
-   * @return 返回值说明
+   * <p>支持按 channel 和 userId 过滤，按创建时间降序排列。
    */
   @Override
   public Page<MsgFeedbackVO> pageFeedback(int page, int size, String channel, String userId) {
-    Page<MsgFeedbackVO> p = new Page<>(page, size);
-    LambdaQueryWrapper<MsgFeedbackVO> wrapper = new LambdaQueryWrapper<>();
+    MsgFeedbackQuery query = new MsgFeedbackQuery();
+    query.setPageNum(page);
+    query.setPageSize(size);
     if (StringUtils.hasText(channel)) {
-      wrapper.eq(MsgFeedbackVO::getChannel, channel);
+      query.setChannel(channel);
     }
     if (StringUtils.hasText(userId)) {
-      wrapper.eq(MsgFeedbackVO::getUserId, userId);
+      query.setUserId(userId);
     }
-    wrapper.orderByDesc(MsgFeedbackVO::getCreatedAt);
-    return msgFeedbackRepository.selectPage(p, wrapper);
+    PageResponse<List<MsgFeedbackVO>> pageResponse = msgFeedbackRepository.findPage(query);
+    // 将 PageResponse 转换为 MyBatis-Plus Page 以保持接口兼容
+    Page<MsgFeedbackVO> resultPage = new Page<>(page, size);
+    resultPage.setTotal(pageResponse.getTotal());
+    resultPage.setRecords(pageResponse.getData());
+    return resultPage;
   }
 
   /**
@@ -204,12 +195,11 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     if (!StringUtils.hasText(userId)) {
       return false;
     }
-    List<MsgFeedbackVO> recentFeedbacks =
-        msgFeedbackRepository.selectList(
-            new LambdaQueryWrapper<MsgFeedbackVO>()
-                .eq(MsgFeedbackVO::getUserId, userId)
-                .orderByDesc(MsgFeedbackVO::getCreatedAt)
-                .last("LIMIT " + FREQ_CHECK_WINDOW));
+    MsgFeedbackQuery query = new MsgFeedbackQuery();
+    query.setUserId(userId);
+    query.setPageNum(1);
+    query.setPageSize(FREQ_CHECK_WINDOW);
+    List<MsgFeedbackVO> recentFeedbacks = msgFeedbackRepository.findList(query);
     if (recentFeedbacks.size() < FREQ_CHECK_WINDOW) {
       return false; // 反馈不足，不降频
     }

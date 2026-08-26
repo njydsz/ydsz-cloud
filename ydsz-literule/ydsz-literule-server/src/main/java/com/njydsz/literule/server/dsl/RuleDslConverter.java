@@ -16,6 +16,7 @@ import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.ScorecardDefinition;
 import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.server.impl.CrossDecisionTableRule;
 import com.njydsz.literule.server.impl.DecisionTableRule;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.impl.ScorecardRule;
