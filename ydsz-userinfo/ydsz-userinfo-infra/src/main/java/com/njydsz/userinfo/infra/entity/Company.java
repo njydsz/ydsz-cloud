@@ -44,7 +44,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_company")
+@TableName("ydsz_org_company")
 public class Company extends MpBaseEntity<String> {
 
   /** 公司名称（前端展示） */

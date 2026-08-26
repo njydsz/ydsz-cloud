@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * Prompt 模板（映射 ydsz_prompt_template 表）
+ * Prompt 模板（映射 ydsz_agt_prompt_template 表）
  *
  * <p>存储 Prompt 模板的当前版本信息，包含编码、名称、内容、分类等。 版本历史由 {@link PromptVersion} 独立维护。
  *
@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_prompt_template")
+@TableName("ydsz_agt_prompt_template")
 public class PromptTemplate extends MpBaseEntity<String> {
 
   /** 模板唯一编码（业务标识，创建后不可变） */

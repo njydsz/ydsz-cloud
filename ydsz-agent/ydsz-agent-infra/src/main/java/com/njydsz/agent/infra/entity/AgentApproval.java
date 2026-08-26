@@ -9,14 +9,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Agent 人工审批请求（映射 ydsz_agent_approval 表）
+ * Agent 人工审批请求（映射 ydsz_agt_approval 表）
  *
  * <p>持久化 Human-in-the-Loop 审批请求，支持多实例共享、重启不丢与长期审计。
  *
  * <p><b>DDL：</b>
  *
  * <pre>
- * CREATE TABLE ydsz_agent_approval (
+ * CREATE TABLE ydsz_agt_approval (
  *   id                VARCHAR(64) PRIMARY KEY,
  *   conversation_id   VARCHAR(64),
  *   trace_id          VARCHAR(64),
@@ -29,8 +29,8 @@ import lombok.NoArgsConstructor;
  *   created_at        TIMESTAMPTZ DEFAULT NOW(),
  *   resolved_at       TIMESTAMPTZ
  * );
- * CREATE INDEX idx_approval_status ON ydsz_agent_approval(status);
- * CREATE INDEX idx_approval_tenant ON ydsz_agent_approval(tenant_id);
+ * CREATE INDEX idx_approval_status ON ydsz_agt_approval(status);
+ * CREATE INDEX idx_approval_tenant ON ydsz_agt_approval(tenant_id);
  * </pre>
  *
  * @author ydsz-team
@@ -40,7 +40,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("ydsz_agent_approval")
+@TableName("ydsz_agt_approval")
 public class AgentApproval {
 
   /** 审批请求 ID（主键，业务生成非自增） */

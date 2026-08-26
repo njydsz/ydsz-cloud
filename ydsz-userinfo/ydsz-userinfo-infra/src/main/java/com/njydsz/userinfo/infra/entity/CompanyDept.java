@@ -51,7 +51,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_company_dept")
+@TableName("ydsz_org_company_dept")
 public class CompanyDept extends MpBaseEntity<String> {
 
   /** 公司 ID，关联 {@link Company#getId()} */

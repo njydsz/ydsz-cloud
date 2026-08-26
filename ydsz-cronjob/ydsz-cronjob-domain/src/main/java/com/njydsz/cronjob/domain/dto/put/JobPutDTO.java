@@ -87,6 +87,44 @@ public class JobPutDTO implements Serializable {
   @Schema(description = "目标集群名称（P3-12 跨集群调度，null=本地集群）")
   private String cluster;
 
+  @Min(value = 0, message = "最大重试次数不能为负")
+  @Schema(description = "失败最大重试次数（null=不重试）")
+  private Integer maxRetries;
+
+  @Min(value = 1, message = "重试间隔必须为正数")
+  @Schema(description = "重试间隔（毫秒）")
+  private Long retryIntervalMs;
+
+  @Schema(description = "重试退避策略（FIXED/EXPONENTIAL，null=默认 FIXED）")
+  private String retryBackoff;
+
+  @Min(value = 1, message = "SLA 阈值必须为正数")
+  @Schema(description = "SLA 达标阈值（毫秒）：执行耗时超过此值触发 SLA_WARNING 告警，null=不设 SLA")
+  private Long slaMs;
+
+  @Schema(
+      description = "阻塞策略: SERIAL 串行跳过(默认) / DISCARD 丢弃本次 / DISCARD_OVERLAPPING 丢弃重叠 / COVER 覆盖执行 / CONCURRENT 并行执行")
+  private String blockStrategy;
+
+  @Min(value = 1, message = "最大连续失败次数必须 >= 1")
+  @Schema(description = "最大连续失败次数（达到后自动熔断暂停任务，null=不熔断）")
+  private Integer maxConsecutiveFails;
+
+  @Min(value = 1, message = "自动恢复延迟必须为正数")
+  @Schema(description = "自动恢复延迟（分钟）：熔断后超过此时间自动恢复 NORMAL，null=不自动恢复")
+  private Integer autoResumeAfterMinutes;
+
+  @Min(value = 0, message = "优先级不能为负")
+  @Schema(description = "调度优先级（数值越大越先派发，默认 0）")
+  private Integer priority;
+
+  @Min(value = 0, message = "灰度比例必须在 0-100")
+  @Schema(description = "灰度比例（0-100，jobKey 稳定哈希分桶，null=全量走主 handler）")
+  private Integer canaryRatio;
+
+  @Schema(description = "灰度处理器 Bean 名称（canaryRatio>0 时生效）")
+  private String canaryHandler;
+
   @Schema(description = "租户 ID（null 时由服务端从 TenantContextHolder 注入）")
   private String tenantId;
 }

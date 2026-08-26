@@ -31,7 +31,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_security_alert")
+@TableName("ydsz_idp_security_alert")
 public class SecurityAlert extends MpBaseEntity<String> {
 
   /** 告警类型（ACCOUNT_LOCKED/ACCOUNT_BANNED/MFA_FAILED/BRUTE_FORCE/ANOMALOUS_LOGIN/PASSWORD_SPRAY） */

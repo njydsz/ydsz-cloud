@@ -15,7 +15,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 统一实体版本实体
  *
- * <p>对应数据库表 {@code ydsz_entity_version}，为 Config/Dict/Variable 提供统一的变更历史快照管理。
+ * <p>对应数据库表 {@code ydsz_sys_entity_version}，为 Config/Dict/Variable 提供统一的变更历史快照管理。
  * 通过 {@link #resourceType} 字段区分不同业务类型，替代原有的三套独立版本表。
  *
  * <p><b>核心字段：</b>
@@ -40,7 +40,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_entity_version")
+@TableName("ydsz_sys_entity_version")
 public class EntityVersion extends MpBaseEntity<String> {
 
   /** 资源类型：CONFIG/DICT/VARIABLE */

@@ -13,9 +13,9 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 
 
 /**
- * 系统变量实体
+  * 系统变量实体
  *
- * <p>对应数据库表 {@code ydsz_variable}，存储系统级动态变量。 与 {@link Config} 的区别：
+ * <p>对应数据库表 {@code ydsz_sys_variable}，存储系统级动态变量。 与 {@link Config} 的区别：
  *
  * <ul>
  *   <li>Variable 面向业务侧（前端/ISV 通过 Feign 调用）
@@ -51,7 +51,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_variable")
+@TableName("ydsz_sys_variable")
 public class Variable extends MpBaseEntity<String> {
 
   /** 状态常量：启用 */

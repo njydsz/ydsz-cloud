@@ -9,9 +9,9 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * Prompt 模板版本（映射 ydsz_prompt_version 表）
+ * Prompt 模板版本（映射 ydsz_agt_prompt_version 表）
  *
- * <p>记录每次模板更新的历史快照，支持版本回滚。 每次对 {@code ydsz_prompt_template} 的更新操作均在此表追加一条记录。
+ * <p>记录每次模板更新的历史快照，支持版本回滚。 每次对 {@code ydsz_agt_prompt_template} 的更新操作均在此表追加一条记录。
  *
  * <p><b>线程安全</b>：由 @Data 生成 setter，属可变持久化实体； 仅在单请求/单事务内使用，勿跨线程共享。
  *
@@ -21,10 +21,10 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_prompt_version")
+@TableName("ydsz_agt_prompt_version")
 public class PromptVersion extends MpBaseEntity<String> {
 
-  /** 所属模板编码（关联 ydsz_prompt_template.template_code） */
+  /** 所属模板编码（关联 ydsz_agt_prompt_template.template_code） */
   private String templateCode;
 
   /** 版本号（与 template 的 currentVersion 对应） */

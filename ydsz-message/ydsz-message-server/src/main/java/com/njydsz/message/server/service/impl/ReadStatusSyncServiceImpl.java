@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +13,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
@@ -150,15 +149,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
           .message("通知 ID 和用户 ID 不能为空")
           .build();
     }
-    int updated =
-        msgNotificationRepository.update(
-            null,
-            new LambdaUpdateWrapper<MsgNotificationVO>()
-                .eq(MsgNotification::getId, notificationId)
-                .eq(MsgNotification::getReceiverId, userId)
-                .eq(MsgNotification::getReadStatus, 0)
-                .set(MsgNotification::getReadStatus, 1)
-                .set(MsgNotification::getReadTime, LocalDateTime.now()));
+    int updated = msgNotificationRepository.markRead(notificationId, userId);
 
     if (updated > 0) {
       realtimePushService.pushToUser(
@@ -184,17 +175,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (!StringUtils.hasText(userId)) {
       return 0;
     }
-    LambdaUpdateWrapper<MsgNotificationVO> wrapper =
-        new LambdaUpdateWrapper<MsgNotificationVO>()
-            .eq(MsgNotification::getReceiverId, userId)
-            .eq(MsgNotification::getReadStatus, 0)
-            .eq(MsgNotification::getRecallStatus, "NONE")
-            .set(MsgNotification::getReadStatus, 1)
-            .set(MsgNotification::getReadTime, LocalDateTime.now());
-    if (StringUtils.hasText(bizType)) {
-      wrapper.eq(MsgNotification::getBizType, bizType);
-    }
-    int updated = msgNotificationRepository.update(null, wrapper);
+    int updated = msgNotificationRepository.markAllReadByBizType(userId, bizType);
     if (updated > 0) {
       realtimePushService.pushToUser(
           userId,
@@ -219,13 +200,11 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
       return 0;
     }
     // 站内通知未读数
-    Long notifCount =
-        msgNotificationRepository.selectCount(
-            new LambdaQueryWrapper<MsgNotificationVO>()
-                .eq(MsgNotification::getReceiverId, userId)
-                .eq(MsgNotification::getReadStatus, 0)
-                .eq(MsgNotification::getRecallStatus, "NONE"));
-    return notifCount == null ? 0 : notifCount;
+    NotificationQueryDTO query = new NotificationQueryDTO();
+    query.setReceiverId(userId);
+    query.setReadStatus(0);
+    query.setRecallStatus("NONE");
+    return msgNotificationRepository.count(query);
   }
 
   /**

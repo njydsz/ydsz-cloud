@@ -40,7 +40,7 @@ import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_social_account")
+@TableName("ydsz_auth_social_account")
 public class SocialAccount extends MpBaseEntity<String> {
 
   /** 关联用户 ID（关联 {@code ydsz_user_account.id}） */

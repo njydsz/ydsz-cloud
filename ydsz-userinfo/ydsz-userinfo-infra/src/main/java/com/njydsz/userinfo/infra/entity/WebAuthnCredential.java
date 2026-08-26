@@ -12,13 +12,13 @@ import lombok.Data;
 /**
  * WebAuthn 凭证持久化实体
  *
- * <p>对应数据库表 ydsz_user_credential，存储用户注册的公钥凭证。
+ * <p>对应数据库表 ydsz_auth_credential，存储用户注册的公钥凭证。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-@TableName("ydsz_user_credential")
+@TableName("ydsz_auth_credential")
 public class WebAuthnCredential implements Serializable {
 
   private static final long serialVersionUID = 1L;

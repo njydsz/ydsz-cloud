@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_saml_idp_config")
+@TableName("ydsz_idp_saml_config")
 public class SamlIdpConfig extends MpBaseEntity<String> {
 
   /** IdP 显示名称（如 "企业微信 SAML"、"飞书 SAML"） */

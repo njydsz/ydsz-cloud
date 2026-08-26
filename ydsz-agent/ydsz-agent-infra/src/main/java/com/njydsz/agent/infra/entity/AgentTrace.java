@@ -7,9 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Agent 执行链路（映射 ydsz_agent_trace 表）
+ * Agent 执行链路（映射 ydsz_agt_trace 表）
  *
- * <p>记录一次 Agent 执行的完整元数据，包括所属对话、Agent 类型、执行状态与总耗时。 步骤明细存储在 {@code ydsz_agent_trace_step} 表中，通过
+ * <p>记录一次 Agent 执行的完整元数据，包括所属对话、Agent 类型、执行状态与总耗时。 步骤明细存储在 {@code ydsz_agt_trace_step} 表中，通过
  * {@code traceId} 关联。
  *
  * <p><b>线程安全</b>：持久化实体，可变；仅在单请求/单事务内使用，勿跨线程共享。
@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("ydsz_agent_trace")
+@TableName("ydsz_agt_trace")
 public class AgentTrace {
 
   /** 链路唯一 ID（主键，业务生成非自增） */

@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 部门实体
  *
- * <p>对应数据库表 {@code ydsz_department}，存储组织架构的部门节点，支持无限级树形结构。 部门是组织维度（区别于角色维度的「权限点」），与用户通过 {@link
+ * <p>对应数据库表 {@code ydsz_org_department}，存储组织架构的部门节点，支持无限级树形结构。 部门是组织维度（区别于角色维度的「权限点」），与用户通过 {@link
  * UserDept} 中间表关联。
  *
  * <p><b>核心字段：</b>
@@ -40,7 +40,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_department")
+@TableName("ydsz_org_department")
 public class Department extends MpBaseEntity<String> {
 
   /** 父部门 ID，根节点为 {@code "0"}，支持无限级树形结构 */

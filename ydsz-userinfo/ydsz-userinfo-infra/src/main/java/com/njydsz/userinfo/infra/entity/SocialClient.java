@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 社交平台客户端配置实体（P1-1 热更新）。
  *
- * <p>对应数据库表 {@code ydsz_social_client}，存储社交平台 OAuth2 应用的客户端配置。
+ * <p>对应数据库表 {@code ydsz_auth_social_client}，存储社交平台 OAuth2 应用的客户端配置。
  * 配置优先从数据库加载（热更新），数据库未配置时回落到 {@code application.yml} 的 {@code ydsz.userinfo.social.providers}。
  *
  * <p><b>索引设计：</b>
@@ -34,7 +34,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_social_client")
+@TableName("ydsz_auth_social_client")
 public class SocialClient extends MpBaseEntity<String> {
 
   /** 平台标识（如 GITHUB/DINGTALK/ENTERPRISE_WECHAT/FEISHU） */

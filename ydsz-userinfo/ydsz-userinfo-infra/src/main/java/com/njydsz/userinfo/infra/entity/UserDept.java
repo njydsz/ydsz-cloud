@@ -49,7 +49,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_user_dept")
+@TableName("ydsz_acct_user_dept")
 public class UserDept extends MpBaseEntity<String> {
 
   /** 用户 ID，关联 {@link UserAccount#getId()} */

@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * Token 用量记录（映射 ydsz_agent_token_usage 表）
+ * Token 用量记录（映射 ydsz_agt_token_usage 表）
  *
  * <p>记录每次 LLM 调用的 Token 消耗明细，用于成本核算与用量分析。 每次 LLM 调用完成后异步写入，按 conversationId + createdAt 建立索引。
  *
@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_agent_token_usage")
+@TableName("ydsz_agt_token_usage")
 public class TokenUsageRecord extends MpBaseEntity<String> {
 
   /** 所属对话 ID（关联 ydsz_agent_conversation） */

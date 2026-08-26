@@ -13,9 +13,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 
 /**
- * 租户主表实体
+  * 租户主表实体
  *
- * <p>对应数据库表 {@code ydsz_tenant}，SaaS 多租户核心元数据。 租户是平台上的最小业务隔离单位，每个租户拥有独立的用户、角色、权限和数据隔离边界。
+ * <p>对应数据库表 {@code ydsz_sys_tenant}，SaaS 多租户核心元数据。 租户是平台上的最小业务隔离单位，每个租户拥有独立的用户、角色、权限和数据隔离边界。
  *
  * <p><b>多租户隔离策略：</b>
  *
@@ -41,7 +41,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_tenant")
+@TableName("ydsz_sys_tenant")
 public class Tenant extends MpBaseEntity<String> {
 
   /** 租户编码（唯一业务标识，租户登录/调用使用） */
@@ -71,7 +71,7 @@ public class Tenant extends MpBaseEntity<String> {
   /** 备注 */
   private String remark;
 
-  /** 启用状态值（与 ydsz_tenant.status 列约定一致） */
+  /** 启用状态值（与 ydsz_sys_tenant.status 列约定一致） */
   private static final String STATUS_ENABLED = "ENABLED";
 
   /**

@@ -13,9 +13,9 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 
 
 /**
- * 系统配置实体
+  * 系统配置实体
  *
- * <p>对应数据库表 {@code ydsz_config}，存储系统级配置项。 支持按分组分类、按配置键查找，公开/私有配置区分，多种值类型（字符串/数字/布尔/JSON）。 运行时可通过
+ * <p>对应数据库表 {@code ydsz_sys_config}，存储系统级配置项。 支持按分组分类、按配置键查找，公开/私有配置区分，多种值类型（字符串/数字/布尔/JSON）。 运行时可通过
  * {@code ConfigClient} 监听配置变更（基于 Nacos long-polling）。
  *
  * <p><b>充血模型能力：</b>
@@ -49,7 +49,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_config")
+@TableName("ydsz_sys_config")
 public class Config extends MpBaseEntity<String> {
 
   /** 配置分组（用于按业务域分类管理配置） */

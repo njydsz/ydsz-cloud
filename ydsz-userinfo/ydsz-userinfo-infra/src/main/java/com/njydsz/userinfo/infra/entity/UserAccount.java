@@ -21,7 +21,7 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
 /**
  * 用户账号实体
  *
- * <p>对应数据库表 {@code ydsz_user_account}，存储系统用户账号信息。是用户中心服务的核心实体，被各业务模块通过 Feign 远程查询。
+ * <p>对应数据库表 {@code ydsz_acct_user}，存储系统用户账号信息。是用户中心服务的核心实体，被各业务模块通过 Feign 远程查询。
  *
  * <p><b>安全敏感字段：</b>
  *
@@ -53,7 +53,7 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_user_account")
+@TableName("ydsz_acct_user")
 @SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 public class UserAccount extends MpBaseEntity<String> {
 

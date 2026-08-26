@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 菜单/权限实体
  *
- * <p>对应数据库表 {@code ydsz_menu}，存储系统菜单与权限点。 菜单是 RBAC 模型中最细粒度的「权限点」，既可以表示前端路由节点，也可以表示后端接口权限码。
+ * <p>对应数据库表 {@code ydsz_rbac_menu}，存储系统菜单与权限点。 菜单是 RBAC 模型中最细粒度的「权限点」，既可以表示前端路由节点，也可以表示后端接口权限码。
  *
  * <p><b>核心字段：</b>
  *
@@ -47,7 +47,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_menu")
+@TableName("ydsz_rbac_menu")
 public class Menu extends MpBaseEntity<String> {
 
   /** 父菜单 ID，根节点为 {@code "0"}，支持无限级树形结构 */

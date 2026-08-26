@@ -76,6 +76,9 @@ public class JobVO implements Serializable {
   /** 超时时间（毫秒） */
   private Long timeoutMs;
 
+  /** SLA 达标阈值（毫秒） */
+  private Long slaMs;
+
   /** 慢任务阈值（毫秒） */
   private Long slowThresholdMs;
 

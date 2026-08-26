@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 岗位实体
  *
- * <p>对应数据库表 {@code ydsz_post}，存储组织中的「岗位」节点（区别于部门、角色）。 岗位是「职责维度」，描述「这个人做什么事」（如 PM、DEV、QA、SA），
+ * <p>对应数据库表 {@code ydsz_rbac_post}，存储组织中的「岗位」节点（区别于部门、角色）。 岗位是「职责维度」，描述「这个人做什么事」（如 PM、DEV、QA、SA），
  * 而角色是「权限维度」，描述「这个人能做什么」。
  *
  * <p><b>岗位 vs 部门 vs 角色：</b>
@@ -44,7 +44,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_post")
+@TableName("ydsz_rbac_post")
 public class Post extends MpBaseEntity<String> {
 
   /** 岗位名称（前端展示，如「项目经理」「后端开发工程师」） */

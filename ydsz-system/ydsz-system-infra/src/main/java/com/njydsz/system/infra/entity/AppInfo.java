@@ -10,9 +10,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 
 /**
- * 应用信息实体
+  * 应用信息实体
  *
- * <p>对应数据库表 {@code ydsz_app_info}，存储 OAuth2 客户端应用注册信息。 每个接入方（ISV / 第三方系统 / 内部子应用）需先注册一条 AppInfo
+ * <p>对应数据库表 {@code ydsz_sys_app_info}，存储 OAuth2 客户端应用注册信息。 每个接入方（ISV / 第三方系统 / 内部子应用）需先注册一条 AppInfo
  * 记录获取 {@code clientId} / {@code clientSecret}，再通过 {@code /oauth2/token} 端点 换取访问令牌。
  *
  * <p><b>字段语义澄清（P1-7）：</b>
@@ -42,7 +42,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_app_info")
+@TableName("ydsz_sys_app_info")
 public class AppInfo extends MpBaseEntity<String> {
 
   /** 应用业务编码（对外展示 / 业务标识，全局唯一） */

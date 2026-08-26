@@ -10,9 +10,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 
 /**
- * 字典类型实体
+  * 字典类型实体
  *
- * <p>对应数据库表 {@code ydsz_dict_type}，存储数据字典分类信息。 字典类型用于对系统中的枚举/常量进行统一管理（如性别、状态、级别、地区代码等）， 配合 {@link
+ * <p>对应数据库表 {@code ydsz_sys_dict_type}，存储数据字典分类信息。 字典类型用于对系统中的枚举/常量进行统一管理（如性别、状态、级别、地区代码等）， 配合 {@link
  * DictItem} 形成两级字典体系：
  *
  * <pre>
@@ -35,7 +35,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_dict_type")
+@TableName("ydsz_sys_dict_type")
 public class DictType extends MpBaseEntity<String> {
 
   /** 类型编码（唯一标识，用于业务引用） */

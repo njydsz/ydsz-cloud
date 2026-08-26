@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 用户-角色关联实体
  *
- * <p>对应数据库表 {@code ydsz_user_role}，是 RBAC 模型中连接用户与角色的多对多中间表。 一个用户可拥有多个角色（叠加权限），一个角色可被分配给多个用户。
+ * <p>对应数据库表 {@code ydsz_acct_user_role}，是 RBAC 模型中连接用户与角色的多对多中间表。 一个用户可拥有多个角色（叠加权限），一个角色可被分配给多个用户。
  *
  * <p><b>设计要点：</b>
  *
@@ -44,7 +44,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_user_role")
+@TableName("ydsz_acct_user_role")
 public class UserRole extends MpBaseEntity<String> {
 
   /** 用户 ID，关联 {@code UserAccount.id} */

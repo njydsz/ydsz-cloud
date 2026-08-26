@@ -10,9 +10,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 
 /**
- * 租户套餐实体
+  * 租户套餐实体
  *
- * <p>对应数据库表 {@code ydsz_tenant_plan}，定义 SaaS 多租户体系下的<b>套餐/订阅计划</b>。 一个套餐对应一组「功能菜单 + 资源配额 + 计费规则」，供
+ * <p>对应数据库表 {@code ydsz_sys_tenant_plan}，定义 SaaS 多租户体系下的<b>套餐/订阅计划</b>。 一个套餐对应一组「功能菜单 + 资源配额 + 计费规则」，供
  * {@link Tenant#getPlanId()} 引用。
  *
  * <p><b>典型使用：</b>
@@ -44,7 +44,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_tenant_plan")
+@TableName("ydsz_sys_tenant_plan")
 public class TenantPlan extends MpBaseEntity<String> {
 
   /** 套餐编码（唯一标识，如 {@code TRIAL} / {@code STANDARD} / {@code ENTERPRISE}） */

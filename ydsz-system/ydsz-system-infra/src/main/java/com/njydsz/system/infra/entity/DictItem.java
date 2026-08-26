@@ -10,14 +10,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 
 /**
- * 字典项实体
+  * 字典项实体
  *
- * <p>对应数据库表 {@code ydsz_dict_item}，字段与 DDL 完全对齐。 字典项是字典类型的具体枚举值，每条记录属于某个 {@link DictType}。
+ * <p>对应数据库表 {@code ydsz_sys_dict_item}，字段与 DDL 完全对齐。 字典项是字典类型的具体枚举值，每条记录属于某个 {@link DictType}。
  *
  * <p><b>字段说明：</b>
  *
  * <ul>
- *   <li>{@code typeCode}：所属字典类型编码（逻辑外键，对应 {@code ydsz_dict_type.type_code}）
+ *   <li>{@code typeCode}：所属字典类型编码（逻辑外键，对应 {@code ydsz_sys_dict_type.type_code}）
  *   <li>{@code itemCode}：字典项编码（同 typeCode 内唯一）
  *   <li>{@code itemValue}：字典项真实值（业务代码引用的值，如 {@code "PAID"}）
  *   <li>{@code sortOrder}：展示排序序号
@@ -38,7 +38,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_dict_item")
+@TableName("ydsz_sys_dict_item")
 public class DictItem extends MpBaseEntity<String> {
 
   /** 所属字典类型编码（逻辑外键 → {@code ydsz_dict_type.type_code}） */

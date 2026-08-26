@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * Agent 定义（映射 ydsz_agent_definition 表）
+ * Agent 定义（映射 ydsz_agt_definition 表）
  *
  * <p>存储 Agent 的完整配置信息，包括类型、系统提示词、绑定工具、模型参数等。
  *
@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_agent_definition")
+@TableName("ydsz_agt_definition")
 public class AgentDefinition extends MpBaseEntity<String> {
 
   /** Agent 编码（业务唯一键） */

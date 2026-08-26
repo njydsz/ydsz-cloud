@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 角色-权限关联实体
  *
- * <p>对应数据库表 {@code ydsz_role_permission}，是 RBAC 模型中连接角色与权限的多对多中间表。 「权限」在系统中由 {@link
+ * <p>对应数据库表 {@code ydsz_rbac_role_permission}，是 RBAC 模型中连接角色与权限的多对多中间表。 「权限」在系统中由 {@link
  * Menu#getPermissionCode()} 表示（{@code "system:user:create"} 格式）， 既可以是菜单级权限，也可以是按钮级权限。
  *
  * <p><b>设计要点：</b>
@@ -46,7 +46,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_role_permission")
+@TableName("ydsz_rbac_role_permission")
 public class RolePermission extends MpBaseEntity<String> {
 
   /** 角色 ID，关联 {@link Role#getId()} */

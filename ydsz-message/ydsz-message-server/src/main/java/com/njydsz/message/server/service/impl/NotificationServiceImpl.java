@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +17,10 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.constant.SystemConstants;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
@@ -87,7 +88,11 @@ public class NotificationServiceImpl implements NotificationService {
     // 分批批量 insert（防止单条 SQL 参数超过 PG 65535 上限）
     for (int i = 0; i < entities.size(); i += INSERT_BATCH_SIZE) {
       int to = Math.min(i + INSERT_BATCH_SIZE, entities.size());
-      msgNotificationRepository.insertBatch(entities.subList(i, to));
+      List<MsgNotificationDTO> batch = new ArrayList<>(to - i);
+      for (MsgNotificationVO vo : entities.subList(i, to)) {
+        batch.add(voToDto(vo));
+      }
+      msgNotificationRepository.saveBatch(batch);
     }
     // 批量 insert 完成后再循环做 index + push（entity.id 已有值）
     for (int i = 0; i < entities.size(); i++) {
@@ -115,22 +120,21 @@ public class NotificationServiceImpl implements NotificationService {
           .message("用户 ID 不能为空")
           .build();
     }
+    NotificationQueryDTO effectiveQuery = query != null ? query : new NotificationQueryDTO();
+    effectiveQuery.setReceiverId(userId);
+    effectiveQuery.setPageNum(effectiveQuery.getPageNum() != null ? effectiveQuery.getPageNum() : 1);
+    effectiveQuery.setPageSize(
+        Math.min(
+            effectiveQuery.getPageSize() != null ? effectiveQuery.getPageSize() : 10,
+            PageConstants.MAX_PAGE_SIZE));
+    PageResponse<List<MsgNotificationVO>> response = msgNotificationRepository.findPage(effectiveQuery);
     Page<MsgNotificationVO> page =
         new Page<>(
-            query == null ? 1 : query.getPageNum(),
-            Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    LambdaQueryWrapper<MsgNotificationVO> w =
-        new LambdaQueryWrapper<MsgNotificationVO>().eq(MsgNotification::getReceiverId, userId);
-    if (query != null) {
-      w.eq(
-          StringUtils.hasText(query.getCategory()),
-          MsgNotification::getCategory,
-          query.getCategory());
-      w.eq(StringUtils.hasText(query.getLevel()), MsgNotification::getLevel, query.getLevel());
-      w.eq(query.getReadStatus() != null, MsgNotification::getReadStatus, query.getReadStatus());
-    }
-    w.orderByDesc(MsgNotification::getCreatedAt);
-    return msgNotificationRepository.selectPage(page, w);
+            response.getPageNum().intValue(),
+            response.getPageSize().intValue(),
+            response.getTotal());
+    page.setRecords(response.getData() != null ? response.getData() : new ArrayList<>());
+    return page;
   }
 
   @Override
@@ -188,11 +192,10 @@ public class NotificationServiceImpl implements NotificationService {
       return;
     }
     // P2-7: 批量查询替代逐条 selectById，减少 N 次 DB 往返
-    List<MsgNotificationVO> notifications =
-        msgNotificationRepository.selectList(
-            new LambdaQueryWrapper<MsgNotificationVO>()
-                .in(MsgNotification::getId, ids)
-                .eq(MsgNotification::getReceiverId, userId));
+    NotificationQueryDTO query = new NotificationQueryDTO();
+    query.setIds(ids);
+    query.setReceiverId(userId);
+    List<MsgNotificationVO> notifications = msgNotificationRepository.findList(query);
     for (MsgNotificationVO n : notifications) {
       // P2-18: 移除全文搜索索引
       notificationSearchService.removeIndex(userId, n.getId(), n.getTitle(), n.getContent());
@@ -248,12 +251,11 @@ public class NotificationServiceImpl implements NotificationService {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(messageGroup)) {
       return List.of();
     }
-    return msgNotificationRepository.selectList(
-        new LambdaQueryWrapper<MsgNotificationVO>()
-            .eq(MsgNotification::getReceiverId, userId)
-            .eq(MsgNotification::getMessageGroup, messageGroup)
-            .eq(MsgNotification::getTenantId, TenantContextHolder.getTenantId())
-            .orderByDesc(MsgNotification::getCreatedAt));
+    NotificationQueryDTO query = new NotificationQueryDTO();
+    query.setReceiverId(userId);
+    query.setMessageGroup(messageGroup);
+    query.setTenantId(TenantContextHolder.getTenantId());
+    return msgNotificationRepository.findList(query);
   }
 
   private List<String> resolveReceiverIds(NotificationSendDTO dto) {
@@ -268,6 +270,45 @@ public class NotificationServiceImpl implements NotificationService {
           .build();
     }
     return receiverIds;
+  }
+
+  /**
+   * 将通知 VO 转换为 DTO（用于 Repository 层 CUD 操作）。
+   *
+   * @param vo 通知 VO
+   * @return 通知 DTO
+   */
+  private MsgNotificationDTO voToDto(MsgNotificationVO vo) {
+    MsgNotificationDTO dto = new MsgNotificationDTO();
+    dto.setId(vo.getId());
+    dto.setTitle(vo.getTitle());
+    dto.setContent(vo.getContent());
+    dto.setLevel(vo.getLevel());
+    dto.setCategory(vo.getCategory());
+    dto.setPriority(vo.getPriority());
+    dto.setSenderId(vo.getSenderId());
+    dto.setReceiverId(vo.getReceiverId());
+    dto.setBizType(vo.getBizType());
+    dto.setBizId(vo.getBizId());
+    dto.setMessageGroup(vo.getMessageGroup());
+    dto.setBatchId(vo.getBatchId());
+    dto.setActionUrl(vo.getActionUrl());
+    dto.setActionText(vo.getActionText());
+    dto.setIcon(vo.getIcon());
+    dto.setExtra(vo.getExtra());
+    dto.setSourceModule(vo.getSourceModule());
+    dto.setReadStatus(vo.getReadStatus());
+    dto.setReadTime(vo.getReadTime());
+    dto.setRecallStatus(vo.getRecallStatus());
+    dto.setRecallAt(vo.getRecallAt());
+    dto.setExpiredAt(vo.getExpiredAt());
+    dto.setMentionUserIds(vo.getMentionUserIds());
+    dto.setStatus(vo.getStatus());
+    dto.setCreatedBy(vo.getCreatedBy());
+    dto.setCreatedAt(vo.getCreatedAt());
+    dto.setUpdatedBy(vo.getUpdatedBy());
+    dto.setUpdatedAt(vo.getUpdatedAt());
+    return dto;
   }
 
   private MsgNotificationVO buildEntity(NotificationSendDTO dto, String receiverId) {

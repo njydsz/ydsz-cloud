@@ -50,7 +50,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_user_post")
+@TableName("ydsz_acct_user_post")
 public class UserPost extends MpBaseEntity<String> {
 
   /** 用户 ID，关联 {@link UserAccount#getId()} */

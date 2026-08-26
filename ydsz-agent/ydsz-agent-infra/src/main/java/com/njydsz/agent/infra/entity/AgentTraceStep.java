@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Agent 执行链路步骤（映射 ydsz_agent_trace_step 表）
+ * Agent 执行链路步骤（映射 ydsz_agt_trace_step 表）
  *
  * <p>记录 Agent 执行过程中的单个步骤，如 LLM 调用、工具执行、意图路由等。 输入/输出以 JSON 字符串存储，支持回放与调试。
  *
@@ -20,10 +20,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("ydsz_agent_trace_step")
+@TableName("ydsz_agt_trace_step")
 public class AgentTraceStep {
 
-  /** 链路 ID（关联 ydsz_agent_trace.traceId） */
+  /** 链路 ID（关联 ydsz_agt_trace.traceId） */
   private String traceId;
 
   /** 步骤序号（从 0 开始递增） */

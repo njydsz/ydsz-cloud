@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 语言配置实体
  *
- * <p>对应数据库表 {@code ydsz_language}，存储系统支持的语言种类及默认语言标识。 用于前端 i18n 国际化与后端消息文案回退链。
+ * <p>对应数据库表 {@code ydsz_acct_user_language}，存储系统支持的语言种类及默认语言标识。 用于前端 i18n 国际化与后端消息文案回退链。
  *
  * <p><b>核心字段：</b>
  *
@@ -41,7 +41,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_language")
+@TableName("ydsz_acct_user_language")
 public class Language extends MpBaseEntity<String> {
 
   /**

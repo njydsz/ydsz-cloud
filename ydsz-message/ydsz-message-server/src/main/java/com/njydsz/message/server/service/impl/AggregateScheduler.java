@@ -3,8 +3,6 @@ package com.njydsz.message.server.service.impl.batch;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
+import com.njydsz.message.domain.query.MsgAggregateQuery;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.server.service.batch.AggregateService;
@@ -61,20 +60,18 @@ public class AggregateScheduler {
   /** 执行聚合批次扫描与发送。 */
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
-    List<MsgAggregateVO> due =
-        msgAggregateRepository.selectList(
-            new LambdaQueryWrapper<MsgAggregateVO>()
-                .eq(MsgAggregateVO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
-                .le(MsgAggregateVO::getScheduledSendAt, now));
+    MsgAggregateQuery dueQuery = new MsgAggregateQuery();
+    dueQuery.setBatchStatus(AggregateBatchStatusEnum.PENDING.name());
+    dueQuery.setScheduledSendAtBefore(now);
+    List<MsgAggregateVO> due = msgAggregateRepository.findList(dueQuery);
     if (due.isEmpty()) {
       return;
     }
     for (MsgAggregateVO batch : due) {
-      msgAggregateRepository.update(
-          new LambdaUpdateWrapper<MsgAggregateVO>()
-              .eq(MsgAggregateVO::getId, batch.getId())
-              .eq(MsgAggregateVO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
-              .set(MsgAggregateVO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
+      msgAggregateRepository.updateStatus(
+          batch.getId(),
+          AggregateBatchStatusEnum.PENDING.name(),
+          AggregateBatchStatusEnum.READY.name());
     }
     int sent = aggregateService.flushDue();
     log.debug("[AggregateScheduler] 流转 {} 个到期批次,发送 {} 个", due.size(), sent);

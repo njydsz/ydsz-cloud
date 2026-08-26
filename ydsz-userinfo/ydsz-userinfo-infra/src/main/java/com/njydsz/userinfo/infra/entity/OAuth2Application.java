@@ -32,7 +32,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName(value = "ydsz_oauth2_application", autoResultMap = true)
+@TableName(value = "ydsz_idp_oauth2_application", autoResultMap = true)
 public class OAuth2Application extends MpBaseEntity<String> {
 
   /** 客户端 ID（唯一标识） */

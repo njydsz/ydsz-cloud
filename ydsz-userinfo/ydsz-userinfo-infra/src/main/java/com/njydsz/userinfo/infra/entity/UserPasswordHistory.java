@@ -36,7 +36,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@TableName("ydsz_user_password_history")
+@TableName("ydsz_acct_password_history")
 @SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 public class UserPasswordHistory {
 
