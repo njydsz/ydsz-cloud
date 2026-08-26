@@ -6,7 +6,7 @@ import com.njydsz.common.exception.custom.SysException;
  * 告警发送异常（P5 告警 + 监控）。
  *
  * <p>由 {@link AlertDispatcher} 实现类在发送失败时抛出，由 {@link AlertDispatcher} 捕获并记录到 {@code
- * ydsz_job_alert_log.error_message}。
+ * ydsz_alert_dispatch.error_message}（P3-1-merge）。
  *
  * <p>继承 {@link SysException}，纳入 common-exception 统一异常体系， 支持统一错误码、ProblemDetail (RFC
  * 7807)、i18n、异常监控等能力。 原为 checked exception（extends Exception），现改为 unchecked（extends

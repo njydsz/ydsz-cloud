@@ -14,7 +14,7 @@ import com.njydsz.cronjob.infra.entity.job.JobAlertLog;
 /**
  * 任务告警日志 Mapper
  *
- * <p>对应数据表 <code>ydsz_job_alert_log</code>。
+ * <p>对应数据表 <code>ydsz_alert_dispatch</code>（P3-1-merge：原 ydsz_job_alert_log 已合并至此表，source_type='CRONJOB'）。
  *
  * <p>告警日志记录每次触发的告警（任务、规则、触发时间、推送渠道、推送结果），用于告警审计与统计。
  *

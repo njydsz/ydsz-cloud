@@ -134,24 +134,6 @@ public class ConsistentHashSharder {
     return owner != null && nodeId != null && nodeId.equals(owner.getNodeId());
   }
 
-  /**
-   * 判断 key 是否属于当前节点（直接传节点列表，避免重建环）
-   *
-   * <p>适用于不想维护环状态的场景（如无状态调用）。
-      * @param key 参数说明
-   * @param nodeId 参数说明
-   * @param nodes 参数说明
-   * @return 返回值说明
-   */
-  public static boolean isMine(String key, String nodeId, List<ClusterNode> nodes) {
-    if (nodes == null || nodes.isEmpty() || nodeId == null || key == null) {
-      return true; // 无节点信息时默认本地执行
-    }
-    // 简化版：对 key 做 hash，模 nodes.size()
-    int idx = (int) (Math.abs(hash0(key)) % nodes.size());
-    return nodeId.equals(nodes.get(idx).getNodeId());
-  }
-
   /** 获取当前环上的节点数量
    * @return 返回值说明
    */
