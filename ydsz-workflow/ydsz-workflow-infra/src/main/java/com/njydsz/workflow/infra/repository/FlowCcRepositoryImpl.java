@@ -73,7 +73,7 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
     return converter.flowCcListToVO(
         ccMapper.selectList(
             new LambdaQueryWrapper<FlowCc>()
-                .eq(FlowCc::getReceiverId, receiverId)
+                .eq(FlowCc::getCcUserId, receiverId)
                 .eq(FlowCc::getDeleted, 0)
                 .orderByDesc(FlowCc::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));

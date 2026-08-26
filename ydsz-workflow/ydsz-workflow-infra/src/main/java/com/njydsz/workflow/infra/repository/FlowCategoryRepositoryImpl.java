@@ -69,7 +69,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
     return categoryMapper
         .selectList(
             new LambdaQueryWrapper<FlowCategory>()
-                .eq(FlowCategory::getCode, code)
+                .eq(FlowCategory::getCategoryCode, code)
                 .eq(FlowCategory::getDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
@@ -84,7 +84,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
             new LambdaQueryWrapper<FlowCategory>()
                 .eq(tenantId != null, FlowCategory::getTenantId, tenantId)
                 .eq(FlowCategory::getDeleted, 0)
-                .orderByAsc(FlowCategory::getSortOrder)));
+                .orderByAsc(FlowCategory::getSortNum)));
   }
 
   @Override
@@ -94,7 +94,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
             new LambdaQueryWrapper<FlowCategory>()
                 .eq(FlowCategory::getParentId, parentId)
                 .eq(FlowCategory::getDeleted, 0)
-                .orderByAsc(FlowCategory::getSortOrder)));
+                .orderByAsc(FlowCategory::getSortNum)));
   }
 
   @Override

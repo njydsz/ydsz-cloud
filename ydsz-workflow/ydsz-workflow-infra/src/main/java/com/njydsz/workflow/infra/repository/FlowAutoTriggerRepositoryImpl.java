@@ -56,7 +56,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
     return converter.flowAutoTriggerListToVO(
         autoTriggerMapper.selectList(
             new LambdaQueryWrapper<FlowAutoTrigger>()
-                .eq(FlowAutoTrigger::getFlowCode, flowCode)
+                .eq(FlowAutoTrigger::getSourceFlowCode, flowCode)
                 .eq(FlowAutoTrigger::getDeleted, 0)));
   }
 
@@ -65,7 +65,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
     return converter.flowAutoTriggerListToVO(
         autoTriggerMapper.selectList(
             new LambdaQueryWrapper<FlowAutoTrigger>()
-                .eq(FlowAutoTrigger::getTriggerType, triggerType)
+                .eq(FlowAutoTrigger::getConditionExpression, triggerType)
                 .eq(FlowAutoTrigger::getDeleted, 0)));
   }
 

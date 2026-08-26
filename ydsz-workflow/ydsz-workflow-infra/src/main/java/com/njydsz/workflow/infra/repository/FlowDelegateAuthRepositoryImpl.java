@@ -57,7 +57,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
             new LambdaQueryWrapper<FlowDelegateAuth>()
-                .eq(FlowDelegateAuth::getDelegatorId, delegatorId)
+                .eq(FlowDelegateAuth::getOwnerUserId, delegatorId)
                 .eq(FlowDelegateAuth::getDeleted, 0)));
   }
 
@@ -66,7 +66,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
     return converter.flowDelegateAuthListToVO(
         delegateAuthMapper.selectList(
             new LambdaQueryWrapper<FlowDelegateAuth>()
-                .eq(FlowDelegateAuth::getDelegatorId, delegatorId)
+                .eq(FlowDelegateAuth::getOwnerUserId, delegatorId)
                 .eq(FlowDelegateAuth::getFlowCode, flowCode)
                 .eq(FlowDelegateAuth::getDeleted, 0)));
   }

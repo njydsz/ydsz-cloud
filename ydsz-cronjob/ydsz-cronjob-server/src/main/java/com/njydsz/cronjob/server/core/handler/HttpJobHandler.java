@@ -23,7 +23,7 @@ import com.njydsz.cronjob.server.config.HttpConfig;
  * HTTP 任务处理器（P1-5）。
  *
  * <p>支持 {@code jobType=HTTP} 的任务，通过 HTTP 调用外部 API 执行业务逻辑。
- * 任务处理器。
+ * 任务处理。
  *
  * <h3>paramsJson 格式</h3>
  *

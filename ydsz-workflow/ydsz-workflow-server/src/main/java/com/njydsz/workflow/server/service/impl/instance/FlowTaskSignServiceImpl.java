@@ -150,7 +150,7 @@ public class FlowTaskSignServiceImpl {
   /**
    * 后加签：在当前审批人通过后、下一节点前插入临时审批人
    *
-   * <p>对标钉钉 / 飞书「后加签」功能。<b>关键实现：</b>
+   * <p>后加签功能。<b>关键实现：</b>
    *
    * <ol>
    *   <li>向 {@code ydsz_flow_user} 插入新审批人（{@code signType=AFTER}）
@@ -211,7 +211,7 @@ public class FlowTaskSignServiceImpl {
   /**
    * GAP-P0-3: 并加签 — 动态追加审批人与原审批人并行审批，所有人审完后才推进。
    * 
-   * <p>对标钉钉/飞书"并加签"。实现方式：
+   * <p>并加签实现方式：
    * 
    * <ol>
    * <li>向 ydsz_flow_user 插入新审批人（signType=PARALLEL，processed=0）
@@ -268,7 +268,7 @@ public class FlowTaskSignServiceImpl {
   /**
    * 减签：从会签任务中移除指定审批人
    *
-   * <p>对标钉钉 / 飞书「减签」功能。执行链路：
+   * <p>减签功能。执行链路：
    *
    * <ol>
    *   <li>校验任务状态（<b>未完成</b>）
@@ -325,7 +325,7 @@ public class FlowTaskSignServiceImpl {
   /**
    * 已阅：标记任务已阅（<b>不改变</b>任务状态，仅记录审计日志）
    *
-   * <p>对标钉钉 / 飞书「已阅」功能。适用于「审批人收到待办后先查看详情，但暂不操作」的场景。 区别于「标记已读」（消息中心），这里是「任务已阅」（审批中心）。
+   * <p>已阅功能。适用于「审批人收到待办后先查看详情，但暂不操作」的场景。 区别于「标记已读」（消息中心），这里是「任务已阅」（审批中心）。
    *
    * @param taskId 任务 ID
    * @param userId 操作人 ID
@@ -364,7 +364,7 @@ public class FlowTaskSignServiceImpl {
   /**
    * 暂存待审：审批人保存审批意见草稿（<b>不改变</b>任务主状态）
    *
-   * <p>对标飞书 / 钉钉审批的「暂存」功能。审批人可以在不确定是否通过 / 驳回时， 先填写意见保存为草稿，事后再次打开任务时自动回填意见，避免重复填写。
+   * <p>暂存功能。审批人可以在不确定是否通过 / 驳回时， 先填写意见保存为草稿，事后再次打开任务时自动回填意见，避免重复填写。
    *
    * <p>任务状态保持 {@code PENDING/CLAIMED} 不变，写审计日志记录 {@code SAVE_DRAFT} 操作。
    *
@@ -391,7 +391,7 @@ public class FlowTaskSignServiceImpl {
   /**
    * 追加处理人：在已有会签任务中追加一个审批人
    *
-   * <p>对标 FlowLong 「追加处理人」功能。区别于「并加签」：
+   * <p>追加处理人功能。区别于「并加签」：
    *
    * <ul>
    *   <li>追加处理人：<b>不改变</b>{@code performType}，适用于「原会签模式追加」

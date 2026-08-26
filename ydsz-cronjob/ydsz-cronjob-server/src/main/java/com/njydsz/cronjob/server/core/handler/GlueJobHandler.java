@@ -173,7 +173,7 @@ public class GlueJobHandler implements JobHandler {
    *   <li>启用间接导入检查：防止通过反射等手段绕过白名单
    * </ul>
    *
-   * <p>对标 XXL-Job 的 GLUE 沙箱隔离和 PowerJob 的脚本安全策略。
+   * <p>GLUE 沙箱隔离和脚本安全策略。
    *
    * @return 配置好安全限制的 CompilerConfiguration
    */

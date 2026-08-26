@@ -60,7 +60,7 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
             new LambdaQueryWrapper<FlowHisTask>()
                 .eq(FlowHisTask::getInstanceId, instanceId)
                 .eq(FlowHisTask::getDeleted, 0)
-                .orderByDesc(FlowHisTask::getOperatedAt)));
+                .orderByDesc(FlowHisTask::getFinishAt)));
   }
 
   @Override

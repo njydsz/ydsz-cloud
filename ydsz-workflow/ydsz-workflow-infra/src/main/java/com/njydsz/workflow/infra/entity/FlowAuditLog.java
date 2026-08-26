@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 流程审计日志实体
@@ -64,7 +64,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_audit_log")
-public class FlowAuditLog extends MpBaseIdEntity<String> {
+public class FlowAuditLog extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 
