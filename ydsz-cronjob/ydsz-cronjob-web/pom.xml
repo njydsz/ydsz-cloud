@@ -16,6 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-cronjob-server</artifactId>
         </dependency>
+        <!-- 既有设计：JobWebhookController 使用 CronjobConverter 做 DTO↔VO 转换（DDD 分层待后续收敛到 server 层） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-cronjob-infra</artifactId>
+        </dependency>
         <!-- ydsz-common-domain: explicit declaration (InternalJobController uses MapContext/ProcessResult, was transitive via server→jdbc) -->
         <dependency>
             <groupId>com.njydsz</groupId>

@@ -17,7 +17,6 @@ import com.njydsz.workflow.domain.repository.FlowAutoTriggerRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingService;
@@ -86,9 +85,6 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /** 审计日志仓储，记录自动触发操作轨迹 */
   private final FlowAuditLogRepository auditLogRepository;
-
-  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 智能路由服务，解析触发条件表达式 */
   private final DefaultFlowRoutingService routingService;

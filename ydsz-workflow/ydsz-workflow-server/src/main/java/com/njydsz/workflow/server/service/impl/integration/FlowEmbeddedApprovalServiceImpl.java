@@ -24,7 +24,6 @@ import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -110,9 +109,6 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
 
   /** P2-2: 历史任务仓储（嵌入式审批面板加载审批轨迹） */
   private final FlowHisTaskRepository hisTaskRepository;
-
-  /** MapStruct 转换器（DO/VO/DTO 转换） */
-  private final WorkflowConverter converter;
 
   /** 操作人角色：发起人 */
   private static final String ROLE_INITIATOR = "INITIATOR";

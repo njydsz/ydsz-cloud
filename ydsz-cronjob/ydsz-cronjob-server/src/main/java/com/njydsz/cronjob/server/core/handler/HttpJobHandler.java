@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.server.core.handler;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -153,11 +154,18 @@ public class HttpJobHandler implements JobHandler {
       default -> throw new IllegalArgumentException("不支持的 HTTP 方法: " + method);
     }
 
-    // 执行请求
+    // 执行请求（IO/中断异常统一转为 JobExecutionException，保持执行失败语义）
     log.info(
         "[HttpJobHandler] 发送请求: method={} url={} timeoutMs={}", method, url, timeout.toMillis());
-    HttpResponse<String> response =
-        httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+    HttpResponse<String> response;
+    try {
+      response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+    } catch (IOException e) {
+      throw new JobExecutionException("HTTP 请求失败: " + url + " reason=" + e.getMessage(), e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new JobExecutionException("HTTP 请求被中断: " + url + " reason=" + e.getMessage(), e);
+    }
 
     int status = response.statusCode();
     String responseBody = response.body();

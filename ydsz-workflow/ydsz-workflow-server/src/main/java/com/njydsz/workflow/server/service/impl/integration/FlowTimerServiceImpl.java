@@ -24,7 +24,6 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -107,9 +106,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
   /** 流程节点仓储（domain 层契约），查询 boundaryEvent 节点配置 */
   private final FlowNodeRepository nodeRepository;
-
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 流程推进引擎，定时器触发后推进流程 */
   private final DefaultFlowAdvancer advancer;

@@ -10,7 +10,6 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
@@ -31,9 +30,6 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
 
   /** 运行时任务仓储，用于乐观锁更新 approveFinished 计数 */
   private final FlowRunTaskRepository taskRepository;
-
-  /** MapStruct 转换器（DO/VO/DTO 转换） */
-  private final WorkflowConverter converter;
 
   /** 任务归档服务，会签全部通过后完成 + 归档到历史表 */
   private final FlowTaskArchiveService archiveService;

@@ -45,7 +45,6 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
@@ -102,9 +101,6 @@ public class FlowInstanceLifecycleManager {
   private static final int BATCH_START_MAX_SIZE = 100;
 
   /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
-  /** entity/VO 转换器 */
-  private final WorkflowConverter converter;
-
   private final FlowInstanceRepository instanceRepository;
 
   /** 流程定义服务，启动实例时解析流程定义节点和跳转 */
@@ -855,7 +851,7 @@ public class FlowInstanceLifecycleManager {
     instance.setFlowStatus(FlowInstanceStatus.RUNNING.name());
     instance.setCurrentNodeCode(targetNodeCode);
     instance.setEndAt(null);
-    instanceRepository.save(converter.voToDto(instance));
+    instanceRepository.save(toDto(instance));
 
     // 6. 在目标节点创建新的待办任务
     FlowNodeVO targetNodeVO =
@@ -970,7 +966,7 @@ public class FlowInstanceLifecycleManager {
     instance.setEndAt(null);
     instance.setRejectReason(null);
     instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
-    instanceRepository.save(converter.voToDto(instance));
+    instanceRepository.save(toDto(instance));
     // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
     FlowAuditLogVO audit = new FlowAuditLogVO();
     audit.setInstanceId(instanceId);
@@ -1570,5 +1566,42 @@ public class FlowInstanceLifecycleManager {
       ctx.setTraceId(traceId);
     }
     return ctx;
+  }
+
+  /**
+   * 将流程实例 VO 转换为 DTO（用于 Repository 保存操作）。
+   *
+   * <p>DDD 分层规范：Service 层内部完成 VO→DTO 转换，避免依赖 infra 层转换器。
+   *
+   * @param vo 流程实例 VO
+   * @return 流程实例 DTO
+   */
+  private static FlowInstanceDTO toDto(FlowInstanceVO vo) {
+    FlowInstanceDTO dto = new FlowInstanceDTO();
+    dto.setId(vo.getId());
+    dto.setFlowCode(vo.getFlowCode());
+    dto.setFlowName(vo.getFlowName());
+    dto.setDefinitionId(vo.getDefinitionId());
+    dto.setFlowVersion(vo.getFlowVersion());
+    dto.setBusinessType(vo.getBusinessType());
+    dto.setBusinessId(vo.getBusinessId());
+    dto.setBusinessNo(vo.getBusinessNo());
+    dto.setTitle(vo.getTitle());
+    dto.setInitiatorId(vo.getInitiatorId());
+    dto.setInitiatorName(vo.getInitiatorName());
+    dto.setCurrentNodeCode(vo.getCurrentNodeCode());
+    dto.setCurrentNodeName(vo.getCurrentNodeName());
+    dto.setVariable(vo.getVariable());
+    dto.setFlowStatus(vo.getFlowStatus());
+    dto.setActivityStatus(vo.getActivityStatus());
+    dto.setStartAt(vo.getStartAt());
+    dto.setEndAt(vo.getEndAt());
+    dto.setDurationMs(vo.getDurationMs());
+    dto.setParentInstanceId(vo.getParentInstanceId());
+    dto.setParentNodeCode(vo.getParentNodeCode());
+    dto.setProviderTraceId(vo.getProviderTraceId());
+    dto.setDueAt(vo.getDueAt());
+    dto.setRejectReason(vo.getRejectReason());
+    return dto;
   }
 }

@@ -134,7 +134,14 @@ public class ScriptJobHandler implements JobHandler {
       timeoutMs = DEFAULT_TIMEOUT_MS;
     }
 
-    return executeScript(language, script, args, timeoutMs);
+    try {
+      return executeScript(language, script, args, timeoutMs);
+    } catch (IOException | InterruptedException e) {
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
+      throw new JobExecutionException("脚本执行失败: reason=" + e.getMessage(), e);
+    }
   }
 
   /**
@@ -171,7 +178,8 @@ public class ScriptJobHandler implements JobHandler {
    * @throws JobExecutionException 失败时抛出
    */
   private ScriptResult executeScript(
-      String language, String script, List<String> args, long timeoutMs) throws JobExecutionException {
+      String language, String script, List<String> args, long timeoutMs)
+      throws JobExecutionException, IOException, InterruptedException {
     // P3-11: 沙箱模式启用时，委托给 SandboxScriptExecutor 执行
     if (cronjobProperties.getSandbox().isEnabled()) {
       return executeInSandbox(language, script, args, timeoutMs);
@@ -192,7 +200,8 @@ public class ScriptJobHandler implements JobHandler {
    * @throws JobExecutionException 沙箱不可用或执行失败时抛出
    */
   private ScriptResult executeInSandbox(
-      String language, String script, List<String> args, long timeoutMs) throws JobExecutionException {
+      String language, String script, List<String> args, long timeoutMs)
+      throws JobExecutionException, IOException, InterruptedException {
     SandboxScriptExecutor sandboxExecutor = sandboxExecutorProvider.getIfAvailable();
     if (sandboxExecutor == null) {
       log.warn("[ScriptJobHandler] 沙箱执行器未注册, 降级到原始执行模式");
@@ -228,7 +237,8 @@ public class ScriptJobHandler implements JobHandler {
 
   /** 解析脚本文件：行内脚本写入临时文件，file: 前缀直接返回路径。 */
   private ScriptResult executeScriptDirectly(
-      String language, String script, List<String> args, long timeoutMs) throws JobExecutionException {
+      String language, String script, List<String> args, long timeoutMs)
+      throws JobExecutionException, IOException, InterruptedException {
     // 解析脚本来源（行内脚本 → 临时文件；file: 前缀 → 直接使用路径）
     Path scriptFile = resolveScriptFile(language, script);
     boolean isTempFile = !script.startsWith(FILE_PREFIX);

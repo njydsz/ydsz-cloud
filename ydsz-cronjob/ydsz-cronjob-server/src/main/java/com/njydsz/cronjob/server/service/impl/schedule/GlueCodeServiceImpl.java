@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.server.service.impl.schedule;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import groovy.lang.GroovyClassLoader;
 import lombok.RequiredArgsConstructor;
@@ -368,7 +371,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
    * @return 返回值说明
    */
   private Object executeByLanguage(String sourceCode, String language, String paramsJson)
-      throws JobExecutionException {
+      throws JobExecutionException, IOException, NoSuchMethodException, InstantiationException,
+          IllegalAccessException, InvocationTargetException, ScriptException {
     switch (language) {
       case "GROOVY", "JAVA" -> {
         try (GroovyClassLoader classLoader = new GroovyClassLoader()) {

@@ -32,7 +32,6 @@ import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionValidator;
@@ -220,7 +219,7 @@ public class JobDagController {
   @GetMapping("/{dagId}")
   public YdszResponse<JobDagVO> getDagById(@PathVariable String dagId) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(jobDagService.getDagById(dagId)));
+        jobDagService.getDagById(dagId));
   }
 
   /**
@@ -236,7 +235,7 @@ public class JobDagController {
   @GetMapping("/key/{dagKey}")
   public YdszResponse<JobDagVO> getDagByKey(@PathVariable String dagKey) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(jobDagService.getDagByKey(dagKey)));
+        jobDagService.getDagByKey(dagKey));
   }
 
   /**
@@ -251,7 +250,7 @@ public class JobDagController {
   @GetMapping("/enabled")
   public YdszResponse<List<JobDagVO>> listEnabledDags() {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.jobDagListToVO(jobDagService.listEnabledDags()));
+        jobDagService.listEnabledDags());
   }
 
   /**
@@ -318,8 +317,7 @@ public class JobDagController {
   @GetMapping("/{dagId}/versions")
   public YdszResponse<List<JobDagVersionVO>> listDagVersions(@PathVariable String dagId) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.jobDagVersionListToVO(
-            jobDagService.listDagVersions(dagId, DEFAULT_VERSION_LIST_LIMIT)));
+        jobDagService.listDagVersions(dagId, DEFAULT_VERSION_LIST_LIMIT));
   }
 
   /**
@@ -346,7 +344,7 @@ public class JobDagController {
       @PathVariable String dagId, @RequestParam Integer version) {
     jobDagService.rollbackDagVersion(dagId, version, AuthContextUtils.getUserId());
     return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(jobDagService.getDagById(dagId)));
+        jobDagService.getDagById(dagId));
   }
 
   /** 将 PostDTO 转换为 SaveDTO。 */

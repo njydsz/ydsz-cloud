@@ -28,7 +28,6 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
 /**
@@ -77,12 +76,11 @@ public class GlueCodeController {
   @PostMapping("/save")
   public YdszResponse<GlueCodeVO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(
-            glueCodeService.save(
+        glueCodeService.save(
                 request.getJobId(),
                 request.getSourceCode(),
                 request.getLanguage(),
-                request.getRemark())));
+                request.getRemark()));
   }
 
   /**
@@ -96,7 +94,7 @@ public class GlueCodeController {
   @GetMapping("/latest")
   public YdszResponse<GlueCodeVO> latest(@RequestParam String jobId) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(glueCodeService.getLatest(jobId)));
+        glueCodeService.getLatest(jobId));
   }
 
   /**
@@ -110,7 +108,7 @@ public class GlueCodeController {
   @GetMapping("/versions")
   public YdszResponse<List<GlueCodeVO>> versions(@RequestParam String jobId) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.glueCodeListToVO(glueCodeService.listVersions(jobId)));
+        glueCodeService.listVersions(jobId));
   }
 
   /**
@@ -131,8 +129,7 @@ public class GlueCodeController {
   @PostMapping("/rollback")
   public YdszResponse<GlueCodeVO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(
-            glueCodeService.rollback(request.getJobId(), request.getVersion())));
+        glueCodeService.rollback(request.getJobId(), request.getVersion()));
   }
 
   /**

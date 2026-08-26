@@ -19,7 +19,6 @@ import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.repository.FlowAttachmentRepository;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 
@@ -96,9 +95,6 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   /** 审批附件仓储，管理 ydsz_flow_attachment 表 */
   private final FlowAttachmentRepository attachmentRepository;
-
-  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** P3-3.4: 附件预览配置统一从 FlowProperties 读取 */
   private final FlowProperties flowProperties;

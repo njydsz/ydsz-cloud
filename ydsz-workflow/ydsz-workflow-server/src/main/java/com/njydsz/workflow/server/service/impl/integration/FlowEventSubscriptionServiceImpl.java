@@ -25,7 +25,6 @@ import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
@@ -104,9 +103,6 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   /** 事件订阅仓储（domain 层契约），管理事件订阅表 CRUD */
   private final FlowEventSubscriptionRepository subscriptionRepository;
-
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 流程实例仓储（domain 层契约），查询事件关联的流程实例 */
   private final FlowInstanceRepository instanceRepository;

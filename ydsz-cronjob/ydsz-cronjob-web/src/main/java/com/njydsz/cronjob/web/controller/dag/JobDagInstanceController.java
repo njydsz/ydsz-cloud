@@ -23,7 +23,6 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
 import com.njydsz.cronjob.server.service.dag.JobDagInstanceService;
 import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 
@@ -77,7 +76,7 @@ public class JobDagInstanceController {
   @GetMapping("/{instanceId}")
   public YdszResponse<JobDagInstanceVO> getInstanceById(@PathVariable String instanceId) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(jobDagInstanceService.getInstanceById(instanceId)));
+        jobDagInstanceService.getInstanceById(instanceId));
   }
 
   /**
@@ -95,8 +94,7 @@ public class JobDagInstanceController {
   public YdszResponse<List<JobDagInstanceVO>> listByDagId(
       @PathVariable String dagId, @RequestParam(defaultValue = "20") int limit) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.jobDagInstanceListToVO(
-            jobDagInstanceService.listByDagId(dagId, limit)));
+        jobDagInstanceService.listByDagId(dagId, limit));
   }
 
   /**
@@ -112,8 +110,7 @@ public class JobDagInstanceController {
   @GetMapping("/status/{status}")
   public YdszResponse<List<JobDagInstanceVO>> listByStatus(@PathVariable String status) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.jobDagInstanceListToVO(
-            jobDagInstanceService.listByStatus(status)));
+        jobDagInstanceService.listByStatus(status));
   }
 
   /**
@@ -129,8 +126,7 @@ public class JobDagInstanceController {
   @GetMapping("/{instanceId}/nodes")
   public YdszResponse<List<JobDagNodeInstanceVO>> listNodes(@PathVariable String instanceId) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.jobDagNodeInstanceListToVO(
-            jobDagInstanceService.listNodes(instanceId)));
+        jobDagInstanceService.listNodes(instanceId));
   }
 
   /**

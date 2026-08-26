@@ -108,7 +108,7 @@ public class JobHistoryController {
       content = "'rollback'")
   public YdszResponse<JobVO> rollback(@RequestParam String jobId, @RequestParam Integer version) {
     return YdszResponse.success(
-        CronjobConverter.INSTANT.entityToVO(jobHistoryService.rollback(jobId, version)));
+        jobHistoryService.rollback(jobId, version));
   }
 
   /**

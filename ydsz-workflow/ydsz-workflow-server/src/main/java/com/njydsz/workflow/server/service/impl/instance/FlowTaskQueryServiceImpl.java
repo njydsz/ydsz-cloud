@@ -28,8 +28,6 @@ import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-
 /**
  * 待办任务 — 查询类 Service 实现
  *
@@ -89,9 +87,6 @@ public class FlowTaskQueryServiceImpl {
 
   /** 用户仓储，查询流程用户关联 */
   private final FlowUserRepository userRepository;
-
-  /** DO/VO 转换器 */
-  private final WorkflowConverter converter;
 
   // ============================== 详情查询 ==============================
 

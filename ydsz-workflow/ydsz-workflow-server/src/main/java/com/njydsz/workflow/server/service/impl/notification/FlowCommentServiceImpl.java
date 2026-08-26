@@ -25,7 +25,6 @@ import com.njydsz.workflow.domain.repository.FlowCommentRepository;
 import com.njydsz.workflow.domain.repository.FlowQuickCommentRepository;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowCommentService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -102,9 +101,6 @@ public class FlowCommentServiceImpl implements FlowCommentService {
 
   /** 审批意见仓储（domain 层契约），管理 ydsz_flow_comment 表 CRUD */
   private final FlowCommentRepository commentRepository;
-
-  /** 实体转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** P0-1: 敏感字段脱敏器，对评论内容中的手机号/身份证等敏感信息做实时脱敏 */
   private final FlowSensitiveMasker sensitiveMasker;
