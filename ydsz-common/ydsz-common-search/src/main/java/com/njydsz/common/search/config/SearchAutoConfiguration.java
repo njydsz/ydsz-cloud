@@ -522,8 +522,8 @@ public class SearchAutoConfiguration {
   /**
    * 装配 PostgreSQL 持久化死信队列。
    *
-   * <p>索引同步失败的操作最终持久化到 {@code ydsz_search_dead_letter} 表， 应用重启不丢失，支持定时任务触发重放。 表结构定义位于 {@code
-   * db/ydsz_search_dead_letter.sql}，需由 DBA 或 Flyway 执行。
+   * <p>索引同步失败的操作最终持久化到 {@code ydsz_com_search_dead_letter} 表， 应用重启不丢失，支持定时任务触发重放。 表结构定义位于 {@code
+   * db/ydsz_com_search_dead_letter.sql}，需由 DBA 或 Flyway 执行。
    *
    * <p>{@link javax.sql.DataSource} 以惰性方式注入，缺失时返回 {@code null}， {@link IndexSyncService}
    * 会检测到并回退到纯内存死信队列。

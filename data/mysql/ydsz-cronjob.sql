@@ -19,7 +19,7 @@
 -- 1. 任务主表
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_job_main (
+CREATE TABLE IF NOT EXISTS ydsz_job (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     job_name              VARCHAR(128)    NOT NULL COMMENT '任务名称',
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_main (
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job_main.id）',
+    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
     source_code           TEXT            NOT NULL COMMENT '源代码（Groovy/Python/Shell/JavaScript 脚本内容）',
     language              VARCHAR(32)     NOT NULL DEFAULT 'GROOVY' COMMENT '语言: GROOVY(默认)/PYTHON/SHELL/JAVASCRIPT/JAVA',
     version               INT             NOT NULL DEFAULT 1 COMMENT '版本号（从 1 递增）',
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_glue (
 CREATE TABLE IF NOT EXISTS ydsz_job_task (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job_main.id）',
+    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
     log_id                VARCHAR(32)     NOT NULL COMMENT '执行日志 ID（关联 ydsz_job_log.id）',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余，便于查询）',
     task_name             VARCHAR(128)    NOT NULL COMMENT '子任务名称（root task 为 "root"）',
@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_history (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job_main.id）',
+    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
     version               INT             NOT NULL COMMENT '版本号（对应更新前的 job.version）',
     snapshot              JSON            DEFAULT NULL COMMENT '完整 Job JSON 快照（变更后状态; DELETE 时为 NULL）',
     change_type           VARCHAR(32)     NOT NULL COMMENT '变更类型: CREATE / UPDATE / DELETE',

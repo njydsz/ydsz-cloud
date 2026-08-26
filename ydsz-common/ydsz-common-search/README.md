@@ -83,7 +83,7 @@
 | `SearchQualityTracker` | 搜索质量追踪器 — MRR（平均倒数排名）、CTR（点击率）、零结果率、平均延迟，Redis + 内存双写降级，`QualityReport`（record） |
 | `SearchPipeline` | 文本处理管道（Filter 链模式：Normalizer → StopWord → Synonym → ChineseToken → Pinyin），每步可配置启用/禁用 |
 | `ZeroResultHandler` | 零结果引导处理器，返回“您是不是要找”、“热门搜索”、“去掉筛选条件”建议 |
-| `PersistentDeadLetterQueue` | 基于 PostgreSQL 的持久化死信队列（`ydsz_search_dead_letter` 表），数据源不可用时回退到纯内存模式 |
+| `PersistentDeadLetterQueue` | 基于 PostgreSQL 的持久化死信队列（`ydsz_com_search_dead_letter` 表），数据源不可用时回退到纯内存模式 |
 | `AdvancedQueryParser` | 高级查询解析器，支持 AND/OR/NOT 逻辑组合、引号短语、字段限定等复杂检索表达式 |
 | `ChineseTokenizer` | 中文分词器（jieba/ICU/简单空格策略可选） |
 
@@ -132,7 +132,7 @@ ydsz:
       ttl: 60
     pg:
       search-config: search_zh
-      index-table: ydsz_search_index
+      index-table: ydsz_wiki_search_index
       field-weights:
         title: 1.0
         subtitle: 0.7
@@ -227,7 +227,7 @@ public SearchResponse search(String keyword) {
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.search.pg.search-config` | `search_zh` | PG tsvector 搜索配置（search_zh / simple） |
-| `ydsz.search.pg.index-table` | `ydsz_search_index` | PG 索引表名 |
+| `ydsz.search.pg.index-table` | `ydsz_wiki_search_index` | PG 索引表名 |
 | `ydsz.search.pg.field-weights` | title=1.0/subtitle=0.7/content=0.4/tags=0.2 | PG 字段权重 |
 | `ydsz.search.pg.time-decay-days` | `0` | 时间衰减半衰期（天，0 表示不衰减） |
 
