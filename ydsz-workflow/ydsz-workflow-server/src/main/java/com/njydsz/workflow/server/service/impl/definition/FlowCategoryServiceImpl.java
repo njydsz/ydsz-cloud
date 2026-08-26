@@ -203,14 +203,14 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     if (!StringUtils.hasText(dto.getId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_id_required")
+          .message("error.workflow.category.id.required")
           .build();
     }
     FlowCategoryVO existing = categoryRepository.findById(dto.getId()).orElse(null);
     if (existing == null || existing.getDeleted() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_6541ab08")
+          .key("error.workflow.category.not.found")
           .params(dto.getId())
           .build();
     }

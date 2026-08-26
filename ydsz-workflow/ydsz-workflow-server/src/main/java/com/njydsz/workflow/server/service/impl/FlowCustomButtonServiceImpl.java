@@ -130,7 +130,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .key("error.workflow.msg_node_not_found")
+          .key("error.workflow.custombutton.node.not.found")
           .params(nodeCode)
           .build();
     }
@@ -184,7 +184,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 () ->
                     SysException.builder()
                         .resultCode(YdszResultCode.BAD_REQUEST)
-                        .key("error.workflow.msg_button_not_found")
+                        .key("error.workflow.custombutton.not.found")
                         .params(buttonCode)
                         .build());
 
@@ -235,7 +235,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         } else {
           throw SysException.builder()
               .resultCode(YdszResultCode.BAD_REQUEST)
-              .message("error.workflow.msg_transfer_target_required")
+              .message("error.workflow.custombutton.transfer.target.required")
               .build();
         }
       }
@@ -255,7 +255,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         } else {
           throw SysException.builder()
               .resultCode(YdszResultCode.BAD_REQUEST)
-              .message("error.workflow.msg_delegate_target_required")
+              .message("error.workflow.custombutton.delegate.target.required")
               .build();
         }
       }
