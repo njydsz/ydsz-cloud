@@ -27,13 +27,8 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.domain.vo.FlowTemplateVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
 import com.njydsz.workflow.infra.entity.FlowNode;
 import com.njydsz.workflow.infra.entity.FlowSkip;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowSkip;
-import com.njydsz.workflow.infra.entity.FlowTemplate;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
@@ -107,7 +102,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTemplateService 接口定义
- * @see FlowTemplate 模板实体（含版本与继承字段）
+ * @see FlowTemplateVO 模板值对象（含版本与继承字段）
  * @see FlowDefinitionService 流程定义服务（模板导入时调用 deploy）
  */
 @Slf4j
@@ -138,9 +133,6 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   private static final int NODE_TYPE_CALL_ACTIVITY = 7;
 
   /** 流程模板仓储（domain 层契约），管理 ydsz_flow_template 表 CRUD */
-  /** entity/VO 转换器 */
-  private final WorkflowConverter converter;
-
   private final FlowTemplateRepository templateRepository;
 
   /** 流程定义服务，模板导入时调用 deploy 部署为草稿定义 */
@@ -155,9 +147,6 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   /** 流程模块配置（缓存 TTL 与容量） */
   private final FlowProperties flowProperties;
 
-  /** MapStruct 转换器 */
-  private final WorkflowConverter converter;
-
   /**
    * 构造模板服务，初始化二级缓存。
    *
@@ -170,10 +159,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       FlowTemplateRepository templateRepository,
       FlowDefinitionService definitionService,
       ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider,
-      FlowProperties flowProperties,
-      WorkflowConverter converter) {
+      FlowProperties flowProperties) {
     this.templateRepository = templateRepository;
-    this.converter = converter;
     this.definitionService = definitionService;
     this.searchIndexEventBridgeProvider = searchIndexEventBridgeProvider;
     this.flowProperties = flowProperties;
@@ -743,7 +730,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取源模板最新版本
-      FlowTemplate source = templateRepository.findByTemplateCode(sourceTemplateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplateVO source = templateRepository.findByTemplateCode(sourceTemplateCode).orElse(null);
       if (source == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -752,7 +739,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 校验新编码未占用
-      FlowTemplate existing = templateRepository.findByTemplateCode(newTemplateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplateVO existing = templateRepository.findByTemplateCode(newTemplateCode).orElse(null);
       if (existing != null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
@@ -761,7 +748,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 复制为新模板（version=1, is_latest=1, inherit_type=CLONE/INHERIT, parent_template_id=源模板 id）
-      FlowTemplate newTemplate = new FlowTemplate();
+      FlowTemplateVO newTemplate = new FlowTemplateVO();
       newTemplate.setTemplateCode(newTemplateCode);
       newTemplate.setTemplateName(newTemplateName);
       newTemplate.setCategory(
@@ -778,7 +765,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newTemplate.setVersionLabel("1.0.0");
       newTemplate.setInheritType(inheritType);
       newTemplate.setIsLatest(1);
-      templateRepository.save(converter.entityToVO(newTemplate));
+      templateRepository.save(newTemplate);
       syncSearchIndex(newTemplate);
 
       log.info(
@@ -825,7 +812,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 先查出父模板主键 ID
-      FlowTemplate parent = templateRepository.findByTemplateCode(parentTemplateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplateVO parent = templateRepository.findByTemplateCode(parentTemplateCode).orElse(null);
       if (parent == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -833,9 +820,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .params(parentTemplateCode)
             .build();
       }
-      List<FlowTemplate> children = templateRepository.findByParentTemplateId(parent.getId()).stream()
-          .map(converter::entityToDO)
-          .toList();
+      List<FlowTemplateVO> children = templateRepository.findByParentTemplateId(parent.getId());
       return children.stream().map(this::toSummaryMap).collect(Collectors.toList());
     } catch (SysException e) {
       throw e;
@@ -872,7 +857,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .build();
       }
       // 读取子模板最新版本
-      FlowTemplate child = templateRepository.findByTemplateCode(childTemplateCode).map(converter::entityToDO).orElse(null);
+      FlowTemplateVO child = templateRepository.findByTemplateCode(childTemplateCode).orElse(null);
       if (child == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -898,7 +883,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             .params(childTemplateCode)
             .build();
       }
-      FlowTemplate parent = templateRepository.findById(parentId).map(converter::entityToDO).orElse(null);
+      FlowTemplateVO parent = templateRepository.findById(parentId).orElse(null);
       if (parent == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -1038,7 +1023,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    */
   private String generateBpmnXml(Map<String, Object> detail) {
     Object defObj = detail.get("definition");
-    if (!(defObj instanceof FlowDefinition definition)) {
+    if (!(defObj instanceof FlowDefinitionVO definition)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("流程定义详情缺少 definition")

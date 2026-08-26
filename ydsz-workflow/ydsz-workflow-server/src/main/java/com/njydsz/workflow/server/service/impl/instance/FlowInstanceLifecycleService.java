@@ -42,12 +42,9 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
-import com.njydsz.workflow.infra.entity.FlowAuditLog;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
@@ -104,9 +101,6 @@ public class FlowInstanceLifecycleService {
   private static final int BATCH_START_MAX_SIZE = 100;
 
   /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
-  /** entity/VO 转换器 */
-  private final WorkflowConverter converter;
-
   private final FlowInstanceRepository instanceRepository;
 
   /** 流程定义服务，启动实例时解析流程定义节点和跳转 */
@@ -1103,7 +1097,7 @@ public class FlowInstanceLifecycleService {
       if (node.getNodeType().equals(FlowNodeType.CC.getCode())) {
         // GAP-P1: 抄送节点 — 展开接收人并写入 ydsz_flow_cc，然后自动推进到下一节点
         try {
-          ccService.handleCcNode(instanceId, converter.entityToVO(node), variables);
+          ccService.handleCcNode(instanceId, node, variables);
           log.info("[Flow] 抄送节点处理完成: instanceId={} node={}", instanceId, node.getNodeCode());
         } catch (Exception e) {
           log.warn(
@@ -1131,7 +1125,7 @@ public class FlowInstanceLifecycleService {
       if (node.getNodeType().equals(FlowNodeType.SUBPROCESS.getCode()) || isCallActivity(node)) {
         try {
           FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
-          subProcessService.startSubProcess(instance, converter.entityToVO(node), variables);
+          subProcessService.startSubProcess(instance, node, variables);
           // 子流程启动后，父流程"停在" callActivity 节点，更新 currentNodeCode
           instanceRepository.updateStatus(
               instanceId,
@@ -1157,7 +1151,7 @@ public class FlowInstanceLifecycleService {
         }
         continue;
       }
-      taskService.createTask(instanceId, converter.entityToVO(node), variables);
+      taskService.createTask(instanceId, node, variables);
     }
   }
 
@@ -1249,7 +1243,7 @@ public class FlowInstanceLifecycleService {
     // 5. 启动新实例
     String newInstanceId = startInstance(dto);
     // 6. 在原实例上追加 REDO 审计日志（保留原轨迹，仅追加）
-    FlowAuditLog audit = new FlowAuditLog();
+    FlowAuditLogVO audit = new FlowAuditLogVO();
     audit.setInstanceId(instanceId);
     audit.setFlowCode(instance.getFlowCode());
     audit.setBusinessType(instance.getBusinessType());
@@ -1265,7 +1259,7 @@ public class FlowInstanceLifecycleService {
     audit.setTenantId(instance.getTenantId());
     audit.setProviderTraceId(instance.getProviderTraceId());
     audit.setOperatedAt(LocalDateTime.now());
-    auditLogRepository.save(converter.entityToVO(audit));
+    auditLogRepository.save(audit);
     log.info("[Flow] 重做为新实例: 原实例={} 新实例={} initiatorId={}", instanceId, newInstanceId, initiatorId);
     return newInstanceId;
   }
@@ -1288,7 +1282,7 @@ public class FlowInstanceLifecycleService {
    * @param boundaryTaskId 参数说明
    */
   private void scheduleBoundaryTimerIfPresent(
-      FlowNode node, String instanceId, String boundaryTaskId) {
+      FlowNodeVO node, String instanceId, String boundaryTaskId) {
     if (timerService == null || boundaryTaskId == null) {
       return;
     }
@@ -1368,7 +1362,7 @@ public class FlowInstanceLifecycleService {
   }
 
   /** P0-2: 解析节点 ext JSON 为 Map（容错） */
-  private Map<String, Object> parseExtMap(FlowNode node) {
+  private Map<String, Object> parseExtMap(FlowNodeVO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return Collections.emptyMap();
     }
@@ -1390,7 +1384,7 @@ public class FlowInstanceLifecycleService {
    * @param instanceId 参数说明
    * @return 返回值说明
    */
-  private String resolveBoundaryTaskId(FlowNode node, String instanceId) {
+  private String resolveBoundaryTaskId(FlowNodeVO node, String instanceId) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return null;
     }
@@ -1404,9 +1398,7 @@ public class FlowInstanceLifecycleService {
         return null;
       }
       // 查找被附着节点的当前 PENDING 任务
-      List<FlowRunTask> tasks = taskRepository.findPendingByNode(instanceId, attachedToRef).stream()
-          .map(converter::entityToDO)
-          .collect(Collectors.toList());
+      List<FlowRunTaskVO> tasks = taskRepository.findPendingByNode(instanceId, attachedToRef);
       return tasks.isEmpty() ? null : tasks.get(0).getId();
     } catch (Exception e) {
       log.warn(
@@ -1423,7 +1415,7 @@ public class FlowInstanceLifecycleService {
    * @param node 参数说明
    * @return 返回值说明
    */
-  private boolean isCallActivity(FlowNode node) {
+  private boolean isCallActivity(FlowNodeVO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
       return false;
     }

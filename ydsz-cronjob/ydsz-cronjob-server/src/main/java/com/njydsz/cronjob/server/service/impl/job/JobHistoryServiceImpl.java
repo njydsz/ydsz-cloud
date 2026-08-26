@@ -185,7 +185,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     // 反序列化快照为 Job
     JobVO snapshotJob = YdszJson.fromJson(targetHistory.getSnapshot(), JobVO.class);
     // 查询当前任务（用于保留统计字段等）
-    JobVO currentJob = jobRepository.selectById(jobId);
+    JobVO currentJob = jobRepository.findById(jobId).orElse(null);
     if (currentJob == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)

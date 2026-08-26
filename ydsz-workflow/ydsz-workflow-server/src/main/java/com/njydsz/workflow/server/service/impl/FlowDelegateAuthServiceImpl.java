@@ -25,8 +25,6 @@ import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
@@ -93,7 +91,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowDelegateAuthService 接口定义
- * @see com.njydsz.workflow.infra.entity.FlowDelegateAuth 委派代理实体
+ * @see FlowDelegateAuthVO 委派代理值对象
  * @see FlowOfflineAutoForwardService 离线自动转交服务（与委派不同：离线是自动转交，委派是主动授权）
  * @see FlowTaskAuditService 任务审计服务
  */

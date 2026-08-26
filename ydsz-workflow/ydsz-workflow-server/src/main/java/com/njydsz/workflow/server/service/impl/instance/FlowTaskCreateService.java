@@ -35,9 +35,8 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.entity.FlowUser;
+import com.njydsz.workflow.domain.vo.FlowUserVO;
 import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
@@ -176,8 +175,6 @@ public class FlowTaskCreateService {
   /** 流程节点仓储，查询节点配置（审批人/权限/SLA 等） */
   private final FlowNodeRepository nodeRepository;
 
-  /** MapStruct 转换器（DO/VO/DTO 转换） */
-  private final WorkflowConverter converter;
 
   /** 流程推进引擎，AUTO_PASS 递归推进到下一节点 */
   private final DefaultFlowAdvancer advancer;
@@ -859,7 +856,7 @@ public class FlowTaskCreateService {
       FlowNodeVO node,
       String uid,
       Map<String, Integer> userWeights) {
-    FlowUser fu = new FlowUser();
+    FlowUserVO fu = new FlowUserVO();
     fu.setTaskId(task.getId());
     fu.setInstanceId(instance.getId());
     fu.setNodeCode(node.getNodeCode());
@@ -871,7 +868,7 @@ public class FlowTaskCreateService {
     fu.setSignType(FlowSignType.ORIGINAL.name());
     fu.setTenantId(instance.getTenantId());
     fu.setProviderTraceId(instance.getProviderTraceId());
-    userRepository.save(converter.entityToVO(fu));
+    userRepository.save(fu);
   }
 
   /**

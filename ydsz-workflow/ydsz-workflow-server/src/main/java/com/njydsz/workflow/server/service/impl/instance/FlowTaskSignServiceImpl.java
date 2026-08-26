@@ -15,8 +15,7 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowUser;
+import com.njydsz.workflow.domain.vo.FlowUserVO;
 
 /**
  * 待办任务 — 加签减签 / 已阅 / 沟通 / 追加处理人 / 暂存待审 子服务实现
@@ -80,10 +79,6 @@ public class FlowTaskSignServiceImpl {
   /** 用户仓储，写入/查询流程用户 */
   private final FlowUserRepository userRepository;
 
-  /** DO/VO 转换器 */
-  private final WorkflowConverter converter;
-
-  /** 跨子 Service 共享的任务校验/审计/事件辅助 */
   private final FlowTaskSupport support;
 
   // ============================== 加签（P1-7） ==============================
@@ -119,7 +114,7 @@ public class FlowTaskSignServiceImpl {
     // 前加签：在当前节点前插入临时审批人
     // 实现：为当前任务新增一个审批人记录到 ydsz_flow_user，approveCount+1
     if (dto.getTargetUserId() != null) {
-      FlowUser fu = new FlowUser();
+      FlowUserVO fu = new FlowUserVO();
       fu.setTaskId(task.getId());
       fu.setInstanceId(task.getInstanceId());
       fu.setNodeCode(task.getNodeCode());
@@ -131,7 +126,7 @@ public class FlowTaskSignServiceImpl {
       fu.setSignType(FlowSignType.BEFORE.name());
       fu.setTenantId(task.getTenantId());
       fu.setProviderTraceId(task.getProviderTraceId());
-      userRepository.save(converter.entityToVO(fu));
+      userRepository.save(fu);
       taskRepository.updateApproveFinished(task.getId(), task.getApproveFinished());
       // approveCount +1
       task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
@@ -180,7 +175,7 @@ public class FlowTaskSignServiceImpl {
     // 3. 新增审批人写入 ydsz_flow_user（processed=0）
     // 这样当前审批人和加签人都通过后才推进到下一节点
     if (dto.getTargetUserId() != null) {
-      FlowUser fu = new FlowUser();
+      FlowUserVO fu = new FlowUserVO();
       fu.setTaskId(task.getId());
       fu.setInstanceId(task.getInstanceId());
       fu.setNodeCode(task.getNodeCode());
@@ -192,7 +187,7 @@ public class FlowTaskSignServiceImpl {
       fu.setSignType(FlowSignType.AFTER.name());
       fu.setTenantId(task.getTenantId());
       fu.setProviderTraceId(task.getProviderTraceId());
-      userRepository.save(converter.entityToVO(fu));
+      userRepository.save(fu);
       // 切换为并行会签：当前人和加签人都通过后才推进
       task.setPerformType(FlowPerformType.PARALLEL.name());
       task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
@@ -238,7 +233,7 @@ public class FlowTaskSignServiceImpl {
           .message("error.workflow.msg_2deb2e4f")
           .build();
     }
-    FlowUser fu = new FlowUser();
+    FlowUserVO fu = new FlowUserVO();
     fu.setTaskId(task.getId());
     fu.setInstanceId(task.getInstanceId());
     fu.setNodeCode(task.getNodeCode());
@@ -250,7 +245,7 @@ public class FlowTaskSignServiceImpl {
     fu.setSignType(FlowSignType.PARALLEL.name());
     fu.setTenantId(task.getTenantId());
     fu.setProviderTraceId(task.getProviderTraceId());
-    userRepository.save(converter.entityToVO(fu));
+    userRepository.save(fu);
     // 强制切换为并行会签：加签人与原审批人并行审批，所有人全部通过才推进
     task.setPerformType(FlowPerformType.PARALLEL.name());
     task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
@@ -427,7 +422,7 @@ public class FlowTaskSignServiceImpl {
           .build();
     }
     // 向 ydsz_flow_user 插入新审批人
-    FlowUser fu = new FlowUser();
+    FlowUserVO fu = new FlowUserVO();
     fu.setTaskId(task.getId());
     fu.setInstanceId(task.getInstanceId());
     fu.setNodeCode(task.getNodeCode());
@@ -439,7 +434,7 @@ public class FlowTaskSignServiceImpl {
     fu.setSignType(FlowSignType.ADD.name());
     fu.setTenantId(task.getTenantId());
     fu.setProviderTraceId(task.getProviderTraceId());
-    userRepository.save(converter.entityToVO(fu));
+    userRepository.save(fu);
     // approveCount +1
     int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
     task.setApproveCount(currentCount + 1);

@@ -16,10 +16,11 @@ public interface JobDagVersionRepository {
   /**
    * 根据 DAG ID 查询版本列表（按版本号降序）。
    *
-   * @param dagId 参数说明
-   * @return 返回值说明
+   * @param dagId DAG ID
+   * @param limit 返回条数上限
+   * @return 版本列表
    */
-  List<JobDagVersionVO> findByVersionDesc(String dagId);
+  List<JobDagVersionVO> findByVersionDesc(String dagId, int limit);
 
   /**
    * 查询指定 DAG 的最大版本号。

@@ -26,8 +26,8 @@ public class JobDagVersionRepositoryImpl implements JobDagVersionRepository {
   private final CronjobConverter converter;
 
   @Override
-  public List<JobDagVersionVO> findByVersionDesc(String dagId) {
-    return converter.jobDagVersionListToVO(jobDagVersionMapper.selectByVersionDesc(dagId, 100));
+  public List<JobDagVersionVO> findByVersionDesc(String dagId, int limit) {
+    return converter.jobDagVersionListToVO(jobDagVersionMapper.selectByVersionDesc(dagId, limit));
   }
 
   @Override

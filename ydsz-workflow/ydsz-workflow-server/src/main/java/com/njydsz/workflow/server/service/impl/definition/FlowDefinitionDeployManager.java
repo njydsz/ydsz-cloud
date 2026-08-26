@@ -32,9 +32,6 @@ import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowSkip;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
@@ -96,9 +93,6 @@ public class FlowDefinitionDeployManager {
   /** 统一配置属性 */
   private final FlowProperties flowProperties;
 
-  /** entity/VO 转换器 */
-  private final WorkflowConverter converter;
-
   /**
    * 自注入代理引用，使 {@link #batchDeployFromZip} 内部调用 {@link #deploy} 时能正确触发 Spring 事务代理。
    * 使用 {@code @Lazy} 打破启动期循环依赖。
@@ -113,7 +107,6 @@ public class FlowDefinitionDeployManager {
       FlowGraphValidator graphValidator,
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowProperties flowProperties,
-      WorkflowConverter converter,
       @Lazy FlowDefinitionDeployManager self) {
     this.definitionRepository = definitionRepository;
     this.nodeRepository = nodeRepository;
@@ -122,7 +115,6 @@ public class FlowDefinitionDeployManager {
     this.graphValidator = graphValidator;
     this.flowDefinitionCacheService = flowDefinitionCacheService;
     this.flowProperties = flowProperties;
-    this.converter = converter;
     this.self = self;
   }
 

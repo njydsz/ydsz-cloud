@@ -19,6 +19,9 @@ public class JobPostDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
+  @Schema(description = "主键 ID（创建时为空，由服务端 Snowflake 生成）")
+  private String id;
+
   @NotBlank(message = "{validation.cronjob.msg_f96f7bb7}")
   @Schema(description = "任务名称", requiredMode = Schema.RequiredMode.REQUIRED)
   private String jobName;
@@ -82,6 +85,17 @@ public class JobPostDTO implements Serializable {
 
   @Schema(description = "目标集群名称（P3-12 跨集群调度，null=本地集群）")
   private String cluster;
+
+  @Min(value = 0, message = "最大重试次数不能为负")
+  @Schema(description = "失败最大重试次数（null=不重试）")
+  private Integer maxRetries;
+
+  @Min(value = 1, message = "重试间隔必须为正数")
+  @Schema(description = "重试间隔（毫秒）")
+  private Long retryIntervalMs;
+
+  @Schema(description = "重试退避策略（FIXED/EXPONENTIAL，null=默认 FIXED）")
+  private String retryBackoff;
 
   @Schema(description = "租户 ID（null 时由服务端从 TenantContextHolder 注入）")
   private String tenantId;

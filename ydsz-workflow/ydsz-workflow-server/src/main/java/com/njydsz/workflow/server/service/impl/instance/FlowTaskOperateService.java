@@ -25,8 +25,7 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowHisTask;
+import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -58,8 +57,6 @@ public class FlowTaskOperateService {
   /** 流程节点仓储，查询节点配置（跳转白名单校验） */
   private final FlowNodeRepository nodeRepository;
 
-  /** MapStruct 转换器，用于 VO ↔ DO 转换 */
-  private final WorkflowConverter converter;
 
   /** 跨子 Service 共享的任务校验/审计/事件辅助 */
   private final FlowTaskSupport support;
@@ -258,7 +255,7 @@ public class FlowTaskOperateService {
   @Transactional(rollbackFor = Exception.class)
   public String retract(String hisTaskId, String operatorId, String comment) {
     // 1. 查询并校验历史任务
-    FlowHisTask hisTask = findHisTaskOrThrow(hisTaskId);
+    FlowHisTaskVO hisTask = findHisTaskOrThrow(hisTaskId);
     validateRetractPermission(hisTask, operatorId);
 
     // 2. 校验实例存在且为 RUNNING
@@ -300,8 +297,8 @@ public class FlowTaskOperateService {
    * @param hisTaskId 参数说明
    * @return 返回值说明
    */
-  private FlowHisTask findHisTaskOrThrow(String hisTaskId) {
-    FlowHisTask hisTask = hisTaskRepository.findById(hisTaskId).map(converter::entityToDO).orElse(null);
+  private FlowHisTaskVO findHisTaskOrThrow(String hisTaskId) {
+    FlowHisTaskVO hisTask = hisTaskRepository.findById(hisTaskId).orElse(null);
     if (hisTask == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -318,7 +315,7 @@ public class FlowTaskOperateService {
    * @param hisTask 参数说明
    * @param operatorId 参数说明
    */
-  private void validateRetractPermission(FlowHisTask hisTask, String operatorId) {
+  private void validateRetractPermission(FlowHisTaskVO hisTask, String operatorId) {
     if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -390,7 +387,7 @@ public class FlowTaskOperateService {
    * @param comment 参数说明
    * @return 返回值说明
    */
-  private FlowRunTaskVO recreateRetractTask(FlowHisTask hisTask, FlowInstanceVO instance, String comment) {
+  private FlowRunTaskVO recreateRetractTask(FlowHisTaskVO hisTask, FlowInstanceVO instance, String comment) {
     FlowRunTaskVO newTask = new FlowRunTaskVO();
     newTask.setInstanceId(instance.getId());
     newTask.setFlowCode(instance.getFlowCode());
@@ -425,11 +422,11 @@ public class FlowTaskOperateService {
    * @param comment 参数说明
    */
   private void markHisTaskRetracted(String hisTaskId, String comment) {
-    FlowHisTask update = new FlowHisTask();
+    FlowHisTaskVO update = new FlowHisTaskVO();
     update.setId(hisTaskId);
     update.setTaskStatus("RETRACTED");
     update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
-    hisTaskRepository.save(converter.entityToVO(update));
+    hisTaskRepository.save(update);
   }
 
   // ============================== 私有辅助 ==============================
