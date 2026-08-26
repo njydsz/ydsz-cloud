@@ -34,7 +34,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  *   <li>根据审批结果恢复 Agent 执行（通过领域事件通知订阅方）
  * </ul>
  *
- * <p><b>持久化（P1 优化）</b>：审批请求落库到 {@code ydsz_agent_approval} 表，内存 {@link ConcurrentHashMap}
+ * <p><b>持久化（P1 优化）</b>：审批请求落库到 {@code ydsz_agt_approval} 表，内存 {@link ConcurrentHashMap}
  * 仅作热点缓存，支持多实例共享与重启恢复；审批结果通过 {@link DomainEventPublisher} 发布 {@code AGENT_APPROVAL_REQUESTED} /
  * {@code AGENT_APPROVAL_RESOLVED} 事件，执行器可订阅事件恢复/中止被暂停的步骤。
  *

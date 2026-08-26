@@ -21,7 +21,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
 /**
  * 数据库执行链路记录器
  *
- * <p>将 Agent 执行链路持久化到 {@code ydsz_agent_trace} 与 {@code ydsz_agent_trace_step} 表中，
+ * <p>将 Agent 执行链路持久化到 {@code ydsz_agt_trace} 与 {@code ydsz_agt_trace_step} 表中，
  * 替代内存实现以支持跨重启数据保留、多实例数据共享与长期审计。
  *
  * <p><b>线程安全</b>：每次写入使用独立的 Entity 实例，通过 MyBatis-Plus 操作数据库。 步骤序号使用进程内 {@link AtomicInteger} 计数（同一

@@ -74,7 +74,7 @@ public class UserAccountDTO implements Serializable {
   /** 所属部门 ID（关联 {@code ydsz_department.id}，支持审批人展开） */
   private String deptId;
 
-  /** 直属上级用户 ID（关联 {@code ydsz_user_account.id}，支持 leader: 审批人展开） */
+  /** 直属上级用户 ID（关联 {@code ydsz_acct_user.id}，支持 leader: 审批人展开） */
   private String leaderId;
 
   /** 岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开） */

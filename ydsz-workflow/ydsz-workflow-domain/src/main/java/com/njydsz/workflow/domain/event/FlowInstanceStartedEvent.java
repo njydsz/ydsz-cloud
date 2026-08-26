@@ -1,12 +1,12 @@
 package com.njydsz.workflow.domain.event;
 
-import static java.util.Collections.emptyMap;
-
 import java.io.Serial;
 import java.util.Map;
 
 import lombok.Getter;
 import lombok.ToString;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * 流程实例已启动领域事件。
