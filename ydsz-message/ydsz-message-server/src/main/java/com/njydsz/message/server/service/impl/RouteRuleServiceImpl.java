@@ -28,7 +28,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgRouteRule;
+import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 import com.njydsz.message.domain.repository.MsgRouteRuleRepository;
 import com.njydsz.message.server.service.config.RouteRuleService;
 
@@ -60,7 +60,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   private static final String CACHE_NAME = "message:route-rule";
 
   /** YdszCache 本地一级缓存（规则列表，key 为 ROUTE_RULE_CACHE_KEY） */
-  private final Cache<String, List<MsgRouteRule>> localCache =
+  private final Cache<String, List<MsgRouteRuleVO>> localCache =
       YdszCache.newBuilder()
           .name(CACHE_NAME)
           .maximumSize(LOCAL_CACHE_MAX_SIZE)
@@ -87,18 +87,18 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    * @return 返回值说明
    */
   @Override
-  public MsgRouteRule create(RouteRuleUpsertDTO dto) {
+  public MsgRouteRuleVO create(RouteRuleUpsertDTO dto) {
     if (dto == null || !StringUtils.hasText(dto.getRuleCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则编码不能为空")
           .build();
     }
-    MsgRouteRule existing =
+    MsgRouteRuleVO existing =
         msgRouteRuleRepository.selectOne(
-            new LambdaQueryWrapper<MsgRouteRule>()
-                .eq(MsgRouteRule::getRuleCode, dto.getRuleCode())
-                .eq(MsgRouteRule::getTenantId, TenantContextHolder.getTenantId())
+            new LambdaQueryWrapper<MsgRouteRuleVO>()
+                .eq(MsgRouteRuleVO::getRuleCode, dto.getRuleCode())
+                .eq(MsgRouteRuleVO::getTenantId, TenantContextHolder.getTenantId())
                 .last("LIMIT 1"));
     if (existing != null) {
       throw SysException.builder()
@@ -106,7 +106,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .message("规则编码已存在: " + dto.getRuleCode())
           .build();
     }
-    MsgRouteRule entity = toEntity(dto);
+    MsgRouteRuleVO entity = toEntity(dto);
     msgRouteRuleRepository.insert(entity);
     evictCache();
     log.info("[RouteRule] 创建规则: code={}", dto.getRuleCode());
@@ -124,14 +124,14 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    * @return 返回值说明
    */
   @Override
-  public MsgRouteRule update(String id, RouteRuleUpsertDTO dto) {
+  public MsgRouteRuleVO update(String id, RouteRuleUpsertDTO dto) {
     if (!StringUtils.hasText(id) || dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则 ID 与参数不能为空")
           .build();
     }
-    MsgRouteRule entity = getById(id);
+    MsgRouteRuleVO entity = getById(id);
     if (StringUtils.hasText(dto.getRuleName())) {
       entity.setRuleName(dto.getRuleName());
     }
@@ -195,14 +195,14 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    * @return 返回值说明
    */
   @Override
-  public MsgRouteRule getById(String id) {
+  public MsgRouteRuleVO getById(String id) {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("规则 ID 不能为空")
           .build();
     }
-    MsgRouteRule entity = msgRouteRuleRepository.selectById(id);
+    MsgRouteRuleVO entity = msgRouteRuleRepository.selectById(id);
     if (entity == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -222,16 +222,16 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    * @return 路由规则分页结果
    */
   @Override
-  public Page<MsgRouteRule> page(PageQuery query) {
-    Page<MsgRouteRule> page =
+  public Page<MsgRouteRuleVO> page(PageQuery query) {
+    Page<MsgRouteRuleVO> page =
         new Page<>(
             query == null ? 1 : query.getPageNum(),
             Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
     return msgRouteRuleRepository.selectPage(
         page,
-        new LambdaQueryWrapper<MsgRouteRule>()
-            .orderByAsc(MsgRouteRule::getSortOrder)
-            .orderByDesc(MsgRouteRule::getCreatedAt));
+        new LambdaQueryWrapper<MsgRouteRuleVO>()
+            .orderByAsc(MsgRouteRuleVO::getSortOrder)
+            .orderByDesc(MsgRouteRuleVO::getCreatedAt));
   }
 
   /**
@@ -242,7 +242,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    * @return 启用规则列表（按优先级升序）
    */
   @Override
-  public List<MsgRouteRule> listEnabled() {
+  public List<MsgRouteRuleVO> listEnabled() {
     return loadEnabledRulesFromCache();
   }
 
@@ -256,14 +256,14 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    * @return 命中的路由规则；未命中返回 null
    */
   @Override
-  public MsgRouteRule match(MessageRequest request) {
+  public MsgRouteRuleVO match(MessageRequest request) {
     if (request == null) {
       return null;
     }
-    List<MsgRouteRule> rules = loadEnabledRulesFromCache();
+    List<MsgRouteRuleVO> rules = loadEnabledRulesFromCache();
     EvaluationContext ctx = new StandardEvaluationContext();
     ctx.setVariable("request", request);
-    for (MsgRouteRule rule : rules) {
+    for (MsgRouteRuleVO rule : rules) {
       if (!StringUtils.hasText(rule.getConditionExpr())) {
         // 无条件表达式视为恒真命中
         return rule;
@@ -293,10 +293,10 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    *
    * @return 启用规则列表（按优先级升序）
    */
-  private List<MsgRouteRule> loadEnabledRulesFromCache() {
+  private List<MsgRouteRuleVO> loadEnabledRulesFromCache() {
     String cacheKey = MessageConstants.ROUTE_RULE_CACHE_KEY;
     // L1: 本地缓存
-    List<MsgRouteRule> l1Result = localCache.getIfPresent(cacheKey);
+    List<MsgRouteRuleVO> l1Result = localCache.getIfPresent(cacheKey);
     if (l1Result != null) {
       return l1Result;
     }
@@ -304,7 +304,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     try {
       String json = redisStringOps.get(cacheKey, String.class);
       if (StringUtils.hasText(json)) {
-        List<MsgRouteRule> cached = YdszJson.parseArray(json, MsgRouteRule.class);
+        List<MsgRouteRuleVO> cached = YdszJson.parseArray(json, MsgRouteRuleVO.class);
         if (cached != null) {
           localCache.put(cacheKey, cached);
           return cached;
@@ -314,12 +314,12 @@ public class RouteRuleServiceImpl implements RouteRuleService {
       log.warn("[RouteRule] L2 缓存读取失败,回退 DB: {}", e.getMessage(), e);
     }
     // DB 回源
-    List<MsgRouteRule> rules =
+    List<MsgRouteRuleVO> rules =
         msgRouteRuleRepository.selectList(
-            new LambdaQueryWrapper<MsgRouteRule>()
-                .eq(MsgRouteRule::getStatus, "ENABLED")
-                .orderByAsc(MsgRouteRule::getPriority));
-    List<MsgRouteRule> result = rules == null ? Collections.emptyList() : rules;
+            new LambdaQueryWrapper<MsgRouteRuleVO>()
+                .eq(MsgRouteRuleVO::getStatus, "ENABLED")
+                .orderByAsc(MsgRouteRuleVO::getPriority));
+    List<MsgRouteRuleVO> result = rules == null ? Collections.emptyList() : rules;
     // 回填 L2 + L1
     try {
       redisStringOps.set(cacheKey, YdszJson.toJson(result), CACHE_TTL);
@@ -340,8 +340,8 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     }
   }
 
-  private MsgRouteRule toEntity(RouteRuleUpsertDTO dto) {
-    MsgRouteRule entity = new MsgRouteRule();
+  private MsgRouteRuleVO toEntity(RouteRuleUpsertDTO dto) {
+    MsgRouteRuleVO entity = new MsgRouteRuleVO();
     entity.setRuleCode(dto.getRuleCode());
     entity.setRuleName(dto.getRuleName());
     entity.setBizType(dto.getBizType());
