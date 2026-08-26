@@ -26,7 +26,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 /**
  * 基于数据库的角色权限加载器。
  *
- * <p>从 ydsz_role_permission 关联表按 roleId 查询权限 ID， 再从 ydsz_menu（权限表）加载菜单/按钮/API 权限集合。 实现 common-auth
+ * <p>从 ydsz_rbac_role_permission 关联表按 roleId 查询权限 ID， 再从 ydsz_rbac_menu（权限表）加载菜单/按钮/API 权限集合。 实现 common-auth
  * 的 {@link RolePermissionLoader} SPI。
  *
  * <p><b>缓存策略（P0-1 修复）：</b>

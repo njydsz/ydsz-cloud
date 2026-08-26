@@ -23,7 +23,7 @@ import com.njydsz.userinfo.server.service.MenuService;
 /**
  * 菜单 Service 实现
  *
- * <p>实现 {@link MenuService} 接口，封装菜单的完整业务逻辑：CRUD、树形结构构建。 菜单（{@code ydsz_menu}）是 RBAC 模型中最细粒度的「权限点」，
+ * <p>实现 {@link MenuService} 接口，封装菜单的完整业务逻辑：CRUD、树形结构构建。 菜单（{@code ydsz_rbac_menu}）是 RBAC 模型中最细粒度的「权限点」，
  * 既可表示前端路由节点，也可表示后端接口权限码。
  *
  * <p><b>核心职责：</b>

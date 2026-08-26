@@ -51,7 +51,8 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  *   <li>扫描先到：预读触发时 CAS 失败 → 跳过（由扫描器完成派发）
  * </ul>
  *
- * <p>通过 {@code ydsz.cronjob.preload.enabled=true} 启用（默认关闭，保守策略）。
+ * <p>通过 {@code ydsz.cronjob.preload.enabled} 控制（默认开启：{@code PrecisionConfig#enabled=true}，
+ * 与 {@code JobScanner} 经 CAS 互斥，不会重复派发；如需保守可显式置 false 回退纯 5s 轮询）。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -84,7 +84,7 @@ public interface PostService {
   /**
    * 批量查询岗位 ID → 岗位名映射（供 NameAssembler 跨服务富化 postName 字段）。
    *
-   * <p>实现：单条 SQL {@code SELECT id, post_name FROM ydsz_post WHERE id IN (...)}，
+   * <p>实现：单条 SQL {@code SELECT id, post_name FROM ydsz_rbac_post WHERE id IN (...)}，
    * 一次往返拿到全部结果。已逻辑删除的岗位不会出现在结果中。
    *
    * @param postIds 岗位 ID 集合（允许 null / 空，返回空 Map）

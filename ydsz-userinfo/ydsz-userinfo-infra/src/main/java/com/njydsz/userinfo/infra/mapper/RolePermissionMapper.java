@@ -14,7 +14,7 @@ import com.njydsz.userinfo.infra.entity.RolePermission;
  *
  * <p>对应数据表 <code>ydsz_rbac_role_permission</code>，存储角色与权限（菜单）的多对多关联。
  *
- * <p>是 RBAC 模型的核心中间表，权限（{@code ydsz_menu}）既可表示菜单也可表示后端接口权限码。
+ * <p>是 RBAC 模型的核心中间表，权限（{@code ydsz_rbac_menu}）既可表示菜单也可表示后端接口权限码。
  *
  * <p><b>主要索引：</b>
  *

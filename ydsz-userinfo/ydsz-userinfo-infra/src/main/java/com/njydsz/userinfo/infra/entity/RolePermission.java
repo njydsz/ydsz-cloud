@@ -55,7 +55,7 @@ public class RolePermission extends MpBaseEntity<String> {
   /**
    * 权限 ID，实际指向 {@link Menu#getId()}。
    *
-   * <p>语义上为「权限点」而非「菜单节点」，但物理外键指向 {@code ydsz_menu.id}。
+   * <p>语义上为「权限点」而非「菜单节点」，但物理外键指向 {@code ydsz_rbac_menu.id}。
    */
   private String permissionId;
 
