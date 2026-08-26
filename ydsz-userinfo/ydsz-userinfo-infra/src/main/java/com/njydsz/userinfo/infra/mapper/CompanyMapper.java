@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.Company;
 /**
  * 公司 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_company}，存储集团-子公司多级组织信息。 支持多级父子关系（{@code parentId="0"} =
+ * <p>对应数据表 {@code ydsz_org_company}，存储集团-子公司多级组织信息。 支持多级父子关系（{@code parentId="0"} =
  * 顶级公司），一个公司可包含多个部门（通过 {@code CompanyDept} 维护）。
  *
  * <p><b>本 Mapper 无自定义 SQL：</b>所有查询通过 Service 层使用 MyBatis-Plus 的 {@code LambdaQueryWrapper}

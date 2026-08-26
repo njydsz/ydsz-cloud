@@ -38,6 +38,7 @@ import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
 import com.njydsz.literule.domain.repository.ABTestRepository;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
+import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.repository.RuleExecutionTraceRepository;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
@@ -630,6 +631,32 @@ public class LiteRuleAutoConfiguration {
     }
     log.info("[LiteRule] 决策表管理服务已初始化（broadcast={}）", broadcaster != null);
     return service;
+  }
+
+  /**
+   * 决策表查询服务（P1-12 收口 web 跳层）
+   *
+   * @param repository 决策表 Repository
+   * @return DecisionTableQueryService 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public DecisionTableQueryService decisionTableQueryService(DecisionTableRepository repository) {
+    return new DecisionTableQueryService(repository);
+  }
+
+  /**
+   * 规则执行轨迹查询服务（P1-12 收口 web 跳层）
+   *
+   * @param repository 执行轨迹 Repository
+   * @return RuleTraceQueryService 实例
+   * @since 1.0.0
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public RuleTraceQueryService ruleTraceQueryService(RuleExecutionTraceRepository repository) {
+    return new RuleTraceQueryService(repository);
   }
 
   /**

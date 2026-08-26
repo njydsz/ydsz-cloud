@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.Post;
 /**
  * 岗位 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_post}，存储组织架构中的岗位信息。 岗位是「职责维度」，描述用户做什么事（如 PM、DEV、QA），区别于角色（权限维度）。
+ * <p>对应数据表 {@code ydsz_rbac_post}，存储组织架构中的岗位信息。 岗位是「职责维度」，描述用户做什么事（如 PM、DEV、QA），区别于角色（权限维度）。
  *
  * <p><b>本 Mapper 无自定义 SQL：</b>所有查询通过 Service 层使用 MyBatis-Plus 的 {@code LambdaQueryWrapper}
  * 构造。用户-岗位关联由 {@code UserPostMapper} 维护。

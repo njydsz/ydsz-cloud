@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.Role;
 /**
  * 角色 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_role}，存储 RBAC 模型中的角色。 角色是「权限集合」概念，一个角色包含多个权限（{@code ydsz_menu}），多个用户可属于同一角色。
+ * <p>对应数据表 {@code ydsz_rbac_role}，存储 RBAC 模型中的角色。 角色是「权限集合」概念，一个角色包含多个权限（{@code ydsz_menu}），多个用户可属于同一角色。
  *
  * <p><b>本 Mapper 无自定义 SQL：</b>所有查询通过 Service 层使用 MyBatis-Plus 的 {@code LambdaQueryWrapper}
  * 构造。角色-菜单关联由 {@code RolePermissionMapper} 维护。

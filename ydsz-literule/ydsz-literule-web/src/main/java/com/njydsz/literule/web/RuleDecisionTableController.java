@@ -36,10 +36,10 @@ import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.spi.DecisionTableEvalProvider;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
-import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.server.config.DecisionTableAdminService;
+import com.njydsz.literule.server.config.DecisionTableQueryService;
 
 /**
  * 决策表管理 Controller
@@ -68,8 +68,8 @@ import com.njydsz.literule.server.config.DecisionTableAdminService;
 @Tag(name = "决策表管理", description = "决策表 CRUD、评估与 Excel 导入导出")
 public class RuleDecisionTableController {
 
-  /** 决策表 Repository */
-  private final DecisionTableRepository decisionTableRepository;
+  /** 决策表查询服务（P1-12 收口：web 不直接依赖 domain Repository） */
+  private final DecisionTableQueryService decisionTableQueryService;
 
   /** 决策表管理服务（P0-3）：可选注入，未启用决策表时为空 */
   private final ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
@@ -85,7 +85,7 @@ public class RuleDecisionTableController {
    */
   @GetMapping("/decision-tables")
   public YdszResponse<List<DecisionTableVO>> listDecisionTables() {
-    return YdszResponse.success(decisionTableRepository.findAll());
+    return YdszResponse.success(decisionTableQueryService.findAll());
   }
 
   /** 查询单条决策表
@@ -94,7 +94,7 @@ public class RuleDecisionTableController {
    */
   @GetMapping("/decision-tables/{tableCode}")
   public YdszResponse<DecisionTableVO> getDecisionTable(@PathVariable String tableCode) {
-    Optional<DecisionTableVO> result = decisionTableRepository.findByTableCode(tableCode);
+    Optional<DecisionTableVO> result = decisionTableQueryService.findByTableCode(tableCode);
     return YdszResponse.success(result.orElse(null));
   }
 
@@ -112,7 +112,7 @@ public class RuleDecisionTableController {
   @PostMapping("/decision-tables")
   public YdszResponse<DecisionTableVO> saveDecisionTable(
       @Valid @RequestBody DecisionTablePostDTO dto) {
-    return YdszResponse.success(decisionTableRepository.save(dto));
+    return YdszResponse.success(decisionTableQueryService.save(dto));
   }
 
   /** 删除决策表
@@ -128,7 +128,7 @@ public class RuleDecisionTableController {
   @RateLimit(resource = "literule.rule_decision_table.deleteDecisionTable", threshold = 50)
   @DeleteMapping("/decision-tables/{id}")
   public YdszResponse<Void> deleteDecisionTable(@PathVariable String id) {
-    decisionTableRepository.deleteById(id);
+    decisionTableQueryService.deleteById(id);
     return YdszResponse.success();
   }
 

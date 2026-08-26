@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.Department;
 /**
  * 部门 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_department}，存储组织架构中的部门信息。 部门是组织架构的核心节点，支持无限级树形结构（{@code parentId="0"} =
+ * <p>对应数据表 {@code ydsz_org_department}，存储组织架构中的部门信息。 部门是组织架构的核心节点，支持无限级树形结构（{@code parentId="0"} =
  * 根部门）。
  *
  * <p><b>本 Mapper 无自定义 SQL：</b>所有查询通过 Service 层使用 MyBatis-Plus 的 {@code LambdaQueryWrapper}

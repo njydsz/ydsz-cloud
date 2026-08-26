@@ -34,9 +34,9 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
-import com.njydsz.literule.domain.repository.RuleExecutionTraceRepository;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.server.config.RuleAdminService;
+import com.njydsz.literule.server.config.RuleTraceQueryService;
 
 /**
  * 规则执行追踪 Controller
@@ -69,8 +69,8 @@ public class RuleTraceController {
     /** 追踪记录查询条数上限 */
   private static final int MAX_TRACE_LIMIT = 5000;
 
-  /** 规则执行轨迹 Repository */
-  private final RuleExecutionTraceRepository ruleExecutionTraceRepository;
+  /** 规则执行轨迹查询服务（P1-12 收口：web 不直接依赖 domain Repository） */
+  private final RuleTraceQueryService ruleTraceQueryService;
 
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
@@ -81,7 +81,7 @@ public class RuleTraceController {
    */
   @GetMapping("/traces/{traceId}")
   public YdszResponse<List<RuleExecutionTraceVO>> getTrace(@PathVariable String traceId) {
-    return YdszResponse.success(ruleExecutionTraceRepository.findByTraceId(traceId));
+    return YdszResponse.success(ruleTraceQueryService.findByTraceId(traceId));
   }
 
   /** 按规则编码查询最近链路
@@ -93,7 +93,7 @@ public class RuleTraceController {
   public YdszResponse<List<RuleExecutionTraceVO>> getTracesByRule(
       @PathVariable String ruleCode,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
-    return YdszResponse.success(ruleExecutionTraceRepository.findByRuleCode(ruleCode, limit));
+    return YdszResponse.success(ruleTraceQueryService.findByRuleCode(ruleCode, limit));
   }
 
   /**
@@ -113,7 +113,7 @@ public class RuleTraceController {
   @RateLimit(resource = "literule.rule_trace.replayTrace", threshold = 50)
   @PostMapping("/traces/{traceId}/replay")
   public YdszResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
-    List<RuleExecutionTraceVO> traces = ruleExecutionTraceRepository.findByTraceId(traceId);
+    List<RuleExecutionTraceVO> traces = ruleTraceQueryService.findByTraceId(traceId);
 
     if (traces.isEmpty()) {
       return YdszResponse.error(
@@ -224,7 +224,7 @@ public class RuleTraceController {
 
     // 按时间范围查询历史 trace（可选按 ruleCode 过滤）
     List<RuleExecutionTraceVO> traces =
-        ruleExecutionTraceRepository.findRecentByRuleCode(ruleCode, limit);
+        ruleTraceQueryService.findRecentByRuleCode(ruleCode, limit);
 
     // 逐条回放：用当前规则集重新评估
     List<Map<String, Object>> diffs = new ArrayList<>();
@@ -350,7 +350,7 @@ public class RuleTraceController {
 
     // 查询该规则最近 N 条 trace
     List<RuleExecutionTraceVO> traces =
-        ruleExecutionTraceRepository.findRecentByRuleCode(ruleCode, limit);
+        ruleTraceQueryService.findRecentByRuleCode(ruleCode, limit);
 
     // 逐条用新表达式重新评估
     List<Map<String, Object>> affectedTraces = new ArrayList<>();
@@ -481,6 +481,6 @@ public class RuleTraceController {
   @GetMapping("/traces")
   public YdszResponse<List<RuleExecutionTraceVO>> listRecentTraces(
       @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-    return YdszResponse.success(ruleExecutionTraceRepository.findRecent(limit));
+    return YdszResponse.success(ruleTraceQueryService.findRecent(limit));
   }
 }

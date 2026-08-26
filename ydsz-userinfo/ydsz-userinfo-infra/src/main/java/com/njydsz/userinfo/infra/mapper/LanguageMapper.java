@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.Language;
 /**
  * 语言配置 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_language}，存储多语言信息（含默认语言唯一性管理）。 用于前端 i18n 国际化与后端消息文案回退链（{@code
+ * <p>对应数据表 {@code ydsz_acct_user_language}，存储多语言信息（含默认语言唯一性管理）。 用于前端 i18n 国际化与后端消息文案回退链（{@code
  * LocaleContextHolder} 匹配 {@code ydsz_i18n_message} 表）。
  *
  * <p><b>本 Mapper 无自定义 SQL：</b>所有查询通过 Service 层使用 MyBatis-Plus 的 {@code LambdaQueryWrapper}

@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.Menu;
 /**
  * 菜单/权限 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_menu}，存储 RBAC 模型中的菜单与权限点。 菜单（{@code ydsz_menu}）既可表示前端路由节点，也可表示后端接口权限码（如
+ * <p>对应数据表 {@code ydsz_rbac_menu}，存储 RBAC 模型中的菜单与权限点。 菜单（{@code ydsz_rbac_menu}）既可表示前端路由节点，也可表示后端接口权限码（如
  * {@code system:user:create}）。
  *
  * <p><b>本 Mapper 无自定义 SQL：</b>所有查询通过 Service 层使用 MyBatis-Plus 的 {@code LambdaQueryWrapper}
