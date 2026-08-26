@@ -102,4 +102,19 @@ public class DagInstanceRepositoryImpl implements DagInstanceRepository {
   public int updateResultStats(String dagId, boolean success) {
     return dagInstanceMapper.updateResultStats(dagId, success);
   }
+
+  @Override
+  public int incrementNodeCounter(String instanceId, String counter) {
+    return dagInstanceMapper.incrementNodeCounter(instanceId, counter);
+  }
+
+  @Override
+  public int tryFinalizeInstance(
+      String instanceId,
+      String finalStatus,
+      LocalDateTime finishedAt,
+      long durationMs,
+      String errorMessage) {
+    return dagInstanceMapper.tryFinalizeInstance(instanceId, finalStatus, finishedAt, durationMs, errorMessage);
+  }
 }

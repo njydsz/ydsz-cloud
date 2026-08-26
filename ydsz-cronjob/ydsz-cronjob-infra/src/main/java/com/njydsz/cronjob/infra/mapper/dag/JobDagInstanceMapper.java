@@ -236,4 +236,60 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
           + "updated_at = CURRENT_TIMESTAMP "
           + "WHERE id = #{dagId}")
   int updateResultStats(@Param("dagId") String dagId, @Param("success") boolean success);
+
+  /**
+   * P1-11: 原子递增 DAG 实例的节点计数器。
+   *
+   * <p>在数据库层面直接递增，避免 read-modify-write 竞态。每个节点完成时调用一次，
+   * 复杂度 O(1)。
+   *
+   * @param instanceId DAG 实例 ID
+   * @param counter 计数器名称: success / failed / skipped
+   * @return 受影响行数
+   */
+  @Update(
+      "<script>"
+          + "UPDATE ydsz_job_dag_instance SET "
+          + "<choose>"
+          + "  <when test=\"counter == 'success'\">success_nodes = success_nodes + 1</when>"
+          + "  <when test=\"counter == 'failed'\">failed_nodes = failed_nodes + 1</when>"
+          + "  <when test=\"counter == 'skipped'\">skipped_nodes = skipped_nodes + 1</when>"
+          + "</choose>"
+          + ", updated_at = CURRENT_TIMESTAMP "
+          + "WHERE id = #{instanceId} AND status = 'RUNNING' AND deleted = 0"
+          + "</script>")
+  int incrementNodeCounter(
+      @Param("instanceId") String instanceId, @Param("counter") String counter);
+
+  /**
+   * P1-11: 条件 CAS 标记 DAG 实例终态（仅当所有节点都已完成时生效）。
+   *
+   * <p>WHERE 条件 {@code total_nodes = success_nodes + failed_nodes + skipped_nodes} 保证
+   * 只有当所有节点都已完成时才更新终态。利用数据库行锁原子性，多个 Leader 并发
+   * 调用时只有一个能成功返回 1，其余返回 0，避免重复终结。
+   *
+   * @param instanceId DAG 实例 ID
+   * @param finalStatus 终态状态: SUCCESS / FAILED / PARTIAL_SUCCESS
+   * @param finishedAt 结束时间
+   * @param durationMs 执行耗时（毫秒）
+   * @param errorMessage 错误信息
+   * @return 受影响行数（1=终结成功，0=尚有节点未完成或已被其他 Leader 终结）
+   */
+  @Update(
+      "UPDATE ydsz_job_dag_instance SET "
+          + "status = #{finalStatus}, "
+          + "finished_at = #{finishedAt}, "
+          + "duration_ms = #{durationMs}, "
+          + "error_message = #{errorMessage}, "
+          + "updated_at = CURRENT_TIMESTAMP "
+          + "WHERE id = #{instanceId} "
+          + "AND status = 'RUNNING' "
+          + "AND total_nodes = success_nodes + failed_nodes + skipped_nodes "
+          + "AND deleted = 0")
+  int tryFinalizeInstance(
+      @Param("instanceId") String instanceId,
+      @Param("finalStatus") String finalStatus,
+      @Param("finishedAt") LocalDateTime finishedAt,
+      @Param("durationMs") long durationMs,
+      @Param("errorMessage") String errorMessage);
 }

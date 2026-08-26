@@ -240,7 +240,20 @@ public class DagInstanceExecutor {
 
     // 如果没有起始节点（理论上不会，已校验无环），直接标记完成
     if (rootNodes.isEmpty()) {
-      finalizeInstance(dagInstanceId);
+      dagInstanceRepository.markFinished(
+          dagInstanceId,
+          DagInstanceStatus.SUCCESS.name(),
+          LocalDateTime.now(),
+          0,
+          null,
+          0,
+          0,
+          0,
+          0);
+      // 更新 DAG 定义的统计计数
+      dagInstanceRepository.updateResultStats(instance.getDagId(), true);
+      log.info("[DagInstance] 无起始节点, 直接完成: instanceId={}", dagInstanceId);
+      return;
     }
   }
 
@@ -420,16 +433,17 @@ public class DagInstanceExecutor {
     DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
 
     if (event.success()) {
+      // P1-11: 增量更新成功计数器并尝试终结
+      incrementCounterAndTryFinalize(dagInstanceId, "success");
       // 节点成功：触发后继
       triggerSuccessors(dagInstanceId, instance.getDagId(), nodeInstance.getJobKey(), definition);
     } else {
+      // P1-11: 增量更新失败计数器
+      dagInstanceRepository.incrementNodeCounter(dagInstanceId, "failed");
       // 节点失败：根据 DAG 级失败策略处理（P2-6 增强）
       DagFailureStrategy dagStrategy = DagFailureStrategy.parse(dag.getFailStrategy());
       handleNodeFailure(dagInstanceId, instance.getDagId(), nodeInstance, definition, dagStrategy);
     }
-
-    // 检查是否所有节点完成
-    finalizeInstance(dagInstanceId);
   }
 
   /**
@@ -457,22 +471,41 @@ public class DagInstanceExecutor {
       }
       // 重试次数用尽，降级为 ABORT
       log.info("[DagInstance] RETRY 重试次数用尽, 按 ABORT 处理: instanceId={} jobKey={}", dagInstanceId, jobKey);
-      skipPendingNodes(dagInstanceId);
+      int skipped = skipPendingNodes(dagInstanceId);
+      if (skipped > 0) {
+        incrementCounterAndTryFinalize(dagInstanceId, "skipped");
+      } else {
+        // 没有跳过的节点，直接尝试终结
+        incrementCounterAndTryFinalize(dagInstanceId, "success");
+      }
       return;
     }
 
     if (dagStrategy == DagFailureStrategy.ABORT) {
-      skipPendingNodes(dagInstanceId);
-      log.info("[DagInstance] ABORT, 跳过未完成节点: instanceId={}", dagInstanceId);
+      int skipped = skipPendingNodes(dagInstanceId);
+      log.info("[DagInstance] ABORT, 跳过未完成节点: instanceId={} skipped={}", dagInstanceId, skipped);
+      if (skipped > 0) {
+        incrementCounterAndTryFinalize(dagInstanceId, "skipped");
+      } else {
+        incrementCounterAndTryFinalize(dagInstanceId, "success");
+      }
     } else if (dagStrategy == DagFailureStrategy.SKIP_SUBSEQUENT) {
-      skipSubsequentNodes(dagInstanceId, jobKey, definition);
+      int skipped = skipSubsequentNodes(dagInstanceId, jobKey, definition);
       log.info(
-          "[DagInstance] SKIP_SUBSEQUENT, 跳过失败节点后继: instanceId={} jobKey={}",
+          "[DagInstance] SKIP_SUBSEQUENT, 跳过失败节点后继: instanceId={} jobKey={} skipped={}",
           dagInstanceId,
-          jobKey);
+          jobKey,
+          skipped);
+      if (skipped > 0) {
+        incrementCounterAndTryFinalize(dagInstanceId, "skipped");
+      } else {
+        incrementCounterAndTryFinalize(dagInstanceId, "success");
+      }
     } else {
       // CONTINUE: 仍然触发后继
       triggerSuccessors(dagInstanceId, dagId, jobKey, definition, false);
+      // 尝试终结（可能所有后继都已完成）
+      incrementCounterAndTryFinalize(dagInstanceId, "success");
     }
   }
 
@@ -507,30 +540,40 @@ public class DagInstanceExecutor {
     return true;
   }
 
-  private void skipSubsequentNodes(
+  private int skipSubsequentNodes(
       String dagInstanceId, String failedJobKey, DagDefinition definition) {
     List<DagEdge> outgoing = definition.outgoingEdges(failedJobKey);
+    int skipped = 0;
     for (DagEdge edge : outgoing) {
-      skipNodeAndSubsequent(dagInstanceId, edge.to(), definition);
+      skipped += skipNodeAndSubsequent(dagInstanceId, edge.to(), definition);
     }
+    return skipped;
   }
 
-  private void skipNodeAndSubsequent(
+  /**
+   * 跳过指定节点及其后继节点。
+   *
+   * @return 跳过的节点数
+   */
+  private int skipNodeAndSubsequent(
       String dagInstanceId, String jobKey, DagDefinition definition) {
     DagNode node = definition.findNode(jobKey);
     if (node == null) {
-      return;
+      return 0;
     }
+    int skipped = 0;
     JobDagNodeInstanceVO nodeInstance =
         dagNodeInstanceRepository.findByDagInstanceAndJobKey(dagInstanceId, jobKey);
     if (nodeInstance != null && DagNodeStatus.PENDING.name().equals(nodeInstance.getNodeStatus())) {
       dagNodeInstanceRepository.markSkipped(nodeInstance.getId());
+      skipped++;
       log.debug("[DagInstance] SKIP_SUBSEQUENT 跳过节点: instanceId={} jobKey={}", dagInstanceId, jobKey);
     }
     // 递归跳过后继
     for (DagEdge edge : definition.outgoingEdges(jobKey)) {
-      skipNodeAndSubsequent(dagInstanceId, edge.to(), definition);
+      skipped += skipNodeAndSubsequent(dagInstanceId, edge.to(), definition);
     }
+    return skipped;
   }
 
   private int resolveNodeMaxRetries(String jobId) {
@@ -598,53 +641,66 @@ public class DagInstanceExecutor {
     return true;
   }
 
-  private void skipPendingNodes(String dagInstanceId) {
+  /**
+   * 跳过所有 PENDING 状态的节点。
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @return 跳过的节点数
+   */
+  private int skipPendingNodes(String dagInstanceId) {
     List<JobDagNodeInstanceVO> nodes = dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
+    int skipped = 0;
     for (JobDagNodeInstanceVO node : nodes) {
       if (DagNodeStatus.PENDING.name().equals(node.getNodeStatus())) {
         dagNodeInstanceRepository.markSkipped(node.getId());
+        skipped++;
       }
     }
+    return skipped;
   }
 
   // ==================== DAG 实例终态处理 ====================
 
-  private void finalizeInstance(String dagInstanceId) {
-    List<JobDagNodeInstanceVO> nodes = dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
-    if (nodes.isEmpty()) {
+  /**
+   * P1-11: 增量更新节点计数器并尝试终结 DAG 实例。
+   *
+   * <p>性能优化：原实现每次节点完成都全表扫描节点实例表 O(N)
+   * 统计各状态计数，总复杂度 O(N²)。新实现：
+   *
+   * <ol>
+   *   <li>原子递增对应计数器（success/failed/skipped），O(1)</li>
+   *   <li>读取实例行获取当前计数，判断是否所有节点已完成</li>
+   *   <li>若完成，条件 CAS 更新终态，仅有一个 Leader 能成功</li>
+   * </ol>
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @param counter       计数器名称: success / failed / skipped
+   */
+  private void incrementCounterAndTryFinalize(String dagInstanceId, String counter) {
+    // 1. 原子递增计数器
+    dagInstanceRepository.incrementNodeCounter(dagInstanceId, counter);
+
+    // 2. 读取实例行获取当前计数
+    JobDagInstanceVO instance = dagInstanceRepository.findById(dagInstanceId).orElse(null);
+    if (instance == null || !"RUNNING".equals(instance.getInstanceStatus())) {
       return;
     }
-    int total = nodes.size();
-    int success = 0;
-    int failed = 0;
-    int skipped = 0;
-    int pending = 0;
-    int running = 0;
-    for (JobDagNodeInstanceVO node : nodes) {
-      DagNodeStatus st = DagNodeStatus.parse(node.getNodeStatus());
-      if (st == null) {
-        continue;
-      }
-      switch (st) {
-        case SUCCESS -> success++;
-        case FAILED, APPROVAL_REJECTED -> failed++;
-        case SKIPPED -> skipped++;
-        case PENDING, WAITING_FOR_APPROVAL -> pending++;
-        case RUNNING -> running++;
-        case RETRYING -> pending++;
-        default -> {
-          // 未知状态忽略
-        }
-      }
-    }
-    if (pending > 0 || running > 0) {
-      return;
+    Integer total = instance.getTotalNodes();
+    Integer success = instance.getSuccessNodes() != null ? instance.getSuccessNodes() : 0;
+    Integer failed = instance.getFailedNodes() != null ? instance.getFailedNodes() : 0;
+    Integer skipped = instance.getSkippedNodes() != null ? instance.getSkippedNodes() : 0;
+
+    // 3. 判断是否所有节点已完成
+    if (total == null || (success + failed + skipped) < total) {
+      return; // 尚有节点未完成
     }
 
+    // 4. 确定终态
     DagInstanceStatus finalStatus;
-    String errorMessage = null;
+    String errorMessage;
     if (failed == 0 && skipped == 0) {
       finalStatus = DagInstanceStatus.SUCCESS;
+      errorMessage = null;
     } else if (success == 0) {
       finalStatus = DagInstanceStatus.FAILED;
       errorMessage = "所有节点执行失败";
@@ -653,37 +709,23 @@ public class DagInstanceExecutor {
       errorMessage = "部分节点失败: failed=" + failed + " skipped=" + skipped;
     }
 
+    // 5. 条件 CAS 更新终态
     LocalDateTime now = LocalDateTime.now();
-    JobDagInstanceVO instance = dagInstanceRepository.findById(dagInstanceId).orElse(null);
-    long durationMs =
-        instance != null && instance.getStartedAt() != null
-            ? ChronoUnit.MILLIS.between(instance.getStartedAt(), now)
-            : 0;
+    long durationMs = instance.getStartedAt() != null
+        ? ChronoUnit.MILLIS.between(instance.getStartedAt(), now)
+        : 0;
+    int updated = dagInstanceRepository.tryFinalizeInstance(
+        dagInstanceId, finalStatus.name(), now, durationMs, errorMessage);
 
-    dagInstanceRepository.markFinished(
-        dagInstanceId,
-        finalStatus.name(),
-        now,
-        durationMs,
-        errorMessage,
-        total,
-        success,
-        failed,
-        skipped);
-
-    // 更新 DAG 定义的统计计数
-    if (instance != null) {
+    if (updated > 0) {
+      // 更新 DAG 定义的统计计数
       dagInstanceRepository.updateResultStats(instance.getDagId(), finalStatus == DagInstanceStatus.SUCCESS);
+      log.info(
+          "[DagInstance] 执行完成: instanceId={} status={} total={} success={} failed={} skipped={} durationMs={}",
+          dagInstanceId, finalStatus, total, success, failed, skipped, durationMs);
+    } else {
+      log.debug("[DagInstance] 实例已被其他 Leader 终结: instanceId={}", dagInstanceId);
     }
-    log.info(
-        "[DagInstance] 执行完成: instanceId={} status={} total={} success={} failed={} skipped={} durationMs={}",
-        dagInstanceId,
-        finalStatus,
-        total,
-        success,
-        failed,
-        skipped,
-        durationMs);
   }
 
   private void markInstanceFailed(String dagInstanceId, String errorMessage) {
@@ -732,6 +774,8 @@ public class DagInstanceExecutor {
       return;
     }
     dagNodeInstanceRepository.markSkipped(node.getId());
+    // P1-11: 增量更新跳过计数器并尝试终结
+    incrementCounterAndTryFinalize(dagInstanceId, "skipped");
   }
 
   // ==================== P2-5: 跨节点上下文传递 ====================

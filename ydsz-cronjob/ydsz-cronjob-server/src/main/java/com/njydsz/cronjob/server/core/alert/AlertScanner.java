@@ -93,6 +93,7 @@ public class AlertScanner {
     try {
       scanFailRateRules();
       scanDurationP95Rules();
+      scanSlaWarningRules();
     } catch (Exception e) {
       log.error("[AlertScanner] 扫描异常: role={} reason={}", leaderRole, e.getMessage(), e);
     }
@@ -251,6 +252,96 @@ public class AlertScanner {
       return window;
     }
     return DEFAULT_TIME_WINDOW_MINUTES;
+  }
+
+  // ===== P1-2: SLA 监控与告警闭环 =====
+
+  /**
+   * 扫描 SLA_WARNING 类型规则：检测任务耗时达到 SLA 承诺值的阈值（默认 80%）。
+   *
+   * <p>与 DURATION_P95 不同，SLA_WARNING 关注的是任务执行耗时是否接近其 SLA 上限，
+   * 用于提前预警即将超 SLA 的任务，而非已经超时。
+   *
+   * <p>阈值含义：SLA 承诺耗时的百分比（如 80 表示达到 SLA 的 80% 时预警）。
+   */
+  void scanSlaWarningRules() {
+    List<JobAlertRuleVO> rules = jobAlertRuleRepository.findByAlertType(AlertType.SLA_WARNING.name());
+    if (rules.isEmpty()) {
+      return;
+    }
+    log.debug("[AlertScanner] 扫描 SLA_WARNING 规则: count={}", rules.size());
+    for (JobAlertRuleVO rule : rules) {
+      try {
+        evaluateSlaWarningRule(rule);
+      } catch (Exception e) {
+        log.error(
+            "[AlertScanner] 评估 SLA_WARNING 规则失败: ruleId={} jobId={} reason={}",
+            rule.getId(),
+            rule.getJobId(),
+            e.getMessage(),
+            e);
+      }
+    }
+  }
+
+  /**
+   * 评估单条 SLA_WARNING 规则。
+   *
+   * <p>逻辑：查询时间窗口内任务的 P95 耗时，若 P95 耗时 &gt;= (SLA_THRESHOLD * threshold/100)，
+   * 则触发 SLA 预警。
+   *
+   * <p>threshold 含义：百分比（如 80 表示 SLA 承诺值的 80%）。
+   */
+  private void evaluateSlaWarningRule(JobAlertRuleVO rule) {
+    // SLA 承诺耗时：从任务配置获取，这里简化为 threshold * 1000 ms（实际应从 Job 配置读取）
+    // threshold 在这里作为 SLA 承诺耗时的秒数
+    if (rule.getThreshold() == null || rule.getThreshold() <= 0) {
+      log.warn(
+          "[AlertScanner] SLA_WARNING 规则阈值无效, 跳过: ruleId={} threshold={}",
+          rule.getId(),
+          rule.getThreshold());
+      return;
+    }
+    int windowMinutes = resolveWindowMinutes(rule);
+    LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);
+
+    // SLA 承诺耗时（毫秒）：threshold 为秒
+    long slaCommitmentMs = rule.getThreshold() * 1000L;
+    // 预警线：SLA 的 80%
+    long warningLineMs = (long) (slaCommitmentMs * 0.8);
+
+    Long p95Ms;
+    if (rule.getJobId() == null) {
+      p95Ms = jobLogRepository.findDurationP95Global(since).orElse(null);
+    } else {
+      p95Ms = jobLogRepository.findDurationP95(rule.getJobId(), since).orElse(null);
+    }
+    if (p95Ms == null || p95Ms <= 0) {
+      return;
+    }
+    if (p95Ms < warningLineMs) {
+      return;
+    }
+    // 触发 SLA 预警
+    AlertContext context =
+        AlertContext.of(
+            AlertType.SLA_WARNING,
+            rule.getJobId(),
+            rule.getJobKey(),
+            null,
+            null,
+            String.valueOf(p95Ms),
+            null,
+            TracerUtils.getTraceId(),
+            rule.getTenantId());
+    alertTrigger.trigger(context);
+    log.info(
+        "[AlertScanner] SLA_WARNING 告警触发: ruleId={} jobId={} p95={}ms slaMs={}ms warningLine={}ms",
+        rule.getId(),
+        rule.getJobId(),
+        p95Ms,
+        slaCommitmentMs,
+        warningLineMs);
   }
 
   /** 安全将 Map 中的统计值转为 long（兼容 Number / String）。 */

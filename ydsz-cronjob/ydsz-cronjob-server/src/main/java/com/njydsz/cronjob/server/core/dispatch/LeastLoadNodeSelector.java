@@ -28,6 +28,9 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * <p>负载信息依赖 {@link com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat} 上报的 running_count +
  * cpu_usage， 因此节点心跳必须正常工作；若 running_count 为 null 视为 0，cpu_usage 为 null 视为最低优先。
  *
+ * <p><b>P1-1 增强：</b>引入加权响应时长（responseTimeMs）作为第三维度，节点响应缓慢时降低被选中的概率，
+ * 避免将新任务派发到 DB 连接不健康的节点。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -36,6 +39,9 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 @Primary
 @ConditionalOnMissingBean(NodeSelector.class)
 public class LeastLoadNodeSelector implements NodeSelector {
+
+  /** 响应时长权重系数：每 100ms 响应延迟等效于 1 个 running_count */
+  private static final double RESPONSE_TIME_WEIGHT = 1.0 / 100.0;
 
   @Override
   public JobNodeVO select(JobVO job, List<JobNodeVO> candidates) {
@@ -47,20 +53,26 @@ public class LeastLoadNodeSelector implements NodeSelector {
       return candidates.get(0);
     }
     return candidates.stream()
-        .min(
-            Comparator.comparingInt(this::safeRunningCount)
-                .thenComparing(this::safeCpuUsage)
-                .thenComparing(JobNodeVO::getNodeId))
+        .min(Comparator.comparingDouble(this::calculateWeightedScore)
+            .thenComparing(JobNodeVO::getNodeId))
         .orElse(candidates.get(0));
   }
 
-  /** 安全获取 running_count（null 视为 0）。 */
-  private int safeRunningCount(JobNodeVO node) {
-    return node.getRunningCount() != null ? node.getRunningCount() : 0;
-  }
+  /**
+   * 计算节点加权负载分数（值越小越优先）。
+   *
+   * <p>分数 = running_count + cpu_usage/10 + responseTimeMs * RESPONSE_TIME_WEIGHT
+   *
+   * <p>响应时长维度将慢节点自然排到后面，避免将任务派发到响应缓慢的节点。
+   *
+   * @param node 节点信息
+   * @return 加权负载分数
+   */
+  private double calculateWeightedScore(JobNodeVO node) {
+    int running = node.getRunningCount() != null ? node.getRunningCount() : 0;
+    BigDecimal cpu = node.getCpuUsage() != null ? node.getCpuUsage() : BigDecimal.ZERO;
+    long responseTime = node.getResponseTimeMs() != null ? node.getResponseTimeMs() : 0L;
 
-  /** 安全获取 cpu_usage（null 视为 0，即最低优先）。 */
-  private BigDecimal safeCpuUsage(JobNodeVO node) {
-    return node.getCpuUsage() != null ? node.getCpuUsage() : BigDecimal.ZERO;
+    return running + cpu.doubleValue() / 10.0 + responseTime * RESPONSE_TIME_WEIGHT;
   }
 }

@@ -114,4 +114,29 @@ public interface JobNodeRepository {
    * @return 受影响行数
    */
   int updateStatus(String nodeId, String status, LocalDateTime lastHeartbeat);
+
+  // ===== P1-1: 节点健康检查 =====
+
+  /**
+   * 更新节点加权响应时长（EMA）。
+   *
+   * @param nodeId 节点 ID
+   * @param responseTimeMs 加权平均响应时长（毫秒）
+   */
+  void updateResponseTime(String nodeId, long responseTimeMs);
+
+  /**
+   * 更新节点连续失败次数。
+   *
+   * @param nodeId 节点 ID
+   * @param consecutiveFailures 连续失败次数
+   */
+  void updateConsecutiveFailures(String nodeId, int consecutiveFailures);
+
+  /**
+   * 重置节点连续失败次数（健康检查成功时调用）。
+   *
+   * @param nodeId 节点 ID
+   */
+  void resetConsecutiveFailures(String nodeId);
 }

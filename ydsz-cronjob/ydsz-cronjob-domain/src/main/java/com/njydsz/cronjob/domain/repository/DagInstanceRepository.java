@@ -126,4 +126,36 @@ public interface DagInstanceRepository {
    * @return 受影响行数
    */
   int updateResultStats(String dagId, boolean success);
+
+  /**
+   * P1-11: 原子递增 DAG 实例的节点计数器。
+   *
+   * <p>在数据库层面直接递增，避免 read-modify-write 竞态。每个节点完成时调用一次。
+   *
+   * @param instanceId DAG 实例 ID
+   * @param counter    计数器名称: success / failed / skipped
+   * @return 受影响行数
+   */
+  int incrementNodeCounter(String instanceId, String counter);
+
+  /**
+   * P1-11: 条件 CAS 标记 DAG 实例终态（仅当所有节点都已完成时生效）。
+   *
+   * <p>WHERE 条件 {@code total_nodes = success_nodes + failed_nodes + skipped_nodes} 保证
+   * 只有当所有节点都已完成时才更新终态。利用数据库行锁原子性，多个 Leader 并发
+   * 调用时只有一个能成功返回 1，其余返回 0。
+   *
+   * @param instanceId   DAG 实例 ID
+   * @param finalStatus  终态状态: SUCCESS / FAILED / PARTIAL_SUCCESS
+   * @param finishedAt   结束时间
+   * @param durationMs   执行耗时（毫秒）
+   * @param errorMessage 错误信息（可为 null）
+   * @return 受影响行数（1=终结成功，0=尚有节点未完成或已被其他 Leader 终结）
+   */
+  int tryFinalizeInstance(
+      String instanceId,
+      String finalStatus,
+      LocalDateTime finishedAt,
+      long durationMs,
+      String errorMessage);
 }

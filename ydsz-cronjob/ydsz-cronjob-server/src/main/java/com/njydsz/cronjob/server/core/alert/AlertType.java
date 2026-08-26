@@ -53,10 +53,10 @@ public enum AlertType {
   /**
    * 判断该告警类型是否需要阈值。
    *
-   * @return FAIL / TIMEOUT / SLA_WARNING 无需阈值；SLOW / FAIL_RATE / DURATION_P95 需要阈值
+   * @return FAIL / TIMEOUT 无需阈值；SLOW / FAIL_RATE / DURATION_P95 / SLA_WARNING 需要阈值
    */
   public boolean requiresThreshold() {
-    return this != FAIL && this != TIMEOUT && this != SLA_WARNING;
+    return this != FAIL && this != TIMEOUT;
   }
 
   /**

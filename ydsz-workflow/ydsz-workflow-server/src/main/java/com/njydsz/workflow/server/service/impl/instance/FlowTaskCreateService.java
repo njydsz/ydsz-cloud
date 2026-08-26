@@ -21,9 +21,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
-import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
@@ -61,14 +59,15 @@ import com.njydsz.workflow.server.service.instance.ServiceNodeExecuteService;
  * FlowTaskCompleteServiceImpl}（单体实现）拆分的产物， 是大厂 B 端工作流「灵活节点类型 + 智能审批人解析」的关键实现层。
  *
  * <p><b>P1-2 God Class 拆分规划：</b>本类承担职责过多（任务创建 + 办理人解析 + 委派改写 + 服务节点执行 + SLA + 推送），
- * 正在逐步拆分。已完成与待完成子服务：
+ * 正在逐步拆分。已完成子服务：
  *
  * <ul>
  *   <li>[已完成] {@link AssigneeResolutionService} — 办理人解析（resolveAssignee / resolveInitiatorId）
  *   <li>[已完成] {@link DelegateRedirectService} — 长期授权委派改写（applyDelegateRedirect）
  *   <li>[已完成] {@link EmptyAssigneeStrategyService} — 审批人为空兜底策略（handleEmptyAssignee 四策略分发）
- *   <li>[已完成] {@link ServiceNodeExecuteService} — 服务节点 HTTP/SCRIPT/AUTO_PASS
- *       执行（executeServiceNode）
+ *   <li>[已完成] {@link ServiceNodeExecuteService} — 服务节点 HTTP/SCRIPT/AUTO_PASS 执行（executeServiceNode）
+ *   <li>[已完成] {@link FlowAutoApproveService} — 自动审批规则引擎（tryAutoApprove 多规则求值 + 动作执行）
+ *   <li>[已完成] {@link FlowCrossNodeDedupService} — 跨节点办理人去重（applyCrossNodeDedup / isAutoDedupEnabled）
  * </ul>
  *
  * <p><b>支持的任务创建场景：</b>
@@ -225,6 +224,12 @@ public class FlowTaskCreateService {
 
   /** P1-4: 服务节点执行服务（从本类抽出，组合模式接入） */
   private ServiceNodeExecuteService serviceNodeExecuteService;
+
+  /** P2-4: 自动审批服务（从本类抽出，组合模式接入） */
+  private final FlowAutoApproveService autoApproveService;
+
+  /** P1-5: 跨节点办理人去重服务（从本类抽出，组合模式接入） */
+  private final FlowCrossNodeDedupService crossNodeDedupService;
 
   /**
    * 初始化 EmptyAssigneeStrategyService
@@ -554,26 +559,8 @@ public class FlowTaskCreateService {
 
   /**
    * P2-4 (GAP-14) / P0-4: 自动审批节点（配置化规则引擎）
-   * 
-   * <p>P0-4 增强：支持多规则配置（rules 数组），每条规则可指定 type + action。
-   * 
-   * <p>ext JSON 配置示例：
-   * 
-   * <pre>
-   * {
-   * "autoApprove": {
-   * "enabled": true,
-   * "rules": [
-   * {"type": "INITIATOR_IS_APPROVER", "action": "PASS"},
-   * {"type": "AMOUNT_BELOW", "threshold": 1000, "variable": "amount", "action": "PASS"},
-   * {"type": "EXPR", "expr": "deptType == 'engineering' && urgency == 'low'", "action": "PASS"},
-   * {"type": "AMOUNT_ABOVE", "threshold": 100000, "variable": "amount", "action": "REJECT"}
-   * ]
-   * }
-   * }
-   * </pre>
-   * 
-   * <p>兼容旧配置：enabled + whenInitiatorIsApprover + expr 单条规则格式。
+   *
+   * <p>委托给 {@link FlowAutoApproveService} 执行。
    *
    * @param instance 参数说明
    * @param node 参数说明
@@ -582,263 +569,7 @@ public class FlowTaskCreateService {
    */
   private void tryAutoApprove(
       FlowInstanceVO instance, FlowNodeVO node, FlowRunTaskVO task, Map<String, Object> variables) {
-    Map<String, Object> cfg = checkAutoApproveConditions(node, task);
-    if (cfg == null) {
-      return;
-    }
-    Map<String, Object> env = buildAutoApproveContext(instance, task, node, variables);
-    executeAutoApprove(cfg, env, instance, node, task, variables);
-  }
-
-  /**
-   * 检查是否满足自动审批触发条件。
-   *
-   * <p>逐项校验：ext 含 autoApprove 配置、enabled=true、任务执行模式为 OR（单人审批）。 任一条件不满足时返回 null，调用方直接跳过自动审批。
-   *
-   * @return 自动审批配置 Map（满足所有条件时返回），不满足时返回空 Map
-   */
-  private Map<String, Object> checkAutoApproveConditions(FlowNodeVO node, FlowRunTaskVO task) {
-    if (node.getExt() == null || node.getExt().isBlank()) {
-      return Collections.emptyMap();
-    }
-    Map<String, Object> extConfig;
-    try {
-      extConfig = FlowNodeExt.parseSafe(node.getExt());
-    } catch (Exception e) {
-      return Collections.emptyMap();
-    }
-    if (extConfig == null) {
-      return Collections.emptyMap();
-    }
-    Object autoApproveObj = extConfig.get("autoApprove");
-    if (!(autoApproveObj instanceof Map<?, ?> autoApprove)) {
-      return Collections.emptyMap();
-    }
-    Map<String, Object> cfg = MapUtils.toStringObjectMap(autoApprove);
-    Boolean enabled = (Boolean) cfg.get("enabled");
-    if (enabled == null || !enabled) {
-      return Collections.emptyMap();
-    }
-    // 仅单人 OR 模式自动通过
-    if (!FlowPerformType.OR.name().equals(task.getPerformType())) {
-      return Collections.emptyMap();
-    }
-    return cfg;
-  }
-
-  /**
-   * 构建自动审批评估环境变量。
-   *
-   * <p>将基础流程变量与 _initiatorId / _assigneeId / _nodeCode 三个内置变量合并， 供规则求值时使用。
-   */
-  private Map<String, Object> buildAutoApproveContext(
-      FlowInstanceVO instance, FlowRunTaskVO task, FlowNodeVO node, Map<String, Object> variables) {
-    Map<String, Object> env = new HashMap<>();
-    if (variables != null) {
-      env.putAll(variables);
-    }
-    env.put("_initiatorId", instance.getInitiatorId());
-    env.put("_assigneeId", task.getAssigneeId());
-    env.put("_nodeCode", node.getNodeCode());
-    return env;
-  }
-
-  /**
-   * 评估自动审批规则并执行匹配的动作。
-   * 
-   * <p>优先使用 rules 数组（新配置）：逐条调用 {@link #evaluateAutoApproveRule}， 命中第一条即执行并返回。无新配置时回退到旧单条规则 （{@code
-   * whenInitiatorIsApprover} / {@code expr}）。
-   *
-   * @param cfg 参数说明
-   * @param env 参数说明
-   * @param instance 参数说明
-   * @param node 参数说明
-   * @param task 参数说明
-   * @param variables 参数说明
-   */
-  private void executeAutoApprove(
-      Map<String, Object> cfg,
-      Map<String, Object> env,
-      FlowInstanceVO instance,
-      FlowNodeVO node,
-      FlowRunTaskVO task,
-      Map<String, Object> variables) {
-    // P0-4: 优先使用 rules 数组（新配置）
-    Object rulesObj = cfg.get("rules");
-    if (rulesObj instanceof List<?> rulesList && !rulesList.isEmpty()) {
-      for (Object ruleObj : rulesList) {
-        if (!(ruleObj instanceof Map<?, ?> rule)) {
-          continue;
-        }
-        Map<String, Object> ruleCfg = MapUtils.toStringObjectMap(rule);
-        String action = evaluateAutoApproveRule(ruleCfg, instance, task, env);
-        if (action != null) {
-          executeAutoAction(action, instance, node, task, variables, ruleCfg);
-          return; // 命中第一条规则即执行
-        }
-      }
-      return; // 规则数组无命中
-    }
-
-    // 兼容旧配置：单条规则
-    boolean matched = false;
-    String action = "PASS";
-
-    // 条件1：发起人是审批人
-    Object whenInitiator = cfg.get("whenInitiatorIsApprover");
-    if (Boolean.TRUE.equals(whenInitiator) && instance.getInitiatorId() != null) {
-      String initiator = String.valueOf(instance.getInitiatorId());
-      if (initiator.equals(task.getAssigneeId())
-          || (task.getAssigneeName() != null && task.getAssigneeName().contains(initiator))) {
-        matched = true;
-      }
-    }
-    // 条件2：Aviator 表达式
-    if (!matched) {
-      Object exprObj = cfg.get("expr");
-      if (exprObj instanceof String expr && !expr.isBlank()) {
-        try {
-          Object result = serviceNodeExecutor.evalExpr(expr, env);
-          matched = Boolean.TRUE.equals(result);
-        } catch (Exception e) {
-          log.warn(
-              "[Flow] 自动审批表达式求值失败 node={} expr={} err={}",
-              node.getNodeCode(),
-              exprObj,
-              e.getMessage());
-        }
-      }
-    }
-    if (matched) {
-      executeAutoAction(action, instance, node, task, variables, null);
-    }
-  }
-
-  /**
-   * P0-4: 评估单条自动审批规则
-   * 
-   * 
-   *
-   * @param rule 参数说明
-   * @param instance 参数说明
-   * @param task 参数说明
-   * @param env 参数说明
-   * @return 返回值说明
-   */
-  private String evaluateAutoApproveRule(
-      Map<String, Object> rule, FlowInstanceVO instance, FlowRunTaskVO task, Map<String, Object> env) {
-    String type = String.valueOf(rule.getOrDefault("type", "")).toUpperCase();
-    String action = String.valueOf(rule.getOrDefault("action", "PASS")).toUpperCase();
-    boolean matched = false;
-
-    switch (type) {
-      case "INITIATOR_IS_APPROVER" -> {
-        if (instance.getInitiatorId() != null) {
-          String initiator = String.valueOf(instance.getInitiatorId());
-          matched =
-              initiator.equals(task.getAssigneeId())
-                  || (task.getAssigneeName() != null && task.getAssigneeName().contains(initiator));
-        }
-      }
-      case "EXPR" -> {
-        Object exprObj = rule.get("expr");
-        if (exprObj instanceof String expr && !expr.isBlank()) {
-          try {
-            Object result = serviceNodeExecutor.evalExpr(expr, env);
-            matched = Boolean.TRUE.equals(result);
-          } catch (Exception e) {
-            log.warn(
-                "[Flow] P0-4 自动审批规则表达式求值失败: type={} expr={} err={}", type, exprObj, e.getMessage());
-          }
-        }
-      }
-      case "AMOUNT_BELOW" -> {
-        String varName = String.valueOf(rule.getOrDefault("variable", "amount"));
-        Object thresholdObj = rule.get("threshold");
-        Object val = env.get(varName);
-        if (thresholdObj != null && val instanceof Number n) {
-          double threshold = ((Number) thresholdObj).doubleValue();
-          matched = n.doubleValue() < threshold;
-        }
-      }
-      case "AMOUNT_ABOVE" -> {
-        String varName = String.valueOf(rule.getOrDefault("variable", "amount"));
-        Object thresholdObj = rule.get("threshold");
-        Object val = env.get(varName);
-        if (thresholdObj != null && val instanceof Number n) {
-          double threshold = ((Number) thresholdObj).doubleValue();
-          matched = n.doubleValue() > threshold;
-        }
-      }
-      case "ALWAYS" -> matched = true;
-      default -> {
-        log.debug("[Flow] P0-4 未知自动审批规则类型: type={}", type);
-      }
-    }
-
-    return matched ? action : null;
-  }
-
-  /**
-   * P0-4: 执行自动审批动作（PASS / REJECT）
-   *
-   * @param action 参数说明
-   * @param instance 参数说明
-   * @param node 参数说明
-   * @param task 参数说明
-   * @param variables 参数说明
-   * @param ruleCfg 参数说明
-   */
-  private void executeAutoAction(
-      String action,
-      FlowInstanceVO instance,
-      FlowNodeVO node,
-      FlowRunTaskVO task,
-      Map<String, Object> variables,
-      Map<String, Object> ruleCfg) {
-    FlowTaskOperateDTO autoDto = new FlowTaskOperateDTO();
-    autoDto.setTaskId(task.getId());
-    autoDto.setUserId("0");
-    autoDto.setUserName("SYSTEM_AUTO_APPROVE");
-    String ruleDesc =
-        ruleCfg != null ? String.valueOf(ruleCfg.getOrDefault("type", "UNKNOWN")) : "LEGACY";
-    if ("REJECT".equals(action)) {
-      autoDto.setComment("P0-4 自动审批规则[" + ruleDesc + "]命中，自动驳回");
-      try {
-        // 调用 flowTaskCoreService 驳回
-        flowTaskCoreService.reject(autoDto);
-        log.info(
-            "[Flow] P0-4 自动审批规则驳回: instanceId={} node={} taskId={} rule={}",
-            instance.getId(),
-            node.getNodeCode(),
-            task.getId(),
-            ruleDesc);
-      } catch (Exception e) {
-        log.warn(
-            "[Flow] P0-4 自动审批驳回失败（降级为人工）: instanceId={} node={} err={}",
-            instance.getId(),
-            node.getNodeCode(),
-            e.getMessage());
-      }
-    } else {
-      autoDto.setComment("P0-4 自动审批规则[" + ruleDesc + "]命中，自动通过");
-      autoDto.setVariables(variables);
-      try {
-        flowTaskCoreService.pass(autoDto);
-        log.info(
-            "[Flow] P0-4 自动审批规则通过: instanceId={} node={} taskId={} rule={}",
-            instance.getId(),
-            node.getNodeCode(),
-            task.getId(),
-            ruleDesc);
-      } catch (Exception e) {
-        log.warn(
-            "[Flow] P0-4 自动审批通过失败（降级为人工）: instanceId={} node={} err={}",
-            instance.getId(),
-            node.getNodeCode(),
-            e.getMessage());
-      }
-    }
+    autoApproveService.tryAutoApprove(instance, node, task, variables);
   }
 
   /**
@@ -1306,71 +1037,27 @@ public class FlowTaskCreateService {
   /**
    * P1-5: 跨节点办理人去重
    *
+   * <p>委托给 {@link FlowCrossNodeDedupService} 执行。
+   *
    * @param userIds 参数说明
    * @param instanceId 参数说明
    * @param node 参数说明
    * @return 返回值说明
    */
   private List<String> applyCrossNodeDedup(List<String> userIds, String instanceId, FlowNodeVO node) {
-    try {
-      // 查询实例下已审批过的人员（COMPLETED 状态）
-      List<FlowRunTaskVO> done = taskRepository.findByInstanceId(instanceId).stream()
-          .filter(t -> FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()))
-          .collect(Collectors.toList());
-      Set<String> excluded = new HashSet<>();
-      for (FlowRunTaskVO t : done) {
-        if (t.getAssigneeId() != null && !"SYSTEM_AUTO_PASS".equals(t.getAssigneeName())) {
-          excluded.add(t.getAssigneeId());
-        }
-      }
-      int beforeSize = userIds.size();
-      List<String> deduped = new ArrayList<>();
-      for (String uid : userIds) {
-        if (!excluded.contains(uid)) {
-          deduped.add(uid);
-        }
-      }
-      log.info(
-          "[Flow] 跨节点办理人去重: instanceId={} node={} before={} after={} excluded={}",
-          instanceId,
-          node.getNodeCode(),
-          beforeSize,
-          deduped.size(),
-          beforeSize - deduped.size());
-      return deduped;
-    } catch (Exception e) {
-      log.warn(
-          "[Flow] 跨节点办理人去重异常，跳过去重: instanceId={} node={} err={}",
-          instanceId,
-          node.getNodeCode(),
-          e.getMessage());
-      return userIds;
-    }
+    return crossNodeDedupService.applyCrossNodeDedup(userIds, instanceId, node);
   }
 
   /**
    * P1-5: 判断节点是否启用跨节点去重
    *
+   * <p>委托给 {@link FlowCrossNodeDedupService} 执行。
+   *
    * @param node 参数说明
    * @return 返回值说明
    */
   private boolean isAutoDedupEnabled(FlowNodeVO node) {
-    if (node == null || !StringUtils.hasText(node.getExt())) {
-      return false;
-    }
-    try {
-      Map<String, Object> ext = parseExtConfig(node.getExt());
-      Object val = ext.get("autoDedup");
-      if (val == null) {
-        return false;
-      }
-      if (val instanceof Boolean b) {
-        return b;
-      }
-      return Boolean.parseBoolean(String.valueOf(val));
-    } catch (Exception e) {
-      return false;
-    }
+    return crossNodeDedupService.isAutoDedupEnabled(node);
   }
 
   /**

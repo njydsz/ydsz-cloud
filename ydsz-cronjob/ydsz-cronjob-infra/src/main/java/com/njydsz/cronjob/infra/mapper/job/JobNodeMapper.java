@@ -143,4 +143,34 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
       @Param("nodeId") String nodeId,
       @Param("status") String status,
       @Param("lastHeartbeat") LocalDateTime lastHeartbeat);
+
+  // ===== P1-1: 节点健康检查 =====
+
+  /**
+   * 更新节点加权响应时长（EMA）。
+   *
+   * @param nodeId 节点 ID
+   * @param responseTimeMs 加权平均响应时长（毫秒）
+   * @return 受影响行数
+   */
+  @Update(
+      "UPDATE ydsz_job_node "
+          + "SET response_time_ms = #{responseTimeMs}, updated_at = NOW() "
+          + "WHERE node_id = #{nodeId} AND deleted = 0")
+  int updateResponseTime(
+      @Param("nodeId") String nodeId, @Param("responseTimeMs") long responseTimeMs);
+
+  /**
+   * 更新节点连续失败次数。
+   *
+   * @param nodeId 节点 ID
+   * @param consecutiveFailures 连续失败次数
+   * @return 受影响行数
+   */
+  @Update(
+      "UPDATE ydsz_job_node "
+          + "SET consecutive_failures = #{consecutiveFailures}, updated_at = NOW() "
+          + "WHERE node_id = #{nodeId} AND deleted = 0")
+  int updateConsecutiveFailures(
+      @Param("nodeId") String nodeId, @Param("consecutiveFailures") int consecutiveFailures);
 }

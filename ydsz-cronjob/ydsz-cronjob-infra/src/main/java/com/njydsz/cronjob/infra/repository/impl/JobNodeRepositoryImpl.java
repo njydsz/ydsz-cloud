@@ -107,4 +107,21 @@ public class JobNodeRepositoryImpl implements JobNodeRepository {
   public int updateStatus(String nodeId, String status, LocalDateTime lastHeartbeat) {
     return jobNodeMapper.updateStatus(nodeId, status, lastHeartbeat);
   }
+
+  // ===== P1-1: 节点健康检查 =====
+
+  @Override
+  public void updateResponseTime(String nodeId, long responseTimeMs) {
+    jobNodeMapper.updateResponseTime(nodeId, responseTimeMs);
+  }
+
+  @Override
+  public void updateConsecutiveFailures(String nodeId, int consecutiveFailures) {
+    jobNodeMapper.updateConsecutiveFailures(nodeId, consecutiveFailures);
+  }
+
+  @Override
+  public void resetConsecutiveFailures(String nodeId) {
+    jobNodeMapper.updateConsecutiveFailures(nodeId, 0);
+  }
 }
