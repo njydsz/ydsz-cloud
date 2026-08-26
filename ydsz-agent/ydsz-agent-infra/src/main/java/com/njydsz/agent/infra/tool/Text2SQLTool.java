@@ -73,7 +73,7 @@ public class Text2SQLTool implements ToolExecutor {
   }
 
   /**
-   * 获取 Text2SQL 工具的 OpenAI function calling 定义。
+   * 获取 Text2SQL 工具的 function calling 定义。
    *
    * <p>供 ToolRegistry 组装 tools 数组使用。
    *

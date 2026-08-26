@@ -308,7 +308,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   /**
    * 并发执行工具调用并记录链路。
    *
-   * <p>P1 优化：LLM 一次返回多个 tool call 时并行执行（对标 LangChain/AutoGen 默认行为）， 结果按 callId
+   * <p>P1 优化：LLM 一次返回多个 tool call 时并行执行， 结果按 callId
    * 收集后由调用方按原始顺序回填，保证 tool/tool_result 配对顺序。
    *
    * @param traceId 链路 ID

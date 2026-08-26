@@ -130,7 +130,7 @@ public class ChatRequestDTO implements Serializable {
   }
 
   /**
-   * 多模态内容段落 DTO（OpenAI Vision API 契约格式）
+   * 多模态内容段落 DTO
    *
    * <p>每个段落可以是文本或图片之一，类型由 {@link #type} 标识。
    */

@@ -57,7 +57,7 @@ import com.njydsz.common.permission.PermissionCodes;
 @Tag(name = "Agent 元数据查询", description = "可用模型 / 已注册工具元数据查询")
 public class AgentMetadataController {
 
-  /** LLM 客户端（统一抽象 OpenAI / Claude / 通义千问 等） */
+  /** LLM 客户端 */
   private final LlmClient llmClient;
 
   /** 工具注册中心（查询已注册工具元数据） */

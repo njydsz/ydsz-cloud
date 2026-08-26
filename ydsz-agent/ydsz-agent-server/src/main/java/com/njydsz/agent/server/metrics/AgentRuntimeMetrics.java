@@ -169,7 +169,7 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
    *
    * <p>衡量流式场景下用户感知延迟的关键指标，应显著低于完整响应耗时。
    *
-   * @param provider Provider 名称（如 "openai" / "deepseek"）
+     * @param provider Provider 名称
    * @param model 模型名称
    * @param ttftMs 首 Token 耗时（毫秒）
    */

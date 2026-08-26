@@ -86,7 +86,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  *       → ydsz-agent-web（本 Controller）
  *         → ydsz-agent-server.AgentFacade（应用门面）
  *           → ChatService / AgentFactory
- *             → LlmClient（OpenAI / Claude / 通义千问 / 文心一言 ...）
+ *             → LlmClient
  * </pre>
  *
  * @author ydsz-team

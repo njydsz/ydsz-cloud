@@ -142,8 +142,8 @@ public class AgentProperties {
 
   /** LLM 相关配置组（默认 Provider、模型、密钥、价格等）。 */
   public static class Llm {
-    /** 默认 Provider（openai / deepseek / qwen / ollama） */
-    private String defaultProvider = "openai";
+/** 默认 Provider */
+private String defaultProvider = "openai";
 
     /** 默认模型名称 */
     private String defaultModel = "gpt-4o-mini";
@@ -152,7 +152,7 @@ public class AgentProperties {
     private String apiKey = "";
 
     /** API Base URL */
-    private String baseUrl = "https://api.openai.com/v1";
+    private String baseUrl = "";
 
     /** 默认温度 */
     private double temperature = 0.7;
@@ -163,7 +163,7 @@ public class AgentProperties {
     /** 调用超时（秒） */
     private int timeoutSeconds = 60;
 
-    /** 多 Provider 配置（key = provider 名称，如 openai/deepseek/qwen） */
+    /** 多 Provider 配置 */
     private Map<String, ProviderConfig> providers = new LinkedHashMap<>();
 
     /** 模型价格配置（key = 模型名前缀，value = 每千 token 价格 USD） */
@@ -244,14 +244,14 @@ public class AgentProperties {
 
   /** Provider 配置（多模型供应商） */
   public static class ProviderConfig {
-    /** Provider 名称（如 openai/deepseek/qwen/ollama） */
+    /** Provider 名称 */
     private String name;
 
     /** API Key */
     private String apiKey = "";
 
     /** API Base URL */
-    private String baseUrl = "https://api.openai.com/v1";
+    private String baseUrl = "";
 
     /** 支持的模型列表 */
     private List<String> models = new ArrayList<>();
