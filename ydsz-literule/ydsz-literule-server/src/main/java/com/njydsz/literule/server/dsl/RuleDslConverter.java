@@ -8,6 +8,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.literule.api.CrossDecisionTableDefinition;
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.HitPolicy;
 import com.njydsz.literule.api.Rule;
@@ -134,6 +135,8 @@ public final class RuleDslConverter {
       case "expression" -> new ExpressionRule(toRuleDefinition(entry), evaluator);
       case "scorecard" -> ScorecardRule.from(toScorecardDefinition(entry), evaluator);
       case "decision_table" -> new DecisionTableRule(toDecisionTableDefinition(entry), evaluator);
+      case "cross_decision_table" ->
+          new CrossDecisionTableRule(toCrossDecisionTableDefinition(entry), evaluator);
       case "script" -> toScriptRule(entry);
       case "static_rule" ->
           throw new IllegalArgumentException("static_rule 类型需通过编程式注册，DSL 不支持直接声明");
@@ -341,6 +344,71 @@ public final class RuleDslConverter {
       b.defaultActions(def);
     }
     return b.build();
+  }
+
+  /**
+   * 将 DSL 规则条目转换为 CrossDecisionTableDefinition（cross_decision_table 类型，P0-3）
+   *
+   * <p>DSL 结构：
+   *
+   * <pre>
+   * - code: MTX_RISK
+   *   type: cross_decision_table
+   *   row_dimension: evmRedCount
+   *   column_dimension: metricValue
+   *   row_buckets: [{label: 红灯>=3, condition: ">=3"}, ...]
+   *   column_buckets: [{label: <0.05, condition: "<0.05"}, ...]
+   *   cells:
+   *     "0_0": {severity: RED, title: 高风险}
+   *   default_actions: {severity: INFO, title: 正常}
+   * </pre>
+   */
+  private static CrossDecisionTableDefinition toCrossDecisionTableDefinition(RuleDslEntry entry) {
+    List<CrossDecisionTableDefinition.Bucket> rowBuckets = parseBuckets(entry.getRowBuckets());
+    List<CrossDecisionTableDefinition.Bucket> columnBuckets =
+        parseBuckets(entry.getColumnBuckets());
+    Map<String, Map<String, Object>> cells = new LinkedHashMap<>();
+    if (entry.getCells() != null) {
+      cells.putAll(entry.getCells());
+    }
+    Map<String, Object> defaults = entry.getDefaultActions();
+    return CrossDecisionTableDefinition.builder()
+        .matrixCode(entry.getCode())
+        .matrixName(entry.getName())
+        .category(entry.getCategory())
+        .description(entry.getDescription())
+        .rowDimension(entry.getRowDimension())
+        .columnDimension(entry.getColumnDimension())
+        .rowBuckets(rowBuckets)
+        .columnBuckets(columnBuckets)
+        .cells(cells)
+        .defaultActions(defaults != null ? new LinkedHashMap<>(defaults) : null)
+        .enabled(entry.isEnabled())
+        .priority(entry.getPriority())
+        .scope(entry.getScope())
+        .version(entry.getVersion())
+        .build();
+  }
+
+  /** 解析分桶 DSL 列表（{@code label}/{@code condition}） */
+  private static List<CrossDecisionTableDefinition.Bucket> parseBuckets(
+      List<Map<String, Object>> bucketMaps) {
+    if (bucketMaps == null) {
+      return null;
+    }
+    List<CrossDecisionTableDefinition.Bucket> buckets =
+        new ArrayList<>(bucketMaps.size());
+    for (Map<String, Object> bm : bucketMaps) {
+      if (bm == null) {
+        continue;
+      }
+      buckets.add(
+          CrossDecisionTableDefinition.Bucket.builder()
+              .label(asString(bm.get("label")))
+              .condition(asString(bm.get("condition")))
+              .build());
+    }
+    return buckets;
   }
 
   /**

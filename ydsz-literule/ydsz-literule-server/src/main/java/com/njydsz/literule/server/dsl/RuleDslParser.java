@@ -324,6 +324,21 @@ public final class RuleDslParser {
     if (defaultActionsObj instanceof Map<?, ?> dam) {
       b.defaultActions(asStringMap(dam));
     }
+    // cross_decision_table 专用（P0-3）
+    b.rowDimension(asString(map.get("row_dimension")));
+    b.columnDimension(asString(map.get("column_dimension")));
+    b.rowBuckets(asListOfMaps(map.get("row_buckets")));
+    b.columnBuckets(asListOfMaps(map.get("column_buckets")));
+    Object cellsObj = map.get("cells");
+    if (cellsObj instanceof Map<?, ?> cm) {
+      Map<String, Map<String, Object>> cells = new LinkedHashMap<>();
+      for (Map.Entry<?, ?> e : cm.entrySet()) {
+        if (e.getKey() != null && e.getValue() instanceof Map<?, ?> vm) {
+          cells.put(String.valueOf(e.getKey()), asStringMap(vm));
+        }
+      }
+      b.cells(cells);
+    }
     // canary_conditions
     Object canaryCondsObj = map.get("canary_conditions");
     if (canaryCondsObj instanceof List<?> cl) {

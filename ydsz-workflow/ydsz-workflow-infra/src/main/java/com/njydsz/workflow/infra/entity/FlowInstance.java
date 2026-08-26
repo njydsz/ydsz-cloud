@@ -89,7 +89,7 @@ public class FlowInstance extends MpBaseEntity<String> {
   /** 流程标题（展示用，默认为「{业务类型}-{业务编号}」） */
   private String title;
 
-  /** 发起人 ID（关联 {@code ydsz_user_account.id}） */
+  /** 发起人 ID（关联 {@code ydsz_acct_user.id}） */
   private String initiatorId;
 
   /** 发起人姓名（冗余） */

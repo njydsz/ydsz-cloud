@@ -137,7 +137,7 @@ public interface OrgQueryClient {
   /**
    * 批量查询用户 ID → 用户真实姓名映射（供 NameAssembler 富化 userName/createdByName 等字段）。
    *
-   * <p>实现走单条 SQL {@code SELECT id, real_name FROM ydsz_user_account WHERE id IN (...)}， 一次 Feign
+   * <p>实现走单条 SQL {@code SELECT id, real_name FROM ydsz_acct_user WHERE id IN (...)}， 一次 Feign
    * 往返拿到全部结果，避免 N+1 调用。
    *
    * @param userIds 用户 ID 列表

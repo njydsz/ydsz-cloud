@@ -19,7 +19,7 @@ public enum IdentityProviderType {
   /**
    * 本地用户（系统内置 BCrypt 密码校验）。
    *
-   * <p>标准用户类型，密码存储在本地 ydsz_user_account 表，使用 BCrypt 哈希。
+   * <p>标准用户类型，密码存储在本地 ydsz_acct_user 表，使用 BCrypt 哈希。
    */
   LOCAL("local", "本地账号"),
 

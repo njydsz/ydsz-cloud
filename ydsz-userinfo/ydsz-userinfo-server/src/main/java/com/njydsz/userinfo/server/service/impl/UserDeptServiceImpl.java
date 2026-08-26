@@ -17,7 +17,7 @@ import com.njydsz.userinfo.server.service.UserDeptService;
 /**
  * 用户-部门关联服务实现。
  *
- * <p>维护用户-部门的多对多关联 ({@code ydsz_user_dept})：
+ * <p>维护用户-部门的多对多关联 ({@code ydsz_acct_user_dept})：
  *
  * <p>支持主部门（{@code isPrimary}）标识，辅助部门（兼任）多选。
  *

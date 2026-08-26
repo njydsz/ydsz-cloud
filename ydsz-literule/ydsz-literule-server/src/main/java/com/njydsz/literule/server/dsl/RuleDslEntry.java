@@ -138,6 +138,23 @@ public class RuleDslEntry implements Serializable {
   /** 默认动作 */
   private Map<String, Object> defaultActions;
 
+  // ============ cross_decision_table 类型专用（P0-3） ============
+
+  /** 行维度字段名（从 facts 中取值） */
+  private String rowDimension;
+
+  /** 列维度字段名（从 facts 中取值） */
+  private String columnDimension;
+
+  /** 行分桶列表（{@code label}/{@code condition}） */
+  private List<Map<String, Object>> rowBuckets;
+
+  /** 列分桶列表（{@code label}/{@code condition}） */
+  private List<Map<String, Object>> columnBuckets;
+
+  /** 交叉单元格动作映射（key 形如 "0_1"，value 为动作 Map） */
+  private Map<String, Map<String, Object>> cells;
+
   // ============ script 类型专用 ============
 
   /** 脚本语言：groovy / javascript / python */

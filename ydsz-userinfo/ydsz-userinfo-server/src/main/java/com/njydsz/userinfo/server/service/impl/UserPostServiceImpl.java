@@ -17,7 +17,7 @@ import com.njydsz.userinfo.server.service.UserPostService;
 /**
  * 用户-岗位关联服务实现。
  *
- * <p>维护用户-岗位的多对多关联 ({@code ydsz_user_post})：支持一人多岗（主岗/兼职），
+ * <p>维护用户-岗位的多对多关联 ({@code ydsz_acct_user_post})：支持一人多岗（主岗/兼职），
  *
  * <p>用于工作流审批人解析（按岗位找人）。
  *
