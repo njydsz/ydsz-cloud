@@ -23,7 +23,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.BatchProgressVO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.BatchSendResult;
-import com.njydsz.message.domain.entity.batch.MsgBatch;
+import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.domain.event.BatchCompletedEvent;
 import com.njydsz.message.domain.repository.MsgBatchRepository;
 import com.njydsz.message.server.event.DomainEventPublisher;
@@ -72,7 +72,7 @@ public class BatchServiceImpl implements BatchService {
   private final DomainEventPublisher domainEventPublisher;
 
   @Override
-  public MsgBatch submitBatch(BatchSendRequestDTO dto) {
+  public MsgBatchVO submitBatch(BatchSendRequestDTO dto) {
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -98,7 +98,7 @@ public class BatchServiceImpl implements BatchService {
         StringUtils.hasText(dto.getBatchId())
             ? dto.getBatchId()
             : String.valueOf(snowflakeIdGenerator.nextId());
-    MsgBatch batch = new MsgBatch();
+    MsgBatchVO batch = new MsgBatchVO();
     batch.setBatchId(batchId);
     batch.setBatchName(dto.getBatchName());
     batch.setChannel(dto.getChannel());
@@ -138,9 +138,9 @@ public class BatchServiceImpl implements BatchService {
           .message("批次 ID 不能为空")
           .build();
     }
-    MsgBatch batch =
+    MsgBatchVO batch =
         msgBatchRepository.selectOne(
-            new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
+            new LambdaQueryWrapper<MsgBatchVO>().eq(MsgBatchVO::getBatchId, batchId).last("LIMIT 1"));
     if (batch == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -222,9 +222,9 @@ public class BatchServiceImpl implements BatchService {
    */
   @Override
   public void executeBatch(String batchId) {
-    MsgBatch batch =
+    MsgBatchVO batch =
         msgBatchRepository.selectOne(
-            new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
+            new LambdaQueryWrapper<MsgBatchVO>().eq(MsgBatchVO::getBatchId, batchId).last("LIMIT 1"));
     if (batch == null) {
       log.warn("[Batch] 批次不存在: {}", batchId);
       return;
@@ -266,9 +266,9 @@ public class BatchServiceImpl implements BatchService {
    * @param incremental true 表示增量累加（断点续传），false 表示全量覆盖（首次执行）
    */
   private void doExecuteBatch(String batchId, List<MessageRequest> requests, boolean incremental) {
-    MsgBatch batch =
+    MsgBatchVO batch =
         msgBatchRepository.selectOne(
-            new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
+            new LambdaQueryWrapper<MsgBatchVO>().eq(MsgBatchVO::getBatchId, batchId).last("LIMIT 1"));
     if (batch == null) {
       log.warn("[Batch] 批次不存在: {}", batchId);
       return;
@@ -349,7 +349,7 @@ public class BatchServiceImpl implements BatchService {
    * @param batch 批次实体
    * @return 进度快照
    */
-  private Map<String, Object> buildProgressSnapshot(MsgBatch batch) {
+  private Map<String, Object> buildProgressSnapshot(MsgBatchVO batch) {
     int success = batch.getSuccess() != null ? batch.getSuccess() : 0;
     int failed = batch.getFailed() != null ? batch.getFailed() : 0;
     int skipped = batch.getSkipped() != null ? batch.getSkipped() : 0;

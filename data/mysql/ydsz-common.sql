@@ -4,7 +4,7 @@
 -- 模块：ydsz-common（公共组件，含 ydsz-common-event、ydsz-common-search）
 -- 说明：基于 ydsz-common-event 与 ydsz-common-search 既有 SQL 整理的完整建表脚本。
 --       outbox 表沿用 ydsz-common-event/src/main/resources/db/outbox_mysql.sql 原定义；
---       搜索死信队列表由 PostgreSQL 版本（ydsz_search_dead_letter.sql）转译为 MySQL。
+--       搜索死信队列表由 PostgreSQL 版本（ydsz_com_search_dead_letter.sql）转译为 MySQL。
 -- 数据库：MySQL 8.0+，InnoDB / utf8mb4
 -- 日期：2026-08-25
 -- @author ydsz-team
@@ -14,7 +14,7 @@
 -- 1. 事务性 Outbox 表（ydsz-common-event）
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS ydsz_outbox (
+CREATE TABLE IF NOT EXISTS ydsz_com_outbox (
     -- ========== 业务主键 ==========
     id                  VARCHAR(64)     NOT NULL COMMENT '消息唯一标识（Snowflake ID）',
 
@@ -48,19 +48,19 @@ CREATE TABLE IF NOT EXISTS ydsz_outbox (
     -- ========== 约束与主键 ==========
     PRIMARY KEY (id),
     -- 轮询待投递消息索引
-    INDEX idx_ydsz_outbox_pending (status, created_at ASC),
+    INDEX idx_ydsz_com_outbox_pending (status, created_at ASC),
     -- 下次重试时间索引
-    INDEX idx_ydsz_outbox_retry (status, next_retry_at),
+    INDEX idx_ydsz_com_outbox_retry (status, next_retry_at),
     -- PROCESSING 超时回收索引
-    INDEX idx_ydsz_outbox_processing (status, updated_at),
+    INDEX idx_ydsz_com_outbox_processing (status, updated_at),
     -- 已投递清理索引
-    INDEX idx_ydsz_outbox_sent_at (status, sent_at),
+    INDEX idx_ydsz_com_outbox_sent_at (status, sent_at),
     -- 租户隔离索引
-    INDEX idx_ydsz_outbox_tenant (tenant_id, status),
+    INDEX idx_ydsz_com_outbox_tenant (tenant_id, status),
     -- 幂等去重索引
-    INDEX idx_ydsz_outbox_dedup (deduplication_id, status),
+    INDEX idx_ydsz_com_outbox_dedup (deduplication_id, status),
     -- 聚合根查询索引
-    INDEX idx_ydsz_outbox_aggregate (aggregate_type, aggregate_id, created_at DESC)
+    INDEX idx_ydsz_com_outbox_aggregate (aggregate_type, aggregate_id, created_at DESC)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS ydsz_outbox (
 -- 由 PostgreSQL 版转译：BIGSERIAL→BIGINT AUTO_INCREMENT、TIMESTAMPTZ→DATETIME、
 -- CHECK 约束并入注释、部分索引转译为普通复合索引。
 
-CREATE TABLE IF NOT EXISTS ydsz_search_dead_letter (
+CREATE TABLE IF NOT EXISTS ydsz_com_search_dead_letter (
     id            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '自增主键',
     operation     VARCHAR(20)  NOT NULL COMMENT '索引操作类型：UPSERT / DELETE / BULK',
     doc_type      VARCHAR(64)  DEFAULT NULL COMMENT '实体类型（project/wiki/user 等）',

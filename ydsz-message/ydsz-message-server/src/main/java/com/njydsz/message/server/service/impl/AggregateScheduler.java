@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.message.domain.entity.batch.MsgAggregate;
+import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.server.service.batch.AggregateService;
@@ -61,20 +61,20 @@ public class AggregateScheduler {
   /** 执行聚合批次扫描与发送。 */
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
-    List<MsgAggregate> due =
+    List<MsgAggregateVO> due =
         msgAggregateRepository.selectList(
-            new LambdaQueryWrapper<MsgAggregate>()
-                .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
-                .le(MsgAggregate::getScheduledSendAt, now));
+            new LambdaQueryWrapper<MsgAggregateVO>()
+                .eq(MsgAggregateVO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
+                .le(MsgAggregateVO::getScheduledSendAt, now));
     if (due.isEmpty()) {
       return;
     }
-    for (MsgAggregate batch : due) {
+    for (MsgAggregateVO batch : due) {
       msgAggregateRepository.update(
-          new LambdaUpdateWrapper<MsgAggregate>()
-              .eq(MsgAggregate::getId, batch.getId())
-              .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
-              .set(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
+          new LambdaUpdateWrapper<MsgAggregateVO>()
+              .eq(MsgAggregateVO::getId, batch.getId())
+              .eq(MsgAggregateVO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
+              .set(MsgAggregateVO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
     }
     int sent = aggregateService.flushDue();
     log.debug("[AggregateScheduler] 流转 {} 个到期批次,发送 {} 个", due.size(), sent);

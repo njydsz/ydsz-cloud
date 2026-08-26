@@ -32,7 +32,7 @@ import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.BatchSendResult;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
-import com.njydsz.message.domain.entity.batch.MsgBatch;
+import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.OutboxEvent;
@@ -472,7 +472,7 @@ public class MessageServiceImpl implements MessageService {
     dto.setBatchId(batchId);
     dto.setRequests(batch);
     dto.setAsync(true);
-    MsgBatch msgBatch = batchService.submitBatch(dto);
+    MsgBatchVO msgBatch = batchService.submitBatch(dto);
     // 异步模式下返回初始进度（实际处理在后台线程池执行）
     BatchSendResult result = new BatchSendResult(batchId, msgBatch.getTotal(), 0, 0, 0);
     log.info(

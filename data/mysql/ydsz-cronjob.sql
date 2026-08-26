@@ -19,7 +19,7 @@
 -- 1. 任务主表
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_job (
+CREATE TABLE IF NOT EXISTS ydsz_job_main (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     job_name              VARCHAR(128)    NOT NULL COMMENT '任务名称',
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job (
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
+    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job_main.id）',
     source_code           TEXT            NOT NULL COMMENT '源代码（Groovy/Python/Shell/JavaScript 脚本内容）',
     language              VARCHAR(32)     NOT NULL DEFAULT 'GROOVY' COMMENT '语言: GROOVY(默认)/PYTHON/SHELL/JAVASCRIPT/JAVA',
     version               INT             NOT NULL DEFAULT 1 COMMENT '版本号（从 1 递增）',
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_glue (
 CREATE TABLE IF NOT EXISTS ydsz_job_task (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
+    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job_main.id）',
     log_id                VARCHAR(32)     NOT NULL COMMENT '执行日志 ID（关联 ydsz_job_log.id）',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余，便于查询）',
     task_name             VARCHAR(128)    NOT NULL COMMENT '子任务名称（root task 为 "root"）',
@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_history (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
+    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job_main.id）',
     version               INT             NOT NULL COMMENT '版本号（对应更新前的 job.version）',
     snapshot              JSON            DEFAULT NULL COMMENT '完整 Job JSON 快照（变更后状态; DELETE 时为 NULL）',
     change_type           VARCHAR(32)     NOT NULL COMMENT '变更类型: CREATE / UPDATE / DELETE',
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
 -- 9. 租户配额
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_tenant_quota (
+CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     max_jobs              INT             DEFAULT NULL COMMENT '任务数上限（NULL=unlimited；超过此值拒绝创建新任务）',
@@ -500,11 +500,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
 
 -- ----------------------------------------------------------------------------
 -- 17. 告警派发日志
---     实体 JobAlertLog 映射到 ydsz_alert_dispatch（P3-1-merge，与告警模块共用），
+--     实体 JobAlertLog 映射到 ydsz_job_alert_dispatch（P3-1-merge，与告警模块共用），
 --     cronjob 场景下 source_type 固定为 CRONJOB。继承 MpBaseIdEntity。
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_alert_dispatch (
+CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     alert_code            VARCHAR(64)     NOT NULL COMMENT '预警编码（cronjob 自动生成: CRONJOB-{timestamp}-{ruleId}）',
     source_type           VARCHAR(32)     NOT NULL COMMENT '触发源类型（cronjob 告警固定为 CRONJOB）',
@@ -533,7 +533,7 @@ CREATE TABLE IF NOT EXISTS ydsz_alert_dispatch (
 --     ydsz-common/ydsz-common-event/src/main/resources/db/outbox_mysql.sql 风格
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
+CREATE TABLE IF NOT EXISTS ydsz_job_main_outbox (
     id                    BIGINT          NOT NULL AUTO_INCREMENT COMMENT '事件 ID（自增）',
     event_key             VARCHAR(64)     NOT NULL COMMENT '事件 KEY（幂等去重标识）',
     event_type            VARCHAR(128)    NOT NULL COMMENT '事件类型',

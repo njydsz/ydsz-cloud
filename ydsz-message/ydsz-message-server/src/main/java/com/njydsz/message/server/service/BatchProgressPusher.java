@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.domain.entity.batch.MsgBatch;
+import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.server.realtime.RealtimePushService;
 
 /**
@@ -37,7 +37,7 @@ public class BatchProgressPusher {
    * @param batch 批次实体
    * @param senderId 发起人 ID
    */
-  public void pushProgress(MsgBatch batch, String senderId) {
+  public void pushProgress(MsgBatchVO batch, String senderId) {
     if (batch == null || senderId == null) {
       return;
     }

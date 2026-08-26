@@ -14,7 +14,7 @@ import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.entity.config.MsgPreference;
+import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.config.PreferenceService;
@@ -143,7 +143,7 @@ public class GuardServiceImpl implements GuardService {
     if (userId == null || userId.isBlank()) {
       return true;
     }
-    MsgPreference pref = preferenceService.getByUser(userId, channel, bizType);
+    MsgPreferenceVO pref = preferenceService.getByUser(userId, channel, bizType);
     if (pref == null || pref.getEnabled() == null) {
       return true;
     }

@@ -398,7 +398,7 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_social_client (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社交平台客户端配置表';
 
 -- ----------------------------------------------------------------------------
---  SAML 身份提供者配置表 ydsz_saml_idp_config
+--  SAML 身份提供者配置表 ydsz_idp_saml_config
 -- ----------------------------------------------------------------------------
 --  存储 SAML 2.0 Identity Provider 的元数据和证书（P2-1 多租户）
 --
@@ -409,7 +409,7 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_social_client (
 --    - idx_status: 状态索引
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_saml_idp_config (
+CREATE TABLE IF NOT EXISTS ydsz_idp_saml_config (
     id VARCHAR(64) PRIMARY KEY COMMENT '配置 ID（UUID）',
     name VARCHAR(64) NOT NULL COMMENT 'IdP 显示名称',
     entity_id VARCHAR(512) NOT NULL COMMENT 'IdP Entity ID（SAML 协议中 IdP 的唯一标识 URI）',
@@ -437,7 +437,7 @@ CREATE TABLE IF NOT EXISTS ydsz_saml_idp_config (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SAML 2.0 身份提供者配置表';
 
 -- ----------------------------------------------------------------------------
---  OAuth2 应用注册表 ydsz_oauth2_application
+--  OAuth2 应用注册表 ydsz_idp_oauth2_application
 -- ----------------------------------------------------------------------------
 --  存储 OAuth2 客户端应用注册信息，由 OAuth2ApplicationService 写入
 --
@@ -446,7 +446,7 @@ CREATE TABLE IF NOT EXISTS ydsz_saml_idp_config (
 --    - idx_status: 状态索引
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_oauth2_application (
+CREATE TABLE IF NOT EXISTS ydsz_idp_oauth2_application (
     id VARCHAR(64) PRIMARY KEY COMMENT '应用 ID（UUID）',
     client_id VARCHAR(128) NOT NULL COMMENT '客户端 ID（唯一标识）',
     client_name VARCHAR(256) NOT NULL COMMENT '应用名称',
@@ -476,7 +476,7 @@ CREATE TABLE IF NOT EXISTS ydsz_oauth2_application (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='OAuth2 应用注册表';
 
 -- 社交账号绑定表（用户与第三方社交平台的绑定关系，令牌 AES-256-GCM 加密存储）
-CREATE TABLE IF NOT EXISTS ydsz_social_account (
+CREATE TABLE IF NOT EXISTS ydsz_auth_social_account (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(32)     NOT NULL COMMENT '关联用户 ID（关联 ydsz_acct_user.id）',
@@ -505,7 +505,7 @@ CREATE TABLE IF NOT EXISTS ydsz_social_account (
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
---  安全告警表 ydsz_security_alert
+--  安全告警表 ydsz_idp_security_alert
 -- ----------------------------------------------------------------------------
 --  存储安全告警事件记录，由 SecurityAlertService 写入，由管理员通过
 --  SecurityAlertController API 查询和处理
@@ -517,7 +517,7 @@ CREATE TABLE IF NOT EXISTS ydsz_social_account (
 --    - idx_source_ip: 来源 IP 索引（IP 维度告警统计）
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS ydsz_security_alert (
+CREATE TABLE IF NOT EXISTS ydsz_idp_security_alert (
     id VARCHAR(64) PRIMARY KEY COMMENT '告警 ID（UUID）',
     alert_type VARCHAR(32) NOT NULL COMMENT '告警类型：ACCOUNT_LOCKED/ACCOUNT_BANNED/MFA_FAILED/BRUTE_FORCE/ANOMALOUS_LOGIN/PASSWORD_SPRAY',
     risk_level VARCHAR(16) NOT NULL COMMENT '风险等级：LOW/MEDIUM/HIGH/CRITICAL',

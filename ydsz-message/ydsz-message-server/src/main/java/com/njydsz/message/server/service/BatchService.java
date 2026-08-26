@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.batch;
 
 import com.njydsz.message.domain.dto.BatchProgressVO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
-import com.njydsz.message.domain.entity.batch.MsgBatch;
+import com.njydsz.message.domain.vo.MsgBatchVO;
 
 /**
  * 消息批次 Service
@@ -22,7 +22,7 @@ import com.njydsz.message.domain.entity.batch.MsgBatch;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.batch.MsgBatch 批次实体
+ * @see com.njydsz.message.domain.vo.MsgBatchVO 批次VO
  * @see AggregateService 聚合批次服务(按 group+receiver 聚合多条消息为单条摘要)
  */
 public interface BatchService {
@@ -33,7 +33,7 @@ public interface BatchService {
    * @param dto 批量发送请求
    * @return 批次实体（含 batchId 与初始状态）
    */
-  MsgBatch submitBatch(BatchSendRequestDTO dto);
+  MsgBatchVO submitBatch(BatchSendRequestDTO dto);
 
   /**
    * 查询批次进度。

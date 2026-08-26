@@ -20,7 +20,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.entity.config.MsgOffline;
+import com.njydsz.message.domain.vo.MsgOfflineVO;
 import com.njydsz.message.domain.repository.MsgOfflineRepository;
 
 /**
@@ -98,15 +98,15 @@ public class OfflineMessageService implements OfflineMessageStore {
 
     // 先从数据库拉取持久化的离线消息
     try {
-      List<MsgOffline> dbMessages =
+      List<MsgOfflineVO> dbMessages =
           msgOfflineRepository.selectList(
-              new LambdaQueryWrapper<MsgOffline>()
-                  .eq(MsgOffline::getUserId, userId)
-                  .eq(MsgOffline::getStatus, "PENDING")
-                  .le(MsgOffline::getExpiredAt, LocalDateTime.now().plusDays(OFFLINE_TTL_DAYS))
-                  .ge(MsgOffline::getExpiredAt, LocalDateTime.now())
-                  .orderByAsc(MsgOffline::getMsgTimestamp));
-      for (MsgOffline msg : dbMessages) {
+              new LambdaQueryWrapper<MsgOfflineVO>()
+                  .eq(MsgOfflineVO::getUserId, userId)
+                  .eq(MsgOfflineVO::getStatus, "PENDING")
+                  .le(MsgOfflineVO::getExpiredAt, LocalDateTime.now().plusDays(OFFLINE_TTL_DAYS))
+                  .ge(MsgOfflineVO::getExpiredAt, LocalDateTime.now())
+                  .orderByAsc(MsgOfflineVO::getMsgTimestamp));
+      for (MsgOfflineVO msg : dbMessages) {
         result.add(msg.getPayload());
       }
       if (!dbMessages.isEmpty()) {
@@ -148,9 +148,9 @@ public class OfflineMessageService implements OfflineMessageStore {
     try {
       Long dbSize =
           msgOfflineRepository.selectCount(
-              new LambdaQueryWrapper<MsgOffline>()
-                  .eq(MsgOffline::getUserId, userId)
-                  .eq(MsgOffline::getStatus, "PENDING"));
+              new LambdaQueryWrapper<MsgOfflineVO>()
+                  .eq(MsgOfflineVO::getUserId, userId)
+                  .eq(MsgOfflineVO::getStatus, "PENDING"));
       dbCount = dbSize == null ? 0L : dbSize;
     } catch (Exception e) {
       log.debug("[WS-Offline] DB 计数失败: {}", e.getMessage());
@@ -185,9 +185,9 @@ public class OfflineMessageService implements OfflineMessageStore {
       LocalDateTime now = LocalDateTime.now();
       String tenantId = TenantContextHolder.getTenantId();
       // P3-6: 先构建全部实体（预生成 ID），再批量 insert
-      List<MsgOffline> entities = new ArrayList<>(overflowMessages.size());
+      List<MsgOfflineVO> entities = new ArrayList<>(overflowMessages.size());
       for (String json : overflowMessages) {
-        MsgOffline offline = new MsgOffline();
+        MsgOfflineVO offline = new MsgOfflineVO();
         offline.setId(IdWorker.getIdStr());
         offline.setUserId(userId);
         offline.setMsgType("OFFLINE_OVERFLOW");

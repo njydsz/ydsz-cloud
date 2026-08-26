@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.core;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.njydsz.message.domain.dto.MessageFeedbackDTO;
-import com.njydsz.message.domain.entity.config.MsgFeedback;
+import com.njydsz.message.domain.vo.MsgFeedbackVO;
 
 /**
  * 消息质量反馈 Service
@@ -29,7 +29,7 @@ import com.njydsz.message.domain.entity.config.MsgFeedback;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.message.domain.entity.config.MsgFeedback 反馈实体
+ * @see com.njydsz.message.domain.vo.MsgFeedbackVO 反馈VO
  * @see RateLimitService 限流服务(降频会调整 rate-limit 阈值)
  */
 public interface MessageFeedbackService {
@@ -67,7 +67,7 @@ public interface MessageFeedbackService {
    * @param userId 用户 ID（可选筛选）
    * @return 分页结果
    */
-  Page<MsgFeedback> pageFeedback(int page, int size, String channel, String userId);
+  Page<MsgFeedbackVO> pageFeedback(int page, int size, String channel, String userId);
 
   /**
    * 检查用户是否需要降频（基于最近反馈评分）。
