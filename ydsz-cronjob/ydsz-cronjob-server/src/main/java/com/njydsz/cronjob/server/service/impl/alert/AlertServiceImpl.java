@@ -26,7 +26,7 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
  *
  * <p>触发、抑制、发送全流程。
  *
- * <p>支持邮件/短信/企业微信/钉钉多渠道告警分发，告警风暴抑制（同一规则 5 分钟内仅告警 1 次）。
+ * <p>支持邮件/短信/企业微信/IM 多渠道告警分发，告警风暴抑制（同一规则 5 分钟内仅告警 1 次）。
  *
  * @author ydsz-team
  * @since 1.0.0
