@@ -13,9 +13,9 @@ import com.njydsz.literule.api.expression.ExpressionTraceNode;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
 
 /**
- * LiteExpr 自研表达式求值器（原 AviatorExpressionEngine 更名，A3 命名修正）
+ * LiteExpr 自研表达式求值器
  *
- * <p>实现 {@link ExpressionEngine} 接口，对接上层规则引擎。 完全自研实现，不依赖 Aviator / QLExpress，核心组件：
+ * <p>实现 {@link ExpressionEngine} 接口，对接上层规则引擎。 完全自研实现，核心组件：
  *
  * <ul>
  *   <li>{@link LiteExprCompiler} — 编译缓存 + 常量折叠 + 变量提取
@@ -287,7 +287,7 @@ public class LiteExprEngine implements ExpressionEngine {
   /**
    * 应用沙箱扩展策略（O2 沙箱规则外置化）
    *
-   * <p>将 YAML 配置中的危险方法/类根追加到沙箱黑名单，白名单函数合并到函数白名单。 对标 Aviator 的配置化沙箱策略，
+   * <p>将 YAML 配置中的危险方法/类根追加到沙箱黑名单，白名单函数合并到函数白名单。
    * 业务方无需改代码即可收紧/放宽沙箱规则。
    *
    * @param forbiddenMethods 追加的危险方法名（可为 null）

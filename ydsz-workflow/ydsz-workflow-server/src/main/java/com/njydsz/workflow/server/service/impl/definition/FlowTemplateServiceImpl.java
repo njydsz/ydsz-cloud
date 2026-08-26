@@ -55,7 +55,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
  *         <li>{@link #syncFromParent} — 子模板同步父模板最新内容，生成 {@code -synced} 版本
  *       </ul>
  *   <li><b>BPMN 2.0 转换</b>：{@link #generateBpmnXml} — 将内部 {@code FlowNode/FlowSkip} 模型 序列化为标准 BPMN
- *       2.0 XML（兼容 Flowable 命名空间）
+ *       2.0 XML（兼容 BPMN 扩展命名空间）
  * </ul>
  *
  * <p><b>事务边界：</b>
@@ -1050,7 +1050,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     StringBuilder xml = new StringBuilder();
     xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     xml.append("<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n");
-    xml.append("             xmlns:flowable=\"http://flowable.org/bpmn\"\n");
+    xml.append("             xmlns:ydsz=\"http://ydsz.org/bpmn\"\n");
     xml.append("             targetNamespace=\"http://ydsz.ydsz/flow\">\n");
     xml.append("  <process id=\"")
         .append(escapeXml(processId))
@@ -1076,7 +1076,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
           xml.append(" name=\"").append(escapeXml(nodeName)).append("\"");
         }
         if (permissionFlag != null && !permissionFlag.isBlank() && "userTask".equals(elementName)) {
-          xml.append(" flowable:assignee=\"").append(escapeXml(permissionFlag)).append("\"");
+          xml.append(" ydsz:assignee=\"").append(escapeXml(permissionFlag)).append("\"");
         }
         xml.append("/>\n");
       }

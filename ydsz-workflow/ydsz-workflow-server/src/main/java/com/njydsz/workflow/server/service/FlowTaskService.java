@@ -8,8 +8,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
  * 待办任务 Service
@@ -66,7 +66,7 @@ public interface FlowTaskService {
    * @param variables 流程变量（用于解析审批人 Spec 表达式，如 ${starter}）
    * @return 新创建的任务 ID（单人节点）或首个任务 ID（会签节点）
    */
-  String createTask(String instanceId, FlowNode node, Map<String, Object> variables);
+  String createTask(String instanceId, FlowNodeVO node, Map<String, Object> variables);
 
   /**
    * P2-20: 按 ID 查任务（任务详情查询）
@@ -349,7 +349,7 @@ public interface FlowTaskService {
    * @param task 任务 DO
    * @return 任务视图 VO（含基础字段 + 富化字段）
    */
-  FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTask task);
+  FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskVO task);
 
   /**
    * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）

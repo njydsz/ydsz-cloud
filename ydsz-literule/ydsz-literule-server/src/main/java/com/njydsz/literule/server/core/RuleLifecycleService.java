@@ -27,7 +27,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 /**
  * 规则生命周期管理服务（P3-1）
  *
- * <p>对标国内主流规则引擎（如 Drools KIE Workbench、URule、阿里 QLExpressConsole） 的生命周期管理能力，提供规则退役检测与一键回滚预览功能。
+ * <p>提供规则退役检测与一键回滚预览功能。
  *
  * <h3>核心能力</h3>
  *

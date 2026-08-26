@@ -13,7 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 流程节点实体
  *
- * <p>对应数据库表 {@code ydsz_flow_node}，对标 Warm-Flow {@code flow_node}，
+ * <p>对应数据库表 {@code ydsz_flow_node}，
  * 描述流程定义中的每个节点（开始/审批/网关/结束），是流程图渲染与引擎调度的最小单元。
  *
  * <p><b>节点分类：</b>

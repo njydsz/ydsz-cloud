@@ -15,8 +15,7 @@
  *   <li>图编排：{@code RuleChain} / {@code RuleChainGraph} 构建规则链有向图，
  *       {@code DefaultGraphExecutionProvider} 驱动图节点按拓扑顺序执行</li>
  *   <li>CEP 处理：{@code CEPEngine} 基于事件流进行模式匹配，输出 {@code CEPHit} 命中结果</li>
- *   <li>表达式引擎：{@code LiteExprEngine} / {@code AviatorExpressionEngine} 双引擎并存，
- *       分别用于沙箱安全执行与高性能脚本求值</li>
+ *   <li>表达式引擎：{@code LiteExprEngine} 提供沙箱安全执行与高性能脚本求值</li>
  * </ul>
  *
  * <h3>关键组件</h3>

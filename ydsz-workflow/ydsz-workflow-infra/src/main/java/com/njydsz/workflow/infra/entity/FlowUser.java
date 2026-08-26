@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 流程任务-办理人关系实体
  *
- * <p>对应数据库表 {@code ydsz_flow_user}，对标 Warm-Flow {@code flow_user}，
+ * <p>对应数据库表 {@code ydsz_flow_user}，
  * 存储「任务-办理人」的多对多关系（会签多办理人、加签、减签等场景）。
  *
  * <p><b>核心职责：</b>

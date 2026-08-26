@@ -147,7 +147,7 @@ public class SandboxScriptExecutor {
   /**
    * P0-F6: Docker 容器沙箱执行。
    *
-   * <p>在隔离容器中执行 SHELL/PYTHON 脚本，提供比进程沙箱更强的隔离（对标 PowerJob 容器化执行）：
+   * <p>在隔离容器中执行 SHELL/PYTHON 脚本，提供比进程沙箱更强的隔离：
    *
    * <ul>
    *   <li>文件系统隔离：{@code --read-only} 只读根文件系统 + 脚本只读挂载

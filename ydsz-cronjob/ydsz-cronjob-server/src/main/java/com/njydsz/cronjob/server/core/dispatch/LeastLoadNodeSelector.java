@@ -15,7 +15,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 /**
  * 默认节点选择策略：最少负载优先。
  *
- * <p>大厂主流选择（XXL-Job / PowerJob 默认策略之一）：
+ * <p>主流选择：
  *
  * <ol>
  *   <li>优先选择 running_count 最小的节点

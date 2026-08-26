@@ -21,10 +21,10 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowTimerRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
-import com.njydsz.workflow.infra.entity.FlowTimer;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -86,7 +86,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowTimerService 接口定义
- * @see com.njydsz.workflow.infra.entity.FlowTimer 定时器实体
+ * @see com.njydsz.workflow.domain.vo.FlowTimerVO 定时器值对象
  * @see com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer 流程推进引擎
  * @see FlowSlaServiceImpl SLA 监控（与定时器同属「超时处理」但职责不同）
  * @see com.njydsz.common.lock.annotation.DistributedScheduled 分布式调度注解
@@ -135,14 +135,14 @@ public class FlowTimerServiceImpl implements FlowTimerService {
           .message("流程实例不存在: " + instanceId)
           .build();
     }
-    FlowNode node = nodeRepository.findByCode(instance.getDefinitionId(), nodeCode).orElse(null);
+    FlowNodeVO node = nodeRepository.findByCode(instance.getDefinitionId(), nodeCode).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .message("节点不存在: " + nodeCode)
           .build();
     }
-    FlowTimer timer = new FlowTimer();
+    FlowTimerVO timer = new FlowTimerVO();
     timer.setTenantId(instance.getTenantId());
     timer.setInstanceId(instanceId);
     timer.setDefinitionId(instance.getDefinitionId());
@@ -153,7 +153,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     timer.setFireAt(LocalDateTime.now().plus(delay));
     timer.setTimerStatus("PENDING");
     timer.setProviderTraceId(instance.getProviderTraceId());
-    timerRepository.save(converter.entityToEntity(timer));
+    timerRepository.save(timer);
     log.info(
         "[FlowTimer] 创建中间定时器: instanceId={} nodeCode={} fireAt={}",
         instanceId,
@@ -181,7 +181,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
     FlowNode node =
         nodeCode != null ? nodeRepository.findByCode(instance.getDefinitionId(), nodeCode).orElse(null) : null;
-    FlowTimer timer = new FlowTimer();
+    FlowTimerVO timer = new FlowTimerVO();
     timer.setTenantId(instance.getTenantId());
     timer.setInstanceId(instanceId);
     timer.setDefinitionId(instance.getDefinitionId());
@@ -193,7 +193,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     timer.setFireAt(LocalDateTime.now().plus(delay));
     timer.setTimerStatus("PENDING");
     timer.setProviderTraceId(instance.getProviderTraceId());
-    timerRepository.save(converter.entityToEntity(timer));
+    timerRepository.save(timer);
     log.info(
         "[FlowTimer] 创建边界定时器: taskId={} instanceId={} fireAt={}",
         taskId,
@@ -204,7 +204,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public boolean fire(FlowTimer timer) {
+  public boolean fire(FlowTimerVO timer) {
     if (timer == null) {
       return false;
     }
@@ -231,7 +231,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
           return true;
         }
         Map<String, Object> variables = parseVariables(instance.getVariable());
-        List<FlowNode> nextNodes =
+        List<FlowNodeVO> nextNodes =
             advancer.advance(instance, timer.getNodeCode(), "PASS", null, variables);
         if (nextNodes.isEmpty()) {
           log.info("[FlowTimer] 中间定时器触发后无下游节点: instanceId={}", timer.getInstanceId());
@@ -239,7 +239,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         }
         ((FlowInstanceServiceImpl) instanceService())
             .generateTasksForNodes(timer.getInstanceId(), nextNodes, variables);
-        FlowNode first = nextNodes.get(0);
+        FlowNodeVO first = nextNodes.get(0);
         instanceRepository.updateStatus(
             timer.getInstanceId(),
             instance.getFlowStatus(),
@@ -273,8 +273,8 @@ public class FlowTimerServiceImpl implements FlowTimerService {
    *
    * @param timer 参数说明
    */
-  private void fireBoundary(FlowTimer timer) {
-    FlowRunTask task = taskRepository.findById(timer.getBoundaryTaskId()).orElse(null);
+  private void fireBoundary(FlowTimerVO timer) {
+    FlowRunTaskVO task = taskRepository.findById(timer.getBoundaryTaskId()).orElse(null);
     if (task == null) {
       log.info("[FlowTimer] 边界定时器对应 userTask 已删除: timerId={}", timer.getId());
       return;
@@ -320,12 +320,12 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
     // 3. 推进到下一节点（按 PASS 流程走，但 task 已被标记为 TIMEOUT）
     Map<String, Object> variables = parseVariables(instance.getVariable());
-    List<FlowNode> nextNodes =
+    List<FlowNodeVO> nextNodes =
         advancer.advance(instance, task.getNodeCode(), "PASS", null, variables);
     if (!nextNodes.isEmpty()) {
       ((FlowInstanceServiceImpl) instanceService())
           .generateTasksForNodes(timer.getInstanceId(), nextNodes, variables);
-      FlowNode first = nextNodes.get(0);
+      FlowNodeVO first = nextNodes.get(0);
       instanceRepository.updateStatus(
           timer.getInstanceId(),
           instance.getFlowStatus(),
@@ -339,13 +339,12 @@ public class FlowTimerServiceImpl implements FlowTimerService {
   @Override
   public int scanAndFire() {
     try {
-      List<FlowTimer> dueList = timerRepository.findDueTimers(LocalDateTime.now(), SCAN_BATCH_SIZE)
-          .stream().toList();
+      List<FlowTimerVO> dueList = timerRepository.findDueTimers(LocalDateTime.now(), SCAN_BATCH_SIZE);
       if (dueList.isEmpty()) {
         return 0;
       }
       int fired = 0;
-      for (FlowTimer t : dueList) {
+      for (FlowTimerVO t : dueList) {
         try {
           if (fire(t)) {
             fired++;
@@ -382,9 +381,8 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<FlowTimer> listByInstance(String instanceId) {
-    return timerRepository.findByInstanceOrderByCreatedAtDesc(instanceId).stream()
-        .map(converter::entityToEntity).toList();
+  public List<FlowTimerVO> listByInstance(String instanceId) {
+    return timerRepository.findByInstanceOrderByCreatedAtDesc(instanceId);
   }
 
   @Override

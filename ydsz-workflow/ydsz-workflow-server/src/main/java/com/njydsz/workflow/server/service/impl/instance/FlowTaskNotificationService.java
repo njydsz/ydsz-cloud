@@ -117,7 +117,7 @@ public class FlowTaskNotificationService {
     // 1. 全局 SPI 监听器
     support.fireEvent(l -> l.onTaskPersonalCompleted(task.getId(), ctx), task.getId());
 
-    // 2. 节点配置的监听器插件（对标 warm-flow 可配置监听器机制）
+    // 2. 节点配置的监听器插件
     support.firePluginEvent(
         nodeExt,
         com.njydsz.workflow.server.engine.listener.FlowListenerEventType.TASK_PERSONAL_FINISHED,

@@ -86,7 +86,7 @@ public class RuleIndexer {
   /**
    * α 节点共享索引（P2 轻量 RETE α 网络）：字段|操作符 -> 规则编码集合
    *
-   * <p>对标 Drools RETE 的 α 网络：同一字段的同一比较操作（如 {@code amount|>}）共享一个 α 节点，
+   * <p>同一字段的同一比较操作（如 {@code amount|>}）共享一个 α 节点，
    * 查询时按 "字段|操作符" 直接定位引用该模式的规则集合， 减少逐条表达式匹配开销。
    */
   private final Map<String, Set<String>> fieldOpIndex = new ConcurrentHashMap<>();

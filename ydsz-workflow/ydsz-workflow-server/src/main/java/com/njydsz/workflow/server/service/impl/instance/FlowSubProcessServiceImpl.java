@@ -66,8 +66,8 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
  * <p><b>设计要点：</b>
  *
  * <ul>
- *   <li><b>独立 vs 嵌入式</b>：本实现采用「独立子流程」（子流程有独立 {@code instanceId} / 待办 / 历史）， 区别于 Camunda
- *       的「嵌入式子流程」（子节点共用父实例），更易于审批粒度控制和跨租户分析
+ *   <li><b>独立 vs 嵌入式</b>：本实现采用「独立子流程」（子流程有独立 {@code instanceId} / 待办 / 历史），
+ *       更易于审批粒度控制和跨租户分析
  *   <li><b>父子变量传递</b>：通过 {@code inVariables / outVariables} JSON 字段声明输入输出变量，
  *       子流程只能看到白名单内的父变量，避免父流程敏感数据泄露
  *   <li><b>嵌套深度保护</b>：超过 {@code maxNestingDepth} 抛 {@code SysException} 阻断启动， 防止循环调用（如 A → B → A）

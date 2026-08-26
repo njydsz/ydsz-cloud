@@ -89,7 +89,7 @@
     {
       "name": "nextwiki.ai.llm-api-url",
       "type": "java.lang.String",
-      "description": "LLM API URL（OpenAI 兼容接口）"
+      "description": "LLM API URL（兼容 OpenAI 标准协议）"
     },
     {
       "name": "nextwiki.ai.llm-api-key",

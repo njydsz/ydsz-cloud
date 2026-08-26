@@ -10,12 +10,12 @@ import org.w3c.dom.Element;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.enums.FlowSkipType;
-import com.njydsz.workflow.infra.entity.FlowSkip;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
 
 /**
  * BPMN 跳转边解析器
  *
- * <p>负责将 BPMN 2.0 XML 中的 {@code <sequenceFlow>} 元素解析为 {@link FlowSkip} 数据对象。
+ * <p>负责将 BPMN 2.0 XML 中的 {@code <sequenceFlow>} 元素解析为 {@link FlowSkipVO} 数据对象。
  * 处理源/目标节点引用、条件表达式、扩展属性等。
  *
  * @since 1.0.0
@@ -34,8 +34,8 @@ public class BpmnSkipParser {
    * @param elem sequenceFlow 元素
    * @return 解析后的 FlowSkip
    */
-  public FlowSkip parseSkip(Element elem) {
-    FlowSkip skip = new FlowSkip();
+  public FlowSkipVO parseSkip(Element elem) {
+    FlowSkipVO skip = new FlowSkipVO();
     skip.setSkipName(elem.getAttribute("name"));
     skip.setSkipType(FlowSkipType.PASS.name());
     // sequenceFlow 自身 id 作为 skip 唯一标识

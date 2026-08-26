@@ -230,7 +230,7 @@ public class LiteRuleProperties {
    * com.njydsz.literule.server.cache.CachingRuleConfigProvider}， 实现 Caffeine（L1 本地）+ Redis（L2
    * 分布式）两级缓存，减少 DB 压力。
    *
-   * <p>对标银行风控/Drools 优化实践：
+   * <p>参考金融行业风控优化实践：
    *
    * <ul>
    *   <li>L1 命中直接返回，避免序列化开销

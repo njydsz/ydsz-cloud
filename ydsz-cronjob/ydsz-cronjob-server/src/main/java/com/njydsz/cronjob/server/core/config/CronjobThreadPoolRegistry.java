@@ -29,10 +29,6 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  *   <li>线程名前缀可配置，便于问题排查时识别业务归属
  * </ul>
  *
- * <h3>对标</h3>
- *
- * <p>对标 XXL-Job 的 ExecutorRouteRun(Pool) 和 SchedulerX 的 ThreadPoolManager， 通过注册中心统一管理线程池的创建、监控与销毁。
- *
  * @author ydsz-team
  * @since 1.0.0
  */

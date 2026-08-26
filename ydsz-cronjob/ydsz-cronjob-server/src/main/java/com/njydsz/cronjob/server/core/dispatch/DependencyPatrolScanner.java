@@ -39,8 +39,6 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  *   <li>扫描结果记录到日志，可通过告警系统推送
  * </ul>
  *
- * <p>对标 Airflow 的 DAG 解析校验和 PowerJob 的任务健康检查。
- *
  * @author ydsz-team
  * @since 1.0.0
  */

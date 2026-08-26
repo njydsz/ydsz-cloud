@@ -13,8 +13,6 @@ import lombok.Data;
  *   <li>AUTO_PAUSED 恢复：到达恢复时间后自动恢复为 NORMAL
  * </ul>
  *
- * <p>对标 XXL-Job 的失败重试 + 分片任务转移、PowerJob 的自愈能力、SchedulerX 的自动恢复机制。
- *
  * @author ydsz-team
  * @since 1.0.0
  */

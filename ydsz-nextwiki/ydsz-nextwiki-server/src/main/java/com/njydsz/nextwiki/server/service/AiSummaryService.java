@@ -7,7 +7,7 @@ import com.njydsz.nextwiki.api.dto.NextwikiDTOs.SummaryResult;
 /**
  * AI 智能摘要服务（预留接口）。
  *
- * <p>定义文件内容 AI 摘要生成的标准接口，后续对接 LLM 服务（如 GPT、Claude、文心一言等）实现具体逻辑。
+ * <p>定义文件内容 AI 摘要生成的标准接口，后续对接 LLM 服务实现具体逻辑。
  *
  * <p>设计考虑：
  *

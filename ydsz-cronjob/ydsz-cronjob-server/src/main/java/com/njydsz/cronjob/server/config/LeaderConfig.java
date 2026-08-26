@@ -38,9 +38,8 @@ public class LeaderConfig {
   /**
    * P2-9: 多 Active Leader 分区调度配置。
    *
-   * <p>启用后，将调度集群分为 N 个分区，每个分区有一个独立的 Leader， 各 Leader 负责扫描和派发属于自己分区的任务。 单节点可以同时持有多个分区的 Leader 角色。
-   *
-   * <p>对标 PowerJob 的多分区调度能力和 XXL-Job 的分片广播。
+   * <p>启用后，将调度集群分为 N 个分区，每个分区有一个独立的 Leader，
+   * 各 Leader 负责扫描和派发属于自己分区的任务。 单节点可以同时持有多个分区的 Leader 角色。
    */
   private PartitionConfig partition = new PartitionConfig();
 }

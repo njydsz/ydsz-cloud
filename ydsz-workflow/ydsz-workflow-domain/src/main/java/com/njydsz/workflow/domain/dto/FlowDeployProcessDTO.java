@@ -14,7 +14,7 @@ import lombok.Data;
  *
  * <ul>
  *   <li>BPMN 2.0 模式：传入 {@code bpmnXml}（标准 BPMN XML），由 BpmnXmlParser 自动解析为节点/跳转
- *   <li>轻量 JSON 模式：直接传入 {@code nodes} + {@code skips} 数组（对标 Warm-Flow）
+ *   <li>轻量 JSON 模式：直接传入 {@code nodes} + {@code skips} 数组
  * </ul>
  *
  * @author ydsz-team

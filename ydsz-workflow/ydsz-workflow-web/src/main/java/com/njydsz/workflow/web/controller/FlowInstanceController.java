@@ -646,7 +646,7 @@ public class FlowInstanceController {
    *
    * <p>幂等保护 5 秒；限流 50 QPS。
    *
-   * <p>注册一条 (源流程 → 目标流程) 触发规则，条件表达式使用 QLExpress 沙箱。
+   * <p>注册一条 (源流程 → 目标流程) 触发规则，条件表达式使用沙箱求值。
    *
    * @param dto 触发规则 DTO（sourceFlowCode / targetFlowCode / conditionExpression / description）
    * @return 空响应

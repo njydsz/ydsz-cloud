@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
-import com.njydsz.workflow.infra.entity.FlowEventSubscription;
-import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
  * 流程事件订阅服务。
@@ -27,7 +27,7 @@ public interface FlowEventSubscriptionService {
    * @return 订阅 ID
    */
   String createSubscription(
-      String instanceId, FlowNode node, Map<String, Object> variables, String boundaryTaskId);
+      String instanceId, FlowNodeVO node, Map<String, Object> variables, String boundaryTaskId);
 
   /**
    * 关联消息 — 匹配 WAITING 的 MESSAGE 订阅并触发
@@ -75,7 +75,7 @@ public interface FlowEventSubscriptionService {
    * @param instanceId 参数说明
    * @return 返回值说明
    */
-  List<FlowEventSubscription> listByInstance(String instanceId);
+  List<FlowEventSubscriptionVO> listByInstance(String instanceId);
 
   /**
    * 查询实例的事件订阅列表（返回 VO，符合 DDD 分层规范）
@@ -92,5 +92,5 @@ public interface FlowEventSubscriptionService {
    * @param node 参数说明
    * @return 返回值说明
    */
-  boolean isEventCatchNode(FlowNode node);
+  boolean isEventCatchNode(FlowNodeVO node);
 }

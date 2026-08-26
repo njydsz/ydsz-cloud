@@ -25,7 +25,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
  * P1-4: 服务节点执行器
@@ -112,7 +112,7 @@ public class FlowServiceNodeExecutor {
    * @param variables 流程变量（HTTP 调用时作为请求体传递）
    * @return 执行结果（成功/失败 + 消息）
    */
-  public ServiceExecutionResult execute(FlowNode node, Map<String, Object> variables) {
+  public ServiceExecutionResult execute(FlowNodeVO node, Map<String, Object> variables) {
     String serviceType = FlowNodeExt.getServiceType(node.getExt());
 
     log.info("[Flow-Service] 执行服务节点: node={} serviceType={}", node.getNodeCode(), serviceType);
@@ -163,7 +163,7 @@ public class FlowServiceNodeExecutor {
    * @return 返回值说明
    */
   private ServiceExecutionResult executeHttp(
-      FlowNode node, Map<String, Object> variables) {
+      FlowNodeVO node, Map<String, Object> variables) {
     String url = FlowNodeExt.getServiceUrl(node.getExt());
     if (!StringUtils.hasText(url) || "null".equals(url)) {
       log.warn("[Flow-Service] HTTP 服务节点未配置 url，标记为失败: node={}", node.getNodeCode());
@@ -254,7 +254,7 @@ public class FlowServiceNodeExecutor {
    * @return 返回值说明
    */
   private ServiceExecutionResult executeScript(
-      FlowNode node, Map<String, Object> variables) {
+      FlowNodeVO node, Map<String, Object> variables) {
     String script = FlowNodeExt.getServiceScript(node.getExt());
     if (!StringUtils.hasText(script) || "null".equals(script)) {
       log.warn("[Flow-Service] SCRIPT 节点未配置 script，标记为失败: node={}", node.getNodeCode());

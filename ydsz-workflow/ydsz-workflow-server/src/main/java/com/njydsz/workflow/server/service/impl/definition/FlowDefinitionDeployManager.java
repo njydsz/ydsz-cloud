@@ -410,8 +410,7 @@ public class FlowDefinitionDeployManager {
   /**
    * 从 BPMN 部署包 .zip 批量导入流程定义
    *
-   * <p>对标 Activiti/Flowable 的 {@code repositoryService.createDeployment().addZipInputStream()}。
-   * 遍历 zip 内的 {@code .bpmn} / {@code .bpmn20.xml} 文件，逐个解析并委托 {@link #deploy} 入库。
+   * <p>遍历 zip 内的 {@code .bpmn} / {@code .bpmn20.xml} 文件，逐个解析并委托 {@link #deploy} 入库。
    * 单个文件失败不影响其他文件（通过 self 代理调用 deploy，每个文件独立事务）。
    *
    * @param zipBytes zip 文件字节数组

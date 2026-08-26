@@ -18,8 +18,8 @@ import com.njydsz.common.json.annotation.JsonProperty;
  *   <li>{@link NodeType#APPROVAL}：审批节点，等待人工审批后继续执行（P1-6）
  * </ul>
  *
- * <p><b>注意</b>：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 1.0.0 移除，建议使用工作流引擎（Flowable/Camunda）
- * 替代复杂编排场景。若反序列化时遇到旧数据中的控制节点类型，{@link #resolveNodeType()} 会降级为 {@link NodeType#TASK}。
+ * <p><b>注意</b>：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 1.0.0 移除，建议使用工作流引擎替代复杂编排场景。
+ * 若反序列化时遇到旧数据中的控制节点类型，{@link #resolveNodeType()} 会降级为 {@link NodeType#TASK}。
  *
  * @param jobKey 任务 KEY（唯一标识节点，边通过 jobKey 引用）
  * @param jobId 任务 ID（冗余，便于直接派发）

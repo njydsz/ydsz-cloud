@@ -15,7 +15,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 历史任务实体
  *
- * <p>对应数据库表 {@code ydsz_flow_his_task}，对标 Warm-Flow {@code flow_his_task}， 存储已完成的待办任务（含 APPROVED /
+ * <p>对应数据库表 {@code ydsz_flow_his_task}，存储已完成的待办任务（含 APPROVED /
  * REJECTED / CANCELED / DELEGATED），是审批历史的查询表。
  *
  * <p><b>归档机制：</b>任务完成（终态）后由 {@code FlowArchiveScheduler} 从 {@link FlowRunTask} 迁移至本表，

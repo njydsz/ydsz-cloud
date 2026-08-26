@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
  * 待办智能排序服务。
@@ -47,29 +47,29 @@ public class FlowTodoSmartSortService {
   /**
    * 对待办列表进行智能排序
    *
-   * @param tasks 待办任务列表
+   * @param tasks 待办任务 VO 列表
    * @return 排序后的列表（分值高的在前）
    */
-  public List<FlowRunTask> smartSort(List<FlowRunTask> tasks) {
+  public List<FlowRunTaskVO> smartSort(List<FlowRunTaskVO> tasks) {
     if (tasks == null || tasks.size() <= 1) {
       return tasks;
     }
     LocalDateTime now = LocalDateTime.now();
     return tasks.stream()
         .sorted(
-            Comparator.comparingInt((FlowRunTask t) -> -calculateScore(t, now)) // 降序
-                .thenComparing(FlowRunTask::getCreatedAt)) // 同分按创建时间
+            Comparator.comparingInt((FlowRunTaskVO t) -> -calculateScore(t, now)) // 降序
+                .thenComparing(FlowRunTaskVO::getCreatedAt)) // 同分按创建时间
         .collect(Collectors.toList());
   }
 
   /**
    * 计算单个任务的智能排序分
    *
-   * @param task 参数说明
-   * @param now 参数说明
-   * @return 返回值说明
+   * @param task 任务 VO
+   * @param now 当前时间
+   * @return 排序分值
    */
-  public int calculateScore(FlowRunTask task, LocalDateTime now) {
+  public int calculateScore(FlowRunTaskVO task, LocalDateTime now) {
     int score = 0;
 
     // 1. 基础优先级

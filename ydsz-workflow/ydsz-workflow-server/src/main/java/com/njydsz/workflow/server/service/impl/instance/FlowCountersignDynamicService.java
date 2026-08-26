@@ -15,7 +15,7 @@ import com.njydsz.workflow.infra.entity.FlowRunTask;
 /**
  * P2-6: 会签动态完成条件服务
  *
- * <p>对标 Camunda <b>multiInstance completionCondition</b> 特性， 支持在审批运行时<b>动态修改</b>会签通过人数阈值。
+ * <p>支持在审批运行时<b>动态修改</b>会签通过人数阈值。
  *
  * <p><b>业务场景：</b>
  *

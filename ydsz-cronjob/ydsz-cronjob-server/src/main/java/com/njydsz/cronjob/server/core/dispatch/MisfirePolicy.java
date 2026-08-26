@@ -6,12 +6,12 @@ package com.njydsz.cronjob.server.core.dispatch;
  * <p>当任务 {@code next_fire_time} 早于 {@code NOW() - misfireGraceMinutes} 时，
  * 视为「Misfire」（错过触发窗口），按本策略处理。
  *
- * <p>对标 Quartz Trigger.MISFIRE_INSTRUCTION_* 语义，简化为三种主流策略：
+ * <p>简化为三种主流策略：
  *
  * <ul>
- *   <li>{@link #FIRE_NOW}：立即执行一次，然后推进 next_fire_time（默认，对标 XXL-Job）
- *   <li>{@link #SKIP}：跳过本次错过的触发，仅推进 next_fire_time（对标 Quartz MISFIRE_INSTRUCTION_DO_NOTHING）
- *   <li>{@link #COALESCE}：合并所有错过的触发为一次执行，日志标记 MISFIRED（对标 Quartz MISFIRE_INSTRUCTION_FIRE_ONCE_NOW）
+ *   <li>{@link #FIRE_NOW}：立即执行一次，然后推进 next_fire_time（默认）
+ *   <li>{@link #SKIP}：跳过本次错过的触发，仅推进 next_fire_time
+ *   <li>{@link #COALESCE}：合并所有错过的触发为一次执行，日志标记 MISFIRED
  * </ul>
  *
  * <p><b>策略选择建议</b>：
@@ -30,7 +30,7 @@ public enum MisfirePolicy {
   /**
    * 立即执行一次：忽略 misfire 状态，立即派发任务执行，然后推进 next_fire_time。
    *
-   * <p>适用于幂等任务，对标 XXL-Job 默认策略。
+   * <p>适用于幂等任务。
    */
   FIRE_NOW,
 

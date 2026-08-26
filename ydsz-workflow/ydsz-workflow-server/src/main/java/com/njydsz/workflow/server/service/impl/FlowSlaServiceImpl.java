@@ -34,7 +34,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * 流程 SLA 超时自动策略实现
  *
  * <p>对 {@link FlowSlaService} 接口的完整实现，是工作流引擎 SLA 监控的核心业务逻辑层。 通过定时任务扫描超期任务并执行自动策略（升级 / 自动通过 /
- * 自动驳回），对标 Activiti / Flowable 的 Job Executor。
+ * 自动驳回），基于时间驱动的 SLA 监控机制。
  *
  * <p><b>核心职责：</b>
  *

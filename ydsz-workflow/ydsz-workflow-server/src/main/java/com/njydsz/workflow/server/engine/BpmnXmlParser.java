@@ -45,24 +45,24 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
  *   <li>{@code <exclusiveGateway>}、{@code <parallelGateway>}、{@code <inclusiveGateway>} - 网关
  *   <li>{@code <sequenceFlow id sourceRef targetRef>} - 跳转边
  *   <li>{@code conditionExpression xsi:type="tFormalExpression"} - 条件
- *   <li>{@code flowable:assignee}、{@code flowable:candidateUsers}、{@code flowable:candidateGroups}
+ *   <li>{@code ydsz:assignee}、{@code ydsz:candidateUsers}、{@code ydsz:candidateGroups}
  *       - 办理人（兼容 BPMN 扩展命名空间）
  * </ul>
  *
  * <p>P0-4: 扩展属性完善，新增：
  *
  * <ul>
- *   <li>flowable:priority - 任务优先级（1-100）
- *   <li>flowable:async - 是否异步执行（true/false）
- *   <li>flowable:assigneeType - 办理人类型（SELF_SELECT/MULTI_LEADER/...）
- *   <li>flowable:performType - 会签类型（OR/PARALLEL）
- *   <li>flowable:approveCount - 会签通过人数
- *   <li>flowable:approveRate - 通过率（0-100）
- *   <li>flowable:weight - 加权值
- *   <li>flowable:timeoutStrategy - 超时策略（PASS/REJECT/NOTIFY/ESCALATE）
- *   <li>flowable:timeout - 超时时长（如 24h/2d）
- *   <li>flowable:escalateUser - 升级办理人（EscalateUser）
- *   <li>flowable:skipAnyNode - OR 会签条件
+ *   <li>ydsz:priority - 任务优先级（1-100）
+ *   <li>ydsz:async - 是否异步执行（true/false）
+ *   <li>ydsz:assigneeType - 办理人类型（SELF_SELECT/MULTI_LEADER/...）
+ *   <li>ydsz:performType - 会签类型（OR/PARALLEL）
+ *   <li>ydsz:approveCount - 会签通过人数
+ *   <li>ydsz:approveRate - 通过率（0-100）
+ *   <li>ydsz:weight - 加权值
+ *   <li>ydsz:timeoutStrategy - 超时策略（PASS/REJECT/NOTIFY/ESCALATE）
+ *   <li>ydsz:timeout - 超时时长（如 24h/2d）
+ *   <li>ydsz:escalateUser - 升级办理人（EscalateUser）
+ *   <li>ydsz:skipAnyNode - OR 会签条件
  *   <li>timerEventDefinition / timerCycle - 定时器节点与边界定时
  *   <li>errorEventDefinition - 错误事件
  *   <li>signalEventDefinition/messageEventDefinition - 信号/消息事件

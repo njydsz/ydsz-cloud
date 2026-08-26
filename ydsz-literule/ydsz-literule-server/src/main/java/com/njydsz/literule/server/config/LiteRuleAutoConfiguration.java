@@ -93,9 +93,9 @@ import com.njydsz.literule.server.spi.TraceRecorder;
 import com.njydsz.literule.server.spi.ZookeeperRuleSource;
 
 /**
- * LiteFlow 规则引擎自动配置。
+ * LiteRule 规则引擎自动配置。
  *
- * <p>封装 LiteFlow 规则引擎的 Bean 注册：执行器、规则加载器、监控指标、回放服务、A/B 测试分流器。
+ * <p>封装 LiteRule 规则引擎的 Bean 注册：执行器、规则加载器、监控指标、回放服务、A/B 测试分流器。
  *
  * <p>通过 {@code ydsz.literule.*} 配置规则文件路径、组件扫描包、监控启用等。
  *
@@ -718,7 +718,7 @@ public class LiteRuleAutoConfiguration {
   /**
    * 规则断点调试器（F1 断点调试器）
    *
-   * <p>提供规则级/表达式节点级断点、调试会话挂起/单步/恢复/终止能力， 对标 URule Pro / QLExpress4 断点调试。
+   * <p>提供规则级/表达式节点级断点、调试会话挂起/单步/恢复/终止能力。
    * 可通过 {@code ydsz.literule.debug.enabled=false} 关闭。
    *
    * @param evaluator 表达式求值器（用于条件断点评估）

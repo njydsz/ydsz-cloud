@@ -37,10 +37,6 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  *       CAS 去重）
  * </ul>
  *
- * <h3>对标</h3>
- *
- * <p>对标 XXL-Job / PowerJob 的失败率告警机制，提供基于时间窗口的统计型告警能力。
- *
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -29,7 +29,7 @@ import com.njydsz.workflow.infra.entity.FlowNode;
 public class BpmnElementHelper {
 
   /** BPMN 扩展属性命名空间 */
-  public static final String BPMN_EXT_NS = "http://flowable.org/bpmn";
+  public static final String BPMN_EXT_NS = "http://ydsz.org/bpmn";
 
   /**
    * 是否为流程节点元素（BPMN 标准节点类型）

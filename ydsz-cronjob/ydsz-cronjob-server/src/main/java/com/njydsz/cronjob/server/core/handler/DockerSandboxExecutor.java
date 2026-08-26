@@ -56,8 +56,6 @@ import com.njydsz.cronjob.server.config.SandboxConfig;
  * ydsz.cronjob.sandbox.docker-cpus=2
  * </pre>
  *
- * <p>对标 DolphinScheduler 的 Docker 沙箱和 Airflow 的 KubernetesPodOperator。
- *
  * @author ydsz-team
  * @since 1.0.0
  */

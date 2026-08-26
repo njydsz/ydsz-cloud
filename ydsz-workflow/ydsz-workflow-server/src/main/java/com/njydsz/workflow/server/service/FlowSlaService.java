@@ -2,8 +2,8 @@ package com.njydsz.workflow.server.service;
 
 import java.util.Map;
 
-import com.njydsz.workflow.infra.entity.FlowNode;
-import com.njydsz.workflow.infra.entity.FlowRunTask;
+import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
  * SLA 服务。
@@ -25,18 +25,18 @@ public interface FlowSlaService {
   /**
    * 处理单条任务的 SLA（外部可主动触发）
    *
-   * @param task 当前任务（必须已 setAssigneeId + dueAt）
+   * @param task 当前任务 VO（必须已 setAssigneeId + dueAt）
    * @return true=已处理或无需处理；false=处理异常
    */
-  boolean processOverdue(FlowRunTask task);
+  boolean processOverdue(FlowRunTaskVO task);
 
   /**
    * 应用 SLA 配置到任务（创建任务时调用，解析 node.slaConfig 设置 dueAt）
    *
-   * @param task 待设置 dueAt 的任务
-   * @param node 当前节点（slaConfig 字段从 ext 中读取）
+   * @param task 待设置 dueAt 的任务 VO
+   * @param node 当前节点 VO（slaConfig 字段从 ext 中读取）
    */
-  void applySlaConfig(FlowRunTask task, FlowNode node);
+  void applySlaConfig(FlowRunTaskVO task, FlowNodeVO node);
 
   /**
    * 解析 SLA 配置（同时支持 slaConfig JSON 和 ext.slaConfig 嵌套）

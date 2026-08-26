@@ -17,7 +17,7 @@ import com.njydsz.workflow.domain.vo.FlowViews;
 /**
  * 流程定义实体
  *
- * <p>对应数据库表 {@code ydsz_flow_definition}，对标 Warm-Flow {@code flow_definition}，存储流程模板元数据。
+ * <p>对应数据库表 {@code ydsz_flow_definition}，存储流程模板元数据。
  * 流程定义是工作流引擎的「模板层」，描述一类流程的结构（节点、流转、审批人）， 每次发起流程都基于某版本的流程定义生成流程实例。
  *
  * <p><b>核心字段：</b>

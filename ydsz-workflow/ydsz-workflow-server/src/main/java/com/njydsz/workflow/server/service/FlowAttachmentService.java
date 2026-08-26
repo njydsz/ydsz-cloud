@@ -6,7 +6,6 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
-import com.njydsz.workflow.infra.entity.FlowAttachment;
 
 /**
  * 流程附件服务 — 审批过程中的文件上传、下载与关联管理
@@ -54,38 +53,20 @@ public interface FlowAttachmentService {
       String traceId);
 
   /**
-   * 查询任务关联的附件列表（返回 DO，供 Service 层内部使用）
-   *
-   * @param taskId 任务 ID
-   * @return 附件 DO 列表
-   */
-  List<FlowAttachment> listByTask(String taskId);
-
-  /**
-   * 查询实例关联的附件列表（返回 DO，供 Service 层内部使用）
-   *
-   * @param instanceId 实例 ID
-   * @return 附件 DO 列表
-   */
-  List<FlowAttachment> listByInstance(String instanceId);
-
-  /**
-   * 查询任务关联的附件列表（返回 VO，符合 DDD 分层规范）
+   * 查询任务关联的附件列表
    *
    * @param taskId 任务 ID
    * @return 附件 VO 列表
-   * @since 1.0.0
    */
-  List<FlowAttachmentVO> listByTaskVO(String taskId);
+  List<FlowAttachmentVO> listByTask(String taskId);
 
   /**
-   * 查询实例关联的附件列表（返回 VO，符合 DDD 分层规范）
+   * 查询实例关联的附件列表
    *
    * @param instanceId 实例 ID
    * @return 附件 VO 列表
-   * @since 1.0.0
    */
-  List<FlowAttachmentVO> listByInstanceVO(String instanceId);
+  List<FlowAttachmentVO> listByInstance(String instanceId);
 
   /**
    * 删除附件（逻辑删除）

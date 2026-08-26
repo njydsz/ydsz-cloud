@@ -13,7 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 节点跳转关联实体
  *
- * <p>对应数据库表 {@code ydsz_flow_skip}，对标 Warm-Flow {@code flow_skip}， 描述流程图中节点之间的<b>有向边</b>（BPMN 2.0
+ * <p>对应数据库表 {@code ydsz_flow_skip}，描述流程图中节点之间的<b>有向边</b>（BPMN 2.0
  * 中的 sequenceFlow）。
  *
  * <p><b>核心概念：</b>流程图本质上是有向图，本表存储「from node → to node」的连接关系。 每条 skip 记录对应设计器中的一条线（连线）。

@@ -20,7 +20,7 @@ import com.njydsz.literule.domain.service.DecisionTableExcelService;
 /**
  * 决策表 Excel 导入导出器（P0-3）
  *
- * <p>将 {@link DecisionTableDefinition} 与 Excel（.xlsx）双向转换， 对标 Drools/URule 的决策表 Excel 格式，便于业务人员通过
+ * <p>将 {@link DecisionTableDefinition} 与 Excel（.xlsx）双向转换， 采用业界通用的决策表 Excel 格式，便于业务人员通过
  * Excel 维护决策表。
  *
  * <h3>Excel 结构</h3>

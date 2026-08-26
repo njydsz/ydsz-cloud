@@ -41,7 +41,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * <p>基于 LLM 生成文件内容摘要，支持：
  *
  * <ul>
- *   <li>LLM 模式：调用 OpenAI 兼容 API（需配置 API 地址/Key）
+ *   <li>LLM 模式：调用标准 LLM API（需配置 API 地址/Key）
  *   <li>降级模式：LLM 不可用时自动降级到 TextRank 算法
  *   <li>缓存：基于内容哈希的 Redis 缓存（TTL 24 小时），避免重复计算
  *   <li>中文优化：内置中文停用词过滤 + 改进的分词逻辑
@@ -449,7 +449,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
   /**
    * 通过 LLM API 生成摘要
    *
-   * <p>调用 OpenAI 兼容接口（/v1/chat/completions），失败时降级到 TextRank。
+   * <p>调用标准 LLM 接口（/v1/chat/completions），失败时降级到 TextRank。
    */
   private String generateSummaryByLlm(String content) {
     log.info(
@@ -472,7 +472,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
   /**
    * 通过 LLM API 提取关键词
    *
-   * <p>调用 OpenAI 兼容接口，失败时降级到 TextRank。
+   * <p>调用标准 LLM 接口，失败时降级到 TextRank。
    */
   private List<String> extractKeywordsByLlm(String content) {
     log.info("[AiSummaryApplicationService] LLM 关键词提取");

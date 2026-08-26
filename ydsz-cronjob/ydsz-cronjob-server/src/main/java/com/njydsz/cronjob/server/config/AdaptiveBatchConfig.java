@@ -15,8 +15,6 @@ import lombok.Data;
  *   <li>通过 AtomicReference 安全发布新值，JobScanner 下次扫描时自动生效
  * </ol>
  *
- * <p>对标 PowerJob 的自适应调度和 SchedulerX 的流量控制能力。
- *
  * @author ydsz-team
  * @since 1.0.0
  */

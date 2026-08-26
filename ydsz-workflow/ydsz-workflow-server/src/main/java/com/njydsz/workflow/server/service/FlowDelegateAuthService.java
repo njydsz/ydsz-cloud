@@ -5,7 +5,6 @@ import java.util.List;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
-import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
 
 /**
  * 流程委托授权服务。
@@ -18,15 +17,15 @@ import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
 public interface FlowDelegateAuthService {
 
   /**
-   * 将授权 Post DTO 转换为 DO 实体
+   * 将授权 Post DTO 转换为 VO
    *
-   * <p>符合 DDD 分层规范：DTO→DO 转换逻辑封装在 Service 层。
+   * <p>符合 DDD 分层规范：DTO→VO 转换逻辑封装在 Service 层。
    *
    * @param dto 授权 Post DTO
-   * @return 授权 DO 实体
+   * @return 授权 VO
    * @since 1.0.0
    */
-  FlowDelegateAuth postDtoToEntity(FlowDelegateAuthPostDTO dto);
+  FlowDelegateAuthVO postDtoToEntity(FlowDelegateAuthPostDTO dto);
 
   /**
    * 创建授权
@@ -39,10 +38,10 @@ public interface FlowDelegateAuthService {
    *   <li>无时间区间冲突的同 scope 授权
    * </ol>
    *
-   * @param auth 授权信息
+   * @param auth 授权信息 VO
    * @return 授权 ID
    */
-  String create(FlowDelegateAuth auth);
+  String create(FlowDelegateAuthVO auth);
 
   /**
    * 撤回授权
@@ -62,46 +61,24 @@ public interface FlowDelegateAuthService {
   void updateStatus(String authId, String status, String operatorId);
 
   /**
-   * 查"我设置的"授权列表（返回 DO，供 Service 层内部使用）
-   *
-   * @param ownerUserId 参数说明
-   * @param tenantId 参数说明
-   * @param status 参数说明
-   * @return 返回值说明
-   */
-  List<FlowDelegateAuth> listMine(String ownerUserId, String tenantId, String status);
-
-  /**
-   * 查"代理给我的"授权列表（返回 DO，供 Service 层内部使用）
-   *
-   * @param delegateUserId 参数说明
-   * @param tenantId 参数说明
-   * @param status 参数说明
-   * @return 返回值说明
-   */
-  List<FlowDelegateAuth> listAsDelegate(String delegateUserId, String tenantId, String status);
-
-  /**
-   * 查"我设置的"授权列表（返回 VO，符合 DDD 分层规范）
+   * 查"我设置的"授权列表
    *
    * @param ownerUserId 授权人 ID
    * @param tenantId 租户 ID
    * @param status 状态筛选（可选）
    * @return 授权 VO 列表
-   * @since 1.0.0
    */
-  List<FlowDelegateAuthVO> listMineVO(String ownerUserId, String tenantId, String status);
+  List<FlowDelegateAuthVO> listMine(String ownerUserId, String tenantId, String status);
 
   /**
-   * 查"代理给我的"授权列表（返回 VO，符合 DDD 分层规范）
+   * 查"代理给我的"授权列表
    *
    * @param delegateUserId 代理人 ID
    * @param tenantId 租户 ID
    * @param status 状态筛选（可选）
    * @return 授权 VO 列表
-   * @since 1.0.0
    */
-  List<FlowDelegateAuthVO> listAsDelegateVO(String delegateUserId, String tenantId, String status);
+  List<FlowDelegateAuthVO> listAsDelegate(String delegateUserId, String tenantId, String status);
 
   /**
    * 匹配代理规则 — 创建任务前调用
@@ -112,9 +89,9 @@ public interface FlowDelegateAuthService {
    * @param ownerUserId 当前解析出的办理人 ID
    * @param flowCode 流程编码
    * @param nodeCode 节点编码
-   * @return 命中的代理规则（无则返回 null）
+   * @return 命中的代理规则 VO（无则返回 null）
    */
-  FlowDelegateAuth matchAuth(String tenantId, String ownerUserId, String flowCode, String nodeCode);
+  FlowDelegateAuthVO matchAuth(String tenantId, String ownerUserId, String flowCode, String nodeCode);
 
   /**
    * 扫描并标记过期授权（每 5 分钟一次）

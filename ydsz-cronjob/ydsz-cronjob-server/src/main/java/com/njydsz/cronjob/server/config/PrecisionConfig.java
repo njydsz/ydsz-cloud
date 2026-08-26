@@ -6,7 +6,7 @@ import lombok.Data;
  * P1-P3: 秒级预读调度配置。
  *
  * <p>控制 {@link com.njydsz.cronjob.server.core.scheduler.TaskPreloadScheduler} 的行为。
- * 对标 XXL-Job 的 6000ms 预读窗口与 PowerJob 的时间轮：主扫描器（默认 5s 周期）作为兜底，
+ * 主扫描器（默认 5s 周期）作为兜底，
  * 预读调度器将窗口内到期的 CRON 任务注册到内存 {@code ScheduledExecutorService}，到期精确派发
  * （毫秒级精度），消除"最差 5s 扫描延迟 + 派发延迟"的精度损失。
  *

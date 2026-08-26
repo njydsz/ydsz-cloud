@@ -7,14 +7,7 @@ import lombok.Data;
  *
  * <p>启用后，Leader 节点仅负责调度扫描和任务派发，不再在本地执行任务。 非分片任务也会通过 RemoteTaskClient 派发到选定的 Worker 节点执行。
  *
- * <h3>对标</h3>
- *
- * <ul>
- *   <li>XXL-Job: 调度中心与执行器完全分离
- *   <li>PowerJob: Server 与 Worker 分离
- * </ul>
- *
- * <p>启用条件：
+ * @author ydsz-team
  *
  * <ul>
  *   <li>remote.enabled = true（远程派发必须可用）
@@ -34,7 +27,7 @@ public class SchedulerExecutorSeparationConfig {
   private static final int DEFAULT_MAX_DISPATCH_ATTEMPTS = 2;
 
   /**
-   * 是否启用调度器-执行器分离（P1-5: 默认 true，对标 XXL-Job/PowerJob 的调度器-执行器分离架构）。
+   * 是否启用调度器-执行器分离（P1-5: 默认 true）。
    *
    * <p>启用后，Leader 节点通过 WorkerNodeSelector 选定 Worker 节点远程派发任务， 无可用 Worker 时自动降级为 Leader
    * 本地执行（保证向后兼容）。 运行条件：remote.enabled=true 且 WorkerNodeSelector Bean 已注册。

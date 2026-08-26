@@ -262,7 +262,7 @@ public class LiteExprCompiler {
   /**
    * 从 AST 中提取所有变量引用名
    *
-   * <p>遍历 AST 收集 {@link VariableNode}，过滤内置关键字。 不依赖正则，比 Aviator/QLExpress 实现更准确。
+   * <p>遍历 AST 收集 {@link VariableNode}，过滤内置关键字。 不依赖正则，通过 AST 遍历实现精确提取。
    *
    * @param ast AST 根节点
    * @return 变量名列表（去重，保留出现顺序）
