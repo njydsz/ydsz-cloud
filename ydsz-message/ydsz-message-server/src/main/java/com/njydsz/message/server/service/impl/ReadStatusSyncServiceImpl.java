@@ -18,7 +18,6 @@ import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
-import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
 
