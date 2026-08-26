@@ -12,7 +12,7 @@ import com.njydsz.userinfo.infra.entity.UserLoginHistory;
 /**
  * 用户登录历史 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_user_login_history}，提供登录历史记录的 CRUD 操作。
+ * <p>对应数据表 {@code ydsz_acct_login_history}，提供登录历史记录的 CRUD 操作。
  *
  * <p><b>主要查询场景：</b>
  *
@@ -38,7 +38,7 @@ public interface UserLoginHistoryMapper extends BaseMapper<UserLoginHistory> {
    * @return 去重用户数
    */
   @Select(
-      "SELECT COUNT(DISTINCT user_id) FROM ydsz_user_login_history "
+      "SELECT COUNT(DISTINCT user_id) FROM ydsz_acct_login_history "
           + "WHERE login_result = 'FAILED' AND created_at >= #{startTime} AND created_at < #{endTime}")
   long countDistinctUsersWithFailures(
       @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);

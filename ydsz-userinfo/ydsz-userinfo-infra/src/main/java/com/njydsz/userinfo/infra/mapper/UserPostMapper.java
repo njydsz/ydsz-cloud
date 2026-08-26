@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.UserPost;
 /**
  * 用户-岗位关联表 Mapper
  *
- * <p>对应数据表 <code>ydsz_user_post</code>，存储用户与岗位的多对多关联。
+ * <p>对应数据表 <code>ydsz_acct_user_post</code>，存储用户与岗位的多对多关联。
  *
  * <p>支持一人多岗（PM/DEV/QA），是工作流审批人展开（{@code Post:xxx}）的核心数据。
  *

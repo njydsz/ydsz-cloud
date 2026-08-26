@@ -13,7 +13,7 @@ import com.njydsz.userinfo.infra.entity.UserAccount;
 /**
  * 用户账号 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_user_account}，存储用户账号基本信息。 继承 MyBatis-Plus {@code BaseMapper} 提供标准 CRUD
+ * <p>对应数据表 {@code ydsz_acct_user}，存储用户账号基本信息。 继承 MyBatis-Plus {@code BaseMapper} 提供标准 CRUD
  * 操作（insert/update/selectById/selectList/deleteById 等）。
  *
  * <p><b>自定义 SQL 说明：</b>本 Mapper 仅保留两处<b>必须原子化</b>的登录安全操作 （失败计数自增、成功态重置），以消除 {@code
@@ -57,7 +57,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
    */
   @Update(
       """
-            UPDATE ydsz_user_account
+            UPDATE ydsz_acct_user
             SET login_fail_count = login_fail_count + 1,
                 locked_until = CASE
                     WHEN login_fail_count + 1 >= #{threshold}
@@ -83,7 +83,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
    */
   @Update(
       """
-            UPDATE ydsz_user_account
+            UPDATE ydsz_acct_user
             SET login_fail_count = 0,
                 locked_until = NULL,
                 last_login_at = CURRENT_TIMESTAMP,
@@ -102,7 +102,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
   @Update(
       """
             <script>
-            UPDATE ydsz_user_account
+            UPDATE ydsz_acct_user
             SET status = '1', updated_at = CURRENT_TIMESTAMP
             WHERE deleted = 0 AND id IN
             <foreach collection='ids' item='id' open='(' separator=',' close=')'>
@@ -121,7 +121,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
   @Update(
       """
             <script>
-            UPDATE ydsz_user_account
+            UPDATE ydsz_acct_user
             SET status = '0', updated_at = CURRENT_TIMESTAMP
             WHERE deleted = 0 AND id IN
             <foreach collection='ids' item='id' open='(' separator=',' close=')'>
@@ -140,7 +140,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
   @Update(
       """
             <script>
-            UPDATE ydsz_user_account
+            UPDATE ydsz_acct_user
             SET deleted = 1, updated_at = CURRENT_TIMESTAMP
             WHERE deleted = 0 AND id IN
             <foreach collection='ids' item='id' open='(' separator=',' close=')'>
@@ -161,7 +161,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
    */
   @Update(
       """
-            UPDATE ydsz_user_account
+            UPDATE ydsz_acct_user
             SET password = #{newPasswordHash},
                 login_fail_count = 0,
                 locked_until = NULL,
@@ -185,7 +185,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
    */
   @Update(
       """
-            UPDATE ydsz_user_account
+            UPDATE ydsz_acct_user
             SET ban_type = #{banType},
                 ban_reason = #{banReason},
                 ban_expire_at = #{banExpireAt},
@@ -212,7 +212,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
    */
   @Update(
       """
-            UPDATE ydsz_user_account
+            UPDATE ydsz_acct_user
             SET locked_until = NULL,
                 login_fail_count = 0,
                 updated_at = CURRENT_TIMESTAMP

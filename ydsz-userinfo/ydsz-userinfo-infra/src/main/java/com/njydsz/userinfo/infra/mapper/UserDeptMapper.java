@@ -8,7 +8,7 @@ import com.njydsz.userinfo.infra.entity.UserDept;
 /**
  * 用户-部门关联表 Mapper
  *
- * <p>对应数据表 <code>ydsz_user_dept</code>，存储用户与部门的多对多关联。
+ * <p>对应数据表 <code>ydsz_acct_user_dept</code>，存储用户与部门的多对多关联。
  *
  * <p>支持一人多部门（主岗/兼岗），用 {@code is_main} 标识主部门，是工作流审批人展开（{@code dept:xxx}）的核心数据。
  *

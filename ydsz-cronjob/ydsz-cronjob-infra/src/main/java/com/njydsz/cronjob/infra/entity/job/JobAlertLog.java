@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 /**
  * 任务告警日志实体（P5 告警 + 监控, P3-1-merge 重构）。
  *
- * <p>P3-1-merge: 原对应 {@code ydsz_job_alert_log} 表，现已合并到 {@code ydsz_job_alert_dispatch}
+ * <p>P3-1-merge: 原对应 {@code ydsz_job_alert_dispatch} 表，现已合并到 {@code ydsz_job_alert_dispatch}
  * （source_type='CRONJOB'）。本实体映射到 ydsz_job_alert_dispatch 表，新增字段（alert_code, title, content,
  * target_role, push_channels 等）在 cronjob 场景下由 AlertDispatcher 填充。
  *

@@ -12,7 +12,7 @@ import com.njydsz.userinfo.infra.entity.UserRole;
 /**
  * 用户-角色关联表 Mapper
  *
- * <p>对应数据表 <code>ydsz_user_role</code>，存储用户与角色的多对多关联。
+ * <p>对应数据表 <code>ydsz_acct_user_role</code>，存储用户与角色的多对多关联。
  *
  * <p>一个用户可拥有多个角色（叠加权限），角色由 {@code RoleMapper} 维护，权限由 {@code RolePermissionMapper} 维护。
  *
@@ -45,7 +45,7 @@ public interface UserRoleMapper extends BaseMapper<UserRole> {
    */
   @Insert(
       "<script>"
-          + "INSERT INTO ydsz_user_role (id, user_id, role_id, tenant_id, deleted) VALUES "
+          + "INSERT INTO ydsz_acct_user_role (id, user_id, role_id, tenant_id, deleted) VALUES "
           + "<foreach collection='list' item='item' separator=','>"
           + "(#{item.id}, #{item.userId}, #{item.roleId}, #{item.tenantId}, 0)"
           + "</foreach>"

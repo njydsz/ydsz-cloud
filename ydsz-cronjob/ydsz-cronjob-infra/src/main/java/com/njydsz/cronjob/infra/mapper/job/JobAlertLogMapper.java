@@ -14,7 +14,7 @@ import com.njydsz.cronjob.infra.entity.job.JobAlertLog;
 /**
  * 任务告警日志 Mapper
  *
- * <p>对应数据表 <code>ydsz_alert_dispatch</code>（P3-1-merge：原 ydsz_job_alert_log 已合并至此表，source_type='CRONJOB'）。
+ * <p>对应数据表 <code>ydsz_job_alert_dispatch</code>（P3-1-merge：原 ydsz_job_alert_dispatch 已合并至此表，source_type='CRONJOB'）。
  *
  * <p>告警日志记录每次触发的告警（任务、规则、触发时间、推送渠道、推送结果），用于告警审计与统计。
  *
@@ -51,7 +51,7 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
           + "       push_channels as channels, status as alert_status, fail_reason as error_message, "
           + "       provider_trace_id as trace_id, trigger_log_id, tenant_id, "
           + "       created_by, created_at, updated_by, updated_at, deleted "
-          + "FROM ydsz_alert_dispatch "
+          + "FROM ydsz_job_alert_dispatch "
           + "WHERE rule_id = #{ruleId} AND source_type = 'CRONJOB' "
           + "  AND created_at >= #{since} AND deleted = 0")
   List<JobAlertLog> selectByRuleIdSince(
@@ -70,7 +70,7 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
           + "       push_channels as channels, status as alert_status, fail_reason as error_message, "
           + "       provider_trace_id as trace_id, trigger_log_id, tenant_id, "
           + "       created_by, created_at, updated_by, updated_at, deleted "
-          + "FROM ydsz_alert_dispatch "
+          + "FROM ydsz_job_alert_dispatch "
           + "WHERE source_id = #{jobId} AND source_type = 'CRONJOB' "
           + "  AND created_at >= #{since} AND deleted = 0 "
           + "ORDER BY created_at DESC")
@@ -95,9 +95,9 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
    * @return 返回值说明
    */
   @Delete(
-      "DELETE FROM ydsz_alert_dispatch "
+      "DELETE FROM ydsz_job_alert_dispatch "
           + "WHERE ctid = ANY(ARRAY("
-          + "  SELECT ctid FROM ydsz_alert_dispatch "
+          + "  SELECT ctid FROM ydsz_job_alert_dispatch "
           + "  WHERE source_type = 'CRONJOB' AND created_at < #{before} "
           + "  LIMIT #{limit}"
           + "))")

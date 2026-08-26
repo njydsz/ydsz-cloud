@@ -12,7 +12,7 @@ import lombok.Data;
  *   <li>{@link #batchSize} 单批删除条数（避免大事务锁表，默认 1000 条/批）
  * </ul>
  *
- * <p>清理范围：ydsz_job_log / ydsz_job_log_content / ydsz_job_alert_log / ydsz_job_task，每天凌晨 3 点由 Leader 节点执行。
+ * <p>清理范围：ydsz_job_log / ydsz_job_log_content / ydsz_job_alert_dispatch / ydsz_job_task，每天凌晨 3 点由 Leader 节点执行。
  *
  * @author ydsz-team
  * @since 1.0.0

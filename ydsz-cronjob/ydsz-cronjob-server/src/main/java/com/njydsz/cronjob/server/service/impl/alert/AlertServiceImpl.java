@@ -22,7 +22,7 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
 /**
  * 任务告警服务实现。
  *
- * <p>基于告警规则 ({@code ydsz_job_alert_rule}) 与告警日志 ({@code ydsz_job_alert_log}) 提供任务告警的订阅、
+ * <p>基于告警规则 ({@code ydsz_job_alert_rule}) 与告警日志 ({@code ydsz_job_alert_dispatch}) 提供任务告警的订阅、
  *
  * <p>触发、抑制、发送全流程。
  *

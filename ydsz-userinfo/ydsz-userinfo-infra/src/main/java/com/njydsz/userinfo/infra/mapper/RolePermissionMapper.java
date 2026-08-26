@@ -12,7 +12,7 @@ import com.njydsz.userinfo.infra.entity.RolePermission;
 /**
  * 角色-权限关联表 Mapper
  *
- * <p>对应数据表 <code>ydsz_role_permission</code>，存储角色与权限（菜单）的多对多关联。
+ * <p>对应数据表 <code>ydsz_rbac_role_permission</code>，存储角色与权限（菜单）的多对多关联。
  *
  * <p>是 RBAC 模型的核心中间表，权限（{@code ydsz_menu}）既可表示菜单也可表示后端接口权限码。
  *
@@ -45,7 +45,7 @@ public interface RolePermissionMapper extends BaseMapper<RolePermission> {
    */
   @Insert(
       "<script>"
-          + "INSERT INTO ydsz_role_permission (id, role_id, permission_id, tenant_id, deleted) VALUES "
+          + "INSERT INTO ydsz_rbac_role_permission (id, role_id, permission_id, tenant_id, deleted) VALUES "
           + "<foreach collection='list' item='item' separator=','>"
           + "(#{item.id}, #{item.roleId}, #{item.permissionId}, #{item.tenantId}, 0)"
           + "</foreach>"
