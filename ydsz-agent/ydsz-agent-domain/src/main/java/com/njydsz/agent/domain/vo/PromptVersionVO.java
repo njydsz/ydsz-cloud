@@ -24,7 +24,7 @@ public class PromptVersionVO implements Serializable {
   /** 主键 ID */
   private String id;
 
-  /** 所属模板编码（关联 ydsz_prompt_template.template_code） */
+  /** 所属模板编码（关联 ydsz_agt_prompt_template.template_code） */
   private String templateCode;
 
   /** 版本号（与 template 的 currentVersion 对应） */

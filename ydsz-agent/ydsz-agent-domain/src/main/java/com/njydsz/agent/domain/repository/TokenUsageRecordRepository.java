@@ -9,7 +9,7 @@ import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
 /**
  * Token 用量记录 Repository
  *
- * <p>封装 {@code ydsz_agent_token_usage} 表的数据库访问，为 server 层提供 Token 用量的持久化操作。
+ * <p>封装 {@code ydsz_agt_token_usage} 表的数据库访问，为 server 层提供 Token 用量的持久化操作。
  *
  * <p><b>主要索引：</b>
  *

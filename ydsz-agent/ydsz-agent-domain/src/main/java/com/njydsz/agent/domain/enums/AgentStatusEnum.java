@@ -5,7 +5,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
 /**
  * Agent 定义状态枚举。
  *
- * <p>对应 {@code ydsz_agent_definition.status} 字段（ENABLED / DISABLED）， 实现 {@link BaseStatusEnum}
+ * <p>对应 {@code ydsz_agt_definition.status} 字段（ENABLED / DISABLED）， 实现 {@link BaseStatusEnum}
  * 契约，提供启用/停用状态流转校验。
  *
  * <p><b>状态流转：</b>{@code ENABLED ⇄ DISABLED}（双向可切换）。

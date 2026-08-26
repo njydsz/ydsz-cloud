@@ -10,7 +10,7 @@ import com.njydsz.agent.domain.vo.AgentApprovalVO;
 /**
  * Agent 人工审批请求 Repository
  *
- * <p>封装 {@code ydsz_agent_approval} 表的数据库访问，为 server 层提供审批请求的持久化操作。
+ * <p>封装 {@code ydsz_agt_approval} 表的数据库访问，为 server 层提供审批请求的持久化操作。
  *
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
  *

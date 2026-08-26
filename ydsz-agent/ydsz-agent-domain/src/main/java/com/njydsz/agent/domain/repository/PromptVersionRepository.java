@@ -9,7 +9,7 @@ import com.njydsz.agent.domain.vo.PromptVersionVO;
 /**
  * Prompt 模板版本 Repository
  *
- * <p>封装 {@code ydsz_prompt_version} 表的数据库访问，为 server 层提供 Prompt 版本的持久化操作。
+ * <p>封装 {@code ydsz_agt_prompt_version} 表的数据库访问，为 server 层提供 Prompt 版本的持久化操作。
  *
  * <p><b>主要索引：</b>
  *

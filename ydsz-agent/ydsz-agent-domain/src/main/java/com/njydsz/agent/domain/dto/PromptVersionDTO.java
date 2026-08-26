@@ -20,7 +20,7 @@ public class PromptVersionDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 所属模板编码（关联 ydsz_prompt_template.template_code） */
+  /** 所属模板编码（关联 ydsz_agt_prompt_template.template_code） */
   private String templateCode;
 
   /** 版本号（与 template 的 currentVersion 对应） */

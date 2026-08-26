@@ -9,7 +9,7 @@ import com.njydsz.agent.domain.vo.AgentTraceVO;
 /**
  * Agent 执行链路 Repository
  *
- * <p>封装 {@code ydsz_agent_trace} 表的数据库访问，为 server 层提供链路元数据的持久化操作。
+ * <p>封装 {@code ydsz_agt_trace} 表的数据库访问，为 server 层提供链路元数据的持久化操作。
  *
  * <p><b>DDD 合规（P1 修复）</b>：本接口属于 domain 层，不得依赖 infra 层实现类。 原实现返回
  * {@code PgTraceRecorder}（infra 类），违反「domain ← infra 单向依赖」原则； 现改为返回领域接口

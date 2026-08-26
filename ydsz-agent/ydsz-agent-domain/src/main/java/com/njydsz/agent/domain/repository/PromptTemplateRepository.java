@@ -9,7 +9,7 @@ import com.njydsz.agent.domain.vo.PromptTemplateVO;
 /**
  * Prompt 模板 Repository
  *
- * <p>封装 {@code ydsz_prompt_template} 表的数据库访问，为 server 层提供 Prompt 模板的持久化操作。
+ * <p>封装 {@code ydsz_agt_prompt_template} 表的数据库访问，为 server 层提供 Prompt 模板的持久化操作。
  *
  * <p><b>主要索引：</b>
  *

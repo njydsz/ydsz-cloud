@@ -75,6 +75,12 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
         </dependency>
+        <!-- P0-4: 脚本规则 Groovy 引擎（JSR-223，默认启用沙箱 AST 级防护；optional，由业务系统按需排除） -->
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy-jsr223</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- P1-1 多级缓存 L2 + 分布式注册 / 广播依赖 Redisson（强制） -->
         <dependency>

@@ -20,7 +20,7 @@ public class AgentTraceStepVO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 链路 ID（关联 ydsz_agent_trace.traceId） */
+  /** 链路 ID（关联 ydsz_agt_trace.traceId） */
   private String traceId;
 
   /** 步骤序号（从 0 开始递增） */

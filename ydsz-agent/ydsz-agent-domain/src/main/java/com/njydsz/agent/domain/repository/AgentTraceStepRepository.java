@@ -8,7 +8,7 @@ import com.njydsz.agent.domain.vo.AgentTraceStepVO;
 /**
  * Agent 执行链路步骤 Repository
  *
- * <p>封装 {@code ydsz_agent_trace_step} 表的数据库访问，为 server 层提供链路步骤的持久化操作。
+ * <p>封装 {@code ydsz_agt_trace_step} 表的数据库访问，为 server 层提供链路步骤的持久化操作。
  *
  * @author ydsz-team
  * @since 1.0.0
