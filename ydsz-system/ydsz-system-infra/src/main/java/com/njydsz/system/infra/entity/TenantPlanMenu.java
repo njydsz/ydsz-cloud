@@ -46,6 +46,6 @@ public class TenantPlanMenu extends MpBaseEntity<String> {
   /** 套餐 ID（{@code ydsz_sys_tenant_plan.id}） */
   private String planId;
 
-  /** 菜单 ID（{@code ydsz_menu.id} 或权限码 {@code ydsz:xxx}） */
+  /** 菜单 ID（{@code ydsz_rbac_menu.id} 或权限码 {@code ydsz:xxx}） */
   private String menuId;
 }

@@ -415,7 +415,7 @@ ydsz-cronjob/                          # 父 POM
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
-| `ydsz.cronjob.preload.enabled` | `false` | 秒级预读调度（CRON 任务毫秒级触发） |
+| `ydsz.cronjob.preload.enabled` | `true` | 秒级预读调度（CRON 任务毫秒级触发；与主扫描器经 CAS 互斥，不会重复派发。保守场景可显式置 `false`） |
 | `ydsz.cronjob.preload.window-seconds` | `30` | 预读窗口（秒） |
 | `ydsz.cronjob.preload.scan-interval-ms` | `3000` | 预读扫描周期（毫秒） |
 | `ydsz.cronjob.preload.batch-size` | `200` | 单批预读最大任务数 |
