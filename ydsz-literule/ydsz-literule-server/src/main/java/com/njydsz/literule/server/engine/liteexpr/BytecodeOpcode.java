@@ -51,6 +51,12 @@ public enum BytecodeOpcode {
   /** 一元取负。栈效应：[a] → [-a] */
   NEG(0x25),
 
+  /** 栈顶复制。栈效应：[a] → [a, a]，用于短路求值保留操作数结果 */
+  DUP(0x26),
+
+  /** 弹出并丢弃栈顶值。栈效应：[a] →，用于短路求值的栈平衡 */
+  POP(0x27),
+
   // ===== 比较运算（[a, b] → [boolean]） =====
 
   /** 大于。栈效应：[a, b] → [a > b] */
@@ -87,10 +93,15 @@ public enum BytecodeOpcode {
   /** 无条件跳转。操作数：u16 targetOffset。栈效应：→（不变） */
   JUMP(0x50),
 
-  /** 条件为 false 时跳转。操作数：u16 targetOffset。栈效应：[cond] → */
+  /**
+   * 条件为 false 时跳转。操作数：u16 targetOffset。栈效应：[cond] → （弹出测试值）。
+   *
+   * <p>测试值为 false 时跳转到目标偏移；无论是否跳转，测试值均已从栈中弹出。
+   * 短路求值场景须先用 {@link #DUP} 复制操作数以保留最终结果。
+   */
   JUMP_IF_FALSE(0x51),
 
-  /** 条件为 true 时跳转。操作数：u16 targetOffset。栈效应：[cond] → */
+  /** 条件为 true 时跳转。操作数：u16 targetOffset。栈效应：[cond] → （弹出测试值，语义同 {@link #JUMP_IF_FALSE}） */
   JUMP_IF_TRUE(0x52),
 
   /** 条件为 null 时跳转（空值安全短路）。操作数：u16 targetOffset。栈效应：[ref] → */

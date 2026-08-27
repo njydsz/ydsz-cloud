@@ -125,6 +125,12 @@ public class BytecodeInterpreter {
           Object a = pop(stack, --sp);
           push(stack, sp++, negate(a));
         }
+        case 0x26 -> { // DUP — 栈顶复制，用于短路求值保留操作数结果；直接读取数组以保留原槽位值
+          Object top = stack[sp - 1];
+          push(stack, sp++, top);
+        }
+        case 0x27 -> // POP — 弹出并丢弃栈顶值，用于短路求值的栈平衡
+            pop(stack, --sp);
         case 0x30 -> { // CMP_GT
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
@@ -310,7 +316,6 @@ public class BytecodeInterpreter {
       return null;
     }
     BigDecimal result = da.divide(db, 10, RoundingMode.HALF_UP);
-    log.warn("[Bytecode] divide: {} / {} = {} (stripZeros={})", da, db, result, result.stripTrailingZeros());
     return result.stripTrailingZeros();
   }
 

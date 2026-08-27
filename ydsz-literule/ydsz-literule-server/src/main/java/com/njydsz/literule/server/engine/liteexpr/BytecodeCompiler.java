@@ -87,15 +87,21 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
   @Override
   public Void visitBinaryOp(BinaryOpNode node) {
     if ("&&".equals(node.operator()) || "and".equals(node.operator())) {
-      // 短路求值：左操作数为 false 时跳过右操作数，结果为 false
+      // 短路求值：DUP 复制左操作数结果，为 false 时弹出测试值并跳转到末尾（结果留在栈顶）
+      //   eval(left); DUP; JUMP_IF_FALSE end; eval(right); end:
+      // left=false → 栈顶即 false；left=true → 继续求值 right，栈顶为最终结果
       node.left().accept(this);
+      emit(BytecodeOpcode.DUP);
       int jumpToEnd = emitJump(BytecodeOpcode.JUMP_IF_FALSE);
       node.right().accept(this);
       patchJump(jumpToEnd);
     } else if ("||".equals(node.operator()) || "or".equals(node.operator())) {
-      // 短路求值：左操作数为 true 时跳过右操作数，结果为 true
+      // 短路求值：DUP 复制左操作数结果，为 true 时弹出测试值跳到末尾，否则 POP 清理副本后求值右操作数
+      //   eval(left); DUP; JUMP_IF_TRUE end; POP; eval(right); end:
       node.left().accept(this);
+      emit(BytecodeOpcode.DUP);
       int jumpToEnd = emitJump(BytecodeOpcode.JUMP_IF_TRUE);
+      emit(BytecodeOpcode.POP);
       node.right().accept(this);
       patchJump(jumpToEnd);
     } else {
