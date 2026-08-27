@@ -201,7 +201,7 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
   }
 
   @Override
-  public Void visitTemplateString(TemplateString node) {
+  public Void visitTemplateString(TemplateStringNode node) {
     throw new LiteExprException("字节码编译不支持模板字符串", node.line(), node.column());
   }
 

@@ -63,8 +63,8 @@ public class BytecodeInterpreter {
    * @return 执行结果
    */
   public Object execute(CompiledProgram program, Map<String, Object> variables) {
-    byte[] code = program.bytecode();
-    List<Object> constants = program.constantPool();
+    byte[] code = program.getBytecode();
+    List<Object> constants = program.getConstantPool();
     int ip = 0; // 指令指针
     int stepCount = 0;
 
@@ -76,7 +76,8 @@ public class BytecodeInterpreter {
       // 安全检查：节点访问预算
       if (++stepCount > maxSteps) {
         throw new LiteExprException(
-            "表达式执行超出节点预算限制（" + maxSteps + " 步）: " + program.sourceExpression());
+            "表达式执行超出节点预算限制（" + maxSteps + " 步）: " + program.getSourceExpression(),
+            0, 0);
       }
 
       int opcode = code[ip++] & 0xFF;
@@ -183,7 +184,8 @@ public class BytecodeInterpreter {
           }
         }
         case 0x40, 0x41 -> { // LOGIC_AND / LOGIC_OR — 已通过 JUMP_IF_FALSE/TRUE 实现短路，此处不应到达
-          throw new LiteExprException("逻辑运算操作码不应直接执行: 0x" + Integer.toHexString(opcode));
+          throw new LiteExprException(
+              "逻辑运算操作码不应直接执行: 0x" + Integer.toHexString(opcode), 0, 0);
         }
         case 0x42 -> { // LOGIC_NOT
           Object a = pop(stack, --sp);
@@ -217,7 +219,7 @@ public class BytecodeInterpreter {
           return pop(stack, --sp);
         }
         default -> throw new LiteExprException(
-            "未知字节码操作码: 0x" + Integer.toHexString(opcode));
+            "未知字节码操作码: 0x" + Integer.toHexString(opcode), 0, 0);
       }
     }
 
@@ -437,8 +439,13 @@ public class BytecodeInterpreter {
   private Object callFunction(String funcName, Object[] args) {
     LiteExprFunction function = functionRegistry.lookup(funcName);
     if (function == null) {
-      throw new LiteExprException("未注册的函数: " + funcName);
+      throw new LiteExprException("未注册的函数: " + funcName, 0, 0);
     }
-    return function.apply(args);
+    try {
+      return function.call(args);
+    } catch (Exception e) {
+      throw new LiteExprException(
+          "函数执行异常: " + funcName + " - " + e.getMessage(), 0, 0, e);
+    }
   }
 }
