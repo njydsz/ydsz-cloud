@@ -29,7 +29,6 @@
         <module>ydsz-literule</module>
         <module>ydsz-nextwiki</module>
         <module>ydsz-agent</module>
-        <module>ydsz-auth</module>
     </modules>
 
     <properties>
@@ -147,17 +146,6 @@
                 <version>${spring-cloud-alibaba.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <!-- Spring Authorization Server BOM -->
-            <dependency>
-                <groupId>org.springframework.security</groupId>
-                <artifactId>spring-security-oauth2-authorization-server</artifactId>
-                <version>1.5.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.security</groupId>
-                <artifactId>spring-security-oauth2-jose</artifactId>
-                <version>7.0.5</version>
             </dependency>
             <!-- Testcontainers BOM（P1-7：集成测试容器化） -->
             <dependency>
@@ -369,32 +357,6 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-event</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <!-- ydsz-auth 子模块 -->
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-auth-domain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-auth-infra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-auth-server</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-auth-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-auth-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
