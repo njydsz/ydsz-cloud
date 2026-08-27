@@ -3,6 +3,7 @@ package com.njydsz.userinfo.server.auth;
 import java.io.StringReader;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.Signature;
 import java.security.interfaces.RSAPublicKey;
@@ -12,6 +13,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -346,7 +348,7 @@ public class SamlService {
       if (!signature.verify(signatureBytes)) {
         throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
       }
-    } catch (java.security.GeneralSecurityException e) {
+    } catch (GeneralSecurityException e) {
       throw new SamlException("SIGNATURE_VERIFY", "签名验证加密操作失败: " + e.getMessage(), e);
     }
   }
@@ -360,8 +362,8 @@ public class SamlService {
    */
   private Document parseXmlDocument(String xml) throws SamlException {
     try {
-      javax.xml.parsers.DocumentBuilderFactory factory =
-          javax.xml.parsers.DocumentBuilderFactory.newInstance();
+      DocumentBuilderFactory factory =
+          DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
       // 禁用外部实体注入（XXE 防护）
       factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
@@ -418,7 +420,7 @@ public class SamlService {
       if (!signature.verify(signatureBytes)) {
         throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
       }
-    } catch (java.security.GeneralSecurityException e) {
+    } catch (GeneralSecurityException e) {
       throw new SamlException("SIGNATURE_VERIFY", "签名验证加密操作失败: " + e.getMessage(), e);
     }
   }

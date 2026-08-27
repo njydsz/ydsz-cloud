@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -67,7 +68,7 @@ public class DictRepositoryImpl implements DictRepository {
       wrapper.eq(DictType::getStatus, query.getStatus());
     }
     wrapper.orderByDesc(DictType::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<DictType> result = dictTypeMapper.selectPage(page, wrapper);
+    IPage<DictType> result = dictTypeMapper.selectPage(page, wrapper);
     List<DictTypeVO> vos = converter.dictTypeListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }
@@ -162,7 +163,7 @@ public class DictRepositoryImpl implements DictRepository {
       wrapper.eq(DictItem::getStatus, query.getStatus());
     }
     wrapper.orderByDesc(DictItem::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<DictItem> result = dictItemMapper.selectPage(page, wrapper);
+    IPage<DictItem> result = dictItemMapper.selectPage(page, wrapper);
     List<DictItemVO> vos = converter.dictItemListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }

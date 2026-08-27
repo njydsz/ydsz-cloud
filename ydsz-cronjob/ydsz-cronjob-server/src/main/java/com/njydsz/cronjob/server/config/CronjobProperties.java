@@ -133,6 +133,9 @@ public class CronjobProperties {
   /** P1-3: Webhook 重试补偿配置 */
   private WebhookRetryConfig webhookRetry = new WebhookRetryConfig();
 
+  /** P2-5: 多云/多集群任务漂移配置 */
+  private MultiClusterConfig multiCluster = new MultiClusterConfig();
+
   /** SpEL 表达式缓存配置（已废弃，1.0.0 移除） */
   @Deprecated
   private SpelConfig spel = new SpelConfig();

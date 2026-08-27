@@ -12,6 +12,7 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
@@ -157,7 +158,7 @@ public abstract class DataPermissionInnerInterceptor extends CachingJsqlParserSu
    * @return 支持时返回 true
    */
   protected abstract boolean isSupportedSqlType(
-      org.apache.ibatis.mapping.SqlCommandType sqlCommandType);
+      SqlCommandType sqlCommandType);
 
   // ====================================================================
   // 公共辅助方法（子类可直接使用）

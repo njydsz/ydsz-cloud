@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -81,7 +82,7 @@ public class VariableRepositoryImpl implements VariableRepository {
       wrapper.eq(Variable::getStatus, query.getStatus());
     }
     wrapper.orderByDesc(Variable::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<Variable> result = variableMapper.selectPage(page, wrapper);
+    IPage<Variable> result = variableMapper.selectPage(page, wrapper);
     List<VariableVO> vos = converter.variableListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }

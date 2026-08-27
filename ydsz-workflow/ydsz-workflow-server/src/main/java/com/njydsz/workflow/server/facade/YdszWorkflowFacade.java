@@ -23,6 +23,7 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
@@ -877,11 +878,11 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   }
 
   @Override
-  public com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO batchUrge(
+  public FlowBatchUrgeResultVO batchUrge(
       List<String> instanceIds, String operatorId, String comment) {
     int successCount = taskService.batchUrge(instanceIds, operatorId, comment);
-    com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO result =
-        new com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO();
+    FlowBatchUrgeResultVO result =
+        new FlowBatchUrgeResultVO();
     result.setTotalCount(instanceIds == null ? 0 : instanceIds.size());
     result.setSuccessCount(successCount);
     result.setFailedCount(result.getTotalCount() - successCount);

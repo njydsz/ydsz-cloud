@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
@@ -72,8 +73,8 @@ public class PromptEvaluationService {
             .model(evalModel)
             .messages(
                 List.of(
-                    com.njydsz.agent.domain.model.ChatMessage.system(renderedPrompt),
-                    com.njydsz.agent.domain.model.ChatMessage.user(evalUserMessage, null)))
+                    ChatMessage.system(renderedPrompt),
+                    ChatMessage.user(evalUserMessage, null)))
             .temperature(properties.getLlm().getTemperature())
             .maxTokens(properties.getLlm().getMaxTokens())
             .build();

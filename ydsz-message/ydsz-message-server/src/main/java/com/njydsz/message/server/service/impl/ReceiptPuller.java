@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.ReceiptResult;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
@@ -127,13 +128,13 @@ public class ReceiptPuller {
         pulled++;
         // 主动拉取：调用渠道 queryReceipt
         MessageChannel channel = channelRouter.route(logVO.getChannel());
-        Optional<com.njydsz.message.domain.dto.ReceiptResult> result = channel.queryReceipt(logVO);
+        Optional<ReceiptResult> result = channel.queryReceipt(logVO);
         if (result.isEmpty()) {
           // 渠道不支持主动拉取，跳过等待被动回调
           skipped++;
           continue;
         }
-        com.njydsz.message.domain.dto.ReceiptResult receipt = result.get();
+        ReceiptResult receipt = result.get();
         messageLogService.updateReceipt(
             logVO.getId(), receipt.getStatus().name(), LocalDateTime.now());
         updated++;

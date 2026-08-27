@@ -96,7 +96,7 @@ public class ChannelRouter {
   @PostConstruct
   public void initChannels() {
     Map<String, MessageChannel> beans = applicationContext.getBeansOfType(MessageChannel.class);
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig r4jConfig =
+    CircuitBreakerConfig r4jConfig =
         buildCircuitBreakerConfig();
     CircuitBreakerRegistry r4jRegistry = CircuitBreakerRegistry.of(r4jConfig);
     for (MessageChannel channel : beans.values()) {

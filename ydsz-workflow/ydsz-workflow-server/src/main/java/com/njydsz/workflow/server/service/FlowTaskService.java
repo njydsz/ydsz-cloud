@@ -168,6 +168,31 @@ public interface FlowTaskService {
       String assigneeId, String tenantId, int page, int size);
 
   /**
+   * P2-1: 游标分页查询用户待办任务（Keyset Pagination）。
+   *
+   * <p>基于上一页最后一条记录的 (priority, createdAt, id) 作为游标锚点，查询下一页数据。
+   * 相比 LIMIT/OFFSET 在大 offset 场景下有显著性能优势（O(1) vs O(N)）。
+   *
+   * <p><b>使用方式：</b>首次查询传 {@code lastPriority=null, lastCreatedAt=null, lastId=null}；
+   * 后续查询传上一页最后一条记录的对应字段值。
+   *
+   * @param assigneeId 办理人 ID
+   * @param tenantId 租户 ID
+   * @param lastPriority 上一页最后一条的 priority（首次查询传 null）
+   * @param lastCreatedAt 上一页最后一条的 createdAt（首次查询传 null）
+   * @param lastId 上一页最后一条的 id（首次查询传 null，用于打破平局）
+   * @param limit 每页大小
+   * @return 下一页任务列表
+   */
+  List<FlowRunTaskVO> listTodoByAssigneeCursor(
+      String assigneeId,
+      String tenantId,
+      Integer lastPriority,
+      LocalDateTime lastCreatedAt,
+      String lastId,
+      int limit);
+
+  /**
    * 查用户的已办（不分页）
    *
    * @param assigneeId 办理人 ID

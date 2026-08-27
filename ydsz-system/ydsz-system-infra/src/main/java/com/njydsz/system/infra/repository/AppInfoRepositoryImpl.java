@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -72,7 +73,7 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
       wrapper.eq(AppInfo::getStatus, query.getStatus());
     }
     wrapper.orderByDesc(AppInfo::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<AppInfo> result = appInfoMapper.selectPage(page, wrapper);
+    IPage<AppInfo> result = appInfoMapper.selectPage(page, wrapper);
     List<AppInfoVO> vos = converter.appInfoListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }

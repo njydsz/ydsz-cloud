@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.parser.JsonParserUtil;
 
 /**
  * 高性能 JSON 读取器
@@ -450,7 +451,7 @@ public final class JSONReader {
     JSONReader.maxDepth = depth;
     // 同步通用解析路径（JsonParserUtil）的深度限制，确保 fromJson(Object.class)
     // 等走通用解析器的入口也生效（两套深度系统统一）
-    com.njydsz.common.json.parser.JsonParserUtil.setMaxParseDepth(depth);
+    JsonParserUtil.setMaxParseDepth(depth);
   }
 
   /**

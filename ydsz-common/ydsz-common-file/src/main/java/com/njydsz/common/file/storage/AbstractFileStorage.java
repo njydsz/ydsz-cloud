@@ -8,7 +8,10 @@ import java.io.OutputStream;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -657,23 +660,23 @@ public abstract class AbstractFileStorage implements IFileStorage {
   /** 临时文件内容源（大文件，避免 OOM） */
   private static final class TempFileContentSource implements FileContentSource {
 
-    private final java.nio.file.Path tempFile;
+    private final Path tempFile;
 
     TempFileContentSource(MultipartFile file) throws IOException {
-      this.tempFile = java.nio.file.Files.createTempFile("ydsz-upload-", ".tmp");
+      this.tempFile = Files.createTempFile("ydsz-upload-", ".tmp");
       file.transferTo(this.tempFile);
     }
 
     @Override
     public InputStream openStream() throws IOException {
       return new BufferedInputStream(
-          java.nio.file.Files.newInputStream(tempFile, java.nio.file.StandardOpenOption.READ));
+          Files.newInputStream(tempFile, StandardOpenOption.READ));
     }
 
     @Override
     public void close() {
       try {
-        java.nio.file.Files.deleteIfExists(tempFile);
+        Files.deleteIfExists(tempFile);
       } catch (IOException e) {
         // 临时文件删除失败不影响业务，交由系统临时目录回收
         log.warn("[Storage] failed to delete temp file: {}", tempFile, e);

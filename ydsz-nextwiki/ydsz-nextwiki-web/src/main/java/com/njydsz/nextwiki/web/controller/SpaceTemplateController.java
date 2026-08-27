@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.response.YdszResponse;
 import com.njydsz.common.web.constants.AuthHeaderConstants;
 import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
+import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -147,12 +148,12 @@ public class SpaceTemplateController {
    */
   @PostMapping("/{templateId}/use")
   @Operation(summary = "使用模板创建空间", description = "基于模板预定义结构创建新空间")
-  public YdszResponse<com.njydsz.nextwiki.domain.vo.SpaceVO> useTemplate(
+  public YdszResponse<SpaceVO> useTemplate(
       @PathVariable String templateId,
       @Valid @RequestBody UseTemplateRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    com.njydsz.nextwiki.domain.vo.SpaceVO space =
+    SpaceVO space =
         spaceTemplateApplicationService.createSpaceFromTemplate(templateId, request.getSpaceName(), userId);
     return YdszResponse.success(space);
   }

@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.json.annotation.JsonCreator;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
+import com.njydsz.common.json.annotation.JsonAlias;
+import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.provider.FieldMetadataLoader;
@@ -462,8 +464,8 @@ public final class BeanReader<T> {
       this.typeCode = getTypeCode(fieldType);
 
       // 加载 @JsonFormat：日期格式模式（序列化/反序列化共用）
-      com.njydsz.common.json.annotation.JsonFormat jsonFormat =
-          field.getAnnotation(com.njydsz.common.json.annotation.JsonFormat.class);
+      JsonFormat jsonFormat =
+          field.getAnnotation(JsonFormat.class);
       this.datePattern =
           (jsonFormat != null && !jsonFormat.pattern().isEmpty()) ? jsonFormat.pattern() : null;
 
@@ -480,8 +482,8 @@ public final class BeanReader<T> {
 
       // F-3 恢复：加载 @JsonAlias 备用名称（仅反序列化匹配，序列化仍输出主名称）；
       // P1-8：未标注时回退 Jackson @JsonAlias.value
-      com.njydsz.common.json.annotation.JsonAlias jsonAlias =
-          field.getAnnotation(com.njydsz.common.json.annotation.JsonAlias.class);
+      JsonAlias jsonAlias =
+          field.getAnnotation(JsonAlias.class);
       String[] aliasValues = null;
       if (jsonAlias != null && jsonAlias.value().length > 0) {
         aliasValues = jsonAlias.value();

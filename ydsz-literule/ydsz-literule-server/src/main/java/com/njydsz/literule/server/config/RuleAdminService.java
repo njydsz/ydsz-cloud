@@ -234,13 +234,13 @@ public class RuleAdminService {
    * @return 分页结果（PageResponse 封装的 RuleDefinition 列表）
    * @since 1.0.0
    */
-  public com.njydsz.common.core.response.PageResponse<List<RuleDefinition>> pageRuleDefinitions(
-      com.njydsz.common.domain.query.PageQuery pageQuery) {
+  public PageResponse<List<RuleDefinition>> pageRuleDefinitions(
+      PageQuery pageQuery) {
     PageResponse<List<RuleDefinitionVO>> voPage = ruleDefinitionRepository.pageRuleDefinitions(pageQuery);
     // VO → RuleDefinition 转换
     List<RuleDefinition> records =
         voPage.getData().stream().map(this::voToRuleDefinition).toList();
-    return com.njydsz.common.core.response.PageResponse.success(
+    return PageResponse.success(
         voPage.getTotal(), voPage.getPageNum(), voPage.getPageSize(), records);
   }
 
@@ -262,7 +262,7 @@ public class RuleAdminService {
     def.setSeverityExpression(vo.getSeverityExpression());
     def.setDefaultSeverity(
         vo.getDefaultSeverity() != null
-            ? com.njydsz.literule.api.RuleSeverity.fromCode(vo.getDefaultSeverity())
+            ? RuleSeverity.fromCode(vo.getDefaultSeverity())
             : null);
     def.setTitleTemplate(vo.getTitleTemplate());
     def.setDescriptionTemplate(vo.getDescriptionTemplate());

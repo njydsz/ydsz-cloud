@@ -1,5 +1,6 @@
 package com.njydsz.common.search.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -222,9 +223,9 @@ public class UnifiedSearchService {
 
       // P4-12: 使用 Resilience4j 熔断器判断是否允许请求通过
       if (circuitBreaker.getState()
-              == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
+              == CircuitBreaker.State.OPEN
           || circuitBreaker.getState()
-              == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN) {
+              == CircuitBreaker.State.FORCED_OPEN) {
         log.warn("[UnifiedSearch] 熔断器开启，拒绝搜索: state={}", circuitBreaker.getState());
         return SearchResponse.empty(request.getPage(), request.getPageSize());
       }
@@ -526,13 +527,13 @@ public class UnifiedSearchService {
             // 失败率阈值达到 50% 时触发熔断
             .failureRateThreshold(50)
             // 熔断持续时间（秒）
-            .waitDurationInOpenState(java.time.Duration.ofSeconds(config.getWaitDuration()))
+            .waitDurationInOpenState(Duration.ofSeconds(config.getWaitDuration()))
             // 半开状态允许通过的请求数
             .permittedNumberOfCallsInHalfOpenState(config.getHalfOpenRequests())
             // 慢调用视为失败：搜索超过 80% 超时时长即视为慢调用
             .slowCallRateThreshold(80)
             .slowCallDurationThreshold(
-                java.time.Duration.ofMillis(properties.getSearchTimeout() * 800L))
+                Duration.ofMillis(properties.getSearchTimeout() * 800L))
             // 自动从 OPEN 转换到 HALF_OPEN
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .build();

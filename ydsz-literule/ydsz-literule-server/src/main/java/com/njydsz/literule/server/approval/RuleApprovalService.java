@@ -69,6 +69,9 @@ public class RuleApprovalService {
   /** P1-5: 工作流引擎桥接（可选 SPI，用于将审批事件转发到 workflow 模块） */
   private RuleApprovalWorkflowBridge workflowBridge;
 
+  /** 分布式锁服务（P1-3：替代 synchronized，支持集群部署） */
+  private LockService lockService;
+
   /**
    * 构造审批流服务
    *
@@ -146,6 +149,19 @@ public class RuleApprovalService {
   }
 
   /**
+   * P1-3: 设置分布式锁服务
+   *
+   * <p>设置后，审批操作（提交/通过/驳回/委托/撤回）使用分布式锁保障集群部署下的互斥。
+   * 未设置时，使用本地 synchronized（向后兼容单节点部署）。
+   *
+   * @param lockService 分布式锁服务
+   * @since 1.4.0
+   */
+  public void setLockService(LockService lockService) {
+    this.lockService = lockService;
+  }
+
+  /**
    * 注册自定义审批流
    *
    * @param flow 审批流配置
@@ -184,6 +200,30 @@ public class RuleApprovalService {
     return flowRegistry.get(flowCode);
   }
 
+  // ==================== 锁辅助方法（P1-3） ====================
+
+  /**
+   * 使用分布式锁或本地锁执行操作（P1-3）
+   *
+   * <p>当 {@link #lockService} 已注入时，使用分布式锁保障集群部署下的互斥；
+   * 未注入时，使用本地 synchronized（向后兼容单节点部署）。
+   *
+   * @param lockKey 锁 key
+   * @param action 要执行的操作
+   * @param <T> 返回类型
+   * @return 操作结果
+   * @since 1.4.0
+   */
+  private <T> T executeWithLock(String lockKey, java.util.function.Supplier<T> action) {
+    if (lockService != null) {
+      return lockService.executeWithLock(lockKey, action);
+    }
+    // 未注入 LockService 时，使用本地 synchronized（向后兼容）
+    synchronized (this) {
+      return action.get();
+    }
+  }
+
   // ==================== 核心审批操作 ====================
 
   /**
@@ -192,60 +232,64 @@ public class RuleApprovalService {
    * <p>将规则从 DRAFT 状态提交到多级审批流的第一级。规则状态变更为 {@link RuleStatus#REVIEW_L1}（多级）或 {@link
    * RuleStatus#REVIEW}（单级兼容）。
    *
+   * <p>P1-3：集群部署时使用分布式锁保障互斥，单节点部署时使用本地 synchronized（向后兼容）。
+   *
    * @param ruleCode 规则编码
    * @param flowCode 审批流编码（null 时使用默认 2 级审批流）
    * @param operator 操作人
    * @return 审批记录
    * @throws IllegalArgumentException 规则不存在、状态非法、审批流不存在
    */
-  public synchronized ApprovalRecord submitForReview(
-      String ruleCode, String flowCode, String operator) {
-    requireNonBlank(ruleCode, "ruleCode");
-    requireNonBlank(operator, "operator");
+  public ApprovalRecord submitForReview(String ruleCode, String flowCode, String operator) {
+    // P1-3：使用分布式锁或本地锁保障互斥
+    return executeWithLock("literule:approval:submit:" + ruleCode, () -> {
+      requireNonBlank(ruleCode, "ruleCode");
+      requireNonBlank(operator, "operator");
 
-    RuleDefinition def = loadRule(ruleCode);
-    RuleStatus current = parseStatus(def.getStatus());
-    ApprovalFlow flow = resolveFlow(flowCode);
+      RuleDefinition def = loadRule(ruleCode);
+      RuleStatus current = parseStatus(def.getStatus());
+      ApprovalFlow flow = resolveFlow(flowCode);
 
-    RuleStatus firstLevelStatus = levelToStatus(1, flow.maxLevel());
-    if (!current.canTransitionTo(firstLevelStatus)) {
-      throw new IllegalStateException("当前状态 " + current.getDesc() + " 不允许提交审核，仅 DRAFT 可提交");
-    }
+      RuleStatus firstLevelStatus = levelToStatus(1, flow.maxLevel());
+      if (!current.canTransitionTo(firstLevelStatus)) {
+        throw new IllegalStateException("当前状态 " + current.getDesc() + " 不允许提交审核，仅 DRAFT 可提交");
+      }
 
-    // 创建审批记录
-    ApprovalRecord record =
-        ApprovalRecord.builder()
-            .recordId(generateRecordId())
-            .ruleCode(ruleCode)
-            .flowCode(flow.getFlowCode())
-            .currentLevel(1)
-            .currentStatus(ApprovalRecord.STATUS_PENDING)
-            .currentLevelApprovedApprovers(new ArrayList<>())
-            .logs(new ArrayList<>())
-            .createdAt(LocalDateTime.now())
-            .updatedAt(LocalDateTime.now())
-            .build();
-    record.appendLog(
-        ApprovalLog.builder()
-            .level(1)
-            .approver(operator)
-            .action(ApprovalLog.ACTION_SUBMIT)
-            .comment("提交" + flow.getName())
-            .timestamp(LocalDateTime.now())
-            .build());
+      // 创建审批记录
+      ApprovalRecord record =
+          ApprovalRecord.builder()
+              .recordId(generateRecordId())
+              .ruleCode(ruleCode)
+              .flowCode(flow.getFlowCode())
+              .currentLevel(1)
+              .currentStatus(ApprovalRecord.STATUS_PENDING)
+              .currentLevelApprovedApprovers(new ArrayList<>())
+              .logs(new ArrayList<>())
+              .createdAt(LocalDateTime.now())
+              .updatedAt(LocalDateTime.now())
+              .build();
+      record.appendLog(
+          ApprovalLog.builder()
+              .level(1)
+              .approver(operator)
+              .action(ApprovalLog.ACTION_SUBMIT)
+              .comment("提交" + flow.getName())
+              .timestamp(LocalDateTime.now())
+              .build());
 
-    // 更新规则状态到第一级
-    updateRuleStatus(def, firstLevelStatus, operator, "提交审核: " + flow.getName());
+      // 更新规则状态到第一级
+      updateRuleStatus(def, firstLevelStatus, operator, "提交审核: " + flow.getName());
 
-    saveRecord(record);
-    log.info(
-        "[Approval] 规则已提交审核: ruleCode={}, flow={}, operator={}",
-        ruleCode,
-        flow.getFlowCode(),
-        operator);
-    // P1-5: 通知工作流引擎
-    notifyWorkflowBridge(b -> b.onApprovalSubmitted(ruleCode, flow.getFlowCode(), operator));
-    return record;
+      saveRecord(record);
+      log.info(
+          "[Approval] 规则已提交审核: ruleCode={}, flow={}, operator={}",
+          ruleCode,
+          flow.getFlowCode(),
+          operator);
+      // P1-5: 通知工作流引擎
+      notifyWorkflowBridge(b -> b.onApprovalSubmitted(ruleCode, flow.getFlowCode(), operator));
+      return record;
+    });
   }
 
   /**
@@ -269,111 +313,113 @@ public class RuleApprovalService {
    * @throws IllegalStateException 状态非法（非 PENDING/DELEGATED）
    * @throws SecurityException 无权限审批
    */
-  public synchronized ApprovalRecord approve(String ruleCode, String operator, String comment) {
-    requireNonBlank(ruleCode, "ruleCode");
-    requireNonBlank(operator, "operator");
+  public ApprovalRecord approve(String ruleCode, String operator, String comment) {
+    return executeWithLock("literule:approval:action:" + ruleCode, () -> {
+      requireNonBlank(ruleCode, "ruleCode");
+      requireNonBlank(operator, "operator");
 
-    ApprovalRecord record = loadRecordForAction(ruleCode);
-    ApprovalFlow flow = resolveFlow(record.getFlowCode());
-    ApprovalStep step = flow.getStep(record.getCurrentLevel());
-    if (step == null) {
-      throw new IllegalStateException(
-          "审批步骤不存在: level=" + record.getCurrentLevel() + ", flow=" + flow.getFlowCode());
-    }
-
-    // 校验权限（考虑委托场景）
-    validateApprovePermission(operator, step, record);
-
-    // COUNTERSIGN：不允许同一人重复通过
-    if (step.getType() == ApprovalType.COUNTERSIGN
-        && record.getCurrentLevelApprovedApprovers().contains(operator)) {
-      throw new IllegalStateException("会签场景下审批人已通过当前级别: " + operator);
-    }
-
-    // SEQUENCE：必须是下一个该审批的人
-    if (step.getType() == ApprovalType.SEQUENCE) {
-      validateSequenceApprover(operator, step, record);
-    }
-
-    // 追加通过日志
-    record.appendLog(
-        ApprovalLog.builder()
-            .level(record.getCurrentLevel())
-            .approver(operator)
-            .action(ApprovalLog.ACTION_APPROVE)
-            .comment(comment)
-            .timestamp(LocalDateTime.now())
-            .build());
-
-    // 判断当前级别是否通过
-    boolean levelPassed = checkLevelPassed(step, record, operator);
-
-    if (!levelPassed) {
-      // 当前级别未全部通过，保持 PENDING，记录已通过审批人
-      record.getCurrentLevelApprovedApprovers().add(operator);
-      // 委托状态审批后恢复 PENDING
-      record.setCurrentStatus(ApprovalRecord.STATUS_PENDING);
-      saveRecord(record);
-      log.info(
-          "[Approval] 审批人通过但当前级别未完成: ruleCode={}, level={}, approver={}, type={}",
-          ruleCode,
-          record.getCurrentLevel(),
-          operator,
-          step.getType());
-      return record;
-    }
-
-    // 当前级别通过，进入下一级
-    record.getCurrentLevelApprovedApprovers().clear();
-    int nextLevel = record.getCurrentLevel() + 1;
-    RuleDefinition def = loadRule(ruleCode);
-
-    if (nextLevel > flow.maxLevel()) {
-      // 全部级别通过，发布规则
-      RuleStatus currentStatus = parseStatus(def.getStatus());
-      if (!currentStatus.canTransitionTo(RuleStatus.PUBLISHED)) {
-        throw new IllegalStateException("当前状态 " + currentStatus.getDesc() + " 不允许变更为 PUBLISHED");
-      }
-      updateRuleStatus(
-          def, RuleStatus.PUBLISHED, operator, "审批通过: 全部 " + flow.maxLevel() + " 级已完成");
-      record.setCurrentLevel(flow.maxLevel());
-      record.setCurrentStatus(ApprovalRecord.STATUS_APPROVED);
-      log.info(
-          "[Approval] 规则全部审批通过已发布: ruleCode={}, flow={}, operator={}",
-          ruleCode,
-          flow.getFlowCode(),
-          operator);
-      // P1-5: 通知工作流引擎（全部通过）
-      notifyWorkflowBridge(
-          b -> b.onApprovalPassed(ruleCode, record.getCurrentLevel(), operator, comment, true));
-    } else {
-      // 进入下一级
-      RuleStatus nextStatus = levelToStatus(nextLevel, flow.maxLevel());
-      RuleStatus currentStatus = parseStatus(def.getStatus());
-      if (!currentStatus.canTransitionTo(nextStatus)) {
+      ApprovalRecord record = loadRecordForAction(ruleCode);
+      ApprovalFlow flow = resolveFlow(record.getFlowCode());
+      ApprovalStep step = flow.getStep(record.getCurrentLevel());
+      if (step == null) {
         throw new IllegalStateException(
-            "当前状态 " + currentStatus.getDesc() + " 不允许变更为 " + nextStatus.getDesc());
+            "审批步骤不存在: level=" + record.getCurrentLevel() + ", flow=" + flow.getFlowCode());
       }
-      updateRuleStatus(
-          def,
-          nextStatus,
-          operator,
-          "通过第 " + record.getCurrentLevel() + " 级，进入第 " + nextLevel + " 级");
-      record.setCurrentLevel(nextLevel);
-      record.setCurrentStatus(ApprovalRecord.STATUS_PENDING);
-      log.info(
-          "[Approval] 规则进入下一级审批: ruleCode={}, level={}, operator={}",
-          ruleCode,
-          nextLevel,
-          operator);
-      // P1-5: 通知工作流引擎（当前级别通过）
-      notifyWorkflowBridge(
-          b ->
-              b.onApprovalPassed(ruleCode, record.getCurrentLevel() - 1, operator, comment, false));
-    }
 
-    saveRecord(record);
-    return record;
+      // 校验权限（考虑委托场景）
+      validateApprovePermission(operator, step, record);
+
+      // COUNTERSIGN：不允许同一人重复通过
+      if (step.getType() == ApprovalType.COUNTERSIGN
+          && record.getCurrentLevelApprovedApprovers().contains(operator)) {
+        throw new IllegalStateException("会签场景下审批人已通过当前级别: " + operator);
+      }
+
+      // SEQUENCE：必须是下一个该审批的人
+      if (step.getType() == ApprovalType.SEQUENCE) {
+        validateSequenceApprover(operator, step, record);
+      }
+
+      // 追加通过日志
+      record.appendLog(
+          ApprovalLog.builder()
+              .level(record.getCurrentLevel())
+              .approver(operator)
+              .action(ApprovalLog.ACTION_APPROVE)
+              .comment(comment)
+              .timestamp(LocalDateTime.now())
+              .build());
+
+      // 判断当前级别是否通过
+      boolean levelPassed = checkLevelPassed(step, record, operator);
+
+      if (!levelPassed) {
+        // 当前级别未全部通过，保持 PENDING，记录已通过审批人
+        record.getCurrentLevelApprovedApprovers().add(operator);
+        // 委托状态审批后恢复 PENDING
+        record.setCurrentStatus(ApprovalRecord.STATUS_PENDING);
+        saveRecord(record);
+        log.info(
+            "[Approval] 审批人通过但当前级别未完成: ruleCode={}, level={}, approver={}, type={}",
+            ruleCode,
+            record.getCurrentLevel(),
+            operator,
+            step.getType());
+        return record;
+      }
+
+      // 当前级别通过，进入下一级
+      record.getCurrentLevelApprovedApprovers().clear();
+      int nextLevel = record.getCurrentLevel() + 1;
+      RuleDefinition def = loadRule(ruleCode);
+
+      if (nextLevel > flow.maxLevel()) {
+        // 全部级别通过，发布规则
+        RuleStatus currentStatus = parseStatus(def.getStatus());
+        if (!currentStatus.canTransitionTo(RuleStatus.PUBLISHED)) {
+          throw new IllegalStateException("当前状态 " + currentStatus.getDesc() + " 不允许变更为 PUBLISHED");
+        }
+        updateRuleStatus(
+            def, RuleStatus.PUBLISHED, operator, "审批通过: 全部 " + flow.maxLevel() + " 级已完成");
+        record.setCurrentLevel(flow.maxLevel());
+        record.setCurrentStatus(ApprovalRecord.STATUS_APPROVED);
+        log.info(
+            "[Approval] 规则全部审批通过已发布: ruleCode={}, flow={}, operator={}",
+            ruleCode,
+            flow.getFlowCode(),
+            operator);
+        // P1-5: 通知工作流引擎（全部通过）
+        notifyWorkflowBridge(
+            b -> b.onApprovalPassed(ruleCode, record.getCurrentLevel(), operator, comment, true));
+      } else {
+        // 进入下一级
+        RuleStatus nextStatus = levelToStatus(nextLevel, flow.maxLevel());
+        RuleStatus currentStatus = parseStatus(def.getStatus());
+        if (!currentStatus.canTransitionTo(nextStatus)) {
+          throw new IllegalStateException(
+              "当前状态 " + currentStatus.getDesc() + " 不允许变更为 " + nextStatus.getDesc());
+        }
+        updateRuleStatus(
+            def,
+            nextStatus,
+            operator,
+            "通过第 " + record.getCurrentLevel() + " 级，进入第 " + nextLevel + " 级");
+        record.setCurrentLevel(nextLevel);
+        record.setCurrentStatus(ApprovalRecord.STATUS_PENDING);
+        log.info(
+            "[Approval] 规则进入下一级审批: ruleCode={}, level={}, operator={}",
+            ruleCode,
+            nextLevel,
+            operator);
+        // P1-5: 通知工作流引擎（当前级别通过）
+        notifyWorkflowBridge(
+            b ->
+                b.onApprovalPassed(ruleCode, record.getCurrentLevel() - 1, operator, comment, false));
+      }
+
+      saveRecord(record);
+      return record;
+    });
   }
 
   /**
@@ -392,73 +438,75 @@ public class RuleApprovalService {
    * @param reason 驳回理由
    * @return 审批记录
    */
-  public synchronized ApprovalRecord reject(String ruleCode, String operator, String reason) {
-    requireNonBlank(ruleCode, "ruleCode");
-    requireNonBlank(operator, "operator");
-    requireNonBlank(reason, "reason");
+  public ApprovalRecord reject(String ruleCode, String operator, String reason) {
+    return executeWithLock("literule:approval:action:" + ruleCode, () -> {
+      requireNonBlank(ruleCode, "ruleCode");
+      requireNonBlank(operator, "operator");
+      requireNonBlank(reason, "reason");
 
-    ApprovalRecord record = loadRecordForAction(ruleCode);
-    ApprovalFlow flow = resolveFlow(record.getFlowCode());
-    ApprovalStep step = flow.getStep(record.getCurrentLevel());
-    if (step == null) {
-      throw new IllegalStateException("审批步骤不存在: level=" + record.getCurrentLevel());
-    }
-
-    validateApprovePermission(operator, step, record);
-
-    record.appendLog(
-        ApprovalLog.builder()
-            .level(record.getCurrentLevel())
-            .approver(operator)
-            .action(ApprovalLog.ACTION_REJECT)
-            .comment(reason)
-            .timestamp(LocalDateTime.now())
-            .build());
-
-    RuleDefinition def = loadRule(ruleCode);
-    int currentLevel = record.getCurrentLevel();
-
-    if (currentLevel <= 1) {
-      // 一级驳回：回退到 DRAFT
-      RuleStatus currentStatus = parseStatus(def.getStatus());
-      if (!currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
-        throw new IllegalStateException("当前状态 " + currentStatus.getDesc() + " 不允许驳回回 DRAFT");
+      ApprovalRecord record = loadRecordForAction(ruleCode);
+      ApprovalFlow flow = resolveFlow(record.getFlowCode());
+      ApprovalStep step = flow.getStep(record.getCurrentLevel());
+      if (step == null) {
+        throw new IllegalStateException("审批步骤不存在: level=" + record.getCurrentLevel());
       }
-      updateRuleStatus(def, RuleStatus.DRAFT, operator, "一级驳回: " + reason);
-      record.setCurrentStatus(ApprovalRecord.STATUS_CANCELLED);
-      record.getCurrentLevelApprovedApprovers().clear();
-      log.info("[Approval] 规则一级驳回回草稿: ruleCode={}, operator={}", ruleCode, operator);
-    } else {
-      // 二级/终审驳回：回退到上一级
-      int previousLevel = currentLevel - 1;
-      RuleStatus previousStatus = levelToStatus(previousLevel, flow.maxLevel());
-      RuleStatus currentStatus = parseStatus(def.getStatus());
-      if (!currentStatus.canTransitionTo(previousStatus)) {
-        throw new IllegalStateException(
-            "当前状态 " + currentStatus.getDesc() + " 不允许驳回回 " + previousStatus.getDesc());
-      }
-      updateRuleStatus(
-          def,
-          previousStatus,
-          operator,
-          "第 " + currentLevel + " 级驳回，回退到第 " + previousLevel + " 级: " + reason);
-      record.setCurrentLevel(previousLevel);
-      record.setCurrentStatus(ApprovalRecord.STATUS_PENDING);
-      record.getCurrentLevelApprovedApprovers().clear();
-      log.info(
-          "[Approval] 规则驳回回上一级: ruleCode={}, fromLevel={}, toLevel={}, operator={}",
-          ruleCode,
-          currentLevel,
-          previousLevel,
-          operator);
-    }
 
-    saveRecord(record);
-    // P1-5: 通知工作流引擎（驳回）
-    int toLevel = currentLevel <= 1 ? 0 : currentLevel - 1;
-    notifyWorkflowBridge(
-        b -> b.onApprovalRejected(ruleCode, currentLevel, toLevel, operator, reason));
-    return record;
+      validateApprovePermission(operator, step, record);
+
+      record.appendLog(
+          ApprovalLog.builder()
+              .level(record.getCurrentLevel())
+              .approver(operator)
+              .action(ApprovalLog.ACTION_REJECT)
+              .comment(reason)
+              .timestamp(LocalDateTime.now())
+              .build());
+
+      RuleDefinition def = loadRule(ruleCode);
+      int currentLevel = record.getCurrentLevel();
+
+      if (currentLevel <= 1) {
+        // 一级驳回：回退到 DRAFT
+        RuleStatus currentStatus = parseStatus(def.getStatus());
+        if (!currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
+          throw new IllegalStateException("当前状态 " + currentStatus.getDesc() + " 不允许驳回回 DRAFT");
+        }
+        updateRuleStatus(def, RuleStatus.DRAFT, operator, "一级驳回: " + reason);
+        record.setCurrentStatus(ApprovalRecord.STATUS_CANCELLED);
+        record.getCurrentLevelApprovedApprovers().clear();
+        log.info("[Approval] 规则一级驳回回草稿: ruleCode={}, operator={}", ruleCode, operator);
+      } else {
+        // 二级/终审驳回：回退到上一级
+        int previousLevel = currentLevel - 1;
+        RuleStatus previousStatus = levelToStatus(previousLevel, flow.maxLevel());
+        RuleStatus currentStatus = parseStatus(def.getStatus());
+        if (!currentStatus.canTransitionTo(previousStatus)) {
+          throw new IllegalStateException(
+              "当前状态 " + currentStatus.getDesc() + " 不允许驳回回 " + previousStatus.getDesc());
+        }
+        updateRuleStatus(
+            def,
+            previousStatus,
+            operator,
+            "第 " + currentLevel + " 级驳回，回退到第 " + previousLevel + " 级: " + reason);
+        record.setCurrentLevel(previousLevel);
+        record.setCurrentStatus(ApprovalRecord.STATUS_PENDING);
+        record.getCurrentLevelApprovedApprovers().clear();
+        log.info(
+            "[Approval] 规则驳回回上一级: ruleCode={}, fromLevel={}, toLevel={}, operator={}",
+            ruleCode,
+            currentLevel,
+            previousLevel,
+            operator);
+      }
+
+      saveRecord(record);
+      // P1-5: 通知工作流引擎（驳回）
+      int toLevel = currentLevel <= 1 ? 0 : currentLevel - 1;
+      notifyWorkflowBridge(
+          b -> b.onApprovalRejected(ruleCode, currentLevel, toLevel, operator, reason));
+      return record;
+    });
   }
 
   /**
@@ -472,50 +520,52 @@ public class RuleApprovalService {
    * @param comment 委托说明
    * @return 审批记录
    */
-  public synchronized ApprovalRecord delegate(
+  public ApprovalRecord delegate(
       String ruleCode, String operator, String delegatedTo, String comment) {
-    requireNonBlank(ruleCode, "ruleCode");
-    requireNonBlank(operator, "operator");
-    requireNonBlank(delegatedTo, "delegatedTo");
+    return executeWithLock("literule:approval:action:" + ruleCode, () -> {
+      requireNonBlank(ruleCode, "ruleCode");
+      requireNonBlank(operator, "operator");
+      requireNonBlank(delegatedTo, "delegatedTo");
 
-    ApprovalRecord record = loadRecordForAction(ruleCode);
-    ApprovalFlow flow = resolveFlow(record.getFlowCode());
-    ApprovalStep step = flow.getStep(record.getCurrentLevel());
-    if (step == null) {
-      throw new IllegalStateException("审批步骤不存在: level=" + record.getCurrentLevel());
-    }
-    if (!step.isAllowDelegate()) {
-      throw new IllegalStateException("当前步骤不允许委托: level=" + record.getCurrentLevel());
-    }
+      ApprovalRecord record = loadRecordForAction(ruleCode);
+      ApprovalFlow flow = resolveFlow(record.getFlowCode());
+      ApprovalStep step = flow.getStep(record.getCurrentLevel());
+      if (step == null) {
+        throw new IllegalStateException("审批步骤不存在: level=" + record.getCurrentLevel());
+      }
+      if (!step.isAllowDelegate()) {
+        throw new IllegalStateException("当前步骤不允许委托: level=" + record.getCurrentLevel());
+      }
 
-    validateApprovePermission(operator, step, record);
+      validateApprovePermission(operator, step, record);
 
-    if (operator.equals(delegatedTo)) {
-      throw new IllegalArgumentException("不允许委托给自己: " + operator);
-    }
+      if (operator.equals(delegatedTo)) {
+        throw new IllegalArgumentException("不允许委托给自己: " + operator);
+      }
 
-    record.appendLog(
-        ApprovalLog.builder()
-            .level(record.getCurrentLevel())
-            .approver(operator)
-            .action(ApprovalLog.ACTION_DELEGATE)
-            .comment(comment)
-            .delegatedTo(delegatedTo)
-            .timestamp(LocalDateTime.now())
-            .build());
-    record.setCurrentStatus(ApprovalRecord.STATUS_DELEGATED);
+      record.appendLog(
+          ApprovalLog.builder()
+              .level(record.getCurrentLevel())
+              .approver(operator)
+              .action(ApprovalLog.ACTION_DELEGATE)
+              .comment(comment)
+              .delegatedTo(delegatedTo)
+              .timestamp(LocalDateTime.now())
+              .build());
+      record.setCurrentStatus(ApprovalRecord.STATUS_DELEGATED);
 
-    saveRecord(record);
-    log.info(
-        "[Approval] 审批已委托: ruleCode={}, level={}, from={}, to={}",
-        ruleCode,
-        record.getCurrentLevel(),
-        operator,
-        delegatedTo);
-    // P1-5: 通知工作流引擎（委托）
-    notifyWorkflowBridge(
-        b -> b.onApprovalDelegated(ruleCode, record.getCurrentLevel(), operator, delegatedTo));
-    return record;
+      saveRecord(record);
+      log.info(
+          "[Approval] 审批已委托: ruleCode={}, level={}, from={}, to={}",
+          ruleCode,
+          record.getCurrentLevel(),
+          operator,
+          delegatedTo);
+      // P1-5: 通知工作流引擎（委托）
+      notifyWorkflowBridge(
+          b -> b.onApprovalDelegated(ruleCode, record.getCurrentLevel(), operator, delegatedTo));
+      return record;
+    });
   }
 
   /**
@@ -527,40 +577,42 @@ public class RuleApprovalService {
    * @param operator 操作人
    * @return 审批记录
    */
-  public synchronized ApprovalRecord cancelReview(String ruleCode, String operator) {
-    requireNonBlank(ruleCode, "ruleCode");
-    requireNonBlank(operator, "operator");
+  public ApprovalRecord cancelReview(String ruleCode, String operator) {
+    return executeWithLock("literule:approval:action:" + ruleCode, () -> {
+      requireNonBlank(ruleCode, "ruleCode");
+      requireNonBlank(operator, "operator");
 
-    ApprovalRecord record = loadRecord(ruleCode);
-    if (record == null) {
-      throw new IllegalArgumentException("审批记录不存在: " + ruleCode);
-    }
-    if (!ApprovalRecord.STATUS_PENDING.equals(record.getCurrentStatus())
-        && !ApprovalRecord.STATUS_DELEGATED.equals(record.getCurrentStatus())) {
-      throw new IllegalStateException("当前审批状态不允许撤回: " + record.getCurrentStatus());
-    }
+      ApprovalRecord record = loadRecord(ruleCode);
+      if (record == null) {
+        throw new IllegalArgumentException("审批记录不存在: " + ruleCode);
+      }
+      if (!ApprovalRecord.STATUS_PENDING.equals(record.getCurrentStatus())
+          && !ApprovalRecord.STATUS_DELEGATED.equals(record.getCurrentStatus())) {
+        throw new IllegalStateException("当前审批状态不允许撤回: " + record.getCurrentStatus());
+      }
 
-    record.appendLog(
-        ApprovalLog.builder()
-            .level(record.getCurrentLevel())
-            .approver(operator)
-            .action(ApprovalLog.ACTION_CANCEL)
-            .comment("撤回审核")
-            .timestamp(LocalDateTime.now())
-            .build());
-    record.setCurrentStatus(ApprovalRecord.STATUS_CANCELLED);
-    record.getCurrentLevelApprovedApprovers().clear();
+      record.appendLog(
+          ApprovalLog.builder()
+              .level(record.getCurrentLevel())
+              .approver(operator)
+              .action(ApprovalLog.ACTION_CANCEL)
+              .comment("撤回审核")
+              .timestamp(LocalDateTime.now())
+              .build());
+      record.setCurrentStatus(ApprovalRecord.STATUS_CANCELLED);
+      record.getCurrentLevelApprovedApprovers().clear();
 
-    // 规则状态回退到 DRAFT
-    RuleDefinition def = loadRule(ruleCode);
-    RuleStatus currentStatus = parseStatus(def.getStatus());
-    if (currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
-      updateRuleStatus(def, RuleStatus.DRAFT, operator, "撤回审核");
-    }
+      // 规则状态回退到 DRAFT
+      RuleDefinition def = loadRule(ruleCode);
+      RuleStatus currentStatus = parseStatus(def.getStatus());
+      if (currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
+        updateRuleStatus(def, RuleStatus.DRAFT, operator, "撤回审核");
+      }
 
-    saveRecord(record);
-    log.info("[Approval] 审核已撤回: ruleCode={}, operator={}", ruleCode, operator);
-    return record;
+      saveRecord(record);
+      log.info("[Approval] 审核已撤回: ruleCode={}, operator={}", ruleCode, operator);
+      return record;
+    });
   }
 
   // ==================== 查询方法 ====================

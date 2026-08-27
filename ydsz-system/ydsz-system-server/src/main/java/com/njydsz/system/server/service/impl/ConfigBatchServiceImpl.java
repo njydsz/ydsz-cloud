@@ -410,9 +410,9 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private static void parseJsonLoose(String json) {
     String trimmed = json.trim();
     if (trimmed.startsWith("{")) {
-      com.njydsz.common.json.YdszJson.parseMap(trimmed);
+      YdszJson.parseMap(trimmed);
     } else if (trimmed.startsWith("[")) {
-      com.njydsz.common.json.YdszJson.parseArray(trimmed, Object.class);
+      YdszJson.parseArray(trimmed, Object.class);
     } else {
       throw BusinessException.of(SystemExceptionCode.VALUE_TYPE_INVALID)
           .data("reason", "JSON 类型值必须以 '{' 或 '[' 开头");

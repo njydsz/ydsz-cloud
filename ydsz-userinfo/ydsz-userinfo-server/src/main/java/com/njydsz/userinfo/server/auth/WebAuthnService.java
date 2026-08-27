@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -650,7 +651,7 @@ public class WebAuthnService {
     challengeVO.setTtlSeconds(CHALLENGE_TTL_SECONDS);
 
     redisStringOps.set(CHALLENGE_KEY_PREFIX + challenge,
-        com.njydsz.common.json.YdszJson.toJson(challengeVO), CHALLENGE_TTL_SECONDS);
+        YdszJson.toJson(challengeVO), CHALLENGE_TTL_SECONDS);
   }
 
   /**
@@ -668,7 +669,7 @@ public class WebAuthnService {
       throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_CHALLENGE_EXPIRED);
     }
 
-    WebAuthnChallengeVO challengeVO = com.njydsz.common.json.YdszJson.fromJson(
+    WebAuthnChallengeVO challengeVO = YdszJson.fromJson(
         storedJson, WebAuthnChallengeVO.class);
 
     if (!expectedType.equals(challengeVO.getType())) {

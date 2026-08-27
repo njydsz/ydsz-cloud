@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.server.oauth2;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
@@ -86,8 +88,8 @@ public class OAuth2ApplicationService {
         OAuth2Application.ApplicationStatus.ENABLED,
         command.description(),
         command.iconUrl(),
-        java.time.LocalDateTime.now(),
-        java.time.LocalDateTime.now(),
+        LocalDateTime.now(),
+        LocalDateTime.now(),
         getCurrentUserId());
 
     OAuth2Application saved = applicationRepository.save(application);
@@ -126,7 +128,7 @@ public class OAuth2ApplicationService {
         existing.description(),
         existing.iconUrl(),
         existing.createdAt(),
-        java.time.LocalDateTime.now(),
+        LocalDateTime.now(),
         existing.createdBy());
 
     applicationRepository.save(updated);
@@ -158,7 +160,7 @@ public class OAuth2ApplicationService {
         command.description() != null ? command.description() : existing.description(),
         command.iconUrl() != null ? command.iconUrl() : existing.iconUrl(),
         existing.createdAt(),
-        java.time.LocalDateTime.now(),
+        LocalDateTime.now(),
         existing.createdBy());
 
     applicationRepository.save(updated);
@@ -210,7 +212,7 @@ public class OAuth2ApplicationService {
    * @param pageSize 每页大小
    * @return 分页结果
    */
-  public com.njydsz.common.core.response.PageResponse<List<OAuth2Application>> page(
+  public PageResponse<List<OAuth2Application>> page(
       OAuth2Application.ApplicationStatus status, String keyword, int pageNum, int pageSize) {
     return applicationRepository.page(status, keyword, pageNum, pageSize);
   }

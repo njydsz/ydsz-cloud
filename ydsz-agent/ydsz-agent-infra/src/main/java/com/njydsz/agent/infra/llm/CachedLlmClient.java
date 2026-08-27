@@ -11,6 +11,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
+import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
@@ -181,7 +182,7 @@ public class CachedLlmClient implements LlmClient {
     return new ChatResponse(
         "chatcmpl-cached-" + System.identityHashCode(cached),
         request.getModel(),
-        com.njydsz.agent.domain.model.ChatMessage.assistant(
+        ChatMessage.assistant(
             cached.content(), null, TokenUsage.zero()),
         TokenUsage.zero(),
         "stop",

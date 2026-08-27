@@ -209,14 +209,25 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     return queryService.listTodoByAssignee(assigneeId, tenantId);
   }
 
-  @Override
-  public PageResponse<List<FlowRunTaskVO>> listTodoByAssigneePage(
-      String assigneeId, String tenantId, int page, int size) {
-    return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
-  }
+@Override
+public PageResponse<List<FlowRunTaskVO>> listTodoByAssigneePage(
+    String assigneeId, String tenantId, int page, int size) {
+return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
+}
 
-  @Override
-  public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId) {
+@Override
+public List<FlowRunTaskVO> listTodoByAssigneeCursor(
+    String assigneeId,
+    String tenantId,
+    Integer lastPriority,
+    LocalDateTime lastCreatedAt,
+    String lastId,
+    int limit) {
+return queryService.listTodoByAssigneeCursor(assigneeId, tenantId, lastPriority, lastCreatedAt, lastId, limit);
+}
+
+@Override
+public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId) {
     return queryService.listDoneByAssignee(assigneeId, tenantId);
   }
 

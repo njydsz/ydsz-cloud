@@ -2,6 +2,9 @@ package com.njydsz.cronjob.server.core.metrics;
 
 import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import com.sun.management.OperatingSystemMXBean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -58,8 +61,8 @@ public class SystemMetricsCollector {
    */
   public BigDecimal collectCpuUsage() {
     try {
-      com.sun.management.OperatingSystemMXBean osBean =
-          (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+      OperatingSystemMXBean osBean =
+          (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
       double load = osBean.getCpuLoad();
       return load >= 0 ? BigDecimal.valueOf(load) : DEFAULT_METRIC_VALUE;
     } catch (Exception e) {
@@ -75,8 +78,8 @@ public class SystemMetricsCollector {
    */
   public BigDecimal collectMemUsagePct() {
     try {
-      com.sun.management.OperatingSystemMXBean osBean =
-          (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+      OperatingSystemMXBean osBean =
+          (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
       long total = osBean.getTotalPhysicalMemorySize();
       long free = osBean.getFreePhysicalMemorySize();
       if (total <= 0 || free < 0) {
@@ -85,7 +88,7 @@ public class SystemMetricsCollector {
       BigDecimal usage =
           BigDecimal.ONE.subtract(
               BigDecimal.valueOf(free)
-                  .divide(BigDecimal.valueOf(total), MEMORY_USAGE_SCALE, java.math.RoundingMode.HALF_UP));
+                  .divide(BigDecimal.valueOf(total), MEMORY_USAGE_SCALE, RoundingMode.HALF_UP));
       return usage
           .multiply(BigDecimal.valueOf(PERCENT_SCALE))
           .min(BigDecimal.valueOf(PERCENT_SCALE));

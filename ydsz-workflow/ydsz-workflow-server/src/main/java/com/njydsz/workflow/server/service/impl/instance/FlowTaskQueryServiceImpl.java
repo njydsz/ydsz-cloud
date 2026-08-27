@@ -76,6 +76,9 @@ public class FlowTaskQueryServiceImpl {
     /** 默认分页大小 */
   private static final int DEFAULT_PAGE_SIZE = 20;
 
+/** 分页每页最大值上限 */
+private static final int MAX_PAGE_SIZE = 100;
+
   /**
    * P1-9: 深翻页保护 — offset 超过该值时拒绝继续下翻（LIMIT/OFFSET 深页性能劣化）。
    *
@@ -235,6 +238,33 @@ public class FlowTaskQueryServiceImpl {
     List<FlowRunTaskVO> list = taskRepository.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
     long total = taskRepository.countTodoByAssignee(assigneeId, tid);
     return PageResponse.success(total, (long) safePage, (long) safeSize, list);
+  }
+
+  /**
+   * P2-1: 游标分页查询用户待办任务（Keyset Pagination）。
+   *
+   * <p>基于上一页最后一条记录的 (priority, createdAt, id) 作为游标锚点，查询下一页数据。
+   * 首次查询传 {@code null} 游标即可。
+   *
+   * @param assigneeId 办理人 ID
+   * @param tenantId 租户 ID
+   * @param lastPriority 上一页最后一条的 priority
+   * @param lastCreatedAt 上一页最后一条的 createdAt
+   * @param lastId 上一页最后一条的 id
+   * @param limit 每页大小
+   * @return 下一页任务列表
+   */
+  public List<FlowRunTaskVO> listTodoByAssigneeCursor(
+      String assigneeId,
+      String tenantId,
+      Integer lastPriority,
+      LocalDateTime lastCreatedAt,
+      String lastId,
+      int limit) {
+    String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
+    int safeLimit = limit > 0 && limit <= MAX_PAGE_SIZE ? limit : DEFAULT_PAGE_SIZE;
+    return taskRepository.selectTodoByAssigneeCursor(
+        assigneeId, tid, lastPriority, lastCreatedAt, lastId, safeLimit);
   }
 
   /**

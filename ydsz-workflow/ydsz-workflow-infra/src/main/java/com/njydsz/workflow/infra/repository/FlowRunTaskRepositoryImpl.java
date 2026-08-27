@@ -389,14 +389,27 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
   }
 
-  @Override
-  public List<FlowRunTaskVO> selectTodoByAssigneePage(String assigneeId, String tenantId, int offset, int limit) {
-    List<FlowRunTask> list = taskMapper.selectTodoByAssigneePage(assigneeId, tenantId, offset, limit);
-    return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
-  }
+@Override
+public List<FlowRunTaskVO> selectTodoByAssigneePage(String assigneeId, String tenantId, int offset, int limit) {
+List<FlowRunTask> list = taskMapper.selectTodoByAssigneePage(assigneeId, tenantId, offset, limit);
+return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
+}
 
-  @Override
-  public long countTodoByAssignee(String assigneeId, String tenantId) {
+@Override
+public List<FlowRunTaskVO> selectTodoByAssigneeCursor(
+    String assigneeId,
+    String tenantId,
+    Integer lastPriority,
+    LocalDateTime lastCreatedAt,
+    String lastId,
+    int limit) {
+List<FlowRunTask> list =
+    taskMapper.selectTodoByAssigneeCursor(assigneeId, tenantId, lastPriority, lastCreatedAt, lastId, limit);
+return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
+}
+
+@Override
+public long countTodoByAssignee(String assigneeId, String tenantId) {
     return taskMapper.countTodoByAssignee(assigneeId, tenantId);
   }
 

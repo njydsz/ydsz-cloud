@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.domain.vo.BloomFilterStatsVO;
 import com.njydsz.message.domain.vo.CacheStatsVO;
@@ -64,7 +65,7 @@ public class OpsController {
   @AuthApiPermission("MESSAGE_LOG_VIEW")
   @GetMapping("/template-cache/stats")
   public YdszResponse<CacheStatsVO> getTemplateCacheStats() {
-    com.njydsz.common.cache.stats.CacheStats stats = cachedTemplateEngine.getCacheStats();
+    CacheStats stats = cachedTemplateEngine.getCacheStats();
     CacheStatsVO vo = CacheStatsVO.builder()
         .size(cachedTemplateEngine.cacheSize())
         .hitCount(stats.hitCount())

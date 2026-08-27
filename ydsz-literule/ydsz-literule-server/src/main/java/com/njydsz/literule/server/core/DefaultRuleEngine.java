@@ -73,8 +73,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /** 默认线程池大小乘数 */
   private static final int DEFAULT_POOL_MULTIPLIER = 2;
 
-  /** 索引未启用时的规则量阈值（超过则绕过索引） */
-  private static final int INDEX_BYPASS_THRESHOLD = 200;
+/** 索引未启用时的规则量阈值（超过则绕过索引） — P1-6：已配置化，默认值 200 */
+private volatile int indexBypassThreshold = 200;
 
   /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
@@ -236,7 +236,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     // 增量更新索引
     ruleIndexer.addToIndex(rule);
     // 当规则数首次超过阈值时，重建索引启用索引模式
-    if (!ruleIndexer.isIndexEnabled() && rules.size() >= INDEX_BYPASS_THRESHOLD) {
+    if (!ruleIndexer.isIndexEnabled() && rules.size() >= indexBypassThreshold) {
       ruleIndexer.rebuildIndex(rules);
     }
     // P1-7：规则变更时精准失效该规则的评估结果缓存（对比全量 clear 减少缓存抖动）
@@ -1253,18 +1253,41 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
   }
 
-  /**
-   * 设置并行评估触发阈值（P2-2）
-   *
-   * @param threshold 候选规则数阈值；< 1 时视为 1
-   * @since 1.0.0
-   */
-  public void setParallelThreshold(int threshold) {
-    this.parallelThreshold = Math.max(1, threshold);
-  }
+/**
+ * 设置并行评估触发阈值（P2-2）
+ *
+ * @param threshold 候选规则数阈值；< 1 时视为 1
+ * @since 1.0.0
+ */
+public void setParallelThreshold(int threshold) {
+this.parallelThreshold = Math.max(1, threshold);
+}
 
-  /**
-   * 设置慢规则告警阈值（P2-4）
+/**
+ * 设置索引绕过阈值（P1-6：硬编码阈值配置化）
+ *
+ * <p>当规则数 &lt; 此值时，不启用索引（全量遍历）；
+ * 规则数 ≥ 此值时，启用索引加速候选筛选。
+ *
+ * @param indexBypassThreshold 索引绕过阈值
+ * @since 1.4.0
+ */
+public void setIndexBypassThreshold(int indexBypassThreshold) {
+this.indexBypassThreshold = Math.max(1, indexBypassThreshold);
+}
+
+/**
+ * 获取索引绕过阈值
+ *
+ * @return 索引绕过阈值
+ * @since 1.4.0
+ */
+public int getIndexBypassThreshold() {
+return indexBypassThreshold;
+}
+
+/**
+ * 设置慢规则告警阈值（P2-4）
    *
    * @param thresholdMs 单规则评估耗时阈值（毫秒）；≤ 0 表示关闭慢规则检测
    * @since 1.0.0

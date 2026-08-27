@@ -40,12 +40,12 @@ public class AuditLogServiceImpl implements AuditLogService {
     // 查询总数
     long total = auditLogRepository.countCronjobAudit(action, operatorName, startTime, endTime);
     if (total == 0) {
-      return PageResponse.of(0L, Collections.emptyList(), pageNum, size);
+      return PageResponse.empty((long) pageNum, (long) size);
     }
     // 查询分页数据
     List<AuditLogVO> records =
         auditLogRepository.selectCronjobAuditPage(
             action, operatorName, startTime, endTime, size, offset);
-    return PageResponse.of(total, records, pageNum, size);
+    return PageResponse.success((long) total, (long) pageNum, (long) size, records);
   }
 }

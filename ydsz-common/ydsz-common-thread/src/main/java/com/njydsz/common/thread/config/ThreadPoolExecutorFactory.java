@@ -164,16 +164,16 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
    * @param config 线程池配置
    * @return TimedTaskDecorator 实例
    */
-  private com.njydsz.common.thread.metrics.TimedTaskDecorator createTimedTaskDecorator(
+  private TimedTaskDecorator createTimedTaskDecorator(
       String name, PoolConfig config) {
-    com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics timerMetrics = null;
+    ThreadPoolTimerMetrics timerMetrics = null;
 
     // 尝试获取已注册的 ThreadPoolTimerMetrics Bean
     String metricsBeanName = name + "ExecutorTimerMetrics";
     if (applicationContext.containsBean(metricsBeanName)) {
       Object bean = applicationContext.getBean(metricsBeanName);
-      if (bean instanceof com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics) {
-        timerMetrics = (com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics) bean;
+      if (bean instanceof ThreadPoolTimerMetrics) {
+        timerMetrics = (ThreadPoolTimerMetrics) bean;
       }
     }
 

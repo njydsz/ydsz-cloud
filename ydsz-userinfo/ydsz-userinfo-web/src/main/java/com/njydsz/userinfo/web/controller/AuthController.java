@@ -32,6 +32,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.annotation.SecondaryAuth;
@@ -297,7 +298,7 @@ public class AuthController {
     codeData.put("tenantId", userInfo.getTenantId() != null ? userInfo.getTenantId() : "1");
     redisStringOps.set(
         DEVICE_CODE_KEY_PREFIX + code,
-        com.njydsz.common.json.YdszJson.toJson(codeData),
+        YdszJson.toJson(codeData),
         DEVICE_CODE_TTL_SECONDS);
 
     Map<String, Object> result = new HashMap<>();
@@ -346,7 +347,7 @@ public class AuthController {
     redisStringOps.del(codeKey);
 
     // 2. 解析用户信息
-    Map<String, String> codeData = com.njydsz.common.json.YdszJson.fromJson(codeDataJson, Map.class);
+    Map<String, String> codeData = YdszJson.fromJson(codeDataJson, Map.class);
     if (codeData == null || codeData.get("userId") == null) {
       throw new BusinessException(UserInfoExceptionCode.SSO_DEVICE_CODE_INVALID);
     }

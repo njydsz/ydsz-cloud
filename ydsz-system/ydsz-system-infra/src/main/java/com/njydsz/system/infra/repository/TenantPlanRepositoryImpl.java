@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -60,7 +61,7 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
       wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }
     wrapper.orderByAsc(TenantPlan::getSortOrder);
-    com.baomidou.mybatisplus.core.metadata.IPage<TenantPlan> result = tenantPlanMapper.selectPage(page, wrapper);
+    IPage<TenantPlan> result = tenantPlanMapper.selectPage(page, wrapper);
     List<TenantPlanVO> vos = converter.planListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }

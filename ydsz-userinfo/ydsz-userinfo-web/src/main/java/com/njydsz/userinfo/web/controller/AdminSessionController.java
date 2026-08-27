@@ -25,6 +25,7 @@ import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.UserBanRequestDTO;
+import com.njydsz.userinfo.domain.enums.BanType;
 import com.njydsz.userinfo.domain.vo.BanInfoVO;
 import com.njydsz.userinfo.domain.vo.UserSessionStatistics;
 import com.njydsz.userinfo.domain.vo.UserSessionVO;
@@ -98,7 +99,7 @@ public class AdminSessionController {
       @PathVariable String userId, @Valid @RequestBody UserBanRequestDTO dto) {
     userBanService.ban(
         userId,
-        com.njydsz.userinfo.domain.enums.BanType.valueOf(dto.getBanType()),
+        BanType.valueOf(dto.getBanType()),
         dto.getBanReason(),
         dto.getBanExpireAt());
     return YdszResponse.success(true);

@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.agent;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.njydsz.common.util.id.IdGenerator;
@@ -237,7 +238,7 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
         msg,
         TokenUsage.zero(),
         "guardrail_rejected",
-        java.util.List.of());
+        List.of());
   }
 
   /**

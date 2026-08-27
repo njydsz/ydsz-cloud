@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
+import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 
@@ -252,7 +253,7 @@ public class EvaluationResultCache {
    * @return 统计摘要文本
    */
   public String getStatsSummary() {
-    com.njydsz.common.cache.stats.CacheStats stats = cache.getStats();
+    CacheStats stats = cache.getStats();
     return String.format(
         "[EvalCache] size=%d, hits=%d, misses=%d, hitRate=%.4f, evictions=%d, avgLoadTime=%.2fms",
         size(),

@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.health.CacheHealthIndicator;
 import com.njydsz.common.cache.api.LoadingCache;
 import com.njydsz.common.cache.internal.concurrent.StripedConcurrentCache;
 import com.njydsz.common.cache.internal.decorator.ExpirableCache;
@@ -116,7 +117,7 @@ public final class CacheBuilder<K, V> {
   private boolean healthCheckEnabled = true;
 
   /** 健康检查指示器 */
-  private com.njydsz.common.cache.health.CacheHealthIndicator healthIndicator;
+  private CacheHealthIndicator healthIndicator;
 
   /** 私有构造函数，通过 YdszCache.newBuilder() 创建 */
   private CacheBuilder() {}
@@ -222,7 +223,7 @@ public final class CacheBuilder<K, V> {
    * @return this
    */
   public CacheBuilder<K, V> healthIndicator(
-      com.njydsz.common.cache.health.CacheHealthIndicator healthIndicator) {
+      CacheHealthIndicator healthIndicator) {
     this.healthIndicator = healthIndicator;
     return this;
   }

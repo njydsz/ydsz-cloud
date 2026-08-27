@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -87,7 +88,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
     // 3. 回填缓存（空结果也缓存，防止穿透；异常不影响业务）
     try {
       redisStringOps.set(cacheKey, serialize(permissions),
-          java.time.Duration.ofSeconds(properties.getPermissionCacheTtlSeconds()));
+          Duration.ofSeconds(properties.getPermissionCacheTtlSeconds()));
     } catch (Exception e) {
       log.warn("Failed to cache role permissions: roleCode={}, error={}", roleCode, e.getMessage());
     }

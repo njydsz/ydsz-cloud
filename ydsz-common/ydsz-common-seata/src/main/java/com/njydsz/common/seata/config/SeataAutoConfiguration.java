@@ -43,6 +43,7 @@ import com.njydsz.common.seata.interceptor.XidServletFilter;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 import com.njydsz.common.seata.mq.MqXidPropagator;
 import com.njydsz.common.seata.mq.RocketMqXidPropagator;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 
 /**
  * 分布式事务自动配置
@@ -363,9 +364,9 @@ public class SeataAutoConfiguration {
   @ConditionalOnClass(name = "org.apache.rocketmq.client.producer.DefaultMQProducer")
   // CHECKSTYLE.ON: RegexpSinglelineJava
   public RocketMqXidPropagator mqXidPropagator(
-      ObjectProvider<org.apache.rocketmq.client.producer.DefaultMQProducer> producerProvider,
+      ObjectProvider<DefaultMQProducer> producerProvider,
       ObjectProvider<XidPropagator> xidPropagatorProvider) {
-    org.apache.rocketmq.client.producer.DefaultMQProducer producer =
+    DefaultMQProducer producer =
         producerProvider.getIfAvailable();
     if (producer == null) {
       LOG.warn("RocketMQ DefaultMQProducer not found, MqXidPropagator disabled");

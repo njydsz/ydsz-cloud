@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.engine.FlowEventContext;
+import com.njydsz.workflow.engine.listener.FlowListenerEventType;
 
 /**
  * 流程任务通知服务实现。
@@ -120,7 +121,7 @@ public class FlowTaskNotificationService {
     // 2. 节点配置的监听器插件
     support.firePluginEvent(
         nodeExt,
-        com.njydsz.workflow.server.engine.listener.FlowListenerEventType.TASK_PERSONAL_FINISHED,
+        FlowListenerEventType.TASK_PERSONAL_FINISHED,
         task.getInstanceId(),
         task.getId(),
         task.getNodeCode(),

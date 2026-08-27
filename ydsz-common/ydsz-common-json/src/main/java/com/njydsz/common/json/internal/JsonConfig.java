@@ -6,6 +6,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.reader.JSONReader;
@@ -169,7 +170,7 @@ public final class JsonConfig implements Serializable {
     JsonConfig oldConfig = INSTANCE.getAndSet(newConfig);
     newConfig.apply();
     // 触发 YdszJson 静态方法委托的默认 Mapper 重建，使配置变更立即生效
-    com.njydsz.common.json.YdszJson.reloadDefaultMapper();
+    YdszJson.reloadDefaultMapper();
     // 自增版本号，供缓存组件检测配置变更
     long newVersion = CONFIG_VERSION.incrementAndGet();
     // 通知监听器（异步不阻塞安装流程）

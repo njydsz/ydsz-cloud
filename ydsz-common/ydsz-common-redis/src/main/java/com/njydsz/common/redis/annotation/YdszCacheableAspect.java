@@ -15,6 +15,7 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
+import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -52,7 +53,7 @@ public class YdszCacheableAspect {
   public YdszCacheableAspect(
       RedisStringOps redisStringOps,
       RedisTemplate<String, Object> redisTemplate,
-      com.njydsz.common.redis.config.RedisProperties redisProperties) {
+      RedisProperties redisProperties) {
     this.redisStringOps = redisStringOps;
   }
 

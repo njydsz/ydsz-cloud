@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
@@ -302,9 +303,9 @@ public class DataValidator {
     }
 
     // @Pattern(regexp = "...") 正则校验
-    if (field.isAnnotationPresent(jakarta.validation.constraints.Pattern.class)) {
-      jakarta.validation.constraints.Pattern pattern =
-          field.getAnnotation(jakarta.validation.constraints.Pattern.class);
+    if (field.isAnnotationPresent(Pattern.class)) {
+      Pattern pattern =
+          field.getAnnotation(Pattern.class);
       if (!Pattern.matches(pattern.regexp(), strVal)) {
         throw ExcelReadException.validationFailed(rowNum, fieldName, value, pattern.message());
       }
@@ -335,9 +336,9 @@ public class DataValidator {
     }
 
     // @Pattern(regexp = "...") 正则校验
-    if (field.isAnnotationPresent(jakarta.validation.constraints.Pattern.class)) {
-      jakarta.validation.constraints.Pattern pattern =
-          field.getAnnotation(jakarta.validation.constraints.Pattern.class);
+    if (field.isAnnotationPresent(Pattern.class)) {
+      Pattern pattern =
+          field.getAnnotation(Pattern.class);
       if (!Pattern.matches(pattern.regexp(), strVal)) {
         errors.add(new ValidationError(rowNum, fieldName, value, pattern.message()));
       }

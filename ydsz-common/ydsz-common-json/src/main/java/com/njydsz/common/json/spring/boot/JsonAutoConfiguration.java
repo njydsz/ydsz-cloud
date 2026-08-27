@@ -16,6 +16,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 
 import com.njydsz.common.json.cache.BeanSerializerCache;
+import com.njydsz.common.json.provider.PolymorphicTypeResolver;
+import com.njydsz.common.json.provider.SerializationProvider;
+import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.module.JsonModule;
@@ -236,9 +239,9 @@ public class JsonAutoConfiguration {
       }
       BeanSerializerCache.clear();
       SerializerCache.clear();
-      com.njydsz.common.json.reader.BeanReader.clearCache();
-      com.njydsz.common.json.provider.PolymorphicTypeResolver.clearCache();
-      com.njydsz.common.json.provider.SerializationProvider.clearThreadLocals();
+      BeanReader.clearCache();
+      PolymorphicTypeResolver.clearCache();
+      SerializationProvider.clearThreadLocals();
     }
   }
 }

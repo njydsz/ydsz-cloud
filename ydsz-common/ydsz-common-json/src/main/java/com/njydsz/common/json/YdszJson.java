@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.deserializer.JsonDeserializer;
+import com.njydsz.common.json.type.TypeFactory;
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.parser.JsonParserUtil;
@@ -327,7 +328,7 @@ public class YdszJson {
       throw new IllegalArgumentException("Map 类型反序列化请使用 fromJsonToMap(json, keyClass, valueClass)");
     }
     Type type =
-        com.njydsz.common.json.type.TypeFactory.getInstance()
+        TypeFactory.getInstance()
             .constructCollectionType(collectionClass, elementClass);
     @SuppressWarnings("unchecked") // 核心基础模块：泛型擦除导致无法在编译期验证类型安全
     T result = (T) fromJson(json, type);

@@ -63,8 +63,8 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
  *   <li><b>跳转</b>：{@code POST /task/jump}（管理员强制跳转） / {@code freeJump}（办理人自由流跳转）
  *   <li><b>批量操作</b>：{@code POST /task/batchPass} / {@code batchReject} / {@code batchTransfer} / {@code
  *       instance/batchUrge} / {@code task/passAll}
- *   <li><b>查询统计</b>：{@code GET /task/todo} / {@code /done} / {@code /overdue} / {@code /done/search} /
- *       {@code /stats/nodeDuration} / {@code /stats/overdue}
+ *   <li><b>查询统计</b>：{@code GET /task/todo} / {@code /task/todo/cursor} / {@code /done} / {@code /overdue} / {@code
+ *       /done/search} / {@code /stats/nodeDuration} / {@code /stats/overdue}
  *   <li><b>辅助操作</b>：{@code POST /task/countersignRemove} / {@code markRead} / {@code communicate} / {@code
  *       saveDraft} / {@code addApprover} / {@code retract} / {@code suspendTask} / {@code activateTask}
  *   <li><b>待办推送</b>：{@code GET /todo/count} / {@code POST /todo/pushMine}
@@ -559,6 +559,33 @@ public class FlowTaskController {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(
         taskService.pageTodoVO(userId, tenantId, flowCode, businessType, startTime, endTime, page, size));
+  }
+
+  /**
+   * P2-1: 游标分页查询待办任务（Keyset Pagination）。
+   *
+   * <p>基于上一页最后一条记录的 (priority, createdAt, id) 作为游标锚点，查询下一页数据。
+   * 相比 LIMIT/OFFSET 在大 offset 场景下有显著性能优势（O(1) vs O(N)）。
+   *
+   * <p><b>使用方式：</b>首次查询不传游标参数；后续查询传上一页最后一条记录的对应字段值。
+   *
+   * @param limit 每页大小（默认 20，最大 100）
+   * @param lastPriority 上一页最后一条的 priority（首次查询不传）
+   * @param lastCreatedAt 上一页最后一条的 createdAt（首次查询不传）
+   * @param lastId 上一页最后一条的 id（首次查询不传，用于打破平局）
+   * @return 统一响应结果，包含下一页任务列表
+   */
+  @GetMapping("/task/todo/cursor")
+  @Operation(summary = "游标分页查询待办任务")
+  public YdszResponse<List<FlowRunTaskVO>> todoCursor(
+      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit,
+      @RequestParam(required = false) Integer lastPriority,
+      @RequestParam(required = false) LocalDateTime lastCreatedAt,
+      @RequestParam(required = false) String lastId) {
+    String userId = AuthContextUtils.getUserId();
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
+    return YdszResponse.success(
+        taskService.listTodoByAssigneeCursor(userId, tenantId, lastPriority, lastCreatedAt, lastId, limit));
   }
 
   /**

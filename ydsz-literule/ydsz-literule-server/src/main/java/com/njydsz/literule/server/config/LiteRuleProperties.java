@@ -698,6 +698,44 @@ public class LiteRuleProperties {
      * @since 1.0.0
      */
     private long slowRuleThresholdMs = 0L;
+
+    /**
+     * 索引配置（P1-6：硬编码阈值配置化）
+     *
+     * <p>控制 RuleIndexer 的索引启用/绕过阈值。
+     *
+     * @since 1.4.0
+     */
+    private IndexConfig index = new IndexConfig();
+  }
+
+  /**
+   * 索引配置（P1-6：硬编码阈值配置化）
+   *
+   * <p>控制 RuleIndexer 的索引启用/绕过阈值。
+   *
+   * @since 1.4.0
+   */
+  @Data
+  public static class IndexConfig {
+
+    /**
+     * 索引绕过阈值（P1-6）
+     *
+     * <p>当规则数 &lt; 此值时，不启用索引（全量遍历）；
+     * 规则数 ≥ 此值时，启用索引加速候选筛选。
+     * 默认 200。
+     *
+     * <p>调优建议：
+     *
+     * <ul>
+     *   <li>规则数 &lt; 100：保持默认 200（不启用索引）
+     *   <li>规则数 100~500：设置为 100（提前启用索引）
+     *   <li>规则数 &gt; 500：设置为 50（尽早启用索引）
+     * </ul>
+     */
+    @Min(1)
+    private int bypassThreshold = 200;
   }
 
   /**

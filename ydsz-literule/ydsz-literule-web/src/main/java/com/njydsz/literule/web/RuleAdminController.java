@@ -112,13 +112,13 @@ public class RuleAdminController {
   @Operation(summary = "分页查询规则定义", description = "分页查询规则引擎中所有规则定义，支持按页码、页大小、排序字段进行分页")
   @ApiResponse(responseCode = "200", description = "分页规则定义列表")
   @GetMapping
-  public com.njydsz.common.core.response.PageResponse<List<RuleDefinitionVO>> list(
+  public PageResponse<List<RuleDefinitionVO>> list(
       PageQuery pageQuery) {
-    com.njydsz.common.core.response.PageResponse<List<RuleDefinition>> page =
+    PageResponse<List<RuleDefinition>> page =
         ruleAdminService.pageRuleDefinitions(pageQuery);
     List<RuleDefinitionVO> records =
         page.getData().stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList();
-    return com.njydsz.common.core.response.PageResponse.success(
+    return PageResponse.success(
         page.getTotal(), page.getPageNum(), page.getPageSize(), records);
   }
 
@@ -210,8 +210,8 @@ public class RuleAdminController {
   @Parameter(name = "pageSize", description = "每页条数（默认 20，最大 100）", required = false)
   @ApiResponse(responseCode = "200", description = "分页版本历史")
   @GetMapping("/{ruleCode}/versions")
-  public com.njydsz.common.core.response.PageResponse<List<RuleVersionVO>> listVersions(
-      @PathVariable String ruleCode, @jakarta.validation.Valid PageQuery pageQuery) {
+  public PageResponse<List<RuleVersionVO>> listVersions(
+      @PathVariable String ruleCode, @Valid PageQuery pageQuery) {
     return ruleAdminService.pageVersions(ruleCode, pageQuery);
   }
 

@@ -3,11 +3,13 @@ package com.njydsz.common.seata.mq;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.messaging.MessagingException;
 
@@ -30,7 +32,7 @@ public class RocketMqXidPropagator implements MqXidPropagator {
   /** 消息头最大长度（RocketMQ 限制保护） */
   private static final int MAX_HEADER_LENGTH = 200;
 
-  private final org.apache.rocketmq.client.producer.DefaultMQProducer producer;
+  private final DefaultMQProducer producer;
   private final ObjectProvider<XidPropagator> xidPropagatorProvider;
 
   /**
@@ -40,7 +42,7 @@ public class RocketMqXidPropagator implements MqXidPropagator {
    * @param xidPropagatorProvider XID 传播器提供者
    */
   public RocketMqXidPropagator(
-      org.apache.rocketmq.client.producer.DefaultMQProducer producer,
+      DefaultMQProducer producer,
       ObjectProvider<XidPropagator> xidPropagatorProvider) {
     this.producer = producer;
     this.xidPropagatorProvider = xidPropagatorProvider;
@@ -70,7 +72,7 @@ public class RocketMqXidPropagator implements MqXidPropagator {
 
   @Override
   public String getCurrentTraceId() {
-    return org.slf4j.MDC.get("traceId");
+    return MDC.get("traceId");
   }
 
   /**

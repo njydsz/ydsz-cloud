@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.circuitbreaker;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -127,8 +128,8 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
             .failureRateThreshold(cbConfig.getFailureRateThreshold())
             .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold())
             .slowCallDurationThreshold(
-                java.time.Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
-            .waitDurationInOpenState(java.time.Duration.ofMillis(cbConfig.getWaitDurationMs()))
+                Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
+            .waitDurationInOpenState(Duration.ofMillis(cbConfig.getWaitDurationMs()))
             .minimumNumberOfCalls(cbConfig.getMinimumNumberOfCalls())
             .slidingWindowSize(cbConfig.getSlidingWindowSize())
             .build();

@@ -3,6 +3,7 @@ package com.njydsz.cronjob.server.core.logger;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -76,7 +77,7 @@ public class DisruptorLogPublisher {
             new DisruptorLogEventFactory(),
             bufferSize,
             DaemonThreadFactory.INSTANCE,
-            com.lmax.disruptor.dsl.ProducerType.MULTI,
+            ProducerType.MULTI,
             new BlockingWaitStrategy());
     disruptor.handleEventsWith(new DisruptorLogEventHandler(jobLogContentServiceProvider));
     disruptor.start();

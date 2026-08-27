@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
@@ -171,7 +172,7 @@ public class FeignMicrometerCollector {
     if (bodySizeBytes < 0) {
       return;
     }
-    io.micrometer.core.instrument.DistributionSummary.builder(METRIC_RESPONSE_BODY_SIZE)
+    DistributionSummary.builder(METRIC_RESPONSE_BODY_SIZE)
         .tag(TAG_CLIENT, clientName)
         .tag(TAG_METHOD, method)
         .tag(TAG_STATUS_CODE, String.valueOf(statusCode))

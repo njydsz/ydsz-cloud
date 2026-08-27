@@ -1,5 +1,6 @@
 package com.njydsz.common.seata.interceptor;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -136,7 +137,7 @@ public final class SeataExecutors {
       int maximumPoolSize,
       long keepAliveTime,
       TimeUnit unit,
-      java.util.concurrent.BlockingQueue<Runnable> workQueue,
+      BlockingQueue<Runnable> workQueue,
       String threadNamePrefix) {
     return new SeataDecoratorExecutorService(
         new ThreadPoolExecutor(

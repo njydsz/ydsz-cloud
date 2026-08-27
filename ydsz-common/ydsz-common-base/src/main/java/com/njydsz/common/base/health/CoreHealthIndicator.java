@@ -2,6 +2,7 @@ package com.njydsz.common.base.health;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -61,7 +62,7 @@ public class CoreHealthIndicator implements HealthIndicator {
     details.put("uptimeSeconds", Duration.between(jvmStartTime, Instant.now()).getSeconds());
 
     // ========== 线程信息 ==========
-    java.lang.management.ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+    ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
     details.put("activeThreads", threadBean.getThreadCount());
     details.put("threadPeak", threadBean.getPeakThreadCount());
     details.put("daemonThreads", threadBean.getDaemonThreadCount());

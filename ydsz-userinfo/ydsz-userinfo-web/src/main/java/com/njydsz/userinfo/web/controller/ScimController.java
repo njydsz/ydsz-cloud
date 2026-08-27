@@ -87,7 +87,7 @@ public class ScimController {
     if (!scimProperties.isAllowCreate()) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
           .body(YdszJson.toJson(
-              com.njydsz.userinfo.domain.scim.ScimError.builder()
+              ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("403")
                   .detail("SCIM user listing is disabled")
@@ -131,7 +131,7 @@ public class ScimController {
     if (user == null) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(YdszJson.toJson(
-              com.njydsz.userinfo.domain.scim.ScimError.builder()
+              ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("404")
                   .detail("User not found: " + id)
@@ -153,7 +153,7 @@ public class ScimController {
     if (!scimProperties.isAllowCreate()) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
           .body(YdszJson.toJson(
-              com.njydsz.userinfo.domain.scim.ScimError.builder()
+              ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("403")
                   .detail("SCIM user creation is disabled")
@@ -161,7 +161,7 @@ public class ScimController {
     }
 
     // 转换为 ydsz 统一 DTO
-    com.njydsz.userinfo.domain.dto.UserAccountDTO createDTO =
+    UserAccountDTO createDTO =
         ScimConverter.toCreateDTO(scimUser);
 
     String userId = userAccountService.save(createDTO);
@@ -187,7 +187,7 @@ public class ScimController {
     if (!scimProperties.isAllowUpdate()) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
           .body(YdszJson.toJson(
-              com.njydsz.userinfo.domain.scim.ScimError.builder()
+              ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("403")
                   .detail("SCIM user update is disabled")
@@ -199,7 +199,7 @@ public class ScimController {
     if (existingUser == null) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(YdszJson.toJson(
-              com.njydsz.userinfo.domain.scim.ScimError.builder()
+              ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("404")
                   .detail("User not found: " + id)
@@ -207,7 +207,7 @@ public class ScimController {
     }
 
     // 转换为 ydsz 统一 DTO
-    com.njydsz.userinfo.domain.dto.UserAccountDTO updateDTO =
+    UserAccountDTO updateDTO =
         ScimConverter.toUpdateDTO(scimUser);
     updateDTO.setId(id);
 
@@ -255,7 +255,7 @@ public class ScimController {
     if (!scimProperties.isAllowPatch()) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
           .body(YdszJson.toJson(
-              com.njydsz.userinfo.domain.scim.ScimError.builder()
+              ScimError.builder()
                   .schemas(List.of("urn:ietf:params:scim:api:messages:2.0:Error"))
                   .status("403")
                   .detail("SCIM PATCH is disabled")

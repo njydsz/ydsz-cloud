@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
@@ -578,7 +579,7 @@ public abstract class BaseExceptionHandler {
    * @param throwable 异常对象
    */
   protected void addRetryAfterHeader(
-      jakarta.servlet.http.HttpServletResponse response, Throwable throwable) {
+      HttpServletResponse response, Throwable throwable) {
     if (response == null || !(throwable instanceof AbstractYdszException ex)) {
       return;
     }

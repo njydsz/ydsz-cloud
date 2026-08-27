@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.IndexOperation;
@@ -341,7 +342,7 @@ public class IndexSyncService {
         case UPSERT -> {
           if (record.documentJson() != null) {
             IndexDocument doc =
-                com.njydsz.common.json.YdszJson.fromJson(
+                YdszJson.fromJson(
                     record.documentJson(), IndexDocument.class);
             opBuilder.document(doc);
           }
@@ -349,7 +350,7 @@ public class IndexSyncService {
         case BULK -> {
           if (record.documentJson() != null) {
             List<IndexDocument> docs =
-                com.njydsz.common.json.YdszJson.fromJson(
+                YdszJson.fromJson(
                     record.documentJson(), List.class, IndexDocument.class);
             opBuilder.documents(docs);
           }

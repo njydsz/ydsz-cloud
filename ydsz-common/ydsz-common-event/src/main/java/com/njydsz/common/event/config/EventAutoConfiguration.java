@@ -15,6 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminService;
@@ -237,7 +238,7 @@ public class EventAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(EventPublishGateway.class)
     public EventPublishGateway rocketMqEventPublishGateway(
-        org.apache.rocketmq.spring.core.RocketMQTemplate rocketMQTemplate) {
+        RocketMQTemplate rocketMQTemplate) {
       LOG.info("RocketMqEventPublishGateway registered: topic=ydsz-outbox-events");
       return new RocketMqEventPublishGateway(rocketMQTemplate, null);
     }

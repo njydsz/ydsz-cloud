@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -53,7 +54,7 @@ public class CircuitBreaker {
 
   public CircuitBreaker(CircuitBreakerConfig config) {
     this.config = config;
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig resilience4jConfig =
+    CircuitBreakerConfig resilience4jConfig =
         config.toResilience4jConfig();
     this.registry = CircuitBreakerRegistry.of(resilience4jConfig);
   }

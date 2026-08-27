@@ -83,6 +83,9 @@ public final class PermissionCodes {
   /** CRONJOB_AUDIT_VIEW — 操作审计视图（P1-14） */
   public static final String CRONJOB_AUDIT_VIEW = "cronjob:audit:view";
 
+  /** CRONJOB_JOB_MIGRATE — 任务集群漂移（P2-5） */
+  public static final String CRONJOB_JOB_MIGRATE = "cronjob:job:migrate";
+
   /** MESSAGE_AGGREGATE_LIST */
   public static final String MESSAGE_AGGREGATE_LIST = "message:aggregate:list";
 

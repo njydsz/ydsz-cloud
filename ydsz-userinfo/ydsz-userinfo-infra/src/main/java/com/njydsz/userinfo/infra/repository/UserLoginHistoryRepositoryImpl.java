@@ -43,7 +43,7 @@ public class UserLoginHistoryRepositoryImpl implements UserLoginHistoryRepositor
     wrapper.eq(UserLoginHistory::getUserId, userId);
     wrapper.eq(UserLoginHistory::getLoginResult, "FAILED");
     wrapper.ge(UserLoginHistory::getCreatedAt,
-        java.time.LocalDateTime.now().minusMinutes(windowMinutes));
+        LocalDateTime.now().minusMinutes(windowMinutes));
     return Math.toIntExact(userLoginHistoryMapper.selectCount(wrapper));
   }
 

@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -56,7 +57,7 @@ public class EntityVersionRepositoryImpl implements EntityVersionRepository {
     wrapper.eq(EntityVersion::getResourceType, query.getResourceType())
         .eq(EntityVersion::getResourceKey, query.getResourceKey())
         .orderByDesc(EntityVersion::getEffectiveDate);
-    com.baomidou.mybatisplus.core.metadata.IPage<EntityVersion> result =
+    IPage<EntityVersion> result =
         entityVersionMapper.selectPage(page, wrapper);
     List<EntityVersionVO> vos = converter.entityVersionListToVO(result.getRecords());
     return PageResponse.success(

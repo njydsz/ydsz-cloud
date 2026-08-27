@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
@@ -93,7 +94,7 @@ public class NextwikiCacheService {
    * @param loader 数据库加载函数
    * @return 文件节点 VO；不存在返回 {@code Optional.empty()}
    */
-  public Optional<FileNodeVO> getFile(String nodeId, java.util.function.Supplier<Optional<FileNodeVO>> loader) {
+  public Optional<FileNodeVO> getFile(String nodeId, Supplier<Optional<FileNodeVO>> loader) {
     String key = KEY_FILE + nodeId;
     String lockKey = KEY_LOCK + "file:" + nodeId;
     String metricName = "file";
@@ -135,7 +136,7 @@ public class NextwikiCacheService {
    * @param loader 数据库加载函数
    * @return 子节点 VO 列表
    */
-  public List<FileNodeVO> getChildren(String parentId, java.util.function.Supplier<List<FileNodeVO>> loader) {
+  public List<FileNodeVO> getChildren(String parentId, Supplier<List<FileNodeVO>> loader) {
     String key = KEY_CHILDREN + parentId;
     String lockKey = KEY_LOCK + "children:" + parentId;
     String metricName = "children";
@@ -208,7 +209,7 @@ public class NextwikiCacheService {
    * @return 配额 VO；不存在返回 {@code Optional.empty()}
    */
   public Optional<StorageQuotaVO> getQuota(String scopeType, String scopeId,
-      java.util.function.Supplier<Optional<StorageQuotaVO>> loader) {
+      Supplier<Optional<StorageQuotaVO>> loader) {
     String key = KEY_QUOTA + scopeType + ":" + scopeId;
     String lockKey = KEY_LOCK + "quota:" + scopeType + ":" + scopeId;
     String metricName = "quota";
@@ -362,7 +363,7 @@ public class NextwikiCacheService {
    * @return 缓存值或加载结果
    */
   private <T> Optional<T> getOrLoadWithLock(String key, String lockKey, long ttl, String metricName,
-      java.util.function.Supplier<Optional<T>> loader) {
+      Supplier<Optional<T>> loader) {
     if (acquireLock(lockKey)) {
       try {
         // 双重检查：其他线程可能已回查

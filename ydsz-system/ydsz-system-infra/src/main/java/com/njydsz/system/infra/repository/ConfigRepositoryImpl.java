@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -105,7 +106,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
       wrapper.eq(Config::getStatus, query.getStatus());
     }
     wrapper.orderByDesc(Config::getCreatedAt);
-    com.baomidou.mybatisplus.core.metadata.IPage<Config> result = configMapper.selectPage(page, wrapper);
+    IPage<Config> result = configMapper.selectPage(page, wrapper);
     List<ConfigVO> vos = converter.configListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
   }

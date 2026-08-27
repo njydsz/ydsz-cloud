@@ -3,6 +3,7 @@ package com.njydsz.nextwiki.web.controller.storage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -71,7 +72,7 @@ public class PresignedUrlController {
         fileStorage.generatePresignedUploadUrl(
             null,
             request.getObjectKey(),
-            java.time.Duration.ofSeconds(
+            Duration.ofSeconds(
                 request.getExpireSeconds() != null ? request.getExpireSeconds() : 3600));
 
     PresignedUrlResponse response = new PresignedUrlResponse();

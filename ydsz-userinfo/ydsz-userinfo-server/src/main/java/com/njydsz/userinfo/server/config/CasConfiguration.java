@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.server.auth.CasService;
 
 /**
@@ -36,7 +37,7 @@ public class CasConfiguration {
    */
   @Bean
   public CasService casService(
-      com.njydsz.common.redis.service.ops.RedisStringOps redisStringOps,
+      RedisStringOps redisStringOps,
       CasProperties casProperties) {
     return new CasService(redisStringOps, casProperties);
   }

@@ -23,6 +23,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.workflow.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
 import com.njydsz.workflow.server.service.FlowTaskService;

@@ -34,18 +34,18 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "clientName", source = "clientName")
   @Mapping(target = "clientSecret", source = "clientSecret")
   @Mapping(target = "clientType",
-      expression = "java(com.njydsz.userinfo.domain.oauth2.OAuth2Application.ClientType.valueOf(entity.getClientType()))")
+      expression = "java(ClientType.valueOf(entity.getClientType()))")
   @Mapping(target = "redirectUris", source = "redirectUris")
   @Mapping(target = "allowedScopes", source = "allowedScopes")
   @Mapping(target = "allowedAudiences", source = "allowedAudiences")
   @Mapping(target = "status",
-      expression = "java(com.njydsz.userinfo.domain.oauth2.OAuth2Application.ApplicationStatus.valueOf(entity.getStatus()))")
+      expression = "java(ApplicationStatus.valueOf(entity.getStatus()))")
   @Mapping(target = "description", source = "description")
   @Mapping(target = "iconUrl", source = "iconUrl")
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "updatedAt", source = "updatedAt")
   @Mapping(target = "createdBy", source = "createdBy")
-  com.njydsz.userinfo.domain.oauth2.OAuth2Application entityToDomain(com.njydsz.userinfo.infra.entity.OAuth2Application entity);
+  OAuth2Application entityToDomain(com.njydsz.userinfo.infra.entity.OAuth2Application entity);
 
   /**
    * 应用领域模型 → 实体。
@@ -70,5 +70,5 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
-  com.njydsz.userinfo.infra.entity.OAuth2Application domainToEntity(com.njydsz.userinfo.domain.oauth2.OAuth2Application domain);
+  com.njydsz.userinfo.infra.entity.OAuth2Application domainToEntity(OAuth2Application domain);
 }

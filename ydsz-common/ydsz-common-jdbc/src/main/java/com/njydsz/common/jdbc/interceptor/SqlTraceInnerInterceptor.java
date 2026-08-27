@@ -20,7 +20,9 @@ import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.mapping.SqlCommandType;
+import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.plugin.Intercepts;
 import org.apache.ibatis.plugin.Invocation;
@@ -75,7 +77,7 @@ import com.njydsz.common.jdbc.monitor.SqlFingerprint;
         Object.class,
         RowBounds.class,
         ResultHandler.class,
-        org.apache.ibatis.cache.CacheKey.class,
+        CacheKey.class,
         BoundSql.class
       }),
   @Signature(
@@ -470,7 +472,7 @@ public class SqlTraceInnerInterceptor
   @Override
   public Object plugin(Object target) {
     if (target instanceof Executor) {
-      return org.apache.ibatis.plugin.Plugin.wrap(target, this);
+      return Plugin.wrap(target, this);
     }
     return target;
   }

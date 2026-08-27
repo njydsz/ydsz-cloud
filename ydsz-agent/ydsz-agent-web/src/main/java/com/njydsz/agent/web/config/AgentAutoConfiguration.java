@@ -1,5 +1,6 @@
 package com.njydsz.agent.web.config;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -13,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -54,6 +56,7 @@ import com.njydsz.agent.infra.trace.PgTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.agent.DagDslParser;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
+import com.njydsz.agent.server.agent.SupervisorAgentExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.GuardrailService;
@@ -110,7 +113,7 @@ public class AgentAutoConfiguration {
   public LlmClient llmClient(
       AgentProperties properties,
       AgentMetrics agentMetrics,
-      ObjectProvider<org.springframework.data.redis.core.StringRedisTemplate>
+      ObjectProvider<StringRedisTemplate>
           redisTemplateProvider) {
     LlmClientRouter router = new LlmClientRouter();
     AgentProperties.Llm llmConfig = properties.getLlm();
@@ -141,13 +144,13 @@ public class AgentAutoConfiguration {
 
     // 启用语义缓存时包装路由器
     if (properties.getCache().isEnabled()) {
-      org.springframework.data.redis.core.StringRedisTemplate redisTemplate =
+      StringRedisTemplate redisTemplate =
           redisTemplateProvider.getIfAvailable();
       if (redisTemplate != null) {
         SemanticLlmCache cache =
             new SemanticLlmCache(
                 redisTemplate,
-                java.time.Duration.ofMinutes(properties.getCache().getTtlMinutes()),
+                Duration.ofMinutes(properties.getCache().getTtlMinutes()),
                 properties.getCache().getMaxSize());
         log.info(
             "[Agent] LLM 语义缓存已启用, ttl={}min, maxSize={}",
@@ -451,7 +454,7 @@ public class AgentAutoConfiguration {
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
       @Lazy DagOrchestrationExecutor dagExecutor,
-      @Lazy com.njydsz.agent.server.agent.SupervisorAgentExecutor supervisorExecutor) {
+      @Lazy SupervisorAgentExecutor supervisorExecutor) {
     return new AgentFactory(
         llmClient,
         memory,

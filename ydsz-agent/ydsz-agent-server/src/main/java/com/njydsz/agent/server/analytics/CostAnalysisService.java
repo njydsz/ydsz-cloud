@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
 
@@ -270,7 +271,7 @@ public class CostAnalysisService {
                     (k1, k2) -> Integer.compare(k2.length(), k1.length()))
                 .thenComparing(Map.Entry.comparingByKey()))
             .collect(
-                java.util.stream.Collectors.toMap(
+                Collectors.toMap(
                     Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
       } else {
         Map<String, Double> defaultPrices = new LinkedHashMap<>(5);

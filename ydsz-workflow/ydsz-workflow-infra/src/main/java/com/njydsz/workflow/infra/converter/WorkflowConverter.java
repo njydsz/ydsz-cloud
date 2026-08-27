@@ -14,6 +14,7 @@ import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
+import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
@@ -506,7 +507,7 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
    * @param entity 参数说明
    * @return 返回值说明
    */
-  com.njydsz.workflow.domain.dto.FlowTaskOperateDTO runTaskToDto(FlowRunTask entity);
+  FlowTaskOperateDTO runTaskToDto(FlowRunTask entity);
 
   // ===== String (通用字符串包装) =====
   /**
