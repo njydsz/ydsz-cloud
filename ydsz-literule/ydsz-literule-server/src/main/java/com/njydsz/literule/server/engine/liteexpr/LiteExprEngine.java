@@ -20,9 +20,14 @@ import com.njydsz.literule.api.expression.ExpressionValidationResult;
  * <ul>
  *   <li>{@link LiteExprCompiler} — 编译缓存 + 常量折叠 + 变量提取
  *   <li>{@link TreeInterpreter} — AST 遍历执行 + 短路求值 + 追踪树
+ *   <li>{@link BytecodeCompiler} — AST 到字节码编译（P0-2 字节码编译能力）
+ *   <li>{@link BytecodeInterpreter} — 栈式虚拟机字节码执行引擎
  *   <li>{@link FunctionRegistry} — 内置函数 + 业务函数注册
  *   <li>{@link LiteExprSandbox} — AST 级安全沙箱
  * </ul>
+ *
+ * <p>字节码编译作为可选执行路径：启用后，引擎优先尝试将 AST 编译为字节码执行（性能更优）；
+ * 遇到不支持的语法结构时自动降级为树遍历解释器（向后兼容）。
  *
  * <p>配置方式：
  *
@@ -38,7 +43,7 @@ import com.njydsz.literule.api.expression.ExpressionValidationResult;
 @Slf4j
 public class LiteExprEngine implements ExpressionEngine {
 
-    /** 表达式函数缓存容量（日志展示） */
+  /** 表达式函数缓存容量（日志展示） */
   private static final int CACHE_CAPACITY = 512;
 
   /** 纳秒到毫秒的换算系数 */
@@ -58,6 +63,19 @@ public class LiteExprEngine implements ExpressionEngine {
   private final LiteExprSandbox sandbox;
   private final boolean sandboxEnabled;
 
+  /** 字节码编译器（P0-2） */
+  private final BytecodeCompiler bytecodeCompiler;
+
+  /** 字节码解释器（P0-2） */
+  private final BytecodeInterpreter bytecodeInterpreter;
+
+  /** 是否启用字节码编译执行（P0-2） */
+  private final boolean bytecodeEnabled;
+
+  /** 编译后的字节码程序缓存（P0-2：避免重复编译同一表达式） */
+  private final java.util.concurrent.ConcurrentHashMap<String, CompiledProgram> bytecodeCache =
+      new java.util.concurrent.ConcurrentHashMap<>();
+
   /** 单次表达式求值超时（纳秒）；0=不启用墙上时钟超时（节点预算仍生效） */
   private final long maxEvalNanos;
 
@@ -76,16 +94,32 @@ public class LiteExprEngine implements ExpressionEngine {
    * @param maxEvalNanos 单次表达式求值超时（纳秒）；0 或负数 = 不启用墙上时钟超时
    */
   public LiteExprEngine(boolean sandboxEnabled, long maxEvalNanos) {
+    this(sandboxEnabled, maxEvalNanos, false);
+  }
+
+  /**
+   * 完整构造器（含字节码编译开关，P0-2）
+   *
+   * @param sandboxEnabled 是否启用 AST 级沙箱
+   * @param maxEvalNanos 单次表达式求值超时（纳秒）
+   * @param bytecodeEnabled 是否启用字节码编译执行
+   */
+  public LiteExprEngine(boolean sandboxEnabled, long maxEvalNanos, boolean bytecodeEnabled) {
     this.sandboxEnabled = sandboxEnabled;
     this.maxEvalNanos = Math.max(0L, maxEvalNanos);
+    this.bytecodeEnabled = bytecodeEnabled;
     this.compiler = new LiteExprCompiler();
     this.functionRegistry = new FunctionRegistry();
     this.interpreter = new TreeInterpreter(functionRegistry);
     this.sandbox = new LiteExprSandbox();
     this.sandbox.syncFunctions(functionRegistry);
+    this.bytecodeCompiler = new BytecodeCompiler("");
+    this.bytecodeInterpreter = new BytecodeInterpreter(functionRegistry);
     log.info(
-        "[LiteExpr] 自研表达式引擎已初始化（sandbox={}, functions={}, cacheCapacity={}, maxEvalNanos={})",
+        "[LiteExpr] 自研表达式引擎已初始化（sandbox={}, bytecode={}, functions={}, "
+            + "cacheCapacity={}, maxEvalNanos={})",
         sandboxEnabled,
+        bytecodeEnabled,
         functionRegistry.getFunctionNames().size(),
         CACHE_CAPACITY,
         this.maxEvalNanos);
@@ -99,7 +133,13 @@ public class LiteExprEngine implements ExpressionEngine {
     try {
       ExprNode ast = compileAndCheck(expression);
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
-      Object result = interpreter.eval(ast, facts, maxEvalNanos);
+      // P0-2：字节码编译执行路径
+      Object result;
+      if (bytecodeEnabled) {
+        result = evalWithBytecode(expression, facts);
+      } else {
+        result = interpreter.eval(ast, facts, maxEvalNanos);
+      }
       if (result instanceof Boolean b) {
         return b;
       }
@@ -138,6 +178,10 @@ public class LiteExprEngine implements ExpressionEngine {
     try {
       ExprNode ast = compileAndCheck(expression);
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
+      // P0-2：字节码编译执行路径（优先尝试，失败降级到树遍历）
+      if (bytecodeEnabled) {
+        return evalWithBytecode(expression, facts);
+      }
       return interpreter.eval(ast, facts, maxEvalNanos);
     } catch (SecurityException e) {
       // 沙箱拦截 = 表达式内容本身存在风险，属配置事故，须 ERROR 级可观测（P0-8）
@@ -156,6 +200,33 @@ public class LiteExprEngine implements ExpressionEngine {
       log.warn("[LiteExpr] 表达式求值失败: expr='{}', error={}", expression, e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * 使用字节码编译执行表达式（P0-2）
+   *
+   * <p>优先从缓存获取编译后的字节码程序；未命中则尝试编译并缓存。
+   * 编译失败（遇到不支持的语法结构）时降级为树遍历解释器。
+   *
+   * @param expression 表达式文本
+   * @param facts 变量上下文
+   * @return 执行结果
+   */
+  private Object evalWithBytecode(String expression, Map<String, Object> facts) {
+    CompiledProgram program = bytecodeCache.get(expression);
+    if (program == null) {
+      try {
+        ExprNode ast = compiler.compile(expression);
+        program = bytecodeCompiler.compile(ast);
+        bytecodeCache.put(expression, program);
+      } catch (LiteExprException e) {
+        // 字节码编译不支持的语法结构，降级为树遍历
+        log.debug("[LiteExpr] 字节码编译降级为树遍历: expr='{}', reason={}", expression, e.getMessage());
+        ExprNode ast = compiler.compile(expression);
+        return interpreter.eval(ast, facts, maxEvalNanos);
+      }
+    }
+    return bytecodeInterpreter.execute(program, facts);
   }
 
   @Override
@@ -314,10 +385,11 @@ public class LiteExprEngine implements ExpressionEngine {
     return compiler;
   }
 
-  /** 清空编译缓存 + 沙箱校验缓存（P1-3） */
+  /** 清空编译缓存 + 沙箱校验缓存 + 字节码缓存（P0-2） */
   public void clearCache() {
     compiler.clearCache();
     sandbox.clearCache();
+    bytecodeCache.clear();
   }
 
   /**

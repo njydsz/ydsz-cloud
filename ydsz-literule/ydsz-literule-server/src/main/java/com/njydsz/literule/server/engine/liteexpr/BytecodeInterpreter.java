@@ -69,7 +69,7 @@ public class BytecodeInterpreter {
     int stepCount = 0;
 
     // 操作数栈（使用数组 + 栈指针实现，避免 ArrayList 扩容开销）
-    Object[] stack = new StackCapacityStack(constants);
+    Object[] stack = createStack(constants);
     int sp = 0; // 栈指针
 
     while (ip < code.length) {
@@ -241,8 +241,8 @@ public class BytecodeInterpreter {
     return ((code[offset] & 0xFF) << 8) | (code[offset + 1] & 0xFF);
   }
 
-  /** 栈容量 — 基于常量池大小给出合理初始容量 */
-  private static Object[] new StackCapacityStack(List<Object> constants) {
+  /** 创建操作数栈 — 基于常量池大小给出合理初始容量 */
+  private static Object[] createStack(List<Object> constants) {
     return new Object[Math.max(16, constants.size() * 2 + 16)];
   }
 
