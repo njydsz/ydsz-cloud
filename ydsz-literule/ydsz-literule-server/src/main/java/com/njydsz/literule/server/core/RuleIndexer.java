@@ -97,6 +97,9 @@ public class RuleIndexer {
   /** 是否启用索引 */
   private volatile boolean indexEnabled = false;
 
+  /** 分布式锁服务（P1-3：替代 synchronized，支持集群部署） */
+  private volatile LockService lockService;
+
   /** LiteExpr 关键字与内置函数，字段提取时不应作为变量返回。 与 {@code LiteExprEngine.EXPR_KEYWORDS} 保持一致。 */
   private static final Set<String> EXPR_KEYWORDS =
       Set.of(
@@ -509,6 +512,43 @@ public class RuleIndexer {
    */
   public int getEnvironmentIndexSize() {
     return environmentIndex.size();
+  }
+
+  // ==================== 锁辅助方法（P1-3） ====================
+
+  /**
+   * P1-3: 设置分布式锁服务
+   *
+   * <p>设置后，索引操作（重建/添加/移除）使用分布式锁保障集群部署下的互斥。
+   * 未设置时，使用本地 synchronized（向后兼容单节点部署）。
+   *
+   * @param lockService 分布式锁服务
+   * @since 1.4.0
+   */
+  public void setLockService(LockService lockService) {
+    this.lockService = lockService;
+  }
+
+  /**
+   * 使用分布式锁或本地锁执行操作（P1-3）
+   *
+   * <p>当 {@link #lockService} 已注入时，使用分布式锁保障集群部署下的互斥；
+   * 未注入时，使用本地 synchronized（向后兼容单节点部署）。
+   *
+   * @param lockKey 锁 key
+   * @param action 要执行的操作
+   * @param <T> 返回类型
+   * @return 操作结果
+   * @since 1.4.0
+   */
+  private <T> T executeWithLock(String lockKey, java.util.function.Supplier<T> action) {
+    if (lockService != null) {
+      return lockService.executeWithLock(lockKey, action);
+    }
+    // 未注入 LockService 时，使用本地 synchronized（向后兼容）
+    synchronized (this) {
+      return action.get();
+    }
   }
 
   /** 内部方法：将规则添加到索引 */

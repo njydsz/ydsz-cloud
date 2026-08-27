@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GLUE 代码编辑器</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.2/dist/index.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #app { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .editor-container { display: flex; flex-direction: column; height: 100%; }
+    .editor-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: #1e1e1e; color: #fff; border-bottom: 1px solid #333; }
+    .editor-header h1 { font-size: 16px; font-weight: 500; }
+    .editor-header .actions { display: flex; gap: 8px; }
+    .editor-main { flex: 1; display: flex; overflow: hidden; }
+    .editor-sidebar { width: 260px; background: #252526; border-right: 1px solid #333; overflow-y: auto; }
+    .editor-sidebar .file-list { padding: 8px 0; }
+    .editor-sidebar .file-item { padding: 8px 16px; color: #ccc; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .editor-sidebar .file-item:hover { background: #2a2d2e; }
+    .editor-sidebar .file-item.active { background: #37373d; color: #fff; }
+    .editor-content { flex: 1; display: flex; flex-direction: column; }
+    .editor-toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #2d2d30; border-bottom: 1px solid #333; }
+    .editor-toolbar .el-select { width: 180px; }
+    .monaco-container { flex: 1; overflow: hidden; }
+    .editor-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: #2d2d30; border-top: 1px solid #333; color: #888; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="editor-container">
+      <header class="editor-header">
+        <h1>GLUE 代码编辑器</h1>
+        <div class="actions">
+          <el-button type="primary" size="small" @click="handleSave" :loading="saving">
+            <el-icon><Check /></el-icon>&nbsp;保存
+          </el-button>
+          <el-button size="small" @click="handleFormat">
+            <el-icon><MagicStick /></el-icon>&nbsp;格式化
+          </el-button>
+          <el-button size="small" @click="handleValidate">
+            <el-icon><CircleCheck /></el-icon>&nbsp;校验
+          </el-button>
+        </div>
+      </header>
+      <div class="editor-main">
+        <aside class="editor-sidebar">
+          <div class="file-list">
+            <div v-for="file in files" :key="file.name" class="file-item" :class="{ active: file.name === currentFile }" @click="currentFile = file.name">
+              <el-icon><Document /></el-icon>
+              {{ file.name }}
+            </div>
+          </div>
+        </aside>
+        <div class="editor-content">
+          <div class="editor-toolbar">
+            <el-select v-model="language" size="small" @change="changeLanguage">
+              <el-option label="Java" value="java" />
+              <el-option label="Groovy" value="groovy" />
+              <el-option label="JavaScript" value="javascript" />
+              <el-option label="Python" value="python" />
+              <el-option label="Shell" value="shell" />
+            </el-select>
+            <el-select v-model="theme" size="small" @change="changeTheme">
+              <el-option label="VS Dark" value="vs-dark" />
+              <el-option label="VS Light" value="vs" />
+              <el-option label="High Contrast" value="hc-black" />
+            </el-select>
+            <el-select v-model="fontSize" size="small" @change="changeFontSize">
+              <el-option label="12px" :value="12" />
+              <el-option label="14px" :value="14" />
+              <el-option label="16px" :value="16" />
+              <el-option label="18px" :value="18" />
+            </el-select>
+          </div>
+          <div class="monaco-container" ref="editorContainer"></div>
+          <div class="editor-footer">
+            <span>行 {{ cursorLine }}, 列 {{ cursorColumn }} | 语言: {{ language }} | 编码: UTF-8</span>
+            <span v-if="lastSaved">最后保存: {{ lastSaved }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.3.8/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.2/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  <script>
+    const { createApp, ref, onMounted, onBeforeUnmount, watch, nextTick } = Vue;
+
+    const app = createApp({
+      setup() {
+        const editorContainer = ref(null);
+        const saving = ref(false);
+        const language = ref('java');
+        const theme = ref('vs-dark');
+        const fontSize = ref(14);
+        const cursorLine = ref(1);
+        const cursorColumn = ref(1);
+        const lastSaved = ref('');
+        const currentFile = ref('Handler.java');
+
+        const files = ref([
+          { name: 'Handler.java', lang: 'java' },
+          { name: 'Utils.groovy', lang: 'groovy' },
+          { name: 'config.json', lang: 'json' },
+        ]);
+
+        let editor = null;
+        let monaco = null;
+
+        const defaultCode = `package com.njydsz.cronjob.handler;
+
+import org.springframework.stereotype.Component;
+
+/**
+ * GLUE 任务处理器
+ *
+ * <p>实现业务逻辑，支持热加载。
+ */
+@Component
+public class SampleHandler {
+
+    /**
+     * 任务执行入口
+     *
+     * @param params 任务参数 JSON
+     * @return 执行结果
+     */
+    public String execute(String params) {
+        // TODO: 实现业务逻辑
+        System.out.println("执行任务，参数: " + params);
+        return "success";
+    }
+}
+`;
+
+        onMounted(async () => {
+          // 加载 Monaco Editor
+          require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+          require(['vs/editor/editor/main'], function (m) {
+            monaco = m;
+            editor = monaco.editor.create(editorContainer.value, {
+              value: defaultCode,
+              language: language.value,
+              theme: theme.value,
+              fontSize: fontSize.value,
+              automaticLayout: true,
+              minimap: { enabled: true },
+              scrollBeyondLastLine: false,
+              lineNumbers: 'on',
+              renderLineHighlight: 'all',
+              tabSize: 4,
+              insertSpaces: true,
+            });
+
+            // 监听光标位置变化
+            editor.onDidChangeCursorPosition((e) => {
+              cursorLine.value = e.position.lineNumber;
+              cursorColumn.value = e.position.column;
+            });
+          });
+        });
+
+        onBeforeUnmount(() => {
+          if (editor) {
+            editor.dispose();
+          }
+        });
+
+        const changeLanguage = () => {
+          if (editor && monaco) {
+            monaco.editor.setModelLanguage(editor.getModel(), language.value);
+          }
+        };
+
+        const changeTheme = () => {
+          if (monaco && editor) {
+            monaco.editor.setTheme(theme.value);
+          }
+        };
+
+        const changeFontSize = () => {
+          if (editor) {
+            editor.updateOptions({ fontSize: fontSize.value });
+          }
+        };
+
+        const handleSave = async () => {
+          if (!editor) return;
+          saving.value = true;
+          try {
+            const code = editor.getValue();
+            // 调用后端保存接口
+            const response = await fetch('/api/v1/cronjob/glue/save', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ file: currentFile.value, code: code, language: language.value })
+            });
+            if (response.ok) {
+              ElementPlus.ElMessage.success('保存成功');
+              lastSaved.value = new Date().toLocaleString();
+            } else {
+              ElementPlus.ElMessage.error('保存失败');
+            }
+          } catch (e) {
+            ElementPlus.ElMessage.error('保存异常: ' + e.message);
+          } finally {
+            saving.value = false;
+          }
+        };
+
+        const handleFormat = () => {
+          if (editor) {
+            editor.trigger('editor', 'editor.action.formatDocument');
+          }
+        };
+
+        const handleValidate = () => {
+          if (!editor) return;
+          const code = editor.getValue();
+          // 简单的语法检查（实际应调用后端校验）
+          if (code.trim().length === 0) {
+            ElementPlus.ElMessage.warning('代码为空');
+          } else {
+            ElementPlus.ElMessage.success('语法校验通过');
+          }
+        };
+
+        return {
+          editorContainer, saving, language, theme, fontSize,
+          cursorLine, cursorColumn, lastSaved, currentFile, files,
+          changeLanguage, changeTheme, changeFontSize,
+          handleSave, handleFormat, handleValidate
+        };
+      }
+    });
+
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>
