@@ -16,6 +16,15 @@
 
 ---
 
+## 关联仓库
+
+| 平台 | 前端仓库 |
+| ---- | -------- |
+| Gitee | https://gitee.com/njydsz/ydsz-micro |
+| GitHub | https://github.com/njydsz/ydsz-micro |
+
+---
+
 ## 项目简介
 
 **Ydsz Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 六层分层架构（`api` / `domain` / `infra` / `server` / `app` / `web`），内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎等企业级全业务场景。

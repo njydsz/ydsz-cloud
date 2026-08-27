@@ -23,8 +23,8 @@ public class FlowDiagramVO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 流程定义详情 */
-  private FlowDefinitionDetailVO definition;
+  /** 流程定义基本信息 */
+  private FlowDefinitionVO definition;
 
   /** 节点列表（每个节点带 active 标记） */
   private List<DiagramNodeVO> nodes;

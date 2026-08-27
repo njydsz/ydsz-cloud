@@ -8,7 +8,11 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.vo.FlowAuditTrailVO;
 import com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO;
+import com.njydsz.workflow.domain.vo.FlowDiagramVO;
+import com.njydsz.workflow.domain.vo.FlowReplayStepVO;
+import com.njydsz.workflow.domain.vo.FlowTimelineVO;
 
 /**
  * 自建工作流引擎 — 业务侧统一入口 Facade
@@ -235,7 +239,7 @@ public interface WorkflowFacade {
    * @param processInstanceId 流程实例 ID
    * @return 审计记录列表（含 operatorName / action / nodeCode / nodeName / comment / timestamp）
    */
-  List<Map<String, Object>> listAuditTrail(String processInstanceId);
+  List<FlowAuditTrailVO> listAuditTrail(String processInstanceId);
 
   /**
    * 获取当前引擎类型标识
@@ -260,7 +264,7 @@ public interface WorkflowFacade {
    * @param instanceId 实例 ID（字符串形式）
    * @return 包含 definition / nodes / skips 的 Map，nodes 中每个节点带 active 标记
    */
-  Map<String, Object> getDiagram(String instanceId);
+  FlowDiagramVO getDiagram(String instanceId);
 
   /**
    * P2-25: 自由跳转 — 管理员强制跳转到任意节点
@@ -321,7 +325,7 @@ public interface WorkflowFacade {
    * @return 时间线列表，每条记录包含
    *     type/timestamp/nodeCode/nodeName/assigneeId/assigneeName/action/comment/taskStatus
    */
-  List<Map<String, Object>> getTimeline(String instanceId);
+  List<FlowTimelineVO> getTimeline(String instanceId);
 
   /**
    * P2-4: 流程回放步骤序列 — 按时间顺序合并历史任务 + 审计日志 + 当前待办为统一步骤序列， 驱动前端 {@code FlowDiagramReplay}
@@ -330,7 +334,7 @@ public interface WorkflowFacade {
    * @param instanceId 实例 ID（字符串形式）
    * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列表
    */
-  List<Map<String, Object>> getReplaySteps(String instanceId);
+  List<FlowReplayStepVO> getReplaySteps(String instanceId);
 
   // ======================== P0-03: 暂存待审 / 追加处理人 / 减签 / 已阅 / 沟通 ========================
 

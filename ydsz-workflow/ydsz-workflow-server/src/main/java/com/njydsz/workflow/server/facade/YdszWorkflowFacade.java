@@ -23,12 +23,17 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
+import com.njydsz.workflow.domain.vo.FlowAuditTrailVO;
 import com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
+import com.njydsz.workflow.domain.vo.FlowDiagramVO;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowReplayStepVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
+import com.njydsz.workflow.domain.vo.FlowTimelineVO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -218,11 +223,11 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   }
 
   @Override
-  public List<Map<String, Object>> listAuditTrail(String processInstanceId) {
+  public List<FlowAuditTrailVO> listAuditTrail(String processInstanceId) {
     String instanceId = processInstanceId;
     // 通过 Repository 获取审计日志（符合 §34.2.3，禁止直接注入 Mapper）
     List<FlowAuditLogVO> logs = auditLogRepository.findByInstanceId(instanceId);
-    return logs.stream().map(this::auditToMap).toList();
+    return logs.stream().map(this::toAuditTrailVO).toList();
   }
 
   @Override
@@ -283,42 +288,39 @@ public class YdszWorkflowFacade implements WorkflowFacade {
    * P2-22: 流程图查询，高亮当前节点
    *
    * @param instanceId 实例 ID（字符串形式）
-   * @return 包含 definition / nodes / skips 的 Map，nodes 中每个节点带 active 标记
+   * @return FlowDiagramVO 包含 definition / nodes / skips，nodes 中每个节点带 active 标记
    */
-  public Map<String, Object> getDiagram(String instanceId) {
+  public FlowDiagramVO getDiagram(String instanceId) {
     String id = instanceId;
     FlowInstanceVO instance = instanceService.getById(id);
     if (instance == null) {
-      return Collections.emptyMap();
+      return null;
     }
     // 通过 definitionService.getDetail 组装 definition + nodes + skips
     FlowDefinitionDetailVO detail = definitionService.getDetail(instance.getDefinitionId());
     if (detail == null) {
-      return Collections.emptyMap();
+      return null;
     }
     String currentNodeCode = instance.getCurrentNodeCode();
     // 在每个 node 上标注 active: true/false（currentNodeCode 匹配则为 active）
-    List<Map<String, Object>> nodes = new ArrayList<>();
+    List<FlowDiagramVO.DiagramNodeVO> nodes = new ArrayList<>();
     if (detail.getNodes() != null) {
       for (FlowNodeVO n : detail.getNodes()) {
-        Map<String, Object> node = new HashMap<>(MAP_INIT_CAPACITY_8);
-        node.put("nodeCode", n.getNodeCode());
-        node.put("nodeName", n.getNodeName());
-        node.put("nodeType", n.getNodeType());
+        FlowDiagramVO.DiagramNodeVO diagramNode = new FlowDiagramVO.DiagramNodeVO();
+        diagramNode.setNodeCode(n.getNodeCode());
+        diagramNode.setNodeName(n.getNodeName());
+        diagramNode.setNodeType(n.getNodeType());
+        diagramNode.setExt(n.getExt());
         boolean active = currentNodeCode != null && currentNodeCode.equals(n.getNodeCode());
-        node.put("active", active);
-        nodes.add(node);
+        diagramNode.setActive(active);
+        nodes.add(diagramNode);
       }
     }
-    // 附带实例当前状态信息
-    Map<String, Object> result = new HashMap<>(MAP_INIT_CAPACITY_8);
-    result.put("instanceId", instance.getId());
-    result.put("flowStatus", instance.getFlowStatus());
-    result.put("currentNodeCode", currentNodeCode);
-    result.put("currentNodeName", instance.getCurrentNodeName());
-    result.put("definition", detail.getDefinition());
-    result.put("nodes", nodes);
-    result.put("skips", detail.getSkips());
+    // 组装强类型 VO
+    FlowDiagramVO result = new FlowDiagramVO();
+    result.setDefinition(detail.getDefinition());
+    result.setNodes(nodes);
+    result.setSkips(detail.getSkips());
     return result;
   }
 
@@ -335,7 +337,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
    * @return 统一时间线列表，实例不存在时返回空列表
    */
   @Override
-  public List<Map<String, Object>> getTimeline(String instanceId) {
+  public List<FlowTimelineVO> getTimeline(String instanceId) {
     String id = instanceId;
     // 1. 获取实例信息
     FlowInstanceVO instance = instanceService.getById(id);
@@ -343,62 +345,61 @@ public class YdszWorkflowFacade implements WorkflowFacade {
       return Collections.emptyList();
     }
 
-    List<Map<String, Object>> timeline = new ArrayList<>(LIST_INIT_CAPACITY_32);
+    List<FlowTimelineVO> timeline = new ArrayList<>(LIST_INIT_CAPACITY_32);
 
     // 2. 获取历史任务列表（通过 Repository，符合 §34.2.3）
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(id);
     for (FlowHisTaskVO his : hisTasks) {
-      Map<String, Object> entry = new HashMap<>(MAP_INIT_CAPACITY_8);
-      entry.put("type", "HIS_TASK");
-      entry.put("timestamp", his.getFinishAt());
-      entry.put("nodeCode", his.getNodeCode());
-      entry.put("nodeName", his.getNodeName());
-      entry.put("assigneeId", his.getAssigneeId());
-      entry.put("assigneeName", his.getAssigneeName());
-      entry.put("action", his.getTaskStatus());
-      entry.put("comment", his.getComment());
-      entry.put("taskStatus", his.getTaskStatus());
+      FlowTimelineVO entry = new FlowTimelineVO();
+      entry.setType("HIS_TASK");
+      entry.setTimestamp(his.getFinishAt());
+      entry.setNodeCode(his.getNodeCode());
+      entry.setNodeName(his.getNodeName());
+      entry.setAssigneeId(his.getAssigneeId());
+      entry.setAssigneeName(his.getAssigneeName());
+      entry.setAction(his.getTaskStatus());
+      entry.setComment(his.getComment());
+      entry.setTaskStatus(his.getTaskStatus());
       timeline.add(entry);
     }
 
     // 3. 获取审计日志列表（通过 Repository，符合 §34.2.3）
     List<FlowAuditLogVO> logs = auditLogRepository.findByInstanceId(id);
     for (FlowAuditLogVO log : logs) {
-      Map<String, Object> entry = new HashMap<>(MAP_INIT_CAPACITY_8);
-      entry.put("type", "AUDIT_LOG");
-      entry.put("timestamp", log.getOperatedAt());
-      entry.put("nodeCode", log.getNodeCode());
-      entry.put("nodeName", log.getNodeName());
-      entry.put(
-          "assigneeId", log.getOperatorId() == null ? null : String.valueOf(log.getOperatorId()));
-      entry.put("assigneeName", log.getOperatorName());
-      entry.put("action", log.getAction());
-      entry.put("comment", log.getComment());
-      entry.put("taskStatus", null);
+      FlowTimelineVO entry = new FlowTimelineVO();
+      entry.setType("AUDIT_LOG");
+      entry.setTimestamp(log.getOperatedAt());
+      entry.setNodeCode(log.getNodeCode());
+      entry.setNodeName(log.getNodeName());
+      entry.setAssigneeId(log.getOperatorId() == null ? null : String.valueOf(log.getOperatorId()));
+      entry.setAssigneeName(log.getOperatorName());
+      entry.setAction(log.getAction());
+      entry.setComment(log.getComment());
+      entry.setTaskStatus(null);
       timeline.add(entry);
     }
 
     // 4. 获取当前待办任务
     List<FlowRunTaskVO> currentTasks = taskService.listPendingByInstance(id);
     for (FlowRunTaskVO task : currentTasks) {
-      Map<String, Object> entry = new HashMap<>(MAP_INIT_CAPACITY_8);
-      entry.put("type", "CURRENT_TASK");
-      entry.put("timestamp", task.getCreatedAt());
-      entry.put("nodeCode", task.getNodeCode());
-      entry.put("nodeName", task.getNodeName());
-      entry.put("assigneeId", task.getAssigneeId());
-      entry.put("assigneeName", task.getAssigneeName());
-      entry.put("action", task.getTaskStatus());
-      entry.put("comment", task.getComment());
-      entry.put("taskStatus", task.getTaskStatus());
+      FlowTimelineVO entry = new FlowTimelineVO();
+      entry.setType("CURRENT_TASK");
+      entry.setTimestamp(task.getCreatedAt());
+      entry.setNodeCode(task.getNodeCode());
+      entry.setNodeName(task.getNodeName());
+      entry.setAssigneeId(task.getAssigneeId());
+      entry.setAssigneeName(task.getAssigneeName());
+      entry.setAction(task.getTaskStatus());
+      entry.setComment(task.getComment());
+      entry.setTaskStatus(task.getTaskStatus());
       timeline.add(entry);
     }
 
     // 5. 按 timestamp 排序（null 排最后），保持同时间戳的插入顺序（稳定排序）
     timeline.sort(
         (a, b) -> {
-          LocalDateTime ta = (LocalDateTime) a.get("timestamp");
-          LocalDateTime tb = (LocalDateTime) b.get("timestamp");
+          LocalDateTime ta = a.getTimestamp();
+          LocalDateTime tb = b.getTimestamp();
           if (ta == null && tb == null) {
             return 0;
           }
@@ -482,22 +483,23 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return m;
   }
 
-  private Map<String, Object> auditToMap(FlowAuditLogVO log) {
-    Map<String, Object> m = new HashMap<>(MAP_INIT_CAPACITY_16);
-    m.put("id", log.getId());
-    m.put("instanceId", log.getInstanceId());
-    m.put("taskId", log.getTaskId());
-    m.put("flowCode", log.getFlowCode());
-    m.put("businessType", log.getBusinessType());
-    m.put("businessId", log.getBusinessId());
-    m.put("nodeCode", log.getNodeCode());
-    m.put("nodeName", log.getNodeName());
-    m.put("action", log.getAction());
-    m.put("operatorId", log.getOperatorId());
-    m.put("targetId", log.getTargetId());
-    m.put("comment", log.getComment());
-    m.put("operatedAt", log.getOperatedAt());
-    return m;
+  /** 将 FlowAuditLogVO 转换为 FlowAuditTrailVO */
+  private FlowAuditTrailVO toAuditTrailVO(FlowAuditLogVO log) {
+    FlowAuditTrailVO vo = new FlowAuditTrailVO();
+    vo.setId(log.getId());
+    vo.setInstanceId(log.getInstanceId());
+    vo.setTaskId(log.getTaskId());
+    vo.setFlowCode(log.getFlowCode());
+    vo.setBusinessType(log.getBusinessType());
+    vo.setBusinessId(log.getBusinessId());
+    vo.setNodeCode(log.getNodeCode());
+    vo.setNodeName(log.getNodeName());
+    vo.setAction(log.getAction());
+    vo.setOperatorId(log.getOperatorId());
+    vo.setTargetId(log.getTargetId());
+    vo.setComment(log.getComment());
+    vo.setOperatedAt(log.getOperatedAt());
+    return vo;
   }
 
   // ============================== P2-4: 流程回放步骤序列 ==============================
@@ -524,7 +526,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
    * @param instanceId 实例 ID（字符串形式）
    * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列表
    */
-  public List<Map<String, Object>> getReplaySteps(String instanceId) {
+  public List<FlowReplayStepVO> getReplaySteps(String instanceId) {
     String id = instanceId;
     FlowInstanceVO instance = instanceService.getById(id);
     if (instance == null) {
@@ -533,21 +535,21 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
     // 预加载节点坐标映射（key = nodeCode），用于步骤中携带 coordinate 字段
     Map<String, Map<String, Object>> nodeCoordMap = loadNodeCoordinates(instance.getDefinitionId());
-    List<Map<String, Object>> steps = new ArrayList<>(LIST_INIT_CAPACITY_32);
+    List<FlowReplayStepVO> steps = new ArrayList<>(LIST_INIT_CAPACITY_32);
 
     // 1. 起始步骤
-    steps.add(buildStartStep(instance));
+    steps.add(buildStartStepVO(instance));
 
     // 2. 历史任务步骤
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(id);
     for (FlowHisTaskVO his : hisTasks) {
-      steps.add(buildHisTaskStep(his, nodeCoordMap));
+      steps.add(buildHisTaskStepVO(his, nodeCoordMap));
     }
 
     // 3. 审计日志步骤（URGE/TRANSFER/DELEGATE/JUMP/RECALL 等任务外操作）
     List<FlowAuditLogVO> logs = auditLogRepository.findByInstanceId(id);
     for (FlowAuditLogVO log : logs) {
-      Map<String, Object> step = buildAuditLogStep(log, nodeCoordMap);
+      FlowReplayStepVO step = buildAuditLogStepVO(log, nodeCoordMap);
       if (step != null) {
         steps.add(step);
       }
@@ -557,81 +559,70 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     if ("RUNNING".equals(instance.getFlowStatus()) || "SUSPENDED".equals(instance.getFlowStatus())) {
       List<FlowRunTaskVO> currentTasks = taskService.listPendingByInstance(id);
       for (FlowRunTaskVO task : currentTasks) {
-        steps.add(buildCurrentTaskStep(task, nodeCoordMap));
+        steps.add(buildCurrentTaskStepVO(task, nodeCoordMap));
       }
     }
 
     // 5. 终止步骤
     if (instance.getEndAt() != null) {
-      steps.add(buildEndStep(instance, nodeCoordMap));
+      steps.add(buildEndStepVO(instance, nodeCoordMap));
     }
 
     // 6. 按 timestamp 升序排序，重新分配 stepIndex
     sortStepsByIndex(steps);
 
-    // 7. 在第一步中嵌入进度摘要
-    if (!steps.isEmpty()) {
-      steps.get(0).put("_progress", buildProgressSummary(steps, instance));
-    }
-
     return steps;
   }
 
-  /** 构建起始步骤 Map。 */
-  private Map<String, Object> buildStartStep(FlowInstanceVO instance) {
-    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
-    step.put("stepIndex", 0);
-    step.put("type", "START");
-    step.put("timestamp", instance.getStartAt());
-    step.put("nodeCode", null);
-    step.put("nodeName", null);
-    step.put("actor", instance.getInitiatorId());
-    step.put("actorName", instance.getInitiatorName());
-    step.put("action", "START");
-    step.put("comment", null);
-    step.put("nodeState", "ENTERED");
-    step.put("durationMs", null);
-    step.put("coordinate", null);
+  /** 构建起始步骤 VO。 */
+  private FlowReplayStepVO buildStartStepVO(FlowInstanceVO instance) {
+    FlowReplayStepVO step = new FlowReplayStepVO();
+    step.setStepIndex(0);
+    step.setType("START");
+    step.setTimestamp(instance.getStartAt());
+    step.setActor(instance.getInitiatorId());
+    step.setActorName(instance.getInitiatorName());
+    step.setAction("START");
+    step.setNodeState("ENTERED");
     return step;
   }
 
-  /** 构建历史任务步骤 Map。 */
-  private Map<String, Object> buildHisTaskStep(FlowHisTaskVO his,
+  /** 构建历史任务步骤 VO。 */
+  private FlowReplayStepVO buildHisTaskStepVO(FlowHisTaskVO his,
       Map<String, Map<String, Object>> nodeCoordMap) {
-    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
-    step.put("type", "HIS_TASK");
-    step.put("timestamp", his.getFinishAt());
-    step.put("nodeCode", his.getNodeCode());
-    step.put("nodeName", his.getNodeName());
-    step.put("actor", his.getAssigneeId());
-    step.put("actorName", his.getAssigneeName());
-    step.put("action", his.getTaskStatus());
-    step.put("comment", his.getComment());
-    step.put("nodeState", mapNodeState(his.getTaskStatus()));
-    step.put("durationMs", his.getDurationMs());
-    step.put("coordinate", nodeCoordMap.get(his.getNodeCode()));
+    FlowReplayStepVO step = new FlowReplayStepVO();
+    step.setType("HIS_TASK");
+    step.setTimestamp(his.getFinishAt());
+    step.setNodeCode(his.getNodeCode());
+    step.setNodeName(his.getNodeName());
+    step.setActor(his.getAssigneeId());
+    step.setActorName(his.getAssigneeName());
+    step.setAction(his.getTaskStatus());
+    step.setComment(his.getComment());
+    step.setNodeState(mapNodeState(his.getTaskStatus()));
+    step.setDurationMs(his.getDurationMs());
+    step.setCoordinate(nodeCoordMap.get(his.getNodeCode()));
     return step;
   }
 
-  /** 构建审计日志步骤 Map。任务自身操作（PASS/REJECT 等）返回 null 以跳过。 */
-  private Map<String, Object> buildAuditLogStep(FlowAuditLogVO log,
+  /** 构建审计日志步骤 VO。任务自身操作（PASS/REJECT 等）返回 null 以跳过。 */
+  private FlowReplayStepVO buildAuditLogStepVO(FlowAuditLogVO log,
       Map<String, Map<String, Object>> nodeCoordMap) {
     String action = log.getAction();
     if (action == null || isTaskAction(action)) {
       return null;
     }
-    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
-    step.put("type", "AUDIT_LOG");
-    step.put("timestamp", log.getOperatedAt());
-    step.put("nodeCode", log.getNodeCode());
-    step.put("nodeName", log.getNodeName());
-    step.put("actor", log.getOperatorId());
-    step.put("actorName", log.getOperatorName());
-    step.put("action", action);
-    step.put("comment", log.getComment());
-    step.put("nodeState", "OBSERVED");
-    step.put("durationMs", null);
-    step.put("coordinate", log.getNodeCode() != null ? nodeCoordMap.get(log.getNodeCode()) : null);
+    FlowReplayStepVO step = new FlowReplayStepVO();
+    step.setType("AUDIT_LOG");
+    step.setTimestamp(log.getOperatedAt());
+    step.setNodeCode(log.getNodeCode());
+    step.setNodeName(log.getNodeName());
+    step.setActor(log.getOperatorId());
+    step.setActorName(log.getOperatorName());
+    step.setAction(action);
+    step.setComment(log.getComment());
+    step.setNodeState("OBSERVED");
+    step.setCoordinate(log.getNodeCode() != null ? nodeCoordMap.get(log.getNodeCode()) : null);
     return step;
   }
 
@@ -649,39 +640,36 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         || "COMPLETED".equals(action);
   }
 
-  /** 构建当前待办步骤 Map。 */
-  private Map<String, Object> buildCurrentTaskStep(FlowRunTaskVO task,
+  /** 构建当前待办步骤 VO。 */
+  private FlowReplayStepVO buildCurrentTaskStepVO(FlowRunTaskVO task,
       Map<String, Map<String, Object>> nodeCoordMap) {
-    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
-    step.put("type", "CURRENT_TASK");
-    step.put("timestamp", task.getCreatedAt());
-    step.put("nodeCode", task.getNodeCode());
-    step.put("nodeName", task.getNodeName());
-    step.put("actor", task.getAssigneeId());
-    step.put("actorName", task.getAssigneeName());
-    step.put("action", task.getTaskStatus());
-    step.put("comment", task.getComment());
-    step.put("nodeState", "ACTIVE");
-    step.put("durationMs", task.getDurationMs());
-    step.put("coordinate", nodeCoordMap.get(task.getNodeCode()));
+    FlowReplayStepVO step = new FlowReplayStepVO();
+    step.setType("CURRENT_TASK");
+    step.setTimestamp(task.getCreatedAt());
+    step.setNodeCode(task.getNodeCode());
+    step.setNodeName(task.getNodeName());
+    step.setActor(task.getAssigneeId());
+    step.setActorName(task.getAssigneeName());
+    step.setAction(task.getTaskStatus());
+    step.setComment(task.getComment());
+    step.setNodeState("ACTIVE");
+    step.setDurationMs(task.getDurationMs());
+    step.setCoordinate(nodeCoordMap.get(task.getNodeCode()));
     return step;
   }
 
-  /** 构建终止步骤 Map。 */
-  private Map<String, Object> buildEndStep(FlowInstanceVO instance,
+  /** 构建终止步骤 VO。 */
+  private FlowReplayStepVO buildEndStepVO(FlowInstanceVO instance,
       Map<String, Map<String, Object>> nodeCoordMap) {
-    Map<String, Object> step = new HashMap<>(MAP_INIT_CAPACITY_8);
-    step.put("type", "END");
-    step.put("timestamp", instance.getEndAt());
-    step.put("nodeCode", instance.getCurrentNodeCode());
-    step.put("nodeName", instance.getCurrentNodeName());
-    step.put("actor", null);
-    step.put("actorName", null);
-    step.put("action", instance.getFlowStatus());
-    step.put("comment", null);
-    step.put("nodeState", "FINISHED");
-    step.put("durationMs", instance.getDurationMs());
-    step.put("coordinate",
+    FlowReplayStepVO step = new FlowReplayStepVO();
+    step.setType("END");
+    step.setTimestamp(instance.getEndAt());
+    step.setNodeCode(instance.getCurrentNodeCode());
+    step.setNodeName(instance.getCurrentNodeName());
+    step.setAction(instance.getFlowStatus());
+    step.setNodeState("FINISHED");
+    step.setDurationMs(instance.getDurationMs());
+    step.setCoordinate(
         instance.getCurrentNodeCode() != null
             ? nodeCoordMap.get(instance.getCurrentNodeCode())
             : null);
@@ -691,12 +679,12 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /**
    * 按 timestamp 升序排序（null 排最后），并重新分配 stepIndex。
    *
-   * @param steps 参数说明
+   * @param steps 步骤列表
    */
-  private void sortStepsByIndex(List<Map<String, Object>> steps) {
+  private void sortStepsByIndex(List<FlowReplayStepVO> steps) {
     steps.sort((a, b) -> {
-      LocalDateTime ta = (LocalDateTime) a.get("timestamp");
-      LocalDateTime tb = (LocalDateTime) b.get("timestamp");
+      LocalDateTime ta = a.getTimestamp();
+      LocalDateTime tb = b.getTimestamp();
       if (ta == null && tb == null) {
         return 0;
       }
@@ -709,40 +697,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
       return ta.compareTo(tb);
     });
     for (int i = 0; i < steps.size(); i++) {
-      steps.get(i).put("stepIndex", i);
+      steps.get(i).setStepIndex(i);
     }
-  }
-
-  /** 构建进度摘要 Map（嵌入到第一步的 _progress 字段）。 */
-  private Map<String, Object> buildProgressSummary(List<Map<String, Object>> steps,
-      FlowInstanceVO instance) {
-    int totalSteps = steps.size();
-    int completedSteps = (int) steps.stream()
-        .filter(s -> {
-          String type = (String) s.get("type");
-          return "HIS_TASK".equals(type) || "START".equals(type) || "END".equals(type);
-        })
-        .count();
-    int activeSteps = (int) steps.stream()
-        .filter(s -> "CURRENT_TASK".equals(s.get("type")))
-        .count();
-
-    Map<String, Object> progress = new HashMap<>(MAP_INIT_CAPACITY_16);
-    progress.put("totalSteps", totalSteps);
-    progress.put("completedSteps", completedSteps);
-    progress.put("activeSteps", activeSteps);
-    progress.put("progressPercent",
-        totalSteps > 0 ? Math.round((float) completedSteps / totalSteps * 100) : 0);
-    progress.put("instanceStatus", instance.getFlowStatus());
-    progress.put("instanceId", instance.getId());
-    progress.put("flowName", instance.getFlowName());
-    progress.put("title", instance.getTitle());
-    progress.put("initiatorId", instance.getInitiatorId());
-    progress.put("initiatorName", instance.getInitiatorName());
-    progress.put("startAt", instance.getStartAt());
-    progress.put("endAt", instance.getEndAt());
-    progress.put("durationMs", instance.getDurationMs());
-    return progress;
   }
 
   /**

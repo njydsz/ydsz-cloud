@@ -41,10 +41,14 @@ import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
+import com.njydsz.workflow.domain.vo.FlowAuditTrailVO;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
+import com.njydsz.workflow.domain.vo.FlowDiagramVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowRecallableNodeVO;
+import com.njydsz.workflow.domain.vo.FlowReplayStepVO;
+import com.njydsz.workflow.domain.vo.FlowTimelineVO;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -333,7 +337,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "审计轨迹查询")
   @GetMapping("/instance/{id}/auditTrail")
-  public YdszResponse<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
+  public YdszResponse<List<FlowAuditTrailVO>> auditTrail(@PathVariable String id) {
     return YdszResponse.success(workflowFacade.listAuditTrail(id));
   }
 
@@ -345,7 +349,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "审批轨迹时间线查询")
   @GetMapping("/instance/{id}/timeline")
-  public YdszResponse<List<Map<String, Object>>> timeline(@PathVariable String id) {
+  public YdszResponse<List<FlowTimelineVO>> timeline(@PathVariable String id) {
     return YdszResponse.success(workflowFacade.getTimeline(id));
   }
 
@@ -357,7 +361,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "流程图查询")
   @GetMapping("/instance/{id}/diagram")
-  public YdszResponse<Map<String, Object>> diagram(@PathVariable String id) {
+  public YdszResponse<FlowDiagramVO> diagram(@PathVariable String id) {
     return YdszResponse.success(workflowFacade.getDiagram(id));
   }
 
@@ -369,7 +373,7 @@ public class FlowInstanceController {
    */
   @Operation(summary = "流程回放步骤序列")
   @GetMapping("/instance/{id}/replay")
-  public YdszResponse<List<Map<String, Object>>> replay(@PathVariable String id) {
+  public YdszResponse<List<FlowReplayStepVO>> replay(@PathVariable String id) {
     return YdszResponse.success(workflowFacade.getReplaySteps(id));
   }
 
