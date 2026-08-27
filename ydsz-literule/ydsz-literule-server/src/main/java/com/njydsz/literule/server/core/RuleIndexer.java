@@ -564,6 +564,24 @@ public class RuleIndexer {
     }
   }
 
+  /**
+   * 使用分布式锁或本地锁执行无返回值操作（P1-3）
+   *
+   * @param lockKey 锁 key
+   * @param action 要执行的操作
+   * @since 1.4.0
+   */
+  private void executeWithLock(String lockKey, Runnable action) {
+    if (lockService != null) {
+      lockService.executeWithLock(lockKey, action);
+      return;
+    }
+    // 未注入 LockService 时，使用本地 synchronized（向后兼容）
+    synchronized (this) {
+      action.run();
+    }
+  }
+
   /** 内部方法：将规则添加到索引 */
   private void addToIndexInternal(Rule rule) {
     String tenantId = rule.getTenantId() != null ? rule.getTenantId() : "1";

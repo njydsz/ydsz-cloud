@@ -19,6 +19,7 @@ import com.njydsz.literule.api.RuleStatus;
 import com.njydsz.literule.domain.dto.post.ApprovalRecordSaveDTO;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
+import com.njydsz.literule.server.core.LockService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**

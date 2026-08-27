@@ -10,6 +10,10 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.vo.AssigneeConfig;
+import com.njydsz.workflow.domain.vo.CountersignConfig;
+import com.njydsz.workflow.domain.vo.SlaConfig;
+import com.njydsz.workflow.domain.vo.ServiceNodeConfig;
 
 /**
  * FlowNode 视图对象。
@@ -50,6 +54,18 @@ public class FlowNodeVO implements Serializable {
   /** ext JSON 懒解析缓存（不参与序列化）。 */
   private transient volatile Map<String, Object> parsedExt;
 
+  /** SLA 配置懒解析缓存（不参与序列化）。 */
+  private transient volatile SlaConfig parsedSlaConfig;
+
+  /** 服务节点配置懒解析缓存（不参与序列化）。 */
+  private transient volatile ServiceNodeConfig parsedServiceNodeConfig;
+
+  /** 会签配置懒解析缓存（不参与序列化）。 */
+  private transient volatile CountersignConfig parsedCountersignConfig;
+
+  /** 办理人配置懒解析缓存（不参与序列化）。 */
+  private transient volatile AssigneeConfig parsedAssigneeConfig;
+
   // ==================== ext 懒解析基础设施 ====================
 
   /**
@@ -81,6 +97,80 @@ public class FlowNodeVO implements Serializable {
     }
   }
 
+  // ==================== 值对象访问（类型安全） ====================
+
+  /**
+   * 获取 SLA 超时配置值对象（懒解析、线程安全）。
+   *
+   * @return SLA 配置值对象（不可变，非 null）
+   */
+  public SlaConfig getSlaConfig() {
+    if (parsedSlaConfig != null) {
+      return parsedSlaConfig;
+    }
+    synchronized (this) {
+      if (parsedSlaConfig != null) {
+        return parsedSlaConfig;
+      }
+      parsedSlaConfig = SlaConfig.fromExt(getExtMap());
+      return parsedSlaConfig;
+    }
+  }
+
+  /**
+   * 获取服务节点配置值对象（懒解析、线程安全）。
+   *
+   * @return 服务节点配置值对象（不可变，非 null）
+   */
+  public ServiceNodeConfig getServiceNodeConfig() {
+    if (parsedServiceNodeConfig != null) {
+      return parsedServiceNodeConfig;
+    }
+    synchronized (this) {
+      if (parsedServiceNodeConfig != null) {
+        return parsedServiceNodeConfig;
+      }
+      parsedServiceNodeConfig = ServiceNodeConfig.fromExt(getExtMap());
+      return parsedServiceNodeConfig;
+    }
+  }
+
+  /**
+   * 获取会签配置值对象（懒解析、线程安全）。
+   *
+   * @return 会签配置值对象（不可变，非 null）
+   */
+  public CountersignConfig getCountersignConfig() {
+    if (parsedCountersignConfig != null) {
+      return parsedCountersignConfig;
+    }
+    synchronized (this) {
+      if (parsedCountersignConfig != null) {
+        return parsedCountersignConfig;
+      }
+      parsedCountersignConfig = CountersignConfig.fromExt(getExtMap());
+      return parsedCountersignConfig;
+    }
+  }
+
+  /**
+   * 获取办理人配置值对象（懒解析、线程安全）。
+   *
+   * @return 办理人配置值对象（不可变，非 null）
+   */
+  public AssigneeConfig getAssigneeConfig() {
+    if (parsedAssigneeConfig != null) {
+      return parsedAssigneeConfig;
+    }
+    synchronized (this) {
+      if (parsedAssigneeConfig != null) {
+        return parsedAssigneeConfig;
+      }
+      parsedAssigneeConfig = AssigneeConfig.fromExt(getExtMap());
+      return parsedAssigneeConfig;
+    }
+  }
+
   // ==================== 网关相关 ====================
 
   /**
@@ -93,78 +183,83 @@ public class FlowNodeVO implements Serializable {
     return val == null ? null : String.valueOf(val);
   }
 
-  // ==================== 服务节点相关 ====================
+  // ==================== 兼容方法（委托给值对象） ====================
 
   /**
    * 获取服务节点类型（HTTP / SCRIPT / AUTO_PASS）。
    *
    * @return 服务类型，默认 AUTO_PASS
+   * @deprecated 使用 {@link #getServiceNodeConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getServiceType() {
-    Object val = getExtMap().get("serviceType");
-    return val == null ? "AUTO_PASS" : String.valueOf(val).toUpperCase();
+    return getServiceNodeConfig().getServiceType().name();
   }
 
   /**
    * 获取服务节点 HTTP 调用地址。
    *
    * @return URL，未配置时返回空字符串
+   * @deprecated 使用 {@link #getServiceNodeConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getServiceUrl() {
-    Object val = getExtMap().get("url");
-    return val == null ? "" : String.valueOf(val);
+    return getServiceNodeConfig().getUrl();
   }
 
   /**
    * 获取服务节点 HTTP 方法。
    *
    * @return HTTP 方法，默认 GET
+   * @deprecated 使用 {@link #getServiceNodeConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getServiceMethod() {
-    Object val = getExtMap().get("method");
-    return val == null ? "GET" : String.valueOf(val).toUpperCase();
+    return getServiceNodeConfig().getMethod();
   }
 
   /**
    * 获取服务节点脚本内容（SCRIPT 类型使用）。
    *
    * @return 脚本内容，未配置时返回空字符串
+   * @deprecated 使用 {@link #getServiceNodeConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getServiceScript() {
-    Object val = getExtMap().get("script");
-    return val == null ? "" : String.valueOf(val);
+    return getServiceNodeConfig().getScript();
   }
-
-  // ==================== 审批人为空兜底策略 ====================
 
   /**
    * 获取审批人为空时的兜底策略（AUTO_PASS / TRANSFER_ADMIN / ASSIGN_SPECIFIED）。
    *
    * @return 兜底策略，默认 AUTO_PASS
+   * @deprecated 使用 {@link #getAssigneeConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getEmptyStrategy() {
-    Object val = getExtMap().get("emptyStrategy");
-    return val == null ? "AUTO_PASS" : String.valueOf(val).toUpperCase();
+    return getAssigneeConfig().getEmptyStrategy().name();
   }
 
   /**
    * 获取兜底策略中的管理员用户 ID。
    *
    * @return 管理员用户 ID，默认 "1"
+   * @deprecated 使用 {@link #getAssigneeConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getAdminUserId() {
-    Object val = getExtMap().get("adminUserId");
-    return val == null ? "1" : String.valueOf(val);
+    return getAssigneeConfig().getAdminUserId();
   }
 
   /**
    * 获取兜底策略中的指定用户 ID。
    *
    * @return 指定用户 ID，默认 "1"
+   * @deprecated 使用 {@link #getAssigneeConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getSpecifiedUserId() {
-    Object val = getExtMap().get("specifiedUserId");
-    return val == null ? "1" : String.valueOf(val);
+    return getAssigneeConfig().getSpecifiedUserId();
   }
 
   // ==================== 自动去重 ====================
@@ -255,46 +350,40 @@ public class FlowNodeVO implements Serializable {
     }
   }
 
-  // ==================== 超时升级 ====================
+  // ==================== 兼容方法（委托给 SLA 值对象） ====================
 
   /**
    * 获取超时升级用户 ID。
    *
    * @return 升级用户 ID，未配置时返回空字符串
+   * @deprecated 使用 {@link #getSlaConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getEscalateUser() {
-    Object val = getExtMap().get("escalateUser");
-    return val == null ? "" : String.valueOf(val);
+    return getSlaConfig().getEscalateUserId();
   }
 
   /**
    * 获取超时策略（REMIND / ESCALATE / AUTO_PASS / AUTO_REJECT）。
    *
    * @return 超时策略，默认 REMIND
+   * @deprecated 使用 {@link #getSlaConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public String getTimeoutStrategy() {
-    Object val = getExtMap().get("timeoutStrategy");
-    return val == null ? "REMIND" : String.valueOf(val).toUpperCase();
+    return getSlaConfig().getAction().name();
   }
 
   /**
    * 获取超时时间（分钟）。
    *
    * @return 超时分钟数，默认 120
+   * @deprecated 使用 {@link #getSlaConfig()} 获取类型安全值对象
    */
+  @Deprecated
   public int getTimeoutMinutes() {
-    Object val = getExtMap().get("timeout");
-    if (val == null) {
-      return DEFAULT_TIMEOUT_MINUTES;
-    }
-    if (val instanceof Number n) {
-      return Math.max(1, n.intValue());
-    }
-    try {
-      return Math.max(1, Integer.parseInt(String.valueOf(val).trim()));
-    } catch (NumberFormatException e) {
-      return DEFAULT_TIMEOUT_MINUTES;
-    }
+    return getSlaConfig().getTimeoutMinutes() > 0 ? getSlaConfig().getTimeoutMinutes()
+        : DEFAULT_TIMEOUT_MINUTES;
   }
 
   // ==================== 事件订阅 ====================

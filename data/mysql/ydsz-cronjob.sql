@@ -120,7 +120,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
     updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_jt_job_id (job_id),
     INDEX idx_jt_log_id (log_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_deleted (tenant_id, deleted),
+    INDEX idx_job_task_job_status (job_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='MapReduce 子任务记录表';
 
 -- ----------------------------------------------------------------------------
@@ -390,7 +391,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
     INDEX idx_di_dag_id (dag_id),
     INDEX idx_di_status (instance_status),
     INDEX idx_di_started_at (started_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_deleted (tenant_id, deleted),
+    INDEX idx_dag_instance_dag_status (dag_id, instance_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 工作流实例表';
 
 -- ----------------------------------------------------------------------------
@@ -423,7 +425,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
     INDEX idx_dni_dag_instance_id (dag_instance_id),
     INDEX idx_dni_job_id (job_id),
     INDEX idx_dni_log_id (log_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_deleted (tenant_id, deleted),
+    INDEX idx_dag_node_instance_status (dag_instance_id, node_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 节点实例表';
 
 -- ----------------------------------------------------------------------------
@@ -465,7 +468,10 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     INDEX idx_jl_trace_id (trace_id),
     INDEX idx_jl_status_start (status, start_time),
     INDEX idx_jl_jobkey_start (job_key, start_time),
-    INDEX idx_jl_node_status (exec_node_id, status)
+    INDEX idx_jl_node_status (exec_node_id, status),
+    INDEX idx_job_log_jobid_starttime (job_id, start_time DESC),
+    INDEX idx_job_log_tenant_status (tenant_id, deleted, status),
+    INDEX idx_job_log_trigger_time (trigger_type, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务执行日志表';
 
 -- ----------------------------------------------------------------------------
