@@ -2,6 +2,7 @@ package com.njydsz.literule.server.engine.liteexpr;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 
@@ -254,21 +255,25 @@ public class BytecodeInterpreter {
     if (a == null || b == null) {
       return null;
     }
-    BigDecimal da = toBigDecimal(a);
-    BigDecimal db = toBigDecimal(b);
-    if (da != null && db != null) {
-      return da.add(db);
-    }
     // 字符串拼接
     if (a instanceof String || b instanceof String) {
       return String.valueOf(a) + b;
     }
-    return null;
+    // 智能算术：两个整数返回 Long，否则返回 BigDecimal（与 TreeInterpreter 行为一致）
+    if (isIntegerLike(a) && isIntegerLike(b)) {
+      return toLong(a) + toLong(b);
+    }
+    BigDecimal da = toBigDecimal(a);
+    BigDecimal db = toBigDecimal(b);
+    return da != null && db != null ? da.add(db) : null;
   }
 
   private Object subtract(Object a, Object b) {
     if (a == null || b == null) {
       return null;
+    }
+    if (isIntegerLike(a) && isIntegerLike(b)) {
+      return toLong(a) - toLong(b);
     }
     BigDecimal da = toBigDecimal(a);
     BigDecimal db = toBigDecimal(b);
@@ -279,6 +284,9 @@ public class BytecodeInterpreter {
     if (a == null || b == null) {
       return null;
     }
+    if (isIntegerLike(a) && isIntegerLike(b)) {
+      return toLong(a) * toLong(b);
+    }
     BigDecimal da = toBigDecimal(a);
     BigDecimal db = toBigDecimal(b);
     return da != null && db != null ? da.multiply(db) : null;
@@ -288,14 +296,30 @@ public class BytecodeInterpreter {
     if (a == null || b == null) {
       return null;
     }
+    // 整数相除且整除时返回 Long
+    if (isIntegerLike(a) && isIntegerLike(b)) {
+      long la = toLong(a);
+      long lb = toLong(b);
+      if (lb != 0 && la % lb == 0) {
+        return la / lb;
+      }
+    }
     BigDecimal da = toBigDecimal(a);
     BigDecimal db = toBigDecimal(b);
-    return da != null && db != null ? da.divide(db, 10, BigDecimal.ROUND_HALF_UP) : null;
+    if (da == null || db == null) {
+      return null;
+    }
+    BigDecimal result = da.divide(db, 10, RoundingMode.HALF_UP);
+    log.debug("[Bytecode] divide: {} / {} = {} (stripZeros={})", da, db, result, result.stripTrailingZeros());
+    return result.stripTrailingZeros();
   }
 
   private Object modulo(Object a, Object b) {
     if (a == null || b == null) {
       return null;
+    }
+    if (isIntegerLike(a) && isIntegerLike(b)) {
+      return toLong(a) % toLong(b);
     }
     BigDecimal da = toBigDecimal(a);
     BigDecimal db = toBigDecimal(b);
@@ -306,8 +330,33 @@ public class BytecodeInterpreter {
     if (a == null) {
       return null;
     }
+    if (isIntegerLike(a)) {
+      return -toLong(a);
+    }
     BigDecimal da = toBigDecimal(a);
     return da != null ? da.negate() : null;
+  }
+
+  /** 判断是否为整数类型（与 BuiltinFunctions.isIntegerLike 行为一致） */
+  private static boolean isIntegerLike(Object v) {
+    if (v instanceof Integer || v instanceof Long) {
+      return true;
+    }
+    if (v instanceof BigDecimal bd) {
+      return bd.scale() <= 0;
+    }
+    return false;
+  }
+
+  /** 将对象转为 long（支持 Integer/Long/BigDecimal） */
+  private static long toLong(Object v) {
+    if (v instanceof Number n) {
+      return n.longValue();
+    }
+    if (v instanceof String s) {
+      return Long.parseLong(s);
+    }
+    throw new IllegalArgumentException("无法转为 long: " + v);
   }
 
   // ===== 比较运算 =====

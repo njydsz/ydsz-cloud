@@ -56,6 +56,9 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
    * @return 编译后的字节码程序
    */
   public CompiledProgram compile(ExprNode root) {
+    // 重置编译状态（编译器实例可复用，但每次编译必须清空上次状态）
+    bytecode.clear();
+    constantPool.clear();
     root.accept(this);
     emit(BytecodeOpcode.RETURN);
     return new CompiledProgram(toByteArray(bytecode), List.copyOf(constantPool), sourceExpression);

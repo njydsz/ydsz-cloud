@@ -221,7 +221,7 @@ public class LiteExprEngine implements ExpressionEngine {
         bytecodeCache.put(expression, program);
       } catch (LiteExprException e) {
         // 字节码编译不支持的语法结构，降级为树遍历
-        log.debug("[LiteExpr] 字节码编译降级为树遍历: expr='{}', reason={}", expression, e.getMessage());
+        log.warn("[LiteExpr] 字节码编译降级为树遍历: expr='{}', reason={}", expression, e.getMessage());
         ExprNode ast = compiler.compile(expression);
         return interpreter.eval(ast, facts, maxEvalNanos);
       }
