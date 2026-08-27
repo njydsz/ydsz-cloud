@@ -6,11 +6,13 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
@@ -103,7 +105,7 @@ public class DocumentConverter {
     try (ByteArrayOutputStream output = new ByteArrayOutputStream();
         Writer writer = new OutputStreamWriter(output, StandardCharsets.UTF_8)) {
 
-      var workbook = org.apache.poi.ss.usermodel.WorkbookFactory.create(inputStream);
+      var workbook = WorkbookFactory.create(inputStream);
       for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
         var sheet = workbook.getSheetAt(i);
         writer.write("=== ");
@@ -151,7 +153,7 @@ public class DocumentConverter {
       case STRING -> cell.getStringCellValue().trim();
       case NUMERIC -> {
         if (DateUtil.isCellDateFormatted(cell)) {
-          yield java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+          yield DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
               .format(cell.getLocalDateTimeCellValue());
         }
         double num = cell.getNumericCellValue();

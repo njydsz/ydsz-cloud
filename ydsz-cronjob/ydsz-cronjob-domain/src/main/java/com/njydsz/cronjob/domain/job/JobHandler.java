@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.domain.job;
 
+import com.njydsz.common.util.security.DigestUtils;
+
 /**
  * 任务处理器接口（cronjob 模块调度框架的核心契约）。
  *
@@ -46,7 +48,7 @@ public interface JobHandler {
     if (paramsJson == null || paramsJson.isBlank()) {
       return JobHandler.class.getName() + ":empty";
     }
-    String hash = com.njydsz.common.util.security.DigestUtils.sha256Hex(paramsJson);
+    String hash = DigestUtils.sha256Hex(paramsJson);
     return getClass().getName() + ":" + hash;
   }
 

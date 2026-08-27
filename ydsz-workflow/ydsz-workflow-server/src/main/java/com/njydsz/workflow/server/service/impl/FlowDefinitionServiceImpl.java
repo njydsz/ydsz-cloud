@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.type.JsonType;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
@@ -200,7 +201,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
       return null;
     }
     return YdszJson.convertValue(list,
-        new com.njydsz.common.json.type.JsonType<List<FlowDefinitionVersionVO>>() {});
+        new JsonType<List<FlowDefinitionVersionVO>>() {});
   }
 
   @Override

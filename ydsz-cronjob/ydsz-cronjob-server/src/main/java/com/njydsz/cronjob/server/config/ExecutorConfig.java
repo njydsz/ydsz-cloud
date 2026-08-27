@@ -108,4 +108,33 @@ public class ExecutorConfig {
   public void setExecutorQueueCapacity(int capacity) {
     this.queueCapacity = capacity;
   }
+
+  /**
+   * 获取分桶隔离的桶数量。
+   *
+   * <p>Lombok @Data 应自动生成，此处显式声明以确保跨模块编译可见性。
+   *
+   * @return 分桶数量
+   */
+  public int getIsolationBuckets() {
+    return isolationBuckets;
+  }
+
+  /**
+   * 获取每个租户/分组独立线程池的核心线程数。
+   *
+   * @return 核心线程数
+   */
+  public int getTenantPoolSize() {
+    return tenantPoolSize;
+  }
+
+  /**
+   * 获取每个租户/分组独立线程池的队列容量。
+   *
+   * @return 队列容量
+   */
+  public int getTenantPoolQueueCapacity() {
+    return tenantPoolQueueCapacity;
+  }
 }

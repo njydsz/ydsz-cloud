@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -214,7 +215,7 @@ public class RuleApprovalService {
    * @return 操作结果
    * @since 1.4.0
    */
-  private <T> T executeWithLock(String lockKey, java.util.function.Supplier<T> action) {
+  private <T> T executeWithLock(String lockKey, Supplier<T> action) {
     if (lockService != null) {
       return lockService.executeWithLock(lockKey, action);
     }

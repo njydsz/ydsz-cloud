@@ -16,6 +16,7 @@ import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
@@ -491,7 +492,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
       // ensure traceId resolved first so we know if it's present
       String tid = getTraceId();
       if (tid != null) {
-        sid = com.njydsz.common.core.trace.TraceIdGenerator.generateSpanId();
+        sid = TraceIdGenerator.generateSpanId();
         spanId = sid;
       }
     }

@@ -136,6 +136,44 @@ public class CronjobProperties {
   /** P2-5: 多云/多集群任务漂移配置 */
   private MultiClusterConfig multiCluster = new MultiClusterConfig();
 
+  /**
+   * 获取执行器配置。
+   *
+   * <p>Lombok @Data 应自动生成，此处显式声明以确保跨模块编译可见性。
+   *
+   * @return 执行器配置
+   */
+  public ExecutorConfig getExecutor() {
+    return executor;
+  }
+
+  /**
+   * 获取 Leader 选举配置。
+   *
+   * @return Leader 配置
+   */
+  public LeaderConfig getLeader() {
+    return leader;
+  }
+
+  /**
+   * 获取任务扫描器配置。
+   *
+   * @return 扫描器配置
+   */
+  public ScannerConfig getScanner() {
+    return scanner;
+  }
+
+  /**
+   * 获取节点配置。
+   *
+   * @return 节点配置
+   */
+  public NodeConfig getNode() {
+    return node;
+  }
+
   /** SpEL 表达式缓存配置（已废弃，1.0.0 移除） */
   @Deprecated
   private SpelConfig spel = new SpelConfig();

@@ -38,6 +38,8 @@ import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
+import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
@@ -582,8 +584,8 @@ public class FlowInstanceController {
       content = "'migrateInstances'")
   @Operation(summary = "执行实例迁移")
   @AuthApiPermission
-  public YdszResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> migrateInstances(
-      @Valid @RequestBody com.njydsz.workflow.domain.dto.InstanceMigrationDTO dto) {
+  public YdszResponse<InstanceMigrationResultDTO> migrateInstances(
+      @Valid @RequestBody InstanceMigrationDTO dto) {
     return YdszResponse.success(instanceMigrationService.migrate(dto));
   }
 
@@ -604,8 +606,8 @@ public class FlowInstanceController {
       content = "'previewMigration'")
   @Operation(summary = "预览实例迁移")
   @AuthApiPermission
-  public YdszResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> previewMigration(
-      @Valid @RequestBody com.njydsz.workflow.domain.dto.InstanceMigrationDTO dto) {
+  public YdszResponse<InstanceMigrationResultDTO> previewMigration(
+      @Valid @RequestBody InstanceMigrationDTO dto) {
     return YdszResponse.success(instanceMigrationService.previewMigration(dto));
   }
 

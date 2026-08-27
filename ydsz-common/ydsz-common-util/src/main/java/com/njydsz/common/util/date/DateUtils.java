@@ -2,6 +2,7 @@ package com.njydsz.common.util.date;
 
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
+import java.time.Year;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -69,7 +70,7 @@ public final class DateUtils {
    * @return 是否为闰年
    */
   public static boolean isLeapYear(int year) {
-    return java.time.Year.of(year).isLeap();
+    return Year.of(year).isLeap();
   }
 
   // ==================== 日期边界 ====================

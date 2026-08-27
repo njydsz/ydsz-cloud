@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.nextwiki.domain.vo.UserRecentVO;
 import com.njydsz.nextwiki.server.service.UserRecentApplicationService;
 
@@ -107,7 +108,7 @@ public class UserRecentController {
       @PathVariable String nodeId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    String tenantId = com.njydsz.common.tenant.TenantContextHolder.getTenantId();
+    String tenantId = TenantContextHolder.getTenantId();
     userRecentApplicationService.recordAccess(nodeId, userId, "view"); // 触发清理
     return YdszResponse.success(true);
   }

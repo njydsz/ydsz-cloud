@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -169,7 +170,7 @@ public class ShareApplicationService {
         // 记录失败次数
         Long failCount = stringOps.incr(failKey, 1);
         if (failCount != null && failCount == 1) {
-          stringOps.expire(failKey, java.time.Duration.ofMinutes(LOCK_DURATION_MINUTES));
+          stringOps.expire(failKey, Duration.ofMinutes(LOCK_DURATION_MINUTES));
         }
         throw new BusinessException(NextwikiExceptionCode.SHARE_PASSWORD_ERROR);
       }

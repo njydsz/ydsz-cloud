@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 
@@ -114,7 +115,7 @@ public class RuleSearchService {
     def.setSeverityExpression(vo.getSeverityExpression());
     def.setDefaultSeverity(
         vo.getDefaultSeverity() != null
-            ? com.njydsz.literule.api.RuleSeverity.fromCode(vo.getDefaultSeverity())
+            ? RuleSeverity.fromCode(vo.getDefaultSeverity())
             : null);
     def.setTitleTemplate(vo.getTitleTemplate());
     def.setDescriptionTemplate(vo.getDescriptionTemplate());

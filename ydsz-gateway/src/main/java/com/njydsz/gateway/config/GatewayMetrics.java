@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -197,7 +198,7 @@ public class GatewayMetrics {
       AtomicInteger holder = new AtomicInteger(state);
       MeterRegistry registry = getMicrometerRegistry();
       if (registry != null) {
-        registry.gauge(PREFIX + "circuit_breaker_state", io.micrometer.core.instrument.Tags.of("route", safe(k)),
+        registry.gauge(PREFIX + "circuit_breaker_state", Tags.of("route", safe(k)),
             holder, AtomicInteger::doubleValue);
       }
       return holder;

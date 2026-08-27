@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -113,7 +114,7 @@ public class ScriptRule implements Rule {
    * <p>虚拟线程为守护线程，不阻止 JVM 退出，无需显式 shutdown。
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava - 虚拟线程执行器，每个任务一个虚拟线程，无平台线程占用
-  private static final java.util.concurrent.ExecutorService SCRIPT_EXECUTOR =
+  private static final ExecutorService SCRIPT_EXECUTOR =
       ExecutorUtils.newVirtualThreadExecutor("literule-script-exec");
   // CHECKSTYLE.ON: RegexpSinglelineJava
 

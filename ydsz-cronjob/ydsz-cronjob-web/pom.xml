@@ -67,6 +67,15 @@
             <artifactId>archunit-junit5</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- P2-8: Flyway 数据库迁移 -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
         <!-- P0-1: 单元测试（JUnit 5 + Mockito + AssertJ + MockMvc） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

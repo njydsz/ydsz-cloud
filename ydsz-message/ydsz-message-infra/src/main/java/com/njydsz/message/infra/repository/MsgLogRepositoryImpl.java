@@ -1,5 +1,7 @@
 package com.njydsz.message.infra.repository;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -169,15 +171,15 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     }
     if (query.getStartTime() != null && !query.getStartTime().isBlank()) {
       try {
-        wrapper.ge("created_at", java.time.LocalDateTime.parse(query.getStartTime()));
-      } catch (java.time.format.DateTimeParseException e) {
+        wrapper.ge("created_at", LocalDateTime.parse(query.getStartTime()));
+      } catch (DateTimeParseException e) {
         // ignore invalid date format
       }
     }
     if (query.getEndTime() != null && !query.getEndTime().isBlank()) {
       try {
-        wrapper.le("created_at", java.time.LocalDateTime.parse(query.getEndTime()));
-      } catch (java.time.format.DateTimeParseException e) {
+        wrapper.le("created_at", LocalDateTime.parse(query.getEndTime()));
+      } catch (DateTimeParseException e) {
         // ignore invalid date format
       }
     }

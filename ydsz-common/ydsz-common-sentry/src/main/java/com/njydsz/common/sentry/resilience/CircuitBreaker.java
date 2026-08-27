@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +55,7 @@ public class CircuitBreaker {
   }
 
   private final String name;
-  private final io.github.resilience4j.circuitbreaker.CircuitBreaker delegate;
+  private final CircuitBreaker delegate;
 
   public CircuitBreaker(
       String name,
@@ -149,9 +150,9 @@ public class CircuitBreaker {
    * @return {@code true} 允许执行；{@code false} 应走降级
    */
   public boolean canExecute() {
-    return delegate.getState() != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
+    return delegate.getState() != CircuitBreaker.State.OPEN
         && delegate.getState()
-            != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
+            != CircuitBreaker.State.FORCED_OPEN;
   }
 
   /** 记录一次成功调用。 */
@@ -244,7 +245,7 @@ public class CircuitBreaker {
    *
    * @return Resilience4j CircuitBreaker 实例
    */
-  public io.github.resilience4j.circuitbreaker.CircuitBreaker getDelegate() {
+  public CircuitBreaker getDelegate() {
     return delegate;
   }
 }

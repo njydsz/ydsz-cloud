@@ -47,6 +47,7 @@ import com.njydsz.workflow.server.service.FlowCustomButtonService;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowSlaService;
+import com.njydsz.workflow.server.service.FlowTaskService;
 
 /**
  * 流程定义统一 Controller
@@ -113,7 +114,7 @@ public class FlowDefinitionController {
   private final FlowCustomButtonService customButtonService;
 
   /** 任务服务（slaProcess 中按 id 查任务） */
-  private final com.njydsz.workflow.server.service.FlowTaskService taskService;
+  private final FlowTaskService taskService;
 
   /**
    * 部署流程定义

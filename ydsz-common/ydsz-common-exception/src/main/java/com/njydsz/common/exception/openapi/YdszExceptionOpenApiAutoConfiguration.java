@@ -9,6 +9,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.config.YdszExceptionCoreAutoConfiguration;
 
 /**
  * 异常模块 SpringDoc OpenAPI 自动配置。
@@ -26,7 +27,7 @@ import com.njydsz.common.exception.code.ErrorCodeTable;
  * @since 1.0.0
  */
 @AutoConfiguration(
-    after = com.njydsz.common.exception.config.YdszExceptionCoreAutoConfiguration.class)
+    after = YdszExceptionCoreAutoConfiguration.class)
 @ConditionalOnClass(
     name = {"org.springdoc.core.customizers.OpenApiCustomizer", "io.swagger.v3.oas.models.OpenAPI"})
 @ConditionalOnProperty(

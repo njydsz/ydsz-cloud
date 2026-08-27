@@ -21,6 +21,7 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.listener.RemovalListener;
+import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.server.template.TemplateEngine;
@@ -484,7 +485,7 @@ public class CachedTemplateEngine implements TemplateEngine {
    *
    * @return CacheStats 对象
    */
-  public com.njydsz.common.cache.stats.CacheStats getCacheStats() {
+  public CacheStats getCacheStats() {
     return astCache.getStats();
   }
 }

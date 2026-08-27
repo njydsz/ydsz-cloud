@@ -248,7 +248,7 @@ public final class FieldMeta {
     // 读取 @JsonFormat 时区和地区
     if (jacksonFormat != null) {
       String tz = jacksonFormat.timezone();
-      this.timezone = (tz != null && !tz.isEmpty()) ? java.time.ZoneId.of(tz) : null;
+      this.timezone = (tz != null && !tz.isEmpty()) ? ZoneId.of(tz) : null;
       String loc = jacksonFormat.locale();
       this.locale = (loc != null && !loc.isEmpty()) ? Locale.forLanguageTag(loc) : null;
     } else {

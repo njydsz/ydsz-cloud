@@ -1,5 +1,6 @@
 package com.njydsz.message.server.service.impl;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -135,7 +136,7 @@ public class DndService {
     }
     // 在 DND 窗口内，计算结束时间
     LocalDateTime windowEnd = resolveWindowEnd(nowZoned, config.startTime, config.endTime);
-    long deferSeconds = java.time.Duration.between(nowZoned, windowEnd).getSeconds();
+    long deferSeconds = Duration.between(nowZoned, windowEnd).getSeconds();
     if (deferSeconds > maxDeferSeconds) {
       log.info(
           "[DND] 延迟超过阈值,丢弃: userId={} channel={} defer={}s max={}s",

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>运维 Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.2/dist/index.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #app { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; }
+    .dashboard-container { display: flex; flex-direction: column; height: 100%; }
+    .dashboard-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: #fff; border-bottom: 1px solid #e4e7ed; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    .dashboard-header h1 { font-size: 18px; font-weight: 600; color: #303133; }
+    .dashboard-header .actions { display: flex; gap: 12px; align-items: center; }
+    .dashboard-main { flex: 1; overflow-y: auto; padding: 20px; }
+    .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .summary-card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .summary-card .card-title { font-size: 13px; color: #909399; margin-bottom: 8px; }
+    .summary-card .card-value { font-size: 28px; font-weight: 700; color: #303133; }
+    .summary-card .card-value.normal { color: #67c23a; }
+    .summary-card .card-value.paused { color: #e6a23c; }
+    .summary-card .card-value.error { color: #f56c6c; }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .chart-panel { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .chart-panel h3 { font-size: 14px; color: #303133; margin-bottom: 12px; font-weight: 600; }
+    .chart-container { width: 100%; height: 300px; }
+    .chart-panel.full-width { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="dashboard-container">
+      <header class="dashboard-header">
+        <h1>运维 Dashboard</h1>
+        <div class="actions">
+          <el-tag size="small" type="info">自动刷新: 30s</el-tag>
+          <el-button type="primary" size="small" @click="refreshData" :loading="loading">
+            <el-icon><Refresh /></el-icon>&nbsp;刷新
+          </el-button>
+        </div>
+      </header>
+      <main class="dashboard-main">
+        <!-- 汇总卡片 -->
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-title">任务总数</div>
+            <div class="card-value">{{ summary.total || 0 }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-title">正常运行</div>
+            <div class="card-value normal">{{ summary.normalCount || 0 }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-title">已暂停</div>
+            <div class="card-value paused">{{ summary.pausedCount || 0 }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-title">异常状态</div>
+            <div class="card-value error">{{ summary.errorCount || 0 }}</div>
+          </div>
+        </div>
+
+        <!-- 图表行 1 -->
+        <div class="chart-row">
+          <div class="chart-panel">
+            <h3>任务状态分布</h3>
+            <div id="status-chart" class="chart-container"></div>
+          </div>
+          <div class="chart-panel">
+            <h3>分组任务数量排行</h3>
+            <div id="group-chart" class="chart-container"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.3.8/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.2/dist/index.full.min.js"></script>
+
+  <!-- ECharts 按需引入：仅加载必要模块，减少首屏体积约 60% -->
+  <script type="importmap">
+  {
+    "imports": {
+      "echarts/core": "https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.core.min.js",
+      "echarts/charts": "https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.charts.min.js",
+      "echarts/components": "https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.components.min.js",
+      "echarts/renderers": "https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.renderers.min.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    // ECharts 按需引入（tree-shaking 友好）
+    import * as echarts from 'echarts/core';
+    import { PieChart, BarChart, LineChart } from 'echarts/charts';
+    import { TitleComponent, TooltipComponent, LegendComponent, GridComponent } from 'echarts/components';
+    import { CanvasRenderer } from 'echarts/renderers';
+
+    // 注册必要组件
+    echarts.use([
+      PieChart, BarChart, LineChart,
+      TitleComponent, TooltipComponent, LegendComponent, GridComponent,
+      CanvasRenderer
+    ]);
+
+    const { createApp, ref, reactive, onMounted, onBeforeUnmount } = Vue;
+
+    const app = createApp({
+      setup() {
+        const loading = ref(false);
+        const summary = reactive({ total: 0, normalCount: 0, pausedCount: 0, errorCount: 0 });
+        let statusChart = null;
+        let groupChart = null;
+        let refreshTimer = null;
+
+        onMounted(() => {
+          initCharts();
+          refreshData();
+          // 30s 自动刷新
+          refreshTimer = setInterval(refreshData, 30000);
+        });
+
+        onBeforeUnmount(() => {
+          if (statusChart) statusChart.dispose();
+          if (groupChart) groupChart.dispose();
+          if (refreshTimer) clearInterval(refreshTimer);
+        });
+
+        const initCharts = () => {
+          statusChart = echarts.init(document.getElementById('status-chart'));
+          groupChart = echarts.init(document.getElementById('group-chart'));
+          window.addEventListener('resize', handleResize);
+        };
+
+        const handleResize = () => {
+          statusChart && statusChart.resize();
+          groupChart && groupChart.resize();
+        };
+
+        const refreshData = () => {
+          loading.value = true;
+          fetch('/api/v1/cronjob/dashboard/overview')
+            .then(resp => resp.json())
+            .then(result => {
+              if (result.code === 'A00000' && result.data) {
+                const data = result.data;
+                // 更新汇总
+                Object.assign(summary, data.summary || {});
+                // 更新图表
+                updateStatusChart(data.statusDistribution);
+                updateGroupChart(data.groupStats);
+              }
+              loading.value = false;
+            })
+            .catch(err => {
+              console.error('获取 Dashboard 数据异常:', err);
+              loading.value = false;
+            });
+        };
+
+        const updateStatusChart = (statusData) => {
+          if (!statusChart || !statusData) return;
+          const pieData = Object.entries(statusData).map(([name, value]) => ({
+            name: getStatusLabel(name),
+            value: value || 0
+          }));
+          const colorMap = { '正常': '#67c23a', '已暂停': '#e6a23c', '自动暂停': '#f56c6c', '异常': '#909399' };
+          statusChart.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+            legend: { bottom: 0, left: 'center' },
+            series: [{
+              type: 'pie',
+              radius: ['40%', '65%'],
+              avoidLabelOverlap: true,
+              itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+              label: { show: true, formatter: '{b}\n{c}' },
+              data: pieData.map(d => ({ ...d, itemStyle: { color: colorMap[d.name] || '#409eff' } }))
+            }]
+          });
+        };
+
+        const updateGroupChart = (groupData) => {
+          if (!groupChart || !groupData) return;
+          const entries = Object.entries(groupData).sort((a, b) => b[1] - a[1]).slice(0, 10);
+          groupChart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+            xAxis: { type: 'category', data: entries.map(e => e[0]), axisLabel: { rotate: 30 } },
+            yAxis: { type: 'value' },
+            series: [{
+              type: 'bar',
+              data: entries.map(e => e[1]),
+              itemStyle: { color: '#409eff', borderRadius: [4, 4, 0, 0] },
+              barMaxWidth: 40
+            }]
+          });
+        };
+
+        const getStatusLabel = (status) => {
+          const labels = { NORMAL: '正常', PAUSED: '已暂停', AUTO_PAUSED: '自动暂停', ERROR: '异常' };
+          return labels[status] || status;
+        };
+
+        return { loading, summary, refreshData };
+      }
+    });
+
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>

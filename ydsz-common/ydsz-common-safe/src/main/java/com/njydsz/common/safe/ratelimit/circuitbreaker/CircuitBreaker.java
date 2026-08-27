@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.AllArgsConstructor;
@@ -46,7 +47,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 public class CircuitBreaker {
 
   /** 资源 → 熔断器实例 */
-  private final ConcurrentHashMap<String, io.github.resilience4j.circuitbreaker.CircuitBreaker>
+  private final ConcurrentHashMap<String, CircuitBreaker>
       breakers = new ConcurrentHashMap<>();
 
   private final CircuitBreakerConfig config;
@@ -72,7 +73,7 @@ public class CircuitBreaker {
    * @return 限流决策（含执行结果或拒绝原因）
    */
   public <T> RateLimitDecision tryAcquire(String resource, CircuitBreakerCallback<T> callback) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
+    CircuitBreaker cb = getOrCreate(resource);
     try {
       T result =
           cb.executeSupplier(
@@ -116,7 +117,7 @@ public class CircuitBreaker {
    * @param resource 资源标识
    */
   public void forceOpen(String resource) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
+    CircuitBreaker cb = getOrCreate(resource);
     cb.transitionToForcedOpenState();
   }
 
@@ -126,7 +127,7 @@ public class CircuitBreaker {
    * @param resource 资源标识
    */
   public void forceClose(String resource) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
+    CircuitBreaker cb = getOrCreate(resource);
     cb.reset();
   }
 
@@ -137,7 +138,7 @@ public class CircuitBreaker {
    * @return 熔断器状态（未创建时返回 CLOSED）
    */
   public State getState(String resource) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = breakers.get(resource);
+    CircuitBreaker cb = breakers.get(resource);
     if (cb == null) {
       return State.CLOSED;
     }
@@ -150,7 +151,7 @@ public class CircuitBreaker {
   }
 
   /** 获取或创建指定资源的熔断器实例 */
-  private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreate(String resource) {
+  private CircuitBreaker getOrCreate(String resource) {
     return breakers.computeIfAbsent(resource, registry::circuitBreaker);
   }
 
@@ -160,7 +161,7 @@ public class CircuitBreaker {
    * @param resource 资源标识
    * @return Resilience4j 熔断器实例；未创建时返回 null
    */
-  public io.github.resilience4j.circuitbreaker.CircuitBreaker getResilience4jCircuitBreaker(
+  public CircuitBreaker getResilience4jCircuitBreaker(
       String resource) {
     return breakers.get(resource);
   }
@@ -240,9 +241,9 @@ public class CircuitBreaker {
     }
 
     /** 转换为 Resilience4j CircuitBreakerConfig */
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toResilience4jConfig() {
+    CircuitBreakerConfig toResilience4jConfig() {
       SlidingWindowType swType = this.slidingWindowType;
-      return io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+      return CircuitBreakerConfig.custom()
           .failureRateThreshold((float) (this.failureRateThreshold * 100))
           .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))
           .slowCallDurationThreshold(Duration.ofMillis(this.slowCallDurationThresholdMillis))
@@ -252,9 +253,9 @@ public class CircuitBreaker {
           .slidingWindowSize(this.slidingWindowSize)
           .slidingWindowType(
               SlidingWindowType.COUNT_BASED.equals(swType)
-                  ? io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType
+                  ? CircuitBreakerConfig.SlidingWindowType
                       .COUNT_BASED
-                  : io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType
+                  : CircuitBreakerConfig.SlidingWindowType
                       .TIME_BASED)
           .recordException(recordException -> true)
           .build();

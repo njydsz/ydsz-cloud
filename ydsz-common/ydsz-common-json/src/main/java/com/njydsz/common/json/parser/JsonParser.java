@@ -7,8 +7,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.reader.JSONReader;
+import com.njydsz.common.json.tree.JsonNode;
 
 /**
  * 流式 JSON 解析器（参考 Jackson 的 JsonParser）。
@@ -483,12 +485,12 @@ public class JsonParser implements Closeable {
    *
    * @return 解析后的 JsonNode
    */
-  public com.njydsz.common.json.tree.JsonNode readValueAsTree() {
+  public JsonNode readValueAsTree() {
     try {
       // 回退一个字符，因为当前 token 已经被读取但未消费 value
       reader.back();
       String rawValue = reader.readRawValue();
-      return com.njydsz.common.json.YdszJson.readTree(rawValue);
+      return YdszJson.readTree(rawValue);
     } catch (Exception e) {
       throw new JsonException("Failed to read tree at position " + reader.getPosition(), e);
     }

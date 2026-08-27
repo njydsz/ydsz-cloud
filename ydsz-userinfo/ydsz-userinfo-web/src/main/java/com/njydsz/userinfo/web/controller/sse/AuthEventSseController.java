@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.web.controller.sse;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -90,7 +91,7 @@ public class AuthEventSseController {
           .name("connected")
           .data(Map.of(
               "message", "SSE 连接已建立",
-              "timestamp", java.time.LocalDateTime.now().toString()),
+              "timestamp", LocalDateTime.now().toString()),
               MediaType.APPLICATION_JSON));
     } catch (Exception e) {
       log.debug("SSE 连接确认发送失败: userId={}", userId);

@@ -2,6 +2,7 @@ package com.njydsz.common.util.string;
 
 import java.text.Normalizer;
 import java.util.Collection;
+import org.slf4j.helpers.MessageFormatter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -308,7 +309,7 @@ public final class StringUtils {
     if (pattern == null) {
       return null;
     }
-    return org.slf4j.helpers.MessageFormatter.arrayFormat(pattern, arguments).getMessage();
+    return MessageFormatter.arrayFormat(pattern, arguments).getMessage();
   }
 
   // ======================== 截断与缩写 ========================

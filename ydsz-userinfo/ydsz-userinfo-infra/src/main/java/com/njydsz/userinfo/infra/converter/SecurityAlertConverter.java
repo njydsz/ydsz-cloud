@@ -8,6 +8,7 @@ import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertType;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel;
+import com.njydsz.userinfo.infra.entity.SecurityAlert;
 
 /**
  * 安全告警 MapStruct 转换器。
@@ -65,5 +66,5 @@ public interface SecurityAlertConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
-  com.njydsz.userinfo.infra.entity.SecurityAlert domainToEntity(SecurityAlert domain);
+  SecurityAlert domainToEntity(SecurityAlert domain);
 }

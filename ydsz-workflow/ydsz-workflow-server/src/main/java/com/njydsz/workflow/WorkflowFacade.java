@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO;
 
 /**
  * 自建工作流引擎 — 业务侧统一入口 Facade
@@ -299,7 +300,7 @@ public interface WorkflowFacade {
    * @param comment 催办说明
    * @return 结果 VO（含 successCount / failedIds）
    */
-  com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO batchUrge(
+  FlowBatchUrgeResultVO batchUrge(
       List<String> instanceIds, String operatorId, String comment);
 
   /**

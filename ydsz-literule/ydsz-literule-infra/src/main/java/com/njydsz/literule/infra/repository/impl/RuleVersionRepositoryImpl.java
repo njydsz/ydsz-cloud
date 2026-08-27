@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
@@ -191,7 +192,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     def.setSeverityExpression(rule.getSeverityExpression());
     def.setDefaultSeverity(
         rule.getDefaultSeverity() != null
-            ? com.njydsz.literule.api.RuleSeverity.fromCode(rule.getDefaultSeverity())
+            ? RuleSeverity.fromCode(rule.getDefaultSeverity())
             : null);
     def.setTitleTemplate(rule.getTitleTemplate());
     def.setDescriptionTemplate(rule.getDescriptionTemplate());

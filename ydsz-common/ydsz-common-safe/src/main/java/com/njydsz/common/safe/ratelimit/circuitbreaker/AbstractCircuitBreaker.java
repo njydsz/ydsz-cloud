@@ -3,6 +3,7 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -237,7 +238,7 @@ public abstract class AbstractCircuitBreaker {
    *
    * @return Resilience4j CircuitBreaker 实例；默认 null
    */
-  public io.github.resilience4j.circuitbreaker.CircuitBreaker getDelegate() {
+  public CircuitBreaker getDelegate() {
     return null;
   }
 

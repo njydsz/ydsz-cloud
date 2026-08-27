@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -143,7 +144,7 @@ public class MentionService {
             "commenterId", commenterId,
             "commenterName", commenterName != null ? commenterName : "有人",
             "content", truncatedContent,
-            "mentionedAt", java.time.LocalDateTime.now().toString()
+            "mentionedAt", LocalDateTime.now().toString()
         );
 
         String messageId = "mention_" + commentId + "_" + mentionedUserId;

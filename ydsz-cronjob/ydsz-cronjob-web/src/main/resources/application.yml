@@ -62,3 +62,14 @@ ydsz:
       audit-delete: true
       log-parameters: true
       max-parameter-length: 500
+
+# P2-8: Flyway 数据库迁移配置
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    out-of-order: false
+    validate-on-migrate: true
+    clean-disabled: true

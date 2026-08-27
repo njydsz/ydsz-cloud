@@ -36,6 +36,7 @@ import com.njydsz.common.file.config.FileUploadProperties;
 import com.njydsz.common.file.constant.FileConstant;
 import com.njydsz.common.file.domain.ChunkedUploadResult;
 import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.file.domain.ObjectMetadata;
 import com.njydsz.common.file.exception.FileExceptionCode;
 import com.njydsz.common.file.storage.AbstractFileStorage;
 import com.njydsz.common.util.string.StringUtils;
@@ -379,12 +380,12 @@ public class OssStorage extends AbstractFileStorage {
   }
 
   @Override
-  protected com.njydsz.common.file.domain.ObjectMetadata doGetMetadata(String bucketName, String objectName) {
+  protected ObjectMetadata doGetMetadata(String bucketName, String objectName) {
     try {
       com.aliyun.oss.model.ObjectMetadata ossMetadata =
           ossClient.getObjectMetadata(
               bucketName, objectName); // FQN-OK: name conflict with ObjectMetadata
-      com.njydsz.common.file.domain.ObjectMetadata metadata = new com.njydsz.common.file.domain.ObjectMetadata();
+      ObjectMetadata metadata = new ObjectMetadata();
       metadata.setObjectName(objectName);
       metadata.setBucketName(bucketName);
       metadata.setSize(ossMetadata.getContentLength());
@@ -410,7 +411,7 @@ public class OssStorage extends AbstractFileStorage {
   @Override
   protected ListObjectsResult doListObjects(
       String bucketName, String prefix, String cursor, int maxKeys) {
-    List<com.njydsz.common.file.domain.ObjectMetadata> objects = new ArrayList<>();
+    List<ObjectMetadata> objects = new ArrayList<>();
     try {
       ListObjectsRequest request = new ListObjectsRequest(bucketName);
       if (prefix != null && !prefix.isEmpty()) {
@@ -425,7 +426,7 @@ public class OssStorage extends AbstractFileStorage {
       String nextCursor = hasMore ? listing.getNextMarker() : null;
       for (OSSObjectSummary summary : listing.getObjectSummaries()) {
         if (objects.size() < maxKeys) {
-          com.njydsz.common.file.domain.ObjectMetadata om = new com.njydsz.common.file.domain.ObjectMetadata();
+          ObjectMetadata om = new ObjectMetadata();
           om.setObjectName(summary.getKey());
           om.setBucketName(bucketName);
           om.setSize(summary.getSize());

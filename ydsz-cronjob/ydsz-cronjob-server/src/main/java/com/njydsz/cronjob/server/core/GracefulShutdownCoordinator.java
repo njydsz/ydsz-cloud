@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
@@ -50,6 +52,9 @@ import com.njydsz.cronjob.server.core.logger.DisruptorLogPublisher;
 @Component
 @RequiredArgsConstructor
 public class GracefulShutdownCoordinator implements SmartLifecycle {
+  /** Logger（显式声明以确保编译可见性） */
+  private static final Logger log = LoggerFactory.getLogger(GracefulShutdownCoordinator.class);
+
   /** 停机轮询间隔（毫秒） */
   private static final long SHUTDOWN_POLL_INTERVAL_MILLIS = 500;
 

@@ -21,6 +21,7 @@ import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO.MigrationDetail;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
@@ -110,7 +111,7 @@ import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationService {
 
   /** 流程实例仓储，查询/更新待迁移的运行中实例 */
-  private final com.njydsz.workflow.domain.repository.FlowInstanceRepository instanceRepository;
+  private final FlowInstanceRepository instanceRepository;
 
   /** 流程节点仓储，查询新旧版本节点映射关系 */
   private final FlowNodeRepository nodeRepository;

@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonView;
+import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.internal.JsonConfig;
@@ -174,7 +175,7 @@ public final class ValueWriter {
     }
 
     // JsonNode 树模型快速路径：直接走树模型 toString()，避免反射序列化损坏
-    if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+    if (obj instanceof JsonNode) {
       sb.append(obj.toString());
       return;
     }

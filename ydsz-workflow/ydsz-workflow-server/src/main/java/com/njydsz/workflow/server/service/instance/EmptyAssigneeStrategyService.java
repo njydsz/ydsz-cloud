@@ -7,6 +7,9 @@ import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
+import com.njydsz.workflow.domain.enums.FlowAssigneeType;
+import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
@@ -143,15 +146,15 @@ public class EmptyAssigneeStrategyService {
    */
   private String handleAutoPass(
       FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
-    task.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
+    task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId("0");
     task.setAssigneeName("SYSTEM_AUTO_PASS");
-    task.setTaskStatus(com.njydsz.workflow.domain.enums.FlowTaskStatus.COMPLETED.name());
+    task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
     LocalDateTime now = LocalDateTime.now();
     task.setFinishAt(now);
     task.setDurationMs(0L);
     taskRepository.save(task);
-    archiveService.archiveToHistory(task, com.njydsz.workflow.domain.enums.FlowTaskStatus.COMPLETED);
+    archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
     support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
     log.info("[Flow] 审批人为空自动通过: instanceId={} node={}", instance.getId(), node.getNodeCode());
     advanceAfterAutoPass(instance, node, variables);
@@ -177,7 +180,7 @@ public class EmptyAssigneeStrategyService {
       String userId,
       String fallbackName,
       String logMsg) {
-    task.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
+    task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId(userId);
     task.setAssigneeName(fallbackName);
     taskRepository.save(task);
@@ -215,7 +218,7 @@ public class EmptyAssigneeStrategyService {
       FlowRunTaskVO task,
       FlowNodeVO node,
       Map<String, Object> variables,
-      com.njydsz.workflow.domain.dto.FlowAssigneeDTO explicit,
+      FlowAssigneeDTO explicit,
       FlowInstanceVO instance) {
     assigneeResolutionService.resolveAssignee(task, node, variables, explicit, instance);
   }

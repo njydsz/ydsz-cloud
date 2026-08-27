@@ -1,6 +1,7 @@
 package com.njydsz.common.docs.service;
 
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -128,7 +129,7 @@ public class AsyncDocumentParser {
                 try {
                   var tempFile =
                       tempFileManager.createAndWrite("ydsz-docs-async-", ".tmp", inputStream);
-                  try (InputStream fis = java.nio.file.Files.newInputStream(tempFile)) {
+                  try (InputStream fis = Files.newInputStream(tempFile)) {
                     return documentService.parse(fis, fileName, options);
                   }
                 } catch (Exception e) {

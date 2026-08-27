@@ -407,7 +407,9 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     facts_snapshot   JSON            DEFAULT NULL COMMENT '事实数据快照（JSON 对象）',
     result_snapshot  JSON            DEFAULT NULL COMMENT '结果快照（JSON 对象）',
     error_message    TEXT            COMMENT '错误信息',
+    created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（P2-2：轨迹写入时间）',
     INDEX idx_trace_id (trace_id),
     INDEX idx_rule_code (rule_code),
-    INDEX idx_scenario (scenario)
+    INDEX idx_scenario (scenario),
+    INDEX idx_rule_code_created_at (rule_code, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则执行链路追踪表';

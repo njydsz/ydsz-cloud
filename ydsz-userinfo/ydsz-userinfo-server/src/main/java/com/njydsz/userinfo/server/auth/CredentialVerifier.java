@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.time.LocalDateTime;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -90,7 +92,7 @@ public class CredentialVerifier {
    */
   private void recordLoginFailure(UserAccountCredentialVO user) {
     int lockMinutes = properties.getLockDurationMinutes();
-    java.time.LocalDateTime lockUntil = java.time.LocalDateTime.now().plusMinutes(lockMinutes);
+    LocalDateTime lockUntil = LocalDateTime.now().plusMinutes(lockMinutes);
     userAccountRepository.increaseLoginFailCount(
         user.getId(), properties.getMaxLoginFailCount(), lockUntil);
     eventPublisher.publishLoginFailed(

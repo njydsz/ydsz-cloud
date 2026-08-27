@@ -1,5 +1,6 @@
 package com.njydsz.message.server.service.chain.handler;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -147,7 +148,7 @@ public class UserPreferenceHandler implements SendHandler {
     LocalDateTime windowEnd = DndService.resolveWindowEnd(now, start, end);
     long buffer = stc.getDndBufferSeconds();
     LocalDateTime nextTime = windowEnd.plusSeconds(buffer);
-    long deferSeconds = java.time.Duration.between(now, nextTime).getSeconds();
+    long deferSeconds = Duration.between(now, nextTime).getSeconds();
     long maxDeferSeconds = stc.getMaxDeferHours() * SECONDS_PER_HOUR;
     if (deferSeconds > maxDeferSeconds) {
       log.info(

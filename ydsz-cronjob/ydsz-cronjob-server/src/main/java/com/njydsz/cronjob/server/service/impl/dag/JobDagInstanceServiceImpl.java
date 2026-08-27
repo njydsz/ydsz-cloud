@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.server.service.impl.dag;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +132,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     JobDagInstanceVO dagInstance = getInstanceById(instanceId);
     LocalDateTime now = LocalDateTime.now();
     long durationMs = dagInstance.getStartedAt() != null
-        ? java.time.temporal.ChronoUnit.MILLIS.between(dagInstance.getStartedAt(), now)
+        ? ChronoUnit.MILLIS.between(dagInstance.getStartedAt(), now)
         : 0;
     int rows = jobDagInstanceRepository.markCanceled(instanceId, now, durationMs);
     if (rows == 0) {

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -457,7 +458,7 @@ public class ExcelFacade {
       }
       case NUMERIC -> {
         if (DateUtil.isCellDateFormatted(cell)) {
-          yield java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+          yield DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
               .format(cell.getLocalDateTimeCellValue());
         }
         double num = cell.getNumericCellValue();

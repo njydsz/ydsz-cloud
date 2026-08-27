@@ -18,5 +18,6 @@
         <module>ydsz-cronjob-api</module>
         <module>ydsz-cronjob-app</module>
         <module>ydsz-cronjob-web</module>
+        <module>ydsz-cronjob-cli</module>
     </modules>
 </project>

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -174,88 +175,100 @@ public class RuleIndexer {
    *
    * <p>在规则批量注册/注销后调用，重建全部索引。 单条注册时使用 {@link #addToIndex(Rule)} 增量更新。
    *
+   * <p>P1-3：集群部署时使用分布式锁保障互斥，单节点部署时使用本地 synchronized（向后兼容）。
+   *
    * @param rules 当前全部规则列表（已按优先级排序）
    */
-  public synchronized void rebuildIndex(List<Rule> rules) {
-    // 清空旧索引
-    tenantIndex.clear();
-    environmentIndex.clear();
-    scopeIndex.clear();
-    mutexGroupIndex.clear();
-    fieldToRules.clear();
-    ruleToFields.clear();
-    fieldOpIndex.clear();
+  public void rebuildIndex(List<Rule> rules) {
+    executeWithLock("literule:index:rebuild", () -> {
+      // 清空旧索引
+      tenantIndex.clear();
+      environmentIndex.clear();
+      scopeIndex.clear();
+      mutexGroupIndex.clear();
+      fieldToRules.clear();
+      ruleToFields.clear();
+      fieldOpIndex.clear();
 
-    allRules = new ArrayList<>(rules);
-    indexEnabled = rules.size() >= INDEX_THRESHOLD;
+      allRules = new ArrayList<>(rules);
+      indexEnabled = rules.size() >= INDEX_THRESHOLD;
 
-    if (!indexEnabled) {
-      log.debug("[LiteRule-Indexer] 规则数 {} < 阈值 {}，索引未启用", rules.size(), INDEX_THRESHOLD);
-      return;
-    }
+      if (!indexEnabled) {
+        log.debug("[LiteRule-Indexer] 规则数 {} < 阈值 {}，索引未启用", rules.size(), INDEX_THRESHOLD);
+        return;
+      }
 
-    // 构建索引
-    for (Rule rule : rules) {
-      addToIndexInternal(rule);
-    }
+      // 构建索引
+      for (Rule rule : rules) {
+        addToIndexInternal(rule);
+      }
 
-    log.info(
-        "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, "
-            + "mutexGroups={}, fieldIndexSize={}, alphaNodes={}",
-        rules.size(),
-        tenantIndex.size(),
-        environmentIndex.size(),
-        scopeIndex.size(),
-        mutexGroupIndex.size(),
-        fieldToRules.size(),
-        fieldOpIndex.size());
+      log.info(
+          "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, "
+              + "mutexGroups={}, fieldIndexSize={}, alphaNodes={}",
+          rules.size(),
+          tenantIndex.size(),
+          environmentIndex.size(),
+          scopeIndex.size(),
+          mutexGroupIndex.size(),
+          fieldToRules.size(),
+          fieldOpIndex.size());
+    });
   }
 
   /**
    * 增量添加规则到索引
    *
+   * <p>P1-3：集群部署时使用分布式锁保障互斥，单节点部署时使用本地 synchronized（向后兼容）。
+   *
    * @param rule 新注册的规则
    */
-  public synchronized void addToIndex(Rule rule) {
-    if (!indexEnabled) {
-      return;
-    }
-    addToIndexInternal(rule);
+  public void addToIndex(Rule rule) {
+    executeWithLock("literule:index:modify", () -> {
+      if (!indexEnabled) {
+        return;
+      }
+      addToIndexInternal(rule);
+    });
   }
 
   /**
    * 从索引中移除规则
    *
+   * <p>P1-3：集群部署时使用分布式锁保障互斥，单节点部署时使用本地 synchronized（向后兼容）。
+   *
    * @param ruleCode 规则编码
    */
-  public synchronized void removeFromIndex(String ruleCode) {
-    if (!indexEnabled) {
-      return;
-    }
-    // 由于索引按引用存储，需要遍历移除
-    tenantIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
-    environmentIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
-    scopeIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
-    mutexGroupIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
-    allRules.removeIf(r -> ruleCode.equals(r.getCode()));
-    // 同步清除倒排索引（P1-2）
-    Set<String> fields = ruleToFields.remove(ruleCode);
-    if (fields != null) {
-      for (String field : fields) {
-        Set<String> ruleCodes = fieldToRules.get(field);
-        if (ruleCodes != null) {
-          ruleCodes.remove(ruleCode);
-          if (ruleCodes.isEmpty()) {
-            fieldToRules.remove(field);
+  public void removeFromIndex(String ruleCode) {
+    executeWithLock("literule:index:modify", () -> {
+      if (!indexEnabled) {
+        return;
+      }
+      // 由于索引按引用存储，需要遍历移除
+      tenantIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
+      environmentIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
+      scopeIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
+      mutexGroupIndex.values().forEach(list -> list.removeIf(r -> ruleCode.equals(r.getCode())));
+      allRules.removeIf(r -> ruleCode.equals(r.getCode()));
+      // 同步清除倒排索引（P1-2）
+      Set<String> fields = ruleToFields.remove(ruleCode);
+      if (fields != null) {
+        for (String field : fields) {
+          Set<String> ruleCodes = fieldToRules.get(field);
+          if (ruleCodes != null) {
+            ruleCodes.remove(ruleCode);
+            if (ruleCodes.isEmpty()) {
+              fieldToRules.remove(field);
+            }
           }
         }
       }
-    }
-    // 同步清除 α 节点共享索引（P2）
-    fieldOpIndex.entrySet().removeIf(entry -> {
-      Set<String> codes = entry.getValue();
-      codes.remove(ruleCode);
-      return codes.isEmpty();
+      // 同步清除 α 节点共享索引（P2）
+      fieldOpIndex.entrySet().removeIf(entry -> {
+        Set<String> codes = entry.getValue();
+        codes.remove(ruleCode);
+        return codes.isEmpty();
+      });
     });
   }
 
@@ -541,7 +554,7 @@ public class RuleIndexer {
    * @return 操作结果
    * @since 1.4.0
    */
-  private <T> T executeWithLock(String lockKey, java.util.function.Supplier<T> action) {
+  private <T> T executeWithLock(String lockKey, Supplier<T> action) {
     if (lockService != null) {
       return lockService.executeWithLock(lockKey, action);
     }

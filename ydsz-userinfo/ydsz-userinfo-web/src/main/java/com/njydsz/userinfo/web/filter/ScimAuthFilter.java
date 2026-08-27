@@ -2,6 +2,7 @@ package com.njydsz.userinfo.web.filter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 
 import jakarta.servlet.FilterChain;
@@ -128,7 +129,7 @@ public class ScimAuthFilter extends OncePerRequestFilter {
     if (expectedToken == null || expectedToken.isEmpty()) {
       return false;
     }
-    return java.security.MessageDigest.isEqual(
+    return MessageDigest.isEqual(
         token.getBytes(StandardCharsets.UTF_8),
         expectedToken.getBytes(StandardCharsets.UTF_8));
   }

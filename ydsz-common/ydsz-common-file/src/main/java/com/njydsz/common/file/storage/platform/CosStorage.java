@@ -170,7 +170,7 @@ public class CosStorage extends AbstractFileStorage {
           folderName.endsWith(FileConstant.DIR_SPLIT)
               ? folderName
               : folderName + FileConstant.DIR_SPLIT;
-      com.qcloud.cos.model.ObjectMetadata metadata =
+      ObjectMetadata metadata =
           cosClient.getObjectMetadata(bucketName, key); // FQN-OK: name conflict with ObjectMetadata
       return metadata != null;
     } catch (Exception e) {

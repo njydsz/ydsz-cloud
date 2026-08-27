@@ -6,6 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
+
 /**
  * Json 类级别注解（参考 Jackson 的@JsonIgnoreProperties 和 FastJSON2 的@JSONType）
  *
@@ -133,14 +135,14 @@ public @interface JsonClass {
      *
      * @return 对应的 PropertyNamingStrategy，ORIGINAL 返回 null（不做转换）
      */
-    public com.njydsz.common.json.naming.PropertyNamingStrategy toPropertyNamingStrategy() {
+    public PropertyNamingStrategy toPropertyNamingStrategy() {
       switch (this) {
         case SNAKE_CASE:
-          return com.njydsz.common.json.naming.PropertyNamingStrategy.SNAKE_CASE;
+          return PropertyNamingStrategy.SNAKE_CASE;
         case KEBAB_CASE:
-          return com.njydsz.common.json.naming.PropertyNamingStrategy.KEBAB_CASE;
+          return PropertyNamingStrategy.KEBAB_CASE;
         case CAMEL_CASE:
-          return com.njydsz.common.json.naming.PropertyNamingStrategy.LOWER_CAMEL_CASE;
+          return PropertyNamingStrategy.LOWER_CAMEL_CASE;
         default:
           return null;
       }

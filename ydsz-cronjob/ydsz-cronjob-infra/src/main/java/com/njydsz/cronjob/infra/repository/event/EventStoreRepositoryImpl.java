@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.cronjob.domain.event.JobEvent;
 import com.njydsz.cronjob.domain.repository.event.EventStoreRepository;
 import com.njydsz.cronjob.infra.entity.event.StoredEvent;
@@ -77,7 +78,7 @@ public class EventStoreRepositoryImpl implements EventStoreRepository {
   @Override
   public int deleteBefore(LocalDateTime beforeTime) {
     return storedEventMapper.delete(
-        new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<StoredEvent>()
+        new QueryWrapper<StoredEvent>()
             .lt("occurred_at", beforeTime));
   }
 

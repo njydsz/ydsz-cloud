@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.json.YdszJson;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -56,7 +57,7 @@ public class JwksEndpoint {
 
     Map<String, Object> jwks = new LinkedHashMap<>();
     jwks.put("keys", keys);
-    return com.njydsz.common.json.YdszJson.toJson(jwks);
+    return YdszJson.toJson(jwks);
   }
 
   private Map<String, Object> buildHmacKey(byte[] secretKey) {

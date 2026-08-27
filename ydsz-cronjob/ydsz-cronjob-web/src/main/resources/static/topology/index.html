@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务全局拓扑</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.2/dist/index.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #app { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .topology-container { display: flex; flex-direction: column; height: 100%; }
+    .topology-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: #fff; border-bottom: 1px solid #e4e7ed; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    .topology-header h1 { font-size: 18px; font-weight: 600; color: #303133; }
+    .topology-header .filters { display: flex; gap: 12px; align-items: center; }
+    .topology-main { flex: 1; display: flex; overflow: hidden; }
+    .topology-canvas { flex: 1; background: #fafafa; position: relative; }
+    #chart-container { width: 100%; height: 100%; }
+    .topology-sidebar { width: 320px; background: #fff; border-left: 1px solid #e4e7ed; padding: 16px; overflow-y: auto; }
+    .topology-sidebar h3 { font-size: 14px; color: #303133; margin-bottom: 12px; font-weight: 600; }
+    .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .stat-card { padding: 12px; background: #f5f7fa; border-radius: 8px; text-align: center; }
+    .stat-card .value { font-size: 24px; font-weight: 700; color: #303133; }
+    .stat-card .label { font-size: 12px; color: #909399; margin-top: 4px; }
+    .stat-card.running .value { color: #67c23a; }
+    .stat-card.failed .value { color: #f56c6c; }
+    .stat-card.paused .value { color: #e6a23c; }
+    .node-info { padding: 12px; background: #f5f7fa; border-radius: 8px; margin-bottom: 12px; }
+    .node-info .info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px dashed #dcdfe6; }
+    .node-info .info-row:last-child { border-bottom: none; }
+    .node-info .info-row .label { color: #909399; }
+    .node-info .info-row .value { color: #303133; font-weight: 500; }
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e4e7ed; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #606266; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="topology-container">
+      <header class="topology-header">
+        <h1>任务全局拓扑</h1>
+        <div class="filters">
+          <el-select v-model="groupBy" size="small" style="width: 140px" @change="refreshData">
+            <el-option label="按分组" value="group" />
+            <el-option label="按状态" value="status" />
+            <el-option label="按集群" value="cluster" />
+          </el-select>
+          <el-input v-model="searchKey" size="small" placeholder="搜索任务..." style="width: 200px" clearable @input="handleSearch" />
+          <el-button type="primary" size="small" @click="refreshData" :loading="loading">
+            <el-icon><Refresh /></el-icon>&nbsp;刷新
+          </el-button>
+        </div>
+      </header>
+      <div class="topology-main">
+        <div class="topology-canvas">
+          <div id="chart-container"></div>
+        </div>
+        <aside class="topology-sidebar">
+          <h3>运行概览</h3>
+          <div class="stat-cards">
+            <div class="stat-card">
+              <div class="value">{{ stats.total }}</div>
+              <div class="label">总任务数</div>
+            </div>
+            <div class="stat-card running">
+              <div class="value">{{ stats.running }}</div>
+              <div class="label">运行中</div>
+            </div>
+            <div class="stat-card paused">
+              <div class="value">{{ stats.paused }}</div>
+              <div class="label">已暂停</div>
+            </div>
+            <div class="stat-card failed">
+              <div class="value">{{ stats.failed }}</div>
+              <div class="label">异常</div>
+            </div>
+          </div>
+
+          <h3 v-if="selectedTask">选中任务</h3>
+          <div class="node-info" v-if="selectedTask">
+            <div class="info-row"><span class="label">任务 KEY</span><span class="value">{{ selectedTask.jobKey }}</span></div>
+            <div class="info-row"><span class="label">名称</span><span class="value">{{ selectedTask.jobName }}</span></div>
+            <div class="info-row"><span class="label">分组</span><span class="value">{{ selectedTask.jobGroup }}</span></div>
+            <div class="info-row"><span class="label">状态</span><span class="value">{{ selectedTask.status }}</span></div>
+            <div class="info-row"><span class="label">调度类型</span><span class="value">{{ selectedTask.scheduleType }}</span></div>
+            <div class="info-row"><span class="label">下次触发</span><span class="value">{{ selectedTask.nextFireTime || '-' }}</span></div>
+          </div>
+
+          <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:#67c23a"></span> 运行中</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#409eff"></span> 正常</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#e6a23c"></span> 已暂停</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f56c6c"></span> 异常</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#909399"></span> 未知</div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.3.8/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.2/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script>
+    const { createApp, ref, reactive, onMounted, onBeforeUnmount } = Vue;
+
+    const app = createApp({
+      setup() {
+        const loading = ref(false);
+        const groupBy = ref('group');
+        const searchKey = ref('');
+        const selectedTask = ref(null);
+        const stats = reactive({ total: 0, running: 0, paused: 0, failed: 0 });
+
+        let chart = null;
+
+        // 拓扑数据（从后端 API 获取）
+        const topologyData = { nodes: [], links: [], stats: { total: 0, running: 0, paused: 0, failed: 0 } };
+
+        onMounted(() => {
+          initChart();
+          refreshData();
+        });
+
+        onBeforeUnmount(() => {
+          if (chart) {
+            chart.dispose();
+          }
+        });
+
+        const initChart = () => {
+          const chartDom = document.getElementById('chart-container');
+          chart = echarts.init(chartDom);
+
+          chart.on('click', (params) => {
+            if (params.dataType === 'node') {
+              selectedTask.value = params.data;
+            }
+          });
+
+          window.addEventListener('resize', () => {
+            chart && chart.resize();
+          });
+        };
+
+        const getColorByStatus = (status) => {
+          const colors = { NORMAL: '#409eff', RUNNING: '#67c23a', PAUSED: '#e6a23c', FAILED: '#f56c6c' };
+          return colors[status] || '#909399';
+        };
+
+        const refreshData = () => {
+          loading.value = true;
+          // 从后端 API 获取全局拓扑数据
+          fetch('/api/v1/cronjob/topology/global')
+            .then(resp => resp.json())
+            .then(result => {
+              if (result.code === 'A00000' && result.data) {
+                topologyData.nodes = result.data.nodes || [];
+                topologyData.links = result.data.links || [];
+                topologyData.stats = result.data.stats || { total: 0, running: 0, paused: 0, failed: 0 };
+                updateChart();
+                updateStats();
+              } else {
+                ElementPlus.ElMessage.error(result.msg || '获取拓扑数据失败');
+              }
+              loading.value = false;
+            })
+            .catch(err => {
+              console.error('获取拓扑数据异常:', err);
+              ElementPlus.ElMessage.error('获取拓扑数据异常，请稍后重试');
+              loading.value = false;
+            });
+        };
+
+        const updateStats = () => {
+          stats.total = topologyData.stats.total;
+          stats.running = topologyData.stats.running;
+          stats.paused = topologyData.stats.paused;
+          stats.failed = topologyData.stats.failed;
+        };
+
+        const updateChart = () => {
+          if (!chart) return;
+
+          const nodes = topologyData.nodes.map(n => ({
+            id: n.id,
+            name: n.jobKey,
+            symbolSize: n.status === 'RUNNING' ? 50 : 40,
+            itemStyle: { color: getColorByStatus(n.status) },
+            label: { show: true },
+            ...n,
+          }));
+
+          const links = topologyData.links.map(l => ({
+            source: l.source,
+            target: l.target,
+            lineStyle: { color: '#a0a2ad', curveness: 0.2 },
+          }));
+
+          const option = {
+            tooltip: {
+              trigger: 'item',
+              formatter: (params) => {
+                if (params.dataType === 'node') {
+                  const d = params.data;
+                  return `<b>${d.jobName}</b><br/>KEY: ${d.jobKey}<br/>状态: ${d.status}<br/>分组: ${d.jobGroup}`;
+                }
+                return '';
+              },
+            },
+            series: [{
+              type: 'graph',
+              layout: 'force',
+              data: nodes,
+              links: links,
+              roam: true,
+              force: { repulsion: 300, edgeLength: 150, gravity: 0.1 },
+              emphasis: { focus: 'adjacency', lineStyle: { width: 3 } },
+              label: { position: 'bottom', fontSize: 11 },
+              edgeSymbol: ['none', 'arrow'],
+              edgeSymbolSize: [4, 8],
+            }],
+          };
+
+          chart.setOption(option);
+        };
+
+        const handleSearch = () => {
+          if (!chart) return;
+          if (!searchKey.value) {
+            chart.setOption({ series: [{ data: topologyData.nodes, links: topologyData.links }] });
+            return;
+          }
+          const keyword = searchKey.value.toLowerCase();
+          const filteredNodes = topologyData.nodes.filter(n =>
+            (n.jobKey && n.jobKey.toLowerCase().includes(keyword)) ||
+            (n.jobName && n.jobName.toLowerCase().includes(keyword))
+          );
+          const filteredIds = new Set(filteredNodes.map(n => n.id));
+          const filteredLinks = topologyData.links.filter(l => filteredIds.has(l.source) && filteredIds.has(l.target));
+
+          chart.setOption({ series: [{ data: filteredNodes, links: filteredLinks }] });
+        };
+
+        return {
+          loading, groupBy, searchKey, selectedTask, stats,
+          refreshData, handleSearch
+        };
+      }
+    });
+
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>

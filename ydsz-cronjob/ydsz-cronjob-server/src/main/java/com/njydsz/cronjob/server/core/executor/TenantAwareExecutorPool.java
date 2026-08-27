@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -48,6 +50,9 @@ import com.njydsz.cronjob.server.config.ExecutorConfig;
 @Component
 @RequiredArgsConstructor
 public class TenantAwareExecutorPool {
+  /** Logger（显式声明以确保编译可见性） */
+  private static final Logger log = LoggerFactory.getLogger(TenantAwareExecutorPool.class);
+
   /** 线程池空闲保活时间（秒） */
   private static final long KEEPALIVE_SECONDS = 60;
 

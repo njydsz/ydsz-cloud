@@ -389,6 +389,17 @@ private String defaultProvider = "default";
     }
   }
 
+  /** 记忆整合配置组（Dreaming 机制、实时提取）。 */
+  private MemoryConsolidation memoryConsolidation = new MemoryConsolidation();
+
+  public MemoryConsolidation getMemoryConsolidation() {
+    return memoryConsolidation;
+  }
+
+  public void setMemoryConsolidation(MemoryConsolidation memoryConsolidation) {
+    this.memoryConsolidation = memoryConsolidation;
+  }
+
   /** RAG 检索相关配置组（开关、向量存储类型、Embedding 模型等）。 */
   public static class Rag {
     /** 是否启用 RAG */
@@ -859,12 +870,34 @@ private String defaultProvider = "default";
   /** 租户配额配置组 */
   private Quota quota = new Quota();
 
+  /** 运行时管理配置 */
+  private Runtime runtime = new Runtime();
+
+  /** 触发器配置 */
+  private Trigger trigger = new Trigger();
+
   public Quota getQuota() {
     return quota;
   }
 
   public void setQuota(Quota quota) {
     this.quota = quota;
+  }
+
+  public Runtime getRuntime() {
+    return runtime;
+  }
+
+  public void setRuntime(Runtime runtime) {
+    this.runtime = runtime;
+  }
+
+  public Trigger getTrigger() {
+    return trigger;
+  }
+
+  public void setTrigger(Trigger trigger) {
+    this.trigger = trigger;
   }
 
   /**
@@ -915,6 +948,214 @@ private String defaultProvider = "default";
 
     public void setAlertThreshold(double alertThreshold) {
       this.alertThreshold = alertThreshold;
+    }
+  }
+
+  /**
+   * 运行时管理配置组。
+   *
+   * <p>控制 Agent 运行时管理面板的行为，包括会话清理间隔、最大会话保留时长等。
+   */
+  public static class Runtime {
+    /** 是否启用运行时管理功能（会话追踪、强制回收） */
+    private boolean enabled = true;
+
+    /** 会话清理任务执行间隔（毫秒），默认 10 分钟 */
+    private long cleanupIntervalMs = 600000L;
+
+    /** 非活跃会话最大保留时长（分钟），默认 120 分钟（2 小时） */
+    private int staleThresholdMinutes = 120;
+
+    /** 单次查询最大返回会话数，默认 200 */
+    private int maxQueryLimit = 200;
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+    }
+
+    public long getCleanupIntervalMs() {
+      return cleanupIntervalMs;
+    }
+
+    public void setCleanupIntervalMs(long cleanupIntervalMs) {
+      this.cleanupIntervalMs = cleanupIntervalMs;
+    }
+
+    public int getStaleThresholdMinutes() {
+      return staleThresholdMinutes;
+    }
+
+    public void setStaleThresholdMinutes(int staleThresholdMinutes) {
+      this.staleThresholdMinutes = staleThresholdMinutes;
+    }
+
+    public int getMaxQueryLimit() {
+      return maxQueryLimit;
+    }
+
+    public void setMaxQueryLimit(int maxQueryLimit) {
+      this.maxQueryLimit = maxQueryLimit;
+    }
+  }
+
+  /**
+   * 记忆整合（Dreaming）配置组。
+   *
+   * <p>控制对话后记忆提取和定时 Dreaming 任务的行为。
+   */
+  public static class MemoryConsolidation {
+    /** 是否启用记忆整合功能 */
+    private boolean enabled = false;
+
+    /** 是否启用对话后实时记忆提取 */
+    private boolean realtimeEnabled = true;
+
+    /** 是否启用定时 Dreaming 任务 */
+    private boolean dreamingEnabled = false;
+
+    /** Dreaming 任务 Cron 表达式，默认每天凌晨 2:30 */
+    private String dreamingCron = "0 30 2 * * ?";
+
+    /** 触发记忆提取的最小消息数 */
+    private int minMessages = 4;
+
+    /** 单次批量处理最大对话数 */
+    private int batchSize = 50;
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+    }
+
+    public boolean isRealtimeEnabled() {
+      return realtimeEnabled;
+    }
+
+    public void setRealtimeEnabled(boolean realtimeEnabled) {
+      this.realtimeEnabled = realtimeEnabled;
+    }
+
+    public boolean isDreamingEnabled() {
+      return dreamingEnabled;
+    }
+
+    public void setDreamingEnabled(boolean dreamingEnabled) {
+      this.dreamingEnabled = dreamingEnabled;
+    }
+
+    public String getDreamingCron() {
+      return dreamingCron;
+    }
+
+    public void setDreamingCron(String dreamingCron) {
+      this.dreamingCron = dreamingCron;
+    }
+
+    public int getMinMessages() {
+      return minMessages;
+    }
+
+    public void setMinMessages(int minMessages) {
+      this.minMessages = minMessages;
+    }
+
+    public int getBatchSize() {
+      return batchSize;
+    }
+
+    public void setBatchSize(int batchSize) {
+      this.batchSize = batchSize;
+    }
+  }
+
+  /**
+   * 触发器配置组。
+   *
+   * <p>控制事件驱动触发器的行为，包括启用状态、扫描间隔、租户限额等。
+   */
+  public static class Trigger {
+    /** 是否启用触发器功能 */
+    private boolean enabled = true;
+
+    /** 定时触发器扫描间隔（毫秒），默认 60 秒 */
+    private long scanIntervalMs = 60000L;
+
+    /** 触发器清理任务执行间隔（毫秒），默认 10 分钟 */
+    private long cleanupIntervalMs = 600000L;
+
+    /** 单租户最大触发器数量 */
+    private int maxTriggersPerTenant = 50;
+
+    /** 默认每小时最大执行次数 */
+    private int defaultMaxExecutionsPerHour = 60;
+
+    /** 去重窗口（分钟） */
+    private int deduplicationWindowMinutes = 5;
+
+    /** 最大递归深度（防止触发器链无限循环） */
+    private int maxRecursionDepth = 3;
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+    }
+
+    public long getScanIntervalMs() {
+      return scanIntervalMs;
+    }
+
+    public void setScanIntervalMs(long scanIntervalMs) {
+      this.scanIntervalMs = scanIntervalMs;
+    }
+
+    public long getCleanupIntervalMs() {
+      return cleanupIntervalMs;
+    }
+
+    public void setCleanupIntervalMs(long cleanupIntervalMs) {
+      this.cleanupIntervalMs = cleanupIntervalMs;
+    }
+
+    public int getMaxTriggersPerTenant() {
+      return maxTriggersPerTenant;
+    }
+
+    public void setMaxTriggersPerTenant(int maxTriggersPerTenant) {
+      this.maxTriggersPerTenant = maxTriggersPerTenant;
+    }
+
+    public int getDefaultMaxExecutionsPerHour() {
+      return defaultMaxExecutionsPerHour;
+    }
+
+    public void setDefaultMaxExecutionsPerHour(int defaultMaxExecutionsPerHour) {
+      this.defaultMaxExecutionsPerHour = defaultMaxExecutionsPerHour;
+    }
+
+    public int getDeduplicationWindowMinutes() {
+      return deduplicationWindowMinutes;
+    }
+
+    public void setDeduplicationWindowMinutes(int deduplicationWindowMinutes) {
+      this.deduplicationWindowMinutes = deduplicationWindowMinutes;
+    }
+
+    public int getMaxRecursionDepth() {
+      return maxRecursionDepth;
+    }
+
+    public void setMaxRecursionDepth(int maxRecursionDepth) {
+      this.maxRecursionDepth = maxRecursionDepth;
     }
   }
 }

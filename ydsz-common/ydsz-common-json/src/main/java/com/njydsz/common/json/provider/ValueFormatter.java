@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.FieldMeta;
+import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
@@ -42,7 +43,7 @@ public final class ValueFormatter {
     }
 
     // JsonNode 树模型：直接走树模型 toString()，避免反射序列化损坏
-    if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+    if (obj instanceof JsonNode) {
       sb.append(obj.toString());
       return;
     }

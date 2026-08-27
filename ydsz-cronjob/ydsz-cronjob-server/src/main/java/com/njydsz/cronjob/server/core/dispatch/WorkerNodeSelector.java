@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -215,10 +216,10 @@ public class WorkerNodeSelector {
               if (cmp != 0) {
                 return cmp;
               }
-              java.math.BigDecimal cpuA =
-                  a.getCpuUsage() != null ? a.getCpuUsage() : java.math.BigDecimal.ZERO;
-              java.math.BigDecimal cpuB =
-                  b.getCpuUsage() != null ? b.getCpuUsage() : java.math.BigDecimal.ZERO;
+              BigDecimal cpuA =
+                  a.getCpuUsage() != null ? a.getCpuUsage() : BigDecimal.ZERO;
+              BigDecimal cpuB =
+                  b.getCpuUsage() != null ? b.getCpuUsage() : BigDecimal.ZERO;
               cmp = cpuA.compareTo(cpuB);
               return cmp != 0 ? cmp : a.getNodeId().compareTo(b.getNodeId());
             })

@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -512,7 +513,7 @@ public class SessionManager {
               ? context.userAgent().substring(0, USER_AGENT_MAX_LENGTH)
               : context.userAgent());
     }
-    sessionInfo.put(SESSION_LOGIN_TIME_FIELD, java.time.LocalDateTime.now().toString());
+    sessionInfo.put(SESSION_LOGIN_TIME_FIELD, LocalDateTime.now().toString());
     return sessionInfo;
   }
 
