@@ -42,6 +42,7 @@ import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
+import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
@@ -141,7 +142,7 @@ public class FlowInstanceController {
   @PostMapping("/instance/batchStart")
   @Operation(summary = "批量启动流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-  public YdszResponse<Map<String, Object>> batchStartInstances(
+  public YdszResponse<FlowBatchStartResultVO> batchStartInstances(
       @Valid @RequestBody List<FlowStartProcessDTO> dtos) {
     return YdszResponse.success(instanceService.batchStartInstances(dtos));
   }

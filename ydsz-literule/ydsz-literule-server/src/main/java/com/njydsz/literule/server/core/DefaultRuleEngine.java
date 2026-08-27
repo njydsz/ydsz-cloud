@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -157,6 +158,18 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
 
   /** 评估结果缓存（P1-7：可选，通过 setEvaluationResultCache 注入） */
   private volatile EvaluationResultCache evaluationResultCache;
+
+  /**
+   * 初始化：将引擎内部的 statistics 引用注入 RuleRegistry
+   *
+   * <p>RuleRegistry 需要 statistics 来清理注销规则的统计数据。 由于 statistics 是 final 字段，通过 {@link PostConstruct} 在构造后注入。
+   *
+   * @since 1.0.0
+   */
+  @PostConstruct
+  public void initRegistry() {
+    ruleRegistry.setStatistics(statistics);
+  }
 
   /**
    * 事实/模型并行注入专用线程池（P1-3 可配置）
@@ -924,6 +937,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    */
   public void setCircuitBreaker(RuleCircuitBreaker circuitBreaker) {
     this.circuitBreaker = circuitBreaker;
+    ruleRegistry.setCircuitBreaker(circuitBreaker);
   }
 
   /**
@@ -945,6 +959,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   public void setMetrics(RuleMetrics metrics) {
     this.metrics = metrics;
     statistics.setMetrics(metrics);
+    ruleRegistry.setMetrics(metrics);
   }
 
   /**
@@ -1044,6 +1059,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    */
   public void setEvaluationResultCache(EvaluationResultCache cache) {
     this.evaluationResultCache = cache;
+    ruleRegistry.setEvaluationResultCache(cache);
   }
 
   /**
