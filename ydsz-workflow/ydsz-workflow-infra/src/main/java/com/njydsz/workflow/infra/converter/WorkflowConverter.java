@@ -295,7 +295,21 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
    * @param vo 参数说明
    * @return 返回值说明
    */
+  @Mapping(target = "slaConfig", expression = "java(mapSlaConfig(vo.getSlaConfig()))")
   FlowNode entityToEntity(FlowNodeVO vo);
+
+  /**
+   * 将 SlaConfig 值对象序列化为 JSON 字符串。
+   *
+   * @param slaConfig SLA 配置值对象
+   * @return JSON 字符串，null 时返回 null
+   */
+  default String mapSlaConfig(com.njydsz.workflow.domain.vo.SlaConfig slaConfig) {
+    if (slaConfig == null) {
+      return null;
+    }
+    return com.njydsz.common.json.YdszJson.toJson(slaConfig);
+  }
 
   /**
    * 流程定义 VO → 流程定义。

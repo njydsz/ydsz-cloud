@@ -73,23 +73,17 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
   /** 默认线程池大小乘数 */
   private static final int DEFAULT_POOL_MULTIPLIER = 2;
 
-/** 索引未启用时的规则量阈值（超过则绕过索引） — P1-6：已配置化，默认值 200 */
-private volatile int indexBypassThreshold = 200;
+/** 纳秒到毫秒的换算系数 */
+private static final long NANOS_PER_MILLI = 1_000_000L;
 
-  /** 纳秒到毫秒的换算系数 */
-  private static final long NANOS_PER_MILLI = 1_000_000L;
+/** 异步记录器终止等待秒数 */
+private static final int AWAIT_RECORDER_SECONDS = 5;
 
-  /** 异步记录器终止等待秒数 */
-  private static final int AWAIT_RECORDER_SECONDS = 5;
+/** 注入线程池终止等待秒数 */
+private static final int AWAIT_INJECTION_SECONDS = 3;
 
-  /** 注入线程池终止等待秒数 */
-  private static final int AWAIT_INJECTION_SECONDS = 3;
-
-  /** 已注册规则列表（按优先级排序） */
-  private final CopyOnWriteArrayList<Rule> rules = new CopyOnWriteArrayList<>();
-
-  /** 规则索引器（P0-1：大规则量场景索引优化） */
-  private final RuleIndexer ruleIndexer = new RuleIndexer();
+/** 规则注册表（P0-1：从引擎核心拆出注册/注销/索引维护职责） */
+private final RuleRegistry ruleRegistry = new RuleRegistry();
 
   /** 是否启用统计（对应 ydsz.literule.statsEnabled 配置） */
   private volatile boolean statsEnabled = true;
@@ -225,90 +219,19 @@ private volatile int indexBypassThreshold = 200;
    */
   @Override
   public void register(Rule rule) {
-    if (rule == null || rule.getCode() == null) {
-      return;
-    }
-    // 先移除同编码旧规则（支持热更新覆盖）
-    unregister(rule.getCode());
-    // 增量保序插入（P2-10）：二分查找插入位置，避免全量 sort
-    int insertIdx = binarySearchInsertIndex(rule.getPriority());
-    rules.add(insertIdx, rule);
-    // 增量更新索引
-    ruleIndexer.addToIndex(rule);
-    // 当规则数首次超过阈值时，重建索引启用索引模式
-    if (!ruleIndexer.isIndexEnabled() && rules.size() >= indexBypassThreshold) {
-      ruleIndexer.rebuildIndex(rules);
-    }
-    // P1-7：规则变更时精准失效该规则的评估结果缓存（对比全量 clear 减少缓存抖动）
-    if (evaluationResultCache != null) {
-      evaluationResultCache.invalidateRule(rule.getCode());
-    }
-    recordRegisteredRules();
-    log.info(
-        "[LiteRule] 规则已注册: code={}, name={}, priority={}, total={}",
-        rule.getCode(),
-        rule.getName(),
-        rule.getPriority(),
-        rules.size());
-  }
-
-  /**
-   * 二分查找按 priority 的插入位置（priority 升序）
-   *
-   * <p>由于 rules 已按 priority 升序排列，使用二分查找可将"找位置"从 O(n) 降到 O(log n)， 总体插入复杂度由 O(n log n)（全量 sort）降为
-   * O(n)（数组移动 + 二分查找）。 规模化（>1000 规则）注册时性能提升显著。
-   *
-   * @param priority 待插入规则的优先级
-   * @return 插入位置索引
-   * @since 1.0.0
-   */
-  private int binarySearchInsertIndex(int priority) {
-    int low = 0;
-    int high = rules.size();
-    while (low < high) {
-      int mid = (low + high) >>> 1;
-      int midPriority = rules.get(mid).getPriority();
-      if (midPriority < priority) {
-        low = mid + 1;
-      } else {
-        high = mid;
-      }
-    }
-    return low;
+    ruleRegistry.register(rule);
   }
 
   /**
    * 注销指定编码的规则
    *
-   * <p>从规则列表和索引中移除指定编码的规则，并同步更新监控指标。
+   * <p>委托 {@link RuleRegistry#unregister}，同步清理索引、统计、熔断器状态。
    *
    * @param ruleCode 规则编码；为 null 时静默跳过
    */
   @Override
   public void unregister(String ruleCode) {
-    if (ruleCode == null) {
-      return;
-    }
-    rules.removeIf(r -> ruleCode.equals(r.getCode()));
-    ruleIndexer.removeFromIndex(ruleCode);
-    // P1-6: 注销规则时同步清理该规则的统计数据，避免统计数据 Map 无限增长
-    statistics.removeRuleStats(ruleCode);
-    // 清理熔断器状态
-    if (circuitBreaker != null) {
-      circuitBreaker.reset(ruleCode);
-    }
-    // P1-7：规则变更时精准失效该规则的评估结果缓存
-    if (evaluationResultCache != null) {
-      evaluationResultCache.invalidateRule(ruleCode);
-    }
-    recordRegisteredRules();
-  }
-
-  /** 记录当前注册规则数到监控指标 */
-  private void recordRegisteredRules() {
-    if (metrics != null) {
-      metrics.recordRegisteredRules(rules.size());
-    }
+    ruleRegistry.unregister(ruleCode);
   }
 
   /**
@@ -446,16 +369,17 @@ private volatile int indexBypassThreshold = 200;
     String contextEnvironment = context.getEnvironment();
 
     // P0-1：使用索引查找候选规则（大规则量场景性能优化）
+    RuleIndexer indexer = ruleRegistry.getRuleIndexer();
     List<Rule> candidateRules =
-        ruleIndexer.isIndexEnabled()
-            ? ruleIndexer.findCandidates(
+        indexer.isIndexEnabled()
+            ? indexer.findCandidates(
                 contextTenantId, contextEnvironment, scenario, new HashSet<>())
-            : rules;
+            : ruleRegistry.getRules();
 
     // P1-2：倒排索引第二层过滤，按 facts 字段进一步缩小候选集
-    if (ruleIndexer.isIndexEnabled() && ruleIndexer.hasFieldIndex()) {
+    if (indexer.isIndexEnabled() && indexer.hasFieldIndex()) {
       Set<String> factKeys = context.getFacts().keySet();
-      candidateRules = ruleIndexer.filterByFacts(candidateRules, factKeys);
+      candidateRules = indexer.filterByFacts(candidateRules, factKeys);
     }
 
     return candidateRules;
@@ -495,7 +419,7 @@ private volatile int indexBypassThreshold = 200;
 
     for (Rule rule : candidateRules) {
       // 索引未启用时仍需租户、环境、场景过滤
-      if (!ruleIndexer.isIndexEnabled()) {
+      if (!ruleRegistry.getRuleIndexer().isIndexEnabled()) {
         if (!Objects.equals(rule.getTenantId(), contextTenantId)) {
           continue;
         }
@@ -795,7 +719,7 @@ private volatile int indexBypassThreshold = 200;
     // 短路计数：已命中且满足严重度要求的规则数量
     int qualifiedCount = 0;
     boolean enableShortCircuit = (limit != null && limit > 0) && (minSeverity != null);
-    for (Rule rule : rules) {
+    for (Rule rule : ruleRegistry.getRules()) {
       // 短路返回：已收集足够的合格结果
       if (enableShortCircuit && qualifiedCount >= limit) {
         break;
@@ -902,7 +826,7 @@ private volatile int indexBypassThreshold = 200;
    */
   @Override
   public List<Rule> getRules() {
-    return List.copyOf(rules);
+    return List.copyOf(ruleRegistry.getRules());
   }
 
   /**
@@ -914,7 +838,7 @@ private volatile int indexBypassThreshold = 200;
    */
   @Override
   public RuleEngineStats getStats() {
-    return statistics.snapshot(rules.size(), metrics != null ? metrics.getLastEvaluatedRules() : 0);
+    return statistics.snapshot(ruleRegistry.size(), metrics != null ? metrics.getLastEvaluatedRules() : 0);
   }
 
   /** 重置统计 */

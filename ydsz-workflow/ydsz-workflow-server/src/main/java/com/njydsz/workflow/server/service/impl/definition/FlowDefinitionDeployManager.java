@@ -33,10 +33,10 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.server.config.FlowProperties;
-import com.njydsz.workflow.engine.BpmnModel;
-import com.njydsz.workflow.engine.BpmnXmlParser;
+import com.njydsz.workflow.server.engine.BpmnModel;
+import com.njydsz.workflow.server.engine.BpmnXmlParser;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.workflow.engine.FlowGraphValidator;
+import com.njydsz.workflow.server.engine.FlowGraphValidator;
 
 /**
  * 流程定义部署管理器

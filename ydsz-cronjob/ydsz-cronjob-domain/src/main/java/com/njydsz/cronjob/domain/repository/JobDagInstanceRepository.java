@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.domain.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -150,4 +151,29 @@ public interface JobDagInstanceRepository {
    * @return 新实例 ID
    */
   String insert(JobDagInstanceVO vo);
+
+  /**
+   * 统计指定状态的实例数量。
+   *
+   * @param status 实例状态（RUNNING/PAUSED/SUCCESS/FAILED/CANCELLED）
+   * @return 实例数量
+   */
+  long countByStatus(String status);
+
+  /**
+   * 统计指定日期触发的实例数量。
+   *
+   * @param date 日期
+   * @return 实例数量
+   */
+  long countByDate(LocalDate date);
+
+  /**
+   * 统计指定日期、指定状态的实例数量。
+   *
+   * @param status 实例状态
+   * @param date 日期
+   * @return 实例数量
+   */
+  long countByStatusAndDate(String status, LocalDate date);
 }

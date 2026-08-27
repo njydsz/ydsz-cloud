@@ -241,7 +241,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     if (task == null || node == null) {
       return;
     }
-    Map<String, Object> config = parseSlaConfig(node.getSlaConfig());
+    Map<String, Object> config = parseSlaConfig(node.getSlaConfigJson());
     if (config.isEmpty()) {
       return; // 未配置 SLA
     }
@@ -373,7 +373,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     // 3. 解析节点 SLA 配置
     FlowNodeVO node = nodeRepository.findByCode(fresh.getDefinitionId(), fresh.getNodeCode()).orElse(null);
     Map<String, Object> config =
-        node == null ? Collections.emptyMap() : parseSlaConfig(node.getSlaConfig());
+        node == null ? Collections.emptyMap() : parseSlaConfig(node.getSlaConfigJson());
     // 无配置：默认仅 NOTIFY（但因 FlowSlaService 只对配了 dueAt 的任务扫描，这种情况不应出现）
     if (config.isEmpty()) {
       log.warn(

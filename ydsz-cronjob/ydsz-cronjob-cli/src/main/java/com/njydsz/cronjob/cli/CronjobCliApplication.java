@@ -10,7 +10,9 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.cronjob.cli.command.CliCommand;
+import com.njydsz.cronjob.cli.command.DagCommand;
 import com.njydsz.cronjob.cli.command.DiagnoseCommand;
+import com.njydsz.cronjob.cli.command.HealthCommand;
 import com.njydsz.cronjob.cli.command.HelpCommand;
 import com.njydsz.cronjob.cli.command.JobListCommand;
 import com.njydsz.cronjob.cli.command.StatusCommand;
@@ -26,6 +28,8 @@ import com.njydsz.cronjob.cli.command.TriggerCommand;
  *   <li>{@code list} - 分页查询任务列表
  *   <li>{@code trigger <jobId>} - 立即触发指定任务
  *   <li>{@code diagnose <jobKey>} - 诊断任务运行状态
+ *   <li>{@code health} - 系统健康检查（P1-3）
+ *   <li>{@code dag} - DAG 工作流管理（P1-3）
  *   <li>{@code help} - 显示帮助信息
  *   <li>{@code exit} - 退出 CLI
  * </ul>
@@ -74,6 +78,8 @@ public class CronjobCliApplication {
     commands.put("list", new JobListCommand(serverUrl));
     commands.put("trigger", new TriggerCommand(serverUrl));
     commands.put("diagnose", new DiagnoseCommand(serverUrl));
+    commands.put("dag", new DagCommand(serverUrl));
+    commands.put("health", new HealthCommand(serverUrl));
     commands.put("help", new HelpCommand(commands));
   }
 

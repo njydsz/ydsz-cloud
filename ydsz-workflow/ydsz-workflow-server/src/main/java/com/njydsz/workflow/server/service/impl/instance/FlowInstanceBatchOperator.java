@@ -1,9 +1,7 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +12,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 
 /**
@@ -61,7 +60,7 @@ public class FlowInstanceBatchOperator {
    *     </ul>
    * @throws SysException 当 dtos 为空或超过 100 条时
    */
-  public Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos) {
+  public FlowBatchStartResultVO batchStartInstances(List<FlowStartProcessDTO> dtos) {
     if (dtos == null || dtos.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -78,7 +77,7 @@ public class FlowInstanceBatchOperator {
 
     int successCount = 0;
     List<String> instanceIds = new ArrayList<>();
-    List<Map<String, Object>> failedItems = new ArrayList<>();
+    List<FlowBatchStartResultVO.FailedItemVO> failedItems = new ArrayList<>();
 
     for (int i = 0; i < dtos.size(); i++) {
       FlowStartProcessDTO dto = dtos.get(i);
@@ -90,21 +89,21 @@ public class FlowInstanceBatchOperator {
         instanceIds.add(instanceId);
         log.info("[Flow] 批量发起第 {} 条成功: businessId={} instanceId={}", i + 1, businessId, instanceId);
       } catch (Exception e) {
-        Map<String, Object> fail = new LinkedHashMap<>();
-        fail.put("index", i + 1);
-        fail.put("businessId", businessId);
+        FlowBatchStartResultVO.FailedItemVO fail = new FlowBatchStartResultVO.FailedItemVO();
+        fail.setIndex(i + 1);
+        fail.setFlowCode(businessId);
         String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-        fail.put("reason", reason);
+        fail.setReason(reason);
         failedItems.add(fail);
         log.warn("[Flow] 批量发起第 {} 条失败: businessId={} reason={}", i + 1, businessId, reason);
       }
     }
 
-    Map<String, Object> result = new LinkedHashMap<>();
-    result.put("successCount", successCount);
-    result.put("failedCount", failedItems.size());
-    result.put("instanceIds", instanceIds);
-    result.put("failedItems", failedItems);
+    FlowBatchStartResultVO result = new FlowBatchStartResultVO();
+    result.setSuccessCount(successCount);
+    result.setFailedCount(failedItems.size());
+    result.setInstanceIds(instanceIds);
+    result.setFailedItems(failedItems);
     log.info(
         "[Flow] 批量发起完成: total={} success={} failed={}",
         dtos.size(),

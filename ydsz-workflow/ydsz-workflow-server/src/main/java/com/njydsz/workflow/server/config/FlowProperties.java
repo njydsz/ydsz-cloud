@@ -51,6 +51,12 @@ public class FlowProperties {
   /** 流程定义缓存 TTL 默认值（分钟） */
   private static final long DEFAULT_DEFINITION_CACHE_TTL_MINUTES = 60L;
 
+  /** 用户信息缓存 TTL 默认值（分钟） */
+  private static final long DEFAULT_USER_CACHE_TTL_MINUTES = 15L;
+
+  /** 表单 Schema 缓存 TTL 默认值（分钟） */
+  private static final long DEFAULT_FORM_SCHEMA_CACHE_TTL_MINUTES = 60L;
+
   /** 是否启用工作流模块 */
   private boolean enabled = true;
 
@@ -75,6 +81,12 @@ public class FlowProperties {
 
   /** P1-2: 流程定义缓存配置（节点/连线/SourceRef 索引三级缓存统一 TTL 与容量） */
   private DefinitionCache definitionCache = new DefinitionCache();
+
+  /** P1: 用户信息缓存配置（用户名称、组织名称等） */
+  private UserCache userCache = new UserCache();
+
+  /** P1: 表单 Schema 缓存配置（已解析的表单 Schema 对象） */
+  private FormSchemaCache formSchemaCache = new FormSchemaCache();
 
   /** P3-1: 流程历史数据归档配置（原 FlowHistoryProperties 合并） */
   private History history = new History();
@@ -166,5 +178,43 @@ public class FlowProperties {
     /** 缓存最大容量（条目数），所有流程定义缓存统一上限（默认 1000 条） */
     @Min(1)
     private long definitionCacheMaxSize = 1000L;
+  }
+
+  /**
+   * P1: 用户信息缓存配置。
+   *
+   * <p>缓存用户名称、组织名称等基础信息，避免每次审批人解析都发起 RPC 调用。
+   * TTL 与容量通过 YAML 外部化，禁止硬编码。
+   *
+   * <p>由 {@link com.njydsz.workflow.server.engine.FlowUserCacheService} 消费。
+   */
+  @Data
+  public static class UserCache {
+    /** 缓存过期时间（分钟），默认 15 分钟 */
+    @Min(1)
+    private long ttlMinutes = DEFAULT_USER_CACHE_TTL_MINUTES;
+
+    /** 缓存最大容量（条目数），默认 5000 条 */
+    @Min(1)
+    private long maxSize = 5000L;
+  }
+
+  /**
+   * P1: 表单 Schema 缓存配置。
+   *
+   * <p>缓存已解析的表单 Schema 对象，避免每次表单校验时重复解析 JSON。
+   * TTL 与容量通过 YAML 外部化，禁止硬编码。
+   *
+   * <p>由 {@link com.njydsz.workflow.server.engine.FlowFormSchemaCacheService} 消费。
+   */
+  @Data
+  public static class FormSchemaCache {
+    /** 缓存过期时间（分钟），默认 60 分钟 */
+    @Min(1)
+    private long ttlMinutes = DEFAULT_FORM_SCHEMA_CACHE_TTL_MINUTES;
+
+    /** 缓存最大容量（条目数），默认 500 条 */
+    @Min(1)
+    private long maxSize = 500L;
   }
 }

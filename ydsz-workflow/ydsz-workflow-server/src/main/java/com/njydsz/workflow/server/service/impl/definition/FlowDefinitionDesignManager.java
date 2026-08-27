@@ -29,8 +29,8 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.server.config.FlowProperties;
-import com.njydsz.workflow.engine.BpmnModel;
-import com.njydsz.workflow.engine.BpmnXmlParser;
+import com.njydsz.workflow.server.engine.BpmnModel;
+import com.njydsz.workflow.server.engine.BpmnXmlParser;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 
 /**
@@ -408,7 +408,7 @@ public class FlowDefinitionDesignManager {
           .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
           .build();
     }
-    return node.getSlaConfig();
+    return node == null ? null : node.getSlaConfigJson();
   }
 
   /**

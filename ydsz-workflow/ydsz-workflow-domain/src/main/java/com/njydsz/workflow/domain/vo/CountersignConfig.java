@@ -56,7 +56,7 @@ public class CountersignConfig implements Serializable {
     this.performType = performType != null ? performType : DEFAULT_PERFORM_TYPE;
     this.approveCount = Math.max(1, approveCount);
     this.votePassRate =
-        votePassRate != null ? votePassRate.clamp(BigDecimal.ONE.negate(), BigDecimal.ONE)
+        votePassRate != null ? votePassRate.max(BigDecimal.ONE.negate()).min(BigDecimal.ONE)
             : DEFAULT_VOTE_PASS_RATE;
   }
 

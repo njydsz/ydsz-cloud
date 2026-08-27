@@ -14,8 +14,8 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.engine.FlowNodeExt;
-import com.njydsz.workflow.engine.FlowServiceNodeExecutor;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
+import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskCoreService;
 
 /**

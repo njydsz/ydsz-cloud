@@ -17,8 +17,8 @@ import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessagePublisher;
-import com.njydsz.workflow.engine.FlowEventContext;
-import com.njydsz.workflow.engine.FlowWorkflowEvent;
+import com.njydsz.workflow.server.engine.FlowEventContext;
+import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 
 /**
  * 工作流消息队列发布者

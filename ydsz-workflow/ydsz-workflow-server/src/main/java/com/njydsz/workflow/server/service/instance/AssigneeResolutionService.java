@@ -11,7 +11,7 @@ import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.engine.impl.DefaultFlowVariableStrategy;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 
 /**
  * 办理人解析服务

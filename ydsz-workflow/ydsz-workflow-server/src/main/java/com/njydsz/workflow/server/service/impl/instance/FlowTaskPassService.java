@@ -25,6 +25,7 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.server.engine.FlowTerminateEventHandler;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
 import com.njydsz.workflow.server.form.FlowFormSchema;
@@ -65,6 +66,12 @@ public class FlowTaskPassService {
 
   /** 流程实例服务，更新实例状态和变量 */
   private final FlowInstanceService instanceService;
+
+  /** 流程实例生命周期管理器，终止事件时调用 */
+  private final FlowInstanceLifecycleManager lifecycleManager;
+
+  /** BPMN 终止事件处理器 */
+  private final FlowTerminateEventHandler terminateEventHandler;
 
   /** 跨子 Service 共享的任务校验/审计/事件辅助 */
   private final FlowTaskSupport support;
@@ -248,6 +255,18 @@ public class FlowTaskPassService {
       FlowPerformType performType,
       FlowTaskOperateDTO dto) {
     List<FlowNodeVO> nextNodes = advancer.advance(instance, task.getNodeCode(), "PASS", null, vars);
+
+    // P0: BPMN 终止事件检查 — 如果下一节点是终止事件节点，立即终止实例
+    if (!nextNodes.isEmpty() && terminateEventHandler.isTerminateEventNode(nextNodes.get(0))) {
+      String nodeCode = nextNodes.get(0).getNodeCode();
+      log.info("[Flow] BPMN终止事件触发: instanceId={} nodeCode={}", instance.getId(), nodeCode);
+      lifecycleManager.doTerminateInstance(instance.getId(),
+          terminateEventHandler.getDescription(nodeCode));
+      support.audit(task, "TERMINATE_EVENT", dto.getUserId(), null, dto.getComment(),
+          dto.getCommentType());
+      return;
+    }
+
     instanceService.generateTasksForNodes(task.getInstanceId(), nextNodes, vars);
     updateInstanceNode(instance, nextNodes);
     notificationService.fireTaskCompleted(task.getId(), "PASS", vars);

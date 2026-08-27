@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.infra.mapper.dag;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -220,6 +221,37 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
       @Param("instanceId") String instanceId,
       @Param("finishedAt") LocalDateTime finishedAt,
       @Param("durationMs") long durationMs);
+
+  /**
+   * P1-2: 统计指定状态的 DAG 实例数量。
+   *
+   * @param status 实例状态
+   * @return 实例数量
+   */
+  @Select("SELECT COUNT(1) FROM ydsz_job_dag_instance "
+      + "WHERE status = #{status} AND deleted = 0")
+  long countByStatus(@Param("status") String status);
+
+  /**
+   * P1-2: 统计指定日期触发的 DAG 实例数量。
+   *
+   * @param date 日期
+   * @return 实例数量
+   */
+  @Select("SELECT COUNT(1) FROM ydsz_job_dag_instance "
+      + "WHERE DATE(created_at) = #{date} AND deleted = 0")
+  long countByDate(@Param("date") LocalDate date);
+
+  /**
+   * P1-2: 统计指定日期、指定状态的 DAG 实例数量。
+   *
+   * @param status 实例状态
+   * @param date 日期
+   * @return 实例数量
+   */
+  @Select("SELECT COUNT(1) FROM ydsz_job_dag_instance "
+      + "WHERE status = #{status} AND DATE(created_at) = #{date} AND deleted = 0")
+  long countByStatusAndDate(@Param("status") String status, @Param("date") LocalDate date);
 
   /**
    * 更新 DAG 定义的结果统计（成功/失败次数）。

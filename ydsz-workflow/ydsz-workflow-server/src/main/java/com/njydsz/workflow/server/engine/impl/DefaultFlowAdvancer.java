@@ -7,6 +7,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +24,13 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.workflow.engine.impl.DefaultFlowVariableStrategy;
+import com.njydsz.workflow.server.engine.FlowTerminateEventHandler;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 import com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingService;
+import com.njydsz.workflow.server.service.impl.instance.FlowInstanceLifecycleManager;
 
 /**
  * 流程推进器默认实现
@@ -64,6 +67,12 @@ public class DefaultFlowAdvancer {
   /** 统一配置属性 */
   private final FlowProperties flowProperties;
 
+  /** BPMN 终止事件处理器 */
+  private final FlowTerminateEventHandler terminateEventHandler;
+
+  /** 流程实例生命周期管理器，终止事件时调用 */
+  private final FlowInstanceLifecycleManager lifecycleManager;
+
   public DefaultFlowAdvancer(
       FlowDefinitionCacheService flowDefinitionCacheService,
       FlowInstanceRepository instanceRepository,
@@ -73,7 +82,9 @@ public class DefaultFlowAdvancer {
       DefaultFlowVariableStrategy variableStrategy,
       FlowJoinTokenService joinTokenService,
       ObjectProvider<DefaultFlowRoutingService> routingServiceProvider,
-      FlowProperties flowProperties) {
+      FlowProperties flowProperties,
+      FlowTerminateEventHandler terminateEventHandler,
+      @Lazy FlowInstanceLifecycleManager lifecycleManager) {
     this.flowDefinitionCacheService = flowDefinitionCacheService;
     this.instanceRepository = instanceRepository;
     this.taskRepository = taskRepository;
@@ -83,6 +94,8 @@ public class DefaultFlowAdvancer {
     this.joinTokenService = joinTokenService;
     this.routingService = routingServiceProvider.getIfAvailable();
     this.flowProperties = flowProperties;
+    this.terminateEventHandler = terminateEventHandler;
+    this.lifecycleManager = lifecycleManager;
   }
 
   public FlowInstanceService getInstanceService() {
@@ -138,6 +151,15 @@ public class DefaultFlowAdvancer {
     if (nextNodes.isEmpty()) {
       log.info("[Flow] 流程无下游节点，自动完成: instanceId={}", instanceId);
       instanceService.complete(instanceId, startNode.getNodeCode());
+      return instanceService.toView(
+          instanceService.getById(instanceId), loadCurrentTasks(instanceId));
+    }
+    // P0: BPMN 终止事件检查 — 如果下一节点是终止事件节点，立即终止实例
+    if (terminateEventHandler.isTerminateEventNode(nextNodes.get(0))) {
+      String nodeCode = nextNodes.get(0).getNodeCode();
+      log.info("[Flow] BPMN终止事件触发: instanceId={} nodeCode={}", instanceId, nodeCode);
+      lifecycleManager.doTerminateInstance(instanceId,
+          terminateEventHandler.getDescription(nodeCode));
       return instanceService.toView(
           instanceService.getById(instanceId), loadCurrentTasks(instanceId));
     }

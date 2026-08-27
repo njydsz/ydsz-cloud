@@ -337,6 +337,11 @@ public class BpmnNodeParser {
             ext.put("compensateActivityRef", activityRef);
           }
         }
+        case "terminateeventdefinition" -> {
+          // P0: BPMN 终止事件定义 — 触发时立即终止实例并清理所有运行中任务
+          ext.put("terminateEvent", true);
+          ext.put("eventType", "TERMINATE");
+        }
         default -> {
           /* ignore */
         }

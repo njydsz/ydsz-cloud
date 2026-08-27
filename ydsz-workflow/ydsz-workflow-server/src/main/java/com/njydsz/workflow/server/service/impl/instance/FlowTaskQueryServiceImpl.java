@@ -463,7 +463,7 @@ private static final int MAX_PAGE_SIZE = 100;
 
     // 无数据时直接返回空分页
     if (total == 0) {
-      return PageResponse.of(0, List.of());
+      return PageResponse.success(0L, (long) validPageNo, (long) validPageSize, List.of());
     }
 
     // 分页查询数据（数据库层 LIMIT/OFFSET）
@@ -471,7 +471,7 @@ private static final int MAX_PAGE_SIZE = 100;
         auditLogRepository.findCountersignByInstance(instanceId, COUNTERSIGN_ACTIONS, offset, validPageSize);
     List<Map<String, Object>> records = toCountersignMapList(logs);
 
-    return PageResponse.of(total, records);
+    return PageResponse.success(total, (long) validPageNo, (long) validPageSize, records);
   }
 
   /**

@@ -14,11 +14,6 @@
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-engine</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-domain</artifactId>
         </dependency>
         <!-- 遵循 DDD 分层，server 层不直接依赖 infra 层，仓储实现由 web 层注入 -->
@@ -93,6 +88,16 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!-- P3: engine 合并后显式声明 common-json（FlowListenerConfigReader 使用 YdszJson） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <!-- P3: engine 合并后显式声明 common-safe（FlowSensitiveMasker 使用 SensitiveUtil） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
         </dependency>
 
         <!-- P2-1: Aviator 表达式引擎（工作流内置，替代对 ydsz-literule 的直接依赖） -->

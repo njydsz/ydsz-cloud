@@ -14,7 +14,7 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.engine.FlowNodeExt;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 
 /**
  * 跨节点办理人去重服务

@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
+import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
@@ -88,7 +89,7 @@ public interface FlowInstanceService {
    *
    * @throws SysException 当 dtos 为空或超过 100 条时
    */
-  Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos);
+  FlowBatchStartResultVO batchStartInstances(List<FlowStartProcessDTO> dtos);
 
   /**
    * 按 ID 查询流程实例

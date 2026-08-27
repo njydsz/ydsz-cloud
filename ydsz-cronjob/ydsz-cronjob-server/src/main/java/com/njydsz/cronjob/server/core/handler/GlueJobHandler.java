@@ -30,7 +30,9 @@ import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
+import com.njydsz.cronjob.server.core.handler.GroovyDockerSandboxExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
 /**
@@ -90,6 +92,12 @@ public class GlueJobHandler implements JobHandler {
   /** P1-7: 沙箱脚本执行器（Python/Shell 语言支持） */
   private final ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider;
 
+  /** P1-4: Groovy Docker 沙箱执行器 */
+  private final ObjectProvider<GroovyDockerSandboxExecutor> groovyDockerExecutorProvider;
+
+  /** P1-4: 调度引擎配置 */
+  private final ObjectProvider<CronjobProperties> cronjobPropertiesProvider;
+
   /** P1-7: JavaScript 脚本引擎（Nashorn/GraalJS） */
   private final ScriptEngine jsEngine;
 
@@ -101,9 +109,13 @@ public class GlueJobHandler implements JobHandler {
 
   public GlueJobHandler(
       ObjectProvider<GlueCodeService> glueCodeServiceProvider,
-      ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider) {
+      ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider,
+      ObjectProvider<GroovyDockerSandboxExecutor> groovyDockerExecutorProvider,
+      ObjectProvider<CronjobProperties> cronjobPropertiesProvider) {
     this.glueCodeServiceProvider = glueCodeServiceProvider;
     this.sandboxExecutorProvider = sandboxExecutorProvider;
+    this.groovyDockerExecutorProvider = groovyDockerExecutorProvider;
+    this.cronjobPropertiesProvider = cronjobPropertiesProvider;
     // 初始化 JavaScript 引擎（P0-6: 应用安全限制）
     ScriptEngineManager manager = new ScriptEngineManager();
     ScriptEngine engine = manager.getEngineByName("nashorn");
@@ -297,7 +309,9 @@ public class GlueJobHandler implements JobHandler {
   }
 
   /**
-   * P1-7: 执行 Groovy 脚本（原有逻辑）。
+   * P1-7: 执行 Groovy 脚本。
+   *
+   * <p>P1-4: 优先使用 Groovy Docker 沙箱（若启用），否则使用 SecureASTCustomizer 进程内编译。
    *
    * @param jobId 参数说明
    * @param sourceCode 参数说明
@@ -306,6 +320,12 @@ public class GlueJobHandler implements JobHandler {
    */
   private Object executeGroovy(String jobId, String sourceCode, String paramsJson)
       throws JobExecutionException {
+    // P1-4: 检查是否启用 Groovy Docker 沙箱
+    if (isGroovyDockerEnabled()) {
+      return executeGroovyInDocker(sourceCode, paramsJson);
+    }
+
+    // 原有逻辑：SecureASTCustomizer 进程内编译
     Class<?> clazz = compileWithCache(jobId, sourceCode);
     Object instance;
     try {
@@ -314,6 +334,42 @@ public class GlueJobHandler implements JobHandler {
       throw new IllegalStateException("GLUE 代码实例化失败: " + e.getMessage(), e);
     }
     return invokeExecute(instance, paramsJson);
+  }
+
+  /**
+   * P1-4: 检查是否启用 Groovy Docker 沙箱。
+   *
+   * @return true 启用
+   */
+  private boolean isGroovyDockerEnabled() {
+    CronjobProperties props = cronjobPropertiesProvider.getIfAvailable();
+    return props != null
+        && props.getSandbox().isEnabled()
+        && props.getSandbox().isGroovyDockerEnabled()
+        && groovyDockerExecutorProvider.getIfAvailable() != null;
+  }
+
+  /**
+   * P1-4: 在 Docker 容器中执行 Groovy 脚本。
+   *
+   * @param sourceCode Groovy 脚本内容
+   * @param paramsJson 参数 JSON
+   * @return 执行结果
+   */
+  private Object executeGroovyInDocker(String sourceCode, String paramsJson)
+      throws JobExecutionException {
+    GroovyDockerSandboxExecutor dockerExecutor = groovyDockerExecutorProvider.getIfAvailable();
+    if (dockerExecutor == null) {
+      throw new IllegalStateException("GroovyDockerSandboxExecutor 未注册");
+    }
+
+    GroovyDockerSandboxExecutor.GroovySandboxResult result =
+        dockerExecutor.execute(sourceCode, paramsJson, SCRIPT_TIMEOUT_SECONDS);
+
+    if (!result.success()) {
+      throw new IllegalStateException("Groovy Docker 沙箱执行失败: " + result.message());
+    }
+    return result.output();
   }
 
   /**

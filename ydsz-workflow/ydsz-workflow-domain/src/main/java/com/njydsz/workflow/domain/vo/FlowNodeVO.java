@@ -118,6 +118,18 @@ public class FlowNodeVO implements Serializable {
   }
 
   /**
+   * 获取 SLA 配置原始 JSON 字符串（数据库原始值）。
+   *
+   * <p>供需要原始 JSON 的场景使用（如持久化、比较、解析 Map）。
+   * 类型安全的值对象访问请使用 {@link #getSlaConfig()}。
+   *
+   * @return SLA 配置 JSON 字符串，未配置返回 null
+   */
+  public String getSlaConfigJson() {
+    return slaConfig;
+  }
+
+  /**
    * 获取服务节点配置值对象（懒解析、线程安全）。
    *
    * @return 服务节点配置值对象（不可变，非 null）

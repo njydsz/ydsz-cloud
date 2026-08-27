@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.engine.FlowNodeExt;
+import com.njydsz.workflow.server.engine.FlowNodeExt;
 
 /**
  * 表单引擎服务（P0-3 表单引擎 MVP）

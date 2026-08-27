@@ -12,6 +12,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
+import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -92,7 +93,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    * @return Map 包含 successCount / failedCount / instanceIds / failedItems
    */
   @Override
-  public Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos) {
+  public FlowBatchStartResultVO batchStartInstances(List<FlowStartProcessDTO> dtos) {
     return batchOperator.batchStartInstances(dtos);
   }
 

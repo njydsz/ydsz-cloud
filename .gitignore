@@ -12,6 +12,7 @@ target/
 *.log
 *.log.*
 *.bak
+effective-pom*
 
 # ===== IDE 配置 =====
 .idea/

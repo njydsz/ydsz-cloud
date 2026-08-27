@@ -521,7 +521,7 @@ public class FlowDefinitionMigrationManager {
     compareField(changes, "formFieldsConfig", n1.getFormFieldsConfig(), n2.getFormFieldsConfig());
     compareField(changes, "ext", n1.getExt(), n2.getExt());
     compareField(changes, "skipAnyNode", n1.getSkipAnyNode(), n2.getSkipAnyNode());
-    compareField(changes, "slaConfig", n1.getSlaConfig(), n2.getSlaConfig());
+    compareField(changes, "slaConfig", n1.getSlaConfigJson(), n2.getSlaConfigJson());
     return changes;
   }
 

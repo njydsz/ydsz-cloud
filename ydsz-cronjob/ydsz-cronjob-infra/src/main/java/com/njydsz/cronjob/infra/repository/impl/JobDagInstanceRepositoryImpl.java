@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.infra.repository.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -103,5 +104,20 @@ public class JobDagInstanceRepositoryImpl implements JobDagInstanceRepository {
     JobDagInstance entity = converter.voToEntity(vo);
     jobDagInstanceMapper.insert(entity);
     return entity.getId();
+  }
+
+  @Override
+  public long countByStatus(String status) {
+    return jobDagInstanceMapper.countByStatus(status);
+  }
+
+  @Override
+  public long countByDate(LocalDate date) {
+    return jobDagInstanceMapper.countByDate(date);
+  }
+
+  @Override
+  public long countByStatusAndDate(String status, LocalDate date) {
+    return jobDagInstanceMapper.countByStatusAndDate(status, date);
   }
 }
