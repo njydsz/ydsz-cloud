@@ -122,4 +122,27 @@ public interface FlowAuditLogRepository {
       String tenantId,
       LocalDateTime startTime,
       LocalDateTime endTime);
+
+  /**
+   * 分页查询流程实例的加签历史记录（P1-8: 数据库级分页，避免内存分页 OOM 风险）。
+   *
+   * <p>按 action IN (加签动作列表) + instance_id 过滤，支持 LIMIT/OFFSET 分页。
+   *
+   * @param instanceId 流程实例 ID
+   * @param actions 加签动作列表
+   * @param offset 偏移量
+   * @param limit 每页大小
+   * @return 审计日志 VO 列表
+   */
+  List<FlowAuditLogVO> findCountersignByInstance(
+      String instanceId, List<String> actions, int offset, int limit);
+
+  /**
+   * 统计流程实例的加签历史记录总数（P1-8: 配合分页查询返回 total）。
+   *
+   * @param instanceId 流程实例 ID
+   * @param actions 加签动作列表
+   * @return 符合条件的记录总数
+   */
+  long countCountersignByInstance(String instanceId, List<String> actions);
 }

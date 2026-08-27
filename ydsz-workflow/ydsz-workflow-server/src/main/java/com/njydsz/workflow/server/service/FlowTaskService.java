@@ -612,12 +612,26 @@ public interface FlowTaskService {
   List<FlowRunTaskVO> listOverdueVO(String userId, String tenantId, int limit);
 
   /**
-   * 查询流程实例的加签历史（Map 形式，避免 Controller 接触 DO）
+   * 查询流程实例的加签历史（Map 形式，避免 Controller 接触 DO）。
+   *
+   * <p><b>注意：</b>此方法返回全量数据，适用于数据量较小的场景。
+   * 大数据量场景请使用 {@link #pageCountersignByInstance(String, int, int)}。
    *
    * @param instanceId 流程实例 ID
    * @return 加签历史列表
    */
   List<Map<String, Object>> listCountersignByInstance(String instanceId);
+
+  /**
+   * 分页查询流程实例的加签历史（P1-8: 数据库级分页，避免内存分页 OOM 风险）。
+   *
+   * @param instanceId 流程实例 ID
+   * @param pageNo 页码（从 1 开始）
+   * @param pageSize 每页大小
+   * @return 分页结果（含 total 和 records）
+   */
+  PageResponse<List<Map<String, Object>>> pageCountersignByInstance(
+      String instanceId, int pageNo, int pageSize);
 
   /**
    * 查询任务的加签历史（Map 形式，避免 Controller 接触 DO）

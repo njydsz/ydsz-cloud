@@ -39,7 +39,9 @@ import com.njydsz.cronjob.infra.entity.job.JobAlertLog;
 public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
 
   /**
-   * 查询指定规则在时间窗口内已发送的告警日志（用于去重判断）。
+   * P0-1: 查询指定规则在时间窗口内已发送的告警日志（利用 idx_alert_log_rule_time 复合索引）。
+   *
+   * <p>复合索引 (rule_id, created_at) 直接覆盖 WHERE 条件，避免全表扫描。
    *
    * @param ruleId 规则 ID
    * @param since 时间窗口起点
@@ -53,7 +55,8 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
           + "       created_by, created_at, updated_by, updated_at, deleted "
           + "FROM ydsz_job_alert_dispatch "
           + "WHERE rule_id = #{ruleId} AND source_type = 'CRONJOB' "
-          + "  AND created_at >= #{since} AND deleted = 0")
+          + "  AND created_at &gt;= #{since} AND deleted = 0 "
+          + "ORDER BY created_at DESC")
   List<JobAlertLog> selectByRuleIdSince(
       @Param("ruleId") String ruleId, @Param("since") LocalDateTime since);
 

@@ -926,25 +926,24 @@ public class FlowTaskController {
           "COUNTERSIGN_BEFORE", "COUNTERSIGN_AFTER", "COUNTERSIGN_PARALLEL", "COUNTERSIGN_REMOVE");
 
   /**
-   * 查询指定流程实例的加签历史记录。
+   * 分页查询指定流程实例的加签历史记录（P1-8: 数据库级分页，避免内存分页 OOM 风险）。
    *
    * @param instanceId 流程实例 ID
    * @param pageNo 页码（默认 1）
    * @param pageSize 每页大小（默认 20，上限 100）
-   * @return 加签历史列表
+   * @return 加签历史分页结果
    */
   @GetMapping("/countersign/instance/{instanceId}")
-  @Operation(summary = "查询流程实例的加签历史")
+  @Operation(summary = "分页查询流程实例的加签历史")
   public YdszResponse<List<Map<String, Object>>> countersignByInstanceId(
       @PathVariable String instanceId,
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-    List<Map<String, Object>> filtered = taskService.listCountersignByInstance(instanceId);
-    int total = filtered.size();
-    int fromIndex = Math.min((pageNo - 1) * pageSize, total);
-    int toIndex = Math.min(fromIndex + pageSize, total);
-    List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-    return PageResponse.success((long) total, (long) pageNo, (long) pageSize, pageData);
+    // P1-8 修复：使用数据库级分页，避免全量加载后 subList 导致的 OOM 风险
+    PageResponse<List<Map<String, Object>>> pageResult =
+        taskService.pageCountersignByInstance(instanceId, pageNo, pageSize);
+    return PageResponse.success(
+        pageResult.getTotal(), pageResult.getPageNo(), pageResult.getPageSize(), pageResult.getRecords());
   }
 
   /**

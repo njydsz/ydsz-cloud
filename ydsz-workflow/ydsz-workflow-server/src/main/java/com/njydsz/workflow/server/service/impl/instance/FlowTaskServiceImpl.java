@@ -496,6 +496,12 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
   }
 
   @Override
+  public PageResponse<List<Map<String, Object>>> pageCountersignByInstance(
+      String instanceId, int pageNo, int pageSize) {
+    return queryService.pageCountersignByInstance(instanceId, pageNo, pageSize);
+  }
+
+  @Override
   public List<Map<String, Object>> listCountersignByTask(String taskId) {
     return queryService.listCountersignByTask(taskId);
   }

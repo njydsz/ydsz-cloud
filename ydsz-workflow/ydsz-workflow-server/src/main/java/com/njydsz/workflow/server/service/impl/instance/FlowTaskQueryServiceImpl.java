@@ -441,6 +441,40 @@ private static final int MAX_PAGE_SIZE = 100;
   }
 
   /**
+   * 分页查询流程实例的加签历史记录（P1-8: 数据库级分页，避免内存分页 OOM 风险）。
+   *
+   * <p>通过 auditLogRepository.findCountersignByInstance 使用 LIMIT/OFFSET 在数据库层完成分页，
+   * 避免全量加载后 subList 导致的内存溢出风险。
+   *
+   * @param instanceId 流程实例 ID
+   * @param pageNo 页码（从 1 开始）
+   * @param pageSize 每页大小
+   * @return 分页结果（含 total 和 records）
+   */
+  public PageResponse<List<Map<String, Object>>> pageCountersignByInstance(
+      String instanceId, int pageNo, int pageSize) {
+    // 参数校验：确保页码和页大小合法
+    int validPageNo = Math.max(pageNo, 1);
+    int validPageSize = Math.min(Math.max(pageSize, 1), 100);
+    int offset = (validPageNo - 1) * validPageSize;
+
+    // 查询总数（数据库层 COUNT）
+    long total = auditLogRepository.countCountersignByInstance(instanceId, COUNTERSIGN_ACTIONS);
+
+    // 无数据时直接返回空分页
+    if (total == 0) {
+      return PageResponse.of(0, List.of());
+    }
+
+    // 分页查询数据（数据库层 LIMIT/OFFSET）
+    List<FlowAuditLogVO> logs =
+        auditLogRepository.findCountersignByInstance(instanceId, COUNTERSIGN_ACTIONS, offset, validPageSize);
+    List<Map<String, Object>> records = toCountersignMapList(logs);
+
+    return PageResponse.of(total, records);
+  }
+
+  /**
    * 查询任务的加签历史记录（Map 形式返回，避免 Controller 层接触 DO）
    *
    * @param taskId 任务 ID

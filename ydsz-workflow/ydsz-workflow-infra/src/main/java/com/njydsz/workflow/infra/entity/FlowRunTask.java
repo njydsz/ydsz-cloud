@@ -49,13 +49,13 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * <p><b>循环节点（GAP-P2-10）：</b>FOREACH 节点为集合中每个元素创建独立 task， {@code iterVar} 存储当前 task 对应的元素值（如
- * userId/deptId），用于区分迭代实例。performType 使用 PARALLEL（全部完成才推进）。
+ * userId/deptId），用于区分迭代实例。performType 使用 PARALLEL（全部完成才推进）。非循环节点 iterVar 为空字符串。
  *
  * <p><b>索引设计：</b>
  *
  * <ul>
  *   <li>唯一索引 {@code uk_instance_node_assignee}（{@code instance_id}, {@code node_code}, {@code
- *       assignee_id}, {@code iter_var}）
+ *       assignee_id}, {@code iter_var}），iter_var 非空（空字符串占位）保证唯一约束生效
  *   <li>普通索引 {@code idx_assignee}（{@code assignee_id}）：「我的待办」核心索引
  *   <li>普通索引 {@code idx_business}（{@code business_type}, {@code business_id}）
  *   <li>普通索引 {@code idx_due_at}（{@code due_at}）：SLA 扫描索引

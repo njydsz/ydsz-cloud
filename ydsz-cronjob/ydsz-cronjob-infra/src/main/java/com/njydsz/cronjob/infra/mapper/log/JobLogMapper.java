@@ -308,6 +308,59 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   Long selectDurationP95Global(@Param("since") LocalDateTime since);
 
   /**
+   * P0-1: 查询指定任务的最近 N 次执行记录（利用 idx_job_log_jobid_starttime 复合索引）。
+   *
+   * <p>高频场景：任务详情页展示最近执行历史。使用复合索引避免 filesort，查询复杂度 O(log N + M)。
+   *
+   * @param jobId 任务 ID
+   * @param limit 最多返回条数（建议 ≤ 100）
+   * @return 执行日志列表（按 start_time 降序）
+   */
+  @Select(
+      "SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
+          + "       status, error_message, trace_id, trigger_type, "
+          + "       exec_node_id, shard_index, shard_total, "
+          + "       created_at, deleted "
+          + "FROM ydsz_job_log "
+          + "WHERE job_id = #{jobId} AND deleted = 0 "
+          + "ORDER BY start_time DESC "
+          + "LIMIT #{limit}")
+  List<JobLog> selectRecentByJobId(
+      @Param("jobId") String jobId, @Param("limit") int limit);
+
+  /**
+   * P0-1: 游标分页查询任务日志（避免深分页性能问题）。
+   *
+   * <p>相比 {@code LIMIT offset, size} 深分页，游标分页通过 {@code < lastId} 条件利用主键索引，
+   * 查询复杂度稳定为 O(log N + pageSize)，不随页码增大而退化。
+   *
+   * @param jobId 任务 ID（可选，为 null 则不限）
+   * @param status 状态过滤（可选，为 null 则不限）
+   * @param lastId 上一页最后一条记录的 ID（首页传 null）
+   * @param pageSize 每页大小
+   * @return 日志列表（按 ID 降序）
+   */
+  @Select(
+      "<script>"
+          + "SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
+          + "       status, error_message, trace_id, trigger_type, "
+          + "       exec_node_id, shard_index, shard_total, "
+          + "       created_at, deleted "
+          + "FROM ydsz_job_log "
+          + "WHERE deleted = 0 "
+          + "<if test='jobId != null'> AND job_id = #{jobId} </if>"
+          + "<if test='status != null'> AND status = #{status} </if>"
+          + "<if test='lastId != null'> AND id &lt; #{lastId} </if>"
+          + "ORDER BY id DESC "
+          + "LIMIT #{pageSize}"
+          + "</script>")
+  List<JobLog> selectByCursor(
+      @Param("jobId") String jobId,
+      @Param("status") String status,
+      @Param("lastId") String lastId,
+      @Param("pageSize") int pageSize);
+
+  /**
    * P2-2: 批量清理过期任务日志（硬删除，释放磁盘空间）。
    *
    * <p>按 {@code created_at < before} 筛选过期记录，单批最多删除 {@code limit} 条， 避免大事务锁表。由 {@link
@@ -316,16 +369,6 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
    * @param before 过期分界时间（此时间之前的记录将被删除）
    * @param limit 单批最多删除条数
    * @return 实际删除条数
-   */
-  /**
-   * 批量删除过期日志（基于 ctid 物理地址，避免回表）。
-   * 
-   * <p>PostgreSQL 特有优化：使用 ctid = ANY(ARRAY(...)) 替代 id IN (SELECT id ...)，
-   * 直接通过物理行地址定位数据页，避免二次索引扫描，大表删除性能提升 3-5 倍。
-   *
-   * @param before 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
    */
   @Delete(
       "DELETE FROM ydsz_job_log "

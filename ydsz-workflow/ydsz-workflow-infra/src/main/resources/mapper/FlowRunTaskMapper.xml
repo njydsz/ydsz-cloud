@@ -37,8 +37,8 @@
         <result column="duration_ms" property="durationMs"/>
         <result column="due_at" property="dueAt"/>
         <result column="priority" property="priority"/>
-        <result column="ydsznder_count" property="urgeCount"/>
-        <result column="last_ydsznded_at" property="lastUrgedAt"/>
+        <result column="urge_count" property="urgeCount"/>
+        <result column="last_urged_at" property="lastUrgedAt"/>
         <result column="sla_action" property="slaAction"/>
         <result column="sla_escalated" property="slaEscalated"/>
         <result column="deleted" property="deleted"/>
@@ -54,7 +54,7 @@
         assignor_id, assignor_name, assignee_type, assignee_id, assignee_name, permission_flag,
         perform_type, approve_count, approve_finished, vote_pass_rate, task_status, comment, status,
         created_by, created_at, updated_by, updated_at, claim_at, finish_at, duration_ms, due_at, priority,
-        ydsznder_count, last_ydsznded_at, sla_action, sla_escalated,
+        urge_count, last_urged_at, sla_action, sla_escalated,
         deleted, tenant_id, provider_trace_id,
         iter_var, version
     </sql>
@@ -293,7 +293,7 @@
         LIMIT #{limit}
     </select>
 
-    <!-- P2-7: 超期任务 Top N 排行 — 按超期时长降序（EXTRACT(EPOCH FROM ...) 为 PostgreSQL 写法） -->
+    <!-- P2-7: 超期任务 Top N 排行 — 按超期时长降序（MySQL 兼容写法） -->
     <select id="selectOverdueTopN" resultType="java.util.Map">
         SELECT id              AS "taskId",
                instance_id     AS "instanceId",
@@ -304,8 +304,8 @@
                assignee_id     AS "assigneeId",
                assignee_name   AS "assigneeName",
                due_at          AS "dueAt",
-               EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - due_at)) / 3600.0 AS "overdueHours",
-               ydsznder_count  AS "urgeCount"
+               TIMESTAMPDIFF(HOUR, due_at, CURRENT_TIMESTAMP) AS "overdueHours",
+               urge_count      AS "urgeCount"
         FROM ydsz_flow_run_task
         WHERE due_at &lt; CURRENT_TIMESTAMP
           AND task_status IN ('PENDING', 'CLAIMED')
@@ -316,14 +316,14 @@
         LIMIT #{limit}
     </select>
 
-    <!-- P2-7: 审批人负载分布 — PENDING/CLAIMED 计数 + 超期计数 -->
+    <!-- P2-7: 审批人负载分布 — PENDING/CLAIMED 计数 + 超期计数（MySQL 兼容写法） -->
     <select id="selectWorkloadByAssignee" resultType="java.util.Map">
         SELECT assignee_id                                                              AS "assigneeId",
                MAX(assignee_name)                                                       AS "assigneeName",
-               COUNT(1) FILTER (WHERE task_status = 'PENDING')                          AS "pendingCount",
-               COUNT(1) FILTER (WHERE task_status = 'CLAIMED')                          AS "claimedCount",
+               SUM(CASE WHEN task_status = 'PENDING' THEN 1 ELSE 0 END)                 AS "pendingCount",
+               SUM(CASE WHEN task_status = 'CLAIMED' THEN 1 ELSE 0 END)                 AS "claimedCount",
                COUNT(1)                                                                 AS "totalCount",
-               COUNT(1) FILTER (WHERE due_at &lt; CURRENT_TIMESTAMP)                      AS "overdueCount"
+               SUM(CASE WHEN due_at &lt; CURRENT_TIMESTAMP THEN 1 ELSE 0 END)            AS "overdueCount"
         FROM ydsz_flow_run_task
         WHERE task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
@@ -339,8 +339,8 @@
     <!-- P1-6: 增加 SLA 催办计数 -->
     <update id="incrementUrgeCount">
         UPDATE ydsz_flow_run_task
-        SET ydsznder_count = #{urgeCount},
-            last_ydsznded_at = #{lastUrgedAt},
+        SET urge_count = #{urgeCount},
+            last_urged_at = #{lastUrgedAt},
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}

@@ -24,15 +24,22 @@ import com.njydsz.cronjob.infra.entity.job.JobWebhookRetry;
 public interface JobWebhookRetryMapper extends BaseMapper<JobWebhookRetry> {
 
   /**
-   * 查询待重试的记录（next_retry_time <= now 且状态为 PENDING）。
+   * P0-1: 查询待重试的记录（利用 idx_webhook_retry_status_time 复合索引）。
+   *
+   * <p>复合索引 (status, next_retry_time) 可直接覆盖 WHERE + ORDER BY，避免 filesort。
    *
    * @param now 当前时间
    * @param limit 批量大小
    * @return 待重试记录列表
    */
   @Select(
-      "SELECT * FROM ydsz_job_webhook_retry "
-          + "WHERE retry_status = 'PENDING' AND next_retry_time <= #{now} "
+      "SELECT id, webhook_id, event_type, job_key, log_id, callback_url, "
+          + "       http_method, headers, webhook_secret, payload_json, "
+          + "       retry_count, max_retries, next_retry_time, "
+          + "       retry_status, last_error, last_retry_time, "
+          + "       created_at, updated_at "
+          + "FROM ydsz_job_webhook_retry "
+          + "WHERE retry_status = 'PENDING' AND next_retry_time &lt;= #{now} "
           + "ORDER BY next_retry_time ASC LIMIT #{limit}")
   List<JobWebhookRetry> selectPendingRetries(
       @Param("now") LocalDateTime now, @Param("limit") int limit);

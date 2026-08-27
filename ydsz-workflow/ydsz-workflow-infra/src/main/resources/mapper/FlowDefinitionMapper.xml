@@ -7,7 +7,7 @@
         <result column="flow_code" property="flowCode"/>
         <result column="flow_name" property="flowName"/>
         <result column="category" property="category"/>
-        <result column="version" property="version"/>
+        <result column="flow_version" property="flowVersion"/>
         <result column="model_value" property="modelValue"/>
         <result column="form_custom" property="formCustom"/>
         <result column="form_path" property="formPath"/>
@@ -35,7 +35,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, flow_code, flow_name, category, version, model_value, form_custom, form_path,
+        id, flow_code, flow_name, category, flow_version, model_value, form_custom, form_path,
         activity_status, is_publish, listener_type, listener_path, ext, description, status,
         created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id,
         canary_percent, canary_status, canary_strategy, canary_rollout_log,

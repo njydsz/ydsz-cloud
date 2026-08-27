@@ -81,4 +81,32 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLog> {
       @Param("targetId") String targetId,
       @Param("startTime") LocalDateTime startTime,
       @Param("endTime") LocalDateTime endTime);
+
+  /**
+   * 分页查询流程实例的加签历史记录（P1-8: 数据库级分页，避免内存分页 OOM 风险）。
+   *
+   * <p>按 action IN (加签动作列表) + instance_id 过滤，支持 LIMIT/OFFSET 分页。
+   *
+   * @param instanceId 流程实例 ID
+   * @param actions 加签动作列表（如 COUNTERSIGN_BEFORE / COUNTERSIGN_AFTER / COUNTERSIGN_PARALLEL / COUNTERSIGN_REMOVE）
+   * @param offset 偏移量
+   * @param limit 每页大小
+   * @return 审计日志列表
+   */
+  List<FlowAuditLog> selectCountersignByInstance(
+      @Param("instanceId") String instanceId,
+      @Param("actions") List<String> actions,
+      @Param("offset") int offset,
+      @Param("limit") int limit);
+
+  /**
+   * 统计流程实例的加签历史记录总数（P1-8: 配合分页查询返回 total）。
+   *
+   * @param instanceId 流程实例 ID
+   * @param actions 加签动作列表
+   * @return 符合条件的记录总数
+   */
+  long countCountersignByInstance(
+      @Param("instanceId") String instanceId,
+      @Param("actions") List<String> actions);
 }

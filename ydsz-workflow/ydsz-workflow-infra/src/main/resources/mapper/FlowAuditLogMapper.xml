@@ -86,4 +86,35 @@
           AND deleted = 0
         ORDER BY operated_at DESC, id DESC
     </select>
+
+    <!--
+        P1-8: 分页查询流程实例的加签历史记录
+        按 action IN (加签动作列表) + instance_id 过滤，支持 LIMIT/OFFSET 分页
+    -->
+    <select id="selectCountersignByInstance" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_flow_audit_log
+        WHERE instance_id = #{instanceId}
+          AND action IN
+          <foreach collection="actions" item="action" open="(" separator="," close=")">
+              #{action}
+          </foreach>
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY operated_at DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- P1-8: 统计流程实例的加签历史记录总数 -->
+    <select id="countCountersignByInstance" resultType="long">
+        SELECT COUNT(1)
+        FROM ydsz_flow_audit_log
+        WHERE instance_id = #{instanceId}
+          AND action IN
+          <foreach collection="actions" item="action" open="(" separator="," close=")">
+              #{action}
+          </foreach>
+          AND status = 'ENABLED'
+          AND deleted = 0
+    </select>
 </mapper>

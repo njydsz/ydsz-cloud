@@ -34,6 +34,7 @@
     <properties>
         <!--ydsz-->
         <revision>1.0.0-SNAPSHOT</revision>
+        <ydsz.version>1.0.0-SNAPSHOT</ydsz.version>
         <!--utf8-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

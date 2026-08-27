@@ -127,4 +127,16 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
             .ge(startTime != null, FlowAuditLog::getCreatedAt, startTime)
             .le(endTime != null, FlowAuditLog::getCreatedAt, endTime));
   }
+
+  @Override
+  public List<FlowAuditLogVO> findCountersignByInstance(
+      String instanceId, List<String> actions, int offset, int limit) {
+    return converter.flowAuditLogListToVO(
+        auditLogMapper.selectCountersignByInstance(instanceId, actions, offset, limit));
+  }
+
+  @Override
+  public long countCountersignByInstance(String instanceId, List<String> actions) {
+    return auditLogMapper.countCountersignByInstance(instanceId, actions);
+  }
 }

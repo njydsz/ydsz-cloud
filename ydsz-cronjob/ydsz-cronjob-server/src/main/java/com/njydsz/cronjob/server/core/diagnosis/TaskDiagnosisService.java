@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,11 +16,16 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
- * 任务诊断服务（P3-1：任务诊断 API + 智能运维）。
+ * P0-3: 任务诊断服务（增强：失败模式识别 + 根因分析 + 自动修复建议）。
  *
- * <p>基于任务执行历史，提供智能诊断能力。
+ * <p>基于任务执行历史，提供智能诊断能力：
  *
- * <p>P2-修正：使用 JobRepository/JobLogRepository 替换 Mapper，使用 VO 替换 Entity，符合 DDD 分层规范。
+ * <ul>
+ *   <li>健康度评分（成功率 + 稳定性 + 超时率 + 连续失败）
+ *   <li>失败模式识别（网络抖动 / 权限变更 / 参数错误 / 依赖服务不可用）
+ *   <li>根因分析（超时 / 资源不足 / GC 停顿 / 死循环）
+ *   <li>自动修复建议（调整超时 / 增加并发 / 降级策略）
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -64,6 +70,32 @@ public class TaskDiagnosisService {
   /** 平均耗时警告阈值（毫秒）：60 秒 */
   private static final long AVG_DURATION_WARN_MILLIS = 60000;
 
+  /** 网络抖动错误模式 */
+  private static final Pattern NETWORK_ERROR_PATTERN = Pattern.compile(
+      "(?i)(connection.*refused|connection.*reset|timeout|socket.*timeout|"
+          + "connect.*timed?\\s*out|read.*timed?\\s*out|network.*unreachable|"
+          + "no.*route.*to.*host|broken.*pipe)");
+
+  /** 权限错误模式 */
+  private static final Pattern PERMISSION_ERROR_PATTERN = Pattern.compile(
+      "(?i)(access.*denied|permission.*denied|unauthorized|forbidden|403|401|"
+          + "invalid.*token|expired.*token|invalid.*credential)");
+
+  /** 参数错误模式 */
+  private static final Pattern PARAM_ERROR_PATTERN = Pattern.compile(
+      "(?i)(nullpointer|null.*pointer|illegal.*argument|invalid.*parameter|"
+          + "missing.*required|bad.*request|400|index.*out.*of.*bounds|"
+          + "class.*cast.*exception|number.*format.*exception)");
+
+  /** 依赖服务错误模式 */
+  private static final Pattern DEPENDENCY_ERROR_PATTERN = Pattern.compile(
+      "(?i)(service.*unavailable|502|503|504|gateway.*timeout|backend.*error|"
+          + "upstream.*error|no.*instance|circuit.*breaker.*open)");
+
+  /** 资源不足错误模式 */
+  private static final Pattern RESOURCE_ERROR_PATTERN = Pattern.compile(
+      "(?i)(out.*of.*memory|oom|disk.*full|too.*many.*open.*files|"
+          + "thread.*pool.*exhausted|queue.*full|rate.*limit)");
 
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
@@ -241,11 +273,164 @@ public class TaskDiagnosisService {
   }
 
   /**
+   * P0-3: 识别失败模式。
+   *
+   * <p>分析失败日志的错误信息，识别失败根因类别。
+   *
+   * @param logs 执行日志列表
+   * @return 失败模式识别结果
+   */
+  public FailurePattern identifyFailurePattern(List<JobLogVO> logs) {
+    int networkCount = 0;
+    int permissionCount = 0;
+    int paramCount = 0;
+    int dependencyCount = 0;
+    int resourceCount = 0;
+    int unknownCount = 0;
+
+    for (JobLogVO log : logs) {
+      if (!"FAILED".equals(log.getStatus()) && !"TIMEOUT".equals(log.getStatus())) {
+        continue;
+      }
+      String errorMsg = log.getErrorMessage();
+      if (errorMsg == null || errorMsg.isEmpty()) {
+        unknownCount++;
+        continue;
+      }
+      if (NETWORK_ERROR_PATTERN.matcher(errorMsg).find()) {
+        networkCount++;
+      } else if (PERMISSION_ERROR_PATTERN.matcher(errorMsg).find()) {
+        permissionCount++;
+      } else if (PARAM_ERROR_PATTERN.matcher(errorMsg).find()) {
+        paramCount++;
+      } else if (DEPENDENCY_ERROR_PATTERN.matcher(errorMsg).find()) {
+        dependencyCount++;
+      } else if (RESOURCE_ERROR_PATTERN.matcher(errorMsg).find()) {
+        resourceCount++;
+      } else {
+        unknownCount++;
+      }
+    }
+
+    int totalFailures = networkCount + permissionCount + paramCount
+        + dependencyCount + resourceCount + unknownCount;
+    if (totalFailures == 0) {
+      return new FailurePattern(FailureType.NONE, 0, List.of());
+    }
+
+    // 找出主导失败模式
+    FailureType dominantType;
+    int dominantCount;
+    if (networkCount >= permissionCount && networkCount >= paramCount
+        && networkCount >= dependencyCount && networkCount >= resourceCount
+        && networkCount >= unknownCount) {
+      dominantType = FailureType.NETWORK;
+      dominantCount = networkCount;
+    } else if (permissionCount >= paramCount && permissionCount >= dependencyCount
+        && permissionCount >= resourceCount && permissionCount >= unknownCount) {
+      dominantType = FailureType.PERMISSION;
+      dominantCount = permissionCount;
+    } else if (paramCount >= dependencyCount && paramCount >= resourceCount
+        && paramCount >= unknownCount) {
+      dominantType = FailureType.PARAM_ERROR;
+      dominantCount = paramCount;
+    } else if (dependencyCount >= resourceCount && dependencyCount >= unknownCount) {
+      dominantType = FailureType.DEPENDENCY;
+      dominantCount = dependencyCount;
+    } else if (resourceCount >= unknownCount) {
+      dominantType = FailureType.RESOURCE;
+      dominantCount = resourceCount;
+    } else {
+      dominantType = FailureType.UNKNOWN;
+      dominantCount = unknownCount;
+    }
+
+    double confidence = (dominantCount * 100.0) / totalFailures;
+    List<String> suggestions = generateFixSuggestions(dominantType);
+
+    return new FailurePattern(dominantType, confidence, suggestions);
+  }
+
+  /**
+   * 根据失败类型生成修复建议。
+   *
+   * @param type 失败类型
+   * @return 修复建议列表
+   */
+  private List<String> generateFixSuggestions(FailureType type) {
+    return switch (type) {
+      case NETWORK -> List.of(
+          "检测到网络抖动，建议：",
+          "  1. 增加重试次数和指数退避策略",
+          "  2. 检查目标服务是否正常运行",
+          "  3. 考虑增加连接超时时间");
+      case PERMISSION -> List.of(
+          "检测到权限错误，建议：",
+          "  1. 检查 Token/密钥是否过期",
+          "  2. 确认服务账号权限配置",
+          "  3. 重新授权或更新凭证");
+      case PARAM_ERROR -> List.of(
+          "检测到参数错误，建议：",
+          "  1. 检查任务参数配置是否正确",
+          "  2. 确认输入数据格式是否符合预期",
+          "  3. 添加参数校验逻辑");
+      case DEPENDENCY -> List.of(
+          "检测到依赖服务不可用，建议：",
+          "  1. 检查下游服务健康状态",
+          "  2. 考虑添加熔断降级策略",
+          "  3. 增加超时和重试配置");
+      case RESOURCE -> List.of(
+          "检测到资源不足，建议：",
+          "  1. 增加 JVM 内存或线程池大小",
+          "  2. 检查是否有资源泄漏",
+          "  3. 考虑降低并发执行数");
+      case UNKNOWN -> List.of(
+          "未能识别具体失败原因，建议：",
+          "  1. 查看完整错误堆栈",
+          "  2. 检查应用日志获取更多上下文",
+          "  3. 联系相关服务负责人排查");
+      case NONE -> List.of();
+    };
+  }
+
+  /**
    * 查询最近 N 小时的执行日志。
    */
   private List<JobLogVO> selectRecentLogs(String jobId, int hours) {
     LocalDateTime since = LocalDateTime.now().minusHours(hours);
     return jobLogRepository.findByJobIdSince(jobId, since);
+  }
+
+  /**
+   * 失败类型枚举。
+   *
+   * <p>基于错误信息模式识别的失败根因分类。
+   */
+  public enum FailureType {
+    /** 无失败 */
+    NONE,
+    /** 网络抖动 */
+    NETWORK,
+    /** 权限错误 */
+    PERMISSION,
+    /** 参数错误 */
+    PARAM_ERROR,
+    /** 依赖服务不可用 */
+    DEPENDENCY,
+    /** 资源不足 */
+    RESOURCE,
+    /** 未知原因 */
+    UNKNOWN
+  }
+
+  /**
+   * 失败模式识别结果。
+   *
+   * @param type 主导失败类型
+   * @param confidence 置信度（%）
+   * @param suggestions 修复建议列表
+   */
+  public record FailurePattern(FailureType type, double confidence, List<String> suggestions) {
   }
 
   /**

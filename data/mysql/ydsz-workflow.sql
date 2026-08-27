@@ -229,7 +229,9 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_by          VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    CONSTRAINT uk_business_type_id UNIQUE (business_type, business_id),
+    -- 注意：移除 uk_business_type_id 唯一约束，改为应用层幂等校验
+    -- 原因：同一业务单据被驳回/终止后应允许重新发起，全表唯一约束会阻止此场景
+    -- 应用层通过 selectByBusiness (flow_status IN ('RUNNING','SUSPENDED')) 做幂等校验
     INDEX idx_initiator_id (initiator_id),
     INDEX idx_flow_status (flow_status),
     INDEX idx_tenant_deleted (tenant_id, deleted)
@@ -275,7 +277,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     last_urged_at       DATETIME        DEFAULT NULL COMMENT '最近一次催办时间',
     sla_action          VARCHAR(32)     DEFAULT NULL COMMENT '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）',
     sla_escalated       INT             NOT NULL DEFAULT 0 COMMENT '是否已升级（0=否，1=是，避免重复升级）',
-    iter_var            VARCHAR(128)    DEFAULT NULL COMMENT 'FOREACH 节点当前迭代元素值（如 userId/deptId，非循环节点为 NULL）',
+    iter_var            VARCHAR(128)    NOT NULL DEFAULT '' COMMENT 'FOREACH 节点当前迭代元素值（如 userId/deptId，非循环节点为空字符串）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',

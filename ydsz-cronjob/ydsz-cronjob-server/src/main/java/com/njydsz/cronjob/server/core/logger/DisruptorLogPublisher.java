@@ -68,7 +68,7 @@ public class DisruptorLogPublisher {
     this.cronjobProperties = cronjobProperties;
   }
 
-  /** 初始化 Disruptor 和 Ring Buffer */
+  /** 初始化 Disruptor 和 Ring Buffer（P0-2: 传递配置到消费者） */
   @PostConstruct
   public void init() {
     int bufferSize = cronjobProperties.getLogger().getNormalizedRingBufferSize();
@@ -79,10 +79,16 @@ public class DisruptorLogPublisher {
             DaemonThreadFactory.INSTANCE,
             ProducerType.MULTI,
             new BlockingWaitStrategy());
-    disruptor.handleEventsWith(new DisruptorLogEventHandler(jobLogContentServiceProvider));
+    // P0-2: 传递 CronjobProperties 以支持可配置的批量写入参数
+    disruptor.handleEventsWith(
+        new DisruptorLogEventHandler(jobLogContentServiceProvider, cronjobProperties));
     disruptor.start();
     ringBuffer = disruptor.getRingBuffer();
-    log.info("[DisruptorLog] 日志发布者初始化完成: bufferSize={}", bufferSize);
+    log.info(
+        "[DisruptorLog] 日志发布者初始化完成: bufferSize={} batchSize={} flushIntervalMs={}",
+        bufferSize,
+        cronjobProperties.getLogger().getNormalizedBatchSize(),
+        cronjobProperties.getLogger().getNormalizedFlushIntervalMs());
   }
 
   /**
