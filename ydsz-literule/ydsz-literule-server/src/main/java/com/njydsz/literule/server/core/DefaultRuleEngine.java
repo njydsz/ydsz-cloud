@@ -984,7 +984,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @since 1.0.0
    */
   public RuleIndexer getRuleIndexer() {
-    return ruleIndexer;
+    return ruleRegistry.getRuleIndexer();
   }
 
   /**
@@ -1197,7 +1197,7 @@ this.parallelThreshold = Math.max(1, threshold);
  * @since 1.4.0
  */
 public void setIndexBypassThreshold(int indexBypassThreshold) {
-this.indexBypassThreshold = Math.max(1, indexBypassThreshold);
+ruleRegistry.setIndexBypassThreshold(indexBypassThreshold);
 }
 
 /**
@@ -1207,7 +1207,7 @@ this.indexBypassThreshold = Math.max(1, indexBypassThreshold);
  * @since 1.4.0
  */
 public int getIndexBypassThreshold() {
-return indexBypassThreshold;
+return ruleRegistry.getIndexBypassThreshold();
 }
 
 /**
