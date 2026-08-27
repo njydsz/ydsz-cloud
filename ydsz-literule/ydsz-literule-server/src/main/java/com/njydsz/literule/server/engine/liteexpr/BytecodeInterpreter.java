@@ -310,7 +310,7 @@ public class BytecodeInterpreter {
       return null;
     }
     BigDecimal result = da.divide(db, 10, RoundingMode.HALF_UP);
-    log.debug("[Bytecode] divide: {} / {} = {} (stripZeros={})", da, db, result, result.stripTrailingZeros());
+    log.warn("[Bytecode] divide: {} / {} = {} (stripZeros={})", da, db, result, result.stripTrailingZeros());
     return result.stripTrailingZeros();
   }
 
