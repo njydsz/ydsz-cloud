@@ -10,16 +10,15 @@ import com.njydsz.common.json.annotation.JsonProperty;
  *
  * <p>对应 dag_definition JSON 中的 nodes 数组元素，描述一个任务节点及其在前端可视化画布上的坐标位置。
  *
- * <p>支持三种节点类型：
+ * <p>支持五种节点类型：
  *
  * <ul>
  *   <li>{@link NodeType#TASK}：普通任务节点，调用 handler 执行
+ *   <li>{@link NodeType#CONDITION}：条件分支节点，根据 SpEL 表达式结果选择分支（P1-1）
+ *   <li>{@link NodeType#PARALLEL_GATEWAY}：并行网关节点，Fork/Join 并行执行（P1-1）
  *   <li>{@link NodeType#SUB_WORKFLOW}：子工作流节点，嵌套触发另一个 DAG 工作流（P1-5）
  *   <li>{@link NodeType#APPROVAL}：审批节点，等待人工审批后继续执行（P1-6）
  * </ul>
- *
- * <p><b>注意</b>：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 1.0.0 移除，建议使用工作流引擎替代复杂编排场景。
- * 若反序列化时遇到旧数据中的控制节点类型，{@link #resolveNodeType()} 会降级为 {@link NodeType#TASK}。
  *
  * @param jobKey 任务 KEY（唯一标识节点，边通过 jobKey 引用）
  * @param jobId 任务 ID（冗余，便于直接派发）
@@ -28,9 +27,9 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * @param y 画布 Y 坐标（前端可视化用）
  * @param paramsJson 节点级参数 JSON（覆盖任务默认 paramsJson，null 表示用任务默认值）
  * @param nodeType 节点类型（null 默认 TASK）
- * @param conditionExpression 保留字段（已废弃，序列化兼容用）
+ * @param conditionExpression 条件表达式（CONDITION 节点必填，SpEL 语法，如 "${a.result=='success'}"）
  * @param loopCount 保留字段（已废弃，序列化兼容用）
- * @param parallelBranches 保留字段（已废弃，序列化兼容用）
+ * @param parallelBranches 并行分支数（PARALLEL_GATEWAY 节点可选，默认按出边数确定）
  * @param subWorkflowDagKey 子工作流 DAG KEY（SUB_WORKFLOW 节点，P1-5）
  * @param approvalUsers 审批人列表（APPROVAL 节点，逗号分隔，P1-6）
  * @param approvalTimeoutMinutes 审批超时时间（分钟，超时自动拒绝，P1-6）
@@ -163,6 +162,72 @@ public record DagNode(
   }
 
   /**
+   * P1-1: 工厂方法：创建 CONDITION 条件分支节点。
+   *
+   * <p>条件节点根据 SpEL 表达式求值结果决定触发哪些后继分支。
+   * 表达式返回 boolean 类型：true 触发条件为真的分支，false 触发条件为假的分支。
+   *
+   * <p>SpEL 表达式可通过 {@code #{}} 引用 DAG 上下文中的变量，如：
+   * <pre>{@code
+   * "#{context['a'].result == 'success'}"
+   * "#{context['b'].count > 100}"
+   * }</pre>
+   *
+   * @param jobKey 节点 KEY
+   * @param label 显示名称
+   * @param conditionExpression SpEL 条件表达式（必填）
+   * @return CONDITION 节点
+   */
+  public static DagNode condition(String jobKey, String label, String conditionExpression) {
+    return new DagNode(
+        jobKey,
+        null,
+        label,
+        0,
+        0,
+        null,
+        NodeType.CONDITION.name(),
+        conditionExpression,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  /**
+   * P1-1: 工厂方法：创建 PARALLEL_GATEWAY 并行网关节点。
+   *
+   * <p>并行网关支持 Fork（分叉）和 Join（汇合）两种模式：
+   *
+   * <ul>
+   *   <li><b>Fork</b>：一个入边，多个出边 → 同时触发所有后继分支并行执行</li>
+   *   <li><b>Join</b>：多个入边，一个出边 → 等待所有入边完成后触发后继</li>
+   * </ul>
+   *
+   * @param jobKey 节点 KEY
+   * @param label 显示名称
+   * @param parallelBranches 并行分支数（可选，null 表示按出边数自动确定）
+   * @return PARALLEL_GATEWAY 节点
+   */
+  public static DagNode parallelGateway(String jobKey, String label, Integer parallelBranches) {
+    return new DagNode(
+        jobKey,
+        null,
+        label,
+        0,
+        0,
+        null,
+        NodeType.PARALLEL_GATEWAY.name(),
+        null,
+        null,
+        parallelBranches,
+        null,
+        null,
+        null);
+  }
+
+  /**
    * 解析节点类型字符串，无效值返回 {@link NodeType#TASK}。
    *
    * @return 节点类型枚举（永不为 null）
@@ -174,21 +239,20 @@ public record DagNode(
   /**
    * DAG 节点类型枚举。
    *
-   * <p>P2-O2: CONDITION / LOOP / PARALLEL_GATEWAY 已于 1.0.0 移除，标注 {@link Deprecated}，
-   * 枚举值保留仅用于反序列化兼容旧数据。遇到旧数据中的控制节点类型时，
-   * {@link #parse(String)} 会降级返回 {@link #TASK}。新增节点类型请勿复用废弃值。
+   * <p>支持 5 种节点类型：TASK（任务）、CONDITION（条件分支）、PARALLEL_GATEWAY（并行网关）、
+   * SUB_WORKFLOW（子工作流）、APPROVAL（审批）。
+   *
+   * <p>LOOP 类型已废弃，保留枚举值仅用于反序列化兼容旧数据。
    */
   public enum NodeType {
     /** 普通任务节点：调用 handler 执行 */
     TASK,
-    /** 已废弃：条件分支节点（1.0.0 移除，反序列化时降级为 TASK） */
-    @Deprecated
+    /** P1-1: 条件分支节点：根据 SpEL 表达式结果选择分支 */
     CONDITION,
     /** 已废弃：循环节点（1.0.0 移除，反序列化时降级为 TASK） */
     @Deprecated
     LOOP,
-    /** 已废弃：并行网关节点（1.0.0 移除，反序列化时降级为 TASK） */
-    @Deprecated
+    /** P1-1: 并行网关节点：Fork/Join 并行执行 */
     PARALLEL_GATEWAY,
     /** P1-5: 子工作流节点：嵌套触发另一个 DAG 工作流 */
     SUB_WORKFLOW,

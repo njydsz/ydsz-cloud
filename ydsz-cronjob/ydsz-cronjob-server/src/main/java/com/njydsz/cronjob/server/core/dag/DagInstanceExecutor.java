@@ -6,10 +6,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -41,13 +46,26 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  *   <li>所有节点完成后，更新 DAG 实例终态（SUCCESS/FAILED/PARTIAL_SUCCESS）
  * </ol>
  *
- * <p>支持 TASK / SUB_WORKFLOW / APPROVAL 三种节点类型。CONDITION / LOOP / PARALLEL_GATEWAY 控制节点
- * 已于 1.0.0 移除，建议使用工作流引擎替代复杂编排场景。
+ * <p>支持 5 种节点类型：TASK / CONDITION / PARALLEL_GATEWAY / SUB_WORKFLOW / APPROVAL。
  *
  * <h3>跨节点上下文传递（P2-5）</h3>
  *
  * <p>节点执行结果写入 DAG 实例级上下文（{@code contextJson}），后继节点可通过
  * {@link DagInstanceRepository#mergeContextAtomic} 读取。
+ *
+ * <h3>P1-1: 条件分支节点</h3>
+ *
+ * <p>CONDITION 节点通过 SpEL 表达式求值决定触发哪些后继分支。表达式返回 boolean，
+ * 用于在多个出边中选择满足条件的分支执行。
+ *
+ * <h3>P1-1: 并行网关节点</h3>
+ *
+ * <p>PARALLEL_GATEWAY 节点支持 Fork（分叉）和 Join（汇合）：
+ *
+ * <ul>
+ *   <li>Fork：同时触发所有后继分支并行执行</li>
+ *   <li>Join：等待所有入边对应的节点完成后才触发后继</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -56,6 +74,17 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 @Component
 @RequiredArgsConstructor
 public class DagInstanceExecutor {
+
+  /** SpEL 表达式解析器（线程安全，可复用） */
+  private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
+
+  /**
+   * P1-1: 并行网关 Join 模式的入边完成计数。
+   *
+   * <p>Key = dagInstanceId + jobKey（PARALLEL_GATEWAY 节点），
+   * Value = 已完成入边的计数。用于 Join 模式判断是否所有前置节点都已完成。
+   */
+  private final ConcurrentHashMap<String, Integer> parallelJoinCounter = new ConcurrentHashMap<>();
 
   private final DagInstanceRepository dagInstanceRepository;
   private final DagNodeInstanceRepository dagNodeInstanceRepository;

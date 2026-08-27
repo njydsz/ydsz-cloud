@@ -3,7 +3,7 @@ package com.njydsz.literule.server.core;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import com.njydsz.common.lock.DistLockLock;
+import com.njydsz.common.lock.core.DistributedLocker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LockService {
 
     /** 分布式锁提供者（可为 null，此时降级为本地锁） */
-    private final DistLockLock distLockLock;
+    private final DistributedLocker distributedLocker;
 
     /** 锁默认等待时间（秒） */
     private static final long DEFAULT_WAIT_TIME = 5L;
@@ -73,17 +73,16 @@ public class LockService {
      * @throws IllegalStateException 获取锁失败
      */
     public <T> T executeWithLock(String lockKey, long waitTime, long leaseTime, Supplier<T> action) {
-        if (distLockLock == null) {
+        if (distributedLocker == null) {
             // 无分布式锁依赖时，直接执行（嵌入式/单节点场景）
-            log.debug("[LockService] DistLockLock 未注入，降级为无锁执行: {}", lockKey);
+            log.debug("[LockService] DistributedLocker 未注入，降级为无锁执行: {}", lockKey);
             return action.get();
         }
 
-        var lock = distLockLock.getLock(lockKey);
-        boolean locked = false;
+        String lockValue = null;
         try {
-            locked = lock.tryLock(waitTime, leaseTime, TimeUnit.SECONDS);
-            if (!locked) {
+            lockValue = distributedLocker.tryLock(lockKey, waitTime, leaseTime, TimeUnit.SECONDS);
+            if (lockValue == null) {
                 throw new IllegalStateException("获取分布式锁失败（超时 " + waitTime + "s）: " + lockKey);
             }
             return action.get();
@@ -91,9 +90,9 @@ public class LockService {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("获取分布式锁被中断: " + lockKey, e);
         } finally {
-            if (locked) {
+            if (lockValue != null) {
                 try {
-                    lock.unlock();
+                    distributedLocker.unlock(lockKey, lockValue);
                 } catch (Exception e) {
                     log.warn("[LockService] 释放锁异常: {}, 原因: {}", lockKey, e.getMessage());
                 }
