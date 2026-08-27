@@ -44,6 +44,7 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowRecallableNodeVO;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -256,7 +257,7 @@ public class FlowInstanceController {
   @GetMapping("/instance/{id}/recallableNodes")
   @Operation(summary = "查询可撤回的历史节点列表")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-  public YdszResponse<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
+  public YdszResponse<List<FlowRecallableNodeVO>> listRecallableNodes(@PathVariable String id) {
     return YdszResponse.success(
         instanceService.listRecallableNodes(id, AuthContextUtils.getUserId()));
   }

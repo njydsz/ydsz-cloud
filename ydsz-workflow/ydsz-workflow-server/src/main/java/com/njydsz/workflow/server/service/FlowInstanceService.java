@@ -11,6 +11,7 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRecallableNodeVO;
 
 /**
  * 流程实例 Service
@@ -223,7 +224,7 @@ public interface FlowInstanceService {
    * @return 节点列表，每个 Map 包含 nodeCode / nodeName / firstFinishAt / visitCount
    * @since 1.0.0
    */
-  List<Map<String, Object>> listRecallableNodes(String instanceId, String initiatorId);
+  List<FlowRecallableNodeVO> listRecallableNodes(String instanceId, String initiatorId);
 
   /**
    * P2-3: 回滚已完成的流程实例（撤销）

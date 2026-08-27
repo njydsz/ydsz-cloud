@@ -15,6 +15,7 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRecallableNodeVO;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 
 /**
@@ -257,7 +258,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    * @return 节点列表
    */
   @Override
-  public List<Map<String, Object>> listRecallableNodes(String instanceId, String initiatorId) {
+  public List<FlowRecallableNodeVO> listRecallableNodes(String instanceId, String initiatorId) {
     return queryService.listRecallableNodes(instanceId, initiatorId);
   }
 

@@ -30,6 +30,7 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRecallableNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 
@@ -147,7 +148,7 @@ public class FlowInstanceQueryService {
    * @return 节点列表，每个 Map 包含 nodeCode / nodeName / firstFinishAt / visitCount
    */
   @Transactional(readOnly = true)
-  public List<Map<String, Object>> listRecallableNodes(String instanceId, String initiatorId) {
+  public List<FlowRecallableNodeVO> listRecallableNodes(String instanceId, String initiatorId) {
     FlowInstanceVO instance = getByIdOrThrow(instanceId);
     // 校验：仅发起人可查询
     if (!instance.getInitiatorId().equals(initiatorId)) {
@@ -168,13 +169,20 @@ public class FlowInstanceQueryService {
     if (passedNodes == null || passedNodes.isEmpty()) {
       return Collections.emptyList();
     }
-    // 排除当前待办节点（撤回到当前节点无意义）
+    // 排除当前待办节点（撤回到当前节点无意义），转换为强类型 VO
     String currentNodeCode = instance.getCurrentNodeCode();
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<FlowRecallableNodeVO> result = new ArrayList<>();
     for (Map<String, Object> n : passedNodes) {
       Object code = n.get("nodeCode");
       if (code != null && !code.toString().equals(currentNodeCode)) {
-        result.add(n);
+        FlowRecallableNodeVO vo = new FlowRecallableNodeVO();
+        vo.setNodeCode(code.toString());
+        vo.setNodeName(n.get("nodeName") != null ? n.get("nodeName").toString() : null);
+        Object firstFinishAt = n.get("firstFinishAt");
+        if (firstFinishAt instanceof LocalDateTime ldt) {
+          vo.setCompletedAt(ldt);
+        }
+        result.add(vo);
       }
     }
     return result;
