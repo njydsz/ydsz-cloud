@@ -3,7 +3,6 @@ package com.njydsz.common.excel.api.validator;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -306,7 +305,7 @@ public class DataValidator {
     if (field.isAnnotationPresent(Pattern.class)) {
       Pattern pattern =
           field.getAnnotation(Pattern.class);
-      if (!Pattern.matches(pattern.regexp(), strVal)) {
+      if (!java.util.regex.Pattern.matches(pattern.regexp(), strVal)) {
         throw ExcelReadException.validationFailed(rowNum, fieldName, value, pattern.message());
       }
     }
@@ -339,7 +338,7 @@ public class DataValidator {
     if (field.isAnnotationPresent(Pattern.class)) {
       Pattern pattern =
           field.getAnnotation(Pattern.class);
-      if (!Pattern.matches(pattern.regexp(), strVal)) {
+      if (!java.util.regex.Pattern.matches(pattern.regexp(), strVal)) {
         errors.add(new ValidationError(rowNum, fieldName, value, pattern.message()));
       }
     }

@@ -7,7 +7,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.expression.ExpressionEngine;
@@ -33,8 +34,10 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
  * @since 1.4.0
  * @author ydsz-team
  */
-@Slf4j
 public interface CompiledCondition {
+
+    /** CompiledCondition 日志记录器 */
+    Logger LOG = LoggerFactory.getLogger(CompiledCondition.class);
 
     /** LiteExpr 表达式前缀 */
     String EXPR_PREFIX = "expr:";
@@ -94,7 +97,7 @@ public interface CompiledCondition {
             try {
                 return new IntervalCondition(intervalMatcher);
             } catch (Exception e) {
-                log.warn("[CompiledCondition] 区间条件编译失败，降级为运行时解析: {}", condExpr);
+                LOG.warn("[CompiledCondition] 区间条件编译失败，降级为运行时解析: {}", condExpr);
                 return new FallbackCondition(condExpr);
             }
         }
@@ -111,7 +114,7 @@ public interface CompiledCondition {
             try {
                 return new ComparisonCondition(cmpMatcher);
             } catch (Exception e) {
-                log.warn("[CompiledCondition] 比较条件编译失败，降级为运行时解析: {}", condExpr);
+                LOG.warn("[CompiledCondition] 比较条件编译失败，降级为运行时解析: {}", condExpr);
                 return new FallbackCondition(condExpr);
             }
         }
@@ -258,7 +261,7 @@ public interface CompiledCondition {
       try {
         return evaluator != null && evaluator.evalBoolean(expression, context);
       } catch (Exception e) {
-        log.debug("[CompiledCondition] 表达式条件求值失败 expr={}: {}", expression, e.getMessage());
+        LOG.debug("[CompiledCondition] 表达式条件求值失败 expr={}: {}", expression, e.getMessage());
         return false;
       }
     }

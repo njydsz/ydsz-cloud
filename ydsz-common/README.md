@@ -248,7 +248,7 @@ deploy\windows\scripts\import-nacos-config.bat ydsz dev
 
 | 配置块 | 内容 |
 |---|---|
-| `spring.datasource` | Druid 主数据源（PostgreSQL） |
+| `spring.datasource` | HikariCP 主数据源（PostgreSQL） |
 | `spring.datasource.dynamic` | baomidou 动态数据源（master/slave 读写分离） |
 | `spring.data.redis` | Redis（支持 Sentinel HA） |
 | `spring.cache.type` | Spring Cache 统一用 Redis |

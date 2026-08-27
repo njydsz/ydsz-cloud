@@ -293,6 +293,8 @@ public class DagInstanceExecutor {
    *
    * <ul>
    *   <li>{@link DagNode.NodeType#TASK}：调用任务 handler 执行</li>
+   *   <li>{@link DagNode.NodeType#CONDITION}：求值 SpEL 条件表达式，选择后继分支（P1-1）</li>
+   *   <li>{@link DagNode.NodeType#PARALLEL_GATEWAY}：Fork/Join 并行执行（P1-1）</li>
    *   <li>{@link DagNode.NodeType#SUB_WORKFLOW}：嵌套触发子 DAG 实例（P1-5）</li>
    *   <li>{@link DagNode.NodeType#APPROVAL}：标记为 WAITING_FOR_APPROVAL，等待人工审批（P2-4）</li>
    * </ul>
@@ -305,7 +307,11 @@ public class DagInstanceExecutor {
   private void dispatchNode(
       String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
     DagNode.NodeType nodeType = node.resolveNodeType();
-    if (nodeType == DagNode.NodeType.APPROVAL) {
+    if (nodeType == DagNode.NodeType.CONDITION) {
+      dispatchConditionNode(dagInstanceId, dagId, node, definition);
+    } else if (nodeType == DagNode.NodeType.PARALLEL_GATEWAY) {
+      dispatchParallelGatewayNode(dagInstanceId, dagId, node, definition);
+    } else if (nodeType == DagNode.NodeType.APPROVAL) {
       dispatchApprovalNode(dagInstanceId, node);
     } else if (nodeType == DagNode.NodeType.SUB_WORKFLOW) {
       dispatchSubWorkflowNode(dagInstanceId, dagId, node, definition);
@@ -361,6 +367,264 @@ public class DagInstanceExecutor {
         node.jobKey(),
         node.subWorkflowDagKey());
     markNodeSkipped(dagInstanceId, node.jobKey());
+  }
+
+  /**
+   * P1-1: 派发 CONDITION 条件分支节点。
+   *
+   * <p>条件节点不调用任务 handler，而是：
+   *
+   * <ol>
+   *   <li>读取 DAG 实例级上下文</li>
+   *   <li>使用 SpEL 解析并求值 {@link DagNode#conditionExpression()}</li>
+   *   <li>表达式返回 true/false，触发对应的后继分支</li>
+   *   <li>节点本身标记为 SUCCESS（条件节点不计入业务执行）</li>
+   * </ol>
+   *
+   * <p>SpEL 上下文变量：
+   *
+   * <ul>
+   *   <li>{@code context} - DAG 实例级上下文 Map（各节点执行结果）</li>
+   *   <li>{@code dagInstanceId} - 当前 DAG 实例 ID</li>
+   * </ul>
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @param dagId DAG 定义 ID
+   * @param node 条件节点
+   * @param definition DAG 定义
+   */
+  private void dispatchConditionNode(
+      String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
+    JobDagNodeInstanceVO nodeInstance =
+        dagNodeInstanceRepository.findByDagInstanceAndJobKey(dagInstanceId, node.jobKey());
+    if (nodeInstance == null) {
+      log.warn("[DagInstance] 条件节点实例不存在: instanceId={} jobKey={}", dagInstanceId, node.jobKey());
+      return;
+    }
+
+    // 标记节点 SUCCESS（条件节点本身不执行任务，仅做路由）
+    LocalDateTime now = LocalDateTime.now();
+    dagNodeInstanceRepository.markFinished(
+        nodeInstance.getId(), DagNodeStatus.SUCCESS.name(), now, 0, null, null, null);
+
+    // P1-11: 递增成功计数器
+    incrementCounterAndTryFinalize(dagInstanceId, "success");
+
+    // 求值条件表达式，决定触发哪些后继
+    boolean conditionResult = evaluateConditionExpression(dagInstanceId, node.conditionExpression());
+    log.info(
+        "[DagInstance] 条件节点求值: instanceId={} jobKey={} expression={} result={}",
+        dagInstanceId,
+        node.jobKey(),
+        node.conditionExpression(),
+        conditionResult);
+
+    // 触发后继：根据条件结果选择分支
+    // 约定：条件为 true 时触发 condition 为 null 或 "true" 的边；
+    //       条件为 false 时触发 condition 为 "false" 的边
+    triggerConditionalSuccessors(dagInstanceId, dagId, node, definition, conditionResult);
+  }
+
+  /**
+   * P1-1: 求值条件表达式。
+   *
+   * <p>使用 SpEL 解析表达式，注入 DAG 上下文变量。表达式示例：
+   *
+   * <ul>
+   *   <li>{@code #{context['a'].result == 'success'}}</li>
+   *   <li>{@code #{context['b'].count > 100}}</li>
+   *   <li>{@code #{context['x'].status != null and context['x'].status == 'done'}}</li>
+   * </ul>
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @param conditionExpression SpEL 条件表达式
+   * @return 条件求值结果；解析或求值失败时返回 false
+   */
+  private boolean evaluateConditionExpression(String dagInstanceId, String conditionExpression) {
+    if (conditionExpression == null || conditionExpression.isBlank()) {
+      log.warn("[DagInstance] 条件表达式为空: instanceId={}", dagInstanceId);
+      return false;
+    }
+    try {
+      // 读取 DAG 实例级上下文
+      Map<String, Object> dagContext = getDagContext(dagInstanceId);
+
+      // 构建 SpEL 求值上下文
+      StandardEvaluationContext evalContext = new StandardEvaluationContext();
+      evalContext.setVariable("context", dagContext);
+      evalContext.setVariable("dagInstanceId", dagInstanceId);
+
+      // 解析表达式（支持 #{...} 和纯表达式两种格式）
+      String expr = conditionExpression;
+      if (expr.startsWith("#{") && expr.endsWith("}")) {
+        expr = expr.substring(2, expr.length() - 1);
+      }
+      Expression expression = SPEL_PARSER.parseExpression(expr);
+      Object result = expression.getValue(evalContext);
+
+      if (result instanceof Boolean boolResult) {
+        return boolResult;
+      }
+      log.warn("[DagInstance] 条件表达式返回非布尔值: result={}", result);
+      return false;
+    } catch (Exception e) {
+      log.warn(
+          "[DagInstance] 条件表达式求值失败: instanceId={} expression={} reason={}",
+          dagInstanceId,
+          conditionExpression,
+          e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * P1-1: 根据条件结果触发后继节点。
+   *
+   * <p>遍历条件节点的所有出边，根据边的 condition 属性和条件求值结果决定是否触发：
+   *
+   * <ul>
+   *   <li>condition 为 null 的边：无条件触发（兜底分支）</li>
+   *   <li>condition 为 "true" 的边：条件为 true 时触发</li>
+   *   <li>condition 为 "false" 的边：条件为 false 时触发</li>
+   * </ul>
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @param dagId DAG 定义 ID
+   * @param node 条件节点
+   * @param definition DAG 定义
+   * @param conditionResult 条件求值结果
+   */
+  private void triggerConditionalSuccessors(
+      String dagInstanceId, String dagId, DagNode node, DagDefinition definition,
+      boolean conditionResult) {
+    List<DagEdge> outgoing = definition.outgoingEdges(node.jobKey());
+    if (outgoing.isEmpty()) {
+      log.info("[DagInstance] 条件节点无出边: instanceId={} jobKey={}", dagInstanceId, node.jobKey());
+      return;
+    }
+
+    for (DagEdge edge : outgoing) {
+      String edgeCondition = edge.condition();
+      boolean shouldTrigger;
+
+      if (edgeCondition == null || edgeCondition.isBlank()) {
+        // 无条件边：兜底分支，当没有其他条件边匹配时触发
+        shouldTrigger = true;
+      } else {
+        // 条件边：根据 condition 属性和条件结果决定是否触发
+        shouldTrigger = "true".equalsIgnoreCase(edgeCondition) == conditionResult;
+      }
+
+      if (shouldTrigger) {
+        DagNode successor = definition.findNode(edge.to());
+        if (successor != null && areAllPredecessorsSuccessful(dagInstanceId, edge.to(), definition)) {
+          dispatchNode(dagInstanceId, dagId, successor, definition);
+        }
+      }
+    }
+  }
+
+  /**
+   * P1-1: 派发 PARALLEL_GATEWAY 并行网关节点。
+   *
+   * <p>并行网关支持两种模式：
+   *
+   * <ul>
+   *   <li><b>Fork（分叉）</b>：入边数 ≤ 1，出边数 > 1 → 同时触发所有后继分支</li>
+   *   <li><b>Join（汇合）</b>：入边数 > 1，出边数 ≤ 1 → 等待所有入边完成后触发后继</li>
+   * </ul>
+   *
+   * <p>节点本身不执行任务，仅做路由。Fork 模式下节点标记 SUCCESS 后立即触发所有后继；
+   * Join 模式下需要等待所有前置节点完成才触发后继（通过计数器实现）。
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @param dagId DAG 定义 ID
+   * @param node 并行网关节点
+   * @param definition DAG 定义
+   */
+  private void dispatchParallelGatewayNode(
+      String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
+    List<DagEdge> incoming = definition.incomingEdges(node.jobKey());
+    List<DagEdge> outgoing = definition.outgoingEdges(node.jobKey());
+
+    JobDagNodeInstanceVO nodeInstance =
+        dagNodeInstanceRepository.findByDagInstanceAndJobKey(dagInstanceId, node.jobKey());
+    if (nodeInstance == null) {
+      log.warn("[DagInstance] 并行网关节点实例不存在: instanceId={} jobKey={}", dagInstanceId, node.jobKey());
+      return;
+    }
+
+    // 判断是 Fork 还是 Join 模式
+    boolean isForkMode = incoming.size() <= 1 && outgoing.size() > 1;
+    boolean isJoinMode = incoming.size() > 1 && outgoing.size() <= 1;
+
+    if (isForkMode) {
+      // Fork 模式：标记节点 SUCCESS，同时触发所有后继
+      LocalDateTime now = LocalDateTime.now();
+      dagNodeInstanceRepository.markFinished(
+          nodeInstance.getId(), DagNodeStatus.SUCCESS.name(), now, 0, null, null, null);
+      incrementCounterAndTryFinalize(dagInstanceId, "success");
+
+      log.info(
+          "[DagInstance] 并行网关 Fork: instanceId={} jobKey={} branches={}",
+          dagInstanceId,
+          node.jobKey(),
+          outgoing.size());
+
+      for (DagEdge edge : outgoing) {
+        DagNode successor = definition.findNode(edge.to());
+        if (successor != null) {
+          dispatchNode(dagInstanceId, dagId, successor, definition);
+        }
+      }
+    } else if (isJoinMode) {
+      // Join 模式：增加完成计数，当所有前置节点都完成时才触发后继
+      String counterKey = dagInstanceId + ":" + node.jobKey();
+      int completedCount = parallelJoinCounter.merge(counterKey, 1, Integer::sum);
+
+      log.info(
+          "[DagInstance] 并行网关 Join 计数: instanceId={} jobKey={} completed={}/{}",
+          dagInstanceId,
+          node.jobKey(),
+          completedCount,
+          incoming.size());
+
+      if (completedCount >= incoming.size()) {
+        // 所有前置节点已完成，触发后继
+        parallelJoinCounter.remove(counterKey);
+        LocalDateTime now = LocalDateTime.now();
+        dagNodeInstanceRepository.markFinished(
+            nodeInstance.getId(), DagNodeStatus.SUCCESS.name(), now, 0, null, null, null);
+        incrementCounterAndTryFinalize(dagInstanceId, "success");
+
+        for (DagEdge edge : outgoing) {
+          DagNode successor = definition.findNode(edge.to());
+          if (successor != null) {
+            dispatchNode(dagInstanceId, dagId, successor, definition);
+          }
+        }
+      }
+      // 否则等待更多前置节点完成
+    } else {
+      // 既不是 Fork 也不是 Join（如 1→1 直通），当作普通路由处理
+      log.info(
+          "[DagInstance] 并行网关直通: instanceId={} jobKey={} in={} out={}",
+          dagInstanceId,
+          node.jobKey(),
+          incoming.size(),
+          outgoing.size());
+      LocalDateTime now = LocalDateTime.now();
+      dagNodeInstanceRepository.markFinished(
+          nodeInstance.getId(), DagNodeStatus.SUCCESS.name(), now, 0, null, null, null);
+      incrementCounterAndTryFinalize(dagInstanceId, "success");
+
+      for (DagEdge edge : outgoing) {
+        DagNode successor = definition.findNode(edge.to());
+        if (successor != null && areAllPredecessorsSuccessful(dagInstanceId, edge.to(), definition)) {
+          dispatchNode(dagInstanceId, dagId, successor, definition);
+        }
+      }
+    }
   }
 
   /** 派发 TASK 类型节点（现有逻辑：调用 handler 执行）。 */

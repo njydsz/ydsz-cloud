@@ -3,6 +3,8 @@ package com.njydsz.workflow.infra.entity;
 import java.io.Serial;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -15,6 +17,8 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
+import com.njydsz.workflow.domain.event.FlowDomainEvent;
+import com.njydsz.workflow.domain.statemachine.FlowInstanceStateMachine;
 
 /**
  * 流程实例实体
@@ -140,25 +144,37 @@ public class FlowInstance extends MpBaseEntity<String> {
   /** 退回原因（最近一次 REJECT 操作的备注，重审时清空） */
   private String rejectReason;
 
+  // ============================== 充血模型：领域事件收集器 ==============================
+
+  /**
+   * 领域事件临时收集器（transient，不持久化）。
+   *
+   * <p>状态变更时记录的领域事件，由应用层 Service 在事务提交后通过 {@link
+   * com.njydsz.workflow.domain.event.DomainEventPublisher} 发布。
+   * 设计参考：DDD 聚合根的事件收集-发布模式（避免在聚合内直接依赖事件发布器）。
+   */
+  private final transient List<FlowDomainEvent> domainEvents = new ArrayList<>();
+
+  /** 状态机实例（无状态单例，延迟初始化） */
+  private static volatile FlowInstanceStateMachine stateMachine;
+
   // ============================== 充血模型行为方法 ==============================
 
   /**
-   * 状态流转：从当前状态转换到目标状态
+   * 状态流转：从当前状态转换到目标状态（使用 {@link FlowInstanceStateMachine} 校验）。
    *
-   * <p>内置状态机校验，流转非法时抛出 {@link WorkflowExceptionCode#INSTANCE_STATUS_INVALID}。 调用此方法后应持久化实体（由应用层
-   * Service 在事务中完成）。
+   * <p>内置状态机校验，流转非法时抛出 {@link WorkflowExceptionCode#INSTANCE_STATUS_INVALID}。
+   * 流转成功后自动记录领域事件（通过 {@link #domainEvents} 收集），由应用层 Service 发布。
+   * 调用此方法后应持久化实体（由应用层 Service 在事务中完成）。
    *
    * @param target 目标状态，不可为 null
    * @param operatorId 操作人 ID（用于审计）
    * @throws BusinessException 状态流转非法或实例为终态时抛出
-   * @see FlowInstanceStatus#canTransitTo
+   * @see FlowInstanceStateMachine#requireTransition
    */
   public void transitTo(FlowInstanceStatus target, String operatorId) {
     FlowInstanceStatus current = FlowInstanceStatus.valueOf(flowStatus);
-    if (!current.canTransitTo(target)) {
-      throw BusinessException.of(WorkflowExceptionCode.INSTANCE_STATUS_INVALID)
-          .data("message", "流程实例状态流转非法: " + flowStatus + " -> " + target.name());
-    }
+    getStateMachine().requireTransition(current, target);
     this.flowStatus = target.name();
     if (target.isFinished()) {
       this.endAt = LocalDateTime.now();
@@ -166,6 +182,8 @@ public class FlowInstance extends MpBaseEntity<String> {
         this.durationMs = Duration.between(this.startAt, this.endAt).toMillis();
       }
     }
+    // 记录领域事件
+    recordEventForTransition(current, target, operatorId);
   }
 
   /**
@@ -237,5 +255,80 @@ public class FlowInstance extends MpBaseEntity<String> {
    */
   public void rollback(String operatorId) {
     transitTo(FlowInstanceStatus.ROLLED_BACK, operatorId);
+  }
+
+  /**
+   * 获取并清空已收集的领域事件。
+   *
+   * <p>由应用层 Service 在事务提交后调用，将事件发布到 {@link
+   * com.njydsz.workflow.domain.event.DomainEventPublisher}。
+   * 调用后本实例的事件列表将被清空，避免重复发布。
+   *
+   * @return 已收集的领域事件列表（可能为空）
+   */
+  public List<FlowDomainEvent> popDomainEvents() {
+    List<FlowDomainEvent> events = new ArrayList<>(domainEvents);
+    domainEvents.clear();
+    return events;
+  }
+
+  // ============================== 私有方法 ==============================
+
+  /**
+   * 获取状态机实例（双重检查锁单例）。
+   *
+   * <p>状态机本身无状态，可安全共享。使用 volatile + DCL 保证线程安全且避免同步开销。
+   *
+   * @return 状态机单例
+   */
+  private static FlowInstanceStateMachine getStateMachine() {
+    if (stateMachine == null) {
+      synchronized (FlowInstance.class) {
+        if (stateMachine == null) {
+          stateMachine = new FlowInstanceStateMachine();
+        }
+      }
+    }
+    return stateMachine;
+  }
+
+  /**
+   * 根据状态流转类型记录对应的领域事件。
+   *
+   * @param current 当前状态
+   * @param target 目标状态
+   * @param operatorId 操作人 ID
+   */
+  private void recordEventForTransition(
+      FlowInstanceStatus current, FlowInstanceStatus target, String operatorId) {
+    switch (target) {
+      case SUSPENDED -> domainEvents.add(
+          new com.njydsz.workflow.domain.event.FlowInstanceSuspendedEvent(
+              this, instanceId(), flowCode, flowName, businessType, businessId, initiatorId, null));
+      case RUNNING -> {
+        if (current == FlowInstanceStatus.SUSPENDED) {
+          domainEvents.add(
+              new com.njydsz.workflow.domain.event.FlowInstanceResumedEvent(
+                  this, instanceId(), flowCode, flowName, businessType, businessId, initiatorId));
+        }
+      }
+      case ROLLED_BACK -> domainEvents.add(
+          new com.njydsz.workflow.domain.event.FlowInstanceRolledBackEvent(
+              this, instanceId(), flowCode, flowName, businessType, businessId, initiatorId,
+              rejectReason));
+      default -> {
+        // 其他流转（COMPLETED/TERMINATED/REJECTED/ERROR）暂不记录额外事件
+        // 实例完成/终止/驳回事件由 FlowInstanceServiceImpl 在事务边界发布
+      }
+    }
+  }
+
+  /**
+   * 获取实例 ID（兼容 id 字段可能为 null 的场景）。
+   *
+   * @return 实例 ID 字符串
+   */
+  private String instanceId() {
+    return this.getId();
   }
 }
