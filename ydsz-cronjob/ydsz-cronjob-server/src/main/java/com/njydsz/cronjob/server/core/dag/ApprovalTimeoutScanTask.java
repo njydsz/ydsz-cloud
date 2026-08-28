@@ -68,6 +68,12 @@ public class ApprovalTimeoutScanTask implements ScanTask {
   /** 每次扫描最大处理的批次数 */
   private static final int BATCH_LIMIT = 100;
 
+  /** 审批超时扫描间隔（毫秒）：60 秒 */
+  private static final long SCAN_INTERVAL_MS = 60_000L;
+
+  /** 毫秒到分钟的换算系数 */
+  private static final long MILLIS_PER_MINUTE = 60_000L;
+
   private final DagNodeInstanceRepository dagNodeInstanceRepository;
   private final DagInstanceRepository dagInstanceRepository;
   private final JobDagRepository jobDagRepository;
@@ -81,7 +87,7 @@ public class ApprovalTimeoutScanTask implements ScanTask {
 
   @Override
   public long intervalMs() {
-    return 60_000L; // 每 60 秒扫描一次
+    return SCAN_INTERVAL_MS;
   }
 
   @Override
@@ -187,7 +193,7 @@ public class ApprovalTimeoutScanTask implements ScanTask {
     node.setNodeStatus(DagNodeStatus.APPROVAL_REJECTED.name());
     node.setFinishedAt(now);
     node.setDurationMs(waitedMs);
-    node.setErrorMessage("审批超时自动拒绝: 等待 " + (waitedMs / 60000) + " 分钟未审批");
+    node.setErrorMessage("审批超时自动拒绝: 等待 " + (waitedMs / MILLIS_PER_MINUTE) + " 分钟未审批");
     dagNodeInstanceRepository.updateById(node);
 
     log.info(

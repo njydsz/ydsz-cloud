@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -69,7 +68,9 @@ public class GlueEditorController {
       content = "'glueSave'")
   @PostMapping("/save")
   public YdszResponse<SaveResult> save(@RequestBody SaveCodeDTO dto) {
-    log.info("[GlueEditor] 保存代码: file={} language={} length={}", dto.getFile(), dto.getLanguage(), dto.getCode() != null ? dto.getCode().length() : 0);
+    int codeLength = dto.getCode() != null ? dto.getCode().length() : 0;
+    log.info("[GlueEditor] 保存代码: file={} language={} length={}",
+        dto.getFile(), dto.getLanguage(), codeLength);
 
     // TODO: 实际实现需要调用 GlueHandlerManager 注册热加载
     // 当前返回模拟结果

@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -19,7 +17,7 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.message.domain.query.MsgOfflineQuery;
 import com.njydsz.message.domain.repository.MsgOfflineRepository;
 import com.njydsz.message.domain.vo.MsgOfflineVO;
 
@@ -98,14 +96,10 @@ public class OfflineMessageService implements OfflineMessageStore {
 
     // 先从数据库拉取持久化的离线消息
     try {
-      List<MsgOfflineVO> dbMessages =
-          msgOfflineRepository.selectList(
-              new LambdaQueryWrapper<MsgOfflineVO>()
-                  .eq(MsgOfflineVO::getUserId, userId)
-                  .eq(MsgOfflineVO::getStatus, "PENDING")
-                  .le(MsgOfflineVO::getExpiredAt, LocalDateTime.now().plusDays(OFFLINE_TTL_DAYS))
-                  .ge(MsgOfflineVO::getExpiredAt, LocalDateTime.now())
-                  .orderByAsc(MsgOfflineVO::getMsgTimestamp));
+      MsgOfflineQuery offlineQuery = new MsgOfflineQuery();
+      offlineQuery.setUserId(userId);
+      offlineQuery.setStatus("PENDING");
+      List<MsgOfflineVO> dbMessages = msgOfflineRepository.findList(offlineQuery);
       for (MsgOfflineVO msg : dbMessages) {
         result.add(msg.getPayload());
       }
@@ -146,12 +140,10 @@ public class OfflineMessageService implements OfflineMessageStore {
       log.debug("[WS-Offline] Redis 计数失败: {}", e.getMessage());
     }
     try {
-      Long dbSize =
-          msgOfflineRepository.selectCount(
-              new LambdaQueryWrapper<MsgOfflineVO>()
-                  .eq(MsgOfflineVO::getUserId, userId)
-                  .eq(MsgOfflineVO::getStatus, "PENDING"));
-      dbCount = dbSize == null ? 0L : dbSize;
+      MsgOfflineQuery countQuery = new MsgOfflineQuery();
+      countQuery.setUserId(userId);
+      countQuery.setStatus("PENDING");
+      dbCount = msgOfflineRepository.findList(countQuery).size();
     } catch (Exception e) {
       log.debug("[WS-Offline] DB 计数失败: {}", e.getMessage());
     }
@@ -183,25 +175,23 @@ public class OfflineMessageService implements OfflineMessageStore {
         return;
       }
       LocalDateTime now = LocalDateTime.now();
-      String tenantId = TenantContextHolder.getTenantId();
       // P3-6: 先构建全部实体（预生成 ID），再批量 insert
       List<MsgOfflineVO> entities = new ArrayList<>(overflowMessages.size());
       for (String json : overflowMessages) {
         MsgOfflineVO offline = new MsgOfflineVO();
-        offline.setId(IdWorker.getIdStr());
+        offline.setId(String.valueOf(System.nanoTime()));
         offline.setUserId(userId);
         offline.setMsgType("OFFLINE_OVERFLOW");
         offline.setPayload(json);
         offline.setMsgTimestamp(System.currentTimeMillis());
         offline.setStatus("PENDING");
         offline.setExpiredAt(now.plusDays(OFFLINE_TTL_DAYS));
-        offline.setTenantId(tenantId);
         entities.add(offline);
       }
       // 分批批量 insert（防止单条 SQL 参数超过 PG 65535 上限）
       for (int i = 0; i < entities.size(); i += INSERT_BATCH_SIZE) {
         int to = Math.min(i + INSERT_BATCH_SIZE, entities.size());
-        msgOfflineRepository.insertBatch(entities.subList(i, to));
+        msgOfflineRepository.saveBatch(entities.subList(i, to));
       }
       redisCollectionOps.lTrim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
       log.info("[WS-Offline] 溢出消息持久化到数据库: userId={}, count={}", userId, overflowMessages.size());

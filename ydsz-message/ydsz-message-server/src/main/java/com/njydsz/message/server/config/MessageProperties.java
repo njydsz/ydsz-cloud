@@ -86,12 +86,6 @@ public class MessageProperties {
   /** 默认readTimeout值（可被配置文件覆盖） */
   private static final int DEFAULT_READ_TIMEOUT = 10000;
 
-  /** 默认connectTimeout值（可被配置文件覆盖） */
-  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
-
-  /** 默认readTimeout值（可被配置文件覆盖） */
-  private static final int DEFAULT_READ_TIMEOUT = 10000;
-
   /** 默认maxRetryCount值（可被配置文件覆盖） */
   private static final int DEFAULT_MAX_RETRY_COUNT = 3;
 
@@ -112,18 +106,6 @@ public class MessageProperties {
 
   /** 默认cooldownMinutes值（可被配置文件覆盖） */
   private static final int DEFAULT_COOLDOWN_MINUTES = 30;
-
-  /** 默认connectTimeout值（可被配置文件覆盖） */
-  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
-
-  /** 默认readTimeout值（可被配置文件覆盖） */
-  private static final int DEFAULT_READ_TIMEOUT = 10000;
-
-  /** 默认connectTimeout值（可被配置文件覆盖） */
-  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
-
-  /** 默认readTimeout值（可被配置文件覆盖） */
-  private static final int DEFAULT_READ_TIMEOUT = 10000;
 
   /** 默认failureRateThreshold值（可被配置文件覆盖） */
   private static final int DEFAULT_FAILURE_RATE_THRESHOLD = 50;

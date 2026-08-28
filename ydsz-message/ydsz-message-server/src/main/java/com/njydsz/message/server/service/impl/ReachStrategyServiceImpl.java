@@ -125,14 +125,14 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
       }
       // 解析通道活跃度
       Map<String, Integer> scores = new HashMap<>();
-      for (Map.Entry<Object, Object> e : raw.entrySet()) {
-        String key = String.valueOf(e.getKey());
+      for (Map.Entry<String, String> e : raw.entrySet()) {
+        String key = e.getKey();
         if (key.startsWith("score:")) {
-          String channel = key.substring(CHANNEL_PREFIX_LENGTH);
+          String channel = key.substring("score:".length());
           try {
-            scores.put(channel, Integer.parseInt(String.valueOf(e.getValue())));
-          } catch (NumberFormatException e) {
-            log.debug("[ReachStrategy] 通道活跃度评分解析失败，跳过: channel={}, value={}", key, e.getMessage());
+            scores.put(channel, Integer.parseInt(e.getValue()));
+          } catch (NumberFormatException ex) {
+            log.debug("[ReachStrategy] 通道活跃度评分解析失败，跳过: channel={}, value={}", key, ex.getMessage());
           }
         }
       }

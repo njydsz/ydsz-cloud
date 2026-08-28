@@ -21,6 +21,9 @@ public class MsgTemplateVersionVO implements Serializable {
   /** 版本记录唯一标识（主键） */
   private String id;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 模板编码 */
   private String templateCode;
 

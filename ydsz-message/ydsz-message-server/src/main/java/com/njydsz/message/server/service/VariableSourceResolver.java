@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.config;
+package com.njydsz.message.server.service;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -18,6 +17,7 @@ import org.springframework.web.client.RestClient;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.message.domain.query.MsgVariableSourceQuery;
 import com.njydsz.message.domain.repository.MsgVariableSourceRepository;
 import com.njydsz.message.domain.vo.MsgVariableSourceVO;
 
@@ -52,10 +52,10 @@ public class VariableSourceResolver {
     if (!StringUtils.hasText(templateCode)) {
       return List.of();
     }
-    return variableSourceRepository.selectList(
-        new LambdaQueryWrapper<MsgVariableSourceVO>()
-            .eq(MsgVariableSourceVO::getTemplateCode, templateCode)
-            .eq(MsgVariableSourceVO::getTenantId, TenantContextHolder.getTenantId()));
+    MsgVariableSourceQuery query = new MsgVariableSourceQuery();
+    query.setTemplateCode(templateCode);
+    query.setTenantId(TenantContextHolder.getTenantId());
+    return variableSourceRepository.findList(query);
   }
 
   /**

@@ -161,7 +161,7 @@ public class CronjobCliApplication {
    * @return data 节点
    * @throws Exception 解析异常
    */
-  static JsonNode parseData(String body) throws Exception {
+  public static JsonNode parseData(String body) throws Exception {
     JsonNode root = MAPPER.readTree(body);
     if (!"A00000".equals(root.path("code").asText())) {
       throw new RuntimeException(root.path("msg").asText("未知错误"));

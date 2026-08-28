@@ -47,6 +47,9 @@ public class SendContext {
   /** 灰度 key（用于日志） */
   private String canaryKeyForLog;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 去重 key */
   private String dedupKey;
 

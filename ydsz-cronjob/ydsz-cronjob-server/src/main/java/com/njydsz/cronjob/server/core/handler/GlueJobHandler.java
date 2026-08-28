@@ -32,7 +32,6 @@ import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
-import com.njydsz.cronjob.server.core.handler.GroovyDockerSandboxExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
 /**

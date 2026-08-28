@@ -22,6 +22,9 @@ public class MsgReceiptVO implements Serializable {
   /** 回执记录唯一标识（主键） */
   private String id;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 关联消息日志 ID */
   private String logId;
 

@@ -73,7 +73,6 @@ import com.njydsz.cronjob.server.core.scheduler.NextFireTimeCalculator;
 import com.njydsz.cronjob.server.core.sharding.ShardAssignment;
 import com.njydsz.cronjob.server.core.sharding.ShardingStrategy;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
-import com.njydsz.cronjob.server.metrics.CronjobMetricsHolder;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 

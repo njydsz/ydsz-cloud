@@ -1,5 +1,6 @@
 package com.njydsz.message.server.service.impl.config;
 
+import java.util.List;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;

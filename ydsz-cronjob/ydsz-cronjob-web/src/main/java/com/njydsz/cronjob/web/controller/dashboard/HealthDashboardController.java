@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -78,6 +79,30 @@ public class HealthDashboardController {
 
   /** Leader 选举角色 */
   private static final String LEADER_ROLE = "ydsz-job-scheduler";
+
+  /** 系统资源危险阈值（CPU/内存使用率百分比） */
+  private static final int CRITICAL_USAGE_THRESHOLD = 95;
+
+  /** WARNING 级别健康评分扣分 */
+  private static final int WARNING_SCORE_DEDUCTION = 20;
+
+  /** CRITICAL 级别健康评分扣分 */
+  private static final int CRITICAL_SCORE_DEDUCTION = 50;
+
+  /** 任务异常扣分上限 */
+  private static final int ERROR_SCORE_MAX_DEDUCTION = 20;
+
+  /** 任务异常扣分系数 */
+  private static final int ERROR_SCORE_MULTIPLIER = 2;
+
+  /** 最近失败扣分上限 */
+  private static final int FAILURE_SCORE_MAX_DEDUCTION = 15;
+
+  /** 最近失败扣分系数 */
+  private static final int FAILURE_SCORE_MULTIPLIER = 3;
+
+  /** 字节到 MB 的转换因子（1024 * 1024） */
+  private static final long BYTES_PER_MB = 1024L * 1024L;
 
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
@@ -160,7 +185,7 @@ public class HealthDashboardController {
         && (int) threadPool.get("usagePct") > POOL_USAGE_WARN_THRESHOLD) {
       healthLevel = "WARNING";
     }
-    if (cpuUsage > 95 || memUsage > 95) {
+    if (cpuUsage > CRITICAL_USAGE_THRESHOLD || memUsage > CRITICAL_USAGE_THRESHOLD) {
       healthLevel = "CRITICAL";
     }
     system.put("healthLevel", healthLevel);
@@ -294,7 +319,7 @@ public class HealthDashboardController {
     if (dispatcher == null) {
       return pool;
     }
-    java.util.concurrent.ThreadPoolExecutor executor = dispatcher.getTaskExecutorPool();
+    ThreadPoolExecutor executor = dispatcher.getTaskExecutorPool();
     if (executor == null) {
       return pool;
     }
@@ -328,9 +353,9 @@ public class HealthDashboardController {
     if (system != null) {
       String healthLevel = (String) system.get("healthLevel");
       if ("WARNING".equals(healthLevel)) {
-        score -= 20;
+        score -= WARNING_SCORE_DEDUCTION;
       } else if ("CRITICAL".equals(healthLevel)) {
-        score -= 50;
+        score -= CRITICAL_SCORE_DEDUCTION;
       }
     }
 
@@ -340,7 +365,7 @@ public class HealthDashboardController {
     if (tasks != null) {
       long error = ((Number) tasks.getOrDefault("error", 0L)).longValue();
       if (error > 0) {
-        score -= Math.min(20, error * 2);
+        score -= Math.min(ERROR_SCORE_MAX_DEDUCTION, error * ERROR_SCORE_MULTIPLIER);
       }
     }
 
@@ -350,7 +375,7 @@ public class HealthDashboardController {
     if (issues != null) {
       int failureCount = ((Number) issues.getOrDefault("failureCount", 0)).intValue();
       if (failureCount > 0) {
-        score -= Math.min(15, failureCount * 3);
+        score -= Math.min(FAILURE_SCORE_MAX_DEDUCTION, failureCount * FAILURE_SCORE_MULTIPLIER);
       }
     }
 
@@ -392,14 +417,14 @@ public class HealthDashboardController {
    * 获取已用堆内存（MB）。
    */
   private long getMemoryUsedMB() {
-    return memoryMXBean.getHeapMemoryUsage().getUsed() / (1024 * 1024);
+    return memoryMXBean.getHeapMemoryUsage().getUsed() / BYTES_PER_MB;
   }
 
   /**
    * 获取最大堆内存（MB）。
    */
   private long getMemoryMaxMB() {
-    return memoryMXBean.getHeapMemoryUsage().getMax() / (1024 * 1024);
+    return memoryMXBean.getHeapMemoryUsage().getMax() / BYTES_PER_MB;
   }
 
   /**

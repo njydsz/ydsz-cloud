@@ -24,4 +24,7 @@ public class MsgVariableSourceQuery extends PageQuery {
 
   /** 数据源类型（BEAN/SQL/HTTP/STATIC） */
   @Xss private String sourceType;
+
+  /** 租户 ID */
+  @Xss private String tenantId;
 }

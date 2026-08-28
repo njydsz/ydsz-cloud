@@ -56,6 +56,9 @@ public class BatchServiceImpl implements BatchService {
   /** 单批最大条数 */
   private static final int MAX_BATCH_SIZE = 10000;
 
+  /** 默认批次大小（初始容量） */
+  private static final int DEFAULT_BATCH_SIZE = 16;
+
   /** 批次记录 Repository */
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -376,7 +379,9 @@ public class BatchServiceImpl implements BatchService {
    * @return 消息请求列表
    */
   private List<MessageRequest> buildRequests(BatchSendRequestDTO dto) {
-    int expectedSize = dto.getRequests() != null ? dto.getRequests().size() : dto.getReceiverList() != null ? dto.getReceiverList().size() : 16;
+        int requestCount = dto.getRequests() != null ? dto.getRequests().size() : 0;
+    int receiverCount = dto.getReceiverList() != null ? dto.getReceiverList().size() : 0;
+    int expectedSize = requestCount > 0 ? requestCount : receiverCount > 0 ? receiverCount : DEFAULT_BATCH_SIZE;
     List<MessageRequest> requests = new ArrayList<>(expectedSize);
     // 优先使用直接传入的 requests 列表
     if (!CollectionUtils.isEmpty(dto.getRequests())) {

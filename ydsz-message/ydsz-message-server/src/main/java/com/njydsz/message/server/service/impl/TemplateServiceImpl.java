@@ -1,9 +1,9 @@
 package com.njydsz.message.server.service.impl.template;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,18 +12,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
+import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
-import com.njydsz.message.server.service.template.TemplateService;
+import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
 
 /**
@@ -82,21 +83,18 @@ public class TemplateServiceImpl implements TemplateService {
     String locale =
         StringUtils.hasText(dto.getLocale()) ? dto.getLocale() : MessageConstants.DEFAULT_LOCALE;
     // 唯一性校验 (templateCode, channel, locale, tenantId)
-    MsgTemplateVO existing =
-        msgTemplateRepository.selectOne(
-            new LambdaQueryWrapper<MsgTemplateVO>()
-                .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
-                .eq(MsgTemplate::getChannel, dto.getChannel())
-                .eq(MsgTemplate::getLocale, locale)
-                .eq(MsgTemplate::getTenantId, tenantId)
-                .last("LIMIT 1"));
+    TemplateQueryDTO query = new TemplateQueryDTO();
+    query.setTemplateCode(dto.getTemplateCode());
+    query.setChannel(dto.getChannel());
+    query.setLocale(locale);
+    MsgTemplateVO existing = msgTemplateRepository.findOne(query).orElse(null);
     if (existing != null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("模板已存在: " + dto.getTemplateCode() + "/" + locale)
           .build();
     }
-    MsgTemplateVO entity = new MsgTemplateVO();
+    MsgTemplateDTO entity = new MsgTemplateDTO();
     entity.setTemplateCode(dto.getTemplateCode());
     entity.setChannel(dto.getChannel());
     entity.setLocale(locale);
@@ -112,14 +110,15 @@ public class TemplateServiceImpl implements TemplateService {
     entity.setAuditStatus(TemplateAuditStatusEnum.DRAFT.name());
     entity.setDescription(dto.getDescription());
     entity.setTenantId(tenantId);
-    msgTemplateRepository.insert(entity);
-    syncSearchIndex(entity);
+    msgTemplateRepository.save(entity);
+    MsgTemplateVO result = msgTemplateRepository.findOne(query).orElse(null);
+    syncSearchIndex(result);
     log.info(
         "[Template] 创建模板: code={} channel={} locale={}",
         dto.getTemplateCode(),
         dto.getChannel(),
         locale);
-    return entity;
+    return result;
   }
 
   /**
@@ -177,7 +176,24 @@ public class TemplateServiceImpl implements TemplateService {
     if (dto.getDescription() != null) {
       entity.setDescription(dto.getDescription());
     }
-    msgTemplateRepository.updateById(entity);
+    MsgTemplateDTO updateDto = new MsgTemplateDTO();
+    updateDto.setId(id);
+    updateDto.setTemplateCode(entity.getTemplateCode());
+    updateDto.setChannel(entity.getChannel());
+    updateDto.setLocale(entity.getLocale());
+    updateDto.setVersion(entity.getVersion());
+    updateDto.setCategory(entity.getCategory());
+    updateDto.setSceneCode(entity.getSceneCode());
+    updateDto.setSubject(entity.getSubject());
+    updateDto.setContent(entity.getContent());
+    updateDto.setProvider(entity.getProvider());
+    updateDto.setProviderKey(entity.getProviderKey());
+    updateDto.setSignName(entity.getSignName());
+    updateDto.setStatus(entity.getStatus());
+    updateDto.setAuditStatus(entity.getAuditStatus());
+    updateDto.setDescription(entity.getDescription());
+    updateDto.setTenantId(entity.getTenantId());
+    msgTemplateRepository.update(updateDto);
     syncSearchIndex(entity);
     return entity;
   }
@@ -215,7 +231,7 @@ public class TemplateServiceImpl implements TemplateService {
           .message("模板 ID 不能为空")
           .build();
     }
-    MsgTemplateVO entity = msgTemplateRepository.selectById(id);
+    MsgTemplateVO entity = msgTemplateRepository.findById(id).orElse(null);
     if (entity == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -235,31 +251,16 @@ public class TemplateServiceImpl implements TemplateService {
    */
   @Override
   public Page<MsgTemplateVO> page(TemplateQueryDTO query) {
-    Page<MsgTemplateVO> page =
-        new Page<>(
-            query == null ? 1 : query.getPageNum(),
-            Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    LambdaQueryWrapper<MsgTemplateVO> w = new LambdaQueryWrapper<>();
-    if (query != null) {
-      w.eq(
-          StringUtils.hasText(query.getTemplateCode()),
-          MsgTemplate::getTemplateCode,
-          query.getTemplateCode());
-      w.eq(StringUtils.hasText(query.getChannel()), MsgTemplate::getChannel, query.getChannel());
-      w.eq(StringUtils.hasText(query.getLocale()), MsgTemplate::getLocale, query.getLocale());
-      w.eq(StringUtils.hasText(query.getStatus()), MsgTemplate::getStatus, query.getStatus());
-      w.eq(
-          StringUtils.hasText(query.getAuditStatus()),
-          MsgTemplate::getAuditStatus,
-          query.getAuditStatus());
-      w.eq(StringUtils.hasText(query.getCategory()), MsgTemplate::getCategory, query.getCategory());
-      w.eq(
-          StringUtils.hasText(query.getSceneCode()),
-          MsgTemplate::getSceneCode,
-          query.getSceneCode());
+    if (query == null) {
+      query = new TemplateQueryDTO();
     }
-    w.orderByDesc(MsgTemplate::getCreatedAt);
-    return msgTemplateRepository.selectPage(page, w);
+    PageResponse<List<MsgTemplateVO>> pageResponse = msgTemplateRepository.findPage(query);
+    Page<MsgTemplateVO> page = new Page<>(
+        query.getPageNum() != null ? query.getPageNum() : 1,
+        query.getPageSize() != null ? query.getPageSize() : 10);
+    page.setRecords(pageResponse.getData());
+    page.setTotal(pageResponse.getTotal());
+    return page;
   }
 
   /**
@@ -286,29 +287,19 @@ public class TemplateServiceImpl implements TemplateService {
     String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContextHolder.getTenantId();
     String loc = StringUtils.hasText(locale) ? locale : MessageConstants.DEFAULT_LOCALE;
     // 精确 locale
-    MsgTemplateVO entity =
-        msgTemplateRepository.selectOne(
-            new LambdaQueryWrapper<MsgTemplateVO>()
-                .eq(MsgTemplate::getTemplateCode, templateCode)
-                .eq(MsgTemplate::getChannel, channel)
-                .eq(MsgTemplate::getLocale, loc)
-                .eq(MsgTemplate::getTenantId, tid)
-                .eq(MsgTemplate::getStatus, "ENABLED")
-                .last("LIMIT 1"));
+    TemplateQueryDTO query = new TemplateQueryDTO();
+    query.setTemplateCode(templateCode);
+    query.setChannel(channel);
+    query.setLocale(loc);
+    query.setStatus("ENABLED");
+    MsgTemplateVO entity = msgTemplateRepository.findOne(query).orElse(null);
     if (entity != null) {
       return entity;
     }
     // 回退默认 zh-CN
     if (!MessageConstants.DEFAULT_LOCALE.equals(loc)) {
-      entity =
-          msgTemplateRepository.selectOne(
-              new LambdaQueryWrapper<MsgTemplateVO>()
-                  .eq(MsgTemplate::getTemplateCode, templateCode)
-                  .eq(MsgTemplate::getChannel, channel)
-                  .eq(MsgTemplate::getLocale, MessageConstants.DEFAULT_LOCALE)
-                  .eq(MsgTemplate::getTenantId, tid)
-                  .eq(MsgTemplate::getStatus, "ENABLED")
-                  .last("LIMIT 1"));
+      query.setLocale(MessageConstants.DEFAULT_LOCALE);
+      entity = msgTemplateRepository.findOne(query).orElse(null);
     }
     return entity;
   }
@@ -348,7 +339,26 @@ public class TemplateServiceImpl implements TemplateService {
       entity.setStatus("DISABLED");
     }
     entity.setAuditAt(LocalDateTime.now());
-    msgTemplateRepository.updateById(entity);
+    MsgTemplateDTO updateDto = new MsgTemplateDTO();
+    updateDto.setId(id);
+    updateDto.setTemplateCode(entity.getTemplateCode());
+    updateDto.setChannel(entity.getChannel());
+    updateDto.setLocale(entity.getLocale());
+    updateDto.setVersion(entity.getVersion());
+    updateDto.setCategory(entity.getCategory());
+    updateDto.setSceneCode(entity.getSceneCode());
+    updateDto.setSubject(entity.getSubject());
+    updateDto.setContent(entity.getContent());
+    updateDto.setProvider(entity.getProvider());
+    updateDto.setProviderKey(entity.getProviderKey());
+    updateDto.setSignName(entity.getSignName());
+    updateDto.setStatus(entity.getStatus());
+    updateDto.setAuditStatus(entity.getAuditStatus());
+    updateDto.setAuditRemark(entity.getAuditRemark());
+    updateDto.setAuditAt(entity.getAuditAt());
+    updateDto.setDescription(entity.getDescription());
+    updateDto.setTenantId(entity.getTenantId());
+    msgTemplateRepository.update(updateDto);
     log.info("[Template] 审核模板: id={} {} -> {}", id, current, target);
   }
 

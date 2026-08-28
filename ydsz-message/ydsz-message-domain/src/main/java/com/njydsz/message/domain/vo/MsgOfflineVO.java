@@ -43,6 +43,9 @@ public class MsgOfflineVO implements Serializable {
   /** 过期时间 */
   private LocalDateTime expiredAt;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 创建人 */
   private String createdBy;
 

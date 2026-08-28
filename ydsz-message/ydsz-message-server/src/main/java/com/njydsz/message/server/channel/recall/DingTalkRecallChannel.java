@@ -43,35 +43,35 @@ public class DingTalkRecallChannel implements RecallChannel {
   }
 
   @Override
-  public RecallResult recall(MsgLogVO log) {
+  public RecallResult recall(MsgLogVO msgLog) {
     log.debug(
         "[RecallChannel] DINGTALK 撤回尝试: msgId={} traceId={}",
-        log.getMsgId(),
-        log.getTraceId());
+        msgLog.getMsgId(),
+        msgLog.getTraceId());
 
     // 通道能力校验：DINGTALK_WORK（工作通知）不支持平台 API 撤回
-    if (log.getChannel() == MessageChannelEnum.DINGTALK_WORK) {
+    if (MessageChannelEnum.DINGTALK_WORK.name().equals(msgLog.getChannel())) {
       log.info(
           "[RecallChannel] DINGTALK_WORK 不支持平台撤回,仅本地标记: msgId={}",
-          log.getMsgId());
+          msgLog.getMsgId());
       return RecallResult.localOnly();
     }
 
     // 时效窗口检查
-    if (isBeyondRecallWindow(log)) {
+    if (isBeyondRecallWindow(msgLog)) {
       log.warn(
           "[RecallChannel] DINGTALK 超出撤回时效窗口({}分钟),仅本地标记: msgId={}",
           RECALL_WINDOW.toMinutes(),
-          log.getMsgId());
+          msgLog.getMsgId());
       return RecallResult.localOnly();
     }
 
     // 获取钉钉消息唯一标识，用于撤回 API 调用
-    String dingtalkMsgId = resolveDingTalkMsgId(log);
+    String dingtalkMsgId = resolveDingTalkMsgId(msgLog);
     if (dingtalkMsgId == null || dingtalkMsgId.isBlank()) {
       log.warn(
           "[RecallChannel] DINGTALK 无法获取消息 ID,仅本地标记: msgId={}",
-          log.getMsgId());
+          msgLog.getMsgId());
       return RecallResult.localOnly();
     }
 
@@ -79,7 +79,7 @@ public class DingTalkRecallChannel implements RecallChannel {
     // 当前为模拟实现，假设撤回成功
     log.info(
         "[RecallChannel] DINGTALK 平台撤回成功(模拟): msgId={} dingtalkMsgId={}",
-        log.getMsgId(),
+        msgLog.getMsgId(),
         dingtalkMsgId);
     return RecallResult.platformSuccess();
   }
@@ -90,8 +90,8 @@ public class DingTalkRecallChannel implements RecallChannel {
    * @param log 消息日志
    * @return true 表示已超出窗口
    */
-  private boolean isBeyondRecallWindow(MsgLogVO log) {
-    LocalDateTime createdAt = log.getCreatedAt();
+  private boolean isBeyondRecallWindow(MsgLogVO msgLog) {
+    LocalDateTime createdAt = msgLog.getCreatedAt();
     if (createdAt == null) {
       return true;
     }
@@ -106,12 +106,12 @@ public class DingTalkRecallChannel implements RecallChannel {
    * @param log 消息日志
    * @return 钉钉消息 ID，无法获取时返回 null
    */
-  private String resolveDingTalkMsgId(MsgLogVO log) {
-    if (log.getProviderTraceId() != null && !log.getProviderTraceId().isBlank()) {
-      return log.getProviderTraceId();
+  private String resolveDingTalkMsgId(MsgLogVO msgLog) {
+    if (msgLog.getProviderTraceId() != null && !msgLog.getProviderTraceId().isBlank()) {
+      return msgLog.getProviderTraceId();
     }
-    if (log.getTraceId() != null && !log.getTraceId().isBlank()) {
-      return log.getTraceId();
+    if (msgLog.getTraceId() != null && !msgLog.getTraceId().isBlank()) {
+      return msgLog.getTraceId();
     }
     return null;
   }

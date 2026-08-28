@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -24,8 +26,6 @@ import com.njydsz.cronjob.domain.dto.BatchResult;
 import com.njydsz.cronjob.domain.dto.job.JobClusterMigrationDTO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.service.cluster.ClusterMigrationService;
-
-import jakarta.validation.Valid;
 
 /**
  * 集群漂移管理 Controller（P2-5）。

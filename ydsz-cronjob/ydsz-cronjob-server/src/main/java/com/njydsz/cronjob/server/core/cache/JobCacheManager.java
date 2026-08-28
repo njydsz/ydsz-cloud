@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.server.core.cache;
 
-import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
@@ -50,6 +49,9 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 @RequiredArgsConstructor
 public class JobCacheManager {
 
+  /** L1 本地缓存最大条目数 */
+  private static final int L1_MAXIMUM_SIZE = 2000;
+
   /** L1 本地缓存 key 前缀 */
   private static final String L1_KEY_PREFIX = "job:";
 
@@ -69,7 +71,7 @@ public class JobCacheManager {
   private final Cache<String, JobVO> l1Cache =
       (Cache<String, JobVO>) (Cache<?, ?>)
           YdszCache.newBuilder()
-              .maximumSize(2000)
+              .maximumSize(L1_MAXIMUM_SIZE)
               .expireAfterWrite(10, TimeUnit.MINUTES)
               .recordStats()
               .build();

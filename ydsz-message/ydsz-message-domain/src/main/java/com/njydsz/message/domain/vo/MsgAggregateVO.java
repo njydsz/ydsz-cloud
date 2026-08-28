@@ -55,6 +55,9 @@ public class MsgAggregateVO implements Serializable {
   /** 状态（ACTIVE/EXPIRED/SENT） */
   private String status;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 创建人 */
   private String createdBy;
 

@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -74,12 +74,11 @@ public class ScheduledMessageScanner {
   /** 执行定时消息扫描。 */
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
-    List<MsgLogVO> due =
-        msgLogRepository.selectList(
-            new LambdaQueryWrapper<MsgLogVO>()
-                .eq(MsgLog::getStatus, MessageStatusEnum.SCHEDULED.name())
-                .le(MsgLog::getScheduledAt, now)
-                .last("LIMIT " + BATCH_SIZE));
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setStatus(MessageStatusEnum.SCHEDULED.name());
+    query.setScheduledAtEnd(now);
+    query.setPageSize(BATCH_SIZE);
+    List<MsgLogVO> due = msgLogRepository.findList(query);
     if (due.isEmpty()) {
       return;
     }
@@ -112,7 +111,7 @@ public class ScheduledMessageScanner {
         logDO.setStatus(MessageStatusEnum.SUCCESS.name());
         logDO.setProviderTraceId(providerTraceId);
         logDO.setCostMs(cost);
-        msgLogRepository.updateById(logDO);
+        msgLogRepository.update(logDO);
         messageMetrics.recordSend(logDO.getChannel(), "SUCCESS", cost);
         log.info(
             "[ScheduledScanner] 定时消息发送成功: msgId={} scheduledAt={} cost={}ms",
@@ -126,7 +125,7 @@ public class ScheduledMessageScanner {
         logDO.setStatus(MessageStatusEnum.RETRY.name());
         logDO.setRetryCount(1);
         logDO.setNextRetryAt(LocalDateTime.now().plusSeconds(NEXT_RETRY_OFFSET_SECONDS));
-        msgLogRepository.updateById(logDO);
+        msgLogRepository.update(logDO);
         messageMetrics.recordRetry(logDO.getChannel());
         log.warn(
             "[ScheduledScanner] 定时消息发送失败转重试: msgId={} err={}", logDO.getMsgId(), e.getMessage());

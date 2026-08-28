@@ -37,27 +37,27 @@ public class FeishuRecallChannel implements RecallChannel {
   }
 
   @Override
-  public RecallResult recall(MsgLogVO log) {
+  public RecallResult recall(MsgLogVO msgLog) {
     log.debug(
         "[RecallChannel] FEISHU 撤回尝试: msgId={} traceId={}",
-        log.getMsgId(),
-        log.getTraceId());
+        msgLog.getMsgId(),
+        msgLog.getTraceId());
 
     // 时效窗口检查
-    if (isBeyondRecallWindow(log)) {
+    if (isBeyondRecallWindow(msgLog)) {
       log.warn(
           "[RecallChannel] FEISHU 超出撤回时效窗口({}分钟),仅本地标记: msgId={}",
           RECALL_WINDOW.toMinutes(),
-          log.getMsgId());
+          msgLog.getMsgId());
       return RecallResult.localOnly();
     }
 
     // 获取飞书消息唯一标识（message_id），用于撤回 API 调用
-    String feishuMsgId = resolveFeishuMsgId(log);
+    String feishuMsgId = resolveFeishuMsgId(msgLog);
     if (feishuMsgId == null || feishuMsgId.isBlank()) {
       log.warn(
           "[RecallChannel] FEISHU 无法获取飞书消息 ID,仅本地标记: msgId={}",
-          log.getMsgId());
+          msgLog.getMsgId());
       return RecallResult.localOnly();
     }
 
@@ -65,7 +65,7 @@ public class FeishuRecallChannel implements RecallChannel {
     // 当前为模拟实现，假设撤回成功
     log.info(
         "[RecallChannel] FEISHU 平台撤回成功(模拟): msgId={} feishuMsgId={}",
-        log.getMsgId(),
+        msgLog.getMsgId(),
         feishuMsgId);
     return RecallResult.platformSuccess();
   }

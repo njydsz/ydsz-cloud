@@ -3,6 +3,7 @@ package com.njydsz.common.seata.config;
 import java.time.Duration;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -43,7 +44,6 @@ import com.njydsz.common.seata.interceptor.XidServletFilter;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 import com.njydsz.common.seata.mq.MqXidPropagator;
 import com.njydsz.common.seata.mq.RocketMqXidPropagator;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
 
 /**
  * 分布式事务自动配置

@@ -73,6 +73,18 @@ public class WebhookEventDispatcher {
   /** 连接超时：5 秒 */
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
 
+  /** Webhook 推送超时时间（秒） */
+  private static final long WEBHOOK_REQUEST_TIMEOUT_SECONDS = 10;
+
+  /** HMAC 算法名称 */
+  private static final String HMAC_ALGORITHM = "HmacSHA256";
+
+  /** 重试补偿记录默认最大重试次数 */
+  private static final int DEFAULT_MAX_RETRIES = 5;
+
+  /** 重试补偿记录首次重试延迟（秒） */
+  private static final long INITIAL_RETRY_DELAY_SECONDS = 30;
+
 
   private final JobWebhookRepository jobWebhookRepository;
   private final WebhookRetryRepository webhookRetryRepository;
@@ -198,7 +210,7 @@ public class WebhookEventDispatcher {
     HttpRequest.Builder builder =
         HttpRequest.newBuilder()
             .uri(URI.create(webhook.getCallbackUrl()))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(Duration.ofSeconds(WEBHOOK_REQUEST_TIMEOUT_SECONDS))
             .header("Content-Type", "application/json; charset=UTF-8");
 
     // 添加自定义请求头
@@ -257,8 +269,8 @@ public class WebhookEventDispatcher {
       retryVO.setWebhookSecret(webhook.getSecret());
       retryVO.setPayloadJson(YdszJson.toJson(body));
       retryVO.setRetryCount(0);
-      retryVO.setMaxRetries(5);
-      retryVO.setNextRetryTime(LocalDateTime.now().plusSeconds(30));
+      retryVO.setMaxRetries(DEFAULT_MAX_RETRIES);
+      retryVO.setNextRetryTime(LocalDateTime.now().plusSeconds(INITIAL_RETRY_DELAY_SECONDS));
       retryVO.setRetryStatus("PENDING");
       retryVO.setCreatedAt(LocalDateTime.now());
       webhookRetryRepository.create(retryVO);
@@ -279,8 +291,8 @@ public class WebhookEventDispatcher {
   /** 计算 HMAC-SHA256 签名。 */
   private String computeSignature(String body, String secret) {
     try {
-      Mac mac = Mac.getInstance("HmacSHA256");
-      mac.init(new SecretKeySpec(secret.getBytes(), "HmacSHA256"));
+      Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+      mac.init(new SecretKeySpec(secret.getBytes(), HMAC_ALGORITHM));
       byte[] hash = mac.doFinal(body.getBytes());
       StringBuilder sb = new StringBuilder();
       for (byte b : hash) {

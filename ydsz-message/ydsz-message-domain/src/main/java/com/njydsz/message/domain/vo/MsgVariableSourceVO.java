@@ -39,6 +39,9 @@ public class MsgVariableSourceVO implements Serializable {
   /** 描述说明 */
   private String description;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 创建人 */
   private String createdBy;
 

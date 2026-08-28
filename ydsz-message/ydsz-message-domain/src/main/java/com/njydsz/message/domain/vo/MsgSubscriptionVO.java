@@ -22,6 +22,9 @@ public class MsgSubscriptionVO implements Serializable {
   /** 订阅记录唯一标识（主键） */
   private String id;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 用户 ID */
   private String userId;
 

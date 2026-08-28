@@ -18,7 +18,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.channel.sms.SmsProvider;
 import com.njydsz.message.server.config.MessageProperties;
-import com.njydsz.message.server.service.template.TemplateService;
+import com.njydsz.message.server.service.TemplateService;
 
 /**
  * 短信通道门面（替换原 MockSmsChannel）。

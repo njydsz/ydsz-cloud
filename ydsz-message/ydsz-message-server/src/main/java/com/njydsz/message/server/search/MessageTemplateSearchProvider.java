@@ -39,7 +39,6 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
     return "message_template";
   }
 
-  @Override
   public String getTypeLabel() {
     return MessageUtils.getMessage("message.search.typeLabel", "消息模板");
   }
@@ -72,7 +71,6 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
         .build();
   }
 
-  @Override
   public List<SearchField> getSearchableFields() {
     return List.of(
         SearchField.builder()
@@ -109,8 +107,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .build());
   }
 
-  @Override
   public MsgTemplateVO loadById(String id) {
-    return msgTemplateRepository.selectById(id);
+    return msgTemplateRepository.findById(id).orElse(null);
   }
 }

@@ -27,4 +27,10 @@ public class MsgTraceQuery extends PageQuery {
 
   /** 节点状态 */
   @Xss private String status;
+
+  /** 业务类型 */
+  @Xss private String bizType;
+
+  /** 业务单据 ID */
+  @Xss private String bizId;
 }

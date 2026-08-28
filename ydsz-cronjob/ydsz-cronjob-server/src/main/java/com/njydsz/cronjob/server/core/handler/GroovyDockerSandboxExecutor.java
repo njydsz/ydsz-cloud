@@ -246,7 +246,7 @@ public class GroovyDockerSandboxExecutor {
       // 使用 filter 查找并强制删除所有匹配的容器
       Process kill = new ProcessBuilder(
           "docker", "rm", "-f",
-          "$(docker", "ps", "-aq", "--filter", "name=" + containerNamePrefix + ")"
+          "$(docker", "ps", "-aq", "--filter", "name=" + containerNamePrefix + ")")
           .redirectErrorStream(true).start();
       kill.waitFor(WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (Exception e) {

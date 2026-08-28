@@ -27,9 +27,9 @@ import com.njydsz.message.domain.query.MsgAggregateQuery;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.server.service.core.MessageService;
-import com.njydsz.message.server.service.template.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
 
 /**

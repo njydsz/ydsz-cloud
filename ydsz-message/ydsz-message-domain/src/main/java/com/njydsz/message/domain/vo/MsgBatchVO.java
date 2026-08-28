@@ -67,6 +67,12 @@ public class MsgBatchVO implements Serializable {
   /** 发送人 ID */
   private String senderId;
 
+  /** 租户 ID */
+  private String tenantId;
+
+  /** 请求列表 JSON（断点续传） */
+  private String payload;
+
   /** 创建人 */
   private String createdBy;
 

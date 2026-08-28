@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -56,6 +58,9 @@ public class MessageLogQueryDTO extends PageQuery {
 
   /** P2-13: 时间范围结束 */
   @Xss private String endTime;
+
+  /** 定时消息调度时间结束（scheduledAt <= now） */
+  private LocalDateTime scheduledAtEnd;
 
   /** 游标 ID（searchAfter 分页）：上一页最后一条记录的 ID */
   @Xss private String searchAfterId;

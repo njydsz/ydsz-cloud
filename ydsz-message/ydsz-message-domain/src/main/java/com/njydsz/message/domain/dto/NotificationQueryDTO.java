@@ -40,4 +40,10 @@ public class NotificationQueryDTO extends PageQuery {
 
   /** 撤回状态 */
   private String recallStatus;
+
+  /** 业务类型 */
+  private String bizType;
+
+  /** 业务 ID */
+  private String bizId;
 }

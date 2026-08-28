@@ -54,7 +54,7 @@ public class RedisHealthStatus {
   public void checkRedisHealth() {
     try {
       redisStringOps.set(PROBE_KEY, "ok", PROBE_TTL_SECONDS);
-      String value = redisStringOps.get(PROBE_KEY);
+      String value = redisStringOps.get(PROBE_KEY, String.class);
       boolean healthy = "ok".equals(value);
       boolean wasHealthy = redisHealthy.getAndSet(healthy);
       if (!wasHealthy && healthy) {

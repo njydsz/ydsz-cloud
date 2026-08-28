@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.GlobalConcurrencyController;
-import com.njydsz.cronjob.domain.repository.JobLogRepository;
 
 /**
  * 全局并发计数器校准任务（P0-4：校准任务显式化）。

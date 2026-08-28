@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.server.core.webhook;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -15,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
@@ -65,6 +68,15 @@ public class WebhookRetryScanTask implements ScanTask {
   /** 签名头名称 */
   private static final String SIGNATURE_HEADER = "X-Webhook-Signature";
 
+  /** 连接超时时间（秒）：5 秒 */
+  private static final long CONNECT_TIMEOUT_SECONDS = 5;
+
+  /** 默认扫描间隔（毫秒）：30 秒 */
+  private static final long DEFAULT_SCAN_INTERVAL_MS = 30_000L;
+
+  /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   /** 最大退避时间：60 秒 */
   private static final long MAX_BACKOFF_MS = 60_000L;
 
@@ -74,7 +86,7 @@ public class WebhookRetryScanTask implements ScanTask {
   private final WebhookRetryRepository webhookRetryRepository;
   private final CronjobProperties cronjobProperties;
   private final HttpClient httpClient =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS)).build();
 
   @Override
   public String name() {
@@ -117,7 +129,7 @@ public class WebhookRetryScanTask implements ScanTask {
           deadCount++;
         } else {
           long backoffMs = calculateBackoffMs(newCount);
-          LocalDateTime nextRetry = LocalDateTime.now().plusNanos(backoffMs * 1_000_000L);
+          LocalDateTime nextRetry = LocalDateTime.now().plusNanos(backoffMs * NANOS_PER_MILLI);
           webhookRetryRepository.updateForRetry(retry.getId(), newCount, nextRetry, null);
         }
       }
@@ -134,7 +146,7 @@ public class WebhookRetryScanTask implements ScanTask {
   @Override
   public long intervalMs() {
     long configuredInterval = cronjobProperties.getWebhookRetry().getScanIntervalMs();
-    return configuredInterval > 0 ? configuredInterval : 30_000L;
+    return configuredInterval > 0 ? configuredInterval : DEFAULT_SCAN_INTERVAL_MS;
   }
 
   @Override
@@ -149,9 +161,10 @@ public class WebhookRetryScanTask implements ScanTask {
    *
    * @param retry 重试记录
    * @return true 推送成功（2xx）；false 非 2xx 响应
-   * @throws Exception IO 或签名异常
+   * @throws IOException          IO 异常
+   * @throws InterruptedException 线程中断异常
    */
-  private boolean doSend(JobWebhookRetryVO retry) throws Exception {
+  private boolean doSend(JobWebhookRetryVO retry) throws IOException, InterruptedException {
     ObjectNode body = YdszJson.parseObject(retry.getPayloadJson());
     HttpRequest.Builder builder =
         HttpRequest.newBuilder()
@@ -199,16 +212,22 @@ public class WebhookRetryScanTask implements ScanTask {
    * @param payload 请求体 JSON
    * @param secret Webhook 密钥
    * @return 十六进制签名
-   * @throws Exception 算法初始化异常
    */
-  private String computeSignature(String payload, String secret) throws Exception {
-    Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-    mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM));
-    byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-    StringBuilder sb = new StringBuilder();
-    for (byte b : hash) {
-      sb.append(String.format("%02x", b));
+  private String computeSignature(String payload, String secret) {
+    try {
+      Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+      mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM));
+      byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+      StringBuilder sb = new StringBuilder();
+      for (byte b : hash) {
+        sb.append(String.format("%02x", b));
+      }
+      return sb.toString();
+    } catch (Exception e) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("Webhook 签名计算失败: " + e.getMessage())
+          .build();
     }
-    return sb.toString();
   }
 }

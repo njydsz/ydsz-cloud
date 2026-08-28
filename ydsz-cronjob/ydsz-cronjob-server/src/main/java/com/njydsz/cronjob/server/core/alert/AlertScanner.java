@@ -55,6 +55,9 @@ public class AlertScanner {
   /** 默认时间窗口（分钟）：规则未配置 timeWindowMinutes 时使用 */
   private static final int DEFAULT_TIME_WINDOW_MINUTES = 30;
 
+  /** SLA 预警线系数：SLA 承诺值的 80% 时触发预警 */
+  private static final double SLA_WARNING_LINE_FACTOR = 0.8;
+
   private String leaderRole;
 
   /**
@@ -308,7 +311,7 @@ public class AlertScanner {
     // SLA 承诺耗时（毫秒）：threshold 为秒
     long slaCommitmentMs = rule.getThreshold() * 1000L;
     // 预警线：SLA 的 80%
-    long warningLineMs = (long) (slaCommitmentMs * 0.8);
+    long warningLineMs = (long) (slaCommitmentMs * SLA_WARNING_LINE_FACTOR);
 
     Long p95Ms;
     if (rule.getJobId() == null) {

@@ -36,6 +36,12 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @ConditionalOnClass(HealthIndicator.class)
 public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
 
+  /** 慢节点响应时长阈值（毫秒）：响应时长超过 5000ms 判定为慢节点 */
+  private static final long SLOW_NODE_RESPONSE_THRESHOLD_MS = 5000L;
+
+  /** 高负载节点阈值：运行任务数超过 50 判定为高负载 */
+  private static final int HIGH_LOAD_NODE_THRESHOLD = 50;
+
   /** Redis 连接工厂（可选依赖，未配置时跳过 Redis 健康检查） */
   private final ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider;
 
@@ -163,13 +169,13 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
 
         // 统计慢节点（响应时长 > 5000ms）
         long slowNodeCount = onlineNodes.stream()
-            .filter(n -> n.getResponseTimeMs() != null && n.getResponseTimeMs() > 5000)
+            .filter(n -> n.getResponseTimeMs() != null && n.getResponseTimeMs() > SLOW_NODE_RESPONSE_THRESHOLD_MS)
             .count();
         nodeHealth.put("slowNodeCount", slowNodeCount);
 
         // 统计高负载节点（runningCount > 50）
         long highLoadNodeCount = onlineNodes.stream()
-            .filter(n -> n.getRunningCount() != null && n.getRunningCount() > 50)
+            .filter(n -> n.getRunningCount() != null && n.getRunningCount() > HIGH_LOAD_NODE_THRESHOLD)
             .count();
         nodeHealth.put("highLoadNodeCount", highLoadNodeCount);
 

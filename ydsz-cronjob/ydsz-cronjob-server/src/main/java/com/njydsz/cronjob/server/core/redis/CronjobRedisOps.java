@@ -112,6 +112,7 @@ public class CronjobRedisOps {
    *
    * @param keySegment key segment
    * @param clazz      返回类型
+   * @param <T>        返回值泛型类型
    * @return 值；不存在或异常返回 null
    */
   public <T> T get(String keySegment, Class<T> clazz) {

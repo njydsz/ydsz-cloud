@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.server.config;
 
-import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import lombok.Data;
 
@@ -48,7 +49,7 @@ public class MultiClusterConfig {
   private boolean enabled = false;
 
   /** 远程集群配置映射（key = 集群名称，如 "beijing"、"shanghai"） */
-  private java.util.Map<String, RemoteCluster> clusters = new java.util.HashMap<>();
+  private Map<String, RemoteCluster> clusters = new HashMap<>();
 
   /**
    * 远程集群连接信息。
@@ -61,10 +62,16 @@ public class MultiClusterConfig {
     /** 跨集群调用鉴权令牌（与目标集群 ydsz.cronjob.remote.access-token 一致） */
     private String accessToken = "";
 
+    /** 默认 HTTP 连接超时（秒） */
+    private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 5;
+
+    /** 默认 HTTP 请求超时（秒） */
+    private static final int DEFAULT_REQUEST_TIMEOUT_SECONDS = 30;
+
     /** HTTP 连接超时（秒） */
-    private int connectTimeoutSeconds = 5;
+    private int connectTimeoutSeconds = DEFAULT_CONNECT_TIMEOUT_SECONDS;
 
     /** HTTP 请求超时（秒） */
-    private int requestTimeoutSeconds = 30;
+    private int requestTimeoutSeconds = DEFAULT_REQUEST_TIMEOUT_SECONDS;
   }
 }

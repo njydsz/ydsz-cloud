@@ -3,6 +3,7 @@ package com.njydsz.message.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -18,6 +19,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
 public class MsgCanaryDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
@@ -54,4 +56,10 @@ public class MsgCanaryDTO implements Serializable {
 
   /** 实验状态：ACTIVE 运行中 / PAUSED 已暂停 / COMPLETED 已结束 */
   private String status;
+
+  /** 删除标记 */
+  private Boolean deleted;
+
+  /** 创建时间 */
+  private java.time.LocalDateTime createdAt;
 }

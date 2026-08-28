@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +52,24 @@ public class JobExecutionProfiler {
 
   /** 稳定性评分阈值 */
   private static final double STABILITY_THRESHOLD_WARNING = 0.3;
+
+  /** P50 百分位常量 */
+  private static final int PERCENTILE_P50 = 50;
+
+  /** P90 百分位常量 */
+  private static final int PERCENTILE_P90 = 90;
+
+  /** P99 百分位常量 */
+  private static final int PERCENTILE_P99 = 99;
+
+  /** P90/P50 比值阈值：P90 超过 P50 的 5 倍时判定为长尾 */
+  private static final int P90_P50_RATIO_THRESHOLD = 5;
+
+  /** 超时率阈值（%）：超过 5% 时提示 */
+  private static final double TIMEOUT_RATE_THRESHOLD = 5.0;
+
+  /** 成功率阈值（%）：低于 90% 时提示 */
+  private static final double SUCCESS_RATE_THRESHOLD = 90.0;
 
   private final JobLogRepository jobLogRepository;
 
@@ -136,9 +153,9 @@ public class JobExecutionProfiler {
 
     // 计算耗时百分位
     Collections.sort(successDurations);
-    long p50 = percentile(successDurations, 50);
-    long p90 = percentile(successDurations, 90);
-    long p99 = percentile(successDurations, 90);
+    long p50 = percentile(successDurations, PERCENTILE_P50);
+    long p90 = percentile(successDurations, PERCENTILE_P90);
+    long p99 = percentile(successDurations, PERCENTILE_P99);
     long avg = average(successDurations);
     long min = successDurations.isEmpty() ? 0 : successDurations.get(0);
     long max = successDurations.isEmpty() ? 0 : successDurations.get(successDurations.size() - 1);
@@ -244,7 +261,7 @@ public class JobExecutionProfiler {
     }
 
     // P90 与 P50 差距大（长尾明显）
-    if (p50 > 0 && p90 > p50 * 5) {
+    if (p50 > 0 && p90 > p50 * P90_P50_RATIO_THRESHOLD) {
       suggestions.add(String.format(
           "P90(%ds) 远大于 P50(%ds)，存在明显长尾，建议排查慢执行原因",
           p90 / 1000, p50 / 1000));
@@ -259,14 +276,14 @@ public class JobExecutionProfiler {
     // 超时率过高
     if (totalCount > 0) {
       double timeoutRate = (timeoutCount * 100.0) / totalCount;
-      if (timeoutRate > 5) {
+      if (timeoutRate > TIMEOUT_RATE_THRESHOLD) {
         suggestions.add(String.format(
             "超时率 %.1f%% 较高，建议增大任务超时时间或优化执行逻辑", timeoutRate));
       }
     }
 
     // 成功率偏低
-    if (successRate < 90) {
+    if (successRate < SUCCESS_RATE_THRESHOLD) {
       suggestions.add(String.format(
           "成功率 %.1f%% 偏低，建议检查 handler 逻辑或外部依赖健康状态", successRate));
     }

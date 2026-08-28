@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.impl.template;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,8 +13,11 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
+import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
+import com.njydsz.message.domain.query.MsgTemplateVersionQuery;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.repository.MsgTemplateVersionRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
@@ -66,10 +68,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
           .message("模板编码不能为空")
           .build();
     }
-    return versionRepository.selectList(
-        new LambdaQueryWrapper<MsgTemplateVersionVO>()
-            .eq(MsgTemplateVersionVO::getTemplateCode, templateCode)
-            .orderByDesc(MsgTemplateVersionVO::getVersion));
+    MsgTemplateVersionQuery query = new MsgTemplateVersionQuery();
+    query.setTemplateCode(templateCode);
+    return versionRepository.findList(query);
   }
 
   /**
@@ -95,17 +96,10 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
       String auditor,
       String auditRemark) {
     // 查询当前最大版本号
-    Integer maxVersion =
-        versionRepository
-            .selectList(
-                new LambdaQueryWrapper<MsgTemplateVersion>()
-                    .eq(MsgTemplateVersion::getTemplateCode, templateCode)
-                    .orderByDesc(MsgTemplateVersion::getVersion)
-                    .last("LIMIT 1"))
-            .stream()
-            .findFirst()
-            .map(MsgTemplateVersionVO::getVersion)
-            .orElse(0);
+    MsgTemplateVersionQuery query = new MsgTemplateVersionQuery();
+    query.setTemplateCode(templateCode);
+    List<MsgTemplateVersionVO> existing = versionRepository.findList(query);
+    Integer maxVersion = existing.isEmpty() ? 0 : existing.get(0).getVersion();
     MsgTemplateVersionVO version = new MsgTemplateVersionVO();
     version.setTemplateCode(templateCode);
     version.setVersion(maxVersion + 1);
@@ -115,7 +109,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     version.setAuditor(auditor);
     version.setAuditRemark(auditRemark);
     version.setTenantId(TenantContextHolder.getTenantId());
-    versionRepository.insert(version);
+    versionRepository.save(version);
     log.info(
         "[TemplateVersion] 版本记录: code={} version={} status={}",
         templateCode,
@@ -135,23 +129,18 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String rollbackToVersion(String templateCode, int version) {
-    MsgTemplateVersionVO versionDO =
-        versionRepository.selectOne(
-            new LambdaQueryWrapper<MsgTemplateVersionVO>()
-                .eq(MsgTemplateVersionVO::getTemplateCode, templateCode)
-                .eq(MsgTemplateVersionVO::getVersion, version)
-                .last("LIMIT 1"));
-    if (versionDO == null) {
+    MsgTemplateVersionQuery versionQuery = new MsgTemplateVersionQuery();
+    versionQuery.setTemplateCode(templateCode);
+    MsgTemplateVersionVO versionDO = versionRepository.findOne(versionQuery).orElse(null);
+    if (versionDO == null || !versionDO.getVersion().equals(version)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .message("版本不存在: " + version)
           .build();
     }
-    MsgTemplateVO template =
-        templateRepository.selectOne(
-            new LambdaQueryWrapper<MsgTemplateVO>()
-                .eq(MsgTemplate::getTemplateCode, templateCode)
-                .last("LIMIT 1"));
+    TemplateQueryDTO templateQuery = new TemplateQueryDTO();
+    templateQuery.setTemplateCode(templateCode);
+    MsgTemplateVO template = templateRepository.findOne(templateQuery).orElse(null);
     if (template == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -159,7 +148,24 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
           .build();
     }
     template.setContent(versionDO.getContent());
-    templateRepository.updateById(template);
+    MsgTemplateDTO updateDto = new MsgTemplateDTO();
+    updateDto.setId(template.getId());
+    updateDto.setTemplateCode(template.getTemplateCode());
+    updateDto.setChannel(template.getChannel());
+    updateDto.setLocale(template.getLocale());
+    updateDto.setVersion(template.getVersion());
+    updateDto.setCategory(template.getCategory());
+    updateDto.setSceneCode(template.getSceneCode());
+    updateDto.setSubject(template.getSubject());
+    updateDto.setContent(template.getContent());
+    updateDto.setProvider(template.getProvider());
+    updateDto.setProviderKey(template.getProviderKey());
+    updateDto.setSignName(template.getSignName());
+    updateDto.setStatus(template.getStatus());
+    updateDto.setAuditStatus(template.getAuditStatus());
+    updateDto.setDescription(template.getDescription());
+    updateDto.setTenantId(template.getTenantId());
+    templateRepository.update(updateDto);
     log.info("[TemplateVersion] 版本回滚: code={} targetVersion={}", templateCode, version);
     return versionDO.getContent();
   }
@@ -190,11 +196,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
             .message("templateCode 和 content 不能同时为空")
             .build();
       }
-      MsgTemplateVO template =
-          templateRepository.selectOne(
-              new LambdaQueryWrapper<MsgTemplateVO>()
-                  .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
-                  .last("LIMIT 1"));
+      TemplateQueryDTO templateQuery = new TemplateQueryDTO();
+      templateQuery.setTemplateCode(dto.getTemplateCode());
+      MsgTemplateVO template = templateRepository.findOne(templateQuery).orElse(null);
       if (template == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
@@ -235,11 +239,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     if (StringUtils.hasText(dto.getTestChannel())) {
       request.setChannel(dto.getTestChannel());
     } else {
-      MsgTemplateVO template =
-          templateRepository.selectOne(
-              new LambdaQueryWrapper<MsgTemplateVO>()
-                  .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
-                  .last("LIMIT 1"));
+      TemplateQueryDTO templateQuery = new TemplateQueryDTO();
+      templateQuery.setTemplateCode(dto.getTemplateCode());
+      MsgTemplateVO template = templateRepository.findOne(templateQuery).orElse(null);
       if (template != null) {
         request.setChannel(template.getChannel());
       }

@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.impl.receipt;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,6 +13,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
+import com.njydsz.message.domain.query.MsgReceiptQuery;
 import com.njydsz.message.domain.repository.MsgReceiptRepository;
 import com.njydsz.message.domain.vo.MsgReceiptVO;
 import com.njydsz.message.server.service.core.MessageLogService;
@@ -70,7 +70,7 @@ public class ReceiptServiceImpl implements ReceiptService {
       entity.setProviderMsg(dto.getProviderMsg());
       entity.setRawResponse(dto.getRawResponse());
       entity.setTenantId(TenantContextHolder.getTenantId());
-      msgReceiptRepository.insert(entity);
+      msgReceiptRepository.save(entity);
       // 联动更新日志回执状态
       try {
         messageLogService.updateReceipt(
@@ -96,9 +96,8 @@ public class ReceiptServiceImpl implements ReceiptService {
     if (!StringUtils.hasText(logId)) {
       return List.of();
     }
-    return msgReceiptRepository.selectList(
-        new LambdaQueryWrapper<MsgReceiptVO>()
-            .eq(MsgReceiptVO::getLogId, logId)
-            .orderByDesc(MsgReceiptVO::getReceiptTime));
+    MsgReceiptQuery query = new MsgReceiptQuery();
+    query.setLogId(logId);
+    return msgReceiptRepository.findList(query);
   }
 }

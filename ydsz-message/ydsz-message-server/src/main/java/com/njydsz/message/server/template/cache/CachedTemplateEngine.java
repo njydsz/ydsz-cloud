@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -111,26 +110,27 @@ public class CachedTemplateEngine implements TemplateEngine {
       long expireAfterWriteMinutes,
       @Autowired(required = false) MeterRegistry meterRegistry) {
     this.astCache =
-        YdszCache.newBuilder()
+        YdszCache.<String, TemplateAst>newBuilder()
             .name(CACHE_NAME)
             .maximumSize(Math.max(MIN_CACHE_SIZE, maxCacheSize))
             .expireAfterWrite(expireAfterWriteMinutes, TimeUnit.MINUTES)
             .recordStats()
-            .removalListener(
-                RemovalListener.listener(
-                    (String key, TemplateAst value, RemovalCause cause) -> {
-                      if (cause == RemovalCause.SIZE) {
-                        log.warn(
-                            "[TemplateAst] 缓存容量驱逐: cause={} cacheSize={}",
-                            cause,
-                            astCache.estimatedSize());
-                      }
-                    }))
+            .removalListener(this::onCacheRemoval)
             .build();
     log.info(
         "[TemplateAst] 缓存已初始化: maxSize={} expireAfterWrite={}min",
         maxCacheSize,
         expireAfterWriteMinutes);
+  }
+
+  /** 缓存移除回调（在 SIZE 驱逐时输出警告） */
+  private void onCacheRemoval(String key, TemplateAst value, RemovalCause cause) {
+    if (cause == RemovalCause.SIZE) {
+      log.warn(
+          "[TemplateAst] 缓存容量驱逐: cause={} cacheSize={}",
+          cause,
+          astCache.estimatedSize());
+    }
   }
 
   /**
@@ -153,7 +153,7 @@ public class CachedTemplateEngine implements TemplateEngine {
           "ydsz.message.template.cache.eviction.count",
           tags,
           astCache,
-          c -> (double) c.getStats().evictionCount());
+          c -> (double) c.getStats().getEvictionCount());
       log.info("[TemplateAst] 缓存监控指标已注册");
     }
   }
@@ -474,7 +474,7 @@ public class CachedTemplateEngine implements TemplateEngine {
         "size=%d, hitRate=%.2f%%, evictions=%d",
         astCache.estimatedSize(),
         astCache.getHitRate() * 100,
-        astCache.getStats().evictionCount());
+        astCache.getStats().getEvictionCount());
   }
 
   /**

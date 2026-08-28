@@ -38,27 +38,27 @@ public class WeComRecallChannel implements RecallChannel {
   }
 
   @Override
-  public RecallResult recall(MsgLogVO log) {
+  public RecallResult recall(MsgLogVO msgLog) {
     log.debug(
         "[RecallChannel] WECOM_APP 撤回尝试: msgId={} traceId={}",
-        log.getMsgId(),
-        log.getTraceId());
+        msgLog.getMsgId(),
+        msgLog.getTraceId());
 
     // 时效窗口检查
-    if (isBeyondRecallWindow(log)) {
+    if (isBeyondRecallWindow(msgLog)) {
       log.warn(
           "[RecallChannel] WECOM_APP 超出撤回时效窗口({}分钟),仅本地标记: msgId={}",
           RECALL_WINDOW.toMinutes(),
-          log.getMsgId());
+          msgLog.getMsgId());
       return RecallResult.localOnly();
     }
 
     // 获取企微消息唯一标识（msgId），用于撤回 API 调用
-    String wecomMsgId = resolveWeComMsgId(log);
+    String wecomMsgId = resolveWeComMsgId(msgLog);
     if (wecomMsgId == null || wecomMsgId.isBlank()) {
       log.warn(
           "[RecallChannel] WECOM_APP 无法获取企微消息 ID,仅本地标记: msgId={}",
-          log.getMsgId());
+          msgLog.getMsgId());
       return RecallResult.localOnly();
     }
 
@@ -66,7 +66,7 @@ public class WeComRecallChannel implements RecallChannel {
     // 当前为模拟实现，假设撤回成功
     log.info(
         "[RecallChannel] WECOM_APP 平台撤回成功(模拟): msgId={} wecomMsgId={}",
-        log.getMsgId(),
+        msgLog.getMsgId(),
         wecomMsgId);
     return RecallResult.platformSuccess();
   }

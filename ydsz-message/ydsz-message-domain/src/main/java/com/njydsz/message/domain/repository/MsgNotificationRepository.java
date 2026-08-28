@@ -1,5 +1,6 @@
 package com.njydsz.message.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -127,4 +128,14 @@ public interface MsgNotificationRepository {
    * @return 未读数量
    */
   long countUnread(String userId);
+
+  /**
+   * 标记过期通知为已删除。
+   *
+   * <p>仅更新 {@code expiredAt < :now 且 deleted=0} 的通知。
+   *
+   * @param now 当前时间
+   * @return 实际更新的通知条数
+   */
+  int markExpired(LocalDateTime now);
 }

@@ -65,6 +65,12 @@ public class FlowNodeVO implements Serializable {
   /** AI 审批节点配置懒解析缓存（不参与序列化）。 */
   private transient volatile AiAgentNodeConfig parsedAiAgentNodeConfig;
 
+  /** 驳回策略配置懒解析缓存（不参与序列化）。 */
+  private transient volatile RejectStrategyConfig parsedRejectStrategyConfig;
+
+  /** 催办通道配置懒解析缓存（不参与序列化）。 */
+  private transient volatile UrgeChannelConfig parsedUrgeChannelConfig;
+
   // ==================== ext 懒解析基础设施 ====================
 
   /**
@@ -197,6 +203,42 @@ public class FlowNodeVO implements Serializable {
       }
       parsedAiAgentNodeConfig = AiAgentNodeConfig.fromExt(getExtMap());
       return parsedAiAgentNodeConfig;
+    }
+  }
+
+  /**
+   * 获取驳回策略配置值对象（懒解析、线程安全）。
+   *
+   * @return 驳回策略配置值对象（不可变，非 null）
+   */
+  public RejectStrategyConfig getRejectStrategyConfig() {
+    if (parsedRejectStrategyConfig != null) {
+      return parsedRejectStrategyConfig;
+    }
+    synchronized (this) {
+      if (parsedRejectStrategyConfig != null) {
+        return parsedRejectStrategyConfig;
+      }
+      parsedRejectStrategyConfig = RejectStrategyConfig.fromExt(getExtMap());
+      return parsedRejectStrategyConfig;
+    }
+  }
+
+  /**
+   * 获取催办通道配置值对象（懒解析、线程安全）。
+   *
+   * @return 催办通道配置值对象（不可变，非 null）
+   */
+  public UrgeChannelConfig getUrgeChannelConfig() {
+    if (parsedUrgeChannelConfig != null) {
+      return parsedUrgeChannelConfig;
+    }
+    synchronized (this) {
+      if (parsedUrgeChannelConfig != null) {
+        return parsedUrgeChannelConfig;
+      }
+      parsedUrgeChannelConfig = UrgeChannelConfig.fromExt(getExtMap());
+      return parsedUrgeChannelConfig;
     }
   }
 

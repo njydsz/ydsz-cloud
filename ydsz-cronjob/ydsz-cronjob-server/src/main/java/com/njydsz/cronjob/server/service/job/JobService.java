@@ -5,7 +5,6 @@ import java.util.List;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.BatchResult;
-import com.njydsz.cronjob.domain.dto.job.JobBatchUpdateDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;

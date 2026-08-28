@@ -52,18 +52,18 @@ public class RecallChannelRouter implements InitializingBean {
   /**
    * 路由并执行撤回。
    *
-   * @param log 消息日志
+   * @param msgLog 消息日志
    * @return 撤回结果
    */
-  public RecallChannel.RecallResult routeAndRecall(MsgLogVO log) {
-    if (log == null) {
+  public RecallChannel.RecallResult routeAndRecall(MsgLogVO msgLog) {
+    if (msgLog == null) {
       return RecallChannel.RecallResult.failed("消息日志为空");
     }
-    String channel = log.getChannel();
+    String channel = msgLog.getChannel();
     RecallChannel handler = channelMap.getOrDefault(channel, defaultRecallChannel);
     log.debug(
         "[RecallRouter] 路由撤回: channel={} handler={}", channel, handler.getClass().getSimpleName());
-    return handler.recall(log);
+    return handler.recall(msgLog);
   }
 
   /**

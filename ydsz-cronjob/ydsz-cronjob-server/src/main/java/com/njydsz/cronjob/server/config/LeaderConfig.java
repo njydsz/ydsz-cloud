@@ -85,6 +85,8 @@ public class LeaderConfig {
    * 跨字段校验：renewIntervalSeconds 必须小于 leaseSeconds。
    *
    * <p>通过 {@code @AssertTrue} 触发方法级校验。
+   *
+   * @return true 表示配置合法（renewIntervalSeconds < leaseSeconds）
    */
   @AssertTrue(message = "续期间隔 renewIntervalSeconds 必须小于租约时长 leaseSeconds")
   public boolean isRenewIntervalValid() {

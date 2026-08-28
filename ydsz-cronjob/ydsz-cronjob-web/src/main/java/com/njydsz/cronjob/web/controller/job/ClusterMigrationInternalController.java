@@ -13,7 +13,6 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
@@ -118,6 +117,8 @@ public class ClusterMigrationInternalController {
 
   /**
    * 注销请求 DTO。
+   *
+   * @param jobKey 任务唯一标识
    */
   public record UnregisterRequest(String jobKey) {
     public String getJobKey() {

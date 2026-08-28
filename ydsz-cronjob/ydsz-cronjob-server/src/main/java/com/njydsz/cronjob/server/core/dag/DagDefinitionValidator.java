@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
@@ -320,8 +322,7 @@ public class DagDefinitionValidator {
         expr = expr.substring(2, expr.length() - 1);
       }
       // 仅解析不求值，仅校验语法
-      org.springframework.expression.ExpressionParser parser =
-          new org.springframework.expression.spel.standard.SpelExpressionParser();
+      ExpressionParser parser = new SpelExpressionParser();
       parser.parseExpression(expr);
     } catch (Exception e) {
       throw SysException.builder()

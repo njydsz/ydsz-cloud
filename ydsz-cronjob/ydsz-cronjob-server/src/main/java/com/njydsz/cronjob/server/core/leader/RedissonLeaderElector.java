@@ -72,6 +72,9 @@ public class RedissonLeaderElector implements LeaderElector {
   /** P1-F4: Leader 任期号（epoch/fencing token）key 前缀：每次抢占成功时 INCR 单调递增 */
   private static final String EPOCH_KEY_PREFIX = "ydsz:job:leader:epoch:";
 
+  /** 纳秒到毫秒的换算系数 */
+  private static final long NANOS_PER_MILLIS = 1_000_000L;
+
   private final RedissonClient redissonClient;
   private final CronjobProperties cronjobProperties;
 
@@ -173,7 +176,7 @@ public class RedissonLeaderElector implements LeaderElector {
     if (metrics == null) {
       return;
     }
-    long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000;
+    long elapsedMs = (System.nanoTime() - startNanos) / NANOS_PER_MILLIS;
     metrics.incLeaderElection(role, success ? "SUCCESS" : "FAILED");
     if (success) {
       metrics.recordLeaderElectionDuration(role, elapsedMs);

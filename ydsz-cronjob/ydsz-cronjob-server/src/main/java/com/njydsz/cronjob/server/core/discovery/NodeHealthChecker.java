@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.server.core.discovery;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -55,6 +54,9 @@ public class NodeHealthChecker implements ScanTask {
 
   /** EMA 平滑系数（0-1，越大越重视历史值） */
   private static final double EMA_ALPHA = 0.3;
+
+  /** DB 连接校验超时时间（秒） */
+  private static final int DB_VALIDATE_TIMEOUT_SECONDS = 5;
 
   private final JobNodeRepository jobNodeRepository;
   private final DataSource dataSource;
@@ -136,7 +138,7 @@ public class NodeHealthChecker implements ScanTask {
   private long measureDbPing() throws SQLException {
     long start = System.currentTimeMillis();
     try (Connection conn = dataSource.getConnection()) {
-      conn.isValid(5);
+      conn.isValid(DB_VALIDATE_TIMEOUT_SECONDS);
     }
     return System.currentTimeMillis() - start;
   }

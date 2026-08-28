@@ -18,7 +18,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.channel.ChannelRouter;
-import com.njydsz.message.server.service.template.TemplateService;
+import com.njydsz.message.server.service.TemplateService;
 
 /**
  * RocketMQ 事务消息本地事务监听器（P2-3）。

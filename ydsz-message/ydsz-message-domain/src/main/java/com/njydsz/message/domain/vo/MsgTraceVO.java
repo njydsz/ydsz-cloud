@@ -61,6 +61,9 @@ public class MsgTraceVO implements Serializable {
   /** 节点发生时间 */
   private LocalDateTime eventAt;
 
+  /** 租户 ID */
+  private String tenantId;
+
   /** 创建人 */
   private String createdBy;
 

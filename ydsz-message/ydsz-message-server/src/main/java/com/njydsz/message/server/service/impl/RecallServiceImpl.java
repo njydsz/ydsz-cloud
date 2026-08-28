@@ -2,17 +2,21 @@ package com.njydsz.message.server.service.impl.receipt;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.MsgNotificationDTO;
+import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.core.MsgTraceNodeEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
@@ -89,13 +93,14 @@ public class RecallServiceImpl implements RecallService {
           .message("用户 ID 与通知 ID 不能为空")
           .build();
     }
-    MsgNotificationVO n = msgNotificationRepository.selectById(notificationId);
-    if (n == null) {
+    Optional<MsgNotificationVO> optNotification = msgNotificationRepository.findById(notificationId);
+    if (optNotification.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .message("通知不存在: " + notificationId)
           .build();
     }
+    MsgNotificationVO n = optNotification.get();
     if (!userId.equals(n.getReceiverId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
@@ -104,7 +109,7 @@ public class RecallServiceImpl implements RecallService {
     }
     n.setRecallStatus(RecallStatusEnum.RECALLED.name());
     n.setRecallAt(LocalDateTime.now());
-    msgNotificationRepository.updateById(n);
+    msgNotificationRepository.update(convertToNotificationDTO(n));
     // P2-19: 推送撤回事件到前端（携带撤回原因/时间戳）
     messageRecallPushService.pushRecall(userId, notificationId, "通知撤回");
     log.info("[Recall] 撤回通知: id={} user={}", notificationId, userId);
@@ -130,17 +135,20 @@ public class RecallServiceImpl implements RecallService {
     }
     messageLogService.markRecalled(logId);
     // P0-4: 查找消息并通过 WebSocket 推送撤回事件
-    MsgLogVO logDO = msgLogRepository.selectById(logId);
-    if (logDO != null && StringUtils.hasText(logDO.getReceiver())) {
-      // P2-19: 推送撤回事件（携带消息 ID/撤回原因/时间戳）
-      messageRecallPushService.pushRecall(logDO.getReceiver(), logDO.getMsgId(), "消息撤回");
-      // P0-2: 记录撤回轨迹
-      messageTraceService.recordTrace(
-          logDO.getMsgId(),
-          MsgTraceNodeEnum.RECALLED.name(),
-          "SUCCESS",
-          logDO.getChannel(),
-          "消息已撤回: logId=" + logId);
+    Optional<MsgLogVO> optLog = msgLogRepository.findById(logId);
+    if (optLog.isPresent()) {
+      MsgLogVO logDO = optLog.get();
+      if (StringUtils.hasText(logDO.getReceiver())) {
+        // P2-19: 推送撤回事件（携带消息 ID/撤回原因/时间戳）
+        messageRecallPushService.pushRecall(logDO.getReceiver(), logDO.getMsgId(), "消息撤回");
+        // P0-2: 记录撤回轨迹
+        messageTraceService.recordTrace(
+            logDO.getMsgId(),
+            MsgTraceNodeEnum.RECALLED.name(),
+            "SUCCESS",
+            logDO.getChannel(),
+            "消息已撤回: logId=" + logId);
+      }
     }
     log.info("[Recall] 撤回消息: logId={}", logId);
     return true;
@@ -148,7 +156,7 @@ public class RecallServiceImpl implements RecallService {
 
   /**
    * P0-4: 按 msgId 撤回已发送消息。
-   * 
+   *
    * <p>校验撤回时间窗口（默认 30 分钟），超时不可撤回。 撤回后更新状态为 RECALLED 并推送前端撤回事件。
    *
    * @param msgId 参数说明
@@ -164,20 +172,22 @@ public class RecallServiceImpl implements RecallService {
           .build();
     }
     // 按 msgId 查询消息日志
-    MsgLogVO logDO =
-        msgLogRepository.selectOne(
-            new LambdaQueryWrapper<MsgLogVO>().eq(MsgLog::getMsgId, msgId).last("LIMIT 1"));
-    if (logDO == null) {
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setMsgId(msgId);
+    Optional<MsgLogVO> optLog = msgLogRepository.findOne(query);
+    if (optLog.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .message("消息不存在: msgId=" + msgId)
           .build();
     }
+    MsgLogVO logDO = optLog.get();
     // P2-B5: 终态消息（DEAD/SKIPPED）不可撤回
-    if (logDO.getStatus() == MessageStatusEnum.DEAD || logDO.getStatus() == MessageStatusEnum.SKIPPED) {
+    MessageStatusEnum status = MessageStatusEnum.valueOf(logDO.getStatus());
+    if (status == MessageStatusEnum.DEAD || status == MessageStatusEnum.SKIPPED) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("消息状态为 " + logDO.getStatus().name() + "，不可撤回")
+          .message("消息状态为 " + logDO.getStatus() + "，不可撤回")
           .build();
     }
     // 校验撤回时间窗口（当前实体无 sentAt 字段，以 createdAt 为基准）
@@ -198,7 +208,7 @@ public class RecallServiceImpl implements RecallService {
     // 执行撤回
     logDO.setRecallStatus(RecallStatusEnum.RECALLED.name());
     logDO.setRecallAt(LocalDateTime.now());
-    msgLogRepository.updateById(logDO);
+    msgLogRepository.update(logDO);
 
     // P2-F2: 路由到通道对应的撤回实现
     RecallChannel.RecallResult recallResult = recallChannelRouter.routeAndRecall(logDO);
@@ -246,27 +256,47 @@ public class RecallServiceImpl implements RecallService {
           .build();
     }
     // 通知批量撤回
-    int notifCount =
-        msgNotificationRepository.update(
-            null,
-            new LambdaUpdateWrapper<MsgNotificationVO>()
-                .eq(MsgNotification::getBizType, bizType)
-                .eq(MsgNotification::getBizId, bizId)
-                .eq(MsgNotification::getRecallStatus, RecallStatusEnum.NONE.name())
-                .set(MsgNotification::getRecallStatus, RecallStatusEnum.RECALLED.name())
-                .set(MsgNotification::getRecallAt, LocalDateTime.now()));
+    NotificationQueryDTO notifQuery = new NotificationQueryDTO();
+    notifQuery.setBizType(bizType);
+    notifQuery.setBizId(bizId);
+    notifQuery.setRecallStatus(RecallStatusEnum.NONE.name());
+    List<MsgNotificationVO> notifications = msgNotificationRepository.findList(notifQuery);
+    int notifCount = 0;
+    for (MsgNotificationVO n : notifications) {
+      n.setRecallStatus(RecallStatusEnum.RECALLED.name());
+      n.setRecallAt(LocalDateTime.now());
+      if (msgNotificationRepository.update(convertToNotificationDTO(n))) {
+        notifCount++;
+      }
+    }
     // 消息日志批量撤回（仅更新非终态）
-    int logCount =
-        msgLogRepository.update(
-            null,
-            new LambdaUpdateWrapper<MsgLogVO>()
-                .eq(MsgLog::getBizType, bizType)
-                .eq(MsgLog::getBizId, bizId)
-                .eq(MsgLog::getRecallStatus, RecallStatusEnum.NONE.name())
-                .set(MsgLog::getRecallStatus, RecallStatusEnum.RECALLED.name())
-                .set(MsgLog::getRecallAt, LocalDateTime.now()));
+    MessageLogQueryDTO logQuery = new MessageLogQueryDTO();
+    logQuery.setBizType(bizType);
+    logQuery.setBizId(bizId);
+    logQuery.setRecallStatus(RecallStatusEnum.NONE.name());
+    List<MsgLogVO> logs = msgLogRepository.findList(logQuery);
+    int logCount = 0;
+    for (MsgLogVO log : logs) {
+      log.setRecallStatus(RecallStatusEnum.RECALLED.name());
+      log.setRecallAt(LocalDateTime.now());
+      if (msgLogRepository.update(log)) {
+        logCount++;
+      }
+    }
     log.info(
         "[Recall] 批量撤回: bizType={} bizId={} notif={} log={}", bizType, bizId, notifCount, logCount);
     return notifCount + logCount;
+  }
+
+  /**
+   * 将 MsgNotificationVO 转换为 MsgNotificationDTO（用于 Repository 更新操作）。
+   *
+   * @param vo 通知 VO
+   * @return 通知 DTO
+   */
+  private MsgNotificationDTO convertToNotificationDTO(MsgNotificationVO vo) {
+    MsgNotificationDTO dto = new MsgNotificationDTO();
+    BeanUtils.copyProperties(vo, dto);
+    return dto;
   }
 }

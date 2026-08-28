@@ -62,7 +62,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
   /** YdszCache 本地一级缓存（规则列表，key 为 ROUTE_RULE_CACHE_KEY） */
   private final Cache<String, List<MsgRouteRuleVO>> localCache =
-      YdszCache.newBuilder()
+      YdszCache.<String, List<MsgRouteRuleVO>>newBuilder()
           .name(CACHE_NAME)
           .maximumSize(LOCAL_CACHE_MAX_SIZE)
           .expireAfterWrite(LOCAL_CACHE_TTL_MS, TimeUnit.MILLISECONDS)
