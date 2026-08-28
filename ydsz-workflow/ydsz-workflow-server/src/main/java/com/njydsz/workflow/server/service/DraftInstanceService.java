@@ -12,13 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowSaveDraftDTO;
-import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.statemachine.FlowInstanceStateMachine;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 
 /**
  * P0-5: 草稿实例服务
@@ -51,8 +51,8 @@ public class DraftInstanceService {
   /** 流程实例状态机 */
   private final FlowInstanceStateMachine stateMachine;
 
-  /** 流程实例服务（提交草稿时复用启动逻辑） */
-  private final FlowInstanceService instanceService;
+  /** 流程推进引擎 */
+  private final DefaultFlowAdvancer advancer;
 
   /**
    * 构造器注入依赖。
@@ -60,15 +60,15 @@ public class DraftInstanceService {
    * @param instanceRepository 流程实例仓储
    * @param definitionRepository 流程定义仓储
    * @param stateMachine 流程实例状态机
-   * @param instanceService 流程实例服务
+   * @param advancer 流程推进引擎
    */
   public DraftInstanceService(FlowInstanceRepository instanceRepository,
       FlowDefinitionRepository definitionRepository, FlowInstanceStateMachine stateMachine,
-      FlowInstanceService instanceService) {
+      DefaultFlowAdvancer advancer) {
     this.instanceRepository = instanceRepository;
     this.definitionRepository = definitionRepository;
     this.stateMachine = stateMachine;
-    this.instanceService = instanceService;
+    this.advancer = advancer;
     log.info("[Flow-Draft] 草稿实例服务已初始化");
   }
 
@@ -94,8 +94,10 @@ public class DraftInstanceService {
     }
 
     // 检查是否已有草稿（同一业务单据）
-    FlowInstanceVO existingDraft = instanceRepository.findByBusinessAndStatus(
-        dto.getBusinessType(), dto.getBusinessId(), FlowInstanceStatus.DRAFT.name());
+    FlowInstanceVO existingDraft = instanceRepository
+        .findByBusinessAndStatus(dto.getBusinessType(), dto.getBusinessId(),
+            FlowInstanceStatus.DRAFT.name())
+        .orElse(null);
 
     if (existingDraft != null) {
       // 更新已有草稿
@@ -149,7 +151,7 @@ public class DraftInstanceService {
    */
   @Transactional(rollbackFor = Exception.class)
   public String updateDraft(String instanceId, FlowSaveDraftDTO dto) {
-    FlowInstanceVO draft = instanceRepository.findById(instanceId);
+    FlowInstanceVO draft = instanceRepository.findById(instanceId).orElse(null);
     if (draft == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -175,7 +177,8 @@ public class DraftInstanceService {
     variables.put("_draft", true);
     variables.put("_draftSavedAt", LocalDateTime.now().toString());
     variables.put("_draftUpdatedCount",
-        (draft.getVariable() != null ? (Integer) draft.getVariable().getOrDefault("_draftUpdatedCount", 0) + 1 : 1));
+        (draft.getVariable() != null ? (Integer) draft.getVariable().getOrDefault(
+            "_draftUpdatedCount", 0) + 1 : 1));
     draft.setVariable(variables);
 
     // 更新可选字段
@@ -196,7 +199,7 @@ public class DraftInstanceService {
   /**
    * 提交草稿（正式发起审批）。
    *
-   * <p>将 DRAFT → RUNNING，触发正常流程流转。复用 {@link FlowInstanceService#startProcess} 逻辑。
+   * <p>将 DRAFT → RUNNING，触发正常流程流转。复用引擎推进逻辑。
    *
    * @param instanceId 草稿实例 ID
    * @param draftData 更新后的表单数据（可选）
@@ -205,7 +208,7 @@ public class DraftInstanceService {
    */
   @Transactional(rollbackFor = Exception.class)
   public String submitDraft(String instanceId, Map<String, Object> draftData, String operatorId) {
-    FlowInstanceVO draft = instanceRepository.findById(instanceId);
+    FlowInstanceVO draft = instanceRepository.findById(instanceId).orElse(null);
     if (draft == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -231,27 +234,22 @@ public class DraftInstanceService {
 
     // 更新状态为 RUNNING
     draft.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+    draft.setStartAt(LocalDateTime.now());
     draft.setUpdatedAt(LocalDateTime.now());
     instanceRepository.update(draft);
 
     log.info("[Flow-Draft] 提交草稿成功: instanceId={}, flowCode={}", instanceId, draft.getFlowCode());
 
-    // 构建启动 DTO，触发流程流转
-    FlowStartProcessDTO startDto = new FlowStartProcessDTO();
-    startDto.setFlowCode(draft.getFlowCode());
-    startDto.setVersion(draft.getFlowVersion());
-    startDto.setBusinessType(draft.getBusinessType());
-    startDto.setBusinessId(draft.getBusinessId());
-    startDto.setBusinessNo(draft.getBusinessNo());
-    startDto.setTitle(draft.getTitle());
-    startDto.setInitiatorId(operatorId != null ? operatorId : draft.getInitiatorId());
-    startDto.setInitiatorName(draft.getInitiatorName());
-    startDto.setVariables(draft.getVariable());
-    startDto.setTenantId(draft.getTenantId());
-    startDto.setProviderTraceId(draft.getProviderTraceId());
+    // 使用引擎推进：从开始节点触发流程流转
+    try {
+      advancer.start(instanceId);
+    } catch (Exception e) {
+      log.error("[Flow-Draft] 草稿提交后流程推进失败: instanceId={} err={}", instanceId, e.getMessage(),
+          e);
+      throw e;
+    }
 
-    // 调用流程启动（推进到第一批业务节点）
-    return instanceService.startExistingInstance(startDto, instanceId);
+    return instanceId;
   }
 
   /**
@@ -263,7 +261,7 @@ public class DraftInstanceService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void cancelDraft(String instanceId) {
-    FlowInstanceVO draft = instanceRepository.findById(instanceId);
+    FlowInstanceVO draft = instanceRepository.findById(instanceId).orElse(null);
     if (draft == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -278,6 +276,7 @@ public class DraftInstanceService {
     // 更新状态为 TERMINATED
     draft.setFlowStatus(FlowInstanceStatus.TERMINATED.name());
     draft.setUpdatedAt(LocalDateTime.now());
+    draft.setEndAt(LocalDateTime.now());
     instanceRepository.update(draft);
 
     log.info("[Flow-Draft] 取消草稿成功: instanceId={}", instanceId);
