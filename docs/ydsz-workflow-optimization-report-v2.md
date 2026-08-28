@@ -213,3 +213,21 @@ F2 表单三件套、F3 流程模拟、测试覆盖专项（引擎网关/join/RE
 
 ---
 *报告生成：WorkBuddy · 基于 git c116ada03 工作区最新代码逐文件核验*
+
+---
+
+## 附录 A：执行落地记录（2026-08-27 下午 · 第一阶段 P0）
+
+| 项 | 处置 | 变更文件 |
+|---|---|---|
+| A1 会签原子计数 | ✅ 已修复：新增 `incrementApproveFinished`（带饱和守卫）与 `incrementApproveWeight` 原子 SQL，替换两处假乐观锁死分支；计数成功后以数据库权威值回填 VO | FlowRunTaskRepository / FlowRunTaskMapper(.java/.xml) / FlowRunTaskRepositoryImpl / ParallelCountersignStrategy / WeightedCountersignStrategy |
+| A2 NameServiceClient 装配缺口 | ✅ 已修复：新增 `NameServiceClientAdapter` 委托平台 `NameAssembler`（含空安全降级），经 `FlowAutoConfiguration @ConditionalOnMissingBean` 注册 | NameServiceClientAdapter（新增）/ FlowAutoConfiguration |
+| iter_var 幂等失效 | ✅ 已修复：PG/Oracle DDL 对齐 MySQL 契约（NOT NULL DEFAULT '' + 注释修订），追加存量环境升级脚本注释段；代码侧 `buildBaseTask` 显式空串占位 | data/postgre/ydsz-workflow.sql / data/oracle/ydsz-workflow.sql / FlowTaskCreateService |
+| O2 ai 空目录 | ✅ 已删除（git 未跟踪空目录，无级联影响） | server/service/ai/**（5 目录） |
+| O1 domain/event 死码包 | ⏸️ 决策调整：因 `FlowInstance` 实体已聚合事件暂存逻辑（popDomainEvents 等），删除需连带拆实体行为；收编方案①（事件基类五字段扩充 + AFTER_COMMIT MQ 桥接 + 实体行为接线）与 **A3/A4 捆绑为二阶段任务**，README 已标注"未接线"警示 | — |
+| E-4 错误码 key 规范化 | ✅ 已修复：DefaultFlowAdvancer 两处 `.message(key误用)` 改为 `.key()+.params()` | DefaultFlowAdvancer |
+| P-2 pass 链路重复查库 | ✅ 已修复：节点单次查询后由 validateFormFieldPerms 与 firePersonalCompletedEvent 共享 | FlowTaskPassService |
+| E5 README 漂移 | ✅ 已修复：AI 章节、实体命名、分区说明、DDL 口径、测试章节、DTO/Controller/事件数量口径、iter_var 幂等约束说明 | ydsz-workflow/README.md |
+| 规范合规清零（补充） | ✅ 已修复：workflow 四模块 CheckStyle 违规清零（domain 6 处：FlowNodeVO 冗余导入 ×4、CountersignConfig 魔法值 + 过期 API；server 24 处：无用/自包导入、魔法值、字典序、FQN、@param 标签），`mvn compile`（checkstyle 开启）+ 既有单测回归通过 | FlowNodeVO / CountersignConfig / FlowAutoConfiguration / FlowProperties / FlowTaskBatchServiceImpl / FlowInstanceLifecycleService / FlowTaskCreateService / FlowCcServiceImpl 等 17 文件 |
+
+**二阶段捆绑待办**（依赖关系：A3 领域事件收编 ← 实体行为接线；A4 状态机接线 ← 热路径读放大权衡）：F1 信号运行时、A3/A4/O1 收编、E-1/E-2 校验体系、P-1/P-2/P-5 性能与可观测、并发回归测试套件。

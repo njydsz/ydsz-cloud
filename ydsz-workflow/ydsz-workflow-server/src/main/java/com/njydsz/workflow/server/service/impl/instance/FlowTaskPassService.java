@@ -120,8 +120,12 @@ public class FlowTaskPassService {
     FlowInstanceVO instance = instanceRepository.findById(task.getInstanceId()).orElse(null);
     Map<String, Object> mergedVars = mergeVariables(instance, variables);
 
+    // P-2 查询收敛: pass 链路中节点仅查询一次，字段权限校验与个人完成事件共享
+    FlowNodeVO formNode =
+        nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).orElse(null);
+
     // P0-2: 表单字段权限校验
-    validateFormFieldPerms(task, dto.getVariables(), instance);
+    validateFormFieldPerms(task, dto.getVariables(), instance, formNode);
 
     // P1-10: 委派回归 — 被委派人通过后任务回到原办理人
     if (FlowTaskStatus.DELEGATED.name().equals(task.getTaskStatus())
@@ -158,7 +162,7 @@ public class FlowTaskPassService {
     strategy.onUserPassed(task, dto);
 
     // P2-38: 触发个人完成事件（会签中单个办理人完成审批，无论会签是否全部完成）
-    firePersonalCompletedEvent(task, dto, mergedVars);
+    firePersonalCompletedEvent(task, dto, mergedVars, formNode);
 
     boolean shouldAdvance = strategy.shouldAdvance(task);
     if (shouldAdvance) {
@@ -211,15 +215,21 @@ public class FlowTaskPassService {
   }
 
   /**
-   * 表单字段权限校验 + P0-3 表单 Schema 校验
+   * 表单字段权限校验 + P0-3 表单 Schema 校验。
    *
-   * @param task 参数说明
+   * <p>P-2 查询收敛：节点由调用方一次性查询后传入，本方法与 {@link #firePersonalCompletedEvent}
+   * 共享同一 {@code formNode}，消除同一 pass 链路中对 nodeRepository 的重复回查。
+   *
+   * @param task 任务
    * @param variables 参数说明
-   * @param instance 参数说明
+   * @param instance 实例
+   * @param formNode 当前任务对应节点（可为 null，表示节点不存在则跳过校验）
    */
   private void validateFormFieldPerms(
-      FlowRunTaskVO task, Map<String, Object> variables, FlowInstanceVO instance) {
-    FlowNodeVO formNode = nodeRepository.findByCode(task.getDefinitionId(), task.getNodeCode()).orElse(null);
+      FlowRunTaskVO task,
+      Map<String, Object> variables,
+      FlowInstanceVO instance,
+      FlowNodeVO formNode) {
     if (formNode == null) {
       return;
     }
@@ -303,17 +313,20 @@ public class FlowTaskPassService {
    *
    * <p>会签中某个办理人完成审批后，无论会签是否全部完成，均触发此事件。 业务方可实时跟踪会签进度（如"3/5 人已通过"）。
    *
-   * @param task       运行时任务（已更新的 approveFinished 计数）
-   * @param dto        操作参数（userId 作为个人审批人）
-   * @param variables  合并后的流程变量
+   * <p>P-2 查询收敛: 节点 ext 由调用方传入（复用 {@link #validateFormFieldPerms} 的查询结果）， 不再重复回查 nodeRepository。
+   *
+   * @param task     运行时任务（已更新的 approveFinished 计数）
+   * @param dto      操作参数（userId 作为个人审批人）
+   * @param variables 合并后的流程变量
+   * @param formNode 当前任务对应节点（可为 null）
    */
   private void firePersonalCompletedEvent(
-      FlowRunTaskVO task, FlowTaskOperateDTO dto, Map<String, Object> variables) {
+      FlowRunTaskVO task,
+      FlowTaskOperateDTO dto,
+      Map<String, Object> variables,
+      FlowNodeVO formNode) {
     try {
-      String nodeExt = nodeRepository
-          .findByCode(task.getDefinitionId(), task.getNodeCode())
-          .map(n -> n.getExt())
-          .orElse(null);
+      String nodeExt = formNode == null ? null : formNode.getExt();
       int finished = task.getApproveFinished() == null ? 1 : task.getApproveFinished();
       int count = task.getApproveCount() == null ? 1 : task.getApproveCount();
       notificationService.fireTaskPersonalCompleted(task, dto.getUserId(), "PASS", finished, count,

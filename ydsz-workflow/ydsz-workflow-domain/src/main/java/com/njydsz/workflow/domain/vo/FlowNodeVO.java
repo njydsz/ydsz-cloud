@@ -10,10 +10,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.vo.AssigneeConfig;
-import com.njydsz.workflow.domain.vo.CountersignConfig;
-import com.njydsz.workflow.domain.vo.SlaConfig;
-import com.njydsz.workflow.domain.vo.ServiceNodeConfig;
 
 /**
  * FlowNode 视图对象。

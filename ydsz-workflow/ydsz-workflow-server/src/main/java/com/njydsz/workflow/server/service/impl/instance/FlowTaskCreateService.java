@@ -27,6 +27,7 @@ import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowSignType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.gateway.FlowAssigneeResolver;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -35,7 +36,6 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
-import com.njydsz.workflow.domain.gateway.FlowAssigneeResolver;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
@@ -514,6 +514,9 @@ public class FlowTaskCreateService {
     task.setPerformType(performType.name());
     task.setApproveCount(approveCount == 0 ? 1 : approveCount);
     task.setApproveFinished(0);
+    // GAP-P0 幂等修复: 非循环节点 iter_var 空字符串占位（非 NULL），
+    // 保证 uk_instance_node_assignee 唯一约束在 PG/Oracle 下对非 FOREACH 任务生效
+    task.setIterVar("");
     task.setTaskStatus(FlowTaskStatus.PENDING.name());
     task.setTenantId(instance.getTenantId());
     task.setProviderTraceId(instance.getProviderTraceId());

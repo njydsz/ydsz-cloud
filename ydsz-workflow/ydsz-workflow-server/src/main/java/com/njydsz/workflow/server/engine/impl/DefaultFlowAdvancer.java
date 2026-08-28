@@ -25,7 +25,6 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowTerminateEventHandler;
-import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -273,7 +272,8 @@ public class DefaultFlowAdvancer {
     if (rejectTarget == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.reject.target.not.found")
+          .key("error.workflow.reject.target.not.found")
+          .params(currentNodeCode)
           .build();
     }
     FlowNodeVO target =
@@ -492,7 +492,8 @@ public class DefaultFlowAdvancer {
     if (targets.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.workflow.reject.target.not.found")
+          .key("error.workflow.reject.target.not.found")
+          .params(currentNodeCode)
           .build();
     }
     return targets;

@@ -9,14 +9,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.collection.MapUtils;
-import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
-import com.njydsz.workflow.server.service.impl.instance.FlowTaskCoreService;
 
 /**
  * 自动审批服务

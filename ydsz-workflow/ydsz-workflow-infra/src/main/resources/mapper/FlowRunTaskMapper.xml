@@ -243,6 +243,28 @@
           AND deleted = 0
     </update>
 
+    <!-- GAP-A1: 会签通过计数原子自增（带饱和守卫，防并发丢失更新与越界计数）。
+         不含任务状态守卫：并行会签首个办理人完成后该行即转 COMPLETED，其余办理人仍需计入票数。 -->
+    <update id="incrementApproveFinished">
+        UPDATE ydsz_flow_run_task
+        SET approve_finished = approve_finished + 1,
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND (approve_count IS NULL OR approve_finished &lt; approve_count)
+          AND deleted = 0
+    </update>
+
+    <!-- GAP-A1: 票签权重原子累加（防并发丢失更新） -->
+    <update id="incrementApproveWeight">
+        UPDATE ydsz_flow_run_task
+        SET approve_weight = approve_weight + #{weight},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
+
     <!-- P1-12: 更新任务办理人信息（用于顺序会签切换办理人） -->
     <update id="updateAssignee">
         UPDATE ydsz_flow_run_task

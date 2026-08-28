@@ -10,12 +10,15 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.workflow.domain.gateway.NameServiceClient;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.server.health.FlowHealthIndicator;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowGroupResolver;
+import com.njydsz.workflow.server.service.impl.integration.NameServiceClientAdapter;
 
 /**
  * 工作流模块自动配置。
@@ -84,6 +87,26 @@ public class FlowAutoConfiguration {
   @ConditionalOnMissingBean(FlowGroupResolver.class)
   public FlowGroupResolver flowGroupResolver() {
     return new FlowGroupResolver.DefaultFlowGroupResolver();
+  }
+
+  /**
+   * GAP-A2: 名称查询网关适配器 Bean。
+   *
+   * <p>修复此前 domain 层 {@link NameServiceClient} 网关接口全仓无实现、
+   * {@code FlowUserCacheService} 构造注入无 Bean 导致的应用上下文启动失败风险。
+   *
+   * <p>委托 common-feign 的 {@link NameAssembler}（ID → 名称富化组件，带缓存）；
+   * 业务系统可注册自定义 {@code NameServiceClient} Bean 覆盖本默认实现
+   * （如直连 userinfo Feign 客户端）。
+   *
+   * @param nameAssemblerProvider 名称富化组件提供器（显式禁用平台兜底时返回 null）
+   * @return 名称查询网关适配器
+   */
+  @Bean
+  @ConditionalOnMissingBean(NameServiceClient.class)
+  public NameServiceClient nameServiceClient(ObjectProvider<NameAssembler> nameAssemblerProvider) {
+    // 平台兜底 NoOpNameAssembler 缺省必在；显式禁用 ydsz.feign.name-assembler 时降级为空适配器，保证可启动
+    return new NameServiceClientAdapter(nameAssemblerProvider.getIfAvailable());
   }
 
   // P0-1: flowQueueExecutor 线程池已迁移到 ydsz-common-thread 统一管理

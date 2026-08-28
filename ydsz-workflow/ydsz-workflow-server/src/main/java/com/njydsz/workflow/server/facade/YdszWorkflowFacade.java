@@ -32,7 +32,6 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowReplayStepVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.domain.vo.FlowTimelineVO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;

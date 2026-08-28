@@ -53,7 +53,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 @RequiredArgsConstructor
 public class WeightedCountersignStrategy implements CountersignStrategy {
 
-  /** 运行时任务仓储，用于乐观锁更新 approveWeight 计数 */
+  /** 运行时任务仓储，用于票签权重原子累加（GAP-A1） */
   private final FlowRunTaskRepository taskRepository;
 
   /** 任务归档服务，票签满足条件后完成 + 归档到历史表 */
@@ -72,12 +72,9 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
 
   @Override
   public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
+    // GAP-A1: 数据库侧原子累加，确保并发投票时每个合法权重的加和精确无丢失
     int weight = task.getUserWeight() == null ? 1 : task.getUserWeight();
-    int currentApproved = task.getApproveWeight() == null ? 0 : task.getApproveWeight();
-    int newApproved = currentApproved + weight;
-    task.setApproveWeight(newApproved);
-
-    int updated = taskRepository.update(task) != null ? 1 : 0;
+    int updated = taskRepository.incrementApproveWeight(task.getId(), weight);
     if (updated == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -85,6 +82,10 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
           .params(task.getId())
           .build();
     }
+    // GAP-A1: 以数据库权威值回填（并发下本地 VO 的 approve_weight 已可能过期）
+    taskRepository
+        .findById(task.getId())
+        .ifPresent(fresh -> task.setApproveWeight(fresh.getApproveWeight()));
     // P2-1: 支持穿越时空补录审批
     LocalDateTime effectiveTime =
         Boolean.TRUE.equals(dto.getBackdated()) ? dto.getEffectiveTime() : null;

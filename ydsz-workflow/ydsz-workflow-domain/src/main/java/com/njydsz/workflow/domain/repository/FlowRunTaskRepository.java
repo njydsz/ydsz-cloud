@@ -268,6 +268,33 @@ public interface FlowRunTaskRepository {
   void markSlaAction(String taskId, String slaAction, int slaEscalated);
 
   /**
+   * 会签通过计数原子自增（GAP-A1 并发修复）。
+   *
+   * <p>在数据库侧以 {@code approve_finished = approve_finished + 1} 原子自增，
+   * 消除"读取 VO → 内存加一 → 整行回写"路径下的并发丢失更新。
+   *
+   * <p><b>守卫条件：</b>{@code approve_count IS NULL OR approve_finished < approve_count}
+   * （防止重复提交导致计数越过上限）+ {@code deleted = 0}。不含任务状态守卫——
+   * 并行会签中首个办理人完成后任务行即转 COMPLETED，其余办理人仍需计入票数。
+   *
+   * @param taskId 任务 ID
+   * @return 受影响行数；{@code 0} 表示任务不存在或计数已饱和（调用方据此判定冲突）
+   */
+  int incrementApproveFinished(String taskId);
+
+  /**
+   * 票签权重原子累加（GAP-A1 并发修复）。
+   *
+   * <p>在数据库侧以 {@code approve_weight = approve_weight + weight} 原子累加，
+   * 确保并发投票时每个合法权重的加和精确无丢失。
+   *
+   * @param taskId 任务 ID
+   * @param weight 本次累加的权重值
+   * @return 受影响行数；{@code 0} 表示任务不存在或已删除
+   */
+  int incrementApproveWeight(String taskId, int weight);
+
+  /**
    * 完成任务（更新状态为 COMPLETED / TIMEOUT 等终态）。
    *
    * <p>更新 {@code taskStatus, finishAt, durationMs}。

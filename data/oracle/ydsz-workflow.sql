@@ -464,7 +464,9 @@ CREATE TABLE ydsz_flow_run_task (
     last_urged_at            TIMESTAMP                DEFAULT NULL,
     sla_action               VARCHAR2(32 CHAR)        DEFAULT NULL,
     sla_escalated            NUMBER(10)               NOT NULL DEFAULT 0,
-    iter_var                 VARCHAR2(128 CHAR)       DEFAULT NULL,
+    -- GAP-P0 幂等修复: iter_var 非空占位（对齐 MySQL 版），保证 uk 约束对非 FOREACH 任务生效
+    -- （Oracle 唯一约束视 NULL 为互异值，若允许 NULL 则重复任务无法被约束拦截）
+    iter_var                 VARCHAR2(128 CHAR)       DEFAULT '' NOT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
@@ -515,7 +517,7 @@ COMMENT ON COLUMN ydsz_flow_run_task.urge_count IS '已发送的 SLA 催办次�
 COMMENT ON COLUMN ydsz_flow_run_task.last_urged_at IS '最近一次催办时间';
 COMMENT ON COLUMN ydsz_flow_run_task.sla_action IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
 COMMENT ON COLUMN ydsz_flow_run_task.sla_escalated IS '是否已升级（0=否，1=是，避免重复升级）';
-COMMENT ON COLUMN ydsz_flow_run_task.iter_var IS 'FOREACH 节点当前迭代元素值（如 userId/deptId，非循环节点为 NULL）';
+COMMENT ON COLUMN ydsz_flow_run_task.iter_var IS 'FOREACH 节点当前迭代元素值（如 userId/deptId，非循环节点为空字符串占位，保证唯一约束幂等生效）';
 COMMENT ON COLUMN ydsz_flow_run_task.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_run_task.status IS '状态标识';
 COMMENT ON COLUMN ydsz_flow_run_task.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
@@ -1450,3 +1452,21 @@ BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;
 END;
 /
+
+-- ============================================================================
+-- GAP-P0 存量环境升级脚本（2026-08-27）：iter_var 幂等修复
+-- 说明：run_task 唯一约束 uk_ydsz_flow_run_task_instance_node_assignee 含 iter_var，
+--       旧版允许 NULL，Oracle 视 NULL 为互异值导致非 FOREACH 任务防重失效。
+--       新装环境已由上方建表语句直接生效；存量环境按需执行以下步骤（先去重再改列）。
+-- ============================================================================
+
+-- 步骤 1：清理历史 NULL 占位（若存在 iter_var IS NULL 的行，占位为空字符串）
+-- UPDATE ydsz_flow_run_task SET iter_var = '' WHERE iter_var IS NULL;
+
+-- 步骤 2：收紧列为 NOT NULL DEFAULT ''
+-- ALTER TABLE ydsz_flow_run_task MODIFY (iter_var DEFAULT '' NOT NULL);
+
+-- 步骤 3：验证约束生效（应返回 0 行重复组合）
+-- SELECT instance_id, node_code, assignee_id, iter_var, COUNT(1)
+--   FROM ydsz_flow_run_task
+--  GROUP BY instance_id, node_code, assignee_id, iter_var HAVING COUNT(1) > 1;

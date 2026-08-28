@@ -54,8 +54,14 @@ public class FlowProperties {
   /** 用户信息缓存 TTL 默认值（分钟） */
   private static final long DEFAULT_USER_CACHE_TTL_MINUTES = 15L;
 
+  /** 用户信息缓存默认最大容量（条目数） */
+  private static final long DEFAULT_USER_CACHE_MAX_SIZE = 5000L;
+
   /** 表单 Schema 缓存 TTL 默认值（分钟） */
   private static final long DEFAULT_FORM_SCHEMA_CACHE_TTL_MINUTES = 60L;
+
+  /** 表单 Schema 缓存默认最大容量（条目数） */
+  private static final long DEFAULT_FORM_SCHEMA_CACHE_MAX_SIZE = 500L;
 
   /** 是否启用工作流模块 */
   private boolean enabled = true;
@@ -196,7 +202,7 @@ public class FlowProperties {
 
     /** 缓存最大容量（条目数），默认 5000 条 */
     @Min(1)
-    private long maxSize = 5000L;
+    private long maxSize = DEFAULT_USER_CACHE_MAX_SIZE;
   }
 
   /**
@@ -215,6 +221,6 @@ public class FlowProperties {
 
     /** 缓存最大容量（条目数），默认 500 条 */
     @Min(1)
-    private long maxSize = 500L;
+    private long maxSize = DEFAULT_FORM_SCHEMA_CACHE_MAX_SIZE;
   }
 }

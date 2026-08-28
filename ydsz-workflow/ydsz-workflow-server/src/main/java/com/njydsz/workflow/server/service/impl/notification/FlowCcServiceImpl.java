@@ -17,6 +17,7 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.util.id.TracerUtils;
+import com.njydsz.workflow.domain.gateway.FlowAssigneeResolver;
 import com.njydsz.workflow.domain.query.FlowCcQuery;
 import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.repository.FlowCcRepository;
@@ -24,7 +25,6 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.domain.gateway.FlowAssigneeResolver;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.service.FlowCcService;
 

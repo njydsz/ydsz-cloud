@@ -22,7 +22,6 @@ import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
-import com.njydsz.workflow.server.engine.FlowSkipUtils;
 import com.njydsz.workflow.server.config.FlowProperties;
 
 /**

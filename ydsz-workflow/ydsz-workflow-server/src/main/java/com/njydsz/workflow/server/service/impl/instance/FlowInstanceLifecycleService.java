@@ -1,6 +1,7 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -32,7 +33,6 @@ import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 import com.njydsz.workflow.server.service.FlowTimerService;
-import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
 
 /**
  * 流程实例生命周期服务
@@ -378,8 +378,8 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
     }
 
     int successCount = 0;
-    List<String> instanceIds = new java.util.ArrayList<>();
-    List<Map<String, Object>> failedItems = new java.util.ArrayList<>();
+    List<String> instanceIds = new ArrayList<>();
+    List<Map<String, Object>> failedItems = new ArrayList<>();
 
     for (int i = 0; i < dtos.size(); i++) {
       FlowStartProcessDTO dto = dtos.get(i);

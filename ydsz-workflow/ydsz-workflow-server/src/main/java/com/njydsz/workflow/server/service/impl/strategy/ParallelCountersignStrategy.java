@@ -21,6 +21,11 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
  *
  * <p>按策略规则（全部通过/任一通过/票决）决定整体结果。
  *
+ * <p><b>GAP-A1 并发修复：</b>会签计数改为数据库侧原子自增
+ * （{@link FlowRunTaskRepository#incrementApproveFinished}），
+ * 消除"读取 VO → 内存加一 → 整行回写"在多办理人并发提交时的丢失更新；
+ * 计数成功后以数据库权威值回填 VO，保证 {@link #shouldAdvance} 判定的准确性。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -28,7 +33,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 @RequiredArgsConstructor
 public class ParallelCountersignStrategy implements CountersignStrategy {
 
-  /** 运行时任务仓储，用于乐观锁更新 approveFinished 计数 */
+  /** 运行时任务仓储，用于会签计数原子自增 */
   private final FlowRunTaskRepository taskRepository;
 
   /** 任务归档服务，会签全部通过后完成 + 归档到历史表 */
@@ -41,17 +46,20 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
 
   @Override
   public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
-    int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
-    task.setApproveFinished(finished);
-    int updated = taskRepository.update(task) != null ? 1 : 0;
+    // GAP-A1: 数据库侧原子自增 + 饱和守卫（approve_finished < approve_count），
+    // 受影响行数为 0 表示任务不存在或计数已越过上限（重复提交），抛冲突异常由调用方处理
+    int updated = taskRepository.incrementApproveFinished(task.getId());
     if (updated == 0) {
-      // 乐观锁冲突，抛异常由调用方处理
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.countersign.optimistic.lock")
           .params(task.getId())
           .build();
     }
+    // GAP-A1: 以数据库权威值回填（并发下本地 VO 的 finished 已可能过期）
+    taskRepository
+        .findById(task.getId())
+        .ifPresent(fresh -> task.setApproveFinished(fresh.getApproveFinished()));
     // P2-1: 支持穿越时空补录审批
     LocalDateTime effectiveTime =
         Boolean.TRUE.equals(dto.getBackdated()) ? dto.getEffectiveTime() : null;

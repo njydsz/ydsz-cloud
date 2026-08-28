@@ -38,7 +38,7 @@
 | **会签模式** | 或签（OR）/ 并行会签（PARALLEL）/ 票签（WEIGHTED，加权投票） |
 | **跳转类型** | PASS / REJECT / FORWARD / BACK |
 | **加签类型** | ORIGINAL / BEFORE / AFTER / PARALLEL |
-| **AI 辅助** | 定义生成 / 实例分析 / 通知优化 / 委派推荐 / 国际化（当前为**显式降级骨架**：AI 服务未配置时返回基础模板/空分析，不阻塞核心审批链路，待对接 LLM 服务） |
+| **AI 辅助** | 定义生成 / 实例分析 / 通知优化 / 委派推荐 / 国际化。⚠️ **当前未实现**：原降级骨架代码及空目录已于近期清理移除（commit fcefb5064），待二阶段按 `LlmServiceClient` Gateway 抽象 + 超时降级方案实质化，不阻塞核心审批链路 |
 | **多租户** | 集团 + 公司 + 部门三级隔离（MULTI 模式） |
 | **历史归档** | 定时归档 + 清理（可配置 cron / 阈值天数） |
 | **附件预览** | 外部预览服务集成（kkFileView / Office Online） |
@@ -59,14 +59,18 @@
 | `FlowCategoryController` | `/api/v1/workflow/categories` | 流程分类（树形） |
 | `FlowTemplateController` | `/api/v1/workflow/template` | 流程模板市场（查询 / 导入 / 导出 / 版本 / 智能推荐） |
 
-> **路径说明**：除 `embedded`、`advanced`、`analytics`、`comment`、`categories`、`template` 外，
-> 其余 Controller 统一挂载在 `/api/v1/workflow/engine` 前缀下，通过方法级路径区分功能。
+> **Controller 数量说明**：`web/controller/` 共 15 个 Controller 文件。除 `embedded`、`advanced`、
+> `analytics`、`comment`、`categories`、`template` 外，其余 Controller 统一挂载在 `/api/v1/workflow/engine`
+> 前缀下，通过方法级路径区分功能。
 
 ## 数据库表设计
 
-实体共映射 **21 张主表** + 1 张已废弃的 `ydsz_flow_dmn_rule` 表（仅有 Mapper XML，无 Java 实体/Mapper 接口），
-数据库实体位于 `ydsz-workflow-infra` 模块的 `com.njydsz.workflow.infra.entity` 包下，命名使用 `DO` 后缀（如 `FlowDefinition`）。
-DDL 由各部署环境统一维护，不在模块内。
+实体共映射 **21 张主表**（另有已废弃的 `ydsz_flow_dmn_rule` 表，仅存 Mapper XML 遗迹，无 Java 实体/Mapper 接口）。
+数据库实体位于 `ydsz-workflow-infra` 模块的 `com.njydsz.workflow.infra.entity` 包下，
+类名**无 DO 后缀**（如 `FlowDefinition` / `FlowRunTask`，MyBatis-Plus 实体 + MapStruct 转换器风格）。
+
+**DDL 维护口径（2026-08-27 修订）**：三库全量 DDL 脚本随仓库维护于根目录 `data/{mysql,oracle,postgre}/ydsz-workflow.sql`；
+部署环境的差异配置（数据源连接等）由 Nacos 统一下发。历史文档中"DDL 不在模块内"的说法已作废。
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
@@ -101,7 +105,14 @@ DDL 由各部署环境统一维护，不在模块内。
 > - `ydsz_flow_cc(recipient_id, read_flag)` 抄送分页
 > - `ydsz_flow_event_subscription(event_type, listener)` 事件分发
 >
-> **分区说明**：`ydsz_flow_audit_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 归档。
+> **幂等约束（2026-08-27 GAP-P0 修复）**：
+> `ydsz_flow_run_task` 的唯一约束 `uk_..._instance_node_assignee` 含 `iter_var` 列，
+> 该列在 PostgreSQL / Oracle 下为 **NOT NULL DEFAULT ''**（空字符串占位，非 NULL）——
+> 唯一约束视 NULL 为互异值，允许 NULL 会令非 FOREACH 任务的防重失效。MySQL 版此前已修复，
+> PG/Oracle 版已对齐，存量环境升级脚本见各 DDL 文件尾部注释段。
+>
+> **分区说明**：⚠️ 历史文档曾宣称 `ydsz_flow_audit_log` 为按月分区表，经核对三库 DDL 实为普通单表。
+> 表为只追加型审计流，若数据量增长显著需启用 pg_partman 月分区，属待规划事项而非现状。
 
 ## 平台适配硬约束
 
@@ -148,7 +159,7 @@ ydsz-workflow/
 │       └── health/                      # 健康检查（WorkflowAppHealthIndicator）
 ├── ydsz-workflow-domain/                # 领域层 — 枚举 + DTO + VO + Repository 接口
 │   └── src/main/java/.../domain/
-│       ├── dto/                         # 数据传输对象（26 个）
+│       ├── dto/                         # 数据传输对象（23 个）
 │       ├── enums/                       # 枚举（9 个）
 │       │   ├── FlowNodeType.java        # 节点类型（11 种）
 │       │   ├── FlowInstanceStatus.java  # 实例状态（RUNNING/SUSPENDED/COMPLETED/TERMINATED/REJECTED/ERROR/ROLLED_BACK）
@@ -159,7 +170,7 @@ ydsz-workflow/
 │       │   ├── FlowSkipType.java        # 跳转类型（PASS/REJECT/FORWARD/BACK）
 │       │   ├── FlowSlaAction.java       # SLA 动作（REMIND/NOTIFY/ESCALATE/AUTO_PASS/AUTO_REJECT）
 │       │   └── WorkflowExceptionCode.java # 异常码（B70001-B75099 区间）
-│       ├── event/                       # 领域事件（6 个）
+│       ├── event/                       # 领域事件（15 个 ⚠️ 当前未接线：全为预留类，二阶段统一收编，见优化报告 v2 §A3）
 │       ├── gateway/                     # 网关接口（NameServiceClient / NotificationClient）
 │       ├── query/                       # 查询对象（3 个）
 │       ├── repository/                  # Repository 接口（20 个）
@@ -215,7 +226,7 @@ ydsz-workflow/
     └── src/main/
         ├── java/.../web/
         │   ├── WorkflowApplication.java  # Spring Boot 启动类
-        │   └── controller/                # REST Controller（11 个）
+        │   └── controller/                # REST Controller（15 个，含 advanced/embedded/analytics 等）
         │       ├── FlowDefinitionController.java      # 流程定义（definition 子包）
         │       ├── FlowCategoryController.java        # 流程分类（definition 子包）
         │       ├── FlowDesignerController.java        # 设计器（definition 子包）
@@ -267,8 +278,11 @@ mvn -pl ydsz-workflow -am spring-boot:run
 
 ## 测试
 
-> 当前模块**暂无单元测试**（`mvn test` 不执行测试类）。
-> 核心引擎（BpmnXmlParser / DefaultFlowAdvancer / FlowDefinitionCacheService）建议后续补齐覆盖。
+> 当前模块测试覆盖仍偏薄（6 个测试类，2026-08-27 更新）：
+> domain 层枚举×2（FlowNodeType / FlowTaskStatus）、状态机×1（FlowTaskStateMachine）、
+> server 层引擎解析器×2（BpmnXmlParser / BpmnElementHelper）、定义缓存×1（FlowDefinitionCacheService）。
+> 二阶段重点补齐：引擎网关/join/REJECT 推进回归套件、会签并发（GAP-A1 原子计数）集成测试、
+> Testcontainers PostgreSQL 上下文启动冒烟测试。
 
 ## Feign 接口
 

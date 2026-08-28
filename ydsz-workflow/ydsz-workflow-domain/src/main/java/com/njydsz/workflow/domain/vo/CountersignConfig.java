@@ -3,6 +3,7 @@ package com.njydsz.workflow.domain.vo;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Map;
 
 import lombok.Getter;
@@ -42,6 +43,9 @@ public class CountersignConfig implements Serializable {
 
   /** 默认通过率阈值（0.5 = 过半数） */
   public static final BigDecimal DEFAULT_VOTE_PASS_RATE = new BigDecimal("0.5");
+
+  /** 票签通过率计算精度（小数位，与 WeightedCountersignStrategy 对齐） */
+  private static final int RATE_SCALE = 4;
 
   /** 会签类型 */
   private final FlowPerformType performType;
@@ -152,7 +156,7 @@ public class CountersignConfig implements Serializable {
       return false;
     }
     BigDecimal rate = BigDecimal.valueOf(approveWeight).divide(
-        BigDecimal.valueOf(totalWeight), 4, BigDecimal.ROUND_HALF_UP);
+        BigDecimal.valueOf(totalWeight), RATE_SCALE, RoundingMode.HALF_UP);
     return rate.compareTo(votePassRate) >= 0;
   }
 

@@ -368,4 +368,24 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
       @Param("userId") String userId,
       @Param("comment") String comment,
       @Param("processedAt") LocalDateTime processedAt);
+
+  /**
+   * GAP-A1: 会签通过计数原子自增（带饱和守卫，防并发丢失更新与越界计数）。
+   *
+   * <p>守卫条件：{@code approve_count IS NULL OR approve_finished < approve_count} + {@code deleted = 0}。
+   * 不含任务状态守卫——并行会签首个办理人完成后该行即转 COMPLETED，其余办理人仍需计入票数。
+   *
+   * @param id 任务 ID
+   * @return 受影响行数；0 表示任务不存在或计数已饱和
+   */
+  int incrementApproveFinished(@Param("id") String id);
+
+  /**
+   * GAP-A1: 票签权重原子累加（防并发丢失更新）。
+   *
+   * @param id 任务 ID
+   * @param weight 本次累加的权重值
+   * @return 受影响行数
+   */
+  int incrementApproveWeight(@Param("id") String id, @Param("weight") int weight);
 }

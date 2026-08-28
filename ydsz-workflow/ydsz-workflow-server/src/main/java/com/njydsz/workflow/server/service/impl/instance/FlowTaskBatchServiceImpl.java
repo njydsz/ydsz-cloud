@@ -38,6 +38,9 @@ public class FlowTaskBatchServiceImpl {
   /** 批量操作默认并发度限制 */
   private static final int DEFAULT_MAX_CONCURRENCY = 10;
 
+  /** 单次批量操作的任务数量上限 */
+  private static final int BATCH_TASK_ID_LIMIT = 500;
+
   /**
    * P2-26: 批量审批 — 对多个任务逐一执行 pass，每条独立事务。
    *
@@ -55,11 +58,11 @@ public class FlowTaskBatchServiceImpl {
           .message("error.workflow.task.batch.empty")
           .build();
     }
-    if (taskIds.size() > 500) {
+    if (taskIds.size() > BATCH_TASK_ID_LIMIT) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.batch.size.exceeded")
-          .params(taskIds.size(), 500)
+          .params(taskIds.size(), BATCH_TASK_ID_LIMIT)
           .build();
     }
 
@@ -116,11 +119,11 @@ public class FlowTaskBatchServiceImpl {
           .message("error.workflow.task.batch.empty")
           .build();
     }
-    if (taskIds.size() > 500) {
+    if (taskIds.size() > BATCH_TASK_ID_LIMIT) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.batch.size.exceeded")
-          .params(taskIds.size(), 500)
+          .params(taskIds.size(), BATCH_TASK_ID_LIMIT)
           .build();
     }
 
@@ -182,11 +185,11 @@ public class FlowTaskBatchServiceImpl {
           .message("error.workflow.task.batch.empty")
           .build();
     }
-    if (taskIds.size() > 500) {
+    if (taskIds.size() > BATCH_TASK_ID_LIMIT) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.batch.size.exceeded")
-          .params(taskIds.size(), 500)
+          .params(taskIds.size(), BATCH_TASK_ID_LIMIT)
           .build();
     }
 

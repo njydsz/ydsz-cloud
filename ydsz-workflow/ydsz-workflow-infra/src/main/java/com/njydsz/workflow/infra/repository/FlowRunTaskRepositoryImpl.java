@@ -448,6 +448,18 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   }
 
   @Override
+  public int incrementApproveFinished(String taskId) {
+    // GAP-A1: 原子自增受影响行数直接透出，0 = 任务不存在或计数已饱和
+    return taskMapper.incrementApproveFinished(taskId);
+  }
+
+  @Override
+  public int incrementApproveWeight(String taskId, int weight) {
+    // GAP-A1: 权重原子累加，确保并发投票加和精确
+    return taskMapper.incrementApproveWeight(taskId, weight);
+  }
+
+  @Override
   public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
     return converter.flowRunTaskListToVO(
         taskMapper.selectList(
