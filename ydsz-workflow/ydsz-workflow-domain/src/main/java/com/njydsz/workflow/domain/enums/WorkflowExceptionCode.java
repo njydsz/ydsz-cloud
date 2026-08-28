@@ -85,7 +85,17 @@ public enum WorkflowExceptionCode implements ExceptionCode {
   /** Sla overdue */
   SLA_OVERDUE("B75002", "workflow.sla.overdue"),
   /** Urge too frequent */
-  URGE_TOO_FREQUENT("B75003", "workflow.urge.too.frequent", 429);
+  URGE_TOO_FREQUENT("B75003", "workflow.urge.too.frequent", 429),
+
+  // ==================== B76001-B76099 AI 审批 ====================
+  /** AI Agent 不存在或未启用 */
+  AI_AGENT_NOT_FOUND("B76001", "workflow.ai.agent.not.found", 404),
+  /** AI Agent 调用超时 */
+  AI_AGENT_TIMEOUT("B76002", "workflow.ai.agent.timeout"),
+  /** AI Agent 输出格式非法 */
+  AI_AGENT_OUTPUT_INVALID("B76003", "workflow.ai.agent.output.invalid"),
+  /** AI Agent 调用异常 */
+  AI_AGENT_EXECUTION_ERROR("B76004", "workflow.ai.agent.execution.error");
 
   /** 错误码 */
   private final String code;

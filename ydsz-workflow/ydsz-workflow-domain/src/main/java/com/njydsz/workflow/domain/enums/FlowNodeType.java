@@ -86,7 +86,27 @@ public enum FlowNodeType {
    * <p>实现：创建任务时通过 {@link FlowAssigneeResolver#expandMultiLeader} 展开多级上级列表，
    * 使用 PARALLEL 会签模式，全部通过后推进。
    */
-  LEVEL_APPROVAL(10, "逐级审批");
+  LEVEL_APPROVAL(10, "逐级审批"),
+  /**
+   * P0-5: AI 审批节点 — 由 AI Agent 根据流程变量智能决策是否通过，无需人工干预。
+   *
+   * <p>ext JSON 配置：
+   *
+   * <ul>
+   *   <li>{@code agentId}：Agent ID（必填），由 ydsz-agent 模块创建并管理
+   *   <li>{@code promptTemplate}：提示词模板（支持 {@code ${variable}} 占位符替换）
+   *   <li>{@code outputSchema}：期望输出 JSON Schema（校验 Agent 输出结构）
+   *   <li>{@code fallbackStrategy}：Agent 超时/异常时的兜底策略（AUTO_PASS / AUTO_REJECT /
+   *       TRANSFER_ADMIN / RETRY，默认 AUTO_PASS）
+   *   <li>{@code retryMax}：最大重试次数（默认 1）
+   *   <li>{@code timeoutMs}：单次调用超时毫秒（默认 30000）
+   * </ul>
+   *
+   * <p>execute 时：组装请求 → 调用 ydsz-agent 执行 Agent → 解析输出（approve/reject + reason）→ 根据结果自动推进流程。
+   *
+   * <p>实现了 Flowlong 的「AI 审批」概念，与 ydsz-agent 模块联动，支持自然语言审批决策。
+   */
+  AI_AGENT(11, "AI审批");
 
   private final int code;
   private final String desc;

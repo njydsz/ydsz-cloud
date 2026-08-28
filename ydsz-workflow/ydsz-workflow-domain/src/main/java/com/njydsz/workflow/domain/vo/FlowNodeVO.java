@@ -62,6 +62,9 @@ public class FlowNodeVO implements Serializable {
   /** 办理人配置懒解析缓存（不参与序列化）。 */
   private transient volatile AssigneeConfig parsedAssigneeConfig;
 
+  /** AI 审批节点配置懒解析缓存（不参与序列化）。 */
+  private transient volatile AiAgentNodeConfig parsedAiAgentNodeConfig;
+
   // ==================== ext 懒解析基础设施 ====================
 
   /**
@@ -176,6 +179,24 @@ public class FlowNodeVO implements Serializable {
       }
       parsedAssigneeConfig = AssigneeConfig.fromExt(getExtMap());
       return parsedAssigneeConfig;
+    }
+  }
+
+  /**
+   * 获取 AI 审批节点配置值对象（懒解析、线程安全）。
+   *
+   * @return AI 审批节点配置值对象（不可变，非 null）
+   */
+  public AiAgentNodeConfig getAiAgentNodeConfig() {
+    if (parsedAiAgentNodeConfig != null) {
+      return parsedAiAgentNodeConfig;
+    }
+    synchronized (this) {
+      if (parsedAiAgentNodeConfig != null) {
+        return parsedAiAgentNodeConfig;
+      }
+      parsedAiAgentNodeConfig = AiAgentNodeConfig.fromExt(getExtMap());
+      return parsedAiAgentNodeConfig;
     }
   }
 
