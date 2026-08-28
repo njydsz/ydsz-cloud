@@ -37,6 +37,7 @@ import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
+import com.njydsz.workflow.domain.dto.FlowSaveDraftDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
@@ -49,6 +50,8 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowRecallableNodeVO;
 import com.njydsz.workflow.domain.vo.FlowReplayStepVO;
 import com.njydsz.workflow.domain.vo.FlowTimelineVO;
+import com.njydsz.workflow.domain.dto.FlowSubmitDraftDTO;
+import com.njydsz.workflow.server.service.DraftInstanceService;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
@@ -111,6 +114,9 @@ public class FlowInstanceController {
   /** 流程自动触发规则服务，负责规则注册、删除与启用/禁用管理 */
   private final FlowAutoTriggerService autoTriggerService;
 
+  /** 草稿实例服务 */
+  private final DraftInstanceService draftInstanceService;
+
   /**
    * 启动流程实例
    *
@@ -150,6 +156,71 @@ public class FlowInstanceController {
   public YdszResponse<FlowBatchStartResultVO> batchStartInstances(
       @Valid @RequestBody List<FlowStartProcessDTO> dtos) {
     return YdszResponse.success(instanceService.batchStartInstances(dtos));
+  }
+
+  /**
+   * P0-5: 保存流程草稿。
+   *
+   * <p>借鉴 Flowlong「暂存待审」概念，用户可保存已填写的表单数据为草稿，后续修改后重新提交。
+   * 草稿不触发流程流转，实例状态为 DRAFT。同一业务单据已有草稿时更新而非新建。
+   *
+   * @param dto 草稿保存参数
+   * @return 统一响应结果，包含草稿实例 ID
+   */
+  @Audit(
+      module = "流程实例",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'保存草稿:' + #dto.flowCode")
+  @PostMapping("/instance/draft/save")
+  @Operation(summary = "保存流程草稿")
+  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
+  public YdszResponse<String> saveDraft(@Valid @RequestBody FlowSaveDraftDTO dto) {
+    return YdszResponse.success(draftInstanceService.saveDraft(dto));
+  }
+
+  /**
+   * P0-5: 提交流程草稿（正式发起审批）。
+   *
+   * <p>将 DRAFT → RUNNING，触发正常流程流转。提交后等同于正常启动流程。
+   *
+   * @param dto 草稿提交参数
+   * @return 统一响应结果，包含流程实例 ID
+   */
+  @Idempotent(key = "ydsz:workflow:instance:draft:submit", ttlSeconds = 5)
+  @Audit(
+      module = "流程实例",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'提交草稿:' + #dto.instanceId")
+  @PostMapping("/instance/draft/submit")
+  @Operation(summary = "提交流程草稿")
+  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
+  public YdszResponse<String> submitDraft(@Valid @RequestBody FlowSubmitDraftDTO dto) {
+    return YdszResponse.success(
+        draftInstanceService.submitDraft(dto.getInstanceId(), dto.getDraftData(), dto.getOperatorId()));
+  }
+
+  /**
+   * P0-5: 取消流程草稿。
+   *
+   * <p>将 DRAFT → TERMINATED，释放资源。取消后的草稿不可恢复。
+   *
+   * @param id 草稿实例 ID
+   * @return 统一响应结果
+   */
+  @Idempotent(key = "ydsz:workflow:instance:draft:cancel", ttlSeconds = 5)
+  @Audit(
+      module = "流程实例",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'取消草稿'")
+  @PostMapping("/instance/{id}/draft/cancel")
+  @Operation(summary = "取消流程草稿")
+  @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+  public YdszResponse<Void> cancelDraft(@PathVariable String id) {
+    draftInstanceService.cancelDraft(id);
+    return YdszResponse.success();
   }
 
   /**

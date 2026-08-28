@@ -87,6 +87,12 @@ public class FlowInstanceStateMachine {
   private static final Map<FlowInstanceStatus, Set<FlowInstanceStatus>> COMPLETED_TRANSITIONS =
       Map.of(FlowInstanceStatus.COMPLETED, Set.of(FlowInstanceStatus.ROLLED_BACK));
 
+  /** 草稿态可流转目标状态集合（提交审批 / 取消草稿） */
+  private static final Map<FlowInstanceStatus, Set<FlowInstanceStatus>> DRAFT_TRANSITIONS =
+      Map.of(
+          FlowInstanceStatus.DRAFT,
+          Set.of(FlowInstanceStatus.RUNNING, FlowInstanceStatus.TERMINATED));
+
   // ============================== 核心方法 ==============================
 
   /**
@@ -160,6 +166,10 @@ public class FlowInstanceStateMachine {
       return transitions;
     }
     transitions = COMPLETED_TRANSITIONS.get(current);
+    if (transitions != null) {
+      return transitions;
+    }
+    transitions = DRAFT_TRANSITIONS.get(current);
     return transitions != null ? transitions : Set.of();
   }
 

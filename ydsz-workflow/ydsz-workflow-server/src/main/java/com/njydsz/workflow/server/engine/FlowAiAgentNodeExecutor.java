@@ -9,9 +9,9 @@ import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.thread.YdszThreadPoolExecutor;
-import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
-import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient.AgentExecutionResult;
 import com.njydsz.workflow.domain.vo.AiAgentNodeConfig;
@@ -28,8 +28,7 @@ import com.njydsz.workflow.server.engine.impl.FlowVariableReplacer;
  * <ol>
  *   <li>解析节点 ext JSON 中的 AI Agent 配置（agentId / promptTemplate / outputSchema / fallbackStrategy /
  *       retryMax / timeoutMs）
- *   <li>使用 {@link com.njydsz.workflow.server.engine.impl.FlowVariableReplacer} 替换提示词模板中的 {@code
- *       ${variable}} 占位符
+ *   <li>使用 {@link FlowVariableReplacer} 替换提示词模板中的 {@code ${variable}} 占位符
  *   <li>调用 {@link AgentServiceClient#execute} 同步执行 Agent（支持超时控制）
  *   <li>解析输出结果，根据 approve/reject 决策自动推进流程
  *   <li>异常时根据 fallbackStrategy 执行兜底逻辑（AUTO_PASS / AUTO_REJECT / TRANSFER_ADMIN / RETRY）
@@ -89,7 +88,7 @@ public class FlowAiAgentNodeExecutor {
    * @param instanceId 流程实例 ID
    * @param variables 流程实例变量
    * @return true-审批通过（继续推进）；false-审批驳回
-   * @throws WorkflowException Agent 配置非法、执行异常且无法兜底时抛出
+   * @throws SysException Agent 配置非法、执行异常且无法兜底时抛出
    */
   public boolean execute(FlowNodeVO node, String instanceId, Map<String, Object> variables) {
     AiAgentNodeConfig config = node.getAiAgentNodeConfig();
@@ -147,6 +146,8 @@ public class FlowAiAgentNodeExecutor {
         if (lastResult != null && lastResult.confidence() > 0) {
           return lastResult;
         }
+      } catch (SysException e) {
+        throw e;
       } catch (Exception e) {
         log.warn("[Flow-AI-Agent] 实例 {} 节点 {} 第 {}/{} 次执行异常: {}", instanceId, nodeCode, attempt,
             maxAttempts, e.getMessage());
@@ -179,15 +180,19 @@ public class FlowAiAgentNodeExecutor {
       return future.get(config.getTimeoutMs(), TimeUnit.MILLISECONDS);
     } catch (TimeoutException e) {
       future.cancel(true);
-      throw new WorkflowException(WorkflowExceptionCode.AI_AGENT_TIMEOUT,
-          String.format("AI Agent 执行超时, agentId=%s, timeout=%dms", config.getAgentId(),
-              config.getTimeoutMs()), e);
-    } catch (WorkflowException e) {
-      throw e;
+      throw SysException.builder()
+          .resultCode(YdszResultCode.REQUEST_TIMEOUT)
+          .key("error.workflow.ai.agent.timeout")
+          .params(config.getAgentId(), config.getTimeoutMs())
+          .Cause(e)
+          .build();
     } catch (Exception e) {
-      throw new WorkflowException(WorkflowExceptionCode.AI_AGENT_EXECUTION_ERROR,
-          String.format("AI Agent 执行异常, agentId=%s, err=%s", config.getAgentId(), e.getMessage()),
-          e);
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BIZ_ERROR)
+          .key("error.workflow.ai.agent.execution.error")
+          .params(config.getAgentId(), e.getMessage())
+          .cause(e)
+          .build();
     }
   }
 
@@ -216,9 +221,11 @@ public class FlowAiAgentNodeExecutor {
       case TRANSFER_ADMIN:
         // 转交管理员（由调用方处理）
         log.info("[Flow-AI-Agent] 实例 {} 节点 {} 兜底策略: 转交管理员", instanceId, nodeCode);
-        throw new WorkflowException(WorkflowExceptionCode.AI_AGENT_EXECUTION_ERROR,
-            String.format("AI Agent 需转交管理员处理, instance=%s, node=%s, cause=%s", instanceId,
-                nodeCode, cause));
+        throw SysException.builder()
+            .resultCode(YdszResultCode.BIZ_ERROR)
+            .key("error.workflow.ai.agent.transfer.admin")
+            .params(instanceId, nodeCode, cause)
+            .build();
       case RETRY:
         // 重试已穷尽，最终兜底为自动通过
         log.warn("[Flow-AI-Agent] 实例 {} 节点 {} 重试已穷尽，最终兜底为自动通过", instanceId, nodeCode);

@@ -36,6 +36,7 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
+import com.njydsz.workflow.server.engine.FlowAiAgentNodeExecutor;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
@@ -48,6 +49,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 import com.njydsz.workflow.server.service.instance.AssigneeResolutionService;
+import com.njydsz.workflow.server.service.instance.AiAgentNodeExecuteService;
 import com.njydsz.workflow.server.service.instance.DelegateRedirectService;
 import com.njydsz.workflow.server.service.instance.EmptyAssigneeStrategyService;
 import com.njydsz.workflow.server.service.instance.ServiceNodeExecuteService;
@@ -207,6 +209,9 @@ public class FlowTaskCreateService {
   /** P0-1: 事件订阅服务（服务节点失败时触发 error boundary） */
   @Lazy private final FlowEventSubscriptionService eventSubscriptionService;
 
+  /** P0-5: AI 审批节点执行器（调用 AI Agent 智能决策） */
+  private final FlowAiAgentNodeExecutor aiAgentNodeExecutor;
+
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
 
@@ -224,6 +229,9 @@ public class FlowTaskCreateService {
 
   /** P1-4: 服务节点执行服务（从本类抽出，组合模式接入） */
   private ServiceNodeExecuteService serviceNodeExecuteService;
+
+  /** P0-5: AI 审批节点执行服务（从本类抽出，组合模式接入） */
+  private AiAgentNodeExecuteService aiAgentNodeExecuteService;
 
   /** P2-4: 自动审批服务（从本类抽出，组合模式接入） */
   private final FlowAutoApproveService autoApproveService;
@@ -277,6 +285,14 @@ public class FlowTaskCreateService {
         nodeRepository,
         instanceRepository,
         this::handleAdvanceAfterServiceNode);
+    this.aiAgentNodeExecuteService = new AiAgentNodeExecuteService(
+        aiAgentNodeExecutor,
+        taskRepository,
+        archiveService,
+        support,
+        nodeRepository,
+        instanceRepository,
+        this::handleAdvanceAfterAiAgentNode);
   }
 
   /**
@@ -289,6 +305,32 @@ public class FlowTaskCreateService {
    */
   private Void handleAdvanceAfterServiceNode(ServiceNodeExecuteService.AdvanceContext ctx) {
     advanceAfterAutoPass(ctx.getInstance(), ctx.getNode(), ctx.getVariables());
+    return null;
+  }
+
+  /**
+   * 处理 AI 审批节点执行后的推进逻辑（回调方法，供 AiAgentNodeExecuteService 使用）
+   *
+   * <p>AI 审批通过后按 PASS 推进，驳回后按 REJECT 回退。
+   * 通过 skipType 区分 AI 决策结果，复用现有推进引擎。
+   *
+   * @param ctx AI 审批推进上下文
+   * @return null
+   */
+  private Void handleAdvanceAfterAiAgentNode(AiAgentNodeExecuteService.AdvanceContext ctx) {
+    if ("REJECT".equalsIgnoreCase(ctx.getSkipType())) {
+      // AI 驳回：执行回退逻辑，回到上一节点
+      FlowInstanceVO instance = ctx.getInstance();
+      FlowNodeVO node = ctx.getNode();
+      Map<String, Object> variables = ctx.getVariables();
+      log.info("[Flow-AI-Agent] AI 驳回，执行回退: instanceId={} node={}", instance.getId(),
+          node.getNodeCode());
+      // 复用引擎推进逻辑：以 REJECT 类型推进（回退到入边源节点）
+      advancer.advance(instance, node.getNodeCode(), "REJECT", null, variables);
+    } else {
+      // AI 通过：自动推进到下一节点
+      advanceAfterAutoPass(ctx.getInstance(), ctx.getNode(), ctx.getVariables());
+    }
     return null;
   }
 
@@ -330,6 +372,9 @@ public class FlowTaskCreateService {
     // 特殊节点创建路径（提前返回）
     if (isNodeType(node, FlowNodeType.SERVICE)) {
       return serviceNodeExecuteService.executeServiceNode(instance, node, variables);
+    }
+    if (isNodeType(node, FlowNodeType.AI_AGENT)) {
+      return aiAgentNodeExecuteService.executeAiAgentNode(instance, node, variables);
     }
     if (isNodeType(node, FlowNodeType.FOREACH)) {
       return createForeachTasks(instance, node, variables, explicitAssignees);

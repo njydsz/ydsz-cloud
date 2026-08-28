@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.AlertType;
 import com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel;
@@ -36,7 +35,7 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   private final SecurityAlertConverter converter;
 
   @Override
-  public SecurityAlert save(SecurityAlert alert) {
+  public com.njydsz.userinfo.domain.alert.SecurityAlert save(com.njydsz.userinfo.domain.alert.SecurityAlert alert) {
     SecurityAlert entity = converter.domainToEntity(alert);
     if (alert.id() == null) {
       securityAlertMapper.insert(entity);
@@ -47,13 +46,13 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   }
 
   @Override
-  public Optional<SecurityAlert> findById(String id) {
+  public Optional<com.njydsz.userinfo.domain.alert.SecurityAlert> findById(String id) {
     SecurityAlert entity = securityAlertMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToDomain);
   }
 
   @Override
-  public PageResponse<List<SecurityAlert>> page(SecurityAlertPageQuery query) {
+  public PageResponse<List<com.njydsz.userinfo.domain.alert.SecurityAlert>> page(SecurityAlertPageQuery query) {
     int pageNum = query.getPageNum();
     int pageSize = query.getPageSize();
     Page<SecurityAlert> page = new Page<>(pageNum, pageSize);
@@ -72,7 +71,7 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
     }
     wrapper.orderByDesc(SecurityAlert::getCreatedAt);
     Page<SecurityAlert> result = securityAlertMapper.selectPage(page, wrapper);
-    List<SecurityAlert> alerts = result.getRecords().stream()
+    List<com.njydsz.userinfo.domain.alert.SecurityAlert> alerts = result.getRecords().stream()
         .map(converter::entityToDomain)
         .toList();
     return PageResponse.success(
@@ -113,7 +112,7 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   }
 
   @Override
-  public List<SecurityAlert> findPendingAlerts(
+  public List<com.njydsz.userinfo.domain.alert.SecurityAlert> findPendingAlerts(
       RiskLevel riskLevel, int limit) {
     LambdaQueryWrapper<SecurityAlert> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(SecurityAlert::getStatus, AlertStatus.PENDING.name());

@@ -11,13 +11,14 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * <p><b>状态流转：</b>
  *
  * <pre>
- *   RUNNING ──▶ SUSPENDED ──▶ RUNNING（恢复）
- *      │           │           │
- *      ├───────────┴───────────┴─▶ COMPLETED（正常完成）
- *      ├─▶ TERMINATED（管理员强制）
- *      ├─▶ REJECTED（被驳回最终结束）
- *      ├─▶ ERROR（异常，需人工介入）
- *      └─▶ ROLLED_BACK（已完成的实例被撤销，最终态）
+ *   DRAFT ──▶ RUNNING ──▶ SUSPENDED ──▶ RUNNING（恢复）
+ *      │         │           │           │
+ *      │         ├───────────┴───────────┴─▶ COMPLETED（正常完成）
+ *      │         ├─▶ TERMINATED（管理员强制）
+ *      │         ├─▶ REJECTED（被驳回最终结束）
+ *      │         ├─▶ ERROR（异常，需人工介入）
+ *      │         └─▶ ROLLED_BACK（已完成的实例被撤销，最终态）
+ *      └─▶ TERMINATED（草稿取消）
  * </pre>
  *
  * <p><b>终态判定：</b>{@link #isFinished()} 标识流程已结束， 包括正常完成、强制终止、驳回、已回滚。终态实例不允许再次变更状态（除非回滚撤销）。
@@ -65,7 +66,21 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
    * <p>原本已 COMPLETED 的实例被发起人/管理员撤销，最终态。 流程不再运行，但保留全部历史轨迹，供业务侧 （如 {@code
    * ProjectInitiationFlowListener}）感知并执行回滚补偿逻辑。
    */
-  ROLLED_BACK;
+  ROLLED_BACK,
+
+  /**
+   * P0-5: 草稿
+   *
+   * <p>用户暂存待审状态，已填写表单但未正式提交。 借鉴 Flowlong 的「暂存待审」概念，允许用户保存草稿后修改再提交。
+   *
+   * <p><b>流转规则：</b>
+   *
+   * <ul>
+   *   <li>DRAFT → RUNNING：用户正式提交审批
+   *   <li>DRAFT → TERMINATED：用户取消草稿
+   * </ul>
+   */
+  DRAFT;
 
   /**
    * 是否为终态
@@ -73,7 +88,7 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
    * <p>终态指流程已结束（无论正常完成、强制终止、驳回还是回滚）。 终态实例不允许再次变更状态（ROLLBACK 除外）。
    *
    * @return true-终态（COMPLETED / TERMINATED / REJECTED / ROLLED_BACK）；false-非终态（RUNNING / SUSPENDED
-   *     / ERROR）
+   *     / ERROR / DRAFT）
    */
   public boolean isFinished() {
     return this == COMPLETED || this == TERMINATED || this == REJECTED || this == ROLLED_BACK;
@@ -126,6 +141,7 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
           target == RUNNING || target == TERMINATED || target == REJECTED || target == ROLLED_BACK;
       case COMPLETED -> target == ROLLED_BACK;
       case TERMINATED, REJECTED, ROLLED_BACK -> false;
+      case DRAFT -> target == RUNNING || target == TERMINATED;
     };
   }
 }
