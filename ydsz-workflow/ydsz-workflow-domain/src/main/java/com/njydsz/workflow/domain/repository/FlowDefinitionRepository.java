@@ -37,16 +37,6 @@ public interface FlowDefinitionRepository {
   FlowDefinitionVO save(FlowDefinitionDTO dto);
 
   /**
-   * 保存流程定义（已废弃）。
-   * 
-   *
-   * @param vo 参数说明
-   * @return 返回值说明
-   */
-  @Deprecated
-  FlowDefinitionVO save(FlowDefinitionVO vo);
-
-  /**
    * 根据 ID 查询流程定义。
    *
    * @param id 流程定义 ID
@@ -97,16 +87,6 @@ public interface FlowDefinitionRepository {
    * @return 更新后的流程定义 VO
    */
   FlowDefinitionVO update(FlowDefinitionDTO dto);
-
-  /**
-   * 更新流程定义（已废弃）。
-   * 
-   *
-   * @param vo 参数说明
-   * @return 返回值说明
-   */
-  @Deprecated
-  FlowDefinitionVO update(FlowDefinitionVO vo);
 
   /**
    * 查询流程定义列表（分页）。

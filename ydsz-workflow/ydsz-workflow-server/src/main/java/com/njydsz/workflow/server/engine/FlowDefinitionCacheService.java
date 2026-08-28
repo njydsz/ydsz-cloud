@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -49,8 +50,10 @@ public class FlowDefinitionCacheService {
   private final FlowNodeRepository flowNodeRepository;
   private final FlowSkipRepository flowSkipRepository;
 
-  /** P0-3: 集群缓存失效广播器（@Lazy 避免循环依赖） */
-  private final FlowDefinitionCacheBroadcaster broadcaster;
+  /**
+   * P0-3: 集群缓存失效广播器（ObjectProvider 处理可选 bean，当 crossInstanceEnabled=false 时 bean 不存在）
+   */
+  private final ObjectProvider<FlowDefinitionCacheBroadcaster> broadcasterProvider;
 
   private final Cache<String, FlowDefinitionMetadata> metadataCache;
 
@@ -61,17 +64,17 @@ public class FlowDefinitionCacheService {
    *
    * @param flowNodeRepository 参数说明
    * @param flowSkipRepository 参数说明
-   * @param broadcaster 参数说明
+   * @param broadcasterProvider 参数说明
    * @param properties 参数说明
    */
   public FlowDefinitionCacheService(
       FlowNodeRepository flowNodeRepository,
       FlowSkipRepository flowSkipRepository,
-      @Lazy FlowDefinitionCacheBroadcaster broadcaster,
+      ObjectProvider<FlowDefinitionCacheBroadcaster> broadcasterProvider,
       FlowProperties properties) {
     this.flowNodeRepository = flowNodeRepository;
     this.flowSkipRepository = flowSkipRepository;
-    this.broadcaster = broadcaster;
+    this.broadcasterProvider = broadcasterProvider;
     this.metadataCache =
         YdszCache.<String, FlowDefinitionMetadata>newBuilder()
             .type(CacheType.STRIPED)
@@ -97,7 +100,8 @@ public class FlowDefinitionCacheService {
       return;
     }
     evictLocal(definitionId);
-    // P0-3: 广播到集群其他节点
+    // P0-3: 广播到集群其他节点（仅当 crossInstanceEnabled=true 时 broadcaster bean 存在）
+    FlowDefinitionCacheBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
     if (broadcaster != null) {
       broadcaster.broadcast(definitionId);
     }

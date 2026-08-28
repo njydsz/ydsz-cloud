@@ -42,16 +42,6 @@ public interface FlowRunTaskRepository {
   FlowRunTaskVO save(FlowRunTaskDTO dto);
 
   /**
-   * 保存运行时任务（新增，已废弃）。
-   * 
-   *
-   * @param vo 参数说明
-   * @return 返回值说明
-   */
-  @Deprecated
-  FlowRunTaskVO save(FlowRunTaskVO vo);
-
-  /**
    * 根据 ID 查询运行时任务。
    *
    * @param id 任务 ID
@@ -179,16 +169,6 @@ public interface FlowRunTaskRepository {
    * @return 运行时任务 VO 列表
    */
   List<FlowRunTaskVO> findByCondition(FlowTaskQuery query);
-
-  /**
-   * 根据复杂条件查询运行时任务列表（已废弃）。
-   * 
-   *
-   * @param condition 参数说明
-   * @return 返回值说明
-   */
-  @Deprecated
-  List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition);
 
   /**
    * 根据条件批量更新任务状态。

@@ -184,6 +184,9 @@ public class FlowProperties {
     /** 缓存最大容量（条目数），所有流程定义缓存统一上限（默认 1000 条） */
     @Min(1)
     private long definitionCacheMaxSize = 1000L;
+
+    /** 是否启用跨实例缓存失效 Pub/Sub 总线（默认关闭，单实例场景无需启用） */
+    private boolean crossInstanceEnabled = false;
   }
 
   /**

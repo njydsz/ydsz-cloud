@@ -20,11 +20,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonCreator;
+import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
-import com.njydsz.common.json.annotation.JsonAlias;
-import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.provider.FieldMetadataLoader;

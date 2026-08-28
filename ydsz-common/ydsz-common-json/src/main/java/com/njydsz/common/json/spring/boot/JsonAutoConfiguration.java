@@ -16,13 +16,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 
 import com.njydsz.common.json.cache.BeanSerializerCache;
-import com.njydsz.common.json.provider.PolymorphicTypeResolver;
-import com.njydsz.common.json.provider.SerializationProvider;
-import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.module.JsonModule;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.provider.PolymorphicTypeResolver;
+import com.njydsz.common.json.provider.SerializationProvider;
+import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.spring.JsonHttpMessageConverter;
 import com.njydsz.common.json.spring.JsonModuleRegistrar;
 import com.njydsz.common.json.spring.JsonProperties;

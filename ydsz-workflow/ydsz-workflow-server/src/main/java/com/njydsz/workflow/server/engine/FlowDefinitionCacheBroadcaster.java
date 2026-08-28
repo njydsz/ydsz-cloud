@@ -2,11 +2,13 @@ package com.njydsz.workflow.server.engine;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.workflow.server.config.FlowProperties;
 
 /**
  * 流程定义缓存集群广播器
@@ -22,6 +24,9 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  *   <li>{@code sourceNodeId} — 发送方节点唯一标识，接收方忽略自身发出的消息
  * </ul>
  *
+ * <p>跨实例 Pub/Sub 通过 {@code ydsz.flow.definition-cache.cross-instance-enabled} 控制，默认关闭。
+ * 单实例场景无需启用，避免不必要的 Redis 订阅开销。
+ *
  * <p>参考实现：auth 模块 PermissionChangeNotifier / PermissionChangeCacheInvalidator
  *
  * @since 1.0.0
@@ -29,6 +34,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "ydsz.flow.definition-cache", name = "cross-instance-enabled", havingValue = "true", matchIfMissing = false)
 public class FlowDefinitionCacheBroadcaster {
 
 
@@ -51,7 +57,8 @@ public class FlowDefinitionCacheBroadcaster {
   public FlowDefinitionCacheBroadcaster(
       RedisPubSubOps redisPubSubOps,
       @Lazy FlowDefinitionCacheService cacheService,
-      SnowflakeIdGenerator snowflakeIdGenerator) {
+      SnowflakeIdGenerator snowflakeIdGenerator,
+      FlowProperties flowProperties) {
     this.redisPubSubOps = redisPubSubOps;
     this.cacheService = cacheService;
     this.snowflakeIdGenerator = snowflakeIdGenerator;

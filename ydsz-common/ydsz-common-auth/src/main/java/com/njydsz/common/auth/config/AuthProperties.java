@@ -151,6 +151,14 @@ public class AuthProperties {
    */
   private String redisUnavailableFallback = "DENY";
 
+  /**
+   * 是否启用跨实例权限缓存失效 Pub/Sub 总线（默认关闭）。
+   *
+   * <p>单实例场景无需启用，避免不必要的 Redis 订阅开销。
+   * 集群部署时启用，确保权限变更即时同步到所有节点的本地缓存。
+   */
+  private boolean crossInstanceEnabled = false;
+
   /** 降级策略枚举。 */
   public enum FallbackPolicy {
     /** 拒绝权限请求 */

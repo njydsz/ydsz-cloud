@@ -427,6 +427,7 @@ public class AuthConfiguration {
   @Bean
   @ConditionalOnMissingBean(PermissionChangeCacheInvalidator.class)
   @ConditionalOnBean(RedisMessageListenerContainer.class)
+  @ConditionalOnProperty(prefix = "ydsz.auth", name = "cross-instance-enabled", havingValue = "true", matchIfMissing = false)
   public PermissionChangeCacheInvalidator permissionChangeCacheInvalidator(
       RolePermissionLoader rolePermissionLoader,
       RedisRoleDataPermissionResolver dataPermissionResolver,
