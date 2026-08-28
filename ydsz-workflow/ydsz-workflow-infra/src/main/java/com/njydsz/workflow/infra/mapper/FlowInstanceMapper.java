@@ -54,6 +54,19 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
       @Param("businessId") String businessId);
 
   /**
+   * 根据业务类型 + 业务单据 ID + 状态查询流程实例（草稿场景）
+   *
+   * @param businessType 业务类型
+   * @param businessId 业务单据 ID
+   * @param flowStatus 流程状态（如 DRAFT）
+   * @return 流程实例实体；不存在返回 null
+   */
+  FlowInstance selectByBusinessAndStatus(
+      @Param("businessType") String businessType,
+      @Param("businessId") String businessId,
+      @Param("flowStatus") String flowStatus);
+
+  /**
    * 状态更新
    *
    * @param id 参数说明

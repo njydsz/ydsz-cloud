@@ -58,6 +58,19 @@ public interface FlowInstanceRepository {
   Optional<FlowInstanceVO> findByBusiness(String tenantId, String businessType, String businessId);
 
   /**
+   * 根据业务类型 + 业务单据 ID + 状态查询流程实例（草稿场景）。
+   *
+   * <p>用于保存草稿时检查是否已有草稿实例，避免重复创建。
+   *
+   * @param businessType 业务类型
+   * @param businessId 业务单据 ID
+   * @param flowStatus 流程状态（如 DRAFT）
+   * @return 流程实例 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<FlowInstanceVO> findByBusinessAndStatus(
+      String businessType, String businessId, String flowStatus);
+
+  /**
    * 查询发起人的流程实例列表。
    *
    * @param initiatorId 发起人 ID

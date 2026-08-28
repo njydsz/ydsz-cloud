@@ -76,6 +76,14 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   @Override
+  public Optional<FlowInstanceVO> findByBusinessAndStatus(
+      String businessType, String businessId, String flowStatus) {
+    return Optional.ofNullable(
+            instanceMapper.selectByBusinessAndStatus(businessType, businessId, flowStatus))
+        .map(converter::entityToVO);
+  }
+
+  @Override
   public List<FlowInstanceVO> findByInitiatorId(String initiatorId) {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
