@@ -503,7 +503,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     }
 
     Map<K, V> result = new HashMap<>(keys.size());
-    List<K> missedKeys = new ArrayList<>();
+    List<K> missedKeys = new ArrayList<>(keys.size());
 
     for (K key : keys) {
       V value = cache.getIfPresent(key);

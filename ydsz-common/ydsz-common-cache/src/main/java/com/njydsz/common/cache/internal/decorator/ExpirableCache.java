@@ -769,7 +769,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
    */
   @Override
   public Collection<V> values() {
-    List<V> values = new ArrayList<>();
+    List<V> values = new ArrayList<>(delegate.keySet().size());
     for (K key : delegate.keySet()) {
       if (!isExpired(key)) {
         V value = delegate.getIfPresent(key);

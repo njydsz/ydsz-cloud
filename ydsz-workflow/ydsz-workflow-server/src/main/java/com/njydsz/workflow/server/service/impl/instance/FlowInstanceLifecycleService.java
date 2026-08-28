@@ -378,8 +378,8 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
     }
 
     int successCount = 0;
-    List<String> instanceIds = new ArrayList<>();
-    List<Map<String, Object>> failedItems = new ArrayList<>();
+    List<String> instanceIds = new ArrayList<>(dtos.size());
+    List<Map<String, Object>> failedItems = new ArrayList<>(dtos.size());
 
     for (int i = 0; i < dtos.size(); i++) {
       FlowStartProcessDTO dto = dtos.get(i);

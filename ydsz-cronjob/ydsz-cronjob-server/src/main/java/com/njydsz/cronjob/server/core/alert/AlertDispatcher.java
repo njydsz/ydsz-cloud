@@ -166,8 +166,8 @@ public class AlertDispatcher {
     }
 
     // 3. 多通道派发（单通道失败不影响其他）
-    List<String> failedChannels = new ArrayList<>();
-    List<String> errorMessages = new ArrayList<>();
+    List<String> failedChannels = new ArrayList<>(channels.size());
+    List<String> errorMessages = new ArrayList<>(channels.size());
     for (AlertChannel channel : channels) {
       try {
         sendViaMessageCenter(channel, context, rule, receivers);

@@ -376,7 +376,8 @@ public class BatchServiceImpl implements BatchService {
    * @return 消息请求列表
    */
   private List<MessageRequest> buildRequests(BatchSendRequestDTO dto) {
-    List<MessageRequest> requests = new ArrayList<>();
+    int expectedSize = dto.getRequests() != null ? dto.getRequests().size() : dto.getReceiverList() != null ? dto.getReceiverList().size() : 16;
+    List<MessageRequest> requests = new ArrayList<>(expectedSize);
     // 优先使用直接传入的 requests 列表
     if (!CollectionUtils.isEmpty(dto.getRequests())) {
       for (MessageRequest req : dto.getRequests()) {

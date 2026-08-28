@@ -265,9 +265,9 @@ public class AuthColPermissionAspect {
     } catch (Exception e) {
       LOG.warn("列权限序列化过滤失败，降级到反射过滤: {}", e.getMessage());
       // 降级：仍然使用反射方式过滤
-      if (returnValue instanceof Collection) {
-        List<Object> filtered = new ArrayList<>();
-        for (Object item : (Collection<?>) returnValue) {
+      if (returnValue instanceof Collection<?> coll) {
+        List<Object> filtered = new ArrayList<>(coll.size());
+        for (Object item : coll) {
           filtered.add(filterObject(item, mode, colInfo, strict, desensitizeCtx, table));
         }
         return filtered;
@@ -682,7 +682,7 @@ public class AuthColPermissionAspect {
       if (!(records instanceof Collection)) {
         return false;
       }
-      List<Object> filtered = new ArrayList<>();
+      List<Object> filtered = new ArrayList<>(((Collection<?>) records).size());
       for (Object item : (Collection<?>) records) {
         filtered.add(filterObject(item, mode, colInfo, strict, desensitizeCtx, table));
       }

@@ -43,6 +43,12 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   /** 状态常量：启用 */
   private static final String STATUS_ENABLED = "ENABLED";
 
+  /** 逻辑删除标志：未删除 */
+  private static final int NOT_DELETED = 0;
+
+  /** 公开配置标志：公开 */
+  private static final int PUBLIC_CONFIG = 1;
+
   private final ConfigMapper configMapper;
 
   private final SystemConverter converter;
@@ -59,7 +65,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
             configMapper.selectOne(
                 new LambdaQueryWrapper<Config>()
                     .eq(Config::getConfigKey, configKey)
-                    .eq(Config::getDeleted, 0)
+                    .eq(Config::getDeleted, NOT_DELETED)
                     .last("LIMIT 1")))
         .map(converter::entityToVO);
   }
@@ -77,7 +83,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   public List<ConfigVO> findPublicEnabled() {
     return converter.configListToVO(configMapper.selectList(
         new LambdaQueryWrapper<Config>()
-            .eq(Config::getIsPublic, 1)
+            .eq(Config::getIsPublic, PUBLIC_CONFIG)
             .eq(Config::getStatus, STATUS_ENABLED)
             .orderByAsc(Config::getSortOrder)));
   }
@@ -142,7 +148,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public List<ConfigVO> findForCursor(String configGroup, String configKey, String cursor, int limit) {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, 0);
+    wrapper.eq(Config::getDeleted, NOT_DELETED);
     if (configGroup != null && !configGroup.isBlank()) {
       wrapper.eq(Config::getConfigGroup, configGroup);
     }
@@ -160,7 +166,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public boolean existsAfterCursor(String configGroup, String configKey, String cursor) {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, 0);
+    wrapper.eq(Config::getDeleted, NOT_DELETED);
     if (configGroup != null && !configGroup.isBlank()) {
       wrapper.eq(Config::getConfigGroup, configGroup);
     }
@@ -176,7 +182,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public List<ConfigVO> findForExport(String configGroup) {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, 0);
+    wrapper.eq(Config::getDeleted, NOT_DELETED);
     if (configGroup != null && !configGroup.isBlank()) {
       wrapper.eq(Config::getConfigGroup, configGroup).orderByAsc(Config::getSortOrder);
     } else {
@@ -188,14 +194,14 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public List<ConfigVO> findEnabledConfigs() {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getStatus, STATUS_ENABLED).eq(Config::getDeleted, 0);
+    wrapper.eq(Config::getStatus, STATUS_ENABLED).eq(Config::getDeleted, NOT_DELETED);
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
   public List<ConfigVO> findByGroup(String configGroup) {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getConfigGroup, configGroup).eq(Config::getDeleted, 0);
+    wrapper.eq(Config::getConfigGroup, configGroup).eq(Config::getDeleted, NOT_DELETED);
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 

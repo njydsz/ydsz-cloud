@@ -185,8 +185,10 @@ public class FlowDefinitionDesignManager {
       skipRepository.findByDefinitionId(definitionId).forEach(s -> skipRepository.deleteById(s.getId()));
       nodeRepository.deleteByDefinitionId(definitionId);
 
-      List<FlowNodeVO> nodes = new ArrayList<>();
-      List<FlowSkipVO> skips = new ArrayList<>();
+      int expectedNodeSize = dto.getNodes() != null ? dto.getNodes().size() : 16;
+      int expectedSkipSize = dto.getSkips() != null ? dto.getSkips().size() : 16;
+      List<FlowNodeVO> nodes = new ArrayList<>(expectedNodeSize);
+      List<FlowSkipVO> skips = new ArrayList<>(expectedSkipSize);
 
       if (hasBpmn) {
         BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());

@@ -276,7 +276,7 @@ public class FlowDefinitionDeployManager {
    * @return 返回值说明
    */
   private List<FlowNodeVO> parseJsonNodes(FlowDeployProcessDTO dto) {
-    List<FlowNodeVO> nodes = new ArrayList<>();
+    List<FlowNodeVO> nodes = new ArrayList<>(dto.getNodes().size());
     for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
       FlowNodeVO node = new FlowNodeVO();
       node.setNodeCode(n.getNodeCode());
@@ -319,7 +319,7 @@ public class FlowDefinitionDeployManager {
    * @return 返回值说明
    */
   private List<FlowSkipVO> parseJsonSkips(FlowDeployProcessDTO dto) {
-    List<FlowSkipVO> skips = new ArrayList<>();
+    List<FlowSkipVO> skips = new ArrayList<>(dto.getSkips() != null ? dto.getSkips().size() : 16);
     if (dto.getSkips() != null) {
       for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
         FlowSkipVO skip = new FlowSkipVO();

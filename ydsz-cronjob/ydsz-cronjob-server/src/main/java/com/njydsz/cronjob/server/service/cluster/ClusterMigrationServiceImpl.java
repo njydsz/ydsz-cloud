@@ -73,7 +73,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
 
     // 3. 逐任务执行漂移
     List<String> jobIds = dto.getJobIds();
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
 
     for (String jobId : jobIds) {

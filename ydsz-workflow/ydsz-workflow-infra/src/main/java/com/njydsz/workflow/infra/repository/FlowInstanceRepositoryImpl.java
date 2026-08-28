@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
+import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
@@ -38,6 +39,9 @@ import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 @Repository
 @RequiredArgsConstructor
 public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
+
+  /** 逻辑删除标志：未删除 */
+  private static final int NOT_DELETED = 0;
 
   private final FlowInstanceMapper instanceMapper;
 
@@ -77,7 +81,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
         instanceMapper.selectList(
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getInitiatorId, initiatorId)
-                .eq(FlowInstance::getDeleted, 0)
+                .eq(FlowInstance::getDeleted, NOT_DELETED)
                 .orderByDesc(FlowInstance::getCreatedAt)));
   }
 
@@ -88,7 +92,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getInitiatorId, initiatorId)
                 .eq(flowCode != null, FlowInstance::getFlowCode, flowCode)
-                .eq(FlowInstance::getDeleted, 0)
+                .eq(FlowInstance::getDeleted, NOT_DELETED)
                 .orderByDesc(FlowInstance::getCreatedAt)));
   }
 
@@ -98,7 +102,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
         instanceMapper.selectList(
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getParentInstanceId, parentInstanceId)
-                .eq(FlowInstance::getDeleted, 0)));
+                .eq(FlowInstance::getDeleted, NOT_DELETED)));
   }
 
   @Override
@@ -106,7 +110,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
     return instanceMapper.selectCount(
         new LambdaQueryWrapper<FlowInstance>()
             .eq(FlowInstance::getFlowStatus, flowStatus)
-            .eq(FlowInstance::getDeleted, 0));
+            .eq(FlowInstance::getDeleted, NOT_DELETED));
   }
 
   @Override
@@ -114,9 +118,9 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
     return converter.flowInstanceListToVO(
         instanceMapper.selectList(
             new LambdaQueryWrapper<FlowInstance>()
-                .eq(FlowInstance::getFlowStatus, "SUSPENDED")
+                .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.SUSPENDED.name())
                 .le(FlowInstance::getUpdatedAt, before)
-                .eq(FlowInstance::getDeleted, 0)
+                .eq(FlowInstance::getDeleted, NOT_DELETED)
                 .last("LIMIT " + limit)));
   }
 
@@ -203,16 +207,16 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
         instanceMapper.selectList(
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getParentInstanceId, parentInstanceId)
-                .eq(FlowInstance::getFlowStatus, "RUNNING")
-                .eq(FlowInstance::getDeleted, 0)));
+                .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name())
+                .eq(FlowInstance::getDeleted, NOT_DELETED)));
   }
 
   @Override
   public List<FlowInstanceVO> findRunningByDefinition(String definitionId, String tenantId) {
     LambdaQueryWrapper<FlowInstance> wrapper = new LambdaQueryWrapper<FlowInstance>()
         .eq(FlowInstance::getDefinitionId, definitionId)
-        .eq(FlowInstance::getFlowStatus, "RUNNING")
-        .eq(FlowInstance::getDeleted, 0);
+        .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name())
+        .eq(FlowInstance::getDeleted, NOT_DELETED);
     if (tenantId != null) {
       wrapper.eq(FlowInstance::getTenantId, tenantId);
     }
@@ -234,7 +238,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
             new LambdaQueryWrapper<FlowInstance>()
                 .in(FlowInstance::getFlowStatus, statuses)
                 .lt(FlowInstance::getEndAt, threshold)
-                .eq(FlowInstance::getDeleted, 0)
+                .eq(FlowInstance::getDeleted, NOT_DELETED)
                 .orderByAsc(FlowInstance::getEndAt)
                 .last("LIMIT " + limit)));
   }
@@ -245,9 +249,9 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
         instanceMapper.selectList(
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(tenantId != null, FlowInstance::getTenantId, tenantId)
-                .eq(FlowInstance::getFlowStatus, "RUNNING")
+                .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name())
                 .lt(FlowInstance::getStartAt, threshold)
-                .eq(FlowInstance::getDeleted, 0)
+                .eq(FlowInstance::getDeleted, NOT_DELETED)
                 .orderByAsc(FlowInstance::getStartAt)
                 .last("LIMIT " + limit)));
   }

@@ -203,7 +203,11 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
    */
   @Override
   public Collection<V> values() {
-    List<V> values = new ArrayList<>();
+    int totalSize = 0;
+    for (final Segment<K, V> segment : segments) {
+      totalSize += segment.values().size();
+    }
+    List<V> values = new ArrayList<>(totalSize);
     for (final Segment<K, V> segment : segments) {
       values.addAll(segment.values());
     }

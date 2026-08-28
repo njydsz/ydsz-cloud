@@ -161,7 +161,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     }
     UserReachProfileDTO profile = getProfile(userId);
     // 计算每个通道的综合评分
-    List<ChannelScore> scored = new ArrayList<>();
+    List<ChannelScore> scored = new ArrayList<>(channels.size());
     for (String channel : channels) {
       double score = calculateChannelScore(channel, profile);
       scored.add(new ChannelScore(channel, score));

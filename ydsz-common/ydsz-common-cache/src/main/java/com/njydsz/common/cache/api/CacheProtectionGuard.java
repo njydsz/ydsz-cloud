@@ -216,7 +216,7 @@ public final class CacheProtectionGuard {
       return Collections.emptyMap();
     }
     Map<K, V> result = new HashMap<>(keys.size());
-    List<K> missingKeys = new ArrayList<>();
+    List<K> missingKeys = new ArrayList<>(keys.size());
 
     // 先从缓存获取
     for (K key : keys) {

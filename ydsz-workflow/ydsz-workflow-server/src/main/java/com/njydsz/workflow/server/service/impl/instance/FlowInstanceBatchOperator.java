@@ -76,8 +76,8 @@ public class FlowInstanceBatchOperator {
     }
 
     int successCount = 0;
-    List<String> instanceIds = new ArrayList<>();
-    List<FlowBatchStartResultVO.FailedItemVO> failedItems = new ArrayList<>();
+    List<String> instanceIds = new ArrayList<>(dtos.size());
+    List<FlowBatchStartResultVO.FailedItemVO> failedItems = new ArrayList<>(dtos.size());
 
     for (int i = 0; i < dtos.size(); i++) {
       FlowStartProcessDTO dto = dtos.get(i);

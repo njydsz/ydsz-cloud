@@ -693,7 +693,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public BatchResult<String> batchPause(List<String> jobIds) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
@@ -719,7 +719,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public BatchResult<String> batchResume(List<String> jobIds) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
@@ -745,7 +745,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public BatchResult<String> batchTrigger(List<String> jobIds) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
@@ -771,7 +771,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public BatchResult<String> batchDelete(List<String> jobIds) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
@@ -799,7 +799,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public BatchResult<String> batchUpdateGroup(List<String> jobIds, String newGroup) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
@@ -840,7 +840,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   public BatchResult<String> batchUpdateCron(List<String> jobIds, String cronExpression) {
     // 先统一校验一次 Cron 表达式合法性，避免逐个校验重复
     validateCron(cronExpression);
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>();
+    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
