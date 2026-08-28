@@ -305,7 +305,7 @@ public class DataValidator {
     if (field.isAnnotationPresent(Pattern.class)) {
       Pattern pattern =
           field.getAnnotation(Pattern.class);
-      if (!java.util.regex.Pattern.matches(pattern.regexp(), strVal)) {
+      if (!strVal.matches(pattern.regexp())) {
         throw ExcelReadException.validationFailed(rowNum, fieldName, value, pattern.message());
       }
     }
@@ -338,7 +338,7 @@ public class DataValidator {
     if (field.isAnnotationPresent(Pattern.class)) {
       Pattern pattern =
           field.getAnnotation(Pattern.class);
-      if (!java.util.regex.Pattern.matches(pattern.regexp(), strVal)) {
+      if (!strVal.matches(pattern.regexp())) {
         errors.add(new ValidationError(rowNum, fieldName, value, pattern.message()));
       }
     }

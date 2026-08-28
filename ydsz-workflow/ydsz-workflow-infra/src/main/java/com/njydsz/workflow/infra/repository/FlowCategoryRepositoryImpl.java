@@ -51,15 +51,6 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
   }
 
   @Override
-  @Deprecated
-  public FlowCategoryVO save(FlowCategoryVO vo) {
-    FlowCategory entity = converter.entityToEntity(vo);
-    categoryMapper.insert(entity);
-    vo.setId(entity.getId());
-    return vo;
-  }
-
-  @Override
   public Optional<FlowCategoryVO> findById(String id) {
     return Optional.ofNullable(categoryMapper.selectById(id)).map(converter::entityToVO);
   }
@@ -107,14 +98,6 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
     FlowCategory entity = converter.dtoToEntity(dto);
     categoryMapper.updateById(entity);
     return converter.entityToVO(entity);
-  }
-
-  @Override
-  @Deprecated
-  public FlowCategoryVO update(FlowCategoryVO vo) {
-    FlowCategory entity = converter.entityToEntity(vo);
-    categoryMapper.updateById(entity);
-    return vo;
   }
 
   @Override
