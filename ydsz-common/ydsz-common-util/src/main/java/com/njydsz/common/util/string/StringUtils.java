@@ -2,10 +2,11 @@ package com.njydsz.common.util.string;
 
 import java.text.Normalizer;
 import java.util.Collection;
-import org.slf4j.helpers.MessageFormatter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+
+import org.slf4j.helpers.MessageFormatter;
 
 /**
  * 字符串工具类

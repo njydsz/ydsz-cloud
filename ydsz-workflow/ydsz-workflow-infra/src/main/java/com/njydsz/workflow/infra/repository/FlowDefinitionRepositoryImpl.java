@@ -49,15 +49,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   @Override
-  @Deprecated
-  public FlowDefinitionVO save(FlowDefinitionVO vo) {
-    FlowDefinition entity = converter.entityToEntity(vo);
-    definitionMapper.insert(entity);
-    vo.setId(entity.getId());
-    return vo;
-  }
-
-  @Override
   public Optional<FlowDefinitionVO> findById(String id) {
     return Optional.ofNullable(definitionMapper.selectById(id)).map(converter::entityToVO);
   }
@@ -113,14 +104,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
     FlowDefinition entity = converter.dtoToEntity(dto);
     definitionMapper.updateById(entity);
     return converter.entityToVO(entity);
-  }
-
-  @Override
-  @Deprecated
-  public FlowDefinitionVO update(FlowDefinitionVO vo) {
-    FlowDefinition entity = converter.entityToEntity(vo);
-    definitionMapper.updateById(entity);
-    return vo;
   }
 
   @Override

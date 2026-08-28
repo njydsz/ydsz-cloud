@@ -37,16 +37,6 @@ public interface FlowCategoryRepository {
   FlowCategoryVO save(FlowCategoryDTO dto);
 
   /**
-   * 保存流程分类（已废弃）。
-   * 
-   *
-   * @param vo 参数说明
-   * @return 返回值说明
-   */
-  @Deprecated
-  FlowCategoryVO save(FlowCategoryVO vo);
-
-  /**
    * 根据 ID 查询流程分类。
    *
    * @param id 分类 ID
@@ -94,16 +84,6 @@ public interface FlowCategoryRepository {
    * @return 更新后的流程分类 VO
    */
   FlowCategoryVO update(FlowCategoryDTO dto);
-
-  /**
-   * 更新流程分类（已废弃）。
-   * 
-   *
-   * @param vo 参数说明
-   * @return 返回值说明
-   */
-  @Deprecated
-  FlowCategoryVO update(FlowCategoryVO vo);
 
   /**
    * 统计指定租户下某编码的分类数量（用于编码唯一性校验）。

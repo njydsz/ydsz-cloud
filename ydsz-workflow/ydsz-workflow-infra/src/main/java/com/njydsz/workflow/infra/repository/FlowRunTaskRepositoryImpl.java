@@ -83,15 +83,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   @Override
-  @Deprecated
-  public FlowRunTaskVO save(FlowRunTaskVO vo) {
-    FlowRunTask entity = converter.entityToEntity(vo);
-    taskMapper.insert(entity);
-    vo.setId(entity.getId());
-    return vo;
-  }
-
-  @Override
   public Optional<FlowRunTaskVO> findById(String id) {
     return Optional.ofNullable(taskMapper.selectById(id)).map(converter::entityToVO);
   }
@@ -249,40 +240,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     }
 
     return converter.flowRunTaskListToVO(taskMapper.selectList(wrapper));
-  }
-
-  @Override
-  public List<FlowRunTaskVO> findByCondition(FlowTaskQueryDTO condition) {
-    // 委托给新的 findByCondition(FlowTaskQuery) 实现
-    return findByCondition(convertToQuery(condition));
-  }
-
-  /**
-   * 将旧的 FlowTaskQueryDTO 转换为新的 FlowTaskQuery
-   *
-   * @param dto 参数说明
-   * @return 返回值说明
-   */
-  private FlowTaskQuery convertToQuery(FlowTaskQueryDTO dto) {
-    FlowTaskQuery query = new FlowTaskQuery();
-    query.setTenantId(dto.getTenantId());
-    query.setFlowCode(dto.getFlowCode());
-    query.setInstanceId(dto.getInstanceId());
-    query.setNodeCode(dto.getNodeCode());
-    query.setAssigneeId(dto.getAssigneeId());
-    query.setTaskStatus(dto.getTaskStatus());
-    query.setBusinessType(dto.getBusinessType());
-    query.setBusinessId(dto.getBusinessId());
-    query.setPriority(dto.getPriority());
-    query.setCreatedAtFrom(dto.getCreatedAtFrom());
-    query.setCreatedAtTo(dto.getCreatedAtTo());
-    query.setDueAtFrom(dto.getDueAtFrom());
-    query.setDueAtTo(dto.getDueAtTo());
-    query.setOrderBy(dto.getOrderBy());
-    query.setOrderDirection(dto.getOrderDirection());
-    query.setOffset(dto.getOffset());
-    query.setLimit(dto.getLimit());
-    return query;
   }
 
   @Override
