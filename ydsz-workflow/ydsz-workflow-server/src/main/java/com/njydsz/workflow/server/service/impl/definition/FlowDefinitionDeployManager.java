@@ -72,6 +72,9 @@ public class FlowDefinitionDeployManager {
     /** 文件读取缓冲区大小 */
   private static final int BUFFER_SIZE = 4096;
 
+  /** 集合默认初始容量（源清单缺失时的兜底估计值） */
+  private static final int DEFAULT_COLLECTION_CAPACITY = 16;
+
   /** 流程定义仓储 */
   private final FlowDefinitionRepository definitionRepository;
 
@@ -319,7 +322,7 @@ public class FlowDefinitionDeployManager {
    * @return 返回值说明
    */
   private List<FlowSkipVO> parseJsonSkips(FlowDeployProcessDTO dto) {
-    List<FlowSkipVO> skips = new ArrayList<>(dto.getSkips() != null ? dto.getSkips().size() : 16);
+    List<FlowSkipVO> skips = new ArrayList<>(dto.getSkips() != null ? dto.getSkips().size() : DEFAULT_COLLECTION_CAPACITY);
     if (dto.getSkips() != null) {
       for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
         FlowSkipVO skip = new FlowSkipVO();

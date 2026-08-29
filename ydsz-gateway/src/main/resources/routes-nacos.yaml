@@ -36,13 +36,24 @@
     "order": -1
   },
   {
+    "id": "ydsz-system-internal",
+    "uri": "lb://ydsz-system",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/internal/config/get,/api/internal/dict/item,/api/internal/dict/list,/api/internal/app/validate" }
+      }
+    ],
+    "order": -2
+  },
+  {
     "id": "ydsz-userinfo",
     "uri": "lb://ydsz-userinfo",
     "predicates": [
       {
         "name": "Path",
         "args": {
-          "pattern": "/api/v1/auth/**,/api/v1/user/**,/api/v1/company/**,/api/v1/dept/**,/api/v1/menu/**,/api/v1/post/**,/api/v1/role/**,/api/v1/language/**,/api/v1/oauth2/**,/api/v1/userinfo/**,/api/v1/profile/**,/api/v1/captcha/**,/api/v1/self-service/**,/api/v1/webauthn/**,/api/v1/sso/**,/api/v1/auth-policy/**,/api/v1/devices/**,/api/v1/social-client-config/**,/api/v1/saml-idp-config/**,/api/v1/admin/**,/saml/**,/cas/**,/scim/**,/.well-known/**,/api/internal/**,/feign/**"
+          "pattern": "/api/v1/auth/**,/api/v1/user/**,/api/v1/company/**,/api/v1/dept/**,/api/v1/menu/**,/api/v1/post/**,/api/v1/role/**,/api/v1/language/**,/api/v1/oauth2/**,/api/v1/userinfo/**,/api/v1/profile/**,/api/v1/captcha/**,/api/v1/self-service/**,/api/v1/webauthn/**,/api/v1/sso/**,/api/v1/auth-policy/**,/api/v1/devices/**,/api/v1/social-client-config/**,/api/v1/saml-idp-config/**,/api/v1/admin/**,/saml/**,/cas/**,/scim/**,/.well-known/**,/api/internal/**"
         }
       }
     ],
@@ -66,7 +77,7 @@
       {
         "name": "Path",
         "args": {
-          "pattern": "/api/v1/config/**,/api/v1/dict/**,/api/v1/app/**,/api/v1/variable/**,/api/v1/system/**,/api/v1/tenant/**,/api/v1/tenant-plan/**,/api/v1/search/**"
+          "pattern": "/api/v1/config/**,/api/v1/dict/**,/api/v1/app/**,/api/v1/variable/**,/api/v1/system/**,/api/v1/tenant/**,/api/v1/tenant-plan/**"
         }
       }
     ],
@@ -92,7 +103,7 @@
     "predicates": [
       {
         "name": "Path",
-        "args": { "pattern": "/api/v1/cronjob/**" }
+        "args": { "pattern": "/api/v1/cronjob/**,/cronjob/*.html" }
       }
     ],
     "order": 0

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
-import com.njydsz.workflow.domain.dto.FlowTaskQueryDTO;
 import com.njydsz.workflow.domain.query.FlowTaskQuery;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;

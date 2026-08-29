@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -260,18 +259,6 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
    */
   private long countDelegateActions(String tenantId, String startTime, String endTime) {
     try {
-      LambdaQueryWrapper<FlowAuditLogVO> wrapper = new LambdaQueryWrapper<>();
-      wrapper.eq(FlowAuditLogVO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY);
-      if (tenantId != null) {
-        wrapper.eq(FlowAuditLogVO::getTenantId, tenantId);
-      }
-      wrapper.in(FlowAuditLogVO::getAction, "PASS", "REJECT");
-      if (StringUtils.hasText(startTime)) {
-        wrapper.ge(FlowAuditLogVO::getCreatedAt, LocalDateTime.parse(startTime, DT_FMT));
-      }
-      if (StringUtils.hasText(endTime)) {
-        wrapper.le(FlowAuditLogVO::getCreatedAt, LocalDateTime.parse(endTime, DT_FMT));
-      }
       return auditLogRepository.countByBusinessTypeAndActions(
           FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY,
           List.of("PASS", "REJECT"),
@@ -554,15 +541,6 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
     LocalDateTime threshold = LocalDateTime.now().minusHours(effectiveStuckHours);
 
-    // 查询未完成且创建时间超过阈值的任务
-    LambdaQueryWrapper<FlowRunTaskVO> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(tenantId != null, FlowRunTaskVO::getTenantId, tenantId)
-        .in(FlowRunTaskVO::getTaskStatus, "PENDING", "CLAIMED")
-        .lt(FlowRunTaskVO::getCreatedAt, threshold)
-        .orderByAsc(FlowRunTaskVO::getCreatedAt)
-        .last("LIMIT " + effectiveLimit);
-
     List<FlowRunTaskVO> stuckTasks = taskRepository.findStuckTasks(tenantId, threshold, effectiveLimit);
     if (stuckTasks == null || stuckTasks.isEmpty()) {
       return List.of();
@@ -601,13 +579,6 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
   @Override
   public List<FlowAnomalyVO> detectHighRejectionNodes(String tenantId) {
-    // 查询最近 100 个历史任务（按完成时间倒序）
-    LambdaQueryWrapper<FlowHisTaskVO> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(tenantId != null, FlowHisTaskVO::getTenantId, tenantId)
-        .orderByDesc(FlowHisTaskVO::getFinishAt)
-        .last("LIMIT " + HIGH_REJECTION_SAMPLE_SIZE);
-
     List<FlowHisTaskVO> recentTasks = hisTaskRepository.selectRecentByTenant(tenantId, HIGH_REJECTION_SAMPLE_SIZE);
     if (recentTasks == null || recentTasks.isEmpty()) {
       return List.of();
@@ -683,15 +654,6 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : DEFAULT_LONG_RUNNING_DAYS;
 
     LocalDateTime threshold = LocalDateTime.now().minusDays(effectiveLongRunningDays);
-
-    // 查询运行中且启动时间超过阈值的实例
-    LambdaQueryWrapper<FlowInstanceVO> wrapper = new LambdaQueryWrapper<>();
-    wrapper
-        .eq(tenantId != null, FlowInstanceVO::getTenantId, tenantId)
-        .eq(FlowInstanceVO::getFlowStatus, "RUNNING")
-        .lt(FlowInstanceVO::getStartAt, threshold)
-        .orderByAsc(FlowInstanceVO::getStartAt)
-        .last("LIMIT " + effectiveLimit);
 
     List<FlowInstanceVO> longRunningInstances = instanceRepository.findLongRunning(tenantId, threshold, effectiveLimit);
     if (longRunningInstances == null || longRunningInstances.isEmpty()) {

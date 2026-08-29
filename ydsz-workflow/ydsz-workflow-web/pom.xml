@@ -16,6 +16,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-server</artifactId>
         </dependency>
+        <!-- ydsz-workflow-infra: 启动扫描（P0 整改：server 已按规范 34.6 Step 6 移除 infra 依赖，
+             Repository 实现改由 web 入口装配，对齐 system-web / cronjob-web 既有模式） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-workflow-infra</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>

@@ -3,7 +3,8 @@ package com.njydsz.agent.server.event;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.event.AgentDomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -23,10 +24,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class AgentEventPublisher {
-  private final DomainEventPublisher publisher;
 
-  public AgentEventPublisher(DomainEventPublisher publisher) {
-    this.publisher = publisher;
+  /** 事件发布门面（可选依赖，未引入 common-event 时安全降级，符合云顶规范 27.4.1） */
+  private final ObjectProvider<DomainEventPublisher> publisherProvider;
+
+  public AgentEventPublisher(ObjectProvider<DomainEventPublisher> publisherProvider) {
+    this.publisherProvider = publisherProvider;
+  }
+
+  private void publishSafely(AgentDomainEvent event) {
+    DomainEventPublisher publisher = publisherProvider.getIfAvailable();
+    if (publisher == null) {
+      log.warn("[AgentEvent] common-event 未装配，事件丢弃: type={}", event.getEventType());
+      return;
+    }
+    publisher.publish(event);
   }
 
   /**
@@ -47,7 +59,7 @@ public class AgentEventPublisher {
     metadata.put("model", model);
     AgentDomainEvent event =
         AgentDomainEvent.of(DomainEventTypes.AGENT_EXECUTION_STARTED, executionId, metadata);
-    publisher.publish(event);
+    publishSafely(event);
     log.debug("[AgentEvent] 执行启动: executionId={}, type={}", executionId, agentType);
   }
 
@@ -79,7 +91,7 @@ public class AgentEventPublisher {
     metadata.put("costUsd", String.valueOf(costUsd));
     AgentDomainEvent event =
         AgentDomainEvent.of(DomainEventTypes.AGENT_EXECUTION_COMPLETED, executionId, metadata);
-    publisher.publish(event);
+    publishSafely(event);
     log.debug("[AgentEvent] 执行完成: executionId={}, tokens={}, cost={}", executionId, totalTokens, costUsd);
   }
 
@@ -108,7 +120,7 @@ public class AgentEventPublisher {
     metadata.put("errorMessage", errorMessage != null ? errorMessage : "未知错误");
     AgentDomainEvent event =
         AgentDomainEvent.of(DomainEventTypes.AGENT_EXECUTION_FAILED, executionId, metadata);
-    publisher.publish(event);
+    publishSafely(event);
     log.warn("[AgentEvent] 执行失败: executionId={}, error={}", executionId, errorMessage);
   }
 
@@ -132,6 +144,6 @@ public class AgentEventPublisher {
             conversationId,
             "CONVERSATION",
             metadata);
-    publisher.publish(event);
+    publishSafely(event);
   }
 }

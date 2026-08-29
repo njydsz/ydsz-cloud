@@ -25,7 +25,6 @@ import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -114,15 +113,28 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
   /**
    * {@inheritDoc}
-   * 
-   * <p>符合 DDD 分层规范：DTO→DO 转换逻辑封装在 Service 层。
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * <p>符合 DDD 分层规范：server 不依赖 infra，DTO→VO 转换以手写字段拷贝完成，
+   * 不经 MapStruct Converter（云顶规范 34.6 Step 6 / Step 11）。
+   *
+   * @param dto 委派授权新增请求 DTO
+   * @return 委派授权 VO
    */
   @Override
-  public FlowDelegateAuthVO postDtoToEntity(FlowDelegateAuthPostDTO dto) {
-    return WorkflowConverter.INSTANT.postDtoToVO(dto);
+  public FlowDelegateAuthVO postDtoToVO(FlowDelegateAuthPostDTO dto) {
+    FlowDelegateAuthVO vo = new FlowDelegateAuthVO();
+    vo.setOwnerUserId(dto.getOwnerUserId());
+    vo.setOwnerUserName(dto.getOwnerUserName());
+    vo.setDelegateUserId(dto.getDelegateUserId());
+    vo.setDelegateUserName(dto.getDelegateUserName());
+    vo.setScopeType(dto.getScopeType());
+    vo.setFlowCode(dto.getFlowCode());
+    vo.setNodeCode(dto.getNodeCode());
+    vo.setRoleCode(dto.getRoleCode());
+    vo.setStartTime(dto.getStartTime());
+    vo.setEndTime(dto.getEndTime());
+    vo.setReason(dto.getReason());
+    return vo;
   }
 
   /**

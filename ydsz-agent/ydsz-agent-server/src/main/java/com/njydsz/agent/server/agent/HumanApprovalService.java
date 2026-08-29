@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.dto.AgentApprovalDTO;
@@ -61,7 +62,21 @@ public class HumanApprovalService {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final AgentApprovalRepository agentApprovalRepository;
-  private final DomainEventPublisher eventPublisher;
+  private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
+
+  /**
+   * 可选发布事件（云顶规范 27.4.1：common-event 未装配时安全降级，不影响主流程）。
+   *
+   * @param event 领域事件
+   */
+  private void publishEvent(DomainEvent event) {
+    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+    if (publisher == null) {
+      log.warn("[HITL] common-event 未装配，事件丢弃: type={}", event.getEventType());
+      return;
+    }
+    publisher.publish(event);
+  }
 
   /**
    * 创建审批请求。
@@ -93,7 +108,7 @@ public class HumanApprovalService {
 
     // 发布审批请求事件，供执行器/通知中心订阅
     try {
-      eventPublisher.publish(
+      publishEvent(
           DomainEvent.builder()
               .aggregateType("AgentApproval")
               .aggregateId(approvalId)
@@ -221,7 +236,7 @@ public class HumanApprovalService {
     }
 
     try {
-      eventPublisher.publish(
+      publishEvent(
           DomainEvent.builder()
               .aggregateType("AgentApproval")
               .aggregateId(approvalId)

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowSaveDraftDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
@@ -83,8 +84,9 @@ public class DraftInstanceService {
    */
   @Transactional(rollbackFor = Exception.class)
   public String saveDraft(FlowSaveDraftDTO dto) {
-    // 校验流程定义
-    FlowDefinitionVO definition = definitionRepository.findLatestPublished(dto.getFlowCode());
+    // 校验流程定义（仅最新已发布版本可用于发起）
+    FlowDefinitionVO definition =
+        definitionRepository.findLatestPublished(dto.getFlowCode(), dto.getTenantId()).orElse(null);
     if (definition == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -133,7 +135,7 @@ public class DraftInstanceService {
     }
     variables.put("_draft", true);
     variables.put("_draftSavedAt", LocalDateTime.now().toString());
-    draft.setVariable(variables);
+    draft.setVariable(YdszJson.toJson(variables));
 
     instanceRepository.save(draft);
     log.info("[Flow-Draft] 保存草稿成功: instanceId={}, flowCode={}, businessId={}", instanceId,
@@ -169,17 +171,20 @@ public class DraftInstanceService {
           .build();
     }
 
-    // 更新草稿数据
+    // 更新草稿数据（variable 字段为 JSON 字符串，经 YdszJson 反序列化后合并）
     Map<String, Object> variables = dto.getDraftData();
     if (variables == null) {
       variables = new HashMap<>();
     }
+    if (draft.getVariable() != null && !draft.getVariable().isBlank()) {
+      variables.putAll(YdszJson.parseMap(draft.getVariable()));
+    }
     variables.put("_draft", true);
     variables.put("_draftSavedAt", LocalDateTime.now().toString());
-    variables.put("_draftUpdatedCount",
-        (draft.getVariable() != null ? (Integer) draft.getVariable().getOrDefault(
-            "_draftUpdatedCount", 0) + 1 : 1));
-    draft.setVariable(variables);
+    Object prevCount = variables.get("_draftUpdatedCount");
+    int updatedCount = prevCount instanceof Number number ? number.intValue() + 1 : 1;
+    variables.put("_draftUpdatedCount", updatedCount);
+    draft.setVariable(YdszJson.toJson(variables));
 
     // 更新可选字段
     if (dto.getTitle() != null) {
@@ -222,14 +227,14 @@ public class DraftInstanceService {
 
     // 更新草稿数据（如有）
     if (draftData != null && !draftData.isEmpty()) {
-      Map<String, Object> variables = draft.getVariable();
-      if (variables == null) {
-        variables = new HashMap<>();
-      }
+      Map<String, Object> variables =
+          draft.getVariable() != null && !draft.getVariable().isBlank()
+              ? YdszJson.parseMap(draft.getVariable())
+              : new HashMap<>();
       variables.putAll(draftData);
       variables.put("_draft", false);
       variables.put("_draftSubmittedAt", LocalDateTime.now().toString());
-      draft.setVariable(variables);
+      draft.setVariable(YdszJson.toJson(variables));
     }
 
     // 更新状态为 RUNNING

@@ -57,7 +57,7 @@ public class FlowDelegateAuthController {
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
   @Operation(summary = "创建长期授权委派")
   public YdszResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthPostDTO dto) {
-    var auth = delegateAuthService.postDtoToEntity(dto);
+    var auth = delegateAuthService.postDtoToVO(dto);
     if (auth.getOwnerUserId() == null) {
       auth.setOwnerUserId(AuthContextUtils.getUserId());
     }

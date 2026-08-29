@@ -142,6 +142,17 @@ public interface FlowDefinitionRepository {
   Optional<FlowDefinitionVO> findLatestByCode(String flowCode, String tenantId);
 
   /**
+   * 根据流程编码查询最新已发布版本定义（P0-5 草稿提交场景）。
+   *
+   * <p>仅返回 {@code isPublish = 1 AND deleted = 0} 的最新版本，用于校验草稿对应的流程已可正式发起。
+   *
+   * @param flowCode 流程编码
+   * @param tenantId 租户 ID
+   * @return 最新已发布流程定义 VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<FlowDefinitionVO> findLatestPublished(String flowCode, String tenantId);
+
+  /**
    * 按分类查询已启用的流程定义列表。
    *
    * <p>返回 {@code category = ? AND activityStatus = 1 AND isPublish = 1 AND deleted = 0} 的定义列表，

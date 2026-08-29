@@ -215,23 +215,6 @@ public interface WorkflowConverter {
   List<FlowUserVO> flowUserListToVO(List<FlowUser> entities);
 
   /**
-   * 委派授权 PostDTO → VO（P0 整改：自 domain 层 FlowDelegateAuthConverter 迁入，
-   * MapStruct Converter 统一收敛于 infra/converter，符合云顶规范 34 章分层约束）。
-   *
-   * @param dto 委派授权新增请求 DTO
-   * @return 委派授权 VO
-   */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "authStatus", ignore = true)
-  @Mapping(target = "providerTraceId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  FlowDelegateAuthVO postDtoToVO(FlowDelegateAuthPostDTO dto);
-
-  /**
    * 委派授权 PostDTO → Entity（创建场景）。
    *
    * @param dto 参数说明

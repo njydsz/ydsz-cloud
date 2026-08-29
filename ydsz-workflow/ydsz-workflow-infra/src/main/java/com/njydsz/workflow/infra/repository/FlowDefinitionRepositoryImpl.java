@@ -146,6 +146,22 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   @Override
+  public Optional<FlowDefinitionVO> findLatestPublished(String flowCode, String tenantId) {
+    return definitionMapper
+        .selectList(
+            new LambdaQueryWrapper<FlowDefinition>()
+                .eq(FlowDefinition::getFlowCode, flowCode)
+                .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
+                .eq(FlowDefinition::getIsPublish, 1)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getCreatedAt)
+                .last("LIMIT 1"))
+        .stream()
+        .findFirst()
+        .map(converter::entityToVO);
+  }
+
+  @Override
   public List<FlowDefinitionVO> findEnabledByCategory(String categoryCode, String tenantId) {
     return converter.flowDefinitionListToVO(
         definitionMapper.selectList(

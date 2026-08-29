@@ -19,13 +19,14 @@ public interface FlowDelegateAuthService {
   /**
    * 将授权 Post DTO 转换为 VO
    *
-   * <p>符合 DDD 分层规范：DTO→VO 转换逻辑封装在 Service 层。
+   * <p>符合 DDD 分层规范：DTO→VO 转换以手写字段拷贝完成，封装在 Service 层，
+   * server 不依赖 infra 的 MapStruct Converter（云顶规范 34.6 Step 6 / Step 11）。
    *
    * @param dto 授权 Post DTO
    * @return 授权 VO
    * @since 1.0.0
    */
-  FlowDelegateAuthVO postDtoToEntity(FlowDelegateAuthPostDTO dto);
+  FlowDelegateAuthVO postDtoToVO(FlowDelegateAuthPostDTO dto);
 
   /**
    * 创建授权

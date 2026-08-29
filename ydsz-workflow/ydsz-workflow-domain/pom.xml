@@ -50,11 +50,6 @@
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>
         </dependency>
-        <!-- mapstruct: domain 层 FlowDelegateAuthConverter 使用 -->
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-        </dependency>
         <!-- P0-1: 单元测试（JUnit 5 + AssertJ + Mockito） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

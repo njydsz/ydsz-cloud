@@ -60,6 +60,9 @@ import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 @Component
 public class FlowDefinitionDesignManager {
 
+  /** 集合默认初始容量（源清单缺失时的兜底估计值） */
+  private static final int DEFAULT_COLLECTION_CAPACITY = 16;
+
   /** 流程定义仓储 */
   private final FlowDefinitionRepository definitionRepository;
 
@@ -185,8 +188,8 @@ public class FlowDefinitionDesignManager {
       skipRepository.findByDefinitionId(definitionId).forEach(s -> skipRepository.deleteById(s.getId()));
       nodeRepository.deleteByDefinitionId(definitionId);
 
-      int expectedNodeSize = dto.getNodes() != null ? dto.getNodes().size() : 16;
-      int expectedSkipSize = dto.getSkips() != null ? dto.getSkips().size() : 16;
+      int expectedNodeSize = dto.getNodes() != null ? dto.getNodes().size() : DEFAULT_COLLECTION_CAPACITY;
+      int expectedSkipSize = dto.getSkips() != null ? dto.getSkips().size() : DEFAULT_COLLECTION_CAPACITY;
       List<FlowNodeVO> nodes = new ArrayList<>(expectedNodeSize);
       List<FlowSkipVO> skips = new ArrayList<>(expectedSkipSize);
 

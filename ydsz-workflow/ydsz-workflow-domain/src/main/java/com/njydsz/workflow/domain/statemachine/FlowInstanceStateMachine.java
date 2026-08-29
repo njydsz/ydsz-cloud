@@ -288,6 +288,10 @@ public class FlowInstanceStateMachine {
           "workflow.instance.transition.ROLLED_BACK",
           new Object[] {current},
           current + " → ROLLED_BACK: 流程回滚");
+      case DRAFT -> MessageUtils.getMessage(
+          "workflow.instance.transition.DRAFT",
+          new Object[] {current},
+          current + " → DRAFT: 转为草稿（P0-5 暂存待审）");
     };
   }
 

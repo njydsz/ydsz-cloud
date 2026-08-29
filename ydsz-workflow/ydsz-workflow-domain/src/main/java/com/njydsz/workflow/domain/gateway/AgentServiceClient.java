@@ -38,15 +38,16 @@ public interface AgentServiceClient {
    * Agent 执行结果值对象。
    *
    * <p>封装 AI Agent 返回的审批决策信息。
+   *
+   * @param approve 审批决策：true-通过，false-驳回
+   * @param reason 决策原因说明
+   * @param confidence Agent 置信度（0.0~1.0）
+   * @param rawOutput Agent 原始输出内容
    */
   record AgentExecutionResult(
-      /** 审批决策：true-通过，false-驳回 */
       boolean approve,
-      /** 决策原因说明 */
       String reason,
-      /** Agent 置信度（0.0~1.0） */
       double confidence,
-      /** Agent 原始输出内容 */
       String rawOutput) {
 
     /**

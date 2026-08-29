@@ -146,10 +146,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <!-- server 依赖 infra 以使用 WorkflowConverter 等转换器 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-infra</artifactId>
-        </dependency>
+        <!-- P0 整改（云顶规范 34.6 Step 6）：server 不依赖 infra，
+             通过 Spring 注入 domain 层 Repository 接口，运行时由 infra 实现提供 -->
     </dependencies>
 </project>
