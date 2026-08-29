@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -62,6 +63,7 @@ import com.njydsz.system.server.service.AppInfoService;
  */
 @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/app")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:app:list")

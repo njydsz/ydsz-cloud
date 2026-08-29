@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
@@ -40,6 +41,7 @@ import com.njydsz.cronjob.server.service.audit.AuditLogService;
  */
 @Tag(name = "操作审计", description = "cronjob 操作审计日志分页查询")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/cronjob/audit")
 @RequiredArgsConstructor
 @Validated

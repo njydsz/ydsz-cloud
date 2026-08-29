@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -69,6 +70,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller（关联分配）
  */
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/menu")
 @RequiredArgsConstructor
 @Tag(name = "菜单管理", description = "菜单/权限 CRUD、树形结构查询")

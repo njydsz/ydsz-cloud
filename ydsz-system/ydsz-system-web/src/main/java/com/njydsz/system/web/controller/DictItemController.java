@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -66,6 +67,7 @@ import com.njydsz.system.server.service.DictItemService;
  */
 @Tag(name = "字典项", description = "字典项 CRUD + 批量操作 + 按类型查询 + 树形查询")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/dict/item")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:dict:item:list")

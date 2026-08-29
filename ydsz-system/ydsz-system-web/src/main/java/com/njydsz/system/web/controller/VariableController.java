@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -61,6 +62,7 @@ import com.njydsz.system.server.service.VariableService;
  */
 @Tag(name = "系统变量", description = "系统变量 CRUD + 按 key 查询（高频调用走 Redis 缓存）")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/variable")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:variable:list")

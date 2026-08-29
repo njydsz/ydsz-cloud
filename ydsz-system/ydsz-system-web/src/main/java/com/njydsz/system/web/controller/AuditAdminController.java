@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.domain.AuditLog;
@@ -44,6 +45,7 @@ import com.njydsz.common.web.version.ApiVersion;
  * @since 1.0.0
  */
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/admin/audit")
 @RequiredArgsConstructor
 @ApiVersion("1")

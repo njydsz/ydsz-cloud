@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -71,6 +72,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（角色授予目标）
  */
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/role")
 @RequiredArgsConstructor
 @Tag(name = "角色管理", description = "角色 CRUD、权限分配")

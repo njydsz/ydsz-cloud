@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -46,6 +47,7 @@ import com.njydsz.system.server.service.TenantPlanService;
  */
 @Tag(name = "租户套餐管理", description = "套餐 CRUD / 菜单配置")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/tenant-plan")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:tenant:plan:list")

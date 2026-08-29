@@ -20,12 +20,12 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.workflow.domain.converter.FlowDelegateAuthConverter;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowDelegateAuthRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
+import com.njydsz.workflow.infra.converter.WorkflowConverter;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -122,7 +122,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
    */
   @Override
   public FlowDelegateAuthVO postDtoToEntity(FlowDelegateAuthPostDTO dto) {
-    return FlowDelegateAuthConverter.INSTANT.postDtoToVO(dto);
+    return WorkflowConverter.INSTANT.postDtoToVO(dto);
   }
 
   /**

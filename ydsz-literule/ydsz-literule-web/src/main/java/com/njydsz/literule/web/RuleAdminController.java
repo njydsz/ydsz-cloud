@@ -32,8 +32,10 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
+import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.dto.ExpressionValidateDTO;
 import com.njydsz.literule.api.dto.RuleABTestDTO;
 import com.njydsz.literule.api.expression.ExpressionEngine;
@@ -320,6 +322,53 @@ public class RuleAdminController {
   @GetMapping("/validate")
   public YdszResponse<Boolean> validate(@RequestParam String expression) {
     return YdszResponse.success(ruleAdminService.validateExpression(expression));
+  }
+
+  /**
+   * 规则评估（正式模式，P0-2 补建）
+   *
+   * <p>与 {@link #dryRun} 的区别：正式评估记录执行统计（评估次数/触发次数/耗时）、发布规则触发事件
+   * （供消息中心等下游消费）并触发动作分发（如发送通知、调用接口）。
+   *
+   * <p>历史缺陷复盘：{@code FeignClientConstants.LITERULE_PATH_EVALUATE} 指向的
+   * {@code /ruleEngine/rules/evaluate} 在后端不存在，Feign 调用 404 后静默走
+   * {@code LiteRuleClientFallback}。本端点补齐正式评估的 HTTP 面，路径与
+   * {@code LiteRuleClient#evaluate} 契约对齐。
+   *
+   * <p>设计说明：本端点为服务间高频调用入口，不启用 {@code @Idempotent}（避免批评估场景误拒），
+   * 通过 {@code @RateLimit} 提供接口级限流防护；租户与链路 ID 从网关注入的请求头解析，
+   * 与 {@code TenantContextFeignInterceptor} / 前端 {@code X-Tenant-Id} 注入约定对齐。
+   *
+   * @param ruleCode 规则编码（可选，null 时评估全部规则，命中结果按此过滤）
+   * @param scenario 场景标识（可选，用于规则过滤和统计分组，缺省 DEFAULT）
+   * @param tenantId 租户 ID（可选，取 X-Tenant-Id 请求头，缺省使用引擎默认租户）
+   * @param traceId 链路追踪 ID（可选，取 X-Trace-Id 请求头）
+   * @param facts 事实数据
+   * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
+   * @since 1.0.0
+   */
+  @Operation(summary = "规则评估（正式模式）", description = "记录统计、发布触发事件并触发动作分发的正式规则评估")
+  @ApiResponse(responseCode = "200", description = "触发的规则结果列表")
+  @RateLimit(resource = "literule.rule_admin.evaluate", threshold = 50)
+  @PostMapping("/evaluate")
+  public YdszResponse<List<RuleResultVO>> evaluate(
+      @RequestParam(required = false) String ruleCode,
+      @RequestParam(required = false) String scenario,
+      @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+      @RequestHeader(value = "X-Trace-Id", required = false) String traceId,
+      @RequestBody Map<String, Object> facts) {
+    String scen = scenario != null ? scenario : "DEFAULT";
+    RuleContext context =
+        tenantId != null
+            ? RuleContext.of(facts, scen, "HTTP", traceId, tenantId)
+            : RuleContext.of(facts, scen, "HTTP", traceId);
+    List<RuleResult> results = ruleEngine.evaluate(context);
+    List<RuleResult> filtered =
+        ruleCode == null
+            ? results
+            : results.stream().filter(r -> ruleCode.equals(r.getRuleCode())).toList();
+    return YdszResponse.success(
+        filtered.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
   }
 
   /**

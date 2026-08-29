@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
@@ -37,6 +38,7 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
  */
 @Tag(name = "灰度实验", description = "消息模板 A/B 对照实验管理")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/message/canary")
 @RequiredArgsConstructor
 public class CanaryController {

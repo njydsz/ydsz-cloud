@@ -14,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
@@ -44,6 +45,7 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
  */
 @Tag(name = "MapReduce 子任务查询", description = "子任务列表/分页/进度汇总")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/cronjob/task")
 @RequiredArgsConstructor
 @Validated

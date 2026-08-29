@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -80,6 +81,7 @@ import com.njydsz.userinfo.web.dto.SecondaryAuthRequest;
  * @see com.njydsz.userinfo.web.controller.OAuth2Controller OAuth2.0 授权端点
  */
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")

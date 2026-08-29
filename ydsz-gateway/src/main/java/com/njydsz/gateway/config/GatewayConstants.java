@@ -3,7 +3,7 @@ package com.njydsz.gateway.config;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
-import com.njydsz.gateway.constant.InternalSignatureHeaderConstants;
+import com.njydsz.common.auth.constant.InternalSignatureHeaderConstants;
 
 /**
  * 网关层内部常量定义。
@@ -16,7 +16,7 @@ import com.njydsz.gateway.constant.InternalSignatureHeaderConstants;
  *   <li>所有 X-User-* / X-Internal-* 头在 {@link com.njydsz.gateway.filter.AuthGlobalFilter}
  *       中统一注入，{@link com.njydsz.gateway.config.PathGuard#internalHeaders()} 中定义需剥离的客户端伪造头集合
  *   <li>新增内部头时必须同步更新 PathGuard 列表 + 下游 BaseAuthFilter 解析逻辑
- *   <li>下游服务信任网关的前提是 {@link com.njydsz.gateway.config.InternalHeaderSigner} 签名校验通过
+ *   <li>下游服务信任网关的前提是 {@link com.njydsz.common.auth.security.InternalHeaderSigner} 签名校验通过
  * </ul>
  *
  * @since 1.0.0

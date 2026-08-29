@@ -56,7 +56,7 @@ public interface LiteRuleClient {
   /**
    * 规则评估（dry-run 仿真模式，不记录统计、不发布事件、不触发动作分发）
    *
-   * <p>对应 literule 模块: POST /ruleEngine/rules/dryRun
+   * <p>对应 literule 模块: POST /api/v1/literule/rules/dry-run
    *
    * @param ruleCode 规则编码（可选，null 时评估全部规则）
    * @param facts 事实数据（如 {@code metric}, {@code threshold}, {@code value}）
@@ -70,7 +70,7 @@ public interface LiteRuleClient {
   /**
    * 规则评估（正式模式，记录统计、发布事件、触发动作分发）
    *
-   * <p>对应 literule 模块: POST /ruleEngine/rules/evaluate
+   * <p>对应 literule 模块: POST /api/v1/literule/rules/evaluate
    *
    * <p>与 {@link #dryRun} 的区别：
    *

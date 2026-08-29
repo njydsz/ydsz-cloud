@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -54,6 +55,7 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
  */
 @Tag(name = "WebHook 事件订阅", description = "订阅 CRUD、过滤查询、测试推送")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/cronjob/webhook")
 @RequiredArgsConstructor
 public class JobWebhookController {

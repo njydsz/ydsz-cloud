@@ -77,11 +77,22 @@ public final class FeignClientConstants {
 
   // ======================== 规则引擎服务路径常量 ========================
 
-  /** 规则评估（dry-run）路径 */
-  public static final String LITERULE_PATH_DRY_RUN = "/ruleEngine/rules/dryRun";
+  /**
+   * 规则评估（dry-run）路径。
+   *
+   * <p>P0-2 修正：旧值 {@code /ruleEngine/rules/dryRun} 为历史遗留路径，与 literule 实际暴露的
+   * {@code RuleAdminController}（{@code @RequestMapping("/api/v1/literule/rules") + @PostMapping("/dry-run")}）不匹配，
+   * Feign 调用必然 404 后静默走 fallback。现对齐 kebab-case 新约定。
+   */
+  public static final String LITERULE_PATH_DRY_RUN = "/api/v1/literule/rules/dry-run";
 
-  /** 规则评估（正式）路径 */
-  public static final String LITERULE_PATH_EVALUATE = "/ruleEngine/rules/evaluate";
+  /**
+   * 规则评估（正式）路径。
+   *
+   * <p>P0-2 修正：旧值 {@code /ruleEngine/rules/evaluate} 在后端不存在；现指向
+   * {@code RuleAdminController#evaluate}（本迭代补建的正式评估端点）。
+   */
+  public static final String LITERULE_PATH_EVALUATE = "/api/v1/literule/rules/evaluate";
 
   // ======================== 工作流服务路径常量 ========================
 

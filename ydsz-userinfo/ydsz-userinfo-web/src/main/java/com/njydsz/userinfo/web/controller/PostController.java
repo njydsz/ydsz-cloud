@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -58,6 +59,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（兼任岗位维护）
  */
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/post")
 @RequiredArgsConstructor
 @Tag(name = "岗位管理", description = "岗位 CRUD")

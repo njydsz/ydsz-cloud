@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -50,6 +51,7 @@ import com.njydsz.system.server.service.EntityVersionService;
  */
 @Tag(name = "配置版本", description = "配置变更历史查询 + 一键回滚")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/config/version")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:config:version:list")

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -65,6 +66,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * @see com.njydsz.userinfo.domain.vo.LanguageVO 语言VO
  */
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/language")
 @Tag(name = "语言管理", description = "语言 CRUD")
 @RequiredArgsConstructor

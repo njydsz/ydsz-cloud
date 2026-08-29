@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -91,6 +92,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  */
 @Tag(name = "站内通知", description = "站内通知发送/收件箱/已读/撤回/推送")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/message/notifications")
 @RequiredArgsConstructor
 public class NotificationController {

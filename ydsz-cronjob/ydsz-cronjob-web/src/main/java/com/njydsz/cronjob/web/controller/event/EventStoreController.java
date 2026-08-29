@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
@@ -28,6 +29,7 @@ import com.njydsz.cronjob.server.service.event.EventStoreService;
  */
 @Tag(name = "事件存储", description = "Event Sourcing 事件流查询")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/cronjob/events")
 @RequiredArgsConstructor
 public class EventStoreController {

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
@@ -65,6 +66,7 @@ import com.njydsz.system.server.service.ConfigService;
  */
 @Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作 + 导入导出")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/config")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:config:list")

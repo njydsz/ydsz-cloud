@@ -158,7 +158,13 @@ public enum SecurityExceptionCode implements ExceptionCode {
    *
    * @return 处理结果
    */
-  PASSWORD_REUSED("C01072", "security.password.reused", 400);
+  PASSWORD_REUSED("C01072", "security.password.reused", 400),
+  /**
+   * 内部签名校验失败（P0-3：网关 X-Internal-Sig 下游验签不通过）
+   *
+   * @return 处理结果
+   */
+  INTERNAL_SIGNATURE_INVALID("C01081", "security.internal.signature.invalid", 403);
 
   // ==================== 字段定义 ====================
 

@@ -24,7 +24,7 @@ import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
-import com.njydsz.gateway.config.InternalHeaderSigner;
+import com.njydsz.common.auth.security.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
 import com.njydsz.gateway.config.WebSocketConnectionLimiter;
 

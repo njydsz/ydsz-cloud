@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
@@ -43,6 +44,7 @@ import com.njydsz.message.server.service.core.MessageHealthService;
  */
 @Tag(name = "系统健康检查", description = "消息模块运行时健康状态监控")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/message/health")
 @RequiredArgsConstructor
 public class SystemHealthController {

@@ -22,6 +22,9 @@ public final class WebFilterOrder {
   /** TraceIdResponseFilter：traceId 注入到 response header */
   public static final int TRACE_ID_RESPONSE_FILTER = Ordered.HIGHEST_PRECEDENCE + 40;
 
+  /** InternalSignatureFilter：内部签名验签（P0-3，先于鉴权执行以拒绝伪造内部请求） */
+  public static final int INTERNAL_SIGNATURE_FILTER = Ordered.HIGHEST_PRECEDENCE + 45;
+
   /** WebAuthFilter：JWT/Session 鉴权 */
   public static final int AUTH_FILTER = Ordered.HIGHEST_PRECEDENCE + 50;
 }

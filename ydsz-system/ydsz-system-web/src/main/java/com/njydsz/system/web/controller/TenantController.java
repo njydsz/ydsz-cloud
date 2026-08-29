@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -51,6 +52,7 @@ import com.njydsz.system.server.service.TenantService;
  */
 @Tag(name = "租户管理", description = "多租户 CRUD")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/tenant")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:tenant:list")

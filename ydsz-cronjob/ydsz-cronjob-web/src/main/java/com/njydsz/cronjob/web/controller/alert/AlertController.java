@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -61,6 +62,7 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
  */
 @Tag(name = "任务告警规则", description = "告警规则 CRUD、启停、告警日志查询")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/cronjob/alert")
 @RequiredArgsConstructor
 public class AlertController {

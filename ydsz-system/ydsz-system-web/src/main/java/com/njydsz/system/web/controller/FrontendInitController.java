@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
@@ -37,6 +38,7 @@ import com.njydsz.system.server.service.FrontendInitService;
  */
 @Tag(name = "前端初始化", description = "前端启动聚合数据接口")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/system/init")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:frontend:init")

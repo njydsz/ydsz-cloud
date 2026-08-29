@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -47,6 +48,7 @@ import com.njydsz.cronjob.server.service.cluster.ClusterMigrationService;
  */
 @Tag(name = "集群漂移", description = "多云/多集群任务漂移管理")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/cronjob/cluster")
 @RequiredArgsConstructor
 @Validated

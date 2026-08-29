@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -73,6 +74,7 @@ import com.njydsz.message.server.service.config.RouteRuleService;
  */
 @Tag(name = "路由规则", description = "消息路由规则管理")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/message/route-rule")
 @RequiredArgsConstructor
 public class RouteRuleController {

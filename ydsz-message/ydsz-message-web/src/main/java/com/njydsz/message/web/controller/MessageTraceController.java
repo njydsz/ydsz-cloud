@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
@@ -77,6 +78,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  */
 @Tag(name = "消息追踪", description = "消息端到端全链路追踪")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/message/trace")
 @RequiredArgsConstructor
 public class MessageTraceController {

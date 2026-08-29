@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -40,6 +41,7 @@ import com.njydsz.userinfo.server.service.DepartmentService;
  * @see com.njydsz.userinfo.server.service.DepartmentService 部门业务逻辑
  */
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/dept")
 @RequiredArgsConstructor
 @Tag(name = "部门管理", description = "部门 CRUD、树形结构查询")

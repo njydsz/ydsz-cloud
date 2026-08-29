@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -75,6 +76,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
  */
 @Tag(name = "聚合批次", description = "消息聚合批次查询与刷新")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/message/aggregate")
 @RequiredArgsConstructor
 public class AggregateController {

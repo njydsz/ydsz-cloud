@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -56,6 +57,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
  * @see com.njydsz.userinfo.web.controller.AuthController 认证 Controller（消费 captcha）
  */
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/captcha")
 @RequiredArgsConstructor
 @Tag(name = "验证码", description = "图形验证码生成与校验")

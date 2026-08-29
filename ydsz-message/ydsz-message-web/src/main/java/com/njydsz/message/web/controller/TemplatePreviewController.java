@@ -11,6 +11,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
@@ -69,6 +70,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
  */
 @Tag(name = "模板预览", description = "模板渲染预览")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/message/template/preview")
 @RequiredArgsConstructor
 public class TemplatePreviewController {

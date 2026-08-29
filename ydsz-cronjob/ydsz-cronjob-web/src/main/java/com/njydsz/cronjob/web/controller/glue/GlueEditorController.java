@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -47,6 +48,7 @@ import com.njydsz.common.permission.PermissionCodes;
  */
 @Tag(name = "GLUE 编辑器", description = "GLUE 任务 Handler 在线代码编辑")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/cronjob/glue")
 @RequiredArgsConstructor
 public class GlueEditorController {

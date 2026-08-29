@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
@@ -76,6 +77,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
  */
 @Tag(name = "消息归档搜索", description = "消息发送日志全文搜索")
 @Slf4j
+@RestController
 @RequestMapping("/api/v1/message/archive/search")
 @RequiredArgsConstructor
 public class MessageArchiveController {
