@@ -18,12 +18,13 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowSlaService;
