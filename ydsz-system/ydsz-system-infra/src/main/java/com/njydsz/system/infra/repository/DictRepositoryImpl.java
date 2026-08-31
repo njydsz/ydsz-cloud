@@ -96,7 +96,12 @@ public class DictRepositoryImpl implements DictRepository {
   @Override
   public boolean insertType(DictTypeDTO dto) {
     DictType entity = converter.dtoToEntity(dto);
-    return dictTypeMapper.insert(entity) > 0;
+    boolean success = dictTypeMapper.insert(entity) > 0;
+    // MyBatis-Plus 回填 snowflake ID 到 entity，需同步回 DTO
+    if (success && entity.getId() != null) {
+      dto.setId(entity.getId());
+    }
+    return success;
   }
 
   @Override
@@ -201,7 +206,12 @@ public class DictRepositoryImpl implements DictRepository {
   @Override
   public boolean insertItem(DictItemDTO dto) {
     DictItem entity = converter.dtoToEntity(dto);
-    return dictItemMapper.insert(entity) > 0;
+    boolean success = dictItemMapper.insert(entity) > 0;
+    // MyBatis-Plus 回填 snowflake ID 到 entity，需同步回 DTO
+    if (success && entity.getId() != null) {
+      dto.setId(entity.getId());
+    }
+    return success;
   }
 
   @Override

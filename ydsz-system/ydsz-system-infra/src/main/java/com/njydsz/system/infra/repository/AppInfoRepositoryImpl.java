@@ -86,7 +86,12 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
   @Override
   public boolean insert(AppInfoDTO dto) {
     AppInfo entity = converter.dtoToEntity(dto);
-    return appInfoMapper.insert(entity) > 0;
+    boolean success = appInfoMapper.insert(entity) > 0;
+    // MyBatis-Plus 回填 snowflake ID 到 entity，需同步回 DTO
+    if (success && entity.getId() != null) {
+      dto.setId(entity.getId());
+    }
+    return success;
   }
 
   @Override

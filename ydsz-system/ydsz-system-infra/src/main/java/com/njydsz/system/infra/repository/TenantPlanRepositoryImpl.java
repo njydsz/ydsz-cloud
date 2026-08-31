@@ -98,7 +98,12 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
   @Override
   public boolean insert(TenantPlanDTO dto) {
     TenantPlan entity = converter.dtoToEntity(dto);
-    return tenantPlanMapper.insert(entity) > 0;
+    boolean success = tenantPlanMapper.insert(entity) > 0;
+    // MyBatis-Plus 回填 snowflake ID 到 entity，需同步回 DTO
+    if (success && entity.getId() != null) {
+      dto.setId(entity.getId());
+    }
+    return success;
   }
 
   @Override

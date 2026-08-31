@@ -31,8 +31,6 @@ import com.njydsz.literule.domain.enums.RuleStatusEnum;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
-@SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_def")

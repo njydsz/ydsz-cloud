@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -48,6 +49,9 @@ public class AgentFacadeImpl implements AgentFacade {
 
   /** Agent 工厂（多类型 Agent 执行器创建 / 路由） */
   private final AgentFactory agentFactory;
+
+  /** Agent 定义服务（按 code 查找定义以支持类型路由） */
+  private final com.njydsz.agent.server.agent.AgentDefinitionService agentDefinitionService;
 
   /**
    * {@inheritDoc}
@@ -164,10 +168,20 @@ public class AgentFacadeImpl implements AgentFacade {
   /**
    * {@inheritDoc}
    *
-   * <p>委托 {@link AgentFactory#getDefaultExecutor()} 获取默认执行器并执行 Agent。
+   * <p>根据请求中的 agentCode 查找 Agent 定义，路由到对应类型的执行器。
+   * 若未找到定义则降级使用默认执行器（ReAct）。
    */
   @Override
   public ChatResponse execute(AgentExecutionRequest request) {
+    if (request.getAgentCode() != null && agentDefinitionService != null) {
+      AgentDefinition definition = agentDefinitionService.getByCode(request.getAgentCode());
+      if (definition != null) {
+        log.debug("[AgentFacade] 路由到类型执行器: agentCode={}, type={}",
+            request.getAgentCode(), definition.getType());
+        return agentFactory.getExecutor(definition).execute(request);
+      }
+    }
+    log.debug("[AgentFacade] 使用默认执行器: agentCode={}", request.getAgentCode());
     return agentFactory.getDefaultExecutor().execute(request);
   }
 

@@ -120,7 +120,12 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public boolean insert(ConfigDTO dto) {
     Config entity = converter.dtoToEntity(dto);
-    return configMapper.insert(entity) > 0;
+    boolean success = configMapper.insert(entity) > 0;
+    // MyBatis-Plus 回填 snowflake ID 到 entity，需同步回 DTO
+    if (success && entity.getId() != null) {
+      dto.setId(entity.getId());
+    }
+    return success;
   }
 
   @Override
