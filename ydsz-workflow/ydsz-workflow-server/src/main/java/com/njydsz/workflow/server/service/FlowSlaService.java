@@ -2,8 +2,8 @@ package com.njydsz.workflow.server.service;
 
 import java.util.Map;
 
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
  * SLA 服务。
@@ -36,7 +36,7 @@ public interface FlowSlaService {
    * @param task 待设置 dueAt 的任务 VO
    * @param node 当前节点 VO（slaConfig 字段从 ext 中读取）
    */
-  void applySlaConfig(FlowRunTaskVO task, FlowNodeVO node);
+  void applySlaConfig(FlowRunTaskDTO task, FlowNodeVO node);
 
   /**
    * 解析 SLA 配置（同时支持 slaConfig JSON 和 ext.slaConfig 嵌套）

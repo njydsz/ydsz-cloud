@@ -6,7 +6,6 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -389,33 +388,30 @@ public class FlowTaskOperateService {
    * @return 返回值说明
    */
   private FlowRunTaskVO recreateRetractTask(FlowHisTaskVO hisTask, FlowInstanceVO instance, String comment) {
-    FlowRunTaskVO newTask = new FlowRunTaskVO();
-    newTask.setInstanceId(instance.getId());
-    newTask.setFlowCode(instance.getFlowCode());
-    newTask.setDefinitionId(instance.getDefinitionId());
-    newTask.setNodeCode(hisTask.getNodeCode());
-    newTask.setNodeName(hisTask.getNodeName());
-    newTask.setNodeType(hisTask.getNodeType());
-    newTask.setBusinessType(instance.getBusinessType());
-    newTask.setBusinessId(instance.getBusinessId());
-    newTask.setBusinessNo(instance.getBusinessNo());
-    newTask.setFlowName(instance.getFlowName());
-    newTask.setTitle(instance.getTitle());
-    newTask.setPermissionFlag(null);
-    newTask.setPerformType(hisTask.getPerformType());
-    newTask.setApproveCount(hisTask.getApproveCount() == null ? 1 : hisTask.getApproveCount());
-    newTask.setApproveFinished(0);
-    newTask.setTaskStatus(FlowTaskStatus.PENDING.name());
-    newTask.setAssigneeType(hisTask.getAssigneeType());
-    newTask.setAssigneeId(hisTask.getAssigneeId());
-    newTask.setAssigneeName(hisTask.getAssigneeName());
-    newTask.setTenantId(instance.getTenantId());
-    newTask.setProviderTraceId(instance.getProviderTraceId());
-    newTask.setComment(comment);
-    FlowRunTaskDTO taskDto = new FlowRunTaskDTO();
-    BeanUtils.copyProperties(newTask, taskDto);
-    taskRepository.save(taskDto);
-    return newTask;
+    FlowRunTaskDTO dto = new FlowRunTaskDTO();
+    dto.setInstanceId(instance.getId());
+    dto.setFlowCode(instance.getFlowCode());
+    dto.setDefinitionId(instance.getDefinitionId());
+    dto.setNodeCode(hisTask.getNodeCode());
+    dto.setNodeName(hisTask.getNodeName());
+    dto.setNodeType(hisTask.getNodeType());
+    dto.setBusinessType(instance.getBusinessType());
+    dto.setBusinessId(instance.getBusinessId());
+    dto.setBusinessNo(instance.getBusinessNo());
+    dto.setFlowName(instance.getFlowName());
+    dto.setTitle(instance.getTitle());
+    dto.setPermissionFlag(null);
+    dto.setPerformType(hisTask.getPerformType());
+    dto.setApproveCount(hisTask.getApproveCount() == null ? 1 : hisTask.getApproveCount());
+    dto.setApproveFinished(0);
+    dto.setTaskStatus(FlowTaskStatus.PENDING.name());
+    dto.setAssigneeType(hisTask.getAssigneeType());
+    dto.setAssigneeId(hisTask.getAssigneeId());
+    dto.setAssigneeName(hisTask.getAssigneeName());
+    dto.setTenantId(instance.getTenantId());
+    dto.setProviderTraceId(instance.getProviderTraceId());
+    dto.setComment(comment);
+    return taskRepository.save(dto);
   }
 
   /**

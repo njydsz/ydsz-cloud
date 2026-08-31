@@ -23,7 +23,7 @@ import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowSlaService;
@@ -237,7 +237,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
    * @param node 当前节点（含 {@code slaConfig}）
    */
   @Override
-  public void applySlaConfig(FlowRunTaskVO task, FlowNodeVO node) {
+  public void applySlaConfig(FlowRunTaskDTO task, FlowNodeVO node) {
     if (task == null || node == null) {
       return;
     }
@@ -265,8 +265,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       }
     }
     log.info(
-        "[FlowSla] 应用 SLA 配置: taskId={} nodeCode={} timeoutMinutes={} action={} dueAt={}",
-        task.getId(),
+        "[FlowSla] 应用 SLA 配置: instanceId={} nodeCode={} timeoutMinutes={} action={} dueAt={}",
+        task.getInstanceId(),
         node.getNodeCode(),
         timeoutMinutes,
         config.get(SLA_CONFIG_KEY_ACTION),

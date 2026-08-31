@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -449,7 +448,7 @@ public class FlowTaskCreateService {
       userIds = applyCrossNodeDedup(userIds, instanceId, node);
     }
 
-    FlowRunTaskVO task = buildBaseTask(instance, node, performType, userIds.size());
+    FlowRunTaskDTO task = buildBaseTask(instance, node, performType, userIds.size());
 
     if (userIds.isEmpty()) {
       // 跨节点去重后候选人为空 — 自动跳过该节点
@@ -474,12 +473,10 @@ public class FlowTaskCreateService {
     }
 
     // 持久化任务 + 写入 ydsz_flow_user（需 task ID，必须在 insert 之后）
-    FlowRunTaskDTO taskDto = new FlowRunTaskDTO();
-    BeanUtils.copyProperties(task, taskDto);
-    taskRepository.save(taskDto);
+    FlowRunTaskVO saved = taskRepository.save(task);
     Map<String, Integer> userWeights = parseUserWeights(node.getExt());
     for (String uid : userIds) {
-      insertFlowUser(task, instance, node, uid, userWeights);
+      insertFlowUser(saved, instance, node, uid, userWeights);
     }
     log.info(
         "[Flow] 创建任务: instanceId={} node={} performType={} assigneeCount={}",
@@ -488,7 +485,7 @@ public class FlowTaskCreateService {
         performType,
         userIds.size());
 
-    return new TaskBuildResult(null, task);
+    return new TaskBuildResult(null, saved);
   }
 
   /**
@@ -545,42 +542,42 @@ public class FlowTaskCreateService {
    * @param approveCount 参数说明
    * @return 返回值说明
    */
-  private FlowRunTaskVO buildBaseTask(
+  private FlowRunTaskDTO buildBaseTask(
       FlowInstanceVO instance, FlowNodeVO node, FlowPerformType performType, int approveCount) {
-    FlowRunTaskVO task = new FlowRunTaskVO();
-    task.setInstanceId(instance.getId());
-    task.setFlowCode(instance.getFlowCode());
-    task.setDefinitionId(instance.getDefinitionId());
-    task.setNodeCode(node.getNodeCode());
-    task.setNodeName(node.getNodeName());
-    task.setNodeType(node.getNodeType());
-    task.setBusinessType(instance.getBusinessType());
-    task.setBusinessId(instance.getBusinessId());
-    task.setBusinessNo(instance.getBusinessNo());
-    task.setFlowName(instance.getFlowName());
-    task.setTitle(instance.getTitle());
-    task.setPermissionFlag(node.getPermissionFlag());
-    task.setPerformType(performType.name());
-    task.setApproveCount(approveCount == 0 ? 1 : approveCount);
-    task.setApproveFinished(0);
+    FlowRunTaskDTO dto = new FlowRunTaskDTO();
+    dto.setInstanceId(instance.getId());
+    dto.setFlowCode(instance.getFlowCode());
+    dto.setDefinitionId(instance.getDefinitionId());
+    dto.setNodeCode(node.getNodeCode());
+    dto.setNodeName(node.getNodeName());
+    dto.setNodeType(node.getNodeType());
+    dto.setBusinessType(instance.getBusinessType());
+    dto.setBusinessId(instance.getBusinessId());
+    dto.setBusinessNo(instance.getBusinessNo());
+    dto.setFlowName(instance.getFlowName());
+    dto.setTitle(instance.getTitle());
+    dto.setPermissionFlag(node.getPermissionFlag());
+    dto.setPerformType(performType.name());
+    dto.setApproveCount(approveCount == 0 ? 1 : approveCount);
+    dto.setApproveFinished(0);
     // GAP-P0 幂等修复: 非循环节点 iter_var 空字符串占位（非 NULL），
     // 保证 uk_instance_node_assignee 唯一约束在 PG/Oracle 下对非 FOREACH 任务生效
-    task.setIterVar("");
-    task.setTaskStatus(FlowTaskStatus.PENDING.name());
-    task.setTenantId(instance.getTenantId());
-    task.setProviderTraceId(instance.getProviderTraceId());
+    dto.setIterVar("");
+    dto.setTaskStatus(FlowTaskStatus.PENDING.name());
+    dto.setTenantId(instance.getTenantId());
+    dto.setProviderTraceId(instance.getProviderTraceId());
 
     // P2-3: 指标
     if (flowMetrics != null) {
       flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
     }
     // P1-1: 优先级
-    applyPriority(task, node);
+    applyPriority(dto, node);
     // P1-6: SLA
     if (slaService != null) {
-      slaService.applySlaConfig(task, node);
+      slaService.applySlaConfig(dto, node);
     }
-    return task;
+    return dto;
   }
 
   /**
@@ -593,7 +590,7 @@ public class FlowTaskCreateService {
    * @return 返回值说明
    */
   private String handleAutoDedupSkip(
-      FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
+      FlowRunTaskDTO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId("0");
     task.setAssigneeName("SYSTEM_DEDUP_SKIP");
@@ -601,14 +598,12 @@ public class FlowTaskCreateService {
     LocalDateTime now = LocalDateTime.now();
     task.setFinishAt(now);
     task.setDurationMs(0L);
-    FlowRunTaskDTO dedupSkipDto = new FlowRunTaskDTO();
-    BeanUtils.copyProperties(task, dedupSkipDto);
-    taskRepository.save(dedupSkipDto);
-    archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-    support.audit(task, "DEDUP_SKIP", null, null, "办理人去重后为空，自动跳过");
+    FlowRunTaskVO saved = taskRepository.save(task);
+    archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
+    support.audit(saved, "DEDUP_SKIP", null, null, "办理人去重后为空，自动跳过");
     log.info("[Flow] 办理人去重后为空，自动跳过: instanceId={} node={}", instance.getId(), node.getNodeCode());
     advanceAfterAutoPass(instance, node, variables);
-    return task.getId();
+    return saved.getId();
   }
 
   /**
@@ -667,32 +662,30 @@ public class FlowTaskCreateService {
    */
   private String createLevelApprovalTask(
       FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables, List<String> approvers) {
-    FlowRunTaskVO task = buildBaseTask(instance, node, FlowPerformType.PARALLEL, approvers.size());
+    FlowRunTaskDTO task = buildBaseTask(instance, node, FlowPerformType.PARALLEL, approvers.size());
     task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId(approvers.get(0));
     task.setAssigneeName("USER:" + approvers.get(0));
     task.setPriority(DEFAULT_TASK_PRIORITY);
-    FlowRunTaskDTO levelApprovalDto = new FlowRunTaskDTO();
-    BeanUtils.copyProperties(task, levelApprovalDto);
-    taskRepository.save(levelApprovalDto);
+    FlowRunTaskVO saved = taskRepository.save(task);
     for (String uid : approvers) {
-      insertFlowUser(task, instance, node, uid, null);
+      insertFlowUser(saved, instance, node, uid, null);
     }
     if (flowMetrics != null) {
       flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
     }
     if (todoCountPushService != null) {
-      todoCountPushService.pushTaskAssigned(task);
+      todoCountPushService.pushTaskAssigned(saved);
     }
-    support.fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
-    support.publishWorkflowEvent("TASK_CREATED", instance.getId(), task.getId());
-    delegateRedirectService.applyDelegateRedirect(task, instance, node);
+    support.fireEvent(l -> l.onTaskCreated(saved.getId()), saved.getId());
+    support.publishWorkflowEvent("TASK_CREATED", instance.getId(), saved.getId());
+    delegateRedirectService.applyDelegateRedirect(saved, instance, node);
     log.info(
         "[Flow] 逐级审批任务创建: instanceId={} node={} approvers={}",
         instance.getId(),
         node.getNodeCode(),
         approvers);
-    return task.getId();
+    return saved.getId();
   }
 
   /**
@@ -707,7 +700,7 @@ public class FlowTaskCreateService {
       FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     Map<String, Object> extConfig = parseExtConfig(node.getExt());
     String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
-    FlowRunTaskVO task = buildBaseTask(instance, node, FlowPerformType.OR, 1);
+    FlowRunTaskDTO task = buildBaseTask(instance, node, FlowPerformType.OR, 1);
 
     switch (emptyStrategy) {
       case "AUTO_PASS":
@@ -729,13 +722,11 @@ public class FlowTaskCreateService {
             task.setFinishAt(LocalDateTime.now());
             task.setDurationMs(0L);
           }
-          FlowRunTaskDTO levelEmptyDto = new FlowRunTaskDTO();
-          BeanUtils.copyProperties(task, levelEmptyDto);
-          taskRepository.save(levelEmptyDto);
+          FlowRunTaskVO saved = taskRepository.save(task);
           if (FlowTaskStatus.COMPLETED.name().equals(task.getTaskStatus())) {
-            archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
+            archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
             support.audit(
-                task, "LEVEL_APPROVAL_" + emptyStrategy, null, null, "逐级审批展开为空，" + emptyStrategy);
+                saved, "LEVEL_APPROVAL_" + emptyStrategy, null, null, "逐级审批展开为空，" + emptyStrategy);
             advanceAfterAutoPass(instance, node, variables);
           }
           log.info(
@@ -743,21 +734,19 @@ public class FlowTaskCreateService {
               instance.getId(),
               node.getNodeCode(),
               emptyStrategy);
-          return task.getId();
+          return saved.getId();
         }
       default:
         {
           task.setAssigneeType(FlowAssigneeType.USER.name());
           task.setAssigneeId("1");
           task.setAssigneeName("FALLBACK");
-          FlowRunTaskDTO levelFallbackDto = new FlowRunTaskDTO();
-          BeanUtils.copyProperties(task, levelFallbackDto);
-          taskRepository.save(levelFallbackDto);
+          FlowRunTaskVO saved = taskRepository.save(task);
           log.warn(
               "[Flow] 逐级审批空兜底 FALLBACK: instanceId={} node={}",
               instance.getId(),
               node.getNodeCode());
-          return task.getId();
+          return saved.getId();
         }
     }
   }
@@ -786,19 +775,17 @@ public class FlowTaskCreateService {
       String emptyStrategy =
           (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
       if ("AUTO_PASS".equals(emptyStrategy)) {
-        FlowRunTaskVO autoTask = buildForeachTask(instance, node, "0", "SYSTEM_AUTO_PASS", "0");
+        FlowRunTaskDTO autoTask = buildForeachTask(instance, node, "0", "SYSTEM_AUTO_PASS", "0");
         autoTask.setTaskStatus(FlowTaskStatus.COMPLETED.name());
         autoTask.setFinishAt(LocalDateTime.now());
         autoTask.setDurationMs(0L);
-        FlowRunTaskDTO foreachAutoDto = new FlowRunTaskDTO();
-        BeanUtils.copyProperties(autoTask, foreachAutoDto);
-        taskRepository.save(foreachAutoDto);
-        archiveService.archiveToHistory(autoTask, FlowTaskStatus.COMPLETED);
-        support.audit(autoTask, "FOREACH_AUTO_PASS", null, null, "FOREACH 集合为空，自动通过");
+        FlowRunTaskVO saved = taskRepository.save(autoTask);
+        archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
+        support.audit(saved, "FOREACH_AUTO_PASS", null, null, "FOREACH 集合为空，自动通过");
         log.info(
             "[Flow] FOREACH 集合为空自动通过: instanceId={} node={}", instance.getId(), node.getNodeCode());
         advanceAfterAutoPass(instance, node, variables);
-        return autoTask.getId();
+        return saved.getId();
       }
       log.warn("[Flow] FOREACH 集合为空，使用 {} 策略: node={}", emptyStrategy, node.getNodeCode());
       elements = List.of("1");
@@ -806,21 +793,19 @@ public class FlowTaskCreateService {
 
     String firstTaskId = null;
     for (String element : elements) {
-      FlowRunTaskVO task = buildForeachTask(instance, node, element, "USER:" + element, element);
-      FlowRunTaskDTO foreachTaskDto = new FlowRunTaskDTO();
-      BeanUtils.copyProperties(task, foreachTaskDto);
-      taskRepository.save(foreachTaskDto);
-      insertFlowUser(task, instance, node, element, null);
+      FlowRunTaskDTO task = buildForeachTask(instance, node, element, "USER:" + element, element);
+      FlowRunTaskVO saved = taskRepository.save(task);
+      insertFlowUser(saved, instance, node, element, null);
       if (flowMetrics != null) {
         flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
       }
       if (todoCountPushService != null) {
-        todoCountPushService.pushTaskAssigned(task);
+        todoCountPushService.pushTaskAssigned(saved);
       }
-      support.fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
-      support.publishWorkflowEvent("TASK_CREATED", instance.getId(), task.getId());
+      support.fireEvent(l -> l.onTaskCreated(saved.getId()), saved.getId());
+      support.publishWorkflowEvent("TASK_CREATED", instance.getId(), saved.getId());
       if (firstTaskId == null) {
-        firstTaskId = task.getId();
+        firstTaskId = saved.getId();
       }
     }
     log.info(
@@ -841,40 +826,40 @@ public class FlowTaskCreateService {
    * @param iterVar 参数说明
    * @return 返回值说明
    */
-  private FlowRunTaskVO buildForeachTask(
+  private FlowRunTaskDTO buildForeachTask(
       FlowInstanceVO instance,
       FlowNodeVO node,
       String assigneeId,
       String assigneeName,
       String iterVar) {
-    FlowRunTaskVO task = new FlowRunTaskVO();
-    task.setInstanceId(instance.getId());
-    task.setFlowCode(instance.getFlowCode());
-    task.setDefinitionId(instance.getDefinitionId());
-    task.setNodeCode(node.getNodeCode());
-    task.setNodeName(node.getNodeName());
-    task.setNodeType(node.getNodeType());
-    task.setBusinessType(instance.getBusinessType());
-    task.setBusinessId(instance.getBusinessId());
-    task.setBusinessNo(instance.getBusinessNo());
-    task.setFlowName(instance.getFlowName());
-    task.setTitle(instance.getTitle());
-    task.setPermissionFlag(node.getPermissionFlag());
-    task.setPerformType(FlowPerformType.PARALLEL.name());
-    task.setApproveCount(1);
-    task.setApproveFinished(0);
-    task.setTaskStatus(FlowTaskStatus.PENDING.name());
-    task.setAssigneeType(FlowAssigneeType.USER.name());
-    task.setAssigneeId(assigneeId);
-    task.setAssigneeName(assigneeName);
-    task.setTenantId(instance.getTenantId());
-    task.setProviderTraceId(instance.getProviderTraceId());
-    task.setIterVar(iterVar);
-    applyPriority(task, node);
+    FlowRunTaskDTO dto = new FlowRunTaskDTO();
+    dto.setInstanceId(instance.getId());
+    dto.setFlowCode(instance.getFlowCode());
+    dto.setDefinitionId(instance.getDefinitionId());
+    dto.setNodeCode(node.getNodeCode());
+    dto.setNodeName(node.getNodeName());
+    dto.setNodeType(node.getNodeType());
+    dto.setBusinessType(instance.getBusinessType());
+    dto.setBusinessId(instance.getBusinessId());
+    dto.setBusinessNo(instance.getBusinessNo());
+    dto.setFlowName(instance.getFlowName());
+    dto.setTitle(instance.getTitle());
+    dto.setPermissionFlag(node.getPermissionFlag());
+    dto.setPerformType(FlowPerformType.PARALLEL.name());
+    dto.setApproveCount(1);
+    dto.setApproveFinished(0);
+    dto.setTaskStatus(FlowTaskStatus.PENDING.name());
+    dto.setAssigneeType(FlowAssigneeType.USER.name());
+    dto.setAssigneeId(assigneeId);
+    dto.setAssigneeName(assigneeName);
+    dto.setTenantId(instance.getTenantId());
+    dto.setProviderTraceId(instance.getProviderTraceId());
+    dto.setIterVar(iterVar);
+    applyPriority(dto, node);
     if (slaService != null) {
-      slaService.applySlaConfig(task, node);
+      slaService.applySlaConfig(dto, node);
     }
-    return task;
+    return dto;
   }
 
   /**
@@ -935,19 +920,19 @@ public class FlowTaskCreateService {
    * @param task 参数说明
    * @param node 参数说明
    */
-  private void applyPriority(FlowRunTaskVO task, FlowNodeVO node) {
+  private void applyPriority(FlowRunTaskDTO dto, FlowNodeVO node) {
     Map<String, Object> nodeExt = parseExtConfig(node.getExt());
     Object priorityVal = nodeExt.get("priority");
     if (priorityVal instanceof Number n) {
-      task.setPriority(n.intValue());
+      dto.setPriority(n.intValue());
     } else if (priorityVal instanceof String s && !s.isBlank()) {
       try {
-        task.setPriority(Integer.parseInt(s.trim()));
+        dto.setPriority(Integer.parseInt(s.trim()));
       } catch (NumberFormatException ignore) {
-        task.setPriority(DEFAULT_TASK_PRIORITY);
+        dto.setPriority(DEFAULT_TASK_PRIORITY);
       }
     } else {
-      task.setPriority(DEFAULT_TASK_PRIORITY);
+      dto.setPriority(DEFAULT_TASK_PRIORITY);
     }
   }
 
@@ -957,14 +942,14 @@ public class FlowTaskCreateService {
    * @param task 参数说明
    * @param node 参数说明
    */
-  private void applyVoteConfig(FlowRunTaskVO task, FlowNodeVO node) {
+  private void applyVoteConfig(FlowRunTaskDTO dto, FlowNodeVO node) {
     Map<String, Object> ext = parseExtConfig(node.getExt());
     Object rate = ext.get("votePassRate");
     if (rate instanceof Number n) {
-      task.setVotePassRate(BigDecimal.valueOf(n.doubleValue()));
+      dto.setVotePassRate(BigDecimal.valueOf(n.doubleValue()));
     } else if (rate instanceof String s && !s.isBlank()) {
       try {
-        task.setVotePassRate(new BigDecimal(s.trim()));
+        dto.setVotePassRate(new BigDecimal(s.trim()));
       } catch (NumberFormatException ignore) {
         // keep default
       }
@@ -1053,7 +1038,7 @@ public class FlowTaskCreateService {
    * @return 返回值说明
    */
   private String tryAutoDedup(
-      FlowRunTaskVO task,
+      FlowRunTaskDTO task,
       FlowInstanceVO instance,
       FlowNodeVO node,
       Map<String, Object> variables,
@@ -1083,13 +1068,11 @@ public class FlowTaskCreateService {
       LocalDateTime now = LocalDateTime.now();
       task.setFinishAt(now);
       task.setDurationMs(0L);
-      FlowRunTaskDTO autoDedupDto = new FlowRunTaskDTO();
-      BeanUtils.copyProperties(task, autoDedupDto);
-      taskRepository.save(autoDedupDto);
-      archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-      support.audit(task, "AUTO_DEDUP", null, null, "审批人与上一节点相同，自动去重跳过");
+      FlowRunTaskVO saved = taskRepository.save(task);
+      archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
+      support.audit(saved, "AUTO_DEDUP", null, null, "审批人与上一节点相同，自动去重跳过");
       advanceAfterAutoPass(instance, node, variables);
-      return task.getId();
+      return saved.getId();
     } catch (Exception e) {
       log.warn(
           "[Flow] 审批人自动去重检查异常: instanceId={} node={} err={}",

@@ -111,14 +111,14 @@ public class EmptyAssigneeStrategyService {
    * @return 任务 ID
    */
   public String handleEmptyAssignee(
-      FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
+      FlowRunTaskDTO dto, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     String emptyStrategy = FlowNodeExt.getEmptyStrategy(node.getExt());
 
     return switch (emptyStrategy) {
-      case "AUTO_PASS" -> handleAutoPass(task, instance, node, variables);
+      case "AUTO_PASS" -> handleAutoPass(dto, instance, node, variables);
       case "TRANSFER_ADMIN" ->
           assignToFallbackUser(
-              task,
+              dto,
               instance,
               node,
               FlowNodeExt.getAdminUserId(node.getExt()),
@@ -126,13 +126,13 @@ public class EmptyAssigneeStrategyService {
               "[Flow] 审批人为空转管理员: instanceId={} node={} adminId={}");
       case "ASSIGN_SPECIFIED" ->
           assignToFallbackUser(
-              task,
+              dto,
               instance,
               node,
               FlowNodeExt.getSpecifiedUserId(node.getExt()),
               "SPECIFIED_FALLBACK",
               "[Flow] 审批人为空指定人员: instanceId={} node={} userId={}");
-      default -> fallbackToResolveAssignee(task, instance, node, variables);
+      default -> fallbackToResolveAssignee(dto, instance, node, variables);
     };
   }
 
@@ -146,16 +146,15 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String handleAutoPass(
-      FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
-    task.setAssigneeType(FlowAssigneeType.USER.name());
-    task.setAssigneeId("0");
-    task.setAssigneeName("SYSTEM_AUTO_PASS");
-    task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+      FlowRunTaskDTO dto, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
+    dto.setAssigneeType(FlowAssigneeType.USER.name());
+    dto.setAssigneeId("0");
+    dto.setAssigneeName("SYSTEM_AUTO_PASS");
+    dto.setTaskStatus(FlowTaskStatus.COMPLETED.name());
     LocalDateTime now = LocalDateTime.now();
-    task.setFinishAt(now);
-    task.setDurationMs(0L);
-    FlowRunTaskDTO autoPassDto = toDto(task);
-    FlowRunTaskVO saved = taskRepository.save(autoPassDto);
+    dto.setFinishAt(now);
+    dto.setDurationMs(0L);
+    FlowRunTaskVO saved = taskRepository.save(dto);
     archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
     support.audit(saved, "AUTO_PASS", null, null, "审批人为空，自动通过");
     log.info("[Flow] 审批人为空自动通过: instanceId={} node={}", instance.getId(), node.getNodeCode());
@@ -176,17 +175,16 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String assignToFallbackUser(
-      FlowRunTaskVO task,
+      FlowRunTaskDTO dto,
       FlowInstanceVO instance,
       FlowNodeVO node,
       String userId,
       String fallbackName,
       String logMsg) {
-    task.setAssigneeType(FlowAssigneeType.USER.name());
-    task.setAssigneeId(userId);
-    task.setAssigneeName(fallbackName);
-    FlowRunTaskDTO fallbackDto = toDto(task);
-    FlowRunTaskVO saved = taskRepository.save(fallbackDto);
+    dto.setAssigneeType(FlowAssigneeType.USER.name());
+    dto.setAssigneeId(userId);
+    dto.setAssigneeName(fallbackName);
+    FlowRunTaskVO saved = taskRepository.save(dto);
     log.info(logMsg, instance.getId(), node.getNodeCode(), userId);
     return saved.getId();
   }
@@ -201,9 +199,8 @@ public class EmptyAssigneeStrategyService {
    * @return 返回值说明
    */
   private String fallbackToResolveAssignee(
-      FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
-    FlowRunTaskDTO resolveDto = toDto(task);
-    FlowRunTaskVO saved = taskRepository.save(resolveDto);
+      FlowRunTaskDTO dto, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
+    FlowRunTaskVO saved = taskRepository.save(dto);
     resolveAssignee(saved, node, variables, null, instance);
     taskRepository.update(saved);
     return saved.getId();
@@ -225,64 +222,6 @@ public class EmptyAssigneeStrategyService {
       FlowAssigneeDTO explicit,
       FlowInstanceVO instance) {
     assigneeResolutionService.resolveAssignee(task, node, variables, explicit, instance);
-  }
-
-  /**
-   * 将运行时任务 VO 显式映射为 DTO（写入入参）。
-   *
-   * <p>本方法替代 {@code BeanUtils.copyProperties()}，提供编译期类型安全的字段映射。
-   * 仅在这几个兜底策略方法内部使用，避免反射拷贝带来的字段不同步风险。
-   *
-   * @param vo 源 VO（由调用方组装完成）
-   * @return 同名字段复制后的 DTO
-   */
-  private FlowRunTaskDTO toDto(FlowRunTaskVO vo) {
-    FlowRunTaskDTO dto = new FlowRunTaskDTO();
-    dto.setId(vo.getId());
-    dto.setInstanceId(vo.getInstanceId());
-    dto.setFlowCode(vo.getFlowCode());
-    dto.setDefinitionId(vo.getDefinitionId());
-    dto.setNodeCode(vo.getNodeCode());
-    dto.setNodeName(vo.getNodeName());
-    dto.setNodeType(vo.getNodeType());
-    dto.setBusinessType(vo.getBusinessType());
-    dto.setBusinessId(vo.getBusinessId());
-    dto.setBusinessNo(vo.getBusinessNo());
-    dto.setFlowName(vo.getFlowName());
-    dto.setTitle(vo.getTitle());
-    dto.setAssignorId(vo.getAssignorId());
-    dto.setAssignorName(vo.getAssignorName());
-    dto.setAssigneeType(vo.getAssigneeType());
-    dto.setAssigneeId(vo.getAssigneeId());
-    dto.setAssigneeName(vo.getAssigneeName());
-    dto.setPermissionFlag(vo.getPermissionFlag());
-    dto.setPerformType(vo.getPerformType());
-    dto.setApproveCount(vo.getApproveCount());
-    dto.setApproveFinished(vo.getApproveFinished());
-    dto.setVotePassRate(vo.getVotePassRate());
-    dto.setTaskStatus(vo.getTaskStatus());
-    dto.setComment(vo.getComment());
-    dto.setClaimAt(vo.getClaimAt());
-    dto.setFinishAt(vo.getFinishAt());
-    dto.setEffectiveTime(vo.getEffectiveTime());
-    dto.setCompletedAt(vo.getCompletedAt());
-    dto.setDurationMs(vo.getDurationMs());
-    dto.setDueAt(vo.getDueAt());
-    dto.setPriority(vo.getPriority());
-    dto.setUrgeCount(vo.getUrgeCount());
-    dto.setLastUrgedAt(vo.getLastUrgedAt());
-    dto.setSlaAction(vo.getSlaAction());
-    dto.setSlaEscalated(vo.getSlaEscalated());
-    dto.setRevision(vo.getRevision());
-    dto.setUserWeight(vo.getUserWeight());
-    dto.setApproveWeight(vo.getApproveWeight());
-    dto.setTotalWeight(vo.getTotalWeight());
-    dto.setIterVar(vo.getIterVar());
-    dto.setTenantId(vo.getTenantId());
-    dto.setProviderTraceId(vo.getProviderTraceId());
-    dto.setDeleted(vo.getDeleted());
-    dto.setCreatedAt(vo.getCreatedAt());
-    return dto;
   }
 
   /**
