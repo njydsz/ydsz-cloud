@@ -26,6 +26,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_auth_policy")
+@SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 public class AuthPolicy extends MpBaseEntity<String> {
 
   /** 租户 ID（为空表示全局默认策略） */

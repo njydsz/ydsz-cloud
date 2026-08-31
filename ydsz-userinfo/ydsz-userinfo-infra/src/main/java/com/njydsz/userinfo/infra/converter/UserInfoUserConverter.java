@@ -82,6 +82,15 @@ public interface UserInfoUserConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "lastLoginAt", ignore = true)
+  @Mapping(target = "lastLoginIp", ignore = true)
+  @Mapping(target = "loginFailCount", ignore = true)
+  @Mapping(target = "lockedUntil", ignore = true)
+  @Mapping(target = "banType", ignore = true)
+  @Mapping(target = "banReason", ignore = true)
+  @Mapping(target = "banExpireAt", ignore = true)
+  @Mapping(target = "bannedBy", ignore = true)
+  @Mapping(target = "bannedAt", ignore = true)
   UserAccount dtoToEntity(UserAccountDTO dto);
 
   /**
@@ -97,8 +106,19 @@ public interface UserInfoUserConverter {
    */
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "lastLoginAt", ignore = true)
+  @Mapping(target = "lastLoginIp", ignore = true)
+  @Mapping(target = "loginFailCount", ignore = true)
+  @Mapping(target = "lockedUntil", ignore = true)
+  @Mapping(target = "banType", ignore = true)
+  @Mapping(target = "banReason", ignore = true)
+  @Mapping(target = "banExpireAt", ignore = true)
+  @Mapping(target = "bannedBy", ignore = true)
+  @Mapping(target = "bannedAt", ignore = true)
   UserAccount dtoToEntityWithId(UserAccountDTO dto);
 
   /**
@@ -139,6 +159,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -173,6 +194,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -207,6 +229,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -219,9 +242,13 @@ public interface UserInfoUserConverter {
    * @param dto 用户-部门关联 DTO（含 id）
    * @return 用户-部门关联实体（含 id）
    */
+  @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   UserDept userDeptDtoToEntityWithId(UserDeptDTO dto);
@@ -297,6 +324,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)

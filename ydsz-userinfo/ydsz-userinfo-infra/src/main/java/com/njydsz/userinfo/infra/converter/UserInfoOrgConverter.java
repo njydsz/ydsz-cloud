@@ -161,6 +161,7 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "leaderId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Department dtoToEntity(DepartmentDTO dto);
@@ -209,6 +210,7 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)

@@ -78,6 +78,8 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Role dtoToEntityWithId(RoleDTO dto);
@@ -110,6 +112,7 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -137,9 +140,12 @@ public interface UserInfoAuthConverter {
   /**
    * 菜单实体 → 菜单树形 VO（含 children 字段）
    *
+   * <p>children 由 Service 层构建树时填充，此处忽略避免 MapStruct 告警。
+   *
    * @param entity 菜单实体
    * @return 菜单树形 VO
    */
+  @Mapping(target = "children", ignore = true)
   MenuTreeVO entityToMenuTreeVO(Menu entity);
 
   /**
@@ -175,6 +181,9 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Menu dtoToEntityWithId(MenuDTO dto);
@@ -222,6 +231,8 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Language dtoToEntityWithId(LanguageDTO dto);

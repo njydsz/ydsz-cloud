@@ -352,7 +352,7 @@ public class FlowDefinitionDeployManager {
     defDto.setId(UUID.randomUUID().toString());
     defDto.setFlowCode(dto.getFlowCode());
     defDto.setFlowName(dto.getFlowName());
-    defDto.setFlowVersion(Integer.valueOf(version));
+    defDto.setFlowVersion(parseVersionInt(version));
     defDto.setTenantId(tenantId);
     return definitionRepository.save(defDto);
   }
@@ -513,5 +513,22 @@ public class FlowDefinitionDeployManager {
       name = name.substring(0, dotIdx);
     }
     return name;
+  }
+
+  /**
+   * 将版本号字符串安全转换为整数（如 "1.0" → 1，"2" → 2）。
+   *
+   * @param version 版本号字符串
+   * @return 整数版本号，解析失败时返回 1
+   */
+  private Integer parseVersionInt(String version) {
+    if (!StringUtils.hasText(version)) {
+      return 1;
+    }
+    try {
+      return Double.valueOf(version).intValue();
+    } catch (NumberFormatException e) {
+      return 1;
+    }
   }
 }
