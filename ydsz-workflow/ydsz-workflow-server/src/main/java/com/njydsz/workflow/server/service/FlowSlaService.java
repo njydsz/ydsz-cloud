@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
  * SLA 服务。
