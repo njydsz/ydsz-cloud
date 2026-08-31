@@ -31,6 +31,8 @@ import lombok.Data;
  *   <li>{@code providerTraceId} — 链路追踪 ID
  *   <li>{@code dueAt} — 期望完成时间（SLA 超期时间）
  *   <li>{@code rejectReason} — 驳回原因
+ *   <li>{@code tenantId} — 租户 ID（多租户隔离）
+ *   <li>{@code createdAt} / {@code updatedAt} — 创建/更新时间
  * </ul>
  *
  * <p>与 {@link com.njydsz.workflow.domain.vo.FlowInstanceVO} 的区别：
@@ -116,4 +118,13 @@ public class FlowInstanceDTO implements Serializable {
 
   /** 驳回原因 */
   private String rejectReason;
+
+  /** 租户 ID（多租户隔离） */
+  private String tenantId;
+
+  /** 创建时间 */
+  private LocalDateTime createdAt;
+
+  /** 更新时间 */
+  private LocalDateTime updatedAt;
 }

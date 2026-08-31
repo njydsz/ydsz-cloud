@@ -169,9 +169,8 @@ public class ServiceNodeExecuteService {
       // 3a. 成功：标记 COMPLETED，归档，审计，推进
       dto.setTaskStatus(FlowTaskStatus.COMPLETED.name());
       dto.setComment(result.message());
-      FlowRunTaskVO saved = taskRepository.save(dto);
-      archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
-      support.audit(saved, "SERVICE_EXECUTE", null, null, "服务节点执行成功: " + result.message());
+      archiveService.archiveToHistory(taskRepository.save(dto), FlowTaskStatus.COMPLETED);
+      support.audit(taskRepository.save(dto), "SERVICE_EXECUTE", null, null, "服务节点执行成功: " + result.message());
       log.info(
           "[Flow] 服务节点执行成功: instanceId={} node={} msg={}",
           instance.getId(),
@@ -188,11 +187,10 @@ public class ServiceNodeExecuteService {
       } else {
         dto.setComment("服务节点执行失败: " + result.message());
       }
-      FlowRunTaskVO saved = taskRepository.save(dto);
-      archiveService.archiveToHistory(saved, FlowTaskStatus.TIMEOUT);
+      archiveService.archiveToHistory(taskRepository.save(dto), FlowTaskStatus.TIMEOUT);
       if (errorBoundaryTriggered) {
         support.audit(
-            saved,
+            taskRepository.save(dto),
             "SERVICE_ERROR_BOUNDARY",
             null,
             null,
@@ -217,6 +215,7 @@ public class ServiceNodeExecuteService {
             result.message());
       }
     }
+    FlowRunTaskVO saved = taskRepository.save(dto);
     return saved.getId();
   }
 

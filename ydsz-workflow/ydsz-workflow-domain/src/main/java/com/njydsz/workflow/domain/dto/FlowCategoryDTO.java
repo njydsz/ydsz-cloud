@@ -39,4 +39,10 @@ public class FlowCategoryDTO {
 
   @Schema(description = "备注")
   private String remark;
+
+  @Schema(description = "租户 ID（多租户隔离）")
+  private String tenantId;
+
+  @Schema(description = "删除标记（0=未删除 / 1=已删除）")
+  private Integer deleted;
 }
