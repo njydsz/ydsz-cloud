@@ -60,7 +60,7 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
       wrapper.eq("audit_status", query.getAuditStatus());
     }
     wrapper.eq("deleted", 0);
-    return Optional.ofNullable(msgTemplateVersionMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgTemplateVersionMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 
   private MsgTemplateVersion voToEntity(MsgTemplateVersionVO vo) {

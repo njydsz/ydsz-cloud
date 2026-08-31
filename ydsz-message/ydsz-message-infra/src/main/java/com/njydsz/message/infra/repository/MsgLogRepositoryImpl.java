@@ -81,14 +81,14 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   @Override
   public Optional<MsgLogVO> findById(String id) {
     MsgLog entity = msgLogMapper.selectById(id);
-    return Optional.ofNullable(entity).map(converter::doToVO);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public Optional<MsgLogVO> findOne(MessageLogQueryDTO query) {
     QueryWrapper<MsgLog> wrapper = buildWrapper(query);
     MsgLog entity = msgLogMapper.selectOne(wrapper);
-    return Optional.ofNullable(entity).map(converter::doToVO);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override

@@ -49,7 +49,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
 
   @Override
   public Optional<MsgRouteRuleVO> findById(String id) {
-    return Optional.ofNullable(msgRouteRuleMapper.selectById(id)).map(converter::doToVO);
+    return Optional.ofNullable(msgRouteRuleMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
@@ -130,7 +130,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
       wrapper.eq("status", query.getStatus());
     }
     wrapper.eq("deleted", 0);
-    return Optional.ofNullable(msgRouteRuleMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgRouteRuleMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 
   private MsgRouteRule voToEntity(MsgRouteRuleVO vo) {

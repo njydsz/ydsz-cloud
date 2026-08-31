@@ -50,7 +50,7 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
   @Override
   public Optional<MsgPreferenceVO> findOne(MsgPreferenceQuery query) {
     QueryWrapper<MsgPreference> wrapper = buildWrapper(query);
-    return Optional.ofNullable(msgPreferenceMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgPreferenceMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 
   @Override

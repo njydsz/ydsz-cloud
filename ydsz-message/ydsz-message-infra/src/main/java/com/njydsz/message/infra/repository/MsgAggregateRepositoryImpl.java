@@ -41,7 +41,7 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
 
   @Override
   public Optional<MsgAggregateVO> findById(String id) {
-    return Optional.ofNullable(msgAggregateMapper.selectById(id)).map(converter::doToVO);
+    return Optional.ofNullable(msgAggregateMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
@@ -55,7 +55,7 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
     QueryWrapper<MsgAggregate> wrapper = buildWrapper(query);
     wrapper.last("LIMIT 1");
     MsgAggregate entity = msgAggregateMapper.selectOne(wrapper);
-    return Optional.ofNullable(entity).map(converter::doToVO);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override

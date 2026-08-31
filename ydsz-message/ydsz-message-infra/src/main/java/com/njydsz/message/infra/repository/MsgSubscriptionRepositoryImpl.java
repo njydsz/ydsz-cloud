@@ -49,7 +49,7 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
   @Override
   public Optional<MsgSubscriptionVO> findOne(MsgSubscriptionQuery query) {
     QueryWrapper<MsgSubscription> wrapper = buildWrapper(query);
-    return Optional.ofNullable(msgSubscriptionMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgSubscriptionMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 
   @Override

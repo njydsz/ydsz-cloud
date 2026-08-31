@@ -79,7 +79,7 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
   @Override
   public Optional<MsgFeedbackVO> findOne(MsgFeedbackQuery query) {
     QueryWrapper<MsgFeedback> wrapper = buildWrapper(query);
-    return Optional.ofNullable(msgFeedbackMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgFeedbackMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 
   private MsgFeedback voToEntity(MsgFeedbackVO vo) {

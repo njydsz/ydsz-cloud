@@ -51,7 +51,7 @@ public class MsgTenantConfigRepositoryImpl implements MsgTenantConfigRepository 
 
   @Override
   public Optional<MsgTenantConfigVO> findById(String id) {
-    return Optional.ofNullable(msgTenantConfigMapper.selectById(id)).map(converter::doToVO);
+    return Optional.ofNullable(msgTenantConfigMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override

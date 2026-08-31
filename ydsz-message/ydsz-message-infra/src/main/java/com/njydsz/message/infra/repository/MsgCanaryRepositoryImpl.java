@@ -51,13 +51,13 @@ public class MsgCanaryRepositoryImpl implements MsgCanaryRepository {
 
   @Override
   public Optional<MsgCanaryVO> findById(String id) {
-    return Optional.ofNullable(msgCanaryMapper.selectById(id)).map(converter::doToVO);
+    return Optional.ofNullable(msgCanaryMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
   public Optional<MsgCanaryVO> findByCanaryKey(String canaryKey) {
     QueryWrapper<MsgCanary> wrapper = new QueryWrapper<>();
     wrapper.eq("canary_key", canaryKey);
-    return Optional.ofNullable(msgCanaryMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgCanaryMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 }

@@ -42,7 +42,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
 
   @Override
   public Optional<MsgTemplateVO> findById(String id) {
-    return Optional.ofNullable(msgTemplateMapper.selectById(id)).map(converter::doToVO);
+    return Optional.ofNullable(msgTemplateMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
@@ -59,7 +59,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
   @Override
   public Optional<MsgTemplateVO> findOne(TemplateQueryDTO query) {
     QueryWrapper<MsgTemplate> wrapper = buildWrapper(query);
-    return Optional.ofNullable(msgTemplateMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgTemplateMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 
   @Override
