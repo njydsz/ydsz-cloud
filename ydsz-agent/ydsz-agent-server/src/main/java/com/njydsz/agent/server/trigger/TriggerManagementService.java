@@ -11,6 +11,7 @@ import com.njydsz.agent.domain.trigger.TriggerRepository;
 import com.njydsz.agent.domain.trigger.TriggerType;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 /**
  * 触发器管理服务。
@@ -18,10 +19,11 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供触发器的 CRUD 操作，包括创建、更新、删除、启用/禁用等功能。
  * 作为触发器聚合的应用服务层，协调领域对象与仓储。</p>
  *
- * @author ydsz-agent
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
+@Service
 public class TriggerManagementService {
 
     private final TriggerRepository triggerRepository;

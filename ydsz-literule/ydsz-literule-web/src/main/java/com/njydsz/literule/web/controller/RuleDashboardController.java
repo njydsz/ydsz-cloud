@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.literule.api.dto.RuleDashboardDistributionVO;
-import com.njydsz.literule.api.dto.RuleDashboardOverviewVO;
-import com.njydsz.literule.api.dto.RuleDashboardRealtimeVO;
-import com.njydsz.literule.api.dto.RuleDashboardTopRuleVO;
-import com.njydsz.literule.api.dto.RuleDashboardTrendVO;
+import com.njydsz.literule.domain.vo.RuleDashboardDistributionVO;
+import com.njydsz.literule.domain.vo.RuleDashboardOverviewVO;
+import com.njydsz.literule.domain.vo.RuleDashboardRealtimeVO;
+import com.njydsz.literule.domain.vo.RuleDashboardTopRuleVO;
+import com.njydsz.literule.domain.vo.RuleDashboardTrendVO;
 import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.spi.DashboardDataProvider;
 

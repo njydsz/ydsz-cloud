@@ -432,4 +432,25 @@ public final class PermissionCodes {
 
   /** AGENT_METADATA_VIEW */
   public static final String AGENT_METADATA_VIEW = "agent:metadata:view";
+
+  /** AGENT_TRIGGER_CREATE */
+  public static final String AGENT_TRIGGER_CREATE = "agent:trigger:create";
+
+  /** AGENT_TRIGGER_UPDATE */
+  public static final String AGENT_TRIGGER_UPDATE = "agent:trigger:update";
+
+  /** AGENT_TRIGGER_DELETE */
+  public static final String AGENT_TRIGGER_DELETE = "agent:trigger:delete";
+
+  /** AGENT_TRIGGER_VIEW */
+  public static final String AGENT_TRIGGER_VIEW = "agent:trigger:view";
+
+  /** AGENT_TEAMRUN_CREATE */
+  public static final String AGENT_TEAMRUN_CREATE = "agent:teamrun:create";
+
+  /** AGENT_TEAMRUN_UPDATE */
+  public static final String AGENT_TEAMRUN_UPDATE = "agent:teamrun:update";
+
+  /** AGENT_TEAMRUN_VIEW */
+  public static final String AGENT_TEAMRUN_VIEW = "agent:teamrun:view";
 }
