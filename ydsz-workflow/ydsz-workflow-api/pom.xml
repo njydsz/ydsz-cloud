@@ -20,6 +20,5 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
-        <!-- FlowStartProcessDTO / FlowInstanceVO / FlowAssigneeDTO now live in this module -->
     </dependencies>
 </project>
