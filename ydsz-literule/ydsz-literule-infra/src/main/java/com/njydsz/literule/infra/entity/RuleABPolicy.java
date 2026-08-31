@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * AB Test 自动回滚策略 DO（P1-10）
+ * AB Test 自动回滚策略（P1-10）
  *
  * <p>对应 ydsz_rule_ab_policy 表。每条启用了 canary 的规则可以配置自动回滚策略， 定时任务会按监控窗口检查错误率，超过阈值则按 rollback_action 执行
  * AUTO 回滚或 NOTIFY 通知。
@@ -25,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_ab_policy")
-public class RuleABPolicyDO extends MpBaseEntity<String> {
+public class RuleABPolicy extends MpBaseEntity<String> {
 
   /** 关联规则编码（一对一） */
   private String ruleCode;

@@ -6,7 +6,6 @@ import lombok.Data;
 
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-import com.njydsz.userinfo.domain.enums.BanType;
 
 /**
  * 用户账号 VO，用于 Controller 返回，不包含密码、盐值等敏感字段。
@@ -140,15 +139,11 @@ public class UserAccountVO {
     if (this.banType == null) {
       return false;
     }
-    try {
-      BanType type = BanType.valueOf(this.banType);
-      if (type == BanType.PERMANENT) {
-        return true;
-      }
-      // TEMPORARY: 检查是否过期
-      return this.banExpireAt != null && this.banExpireAt.isAfter(LocalDateTime.now());
-    } catch (IllegalArgumentException e) {
-      return false;
+    // PERMANENT: 永久封禁始终返回 true
+    if ("PERMANENT".equals(this.banType)) {
+      return true;
     }
+    // TEMPORARY: 检查是否过期
+    return this.banExpireAt != null && this.banExpireAt.isAfter(LocalDateTime.now());
   }
 }

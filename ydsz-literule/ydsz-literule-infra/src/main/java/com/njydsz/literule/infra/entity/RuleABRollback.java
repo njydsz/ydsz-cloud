@@ -32,7 +32,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_ab_rollback")
-public class RuleABRollbackDO extends MpBaseEntity<String> {
+public class RuleABRollback extends MpBaseEntity<String> {
 
   /** 规则编码（关联 {@code ydsz_rule_definition.code}） */
   private String ruleCode;

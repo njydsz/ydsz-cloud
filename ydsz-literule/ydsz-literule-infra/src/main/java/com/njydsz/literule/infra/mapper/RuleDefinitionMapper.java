@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
+import com.njydsz.literule.infra.entity.RuleDefinition;
 
 /**
  * 规则定义 Mapper
@@ -28,12 +28,12 @@ import com.njydsz.literule.infra.entity.RuleDefinitionDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RuleDefinitionDO 规则定义实体
+ * @see RuleDefinition 规则定义实体
  * @see com.njydsz.literule.server.service.RuleLifecycleService 规则生命周期 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RuleDefinitionMapper extends BaseMapper<RuleDefinitionDO> {
+public interface RuleDefinitionMapper extends BaseMapper<RuleDefinition> {
 
   /**
    * 根据规则编码查询
@@ -41,7 +41,7 @@ public interface RuleDefinitionMapper extends BaseMapper<RuleDefinitionDO> {
    * @param ruleCode 规则编码
    * @return 规则定义 DO
    */
-  RuleDefinitionDO selectByCode(@Param("ruleCode") String ruleCode);
+  RuleDefinition selectByCode(@Param("ruleCode") String ruleCode);
 
   /**
    * 全文搜索规则（数据库级 LIKE 查询）
@@ -54,12 +54,12 @@ public interface RuleDefinitionMapper extends BaseMapper<RuleDefinitionDO> {
    * @return 分页结果
    * @since 1.0.0
    */
-  IPage<RuleDefinitionDO> searchRules(
+  IPage<RuleDefinition> searchRules(
       @Param("query") String query,
       @Param("status") String status,
       @Param("category") String category,
       @Param("enabled") Boolean enabled,
-      IPage<RuleDefinitionDO> page);
+      IPage<RuleDefinition> page);
 
   /**
    * 统计搜索结果总数

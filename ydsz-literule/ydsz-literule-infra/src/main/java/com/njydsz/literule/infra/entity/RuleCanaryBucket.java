@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 规则灰度分桶统计 DO
+ * 规则灰度分桶统计
  *
  * <p>对应 ydsz_rule_canary_bucket 表，按日聚合每条规则在 PRIMARY/CANARY 桶中的执行次数。 用于 AB Test 自动回滚判断（比较两桶错误率/触发率）。
  *
@@ -23,7 +23,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_canary_bucket")
-public class RuleCanaryBucketDO extends MpBaseEntity<String> {
+public class RuleCanaryBucket extends MpBaseEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;

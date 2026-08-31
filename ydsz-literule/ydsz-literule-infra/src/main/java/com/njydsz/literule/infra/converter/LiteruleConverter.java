@@ -28,11 +28,11 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.entity.DecisionTable;
-import com.njydsz.literule.infra.entity.RuleABPolicyDO;
-import com.njydsz.literule.infra.entity.RuleABRollbackDO;
-import com.njydsz.literule.infra.entity.RuleChainGraphDO;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
-import com.njydsz.literule.infra.entity.RuleDependencyDO;
+import com.njydsz.literule.infra.entity.RuleABPolicy;
+import com.njydsz.literule.infra.entity.RuleABRollback;
+import com.njydsz.literule.infra.entity.RuleChainGraph;
+import com.njydsz.literule.infra.entity.RuleDefinition;
+import com.njydsz.literule.infra.entity.RuleDependency;
 import com.njydsz.literule.infra.entity.RuleExecutionTrace;
 import com.njydsz.literule.infra.entity.RulePack;
 import com.njydsz.literule.infra.entity.RuleTemplate;
@@ -75,48 +75,48 @@ public class LiteruleConverter {
     return component.decisionTableListToVO(entities);
   }
 
-  // ===== RuleABPolicyDO =====
-  public RuleABPolicyVO entityToVO(RuleABPolicyDO entity) {
+  // ===== RuleABPolicy =====
+  public RuleABPolicyVO entityToVO(RuleABPolicy entity) {
     return component.entityToVO(entity);
   }
 
-  public List<RuleABPolicyVO> ruleABPolicyListToVO(List<RuleABPolicyDO> entities) {
+  public List<RuleABPolicyVO> ruleABPolicyListToVO(List<RuleABPolicy> entities) {
     return component.ruleABPolicyListToVO(entities);
   }
 
-  // ===== RuleABRollbackDO =====
-  public RuleABRollbackVO entityToVO(RuleABRollbackDO entity) {
+  // ===== RuleABRollback =====
+  public RuleABRollbackVO entityToVO(RuleABRollback entity) {
     return component.entityToVO(entity);
   }
 
-  public List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollbackDO> entities) {
+  public List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollback> entities) {
     return component.ruleABRollbackListToVO(entities);
   }
 
-  // ===== RuleChainGraphDO =====
-  public RuleChainGraphVO entityToVO(RuleChainGraphDO entity) {
+  // ===== RuleChainGraph =====
+  public RuleChainGraphVO entityToVO(RuleChainGraph entity) {
     return component.entityToVO(entity);
   }
 
-  public List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities) {
+  public List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraph> entities) {
     return component.ruleChainGraphListToVO(entities);
   }
 
-  // ===== RuleDefinitionDO =====
-  public RuleDefinitionVO entityToVO(RuleDefinitionDO entity) {
+  // ===== RuleDefinition =====
+  public RuleDefinitionVO entityToVO(RuleDefinition entity) {
     return core.entityToVO(entity);
   }
 
-  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDO> entities) {
+  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinition> entities) {
     return core.ruleDefinitionListToVO(entities);
   }
 
-  // ===== RuleDependencyDO =====
-  public RuleDependencyVO entityToVO(RuleDependencyDO entity) {
+  // ===== RuleDependency =====
+  public RuleDependencyVO entityToVO(RuleDependency entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependencyDO> entities) {
+  public List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependency> entities) {
     return support.ruleDependencyListToVO(entities);
   }
 
@@ -201,8 +201,8 @@ public class LiteruleConverter {
     return support.postDtoToEntity(dto);
   }
 
-  // ===== RuleABPolicyDO PutDTO → Entity =====
-  public RuleABPolicyDO putDtoToEntity(RuleABPolicyPutDTO dto) {
+  // ===== RuleABPolicy PutDTO → Entity =====
+  public RuleABPolicy putDtoToEntity(RuleABPolicyPutDTO dto) {
     return support.putDtoToEntity(dto);
   }
 }

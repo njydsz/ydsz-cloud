@@ -726,7 +726,29 @@ DELIMITER ;
 */
 
 -- ----------------------------------------------------------------------------
--- 26. 非分区环境的批量清理方案（LogCleaner 使用）
+-- 27. 事件存储表（Event Sourcing）
+--     原 migration 脚本中为 ydz_event_store，按 §2.5 表名前缀规范统一为 ydsz_job_event_store
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS ydsz_job_event_store (
+    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
+    aggregate_type        VARCHAR(64)     NOT NULL COMMENT '聚合根类型',
+    aggregate_id          VARCHAR(32)     NOT NULL COMMENT '聚合根 ID',
+    event_type            VARCHAR(64)     NOT NULL COMMENT '事件类型',
+    event_data            MEDIUMTEXT      NOT NULL COMMENT '事件数据 JSON',
+    event_version         INT             NOT NULL DEFAULT 1 COMMENT '事件版本号',
+    occurred_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发生时间',
+    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_jes_aggregate (aggregate_type, aggregate_id),
+    INDEX idx_jes_event_type (event_type),
+    INDEX idx_jes_occurred_at (occurred_at),
+    INDEX idx_tenant_deleted (tenant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件存储表（Event Sourcing）';
+
+-- ----------------------------------------------------------------------------
+-- 28. 非分区环境的批量清理方案（LogCleaner 使用）
 --    按主键范围分批删除，每批 1000 行，避免长事务和锁等待
 -- ----------------------------------------------------------------------------
 -- 使用方式（在 LogCleaner 中实现）:

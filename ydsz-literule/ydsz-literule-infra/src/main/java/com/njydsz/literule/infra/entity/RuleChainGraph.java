@@ -30,7 +30,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_chain_graph")
-public class RuleChainGraphDO extends MpBaseEntity<String> {
+public class RuleChainGraph extends MpBaseEntity<String> {
 
   /** 画布状态：草稿 */
   public static final String STATUS_DRAFT = "DRAFT";

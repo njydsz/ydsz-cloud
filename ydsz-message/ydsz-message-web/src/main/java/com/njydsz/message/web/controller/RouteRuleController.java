@@ -23,7 +23,6 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -168,7 +167,7 @@ public class RouteRuleController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<MsgRouteRuleVO>>> page(PageQuery query) {
-    return YdszResponse.success(PageResponses.success(routeRuleService.page(query)));
+    return YdszResponse.success(routeRuleService.page(query));
   }
 
   /**

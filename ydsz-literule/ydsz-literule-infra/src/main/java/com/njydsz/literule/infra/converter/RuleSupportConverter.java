@@ -14,8 +14,8 @@ import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.entity.DecisionTable;
-import com.njydsz.literule.infra.entity.RuleABPolicyDO;
-import com.njydsz.literule.infra.entity.RuleDependencyDO;
+import com.njydsz.literule.infra.entity.RuleABPolicy;
+import com.njydsz.literule.infra.entity.RuleDependency;
 import com.njydsz.literule.infra.entity.RuleExecutionTrace;
 import com.njydsz.literule.infra.entity.RulePack;
 import com.njydsz.literule.infra.entity.RuleVersionHistory;
@@ -34,10 +34,10 @@ public interface RuleSupportConverter {
   /** MapStruct 单例实例 */
   RuleSupportConverter INSTANCE = Mappers.getMapper(RuleSupportConverter.class);
 
-  // ===== RuleDependencyDO =====
-  RuleDependencyVO entityToVO(RuleDependencyDO entity);
+  // ===== RuleDependency =====
+  RuleDependencyVO entityToVO(RuleDependency entity);
 
-  List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependencyDO> entities);
+  List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependency> entities);
 
   // ===== RuleExecutionTrace =====
   RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity);
@@ -76,7 +76,7 @@ public interface RuleSupportConverter {
   @Mapping(target = "updatedAt", ignore = true)
   DecisionTable postDtoToEntity(DecisionTablePostDTO dto);
 
-  // ===== RuleABPolicyDO PutDTO → Entity =====
+  // ===== RuleABPolicy PutDTO → Entity =====
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
@@ -86,5 +86,5 @@ public interface RuleSupportConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "lastEvaluatedAt", ignore = true)
   @Mapping(target = "lastRollbackAt", ignore = true)
-  RuleABPolicyDO putDtoToEntity(RuleABPolicyPutDTO dto);
+  RuleABPolicy putDtoToEntity(RuleABPolicyPutDTO dto);
 }

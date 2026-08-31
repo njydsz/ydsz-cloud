@@ -19,7 +19,7 @@ import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
-import com.njydsz.literule.infra.entity.RuleDefinitionDO;
+import com.njydsz.literule.infra.entity.RuleDefinition;
 import com.njydsz.literule.infra.entity.RuleVersionHistory;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.infra.mapper.RuleVersionHistoryMapper;
@@ -93,7 +93,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     }
 
     // 2. 查询当前规则定义
-    RuleDefinitionDO currentRule = ruleDefinitionMapper.selectByCode(ruleCode);
+    RuleDefinition currentRule = ruleDefinitionMapper.selectByCode(ruleCode);
     if (currentRule == null) {
       log.warn("[LiteRule] 回滚时规则定义不存在: ruleCode={}", ruleCode);
       return Optional.empty();
@@ -122,7 +122,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
       throw new IllegalStateException("回滚失败：目标版本 JSON 解析异常", e);
     }
 
-    RuleDefinitionDO updateEntity = doFromApi(targetDefinition);
+    RuleDefinition updateEntity = doFromApi(targetDefinition);
     updateEntity.setId(currentRule.getId());
     updateEntity.setRuleCode(ruleCode);
     // 新版本号 = 当前最大版本号 + 1，保持递增
@@ -153,7 +153,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
         ruleCode, version, updateEntity.getVersion(), operator);
 
     // 6. 返回回滚后的规则定义 VO
-    RuleDefinitionDO refreshedRule = ruleDefinitionMapper.selectByCode(ruleCode);
+    RuleDefinition refreshedRule = ruleDefinitionMapper.selectByCode(ruleCode);
     return Optional.ofNullable(converter.entityToVO(refreshedRule));
   }
 
@@ -180,7 +180,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @param rule 规则定义
    * @return RuleDefinition api 定义
    */
-  private RuleDefinition apiFromDo(RuleDefinitionDO rule) {
+  private RuleDefinition apiFromDo(RuleDefinition rule) {
     RuleDefinition def = new RuleDefinition();
     def.setCode(rule.getRuleCode());
     def.setName(rule.getRuleName());
@@ -219,8 +219,8 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @param def api 规则定义
    * @return RuleDefinition
    */
-  private RuleDefinitionDO doFromApi(RuleDefinition def) {
-    RuleDefinitionDO rule = new RuleDefinitionDO();
+  private RuleDefinition doFromApi(RuleDefinition def) {
+    RuleDefinition rule = new RuleDefinition();
     rule.setRuleCode(def.getCode());
     rule.setRuleName(def.getName());
     rule.setCategory(def.getCategory());

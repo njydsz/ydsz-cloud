@@ -11,9 +11,9 @@ import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.infra.entity.DecisionTable;
-import com.njydsz.literule.infra.entity.RuleABPolicyDO;
-import com.njydsz.literule.infra.entity.RuleABRollbackDO;
-import com.njydsz.literule.infra.entity.RuleChainGraphDO;
+import com.njydsz.literule.infra.entity.RuleABPolicy;
+import com.njydsz.literule.infra.entity.RuleABRollback;
+import com.njydsz.literule.infra.entity.RuleChainGraph;
 import com.njydsz.literule.infra.entity.RuleTemplate;
 
 /**
@@ -35,20 +35,20 @@ public interface RuleComponentConverter {
 
   List<DecisionTableVO> decisionTableListToVO(List<DecisionTable> entities);
 
-  // ===== RuleABPolicyDO =====
-  RuleABPolicyVO entityToVO(RuleABPolicyDO entity);
+  // ===== RuleABPolicy =====
+  RuleABPolicyVO entityToVO(RuleABPolicy entity);
 
-  List<RuleABPolicyVO> ruleABPolicyListToVO(List<RuleABPolicyDO> entities);
+  List<RuleABPolicyVO> ruleABPolicyListToVO(List<RuleABPolicy> entities);
 
-  // ===== RuleABRollbackDO =====
-  RuleABRollbackVO entityToVO(RuleABRollbackDO entity);
+  // ===== RuleABRollback =====
+  RuleABRollbackVO entityToVO(RuleABRollback entity);
 
-  List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollbackDO> entities);
+  List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollback> entities);
 
-  // ===== RuleChainGraphDO =====
-  RuleChainGraphVO entityToVO(RuleChainGraphDO entity);
+  // ===== RuleChainGraph =====
+  RuleChainGraphVO entityToVO(RuleChainGraph entity);
 
-  List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities);
+  List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraph> entities);
 
   // ===== RuleTemplate =====
   RuleTemplateVO entityToVO(RuleTemplate entity);

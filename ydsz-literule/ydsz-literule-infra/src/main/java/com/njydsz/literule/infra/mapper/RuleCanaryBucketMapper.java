@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleCanaryBucketDO;
+import com.njydsz.literule.infra.entity.RuleCanaryBucket;
 
 /**
  * 规则灰度桶 Mapper
@@ -28,12 +28,12 @@ import com.njydsz.literule.infra.entity.RuleCanaryBucketDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RuleCanaryBucketDO 灰度桶实体
+ * @see RuleCanaryBucket 灰度桶实体
  * @see com.njydsz.literule.server.service.RuleCanaryBucketService 灰度桶 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RuleCanaryBucketMapper extends BaseMapper<RuleCanaryBucketDO> {
+public interface RuleCanaryBucketMapper extends BaseMapper<RuleCanaryBucket> {
 
   /**
    * 查询某条规则在指定时间窗口内的分桶统计。
@@ -42,6 +42,6 @@ public interface RuleCanaryBucketMapper extends BaseMapper<RuleCanaryBucketDO> {
    * @param since 起始时间（含）
    * @return 分桶统计列表
    */
-  List<RuleCanaryBucketDO> selectByRuleCodeSince(
+  List<RuleCanaryBucket> selectByRuleCodeSince(
       @Param("ruleCode") String ruleCode, @Param("since") LocalDateTime since);
 }

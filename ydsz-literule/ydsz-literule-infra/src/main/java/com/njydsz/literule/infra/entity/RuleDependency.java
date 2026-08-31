@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 规则依赖关系 DO（P1-8）
+ * 规则依赖关系（P1-8）
  *
  * <p>对应 ydsz_rule_dependency 表。一条记录表示 rule_code 依赖 depends_on_rule_code：
  *
@@ -29,7 +29,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_dependency")
-public class RuleDependencyDO extends MpBaseEntity<String> {
+public class RuleDependency extends MpBaseEntity<String> {
 
   /** 主规则编码（依赖方） */
   private String ruleCode;

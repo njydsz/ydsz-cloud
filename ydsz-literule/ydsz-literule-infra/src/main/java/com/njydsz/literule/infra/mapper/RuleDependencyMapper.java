@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleDependencyDO;
+import com.njydsz.literule.infra.entity.RuleDependency;
 
 /**
  * 规则依赖关系 Mapper
@@ -27,12 +27,12 @@ import com.njydsz.literule.infra.entity.RuleDependencyDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RuleDependencyDO 规则依赖实体
+ * @see RuleDependency 规则依赖实体
  * @see com.njydsz.literule.server.service.RuleDependencyService 规则依赖 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RuleDependencyMapper extends BaseMapper<RuleDependencyDO> {
+public interface RuleDependencyMapper extends BaseMapper<RuleDependency> {
 
   /**
    * 查询某条规则依赖了哪些规则（正向）。
@@ -40,7 +40,7 @@ public interface RuleDependencyMapper extends BaseMapper<RuleDependencyDO> {
    * @param ruleCode 规则编码
    * @return 依赖关系列表
    */
-  List<RuleDependencyDO> selectByRuleCode(@Param("ruleCode") String ruleCode);
+  List<RuleDependency> selectByRuleCode(@Param("ruleCode") String ruleCode);
 
   /**
    * 查询哪些规则依赖了指定规则（反向）。
@@ -48,7 +48,7 @@ public interface RuleDependencyMapper extends BaseMapper<RuleDependencyDO> {
    * @param dependsOnRuleCode 被依赖的规则编码
    * @return 依赖关系列表
    */
-  List<RuleDependencyDO> selectByDependsOn(@Param("dependsOnRuleCode") String dependsOnRuleCode);
+  List<RuleDependency> selectByDependsOn(@Param("dependsOnRuleCode") String dependsOnRuleCode);
 
   /**
    * 查询指定被依赖规则中配置了级联禁用的依赖方。
@@ -56,7 +56,7 @@ public interface RuleDependencyMapper extends BaseMapper<RuleDependencyDO> {
    * @param dependsOnRuleCode 被依赖的规则编码
    * @return 级联禁用依赖方列表
    */
-  List<RuleDependencyDO> selectCascadingByDependsOn(
+  List<RuleDependency> selectCascadingByDependsOn(
       @Param("dependsOnRuleCode") String dependsOnRuleCode);
 
   /**
