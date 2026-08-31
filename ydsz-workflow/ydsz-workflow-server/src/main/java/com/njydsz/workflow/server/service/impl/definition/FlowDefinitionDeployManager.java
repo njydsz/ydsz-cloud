@@ -349,10 +349,10 @@ public class FlowDefinitionDeployManager {
    */
   private FlowDefinitionVO saveDefinition(FlowDeployProcessDTO dto, String version, String tenantId) {
     FlowDefinitionDTO defDto = new FlowDefinitionDTO();
-    defDto.setId(java.util.UUID.randomUUID().toString());
+    defDto.setId(UUID.randomUUID().toString());
     defDto.setFlowCode(dto.getFlowCode());
     defDto.setFlowName(dto.getFlowName());
-    defDto.setFlowVersion(version);
+    defDto.setFlowVersion(Integer.valueOf(version));
     defDto.setTenantId(tenantId);
     return definitionRepository.save(defDto);
   }

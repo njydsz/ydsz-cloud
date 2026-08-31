@@ -4,9 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.springframework.beans.BeanUtils;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
@@ -157,7 +156,7 @@ public class EmptyAssigneeStrategyService {
     task.setFinishAt(now);
     task.setDurationMs(0L);
     FlowRunTaskDTO autoPassDto = new FlowRunTaskDTO();
-    org.springframework.beans.BeanUtils.copyProperties(task, autoPassDto);
+    BeanUtils.copyProperties(task, autoPassDto);
     taskRepository.save(autoPassDto);
     archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
     support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
@@ -189,7 +188,7 @@ public class EmptyAssigneeStrategyService {
     task.setAssigneeId(userId);
     task.setAssigneeName(fallbackName);
     FlowRunTaskDTO fallbackDto = new FlowRunTaskDTO();
-    org.springframework.beans.BeanUtils.copyProperties(task, fallbackDto);
+    BeanUtils.copyProperties(task, fallbackDto);
     taskRepository.save(fallbackDto);
     log.info(logMsg, instance.getId(), node.getNodeCode(), userId);
     return task.getId();
@@ -207,7 +206,7 @@ public class EmptyAssigneeStrategyService {
   private String fallbackToResolveAssignee(
       FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
     FlowRunTaskDTO resolveDto = new FlowRunTaskDTO();
-    org.springframework.beans.BeanUtils.copyProperties(task, resolveDto);
+    BeanUtils.copyProperties(task, resolveDto);
     taskRepository.save(resolveDto);
     resolveAssignee(task, node, variables, null, instance);
     taskRepository.update(task);

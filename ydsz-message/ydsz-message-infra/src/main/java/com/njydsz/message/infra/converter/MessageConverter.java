@@ -5,6 +5,7 @@ import java.util.List;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.message.domain.dto.MsgCanaryDTO;
@@ -65,7 +66,7 @@ import com.njydsz.message.infra.entity.MsgVariableSource;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Mapper
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MessageConverter {
 
   /** MapStruct 单例实例 */

@@ -6,17 +6,16 @@ import java.util.Map;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-
-import org.springframework.beans.BeanUtils;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
@@ -172,7 +171,7 @@ public class ServiceNodeExecuteService {
       task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
       task.setComment(result.message());
       FlowRunTaskDTO serviceSuccessDto = new FlowRunTaskDTO();
-      org.springframework.beans.BeanUtils.copyProperties(task, serviceSuccessDto);
+      BeanUtils.copyProperties(task, serviceSuccessDto);
       taskRepository.save(serviceSuccessDto);
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "SERVICE_EXECUTE", null, null, "服务节点执行成功: " + result.message());
@@ -193,7 +192,7 @@ public class ServiceNodeExecuteService {
         task.setComment("服务节点执行失败: " + result.message());
       }
       FlowRunTaskDTO serviceFailDto = new FlowRunTaskDTO();
-      org.springframework.beans.BeanUtils.copyProperties(task, serviceFailDto);
+      BeanUtils.copyProperties(task, serviceFailDto);
       taskRepository.save(serviceFailDto);
       archiveService.archiveToHistory(task, FlowTaskStatus.TIMEOUT);
       if (errorBoundaryTriggered) {

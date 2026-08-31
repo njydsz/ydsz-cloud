@@ -5,16 +5,15 @@ import java.util.Map;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-
-import org.springframework.beans.BeanUtils;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
@@ -138,7 +137,7 @@ public class AiAgentNodeExecuteService {
       // 3a. 通过：标记 COMPLETED，归档，审计，推进
       task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
       FlowRunTaskDTO aiApproveDto = new FlowRunTaskDTO();
-      org.springframework.beans.BeanUtils.copyProperties(task, aiApproveDto);
+      BeanUtils.copyProperties(task, aiApproveDto);
       taskRepository.save(aiApproveDto);
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "AI_AGENT_APPROVE", null, null, "AI 审批通过");
@@ -149,7 +148,7 @@ public class AiAgentNodeExecuteService {
       task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
       task.setComment(comment);
       FlowRunTaskDTO aiRejectDto = new FlowRunTaskDTO();
-      org.springframework.beans.BeanUtils.copyProperties(task, aiRejectDto);
+      BeanUtils.copyProperties(task, aiRejectDto);
       taskRepository.save(aiRejectDto);
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "AI_AGENT_REJECT", null, null, comment);

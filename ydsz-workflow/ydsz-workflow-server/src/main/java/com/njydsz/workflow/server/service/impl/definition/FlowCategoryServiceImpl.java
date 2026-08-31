@@ -4,10 +4,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.BeanUtils;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -183,7 +182,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     category.setRemark(dto.getRemark());
     category.setTenantId(tid);
     FlowCategoryDTO categoryDto = new FlowCategoryDTO();
-    categoryDto.setId(java.util.UUID.randomUUID().toString());
+    categoryDto.setId(UUID.randomUUID().toString());
     categoryDto.setCategoryCode(dto.getCategoryCode());
     categoryDto.setCategoryName(dto.getCategoryName());
     categoryDto.setParentId(dto.getParentId());
@@ -239,7 +238,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
       existing.setRemark(dto.getRemark());
     }
     FlowCategoryDTO updateDto = new FlowCategoryDTO();
-    org.springframework.beans.BeanUtils.copyProperties(existing, updateDto);
+    BeanUtils.copyProperties(existing, updateDto);
     categoryRepository.update(updateDto);
   }
 
@@ -285,7 +284,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     }
     existing.setDeleted(1);
     FlowCategoryDTO deleteDto = new FlowCategoryDTO();
-    org.springframework.beans.BeanUtils.copyProperties(existing, deleteDto);
+    BeanUtils.copyProperties(existing, deleteDto);
     categoryRepository.update(deleteDto);
   }
 

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
@@ -81,7 +82,7 @@ import com.njydsz.workflow.infra.entity.FlowUser;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Mapper
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface WorkflowConverter {
 
   /** MapStruct 单例实例 */

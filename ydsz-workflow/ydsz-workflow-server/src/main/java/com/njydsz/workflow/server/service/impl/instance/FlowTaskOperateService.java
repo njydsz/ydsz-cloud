@@ -4,10 +4,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.BeanUtils;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -414,7 +413,7 @@ public class FlowTaskOperateService {
     newTask.setProviderTraceId(instance.getProviderTraceId());
     newTask.setComment(comment);
     FlowRunTaskDTO taskDto = new FlowRunTaskDTO();
-    org.springframework.beans.BeanUtils.copyProperties(newTask, taskDto);
+    BeanUtils.copyProperties(newTask, taskDto);
     taskRepository.save(taskDto);
     return newTask;
   }

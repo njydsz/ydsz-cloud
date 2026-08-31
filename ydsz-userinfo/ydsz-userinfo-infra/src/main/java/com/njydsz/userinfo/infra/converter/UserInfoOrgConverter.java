@@ -57,9 +57,14 @@ public interface UserInfoOrgConverter {
   /**
    * 公司实体 → 公司树形 VO（含 children 字段）
    *
+   * <p>children / level / path 由 TreeBuilder 在 Service 层填充，此处忽略避免 MapStruct 告警。
+   *
    * @param entity 公司实体
    * @return 公司树形 VO
    */
+  @Mapping(target = "children", ignore = true)
+  @Mapping(target = "level", ignore = true)
+  @Mapping(target = "path", ignore = true)
   CompanyTreeVO entityToTreeVO(Company entity);
 
   /**
@@ -100,6 +105,8 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Company dtoToEntityWithId(CompanyDTO dto);
@@ -125,9 +132,13 @@ public interface UserInfoOrgConverter {
   /**
    * 部门实体 → 部门树形 VO（含 children 字段）
    *
+   * <p>deptPath / children 由 Service 层构建树时填充，此处忽略避免 MapStruct 告警。
+   *
    * @param entity 部门实体
    * @return 部门树形 VO
    */
+  @Mapping(target = "deptPath", ignore = true)
+  @Mapping(target = "children", ignore = true)
   DepartmentTreeVO entityToTreeVO(Department entity);
 
   /**
@@ -163,6 +174,9 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "leaderId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Department dtoToEntityWithId(DepartmentDTO dto);
@@ -212,6 +226,9 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   CompanyDept dtoToEntityWithId(CompanyDeptDTO dto);
@@ -259,6 +276,8 @@ public interface UserInfoOrgConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Post dtoToEntityWithId(PostDTO dto);

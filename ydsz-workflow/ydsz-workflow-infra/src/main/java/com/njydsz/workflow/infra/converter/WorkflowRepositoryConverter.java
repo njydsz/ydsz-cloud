@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
@@ -27,7 +28,7 @@ import com.njydsz.workflow.infra.entity.FlowInstance;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Mapper
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface WorkflowRepositoryConverter {
 
   /** MapStruct 单例实例 */
