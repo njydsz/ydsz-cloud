@@ -72,7 +72,7 @@ public interface MessageConverter {
   MessageConverter INSTANCE = Mappers.getMapper(MessageConverter.class);
 
   // ===== MsgLog =====
-  MsgLogVO doToVO(MsgLog entity);
+  MsgLogVO entityToVO(MsgLog entity);
 
   List<MsgLogVO> logListToVO(List<MsgLog> entities);
 
@@ -88,17 +88,17 @@ public interface MessageConverter {
   MsgLog voToLog(MsgLogVO vo);
 
   // ===== MsgNotification =====
-  MsgNotificationVO doToVO(MsgNotification entity);
+  MsgNotificationVO entityToVO(MsgNotification entity);
 
   List<MsgNotificationVO> notificationListToVO(List<MsgNotification> entities);
 
   // ===== MsgTemplate =====
-  MsgTemplateVO doToVO(MsgTemplate entity);
+  MsgTemplateVO entityToVO(MsgTemplate entity);
 
   List<MsgTemplateVO> templateListToVO(List<MsgTemplate> entities);
 
   // ===== MsgRouteRule =====
-  MsgRouteRuleVO doToVO(MsgRouteRule entity);
+  MsgRouteRuleVO entityToVO(MsgRouteRule entity);
 
   List<MsgRouteRuleVO> routeRuleListToVO(List<MsgRouteRule> entities);
 
@@ -114,12 +114,12 @@ public interface MessageConverter {
   MsgRouteRule voToRouteRule(MsgRouteRuleVO vo);
 
   // ===== MsgOffline =====
-  MsgOfflineVO doToVO(MsgOffline entity);
+  MsgOfflineVO entityToVO(MsgOffline entity);
 
   List<MsgOfflineVO> offlineListToVO(List<MsgOffline> entities);
 
   // ===== MsgSubscription =====
-  MsgSubscriptionVO doToVO(MsgSubscription entity);
+  MsgSubscriptionVO entityToVO(MsgSubscription entity);
 
   List<MsgSubscriptionVO> subscriptionListToVO(List<MsgSubscription> entities);
 
@@ -135,7 +135,7 @@ public interface MessageConverter {
   MsgSubscription voToSubscription(MsgSubscriptionVO vo);
 
   // ===== MsgPreference =====
-  MsgPreferenceVO doToVO(MsgPreference entity);
+  MsgPreferenceVO entityToVO(MsgPreference entity);
 
   List<MsgPreferenceVO> preferenceListToVO(List<MsgPreference> entities);
 
@@ -151,22 +151,22 @@ public interface MessageConverter {
   MsgPreference voToPreference(MsgPreferenceVO vo);
 
   // ===== MsgUserChannel =====
-  MsgUserChannelVO doToVO(MsgUserChannel entity);
+  MsgUserChannelVO entityToVO(MsgUserChannel entity);
 
   List<MsgUserChannelVO> userChannelListToVO(List<MsgUserChannel> entities);
 
   // ===== MsgTrace =====
-  MsgTraceVO doToVO(MsgTrace entity);
+  MsgTraceVO entityToVO(MsgTrace entity);
 
   List<MsgTraceVO> traceListToVO(List<MsgTrace> entities);
 
   // ===== MsgReceipt =====
-  MsgReceiptVO doToVO(MsgReceipt entity);
+  MsgReceiptVO entityToVO(MsgReceipt entity);
 
   List<MsgReceiptVO> receiptListToVO(List<MsgReceipt> entities);
 
   // ===== MsgFeedback =====
-  MsgFeedbackVO doToVO(MsgFeedback entity);
+  MsgFeedbackVO entityToVO(MsgFeedback entity);
 
   List<MsgFeedbackVO> feedbackListToVO(List<MsgFeedback> entities);
 
@@ -182,22 +182,22 @@ public interface MessageConverter {
   MsgFeedback voToFeedback(MsgFeedbackVO vo);
 
   // ===== MsgBatch =====
-  MsgBatchVO doToVO(MsgBatch entity);
+  MsgBatchVO entityToVO(MsgBatch entity);
 
   List<MsgBatchVO> batchListToVO(List<MsgBatch> entities);
 
   // ===== MsgAggregate =====
-  MsgAggregateVO doToVO(MsgAggregate entity);
+  MsgAggregateVO entityToVO(MsgAggregate entity);
 
   List<MsgAggregateVO> aggregateListToVO(List<MsgAggregate> entities);
 
   // ===== MsgTemplateVersion =====
-  MsgTemplateVersionVO doToVO(MsgTemplateVersion entity);
+  MsgTemplateVersionVO entityToVO(MsgTemplateVersion entity);
 
   List<MsgTemplateVersionVO> templateVersionListToVO(List<MsgTemplateVersion> entities);
 
   // ===== MsgVariableSource =====
-  MsgVariableSourceVO doToVO(MsgVariableSource entity);
+  MsgVariableSourceVO entityToVO(MsgVariableSource entity);
 
   List<MsgVariableSourceVO> variableSourceListToVO(List<MsgVariableSource> entities);
 
@@ -278,12 +278,12 @@ public interface MessageConverter {
   MsgTemplate dtoToEntity(MsgTemplateDTO dto);
 
   // ===== MsgTenantConfig =====
-  MsgTenantConfigVO doToVO(MsgTenantConfig entity);
+  MsgTenantConfigVO entityToVO(MsgTenantConfig entity);
 
   MsgTenantConfig dtoToEntity(MsgTenantConfigDTO dto);
 
   // ===== MsgCanary =====
-  MsgCanaryVO doToVO(MsgCanary entity);
+  MsgCanaryVO entityToVO(MsgCanary entity);
 
   MsgCanary dtoToEntity(MsgCanaryDTO dto);
 

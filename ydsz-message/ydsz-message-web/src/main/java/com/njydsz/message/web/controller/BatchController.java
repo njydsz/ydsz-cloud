@@ -121,7 +121,7 @@ public class BatchController {
     if (dto == null) {
       return YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量发送参数为空");
     }
-    return YdszResponse.success(MessageConverter.INSTANCE.doToVO(batchService.submitBatch(dto)));
+    return YdszResponse.success(MessageConverter.INSTANCE.entityToVO(batchService.submitBatch(dto)));
   }
 
   /**

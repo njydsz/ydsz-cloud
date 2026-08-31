@@ -54,7 +54,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
 
   @Override
   public Optional<MsgNotificationVO> findById(String id) {
-    return Optional.ofNullable(msgNotificationMapper.selectById(id)).map(converter::doToVO);
+    return Optional.ofNullable(msgNotificationMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override

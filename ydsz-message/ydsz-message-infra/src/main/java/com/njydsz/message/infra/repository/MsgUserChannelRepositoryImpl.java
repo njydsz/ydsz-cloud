@@ -53,7 +53,7 @@ public class MsgUserChannelRepositoryImpl implements MsgUserChannelRepository {
     if (query.isPrimaryFirst()) {
       wrapper.orderByDesc("is_primary");
     }
-    return Optional.ofNullable(msgUserChannelMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgUserChannelMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 
   @Override

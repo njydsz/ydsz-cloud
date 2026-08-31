@@ -103,7 +103,7 @@ public class TemplateController {
   @RateLimit(resource = "message.template.create", threshold = 50)
   @PostMapping
   public YdszResponse<MsgTemplateVO> create(@Valid @RequestBody TemplateCreateDTO dto) {
-    return YdszResponse.success(MessageConverter.INSTANCE.doToVO(templateService.create(dto)));
+    return YdszResponse.success(MessageConverter.INSTANCE.entityToVO(templateService.create(dto)));
   }
 
   /**
@@ -126,7 +126,7 @@ public class TemplateController {
   public YdszResponse<MsgTemplateVO> update(
       @PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
     return YdszResponse.success(
-        MessageConverter.INSTANCE.doToVO(templateService.update(id, dto)));
+        MessageConverter.INSTANCE.entityToVO(templateService.update(id, dto)));
   }
 
   /**
@@ -160,7 +160,7 @@ public class TemplateController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
   @GetMapping("/{id}")
   public YdszResponse<MsgTemplateVO> getById(@PathVariable String id) {
-    return YdszResponse.success(MessageConverter.INSTANCE.doToVO(templateService.getById(id)));
+    return YdszResponse.success(MessageConverter.INSTANCE.entityToVO(templateService.getById(id)));
   }
 
   /**

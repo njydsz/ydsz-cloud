@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.vo.MsgTraceVO;
 import com.njydsz.message.server.service.core.MessageTraceService;
 
 /**

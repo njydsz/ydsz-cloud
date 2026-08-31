@@ -38,7 +38,7 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
 
   @Override
   public Optional<MsgBatchVO> findById(String id) {
-    return Optional.ofNullable(msgBatchMapper.selectById(id)).map(converter::doToVO);
+    return Optional.ofNullable(msgBatchMapper.selectById(id)).map(converter::entityToVO);
   }
 
   @Override
@@ -68,7 +68,7 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
     wrapper.eq("deleted", 0);
     wrapper.last("LIMIT 1");
     MsgBatch entity = msgBatchMapper.selectOne(wrapper);
-    return Optional.ofNullable(entity).map(converter::doToVO);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override

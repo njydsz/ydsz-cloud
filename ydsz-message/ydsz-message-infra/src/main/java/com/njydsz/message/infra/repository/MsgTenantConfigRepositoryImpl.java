@@ -58,6 +58,6 @@ public class MsgTenantConfigRepositoryImpl implements MsgTenantConfigRepository 
   public Optional<MsgTenantConfigVO> findByTenantId(String tenantId) {
     QueryWrapper<MsgTenantConfig> wrapper = new QueryWrapper<>();
     wrapper.eq("tenant_id", tenantId);
-    return Optional.ofNullable(msgTenantConfigMapper.selectOne(wrapper)).map(converter::doToVO);
+    return Optional.ofNullable(msgTenantConfigMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 }

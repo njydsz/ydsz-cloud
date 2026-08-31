@@ -100,7 +100,7 @@ public class TemplateVersionController {
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
   @GetMapping("/list/{templateCode}")
   public YdszResponse<List<MsgTemplateVersionVO>> listVersions(@PathVariable String templateCode) {
-    return YdszResponse.success(templateVersionService.listVersions(templateCode));
+    return YdszResponse.success(MessageConverter.INSTANCE.templateVersionListToVO(templateVersionService.listVersions(templateCode)));
   }
 
   /**

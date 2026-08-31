@@ -96,7 +96,7 @@ public class SubscriptionController {
   @PostMapping
   public YdszResponse<MsgSubscriptionVO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
     return YdszResponse.success(
-        MessageConverter.INSTANCE.doToVO(subscriptionService.upsert(dto)));
+        MessageConverter.INSTANCE.entityToVO(subscriptionService.upsert(dto)));
   }
 
   /**
