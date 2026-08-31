@@ -18,7 +18,6 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;

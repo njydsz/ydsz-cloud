@@ -104,7 +104,7 @@ public class EmptyAssigneeStrategyService {
    *   <li>其它（{@code FALLBACK}）— 回退到 resolveAssignee 逻辑
    * </ul>
    *
-   * @param task 待处理的运行时任务
+   * @param dto 运行时任务 DTO
    * @param instance 流程实例
    * @param node 当前流程节点
    * @param variables 流程变量

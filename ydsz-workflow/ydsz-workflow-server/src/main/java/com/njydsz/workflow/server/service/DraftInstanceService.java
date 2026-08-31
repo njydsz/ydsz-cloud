@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -110,25 +109,6 @@ public class DraftInstanceService {
 
     // 创建新草稿实例
     String instanceId = UUID.randomUUID().toString();
-    FlowInstanceVO draft = new FlowInstanceVO();
-    draft.setId(instanceId);
-    draft.setDefinitionId(definition.getId());
-    draft.setFlowCode(dto.getFlowCode());
-    draft.setFlowName(definition.getFlowName());
-    draft.setFlowVersion(definition.getFlowVersion());
-    draft.setFlowStatus(FlowInstanceStatus.DRAFT.name());
-    draft.setBusinessType(dto.getBusinessType());
-    draft.setBusinessId(dto.getBusinessId());
-    draft.setBusinessNo(dto.getBusinessNo());
-    draft.setTitle(dto.getTitle() != null ? dto.getTitle() : definition.getFlowName() + " - 草稿");
-    draft.setInitiatorId(dto.getInitiatorId());
-    draft.setInitiatorName(dto.getInitiatorName());
-    draft.setTenantId(dto.getTenantId());
-    draft.setProviderTraceId(dto.getProviderTraceId());
-    draft.setCurrentNodeCode("");
-    draft.setCurrentNodeName("");
-    draft.setCreatedAt(LocalDateTime.now());
-    draft.setUpdatedAt(LocalDateTime.now());
 
     // 保存草稿数据到 variables
     Map<String, Object> variables = dto.getDraftData();
@@ -137,10 +117,27 @@ public class DraftInstanceService {
     }
     variables.put("_draft", true);
     variables.put("_draftSavedAt", LocalDateTime.now().toString());
-    draft.setVariable(YdszJson.toJson(variables));
 
     FlowInstanceDTO instanceDto = new FlowInstanceDTO();
-    BeanUtils.copyProperties(draft, instanceDto);
+    instanceDto.setId(instanceId);
+    instanceDto.setDefinitionId(definition.getId());
+    instanceDto.setFlowCode(dto.getFlowCode());
+    instanceDto.setFlowName(definition.getFlowName());
+    instanceDto.setFlowVersion(definition.getFlowVersion());
+    instanceDto.setFlowStatus(FlowInstanceStatus.DRAFT.name());
+    instanceDto.setBusinessType(dto.getBusinessType());
+    instanceDto.setBusinessId(dto.getBusinessId());
+    instanceDto.setBusinessNo(dto.getBusinessNo());
+    instanceDto.setTitle(dto.getTitle() != null ? dto.getTitle() : definition.getFlowName() + " - 草稿");
+    instanceDto.setInitiatorId(dto.getInitiatorId());
+    instanceDto.setInitiatorName(dto.getInitiatorName());
+    instanceDto.setTenantId(dto.getTenantId());
+    instanceDto.setProviderTraceId(dto.getProviderTraceId());
+    instanceDto.setCurrentNodeCode("");
+    instanceDto.setCurrentNodeName("");
+    instanceDto.setCreatedAt(LocalDateTime.now());
+    instanceDto.setUpdatedAt(LocalDateTime.now());
+    instanceDto.setVariable(YdszJson.toJson(variables));
     instanceRepository.save(instanceDto);
     log.info("[Flow-Draft] 保存草稿成功: instanceId={}, flowCode={}, businessId={}", instanceId,
         dto.getFlowCode(), dto.getBusinessId());
