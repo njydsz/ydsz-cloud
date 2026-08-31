@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -237,8 +236,16 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     if (dto.getRemark() != null) {
       existing.setRemark(dto.getRemark());
     }
+    // 使用显式字段映射替代 BeanUtils.copyProperties（编码规范禁止反射式拷贝）
     FlowCategoryDTO updateDto = new FlowCategoryDTO();
-    BeanUtils.copyProperties(existing, updateDto);
+    updateDto.setId(existing.getId());
+    updateDto.setCategoryName(existing.getCategoryName());
+    updateDto.setParentId(existing.getParentId());
+    updateDto.setSortNum(existing.getSortNum());
+    updateDto.setIcon(existing.getIcon());
+    updateDto.setRemark(existing.getRemark());
+    updateDto.setTenantId(existing.getTenantId());
+    updateDto.setDeleted(existing.getDeleted());
     categoryRepository.update(updateDto);
   }
 
@@ -283,8 +290,10 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .build();
     }
     existing.setDeleted(1);
+    // 使用显式字段映射替代 BeanUtils.copyProperties（编码规范禁止反射式拷贝）
     FlowCategoryDTO deleteDto = new FlowCategoryDTO();
-    BeanUtils.copyProperties(existing, deleteDto);
+    deleteDto.setId(existing.getId());
+    deleteDto.setDeleted(1);
     categoryRepository.update(deleteDto);
   }
 
