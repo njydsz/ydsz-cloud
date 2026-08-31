@@ -19,6 +19,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
@@ -94,7 +95,7 @@ public class TemplatePreviewController {
     if (req == null || !StringUtils.hasText(req.getTemplateCode())) {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "模板编码不能为空");
     }
-    MsgTemplate template =
+    MsgTemplateVO template =
         templateService.loadByCodeAndChannel(
             req.getTemplateCode(),
             StringUtils.hasText(req.getChannel()) ? req.getChannel() : "INAPP",

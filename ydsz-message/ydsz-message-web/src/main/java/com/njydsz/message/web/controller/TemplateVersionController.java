@@ -28,6 +28,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
+import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
 import com.njydsz.message.infra.entity.MsgTemplateVersion;
 import com.njydsz.message.server.service.template.TemplateVersionService;
 
@@ -99,7 +100,7 @@ public class TemplateVersionController {
   @Operation(summary = "查询模板版本历史")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
   @GetMapping("/list/{templateCode}")
-  public YdszResponse<List<MsgTemplateVersion>> listVersions(@PathVariable String templateCode) {
+  public YdszResponse<List<MsgTemplateVersionVO>> listVersions(@PathVariable String templateCode) {
     return YdszResponse.success(templateVersionService.listVersions(templateCode));
   }
 
