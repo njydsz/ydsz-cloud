@@ -1,0 +1,505 @@
+# 云顶编码规范 - AI 红线规则集（Shared Rules）
+# Ydsz Cloud Coding Standards - AI Red Line Rules
+#
+# 本文件为单一权威源（Single Source of Truth），适用于所有 AI 编码工具。
+# CatPaw 和 WorkBuddy 的配置文件由此文件生成或软链引用。
+#
+# 规范版本：对齐《云顶编码规范》1.0.3
+# 生成日期：2026-08-31
+#
+# 同步方式：
+#   - CatPaw: .meituan-catpaw/5728405356/rules/catpaw-always.md（由本文件生成）
+#   - WorkBuddy: .workbuddy/rules/workbuddy-system.md（由本文件生成）
+#   - 同步脚本: data/scripts/sync-ai-rules.py
+
+meta:
+  version: "1.0.0"
+  source: "docs/云顶编码规范.md v1.0.3"
+  last_synced: "2026-08-31"
+  total_rules: 42
+  severity_levels:
+    P0: "阻断级，AI 编码绝对禁止违反"
+    P1: "严重级，AI 编码不应违反，违反需人工确认"
+    P2: "建议级，AI 编码建议遵循"
+
+rules:
+  # ============================================
+  # 一、Import 导入规范（5 条，全部 P0）
+  # ============================================
+  - id: "YDIZ-IMPORT-001"
+    category: "import"
+    severity: "P0"
+    title: "禁止行内全限定名（FQN）"
+    description: "所有类型引用必须通过文件顶部的 import 语句声明，严禁在代码体中使用全限定类名。"
+    pattern: "代码体中出现 xxx.yyy.Zzz 全限定名（非 import 行）"
+    fix: "将 FQN 拆为顶部 import + 代码体使用简单名"
+    example_bad: "new org.apache.ibatis.io.Resources.NamedThreadLocal<>(\"key\");"
+    example_good: "import org.apache.ibatis.io.Resources;\n...\nnew Resources.NamedThreadLocal<>(\"key\");"
+    source: "编码规范 5.1 节"
+
+  - id: "YDIZ-IMPORT-002"
+    category: "import"
+    severity: "P0"
+    title: "禁止通配符 import"
+    description: "禁止使用 import xxx.* 通配符导入，每个类型必须显式 import。"
+    pattern: "import 语句中出现 .*"
+    fix: "拆分为具体类型的显式 import"
+    example_bad: "import org.springframework.beans.factory.*;"
+    example_good: "import org.springframework.beans.factory.BeanFactory;"
+    source: "编码规范 5.2 节"
+
+  - id: "YDIZ-IMPORT-003"
+    category: "import"
+    severity: "P0"
+    title: "禁止未使用的 import"
+    description: "禁止保留未使用的 import 语句。"
+    pattern: "import 的类型在代码体中未被引用"
+    fix: "删除未使用的 import"
+    source: "编码规范 5.5 节"
+
+  - id: "YDIZ-IMPORT-004"
+    category: "import"
+    severity: "P0"
+    title: "禁止直接 import 第三方 JSON 库"
+    description: "业务代码禁止直接 import Jackson/Fastjson/Gson/org.json，必须统一使用 ydsz-common-json（JsonUtils）。"
+    pattern: "import com.fasterxml.jackson.* 或 import com.alibaba.fastjson2.*"
+    fix: "使用 com.njydsz.common.json.JsonUtils 替代"
+    source: "编码规范 22.3 节、20.5 节"
+
+  - id: "YDIZ-IMPORT-005"
+    category: "import"
+    severity: "P0"
+    title: "禁止业务模块直接 import Netty"
+    description: "禁止直接 import io.netty.*，必须通过 ydsz-common-netty 或 ydsz-common-socket 封装。"
+    pattern: "import io.netty.* 且模块非 common-netty/common-socket"
+    fix: "使用 ydsz-common-netty 的 AbstractNettyServer/AbstractNettyClient"
+    source: "编码规范 22.3 节、23.6 节"
+
+  # ============================================
+  # 二、命名规范（4 条）
+  # ============================================
+  - id: "YDIZ-NAME-001"
+    category: "naming"
+    severity: "P0"
+    title: "entity 包下禁止使用 DO 后缀"
+    description: "持久化实体类不允许使用 DO 后缀，直接使用业务名称命名。"
+    pattern: "entity 包下类名以 DO 结尾"
+    fix: "移除 DO 后缀，通过包路径区分角色"
+    example_bad: "public class UserAccountDO { ... }"
+    example_good: "public class UserAccount { ... }"
+    source: "编码规范 2.4 节"
+
+  - id: "YDIZ-NAME-002"
+    category: "naming"
+    severity: "P0"
+    title: "数据库表名必须使用 ydsz_ 前缀"
+    description: "所有业务模块的数据库表名必须以 ydsz_ 为前缀（ydsz-common 模块除外）。"
+    pattern: "@TableName 注解值不以 ydsz_ 开头"
+    fix: "改为 ydsz_ 前缀"
+    example_bad: "@TableName(\"nw_file_node\")"
+    example_good: "@TableName(\"ydsz_wiki_file_node\")"
+    source: "编码规范 2.5 节"
+
+  - id: "YDIZ-NAME-003"
+    category: "naming"
+    severity: "P1"
+    title: "禁止中文拼音混合命名"
+    description: "命名必须使用英文单词，禁止中文拼音、拼音首字母缩写。"
+    pattern: "变量名或方法名包含拼音（如 yongHu、getPingJia）"
+    fix: "使用对应英文含义命名"
+    example_bad: "String getPingJiaByName();"
+    example_good: "String getCommentByName();"
+    source: "编码规范 2.1 节"
+
+  - id: "YDIZ-NAME-004"
+    category: "naming"
+    severity: "P1"
+    title: "禁止无意义命名"
+    description: "命名必须'见名知意'，禁止 a、b、tmp、data、flag 等无意义命名。"
+    pattern: "单字符变量名（除循环变量 i/j/k）或 tmp/tmpVar 等"
+    fix: "使用有业务含义的命名"
+    example_bad: "int d; boolean flag;"
+    example_good: "int elapsedDays; boolean enabled;"
+    source: "编码规范 2.1 节"
+
+  # ============================================
+  # 三、OOP 规约（5 条）
+  # ============================================
+  - id: "YDIZ-OOP-001"
+    category: "oop"
+    severity: "P0"
+    title: "覆盖 equals 必须同时覆盖 hashCode"
+    description: "覆盖 equals 方法时，必须同时覆盖 hashCode 方法。"
+    pattern: "类中定义 equals 方法但未定义 hashCode 方法"
+    fix: "同时实现 hashCode 方法"
+    source: "编码规范 6.2 节"
+
+  - id: "YDIZ-OOP-002"
+    category: "oop"
+    severity: "P0"
+    title: "包装类比较必须使用 equals"
+    description: "所有整形包装类对象之间值的比较，全部使用 equals 方法，禁止使用 ==。"
+    pattern: "Integer/Long/Short/Byte 等包装类使用 == 比较"
+    fix: "改用 equals() 方法"
+    example_bad: "if (a == b) // Integer a, b"
+    example_good: "if (a.equals(b))"
+    source: "编码规范 6.2 节"
+
+  - id: "YDIZ-OOP-003"
+    category: "oop"
+    severity: "P0"
+    title: "禁止定义为 double/float 类型，一律使用 BigDecimal"
+    description: "浮点数等值判断，基本类型不能用==，禁止定义为 double/float 类型，一律使用 BigDecimal。"
+    pattern: "字段或局部变量声明为 double 或 float（JSON 序列化 DTO 除外）"
+    fix: "改用 BigDecimal，使用字符串构造或 BigDecimal.valueOf()"
+    example_bad: "double price = 19.99;"
+    example_good: "BigDecimal price = new BigDecimal(\"19.99\");"
+    source: "编码规范 6.3 节、6.4 节、6.6 节"
+
+  - id: "YDIZ-OOP-004"
+    category: "oop"
+    severity: "P1"
+    title: "POJO 类布尔属性禁止加 is 前缀"
+    description: "POJO 类中布尔类型的变量不要加 is 前缀，否则部分框架解析会引起序列化错误。"
+    pattern: "private Boolean isDeleted;"
+    fix: "去掉 is 前缀"
+    example_bad: "private Boolean isDeleted;"
+    example_good: "private Boolean deleted;"
+    source: "编码规范 6.5 节"
+
+  - id: "YDIZ-OOP-005"
+    category: "oop"
+    severity: "P2"
+    title: "覆写方法必须添加 @Override"
+    description: "覆盖父类方法或实现接口方法时必须添加 @Override 注解。"
+    pattern: "方法签名与父类/接口相同但缺少 @Override"
+    fix: "添加 @Override 注解"
+    source: "编码规范附录 D 第 17 项"
+
+  # ============================================
+  # 四、异常与日志（3 条）
+  # ============================================
+  - id: "YDIZ-LOG-001"
+    category: "logging"
+    severity: "P0"
+    title: "禁止空 catch 块（吞异常）"
+    description: "禁止仅捕获异常不做任何处理。catch 块必须记录日志或抛出自定义异常。"
+    pattern: "catch (Exception e) {} 或空 catch 块（仅注释无语句）"
+    fix: "添加日志记录或异常转换"
+    source: "编码规范 12 章"
+
+  - id: "YDIZ-LOG-002"
+    category: "logging"
+    severity: "P0"
+    title: "日志必须使用占位符 {}"
+    description: "日志输出必须使用 {} 占位符，禁止字符串拼接。"
+    pattern: "log.info/warn/error 中使用 + 拼接字符串变量"
+    fix: "改用 {} 占位符"
+    example_bad: "log.info(\"用户\" + userId + \"操作失败\");"
+    example_good: "log.info(\"用户{}操作失败\", userId);"
+    source: "编码规范 13 章、附录 D 第 14 项"
+
+  - id: "YDIZ-LOG-003"
+    category: "logging"
+    severity: "P0"
+    title: "禁止 System.out/err 和 printStackTrace"
+    description: "禁止使用 System.out.println / System.err.println / e.printStackTrace()。"
+    pattern: "System.out.println 或 System.err.println 或 printStackTrace"
+    fix: "使用日志框架 SLF4J"
+    source: "编码规范附录 D 第 15/16 项"
+
+  # ============================================
+  # 五、日期时间（2 条）
+  # ============================================
+  - id: "YDIZ-DATE-001"
+    category: "datetime"
+    severity: "P0"
+    title: "禁止 SimpleDateFormat 作为共享变量"
+    description: "SimpleDateFormat 非线程安全，禁止作为静态字段或实例字段。"
+    pattern: "private static final SimpleDateFormat"
+    fix: "使用 DateTimeFormatter（线程安全）"
+    example_bad: "private static final SimpleDateFormat SDF = new SimpleDateFormat(\"yyyy-MM-dd\");"
+    example_good: "private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern(\"yyyy-MM-dd\");"
+    source: "编码规范 7.1 节"
+
+  - id: "YDIZ-DATE-002"
+    category: "datetime"
+    severity: "P0"
+    title: "使用 Java 8+ 时间 API，禁止 Date/Calendar"
+    description: "日期时间操作使用 java.time.* API，避免使用 java.util.Date / Calendar。"
+    pattern: "字段或局部变量使用 java.util.Date 或 Calendar"
+    fix: "改用 LocalDate/LocalDateTime/Instant"
+    source: "编码规范 7.2 节"
+
+  # ============================================
+  # 六、集合与数据结构（2 条）
+  # ============================================
+  - id: "YDIZ-COLL-001"
+    category: "collection"
+    severity: "P1"
+    title: "集合初始化必须指定初始容量"
+    description: "集合初始化时必须指定初始容量（已知大小时）。"
+    pattern: "new ArrayList<>() 或 new HashMap<>() 无初始容量参数"
+    fix: "指定初始容量，如 new ArrayList<>(16)"
+    source: "编码规范 9.1 节"
+
+  - id: "YDIZ-COLL-002"
+    category: "collection"
+    severity: "P0"
+    title: "方法返回集合禁止返回 null"
+    description: "方法返回集合类型时，禁止返回 null，必须返回空集合。"
+    pattern: "返回 List/Map/Set 的方法存在 return null 分支"
+    fix: "改用 Collections.emptyList()/emptyMap()/emptySet()"
+    source: "编码规范 9.2 节"
+
+  # ============================================
+  # 七、DDD 分层架构（6 条，全部 P0）
+  # ============================================
+  - id: "YDIZ-DDD-001"
+    category: "ddd"
+    severity: "P0"
+    title: "依赖方向必须单向，禁止反向依赖"
+    description: "web → server → domain ← infra，依赖方向必须单向，禁止反向依赖。"
+    pattern: "domain 层依赖 infra 层 或 server 层依赖其他业务模块的 infra 层"
+    fix: "通过接口反转依赖，Repository 接口定义在 domain 层"
+    source: "编码规范 22.1 节、34.3 节"
+
+  - id: "YDIZ-DDD-002"
+    category: "ddd"
+    severity: "P0"
+    title: "Repository 必须返回 VO/DTO，禁止返回 PO/Entity"
+    description: "Repository 接口禁止返回基础设施层实体（PO），必须通过 Converter 转换为 VO/DTO 后返回。"
+    pattern: "Repository 接口签名中返回类型为 entity 包下的类"
+    fix: "在 infra 层通过 MapStruct Converter 转换为 VO"
+    source: "编码规范 34.2 节 §34.2.1"
+
+  - id: "YDIZ-DDD-003"
+    category: "ddd"
+    severity: "P0"
+    title: "server 层禁止直接使用 Mapper/QueryWrapper"
+    description: "禁止在 server 层直接 import Mapper 类或使用 QueryWrapper/LambdaQueryWrapper/UpdateWrapper。"
+    pattern: "server 包下 import org.mybatisplus.core.mapper 或 import com.baomidou.mybatisplus.core.conditions.query"
+    fix: "数据访问逻辑封装在 Repository 实现中（infra 层）"
+    source: "编码规范 34 章、附录 D 第 22/23 项"
+
+  - id: "YDIZ-DDD-004"
+    category: "ddd"
+    severity: "P0"
+    title: "domain 层禁止声明 MapStruct 依赖"
+    description: "禁止 {module}-domain 层 pom.xml 中出现 org.mapstruct 依赖，禁止 domain 包 import MapStruct 类。"
+    pattern: "domain pom.xml 中 <groupId>org.mapstruct</groupId>"
+    fix: "MapStruct Converter 放在 {module}-infra/converter/ 包下"
+    source: "编码规范 34.5 节、附录 D 第 25/26 项"
+
+  - id: "YDIZ-DDD-005"
+    category: "ddd"
+    severity: "P1"
+    title: "api 模块必须依赖 domain，禁止自建 VO"
+    description: "api 模块必须依赖 domain 模块，通过 domain 层的 VO/枚举/Query 定义 Feign 接口方法签名。禁止在 api 模块内部自建 domain/vo 包。"
+    pattern: "api 模块中存在 vo/dto/entity 自建包"
+    fix: "引用 domain 层的 VO 对象"
+    source: "编码规范 22.1 节"
+
+  - id: "YDIZ-DDD-006"
+    category: "ddd"
+    severity: "P1"
+    title: "Repository 接口禁止暴露 getMapper 方法"
+    description: "禁止 Repository 实现类暴露 getMapper()/getXxxMapper() 方法，防止 Mapper 泄漏到 server 层。"
+    pattern: "Repository 实现类中存在 getMapper 或类似方法"
+    fix: "封装具体的数据访问方法，不暴露 Mapper 引用"
+    source: "编码规范附录 D 第 24 项"
+
+  # ============================================
+  # 八、并发规范（3 条）
+  # ============================================
+  - id: "YDIZ-CONC-001"
+    category: "concurrency"
+    severity: "P0"
+    title: "禁止业务代码自建线程池"
+    description: "所有异步任务必须通过 ydsz-common-thread 模块统一管理，禁止业务代码直接 new ThreadPoolExecutor 或 ThreadPoolTaskExecutor。"
+    pattern: "new ThreadPoolExecutor 或 new ThreadPoolTaskExecutor（非 common-thread 模块）"
+    fix: "配置 ydsz.thread.pools.<name> 声明式创建"
+    source: "编码规范 16.4 节"
+
+  - id: "YDIZ-CONC-002"
+    category: "concurrency"
+    severity: "P0"
+    title: "ThreadLocal 必须在 finally 中 remove"
+    description: "使用 ThreadLocal 必须在 finally 块中调用 remove() 清理。"
+    pattern: "ThreadLocal.set() 无对应 finally { threadLocal.remove() }"
+    fix: "在 finally 中添加 remove() 调用"
+    source: "编码规范 16.1 节"
+
+  - id: "YDIZ-CONC-003"
+    category: "concurrency"
+    severity: "P1"
+    title: "正则表达式必须预编译为 static final"
+    description: "禁止在循环中编译正则表达式，必须预编译为 static final Pattern。"
+    pattern: "方法体内 Pattern.compile 非静态字段"
+    fix: "提取为 private static final Pattern"
+    source: "编码规范 21.1 节"
+
+  # ============================================
+  # 九、性能规范（2 条）
+  # ============================================
+  - id: "YDIZ-PERF-001"
+    category: "performance"
+    severity: "P0"
+    title: "禁止 N+1 查询（循环中执行数据库查询）"
+    description: "禁止在循环中执行数据库查询，必须使用批量查询。"
+    pattern: "for 循环内部调用 mapper 的 select/find 方法"
+    fix: "改为 batchQuery/findByIds 批量查询"
+    source: "编码规范 20.4 节"
+
+  - id: "YDIZ-PERF-002"
+    category: "performance"
+    severity: "P1"
+    title: "IO 资源必须使用 try-with-resources"
+    description: "IO 资源（InputStream/OutputStream/Reader/Writer）必须使用 try-with-resources 自动关闭。"
+    pattern: "手动 close() 而非 try-with-resources"
+    fix: "改用 try (Resource r = ...) { ... } 语法"
+    source: "编码规范通用最佳实践"
+
+  # ============================================
+  # 十、common 模块能力复用（8 条，全部 P0 或 P1）
+  # ============================================
+  - id: "YDIZ-COMMON-001"
+    category: "common-reuse"
+    severity: "P0"
+    title: "文件存储必须通过 ydsz-common-file 接入"
+    description: "业务代码禁止直接 import io.minio.* / com.aliyun.oss.* / software.amazon.awssdk.services.s3.*，必须通过 IFileStorageProvider 接入。"
+    pattern: "直接 import MinioClient/OSSClient/S3Client 等原生 SDK"
+    fix: "注入 IFileStorageProvider 使用"
+    source: "编码规范 20.5 节"
+
+  - id: "YDIZ-COMMON-002"
+    category: "common-reuse"
+    severity: "P0"
+    title: "Excel 必须通过 ydsz-common-excel 处理"
+    description: "所有 Excel 导入导出操作必须通过 ydsz-common-excel，严禁业务模块直接使用 Apache POI API。"
+    pattern: "业务模块直接 import org.apache.poi.*"
+    fix: "使用 ExcelFacade/ExcelExportHelper/WebSupport"
+    source: "编码规范 22.6 节"
+
+  - id: "YDIZ-COMMON-003"
+    category: "common-reuse"
+    severity: "P0"
+    title: "分布式事务禁止直接使用 Seata 原生 API"
+    description: "禁止业务代码直接 import org.apache.seata.*，所有 Seata 能力必须通过 com.njydsz.common.seata.* 包访问。"
+    pattern: "业务代码 import org.apache.seata."
+    fix: "使用 DistributedTransactionManager 接口"
+    source: "编码规范 25.1 节"
+
+  - id: "YDIZ-COMMON-004"
+    category: "common-reuse"
+    severity: "P0"
+    title: "本地缓存必须通过 ydsz-common-cache"
+    description: "禁止业务代码直接 new Caffeine 或 Guava Cache，必须通过 YdszCache.newBuilder() 创建。"
+    pattern: "直接 import com.github.benmanes.caffeine 或 com.google.common.cache"
+    fix: "使用 YdszCache.newBuilder() 或 Spring Cache @Cacheable"
+    source: "编码规范 20.5 节、第 18 章"
+
+  - id: "YDIZ-COMMON-005"
+    category: "common-reuse"
+    severity: "P0"
+    title: "Sentry/监控指标必须通过 ydsz-common-sentry"
+    description: "禁止业务模块直接注入 MeterRegistry 注册指标，禁止直接继承 AbstractModuleMetrics，所有指标上报必须通过 SentryObservation.count/time/gauge。"
+    pattern: "直接注入 io.micrometer.core.instrument.MeterRegistry"
+    fix: "使用 SentryObservation 统一入口"
+    source: "编码规范 27/28 章"
+
+  - id: "YDIZ-COMMON-006"
+    category: "common-reuse"
+    severity: "P1"
+    title: "分布式锁必须通过 ydsz-common-lock"
+    description: "分布式锁使用 DistributedLocker/@DistributedLock，禁止直接使用 Redisson RLock API。"
+    pattern: "直接使用 redissonClient.getLock() 或 RLock 操作（非 common-lock 模块场景）"
+    fix: "注入 DistributedLocker 或使用 @DistributedLock 注解"
+    source: "编码规范 20.5 节"
+
+  - id: "YDIZ-COMMON-007"
+    category: "common-reuse"
+    severity: "P1"
+    title: "树形结构必须使用 ydsz-common-domain TreeBuilder"
+    description: "禁止业务模块自建递归建树算法或自建树节点接口，应继承 TreeNode 基类，通过 TreeBuilder 的 O(n) 迭代构造。"
+    pattern: "业务模块自建 buildTree 递归方法或自建 TreeNode 接口"
+    fix: "继承 TreeNode + TreeBuilder"
+    source: "编码规范 20.5 节、22.5 节"
+
+  - id: "YDIZ-COMMON-008"
+    category: "common-reuse"
+    severity: "P1"
+    title: "通知服务必须通过 ydsz-common-notify"
+    description: "业务模块发送通知时，必须使用 ydsz-common-notify 模块的 NotifyHelper 作为统一业务入口，禁止直接调用 ydsz-message 模块的内部 API。"
+    pattern: "业务模块直接注入 MessageChannel 或自行构建 NotifyRequest"
+    fix: "注入 NotifyHelper"
+    source: "编码规范 23.6 节"
+
+  # ============================================
+  # 十一、安全规范（2 条）
+  # ============================================
+  - id: "YDIZ-SEC-001"
+    category: "security"
+    severity: "P0"
+    title: "禁止 SQL 字符串拼接（SQL 注入）"
+    description: "禁止拼接 SQL 字符串，必须使用参数化查询（MyBatis #{}）。"
+    pattern: "MyBatis XML 或注解中使用 ${} 拼接用户输入"
+    fix: "改用 #{} 参数化绑定"
+    source: "编码规范 19.3 节"
+
+  - id: "YDIZ-SEC-002"
+    category: "security"
+    severity: "P1"
+    title: "禁止日志打印敏感信息"
+    description: "禁止在日志中打印密码、Token、密钥、API Key 等敏感信息。"
+    pattern: "log 中出现 password/token/secret/apiKey 等敏感值"
+    fix: "脱敏处理后打印或直接省略"
+    source: "编码规范 13 章"
+
+  # ============================================
+  # 十二、工程约束（3 条）
+  # ============================================
+  - id: "YDIZ-ENG-001"
+    category: "engineering"
+    severity: "P0"
+    title: "禁止在 ydsz-common 下自行创建新子模块"
+    description: "禁止业务人员自行在 ydsz-common 下创建新子模块。已有功能必须优先合并到现有对应层级模块。"
+    pattern: "新增 ydsz-common-* 模块未经 ACC 审批"
+    fix: "先提交架构变更申请（ACC），经技术负责人审批"
+    source: "编码规范 23.4 节"
+
+  - id: "YDIZ-ENG-002"
+    category: "engineering"
+    severity: "P1"
+    title: "禁止硬编码 TTL/容量等配置值"
+    description: "缓存 TTL 和 maximumSize 禁止硬编码在代码中，必须通过 @ConfigurationProperties 从 YAML 配置读取。"
+    pattern: "代码中硬编码 expireAfterWrite 的数值（如 Duration.ofMinutes(10) 直接赋值）"
+    fix: "使用 @Value 或 @ConfigurationProperties 外部化"
+    source: "编码规范 20.5 节缓存配置"
+
+  - id: "YDIZ-ENG-003"
+    category: "engineering"
+    severity: "P2"
+    title: "禁止注释保留废弃代码"
+    description: "不再使用的代码段直接删除，禁止通过注释保留。Git 可回溯历史。"
+    pattern: "大段被注释掉的代码（>3 行）"
+    fix: "删除注释代码，通过 Git 历史找回"
+    source: "编码规范 10.1 节"
+
+# ============================================
+# 附录：按 category 统计
+# ============================================
+stats:
+  import: 5
+  naming: 4
+  oop: 5
+  logging: 3
+  datetime: 2
+  collection: 2
+  ddd: 6
+  concurrency: 3
+  performance: 2
+  common-reuse: 8
+  security: 2
+  engineering: 3
+  total: 45

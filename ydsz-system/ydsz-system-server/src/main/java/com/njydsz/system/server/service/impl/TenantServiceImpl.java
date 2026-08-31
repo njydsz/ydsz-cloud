@@ -101,11 +101,13 @@ public class TenantServiceImpl implements TenantService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(TenantDTO dto) {
-    TenantPageQuery checkQuery = new TenantPageQuery();
-    checkQuery.setTenantCode(dto.getTenantCode());
-    if (tenantRepository.countByCondition(checkQuery) > 0) {
-      throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
-          .data("tenantCode", dto.getTenantCode());
+    TenantVO existing = tenantRepository.findById(dto.getId()).orElse(null);
+    if (existing != null) {
+      // 租户编码未变更时跳过唯一性校验（排除自身）
+      if (!dto.getTenantCode().equals(existing.getTenantCode()) && existsByTenantCode(dto.getTenantCode())) {
+        throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
+            .data("tenantCode", dto.getTenantCode());
+      }
     }
     return tenantRepository.updateById(dto);
   }

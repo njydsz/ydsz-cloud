@@ -28,14 +28,13 @@ import com.njydsz.literule.domain.enums.RuleStatusEnum;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true)
 @SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-// 显式声明 @Getter @Setter 以确保在 @SuperBuilder 继承链中正确生成（避免 Lombok 已知 edge case）
-@Getter
-@Setter
 @TableName("ydsz_rule_def")
 public class RuleDefinition extends MpBaseEntity<String> {
 
