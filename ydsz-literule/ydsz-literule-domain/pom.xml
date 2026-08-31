@@ -29,11 +29,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!-- RuleContext / RuleEnvironment / HitPolicy / DecisionTableDefinition 已迁至本模块 -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>
@@ -56,6 +52,11 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
+        <!-- ydsz-common-util: IdGenerator（RuleContext 使用） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
         </dependency>
     </dependencies>
 </project>

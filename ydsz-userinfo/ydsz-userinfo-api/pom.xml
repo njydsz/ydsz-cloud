@@ -21,12 +21,13 @@
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-userinfo-domain</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
+        <!-- 领域模块：VO/枚举/Query，供 FeignClient 方法签名引用 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-userinfo-domain</artifactId>
         </dependency>
         <!-- ydsz-common-redis -->
         <dependency>

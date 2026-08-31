@@ -138,7 +138,13 @@ public class UserBanService {
     UserAccountVO userVO = userAccountRepository.findByIdWithBan(userId)
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
 
-    BanInfoVO banInfo = userVO.toBanInfo();
+    BanInfoVO banInfo = new BanInfoVO();
+    banInfo.setBanned(userVO.isBanned());
+    banInfo.setBanType(userVO.getBanType());
+    banInfo.setBanReason(userVO.getBanReason());
+    banInfo.setBanExpireAt(userVO.getBanExpireAt());
+    banInfo.setBannedBy(userVO.getBannedBy());
+    banInfo.setBannedAt(userVO.getBannedAt());
     log.debug("Ban info for user {}: banned={}, type={}", userId, banInfo.isBanned(), banInfo.getBanType());
     return banInfo;
   }

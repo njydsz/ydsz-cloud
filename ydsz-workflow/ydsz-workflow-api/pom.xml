@@ -20,10 +20,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
-        <!-- explicit declaration for direct usage of FlowStartProcessDTO / FlowInstanceVO -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-domain</artifactId>
-        </dependency>
+        <!-- FlowStartProcessDTO / FlowInstanceVO / FlowAssigneeDTO now live in this module -->
     </dependencies>
 </project>

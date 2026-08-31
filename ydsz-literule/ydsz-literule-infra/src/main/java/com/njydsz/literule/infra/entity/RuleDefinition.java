@@ -33,6 +33,9 @@ import com.njydsz.literule.domain.enums.RuleStatusEnum;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+// 显式声明 @Getter @Setter 以确保在 @SuperBuilder 继承链中正确生成（避免 Lombok 已知 edge case）
+@Getter
+@Setter
 @TableName("ydsz_rule_def")
 public class RuleDefinition extends MpBaseEntity<String> {
 

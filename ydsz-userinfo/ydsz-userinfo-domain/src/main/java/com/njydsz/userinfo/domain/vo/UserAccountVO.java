@@ -109,33 +109,13 @@ public class UserAccountVO {
   private LocalDateTime bannedAt;
 
   /**
-   * 转换为封禁信息 VO。
-   *
-   * <p>根据当前封禁字段状态生成 {@link BanInfoVO}，包含懒检查逻辑（临时封禁过期自动解除）。
-   *
-   * @return 封禁信息 VO
-   */
-  public BanInfoVO toBanInfo() {
-    BanInfoVO vo = new BanInfoVO();
-    vo.setBanned(checkBanned());
-    if (this.banType != null) {
-      vo.setBanType(this.banType);
-    }
-    vo.setBanReason(this.banReason);
-    vo.setBanExpireAt(this.banExpireAt);
-    vo.setBannedBy(this.bannedBy);
-    vo.setBannedAt(this.bannedAt);
-    return vo;
-  }
-
-  /**
    * 检查当前是否处于封禁状态（懒检查）。
    *
    * <p>临时封禁过期自动返回 false。永久封禁始终返回 true。
    *
    * @return true 表示当前处于封禁状态
    */
-  private boolean checkBanned() {
+  public boolean isBanned() {
     if (this.banType == null) {
       return false;
     }
