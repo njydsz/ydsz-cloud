@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowSaveDraftDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
@@ -113,7 +114,7 @@ public class DraftInstanceService {
     draft.setDefinitionId(definition.getId());
     draft.setFlowCode(dto.getFlowCode());
     draft.setFlowName(definition.getFlowName());
-    draft.setFlowVersion(definition.getVersion());
+    draft.setFlowVersion(definition.getFlowVersion());
     draft.setFlowStatus(FlowInstanceStatus.DRAFT.name());
     draft.setBusinessType(dto.getBusinessType());
     draft.setBusinessId(dto.getBusinessId());
@@ -137,7 +138,9 @@ public class DraftInstanceService {
     variables.put("_draftSavedAt", LocalDateTime.now().toString());
     draft.setVariable(YdszJson.toJson(variables));
 
-    instanceRepository.save(draft);
+    FlowInstanceDTO instanceDto = new FlowInstanceDTO();
+    org.springframework.beans.BeanUtils.copyProperties(draft, instanceDto);
+    instanceRepository.save(instanceDto);
     log.info("[Flow-Draft] 保存草稿成功: instanceId={}, flowCode={}, businessId={}", instanceId,
         dto.getFlowCode(), dto.getBusinessId());
 

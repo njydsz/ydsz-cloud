@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
@@ -472,7 +473,9 @@ public class FlowTaskCreateService {
     }
 
     // 持久化任务 + 写入 ydsz_flow_user（需 task ID，必须在 insert 之后）
-    taskRepository.save(task);
+    FlowRunTaskDTO taskDto = new FlowRunTaskDTO();
+    org.springframework.beans.BeanUtils.copyProperties(task, taskDto);
+    taskRepository.save(taskDto);
     Map<String, Integer> userWeights = parseUserWeights(node.getExt());
     for (String uid : userIds) {
       insertFlowUser(task, instance, node, uid, userWeights);
@@ -597,7 +600,9 @@ public class FlowTaskCreateService {
     LocalDateTime now = LocalDateTime.now();
     task.setFinishAt(now);
     task.setDurationMs(0L);
-    taskRepository.save(task);
+    FlowRunTaskDTO dedupSkipDto = new FlowRunTaskDTO();
+    org.springframework.beans.BeanUtils.copyProperties(task, dedupSkipDto);
+    taskRepository.save(dedupSkipDto);
     archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
     support.audit(task, "DEDUP_SKIP", null, null, "办理人去重后为空，自动跳过");
     log.info("[Flow] 办理人去重后为空，自动跳过: instanceId={} node={}", instance.getId(), node.getNodeCode());
@@ -666,7 +671,9 @@ public class FlowTaskCreateService {
     task.setAssigneeId(approvers.get(0));
     task.setAssigneeName("USER:" + approvers.get(0));
     task.setPriority(DEFAULT_TASK_PRIORITY);
-    taskRepository.save(task);
+    FlowRunTaskDTO levelApprovalDto = new FlowRunTaskDTO();
+    org.springframework.beans.BeanUtils.copyProperties(task, levelApprovalDto);
+    taskRepository.save(levelApprovalDto);
     for (String uid : approvers) {
       insertFlowUser(task, instance, node, uid, null);
     }
@@ -721,7 +728,9 @@ public class FlowTaskCreateService {
             task.setFinishAt(LocalDateTime.now());
             task.setDurationMs(0L);
           }
-          taskRepository.save(task);
+          FlowRunTaskDTO levelEmptyDto = new FlowRunTaskDTO();
+          org.springframework.beans.BeanUtils.copyProperties(task, levelEmptyDto);
+          taskRepository.save(levelEmptyDto);
           if (FlowTaskStatus.COMPLETED.name().equals(task.getTaskStatus())) {
             archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
             support.audit(
@@ -740,7 +749,9 @@ public class FlowTaskCreateService {
           task.setAssigneeType(FlowAssigneeType.USER.name());
           task.setAssigneeId("1");
           task.setAssigneeName("FALLBACK");
-          taskRepository.save(task);
+          FlowRunTaskDTO levelFallbackDto = new FlowRunTaskDTO();
+          org.springframework.beans.BeanUtils.copyProperties(task, levelFallbackDto);
+          taskRepository.save(levelFallbackDto);
           log.warn(
               "[Flow] 逐级审批空兜底 FALLBACK: instanceId={} node={}",
               instance.getId(),
@@ -778,7 +789,9 @@ public class FlowTaskCreateService {
         autoTask.setTaskStatus(FlowTaskStatus.COMPLETED.name());
         autoTask.setFinishAt(LocalDateTime.now());
         autoTask.setDurationMs(0L);
-        taskRepository.save(autoTask);
+        FlowRunTaskDTO foreachAutoDto = new FlowRunTaskDTO();
+        org.springframework.beans.BeanUtils.copyProperties(autoTask, foreachAutoDto);
+        taskRepository.save(foreachAutoDto);
         archiveService.archiveToHistory(autoTask, FlowTaskStatus.COMPLETED);
         support.audit(autoTask, "FOREACH_AUTO_PASS", null, null, "FOREACH 集合为空，自动通过");
         log.info(
@@ -793,7 +806,9 @@ public class FlowTaskCreateService {
     String firstTaskId = null;
     for (String element : elements) {
       FlowRunTaskVO task = buildForeachTask(instance, node, element, "USER:" + element, element);
-      taskRepository.save(task);
+      FlowRunTaskDTO foreachTaskDto = new FlowRunTaskDTO();
+      org.springframework.beans.BeanUtils.copyProperties(task, foreachTaskDto);
+      taskRepository.save(foreachTaskDto);
       insertFlowUser(task, instance, node, element, null);
       if (flowMetrics != null) {
         flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
@@ -1067,7 +1082,9 @@ public class FlowTaskCreateService {
       LocalDateTime now = LocalDateTime.now();
       task.setFinishAt(now);
       task.setDurationMs(0L);
-      taskRepository.save(task);
+      FlowRunTaskDTO autoDedupDto = new FlowRunTaskDTO();
+      org.springframework.beans.BeanUtils.copyProperties(task, autoDedupDto);
+      taskRepository.save(autoDedupDto);
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "AUTO_DEDUP", null, null, "审批人与上一节点相同，自动去重跳过");
       advanceAfterAutoPass(instance, node, variables);

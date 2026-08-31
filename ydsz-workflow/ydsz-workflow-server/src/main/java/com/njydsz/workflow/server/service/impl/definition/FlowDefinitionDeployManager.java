@@ -23,6 +23,7 @@ import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowSkipType;
@@ -346,20 +347,13 @@ public class FlowDefinitionDeployManager {
    * @return 返回值说明
    */
   private FlowDefinitionVO saveDefinition(FlowDeployProcessDTO dto, String version, String tenantId) {
-    FlowDefinitionVO def = new FlowDefinitionVO();
-    def.setFlowCode(dto.getFlowCode());
-    def.setFlowName(dto.getFlowName());
-    def.setCategory(dto.getCategory());
-    def.setFlowVersion(version);
-    def.setModelValue("CLASSICS");
-    def.setFormCustom("N");
-    def.setFormPath(dto.getFormPath());
-    def.setActivityStatus(1);
-    def.setIsPublish(0);
-    def.setDescription(dto.getDescription());
-    def.setTenantId(tenantId);
-    def.setProviderTraceId(dto.getProviderTraceId());
-    return definitionRepository.save(def);
+    FlowDefinitionDTO defDto = new FlowDefinitionDTO();
+    defDto.setId(java.util.UUID.randomUUID().toString());
+    defDto.setFlowCode(dto.getFlowCode());
+    defDto.setFlowName(dto.getFlowName());
+    defDto.setFlowVersion(version);
+    defDto.setTenantId(tenantId);
+    return definitionRepository.save(defDto);
   }
 
   /**

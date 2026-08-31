@@ -19,6 +19,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowSkipType;
@@ -178,7 +179,11 @@ public class FlowDefinitionDesignManager {
     if (StringUtils.hasText(dto.getFormPath())) {
       def.setFormPath(dto.getFormPath());
     }
-    definitionRepository.update(def);
+    FlowDefinitionDTO updateDto = new FlowDefinitionDTO();
+    updateDto.setId(definitionId);
+    updateDto.setFlowName(def.getFlowName());
+    updateDto.setTenantId(def.getTenantId());
+    definitionRepository.update(updateDto);
 
     boolean hasNodes = dto.getNodes() != null && !dto.getNodes().isEmpty();
     boolean hasSkips = dto.getSkips() != null && !dto.getSkips().isEmpty();

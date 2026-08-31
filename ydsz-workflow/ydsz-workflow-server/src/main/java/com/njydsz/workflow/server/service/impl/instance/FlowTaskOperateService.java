@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -410,7 +411,9 @@ public class FlowTaskOperateService {
     newTask.setTenantId(instance.getTenantId());
     newTask.setProviderTraceId(instance.getProviderTraceId());
     newTask.setComment(comment);
-    taskRepository.save(newTask);
+    FlowRunTaskDTO taskDto = new FlowRunTaskDTO();
+    org.springframework.beans.BeanUtils.copyProperties(newTask, taskDto);
+    taskRepository.save(taskDto);
     return newTask;
   }
 
