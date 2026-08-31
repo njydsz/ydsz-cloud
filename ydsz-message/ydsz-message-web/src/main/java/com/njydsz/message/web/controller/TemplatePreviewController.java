@@ -20,7 +20,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
-import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.TemplateVariableValidator;

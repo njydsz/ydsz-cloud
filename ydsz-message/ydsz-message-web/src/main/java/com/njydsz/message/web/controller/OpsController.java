@@ -68,10 +68,10 @@ public class OpsController {
     CacheStats stats = cachedTemplateEngine.getCacheStats();
     CacheStatsVO vo = CacheStatsVO.builder()
         .size(cachedTemplateEngine.cacheSize())
-        .hitCount(stats.hitCount())
-        .missCount(stats.missCount())
-        .hitRate(stats.hitRate())
-        .evictionCount(stats.evictionCount())
+        .hitCount(stats.getHitCount())
+        .missCount(stats.getMissCount())
+        .hitRate(stats.getHitRate())
+        .evictionCount(stats.getEvictionCount())
         .build();
     return YdszResponse.success(vo);
   }

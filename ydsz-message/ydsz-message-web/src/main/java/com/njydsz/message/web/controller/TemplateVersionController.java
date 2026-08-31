@@ -29,7 +29,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
-import com.njydsz.message.infra.entity.MsgTemplateVersion;
 import com.njydsz.message.server.service.template.TemplateVersionService;
 
 /**

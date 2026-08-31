@@ -23,7 +23,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
-import com.njydsz.message.infra.entity.MsgReceipt;
+import com.njydsz.message.domain.vo.MsgReceiptVO;
 import com.njydsz.message.server.service.receipt.ReceiptService;
 
 /**
@@ -114,7 +114,7 @@ public class ReceiptController {
   @Operation(summary = "按日志 ID 查询回执列表")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_VIEW)
   @GetMapping("/{logId}")
-  public YdszResponse<List<MsgReceipt>> listByLogId(@PathVariable String logId) {
+  public YdszResponse<List<MsgReceiptVO>> listByLogId(@PathVariable String logId) {
     return YdszResponse.success(receiptService.listByLogId(logId));
   }
 }

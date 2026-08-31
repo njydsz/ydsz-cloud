@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.message.domain.vo.MsgTraceVO;
 import com.njydsz.message.server.service.core.MessageTraceService;
 
 /**
@@ -95,7 +94,7 @@ public class MessageTraceController {
   @Operation(summary = "按消息 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/msg/{msgId}")
-  public YdszResponse<List<MsgTrace>> getByMsgId(@PathVariable String msgId) {
+  public YdszResponse<List<MsgTraceVO>> getByMsgId(@PathVariable String msgId) {
     return YdszResponse.success(messageTraceService.getTraceByMsgId(msgId));
   }
 
@@ -108,7 +107,7 @@ public class MessageTraceController {
   @Operation(summary = "按链路追踪 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/trace/{traceId}")
-  public YdszResponse<List<MsgTrace>> getByTraceId(@PathVariable String traceId) {
+  public YdszResponse<List<MsgTraceVO>> getByTraceId(@PathVariable String traceId) {
     return YdszResponse.success(messageTraceService.getTraceByTraceId(traceId));
   }
 
@@ -122,7 +121,7 @@ public class MessageTraceController {
   @Operation(summary = "按业务类型+单据 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/biz")
-  public YdszResponse<List<MsgTrace>> getByBiz(
+  public YdszResponse<List<MsgTraceVO>> getByBiz(
       @RequestParam String bizType, @RequestParam String bizId) {
     return YdszResponse.success(messageTraceService.getTraceByBiz(bizType, bizId));
   }

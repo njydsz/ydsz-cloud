@@ -141,7 +141,7 @@ public class NotificationController {
   @GetMapping("/inbox")
   public YdszResponse<PageResponse<List<MsgNotificationVO>>> inbox(NotificationQueryDTO query) {
     Page<MsgNotification> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
-    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANCE::entityToVO));
+    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANCE::doToVO));
   }
 
   /**
