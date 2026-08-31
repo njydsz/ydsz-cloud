@@ -17,7 +17,7 @@ import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class ShareAccessLogmainService {
+public class ShareAccessLogDomainService {
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
