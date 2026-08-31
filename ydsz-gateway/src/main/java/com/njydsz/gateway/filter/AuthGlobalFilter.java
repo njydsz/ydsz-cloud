@@ -28,8 +28,8 @@ import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayErrorWriter;
-import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.common.auth.security.InternalHeaderSigner;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.PathGuard;
 
 /**
