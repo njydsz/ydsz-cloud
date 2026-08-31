@@ -1,14 +1,12 @@
 package com.njydsz.workflow.server.service;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
-
-import org.springframework.beans.BeanUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -142,7 +140,7 @@ public class DraftInstanceService {
     draft.setVariable(YdszJson.toJson(variables));
 
     FlowInstanceDTO instanceDto = new FlowInstanceDTO();
-    org.springframework.beans.BeanUtils.copyProperties(draft, instanceDto);
+    BeanUtils.copyProperties(draft, instanceDto);
     instanceRepository.save(instanceDto);
     log.info("[Flow-Draft] 保存草稿成功: instanceId={}, flowCode={}, businessId={}", instanceId,
         dto.getFlowCode(), dto.getBusinessId());

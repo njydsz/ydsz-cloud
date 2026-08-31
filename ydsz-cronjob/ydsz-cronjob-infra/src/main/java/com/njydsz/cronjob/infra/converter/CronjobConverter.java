@@ -6,6 +6,7 @@ import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
@@ -74,7 +75,7 @@ import com.njydsz.cronjob.infra.entity.schedule.GlueCode;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Mapper
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CronjobConverter {
 
   /** MapStruct 单例实例 */
