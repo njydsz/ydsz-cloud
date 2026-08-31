@@ -25,13 +25,6 @@
             <artifactId>ydsz-common-base</artifactId>
         </dependency>
 
-        <!-- Test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!-- 异常模块（直接依赖，避免通过 ydsz-common-base 间接引入） -->
         <dependency>
             <groupId>com.njydsz</groupId>
