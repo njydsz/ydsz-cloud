@@ -31,8 +31,6 @@ import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgTemplate;
 import com.njydsz.message.server.service.TemplateService;
 
 /**
@@ -103,7 +101,7 @@ public class TemplateController {
   @RateLimit(resource = "message.template.create", threshold = 50)
   @PostMapping
   public YdszResponse<MsgTemplateVO> create(@Valid @RequestBody TemplateCreateDTO dto) {
-    return YdszResponse.success(MessageConverter.INSTANCE.entityToVO(templateService.create(dto)));
+    return YdszResponse.success(templateService.create(dto));
   }
 
   /**
@@ -125,8 +123,7 @@ public class TemplateController {
   @PutMapping("/{id}")
   public YdszResponse<MsgTemplateVO> update(
       @PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
-    return YdszResponse.success(
-        MessageConverter.INSTANCE.entityToVO(templateService.update(id, dto)));
+    return YdszResponse.success(templateService.update(id, dto));
   }
 
   /**
@@ -160,7 +157,7 @@ public class TemplateController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
   @GetMapping("/{id}")
   public YdszResponse<MsgTemplateVO> getById(@PathVariable String id) {
-    return YdszResponse.success(MessageConverter.INSTANCE.entityToVO(templateService.getById(id)));
+    return YdszResponse.success(templateService.getById(id));
   }
 
   /**

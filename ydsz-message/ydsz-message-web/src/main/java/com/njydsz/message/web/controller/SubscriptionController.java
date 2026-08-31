@@ -25,7 +25,6 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.config.SubscriptionService;
 
 /**
@@ -95,8 +94,7 @@ public class SubscriptionController {
   @RateLimit(resource = "message.subscription.upsert", threshold = 50)
   @PostMapping
   public YdszResponse<MsgSubscriptionVO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
-    return YdszResponse.success(
-        MessageConverter.INSTANCE.entityToVO(subscriptionService.upsert(dto)));
+    return YdszResponse.success(subscriptionService.upsert(dto));
   }
 
   /**
@@ -109,8 +107,7 @@ public class SubscriptionController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
   @GetMapping("/user/{userId}")
   public YdszResponse<List<MsgSubscriptionVO>> listByUser(@PathVariable String userId) {
-    return YdszResponse.success(
-        MessageConverter.INSTANCE.subscriptionListToVO(subscriptionService.listByUser(userId)));
+    return YdszResponse.success(subscriptionService.listByUser(userId));
   }
 
   /**
@@ -126,8 +123,7 @@ public class SubscriptionController {
   public YdszResponse<List<MsgSubscriptionVO>> listByTopic(
       @PathVariable String topicCode, @PathVariable String channel) {
     return YdszResponse.success(
-        MessageConverter.INSTANCE.subscriptionListToVO(
-            subscriptionService.listByTopic(topicCode, channel)));
+        subscriptionService.listByTopic(topicCode, channel));
   }
 
   /**

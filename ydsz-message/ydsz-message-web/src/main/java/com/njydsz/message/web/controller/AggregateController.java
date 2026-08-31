@@ -25,8 +25,6 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgAggregate;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**
@@ -94,8 +92,8 @@ public class AggregateController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<MsgAggregateVO>>> page(PageQuery query) {
-    Page<MsgAggregate> page = aggregateService.page(query);
-    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANCE::entityToVO));
+    Page<MsgAggregateVO> page = aggregateService.page(query);
+    return YdszResponse.success(PageResponses.success(page, vo -> vo));
   }
 
   /**

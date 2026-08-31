@@ -26,7 +26,6 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
 import com.njydsz.message.domain.vo.MsgUserChannelVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 /**
@@ -109,8 +108,7 @@ public class UserChannelBindingController {
   @Idempotent(key = "ydsz:message:UserChannelBindingController:upsert:lock", ttlSeconds = 5)
   @PostMapping
   public YdszResponse<MsgUserChannelVO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
-    return YdszResponse.success(
-        MessageConverter.INSTANCE.entityToVO(userChannelBindingService.upsert(dto)));
+    return YdszResponse.success(userChannelBindingService.upsert(dto));
   }
 
   /**
@@ -125,8 +123,7 @@ public class UserChannelBindingController {
   @GetMapping("/mine")
   public YdszResponse<List<MsgUserChannelVO>> listMine() {
     return YdszResponse.success(
-        MessageConverter.INSTANCE.userChannelListToVO(
-            userChannelBindingService.listByUser(AuthContextUtils.getUserId())));
+        userChannelBindingService.listByUser(AuthContextUtils.getUserId()));
   }
 
   /**
@@ -142,7 +139,7 @@ public class UserChannelBindingController {
   @GetMapping("/user/{userId}")
   public YdszResponse<List<MsgUserChannelVO>> listByUser(@PathVariable String userId) {
     return YdszResponse.success(
-        MessageConverter.INSTANCE.userChannelListToVO(userChannelBindingService.listByUser(userId)));
+        userChannelBindingService.listByUser(userId));
   }
 
   /**

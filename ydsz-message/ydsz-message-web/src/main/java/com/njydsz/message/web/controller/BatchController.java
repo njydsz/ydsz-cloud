@@ -27,7 +27,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.BatchProgressVO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
-import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;
 
@@ -121,7 +120,7 @@ public class BatchController {
     if (dto == null) {
       return YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量发送参数为空");
     }
-    return YdszResponse.success(MessageConverter.INSTANCE.entityToVO(batchService.submitBatch(dto)));
+    return YdszResponse.success(batchService.submitBatch(dto));
   }
 
   /**

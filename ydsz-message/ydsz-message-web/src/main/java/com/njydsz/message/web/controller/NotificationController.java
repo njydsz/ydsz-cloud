@@ -37,8 +37,6 @@ import com.njydsz.common.socket.trace.WebSocketTraceContext;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgNotification;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.NotificationService;
 import com.njydsz.message.server.service.receipt.RecallService;
@@ -140,8 +138,8 @@ public class NotificationController {
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping("/inbox")
   public YdszResponse<PageResponse<List<MsgNotificationVO>>> inbox(NotificationQueryDTO query) {
-    Page<MsgNotification> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
-    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANCE::entityToVO));
+    Page<MsgNotificationVO> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
+    return YdszResponse.success(PageResponses.success(page, vo -> vo));
   }
 
   /**
