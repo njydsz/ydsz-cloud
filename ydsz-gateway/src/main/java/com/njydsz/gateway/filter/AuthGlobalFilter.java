@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import com.njydsz.common.auth.security.InternalHeaderSigner;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.safe.config.SecurityHeaderConfigurer;
@@ -28,7 +29,6 @@ import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayErrorWriter;
-import com.njydsz.common.auth.security.InternalHeaderSigner;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.PathGuard;
 
