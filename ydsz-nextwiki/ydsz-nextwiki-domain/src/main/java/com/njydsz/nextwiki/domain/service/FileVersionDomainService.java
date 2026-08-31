@@ -34,7 +34,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class FileVersionmainService {
+public class FileVersionDomainService {
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
