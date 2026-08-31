@@ -110,7 +110,7 @@ public class UserChannelBindingController {
   @PostMapping
   public YdszResponse<MsgUserChannelVO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
     return YdszResponse.success(
-        MessageConverter.INSTANT.entityToVO(userChannelBindingService.upsert(dto)));
+        MessageConverter.INSTANCE.entityToVO(userChannelBindingService.upsert(dto)));
   }
 
   /**
@@ -125,7 +125,7 @@ public class UserChannelBindingController {
   @GetMapping("/mine")
   public YdszResponse<List<MsgUserChannelVO>> listMine() {
     return YdszResponse.success(
-        MessageConverter.INSTANT.userChannelListToVO(
+        MessageConverter.INSTANCE.userChannelListToVO(
             userChannelBindingService.listByUser(AuthContextUtils.getUserId())));
   }
 
@@ -142,7 +142,7 @@ public class UserChannelBindingController {
   @GetMapping("/user/{userId}")
   public YdszResponse<List<MsgUserChannelVO>> listByUser(@PathVariable String userId) {
     return YdszResponse.success(
-        MessageConverter.INSTANT.userChannelListToVO(userChannelBindingService.listByUser(userId)));
+        MessageConverter.INSTANCE.userChannelListToVO(userChannelBindingService.listByUser(userId)));
   }
 
   /**

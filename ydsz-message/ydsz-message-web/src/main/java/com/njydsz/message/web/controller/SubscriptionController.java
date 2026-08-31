@@ -96,7 +96,7 @@ public class SubscriptionController {
   @PostMapping
   public YdszResponse<MsgSubscriptionVO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
     return YdszResponse.success(
-        MessageConverter.INSTANT.entityToVO(subscriptionService.upsert(dto)));
+        MessageConverter.INSTANCE.entityToVO(subscriptionService.upsert(dto)));
   }
 
   /**
@@ -110,7 +110,7 @@ public class SubscriptionController {
   @GetMapping("/user/{userId}")
   public YdszResponse<List<MsgSubscriptionVO>> listByUser(@PathVariable String userId) {
     return YdszResponse.success(
-        MessageConverter.INSTANT.subscriptionListToVO(subscriptionService.listByUser(userId)));
+        MessageConverter.INSTANCE.subscriptionListToVO(subscriptionService.listByUser(userId)));
   }
 
   /**
@@ -126,7 +126,7 @@ public class SubscriptionController {
   public YdszResponse<List<MsgSubscriptionVO>> listByTopic(
       @PathVariable String topicCode, @PathVariable String channel) {
     return YdszResponse.success(
-        MessageConverter.INSTANT.subscriptionListToVO(
+        MessageConverter.INSTANCE.subscriptionListToVO(
             subscriptionService.listByTopic(topicCode, channel)));
   }
 

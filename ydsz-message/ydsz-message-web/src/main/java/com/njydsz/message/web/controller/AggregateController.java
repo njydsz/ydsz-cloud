@@ -95,7 +95,7 @@ public class AggregateController {
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<MsgAggregateVO>>> page(PageQuery query) {
     Page<MsgAggregate> page = aggregateService.page(query);
-    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANT::entityToVO));
+    return YdszResponse.success(PageResponses.success(page, MessageConverter.INSTANCE::entityToVO));
   }
 
   /**
