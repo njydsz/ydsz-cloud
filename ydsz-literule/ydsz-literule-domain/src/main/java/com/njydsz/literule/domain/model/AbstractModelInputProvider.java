@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleContext;
 
 /**
  * ModelInputProvider 抽象基类（P3-1 SPI Adapter）

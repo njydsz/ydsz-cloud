@@ -3,8 +3,8 @@ package com.njydsz.literule.server.spi;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleEnvironment;
+import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleEnvironment;
 
 /**
  * 规则配置提供者接口（SPI）

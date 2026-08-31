@@ -12,7 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.literule.api.RuleStatus;
+import com.njydsz.literule.domain.api.RuleStatus;
 
 /**
  * 可视化规则链编排画布图 DTO（P2-1）

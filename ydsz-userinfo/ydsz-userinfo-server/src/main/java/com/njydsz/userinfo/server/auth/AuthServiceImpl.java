@@ -382,11 +382,30 @@ public class AuthServiceImpl implements AuthService {
     if (accessToken == null || accessToken.isBlank()) {
       return;
     }
-    sessionManager.revokeSession(accessToken);
+    // 获取会话信息用于事件发布（吊销前）
+    Map<String, String> sessionDetails = sessionManager.getSessionDeviceDetails(accessToken);
+    String username = sessionDetails.getOrDefault("username", "");
+    String loginIp = sessionDetails.getOrDefault("loginIp", "");
+    // 计算会话持续时长
+    long sessionDuration = 0L;
+    String loginTimeStr = sessionDetails.getOrDefault("loginTime", "");
+    if (loginTimeStr != null && !loginTimeStr.isEmpty()) {
+      try {
+        java.time.LocalDateTime loginTime = java.time.LocalDateTime.parse(loginTimeStr);
+        sessionDuration = java.time.Duration.between(loginTime, java.time.LocalDateTime.now()).toMillis();
+      } catch (Exception e) {
+        log.debug("解析 loginTime 失败，跳过会话时长统计: {}", loginTimeStr);
+      }
+    }
+    // revokeSession 返回吊销会话所属的 userId
+    String userId = sessionManager.revokeSession(accessToken);
     userInfoMetrics.recordLogout();
     userDomainEventPublisher.publishLogout(
-        null, null, null, 0);
-    log.info("User logged out, token blacklisted");
+        userId != null ? userId : "",
+        username,
+        loginIp,
+        sessionDuration);
+    log.info("用户已注销，Token 已吊销: userId={}", userId);
   }
 
   /**

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.domain.api.RuleResult;
 import com.njydsz.literule.api.fallback.LiteRuleClientFallback;
 
 /**

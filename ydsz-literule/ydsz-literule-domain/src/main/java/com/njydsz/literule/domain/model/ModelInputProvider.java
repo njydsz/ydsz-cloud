@@ -2,7 +2,7 @@ package com.njydsz.literule.domain.model;
 
 import java.util.Map;
 
-import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleContext;
 
 /**
  * 模型输入提供者 SPI（P3-1 规则+模型融合）

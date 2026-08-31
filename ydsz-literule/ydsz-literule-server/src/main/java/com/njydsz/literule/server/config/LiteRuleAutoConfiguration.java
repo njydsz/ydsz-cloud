@@ -31,8 +31,8 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.api.RuleEngine;
-import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.api.RuleEngine;
+import com.njydsz.literule.domain.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
@@ -1489,7 +1489,7 @@ public class LiteRuleAutoConfiguration {
    * 提供规则退役检测、回滚预览、一键退役等生命周期管理能力。
    *
    * <p>退役检测基于规则执行统计（{@link RuleEngine#getStats()}）， 自动识别休眠规则、高错误率规则、长期停用规则和低影响规则， 生成 {@link
-   * com.njydsz.literule.api.RetirementSuggestion} 建议列表。
+   * com.njydsz.literule.domain.api.RetirementSuggestion} 建议列表。
    *
    * <p>可通过 {@code ydsz.literule.lifecycle.enabled=false} 关闭。
    *

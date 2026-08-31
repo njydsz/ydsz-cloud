@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 
 /**

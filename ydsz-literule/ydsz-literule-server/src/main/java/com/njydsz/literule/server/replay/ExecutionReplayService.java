@@ -16,12 +16,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleExecutionTrace;
-import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleExecutionTrace;
+import com.njydsz.literule.domain.api.RuleResult;
+import com.njydsz.literule.domain.api.RuleSeverity;
+import com.njydsz.literule.domain.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.server.config.RuleAdminService;

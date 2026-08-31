@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.Rule;
+import com.njydsz.literule.domain.api.Rule;
 
 /**
  * RuleChain ↔ RuleChainGraph 双向转换器（P2-1）

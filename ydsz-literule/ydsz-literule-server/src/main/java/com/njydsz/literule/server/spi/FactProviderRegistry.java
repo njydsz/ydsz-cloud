@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleContext;
 
 /**
  * 事实数据提供者注册中心（P0-2 动态事实采集管道）

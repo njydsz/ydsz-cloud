@@ -6,7 +6,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.njydsz.common.util.security.DigestUtils;
-import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleContext;
 
 /**
  * 轻量级缓存键构建器（P1-1 性能优化）

@@ -10,9 +10,9 @@ import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.Rule;
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.domain.api.Rule;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleResult;
 
 /**
  * 规则超时执行器

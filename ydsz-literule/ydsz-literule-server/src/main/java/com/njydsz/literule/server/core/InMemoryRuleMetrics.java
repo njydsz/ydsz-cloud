@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.LongAdder;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.literule.domain.api.RuleSeverity;
 
 /**
  * 内存版规则监控指标实现（降级/测试场景）。

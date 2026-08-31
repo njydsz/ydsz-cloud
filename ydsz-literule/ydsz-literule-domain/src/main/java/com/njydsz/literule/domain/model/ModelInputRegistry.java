@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleContext;
 
 /**
  * 模型输入注册中心（P3-1 规则+模型融合）

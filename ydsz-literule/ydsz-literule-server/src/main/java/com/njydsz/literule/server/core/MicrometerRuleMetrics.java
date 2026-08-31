@@ -7,7 +7,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
-import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.literule.domain.api.RuleSeverity;
 
 /**
  * 基于 Micrometer 的规则监控指标实现。

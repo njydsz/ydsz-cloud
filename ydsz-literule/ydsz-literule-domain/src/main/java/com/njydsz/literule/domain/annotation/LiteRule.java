@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 /**
  * 声明式规则注解（P2-10）
  *
- * <p>标注在实现了 {@link com.njydsz.literule.api.Rule} 接口的 Spring Bean（通常配合 {@link Component}）上， LiteRule 启动时会自动将其注册到规则引擎，无需手动调用
+ * <p>标注在实现了 {@link com.njydsz.literule.domain.api.Rule} 接口的 Spring Bean（通常配合 {@link Component}）上， LiteRule 启动时会自动将其注册到规则引擎，无需手动调用
  * {@code engine.register(rule)}。
  *
  * <pre>{@code

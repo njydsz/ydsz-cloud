@@ -16,11 +16,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
-        <!-- ydsz-literule-domain: RuleContext / RuleEnvironment 等核心类型已从 api 迁往 domain -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-domain</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>

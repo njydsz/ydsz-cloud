@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleDefinition;
 
 /**
  * 规则 DSL 导出器

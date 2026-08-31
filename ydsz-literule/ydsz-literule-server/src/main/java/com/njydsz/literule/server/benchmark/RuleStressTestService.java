@@ -15,7 +15,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.domain.api.RuleResult;
 import com.njydsz.literule.server.config.RuleAdminService;
 
 /**

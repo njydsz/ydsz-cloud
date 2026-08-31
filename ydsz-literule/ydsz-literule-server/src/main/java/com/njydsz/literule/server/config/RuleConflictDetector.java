@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleSeverity;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**

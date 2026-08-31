@@ -9,10 +9,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.literule.api.Rule;
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleEngine;
-import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.api.Rule;
+import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleEngine;
+import com.njydsz.literule.domain.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.annotation.LiteRule;
 import com.njydsz.literule.server.impl.ExpressionRule;
 

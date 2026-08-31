@@ -2,7 +2,7 @@ package com.njydsz.literule.server.core;
 
 import java.util.List;
 
-import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.literule.domain.api.RuleSeverity;
 
 /**
  * 规则引擎监控指标接口。

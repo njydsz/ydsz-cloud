@@ -138,14 +138,14 @@ public class ShareLinkDomainService {
         recipients.add(recipient);
       }
       log.info(
-          "[ShareLinkmainService] 创建定向分享: fileNodeId={}, shareCode={}, recipients={}",
+          "[ShareLinkDomainService] 创建定向分享: fileNodeId={}, shareCode={}, recipients={}",
           fileNodeId,
           shareCode,
           targetUserIds.size());
     }
 
     log.info(
-        "[ShareLinkmainService] 创建分享: fileNodeId={}, shareCode={}, target={}",
+        "[ShareLinkDomainService] 创建分享: fileNodeId={}, shareCode={}, target={}",
         fileNodeId,
         shareCode,
         shareTargetType);
@@ -208,7 +208,7 @@ public class ShareLinkDomainService {
   public void revoke(ShareLinkDTO shareLink, String userId) {
     shareLink.setStatus(ShareStatus.REVOKED.getCode());
     shareLink.setUpdatedBy(userId);
-    log.info("[ShareLinkmainService] 撤销分享: shareId={}, userId={}", shareLink.getId(), userId);
+    log.info("[ShareLinkDomainService] 撤销分享: shareId={}, userId={}", shareLink.getId(), userId);
   }
 
   // ==================== 到期提醒 ====================

@@ -298,7 +298,7 @@ public class LiteRuleProperties {
    * 规则+模型融合配置（P3-1）
    *
    * <p>启用后，规则引擎在评估前会调用所有已注册的 {@link com.njydsz.literule.domain.model.ModelInputProvider} 获取模型输出，注入到
-   * {@link com.njydsz.literule.api.RuleContext} 的 facts 中， 使规则表达式可通过 {@code model.<field>} 引用（如
+   * {@link com.njydsz.literule.domain.api.RuleContext}的 facts 中， 使规则表达式可通过 {@code model.<field>} 引用（如
    * {@code model.score > 0.8}）。
    *
    * <p>对标滴滴 Newton、字节风控的"规则+模型融合"能力：
@@ -328,7 +328,7 @@ public class LiteRuleProperties {
    * 动态事实采集配置（P0-2）
    *
    * <p>启用后，规则引擎在评估前会调用所有已注册的 {@link com.njydsz.literule.server.spi.FactProvider}
-   * 从外部数据源（DB、Redis、HTTP API 等）动态采集事实数据， 合并到 {@link com.njydsz.literule.api.RuleContext} 的 facts 中。
+   * 从外部数据源（DB、Redis、HTTP API 等）动态采集事实数据， 合并到 {@link com.njydsz.literule.domain.api.RuleContext}的 facts 中。
    *
    * <p>事实采集在模型注入之前执行，采集的事实可供模型 provider 使用。
    *

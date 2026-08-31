@@ -14,7 +14,7 @@ ydsz:
     use-big-decimal: true
     safe-mode: true
     warmup-classes:
-      - com.njydsz.literule.api.RuleDefinition
+      - com.njydsz.literule.domain.api.RuleDefinition
       - com.njydsz.literule.server.spi.RuleVersion
       - com.njydsz.literule.server.version.RuleVersionDiff
       - com.njydsz.literule.domain.entity.RulePack

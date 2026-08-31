@@ -9,13 +9,13 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.DecisionTableDefinition;
-import com.njydsz.literule.api.HitPolicy;
-import com.njydsz.literule.api.Rule;
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.api.DecisionTableDefinition;
+import com.njydsz.literule.domain.api.HitPolicy;
+import com.njydsz.literule.domain.api.Rule;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleResult;
+import com.njydsz.literule.domain.api.RuleSeverity;
+import com.njydsz.literule.domain.api.expression.ExpressionEngine;
 
 /**
  * 决策表规则：基于 DMN 风格的表格进行多条件匹配

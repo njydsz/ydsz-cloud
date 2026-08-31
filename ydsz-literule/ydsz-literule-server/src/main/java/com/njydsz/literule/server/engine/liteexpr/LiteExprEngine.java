@@ -6,11 +6,11 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.expression.ExpressionEngine;
-import com.njydsz.literule.api.expression.ExpressionFunctionDef;
-import com.njydsz.literule.api.expression.ExpressionTraceNode;
-import com.njydsz.literule.api.expression.ExpressionValidationResult;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.api.expression.ExpressionFunctionDef;
+import com.njydsz.literule.domain.api.expression.ExpressionTraceNode;
+import com.njydsz.literule.domain.api.expression.ExpressionValidationResult;
 
 /**
  * LiteExpr 自研表达式求值器

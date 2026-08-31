@@ -17,8 +17,8 @@ import java.util.function.Consumer;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.expression.ExpressionEngine;
 
 /**
  * CEP 引擎（精简版）

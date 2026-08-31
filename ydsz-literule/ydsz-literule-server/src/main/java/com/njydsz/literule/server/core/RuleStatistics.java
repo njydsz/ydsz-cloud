@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
-import com.njydsz.literule.api.RuleEngineStats;
+import com.njydsz.literule.domain.api.RuleEngineStats;
 
 /**
  * 规则引擎统计记录器

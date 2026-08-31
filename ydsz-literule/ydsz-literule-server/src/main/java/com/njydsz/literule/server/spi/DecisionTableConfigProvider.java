@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.api.DecisionTableDefinition;
+import com.njydsz.literule.domain.api.DecisionTableDefinition;
 
 /**
  * 决策表配置提供者接口（SPI）

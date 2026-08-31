@@ -5,7 +5,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleContext;
 
 /**
  * Mock 模型输入提供者（本地调试/联调用）

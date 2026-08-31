@@ -53,7 +53,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
-import com.njydsz.nextwiki.domain.service.FileVersionmainService;
+import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
@@ -88,7 +88,7 @@ public class FileApplicationService {
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
   private final FolderDomainService folderDomainService;
-  private final FileVersionmainService versionDomainService;
+  private final FileVersionDomainService versionDomainService;
   private final QuotaDomainService quotaDomainService;
   private final StorageQuotaRepository storageQuotaRepository;
   private final StorageReferenceService storageReferenceService;
@@ -781,7 +781,7 @@ public class FileApplicationService {
     if (source.isFile()) {
       List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
-      FileVersionmainService.VersionCreateResult versionResult =
+      FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               saved,
               existingVersionDTOs,
@@ -902,7 +902,7 @@ public class FileApplicationService {
     List<FileVersionDTO> allVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
         versionRepository.findByFileNodeId(nodeId));
 
-    FileVersionmainService.VersionRollbackResult result =
+    FileVersionDomainService.VersionRollbackResult result =
         versionDomainService.rollback(node, targetDTO, allVersionDTOs, userId);
 
     versionRepository.setActiveVersion(nodeId, -1);

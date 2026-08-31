@@ -5,8 +5,8 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleResult;
 
 /**
  * 规则动作分发器

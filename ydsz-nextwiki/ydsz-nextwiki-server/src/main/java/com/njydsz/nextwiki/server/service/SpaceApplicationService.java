@@ -16,7 +16,7 @@ import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.SpaceMemberRepository;
 import com.njydsz.nextwiki.domain.repository.SpaceRepository;
-import com.njydsz.nextwiki.domain.service.SpacemainService;
+import com.njydsz.nextwiki.domain.service.SpaceDomainService;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.server.security.SpacePermission;
@@ -39,7 +39,7 @@ public class SpaceApplicationService {
 
   private final SpaceRepository spaceRepository;
   private final SpaceMemberRepository spaceMemberRepository;
-  private final SpacemainService SpacemainService;
+  private final SpaceDomainService spaceDomainService;
   private final NextwikiConverter nextwikiConverter;
 
   /** 默认查询数量限制 */
@@ -59,7 +59,7 @@ public class SpaceApplicationService {
     String tenantId = TenantContextHolder.getTenantId();
 
     // 校验参数（名称非空由领域服务校验）
-    SpacemainService.validateSpaceName(name);
+    spaceDomainService.validateSpaceName(name);
 
     // 校验名称唯一性
     spaceRepository.findByTenantIdAndName(tenantId, name).ifPresent(existing -> {
@@ -127,7 +127,7 @@ public class SpaceApplicationService {
 
     // 更新字段
     if (name != null) {
-      SpacemainService.validateSpaceName(name);
+      spaceDomainService.validateSpaceName(name);
       space.setName(name);
     }
     if (description != null) {

@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.exception.ExcelWriteException;
-import com.njydsz.literule.api.DecisionTableDefinition;
-import com.njydsz.literule.api.HitPolicy;
+import com.njydsz.literule.domain.api.DecisionTableDefinition;
+import com.njydsz.literule.domain.api.HitPolicy;
 import com.njydsz.literule.domain.service.DecisionTableExcelService;
 
 /**

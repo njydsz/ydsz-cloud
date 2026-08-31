@@ -15,11 +15,11 @@ import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.api.Rule;
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.StatsRecorder;
-import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.api.Rule;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleResult;
+import com.njydsz.literule.domain.api.StatsRecorder;
+import com.njydsz.literule.domain.api.expression.ExpressionEngine;
 
 /**
  * 规则链，支持 THEN/IF/ELIF/SWITCH/WHEN 编排

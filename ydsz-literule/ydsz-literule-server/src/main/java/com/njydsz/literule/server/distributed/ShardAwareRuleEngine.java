@@ -7,11 +7,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.literule.api.Rule;
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleEngine;
-import com.njydsz.literule.api.RuleEngineStats;
-import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.domain.api.Rule;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleEngine;
+import com.njydsz.literule.domain.api.RuleEngineStats;
+import com.njydsz.literule.domain.api.RuleResult;
 
 /**
  * 分片感知的规则引擎装饰器（P2-16 分布式执行）

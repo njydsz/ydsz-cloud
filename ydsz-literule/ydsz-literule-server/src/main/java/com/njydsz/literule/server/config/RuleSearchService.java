@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleSeverity;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 

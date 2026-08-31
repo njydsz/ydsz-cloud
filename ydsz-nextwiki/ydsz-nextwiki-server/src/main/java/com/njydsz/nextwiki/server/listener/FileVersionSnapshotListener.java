@@ -15,7 +15,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
-import com.njydsz.nextwiki.domain.service.FileVersionmainService;
+import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 
 /**
  * 文件版本快照事件监听器 — 在主写事务提交后异步创建文件版本记录。
@@ -41,7 +41,7 @@ import com.njydsz.nextwiki.domain.service.FileVersionmainService;
 public class FileVersionSnapshotListener {
 
   /** 文件版本领域服务 */
-  private final FileVersionmainService versionDomainService;
+  private final FileVersionDomainService versionDomainService;
 
   /** 文件节点 Repository */
   private final FileNodeRepository fileNodeRepository;
@@ -77,7 +77,7 @@ public class FileVersionSnapshotListener {
               versionRepository.findByFileNodeId(fileNodeId));
 
       // 领域服务构建版本记录
-      FileVersionmainService.VersionCreateResult versionResult =
+      FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
               node,
               existingVersionDTOs,

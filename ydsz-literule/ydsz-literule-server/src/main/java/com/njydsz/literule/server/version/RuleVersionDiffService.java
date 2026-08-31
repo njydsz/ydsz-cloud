@@ -7,8 +7,8 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleSeverity;
 
 /**
  * 规则版本 Diff 服务

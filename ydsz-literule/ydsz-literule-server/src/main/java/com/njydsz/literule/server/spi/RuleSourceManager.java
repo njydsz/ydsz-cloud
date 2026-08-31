@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleDefinition;
 
 /**
  * 规则数据源管理器（P1-5）

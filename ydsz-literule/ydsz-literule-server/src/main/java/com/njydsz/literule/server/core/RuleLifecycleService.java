@@ -11,12 +11,12 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.api.RetirementSuggestion;
-import com.njydsz.literule.api.RollbackPreview;
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleEngine;
-import com.njydsz.literule.api.RuleEngineStats;
-import com.njydsz.literule.api.RuleStatus;
+import com.njydsz.literule.domain.api.RetirementSuggestion;
+import com.njydsz.literule.domain.api.RollbackPreview;
+import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.api.RuleEngine;
+import com.njydsz.literule.domain.api.RuleEngineStats;
+import com.njydsz.literule.domain.api.RuleStatus;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;

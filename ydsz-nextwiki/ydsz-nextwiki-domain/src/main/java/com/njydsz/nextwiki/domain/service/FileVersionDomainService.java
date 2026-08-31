@@ -109,7 +109,7 @@ public class FileVersionDomainService {
     node.setUpdatedBy(userId);
 
     log.info(
-        "[FileVersionmainService] 创建版本: fileNodeId={}, version={}",
+        "[FileVersionDomainService] 创建版本: fileNodeId={}, version={}",
         node.getId(),
         nextVersion);
     return new VersionCreateResult(version, node);
@@ -178,7 +178,7 @@ public class FileVersionDomainService {
     node.setUpdatedBy(userId);
 
     log.info(
-        "[FileVersionmainService] 版本回滚: fileNodeId={}, targetVersion={}, newVersion={}",
+        "[FileVersionDomainService] 版本回滚: fileNodeId={}, targetVersion={}, newVersion={}",
         node.getId(),
         targetVersion.getVersionNumber(),
         nextVersion);

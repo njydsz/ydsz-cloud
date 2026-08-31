@@ -32,7 +32,6 @@ import com.njydsz.literule.domain.enums.RuleStatusEnum;
 @Setter
 @ToString(callSuper = true)
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_def")
 public class RuleDefinition extends MpBaseEntity<String> {
 

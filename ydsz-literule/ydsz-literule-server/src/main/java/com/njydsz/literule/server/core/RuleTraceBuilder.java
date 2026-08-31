@@ -3,10 +3,10 @@ package com.njydsz.literule.server.core;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.njydsz.literule.api.Rule;
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleExecutionTrace;
-import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.domain.api.Rule;
+import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.api.RuleExecutionTrace;
+import com.njydsz.literule.domain.api.RuleResult;
 
 /**
  * 规则执行轨迹构建器
