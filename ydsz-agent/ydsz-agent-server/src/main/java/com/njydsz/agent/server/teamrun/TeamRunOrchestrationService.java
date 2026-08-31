@@ -18,6 +18,7 @@ import com.njydsz.agent.domain.teamrun.TeamRunRepository;
 import com.njydsz.agent.domain.teamrun.TeamRunStatus;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 /**
  * Team Run 编排服务。
@@ -32,10 +33,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>借鉴 MateClaw 的 Team Runs 设计，支持顺序、并行、层级、协商四种协作模式。</p>
  *
- * @author ydsz-agent
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
+@Service
 public class TeamRunOrchestrationService {
 
     private final TeamRunRepository teamRunRepository;
