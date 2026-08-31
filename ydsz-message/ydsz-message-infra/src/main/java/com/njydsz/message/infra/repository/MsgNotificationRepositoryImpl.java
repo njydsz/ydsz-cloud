@@ -123,6 +123,16 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     return count != null ? count : 0L;
   }
 
+  @Override
+  public int markExpired(java.time.LocalDateTime now) {
+    QueryWrapper<MsgNotification> wrapper = new QueryWrapper<>();
+    wrapper.lt("expired_at", now);
+    wrapper.eq("deleted", 0);
+    MsgNotification entity = new MsgNotification();
+    entity.setDeleted(true);
+    return msgNotificationMapper.update(entity, wrapper);
+  }
+
   private QueryWrapper<MsgNotification> buildWrapper(NotificationQueryDTO query) {
     QueryWrapper<MsgNotification> wrapper = new QueryWrapper<>();
     if (query.getReceiverId() != null && !query.getReceiverId().isBlank()) {

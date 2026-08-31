@@ -177,11 +177,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
+
 
     </dependencies>
 </project>
