@@ -24,9 +24,9 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.infra.converter.MessageConverter;
+import com.njydsz.message.infra.entity.MsgAggregate;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**

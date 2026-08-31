@@ -56,7 +56,7 @@ public class CanaryController {
    * @return 统一响应结果，包含实验唯一标识 canaryKey
    */
   @Operation(summary = "创建实验")
-  @AuthApiPermission("MESSAGE_TEMPLATE_EDIT")
+  @AuthApiPermission(apiCodes = "MESSAGE_TEMPLATE_EDIT")
   @PostMapping("/experiment")
   public YdszResponse<String> createExperiment(
       @RequestParam String templateCode,
@@ -78,7 +78,7 @@ public class CanaryController {
    * @return 统一响应结果，包含实验组标识（CONTROL / VARIANT）
    */
   @Operation(summary = "分配实验桶")
-  @AuthApiPermission("MESSAGE_TEMPLATE_EDIT")
+  @AuthApiPermission(apiCodes = "MESSAGE_TEMPLATE_EDIT")
   @GetMapping("/assign")
   public YdszResponse<String> assignBucket(
       @RequestParam String experimentId,

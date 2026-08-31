@@ -16,7 +16,7 @@
         <module>ydsz-literule-infra</module>
         <module>ydsz-literule-server</module>
         <module>ydsz-literule-api</module>
-        <module>ydsz-literule-web</module>
         <module>ydsz-literule-app</module>
+        <module>ydsz-literule-web</module>
     </modules>
 </project>

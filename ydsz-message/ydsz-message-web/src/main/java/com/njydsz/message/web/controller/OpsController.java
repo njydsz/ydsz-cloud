@@ -62,7 +62,7 @@ public class OpsController {
    * @return 统一响应结果，包含缓存统计信息
    */
   @Operation(summary = "模板缓存统计")
-  @AuthApiPermission("MESSAGE_LOG_VIEW")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
   @GetMapping("/template-cache/stats")
   public YdszResponse<CacheStatsVO> getTemplateCacheStats() {
     CacheStats stats = cachedTemplateEngine.getCacheStats();
@@ -85,7 +85,7 @@ public class OpsController {
    * @return 统一响应结果
    */
   @Operation(summary = "清除模板缓存")
-  @AuthApiPermission("MESSAGE_TEMPLATE_EDIT")
+  @AuthApiPermission(apiCodes = "MESSAGE_TEMPLATE_EDIT")
   @DeleteMapping("/template-cache")
   public YdszResponse<Void> evictTemplateCache(@RequestParam String template) {
     cachedTemplateEngine.evictCache(template);
@@ -100,7 +100,7 @@ public class OpsController {
    * @return 统一响应结果
    */
   @Operation(summary = "清空所有模板缓存")
-  @AuthApiPermission("MESSAGE_TEMPLATE_EDIT")
+  @AuthApiPermission(apiCodes = "MESSAGE_TEMPLATE_EDIT")
   @DeleteMapping("/template-cache/all")
   public YdszResponse<Void> clearTemplateCache() {
     cachedTemplateEngine.clearCache();
@@ -115,7 +115,7 @@ public class OpsController {
    * @return 统一响应结果，包含 BloomFilter 统计信息
    */
   @Operation(summary = "BloomFilter 统计")
-  @AuthApiPermission("MESSAGE_LOG_VIEW")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
   @GetMapping("/bloomfilter/stats")
   public YdszResponse<BloomFilterStatsVO> getBloomFilterStats() {
     BloomFilterStatsVO vo = BloomFilterStatsVO.builder()

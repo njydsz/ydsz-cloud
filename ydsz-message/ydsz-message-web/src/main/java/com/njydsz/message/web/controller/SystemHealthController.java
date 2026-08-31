@@ -60,7 +60,7 @@ public class SystemHealthController {
    * @return 统一响应结果，包含整体状态和通道摘要
    */
   @Operation(summary = "系统整体健康状态")
-  @AuthApiPermission("MESSAGE_LOG_VIEW")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
   @GetMapping
   public YdszResponse<SystemHealthVO> getSystemHealth() {
     return YdszResponse.success(messageHealthService.getSystemHealth());
@@ -74,7 +74,7 @@ public class SystemHealthController {
    * @return 统一响应结果，包含通道健康状态列表
    */
   @Operation(summary = "各通道详细健康状态")
-  @AuthApiPermission("MESSAGE_LOG_VIEW")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
   @GetMapping("/channels")
   public YdszResponse<List<ChannelHealthVO>> getChannelHealths() {
     return YdszResponse.success(messageHealthService.getChannelHealths());

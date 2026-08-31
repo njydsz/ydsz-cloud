@@ -33,7 +33,7 @@ import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.infra.converter.MessageConverter;
 import com.njydsz.message.infra.entity.MsgTemplate;
-import com.njydsz.message.server.service.template.TemplateService;
+import com.njydsz.message.server.service.TemplateService;
 
 /**
  * 消息模板管理 Controller。

@@ -23,7 +23,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
-import com.njydsz.message.domain.entity.receipt.MsgReceipt;
+import com.njydsz.message.infra.entity.MsgReceipt;
 import com.njydsz.message.server.service.receipt.ReceiptService;
 
 /**
