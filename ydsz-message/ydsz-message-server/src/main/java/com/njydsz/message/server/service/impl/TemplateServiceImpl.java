@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -250,17 +249,11 @@ public class TemplateServiceImpl implements TemplateService {
    * @return 模板分页结果
    */
   @Override
-  public Page<MsgTemplateVO> page(TemplateQueryDTO query) {
+  public PageResponse<List<MsgTemplateVO>> page(TemplateQueryDTO query) {
     if (query == null) {
       query = new TemplateQueryDTO();
     }
-    PageResponse<List<MsgTemplateVO>> pageResponse = msgTemplateRepository.findPage(query);
-    Page<MsgTemplateVO> page = new Page<>(
-        query.getPageNum() != null ? query.getPageNum() : 1,
-        query.getPageSize() != null ? query.getPageSize() : 10);
-    page.setRecords(pageResponse.getData());
-    page.setTotal(pageResponse.getTotal());
-    return page;
+    return msgTemplateRepository.findPage(query);
   }
 
   /**

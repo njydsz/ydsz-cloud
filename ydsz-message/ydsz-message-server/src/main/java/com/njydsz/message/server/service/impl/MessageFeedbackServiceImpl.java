@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.impl;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -163,7 +162,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
    * <p>支持按 channel 和 userId 过滤，按创建时间降序排列。
    */
   @Override
-  public Page<MsgFeedbackVO> pageFeedback(int page, int size, String channel, String userId) {
+  public PageResponse<List<MsgFeedbackVO>> pageFeedback(int page, int size, String channel, String userId) {
     MsgFeedbackQuery query = new MsgFeedbackQuery();
     query.setPageNum(page);
     query.setPageSize(size);
@@ -173,12 +172,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     if (StringUtils.hasText(userId)) {
       query.setUserId(userId);
     }
-    PageResponse<List<MsgFeedbackVO>> pageResponse = msgFeedbackRepository.findPage(query);
-    // 将 PageResponse 转换为 MyBatis-Plus Page 以保持接口兼容
-    Page<MsgFeedbackVO> resultPage = new Page<>(page, size);
-    resultPage.setTotal(pageResponse.getTotal());
-    resultPage.setRecords(pageResponse.getData());
-    return resultPage;
+    return msgFeedbackRepository.findPage(query);
   }
 
   /**

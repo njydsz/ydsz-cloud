@@ -15,7 +15,7 @@ import com.njydsz.cronjob.infra.mapper.job.SysAuditLogMapper;
 /**
  * 审计日志 Repository 实现（P1-14 操作审计视图）。
  *
- * <p>实现 {@link AuditLogRepository} 接口，封装 sys_audit_log 表的查询操作。
+ * <p>实现 {@link AuditLogRepository} 接口，封装 ydsz_job_audit_log 表的查询操作。
  *
  * @author ydsz-team
  * @since 1.0.0

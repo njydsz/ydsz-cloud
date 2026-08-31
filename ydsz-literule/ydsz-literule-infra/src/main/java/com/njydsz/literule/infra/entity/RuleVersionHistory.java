@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
- * LiteRule 规则版本历史 DO
+ * LiteRule 规则版本历史
  *
  * <p>映射 ydsz_rule_version_history 表，存储规则变更的版本快照。
  *
@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_version_history")
-public class RuleVersionHistoryDO extends MpBaseIdEntity<String> {
+public class RuleVersionHistory extends MpBaseIdEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;

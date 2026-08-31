@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_decision_table", autoResultMap = true)
-public class DecisionTableDO extends MpBaseEntity<String> {
+public class DecisionTable extends MpBaseEntity<String> {
 
   /** 决策表编码 */
   private String tableCode;

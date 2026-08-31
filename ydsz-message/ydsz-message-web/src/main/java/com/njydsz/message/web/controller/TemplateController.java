@@ -2,7 +2,6 @@ package com.njydsz.message.web.controller.template;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -170,8 +169,7 @@ public class TemplateController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<MsgTemplateVO>>> page(TemplateQueryDTO query) {
-    Page<MsgTemplateVO> page = templateService.page(query);
-    return YdszResponse.success(PageResponses.success(page, vo -> vo));
+    return YdszResponse.success(templateService.page(query));
   }
 
   /**

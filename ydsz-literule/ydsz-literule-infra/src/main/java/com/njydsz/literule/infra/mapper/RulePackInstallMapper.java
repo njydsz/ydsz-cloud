@@ -3,7 +3,7 @@ package com.njydsz.literule.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.literule.infra.entity.RulePackInstallDO;
+import com.njydsz.literule.infra.entity.RulePackInstall;
 
 /**
  * 规则包安装记录 Mapper
@@ -25,9 +25,9 @@ import com.njydsz.literule.infra.entity.RulePackInstallDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RulePackInstallDO 规则包安装实体
+ * @see RulePackInstall 规则包安装实体
  * @see com.njydsz.literule.server.service.RulePackInstallService 规则包安装 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RulePackInstallMapper extends BaseMapper<RulePackInstallDO> {}
+public interface RulePackInstallMapper extends BaseMapper<RulePackInstall> {}

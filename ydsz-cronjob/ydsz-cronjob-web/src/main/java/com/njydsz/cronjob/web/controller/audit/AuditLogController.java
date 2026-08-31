@@ -28,7 +28,7 @@ import com.njydsz.cronjob.server.service.audit.AuditLogService;
  *
  * <h3>数据来源</h3>
  *
- * <p>数据来自 {@code sys_audit_log} 表（由 common-audit 模块写入），本接口仅读取
+ * <p>数据来自 {@code ydsz_job_audit_log} 表（由 common-audit 模块写入），本接口仅读取
  * {@code module = 'cronjob'} 的记录，展示任务调度相关的操作轨迹：创建、更新、暂停、
  * 恢复、触发、删除等。
  *

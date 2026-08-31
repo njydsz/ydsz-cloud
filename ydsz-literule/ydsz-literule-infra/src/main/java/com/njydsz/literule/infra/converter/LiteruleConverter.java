@@ -27,16 +27,16 @@ import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
-import com.njydsz.literule.infra.entity.DecisionTableDO;
+import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleABRollbackDO;
 import com.njydsz.literule.infra.entity.RuleChainGraphDO;
 import com.njydsz.literule.infra.entity.RuleDefinitionDO;
 import com.njydsz.literule.infra.entity.RuleDependencyDO;
-import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
-import com.njydsz.literule.infra.entity.RulePackDO;
-import com.njydsz.literule.infra.entity.RuleTemplateDO;
-import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
+import com.njydsz.literule.infra.entity.RuleExecutionTrace;
+import com.njydsz.literule.infra.entity.RulePack;
+import com.njydsz.literule.infra.entity.RuleTemplate;
+import com.njydsz.literule.infra.entity.RuleVersionHistory;
 
 /**
  * literule 模块统一转换器门面。
@@ -66,12 +66,12 @@ public class LiteruleConverter {
     // 单例门面
   }
 
-  // ===== DecisionTableDO =====
-  public DecisionTableVO entityToVO(DecisionTableDO entity) {
+  // ===== DecisionTable =====
+  public DecisionTableVO entityToVO(DecisionTable entity) {
     return component.entityToVO(entity);
   }
 
-  public List<DecisionTableVO> decisionTableListToVO(List<DecisionTableDO> entities) {
+  public List<DecisionTableVO> decisionTableListToVO(List<DecisionTable> entities) {
     return component.decisionTableListToVO(entities);
   }
 
@@ -120,44 +120,44 @@ public class LiteruleConverter {
     return support.ruleDependencyListToVO(entities);
   }
 
-  // ===== RuleExecutionTraceDO =====
-  public RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity) {
+  // ===== RuleExecutionTrace =====
+  public RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities) {
+  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities) {
     return support.ruleExecutionTraceListToVO(entities);
   }
 
-  // ===== RulePackDO =====
-  public RulePackVO entityToVO(RulePackDO entity) {
+  // ===== RulePack =====
+  public RulePackVO entityToVO(RulePack entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RulePackVO> rulePackListToVO(List<RulePackDO> entities) {
+  public List<RulePackVO> rulePackListToVO(List<RulePack> entities) {
     return support.rulePackListToVO(entities);
   }
 
-  // ===== RuleTemplateDO =====
-  public RuleTemplateVO entityToVO(RuleTemplateDO entity) {
+  // ===== RuleTemplate =====
+  public RuleTemplateVO entityToVO(RuleTemplate entity) {
     return component.entityToVO(entity);
   }
 
-  public List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplateDO> entities) {
+  public List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplate> entities) {
     return component.ruleTemplateListToVO(entities);
   }
 
-  // ===== RuleVersionHistoryDO → RuleVersionVO =====
-  public RuleVersionVO ruleVersionHistoryToVO(RuleVersionHistoryDO entity) {
+  // ===== RuleVersionHistory → RuleVersionVO =====
+  public RuleVersionVO ruleVersionHistoryToVO(RuleVersionHistory entity) {
     return support.ruleVersionHistoryToVO(entity);
   }
 
-  public List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistoryDO> entities) {
+  public List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistory> entities) {
     return support.ruleVersionListToVO(entities);
   }
 
-  // ===== RuleVersionSaveDTO → RuleVersionHistoryDO =====
-  public RuleVersionHistoryDO postDtoToEntity(RuleVersionSaveDTO dto) {
+  // ===== RuleVersionSaveDTO → RuleVersionHistory =====
+  public RuleVersionHistory postDtoToEntity(RuleVersionSaveDTO dto) {
     return support.postDtoToEntity(dto);
   }
 
@@ -196,8 +196,8 @@ public class LiteruleConverter {
     return core.entityToVO(entity);
   }
 
-  // ===== DecisionTableDO PostDTO → Entity =====
-  public DecisionTableDO postDtoToEntity(DecisionTablePostDTO dto) {
+  // ===== DecisionTable PostDTO → Entity =====
+  public DecisionTable postDtoToEntity(DecisionTablePostDTO dto) {
     return support.postDtoToEntity(dto);
   }
 

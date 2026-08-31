@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.core;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
@@ -56,7 +56,7 @@ public interface NotificationService {
    * @param query 查询条件（pageNum / pageSize / read / businessType / messageGroup）
    * @return 分页结果（含 total / records）
    */
-  Page<MsgNotificationVO> inbox(String userId, NotificationQueryDTO query);
+  PageResponse<List<MsgNotificationVO>> inbox(String userId, NotificationQueryDTO query);
 
   /**
    * 统计用户未读通知数
@@ -120,7 +120,7 @@ public interface NotificationService {
    * @param query 查询参数
    * @return 分组列表（每组：最新一条通知 + 该分组总未读数 + 通知数）
    */
-  Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query);
+  PageResponse<List<NotificationGroupVO>> inboxGrouped(String userId, NotificationQueryDTO query);
 
   /**
    * P1-2: 查询指定分组的所有通知。

@@ -8,7 +8,7 @@ import com.njydsz.cronjob.domain.vo.AuditLogVO;
 /**
  * 审计日志 Repository 接口（P1-14 操作审计视图）。
  *
- * <p>封装 sys_audit_log 表的查询操作。仅提供读取能力，写入由 common-audit 模块完成。
+ * <p>封装 ydsz_job_audit_log 表的查询操作。仅提供读取能力，写入由 common-audit 模块完成。
  *
  * @author ydsz-team
  * @since 1.0.0

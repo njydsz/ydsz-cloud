@@ -1,6 +1,8 @@
 package com.njydsz.message.server.service.batch;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.List;
+
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
@@ -61,5 +63,5 @@ public interface AggregateService {
    * @param query 分页参数
    * @return 分页结果
    */
-  Page<MsgAggregateVO> page(PageQuery query);
+  PageResponse<List<MsgAggregateVO>> page(PageQuery query);
 }

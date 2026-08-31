@@ -20,7 +20,7 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
 import com.njydsz.literule.infra.entity.RuleDefinitionDO;
-import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
+import com.njydsz.literule.infra.entity.RuleVersionHistory;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.infra.mapper.RuleVersionHistoryMapper;
 
@@ -55,26 +55,26 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
 
   @Override
   public void saveVersion(RuleVersionSaveDTO saveDTO) {
-    RuleVersionHistoryDO entity = converter.postDtoToEntity(saveDTO);
+    RuleVersionHistory entity = converter.postDtoToEntity(saveDTO);
     ruleVersionHistoryMapper.insert(entity);
   }
 
   @Override
   public List<RuleVersionVO> listVersions(String ruleCode) {
-    LambdaQueryWrapper<RuleVersionHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RuleVersionHistoryDO::getRuleCode, ruleCode)
-           .orderByDesc(RuleVersionHistoryDO::getVersion);
-    List<RuleVersionHistoryDO> entities = ruleVersionHistoryMapper.selectList(wrapper);
+    LambdaQueryWrapper<RuleVersionHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
+           .orderByDesc(RuleVersionHistory::getVersion);
+    List<RuleVersionHistory> entities = ruleVersionHistoryMapper.selectList(wrapper);
     return converter.ruleVersionListToVO(entities);
   }
 
   @Override
   public PageResponse<List<RuleVersionVO>> pageVersions(String ruleCode, int pageNum, int pageSize) {
-    Page<RuleVersionHistoryDO> page = new Page<>(pageNum, pageSize);
-    LambdaQueryWrapper<RuleVersionHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RuleVersionHistoryDO::getRuleCode, ruleCode)
-           .orderByDesc(RuleVersionHistoryDO::getVersion);
-    IPage<RuleVersionHistoryDO> entityPage = ruleVersionHistoryMapper.selectPage(page, wrapper);
+    Page<RuleVersionHistory> page = new Page<>(pageNum, pageSize);
+    LambdaQueryWrapper<RuleVersionHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
+           .orderByDesc(RuleVersionHistory::getVersion);
+    IPage<RuleVersionHistory> entityPage = ruleVersionHistoryMapper.selectPage(page, wrapper);
     return PageResponse.success(
         (long) pageNum, (long) pageSize, entityPage.getTotal(),
         converter.ruleVersionListToVO(entityPage.getRecords()));
@@ -83,10 +83,10 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
   @Override
   public Optional<RuleDefinitionVO> rollback(String ruleCode, int version, String operator) {
     // 1. 查询目标版本
-    LambdaQueryWrapper<RuleVersionHistoryDO> versionWrapper = new LambdaQueryWrapper<>();
-    versionWrapper.eq(RuleVersionHistoryDO::getRuleCode, ruleCode)
-                 .eq(RuleVersionHistoryDO::getVersion, version);
-    RuleVersionHistoryDO targetVersion = ruleVersionHistoryMapper.selectOne(versionWrapper);
+    LambdaQueryWrapper<RuleVersionHistory> versionWrapper = new LambdaQueryWrapper<>();
+    versionWrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
+                 .eq(RuleVersionHistory::getVersion, version);
+    RuleVersionHistory targetVersion = ruleVersionHistoryMapper.selectOne(versionWrapper);
     if (targetVersion == null) {
       log.warn("[LiteRule] 回滚目标版本不存在: ruleCode={}, version={}", ruleCode, version);
       return Optional.empty();
@@ -102,7 +102,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     // 3. 将当前版本备份到版本历史表（保护性快照，防止回滚后无法恢复）
     String currentDefinitionJson = YdszJson.toJson(apiFromDo(currentRule));
     Integer nextVersion = calculateNextVersionNumber(ruleCode);
-    RuleVersionHistoryDO backupVersion = RuleVersionHistoryDO.builder()
+    RuleVersionHistory backupVersion = RuleVersionHistory.builder()
         .ruleCode(ruleCode)
         .version(nextVersion)
         .definitionJson(currentDefinitionJson)
@@ -166,11 +166,11 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @return 下一个可用版本号
    */
   private Integer calculateNextVersionNumber(String ruleCode) {
-    LambdaQueryWrapper<RuleVersionHistoryDO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RuleVersionHistoryDO::getRuleCode, ruleCode)
-           .orderByDesc(RuleVersionHistoryDO::getVersion)
+    LambdaQueryWrapper<RuleVersionHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
+           .orderByDesc(RuleVersionHistory::getVersion)
            .last("LIMIT 1");
-    RuleVersionHistoryDO latest = ruleVersionHistoryMapper.selectOne(wrapper);
+    RuleVersionHistory latest = ruleVersionHistoryMapper.selectOne(wrapper);
     return latest != null ? latest.getVersion() + 1 : 1;
   }
 

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -118,14 +117,8 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-  public Page<RoleVO> page(RolePageQuery query) {
-    PageResponse<List<RoleVO>> pageResponse = roleRepository.page(query);
-    Page<RoleVO> voPage = new Page<>(
-        pageResponse.getPageNum() != null ? pageResponse.getPageNum() : query.getEffectivePageNum(),
-        pageResponse.getPageSize() != null ? pageResponse.getPageSize() : query.getEffectivePageSize(),
-        pageResponse.getTotal() != null ? pageResponse.getTotal() : 0L);
-    voPage.setRecords(pageResponse.getData() != null ? pageResponse.getData() : List.of());
-    return voPage;
+  public PageResponse<List<RoleVO>> page(RolePageQuery query) {
+    return roleRepository.page(query);
   }
 
   /**

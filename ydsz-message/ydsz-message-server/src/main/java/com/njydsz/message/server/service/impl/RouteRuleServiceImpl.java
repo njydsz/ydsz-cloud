@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.expression.EvaluationContext;
@@ -204,17 +203,12 @@ public class RouteRuleServiceImpl implements RouteRuleService {
    * @return 路由规则分页结果
    */
   @Override
-  public Page<MsgRouteRuleVO> page(PageQuery query) {
+  public PageResponse<List<MsgRouteRuleVO>> page(PageQuery query) {
     MsgRouteRuleQuery routeQuery = new MsgRouteRuleQuery();
     routeQuery.setPageNum(query == null ? 1 : query.getPageNum());
     routeQuery.setPageSize(
         Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    PageResponse<List<MsgRouteRuleVO>> pageResponse = msgRouteRuleRepository.findPage(routeQuery);
-    // 将 PageResponse 转换为 MyBatis-Plus Page 以保持接口兼容
-    Page<MsgRouteRuleVO> page = new Page<>(routeQuery.getPageNum(), routeQuery.getPageSize());
-    page.setTotal(pageResponse.getTotal());
-    page.setRecords(pageResponse.getData());
-    return page;
+    return msgRouteRuleRepository.findPage(routeQuery);
   }
 
   /**

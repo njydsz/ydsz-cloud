@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -113,7 +112,7 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
-  public Page<MsgNotificationVO> inbox(String userId, NotificationQueryDTO query) {
+  public PageResponse<List<MsgNotificationVO>> inbox(String userId, NotificationQueryDTO query) {
     if (!StringUtils.hasText(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -127,14 +126,7 @@ public class NotificationServiceImpl implements NotificationService {
         Math.min(
             effectiveQuery.getPageSize() != null ? effectiveQuery.getPageSize() : 10,
             PageConstants.MAX_PAGE_SIZE));
-    PageResponse<List<MsgNotificationVO>> response = msgNotificationRepository.findPage(effectiveQuery);
-    Page<MsgNotificationVO> page =
-        new Page<>(
-            response.getPageNum().intValue(),
-            response.getPageSize().intValue(),
-            response.getTotal());
-    page.setRecords(response.getData() != null ? response.getData() : new ArrayList<>());
-    return page;
+    return msgNotificationRepository.findPage(effectiveQuery);
   }
 
   @Override
@@ -209,12 +201,12 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
-  public Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query) {
+  public PageResponse<List<NotificationGroupVO>> inboxGrouped(String userId, NotificationQueryDTO query) {
     // 查询用户全部通知（按时间倒序），按 message_group 折叠
-    Page<MsgNotificationVO> allPage = inbox(userId, query);
+    PageResponse<List<MsgNotificationVO>> allPage = inbox(userId, query);
     Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>();
 
-    for (MsgNotificationVO n : allPage.getRecords()) {
+    for (MsgNotificationVO n : allPage.getData()) {
       String groupKey = n.getMessageGroup();
       if (!StringUtils.hasText(groupKey)) {
         // 无分组键的消息独立成组（用 id 作为 groupKey）
@@ -240,10 +232,11 @@ public class NotificationServiceImpl implements NotificationService {
       }
     }
 
-    Page<NotificationGroupVO> result =
-        new Page<>(allPage.getCurrent(), allPage.getSize(), allPage.getTotal());
-    result.setRecords(new ArrayList<>(groupMap.values()));
-    return result;
+    return PageResponse.success(
+        allPage.getTotal(),
+        allPage.getPageNum(),
+        allPage.getPageSize(),
+        new ArrayList<>(groupMap.values()));
   }
 
   @Override

@@ -32,7 +32,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  *   <li>ydsz_job_alert_dispatch：告警派发日志（含告警规则命中与发送结果，P3-1-merge 后统一落此表）
  *   <li>ydsz_job_task：MapReduce 子任务记录
  *   <li>ydsz_job_history：任务配置历史版本
- *   <li>sys_audit_log：审计日志（1.0.0 新增，由 ydsz-common-audit 模块提供清理能力）
+ *   <li>ydsz_job_audit_log：审计日志（1.0.0 新增，由 ydsz-common-audit 模块提供清理能力）
  * </ul>
  *
  * <h3>设计要点</h3>
@@ -71,7 +71,7 @@ public class LogCleaner {
    * 审计日志存储（可选 Bean）。
    *
    * <p>当项目引入 ydsz-common-audit 模块时，Spring 容器中存在 {@link JdbcAuditStorage}， 定时清理任务会自动联动清理
-   * sys_audit_log 表；未引入时静默跳过。
+   * ydsz_job_audit_log 表；未引入时静默跳过。
    *
    * <p>使用 {@code @Autowired(required = false)} 保持对 audit 模块的零硬依赖， 符合云顶编码规范「公共能力优先使用 common
    * 模块，但不强制依赖」原则。
@@ -172,14 +172,14 @@ public class LogCleaner {
     totalCleaned +=
         cleanTable("ydsz_job_history", before, batchSize, jobHistoryRepository::cleanExpiredLogs);
 
-    // 审计日志清理（sys_audit_log）— 联动 ydsz-common-audit 模块能力
+    // 审计日志清理（ydsz_job_audit_log）— 联动 ydsz-common-audit 模块能力
     totalCleaned += cleanAuditLogs(cfg.getRetentionDays());
 
     log.info("[LogCleaner] 清理完成: totalCleaned={}", totalCleaned);
   }
 
   /**
-   * 清理审计日志表（sys_audit_log）中的过期记录。
+   * 清理审计日志表（ydsz_job_audit_log）中的过期记录。
    *
    * <p>委托 {@link JdbcAuditStorage#cleanExpiredLogs(int)} 执行物理删除， 保留天数与 cronjob 日志保留策略保持一致（可通过
    * ydsz.audit.retentionDays 独立配置）。
@@ -196,11 +196,11 @@ public class LogCleaner {
     try {
       int deleted = jdbcAuditStorage.cleanExpiredLogs(retentionDays);
       if (deleted > 0) {
-        log.info("[LogCleaner] 审计日志表 sys_audit_log 清理完成: deleted={}", deleted);
+        log.info("[LogCleaner] 审计日志表 ydsz_job_audit_log 清理完成: deleted={}", deleted);
       }
       return deleted;
     } catch (Exception e) {
-      log.error("[LogCleaner] 审计日志表 sys_audit_log 清理异常: reason={}", e.getMessage(), e);
+      log.error("[LogCleaner] 审计日志表 ydsz_job_audit_log 清理异常: reason={}", e.getMessage(), e);
       return 0;
     }
   }

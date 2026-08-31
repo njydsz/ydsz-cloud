@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.literule.infra.entity.RuleVariableDefDO;
+import com.njydsz.literule.infra.entity.RuleVariableDef;
 
 /**
  * 规则变量定义 Mapper
@@ -26,12 +26,12 @@ import com.njydsz.literule.infra.entity.RuleVariableDefDO;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RuleVariableDefDO 规则变量实体
+ * @see RuleVariableDef 规则变量实体
  * @see com.njydsz.literule.server.service.RuleLifecycleService 规则生命周期 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RuleVariableDefMapper extends BaseMapper<RuleVariableDefDO> {
+public interface RuleVariableDefMapper extends BaseMapper<RuleVariableDef> {
 
   /**
    * 按变量名查询（不限启用状态，供管理端 upsert / 删除使用）
@@ -40,5 +40,5 @@ public interface RuleVariableDefMapper extends BaseMapper<RuleVariableDefDO> {
    * @return 变量定义 DO；不存在返回 null
    */
   @Select("SELECT * FROM ydsz_rule_variable_def WHERE var_name = #{varName} LIMIT 1")
-  RuleVariableDefDO selectByVarName(@Param("varName") String varName);
+  RuleVariableDef selectByVarName(@Param("varName") String varName);
 }

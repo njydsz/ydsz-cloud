@@ -17,7 +17,7 @@ import com.njydsz.cronjob.domain.vo.OutboxEventVO;
  * <p>消费 Outbox 事件中 topic={@code audit} 的事件，记录操作审计。
  *
  * <p><b>P1-F9：落库实现</b>——原实现仅 log.info 占位；现通过 {@link AuditWriter}（common-audit 的
- * {@code JdbcAuditStorage} 等实现）写入 {@code sys_audit_log}，记录任务生命周期操作
+ * {@code JdbcAuditStorage} 等实现）写入 {@code ydsz_job_audit_log}，记录任务生命周期操作
  * （创建/更新/暂停/恢复/触发/删除等）。容器中无 AuditWriter Bean 时（未引入 common-audit）静默降级为日志记录。
  *
  * @author ydsz-team
@@ -33,7 +33,7 @@ public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
   /** 落库 payload 截断长度（避免审计表膨胀） */
   private static final int MAX_PAYLOAD_STORE_LENGTH = 1000;
 
-  /** 审计模块标识（写入 sys_audit_log.module） */
+  /** 审计模块标识（写入 ydsz_job_audit_log.module） */
   private static final String AUDIT_MODULE = "cronjob";
 
   /** 审计类型：业务操作审计 */
@@ -70,7 +70,7 @@ public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
   }
 
   /**
-   * 将审计事件写入 sys_audit_log（AuditWriter 存在时），否则降级为日志记录。
+   * 将审计事件写入 ydsz_job_audit_log（AuditWriter 存在时），否则降级为日志记录。
    *
    * @param event Outbox 审计事件
    */

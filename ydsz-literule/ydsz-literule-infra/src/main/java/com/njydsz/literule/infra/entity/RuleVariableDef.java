@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 规则变量定义 DO
+ * 规则变量定义
  *
  * <p>映射 ydsz_rule_variable_def 表，存储规则表达式中可引用的变量元数据。 由 {@link
  * com.njydsz.project.literule.DatabaseVariableRegistry} 加载， 供 {@link
@@ -23,7 +23,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_variable_def")
-public class RuleVariableDefDO extends MpBaseEntity<String> {
+public class RuleVariableDef extends MpBaseEntity<String> {
 
   /** 变量名（如 cpi / budgetAmount / evmRedCount） */
   private String varName;

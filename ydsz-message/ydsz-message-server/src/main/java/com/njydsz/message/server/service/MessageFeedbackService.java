@@ -1,6 +1,6 @@
 package com.njydsz.message.server.service.core;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.message.domain.dto.MessageFeedbackDTO;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
@@ -67,7 +67,7 @@ public interface MessageFeedbackService {
    * @param userId 用户 ID（可选筛选）
    * @return 分页结果
    */
-  Page<MsgFeedbackVO> pageFeedback(int page, int size, String channel, String userId);
+  PageResponse<List<MsgFeedbackVO>> pageFeedback(int page, int size, String channel, String userId);
 
   /**
    * 检查用户是否需要降频（基于最近反馈评分）。

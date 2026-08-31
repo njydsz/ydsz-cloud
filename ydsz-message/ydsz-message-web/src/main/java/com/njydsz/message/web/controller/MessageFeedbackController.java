@@ -140,7 +140,7 @@ public class MessageFeedbackController {
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) String channel,
       @RequestParam(required = false) String userId) {
-    return YdszResponse.success(PageResponses.success(messageFeedbackService.pageFeedback(page, size, channel, userId)));
+    return YdszResponse.success(messageFeedbackService.pageFeedback(page, size, channel, userId));
   }
 
   /**

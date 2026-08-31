@@ -11,7 +11,7 @@ import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
-import com.njydsz.literule.infra.entity.DecisionTableDO;
+import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.infra.mapper.DecisionTableMapper;
 
 /**
@@ -45,15 +45,15 @@ public class DecisionTableRepositoryImpl implements DecisionTableRepository {
 
   @Override
   public Optional<DecisionTableVO> findByTableCode(String tableCode) {
-    DecisionTableDO entity =
+    DecisionTable entity =
         decisionTableMapper.selectOne(
-            new LambdaQueryWrapper<DecisionTableDO>().eq(DecisionTableDO::getTableCode, tableCode));
+            new LambdaQueryWrapper<DecisionTable>().eq(DecisionTable::getTableCode, tableCode));
     return Optional.ofNullable(entity).map(converter::entityToVO);
   }
 
   @Override
   public DecisionTableVO save(DecisionTablePostDTO dto) {
-    DecisionTableDO entity = converter.postDtoToEntity(dto);
+    DecisionTable entity = converter.postDtoToEntity(dto);
     if (entity.getId() != null) {
       decisionTableMapper.updateById(entity);
     } else {

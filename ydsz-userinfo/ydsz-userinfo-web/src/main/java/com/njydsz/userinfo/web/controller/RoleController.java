@@ -2,7 +2,6 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,7 +21,6 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
@@ -93,8 +91,7 @@ public class RoleController {
   @GetMapping("/page")
   @Operation(summary = "分页查询角色列表")
   public YdszResponse<PageResponse<List<RoleVO>>> page(@Valid RolePageQuery query) {
-    Page<RoleVO> page = service.page(query);
-    return YdszResponse.success(PageResponses.success(page));
+    return YdszResponse.success(service.page(query));
   }
 
   /**

@@ -1,9 +1,9 @@
 -- ============================================================================
--- ydsz-cronjob 辅助功能表结构（Flyway 迁移脚本 P2-8）
+-- ydsz-cronjob 辅助功能表结构（手工 SQL 脚本）
 -- 版本: 1.2.0
 -- 描述: 创建 Webhook、告警、统计、事件存储、审计日志等辅助表
 -- 依赖: V2__dag_tables.sql
--- 兼容: MySQL 8.0+
+-- 兼容: PostgreSQL 18 / MySQL 8.0+
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -156,9 +156,9 @@ CREATE TABLE IF NOT EXISTS `ydsz_event_store` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件存储表（Event Sourcing）';
 
 -- ---------------------------------------------------------------------------
--- 16. 审计日志表（sys_audit_log）
+-- 16. 审计日志表（ydsz_job_audit_log）
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sys_audit_log` (
+CREATE TABLE IF NOT EXISTS `ydsz_job_audit_log` (
   `id` VARCHAR(32) NOT NULL COMMENT '主键（雪花ID）',
   `module` VARCHAR(64) NOT NULL COMMENT '功能模块',
   `operation` VARCHAR(64) NOT NULL COMMENT '操作类型',
@@ -201,9 +201,9 @@ CREATE TABLE IF NOT EXISTS `ydsz_outbox_event` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Outbox事件表（事务消息）';
 
 -- ---------------------------------------------------------------------------
--- 18. 租户配额表（sys_tenant_quota）
+-- 18. 租户配额表（ydsz_job_tenant_quota）
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `sys_tenant_quota` (
+CREATE TABLE IF NOT EXISTS `ydsz_job_tenant_quota` (
   `id` VARCHAR(32) NOT NULL COMMENT '主键（雪花ID）',
   `tenant_id` VARCHAR(32) NOT NULL COMMENT '租户ID',
   `max_jobs` INT DEFAULT 100 COMMENT '最大任务数',

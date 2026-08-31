@@ -2,8 +2,9 @@ package com.njydsz.message.server.service;
 
 import java.util.Map;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.List;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
@@ -83,7 +84,7 @@ public interface TemplateService {
    * @param query 查询参数
    * @return 分页结果（total / records）
    */
-  Page<MsgTemplateVO> page(TemplateQueryDTO query);
+  PageResponse<List<MsgTemplateVO>> page(TemplateQueryDTO query);
 
   /**
    * 按编码 + 通道 + 语言加载模板（locale 为空时回退默认 zh-CN）

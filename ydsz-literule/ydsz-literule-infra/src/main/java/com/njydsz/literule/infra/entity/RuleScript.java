@@ -9,9 +9,9 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 规则决策树实体
+ * 规则脚本实体
  *
- * <p>决策树规则：root_node 字段为嵌套 JSON 结构，描述树形决策过程。 节点类型：CONDITION（条件）/ ACTION（动作）/ DEFAULT（默认分支）。
+ * <p>脚本规则：script 字段为 Groovy 脚本源码，运行在沙箱中。 通过 sandbox_enabled 控制是否启用沙箱安全限制。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -20,8 +20,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName(value = "ydsz_rule_decision_tree", autoResultMap = true)
-public class RuleDecisionTreeDO extends MpBaseEntity<String> {
+@TableName(value = "ydsz_rule_script", autoResultMap = true)
+public class RuleScript extends MpBaseEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;
@@ -35,10 +35,16 @@ public class RuleDecisionTreeDO extends MpBaseEntity<String> {
   /** 规则描述 */
   private String description;
 
-  /** 根节点 JSON（嵌套结构） */
-  private String rootNode;
+  /** Groovy 脚本源码 */
+  private String script;
 
-  /** 优先级（数字越小越优先） */
+  /** 默认严重级别：INFO/WARN/ERROR/CRITICAL */
+  private String defaultSeverity;
+
+  /** 是否启用沙箱 */
+  private Boolean sandboxEnabled;
+
+  /** 优先级 */
   private Integer priority;
 
   /** 是否启用 */

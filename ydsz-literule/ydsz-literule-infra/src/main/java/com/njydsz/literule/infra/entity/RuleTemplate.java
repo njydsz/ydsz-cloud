@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * LiteRule 规则模板 DO
+ * LiteRule 规则模板
  *
  * <p>映射 ydsz_rule_template 表，存储规则模板市场中的预置模板。 用户可从模板一键导入生成规则定义。
  *
@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_template")
-public class RuleTemplateDO extends MpBaseEntity<String> {
+public class RuleTemplate extends MpBaseEntity<String> {
 
   /** 模板编码，业务唯一 */
   private String templateCode;

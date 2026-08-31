@@ -10,11 +10,11 @@ import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
-import com.njydsz.literule.infra.entity.DecisionTableDO;
+import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleABRollbackDO;
 import com.njydsz.literule.infra.entity.RuleChainGraphDO;
-import com.njydsz.literule.infra.entity.RuleTemplateDO;
+import com.njydsz.literule.infra.entity.RuleTemplate;
 
 /**
  * 规则组件转换器（P2-2 拆分）
@@ -30,10 +30,10 @@ public interface RuleComponentConverter {
   /** MapStruct 单例实例 */
   RuleComponentConverter INSTANCE = Mappers.getMapper(RuleComponentConverter.class);
 
-  // ===== DecisionTableDO =====
-  DecisionTableVO entityToVO(DecisionTableDO entity);
+  // ===== DecisionTable =====
+  DecisionTableVO entityToVO(DecisionTable entity);
 
-  List<DecisionTableVO> decisionTableListToVO(List<DecisionTableDO> entities);
+  List<DecisionTableVO> decisionTableListToVO(List<DecisionTable> entities);
 
   // ===== RuleABPolicyDO =====
   RuleABPolicyVO entityToVO(RuleABPolicyDO entity);
@@ -50,8 +50,8 @@ public interface RuleComponentConverter {
 
   List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities);
 
-  // ===== RuleTemplateDO =====
-  RuleTemplateVO entityToVO(RuleTemplateDO entity);
+  // ===== RuleTemplate =====
+  RuleTemplateVO entityToVO(RuleTemplate entity);
 
-  List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplateDO> entities);
+  List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplate> entities);
 }

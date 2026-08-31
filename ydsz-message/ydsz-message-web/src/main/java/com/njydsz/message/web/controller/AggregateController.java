@@ -2,7 +2,6 @@ package com.njydsz.message.web.controller.batch;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -92,8 +91,7 @@ public class AggregateController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<MsgAggregateVO>>> page(PageQuery query) {
-    Page<MsgAggregateVO> page = aggregateService.page(query);
-    return YdszResponse.success(PageResponses.success(page));
+    return YdszResponse.success(aggregateService.page(query));
   }
 
   /**

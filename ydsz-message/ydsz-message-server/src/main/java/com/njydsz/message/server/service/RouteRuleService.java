@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.config;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.PageResponse;
 
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.feign.MessageRequest;
@@ -75,7 +75,7 @@ public interface RouteRuleService {
    * @param query 分页参数
    * @return 分页结果
    */
-  Page<MsgRouteRuleVO> page(PageQuery query);
+  PageResponse<List<MsgRouteRuleVO>> page(PageQuery query);
 
   /**
    * 查询所有启用的路由规则

@@ -1,7 +1,5 @@
 package com.njydsz.literule.infra.entity;
 
-import java.math.BigDecimal;
-
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,10 +9,9 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 规则评分卡实体
+ * 规则决策树实体
  *
- * <p>评分卡规则：基于 factors 列表（条件表达式 + 扣分）逐项评估。 基础分 base_score，低于 red_threshold 为红灯、低于 yellow_threshold
- * 为黄灯。
+ * <p>决策树规则：root_node 字段为嵌套 JSON 结构，描述树形决策过程。 节点类型：CONDITION（条件）/ ACTION（动作）/ DEFAULT（默认分支）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -23,8 +20,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName(value = "ydsz_rule_scorecard", autoResultMap = true)
-public class RuleScorecardDO extends MpBaseEntity<String> {
+@TableName(value = "ydsz_rule_decision_tree", autoResultMap = true)
+public class RuleDecisionTree extends MpBaseEntity<String> {
 
   /** 规则编码 */
   private String ruleCode;
@@ -32,23 +29,14 @@ public class RuleScorecardDO extends MpBaseEntity<String> {
   /** 规则名称 */
   private String ruleName;
 
-  /** 规则分类（RISK / QUALITY / PROFIT 等） */
+  /** 规则分类 */
   private String category;
 
   /** 规则描述 */
   private String description;
 
-  /** 基础分（满分，默认 100） */
-  private BigDecimal baseScore;
-
-  /** 红灯阈值（≤ 触发红灯） */
-  private BigDecimal redThreshold;
-
-  /** 黄灯阈值（≤ 触发黄灯） */
-  private BigDecimal yellowThreshold;
-
-  /** 评分因子 JSON：[{conditionExpression, score, description}] */
-  private String factors;
+  /** 根节点 JSON（嵌套结构） */
+  private String rootNode;
 
   /** 优先级（数字越小越优先） */
   private Integer priority;
@@ -56,7 +44,7 @@ public class RuleScorecardDO extends MpBaseEntity<String> {
   /** 是否启用 */
   private Boolean enabled;
 
-  /** 适用范围（如 ALL / PROJECT_TYPE:CONSTRUCTION 表示限定项目类型） */
+  /** 适用范围 */
   private String scope;
 
   /** 版本号 */

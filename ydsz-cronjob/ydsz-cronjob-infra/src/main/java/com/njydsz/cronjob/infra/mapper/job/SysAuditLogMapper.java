@@ -13,7 +13,7 @@ import com.njydsz.cronjob.infra.entity.job.SysAuditLog;
 /**
  * 操作审计日志 Mapper（P1-14 操作审计视图）。
  *
- * <p>对应 <code>sys_audit_log</code> 表（由 common-audit 管理）。
+ * <p>对应 <code>ydsz_job_audit_log</code> 表（由 common-audit 管理）。
  * 本 Mapper 仅提供查询能力，写入由 common-audit 模块完成。
  *
  * <p>cronjob 模块仅关注 {@code module = 'cronjob'} 的记录，所有查询自动过滤。
@@ -47,7 +47,7 @@ public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {
           + "       operator_id, operator_name, operation_time, ip_address, "
           + "       request_params, response_result, errorMessage, cost_time, "
           + "       app_key, tenant_id, trace_id, created_at "
-          + "FROM sys_audit_log "
+          + "FROM ydsz_job_audit_log "
           + "WHERE module = #{module} "
           + "<if test=\"action != null\"> AND action = #{action} </if> "
           + "<if test=\"operatorName != null and operatorName != ''\"> AND operator_name = #{operatorName} </if> "
@@ -77,7 +77,7 @@ public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {
    */
   @Select(
       "<script>"
-          + "SELECT COUNT(*) FROM sys_audit_log "
+          + "SELECT COUNT(*) FROM ydsz_job_audit_log "
           + "WHERE module = #{module} "
           + "<if test=\"action != null\"> AND action = #{action} </if> "
           + "<if test=\"operatorName != null and operatorName != ''\"> AND operator_name = #{operatorName} </if> "

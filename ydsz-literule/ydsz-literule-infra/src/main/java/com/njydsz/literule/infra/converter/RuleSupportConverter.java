@@ -13,12 +13,12 @@ import com.njydsz.literule.domain.vo.RuleDependencyVO;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
-import com.njydsz.literule.infra.entity.DecisionTableDO;
+import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.infra.entity.RuleABPolicyDO;
 import com.njydsz.literule.infra.entity.RuleDependencyDO;
-import com.njydsz.literule.infra.entity.RuleExecutionTraceDO;
-import com.njydsz.literule.infra.entity.RulePackDO;
-import com.njydsz.literule.infra.entity.RuleVersionHistoryDO;
+import com.njydsz.literule.infra.entity.RuleExecutionTrace;
+import com.njydsz.literule.infra.entity.RulePack;
+import com.njydsz.literule.infra.entity.RuleVersionHistory;
 
 /**
  * 规则支撑转换器（P2-2 拆分）
@@ -39,17 +39,17 @@ public interface RuleSupportConverter {
 
   List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependencyDO> entities);
 
-  // ===== RuleExecutionTraceDO =====
-  RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity);
+  // ===== RuleExecutionTrace =====
+  RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity);
 
-  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities);
+  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities);
 
-  // ===== RulePackDO =====
-  RulePackVO entityToVO(RulePackDO entity);
+  // ===== RulePack =====
+  RulePackVO entityToVO(RulePack entity);
 
-  List<RulePackVO> rulePackListToVO(List<RulePackDO> entities);
+  List<RulePackVO> rulePackListToVO(List<RulePack> entities);
 
-  // ===== RuleVersionHistoryDO → RuleVersionVO =====
+  // ===== RuleVersionHistory → RuleVersionVO =====
   @Mapping(target = "id", source = "id")
   @Mapping(target = "ruleCode", source = "ruleCode")
   @Mapping(target = "version", source = "version")
@@ -57,15 +57,15 @@ public interface RuleSupportConverter {
   @Mapping(target = "changeDesc", source = "changeDesc")
   @Mapping(target = "operator", source = "operator")
   @Mapping(target = "createdAt", ignore = true)
-  RuleVersionVO ruleVersionHistoryToVO(RuleVersionHistoryDO entity);
+  RuleVersionVO ruleVersionHistoryToVO(RuleVersionHistory entity);
 
-  List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistoryDO> entities);
+  List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistory> entities);
 
-  // ===== RuleVersionSaveDTO → RuleVersionHistoryDO =====
+  // ===== RuleVersionSaveDTO → RuleVersionHistory =====
   @Mapping(target = "id", ignore = true)
-  RuleVersionHistoryDO postDtoToEntity(RuleVersionSaveDTO dto);
+  RuleVersionHistory postDtoToEntity(RuleVersionSaveDTO dto);
 
-  // ===== DecisionTableDO PostDTO → Entity =====
+  // ===== DecisionTable PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -74,7 +74,7 @@ public interface RuleSupportConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DecisionTableDO postDtoToEntity(DecisionTablePostDTO dto);
+  DecisionTable postDtoToEntity(DecisionTablePostDTO dto);
 
   // ===== RuleABPolicyDO PutDTO → Entity =====
   @Mapping(target = "deleted", ignore = true)

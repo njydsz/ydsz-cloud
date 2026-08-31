@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -189,17 +188,13 @@ public class AggregateServiceImpl implements AggregateService {
   }
 
   @Override
-  public Page<MsgAggregateVO> page(PageQuery query) {
+  public PageResponse<List<MsgAggregateVO>> page(PageQuery query) {
     MsgAggregateQuery aggQuery = new MsgAggregateQuery();
     if (query != null) {
       aggQuery.setPageNum(query.getPageNum());
       aggQuery.setPageSize(Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
     }
-    PageResponse<List<MsgAggregateVO>> response = msgAggregateRepository.findPage(aggQuery);
-    Page<MsgAggregateVO> page = new Page<>(
-        response.getPageNum().intValue(), response.getPageSize().intValue(), response.getTotal());
-    page.setRecords(response.getData() != null ? response.getData() : List.of());
-    return page;
+    return msgAggregateRepository.findPage(aggQuery);
   }
 
   /**

@@ -3,7 +3,6 @@ package com.njydsz.message.web.controller.core;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -138,8 +137,7 @@ public class NotificationController {
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping("/inbox")
   public YdszResponse<PageResponse<List<MsgNotificationVO>>> inbox(NotificationQueryDTO query) {
-    Page<MsgNotificationVO> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
-    return YdszResponse.success(PageResponses.success(page));
+    return YdszResponse.success(notificationService.inbox(AuthContextUtils.getUserId(), query));
   }
 
   /**
