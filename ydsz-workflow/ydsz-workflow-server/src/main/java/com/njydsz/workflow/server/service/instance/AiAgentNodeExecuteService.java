@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
@@ -131,71 +130,67 @@ public class AiAgentNodeExecuteService {
     }
 
     // 2. 创建任务记录（用于审计追溯）
-    FlowRunTaskVO task = buildAuditTask(instance, node, approved, comment);
+    FlowRunTaskDTO dto = buildAuditDto(instance, node, approved, comment);
 
     if (approved) {
       // 3a. 通过：标记 COMPLETED，归档，审计，推进
-      task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-      FlowRunTaskDTO aiApproveDto = new FlowRunTaskDTO();
-      BeanUtils.copyProperties(task, aiApproveDto);
-      taskRepository.save(aiApproveDto);
-      archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-      support.audit(task, "AI_AGENT_APPROVE", null, null, "AI 审批通过");
+      dto.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+      FlowRunTaskVO saved = taskRepository.save(dto);
+      archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
+      support.audit(saved, "AI_AGENT_APPROVE", null, null, "AI 审批通过");
       log.info("[Flow-AI-Agent] AI 审批节点通过: instanceId={} node={}", instanceId, nodeCode);
       advanceAfterDecision(instance, node, variables, "PASS");
     } else {
       // 3b. 驳回：标记 COMPLETED（已处理），归档，审计，执行驳回回退
-      task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-      task.setComment(comment);
-      FlowRunTaskDTO aiRejectDto = new FlowRunTaskDTO();
-      BeanUtils.copyProperties(task, aiRejectDto);
-      taskRepository.save(aiRejectDto);
-      archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-      support.audit(task, "AI_AGENT_REJECT", null, null, comment);
+      dto.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+      dto.setComment(comment);
+      FlowRunTaskVO saved = taskRepository.save(dto);
+      archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
+      support.audit(saved, "AI_AGENT_REJECT", null, null, comment);
       log.info("[Flow-AI-Agent] AI 审批节点驳回: instanceId={} node={}", instanceId, nodeCode);
       advanceAfterDecision(instance, node, variables, "REJECT");
     }
-    return task.getId();
+    return saved.getId();
   }
 
   /**
-   * 构建 AI 审批节点的审计任务记录。
+   * 构建 AI 审批节点的审计任务 DTO。
    *
    * @param instance 流程实例
    * @param node 当前节点
    * @param approved 是否通过
    * @param comment 审批意见
-   * @return 运行时任务 VO
+   * @return 运行时任务 DTO
    */
-  private FlowRunTaskVO buildAuditTask(FlowInstanceVO instance, FlowNodeVO node, boolean approved,
+  private FlowRunTaskDTO buildAuditDto(FlowInstanceVO instance, FlowNodeVO node, boolean approved,
       String comment) {
-    FlowRunTaskVO task = new FlowRunTaskVO();
-    task.setInstanceId(instance.getId());
-    task.setFlowCode(instance.getFlowCode());
-    task.setDefinitionId(instance.getDefinitionId());
-    task.setNodeCode(node.getNodeCode());
-    task.setNodeName(node.getNodeName());
-    task.setNodeType(node.getNodeType());
-    task.setBusinessType(instance.getBusinessType());
-    task.setBusinessId(instance.getBusinessId());
-    task.setBusinessNo(instance.getBusinessNo());
-    task.setFlowName(instance.getFlowName());
-    task.setTitle(instance.getTitle());
-    task.setPermissionFlag(node.getPermissionFlag());
-    task.setPerformType(FlowPerformType.OR.name());
-    task.setApproveCount(1);
-    task.setApproveFinished(1);
-    task.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
-    task.setAssigneeId("0");
-    task.setAssigneeName("AI_AGENT");
-    task.setTenantId(instance.getTenantId());
-    task.setProviderTraceId(instance.getProviderTraceId());
+    FlowRunTaskDTO dto = new FlowRunTaskDTO();
+    dto.setInstanceId(instance.getId());
+    dto.setFlowCode(instance.getFlowCode());
+    dto.setDefinitionId(instance.getDefinitionId());
+    dto.setNodeCode(node.getNodeCode());
+    dto.setNodeName(node.getNodeName());
+    dto.setNodeType(node.getNodeType());
+    dto.setBusinessType(instance.getBusinessType());
+    dto.setBusinessId(instance.getBusinessId());
+    dto.setBusinessNo(instance.getBusinessNo());
+    dto.setFlowName(instance.getFlowName());
+    dto.setTitle(instance.getTitle());
+    dto.setPermissionFlag(node.getPermissionFlag());
+    dto.setPerformType(FlowPerformType.OR.name());
+    dto.setApproveCount(1);
+    dto.setApproveFinished(1);
+    dto.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
+    dto.setAssigneeId("0");
+    dto.setAssigneeName("AI_AGENT");
+    dto.setTenantId(instance.getTenantId());
+    dto.setProviderTraceId(instance.getProviderTraceId());
     LocalDateTime now = LocalDateTime.now();
-    task.setCreatedAt(now);
-    task.setFinishAt(now);
-    task.setDurationMs(0L);
-    task.setComment(comment);
-    return task;
+    dto.setCreatedAt(now);
+    dto.setFinishAt(now);
+    dto.setDurationMs(0L);
+    dto.setComment(comment);
+    return dto;
   }
 
   /**

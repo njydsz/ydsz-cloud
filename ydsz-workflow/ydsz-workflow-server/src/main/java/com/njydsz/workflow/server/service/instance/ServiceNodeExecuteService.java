@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
@@ -19,6 +18,7 @@ import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
@@ -141,40 +141,38 @@ public class ServiceNodeExecuteService {
     }
 
     // 2. 创建任务记录（用于审计追溯）
-    FlowRunTaskVO task = new FlowRunTaskVO();
-    task.setInstanceId(instance.getId());
-    task.setFlowCode(instance.getFlowCode());
-    task.setDefinitionId(instance.getDefinitionId());
-    task.setNodeCode(node.getNodeCode());
-    task.setNodeName(node.getNodeName());
-    task.setNodeType(node.getNodeType());
-    task.setBusinessType(instance.getBusinessType());
-    task.setBusinessId(instance.getBusinessId());
-    task.setBusinessNo(instance.getBusinessNo());
-    task.setFlowName(instance.getFlowName());
-    task.setTitle(instance.getTitle());
-    task.setPermissionFlag(node.getPermissionFlag());
-    task.setPerformType(FlowPerformType.OR.name());
-    task.setApproveCount(1);
-    task.setApproveFinished(1);
-    task.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
-    task.setAssigneeId("0");
-    task.setAssigneeName("SYSTEM_SERVICE");
-    task.setTenantId(instance.getTenantId());
-    task.setProviderTraceId(instance.getProviderTraceId());
+    FlowRunTaskDTO dto = new FlowRunTaskDTO();
+    dto.setInstanceId(instance.getId());
+    dto.setFlowCode(instance.getFlowCode());
+    dto.setDefinitionId(instance.getDefinitionId());
+    dto.setNodeCode(node.getNodeCode());
+    dto.setNodeName(node.getNodeName());
+    dto.setNodeType(node.getNodeType());
+    dto.setBusinessType(instance.getBusinessType());
+    dto.setBusinessId(instance.getBusinessId());
+    dto.setBusinessNo(instance.getBusinessNo());
+    dto.setFlowName(instance.getFlowName());
+    dto.setTitle(instance.getTitle());
+    dto.setPermissionFlag(node.getPermissionFlag());
+    dto.setPerformType(FlowPerformType.OR.name());
+    dto.setApproveCount(1);
+    dto.setApproveFinished(1);
+    dto.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
+    dto.setAssigneeId("0");
+    dto.setAssigneeName("SYSTEM_SERVICE");
+    dto.setTenantId(instance.getTenantId());
+    dto.setProviderTraceId(instance.getProviderTraceId());
     LocalDateTime now = LocalDateTime.now();
-    task.setFinishAt(now);
-    task.setDurationMs(0L);
+    dto.setFinishAt(now);
+    dto.setDurationMs(0L);
 
     if (result.success()) {
       // 3a. 成功：标记 COMPLETED，归档，审计，推进
-      task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-      task.setComment(result.message());
-      FlowRunTaskDTO serviceSuccessDto = new FlowRunTaskDTO();
-      BeanUtils.copyProperties(task, serviceSuccessDto);
-      taskRepository.save(serviceSuccessDto);
-      archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-      support.audit(task, "SERVICE_EXECUTE", null, null, "服务节点执行成功: " + result.message());
+      dto.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+      dto.setComment(result.message());
+      FlowRunTaskVO saved = taskRepository.save(dto);
+      archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
+      support.audit(saved, "SERVICE_EXECUTE", null, null, "服务节点执行成功: " + result.message());
       log.info(
           "[Flow] 服务节点执行成功: instanceId={} node={} msg={}",
           instance.getId(),
@@ -185,19 +183,17 @@ public class ServiceNodeExecuteService {
       // 3b. 失败：优先尝试触发 error boundary 接管流程
       boolean errorBoundaryTriggered =
           triggerErrorBoundaryIfExists(instance, node, result.message());
-      task.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
+      dto.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
       if (errorBoundaryTriggered) {
-        task.setComment("服务节点失败，error boundary 已触发: " + result.message());
+        dto.setComment("服务节点失败，error boundary 已触发: " + result.message());
       } else {
-        task.setComment("服务节点执行失败: " + result.message());
+        dto.setComment("服务节点执行失败: " + result.message());
       }
-      FlowRunTaskDTO serviceFailDto = new FlowRunTaskDTO();
-      BeanUtils.copyProperties(task, serviceFailDto);
-      taskRepository.save(serviceFailDto);
-      archiveService.archiveToHistory(task, FlowTaskStatus.TIMEOUT);
+      FlowRunTaskVO saved = taskRepository.save(dto);
+      archiveService.archiveToHistory(saved, FlowTaskStatus.TIMEOUT);
       if (errorBoundaryTriggered) {
         support.audit(
-            task,
+            saved,
             "SERVICE_ERROR_BOUNDARY",
             null,
             null,
@@ -207,7 +203,7 @@ public class ServiceNodeExecuteService {
             instance.getId(),
             node.getNodeCode());
       } else {
-        support.audit(task, "SERVICE_ERROR", null, null, "服务节点执行失败: " + result.message());
+        support.audit(saved, "SERVICE_ERROR", null, null, "服务节点执行失败: " + result.message());
         instanceRepository.updateStatus(
             instance.getId(),
             FlowInstanceStatus.ERROR.name(),
@@ -222,7 +218,7 @@ public class ServiceNodeExecuteService {
             result.message());
       }
     }
-    return task.getId();
+    return saved.getId();
   }
 
   /**
