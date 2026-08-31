@@ -26,9 +26,9 @@ import yaml
 from pathlib import Path
 from datetime import datetime
 
-# 项目根目录（脚本所在位置父目录的父目录）
+# 项目根目录（脚本在 data/scripts/，项目根为上两层）
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
+PROJECT_ROOT = SCRIPT_DIR.parent.parent
 
 # 路径配置
 SOURCE_FILE = PROJECT_ROOT / "docs" / "ai-rules" / "shared-rules.yaml"
@@ -57,7 +57,7 @@ def generate_catpaw_rules(data):
 
     lines = [
         "# 云顶编码规范 - CatPaw Always 规则",
-        f"# 本文件由 {SCRIPT_DIR.name}/sync-ai-rules.py 自动生成，请勿手动修改",
+        "# 本文件由 data/scripts/sync-ai-rules.py 自动生成，请勿手动修改",
         f"# 生成时间: {datetime.now().strftime('%Y-%m-%d')}",
         f"# 源文件: docs/ai-rules/shared-rules.yaml",
         "",
@@ -116,7 +116,7 @@ def generate_workbuddy_rules(data):
 
     lines = [
         "# 云顶编码规范 - WorkBuddy System Prompt 增强规则",
-        f"# 本文件由 {SCRIPT_DIR.name}/sync-ai-rules.py 自动生成，请勿手动修改",
+        "# 本文件由 data/scripts/sync-ai-rules.py 自动生成，请勿手动修改",
         f"# 生成时间: {datetime.now().strftime('%Y-%m-%d')}",
         f"# 源文件: docs/ai-rules/shared-rules.yaml",
         "",

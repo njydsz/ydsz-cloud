@@ -35,7 +35,7 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class ShareLinkmainService {
+public class ShareLinkDomainService {
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
