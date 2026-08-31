@@ -48,11 +48,5 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
-        <!-- P2-2: 单元测试依赖（JUnit Jupiter + Mockito + AssertJ） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-</dependencies>
+    </dependencies>
 </project>

@@ -108,18 +108,9 @@
         <gson.version>2.13.2</gson.version>
         <grpc.version>1.80.0</grpc.version>
 
-        <!-- Testcontainers（P1-7：集成测试容器化基础设施）
-             需要本地或 CI 有 Docker 环境
-             用法：继承 AbstractIntegrationTest，自动启动 PG/Redis 容器
-        -->
-        <testcontainers.version>1.20.6</testcontainers.version>
-        <!-- JMH 基准测试（UtilBenchmark 等） -->
-        <jmh.version>1.37</jmh.version>
         <!-- Aviator 表达式引擎（工作流条件表达式求值） -->
         <aviator.version>5.4.3</aviator.version>
-        <!-- ArchUnit 架构测试（P3-2：与 ydsz-common/pom.xml 保持同版本） -->
-        <archunit.version>1.4.2</archunit.version>
-    </properties>
+        </properties>
 
     <dependencyManagement>
         <dependencies>
@@ -147,40 +138,12 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- Testcontainers BOM（P1-7：集成测试容器化） -->
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>${testcontainers.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- JMH 基准测试（UtilBenchmark 等） -->
-            <dependency>
-                <groupId>org.openjdk.jmh</groupId>
-                <artifactId>jmh-core</artifactId>
-                <version>${jmh.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.openjdk.jmh</groupId>
-                <artifactId>jmh-generator-annprocess</artifactId>
-                <version>${jmh.version}</version>
-            </dependency>
             <!-- A10: Aviator 表达式引擎版本集中管控（工作流条件表达式求值） -->
             <dependency>
                 <groupId>com.googlecode.aviator</groupId>
                 <artifactId>aviator</artifactId>
                 <version>${aviator.version}</version>
             </dependency>
-            <!-- ArchUnit 架构测试（P3-2：DDD 分层依赖方向与红线兜底的构建期守护，
-                 各业务模块 -web 子模块 ArchitectureTest / common-util L1 纯度测试） -->
-            <dependency>
-                <groupId>com.tngtech.archunit</groupId>
-                <artifactId>archunit-junit5</artifactId>
-                <version>${archunit.version}</version>
-                <scope>test</scope>
-            </dependency>
-
             <!-- 内部模块：ydsz-common 多模块拆分 -->
             <dependency>
                 <groupId>com.njydsz</groupId>
@@ -192,14 +155,6 @@
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-core</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <!-- common-core test-jar（AbstractIntegrationTest 基类，P1-7） -->
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-core</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
@@ -345,14 +300,6 @@
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-tenant</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <!-- tenant test-jar（TenantTestUtils / WithMockTenant 等测试工具，供下游模块复用） -->
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-tenant</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
@@ -1214,18 +1161,6 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-        </plugin>
-        <!-- Surefire 单元测试：解决 Windows + JDK 21 下 Boot Manifest-JAR 绝对路径校验失败
-             报错：Boot Manifest-JAR contains absolute paths in classpath ... 'other' has different root
-             根因：JDK 9+ 默认拒绝 Manifest Class-Path 中的绝对路径
-             方案：通过 -Djdk.net.URLClassPath.disableClassPathURLCheck=true 关闭校验
-        -->
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-                <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
-            </configuration>
         </plugin>
         <!-- Checkstyle 源码检查：JSON 生态红线——业务代码禁止 import 第三方 JSON 库（Jackson/Fastjson/Gson）
              规则文件：checkstyle/checkstyle.xml；只扫 src/main，不扫 src/test（不影响 benchmark 基准库）
