@@ -20,5 +20,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
+        <!-- jakarta.validation: API 契约层 DTO 校验注解（@NotBlank/@NotNull） -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
     </dependencies>
 </project>

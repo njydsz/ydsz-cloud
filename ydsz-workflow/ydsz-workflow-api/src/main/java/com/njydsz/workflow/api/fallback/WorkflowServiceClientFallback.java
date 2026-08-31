@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.workflow.api.client.WorkflowServiceClient;
-import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.api.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.api.vo.FlowInstanceVO;
 
 /**
  * WorkflowServiceClient 降级工厂

@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
-import com.njydsz.userinfo.domain.vo.DepartmentVO;
-import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.api.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.api.vo.DepartmentVO;
+import com.njydsz.userinfo.api.vo.UserAccountVO;
 
 /**
  * OrgQueryClient 降级处理。
