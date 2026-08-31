@@ -93,7 +93,7 @@ public class AggregateController {
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<MsgAggregateVO>>> page(PageQuery query) {
     Page<MsgAggregateVO> page = aggregateService.page(query);
-    return YdszResponse.success(PageResponses.success(page, vo -> vo));
+    return YdszResponse.success(PageResponses.success(page));
   }
 
   /**
