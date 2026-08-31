@@ -179,7 +179,15 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     category.setIcon(dto.getIcon());
     category.setRemark(dto.getRemark());
     category.setTenantId(tid);
-    categoryRepository.save(category);
+    FlowCategoryDTO categoryDto = new FlowCategoryDTO();
+    categoryDto.setId(java.util.UUID.randomUUID().toString());
+    categoryDto.setCategoryCode(dto.getCategoryCode());
+    categoryDto.setCategoryName(dto.getCategoryName());
+    categoryDto.setParentId(dto.getParentId());
+    categoryDto.setSortNum(dto.getSortNum() != null ? dto.getSortNum() : 0);
+    categoryDto.setIcon(dto.getIcon());
+    categoryDto.setRemark(dto.getRemark());
+    categoryRepository.save(categoryDto);
     log.info(
         "[FlowCategory] 新增分类: code={} name={} id={}",
         category.getCategoryCode(),
@@ -227,7 +235,9 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     if (dto.getRemark() != null) {
       existing.setRemark(dto.getRemark());
     }
-    categoryRepository.update(existing);
+    FlowCategoryDTO updateDto = new FlowCategoryDTO();
+    org.springframework.beans.BeanUtils.copyProperties(existing, updateDto);
+    categoryRepository.update(updateDto);
   }
 
   /**
@@ -271,7 +281,9 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .build();
     }
     existing.setDeleted(1);
-    categoryRepository.update(existing);
+    FlowCategoryDTO deleteDto = new FlowCategoryDTO();
+    org.springframework.beans.BeanUtils.copyProperties(existing, deleteDto);
+    categoryRepository.update(deleteDto);
   }
 
   /**
