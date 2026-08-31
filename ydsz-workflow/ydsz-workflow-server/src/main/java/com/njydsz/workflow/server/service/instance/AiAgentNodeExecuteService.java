@@ -11,6 +11,7 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
+import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
@@ -134,7 +135,9 @@ public class AiAgentNodeExecuteService {
     if (approved) {
       // 3a. 通过：标记 COMPLETED，归档，审计，推进
       task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-      taskRepository.save(task);
+      FlowRunTaskDTO aiApproveDto = new FlowRunTaskDTO();
+      org.springframework.beans.BeanUtils.copyProperties(task, aiApproveDto);
+      taskRepository.save(aiApproveDto);
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "AI_AGENT_APPROVE", null, null, "AI 审批通过");
       log.info("[Flow-AI-Agent] AI 审批节点通过: instanceId={} node={}", instanceId, nodeCode);
@@ -143,7 +146,9 @@ public class AiAgentNodeExecuteService {
       // 3b. 驳回：标记 COMPLETED（已处理），归档，审计，执行驳回回退
       task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
       task.setComment(comment);
-      taskRepository.save(task);
+      FlowRunTaskDTO aiRejectDto = new FlowRunTaskDTO();
+      org.springframework.beans.BeanUtils.copyProperties(task, aiRejectDto);
+      taskRepository.save(aiRejectDto);
       archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
       support.audit(task, "AI_AGENT_REJECT", null, null, comment);
       log.info("[Flow-AI-Agent] AI 审批节点驳回: instanceId={} node={}", instanceId, nodeCode);
