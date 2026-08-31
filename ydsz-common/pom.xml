@@ -658,13 +658,6 @@
                 <version>${sentinel.version}</version>
             </dependency>
 
-            <!-- ArchUnit 架构测试（P3-2: 编译期 enforce 禁止反模式，archunit-junit5 聚合 junit5-api + engine） -->
-            <dependency>
-                <groupId>com.tngtech.archunit</groupId>
-                <artifactId>archunit-junit5</artifactId>
-                <version>${archunit.version}</version>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 

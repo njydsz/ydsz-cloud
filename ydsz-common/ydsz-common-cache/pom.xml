@@ -12,7 +12,6 @@
   <description>YDSZ Common Cache - 多策略本地缓存框架（零第三方依赖核心，可选 Spring/Micrometer 集成）</description>
 
   <properties>
-    <jmh.version>1.37</jmh.version>
     <!-- L1 工具层模块标识：激活 purity 检查 -->
     <l1.module.skip>false</l1.module.skip>
   </properties>
@@ -81,40 +80,6 @@
       <artifactId>spring-boot-actuator-autoconfigure</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
-    </dependency>
-    <!-- Test -->
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.awaitility</groupId>
-      <artifactId>awaitility</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <!-- JMH Benchmark（test scope，避免打包进生产 jar） -->
-    <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-core</artifactId>
-      <version>${jmh.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-generator-annprocess</artifactId>
-      <version>${jmh.version}</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
