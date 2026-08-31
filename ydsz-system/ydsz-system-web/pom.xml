@@ -78,18 +78,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-            <!-- ArchUnit 架构测试（P3-2：DDD 分层依赖方向与 Controller 注册性守护，见 SystemArchitectureTest） -->
-        <dependency>
-            <groupId>com.tngtech.archunit</groupId>
-            <artifactId>archunit-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- JUnit 5 测试基座（P0-1：支撑 ArchUnit Controller 注册性守护测试） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
