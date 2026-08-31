@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
@@ -155,14 +154,13 @@ public class EmptyAssigneeStrategyService {
     LocalDateTime now = LocalDateTime.now();
     task.setFinishAt(now);
     task.setDurationMs(0L);
-    FlowRunTaskDTO autoPassDto = new FlowRunTaskDTO();
-    BeanUtils.copyProperties(task, autoPassDto);
-    taskRepository.save(autoPassDto);
-    archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-    support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
+    FlowRunTaskDTO autoPassDto = toDto(task);
+    FlowRunTaskVO saved = taskRepository.save(autoPassDto);
+    archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
+    support.audit(saved, "AUTO_PASS", null, null, "审批人为空，自动通过");
     log.info("[Flow] 审批人为空自动通过: instanceId={} node={}", instance.getId(), node.getNodeCode());
     advanceAfterAutoPass(instance, node, variables);
-    return task.getId();
+    return saved.getId();
   }
 
   /**
@@ -187,11 +185,10 @@ public class EmptyAssigneeStrategyService {
     task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId(userId);
     task.setAssigneeName(fallbackName);
-    FlowRunTaskDTO fallbackDto = new FlowRunTaskDTO();
-    BeanUtils.copyProperties(task, fallbackDto);
-    taskRepository.save(fallbackDto);
+    FlowRunTaskDTO fallbackDto = toDto(task);
+    FlowRunTaskVO saved = taskRepository.save(fallbackDto);
     log.info(logMsg, instance.getId(), node.getNodeCode(), userId);
-    return task.getId();
+    return saved.getId();
   }
 
   /**
@@ -205,12 +202,11 @@ public class EmptyAssigneeStrategyService {
    */
   private String fallbackToResolveAssignee(
       FlowRunTaskVO task, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
-    FlowRunTaskDTO resolveDto = new FlowRunTaskDTO();
-    BeanUtils.copyProperties(task, resolveDto);
-    taskRepository.save(resolveDto);
-    resolveAssignee(task, node, variables, null, instance);
-    taskRepository.update(task);
-    return task.getId();
+    FlowRunTaskDTO resolveDto = toDto(task);
+    FlowRunTaskVO saved = taskRepository.save(resolveDto);
+    resolveAssignee(saved, node, variables, null, instance);
+    taskRepository.update(saved);
+    return saved.getId();
   }
 
   /**
@@ -229,6 +225,64 @@ public class EmptyAssigneeStrategyService {
       FlowAssigneeDTO explicit,
       FlowInstanceVO instance) {
     assigneeResolutionService.resolveAssignee(task, node, variables, explicit, instance);
+  }
+
+  /**
+   * 将运行时任务 VO 显式映射为 DTO（写入入参）。
+   *
+   * <p>本方法替代 {@code BeanUtils.copyProperties()}，提供编译期类型安全的字段映射。
+   * 仅在这几个兜底策略方法内部使用，避免反射拷贝带来的字段不同步风险。
+   *
+   * @param vo 源 VO（由调用方组装完成）
+   * @return 同名字段复制后的 DTO
+   */
+  private FlowRunTaskDTO toDto(FlowRunTaskVO vo) {
+    FlowRunTaskDTO dto = new FlowRunTaskDTO();
+    dto.setId(vo.getId());
+    dto.setInstanceId(vo.getInstanceId());
+    dto.setFlowCode(vo.getFlowCode());
+    dto.setDefinitionId(vo.getDefinitionId());
+    dto.setNodeCode(vo.getNodeCode());
+    dto.setNodeName(vo.getNodeName());
+    dto.setNodeType(vo.getNodeType());
+    dto.setBusinessType(vo.getBusinessType());
+    dto.setBusinessId(vo.getBusinessId());
+    dto.setBusinessNo(vo.getBusinessNo());
+    dto.setFlowName(vo.getFlowName());
+    dto.setTitle(vo.getTitle());
+    dto.setAssignorId(vo.getAssignorId());
+    dto.setAssignorName(vo.getAssignorName());
+    dto.setAssigneeType(vo.getAssigneeType());
+    dto.setAssigneeId(vo.getAssigneeId());
+    dto.setAssigneeName(vo.getAssigneeName());
+    dto.setPermissionFlag(vo.getPermissionFlag());
+    dto.setPerformType(vo.getPerformType());
+    dto.setApproveCount(vo.getApproveCount());
+    dto.setApproveFinished(vo.getApproveFinished());
+    dto.setVotePassRate(vo.getVotePassRate());
+    dto.setTaskStatus(vo.getTaskStatus());
+    dto.setComment(vo.getComment());
+    dto.setClaimAt(vo.getClaimAt());
+    dto.setFinishAt(vo.getFinishAt());
+    dto.setEffectiveTime(vo.getEffectiveTime());
+    dto.setCompletedAt(vo.getCompletedAt());
+    dto.setDurationMs(vo.getDurationMs());
+    dto.setDueAt(vo.getDueAt());
+    dto.setPriority(vo.getPriority());
+    dto.setUrgeCount(vo.getUrgeCount());
+    dto.setLastUrgedAt(vo.getLastUrgedAt());
+    dto.setSlaAction(vo.getSlaAction());
+    dto.setSlaEscalated(vo.getSlaEscalated());
+    dto.setRevision(vo.getRevision());
+    dto.setUserWeight(vo.getUserWeight());
+    dto.setApproveWeight(vo.getApproveWeight());
+    dto.setTotalWeight(vo.getTotalWeight());
+    dto.setIterVar(vo.getIterVar());
+    dto.setTenantId(vo.getTenantId());
+    dto.setProviderTraceId(vo.getProviderTraceId());
+    dto.setDeleted(vo.getDeleted());
+    dto.setCreatedAt(vo.getCreatedAt());
+    return dto;
   }
 
   /**
