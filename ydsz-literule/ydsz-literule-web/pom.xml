@@ -20,6 +20,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-domain</artifactId>
         </dependency>
+        <!-- literule-infra: Repository 实现 + MyBatis Mapper 注入 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-literule-infra</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>

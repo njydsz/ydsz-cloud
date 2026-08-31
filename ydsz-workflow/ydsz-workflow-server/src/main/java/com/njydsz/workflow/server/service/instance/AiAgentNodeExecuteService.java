@@ -132,10 +132,11 @@ public class AiAgentNodeExecuteService {
     // 2. 创建任务记录（用于审计追溯）
     FlowRunTaskDTO dto = buildAuditDto(instance, node, approved, comment);
 
+    FlowRunTaskVO saved;
     if (approved) {
       // 3a. 通过：标记 COMPLETED，归档，审计，推进
       dto.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-      FlowRunTaskVO saved = taskRepository.save(dto);
+      saved = taskRepository.save(dto);
       archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
       support.audit(saved, "AI_AGENT_APPROVE", null, null, "AI 审批通过");
       log.info("[Flow-AI-Agent] AI 审批节点通过: instanceId={} node={}", instanceId, nodeCode);
@@ -144,7 +145,7 @@ public class AiAgentNodeExecuteService {
       // 3b. 驳回：标记 COMPLETED（已处理），归档，审计，执行驳回回退
       dto.setTaskStatus(FlowTaskStatus.COMPLETED.name());
       dto.setComment(comment);
-      FlowRunTaskVO saved = taskRepository.save(dto);
+      saved = taskRepository.save(dto);
       archiveService.archiveToHistory(saved, FlowTaskStatus.COMPLETED);
       support.audit(saved, "AI_AGENT_REJECT", null, null, comment);
       log.info("[Flow-AI-Agent] AI 审批节点驳回: instanceId={} node={}", instanceId, nodeCode);

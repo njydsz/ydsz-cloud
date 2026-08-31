@@ -10,12 +10,12 @@ import lombok.Setter;
 /**
  * 操作审计日志实体（P1-14 操作审计视图）。
  *
- * <p>对应 <code>sys_audit_log</code> 表（由 ydsz-common-audit 模块管理），
+ * <p>对应 <code>ydsz_job_audit_log</code> 表（由 ydsz-common-audit 模块管理），
  * 本实体仅用于查询，不执行写入操作。写入由 common-audit 模块的 {@code AuditWriter} 完成。
  *
  * <p>cronjob 模块通过 {@code module = 'cronjob'} 过滤只查看与任务调度相关的审计记录。
  *
- * <p><b>注意</b>：本实体不继承 {@code MpBaseIdEntity}，因为 sys_audit_log 表可能不存在于
+ * <p><b>注意</b>：本实体不继承 {@code MpBaseIdEntity}，因为 ydsz_job_audit_log 表可能不存在于
  * 所有部署环境（取决于是否引入 common-audit 模块），且本模块不管理该表的 DDL。
  *
  * @author ydsz-team
@@ -23,7 +23,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@TableName("sys_audit_log")
+@TableName("ydsz_job_audit_log")
 public class SysAuditLog {
 
   @Serial private static final long serialVersionUID = 1L;

@@ -160,7 +160,7 @@ public final class CostEstimate implements Serializable {
   }
 
   private static double round(double value) {
-    return new BigDecimal(value).setScale(6, RoundingMode.HALF_UP).doubleValue();
+    return BigDecimal.valueOf(value).setScale(6, RoundingMode.HALF_UP).doubleValue();
   }
 
   @Override

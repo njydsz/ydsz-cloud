@@ -19,4 +19,17 @@
         <module>ydsz-workflow-app</module>
         <module>ydsz-workflow-web</module>
     </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <configLocation>${maven.multiModuleProjectDirectory}/../docs/checkstyle.xml</configLocation>
+                    <propertyExpansion>config_loc=${maven.multiModuleProjectDirectory}/../docs</propertyExpansion>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
