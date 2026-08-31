@@ -52,12 +52,6 @@
             <artifactId>jakarta.validation-api</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <!-- JSON 模块 -->
         <dependency>
@@ -65,22 +59,5 @@
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <!-- 生成 test-jar（供下游模块集成测试复用 AbstractIntegrationTest 等基类） -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

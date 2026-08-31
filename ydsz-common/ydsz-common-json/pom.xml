@@ -85,13 +85,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Test -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!-- JMH Benchmark -->
         <dependency>
             <groupId>org.openjdk.jmh</groupId>

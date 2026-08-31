@@ -100,11 +100,6 @@
             <optional>true</optional>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
         <!-- P0-1: 统一监控告警（Sentry SPI：ELK/Loki 日志推送 + 告警收敛 + SLA） -->
         <dependency>
             <groupId>com.njydsz</groupId>

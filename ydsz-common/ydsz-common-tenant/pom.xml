@@ -73,29 +73,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
-
-        <!-- 测试依赖 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <!-- 生成 test-jar（供下游模块复用测试工具：TenantTestUtils / WithMockTenant 等） -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
