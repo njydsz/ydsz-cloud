@@ -303,7 +303,7 @@ ydsz:
 |---|---|---|
 | `ydsz.literule.circuit-breaker-error-rate` | `0.5` | 熔断错误率阈值（0~1.0） |
 | `ydsz.literule.circuit-breaker-min-evaluations` | `100` | 熔断最小评估次数 |
-| `ydsz.literule.circuit-breaker-open-state-ms` | `30000` | OPEN 状态持续时间（对齐 Resilience4j） |
+| `ydsz.literule.circuit-breaker-open-state-ms` | `30000` | OPEN 状态持续时间（对齐 common-safe 自研熔断引擎） |
 
 ### 多级缓存
 

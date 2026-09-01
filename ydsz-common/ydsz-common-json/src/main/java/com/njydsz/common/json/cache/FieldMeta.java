@@ -5,6 +5,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.exception.JsonSerializationException;
 import com.njydsz.common.json.type.FieldTypeCode;
@@ -151,6 +153,14 @@ public final class FieldMeta {
    */
   public final boolean serializable;
 
+  /**
+   * 字段视图（P1.5 方法级注解支持）。
+   *
+   * <p>来自字段级或 getter 方法级 {@code @JsonView} 注解（字段级优先），空数组表示无视图标注。
+   * 对齐 Jackson 的注解放置习惯：{@code @JsonView} 既可标在字段上也可标在 getter 上。
+   */
+  public final Class<?>[] views;
+
   /** 类型代码（优化序列化分支预测） */
   public final int serializeTypeCode;
 
@@ -275,6 +285,9 @@ public final class FieldMeta {
         !(accessProperty != null
             && accessProperty.access() == JsonProperty.Access.WRITE_ONLY);
 
+    // 加载 @JsonView（P1.5 方法级支持：字段级优先，回退 getter 方法级）
+    this.views = resolveViews(field);
+
     field.setAccessible(true);
 
     // 缓存 DateTimeFormatter（P2-1: 避免每次 formatDateValue/parseDateValue 重复编译模式）
@@ -305,6 +318,57 @@ public final class FieldMeta {
       includeAnnotation = field.getDeclaringClass().getAnnotation(JsonInclude.class);
     }
     return includeAnnotation != null ? includeAnnotation.value() : JsonInclude.Include.ALWAYS;
+  }
+
+  /**
+   * 解析字段视图（P1.5 方法级注解支持）。
+   *
+   * <p>字段级 {@code @JsonView} 优先；字段未标注时回退到 getter 方法级标注
+   * （命名规则：非 boolean 字段 {@code getX}，boolean 字段 {@code isX}，另尝试 {@code isX}）。
+   * 两处均未标注返回空数组。
+   *
+   * @param field Java 反射字段对象
+   * @return 视图类数组（无标注时为空数组，非 null）
+   */
+  private static Class<?>[] resolveViews(Field field) {
+    JsonView annotation = field.getAnnotation(JsonView.class);
+    if (annotation != null) {
+      return annotation.value();
+    }
+    // 回退 getter 方法级标注
+    Method getter = findGetterMethod(field);
+    if (getter != null) {
+      JsonView methodAnnotation = getter.getAnnotation(JsonView.class);
+      if (methodAnnotation != null) {
+        return methodAnnotation.value();
+      }
+    }
+    return new Class<?>[0];
+  }
+
+  /**
+   * 按字段名推断并查找 getter 方法（{@code getX} / boolean 字段 {@code isX}）。
+   *
+   * @param field Java 反射字段对象
+   * @return getter 方法，不存在返回 null
+   */
+  private static Method findGetterMethod(Field field) {
+    String fieldName = field.getName();
+    String capitalized =
+        Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+    Class<?> declaringClass = field.getDeclaringClass();
+    String[] candidates =
+        field.getType() == boolean.class
+            ? new String[] {"is" + capitalized, "get" + capitalized}
+            : new String[] {"get" + capitalized};
+    for (String candidate : candidates) {
+      try {
+        return declaringClass.getMethod(candidate);
+      } catch (NoSuchMethodException e) {
+        // 继续尝试下一个候选名
+      }
+    }
+    return null;
   }
 
   /**

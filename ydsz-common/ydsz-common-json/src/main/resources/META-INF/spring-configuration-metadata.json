@@ -92,6 +92,12 @@
       "defaultValue": false
     },
     {
+      "name": "ydsz.json.fail-on-unknown-properties",
+      "type": "java.lang.Boolean",
+      "description": "反序列化遇到未知字段时是否抛出异常（对标 Jackson FAIL_ON_UNKNOWN_PROPERTIES，默认 false 容错跳过；true 用于接口契约严格场景）。",
+      "defaultValue": false
+    },
+    {
       "name": "ydsz.json.max-request-body-size",
       "type": "java.lang.Long",
       "description": "HTTP 请求体最大大小（字节，默认 10MB），超过将拒绝请求。",

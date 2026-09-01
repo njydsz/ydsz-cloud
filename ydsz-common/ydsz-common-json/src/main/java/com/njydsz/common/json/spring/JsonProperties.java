@@ -254,6 +254,16 @@ public class JsonProperties {
     this.failOnError = failOnError;
   }
 
+  // --- failOnUnknownProperties ---
+
+  public boolean isFailOnUnknownProperties() {
+    return failOnUnknownProperties;
+  }
+
+  public void setFailOnUnknownProperties(boolean failOnUnknownProperties) {
+    this.failOnUnknownProperties = failOnUnknownProperties;
+  }
+
   // --- maxRequestBodySize ---
 
   public long getMaxRequestBodySize() {

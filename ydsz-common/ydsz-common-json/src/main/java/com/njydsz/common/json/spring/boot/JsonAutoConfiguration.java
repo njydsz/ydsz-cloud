@@ -195,6 +195,7 @@ public class JsonAutoConfiguration {
               .useBigDecimal(properties.isUseBigDecimal())
               .wrapRootValue(properties.isWrapRootValue())
               .failOnError(properties.isFailOnError())
+              .failOnUnknownProperties(properties.isFailOnUnknownProperties())
               .build();
       // 安装为全局不可变配置实例，后续修改必须走 install(newConfig)
       JsonConfig.install(newConfig);
