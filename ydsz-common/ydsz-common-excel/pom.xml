@@ -115,6 +115,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Jakarta Bean Validation 实现（Hibernate Validator + EL）：验证 DataValidator 标准委托路径；
+             仅测试域，主代码保持 L1 层零强制依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 </project>

@@ -127,7 +127,7 @@
    - 接线修复：`ExcelTemplate` read/write 三方法、`ExcelExportHelper`（新增构造注入）均接线 ExcelConfig；`ExcelAutoConfiguration` 为 ExportHelper 传入 config；新增 `ExcelReader.config()` 流式方法（与 `ExcelWriter.config()` 对称，读路径此前无配置入口）；ExcelHealthIndicator 经嵌套配置类注册（隔离 spring-boot-health optional 依赖的类引用，规避 NoClassDefFoundError）
    - 修复中暴露的三个**更深断点**（均已修复）：① `ExcelWriter` 的 `ValueFormatter` 构造时固化 defaults，链式 `config()` 变更后不重建 → 统一 `rebuildValueFormatter()`；② `UltraFastCellWriter`（typed POI 写**主路径**）完全不接收 ExcelConfig，公式注入消毒在该路径失效（P1-1 修复时漏网）→ 接入 config；③ `finish()` 非幂等，`doWrite`（单 Sheet 自动 finish）后显式 `finish()` 触发已关闭 workbook 二次写入（POI: Cannot write data, document seems to have been closed already）→ 以既有 `writeCompleted` 标志幂等化
    - 新增 `ExcelSpringWiringTest` 5 用例：以"配置属性 → 输出行为差异"为证（default-date-format 改变日期列输出、formula-injection-protection=false 关闭消毒、动态导出表头仍在首行、HealthIndicator Bean 注册且 UP）
-7. DataValidator 委托标准 Validator
+7. ✅ DataValidator 委托标准 Validator（双路径：classpath 存在 Jakarta Bean Validation 实现时委托标准 `Validator`——全约束覆盖含 `@NotBlank`/`@Email`/自定义约束，此前静默放行；实现缺席时回退内置五规则，保持 L1 零强制依赖。错误提示字段名优先映射 `@ExcelProperty.value()`。测试域引入 spring-boot-starter-validation，`DataValidatorTest` 7 用例——核心证据为 @NotBlank 空串与 @Email 格式两类"旧路径必然漏放"的约束被实际拦截）
 8. fast 路径 Sheet 选择 + zip bomb 膨胀比防护
 9. 完成架构决策（方案 A/B/C）评审——建议与语雀架构文档同步
 

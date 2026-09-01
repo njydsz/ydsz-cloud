@@ -3,7 +3,11 @@ package com.njydsz.common.excel.api.validator;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -19,12 +23,17 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
 /**
  * 数据验证器 — 读取数据时基于 JSR-303 标准注解进行字段验证。
  *
- * <p>支持以下校验规则（通过 Jakarta Bean Validation 注解配置）：</p>
+ * <p><b>双路径设计（P1-3 修复）：</b></p>
+ *
  * <ul>
- *   <li>{@link NotNull} — 必填字段验证</li>
- *   <li>{@link Size#max()} — 字符串最大长度验证</li>
- *   <li>{@link Min} / {@link Max} — 数值范围验证</li>
- *   <li>{@link jakarta.validation.constraints.Pattern} — 正则表达式验证</li>
+ *   <li><b>标准委托路径（优先）</b>：classpath 存在 Jakarta Bean Validation 实现（如
+ *       Hibernate Validator）时，委托标准 {@link Validator} 校验——覆盖全部标准约束
+ *       （{@code @NotBlank}/{@code @Email} 等）与自定义约束，此前内置规则对这类约束
+ *       <b>静默放行</b>。标准路径校验对象的全部约束（含非 Excel 映射字段），
+ *       {@code @ExcelProperty.value()} 仅用于错误提示中的字段友好名。</li>
+ *   <li><b>内置规则回退路径</b>：实现缺席时（L1 层不强制依赖校验实现），回退到手搓的
+ *       五种规则（{@link NotNull} / {@link Size#max()} / {@link Min} / {@link Max} /
+ *       {@link Pattern}），仅校验带 {@code @ExcelProperty} 的字段。</li>
  * </ul>
  *
  * <p>支持两种校验模式（通过 {@link ValidationMode} 选择）：</p>
@@ -152,11 +161,116 @@ public class DataValidator {
       throw ExcelReadException.validationFailed(rowNum, "unknown", null, "对象为null");
     }
 
+    // P1-3：优先委托标准 Validator（覆盖 @NotBlank/@Email/自定义约束等全部规则）；
+    // 实现缺席时回退内置五规则，保持 L1 层零强制依赖
+    Validator standard = StandardValidatorHolder.INSTANCE;
+    if (standard != null) {
+      validateWithStandard(standard, obj, rowNum, mode);
+      return;
+    }
+
     if (mode == ValidationMode.COLLECT_ALL) {
       validateCollectAll(obj, rowNum);
     } else {
       validateFailFast(obj, rowNum);
     }
+  }
+
+  /** 标准校验器懒加载持有者——仅首次校验时解析，实现缺席时保持 null。 */
+  private static final class StandardValidatorHolder {
+
+    static final Validator INSTANCE = resolveStandardValidator();
+
+    private static Validator resolveStandardValidator() {
+      try {
+        // 工厂为进程级单例，随模块生命周期存活（Spring 环境下业务方也可自行装配 Validator）
+        return Validation.buildDefaultValidatorFactory().getValidator();
+      } catch (Throwable t) {
+        // jakarta.validation 实现缺席（validation-api 为 optional 依赖）——回退内置规则
+        return null;
+      }
+    }
+  }
+
+  /**
+   * 标准 Validator 委托校验。
+   *
+   * <p>校验对象的全部约束（含非 {@code @ExcelProperty} 字段）；错误提示字段名优先取
+   * {@code @ExcelProperty.value()}（Excel 列名），否则用 Java 字段名。
+   *
+   * @param <T> 对象类型
+   * @param validator 标准校验器
+   * @param obj 待验证对象
+   * @param rowNum 行号
+   * @param mode 校验模式
+   */
+  private static <T> void validateWithStandard(
+      Validator validator, T obj, int rowNum, ValidationMode mode) {
+    Set<ConstraintViolation<T>> violations = validator.validate(obj);
+    if (violations.isEmpty()) {
+      return;
+    }
+
+    Class<?> clazz = obj.getClass();
+    if (mode == ValidationMode.COLLECT_ALL) {
+      List<ValidationError> errors = new ArrayList<>(violations.size());
+      for (ConstraintViolation<T> violation : violations) {
+        errors.add(toValidationError(violation, clazz, rowNum));
+      }
+      throw buildCollectAllException(rowNum, errors);
+    }
+
+    ConstraintViolation<T> first = violations.iterator().next();
+    ValidationError error = toValidationError(first, clazz, rowNum);
+    throw ExcelReadException.validationFailed(
+        rowNum, error.getFieldName(), error.getValue(), error.getMessage());
+  }
+
+  /**
+   * 将标准 ConstraintViolation 转换为 ValidationError（字段名带 Excel 列名友好映射）。
+   *
+   * @param <T> 对象类型
+   * @param violation 约束违例
+   * @param clazz 对象类型（用于字段名映射）
+   * @param rowNum 行号
+   * @return 转换后的错误详情
+   */
+  private static <T> ValidationError toValidationError(
+      ConstraintViolation<T> violation, Class<?> clazz, int rowNum) {
+    String propertyPath = violation.getPropertyPath().toString();
+    return new ValidationError(
+        rowNum, resolveFieldName(clazz, propertyPath), violation.getInvalidValue(),
+        violation.getMessage());
+  }
+
+  /**
+   * 解析错误提示字段名：取属性路径末节点对应的 Java 字段，优先映射 {@code @ExcelProperty.value()}。
+   *
+   * @param clazz 对象类型
+   * @param propertyPath 约束违例的属性路径
+   * @return 友好字段名
+   */
+  private static String resolveFieldName(Class<?> clazz, String propertyPath) {
+    String leaf = leafName(propertyPath);
+    for (Field field : ReflectCache.getCachedFields(clazz)) {
+      if (field.getName().equals(leaf)) {
+        ExcelProperty annotation = field.getAnnotation(ExcelProperty.class);
+        if (annotation != null && !annotation.value().isEmpty()) {
+          return annotation.value();
+        }
+        return leaf;
+      }
+    }
+    return propertyPath;
+  }
+
+  /** 取属性路径的末节点名（如 "address.city" → "city"）。 */
+  private static String leafName(String propertyPath) {
+    if (propertyPath == null || propertyPath.isEmpty()) {
+      return "";
+    }
+    int lastDot = propertyPath.lastIndexOf('.');
+    return lastDot >= 0 ? propertyPath.substring(lastDot + 1) : propertyPath;
   }
 
   /**
