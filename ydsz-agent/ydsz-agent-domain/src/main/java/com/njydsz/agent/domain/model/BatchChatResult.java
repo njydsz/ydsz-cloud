@@ -35,6 +35,12 @@ public class BatchChatResult implements Serializable {
   /** 失败条目数 */
   private final int failedCount;
 
+  /**
+   * 构造批量对话结果，并自动统计成功/失败条目数。
+   *
+   * @param results 批量结果列表（与请求 items 顺序一致）
+   * @param totalDurationMs 总耗时（毫秒）
+   */
   public BatchChatResult(List<BatchResultItem> results, long totalDurationMs) {
     this.results = results;
     this.totalDurationMs = totalDurationMs;
@@ -51,18 +57,38 @@ public class BatchChatResult implements Serializable {
     this.failedCount = failed;
   }
 
+  /**
+   * 获取批量结果列表。
+   *
+   * @return 批量结果列表（与请求 items 顺序一致）
+   */
   public List<BatchResultItem> getResults() {
     return results;
   }
 
+  /**
+   * 获取总耗时。
+   *
+   * @return 总耗时（毫秒）
+   */
   public long getTotalDurationMs() {
     return totalDurationMs;
   }
 
+  /**
+   * 获取成功条目数。
+   *
+   * @return 成功条目数
+   */
   public int getSuccessCount() {
     return successCount;
   }
 
+  /**
+   * 获取失败条目数。
+   *
+   * @return 失败条目数
+   */
   public int getFailedCount() {
     return failedCount;
   }

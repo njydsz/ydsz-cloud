@@ -45,6 +45,19 @@ public final class ChatRequest implements Serializable {
   /** 工具选择策略（auto/none/指定工具名） */
   private final String toolChoice;
 
+  /**
+   * 全参构造。
+   *
+   * @param model 模型名称
+   * @param messages 消息列表（按角色排序）
+   * @param temperature 温度参数（0-2）
+   * @param maxTokens 最大生成 Token 数
+   * @param topP Top-P 采样参数
+   * @param stop 停止序列列表
+   * @param stream 是否流式输出
+   * @param tools 可用工具定义列表
+   * @param toolChoice 工具选择策略（auto/none/指定工具名）
+   */
   public ChatRequest(
       String model,
       List<ChatMessage> messages,
@@ -66,38 +79,83 @@ public final class ChatRequest implements Serializable {
     this.toolChoice = toolChoice;
   }
 
+  /**
+   * 获取模型名称。
+   *
+   * @return 模型名称
+   */
   public String getModel() {
     return model;
   }
 
+  /**
+   * 获取消息列表。
+   *
+   * @return 不可变消息列表
+   */
   public List<ChatMessage> getMessages() {
     return messages;
   }
 
+  /**
+   * 获取温度参数。
+   *
+   * @return 温度参数（0-2）
+   */
   public double getTemperature() {
     return temperature;
   }
 
+  /**
+   * 获取最大生成 Token 数。
+   *
+   * @return 最大生成 Token 数
+   */
   public int getMaxTokens() {
     return maxTokens;
   }
 
+  /**
+   * 获取 Top-P 采样参数。
+   *
+   * @return Top-P 采样参数
+   */
   public double getTopP() {
     return topP;
   }
 
+  /**
+   * 获取停止序列列表。
+   *
+   * @return 不可变停止序列列表
+   */
   public List<String> getStop() {
     return stop;
   }
 
+  /**
+   * 是否流式输出。
+   *
+   * @return 流式输出返回 true
+   */
   public boolean isStream() {
     return stream;
   }
 
+  /**
+   * 获取可用工具定义列表。
+   *
+   * @return 不可变工具定义列表
+   */
   public List<ToolDefinition> getTools() {
     return tools;
   }
 
+  /**
+   * 获取工具选择策略。
+   *
+   * @return 工具选择策略（auto/none/指定工具名）
+   */
   public String getToolChoice() {
     return toolChoice;
   }
