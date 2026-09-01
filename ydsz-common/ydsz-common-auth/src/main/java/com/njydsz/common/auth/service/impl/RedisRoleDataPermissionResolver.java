@@ -90,10 +90,13 @@ public class RedisRoleDataPermissionResolver {
   private Cache<String, DataScopeInfo> buildCache() {
     Integer ttlSeconds = properties.getRoleDataCacheSeconds();
     if (ttlSeconds == null || ttlSeconds <= 0) {
-      return YdszCache.<String, DataScopeInfo>newBuilder().build();
+      return YdszCache.<String, DataScopeInfo>newBuilder()
+          .maximumSize(properties.getPermissionCacheMaxSize())
+          .build();
     }
     return YdszCache.<String, DataScopeInfo>newBuilder()
         .type(CacheType.STRIPED)
+        .maximumSize(properties.getPermissionCacheMaxSize())
         .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
         .removalListener(
             (String key, DataScopeInfo value, RemovalCause cause) -> {

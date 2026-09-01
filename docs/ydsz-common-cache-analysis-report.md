@@ -126,7 +126,7 @@
 
 - **一审前提不成立**："auth 模块 6 处手写两级缓存"经核验实为——3 处已构建在 ydsz-common-cache 之上的 L1+L2 两级缓存（RedisRolePermissionLoader / RedisRoleColumnPermissionResolver / RedisRoleDataPermissionResolver，各含近似 `buildCache()` 样板）+ ConcurrentHashMap 的用途为有界反射元数据缓存（非业务缓存）；
 - **裁定**：不建 L1+L2 薄装饰器统一抽象——3 处样板重复不满足抽象门槛（抽象收益 < 维护成本），强行统一会引入间接层；
-- **附带发现**（可低成本修复）：3 处 `buildCache()` 均未设 maximumSize（无界）；javadoc 注释写"Caffeine"但实际构建的是 YdszCache——文档与实现不符。
+- **附带发现**（2026-09-01 已低成本修复）：3 处 `buildCache()` 均未设 maximumSize（无界）——已统一补 `permissionCacheMaxSize` 容量上限（TTL 与无 TTL 两分支均覆盖）；javadoc 注释写"Caffeine"但实际构建的是 YdszCache——已改为本地缓存（YdszCache）表述。auth 模块 `mvn -o compile` + checkstyle 通过。
 
 ---
 

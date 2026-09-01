@@ -127,10 +127,13 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
   private Cache<String, RolePermissions> buildCache() {
     Integer ttlSeconds = properties.getRolePermissionCacheSeconds();
     if (ttlSeconds == null || ttlSeconds <= 0) {
-      return YdszCache.<String, RolePermissions>newBuilder().build();
+      return YdszCache.<String, RolePermissions>newBuilder()
+          .maximumSize(properties.getPermissionCacheMaxSize())
+          .build();
     }
     return YdszCache.<String, RolePermissions>newBuilder()
         .type(CacheType.STRIPED)
+        .maximumSize(properties.getPermissionCacheMaxSize())
         .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
         .removalListener(
             (String key, RolePermissions value, RemovalCause cause) -> {
@@ -225,11 +228,11 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
    * <p>处理流程：
    *
    * <ol>
-   *   <li>先检查 Caffeine 本地缓存，筛选出未缓存的角色
+   *   <li>先检查本地缓存（YdszCache），筛选出未缓存的角色
    *   <li>对未缓存的角色，构建 menu-keys 和 api-keys 列表
    *   <li>通过 Pipeline 一次性发送所有 GET 命令（1 次往返）
    *   <li>解析每个角色的 JSON 数据，构建 RolePermissions
-   *   <li>写入 Caffeine 缓存和 RolePermissionCacheService
+   *   <li>写入本地缓存和 RolePermissionCacheService
    * </ol>
    *
    * @param roleCodes 角色编码集合

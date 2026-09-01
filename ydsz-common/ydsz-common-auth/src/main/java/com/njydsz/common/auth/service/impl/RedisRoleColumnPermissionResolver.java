@@ -35,7 +35,7 @@ import com.njydsz.common.util.string.StringUtils;
  *   <li>根据 accessToken 读取当前用户信息
  *   <li>从用户信息解析 roleCode（支持多角色）
  *   <li>按角色读取 role-col-key 并合并列可见/可编辑规则
- *   <li>对单角色列权限结果做本地 Caffeine 缓存，防止内存溢出
+ *   <li>对单角色列权限结果做本地缓存（容量上限 permissionCacheMaxSize），防止内存溢出
  * </ul>
  *
  * <p><b>缓存策略：</b>
@@ -74,10 +74,13 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
   private Cache<String, ColumnScopeInfo> buildCache() {
     Integer ttlSeconds = properties.getRoleColumnCacheSeconds();
     if (ttlSeconds == null || ttlSeconds <= 0) {
-      return YdszCache.<String, ColumnScopeInfo>newBuilder().build();
+      return YdszCache.<String, ColumnScopeInfo>newBuilder()
+          .maximumSize(properties.getPermissionCacheMaxSize())
+          .build();
     }
     return YdszCache.<String, ColumnScopeInfo>newBuilder()
         .type(CacheType.STRIPED)
+        .maximumSize(properties.getPermissionCacheMaxSize())
         .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
         .removalListener(
             (String key, ColumnScopeInfo value, RemovalCause cause) -> {
