@@ -107,21 +107,10 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-        <!-- Resilience4j 降级/熔断（可选） -->
+        <!-- 平台自研弹性引擎（熔断降级，替代第三方弹性库） -->
         <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-circuitbreaker</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-        <!-- Resilience4j Core（显式声明：optional 依赖的传递依赖不传播，
-            而 CircuitBreakerRegistry 的父接口 io.github.resilience4j.core.Registry
-            编译期必需，缺失将导致 UnifiedSearchService 编译失败） -->
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-core</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
         </dependency>
         <!-- SkyWalking Trace（可选） -->
         <dependency>

@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +19,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
+import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ChannelScore;
@@ -90,15 +90,15 @@ public class ChannelRouter {
   /**
    * 收集所有 MessageChannel Bean 并按通道类型注册,同时为每个通道创建独立熔断器。
    *
-   * <p>使用 {@link com.njydsz.common.sentry.resilience.CircuitBreaker} 封装 Resilience4j，
-   * 符合《云顶编码规范》：业务模块不得直接使用 Resilience4j。
+   * <p>使用 {@link com.njydsz.common.sentry.resilience.CircuitBreaker} 封装平台自研弹性引擎，
+   * 符合《云顶编码规范》：业务模块不得直接使用底层熔断实现。
    */
   @PostConstruct
   public void initChannels() {
     Map<String, MessageChannel> beans = applicationContext.getBeansOfType(MessageChannel.class);
-    CircuitBreakerConfig r4jConfig =
+    CircuitBreakerConfig engineConfig =
         buildCircuitBreakerConfig();
-    CircuitBreakerRegistry r4jRegistry = CircuitBreakerRegistry.of(r4jConfig);
+    CircuitBreakerRegistry engineRegistry = CircuitBreakerRegistry.of(engineConfig);
     for (MessageChannel channel : beans.values()) {
       String type = channel.channelType() == null ? "" : channel.channelType().trim().toUpperCase();
       if (type.isEmpty()) {
@@ -106,8 +106,8 @@ public class ChannelRouter {
         continue;
       }
       channelCache.put(type, channel);
-      // 使用 common-sentry CircuitBreaker 封装 Resilience4j，符合编码规范
-      breakerCache.put(type, new CircuitBreaker("ch-" + type, r4jConfig, r4jRegistry));
+      // 使用 common-sentry CircuitBreaker 封装自研引擎，符合编码规范
+      breakerCache.put(type, new CircuitBreaker("ch-" + type, engineConfig, engineRegistry));
     }
     log.info("[ChannelRouter] 已注册 {} 个消息通道(含熔断器): {}", channelCache.size(), channelCache.keySet());
   }

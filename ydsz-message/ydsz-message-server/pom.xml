@@ -95,10 +95,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-spring-boot3</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
@@ -123,6 +119,11 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
+        </dependency>
+        <!-- 通道熔断：自研弹性引擎（ChannelRouter 直接使用） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
         </dependency>
         <!-- P1-3: 事务性 Outbox 事件模式 -->
         <dependency>

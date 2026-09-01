@@ -13,6 +13,10 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.safe.resilience.CircuitBreaker;
+import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
+import com.njydsz.common.safe.resilience.CircuitBreakerEvent;
+import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
 import com.njydsz.common.search.api.SearchFilter;
@@ -50,7 +54,7 @@ public class UnifiedSearchService {
   private final ThreadPoolTaskExecutor searchExecutor;
   private final BusinessRanker ranker;
 
-  /** Resilience4j 熔断器 — 替代自研三态状态机，提供标准化指标输出与 HALF_OPEN 自动探测 */
+  /** 平台自研熔断器（common-safe 弹性引擎），提供标准化状态机与 HALF_OPEN 自动探测 */
   private final CircuitBreaker circuitBreaker;
 
   private final Semaphore searchConcurrencyLimit;
@@ -218,7 +222,7 @@ public class UnifiedSearchService {
       long textProcessMs = phaseTimer.lap();
       metrics.recordTextProcess(textProcessMs);
 
-      // P4-12: 使用 Resilience4j 熔断器判断是否允许请求通过
+      // P4-12: 使用平台自研熔断器判断是否允许请求通过
       if (circuitBreaker.getState()
               == CircuitBreaker.State.OPEN
           || circuitBreaker.getState()
@@ -506,9 +510,9 @@ public class UnifiedSearchService {
   }
 
   /**
-   * 创建 Resilience4j 熔断器实例。
+   * 创建平台自研熔断器实例。
    *
-   * <p>使用搜索配置中的熔断参数，启动自定义滑动窗口统计。 配置包括：失败阈值、熔断等待时长、半开状态允许请求数。
+   * <p>使用搜索配置中的熔断参数，启动滑动窗口统计。 配置包括：失败阈值、熔断等待时长、半开状态允许请求数。
    *
    * @param properties 搜索配置
    * @return 配置好的 CircuitBreaker 实例
@@ -535,7 +539,7 @@ public class UnifiedSearchService {
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .build();
 
-    CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(cbConfig);
+    CircuitBreakerRegistry registry = new CircuitBreakerRegistry(cbConfig);
     CircuitBreaker breaker = registry.circuitBreaker("search-circuit-breaker");
 
     // 注册状态变更监听器，输出结构化日志
@@ -548,7 +552,10 @@ public class UnifiedSearchService {
                     event.getStateTransition().getFromState(),
                     event.getStateTransition().getToState()))
         .onError(
-            event -> log.debug("[UnifiedSearch] 熔断器记录失败: {}", event.getThrowable().getMessage()))
+            event ->
+                log.debug(
+                    "[UnifiedSearch] 熔断器记录失败: {}",
+                    event.getThrowable() == null ? "unknown" : event.getThrowable().getMessage()))
         .onSuccess(event -> log.debug("[UnifiedSearch] 熔断器记录成功"));
 
     return breaker;

@@ -4,28 +4,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
+import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 
 /**
  * 规则熔断器（基于 ydsz-common-sentry 统一熔断能力）。
  *
- * <p>每个规则编码独立维护一个熔断器，底层委托 sentry {@link CircuitBreaker}（Resilience4j），
+ * <p>每个规则编码独立维护一个熔断器，底层委托 sentry {@link CircuitBreaker}（平台自研弹性引擎），
  * 提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
  *
  * <h3>1.0.0 变更</h3>
  *
- * <p>自 1.0.0 起，底层实现从自研滑动窗口改为委托 {@code ydsz-common-sentry} 的 {@link CircuitBreaker} 封装（基于
- * Resilience4j），获得以下收益：
+ * <p>底层实现委托 {@code ydsz-common-sentry} 的 {@link CircuitBreaker} 封装（平台自研弹性引擎，
+ * 决策见 docs/ADR-0004-resilience-self-hosted.md），获得以下收益：
  *
  * <ul>
- *   <li>经过 10+ 年生产验证的稳定性
- *   <li>原生支持 Micrometer 指标导出
- *   <li>支持事件总线（状态变更 / 错误 / 成功事件）
+ *   <li>全仓统一的熔断状态机与事件总线
  *   <li>符合编码规范第 27.5 节"禁止自建熔断器"的要求
+ *   <li>修复历史缺陷：错误率阈值（0-1）此前直传百分比语义 API，实际生效阈值缩小 100 倍
  * </ul>
  *
  * @since 1.0.0
@@ -49,7 +48,7 @@ public class RuleCircuitBreaker {
   private final int minEvaluations;
   private final long openStateMs;
 
-  /** 共享的 Resilience4j 注册表（所有规则共用配置模板） */
+  /** 共享的自研引擎注册表（所有规则共用配置模板） */
   private final CircuitBreakerRegistry sharedRegistry;
 
   /** 每个规则一个独立熔断器（sentry 封装） */
@@ -73,17 +72,16 @@ public class RuleCircuitBreaker {
     this.minEvaluations = Math.max(1, minEvaluations);
     this.openStateMs = openStateMs;
 
-    // 构建共享的 Resilience4j 配置
+    // 构建共享的自研引擎配置（阈值 0-1 换算为百分比语义）
     CircuitBreakerConfig config =
         CircuitBreakerConfig.custom()
-            .failureRateThreshold((float) errorRateThreshold)
+            .failureRateThreshold((float) (errorRateThreshold * 100))
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
             .slidingWindowSize(this.minEvaluations)
             .waitDurationInOpenState(java.time.Duration.ofMillis(openStateMs))
             .minimumNumberOfCalls(this.minEvaluations)
             .permittedNumberOfCallsInHalfOpenState(1)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
-            .recordException(e -> true)
             .build();
 
     this.sharedRegistry = CircuitBreakerRegistry.of(config);
@@ -156,14 +154,13 @@ public class RuleCircuitBreaker {
   /** 构建单规则熔断配置（复用全局阈值参数） */
   private CircuitBreakerConfig buildBreakerConfig() {
     return CircuitBreakerConfig.custom()
-        .failureRateThreshold((float) errorRateThreshold)
+        .failureRateThreshold((float) (errorRateThreshold * 100))
         .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
         .slidingWindowSize(minEvaluations)
         .waitDurationInOpenState(java.time.Duration.ofMillis(openStateMs))
         .minimumNumberOfCalls(minEvaluations)
         .permittedNumberOfCallsInHalfOpenState(1)
         .automaticTransitionFromOpenToHalfOpenEnabled(true)
-        .recordException(e -> true)
         .build();
   }
 
@@ -184,7 +181,7 @@ public class RuleCircuitBreaker {
   public void reset(String ruleCode) {
     CircuitBreaker removed = breakers.remove(ruleCode);
     if (removed != null) {
-      // 从 Resilience4j 注册表中移除，释放资源
+      // 从注册表中移除，释放资源
       sharedRegistry.remove("literule-" + ruleCode);
     }
   }
