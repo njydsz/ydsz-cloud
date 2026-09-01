@@ -1,6 +1,8 @@
 package com.njydsz.common.safe.resilience;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -118,8 +120,8 @@ public final class CircuitBreakerRegistry {
    *
    * @return 不可变名称集合
    */
-  public java.util.Set<String> getRegisteredNames() {
-    return java.util.Collections.unmodifiableSet(circuitBreakers.keySet());
+  public Set<String> getRegisteredNames() {
+    return Collections.unmodifiableSet(circuitBreakers.keySet());
   }
 
   /**

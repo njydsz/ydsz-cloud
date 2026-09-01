@@ -4,9 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,15 @@ import com.njydsz.common.excel.core.reader.SimpleCell;
  * <h3>空行处理</h3>
  *
  * <p>当 {@code reader.skipEmptyRows=true} 时，无单元格数据的行将被跳过。
+ *
+ * <h3>XLSX 规范覆盖（深度完善·方案 B）</h3>
+ *
+ * <ul>
+ *   <li>数值型日期识别：{@code <c s="N">} 样式索引经 {@link StylesReader} 判定为
+ *       日期格式时，序列值按 {@code use1904Windowing} 窗口转 {@link Date}
+ *   <li>inlineStr 富文本：多 run 拼接 + phonetic 过滤（复用
+ *       {@link SharedStringsReader#extractRunsText}）
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
