@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
-import com.njydsz.literule.domain.vo.RuleEngineStats;
+import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 
 /**
  * 规则引擎统计记录器
@@ -40,7 +40,7 @@ public class RuleStatistics {
   private final AtomicLong totalElapsedMs = new AtomicLong(0);
 
   /** 按规则编码的统计明细 */
-  private final ConcurrentHashMap<String, RuleEngineStats.RuleStat> perRuleStats =
+  private final ConcurrentHashMap<String, RuleEngineStatsVO.RuleStat> perRuleStats =
       new ConcurrentHashMap<>();
 
   /** 是否启用统计 */
@@ -78,7 +78,7 @@ public class RuleStatistics {
         ruleCode,
         (k, v) -> {
           if (v == null) {
-            v = RuleEngineStats.RuleStat.builder().build();
+            v = RuleEngineStatsVO.RuleStat.builder().build();
           }
           v.setExecutions(v.getExecutions() + 1);
           if (triggered) {
@@ -138,19 +138,19 @@ public class RuleStatistics {
    * @param lastEvaluatedRules 上次评估规则数
    * @return 统计快照
    */
-  public RuleEngineStats snapshot(int registeredRules, int lastEvaluatedRules) {
-    Map<String, RuleEngineStats.RuleStat> snapshot = new HashMap<>(perRuleStats.size());
+  public RuleEngineStatsVO snapshot(int registeredRules, int lastEvaluatedRules) {
+    Map<String, RuleEngineStatsVO.RuleStat> snapshot = new HashMap<>(perRuleStats.size());
     perRuleStats.forEach(
         (k, v) ->
             snapshot.put(
                 k,
-                RuleEngineStats.RuleStat.builder()
+                RuleEngineStatsVO.RuleStat.builder()
                     .executions(v.getExecutions())
                     .triggered(v.getTriggered())
                     .errors(v.getErrors())
                     .totalElapsedMs(v.getTotalElapsedMs())
                     .build()));
-    return RuleEngineStats.builder()
+    return RuleEngineStatsVO.builder()
         .totalEvaluations(totalEvaluations.get())
         .totalTriggered(totalTriggered.get())
         .totalErrors(totalErrors.get())

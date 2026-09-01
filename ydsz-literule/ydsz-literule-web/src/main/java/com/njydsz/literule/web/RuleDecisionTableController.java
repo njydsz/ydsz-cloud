@@ -32,7 +32,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.spi.DecisionTableEvalProvider;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
@@ -214,7 +214,7 @@ public class RuleDecisionTableController {
     }
     try {
       byte[] bytes = file.getBytes();
-      DecisionTableDefinition saved = svc.importExcel(bytes, operator);
+      DecisionTableDefinitionDTO saved = svc.importExcel(bytes, operator);
       return YdszResponse.success(LiteruleWebConverter.INSTANCE.entityToVO(saved));
     } catch (IllegalArgumentException e) {
       log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());

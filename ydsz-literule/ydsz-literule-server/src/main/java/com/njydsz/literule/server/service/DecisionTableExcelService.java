@@ -1,6 +1,6 @@
 package com.njydsz.literule.server.service;
 
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 
 /**
  * 决策表 Excel 导入导出服务接口（应用服务层）
@@ -18,7 +18,7 @@ public interface DecisionTableExcelService {
    * @param definition 决策表定义
    * @return xlsx 字节数组
    */
-  byte[] exportToExcel(DecisionTableDefinition definition);
+  byte[] exportToExcel(DecisionTableDefinitionDTO definition);
 
   /**
    * 从 Excel 导入决策表
@@ -26,7 +26,7 @@ public interface DecisionTableExcelService {
    * @param excelBytes xlsx 字节数组
    * @return 决策表定义
    */
-  DecisionTableDefinition importFromExcel(byte[] excelBytes);
+  DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes);
 
   /**
    * 导出空白 Excel 模板

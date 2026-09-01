@@ -15,7 +15,7 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
-import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
+import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewDTO;
 import com.njydsz.workflow.domain.repository.FlowAttachmentRepository;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.server.config.FlowProperties;
@@ -85,7 +85,7 @@ import com.njydsz.workflow.server.service.FlowAttachmentService;
  * @see FlowAttachmentService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowAttachmentVO 附件值对象
  * @see com.njydsz.workflow.domain.dto.FlowAttachmentDTO 附件 DTO
- * @see com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO 附件预览 VO
+ * @see com.njydsz.workflow.domain.dto.FlowAttachmentPreviewDTO 附件预览 VO
  */
 @Slf4j
 @Service
@@ -200,7 +200,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
   }
 
   @Override
-  public FlowAttachmentPreviewVO previewAttachment(String attachmentId) {
+  public FlowAttachmentPreviewDTO previewAttachment(String attachmentId) {
     FlowAttachmentVO attachment = attachmentRepository.findById(attachmentId).orElse(null);
     if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
       throw SysException.builder()
@@ -215,7 +215,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     String previewType = classifyPreviewType(ext);
     String previewUrl = buildPreviewUrl(previewType, downloadUrl, ext);
 
-    FlowAttachmentPreviewVO vo = new FlowAttachmentPreviewVO();
+    FlowAttachmentPreviewDTO vo = new FlowAttachmentPreviewDTO();
     vo.setAttachmentId(attachment.getId());
     vo.setFileName(attachment.getFileName());
     vo.setFileExt(ext);

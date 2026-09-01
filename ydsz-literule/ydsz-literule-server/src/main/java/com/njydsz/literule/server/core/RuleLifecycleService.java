@@ -11,11 +11,11 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RetirementSuggestion;
-import com.njydsz.literule.domain.vo.RollbackPreview;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.vo.RetirementSuggestionVO;
+import com.njydsz.literule.domain.vo.RollbackPreviewVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleEngineStats;
+import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
@@ -42,10 +42,10 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  * <h3>退役检测策略</h3>
  *
  * <ul>
- *   <li>{@link RetirementSuggestion.Reason#DORMANT}：评估次数 ≥ minEvaluations 且触发率 = 0
- *   <li>{@link RetirementSuggestion.Reason#HIGH_ERROR_RATE}：错误率 ≥ errorRateThreshold
- *   <li>{@link RetirementSuggestion.Reason#STALE_DISABLED}：已停用且停用时间 ≥ staleDisabledDays
- *   <li>{@link RetirementSuggestion.Reason#LOW_IMPACT}：触发率 < lowImpactTriggerRate 且评估次数 ≥
+ *   <li>{@link RetirementSuggestionVO.Reason#DORMANT}：评估次数 ≥ minEvaluations 且触发率 = 0
+ *   <li>{@link RetirementSuggestionVO.Reason#HIGH_ERROR_RATE}：错误率 ≥ errorRateThreshold
+ *   <li>{@link RetirementSuggestionVO.Reason#STALE_DISABLED}：已停用且停用时间 ≥ staleDisabledDays
+ *   <li>{@link RetirementSuggestionVO.Reason#LOW_IMPACT}：触发率 < lowImpactTriggerRate 且评估次数 ≥
  *       minEvaluations
  * </ul>
  *
@@ -53,10 +53,10 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  *
  * <pre>
  * // 1. 检测退役候选规则
- * List&lt;RetirementSuggestion&gt; suggestions = lifecycleService.detectRetirementCandidates();
+ * List&lt;RetirementSuggestionVO&gt; suggestions = lifecycleService.detectRetirementCandidates();
  *
  * // 2. 预览回滚
- * RollbackPreview preview = lifecycleService.previewRollback("R001", 3);
+ * RollbackPreviewVO preview = lifecycleService.previewRollback("R001", 3);
  * log.info("差异数: {}", preview.getDiffCount());
  *
  * // 3. 确认后执行回滚
@@ -175,28 +175,28 @@ public class RuleLifecycleService {
    *
    * @return 退役建议列表（按置信度降序排列）
    */
-  public List<RetirementSuggestion> detectRetirementCandidates() {
-    List<RuleDefinition> allRules = configProvider.loadAllRules();
+  public List<RetirementSuggestionVO> detectRetirementCandidates() {
+    List<RuleDefinitionDTO> allRules = configProvider.loadAllRules();
     if (allRules == null || allRules.isEmpty()) {
       return List.of();
     }
 
     // 获取执行统计
-    RuleEngineStats stats = ruleEngine.getStats();
-    Map<String, RuleEngineStats.RuleStat> perRuleStats =
+    RuleEngineStatsVO stats = ruleEngine.getStats();
+    Map<String, RuleEngineStatsVO.RuleStat> perRuleStats =
         stats != null && stats.getPerRuleStats() != null
             ? stats.getPerRuleStats()
             : new HashMap<>();
 
-    List<RetirementSuggestion> suggestions = new ArrayList<>();
-    for (RuleDefinition rule : allRules) {
+    List<RetirementSuggestionVO> suggestions = new ArrayList<>();
+    for (RuleDefinitionDTO rule : allRules) {
       // 已归档规则跳过
       RuleStatus status = RuleStatus.fromCode(rule.getStatus());
       if (status == RuleStatus.ARCHIVED) {
         continue;
       }
 
-      RetirementSuggestion suggestion = analyzeRule(rule, perRuleStats.get(rule.getCode()));
+      RetirementSuggestionVO suggestion = analyzeRule(rule, perRuleStats.get(rule.getCode()));
       if (suggestion != null) {
         suggestions.add(suggestion);
       }
@@ -214,11 +214,11 @@ public class RuleLifecycleService {
    * @param ruleCode 规则编码
    * @return 退役建议；不符合退役条件返回 null
    */
-  public RetirementSuggestion detectRetirement(String ruleCode) {
+  public RetirementSuggestionVO detectRetirement(String ruleCode) {
     if (ruleCode == null || ruleCode.isBlank()) {
       return null;
     }
-    RuleDefinition rule = configProvider.findByCode(ruleCode);
+    RuleDefinitionDTO rule = configProvider.findByCode(ruleCode);
     if (rule == null) {
       return null;
     }
@@ -227,8 +227,8 @@ public class RuleLifecycleService {
       return null;
     }
 
-    RuleEngineStats stats = ruleEngine.getStats();
-    Map<String, RuleEngineStats.RuleStat> perRuleStats =
+    RuleEngineStatsVO stats = ruleEngine.getStats();
+    Map<String, RuleEngineStatsVO.RuleStat> perRuleStats =
         stats != null && stats.getPerRuleStats() != null
             ? stats.getPerRuleStats()
             : new HashMap<>();
@@ -237,7 +237,7 @@ public class RuleLifecycleService {
   }
 
   /** 分析单条规则是否应退役 */
-  private RetirementSuggestion analyzeRule(RuleDefinition rule, RuleEngineStats.RuleStat stat) {
+  private RetirementSuggestionVO analyzeRule(RuleDefinitionDTO rule, RuleEngineStatsVO.RuleStat stat) {
     long evaluations = stat != null ? stat.getExecutions() : 0;
     long triggered = stat != null ? stat.getTriggered() : 0;
     long errors = stat != null ? stat.getErrors() : 0;
@@ -248,7 +248,7 @@ public class RuleLifecycleService {
     if (isStaleDisabled(rule)) {
       return buildSuggestion(
           rule,
-          RetirementSuggestion.Reason.STALE_DISABLED,
+          RetirementSuggestionVO.Reason.STALE_DISABLED,
           evaluations,
           triggered,
           errors,
@@ -265,7 +265,7 @@ public class RuleLifecycleService {
     if (evaluations >= dormantMinEvaluations && triggered == 0) {
       return buildSuggestion(
           rule,
-          RetirementSuggestion.Reason.DORMANT,
+          RetirementSuggestionVO.Reason.DORMANT,
           evaluations,
           triggered,
           errors,
@@ -277,7 +277,7 @@ public class RuleLifecycleService {
     if (errorRate >= highErrorRateThreshold) {
       return buildSuggestion(
           rule,
-          RetirementSuggestion.Reason.HIGH_ERROR_RATE,
+          RetirementSuggestionVO.Reason.HIGH_ERROR_RATE,
           evaluations,
           triggered,
           errors,
@@ -289,7 +289,7 @@ public class RuleLifecycleService {
     if (triggerRate < lowImpactTriggerRate && triggered > 0) {
       return buildSuggestion(
           rule,
-          RetirementSuggestion.Reason.LOW_IMPACT,
+          RetirementSuggestionVO.Reason.LOW_IMPACT,
           evaluations,
           triggered,
           errors,
@@ -301,7 +301,7 @@ public class RuleLifecycleService {
   }
 
   /** 判断规则是否长期停用 */
-  private boolean isStaleDisabled(RuleDefinition rule) {
+  private boolean isStaleDisabled(RuleDefinitionDTO rule) {
     // 状态非 DISABLED 直接返回 false
     if (!"DISABLED".equalsIgnoreCase(rule.getStatus())) {
       return false;
@@ -325,9 +325,9 @@ public class RuleLifecycleService {
   }
 
   /** 构建退役建议 */
-  private RetirementSuggestion buildSuggestion(
-      RuleDefinition rule,
-      RetirementSuggestion.Reason reason,
+  private RetirementSuggestionVO buildSuggestion(
+      RuleDefinitionDTO rule,
+      RetirementSuggestionVO.Reason reason,
       long evaluations,
       long triggered,
       long errors,
@@ -346,7 +346,7 @@ public class RuleLifecycleService {
               String.format("低影响：触发率 %.4f（%d/%d），投入产出比不合理", triggerRate, triggered, evaluations);
         };
 
-    return RetirementSuggestion.builder()
+    return RetirementSuggestionVO.builder()
         .ruleCode(rule.getCode())
         .ruleName(rule.getName())
         .category(rule.getCategory())
@@ -378,7 +378,7 @@ public class RuleLifecycleService {
 
   /** 构建建议操作列表 */
   private List<String> buildRecommendedActions(
-      RetirementSuggestion.Reason reason, RuleDefinition rule) {
+      RetirementSuggestionVO.Reason reason, RuleDefinitionDTO rule) {
     List<String> actions = new ArrayList<>();
     switch (reason) {
       case DORMANT -> {
@@ -416,9 +416,9 @@ public class RuleLifecycleService {
    * @param version 目标版本号
    * @return 回滚预览；规则不存在或版本不存在返回 null
    */
-  public RollbackPreview previewRollback(String ruleCode, int version) {
+  public RollbackPreviewVO previewRollback(String ruleCode, int version) {
     if (versionRepository == null) {
-      return RollbackPreview.builder()
+      return RollbackPreviewVO.builder()
           .ruleCode(ruleCode)
           .targetVersion(version)
           .rollbackAllowed(false)
@@ -426,9 +426,9 @@ public class RuleLifecycleService {
           .build();
     }
 
-    RuleDefinition current = configProvider.findByCode(ruleCode);
+    RuleDefinitionDTO current = configProvider.findByCode(ruleCode);
     if (current == null) {
-      return RollbackPreview.builder()
+      return RollbackPreviewVO.builder()
           .ruleCode(ruleCode)
           .targetVersion(version)
           .rollbackAllowed(false)
@@ -442,7 +442,7 @@ public class RuleLifecycleService {
         versions.stream().filter(v -> v.getVersion() == version).findFirst().orElse(null);
 
     if (targetVersion == null) {
-      return RollbackPreview.builder()
+      return RollbackPreviewVO.builder()
           .ruleCode(ruleCode)
           .currentVersion(current.getVersion())
           .targetVersion(version)
@@ -461,12 +461,12 @@ public class RuleLifecycleService {
     }
 
     // 解析目标版本的规则定义 JSON
-    RuleDefinition targetDef = parseDefinitionJson(targetVersion.getDefinitionJson(), ruleCode);
+    RuleDefinitionDTO targetDef = parseDefinitionJson(targetVersion.getDefinitionJson(), ruleCode);
 
     // 生成字段差异
-    List<RollbackPreview.FieldDiff> diffs = generateDiffs(current, targetDef);
+    List<RollbackPreviewVO.FieldDiff> diffs = generateDiffs(current, targetDef);
 
-    return RollbackPreview.builder()
+    return RollbackPreviewVO.builder()
         .ruleCode(ruleCode)
         .ruleName(current.getName())
         .currentVersion(current.getVersion())
@@ -481,18 +481,18 @@ public class RuleLifecycleService {
   }
 
   /**
-   * 解析版本 JSON 为 RuleDefinition
+   * 解析版本 JSON 为 RuleDefinitionDTO
    *
    * <p>使用简化的 JSON 解析逻辑，提取关键字段进行比较。 如需精确解析，消费方可注入 ObjectMapper。
    */
-  private RuleDefinition parseDefinitionJson(String json, String ruleCode) {
+  private RuleDefinitionDTO parseDefinitionJson(String json, String ruleCode) {
     if (json == null || json.isBlank()) {
-      return RuleDefinition.builder().code(ruleCode).build();
+      return RuleDefinitionDTO.builder().code(ruleCode).build();
     }
     try {
       // 简化解析：提取 JSON 中的字段值
       Map<String, String> fields = extractJsonFields(json);
-      return RuleDefinition.builder()
+      return RuleDefinitionDTO.builder()
           .code(ruleCode)
           .name(fields.get("name"))
           .description(fields.get("description"))
@@ -512,7 +512,7 @@ public class RuleLifecycleService {
           .build();
     } catch (Exception e) {
       log.warn("[Lifecycle] 解析版本 JSON 失败: {}", e.getMessage());
-      return RuleDefinition.builder().code(ruleCode).build();
+      return RuleDefinitionDTO.builder().code(ruleCode).build();
     }
   }
 
@@ -605,9 +605,9 @@ public class RuleLifecycleService {
   }
 
   /** 生成字段差异列表 */
-  private List<RollbackPreview.FieldDiff> generateDiffs(
-      RuleDefinition current, RuleDefinition target) {
-    List<RollbackPreview.FieldDiff> diffs = new ArrayList<>();
+  private List<RollbackPreviewVO.FieldDiff> generateDiffs(
+      RuleDefinitionDTO current, RuleDefinitionDTO target) {
+    List<RollbackPreviewVO.FieldDiff> diffs = new ArrayList<>();
     compareField(diffs, "name", "规则名称", current.getName(), target.getName());
     compareField(diffs, "description", "描述", current.getDescription(), target.getDescription());
     compareField(
@@ -655,7 +655,7 @@ public class RuleLifecycleService {
 
   /** 比较单个字段并添加差异 */
   private void compareField(
-      List<RollbackPreview.FieldDiff> diffs,
+      List<RollbackPreviewVO.FieldDiff> diffs,
       String field,
       String label,
       String currentValue,
@@ -663,16 +663,16 @@ public class RuleLifecycleService {
     String cur = normalizeValue(currentValue);
     String tgt = normalizeValue(targetValue);
     if (!equals(cur, tgt)) {
-      RollbackPreview.DiffType type;
+      RollbackPreviewVO.DiffType type;
       if (cur == null && tgt != null) {
-        type = RollbackPreview.DiffType.ADDED;
+        type = RollbackPreviewVO.DiffType.ADDED;
       } else if (cur != null && tgt == null) {
-        type = RollbackPreview.DiffType.REMOVED;
+        type = RollbackPreviewVO.DiffType.REMOVED;
       } else {
-        type = RollbackPreview.DiffType.MODIFIED;
+        type = RollbackPreviewVO.DiffType.MODIFIED;
       }
       diffs.add(
-          RollbackPreview.FieldDiff.builder()
+          RollbackPreviewVO.FieldDiff.builder()
               .field(field)
               .fieldLabel(label)
               .currentValue(cur)
@@ -713,7 +713,7 @@ public class RuleLifecycleService {
    * @throws IllegalStateException 规则已归档或版本不存在
    */
   public RuleDefinitionVO rollback(String ruleCode, int version, String operator) {
-    RollbackPreview preview = previewRollback(ruleCode, version);
+    RollbackPreviewVO preview = previewRollback(ruleCode, version);
     if (!preview.isRollbackAllowed()) {
       throw new IllegalStateException("回滚被拒绝: " + preview.getRollbackBlockedReason());
     }
@@ -740,8 +740,8 @@ public class RuleLifecycleService {
    * @return 退役后的规则定义
    * @throws IllegalStateException 规则已归档
    */
-  public RuleDefinition retireRule(String ruleCode, String operator, String reason) {
-    RuleDefinition rule = configProvider.findByCode(ruleCode);
+  public RuleDefinitionDTO retireRule(String ruleCode, String operator, String reason) {
+    RuleDefinitionDTO rule = configProvider.findByCode(ruleCode);
     if (rule == null) {
       throw new IllegalArgumentException("规则不存在: " + ruleCode);
     }
@@ -761,7 +761,7 @@ public class RuleLifecycleService {
     rule.setEnabled(false);
     rule.setReviewComment("退役原因: " + reason);
 
-    RuleDefinition saved = ruleAdminService.save(rule, operator, "规则退役: " + reason);
+    RuleDefinitionDTO saved = ruleAdminService.save(rule, operator, "规则退役: " + reason);
     log.info("[Lifecycle] 规则已退役: code={}, operator={}, reason={}", ruleCode, operator, reason);
     return saved;
   }
@@ -807,7 +807,7 @@ public class RuleLifecycleService {
    * @return 状态 → 数量 的映射
    */
   public Map<String, Integer> getLifecycleSummary() {
-    List<RuleDefinition> allRules = configProvider.loadAllRules();
+    List<RuleDefinitionDTO> allRules = configProvider.loadAllRules();
     Map<String, Integer> summary = new LinkedHashMap<>();
 
     // 初始化所有状态
@@ -816,7 +816,7 @@ public class RuleLifecycleService {
     }
 
     if (allRules != null) {
-      for (RuleDefinition rule : allRules) {
+      for (RuleDefinitionDTO rule : allRules) {
         String status = rule.getStatus();
         if (status == null || status.isBlank()) {
           status = "PUBLISHED";

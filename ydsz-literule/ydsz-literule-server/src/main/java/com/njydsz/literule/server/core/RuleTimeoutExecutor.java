@@ -11,8 +11,8 @@ import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 规则超时执行器
@@ -50,7 +50,7 @@ public class RuleTimeoutExecutor {
    * @param timeoutMs 本次评估超时（毫秒）；0 表示使用默认值；负数表示不限制
    * @return 评估结果；超时返回未触发结果（含 timeout 标记）
    */
-  public RuleResult evaluateWithTimeout(Rule rule, RuleContext context, long timeoutMs) {
+  public RuleResultVO evaluateWithTimeout(Rule rule, RuleContextVO context, long timeoutMs) {
     long effectiveTimeout = timeoutMs > 0 ? timeoutMs : timeoutMs == 0 ? defaultTimeoutMs : 0;
 
     if (effectiveTimeout <= 0) {
@@ -58,7 +58,7 @@ public class RuleTimeoutExecutor {
       return rule.evaluate(context);
     }
 
-    CompletableFuture<RuleResult> future =
+    CompletableFuture<RuleResultVO> future =
         CompletableFuture.supplyAsync(() -> rule.evaluate(context), executor);
 
     try {
@@ -66,7 +66,7 @@ public class RuleTimeoutExecutor {
     } catch (TimeoutException e) {
       future.cancel(true);
       log.warn("[LiteRule-Timeout] 规则 {} 评估超时（{}ms）", rule.getCode(), effectiveTimeout);
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(rule.getCode())
           .ruleName(rule.getName())
           .category(rule.getCategory())
@@ -77,7 +77,7 @@ public class RuleTimeoutExecutor {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       log.warn("[LiteRule-Timeout] 规则 {} 评估被中断", rule.getCode());
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(rule.getCode())
           .triggered(false)
           .description("评估被中断")

@@ -11,10 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleEnvironment;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.debug.RuleDebugger;
@@ -22,7 +22,7 @@ import com.njydsz.literule.server.debug.RuleDebugger;
 /**
  * 表达式规则：基于 LiteExpr 表达式动态评估
  *
- * <p>从 {@link RuleDefinition} 构建，条件表达式返回 boolean 决定是否触发， 严重度表达式可动态决定严重等级。支持 ${var} 模板渲染标题和描述。
+ * <p>从 {@link RuleDefinitionDTO} 构建，条件表达式返回 boolean 决定是否触发， 严重度表达式可动态决定严重等级。支持 ${var} 模板渲染标题和描述。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -33,7 +33,7 @@ public class ExpressionRule implements Rule {
     /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
-  private final RuleDefinition definition;
+  private final RuleDefinitionDTO definition;
   private final ExpressionEngine evaluator;
 
   /**
@@ -42,7 +42,7 @@ public class ExpressionRule implements Rule {
    * @param definition 规则定义
    * @param evaluator 表达式求值器
    */
-  public ExpressionRule(RuleDefinition definition, ExpressionEngine evaluator) {
+  public ExpressionRule(RuleDefinitionDTO definition, ExpressionEngine evaluator) {
     this.definition = definition;
     this.evaluator = evaluator;
   }
@@ -118,7 +118,7 @@ public class ExpressionRule implements Rule {
    * @since 1.0.0
    */
   @Override
-  public RuleDefinition getRuleDefinition() {
+  public RuleDefinitionDTO getRuleDefinition() {
     return definition;
   }
 
@@ -126,7 +126,7 @@ public class ExpressionRule implements Rule {
    * 租户 ID（来自规则定义）
    *
    * <p>1.5.0 起启用运行时租户过滤：{@link com.njydsz.literule.server.core.DefaultRuleEngine} 在评估前会比较本方法返回值与
-   * {@link RuleContext#getTenantId()}，仅当两者匹配时才评估该规则。
+   * {@link RuleContextVO#getTenantId()}，仅当两者匹配时才评估该规则。
    *
    * @return 规则定义中的租户 ID；默认 "1"
    * @since 1.0.0
@@ -140,7 +140,7 @@ public class ExpressionRule implements Rule {
    * 环境标识（来自规则定义，P1-5 多环境隔离）
    *
    * <p>1.6.0 起启用运行时环境过滤：{@link com.njydsz.literule.server.core.DefaultRuleEngine} 在评估前会比较本方法返回值与
-   * {@link RuleContext#getEnvironment()}： 规则 environment 为 {@link RuleEnvironment#DEFAULT
+   * {@link RuleContextVO#getEnvironment()}： 规则 environment 为 {@link RuleEnvironment#DEFAULT
    * "default"} 时匹配任何上下文环境； 非 "default" 时必须完全匹配。
    *
    * @return 规则定义中的环境标识；默认 "default"
@@ -169,7 +169,7 @@ public class ExpressionRule implements Rule {
    * @return 规则评估结果（包含触发状态、严重度、标题、描述等）
    */
   @Override
-  public RuleResult evaluate(RuleContext context) {
+  public RuleResultVO evaluate(RuleContextVO context) {
     // F1 断点调试：规则级断点检查（未配置调试器时为 no-op）
     RuleDebugger debugger = RuleDebugger.get();
     if (debugger != null) {
@@ -183,7 +183,7 @@ public class ExpressionRule implements Rule {
       boolean triggered =
           Boolean.TRUE.equals(evalBooleanCached(definition.getConditionExpression(), context));
       if (!triggered) {
-        return RuleResult.builder()
+        return RuleResultVO.builder()
             .ruleCode(getCode())
             .ruleName(getName())
             .category(getCategory())
@@ -200,7 +200,7 @@ public class ExpressionRule implements Rule {
       String title = renderTemplate(definition.getTitleTemplate(), context);
       String description = renderTemplate(definition.getDescriptionTemplate(), context);
 
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(getCode())
           .ruleName(getName())
           .category(getCategory())
@@ -216,7 +216,7 @@ public class ExpressionRule implements Rule {
           .build();
     } catch (Exception e) {
       log.warn("[LiteRule] 表达式规则 {} 评估异常: {}", getCode(), e.getMessage());
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(getCode())
           .triggered(false)
           .triggeredAt(LocalDateTime.now())
@@ -236,7 +236,7 @@ public class ExpressionRule implements Rule {
    * @param context 规则上下文
    * @return 严重度
    */
-  private RuleSeverity resolveSeverity(RuleContext context) {
+  private RuleSeverity resolveSeverity(RuleContextVO context) {
     String expr = definition.getSeverityExpression();
     if (StringUtils.isNotBlank(expr)) {
       Object code = evalCached(expr, context);
@@ -266,7 +266,7 @@ public class ExpressionRule implements Rule {
    * @param context 规则上下文
    * @return 渲染后的字符串
    */
-  private String renderTemplate(String template, RuleContext context) {
+  private String renderTemplate(String template, RuleContextVO context) {
     if (StringUtils.isBlank(template)) {
       return getName();
     }
@@ -350,21 +350,21 @@ public class ExpressionRule implements Rule {
    *
    * @return 规则定义
    */
-  public RuleDefinition getDefinition() {
+  public RuleDefinitionDTO getDefinition() {
     return definition;
   }
 
   /**
    * 带缓存的布尔表达式求值（P2-9 条件冗余计算缓存）
    *
-   * <p>同一 {@link RuleContext} 内，相同条件表达式仅求值一次；命中缓存直接返回， 避免多条规则或同规则内（条件+严重度+模板）重复表达式的冗余计算。 缓存随 {@code
+   * <p>同一 {@link RuleContextVO} 内，相同条件表达式仅求值一次；命中缓存直接返回， 避免多条规则或同规则内（条件+严重度+模板）重复表达式的冗余计算。 缓存随 {@code
    * context} 生命周期自动失效，无需额外清理。
    *
    * @param expr 条件表达式
    * @param context 评估上下文
    * @return 布尔结果；expr 为 null/空返回 null
    */
-  private Boolean evalBooleanCached(String expr, RuleContext context) {
+  private Boolean evalBooleanCached(String expr, RuleContextVO context) {
     if (expr == null || expr.isBlank()) {
       return null;
     }
@@ -382,13 +382,13 @@ public class ExpressionRule implements Rule {
   /**
    * 带缓存的对象表达式求值（P2-9 条件冗余计算缓存）
    *
-   * <p>与 {@link #evalBooleanCached(String, RuleContext)} 同理，用于严重度/模板渲染表达式。
+   * <p>与 {@link #evalBooleanCached(String, RuleContextVO)} 同理，用于严重度/模板渲染表达式。
    *
    * @param expr 表达式
    * @param context 评估上下文
    * @return 求值结果；expr 为 null/空返回 null
    */
-  private Object evalCached(String expr, RuleContext context) {
+  private Object evalCached(String expr, RuleContextVO context) {
     if (expr == null || expr.isBlank()) {
       return null;
     }

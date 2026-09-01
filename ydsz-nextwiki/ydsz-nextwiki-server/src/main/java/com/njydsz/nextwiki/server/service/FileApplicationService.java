@@ -607,14 +607,14 @@ public class FileApplicationService {
    *
    * @param nodeIds 待删除节点 ID 列表
    * @param userId 操作人 ID
-   * @return 批量结果 {@link BatchResult}，含成功数与失败明细
+   * @return 批量结果 {@link BatchResultDTO}，含成功数与失败明细
    * @complexity O(nodeIds.size() / parallelism)（并行删除）
    * @note 无整体事务边界，部分成功部分失败属正常；单条失败不影响其他项
    * @concurrency 使用 nextwikiTaskExecutor 线程池并行处理
    */
-  public BatchResult batchDelete(List<String> nodeIds, String userId) {
+  public BatchResultDTO batchDelete(List<String> nodeIds, String userId) {
     if (nodeIds == null || nodeIds.isEmpty()) {
-      return new BatchResult(0, List.of());
+      return new BatchResultDTO(0, List.of());
     }
 
     // 批量查询节点，避免 N 次单条查询
@@ -643,22 +643,22 @@ public class FileApplicationService {
 
     // 等待所有任务完成并收集结果
     int success = 0;
-    List<BatchResult.FailedItem> failedItems = new ArrayList<>();
+    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>();
     for (int i = 0; i < futures.size(); i++) {
       try {
         String error = futures.get(i).get();
         if (error == null) {
           success++;
         } else {
-          failedItems.add(new BatchResult.FailedItem(nodeIds.get(i), error));
+          failedItems.add(new BatchResultDTO.FailedItem(nodeIds.get(i), error));
         }
       } catch (Exception e) {
-        failedItems.add(new BatchResult.FailedItem(nodeIds.get(i), e.getMessage()));
+        failedItems.add(new BatchResultDTO.FailedItem(nodeIds.get(i), e.getMessage()));
       }
     }
 
     log.info("[FileApplicationService] 批量删除: total={}, success={}", nodeIds.size(), success);
-    return new BatchResult(success, failedItems);
+    return new BatchResultDTO(success, failedItems);
   }
 
   /**
@@ -670,14 +670,14 @@ public class FileApplicationService {
    * @param nodeIds 待移动节点 ID 列表
    * @param targetParentId 目标父目录 ID
    * @param userId 操作人 ID
-   * @return 批量结果 {@link BatchResult}，含成功数与失败明细
+   * @return 批量结果 {@link BatchResultDTO}，含成功数与失败明细
    * @complexity O(nodeIds.size() / parallelism)（并行移动）
    * @note 单条失败被捕获并记入失败明细，不影响其余项
    * @concurrency 使用 nextwikiTaskExecutor 线程池并行处理
    */
-  public BatchResult batchMove(List<String> nodeIds, String targetParentId, String userId) {
+  public BatchResultDTO batchMove(List<String> nodeIds, String targetParentId, String userId) {
     if (nodeIds == null || nodeIds.isEmpty()) {
-      return new BatchResult(0, List.of());
+      return new BatchResultDTO(0, List.of());
     }
 
     // 并行处理各节点移动
@@ -695,22 +695,22 @@ public class FileApplicationService {
 
     // 等待所有任务完成并收集结果
     int success = 0;
-    List<BatchResult.FailedItem> failedItems = new ArrayList<>();
+    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>();
     for (int i = 0; i < futures.size(); i++) {
       try {
         String error = futures.get(i).get();
         if (error == null) {
           success++;
         } else {
-          failedItems.add(new BatchResult.FailedItem(nodeIds.get(i), error));
+          failedItems.add(new BatchResultDTO.FailedItem(nodeIds.get(i), error));
         }
       } catch (Exception e) {
-        failedItems.add(new BatchResult.FailedItem(nodeIds.get(i), e.getMessage()));
+        failedItems.add(new BatchResultDTO.FailedItem(nodeIds.get(i), e.getMessage()));
       }
     }
 
     log.info("[FileApplicationService] 批量移动: total={}, success={}", nodeIds.size(), success);
-    return new BatchResult(success, failedItems);
+    return new BatchResultDTO(success, failedItems);
   }
 
   /**
@@ -1384,7 +1384,7 @@ public class FileApplicationService {
   }
 
   /** 批量操作结果 */
-  public record BatchResult(int successCount, List<FailedItem> failedItems) {
+  public record BatchResultDTO(int successCount, List<FailedItem> failedItems) {
 
     /**
      * 失败项明细

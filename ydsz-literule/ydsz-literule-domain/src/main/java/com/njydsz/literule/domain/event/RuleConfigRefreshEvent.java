@@ -55,7 +55,7 @@ public class RuleConfigRefreshEvent extends DomainEvent {
     /** 全量重载 */
     FULL_RELOAD,
 
-    /** 规则包（RulePack）批量重载（P0-F4） */
+    /** 规则包（RulePackVO）批量重载（P0-F4） */
     PACK_RELOAD
   }
 

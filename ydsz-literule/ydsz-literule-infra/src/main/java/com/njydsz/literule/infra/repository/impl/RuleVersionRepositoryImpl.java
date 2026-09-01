@@ -18,7 +18,7 @@ import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
-import com.njydsz.literule.infra.entity.RuleDefinition;
+import com.njydsz.literule.infra.entity.RuleDefinitionDTO;
 import com.njydsz.literule.infra.entity.RuleVersionHistory;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.infra.mapper.RuleVersionHistoryMapper;
@@ -92,7 +92,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     }
 
     // 2. 查询当前规则定义
-    RuleDefinition currentRule = ruleDefinitionMapper.selectByCode(ruleCode);
+    RuleDefinitionDTO currentRule = ruleDefinitionMapper.selectByCode(ruleCode);
     if (currentRule == null) {
       log.warn("[LiteRule] 回滚时规则定义不存在: ruleCode={}", ruleCode);
       return Optional.empty();
@@ -112,7 +112,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     log.info("[LiteRule] 回滚前快照已保存: ruleCode={}, backupVersion={}", ruleCode, nextVersion);
 
     // 4. 从目标版本反序列化规则定义并恢复到主表
-    com.njydsz.literule.domain.dto.RuleDefinition targetDefinition;
+    com.njydsz.literule.domain.dto.RuleDefinitionDTO targetDefinition;
     try {
       targetDefinition = YdszJson.fromJson(
           targetVersion.getDefinitionJson(), com.njydsz.literule.domain.dto.RuleDefinition.class);
@@ -122,7 +122,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
       throw new IllegalStateException("回滚失败：目标版本 JSON 解析异常", e);
     }
 
-    RuleDefinition updateEntity = doFromApi(targetDefinition);
+    RuleDefinitionDTO updateEntity = doFromApi(targetDefinition);
     updateEntity.setId(currentRule.getId());
     updateEntity.setRuleCode(ruleCode);
     // 新版本号 = 当前最大版本号 + 1，保持递增
@@ -153,7 +153,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
         ruleCode, version, updateEntity.getVersion(), operator);
 
     // 6. 返回回滚后的规则定义 VO
-    RuleDefinition refreshedRule = ruleDefinitionMapper.selectByCode(ruleCode);
+    RuleDefinitionDTO refreshedRule = ruleDefinitionMapper.selectByCode(ruleCode);
     return Optional.ofNullable(converter.entityToVO(refreshedRule));
   }
 
@@ -175,13 +175,13 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
   }
 
   /**
-   * RuleDefinition → RuleDefinition (api) 转换
+   * RuleDefinitionDTO → RuleDefinitionDTO (api) 转换
    *
    * @param rule 规则定义
-   * @return RuleDefinition api 定义
+   * @return RuleDefinitionDTO api 定义
    */
-  private com.njydsz.literule.domain.dto.RuleDefinition apiFromDo(RuleDefinition rule) {
-    com.njydsz.literule.domain.dto.RuleDefinition def = new com.njydsz.literule.domain.dto.RuleDefinition();
+  private com.njydsz.literule.domain.dto.RuleDefinitionDTO apiFromDo(RuleDefinitionDTO rule) {
+    com.njydsz.literule.domain.dto.RuleDefinitionDTO def = new com.njydsz.literule.domain.dto.RuleDefinitionDTO();
     def.setCode(rule.getRuleCode());
     def.setName(rule.getRuleName());
     def.setCategory(rule.getCategory());
@@ -214,13 +214,13 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
   }
 
   /**
-   * RuleDefinition (api) → RuleDefinition 转换
+   * RuleDefinitionDTO (api) → RuleDefinitionDTO 转换
    *
    * @param def api 规则定义
-   * @return RuleDefinition
+   * @return RuleDefinitionDTO
    */
-  private RuleDefinition doFromApi(com.njydsz.literule.domain.dto.RuleDefinition def) {
-    RuleDefinition rule = new RuleDefinition();
+  private RuleDefinitionDTO doFromApi(com.njydsz.literule.domain.dto.RuleDefinitionDTO def) {
+    RuleDefinitionDTO rule = new RuleDefinitionDTO();
     rule.setRuleCode(def.getCode());
     rule.setRuleName(def.getName());
     rule.setCategory(def.getCategory());

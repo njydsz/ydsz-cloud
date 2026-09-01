@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * 规则数据源管理器（P1-5）
@@ -32,7 +32,7 @@ public class RuleSourceManager {
 
   private final Map<RuleSource.SourceType, RuleSource> sources = new ConcurrentHashMap<>();
   private volatile RuleSource activeSource;
-  private final List<Consumer<List<RuleDefinition>>> globalListeners = new CopyOnWriteArrayList<>();
+  private final List<Consumer<List<RuleDefinitionDTO>>> globalListeners = new CopyOnWriteArrayList<>();
 
   /**
    * 注册数据源
@@ -84,7 +84,7 @@ public class RuleSourceManager {
    *
    * @return 启用的规则定义列表
    */
-  public List<RuleDefinition> loadEnabledRules() {
+  public List<RuleDefinitionDTO> loadEnabledRules() {
     RuleSource source = getAvailableSource();
     if (source == null) {
       log.warn("[RuleSourceManager] 无可用数据源，返回空列表");
@@ -120,7 +120,7 @@ public class RuleSourceManager {
    *
    * @param listener 监听器
    */
-  public void addGlobalChangeListener(Consumer<List<RuleDefinition>> listener) {
+  public void addGlobalChangeListener(Consumer<List<RuleDefinitionDTO>> listener) {
     globalListeners.add(listener);
     // 向所有支持 Watch 的数据源注册监听
     for (RuleSource source : sources.values()) {
@@ -131,8 +131,8 @@ public class RuleSourceManager {
   }
 
   /** 通知全局监听器 */
-  private void notifyGlobalListeners(List<RuleDefinition> rules) {
-    for (Consumer<List<RuleDefinition>> listener : globalListeners) {
+  private void notifyGlobalListeners(List<RuleDefinitionDTO> rules) {
+    for (Consumer<List<RuleDefinitionDTO>> listener : globalListeners) {
       try {
         listener.accept(rules);
       } catch (Exception e) {

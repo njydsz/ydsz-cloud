@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
 
@@ -295,7 +295,7 @@ public class ExpressionValidationService {
     }
     // 求值
     try {
-      RuleContext ctx = RuleContext.of(facts != null ? facts : Map.of());
+      RuleContextVO ctx = RuleContextVO.of(facts != null ? facts : Map.of());
       Object value = evaluator.eval(expression, ctx);
       result.setValue(value == null ? "null" : String.valueOf(value));
       result.setJavaType(value == null ? "null" : value.getClass().getSimpleName());

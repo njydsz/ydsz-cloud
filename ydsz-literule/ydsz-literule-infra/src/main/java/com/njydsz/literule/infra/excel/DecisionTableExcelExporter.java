@@ -13,14 +13,14 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.exception.ExcelWriteException;
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.enums.HitPolicy;
 import com.njydsz.literule.server.service.DecisionTableExcelService;
 
 /**
  * 决策表 Excel 导入导出器（P0-3）
  *
- * <p>将 {@link DecisionTableDefinition} 与 Excel（.xlsx）双向转换， 采用业界通用的决策表 Excel 格式，便于业务人员通过
+ * <p>将 {@link DecisionTableDefinitionDTO} 与 Excel（.xlsx）双向转换， 采用业界通用的决策表 Excel 格式，便于业务人员通过
  * Excel 维护决策表。
  *
  * <h3>Excel 结构</h3>
@@ -95,14 +95,14 @@ public class DecisionTableExcelExporter implements DecisionTableExcelService {
    * @throws RuntimeException 导出失败
    */
   @Override
-public byte[] exportToExcel(DecisionTableDefinition definition) {
+public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
     if (definition == null) {
       throw new IllegalArgumentException("决策表定义不能为 null");
     }
     try {
-      List<DecisionTableDefinition.Column> conditionColumns =
+      List<DecisionTableDefinitionDTO.Column> conditionColumns =
           nullToEmpty(definition.getConditionColumns());
-      List<DecisionTableDefinition.Column> actionColumns =
+      List<DecisionTableDefinitionDTO.Column> actionColumns =
           nullToEmpty(definition.getActionColumns());
       int totalCols = Math.max(conditionColumns.size() + actionColumns.size(), MIN_TOTAL_COLUMNS);
 
@@ -128,11 +128,11 @@ public byte[] exportToExcel(DecisionTableDefinition definition) {
       // 第 3 行：列头（C:name / A:name）
       List<Object> headerRow = padRow(new ArrayList<>(), totalCols);
       int colIdx = 0;
-      for (DecisionTableDefinition.Column col : conditionColumns) {
+      for (DecisionTableDefinitionDTO.Column col : conditionColumns) {
         headerRow.set(colIdx, CONDITION_PREFIX + nullToEmpty(col.getName()));
         colIdx++;
       }
-      for (DecisionTableDefinition.Column col : actionColumns) {
+      for (DecisionTableDefinitionDTO.Column col : actionColumns) {
         headerRow.set(colIdx, ACTION_PREFIX + nullToEmpty(col.getName()));
         colIdx++;
       }
@@ -141,11 +141,11 @@ public byte[] exportToExcel(DecisionTableDefinition definition) {
       // 第 4 行：列显示名（label）
       List<Object> labelRow = padRow(new ArrayList<>(), totalCols);
       colIdx = 0;
-      for (DecisionTableDefinition.Column col : conditionColumns) {
+      for (DecisionTableDefinitionDTO.Column col : conditionColumns) {
         labelRow.set(colIdx, nullToEmpty(col.getLabel()));
         colIdx++;
       }
-      for (DecisionTableDefinition.Column col : actionColumns) {
+      for (DecisionTableDefinitionDTO.Column col : actionColumns) {
         labelRow.set(colIdx, nullToEmpty(col.getLabel()));
         colIdx++;
       }
@@ -154,19 +154,19 @@ public byte[] exportToExcel(DecisionTableDefinition definition) {
       // 第 5 行：列类型
       List<Object> typeRow = padRow(new ArrayList<>(), totalCols);
       colIdx = 0;
-      for (DecisionTableDefinition.Column col : conditionColumns) {
+      for (DecisionTableDefinitionDTO.Column col : conditionColumns) {
         typeRow.set(colIdx, nullToEmpty(col.getType()));
         colIdx++;
       }
-      for (DecisionTableDefinition.Column col : actionColumns) {
+      for (DecisionTableDefinitionDTO.Column col : actionColumns) {
         typeRow.set(colIdx, nullToEmpty(col.getType()));
         colIdx++;
       }
       allRows.add(typeRow);
 
       // 第 6 行起：决策行
-      List<DecisionTableDefinition.Row> rows = nullToEmpty(definition.getRows());
-      for (DecisionTableDefinition.Row row : rows) {
+      List<DecisionTableDefinitionDTO.Row> rows = nullToEmpty(definition.getRows());
+      for (DecisionTableDefinitionDTO.Row row : rows) {
         allRows.add(buildDataRow(row, conditionColumns, actionColumns, totalCols));
       }
 
@@ -206,7 +206,7 @@ public byte[] exportToExcel(DecisionTableDefinition definition) {
    * @throws IllegalArgumentException 导入失败（格式错误/数据缺失）
    */
   @Override
-public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
+public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
     if (excelBytes == null || excelBytes.length == 0) {
       throw new IllegalArgumentException("Excel 数据不能为空");
     }
@@ -271,8 +271,8 @@ public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
         throw new IllegalArgumentException("Excel 未定义任何列");
       }
 
-      List<DecisionTableDefinition.Column> conditionColumns = new ArrayList<>();
-      List<DecisionTableDefinition.Column> actionColumns = new ArrayList<>();
+      List<DecisionTableDefinitionDTO.Column> conditionColumns = new ArrayList<>();
+      List<DecisionTableDefinitionDTO.Column> actionColumns = new ArrayList<>();
       for (int i = 0; i < totalCols; i++) {
         String header = getOrEmpty(row2, i);
         String label = getOrEmpty(row3, i);
@@ -280,8 +280,8 @@ public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
         if (header.isBlank()) {
           throw new IllegalArgumentException("第 " + (i + 1) + " 列头为空");
         }
-        DecisionTableDefinition.Column column =
-            DecisionTableDefinition.Column.builder()
+        DecisionTableDefinitionDTO.Column column =
+            DecisionTableDefinitionDTO.Column.builder()
                 .name(stripPrefix(header))
                 .label(label)
                 .type(type.isBlank() ? "string" : type)
@@ -304,7 +304,7 @@ public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
       }
 
       // 解析决策行 + 默认动作
-      List<DecisionTableDefinition.Row> decisionRows = new ArrayList<>();
+      List<DecisionTableDefinitionDTO.Row> decisionRows = new ArrayList<>();
       Map<String, Object> defaultActions = new LinkedHashMap<>();
       for (int r = DATA_ROW_START - 1; r < stringRows.size(); r++) {
         List<String> rowValues = stringRows.get(r);
@@ -320,15 +320,15 @@ public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
           continue;
         }
 
-        DecisionTableDefinition.Row decisionRow =
+        DecisionTableDefinitionDTO.Row decisionRow =
             parseDataRow(rowValues, conditionColumns, actionColumns);
         if (decisionRow != null) {
           decisionRows.add(decisionRow);
         }
       }
 
-      DecisionTableDefinition def =
-          DecisionTableDefinition.builder()
+      DecisionTableDefinitionDTO def =
+          DecisionTableDefinitionDTO.builder()
               .tableCode(tableCode)
               .tableName(tableName)
               .description(description)
@@ -364,8 +364,8 @@ public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
    */
   @Override
 public byte[] exportTemplate() {
-    DecisionTableDefinition template =
-        DecisionTableDefinition.builder()
+    DecisionTableDefinitionDTO template =
+        DecisionTableDefinitionDTO.builder()
             .tableCode("DT_TEMPLATE")
             .tableName("决策表模板")
             .description("请在此填写决策表内容")
@@ -373,14 +373,14 @@ public byte[] exportTemplate() {
             .hitPolicy(HitPolicy.FIRST)
             .conditionColumns(
                 List.of(
-                    DecisionTableDefinition.Column.builder()
+                    DecisionTableDefinitionDTO.Column.builder()
                         .name("cond1")
                         .label("条件1")
                         .type("string")
                         .build()))
             .actionColumns(
                 List.of(
-                    DecisionTableDefinition.Column.builder()
+                    DecisionTableDefinitionDTO.Column.builder()
                         .name("action1")
                         .label("动作1")
                         .type("string")
@@ -396,22 +396,22 @@ public byte[] exportTemplate() {
 
   /** 构建决策数据行 */
   private List<Object> buildDataRow(
-      DecisionTableDefinition.Row row,
-      List<DecisionTableDefinition.Column> conditionColumns,
-      List<DecisionTableDefinition.Column> actionColumns,
+      DecisionTableDefinitionDTO.Row row,
+      List<DecisionTableDefinitionDTO.Column> conditionColumns,
+      List<DecisionTableDefinitionDTO.Column> actionColumns,
       int totalCols) {
     List<Object> dataRow = padRow(new ArrayList<>(), totalCols);
     Map<String, String> conditions = row.getConditions();
     Map<String, Object> actions = row.getActions();
 
     int colIdx = 0;
-    for (DecisionTableDefinition.Column col : conditionColumns) {
+    for (DecisionTableDefinitionDTO.Column col : conditionColumns) {
       if (conditions != null && conditions.containsKey(col.getName())) {
         dataRow.set(colIdx, conditions.get(col.getName()));
       }
       colIdx++;
     }
-    for (DecisionTableDefinition.Column col : actionColumns) {
+    for (DecisionTableDefinitionDTO.Column col : actionColumns) {
       if (actions != null && actions.containsKey(col.getName())) {
         Object val = actions.get(col.getName());
         dataRow.set(colIdx, val == null ? "" : val.toString());
@@ -444,23 +444,23 @@ public byte[] exportTemplate() {
     }
   }
 
-  /** 解析一行为 DecisionTableDefinition.Row */
-  private DecisionTableDefinition.Row parseDataRow(
+  /** 解析一行为 DecisionTableDefinitionDTO.Row */
+  private DecisionTableDefinitionDTO.Row parseDataRow(
       List<String> rowValues,
-      List<DecisionTableDefinition.Column> conditionColumns,
-      List<DecisionTableDefinition.Column> actionColumns) {
+      List<DecisionTableDefinitionDTO.Column> conditionColumns,
+      List<DecisionTableDefinitionDTO.Column> actionColumns) {
     Map<String, String> conditions = new LinkedHashMap<>();
     Map<String, Object> actions = new LinkedHashMap<>();
     int colIdx = 0;
 
-    for (DecisionTableDefinition.Column col : conditionColumns) {
+    for (DecisionTableDefinitionDTO.Column col : conditionColumns) {
       String val = getOrEmpty(rowValues, colIdx);
       if (!val.isEmpty()) {
         conditions.put(col.getName(), val);
       }
       colIdx++;
     }
-    for (DecisionTableDefinition.Column col : actionColumns) {
+    for (DecisionTableDefinitionDTO.Column col : actionColumns) {
       String val = getOrEmpty(rowValues, colIdx);
       if (!val.isEmpty()) {
         actions.put(col.getName(), val);
@@ -471,7 +471,7 @@ public byte[] exportTemplate() {
     if (conditions.isEmpty() && actions.isEmpty()) {
       return null;
     }
-    return DecisionTableDefinition.Row.builder()
+    return DecisionTableDefinitionDTO.Row.builder()
         .conditions(conditions)
         .actions(actions)
         .priority(100)

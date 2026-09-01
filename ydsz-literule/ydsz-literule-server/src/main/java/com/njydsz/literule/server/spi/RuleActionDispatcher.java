@@ -5,8 +5,8 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 规则动作分发器
@@ -39,7 +39,7 @@ public class RuleActionDispatcher {
    * @param triggered 触发的规则结果列表
    * @param context 规则上下文
    */
-  public void dispatchActions(List<RuleResult> triggered, RuleContext context) {
+  public void dispatchActions(List<RuleResultVO> triggered, RuleContextVO context) {
     if (handlers.isEmpty() || triggered == null || triggered.isEmpty()) {
       return;
     }

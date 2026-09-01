@@ -16,9 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
-import com.njydsz.literule.domain.vo.StatsRecorder;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
+import com.njydsz.literule.domain.vo.StatsRecorderVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
@@ -31,7 +31,7 @@ import com.njydsz.literule.domain.expression.ExpressionEngine;
  *   <li><b>WHEN</b> - 并行执行：基于 {@link CompletableFuture#supplyAsync} 并发执行全部节点，收集触发结果
  *   <li><b>IF</b> - 条件执行：先对 {@link #conditionExpression} 求值，为 true 才执行动作规则
  *   <li><b>ELIF</b> - 多分支条件：依次求值多个条件表达式，执行第一个匹配的分支，无匹配则执行 else 分支
- *   <li><b>SWITCH</b> - 分支选择：从 {@link RuleContext#getFacts()} 中按 {@link #branchKey} 取分支 key， 执行
+ *   <li><b>SWITCH</b> - 分支选择：从 {@link RuleContextVO#getFacts()} 中按 {@link #branchKey} 取分支 key， 执行
  *       {@link #branchMap} 中对应的分支节点
  * </ul>
  *
@@ -296,14 +296,14 @@ public class RuleChain {
    * @param evaluator 表达式求值器（IF/SWITCH 嵌套链需要）
    * @return 已触发的规则结果列表；无触发返回空列表
    */
-  public List<RuleResult> evaluate(RuleContext context, ExpressionEngine evaluator) {
+  public List<RuleResultVO> evaluate(RuleContextVO context, ExpressionEngine evaluator) {
     return evaluate(context, evaluator, null);
   }
 
   /**
    * 评估规则链（带统计记录）
    *
-   * <p>按链类型分派执行语义，返回已触发（triggered=true）的结果列表。 若提供 {@link StatsRecorder}，将对 SINGLE 节点的规则评估记录执行统计。
+   * <p>按链类型分派执行语义，返回已触发（triggered=true）的结果列表。 若提供 {@link StatsRecorderVO}，将对 SINGLE 节点的规则评估记录执行统计。
    *
    * @param context 规则上下文
    * @param evaluator 表达式求值器（IF/SWITCH 嵌套链需要）
@@ -311,8 +311,8 @@ public class RuleChain {
    * @return 已触发的规则结果列表；无触发返回空列表
    * @since 1.0.0
    */
-  public List<RuleResult> evaluate(
-      RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
+  public List<RuleResultVO> evaluate(
+      RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
     return evaluate(context, evaluator, statsRecorder, null, 0);
   }
 
@@ -327,10 +327,10 @@ public class RuleChain {
    * @return 已触发的规则结果列表
    * @since 1.0.0
    */
-  public List<RuleResult> evaluate(
-      RuleContext context,
+  public List<RuleResultVO> evaluate(
+      RuleContextVO context,
       ExpressionEngine evaluator,
-      StatsRecorder statsRecorder,
+      StatsRecorderVO statsRecorder,
       ExecutorService parallelExecutor,
       long timeoutMs) {
     Objects.requireNonNull(context, "context 不能为 null");
@@ -351,9 +351,9 @@ public class RuleChain {
    * @param evaluator 表达式求值器
    * @return 已触发的结果列表
    */
-  private List<RuleResult> evaluateThen(
-      RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
-    List<RuleResult> results = new ArrayList<>();
+  private List<RuleResultVO> evaluateThen(
+      RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
+    List<RuleResultVO> results = new ArrayList<>();
     if (nodes == null) {
       return results;
     }
@@ -373,13 +373,13 @@ public class RuleChain {
    * @param evaluator 表达式求值器
    * @return 已触发的结果列表
    */
-  private List<RuleResult> evaluateWhen(
-      RuleContext context,
+  private List<RuleResultVO> evaluateWhen(
+      RuleContextVO context,
       ExpressionEngine evaluator,
-      StatsRecorder statsRecorder,
+      StatsRecorderVO statsRecorder,
       ExecutorService parallelExecutor,
       long timeoutMs) {
-    List<RuleResult> results = new ArrayList<>();
+    List<RuleResultVO> results = new ArrayList<>();
     if (nodes == null || nodes.isEmpty()) {
       return results;
     }
@@ -387,7 +387,7 @@ public class RuleChain {
     // P1-4: 当调用方未提供 executor 时，使用专用守护线程池而非 ForkJoinPool.commonPool()
     ExecutorService executor = parallelExecutor != null ? parallelExecutor : WHEN_FALLBACK_EXECUTOR;
     // 并行执行所有节点
-    List<CompletableFuture<List<RuleResult>>> futures = new ArrayList<>();
+    List<CompletableFuture<List<RuleResultVO>>> futures = new ArrayList<>();
     for (RuleNode node : nodes) {
       futures.add(
           CompletableFuture.supplyAsync(
@@ -410,7 +410,7 @@ public class RuleChain {
       log.warn("[LiteRule-Chain] WHEN 并行执行异常: {}", e.getMessage());
     }
     // 合并已完成的结果
-    for (CompletableFuture<List<RuleResult>> future : futures) {
+    for (CompletableFuture<List<RuleResultVO>> future : futures) {
       if (future.isDone() && !future.isCompletedExceptionally()) {
         try {
           results.addAll(future.join());
@@ -429,9 +429,9 @@ public class RuleChain {
    * @param evaluator 表达式求值器
    * @return 已触发的结果列表
    */
-  private List<RuleResult> evaluateIf(
-      RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
-    List<RuleResult> results = new ArrayList<>();
+  private List<RuleResultVO> evaluateIf(
+      RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
+    List<RuleResultVO> results = new ArrayList<>();
     if (evaluator == null) {
       log.warn("[LiteRule-Chain] IF 链缺少 ExpressionEngine，跳过求值");
       return results;
@@ -456,9 +456,9 @@ public class RuleChain {
    * @param evaluator 表达式求值器
    * @return 已触发的结果列表
    */
-  private List<RuleResult> evaluateSwitch(
-      RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
-    List<RuleResult> results = new ArrayList<>();
+  private List<RuleResultVO> evaluateSwitch(
+      RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
+    List<RuleResultVO> results = new ArrayList<>();
     if (branchMap == null || branchKey == null) {
       return results;
     }
@@ -486,9 +486,9 @@ public class RuleChain {
   }
 
   /** ELIF 语义：依次求值多个条件表达式，执行第一个匹配的分支；无匹配则执行 else 分支 */
-  private List<RuleResult> evaluateElif(
-      RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
-    List<RuleResult> results = new ArrayList<>();
+  private List<RuleResultVO> evaluateElif(
+      RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
+    List<RuleResultVO> results = new ArrayList<>();
     if (evaluator == null) {
       log.warn("[LiteRule-Chain] ELIF 链缺少 ExpressionEngine，跳过求值");
       return results;
@@ -532,9 +532,9 @@ public class RuleChain {
    * @param evaluator 表达式求值器
    * @return 已触发的结果列表
    */
-  private List<RuleResult> evaluateNode(
-      RuleNode node, RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
-    List<RuleResult> results = new ArrayList<>();
+  private List<RuleResultVO> evaluateNode(
+      RuleNode node, RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
+    List<RuleResultVO> results = new ArrayList<>();
     if (node == null) {
       return results;
     }
@@ -542,7 +542,7 @@ public class RuleChain {
       switch (node.getNodeType()) {
         case SINGLE -> {
           long start = System.nanoTime();
-          RuleResult result = null;
+          RuleResultVO result = null;
           boolean error = false;
           try {
             result = node.getRule().evaluate(context);

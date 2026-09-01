@@ -178,7 +178,7 @@ public class RuleDefinitionDTO implements Serializable {
   /**
    * 灰度候选版本表达式（条件/严重度表达式，覆盖主版本）
    *
-   * <p>当流量被分到灰度桶时，使用此候选表达式构造一条临时规则进行评估， 结果会被标记 {@link com.njydsz.literule.domain.vo.RuleResult#isCanary()} = true，便于运营对比新旧命中差异。
+   * <p>当流量被分到灰度桶时，使用此候选表达式构造一条临时规则进行评估， 结果会被标记 {@link com.njydsz.literule.domain.vo.RuleResultVO#isCanary()} = true，便于运营对比新旧命中差异。
    *
    * @since 1.0.0
    */

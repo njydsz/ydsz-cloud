@@ -32,10 +32,10 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.api.dto.ExpressionValidateDTO;
 import com.njydsz.literule.api.dto.RuleABTestDTO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
@@ -116,7 +116,7 @@ public class RuleAdminController {
   @GetMapping
   public PageResponse<List<RuleDefinitionVO>> list(
       PageQuery pageQuery) {
-    PageResponse<List<RuleDefinition>> page =
+    PageResponse<List<RuleDefinitionDTO>> page =
         ruleAdminService.pageRuleDefinitions(pageQuery);
     List<RuleDefinitionVO> records =
         page.getData().stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList();
@@ -161,7 +161,7 @@ public class RuleAdminController {
   @PostMapping
   @AuthApiPermission(apiCodes = "execution:rule:save")
   public YdszResponse<RuleDefinitionVO> save(
-      @RequestBody RuleDefinition definition,
+      @RequestBody RuleDefinitionDTO definition,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
       @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
     return YdszResponse.success(
@@ -244,8 +244,8 @@ public class RuleAdminController {
     }
 
     try {
-      RuleDefinition oldDef = YdszJson.fromJson(oldV.getDefinitionJson(), RuleDefinition.class);
-      RuleDefinition newDef = YdszJson.fromJson(newV.getDefinitionJson(), RuleDefinition.class);
+      RuleDefinitionDTO oldDef = YdszJson.fromJson(oldV.getDefinitionJson(), RuleDefinition.class);
+      RuleDefinitionDTO newDef = YdszJson.fromJson(newV.getDefinitionJson(), RuleDefinition.class);
       return YdszResponse.success(
           LiteruleWebConverter.INSTANCE.entityToVO(ruleVersionDiffService.diff(oldDef, newDef)));
     } catch (Exception e) {
@@ -358,12 +358,12 @@ public class RuleAdminController {
       @RequestHeader(value = "X-Trace-Id", required = false) String traceId,
       @RequestBody Map<String, Object> facts) {
     String scen = scenario != null ? scenario : "DEFAULT";
-    RuleContext context =
+    RuleContextVO context =
         tenantId != null
-            ? RuleContext.of(facts, scen, "HTTP", traceId, tenantId)
-            : RuleContext.of(facts, scen, "HTTP", traceId);
-    List<RuleResult> results = ruleEngine.evaluate(context);
-    List<RuleResult> filtered =
+            ? RuleContextVO.of(facts, scen, "HTTP", traceId, tenantId)
+            : RuleContextVO.of(facts, scen, "HTTP", traceId);
+    List<RuleResultVO> results = ruleEngine.evaluate(context);
+    List<RuleResultVO> filtered =
         ruleCode == null
             ? results
             : results.stream().filter(r -> ruleCode.equals(r.getRuleCode())).toList();
@@ -481,13 +481,13 @@ public class RuleAdminController {
   @PostMapping("/{ruleCode}/ab-test")
   public YdszResponse<ABTestService.ABTestReport> abTest(
       @PathVariable String ruleCode, @Valid @RequestBody RuleABTestDTO dto) {
-    RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);
+    RuleDefinitionDTO currentDef = ruleAdminService.getByCode(ruleCode);
     if (currentDef == null) {
       return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
 
     // 构建候选规则定义（基于当前规则，覆盖候选字段）
-    RuleDefinition candidateDef = dto.getCandidate();
+    RuleDefinitionDTO candidateDef = dto.getCandidate();
     candidateDef.setCode(ruleCode);
 
     return YdszResponse.success(abTestService.test(currentDef, candidateDef, dto.getFacts()));

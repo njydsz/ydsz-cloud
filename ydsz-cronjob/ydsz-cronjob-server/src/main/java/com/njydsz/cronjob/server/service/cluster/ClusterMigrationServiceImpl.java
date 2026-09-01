@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.job.JobClusterMigrationDTO;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
@@ -51,7 +51,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
   private final ClusterMigrationClient migrationClient;
 
   @Override
-  public BatchResult<String> migrateToCluster(JobClusterMigrationDTO dto) {
+  public BatchResultDTO<String> migrateToCluster(JobClusterMigrationDTO dto) {
     // 1. 校验目标集群配置
     String targetCluster = dto.getTargetCluster();
     if (cronjobProperties.getMultiCluster() == null
@@ -73,13 +73,13 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
 
     // 3. 逐任务执行漂移
     List<String> jobIds = dto.getJobIds();
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
+    List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
 
     for (String jobId : jobIds) {
       try {
         migrateSingleJob(jobId, targetCluster);
-        details.add(BatchResult.ItemResult.success(jobId));
+        details.add(BatchResultDTO.ItemResult.success(jobId));
         success++;
       } catch (Exception e) {
         log.warn(
@@ -87,7 +87,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
             jobId,
             targetCluster,
             e.getMessage());
-        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+        details.add(BatchResultDTO.ItemResult.failure(jobId, e.getMessage()));
       }
     }
 
@@ -96,7 +96,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
         jobIds.size(),
         success,
         targetCluster);
-    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+    return new BatchResultDTO<>(jobIds.size(), success, jobIds.size() - success, details);
   }
 
   @Override

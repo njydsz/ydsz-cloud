@@ -31,7 +31,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
@@ -128,7 +128,7 @@ public class RuleTraceController {
     }
 
     // 用当前规则集重新评估
-    List<RuleResult> currentResults = ruleAdminService.dryRun(null, facts);
+    List<RuleResultVO> currentResults = ruleAdminService.dryRun(null, facts);
 
     // 构建历史触发规则编码集合
     Set<String> historicalTriggered =
@@ -139,7 +139,7 @@ public class RuleTraceController {
 
     // 构建当前触发规则编码集合
     Set<String> currentTriggered =
-        currentResults.stream().map(RuleResult::getRuleCode).collect(Collectors.toSet());
+        currentResults.stream().map(RuleResultVO::getRuleCode).collect(Collectors.toSet());
 
     // 差异分析
     Set<String> added = new LinkedHashSet<>(currentTriggered);
@@ -238,8 +238,8 @@ public class RuleTraceController {
       }
 
       // 用当前规则集对单条规则重新评估
-      List<RuleResult> currentResults = ruleAdminService.dryRun(trace.getRuleCode(), facts);
-      RuleResult currentResult =
+      List<RuleResultVO> currentResults = ruleAdminService.dryRun(trace.getRuleCode(), facts);
+      RuleResultVO currentResult =
           currentResults.stream()
               .filter(r -> trace.getRuleCode().equals(r.getRuleCode()))
               .findFirst()
@@ -366,7 +366,7 @@ public class RuleTraceController {
       }
 
       // 用新表达式评估
-      RuleResult newResult =
+      RuleResultVO newResult =
           ruleAdminService.evaluateWithExpression(
               ruleCode, conditionExpression, severityExpression, defaultSeverity, facts);
 

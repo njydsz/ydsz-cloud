@@ -10,7 +10,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.annotation.LiteRule;
@@ -20,7 +20,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  * 声明式规则注册器（P2-10）
  *
  * <p>容器刷新完成后扫描 {@code @LiteRule}（标注在 {@link Rule} Spring Bean 上）， 将其注册到 {@link RuleEngine}；同时按
- * {@code ydsz.literule.annotation-scan-base-packages} 配置的基包扫描 {@link RuleDefinition}
+ * {@code ydsz.literule.annotation-scan-base-packages} 配置的基包扫描 {@link RuleDefinitionDTO}
  * Bean（纯声明式表达式规则）并按需包装为 {@link ExpressionRule} 后注册。
  *
  * <p>实现为 {@link SmartInitializingSingleton}，在所有非懒加载单例实例化之后、 容器完全启动之前执行一次，确保扫描到的 Bean 全部就绪。
@@ -33,7 +33,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  * public class OverdueRule implements Rule { ... }
  *
  * @Component
- * public class MyDef extends RuleDefinition { ... }   // 通过 @RuleDefinitionMeta 标注或被 @Component 声明
+ * public class MyDef extends RuleDefinitionDTO { ... }   // 通过 @RuleDefinitionMeta 标注或被 @Component 声明
  * }</pre>
  *
  * @since 1.0.0
@@ -70,7 +70,7 @@ public class LiteRuleAnnotationRegistrar implements SmartInitializingSingleton {
     int liteRuleCount = scanLiteRuleBeans();
     int defMetaCount = scanRuleDefinitionBeans();
     log.info(
-        "[LiteRule-Annotation] 声明式规则注册完成: @LiteRule={}, @RuleDefinition={}",
+        "[LiteRule-Annotation] 声明式规则注册完成: @LiteRule={}, @RuleDefinitionDTO={}",
         liteRuleCount,
         defMetaCount);
   }
@@ -104,7 +104,7 @@ public class LiteRuleAnnotationRegistrar implements SmartInitializingSingleton {
   }
 
   /**
-   * 按配置的基包扫描 {@link RuleDefinition} Bean，包装为 {@link ExpressionRule} 后注册。
+   * 按配置的基包扫描 {@link RuleDefinitionDTO} Bean，包装为 {@link ExpressionRule} 后注册。
    *
    * <p>未配置 {@code annotation-scan-base-packages} 时跳过本步骤。
    */
@@ -120,10 +120,10 @@ public class LiteRuleAnnotationRegistrar implements SmartInitializingSingleton {
       if (pkg.isEmpty()) {
         continue;
       }
-      // 仅扫描标注了 @Component 的 RuleDefinition 子类（避免误将抽象/接口类实例化）
-      Map<String, RuleDefinition> defBeans =
+      // 仅扫描标注了 @Component 的 RuleDefinitionDTO 子类（避免误将抽象/接口类实例化）
+      Map<String, RuleDefinitionDTO> defBeans =
           applicationContext.getBeansOfType(RuleDefinition.class);
-      for (RuleDefinition bean : defBeans.values()) {
+      for (RuleDefinitionDTO bean : defBeans.values()) {
         if (!bean.getClass().getPackageName().startsWith(pkg)) {
           continue;
         }
@@ -131,12 +131,12 @@ public class LiteRuleAnnotationRegistrar implements SmartInitializingSingleton {
           continue;
         }
         try {
-          ruleEngine.register(new ExpressionRule((RuleDefinition) bean, evaluator));
+          ruleEngine.register(new ExpressionRule((RuleDefinitionDTO) bean, evaluator));
           count++;
         } catch (Exception e) {
           log.error(
-              "[LiteRule-Annotation] 注册 RuleDefinition 失败: def={} err={}",
-              ((RuleDefinition) bean).getCode(),
+              "[LiteRule-Annotation] 注册 RuleDefinitionDTO 失败: def={} err={}",
+              ((RuleDefinitionDTO) bean).getCode(),
               e.getMessage(),
               e);
         }

@@ -6,10 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.DecisionTreeDefinition;
+import com.njydsz.literule.domain.dto.DecisionTreeDefinitionDTO;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
@@ -78,14 +78,14 @@ public class DecisionTreeRule implements Rule {
   }
 
   /**
-   * 从 DecisionTreeDefinition 构造决策树规则
+   * 从 DecisionTreeDefinitionDTO 构造决策树规则
    *
    * @param def 决策树定义
    * @param evaluator 表达式求值器
    * @return DecisionTreeRule 实例
    * @since 1.0.0
    */
-  public static DecisionTreeRule from(DecisionTreeDefinition def, ExpressionEngine evaluator) {
+  public static DecisionTreeRule from(DecisionTreeDefinitionDTO def, ExpressionEngine evaluator) {
     return new DecisionTreeRule(
         def.getRuleCode(),
         def.getRuleName(),
@@ -102,7 +102,7 @@ public class DecisionTreeRule implements Rule {
    * @param src 源节点
    * @return 内部节点
    */
-  private static DecisionNode convertNode(DecisionTreeDefinition.DecisionNode src) {
+  private static DecisionNode convertNode(DecisionTreeDefinitionDTO.DecisionNode src) {
     if (src == null) {
       return null;
     }
@@ -151,19 +151,19 @@ public class DecisionTreeRule implements Rule {
   }
 
   @Override
-  public RuleResult evaluate(RuleContext context) {
+  public RuleResultVO evaluate(RuleContextVO context) {
     long start = System.nanoTime();
     try {
       DecisionResult result = traverse(root, context, new StringBuilder());
       if (result == null) {
-        return RuleResult.builder()
+        return RuleResultVO.builder()
             .ruleCode(code)
             .triggered(false)
             .triggeredAt(LocalDateTime.now())
             .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
             .build();
       }
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(code)
           .ruleName(name)
           .category(category)
@@ -176,7 +176,7 @@ public class DecisionTreeRule implements Rule {
           .build();
     } catch (Exception e) {
       log.warn("[LiteRule-DecisionTree] 决策树 {} 评估异常: {}", code, e.getMessage());
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(code)
           .triggered(false)
           .triggeredAt(LocalDateTime.now())
@@ -186,7 +186,7 @@ public class DecisionTreeRule implements Rule {
   }
 
   /** 递归遍历决策树 */
-  private DecisionResult traverse(DecisionNode node, RuleContext context, StringBuilder path) {
+  private DecisionResult traverse(DecisionNode node, RuleContextVO context, StringBuilder path) {
     if (node == null) {
       return null;
     }

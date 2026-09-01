@@ -7,13 +7,13 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 
 /**
  * 规则版本 Diff 服务
  *
- * <p>对两个 {@link RuleDefinition} 进行字段级结构化对比，产出 {@link RuleVersionDiff}。 支持的字段对比维度：
+ * <p>对两个 {@link RuleDefinitionDTO} 进行字段级结构化对比，产出 {@link RuleVersionDiff}。 支持的字段对比维度：
  *
  * <ul>
  *   <li>基本信息：code, name, category, categoryPath, description, owner, scope
@@ -39,7 +39,7 @@ public class RuleVersionDiffService {
    * @param newDef 新版本定义
    * @return Diff 结果
    */
-  public RuleVersionDiff diff(RuleDefinition oldDef, RuleDefinition newDef) {
+  public RuleVersionDiff diff(RuleDefinitionDTO oldDef, RuleDefinitionDTO newDef) {
     if (oldDef == null && newDef == null) {
       return RuleVersionDiff.builder().entries(List.of()).summary("两个版本均为空").build();
     }
@@ -210,7 +210,7 @@ public class RuleVersionDiffService {
 
   /** 构建变更摘要 */
   private String buildSummary(
-      RuleDefinition oldDef, RuleDefinition newDef, List<RuleVersionDiff.DiffEntry> entries) {
+      RuleDefinitionDTO oldDef, RuleDefinitionDTO newDef, List<RuleVersionDiff.DiffEntry> entries) {
     int modified =
         (int)
             entries.stream().filter(e -> e.getType() == RuleVersionDiff.DiffType.MODIFIED).count();

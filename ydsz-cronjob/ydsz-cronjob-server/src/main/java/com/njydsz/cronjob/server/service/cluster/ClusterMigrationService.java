@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.service.cluster;
 
 import java.util.List;
 
-import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.job.JobClusterMigrationDTO;
 
 /**
@@ -24,7 +24,7 @@ public interface ClusterMigrationService {
    * @param dto 漂移请求参数（含任务 ID 列表 + 目标集群名）
    * @return 批量操作结果（含成功/失败明细）
    */
-  BatchResult<String> migrateToCluster(JobClusterMigrationDTO dto);
+  BatchResultDTO<String> migrateToCluster(JobClusterMigrationDTO dto);
 
   /**
    * 查询已配置的远程集群名称列表。

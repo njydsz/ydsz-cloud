@@ -37,7 +37,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.job.JobHandler;
@@ -692,21 +692,21 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @return 批量操作结果（含成功/失败明细）
    */
   @Override
-  public BatchResult<String> batchPause(List<String> jobIds) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
+  public BatchResultDTO<String> batchPause(List<String> jobIds) {
+    List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
         pause(jobId);
-        details.add(BatchResult.ItemResult.success(jobId));
+        details.add(BatchResultDTO.ItemResult.success(jobId));
         success++;
       } catch (Exception e) {
         log.warn("[Cronjob] 批量暂停失败: jobId={} reason={}", jobId, e.getMessage());
-        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+        details.add(BatchResultDTO.ItemResult.failure(jobId, e.getMessage()));
       }
     }
     log.info("[Cronjob] 批量暂停完成: total={} success={}", jobIds.size(), success);
-    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+    return new BatchResultDTO<>(jobIds.size(), success, jobIds.size() - success, details);
   }
 
   /**
@@ -718,21 +718,21 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @return 批量操作结果（含成功/失败明细）
    */
   @Override
-  public BatchResult<String> batchResume(List<String> jobIds) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
+  public BatchResultDTO<String> batchResume(List<String> jobIds) {
+    List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
         resume(jobId);
-        details.add(BatchResult.ItemResult.success(jobId));
+        details.add(BatchResultDTO.ItemResult.success(jobId));
         success++;
       } catch (Exception e) {
         log.warn("[Cronjob] 批量恢复失败: jobId={} reason={}", jobId, e.getMessage());
-        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+        details.add(BatchResultDTO.ItemResult.failure(jobId, e.getMessage()));
       }
     }
     log.info("[Cronjob] 批量恢复完成: total={} success={}", jobIds.size(), success);
-    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+    return new BatchResultDTO<>(jobIds.size(), success, jobIds.size() - success, details);
   }
 
   /**
@@ -744,21 +744,21 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @return 批量操作结果（含成功/失败明细）
    */
   @Override
-  public BatchResult<String> batchTrigger(List<String> jobIds) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
+  public BatchResultDTO<String> batchTrigger(List<String> jobIds) {
+    List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
         trigger(jobId);
-        details.add(BatchResult.ItemResult.success(jobId));
+        details.add(BatchResultDTO.ItemResult.success(jobId));
         success++;
       } catch (Exception e) {
         log.warn("[Cronjob] 批量触发失败: jobId={} reason={}", jobId, e.getMessage());
-        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+        details.add(BatchResultDTO.ItemResult.failure(jobId, e.getMessage()));
       }
     }
     log.info("[Cronjob] 批量触发完成: total={} success={}", jobIds.size(), success);
-    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+    return new BatchResultDTO<>(jobIds.size(), success, jobIds.size() - success, details);
   }
 
   /**
@@ -770,21 +770,21 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @return 批量操作结果（含成功/失败明细）
    */
   @Override
-  public BatchResult<String> batchDelete(List<String> jobIds) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
+  public BatchResultDTO<String> batchDelete(List<String> jobIds) {
+    List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
         delete(jobId);
-        details.add(BatchResult.ItemResult.success(jobId));
+        details.add(BatchResultDTO.ItemResult.success(jobId));
         success++;
       } catch (Exception e) {
         log.warn("[Cronjob] 批量删除失败: jobId={} reason={}", jobId, e.getMessage());
-        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+        details.add(BatchResultDTO.ItemResult.failure(jobId, e.getMessage()));
       }
     }
     log.info("[Cronjob] 批量删除完成: total={} success={}", jobIds.size(), success);
-    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+    return new BatchResultDTO<>(jobIds.size(), success, jobIds.size() - success, details);
   }
 
   /**
@@ -798,8 +798,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @return 批量操作结果（含成功/失败明细）
    */
   @Override
-  public BatchResult<String> batchUpdateGroup(List<String> jobIds, String newGroup) {
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
+  public BatchResultDTO<String> batchUpdateGroup(List<String> jobIds, String newGroup) {
+    List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
@@ -815,15 +815,15 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         JobVO j = voToJob(vo);
         j.setJobGroup(newGroup);
         jobRepository.updateById(j);
-        details.add(BatchResult.ItemResult.success(jobId));
+        details.add(BatchResultDTO.ItemResult.success(jobId));
         success++;
       } catch (Exception e) {
         log.warn("[Cronjob] 批量修改分组失败: jobId={} reason={}", jobId, e.getMessage());
-        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+        details.add(BatchResultDTO.ItemResult.failure(jobId, e.getMessage()));
       }
     }
     log.info("[Cronjob] 批量修改分组完成: total={} success={} group={}", jobIds.size(), success, newGroup);
-    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+    return new BatchResultDTO<>(jobIds.size(), success, jobIds.size() - success, details);
   }
 
   /**
@@ -837,10 +837,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @return 批量操作结果（含成功/失败明细）
    */
   @Override
-  public BatchResult<String> batchUpdateCron(List<String> jobIds, String cronExpression) {
+  public BatchResultDTO<String> batchUpdateCron(List<String> jobIds, String cronExpression) {
     // 先统一校验一次 Cron 表达式合法性，避免逐个校验重复
     validateCron(cronExpression);
-    List<BatchResult.ItemResult<String>> details = new ArrayList<>(jobIds.size());
+    List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
     for (String jobId : jobIds) {
       try {
@@ -858,7 +858,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         ScheduleType type = ScheduleType.parse(j.getScheduleType());
         if (type != ScheduleType.CRON) {
           details.add(
-              BatchResult.ItemResult.failure(jobId, "仅 CRON 类型任务支持修改 Cron 表达式"));
+              BatchResultDTO.ItemResult.failure(jobId, "仅 CRON 类型任务支持修改 Cron 表达式"));
           continue;
         }
         // 更新 Cron 并重新计算下次触发时间
@@ -870,15 +870,15 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if ("NORMAL".equals(j.getStatus())) {
           registerInternal(j);
         }
-        details.add(BatchResult.ItemResult.success(jobId));
+        details.add(BatchResultDTO.ItemResult.success(jobId));
         success++;
       } catch (Exception e) {
         log.warn("[Cronjob] 批量修改 Cron 失败: jobId={} reason={}", jobId, e.getMessage());
-        details.add(BatchResult.ItemResult.failure(jobId, e.getMessage()));
+        details.add(BatchResultDTO.ItemResult.failure(jobId, e.getMessage()));
       }
     }
     log.info("[Cronjob] 批量修改 Cron 完成: total={} success={} cron={}", jobIds.size(), success, cronExpression);
-    return new BatchResult<>(jobIds.size(), success, jobIds.size() - success, details);
+    return new BatchResultDTO<>(jobIds.size(), success, jobIds.size() - success, details);
   }
 
   /**

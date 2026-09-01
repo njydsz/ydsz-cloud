@@ -7,10 +7,10 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.CrossDecisionTableDefinition;
+import com.njydsz.literule.domain.dto.CrossDecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
@@ -38,11 +38,11 @@ public class CrossDecisionTableRule implements Rule {
   /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
-  private final CrossDecisionTableDefinition definition;
+  private final CrossDecisionTableDefinitionDTO definition;
   private final ExpressionEngine evaluator;
 
   public CrossDecisionTableRule(
-      CrossDecisionTableDefinition definition, ExpressionEngine evaluator) {
+      CrossDecisionTableDefinitionDTO definition, ExpressionEngine evaluator) {
     this.definition = definition;
     this.evaluator = evaluator;
   }
@@ -75,11 +75,11 @@ public class CrossDecisionTableRule implements Rule {
   }
 
   @Override
-  public RuleResult evaluate(RuleContext context) {
+  public RuleResultVO evaluate(RuleContextVO context) {
     long start = System.nanoTime();
     try {
       if (!definition.isEnabled()) {
-        return RuleResult.builder()
+        return RuleResultVO.builder()
             .ruleCode(getCode())
             .ruleName(getName())
             .category(getCategory())
@@ -100,14 +100,14 @@ public class CrossDecisionTableRule implements Rule {
       Map<String, Object> actions = null;
       if (rowIndex >= 0 && colIndex >= 0
           && definition.getCells() != null
-          && definition.getCells().containsKey(CrossDecisionTableDefinition.cellKey(rowIndex, colIndex))) {
-        actions = definition.getCells().get(CrossDecisionTableDefinition.cellKey(rowIndex, colIndex));
+          && definition.getCells().containsKey(CrossDecisionTableDefinitionDTO.cellKey(rowIndex, colIndex))) {
+        actions = definition.getCells().get(CrossDecisionTableDefinitionDTO.cellKey(rowIndex, colIndex));
       }
       if (actions == null || actions.isEmpty()) {
         actions = definition.getDefaultActions();
       }
       if (actions == null || actions.isEmpty()) {
-        return RuleResult.builder()
+        return RuleResultVO.builder()
             .ruleCode(getCode())
             .ruleName(getName())
             .category(getCategory())
@@ -123,7 +123,7 @@ public class CrossDecisionTableRule implements Rule {
       return buildResultFromActions(enriched, start);
     } catch (Exception e) {
       log.warn("[LiteRule-CrossTable] 交叉决策表 {} 评估异常: {}", getCode(), e.getMessage());
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(getCode())
           .triggered(false)
           .description("评估异常: " + e.getMessage())
@@ -135,12 +135,12 @@ public class CrossDecisionTableRule implements Rule {
 
   /** 按分桶顺序匹配，返回首个命中的桶索引；无命中返回 -1 */
   private int matchBucketIndex(
-      List<CrossDecisionTableDefinition.Bucket> buckets, Object value, RuleContext context) {
+      List<CrossDecisionTableDefinitionDTO.Bucket> buckets, Object value, RuleContextVO context) {
     if (buckets == null) {
       return -1;
     }
     for (int i = 0; i < buckets.size(); i++) {
-      CrossDecisionTableDefinition.Bucket bucket = buckets.get(i);
+      CrossDecisionTableDefinitionDTO.Bucket bucket = buckets.get(i);
       if (bucket == null) {
         continue;
       }
@@ -159,7 +159,7 @@ public class CrossDecisionTableRule implements Rule {
   }
 
   /** 根据 actions 构建规则结果（键约定与决策表一致） */
-  private RuleResult buildResultFromActions(Map<String, Object> actions, long startNano) {
+  private RuleResultVO buildResultFromActions(Map<String, Object> actions, long startNano) {
     String severityCode =
         actions.get("severity") == null ? "INFO" : String.valueOf(actions.get("severity"));
     RuleSeverity severity = RuleSeverity.fromCode(severityCode);
@@ -173,7 +173,7 @@ public class CrossDecisionTableRule implements Rule {
     String currentValue =
         actions.get("currentValue") == null ? null : String.valueOf(actions.get("currentValue"));
 
-    return RuleResult.builder()
+    return RuleResultVO.builder()
         .ruleCode(getCode())
         .ruleName(getName())
         .category(getCategory())

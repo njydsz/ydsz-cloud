@@ -15,13 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 模型输入注册中心（P3-1 规则+模型融合）
  *
  * <p>管理所有 {@link ModelInputProvider} 的注册/注销，并对外提供聚合查询能力。 规则引擎在评估前调用 {@link #collectAllModelOutputs}
- * 获取全部模型输出， 合并到 {@link RuleContext} 的 facts 中，使规则表达式可通过 {@code model.<field>} 引用。
+ * 获取全部模型输出， 合并到 {@link RuleContextVO} 的 facts 中，使规则表达式可通过 {@code model.<field>} 引用。
  *
  * <h3>核心能力</h3>
  *
@@ -193,7 +193,7 @@ public class ModelInputRegistry {
    * @param context 规则上下文
    * @return 模型输出 Map；不存在或失败返回空 Map
    */
-  public Map<String, Object> getModelOutputs(String modelId, RuleContext context) {
+  public Map<String, Object> getModelOutputs(String modelId, RuleContextVO context) {
     if (modelId == null) {
       return Collections.emptyMap();
     }
@@ -225,7 +225,7 @@ public class ModelInputRegistry {
    * @param context 规则上下文
    * @return 聚合后的 Map（key 带 "model." 前缀）；无 provider 或全部失败返回空 Map
    */
-  public Map<String, Object> collectAllModelOutputs(RuleContext context) {
+  public Map<String, Object> collectAllModelOutputs(RuleContextVO context) {
     if (providers.isEmpty()) {
       return Collections.emptyMap();
     }
@@ -272,7 +272,7 @@ public class ModelInputRegistry {
    * @param context 规则上下文
    * @return 模型输出；失败时返回空 Map（fallbackOnError=true）或抛异常（false）
    */
-  private Map<String, Object> safeInvoke(ModelInputProvider provider, RuleContext context) {
+  private Map<String, Object> safeInvoke(ModelInputProvider provider, RuleContextVO context) {
     Future<Map<String, Object>> future = null;
     try {
       future = executor.submit(() -> provider.getModelOutput(context));

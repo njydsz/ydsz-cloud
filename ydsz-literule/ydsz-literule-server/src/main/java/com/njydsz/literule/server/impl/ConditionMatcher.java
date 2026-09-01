@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
@@ -59,7 +59,7 @@ final class ConditionMatcher {
       String column,
       String condExpr,
       Object factValue,
-      RuleContext context,
+      RuleContextVO context,
       ExpressionEngine evaluator) {
     if (condExpr == null) {
       return true;

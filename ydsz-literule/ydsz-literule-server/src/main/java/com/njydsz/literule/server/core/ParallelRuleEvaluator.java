@@ -19,8 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 规则分组并行评估器（P2-3 高性能优化）
@@ -63,7 +63,7 @@ import com.njydsz.literule.domain.vo.RuleResult;
  * ParallelRuleEvaluator evaluator = new ParallelRuleEvaluator(4);
  *
  * // 引擎评估时调用
- * List&lt;RuleResult&gt; results = evaluator.evaluateParallel(candidateRules, context,
+ * List&lt;RuleResultVO&gt; results = evaluator.evaluateParallel(candidateRules, context,
  *         rule -> evaluateSingleRule(rule, context));
  * </pre>
  *
@@ -143,8 +143,8 @@ public class ParallelRuleEvaluator {
    * @param evaluator 单规则评估函数
    * @return 触发的规则结果列表（按严重度倒序）
    */
-  public List<RuleResult> evaluateParallel(
-      List<Rule> candidateRules, RuleContext context, RuleEvaluator evaluator) {
+  public List<RuleResultVO> evaluateParallel(
+      List<Rule> candidateRules, RuleContextVO context, RuleEvaluator evaluator) {
     if (candidateRules == null || candidateRules.isEmpty()) {
       return Collections.emptyList();
     }
@@ -165,16 +165,16 @@ public class ParallelRuleEvaluator {
     }
 
     // 每组一个 CompletableFuture，组内串行评估
-    List<CompletableFuture<List<RuleResult>>> futures = new ArrayList<>(groups.size());
+    List<CompletableFuture<List<RuleResultVO>>> futures = new ArrayList<>(groups.size());
     for (List<Rule> groupRules : groups.values()) {
-      CompletableFuture<List<RuleResult>> future =
+      CompletableFuture<List<RuleResultVO>> future =
           CompletableFuture.supplyAsync(
               () -> {
                 try {
                   return evaluateGroup(groupRules, context, evaluator);
                 } catch (Exception e) {
                   log.warn("[ParallelEval] 分组评估异常: {}", e.getMessage());
-                  return Collections.<RuleResult>emptyList();
+                  return Collections.<RuleResultVO>emptyList();
                 }
               },
               executor);
@@ -191,10 +191,10 @@ public class ParallelRuleEvaluator {
     }
 
     // 合并结果
-    List<RuleResult> allResults = new ArrayList<>();
-    for (CompletableFuture<List<RuleResult>> future : futures) {
+    List<RuleResultVO> allResults = new ArrayList<>();
+    for (CompletableFuture<List<RuleResultVO>> future : futures) {
       try {
-        List<RuleResult> groupResults = future.getNow(Collections.emptyList());
+        List<RuleResultVO> groupResults = future.getNow(Collections.emptyList());
         allResults.addAll(groupResults);
       } catch (Exception e) {
         log.debug("[ParallelEval] 获取分组结果异常: {}", e.getMessage());
@@ -202,21 +202,21 @@ public class ParallelRuleEvaluator {
     }
 
     // 按严重度倒序
-    allResults.sort(Comparator.comparingInt(RuleResult::getSeverityWeight).reversed());
+    allResults.sort(Comparator.comparingInt(RuleResultVO::getSeverityWeight).reversed());
     return allResults;
   }
 
   /** 串行评估（规则数少时的快速路径） */
-  private List<RuleResult> evaluateSequential(
-      List<Rule> rules, RuleContext context, RuleEvaluator evaluator) {
-    List<RuleResult> triggered = new ArrayList<>();
+  private List<RuleResultVO> evaluateSequential(
+      List<Rule> rules, RuleContextVO context, RuleEvaluator evaluator) {
+    List<RuleResultVO> triggered = new ArrayList<>();
     Set<String> triggeredGroups = new HashSet<>();
     for (Rule rule : rules) {
       String mutexGroup = rule.getMutexGroup();
       if (mutexGroup != null && !mutexGroup.isBlank() && triggeredGroups.contains(mutexGroup)) {
         continue;
       }
-      RuleResult result = evaluator.evaluate(rule, context);
+      RuleResultVO result = evaluator.evaluate(rule, context);
       if (result != null && result.isTriggered()) {
         triggered.add(result);
         if (mutexGroup != null && !mutexGroup.isBlank()) {
@@ -224,14 +224,14 @@ public class ParallelRuleEvaluator {
         }
       }
     }
-    triggered.sort(Comparator.comparingInt(RuleResult::getSeverityWeight).reversed());
+    triggered.sort(Comparator.comparingInt(RuleResultVO::getSeverityWeight).reversed());
     return triggered;
   }
 
   /** 评估单个互斥组（组内串行，首条命中后同组跳过） */
-  private List<RuleResult> evaluateGroup(
-      List<Rule> groupRules, RuleContext context, RuleEvaluator evaluator) {
-    List<RuleResult> triggered = new ArrayList<>();
+  private List<RuleResultVO> evaluateGroup(
+      List<Rule> groupRules, RuleContextVO context, RuleEvaluator evaluator) {
+    List<RuleResultVO> triggered = new ArrayList<>();
     for (Rule rule : groupRules) {
       String mutexGroup = rule.getMutexGroup();
       if (mutexGroup != null && !mutexGroup.isBlank() && !triggered.isEmpty()) {
@@ -239,7 +239,7 @@ public class ParallelRuleEvaluator {
         break;
       }
       try {
-        RuleResult result = evaluator.evaluate(rule, context);
+        RuleResultVO result = evaluator.evaluate(rule, context);
         if (result != null && result.isTriggered()) {
           triggered.add(result);
         }
@@ -347,6 +347,6 @@ public class ParallelRuleEvaluator {
      * @param context 上下文
      * @return 评估结果；未触发或异常时可为 null
      */
-    RuleResult evaluate(Rule rule, RuleContext context);
+    RuleResultVO evaluate(Rule rule, RuleContextVO context);
   }
 }

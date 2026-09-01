@@ -7,8 +7,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 默认告警动作处理器
@@ -29,8 +29,8 @@ public class DefaultAlertActionHandler implements RuleActionHandler {
   }
 
   @Override
-  public void handle(List<RuleResult> triggered, RuleContext context) {
-    for (RuleResult result : triggered) {
+  public void handle(List<RuleResultVO> triggered, RuleContextVO context) {
+    for (RuleResultVO result : triggered) {
       try {
         RuleTriggeredEvent event = new RuleTriggeredEvent();
         event.setRuleCode(result.getRuleCode());

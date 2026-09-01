@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 事实数据提供者注册中心（P0-2 动态事实采集管道）
  *
  * <p>管理所有 {@link FactProvider} 的注册/注销，并对外提供聚合查询能力。 规则引擎在评估前调用 {@link #collectAllFacts} 获取全部事实数据，
- * 合并到 {@link RuleContext} 的 facts 中，使规则表达式可直接引用。
+ * 合并到 {@link RuleContextVO} 的 facts 中，使规则表达式可直接引用。
  *
  * <h3>核心能力</h3>
  *
@@ -201,7 +201,7 @@ public class FactProviderRegistry {
    * @param context 规则上下文（含已有 facts，provider 可读取）
    * @return 聚合后的事实 Map；无 provider 或全部失败返回空 Map
    */
-  public Map<String, Object> collectAllFacts(RuleContext context) {
+  public Map<String, Object> collectAllFacts(RuleContextVO context) {
     if (providers.isEmpty()) {
       return Collections.emptyMap();
     }
@@ -223,8 +223,8 @@ public class FactProviderRegistry {
         continue;
       }
       // 构建包含已采集事实的临时上下文
-      RuleContext progressiveContext =
-          RuleContext.of(
+      RuleContextVO progressiveContext =
+          RuleContextVO.of(
               progressiveFacts,
               context.getScenario(),
               context.getSource(),
@@ -248,7 +248,7 @@ public class FactProviderRegistry {
    * @param context 规则上下文
    * @return 事实数据 Map；不存在或失败返回空 Map
    */
-  public Map<String, Object> getFacts(String providerId, RuleContext context) {
+  public Map<String, Object> getFacts(String providerId, RuleContextVO context) {
     if (providerId == null) {
       return Collections.emptyMap();
     }
@@ -280,7 +280,7 @@ public class FactProviderRegistry {
   }
 
   /** 安全调用单个 provider（带超时与异常隔离） */
-  private Map<String, Object> safeInvoke(FactProvider provider, RuleContext context) {
+  private Map<String, Object> safeInvoke(FactProvider provider, RuleContextVO context) {
     Future<Map<String, Object>> future = null;
     try {
       future = executor.submit(() -> provider.getFacts(context));

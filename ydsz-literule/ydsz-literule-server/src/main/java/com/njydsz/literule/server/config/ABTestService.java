@@ -7,9 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
@@ -47,10 +47,10 @@ public class ABTestService {
    * @return A/B 对比报告
    */
   public ABTestReport test(
-      RuleDefinition currentDef, RuleDefinition candidateDef, Map<String, Object> facts) {
-    RuleContext context = RuleContext.of(facts, "AB_TEST", "MANUAL");
-    RuleResult currentResult = evaluateSafely(currentDef, context);
-    RuleResult candidateResult = evaluateSafely(candidateDef, context);
+      RuleDefinitionDTO currentDef, RuleDefinitionDTO candidateDef, Map<String, Object> facts) {
+    RuleContextVO context = RuleContextVO.of(facts, "AB_TEST", "MANUAL");
+    RuleResultVO currentResult = evaluateSafely(currentDef, context);
+    RuleResultVO candidateResult = evaluateSafely(candidateDef, context);
 
     Winner winner = decideWinner(currentResult, candidateResult);
     String conclusion = buildConclusion(currentDef, currentResult, candidateResult, winner);
@@ -74,14 +74,14 @@ public class ABTestService {
    * @param context 评估上下文
    * @return 评估结果
    */
-  private RuleResult evaluateSafely(RuleDefinition definition, RuleContext context) {
+  private RuleResultVO evaluateSafely(RuleDefinitionDTO definition, RuleContextVO context) {
     try {
       ExpressionRule rule = new ExpressionRule(definition, evaluator);
       return rule.evaluate(context);
     } catch (Exception e) {
       log.warn("[LiteRule-ABTest] 规则评估异常，按未触发处理: ruleCode={}, error={}",
           definition.getCode(), e.getMessage());
-      return RuleResult.notTriggered(definition.getCode());
+      return RuleResultVO.notTriggered(definition.getCode());
     }
   }
 
@@ -94,7 +94,7 @@ public class ABTestService {
    * @param candidateResult 候选规则结果
    * @return 胜者
    */
-  private Winner decideWinner(RuleResult currentResult, RuleResult candidateResult) {
+  private Winner decideWinner(RuleResultVO currentResult, RuleResultVO candidateResult) {
     boolean currentTriggered = currentResult.isTriggered();
     boolean candidateTriggered = candidateResult.isTriggered();
     if (currentTriggered && candidateTriggered) {
@@ -128,9 +128,9 @@ public class ABTestService {
    * @return 结论文案
    */
   private String buildConclusion(
-      RuleDefinition ruleCode,
-      RuleResult currentResult,
-      RuleResult candidateResult,
+      RuleDefinitionDTO ruleCode,
+      RuleResultVO currentResult,
+      RuleResultVO candidateResult,
       Winner winner) {
     return switch (winner) {
       case CANDIDATE ->
@@ -155,7 +155,7 @@ public class ABTestService {
    * @param result 规则结果
    * @return 严重度文本
    */
-  private String severityText(RuleResult result) {
+  private String severityText(RuleResultVO result) {
     if (result == null || !result.isTriggered() || result.getSeverity() == null) {
       return "未触发";
     }

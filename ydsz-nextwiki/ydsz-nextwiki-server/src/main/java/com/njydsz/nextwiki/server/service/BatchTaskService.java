@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.server.service.FileApplicationService.BatchResult;
+import com.njydsz.nextwiki.server.service.FileApplicationService.BatchResultDTO;
 import com.njydsz.nextwiki.server.websocket.BatchProgressNotifier;
 
 /**
@@ -169,7 +169,7 @@ public class BatchTaskService {
 
     try {
       FileApplicationService fileService = getService();
-      BatchResult result;
+      BatchResultDTO result;
       if (operation.startsWith("move:")) {
         String targetParentId = operation.substring(5);
         result = fileService.batchMove(nodeIds, targetParentId, userId);
@@ -304,7 +304,7 @@ public class BatchTaskService {
   /**
    * 批量任务结果视图（普通 POJO）。
    *
-   * <p>由 {@link FileApplicationService.BatchResult}（record）转换而来，保证 ydsz-common-json
+   * <p>由 {@link FileApplicationService.BatchResultDTO}（record）转换而来，保证 ydsz-common-json
    * 自研引擎可正常序列化/反序列化（record 无无参构造，自研引擎不保证支持）。
    *
    * @author ydsz-team
@@ -328,7 +328,7 @@ public class BatchTaskService {
      * @param result 领域批量结果（record）
      * @return 可序列化视图
      */
-    public static BatchResultView from(BatchResult result) {
+    public static BatchResultView from(BatchResultDTO result) {
       if (result == null) {
         return null;
       }

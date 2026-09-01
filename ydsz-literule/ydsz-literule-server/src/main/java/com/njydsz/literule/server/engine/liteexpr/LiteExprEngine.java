@@ -6,7 +6,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.expression.ExpressionTraceNode;
@@ -126,7 +126,7 @@ public class LiteExprEngine implements ExpressionEngine {
   }
 
   @Override
-  public boolean evalBoolean(String expression, RuleContext context) {
+  public boolean evalBoolean(String expression, RuleContextVO context) {
     if (expression == null || expression.isBlank()) {
       return false;
     }
@@ -171,7 +171,7 @@ public class LiteExprEngine implements ExpressionEngine {
   }
 
   @Override
-  public Object eval(String expression, RuleContext context) {
+  public Object eval(String expression, RuleContextVO context) {
     if (expression == null || expression.isBlank()) {
       return null;
     }
@@ -304,7 +304,7 @@ public class LiteExprEngine implements ExpressionEngine {
   }
 
   @Override
-  public TraceResult evalBooleanWithTrace(String expression, RuleContext context) {
+  public TraceResult evalBooleanWithTrace(String expression, RuleContextVO context) {
     if (expression == null || expression.isBlank()) {
       ExpressionTraceNode root =
           ExpressionTraceNode.builder()

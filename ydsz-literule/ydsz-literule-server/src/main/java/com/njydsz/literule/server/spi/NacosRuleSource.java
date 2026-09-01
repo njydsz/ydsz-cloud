@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * Nacos 配置中心规则数据源（P1-5）
@@ -39,7 +39,7 @@ public class NacosRuleSource implements RuleSource {
   private final String serverAddr;
   private final String dataId;
   private final String group;
-  private final List<Consumer<List<RuleDefinition>>> listeners = new ArrayList<>();
+  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>();
 
   /** Nacos ConfigService 实例（反射创建，避免硬依赖） */
   private Object configService;
@@ -86,7 +86,7 @@ public class NacosRuleSource implements RuleSource {
   }
 
   @Override
-  public List<RuleDefinition> loadEnabledRules() {
+  public List<RuleDefinitionDTO> loadEnabledRules() {
     if (!isAvailable()) {
       log.warn("[NacosRuleSource] 未初始化或不可用，返回空列表");
       return List.of();
@@ -109,7 +109,7 @@ public class NacosRuleSource implements RuleSource {
   }
 
   @Override
-  public void addChangeListener(Consumer<List<RuleDefinition>> listener) {
+  public void addChangeListener(Consumer<List<RuleDefinitionDTO>> listener) {
     listeners.add(listener);
   }
 
@@ -175,8 +175,8 @@ public class NacosRuleSource implements RuleSource {
         (proxy, method, args) -> {
           if ("receiveConfigInfo".equals(method.getName())) {
             String newConfig = String.valueOf(args[0]);
-            List<RuleDefinition> rules = parseRulesFromJson(newConfig);
-            for (Consumer<List<RuleDefinition>> listener : listeners) {
+            List<RuleDefinitionDTO> rules = parseRulesFromJson(newConfig);
+            for (Consumer<List<RuleDefinitionDTO>> listener : listeners) {
               try {
                 listener.accept(rules);
               } catch (Exception e) {
@@ -191,9 +191,9 @@ public class NacosRuleSource implements RuleSource {
   /**
    * 从 JSON 解析规则定义列表
    *
-   * <p>使用 fastjson2 解析，格式为 {@code List<RuleDefinition>} 的 JSON 序列化。
+   * <p>使用 fastjson2 解析，格式为 {@code List<RuleDefinitionDTO>} 的 JSON 序列化。
    */
-  private List<RuleDefinition> parseRulesFromJson(String json) {
+  private List<RuleDefinitionDTO> parseRulesFromJson(String json) {
     if (json == null || json.isBlank()) {
       return List.of();
     }
@@ -214,7 +214,7 @@ public class NacosRuleSource implements RuleSource {
    * @return 规则定义；不存在返回 null
    */
   @Override
-  public RuleDefinition findByCode(String ruleCode) {
+  public RuleDefinitionDTO findByCode(String ruleCode) {
     if (ruleCode == null) {
       return null;
     }
@@ -248,7 +248,7 @@ public class NacosRuleSource implements RuleSource {
    * @return 保存后的规则定义
    */
   @Override
-  public RuleDefinition save(RuleDefinition definition, String operator) {
+  public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator) {
     throw new UnsupportedOperationException(
         "配置中心数据源为只读，不支持 save 操作: source=" + getClass().getSimpleName());
   }
@@ -262,7 +262,7 @@ public class NacosRuleSource implements RuleSource {
    * @return 全部规则定义列表
    */
   @Override
-  public List<RuleDefinition> loadAllRules() {
+  public List<RuleDefinitionDTO> loadAllRules() {
     return loadEnabledRules();
   }
 

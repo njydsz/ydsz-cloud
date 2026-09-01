@@ -25,7 +25,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
@@ -207,7 +207,7 @@ public class RuleGraphController {
   public YdszResponse<List<RuleResultVO>> dryRunGraph(
       @PathVariable String ruleCode, @RequestBody Map<String, Object> facts) {
     try {
-      List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
+      List<RuleResultVO> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
       return YdszResponse.success(
           results.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
     } catch (IllegalArgumentException e) {

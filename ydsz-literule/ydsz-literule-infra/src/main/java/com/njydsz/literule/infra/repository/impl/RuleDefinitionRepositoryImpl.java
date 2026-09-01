@@ -15,7 +15,7 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
-import com.njydsz.literule.infra.entity.RuleDefinition;
+import com.njydsz.literule.infra.entity.RuleDefinitionDTO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 
 /**
@@ -45,23 +45,23 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
 
   @Override
   public Optional<RuleDefinitionVO> findByCode(String ruleCode) {
-    RuleDefinition entity = ruleDefinitionMapper.selectByCode(ruleCode);
+    RuleDefinitionDTO entity = ruleDefinitionMapper.selectByCode(ruleCode);
     return Optional.ofNullable(converter.entityToVO(entity));
   }
 
   @Override
   public Optional<RuleDefinitionVO> findById(String id) {
-    RuleDefinition entity = ruleDefinitionMapper.selectById(id);
+    RuleDefinitionDTO entity = ruleDefinitionMapper.selectById(id);
     return Optional.ofNullable(converter.entityToVO(entity));
   }
 
   @Override
   public PageResponse<List<RuleDefinitionVO>> pageRuleDefinitions(PageQuery pageQuery) {
-    Page<RuleDefinition> page = new Page<>(
+    Page<RuleDefinitionDTO> page = new Page<>(
         pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
-    LambdaQueryWrapper<RuleDefinition> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByAsc(RuleDefinition::getPriority).orderByDesc(RuleDefinition::getCreatedAt);
-    IPage<RuleDefinition> doPage = ruleDefinitionMapper.selectPage(page, wrapper);
+    LambdaQueryWrapper<RuleDefinitionDTO> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByAsc(RuleDefinitionDTO::getPriority).orderByDesc(RuleDefinitionDTO::getCreatedAt);
+    IPage<RuleDefinitionDTO> doPage = ruleDefinitionMapper.selectPage(page, wrapper);
 
     // DO → VO 转换，封装为框架无关的 PageResponse
     List<RuleDefinitionVO> records = converter.ruleDefinitionListToVO(doPage.getRecords());
@@ -72,7 +72,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
   @Override
   public List<RuleDefinitionVO> search(
       String query, String status, String category, Boolean enabled, int offset, int limit) {
-    IPage<RuleDefinition> page =
+    IPage<RuleDefinitionDTO> page =
         ruleDefinitionMapper.searchRules(
             buildSearchQuery(query),
             status,
@@ -90,7 +90,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
   @Override
   public PageResponse<List<RuleDefinitionVO>> searchPage(
       String query, String status, String category, Boolean enabled, PageQuery pageQuery) {
-    IPage<RuleDefinition> page =
+    IPage<RuleDefinitionDTO> page =
         ruleDefinitionMapper.searchRules(
             buildSearchQuery(query),
             status,

@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
 import com.njydsz.literule.domain.model.ModelInvocationException;
 import com.njydsz.literule.server.spi.FactCollectionException;
@@ -77,7 +77,7 @@ public class FactInjectionService {
      * @param context 原始评估上下文
      * @return 合并后的上下文
      */
-    public RuleContext injectDataInParallel(RuleContext context) {
+    public RuleContextVO injectDataInParallel(RuleContextVO context) {
         boolean hasFacts = factProviderRegistry != null && factProviderRegistry.hasProviders();
         boolean hasModels = modelInputRegistry != null && modelInputRegistry.hasProviders();
 
@@ -128,8 +128,8 @@ public class FactInjectionService {
      * @param context 原始上下文
      * @return 合并后的上下文
      */
-    private RuleContext injectFactsThenModel(RuleContext context) {
-        RuleContext enriched = injectFactsIfNeeded(context);
+    private RuleContextVO injectFactsThenModel(RuleContextVO context) {
+        RuleContextVO enriched = injectFactsIfNeeded(context);
         return injectModelOutputsIfNeeded(enriched);
     }
 
@@ -139,7 +139,7 @@ public class FactInjectionService {
      * @param context 上下文
      * @return 事实数据 Map；异常时返回空 Map
      */
-    private Map<String, Object> collectFactsSafely(RuleContext context) {
+    private Map<String, Object> collectFactsSafely(RuleContextVO context) {
         try {
             return factProviderRegistry.collectAllFacts(context);
         } catch (FactCollectionException e) {
@@ -154,7 +154,7 @@ public class FactInjectionService {
      * @param context 上下文
      * @return 模型输出 Map；异常时返回空 Map
      */
-    private Map<String, Object> collectModelsSafely(RuleContext context) {
+    private Map<String, Object> collectModelsSafely(RuleContextVO context) {
         try {
             return modelInputRegistry.collectAllModelOutputs(context);
         } catch (ModelInvocationException e) {
@@ -171,8 +171,8 @@ public class FactInjectionService {
      * @param modelOutputs 模型输出
      * @return 合并后的上下文
      */
-    private RuleContext mergeInjectedData(
-            RuleContext context,
+    private RuleContextVO mergeInjectedData(
+            RuleContextVO context,
             Map<String, Object> externalFacts,
             Map<String, Object> modelOutputs) {
         boolean hasFacts = externalFacts != null && !externalFacts.isEmpty();
@@ -203,7 +203,7 @@ public class FactInjectionService {
             }
         }
 
-        return RuleContext.of(
+        return RuleContextVO.of(
                 mergedFacts,
                 context.getScenario(),
                 context.getSource(),
@@ -219,13 +219,13 @@ public class FactInjectionService {
      *
      * <ol>
      *   <li>调用 {@link FactProviderRegistry#collectAllFacts} 获取外部数据源事实
-     *   <li>合并到 facts 中，构建新的 {@link RuleContext}
+     *   <li>合并到 facts 中，构建新的 {@link RuleContextVO}
      * </ol>
      *
      * @param context 原始上下文
      * @return 包含外部事实的新上下文；无需注入时返回原 context
      */
-    public RuleContext injectFactsIfNeeded(RuleContext context) {
+    public RuleContextVO injectFactsIfNeeded(RuleContextVO context) {
         if (factProviderRegistry == null || !factProviderRegistry.hasProviders()) {
             return context;
         }
@@ -245,8 +245,8 @@ public class FactInjectionService {
         // 合并到新 facts（原 facts + 外部事实，后者覆盖前者）
         Map<String, Object> mergedFacts = new LinkedHashMap<>(context.getFacts());
         mergedFacts.putAll(externalFacts);
-        RuleContext enriched =
-                RuleContext.of(
+        RuleContextVO enriched =
+                RuleContextVO.of(
                         mergedFacts,
                         context.getScenario(),
                         context.getSource(),
@@ -270,13 +270,13 @@ public class FactInjectionService {
      * <ol>
      *   <li>调用 {@link ModelInputRegistry#collectAllModelOutputs} 获取模型输出
      *   <li>将扁平 key 转换为嵌套结构 {@code {"model": {"score": ..., ...}}}
-     *   <li>合并到 facts 中，构建新的 {@link RuleContext}
+     *   <li>合并到 facts 中，构建新的 {@link RuleContextVO}
      * </ol>
      *
      * @param context 原始上下文
      * @return 包含模型输出的新上下文；无需注入时返回原 context
      */
-    public RuleContext injectModelOutputsIfNeeded(RuleContext context) {
+    public RuleContextVO injectModelOutputsIfNeeded(RuleContextVO context) {
         if (modelInputRegistry == null || !modelInputRegistry.hasProviders()) {
             return context;
         }
@@ -311,8 +311,8 @@ public class FactInjectionService {
         // 合并到新 facts（保留原 facts + 添加 model 嵌套 Map）
         Map<String, Object> mergedFacts = new LinkedHashMap<>(context.getFacts());
         mergedFacts.put("model", nestedModel);
-        RuleContext enriched =
-                RuleContext.of(
+        RuleContextVO enriched =
+                RuleContextVO.of(
                         mergedFacts,
                         context.getScenario(),
                         context.getSource(),

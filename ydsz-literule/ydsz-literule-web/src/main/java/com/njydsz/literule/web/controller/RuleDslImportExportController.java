@@ -24,7 +24,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.dsl.RuleDsl;
@@ -115,7 +115,7 @@ public class RuleDslImportExportController {
       if (dsl.getRules() != null) {
         for (RuleDslEntry entry : dsl.getRules()) {
           try {
-            RuleDefinition def = RuleDslConverter.toRuleDefinition(entry);
+            RuleDefinitionDTO def = RuleDslConverter.toRuleDefinition(entry);
             ruleAdminService.save(def, operator, "DSL 导入");
             successCount++;
             importedCodes.add(entry.getCode());
@@ -159,7 +159,7 @@ public class RuleDslImportExportController {
   @Operation(summary = "导出全部规则DSL", description = "将引擎中的规则导出为 YAML 格式的 DSL")
   public YdszResponse<Map<String, Object>> exportAll(
       @RequestParam(value = "category", required = false) String category) {
-    List<RuleDefinition> allRules = ruleAdminService.listAll();
+    List<RuleDefinitionDTO> allRules = ruleAdminService.listAll();
 
     // 分类过滤
     if (category != null && !category.isBlank()) {
@@ -189,7 +189,7 @@ public class RuleDslImportExportController {
   @GetMapping("/export/{ruleCode}")
   @Operation(summary = "导出单条规则DSL", description = "将指定规则导出为 YAML 格式的 DSL")
   public YdszResponse<Map<String, Object>> exportSingle(@PathVariable String ruleCode) {
-    RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+    RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
       return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }

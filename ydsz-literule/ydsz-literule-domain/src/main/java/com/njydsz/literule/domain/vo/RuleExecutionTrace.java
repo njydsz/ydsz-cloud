@@ -12,7 +12,7 @@ import java.util.Map;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class RuleExecutionTrace implements Serializable {
+public class RuleExecutionTraceVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -52,9 +52,9 @@ public class RuleExecutionTrace implements Serializable {
   /** 创建时间 */
   private LocalDateTime createdAt;
 
-  public RuleExecutionTrace() {}
+  public RuleExecutionTraceVO() {}
 
-  public RuleExecutionTrace(
+  public RuleExecutionTraceVO(
       String traceId,
       String ruleCode,
       String ruleName,

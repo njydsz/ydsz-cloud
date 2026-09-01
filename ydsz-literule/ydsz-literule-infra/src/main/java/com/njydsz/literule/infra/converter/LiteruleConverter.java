@@ -2,11 +2,11 @@ package com.njydsz.literule.infra.converter;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
-import com.njydsz.literule.domain.dto.RuleDefinition;
-import com.njydsz.literule.domain.vo.RuleEngineStats;
-import com.njydsz.literule.domain.vo.RulePack;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
+import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
@@ -31,10 +31,10 @@ import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.infra.entity.RuleABPolicy;
 import com.njydsz.literule.infra.entity.RuleABRollback;
 import com.njydsz.literule.infra.entity.RuleChainGraph;
-import com.njydsz.literule.infra.entity.RuleDefinition;
+import com.njydsz.literule.infra.entity.RuleDefinitionDTO;
 import com.njydsz.literule.infra.entity.RuleDependency;
-import com.njydsz.literule.infra.entity.RuleExecutionTrace;
-import com.njydsz.literule.infra.entity.RulePack;
+import com.njydsz.literule.infra.entity.RuleExecutionTraceVO;
+import com.njydsz.literule.infra.entity.RulePackVO;
 import com.njydsz.literule.infra.entity.RuleTemplate;
 import com.njydsz.literule.infra.entity.RuleVersionHistory;
 
@@ -102,12 +102,12 @@ public class LiteruleConverter {
     return component.ruleChainGraphListToVO(entities);
   }
 
-  // ===== RuleDefinition =====
-  public RuleDefinitionVO entityToVO(RuleDefinition entity) {
+  // ===== RuleDefinitionDTO =====
+  public RuleDefinitionVO entityToVO(RuleDefinitionDTO entity) {
     return core.entityToVO(entity);
   }
 
-  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinition> entities) {
+  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDTO> entities) {
     return core.ruleDefinitionListToVO(entities);
   }
 
@@ -120,21 +120,21 @@ public class LiteruleConverter {
     return support.ruleDependencyListToVO(entities);
   }
 
-  // ===== RuleExecutionTrace =====
-  public RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity) {
+  // ===== RuleExecutionTraceVO =====
+  public RuleExecutionTraceVO entityToVO(RuleExecutionTraceVO entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities) {
+  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceVO> entities) {
     return support.ruleExecutionTraceListToVO(entities);
   }
 
-  // ===== RulePack =====
-  public RulePackVO entityToVO(RulePack entity) {
+  // ===== RulePackVO =====
+  public RulePackVO entityToVO(RulePackVO entity) {
     return support.entityToVO(entity);
   }
 
-  public List<RulePackVO> rulePackListToVO(List<RulePack> entities) {
+  public List<RulePackVO> rulePackListToVO(List<RulePackVO> entities) {
     return support.rulePackListToVO(entities);
   }
 
@@ -161,28 +161,28 @@ public class LiteruleConverter {
     return support.postDtoToEntity(dto);
   }
 
-  // ===== RuleDefinition (api) → RuleDefinitionVO =====
-  public RuleDefinitionVO entityToVO(RuleDefinition entity) {
+  // ===== RuleDefinitionDTO (api) → RuleDefinitionVO =====
+  public RuleDefinitionVO entityToVO(RuleDefinitionDTO entity) {
     return core.entityToVO(entity);
   }
 
-  // ===== RuleResult (api) → RuleResultVO =====
-  public RuleResultVO entityToVO(RuleResult entity) {
+  // ===== RuleResultVO (api) → RuleResultVO =====
+  public RuleResultVO entityToVO(RuleResultVO entity) {
     return core.entityToVO(entity);
   }
 
-  // ===== RuleEngineStats (api) → RuleEngineStatsVO =====
-  public RuleEngineStatsVO entityToVO(RuleEngineStats entity) {
+  // ===== RuleEngineStatsVO (api) → RuleEngineStatsVO =====
+  public RuleEngineStatsVO entityToVO(RuleEngineStatsVO entity) {
     return core.entityToVO(entity);
   }
 
-  // ===== RulePack (api) → RulePackVO =====
-  public RulePackVO entityToVO(RulePack entity) {
+  // ===== RulePackVO (api) → RulePackVO =====
+  public RulePackVO entityToVO(RulePackVO entity) {
     return core.entityToVO(entity);
   }
 
-  // ===== DecisionTableDefinition (api) → DecisionTableDefinitionVO =====
-  public DecisionTableDefinitionVO entityToVO(DecisionTableDefinition entity) {
+  // ===== DecisionTableDefinitionDTO (api) → DecisionTableDefinitionVO =====
+  public DecisionTableDefinitionVO entityToVO(DecisionTableDefinitionDTO entity) {
     return core.entityToVO(entity);
   }
 

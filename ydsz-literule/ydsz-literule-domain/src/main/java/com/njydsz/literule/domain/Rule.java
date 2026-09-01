@@ -4,7 +4,7 @@ import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleEnvironment;
 import com.njydsz.literule.domain.vo.RuleContextVO;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 规则接口
@@ -131,7 +131,7 @@ public interface Rule {
    * 评估规则
    *
    * @param context 规则上下文（事实数据）
-   * @return 评估结果；未触发时返回 {@link RuleResult#notTriggered(String)}
+   * @return 评估结果；未触发时返回 {@link RuleResultVO#notTriggered(String)}
    */
-  RuleResult evaluate(RuleContextVO context);
+  RuleResultVO evaluate(RuleContextVO context);
 }

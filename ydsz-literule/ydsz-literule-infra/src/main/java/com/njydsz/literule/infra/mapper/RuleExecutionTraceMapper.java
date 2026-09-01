@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.literule.infra.entity.RuleExecutionTrace;
+import com.njydsz.literule.infra.entity.RuleExecutionTraceVO;
 
 /**
  * 规则执行轨迹 Mapper
@@ -32,12 +32,12 @@ import com.njydsz.literule.infra.entity.RuleExecutionTrace;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RuleExecutionTrace 执行轨迹实体
+ * @see RuleExecutionTraceVO 执行轨迹实体
  * @see com.njydsz.literule.server.service.RuleExecutionTraceService 轨迹 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTrace> {
+public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTraceVO> {
 
   /**
    * 时间窗口内的总体统计（评估次数 / 触发次数 / 错误次数 / 总耗时）

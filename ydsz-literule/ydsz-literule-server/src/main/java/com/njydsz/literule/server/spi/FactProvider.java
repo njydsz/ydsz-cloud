@@ -2,12 +2,12 @@ package com.njydsz.literule.server.spi;
 
 import java.util.Map;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 事实数据提供者 SPI（P0-2 动态事实采集管道）
  *
- * <p>实现本接口可从外部数据源（DB、Redis、HTTP API、消息队列等）动态采集事实数据， 注入到 {@link RuleContext} 中供规则表达式引用。与 {@link
+ * <p>实现本接口可从外部数据源（DB、Redis、HTTP API、消息队列等）动态采集事实数据， 注入到 {@link RuleContextVO} 中供规则表达式引用。与 {@link
  * com.njydsz.literule.domain.model.ModelInputProvider} 的区别：
  *
  * <ul>
@@ -50,7 +50,7 @@ import com.njydsz.literule.domain.vo.RuleContext;
  *     private ProjectMapper projectMapper;
  *
  *     {@literal @Override}
- *     public Map<String, Object> getFacts(RuleContext context) {
+ *     public Map<String, Object> getFacts(RuleContextVO context) {
  *         String projectId = (String) context.get("projectId");
  *         ProjectBudget budget = projectMapper.selectBudget(projectId);
  *         Map<String, Object> facts = new HashMap<>();
@@ -75,13 +75,13 @@ public interface FactProvider {
   /**
    * 根据规则上下文动态采集事实数据
    *
-   * <p>实现方可从 {@link RuleContext#getFacts()} 中读取已有的上下文数据（如 projectId、tenantId），
+   * <p>实现方可从 {@link RuleContextVO#getFacts()} 中读取已有的上下文数据（如 projectId、tenantId），
    * 查询外部数据源，返回需要补充的事实数据。返回的 Map 将直接合并到 facts 中。
    *
    * @param context 规则上下文（含已有 facts）
    * @return 事实数据 Map；null 或空 Map 表示无数据
    */
-  Map<String, Object> getFacts(RuleContext context);
+  Map<String, Object> getFacts(RuleContextVO context);
 
   /**
    * 提供者标识（如 "project-budget"、"redis-stats"）
@@ -90,7 +90,7 @@ public interface FactProvider {
    *
    * <ul>
    *   <li>日志与监控中区分不同数据源的调用情况
-   *   <li>通过 {@link FactProviderRegistry#getFacts(String, RuleContext)} 定点获取
+   *   <li>通过 {@link FactProviderRegistry#getFacts(String, RuleContextVO)} 定点获取
    * </ul>
    *
    * @return 提供者标识；全局唯一

@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
@@ -59,7 +59,7 @@ public interface CompiledCondition {
      * @param evaluator 表达式求值器（expr: 表达式求值使用）
      * @return true 表示匹配
      */
-    boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator);
+    boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator);
 
     /**
      * 编译条件字符串为 {@link CompiledCondition}
@@ -130,7 +130,7 @@ public interface CompiledCondition {
    */
   class AlwaysTrueCondition implements CompiledCondition {
     @Override
-    public boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator) {
+    public boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator) {
       return true;
     }
   }
@@ -148,7 +148,7 @@ public interface CompiledCondition {
     }
 
     @Override
-    public boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator) {
+    public boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator) {
       return matchNull ? factValue == null : factValue != null;
     }
   }
@@ -170,7 +170,7 @@ public interface CompiledCondition {
     }
 
     @Override
-    public boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator) {
+    public boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator) {
       if (factValue == null) {
         return false;
       }
@@ -195,7 +195,7 @@ public interface CompiledCondition {
     }
 
     @Override
-    public boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator) {
+    public boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator) {
       return factValue != null && values.contains(factValue.toString());
     }
   }
@@ -213,7 +213,7 @@ public interface CompiledCondition {
     }
 
     @Override
-    public boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator) {
+    public boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator) {
       if (factValue == null) {
         return false;
       }
@@ -241,7 +241,7 @@ public interface CompiledCondition {
     }
 
     @Override
-    public boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator) {
+    public boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator) {
       return Objects.equals(value, factValue != null ? factValue.toString() : null);
     }
   }
@@ -257,7 +257,7 @@ public interface CompiledCondition {
     }
 
     @Override
-    public boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator) {
+    public boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator) {
       try {
         return evaluator != null && evaluator.evalBoolean(expression, context);
       } catch (Exception e) {
@@ -278,7 +278,7 @@ public interface CompiledCondition {
     }
 
     @Override
-    public boolean matches(Object factValue, RuleContext context, ExpressionEngine evaluator) {
+    public boolean matches(Object factValue, RuleContextVO context, ExpressionEngine evaluator) {
       // 降级为原始的 ConditionMatcher 运行时解析
       return ConditionMatcher.match("fallback", condExpr, factValue, context, evaluator);
     }

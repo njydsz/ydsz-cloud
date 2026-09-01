@@ -73,7 +73,7 @@ public class RuleChainGraph implements Serializable {
   /** 画布描述 */
   private String description;
 
-  /** 适用场景（与 RuleContext.scenario 对应） */
+  /** 适用场景（与 RuleContextVO.scenario 对应） */
   private String scenario;
 
   /** 租户 ID（多租户隔离，P1-3） */

@@ -18,7 +18,7 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
@@ -80,8 +80,8 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
   private static final String L2_NULL_MARKER = "__NULL__";
 
   /** L1 NULL 标记（本地缓存中表示 null 结果，不缓存 null） */
-  private static final RuleDefinition L1_NULL_MARKER =
-      RuleDefinition.builder().code("__L1_NULL_MARKER__").build();
+  private static final RuleDefinitionDTO L1_NULL_MARKER =
+      RuleDefinitionDTO.builder().code("__L1_NULL_MARKER__").build();
 
   /** 版本号检查间隔（纳秒，1 秒）- 限流避免每次 L1 命中都打 Redis */
   private static final long VERSION_CHECK_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(1);
@@ -94,10 +94,10 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
   private final LiteRuleProperties.CacheConfig cacheConfig;
 
   /** L1 列表缓存（loadEnabledRules / loadAllRules / loadEnabledRulesByTenant） */
-  private final Cache<String, List<RuleDefinition>> listCache;
+  private final Cache<String, List<RuleDefinitionDTO>> listCache;
 
   /** L1 单条缓存（findByCode，使用 NULL_MARKER 处理 null） */
-  private final Cache<String, RuleDefinition> singleCache;
+  private final Cache<String, RuleDefinitionDTO> singleCache;
 
   /** 上次版本号检查时间（纳秒） */
   private volatile long lastVersionCheckNanos = 0L;
@@ -134,13 +134,13 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
         (redissonClient != null && cacheConfig.isL2Enabled()) ? redissonClient : null;
     this.cacheConfig = cacheConfig;
     this.listCache =
-        YdszCache.<String, List<RuleDefinition>>newBuilder()
+        YdszCache.<String, List<RuleDefinitionDTO>>newBuilder()
             .type(CacheType.STRIPED)
             .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
             .maximumSize(cacheConfig.getL1MaxSize())
             .build();
     this.singleCache =
-        YdszCache.<String, RuleDefinition>newBuilder()
+        YdszCache.<String, RuleDefinitionDTO>newBuilder()
             .type(CacheType.STRIPED)
             .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
             .maximumSize(cacheConfig.getL1MaxSize())
@@ -153,30 +153,30 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
   }
 
   @Override
-  public List<RuleDefinition> loadEnabledRules() {
+  public List<RuleDefinitionDTO> loadEnabledRules() {
     checkVersionAndInvalidate();
     return listCache.get(
         KEY_ENABLED, k -> loadListFromL2OrDb(KEY_ENABLED, delegate::loadEnabledRules));
   }
 
   @Override
-  public List<RuleDefinition> loadAllRules() {
+  public List<RuleDefinitionDTO> loadAllRules() {
     checkVersionAndInvalidate();
     return listCache.get(KEY_ALL, k -> loadListFromL2OrDb(KEY_ALL, delegate::loadAllRules));
   }
 
   @Override
-  public RuleDefinition findByCode(String ruleCode) {
+  public RuleDefinitionDTO findByCode(String ruleCode) {
     checkVersionAndInvalidate();
     String cacheKey = KEY_CODE_PREFIX + ruleCode;
-    RuleDefinition cached =
+    RuleDefinitionDTO cached =
         singleCache.get(
             cacheKey, k -> loadSingleFromL2OrDb(cacheKey, () -> delegate.findByCode(ruleCode)));
     return cached == L1_NULL_MARKER ? null : cached;
   }
 
   @Override
-  public List<RuleDefinition> loadEnabledRulesByTenant(String tenantId) {
+  public List<RuleDefinitionDTO> loadEnabledRulesByTenant(String tenantId) {
     checkVersionAndInvalidate();
     String cacheKey = KEY_TENANT_ENABLED_PREFIX + tenantId + ":enabled";
     return listCache.get(
@@ -185,7 +185,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
   }
 
   @Override
-  public RuleDefinition save(RuleDefinition definition, String operator) {
+  public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator) {
     try {
       return delegate.save(definition, operator);
     } finally {
@@ -260,16 +260,16 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    *
    * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 由缓存框架自动回填）。
    */
-  private List<RuleDefinition> loadListFromL2OrDb(
-      String l2Key, Supplier<List<RuleDefinition>> loader) {
+  private List<RuleDefinitionDTO> loadListFromL2OrDb(
+      String l2Key, Supplier<List<RuleDefinitionDTO>> loader) {
     // 1. 尝试 L2
     if (redissonClient != null) {
       try {
         RBucket<String> bucket = redissonClient.getBucket(l2Key);
         String json = bucket.get();
         if (json != null) {
-          List<RuleDefinition> l2Value =
-              YdszJson.fromJson(json, new JsonType<List<RuleDefinition>>() {});
+          List<RuleDefinitionDTO> l2Value =
+              YdszJson.fromJson(json, new JsonType<List<RuleDefinitionDTO>>() {});
           if (l2Value != null) {
             log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
             return l2Value;
@@ -281,7 +281,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
     }
 
     // 2. 加载 DB
-    List<RuleDefinition> dbValue = loader.get();
+    List<RuleDefinitionDTO> dbValue = loader.get();
     if (dbValue == null) {
       dbValue = Collections.emptyList();
     }
@@ -298,7 +298,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 由缓存框架自动回填）。 null 结果使用 {@link #L1_NULL_MARKER}（L1）和 {@link
    * #L2_NULL_MARKER}（L2）标记， 避免不缓存 null 导致的缓存穿透。
    */
-  private RuleDefinition loadSingleFromL2OrDb(String l2Key, Supplier<RuleDefinition> loader) {
+  private RuleDefinitionDTO loadSingleFromL2OrDb(String l2Key, Supplier<RuleDefinitionDTO> loader) {
     // 1. 尝试 L2
     if (redissonClient != null) {
       try {
@@ -309,7 +309,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
             log.debug("[LiteRule-Cache] L2 命中 NULL 标记: {}", l2Key);
             return L1_NULL_MARKER;
           }
-          RuleDefinition l2Value = YdszJson.fromJson(json, RuleDefinition.class);
+          RuleDefinitionDTO l2Value = YdszJson.fromJson(json, RuleDefinition.class);
           if (l2Value != null) {
             log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
             return l2Value;
@@ -321,7 +321,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
     }
 
     // 2. 加载 DB
-    RuleDefinition dbValue = loader.get();
+    RuleDefinitionDTO dbValue = loader.get();
 
     // 3. 回填 L2
     if (dbValue == null) {

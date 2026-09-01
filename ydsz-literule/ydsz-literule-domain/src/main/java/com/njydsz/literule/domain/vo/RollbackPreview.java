@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RollbackPreview implements Serializable {
+public class RollbackPreviewVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

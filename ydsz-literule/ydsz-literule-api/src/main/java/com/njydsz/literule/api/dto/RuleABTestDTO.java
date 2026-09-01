@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * A/B 测试请求体 DTO
@@ -28,7 +28,7 @@ public class RuleABTestDTO {
   @Schema(description = "候选规则定义", requiredMode = Schema.RequiredMode.REQUIRED)
   @NotNull(message = "{validation.project.msg_8304cf7d}")
   @Valid
-  private RuleDefinition candidate;
+  private RuleDefinitionDTO candidate;
 
   /** 测试用事实数据（同一份 facts 分别评估当前规则与候选规则） */
   @Schema(description = "测试用事实数据", requiredMode = Schema.RequiredMode.REQUIRED)

@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.vo.RuleExecutionTrace;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 
 /**
  * 规则执行轨迹记录器（SPI）
@@ -28,15 +28,15 @@ public interface TraceRecorder {
    *
    * @param trace 轨迹记录
    */
-  void record(RuleExecutionTrace trace);
+  void record(RuleExecutionTraceVO trace);
 
   /**
    * 同步批量记录（用于批量评估场景）
    *
    * @param traces 轨迹列表
    */
-  default void recordBatch(List<RuleExecutionTrace> traces) {
-    for (RuleExecutionTrace trace : traces) {
+  default void recordBatch(List<RuleExecutionTraceVO> traces) {
+    for (RuleExecutionTraceVO trace : traces) {
       record(trace);
     }
   }
@@ -47,7 +47,7 @@ public interface TraceRecorder {
    * @param traceId 追踪 ID
    * @return 轨迹列表
    */
-  List<RuleExecutionTrace> getByTraceId(String traceId);
+  List<RuleExecutionTraceVO> getByTraceId(String traceId);
 
   /**
    * 按 ruleCode 查询历史执行轨迹
@@ -56,7 +56,7 @@ public interface TraceRecorder {
    * @param limit 最大返回数
    * @return 轨迹列表
    */
-  List<RuleExecutionTrace> getByRuleCode(String ruleCode, int limit);
+  List<RuleExecutionTraceVO> getByRuleCode(String ruleCode, int limit);
 
   /**
    * 查询最近的执行轨迹
@@ -64,7 +64,7 @@ public interface TraceRecorder {
    * @param limit 最大返回数
    * @return 轨迹列表
    */
-  List<RuleExecutionTrace> getRecentTraces(int limit);
+  List<RuleExecutionTraceVO> getRecentTraces(int limit);
 
   /**
    * 是否启用轨迹记录

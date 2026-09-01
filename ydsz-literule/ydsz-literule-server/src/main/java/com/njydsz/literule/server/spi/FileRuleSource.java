@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.server.dsl.RuleDsl;
 import com.njydsz.literule.server.dsl.RuleDslEntry;
@@ -32,7 +32,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
 /**
  * 文件规则数据源（P2-3 DSL YAML/JSON 规则文件加载）
  *
- * <p>从 classpath 或文件系统加载 YAML/JSON 规则文件，转换为 {@link RuleDefinition} 列表。 适用于 GitOps 场景：规则以 YAML
+ * <p>从 classpath 或文件系统加载 YAML/JSON 规则文件，转换为 {@link RuleDefinitionDTO} 列表。 适用于 GitOps 场景：规则以 YAML
  * 文件形式存储在 Git 仓库中，应用启动时从 classpath 或本地磁盘加载，文件变更后通过 {@code WatchService} 触发热刷新。
  *
  * <p><b>支持的 location 格式</b>：
@@ -50,7 +50,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  * <pre>
  * FileRuleSource source = new FileRuleSource("classpath:rules/", true);
  * source.init();
- * List&lt;RuleDefinition&gt; rules = source.loadEnabledRules();
+ * List&lt;RuleDefinitionDTO&gt; rules = source.loadEnabledRules();
  * </pre>
  *
  * <p>WatchService 监听为可选能力（{@link #supportsWatch()} 返回 true）， 文件变更时回调已注册的 {@link Consumer} 监听器。
@@ -68,10 +68,10 @@ public class FileRuleSource implements RuleSource {
   private final boolean watchEnabled;
 
   /** 已加载的规则定义（init 后填充） */
-  private volatile List<RuleDefinition> cachedRules = Collections.emptyList();
+  private volatile List<RuleDefinitionDTO> cachedRules = Collections.emptyList();
 
   /** 变更监听器列表 */
-  private final List<Consumer<List<RuleDefinition>>> listeners = new ArrayList<>();
+  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>();
 
   /** 文件监听线程池（watchEnabled=true 时启动） */
   private ExecutorService watchThread;
@@ -115,7 +115,7 @@ public class FileRuleSource implements RuleSource {
   }
 
   @Override
-  public List<RuleDefinition> loadEnabledRules() {
+  public List<RuleDefinitionDTO> loadEnabledRules() {
     if (!initialized) {
       log.warn("[FileRuleSource] 未初始化，返回空列表");
       return List.of();
@@ -129,7 +129,7 @@ public class FileRuleSource implements RuleSource {
    *
    * @return 全部规则定义列表
    */
-  public List<RuleDefinition> loadAllRules() {
+  public List<RuleDefinitionDTO> loadAllRules() {
     if (!initialized) {
       return List.of();
     }
@@ -137,7 +137,7 @@ public class FileRuleSource implements RuleSource {
   }
 
   @Override
-  public void addChangeListener(Consumer<List<RuleDefinition>> listener) {
+  public void addChangeListener(Consumer<List<RuleDefinitionDTO>> listener) {
     if (listener != null) {
       listeners.add(listener);
     }
@@ -186,7 +186,7 @@ public class FileRuleSource implements RuleSource {
    * @param location 位置字符串
    * @return 规则定义列表
    */
-  private List<RuleDefinition> loadFromLocation(String location) throws IOException {
+  private List<RuleDefinitionDTO> loadFromLocation(String location) throws IOException {
     List<RuleDsl> dsls = new ArrayList<>();
     if (location.startsWith(CLASSPATH_PREFIX)) {
       String path = location.substring(CLASSPATH_PREFIX.length());
@@ -199,13 +199,13 @@ public class FileRuleSource implements RuleSource {
       dsls.addAll(loadFromClasspath(location));
     }
     // 合并全部 DSL 的规则定义
-    List<RuleDefinition> rules = new ArrayList<>();
+    List<RuleDefinitionDTO> rules = new ArrayList<>();
     for (RuleDsl dsl : dsls) {
       if (dsl == null || dsl.getRules() == null) {
         continue;
       }
       for (RuleDslEntry entry : dsl.getRules()) {
-        RuleDefinition def = toRuleDefinition(entry);
+        RuleDefinitionDTO def = toRuleDefinition(entry);
         if (def != null) {
           rules.add(def);
         }
@@ -336,7 +336,7 @@ public class FileRuleSource implements RuleSource {
     return null;
   }
 
-  // ============ DSL 条目转 RuleDefinition ============
+  // ============ DSL 条目转 RuleDefinitionDTO ============
 
   /**
    * 将 DSL 条目转换为规则定义
@@ -346,12 +346,12 @@ public class FileRuleSource implements RuleSource {
    * @param entry DSL 条目
    * @return 规则定义；entry 为 null 或缺少 code 时返回 null
    */
-  private RuleDefinition toRuleDefinition(RuleDslEntry entry) {
+  private RuleDefinitionDTO toRuleDefinition(RuleDslEntry entry) {
     if (entry == null || entry.getCode() == null || entry.getCode().isBlank()) {
       return null;
     }
-    RuleDefinition.RuleDefinitionBuilder b =
-        RuleDefinition.builder()
+    RuleDefinitionDTO.RuleDefinitionBuilder b =
+        RuleDefinitionDTO.builder()
             .code(entry.getCode())
             .name(entry.getName())
             .category(entry.getCategory())
@@ -455,11 +455,11 @@ public class FileRuleSource implements RuleSource {
   /** 重新加载并通知监听器 */
   private synchronized void reloadAndNotify() {
     try {
-      List<RuleDefinition> newRules = loadFromLocation(location);
-      List<RuleDefinition> oldRules = cachedRules;
+      List<RuleDefinitionDTO> newRules = loadFromLocation(location);
+      List<RuleDefinitionDTO> oldRules = cachedRules;
       cachedRules = newRules;
       log.info("[FileRuleSource] 文件变更触发重载: {} -> {} 条规则", oldRules.size(), newRules.size());
-      for (Consumer<List<RuleDefinition>> listener : listeners) {
+      for (Consumer<List<RuleDefinitionDTO>> listener : listeners) {
         try {
           listener.accept(loadEnabledRules());
         } catch (Exception e) {
@@ -480,7 +480,7 @@ public class FileRuleSource implements RuleSource {
    * @return 规则定义；不存在返回 null
    */
   @Override
-  public RuleDefinition findByCode(String ruleCode) {
+  public RuleDefinitionDTO findByCode(String ruleCode) {
     if (ruleCode == null) {
       return null;
     }
@@ -514,7 +514,7 @@ public class FileRuleSource implements RuleSource {
    * @return 保存后的规则定义
    */
   @Override
-  public RuleDefinition save(RuleDefinition definition, String operator) {
+  public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator) {
     throw new UnsupportedOperationException(
         "配置中心数据源为只读，不支持 save 操作: source=" + getClass().getSimpleName());
   }

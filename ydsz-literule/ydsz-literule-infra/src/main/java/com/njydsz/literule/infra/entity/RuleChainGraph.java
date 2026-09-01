@@ -50,7 +50,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
   /** 画布描述 */
   private String description;
 
-  /** 适用场景（与 RuleContext.scenario 对应） */
+  /** 适用场景（与 RuleContextVO.scenario 对应） */
   private String scenario;
 
   /** 画布版本号（独立递增） */

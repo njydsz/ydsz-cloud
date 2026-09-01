@@ -26,7 +26,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.api.dto.RuleBatchCategoryDTO;
 import com.njydsz.literule.api.dto.RuleBatchPriorityDTO;
@@ -91,7 +91,7 @@ public class RuleBatchController {
   public YdszResponse<Void> deleteRule(
       @PathVariable String ruleCode,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+    RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
       return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
@@ -152,7 +152,7 @@ public class RuleBatchController {
     List<String> failed = new ArrayList<>();
     for (String code : ruleCodes) {
       try {
-        RuleDefinition def = ruleAdminService.getByCode(code);
+        RuleDefinitionDTO def = ruleAdminService.getByCode(code);
         if (def == null) {
           failed.add(code + ": 不存在");
           continue;
@@ -202,7 +202,7 @@ public class RuleBatchController {
     List<String> failed = new ArrayList<>();
     for (String code : ruleCodes) {
       try {
-        RuleDefinition def = ruleAdminService.getByCode(code);
+        RuleDefinitionDTO def = ruleAdminService.getByCode(code);
         if (def == null) {
           failed.add(code + ": 不存在");
           continue;
@@ -248,7 +248,7 @@ public class RuleBatchController {
     List<String> failed = new ArrayList<>();
     for (String code : ruleCodes) {
       try {
-        RuleDefinition def = ruleAdminService.getByCode(code);
+        RuleDefinitionDTO def = ruleAdminService.getByCode(code);
         if (def == null) {
           failed.add(code + ": 不存在");
           continue;

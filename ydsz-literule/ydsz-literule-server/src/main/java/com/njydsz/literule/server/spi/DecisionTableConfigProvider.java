@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 
 /**
  * 决策表配置提供者接口（SPI）
@@ -19,14 +19,14 @@ public interface DecisionTableConfigProvider {
    *
    * @return 启用的决策表列表
    */
-  List<DecisionTableDefinition> loadEnabledTables();
+  List<DecisionTableDefinitionDTO> loadEnabledTables();
 
   /**
    * 加载全部决策表（含禁用）
    *
    * @return 全部决策表列表
    */
-  List<DecisionTableDefinition> loadAllTables();
+  List<DecisionTableDefinitionDTO> loadAllTables();
 
   /**
    * 保存决策表
@@ -35,7 +35,7 @@ public interface DecisionTableConfigProvider {
    * @param operator 操作人
    * @return 保存后的定义（含版本号）
    */
-  DecisionTableDefinition save(DecisionTableDefinition definition, String operator);
+  DecisionTableDefinitionDTO save(DecisionTableDefinitionDTO definition, String operator);
 
   /**
    * 切换启停
@@ -52,7 +52,7 @@ public interface DecisionTableConfigProvider {
    * @param tableCode 表编码
    * @return 决策表定义；不存在返回 null
    */
-  DecisionTableDefinition findByCode(String tableCode);
+  DecisionTableDefinitionDTO findByCode(String tableCode);
 
   /**
    * 删除决策表

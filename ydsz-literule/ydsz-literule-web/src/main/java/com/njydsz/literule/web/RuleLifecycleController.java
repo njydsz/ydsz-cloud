@@ -27,7 +27,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.api.dto.RuleApproveDTO;
 import com.njydsz.literule.api.dto.RuleDelegateDTO;
@@ -100,7 +100,7 @@ public class RuleLifecycleController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     String targetStatus = dto.getTargetStatus();
     String comment = dto.getComment() == null ? "" : dto.getComment();
-    RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+    RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
       return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
@@ -158,7 +158,7 @@ public class RuleLifecycleController {
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleApproveDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+    RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
       return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }
@@ -215,7 +215,7 @@ public class RuleLifecycleController {
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleRejectDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+    RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
       return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
     }

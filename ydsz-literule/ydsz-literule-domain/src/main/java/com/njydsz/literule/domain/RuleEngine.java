@@ -3,9 +3,9 @@ package com.njydsz.literule.domain;
 import java.util.List;
 
 import com.njydsz.literule.domain.enums.RuleSeverity;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleEngineStats;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 规则引擎接口
@@ -37,7 +37,7 @@ public interface RuleEngine {
    * @param context 规则上下文
    * @return 触发的规则结果列表；无触发返回空列表
    */
-  List<RuleResult> evaluate(RuleContext context);
+  List<RuleResultVO> evaluate(RuleContextVO context);
 
   /**
    * 评估并返回最高严重度的结果（用于顶部 banner 摘要）
@@ -45,7 +45,7 @@ public interface RuleEngine {
    * @param context 规则上下文
    * @return 最高严重度结果；无触发返回 null
    */
-  RuleResult topResult(RuleContext context);
+  RuleResultVO topResult(RuleContextVO context);
 
   /**
    * Dry-run 仿真：评估全部规则，返回全部结果（含未触发），不发布事件、不记录统计
@@ -53,7 +53,7 @@ public interface RuleEngine {
    * @param context 规则上下文
    * @return 全部规则结果列表（含未触发）
    */
-  List<RuleResult> dryRun(RuleContext context);
+  List<RuleResultVO> dryRun(RuleContextVO context);
 
   /**
    * Dry-run 仿真（支持短路返回优化，P2-5）
@@ -61,7 +61,7 @@ public interface RuleEngine {
    * <p>当 {@code limit} 与 {@code minSeverity} 均非空时， 在按优先级遍历过程中，已命中且严重度不低于 {@code minSeverity}
    * 的结果数量达到 {@code limit} 时立即停止评估（短路）。
    *
-   * <p>默认实现委托 {@link #dryRun(RuleContext)}（短路参数不生效）， 支持短路优化的实现（如 {@code DefaultRuleEngine}）应覆盖本方法。
+   * <p>默认实现委托 {@link #dryRun(RuleContextVO)}（短路参数不生效）， 支持短路优化的实现（如 {@code DefaultRuleEngine}）应覆盖本方法。
    *
    * @param context 规则上下文
    * @param limit 返回结果数量上限（可为 null，表示不限制）
@@ -69,8 +69,8 @@ public interface RuleEngine {
    * @return 全部规则结果列表（含未触发）
    * @since 1.0.0
    */
-  default List<RuleResult> dryRun(
-      RuleContext context, Integer limit, RuleSeverity minSeverity) {
+  default List<RuleResultVO> dryRun(
+      RuleContextVO context, Integer limit, RuleSeverity minSeverity) {
     return dryRun(context);
   }
 
@@ -86,5 +86,5 @@ public interface RuleEngine {
    *
    * @return 统计快照
    */
-  RuleEngineStats getStats();
+  RuleEngineStatsVO getStats();
 }

@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.dto.ReceiptResult;
+import com.njydsz.message.domain.dto.ReceiptResultDTO;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
@@ -104,7 +104,7 @@ public class SmsChannel implements MessageChannel {
    * @return 返回值说明
    */
   @Override
-  public Optional<ReceiptResult> queryReceipt(MsgLogVO logVO) {
+  public Optional<ReceiptResultDTO> queryReceipt(MsgLogVO logVO) {
     SmsProvider provider = selectProvider();
     if (!"aliyun".equals(provider.providerType())) {
       return Optional.empty();
@@ -116,9 +116,9 @@ public class SmsChannel implements MessageChannel {
     }
     MessageResult result = provider.queryReceipt(traceId, phone);
     if ("SUCCESS".equals(result.getStatus())) {
-      return Optional.of(ReceiptResult.of(ReceiptStatusEnum.DELIVERED, traceId));
+      return Optional.of(ReceiptResultDTO.of(ReceiptStatusEnum.DELIVERED, traceId));
     } else if ("FAILED".equals(result.getStatus())) {
-      return Optional.of(ReceiptResult.of(ReceiptStatusEnum.FAILED, result.getErrorMessage()));
+      return Optional.of(ReceiptResultDTO.of(ReceiptStatusEnum.FAILED, result.getErrorMessage()));
     }
     // UNKNOWN 状态不更新回执,返回 empty
     return Optional.empty();

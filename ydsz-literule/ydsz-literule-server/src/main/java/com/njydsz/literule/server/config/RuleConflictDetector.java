@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
@@ -73,9 +73,9 @@ public class RuleConflictDetector {
    * @param newDefinition 待保存的新规则定义
    * @return 冲突列表；无冲突返回空列表
    */
-  public List<RuleConflict> detect(RuleDefinition newDefinition) {
+  public List<RuleConflict> detect(RuleDefinitionDTO newDefinition) {
     List<RuleConflict> conflicts = new ArrayList<>();
-    List<RuleDefinition> existingRules;
+    List<RuleDefinitionDTO> existingRules;
     try {
       existingRules = configProvider.loadAllRules();
     } catch (Exception e) {
@@ -101,7 +101,7 @@ public class RuleConflictDetector {
     // 2. 子条件不可达检测：复合条件中被包含的冗余子句
     detectUnreachableSubcondition(conflicts, newDefinition);
 
-    for (RuleDefinition other : existingRules) {
+    for (RuleDefinitionDTO other : existingRules) {
       if (Objects.equals(other.getCode(), newCode)) {
         continue;
       }
@@ -229,7 +229,7 @@ public class RuleConflictDetector {
    * @param newDefinition 待检测规则
    * @since 1.0.0
    */
-  private void detectDeadRule(List<RuleConflict> conflicts, RuleDefinition newDefinition) {
+  private void detectDeadRule(List<RuleConflict> conflicts, RuleDefinitionDTO newDefinition) {
     String expr = newDefinition.getConditionExpression();
     if (expr == null || expr.isBlank()) {
       return;
@@ -296,7 +296,7 @@ public class RuleConflictDetector {
    * @since 1.0.0
    */
   private void detectUnreachableSubcondition(
-      List<RuleConflict> conflicts, RuleDefinition newDefinition) {
+      List<RuleConflict> conflicts, RuleDefinitionDTO newDefinition) {
     String expr = newDefinition.getConditionExpression();
     if (expr == null || expr.isBlank()) {
       return;
@@ -510,7 +510,7 @@ public class RuleConflictDetector {
    * @param other 已有规则定义
    * @return true=存在执行顺序冲突
    */
-  private boolean isOrderConflict(RuleDefinition newDef, RuleDefinition other) {
+  private boolean isOrderConflict(RuleDefinitionDTO newDef, RuleDefinitionDTO other) {
     // 互斥组可消除顺序不确定性
     String newMutex = newDef.getMutexGroup();
     String otherMutex = other.getMutexGroup();
@@ -601,7 +601,7 @@ public class RuleConflictDetector {
   }
 
   /** 提取规则的严重度标识 */
-  private String severityKey(RuleDefinition def) {
+  private String severityKey(RuleDefinitionDTO def) {
     if (def.getSeverityExpression() != null && !def.getSeverityExpression().isBlank()) {
       return "expr:" + def.getSeverityExpression().trim();
     }

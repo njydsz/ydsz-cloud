@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
@@ -122,7 +122,7 @@ public interface JobService {
    * @param jobIds 任务 ID 列表
    * @return 批量操作结果（含成功明细）
    */
-  BatchResult<String> batchPause(List<String> jobIds);
+  BatchResultDTO<String> batchPause(List<String> jobIds);
 
   /**
    * 批量恢复任务
@@ -132,7 +132,7 @@ public interface JobService {
    * @param jobIds 任务 ID 列表
    * @return 批量操作结果（含成功明细）
    */
-  BatchResult<String> batchResume(List<String> jobIds);
+  BatchResultDTO<String> batchResume(List<String> jobIds);
 
   /**
    * 批量触发任务
@@ -142,7 +142,7 @@ public interface JobService {
    * @param jobIds 任务 ID 列表
    * @return 批量操作结果（含成功明细）
    */
-  BatchResult<String> batchTrigger(List<String> jobIds);
+  BatchResultDTO<String> batchTrigger(List<String> jobIds);
 
   /**
    * 批量删除任务
@@ -152,7 +152,7 @@ public interface JobService {
    * @param jobIds 任务 ID 列表
    * @return 批量操作结果（含成功明细）
    */
-  BatchResult<String> batchDelete(List<String> jobIds);
+  BatchResultDTO<String> batchDelete(List<String> jobIds);
 
   /**
    * P1-13: 批量修改任务分组。
@@ -163,7 +163,7 @@ public interface JobService {
    * @param newGroup 目标分组名称
    * @return 批量操作结果（含成功明细）
    */
-  BatchResult<String> batchUpdateGroup(List<String> jobIds, String newGroup);
+  BatchResultDTO<String> batchUpdateGroup(List<String> jobIds, String newGroup);
 
   /**
    * P1-13: 批量修改 Cron 表达式。
@@ -175,7 +175,7 @@ public interface JobService {
    * @param cronExpression 新 Cron 表达式
    * @return 批量操作结果（含成功明细）
    */
-  BatchResult<String> batchUpdateCron(List<String> jobIds, String cronExpression);
+  BatchResultDTO<String> batchUpdateCron(List<String> jobIds, String cronExpression);
 
   /**
    * 注册到调度器（从 DB 加载/动态新增）

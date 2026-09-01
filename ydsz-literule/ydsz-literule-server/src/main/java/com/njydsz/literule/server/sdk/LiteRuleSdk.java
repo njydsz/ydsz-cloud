@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
@@ -29,7 +29,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  *     .build();
  *
  * // 编程式注册规则
- * sdk.addRule(RuleDefinition.builder()
+ * sdk.addRule(RuleDefinitionDTO.builder()
  *     .code("R001")
  *     .name("高额预警")
  *     .conditionExpression("amount > 10000")
@@ -37,7 +37,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  *     .build());
  *
  * // 评估
- * List<RuleResult> results = sdk.evaluate(Map.of("amount", 15000));
+ * List<RuleResultVO> results = sdk.evaluate(Map.of("amount", 15000));
  * }</pre>
  *
  * <h3>链式 Builder 注册规则</h3>
@@ -63,7 +63,7 @@ public class LiteRuleSdk {
   private final ExpressionEngine evaluator;
   private final String tenantId;
   private final String environment;
-  private final Map<String, RuleDefinition> ruleDefinitions = new ConcurrentHashMap<>();
+  private final Map<String, RuleDefinitionDTO> ruleDefinitions = new ConcurrentHashMap<>();
 
   public LiteRuleSdk(
       RuleEngine ruleEngine, ExpressionEngine evaluator, String tenantId, String environment) {
@@ -85,7 +85,7 @@ public class LiteRuleSdk {
    *
    * @param definition 规则定义
    */
-  public void addRule(RuleDefinition definition) {
+  public void addRule(RuleDefinitionDTO definition) {
     Objects.requireNonNull(definition, "definition");
     Objects.requireNonNull(definition.getCode(), "rule code");
 
@@ -118,7 +118,7 @@ public class LiteRuleSdk {
    * @param facts 事实数据
    * @return 触发的规则结果列表
    */
-  public List<RuleResult> evaluate(Map<String, Object> facts) {
+  public List<RuleResultVO> evaluate(Map<String, Object> facts) {
     return evaluate(facts, null);
   }
 
@@ -136,9 +136,9 @@ public class LiteRuleSdk {
    * @param scenario 业务场景标识
    * @return 触发的规则结果列表
    */
-  public List<RuleResult> evaluate(Map<String, Object> facts, String scenario) {
+  public List<RuleResultVO> evaluate(Map<String, Object> facts, String scenario) {
     String scen = scenario != null ? scenario : "DEFAULT";
-    RuleContext context = RuleContext.of(facts, scen, "SDK", null, tenantId, environment);
+    RuleContextVO context = RuleContextVO.of(facts, scen, "SDK", null, tenantId, environment);
     return ruleEngine.evaluate(context);
   }
 
@@ -148,8 +148,8 @@ public class LiteRuleSdk {
    * @param facts 事实数据
    * @return 全部规则结果
    */
-  public List<RuleResult> dryRun(Map<String, Object> facts) {
-    RuleContext context = RuleContext.of(facts, "DRY_RUN", "SDK", null, tenantId, environment);
+  public List<RuleResultVO> dryRun(Map<String, Object> facts) {
+    RuleContextVO context = RuleContextVO.of(facts, "DRY_RUN", "SDK", null, tenantId, environment);
     return ruleEngine.dryRun(context);
   }
 
@@ -159,15 +159,15 @@ public class LiteRuleSdk {
    * @param facts 事实数据
    * @return 最高严重度结果；无触发返回 null
    */
-  public RuleResult topResult(Map<String, Object> facts) {
-    RuleContext context = RuleContext.of(facts, "TOP", "SDK", null, tenantId, environment);
+  public RuleResultVO topResult(Map<String, Object> facts) {
+    RuleContextVO context = RuleContextVO.of(facts, "TOP", "SDK", null, tenantId, environment);
     return ruleEngine.topResult(context);
   }
 
   /** 获取已注册的规则定义列表
    * @return 返回值说明
    */
-  public List<RuleDefinition> getRuleDefinitions() {
+  public List<RuleDefinitionDTO> getRuleDefinitions() {
     return new ArrayList<>(ruleDefinitions.values());
   }
 
@@ -193,11 +193,11 @@ public class LiteRuleSdk {
   /** 链式规则构建器 */
   public static class RuleBuilder {
     private final LiteRuleSdk sdk;
-    private final RuleDefinition.RuleDefinitionBuilder builder;
+    private final RuleDefinitionDTO.RuleDefinitionBuilder builder;
 
     RuleBuilder(LiteRuleSdk sdk, String code) {
       this.sdk = sdk;
-      this.builder = RuleDefinition.builder().code(code);
+      this.builder = RuleDefinitionDTO.builder().code(code);
     }
 
     /**
@@ -234,7 +234,7 @@ public class LiteRuleSdk {
     }
 
     /**
-     * 设置条件表达式（规则的核心判定逻辑，映射到 RuleDefinition 的 conditionExpression）。
+     * 设置条件表达式（规则的核心判定逻辑，映射到 RuleDefinitionDTO 的 conditionExpression）。
      *
      * <p>表达式为空或非法将导致规则无法正确触发。建议在 {@link #register()} 前务必设置， 否则评估时按空条件处理（通常视为不触发）。
      *

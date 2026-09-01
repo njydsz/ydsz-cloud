@@ -25,7 +25,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.api.dto.RuleImportDTO;
 import com.njydsz.literule.server.config.RuleAdminService;
 
@@ -64,7 +64,7 @@ public class RuleImportExportController {
    */
   @GetMapping("/export")
   public YdszResponse<Map<String, Object>> exportRules() {
-    List<RuleDefinition> rules = ruleAdminService.listAll();
+    List<RuleDefinitionDTO> rules = ruleAdminService.listAll();
     // 过滤掉内部字段，只导出核心配置
     List<Map<String, Object>> exportData =
         rules.stream()
@@ -106,14 +106,14 @@ public class RuleImportExportController {
    */
   @GetMapping(value = "/export.yaml", produces = "text/plain;charset=UTF-8")
   public String exportRulesAsYaml() {
-    List<RuleDefinition> rules = ruleAdminService.listAll();
+    List<RuleDefinitionDTO> rules = ruleAdminService.listAll();
     StringBuilder sb = new StringBuilder();
     sb.append("# LiteRule 规则导出（YAML）\n");
     sb.append("# 导出时间: ").append(LocalDateTime.now()).append("\n");
     sb.append("# 规则数量: ").append(rules.size()).append("\n");
     sb.append("# 用途: GitOps 规则即代码，提交到 Git 仓库后通过 CI 校验与 Webhook 发布\n\n");
     sb.append("rules:\n");
-    for (RuleDefinition r : rules) {
+    for (RuleDefinitionDTO r : rules) {
       sb.append("  - code: ").append(r.getCode()).append("\n");
       sb.append("    name: ").append(escapeYaml(r.getName())).append("\n");
       sb.append("    category: ").append(r.getCategory()).append("\n");
@@ -193,7 +193,7 @@ public class RuleImportExportController {
           skipped++;
           continue;
         }
-        RuleDefinition def = YdszJson.convertValue(ruleMap, RuleDefinition.class);
+        RuleDefinitionDTO def = YdszJson.convertValue(ruleMap, RuleDefinition.class);
         // 导入时重置版本和状态
         def.setVersion(1);
         def.setStatus("DRAFT");

@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * Apollo 配置中心规则数据源（P1-5）
@@ -32,7 +32,7 @@ import com.njydsz.literule.domain.dto.RuleDefinition;
 public class ApolloRuleSource implements RuleSource {
 
   private final String namespace;
-  private final List<Consumer<List<RuleDefinition>>> listeners = new ArrayList<>();
+  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>();
 
   /** Apollo Config 实例（反射获取，避免硬依赖） */
   private Object apolloConfig;
@@ -59,7 +59,7 @@ public class ApolloRuleSource implements RuleSource {
   }
 
   @Override
-  public List<RuleDefinition> loadEnabledRules() {
+  public List<RuleDefinitionDTO> loadEnabledRules() {
     if (!isAvailable()) {
       return List.of();
     }
@@ -79,7 +79,7 @@ public class ApolloRuleSource implements RuleSource {
   }
 
   @Override
-  public void addChangeListener(Consumer<List<RuleDefinition>> listener) {
+  public void addChangeListener(Consumer<List<RuleDefinitionDTO>> listener) {
     listeners.add(listener);
   }
 
@@ -101,8 +101,8 @@ public class ApolloRuleSource implements RuleSource {
               new Class[] {changeListenerClass},
               (proxy, method, args) -> {
                 if ("onChange".equals(method.getName())) {
-                  List<RuleDefinition> rules = loadEnabledRules();
-                  for (Consumer<List<RuleDefinition>> l : listeners) {
+                  List<RuleDefinitionDTO> rules = loadEnabledRules();
+                  for (Consumer<List<RuleDefinitionDTO>> l : listeners) {
                     try {
                       l.accept(rules);
                     } catch (Exception e) {
@@ -129,7 +129,7 @@ public class ApolloRuleSource implements RuleSource {
     }
   }
 
-  private List<RuleDefinition> parseRulesFromJson(String json) {
+  private List<RuleDefinitionDTO> parseRulesFromJson(String json) {
     if (json == null || json.isBlank() || "[]".equals(json.trim())) {
       return List.of();
     }
@@ -150,7 +150,7 @@ public class ApolloRuleSource implements RuleSource {
    * @return 规则定义；不存在返回 null
    */
   @Override
-  public RuleDefinition findByCode(String ruleCode) {
+  public RuleDefinitionDTO findByCode(String ruleCode) {
     if (ruleCode == null) {
       return null;
     }
@@ -184,7 +184,7 @@ public class ApolloRuleSource implements RuleSource {
    * @return 保存后的规则定义
    */
   @Override
-  public RuleDefinition save(RuleDefinition definition, String operator) {
+  public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator) {
     throw new UnsupportedOperationException(
         "配置中心数据源为只读，不支持 save 操作: source=" + getClass().getSimpleName());
   }
@@ -198,7 +198,7 @@ public class ApolloRuleSource implements RuleSource {
    * @return 全部规则定义列表
    */
   @Override
-  public List<RuleDefinition> loadAllRules() {
+  public List<RuleDefinitionDTO> loadAllRules() {
     return loadEnabledRules();
   }
 

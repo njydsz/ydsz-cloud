@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.api.client.LiteRuleClient;
 
 /**
@@ -32,13 +32,13 @@ public class LiteRuleClientFallback implements FallbackFactory<LiteRuleClient> {
     log.warn("[LiteRuleClient] 降级触发: {}", cause.getMessage());
     return new LiteRuleClient() {
       @Override
-      public YdszResponse<List<RuleResult>> dryRun(String ruleCode, Map<String, Object> facts) {
+      public YdszResponse<List<RuleResultVO>> dryRun(String ruleCode, Map<String, Object> facts) {
         log.warn("[LiteRuleClient] dryRun 降级: ruleCode={}, reason=规则引擎服务不可用", ruleCode);
         return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "规则引擎服务不可用");
       }
 
       @Override
-      public YdszResponse<List<RuleResult>> evaluate(
+      public YdszResponse<List<RuleResultVO>> evaluate(
           String ruleCode, String scenario, Map<String, Object> facts) {
         log.warn(
             "[LiteRuleClient] evaluate 降级: ruleCode={}, scenario={}, reason=规则引擎服务不可用",

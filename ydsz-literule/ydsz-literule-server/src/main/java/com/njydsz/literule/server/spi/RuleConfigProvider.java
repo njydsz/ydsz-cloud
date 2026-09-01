@@ -3,7 +3,7 @@ package com.njydsz.literule.server.spi;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleEnvironment;
 
 /**
@@ -23,14 +23,14 @@ public interface RuleConfigProvider {
    *
    * @return 启用的规则定义列表
    */
-  List<RuleDefinition> loadEnabledRules();
+  List<RuleDefinitionDTO> loadEnabledRules();
 
   /**
    * 加载全部规则定义（含禁用）
    *
    * @return 全部规则定义列表
    */
-  List<RuleDefinition> loadAllRules();
+  List<RuleDefinitionDTO> loadAllRules();
 
   /**
    * 保存规则定义（新增或更新）
@@ -39,7 +39,7 @@ public interface RuleConfigProvider {
    * @param operator 操作人
    * @return 保存后的规则定义（含版本号）
    */
-  RuleDefinition save(RuleDefinition definition, String operator);
+  RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator);
 
   /**
    * 切换规则启停状态
@@ -56,7 +56,7 @@ public interface RuleConfigProvider {
    * @param ruleCode 规则编码
    * @return 规则定义；不存在返回 null
    */
-  RuleDefinition findByCode(String ruleCode);
+  RuleDefinitionDTO findByCode(String ruleCode);
 
   /**
    * 加载指定租户下全部启用的规则定义（1.5.1 起支持物理隔离）
@@ -68,8 +68,8 @@ public interface RuleConfigProvider {
    * @return 该租户下启用的规则定义列表
    * @since 1.0.0
    */
-  default List<RuleDefinition> loadEnabledRulesByTenant(String tenantId) {
-    List<RuleDefinition> all = loadEnabledRules();
+  default List<RuleDefinitionDTO> loadEnabledRulesByTenant(String tenantId) {
+    List<RuleDefinitionDTO> all = loadEnabledRules();
     if (tenantId == null || tenantId.isBlank()) {
       return all;
     }
@@ -85,8 +85,8 @@ public interface RuleConfigProvider {
    * @return 该租户下全部规则定义列表
    * @since 1.0.0
    */
-  default List<RuleDefinition> loadAllRulesByTenant(String tenantId) {
-    List<RuleDefinition> all = loadAllRules();
+  default List<RuleDefinitionDTO> loadAllRulesByTenant(String tenantId) {
+    List<RuleDefinitionDTO> all = loadAllRules();
     if (tenantId == null || tenantId.isBlank()) {
       return all;
     }
@@ -111,8 +111,8 @@ public interface RuleConfigProvider {
    * @return 该租户下匹配环境的启用规则定义列表
    * @since 1.0.0
    */
-  default List<RuleDefinition> loadEnabledRulesByEnv(String tenantId, String environment) {
-    List<RuleDefinition> all = loadEnabledRulesByTenant(tenantId);
+  default List<RuleDefinitionDTO> loadEnabledRulesByEnv(String tenantId, String environment) {
+    List<RuleDefinitionDTO> all = loadEnabledRulesByTenant(tenantId);
     if (environment == null
         || environment.isBlank()
         || RuleEnvironment.DEFAULT.equals(environment)) {
@@ -166,7 +166,7 @@ public interface RuleConfigProvider {
    *
    * @param listener 变更监听器，接收变更后的规则定义列表
    */
-  default void addChangeListener(Consumer<List<RuleDefinition>> listener) {
+  default void addChangeListener(Consumer<List<RuleDefinitionDTO>> listener) {
     // 默认不支持监听，子类按需实现
   }
 

@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * 规则目录树提供者 SPI
@@ -38,7 +38,7 @@ public interface RuleCategoryProvider {
    * @param pathPrefix 分类路径前缀，为空时返回全部
    * @return 规则定义列表
    */
-  List<RuleDefinition> listDefinitionsByCategoryPath(String pathPrefix);
+  List<RuleDefinitionDTO> listDefinitionsByCategoryPath(String pathPrefix);
 
   /**
    * 按 Owner 查询规则（返回 API Definition）
@@ -46,5 +46,5 @@ public interface RuleCategoryProvider {
    * @param owner 责任人
    * @return 规则定义列表
    */
-  List<RuleDefinition> listDefinitionsByOwner(String owner);
+  List<RuleDefinitionDTO> listDefinitionsByOwner(String owner);
 }

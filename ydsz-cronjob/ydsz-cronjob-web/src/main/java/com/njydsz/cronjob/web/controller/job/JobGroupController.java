@@ -26,7 +26,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.constants.CronjobConstants;
-import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
@@ -136,14 +136,14 @@ public class JobGroupController {
   @RateLimit(resource = "cronjob.jobgroup.pauseByGroup", threshold = 50)
   @Idempotent(key = "ydsz:cronjob:JobGroupController:pauseByGroup:lock", ttlSeconds = 5)
   @PostMapping("/{jobGroup}/pause")
-  public YdszResponse<BatchResult<String>> pauseByGroup(@PathVariable String jobGroup) {
+  public YdszResponse<BatchResultDTO<String>> pauseByGroup(@PathVariable String jobGroup) {
     // 查询 NORMAL 状态且未删除的任务
     List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_NORMAL);
     // 提取 ID 列表
     List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
       log.info("[JobGroup] pauseByGroup jobGroup={} 命中 0 个 NORMAL 任务，跳过", jobGroup);
-      return YdszResponse.success(new BatchResult<>(0, 0, 0, List.of()));
+      return YdszResponse.success(new BatchResultDTO<>(0, 0, 0, List.of()));
     }
     log.info(
         "[JobGroup] pauseByGroup jobGroup={} 命中 {} 个 NORMAL 任务，开始批量暂停", jobGroup, jobIds.size());
@@ -171,13 +171,13 @@ public class JobGroupController {
   @RateLimit(resource = "cronjob.jobgroup.resumeByGroup", threshold = 50)
   @Idempotent(key = "ydsz:cronjob:JobGroupController:resumeByGroup:lock", ttlSeconds = 5)
   @PostMapping("/{jobGroup}/resume")
-  public YdszResponse<BatchResult<String>> resumeByGroup(@PathVariable String jobGroup) {
+  public YdszResponse<BatchResultDTO<String>> resumeByGroup(@PathVariable String jobGroup) {
     // 查询 PAUSED 状态且未删除的任务
     List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_PAUSED);
     List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
       log.info("[JobGroup] resumeByGroup jobGroup={} 命中 0 个 PAUSED 任务，跳过", jobGroup);
-      return YdszResponse.success(new BatchResult<>(0, 0, 0, List.of()));
+      return YdszResponse.success(new BatchResultDTO<>(0, 0, 0, List.of()));
     }
     log.info(
         "[JobGroup] resumeByGroup jobGroup={} 命中 {} 个 PAUSED 任务，开始批量恢复", jobGroup, jobIds.size());
@@ -207,13 +207,13 @@ public class JobGroupController {
   @RateLimit(resource = "cronjob.jobgroup.triggerByGroup", threshold = 50)
   @Idempotent(key = "ydsz:cronjob:JobGroupController:triggerByGroup:lock", ttlSeconds = 5)
   @PostMapping("/{jobGroup}/trigger")
-  public YdszResponse<BatchResult<String>> triggerByGroup(@PathVariable String jobGroup) {
+  public YdszResponse<BatchResultDTO<String>> triggerByGroup(@PathVariable String jobGroup) {
     // 查询 NORMAL 状态且未删除的任务（仅 NORMAL 状态可被触发）
     List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_NORMAL);
     List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
       log.info("[JobGroup] triggerByGroup jobGroup={} 命中 0 个 NORMAL 任务，跳过", jobGroup);
-      return YdszResponse.success(new BatchResult<>(0, 0, 0, List.of()));
+      return YdszResponse.success(new BatchResultDTO<>(0, 0, 0, List.of()));
     }
     log.info(
         "[JobGroup] triggerByGroup jobGroup={} 命中 {} 个 NORMAL 任务，开始批量触发", jobGroup, jobIds.size());

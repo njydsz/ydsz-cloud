@@ -11,21 +11,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * 规则 DSL 导出器
  *
- * <p>将引擎中的 {@link RuleDefinition} 列表导出为 YAML 格式的 DSL 文本， 便于版本管理、环境迁移和跨实例共享。
+ * <p>将引擎中的 {@link RuleDefinitionDTO} 列表导出为 YAML 格式的 DSL 文本， 便于版本管理、环境迁移和跨实例共享。
  *
  * <h3>使用示例</h3>
  *
  * <pre>{@code
- * List<RuleDefinition> rules = ruleAdminService.listAll();
+ * List<RuleDefinitionDTO> rules = ruleAdminService.listAll();
  * String yaml = RuleDslExporter.exportYaml(rules, "demo-rules", "示例规则集");
  *
  * // 导出单条规则
- * RuleDefinition rule = ruleAdminService.getByCode("RISK_001");
+ * RuleDefinitionDTO rule = ruleAdminService.getByCode("RISK_001");
  * String singleYaml = RuleDslExporter.exportSingleRule(rule);
  * }</pre>
  *
@@ -52,7 +52,7 @@ public final class RuleDslExporter {
    * @param description DSL 描述（写入 meta.description）
    * @return YAML 格式的 DSL 文本
    */
-  public static String exportYaml(List<RuleDefinition> rules, String name, String description) {
+  public static String exportYaml(List<RuleDefinitionDTO> rules, String name, String description) {
     RuleDsl dsl = toDsl(rules, name, description);
     return toYaml(dsl);
   }
@@ -63,8 +63,8 @@ public final class RuleDslExporter {
    * @param rule 规则定义
    * @return YAML 格式的 DSL 文本（含单条 rules 段）
    */
-  public static String exportSingleRule(RuleDefinition rule) {
-    List<RuleDefinition> rules = new ArrayList<>();
+  public static String exportSingleRule(RuleDefinitionDTO rule) {
+    List<RuleDefinitionDTO> rules = new ArrayList<>();
     rules.add(rule);
     return exportYaml(rules, rule.getCode(), rule.getName());
   }
@@ -77,10 +77,10 @@ public final class RuleDslExporter {
    * @param description DSL 描述
    * @return DSL 模型
    */
-  public static RuleDsl toDsl(List<RuleDefinition> rules, String name, String description) {
+  public static RuleDsl toDsl(List<RuleDefinitionDTO> rules, String name, String description) {
     List<RuleDslEntry> entries = new ArrayList<>();
     if (rules != null) {
-      for (RuleDefinition def : rules) {
+      for (RuleDefinitionDTO def : rules) {
         RuleDslEntry entry = toDslEntry(def);
         if (entry != null) {
           entries.add(entry);
@@ -104,7 +104,7 @@ public final class RuleDslExporter {
    * @param def 规则定义
    * @return DSL 条目；规则为 null 或类型不支持时返回 null
    */
-  public static RuleDslEntry toDslEntry(RuleDefinition def) {
+  public static RuleDslEntry toDslEntry(RuleDefinitionDTO def) {
     if (def == null || def.getCode() == null) {
       return null;
     }

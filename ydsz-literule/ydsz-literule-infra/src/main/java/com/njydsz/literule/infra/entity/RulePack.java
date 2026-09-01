@@ -26,7 +26,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_pack")
-public class RulePack extends MpBaseEntity<String> {
+public class RulePackVO extends MpBaseEntity<String> {
 
   /** 规则集编码（全局唯一，用于版本间关联） */
   private String packCode;
@@ -50,7 +50,7 @@ public class RulePack extends MpBaseEntity<String> {
    * 规则定义快照（P2-8 知识包版本管理）。
    *
    * <p>发布该版本时，将 ruleCodes 对应的规则定义完整 JSON 列表固化存库， 保证知识包版本的"内容可复现"：回滚/安装某一历史版本时，可直接取用快照，
-   * 而不依赖当时在线规则表的实时状态。格式：{@code List<RuleDefinition>} 的 JSON。
+   * 而不依赖当时在线规则表的实时状态。格式：{@code List<RuleDefinitionDTO>} 的 JSON。
    */
   private String ruleSnapshots;
 

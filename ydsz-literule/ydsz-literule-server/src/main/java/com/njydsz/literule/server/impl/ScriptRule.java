@@ -27,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
-import com.njydsz.literule.domain.dto.ScriptDefinition;
+import com.njydsz.literule.domain.dto.ScriptDefinitionDTO;
 import com.njydsz.literule.server.core.RuleEvaluationException;
 
 /**
@@ -299,13 +299,13 @@ public class ScriptRule implements Rule {
   }
 
   /**
-   * 从 ScriptDefinition 构造脚本规则
+   * 从 ScriptDefinitionDTO 构造脚本规则
    *
    * @param def 脚本规则定义
    * @return ScriptRule 实例
    * @since 1.0.0
    */
-  public static ScriptRule from(ScriptDefinition def) {
+  public static ScriptRule from(ScriptDefinitionDTO def) {
     RuleSeverity severity =
         def.getDefaultSeverity() != null
             ? RuleSeverity.fromCode(def.getDefaultSeverity())
@@ -348,7 +348,7 @@ public class ScriptRule implements Rule {
   }
 
   @Override
-  public RuleResult evaluate(RuleContext context) {
+  public RuleResultVO evaluate(RuleContextVO context) {
     long start = System.nanoTime();
     try {
       Bindings bindings = scriptEngine.createBindings();
@@ -368,7 +368,7 @@ public class ScriptRule implements Rule {
         } catch (TimeoutException te) {
           future.cancel(true);
           log.warn("[LiteRule] 脚本规则 {} 执行超时（{}ms），已中断", code, sandboxTimeoutMs);
-          return RuleResult.builder()
+          return RuleResultVO.builder()
               .ruleCode(code)
               .ruleName(name)
               .category(category)
@@ -379,7 +379,7 @@ public class ScriptRule implements Rule {
               .build();
         } catch (ExecutionException ee) {
           log.warn("[LiteRule] 脚本规则 {} 执行异常: {}", code, ee.getCause().getMessage());
-          return RuleResult.builder()
+          return RuleResultVO.builder()
               .ruleCode(code)
               .ruleName(name)
               .category(category)
@@ -390,7 +390,7 @@ public class ScriptRule implements Rule {
         } catch (InterruptedException ie) {
           Thread.currentThread().interrupt();
           log.warn("[LiteRule] 脚本规则 {} 执行被中断", code);
-          return RuleResult.builder()
+          return RuleResultVO.builder()
               .ruleCode(code)
               .ruleName(name)
               .category(category)
@@ -405,7 +405,7 @@ public class ScriptRule implements Rule {
       boolean triggered = Boolean.TRUE.equals(result);
 
       if (!triggered) {
-        return RuleResult.builder()
+        return RuleResultVO.builder()
             .ruleCode(code)
             .ruleName(name)
             .category(category)
@@ -430,7 +430,7 @@ public class ScriptRule implements Rule {
       String desc =
           bindings.get("description") != null ? String.valueOf(bindings.get("description")) : "";
 
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(code)
           .ruleName(name)
           .category(category)
@@ -445,7 +445,7 @@ public class ScriptRule implements Rule {
           .build();
     } catch (Exception e) {
       log.warn("[LiteRule] 脚本规则 {} 评估异常: {}", code, e.getMessage());
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(code)
           .ruleName(name)
           .category(category)

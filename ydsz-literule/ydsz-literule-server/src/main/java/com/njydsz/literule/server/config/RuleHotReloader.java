@@ -12,14 +12,14 @@ import org.springframework.core.annotation.Order;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
-import com.njydsz.literule.domain.dto.DecisionTreeDefinition;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
+import com.njydsz.literule.domain.dto.DecisionTreeDefinitionDTO;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RulePack;
-import com.njydsz.literule.domain.dto.ScorecardDefinition;
-import com.njydsz.literule.domain.dto.ScriptDefinition;
+import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.domain.dto.ScorecardDefinitionDTO;
+import com.njydsz.literule.domain.dto.ScriptDefinitionDTO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.server.impl.DecisionTableRule;
@@ -89,7 +89,7 @@ public class RuleHotReloader {
   /**
    * 已加载版本号记录（P0-F4 版本号去重）
    *
-   * <p>ruleCode -> 最后加载的版本号。reloadSingle 时比对 {@link RuleDefinition#getVersion()}，
+   * <p>ruleCode -> 最后加载的版本号。reloadSingle 时比对 {@link RuleDefinitionDTO#getVersion()}，
    * 版本相同（重复事件/重复广播）时跳过重载，避免无谓的 register/unregister 开销。
    */
   private final Map<String, Integer> lastLoadedVersions = new ConcurrentHashMap<>();
@@ -202,8 +202,8 @@ public class RuleHotReloader {
 
   private int loadExpressionRules() {
     int count = 0;
-    List<RuleDefinition> definitions = configProvider.loadEnabledRules();
-    for (RuleDefinition def : definitions) {
+    List<RuleDefinitionDTO> definitions = configProvider.loadEnabledRules();
+    for (RuleDefinitionDTO def : definitions) {
       if (!def.isEnabled()) {
         continue;
       }
@@ -222,7 +222,7 @@ public class RuleHotReloader {
       return 0;
     }
     int count = 0;
-    for (DecisionTableDefinition dt : decisionTableConfigProvider.loadEnabledTables()) {
+    for (DecisionTableDefinitionDTO dt : decisionTableConfigProvider.loadEnabledTables()) {
       if (!dt.isEnabled()) {
         continue;
       }
@@ -241,7 +241,7 @@ public class RuleHotReloader {
       return 0;
     }
     int count = 0;
-    for (ScorecardDefinition def : scorecardConfigProvider.loadEnabledScorecards()) {
+    for (ScorecardDefinitionDTO def : scorecardConfigProvider.loadEnabledScorecards()) {
       if (!def.isEnabled()) {
         continue;
       }
@@ -260,7 +260,7 @@ public class RuleHotReloader {
       return 0;
     }
     int count = 0;
-    for (DecisionTreeDefinition def : decisionTreeConfigProvider.loadEnabledTrees()) {
+    for (DecisionTreeDefinitionDTO def : decisionTreeConfigProvider.loadEnabledTrees()) {
       if (!def.isEnabled()) {
         continue;
       }
@@ -279,7 +279,7 @@ public class RuleHotReloader {
       return 0;
     }
     int count = 0;
-    for (ScriptDefinition def : scriptConfigProvider.loadEnabledScripts()) {
+    for (ScriptDefinitionDTO def : scriptConfigProvider.loadEnabledScripts()) {
       if (!def.isEnabled()) {
         continue;
       }
@@ -347,7 +347,7 @@ public class RuleHotReloader {
       return;
     }
     try {
-      RulePack pack = packProvider.getLatest(packCode);
+      RulePackVO pack = packProvider.getLatest(packCode);
       if (pack == null || pack.getRuleCodes() == null || pack.getRuleCodes().isEmpty()) {
         log.warn("[LiteRule] 规则包 {} 不存在或无规则，降级为全量重载", packCode);
         fullReload(operator);
@@ -407,7 +407,7 @@ public class RuleHotReloader {
   }
 
   private boolean tryReloadExpression(String ruleCode, String operator) {
-    RuleDefinition def = configProvider.findByCode(ruleCode);
+    RuleDefinitionDTO def = configProvider.findByCode(ruleCode);
     if (def == null) {
       return false;
     }
@@ -433,7 +433,7 @@ public class RuleHotReloader {
     if (decisionTableConfigProvider == null) {
       return false;
     }
-    DecisionTableDefinition dt = decisionTableConfigProvider.findByCode(ruleCode);
+    DecisionTableDefinitionDTO dt = decisionTableConfigProvider.findByCode(ruleCode);
     if (dt == null) {
       return false;
     }
@@ -451,7 +451,7 @@ public class RuleHotReloader {
     if (scorecardConfigProvider == null) {
       return false;
     }
-    ScorecardDefinition def = scorecardConfigProvider.findByCode(ruleCode);
+    ScorecardDefinitionDTO def = scorecardConfigProvider.findByCode(ruleCode);
     if (def == null) {
       return false;
     }
@@ -469,7 +469,7 @@ public class RuleHotReloader {
     if (decisionTreeConfigProvider == null) {
       return false;
     }
-    DecisionTreeDefinition def = decisionTreeConfigProvider.findByCode(ruleCode);
+    DecisionTreeDefinitionDTO def = decisionTreeConfigProvider.findByCode(ruleCode);
     if (def == null) {
       return false;
     }
@@ -487,7 +487,7 @@ public class RuleHotReloader {
     if (scriptConfigProvider == null) {
       return false;
     }
-    ScriptDefinition def = scriptConfigProvider.findByCode(ruleCode);
+    ScriptDefinitionDTO def = scriptConfigProvider.findByCode(ruleCode);
     if (def == null) {
       return false;
     }

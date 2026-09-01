@@ -17,7 +17,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
+import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewDTO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 
@@ -91,7 +91,7 @@ public class FlowAttachmentController {
    */
   @GetMapping("/attachment/{attachmentId}/preview")
   @Operation(summary = "附件在线预览（根据文件类型返回预览策略）")
-  public YdszResponse<FlowAttachmentPreviewVO> preview(@PathVariable String attachmentId) {
+  public YdszResponse<FlowAttachmentPreviewDTO> preview(@PathVariable String attachmentId) {
     return YdszResponse.success(attachmentService.previewAttachment(attachmentId));
   }
 }

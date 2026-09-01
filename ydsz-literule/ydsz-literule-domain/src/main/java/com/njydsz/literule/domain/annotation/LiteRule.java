@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  * @Component
  * public class OverdueRule implements Rule {
  *     public String getCode() { return "OVERDUE_001"; }
- *     public RuleResult evaluate(RuleContext ctx) { ... }
+ *     public RuleResultVO evaluate(RuleContextVO ctx) { ... }
  * }
  * }</pre>
  *

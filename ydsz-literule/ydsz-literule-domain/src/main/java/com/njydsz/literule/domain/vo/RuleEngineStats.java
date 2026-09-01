@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RuleEngineStats implements Serializable {
+public class RuleEngineStatsVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -76,7 +76,7 @@ public class RuleEngineStats implements Serializable {
    *
    * @return 空快照
    */
-  public static RuleEngineStats empty() {
-    return RuleEngineStats.builder().perRuleStats(new ConcurrentHashMap<>()).build();
+  public static RuleEngineStatsVO empty() {
+    return RuleEngineStatsVO.builder().perRuleStats(new ConcurrentHashMap<>()).build();
   }
 }

@@ -10,9 +10,9 @@ import lombok.Builder;
 import lombok.Data;
 
 /**
- * 规则集（RulePack）元数据
+ * 规则集（RulePackVO）元数据
  *
- * <p>将一组相关规则打包发布到规则集市场（Rule Pack Market）。 与单个 {@link RuleDefinitionDTO} 不同，{@code RulePack} 关注：
+ * <p>将一组相关规则打包发布到规则集市场（Rule Pack Market）。 与单个 {@link RuleDefinitionDTO} 不同，{@code RulePackVO} 关注：
  *
  * <ul>
  *   <li><b>聚合</b>：将多条规则按业务场景打包，用户可一键导入整包
@@ -34,7 +34,7 @@ import lombok.Data;
  */
 @Data
 @Builder
-public class RulePack implements Serializable {
+public class RulePackVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

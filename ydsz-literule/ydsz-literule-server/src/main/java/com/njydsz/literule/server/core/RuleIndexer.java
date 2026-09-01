@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleEnvironment;
 
 /**
@@ -673,7 +673,7 @@ public class RuleIndexer {
     if (rule == null) {
       return Collections.emptyMap();
     }
-    RuleDefinition def = rule.getRuleDefinition();
+    RuleDefinitionDTO def = rule.getRuleDefinition();
     if (def == null) {
       return Collections.emptyMap();
     }
@@ -720,7 +720,7 @@ public class RuleIndexer {
     if (rule == null) {
       return Collections.emptySet();
     }
-    RuleDefinition def = rule.getRuleDefinition();
+    RuleDefinitionDTO def = rule.getRuleDefinition();
     if (def == null) {
       return Collections.emptySet();
     }

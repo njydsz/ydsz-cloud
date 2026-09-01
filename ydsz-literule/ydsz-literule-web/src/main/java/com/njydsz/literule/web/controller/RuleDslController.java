@@ -21,8 +21,8 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.vo.RuleDslVO;
@@ -233,12 +233,12 @@ public class RuleDslController {
       RuleDslParser.validate(dsl);
 
       List<Rule> rules = RuleDslConverter.toRules(dsl, evaluator);
-      RuleContext context = RuleContext.of(facts, "DSL_PREVIEW", "MANUAL");
+      RuleContextVO context = RuleContextVO.of(facts, "DSL_PREVIEW", "MANUAL");
 
       List<Map<String, Object>> results = new ArrayList<>();
       for (Rule rule : rules) {
         try {
-          RuleResult result = rule.evaluate(context);
+          RuleResultVO result = rule.evaluate(context);
           Map<String, Object> r = new LinkedHashMap<>();
           r.put("ruleCode", result.getRuleCode());
           r.put("triggered", result.isTriggered());

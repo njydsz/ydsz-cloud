@@ -8,9 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.spi.GraphExecutionProvider;
 import com.njydsz.literule.server.spi.RuleChainGraphProvider;
@@ -103,7 +103,7 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
    * @return 评估结果列表；画布为空或转换失败返回空列表
    */
   @Override
-  public List<RuleResult> dryRunGraph(String ruleCode, Map<String, Object> facts) {
+  public List<RuleResultVO> dryRunGraph(String ruleCode, Map<String, Object> facts) {
     if (ruleCode == null || ruleCode.isBlank()) {
       return List.of();
     }
@@ -130,8 +130,8 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
         log.warn("[LiteRule-Graph] 画布转换为规则链失败: ruleCode={}", ruleCode);
         return List.of();
       }
-      RuleContext context = RuleContext.of(facts != null ? facts : Map.of(), "GRAPH_DRY_RUN", "MANUAL");
-      List<RuleResult> results = chain.evaluate(context, evaluator);
+      RuleContextVO context = RuleContextVO.of(facts != null ? facts : Map.of(), "GRAPH_DRY_RUN", "MANUAL");
+      List<RuleResultVO> results = chain.evaluate(context, evaluator);
       log.info("[LiteRule-Graph] 画布执行完成: ruleCode={}, triggered={}", ruleCode, results.size());
       return results;
     } catch (Exception e) {

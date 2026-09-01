@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
-import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
+import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewDTO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 
 /**
@@ -93,5 +93,5 @@ public interface FlowAttachmentService {
    * @throws SysException 附件不存在时抛 NOT_FOUND
    * @since 1.0.0
    */
-  FlowAttachmentPreviewVO previewAttachment(String attachmentId);
+  FlowAttachmentPreviewDTO previewAttachment(String attachmentId);
 }

@@ -15,7 +15,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 
 /**
@@ -131,7 +131,7 @@ public class RuleStressTestService {
                       factsList.get(ThreadLocalRandom.current().nextInt(factsList.size()));
                   long begin = System.nanoTime();
                   try {
-                    List<RuleResult> results = ruleAdminService.dryRun(ruleCode, facts);
+                    List<RuleResultVO> results = ruleAdminService.dryRun(ruleCode, facts);
                     if (results == null) {
                       errorCount.increment();
                     } else {

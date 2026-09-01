@@ -10,10 +10,10 @@ import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
-import com.njydsz.literule.domain.dto.ScorecardDefinition;
+import com.njydsz.literule.domain.dto.ScorecardDefinitionDTO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
@@ -40,7 +40,7 @@ import com.njydsz.literule.domain.expression.ExpressionEngine;
  *     .name("评分卡示例")
  *     .category("DEMO")
  *     .baseScore(100)
- *     .scoreDirection(ScorecardDefinition.ScoreDirection.DESCENDING)
+ *     .scoreDirection(ScorecardDefinitionDTO.ScoreDirection.DESCENDING)
  *     .minScore(0).maxScore(100)
  *     .factor(ScoreFactor.of("metricA > 3", -30, "示例因子A 命中扣分"))
  *     .factor(ScoreFactor.ofExpression("metricB > 1000000", "metricB * 0.001", 0.5, "示例因子B 动态扣分"))
@@ -74,8 +74,8 @@ public class ScorecardRule implements Rule {
 
   /** 评分方向（默认 DESCENDING：分数越低风险越高） */
   @Builder.Default
-  private final ScorecardDefinition.ScoreDirection scoreDirection =
-      ScorecardDefinition.ScoreDirection.DESCENDING;
+  private final ScorecardDefinitionDTO.ScoreDirection scoreDirection =
+      ScorecardDefinitionDTO.ScoreDirection.DESCENDING;
 
   /** 最低分（钳制下界，默认 0） */
   @Builder.Default private final double minScore = 0;
@@ -84,7 +84,7 @@ public class ScorecardRule implements Rule {
   @Builder.Default private final double maxScore = 100;
 
   /** 自定义评级映射（可选） */
-  @Singular private final List<ScorecardDefinition.ScoreGrade> grades;
+  @Singular private final List<ScorecardDefinitionDTO.ScoreGrade> grades;
 
   private final ExpressionEngine evaluator;
 
@@ -114,14 +114,14 @@ public class ScorecardRule implements Rule {
   }
 
   /**
-   * 从 ScorecardDefinition 构造评分卡规则
+   * 从 ScorecardDefinitionDTO 构造评分卡规则
    *
    * @param def 评分卡定义
    * @param evaluator 表达式求值器
    * @return ScorecardRule 实例
    * @since 1.0.0
    */
-  public static ScorecardRule from(ScorecardDefinition def, ExpressionEngine evaluator) {
+  public static ScorecardRule from(ScorecardDefinitionDTO def, ExpressionEngine evaluator) {
     ScorecardRuleBuilder b =
         ScorecardRule.builder()
             .code(def.getRuleCode())
@@ -135,12 +135,12 @@ public class ScorecardRule implements Rule {
             .scoreDirection(
                 def.getScoreDirection() != null
                     ? def.getScoreDirection()
-                    : ScorecardDefinition.ScoreDirection.DESCENDING)
+                    : ScorecardDefinitionDTO.ScoreDirection.DESCENDING)
             .minScore(def.getMinScore())
             .maxScore(def.getMaxScore())
             .evaluator(evaluator);
     if (def.getFactors() != null) {
-      for (ScorecardDefinition.ScoreFactor f : def.getFactors()) {
+      for (ScorecardDefinitionDTO.ScoreFactor f : def.getFactors()) {
         b.factor(
             ScoreFactor.builder()
                 .conditionExpression(f.getConditionExpression())
@@ -152,7 +152,7 @@ public class ScorecardRule implements Rule {
       }
     }
     if (def.getGrades() != null) {
-      for (ScorecardDefinition.ScoreGrade g : def.getGrades()) {
+      for (ScorecardDefinitionDTO.ScoreGrade g : def.getGrades()) {
         b.grade(g);
       }
     }
@@ -160,7 +160,7 @@ public class ScorecardRule implements Rule {
   }
 
   @Override
-  public RuleResult evaluate(RuleContext context) {
+  public RuleResultVO evaluate(RuleContextVO context) {
     long start = System.nanoTime();
     try {
       double totalScore = baseScore;
@@ -192,7 +192,7 @@ public class ScorecardRule implements Rule {
       String gradeLabel = null;
       if (grades != null && !grades.isEmpty()) {
         // 自定义评级映射优先
-        ScorecardDefinition.ScoreGrade matched = resolveGrade(totalScore);
+        ScorecardDefinitionDTO.ScoreGrade matched = resolveGrade(totalScore);
         if (matched != null) {
           gradeLabel = matched.getLabel();
           severity = parseSeverity(matched.getSeverity(), RuleSeverity.INFO);
@@ -216,7 +216,7 @@ public class ScorecardRule implements Rule {
       }
       desc.append(String.format("最终=%.1f", totalScore));
 
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(code)
           .ruleName(name)
           .category(category)
@@ -230,7 +230,7 @@ public class ScorecardRule implements Rule {
           .build();
     } catch (Exception e) {
       log.warn("[LiteRule-Scorecard] 评分卡 {} 评估异常: {}", code, e.getMessage());
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(code)
           .triggered(false)
           .triggeredAt(LocalDateTime.now())
@@ -240,7 +240,7 @@ public class ScorecardRule implements Rule {
   }
 
   /** 解析因子分值：优先使用 scoreExpression 动态计算，否则使用固定 score */
-  private double resolveScore(ScoreFactor factor, RuleContext context) {
+  private double resolveScore(ScoreFactor factor, RuleContextVO context) {
     if (factor.getScoreExpression() != null && !factor.getScoreExpression().isBlank()) {
       Object result = evaluator.eval(factor.getScoreExpression(), context);
       if (result instanceof Number n) {
@@ -252,8 +252,8 @@ public class ScorecardRule implements Rule {
   }
 
   /** 按自定义评级映射查找命中区间 */
-  private ScorecardDefinition.ScoreGrade resolveGrade(double totalScore) {
-    for (ScorecardDefinition.ScoreGrade g : grades) {
+  private ScorecardDefinitionDTO.ScoreGrade resolveGrade(double totalScore) {
+    for (ScorecardDefinitionDTO.ScoreGrade g : grades) {
       if (totalScore >= g.getMinScore() && totalScore < g.getMaxScore()) {
         return g;
       }
@@ -269,7 +269,7 @@ public class ScorecardRule implements Rule {
    * <p>ASCENDING 模式：分数越高风险越高（redThreshold &gt; yellowThreshold）
    */
   private RuleSeverity resolveSeverityByThreshold(double totalScore) {
-    if (scoreDirection == ScorecardDefinition.ScoreDirection.ASCENDING) {
+    if (scoreDirection == ScorecardDefinitionDTO.ScoreDirection.ASCENDING) {
       if (totalScore >= redThreshold) {
         return RuleSeverity.RED;
       }

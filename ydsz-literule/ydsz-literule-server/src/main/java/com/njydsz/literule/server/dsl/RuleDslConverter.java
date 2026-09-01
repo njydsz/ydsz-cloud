@@ -8,13 +8,13 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.CrossDecisionTableDefinition;
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
+import com.njydsz.literule.domain.dto.CrossDecisionTableDefinitionDTO;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.enums.HitPolicy;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
-import com.njydsz.literule.domain.dto.ScorecardDefinition;
+import com.njydsz.literule.domain.dto.ScorecardDefinitionDTO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.CrossDecisionTableRule;
 import com.njydsz.literule.server.impl.DecisionTableRule;
@@ -173,15 +173,15 @@ public final class RuleDslConverter {
   // ============ Definition 转换 ============
 
   /**
-   * 将 DSL 规则条目转换为 RuleDefinition（expression 类型）
+   * 将 DSL 规则条目转换为 RuleDefinitionDTO（expression 类型）
    *
    * @param entry DSL 规则条目
-   * @return RuleDefinition
+   * @return RuleDefinitionDTO
    * @since 1.0.0
    */
-  public static RuleDefinition toRuleDefinition(RuleDslEntry entry) {
+  public static RuleDefinitionDTO toRuleDefinition(RuleDslEntry entry) {
     RuleSeverity defaultSeverity = parseSeverity(entry.getSeverity(), RuleSeverity.INFO);
-    return RuleDefinition.builder()
+    return RuleDefinitionDTO.builder()
         .code(entry.getCode())
         .name(entry.getName())
         .category(entry.getCategory())
@@ -208,10 +208,10 @@ public final class RuleDslConverter {
         .build();
   }
 
-  /** 将 DSL 规则条目转换为 ScorecardDefinition（scorecard 类型） */
-  private static ScorecardDefinition toScorecardDefinition(RuleDslEntry entry) {
-    ScorecardDefinition.ScorecardDefinitionBuilder b =
-        ScorecardDefinition.builder()
+  /** 将 DSL 规则条目转换为 ScorecardDefinitionDTO（scorecard 类型） */
+  private static ScorecardDefinitionDTO toScorecardDefinition(RuleDslEntry entry) {
+    ScorecardDefinitionDTO.ScorecardDefinitionBuilder b =
+        ScorecardDefinitionDTO.builder()
             .ruleCode(entry.getCode())
             .ruleName(entry.getName())
             .category(entry.getCategory())
@@ -228,10 +228,10 @@ public final class RuleDslConverter {
             .version(entry.getVersion());
     // 因子列表
     if (entry.getFactors() != null) {
-      List<ScorecardDefinition.ScoreFactor> factors = new ArrayList<>(entry.getFactors().size());
+      List<ScorecardDefinitionDTO.ScoreFactor> factors = new ArrayList<>(entry.getFactors().size());
       for (RuleDslEntry.FactorDsl f : entry.getFactors()) {
         factors.add(
-            ScorecardDefinition.ScoreFactor.builder()
+            ScorecardDefinitionDTO.ScoreFactor.builder()
                 .conditionExpression(f.getWhen())
                 .score(f.getScore() != null ? f.getScore() : 0.0)
                 .scoreExpression(f.getScoreExpr())
@@ -243,7 +243,7 @@ public final class RuleDslConverter {
     }
     // 评级映射
     if (entry.getGrades() != null) {
-      List<ScorecardDefinition.ScoreGrade> grades = new ArrayList<>(entry.getGrades().size());
+      List<ScorecardDefinitionDTO.ScoreGrade> grades = new ArrayList<>(entry.getGrades().size());
       for (RuleDslEntry.GradeDsl g : entry.getGrades()) {
         double min = (g.getRange() != null && g.getRange().size() >= 1) ? g.getRange().get(0) : 0.0;
         double max =
@@ -251,7 +251,7 @@ public final class RuleDslConverter {
                 ? g.getRange().get(1)
                 : Double.MAX_VALUE;
         grades.add(
-            ScorecardDefinition.ScoreGrade.builder()
+            ScorecardDefinitionDTO.ScoreGrade.builder()
                 .label(g.getLabel())
                 .minScore(min)
                 .maxScore(max)
@@ -263,10 +263,10 @@ public final class RuleDslConverter {
     return b.build();
   }
 
-  /** 将 DSL 规则条目转换为 DecisionTableDefinition（decision_table 类型） */
-  private static DecisionTableDefinition toDecisionTableDefinition(RuleDslEntry entry) {
-    DecisionTableDefinition.DecisionTableDefinitionBuilder b =
-        DecisionTableDefinition.builder()
+  /** 将 DSL 规则条目转换为 DecisionTableDefinitionDTO（decision_table 类型） */
+  private static DecisionTableDefinitionDTO toDecisionTableDefinition(RuleDslEntry entry) {
+    DecisionTableDefinitionDTO.DecisionTableDefinitionBuilder b =
+        DecisionTableDefinitionDTO.builder()
             .tableCode(entry.getCode())
             .tableName(entry.getName())
             .category(entry.getCategory())
@@ -278,11 +278,11 @@ public final class RuleDslConverter {
             .version(entry.getVersion());
     // 条件列
     if (entry.getConditionColumns() != null) {
-      List<DecisionTableDefinition.Column> cols =
+      List<DecisionTableDefinitionDTO.Column> cols =
           new ArrayList<>(entry.getConditionColumns().size());
       for (Map<String, Object> cm : entry.getConditionColumns()) {
         cols.add(
-            DecisionTableDefinition.Column.builder()
+            DecisionTableDefinitionDTO.Column.builder()
                 .name(asString(cm.get("name")))
                 .label(asString(cm.get("label")))
                 .type(asString(cm.get("type")))
@@ -292,10 +292,10 @@ public final class RuleDslConverter {
     }
     // 动作列
     if (entry.getActionColumns() != null) {
-      List<DecisionTableDefinition.Column> cols = new ArrayList<>(entry.getActionColumns().size());
+      List<DecisionTableDefinitionDTO.Column> cols = new ArrayList<>(entry.getActionColumns().size());
       for (Map<String, Object> cm : entry.getActionColumns()) {
         cols.add(
-            DecisionTableDefinition.Column.builder()
+            DecisionTableDefinitionDTO.Column.builder()
                 .name(asString(cm.get("name")))
                 .label(asString(cm.get("label")))
                 .type(asString(cm.get("type")))
@@ -305,7 +305,7 @@ public final class RuleDslConverter {
     }
     // 决策行
     if (entry.getRows() != null) {
-      List<DecisionTableDefinition.Row> rows = new ArrayList<>(entry.getRows().size());
+      List<DecisionTableDefinitionDTO.Row> rows = new ArrayList<>(entry.getRows().size());
       for (Map<String, Object> rm : entry.getRows()) {
         Map<String, String> conditions = new LinkedHashMap<>();
         Object condObj = rm.get("conditions");
@@ -331,7 +331,7 @@ public final class RuleDslConverter {
           prio = n.intValue();
         }
         rows.add(
-            DecisionTableDefinition.Row.builder()
+            DecisionTableDefinitionDTO.Row.builder()
                 .conditions(conditions)
                 .actions(actions)
                 .priority(prio)
@@ -348,7 +348,7 @@ public final class RuleDslConverter {
   }
 
   /**
-   * 将 DSL 规则条目转换为 CrossDecisionTableDefinition（cross_decision_table 类型，P0-3）
+   * 将 DSL 规则条目转换为 CrossDecisionTableDefinitionDTO（cross_decision_table 类型，P0-3）
    *
    * <p>DSL 结构：
    *
@@ -364,16 +364,16 @@ public final class RuleDslConverter {
    *   default_actions: {severity: INFO, title: 正常}
    * </pre>
    */
-  private static CrossDecisionTableDefinition toCrossDecisionTableDefinition(RuleDslEntry entry) {
-    List<CrossDecisionTableDefinition.Bucket> rowBuckets = parseBuckets(entry.getRowBuckets());
-    List<CrossDecisionTableDefinition.Bucket> columnBuckets =
+  private static CrossDecisionTableDefinitionDTO toCrossDecisionTableDefinition(RuleDslEntry entry) {
+    List<CrossDecisionTableDefinitionDTO.Bucket> rowBuckets = parseBuckets(entry.getRowBuckets());
+    List<CrossDecisionTableDefinitionDTO.Bucket> columnBuckets =
         parseBuckets(entry.getColumnBuckets());
     Map<String, Map<String, Object>> cells = new LinkedHashMap<>();
     if (entry.getCells() != null) {
       cells.putAll(entry.getCells());
     }
     Map<String, Object> defaults = entry.getDefaultActions();
-    return CrossDecisionTableDefinition.builder()
+    return CrossDecisionTableDefinitionDTO.builder()
         .matrixCode(entry.getCode())
         .matrixName(entry.getName())
         .category(entry.getCategory())
@@ -392,19 +392,19 @@ public final class RuleDslConverter {
   }
 
   /** 解析分桶 DSL 列表（{@code label}/{@code condition}） */
-  private static List<CrossDecisionTableDefinition.Bucket> parseBuckets(
+  private static List<CrossDecisionTableDefinitionDTO.Bucket> parseBuckets(
       List<Map<String, Object>> bucketMaps) {
     if (bucketMaps == null) {
       return null;
     }
-    List<CrossDecisionTableDefinition.Bucket> buckets =
+    List<CrossDecisionTableDefinitionDTO.Bucket> buckets =
         new ArrayList<>(bucketMaps.size());
     for (Map<String, Object> bm : bucketMaps) {
       if (bm == null) {
         continue;
       }
       buckets.add(
-          CrossDecisionTableDefinition.Bucket.builder()
+          CrossDecisionTableDefinitionDTO.Bucket.builder()
               .label(asString(bm.get("label")))
               .condition(asString(bm.get("condition")))
               .build());
@@ -501,14 +501,14 @@ public final class RuleDslConverter {
     }
   }
 
-  private static ScorecardDefinition.ScoreDirection parseDirection(String dir) {
+  private static ScorecardDefinitionDTO.ScoreDirection parseDirection(String dir) {
     if (dir == null || dir.isBlank()) {
-      return ScorecardDefinition.ScoreDirection.DESCENDING;
+      return ScorecardDefinitionDTO.ScoreDirection.DESCENDING;
     }
     try {
-      return ScorecardDefinition.ScoreDirection.valueOf(dir.trim().toUpperCase());
+      return ScorecardDefinitionDTO.ScoreDirection.valueOf(dir.trim().toUpperCase());
     } catch (IllegalArgumentException e) {
-      return ScorecardDefinition.ScoreDirection.DESCENDING;
+      return ScorecardDefinitionDTO.ScoreDirection.DESCENDING;
     }
   }
 

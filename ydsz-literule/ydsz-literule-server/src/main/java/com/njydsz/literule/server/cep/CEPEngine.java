@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
@@ -250,7 +250,7 @@ public class CEPEngine implements Serializable {
       if (event.getAttributes() != null) {
         ctx.putAll(event.getAttributes());
       }
-      RuleContext ruleContext = RuleContext.of(ctx);
+      RuleContextVO ruleContext = RuleContextVO.of(ctx);
       return expressionEvaluator.evalBoolean(filter, ruleContext);
     } catch (Exception e) {
       log.debug("[CEP] 过滤器评估失败: filter={}, error={}", filter, e.getMessage());

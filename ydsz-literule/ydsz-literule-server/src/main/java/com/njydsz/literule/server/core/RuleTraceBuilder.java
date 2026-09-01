@@ -4,14 +4,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleExecutionTrace;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 规则执行轨迹构建器
  *
- * <p>封装 {@link RuleExecutionTrace} 的构建逻辑，从 {@link DefaultRuleEngine} 提取，使引擎核心聚焦评估编排。
+ * <p>封装 {@link RuleExecutionTraceVO} 的构建逻辑，从 {@link DefaultRuleEngine} 提取，使引擎核心聚焦评估编排。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -28,8 +28,8 @@ public class RuleTraceBuilder {
    * @param exception 评估异常（可能为 null）
    * @return 轨迹记录
    */
-  public RuleExecutionTrace buildTrace(
-      RuleContext context, Rule rule, RuleResult result, long elapsedMs, Exception exception) {
+  public RuleExecutionTraceVO buildTrace(
+      RuleContextVO context, Rule rule, RuleResultVO result, long elapsedMs, Exception exception) {
     String severity =
         result != null && result.getSeverity() != null ? result.getSeverity().getCode() : null;
     String conditionResult =
@@ -43,7 +43,7 @@ public class RuleTraceBuilder {
       resultSnapshot.put("description", result.getDescription());
     }
 
-    return new RuleExecutionTrace(
+    return new RuleExecutionTraceVO(
         context.getTraceId(),
         rule.getCode(),
         rule.getName(),

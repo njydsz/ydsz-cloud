@@ -2,8 +2,8 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 规则动作处理器 SPI
@@ -23,5 +23,5 @@ public interface RuleActionHandler {
    * @param triggered 触发的规则结果列表
    * @param context 规则上下文
    */
-  void handle(List<RuleResult> triggered, RuleContext context);
+  void handle(List<RuleResultVO> triggered, RuleContextVO context);
 }

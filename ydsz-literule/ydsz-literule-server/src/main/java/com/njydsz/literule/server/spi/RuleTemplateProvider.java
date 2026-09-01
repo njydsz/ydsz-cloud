@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 
 /**
@@ -44,12 +44,12 @@ public interface RuleTemplateProvider {
   /**
    * 导入模板为规则定义
    *
-   * <p>根据模板编码查找模板，将其转换为 {@link RuleDefinition} 后保存为正式规则。 规则编码使用模板编码（{@code
+   * <p>根据模板编码查找模板，将其转换为 {@link RuleDefinitionDTO} 后保存为正式规则。 规则编码使用模板编码（{@code
    * templateCode}），若已存在同名规则则执行更新。
    *
    * @param templateCode 模板编码
    * @param operator 操作人
    * @return 保存后的规则定义（含版本号）
    */
-  RuleDefinition importTemplate(String templateCode, String operator);
+  RuleDefinitionDTO importTemplate(String templateCode, String operator);
 }

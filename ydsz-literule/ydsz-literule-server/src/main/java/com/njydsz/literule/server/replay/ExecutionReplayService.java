@@ -16,10 +16,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
-import com.njydsz.literule.domain.vo.RuleExecutionTrace;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
@@ -31,7 +31,7 @@ import com.njydsz.literule.server.spi.TraceRecorder;
 /**
  * 执行回放服务（P3-4）
  *
- * <p>基于历史执行轨迹（{@link RuleExecutionTrace}）中保存的事实快照（factsSnapshot），
+ * <p>基于历史执行轨迹（{@link RuleExecutionTraceVO}）中保存的事实快照（factsSnapshot），
  * 用当前规则集或指定版本重新评估，对比历史结果与当前结果，生成结构化差异报告。
  *
  * <h3>核心能力</h3>
@@ -63,7 +63,7 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  * ReplayResult result = service.replayByTraceId("trace-abc-123");
  *
  * // 批量回放
- * List<RuleExecutionTrace> traces = traceRecorder.getByRuleCode("RISK_001", 100);
+ * List<RuleExecutionTraceVO> traces = traceRecorder.getByRuleCode("RISK_001", 100);
  * BatchReplayResult batchResult = service.batchReplay(traces);
  *
  * // 指定版本回放
@@ -116,7 +116,7 @@ public class ExecutionReplayService {
       return ReplayResult.error(traceId, "TraceRecorder 未配置，无法加载历史轨迹");
     }
 
-    List<RuleExecutionTrace> traces = traceRecorder.getByTraceId(traceId);
+    List<RuleExecutionTraceVO> traces = traceRecorder.getByTraceId(traceId);
     if (traces == null || traces.isEmpty()) {
       return ReplayResult.error(traceId, "未找到 traceId=" + traceId + " 的执行记录");
     }
@@ -128,20 +128,20 @@ public class ExecutionReplayService {
     }
 
     // 用当前规则集重新评估
-    List<RuleResult> currentResults = ruleAdminService.dryRun(null, facts);
+    List<RuleResultVO> currentResults = ruleAdminService.dryRun(null, facts);
 
     // 构建历史触发规则编码集合
     Set<String> historicalTriggered =
         traces.stream()
-            .filter(RuleExecutionTrace::isTriggered)
-            .map(RuleExecutionTrace::getRuleCode)
+            .filter(RuleExecutionTraceVO::isTriggered)
+            .map(RuleExecutionTraceVO::getRuleCode)
             .collect(Collectors.toCollection(LinkedHashSet::new));
 
     // 构建当前触发规则编码集合
     Set<String> currentTriggered =
         currentResults.stream()
-            .filter(RuleResult::isTriggered)
-            .map(RuleResult::getRuleCode)
+            .filter(RuleResultVO::isTriggered)
+            .map(RuleResultVO::getRuleCode)
             .collect(Collectors.toCollection(LinkedHashSet::new));
 
     // 差异分析
@@ -165,7 +165,7 @@ public class ExecutionReplayService {
    * @param traces 待回放的历史轨迹列表
    * @return 批量回放差异报告
    */
-  public BatchReplayResult batchReplay(List<RuleExecutionTrace> traces) {
+  public BatchReplayResult batchReplay(List<RuleExecutionTraceVO> traces) {
     if (traces == null || traces.isEmpty()) {
       return BatchReplayResult.empty();
     }
@@ -175,7 +175,7 @@ public class ExecutionReplayService {
     int diffCount = 0;
     int skippedCount = 0;
 
-    for (RuleExecutionTrace trace : traces) {
+    for (RuleExecutionTraceVO trace : traces) {
       Map<String, Object> facts = trace.getFactsSnapshot();
       if (facts == null || facts.isEmpty()) {
         skippedCount++;
@@ -183,8 +183,8 @@ public class ExecutionReplayService {
       }
 
       // 用当前规则集对单条规则重新评估
-      List<RuleResult> currentResults = ruleAdminService.dryRun(trace.getRuleCode(), facts);
-      RuleResult currentResult =
+      List<RuleResultVO> currentResults = ruleAdminService.dryRun(trace.getRuleCode(), facts);
+      RuleResultVO currentResult =
           currentResults.stream()
               .filter(
                   r -> trace.getRuleCode() != null && trace.getRuleCode().equals(r.getRuleCode()))
@@ -254,14 +254,14 @@ public class ExecutionReplayService {
     }
 
     // 加载历史 trace
-    List<RuleExecutionTrace> traces =
+    List<RuleExecutionTraceVO> traces =
         traceRecorder != null ? traceRecorder.getByTraceId(traceId) : Collections.emptyList();
     if (traces.isEmpty()) {
       return ReplayResult.error(traceId, "未找到 traceId=" + traceId + " 的执行记录");
     }
 
     // 查找目标规则的 trace
-    RuleExecutionTrace targetTrace =
+    RuleExecutionTraceVO targetTrace =
         traces.stream()
             .filter(t -> ruleCode != null && ruleCode.equals(t.getRuleCode()))
             .findFirst()
@@ -281,9 +281,9 @@ public class ExecutionReplayService {
       return ReplayResult.error(traceId, "未找到规则 " + ruleCode + " 的版本 " + version);
     }
 
-    // 将 VO 转换回 RuleDefinition 用于评估
+    // 将 VO 转换回 RuleDefinitionDTO 用于评估
     RuleDefinitionVO versionVO = versionOpt.get();
-    RuleDefinition versionDef = new RuleDefinition();
+    RuleDefinitionDTO versionDef = new RuleDefinitionDTO();
     versionDef.setCode(versionVO.getRuleCode());
     versionDef.setName(versionVO.getRuleName());
     versionDef.setConditionExpression(versionVO.getConditionExpression());
@@ -317,11 +317,11 @@ public class ExecutionReplayService {
 
     // 用目标版本重新评估
     ExpressionRule versionRule = new ExpressionRule(versionDef, evaluator);
-    RuleContext context = RuleContext.of(facts, "REPLAY", "MANUAL");
-    RuleResult versionResult = versionRule.evaluate(context);
+    RuleContextVO context = RuleContextVO.of(facts, "REPLAY", "MANUAL");
+    RuleResultVO versionResult = versionRule.evaluate(context);
 
     // 同时用当前规则评估
-    List<RuleResult> currentResults = ruleAdminService.dryRun(ruleCode, facts);
+    List<RuleResultVO> currentResults = ruleAdminService.dryRun(ruleCode, facts);
 
     // 构建差异
     Set<String> historicalTriggered = new LinkedHashSet<>();
@@ -334,8 +334,8 @@ public class ExecutionReplayService {
     }
     Set<String> currentTriggered =
         currentResults.stream()
-            .filter(RuleResult::isTriggered)
-            .map(RuleResult::getRuleCode)
+            .filter(RuleResultVO::isTriggered)
+            .map(RuleResultVO::getRuleCode)
             .collect(Collectors.toCollection(LinkedHashSet::new));
 
     ReplayDiff diffVsHistory = computeDiff(historicalTriggered, versionTriggered);
@@ -370,7 +370,7 @@ public class ExecutionReplayService {
    * @param facts 事实数据（为 null 时从 trace 加载）
    * @return 评估结果
    */
-  public RuleResult replayWithExpression(
+  public RuleResultVO replayWithExpression(
       String traceId,
       String ruleCode,
       String conditionExpression,
@@ -380,9 +380,9 @@ public class ExecutionReplayService {
     Map<String, Object> replayFacts = facts;
     if (replayFacts == null || replayFacts.isEmpty()) {
       if (traceRecorder == null) {
-        return RuleResult.notTriggered(ruleCode);
+        return RuleResultVO.notTriggered(ruleCode);
       }
-      List<RuleExecutionTrace> traces = traceRecorder.getByTraceId(traceId);
+      List<RuleExecutionTraceVO> traces = traceRecorder.getByTraceId(traceId);
       if (!traces.isEmpty()) {
         replayFacts = traces.get(0).getFactsSnapshot();
       }
@@ -457,8 +457,8 @@ public class ExecutionReplayService {
   public static class ReplayResult {
     private String traceId;
     private Map<String, Object> factsSnapshot;
-    private List<RuleExecutionTrace> historicalTraces;
-    private List<RuleResult> currentResults;
+    private List<RuleExecutionTraceVO> historicalTraces;
+    private List<RuleResultVO> currentResults;
     private ReplayDiff diff;
     private Map<String, Object> extra;
     private LocalDateTime replayedAt;

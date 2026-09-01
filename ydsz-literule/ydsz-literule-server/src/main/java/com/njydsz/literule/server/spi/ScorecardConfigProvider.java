@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.ScorecardDefinition;
+import com.njydsz.literule.domain.dto.ScorecardDefinitionDTO;
 
 /**
  * 评分卡配置提供者接口（SPI）
@@ -19,14 +19,14 @@ public interface ScorecardConfigProvider {
    *
    * @return 启用的评分卡列表
    */
-  List<ScorecardDefinition> loadEnabledScorecards();
+  List<ScorecardDefinitionDTO> loadEnabledScorecards();
 
   /**
    * 加载全部评分卡（含禁用）
    *
    * @return 全部评分卡列表
    */
-  List<ScorecardDefinition> loadAllScorecards();
+  List<ScorecardDefinitionDTO> loadAllScorecards();
 
   /**
    * 保存评分卡
@@ -35,7 +35,7 @@ public interface ScorecardConfigProvider {
    * @param operator 操作人
    * @return 保存后的定义（含版本号）
    */
-  ScorecardDefinition save(ScorecardDefinition definition, String operator);
+  ScorecardDefinitionDTO save(ScorecardDefinitionDTO definition, String operator);
 
   /**
    * 切换启停
@@ -52,7 +52,7 @@ public interface ScorecardConfigProvider {
    * @param ruleCode 规则编码
    * @return 评分卡定义；不存在返回 null
    */
-  ScorecardDefinition findByCode(String ruleCode);
+  ScorecardDefinitionDTO findByCode(String ruleCode);
 
   /**
    * 删除评分卡

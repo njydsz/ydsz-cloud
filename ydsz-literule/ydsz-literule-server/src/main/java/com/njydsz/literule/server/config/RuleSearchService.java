@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
@@ -53,7 +53,7 @@ public class RuleSearchService {
    * @return 搜索结果列表
    * @since 1.0.0
    */
-  public List<RuleDefinition> search(
+  public List<RuleDefinitionDTO> search(
       String query, String status, String category, Boolean enabled, int offset, int limit) {
     return ruleDefinitionRepository
         .search(query, status, category, enabled, offset, limit)
@@ -87,24 +87,24 @@ public class RuleSearchService {
    * @return 分页结果
    * @since 1.0.0
    */
-  public PageResponse<List<RuleDefinition>> searchPage(
+  public PageResponse<List<RuleDefinitionDTO>> searchPage(
       String query, String status, String category, Boolean enabled, PageQuery pageQuery) {
     PageResponse<List<RuleDefinitionVO>> voPage =
         ruleDefinitionRepository.searchPage(query, status, category, enabled, pageQuery);
-    List<RuleDefinition> records =
+    List<RuleDefinitionDTO> records =
         voPage.getData().stream().map(this::voToRuleDefinition).toList();
     return PageResponse.success(
         voPage.getTotal(), voPage.getPageNum(), voPage.getPageSize(), records);
   }
 
   /**
-   * RuleDefinitionVO → RuleDefinition 转换
+   * RuleDefinitionVO → RuleDefinitionDTO 转换
    *
    * @param vo 规则定义 VO
-   * @return RuleDefinition
+   * @return RuleDefinitionDTO
    */
-  private RuleDefinition voToRuleDefinition(RuleDefinitionVO vo) {
-    RuleDefinition def = new RuleDefinition();
+  private RuleDefinitionDTO voToRuleDefinition(RuleDefinitionVO vo) {
+    RuleDefinitionDTO def = new RuleDefinitionDTO();
     def.setCode(vo.getRuleCode());
     def.setName(vo.getRuleName());
     def.setCategory(vo.getCategory());

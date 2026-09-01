@@ -3,7 +3,7 @@ package com.njydsz.literule.server.spi;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 画布执行提供者 SPI
@@ -23,7 +23,7 @@ public interface GraphExecutionProvider {
    * @param facts 事实数据
    * @return 评估结果列表（已触发的规则结果）；画布为空或转换失败返回空列表
    */
-  List<RuleResult> dryRunGraph(String ruleCode, Map<String, Object> facts);
+  List<RuleResultVO> dryRunGraph(String ruleCode, Map<String, Object> facts);
 
   /**
    * 收集画布中引用了但已失效（不存在/已禁用）的规则编码

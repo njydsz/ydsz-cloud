@@ -22,7 +22,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.job.JobClusterMigrationDTO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.service.cluster.ClusterMigrationService;
@@ -76,7 +76,7 @@ public class ClusterMigrationController {
       content = "'clusterMigrate'")
   @RateLimit(resource = "cronjob.cluster.migrate", threshold = 10)
   @PostMapping("/migrate")
-  public YdszResponse<BatchResult<String>> migrate(@RequestBody @Valid JobClusterMigrationDTO dto) {
+  public YdszResponse<BatchResultDTO<String>> migrate(@RequestBody @Valid JobClusterMigrationDTO dto) {
     return YdszResponse.success(clusterMigrationService.migrateToCluster(dto));
   }
 

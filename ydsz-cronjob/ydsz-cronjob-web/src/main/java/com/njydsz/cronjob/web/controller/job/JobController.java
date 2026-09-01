@@ -36,7 +36,7 @@ import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
-import com.njydsz.cronjob.domain.dto.BatchResult;
+import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.cronjob.domain.dto.job.JobBatchUpdateDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
@@ -192,7 +192,7 @@ public class JobController {
       content = "'batchDelete'")
   @RateLimit(resource = "cronjob.job.batchDelete", threshold = 50)
   @PostMapping("/batch/delete")
-  public YdszResponse<BatchResult<String>> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
+  public YdszResponse<BatchResultDTO<String>> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
     return YdszResponse.success(jobService.batchDelete(dto.getJobIds()));
   }
 
@@ -321,7 +321,7 @@ public class JobController {
       content = "'batchPause'")
   @RateLimit(resource = "cronjob.job.batchPause", threshold = 50)
   @PostMapping("/batch/pause")
-  public YdszResponse<BatchResult<String>> batchPause(@RequestBody @Valid JobBatchDTO dto) {
+  public YdszResponse<BatchResultDTO<String>> batchPause(@RequestBody @Valid JobBatchDTO dto) {
     return YdszResponse.success(jobService.batchPause(dto.getJobIds()));
   }
 
@@ -343,7 +343,7 @@ public class JobController {
       content = "'batchResume'")
   @RateLimit(resource = "cronjob.job.batchResume", threshold = 50)
   @PostMapping("/batch/resume")
-  public YdszResponse<BatchResult<String>> batchResume(@RequestBody @Valid JobBatchDTO dto) {
+  public YdszResponse<BatchResultDTO<String>> batchResume(@RequestBody @Valid JobBatchDTO dto) {
     return YdszResponse.success(jobService.batchResume(dto.getJobIds()));
   }
 
@@ -366,7 +366,7 @@ public class JobController {
       content = "'batchTrigger'")
   @RateLimit(resource = "cronjob.job.batchTrigger", threshold = 50)
   @PostMapping("/batch/trigger")
-  public YdszResponse<BatchResult<String>> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
+  public YdszResponse<BatchResultDTO<String>> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
     return YdszResponse.success(jobService.batchTrigger(dto.getJobIds()));
   }
 
@@ -388,7 +388,7 @@ public class JobController {
       content = "'batchUpdateGroup'")
   @RateLimit(resource = "cronjob.job.batchUpdateGroup", threshold = 50)
   @PostMapping("/batch/updateGroup")
-  public YdszResponse<BatchResult<String>> batchUpdateGroup(@RequestBody @Valid JobBatchUpdateDTO dto) {
+  public YdszResponse<BatchResultDTO<String>> batchUpdateGroup(@RequestBody @Valid JobBatchUpdateDTO dto) {
     return YdszResponse.success(jobService.batchUpdateGroup(dto.getJobIds(), dto.getJobGroup()));
   }
 
@@ -411,7 +411,7 @@ public class JobController {
       content = "'batchUpdateCron'")
   @RateLimit(resource = "cronjob.job.batchUpdateCron", threshold = 50)
   @PostMapping("/batch/updateCron")
-  public YdszResponse<BatchResult<String>> batchUpdateCron(@RequestBody @Valid JobBatchUpdateDTO dto) {
+  public YdszResponse<BatchResultDTO<String>> batchUpdateCron(@RequestBody @Valid JobBatchUpdateDTO dto) {
     return YdszResponse.success(jobService.batchUpdateCron(dto.getJobIds(), dto.getCronExpression()));
   }
 

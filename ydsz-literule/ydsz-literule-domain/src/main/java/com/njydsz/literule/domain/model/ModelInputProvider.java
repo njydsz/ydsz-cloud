@@ -2,7 +2,7 @@ package com.njydsz.literule.domain.model;
 
 import java.util.Map;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 模型输入提供者 SPI（P3-1 规则+模型融合）
@@ -41,7 +41,7 @@ public interface ModelInputProvider {
   /**
    * 根据规则上下文获取模型输出
    *
-   * <p>实现方可从 {@link RuleContext#getFacts()} 中读取特征数据，调用模型服务， 返回模型输出。返回的 Map 的 key 为模型字段名（如 "score"），
+   * <p>实现方可从 {@link RuleContextVO#getFacts()} 中读取特征数据，调用模型服务， 返回模型输出。返回的 Map 的 key 为模型字段名（如 "score"），
    * value 为数值/字符串/布尔等。
    *
    * <p>注意：返回的 key 不应包含 "model." 前缀，前缀由 {@link ModelInputRegistry#collectAllModelOutputs} 统一添加。
@@ -49,7 +49,7 @@ public interface ModelInputProvider {
    * @param context 规则上下文（含 facts）
    * @return 模型输出 Map；null 或空 Map 表示无输出
    */
-  Map<String, Object> getModelOutput(RuleContext context);
+  Map<String, Object> getModelOutput(RuleContextVO context);
 
   /**
    * 模型标识（如 "risk-model-v1"、"fraud-detection-v2"）
@@ -57,7 +57,7 @@ public interface ModelInputProvider {
    * <p>用于：
    *
    * <ul>
-   *   <li>通过 {@link ModelInputRegistry#getModelOutputs(String, RuleContext)} 定点获取
+   *   <li>通过 {@link ModelInputRegistry#getModelOutputs(String, RuleContextVO)} 定点获取
    *   <li>日志与监控中区分不同模型的调用情况
    * </ul>
    *

@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * 数据库规则数据源
@@ -23,17 +23,17 @@ public class DbRuleSource implements RuleConfigProvider {
   private final RuleConfigProvider configProvider;
 
   @Override
-  public List<RuleDefinition> loadEnabledRules() {
+  public List<RuleDefinitionDTO> loadEnabledRules() {
     return configProvider.loadEnabledRules();
   }
 
   @Override
-  public List<RuleDefinition> loadAllRules() {
+  public List<RuleDefinitionDTO> loadAllRules() {
     return configProvider.loadAllRules();
   }
 
   @Override
-  public RuleDefinition save(RuleDefinition definition, String operator) {
+  public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator) {
     return configProvider.save(definition, operator);
   }
 
@@ -43,7 +43,7 @@ public class DbRuleSource implements RuleConfigProvider {
   }
 
   @Override
-  public RuleDefinition findByCode(String ruleCode) {
+  public RuleDefinitionDTO findByCode(String ruleCode) {
     return configProvider.findByCode(ruleCode);
   }
 

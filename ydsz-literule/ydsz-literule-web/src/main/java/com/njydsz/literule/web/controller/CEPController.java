@@ -27,9 +27,9 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.CEPHitVO;
 import com.njydsz.literule.domain.vo.CEPPatternVO;
 import com.njydsz.literule.server.cep.CEPEngine;
@@ -126,8 +126,8 @@ public class CEPController {
               if (hit.getContext() != null) {
                 facts.putAll(hit.getContext());
               }
-              RuleContext ctx = RuleContext.of(facts, "CEP", "CEP_ENGINE", null);
-              List<RuleResult> results = ruleEngine.evaluate(ctx);
+              RuleContextVO ctx = RuleContextVO.of(facts, "CEP", "CEP_ENGINE", null);
+              List<RuleResultVO> results = ruleEngine.evaluate(ctx);
               if (!results.isEmpty()) {
                 log.info(
                     "[CEPController] CEP 命中触发规则评估: patternId={}, ruleCode={}, triggered={}",

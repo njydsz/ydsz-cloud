@@ -3,8 +3,8 @@ package com.njydsz.literule.server.impl;
 import java.util.function.Function;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 静态规则：包装 Java lambda 作为规则
@@ -21,7 +21,7 @@ public class StaticRule implements Rule {
   private final String category;
   private final int priority;
   private final String scope;
-  private final Function<RuleContext, RuleResult> evaluator;
+  private final Function<RuleContextVO, RuleResultVO> evaluator;
 
   /**
    * 构造静态规则
@@ -37,7 +37,7 @@ public class StaticRule implements Rule {
       String name,
       String category,
       int priority,
-      Function<RuleContext, RuleResult> evaluator) {
+      Function<RuleContextVO, RuleResultVO> evaluator) {
     this(code, name, category, priority, null, evaluator);
   }
 
@@ -58,7 +58,7 @@ public class StaticRule implements Rule {
       String category,
       int priority,
       String scope,
-      Function<RuleContext, RuleResult> evaluator) {
+      Function<RuleContextVO, RuleResultVO> evaluator) {
     this.code = code;
     this.name = name;
     this.category = category;
@@ -76,7 +76,7 @@ public class StaticRule implements Rule {
    * @param evaluator 评估函数
    */
   public StaticRule(
-      String code, String name, String category, Function<RuleContext, RuleResult> evaluator) {
+      String code, String name, String category, Function<RuleContextVO, RuleResultVO> evaluator) {
     this(code, name, category, DEFAULT_PRIORITY, evaluator);
   }
 
@@ -106,10 +106,10 @@ public class StaticRule implements Rule {
   }
 
   @Override
-  public RuleResult evaluate(RuleContext context) {
-    RuleResult result = evaluator.apply(context);
+  public RuleResultVO evaluate(RuleContextVO context) {
+    RuleResultVO result = evaluator.apply(context);
     if (result == null) {
-      return RuleResult.notTriggered(code);
+      return RuleResultVO.notTriggered(code);
     }
     return result;
   }

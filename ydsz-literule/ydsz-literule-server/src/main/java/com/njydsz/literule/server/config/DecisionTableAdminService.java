@@ -10,11 +10,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.enums.HitPolicy;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.server.service.DecisionTableExcelService;
 import com.njydsz.literule.server.impl.DecisionTableRule;
@@ -66,7 +66,7 @@ public class DecisionTableAdminService {
   /** 查询全部决策表
    * @return 返回值说明
    */
-  public List<DecisionTableDefinition> listAll() {
+  public List<DecisionTableDefinitionDTO> listAll() {
     return configProvider.loadAllTables();
   }
 
@@ -74,7 +74,7 @@ public class DecisionTableAdminService {
    * @param tableCode 参数说明
    * @return 返回值说明
    */
-  public DecisionTableDefinition getByCode(String tableCode) {
+  public DecisionTableDefinitionDTO getByCode(String tableCode) {
     return configProvider.findByCode(tableCode);
   }
 
@@ -85,10 +85,10 @@ public class DecisionTableAdminService {
    * @return 保存后的决策表定义
    */
   @Transactional(rollbackFor = Exception.class)
-  public DecisionTableDefinition save(
-      DecisionTableDefinition definition, String operator, String changeDesc) {
+  public DecisionTableDefinitionDTO save(
+      DecisionTableDefinitionDTO definition, String operator, String changeDesc) {
     validate(definition);
-    DecisionTableDefinition saved = configProvider.save(definition, operator);
+    DecisionTableDefinitionDTO saved = configProvider.save(definition, operator);
     publishRefreshEvent(
         RuleConfigRefreshEvent.of(
             saved.getTableCode(), RuleConfigRefreshEvent.ChangeType.UPDATE, operator));
@@ -135,12 +135,12 @@ public class DecisionTableAdminService {
    * @param facts 参数说明
    * @return 返回值说明
    */
-  public RuleResult dryRun(String tableCode, Map<String, Object> facts) {
-    DecisionTableDefinition def = configProvider.findByCode(tableCode);
+  public RuleResultVO dryRun(String tableCode, Map<String, Object> facts) {
+    DecisionTableDefinitionDTO def = configProvider.findByCode(tableCode);
     if (def == null) {
       return null;
     }
-    RuleContext context = RuleContext.of(facts, "DRY_RUN", "MANUAL");
+    RuleContextVO context = RuleContextVO.of(facts, "DRY_RUN", "MANUAL");
     DecisionTableRule rule = new DecisionTableRule(def, null);
     return rule.evaluate(context);
   }
@@ -156,7 +156,7 @@ public class DecisionTableAdminService {
    * @throws RuntimeException 导出失败
    */
   public byte[] exportExcel(String tableCode) {
-    DecisionTableDefinition def = configProvider.findByCode(tableCode);
+    DecisionTableDefinitionDTO def = configProvider.findByCode(tableCode);
     if (def == null) {
       throw new IllegalArgumentException("决策表不存在: " + tableCode);
     }
@@ -173,9 +173,9 @@ public class DecisionTableAdminService {
    * @return 保存后的决策表定义
    * @throws IllegalArgumentException 导入失败
    */
-  public DecisionTableDefinition importExcel(byte[] excelBytes, String operator) {
-    DecisionTableDefinition def = getExcelService().importFromExcel(excelBytes);
-    DecisionTableDefinition saved = save(def, operator, "Excel 导入决策表");
+  public DecisionTableDefinitionDTO importExcel(byte[] excelBytes, String operator) {
+    DecisionTableDefinitionDTO def = getExcelService().importFromExcel(excelBytes);
+    DecisionTableDefinitionDTO saved = save(def, operator, "Excel 导入决策表");
     log.info(
         "[LiteRule-DecisionTable] 决策表已导入 Excel: code={}, operator={}",
         saved.getTableCode(),
@@ -199,7 +199,7 @@ public class DecisionTableAdminService {
     return excelService;
   }
 
-  private void validate(DecisionTableDefinition def) {
+  private void validate(DecisionTableDefinitionDTO def) {
     if (def.getTableCode() == null || def.getTableCode().isBlank()) {
       throw new IllegalArgumentException("决策表编码 tableCode 不能为空");
     }

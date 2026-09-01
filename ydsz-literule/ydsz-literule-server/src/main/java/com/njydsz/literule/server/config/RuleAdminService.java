@@ -16,10 +16,10 @@ import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
@@ -219,7 +219,7 @@ public class RuleAdminService {
    *
    * @return 全部规则定义
    */
-  public List<RuleDefinition> listAll() {
+  public List<RuleDefinitionDTO> listAll() {
     return configProvider.loadAllRules();
   }
 
@@ -231,27 +231,27 @@ public class RuleAdminService {
    * 传入， 支持 pageNum/pageSize/orderItems/cursor 等分页能力。
    *
    * @param pageQuery 分页查询参数
-   * @return 分页结果（PageResponse 封装的 RuleDefinition 列表）
+   * @return 分页结果（PageResponse 封装的 RuleDefinitionDTO 列表）
    * @since 1.0.0
    */
-  public PageResponse<List<RuleDefinition>> pageRuleDefinitions(
+  public PageResponse<List<RuleDefinitionDTO>> pageRuleDefinitions(
       PageQuery pageQuery) {
     PageResponse<List<RuleDefinitionVO>> voPage = ruleDefinitionRepository.pageRuleDefinitions(pageQuery);
-    // VO → RuleDefinition 转换
-    List<RuleDefinition> records =
+    // VO → RuleDefinitionDTO 转换
+    List<RuleDefinitionDTO> records =
         voPage.getData().stream().map(this::voToRuleDefinition).toList();
     return PageResponse.success(
         voPage.getTotal(), voPage.getPageNum(), voPage.getPageSize(), records);
   }
 
   /**
-   * RuleDefinitionVO → RuleDefinition 转换
+   * RuleDefinitionVO → RuleDefinitionDTO 转换
    *
    * @param vo 规则定义 VO
-   * @return RuleDefinition
+   * @return RuleDefinitionDTO
    */
-  private RuleDefinition voToRuleDefinition(RuleDefinitionVO vo) {
-    RuleDefinition def = new RuleDefinition();
+  private RuleDefinitionDTO voToRuleDefinition(RuleDefinitionVO vo) {
+    RuleDefinitionDTO def = new RuleDefinitionDTO();
     def.setCode(vo.getRuleCode());
     def.setName(vo.getRuleName());
     def.setCategory(vo.getCategory());
@@ -289,7 +289,7 @@ public class RuleAdminService {
    * @param ruleCode 规则编码
    * @return 规则定义
    */
-  public RuleDefinition getByCode(String ruleCode) {
+  public RuleDefinitionDTO getByCode(String ruleCode) {
     return configProvider.findByCode(ruleCode);
   }
 
@@ -307,7 +307,7 @@ public class RuleAdminService {
    * @return 搜索结果列表
    * @since 1.0.0
    */
-  public List<RuleDefinition> search(
+  public List<RuleDefinitionDTO> search(
       String query, String status, String category, Boolean enabled, int offset, int limit) {
     return searchService.search(query, status, category, enabled, offset, limit);
   }
@@ -338,7 +338,7 @@ public class RuleAdminService {
    * @return 保存后的规则定义
    */
   @Transactional(rollbackFor = Exception.class)
-  public RuleDefinition save(RuleDefinition definition, String operator, String changeDesc) {
+  public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator, String changeDesc) {
     // 校验表达式语法
     if (!evaluator.validate(definition.getConditionExpression())) {
       throw new IllegalArgumentException("条件表达式语法错误: " + definition.getConditionExpression());
@@ -356,7 +356,7 @@ public class RuleAdminService {
     // 冲突检测（可选，1.4.0 起支持）
     detectConflicts(definition);
 
-    RuleDefinition saved = configProvider.save(definition, operator);
+    RuleDefinitionDTO saved = configProvider.save(definition, operator);
 
     // 保存版本快照（同一事务内，失败则整体回滚）
     if (versionRepository != null) {
@@ -419,7 +419,7 @@ public class RuleAdminService {
     if (ruleCode == null || ruleCode.isBlank()) {
       throw new IllegalArgumentException("ruleCode 不能为空");
     }
-    RuleDefinition existing = configProvider.findByCode(ruleCode);
+    RuleDefinitionDTO existing = configProvider.findByCode(ruleCode);
     if (existing == null) {
       throw new IllegalArgumentException("规则不存在: " + ruleCode);
     }
@@ -452,7 +452,7 @@ public class RuleAdminService {
       throw new IllegalArgumentException("ruleCode 不能为空");
     }
     validateCategoryPath(path);
-    RuleDefinition existing = configProvider.findByCode(ruleCode);
+    RuleDefinitionDTO existing = configProvider.findByCode(ruleCode);
     if (existing == null) {
       throw new IllegalArgumentException("规则不存在: " + ruleCode);
     }
@@ -564,21 +564,21 @@ public class RuleAdminService {
    * @return 仿真结果列表
    * @throws IllegalStateException dry-run 功能被禁用
    */
-  public List<RuleResult> dryRun(
+  public List<RuleResultVO> dryRun(
       String ruleCode, Map<String, Object> facts, Integer limit, RuleSeverity minSeverity) {
     if (!dryRunEnabled) {
       throw new IllegalStateException("Dry-run 功能已被禁用（ydsz.literule.dryRunEnabled=false）");
     }
-    RuleContext context = RuleContext.of(facts, "DRY_RUN", "MANUAL");
+    RuleContextVO context = RuleContextVO.of(facts, "DRY_RUN", "MANUAL");
 
     if (ruleCode != null) {
       // 单条规则仿真
-      RuleDefinition def = configProvider.findByCode(ruleCode);
+      RuleDefinitionDTO def = configProvider.findByCode(ruleCode);
       if (def == null) {
         return List.of();
       }
       ExpressionRule rule = new ExpressionRule(def, evaluator);
-      RuleResult result = rule.evaluate(context);
+      RuleResultVO result = rule.evaluate(context);
       return List.of(result);
     }
 
@@ -593,7 +593,7 @@ public class RuleAdminService {
    * @param facts 事实数据
    * @return 仿真结果列表
    */
-  public List<RuleResult> dryRun(String ruleCode, Map<String, Object> facts) {
+  public List<RuleResultVO> dryRun(String ruleCode, Map<String, Object> facts) {
     return dryRun(ruleCode, facts, null, null);
   }
 
@@ -610,7 +610,7 @@ public class RuleAdminService {
    * @return 评估结果；表达式非法或评估异常时返回未触发结果
    * @since 1.0.0
    */
-  public RuleResult evaluateWithExpression(
+  public RuleResultVO evaluateWithExpression(
       String ruleCode,
       String conditionExpression,
       String severityExpression,
@@ -618,17 +618,17 @@ public class RuleAdminService {
       Map<String, Object> facts) {
     // 表达式语法校验
     if (!evaluator.validate(conditionExpression)) {
-      return RuleResult.notTriggered(ruleCode);
+      return RuleResultVO.notTriggered(ruleCode);
     }
     if (severityExpression != null
         && !severityExpression.isBlank()
         && !evaluator.validate(severityExpression)) {
-      return RuleResult.notTriggered(ruleCode);
+      return RuleResultVO.notTriggered(ruleCode);
     }
 
     // 构造临时规则定义
-    RuleDefinition tempDef =
-        RuleDefinition.builder()
+    RuleDefinitionDTO tempDef =
+        RuleDefinitionDTO.builder()
             .code(ruleCode)
             .name("影响分析-" + ruleCode)
             .conditionExpression(conditionExpression)
@@ -637,8 +637,8 @@ public class RuleAdminService {
             .build();
 
     ExpressionRule rule = new ExpressionRule(tempDef, evaluator);
-    RuleContext context =
-        RuleContext.of(facts != null ? facts : Collections.emptyMap(), "IMPACT_PREVIEW", "MANUAL");
+    RuleContextVO context =
+        RuleContextVO.of(facts != null ? facts : Collections.emptyMap(), "IMPACT_PREVIEW", "MANUAL");
     try {
       return rule.evaluate(context);
     } catch (Exception e) {
@@ -647,7 +647,7 @@ public class RuleAdminService {
           ruleCode,
           conditionExpression,
           e.getMessage());
-      return RuleResult.notTriggered(ruleCode);
+      return RuleResultVO.notTriggered(ruleCode);
     }
   }
 
@@ -685,8 +685,8 @@ public class RuleAdminService {
               .build();
       return new ExpressionEngine.TraceResult(false, root);
     }
-    RuleContext context =
-        RuleContext.of(facts != null ? facts : Collections.emptyMap(), "EXPR_TRACE", "MANUAL");
+    RuleContextVO context =
+        RuleContextVO.of(facts != null ? facts : Collections.emptyMap(), "EXPR_TRACE", "MANUAL");
     return evaluator.evalBooleanWithTrace(expression, context);
   }
 
@@ -705,7 +705,7 @@ public class RuleAdminService {
    * @param definition 待保存的规则定义
    * @since 1.0.0
    */
-  private void validateStatusTransition(RuleDefinition definition) {
+  private void validateStatusTransition(RuleDefinitionDTO definition) {
     String statusStr = definition.getStatus();
     if (statusStr == null || statusStr.isBlank()) {
       return;
@@ -718,7 +718,7 @@ public class RuleAdminService {
               + "，合法值: DRAFT/REVIEW/REVIEW_L1/REVIEW_L2/REVIEW_FINAL/PUBLISHED/DISABLED/ARCHIVED");
     }
 
-    RuleDefinition existing = configProvider.findByCode(definition.getCode());
+    RuleDefinitionDTO existing = configProvider.findByCode(definition.getCode());
     if (existing == null) {
       // 新建：限制初始状态白名单（禁止 REVIEW/DISABLED/ARCHIVED 作为初始状态）
       if (target != RuleStatus.DRAFT && target != RuleStatus.PUBLISHED) {
@@ -758,7 +758,7 @@ public class RuleAdminService {
    * @param definition 待保存的规则定义
    * @since 1.0.0
    */
-  private void detectConflicts(RuleDefinition definition) {
+  private void detectConflicts(RuleDefinitionDTO definition) {
     if (!conflictDetectionEnabled || conflictDetector == null) {
       return;
     }
@@ -860,7 +860,7 @@ public class RuleAdminService {
    *
    * @param definition 规则定义
    */
-  private void syncSearchIndex(RuleDefinition definition) {
+  private void syncSearchIndex(RuleDefinitionDTO definition) {
     if (searchIndexEventBridgeProvider == null) {
       return;
     }

@@ -10,7 +10,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
@@ -301,7 +301,7 @@ public class RuleDebugger {
    * @param context 规则上下文
    * @return 命中断点；未命中或无可调试会话返回 null
    */
-  public BreakpointHit checkRuleBreakpoint(String ruleCode, RuleContext context) {
+  public BreakpointHit checkRuleBreakpoint(String ruleCode, RuleContextVO context) {
     DebugSession session = findActiveSession(ruleCode);
     if (session == null) {
       return null;
@@ -396,8 +396,8 @@ public class RuleDebugger {
     return bp.getHitLimit() <= 0 || bp.getHitCount() < bp.getHitLimit();
   }
 
-  /** 条件断点评估（RuleContext 版本） */
-  private boolean evaluateCondition(String condition, RuleContext context) {
+  /** 条件断点评估（RuleContextVO 版本） */
+  private boolean evaluateCondition(String condition, RuleContextVO context) {
     try {
       return evaluator != null && evaluator.evalBoolean(condition, context);
     } catch (Exception e) {
@@ -409,7 +409,7 @@ public class RuleDebugger {
   /** 条件断点评估（facts Map 版本） */
   private boolean evaluateCondition(String condition, Map<String, Object> facts) {
     try {
-      return evaluator != null && evaluator.evalBoolean(condition, RuleContext.of(facts));
+      return evaluator != null && evaluator.evalBoolean(condition, RuleContextVO.of(facts));
     } catch (Exception e) {
       log.debug("[LiteRule-Debug] 条件断点求值失败: condition={}, err={}", condition, e.getMessage());
       return false;

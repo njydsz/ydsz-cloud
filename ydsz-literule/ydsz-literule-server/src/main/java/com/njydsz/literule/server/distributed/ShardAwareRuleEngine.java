@@ -8,10 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleEngineStats;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 分片感知的规则引擎装饰器（P2-16 分布式执行）
@@ -40,7 +40,7 @@ import com.njydsz.literule.domain.vo.RuleResult;
  * ShardAwareRuleEngine engine = new ShardAwareRuleEngine(delegate, registry, sharder);
  * engine.refreshNodes(); // 刷新节点列表，完成首轮分片
  * engine.register(rule); // 注册时即按分片归属过滤
- * List&lt;RuleResult&gt; results = engine.evaluate(context);
+ * List&lt;RuleResultVO&gt; results = engine.evaluate(context);
  * </pre>
  *
  * <h3>废弃说明</h3>
@@ -150,14 +150,14 @@ public class ShardAwareRuleEngine implements RuleEngine {
   }
 
   @Override
-  public List<RuleResult> evaluate(RuleContext context) {
+  public List<RuleResultVO> evaluate(RuleContextVO context) {
     // delegate 仅持有本节点规则，评估即分片执行
     return delegate.evaluate(context);
   }
 
   @Override
-  public RuleResult topResult(RuleContext context) {
-    List<RuleResult> results = evaluate(context);
+  public RuleResultVO topResult(RuleContextVO context) {
+    List<RuleResultVO> results = evaluate(context);
     if (results == null || results.isEmpty()) {
       return null;
     }
@@ -165,7 +165,7 @@ public class ShardAwareRuleEngine implements RuleEngine {
   }
 
   @Override
-  public List<RuleResult> dryRun(RuleContext context) {
+  public List<RuleResultVO> dryRun(RuleContextVO context) {
     // 与 evaluate() 路径一致：仅仿真本节点持有的规则
     return delegate.dryRun(context);
   }
@@ -176,7 +176,7 @@ public class ShardAwareRuleEngine implements RuleEngine {
   }
 
   @Override
-  public RuleEngineStats getStats() {
+  public RuleEngineStatsVO getStats() {
     return delegate.getStats();
   }
 

@@ -6,7 +6,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.njydsz.common.util.security.DigestUtils;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 轻量级缓存键构建器（P1-1 性能优化）
@@ -51,7 +51,7 @@ public final class CacheKeyBuilder {
    * @param context 规则上下文
    * @return 缓存键（固定长度约 80 字符 + 维度前缀）
    */
-  public static String buildKey(RuleContext context) {
+  public static String buildKey(RuleContextVO context) {
     Map<String, Object> facts = context.getFacts();
     // 按 key 排序保证相同 facts 产生相同键
     SortedMap<String, Object> sortedFacts = new TreeMap<>(facts);

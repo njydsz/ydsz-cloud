@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.domain.dto.ReceiptResult;
+import com.njydsz.message.domain.dto.ReceiptResultDTO;
 import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
@@ -44,7 +44,7 @@ public interface MessageChannel {
    * @param logVO 消息日志VO（含 providerTraceId 用于查询）
    * @return 回执结果；空表示渠道不支持或暂无回执
    */
-  default Optional<ReceiptResult> queryReceipt(MsgLogVO logVO) {
+  default Optional<ReceiptResultDTO> queryReceipt(MsgLogVO logVO) {
     return Optional.empty();
   }
 }

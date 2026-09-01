@@ -24,15 +24,15 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleEngineStats;
+import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 import com.njydsz.literule.domain.enums.RuleEnvironment;
-import com.njydsz.literule.domain.vo.RuleExecutionTrace;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
-import com.njydsz.literule.domain.vo.StatsRecorder;
+import com.njydsz.literule.domain.vo.StatsRecorderVO;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
 import com.njydsz.literule.domain.model.ModelInvocationException;
 import com.njydsz.literule.server.spi.FactCollectionException;
@@ -62,7 +62,7 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  * @author ydsz-team
  */
 @Slf4j
-public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
+public class DefaultRuleEngine implements RuleEngine, StatsRecorderVO {
 
     /** 默认并行执行阈值 */
   private static final int DEFAULT_PARALLEL_THRESHOLD = 50;
@@ -110,7 +110,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 模型输入注册表（可选，1.8.0 起 P3-1 规则+模型融合）
    *
    * <p>非 null 且已注册 provider 时，引擎在评估前调用 {@link ModelInputRegistry#collectAllModelOutputs} 获取模型输出，
-   * 合并到 {@link RuleContext} 的 facts 中（嵌套在 "model" key 下）， 使规则表达式可通过 {@code model.<field>} 引用（如
+   * 合并到 {@link RuleContextVO} 的 facts 中（嵌套在 "model" key 下）， 使规则表达式可通过 {@code model.<field>} 引用（如
    * {@code model.score > 0.8}）。 默认 null（向后兼容，不影响现有评估）。
    */
   private volatile ModelInputRegistry modelInputRegistry;
@@ -119,7 +119,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 事实数据提供者注册表（可选，2.1.0 起 P0-2 动态事实采集管道）
    *
    * <p>非 null 且已注册 provider 时，引擎在评估前调用 {@link FactProviderRegistry#collectAllFacts} 动态采集事实数据， 合并到
-   * {@link RuleContext} 的 facts 中，使规则表达式可直接引用。 事实采集在模型注入之前执行，采集的事实可供模型 provider 使用。 默认
+   * {@link RuleContextVO} 的 facts 中，使规则表达式可直接引用。 事实采集在模型注入之前执行，采集的事实可供模型 provider 使用。 默认
    * null（向后兼容，不影响现有评估）。
    */
   private volatile FactProviderRegistry factProviderRegistry;
@@ -280,12 +280,12 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 已触发的规则结果列表（按严重度倒序）；无触发时返回空列表
    */
   @Override
-  public List<RuleResult> evaluate(RuleContext context) {
+  public List<RuleResultVO> evaluate(RuleContextVO context) {
     String traceId = resolveTraceId(context);
     return withMdcTraceId(traceId, () -> doEvaluate(context));
   }
 
-  private List<RuleResult> doEvaluate(RuleContext context) {
+  private List<RuleResultVO> doEvaluate(RuleContextVO context) {
     // 1. 准备评估上下文（缓存查询 + 事实/模型注入）
     PreparationResult prep = prepareEvaluationContext(context);
     if (prep.cached != null) {
@@ -309,7 +309,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   }
 
   /** 准备评估上下文结果封装 */
-  private record PreparationResult(List<RuleResult> cached, RuleContext enrichedContext) {}
+  private record PreparationResult(List<RuleResultVO> cached, RuleContextVO enrichedContext) {}
 
   /**
    * 准备评估上下文（缓存查询 + 事实/模型注入）
@@ -328,10 +328,10 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @param context 原始评估上下文
    * @return 包含缓存结果（命中时）或 enriched context（未命中时）
    */
-  private PreparationResult prepareEvaluationContext(RuleContext context) {
+  private PreparationResult prepareEvaluationContext(RuleContextVO context) {
     // P1-7：评估结果缓存查询
     if (evaluationResultCache != null) {
-      List<RuleResult> cached = evaluationResultCache.get(context);
+      List<RuleResultVO> cached = evaluationResultCache.get(context);
       if (cached != null) {
         if (log.isDebugEnabled()) {
           log.debug("[LiteRule] 评估结果缓存命中: scenario={}", context.getScenario());
@@ -340,7 +340,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
       }
     }
 
-    RuleContext enriched = injectDataInParallel(context);
+    RuleContextVO enriched = injectDataInParallel(context);
 
     return new PreparationResult(null, enriched);
   }
@@ -354,7 +354,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @param context 原始评估上下文
    * @return 合并后的上下文
    */
-  private RuleContext injectDataInParallel(RuleContext context) {
+  private RuleContextVO injectDataInParallel(RuleContextVO context) {
     if (factInjectionService != null) {
       return factInjectionService.injectDataInParallel(context);
     }
@@ -375,7 +375,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @param context 评估上下文
    * @return 候选规则列表
    */
-  private List<Rule> selectCandidateRules(RuleContext context) {
+  private List<Rule> selectCandidateRules(RuleContextVO context) {
     String scenario = context.getScenario();
     String contextTenantId = context.getTenantId();
     String contextEnvironment = context.getEnvironment();
@@ -399,7 +399,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
 
   /** 评估状态封装（评估过程中的可变状态） */
   private static class EvaluationState {
-    final List<RuleResult> triggered = new ArrayList<>();
+    final List<RuleResultVO> triggered = new ArrayList<>();
 
     /** 互斥组：记录本次评估中已命中的互斥组 */
     final Set<String> triggeredGroups = new HashSet<>();
@@ -423,7 +423,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @param context 评估上下文
    * @return 评估状态（已触发结果、互斥组、评估计数）
    */
-  private EvaluationState evaluateRules(List<Rule> candidateRules, RuleContext context) {
+  private EvaluationState evaluateRules(List<Rule> candidateRules, RuleContextVO context) {
     EvaluationState state = new EvaluationState();
     String scenario = context.getScenario();
     String contextTenantId = context.getTenantId();
@@ -494,9 +494,9 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @param context 评估上下文
    * @return 最终的规则结果列表
    */
-  private List<RuleResult> finalizeResults(EvaluationState state, RuleContext context) {
+  private List<RuleResultVO> finalizeResults(EvaluationState state, RuleContextVO context) {
     // 按严重度倒序
-    state.triggered.sort(Comparator.comparingInt(RuleResult::getSeverityWeight).reversed());
+    state.triggered.sort(Comparator.comparingInt(RuleResultVO::getSeverityWeight).reversed());
     // 记录本次评估遍历的规则数（用于规则规模监控）
     if (metrics != null) {
       metrics.recordEvaluatedRules(state.evaluatedCount);
@@ -522,7 +522,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 灰度定义；不满足条件返回 null
    * @since 1.0.0
    */
-  private RuleDefinition resolveCanaryDefinition(Rule rule) {
+  private RuleDefinitionDTO resolveCanaryDefinition(Rule rule) {
     if (canaryEvaluator != null) {
       return canaryEvaluator.resolveCanaryDefinition(rule);
     }
@@ -537,7 +537,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    *
    * <ol>
    *   <li>调用 {@link FactProviderRegistry#collectAllFacts} 获取外部数据源事实
-   *   <li>合并到 facts 中，构建新的 {@link RuleContext}（保留原 scenario/source/traceId/tenantId/environment）
+   *   <li>合并到 facts 中，构建新的 {@link RuleContextVO}（保留原 scenario/source/traceId/tenantId/environment）
    * </ol>
    *
    * <p>降级策略：
@@ -552,7 +552,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 包含外部事实的新上下文；无需注入时返回原 context
    * @since 1.0.0
    */
-  private RuleContext injectFactsIfNeeded(RuleContext context) {
+  private RuleContextVO injectFactsIfNeeded(RuleContextVO context) {
     FactProviderRegistry registry = this.factProviderRegistry;
     if (registry == null || !registry.hasProviders()) {
       return context;
@@ -573,8 +573,8 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
     // 合并到新 facts（原 facts + 外部事实，后者覆盖前者）
     Map<String, Object> mergedFacts = new LinkedHashMap<>(context.getFacts());
     mergedFacts.putAll(externalFacts);
-    RuleContext enriched =
-        RuleContext.of(
+    RuleContextVO enriched =
+        RuleContextVO.of(
             mergedFacts,
             context.getScenario(),
             context.getSource(),
@@ -600,7 +600,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    *       "model.score"）
    *   <li>将扁平 key 转换为嵌套结构 {@code {"model": {"score": ..., ...}}}， 以兼容 LiteExpr 表达式 {@code
    *       model.score} 的属性访问语法
-   *   <li>合并到 facts 中，构建新的 {@link RuleContext}（保留原 scenario/source/traceId/tenantId/environment）
+   *   <li>合并到 facts 中，构建新的 {@link RuleContextVO}（保留原 scenario/source/traceId/tenantId/environment）
    * </ol>
    *
    * <p>降级策略：
@@ -615,7 +615,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 包含模型输出的新上下文；无需注入时返回原 context
    * @since 1.0.0
    */
-  private RuleContext injectModelOutputsIfNeeded(RuleContext context) {
+  private RuleContextVO injectModelOutputsIfNeeded(RuleContextVO context) {
     ModelInputRegistry registry = this.modelInputRegistry;
     if (registry == null || !registry.hasProviders()) {
       return context;
@@ -653,8 +653,8 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
     // 合并到新 facts（保留原 facts + 添加 model 嵌套 Map）
     Map<String, Object> mergedFacts = new LinkedHashMap<>(context.getFacts());
     mergedFacts.put("model", nestedModel);
-    RuleContext enriched =
-        RuleContext.of(
+    RuleContextVO enriched =
+        RuleContextVO.of(
             mergedFacts,
             context.getScenario(),
             context.getSource(),
@@ -676,8 +676,8 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 最高严重度的规则结果；无触发时返回 null
    */
   @Override
-  public RuleResult topResult(RuleContext context) {
-    List<RuleResult> all = evaluate(context);
+  public RuleResultVO topResult(RuleContextVO context) {
+    List<RuleResultVO> all = evaluate(context);
     return all.isEmpty() ? null : all.get(0);
   }
 
@@ -700,7 +700,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 全部匹配规则的结果列表（含未触发）
    */
   @Override
-  public List<RuleResult> dryRun(RuleContext context) {
+  public List<RuleResultVO> dryRun(RuleContextVO context) {
     return dryRun(context, null, null);
   }
 
@@ -717,15 +717,15 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 仿真结果列表
    * @since 1.0.0
    */
-  public List<RuleResult> dryRun(RuleContext context, Integer limit, RuleSeverity minSeverity) {
+  public List<RuleResultVO> dryRun(RuleContextVO context, Integer limit, RuleSeverity minSeverity) {
     String traceId = resolveTraceId(context);
     return withMdcTraceId(traceId, () -> doDryRun(context, limit, minSeverity));
   }
 
-  private List<RuleResult> doDryRun(RuleContext context, Integer limit, RuleSeverity minSeverity) {
+  private List<RuleResultVO> doDryRun(RuleContextVO context, Integer limit, RuleSeverity minSeverity) {
     // P0-2 动态事实采集 + P3-1 模型融合：dry-run 同样注入（并行优化）
     context = injectDataInParallel(context);
-    List<RuleResult> all = new ArrayList<>();
+    List<RuleResultVO> all = new ArrayList<>();
     String contextTenantId = context.getTenantId();
     String contextEnvironment = context.getEnvironment();
     // 短路计数：已命中且满足严重度要求的规则数量
@@ -745,9 +745,9 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
         continue;
       }
       try {
-        RuleResult result = rule.evaluate(context);
+        RuleResultVO result = rule.evaluate(context);
         if (result == null) {
-          result = RuleResult.notTriggered(rule.getCode());
+          result = RuleResultVO.notTriggered(rule.getCode());
         }
         all.add(result);
         // 短路计数递增
@@ -759,7 +759,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
         }
       } catch (Exception e) {
         all.add(
-            RuleResult.builder()
+            RuleResultVO.builder()
                 .ruleCode(rule.getCode())
                 .triggered(false)
                 .description("评估异常: " + e.getMessage())
@@ -775,7 +775,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * <p>优先级：
    *
    * <ol>
-   *   <li>{@link RuleContext#getTraceId()} — 调用方显式传入的 traceId
+   *   <li>{@link RuleContextVO#getTraceId()} — 调用方显式传入的 traceId
    *   <li>当前线程 MDC 中的 traceId — 继承上游链路（如 Web 请求过滤器设置的）
    *   <li>自动生成新 UUID — 确保评估期间日志始终有 traceId
    * </ol>
@@ -818,7 +818,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
     }
   }
 
-  private String resolveTraceId(RuleContext context) {
+  private String resolveTraceId(RuleContextVO context) {
     String traceId = context.getTraceId();
     if (traceId != null && !traceId.isBlank()) {
       return traceId;
@@ -849,7 +849,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 引擎统计快照
    */
   @Override
-  public RuleEngineStats getStats() {
+  public RuleEngineStatsVO getStats() {
     return statistics.snapshot(ruleRegistry.size(), metrics != null ? metrics.getLastEvaluatedRules() : 0);
   }
 
@@ -881,10 +881,10 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   /**
    * 将引擎作为统计记录器暴露给编排层使用
    *
-   * @return StatsRecorder 实例
+   * @return StatsRecorderVO 实例
    * @since 1.0.0
    */
-  public StatsRecorder asStatsRecorder() {
+  public StatsRecorderVO asStatsRecorder() {
     return this;
   }
 
@@ -1094,7 +1094,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   /**
    * 设置模型输入注册表（P3-1 规则+模型融合）
    *
-   * <p>注入后，引擎在 {@link #evaluate} 前会调用注册表获取模型输出， 合并到 {@link RuleContext} 的 facts 中。null
+   * <p>注入后，引擎在 {@link #evaluate} 前会调用注册表获取模型输出， 合并到 {@link RuleContextVO} 的 facts 中。null
    * 表示禁用模型融合（向后兼容）。
    *
    * @param modelInputRegistry 模型输入注册表；null 表示禁用
@@ -1124,7 +1124,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   /**
    * 设置事实数据提供者注册表（P0-2 动态事实采集管道）
    *
-   * <p>注入后，引擎在 {@link #evaluate} 前会调用注册表动态采集事实数据， 合并到 {@link RuleContext} 的 facts 中。null
+   * <p>注入后，引擎在 {@link #evaluate} 前会调用注册表动态采集事实数据， 合并到 {@link RuleContextVO} 的 facts 中。null
    * 表示禁用事实采集（向后兼容）。
    *
    * @param factProviderRegistry 事实数据提供者注册表；null 表示禁用
@@ -1265,13 +1265,13 @@ return ruleRegistry.getIndexBypassThreshold();
    * @since 1.0.0
    */
   private static class RuleEvaluationOutcome {
-    final RuleResult result;
+    final RuleResultVO result;
     final Exception caughtException;
     final long elapsedMs;
     final boolean isTriggered;
     final boolean isError;
 
-    RuleEvaluationOutcome(RuleResult result, Exception caughtException, long elapsedMs) {
+    RuleEvaluationOutcome(RuleResultVO result, Exception caughtException, long elapsedMs) {
       this.result = result;
       this.caughtException = caughtException;
       this.elapsedMs = elapsedMs;
@@ -1309,14 +1309,14 @@ return ruleRegistry.getIndexBypassThreshold();
    * @since 1.0.0
    */
   private RuleEvaluationOutcome executeAndRecordRuleEvaluation(
-      Rule rule, RuleContext context, String scenario, String logTag) {
+      Rule rule, RuleContextVO context, String scenario, String logTag) {
     long start = System.nanoTime();
-    RuleResult result = null;
+    RuleResultVO result = null;
     Exception caughtException = null;
     boolean routedToCanary = false;
 
     // 灰度路由：仅对带 canaryRatio 的表达式规则生效
-    RuleDefinition canaryDef = resolveCanaryDefinition(rule);
+    RuleDefinitionDTO canaryDef = resolveCanaryDefinition(rule);
     if (canaryDef != null && canaryEvaluator != null) {
       boolean goCanary = canaryEvaluator.shouldRouteToCanary(canaryDef, context);
       canaryEvaluator.recordBucket(rule.getCode(), goCanary);
@@ -1379,7 +1379,7 @@ return ruleRegistry.getIndexBypassThreshold();
     // 异步记录 Trace（即使异常也记录，便于排查）
     if (traceRecorder != null && traceRecorder.isEnabled()) {
       try {
-        RuleExecutionTrace trace = traceBuilder.buildTrace(context, rule, result, elapsed, caughtException);
+        RuleExecutionTraceVO trace = traceBuilder.buildTrace(context, rule, result, elapsed, caughtException);
         traceRecorder.record(trace);
       } catch (Exception te) {
         log.debug("{} Trace 记录失败: {}", logTag, te.getMessage());
@@ -1398,7 +1398,7 @@ return ruleRegistry.getIndexBypassThreshold();
    * @throws Exception 评估异常
    * @since 1.0.0
    */
-  private RuleResult evaluateWithOptionalTimeout(Rule rule, RuleContext context) throws Exception {
+  private RuleResultVO evaluateWithOptionalTimeout(Rule rule, RuleContextVO context) throws Exception {
     if (timeoutExecutor != null) {
       return timeoutExecutor.evaluateWithTimeout(rule, context, 0);
     }
@@ -1420,8 +1420,8 @@ return ruleRegistry.getIndexBypassThreshold();
    * @return 触发的规则结果列表（按严重度倒序）
    * @since 1.0.0
    */
-  private List<RuleResult> evaluateInParallel(
-      List<Rule> candidateRules, RuleContext context, String scenario) {
+  private List<RuleResultVO> evaluateInParallel(
+      List<Rule> candidateRules, RuleContextVO context, String scenario) {
     String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
     if (log.isDebugEnabled()) {
       log.debug(
@@ -1429,7 +1429,7 @@ return ruleRegistry.getIndexBypassThreshold();
           candidateRules.size(),
           parallelThreshold);
     }
-    List<RuleResult> results =
+    List<RuleResultVO> results =
         parallelEvaluator.evaluateParallel(
             candidateRules,
             context,
@@ -1461,11 +1461,11 @@ return ruleRegistry.getIndexBypassThreshold();
    * @param context 规则上下文
    * @param scenario 业务场景
    * @param traceId MDC traceId（用于工作线程传播）
-   * @return 已触发的 RuleResult；未触发/被熔断返回 null
+   * @return 已触发的 RuleResultVO；未触发/被熔断返回 null
    * @since 1.0.0
    */
-  private RuleResult evaluateSingleRule(
-      Rule rule, RuleContext context, String scenario, String traceId) {
+  private RuleResultVO evaluateSingleRule(
+      Rule rule, RuleContextVO context, String scenario, String traceId) {
     return withMdcTraceId(
         traceId,
         () -> {
@@ -1568,7 +1568,7 @@ return ruleRegistry.getIndexBypassThreshold();
   }
 
   /**
-   * 记录统计（实现 {@link StatsRecorder}）
+   * 记录统计（实现 {@link StatsRecorderVO}）
    *
    * <p>委托给 {@link RuleStatistics} 组件，保持向后兼容。
    *

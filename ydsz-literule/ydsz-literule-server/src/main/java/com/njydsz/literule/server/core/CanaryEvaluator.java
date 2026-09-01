@@ -3,9 +3,9 @@ package com.njydsz.literule.server.core;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 灰度评估器
@@ -48,18 +48,18 @@ public class CanaryEvaluator {
      * <ul>
      *   <li>canaryEnabled = true
      *   <li>canaryRouter 已注入
-     *   <li>规则暴露了 RuleDefinition（即 {@code rule.getRuleDefinition()} 非空）
+     *   <li>规则暴露了 RuleDefinitionDTO（即 {@code rule.getRuleDefinition()} 非空）
      *   <li>canaryRatio > 0 且配置了候选表达式（条件或严重度）
      * </ul>
      *
      * @param rule 规则
      * @return 灰度定义；不满足条件返回 null
      */
-    public RuleDefinition resolveCanaryDefinition(Rule rule) {
+    public RuleDefinitionDTO resolveCanaryDefinition(Rule rule) {
         if (!canaryEnabled || canaryRouter == null) {
             return null;
         }
-        RuleDefinition def = rule.getRuleDefinition();
+        RuleDefinitionDTO def = rule.getRuleDefinition();
         if (def == null || def.getCanaryRatio() <= 0) {
             return null;
         }
@@ -76,7 +76,7 @@ public class CanaryEvaluator {
      * @param context 评估上下文
      * @return true 表示路由到灰度版本
      */
-    public boolean shouldRouteToCanary(RuleDefinition canaryDef, RuleContext context) {
+    public boolean shouldRouteToCanary(RuleDefinitionDTO canaryDef, RuleContextVO context) {
         return canaryRouter.shouldRouteToCanary(canaryDef, context);
     }
 
@@ -86,7 +86,7 @@ public class CanaryEvaluator {
      * @param canaryDef 灰度定义
      * @return 灰度候选规则
      */
-    public Rule buildCanaryRule(RuleDefinition canaryDef) {
+    public Rule buildCanaryRule(RuleDefinitionDTO canaryDef) {
         return canaryRouter.buildCanaryRule(canaryDef);
     }
 
@@ -95,7 +95,7 @@ public class CanaryEvaluator {
      *
      * @param result 评估结果
      */
-    public void markCanary(RuleResult result) {
+    public void markCanary(RuleResultVO result) {
         canaryRouter.markCanary(result);
     }
 

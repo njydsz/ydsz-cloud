@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.DecisionTreeDefinition;
+import com.njydsz.literule.domain.dto.DecisionTreeDefinitionDTO;
 
 /**
  * 决策树配置提供者接口（SPI）
@@ -19,14 +19,14 @@ public interface DecisionTreeConfigProvider {
    *
    * @return 启用的决策树列表
    */
-  List<DecisionTreeDefinition> loadEnabledTrees();
+  List<DecisionTreeDefinitionDTO> loadEnabledTrees();
 
   /**
    * 加载全部决策树（含禁用）
    *
    * @return 全部决策树列表
    */
-  List<DecisionTreeDefinition> loadAllTrees();
+  List<DecisionTreeDefinitionDTO> loadAllTrees();
 
   /**
    * 保存决策树
@@ -35,7 +35,7 @@ public interface DecisionTreeConfigProvider {
    * @param operator 操作人
    * @return 保存后的定义
    */
-  DecisionTreeDefinition save(DecisionTreeDefinition definition, String operator);
+  DecisionTreeDefinitionDTO save(DecisionTreeDefinitionDTO definition, String operator);
 
   /**
    * 切换启停
@@ -52,7 +52,7 @@ public interface DecisionTreeConfigProvider {
    * @param ruleCode 规则编码
    * @return 决策树定义；不存在返回 null
    */
-  DecisionTreeDefinition findByCode(String ruleCode);
+  DecisionTreeDefinitionDTO findByCode(String ruleCode);
 
   /**
    * 删除决策树

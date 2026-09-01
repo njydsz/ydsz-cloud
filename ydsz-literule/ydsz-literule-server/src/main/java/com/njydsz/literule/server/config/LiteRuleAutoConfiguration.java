@@ -1489,7 +1489,7 @@ public class LiteRuleAutoConfiguration {
    * 提供规则退役检测、回滚预览、一键退役等生命周期管理能力。
    *
    * <p>退役检测基于规则执行统计（{@link RuleEngine#getStats()}）， 自动识别休眠规则、高错误率规则、长期停用规则和低影响规则， 生成 {@link
-   * com.njydsz.literule.domain.vo.RetirementSuggestion} 建议列表。
+   * com.njydsz.literule.domain.vo.RetirementSuggestionVO} 建议列表。
    *
    * <p>可通过 {@code ydsz.literule.lifecycle.enabled=false} 关闭。
    *

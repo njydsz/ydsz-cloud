@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.vo.RuleExecutionTrace;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.server.spi.TraceRecorder;
 
 /**
@@ -36,7 +36,7 @@ import com.njydsz.literule.server.spi.TraceRecorder;
 @Slf4j
 public class AsyncTraceRecorder implements TraceRecorder {
 
-  private final BlockingQueue<RuleExecutionTrace> queue;
+  private final BlockingQueue<RuleExecutionTraceVO> queue;
   private final int batchSize;
   private final long flushIntervalMs;
   private final AtomicBoolean running = new AtomicBoolean(true);
@@ -79,7 +79,7 @@ public class AsyncTraceRecorder implements TraceRecorder {
   }
 
   @Override
-  public void record(RuleExecutionTrace trace) {
+  public void record(RuleExecutionTraceVO trace) {
     if (!running.get()) {
       log.debug("[LiteRule-Trace] 记录器已关闭，丢弃轨迹: ruleCode={}", trace.getRuleCode());
       return;
@@ -93,24 +93,24 @@ public class AsyncTraceRecorder implements TraceRecorder {
   }
 
   @Override
-  public void recordBatch(List<RuleExecutionTrace> traces) {
-    for (RuleExecutionTrace trace : traces) {
+  public void recordBatch(List<RuleExecutionTraceVO> traces) {
+    for (RuleExecutionTraceVO trace : traces) {
       record(trace);
     }
   }
 
   @Override
-  public List<RuleExecutionTrace> getByTraceId(String traceId) {
+  public List<RuleExecutionTraceVO> getByTraceId(String traceId) {
     return delegate != null ? delegate.getByTraceId(traceId) : Collections.emptyList();
   }
 
   @Override
-  public List<RuleExecutionTrace> getByRuleCode(String ruleCode, int limit) {
+  public List<RuleExecutionTraceVO> getByRuleCode(String ruleCode, int limit) {
     return delegate != null ? delegate.getByRuleCode(ruleCode, limit) : Collections.emptyList();
   }
 
   @Override
-  public List<RuleExecutionTrace> getRecentTraces(int limit) {
+  public List<RuleExecutionTraceVO> getRecentTraces(int limit) {
     return delegate != null ? delegate.getRecentTraces(limit) : Collections.emptyList();
   }
 
@@ -151,10 +151,10 @@ public class AsyncTraceRecorder implements TraceRecorder {
 
   /** 后台刷新循环 */
   private void flushLoop() {
-    List<RuleExecutionTrace> batch = new ArrayList<>(batchSize);
+    List<RuleExecutionTraceVO> batch = new ArrayList<>(batchSize);
     while (running.get() || !queue.isEmpty()) {
       try {
-        RuleExecutionTrace first = queue.poll(flushIntervalMs, TimeUnit.MILLISECONDS);
+        RuleExecutionTraceVO first = queue.poll(flushIntervalMs, TimeUnit.MILLISECONDS);
         if (first == null) {
           continue;
         }
@@ -175,7 +175,7 @@ public class AsyncTraceRecorder implements TraceRecorder {
   }
 
   /** 刷新一批到委托 */
-  private void flushBatch(List<RuleExecutionTrace> batch) {
+  private void flushBatch(List<RuleExecutionTraceVO> batch) {
     if (delegate == null) {
       // 无委托：仅清空队列（不入库）
       return;

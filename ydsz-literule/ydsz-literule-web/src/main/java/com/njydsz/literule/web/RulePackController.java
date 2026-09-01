@@ -30,7 +30,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.vo.RulePack;
+import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
 import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
@@ -181,7 +181,7 @@ public class RulePackController {
   @RateLimit(resource = "literule.rule_pack.publishPack", threshold = 50)
   @PostMapping("/packs")
   public YdszResponse<RulePackVO> publishPack(
-      @Valid @RequestBody RulePack pack,
+      @Valid @RequestBody RulePackVO pack,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
         LiteruleWebConverter.INSTANCE.entityToVO(rulePackProvider.publish(pack, operator)));

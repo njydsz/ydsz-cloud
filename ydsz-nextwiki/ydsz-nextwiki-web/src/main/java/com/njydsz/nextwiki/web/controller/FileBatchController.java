@@ -49,7 +49,7 @@ import com.njydsz.nextwiki.server.service.VersionDiffService;
  * <h3>核心能力</h3>
  *
  * <ul>
- *   <li>批量操作：批量删除 / 批量移动，统一返回 {@link FileApplicationService.BatchResult}（含成功/失败明细）
+ *   <li>批量操作：批量删除 / 批量移动，统一返回 {@link FileApplicationService.BatchResultDTO}（含成功/失败明细）
  *   <li>版本管理：版本历史查询（按版本号倒序）、回滚到指定版本（保留历史，新增回滚记录）
  *   <li>个性化：切换文件星标状态，便于"我的星标"视图聚合展示
  * </ul>
@@ -107,7 +107,7 @@ public class FileBatchController {
   /**
    * 批量删除文件/文件夹（移入回收站）。
    *
-   * <p>返回每条的处理结果（成功/失败原因），由前端根据 {@link FileApplicationService.BatchResult} 展示。
+   * <p>返回每条的处理结果（成功/失败原因），由前端根据 {@link FileApplicationService.BatchResultDTO} 展示。
    *
    * @param nodeIds 节点 ID 列表
    * @param userId 当前用户 ID
@@ -122,11 +122,11 @@ public class FileBatchController {
   @PostMapping("/batch/delete")
   @Operation(summary = "批量删除")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
-  public YdszResponse<FileApplicationService.BatchResult> batchDelete(
+  public YdszResponse<FileApplicationService.BatchResultDTO> batchDelete(
       @RequestBody List<String> nodeIds,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    FileApplicationService.BatchResult result = fileApplicationService.batchDelete(nodeIds, userId);
+    FileApplicationService.BatchResultDTO result = fileApplicationService.batchDelete(nodeIds, userId);
     return YdszResponse.success(result);
   }
 
@@ -148,11 +148,11 @@ public class FileBatchController {
   @PostMapping("/batch/move")
   @Operation(summary = "批量移动")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
-  public YdszResponse<FileApplicationService.BatchResult> batchMove(
+  public YdszResponse<FileApplicationService.BatchResultDTO> batchMove(
       @Valid @RequestBody NextwikiDTOs.BatchMoveRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    FileApplicationService.BatchResult result =
+    FileApplicationService.BatchResultDTO result =
         fileApplicationService.batchMove(request.getNodeIds(), request.getTargetParentId(), userId);
     return YdszResponse.success(result);
   }

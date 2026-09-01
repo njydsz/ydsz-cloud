@@ -15,7 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * 规则操作审计日志服务（P3-5 RBAC 与审计日志）
@@ -76,7 +76,7 @@ public class RuleAuditLogService {
    * @param operator 参数说明
    * @param source 参数说明
    */
-  public void logCreate(RuleDefinition def, String operator, String source) {
+  public void logCreate(RuleDefinitionDTO def, String operator, String source) {
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(def.getCode())
@@ -99,8 +99,8 @@ public class RuleAuditLogService {
       * @param oldDef 参数说明
    */
   public void logUpdate(
-      RuleDefinition oldDef,
-      RuleDefinition newDef,
+      RuleDefinitionDTO oldDef,
+      RuleDefinitionDTO newDef,
       String operator,
       String source,
       String changeDesc) {
@@ -378,7 +378,7 @@ public class RuleAuditLogService {
     }
   }
 
-  private Map<String, Object> toSnapshot(RuleDefinition def) {
+  private Map<String, Object> toSnapshot(RuleDefinitionDTO def) {
     if (def == null) {
       return Collections.emptyMap();
     }
@@ -402,7 +402,7 @@ public class RuleAuditLogService {
     return snapshot;
   }
 
-  private Map<String, FieldDiff> computeFieldDiff(RuleDefinition oldDef, RuleDefinition newDef) {
+  private Map<String, FieldDiff> computeFieldDiff(RuleDefinitionDTO oldDef, RuleDefinitionDTO newDef) {
     Map<String, FieldDiff> diffs = new LinkedHashMap<>();
     if (oldDef == null || newDef == null) {
       return diffs;

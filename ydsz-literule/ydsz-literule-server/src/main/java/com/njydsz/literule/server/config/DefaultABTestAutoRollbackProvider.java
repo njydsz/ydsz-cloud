@@ -8,7 +8,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.repository.ABTestRepository;
 import com.njydsz.literule.domain.repository.RuleExecutionTraceRepository;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
@@ -191,7 +191,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
   @Override
   public RuleABRollbackVO manualRollback(String ruleCode, String operator, String reason) {
     // 回滚到上一个稳定版本（当前版本 - 1）
-    RuleDefinition current = ruleAdminService.getByCode(ruleCode);
+    RuleDefinitionDTO current = ruleAdminService.getByCode(ruleCode);
     if (current == null) {
       throw new IllegalStateException("人工回滚失败：规则不存在，ruleCode=" + ruleCode);
     }

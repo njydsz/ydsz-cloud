@@ -7,7 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
@@ -135,7 +135,7 @@ public class RulePermissionChecker {
       // 无 configProvider 时降级为全目录权限校验
       return hasPermission(permission, null, operator);
     }
-    RuleDefinition def = configProvider.findByCode(ruleCode);
+    RuleDefinitionDTO def = configProvider.findByCode(ruleCode);
     if (def == null) {
       // 规则不存在，按全目录权限校验（新建规则场景）
       return hasPermission(permission, null, operator);

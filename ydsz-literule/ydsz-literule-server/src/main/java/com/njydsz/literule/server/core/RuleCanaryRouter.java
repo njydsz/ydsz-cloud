@@ -11,21 +11,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.dto.RuleDefinition;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 /**
  * 规则灰度路由器
  *
- * <p>当 {@link RuleDefinition#getCanaryRatio()} > 0 时，按比例将流量分到候选版本。
+ * <p>当 {@link RuleDefinitionDTO#getCanaryRatio()} > 0 时，按比例将流量分到候选版本。
  *
  * <p>分流策略（双重过滤）：
  *
  * <ol>
- *   <li>条件过滤：若 {@link RuleDefinition#getCanaryConditions()} 非空， 则需全部条件表达式求值为 true 才进入候选桶
+ *   <li>条件过滤：若 {@link RuleDefinitionDTO#getCanaryConditions()} 非空， 则需全部条件表达式求值为 true 才进入候选桶
  *   <li>比例分桶：通过 traceId 哈希 + 随机数，按 canaryRatio 比例决定是否进入候选桶
  * </ol>
  *
@@ -62,7 +62,7 @@ public class RuleCanaryRouter {
    * @param context 上下文
    * @return true=进入候选桶；false=走主版本
    */
-  public boolean shouldRouteToCanary(RuleDefinition definition, RuleContext context) {
+  public boolean shouldRouteToCanary(RuleDefinitionDTO definition, RuleContextVO context) {
     if (definition == null || definition.getCanaryRatio() <= 0) {
       return false;
     }
@@ -101,8 +101,8 @@ public class RuleCanaryRouter {
    * @param original 原始规则定义
    * @return 候选版本定义
    */
-  public RuleDefinition buildCanaryDefinition(RuleDefinition original) {
-    return RuleDefinition.builder()
+  public RuleDefinitionDTO buildCanaryDefinition(RuleDefinitionDTO original) {
+    return RuleDefinitionDTO.builder()
         .code(original.getCode())
         .name(original.getName() + " [CANARY]")
         .category(original.getCategory())
@@ -130,30 +130,30 @@ public class RuleCanaryRouter {
   /**
    * 评估候选版本（构造临时 ExpressionRule 并执行）
    *
-   * <p>结果会被标记 {@link RuleResult#isCanary()} = true，canaryBucket = "CANARY"。 由 {@link
+   * <p>结果会被标记 {@link RuleResultVO#isCanary()} = true，canaryBucket = "CANARY"。 由 {@link
    * DefaultRuleEngine} 在确定进入灰度桶后调用。
    *
    * @param original 原始规则定义
    * @param context 规则上下文
    * @return 候选版本评估结果（不会返回 null）
    */
-  public RuleResult evaluateCanary(RuleDefinition original, RuleContext context) {
-    RuleDefinition canaryDef = buildCanaryDefinition(original);
+  public RuleResultVO evaluateCanary(RuleDefinitionDTO original, RuleContextVO context) {
+    RuleDefinitionDTO canaryDef = buildCanaryDefinition(original);
     ExpressionRule canaryRule = new ExpressionRule(canaryDef, evaluator);
-    RuleResult result;
+    RuleResultVO result;
     try {
       result = canaryRule.evaluate(context);
     } catch (Exception e) {
       log.warn("[LiteRule-Canary] 候选版本评估异常 ruleCode={}: {}", original.getCode(), e.getMessage());
       result =
-          RuleResult.builder()
+          RuleResultVO.builder()
               .ruleCode(original.getCode())
               .triggered(false)
               .description("灰度候选版本评估异常: " + e.getMessage())
               .build();
     }
     if (result == null) {
-      result = RuleResult.notTriggered(original.getCode());
+      result = RuleResultVO.notTriggered(original.getCode());
     }
     result.setCanary(true);
     result.setCanaryBucket("CANARY");
@@ -167,7 +167,7 @@ public class RuleCanaryRouter {
    * @return 候选版本 Rule
    * @since 1.0.0
    */
-  public Rule buildCanaryRule(RuleDefinition original) {
+  public Rule buildCanaryRule(RuleDefinitionDTO original) {
     return new ExpressionRule(buildCanaryDefinition(original), evaluator);
   }
 
@@ -176,7 +176,7 @@ public class RuleCanaryRouter {
    *
    * @param result 候选版本结果
    */
-  public void markCanary(RuleResult result) {
+  public void markCanary(RuleResultVO result) {
     if (result != null) {
       result.setCanary(true);
       result.setCanaryBucket("CANARY");

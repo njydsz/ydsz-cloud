@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RuleResult implements Serializable {
+public class RuleResultVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -89,24 +89,24 @@ public class RuleResult implements Serializable {
    * COLLECT/RULE_ORDER 命中策略下收集的全部匹配行结果
    *
    * <p>仅当决策表采用 {@link HitPolicy#COLLECT} 或 {@link HitPolicy#RULE_ORDER} 策略且命中多行时填充。主结果（{@code
-   * severity/title/description}）取首条 匹配行，其余匹配行以独立 {@link RuleResult} 形式存入此列表，保留命中顺序。
+   * severity/title/description}）取首条 匹配行，其余匹配行以独立 {@link RuleResultVO} 形式存入此列表，保留命中顺序。
    *
    * <p>对于单结果策略（UNIQUE/FIRST/PRIORITY/ANY），此字段为空列表。
    *
    * @since 1.0.0
    */
-  @Builder.Default private List<RuleResult> collectedResults = Collections.emptyList();
+  @Builder.Default private List<RuleResultVO> collectedResults = Collections.emptyList();
 
   /**
    * 追加一个收集结果（用于 COLLECT/RULE_ORDER 策略）
    *
    * @param result 单行匹配结果
    */
-  public void addCollectedResult(RuleResult result) {
+  public void addCollectedResult(RuleResultVO result) {
     if (result == null) {
       return;
     }
-    if (collectedResults == null || collectedResults == Collections.<RuleResult>emptyList()) {
+    if (collectedResults == null || collectedResults == Collections.<RuleResultVO>emptyList()) {
       collectedResults = new ArrayList<>();
     }
     collectedResults.add(result);
@@ -126,7 +126,7 @@ public class RuleResult implements Serializable {
    *
    * @return 收集结果列表；无收集时返回空列表
    */
-  public List<RuleResult> getCollectedResultsOrEmpty() {
+  public List<RuleResultVO> getCollectedResultsOrEmpty() {
     return collectedResults == null ? Collections.emptyList() : collectedResults;
   }
 
@@ -144,10 +144,10 @@ public class RuleResult implements Serializable {
    * 快速构建未触发结果
    *
    * @param ruleCode 规则编码
-   * @return 未触发的 RuleResult
+   * @return 未触发的 RuleResultVO
    */
-  public static RuleResult notTriggered(String ruleCode) {
-    return RuleResult.builder()
+  public static RuleResultVO notTriggered(String ruleCode) {
+    return RuleResultVO.builder()
         .ruleCode(ruleCode)
         .triggered(false)
         .triggeredAt(LocalDateTime.now())
@@ -163,16 +163,16 @@ public class RuleResult implements Serializable {
    * @param severity 严重度
    * @param title 标题
    * @param description 描述
-   * @return 已触发的 RuleResult
+   * @return 已触发的 RuleResultVO
    */
-  public static RuleResult triggered(
+  public static RuleResultVO triggered(
       String ruleCode,
       String ruleName,
       String category,
       RuleSeverity severity,
       String title,
       String description) {
-    return RuleResult.builder()
+    return RuleResultVO.builder()
         .ruleCode(ruleCode)
         .ruleName(ruleName)
         .category(category)

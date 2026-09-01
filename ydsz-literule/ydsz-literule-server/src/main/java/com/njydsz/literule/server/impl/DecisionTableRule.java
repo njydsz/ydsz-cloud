@@ -9,11 +9,11 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.DecisionTableDefinition;
+import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.enums.HitPolicy;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 
@@ -41,10 +41,10 @@ public class DecisionTableRule implements Rule {
   /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
-  private final DecisionTableDefinition definition;
+  private final DecisionTableDefinitionDTO definition;
   private final ExpressionEngine evaluator;
 
-  public DecisionTableRule(DecisionTableDefinition definition, ExpressionEngine evaluator) {
+  public DecisionTableRule(DecisionTableDefinitionDTO definition, ExpressionEngine evaluator) {
     this.definition = definition;
     this.evaluator = evaluator;
   }
@@ -75,11 +75,11 @@ public class DecisionTableRule implements Rule {
   }
 
   @Override
-  public RuleResult evaluate(RuleContext context) {
+  public RuleResultVO evaluate(RuleContextVO context) {
     long start = System.nanoTime();
     try {
-      List<DecisionTableDefinition.Row> matchedRows = new ArrayList<>();
-      for (DecisionTableDefinition.Row row : definition.getRows()) {
+      List<DecisionTableDefinitionDTO.Row> matchedRows = new ArrayList<>();
+      for (DecisionTableDefinitionDTO.Row row : definition.getRows()) {
         if (row.getConditions() == null || row.getConditions().isEmpty()) {
           matchedRows.add(row);
           continue;
@@ -102,7 +102,7 @@ public class DecisionTableRule implements Rule {
       // 无命中：使用默认动作；若无默认动作则返回未触发
       if (matchedRows.isEmpty()) {
         if (definition.getDefaultActions() == null || definition.getDefaultActions().isEmpty()) {
-          return RuleResult.builder()
+          return RuleResultVO.builder()
               .ruleCode(getCode())
               .ruleName(getName())
               .category(getCategory())
@@ -123,7 +123,7 @@ public class DecisionTableRule implements Rule {
             "[LiteRule-DecisionTable] 决策表 {} UNIQUE 策略命中多行: count={}",
             getCode(),
             matchedRows.size());
-        return RuleResult.builder()
+        return RuleResultVO.builder()
             .ruleCode(getCode())
             .ruleName(getName())
             .category(getCategory())
@@ -135,28 +135,28 @@ public class DecisionTableRule implements Rule {
       }
 
       // 按策略挑选
-      DecisionTableDefinition.Row chosen;
+      DecisionTableDefinitionDTO.Row chosen;
       if (policy == HitPolicy.PRIORITY) {
         chosen =
             matchedRows.stream()
-                .min(Comparator.comparingInt(DecisionTableDefinition.Row::getPriority))
+                .min(Comparator.comparingInt(DecisionTableDefinitionDTO.Row::getPriority))
                 .orElse(matchedRows.get(0));
       } else if (policy == HitPolicy.COLLECT) {
         // COLLECT 策略：按优先级升序排序，主结果取首条，
-        // 其余匹配行作为独立 RuleResult 收集到 collectedResults
-        List<DecisionTableDefinition.Row> sorted = new ArrayList<>(matchedRows);
-        sorted.sort(Comparator.comparingInt(DecisionTableDefinition.Row::getPriority));
+        // 其余匹配行作为独立 RuleResultVO 收集到 collectedResults
+        List<DecisionTableDefinitionDTO.Row> sorted = new ArrayList<>(matchedRows);
+        sorted.sort(Comparator.comparingInt(DecisionTableDefinitionDTO.Row::getPriority));
         chosen = sorted.get(0);
-        RuleResult mainResult = buildResultFromActions(chosen.getActions(), start);
+        RuleResultVO mainResult = buildResultFromActions(chosen.getActions(), start);
         mainResult.setCollectedResults(buildCollectedResults(sorted, start));
         // 兼容下游：actions 中保留 _matchedCount 供旧消费者使用
         mainResult.setDescription(appendCollectInfo(mainResult.getDescription(), sorted.size()));
         return mainResult;
       } else if (policy == HitPolicy.RULE_ORDER) {
         // RULE_ORDER 策略：按行在表中的出现顺序，主结果取首条，
-        // 其余匹配行作为独立 RuleResult 收集到 collectedResults
+        // 其余匹配行作为独立 RuleResultVO 收集到 collectedResults
         chosen = matchedRows.get(0);
-        RuleResult mainResult = buildResultFromActions(chosen.getActions(), start);
+        RuleResultVO mainResult = buildResultFromActions(chosen.getActions(), start);
         mainResult.setCollectedResults(buildCollectedResults(matchedRows, start));
         mainResult.setDescription(
             appendCollectInfo(mainResult.getDescription(), matchedRows.size()));
@@ -172,7 +172,7 @@ public class DecisionTableRule implements Rule {
       return buildResultFromActions(actions, start);
     } catch (Exception e) {
       log.warn("[LiteRule-DecisionTable] 决策表 {} 评估异常: {}", getCode(), e.getMessage());
-      return RuleResult.builder()
+      return RuleResultVO.builder()
           .ruleCode(getCode())
           .triggered(false)
           .description("评估异常: " + e.getMessage())
@@ -194,7 +194,7 @@ public class DecisionTableRule implements Rule {
    *   <li>{@code currentValue} — 当前值（参考）
    * </ul>
    */
-  private RuleResult buildResultFromActions(Map<String, Object> actions, long startNano) {
+  private RuleResultVO buildResultFromActions(Map<String, Object> actions, long startNano) {
     String severityCode =
         actions.get("severity") == null ? "INFO" : String.valueOf(actions.get("severity"));
     RuleSeverity severity = RuleSeverity.fromCode(severityCode);
@@ -208,7 +208,7 @@ public class DecisionTableRule implements Rule {
     String currentValue =
         actions.get("currentValue") == null ? null : String.valueOf(actions.get("currentValue"));
 
-    return RuleResult.builder()
+    return RuleResultVO.builder()
         .ruleCode(getCode())
         .ruleName(getName())
         .category(getCategory())
@@ -232,16 +232,16 @@ public class DecisionTableRule implements Rule {
   /**
    * 构建 COLLECT/RULE_ORDER 策略的全部匹配行结果列表
    *
-   * <p>每行独立构建一个 {@link RuleResult}，保留行优先级与动作信息， 主结果（列表首项）与外层返回的主结果内容一致。
+   * <p>每行独立构建一个 {@link RuleResultVO}，保留行优先级与动作信息， 主结果（列表首项）与外层返回的主结果内容一致。
    *
    * @param matchedRows 已按策略排序的匹配行
    * @param startNano 评估起始纳秒时间
    * @return 匹配行结果列表（至少 1 项）
    */
-  private List<RuleResult> buildCollectedResults(
-      List<DecisionTableDefinition.Row> matchedRows, long startNano) {
-    List<RuleResult> results = new ArrayList<>(matchedRows.size());
-    for (DecisionTableDefinition.Row row : matchedRows) {
+  private List<RuleResultVO> buildCollectedResults(
+      List<DecisionTableDefinitionDTO.Row> matchedRows, long startNano) {
+    List<RuleResultVO> results = new ArrayList<>(matchedRows.size());
+    for (DecisionTableDefinitionDTO.Row row : matchedRows) {
       results.add(buildResultFromActions(row.getActions(), startNano));
     }
     return results;
@@ -259,7 +259,7 @@ public class DecisionTableRule implements Rule {
     return (description == null || description.isEmpty()) ? info : description + " " + info;
   }
 
-  public DecisionTableDefinition getDefinition() {
+  public DecisionTableDefinitionDTO getDefinition() {
     return definition;
   }
 }

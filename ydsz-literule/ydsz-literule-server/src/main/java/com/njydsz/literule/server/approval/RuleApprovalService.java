@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.dto.post.ApprovalRecordSaveDTO;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
@@ -248,7 +248,7 @@ public class RuleApprovalService {
       requireNonBlank(ruleCode, "ruleCode");
       requireNonBlank(operator, "operator");
 
-      RuleDefinition def = loadRule(ruleCode);
+      RuleDefinitionDTO def = loadRule(ruleCode);
       RuleStatus current = parseStatus(def.getStatus());
       ApprovalFlow flow = resolveFlow(flowCode);
 
@@ -373,7 +373,7 @@ public class RuleApprovalService {
       // 当前级别通过，进入下一级
       record.getCurrentLevelApprovedApprovers().clear();
       int nextLevel = record.getCurrentLevel() + 1;
-      RuleDefinition def = loadRule(ruleCode);
+      RuleDefinitionDTO def = loadRule(ruleCode);
 
       if (nextLevel > flow.maxLevel()) {
         // 全部级别通过，发布规则
@@ -464,7 +464,7 @@ public class RuleApprovalService {
               .timestamp(LocalDateTime.now())
               .build());
 
-      RuleDefinition def = loadRule(ruleCode);
+      RuleDefinitionDTO def = loadRule(ruleCode);
       int currentLevel = record.getCurrentLevel();
 
       if (currentLevel <= 1) {
@@ -605,7 +605,7 @@ public class RuleApprovalService {
       record.getCurrentLevelApprovedApprovers().clear();
 
       // 规则状态回退到 DRAFT
-      RuleDefinition def = loadRule(ruleCode);
+      RuleDefinitionDTO def = loadRule(ruleCode);
       RuleStatus currentStatus = parseStatus(def.getStatus());
       if (currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
         updateRuleStatus(def, RuleStatus.DRAFT, operator, "撤回审核");
@@ -703,8 +703,8 @@ public class RuleApprovalService {
   }
 
   /** 加载规则定义 */
-  private RuleDefinition loadRule(String ruleCode) {
-    RuleDefinition def = configProvider.findByCode(ruleCode);
+  private RuleDefinitionDTO loadRule(String ruleCode) {
+    RuleDefinitionDTO def = configProvider.findByCode(ruleCode);
     if (def == null) {
       throw new IllegalArgumentException("规则不存在: " + ruleCode);
     }
@@ -898,7 +898,7 @@ public class RuleApprovalService {
 
   /** 更新规则状态 */
   private void updateRuleStatus(
-      RuleDefinition def, RuleStatus target, String operator, String changeDesc) {
+      RuleDefinitionDTO def, RuleStatus target, String operator, String changeDesc) {
     RuleStatus current = RuleStatus.fromCode(def.getStatus());
     if (current != null && !current.canTransitionTo(target)) {
       throw new IllegalStateException(

@@ -14,8 +14,8 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.cache.stats.CacheStats;
-import com.njydsz.literule.domain.vo.RuleContext;
-import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 评估结果缓存（P1-1 高性能优化 - 基于 Caffeine）
@@ -57,13 +57,13 @@ import com.njydsz.literule.domain.vo.RuleResult;
  * EvaluationResultCache cache = new EvaluationResultCache(300_000L, 10_000);
  *
  * // 尝试获取缓存
- * List&lt;RuleResult&gt; cached = cache.get(context);
+ * List&lt;RuleResultVO&gt; cached = cache.get(context);
  * if (cached != null) {
  *     return cached;  // 缓存命中
  * }
  *
  * // 缓存未命中，执行评估
- * List&lt;RuleResult&gt; results = engine.evaluate(context);
+ * List&lt;RuleResultVO&gt; results = engine.evaluate(context);
  * cache.put(context, results);  // 写入缓存
  * </pre>
  *
@@ -83,7 +83,7 @@ public class EvaluationResultCache {
   public static final int DEFAULT_MAX_SIZE = 10_000;
 
   /** 缓存实例（基于 ydsz-common-cache 实现） */
-  private final Cache<String, List<RuleResult>> cache;
+  private final Cache<String, List<RuleResultVO>> cache;
 
   /**
    * 规则编码 → 涉及该规则的缓存键集合（P1 精准失效反向索引）
@@ -106,8 +106,8 @@ public class EvaluationResultCache {
   public EvaluationResultCache(long ttlMs, int maxSize) {
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 使用 ydsz-common-cache 替代 Caffeine
     // 显式类型见证：javac 对链式泛型方法调用无法从赋值目标推断 K/V
-    CacheBuilder<String, List<RuleResult>> builder =
-        YdszCache.<String, List<RuleResult>>newBuilder()
+    CacheBuilder<String, List<RuleResultVO>> builder =
+        YdszCache.<String, List<RuleResultVO>>newBuilder()
             .maximumSize(maxSize > 0 ? maxSize : -1)
             .recordStats();
     if (ttlMs > 0) {
@@ -127,9 +127,9 @@ public class EvaluationResultCache {
    * @param context 规则上下文
    * @return 缓存的评估结果；未命中或已过期返回空列表
    */
-  public List<RuleResult> get(RuleContext context) {
+  public List<RuleResultVO> get(RuleContextVO context) {
     String key = buildCacheKey(context);
-    List<RuleResult> result = cache.getIfPresent(key);
+    List<RuleResultVO> result = cache.getIfPresent(key);
     if (result == null) {
       return Collections.emptyList();
     }
@@ -143,15 +143,15 @@ public class EvaluationResultCache {
    * @param context 规则上下文
    * @param results 评估结果
    */
-  public void put(RuleContext context, List<RuleResult> results) {
+  public void put(RuleContextVO context, List<RuleResultVO> results) {
     if (results == null) {
       return;
     }
     String key = buildCacheKey(context);
-    List<RuleResult> immutableResults = Collections.unmodifiableList(new ArrayList<>(results));
+    List<RuleResultVO> immutableResults = Collections.unmodifiableList(new ArrayList<>(results));
     cache.put(key, immutableResults);
     // P1 精准失效：建立 ruleCode → cacheKey 反向索引
-    for (RuleResult result : results) {
+    for (RuleResultVO result : results) {
       if (result.getRuleCode() != null) {
         ruleToCacheKeys
             .computeIfAbsent(result.getRuleCode(), k -> ConcurrentHashMap.newKeySet())
@@ -274,7 +274,7 @@ public class EvaluationResultCache {
    * @param context 规则上下文
    * @return 缓存键
    */
-  private String buildCacheKey(RuleContext context) {
+  private String buildCacheKey(RuleContextVO context) {
     return CacheKeyBuilder.buildKey(context);
   }
 }
