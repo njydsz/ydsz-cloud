@@ -20,6 +20,12 @@ import java.util.List;
  */
 public interface Retriever {
 
+  /** 默认返回条数 */
+  int DEFAULT_TOP_K = 5;
+
+  /** 默认相关性分数阈值 */
+  double DEFAULT_SCORE_THRESHOLD = 0.7;
+
   /**
    * 检索相关文本块。
    *
@@ -37,6 +43,6 @@ public interface Retriever {
    * @return 检索到的文本块列表
    */
   default List<TextChunk> retrieve(String query) {
-    return retrieve(query, 5, 0.7);
+    return retrieve(query, DEFAULT_TOP_K, DEFAULT_SCORE_THRESHOLD);
   }
 }

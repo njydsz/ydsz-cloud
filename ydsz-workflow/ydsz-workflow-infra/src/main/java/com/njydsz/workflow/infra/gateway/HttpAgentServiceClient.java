@@ -34,6 +34,12 @@ import com.njydsz.workflow.domain.gateway.AgentServiceClient;
 @ConditionalOnMissingBean(AgentServiceClient.class)
 public class HttpAgentServiceClient implements AgentServiceClient {
 
+  /** 无法从回复内容推断语义时的默认置信度 */
+  private static final double DEFAULT_CONFIDENCE = 0.5;
+
+  /** 依据关键词判定通过/拒绝后的置信度 */
+  private static final double KEYWORD_CONFIDENCE = 0.85;
+
   /** HTTP 客户端 */
   private final RestTemplate restTemplate;
 
@@ -105,16 +111,16 @@ public class HttpAgentServiceClient implements AgentServiceClient {
 
     boolean approve = false;
     String reason = content != null ? content : "";
-    double confidence = 0.5;
+    double confidence = DEFAULT_CONFIDENCE;
 
     if (content != null) {
       String lower = content.toLowerCase();
       if (lower.contains("approve") || lower.contains("通过") || lower.contains("同意")) {
         approve = true;
-        confidence = 0.85;
+        confidence = KEYWORD_CONFIDENCE;
       } else if (lower.contains("reject") || lower.contains("拒绝") || lower.contains("驳回")) {
         approve = false;
-        confidence = 0.85;
+        confidence = KEYWORD_CONFIDENCE;
       }
     }
 

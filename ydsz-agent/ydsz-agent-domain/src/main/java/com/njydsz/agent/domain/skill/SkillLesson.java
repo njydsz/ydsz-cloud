@@ -172,6 +172,9 @@ public final class SkillLesson {
     }
 
     public static final class Builder {
+
+      /** 默认置信度（0-100） */
+      private static final int DEFAULT_CONFIDENCE = 50;
         private String lessonId;
         private String tenantId;
         private String skillCode;
@@ -182,7 +185,7 @@ public final class SkillLesson {
         private String scenario;
         private String action;
         private String result;
-        private int confidence = 50;
+        private int confidence = DEFAULT_CONFIDENCE;
         private int usageCount = 0;
         private String sourceExecutionId;
         private LocalDateTime createdAt;

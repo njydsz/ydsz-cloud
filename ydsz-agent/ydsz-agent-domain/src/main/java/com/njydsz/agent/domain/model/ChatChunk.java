@@ -16,6 +16,9 @@ import java.util.Objects;
  */
 public final class ChatChunk implements Serializable {
 
+  /** toString 内容截断长度 */
+  private static final int TO_STRING_TRUNCATE_LEN = 50;
+
   private static final long serialVersionUID = 1L;
 
   private final String id;
@@ -164,8 +167,8 @@ public final class ChatChunk implements Serializable {
   @Override
   public String toString() {
     return "ChatChunk{delta='"
-        + (deltaContent != null && deltaContent.length() > 50
-            ? deltaContent.substring(0, 50) + "..."
+        + (deltaContent != null && deltaContent.length() > TO_STRING_TRUNCATE_LEN
+            ? deltaContent.substring(0, TO_STRING_TRUNCATE_LEN) + "..."
             : deltaContent)
         + "', toolCalls="
         + deltaToolCalls.size()

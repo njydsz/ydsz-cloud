@@ -139,10 +139,16 @@ public final class ChatRequest implements Serializable {
    * <p>提供链式配置入口，{@code model} 与 {@code messages} 为必填项， 其余参数均有合理默认值，适用于绝大多数对话场景。
    */
   public static final class Builder {
+
+    /** 经验默认温度：兼顾生成多样性与稳定性，低于 0 偏确定、高于 1 偏发散 */
+    private static final double DEFAULT_TEMPERATURE = 0.7;
+
+    /** 单次响应 Token 上限默认值，防止超长输出耗尽配额 */
+    private static final int DEFAULT_MAX_TOKENS = 2048;
     private String model;
     private List<ChatMessage> messages;
-    private double temperature = 0.7; // 经验默认值：0.7 兼顾生成多样性与稳定性，低于 0 偏确定、高于 1 偏发散
-    private int maxTokens = 2048; // 单次响应 Token 上限默认值，防止超长输出耗尽配额
+    private double temperature = DEFAULT_TEMPERATURE;
+    private int maxTokens = DEFAULT_MAX_TOKENS;
     private double topP = 1.0; // Top-P 默认 1.0 即不做 nucleus 截断，由 temperature 主导采样
     private List<String> stop;
     private boolean stream = false;

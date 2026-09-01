@@ -25,6 +25,9 @@ import com.njydsz.agent.domain.model.ChatMessage;
  */
 public interface ConversationMemory {
 
+  /** 工具调用额外 Token 估算值（每个工具调用约 50 Token） */
+  int TOOL_CALL_TOKEN_ESTIMATE = 50;
+
   /**
    * 保存一条消息到对话历史
    *
@@ -96,7 +99,7 @@ public interface ConversationMemory {
     }
     // 工具调用额外估算：每个工具调用约 50 Token
     if (message.getToolCalls() != null) {
-      charCount += message.getToolCalls().size() * 50;
+      charCount += message.getToolCalls().size() * TOOL_CALL_TOKEN_ESTIMATE;
     }
     return Math.max(1, (int) Math.ceil(charCount / tokenCharRatio));
   }

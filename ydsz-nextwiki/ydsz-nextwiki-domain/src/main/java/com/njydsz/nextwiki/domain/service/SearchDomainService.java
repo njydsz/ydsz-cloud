@@ -46,6 +46,18 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
 @RequiredArgsConstructor
 public class SearchDomainService {
 
+  /** 前缀命中评分权重 */
+  private static final float SCORE_PREFIX_MATCH = 0.8f;
+
+  /** 包含命中评分权重 */
+  private static final float SCORE_CONTAINS_MATCH = 0.6f;
+
+  /** 路径包含命中评分权重 */
+  private static final float SCORE_PATH_CONTAINS = 0.3f;
+
+  /** 高亮片段上下文字符数（命中位置前后各取值） */
+  private static final int HIGHLIGHT_CONTEXT_CHARS = 20;
+
   /** 文件类型常量 */
   private static final String TYPE_FILE = "file";
 
@@ -182,15 +194,15 @@ public class SearchDomainService {
       return 1.0f;
     }
     if (name.startsWith(lowerKeyword)) {
-      return 0.8f;
+      return SCORE_PREFIX_MATCH;
     }
     if (name.contains(lowerKeyword)) {
-      return 0.6f;
+      return SCORE_CONTAINS_MATCH;
     }
 
     String path = index.getPath() != null ? index.getPath().toLowerCase() : "";
     if (path.contains(lowerKeyword)) {
-      return 0.3f;
+      return SCORE_PATH_CONTAINS;
     }
 
     return 0.1f;
@@ -203,8 +215,8 @@ public class SearchDomainService {
     }
     if (name.toLowerCase().contains(keyword.toLowerCase())) {
       int idx = name.toLowerCase().indexOf(keyword.toLowerCase());
-      int start = Math.max(0, idx - 20);
-      int end = Math.min(name.length(), idx + keyword.length() + 20);
+      int start = Math.max(0, idx - HIGHLIGHT_CONTEXT_CHARS);
+      int end = Math.min(name.length(), idx + keyword.length() + HIGHLIGHT_CONTEXT_CHARS);
       String prefix = start > 0 ? "..." : "";
       String suffix = end < name.length() ? "..." : "";
       return prefix + name.substring(start, end) + suffix;

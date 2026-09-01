@@ -83,18 +83,6 @@ public interface FlowCcService {
   List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQuery query);
 
   /**
-   * 查"抄送我的"分页（已废弃）。
-   * 
-   *
-   * @param tenantId 参数说明
-   * @param userId 参数说明
-   * @param query 参数说明
-   * @return 返回值说明
-   */
-  @Deprecated
-  List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query);
-
-  /**
    * 查"抄送我的"总数（便捷方法）。
    *
    * @param tenantId 租户 ID

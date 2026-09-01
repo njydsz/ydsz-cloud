@@ -28,6 +28,9 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
 @YdszExceptionCode(module = "agent", description = "AI Agent")
 public enum AgentExceptionCode implements ExceptionCode {
 
+  /** 缺省 HTTP 状态码 */
+  private static final int DEFAULT_HTTP_STATUS = 400;
+
   // ==================== B94001-B94099 Agent 定义/执行 ====================
   AGENT_NOT_FOUND("B94001", "agent.not.found", 404),
   AGENT_CODE_DUPLICATE("B94002", "agent.code.duplicate"),
@@ -71,7 +74,7 @@ public enum AgentExceptionCode implements ExceptionCode {
   private final int httpStatus;
 
   AgentExceptionCode(String code, String key) {
-    this(code, key, 400);
+    this(code, key, DEFAULT_HTTP_STATUS);
   }
 
   AgentExceptionCode(String code, String key, int httpStatus) {

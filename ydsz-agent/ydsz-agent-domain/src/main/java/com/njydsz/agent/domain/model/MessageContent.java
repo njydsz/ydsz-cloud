@@ -16,6 +16,12 @@ import java.util.Objects;
  */
 public final class MessageContent implements Serializable {
 
+  /** 低分辨率单图 Token 估算值 */
+  private static final double IMAGE_TOKEN_ESTIMATE = 85;
+
+  /** 图片 Token 转字符数比率（与 tokenCharRatio 估算口径一致） */
+  private static final double IMAGE_TOKEN_CHAR_RATIO = 2.5;
+
   private static final long serialVersionUID = 1L;
 
   /** 内容段落列表（按显示顺序排列） */
@@ -94,7 +100,7 @@ public final class MessageContent implements Serializable {
         chars += part.text().length();
       } else if (part.isImage()) {
             // 低分辨率单图约 85 Token，按 tokenCharRatio 反算字符数
-        chars += 85 * 2.5;
+        chars += IMAGE_TOKEN_ESTIMATE * IMAGE_TOKEN_CHAR_RATIO;
       }
     }
     return chars;

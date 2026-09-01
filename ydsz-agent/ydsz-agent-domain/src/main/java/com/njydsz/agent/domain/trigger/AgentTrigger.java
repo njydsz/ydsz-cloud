@@ -143,6 +143,9 @@ public final class AgentTrigger {
     }
 
     public static final class Builder {
+
+      /** 默认每小时最大执行次数 */
+      private static final int DEFAULT_MAX_EXECUTIONS_PER_HOUR = 60;
         private String triggerId;
         private String tenantId;
         private String name;
@@ -154,7 +157,7 @@ public final class AgentTrigger {
         private String matchPattern;
         private Map<String, Object> config;
         private boolean enabled = true;
-        private int maxExecutionsPerHour = 60;
+        private int maxExecutionsPerHour = DEFAULT_MAX_EXECUTIONS_PER_HOUR;
         private LocalDateTime createdAt;
         private LocalDateTime lastTriggeredAt;
         private int totalTriggerCount;

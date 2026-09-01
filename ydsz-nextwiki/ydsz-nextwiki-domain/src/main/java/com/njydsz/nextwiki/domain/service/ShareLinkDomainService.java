@@ -37,6 +37,12 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 @RequiredArgsConstructor
 public class ShareLinkDomainService {
 
+  /** 提取码随机区间跨度（9000 个候选：1000-9999） */
+  private static final int EXTRACT_CODE_RANGE = 9000;
+
+  /** 提取码最小值（保证 4 位数字） */
+  private static final int EXTRACT_CODE_MIN = 1000;
+
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
@@ -267,7 +273,7 @@ public class ShareLinkDomainService {
    * @return 提取码字符串
    */
   private String generateExtractCode() {
-    int code = (int) (Math.random() * 9000) + 1000;
+    int code = (int) (Math.random() * EXTRACT_CODE_RANGE) + EXTRACT_CODE_MIN;
     return String.valueOf(code);
   }
 

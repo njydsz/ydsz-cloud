@@ -28,6 +28,9 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
 @YdszExceptionCode(module = "nextwiki", description = "知识库")
 public enum NextwikiExceptionCode implements ExceptionCode {
 
+  /** 缺省 HTTP 状态码 */
+  private static final int DEFAULT_HTTP_STATUS = 400;
+
   // 文件相关 W01xxx
   /** 参数错误 */
   PARAM_ERROR("W01999", "nextwiki.param.error"),
@@ -190,7 +193,7 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   private final int httpStatus;
 
   NextwikiExceptionCode(String code, String key) {
-    this(code, key, 400);
+    this(code, key, DEFAULT_HTTP_STATUS);
   }
 
   NextwikiExceptionCode(String code, String key, int httpStatus) {

@@ -18,6 +18,9 @@ import java.math.RoundingMode;
  */
 public final class CostEstimate implements Serializable {
 
+  /** 金额保留小数位 */
+  private static final int PRICE_SCALE = 6;
+
   private static final long serialVersionUID = 1L;
 
   /** 估算的 Prompt Token 数（调用前预检） */
@@ -160,7 +163,7 @@ public final class CostEstimate implements Serializable {
   }
 
   private static double round(double value) {
-    return BigDecimal.valueOf(value).setScale(6, RoundingMode.HALF_UP).doubleValue();
+    return BigDecimal.valueOf(value).setScale(PRICE_SCALE, RoundingMode.HALF_UP).doubleValue();
   }
 
   @Override
