@@ -33,7 +33,7 @@ import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.vo.StatsRecorderVO;
-import com.njydsz.literule.domain.model.ModelInputRegistry;
+import com.njydsz.literule.server.model.ModelInputRegistry;
 import com.njydsz.literule.domain.model.ModelInvocationException;
 import com.njydsz.literule.server.spi.FactCollectionException;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
