@@ -94,8 +94,12 @@ public class SafeQueryAutoConfiguration {
   /**
    * 将安全查询拦截器注册到 MyBatis-Plus 拦截器链。
    *
+   * <p>本方法只是借助 {@code @Bean} 的生命周期完成注册副作用，返回值本身没有调用方使用。
+   *
    * @param mybatisPlusInterceptor MyBatis-Plus 拦截器链
    * @param safeQueryInterceptor SafeQueryInnerInterceptor 实例
+   * @return 实际生效的 {@code SafeQueryInnerInterceptor}：链中已存在同类型拦截器时返回链上的旧实例（本次不重复注册），
+   *     否则返回刚注册进链的 {@code safeQueryInterceptor}；不会为 {@code null}
    */
   @Bean
   public Object safeQueryInterceptorRegistration(

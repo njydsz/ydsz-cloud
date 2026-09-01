@@ -63,7 +63,14 @@ public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter
   @Override
   public abstract String resolveRequestId(HttpServletRequest request);
 
-  /** 请求结束后清理（默认空实现，子类可覆盖） */
+  /**
+   * 请求结束后清理（默认空实现，子类可覆盖）
+   *
+   * <p>在响应头已写入、过滤器链已回程后调用，用于释放本次请求挂载的上下文。 子类覆盖时无需调用 {@code super}，空实现不含任何逻辑。
+   *
+   * @param request 本次 HTTP 请求，此时请求体可能已被读取完毕
+   * @param response 本次 HTTP 响应，响应头已由本过滤器写入，覆盖实现一般不应再改动
+   */
   protected void afterFilter(HttpServletRequest request, HttpServletResponse response) {
     // 默认空实现
   }

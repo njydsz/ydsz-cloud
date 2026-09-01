@@ -316,7 +316,16 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return maxSize;
   }
 
-  /** 将分段内的淘汰/显式删除事件向上透传。 */
+  /**
+   * 将分段内的淘汰/显式删除事件向上透传。
+   *
+   * <p>各分段触发移除后统一汇聚到本方法，再交由父类广播给全局移除监听器，
+   * 使监听器无需感知分段结构。监听器回调在调用方线程内同步执行，不应在其中做耗时操作。
+   *
+   * @param key 被移除条目的键，不会为 {@code null}
+   * @param value 被移除时的值；移除前该条目已被替换为占位值等特殊情形下可能为 {@code null}
+   * @param cause 移除原因，用于区分容量淘汰、显式删除、过期与被覆盖
+   */
   protected void notifyRemoval(K key, V value, RemovalCause cause) {
     super.notifyRemoval(key, value, cause);
   }
