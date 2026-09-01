@@ -97,12 +97,12 @@ public class GetuiPushProvider implements PushProvider {
   public MessageResult send(MessageRequest request, MsgTemplateVO template) {
     String cid = extractClientId(request);
     if (!StringUtils.hasText(cid)) {
-      return MessageResult.fail("PUSH", "推送目标 clientId/deviceToken 不能为空");
+      return MessageResult.fail("PUSH", null, "推送目标 clientId/deviceToken 不能为空", "推送目标 clientId/deviceToken 不能为空", null);
     }
     if (!StringUtils.hasText(config.getAppId())
         || !StringUtils.hasText(config.getAppKey())
         || !StringUtils.hasText(config.getMasterSecret())) {
-      return MessageResult.fail("PUSH", "个推凭证未配置");
+      return MessageResult.fail("PUSH", null, "个推凭证未配置", "个推凭证未配置", null);
     }
     try {
       String token = getToken();
@@ -134,10 +134,10 @@ public class GetuiPushProvider implements PushProvider {
       }
       log.warn(
           "[GetuiPush] 推送失败: cid={} code={} msg={}", cid, code, MapUtils.getString(json, "msg"));
-      return MessageResult.fail("PUSH", code + ": " + MapUtils.getString(json, "msg"));
+      return MessageResult.fail("PUSH", null, code + ": " + MapUtils.getString(json, "msg"), code + ": " + MapUtils.getString(json, "msg"), null);
     } catch (Exception e) {
       log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage(), e);
-      return MessageResult.fail("PUSH", e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail("PUSH", null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

@@ -106,7 +106,7 @@ public class FeishuChannel implements MessageChannel {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn("[FEISHU] 未配置 hook，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, "飞书 hook 未配置");
+      return MessageResult.fail(CHANNEL_TYPE, null, "飞书 hook 未配置", "飞书 hook 未配置", null);
     }
 
     try {
@@ -131,13 +131,13 @@ public class FeishuChannel implements MessageChannel {
         }
         String msg = (String) body.getOrDefault("msg", "unknown");
         log.error("[FEISHU] 发送失败: code={} msg={}", code, msg);
-        return MessageResult.fail(CHANNEL_TYPE, "code=" + code + ", msg=" + msg);
+        return MessageResult.fail(CHANNEL_TYPE, null, "code=" + code + ", msg=" + msg, "code=" + code + ", msg=" + msg, null);
       }
       log.error("[FEISHU] 发送失败: status={}", response.getStatusCode());
-      return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
+      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[FEISHU] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

@@ -68,7 +68,7 @@ public class AlipayMiniChannel implements MessageChannel {
   @Override
   public MessageResult send(MessageRequest request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, "支付宝小程序接收人(UserID)不能为空");
+      return MessageResult.fail(CHANNEL_TYPE, null, "支付宝小程序接收人(UserID)不能为空", "支付宝小程序接收人(UserID)不能为空", null);
     }
 
     MessageProperties.AlipayMiniConfig config = messageProperties.getAlipayMini();
@@ -150,14 +150,14 @@ public class AlipayMiniChannel implements MessageChannel {
               request.getReceiver(),
               errCode,
               errMsg);
-          return MessageResult.fail(CHANNEL_TYPE, "支付宝小程序发送失败: " + errMsg);
+          return MessageResult.fail(CHANNEL_TYPE, null, "支付宝小程序发送失败: " + errMsg, "支付宝小程序发送失败: " + errMsg, null);
         }
       }
-      return MessageResult.fail(CHANNEL_TYPE, "支付宝返回空响应");
+      return MessageResult.fail(CHANNEL_TYPE, null, "支付宝返回空响应", "支付宝返回空响应", null);
     } catch (Exception e) {
       log.error(
           "[AlipayMiniChannel] 发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

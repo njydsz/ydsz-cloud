@@ -57,7 +57,7 @@ public class InAppChannel implements MessageChannel {
   @Override
   public MessageResult send(MessageRequest request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, "站内信接收人不能为空");
+      return MessageResult.fail(CHANNEL_TYPE, null, "站内信接收人不能为空", "站内信接收人不能为空", null);
     }
     String traceId = "INAPP-" + String.valueOf(snowflakeIdGenerator.nextId());
     try {
@@ -68,7 +68,7 @@ public class InAppChannel implements MessageChannel {
             "[INAPP] 站内信发送未落库: receiver={} bizType={}",
             request.getReceiver(),
             request.getBizType());
-        return MessageResult.fail(CHANNEL_TYPE, "站内信发送失败：未落库");
+        return MessageResult.fail(CHANNEL_TYPE, null, "站内信发送失败：未落库", "站内信发送失败：未落库", null);
       }
       log.info(
           "[INAPP] 站内信发送成功: receiver={} bizType={} count={} traceId={}",
@@ -79,7 +79,7 @@ public class InAppChannel implements MessageChannel {
       return MessageResult.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
       log.error("[INAPP] 站内信发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, "站内信发送异常: " + e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, "站内信发送异常: " + e.getMessage(), "站内信发送异常: " + e.getMessage(), null);
     }
   }
 
