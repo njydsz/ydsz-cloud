@@ -56,7 +56,7 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 | L4 | [common-tenant](ydsz-common-tenant/README.md) | 多租户隔离（SINGLE/MULTI/SCHEMA）、SQL 改写（含 CTE/标量子查询）、全链路上下文传播、fail-closed 防护 |
 | L5 | [common-auth](ydsz-common-auth/README.md) | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限（fail-closed）、权限缓存热更新 |
 | L5 | [common-safe](ydsz-common-safe/README.md) | @SensitiveData 脱敏（fail-closed）、@Sensitive、@RateLimit、CSRF、SQL 注入防护、安全事件告警、API 签名（query 入签）、SSRF 防护 |
-| L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断（参数可配置）、动态客户端 |
+| L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、自研熔断（common-safe 引擎，参数可配置）、动态客户端 |
 | L5 | [common-audit](ydsz-common-audit/README.md) | @OperationLog + @Audit、异步队列批量落库、时间分表（日/月/年）、磁盘兜底 |
 | L5 | [common-notify](ydsz-common-notify/README.md) | 6 种通知渠道（邮件/短信/企微/IM/站内）、SpEL 模板引擎、重试队列、DKIM 签名 |
 | L5 | [common-queue](ydsz-common-queue/README.md) | 6 种 MQ（Redis Stream/List/PubSub + Kafka/RocketMQ/RabbitMQ）、死信队列、消息轨迹、去重 |
@@ -154,7 +154,7 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-safe | `RateLimiter` | 限流算法（令牌桶/并发限制） | `@Component` |
 | common-safe | `ClusterRateLimiter` | 集群限流器 | `@Component` |
 | common-feign | `FeignTraceHandler` **SPI** | Feign 链路追踪（SkyWalking/Zipkin） | `@Component` |
-| common-feign | `FeignCircuitBreakerStrategy` | Feign 熔断器（Resilience4j/Sentinel） | `@ConditionalOnMissingBean` |
+| common-feign | `FeignCircuitBreakerStrategy` | Feign 熔断器（common-safe 自研引擎） | `@ConditionalOnMissingBean` |
 
 ### L5 业务服务层（审计/文件/通知/队列）
 
@@ -257,7 +257,7 @@ deploy\windows\scripts\import-nacos-config.bat ydsz dev
 | `mybatis-plus.*` | 共享基础配置（map-underscore / logic-delete / id-type / log-impl） |
 | `feign.client.config` | Feign 超时（default 3s / project 10s / agent 30s） |
 | `spring.cloud.openfeign.circuitbreaker` | Feign + Sentinel 熔断 |
-| `resilience4j.*` | 重试 + 熔断器（feignRetry / dbRetry / default） |
+| `ydsz.feign.circuit-breaker.*` | Feign 熔断器（common-safe 自研引擎，见 ADR-0004） |
 | `springdoc` + `knife4j` | OpenAPI / Knife4j 共享配置 |
 | `logging.*` | 日志级别 + pattern（含 traceId） |
 | `ydsz.jwt` / `ydsz.security` / `ydsz.kms` / `ydsz.sentry` | JWT、IP 白名单、KMS、Sentry |

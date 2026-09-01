@@ -19,7 +19,7 @@
 1. **路由分发**：Nacos 动态路由为唯一入口（`gateway-routes.json` JSON 数组格式，8 条路由）
 2. **鉴权拦截**：解析 JWT（本地缓存防击穿/穿透 + 自适应 TTL，验签切出事件循环到 `boundedElastic`）、Token 黑名单校验（Redis）、转发 `X-User-Id` / `X-Tenant-Id` / `X-Trace-Id` 等内部头
 3. **限流**：Redis + Lua 令牌桶二维限流（IP / 用户），Redis 不可用时降级放行
-4. **熔断**：Resilience4j 按路由隔离熔断（防下游雪崩）
+4. **熔断**：自研熔断引擎（common-safe）按路由隔离熔断（防下游雪崩）
 5. **CORS**：按环境单一可信 Origin 放行（生产必须显式域名，拒绝凭据+通配符组合）
 6. **IP 访问控制**：`ydsz.gateway.ip-control.*` 统一黑白名单（Redis 动态黑名单 + 本地缓存）
 7. **灰度路由**：基于 `X-Gray-Tag` 头 + Nacos `metadata.version` 元数据 + `weight` 权重加权随机（Alias Method O(1)）+ `grayRatio` 比例分流
@@ -95,7 +95,7 @@ ydsz-gateway/
     │   │   ├── ApiVersionHeaderFilter.java      # API 版本协商（X-API-Version / Sunset 头）
     │   │   ├── AuditLogFilter.java              # 审计日志（双轨制：SLF4J + 审计事件桥接 sys_audit_log）
     │   │   ├── AuthGlobalFilter.java            # JWT 解析 + 内部头注入（验签切出事件循环）+ Token 黑名单 + 路径穿越拦截
-    │   │   ├── CircuitBreakerGlobalFilter.java  # 熔断（Resilience4j，按路由隔离 + 状态指标）
+    │   │   ├── CircuitBreakerGlobalFilter.java  # 熔断（common-safe 自研引擎，按路由隔离 + 状态指标）
     │   │   ├── GrayLoadBalancerRequestFilter.java  # 灰度路由请求过滤器（注入 X-Gray-Tag）
     │   │   ├── GrayResponseHeaderFilter.java    # 灰度路由响应头（X-Gray-Hit）
     │   │   ├── IpAccessControlFilter.java       # IP 黑白名单统一过滤（Redis 动态黑名单 + 本地缓存）
@@ -205,7 +205,7 @@ ydsz-gateway/
 | `ydsz.gateway.dynamic-routes.enabled` | true | Nacos 动态路由开关（默认启用） |
 | `ydsz.gateway.dynamic-routes.data-id` | gateway-routes.json | 路由配置 DataId（JSON 数组格式，Group=当前 profile） |
 
-### 熔断（Resilience4j，prefix `ydsz.gateway.circuit-breaker`）
+### 熔断（自研引擎，prefix `ydsz.gateway.circuit-breaker`）
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
@@ -324,7 +324,7 @@ ydsz-gateway/
   20       GrayLoadBalancerRequestFilter           灰度标识注入
   30       RateLimitFilter                        令牌桶限流（Redis + Lua）
   35       AuditLogFilter                          审计日志（双轨制）
-  45       CircuitBreakerGlobalFilter              Resilience4j 熔断
+  45       CircuitBreakerGlobalFilter              自研引擎熔断
   150      GrayResponseHeaderFilter                灰度路由响应头（X-Gray-Hit）
   200      ApiVersionHeaderFilter                  API 版本响应头（Sunset 头）
   ───      ─────────────────────────────────────  ──────────────────────────
