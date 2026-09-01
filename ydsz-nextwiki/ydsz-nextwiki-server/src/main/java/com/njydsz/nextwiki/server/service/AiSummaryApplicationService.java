@@ -62,6 +62,21 @@ public class AiSummaryApplicationService implements AiSummaryService {
   /** 关键词数量 */
   private static final int MAX_KEYWORDS = 10;
 
+  /** 阅读时长估算：每分钟阅读字数 */
+  private static final int READING_SPEED_CHARS_PER_MINUTE = 500;
+
+  /** TextRank 阻尼系数 */
+  private static final double TEXT_RANK_DAMPING = 0.85;
+
+  /** TextRank 迭代次数 */
+  private static final int TEXT_RANK_ITERATIONS = 50;
+
+  /** TextRank 初始分值 */
+  private static final double TEXT_RANK_INITIAL_SCORE = 1.0;
+
+  /** 中文 n-gram 分词最大长度 */
+  private static final int NGRAM_MAX_LENGTH = 4;
+
   /** 最小句子长度 */
   private static final int MIN_SENTENCE_LENGTH = 10;
 
@@ -280,7 +295,8 @@ public class AiSummaryApplicationService implements AiSummaryService {
         .keywords(extractKeywords(content))
         .wordCount(content.length())
         // 阅读时长：以约 500 字/分钟估算，Math.max 保证最短 1 分钟，避免展示 0 分钟
-        .readingTimeEstimate(Math.max(1, content.length() / 500))
+        .readingTimeEstimate(
+            Math.max(1, content.length() / READING_SPEED_CHARS_PER_MINUTE))
         .build();
   }
 
@@ -320,17 +336,21 @@ public class AiSummaryApplicationService implements AiSummaryService {
 
     // TextRank 迭代
     double[] scores = new double[n];
-    Arrays.fill(scores, 1.0);
-    double dampingCoefficient = 0.85; // 阻尼系数
-    for (int iter = 0; iter < 50; iter++) {
+    Arrays.fill(scores, TEXT_RANK_INITIAL_SCORE);
+    double dampingCoefficient = TEXT_RANK_DAMPING; // 阻尼系数
+    for (int iter = 0; iter < TEXT_RANK_ITERATIONS; iter++) {
       double[] newScores = new double[n];
       for (int i = 0; i < n; i++) {
         double sum = 0;
         for (int j = 0; j < n; j++) {
-          if (i == j) continue;
+          if (i == j) {
+            continue;
+          }
           double outWeight = 0;
           for (int k = 0; k < n; k++) {
-            if (k != j) outWeight += similarity[j][k];
+            if (k != j) {
+              outWeight += similarity[j][k];
+            }
           }
           if (outWeight > 0) {
             sum += similarity[j][i] / outWeight * scores[j];
@@ -358,7 +378,9 @@ public class AiSummaryApplicationService implements AiSummaryService {
 
     StringBuilder summary = new StringBuilder();
     for (int idx : sortedIndices) {
-      if (summary.length() > 0) summary.append("。");
+      if (summary.length() > 0) {
+        summary.append("。");
+      }
       summary.append(sentences.get(idx));
     }
 
@@ -407,7 +429,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
     String cleaned = text.replaceAll("[\\p{Punct}\\p{IsPunctuation}0-9a-zA-Z\\s]+", " ");
     Set<String> words = new HashSet<>();
     // 简单的中文 n-gram 分词（2-4字），过滤停用词
-    for (int len = 2; len <= 4; len++) {
+    for (int len = 2; len <= NGRAM_MAX_LENGTH; len++) {
       for (int i = 0; i <= cleaned.length() - len; i++) {
         String gram = cleaned.substring(i, i + len).trim();
         if (gram.length() == len && !gram.contains(" ") && !CHINESE_STOP_WORDS.contains(gram)) {
@@ -420,7 +442,9 @@ public class AiSummaryApplicationService implements AiSummaryService {
 
   /** 计算两个句子集合的相似度（Jaccard 系数） */
   private double calculateSimilarity(Set<String> set1, Set<String> set2) {
-    if (set1.isEmpty() || set2.isEmpty()) return 0;
+    if (set1.isEmpty() || set2.isEmpty()) {
+      return 0;
+    }
     Set<String> intersection = new HashSet<>(set1);
     intersection.retainAll(set2);
     Set<String> union = new HashSet<>(set1);

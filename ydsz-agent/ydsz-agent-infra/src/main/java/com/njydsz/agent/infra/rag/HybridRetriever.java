@@ -41,6 +41,12 @@ public class HybridRetriever implements Retriever {
   /** RRF 平滑常数 */
   private static final int RRF_K = 60;
 
+  /** 候选召回分数下限缩放系数（召回时放宽为最低分数的一半） */
+  private static final double RECALL_MIN_SCORE_FACTOR = 0.5;
+
+  /** 日志中查询文本的截断长度 */
+  private static final int LOG_QUERY_TRUNCATE_LENGTH = 50;
+
   /** 文本块表名 */
   private static final String TABLE_NAME = "ydsz_agt_document_chunk";
 
@@ -102,7 +108,7 @@ public class HybridRetriever implements Retriever {
     if (query == null || query.isBlank()) {
       return List.of();
     }
-    List<TextChunk> vectorResults = vectorStore.search(query, topK * 2, minScore * 0.5);
+    List<TextChunk> vectorResults = vectorStore.search(query, topK * 2, minScore * RECALL_MIN_SCORE_FACTOR);
     log.debug("[Hybrid-Retrieval] 向量检索: {} 条", vectorResults.size());
 
     List<TextChunk> fullTextResults = List.of();
@@ -116,7 +122,7 @@ public class HybridRetriever implements Retriever {
     List<TextChunk> reranked = reranker.rerank(query, merged, topK);
     log.info(
         "[Hybrid-Retrieval] 混合检索完成: query='{}', vector={}, fulltext={}, merged={}, reranked={}",
-        truncate(query, 50),
+        truncate(query, LOG_QUERY_TRUNCATE_LENGTH),
         vectorResults.size(),
         fullTextResults.size(),
         merged.size(),
@@ -235,7 +241,9 @@ public class HybridRetriever implements Retriever {
   }
 
   private String truncate(String text, int maxLen) {
-    if (text == null) return "";
+    if (text == null) {
+      return "";
+    }
     return text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
   }
 

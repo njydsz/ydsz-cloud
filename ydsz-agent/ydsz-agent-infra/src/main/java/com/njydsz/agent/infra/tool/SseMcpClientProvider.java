@@ -1,5 +1,6 @@
 package com.njydsz.agent.infra.tool;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -38,6 +39,9 @@ public class SseMcpClientProvider implements McpClientProvider {
 
   /** 会话失效时的 HTTP 状态码（401 Unauthorized） */
   private static final int HTTP_UNAUTHORIZED = 401;
+
+  /** HTTP 客户端错误响应的最低状态码（4xx） */
+  private static final int HTTP_CLIENT_ERROR_MIN = 400;
 
   /** HTTP Client（线程安全，可复用） */
   private final HttpClient httpClient =
@@ -174,7 +178,7 @@ public class SseMcpClientProvider implements McpClientProvider {
     HttpResponse<String> response;
     try {
       response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-    } catch (java.io.IOException e) {
+    } catch (IOException e) {
       throw new LlmException(
           "MCP 网络请求失败: server=" + server.getName() + ", error=" + e.getMessage(),
           LlmException.ErrorType.NETWORK_TIMEOUT,
@@ -193,7 +197,7 @@ public class SseMcpClientProvider implements McpClientProvider {
           "MCP 会话已失效（401），将自动重连: server=" + server.getName(),
           LlmException.ErrorType.AUTH_FAILED);
     }
-    if (response.statusCode() >= 400) {
+    if (response.statusCode() >= HTTP_CLIENT_ERROR_MIN) {
       throw new LlmException(
           "MCP 请求失败: HTTP " + response.statusCode() + ", server=" + server.getName(),
           LlmException.ErrorType.PROVIDER_ERROR);

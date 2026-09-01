@@ -25,6 +25,9 @@ import com.njydsz.common.json.tree.ObjectNode;
 @Slf4j
 public class CompatibleEmbeddingClient implements EmbeddingClient {
 
+  /** 默认向量维度 */
+  private static final int DEFAULT_EMBEDDING_DIMENSION = 1536;
+
   /** API 基础地址 */
   private final String baseUrl;
 
@@ -44,7 +47,7 @@ public class CompatibleEmbeddingClient implements EmbeddingClient {
     this.baseUrl = baseUrl != null ? baseUrl : "";
     this.apiKey = apiKey;
     this.model = model != null ? model : "text-embedding-3-small";
-    this.dimension = dimension > 0 ? dimension : 1536;
+    this.dimension = dimension > 0 ? dimension : DEFAULT_EMBEDDING_DIMENSION;
     this.restClient =
         RestClient.builder()
             .baseUrl(this.baseUrl)

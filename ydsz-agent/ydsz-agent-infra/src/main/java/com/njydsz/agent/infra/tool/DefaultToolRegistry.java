@@ -30,6 +30,9 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 @Slf4j
 public class DefaultToolRegistry implements ToolRegistry {
 
+  /** 默认工具执行超时（秒） */
+  private static final int DEFAULT_TOOL_TIMEOUT_SECONDS = 30;
+
   /** 工具注册表（key=工具名） */
   private final Map<String, ToolRegistration> registry = new ConcurrentHashMap<>();
 
@@ -41,7 +44,7 @@ public class DefaultToolRegistry implements ToolRegistry {
 
   /** 默认构造器（30 秒超时） */
   public DefaultToolRegistry() {
-    this(30);
+    this(DEFAULT_TOOL_TIMEOUT_SECONDS);
   }
 
   /**

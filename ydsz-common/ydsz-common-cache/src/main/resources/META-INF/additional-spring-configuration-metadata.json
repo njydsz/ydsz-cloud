@@ -3,7 +3,7 @@
     {
       "name": "ydsz.cache.type",
       "type": "java.lang.String",
-      "description": "缓存类型。可选值：CONCURRENT、LRU、LFU、TINYLFU、REFERENCE、WEIGHTED、TTL、LOADING。默认 TINYLFU。"
+      "description": "缓存类型。可选值：TINYLFU（默认，命中率最优）、STRIPED（分段锁，高并发写入场景）。"
     },
     {
       "name": "ydsz.cache.cache-names",

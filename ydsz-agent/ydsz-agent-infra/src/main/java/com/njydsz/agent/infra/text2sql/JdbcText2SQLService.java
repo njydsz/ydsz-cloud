@@ -58,6 +58,12 @@ public class JdbcText2SQLService implements Text2SQLService {
   /** SQL 执行超时（秒） */
   private static final int EXEC_TIMEOUT_SECONDS = 10;
 
+  /** SQL 生成请求最大输出 Token 数 */
+  private static final int SQL_MAX_TOKENS = 512;
+
+  /** 错误信息中 SQL 片段的截断长度 */
+  private static final int SQL_SNIPPET_LENGTH = 50;
+
   /** 允许的 SQL 开头（仅 SELECT / WITH） */
   private static final Set<String> ALLOWED_PREFIXES = Set.of("SELECT", "WITH");
 
@@ -118,7 +124,7 @@ public class JdbcText2SQLService implements Text2SQLService {
             .model(defaultModel)
             .messages(List.of(ChatMessage.user(query, null)))
             .temperature(0)
-            .maxTokens(512)
+            .maxTokens(SQL_MAX_TOKENS)
             .build();
     try {
       ChatResponse response = llmClient.chat(request);
@@ -222,7 +228,8 @@ public class JdbcText2SQLService implements Text2SQLService {
       }
     }
     if (!allowed) {
-      throw new Text2SQLException("仅允许 SELECT 查询，拒绝语句: " + sql.substring(0, Math.min(50, sql.length())), "TEXT2SQL_NOT_SELECT");
+      String snippet = sql.substring(0, Math.min(SQL_SNIPPET_LENGTH, sql.length()));
+      throw new Text2SQLException("仅允许 SELECT 查询，拒绝语句: " + snippet, "TEXT2SQL_NOT_SELECT");
     }
     // 注入检测
     for (Pattern pattern : INJECTION_PATTERNS) {

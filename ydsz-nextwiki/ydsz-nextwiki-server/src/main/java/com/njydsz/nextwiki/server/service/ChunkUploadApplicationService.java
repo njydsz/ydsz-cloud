@@ -595,14 +595,20 @@ public class ChunkUploadApplicationService {
   }
 
   private String sanitizeFileName(String filename) {
-    if (filename == null) return "unknown";
+    if (filename == null) {
+      return "unknown";
+    }
     return filename.replace("/", "_").replace("\\", "_").replace("..", "_");
   }
 
   private String extractSuffix(String filename) {
-    if (filename == null || filename.isEmpty()) return "";
+    if (filename == null || filename.isEmpty()) {
+      return "";
+    }
     int dot = filename.lastIndexOf('.');
-    if (dot < 0 || dot == filename.length() - 1) return "";
+    if (dot < 0 || dot == filename.length() - 1) {
+      return "";
+    }
     return filename.substring(dot + 1).toLowerCase();
   }
 

@@ -37,6 +37,12 @@ public class McpToolAdapter {
   /** MCP 工具名分隔符 */
   private static final String TOOL_NAME_SEPARATOR = "__";
 
+  /** 工具列表初始容量 */
+  private static final int TOOL_LIST_INITIAL_CAPACITY = 16;
+
+  /** 默认空 schema 初始容量 */
+  private static final int SCHEMA_MAP_INITIAL_CAPACITY = 8;
+
   /** MCP Client 提供者（封装具体 MCP SDK 实现） */
   private final McpClientProvider clientProvider;
 
@@ -54,7 +60,7 @@ public class McpToolAdapter {
    * @return 工具定义列表（已添加 server 名前缀）
    */
   public List<ToolDefinition> discoverAllTools() {
-    List<ToolDefinition> allTools = new ArrayList<>(16);
+    List<ToolDefinition> allTools = new ArrayList<>(TOOL_LIST_INITIAL_CAPACITY);
     if (mcpConfig == null || !mcpConfig.isEnabled()) {
       return allTools;
     }
@@ -126,7 +132,7 @@ public class McpToolAdapter {
       return descriptor.inputSchema();
     }
     // 默认空 schema（object 类型，无必填参数）
-    Map<String, Object> schema = new HashMap<>(8);
+    Map<String, Object> schema = new HashMap<>(SCHEMA_MAP_INITIAL_CAPACITY);
     schema.put("type", "object");
     schema.put("properties", Map.of());
     return schema;

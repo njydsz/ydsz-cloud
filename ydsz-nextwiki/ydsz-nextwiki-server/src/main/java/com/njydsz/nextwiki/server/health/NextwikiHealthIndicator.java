@@ -30,7 +30,11 @@ public class NextwikiHealthIndicator extends AbstractModuleHealthIndicator {
   @Autowired(required = false)
   private IFileStorageProvider fileStorageProvider;
 
-  /** 设置文件存储提供者（由 @Bean 注册时注入） */
+  /**
+   * 设置文件存储提供者（由 @Bean 注册时注入）。
+   *
+   * @param fileStorageProvider 文件存储提供者
+   */
   public void setFileStorageProvider(IFileStorageProvider fileStorageProvider) {
     this.fileStorageProvider = fileStorageProvider;
   }

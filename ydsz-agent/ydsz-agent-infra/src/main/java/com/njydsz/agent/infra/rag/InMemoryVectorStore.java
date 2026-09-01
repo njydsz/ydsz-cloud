@@ -139,7 +139,9 @@ public class InMemoryVectorStore implements VectorStore {
     if (a.size() != b.size()) {
       return 0;
     }
-    double dotProduct = 0, normA = 0, normB = 0;
+    double dotProduct = 0;
+    double normA = 0;
+    double normB = 0;
     for (int i = 0; i < a.size(); i++) {
       dotProduct += a.get(i) * b.get(i);
       normA += a.get(i) * a.get(i);

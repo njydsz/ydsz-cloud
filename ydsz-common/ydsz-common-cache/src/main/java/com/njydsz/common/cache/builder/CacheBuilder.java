@@ -59,10 +59,17 @@ import com.njydsz.common.cache.support.Expiry;
  */
 public final class CacheBuilder<K, V> {
 
+  /** maximumSize 未设置（-1）时的兜底容量 */
+  private static final int DEFAULT_UNBOUNDED_CAPACITY = 1024;
+
   /** 缓存类型（默认 TINYLFU，命中率最优） */
   private CacheType type = CacheType.TINYLFU;
 
-  /** 最大容量（-1 表示无限制） */
+  /**
+   * 最大容量（-1 表示未设置，构建时按 {@link #DEFAULT_UNBOUNDED_CAPACITY} 兜底）
+   *
+   * <p>注意：-1 并非"无限容量"——W-TinyLFU / 分段缓存均需有界容量才能执行淘汰。
+   */
   private long maximumSize = -1;
 
   /** 写入后过期时间（-1 表示不过期） */
@@ -147,7 +154,7 @@ public final class CacheBuilder<K, V> {
   /**
    * 设置最大容量
    *
-   * @param maximumSize 最大容量（-1 表示无限制）
+   * @param maximumSize 最大容量（-1 表示未设置，构建时按默认兜底容量 1024）
    * @return this
    */
   public CacheBuilder<K, V> maximumSize(long maximumSize) {
@@ -506,22 +513,16 @@ public final class CacheBuilder<K, V> {
    * @return 基础缓存实例
    */
   private Cache<K, V> createBaseCache() {
-    int effectiveSize = maximumSize > 0 ? (int) maximumSize : 1024;
+    // maximumSize 未设置（-1）时使用 DEFAULT_UNBOUNDED_CAPACITY 而非 initialCapacity：
+    // initialCapacity（默认 16）本是 CHM 初始桶数语义，误作容量会得到 16 条目小缓存（P0 修复）
+    int effectiveSize = maximumSize > 0 ? (int) maximumSize : DEFAULT_UNBOUNDED_CAPACITY;
 
     switch (type) {
       case TINYLFU:
-        if (maximumSize > 0) {
-          return new WindowTinyLFUCache<K, V>((int) maximumSize, stripes);
-        } else {
-          return new WindowTinyLFUCache<K, V>(initialCapacity, stripes);
-        }
+        return new WindowTinyLFUCache<K, V>(effectiveSize, stripes);
 
       case STRIPED:
-        if (maximumSize > 0) {
-          return new StripedConcurrentCache<K, V>((int) maximumSize, stripes);
-        } else {
-          return new StripedConcurrentCache<K, V>(initialCapacity, stripes);
-        }
+        return new StripedConcurrentCache<K, V>(effectiveSize, stripes);
 
       default:
         throw new IllegalStateException("Unknown cache type: " + type);

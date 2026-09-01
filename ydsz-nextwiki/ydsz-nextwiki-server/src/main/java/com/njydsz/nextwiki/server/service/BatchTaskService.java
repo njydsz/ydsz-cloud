@@ -291,7 +291,13 @@ public class BatchTaskService {
       FAILED
     }
 
-    /** 便捷构造方法。 */
+    /**
+     * 便捷构造方法。
+     *
+     * @param taskId 任务 ID
+     * @param taskType 任务类型
+     * @param totalCount 任务总条目数
+     */
     public BatchTaskStatus(String taskId, String taskType, int totalCount) {
       this.taskId = taskId;
       this.taskType = taskType;

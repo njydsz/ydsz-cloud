@@ -35,6 +35,9 @@ public class SimpleTextChunker implements TextChunker {
   /** 默认重叠大小（字符数） */
   private static final int DEFAULT_OVERLAP = 50;
 
+  /** 平均每个 Token 对应的字符数（用于估算 Token 数） */
+  private static final double CHARS_PER_TOKEN = 1.5;
+
   /** 分块大小（字符数） */
   private final int chunkSize;
 
@@ -121,6 +124,6 @@ public class SimpleTextChunker implements TextChunker {
   }
 
   private int estimateTokens(String text) {
-    return (int) Math.ceil(text.length() / 1.5);
+    return (int) Math.ceil(text.length() / CHARS_PER_TOKEN);
   }
 }

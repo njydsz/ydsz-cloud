@@ -188,8 +188,8 @@ public class FileOperatedEventListener {
 
     try {
       // 查询分享链接详情，获取被分享者信息
-      var ShareLink = shareLinkRepository.findByShareCode(shareCode);
-      if (ShareLink == null) {
+      var shareLink = shareLinkRepository.findByShareCode(shareCode);
+      if (shareLink == null) {
         log.warn("[FileOperatedEventListener] 分享链接不存在: shareCode={}", shareCode);
         return;
       }

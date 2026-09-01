@@ -305,9 +305,10 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
   }
 
   /**
-   * 清空缓存，重置三段 LRU 队列与尺寸计数。
+   * 清空缓存，重置三段 LRU 队列与全部尺寸计数。
    *
-   * <p>写锁内对全部条目发送 {@link RemovalCause#EXPLICIT} 通知后清空； 频率草图不重置（其统计生命周期长于单次清空操作）。
+   * <p>写锁内对全部条目发送 {@link RemovalCause#EXPLICIT} 通知后清空； 同时重置 {@code windowSize} 与
+   * {@code totalCount}（P1 修复：此前漏重置导致 Window 段容量治理在 clear 后永久失真、 每次多付一次空轮询）。
    */
   @Override
   public void clear() {
@@ -322,6 +323,8 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
       clearAll(protectedHead);
       sizeCounter.set(0);
       protectedSize.set(0);
+      windowSize.set(0);
+      totalCount = 0;
     } finally {
       writeLock.unlock();
     }

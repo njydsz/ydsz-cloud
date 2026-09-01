@@ -19,7 +19,7 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.common.json.YdszJson;
 
 /**
- * @Tool 注解自动扫描注册器
+ * 工具注解（{@code @Tool}）自动扫描注册器。
  *
  * <p>在 Spring Bean 初始化后扫描所有 Bean 的 public 方法， 发现带有 {@link Tool} 注解的方法时自动注册为 LLM 可调用的工具。
  *
@@ -203,14 +203,30 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
   }
 
   private Object getDefaultValue(Class<?> targetType) {
-    if (targetType == int.class) return 0;
-    if (targetType == long.class) return 0L;
-    if (targetType == double.class) return 0.0;
-    if (targetType == float.class) return 0.0f;
-    if (targetType == boolean.class) return false;
-    if (targetType == short.class) return (short) 0;
-    if (targetType == byte.class) return (byte) 0;
-    if (targetType == char.class) return '\0';
+    if (targetType == int.class) {
+      return 0;
+    }
+    if (targetType == long.class) {
+      return 0L;
+    }
+    if (targetType == double.class) {
+      return 0.0;
+    }
+    if (targetType == float.class) {
+      return 0.0f;
+    }
+    if (targetType == boolean.class) {
+      return false;
+    }
+    if (targetType == short.class) {
+      return (short) 0;
+    }
+    if (targetType == byte.class) {
+      return (byte) 0;
+    }
+    if (targetType == char.class) {
+      return '\0';
+    }
     return null;
   }
 }

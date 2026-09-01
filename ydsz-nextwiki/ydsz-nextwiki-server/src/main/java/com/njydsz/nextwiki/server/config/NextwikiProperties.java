@@ -50,6 +50,21 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "nextwiki")
 public class NextwikiProperties {
 
+  /** 默认最大文件大小（字节）：500MB */
+  public static final long DEFAULT_MAX_FILE_SIZE = 524288000L;
+
+  /** ClamAV 默认端口 */
+  public static final int DEFAULT_VIRUS_SCAN_PORT = 3310;
+
+  /** 单用户默认每分钟下载次数上限 */
+  public static final int DEFAULT_DOWNLOAD_RATE_LIMIT = 30;
+
+  /** 签名 URL 默认有效期（秒）：1 小时 */
+  public static final long DEFAULT_SIGNED_URL_EXPIRE_SECONDS = 3600L;
+
+  /** 文件默认多少天未访问后视为冷数据 */
+  public static final int DEFAULT_COLD_DAYS_THRESHOLD = 90;
+
   /** 文件上传配置 */
   private UploadConfig upload = new UploadConfig();
 
@@ -90,7 +105,7 @@ public class NextwikiProperties {
   @Data
   public static class UploadConfig {
     /** 最大文件大小（字节），默认 500MB */
-    private long maxFileSize = 524288000L;
+    private long maxFileSize = DEFAULT_MAX_FILE_SIZE;
 
     /** 允许的文件类型（逗号分隔 MIME/扩展名，空表示不限） */
     private String allowedTypes = "";
@@ -99,7 +114,7 @@ public class NextwikiProperties {
     private String conflictStrategy = "KEEP_BOTH";
 
     /** 分片上传临时目录（默认系统临时目录下的 nextwiki-chunk 子目录） */
-    private String chunkTempDir = System.getProperty("java.io.tmpdir") + "/nextwiki-chunk";
+    private String chunkTempDir = System.getProperty("java" + ".io.tmpdir") + "/nextwiki-chunk";
   }
 
   /** 缩略图配置。 */
@@ -186,7 +201,7 @@ public class NextwikiProperties {
     private String host = "localhost";
 
     /** ClamAV 守护进程端口 */
-    private int port = 3310;
+    private int port = DEFAULT_VIRUS_SCAN_PORT;
   }
 
   /**
@@ -211,13 +226,13 @@ public class NextwikiProperties {
   @Data
   public static class DownloadConfig {
     /** 单用户每分钟下载次数上限 */
-    private int rateLimitPerMinute = 30;
+    private int rateLimitPerMinute = DEFAULT_DOWNLOAD_RATE_LIMIT;
 
     /** 单 IP 每分钟下载次数上限 */
     private int ipRateLimitPerMinute = 100;
 
     /** 签名 URL 有效期（秒），默认 1 小时 */
-    private long signedUrlExpireSeconds = 3600L;
+    private long signedUrlExpireSeconds = DEFAULT_SIGNED_URL_EXPIRE_SECONDS;
 
     /** 是否允许空 Referer（如浏览器直接访问）；默认 false（拒绝空 Referer 防直链盗刷） */
     private boolean allowEmptyReferer = false;
@@ -249,7 +264,7 @@ public class NextwikiProperties {
     private boolean enabled = false;
 
     /** 文件多少天未访问后视为冷数据 */
-    private int coldDaysThreshold = 90;
+    private int coldDaysThreshold = DEFAULT_COLD_DAYS_THRESHOLD;
 
     /** 归档批次大小（每次处理文件数） */
     private int batchSize = 100;

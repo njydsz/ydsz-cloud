@@ -71,31 +71,34 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
   /** 配额用量缓存（用于 Gauge） */
   private final AtomicLong quotaUsageCached = new AtomicLong(0);
 
+  /** 发布的百分位（P50/P95/P99） */
+  private static final double[] PUBLISHED_PERCENTILES = {0.5, 0.95, 0.99};
+
   public NextwikiMetrics(MeterRegistry meterRegistry, StorageQuotaRepository quotaRepository) {
     super("ydsz_nextwiki_");
     this.meterRegistry = meterRegistry;
     this.quotaRepository = quotaRepository;
     this.uploadTimer = Timer.builder("ydsz_nextwiki_file_upload_duration")
             .description("文件上传耗时（毫秒）")
-            .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentiles(PUBLISHED_PERCENTILES)
             .register(meterRegistry);
     this.downloadTimer = Timer.builder("ydsz_nextwiki_file_download_duration")
             .description("文件下载耗时（毫秒）")
-            .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentiles(PUBLISHED_PERCENTILES)
             .register(meterRegistry);
     this.operationTimer = Timer.builder("ydsz_nextwiki_operation_duration")
             .description("通用操作耗时（毫秒），由 operation tag 区分类型")
-            .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentiles(PUBLISHED_PERCENTILES)
             .register(meterRegistry);
     this.uploadSizeSummary = DistributionSummary.builder("ydsz_nextwiki_file_upload_size_bytes")
             .description("上传文件大小分布（字节）")
             .baseUnit("bytes")
-            .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentiles(PUBLISHED_PERCENTILES)
             .register(meterRegistry);
     this.downloadSizeSummary = DistributionSummary.builder("ydsz_nextwiki_file_download_size_bytes")
             .description("下载文件大小分布（字节）")
             .baseUnit("bytes")
-            .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentiles(PUBLISHED_PERCENTILES)
             .register(meterRegistry);
     this.uploadFailureCounter = Counter.builder("ydsz_nextwiki_file_upload_failures_total")
             .description("文件上传失败次数")
@@ -275,7 +278,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
       // 使用预注册 Timer 并添加 operation tag
       Timer.builder("ydsz_nextwiki_operation_duration")
           .tags("operation", operation != null ? operation : "unknown")
-          .publishPercentiles(0.5, 0.95, 0.99)
+          .publishPercentiles(PUBLISHED_PERCENTILES)
           .register(meterRegistry)
           .record(durationMs, TimeUnit.MILLISECONDS);
     } catch (Exception e) {
@@ -304,6 +307,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    * @param operation 操作名
    * @param action 待测量的操作
    * @param input 传入参数
+   * @param <T> 输入参数类型
    */
   public <T> void timedOperation(String operation, Consumer<T> action, T input) {
     long start = System.currentTimeMillis();
@@ -316,14 +320,22 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
 
   // ==================== DistributionSummary：值分布 ====================
 
-  /** 记录上传文件大小（字节）。 */
+  /**
+   * 记录上传文件大小（字节）。
+   *
+   * @param bytes 文件大小（字节）
+   */
   public void recordUploadSize(long bytes) {
     if (bytes > 0) {
       uploadSizeSummary.record(bytes);
     }
   }
 
-  /** 记录下载文件大小（字节）。 */
+  /**
+   * 记录下载文件大小（字节）。
+   *
+   * @param bytes 文件大小（字节）
+   */
   public void recordDownloadSize(long bytes) {
     if (bytes > 0) {
       downloadSizeSummary.record(bytes);
