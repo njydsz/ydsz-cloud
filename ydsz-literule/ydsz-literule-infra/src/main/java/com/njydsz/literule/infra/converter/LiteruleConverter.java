@@ -402,21 +402,59 @@ public class LiteruleConverter {
   }
 
   // ===== DecisionTableDefinitionDTO (api) → DecisionTableDefinitionVO =====
+
+  /**
+   * 将 API 层决策表定义 DTO 转换为视图对象。
+   *
+   * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(DecisionTableDefinitionDTO)}，字段同名直接映射。
+   *
+   * @param entity API 层决策表定义（含条件列、动作列与命中策略），为 {@code null} 时返回 {@code null}
+   * @return 决策表定义视图对象；入参为 {@code null} 时返回 {@code null}
+   */
   public DecisionTableDefinitionVO entityToVO(DecisionTableDefinitionDTO entity) {
     return core.entityToVO(entity);
   }
 
   // ===== ExpressionValidationResult (api.expr) → ExpressionValidationResultVO =====
+
+  /**
+   * 将 API 层表达式校验结果转换为视图对象。
+   *
+   * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(ExpressionValidationResult)}，字段同名直接映射。
+   *
+   * @param entity API 层校验结果（含是否合法、错误码与错误位置），为 {@code null} 时返回 {@code null}
+   * @return 表达式校验结果视图对象；入参为 {@code null} 时返回 {@code null}
+   */
   public ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity) {
     return core.entityToVO(entity);
   }
 
   // ===== ExpressionFunctionDef (api.expr) → ExpressionFunctionDefVO =====
+
+  /**
+   * 将 API 层表达式函数定义转换为视图对象。
+   *
+   * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(ExpressionFunctionDef)}，字段同名直接映射。
+   *
+   * @param entity API 层函数定义（含函数名、参数签名与返回值说明），为 {@code null} 时返回 {@code null}
+   * @return 表达式函数定义视图对象；入参为 {@code null} 时返回 {@code null}
+   */
   public ExpressionFunctionDefVO entityToVO(ExpressionFunctionDef entity) {
     return core.entityToVO(entity);
   }
 
   // ===== DecisionTable PostDTO → Entity =====
+
+  /**
+   * 将新建决策表请求 DTO 转换为待落库的持久化实体。
+   *
+   * <p>门面方法，委托给 {@link RuleSupportConverter#postDtoToEntity(DecisionTableDTO)}。
+   * 主键、逻辑删除标记、乐观锁版本号、租户与审计字段均由持久层与拦截器填写，故忽略映射。
+   *
+   * @param dto 新建决策表入参，为 {@code null} 时返回 {@code null}
+   * @return 决策表持久化实体，{@code id} / {@code deleted} / {@code revision} 等字段为 {@code null}；
+   *     入参为 {@code null} 时返回 {@code null}
+   */
   public DecisionTable postDtoToEntity(DecisionTableDTO dto) {
     return support.postDtoToEntity(dto);
   }

@@ -269,7 +269,7 @@ public interface Cache<K, V> {
    * 由 loader 决定单条查询还是真正的批量查询（如 SQL IN 查询、mget）； 加载结果写回缓存并合入返回值。loader 仅在存在缺失键时调用一次。
    *
    * <p>loader 返回 null 或其映射中值为 null 的条目视为"加载不到"， 不写缓存也不出现在返回值中（与单键 get 的 null 语义一致）。
-   * loader 为 null 时退化为仅查询已缓存条目。loader 抛出异常时异常直接传播， 已命中的条目不丢失（异常发生在加载阶段之后）。
+   * loader 为 null 时退化为仅查询已缓存条目。loader 抛出异常时异常直接传播， 缓存既有状态不变（本次调用不产生部分写入）。
    *
    * <p>继承 {@code AbstractCache} 的实现会记录批量加载统计（次数/耗时）； 此 default 实现为直接实现本接口的类提供兼容存根（不计统计）。
    *
