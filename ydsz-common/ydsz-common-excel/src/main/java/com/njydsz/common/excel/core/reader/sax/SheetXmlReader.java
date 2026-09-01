@@ -416,7 +416,27 @@ public class SheetXmlReader {
     }
   }
 
-  private Object convertCellValue(String value, ColumnMetadata colMeta) {    if (value == null || value.isEmpty()) {
+  /**
+   * 解析单元格原始值为表头文本（t="s" 时为 SST 共享字符串索引，需解析为实际文本）
+   *
+   * @param value 单元格原始值
+   * @return 表头文本；SST 解析失败时回退原始值
+   */
+  private String resolveSharedString(String value) {
+    if ("s".equals(cellType) && ssReader != null) {
+      try {
+        int sstIndex = Integer.parseInt(value);
+        String resolved = ssReader.getString(sstIndex);
+        return resolved != null ? resolved : "";
+      } catch (Exception e) {
+        return value;
+      }
+    }
+    return value;
+  }
+
+  private Object convertCellValue(String value, ColumnMetadata colMeta) {
+    if (value == null || value.isEmpty()) {
       return null;
     }
 

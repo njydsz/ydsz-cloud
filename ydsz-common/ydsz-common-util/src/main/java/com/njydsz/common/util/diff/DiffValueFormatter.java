@@ -1,5 +1,7 @@
 package com.njydsz.common.util.diff;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * 差异值格式化器接口
  *
@@ -24,6 +26,7 @@ package com.njydsz.common.util.diff;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Experimental("能力储备：字段级差异对比（审计日志场景），当前平台内暂无消费方，启用前请确认测试覆盖")
 public interface DiffValueFormatter {
 
   /**

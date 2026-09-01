@@ -6,6 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * 字段差异追踪注解
  *
@@ -40,6 +42,7 @@ import java.lang.annotation.Target;
  * @see DiffCalculator
  * @see FieldDiff
  */
+@Experimental("能力储备：字段级差异对比（审计日志场景），当前平台内暂无消费方，启用前请确认测试覆盖")
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

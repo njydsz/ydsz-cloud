@@ -33,14 +33,14 @@
     {
       "name": "ydsz.excel.use-fast-reader",
       "type": "java.lang.Boolean",
-      "description": "Use fast reader (zero POI).",
-      "defaultValue": true
+      "description": "Use fast reader (zero POI). Default false: POI-compatible path wins on correctness; opt in explicitly for large-file scenarios.",
+      "defaultValue": false
     },
     {
       "name": "ydsz.excel.use-fast-writer",
       "type": "java.lang.Boolean",
-      "description": "Use fast writer (zero POI).",
-      "defaultValue": true
+      "description": "Use fast writer (zero POI). Default false: POI-compatible path wins on correctness; opt in explicitly for large-file scenarios.",
+      "defaultValue": false
     },
     {
       "name": "ydsz.excel.streaming-parse-threshold-mb",

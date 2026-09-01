@@ -38,6 +38,21 @@ public class CronTriggerScheduler {
     /** 标准 cron 表达式字段数量 */
     private static final int CRON_FIELD_COUNT = 5;
 
+    /** cron 表达式分钟字段下标 */
+    private static final int CRON_MINUTE_INDEX = 0;
+
+    /** cron 表达式小时字段下标 */
+    private static final int CRON_HOUR_INDEX = 1;
+
+    /** cron 表达式日字段下标 */
+    private static final int CRON_DAY_OF_MONTH_INDEX = 2;
+
+    /** cron 表达式月字段下标 */
+    private static final int CRON_MONTH_INDEX = 3;
+
+    /** cron 表达式周字段下标 */
+    private static final int CRON_DAY_OF_WEEK_INDEX = 4;
+
     /** 分钟字段最大值 */
     private static final int MINUTE_MAX = 59;
 
@@ -126,11 +141,16 @@ public class CronTriggerScheduler {
             return false;
         }
 
-        return matchesField(parts[0], time.getMinute(), 0, MINUTE_MAX) && // 分
-                matchesField(parts[1], time.getHour(), 0, HOUR_MAX) && // 时
-                matchesField(parts[2], time.getDayOfMonth(), 1, DAY_OF_MONTH_MAX) && // 日
-                matchesField(parts[3], time.getMonthValue(), 1, MONTH_MAX) && // 月
-                matchesField(parts[4], time.getDayOfWeek().getValue(), 1, DAY_OF_WEEK_MAX); // 周
+        String minuteField = parts[CRON_MINUTE_INDEX];
+        String hourField = parts[CRON_HOUR_INDEX];
+        String dayOfMonthField = parts[CRON_DAY_OF_MONTH_INDEX];
+        String monthField = parts[CRON_MONTH_INDEX];
+        String dayOfWeekField = parts[CRON_DAY_OF_WEEK_INDEX];
+        return matchesField(minuteField, time.getMinute(), 0, MINUTE_MAX) // 分
+                && matchesField(hourField, time.getHour(), 0, HOUR_MAX) // 时
+                && matchesField(dayOfMonthField, time.getDayOfMonth(), 1, DAY_OF_MONTH_MAX) // 日
+                && matchesField(monthField, time.getMonthValue(), 1, MONTH_MAX) // 月
+                && matchesField(dayOfWeekField, time.getDayOfWeek().getValue(), 1, DAY_OF_WEEK_MAX); // 周
     }
 
     /**

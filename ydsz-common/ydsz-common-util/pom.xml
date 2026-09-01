@@ -77,6 +77,12 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- ydsz-common-thread（线程池统一管理，替代直接使用 Executors） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- JSR-305 Null-safety 注解（@Nonnull / @Nullable） -->
         <dependency>
             <groupId>com.google.code.findbugs</groupId>

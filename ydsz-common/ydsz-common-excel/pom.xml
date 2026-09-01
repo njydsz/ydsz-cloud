@@ -109,5 +109,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- 测试（与 ydsz-common-util/cache 等兄弟模块惯例一致） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

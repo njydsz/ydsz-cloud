@@ -90,6 +90,9 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   /** Markdown 代码块围栏字符长度（```） */
   private static final int MD_FENCE_LENGTH = 3;
 
+  /** Markdown 代码块语言标记 "json" 的长度 */
+  private static final int JSON_LANG_TAG_LENGTH = 4;
+
   /** Agent 工厂 */
   private final AgentFactory agentFactory;
 
@@ -581,7 +584,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
         int end = json.lastIndexOf("```");
         String inner = json.substring(start + MD_FENCE_LENGTH, end);
         if (inner.startsWith("json")) {
-          inner = inner.substring(4);
+          inner = inner.substring(JSON_LANG_TAG_LENGTH);
         }
         json = inner.trim();
       }

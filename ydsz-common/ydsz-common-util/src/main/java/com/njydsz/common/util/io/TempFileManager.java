@@ -7,10 +7,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -69,13 +69,7 @@ public class TempFileManager implements AutoCloseable {
    */
   public TempFileManager(Duration retention, Duration cleanupInterval) {
     this.retentionMillis = retention.toMillis();
-    this.sweeper =
-        Executors.newSingleThreadScheduledExecutor(
-            runnable -> {
-              Thread thread = new Thread(runnable, "ydsz-tempfile-sweeper");
-              thread.setDaemon(true);
-              return thread;
-            });
+    this.sweeper = ExecutorUtils.newScheduledThreadPool(1, "tempfile-sweeper");
     sweeper.scheduleWithFixedDelay(
         this::sweepExpired,
         cleanupInterval.toMillis(),

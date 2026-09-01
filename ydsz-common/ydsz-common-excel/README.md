@@ -202,8 +202,8 @@ Spring Boot 应用会通过 `spring.factories` / `AutoConfiguration.imports` 自
 ydsz:
   excel:
     enabled: true                       # 默认激活
-    use-fast-reader: true               # 启用零 POI 快速读取路径
-    use-fast-writer: true               # 启用零 POI 快速写入路径
+    use-fast-reader: false              # 默认 false（POI 兼容路径，正确性优先）；大文件场景显式开启
+    use-fast-writer: false              # 默认 false（POI 兼容路径，正确性优先）；大文件场景显式开启
     formula-injection-protection: true  # 启用公式注入防护
 ```
 
@@ -238,8 +238,8 @@ public class UserService {
 | `ydsz.excel.default-date-format` | `yyyy-MM-dd HH:mm:ss` | 默认日期格式 |
 | `ydsz.excel.default-number-format` | `#,##0.00` | 默认数字格式 |
 | `ydsz.excel.automatic-trim` | `true` | 是否自动去除字符串首尾空格 |
-| `ydsz.excel.use-fast-reader` | `true` | 是否启用快速读取引擎（SuperFastExcelReader） |
-| `ydsz.excel.use-fast-writer` | `true` | 是否启用快速写入引擎（SuperFastExcelWriter） |
+| `ydsz.excel.use-fast-reader` | `false` | 是否启用快速读取引擎（SuperFastExcelReader）。默认走 POI 兼容路径，正确性优先；大文件场景显式开启 |
+| `ydsz.excel.use-fast-writer` | `false` | 是否启用快速写入引擎（SuperFastExcelWriter）。默认走 POI 兼容路径，正确性优先；大文件场景显式开启 |
 | `ydsz.excel.streaming-parse-threshold-mb` | `10` | 流式解析文件大小阈值（MB，1-500） |
 | `ydsz.excel.max-read-file-size-mb` | `100` | 最大读取文件大小（MB，1-1024） |
 | `ydsz.excel.max-write-file-size-mb` | `50` | 最大写入文件大小（MB，1-512） |
