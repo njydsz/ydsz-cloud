@@ -184,6 +184,23 @@ public class ExcelReader {
     return this;
   }
 
+  /**
+   * 设置 Excel 全局配置。
+   *
+   * <p>与 {@link ExcelWriter#config(ExcelConfig)} 对称。 P1-2 修复：Spring 接入层（如 ExcelTemplate）通过本方法将
+   * {@code ydsz.excel.*} 配置注入读取链路； 此前读取器无此入口，doRead 内部恒回退 {@link ExcelConfig#defaults()}，
+   * Spring 配置（maxReadFileSizeMb / useFastReader / validationMode 等）完全断线。
+   *
+   * <p><b>注意：</b>须在 {@link #doRead(ReadListener)} 之前调用。
+   *
+   * @param config Excel 全局配置，可为 {@code null}（null 时回退默认配置）
+   * @return 当前读取器实例，支持链式调用
+   */
+  public ExcelReader config(ExcelConfig config) {
+    metadata.setExcelConfig(config);
+    return this;
+  }
+
   // ==================== 读取参数配置 ====================
 
   /**

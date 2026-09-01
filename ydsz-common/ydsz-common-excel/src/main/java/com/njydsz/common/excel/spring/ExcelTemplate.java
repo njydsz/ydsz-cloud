@@ -52,7 +52,9 @@ public class ExcelTemplate {
    * @param <T> data type
    */
   public <T> void read(InputStream inputStream, Class<T> clazz, ReadListener<T> listener) {
-    ExcelFacade.read(inputStream, clazz).sheet().doRead(listener);
+    // P1-2 修复：接线注入的 ExcelConfig。此前直接委托静态门面，读取恒用 ExcelConfig.defaults()，
+    // ydsz.excel.* 配置（maxReadFileSizeMb / useFastReader / validationMode 等）完全不生效。
+    ExcelFacade.read(inputStream, clazz).config(config).sheet().doRead(listener);
   }
 
   /**
@@ -64,7 +66,8 @@ public class ExcelTemplate {
    * @param <T> data type
    */
   public <T> void write(OutputStream outputStream, Class<T> clazz, List<T> data) {
-    ExcelFacade.write(outputStream, clazz).sheet("sheet1").doWrite(data);
+    // P1-2 修复：接线注入的 ExcelConfig（此前恒用默认配置）
+    ExcelFacade.write(outputStream, clazz).config(config).sheet("sheet1").doWrite(data);
   }
 
   /**
@@ -77,7 +80,8 @@ public class ExcelTemplate {
    * @param <T> data type
    */
   public <T> void write(OutputStream outputStream, Class<T> clazz, List<T> data, String sheetName) {
-    ExcelFacade.write(outputStream, clazz).sheet(sheetName).doWrite(data);
+    // P1-2 修复：接线注入的 ExcelConfig（此前恒用默认配置）
+    ExcelFacade.write(outputStream, clazz).config(config).sheet(sheetName).doWrite(data);
   }
 
   /**

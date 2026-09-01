@@ -130,9 +130,21 @@ public class ExcelWriter {
     this.callbacks = new ArrayList<>();
     this.styleManager = new StyleManager(512);
     this.workbookFactory = new WorkbookFactory();
+    rebuildValueFormatter();
+  }
+
+  /**
+   * 重建值格式化器。
+   *
+   * <p>P1-2 修复：{@link ValueFormatter} 构造时固化 ExcelConfig 与 automaticTrim， 此前仅在构造器用单参构造（恒回退
+   * ExcelConfig.defaults()）， 且链式 {@code config()} / {@code automaticTrim()} 变更后不重建 —— POI 写路径的公式注入消毒、
+   * 日期格式化永远用默认配置，Spring 层接线形同虚设。 现统一在构造与配置变更时重建。
+   */
+  private void rebuildValueFormatter() {
     this.valueFormatter =
         new ValueFormatter(
-            metadata.getAutomaticTrim() != null ? metadata.getAutomaticTrim() : true);
+            metadata.getAutomaticTrim() != null ? metadata.getAutomaticTrim() : true,
+            metadata.getExcelConfig());
   }
 
   // ==================== 链式配置方法 ====================
@@ -361,6 +373,7 @@ public class ExcelWriter {
    */
   public ExcelWriter automaticTrim(boolean automaticTrim) {
     metadata.setAutomaticTrim(automaticTrim);
+    rebuildValueFormatter();
     return this;
   }
 
@@ -375,6 +388,8 @@ public class ExcelWriter {
    */
   public ExcelWriter config(ExcelConfig config) {
     metadata.setExcelConfig(config);
+    // P1-2 修复：ValueFormatter 构造时固化配置，须同步重建，否则 POI 写路径仍用旧配置
+    rebuildValueFormatter();
     return this;
   }
 
@@ -977,7 +992,12 @@ public class ExcelWriter {
 
     precomputedProps =
         new PrecomputedColumnProperties(headProperties, styleManager.getStyleHandler());
-    ultraFastCellWriter = new UltraFastCellWriter(metadata.getAutomaticTrim());
+    // P1-2 修复：typed POI 写入主路径接入 ExcelConfig（公式注入消毒）；
+    // 同时修复 automaticTrim 为 null 时 Boolean 拆箱 NPE 风险
+    ultraFastCellWriter =
+        new UltraFastCellWriter(
+            metadata.getAutomaticTrim() != null ? metadata.getAutomaticTrim() : true,
+            metadata.getExcelConfig());
   }
 
   /**
@@ -1271,7 +1291,10 @@ public class ExcelWriter {
    * @throws IOException 写入异常
    */
   public void finish() throws IOException {
-    if (workbook == null) {
+    // P1-2 修复：幂等化。doWrite 单 Sheet 场景自动 finish 并 markWriteCompleted，
+    // 调用方（如 ExcelExportHelper）"doWrite + finish" 惯用写法此前触发已关闭 workbook 的二次写入
+    // （POI: Cannot write data, document seems to have been closed already）。
+    if (writeCompleted || workbook == null) {
       return;
     }
 
@@ -1313,6 +1336,8 @@ public class ExcelWriter {
           sxssf.dispose();
         }
       }
+      // 无论成功失败均标记完成：workbook 已关闭（或已写出），重复 finish 无意义且有害
+      markWriteCompleted();
     }
 
     if (firstException != null) {

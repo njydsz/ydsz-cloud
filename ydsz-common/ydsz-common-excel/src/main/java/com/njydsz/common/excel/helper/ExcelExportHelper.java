@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
+import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.exception.ExcelWriteException;
 
 /**
@@ -32,6 +33,23 @@ public class ExcelExportHelper {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExcelExportHelper.class);
 
+  /** Excel 全局配置。P1-2 修复：Spring 层注入，此前导出恒用 ExcelConfig.defaults() */
+  private final ExcelConfig config;
+
+  /** 默认构造（非 Spring 独立使用场景），使用默认配置 */
+  public ExcelExportHelper() {
+    this(ExcelConfig.defaults());
+  }
+
+  /**
+   * 构造方法
+   *
+   * @param config Excel 全局配置，可为 {@code null}（null 时回退默认配置）
+   */
+  public ExcelExportHelper(ExcelConfig config) {
+    this.config = config != null ? config : ExcelConfig.defaults();
+  }
+
   /**
    * 导出数据为 Excel 字节数组。
    * @param sheetName Sheet 名称
@@ -43,7 +61,7 @@ public class ExcelExportHelper {
    */
   public <T> byte[] export(String sheetName, Class<T> dataClass, List<T> dataList) {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      ExcelWriter writer = ExcelFacade.write(out, dataClass).sheet(sheetName);
+      ExcelWriter writer = ExcelFacade.write(out, dataClass).config(config).sheet(sheetName);
       writer.doWrite(dataList);
       writer.finish();
       return out.toByteArray();
@@ -78,7 +96,8 @@ public class ExcelExportHelper {
    */
   public byte[] export(String sheetName, List<String> headers, List<List<Object>> rows) {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-      ExcelWriter writer = ExcelFacade.write(out).head(headers).headRowNumber(0).sheet(sheetName);
+      // P1-2 修复：接线 config；headRowNumber 语义统一为 1-based（1=表头在第一行），此前传 0 依赖 clamp 兜底
+      ExcelWriter writer = ExcelFacade.write(out).config(config).head(headers).headRowNumber(1).sheet(sheetName);
       writer.doWrite(rows);
       writer.finish();
       return out.toByteArray();

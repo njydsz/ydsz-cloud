@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.poi.ss.usermodel.Cell;
 
+import com.njydsz.common.excel.core.config.ExcelConfig;
+
 /**
  * 超高速单元格写入器 - 零拷贝路径
  *
@@ -38,13 +40,27 @@ public final class UltraFastCellWriter {
   /** 是否自动修剪字符串 */
   private final boolean trimStrings;
 
+  /** Excel 全局配置。P1-2 修复：typed POI 写入主路径此前无 ExcelConfig，公式注入消毒完全失效 */
+  private final ExcelConfig excelConfig;
+
   /**
    * 构造超高速单元格写入器
    *
    * @param trimStrings 是否自动修剪字符串
    */
   public UltraFastCellWriter(boolean trimStrings) {
+    this(trimStrings, null);
+  }
+
+  /**
+   * 构造超高速单元格写入器
+   *
+   * @param trimStrings 是否自动修剪字符串
+   * @param excelConfig Excel 全局配置，可为 {@code null}（null 时不做公式注入消毒，向后兼容）
+   */
+  public UltraFastCellWriter(boolean trimStrings, ExcelConfig excelConfig) {
     this.trimStrings = trimStrings;
+    this.excelConfig = excelConfig;
   }
 
   /**
@@ -63,7 +79,7 @@ public final class UltraFastCellWriter {
     }
 
     if (value instanceof String s) {
-      cell.setCellValue(trimStrings ? s.trim() : s);
+      cell.setCellValue(sanitize(trimStrings ? s.trim() : s));
     } else if (value instanceof Number n) {
       cell.setCellValue(n.doubleValue());
     } else if (value instanceof Boolean b) {
@@ -79,8 +95,24 @@ public final class UltraFastCellWriter {
     } else if (value instanceof YearMonth ym) {
       cell.setCellValue(formatYearMonth(ym));
     } else {
-      cell.setCellValue(value.toString());
+      cell.setCellValue(sanitize(value.toString()));
     }
+  }
+
+  /**
+   * 公式注入消毒（XLSX 路径：前导空格阻断二次求值链）。
+   *
+   * <p>P1-2 修复：typed POI 写入主路径接入 ExcelConfig；与 {@code ValueFormatter.setCellValueFast}
+   * 的 String 分支行为对齐。
+   *
+   * @param value 已 trim 的字符串值
+   * @return 消毒后的值
+   */
+  private String sanitize(String value) {
+    if (excelConfig != null && excelConfig.isFormulaInjectionProtection()) {
+      return excelConfig.sanitizeForXlsx(value);
+    }
+    return value;
   }
 
   /**

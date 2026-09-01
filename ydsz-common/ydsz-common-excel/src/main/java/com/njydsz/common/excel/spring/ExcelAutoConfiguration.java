@@ -14,7 +14,8 @@ import com.njydsz.common.excel.helper.ExcelExportHelper;
 /**
  * Excel 模块 Spring Boot 自动配置
  *
- * <p>通过 {@code ydsz.excel.*} 前缀绑定 application.yml 配置，自动注册 {@link ExcelTemplate} Bean。 仅在 Spring
+ * <p>通过 {@code ydsz.excel.*} 前缀绑定 application.yml 配置，自动注册 {@link ExcelTemplate}、 {@link
+ * ExcelExportHelper}、{@link ExcelWebSupport}、{@link ExcelConfig} 及健康检查指示器 Bean（Actuator 存在时）。 仅在 Spring
  * Boot 环境下生效，核心模块不依赖 Spring。
  *
  * <h3>使用示例</h3>
@@ -59,12 +60,13 @@ public class ExcelAutoConfiguration {
    * <p>各业务模块通过 {@code @Resource} 或 {@code @Autowired} 注入， 统一封装导出入口，消除各模块自建 {@code
    * ByteArrayOutputStream + ExcelFacade.write()} 的重复编码。
    *
+   * @param config 基于配置属性构建的 ExcelConfig（P1-2 修复：此前不传入，导出恒用默认配置）
    * @return ExcelExportHelper 实例
    */
   @Bean
   @ConditionalOnMissingBean
-  public ExcelExportHelper excelExportHelper() {
-    return new ExcelExportHelper();
+  public ExcelExportHelper excelExportHelper(ExcelConfig config) {
+    return new ExcelExportHelper(config);
   }
 
   /**
@@ -109,5 +111,32 @@ public class ExcelAutoConfiguration {
         .headRowNumber(properties.getHeadRowNumber())
         .writeCacheSize(properties.getWriteCacheSize())
         .build();
+  }
+
+  /**
+   * 嵌套配置：注册 Excel 健康检查指示器。
+   *
+   * <p>P1-2 修复：{@link ExcelHealthIndicator} 此前从未注册为 Bean（类存在但无任何装配点）， /actuator/health
+   * 永远看不到 excel 组件状态。
+   *
+   * <p>通过嵌套配置类隔离 {@code HealthIndicator} 类引用——spring-boot-health 为 optional 依赖， 直接在主配置类
+   * {@code @Bean} 方法签名中引用该类型， 会在依赖缺失时触发 NoClassDefFoundError（Spring Boot 官方推荐的隔离模式）。
+   */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
+  @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+  static class HealthIndicatorConfiguration {
+
+    /**
+     * 注册 ExcelHealthIndicator Bean。
+     *
+     * @param properties 配置属性
+     * @return 健康指示器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ExcelHealthIndicator excelHealthIndicator(ExcelProperties properties) {
+      return new ExcelHealthIndicator(properties);
+    }
   }
 }
