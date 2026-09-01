@@ -1,6 +1,6 @@
 # ydsz-workflow 数据库索引基线（P0-3）
 
-> 权威来源：`V1__baseline.sql`（与 `data/postgre/ydsz-workflow.sql` 双写同步）。
+> 权威来源：`data/postgre/ydsz-workflow.sql`（项目规范要求脚本统一存放在 data/ 目录）。
 > 基线共 **21 张表 / 72 个索引**。索引口径须与 infra 实体 Javadoc 注释保持一致。
 
 ## ydsz_flow_admin_role

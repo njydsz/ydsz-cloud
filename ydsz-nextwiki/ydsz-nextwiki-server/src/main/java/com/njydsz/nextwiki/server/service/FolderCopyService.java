@@ -131,7 +131,7 @@ public class FolderCopyService {
     }
 
     // 用后映射：旧 ID → 新 ID。根节点映射需要由外层在此方法调用前初始化
-    Map<String, String> idMapping = new HashMap<>();
+    Map<String, String> idMapping = new HashMap<>(total * 2);
 
     int totalCopied = 0;
     int offset = 0;

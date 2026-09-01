@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 import com.njydsz.common.safe.resilience.CallNotPermittedException;
-import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
 
 /**
  * 熔断器（基于平台自研弹性引擎 {@link com.njydsz.common.safe.resilience.CircuitBreaker}）
@@ -248,8 +247,8 @@ public class CircuitBreaker {
     }
 
     /** 转换为自研引擎配置（阈值 0-1 → 百分比）。 */
-    CircuitBreakerConfig toEngineConfig() {
-      return CircuitBreakerConfig.custom()
+    com.njydsz.common.safe.resilience.CircuitBreakerConfig toEngineConfig() {
+      return com.njydsz.common.safe.resilience.CircuitBreakerConfig.custom() // FQN-OK: name conflict with CircuitBreakerConfig
           .failureRateThreshold((float) (this.failureRateThreshold * 100))
           .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))
           .slowCallDurationThreshold(Duration.ofMillis(this.slowCallDurationThresholdMillis))
@@ -259,8 +258,8 @@ public class CircuitBreaker {
           .slidingWindowSize(this.slidingWindowSize)
           .slidingWindowType(
               SlidingWindowType.COUNT_BASED.equals(this.slidingWindowType)
-                  ? CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
-                  : CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+                  ? com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType.COUNT_BASED // FQN-OK: name conflict
+                  : com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType.TIME_BASED) // FQN-OK: name conflict
           .build();
     }
   }

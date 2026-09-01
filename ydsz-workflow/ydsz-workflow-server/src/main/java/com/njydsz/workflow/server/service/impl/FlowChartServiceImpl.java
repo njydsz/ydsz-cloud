@@ -84,7 +84,7 @@ public class FlowChartServiceImpl implements FlowChartService {
       return "";
     }
 
-    Map<String, NodeCoordinate> nodeCoords = new HashMap<>();
+    Map<String, NodeCoordinate> nodeCoords = new HashMap<>(nodes.size() * 2);
     for (FlowNodeVO node : nodes) {
       String nodeCode = node.getNodeCode();
       String coordinate = node.getCoordinate();

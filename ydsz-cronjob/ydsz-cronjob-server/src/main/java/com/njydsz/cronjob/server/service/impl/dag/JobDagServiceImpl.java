@@ -481,7 +481,7 @@ public class JobDagServiceImpl implements JobDagService {
     if (definition == null || definition.edges() == null || definition.edges().isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, List<String>> adj = new HashMap<>();
+    Map<String, List<String>> adj = new HashMap<>(definition.nodes().size() * 2);
     // 确保所有节点都在邻接表中（即使没有出边）
     for (DagNode node : definition.nodes()) {
       adj.computeIfAbsent(node.jobKey(), k -> new ArrayList<>());

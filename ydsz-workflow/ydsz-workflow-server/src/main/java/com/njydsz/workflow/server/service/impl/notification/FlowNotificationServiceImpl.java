@@ -141,7 +141,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       }
       String title = "您有一个新的审批待办";
       String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 需要您处理";
-      Map<String, Object> extra = new HashMap<>();
+      Map<String, Object> extra = new HashMap<>(8);
       extra.put("bizType", "WORKFLOW_TASK");
       extra.put("instanceId", instanceId);
       extra.put("taskId", taskId);
@@ -174,7 +174,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         content += "，备注：" + comment;
       }
       for (String assigneeId : assigneeIds) {
-        Map<String, Object> extra = new HashMap<>();
+        Map<String, Object> extra = new HashMap<>(8);
         extra.put("bizType", "WORKFLOW_URGE");
         extra.put("instanceId", instanceId);
         extra.put("taskId", taskId);
@@ -203,7 +203,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       }
       String content = "流程实例[" + instanceId + "] 节点[" + nodeCode + "] 抄送给您";
       for (Long userId : ccUserIds) {
-        Map<String, Object> extra = new HashMap<>();
+        Map<String, Object> extra = new HashMap<>(8);
         extra.put("bizType", "WORKFLOW_CC");
         extra.put("instanceId", instanceId);
         extra.put("nodeCode", nodeCode);
@@ -231,7 +231,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       }
       String title = "您的审批流程已完成";
       String content = "流程实例[" + instanceId + "] 已审批通过";
-      Map<String, Object> extra = new HashMap<>();
+      Map<String, Object> extra = new HashMap<>(8);
       extra.put("bizType", "WORKFLOW_COMPLETED");
       extra.put("instanceId", instanceId);
       send(CHANNEL_INAPP, initiatorId, title, content, extra);
@@ -256,7 +256,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       if (reason != null && !reason.isBlank()) {
         content += "，原因：" + reason;
       }
-      Map<String, Object> extra = new HashMap<>();
+      Map<String, Object> extra = new HashMap<>(8);
       extra.put("bizType", "WORKFLOW_REJECTED");
       extra.put("instanceId", instanceId);
       extra.put("reason", reason);
@@ -283,7 +283,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       }
       String title = "审批任务已超时";
       String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 超时，触发动作：" + action;
-      Map<String, Object> extra = new HashMap<>();
+      Map<String, Object> extra = new HashMap<>(8);
       extra.put("bizType", "WORKFLOW_SLA_TIMEOUT");
       extra.put("instanceId", instanceId);
       extra.put("taskId", taskId);
