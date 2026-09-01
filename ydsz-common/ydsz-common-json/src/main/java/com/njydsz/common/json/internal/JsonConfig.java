@@ -606,6 +606,19 @@ public final class JsonConfig implements Serializable {
     }
 
     /**
+     * 设置反序列化遇到未知字段时是否抛出异常。
+     *
+     * <p>对标 Jackson {@code FAIL_ON_UNKNOWN_PROPERTIES}。默认 {@code false}（容错跳过）。
+     *
+     * @param failOnUnknownProperties {@code true} 严格模式（未知字段抛异常），{@code false} 容错跳过
+     * @return this（链式调用）
+     */
+    public Builder failOnUnknownProperties(boolean failOnUnknownProperties) {
+      this.failOnUnknownProperties = failOnUnknownProperties;
+      return this;
+    }
+
+    /**
      * 设置反序列化时未显式指定格式的日期默认解析模式。
      *
      * @param defaultDateFormat 日期默认解析模式串
@@ -694,6 +707,7 @@ public final class JsonConfig implements Serializable {
         this.maxGenericDepth = config.getMaxGenericDepth();
         this.useBigDecimal = config.isUseBigDecimal();
         this.wrapRootValue = config.isWrapRootValue();
+        this.failOnUnknownProperties = config.isFailOnUnknownProperties();
       }
       return this;
     }
@@ -719,7 +733,8 @@ public final class JsonConfig implements Serializable {
           this.maxDepth,
           this.maxGenericDepth,
           this.useBigDecimal,
-          this.wrapRootValue);
+          this.wrapRootValue,
+          this.failOnUnknownProperties);
     }
   }
 

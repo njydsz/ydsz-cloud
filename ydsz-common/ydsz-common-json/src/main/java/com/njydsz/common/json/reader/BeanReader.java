@@ -56,6 +56,32 @@ public final class BeanReader<T> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BeanReader.class);
 
+  /**
+   * 反序列化遇未知字段时是否抛出异常（严格模式）。
+   *
+   * <p>默认 {@code false}（静默跳过未知字段，兼容旧行为）；设为 {@code true} 后，遇到 Bean 中未声明的字段时抛出
+   * {@link JsonDeserializationException}，适用于要求严格契约的场景。
+   */
+  private static volatile boolean failOnUnknownProperties = false;
+
+  /**
+   * 设置反序列化遇未知字段时是否抛出异常。
+   *
+   * @param fail {@code true} 启用严格模式（遇未知字段抛异常），{@code false} 静默跳过
+   */
+  public static void setFailOnUnknownProperties(boolean fail) {
+    failOnUnknownProperties = fail;
+  }
+
+  /**
+   * 获取当前严格模式状态。
+   *
+   * @return {@code true} 表示遇未知字段抛异常
+   */
+  public static boolean isFailOnUnknownProperties() {
+    return failOnUnknownProperties;
+  }
+
   /** Bean 类型 */
   public final Class<T> beanType;
 
@@ -371,6 +397,8 @@ public final class BeanReader<T> {
           } catch (Exception e) {
             // 调用失败时跳过该字段
           }
+        } else if (failOnUnknownProperties) {
+          throw JsonDeserializationException.unknownField(fieldName, beanType);
         } else {
           reader.skipValue();
         }

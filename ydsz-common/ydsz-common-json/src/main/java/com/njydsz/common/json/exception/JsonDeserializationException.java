@@ -29,6 +29,8 @@ public class JsonDeserializationException extends JsonException {
   public static final int VALIDATION_ERROR = 3006;
 /** field access error */
   public static final int FIELD_ACCESS_ERROR = 3007;
+/** unknown field */
+  public static final int UNKNOWN_FIELD = 3008;
 
   /** 长上下文片段半径：错误位置前后各取的字符数 */
   private static final int LONG_CONTEXT_RADIUS = 40;
@@ -416,5 +418,19 @@ public class JsonDeserializationException extends JsonException {
    */
   public static JsonDeserializationException validationError(String message) {
     return new JsonDeserializationException(VALIDATION_ERROR, message);
+  }
+
+  /**
+   * 创建未知字段异常
+   *
+   * @param fieldName 未知字段名
+   * @param beanType Bean 类型
+   * @return 反序列化异常
+   */
+  public static JsonDeserializationException unknownField(String fieldName, Class<?> beanType) {
+    return new JsonDeserializationException(
+        UNKNOWN_FIELD,
+        "Unknown field '" + fieldName + "' for bean "
+            + (beanType != null ? beanType.getName() : "null"));
   }
 }
