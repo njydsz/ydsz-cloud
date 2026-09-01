@@ -31,4 +31,10 @@ public class FlowCcQuery extends PageQuery {
 
   /** 流程编码过滤 */
   private String flowCode;
+
+  /** 流程实例ID（合并自 FlowCcQueryDTO） */
+  private String instanceId;
+
+  /** 抄送用户ID（合并自 FlowCcQueryDTO） */
+  private String ccUserId;
 }
