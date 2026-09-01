@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.literule.domain.dto.post.DecisionTableDTO;
+import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
@@ -67,5 +67,6 @@ public class DecisionTableRepositoryImpl implements DecisionTableRepository {
     decisionTableMapper.deleteById(id);
   }
 }
+
 
 

@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -117,17 +116,6 @@ public class CronjobMetrics extends SentryMetricsAdapter {
     this.cronjobProperties = cronjobProperties;
     registerGauges();
     log.info("[CronjobMetrics] 初始化完成，Prometheus 端点可访问 /actuator/prometheus");
-  }
-
-  /**
-   * P0-6/11: 注册自身引用到 CronjobMetricsHolder，使旧静态方法委托到本 Bean。
-   *
-   * <p>兼容过渡期使用，新代码应直接注入 {@link CronjobMetrics}。
-   */
-  @PostConstruct
-  public void registerAsHolderDelegate() {
-    CronjobMetricsHolder.setCronjobMetrics(this);
-    log.info("[CronjobMetrics] 已注册为 CronjobMetricsHolder 委托目标");
   }
 
   // ===========================================

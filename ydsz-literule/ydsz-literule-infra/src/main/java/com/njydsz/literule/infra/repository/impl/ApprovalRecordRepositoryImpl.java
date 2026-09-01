@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.literule.domain.dto.post.ApprovalRecordDTO;
+import com.njydsz.literule.domain.dto.ApprovalRecordDTO;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 
@@ -85,5 +85,6 @@ public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
     return vo;
   }
 }
+
 
 

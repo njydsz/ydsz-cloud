@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
+import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.dto.RuleVersionDTO;
 import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
@@ -74,7 +74,7 @@ public interface RuleSupportConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  DecisionTable postDtoToEntity(DecisionTablePostDTO dto);
+  DecisionTable postDtoToEntity(DecisionTableDTO dto);
 
   // ===== RuleABPolicy PutDTO → Entity =====
   @Mapping(target = "deleted", ignore = true)
@@ -88,5 +88,6 @@ public interface RuleSupportConverter {
   @Mapping(target = "lastRollbackAt", ignore = true)
   RuleABPolicy putDtoToEntity(RuleABPolicyDTO dto);
 }
+
 
 

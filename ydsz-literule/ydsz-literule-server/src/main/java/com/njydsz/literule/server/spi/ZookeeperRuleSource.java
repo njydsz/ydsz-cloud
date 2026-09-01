@@ -30,7 +30,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * @author ydsz-team
  */
 @Slf4j
-public class ZookeeperRuleSource implements RuleSource {
+public class ZookeeperRuleSource implements RuleConfigProvider {
 
     /** 重试策略：基础休眠时间（毫秒） */
   private static final int RETRY_SLEEP_MS = 1000;
