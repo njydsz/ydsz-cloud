@@ -87,6 +87,14 @@ public class JsonProperties {
   /** 反序列化失败时是否抛出异常 */
   private boolean failOnError = false;
 
+  /**
+   * 反序列化遇到未知字段时是否抛出异常（P1.5 新增，对标 Jackson FAIL_ON_UNKNOWN_PROPERTIES）。
+   *
+   * <p>默认 {@code false}（容错跳过，与本模块历史行为一致）；{@code true} 用于接口契约
+   * 严格场景（如拼写错误字段的显式暴露）。
+   */
+  private boolean failOnUnknownProperties = false;
+
   /** HTTP 请求体最大大小（字节，默认 10MB） */
   private long maxRequestBodySize = 10L * 1024 * 1024;
 

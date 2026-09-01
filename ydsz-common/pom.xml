@@ -54,7 +54,6 @@
         <h2.db.version>2.4.240</h2.db.version>
         <okhttp3.version>4.12.0</okhttp3.version>
         <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
-        <resilience4j.version>2.4.0</resilience4j.version>
         <error-prone-annotations.version>2.49.0</error-prone-annotations.version>
         <fastjson2.version>2.0.62</fastjson2.version>
         <asm.version>9.7.1</asm.version>
@@ -562,67 +561,8 @@
 
             <!-- fastjson2 版本覆盖 -->
 
-            <!-- resilience4j 版本覆盖 -->
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-spring-boot3</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-spring6</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-reactor</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-circuitbreaker</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-micrometer</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-framework-common</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-core</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-ratelimiter</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-retry</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-bulkhead</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-timelimiter</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.resilience4j</groupId>
-                <artifactId>resilience4j-consumer</artifactId>
-                <version>${resilience4j.version}</version>
-            </dependency>
+            <!-- 弹性容错已回归平台自研引擎 ydsz-common-safe（com.njydsz.common.safe.resilience），
+                 Resilience4j 版本覆盖条目已全部移除，决策详见 docs/ADR-0004-resilience-self-hosted.md -->
 
             <!-- jetbrains annotations -->
             <dependency>
@@ -647,7 +587,7 @@
             </dependency>
 
             <!-- Sentinel 声明已于 2026-09-01 移除（对标清理 P1）：
-                 全仓 0 个使用点，熔断/重试由 Resilience4j 承担，详见根 pom 说明。 -->
+                 全仓 0 个使用点，弹性容错由平台自研引擎 ydsz-common-safe 提供，详见 docs/ADR-0004-resilience-self-hosted.md。 -->
 
         </dependencies>
     </dependencyManagement>

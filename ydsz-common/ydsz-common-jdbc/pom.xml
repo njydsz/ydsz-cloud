@@ -118,16 +118,7 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
         </dependency>
-        <!-- resilience4j 熔断器（数据库熔断，按数据源分桶） -->
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-circuitbreaker</artifactId>
-        </dependency>
-        <!-- resilience4j Micrometer 指标（熔断状态可观测） -->
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-micrometer</artifactId>
-        </dependency>
+        <!-- 数据库熔断由平台自研引擎提供（ydsz-common-safe，经上层服务按需引入） -->
         <!-- ydsz-common-cache（统一本地缓存框架，替代 Caffeine） -->
         <dependency>
             <groupId>com.njydsz</groupId>
