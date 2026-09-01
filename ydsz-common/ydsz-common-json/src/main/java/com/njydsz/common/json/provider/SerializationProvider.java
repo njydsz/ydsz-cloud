@@ -585,6 +585,12 @@ public final class SerializationProvider {
    */
   private static StringBuilder getSizedStringBuilder(int estimatedSize) {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
+
+    // 池化缓冲重入防护：嵌套序列化不复用 sbPool，防止外层/内层缓冲互相污染（P0 修复）
+    if (ctx.poolDepth > 1) {
+      return new StringBuilder(Math.max(estimatedSize, 256));
+    }
+
     StringBuilder sb = ctx.sbPool;
 
     // 缩容保护：如果池中 StringBuilder 过大，根据预估大小缩容到合适的级别
@@ -777,23 +783,30 @@ public final class SerializationProvider {
       return serialize(obj);
     }
 
-    // PrettyPrint 格式化路径
-    StringBuilder sb = getSizedStringBuilder(LARGE_SB_CAPACITY);
-
-    Set<Object> objects = SerializationContext.CONTEXT.get().serializingObjects;
-    objects.clear();
-
+    // 池化缓冲重入防护
+    SerializationContext ctx = SerializationContext.CONTEXT.get();
+    ctx.poolDepth++;
     try {
-      ValueFormatter.formatValue(obj, sb, 0);
-    } catch (JsonSerializationException e) {
-      throw e;
-    } catch (Exception e) {
-      throw wrapSerializationException(obj, e);
-    } finally {
-      objects.clear();
-    }
+      // PrettyPrint 格式化路径
+      StringBuilder sb = getSizedStringBuilder(LARGE_SB_CAPACITY);
 
-    return sb.toString();
+      Set<Object> objects = ctx.serializingObjects;
+      objects.clear();
+
+      try {
+        ValueFormatter.formatValue(obj, sb, 0);
+      } catch (JsonSerializationException e) {
+        throw e;
+      } catch (Exception e) {
+        throw wrapSerializationException(obj, e);
+      } finally {
+        objects.clear();
+      }
+
+      return sb.toString();
+    } finally {
+      ctx.poolDepth--;
+    }
   }
 
   /**
@@ -807,19 +820,26 @@ public final class SerializationProvider {
       return "null";
     }
 
-    // 格式化输出通常更大，使用较大的预估大小
-    StringBuilder sb = getSizedStringBuilder(LARGE_SB_CAPACITY);
-
-    Set<Object> objects = SerializationContext.CONTEXT.get().serializingObjects;
-    objects.clear();
-
+    // 池化缓冲重入防护
+    SerializationContext ctx = SerializationContext.CONTEXT.get();
+    ctx.poolDepth++;
     try {
-      ValueFormatter.formatValue(obj, sb, 0);
-    } finally {
-      objects.clear();
-    }
+      // 格式化输出通常更大，使用较大的预估大小
+      StringBuilder sb = getSizedStringBuilder(LARGE_SB_CAPACITY);
 
-    return sb.toString();
+      Set<Object> objects = ctx.serializingObjects;
+      objects.clear();
+
+      try {
+        ValueFormatter.formatValue(obj, sb, 0);
+      } finally {
+        objects.clear();
+      }
+
+      return sb.toString();
+    } finally {
+      ctx.poolDepth--;
+    }
   }
 
   /**
@@ -834,24 +854,30 @@ public final class SerializationProvider {
       return "null";
     }
 
-    StringBuilder sb = getSizedStringBuilder(256);
-
+    // 池化缓冲重入防护
     SerializationContext ctx = SerializationContext.CONTEXT.get();
-    Set<Object> objects = ctx.serializingObjects;
-    objects.clear();
-
-    Class<?> previousView = ctx.currentViewClass;
-    ctx.currentViewClass = viewClass;
+    ctx.poolDepth++;
     try {
-      ValueWriter.writeValue(obj, sb);
-    } catch (Exception e) {
-      throw wrapSerializationException(obj, e);
-    } finally {
-      ctx.currentViewClass = previousView;
-      objects.clear();
-    }
+      StringBuilder sb = getSizedStringBuilder(256);
 
-    return sb.toString();
+      Set<Object> objects = ctx.serializingObjects;
+      objects.clear();
+
+      Class<?> previousView = ctx.currentViewClass;
+      ctx.currentViewClass = viewClass;
+      try {
+        ValueWriter.writeValue(obj, sb);
+      } catch (Exception e) {
+        throw wrapSerializationException(obj, e);
+      } finally {
+        ctx.currentViewClass = previousView;
+        objects.clear();
+      }
+
+      return sb.toString();
+    } finally {
+      ctx.poolDepth--;
+    }
   }
 
   /**
@@ -867,31 +893,37 @@ public final class SerializationProvider {
       return "null";
     }
 
-    // 格式化输出使用较大预估大小
-    StringBuilder sb = getSizedStringBuilder(pretty ? LARGE_SB_CAPACITY : 256);
-
+    // 池化缓冲重入防护
     SerializationContext ctx = SerializationContext.CONTEXT.get();
-    Set<Object> objects = ctx.serializingObjects;
-    objects.clear();
-
-    Class<?> previousView = ctx.currentViewClass;
-    ctx.currentViewClass = viewClass;
+    ctx.poolDepth++;
     try {
-      if (pretty) {
-        ValueFormatter.formatValue(obj, sb, 0);
-      } else {
-        ValueWriter.writeValue(obj, sb);
-      }
-    } catch (JsonSerializationException e) {
-      throw e;
-    } catch (Exception e) {
-      throw wrapSerializationException(obj, e);
-    } finally {
-      ctx.currentViewClass = previousView;
-      objects.clear();
-    }
+      // 格式化输出使用较大预估大小
+      StringBuilder sb = getSizedStringBuilder(pretty ? LARGE_SB_CAPACITY : 256);
 
-    return sb.toString();
+      Set<Object> objects = ctx.serializingObjects;
+      objects.clear();
+
+      Class<?> previousView = ctx.currentViewClass;
+      ctx.currentViewClass = viewClass;
+      try {
+        if (pretty) {
+          ValueFormatter.formatValue(obj, sb, 0);
+        } else {
+          ValueWriter.writeValue(obj, sb);
+        }
+      } catch (JsonSerializationException e) {
+        throw e;
+      } catch (Exception e) {
+        throw wrapSerializationException(obj, e);
+      } finally {
+        ctx.currentViewClass = previousView;
+        objects.clear();
+      }
+
+      return sb.toString();
+    } finally {
+      ctx.poolDepth--;
+    }
   }
 
   /**
@@ -911,28 +943,34 @@ public final class SerializationProvider {
 
     SerializationContext ctx = SerializationContext.CONTEXT.get();
 
-    // 统一快速路径：Bean/Collection/Map 三条路径提取到 tryFastPathToWriter
-    JSONWriter writer = tryFastPathToWriter(obj, ctx);
-    if (writer != null) {
-      return writer.toUtf8Bytes();
-    }
-
-    // 回退路径：使用 StringBuilder + ValueWriter
-    StringBuilder sb = getSizedStringBuilder(256);
-    Set<Object> objects = ctx.serializingObjects;
-    objects.clear();
-
+    // 池化缓冲重入防护：最外层（poolDepth == 1）才允许复用 fastWriterPool / sbPool
+    ctx.poolDepth++;
     try {
-      if (!tryBeanSerialize(obj, sb)) {
-        ValueWriter.writeValue(obj, sb);
+      // 统一快速路径：Bean/Collection/Map 三条路径提取到 tryFastPathToWriter
+      JSONWriter writer = tryFastPathToWriter(obj, ctx);
+      if (writer != null) {
+        return writer.toUtf8Bytes();
       }
-    } catch (Exception e) {
-      throw wrapSerializationException(obj, e);
-    } finally {
-      objects.clear();
-    }
 
-    return sb.toString().getBytes(StandardCharsets.UTF_8);
+      // 回退路径：使用 StringBuilder + ValueWriter
+      StringBuilder sb = getSizedStringBuilder(256);
+      Set<Object> objects = ctx.serializingObjects;
+      objects.clear();
+
+      try {
+        if (!tryBeanSerialize(obj, sb)) {
+          ValueWriter.writeValue(obj, sb);
+        }
+      } catch (Exception e) {
+        throw wrapSerializationException(obj, e);
+      } finally {
+        objects.clear();
+      }
+
+      return sb.toString().getBytes(StandardCharsets.UTF_8);
+    } finally {
+      ctx.poolDepth--;
+    }
   }
 
   /**
