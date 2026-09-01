@@ -53,6 +53,9 @@ public class TeamRunOrchestrationService {
     /** 单次 Team Run 最大成员数 */
     private static final int MAX_MEMBERS_PER_TEAM_RUN = 10;
 
+    /** 各类 ID 中 UUID 的截取长度 */
+    private static final int ID_UUID_LENGTH = 8;
+
     public TeamRunOrchestrationService(TeamRunRepository teamRunRepository,
                                          AgentExecutionService agentExecutionService) {
         this.teamRunRepository = Objects.requireNonNull(teamRunRepository, "teamRunRepository 不能为 null");
@@ -429,6 +432,10 @@ public class TeamRunOrchestrationService {
 
     /**
      * 获取 Team Run 详情。
+     *
+     * @param teamRunId Team Run ID
+     * @param tenantId 租户 ID
+     * @return Team Run 详情
      */
     public TeamRun getTeamRun(String teamRunId, String tenantId) {
         return getTeamRunOrThrow(teamRunId, tenantId);
@@ -436,6 +443,9 @@ public class TeamRunOrchestrationService {
 
     /**
      * 列出租户下活跃的 Team Run。
+     *
+     * @param tenantId 租户 ID
+     * @return 活跃 Team Run 列表
      */
     public List<TeamRun> listActiveTeamRuns(String tenantId) {
         return teamRunRepository.findActiveByTenant(tenantId);
@@ -459,21 +469,21 @@ public class TeamRunOrchestrationService {
      * 生成 Team Run ID。
      */
     private String generateTeamRunId() {
-        return "tr-" + UUID.randomUUID().toString().substring(0, 8);
+        return "tr-" + UUID.randomUUID().toString().substring(0, ID_UUID_LENGTH);
     }
 
     /**
      * 生成成员 ID。
      */
     private String generateMemberId() {
-        return "mbr-" + UUID.randomUUID().toString().substring(0, 8);
+        return "mbr-" + UUID.randomUUID().toString().substring(0, ID_UUID_LENGTH);
     }
 
     /**
      * 生成执行 ID。
      */
     private String generateExecutionId() {
-        return "exec-" + UUID.randomUUID().toString().substring(0, 8);
+        return "exec-" + UUID.randomUUID().toString().substring(0, ID_UUID_LENGTH);
     }
 
     /**

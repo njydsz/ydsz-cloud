@@ -508,7 +508,12 @@ public final class SerializationProvider {
    * @since 1.0.0
    */
   public static JSONWriter getFastWriterPool() {
-    return SerializationContext.CONTEXT.get().fastWriterPool;
+    // 池化缓冲重入防护：嵌套序列化返回独立实例，避免 reset() 清空外层内容（P0 修复）
+    SerializationContext ctx = SerializationContext.CONTEXT.get();
+    if (ctx.poolDepth > 1) {
+      return new JSONWriter();
+    }
+    return ctx.fastWriterPool;
   }
 
   /**
@@ -1080,7 +1085,8 @@ public final class SerializationProvider {
 
     // 快速路径 2：Collection 类型直接使用 JSONWriter
     if (obj instanceof Collection) {
-      JSONWriter writer = ctx.fastWriterPool;
+      // 池化缓冲重入防护：嵌套序列化使用独立实例（P0 修复）
+      JSONWriter writer = ctx.poolDepth > 1 ? new JSONWriter() : ctx.fastWriterPool;
       writer.reset();
       Collection<?> coll = (Collection<?>) obj;
       if (!coll.isEmpty()) {
@@ -1092,7 +1098,8 @@ public final class SerializationProvider {
 
     // 快速路径 3：Map 类型直接使用 JSONWriter
     if (obj instanceof Map) {
-      JSONWriter writer = ctx.fastWriterPool;
+      // 池化缓冲重入防护：嵌套序列化使用独立实例（P0 修复）
+      JSONWriter writer = ctx.poolDepth > 1 ? new JSONWriter() : ctx.fastWriterPool;
       writer.reset();
       writer.writeMap((Map<?, ?>) obj);
       return writer;
@@ -1172,7 +1179,9 @@ public final class SerializationProvider {
   // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
     // 使用 JSONWriter 进行快速序列化（复用 ThreadLocal 池）
   // CHECKSTYLE.ON: RegexpSinglelineJava
-    JSONWriter writer = SerializationContext.CONTEXT.get().fastWriterPool;
+    // 池化缓冲重入防护：嵌套序列化使用独立实例，避免 reset() 清空外层内容（P0 修复）
+    SerializationContext serializeCtx = SerializationContext.CONTEXT.get();
+    JSONWriter writer = serializeCtx.poolDepth > 1 ? new JSONWriter() : serializeCtx.fastWriterPool;
     writer.reset();
 
     BeanSerializer beanSerializer = BeanSerializerCache.getOrCreate(clazz, fields, strategy);

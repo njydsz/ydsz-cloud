@@ -35,6 +35,24 @@ public class CronTriggerScheduler {
     /** 最小执行间隔（秒），防止同一分钟内多次触发 */
     private static final long MIN_EXECUTION_INTERVAL_SECONDS = 55;
 
+    /** 标准 cron 表达式字段数量 */
+    private static final int CRON_FIELD_COUNT = 5;
+
+    /** 分钟字段最大值 */
+    private static final int MINUTE_MAX = 59;
+
+    /** 小时字段最大值 */
+    private static final int HOUR_MAX = 23;
+
+    /** 日字段最大值 */
+    private static final int DAY_OF_MONTH_MAX = 31;
+
+    /** 月字段最大值 */
+    private static final int MONTH_MAX = 12;
+
+    /** 周字段最大值 */
+    private static final int DAY_OF_WEEK_MAX = 7;
+
     public CronTriggerScheduler(TriggerRepository triggerRepository,
                                 TriggerEvaluationService evaluationService) {
         this.triggerRepository = Objects.requireNonNull(triggerRepository, "triggerRepository 不能为 null");
@@ -103,16 +121,16 @@ public class CronTriggerScheduler {
      */
     private boolean matchesCronExpression(String cronExpression, LocalDateTime time) {
         String[] parts = cronExpression.trim().split("\\s+");
-        if (parts.length != 5) {
+        if (parts.length != CRON_FIELD_COUNT) {
             log.warn("[CronScheduler] 无效的 cron 表达式: {}", cronExpression);
             return false;
         }
 
-        return matchesField(parts[0], time.getMinute(), 0, 59) && // 分
-                matchesField(parts[1], time.getHour(), 0, 23) && // 时
-                matchesField(parts[2], time.getDayOfMonth(), 1, 31) && // 日
-                matchesField(parts[3], time.getMonthValue(), 1, 12) && // 月
-                matchesField(parts[4], time.getDayOfWeek().getValue(), 1, 7); // 周
+        return matchesField(parts[0], time.getMinute(), 0, MINUTE_MAX) && // 分
+                matchesField(parts[1], time.getHour(), 0, HOUR_MAX) && // 时
+                matchesField(parts[2], time.getDayOfMonth(), 1, DAY_OF_MONTH_MAX) && // 日
+                matchesField(parts[3], time.getMonthValue(), 1, MONTH_MAX) && // 月
+                matchesField(parts[4], time.getDayOfWeek().getValue(), 1, DAY_OF_WEEK_MAX); // 周
     }
 
     /**

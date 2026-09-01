@@ -10,16 +10,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * ydsz-common-core 模块中 {@code TraceIdGenerator} 的反射代理。
- *
- * <p>提供 TraceId 和 SpanId 的生成能力，以及 W3C traceparent 编解码。
- *
- * <p>当 ydsz-common-core 不在 classpath 时，降级为基于 ThreadLocalRandom 的简易实现。
- *
- * @author ydsz-team
- * @since 1.0.0
- */
+  /**
+   * ydsz-common-core 模块中 {@code TraceIdGenerator} 的反射代理。
+   *
+   * <p>提供 TraceId 和 SpanId 的生成能力，以及 W3C traceparent 编解码。
+   *
+   * <p>当 ydsz-common-core 不在 classpath 时，降级为基于共享 SecureRandom 的内置实现 （TraceId 带时间戳前缀，保持时间有序语义）。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
 public final class TraceIdGeneratorProxy {
 
   private static final Logger LOG = LoggerFactory.getLogger(TraceIdGeneratorProxy.class);
@@ -42,6 +42,12 @@ public final class TraceIdGeneratorProxy {
 
   /** Span ID 长度（16 位十六进制 = 64 bit） */
   private static final int SPAN_ID_LENGTH = 16;
+
+  /** 降级实现共享的 SecureRandom（静态单例，避免每次调用重新播种的开销） */
+  private static final SecureRandom FALLBACK_RANDOM = new SecureRandom();
+
+  /** 降级 TraceId 时间戳前缀的十六进制长度（12 位，可表示到公元 10889 年） */
+  private static final int FALLBACK_TIMESTAMP_HEX_LENGTH = 12;
 
   private TraceIdGeneratorProxy() {
     throw new UnsupportedOperationException("Utility class should not be instantiated");
@@ -85,7 +91,7 @@ public final class TraceIdGeneratorProxy {
         LOG.debug("调用 TraceIdGenerator.generateSortableTraceId() 失败，使用降级实现: {}", e.getMessage());
       }
     }
-    return fallbackGenerateHex(TRACE_ID_LENGTH);
+    return fallbackGenerateSortableTraceId();
   }
 
   /**
@@ -158,16 +164,34 @@ public final class TraceIdGeneratorProxy {
   }
 
   /**
-   * 降级实现：基于 ThreadLocalRandom 生成指定位数的十六进制字符串。
+   * 降级实现：生成时间有序的 32 位十六进制 Trace ID。
+   *
+   * <p>结构：12 位毫秒时间戳十六进制前缀 + 20 位随机后缀。 时间戳前缀保证与主实现一致的字典序时间有序性（排序/归档场景语义不断裂），
+   * 随机后缀保证同毫秒内的唯一性。使用静态共享 {@link SecureRandom}，避免每次调用重新播种。
+   *
+   * @return 32 位十六进制 Trace ID
+   */
+  private static String fallbackGenerateSortableTraceId() {
+    String timestampHex =
+        String.format("%0" + FALLBACK_TIMESTAMP_HEX_LENGTH + "x", System.currentTimeMillis());
+    StringBuilder sb = new StringBuilder(TRACE_ID_LENGTH);
+    sb.append(timestampHex, 0, FALLBACK_TIMESTAMP_HEX_LENGTH);
+    for (int i = 0; i < TRACE_ID_LENGTH - FALLBACK_TIMESTAMP_HEX_LENGTH; i++) {
+      sb.append(FALLBACK_RANDOM.nextInt(16));
+    }
+    return sb.toString();
+  }
+
+  /**
+   * 降级实现：生成指定位数的随机十六进制字符串（SpanId 使用）。
    *
    * @param length 十六进制字符串长度
    * @return 随机十六进制字符串
    */
   private static String fallbackGenerateHex(int length) {
     StringBuilder sb = new StringBuilder(length);
-    SecureRandom random = new SecureRandom();
     for (int i = 0; i < length; i++) {
-      sb.append(Integer.toHexString(random.nextInt(16)));
+      sb.append(FALLBACK_RANDOM.nextInt(16));
     }
     return sb.toString();
   }
