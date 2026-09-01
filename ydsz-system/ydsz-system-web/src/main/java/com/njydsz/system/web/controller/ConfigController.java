@@ -104,7 +104,7 @@ public class ConfigController {
    */
   @Operation(summary = "游标分页查询")
   @GetMapping("/cursor")
-  public YdszResponse<PageResponse<List<ConfigVO>>> pageByCursor(
+  public YdszResponse<PageResponse<ConfigVO>> pageByCursor(
       @RequestParam(required = false) String configGroup,
       @RequestParam(required = false) String configKey,
       @RequestParam(defaultValue = "20") int pageSize,

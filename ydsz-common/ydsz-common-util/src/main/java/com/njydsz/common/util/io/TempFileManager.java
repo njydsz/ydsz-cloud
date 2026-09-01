@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
+import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * 临时文件统一管理器
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
  * <ul>
  *   <li>带前缀的统一创建方法
  *   <li>跟踪所有已创建的临时文件，支持批量清理
+ *   <li>TTL 兜底清理：创建后超过保留时长（{@code ydsz.util.tempfile.retention}，默认 24h）仍未删除的文件由后台任务定期回收
  *   <li>注册 JVM ShutdownHook 兜底清理，防止文件泄漏
  * </ul>
  *
@@ -26,24 +30,64 @@ import org.springframework.stereotype.Component;
  *
  * <p><b>适用范围：</b>全系统通用能力，不限于文档处理场景。任何需要创建临时文件 并确保最终清理的业务模块均可注入使用。
  *
+ * <p><b>注册方式：</b>由 {@code UtilAutoConfiguration} 以 {@code @Bean} 注册（不使用 {@code @Component}，
+ * 遵循模块"不依赖业务侧组件扫描"的装配原则）。业务方也可自定义 Bean 覆盖（{@code @ConditionalOnMissingBean}）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-@Component
-public class TempFileManager {
+public class TempFileManager implements AutoCloseable {
 
-  /** 本组件创建的所有临时文件路径集合 */
-  private final Set<Path> trackedFiles = ConcurrentHashMap.newKeySet();
+  /** 本组件创建的所有临时文件路径 → 创建时间（毫秒） */
+  private final Map<Path, Long> trackedFiles = new ConcurrentHashMap<>();
 
+  /** 兜底清理调度器（单线程守护线程，不阻碍 JVM 退出） */
+  private final ScheduledExecutorService sweeper;
+
+  /** 临时文件保留时长（毫秒），超龄文件由兜底任务清理 */
+  private final long retentionMillis;
+
+  /** 默认临时文件保留时长：24 小时 */
+  private static final Duration DEFAULT_RETENTION = Duration.ofHours(24);
+
+  /** 默认兜底清理任务执行间隔：10 分钟 */
+  private static final Duration DEFAULT_CLEANUP_INTERVAL = Duration.ofMinutes(10);
+
+  /**
+   * 以默认配置构造（保留 24h，每 10 分钟清理一次）。
+   */
   public TempFileManager() {
+    this(DEFAULT_RETENTION, DEFAULT_CLEANUP_INTERVAL);
+  }
+
+  /**
+   * 以指定配置构造。
+   *
+   * @param retention 临时文件保留时长（正数）
+   * @param cleanupInterval 兜底清理任务执行间隔（正数）
+   */
+  public TempFileManager(Duration retention, Duration cleanupInterval) {
+    this.retentionMillis = retention.toMillis();
+    this.sweeper =
+        Executors.newSingleThreadScheduledExecutor(
+            runnable -> {
+              Thread thread = new Thread(runnable, "ydsz-tempfile-sweeper");
+              thread.setDaemon(true);
+              return thread;
+            });
+    sweeper.scheduleWithFixedDelay(
+        this::sweepExpired,
+        cleanupInterval.toMillis(),
+        cleanupInterval.toMillis(),
+        TimeUnit.MILLISECONDS);
     // JVM 退出时的兜底清理，处理未显式关闭的临时文件
     Runtime.getRuntime()
         .addShutdownHook(
             new Thread(
                 () -> {
                   log.info("[TempFileManager] 应用退出，清理残留临时文件 {} 个", trackedFiles.size());
-                  trackedFiles.forEach(this::deleteQuietly);
+                  cleanupAll();
                 },
                 "ydsz-tempfile-cleanup"));
   }
@@ -65,7 +109,7 @@ public class TempFileManager {
     Path tempFile = Files.createTempFile(prefix, suffix);
     try {
       inputStream.transferTo(Files.newOutputStream(tempFile));
-      trackedFiles.add(tempFile);
+      trackedFiles.put(tempFile, System.currentTimeMillis());
       return tempFile;
     } catch (IOException e) {
       // 写入失败时删除空文件，避免残留
@@ -84,7 +128,7 @@ public class TempFileManager {
    */
   public void track(Path tempFile) {
     if (tempFile != null) {
-      trackedFiles.add(tempFile);
+      trackedFiles.put(tempFile, System.currentTimeMillis());
     }
   }
 
@@ -119,8 +163,39 @@ public class TempFileManager {
    * <p>通常在应用关闭或批次处理结束时调用，无论单个文件是否删除成功， 都会将路径从跟踪集合中移除（避免无限重试）。无论何种情况此方法不会抛异常。
    */
   public void cleanupAll() {
-    trackedFiles.forEach(this::deleteQuietly);
+    trackedFiles.keySet().forEach(this::deleteQuietly);
     trackedFiles.clear();
+  }
+
+  /**
+   * 停止兜底清理任务并清理全部跟踪文件（容器优雅停机时由 Spring 调用）。
+   */
+  @Override
+  public void close() {
+    sweeper.shutdownNow();
+    cleanupAll();
+  }
+
+  /** 清理超过保留时长的临时文件（由调度器周期调用，异常不外抛以保证任务持续运行）。 */
+  private void sweepExpired() {
+    try {
+      long now = System.currentTimeMillis();
+      int swept = 0;
+      for (Map.Entry<Path, Long> entry : trackedFiles.entrySet()) {
+        if (now - entry.getValue() >= retentionMillis) {
+          if (trackedFiles.remove(entry.getKey(), entry.getValue())) {
+            deleteQuietly(entry.getKey());
+            swept++;
+          }
+        }
+      }
+      if (swept > 0) {
+        log.info("[TempFileManager] TTL 兜底清理超龄临时文件 {} 个（保留时长 {}ms）", swept, retentionMillis);
+      }
+    } catch (Exception e) {
+      // 调度任务不允许因单次异常终止（scheduleWithFixedDelay 的语义）
+      log.warn("[TempFileManager] TTL 清理任务执行异常: {}", e.getMessage());
+    }
   }
 
   /**

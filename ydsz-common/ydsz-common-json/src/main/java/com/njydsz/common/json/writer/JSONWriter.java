@@ -627,14 +627,16 @@ public final class JSONWriter {
   }
 
   /**
-   * 直接写入字符串到缓冲区（无容量检查，用于外层已预分配容量的场景）
-   * <p>跳过 ensureCapacity 检查，减少方法调用开销。 调用者必须确保缓冲区有足够容量（至少 len + 2 个字符）
-   * <p>优化：字级检查，纯 ASCII 安全字符串直接批量拷贝
+   * 直接写入字符串到缓冲区（含容量保障）
+   * <p>容量不足时自动扩容，保证写入 len + 2 个字符安全。 <p>优化：字级检查，纯 ASCII 安全字符串直接批量拷贝
    *
    * @param str 字符串
    */
   public void writeStringDirectNoCheck(String str) {
     int len = str.length();
+
+    // 容量保障（P0 修复）：原实现无容量检查，长字符串/长键会越界
+    ensureCapacity(len + 2);
 
     buf[pos++] = '"';
 
@@ -1165,6 +1167,8 @@ public final class JSONWriter {
       preAllocate(size * 64);
     }
 
+    // 容量保障（P0 修复）：空集合场景无 preAllocate，'[' 与 ']' 需自行保障
+    ensureCapacity(2);
     buf[pos++] = '[';
 
     // 优化：对支持随机访问的 List 使用索引循环，避免 Iterator 对象创建开销
@@ -1174,6 +1178,7 @@ public final class JSONWriter {
       List<?> list = (List<?>) collection;
       for (int i = 0; i < size; i++) {
         if (i > 0) {
+          ensureCapacity(1);
           buf[pos++] = ',';
         }
         writeValueInline(list.get(i));
@@ -1182,12 +1187,14 @@ public final class JSONWriter {
       boolean first = true;
       for (Object item : collection) {
         if (!first) {
+          ensureCapacity(1);
           buf[pos++] = ',';
         }
         first = false;
         writeValueInline(item);
       }
     }
+    ensureCapacity(1);
     buf[pos++] = ']';
   }
 
@@ -1207,10 +1214,13 @@ public final class JSONWriter {
       preAllocate(size * 64);
     }
 
+    // 容量保障（P0 修复）：空 Map 场景无 preAllocate，'{' 与 '}' 需自行保障
+    ensureCapacity(2);
     buf[pos++] = '{';
     boolean first = true;
     for (Map.Entry<?, ?> entry : map.entrySet()) {
       if (!first) {
+        ensureCapacity(1);
         buf[pos++] = ',';
       }
       first = false;
@@ -1223,9 +1233,11 @@ public final class JSONWriter {
       } else {
         writeStringDirectNoCheck(String.valueOf(key));
       }
+      ensureCapacity(1);
       buf[pos++] = ':';
       writeValueInline(value);
     }
+    ensureCapacity(1);
     buf[pos++] = '}';
   }
 
@@ -1248,6 +1260,8 @@ public final class JSONWriter {
   /** 内联写入值（不调用 YdszJson.toJson） */
   void writeValueInline(Object value) {
     if (value == null) {
+      // 容量保障（P0 修复）：原实现无容量检查
+      ensureCapacity(4);
       buf[pos] = 'n';
       buf[pos + 1] = 'u';
       buf[pos + 2] = 'l';
@@ -1268,6 +1282,8 @@ public final class JSONWriter {
     } else if (value instanceof Number) {
       writeNumberInline((Number) value);
     } else if (value instanceof Boolean) {
+      // 容量保障（P0 修复）：原实现无容量检查
+      ensureCapacity(5);
       if ((Boolean) value) {
         buf[pos] = 't';
         buf[pos + 1] = 'r';

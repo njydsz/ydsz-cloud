@@ -175,21 +175,8 @@ public final class BeanSerializer {
             strVal = null;
           }
           if (strVal != null) {
-            if (!first) {
-              buf[pos++] = ',';
-            }
-            first = false;
-
-            // 写入键名
-            int keyLen = field.jsonKeyLen;
-            field.jsonKey.getChars(0, keyLen, buf, pos);
-            pos += keyLen;
-
-            // 写入字符串值
+            // 容量保障（P0 修复）：按实际长度保障，转义最坏 6 倍展开
             int len = strVal.length();
-            buf[pos++] = '"';
-
-            // 快速路径：检查转义
             boolean needsEscape = false;
             for (int j = 0; j < len; j++) {
               char c = strVal.charAt(j);
@@ -198,6 +185,26 @@ public final class BeanSerializer {
                 break;
               }
             }
+
+            int keyLen = field.jsonKeyLen;
+            int need = keyLen + (needsEscape ? len * 6 + 4 : len + 4);
+            if (pos + need > buf.length) {
+              writer.pos = pos;
+              writer.ensureCapacity(need);
+              buf = writer.buf; // ensureCapacity 可能重新分配
+            }
+
+            if (!first) {
+              buf[pos++] = ',';
+            }
+            first = false;
+
+            // 写入键名
+            field.jsonKey.getChars(0, keyLen, buf, pos);
+            pos += keyLen;
+
+            // 写入字符串值
+            buf[pos++] = '"';
 
             if (!needsEscape) {
               strVal.getChars(0, len, buf, pos);
@@ -212,20 +219,25 @@ public final class BeanSerializer {
           break;
 
         case 2: // int/Integer
-          int intVal;
+          Integer intVal;
           try {
-            Integer val = (Integer) field.getter.invoke(obj);
-            intVal = val == null ? 0 : val;
+            intVal = (Integer) field.getter.invoke(obj);
           } catch (Throwable e) {
-            intVal = 0;
+            intVal = null;
           }
-          if (intVal != 0 || field.type == int.class) {
+          // P0 修复：区分 null 与 0——包装类型 0 是合法值，必须输出
+          if (intVal != null) {
+            int keyLen = field.jsonKeyLen;
+            if (pos + keyLen + 16 > buf.length) {
+              writer.pos = pos;
+              writer.ensureCapacity(keyLen + 16);
+              buf = writer.buf;
+            }
             if (!first) {
               buf[pos++] = ',';
             }
             first = false;
 
-            int keyLen = field.jsonKeyLen;
             field.jsonKey.getChars(0, keyLen, buf, pos);
             pos += keyLen;
 
@@ -234,20 +246,25 @@ public final class BeanSerializer {
           break;
 
         case 3: // long/Long
-          long longVal;
+          Long longVal;
           try {
-            Long val = (Long) field.getter.invoke(obj);
-            longVal = val == null ? 0L : val;
+            longVal = (Long) field.getter.invoke(obj);
           } catch (Throwable e) {
-            longVal = 0L;
+            longVal = null;
           }
-          if (longVal != 0L || field.type == long.class) {
+          // P0 修复：区分 null 与 0——包装类型 0 是合法值，必须输出
+          if (longVal != null) {
+            int keyLen = field.jsonKeyLen;
+            if (pos + keyLen + 24 > buf.length) {
+              writer.pos = pos;
+              writer.ensureCapacity(keyLen + 24);
+              buf = writer.buf;
+            }
             if (!first) {
               buf[pos++] = ',';
             }
             first = false;
 
-            int keyLen = field.jsonKeyLen;
             field.jsonKey.getChars(0, keyLen, buf, pos);
             pos += keyLen;
 
@@ -256,64 +273,83 @@ public final class BeanSerializer {
           break;
 
         case 4: // double/Double
-          double doubleVal;
+          Double doubleVal;
           try {
-            Double val = (Double) field.getter.invoke(obj);
-            doubleVal = val == null ? 0.0 : val;
+            doubleVal = (Double) field.getter.invoke(obj);
           } catch (Throwable e) {
-            doubleVal = 0.0;
+            doubleVal = null;
           }
-          if (doubleVal != 0.0 || field.type == double.class) {
+          // P0 修复：区分 null 与 0.0——包装类型 0.0 是合法值，必须输出
+          if (doubleVal != null) {
+            int keyLen = field.jsonKeyLen;
+            if (pos + keyLen + 32 > buf.length) {
+              writer.pos = pos;
+              writer.ensureCapacity(keyLen + 32);
+              buf = writer.buf;
+            }
             if (!first) {
               buf[pos++] = ',';
             }
             first = false;
 
-            int keyLen = field.jsonKeyLen;
             field.jsonKey.getChars(0, keyLen, buf, pos);
             pos += keyLen;
 
             pos = writer.writeDoubleToBuf(doubleVal, pos);
+            // writeDoubleToBuf 内部 ensureCapacity 可能重新分配缓冲区，刷新本地引用
+            buf = writer.buf;
           }
           break;
 
         case 5: // float/Float
-          float floatVal;
+          Float floatVal;
           try {
-            Float val = (Float) field.getter.invoke(obj);
-            floatVal = val == null ? 0.0f : val;
+            floatVal = (Float) field.getter.invoke(obj);
           } catch (Throwable e) {
-            floatVal = 0.0f;
+            floatVal = null;
           }
-          if (floatVal != 0.0f || field.type == float.class) {
+          // P0 修复：区分 null 与 0.0——包装类型 0.0 是合法值，必须输出
+          if (floatVal != null) {
+            int keyLen = field.jsonKeyLen;
+            if (pos + keyLen + 24 > buf.length) {
+              writer.pos = pos;
+              writer.ensureCapacity(keyLen + 24);
+              buf = writer.buf;
+            }
             if (!first) {
               buf[pos++] = ',';
             }
             first = false;
 
-            int keyLen = field.jsonKeyLen;
             field.jsonKey.getChars(0, keyLen, buf, pos);
             pos += keyLen;
 
             pos = writer.writeFloatToBuf(floatVal, pos);
+            // writeFloatToBuf 内部 ensureCapacity 可能重新分配缓冲区，刷新本地引用
+            buf = writer.buf;
           }
           break;
 
         case 6: // boolean/Boolean
-          boolean boolVal;
+          Boolean boolVal;
           try {
-            Boolean val = (Boolean) field.getter.invoke(obj);
-            boolVal = val != null && val;
+            boolVal = (Boolean) field.getter.invoke(obj);
           } catch (Throwable e) {
-            boolVal = false;
+            boolVal = null;
           }
-          if (boolVal || field.type == boolean.class) {
+          // P0 修复：区分 null 与 false——包装类型 false 是合法值，必须输出
+          if (boolVal != null) {
+            int keyLen = field.jsonKeyLen;
+            if (pos + keyLen + 8 > buf.length) {
+              writer.pos = pos;
+              writer.ensureCapacity(keyLen + 8);
+              buf = writer.buf;
+            }
             if (!first) {
               buf[pos++] = ',';
             }
             first = false;
 
-            int keyLen = field.jsonKeyLen;
             field.jsonKey.getChars(0, keyLen, buf, pos);
             pos += keyLen;
 
@@ -344,12 +380,19 @@ public final class BeanSerializer {
           if (dateOrNumVal == null) {
             break;
           }
+
+          int keyLen = field.jsonKeyLen;
+          if (pos + keyLen + 64 > buf.length) {
+            writer.pos = pos;
+            writer.ensureCapacity(keyLen + 64);
+            buf = writer.buf; // ensureCapacity 可能重新分配
+          }
+
           if (!first) {
             buf[pos++] = ',';
           }
           first = false;
 
-          int keyLen = field.jsonKeyLen;
           field.jsonKey.getChars(0, keyLen, buf, pos);
           pos += keyLen;
 
@@ -358,6 +401,7 @@ public final class BeanSerializer {
           writer.pos = pos;
           writer.writeValueInline(dateOrNumVal);
           pos = writer.pos;
+          buf = writer.buf; // writeValueInline 内部可能扩容，刷新本地引用
           break;
 
         default:
@@ -370,12 +414,19 @@ public final class BeanSerializer {
           if (value == null) {
             break;
           }
+
+          int defaultKeyLen = field.jsonKeyLen;
+          if (pos + defaultKeyLen + 64 > buf.length) {
+            writer.pos = pos;
+            writer.ensureCapacity(defaultKeyLen + 64);
+            buf = writer.buf; // ensureCapacity 可能重新分配
+          }
+
           if (!first) {
             buf[pos++] = ',';
           }
           first = false;
 
-          int defaultKeyLen = field.jsonKeyLen;
           field.jsonKey.getChars(0, defaultKeyLen, buf, pos);
           pos += defaultKeyLen;
 
@@ -388,11 +439,17 @@ public final class BeanSerializer {
             SerializationProvider.popFieldPath();
           }
           pos = writer.pos;
+          buf = writer.buf; // writeValueInline 内部可能扩容，刷新本地引用
           break;
       }
     }
 
     // 写入 }
+    if (pos + 1 > buf.length) {
+      writer.pos = pos;
+      writer.ensureCapacity(1);
+      buf = writer.buf;
+    }
     buf[pos++] = '}';
     writer.pos = pos;
 

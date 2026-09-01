@@ -8,7 +8,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -60,6 +63,21 @@ public class SuperFastExcelReader {
 
   /** 列元数据数组 */
   ColumnMetadata[] columnMetadataArray;
+
+  /**
+   * 表头行收集的列名（0-based 列索引 → 列名），由 SheetXmlReader 在解析表头行时填充。
+   *
+   * <p>P0-2 修复：fast 路径此前无法构建列元数据（POI 路径在 parseSheet 中通过 HeaderAnalyzer
+   * 构建，fast 路径拿不到 POI Row），导致所有数据单元格被 parseDataCell 直接丢弃。
+   */
+  final Map<Integer, String> headerNames = new HashMap<>();
+
+  /**
+   * 列元数据工厂：当 {@link #columnMetadataArray} 为 null 时，基于收集到的表头列名惰性构建列元数据。
+   *
+   * <p>由 ExcelReader 接线为 HeaderAnalyzer.analyzeClassMetadataFromNames， 首个数据单元格到达时触发，保证表头行已完整收集。
+   */
+  private Function<Map<Integer, String>, ColumnMetadata[]> metadataFactory;
 
   /** 对象实例化器 */
   ObjectInstantiator instantiator;
@@ -185,6 +203,29 @@ public class SuperFastExcelReader {
    */
   public void setColumnMetadataArray(ColumnMetadata[] columnMetadataArray) {
     this.columnMetadataArray = columnMetadataArray;
+  }
+
+  /**
+   * 设置列元数据工厂（fast 路径惰性构建列元数据）
+   *
+   * <p>仅当 {@link #setColumnMetadataArray} 未提供（columnMetadataArray 为 null）时生效。
+   *
+   * @param metadataFactory 表头列名 → 列元数据的构建函数
+   */
+  public void setMetadataFactory(Function<Map<Integer, String>, ColumnMetadata[]> metadataFactory) {
+    this.metadataFactory = metadataFactory;
+  }
+
+  /**
+   * 获取列元数据数组；若未预置且配置了工厂，则基于已收集的表头列名惰性构建。
+   *
+   * @return 列元数据数组；无预置且无工厂时返回 null
+   */
+  ColumnMetadata[] resolveMetadata() {
+    if (columnMetadataArray == null && metadataFactory != null) {
+      columnMetadataArray = metadataFactory.apply(headerNames);
+    }
+    return columnMetadataArray;
   }
 
   /**
