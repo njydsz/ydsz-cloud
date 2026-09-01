@@ -52,7 +52,7 @@ public class ExceptionCodeOpenApiCustomizer implements OpenApiCustomizer {
   }
 
   @Override
-  public void customise(io.swagger.v3.oas.models.OpenAPI openApi) {
+  public void customise(OpenAPI openApi) {
     if (errorCodeTable == null || errorCodeTable.allCodes().isEmpty()) {
       log.debug("[ExceptionCodeOpenApiCustomizer] 无可注册的错误码，跳过");
       return;

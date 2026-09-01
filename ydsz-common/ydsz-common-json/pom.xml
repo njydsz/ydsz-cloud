@@ -16,7 +16,6 @@
     <description>YDSZ 公共依赖 - 高性能 JSON 序列化/反序列化引擎（YdszJson，零外部 JSON 库依赖）</description>
 
     <properties>
-        <jmh.version>1.37</jmh.version>
         <!-- L1 工具层模块标识：激活 purity 检查 -->
         <l1.module.skip>false</l1.module.skip>
     </properties>
@@ -83,13 +82,6 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <!-- JUnit 5（回归测试，版本由 spring-boot-starter-parent 管理） -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>

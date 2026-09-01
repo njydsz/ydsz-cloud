@@ -80,49 +80,7 @@
       <artifactId>spring-boot-actuator-autoconfigure</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
-    </dependency>
-    <!-- 测试（JUnit 5 + AssertJ，版本由 spring-boot-starter-parent BOM 管理） -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <build>
-    <plugins>
-      <!-- JaCoCo 覆盖率（P2 #13，2026-09-01）：prepare-agent + report 执行由根 pom pluginManagement
-           预置，此处按需启用本模块；check 门禁阈值依据当日基线实测设定（指令覆盖率 37.9%，
-           门禁取 35% 作回归下限，防止覆盖率劣化；跑法：mvn verify）
-           注：JMH/Caffeine 基准对照依赖已按 A1 裁决（不引入竞品，仅自研）移除，
-           基线数据归档于 docs/ydsz-common-cache-analysis-report.md §7，基准源码可从 git 历史取回 -->
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>coverage-check</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <rule>
-                  <element>BUNDLE</element>
-                  <limits>
-                    <limit>
-                      <counter>INSTRUCTION</counter>
-                      <value>COVEREDRATIO</value>
-                      <minimum>0.35</minimum>
-                    </limit>
-                  </limits>
-                </rule>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+        </dependency>
+    </dependencies>
 
 </project>

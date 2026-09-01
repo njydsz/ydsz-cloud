@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
+import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
@@ -156,7 +157,7 @@ public class ServiceNodeExecuteService {
     dto.setPerformType(FlowPerformType.OR.name());
     dto.setApproveCount(1);
     dto.setApproveFinished(1);
-    dto.setAssigneeType(com.njydsz.workflow.domain.enums.FlowAssigneeType.USER.name());
+    dto.setAssigneeType(FlowAssigneeType.USER.name());
     dto.setAssigneeId("0");
     dto.setAssigneeName("SYSTEM_SERVICE");
     dto.setTenantId(instance.getTenantId());

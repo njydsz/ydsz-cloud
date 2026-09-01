@@ -50,7 +50,7 @@ public class AgentFacadeImpl implements AgentFacade {
   private final AgentFactory agentFactory;
 
   /** Agent 定义服务（按 code 查找定义以支持类型路由） */
-  private final com.njydsz.agent.server.agent.AgentDefinitionService agentDefinitionService;
+  private final AgentDefinitionService agentDefinitionService;
 
   /**
    * {@inheritDoc}
