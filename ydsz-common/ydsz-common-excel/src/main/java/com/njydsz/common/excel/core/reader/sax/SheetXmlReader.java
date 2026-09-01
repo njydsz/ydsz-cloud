@@ -52,6 +52,9 @@ public class SheetXmlReader {
   /** 共享字符串表读取器，用于解析 t="s" 类型的单元格 */
   private final SharedStringsReader ssReader;
 
+  /** 样式表读取器，用于判定数值单元格是否日期格式（可空：styles.xml 缺失时） */
+  private final StylesReader stylesReader;
+
   /** 父级读取器，提供配置、监听器和上下文 */
   private final SuperFastExcelReader reader;
 
@@ -67,6 +70,9 @@ public class SheetXmlReader {
   /** 当前单元格类型 */
   private String cellType;
 
+  /** 当前单元格样式索引（<c s="N">，-1 表示未声明） */
+  private int cellStyleIndex = -1;
+
   /** 当前行是否有数据（用于空行跳过） */
   private boolean rowHasData;
 
@@ -75,10 +81,13 @@ public class SheetXmlReader {
    *
    * @param reader 父级读取器
    * @param ssReader 共享字符串表读取器
+   * @param stylesReader 样式表读取器（可空：styles.xml 缺失时不做日期样式判定）
    */
-  SheetXmlReader(SuperFastExcelReader reader, SharedStringsReader ssReader) {
+  SheetXmlReader(
+      SuperFastExcelReader reader, SharedStringsReader ssReader, StylesReader stylesReader) {
     this.reader = reader;
     this.ssReader = ssReader;
+    this.stylesReader = stylesReader;
   }
 
   /**
@@ -297,6 +306,16 @@ public class SheetXmlReader {
         cellEnd = end;
       }
 
+      // 深度完善·方案 B：inlineStr 富文本（<is><r><t>…</t></r><r><t>…</t></r></is>）
+      // 多 run 拼接 + phonetic 过滤（与 SST 同构，复用提取逻辑；含 XML 实体解码）。
+      // 此前只取第一个 <t>，多 run 单元格静默丢失后续内容。
+      if ("inlineStr".equals(cellType)) {
+        String inlineText = SharedStringsReader.extractRunsText(data, cellAttrEnd + 1, cellEnd);
+        handleCellValue(inlineText);
+        pos = cellEnd + 4;
+        continue;
+      }
+
       // Search for <v> and <t> within the cell boundary (cellAttrEnd+1 to cellEnd)
       int vStart = findTag(data, cellAttrEnd + 1, cellEnd, "v");
       int tStart = -1;
@@ -333,6 +352,7 @@ public class SheetXmlReader {
   }
 
   private void parseCellAttributes(byte[] data, int start, int end) {
+    cellStyleIndex = -1;
     int rPos = findAttribute(data, start, end, "r=\"");
     if (rPos != -1) {
       int valueStart = rPos + 3;
@@ -352,6 +372,22 @@ public class SheetXmlReader {
       }
     } else {
       cellType = null;
+    }
+
+    // 深度完善·方案 B：收集样式索引（<c s="N">），供数值单元格的日期格式判定。
+    // 带前导空格匹配（' s="'）避免误中 rs= 等同尾属性名。
+    int sPos = findAttribute(data, start, end, " s=\"");
+    if (sPos != -1) {
+      int valueStart = sPos + 4;
+      int valueEnd = findChar(data, valueStart, end, '"');
+      if (valueEnd != -1) {
+        String styleStr = decodeUtf8Fast(data, valueStart, valueEnd - valueStart);
+        try {
+          cellStyleIndex = Integer.parseInt(styleStr);
+        } catch (NumberFormatException e) {
+          cellStyleIndex = -1;
+        }
+      }
     }
   }
 
@@ -452,16 +488,39 @@ public class SheetXmlReader {
       } catch (Exception e) {
         return null;
       }
-    } else if ("inlineStr".equals(cellType)) {
-    } else {
     }
 
     if (actualValue.isEmpty()) {
       return null;
     }
 
+    // 深度完善·方案 B：数值单元格且样式为日期格式（styles.xml numFmt 判定）时，
+    // 序列值按 1900/1904 窗口转换为 Date 交付转换链——此前一律按纯数字读入，
+    // Date/LocalDateTime 字段拿到错误值（fastNumericDateCellIsKnownLimitation 已解除）
+    if (isDateStyledNumericCell()) {
+      try {
+        double serial = Double.parseDouble(actualValue);
+        Date date = DateUtil.getJavaDate(serial, reader.excelConfig().isUse1904Windowing());
+        SimpleCell dateCell = SimpleCell.forDate(actualValue, date);
+        return colMeta.convertStrategy.convert(dateCell, CellType.NUMERIC);
+      } catch (NumberFormatException e) {
+        // 非数值内容按原路径处理（异常生成器的坏数据不在此放大）
+      }
+    }
+
     SimpleCell cell = new SimpleCell(actualValue, mapCellType(cellType));
     return colMeta.convertStrategy.convert(cell, mapCellType(cellType));
+  }
+
+  /**
+   * 当前单元格是否为"日期样式的数值单元格"：无 t 属性（默认 numeric）或 t="n"，
+   * 且样式索引经 {@link StylesReader} 判定为日期格式。
+   */
+  private boolean isDateStyledNumericCell() {
+    if (cellType != null && !"n".equals(cellType)) {
+      return false;
+    }
+    return stylesReader != null && stylesReader.isDateFormat(cellStyleIndex);
   }
 
   private CellType mapCellType(String type) {

@@ -24,6 +24,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import com.njydsz.common.json.annotation.JsonSetter;
 import com.njydsz.common.json.annotation.JsonValue;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.util.BoundedLruCache;

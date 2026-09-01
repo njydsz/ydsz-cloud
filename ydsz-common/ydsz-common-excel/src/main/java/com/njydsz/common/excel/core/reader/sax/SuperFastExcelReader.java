@@ -59,6 +59,14 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.ObjectInstantiator;
  * 单个部件解压后超过 {@code maxReadFileSizeMB} 即中断并抛出异常——压缩前体积再小也无法膨胀越限。
  * 此前依赖 {@code ZipEntry.getSize()}（来自 zip 头，可伪造，常为 -1）事后检查， 临时文件分支先写满磁盘再校验，防护形同虚设。
  *
+ * <h3>数值型日期识别（深度完善·方案 B）</h3>
+ *
+ * <p>{@code read(Path)} 同时解析 {@code xl/styles.xml}（{@link StylesReader}），
+ * 数值单元格的样式索引（{@code <c s="N">}）经 numFmt 判定为日期格式时，序列值按
+ * {@code use1904Windowing} 配置的窗口转换为 {@link java.util.Date} 交付转换链。
+ * 此前 fast 引擎不解析 styles.xml，数值型日期单元格一律按纯数字读入——即
+ * {@code fastNumericDateCellIsKnownLimitation} 存档的已知限制，现已解除。
+ *
  * <h3>性能对比</h3>
  *
  * <table border="1">
