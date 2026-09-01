@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;

@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;

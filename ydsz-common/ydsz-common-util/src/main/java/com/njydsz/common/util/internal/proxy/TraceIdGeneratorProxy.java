@@ -76,6 +76,61 @@ public final class TraceIdGeneratorProxy {
   }
 
   /**
+   * 启动期反射绑定自检（由 {@code UtilAutoConfiguration} 调用）。
+   *
+   * <p>当 ydsz-common-core 在 classpath 上时，逐一验证被反射调用的方法可解析、可执行； 任一失败立即打印 ERROR
+   * 日志并给出修复指引。将"core 侧重命名/改签名导致的运行期静默降级"提前暴露为启动期显式告警。
+   *
+   * <p>core 不在 classpath 时为正常独立使用场景，仅打印 debug 日志，不告警。
+   *
+   * @return true 表示绑定校验通过（或 core 不在 classpath，无需校验）
+   */
+  public static boolean verifyBinding() {
+    if (!isAvailable()) {
+      LOG.debug("ydsz-common-core 不在 classpath 中，跳过 TraceIdGenerator 绑定自检");
+      return true;
+    }
+    boolean healthy = true;
+    healthy &= verifyMethod("generateSortableTraceId");
+    healthy &= verifyMethod("generateSpanId");
+    healthy &= verifyMethod("parseTraceparent", String.class);
+    if (!healthy) {
+      LOG.error(
+          "TraceIdGenerator 反射绑定自检失败：ydsz-common-core 的 TraceIdGenerator 签名与"
+              + " ydsz-common-util 的反射代理不兼容（可能是 core 侧重命名/改签名），"
+              + "TraceId/SpanId 将静默降级为内置实现。请升级 ydsz-common-util 与"
+              + " ydsz-common-core 至配套版本（设计决策见 docs/ADR-0002-trace-contract-sinking.md）");
+    }
+    return healthy;
+  }
+
+  /**
+   * 验证单个反射方法可解析且可执行（用安全入参触发一次真实调用）。
+   *
+   * @param methodName 方法名
+   * @param paramTypes 参数类型
+   * @return true 表示绑定正常
+   */
+  private static boolean verifyMethod(String methodName, Class<?>... paramTypes) {
+    try {
+      Method method = getCachedMethod(methodName, paramTypes);
+      if (method == null) {
+        return false;
+      }
+      if (paramTypes.length == 1 && paramTypes[0] == String.class) {
+        // parseTraceparent：用合法样例触发真实调用
+        method.invoke(null, "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01");
+      } else {
+        method.invoke(null);
+      }
+      return true;
+    } catch (Exception e) {
+      LOG.error("TraceIdGenerator.{} 绑定验证失败: {}", methodName, e.getMessage());
+      return false;
+    }
+  }
+
+  /**
    * 生成时间有序的 Trace ID（32 位十六进制）。
    *
    * <p>W3C TraceContext 兼容格式，与 SkyWalking、Zipkin 等主流规范互通。
