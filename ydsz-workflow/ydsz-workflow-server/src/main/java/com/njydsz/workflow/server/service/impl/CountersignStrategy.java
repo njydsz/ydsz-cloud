@@ -63,7 +63,7 @@ public interface CountersignStrategy {
   /**
    * 当前策略支持的会签类型。
    *
-   * @return 返回值说明
+   * @return 当前策略支持的会签类型枚举
    */
   FlowPerformType supportedType();
 
@@ -72,8 +72,8 @@ public interface CountersignStrategy {
    * 
    * <p>默认无操作；子类可按需重写。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
+   * @param task 当前运行时任务
+   * @param dto 任务操作参数
    */
   default void preCheck(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     // 默认 no-op
@@ -84,24 +84,24 @@ public interface CountersignStrategy {
    * 
    * <p>主流程在调用本方法前已完成"完成当前 task 并归档"动作；本方法负责 更新会签维度的状态（如并行计数器）。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
+   * @param task 当前运行时任务
+   * @param dto 任务操作参数
    */
   void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto);
 
   /**
    * 是否满足推进条件（达到完成阈值）。
    *
-   * @param task 参数说明
-   * @return 返回值说明
+   * @param task 当前运行时任务
+   * @return true 表示满足推进条件（达到完成阈值）
    */
   boolean shouldAdvance(FlowRunTaskVO task);
 
   /**
    * 推进前的清理动作（如 PARALLEL 完成后 skip 同节点其他 PENDING 任务）。
    *
-   * @param task 参数说明
-   * @param dto 参数说明
+   * @param task 当前运行时任务
+   * @param dto 任务操作参数
    */
   default void onAdvance(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     // 默认 no-op

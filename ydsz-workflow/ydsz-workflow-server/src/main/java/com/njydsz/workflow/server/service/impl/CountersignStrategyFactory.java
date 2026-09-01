@@ -72,8 +72,8 @@ public class CountersignStrategyFactory {
   /**
    * 按 performType 获取策略；未注册时回退到 OR。
    *
-   * @param performType 参数说明
-   * @return 返回值说明
+   * @param performType 会签类型枚举
+   * @return 对应的策略实例；未注册时回退到 OR 策略
    */
   public CountersignStrategy getStrategy(FlowPerformType performType) {
     if (performType == null) {

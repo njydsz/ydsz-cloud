@@ -84,7 +84,8 @@ public class SpringCacheHealthIndicator implements HealthIndicator {
   /**
    * 获取底层 CacheHealthIndicator（用于手动注册额外缓存）
    *
-   * @return 返回值说明
+   * @return 被委派的 {@link CacheHealthIndicator} 实例，不会为 {@code null}；
+   *     通过它注册的缓存会一并纳入 {@link #health()} 的明细输出
    */
   public CacheHealthIndicator getDelegate() {
     return delegate;

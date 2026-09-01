@@ -118,8 +118,8 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    * 
    * 
    *
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @return 构建好的分类树形结构列表；无数据返回空列表
    */
   @Override
   public List<FlowCategoryTreeVO> tree(String tenantId) {
