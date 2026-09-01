@@ -259,6 +259,28 @@ public final class ArrayNode extends JsonNode {
   }
 
   @Override
+  public JsonNode findValue(String fieldName) {
+    for (JsonNode child : elements) {
+      if (child != null) {
+        JsonNode found = child.findValue(fieldName);
+        if (found != null) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public void findValues(String fieldName, List<JsonNode> found) {
+    for (JsonNode child : elements) {
+      if (child != null) {
+        child.findValues(fieldName, found);
+      }
+    }
+  }
+
+  @Override
   public Object asValue() {
     return elements.stream().map(node -> node != null ? node.asValue() : null).toList();
   }

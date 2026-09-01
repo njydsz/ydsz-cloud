@@ -1163,7 +1163,7 @@ public final class SerializationProvider {
     // P1 能力补齐：@JsonTypeInfo 多态类型必须走 ValueWriter 注解路径（输出类型标识），
     // 此处检查自身与父类层级（注解通常声明在基类上）
     for (Class<?> c = clazz; c != null && c != Object.class; c = c.getSuperclass()) {
-      if (c.isAnnotationPresent(com.njydsz.common.json.annotation.JsonTypeInfo.class)) {
+      if (c.isAnnotationPresent(JsonTypeInfo.class)) {
         return false;
       }
     }

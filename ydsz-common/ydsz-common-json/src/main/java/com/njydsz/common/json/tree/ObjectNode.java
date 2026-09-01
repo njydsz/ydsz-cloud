@@ -196,6 +196,45 @@ public final class ObjectNode extends JsonNode {
     return Collections.unmodifiableMap(fields);
   }
 
+  /**
+   * 获取字段的键值对视图（P1 能力补齐，对标 Jackson {@code fields()}）。
+   *
+   * @return 不可变的字段条目集合
+   */
+  public Set<Map.Entry<String, JsonNode>> fields() {
+    return Collections.unmodifiableSet(fields.entrySet());
+  }
+
+  @Override
+  public JsonNode findValue(String fieldName) {
+    JsonNode direct = fields.get(fieldName);
+    if (direct != null) {
+      return direct;
+    }
+    for (JsonNode child : fields.values()) {
+      if (child != null) {
+        JsonNode found = child.findValue(fieldName);
+        if (found != null) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public void findValues(String fieldName, List<JsonNode> found) {
+    JsonNode direct = fields.get(fieldName);
+    if (direct != null) {
+      found.add(direct);
+    }
+    for (JsonNode child : fields.values()) {
+      if (child != null) {
+        child.findValues(fieldName, found);
+      }
+    }
+  }
+
   @Override
   public Object asValue() {
     Map<String, Object> result = new LinkedHashMap<>();

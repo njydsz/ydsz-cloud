@@ -81,7 +81,6 @@ public class ServiceNodeExecuteService {
 
   /**
    * 创建 ServiceNodeExecuteService 实例
-   * 
    *
    * @param serviceNodeExecutor 服务节点执行器（HTTP / SCRIPT / AUTO_PASS）
    * @param taskRepository 运行时任务仓储
@@ -91,6 +90,7 @@ public class ServiceNodeExecuteService {
    * @param nodeRepository 流程节点仓储
    * @param instanceRepository 流程实例仓储
    * @param advanceCallback 执行成功后推进到下一节点的回调
+   */
   public ServiceNodeExecuteService(
       FlowServiceNodeExecutor serviceNodeExecutor,
       FlowRunTaskRepository taskRepository,

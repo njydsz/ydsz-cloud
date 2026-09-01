@@ -185,6 +185,16 @@ public class OpenApiAutoConfiguration {
     return builder.build();
   }
 
+  /**
+   * 注册 API 版本 OpenAPI 定制器，把 {@code ApiVersion} 注解信息写回 OpenAPI 文档。
+   *
+   * <p>定制器会为标注了 {@code ApiVersion} 的 Controller 方法追加版本徽章、废弃说明与 {@code
+   * X-Api-Version} 响应头；未标注该注解的接口不受影响。
+   *
+   * <p>以 {@code @ConditionalOnMissingBean} 声明，业务模块可用自定义实现覆盖默认版本展示策略。
+   *
+   * @return 版本定制器实例，不会为 {@code null}
+   */
   @Bean
   @ConditionalOnMissingBean(ApiVersionOpenApiCustomizer.class)
   public ApiVersionOpenApiCustomizer apiVersionOpenApiCustomizer() {

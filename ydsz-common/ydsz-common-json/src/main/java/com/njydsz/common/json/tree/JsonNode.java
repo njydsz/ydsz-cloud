@@ -142,6 +142,50 @@ public abstract class JsonNode {
   }
 
   /**
+   * RFC 6901 JSON Pointer 访问（P1 能力补齐，对标 Jackson {@code at()}）。
+   *
+   * <p>与 {@link #path(String)} 的区别：入参必须是标准 JSON Pointer——以 {@code /} 开头
+   * 或为空串（空串指向整文档）。非法指针（不以 {@code /} 开头）返回 MissingNode 而非降级。
+   *
+   * @param jsonPointer JSON Pointer 表达式，如 {@code /user/address/0/city}
+   * @return 指向的节点；路径不可达时返回 MissingNode（与 Jackson 语义一致，不抛异常）
+   */
+  public JsonNode at(String jsonPointer) {
+    if (jsonPointer == null) {
+      return MissingNode.getInstance();
+    }
+    if (jsonPointer.isEmpty()) {
+      return this;
+    }
+    if (!jsonPointer.startsWith("/")) {
+      return MissingNode.getInstance();
+    }
+    return path(jsonPointer.substring(1));
+  }
+
+  /**
+   * 深度优先查找第一个匹配字段名的值节点（P1 能力补齐，对标 Jackson {@code findValue()}）。
+   *
+   * <p>仅容器节点（对象/数组）会实际递归；叶子节点返回 null。
+   *
+   * @param fieldName 字段名
+   * @return 第一个匹配字段的值节点；未找到返回 null
+   */
+  public JsonNode findValue(String fieldName) {
+    return null;
+  }
+
+  /**
+   * 深度优先收集全部匹配字段名的值节点（P1 能力补齐，对标 Jackson {@code findValues()}）。
+   *
+   * @param fieldName 字段名
+   * @param found 结果收集列表（由调用方创建并传入，按遍历顺序追加）
+   */
+  public void findValues(String fieldName, List<JsonNode> found) {
+    // 基类空实现：叶子节点无可遍历子节点
+  }
+
+  /**
    * 转换为字符串
    *
    * @return 节点对应的字符串；基类默认返回空字符串，对象 / 数组等非文本节点同样返回空字符串而非 {@code null}

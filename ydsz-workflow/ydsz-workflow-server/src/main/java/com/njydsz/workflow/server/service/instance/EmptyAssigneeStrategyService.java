@@ -72,13 +72,13 @@ public class EmptyAssigneeStrategyService {
 
   /**
    * 创建 EmptyAssigneeStrategyService 实例
-   * 
    *
    * @param taskRepository 运行时任务仓储
    * @param archiveService 任务归档服务
    * @param support 任务支持组件（事件 / 审计 / 工作流事件）
    * @param assigneeResolutionService 办理人解析服务
    * @param advanceCallback 自动通过后推进到下一节点的回调
+   */
   public EmptyAssigneeStrategyService(
       FlowRunTaskRepository taskRepository,
       FlowTaskArchiveService archiveService,
