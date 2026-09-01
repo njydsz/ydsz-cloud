@@ -86,7 +86,7 @@
         <module>ydsz-common-queue</module>
         <module>ydsz-common-event</module>
         <module>ydsz-common-config</module>
-        <module>ydsz-common-seata</module>
+        <!-- ydsz-common-seata 已移除（2026-09-01 对标清理 P1，0 使用点） -->
         <module>ydsz-common-socket</module>
         <module>ydsz-common-netty</module>
         <module>ydsz-common-file</module>
@@ -203,11 +203,9 @@
                 <artifactId>ydsz-common-config</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-seata</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            <!-- ydsz-common-seata 模块已于 2026-09-01 移除（对标清理 P1）：
+                 全套 TCC/Saga 骨架 0 使用点（无 @GlobalTransactional、无消费方），
+                 避免声明与实现漂移。分布式事务需求落地时再按实际场景引入。 -->
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-socket</artifactId>

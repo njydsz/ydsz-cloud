@@ -87,10 +87,10 @@ public class EmailChannel implements MessageChannel {
   @Override
   public MessageResult send(MessageRequest request) {
     if (mailSender == null) {
-      return MessageResult.fail(CHANNEL_TYPE, "JavaMailSender 未配置");
+      return MessageResult.fail(CHANNEL_TYPE, null, "JavaMailSender 未配置", "JavaMailSender 未配置", null);
     }
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, "收件人邮箱不能为空");
+      return MessageResult.fail(CHANNEL_TYPE, null, "收件人邮箱不能为空", "收件人邮箱不能为空", null);
     }
     try {
       String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
@@ -131,7 +131,7 @@ public class EmailChannel implements MessageChannel {
       return MessageResult.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
       log.error("[EMAIL] 发送失败: to={} reason={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

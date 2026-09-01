@@ -91,14 +91,14 @@ public class DingTalkChannel implements MessageChannel {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn("[DINGTALK] 未配置 access_token，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, "钉钉 access_token 未配置");
+      return MessageResult.fail(CHANNEL_TYPE, null, "钉钉 access_token 未配置", "钉钉 access_token 未配置", null);
     }
 
     String secret = channelProperties.getChannel().getDingtalk().getSecret();
     if (StringUtils.hasText(secret)) {
       String signedUrl = appendSign(webhookUrl, secret);
       if (signedUrl == null) {
-        return MessageResult.fail(CHANNEL_TYPE, "钉钉加签失败,请检查 secret 配置");
+        return MessageResult.fail(CHANNEL_TYPE, null, "钉钉加签失败,请检查 secret 配置", "钉钉加签失败,请检查 secret 配置", null);
       }
       webhookUrl = signedUrl;
     }
@@ -125,13 +125,13 @@ public class DingTalkChannel implements MessageChannel {
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
         log.error("[DINGTALK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
-        return MessageResult.fail(CHANNEL_TYPE, "errcode=" + errcode + ", errmsg=" + errmsg);
+        return MessageResult.fail(CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg, "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
       log.error("[DINGTALK] 发送失败: status={}", response.getStatusCode());
-      return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
+      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[DINGTALK] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 
