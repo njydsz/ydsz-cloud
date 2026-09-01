@@ -10,8 +10,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.FileNode;
 import com.njydsz.nextwiki.domain.vo.FileStatVO;
+import com.njydsz.nextwiki.infra.entity.FileNode;
 
 /**
  * 文件节点 Mapper
@@ -42,17 +42,39 @@ import com.njydsz.nextwiki.domain.vo.FileStatVO;
 @Mapper
 public interface FileNodeMapper extends BaseMapper<FileNode> {
 
-  /** 批量插入节点（P1-3：单条 SQL 批量写入，替代循环 insert，适用于文件夹批量复制场景） */
+  /**
+   * 批量插入节点（P1-3：单条 SQL 批量写入，替代循环 insert，适用于文件夹批量复制场景）。
+   *
+   * @param entities 节点实体列表
+   * @return 受影响行数
+   */
   int insertBatch(@Param("list") List<FileNode> entities);
 
-  /** 查询子节点（未删除） */
+  /**
+   * 查询子节点（未删除）。
+   *
+   * @param parentId 父目录 ID
+   * @param tenantId 租户 ID
+   * @return 子节点列表
+   */
   List<FileNode> selectChildren(
       @Param("parentId") String parentId, @Param("tenantId") String tenantId);
 
-  /** 带 revision 乐观锁的更新（更新失败返回 0） */
+  /**
+   * 带 revision 乐观锁的更新（更新失败返回 0）。
+   *
+   * @param node 待更新的节点实体（含 revision）
+   * @return 受影响行数
+   */
   int updateWithRevision(@Param("node") FileNode node);
 
-  /** 按路径前缀查询（用于递归操作，P1-7：显式带租户过滤） */
+  /**
+   * 按路径前缀查询（用于递归操作，P1-7：显式带租户过滤）。
+   *
+   * @param pathPrefix 路径前缀
+   * @param tenantId 租户 ID
+   * @return 命中的节点列表
+   */
   List<FileNode> selectByPathPrefix(
       @Param("pathPrefix") String pathPrefix, @Param("tenantId") String tenantId);
 
@@ -102,6 +124,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    *
    * @param pathPrefix 路径前缀
    * @param excludeId 需要排除的节点ID（目录自身已单独删除）
+   * @param tenantId 租户 ID（P1-7：显式租户过滤）
    * @return 受影响行数
    */
   @Update(
@@ -113,7 +136,13 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
       @Param("excludeId") String excludeId,
       @Param("tenantId") String tenantId);
 
-  /** 逻辑删除（设置 deleted=1 + deleted_time） */
+  /**
+   * 逻辑删除（设置 deleted=1 + deleted_time）。
+   *
+   * @param id 节点 ID
+   * @param originalPath 删除前的原始路径（供回收站还原）
+   * @return 受影响行数
+   */
   @Update(
       "UPDATE nw_file_node SET deleted = 1, deleted_time = NOW(), "
           + "original_path = #{originalPath}, updated_at = NOW() WHERE id = #{id}")
@@ -171,56 +200,113 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
       @Param("newPaths") List<String> newPaths,
       @Param("levels") List<Integer> levels);
 
-  /** 恢复逻辑删除 */
+  /**
+   * 恢复逻辑删除。
+   *
+   * @param id 节点 ID
+   * @return 受影响行数
+   */
   @Update(
       "UPDATE nw_file_node SET deleted = 0, deleted_time = NULL, updated_at = NOW() WHERE id = #{id}")
   int restore(@Param("id") String id);
 
-  /** 更新大小（P1-11：限制仅更新未删除节点，防误更新回收站条目） */
+  /**
+   * 更新大小（P1-11：限制仅更新未删除节点，防误更新回收站条目）。
+   *
+   * @param id 节点 ID
+   * @param sizeDelta 大小变化量（正负均可）
+   * @return 受影响行数
+   */
   @Update(
       "UPDATE nw_file_node SET size = size + #{sizeDelta}, updated_at = NOW() "
           + "WHERE id = #{id} AND deleted = 0")
   int updateSize(@Param("id") String id, @Param("sizeDelta") Long sizeDelta);
 
-  /** 查询用户根目录 */
+  /**
+   * 查询用户根目录。
+   *
+   * @param createdBy 创建者用户 ID
+   * @param tenantId 租户 ID
+   * @return 根目录节点（不存在时为 null）
+   */
   FileNode selectRootByUser(
       @Param("createdBy") String createdBy, @Param("tenantId") String tenantId);
 
-  /** 统计用户文件数量 */
+  /**
+   * 统计用户文件数量。
+   *
+   * @param userId 用户 ID
+   * @return 文件数量
+   */
   @Select(
       "SELECT COUNT(*) FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file'")
   int countByUser(@Param("userId") String userId);
 
-  /** 统计用户文件夹数量 */
+  /**
+   * 统计用户文件夹数量。
+   *
+   * @param userId 用户 ID
+   * @return 文件夹数量
+   */
   @Select(
       "SELECT COUNT(*) FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'folder'")
   int countFoldersByUser(@Param("userId") String userId);
 
-  /** 查询用户文件总大小 */
+  /**
+   * 查询用户文件总大小。
+   *
+   * @param userId 用户 ID
+   * @return 文件总大小（字节，无文件时为 0）
+   */
   @Select(
       "SELECT COALESCE(SUM(size), 0) FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file'")
   Long sumSizeByUser(@Param("userId") String userId);
 
-  /** 查询用户大文件 Top-N */
+  /**
+   * 查询用户大文件 Top-N。
+   *
+   * @param userId 用户 ID
+   * @param limit 返回数量上限
+   * @return 按大小降序排列的文件列表
+   */
   @Select(
       "SELECT * FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' "
           + "ORDER BY size DESC LIMIT #{limit}")
   List<FileNode> findTopLargeFilesByUser(@Param("userId") String userId, @Param("limit") int limit);
 
-  /** 按后缀统计文件数量和大小 */
+  /**
+   * 按后缀统计文件数量和大小。
+   *
+   * @param userId 用户 ID
+   * @return 后缀统计列表（按总大小降序）
+   */
   @Select(
       "SELECT suffix, COUNT(*) AS file_count, COALESCE(SUM(size), 0) AS total_size "
           + "FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' "
           + "GROUP BY suffix ORDER BY total_size DESC")
   List<FileStatVO> statsBySuffixAndUser(@Param("userId") String userId);
 
-  /** 按文件哈希查询（用于秒传去重） */
+  /**
+   * 按文件哈希查询（用于秒传去重）。
+   *
+   * @param fileHash 文件哈希
+   * @param tenantId 租户 ID
+   * @return 命中的文件节点（不存在时为 null）
+   */
   @Select(
       "SELECT * FROM nw_file_node WHERE file_hash = #{fileHash} "
           + "AND tenant_id = #{tenantId} AND deleted = 0 AND node_type = 'file' LIMIT 1")
   FileNode findByFileHash(@Param("fileHash") String fileHash, @Param("tenantId") String tenantId);
 
-  /** 按 createdBy + parentId 查询同名文件 */
+  /**
+   * 按 createdBy + parentId 查询同名文件。
+   *
+   * @param name 文件名
+   * @param parentId 父目录 ID
+   * @param createdBy 创建者用户 ID
+   * @param tenantId 租户 ID
+   * @return 同名文件列表
+   */
   @Select(
       "SELECT * FROM nw_file_node WHERE name = #{name} AND parent_id = #{parentId} "
           + "AND created_by = #{createdBy} AND tenant_id = #{tenantId} AND deleted = 0")
@@ -269,6 +355,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    *
    * @param threshold 时间阈值（updated_at 早于此时间的文件）
    * @param excludeSuffixes 排除的后缀（逗号分隔，可为空）
+   * @param excludeSuffixesList 排除的后缀列表（由 excludeSuffixes 拆分而来，供 foreach 使用）
    * @param limit 返回数量限制
    * @return 冷数据候选列表
    */

@@ -96,12 +96,12 @@ public class AliyunSmsProvider implements SmsProvider {
   public MessageResult send(MessageRequest request, MsgTemplateVO template) {
     String phone = request.getReceiver();
     if (!StringUtils.hasText(phone)) {
-      return MessageResult.fail("SMS", MessageUtils.getMessage("sms.phone.required", "手机号不能为空"));
+      return MessageResult.fail("SMS", null, MessageUtils.getMessage("sms.phone.required", "手机号不能为空"), MessageUtils.getMessage("sms.phone.required", "手机号不能为空"), null);
     }
     if (!StringUtils.hasText(config.getAccessKeyId())
         || !StringUtils.hasText(config.getAccessKeySecret())) {
       log.warn("[AliyunSms] 凭证未配置,发送失败: phone={}", phone);
-      return MessageResult.fail("SMS", MessageUtils.getMessage("sms.credential.not.configured", "阿里云 SMS 凭证未配置"));
+      return MessageResult.fail("SMS", null, MessageUtils.getMessage("sms.credential.not.configured", "阿里云 SMS 凭证未配置"), MessageUtils.getMessage("sms.credential.not.configured", "阿里云 SMS 凭证未配置"), null);
     }
     String signName =
         template != null && StringUtils.hasText(template.getSignName())
@@ -109,7 +109,7 @@ public class AliyunSmsProvider implements SmsProvider {
             : config.getSignName();
     String templateCode = template != null ? template.getProviderKey() : null;
     if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
-      return MessageResult.fail("SMS", MessageUtils.getMessage("sms.signatureOrTemplate.missing", "短信签名或模板 Code 缺失"));
+      return MessageResult.fail("SMS", null, MessageUtils.getMessage("sms.signatureOrTemplate.missing", "短信签名或模板 Code 缺失"), MessageUtils.getMessage("sms.signatureOrTemplate.missing", "短信签名或模板 Code 缺失"), null);
     }
     try {
       Map<String, String> params = buildCommonParams();
@@ -133,10 +133,10 @@ public class AliyunSmsProvider implements SmsProvider {
           phone,
           code,
           MapUtils.getString(json, "Message"));
-      return MessageResult.fail("SMS", code + ": " + MapUtils.getString(json, "Message"));
+      return MessageResult.fail("SMS", null, code + ": " + MapUtils.getString(json, "Message"), code + ": " + MapUtils.getString(json, "Message"), null);
     } catch (Exception e) {
       log.error("[AliyunSms] 发送异常: phone={} err={}", phone, e.getMessage(), e);
-      return MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail("SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 
@@ -192,7 +192,7 @@ public class AliyunSmsProvider implements SmsProvider {
         || !StringUtils.hasText(config.getAccessKeySecret())) {
       String credErr = MessageUtils.getMessage("sms.credential.not.configured", "阿里云 SMS 凭证未配置");
       for (int i = 0; i < requests.size(); i++) {
-        results.add(MessageResult.fail("SMS", credErr));
+        results.add(MessageResult.fail("SMS", null, credErr, credErr, null));
       }
       return results;
     }
@@ -204,7 +204,7 @@ public class AliyunSmsProvider implements SmsProvider {
     if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
       String sigErr = MessageUtils.getMessage("sms.signatureOrTemplate.missing", "短信签名或模板 Code 缺失");
       for (int i = 0; i < requests.size(); i++) {
-        results.add(MessageResult.fail("SMS", sigErr));
+        results.add(MessageResult.fail("SMS", null, sigErr, sigErr, null));
       }
       return results;
     }
@@ -239,14 +239,14 @@ public class AliyunSmsProvider implements SmsProvider {
       } else {
         log.warn("[AliyunSms] 批量发送失败: code={} msg={}", code, MapUtils.getString(json, "Message"));
         for (int i = 0; i < requests.size(); i++) {
-          results.add(MessageResult.fail("SMS", code + ": " + MapUtils.getString(json, "Message")));
+          results.add(MessageResult.fail("SMS", null, code + ": " + MapUtils.getString(json, "Message"), code + ": " + MapUtils.getString(json, "Message"), null));
         }
       }
     } catch (Exception e) {
       log.error("[AliyunSms] 批量发送异常: count={} err={}", requests.size(), e.getMessage(), e);
       for (int i = 0; i < requests.size(); i++) {
         results.add(
-            MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage()));
+            MessageResult.fail("SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null));
       }
     }
     return results;

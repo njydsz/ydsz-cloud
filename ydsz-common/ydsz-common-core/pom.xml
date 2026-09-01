@@ -58,6 +58,13 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+
+        <!-- 测试（2026-09-01 测试破零：spring-boot-parent BOM 统一管理版本） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>
