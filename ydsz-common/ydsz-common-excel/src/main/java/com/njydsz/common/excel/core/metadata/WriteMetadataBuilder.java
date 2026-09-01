@@ -177,7 +177,7 @@ public class WriteMetadataBuilder {
   /**
    * 设置表头行号
    *
-   * @param headRowNumber 表头行号(从0开始)
+   * @param headRowNumber 表头行号(从1开始计数，1=表头写在第一行；与读路径语义一致)
    * @return 当前建造者
    */
   public WriteMetadataBuilder headRowNumber(int headRowNumber) {

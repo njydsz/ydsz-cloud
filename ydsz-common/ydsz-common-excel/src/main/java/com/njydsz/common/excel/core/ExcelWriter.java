@@ -232,9 +232,10 @@ public class ExcelWriter {
   /**
    * 指定表头行号
    *
-   * <p>数据将从此行号之后开始写入
+   * <p>表头行号从 1 开始计数（1 = 表头写在第一行，数据从第二行开始写入）， 与 {@code
+   * ExcelReader.headRowNumber} 及 {@code @ExcelSheet.headRowNumber} 语义一致。
    *
-   * @param headRowNumber 表头行号(从0开始计数)
+   * @param headRowNumber 表头行号(从1开始计数)
    * @return 当前写入器实例
    */
   public ExcelWriter headRowNumber(int headRowNumber) {
@@ -553,12 +554,16 @@ public class ExcelWriter {
       dispatchAfterWorkbookCreate();
       dispatchAfterSheetCreate();
 
+      // P0-5 补全（写侧）：headRowNumber 统一为 1-based 表头行号（1=表头写在第一行），
+      // 与读路径（ExcelReader.headRowNumber）、@ExcelSheet.headRowNumber、WorkbookFactory.findLastRowIndex、
+      // WriteContext 及 fast 写引擎（表头恒在首行）语义对齐。
+      // 此前直接将 1-based 值当 0-based 行索引用，默认导出首行空白且写读 round-trip 断裂。
       if (isMultiSheetWriting) {
-        currentRowIndex = metadata.getHeadRowNumber();
+        currentRowIndex = Math.max(0, metadata.getHeadRowNumber() - 1);
       } else if (append && currentRowIndex <= 0) {
         currentRowIndex = workbookFactory.findLastRowIndex(sheet, metadata) + 1;
       } else if (!append) {
-        currentRowIndex = metadata.getHeadRowNumber();
+        currentRowIndex = Math.max(0, metadata.getHeadRowNumber() - 1);
       }
 
       List<WriteHeaderProperty> headProperties;
