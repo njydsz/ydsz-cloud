@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.njydsz.literule.domain.enums.RuleSeverity;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RuleDefinition implements Serializable {
+public class RuleDefinitionDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -115,7 +115,7 @@ public class RuleDefinition implements Serializable {
    *
    * <p>多租户隔离标识，单租户部署下默认为 1。 1.5.0 起启用运行时租户过滤：{@link
    * com.njydsz.literule.server.core.DefaultRuleEngine} 在评估前会比较 {@code rule.getTenantId()} 与 {@link
-   * RuleContext#getTenantId()}， 仅当两者匹配时才评估该规则。
+   * RuleContextVO#getTenantId()}， 仅当两者匹配时才评估该规则。
    *
    * @since 1.0.0
    */
@@ -132,7 +132,7 @@ public class RuleDefinition implements Serializable {
    * </ul>
    *
    * 过滤规则：规则的 environment 为 {@code "default"} 时匹配任何上下文环境； 非 {@code "default"} 时必须与 {@link
-   * RuleContext#getEnvironment()} 完全匹配。
+   * RuleContextVO#getEnvironment()} 完全匹配。
    *
    * @since 1.0.0
    */

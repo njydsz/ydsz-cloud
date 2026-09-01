@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
  *
  * <p>交叉决策表（决策矩阵），支持行和列双维度交叉匹配。
  *
- * <p>与普通决策表（{@link DecisionTableDefinition}）的区别：
+ * <p>与普通决策表（{@link DecisionTableDefinitionDTO}）的区别：
  *
  * <ul>
  *   <li>普通决策表：行 = 规则，列 = 条件，每行条件 AND 关系
@@ -73,7 +73,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CrossDecisionTableDefinition implements Serializable {
+public class CrossDecisionTableDefinitionDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

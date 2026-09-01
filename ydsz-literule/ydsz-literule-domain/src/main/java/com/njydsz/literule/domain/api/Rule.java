@@ -5,7 +5,7 @@ import com.njydsz.common.core.constant.SystemConstants;
 /**
  * 规则接口
  *
- * <p>所有规则（Java 编码规则 / 表达式规则 / 数据库配置规则）均实现此接口。 引擎遍历已注册规则，调用 {@link #evaluate(RuleContext)} 进行评估。
+ * <p>所有规则（Java 编码规则 / 表达式规则 / 数据库配置规则）均实现此接口。 引擎遍历已注册规则，调用 {@link #evaluate(RuleContextVO)} 进行评估。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -48,7 +48,7 @@ public interface Rule {
   /**
    * 作用域（影响范围）
    *
-   * <p>用于场景过滤：当 {@link RuleContext#getScenario()} 非空且非 "DEFAULT" 时， 仅评估 scope 为 null/"ALL" 或与
+   * <p>用于场景过滤：当 {@link RuleContextVO#getScenario()} 非空且非 "DEFAULT" 时， 仅评估 scope 为 null/"ALL" 或与
    * scenario 匹配的规则。 默认返回 null 表示适用于全部场景。
    *
    * @return 作用域；null 表示适用于全部场景
@@ -61,12 +61,12 @@ public interface Rule {
   /**
    * 规则定义快照（用于灰度路由、统计、Trace）
    *
-   * <p>默认返回 null，表示该规则为编码规则（无动态 RuleDefinition）。 表达式规则 / 决策表规则应覆盖此方法返回原始定义。
+   * <p>默认返回 null，表示该规则为编码规则（无动态 RuleDefinitionDTO）。 表达式规则 / 决策表规则应覆盖此方法返回原始定义。
    *
    * @return 规则定义；null 表示编码规则
    * @since 1.0.0
    */
-  default RuleDefinition getRuleDefinition() {
+  default RuleDefinitionDTO getRuleDefinition() {
     return null;
   }
 
@@ -88,11 +88,11 @@ public interface Rule {
    * 租户 ID（多租户运行时隔离）
    *
    * <p>1.5.0 起启用运行时租户过滤：{@link com.njydsz.literule.server.core.DefaultRuleEngine} 在评估前会比较 {@code
-   * rule.getTenantId()} 与 {@link RuleContext#getTenantId()}， 仅当两者匹配时才评估该规则。
+   * rule.getTenantId()} 与 {@link RuleContextVO#getTenantId()}， 仅当两者匹配时才评估该规则。
    *
-   * <p>默认返回 {@link SystemConstants#DEFAULT_TENANT_ID}（"0"，单租户部署），与 {@link RuleContext}
+   * <p>默认返回 {@link SystemConstants#DEFAULT_TENANT_ID}（"0"，单租户部署），与 {@link RuleContextVO}
    * 的默认租户保持一致（P0-2 对齐修复：原默认 "1" 会导致编码规则在默认租户上下文中被过滤掉）。
-   * {@link com.njydsz.literule.server.impl.ExpressionRule} 等基于 {@link RuleDefinition} 的规则会覆写此方法返回定义中的 tenantId。
+   * {@link com.njydsz.literule.server.impl.ExpressionRule} 等基于 {@link RuleDefinitionDTO} 的规则会覆写此方法返回定义中的 tenantId。
    *
    * @return 租户 ID；默认 "0"
    * @since 1.0.0
@@ -105,7 +105,7 @@ public interface Rule {
    * 环境标识（多环境运行时隔离，P1-5）
    *
    * <p>1.6.0 起启用运行时环境过滤：{@link com.njydsz.literule.server.core.DefaultRuleEngine} 在评估前会比较 {@code
-   * rule.getEnvironment()} 与 {@link RuleContext#getEnvironment()}：
+   * rule.getEnvironment()} 与 {@link RuleContextVO#getEnvironment()}：
    *
    * <ul>
    *   <li>规则 environment 为 {@link RuleEnvironment#DEFAULT "default"} 时，匹配任何上下文环境（向后兼容）
@@ -113,7 +113,7 @@ public interface Rule {
    * </ul>
    *
    * <p>默认返回 {@link RuleEnvironment#DEFAULT "default"}（全环境生效），向后兼容。 {@link
-   * com.njydsz.literule.server.impl.ExpressionRule} 等基于 {@link RuleDefinition} 的规则会覆写此方法返回定义中的
+   * com.njydsz.literule.server.impl.ExpressionRule} 等基于 {@link RuleDefinitionDTO} 的规则会覆写此方法返回定义中的
    * environment。
    *
    * @return 环境标识；默认 "default"
@@ -129,5 +129,5 @@ public interface Rule {
    * @param context 规则上下文（事实数据）
    * @return 评估结果；未触发时返回 {@link RuleResult#notTriggered(String)}
    */
-  RuleResult evaluate(RuleContext context);
+  RuleResult evaluate(RuleContextVO context);
 }

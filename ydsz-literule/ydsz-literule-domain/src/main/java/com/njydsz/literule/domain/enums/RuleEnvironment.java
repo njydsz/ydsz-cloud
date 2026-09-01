@@ -3,7 +3,7 @@ package com.njydsz.literule.domain.enums;
 /**
  * 规则环境维度常量（P1-5 多环境隔离）
  *
- * <p>与 {@link com.njydsz.literule.domain.dto.RuleDefinition#getTenantId()} 维度正交，实现 dev/staging/prod 环境的规则隔离。
+ * <p>与 {@link com.njydsz.literule.domain.dto.RuleDefinitionDTO#getTenantId()} 维度正交，实现 dev/staging/prod 环境的规则隔离。
  *
  * <ul>
  *   <li>{@link #DEFAULT} - 全环境生效（向后兼容），规则与上下文均默认此值
@@ -16,7 +16,7 @@ package com.njydsz.literule.domain.enums;
  *
  * <ul>
  *   <li>规则的 environment 为 {@code "default"} 时，匹配任何上下文环境（向后兼容）
- *   <li>规则的 environment 非 {@code "default"} 时，必须与 {@link com.njydsz.literule.domain.vo.RuleContext#getEnvironment()} 完全匹配
+ *   <li>规则的 environment 非 {@code "default"} 时，必须与 {@link com.njydsz.literule.domain.vo.RuleContextVO#getEnvironment()} 完全匹配
  * </ul>
  *
  * @author ydsz-team

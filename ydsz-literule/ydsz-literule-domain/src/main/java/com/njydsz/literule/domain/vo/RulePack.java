@@ -3,7 +3,7 @@ package com.njydsz.literule.domain.vo;
 import java.io.Serializable;
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
@@ -12,7 +12,7 @@ import lombok.Data;
 /**
  * 规则集（RulePack）元数据
  *
- * <p>将一组相关规则打包发布到规则集市场（Rule Pack Market）。 与单个 {@link RuleDefinition} 不同，{@code RulePack} 关注：
+ * <p>将一组相关规则打包发布到规则集市场（Rule Pack Market）。 与单个 {@link RuleDefinitionDTO} 不同，{@code RulePack} 关注：
  *
  * <ul>
  *   <li><b>聚合</b>：将多条规则按业务场景打包，用户可一键导入整包
@@ -59,15 +59,15 @@ public class RulePack implements Serializable {
   /** 标签列表（用于市场筛选与检索） */
   private List<String> tags;
 
-  /** 包含的规则编码列表（引用 RuleDefinition.code） */
+  /** 包含的规则编码列表（引用 RuleDefinitionDTO.code） */
   private List<String> ruleCodes;
 
   /**
    * 规则定义快照列表（P2-8 知识包版本管理）
    *
-   * <p>发布版本时固化的规则定义 JSON 列表，用于版本内容复现与回滚。 格式为 {@code List<RuleDefinition>} 反序列化后的对象。
+   * <p>发布版本时固化的规则定义 JSON 列表，用于版本内容复现与回滚。 格式为 {@code List<RuleDefinitionDTO>} 反序列化后的对象。
    */
-  private List<RuleDefinition> ruleSnapshots;
+  private List<RuleDefinitionDTO> ruleSnapshots;
 
   /** 升级来源版本号（便于审计链路追踪） */
   private String previousVersion;
