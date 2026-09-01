@@ -166,6 +166,94 @@ public final class RequestContextProxy {
   }
 
   /**
+   * 启动期绑定自检：逐一验证反射代理依赖的 {@code RequestContext} 方法可解析且可执行。
+   *
+   * <p>由 {@code UtilAutoConfiguration} 在 {@code @PostConstruct} 阶段调用，发现签名漂移时输出
+   * error 日志并给出修复指引。将"core 侧重命名/改签名导致的运行期静默降级"提前暴露为启动期显式告警。
+   *
+   * <p>core 不在 classpath 时为正常独立使用场景，仅打印 debug 日志，不告警。
+   *
+   * <p>注意：setTraceId 校验采用「写入探针值 → 读回比对 → clear() 还原」的往返方式，
+   * 会短暂触碰当前线程的上下文，故仅在启动线程中调用，禁止在业务请求线程中调用。
+   *
+   * @return true 表示绑定校验通过（或 core 不在 classpath，无需校验）
+   */
+  public static boolean verifyBinding() {
+    if (!isAvailable()) {
+      LOG.debug("ydsz-common-core 不在 classpath 中，跳过 RequestContext 绑定自检");
+      return true;
+    }
+    boolean healthy = true;
+    healthy &= verifyMethod("getTraceId");
+    healthy &= verifyMethod("getRequestId");
+    healthy &= verifyMethod("get", String.class);
+    healthy &= verifyMethod("remove", String.class);
+    healthy &= verifySetTraceIdRoundTrip();
+    if (!healthy) {
+      LOG.error(
+          "RequestContext 反射绑定自检失败：ydsz-common-core 的 RequestContext 签名与"
+              + " ydsz-common-util 的反射代理不兼容（可能是 core 侧重命名/改签名），"
+              + "上下文读写将静默降级为无操作。请升级 ydsz-common-util 与"
+              + " ydsz-common-core 至配套版本（设计决策见 docs/ADR-0002-trace-contract-sinking.md）");
+    }
+    return healthy;
+  }
+
+  /**
+   * 验证单个反射方法可解析且可执行（用安全入参触发一次真实调用）。
+   *
+   * @param methodName 方法名
+   * @param paramTypes 参数类型
+   * @return true 表示绑定正常
+   */
+  private static boolean verifyMethod(String methodName, Class<?>... paramTypes) {
+    try {
+      Method method = getCachedMethod(methodName, paramTypes);
+      if (method == null) {
+        return false;
+      }
+      if (paramTypes.length == 1 && paramTypes[0] == String.class) {
+        // get/remove：探针键不存在于上下文中，读写均为安全操作
+        method.invoke(null, "__verify_binding_probe__");
+      } else {
+        method.invoke(null);
+      }
+      return true;
+    } catch (Exception e) {
+      LOG.error("RequestContext.{} 绑定验证失败: {}", methodName, e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * setTraceId 往返校验：写入探针值后读回比对，再通过 {@code clear()} 还原线程现场。
+   *
+   * <p>仅比对新值可见性，不校验存储实现细节；clear 不可用时容忍残留（启动线程为一次性线程）。
+   *
+   * @return true 表示写入-读取链路正常
+   */
+  private static boolean verifySetTraceIdRoundTrip() {
+    String probe = "__verify_binding_trace_id__";
+    try {
+      Method setter = getCachedMethod("setTraceId", String.class);
+      Method getter = getCachedMethod("getTraceId");
+      Method clear = getCachedMethod("clear");
+      if (setter == null || getter == null) {
+        return false;
+      }
+      setter.invoke(null, probe);
+      Object result = getter.invoke(null);
+      if (clear != null) {
+        clear.invoke(null);
+      }
+      return probe.equals(result);
+    } catch (Exception e) {
+      LOG.error("RequestContext.setTraceId 往返校验失败: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
    * 获取缓存的反射 Method 句柄。
    *
    * <p>使用双重检查锁确保线程安全，首次调用后缓存结果避免重复反射查找。

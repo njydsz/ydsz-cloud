@@ -8,7 +8,9 @@
  *
  * <ul>
  *   <li>本模块（thread）：集配置驱动托管、编程式工厂、可观测执行器于一体， 是线程池管理能力的唯一归属模块
- *   <li>common-util：仅保留限流、重试等通用并发工具（{@code RateLimiter}、{@code RetryUtils}）， 不再包含线程池创建与监控能力
+ *   <li>common-util：仅保留轻量重试（{@code RetryUtils}，@Experimental 能力储备）等通用并发工具，
+ *       限流已收敛至 ydsz-common-safe 的 {@code TokenBucketLimiter}（util 侧重复实现已删除），
+ *       平台级熔断/重试标准为 Resilience4j
  * </ul>
  *
  * <p><b>1.0.0 变更：</b>

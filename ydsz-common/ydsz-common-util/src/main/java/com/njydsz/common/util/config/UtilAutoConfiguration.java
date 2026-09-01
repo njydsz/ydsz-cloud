@@ -23,6 +23,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.SnowflakeProperties;
 import com.njydsz.common.util.id.WorkerIdAllocator;
 import com.njydsz.common.util.id.WorkerIdAllocatorChain;
+import com.njydsz.common.util.internal.proxy.RequestContextProxy;
 import com.njydsz.common.util.internal.proxy.TraceIdGeneratorProxy;
 import com.njydsz.common.util.io.TempFileManager;
 import com.njydsz.common.util.io.TempFileProperties;
@@ -78,6 +79,7 @@ public class UtilAutoConfiguration {
     // 反射桥接启动自检：core 在 classpath 但方法绑定失败时立即显式告警，
     // 避免运行期静默降级（详见 docs/ADR-0002-trace-contract-sinking.md）
     TraceIdGeneratorProxy.verifyBinding();
+    RequestContextProxy.verifyBinding();
   }
 
   /**

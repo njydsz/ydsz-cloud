@@ -446,6 +446,20 @@ String formatted = YdszJson.format(compactJson);
 
 ## 最新变更
 
+### 1.0.0（P0 止血修复轮：2026-09-01）
+
+> 本轮变更对标 Jackson / FastJSON2 实践与互联网大厂研发规范，经 **20 项 JUnit 回归测试**（`src/test/java`，mvn test 全绿）+ 复现程序实跑验证。完整审计报告见 `docs/ydsz-common-json竞品对标分析报告_2026-09-01.md`。
+
+| 优先级 | 变更 | 说明 |
+|------|------|------|
+| P0 | fastWriterPool ThreadLocal 重入修复 | `SerializationContext` 新增 `poolDepth` 重入防护：仅最外层序列化复用池化 `JSONWriter`/`StringBuilder`，嵌套序列化（容器内 Bean 经 `writeObjectInline → YdszJson.toJson` 重入）使用独立实例。此前 `toJson(List<无注解Bean>)` / `toJson(Map<String,无注解Bean>)` 会输出损坏 JSON（丢失 `[`/键名），HTTP 响应路径（`JsonHttpMessageConverter → toJsonBytes`）同样中招 |
+| P0 | BeanSerializer 逐字段容量保障 | String 字段按实际长度（转义按 6 倍展开）`ensureCapacity`，修复 8KB 字段抛 `Range out of bounds`；所有 `writeValueInline`/`writeDoubleToBuf` 调用后刷新本地 `buf` 引用，修复扩容后本地引用过期 |
+| P0 | 包装类型 0/false 不再被吞 | `BeanSerializer` 五处 `intVal != 0` 判断改为 null 判断：`Integer=0`、`Boolean=false`、`Double=0.0` 等合法值正常输出（与注解路径/ Jackson ALWAYS 语义对齐），null 仍跳过 |
+| P0 | `@JsonProperty.access` 落地实现 | `FieldMeta.serializable` + `ValueWriter`/`BeanReader`/`hasFieldAnnotations` 三点接入：`WRITE_ONLY`（密码字段）序列化不输出、`READ_ONLY` 反序列化忽略（对标 Jackson 语义，并修正原枚举 javadoc 方向写反的问题）。此前注解声明支持但零实现，敏感字段会被照常序列化 |
+| P0 | NaN/Infinity 全路径统一输出 null | `ValueWriter.writeFloat`、`ValueFormatter` 补齐 NaN/Infinity 检查，与 `writeDouble`/`writeNumberInline` 策略一致，消除非法 `NaN`/`Infinity` 字面量输出 |
+| P0 | JSONWriter 容量保障补齐 | `writeStringDirectNoCheck` 自带 `ensureCapacity(len+2)`（修复长字符串/长 Map 键越界）；`writeValueInline` null/Boolean 分支、`writeCollection`/`writeMap` 结构符补齐容量检查 |
+| P1 | 回归测试基建（从 0 到 1） | 新建 `src/test/java` + JUnit 5 依赖：20 项用例覆盖本轮全部 P0 场景 + round-trip 基线（嵌套/泛型/数值精度/日期/转义/Unicode 代理对）。**历史声称的"239 项单元测试"与仓库事实不符（当时 src/test 不存在），特此更正** |
+
 ### 1.0.0（性能与正确性修复）
 
 > 本轮变更对标 Jackson / FastJSON2 实践与互联网大厂研发规范，经 239 项单元测试全量回归。

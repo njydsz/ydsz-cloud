@@ -2,8 +2,11 @@ package com.njydsz.common.cache.internal;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.slf4j.Logger;
@@ -55,6 +58,16 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
   /** 删除监听器列表 */
   protected final List<RemovalListener<? super K, ? super V>> listeners =
       new CopyOnWriteArrayList<>();
+
+  /**
+   * Per-key 原子操作信号映射（putIfAbsent 与 compute 系列方法的单飞实现）。
+   *
+   * <p>同一 key 的并发原子操作中仅信号持有者执行用户函数，其余线程等待完成信号后读取结果—— 对标 Caffeine
+   * 的 computeIfAbsent 语义（mapping 仅执行一次，结果对全部等待者可见）。 信号仅作完成通知不携带值，等待方通过 {@code
+   * getIfPresent} 读取，避免 unchecked cast。 失败语义：用户函数异常时信号异常完成，异常传播给全部等待者（守卫不做递归重试）。
+   */
+  private final ConcurrentHashMap<Object, CompletableFuture<Object>> atomicSignals =
+      new ConcurrentHashMap<>();
 
   /**
    * 添加删除监听器。
@@ -112,6 +125,196 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
       }
     }
     return value;
+  }
+
+  /**
+   * 原子的 putIfAbsent（对标 ConcurrentHashMap.putIfAbsent）。
+   *
+   * <p>per-key 单飞：并发调用下仅一个线程完成写入，竞争方等待后读取既有值。 double-check 消除信号获取与缓存读取之间的竞态窗口。
+   *
+   * @param key 缓存键（null 时直接返回现有值，与 put 的宽松 null 语义一致）
+   * @param value 待写入值
+   * @return 写入前已存在的值；写入成功（此前无值）返回 null
+   */
+  @Override
+  public V putIfAbsent(K key, V value) {
+    if (key == null || value == null) {
+      return getIfPresent(key);
+    }
+    V existing = getIfPresent(key);
+    if (existing != null) {
+      return existing;
+    }
+    CompletableFuture<Object> ourSignal = new CompletableFuture<>();
+    CompletableFuture<Object> winner = atomicSignals.putIfAbsent(key, ourSignal);
+    if (winner != null) {
+      winner.join();
+      return getIfPresent(key);
+    }
+    try {
+      V second = getIfPresent(key);
+      if (second != null) {
+        return second;
+      }
+      put(key, value);
+      return null; // 写入成功：此前无值
+    } finally {
+      atomicSignals.remove(key, ourSignal);
+      ourSignal.complete(null);
+    }
+  }
+
+  /**
+   * 原子的 computeIfAbsent（对标 Caffeine：mapping 仅执行一次，结果对全部等待者可见）。
+   *
+   * <p>失败语义：mappingFunction 抛出异常时，异常传播给所有等待者（等待方不重复执行 mapping， 防止并发重试风暴）。
+   * mappingFunction 返回 null 时写入占位信号正常完成，等待方读取缓存未果后返回 null。
+   *
+   * @param key 缓存键
+   * @param mappingFunction 映射函数
+   * @return 缓存值或映射值；映射为 null 时返回 null 且不写入
+   */
+  @Override
+  public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
+    if (key == null || mappingFunction == null) {
+      return getIfPresent(key);
+    }
+    V value = getIfPresent(key);
+    if (value != null) {
+      return value;
+    }
+    CompletableFuture<Object> ourSignal = new CompletableFuture<>();
+    CompletableFuture<Object> winner = atomicSignals.putIfAbsent(key, ourSignal);
+    if (winner != null) {
+      try {
+        winner.join();
+      } catch (CompletionException e) {
+        throw unwrapCompletion(e);
+      }
+      V theirs = getIfPresent(key);
+      return theirs;
+    }
+    try {
+      V second = getIfPresent(key);
+      if (second != null) {
+        return second;
+      }
+      V mapped = mappingFunction.apply(key);
+      if (mapped != null) {
+        put(key, mapped);
+      }
+      return mapped;
+    } catch (Exception e) {
+      ourSignal.completeExceptionally(e);
+      throw asRuntime(e);
+    } finally {
+      atomicSignals.remove(key, ourSignal);
+      ourSignal.complete(null);
+    }
+  }
+
+  /**
+   * 原子的 compute（同一 key 的并发 compute 按抵达顺序串行化）。
+   *
+   * @param key 缓存键
+   * @param remappingFunction 重映射函数
+   * @return 新值；重映射为 null 时移除条目并返回 null
+   */
+  @Override
+  public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    if (key == null || remappingFunction == null) {
+      return null;
+    }
+    CompletableFuture<Object> ourSignal = new CompletableFuture<>();
+    CompletableFuture<Object> winner = atomicSignals.putIfAbsent(key, ourSignal);
+    if (winner != null) {
+      try {
+        winner.join();
+      } catch (CompletionException e) {
+        throw unwrapCompletion(e);
+      }
+      return getIfPresent(key);
+    }
+    try {
+      V oldValue = getIfPresent(key);
+      V newValue = remappingFunction.apply(key, oldValue);
+      if (newValue == null) {
+        if (oldValue != null) {
+          remove(key);
+        }
+      } else {
+        put(key, newValue);
+      }
+      return newValue;
+    } catch (Exception e) {
+      ourSignal.completeExceptionally(e);
+      throw asRuntime(e);
+    } finally {
+      atomicSignals.remove(key, ourSignal);
+      ourSignal.complete(null);
+    }
+  }
+
+  /**
+   * 原子的 merge（对标 ConcurrentHashMap.merge，同一 key 并发按抵达顺序串行化）。
+   *
+   * @param key 缓存键
+   * @param value 待合并值
+   * @param remappingFunction 合并函数
+   * @return 合并后的值；合并结果为 null 时移除条目并返回 null
+   */
+  @Override
+  public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    if (key == null || value == null || remappingFunction == null) {
+      return getIfPresent(key);
+    }
+    CompletableFuture<Object> ourSignal = new CompletableFuture<>();
+    CompletableFuture<Object> winner = atomicSignals.putIfAbsent(key, ourSignal);
+    if (winner != null) {
+      try {
+        winner.join();
+      } catch (CompletionException e) {
+        throw unwrapCompletion(e);
+      }
+      return getIfPresent(key);
+    }
+    try {
+      V oldValue = getIfPresent(key);
+      V newValue = (oldValue == null) ? value : remappingFunction.apply(oldValue, value);
+      if (newValue == null) {
+        remove(key);
+      } else {
+        put(key, newValue);
+      }
+      return newValue;
+    } catch (Exception e) {
+      ourSignal.completeExceptionally(e);
+      throw asRuntime(e);
+    } finally {
+      atomicSignals.remove(key, ourSignal);
+      ourSignal.complete(null);
+    }
+  }
+
+  /**
+   * 将异常转换为可抛出的 RuntimeException（保留原始运行时异常类型，检查异常包装为 CompletionException）。
+   *
+   * @param e 原始异常
+   * @return 可抛出的运行时异常
+   */
+  private static RuntimeException asRuntime(Exception e) {
+    return (e instanceof RuntimeException) ? (RuntimeException) e : new CompletionException(e);
+  }
+
+  /**
+   * 解包等待方捕获的 CompletionException，还原信号发送方的原始异常类型。
+   *
+   * @param e 等待方捕获的 CompletionException
+   * @return 还原后的可抛出运行时异常
+   */
+  private static RuntimeException unwrapCompletion(CompletionException e) {
+    Throwable cause = e.getCause();
+    return (cause instanceof RuntimeException) ? (RuntimeException) cause : e;
   }
 
   /**

@@ -99,11 +99,14 @@ public interface Cache<K, V> {
   void put(K key, V value);
 
   /**
-   * 如果键不存在则放入缓存
+   * 如果键不存在则放入缓存。
+   *
+   * <p><b>原子性契约（对标 Caffeine/ConcurrentHashMap）</b>：同一 key 的并发调用仅一次写入成功。 继承 {@code
+   * AbstractCache} 的实现通过 per-key 单飞信号保证原子；此 default 实现仅为 直接实现本接口的类提供兼容存根（check-then-act，非原子）。
    *
    * @param key 键
    * @param value 值
-   * @return 返回值说明
+   * @return 写入前已存在的值；写入成功（此前无值）返回 null
    */
   default V putIfAbsent(K key, V value) {
     V existing = getIfPresent(key);
@@ -115,11 +118,14 @@ public interface Cache<K, V> {
   }
 
   /**
-   * 如果键不存在则计算并放入缓存
+   * 如果键不存在则计算并放入缓存。
+   *
+   * <p><b>原子性契约（对标 Caffeine）</b>：同一 key 并发调用时 mappingFunction 仅执行一次（单飞）， 映射结果对全部等待者可见。继承
+   * {@code AbstractCache} 的实现已保证；此 default 实现为非原子兼容存根。 mappingFunction 抛出异常时异常传播给所有等待者。
    *
    * @param key 键
    * @param mappingFunction mappingFunction 参数
-   * @return 返回值说明
+   * @return 映射值；映射为 null 时返回 null 且不写入
    */
   default V computeIfAbsent(K key, Function<K, V> mappingFunction) {
     V value = getIfPresent(key);
@@ -133,11 +139,14 @@ public interface Cache<K, V> {
   }
 
   /**
-   * 重新计算映射值
+   * 重新计算映射值。
+   *
+   * <p><b>原子性契约</b>：同一 key 的并发 compute 按抵达顺序串行化（per-key 单飞）。 继承 {@code AbstractCache}
+   * 的实现已保证；此 default 实现为非原子兼容存根。 remappingFunction 抛出异常时异常传播且不改变缓存状态。
    *
    * @param key 键
    * @param remappingFunction remappingFunction 参数
-   * @return 返回值说明
+   * @return 新值；重映射为 null 时移除条目并返回 null
    */
   default V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     V oldValue = getIfPresent(key);
@@ -153,12 +162,15 @@ public interface Cache<K, V> {
   }
 
   /**
-   * 合并值
+   * 合并值。
+   *
+   * <p><b>原子性契约（对标 ConcurrentHashMap.merge）</b>：同一 key 的并发 merge 按抵达顺序串行化。 继承 {@code
+   * AbstractCache} 的实现已保证；此 default 实现为非原子兼容存根。
    *
    * @param key 键
    * @param value 值
    * @param remappingFunction remappingFunction 参数
-   * @return 返回值说明
+   * @return 合并后的值；合并结果为 null 时移除条目并返回 null
    */
   default V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
     V oldValue = getIfPresent(key);

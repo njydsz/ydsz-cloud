@@ -80,6 +80,19 @@ public final class CryptoUtils {
     LOG.info("CryptoUtils 默认算法已设置为: {}", algorithm);
   }
 
+  /**
+   * 重置静态状态（仅供测试使用）。
+   *
+   * <p>清空已注入算法与缓存的 provider，解决 {@code setDefaultAlgorithm} 的"仅允许注入一次"语义
+   * 在 Spring TestContext 缓存复用（同 JVM 多次启动容器）下第二次注入被静默忽略的问题。
+   *
+   * <p><b>非线程安全：</b>仅允许在单测的 {@code @BeforeEach}/{@code @AfterEach} 中调用， 禁止在业务代码中使用。
+   */
+  public static void resetForTesting() {
+    injectedAlgorithm = null;
+    defaultProvider = null;
+  }
+
   // ==================== 字符串加密（Base64 编码） ====================
 
   /**

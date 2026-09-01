@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * 重试工具类（Unchecked 风格）。
  *
@@ -40,6 +42,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
+@Experimental(
+    "能力储备：Unchecked 风格轻量重试（无平台内自研重复实现）。平台级熔断/重试标准为"
+        + " Resilience4j（见根 pom 说明，全仓 0 个 RetryUtils 使用点）；引入 Resilience4j 的"
+        + " 模块应优先使用其 Retry 能力，本类保留给不愿引入 Resilience4j 依赖的轻量场景，"
+        + " 启用前请确认测试覆盖")
 public final class RetryUtils {
 
   /** 默认指数退避乘数（每次延迟翻倍）。 */
