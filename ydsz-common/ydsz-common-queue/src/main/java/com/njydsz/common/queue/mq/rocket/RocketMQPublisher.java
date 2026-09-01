@@ -228,6 +228,20 @@ public class RocketMQPublisher implements IMessagePublisher {
     return future;
   }
 
+  /**
+   * 发布定时/延迟消息，按 RocketMQ 的固定延迟等级投递。
+   *
+   * <p>RocketMQ 不支持任意毫秒级延迟，{@code delayMillis} 会被向上取整到最近的延迟等级（1s / 5s / 10s /
+   * 30s / 1m / 2m …，见 {@code calculateDelayLevel}），因此<b>实际投递时间不早于</b>请求时间、且可能明显
+   * 晚于请求时间。业务不应依赖精确的延迟时刻，只应保证"不早于"这一下界。
+   *
+   * <p>发送失败时按 {@code maxRetryTimes} 退避重试；重试全部失败后抛出业务异常，不静默丢弃。
+   *
+   * @param message 待投递消息，不允许为 {@code null}
+   * @param delayMillis 期望延迟毫秒数，必须大于 0；最终会被换算为延迟等级
+   * @throws BusinessException 消息为 {@code null}、{@code delayMillis <= 0}、发布器已关闭，
+   *     或重试 {@code maxRetryTimes} 次后仍未成功时抛出
+   */
   public void publishDelayed(QueueMessage message, long delayMillis) {
     if (message == null) {
       throw BusinessException.builder().key("消息不能为空").build();
@@ -342,6 +356,20 @@ public class RocketMQPublisher implements IMessagePublisher {
         .build();
   }
 
+  /**
+   * 发布顺序消息，通过队列选择器把同一分组键的消息固定路由到同一 MessageQueue。
+   *
+   * <p>选择器按 {@code Math.abs(groupKey.hashCode()) % queueCount} 选队列，因此顺序性只在<b>同一
+   * {@code messageGroupKey}</b> 内成立；不同分组键可能落到同一队列，也可能分散到不同队列，彼此之间没有顺序保证。
+   *
+   * <p>队列数量变化（扩缩容）会改变哈希映射结果，进而短暂打破顺序，运维调整 topic 队列数时需知悉该影响。
+   *
+   * <p>发送失败时按 {@code maxRetryTimes} 退避重试；重试全部失败后抛出业务异常。
+   *
+   * @param message 待投递的顺序消息，必须设置 {@code messageGroupKey}
+   * @throws BusinessException 消息为 {@code null}、未设置 {@code messageGroupKey}、发布器已关闭，
+   *     或重试 {@code maxRetryTimes} 次后仍未成功时抛出
+   */
   public void publishSequential(QueueMessage message) {
     if (message == null || !message.isSequential()) {
       throw BusinessException.builder().key("顺序消息必须设置 messageGroupKey").build();
