@@ -37,7 +37,7 @@ import com.njydsz.common.util.collection.CollectionUtils;
  * 集成 {@link RedisMetricsCollector} 进行操作指标采集，与 {@link RedisStringOps} 保持一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisHashOps {

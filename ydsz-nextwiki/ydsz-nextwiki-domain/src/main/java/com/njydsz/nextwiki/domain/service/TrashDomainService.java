@@ -24,7 +24,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
  * 而是返回 {@link FileOperatedEvent} 由应用层发布，保持领域层对框架的零依赖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

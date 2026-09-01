@@ -13,7 +13,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * <p>P1-8: 描述用户在不同通道的触达偏好和活跃度，用于智能选择最优通道。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserReachProfileDTO {

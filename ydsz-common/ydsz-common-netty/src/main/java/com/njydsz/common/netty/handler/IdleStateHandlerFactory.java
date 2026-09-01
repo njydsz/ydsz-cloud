@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
  * userEventTriggered} 处理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @RequiredArgsConstructor
 public class IdleStateHandlerFactory {

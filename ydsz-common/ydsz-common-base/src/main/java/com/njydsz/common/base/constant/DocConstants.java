@@ -8,7 +8,7 @@ package com.njydsz.common.base.constant;
  * <p><b>线程安全性：</b>所有字段均为 {@code public static final}，线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class DocConstants {
 
@@ -34,7 +34,7 @@ public final class DocConstants {
   public static final String DEFAULT_GROUP_NAME = "default";
 
   /** 默认 API 版本 */
-  public static final String DEFAULT_API_VERSION = "1.0.0";
+  public static final String DEFAULT_API_VERSION = "26.09.01";
 
   /** JSON 格式标识 */
   public static final String FORMAT_JSON = "json";

@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>描述业务关键路径的 SLA 指标，包括阈值、目标和分解步骤。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class SlaDefinition {

@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.vo.MenuVO;
  * <p>入参为 DTO / Query / 具体字段，返回值为 VO 类型，禁止暴露 MyBatis-Plus 类。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface MenuRepository {
 

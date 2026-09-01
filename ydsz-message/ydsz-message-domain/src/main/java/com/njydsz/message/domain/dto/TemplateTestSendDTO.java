@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于模板编辑后的真实发送验证，向测试接收人发送一条真实消息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class TemplateTestSendDTO implements Serializable {

@@ -17,7 +17,7 @@ import com.njydsz.common.sentry.spi.AlertPublisher;
  * <p>将告警事件转发到 Prometheus Alertmanager 或直接记录日志。 支持告警级别路由。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DefaultAlertPublisher implements AlertPublisher {

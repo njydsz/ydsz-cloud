@@ -30,7 +30,7 @@ import com.njydsz.common.json.type.JsonType;
  * <p><b>线程安全性：</b>无状态 Bean，{@link DocProperties} 与 {@code applicationVersion} 在初始化后即视为只读，线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public abstract class AbstractDocExporter implements DocExporter {
 

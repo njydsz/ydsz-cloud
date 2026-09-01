@@ -47,7 +47,7 @@ import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
  * });
  * }</pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -168,7 +168,7 @@ public class FlowQueuePublisher {
    *
    * @param eventType 事件类型（建议使用业务前缀，如 INITIATION_STATUS_SYNC）
    * @param data 业务数据负载（不可为 null）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void publish(String eventType, Map<String, Object> data) {
     if (flowEventPublisher == null || eventType == null || data == null) {

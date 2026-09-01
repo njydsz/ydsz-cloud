@@ -32,7 +32,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * <p><b>cron 表达式：</b>通过 {@code ydsz.userinfo.security.alert.aggregation.cron} 配置，默认每 5 分钟执行一次。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

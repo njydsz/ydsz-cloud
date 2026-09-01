@@ -7,7 +7,7 @@ package com.njydsz.cronjob.server.core.alert;
  * 仅邮件）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum AlertLevel {
 

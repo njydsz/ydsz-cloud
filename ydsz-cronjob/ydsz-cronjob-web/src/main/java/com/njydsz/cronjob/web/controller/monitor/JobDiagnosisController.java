@@ -44,7 +44,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * <p>适用于任务卡死、锁冲突、执行异常等场景的快速定位。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Tag(name = "任务诊断", description = "聚合任务多维度状态信息，提供一键诊断能力")

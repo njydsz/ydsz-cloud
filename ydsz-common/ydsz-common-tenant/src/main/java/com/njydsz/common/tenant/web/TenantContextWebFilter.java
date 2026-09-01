@@ -43,7 +43,7 @@ import com.njydsz.common.tenant.metrics.TenantMetrics;
  * <p><b>安全清洗：</b>外部请求的 X-Tenant-* header 在网关层已被清洗， 此处 header 恢复仅在 JWT 不可用时触发（Feign 内部调用场景）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class TenantContextWebFilter implements Filter {
@@ -222,7 +222,7 @@ public class TenantContextWebFilter implements Filter {
    *
    * @param claim JWT claim 名
    * @return claim 值，不存在返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   protected String resolveClaimValue(String claim) {
     if (claim == null || claim.isEmpty()) {

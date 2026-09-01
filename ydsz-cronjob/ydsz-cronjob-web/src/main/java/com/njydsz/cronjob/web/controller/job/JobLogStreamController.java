@@ -32,7 +32,7 @@ import com.njydsz.cronjob.server.core.logger.LogStreamManager;
  * <p>由 {@link LogStreamManager} 统一管理订阅者生命周期（超时/上限/清理），本端点仅做转发。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Tag(name = "任务日志流", description = "任务执行日志 SSE 实时推送")

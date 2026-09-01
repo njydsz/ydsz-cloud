@@ -29,7 +29,7 @@ import com.njydsz.workflow.infra.entity.FlowDelegateAuth;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.infra.entity.FlowDelegateAuth 委派代理实体
  * @see com.njydsz.workflow.server.service.FlowDelegateService 委派 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -39,7 +39,7 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuth> {
 
   /**
    * 按授权人查询授权列表
-   * 
+   *
    *
    * @param tenantId 租户 ID
    * @param ownerUserId 授权人用户 ID

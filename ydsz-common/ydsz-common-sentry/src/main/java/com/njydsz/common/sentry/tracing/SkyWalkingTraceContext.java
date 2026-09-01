@@ -11,7 +11,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * <p>基于 SkyWalking apm-toolkit-trace 实现，当 SkyWalking agent 存在时自动接入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SkyWalkingTraceContext implements TraceContext {

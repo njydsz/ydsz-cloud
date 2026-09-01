@@ -46,7 +46,7 @@ import org.springframework.core.env.Environment;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @Slf4j
@@ -182,7 +182,7 @@ public class DocSecurityConfiguration {
    * <p><b>线程安全性：</b>无状态，线程安全。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static class DocBasicAuthFilter implements Filter {
 

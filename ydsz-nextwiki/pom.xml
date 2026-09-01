@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-cloud</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>26.09.01-SNAPSHOT</version>
     </parent>
     <artifactId>ydsz-nextwiki</artifactId>
     <packaging>pom</packaging>

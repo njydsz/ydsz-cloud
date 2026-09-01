@@ -44,7 +44,7 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
  * </table>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserInfoProperties 用户中心配置属性
  * @see LdapProperties LDAP 配置属性
  * @see com.njydsz.userinfo.UserInfoApplication ydsz-userinfo 启动类

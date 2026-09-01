@@ -22,7 +22,7 @@ import com.njydsz.userinfo.server.service.UserPostService;
  * <p>用于工作流审批人解析（按岗位找人）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

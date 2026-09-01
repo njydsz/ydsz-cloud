@@ -28,7 +28,7 @@ import javax.crypto.spec.SecretKeySpec;
  * {@link com.njydsz.common.util.security.crypto.CryptoUtils} 加密存储。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class TotpAuthenticator {
 

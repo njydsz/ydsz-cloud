@@ -24,7 +24,7 @@ import com.njydsz.common.notify.template.TemplateEngine;
  * <p>仅支持在 {@link NotifyChannel} 枚举中有对应值的通道类型， PUSH / WEBHOOK 等无对应枚举值的通道不会被适配。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
@@ -35,7 +35,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
 
   /**
    * 构造适配器。
-   * 
+   *
    *
    * @param delegate 消息服务通道实现（如 EmailChannel / SmsChannel 等）
    * @param notifyChannel common-notify 通道枚举值（如 EMAIL / SMS 等）

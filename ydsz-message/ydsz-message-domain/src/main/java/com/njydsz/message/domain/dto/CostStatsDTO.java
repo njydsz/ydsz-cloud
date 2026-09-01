@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>按通道维度统计发送成本：单条成本 × 成功发送数 = 通道总成本。 通道单价由 {@code ydsz.message.cost.unit-prices} 配置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "消息发送成本统计")

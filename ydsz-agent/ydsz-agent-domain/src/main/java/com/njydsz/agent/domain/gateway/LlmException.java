@@ -9,7 +9,7 @@ import com.njydsz.common.exception.custom.SysException;
  * <p>LLM API 调用失败时抛出，包括网络超时、认证失败、模型不可用、响应解析错误等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class LlmException extends SysException {
 
@@ -21,7 +21,7 @@ public class LlmException extends SysException {
    * <p>定义 LLM 调用失败的错误分类，包括网络超时、认证失败、模型不存在、限流、响应格式错误、Provider 内部错误和调用取消。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public enum ErrorType {
     /** 网络超时 */

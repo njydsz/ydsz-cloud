@@ -9,7 +9,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
  * <p>封装创建用户会话所需的全部参数，避免方法参数数量超限（云顶编码规范 5.4 节）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param accessToken 访问令牌
  * @param refreshToken 刷新令牌
  * @param user 用户账号

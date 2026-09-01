@@ -33,7 +33,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ConfigVO 字段完全一致的视图对象（"VO 兼 DTO"模式）
  */
 @Data

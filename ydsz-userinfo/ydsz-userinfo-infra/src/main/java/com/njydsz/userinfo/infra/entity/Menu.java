@@ -39,7 +39,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * parent_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RolePermission 角色-菜单权限中间表
  * @see com.njydsz.userinfo.web.controller.MenuController 菜单 Controller
  */

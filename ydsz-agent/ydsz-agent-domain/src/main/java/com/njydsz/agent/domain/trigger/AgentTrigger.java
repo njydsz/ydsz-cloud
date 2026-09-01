@@ -13,7 +13,7 @@ import java.util.Map;
  * 去重、限速、递归守卫、失败关闭未知模式。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class AgentTrigger {
 

@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回消息聚合发送的完整信息，将同一接收人同一通道的 多条消息聚合为一条摘要消息发送，减少打扰并提升信息密度。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgAggregateVO implements Serializable {

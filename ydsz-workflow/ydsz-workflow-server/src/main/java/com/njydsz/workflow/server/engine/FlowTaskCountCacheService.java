@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
  *   <li>启动预热：应用启动时从 DB 加载初始值
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

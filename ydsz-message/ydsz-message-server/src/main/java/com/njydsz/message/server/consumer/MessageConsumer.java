@@ -45,7 +45,7 @@ import com.njydsz.message.server.service.core.MessageService;
  * <p>性能优化:Redis 健康时跳过 DB 二级幂等检查,减少每次消费的 DB 查询开销。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

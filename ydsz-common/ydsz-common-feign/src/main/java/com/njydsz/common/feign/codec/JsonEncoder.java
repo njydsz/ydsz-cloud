@@ -17,7 +17,7 @@ import com.njydsz.common.json.YdszJson;
  * <p>使用 {@link YdszJson} 作为 JSON 序列化实现，提供统一的 JSON 编码能力。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class JsonEncoder implements Encoder {
 

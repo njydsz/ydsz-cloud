@@ -20,7 +20,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * <p>允许 Agent 通过自然语言查询数据库，自动转换为 SQL 并执行返回结果。 安全护栏（仅 SELECT、注入检测、行数限制）由 {@link Text2SQLService} 实现层保证。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

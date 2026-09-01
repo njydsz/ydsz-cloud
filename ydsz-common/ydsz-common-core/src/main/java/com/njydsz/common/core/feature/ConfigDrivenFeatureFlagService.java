@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * <p>线程安全：内部使用 {@link ConcurrentHashMap}，映射替换采用原子引用切换， 并发读无锁。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FeatureFlagService
  */
 public class ConfigDrivenFeatureFlagService implements FeatureFlagService {

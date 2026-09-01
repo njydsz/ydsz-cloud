@@ -15,7 +15,7 @@ import com.njydsz.cronjob.app.openapi.CronjobAppOpenApiConfiguration;
  * <p>仅在 {@code ydzz.platform.mode=app} 时生效，注册 App 端健康检查、OpenApi 配置等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)

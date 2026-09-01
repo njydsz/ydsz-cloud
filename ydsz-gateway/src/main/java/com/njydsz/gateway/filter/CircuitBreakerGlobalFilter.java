@@ -3,7 +3,9 @@ package com.njydsz.gateway.filter;
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -85,7 +87,7 @@ import com.njydsz.gateway.config.PathGuard;
  * <p><b>处理顺序：</b>{@code HIGHEST_PRECEDENCE + 45}，位于限流（+30）之后，路由转发（+100）之前。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -162,8 +164,7 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
             () -> {
               if (!circuitBreaker.tryAcquirePermission()) {
                 return Mono.error(
-                    io.github.resilience4j.circuitbreaker.CallNotPermittedException
-                        .createCallNotPermittedException(circuitBreaker));
+                    CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
               }
               long startNanos = System.nanoTime();
               return chain
@@ -171,19 +172,17 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
                   .doOnSuccess(
                       v ->
                           circuitBreaker.onSuccess(
-                              java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(
-                                  System.nanoTime() - startNanos),
-                              java.util.concurrent.TimeUnit.MILLISECONDS))
+                              TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos),
+                              TimeUnit.MILLISECONDS))
                   .doOnError(
                       t ->
                           circuitBreaker.onError(
-                              java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(
-                                  System.nanoTime() - startNanos),
-                              java.util.concurrent.TimeUnit.MILLISECONDS,
+                              TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos),
+                              TimeUnit.MILLISECONDS,
                               t));
             })
         .onErrorResume(
-            io.github.resilience4j.circuitbreaker.CallNotPermittedException.class,
+            CallNotPermittedException.class,
             e -> rejectCircuitOpen(exchange, routeId));
   }
 

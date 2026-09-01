@@ -29,7 +29,7 @@ import com.njydsz.cronjob.api.fallback.CronjobServiceClientFallback;
  * <p>使用 {@link CronjobServiceClientFallback} 保证 cronjob 服务不可用时 不影响调用方主流程（降级为 WARN 日志）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FeignClient(
     name = FeignClientConstants.CRONJOB,

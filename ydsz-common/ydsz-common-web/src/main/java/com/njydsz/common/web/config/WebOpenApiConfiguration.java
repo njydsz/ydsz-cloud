@@ -12,7 +12,7 @@ import com.njydsz.common.base.config.BaseOpenApiConfiguration;
  * <p>安全 Scheme、Tag 描述、JWT 鉴权头。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 public class WebOpenApiConfiguration extends BaseOpenApiConfiguration {

@@ -14,7 +14,7 @@ import com.njydsz.common.excel.annotation.ExcelProperty;
  * <p><b>P1-3 分层调整：</b>从 domain 层移至 server 层，剥离 domain 对 common-excel 的依赖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "系统配置 Excel 导入导出")

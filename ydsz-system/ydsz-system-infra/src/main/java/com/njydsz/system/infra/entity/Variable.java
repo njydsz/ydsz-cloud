@@ -44,7 +44,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
  * <p><b>索引设计：</b>唯一索引 {@code uk_variable_key}（{@code variable_key}）， 加速按 key 查询与唯一性校验。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see Config 系统配置实体（面向后端）
  */
 @Data

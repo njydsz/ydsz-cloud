@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>注册 SAML 相关的 Bean，当 ydsz.userinfo.saml.enabled=true 时激活。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 @EnableConfigurationProperties(SamlProperties.class)

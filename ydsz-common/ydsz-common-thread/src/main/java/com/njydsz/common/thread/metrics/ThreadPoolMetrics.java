@@ -38,13 +38,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *
  * <p>默认指标前缀使用 {@code ydsz.executor} 而非 {@code executor}， 避免与 Spring Boot Actuator 内置的线程池指标命名空间冲突。
  *
- * <p>1.0.0 变更：指标分核心/可选两类，通过 {@link #enableDetailedMetrics} 控制。
+ * <p>26.09.01 变更：指标分核心/可选两类，通过 {@link #enableDetailedMetrics} 控制。
  *
- * <p>1.0.0 变更：构造器改为接受 {@link ThreadPoolTaskExecutor}， 拒绝计数由 {@link MeteredRejectedHandler} 自动回调
+ * <p>26.09.01 变更：构造器改为接受 {@link ThreadPoolTaskExecutor}， 拒绝计数由 {@link MeteredRejectedHandler} 自动回调
  * {@link #incrementRejected()}， 无需业务方手动调用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MeteredRejectedHandler
  */
 @Slf4j
@@ -168,7 +168,7 @@ public class ThreadPoolMetrics implements MeterBinder {
    * 获取是否启用了详细指标。
    *
    * @return true 如果启用了详细指标
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public boolean isEnableDetailedMetrics() {
     return enableDetailedMetrics;

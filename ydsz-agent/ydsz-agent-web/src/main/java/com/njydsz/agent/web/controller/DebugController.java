@@ -60,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
  * 调试链路存储在内存（{@code InMemoryTraceRecorder}），重启后丢失； 生产环境建议接入持久化存储（如 ClickHouse / ES），并配置合理的保留周期。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController

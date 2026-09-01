@@ -32,7 +32,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  *   {"sourceNodeId":"hostA:1234","event":{"ruleCode":"R001","changeType":"UPDATE","operator":"admin"}}
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {

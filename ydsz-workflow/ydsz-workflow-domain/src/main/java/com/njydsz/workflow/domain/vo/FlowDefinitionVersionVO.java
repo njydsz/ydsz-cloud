@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>记录某一流程定义的版本信息，用于版本管理和发布记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowDefinitionVersionVO implements Serializable {

@@ -15,7 +15,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>仅在 RedisStringOps 可用时启用，否则降级为无持久化模式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class CircuitBreakerStatePersistence {

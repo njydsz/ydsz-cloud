@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端组件（如 zTree / Element UI Tree 等）渲染文件树结构。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class DirectoryTree {

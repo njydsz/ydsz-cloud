@@ -62,7 +62,7 @@ import com.njydsz.workflow.domain.vo.FlowUserVO;
  * <p><b>跨子服务共享：</b>任务校验 / 审计 / 事件能力委托给 {@link FlowTaskSupport}，避免代码重复。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowTaskSupport 跨子服务共享辅助
  * @see FlowTaskOperateDTO 任务操作参数 DTO
  * @see FlowSignType 加签类型枚举
@@ -205,15 +205,15 @@ public class FlowTaskSignServiceImpl {
 
   /**
    * GAP-P0-3: 并加签 — 动态追加审批人与原审批人并行审批，所有人审完后才推进。
-   * 
+   *
    * <p>并加签实现方式：
-   * 
+   *
    * <ol>
    * <li>向 ydsz_flow_user 插入新审批人（signType=PARALLEL，processed=0）
    * <li>approveCount +1
    * <li>强制切换 performType 为 PARALLEL —— 确保所有人全部通过才推进
    * </ol>
-   * 
+   *
    * 与后加签（PARALLEL 并行）不同，并加签的加签人与原审批人<b>同时</b>收到待办， 互不阻塞，全部审完后才推进到下一节点。
    *
    * @param dto 任务操作 DTO（含 taskId/targetUserId 等）

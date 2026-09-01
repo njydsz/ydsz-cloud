@@ -12,7 +12,7 @@ import java.util.Objects;
  * <p><b>线程安全</b>：字段 final 且参数 Map 经不可变封装，不可变值对象，可安全跨线程传递。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class ToolCall implements Serializable {
 

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>封装分页列举对象的返回结果，包含对象列表和分页信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

@@ -19,7 +19,7 @@ import lombok.Setter;
  * 所有部署环境（取决于是否引入 common-audit 模块），且本模块不管理该表的 DDL。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

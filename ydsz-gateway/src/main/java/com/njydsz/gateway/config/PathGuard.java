@@ -23,7 +23,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
  *   <li>URL 解码规范化：先解码再检测，防范编码绕过
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public final class PathGuard {

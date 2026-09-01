@@ -31,7 +31,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * <p>{@code ydsz.sentry.enabled=true}（默认）时装配全部能力； {@code ydsz.sentry.enabled=false} 时整个可观测性模块不生效。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SentryProperties
  */
 @AutoConfiguration

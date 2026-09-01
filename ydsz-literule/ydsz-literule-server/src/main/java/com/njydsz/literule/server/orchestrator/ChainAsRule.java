@@ -18,7 +18,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *
  * <p>P0-1 修复：增加 null 求值器防御与 NPE 隔离， 避免单个 Rule 的 null evaluator 导致整个 Chain 失败。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

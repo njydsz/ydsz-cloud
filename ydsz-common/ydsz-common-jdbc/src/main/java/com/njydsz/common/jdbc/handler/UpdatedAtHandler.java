@@ -40,7 +40,7 @@ import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CreatedAtHandler 创建时间处理器
  * @see FieldFillConfiguration 字段填充配置
  */

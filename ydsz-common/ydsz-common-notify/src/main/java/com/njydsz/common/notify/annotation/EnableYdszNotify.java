@@ -16,7 +16,7 @@ import com.njydsz.common.notify.config.NotifyConfiguration;
  * <p>在 Spring Boot 应用的启动类或配置类上添加此注解， 即可启用通知模块的全部功能（包括定时重试消费）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see NotifyConfiguration
  */
 @Target(ElementType.TYPE)

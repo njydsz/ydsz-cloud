@@ -10,7 +10,7 @@ import com.njydsz.common.app.config.AppOpenApiConfiguration;
  * <p>继承 {@link AppOpenApiConfiguration}，为 Agent 模块的移动端 API 提供独立的 OpenAPI 分组与文档展示。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 public class AgentAppOpenApiConfiguration extends AppOpenApiConfiguration {

@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>封装迁移执行的统计信息与逐实例明细，供前端展示迁移报告。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class InstanceMigrationResultDTO implements Serializable {
@@ -42,7 +42,7 @@ public class InstanceMigrationResultDTO implements Serializable {
    * 单个实例的迁移明细
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class MigrationDetail implements Serializable {

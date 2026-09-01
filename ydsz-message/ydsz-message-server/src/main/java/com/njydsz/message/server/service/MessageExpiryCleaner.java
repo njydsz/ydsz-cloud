@@ -16,7 +16,7 @@ import com.njydsz.message.domain.repository.MsgNotificationRepository;
  * <p>定时清理过期/已读 N 个月的消息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -80,7 +80,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * 现移至 web 层（依赖注入编排层），server 层仅依赖 domain 接口。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 @EnableConfigurationProperties(AgentProperties.class)

@@ -132,7 +132,7 @@ import com.njydsz.workflow.server.service.instance.ServiceNodeExecuteService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowTaskServiceImpl 任务门面（拆分入口）
  * @see FlowRunTaskVO 运行时任务视图对象
  * @see FlowNodeVO 流程节点视图对象
@@ -258,7 +258,7 @@ public class FlowTaskCreateService {
 
   /**
    * 处理自动通过后的推进逻辑（回调方法，供 EmptyAssigneeStrategyService 使用）
-   * 
+   *
    * <p>将 advanceAfterAutoPass 的调用封装为回调，解耦递归深度保护逻辑。
    *
    * @param ctx 自动通过推进上下文（含 instance/node/variables）
@@ -298,7 +298,7 @@ public class FlowTaskCreateService {
 
   /**
    * 处理服务节点执行成功后的推进逻辑（回调方法，供 ServiceNodeExecuteService 使用）
-   * 
+   *
    * <p>将 advanceAfterAutoPass 的调用封装为回调，解耦递归深度保护逻辑。
    *
    * @param ctx 服务节点推进上下文（含 instance/node/variables）
@@ -352,7 +352,7 @@ public class FlowTaskCreateService {
 
   /**
    * 创建任务（支持显式指定办理人）
-   * 
+   *
    * <p>GAP-P2-9 自由流扩展：{@code explicitAssignees} 非空时直接作为目标节点办理人， 跳过 {@code node.permissionFlag} /
    * {@code ext.collection} 解析逻辑。 为空时回退到原有解析逻辑（向后兼容）。
    *
@@ -412,7 +412,7 @@ public class FlowTaskCreateService {
 
   /**
    * 构建标准审批节点的任务实体（含持久化）。
-   * 
+   *
    * <p>完成办理人解析 → 跨节点去重 → 审批人为空兜底 → 自动去重判断 → 写入任务表 + ydsz_flow_user。 出现提前返回场景（空审批人去重跳过 / 空审批人兜底 /
    * 自动去重命中）时， 通过 {@link TaskBuildResult#earlyReturnTaskId} 传递结果。
    *
@@ -490,7 +490,7 @@ public class FlowTaskCreateService {
 
   /**
    * 任务创建后置处理：委派改写 + 事件发布 + WebSocket 推送 + 自动审批。
-   * 
+   *
    * <p>前置条件：{@code task} 已持久化且 ydsz_flow_user 已写入。
    *
    * @param task 参数说明

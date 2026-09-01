@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>P1-A3：payload 字段存放 JSON 序列化的消息请求列表，支持断点续传（{@code executeBatch(batchId)} 即可恢复）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

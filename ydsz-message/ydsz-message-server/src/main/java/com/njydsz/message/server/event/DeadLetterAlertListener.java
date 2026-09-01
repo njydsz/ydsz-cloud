@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * <p>当前实现为日志告警（WARN 级别），可扩展为钉钉机器人 / 邮件 / 站内告警等通道。 监听器同步执行且不抛异常，避免影响死信标记主流程。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

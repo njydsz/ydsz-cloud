@@ -80,7 +80,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>本切面 Order 为 12，在行级权限注入之后执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AuthColPermission
  * @see ColumnScopeInfo
  * @see ColumnScopeAware

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  * <p>基于 {@link ConcurrentHashMap} 的内存存储，适用于单实例开发和测试环境。 生产环境应替换为基于 Redis 或数据库的实现以支持持久化和跨实例查询。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class InMemoryNotifyReceiptTracker implements NotifyReceiptTracker {
 

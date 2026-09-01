@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于展示用户当前活跃的会话列表，支持管理员查看和强制下线指定设备。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserSessionVO implements Serializable {

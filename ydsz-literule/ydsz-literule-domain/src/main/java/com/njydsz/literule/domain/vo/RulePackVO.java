@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回规则包的完整信息。规则包是行业级规则集合的封装， 支持版本管理、规则快照、评分和下载统计，实现规则的复用与共享。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RulePackVO implements Serializable {

@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * common-tenant 负责数据层过滤，本实体负责业务层配额与通道策略。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

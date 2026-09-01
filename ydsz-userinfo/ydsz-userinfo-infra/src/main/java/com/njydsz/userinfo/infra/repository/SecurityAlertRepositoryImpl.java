@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.mapper.SecurityAlertMapper;
  * 依据规范 5.4 节，两者均以行内 FQN 引用并附 FQN-OK 注释。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

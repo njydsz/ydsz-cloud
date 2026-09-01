@@ -6,7 +6,7 @@ package com.njydsz.common.util.id;
  * <p>当系统时钟回拨量超过容忍阈值时抛出此异常。 Snowflake 算法依赖单调递增的时间戳，时钟回拨会导致 ID 重复。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ClockBackwardException extends RuntimeException {
 

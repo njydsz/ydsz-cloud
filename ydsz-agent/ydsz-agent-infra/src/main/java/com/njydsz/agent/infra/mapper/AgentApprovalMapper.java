@@ -12,7 +12,7 @@ import com.njydsz.agent.infra.entity.AgentApproval;
  * 过滤条件，本接口不感知。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface AgentApprovalMapper extends BaseMapper<AgentApproval> {}

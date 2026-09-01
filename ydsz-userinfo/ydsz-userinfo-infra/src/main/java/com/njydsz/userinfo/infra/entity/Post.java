@@ -35,7 +35,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>索引设计：</b>唯一索引 {@code uk_post_code}（{@code post_code}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserPost 用户-岗位中间表
  * @see UserAccount 用户实体（含 {@code positionCode} 字段）
  * @see com.njydsz.userinfo.web.controller.PostController 岗位 Controller

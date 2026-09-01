@@ -22,7 +22,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.domain.query.PageQuery 父类（分页参数）
  */
 @Data

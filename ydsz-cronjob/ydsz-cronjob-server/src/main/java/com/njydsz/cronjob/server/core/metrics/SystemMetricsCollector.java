@@ -27,7 +27,7 @@ import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
  * <p>采集失败时返回安全默认值（CPU/内存 0，任务数 0），不影响心跳主流程。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

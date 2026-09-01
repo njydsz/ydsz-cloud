@@ -6,7 +6,7 @@ package com.njydsz.userinfo.server.auth;
  * <p>封装基础与地理围栏风险评估所需的全部输入，避免方法参数数量超限（云顶编码规范 5.4 节）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param username 用户名
  * @param loginIp 登录 IP
  * @param userAgent 用户代理

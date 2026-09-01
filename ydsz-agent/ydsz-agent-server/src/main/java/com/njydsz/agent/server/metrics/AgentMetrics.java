@@ -31,7 +31,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * {@code CachedLlmClient} 回调上报缓存指标，避免 infra 反向依赖 server 层。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConditionalOnClass(MeterRegistry.class)
 public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRecorder {

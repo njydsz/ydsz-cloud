@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>由 {@code MenuServiceImpl.buildMenuTree()} 构建递归树， 前端根据该树渲染侧边栏菜单和路由配置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MenuTreeVO {

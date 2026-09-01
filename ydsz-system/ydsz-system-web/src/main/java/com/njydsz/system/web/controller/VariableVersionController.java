@@ -45,7 +45,7 @@ import com.njydsz.system.server.service.VariableService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
  * @see com.njydsz.system.infra.entity.EntityVersion 实体版本
  */

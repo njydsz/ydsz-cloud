@@ -30,7 +30,7 @@ import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
  * 本次拆分将最独立的办理人解析逻辑先行抽出，后续将继续抽出委派改写、空办理人兜底等逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService 任务创建服务（调用方）
  * @see DefaultFlowVariableStrategy 变量表达式策略
  */

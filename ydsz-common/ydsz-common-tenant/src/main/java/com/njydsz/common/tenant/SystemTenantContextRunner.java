@@ -29,7 +29,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * <p>线程安全：{@code systemTenantId} 在启动时设置一次，运行时只读。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class SystemTenantContextRunner {
 

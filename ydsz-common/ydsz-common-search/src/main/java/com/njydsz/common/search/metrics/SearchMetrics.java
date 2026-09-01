@@ -17,7 +17,7 @@ import io.micrometer.core.instrument.Timer;
  * <p>通过 Micrometer 收集搜索 QPS、延迟、零结果率等指标。 当 Micrometer 不可用时降级为内部计数器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SearchMetrics {
 

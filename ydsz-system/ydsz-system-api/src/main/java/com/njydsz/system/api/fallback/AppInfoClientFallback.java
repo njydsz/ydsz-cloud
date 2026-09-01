@@ -16,7 +16,7 @@ import com.njydsz.system.api.dto.AppValidateRequest;
  * 日志，保证调用方走"服务不可用"分支而非异常中断。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

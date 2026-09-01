@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-agent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>26.09.01-SNAPSHOT</version>
     </parent>
     <artifactId>ydsz-agent-app</artifactId>
     <name>ydsz-agent-app</name>

@@ -23,7 +23,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * <p>所有生成的键均包含租户命名空间前缀，格式 {@code {prefix}:{tenantId}:{key}}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component("cacheKeyBuilder")
 public final class CacheKeyBuilder {

@@ -21,7 +21,7 @@ import com.njydsz.workflow.api.vo.FlowInstanceVO;
  * <p>P2-1-followup: 从 project.feign 迁移至 common.feign，使用 {@link FeignClientConstants#WORKFLOW} 常量。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FeignClient(
     name = FeignClientConstants.WORKFLOW,

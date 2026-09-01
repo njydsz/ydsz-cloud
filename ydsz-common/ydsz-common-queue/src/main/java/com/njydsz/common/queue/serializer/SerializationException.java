@@ -6,7 +6,7 @@ package com.njydsz.common.queue.serializer;
  * <p>当消息序列化或反序列化失败时抛出此异常。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SerializationException extends RuntimeException {
 

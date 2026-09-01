@@ -19,7 +19,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p>拦截标注了 {@link RateLimit} 注解的方法，限制访问频率。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class RateLimitInterceptor implements HandlerInterceptor {
 

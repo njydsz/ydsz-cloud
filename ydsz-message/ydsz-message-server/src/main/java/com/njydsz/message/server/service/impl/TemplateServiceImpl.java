@@ -38,7 +38,7 @@ import com.njydsz.message.server.template.TemplateEngine;
  * <p>变量支持 ${var} 嵌套替换与缺省值回退；locale 加载支持精确 + 默认 zh-CN 回退。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

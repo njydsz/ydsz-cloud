@@ -10,7 +10,7 @@ package com.njydsz.common.base.constant;
  * <p><b>注意：</b>仅保留 base 模块实际使用的常量，其他模块的 Interceptor 顺序常量 应定义在各自模块中。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class InterceptorOrder {
 

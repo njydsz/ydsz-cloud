@@ -23,7 +23,7 @@ package com.njydsz.common.queue.constant;
  * <p>各业务模块可以保留本地的 {@code XxxQueueChannels} 类作为语义别名， 但值必须引用本类常量而非重复定义字符串。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see YdszMessageTopics
  */
 public final class QueueChannels {

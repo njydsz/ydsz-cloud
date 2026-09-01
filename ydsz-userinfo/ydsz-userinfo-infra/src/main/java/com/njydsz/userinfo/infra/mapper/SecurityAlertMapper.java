@@ -11,7 +11,7 @@ import com.njydsz.userinfo.infra.entity.SecurityAlert;
  * <p>对应数据表 {@code ydsz_idp_security_alert}，提供安全告警记录的 CRUD 操作。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface SecurityAlertMapper extends BaseMapper<SecurityAlert> {}

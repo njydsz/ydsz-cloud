@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * 等所有标准转义序列。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see BuilderResolver
  * @see CreatorResolver
  */

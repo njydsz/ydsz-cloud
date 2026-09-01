@@ -11,7 +11,7 @@ import com.njydsz.literule.domain.vo.ApprovalRecordVO;
  * <p>定义审批记录的持久化操作，消费方可提供自定义实现（如数据库存储）以替代默认的内存存储。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ApprovalRecordRepository {
 

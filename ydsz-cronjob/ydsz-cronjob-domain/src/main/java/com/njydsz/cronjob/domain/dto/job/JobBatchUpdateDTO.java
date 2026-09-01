@@ -17,7 +17,7 @@ import lombok.Data;
  * <p>当 {@code cronExpression} 非空时，自动校验 Cron 表达式合法性并重新注册调度器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "任务批量修改 DTO（分组 / Cron）")

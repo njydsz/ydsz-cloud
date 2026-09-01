@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供 Prompt 模板的试运行与 A/B 对比评估能力，用于 Prompt 上线前的效果验证与版本横向对比。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController

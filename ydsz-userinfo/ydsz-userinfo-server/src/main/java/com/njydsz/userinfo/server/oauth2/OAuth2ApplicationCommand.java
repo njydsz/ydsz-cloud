@@ -12,7 +12,7 @@ import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
  * 更新场景下 {@code id} 必填；其余字段为空时保留原值。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param id 应用 ID（更新时必填，注册时为 null）
  * @param clientName 应用名称
  * @param clientType 客户端类型（注册时必填）

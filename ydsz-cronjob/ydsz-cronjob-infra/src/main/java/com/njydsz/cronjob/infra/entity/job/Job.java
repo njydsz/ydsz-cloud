@@ -19,7 +19,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>对应 ydsz_job_main 表，描述一个调度任务的处理器、Cron 表达式、参数及执行统计。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

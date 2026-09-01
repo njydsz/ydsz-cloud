@@ -23,7 +23,7 @@ import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
  * <p>降低在线表数据量、提升查询性能。归档后通过专门的历史查询接口访问。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

@@ -32,7 +32,7 @@ import com.njydsz.common.util.string.StringUtils;
  * WARN，便于性能监控。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public abstract class BaseRequestLogInterceptor implements HandlerInterceptor, RequestIdResolver {
 

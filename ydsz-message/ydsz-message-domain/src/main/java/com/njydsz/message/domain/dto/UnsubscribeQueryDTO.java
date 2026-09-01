@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * <p>用于管理后台分页查看已退订用户列表，支持按用户 / 主题 / 通道过滤， 仅返回 {@code status=UNSUBSCRIBED} 的记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

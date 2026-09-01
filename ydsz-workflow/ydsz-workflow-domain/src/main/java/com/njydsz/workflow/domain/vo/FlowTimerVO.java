@@ -10,7 +10,7 @@ import lombok.Data;
  * FlowTimer 视图对象。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowTimerVO implements Serializable {

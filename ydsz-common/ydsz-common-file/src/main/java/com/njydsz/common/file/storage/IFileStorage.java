@@ -47,7 +47,7 @@ import com.njydsz.common.file.storage.platform.S3Storage;
  * <p><b>并发一致性：</b>分片上传需保证 partNumber 唯一性；complete 时需校验所有分片 ETag 与云端一致，避免出现 "孤儿分片"。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see IFileStorageProvider
  * @see LocalStorage
  * @see MinioStorage

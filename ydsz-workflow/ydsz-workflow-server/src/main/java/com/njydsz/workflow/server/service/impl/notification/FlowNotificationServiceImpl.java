@@ -104,7 +104,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * <p><b>扩展能力：</b>如需新增通知类型（如「流程完成通知」「抄送通知」）， 在 {@code ydsz-message} 侧新增模板，本类无需修改即可支持。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowNotificationService 接口定义
  * @see NotificationClient 通知中心 Feign 客户端
  * @see MessageRequest 消息请求 DTO

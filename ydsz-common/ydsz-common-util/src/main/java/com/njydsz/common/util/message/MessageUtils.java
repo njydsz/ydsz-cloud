@@ -20,7 +20,7 @@ import com.njydsz.common.util.string.StringUtils;
  * 环境下静态方法仍可通过降级路径返回默认消息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class MessageUtils {
 
@@ -45,7 +45,7 @@ public final class MessageUtils {
    * ObjectProvider<MessageSource>} 传入本类。
    *
    * @param provider MessageSource 提供者；允许 null（此时使用降级路径）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void setMessageSourceProvider(ObjectProvider<MessageSource> provider) {
     MESSAGE_SOURCE_BRIDGE.registerSupplier(provider::getIfAvailable);

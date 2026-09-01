@@ -50,7 +50,7 @@ import com.njydsz.gateway.config.PathGuard;
  *
  * <p>{@code internalSignSecret} 使用独立配置项 {@code ydsz.gateway.internal-sign-secret}，与 JWT 密钥隔离。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

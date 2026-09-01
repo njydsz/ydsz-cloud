@@ -45,7 +45,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
  * <p>多实例部署通过 {@link DistributedScheduled} 注解保证只有一个实例执行扫描， 锁等待 0s（非阻塞），TTL 60s，获取失败直接跳过本次扫描。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

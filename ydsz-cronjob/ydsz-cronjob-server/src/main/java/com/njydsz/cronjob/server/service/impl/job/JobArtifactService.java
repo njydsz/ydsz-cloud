@@ -24,7 +24,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  * <p>临时下载链接。产物支持 OSS / 本地存储双后端。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

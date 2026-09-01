@@ -33,7 +33,7 @@ import com.njydsz.literule.server.spi.DashboardDataProvider;
  * <p>通过 {@link DashboardDataProvider} SPI 反转依赖，由 project 模块提供数据聚合实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController

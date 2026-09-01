@@ -13,7 +13,7 @@ import com.njydsz.common.socket.push.PushContext;
  * {@link #shouldSend(String, String, String)} 方法保留为默认实现（委托新方法）， 保证现有过滤器实现类无需修改即可继续工作。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface MessageFilter {
 

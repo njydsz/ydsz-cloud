@@ -15,7 +15,7 @@ import lombok.Data;
  * <p>清理范围：ydsz_job_log / ydsz_job_log_content / ydsz_job_alert_dispatch / ydsz_job_task，每天凌晨 3 点由 Leader 节点执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class LogRetentionConfig {

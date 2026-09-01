@@ -55,7 +55,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SensitiveVerifyService
  */
 @Slf4j

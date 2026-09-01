@@ -20,7 +20,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
  * <p>子类覆盖 {@link #resolveRequestId(HttpServletRequest)} 提供不同的 ID 来源。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter

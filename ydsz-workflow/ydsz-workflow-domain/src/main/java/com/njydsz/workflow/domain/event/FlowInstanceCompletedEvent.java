@@ -10,11 +10,11 @@ import lombok.ToString;
  *
  * <p>当流程实例所有节点审批通过、实例状态变为 COMPLETED 时发布。
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>领域事件置于 {@code domain/event/} 包下、
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>领域事件置于 {@code domain/event/} 包下、
  * 以 {@code Event} 结尾（符合 §34.2.1）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @ToString

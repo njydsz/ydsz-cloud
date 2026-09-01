@@ -35,7 +35,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  * safe 模块的 {@code SecurityHeaderFilter} 统一管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SecurityHeadersFilter extends OncePerRequestFilter {
 

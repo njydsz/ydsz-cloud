@@ -13,7 +13,7 @@ package com.njydsz.literule.server.debug;
  *   <li>{@link #TERMINATE} - 终止会话，后续断点不再挂起
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public enum DebugCommand {

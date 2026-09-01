@@ -9,7 +9,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * DAG 执行引擎与业务层复用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum DagInstanceStatus implements BaseStatusEnum<DagInstanceStatus> {
 

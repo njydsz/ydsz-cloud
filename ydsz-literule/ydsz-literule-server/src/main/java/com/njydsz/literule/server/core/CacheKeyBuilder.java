@@ -28,7 +28,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  *
  * <p>线程安全：{@link MessageDigest} 实例为方法局部变量，无共享状态。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public final class CacheKeyBuilder {

@@ -32,7 +32,7 @@ import org.springframework.validation.annotation.Validated;
  * {@code ydsz.lock}，旧前缀不再支持。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Validated
@@ -126,7 +126,7 @@ public class LockProperties {
    * <p>用于执行阻塞式锁获取与释放任务，避免在业务线程上直接阻塞； 核心/最大线程数与队列容量决定锁竞争激烈时的排队能力。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class ThreadPool {

@@ -39,7 +39,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
  * 实现自然语言驱动的审批决策自动化。与 {@link ServiceNodeExecuteService} 平级，
  * 各自承担不同类型的自动节点执行职责。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  * @see FlowTaskCreateService 任务创建服务（调用方）
  * @see FlowAiAgentNodeExecutor AI 审批节点执行器

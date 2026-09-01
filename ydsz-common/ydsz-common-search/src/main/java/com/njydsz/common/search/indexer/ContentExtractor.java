@@ -8,7 +8,7 @@ import java.io.InputStream;
  * <p>将文件内容解析为纯文本，供搜索引擎索引。 各文档解析模块（如 common-docs）实现此接口并通过 Spring Bean 注入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ContentExtractor {
 

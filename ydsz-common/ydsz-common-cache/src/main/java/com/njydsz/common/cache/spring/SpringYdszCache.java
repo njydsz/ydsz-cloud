@@ -26,7 +26,7 @@ import com.njydsz.common.cache.api.CacheProtectionGuard;
  * 大幅缩小"后端恢复后仍被 null 屏蔽"的窗口。 未配置时保持旧行为（NullValue 包装 + 主 TTL，向后兼容）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SpringYdszCache extends AbstractValueAdaptingCache {
 

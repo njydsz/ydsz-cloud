@@ -29,7 +29,7 @@ import com.njydsz.common.queue.service.impl.RedisListSubscriber;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisListMQ extends AbstractMessageQueue {

@@ -15,7 +15,7 @@ import lombok.Data;
  * <p>对应数据库表 ydsz_auth_credential，存储用户注册的公钥凭证。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @TableName("ydsz_auth_credential")

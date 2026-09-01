@@ -71,7 +71,7 @@ import com.njydsz.message.server.token.UnsubscribeTokenPayload;
  * <p><b>多租户隔离：</b>所有退订按 {@code tenantId} 隔离，跨租户退订不可见。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.config.UnsubscribeService 退订服务
  * @see com.njydsz.message.server.token.UnsubscribeTokenPayload 退订 token 载荷
  */

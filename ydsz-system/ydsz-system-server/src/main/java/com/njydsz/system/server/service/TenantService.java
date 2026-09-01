@@ -24,7 +24,7 @@ import com.njydsz.system.domain.vo.TenantVO;
  * <p><b>多租户：</b>租户管理属于系统级超级管理员权限， 查询时不注入租户过滤条件，可跨租户查看全部租户。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.system.infra.entity.Tenant 租户实体
  */
 public interface TenantService {

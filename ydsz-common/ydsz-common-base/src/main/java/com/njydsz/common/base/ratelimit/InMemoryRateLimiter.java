@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  * <p><b>注意：</b>此实现适用于低并发场景。高并发下建议使用 Redis 版本。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class InMemoryRateLimiter implements RateLimiter {
 

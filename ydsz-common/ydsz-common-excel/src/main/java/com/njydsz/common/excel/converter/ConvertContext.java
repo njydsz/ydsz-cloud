@@ -7,8 +7,8 @@ package com.njydsz.common.excel.converter;
  *
  * @author ydsz-team
 
- * @version 1.0.0
- * @since 1.0.0
+ * @version 26.09.01
+ * @since 26.09.01
  */
 public class ConvertContext {
 
@@ -83,7 +83,7 @@ public class ConvertContext {
    * 构建后继续调用 setter 会直接改写已返回的对象。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static class Builder {
     private final ConvertContext context = new ConvertContext();

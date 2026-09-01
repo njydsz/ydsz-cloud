@@ -18,7 +18,7 @@ import com.njydsz.message.server.service.config.RouteRuleService;
  * <p>按优先级遍历启用规则，SpEL 求值命中后覆盖通道。 路由规则仅做通道切换，不做拦截（拦截由下游 Handler 负责）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

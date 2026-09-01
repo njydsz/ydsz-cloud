@@ -8,7 +8,7 @@ package com.njydsz.workflow.server.engine.listener;
  * <p>设计器中每个节点可为此事件类型绑定监听器（Spring Bean 名称），引擎在执行到关键节点时自动回调。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowListenerPluginExecutor 监听器执行器
  */
 public enum FlowListenerEventType {

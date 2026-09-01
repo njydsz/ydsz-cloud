@@ -9,7 +9,7 @@ package com.njydsz.common.auth.constant;
  * 禁止依赖 ydsz-common-web）与下游 Servlet 服务共同依赖本模块，保证签名头名称单一事实源。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class InternalSignatureHeaderConstants {
 

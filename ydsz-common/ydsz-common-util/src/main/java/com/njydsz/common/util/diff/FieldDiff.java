@@ -13,7 +13,7 @@ import com.njydsz.common.util.message.MessageUtils;
  * <p>记录单个字段在更新操作前后的值变化，用于生成操作日志的变更详情。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Experimental("能力储备：字段级差异对比（审计日志场景），当前平台内暂无消费方，启用前请确认测试覆盖")
 @Data

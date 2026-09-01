@@ -15,7 +15,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * <p>回滚操作会基于历史快照恢复配置字段，同时保留当前任务的统计字段 （触发次数、成功/失败次数等），并产生新的历史版本。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface JobHistoryService {
 

@@ -15,7 +15,7 @@ package com.njydsz.userinfo.domain.config;
  * <p><b>线程安全：</b>实现类必须无状态，可多线程并发调用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface MfaSecretEncryptor {
 

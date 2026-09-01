@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     sort_order          INT             NOT NULL DEFAULT 0 COMMENT '排序权重（越大越靠前，模板市场首页展示用）',
     parent_template_id  VARCHAR(32)     DEFAULT NULL COMMENT '父模板 ID（跨模板继承关系，STANDALONE 时为 NULL）',
     version             INT             NOT NULL DEFAULT 1 COMMENT '模板版本号（从 1 开始单调递增，同一 templateCode 下唯一）',
-    version_label       VARCHAR(32)     DEFAULT NULL COMMENT '版本标签（如 1.0.0 / 1.0.0-rc1，可选可读标识）',
+    version_label       VARCHAR(32)     DEFAULT NULL COMMENT '版本标签（如 26.09.01 / 26.09.01-rc1，可选可读标识）',
     inherit_type        VARCHAR(32)     DEFAULT NULL COMMENT '继承类型（STANDALONE=独立，CLONE=克隆，INHERIT=继承）',
     is_latest           INT             NOT NULL DEFAULT 0 COMMENT '是否当前 templateCode 下最新版本（0=否，1=是）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',

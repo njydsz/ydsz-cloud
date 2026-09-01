@@ -30,7 +30,7 @@ import com.njydsz.common.docs.parser.DocumentParser;
  * <p>基于 Apache POI XWPF 解析 Word OOXML 文档，提取段落、标题层级和表格。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

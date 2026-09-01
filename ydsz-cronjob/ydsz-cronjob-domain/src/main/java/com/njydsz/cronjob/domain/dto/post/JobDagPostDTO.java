@@ -12,7 +12,7 @@ import lombok.Data;
  * JobDag 新增请求 DTO。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class JobDagPostDTO implements Serializable {

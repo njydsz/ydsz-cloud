@@ -27,7 +27,7 @@ import com.njydsz.cronjob.server.config.MultiClusterConfig.RemoteCluster;
  * <p>{@link HttpClient} 线程安全，{@code clients} Map 使用 {@link ConcurrentHashMap} 保证并发安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

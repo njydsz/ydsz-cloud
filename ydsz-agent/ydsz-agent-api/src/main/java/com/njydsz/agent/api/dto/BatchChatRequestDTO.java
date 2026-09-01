@@ -29,7 +29,7 @@ import jakarta.validation.constraints.Size;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Schema(description = "批量对话请求")
 public class BatchChatRequestDTO implements Serializable {

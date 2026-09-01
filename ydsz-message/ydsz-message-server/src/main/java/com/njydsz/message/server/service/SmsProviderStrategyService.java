@@ -20,7 +20,7 @@ import com.njydsz.message.server.channel.sms.SmsProvider;
  * <p>同时提供成本统计：记录各 provider 的发送量和失败率，用于成本分析和优化决策。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface SmsProviderStrategyService {
 

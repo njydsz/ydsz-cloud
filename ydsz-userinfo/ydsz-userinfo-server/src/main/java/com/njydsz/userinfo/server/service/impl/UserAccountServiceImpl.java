@@ -52,7 +52,7 @@ import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
  * 数据权限（{@link DataScope}）、搜索索引同步等横切关注点。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserAccountService Service 接口
  */
 @Slf4j

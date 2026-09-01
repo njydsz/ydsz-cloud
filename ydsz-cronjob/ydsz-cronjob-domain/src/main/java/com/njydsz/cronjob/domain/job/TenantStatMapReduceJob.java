@@ -21,7 +21,7 @@ import java.util.Map;
  * <p><b>业务场景：</b>按租户维度统计各租户任务执行量，供报表/配额分析使用。 实际业务中可按需改造（如按城市、按部门、按日期分片）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class TenantStatMapReduceJob implements MapReduceProcessor {
 

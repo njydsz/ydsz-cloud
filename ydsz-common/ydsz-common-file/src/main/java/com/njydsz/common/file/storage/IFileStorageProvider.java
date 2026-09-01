@@ -6,7 +6,7 @@ package com.njydsz.common.file.storage;
  * <p>用于获取具体的文件存储实现（Local/MinIO/S3/OSS/COS/OBS/Qiniu）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface IFileStorageProvider {
   /**

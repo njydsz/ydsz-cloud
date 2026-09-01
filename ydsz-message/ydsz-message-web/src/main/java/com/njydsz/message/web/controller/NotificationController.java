@@ -81,7 +81,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.core.NotificationService 站内通知服务
  * @see com.njydsz.message.server.realtime.RealtimePushService 实时推送服务
  * @see com.njydsz.message.server.service.receipt.RecallService 撤回服务

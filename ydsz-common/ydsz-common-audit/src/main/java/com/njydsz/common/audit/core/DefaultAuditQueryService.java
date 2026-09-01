@@ -27,7 +27,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p><b>分表支持：</b>当启用分表时，查询会自动根据时间范围路由到对应分表， 跨分表查询使用 UNION ALL 合并结果。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DefaultAuditQueryService implements AuditQueryService {
 

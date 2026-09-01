@@ -16,7 +16,7 @@ package com.njydsz.agent.domain.citation;
  * @param score         相似度得分
  * @param sourcePath    来源路径
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record Citation(
         String documentId,

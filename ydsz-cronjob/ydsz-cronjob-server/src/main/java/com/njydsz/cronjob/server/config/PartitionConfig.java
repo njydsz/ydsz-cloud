@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>启用分区调度后，多个节点可同时作为不同分区的 Leader，提升调度吞吐量。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class PartitionConfig {

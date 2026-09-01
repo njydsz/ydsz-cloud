@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>P0-4: 模板变量可绑定到数据源(BEAN/SQL/HTTP/STATIC), 渲染前自动拉取变量值,免除调用方手动传入所有参数。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

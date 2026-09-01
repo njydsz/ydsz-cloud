@@ -22,7 +22,7 @@ import com.njydsz.common.util.string.StringUtils;
  * 【业务通用】X-User-Locale：用户语言环境（国际化）、X-Request-Source：请求来源标识、X-Request-Id：请求唯一标识（不存在时自动生成）
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class FeignRequestInterceptor implements RequestInterceptor {
 

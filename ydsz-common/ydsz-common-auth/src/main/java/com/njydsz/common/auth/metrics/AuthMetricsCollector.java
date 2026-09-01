@@ -36,7 +36,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
  * 对象。Micrometer 内部对同 name+tags 的注册做了幂等处理， 但缓存 Builder 仍可减少对象分配与 map 查询开销。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AuthMetrics
  * @see PermissionMetrics
  */

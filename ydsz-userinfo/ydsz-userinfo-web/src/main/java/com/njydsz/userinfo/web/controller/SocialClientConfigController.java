@@ -37,7 +37,7 @@ import com.njydsz.userinfo.server.service.SocialClientConfigService;
  * <p><b>配置优先级：</b>数据库 ＞ application.yml
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController

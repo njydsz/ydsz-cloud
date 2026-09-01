@@ -24,7 +24,7 @@ import com.njydsz.nextwiki.domain.vo.TrashItemVO;
  * <p>编排回收站操作：数据访问（repository）+ 领域逻辑（domain service）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

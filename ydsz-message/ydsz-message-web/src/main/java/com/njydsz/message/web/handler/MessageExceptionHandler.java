@@ -39,7 +39,7 @@ import com.njydsz.message.domain.enums.MessageExceptionCode;
  * 之后执行，仅捕获其中会透传到 HTTP 响应的 {@link MessageExceptionCode} 异常。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MessageExceptionCode
  * @see MessageResult#fail(String, String, String, Integer)
  */

@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * </code></pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.json.serializer.JsonSerializer 自定义序列化器 SPI
  * @see JsonDeserialize
  */

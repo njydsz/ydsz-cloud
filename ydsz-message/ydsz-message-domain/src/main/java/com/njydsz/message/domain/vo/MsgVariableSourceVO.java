@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于返回模板变量数据源的绑定信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgVariableSourceVO implements Serializable {

@@ -13,7 +13,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * Bean，无硬依赖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class RequestIdGenerator {
 

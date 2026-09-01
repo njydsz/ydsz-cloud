@@ -21,7 +21,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>从 {@link AbstractFileStorage} 中提取的检查点管理逻辑， 封装 JSON 序列化、校验恢复、MD5 累积计算、文件完整性校验等业务逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DefaultCheckpointService implements CheckpointService {

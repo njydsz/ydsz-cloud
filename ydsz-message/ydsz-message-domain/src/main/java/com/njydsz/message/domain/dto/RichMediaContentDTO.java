@@ -13,7 +13,7 @@ import lombok.Data;
  * JSON 序列化结果。 通道实现按需解析并渲染为通道特定的富媒体格式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RichMediaContentDTO {

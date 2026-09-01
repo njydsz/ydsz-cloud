@@ -10,7 +10,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * 系统管理模块 App 端健康检查指示器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SystemAppHealthIndicator implements HealthIndicator {
 

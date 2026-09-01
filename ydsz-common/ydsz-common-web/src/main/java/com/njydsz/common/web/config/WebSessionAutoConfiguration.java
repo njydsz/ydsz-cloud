@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Import;
  * <p>通过 {@code ydsz.web.session.enabled=false} 可降级为本地 Session。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -31,6 +31,6 @@ import org.springframework.context.annotation.Import;
  * <p>启用 Redis HTTP 会话管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class WebSessionAutoConfiguration {}

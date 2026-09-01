@@ -34,7 +34,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>索引设计：</b>唯一索引 {@code uk_language_code}（{@code language_code}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.web.controller.LanguageController 语言 Controller
  */
 @Data

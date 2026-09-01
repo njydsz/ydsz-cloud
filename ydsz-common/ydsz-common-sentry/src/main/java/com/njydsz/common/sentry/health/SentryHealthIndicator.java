@@ -15,7 +15,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * Sentry 模块整体健康检查
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

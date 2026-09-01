@@ -68,7 +68,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.receipt.RecallService 消息撤回服务
  * @see RecallRequestDTO 撤回请求 DTO
  */

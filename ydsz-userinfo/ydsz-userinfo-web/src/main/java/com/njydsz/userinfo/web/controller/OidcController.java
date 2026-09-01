@@ -31,7 +31,7 @@ import com.njydsz.userinfo.web.vo.OidcDiscoveryEndpointVO;
  * <p>参考规范：<a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery 1.0</a>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController

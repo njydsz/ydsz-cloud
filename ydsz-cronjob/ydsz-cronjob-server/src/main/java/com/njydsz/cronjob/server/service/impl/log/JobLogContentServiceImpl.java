@@ -17,7 +17,7 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
  * <p>拆分存储任务执行日志的内容（{@code ydsz_job_log_content}）， 与 {@code ydsz_job_log} 1:1 关联，解决大字段导致的 IO 性能问题。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

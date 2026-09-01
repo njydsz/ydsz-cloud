@@ -33,8 +33,8 @@ import lombok.ToString;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段， 移除非约定的 mutable state
+ * @since 26.09.01
+ * @since 26.09.01 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段， 移除非约定的 mutable state
  *     方法（markAsProcessing/Sent/Failed）和 fromDraft 工厂方法， 实体回归纯 POJO + Builder 模式
  */
 @Getter

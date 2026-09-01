@@ -29,7 +29,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>Redis Key 格式：{@code dnd:{userId}} → "22:00-08:00 Asia/Shanghai"
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -76,7 +76,7 @@ public class DndService {
 
     /**
      * 构造延迟结果。
-     * 
+     *
      *
      * @param deferUntil 延迟发送的目标时间
      * @return 包含 DEFER 决策和延迟目标时间的结果

@@ -12,7 +12,7 @@ import com.njydsz.common.queue.service.DeadLetterQueueService;
  * <p>所有调用方法均为 no-op，避免业务路径 NPE，保留日志埋点。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NoOpDeadLetterQueueService implements DeadLetterQueueService {
 

@@ -49,9 +49,9 @@ import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
  * <p>注入方式：<br>
  * {@code @Resource(name = "ioExecutor") private ThreadPoolTaskExecutor ioExecutor;}
  *
- * <p>1.0.0 变更：新增 {@code metric-prefix} 和 {@code task-decorator-bean-names} 配置项。
+ * <p>26.09.01 变更：新增 {@code metric-prefix} 和 {@code task-decorator-bean-names} 配置项。
  *
- * <p>1.0.0 变更：
+ * <p>26.09.01 变更：
  *
  * <ul>
  *   <li>新增 {@code slow-task-threshold-ms} 配置项，支持自定义慢任务阈值
@@ -59,7 +59,7 @@ import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Validated
@@ -74,7 +74,7 @@ public class ThreadPoolProperties {
    *
    * <p>启用后，应用启动时会自动注册热更新监听器，允许运行时动态调整线程池参数。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private HotUpdateConfig hotUpdate = new HotUpdateConfig();
 
@@ -86,7 +86,7 @@ public class ThreadPoolProperties {
    *
    * <p>示例：prefix = "ydsz-", key = "io" → Bean 名称为 "ydsz-ioExecutor"。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private String beanNamePrefix = "";
 
@@ -166,7 +166,7 @@ public class ThreadPoolProperties {
      *
      * <p>虚拟线程池固定使用 {@link VirtualThreadMetrics#DEFAULT_METRIC_PREFIX} 前缀。
      *
-     * @since 1.0.0
+     * @since 26.09.01
      */
     private String metricPrefix = ThreadPoolMetrics.DEFAULT_METRIC_PREFIX;
 
@@ -176,7 +176,7 @@ public class ThreadPoolProperties {
      * <p>任务执行耗时超过此阈值时，慢任务计数器 {@code ydsz.executor.slow.tasks} 递增。 默认值 5000ms 适用于大多数 IO 密集场景；AI
      * Agent 等长耗时场景建议设置为 30000。
      *
-     * @since 1.0.0
+     * @since 26.09.01
      */
     @Min(value = 100, message = "slowTaskThresholdMs 必须 >= 100")
     private long slowTaskThresholdMs = 5000L;
@@ -196,7 +196,7 @@ public class ThreadPoolProperties {
      *
      * <p>耗时指标（execution / queue.wait Timer）和慢任务计数器由 {@code slow-task-threshold-ms} 控制，不受此选项影响。
      *
-     * @since 1.0.0
+     * @since 26.09.01
      */
     private boolean enableDetailedMetrics = false;
 
@@ -206,7 +206,7 @@ public class ThreadPoolProperties {
      * <p>用于跨线程传播上下文，例如 MDC 日志追踪 ID、RequestContext、SecurityContext 等。 配置的 Bean 名称对应的 Bean 必须实现
      * {@link org.springframework.core.task.TaskDecorator} 接口。
      *
-     * @since 1.0.0
+     * @since 26.09.01
      */
     private List<String> taskDecoratorBeanNames;
 
@@ -249,7 +249,7 @@ public class ThreadPoolProperties {
   /**
    * 热更新配置属性。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class HotUpdateConfig {

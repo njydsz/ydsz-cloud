@@ -21,7 +21,7 @@ import com.njydsz.common.docs.security.pii.PiiDetector;
  * （10.x、172.16-31.x、192.168.x）给予较高置信度 0.9， 其他公网 IP 视为低频敏感，给 0.5。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class IpAddressDetector implements PiiDetector {
@@ -34,7 +34,7 @@ public class IpAddressDetector implements PiiDetector {
   /**
    * 扫描全文中的 IPv4 地址，按是否为私网段分配置信度。
    *
-   * <p>公网 IP 虽也属敏感，但误报率较高（如版本号 1.0.0.1 也会命中）， 因此仅对 RFC1918 私网段给予 0.9 高置信度，公网 IP 降为 0.5。 {@code
+   * <p>公网 IP 虽也属敏感，但误报率较高（如版本号 26.09.01.1 也会命中）， 因此仅对 RFC1918 私网段给予 0.9 高置信度，公网 IP 降为 0.5。 {@code
    * 0.0.0.0}、{@code 255.255.255.255} 等特殊地址<b>不会</b>命中。
    *
    * <p>返回的下标基于预处理后的文本，脱敏时须使用同一份文本。

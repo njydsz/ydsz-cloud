@@ -15,6 +15,6 @@
  * <p><b>设计原则：</b>DTO 仅包含数据字段和必要的验证注解，不包含业务逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 package com.njydsz.workflow.domain.dto;

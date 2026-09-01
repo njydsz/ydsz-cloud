@@ -50,7 +50,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * 桩实现），统一 AI 摘要能力入口，消除"接口 + 应用服务 + 桩实现"三套并行的职责重叠。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

@@ -48,7 +48,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RedisMessageDeduplicator
  */
 public class MessageDeduplicator {

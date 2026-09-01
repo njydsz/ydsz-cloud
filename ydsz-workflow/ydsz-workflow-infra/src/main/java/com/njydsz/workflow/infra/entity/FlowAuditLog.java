@@ -55,7 +55,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowComment 流程评论（用户视角，可修改可删除）
  * @see com.njydsz.common.audit.OperationLog 通用操作日志（横切关注点）
  */

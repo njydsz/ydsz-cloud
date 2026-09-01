@@ -14,7 +14,7 @@ import com.njydsz.agent.domain.event.AgentDomainEvent;
  * 实现事件驱动的 Agent 链式编排。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class AgentLifecycleTriggerListener {

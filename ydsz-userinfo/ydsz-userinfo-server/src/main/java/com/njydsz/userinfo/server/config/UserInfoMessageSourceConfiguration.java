@@ -36,7 +36,7 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
  * Bean，本配置不生效。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

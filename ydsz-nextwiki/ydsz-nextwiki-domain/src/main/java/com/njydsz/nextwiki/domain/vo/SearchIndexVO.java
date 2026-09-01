@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于搜索索引的查询结果返回，作为 Repository 接口查询方法的返回值。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

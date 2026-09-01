@@ -22,7 +22,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
  *
  * <p>所有方法均为无状态纯函数，线程安全。作为 Spring Bean 可被注入到各解析器中使用。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

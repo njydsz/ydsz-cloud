@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotBlank;
  * <p>封装将文档内容写入 RAG 知识库的请求参数， 支持来自 nextwiki、project、contract 等不同来源的文档。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Schema(description = "文档摄入请求")
 public class DocumentIngestDTO implements Serializable {

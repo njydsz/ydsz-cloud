@@ -58,7 +58,7 @@ import com.njydsz.workflow.server.service.FlowI18nService;
  * <p><b>设计原则：</b>Controller 仅做参数透传与时间范围解析； 指标计算、聚合 SQL 编排、缓存管理下沉到 {@link FlowAnalyticsService}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowAnalyticsService 审批数据分析服务
  */
 @Slf4j

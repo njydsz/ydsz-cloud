@@ -9,7 +9,7 @@ import java.util.List;
  * <p>引擎负责管理规则注册、按优先级编排执行、收集评估结果、记录执行统计。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface RuleEngine {
 
@@ -63,7 +63,7 @@ public interface RuleEngine {
    * @param limit 返回结果数量上限（可为 null，表示不限制）
    * @param minSeverity 最低严重度阈值（可为 null，表示不限制）
    * @return 全部规则结果列表（含未触发）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default List<RuleResultVO> dryRun(
       RuleContextVO context, Integer limit, RuleSeverity minSeverity) {

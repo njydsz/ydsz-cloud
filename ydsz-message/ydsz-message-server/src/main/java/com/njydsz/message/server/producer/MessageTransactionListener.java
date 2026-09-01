@@ -49,7 +49,7 @@ import com.njydsz.message.server.service.TemplateService;
  * <p>若 Producer 崩溃未返回 COMMIT/ROLLBACK,RocketMQ 回调 {@link #checkLocalTransaction} 重新校验,决定最终状态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -122,7 +122,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
 
   /**
    * 从 RocketMQ Message + arg 中解析 MessageRequest。
-   * 
+   *
    * <p>优先从 arg（sendMessageInTransaction 的第三个参数）解析, arg 为 null 时从 message payload 解析。
    *
    * @param message RocketMQ 消息对象（payload 中可能含 MessageRequest JSON）
@@ -157,7 +157,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
 
   /**
    * 轻量校验：通道启用 + 模板存在且 ENABLED + 接收人非空。
-   * 
+   *
    *
    * @param req 待校验的消息发送请求
    * @return 校验失败原因，null 表示校验通过

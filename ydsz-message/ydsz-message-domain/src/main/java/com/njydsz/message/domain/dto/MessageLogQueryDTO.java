@@ -12,7 +12,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * 消息日志分页查询 DTO
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

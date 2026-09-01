@@ -6,7 +6,7 @@ package com.njydsz.common.json.exception;
  * <p>在 JSON 反序列化过程中抛出的异常，包含行列号和上下文片段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class JsonDeserializationException extends JsonException {
 
@@ -127,7 +127,7 @@ public class JsonDeserializationException extends JsonException {
    * @param message 错误消息
    * @param position 字符位置
    * @param json 原始 JSON 字符串（用于计算行列号和上下文）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public JsonDeserializationException(int errorCode, String message, int position, String json) {
     super(errorCode, enrichMessage(message, position, json), position);
@@ -174,7 +174,7 @@ public class JsonDeserializationException extends JsonException {
    * 获取 JSON token 类型
    *
    * @return token 类型（如 "FIELD_NAME", "VALUE_STRING"），未设置时返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public String getTokenType() {
     return tokenType;
@@ -184,7 +184,7 @@ public class JsonDeserializationException extends JsonException {
    * 获取源码片段
    *
    * @return 出错位置前后 20 字符的短上下文片段，未设置时返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public String getSourceSnippet() {
     return sourceSnippet;
@@ -202,7 +202,7 @@ public class JsonDeserializationException extends JsonException {
    *
    * @param fieldName 字段名
    * @return this（链式调用）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public JsonDeserializationException withFieldName(String fieldName) {
     this.fieldName = fieldName;
@@ -223,7 +223,7 @@ public class JsonDeserializationException extends JsonException {
    *
    * @param tokenType token 类型（如 "FIELD_NAME", "VALUE_STRING"）
    * @return this（链式调用）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public JsonDeserializationException withTokenType(String tokenType) {
     this.tokenType = tokenType;
@@ -235,7 +235,7 @@ public class JsonDeserializationException extends JsonException {
    *
    * @param sourceSnippet 源码片段
    * @return this（链式调用）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public JsonDeserializationException withSourceSnippet(String sourceSnippet) {
     this.sourceSnippet = sourceSnippet;
@@ -332,7 +332,7 @@ public class JsonDeserializationException extends JsonException {
    * <p>此方法便于统一获取位置引用格式，无需关心内部是预先计算的行列号还是原始偏移量。
    *
    * @return 格式为 {@code (line:X, column:Y)} 的位置引用字符串，无法确定时返回 {@code (unknown)}
-   * @since 1.0.0
+   * @since 26.09.01
    * @see #getLine()
    * @see #getColumn()
    */

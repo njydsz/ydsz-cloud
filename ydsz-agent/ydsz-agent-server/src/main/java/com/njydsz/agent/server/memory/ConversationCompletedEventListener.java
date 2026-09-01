@@ -16,7 +16,7 @@ import com.njydsz.agent.domain.event.AgentDomainEvent;
  * 不阻塞主执行流程，提取失败不影响用户体验。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>控制 JobArtifactService 的制品文件存储目录和保留策略，超过 retentionDays 的制品文件由清理任务自动删除。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ArtifactConfig {

@@ -22,7 +22,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>提供 Token 格式校验能力，支持 JWT 和 Bearer Token 格式验证。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class AccessTokenUtils {
 

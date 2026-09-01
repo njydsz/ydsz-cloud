@@ -26,7 +26,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * <p>过滤策略：命中敏感词替换为 {@code ***}，多次命中分别替换。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -46,7 +46,7 @@ public class SensitiveWordFilter {
 
   /**
    * 构造时根据 {@link MessageProperties.SensitiveFilterConfig} 初始化 DFA 词库。
-   * 
+   *
    * <p>支持运行时通过 {@link #reload(Set)} 刷新词库。
    *
    * @param messageProperties 消息模块配置属性（含敏感词过滤配置 SensitiveFilterConfig）

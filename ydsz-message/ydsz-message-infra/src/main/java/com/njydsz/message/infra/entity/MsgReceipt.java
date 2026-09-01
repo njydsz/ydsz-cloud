@@ -15,7 +15,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 消息回执表: 服务商送达/已读/点击/失败回调记录
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

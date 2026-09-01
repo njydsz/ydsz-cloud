@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>用于批量暂停/恢复/触发/删除任务的请求参数。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "任务批量操作 DTO")

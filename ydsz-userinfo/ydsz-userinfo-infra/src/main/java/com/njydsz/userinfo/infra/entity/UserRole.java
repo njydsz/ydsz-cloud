@@ -34,7 +34,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * role_id}）。如需强唯一性（用户-角色一一对应）， 可加唯一索引 {@code uk_user_role}（{@code user_id, role_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserAccount 用户实体
  * @see Role 角色实体
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（含 {@code assignRoles}

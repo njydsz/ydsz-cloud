@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Lazy;
  * <p><b>懒加载：</b>Yauaa 初始化较重（加载大量 UA 规则），使用 {@code @Lazy} 延迟到首次使用时构建， 避免启动时间延长。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnClass(name = "nl.basjes.parse.useragent.UserAgentAnalyzer")

@@ -20,7 +20,7 @@ import com.njydsz.message.infra.mapper.config.MsgUserChannelMapper;
  * <p>实现 {@link MsgUserChannelRepository} 接口，封装 MsgUserChannelMapper 数据访问细节。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

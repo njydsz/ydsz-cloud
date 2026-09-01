@@ -13,7 +13,7 @@ import com.njydsz.message.infra.entity.MsgOffline;
  * P0-3: 离线消息持久化 Mapper
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface MsgOfflineMapper extends BaseMapper<MsgOffline> {

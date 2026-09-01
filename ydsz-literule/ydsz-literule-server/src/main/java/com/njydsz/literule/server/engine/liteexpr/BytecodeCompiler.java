@@ -26,7 +26,7 @@ import java.util.List;
  *
  * <p>操作数编码：u16（2 字节，大端），u8（1 字节）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class BytecodeCompiler implements ExprNodeVisitor<Void> {

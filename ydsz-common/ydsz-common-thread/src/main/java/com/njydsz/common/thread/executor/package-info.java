@@ -7,6 +7,6 @@
  * {@link com.njydsz.common.thread.config.ThreadPoolExecutorFactory}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 package com.njydsz.common.thread.executor;

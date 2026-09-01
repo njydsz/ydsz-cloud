@@ -49,7 +49,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  * 模块存在，其 {@code InAppChannel} 通过 {@code NotifyChannelBridgeConfiguration} 桥接后自动覆盖本实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 @ConditionalOnProperty(prefix = "ydsz.notify.insite", name = "enabled", havingValue = "true")

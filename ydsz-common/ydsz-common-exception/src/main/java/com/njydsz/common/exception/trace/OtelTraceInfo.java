@@ -12,7 +12,7 @@ import org.springframework.lang.Nullable;
  * @param spanId 8 字节 hex 编码 span ID（16 字符）；同 traceId 一起为 null
  * @param sampled 当前 span 是否被采样（false 时不记录 span，但 traceId 仍可用于关联日志）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record OtelTraceInfo(@Nullable String traceId, @Nullable String spanId, boolean sampled) {
   /**

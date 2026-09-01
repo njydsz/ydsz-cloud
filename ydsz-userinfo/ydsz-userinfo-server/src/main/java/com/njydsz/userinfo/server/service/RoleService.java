@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.vo.RoleVO;
  * <p>封装角色的完整业务逻辑：CRUD、权限分配、跨服务名称富化。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface RoleService {
 

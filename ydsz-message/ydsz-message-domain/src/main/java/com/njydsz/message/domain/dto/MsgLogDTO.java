@@ -21,7 +21,7 @@ import lombok.Data;
  * {@code dtoToEntityWithId}（保留 id，更新场景）区分行为。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgLogDTO implements Serializable {

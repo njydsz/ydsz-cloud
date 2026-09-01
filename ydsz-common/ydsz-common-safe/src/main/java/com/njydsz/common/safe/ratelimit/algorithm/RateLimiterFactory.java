@@ -9,7 +9,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  * <p>根据 {@link RateLimitAlgorithm} 创建对应的 {@link RateLimiter} 实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class RateLimiterFactory {
 

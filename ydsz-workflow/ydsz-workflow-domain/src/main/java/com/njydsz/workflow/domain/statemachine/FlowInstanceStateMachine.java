@@ -50,7 +50,7 @@ import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowInstanceStatus 流程实例状态枚举
  * @see FlowTaskStateMachine 任务级状态机（对称设计）
  */

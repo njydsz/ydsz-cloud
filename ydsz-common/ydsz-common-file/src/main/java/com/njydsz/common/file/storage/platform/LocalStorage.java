@@ -42,7 +42,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>通过 Nginx/网关将 domain 配置的访问域名映射到本地目录，实现类似对象存储的公开访问。 分片上传使用本地文件系统暂存 + 按序合并策略，失败后自动清理临时分片目录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class LocalStorage extends AbstractFileStorage {

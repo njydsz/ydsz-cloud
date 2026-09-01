@@ -34,7 +34,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * <p>借鉴 MateClaw 的 Team Runs 设计，支持顺序、并行、层级、协商四种协作模式。</p>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

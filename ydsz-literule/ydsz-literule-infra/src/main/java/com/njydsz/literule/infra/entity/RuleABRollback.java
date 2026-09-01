@@ -25,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0 (P1-10)
+ * @since 26.09.01 (P1-10)
  */
 @Data
 @SuperBuilder

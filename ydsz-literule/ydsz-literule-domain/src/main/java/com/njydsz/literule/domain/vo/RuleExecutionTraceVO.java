@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回单次规则执行的完整轨迹信息，包含命中结果、 严重级别、条件求值结果、耗时及错误信息，支撑执行回放和问题排查。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleExecutionTraceVO implements Serializable {

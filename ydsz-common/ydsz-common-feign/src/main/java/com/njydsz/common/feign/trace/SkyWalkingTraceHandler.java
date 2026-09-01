@@ -19,7 +19,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>同时支持 W3C TraceContext 标准（{@code traceparent} 头）， 当 SkyWalking 不可用时降级为自定义 {@code X-Trace-Id} 头。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SkyWalkingTraceHandler implements FeignTraceHandler {
 

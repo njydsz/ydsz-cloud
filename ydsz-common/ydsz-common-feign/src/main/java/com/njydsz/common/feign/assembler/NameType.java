@@ -6,7 +6,7 @@ package com.njydsz.common.feign.assembler;
  * <p>定义跨服务 ID → 名称解析的业务对象类型，每种类型对应不同的查询策略。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum NameType {
 

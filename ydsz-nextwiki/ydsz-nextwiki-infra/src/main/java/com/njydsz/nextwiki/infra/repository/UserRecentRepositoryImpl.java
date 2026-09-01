@@ -21,7 +21,7 @@ import com.njydsz.nextwiki.infra.mapper.UserRecentMapper;
  * <p>基于 MyBatis-Plus 实现最近访问的数据访问。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Repository

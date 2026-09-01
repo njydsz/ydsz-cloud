@@ -26,7 +26,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * SensitiveSerializer} 支持 handlerName 参数。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -15,7 +15,7 @@ import com.njydsz.common.util.message.MessageUtils;
  * @param successList 成功删除的对象路径列表
  * @param failedList 失败的对象路径 → 失败原因映射
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record BatchDeleteResult(List<String> successList, Map<String, String> failedList) {
 

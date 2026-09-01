@@ -8,7 +8,7 @@ import java.util.List;
  * <p>提供节点注册、注销、心跳、查询存活节点列表等能力。
  * 生产环境使用 Redis 实现（{@link RedisNodeRegistry}），确保跨实例节点发现与心跳管理。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface NodeRegistry {

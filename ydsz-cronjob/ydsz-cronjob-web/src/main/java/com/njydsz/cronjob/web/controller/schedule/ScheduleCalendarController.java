@@ -55,7 +55,7 @@ import com.njydsz.cronjob.server.service.impl.schedule.ScheduleCalendarService;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Tag(name = "调度日历", description = "单任务未来触发时间 / 全局调度日历聚合可视化")
 @Slf4j

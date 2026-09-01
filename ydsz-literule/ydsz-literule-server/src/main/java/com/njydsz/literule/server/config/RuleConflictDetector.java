@@ -46,7 +46,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  *
  * <p>租户隔离：仅在同一 tenantId 内检测冲突（单租户部署下 tenantId 恒为 1）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -227,7 +227,7 @@ public class RuleConflictDetector {
    *
    * @param conflicts 冲突输出列表
    * @param newDefinition 待检测规则
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private void detectDeadRule(List<RuleConflict> conflicts, RuleDefinitionDTO newDefinition) {
     String expr = newDefinition.getConditionExpression();
@@ -293,7 +293,7 @@ public class RuleConflictDetector {
    *
    * @param conflicts 冲突输出列表
    * @param newDefinition 待检测规则
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private void detectUnreachableSubcondition(
       List<RuleConflict> conflicts, RuleDefinitionDTO newDefinition) {

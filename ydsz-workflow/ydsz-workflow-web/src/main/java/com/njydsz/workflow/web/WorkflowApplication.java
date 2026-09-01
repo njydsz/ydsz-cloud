@@ -26,7 +26,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SpringBootApplication(
     scanBasePackages = {"com.njydsz.workflow", "com.njydsz.common"})

@@ -17,7 +17,7 @@ import com.njydsz.cronjob.domain.vo.JobNodeVO;
  * <p>通过 {@code ydsz.cronjob.node-discovery.type} 配置项切换，默认 {@code nacos}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface NodeDiscoveryStrategy {
 

@@ -20,7 +20,7 @@ import java.util.Optional;
  *
  * @param <T> 目标对象类型
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface TabularRowMapper<T> {
 

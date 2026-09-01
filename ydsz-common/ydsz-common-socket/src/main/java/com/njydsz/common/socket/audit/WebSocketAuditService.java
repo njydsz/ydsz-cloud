@@ -32,7 +32,7 @@ import com.njydsz.common.json.YdszJson;
  * <p><b>日志脱敏：</b>用户 ID 脱敏由日志采集层（Filebeat / Fluentd pipeline）统一处理， 应用层不重复脱敏，避免多业务模块脱敏逻辑不一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class WebSocketAuditService {
 

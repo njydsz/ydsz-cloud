@@ -10,7 +10,7 @@ import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
  * <p>按条件（数据变更/定时/事件）自动发起流程。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowAutoTriggerService {
 

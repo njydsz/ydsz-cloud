@@ -26,7 +26,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
  * 300s, 获取失败直接跳过本次扫描,由下一个周期接管。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

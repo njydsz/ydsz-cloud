@@ -55,7 +55,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  * 与 {@code JobScanner} 经 CAS 互斥，不会重复派发；如需保守可显式置 false 回退纯 5s 轮询）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -26,7 +26,7 @@ import com.njydsz.common.core.config.CoreProperties;
  * {@code setMaxPageSize()}/{@code setDefaultPageSize()}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CoreProperties
  */
 public final class PageConstants {
@@ -67,7 +67,7 @@ public final class PageConstants {
    *
    * @param coreProperties 已校验通过的 CoreProperties 实例
    * @throws IllegalStateException 如果配置已被初始化
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void init(CoreProperties coreProperties) {
     if (coreProperties == null) {
@@ -84,7 +84,7 @@ public final class PageConstants {
    * <p><b>警告：</b>此方法仅应在测试环境的 {@code @BeforeEach} 或 {@code @AfterEach} 中调用，
    * 生产代码严禁调用。重启后生效的"一次性设置"语义是设计约束，非缺陷。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void reset() {
     PROPERTIES.set(null);
@@ -104,7 +104,7 @@ public final class PageConstants {
    * 获取运行时默认页码。
    *
    * @return 运行时配置的默认页码（目前与 {@link #DEFAULT_PAGE_NUM} 一致，预留 CoreProperties 扩展点）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static int getDefaultPageNum() {
     return DEFAULT_PAGE_NUM;
@@ -134,7 +134,7 @@ public final class PageConstants {
    *
    * @param offset 原始偏移量（可为 null）
    * @return 标准化后的偏移量
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static long normalizeOffset(Long offset) {
     return offset == null || offset < 0 ? 0L : offset;
@@ -153,7 +153,7 @@ public final class PageConstants {
    *
    * @param limit 原始返回记录数（可为 null）
    * @return 标准化后的返回记录数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static int normalizeLimit(Long limit) {
     if (limit == null || limit < 1) {
@@ -190,7 +190,7 @@ public final class PageConstants {
    *
    * @param pageSize 原始页大小（可为 null）
    * @return 包含归一化结果和是否被调整标记的 NormalizeResult
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static NormalizeResult normalizePageSizeWithResult(Integer pageSize) {
     int raw = (pageSize == null || pageSize < 1) ? 0 : pageSize;
@@ -202,7 +202,7 @@ public final class PageConstants {
   /**
    * 归一化结果封装。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static final class NormalizeResult {
     private final int value;
@@ -283,7 +283,7 @@ public final class PageConstants {
    * @param offset 偏移量（可为 null，按 0 处理）
    * @param pageSize 页大小（可为 null，按默认值处理）
    * @return 计算出的页码（从 1 开始）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static int calcPageNum(Long offset, Integer pageSize) {
     long normalizedOffset = normalizeOffset(offset);
@@ -299,7 +299,7 @@ public final class PageConstants {
    * @param total 总记录数
    * @param pageSize 页大小（可为 null，按默认值处理）
    * @return 总页数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static long calcTotalPages(long total, Integer pageSize) {
     if (total <= 0) {
@@ -316,7 +316,7 @@ public final class PageConstants {
    *
    * @param offset 偏移量（可为 null，按 0 处理）
    * @return true=安全，false=可能导致性能问题
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static boolean isOffsetSafe(Long offset) {
     long normalizedOffset = normalizeOffset(offset);
@@ -328,7 +328,7 @@ public final class PageConstants {
    *
    * <p>超过此值的深度分页在 PostgreSQL/MySQL 中可能导致性能急剧下降， 建议改用 WHERE id > lastId 的游标模式。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static final long MAX_SAFE_OFFSET = 10000L;
 }

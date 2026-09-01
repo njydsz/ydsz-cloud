@@ -26,7 +26,7 @@ import java.util.Map;
  *   <li>{@link TemplateStringNode} — 模板字符串 `Hello ${name}`
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  */
 
 // ===== AST 节点接口 =====
@@ -37,7 +37,7 @@ import java.util.Map;
  * <p>所属包：{@code com.njydsz.literule.server.engine.liteexpr}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 sealed interface ExprNode
     permits LiteralNode,

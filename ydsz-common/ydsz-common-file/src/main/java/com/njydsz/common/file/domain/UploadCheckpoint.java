@@ -17,7 +17,7 @@ import com.njydsz.common.util.security.HexUtils;
  * <p>记录分片上传的进度，支持断点续传。 当上传中断后，可通过读取检查点信息恢复上传进度。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

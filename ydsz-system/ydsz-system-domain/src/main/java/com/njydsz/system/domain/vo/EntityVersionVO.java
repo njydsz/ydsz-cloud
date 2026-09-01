@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>对应 {@code ydsz_sys_entity_version} 表的展示视图，是「版本管理」列表 / 详情接口的返回值类型。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.system.domain.entity.EntityVersion 实体版本实体
  */
 @Data

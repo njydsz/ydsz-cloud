@@ -26,7 +26,7 @@ import com.njydsz.common.excel.core.style.WriteStyleHandler;
  * <p>在写入循环中可减少约50-60%的计算开销， 特别是样式转换和格式解析部分。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class PrecomputedColumnProperties {
 

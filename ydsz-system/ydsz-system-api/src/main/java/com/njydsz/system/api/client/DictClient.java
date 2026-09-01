@@ -18,7 +18,7 @@ import com.njydsz.system.api.fallback.DictClientFallback;
  * <p>提供字典项的远程查询能力，走 Redis 缓存。 典型场景：工作流模块解析「审批状态」「审批类型」等字典项， 项目模块查询「项目类型」「合同类型」等字典项。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FeignClient(
     name = FeignClientConstants.SYSTEM,

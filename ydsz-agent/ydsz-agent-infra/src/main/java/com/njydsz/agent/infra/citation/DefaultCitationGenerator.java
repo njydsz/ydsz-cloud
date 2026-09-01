@@ -16,7 +16,7 @@ import com.njydsz.agent.domain.rag.TextChunk;
  * 支持从 chunk 的 metadata 中读取 documentId、documentTitle、sourcePath 等信息。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class DefaultCitationGenerator implements CitationGenerator {

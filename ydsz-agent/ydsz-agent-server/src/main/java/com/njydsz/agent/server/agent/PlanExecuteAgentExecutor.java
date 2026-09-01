@@ -42,7 +42,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p><b>流式支持</b>：逐步骤推送进度（step 级流式），用户可见每个步骤的执行结果。 与简单同步执行后包装为流式不同，本执行器在步骤执行完成后立即推送中间结果。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {

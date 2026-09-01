@@ -28,7 +28,7 @@ import org.slf4j.MDC;
  * <p>典型使用：在 SentryAutoConfiguration 中注册到 SDK TracerProvider。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class YdszSpanEnrichmentProcessor implements SpanProcessor {

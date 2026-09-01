@@ -29,7 +29,7 @@ import com.njydsz.agent.domain.runtime.RuntimeSessionStore;
  * 实时查看所有 Agent 执行状态的能力，并支持一键强制回收。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

@@ -32,7 +32,7 @@ import org.springframework.util.StringUtils;
  * base/profile 等多个来源定义的 exclude 列表相互覆盖、条目丢失。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class JacksonExclusionEnvironmentPostProcessor implements EnvironmentPostProcessor {
 

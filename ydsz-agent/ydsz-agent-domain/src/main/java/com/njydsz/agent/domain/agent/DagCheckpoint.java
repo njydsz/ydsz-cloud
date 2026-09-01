@@ -15,7 +15,7 @@ import java.util.Set;
  * <p><b>线程安全</b>：所有字段 final，集合经不可变封装，实例不可变、可安全跨线程传递。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class DagCheckpoint implements Serializable {
 

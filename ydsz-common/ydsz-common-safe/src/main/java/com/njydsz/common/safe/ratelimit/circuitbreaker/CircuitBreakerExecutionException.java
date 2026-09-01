@@ -11,7 +11,7 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
  * 统一转换为 {@code RateLimitDecision.BLOCKED}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class CircuitBreakerExecutionException extends RuntimeException {
 

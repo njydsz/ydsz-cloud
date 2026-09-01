@@ -23,7 +23,7 @@ import com.njydsz.agent.domain.vo.PromptVersionVO;
  * <p><b>逻辑删除：</b>版本表不做逻辑删除，保留完整历史记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface PromptVersionRepository {
 

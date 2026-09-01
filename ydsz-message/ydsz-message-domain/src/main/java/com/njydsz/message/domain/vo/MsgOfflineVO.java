@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于返回离线消息的完整信息，包含接收人、消息内容、推送状态及时间线。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgOfflineVO implements Serializable {

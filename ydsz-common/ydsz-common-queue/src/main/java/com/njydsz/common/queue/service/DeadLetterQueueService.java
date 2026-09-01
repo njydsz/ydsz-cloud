@@ -10,7 +10,7 @@ import java.util.List;
  * <p>供后台告警/人工干预/归档。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface DeadLetterQueueService {
 

@@ -66,7 +66,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>本切面 Order 为 11，在菜单权限校验之后、接口权限校验之前执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AuthRowPermission
  * @see DataScopeInfo
  * @see DataScopeAware

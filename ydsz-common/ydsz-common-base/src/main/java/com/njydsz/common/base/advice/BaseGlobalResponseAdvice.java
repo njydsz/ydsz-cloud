@@ -38,7 +38,7 @@ import com.njydsz.common.json.YdszJson;
  * YdszResponse.success(msg)}，App 端调用 {@code YdszResponse.successMsg(msg)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Object> {
 

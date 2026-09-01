@@ -46,7 +46,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * ydsz_job_log}（原始日志，用于实时统计）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Tag(name = "任务执行统计", description = "每日趋势、范围汇总、仪表盘、热力图、失败列表")
 @Slf4j

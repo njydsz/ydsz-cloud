@@ -6,7 +6,7 @@ package com.njydsz.common.util.internal.proxy;
  * <p>L1 工具层不直接依赖 L2 的常量类，而是在此维护必要的常量副本。 这些常量值与 core 模块保持一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class CoreConstants {
 

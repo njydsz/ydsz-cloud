@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>控制任务执行节点的注册、心跳、优雅下线、并发限制、线程池隔离等行为。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ExecutorConfig {

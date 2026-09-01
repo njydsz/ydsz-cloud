@@ -54,7 +54,7 @@ import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
  * Exception.class)}，确保任一异常触发完整回滚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DepartmentService Service 接口
  */
 @Slf4j

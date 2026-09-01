@@ -20,7 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConfigurationProperties(prefix = "ydsz.util.tempfile")
 public class TempFileProperties {

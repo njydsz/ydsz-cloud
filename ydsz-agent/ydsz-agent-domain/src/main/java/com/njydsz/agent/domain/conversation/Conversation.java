@@ -18,7 +18,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * 加锁）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class Conversation {
 

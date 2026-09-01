@@ -29,7 +29,7 @@ import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
  * Exception.class)}，确保任一异常触发完整回滚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.domain.vo.CompanyVO 公司VO
  * @see com.njydsz.userinfo.domain.vo.DepartmentVO 部门VO
  */

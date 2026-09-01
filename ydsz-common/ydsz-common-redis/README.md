@@ -150,7 +150,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `MultiLevelCacheProvider` | 多级缓存提供者（L1 Caffeine 本地缓存 + L2 Redis 远程缓存），@since 1.0.0 |
+| `MultiLevelCacheProvider` | 多级缓存提供者（L1 Caffeine 本地缓存 + L2 Redis 远程缓存），@since 26.09.01 |
 | `MultiLevelCacheAutoConfiguration` | 多级缓存自动配置，条件：Caffeine 在 classpath + `ydsz.redis.multilevel.enabled=true` |
 
 读取流程：L1（Caffeine）→ L2（Redis）→ Supplier（回源）；写入流程：写 L2 → 失效 L1；删除流程：删 L2 → 失效 L1。L1 TTL 应显著小于 L2 TTL 以保证数据新鲜度。
@@ -328,7 +328,7 @@ public boolean updateUser(String key, User user) { ... }
 
 ## 注意事项
 
-1. **RedisTemplate 不再默认代理**：自 1.0.0 起 `RedisTemplate` 不再被 AOP 代理包装，保持基础数据访问 Bean 的纯净性。如需重试能力，注入 `retryableRedisTemplate` 或开启 `ydsz.redis.retry.proxy-template=true`。
+1. **RedisTemplate 不再默认代理**：自 26.09.01 起 `RedisTemplate` 不再被 AOP 代理包装，保持基础数据访问 Bean 的纯净性。如需重试能力，注入 `retryableRedisTemplate` 或开启 `ydsz.redis.retry.proxy-template=true`。
 2. **重试仅读操作**：`retry.retry-on-write` 默认 `false`，避免写操作重复执行导致数据不一致。开启前需评估幂等性。
 3. **缓存防护**：防击穿/防穿透/防雪崩由 `@YdszCacheable` 切面（`YdszCacheableAspect`）承载，通过 `ydsz-common-lock` 的分布式锁互斥回填。
 4. **租户前缀只作用于 key**：`TenantRedisKeyPrefixer` 通过包装 `RedisSerializer` 实现，仅对 key 序列化生效，value 不受影响；超级管理员（tenantId = null 或 "0"）不添加前缀。
@@ -341,6 +341,6 @@ public boolean updateUser(String key, User user) { ... }
 
 ## 变更记录
 
-- **1.0.0**（2026-08-18）：新增 Key 过期事件监听（`@RedisKeyExpireListener` / `RedisKeyExpirationEvent`）、统一异常处理拦截器（`RedisOperationExceptionHandler`）、操作类型声明注解（`RedisOperation`）、Key 前缀格式化器（`RedisKeyFormatter`）；新增内部异常体系（`RedisConnectionException` / `RedisBusinessException` / `RedisOperationException`）、Lua 脚本常量（`RedisScriptConstants`）、Key 命名约定策略（`RedisKeyNamingConvention`）。
-- **1.0.0**（2026-08-17）：补全多级缓存（`MultiLevelCacheProvider` / `MultiLevelCacheAutoConfiguration`）章节与配置项文档
-- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **26.09.01**（2026-08-18）：新增 Key 过期事件监听（`@RedisKeyExpireListener` / `RedisKeyExpirationEvent`）、统一异常处理拦截器（`RedisOperationExceptionHandler`）、操作类型声明注解（`RedisOperation`）、Key 前缀格式化器（`RedisKeyFormatter`）；新增内部异常体系（`RedisConnectionException` / `RedisBusinessException` / `RedisOperationException`）、Lua 脚本常量（`RedisScriptConstants`）、Key 命名约定策略（`RedisKeyNamingConvention`）。
+- **26.09.01**（2026-08-17）：补全多级缓存（`MultiLevelCacheProvider` / `MultiLevelCacheAutoConfiguration`）章节与配置项文档
+- **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

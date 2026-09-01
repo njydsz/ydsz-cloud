@@ -18,7 +18,7 @@ package com.njydsz.message.domain.enums.core;
  * <p><b>通道能力差异：</b>不同通道支持的富文本格式、字符长度限制、速率限制、回执能力均不同， 由 {@code ChannelStrategy} 实现类各自处理降级和适配逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum MessageChannelEnum {
 

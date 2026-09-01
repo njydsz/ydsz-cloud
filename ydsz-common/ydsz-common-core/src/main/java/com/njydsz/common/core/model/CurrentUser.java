@@ -24,7 +24,7 @@ import org.springframework.lang.Nullable;
  * com.njydsz.common.core.context.BizContextKeys#KEY_AUTH_INFO} 读取， 返回对象可安全转换为本接口类型。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.auth.model.AuthInfo
  * @see com.njydsz.common.auth.model.YdszAuthInfo
  */
@@ -76,7 +76,7 @@ public interface CurrentUser {
    *
    * @param claim 维度标识（companyIds / deptIds / projectIds / regionIds）
    * @return 权限 ID 集合；不支持或不存在返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Nullable
   default Set<String> getPermissionIds(String claim) {

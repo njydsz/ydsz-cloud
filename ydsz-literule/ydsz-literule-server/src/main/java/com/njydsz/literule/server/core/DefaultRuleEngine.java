@@ -57,7 +57,7 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  *   <li>灰度路由评估（1.4.0，委托 {@link CanaryEvaluator}）
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -162,7 +162,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    *
    * <p>RuleRegistry 需要 statistics 来清理注销规则的统计数据。 由于 statistics 是 final 字段，通过 {@link PostConstruct} 在构造后注入。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @PostConstruct
   public void initRegistry() {
@@ -200,7 +200,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 使用 volatile 引用替换可以安全地在运行时切换（已提交任务继续在新旧线程池中处理）。
    *
    * @param injectionExecutor 自定义注入线程池
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setInjectionExecutor(ExecutorService injectionExecutor) {
     if (injectionExecutor != null) {
@@ -519,7 +519,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    *
    * @param rule 规则
    * @return 灰度定义；不满足条件返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private RuleDefinitionDTO resolveCanaryDefinition(Rule rule) {
     if (canaryEvaluator != null) {
@@ -549,7 +549,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    *
    * @param context 原始上下文
    * @return 包含外部事实的新上下文；无需注入时返回原 context
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private RuleContextVO injectFactsIfNeeded(RuleContextVO context) {
     FactProviderRegistry registry = this.factProviderRegistry;
@@ -612,7 +612,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    *
    * @param context 原始上下文
    * @return 包含模型输出的新上下文；无需注入时返回原 context
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private RuleContextVO injectModelOutputsIfNeeded(RuleContextVO context) {
     ModelInputRegistry registry = this.modelInputRegistry;
@@ -714,7 +714,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @param limit 返回结果数量上限（null 表示不限制）
    * @param minSeverity 最低严重度阈值（null 表示不限制）
    * @return 仿真结果列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<RuleResultVO> dryRun(RuleContextVO context, Integer limit, RuleSeverity minSeverity) {
     String traceId = resolveTraceId(context);
@@ -781,7 +781,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    *
    * @param context 规则上下文
    * @return 有效 traceId（非 null、非空）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   /**
    * 在 MDC 与 {@link RequestContext} 中设置 traceId 执行_supplier，执行完毕后恢复原有上下文状态。
@@ -861,7 +861,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 设置是否启用统计
    *
    * @param statsEnabled 是否启用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setStatsEnabled(boolean statsEnabled) {
     statistics.setStatsEnabled(statsEnabled);
@@ -871,7 +871,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取是否启用统计
    *
    * @return 是否启用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public boolean isStatsEnabled() {
     return statistics.isStatsEnabled();
@@ -881,7 +881,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 将引擎作为统计记录器暴露给编排层使用
    *
    * @return StatsRecorderVO 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public StatsRecorderVO asStatsRecorder() {
     return this;
@@ -891,7 +891,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 设置轨迹记录器
    *
    * @param traceRecorder 轨迹记录器；null 表示禁用 Trace
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setTraceRecorder(TraceRecorder traceRecorder) {
     this.traceRecorder = traceRecorder;
@@ -901,7 +901,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取轨迹记录器
    *
    * @return 轨迹记录器；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public TraceRecorder getTraceRecorder() {
     return traceRecorder;
@@ -911,7 +911,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 设置超时执行器
    *
    * @param timeoutExecutor 超时执行器；null 表示禁用超时控制
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setTimeoutExecutor(RuleTimeoutExecutor timeoutExecutor) {
     this.timeoutExecutor = timeoutExecutor;
@@ -921,7 +921,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取超时执行器
    *
    * @return 超时执行器；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleTimeoutExecutor getTimeoutExecutor() {
     return timeoutExecutor;
@@ -931,7 +931,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 设置熔断器
    *
    * @param circuitBreaker 熔断器；null 表示禁用熔断
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setCircuitBreaker(RuleCircuitBreaker circuitBreaker) {
     this.circuitBreaker = circuitBreaker;
@@ -942,7 +942,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取熔断器
    *
    * @return 熔断器；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleCircuitBreaker getCircuitBreaker() {
     return circuitBreaker;
@@ -952,7 +952,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 设置监控指标
    *
    * @param metrics 监控指标；null 表示禁用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setMetrics(RuleMetrics metrics) {
     this.metrics = metrics;
@@ -964,7 +964,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取监控指标
    *
    * @return 监控指标；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleMetrics getMetrics() {
     return metrics;
@@ -974,7 +974,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 设置灰度路由器
    *
    * @param canaryRouter 灰度路由器；null 表示禁用灰度
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setCanaryRouter(RuleCanaryRouter canaryRouter) {
     this.canaryRouter = canaryRouter;
@@ -984,7 +984,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取灰度路由器
    *
    * @return 灰度路由器；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleCanaryRouter getCanaryRouter() {
     return canaryRouter;
@@ -994,7 +994,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取规则索引器
    *
    * @return 规则索引器实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleIndexer getRuleIndexer() {
     return ruleRegistry.getRuleIndexer();
@@ -1053,7 +1053,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * <p>注入后，evaluate 方法会先查缓存，命中则直接返回； 未命中则执行评估后写入缓存。规则注册/注销/热加载时自动清除缓存。
    *
    * @param cache 评估结果缓存实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setEvaluationResultCache(EvaluationResultCache cache) {
     this.evaluationResultCache = cache;
@@ -1064,7 +1064,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取评估结果缓存
    *
    * @return 评估结果缓存实例；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public EvaluationResultCache getEvaluationResultCache() {
     return evaluationResultCache;
@@ -1074,7 +1074,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 设置是否启用灰度路由
    *
    * @param canaryEnabled 是否启用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setCanaryEnabled(boolean canaryEnabled) {
     this.canaryEnabled = canaryEnabled;
@@ -1084,7 +1084,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取是否启用灰度路由
    *
    * @return 是否启用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public boolean isCanaryEnabled() {
     return canaryEnabled;
@@ -1097,7 +1097,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 表示禁用模型融合（向后兼容）。
    *
    * @param modelInputRegistry 模型输入注册表；null 表示禁用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setModelInputRegistry(ModelInputRegistry modelInputRegistry) {
     this.modelInputRegistry = modelInputRegistry;
@@ -1114,7 +1114,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取模型输入注册表（P3-1）
    *
    * @return 模型输入注册表；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public ModelInputRegistry getModelInputRegistry() {
     return modelInputRegistry;
@@ -1127,7 +1127,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 表示禁用事实采集（向后兼容）。
    *
    * @param factProviderRegistry 事实数据提供者注册表；null 表示禁用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setFactProviderRegistry(FactProviderRegistry factProviderRegistry) {
     this.factProviderRegistry = factProviderRegistry;
@@ -1144,7 +1144,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取事实数据提供者注册表（P0-2）
    *
    * @return 事实数据提供者注册表；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public FactProviderRegistry getFactProviderRegistry() {
     return factProviderRegistry;
@@ -1157,7 +1157,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * com.njydsz.literule.server.spi.RuleActionHandler}。 null 表示禁用动作分发（向后兼容）。
    *
    * @param actionDispatcher 动作分发器；null 表示禁用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setActionDispatcher(RuleActionDispatcher actionDispatcher) {
     this.actionDispatcher = actionDispatcher;
@@ -1170,7 +1170,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * 获取规则动作分发器（P1-1）
    *
    * @return 动作分发器；未配置返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleActionDispatcher getActionDispatcher() {
     return actionDispatcher;
@@ -1182,7 +1182,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * <p>设置后，当候选规则数 ≥ {@link #parallelThreshold} 时， 引擎自动切换为并行评估模式。
    *
    * @param parallelEvaluator 并行评估器；null 表示始终串行
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setParallelEvaluator(ParallelRuleEvaluator parallelEvaluator) {
     this.parallelEvaluator = parallelEvaluator;
@@ -1195,7 +1195,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
  * 设置并行评估触发阈值（P2-2）
  *
  * @param threshold 候选规则数阈值；< 1 时视为 1
- * @since 1.0.0
+ * @since 26.09.01
  */
 public void setParallelThreshold(int threshold) {
 this.parallelThreshold = Math.max(1, threshold);
@@ -1228,7 +1228,7 @@ return ruleRegistry.getIndexBypassThreshold();
  * 设置慢规则告警阈值（P2-4）
    *
    * @param thresholdMs 单规则评估耗时阈值（毫秒）；≤ 0 表示关闭慢规则检测
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setSlowRuleThresholdMs(long thresholdMs) {
     statistics.setSlowRuleThresholdMs(thresholdMs);
@@ -1249,7 +1249,7 @@ return ruleRegistry.getIndexBypassThreshold();
    *
    * @param candidateRules 候选规则列表
    * @return true 表示应使用并行评估
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private boolean shouldUseParallelEvaluation(List<Rule> candidateRules) {
     return parallelEvaluator != null
@@ -1261,7 +1261,7 @@ return ruleRegistry.getIndexBypassThreshold();
    *
    * <p>封装单规则评估的完整结果，供串行路径和并行路径统一使用， 消除两路径间灰度路由 + 评估执行 + 统计/监控/熔断/轨迹记录的重复代码。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static class RuleEvaluationOutcome {
     final RuleResultVO result;
@@ -1305,7 +1305,7 @@ return ruleRegistry.getIndexBypassThreshold();
    * @param scenario 业务场景
    * @param logTag 日志标签（如 "[LiteRule]" 或 "[LiteRule-Parallel]"）
    * @return 评估结果封装
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private RuleEvaluationOutcome executeAndRecordRuleEvaluation(
       Rule rule, RuleContextVO context, String scenario, String logTag) {
@@ -1395,7 +1395,7 @@ return ruleRegistry.getIndexBypassThreshold();
    * @param context 规则上下文
    * @return 评估结果
    * @throws Exception 评估异常
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private RuleResultVO evaluateWithOptionalTimeout(Rule rule, RuleContextVO context) throws Exception {
     if (timeoutExecutor != null) {
@@ -1417,7 +1417,7 @@ return ruleRegistry.getIndexBypassThreshold();
    * @param context 规则上下文
    * @param scenario 业务场景
    * @return 触发的规则结果列表（按严重度倒序）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private List<RuleResultVO> evaluateInParallel(
       List<Rule> candidateRules, RuleContextVO context, String scenario) {
@@ -1461,7 +1461,7 @@ return ruleRegistry.getIndexBypassThreshold();
    * @param scenario 业务场景
    * @param traceId MDC traceId（用于工作线程传播）
    * @return 已触发的 RuleResultVO；未触发/被熔断返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private RuleResultVO evaluateSingleRule(
       Rule rule, RuleContextVO context, String scenario, String traceId) {
@@ -1484,7 +1484,7 @@ return ruleRegistry.getIndexBypassThreshold();
   /**
    * 优雅关闭：释放 TraceRecorder、超时执行器、并行评估器、注入线程池与注册表资源
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @PreDestroy
   public void destroy() {
@@ -1530,7 +1530,7 @@ return ruleRegistry.getIndexBypassThreshold();
    * @param rule 规则
    * @param scenario 当前场景
    * @return 是否应评估
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private boolean shouldEvaluate(Rule rule, String scenario) {
     if (scenario == null || "DEFAULT".equals(scenario)) {
@@ -1556,7 +1556,7 @@ return ruleRegistry.getIndexBypassThreshold();
    * @param rule 规则
    * @param contextEnvironment 上下文环境标识
    * @return true=匹配；false=不匹配
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private boolean environmentMatches(Rule rule, String contextEnvironment) {
     String ruleEnv = rule.getEnvironment();

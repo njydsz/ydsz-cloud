@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 /**
  * 规则版本快照
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Data

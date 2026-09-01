@@ -50,7 +50,7 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
  * private ThreadPoolTaskExecutor ioExecutor;
  * }</pre>
  *
- * <p><b>1.0.0 变更：</b>
+ * <p><b>26.09.01 变更：</b>
  *
  * <ul>
  *   <li>新增 {@link ThreadPoolMetrics} / {@link VirtualThreadMetrics} 自动注册
@@ -59,7 +59,7 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ThreadPoolProperties
  * @see ThreadHealthIndicator
  */
@@ -94,11 +94,11 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>该 Bean 负责在 Spring 容器初始化阶段动态注册线程池和指标绑定器 BeanDefinition。 通过 {@link
    * BeanDefinitionRegistryPostProcessor} 在所有常规 BeanDefinition 加载完成后、 Bean 实例化之前执行注册逻辑。
    *
-   * <p>1.0.0 修复：显式声明为 {@code @Bean}， 修复 {@link ThreadPoolRegistrar} 因缺少组件原型注解导致装配链路断裂的问题。
+   * <p>26.09.01 修复：显式声明为 {@code @Bean}， 修复 {@link ThreadPoolRegistrar} 因缺少组件原型注解导致装配链路断裂的问题。
    *
    * @param properties 线程池配置属性
    * @return 线程池注册器
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -113,7 +113,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>供下游模块（如消息通道 Bulkhead 隔离）按名称查找线程池并组装为业务 Map。 虚拟线程池（{@link ExecutorService}）不在此返回范围内。
    *
    * @return Bean 名称 → ThreadPoolTaskExecutor 的映射；无线程池时返回空 Map
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public Map<String, ThreadPoolTaskExecutor> getExecutors() {
     if (applicationContext == null) {
@@ -128,10 +128,10 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>通过 BeanPostProcessor 而非构造器注入避免循环依赖： ThreadPoolTaskExecutor → 拒绝策略 → MeteredRejectedHandler →
    * ThreadPoolMetrics → ThreadPoolTaskExecutor。
    *
-   * <p>1.0.0 重构：{@link ThreadPoolRegistrar} 已提取为独立组件类。
+   * <p>26.09.01 重构：{@link ThreadPoolRegistrar} 已提取为独立组件类。
    *
    * @return 装配后处理器
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -149,7 +149,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    *
    * <p>冲突防护：仅处理名称以 "Executor" 结尾、存在配套 Metrics Bean 的平台线程池， 避免误处理业务自定义的 ThreadPoolTaskExecutor Bean。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static class ThreadPoolMetricsPostProcessor
       implements BeanPostProcessor, BeanFactoryAware {

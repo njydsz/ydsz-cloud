@@ -13,7 +13,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * arguments} 序列化为「JSON 字符串」（而非嵌套对象）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ToolCallSerializer implements JsonSerializer<ToolCall> {
 

@@ -30,7 +30,7 @@ import com.njydsz.system.server.service.TenantPlanMenuService;
  * 消除逐条写入的 N 次 DB 往返。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see TenantPlanMenuService 套餐-菜单关联 Service 接口
  * @see com.njydsz.system.infra.entity.TenantPlanMenu 套餐-菜单关联实体
  */

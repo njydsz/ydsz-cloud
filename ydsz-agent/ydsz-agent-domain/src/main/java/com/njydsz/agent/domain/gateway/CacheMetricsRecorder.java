@@ -9,7 +9,7 @@ package com.njydsz.agent.domain.gateway;
  * <p><b>线程安全</b>：实现类需保证并发计数安全（如基于 Micrometer Counter / AtomicLong）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface CacheMetricsRecorder {
 

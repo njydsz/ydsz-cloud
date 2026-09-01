@@ -25,7 +25,7 @@ import java.util.stream.Stream;
  * <p><b>线程安全性：</b>所有常量集合均为不可变 Set（{@link Collections#unmodifiableSet(Set)}）， 多线程并发访问安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class FilterIgnoreConstants {
 

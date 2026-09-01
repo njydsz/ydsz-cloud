@@ -22,7 +22,7 @@ import com.njydsz.common.search.provider.SearchProviderRegistry;
  * <p>定时对比数据库文档数与索引文档数，检测索引丢失或冗余。 巡检结果通过日志输出，严重不一致时触发告警。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

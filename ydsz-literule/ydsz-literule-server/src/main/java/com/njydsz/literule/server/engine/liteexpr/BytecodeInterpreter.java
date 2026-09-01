@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>安全限制：节点访问预算 + 递归深度，防止病态表达式耗尽 CPU/栈
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

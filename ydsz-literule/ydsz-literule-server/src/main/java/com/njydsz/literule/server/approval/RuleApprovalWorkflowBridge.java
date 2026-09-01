@@ -31,7 +31,7 @@ package com.njydsz.literule.server.approval;
  *
  * <p>未提供实现时（bridge=null），literule 审批服务独立运行，不影响功能。
  *
- * @since 1.0.0 (P1-5)
+ * @since 26.09.01 (P1-5)
  * @author ydsz-team
  */
 public interface RuleApprovalWorkflowBridge {

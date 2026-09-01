@@ -29,7 +29,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  * Actuator 依赖时错误码仍能正常注册。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration(after = YdszExceptionCoreAutoConfiguration.class)
   // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用

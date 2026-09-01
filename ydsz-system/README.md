@@ -292,7 +292,7 @@ spring:
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
         metadata:
-          version: 1.0.0
+          version: 26.09.01
           port: 9001
         ip-type: IPv4
       config:
@@ -327,7 +327,7 @@ spring:
 | `ydsz.system.variable.cache-ttl-minutes` | 15 | 变量缓存 TTL（分钟） |
 | `ydsz.system.app.bcrypt-strength` | 10 | BCrypt 加密强度（4-31） |
 | `ydsz.system.cache.cross-instance-enabled` | false | 是否启用跨实例缓存失效（Redis Pub/Sub），多实例部署且需实时一致性时开启 |
-| `ydsz.system.version` | 1.0.0 | 系统版本号（前端展示） |
+| `ydsz.system.version` | 26.09.01 | 系统版本号（前端展示） |
 | `ydsz.system.tenant.expire-check-interval-ms` | 1800000 | 租户到期检查间隔（毫秒，默认 30 分钟） |
 | `ydsz.system.tenant.expire-check-initial-delay-ms` | 60000 | 租户到期检查初始延迟（毫秒，默认 60 秒） |
 

@@ -7,7 +7,7 @@ package com.njydsz.common.core.feature;
  * {@link #setService(FeatureFlagService)} 在应用启动时注入实际服务实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FeatureFlagService
  */
 public final class FeatureFlagContext {

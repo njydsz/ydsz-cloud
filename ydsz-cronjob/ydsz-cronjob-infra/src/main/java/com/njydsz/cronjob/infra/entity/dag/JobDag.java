@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>{@link #dagDefinition} 为 JSON 格式，包含节点列表、边列表及前端可视化坐标， 由 {@code DagDefinition} 模型类序列化/反序列化。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

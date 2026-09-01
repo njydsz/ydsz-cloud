@@ -14,7 +14,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p>算法：SHA256(timestamp + nonce + encrypt + appSecret)，结果以十六进制小写编码后与回调签名比对。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class Sha256SignatureUtil {
 

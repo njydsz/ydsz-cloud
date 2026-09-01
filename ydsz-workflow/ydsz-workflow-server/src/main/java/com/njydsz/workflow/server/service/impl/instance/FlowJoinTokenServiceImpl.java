@@ -23,7 +23,7 @@ import com.njydsz.workflow.server.service.FlowJoinTokenService;
  * <p>支持过期时间、租户隔离、操作审计。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

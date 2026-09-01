@@ -21,7 +21,7 @@ import com.njydsz.common.auth.util.PermissionUtils;
  * <p>线程安全：使用 {@link ConcurrentHashMap} 保证并发安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class PermissionHierarchyService {

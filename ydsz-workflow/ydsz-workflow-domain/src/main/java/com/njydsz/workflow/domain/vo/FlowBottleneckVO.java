@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于标识审批流程中耗时较长、处理数量较多的瓶颈节点，帮助定位流程优化点。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowBottleneckVO implements Serializable {

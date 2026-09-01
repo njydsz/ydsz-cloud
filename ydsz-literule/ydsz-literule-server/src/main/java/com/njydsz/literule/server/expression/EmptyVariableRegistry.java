@@ -8,7 +8,7 @@ import java.util.List;
  * <p>默认实现，不注册任何变量定义。当应用未配置 {@link VariableRegistry} Bean 时使用， 确保向后兼容：{@link
  * ExpressionValidationService} 仍可工作，但不会触发 UNDEFINED_VARIABLE 校验。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class EmptyVariableRegistry implements VariableRegistry {

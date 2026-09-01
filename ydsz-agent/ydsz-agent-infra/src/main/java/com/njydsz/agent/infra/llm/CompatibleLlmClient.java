@@ -57,7 +57,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  * <p>使用 {@link WebClient} 接收 SSE 流，逐行解析 {@code data:} 前缀的 JSON 片段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class CompatibleLlmClient implements LlmClient {

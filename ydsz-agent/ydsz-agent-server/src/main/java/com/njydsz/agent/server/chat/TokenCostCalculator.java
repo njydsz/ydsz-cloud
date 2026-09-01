@@ -19,7 +19,7 @@ import com.njydsz.agent.server.config.AgentProperties;
  * <p>估算策略：对 messages 列表中每条消息的 content 求字符数，除以 {@code tokenCharRatio} 得到估算 Token 数。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class TokenCostCalculator {

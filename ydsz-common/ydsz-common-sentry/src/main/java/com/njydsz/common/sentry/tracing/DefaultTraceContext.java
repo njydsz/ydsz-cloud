@@ -12,7 +12,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>当 SkyWalking 不可用时使用 UUID 生成 TraceId，通过 MDC 传递。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DefaultTraceContext implements TraceContext {

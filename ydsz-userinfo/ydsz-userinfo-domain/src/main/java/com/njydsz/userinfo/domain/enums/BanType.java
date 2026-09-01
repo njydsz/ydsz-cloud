@@ -8,7 +8,7 @@ package com.njydsz.userinfo.domain.enums;
  * <p><b>DB 存储：</b>使用枚举名字符串（{@code TEMPORARY} / {@code PERMANENT}）存储，为 null 时表示未封禁。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum BanType {
 

@@ -31,7 +31,7 @@ import com.njydsz.common.docs.parser.DocumentParser;
  * <p>基于 Apache POI XSLF 解析 PowerPoint 文档，提取每页幻灯片的文本内容和表格。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

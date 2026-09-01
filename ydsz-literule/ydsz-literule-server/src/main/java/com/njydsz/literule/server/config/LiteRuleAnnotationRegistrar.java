@@ -36,7 +36,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  * public class MyDef extends RuleDefinitionDTO { ... }   // 通过 @RuleDefinitionMeta 标注或被 @Component 声明
  * }</pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

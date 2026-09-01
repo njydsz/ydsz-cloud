@@ -36,7 +36,7 @@ import com.njydsz.common.cache.listener.RemovalCause;
  * @param <K> 缓存键类型
  * @param <V> 缓存值类型
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
 
@@ -631,7 +631,7 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
    * prev}/{@code next} 构成双向链表，由各队列的头节点（哨兵）组织。 除 key 外的字段均为 volatile，保证并发读写下的可见性。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static final class Node<K, V> {
     final K key;

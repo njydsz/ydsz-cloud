@@ -7,7 +7,7 @@ package com.njydsz.common.util.security.crypto;
  * CryptoException}（运行时加密失败，如密文被篡改、算法不可用）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class CryptoException extends RuntimeException {
 

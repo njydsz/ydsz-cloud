@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 能力保留，启用前应补充并发基准测试（JMH）验证收益。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class StringInterner {
 

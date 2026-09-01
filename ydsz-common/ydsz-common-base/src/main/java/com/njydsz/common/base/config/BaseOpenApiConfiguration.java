@@ -37,7 +37,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
  * <p><b>激活条件：</b>需要通过配置 {@code ydsz.doc.enabled=true} 显式开启。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public abstract class BaseOpenApiConfiguration {
 
@@ -85,7 +85,7 @@ public abstract class BaseOpenApiConfiguration {
     return new Info()
         .title(getTitle())
         .description(getDescription())
-        .version("1.0.0")
+        .version("26.09.01")
         .contact(
             new Contact()
                 .name("ydsz-team")

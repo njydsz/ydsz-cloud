@@ -45,7 +45,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * <p><b>线程安全</b>：delegate 记忆并发安全；摘要读取优先 Redis（原子操作），内存 Map 仅作兜底缓存。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SummaryConversationMemory implements ConversationMemory {

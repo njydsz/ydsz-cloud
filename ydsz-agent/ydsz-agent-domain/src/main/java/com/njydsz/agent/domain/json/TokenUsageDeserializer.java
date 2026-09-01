@@ -14,7 +14,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * 避免手写 token 级解析的脆弱性。构造 {@link TokenUsage} 时 {@code totalTokens} 由其构造函数自动求和。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class TokenUsageDeserializer implements JsonDeserializer<TokenUsage> {
 

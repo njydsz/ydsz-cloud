@@ -94,7 +94,7 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
  * <p>与 {@link JobNodeHeartbeat} 联动：执行前后递增/递减 running_count， 用于负载均衡选择。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

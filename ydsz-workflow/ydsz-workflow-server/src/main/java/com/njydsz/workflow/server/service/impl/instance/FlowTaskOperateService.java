@@ -38,7 +38,7 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
  * <p>每种操作均产生审计记录与流程轨迹。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -80,7 +80,7 @@ public class FlowTaskOperateService {
 
   /**
    * 转办：将任务办理人换为他人。
-   * 
+   *
    * <p>原办理人变为 assignorId，新办理人变为 assigneeId，状态保持 CLAIMED。
    *
    * @param dto 任务操作 DTO（含 taskId/targetUserId 等）
@@ -119,7 +119,7 @@ public class FlowTaskOperateService {
 
   /**
    * 委派：被委派人处理后任务回到原办理人。
-   * 
+   *
    * <p>原办理人变为 assignorId，新办理人变为 assigneeId，任务状态置为 DELEGATED。 被委派人通过时（FlowTaskPassService）会检测
    * DELEGATED 状态，自动回归原办理人。
    *
@@ -163,7 +163,7 @@ public class FlowTaskOperateService {
 
   /**
    * 自由跳转：完成当前任务，强制跳转到任意节点。
-   * 
+   *
    * <p>GAP-P2-9: 节点级 freeJump 白名单校验（仅自由流操作 action=JUMP 时启用）。 历史管理员强制跳转（无 action 字段或 action !=
    * JUMP）保持原有放行语义。
    *
@@ -244,7 +244,7 @@ public class FlowTaskOperateService {
 
   /**
    * P1-3: 取回 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
-   * 
+   *
    * <p>对标钉钉/飞书"取回"。审批人 PASS 后下一节点待办尚未处理时， 可取回自己的审批：取消下一节点待办，在本节点重新生成 PENDING 任务。
    *
    * @param hisTaskId 历史任务 ID（欲取回的任务）

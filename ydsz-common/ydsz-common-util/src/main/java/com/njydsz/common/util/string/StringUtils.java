@@ -34,7 +34,7 @@ import org.slf4j.helpers.MessageFormatter;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class StringUtils {
 
@@ -301,7 +301,7 @@ public final class StringUtils {
    * <p>内部委托 {@link org.slf4j.helpers.MessageFormatter}（slf4j-api 自带）， 与日志占位符语义完全一致：支持 {@code \{} }
    * 转义、null 渲染为 "null"、 参数不足时保留占位符、参数多余时忽略。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    * @param pattern 格式模式
    * @param arguments arguments
    * @return 处理后的字符串
@@ -324,7 +324,7 @@ public final class StringUtils {
    * @param maxLength 最大允许长度（≥ 0），超过将被截断
    * @return 不超过 maxLength 的字符串，或原字符串
    * @throws IllegalArgumentException 如果 maxLength 为负数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String truncate(String text, int maxLength) {
     if (maxLength < MIN_INDEX) {
@@ -345,7 +345,7 @@ public final class StringUtils {
    * @param maxLength 缩写后最大长度（≥ 4，因为至少要保留 1 字符 + "..."）
    * @return 缩写后的字符串
    * @throws IllegalArgumentException 如果 maxLength 小于 4
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String abbreviate(String text, int maxLength) {
     if (maxLength < MIN_ABBREVIATION_LENGTH) {
@@ -364,7 +364,7 @@ public final class StringUtils {
    *
    * @param text 待处理字符串
    * @return 处理后的字符串，输入为 {@code null} 时返回 {@code null}
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String normalizeSpace(String text) {
     if (Objects.isNull(text)) {

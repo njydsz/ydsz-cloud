@@ -34,7 +34,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * @param approvalUsers 审批人列表（APPROVAL 节点，逗号分隔，P1-6）
  * @param approvalTimeoutMinutes 审批超时时间（分钟，超时自动拒绝，P1-6）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @JsonClass(description = "DAG 节点定义，标记可安全反序列化")
 public record DagNode(
@@ -249,7 +249,7 @@ public record DagNode(
     TASK,
     /** P1-1: 条件分支节点：根据 SpEL 表达式结果选择分支 */
     CONDITION,
-    /** 已废弃：循环节点（1.0.0 移除，反序列化时降级为 TASK） */
+    /** 已废弃：循环节点（26.09.01 移除，反序列化时降级为 TASK） */
     @Deprecated
     LOOP,
     /** P1-1: 并行网关节点：Fork/Join 并行执行 */

@@ -21,7 +21,7 @@ import com.njydsz.common.docs.security.pii.PiiDetector;
  * 会员编号等，存在误报风险，建议结合"护照"关键词上下文二次过滤。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class PassportDetector implements PiiDetector {

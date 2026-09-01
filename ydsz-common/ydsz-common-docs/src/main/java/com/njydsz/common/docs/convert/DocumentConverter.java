@@ -31,7 +31,7 @@ import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
  * <p>实现策略：优先委托已注册的 {@link DocumentParser} 获取结构化内容后提取文本， 避免重复实现 POI 解析逻辑；仅当解析器不可用时才使用内置轻量转换。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

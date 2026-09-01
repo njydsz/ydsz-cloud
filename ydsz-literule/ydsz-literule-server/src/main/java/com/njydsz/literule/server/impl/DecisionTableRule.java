@@ -32,7 +32,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *
  * <p>条件表达式解析由 {@link ConditionMatcher} 实现（P0-3 抽取复用），支持字面值、比较、区间、枚举、LiteExpr 表达式。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

@@ -12,7 +12,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * <p>读取 {@code ydsz.userinfo.platform} 配置值，与 {@link ConditionalOnPlatform#value()} 比对。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class PlatformCondition implements Condition {
 

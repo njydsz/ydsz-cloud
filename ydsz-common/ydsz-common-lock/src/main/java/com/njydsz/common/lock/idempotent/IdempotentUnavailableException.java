@@ -7,7 +7,7 @@ package com.njydsz.common.lock.idempotent;
  * ydsz.lock.idempotent.fail-open=false}）时抛出，拒绝请求以保证强幂等语义。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class IdempotentUnavailableException extends RuntimeException {
 

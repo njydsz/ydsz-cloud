@@ -46,7 +46,7 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.server.service.impl.FlowTaskServiceImpl 实现类（编排器，委派给具体的子服务）
  * @see FlowInstanceService 流程实例 Service
  * @see CountersignStrategy 会签策略接口
@@ -215,7 +215,7 @@ public interface FlowTaskService {
 
   /**
    * 查用户的待办（多维度匹配：直接分配 + ROLE/DEPT 展开 + ydsz_flow_user 关联）
-   * 
+   *
    *
    * @param userId 用户 ID
    * @param roleCodes 角色编码列表（可空）
@@ -257,7 +257,7 @@ public interface FlowTaskService {
    * 后加签是"当前人审完→加签人审"的串行流程；并加签是"当前人+加签人同时审"的并行流程。
    *
    * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   void countersignParallel(FlowTaskOperateDTO dto);
 
@@ -287,8 +287,8 @@ public interface FlowTaskService {
 
   /**
    * P1-9: 催办 — 通知当前节点所有待办处理人
-   * 
-   * 
+   *
+   *
    *
    * @param instanceId 流程实例 ID
    * @param operatorId 催办人用户 ID
@@ -487,7 +487,7 @@ public interface FlowTaskService {
    * @param taskId 任务 ID
    * @param operatorId 操作人 ID
    * @param reason 挂起原因（可选，写入 comment）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   void suspendTask(String taskId, String operatorId, String reason);
 
@@ -504,7 +504,7 @@ public interface FlowTaskService {
    *
    * @param taskId 任务 ID
    * @param operatorId 操作人 ID
-   * @since 1.0.0
+   * @since 26.09.01
    */
   void activateTask(String taskId, String operatorId);
 
@@ -527,7 +527,7 @@ public interface FlowTaskService {
    * @param operatorId 操作人 ID（校验与 hisTask.assigneeId 一致）
    * @param comment 取回说明（可选）
    * @return 新创建的待办任务 ID
-   * @since 1.0.0
+   * @since 26.09.01
    */
   String retract(String hisTaskId, String operatorId, String comment);
 

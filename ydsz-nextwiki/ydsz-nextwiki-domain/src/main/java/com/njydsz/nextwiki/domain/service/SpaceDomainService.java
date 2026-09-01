@@ -15,7 +15,7 @@ import com.njydsz.nextwiki.domain.vo.SpaceVO;
  * 本服务为纯领域逻辑组件，不执行任何数据访问；数据由应用层加载后传入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SpaceDomainService {

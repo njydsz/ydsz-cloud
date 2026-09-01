@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  *   <li>项目立项（PROJECT）— 发起人 → 部门负责人 → 项目总监 → 总经理审批
  * </ol>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

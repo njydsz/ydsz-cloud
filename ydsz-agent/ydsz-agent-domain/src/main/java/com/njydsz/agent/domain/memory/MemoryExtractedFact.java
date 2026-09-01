@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * 对话结束后后台自动提取有价值的信息。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class MemoryExtractedFact {
 

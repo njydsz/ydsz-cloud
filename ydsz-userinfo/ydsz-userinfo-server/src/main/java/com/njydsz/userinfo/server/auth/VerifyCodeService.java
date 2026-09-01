@@ -27,7 +27,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
  * 生产环境需集成 SNS 短信服务（如阿里云 SMS、腾讯云 SMTP）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

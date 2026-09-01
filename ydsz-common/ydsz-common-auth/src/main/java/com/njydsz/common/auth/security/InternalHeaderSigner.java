@@ -18,7 +18,7 @@ import com.njydsz.common.util.security.HexUtils;
  *
  * <p>签名 payload 拼接顺序：traceId|userId|username|roles|permissions
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public final class InternalHeaderSigner {

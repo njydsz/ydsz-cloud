@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * <p>统一定义请求 ID（requestId / traceId）的解析逻辑，供 Filter 和 Interceptor 共享。 子类提供具体的 ID 来源实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface RequestIdResolver {
 

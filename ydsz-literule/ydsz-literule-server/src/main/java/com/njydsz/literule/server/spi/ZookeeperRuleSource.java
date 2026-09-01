@@ -26,7 +26,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  *
  * <p>依赖：需在 classpath 中引入 {@code org.apache.curator:curator-recipes}。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

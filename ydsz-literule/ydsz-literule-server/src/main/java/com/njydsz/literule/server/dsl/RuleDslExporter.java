@@ -29,7 +29,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * String singleYaml = RuleDslExporter.exportSingleRule(rule);
  * }</pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

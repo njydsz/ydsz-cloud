@@ -11,7 +11,7 @@ import com.njydsz.message.domain.vo.MsgUserChannelVO;
  * <p>维护用户在各渠道的地址/账号绑定。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface UserChannelBindingService {
 

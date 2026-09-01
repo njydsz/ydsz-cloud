@@ -9,7 +9,7 @@ package com.njydsz.common.jdbc.permission;
  * 处理，本上下文不再包含租户相关字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ import lombok.Data;
  * <p>所属包：{@code com.njydsz.common.jdbc.permission}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class DataPermissionContext {

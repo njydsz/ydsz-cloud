@@ -14,7 +14,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p>内置实现见 {@link com.njydsz.common.audit.core.DefaultAuditQueryService}， 支持分表场景下的 UNION ALL 合并查询。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface AuditQueryService {
 

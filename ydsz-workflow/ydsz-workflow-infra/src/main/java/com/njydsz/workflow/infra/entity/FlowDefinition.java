@@ -54,7 +54,7 @@ import com.njydsz.workflow.domain.vo.FlowViewsVO;
  * idx_category}（{@code category}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowInstance 流程实例
  * @see FlowNode 流程节点
  * @see com.njydsz.workflow.server.service.FlowDefinitionService 流程定义 Service
@@ -88,7 +88,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
   /**
    * 流程版本号。
    *
-   * <p>建议使用 {@code v1} / {@code v2} 格式或语义版本号（{@code 1.0.0} / {@code 1.1.0}）。 同一 {@code flowCode}
+   * <p>建议使用 {@code v1} / {@code v2} 格式或语义版本号（{@code 26.09.01} / {@code 1.1.0}）。 同一 {@code flowCode}
    * 下的不同版本独立发布，支持灰度切换。
    */
   @TableField("flow_version")

@@ -15,7 +15,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p>Key 格式：{@code auth:rp:<sha256(tenantId|sortedRole1,role2,...)>}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DefaultCacheKeyStrategy implements CacheKeyStrategy {
 

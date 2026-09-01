@@ -24,10 +24,10 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>提供通用的请求头解析逻辑，子类只需实现 {@link #createAuthInfo()} 返回具体的 AuthInfo 实现类。
  * 采用模板方法模式，统一的解析流程由本类管理，差异化实例创建由子类提供。
  *
- * <p>自 1.0.0 起从 util 层迁移至 common-auth 服务层， 已移除对旧版弃用类的继承依赖，新代码应继承本类。
+ * <p>自 26.09.01 起从 util 层迁移至 common-auth 服务层， 已移除对旧版弃用类的继承依赖，新代码应继承本类。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AuthHandler
  */
 public abstract class AbstractAuthHandler implements AuthHandler {

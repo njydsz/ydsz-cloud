@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see BaseQuery 分页基类
  */
 @Data

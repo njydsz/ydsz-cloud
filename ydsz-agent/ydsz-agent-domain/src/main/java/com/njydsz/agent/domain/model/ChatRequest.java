@@ -12,7 +12,7 @@ import java.util.Objects;
  * <p><b>线程安全</b>：所有字段 final 且集合不可变，构造后只读，可安全跨线程传递与复用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class ChatRequest implements Serializable {
 

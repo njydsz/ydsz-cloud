@@ -9,7 +9,7 @@ import com.njydsz.literule.domain.dto.ScorecardDefinitionDTO;
  *
  * <p>由消费方提供实现，从数据库加载评分卡定义。 literule 模块本身不依赖持久层。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface ScorecardConfigProvider {

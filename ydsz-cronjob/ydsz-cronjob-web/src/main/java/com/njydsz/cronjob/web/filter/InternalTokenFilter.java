@@ -33,7 +33,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  * <p>令牌比较使用 {@link MessageDigest#isEqual(byte[], byte[])} 常量时间比较，防止时序侧信道。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

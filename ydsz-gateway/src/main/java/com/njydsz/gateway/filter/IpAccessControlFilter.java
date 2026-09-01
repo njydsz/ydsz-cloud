@@ -62,7 +62,7 @@ import com.njydsz.gateway.config.IpAccessControlProperties;
  *
  * <p>{@code HIGHEST_PRECEDENCE + 3}，在认证(+10)之前执行，尽早拦截恶意请求。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

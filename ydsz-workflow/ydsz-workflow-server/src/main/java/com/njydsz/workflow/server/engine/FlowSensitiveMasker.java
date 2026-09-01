@@ -36,7 +36,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * <p>所有方法均为无状态纯函数，线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

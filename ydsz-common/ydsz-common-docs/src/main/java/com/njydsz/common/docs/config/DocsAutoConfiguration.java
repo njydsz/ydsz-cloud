@@ -23,7 +23,7 @@ import com.njydsz.common.docs.service.AsyncDocumentParser;
  * <p><b>配置开关：</b> {@code ydsz.docs.enabled=true}（默认启用）
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @AutoConfiguration

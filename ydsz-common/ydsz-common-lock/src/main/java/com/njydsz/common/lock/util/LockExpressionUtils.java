@@ -26,7 +26,7 @@ import org.springframework.expression.spel.support.SimpleEvaluationContext;
  * <p><b>线程安全：</b>表达式解析器、参数名发现器与表达式缓存均为线程安全的无状态组件。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class LockExpressionUtils {
 

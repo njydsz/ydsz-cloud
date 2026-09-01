@@ -26,7 +26,7 @@ import com.njydsz.common.safe.config.ApiSignatureProperties;
  * <p><b>注意：</b>Redis 连通性和安全能力清单由 {@code SafeHealthIndicator} 统一报告， 本指示器仅关注 App 模块特有状态，避免重复检测。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class AppHealthIndicator implements HealthIndicator {

@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>同时支持 Zipkin / Jaeger / Logging / 任意自定义 Exporter。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public final class OtelExporterFactory {

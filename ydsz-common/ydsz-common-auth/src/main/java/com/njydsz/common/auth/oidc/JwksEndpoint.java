@@ -28,7 +28,7 @@ import com.njydsz.common.json.YdszJson;
  * <p>返回的 key 均包含 {@code use=sig} 标识（仅用于签名验证）和对应的 {@code alg} 字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class JwksEndpoint {

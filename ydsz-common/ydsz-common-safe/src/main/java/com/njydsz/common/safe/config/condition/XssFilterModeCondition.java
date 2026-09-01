@@ -10,7 +10,7 @@ import org.springframework.context.annotation.ConfigurationCondition;
  * <p>当 ydsz.safe.xss.enabled=true（或未配置）且 ydsz.safe.xss.mode=filter 时生效
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class XssFilterModeCondition extends AllNestedConditions {
 

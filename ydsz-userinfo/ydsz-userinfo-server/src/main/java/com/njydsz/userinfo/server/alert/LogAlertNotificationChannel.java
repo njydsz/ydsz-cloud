@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.alert.SecurityAlert;
  * <p>将告警信息输出到日志，作为默认的告警通知方式。生产环境可替换为邮件/企业微信/钉钉等通道。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

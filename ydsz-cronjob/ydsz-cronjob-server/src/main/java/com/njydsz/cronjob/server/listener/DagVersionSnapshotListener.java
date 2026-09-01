@@ -27,7 +27,7 @@ import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
  * <p><b>注意：</b>若快照创建失败，仅日志告警，不回滚已提交的主业务数据。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DagVersionSnapshotEvent DAG 版本快照事件
  */
 @Slf4j

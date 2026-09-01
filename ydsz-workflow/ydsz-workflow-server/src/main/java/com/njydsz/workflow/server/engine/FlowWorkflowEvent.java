@@ -20,7 +20,7 @@ import org.springframework.context.ApplicationEvent;
  *       TASK_COUNTERSIGNED / TASK_JUMPED / TASK_TIMEOUT
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Getter

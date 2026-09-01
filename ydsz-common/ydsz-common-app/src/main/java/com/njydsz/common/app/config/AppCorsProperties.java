@@ -13,7 +13,7 @@ import com.njydsz.common.base.config.BaseCorsProperties;
  * <p><b>线程安全性：</b>由 Spring Boot 配置属性绑定机制管理，绑定完成后通常视为只读。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConfigurationProperties(prefix = "ydsz.app.cors")
 public class AppCorsProperties extends BaseCorsProperties {}

@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>决策树规则：root_node 字段为嵌套 JSON 结构，描述树形决策过程。 节点类型：CONDITION（条件）/ ACTION（动作）/ DEFAULT（默认分支）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @SuperBuilder

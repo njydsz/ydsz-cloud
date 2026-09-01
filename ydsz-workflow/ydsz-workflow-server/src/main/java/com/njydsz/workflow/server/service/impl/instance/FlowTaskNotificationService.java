@@ -21,7 +21,7 @@ import com.njydsz.workflow.server.engine.listener.FlowListenerEventType;
  * <p>支持免打扰时段、用户偏好、租户级模板覆盖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -42,7 +42,7 @@ public class FlowTaskNotificationService {
 
   /**
    * 任务完成事件（含流程变量）
-   * 
+   *
    * <p>同时调用两版监听器：老版（taskId/action/vars）和 P2-37 引入的 携带 {@link FlowEventContext} 的新版本，保证向后兼容。
    *
    * @param taskId 任务 ID

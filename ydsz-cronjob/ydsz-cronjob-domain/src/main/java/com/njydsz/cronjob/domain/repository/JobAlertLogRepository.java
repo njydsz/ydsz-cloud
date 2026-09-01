@@ -9,7 +9,7 @@ import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
  * 告警日志 Repository（domain 层契约）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface JobAlertLogRepository {
 

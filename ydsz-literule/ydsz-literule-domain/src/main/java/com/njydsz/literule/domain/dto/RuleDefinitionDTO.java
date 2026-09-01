@@ -19,7 +19,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  * 可选，用于动态生成结果描述。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder
@@ -100,7 +100,7 @@ public class RuleDefinitionDTO implements Serializable {
    *
    * <p>同组内首个命中的规则执行后，其余规则跳过评估。null 表示无互斥组。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private String mutexGroup;
 
@@ -117,7 +117,7 @@ public class RuleDefinitionDTO implements Serializable {
    * com.njydsz.literule.server.core.DefaultRuleEngine} 在评估前会比较 {@code rule.getTenantId()} 与 {@link
    * RuleContextVO#getTenantId()}， 仅当两者匹配时才评估该规则。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Builder.Default private String tenantId = "1";
 
@@ -134,7 +134,7 @@ public class RuleDefinitionDTO implements Serializable {
    * 过滤规则：规则的 environment 为 {@code "default"} 时匹配任何上下文环境； 非 {@code "default"} 时必须与 {@link
    * RuleContextVO#getEnvironment()} 完全匹配。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Builder.Default private String environment = "default";
 
@@ -161,7 +161,7 @@ public class RuleDefinitionDTO implements Serializable {
    *
    * <p>当 canaryRatio > 0 且存在候选版本（canaryDefinition 非空）时， 引擎按此比例将流量分到候选版本。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Builder.Default private double canaryRatio = 0.0;
 
@@ -171,7 +171,7 @@ public class RuleDefinitionDTO implements Serializable {
    * <p>仅当 canaryRatio > 0 时生效；满足全部条件才进入灰度流量分桶。 示例：{@code ["tenantId == 'T001'", "userRole ==
    * 'ADMIN'"]} 为空时仅按 canaryRatio 比例分桶。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private List<String> canaryConditions;
 
@@ -180,7 +180,7 @@ public class RuleDefinitionDTO implements Serializable {
    *
    * <p>当流量被分到灰度桶时，使用此候选表达式构造一条临时规则进行评估， 结果会被标记 {@link com.njydsz.literule.domain.vo.RuleResultVO#isCanary()} = true，便于运营对比新旧命中差异。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private String canaryConditionExpression;
 

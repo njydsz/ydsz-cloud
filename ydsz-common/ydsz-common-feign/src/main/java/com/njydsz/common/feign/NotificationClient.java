@@ -39,7 +39,7 @@ import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MessageSendClient message-api 的细粒度消息客户端
  */
 @FeignClient(

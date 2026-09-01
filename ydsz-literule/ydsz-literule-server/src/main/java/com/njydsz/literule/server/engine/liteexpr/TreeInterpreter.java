@@ -27,7 +27,7 @@ import com.njydsz.literule.server.debug.RuleDebugger;
  *       {@link ThreadLocal} 会话中（P0-2 并发修复），并发求值互不干扰
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class TreeInterpreter implements ExprNodeVisitor<Object> {

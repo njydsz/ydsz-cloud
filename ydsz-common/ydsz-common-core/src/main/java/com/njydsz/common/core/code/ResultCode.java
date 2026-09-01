@@ -19,7 +19,7 @@ package com.njydsz.common.core.code;
  * 注解注册，不要再直接实现此接口。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see YdszResultCode
  * @see com.njydsz.common.core.code.YdszResultCode
  */

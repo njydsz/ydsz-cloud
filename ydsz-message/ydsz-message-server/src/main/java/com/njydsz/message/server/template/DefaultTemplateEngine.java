@@ -31,7 +31,7 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  * <p>多渠道差异化由 {@code TemplateService.loadByCodeAndChannel} 在模板加载层实现， 引擎仅按传入的模板内容渲染。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class DefaultTemplateEngine implements TemplateEngine {

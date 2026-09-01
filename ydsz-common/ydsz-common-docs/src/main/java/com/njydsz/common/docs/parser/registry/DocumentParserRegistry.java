@@ -22,7 +22,7 @@ import com.njydsz.common.docs.parser.DocumentParser;
  * <p><b>线程安全性：</b>使用 {@link ConcurrentHashMap} 存储注册表，线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

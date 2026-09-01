@@ -23,7 +23,7 @@ import org.springframework.web.method.HandlerMethod;
  * <p><b>装配方式：</b>由 {@code OpenApiAutoConfiguration} 注册为 Spring Bean，当 classpath 中存在 springdoc-openapi 时激活。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class ApiVersionOpenApiCustomizer implements OperationCustomizer {

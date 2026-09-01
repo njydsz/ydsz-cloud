@@ -52,7 +52,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CaptchaService 验证码业务逻辑
  * @see com.njydsz.userinfo.web.controller.AuthController 认证 Controller（消费 captcha）
  */

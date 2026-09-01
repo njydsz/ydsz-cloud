@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>领域层 VO，对应 infra 实体 {@link com.njydsz.cronjob.infra.entity.OutboxEvent}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class OutboxEventVO implements Serializable {

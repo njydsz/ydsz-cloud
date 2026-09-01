@@ -28,7 +28,7 @@ import com.njydsz.message.domain.vo.NotificationGroupVO;
  * {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.MessageService 全渠道消息（含短信/邮件/推送）
  * @see MsgNotificationVO 站内通知实体
  */

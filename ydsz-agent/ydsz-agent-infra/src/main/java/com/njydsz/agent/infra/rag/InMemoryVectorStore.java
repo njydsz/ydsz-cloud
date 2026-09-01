@@ -22,7 +22,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * <p><b>多租户隔离（P0 修复）</b>：按 {@code chunkId → tenantId} 维护租户映射， 检索时仅返回当前租户的文本块，避免内存实现成为跨租户泄露通道。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class InMemoryVectorStore implements VectorStore {

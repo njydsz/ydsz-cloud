@@ -14,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
  * <p><b>设计原则：</b>仅保留核心配置项，业务特定参数下沉到业务模块配置， 避免 common 模块承担过多场景化职责。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Validated

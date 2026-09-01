@@ -67,7 +67,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowHisTaskRepository 历史任务仓储
  * @see FlowTaskArchiveService 任务归档服务（历史任务来源）
  * @see FlowInstanceService 流程实例服务（在创建下游任务时调用本服务过滤）
@@ -148,7 +148,7 @@ public class FlowAssigneeDedupService {
    *
    * @param instanceId 流程实例 ID
    * @return 已审批用户 ID VO 列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Transactional(readOnly = true)
   public List<StringVO> getApprovedUserIdsVO(String instanceId) {

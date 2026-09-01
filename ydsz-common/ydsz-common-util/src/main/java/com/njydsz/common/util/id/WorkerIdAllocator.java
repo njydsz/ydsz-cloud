@@ -14,7 +14,7 @@ import jakarta.annotation.Nonnull;
  * <p><b>新增约定：</b>所有实现必须保证同一集群内 workerId 全局唯一， 非唯一可能导致雪花 ID 冲突。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see WorkerIdAllocatorChain
  * @see PodOrdinalWorkerIdAllocator
  * @see IpHashWorkerIdAllocator

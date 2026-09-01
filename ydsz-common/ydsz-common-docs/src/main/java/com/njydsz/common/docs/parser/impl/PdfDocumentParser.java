@@ -38,7 +38,7 @@ import com.njydsz.common.util.io.TempFileManager;
  * <p><b>流式解析：</b>通过 {@link #parseStreaming} 方法支持逐页回调， 适用于超大 PDF 的增量处理场景（如全文索引构建），避免一次性载入全文。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -25,7 +25,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * RocketMQTemplate 且 {@code rocketmq.producer.group} 配置时生效。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

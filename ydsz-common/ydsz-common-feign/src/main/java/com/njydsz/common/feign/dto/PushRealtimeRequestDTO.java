@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
  * <p><b>P0-3-fix</b>：新增 DTO 以支持 {@link com.njydsz.common.feign.NotificationClient#pushRealtime} 方法。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

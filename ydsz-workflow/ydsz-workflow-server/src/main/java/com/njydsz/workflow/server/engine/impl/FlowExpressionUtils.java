@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>本工具类为纯静态工具，不纳入 Spring 容器管理。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

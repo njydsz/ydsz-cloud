@@ -41,7 +41,7 @@ import com.njydsz.common.excel.exception.ExcelExceptionCode;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class MetadataCache {
 
@@ -125,7 +125,7 @@ public class MetadataCache {
    *
    * @author ydsz-team
 
-   * @version 1.0.0
+   * @version 26.09.01
    */
   public static void clear() {
     METADATA_CACHE.clear();

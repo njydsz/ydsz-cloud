@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 {@code SocialAccountRepository.save()} 持久化社交账号绑定记录，由 Service 层组装后传入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class SocialAccountDTO implements Serializable {

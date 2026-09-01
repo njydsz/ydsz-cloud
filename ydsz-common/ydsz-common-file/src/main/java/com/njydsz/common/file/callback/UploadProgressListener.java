@@ -6,7 +6,7 @@ package com.njydsz.common.file.callback;
  * <p>监听上传过程中的关键节点，使业务层能够获取实时进度（用于进度条、弱网重试等场景）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface UploadProgressListener {
 

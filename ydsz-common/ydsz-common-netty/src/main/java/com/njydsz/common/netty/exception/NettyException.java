@@ -12,7 +12,7 @@ import com.njydsz.common.exception.custom.SysException;
  * <p>场景区分通过 message 描述实现，避免异常类膨胀。 如需区分 SSL 服务端/客户端上下文，可使用 {@link #ofSsl(String, String)} 工厂方法。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NettyException extends SysException {
 

@@ -12,7 +12,7 @@ import lombok.Data;
  * 平均耗时、驳回率及逾期数量等核心指标。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowAnalyticsOverviewVO implements Serializable {

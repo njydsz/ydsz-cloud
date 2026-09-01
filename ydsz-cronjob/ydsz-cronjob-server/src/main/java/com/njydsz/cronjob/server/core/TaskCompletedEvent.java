@@ -11,6 +11,6 @@ package com.njydsz.cronjob.server.core;
  * @param success 是否成功
  * @param logId 日志 ID
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record TaskCompletedEvent(String jobId, String jobKey, boolean success, String logId) {}

@@ -14,7 +14,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  * 统一收集、路由与分发。通道类型字符串需与 {@link com.njydsz.message.domain.enums.MessageChannelEnum} 枚举名保持一致（大写）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface MessageChannel {
 

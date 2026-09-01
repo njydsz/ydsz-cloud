@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @param evictedBy 驱逐操作者（"SYSTEM" 表示系统自动挤出）
  * @param reason 驱逐原因
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record SessionEvictedEvent(
     String userId, String username, LocalDateTime timestamp, String evictedBy, String reason) {}

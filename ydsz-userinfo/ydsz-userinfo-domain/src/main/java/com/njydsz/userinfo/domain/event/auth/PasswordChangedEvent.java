@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * @param timestamp 事件发生时间
  * @param changedBy 操作者（"SELF" 表示用户自行修改，其他为操作者用户名）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record PasswordChangedEvent(
     String userId, String username, LocalDateTime timestamp, String changedBy) {}

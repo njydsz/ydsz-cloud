@@ -18,7 +18,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>版本管理：每次发布生成新的 {@code packVersion}，同时通过 {@link #ruleSnapshots} 固化规则定义快照，保证历史版本内容可复现、可回滚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
@@ -31,7 +31,7 @@ public class RulePackVO extends MpBaseEntity<String> {
   /** 规则集编码（全局唯一，用于版本间关联） */
   private String packCode;
 
-  /** 规则集版本号（如 1.0.0、1.0.0） */
+  /** 规则集版本号（如 26.09.01、26.09.01） */
   private String packVersion;
 
   /** 规则集名称 */

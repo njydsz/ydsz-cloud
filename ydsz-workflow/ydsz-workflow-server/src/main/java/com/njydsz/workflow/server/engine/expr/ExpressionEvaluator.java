@@ -9,7 +9,7 @@ import java.util.Map;
  *
  * <p>业务系统可通过实现本接口并注册为 Bean 来替换默认求值逻辑（如接入 ydsz-literule 引擎）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface ExpressionEvaluator {

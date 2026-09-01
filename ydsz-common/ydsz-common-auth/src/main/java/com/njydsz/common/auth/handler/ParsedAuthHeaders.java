@@ -19,7 +19,7 @@ import com.njydsz.common.util.string.StringUtils;
  * handler 中重复编写相同的 13 行 header.getHeader() 代码。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ParsedAuthHeaders {
 

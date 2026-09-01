@@ -10,7 +10,7 @@ import lombok.Data;
  * ≤ 5 的要求，同时让版本创建语义更内聚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

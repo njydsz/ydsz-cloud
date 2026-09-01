@@ -29,7 +29,7 @@ import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
  * <p>供 {@code MsgLog.receiptStatus} 字段实时更新。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

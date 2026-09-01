@@ -91,7 +91,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>通过 {@link S3Presigner} 生成预签名下载 URL，支持自定义过期时间。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AbstractFileStorage
  * @see S3Client
  * @see S3Presigner

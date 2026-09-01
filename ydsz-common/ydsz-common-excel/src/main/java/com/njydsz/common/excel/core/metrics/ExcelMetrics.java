@@ -30,7 +30,7 @@ import io.micrometer.core.instrument.Timer;
  * <p>当 MeterRegistry 不可用时（micrometer 未引入），所有方法为空操作， 不影响业务逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ExcelMetrics {
 

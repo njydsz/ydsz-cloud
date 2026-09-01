@@ -28,7 +28,7 @@ import com.njydsz.common.tenant.config.TenantProperties;
  * <p>基于 {@link RequestContext} 的快照/恢复机制实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class TenantContextTaskDecorator implements TaskDecorator {
 

@@ -39,7 +39,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * {@code @Transactional(rollbackFor = Exception.class)}，确保任一异常触发完整回滚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserAccount 用户实体
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller
  * @see com.njydsz.userinfo.api.UserAccountClient Feign Client 接口

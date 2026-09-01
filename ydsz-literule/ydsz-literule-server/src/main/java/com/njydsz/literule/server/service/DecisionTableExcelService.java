@@ -8,7 +8,7 @@ import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
  * <p>定义决策表与 Excel（.xlsx）双向转换的标准操作，解耦 server 层与 infra 层 Excel 实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface DecisionTableExcelService {
 

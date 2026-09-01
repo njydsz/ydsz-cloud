@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>提供搜索时的上下文信息（用户、租户、权限等），供 {@code SearchProvider} 构建过滤条件。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

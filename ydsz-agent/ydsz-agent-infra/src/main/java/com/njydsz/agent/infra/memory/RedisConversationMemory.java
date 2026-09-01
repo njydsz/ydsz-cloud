@@ -33,7 +33,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * {@code maxMessages * 2}， 保留一定余量供滑动窗口检索。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisConversationMemory implements ConversationMemory {

@@ -28,7 +28,7 @@ import com.njydsz.message.server.metric.MessageMetrics;
  * <p>ChannelRouter 为 {@code @Component}，由组件扫描自动注册，无需在此 @Bean。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 @EnableConfigurationProperties({MessageProperties.class, ChannelProperties.class})

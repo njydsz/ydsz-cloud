@@ -67,7 +67,7 @@ import com.njydsz.message.server.service.config.RouteRuleService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.config.RouteRuleService 路由规则服务
  * @see com.njydsz.message.domain.entity.config.MsgRouteRule 路由规则实体
  */

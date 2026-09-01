@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端展示审批流配置，描述一条审批流的基础信息及其有序的审批步骤。 与后端 {@code ApprovalFlow} 领域对象一一对应，仅承载展示所需的字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ApprovalFlowVO {

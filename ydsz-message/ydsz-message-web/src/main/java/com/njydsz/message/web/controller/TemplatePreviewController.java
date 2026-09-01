@@ -63,7 +63,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.template.TemplateEngine 模板渲染引擎
  * @see com.njydsz.message.server.template.TemplateVariableValidator 变量校验器
  * @see com.njydsz.message.server.service.template.TemplateService 模板服务

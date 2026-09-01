@@ -79,7 +79,7 @@ import com.njydsz.system.server.service.DictService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DictService 字典类型 Service 接口
  * @see com.njydsz.system.infra.entity.DictType 字典类型实体
  * @see DictItemServiceImpl 字典项 Service 实现（依赖本类创建类型后再挂载字典项）

@@ -8,7 +8,7 @@ import com.lmax.disruptor.EventFactory;
  * <p>预分配 ring buffer 中的所有事件对象，避免运行时 GC。 由 Disruptor 在初始化时调用，创建固定数量的事件实例。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DisruptorLogEventFactory implements EventFactory<DisruptorLogEvent> {
 

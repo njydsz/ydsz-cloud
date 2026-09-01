@@ -18,7 +18,7 @@ import com.njydsz.literule.domain.vo.RuleABRollbackVO;
  * （如基于 MyBatis 的数据库存储）替代默认实现，实现持久化。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DefaultABTestRepository implements ABTestRepository {
 

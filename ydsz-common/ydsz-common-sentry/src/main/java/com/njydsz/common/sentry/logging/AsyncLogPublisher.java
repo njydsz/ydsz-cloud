@@ -27,7 +27,7 @@ import com.njydsz.common.sentry.spi.LogPublisher;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class AsyncLogPublisher implements LogPublisher, AutoCloseable {

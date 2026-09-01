@@ -8,7 +8,7 @@ import com.njydsz.userinfo.domain.alert.SecurityAlert;
  * <p>封装创建并发送安全告警所需的全部参数，避免方法参数数量超限（云顶编码规范 5.4 节）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param alertType 告警类型
  * @param riskLevel 风险等级
  * @param userId 用户 ID

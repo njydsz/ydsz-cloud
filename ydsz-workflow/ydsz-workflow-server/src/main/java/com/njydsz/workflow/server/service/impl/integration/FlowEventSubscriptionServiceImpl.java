@@ -87,7 +87,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowEventSubscriptionService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO 事件订阅值对象
  * @see com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer 流程推进引擎
@@ -278,7 +278,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
    *
    * @param instanceId 流程实例 ID

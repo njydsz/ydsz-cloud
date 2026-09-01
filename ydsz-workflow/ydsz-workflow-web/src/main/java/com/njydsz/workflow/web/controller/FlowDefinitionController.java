@@ -86,7 +86,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * 胖 Service」规范。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowDefinitionService 流程定义服务
  * @see FlowDeployProcessDTO 部署参数 DTO
  */

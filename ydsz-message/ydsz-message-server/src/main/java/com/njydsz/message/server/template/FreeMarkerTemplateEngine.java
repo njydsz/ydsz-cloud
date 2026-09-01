@@ -22,7 +22,7 @@ import com.njydsz.common.exception.custom.SysException;
  * <p>对于仍使用旧语法（{@code {{#if}}} / {@code {{#each}}}）的模板， 回退到 {@link DefaultTemplateEngine} 渲染。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Primary

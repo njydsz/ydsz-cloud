@@ -6,7 +6,7 @@ package com.njydsz.agent.domain.teamrun;
  * <p>定义多 Agent 之间的协作方式。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum TeamRunPattern {
 

@@ -32,7 +32,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * 避免将新任务派发到 DB 连接不健康的节点。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

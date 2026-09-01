@@ -30,7 +30,7 @@ import com.njydsz.userinfo.infra.entity.Post;
  * <p>使用 Spring 注入模式（componentModel = "spring"），替代旧的静态单例 INSTANT 访问方式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper(componentModel = "spring")
 @Component

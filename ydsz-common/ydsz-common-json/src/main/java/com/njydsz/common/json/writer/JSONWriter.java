@@ -37,7 +37,7 @@ import com.njydsz.common.json.number.NumberUtils;
  * {@link #of(Set)} 计算特性标志位。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class JSONWriter {
 
@@ -172,7 +172,7 @@ public final class JSONWriter {
    *
    * @param capacity 初始容量
    * @param features 预计算的 Feature 位掩码（由调用方从 JsonRuntimeConfig 转换）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public JSONWriter(int capacity, long features) {
     this.buf = new char[capacity];
@@ -184,7 +184,7 @@ public final class JSONWriter {
    * 构造函数（使用默认缓冲区大小和预计算特性位）
    *
    * @param features 预计算的 Feature 位掩码
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public JSONWriter(long features) {
     this(DEFAULT_BUF_SIZE, features);
@@ -204,7 +204,7 @@ public final class JSONWriter {
    *
    * @param sb 外部 StringBuilder
    * @param features 预计算的 Feature 位掩码
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public JSONWriter(StringBuilder sb, long features) {
     this.externalSb = sb;
@@ -416,7 +416,7 @@ public final class JSONWriter {
    * 精度丢失。
    *
    * @param value BigDecimal 值
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void writeBigDecimal(BigDecimal value) {
     if (value == null) {
@@ -890,7 +890,7 @@ public final class JSONWriter {
    * 1:1 拷贝， 跳过 String 中间层。
    *
    * @return UTF-8 编码的字节数组
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public byte[] toUtf8Bytes() {
     if (externalSb != null) {

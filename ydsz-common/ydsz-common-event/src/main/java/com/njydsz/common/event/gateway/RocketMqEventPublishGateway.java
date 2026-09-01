@@ -32,8 +32,8 @@ import com.njydsz.common.event.model.OutboxMessage;
  * 4MB，超重自动分包。
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 publishBatch 使用 RocketMQ 原生批量 API，支持自动分包
+ * @since 26.09.01
+ * @since 26.09.01 publishBatch 使用 RocketMQ 原生批量 API，支持自动分包
  */
 public class RocketMqEventPublishGateway implements EventPublishGateway {
 

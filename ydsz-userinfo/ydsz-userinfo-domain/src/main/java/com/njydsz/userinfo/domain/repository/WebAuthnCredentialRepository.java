@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
  * <p>定义 WebAuthn 凭证的持久化操作，遵循 DDD 仓储模式。实现位于 {@code infra} 层。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface WebAuthnCredentialRepository {
 

@@ -79,7 +79,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowAssigneeLeaveHandler 接口定义
  * @see FlowRunTaskVO 运行时任务视图对象
  * @see FlowDelegateAuthVO 长期授权委派视图对象

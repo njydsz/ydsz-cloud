@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于前端配置与展示决策表的结构化定义，包含表头信息、条件列/动作列定义、 行数据（条件→动作映射）及默认动作。决策表以行列方式组织规则，便于业务人员维护。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class DecisionTableDefinitionVO {

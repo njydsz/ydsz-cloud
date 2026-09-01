@@ -60,11 +60,11 @@ import com.njydsz.cronjob.domain.dag.DagNodeStatus;
  *   <li>APPROVAL: star（星形）
  * </ul>
  *
- * <p>P2-E2：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 1.0.0 废弃（反序列化时降级为 TASK），
+ * <p>P2-E2：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 26.09.01 废弃（反序列化时降级为 TASK），
  * 不再输出专用形状，统一按 TASK 渲染，避免前端展示与运行时能力不一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class DagCytoscapeHelper {
 
@@ -165,7 +165,7 @@ public final class DagCytoscapeHelper {
       return "round-rectangle";
     }
     return switch (nodeType.toUpperCase()) {
-      // P2-E2: CONDITION/LOOP/PARALLEL_GATEWAY 已于 1.0.0 废弃（反序列化降级为 TASK），统一矩形渲染
+      // P2-E2: CONDITION/LOOP/PARALLEL_GATEWAY 已于 26.09.01 废弃（反序列化降级为 TASK），统一矩形渲染
       case "SUB_WORKFLOW" -> "barrel";
       case "APPROVAL" -> "star";
       default -> "round-rectangle";

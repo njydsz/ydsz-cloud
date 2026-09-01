@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
  * <p><b>约束：</b>追踪数据只做追加写入，不随规则定义的变更而改写，因此不可用于推断规则当前状态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复

@@ -28,7 +28,7 @@ import com.njydsz.userinfo.domain.social.SocialUserInfo;
  * <p><b>配置要求：</b>需要在企业微信管理后台创建应用，获取 corpid + agentid + secret。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

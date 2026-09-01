@@ -44,7 +44,7 @@ import org.springframework.cglib.beans.BeanCopier;
  * <p>BeanCopier 实例创建后无状态，可安全缓存并发使用； 字段数组缓存为不可变结构，多线程读取安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see org.springframework.cglib.beans.BeanCopier
  * @see org.springframework.beans.BeanUtils
  */

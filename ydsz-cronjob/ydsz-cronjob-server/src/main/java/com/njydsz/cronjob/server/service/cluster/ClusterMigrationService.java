@@ -11,7 +11,7 @@ import com.njydsz.cronjob.domain.dto.job.JobClusterMigrationDTO;
  * <p>负责将任务从当前集群迁移到目标集群，包括调度器注销、远程注册、DB 更新。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ClusterMigrationService {
 

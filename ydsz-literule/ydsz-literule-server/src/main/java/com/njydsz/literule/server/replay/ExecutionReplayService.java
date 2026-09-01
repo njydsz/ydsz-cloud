@@ -56,7 +56,7 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  * <h3>使用示例</h3>
  *
  * <pre>{@code
- * ExecutionReplayService service = new ExecutionReplayService(ruleAdminService, 
+ * ExecutionReplayService service = new ExecutionReplayService(ruleAdminService,
   * traceRecorder, versionRepository, evaluator);
  *
  * // 单条回放
@@ -71,7 +71,7 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class ExecutionReplayService {

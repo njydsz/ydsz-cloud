@@ -13,7 +13,7 @@ import com.njydsz.literule.domain.enums.RuleEnvironment;
  *
  * <p>合并了原 {@code RuleSource} 的 Watch 监听能力，支持配置中心推送变更通知。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface RuleConfigProvider {
@@ -66,7 +66,7 @@ public interface RuleConfigProvider {
    *
    * @param tenantId 租户 ID
    * @return 该租户下启用的规则定义列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default List<RuleDefinitionDTO> loadEnabledRulesByTenant(String tenantId) {
     List<RuleDefinitionDTO> all = loadEnabledRules();
@@ -83,7 +83,7 @@ public interface RuleConfigProvider {
    *
    * @param tenantId 租户 ID
    * @return 该租户下全部规则定义列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default List<RuleDefinitionDTO> loadAllRulesByTenant(String tenantId) {
     List<RuleDefinitionDTO> all = loadAllRules();
@@ -109,7 +109,7 @@ public interface RuleConfigProvider {
    * @param tenantId 租户 ID
    * @param environment 环境标识（dev/staging/prod/default）
    * @return 该租户下匹配环境的启用规则定义列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default List<RuleDefinitionDTO> loadEnabledRulesByEnv(String tenantId, String environment) {
     List<RuleDefinitionDTO> all = loadEnabledRulesByTenant(tenantId);

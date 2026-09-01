@@ -16,7 +16,7 @@ import com.njydsz.common.queue.config.QueueConfiguration;
  * <p>在Spring Boot应用主类上添加此注解，启用多消息中间件适配能力
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see QueueConfiguration
  */
 @Target(ElementType.TYPE)

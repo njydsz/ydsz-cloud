@@ -15,7 +15,7 @@ import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
  * <p>当自研 {@link DynamicRoutingDataSource} 注册后，检查主数据源的连接池状态。 仅读取 HikariPoolMXBean 指标，不获取连接。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DynamicDataSourceHealthIndicator implements HealthIndicator {

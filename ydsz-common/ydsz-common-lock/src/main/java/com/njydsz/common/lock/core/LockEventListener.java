@@ -19,7 +19,7 @@ import com.njydsz.common.lock.annotation.LockType;
  * <p><b>注意：</b>监听器方法必须轻量快速，避免阻塞锁操作主流程。 如需执行耗时操作，请异步处理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface LockEventListener {
 

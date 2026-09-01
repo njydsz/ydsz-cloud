@@ -27,7 +27,7 @@ import com.njydsz.common.auth.service.RolePermissionLoader;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RolePermissionLoader
  * @see RbacPermissionEvaluator
  */

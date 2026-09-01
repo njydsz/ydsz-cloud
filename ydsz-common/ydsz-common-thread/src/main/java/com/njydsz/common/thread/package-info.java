@@ -13,14 +13,14 @@
  *       平台级熔断/重试标准为 Resilience4j
  * </ul>
  *
- * <p><b>1.0.0 变更：</b>
+ * <p><b>26.09.01 变更：</b>
  *
  * <ul>
  *   <li>从 ydsz-common-util 迁入 {@code ExecutorUtils} 编程式线程池工厂
  *   <li>线程池管理能力统一收归本模块，ydsz-common-util 不再提供线程池相关能力
  * </ul>
  *
- * <p><b>1.0.0 变更：</b>
+ * <p><b>26.09.01 变更：</b>
  *
  * <ul>
  *   <li>TimedTaskDecorator 改用不可变包装对象传递时间戳，修复潜在的 threadId 串扰风险
@@ -32,6 +32,6 @@
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 package com.njydsz.common.thread;

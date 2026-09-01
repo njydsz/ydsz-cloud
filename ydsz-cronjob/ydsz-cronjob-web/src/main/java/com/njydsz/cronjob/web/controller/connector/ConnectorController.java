@@ -48,7 +48,7 @@ import com.njydsz.cronjob.server.core.connector.JobConnector;
  * <p>所有连接器由 {@link ConnectorManager} 统一管理，通过类型字符串路由。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Tag(name = "生态连接器", description = "外部调度系统集成：测试连接、导入/导出、查询远程任务")

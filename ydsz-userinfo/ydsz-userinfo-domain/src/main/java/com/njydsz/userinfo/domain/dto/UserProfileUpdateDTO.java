@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>与 {@link com.njydsz.userinfo.domain.dto.UserAccountDTO} 不同，此 DTO 不包含状态、角色等管理字段，仅包含用户可自助修改的基本信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserProfileUpdateDTO implements Serializable {

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * @param reason 封禁原因
  * @param bannedBy 封禁操作者
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record AccountBannedEvent(
     String userId,

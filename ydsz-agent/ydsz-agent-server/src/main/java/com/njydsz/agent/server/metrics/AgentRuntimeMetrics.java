@@ -42,7 +42,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * MetricsCollector} 统一入口。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConditionalOnClass(MeterRegistry.class)
 public class AgentRuntimeMetrics extends SentryMetricsAdapter {

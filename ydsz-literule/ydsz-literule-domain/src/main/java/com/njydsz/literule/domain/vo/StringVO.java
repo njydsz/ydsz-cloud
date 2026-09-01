@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * <p>用于接口返回单个字符串结果（如导出的规则文本、DSL 文本、简单回显等）， 避免直接返回裸 String 导致 JSON 反序列化歧义。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

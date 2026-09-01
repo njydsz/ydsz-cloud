@@ -53,7 +53,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
  *
  * <p>RestTemplate 由 ydsz-common-notify 统一提供，通过构造器注入。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

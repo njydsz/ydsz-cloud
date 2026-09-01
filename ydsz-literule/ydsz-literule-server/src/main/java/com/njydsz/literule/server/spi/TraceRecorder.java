@@ -18,7 +18,7 @@ import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
  *   <li>支持历史 Trace 回放对比
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface TraceRecorder {

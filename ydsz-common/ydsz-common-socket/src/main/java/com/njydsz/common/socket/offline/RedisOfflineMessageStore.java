@@ -24,7 +24,7 @@ import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
  * <p>当 Redis 缓存超过 {@code maxCache} 时，自动丢弃最旧消息（LPUSH + TRIM）， 防止 Redis 内存被离线消息打满。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

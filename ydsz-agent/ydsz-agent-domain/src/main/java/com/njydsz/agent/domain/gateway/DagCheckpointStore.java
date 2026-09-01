@@ -10,7 +10,7 @@ import com.njydsz.agent.domain.agent.DagCheckpoint;
  * <p>定义检查点的持久化契约，解耦编排引擎与存储实现。 支持按执行 ID 加载、保存、删除检查点，用于实现断点续跑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface DagCheckpointStore {
 

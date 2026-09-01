@@ -35,7 +35,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  *
  * <p>{@link #doGetModelOutput} 中抛出的异常会被自动捕获并记录 WARN 日志，返回空 Map， 不会中断其他 provider 的执行。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

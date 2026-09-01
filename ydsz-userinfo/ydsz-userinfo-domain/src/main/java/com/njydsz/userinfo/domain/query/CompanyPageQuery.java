@@ -15,7 +15,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * <p>所有查询条件均为可选，未传则不作为筛选条件。树形结构请使用 {@code GET /api/v1/company/tree}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

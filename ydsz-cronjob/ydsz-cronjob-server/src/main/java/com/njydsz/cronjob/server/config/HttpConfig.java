@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>为 {@code jobType=HTTP} 的任务提供默认 HTTP 客户端参数。 任务级可在 paramsJson 中通过 {@code timeoutMs} 覆盖超时时间。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class HttpConfig {

@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public final class OtelResources {
@@ -158,7 +158,7 @@ public final class OtelResources {
     @Builder.Default private String serviceName = "ydsz-unknown";
 
     /** 服务版本 */
-    @Builder.Default private String serviceVersion = "1.0.0";
+    @Builder.Default private String serviceVersion = "26.09.01";
 
     /** 服务命名空间 */
     @Builder.Default private String serviceNamespace = "ydsz";

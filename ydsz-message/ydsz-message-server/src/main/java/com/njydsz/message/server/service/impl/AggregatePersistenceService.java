@@ -19,7 +19,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
  * <p>原实现中同类 self-invocation 导致事务不生效， 提取到独立 Bean 后 Spring AOP 代理可正常拦截事务边界。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

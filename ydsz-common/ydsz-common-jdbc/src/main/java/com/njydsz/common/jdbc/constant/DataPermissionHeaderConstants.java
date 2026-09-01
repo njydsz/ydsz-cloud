@@ -6,7 +6,7 @@ package com.njydsz.common.jdbc.constant;
  * <p>定义与行级/列级数据权限过滤相关的 HTTP Header 名称常量。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class DataPermissionHeaderConstants {
 

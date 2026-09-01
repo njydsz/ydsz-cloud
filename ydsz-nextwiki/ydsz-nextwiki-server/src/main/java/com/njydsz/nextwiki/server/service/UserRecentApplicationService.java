@@ -24,7 +24,7 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
  * <p>提供用户最近访问记录的管理功能：记录访问、查看最近访问列表、清理记录。 每用户最多保留 100 条最近访问记录，超出自动清理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

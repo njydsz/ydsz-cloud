@@ -8,7 +8,7 @@ import java.util.List;
  * <p>实现 OpenID Connect Discovery 1.0 规范中的 Provider Configuration Response。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param issuer                                  签发者标识
  * @param authorizationEndpoint                   授权端点 URL
  * @param tokenEndpoint                           令牌端点 URL
@@ -25,7 +25,7 @@ import java.util.List;
  * @param idTokenSigningAlgValuesSupported        签名 ID Token 的算法列表
  * @param claimsSupported                         支持的声明（claim）列表
  */
-public record OidcDiscoveryEndpoint(
+public record OidcDiscoveryEndpointVO(
     String issuer,
     String authorizationEndpoint,
     String tokenEndpoint,

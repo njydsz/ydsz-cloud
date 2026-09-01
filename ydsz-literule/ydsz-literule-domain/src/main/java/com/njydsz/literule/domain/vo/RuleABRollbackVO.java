@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回灰度发布回滚操作的完整记录，包含触发原因、 回滚时的错误率和样本量、操作人及通知状态，支撑灰度回滚审计追溯。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleABRollbackVO implements Serializable {

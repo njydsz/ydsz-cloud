@@ -33,7 +33,7 @@ import com.njydsz.message.domain.dto.TemplateCanaryDTO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see TemplateCanaryDTO
  * @see com.njydsz.message.domain.vo.MsgCanaryVO
  */

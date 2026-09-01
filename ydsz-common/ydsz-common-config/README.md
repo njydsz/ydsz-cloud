@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供 Jasypt 加密增强（健康检查 / CLI 工具）+ 配置变更监听桥接 + JSON 配置合并工具 |
 | **依赖** | common-core、common-json（透传）；可选依赖 jasypt-spring-boot-starter、spring-cloud-context、spring-boot-health |
-| **版本** | 1.0.0 |
+| **版本** | 26.09.01 |
 
 ## 核心能力
 
@@ -384,4 +384,4 @@ public class FeatureFlagListener implements ConfigChangeListener {
 
 ## 变更记录
 
-- **1.0.0**（2026-08-02）：补全接入方式、配置项表、使用示例、SPI 扩展点、健康检查、注意事项章节；完善配置变更桥接工作原理、加密健康检查暴露字段、CLI 工具默认参数、JSON 合并规则等核心能力描述
+- **26.09.01**（2026-08-02）：补全接入方式、配置项表、使用示例、SPI 扩展点、健康检查、注意事项章节；完善配置变更桥接工作原理、加密健康检查暴露字段、CLI 工具默认参数、JSON 合并规则等核心能力描述

@@ -83,7 +83,7 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
  * 的 token 携带了 redirectUri 等客户端上下文。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.server.config.UserInfoProperties OAuth2 客户端配置
  * @see com.njydsz.userinfo.web.controller.AuthController 普通登录（账号密码模式）
  */

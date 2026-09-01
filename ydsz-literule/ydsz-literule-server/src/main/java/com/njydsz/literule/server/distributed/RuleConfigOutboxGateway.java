@@ -30,7 +30,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  *   <li>广播失败返回 false，触发 Outbox 指数退避重试，直至达到 maxRetries
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class RuleConfigOutboxGateway implements EventPublishGateway {

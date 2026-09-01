@@ -60,7 +60,7 @@ import com.njydsz.common.search.sync.SearchIndexEventBridge;
  * <p>通过 {@code ydsz.search.*} 配置主引擎选择、缓存、降级策略等。 默认使用 PostgreSQL tsvector 引擎，不可用时自动降级到内存引擎。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @AutoConfiguration

@@ -12,7 +12,7 @@ import java.util.UUID;
  * <p><b>线程安全</b>：全字段 final 不可变值对象，可安全跨线程共享。由 {@link #withExecutionId(String)} 生成变体（而非修改原对象）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class AgentExecutionContext implements Serializable {
 

@@ -32,7 +32,7 @@ import org.springframework.util.unit.DataSize;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.web.multipart")

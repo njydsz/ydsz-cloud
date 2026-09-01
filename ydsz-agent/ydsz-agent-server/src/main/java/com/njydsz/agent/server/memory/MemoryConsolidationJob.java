@@ -18,7 +18,7 @@ import com.njydsz.agent.server.config.AgentProperties;
  * "待整合对话队列"来实现。预留 batchConsolidate 调用接口。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

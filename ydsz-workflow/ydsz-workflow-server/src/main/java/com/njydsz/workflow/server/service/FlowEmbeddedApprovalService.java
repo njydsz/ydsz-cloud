@@ -9,7 +9,7 @@ import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
  * <p>在业务系统以 iframe/WebComponent 嵌入审批。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowEmbeddedApprovalService {
 

@@ -20,7 +20,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
  *   <li>600: Pagination（分页）
  * </ul>
  *
- * <p><b>注意：</b>逻辑删除（LogicalDelete）自 1.0.0 起已迁移至 MP 原生 {@code @TableLogic} 注解， 不再占用拦截器链节点。
+ * <p><b>注意：</b>逻辑删除（LogicalDelete）自 26.09.01 起已迁移至 MP 原生 {@code @TableLogic} 注解， 不再占用拦截器链节点。
  *
  * <p>外部模块只需在 classpath 提供此接口的实现，并通过 Spring {@code @Bean} 或 {@code @Component} 注册，{@code
  * MybatisPlusConfiguration} 将自动收集并按 {@link #getOrder()} 排序后注入拦截器链。
@@ -48,7 +48,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface InnerInterceptorProvider {
 

@@ -45,7 +45,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  *
  * <p>{@code HIGHEST_PRECEDENCE}，最早执行，确保所有下游请求都携带 trace context。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

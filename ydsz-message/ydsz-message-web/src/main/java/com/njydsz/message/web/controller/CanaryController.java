@@ -33,7 +33,7 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
  * <p><b>安全特性：</b>写接口通过 {@code @AuthApiPermission} 校验 {@code MESSAGE_TEMPLATE_EDIT} 权限码， 与模板操作同级权限。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CanaryExperimentService 灰度实验服务
  */
 @Tag(name = "灰度实验", description = "消息模板 A/B 对照实验管理")

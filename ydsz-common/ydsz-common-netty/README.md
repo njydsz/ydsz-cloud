@@ -59,7 +59,7 @@
 | `ChannelEventListener` | Channel 事件监听器 SPI 接口，业务侧实现订阅 Channel 生命周期事件 |
 | `NettyPipelineDiagnostics` | Pipeline 诊断工具，运行时打印 Handler 链结构与事件传播路径，辅助排查 Handler 顺序问题 |
 
-> 说明：`@MessageHandler` 注解 / `MessageDispatcher` 分发器已在 1.0.0 **移除**（1.0.0 起标注 Deprecated，无活跃消费者）。消息处理统一使用 `SimpleChannelInboundHandler` 推荐模式。
+> 说明：`@MessageHandler` 注解 / `MessageDispatcher` 分发器已在 26.09.01 **移除**（26.09.01 起标注 Deprecated，无活跃消费者）。消息处理统一使用 `SimpleChannelInboundHandler` 推荐模式。
 
 ### 5. SSL/TLS
 
@@ -404,6 +404,6 @@ ydsz:
 
 ## 变更记录
 
-- **1.0.0**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 1.0.0 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式；新增 `allocator`（ByteBuf 分配器）、`connection-control`（连接数限制）配置段；新增 `ConnectionLimitHandler`、`ConnectionMetrics`、`NettyPipelineDiagnostics`、`NettyActuatorEndpoint`；provided 依赖 `micrometer-core` 改为通过 `@ConditionalOnClass` 可选装配
-- **1.0.0**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 1.0.0 移除）
-- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README
+- **26.09.01**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 26.09.01 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式；新增 `allocator`（ByteBuf 分配器）、`connection-control`（连接数限制）配置段；新增 `ConnectionLimitHandler`、`ConnectionMetrics`、`NettyPipelineDiagnostics`、`NettyActuatorEndpoint`；provided 依赖 `micrometer-core` 改为通过 `@ConditionalOnClass` 可选装配
+- **26.09.01**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 26.09.01 移除）
+- **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README

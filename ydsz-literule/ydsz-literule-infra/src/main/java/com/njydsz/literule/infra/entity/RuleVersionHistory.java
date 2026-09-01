@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * <p>映射 ydsz_rule_version_history 表，存储规则变更的版本快照。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @SuperBuilder

@@ -16,7 +16,7 @@ import lombok.Data;
  * 审计字段、运行时统计与调度器字段，避免表结构泄露与越权写入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "DAG 工作流表单")

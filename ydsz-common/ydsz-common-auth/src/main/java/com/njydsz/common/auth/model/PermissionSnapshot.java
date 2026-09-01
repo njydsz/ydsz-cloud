@@ -25,7 +25,7 @@ import java.util.Set;
  * <p><b>构造方式：</b>使用 {@link Builder} 或 {@link #of} 工厂方法创建。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RolePermissions
  * @see Builder
  */

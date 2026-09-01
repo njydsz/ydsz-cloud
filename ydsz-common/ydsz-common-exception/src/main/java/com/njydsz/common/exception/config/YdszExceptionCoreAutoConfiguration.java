@@ -49,7 +49,7 @@ import com.njydsz.common.exception.registry.ExceptionCodeScanner;
  * <p>所有 Web/Actuator 相关能力均通过 {@code @ConditionalOnClass} 条件加载， 保证在纯后端（无 Web 容器）场景下也能使用异常模块的核心功能。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @AutoConfiguration

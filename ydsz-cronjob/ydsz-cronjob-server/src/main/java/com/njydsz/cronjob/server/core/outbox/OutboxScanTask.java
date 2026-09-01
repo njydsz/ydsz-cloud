@@ -19,7 +19,7 @@ import com.njydsz.cronjob.server.core.maintenance.ScanTask;
  * <p>扫描间隔配置化，避免硬编码，支持不同 SLA 场景灵活调整。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

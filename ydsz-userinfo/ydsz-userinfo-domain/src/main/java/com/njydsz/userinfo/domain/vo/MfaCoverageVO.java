@@ -12,7 +12,7 @@ package com.njydsz.userinfo.domain.vo;
  * @param coverageRate MFA 覆盖率（0.0-1.0）
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record MfaCoverageVO(
     long totalUsers,

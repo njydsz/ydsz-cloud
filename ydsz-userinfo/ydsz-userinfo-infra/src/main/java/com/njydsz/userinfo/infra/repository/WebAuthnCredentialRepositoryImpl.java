@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.mapper.WebAuthnCredentialMapper;
  * P1-2: 升级为 Spring 注入模式，提升可测试性。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Repository

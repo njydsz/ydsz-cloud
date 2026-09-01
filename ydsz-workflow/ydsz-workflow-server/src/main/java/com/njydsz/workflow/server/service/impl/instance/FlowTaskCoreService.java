@@ -47,7 +47,7 @@ import com.njydsz.workflow.server.service.impl.CountersignStrategyFactory;
 /**
  * 任务核心操作服务（由 FlowTaskPassService + FlowTaskRejectService + FlowTaskCompleteServiceImpl 合并）
  *
-  * <p>工作流引擎中任务核心操作的统一入口，承担任务创建、签收、通过、驳回、转办、委派的职责。 是从原 {@code FlowTaskCompleteServiceImpl}（门面） + {@code 
+  * <p>工作流引擎中任务核心操作的统一入口，承担任务创建、签收、通过、驳回、转办、委派的职责。 是从原 {@code FlowTaskCompleteServiceImpl}（门面） + {@code
   * FlowTaskPassService}（通过） + {@code FlowTaskRejectService}
  * （驳回）合并的产物，合并后消除了子服务之间的委托调用链，直接内联核心逻辑。
  *
@@ -79,7 +79,7 @@ import com.njydsz.workflow.server.service.impl.CountersignStrategyFactory;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowTaskServiceImpl 任务门面（上层委托入口）
  * @see FlowRunTaskVO 运行时任务视图对象
  * @see FlowNodeVO 流程节点视图对象
@@ -808,7 +808,7 @@ public class FlowTaskCoreService {
 
   /**
    * P0-1 修复: 退回到发起人 — 解析 startNode 下游第一个审批节点作为退回目标。
-   * 
+   *
    * <p>原实现直接返回 startNode.getNodeCode()（开始节点本身）， 导致退回后不会生成有意义的待办任务。修正为沿 PASS 出边找到 第一个 APPROVAL
    * 类型节点，找不到时回退到开始节点。
    *

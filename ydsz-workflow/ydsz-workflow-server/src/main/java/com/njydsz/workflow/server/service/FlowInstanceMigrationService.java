@@ -12,7 +12,7 @@ import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
  * <p>旧版本实例迁移到新版本流程。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowInstanceMigrationService {
 

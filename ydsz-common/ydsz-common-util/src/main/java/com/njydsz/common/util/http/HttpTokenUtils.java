@@ -22,7 +22,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>若 Token 以 "{@code ydsz}" 开头（如 {@code ydsz eyJhbG...}）， 自动剥离前缀并返回仅包含 Token 部分的内容。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class HttpTokenUtils {
 

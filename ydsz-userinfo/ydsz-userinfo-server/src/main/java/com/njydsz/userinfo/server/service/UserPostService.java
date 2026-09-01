@@ -28,7 +28,7 @@ import com.njydsz.userinfo.domain.vo.UserPostVO;
  * Exception.class)}，确保任一异常触发完整回滚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface UserPostService {
 

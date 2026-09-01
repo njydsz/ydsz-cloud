@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  * <p><b>性能优化：</b>使用 {@code ConcurrentHashMap} 缓存反射 Method/Field 对象，避免重复的
  * {@code getMethod()} / {@code getDeclaredField()} 调用（高频调用路径上反射开销显著）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

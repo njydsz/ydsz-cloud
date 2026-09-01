@@ -28,7 +28,7 @@ import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
  * <p><b>可视化数据：</b>{@link #getVisualization} 返回包含 DAG 拓扑结构、各节点实时状态、 耗时、错误信息的 VO,前端可直接渲染为甘特图/流程图。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.cronjob.domain.vo.JobDagInstanceVO DAG 实例视图对象
  * @see com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO DAG 节点实例视图对象
  * @see JobDagService DAG 定义 Service

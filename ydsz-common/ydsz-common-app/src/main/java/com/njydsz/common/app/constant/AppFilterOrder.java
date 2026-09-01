@@ -8,7 +8,7 @@ import org.springframework.core.Ordered;
  * <p>Servlet Filter 使用 {@link Ordered#HIGHEST_PRECEDENCE} 为基准的整数体系， 数值越小优先级越高（最先执行）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class AppFilterOrder {
 

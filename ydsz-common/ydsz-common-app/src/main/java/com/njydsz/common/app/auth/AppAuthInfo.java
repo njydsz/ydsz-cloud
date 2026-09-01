@@ -13,7 +13,7 @@ import com.njydsz.common.base.auth.BaseAuthInfo;
  * <p><b>线程安全性：</b>依赖于 {@link com.njydsz.common.core.context.RequestContext} 的线程局部变量，实例本身不共享。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.core.context.RequestContext
  */
 public class AppAuthInfo extends BaseAuthInfo {

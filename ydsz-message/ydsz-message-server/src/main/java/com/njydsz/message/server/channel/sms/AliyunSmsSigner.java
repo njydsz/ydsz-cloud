@@ -9,7 +9,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * 阿里云 SMS Common RPC 1.0.0 签名工具。
+ * 阿里云 SMS Common RPC 26.09.01 签名工具。
  *
  * <p>实现阿里云 {@code HMAC-SHA1} 签名算法，纯静态方法，可独立单元测试。 签名步骤：
  *
@@ -22,7 +22,7 @@ import javax.crypto.spec.SecretKeySpec;
  * <p>零外部 SDK 依赖，仅用 JDK 标准库，符合自研轻量化风格。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class AliyunSmsSigner {
 

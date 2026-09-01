@@ -8,7 +8,7 @@ import com.njydsz.userinfo.domain.enums.DeviceType;
  * <p>封装构建会话 Hash 数据所需的全部字段，避免方法参数数量超限（云顶编码规范 5.4 节）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param userId 用户 ID
  * @param username 用户名
  * @param roleCodes 角色编码（逗号分隔）

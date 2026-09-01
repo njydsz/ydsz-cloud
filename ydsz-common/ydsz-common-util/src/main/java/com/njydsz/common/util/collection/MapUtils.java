@@ -37,7 +37,7 @@ import com.njydsz.common.util.bean.BeanMapper;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class MapUtils {
 
@@ -271,7 +271,7 @@ public final class MapUtils {
    * @param targetClass 目标类型
    * @param <T> 目标类型泛型
    * @return 转换后的对象；source 为 null 时返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toBean(Map<String, Object> source, Class<T> targetClass) {
     return BeanMapper.toBean(source, targetClass);
@@ -291,7 +291,7 @@ public final class MapUtils {
    * @param typeRef 泛型类型引用
    * @param <T> 目标类型泛型
    * @return 转换后的对象
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toBean(Object source, BeanMapper.TypeReference<T> typeRef) {
     return BeanMapper.toBean(source, typeRef);
@@ -306,7 +306,7 @@ public final class MapUtils {
    * @param clazz 目标类型（Record 或 POJO）
    * @param <T> 目标类型泛型
    * @return 填充后的实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toBeanOrRecord(Map<String, Object> map, Class<T> clazz) {
     return BeanMapper.toBeanOrRecord(map, clazz);
@@ -321,7 +321,7 @@ public final class MapUtils {
    *
    * @param snake 下划线命名字符串
    * @return 驼峰命名字符串；入参为 null 时返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String snakeToCamel(String snake) {
     if (snake == null || snake.isEmpty()) {
@@ -350,7 +350,7 @@ public final class MapUtils {
    *
    * @param camel 驼峰命名字符串
    * @return 下划线命名字符串（小写）；入参为 null 时返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String camelToSnake(String camel) {
     if (camel == null || camel.isEmpty()) {

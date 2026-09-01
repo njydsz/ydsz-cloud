@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * <p><b>降级策略：</b>当 {@code LockStrategy} Bean 不存在（单节点/测试环境未装配 ydsz-common-lock）时， 直接执行任务不做加锁，保证功能可用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

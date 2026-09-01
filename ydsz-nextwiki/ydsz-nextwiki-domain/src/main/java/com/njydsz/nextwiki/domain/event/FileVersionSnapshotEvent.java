@@ -17,7 +17,7 @@ import org.springframework.context.ApplicationEvent;
  * <p><b>发布时机：</b>由 {@code FileApplicationService} 在文件上传/秒传成功后、事务提交前发布。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class FileVersionSnapshotEvent extends ApplicationEvent {
 

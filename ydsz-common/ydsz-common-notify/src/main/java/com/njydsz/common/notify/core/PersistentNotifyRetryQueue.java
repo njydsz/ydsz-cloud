@@ -29,7 +29,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  * <p>Redis 操作异常后，进入降级模式使用内存队列。定时（30s）探测 Redis 恢复， 恢复后将内存队列中的消息刷回 Redis。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see NotifyRetryQueue
  * @see InMemoryDeadLetterHandler
  */
@@ -403,7 +403,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
      * <p>持有通知要素（渠道/接收人/标题/内容）与重试进度（当前重试次数、 最近一次错误、下次重试时间）；下次重试时间由指数退避算法在失败时计算。
      *
      * @author ydsz-team
-     * @since 1.0.0
+     * @since 26.09.01
      */
     private static class RetryEntry {
       private final NotifyChannel channel;

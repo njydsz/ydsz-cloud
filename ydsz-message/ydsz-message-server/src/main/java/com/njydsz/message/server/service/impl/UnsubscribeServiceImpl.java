@@ -33,7 +33,7 @@ import com.njydsz.message.server.token.UnsubscribeTokenUtil;
  * <p>退订记录作为通知偏好的「强约束」覆盖，发送前自动过滤。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

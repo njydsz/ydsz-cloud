@@ -61,7 +61,7 @@ import com.njydsz.system.server.service.DictItemService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DictController 字典类型 Controller（字典两级体系上层）
  * @see DictVersionController 字典版本 Controller（变更历史与回滚）
  */

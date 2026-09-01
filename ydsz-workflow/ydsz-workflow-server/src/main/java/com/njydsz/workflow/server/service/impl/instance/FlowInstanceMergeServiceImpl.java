@@ -85,7 +85,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowInstanceMergeService 接口定义
  * @see com.njydsz.common.redis.service.ops.RedisHashOps Redis Hash 操作
  * @see FlowTaskService 流程任务服务
@@ -122,9 +122,9 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>校验所有实例存在、状态为 RUNNING 且 flowCode 相同，生成合并组 ID 并存入 Redis。
-   * 
+   *
    *
    * @param instanceIds 待合并的实例 ID 列表（≥2 个）
    * @param operatorId 操作人 ID
@@ -197,7 +197,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>符合 DDD 分层规范：Service 层内部完成 String→StringVO 转换。
    *
    * @param instanceIds 待合并的实例 ID 列表

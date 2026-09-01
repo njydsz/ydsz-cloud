@@ -41,7 +41,7 @@ import lombok.Getter;
  * <p>所有错误响应的 {@code message} 字段使用 i18n 键（如 {@code error.TOKEN_INVALID}）， 前端根据 {@code
  * Accept-Language} 头或用户设置的语言环境翻译。 后端不负责翻译，仅提供统一键名。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  * @see <a href="https://docs.njydsz.com/errors">错误码文档</a>
  */

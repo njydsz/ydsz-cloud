@@ -32,7 +32,7 @@ import java.util.Map;
  * false（保守方向：宁可当普通数字，不误转日期）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SuperFastExcelReader
  * @see SheetXmlReader
  */

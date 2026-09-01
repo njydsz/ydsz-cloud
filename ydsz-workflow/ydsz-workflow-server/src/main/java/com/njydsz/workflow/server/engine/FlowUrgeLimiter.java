@@ -28,7 +28,7 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
  *   <li>RedisRateLimiter 不可用时降级放行（ObjectProvider 可选注入）
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
  * @param <K> 键类型
  * @param <V> 值类型
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FunctionalInterface
 public interface AsyncFunction<K, V> {

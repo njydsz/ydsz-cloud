@@ -13,7 +13,7 @@ import com.njydsz.common.docs.enums.SecurityLevel;
  * <p>文档安全扫描的完整输出，包含安全等级和风险项列表。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

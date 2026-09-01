@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>继承传播：</b>文件夹的 ACL 自动继承给子节点，除非子节点有显式 ACL 覆盖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

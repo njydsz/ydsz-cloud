@@ -23,7 +23,7 @@ import com.njydsz.common.util.string.StringUtils;
  * Token。但作为纵深防御措施仍建议启用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class CsrfTokenValidator {
 

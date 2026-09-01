@@ -45,7 +45,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * COMMENT '源节点编码';} 并建索引 {@code idx_source_node (source_node_code)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowNode 流程节点
  * @see FlowDefinition 流程定义
  * @see com.njydsz.workflow.domain.enums.FlowSkipType 跳转类型枚举

@@ -25,7 +25,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
  * 压测走 dry-run 通道：不发布事件、不记录统计、不影响线上指标。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RuleStressTestService {

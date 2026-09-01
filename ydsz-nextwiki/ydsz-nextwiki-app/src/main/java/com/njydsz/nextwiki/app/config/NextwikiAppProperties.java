@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * （如推送、离线缓存、分页大小等）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConfigurationProperties(prefix = "nextwiki.app")
 public class NextwikiAppProperties {

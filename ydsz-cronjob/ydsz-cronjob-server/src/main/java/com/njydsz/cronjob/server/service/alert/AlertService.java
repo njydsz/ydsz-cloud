@@ -28,7 +28,7 @@ import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
  * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see JobService 任务 Service(执行后由告警调度器评估规则)
  */
 public interface AlertService {

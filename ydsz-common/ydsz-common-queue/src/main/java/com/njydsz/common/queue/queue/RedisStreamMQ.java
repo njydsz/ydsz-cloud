@@ -20,7 +20,7 @@ import com.njydsz.common.queue.service.impl.RedisStreamSubscriber;
  * <p><b>连接复用：</b>通过 RedisTemplate 复用 ydsz-common-redis 的连接。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisStreamMQ extends AbstractMessageQueue {

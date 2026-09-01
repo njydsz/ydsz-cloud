@@ -512,7 +512,7 @@ COMMENT ON TABLE ydsz_rule_pack IS '规则集（知识包）表';
 COMMENT ON COLUMN ydsz_rule_pack.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_rule_pack.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_rule_pack.pack_code IS '规则集编码（全局唯一，用于版本间关联）';
-COMMENT ON COLUMN ydsz_rule_pack.pack_version IS '规则集版本号（如 1.0.0）';
+COMMENT ON COLUMN ydsz_rule_pack.pack_version IS '规则集版本号（如 26.09.01）';
 COMMENT ON COLUMN ydsz_rule_pack.pack_name IS '规则集名称';
 COMMENT ON COLUMN ydsz_rule_pack.industry IS '所属行业（FINANCE / MANUFACTURING / HEALTHCARE）';
 COMMENT ON COLUMN ydsz_rule_pack.tags IS '标签（JSON 数组，如 ["风控", "审批"]）';

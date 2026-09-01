@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>用于前端实时预览某条表达式在给定事实下的求值结果， 包含求值结果值、类型、布尔判定及耗时，便于调试表达式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ExpressionPreviewResultVO {

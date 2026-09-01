@@ -43,7 +43,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
  * 空办理人兜底等多重职责，本次拆分将服务节点执行逻辑抽出为独立服务，使各职责边界更清晰。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService 任务创建服务（调用方）
  * @see FlowServiceNodeExecutor 服务节点执行器
  * @see FlowEventSubscriptionService 事件订阅服务

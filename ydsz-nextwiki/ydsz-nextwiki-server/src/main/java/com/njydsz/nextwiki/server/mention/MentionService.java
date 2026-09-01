@@ -46,7 +46,7 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
  * <p><b>降级策略：</b>WebSocket 模块未引入时静默降级，不影响评论正常提交。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

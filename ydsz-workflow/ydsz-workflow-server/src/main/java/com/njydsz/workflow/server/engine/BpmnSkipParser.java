@@ -18,7 +18,7 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
  * <p>负责将 BPMN 2.0 XML 中的 {@code <sequenceFlow>} 元素解析为 {@link FlowSkipVO} 数据对象。
  * 处理源/目标节点引用、条件表达式、扩展属性等。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

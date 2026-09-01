@@ -47,7 +47,7 @@ import com.njydsz.system.server.util.SystemVersionUtils;
  * <p><b>SQL 优化效果：</b>500 条数据从原来的 2000+ SQL 降低到 ~7 SQL（1 次唯一性校验 + 每组 1 次快照 + 1 次批量插入 + 每组 1 次缓存失效）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

@@ -17,7 +17,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  * <p><b>统一上下文：</b>traceId 读写统一收口至 {@link RequestContext}（统一上下文主源）， MDC 仅作为日志桥接双写，保证业务代码与日志链路一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class NotifyTraceContext {
 

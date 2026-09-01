@@ -24,7 +24,7 @@ import com.njydsz.message.infra.entity.MsgAggregate;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.entity.batch.MsgAggregate 聚合批次实体
  * @see com.njydsz.message.server.service.MsgAggregateService 聚合批次 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

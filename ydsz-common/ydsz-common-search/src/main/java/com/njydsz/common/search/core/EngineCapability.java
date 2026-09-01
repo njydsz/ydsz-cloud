@@ -13,7 +13,7 @@ package com.njydsz.common.search.core;
  * @param supportsSuggest 是否支持搜索建议
  * @param supportsIndexing 是否支持显式索引操作（false = 无需显式索引，如 RediSearch）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record EngineCapability(
     boolean supportsFullText,

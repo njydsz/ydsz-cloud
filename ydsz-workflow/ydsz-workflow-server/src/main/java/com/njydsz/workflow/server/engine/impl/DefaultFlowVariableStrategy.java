@@ -58,7 +58,7 @@ import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
  *   <li>若 Aviator 不可用（classpath 中无 aviator 依赖），直接使用内置正则解析器降级求值
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

@@ -25,7 +25,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * <p>TTL：抑制窗口时间
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

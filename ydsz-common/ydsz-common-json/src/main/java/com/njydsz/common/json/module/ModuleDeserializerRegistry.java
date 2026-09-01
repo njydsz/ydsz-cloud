@@ -12,7 +12,7 @@ import com.njydsz.common.json.deserializer.JsonDeserializer;
  * <p>用于在模块中注册自定义反序列化器，提供类型安全的注册接口。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class ModuleDeserializerRegistry {
 

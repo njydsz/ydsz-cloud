@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

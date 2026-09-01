@@ -58,7 +58,7 @@ import com.njydsz.system.server.service.AppInfoService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AppInfoService 应用注册业务逻辑
  */
 @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")

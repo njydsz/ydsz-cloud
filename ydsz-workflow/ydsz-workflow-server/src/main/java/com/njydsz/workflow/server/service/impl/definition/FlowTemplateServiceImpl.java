@@ -98,7 +98,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
  * <p><b>版本模型：</b>模板与流程定义均支持多版本并存，模板版本独立于流程定义版本—— 同一模板可在多次导出后累积多个版本，业务方按需选择部署任一版本。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowTemplateService 接口定义
  * @see FlowTemplateVO 模板值对象（含版本与继承字段）
  * @see FlowDefinitionService 流程定义服务（模板导入时调用 deploy）
@@ -439,7 +439,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         template.setSortOrder(DEFAULT_SORT_ORDER);
         // P2-9: 版本化字段
         template.setVersion(1);
-        template.setVersionLabel("1.0.0");
+        template.setVersionLabel("26.09.01");
         template.setInheritType("STANDALONE");
         template.setIsLatest(1);
         templateRepository.save(template);
@@ -760,7 +760,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       // P2-9: 继承关系字段
       newTemplate.setParentTemplateId(source.getId());
       newTemplate.setVersion(1);
-      newTemplate.setVersionLabel("1.0.0");
+      newTemplate.setVersionLabel("26.09.01");
       newTemplate.setInheritType(inheritType);
       newTemplate.setIsLatest(1);
       templateRepository.save(newTemplate);

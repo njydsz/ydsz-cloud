@@ -46,7 +46,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * tenant_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserRole 用户-角色中间表
  * @see RolePermission 角色-权限中间表
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller

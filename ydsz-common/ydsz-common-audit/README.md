@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 为所有业务服务提供操作审计、合规追踪、审计轨迹记录能力（AOP + 异步批写 + 分表 + 差异计算） |
 | **依赖** | common-core、common-util、common-exception、common-json；可选依赖 spring-jdbc、micrometer-core、spring-boot-actuator、spring-boot-health、spring-webmvc |
-| **版本** | 1.0.0 |
+| **版本** | 26.09.01 |
 
 ## 核心能力
 
@@ -335,5 +335,5 @@ eventPublisher.publishEvent(
 
 ## 变更记录
 
-- **1.0.0**（2026-08-17）：补全 `GatewayAuditEventBridge`（网关审计事件桥接器）、`AuditWriteException` 文档；澄清差异计算类属于 `ydsz-common-util` 包
-- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 10 项核心能力、3 个配置分组、4 个 SPI 接口、1 个 HealthIndicator。
+- **26.09.01**（2026-08-17）：补全 `GatewayAuditEventBridge`（网关审计事件桥接器）、`AuditWriteException` 文档；澄清差异计算类属于 `ydsz-common-util` 包
+- **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 10 项核心能力、3 个配置分组、4 个 SPI 接口、1 个 HealthIndicator。

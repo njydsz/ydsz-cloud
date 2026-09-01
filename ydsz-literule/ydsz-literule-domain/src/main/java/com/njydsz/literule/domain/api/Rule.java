@@ -8,7 +8,7 @@ import com.njydsz.common.core.constant.SystemConstants;
  * <p>所有规则（Java 编码规则 / 表达式规则 / 数据库配置规则）均实现此接口。 引擎遍历已注册规则，调用 {@link #evaluate(RuleContextVO)} 进行评估。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface Rule {
 
@@ -52,7 +52,7 @@ public interface Rule {
    * scenario 匹配的规则。 默认返回 null 表示适用于全部场景。
    *
    * @return 作用域；null 表示适用于全部场景
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default String getScope() {
     return null;
@@ -64,7 +64,7 @@ public interface Rule {
    * <p>默认返回 null，表示该规则为编码规则（无动态 RuleDefinitionDTO）。 表达式规则 / 决策表规则应覆盖此方法返回原始定义。
    *
    * @return 规则定义；null 表示编码规则
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default RuleDefinitionDTO getRuleDefinition() {
     return null;
@@ -78,7 +78,7 @@ public interface Rule {
    * <p>典型场景：同一业务维度配置多条不同阈值的规则，仅希望最严重的那个生效。 例如：金额>1000（RED）与 金额>500（YELLOW）归属同一互斥组，避免重复告警。
    *
    * @return 互斥组名称；null 或空串表示无互斥组
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default String getMutexGroup() {
     return null;
@@ -95,7 +95,7 @@ public interface Rule {
    * {@link com.njydsz.literule.server.impl.ExpressionRule} 等基于 {@link RuleDefinitionDTO} 的规则会覆写此方法返回定义中的 tenantId。
    *
    * @return 租户 ID；默认 "0"
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default String getTenantId() {
     return SystemConstants.DEFAULT_TENANT_ID;
@@ -117,7 +117,7 @@ public interface Rule {
    * environment。
    *
    * @return 环境标识；默认 "default"
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default String getEnvironment() {
     return RuleEnvironment.DEFAULT;

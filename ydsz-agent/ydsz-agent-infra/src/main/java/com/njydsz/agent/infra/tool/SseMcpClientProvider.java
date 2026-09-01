@@ -29,7 +29,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p><b>线程安全</b>：{@link HttpClient} 与 {@link ConcurrentHashMap} 均线程安全，可并发调用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SseMcpClientProvider implements McpClientProvider {

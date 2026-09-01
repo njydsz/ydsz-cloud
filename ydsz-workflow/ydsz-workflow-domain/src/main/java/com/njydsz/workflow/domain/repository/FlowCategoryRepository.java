@@ -21,14 +21,14 @@ import com.njydsz.workflow.domain.vo.FlowCategoryVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowCategoryRepository {
 
   /**
    * 保存流程分类（新增）。
    *
-   * <p><b>合规说明（1.0.0 DDD 分层规范）：</b>CUD 入参使用 {@link FlowCategoryDTO}（dto/ 包），
+   * <p><b>合规说明（26.09.01 DDD 分层规范）：</b>CUD 入参使用 {@link FlowCategoryDTO}（dto/ 包），
    * 符合 §34.2.1（dto/ 命令请求参数 以 DTO 结尾）。
    *
    * @param dto 流程分类命令 DTO
@@ -78,7 +78,7 @@ public interface FlowCategoryRepository {
   /**
    * 更新流程分类。
    *
-   * <p><b>合规说明（1.0.0 DDD 分层规范）：</b>CUD 入参使用 {@link FlowCategoryDTO}（dto/ 包）。
+   * <p><b>合规说明（26.09.01 DDD 分层规范）：</b>CUD 入参使用 {@link FlowCategoryDTO}（dto/ 包）。
    *
    * @param dto 流程分类命令 DTO（含 id）
    * @return 更新后的流程分类 VO

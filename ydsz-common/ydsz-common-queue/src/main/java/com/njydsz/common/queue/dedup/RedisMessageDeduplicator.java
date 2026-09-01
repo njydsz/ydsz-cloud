@@ -10,7 +10,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>使用 Redis 的 SETNX 命令实现原子性去重判断，配合 TTL 自动过期清理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MessageDeduplicator
  */
 public class RedisMessageDeduplicator {

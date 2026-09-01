@@ -11,7 +11,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * 审批常用语 DTO
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "审批常用语")

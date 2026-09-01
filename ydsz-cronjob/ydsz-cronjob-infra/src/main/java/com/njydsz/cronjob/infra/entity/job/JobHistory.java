@@ -22,7 +22,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * 同时保留当前任务的统计字段（触发次数等），并产生新的历史版本。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

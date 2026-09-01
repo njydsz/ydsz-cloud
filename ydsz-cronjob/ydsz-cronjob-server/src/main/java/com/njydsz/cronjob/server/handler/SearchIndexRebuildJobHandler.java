@@ -46,7 +46,7 @@ import com.njydsz.cronjob.domain.job.JobHandler;
  * IndexRebuildService.isRebuilding()} 检查是否有任务在执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see IndexRebuildService
  */
 @Slf4j

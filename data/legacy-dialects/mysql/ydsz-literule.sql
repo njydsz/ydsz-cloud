@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     id               VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id        VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     pack_code        VARCHAR(64)     NOT NULL COMMENT '规则集编码（全局唯一，用于版本间关联）',
-    pack_version     VARCHAR(32)     NOT NULL COMMENT '规则集版本号（如 1.0.0）',
+    pack_version     VARCHAR(32)     NOT NULL COMMENT '规则集版本号（如 26.09.01）',
     pack_name        VARCHAR(128)    NOT NULL COMMENT '规则集名称',
     industry         VARCHAR(64)     DEFAULT NULL COMMENT '所属行业（FINANCE / MANUFACTURING / HEALTHCARE）',
     tags             JSON            DEFAULT NULL COMMENT '标签（JSON 数组，如 ["风控", "审批"]）',

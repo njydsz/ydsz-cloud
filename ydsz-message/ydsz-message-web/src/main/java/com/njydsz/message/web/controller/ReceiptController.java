@@ -69,7 +69,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.receipt.ReceiptService 消息回执服务
  * @see com.njydsz.message.domain.entity.receipt.MsgReceipt 回执实体
  * @see ReceiptCallbackDTO 回执回调 DTO

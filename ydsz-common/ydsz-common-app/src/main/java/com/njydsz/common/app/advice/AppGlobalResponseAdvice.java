@@ -32,7 +32,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p><b>线程安全性：</b>无状态 Bean，线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AppApi
  */
 @RestControllerAdvice(annotations = AppApi.class)

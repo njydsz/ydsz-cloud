@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Conditional;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see PlatformMode
  * @see PlatformCondition
  */

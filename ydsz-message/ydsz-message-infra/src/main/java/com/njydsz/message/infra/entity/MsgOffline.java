@@ -17,7 +17,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>当 Redis 离线消息缓存超过阈值或用户长时间未上线时， 将消息从 Redis 溢出到数据库持久化存储，支持 30 天回溯。 用户上线时合并 Redis 缓存和数据库记录一并推送。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>聚合流程定义、节点列表、跳转条件和只读标识，用于流程设计器初始化加载。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowDefinitionDetailVO implements Serializable {

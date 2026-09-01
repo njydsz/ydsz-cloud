@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>记录流程实例中每个节点的审批操作历史，包含操作人、操作动作、时间等信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowAuditTrailVO implements Serializable {

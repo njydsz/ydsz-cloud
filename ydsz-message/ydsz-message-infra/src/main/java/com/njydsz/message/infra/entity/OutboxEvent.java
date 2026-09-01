@@ -16,7 +16,7 @@ import lombok.Data;
  * <p>对应 {@code ydsz_msg_outbox} 表，用于实现事务性 Outbox 模式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @TableName("ydsz_msg_outbox")

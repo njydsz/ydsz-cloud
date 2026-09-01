@@ -7,7 +7,7 @@ import lombok.Data;
  * 按通道维度的发送统计（P1-2 可观测看板）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "通道维度发送统计")

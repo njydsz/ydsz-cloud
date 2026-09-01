@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
  * <p>典型用途：商品搜索的分类筛选、标签汇总、价格区间分布等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

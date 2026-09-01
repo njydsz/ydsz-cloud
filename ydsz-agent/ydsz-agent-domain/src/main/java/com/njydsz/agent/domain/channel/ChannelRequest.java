@@ -8,7 +8,7 @@ import java.util.Map;
  * <p>封装来自不同渠道的请求数据。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class ChannelRequest {
 

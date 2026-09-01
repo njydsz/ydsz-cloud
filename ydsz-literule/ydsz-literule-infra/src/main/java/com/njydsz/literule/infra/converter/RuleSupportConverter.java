@@ -26,7 +26,7 @@ import com.njydsz.literule.infra.entity.RuleVersionHistory;
  * <p>承载规则依赖、执行轨迹、规则包、测试用例、版本历史等支撑实体的 Entity ↔ VO 以及 DTO → Entity 转换。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface RuleSupportConverter {

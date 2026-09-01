@@ -48,7 +48,7 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CrossDomainSsoProperties 跨域 SSO 配置
  * @see CrossDomainTokenService 跨域 Token 服务
  */
@@ -223,7 +223,7 @@ public class TokenExchangeController {
    * 令牌交换请求体。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class TokenExchangeRequest {
@@ -237,7 +237,7 @@ public class TokenExchangeController {
    * 令牌交换响应体。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class TokenExchangeVO {
@@ -256,7 +256,7 @@ public class TokenExchangeController {
    * Token 验证响应体。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class TokenValidateVO {
@@ -278,7 +278,7 @@ public class TokenExchangeController {
    * 登出通知请求体。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class LogoutNotifyRequest {
@@ -292,7 +292,7 @@ public class TokenExchangeController {
    * 登出通知响应体。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class LogoutNotifyVO {

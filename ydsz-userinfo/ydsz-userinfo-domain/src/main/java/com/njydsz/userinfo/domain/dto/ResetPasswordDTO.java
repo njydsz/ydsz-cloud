@@ -14,7 +14,7 @@ import lombok.Data;
  * <p><b>安全说明：</b>重置密码成功后，目标用户的所有活跃会话将被撤销， 须使用新密码重新登录。该接口需要管理员权限。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ResetPasswordDTO implements Serializable {

@@ -7,7 +7,7 @@ import lombok.Getter;
  * 消息通知渠道枚举
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @AllArgsConstructor

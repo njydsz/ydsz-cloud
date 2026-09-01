@@ -25,7 +25,7 @@ import com.njydsz.userinfo.domain.vo.CompanyVO;
  * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface CompanyService {
 
@@ -50,7 +50,7 @@ public interface CompanyService {
    * <p>一次性查询全表后在内存中构建树，集团-子公司层级关系清晰。 公司数据量小（百级别），全量加载可接受。
    *
    * @return 公司树形结构根节点列表，无数据返回空列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   List<CompanyTreeVO> tree();
 

@@ -27,7 +27,7 @@ import com.njydsz.common.safe.core.JsonBodyXssCleaner;
  * <p>在 JSON 反序列化前，对请求体中的字符串值进行 XSS 清理。 适用于非 FastJson 转换器场景，作为补充防护层。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 @ConditionalOnProperty(

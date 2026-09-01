@@ -28,7 +28,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  * @see ExcelReader
  * @see WriteMetadata
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ReadMetadata {
 

@@ -21,7 +21,7 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
  * <p>实际通知（站内信/邮件/推送）由事件监听器处理，本任务仅负责识别与触发。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

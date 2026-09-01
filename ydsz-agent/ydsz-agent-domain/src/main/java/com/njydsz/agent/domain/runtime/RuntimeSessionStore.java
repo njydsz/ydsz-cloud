@@ -10,7 +10,7 @@ import java.util.Optional;
  * 用于运行时管理面板查询活跃会话、强制回收等场景。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface RuntimeSessionStore {
 

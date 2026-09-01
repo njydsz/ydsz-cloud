@@ -33,7 +33,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p><b>启用条件：</b>当 {@code ydsz.core.enabled=true} 时生效（默认启用）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnProperty(
@@ -70,7 +70,7 @@ public class CoreAutoConfiguration {
    * i18n/core/messages*} 资源束， 提供最低限度的国际化能力。此 Bean 仅在 SpringMessageResolver 未注册时生效。
    *
    * @return ResourceBundleMessageResolver 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(YdszResponse.MessageResolver.class)
@@ -117,7 +117,7 @@ public class CoreAutoConfiguration {
    * <p>本类为包级可见的启动期一次性组件，无状态、不对外暴露。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   static class PageConstantsInitializer implements SmartInitializingSingleton {
 

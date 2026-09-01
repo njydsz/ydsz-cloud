@@ -17,7 +17,7 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
  * <p>Length 字段为大端 4 字节整数，表示 Payload 长度（不含 Length 和 Type 字段）。 maxFrameLength 默认 1MB，可通过构造参数调整。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class LengthFieldFrameDecoder extends LengthFieldBasedFrameDecoder {
 

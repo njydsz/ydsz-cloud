@@ -24,7 +24,7 @@ import com.njydsz.common.search.core.SuggestStrategy;
  * <p>基于 {@link LinkedHashMap} LRU 缓存实现的轻量级搜索引擎，无需外部依赖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class InMemorySearchStrategy implements SearchStrategy, IndexStrategy, SuggestStrategy {

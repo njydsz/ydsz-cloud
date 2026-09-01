@@ -10,7 +10,7 @@ import java.util.List;
  * <p>提供每个接收者的发送明细，便于业务方定位失败接收者并执行定向重试。 与 {@link NotifySendResult} 不同，本对象包含完整的逐条发送结果。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class BatchSendResultDTO {
 

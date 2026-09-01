@@ -19,7 +19,7 @@ import com.njydsz.nextwiki.server.service.VersionDiffService.DiffResult;
  * <p>协调版本内容获取与 diff 计算，提供端到端的版本对比能力。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

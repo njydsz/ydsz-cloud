@@ -21,7 +21,7 @@ import com.njydsz.literule.domain.Rule;
  *
  * <p>线程安全：底层使用 {@link CopyOnWriteArrayList}，注册/注销操作本身原子； 索引更新委托 {@link RuleIndexer}（内部使用锁）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

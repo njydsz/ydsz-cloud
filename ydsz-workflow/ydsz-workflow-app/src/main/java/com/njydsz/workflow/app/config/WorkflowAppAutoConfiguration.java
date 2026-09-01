@@ -11,11 +11,11 @@ import com.njydsz.common.base.config.PlatformMode;
  *
  * <p>仅在 APP 模式下激活，注册 App 端专属组件。
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>双入口架构的 App 端入口层，
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>双入口架构的 App 端入口层，
  * 通过 @ConditionalOnPlatform 控制激活条件（符合 §34.2.5）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)

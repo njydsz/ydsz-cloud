@@ -14,7 +14,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * 依赖由 ydsz-cronjob-app/pom.xml 的 spring-boot-health 提供。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class CronjobAppHealthIndicator implements HealthIndicator {
 

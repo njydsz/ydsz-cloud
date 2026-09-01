@@ -32,7 +32,7 @@ import com.njydsz.userinfo.domain.vo.SocialAccountVO;
  * <p><b>核心流程（bind）：</b>校验平台开关 → 检查是否已绑定 → 保存绑定记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

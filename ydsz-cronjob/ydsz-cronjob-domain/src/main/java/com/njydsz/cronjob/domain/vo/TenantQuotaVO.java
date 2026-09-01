@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回租户配额数据，对应实体 {@link com.njydsz.cronjob.domain.entity.job.TenantQuota}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class TenantQuotaVO implements Serializable {

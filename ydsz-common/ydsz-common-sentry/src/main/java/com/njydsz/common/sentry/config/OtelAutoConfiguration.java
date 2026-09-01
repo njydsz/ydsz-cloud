@@ -50,7 +50,7 @@ import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
  *       otel:
  *         enabled: true
  *         service-name: ydsz-order
- *         service-version: 1.0.0
+ *         service-version: 26.09.01
  *         sampler: parent-based
  *         sampler-ratio: 0.1
  *         tail-sampling:
@@ -65,7 +65,7 @@ import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
@@ -127,7 +127,7 @@ public class OtelAutoConfiguration {
    * <p>由 {@link OtelSdkInitializer} 在 {@code initMethod} 阶段构建完成。 业务模块可通过 {@code @Resource(name =
    * "ydszOpenTelemetrySdk")} 注入使用。
    *
-   * <p>1.0.0 变更：不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播， 避免与
+   * <p>26.09.01 变更：不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播， 避免与
    * opentelemetry-spring-boot-starter 等第三方配置冲突。
    *
    * @param sentryProperties 可观测配置，其中 {@code tracing.otel} 段决定采样率、导出方式与资源属性
@@ -201,7 +201,7 @@ public class OtelAutoConfiguration {
                   .serviceVersion(
                       otelConfig.getServiceVersion() != null
                           ? otelConfig.getServiceVersion()
-                          : "1.0.0")
+                          : "26.09.01")
                   .serviceNamespace(otelConfig.getServiceNamespace())
                   .environment(sentryProperties.getProfile())
                   .customAttributes(otelConfig.getResourceAttributes())

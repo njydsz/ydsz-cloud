@@ -32,7 +32,7 @@ import com.njydsz.userinfo.domain.vo.PostVO;
  * Exception.class)}，确保任一异常触发完整回滚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.domain.vo.PostVO 岗位VO
  * @see com.njydsz.userinfo.web.controller.PostController 岗位 Controller
  */

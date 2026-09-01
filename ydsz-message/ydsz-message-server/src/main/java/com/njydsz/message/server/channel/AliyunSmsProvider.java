@@ -44,7 +44,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -65,7 +65,7 @@ public class AliyunSmsProvider implements SmsProvider {
 
   /**
    * 生产构造：从 {@link MessageProperties} 读取阿里云配置并构建 RestTemplate。
-   * 
+   *
    *
    * @param messageProperties 消息模块配置属性（含 aliyun 子配置项 AccessKeyId/AccessKeySecret/Endpoint 等）
    */
@@ -192,7 +192,7 @@ public class AliyunSmsProvider implements SmsProvider {
 
   /**
    * 调用阿里云 SendBatchSms 接口批量发送。
-   * 
+   *
    * <p>参数构造：PhoneNumberJson = ["phone1","phone2",...]， SignNameJson =
    * ["sign","sign",...]，TemplateParamJson = [{...},{...},...]。
    *

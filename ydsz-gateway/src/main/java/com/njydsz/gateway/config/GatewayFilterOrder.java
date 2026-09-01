@@ -27,7 +27,7 @@ import org.springframework.core.Ordered;
  *   200 ApiVersionHeaderFilter    API 版本响应头（响应阶段）
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public enum GatewayFilterOrder {

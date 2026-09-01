@@ -31,7 +31,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController
@@ -99,7 +99,7 @@ public class SsoMetricsController {
    * SSO 指标值对象。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @lombok.Data
   public static class SsoMetricsVO {

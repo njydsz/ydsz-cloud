@@ -8,7 +8,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  * <p>当通知发送失败时，将消息加入重试队列，采用指数退避策略进行重试。 支持设置最大重试次数和队列容量，超过最大重试次数的消息将标记为永久失败。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface NotifyRetryQueue {
 

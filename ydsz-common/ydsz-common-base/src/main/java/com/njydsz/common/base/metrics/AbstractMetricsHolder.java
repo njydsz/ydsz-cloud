@@ -42,7 +42,7 @@ import io.micrometer.core.instrument.Timer;
  * <p>注意：因共享机制使用静态字段，{@link #bindTo} 仅需调用一次（传入 Spring 容器中的 MeterRegistry 即可）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.sentry.adapter.SentryMetricsAdapter 若可使用 Spring Bean 注入，推荐优先选择
  *     SentryMetricsAdapter 基类
  */

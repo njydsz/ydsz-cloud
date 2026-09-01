@@ -44,7 +44,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SuppressWarnings("deprecation")
 public final class FieldMetadataLoader {
@@ -90,7 +90,7 @@ public final class FieldMetadataLoader {
    *
    * @param clazz 目标类
    * @return 合并后的字段列表（子类在前）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static List<Field> collectDeclaredAndInheritedFields(Class<?> clazz) {
     List<Field> fields = new ArrayList<>();
@@ -301,7 +301,7 @@ public final class FieldMetadataLoader {
    * @param clazz 被扫描的类
    * @param fieldList 已加载的字段列表
    * @param classNaming 类级命名策略
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static void applyMethodAnnotations(
       Class<?> clazz, List<FieldMeta> fieldList, PropertyNamingStrategy classNaming) {
@@ -424,7 +424,7 @@ public final class FieldMetadataLoader {
    *
    * @param clazz 要扫描的类
    * @return 标注了 {@code @JsonValue} 的 Method，未找到返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Method findJsonValueMethod(Class<?> clazz) {
     Method result =
@@ -468,7 +468,7 @@ public final class FieldMetadataLoader {
    *
    * @param clazz 要检查的类
    * @return true 如果类中存在 {@code @JsonValue} 标注的方法
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static boolean hasJsonValueMethod(Class<?> clazz) {
     return findJsonValueMethod(clazz) != null;
@@ -493,7 +493,7 @@ public final class FieldMetadataLoader {
    *
    * @param clazz 要扫描的类
    * @return 计算属性方法数组，未找到返回空数组
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Method[] findComputedProperties(Class<?> clazz) {
     return COMPUTED_PROPERTIES_CACHE.computeIfAbsent(
@@ -530,7 +530,7 @@ public final class FieldMetadataLoader {
    *
    * @param clazz 要检查的类
    * @return true 如果类中存在计算属性方法
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static boolean hasComputedProperties(Class<?> clazz) {
     return findComputedProperties(clazz).length > 0;
@@ -541,7 +541,7 @@ public final class FieldMetadataLoader {
    *
    * @param method 标注了 @JsonGetter 的方法
    * @return JSON 属性名
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String getComputedPropertyName(Method method) {
     JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);

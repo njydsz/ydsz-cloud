@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.condition.RequestCondition;
  * /v1/api/users}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ApiVersionCondition implements RequestCondition<ApiVersionCondition> {
 

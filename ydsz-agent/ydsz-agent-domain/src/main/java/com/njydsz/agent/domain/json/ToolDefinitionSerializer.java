@@ -12,7 +12,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * {"type":"function","function":{"name":..,"description":..,"parameters":<json-schema>}}}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ToolDefinitionSerializer implements JsonSerializer<ToolDefinition> {
 

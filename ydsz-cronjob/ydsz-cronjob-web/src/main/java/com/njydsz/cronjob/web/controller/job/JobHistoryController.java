@@ -45,7 +45,7 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Tag(name = "任务配置历史版本", description = "版本列表、版本详情、回滚、版本对比")
 @Slf4j

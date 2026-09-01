@@ -32,7 +32,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * 通道发送），降低跨模块耦合度。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 public class UnifiedAlertEvent extends DomainEvent {

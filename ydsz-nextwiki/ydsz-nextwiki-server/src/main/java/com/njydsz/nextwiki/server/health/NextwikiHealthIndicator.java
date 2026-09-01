@@ -19,7 +19,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
  * common 模块能力， 不重复造轮子，不承担非自身职责"原则。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

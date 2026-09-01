@@ -18,7 +18,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobWebhookRetryMapper;
  * <p>实现 {@link WebhookRetryRepository} 接口，封装 JobWebhookRetryMapper 数据访问细节。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

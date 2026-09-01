@@ -37,7 +37,7 @@ import com.njydsz.system.server.health.SystemHealthIndicator;
  * <p><b>配置变更：</b>{@link SystemProperties} 通过 Nacos 实现热加载；BCrypt 强度变更需重启生效。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SystemProperties 系统模块配置属性
  * @see com.njydsz.system.server.service.AppInfoService 应用注册服务（BCrypt 加密 appSecret）
  */

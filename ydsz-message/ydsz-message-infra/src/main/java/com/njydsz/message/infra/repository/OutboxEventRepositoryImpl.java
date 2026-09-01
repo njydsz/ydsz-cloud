@@ -25,7 +25,7 @@ import com.njydsz.message.infra.mapper.OutboxEventMapper;
  * 依据规范 5.4 节，infra 实体以行内 FQN 引用并附 FQN-OK 注释。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Repository

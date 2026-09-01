@@ -31,7 +31,7 @@ import org.springframework.validation.annotation.Validated;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Validated
 @ConfigurationProperties(prefix = "ydsz.audit")

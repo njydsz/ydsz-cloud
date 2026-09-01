@@ -19,7 +19,7 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
  * 规则定义搜索提供者 — 将规则定义数据注册到统一搜索体系。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

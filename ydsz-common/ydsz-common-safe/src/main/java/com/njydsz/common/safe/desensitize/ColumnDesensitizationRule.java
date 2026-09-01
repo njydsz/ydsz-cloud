@@ -16,7 +16,7 @@ package com.njydsz.common.safe.desensitize;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ColumnDesensitizationExecutor
  */
 public enum ColumnDesensitizationRule {

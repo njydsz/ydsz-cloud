@@ -10,7 +10,7 @@ import java.io.Serializable;
  * <p><b>线程安全</b>：全字段 final 不可变值对象，可安全跨线程共享。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class TenantQuota implements Serializable {
 

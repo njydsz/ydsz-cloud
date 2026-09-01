@@ -24,7 +24,7 @@ import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
  * 数据库仅记录元数据（文件名、大小、存储路径、上传人等）。删除为逻辑删除（deleted=1）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowAttachmentService {
 
@@ -91,7 +91,7 @@ public interface FlowAttachmentService {
    * @param attachmentId 附件 ID
    * @return 预览 VO（含 previewType / previewUrl / downloadUrl / previewable）
    * @throws SysException 附件不存在时抛 NOT_FOUND
-   * @since 1.0.0
+   * @since 26.09.01
    */
   FlowAttachmentPreviewDTO previewAttachment(String attachmentId);
 }

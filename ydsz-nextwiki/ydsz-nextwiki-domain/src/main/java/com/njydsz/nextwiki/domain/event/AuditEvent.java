@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
  * @param result     操作结果（success/fail）
  * @param eventId    事件唯一 ID
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record AuditEvent(
     boolean audit,

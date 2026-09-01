@@ -22,7 +22,7 @@ import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
  * <p>同时注册 {@link NextwikiProperties} 配置属性绑定， 替代各 Service 中散落的 {@code @Value} 注入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 @EnableCaching

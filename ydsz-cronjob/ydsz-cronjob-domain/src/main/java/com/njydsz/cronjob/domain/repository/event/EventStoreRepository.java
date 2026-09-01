@@ -13,7 +13,7 @@ import com.njydsz.cronjob.domain.event.JobEvent;
  * <p>事件存储为仅追加（append-only）模式，不支持修改和删除（清理过期事件除外）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface EventStoreRepository {
 

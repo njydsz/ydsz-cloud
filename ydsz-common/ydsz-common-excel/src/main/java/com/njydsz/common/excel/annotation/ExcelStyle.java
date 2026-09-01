@@ -29,9 +29,9 @@ import com.njydsz.common.excel.core.ExcelWriter;
  *
  * @author ydsz-team
 
- * @version 1.0.0
+ * @version 26.09.01
  * @see ExcelWriter
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

@@ -28,7 +28,7 @@ import com.njydsz.userinfo.server.trace.TraceContext;
  * <p><b>过滤器优先级：</b>设置为 {@link Ordered#LOWEST_PRECEDENCE} - 100，在认证过滤器之后执行， 确保只统计进入 Controller 的请求。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

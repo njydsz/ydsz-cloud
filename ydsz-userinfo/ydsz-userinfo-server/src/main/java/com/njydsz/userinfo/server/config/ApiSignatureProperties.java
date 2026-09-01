@@ -45,7 +45,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.web.filter.ApiSignatureFilter 签名校验过滤器
  * @see com.njydsz.userinfo.server.auth.ApiSignatureUtil 签名工具类
  */

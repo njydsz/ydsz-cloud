@@ -25,7 +25,7 @@ import lombok.Data;
  * <p>通过 JSR-380 注解声明约束，启动时自动校验，配置错误立即报错。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class LeaderConfig {

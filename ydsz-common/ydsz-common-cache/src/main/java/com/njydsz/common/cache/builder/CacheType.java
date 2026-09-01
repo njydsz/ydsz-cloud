@@ -3,7 +3,7 @@ package com.njydsz.common.cache.builder;
 /**
  * 缓存类型枚举
  *
- * <p>当前支持的缓存类型（精简版 1.0.0）：
+ * <p>当前支持的缓存类型（精简版 26.09.01）：
  *
  * <ul>
  *   <li>TINYLFU：Window-TinyLFU 算法（参考 Caffeine），命中率最优，通用场景默认
@@ -14,7 +14,7 @@ package com.njydsz.common.cache.builder;
  * STRIPED。业务接入方无需指定类型时，使用默认值 TINYLFU 即可满足绝大多数场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum CacheType {
 

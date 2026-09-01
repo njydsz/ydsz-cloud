@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回用户在各通道的身份绑定信息，@包含通道用户 ID、 验证状态和主通道标记，支撑多通道消息投递。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgUserChannelVO implements Serializable {

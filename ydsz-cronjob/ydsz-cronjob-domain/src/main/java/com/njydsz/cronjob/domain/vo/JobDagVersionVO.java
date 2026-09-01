@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回 DAG 版本历史数据，对应实体 {@link com.njydsz.cronjob.domain.entity.dag.JobDagVersion}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class JobDagVersionVO implements Serializable {

@@ -9,7 +9,7 @@ package com.njydsz.agent.domain.trigger;
  * 并扩展了 Agent 特有的生命周期触发。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum TriggerType {
 

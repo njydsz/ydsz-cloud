@@ -27,7 +27,7 @@ import com.njydsz.common.auth.service.ColumnPermissionResolver;
  * SELECT/INSERT/UPDATE 语句中过滤无权访问的字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AuthColPermission
  * @see ColumnPermissionResolver
  */

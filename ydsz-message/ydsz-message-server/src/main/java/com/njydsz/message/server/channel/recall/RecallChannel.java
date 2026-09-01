@@ -16,7 +16,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  * <p>实现类通过 {@link #channelType()} 声明支持的通道类型，由 {@link RecallChannelRouter} 按需路由。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface RecallChannel {
 
@@ -40,7 +40,7 @@ public interface RecallChannel {
 
   /**
    * 撤回结果记录。
-   * 
+   *
    *
    * @param platformRecallSucceeded 平台 API 是否真正撤回（false 表示仅本地标记）
    * @param failureReason 撤回失败原因（null 表示成功）

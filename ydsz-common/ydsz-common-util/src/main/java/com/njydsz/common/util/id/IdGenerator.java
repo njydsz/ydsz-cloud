@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>推荐实践：</b>Spring Bean 注入 {@link SnowflakeIdGenerator} 优于使用本类， 避免服务定位器反模式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public final class IdGenerator {

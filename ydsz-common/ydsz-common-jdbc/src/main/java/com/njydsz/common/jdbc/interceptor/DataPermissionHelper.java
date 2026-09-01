@@ -36,7 +36,7 @@ import com.njydsz.common.util.string.StringUtils;
  * 全局锁带来的并发竞争。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DataPermissionInnerInterceptor
  * @see DataPermissionIgnore
  */

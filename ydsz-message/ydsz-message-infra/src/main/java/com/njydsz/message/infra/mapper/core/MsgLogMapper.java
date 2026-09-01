@@ -28,7 +28,7 @@ import com.njydsz.message.infra.entity.MsgLog;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MsgLog 消息日志实体
  * @see com.njydsz.message.server.service.MsgLogService 消息日志 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

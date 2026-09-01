@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>配置前缀：{@code ydsz.base.request}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConfigurationProperties(prefix = "ydsz.base.request")
 public class YdszRequestProperties {

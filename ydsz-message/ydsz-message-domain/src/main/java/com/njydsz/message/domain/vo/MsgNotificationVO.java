@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回站内通知的完整信息，包含通知内容、业务关联、 已读状态、撤回状态及审计字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgNotificationVO implements Serializable {

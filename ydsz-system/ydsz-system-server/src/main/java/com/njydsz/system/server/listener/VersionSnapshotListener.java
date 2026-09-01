@@ -26,7 +26,7 @@ import com.njydsz.system.server.service.EntityVersionService;
  * 若快照创建失败，仅日志告警，不回滚已提交的主业务数据。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see VersionSnapshotEvent 版本快照事件
  */
 @Slf4j

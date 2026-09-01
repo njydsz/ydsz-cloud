@@ -29,7 +29,7 @@ import com.njydsz.message.domain.vo.MsgFeedbackVO;
  * <p><b>降频阈值：</b>由 {@code ydsz.message.feedback.reduce-threshold} 配置,默认 3.0。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgFeedbackVO 反馈VO
  * @see RateLimitService 限流服务(降频会调整 rate-limit 阈值)
  */

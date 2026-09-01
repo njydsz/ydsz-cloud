@@ -30,7 +30,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * <p>纯文本消息保持字符串格式，向后兼容非 Vision 模型。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ChatMessageSerializer implements JsonSerializer<ChatMessage> {
 

@@ -44,7 +44,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * tenant_id} 条件，否则跨租户检索会泄露数据。 租户 ID 从 {@link TenantContextHolder} 解析；超级管理员/系统租户/跳过隔离场景不做过滤。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class PgVectorStore implements VectorStore {

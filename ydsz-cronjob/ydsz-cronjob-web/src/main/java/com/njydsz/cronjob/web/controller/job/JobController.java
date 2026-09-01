@@ -79,7 +79,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Tag(name = "任务调度", description = "任务 CRUD、暂停/恢复、立即触发、Cron 校验、批量操作")
 @Slf4j

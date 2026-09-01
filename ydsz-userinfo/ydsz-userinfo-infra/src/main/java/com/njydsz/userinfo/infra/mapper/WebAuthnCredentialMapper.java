@@ -11,7 +11,7 @@ import com.njydsz.userinfo.infra.entity.WebAuthnCredential;
  * <p>MyBatis-Plus Mapper 接口，提供 CRUD 操作。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface WebAuthnCredentialMapper extends BaseMapper<WebAuthnCredential> {

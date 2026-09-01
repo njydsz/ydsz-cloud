@@ -31,7 +31,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>在 LLM 调用前先检索知识库，将检索到的上下文注入 System Prompt， 使 LLM 能够基于私有知识回答问题。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RagAgentExecutor extends AbstractAgentExecutor {

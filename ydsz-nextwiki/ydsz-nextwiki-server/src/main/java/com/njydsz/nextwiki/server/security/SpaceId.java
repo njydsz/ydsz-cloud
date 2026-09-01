@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * <p>若方法参数名就是 {@code spaceId} 且类型是 {@link String}，可省略此注解。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SpacePermission
  */
 @Documented

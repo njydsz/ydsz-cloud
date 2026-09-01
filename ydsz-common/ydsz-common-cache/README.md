@@ -302,6 +302,6 @@ management:
 
 ## 变更记录
 
-- **1.0.0**（2026-09-01）：并发语义加固（对标 Caffeine / ConcurrentHashMap）——`putIfAbsent`/`computeIfAbsent`/`compute`/`merge` 原子化（per-key 单飞，等待者不丢失自身操作）；`getAsync` 单飞共享加载 Future；`getWithProtection` 失败传播给所有等待者且无递归重试风暴，空值占位不再屏蔽真实值；RemovalListener 默认异步派发（`setListenerExecutor` 可自定义）；新增空值 TTL 两种配置（`CacheBuilder.nullValueExpire` 实例级 + `ydsz.cache.null-value-ttl-*` 注解级，均支持 per-cache）；null 键统计口径统一（不计 miss）。单元测试 17 → 31 个。
-- **1.0.0**（2026-08-15）：架构精简重构，移除 LRU/Weighted/Concurrent/弱引用缓存实现、多级缓存（L1+L2 Redis）、热点 Key 追踪、Resilience4j 熔断降级、内存感知淘汰、SWR、WriteBehind 等未落地能力；统一使用 Spring Cache 标准注解（@Cacheable/@CacheEvict）；下线 AsyncCache/AsyncLoadingCacheImpl；精简 pom 依赖（移除 resilience4j、aspectjweaver、spring-aop、skywalking、lombok、common-redis、common-json）；保留核心能力（TINYLFU/STRIPED + 三防 + ExpirableCache + WriteThroughCache + Spring Cache 适配 + Micrometer 指标 + Actuator 端点 + 健康检查）。
-- **1.0.0**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。
+- **26.09.01**（2026-09-01）：并发语义加固（对标 Caffeine / ConcurrentHashMap）——`putIfAbsent`/`computeIfAbsent`/`compute`/`merge` 原子化（per-key 单飞，等待者不丢失自身操作）；`getAsync` 单飞共享加载 Future；`getWithProtection` 失败传播给所有等待者且无递归重试风暴，空值占位不再屏蔽真实值；RemovalListener 默认异步派发（`setListenerExecutor` 可自定义）；新增空值 TTL 两种配置（`CacheBuilder.nullValueExpire` 实例级 + `ydsz.cache.null-value-ttl-*` 注解级，均支持 per-cache）；null 键统计口径统一（不计 miss）。单元测试 17 → 31 个。
+- **26.09.01**（2026-08-15）：架构精简重构，移除 LRU/Weighted/Concurrent/弱引用缓存实现、多级缓存（L1+L2 Redis）、热点 Key 追踪、Resilience4j 熔断降级、内存感知淘汰、SWR、WriteBehind 等未落地能力；统一使用 Spring Cache 标准注解（@Cacheable/@CacheEvict）；下线 AsyncCache/AsyncLoadingCacheImpl；精简 pom 依赖（移除 resilience4j、aspectjweaver、spring-aop、skywalking、lombok、common-redis、common-json）；保留核心能力（TINYLFU/STRIPED + 三防 + ExpirableCache + WriteThroughCache + Spring Cache 适配 + Micrometer 指标 + Actuator 端点 + 健康检查）。
+- **26.09.01**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。

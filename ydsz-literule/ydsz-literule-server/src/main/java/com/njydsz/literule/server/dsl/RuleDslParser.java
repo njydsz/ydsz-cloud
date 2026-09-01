@@ -46,7 +46,7 @@ import com.njydsz.common.json.YdszJson;
  * List&lt;RuleChain&gt; chains = RuleDslConverter.toChains(dsl, rules);
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -68,7 +68,7 @@ public final class RuleDslParser {
    * @param yamlContent YAML 内容
    * @return DSL 模型；空内容返回空 RuleDsl（rules/chains 为空列表）
    * @throws IllegalArgumentException YAML 格式错误时抛出
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static RuleDsl parseYaml(String yamlContent) {
     return parse(yamlContent);
@@ -99,7 +99,7 @@ public final class RuleDslParser {
    * @param jsonContent JSON 内容
    * @return DSL 模型；空内容返回空 RuleDsl
    * @throws IllegalArgumentException JSON 格式错误时抛出
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static RuleDsl parseJson(String jsonContent) {
     if (jsonContent == null || jsonContent.isBlank()) {
@@ -128,7 +128,7 @@ public final class RuleDslParser {
    * @return DSL 模型
    * @throws IOException 文件读取失败
    * @throws IllegalArgumentException 文件后缀不支持或内容格式错误
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static RuleDsl loadFromFile(Path path) throws IOException {
     if (path == null) {
@@ -154,7 +154,7 @@ public final class RuleDslParser {
    * @return DSL 模型
    * @throws IOException 流读取失败
    * @throws IllegalArgumentException 格式不支持或内容错误
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static RuleDsl loadFromStream(InputStream stream, String format) throws IOException {
     if (stream == null) {

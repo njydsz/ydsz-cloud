@@ -31,7 +31,7 @@ import com.njydsz.common.cache.builder.CacheType;
  * TTL 防穿透，非空权限加随机抖动防雪崩）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RolePermissionsExpiry
  */
 @Slf4j

@@ -34,7 +34,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * <p>目标设备标识来源：优先 {@code channelMeta.deviceToken}，回退 {@code receiver}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -60,7 +60,7 @@ public class GetuiPushProvider implements PushProvider {
 
   /**
    * 生产构造：从 {@link MessageProperties} 读取个推配置并构建 RestTemplate。
-   * 
+   *
    *
    * @param messageProperties 消息模块配置属性（含 getui 子配置 AppId/AppKey/MasterSecret/BaseUrl 等）
    * @param snowflakeIdGenerator 分布式 ID 生成器，用于生成 request_id

@@ -29,7 +29,7 @@ import com.njydsz.common.util.io.TempFileManager;
  * <p>检测 PDF 文档中的 JavaScript 脚本、嵌入文件和可疑外部链接。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>封装解析操作的完整输出，包括文档内容、解析耗时和解析状态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

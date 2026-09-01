@@ -23,7 +23,7 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
  * WebSocketClusterPublisher} 跨节点同步， 消息仍由 message 模块管理的 WebSocket 连接投递到客户端。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

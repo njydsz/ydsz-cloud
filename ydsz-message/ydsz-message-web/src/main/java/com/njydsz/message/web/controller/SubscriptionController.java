@@ -63,7 +63,7 @@ import com.njydsz.message.server.service.config.SubscriptionService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.config.SubscriptionService 订阅服务
  * @see com.njydsz.message.domain.entity.config.MsgSubscription 订阅实体
  */

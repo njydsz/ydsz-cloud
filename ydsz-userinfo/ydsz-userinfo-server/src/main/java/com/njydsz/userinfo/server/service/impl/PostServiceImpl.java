@@ -39,7 +39,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * <p><b>性能：</b>{@link #batchNamesByIds} 仅 SELECT id 与 post_name 字段，单次往返。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see PostService Service 接口
  * @see com.njydsz.userinfo.web.controller.PostController 岗位 Controller
  */

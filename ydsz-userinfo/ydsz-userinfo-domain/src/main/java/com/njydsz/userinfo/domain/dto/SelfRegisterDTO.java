@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用户通过前端注册页面提交注册申请，包含基本信息和验证码。 注册成功后账号状态为"待审核"或"已启用"（取决于配置）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class SelfRegisterDTO implements Serializable {

@@ -15,7 +15,7 @@ import com.njydsz.common.redis.config.RedisProperties;
  * <p>通过 Lettuce Client Resources 注入 MeterRegistry 采集。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)

@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>映射 ydsz_rule_template 表，存储规则模板市场中的预置模板。 用户可从模板一键导入生成规则定义。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @SuperBuilder

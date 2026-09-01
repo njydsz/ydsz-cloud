@@ -18,7 +18,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>管理用户通知偏好的存储、查询和缓存。 Redis 持久化 + 本地缓存双层架构。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NotifyPreferenceManager {
 

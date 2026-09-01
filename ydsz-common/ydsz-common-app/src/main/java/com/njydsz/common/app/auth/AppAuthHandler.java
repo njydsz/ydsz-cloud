@@ -15,7 +15,7 @@ import com.njydsz.common.auth.model.YdszAuthInfo;
  * 注册，业务方可覆盖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AbstractAuthHandler
  * @see AppAuthInfo
  */

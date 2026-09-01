@@ -15,7 +15,7 @@ import com.njydsz.userinfo.app.config.ConditionalOnPlatform;
  * <p>仅在 {@code ydsz.userinfo.platform=app} 时激活，为移动端/应用端 API 提供 Swagger 文档。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 @ConditionalOnPlatform("app")
@@ -32,7 +32,7 @@ public class AppOpenApiConfiguration {
         .info(new Info()
             .title("用户信息中心 - App API")
             .description("移动端/应用端接口文档（用户认证、社交登录、个人资料管理）")
-            .version("1.0.0")
+            .version("26.09.01")
             .contact(new Contact()
                 .name("ydsz-team")
                 .email("team@ydsz.com"))

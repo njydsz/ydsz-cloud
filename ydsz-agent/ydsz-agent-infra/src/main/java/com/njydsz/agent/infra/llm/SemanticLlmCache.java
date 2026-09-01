@@ -44,7 +44,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p><b>线程安全</b>：YdszCache 与 {@link StringRedisTemplate} 均为线程安全实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SemanticLlmCache {

@@ -13,7 +13,7 @@ package com.njydsz.common.safe.sensitive;
  * <p>抛出本异常后由上层（如 {@link SensitiveDataAdvice}）统一兜底为安全空对象， 禁止向调用方返回包含未脱敏数据的原始对象。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SensitiveDataProcessingException extends RuntimeException {
 

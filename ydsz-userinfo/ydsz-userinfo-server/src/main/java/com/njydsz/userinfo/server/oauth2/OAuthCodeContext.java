@@ -27,7 +27,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param clientId OAuth2 客户端 ID
  * @param userId 授权用户 ID
  * @param username 授权用户名

@@ -23,7 +23,7 @@ import com.njydsz.common.sentry.domain.AlertSeverity;
  * <p>当 {@code common-notify} 模块不可用时，此 Handler 不会被注册。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

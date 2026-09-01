@@ -27,7 +27,7 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
  * <p>DefaultTaskDispatcher 1592 行代码中约 200 行涉及日志记录， 提取后可统一日志格式和执行轨迹字段管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class JobExecutionRecorder {

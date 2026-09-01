@@ -13,7 +13,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *
  * <p>封装 {@link RuleExecutionTraceVO} 的构建逻辑，从 {@link DefaultRuleEngine} 提取，使引擎核心聚焦评估编排。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class RuleTraceBuilder {

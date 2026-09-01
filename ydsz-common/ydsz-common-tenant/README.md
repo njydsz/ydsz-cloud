@@ -17,7 +17,7 @@
 | **可选依赖** | `ydsz-common-redis`、`ydsz-common-feign`、`ydsz-common-thread`、`spring-boot-starter-web`、`spring-boot-health` |
 | **启用条件** | `ydsz.tenant.enabled=true`（默认 false，不启用时无任何租户逻辑） |
 
-> **职责边界说明**：1.0.0 起，本模块聚焦"运行时隔离"职责。租户生命周期管理（上下线/状态转换）已剥离至独立运营域模块；字段加密能力下沉至 `common-safe`；PostgreSQL RLS DDL 生成工具迁移至 devops 脚本目录。
+> **职责边界说明**：26.09.01 起，本模块聚焦"运行时隔离"职责。租户生命周期管理（上下线/状态转换）已剥离至独立运营域模块；字段加密能力下沉至 `common-safe`；PostgreSQL RLS DDL 生成工具迁移至 devops 脚本目录。
 
 ## 核心能力
 
@@ -398,7 +398,7 @@ com.njydsz.common.tenant/
 
 ## 架构决策记录（ADR）
 
-### ADR-001：职责剥离（1.0.0）
+### ADR-001：职责剥离（26.09.01）
 
 **背景**：原 common-tenant 模块承载了运行时隔离、租户运营管理、字段加密、审计门面、RLS DDL 生成等多维度职责，模块体量过大（35 个类），与"L4 基础数据层"定位不符。
 
@@ -408,15 +408,15 @@ com.njydsz.common.tenant/
 - 简化：数据源解析器从 3 层 SPI 合并为 1 个接口 + 内置实现
 
 **收益**：
-- 模块从 35 个类精简至 24 个类（含 1.0.0 新增的 TenantColumnScanner / TenantPropertiesAnnotationPopulator / TenantIndexValidator / DatasourceKeyResolver），职责边界清晰
+- 模块从 35 个类精简至 24 个类（含 26.09.01 新增的 TenantColumnScanner / TenantPropertiesAnnotationPopulator / TenantIndexValidator / DatasourceKeyResolver），职责边界清晰
 - 消除对 Redis 的强依赖（lifecycle 模块独立后按需引入）
 - `TenantContextWebFilter` 移除生命周期检查，启动速度提升
 - 双路径上下文收敛为单一路径，降低心智模型复杂度
 
 ## 变更记录
 
-- **1.0.0**（2026-08-18）：完善模块定位（新增源文件数 24）；补充 `TenantHeaderContract`（Feign/WebFilter header 契约统一）和 `TenantPropertiesAnnotationPopulator`（BeanPostProcessor：注解扫描回填）文档；补全 `validation/` 包（`TenantIndexValidator` 启动时租户列索引校验）说明。
-- **1.0.0**（2026-08-15）：架构瘦身与职责剥离。
+- **26.09.01**（2026-08-18）：完善模块定位（新增源文件数 24）；补充 `TenantHeaderContract`（Feign/WebFilter header 契约统一）和 `TenantPropertiesAnnotationPopulator`（BeanPostProcessor：注解扫描回填）文档；补全 `validation/` 包（`TenantIndexValidator` 启动时租户列索引校验）说明。
+- **26.09.01**（2026-08-15）：架构瘦身与职责剥离。
   - **删除**：生命周期管理（5 类）、字段加密（2 类）、审计日志门面（1 类）、Provisioning 钩子（1 类）、PostgresRLSAdvisor（1 类）
   - **简化**：数据源解析器 NamingConventionResolver + ConfigurationResolver 合并为单一接口（内置实现）
   - **收敛**：TenantContextHolder 双路径写入收敛为单一路径
@@ -424,5 +424,5 @@ com.njydsz.common.tenant/
   - **新增**：sql-cache.enabled 配置项
   - **测试性**：TenantContextWebFilter 提取 protected resolveClaimValue 方法支持单元测试覆盖
   - **文档**：更新 README 反映职责边界与模块结构变化
-- **1.0.0**（2026-08-14）：安全加固与架构优化。新增 SCHEMA 模式、`@TenantColumn` 启动扫描、Feign/WebFilter header 契约统一、SQL IN 表达式树防注入、Caffeine 缓存替代 ConcurrentHashMap、双路径上下文统一为 `TenantContextHolder`、`TenantIndexValidator` 启动校验。
-- **1.0.0**（2026-08-02）：初始版本。提供统一租户上下文、SQL 隔离拦截器、多级租户支持（SINGLE/MULTI/ISOLATE_DB）、全链路传播、Redis Key 隔离、per-table 列名覆盖、租户限流、Micrometer 指标、Fail-Closed 保护、健康检查。
+- **26.09.01**（2026-08-14）：安全加固与架构优化。新增 SCHEMA 模式、`@TenantColumn` 启动扫描、Feign/WebFilter header 契约统一、SQL IN 表达式树防注入、Caffeine 缓存替代 ConcurrentHashMap、双路径上下文统一为 `TenantContextHolder`、`TenantIndexValidator` 启动校验。
+- **26.09.01**（2026-08-02）：初始版本。提供统一租户上下文、SQL 隔离拦截器、多级租户支持（SINGLE/MULTI/ISOLATE_DB）、全链路传播、Redis Key 隔离、per-table 列名覆盖、租户限流、Micrometer 指标、Fail-Closed 保护、健康检查。

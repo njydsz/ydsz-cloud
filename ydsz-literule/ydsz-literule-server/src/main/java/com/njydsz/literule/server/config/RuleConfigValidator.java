@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>校验失败时输出 WARN 日志（不阻塞启动），便于运维发现配置问题。 对于严重错误（如必填项缺失），抛出 {@link IllegalStateException} 阻塞启动。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

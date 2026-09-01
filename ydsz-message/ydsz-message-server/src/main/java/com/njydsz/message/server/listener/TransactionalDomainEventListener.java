@@ -23,7 +23,7 @@ import com.njydsz.message.domain.event.MessageSentEvent;
  * <p><b>设计定位：</b>作为 Outbox 模式下事务提交后的回调钩子, 后续可扩展为更新统计表、触发 Webhook、写入审计日志等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.event.OutboxDomainEventPublisher
  */
 @Slf4j

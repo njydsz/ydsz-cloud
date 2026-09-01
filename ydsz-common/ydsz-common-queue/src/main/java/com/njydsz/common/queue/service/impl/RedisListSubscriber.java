@@ -23,7 +23,7 @@ import com.njydsz.common.queue.service.IMessageSubscriber;
  * <p>支持自动 ACK、失败重试、死信投递。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisListSubscriber implements IMessageSubscriber {

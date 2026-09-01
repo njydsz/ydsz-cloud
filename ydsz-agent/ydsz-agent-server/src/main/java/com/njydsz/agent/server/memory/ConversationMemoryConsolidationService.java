@@ -24,7 +24,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
  * </ul>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

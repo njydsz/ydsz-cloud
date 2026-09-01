@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>业务层需要保存 uploadId，并在后续 uploadChunk / completeChunkedUpload 时传入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

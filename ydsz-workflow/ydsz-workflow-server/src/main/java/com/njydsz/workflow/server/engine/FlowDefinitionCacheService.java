@@ -35,10 +35,10 @@ import com.njydsz.workflow.server.config.FlowProperties;
  * <p>设计说明：节点和 skip 的全量列表各自仅查库一次（{@code findByDefinitionId}）， 其余按 nodeCode / nextNodeCode / 起始节点
  * 等维度的查询均从缓存列表中派生， 将原本每次推进 5+ 次查库降为首次 2 次、后续 0 次。
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
  * 禁止 server 层直接注入 infra Mapper（符合 §34.2.3）。Repository 返回领域 VO，无需 DO → VO 转换。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -189,7 +189,7 @@ public class FlowDefinitionCacheService {
 
   /**
    * 查某节点的出发跳转（P2-4: 预解析 sourceRef 索引，O(1) 查找替代 O(n) 流过滤）
-   * 
+   *
    * <p>返回该节点所有 skipType 的出边，调用方按需过滤 skipType。
    *
    * @param definitionId 流程定义 ID
@@ -255,7 +255,7 @@ public class FlowDefinitionCacheService {
 
   /**
    * 一次性加载完整元数据并构建索引。
-   * 
+   *
    * <p>替代原有的多个独立缓存加载方法（loadNodes/loadSkips/loadSkipSourceRefIndex/
    * loadNodeByCodeIndex/loadSkipsByNextNodeIndex）， 单次缓存调用完成全部数据加载和索引构建，减少缓存操作次数。
    *

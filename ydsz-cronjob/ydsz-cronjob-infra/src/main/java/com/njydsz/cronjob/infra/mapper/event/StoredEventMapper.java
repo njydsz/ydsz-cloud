@@ -17,7 +17,7 @@ import com.njydsz.cronjob.infra.entity.event.StoredEvent;
  * MyBatis-Plus 基类方法完成。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface StoredEventMapper extends BaseMapper<StoredEvent> {

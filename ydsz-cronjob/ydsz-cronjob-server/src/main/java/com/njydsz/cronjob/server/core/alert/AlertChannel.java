@@ -7,7 +7,7 @@ package com.njydsz.cronjob.server.core.alert;
  * com.njydsz.common.feign.NotificationClient}）路由到具体通道实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum AlertChannel {
 

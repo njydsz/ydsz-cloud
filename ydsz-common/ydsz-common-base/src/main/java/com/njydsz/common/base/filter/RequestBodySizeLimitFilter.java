@@ -20,7 +20,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p>注意：此过滤器仅基于 Content-Length header 进行预检查， 对于 chunked 编码的请求需要在 ContentCachingFilter 中二次校验。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class RequestBodySizeLimitFilter extends OncePerRequestFilter {
 

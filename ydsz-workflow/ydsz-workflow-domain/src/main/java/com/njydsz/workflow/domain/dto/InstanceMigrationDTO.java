@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>当流程定义更新（新版本部署）后，运行中的实例可能需要迁移到新版本。 本 DTO 封装迁移所需参数，包括源/目标定义 ID、租户、节点映射及是否试运行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class InstanceMigrationDTO implements Serializable {

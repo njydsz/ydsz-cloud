@@ -47,7 +47,7 @@ import reactor.netty.resources.ConnectionProvider;
  * <p><b>说明：</b>历史版本手写 Gauge（{@code ydsz_gateway_httpclient_pool_*}）从未更新、恒为 0，
  * 已删除；统一使用 Reactor Netty 官方指标，保证可观测性真实可信。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

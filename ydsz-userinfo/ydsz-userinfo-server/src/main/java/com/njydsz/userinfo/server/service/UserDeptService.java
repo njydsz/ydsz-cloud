@@ -29,7 +29,7 @@ import com.njydsz.userinfo.domain.vo.UserDeptVO;
  * Exception.class)}，确保任一异常触发完整回滚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.domain.vo.UserDeptVO 用户-部门关联 VO
  */
 public interface UserDeptService {

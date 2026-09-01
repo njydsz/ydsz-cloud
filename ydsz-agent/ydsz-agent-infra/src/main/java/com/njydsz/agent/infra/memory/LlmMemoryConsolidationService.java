@@ -32,7 +32,7 @@ import com.njydsz.agent.domain.model.MessageRole;
  * <p>借鉴 MateClaw 的记忆生命周期设计：对话后提取、定时整合、Dreaming 工作流。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -56,22 +56,22 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
 
     private static final String EXTRACTION_PROMPT = """
             你是一个专业的记忆分析助手。请从以下对话中提取有价值的记忆事实。
-            
+
             提取规则：
             1. 只提取对后续对话有复用价值的信息（用户偏好、关键决策、项目上下文、关系信息）
             2. 不要提取临时性、一次性的信息
             3. 每条事实控制在 50 字以内
             4. importance 取值 0.0-1.0，越高表示越重要
             5. 类别从以下选择：preference(偏好)、decision(决策)、project(项目)、relationship(关系)、knowledge(知识)
-            
+
             输出格式（JSON 数组）：
             [
               {"category": "类别", "content": "事实内容", "importance": 重要度},
               ...
             ]
-            
+
             如果对话中没有值得记忆的事实，输出：[]
-            
+
             对话内容：
             """;
 

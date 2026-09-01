@@ -12,7 +12,7 @@ import java.util.Objects;
  * <p><b>线程安全</b>：所有字段均为 final，构造后不可变，可在多线程间安全共享，无需外部同步。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class AgentDefinition implements Serializable {
 
@@ -24,7 +24,7 @@ public final class AgentDefinition implements Serializable {
    * <p>定义 Agent 的执行模式，包括单轮对话、ReAct、RAG、计划执行、路由、工作流、主管协同和 DAG 编排。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public enum Type {
     /** 单轮对话 */

@@ -19,7 +19,7 @@ import com.njydsz.common.netty.metric.NettyChannelMetrics;
  * <p>当 {@link NettyChannelMetrics} 为 {@code null} 时降级为空操作。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @ChannelHandler.Sharable

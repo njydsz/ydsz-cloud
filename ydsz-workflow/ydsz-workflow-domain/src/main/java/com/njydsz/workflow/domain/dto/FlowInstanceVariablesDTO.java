@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>P1-10: 由原 Map body 改造为强类型 DTO + JSR-303 校验。 variables 保持 Map 类型（动态流程变量）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "流程实例变量 DTO")

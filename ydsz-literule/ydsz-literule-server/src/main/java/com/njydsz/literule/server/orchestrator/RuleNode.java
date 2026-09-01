@@ -20,7 +20,7 @@ import com.njydsz.literule.domain.Rule;
  *
  * <p>使用静态工厂方法 {@link #of(Rule)} 与 {@link #of(RuleChain)} 构建节点， 保证节点形态与字段填充的一致性。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class RuleNode {
@@ -156,7 +156,7 @@ public class RuleNode {
    * 获取节点名称
    *
    * @return 节点名称；可能为 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public String getName() {
     return name;

@@ -41,7 +41,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
  * 加速按分组+键查询。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.system.domain.enums.ConfigValueType 值类型枚举
  * @see com.njydsz.system.server.service.ConfigService 配置业务逻辑
  */

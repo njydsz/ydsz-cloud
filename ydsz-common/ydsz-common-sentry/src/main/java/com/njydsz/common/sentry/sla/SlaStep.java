@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * <p>标注在方法上，作为 SLA 的一个步骤进行采集。 需配合 {@link SlaMetric} 使用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

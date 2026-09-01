@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * RegexpSinglelineJava} 线程池构造检测。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public final class InternalExecutorFactory {

@@ -29,7 +29,7 @@ import com.njydsz.common.socket.trace.WebSocketTraceContext;
  * <p>收到消息后从 {@link WebSocketClusterMessage#getTraceId()} 恢复 MDC traceId。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -30,7 +30,7 @@ import com.njydsz.workflow.infra.entity.FlowRunTask;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.infra.entity.FlowRunTask 待办任务实体
  * @see com.njydsz.workflow.server.service.FlowTaskService 待办 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -76,7 +76,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
 
   /**
    * 查用户的待办（真分页：LIMIT/OFFSET）
-   * 
+   *
    *
    * @param assigneeId 办理人用户 ID
    * @param tenantId 租户 ID
@@ -171,7 +171,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
 
   /**
    * P0-1: 取消单个任务（边界事件触发时使用）
-   * 
+   *
    *
    * @param id 任务 ID
    * @param taskStatus 目标取消状态
@@ -198,7 +198,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
 
   /**
    * P2-18: 冻结某实例下所有 PENDING/CLAIMED 任务（流程挂起时调用）
-   * 
+   *
    *
    * @param instanceId 流程实例 ID
    * @return 受影响行数
@@ -207,7 +207,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
 
   /**
    * P2-18: 解冻某实例下所有 FROZEN 任务（流程激活时调用，回到 PENDING）
-   * 
+   *
    *
    * @param instanceId 流程实例 ID
    * @return 受影响行数

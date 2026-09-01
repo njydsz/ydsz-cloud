@@ -34,7 +34,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  * <p>每个处理器按 Servlet / Reactive 类型自动适配， 在纯 WebMVC 项目或纯 WebFlux 项目中仅装配对应的一个。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration(after = YdszExceptionCoreAutoConfiguration.class)
 @EnableConfigurationProperties(ExceptionProperties.class)

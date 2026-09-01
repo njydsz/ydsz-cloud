@@ -79,7 +79,7 @@ import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
  * 之前加载，避免与自动配置产生冲突。 所有 Bean 均添加了 {@code @ConditionalOnMissingBean}，允许用户自定义覆盖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @AutoConfigureBefore(DataRedisAutoConfiguration.class)

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
  * <p>封装批量导入的执行结果，包含成功数、失败数、失败明细等详细信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

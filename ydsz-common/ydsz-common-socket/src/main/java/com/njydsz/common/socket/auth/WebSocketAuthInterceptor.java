@@ -39,7 +39,7 @@ import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
  * 接口而非具体的 {@code JwtTokenProvider}， 可适配任何 TokenService 实现，解耦更彻底。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

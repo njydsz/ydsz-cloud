@@ -60,7 +60,7 @@ import com.njydsz.system.server.service.ConfigService;
  * feature-flag}），便于批量查询与管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.system.server.service.ConfigService 配置业务逻辑
  */
 @Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作 + 导入导出")

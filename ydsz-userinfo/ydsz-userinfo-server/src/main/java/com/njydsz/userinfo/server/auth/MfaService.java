@@ -41,7 +41,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
    * 未配置时明文存储（仅适用于开发/测试环境）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

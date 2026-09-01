@@ -14,7 +14,7 @@ import lombok.Data;
  * <p><b>安全说明：</b>修改密码成功后，当前会话 Token 不会被撤销， 如需强制下线请调用管理员重置密码接口。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ChangePasswordDTO implements Serializable {

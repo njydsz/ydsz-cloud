@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>由 {@code DepartmentServiceImpl.buildDeptTree()} 构建递归树， 包含部门路径 {@code deptPath} 用于快速查询子树。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class DepartmentTreeVO {

@@ -11,7 +11,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  * <p>规则触发后执行的后续动作（消息通知、工作流触发、定时任务触发等）。 实现类通过 {@link RuleActionDispatcher} 注册，由 {@code
  * DefaultRuleEngine} 在评估完成后调用。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @FunctionalInterface

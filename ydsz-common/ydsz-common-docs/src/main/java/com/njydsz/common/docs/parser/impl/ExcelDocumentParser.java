@@ -37,7 +37,7 @@ import com.njydsz.common.excel.core.RawSheetData;
  * <p>整个工作簿以 DOM 方式载入内存，大文件内存占用约为文件体积的数倍， 需由上层按 {@code maxFileSizeMb} 提前拦截。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

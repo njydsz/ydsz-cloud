@@ -26,7 +26,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  * <p>每条事件携带 TraceId 与 ProviderTraceId，可与 SkyWalking/OpenTelemetry 关联。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

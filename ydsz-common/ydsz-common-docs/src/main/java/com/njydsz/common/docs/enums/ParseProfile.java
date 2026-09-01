@@ -9,7 +9,7 @@ package com.njydsz.common.docs.enums;
  * <p>通过显式声明输出轮廓，调用方可对非空字段省略判空保护，解析器实现也可按需跳过 高开销操作（如图片提取），避免"全默认填充"造成的性能浪费。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum ParseProfile {
 

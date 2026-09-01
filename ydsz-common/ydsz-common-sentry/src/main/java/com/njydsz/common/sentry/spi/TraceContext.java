@@ -6,7 +6,7 @@ package com.njydsz.common.sentry.spi;
  * <p>统一追踪上下文抽象，底层可切换 SkyWalking / 自实现 TraceId。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface TraceContext {
 

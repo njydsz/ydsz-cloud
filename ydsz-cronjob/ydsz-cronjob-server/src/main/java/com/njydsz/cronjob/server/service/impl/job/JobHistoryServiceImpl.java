@@ -33,7 +33,7 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
  * <p>支持按时间窗/状态/调度计划/执行人等多维度查询与清理（保留 N 个月后归档至 OSS）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

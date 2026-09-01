@@ -35,7 +35,7 @@ import com.njydsz.common.util.string.StringUtils;
  * 所有方法均为无状态方法，可安全在多线程环境下使用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class PermissionUtils {
 

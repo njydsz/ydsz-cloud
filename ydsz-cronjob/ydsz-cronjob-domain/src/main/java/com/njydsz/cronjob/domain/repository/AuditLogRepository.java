@@ -11,7 +11,7 @@ import com.njydsz.cronjob.domain.vo.AuditLogVO;
  * <p>封装 ydsz_job_audit_log 表的查询操作。仅提供读取能力，写入由 common-audit 模块完成。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface AuditLogRepository {
 

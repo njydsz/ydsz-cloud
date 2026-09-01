@@ -36,7 +36,7 @@ import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
  * <p><b>容错策略</b>：Redis 操作失败时降级放行（仅记录 WARN 日志）， 避免配额服务故障导致全局任务不可执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface TenantQuotaService {
 

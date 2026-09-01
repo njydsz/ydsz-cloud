@@ -19,7 +19,7 @@ import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
  * <p>实现 {@link MsgVariableSourceRepository} 接口，封装 MsgVariableSourceMapper 数据访问细节。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

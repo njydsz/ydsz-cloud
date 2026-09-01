@@ -27,7 +27,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
  * 计数成功后以数据库权威值回填 VO，保证 {@link #shouldAdvance} 判定的准确性。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 @RequiredArgsConstructor

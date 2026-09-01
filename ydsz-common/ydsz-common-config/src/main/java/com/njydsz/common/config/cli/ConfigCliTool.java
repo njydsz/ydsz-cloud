@@ -44,7 +44,7 @@ import com.njydsz.common.json.YdszJson;
  * 共享配置 {@code jasypt.encryptor.algorithm} 对齐。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ConfigCliTool {
 

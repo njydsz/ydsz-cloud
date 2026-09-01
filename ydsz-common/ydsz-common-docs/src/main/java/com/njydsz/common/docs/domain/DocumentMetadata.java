@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>描述文档的属性信息，包括作者、创建时间、修改时间、页数、字数等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

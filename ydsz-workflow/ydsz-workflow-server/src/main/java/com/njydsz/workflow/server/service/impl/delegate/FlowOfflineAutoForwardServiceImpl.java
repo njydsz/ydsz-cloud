@@ -92,7 +92,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowOfflineAutoForwardService 接口定义
  * @see com.njydsz.workflow.infra.entity.FlowDelegateAuth 委派代理实体（优先使用其配置）
  * @see FlowTaskService 流程任务服务（转交后触发新的待办）

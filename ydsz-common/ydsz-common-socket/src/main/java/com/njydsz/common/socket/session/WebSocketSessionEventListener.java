@@ -37,7 +37,7 @@ import com.njydsz.common.socket.offline.OfflineMessageStore;
  * <p>集成心跳注册/注销（P0-3）和连接生命周期钩子（P3-5）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class WebSocketSessionEventListener {

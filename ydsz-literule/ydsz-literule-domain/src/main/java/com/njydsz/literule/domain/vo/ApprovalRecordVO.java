@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端展示某条规则在某审批流中的审批进度与状态。 每行对应一个规则的一次审批实例，记录当前所处层级与状态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ApprovalRecordVO {

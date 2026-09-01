@@ -88,7 +88,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
  * 代批任务的审计日志同时记录「原审批人 / 代理人」便于合规追溯。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowDelegateAuthService 接口定义
  * @see FlowDelegateAuthVO 委派代理值对象
  * @see FlowOfflineAutoForwardService 离线自动转交服务（与委派不同：离线是自动转交，委派是主动授权）

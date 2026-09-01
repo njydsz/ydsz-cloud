@@ -19,7 +19,7 @@ import com.njydsz.common.audit.core.HealthInfo;
  * <p>健康状态由 {@link AuditRecorder#health()} 多态分发， 无需在指示器中做 instanceof 类型判断。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class AuditHealthIndicator implements HealthIndicator {

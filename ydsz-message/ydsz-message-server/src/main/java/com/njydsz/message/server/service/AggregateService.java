@@ -23,7 +23,7 @@ import com.njydsz.message.domain.vo.MsgAggregateVO;
  * <p><b>刷新策略：</b>由 {@code ydsz.message.aggregate.flush-interval-seconds} 配置(默认 60s), 定时任务每分钟扫描到期批次。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgAggregateVO 聚合批次VO
  * @see BatchService 普通批次服务(无聚合)
  */

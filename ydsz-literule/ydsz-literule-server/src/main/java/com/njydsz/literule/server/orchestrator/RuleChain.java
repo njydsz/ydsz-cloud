@@ -45,7 +45,7 @@ import com.njydsz.literule.domain.vo.StatsRecorderVO;
  *   RuleChain.switchOn("type", branches)             // 分支选择
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -237,7 +237,7 @@ public class RuleChain {
    * @param branches 分支映射：分支 key -&gt; 分支规则
    * @param defaultRule 默认分支规则（未命中任何分支时执行，可为 null）
    * @return SWITCH 类型规则链
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static RuleChain switchOn(String branchKey, Map<String, Rule> branches, Rule defaultRule) {
     Objects.requireNonNull(branchKey, "branchKey 不能为 null");
@@ -309,7 +309,7 @@ public class RuleChain {
    * @param evaluator 表达式求值器（IF/SWITCH 嵌套链需要）
    * @param statsRecorder 统计记录器（可为 null，表示不记录统计）
    * @return 已触发的规则结果列表；无触发返回空列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<RuleResultVO> evaluate(
       RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
@@ -325,7 +325,7 @@ public class RuleChain {
    * @param parallelExecutor 并行执行线程池（WHEN 链使用，null 则用 ForkJoinPool）
    * @param timeoutMs 超时毫秒（0=不超时）
    * @return 已触发的规则结果列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<RuleResultVO> evaluate(
       RuleContextVO context,
@@ -610,7 +610,7 @@ public class RuleChain {
    * <p>仅 ELIF 链返回非 null 列表；其他链类型返回 null。 P0-1 增强：暴露给 {@link ChainGraphConverter} 提取子节点。
    *
    * @return 不可修改的多分支条件列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<Map.Entry<String, RuleNode>> getElifBranches() {
     return elifBranches;
@@ -620,7 +620,7 @@ public class RuleChain {
    * 获取 ELSE 节点（ELIF 专用）
    *
    * @return ELSE 节点；ELIF 链之外或未设置时返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleNode getElseNode() {
     return elseNode;
@@ -630,7 +630,7 @@ public class RuleChain {
    * 获取 SWITCH 默认分支节点
    *
    * @return 默认分支节点；SWITCH 链之外或未设置时返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleNode getDefaultBranch() {
     return defaultBranch;

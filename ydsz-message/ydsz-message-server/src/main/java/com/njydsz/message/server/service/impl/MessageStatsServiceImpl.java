@@ -33,7 +33,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
  * <p>数据按小时/天/周/月聚合，支持自定义时间区间导出报表。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

@@ -31,7 +31,7 @@ import com.njydsz.cronjob.server.core.LockKeyUtil;
  * （value 相等判断，兼容 SETNX 与 common-lock 两种获取路径）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

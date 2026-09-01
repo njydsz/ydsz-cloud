@@ -30,7 +30,7 @@ import com.njydsz.common.docs.parser.DocumentParser;
  * 文本必须由调用方显式声明编码，否则会乱码。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -55,7 +55,7 @@ import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
  * 单条 UPDATE SQL 完成判定 + 更新，避免"读-判-写"竞态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

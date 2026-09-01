@@ -42,7 +42,7 @@ import com.njydsz.common.search.api.SearchRequest;
  * <p>兼容性：当输入不包含布尔操作符时，行为与 {@link QueryParser} 完全一致。
  *
  * @author ydzs-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class AdvancedQueryParser {

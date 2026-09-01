@@ -72,7 +72,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.core.MessageTraceService 消息追踪服务
  * @see com.njydsz.message.infra.entity.MsgTrace 追踪实体
  */

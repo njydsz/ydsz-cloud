@@ -19,7 +19,7 @@ import com.njydsz.cronjob.infra.entity.job.JobTask;
  * 管理子任务生命周期。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface JobTaskMapper extends BaseMapper<JobTask> {
@@ -111,7 +111,7 @@ public interface JobTaskMapper extends BaseMapper<JobTask> {
 
   /**
    * 批量删除过期子任务记录（基于 ctid 物理地址，避免回表）。
-   * 
+   *
    * <p>PostgreSQL 特有优化：使用 ctid = ANY(ARRAY(...)) 替代 id IN (SELECT id ...)，
    * 直接通过物理行地址定位数据页，避免二次索引扫描，大表删除性能提升 3-5 倍。
    *

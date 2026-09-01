@@ -21,7 +21,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * 这是文档场景的特殊需求——泄露事件分析需要保留地区信息以快速定位影响范围。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class IdCardDetector implements PiiDetector {

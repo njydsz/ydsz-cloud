@@ -49,7 +49,7 @@ import com.njydsz.literule.domain.enums.RuleStatus;
  *       .build();
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Data
@@ -79,7 +79,7 @@ public class RuleChainGraph implements Serializable {
   /** 租户 ID（多租户隔离，P1-3） */
   private String tenantId;
 
-  /** 画布版本号（语义化版本，如 1.0.0、1.0.0-SNAPSHOT） */
+  /** 画布版本号（语义化版本，如 26.09.01、26.09.01-SNAPSHOT） */
   private String version;
 
   /** 画布状态：DRAFT / PUBLISHED / ARCHIVED（与 {@link RuleStatus} 对齐） */

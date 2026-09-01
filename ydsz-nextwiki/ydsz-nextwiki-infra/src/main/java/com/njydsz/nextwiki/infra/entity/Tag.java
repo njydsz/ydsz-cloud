@@ -15,7 +15,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>支持对文件/文件夹打标签，用于知识库分类和检索。 标签可由用户手动创建或由系统基于文档内容自动推荐。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

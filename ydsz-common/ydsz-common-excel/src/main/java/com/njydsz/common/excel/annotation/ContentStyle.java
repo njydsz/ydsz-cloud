@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * <p>标注在导出模型的字段上，控制生成 Excel 时该单元格的隐藏、锁定、 对齐、背景色、数字格式、自动换行等样式。所有数值型属性使用 {@code -1} 表示「不设置」（沿用默认样式）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

@@ -13,7 +13,7 @@ import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
  * <p>注册为 Spring Bean，由 {@code AgentFactory} 注入各执行器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

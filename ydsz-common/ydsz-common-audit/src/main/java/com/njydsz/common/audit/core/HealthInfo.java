@@ -13,7 +13,7 @@ import java.util.Map;
  * <p>不同实现可扩展额外字段（如 {@code queueSize}、{@code usageRatio}）， 通过 {@link #getDetails()} 传递给健康检查端点。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class HealthInfo {
 

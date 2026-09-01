@@ -7,7 +7,7 @@ package com.njydsz.agent.domain.tool;
  * 工具内部错误等场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ToolExecutionException extends Exception {
 

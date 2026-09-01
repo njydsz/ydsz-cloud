@@ -36,7 +36,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * ThreadLocal 内存泄漏。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public abstract class AbstractRedisDistributedLock implements DistributedLocker {

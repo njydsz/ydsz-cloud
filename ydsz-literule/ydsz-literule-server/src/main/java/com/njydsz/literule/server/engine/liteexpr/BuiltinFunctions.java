@@ -22,7 +22,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>所有函数在 {@link FunctionRegistry} 构造时自动注册，附带分类信息用于前端函数市场分组展示。
   * 业务侧可通过 {@code registry.register(name, fn, sig, desc, category)} 追加自定义函数。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public final class BuiltinFunctions {

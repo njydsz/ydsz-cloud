@@ -15,7 +15,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>支持文件级别的评论和回复，用于知识库协作讨论。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

@@ -27,7 +27,7 @@ import com.njydsz.common.json.YdszJson;
  * <p><b>降级策略：</b>当 OpenAPI 文档解析失败时，自动降级为简单格式（仅输出标题与原始 JSON）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Conditional(MarkdownDocExporter.MarkdownDocExporterCondition.class)
 public class MarkdownDocExporter extends AbstractDocExporter {
@@ -295,7 +295,7 @@ public class MarkdownDocExporter extends AbstractDocExporter {
      * 导出开关条件：{@code ydsz.doc.export.enabled=true}（缺省按 true 处理）。
      *
      * @author ydsz-team
-     * @since 1.0.0
+     * @since 26.09.01
      */
     @ConditionalOnProperty(
         prefix = "ydsz.doc.export",
@@ -308,7 +308,7 @@ public class MarkdownDocExporter extends AbstractDocExporter {
      * 导出器类型条件：{@code ydsz.doc.exporter=markdown}（需显式指定，缺省不激活）。
      *
      * @author ydsz-team
-     * @since 1.0.0
+     * @since 26.09.01
      */
     @ConditionalOnProperty(prefix = "ydsz.doc", name = "exporter", havingValue = "markdown")
     static class OnExporterType {}

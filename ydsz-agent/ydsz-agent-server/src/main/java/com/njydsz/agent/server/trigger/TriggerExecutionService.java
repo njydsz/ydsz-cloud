@@ -17,7 +17,7 @@ import com.njydsz.agent.domain.trigger.AgentTrigger;
  * 生成执行上下文、记录触发历史、处理执行结果。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class TriggerExecutionService {

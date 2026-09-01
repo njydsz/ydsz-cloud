@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/{ruleCode}/dependencies} 接口，为规则添加依赖关系 （依赖另一条规则的执行结果，支持级联禁用）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "规则依赖新增请求体")

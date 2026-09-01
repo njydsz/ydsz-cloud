@@ -49,7 +49,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  *       strict-content-type: true      # 是否强制校验 Content-Type
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

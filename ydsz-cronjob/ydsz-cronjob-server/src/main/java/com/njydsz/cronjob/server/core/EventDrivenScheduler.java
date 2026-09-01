@@ -20,7 +20,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
  * <p><b>P0-10</b>：强制要求调用方传 {@code msgId}，无 msgId 时拒绝触发，避免去重失效导致任务重复执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

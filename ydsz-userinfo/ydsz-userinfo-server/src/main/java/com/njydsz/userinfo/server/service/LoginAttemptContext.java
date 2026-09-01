@@ -10,6 +10,6 @@ package com.njydsz.userinfo.server.service;
  * @param username 用户名
  * @param loginIp 登录 IP
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record LoginAttemptContext(String userId, String username, String loginIp) {}

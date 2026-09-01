@@ -81,7 +81,7 @@ import com.njydsz.workflow.server.service.FlowAttachmentService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowAttachmentService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowAttachmentVO 附件值对象
  * @see com.njydsz.workflow.domain.dto.FlowAttachmentDTO 附件 DTO
@@ -181,7 +181,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
    *
    * @param taskId 任务 ID（用于定位附件）
@@ -262,9 +262,9 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   /**
    * 根据预览类型构建预览 URL。
-   * 
+   *
    * <p>OFFICE 类型需要配置 {@code workflow.attachment.preview-server-url}：
-   * 
+   *
    * <ul>
    * <li>配置中含 {@code {url}} 占位符 → 替换为 downloadUrl 的 URL 编码
    * <li>配置中不含占位符 → 直接拼接 downloadUrl

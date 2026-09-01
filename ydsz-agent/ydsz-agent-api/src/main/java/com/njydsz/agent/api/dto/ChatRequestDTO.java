@@ -21,7 +21,7 @@ import jakarta.validation.constraints.NotBlank;
  * <p>当 {@code multimodalContent} 非空时，优先使用多模态格式，{@code message} 忽略。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Schema(description = "对话请求")
 public class ChatRequestDTO implements Serializable {

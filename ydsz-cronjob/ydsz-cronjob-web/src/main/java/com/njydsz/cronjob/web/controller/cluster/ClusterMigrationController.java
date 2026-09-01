@@ -44,7 +44,7 @@ import com.njydsz.cronjob.server.service.cluster.ClusterMigrationService;
  * <p>需要 {@code CRONJOB_JOB_MIGRATE} 权限（管理员级别）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Tag(name = "集群漂移", description = "多云/多集群任务漂移管理")
 @Slf4j

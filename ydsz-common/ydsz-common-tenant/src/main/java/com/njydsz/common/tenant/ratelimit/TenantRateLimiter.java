@@ -45,7 +45,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * <p><b>注意：</b>本门面是租户级限流的唯一推荐入口，各模块应避免自行实现限流逻辑， 以确保限流配额按租户维度统一管理与监控。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class TenantRateLimiter {
 

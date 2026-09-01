@@ -27,7 +27,7 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
  *   <li>owner - 责任人
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -51,7 +51,7 @@ public class RuleSearchService {
    * @param offset 分页偏移
    * @param limit 分页大小
    * @return 搜索结果列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<RuleDefinitionDTO> search(
       String query, String status, String category, Boolean enabled, int offset, int limit) {
@@ -70,7 +70,7 @@ public class RuleSearchService {
    * @param category 分类过滤
    * @param enabled 启停过滤
    * @return 匹配的规则总数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public int searchCount(String query, String status, String category, Boolean enabled) {
     return ruleDefinitionRepository.searchCount(query, status, category, enabled);
@@ -85,7 +85,7 @@ public class RuleSearchService {
    * @param enabled 启停过滤
    * @param pageQuery 分页查询参数
    * @return 分页结果
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public PageResponse<List<RuleDefinitionDTO>> searchPage(
       String query, String status, String category, Boolean enabled, PageQuery pageQuery) {

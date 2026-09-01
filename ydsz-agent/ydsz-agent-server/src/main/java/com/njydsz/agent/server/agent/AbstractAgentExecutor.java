@@ -38,7 +38,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>子类只需实现具体的执行逻辑，无需重复声明公共字段和基础方法。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public abstract class AbstractAgentExecutor implements AgentExecutor {

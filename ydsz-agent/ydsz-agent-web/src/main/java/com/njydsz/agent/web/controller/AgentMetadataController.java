@@ -44,7 +44,7 @@ import com.njydsz.common.permission.PermissionCodes;
  * <p>本 Controller 仅做参数透传与 VO 转换，所有元数据来源由 {@link LlmClient} 与 {@link ToolRegistry} 提供，不包含业务编排逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AgentController Agent 执行接口（同步 / SSE 流式）
  * @see LlmClient LLM 客户端抽象
  * @see LlmClientRouter 多 Provider 路由器

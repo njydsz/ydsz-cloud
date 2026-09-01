@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SensitiveType
  */
 @Slf4j
@@ -554,7 +554,7 @@ public final class SensitiveUtil {
    * @param rawValue 匹配到的原始文本
    * @param type 对应的 PII 类型
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public record PiiMatch(int startIndex, int endIndex, String rawValue, SensitiveType type) {
 
@@ -595,7 +595,7 @@ public final class SensitiveUtil {
    * @param text 原始文本（可为 null）
    * @return 匹配列表（按下标升序）；输入为 null 或空时返回空列表，不返回 {@code null}
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static List<PiiMatch> scanWithPositions(String text) {
     if (text == null || text.isEmpty()) {

@@ -19,7 +19,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * ydsz.message.recall-timeout-hours} 配置）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum RecallStatusEnum implements BaseStatusEnum<RecallStatusEnum> {
 

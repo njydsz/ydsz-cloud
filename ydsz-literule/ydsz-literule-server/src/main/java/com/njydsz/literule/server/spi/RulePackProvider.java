@@ -13,7 +13,7 @@ import com.njydsz.literule.domain.vo.RulePackVO;
  * <p>由消费方（如 project 模块）提供实现，提供规则集（RulePackVO）的市场发布、查询、安装、 版本管理等能力。将原有 {@code RulePackService} 的能力抽象为
  * SPI， 避免 literule 模块直接依赖 project 模块。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface RulePackProvider {

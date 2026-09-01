@@ -41,7 +41,7 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  * <p>若 MeterRegistry 为 null 或指标注册失败（如并发冲突）， 自动降级到内存采集器，不影响业务流程。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MetricsCollector
  * @see InMemoryMetricsCollector
  * @see MeterRegistry
@@ -273,7 +273,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
    * <p>仅供 SentryMetricsAdapter 等内部组件在需要注册 Gauge 回调时使用， 业务代码不应直接操作此 MeterRegistry。
    *
    * @return Micrometer MeterRegistry 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public MeterRegistry getMeterRegistry() {
     return meterRegistry;

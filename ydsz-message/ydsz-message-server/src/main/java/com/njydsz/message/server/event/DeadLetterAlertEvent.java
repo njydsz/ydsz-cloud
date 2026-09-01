@@ -14,7 +14,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * 邮件等，可扩展）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DeadLetterAlertEvent extends ApplicationEvent {
 
@@ -35,7 +35,7 @@ public class DeadLetterAlertEvent extends ApplicationEvent {
 
   /**
    * 构造死信告警事件。
-   * 
+   *
    *
    * @param source 事件源对象
    * @param channel 触发告警的通道标识

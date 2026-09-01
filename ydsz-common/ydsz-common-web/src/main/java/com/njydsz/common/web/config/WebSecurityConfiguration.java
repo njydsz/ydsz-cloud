@@ -23,7 +23,7 @@ import com.njydsz.common.web.handler.WebAuthenticationEntryPoint;
  * <p>项目使用自定义 {@code WebAuthFilter}，本配置仅负责异常处理链接入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnClass(AccessDeniedHandler.class)

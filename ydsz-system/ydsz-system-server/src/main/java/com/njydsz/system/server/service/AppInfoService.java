@@ -34,7 +34,7 @@ import com.njydsz.system.domain.vo.AppInfoVO;
  * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AppInfoDTO 应用注册 DTO
  */
 public interface AppInfoService {

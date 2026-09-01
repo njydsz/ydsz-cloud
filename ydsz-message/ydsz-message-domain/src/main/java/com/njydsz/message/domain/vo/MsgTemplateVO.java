@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回消息模板的完整信息，包含模板内容、通道配置、 供应商绑定、审核状态及变量定义，支撑模板管理与多语言配置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgTemplateVO implements Serializable {

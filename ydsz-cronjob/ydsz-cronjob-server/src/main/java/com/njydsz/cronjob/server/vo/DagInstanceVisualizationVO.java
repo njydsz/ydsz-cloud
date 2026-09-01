@@ -14,7 +14,7 @@ import com.njydsz.cronjob.server.core.dag.DagDefinition;
  * <p>组合 DAG 实例、DAG 定义（节点/边）和节点执行状态， 供前端一次性获取渲染 DAG 可视化图所需的全部数据。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class DagInstanceVisualizationVO {

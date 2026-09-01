@@ -26,7 +26,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * 自动清理全部缓存条目，消除"命名策略对已缓存类无效"的隐患。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class SerializerCache {
 
@@ -127,7 +127,7 @@ public final class SerializerCache {
    * 获取因配置变更自动清理的次数。
    *
    * @return 自动清理次数（监控指标）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static long getAutoInvalidateCount() {
     return AUTO_INVALIDATE_COUNT.get();
@@ -137,7 +137,7 @@ public final class SerializerCache {
    * 获取上次清理时的配置版本号。
    *
    * @return 版本号
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static long getLastConfigVersion() {
     return LAST_CONFIG_VERSION.get();

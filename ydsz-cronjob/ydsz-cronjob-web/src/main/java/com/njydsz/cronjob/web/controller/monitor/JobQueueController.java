@@ -51,7 +51,7 @@ import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
  * 接口加 {@link AuthApiPermission} 权限控制（{@link PermissionCodes#CRONJOB_STATS_VIEW}）， 只读不写，无需幂等/限流/审计。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Tag(name = "执行队列状态", description = "任务执行线程池实时状态：活跃数/队列大小/已完成数/拒绝数")

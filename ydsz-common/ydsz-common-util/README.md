@@ -2,7 +2,7 @@
 
 > YDSZ 通用工具类库（L1 工具层）— 覆盖 ID 生成、加密/国密、HTTP、字符串、集合/Map、IP、并发、认证上下文、国际化消息等领域。
 
-> **注意**: 自 1.0.0 起，线程池创建与监控能力（`ExecutorUtils`、`MeteredThreadPoolExecutor`）已迁移至 `ydsz-common-thread` 模块；
+> **注意**: 自 26.09.01 起，线程池创建与监控能力（`ExecutorUtils`、`MeteredThreadPoolExecutor`）已迁移至 `ydsz-common-thread` 模块；
 > 限流能力已收敛至 `ydsz-common-safe` 的 `TokenBucketLimiter`（本模块重复实现已删除）；
 > 本模块并发包仅保留 `RetryUtils`（轻量重试，@Experimental 能力储备——平台级熔断/重试标准为 Resilience4j，见根 pom 说明）。
 
@@ -319,14 +319,14 @@ MessageSource ms = MESSAGE_SOURCE_BRIDGE.get();
 
 ## 变更记录
 
-- **1.0.0**（2026-09-01，治理轮）：
+- **26.09.01**（2026-09-01，治理轮）：
   - P0：`TraceIdGeneratorProxy` 降级 SecureRandom 静态化 + 降级 TraceId hex 格式 bug 修复（原 append(int) 产生十进制串）；`TempFileManager` 重构为 `AutoCloseable` + TTL 兜底清理；pom 清理（snakeyaml / transmittable-thread-local 移除）
   - P1：`RateLimiter` 删除（收敛至 safe 的 `TokenBucketLimiter`）；datacenterId 配置命名空间统一（旧前缀保留兼容告警）；TrustedProxy 自动装配 Bean；IdGenerator 降级计数 + Micrometer 指标；Javadoc 漂移清理
   - P2：反射桥接启动自检（`verifyBinding`，见 `docs/ADR-0002-trace-contract-sinking.md`）；`KeyProvider` 密钥来源 SPI；配置元数据补全（trusted-proxies / tempfile / crypto / sequence-bits 调优 hints）；能力生命周期状态章节
   - 测试补齐：8 个测试类 59 个用例（Snowflake 并发唯一性/时钟回拨注入、AES-GCM 往返/AAD 篡改、KeyProvider SPI、TempFileManager TTL、RetryUtils、降级路径）
-- **1.0.0**（2026-08-17）：
+- **26.09.01**（2026-08-17）：
   - README 对齐源码：补全 `HexUtils`、`DiffCalculator`/`DiffReport`/`FieldDiff`/`DiffValueFormatter`、`StaticBridge`、`RetryException`、`WorkerIdExhaustedException`、`NotApplicableException`、`@Experimental`、`TempFileManager`、`PodOrdinalWorkerIdAllocator`、`IpHashWorkerIdAllocator`、`WorkerIdAllocatorChain` 文档
   - 修正依赖说明：移除不存在的 `ydsz-common-core`、`ydsz-common-domain` 核心依赖声明，修正 `ydsz-common-json` 为可选依赖
   - 新增 "字段 diff 对比"、"→Spring Bean 桥接器" 使用示例
-- **1.0.0**（2026-08-02）：线程池创建与监控能力迁移至 `ydsz-common-thread`
-- **1.0.0**：架构优化（BeanMapper 独立、SnowflakeIdGenerator 拆分、循环导入消除）、功能增强（DateUtils/FileUtils/MaskUtils/ValidationUtils/StringUtils 增强）
+- **26.09.01**（2026-08-02）：线程池创建与监控能力迁移至 `ydsz-common-thread`
+- **26.09.01**：架构优化（BeanMapper 独立、SnowflakeIdGenerator 拆分、循环导入消除）、功能增强（DateUtils/FileUtils/MaskUtils/ValidationUtils/StringUtils 增强）

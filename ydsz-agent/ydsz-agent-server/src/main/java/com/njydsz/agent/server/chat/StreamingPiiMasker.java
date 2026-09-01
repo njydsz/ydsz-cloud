@@ -11,7 +11,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * <p><b>线程安全</b>：单次流式调用单实例使用，不跨线程共享；实例不可复用，流结束后丢弃。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class StreamingPiiMasker {
 

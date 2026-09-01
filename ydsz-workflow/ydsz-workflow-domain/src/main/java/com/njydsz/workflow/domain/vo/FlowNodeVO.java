@@ -18,7 +18,7 @@ import com.njydsz.common.json.YdszJson;
  * 解析结果缓存在 {@code parsedExt} 中，同一 VO 多次调用只解析一次。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Slf4j

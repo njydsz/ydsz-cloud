@@ -285,7 +285,7 @@ dedupSubscriber.subscribeAsync(handler);
 
 ## 接口精简说明
 
-从 1.0.0 起，`IMessagePublisher` 和 `IMessageSubscriber` 接口进行了精简：
+从 26.09.01 起，`IMessagePublisher` 和 `IMessageSubscriber` 接口进行了精简：
 
 **IMessagePublisher（10 → 4 方法）**
 
@@ -374,5 +374,5 @@ logging:
 
 ## 变更记录
 
-- **1.0.0**（2026-08-16）：接口精简（IMessagePublisher/Subscriber 10→4 方法）；移除过度设计组件（熔断器、消息轨迹、自动压缩等）；`common-redis` 升为必需依赖；新增 `dead-letter-retry-jitter-percent`（抖动延迟）、`dedup-enabled`（去重开关）、`dedup-window-millis`（去重窗口）配置项；新增 `QueueEndpoint` Actuator 端点、`QueueMetricsBinder` Micrometer 桥接；`@EnableScheduling` 移至 `QueueConfiguration`
-- **1.0.0**（2026-08-02）：初始版本
+- **26.09.01**（2026-08-16）：接口精简（IMessagePublisher/Subscriber 10→4 方法）；移除过度设计组件（熔断器、消息轨迹、自动压缩等）；`common-redis` 升为必需依赖；新增 `dead-letter-retry-jitter-percent`（抖动延迟）、`dedup-enabled`（去重开关）、`dedup-window-millis`（去重窗口）配置项；新增 `QueueEndpoint` Actuator 端点、`QueueMetricsBinder` Micrometer 桥接；`@EnableScheduling` 移至 `QueueConfiguration`
+- **26.09.01**（2026-08-02）：初始版本

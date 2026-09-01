@@ -29,7 +29,7 @@ import com.njydsz.cronjob.infra.entity.log.JobLogContent;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.cronjob.domain.entity.log.JobLogContent 日志内容实体
  * @see com.njydsz.cronjob.server.service.JobLogService 日志 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -102,7 +102,7 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContent> {
 
   /**
    * 批量删除过期日志内容（基于 ctid 物理地址，避免回表）。
-   * 
+   *
    * <p>PostgreSQL 特有优化：使用 ctid = ANY(ARRAY(...)) 替代 id IN (SELECT id ...)，
    * 直接通过物理行地址定位数据页，避免二次索引扫描，大表删除性能提升 3-5 倍。
    *

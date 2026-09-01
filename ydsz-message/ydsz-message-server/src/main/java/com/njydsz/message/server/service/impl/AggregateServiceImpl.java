@@ -41,7 +41,7 @@ import com.njydsz.message.server.template.TemplateEngine;
  * <p>避免对用户造成骚扰。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

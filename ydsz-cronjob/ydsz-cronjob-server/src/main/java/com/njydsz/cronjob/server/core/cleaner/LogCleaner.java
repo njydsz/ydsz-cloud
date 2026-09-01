@@ -32,7 +32,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  *   <li>ydsz_job_alert_dispatch：告警派发日志（含告警规则命中与发送结果，P3-1-merge 后统一落此表）
  *   <li>ydsz_job_task：MapReduce 子任务记录
  *   <li>ydsz_job_history：任务配置历史版本
- *   <li>ydsz_job_audit_log：审计日志（1.0.0 新增，由 ydsz-common-audit 模块提供清理能力）
+ *   <li>ydsz_job_audit_log：审计日志（26.09.01 新增，由 ydsz-common-audit 模块提供清理能力）
  * </ul>
  *
  * <h3>设计要点</h3>
@@ -52,7 +52,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  * 直接通过物理行地址定位数据页，避免二次索引扫描，大表删除性能提升 3-5 倍。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -11,7 +11,7 @@ import com.njydsz.cronjob.domain.vo.JobLogContentVO;
  * 列表查询 IO 性能问题：日志列表只查询主表，大字段按需懒加载。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface JobLogContentService {
 

@@ -49,7 +49,7 @@ import com.njydsz.common.util.message.MessageUtils;
  * <p>适合需要多种能力协作的复杂任务，例如： "帮我分析项目进度，查询相关文档，然后生成一份报告" 可分解为 REACT（查项目）+ RAG（查文档）→ CHAT（生成报告）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SupervisorAgentExecutor extends AbstractAgentExecutor {

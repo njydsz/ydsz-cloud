@@ -53,7 +53,7 @@ import com.njydsz.workflow.server.engine.impl.FlowVariableReplacer;
  * <p>借鉴 Flowlong 的「AI 审批」概念，将 AI Agent 作为流程节点执行器，
  * 实现自然语言驱动的审批决策自动化。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

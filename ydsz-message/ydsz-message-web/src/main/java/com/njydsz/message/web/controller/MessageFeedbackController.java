@@ -68,7 +68,7 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.core.MessageFeedbackService 消息反馈服务
  * @see com.njydsz.message.domain.entity.config.MsgFeedback 反馈实体
  */

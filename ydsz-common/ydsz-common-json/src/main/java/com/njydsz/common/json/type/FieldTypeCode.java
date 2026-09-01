@@ -9,13 +9,13 @@ package com.njydsz.common.json.type;
  * <p>当前编码表以 {@link com.njydsz.common.json.provider.ValueWriter} 的 TYPE_CODE_* 为准， 各组件通过 {@link
  * #fromLegacy(int, String)} 按来源兼容转换。
  *
- * @since 1.0.0
+ * @since 26.09.01
  */
 /**
  * FieldTypeCode。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum FieldTypeCode {
 /** string */

@@ -20,12 +20,12 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  *   <li>HALF_OPEN → 探测失败 → OPEN
  * </ul>
  *
- * <h3>1.0.0 变更</h3>
+ * <h3>26.09.01 变更</h3>
  *
- * <p>自 1.0.0 起，继承 {@link AbstractCircuitBreaker}（ydsz-common-safe）， 复用标准三态状态机，移除自研 CAS 状态管理代码。
+ * <p>自 26.09.01 起，继承 {@link AbstractCircuitBreaker}（ydsz-common-safe）， 复用标准三态状态机，移除自研 CAS 状态管理代码。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class WebSocketCircuitBreaker extends AbstractCircuitBreaker {

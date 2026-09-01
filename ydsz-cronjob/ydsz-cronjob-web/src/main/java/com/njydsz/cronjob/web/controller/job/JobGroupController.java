@@ -77,7 +77,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Tag(name = "任务分组管理", description = "按业务域分组的任务批量管理：分页、暂停/恢复/触发、统计")

@@ -17,7 +17,7 @@ import com.njydsz.nextwiki.server.service.ColdDataArchivalService;
  * 保持一致，防止多实例部署时同一归档任务被并发执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回用户消息偏好的完整信息，包含通道启停、免打扰时段、 频率限制、摘要配置及语言偏好，支撑用户个性化消息设置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgPreferenceVO implements Serializable {

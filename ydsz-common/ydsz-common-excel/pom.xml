@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>26.09.01-SNAPSHOT</version>
     </parent>
 
     <!-- L1 工具模块层：激活 purity 检查，禁止依赖 L2+ 内部模块 -->

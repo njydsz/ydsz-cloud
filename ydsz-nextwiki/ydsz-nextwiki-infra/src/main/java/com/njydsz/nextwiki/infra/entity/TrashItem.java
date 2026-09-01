@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>记录被逻辑删除的文件/文件夹，支持恢复和自动清理。 默认保留 30 天，超期自动永久删除。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

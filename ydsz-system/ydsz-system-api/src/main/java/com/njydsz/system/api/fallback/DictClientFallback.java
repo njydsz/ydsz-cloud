@@ -18,7 +18,7 @@ import com.njydsz.system.api.dto.DictListRequest;
  * <p>系统管理服务不可用时降级返回统一错误码 ({@link FeignClientConstants#FEIGN_SERVICE_UNAVAILABLE})，仅记录 WARN 日志。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

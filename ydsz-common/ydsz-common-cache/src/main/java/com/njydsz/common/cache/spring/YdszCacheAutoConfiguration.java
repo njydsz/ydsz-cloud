@@ -36,7 +36,7 @@ import com.njydsz.common.cache.support.CacheThreadPoolManager;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnClass(YdszCacheManager.class)

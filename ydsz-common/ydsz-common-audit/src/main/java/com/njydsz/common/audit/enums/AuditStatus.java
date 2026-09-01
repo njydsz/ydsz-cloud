@@ -6,7 +6,7 @@ package com.njydsz.common.audit.enums;
  * <p>定义审计记录对目标业务方法调用结果的状态分类。用于事后排查与统计（如失败率、 拒绝率等指标）。与 HTTP 状态码解耦，仅描述业务方法的执行结果。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum AuditStatus {
 

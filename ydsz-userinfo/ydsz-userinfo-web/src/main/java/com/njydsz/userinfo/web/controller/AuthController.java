@@ -76,7 +76,7 @@ import com.njydsz.userinfo.web.dto.SecondaryAuthRequest;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.server.auth.AuthService 认证业务逻辑
  * @see com.njydsz.userinfo.web.controller.OAuth2Controller OAuth2.0 授权端点
  */
@@ -563,7 +563,7 @@ public class AuthController {
    * <p>替代匿名内部类，避免 Spring AOP 代理场景下的 this 引用逃逸问题。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static class SecondaryAuthImpl implements SecondaryAuth {
 

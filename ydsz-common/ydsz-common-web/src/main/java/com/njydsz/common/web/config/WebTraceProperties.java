@@ -28,7 +28,7 @@ import com.njydsz.common.web.filter.TraceIdResponseFilter;
  * @author ydsz-team
  * @see BaseTraceProperties
  * @see TraceIdResponseFilter
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Validated

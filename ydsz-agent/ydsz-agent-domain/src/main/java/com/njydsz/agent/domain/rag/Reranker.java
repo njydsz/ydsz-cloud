@@ -16,7 +16,7 @@ import java.util.List;
  * <p><b>线程安全</b>：实现通常为无状态或远程服务客户端，可安全并发调用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface Reranker {
 

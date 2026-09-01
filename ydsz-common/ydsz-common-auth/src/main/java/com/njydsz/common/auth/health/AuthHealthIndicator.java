@@ -22,7 +22,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)

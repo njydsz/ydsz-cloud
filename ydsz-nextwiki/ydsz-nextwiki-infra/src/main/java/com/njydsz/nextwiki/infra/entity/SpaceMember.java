@@ -19,7 +19,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应空间成员表 {@code nw_space_member}，记录用户与空间的归属关系及角色。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
 @Data

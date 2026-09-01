@@ -36,7 +36,7 @@ spring:
         password: ${NACOS_PASSWORD:nacos}
         # 服务实例元数据（供其他服务做灰度路由、版本标识等使用）
         metadata:
-          version: 1.0.0
+          version: 26.09.01
           port: 9000
         # 心跳/IP 类型
         ip-type: IPv4

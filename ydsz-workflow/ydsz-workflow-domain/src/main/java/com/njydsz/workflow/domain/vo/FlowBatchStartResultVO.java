@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于返回批量启动流程实例操作的成功与失败统计信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowBatchStartResultVO implements Serializable {

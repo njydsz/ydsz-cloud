@@ -23,7 +23,7 @@ import com.njydsz.common.util.ip.CidrUtils;
  * Servlet API。本类对应 WebFlux 的 {@link ServerHttpRequest} 做了等价实现， 但可信代理判定逻辑完全复用 ydsz-common-safe 中的
  * {@link ClientIpResolver#isTrustedProxy}， 保持单一来源一致。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public final class GatewayIpUtils {

@@ -59,8 +59,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 移除 JSON Schema 校验框架和同步投递模式，精简职责回归异步 Outbox 本质
+ * @since 26.09.01
+ * @since 26.09.01 移除 JSON Schema 校验框架和同步投递模式，精简职责回归异步 Outbox 本质
  */
 public class OutboxService {
 
@@ -182,7 +182,7 @@ public class OutboxService {
    * }</pre>
    *
    * @param event 领域事件
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Transactional
   public void appendToOutbox(DomainEvent event) {
@@ -338,7 +338,7 @@ public class OutboxService {
    * </ul>
    *
    * @param events 领域事件列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Transactional
   public void appendAllToOutbox(List<DomainEvent> events) {

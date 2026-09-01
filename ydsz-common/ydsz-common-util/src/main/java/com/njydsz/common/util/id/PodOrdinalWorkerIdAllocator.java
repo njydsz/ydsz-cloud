@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * <p><b>自动检测：</b>仅在 HOSTNAME 匹配模式时启用，否则抛出 {@link NotApplicableException} 让位给下个策略。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class PodOrdinalWorkerIdAllocator implements WorkerIdAllocator {
 

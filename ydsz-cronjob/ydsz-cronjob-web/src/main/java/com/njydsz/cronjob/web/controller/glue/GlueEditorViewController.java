@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * <p>返回 GLUE 代码编辑器静态页面。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Controller
 public class GlueEditorViewController {

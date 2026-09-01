@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>不包含 deleted 等内部维护字段。注意：passwordHash 仅用于历史比对，不可逆转为明文。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserPasswordHistoryVO {

@@ -12,7 +12,7 @@ import lombok.Data;
  * 任务依赖关系创建/更新 DTO（P4 DAG 工作流）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "任务依赖关系表单")

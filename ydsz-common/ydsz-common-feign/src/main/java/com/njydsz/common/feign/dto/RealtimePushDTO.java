@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>用于 WebSocket/SSE 广播场景，承载推送到前端的数据载荷。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

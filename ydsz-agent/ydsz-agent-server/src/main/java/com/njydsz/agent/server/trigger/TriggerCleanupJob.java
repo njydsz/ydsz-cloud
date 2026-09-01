@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * 防止内存泄漏。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class TriggerCleanupJob {

@@ -16,7 +16,7 @@ import lombok.Data;
  * <p>未配置租户配额记录时（{@code ydsz_job_tenant_quota} 表无对应行），默认不限制（unlimited）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class QuotaConfig {

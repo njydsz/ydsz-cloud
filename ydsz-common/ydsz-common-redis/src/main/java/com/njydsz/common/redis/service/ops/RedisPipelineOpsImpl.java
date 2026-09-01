@@ -19,7 +19,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
  * <p>必须在 {@code RedisTemplate.executePipelined()} 回调内使用， 构造时传入回调中的 {@link RedisConnection}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RedisPipelineOps
  * @see RedisTemplate#executePipelined(org.springframework.data.redis.core.RedisCallback)
  */

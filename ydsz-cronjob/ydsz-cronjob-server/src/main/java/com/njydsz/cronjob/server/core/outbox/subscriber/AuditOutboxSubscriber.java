@@ -21,7 +21,7 @@ import com.njydsz.cronjob.domain.vo.OutboxEventVO;
  * （创建/更新/暂停/恢复/触发/删除等）。容器中无 AuditWriter Bean 时（未引入 common-audit）静默降级为日志记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

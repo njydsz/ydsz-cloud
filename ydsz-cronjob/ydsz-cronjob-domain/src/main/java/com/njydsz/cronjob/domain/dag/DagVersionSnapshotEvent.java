@@ -17,7 +17,7 @@ import org.springframework.context.ApplicationEvent;
  * <p><b>发布时机：</b>由 {@code JobDagServiceImpl} 在 DAG 定义写操作成功后、事务提交前发布。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DagVersionSnapshotEvent extends ApplicationEvent {
 

@@ -36,7 +36,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceLifecycleMan
  *
  * <p>P0 修复：排他网关互斥（CONDITION 只取第一条匹配）、并行网关 join 聚合。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -254,7 +254,7 @@ public class DefaultFlowAdvancer {
 
   /**
    * REJECT 回退：解析目标节点、校验存在性，返回单元素列表。
-   * 
+   *
    * <p>显式传入 {@code targetNodeCode} 时优先按其回退；未指定时由 {@link #resolveRejectTarget} 推导。
    * 推导不出目标或目标节点不存在时抛异常，不会静默把流程留在原地。
    *
@@ -290,7 +290,7 @@ public class DefaultFlowAdvancer {
 
   /**
    * PASS 推进：解析出边 + 遍历目标节点并执行 join 聚合。
-   * 
+   *
    * <p>无下游节点时返回空列表（流程结束）；有下游时交由 {@link #aggregateJoinResults} 执行网关 join 聚合逻辑。
    *
    * @param currentInstance 当前流程实例
@@ -313,7 +313,7 @@ public class DefaultFlowAdvancer {
 
   /**
    * PASS 推进：遍历出边 skip，解析节点并执行并行网关 join 聚合。
-   * 
+   *
    * <p>跳过不存在的目标节点并告警；对于 join 节点委托 {@link #tryAggregateJoin} 执行令牌聚合逻辑，未满足聚合条件的分支不进入返回列表（静默等待）。
    *
    * @param currentInstance 当前流程实例
@@ -344,10 +344,10 @@ public class DefaultFlowAdvancer {
 
   /**
    * P0-5 / GAP-P2 / P0-3: 尝试通过 join 聚合检查。
-   * 
+   *
    * <p>通过令牌服务标记本次分支到达，判断是否满足 N/M 聚合条件。 令牌服务（Redis）异常时降级为扫描活跃任务数，避免 join 永久挂起。
-   * 
-   * 
+   *
+   *
    *
    * @param currentInstance 当前流程实例
    * @param joinNode join 类型目标节点

@@ -30,7 +30,7 @@ import com.njydsz.cronjob.infra.entity.dag.JobDagNodeInstance;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance 节点实例实体
  * @see com.njydsz.cronjob.server.service.JobDagService DAG Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -56,7 +56,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
 
   /**
    * 根据 DAG 实例 ID 和任务 ID 查询节点实例（唯一）。
-   * 
+   *
    * <p>注意：LOOP 场景下同一 (dagInstanceId, jobId) 可能存在多个实例 （原始 body 节点 + N 个 iter 实例），本方法仅返回其中一条（不确定）。
    * LOOP 相关的批量查询请使用 {@link #selectAllByDagInstanceAndJob}。
    *
@@ -76,14 +76,14 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
 
   /**
    * P0-4: 根据 DAG 实例 ID 和任务 ID 查询全部节点实例（含 LOOP iter 实例）。
-   * 
+   *
    * <p>LOOP 场景下同一 (dagInstanceId, jobId) 会存在多个实例：
-   * 
+   *
    * <ul>
    * <li>原始 body 节点实例（jobKey 无后缀，由 doExecute 创建）
    * <li>N 个 iter 实例（jobKey 带 {@code #loop} 后缀，LOOP 节点已废弃，保留注释仅兼容旧数据）
    * </ul>
-   * 
+   *
    * 本方法返回全部实例，供 LOOP iter 完成处理逻辑聚合判断使用。
    *
    * @param dagInstanceId DAG 实例 ID
@@ -193,7 +193,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
 
   /**
    * 根据 DAG 实例 ID 和任务 KEY 查询节点实例（唯一，按 KEY 精确查找）。
-   * 
+   *
    * <p>与 {@link #selectByDagInstanceAndJob} 区别：本方法按 jobKey 而非 jobId 查找。
    *
    * @param dagInstanceId DAG 实例 ID

@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回消息路由规则的配置信息，路由规则决定消息 从哪个通道发出、按什么条件筛选等，支撑消息智能路由。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgRouteRuleVO implements Serializable {

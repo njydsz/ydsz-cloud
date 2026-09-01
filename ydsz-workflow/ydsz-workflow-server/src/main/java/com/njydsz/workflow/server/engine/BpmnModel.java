@@ -14,7 +14,7 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
  * <p>P3-1：增加 {@link #nodeCoordinates} / {@link #skipCoordinates} 两个字段， 用于驱动流程图回放时节点高亮定位。坐标系来自 BPMN
  * 2.0 标准 BPMNDI 段 （{@code <BPMNDiagram><BPMNPlane><BPMNShape>}/{@code <BPMNEdge>}）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class BpmnModel {

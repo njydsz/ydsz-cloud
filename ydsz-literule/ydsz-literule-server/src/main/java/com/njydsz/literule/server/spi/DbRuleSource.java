@@ -13,7 +13,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * <p>代理现有 {@link RuleConfigProvider} 实现，作为默认数据源。不支持 Watch 推送（需配合 {@link
  * RuleConfigBroadcaster} 实现分布式热刷新）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * <p>对两个版本的定义进行字段级对比，产出变更项列表。 与纯文本 Diff 不同，本结果基于 {@link com.njydsz.literule.domain.dto.RuleDefinitionDTO}
  * 的字段语义进行结构化对比，前端可据此高亮具体变更字段。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Data

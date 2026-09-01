@@ -57,7 +57,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * <p>失败重试 + 分片任务转移、自愈能力、自动恢复机制。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

@@ -52,7 +52,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  * <p><b>多租户：</b>所有查询与写入均按 {@code tenantId} 隔离。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowInstanceService 接口定义
  * @see FlowInstanceLifecycleManager 实例生命周期管理器
  * @see FlowInstanceBatchOperator 批量操作器

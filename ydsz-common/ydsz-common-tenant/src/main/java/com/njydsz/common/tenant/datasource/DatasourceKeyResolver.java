@@ -26,7 +26,7 @@ import com.njydsz.common.tenant.config.TenantProperties;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see TenantDataSourceRouter
  */
 public interface DatasourceKeyResolver {
@@ -65,7 +65,7 @@ public interface DatasourceKeyResolver {
    *
    * @param properties 租户配置
    * @return 默认解析器
-   * @since 1.0.0
+   * @since 26.09.01
    */
   static DatasourceKeyResolver createDefault(TenantProperties properties) {
     return new SimpleDatasourceKeyResolver(properties);
@@ -76,7 +76,7 @@ public interface DatasourceKeyResolver {
    *
    * <p>包级私有，仅供 {@link #createDefault} 使用。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   class SimpleDatasourceKeyResolver implements DatasourceKeyResolver {
 

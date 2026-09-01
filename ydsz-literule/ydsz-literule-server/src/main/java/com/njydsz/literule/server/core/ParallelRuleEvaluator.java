@@ -67,7 +67,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *         rule -> evaluateSingleRule(rule, context));
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

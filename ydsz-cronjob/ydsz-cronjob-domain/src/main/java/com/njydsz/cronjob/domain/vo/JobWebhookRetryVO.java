@@ -8,7 +8,7 @@ import lombok.Data;
  * WebHook 重试补偿记录 VO（P1-3 Webhook 投递保障）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class JobWebhookRetryVO {

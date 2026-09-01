@@ -8,7 +8,7 @@ import java.util.ServiceLoader;
  * <p>通过 {@link ServiceLoader} 加载所有实现，接收安全事件回调。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface SecurityAlertListener {
 

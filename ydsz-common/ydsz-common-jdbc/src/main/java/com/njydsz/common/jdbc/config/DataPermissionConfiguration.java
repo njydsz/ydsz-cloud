@@ -8,7 +8,7 @@ package com.njydsz.common.jdbc.config;
  * <p><b>配置前缀：</b>{@code ydsz.jdbc.data-permission}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 import java.util.HashSet;
 import java.util.Set;
@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
  * <p>所属包：{@code com.njydsz.common.jdbc.config}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.jdbc.data-permission")

@@ -61,7 +61,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see LanguageService 语言业务逻辑
  * @see com.njydsz.userinfo.domain.vo.LanguageVO 语言VO
  */

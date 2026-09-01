@@ -9,7 +9,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  * 实现时，路由器会回退到此默认实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DefaultRecallChannel implements RecallChannel {
 

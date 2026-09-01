@@ -10,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>控制请求体缓存过滤器的最大缓存容量，防止大文件上传场景下的 OOM 风险。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Validated
 @ConfigurationProperties(prefix = "ydsz.app.content-cache")

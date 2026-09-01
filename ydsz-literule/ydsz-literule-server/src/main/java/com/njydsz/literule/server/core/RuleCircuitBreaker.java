@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>每个规则编码独立维护一个熔断器，底层委托 Resilience4j {@link CircuitBreaker}，
  * 提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
  *
- * <h3>1.0.0 变更（2026-09-01）</h3>
+ * <h3>26.09.01 变更（2026-09-01）</h3>
  *
  * <p>底层实现改为 Resilience4j（{@code resilience4j-circuitbreaker}），移除自研引擎依赖：
  *
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>使用 Resilience4j {@link CircuitBreakerConfig} 配置（阈值换算百分比语义）
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

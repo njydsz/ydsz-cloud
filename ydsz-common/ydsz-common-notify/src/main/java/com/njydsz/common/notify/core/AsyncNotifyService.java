@@ -20,7 +20,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  * <p>支持 {@link NotifyTraceContext} traceId 上下文传播，确保异步线程中链路追踪不丢失。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class AsyncNotifyService {
 

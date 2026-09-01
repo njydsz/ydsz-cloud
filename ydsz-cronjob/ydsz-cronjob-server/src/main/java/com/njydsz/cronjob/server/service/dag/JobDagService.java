@@ -32,7 +32,7 @@ import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
  * <p><b>关联模块：</b>DAG 节点引用 {@link JobService} 管理的任务,通过 {@code dagDefinition.nodes[].jobId} 关联。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.cronjob.domain.vo.JobDagVO DAG 定义视图对象
  * @see com.njydsz.cronjob.domain.vo.JobDagVersionVO DAG 版本视图对象
  * @see JobDagInstanceService DAG 实例 Service

@@ -72,7 +72,7 @@ import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
  * <p>以 jobId + sourceCode 哈希为 key 缓存编译结果（Class 对象）， 源代码未变更时直接复用，避免重复编译开销。新版本保存后自动失效旧缓存。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

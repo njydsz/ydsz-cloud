@@ -32,7 +32,7 @@ import com.njydsz.workflow.server.service.FlowDelegateAuthService;
  * <p>提供长期授权委派的创建、撤回、启停与双视角查询（我设置的/代理给我的）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @RestController
 @RequestMapping("/api/v1/workflow/engine")

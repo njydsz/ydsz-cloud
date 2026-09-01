@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * 各引擎实现将此定义映射为各自的 schema。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

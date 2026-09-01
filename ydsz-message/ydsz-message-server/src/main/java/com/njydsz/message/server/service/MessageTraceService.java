@@ -29,7 +29,7 @@ import com.njydsz.message.domain.vo.MsgTraceVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgTraceVO 轨迹视图对象
  * @see MessageService 消息发送主流程(各节点调用 recordTrace)
  */

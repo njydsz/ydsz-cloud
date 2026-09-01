@@ -10,7 +10,7 @@ import java.io.Serializable;
  * <p><b>线程安全</b>：字段 final，不可变值对象，可安全在护栏链多个阶段间传递与共享。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class GuardrailResult implements Serializable {
 

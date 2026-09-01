@@ -6,7 +6,7 @@ package com.njydsz.common.core.constant;
  * <p>包含系统用户 ID、系统模块名称等全局共享常量。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class SystemConstants {
 

@@ -15,7 +15,7 @@ import com.njydsz.common.queue.service.IMessageSubscriber;
  * <p>使用 traceId 作为去重键，在去重窗口内的重复消息将被丢弃。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DedupAwareSubscriber implements IMessageSubscriber {

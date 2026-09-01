@@ -9,7 +9,7 @@ import java.util.Map;
  * <p>模板分类/标签/搜索。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowTemplateService {
 
@@ -93,7 +93,7 @@ public interface FlowTemplateService {
    * <p>注意：本方法仅复制模板内容，不修改 BPMN XML；如需修改请通过设计器编辑流程定义后再次导出。
    *
    * @param templateCode 模板编码
-   * @param versionLabel 版本标签（可空，如 1.0.0-rc1）
+   * @param versionLabel 版本标签（可空，如 26.09.01-rc1）
    * @return 新版本号
    */
   Integer createNewVersion(String templateCode, String versionLabel);

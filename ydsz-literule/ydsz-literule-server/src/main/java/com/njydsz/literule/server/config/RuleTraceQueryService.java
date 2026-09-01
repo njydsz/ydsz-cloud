@@ -14,7 +14,7 @@ import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
  * web Controller 不再直接依赖 domain Repository（分层合规），并统一查询上限保护。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @RequiredArgsConstructor
 public class RuleTraceQueryService {

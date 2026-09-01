@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>包含任务的基本信息、处理人、状态和时间等完整详情，用于任务详情页展示。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowTaskDetailVO implements Serializable {

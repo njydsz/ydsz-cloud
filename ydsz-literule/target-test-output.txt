@@ -1,28 +1,28 @@
 [INFO] Scanning for projects...
-[INFO] 
+[INFO]
 [INFO] ------------------< com.njydsz:ydsz-literule-server >-------------------
-[INFO] Building ydsz-literule-server 1.0.0-SNAPSHOT
+[INFO] Building ydsz-literule-server 26.09.01-SNAPSHOT
 [INFO]   from pom.xml
 [INFO] --------------------------------[ jar ]---------------------------------
-[INFO] 
+[INFO]
 [INFO] --- checkstyle:3.6.0:check (check-json-ecosystem) @ ydsz-literule-server ---
-[INFO] 
+[INFO]
 [INFO] --- resources:3.5.0:resources (default-resources) @ ydsz-literule-server ---
 [INFO] Copying 0 resource from src\main\resources to target\classes
 [INFO] Copying 2 resources from src\main\resources to target\classes
-[INFO] 
+[INFO]
 [INFO] --- compiler:3.15.0:compile (default-compile) @ ydsz-literule-server ---
 [INFO] Nothing to compile - all classes are up to date.
-[INFO] 
+[INFO]
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ ydsz-literule-server ---
 [INFO] skip non existing resourceDirectory D:\Code\open\ydsz-cloud\ydsz-literule\ydsz-literule-server\src\test\resources
-[INFO] 
+[INFO]
 [INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ ydsz-literule-server ---
 [INFO] Nothing to compile - all classes are up to date.
-[INFO] 
+[INFO]
 [INFO] --- surefire:3.5.6:test (default-test) @ ydsz-literule-server ---
 [INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
-[INFO] 
+[INFO]
 [INFO] -------------------------------------------------------
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
@@ -124,8 +124,8 @@
 17:27:52.006 [main] INFO com.njydsz.literule.server.engine.liteexpr.LiteExprEngine -- [LiteExpr] 自研表达式引擎已初始化（sandbox=true, bytecode=false, functions=61, cacheCapacity=512, maxEvalNanos=5000000000)
 [ERROR] Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.018 s <<< FAILURE! -- in 字节码与树遍历一致性测试
 [ERROR] com.njydsz.literule.server.engine.liteexpr.BytecodeEngineTest.test_bytecode_matchesTreeEngine_forLogicalExpressions -- Time elapsed: 0.008 s <<< FAILURE!
-org.opentest4j.AssertionFailedError: 
-[表达式 'x || y' 字节码结果应与树遍历一致] 
+org.opentest4j.AssertionFailedError:
+[表达式 'x || y' 字节码结果应与树遍历一致]
 expected: true
  but was: false
 	at com.njydsz.literule.server.engine.liteexpr.BytecodeEngineTest$BytecodeConsistencyTest.test_bytecode_matchesTreeEngine_forLogicalExpressions(BytecodeEngineTest.java:332)
@@ -165,16 +165,16 @@ expected: true
 17:27:52.022 [main] INFO com.njydsz.literule.server.engine.liteexpr.LiteExprEngine -- [LiteExpr] 自研表达式引擎已初始化（sandbox=true, bytecode=false, functions=61, cacheCapacity=512, maxEvalNanos=5000000000)
 [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in 字节码变量引用测试
 [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.267 s -- in com.njydsz.literule.server.engine.liteexpr.BytecodeEngineTest
-[INFO] 
+[INFO]
 [INFO] Results:
-[INFO] 
-[ERROR] Failures: 
-[ERROR]   BytecodeEngineTest.test_bytecode_matchesTreeEngine_forLogicalExpressions [表达式 'x || y' 字节码结果应与树遍历一致] 
+[INFO]
+[ERROR] Failures:
+[ERROR]   BytecodeEngineTest.test_bytecode_matchesTreeEngine_forLogicalExpressions [表达式 'x || y' 字节码结果应与树遍历一致]
 expected: true
  but was: false
-[INFO] 
+[INFO]
 [ERROR] Tests run: 19, Failures: 1, Errors: 0, Skipped: 0
-[INFO] 
+[INFO]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
@@ -182,13 +182,13 @@ expected: true
 [INFO] Finished at: 2026-08-27T17:27:52+08:00
 [INFO] ------------------------------------------------------------------------
 [ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test (default-test) on project ydsz-literule-server: There are test failures.
-[ERROR] 
+[ERROR]
 [ERROR] See D:\Code\open\ydsz-cloud\ydsz-literule\ydsz-literule-server\target\surefire-reports for the individual test results.
 [ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
 [ERROR] -> [Help 1]
-[ERROR] 
+[ERROR]
 [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
 [ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR] 
+[ERROR]
 [ERROR] For more information about the errors and possible solutions, please read the following articles:
 [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

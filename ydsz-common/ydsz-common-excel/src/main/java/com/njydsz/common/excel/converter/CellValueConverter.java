@@ -33,10 +33,10 @@ package com.njydsz.common.excel.converter;
  *
  * @author ydsz-team
 
- * @version 1.0.0
+ * @version 26.09.01
  * @see ConverterChain
  * @see ConverterRegistry
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface CellValueConverter {
 

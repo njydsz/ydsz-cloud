@@ -12,7 +12,7 @@ import com.njydsz.common.notify.enums.NotifyPriority;
  * <p>将短时间内发送给同一用户的同类通知聚合为一条摘要，避免消息轰炸。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface NotificationAggregator {
 

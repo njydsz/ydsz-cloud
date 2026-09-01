@@ -20,7 +20,7 @@ import com.njydsz.common.json.YdszJson;
  * <p>使用 {@link ConcurrentHashMap} 在内存中存储执行链路，适用于开发调试。 生产环境可替换为数据库或链路追踪系统实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class InMemoryTraceRecorder implements TraceRecorder {

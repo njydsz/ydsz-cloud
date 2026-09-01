@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>聚合流程实例的历史任务、审计日志和当前任务，按时间顺序展示流程执行全过程。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowTimelineVO implements Serializable {

@@ -11,7 +11,7 @@ import lombok.Data;
  * 与 domain 层 {@code com.njydsz.userinfo.domain.vo.UserAccountVO} 字段一致，但不含脱敏注解。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserAccountVO {

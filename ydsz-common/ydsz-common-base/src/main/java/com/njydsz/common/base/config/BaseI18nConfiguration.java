@@ -38,7 +38,7 @@ import com.njydsz.common.base.i18n.SpringMessageResolver;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public abstract class BaseI18nConfiguration {
 

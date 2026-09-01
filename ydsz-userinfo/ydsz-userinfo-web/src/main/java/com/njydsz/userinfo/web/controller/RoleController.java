@@ -64,7 +64,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.server.service.RoleService 角色业务逻辑
  * @see com.njydsz.userinfo.web.controller.MenuController 菜单 Controller（权限分配的目标对象）
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（角色授予目标）

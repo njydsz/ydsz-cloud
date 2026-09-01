@@ -55,7 +55,7 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AccountStatusGuard 账号状态守卫
  * @see CredentialVerifier 凭据校验器
  * @see SessionManager 会话管理器

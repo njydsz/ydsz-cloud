@@ -10,7 +10,7 @@ import java.util.Map;
  * 借鉴 MateClaw 的 LESSONS 设计，实现知识的持续积累和复用。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class SkillLesson {
 

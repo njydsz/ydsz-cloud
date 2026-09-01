@@ -54,7 +54,7 @@ import com.njydsz.common.safe.util.ClientIpResolver;
  * <p><b>过滤器优先级：</b>{@link Ordered#HIGHEST_PRECEDENCE} + 10，确保在鉴权 Filter 之前执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see IpAccessService IP 访问控制服务
  * @see ClientIpResolver 客户端 IP 解析工具
  * @see com.njydsz.system.server.controller.InternalApiController 内部 API Controller

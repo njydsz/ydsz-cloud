@@ -11,7 +11,7 @@ import java.time.Instant;
  * @param businessKey 去除业务前缀后的 key（如果可解析）
  * @param occurredAt 事件发生时间戳
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record RedisKeyExpirationEvent(String expiredKey, String businessKey, Instant occurredAt) {
 

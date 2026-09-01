@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回规则定义的完整信息，涵盖规则基本信息、条件表达式、 灰度发布配置、审批信息及审计字段。不参与持久化，仅用于展示和传输。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleDefinitionVO implements Serializable {

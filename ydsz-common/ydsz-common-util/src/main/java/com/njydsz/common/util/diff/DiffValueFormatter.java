@@ -24,7 +24,7 @@ import com.njydsz.common.util.api.Experimental;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Experimental("能力储备：字段级差异对比（审计日志场景），当前平台内暂无消费方，启用前请确认测试覆盖")
 public interface DiffValueFormatter {

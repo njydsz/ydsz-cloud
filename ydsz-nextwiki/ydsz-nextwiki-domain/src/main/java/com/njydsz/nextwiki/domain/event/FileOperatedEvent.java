@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>所有文件操作（上传、删除、移动、重命名、分享等）均发布此事件， 由异步监听器驱动后续管线：索引同步、缩略图生成、审计记录、通知推送。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

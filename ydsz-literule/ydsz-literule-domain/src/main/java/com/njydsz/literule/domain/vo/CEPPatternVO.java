@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端配置与展示复杂事件模式，支持滚动窗口计数模式。与后端 {@code CEPPattern} 领域对象对应，仅承载展示所需字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class CEPPatternVO {

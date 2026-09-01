@@ -33,7 +33,7 @@ import com.njydsz.common.json.YdszJson;
  * @param idTokenSigningAlgValuesSupported        签名 ID Token 的算法列表
  * @param claimsSupported                         支持的声明（claim）列表
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record OidcDiscoveryEndpoint(
     String issuer,

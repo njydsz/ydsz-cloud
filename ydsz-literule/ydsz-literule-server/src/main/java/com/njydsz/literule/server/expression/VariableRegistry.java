@@ -24,7 +24,7 @@ import java.util.List;
  *
  * <p>线程安全：实现类应保证 {@link #lookup(String)} 和 {@link #register(VariableDefinition)} 的线程安全。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface VariableRegistry {

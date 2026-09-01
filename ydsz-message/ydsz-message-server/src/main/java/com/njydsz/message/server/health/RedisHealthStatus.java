@@ -19,7 +19,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>当 Redis 健康时，消费者跳过 DB 二级幂等检查，避免每次消费都额外查询数据库。 仅在 Redis 故障恢复窗口期内启用 DB 幂等兜底。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

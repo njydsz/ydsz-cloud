@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>线程安全</b>：无状态工具类，可安全并发调用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public final class DagConditionEvaluator {

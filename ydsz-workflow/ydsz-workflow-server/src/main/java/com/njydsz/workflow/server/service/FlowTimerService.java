@@ -11,7 +11,7 @@ import com.njydsz.workflow.domain.vo.FlowTimerVO;
  * <p>节点上设置的定时器（延时/边界）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowTimerService {
 

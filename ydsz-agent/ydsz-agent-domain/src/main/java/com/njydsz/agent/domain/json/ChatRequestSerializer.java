@@ -17,7 +17,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * 动态附加（ChatRequest 不持有 stream 标志），故本序列化器不输出该字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ChatRequestSerializer implements JsonSerializer<ChatRequest> {
 

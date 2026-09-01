@@ -29,7 +29,7 @@ import com.njydsz.message.domain.vo.MsgSubscriptionVO;
  * <p><b>事务：</b>{@link #unsubscribe} 开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgSubscriptionVO 订阅VO
  * @see UnsubscribeService 退订中心服务(基于签名 token 的一键退订)
  * @see PreferenceService 用户消息偏好服务

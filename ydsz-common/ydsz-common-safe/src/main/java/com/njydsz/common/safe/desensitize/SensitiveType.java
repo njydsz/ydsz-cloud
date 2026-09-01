@@ -6,7 +6,7 @@ package com.njydsz.common.safe.desensitize;
  * <p>定义系统支持的脱敏类型及其对应的格式化规则。 新增类型只需在此枚举中添加即可，无需修改脱敏器逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see Sensitive
  * @see SensitiveUtils
  */

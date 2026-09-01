@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>使用 {@link ChannelHandler.Sharable} 注解允许在多个 Channel 间共享同一实例。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @ChannelHandler.Sharable

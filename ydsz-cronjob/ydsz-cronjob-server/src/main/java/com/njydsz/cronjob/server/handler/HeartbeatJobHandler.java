@@ -14,7 +14,7 @@ import com.njydsz.cronjob.domain.job.JobHandler;
  * <p>Bean 名称 = handler，配置任务 handler = heartbeatHandler 即可。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component("heartbeatHandler")

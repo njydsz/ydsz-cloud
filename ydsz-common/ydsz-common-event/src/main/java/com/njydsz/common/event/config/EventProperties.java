@@ -29,8 +29,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 精简配置项，移除 schema-validation/sync-publish/alert-threshold 等未验证配置
+ * @since 26.09.01
+ * @since 26.09.01 精简配置项，移除 schema-validation/sync-publish/alert-threshold 等未验证配置
  */
 @Getter
 @Setter

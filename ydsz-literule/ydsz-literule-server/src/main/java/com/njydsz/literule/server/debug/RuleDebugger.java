@@ -37,7 +37,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  * <p><b>线程安全</b>：断点与会话均使用 {@link ConcurrentHashMap}；当前评估规则编码通过 ThreadLocal
  * 传递（并行评估场景每线程独立，互不干扰）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

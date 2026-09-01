@@ -12,7 +12,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
  * <p>外部系统订阅流程实例/任务事件。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowEventSubscriptionService {
 
@@ -81,7 +81,7 @@ public interface FlowEventSubscriptionService {
    *
    * @param instanceId 实例 ID
    * @return 事件订阅 VO 列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   List<FlowEventSubscriptionVO> listByInstanceVO(String instanceId);
 

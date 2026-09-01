@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
  * 默认的消息发送结果实现
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

@@ -32,7 +32,7 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
  * <p><b>注意：</b>本监听器执行在新事务中，若版本创建失败，仅日志告警，不回滚已提交的主业务数据。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FileVersionSnapshotEvent 文件版本快照事件
  */
 @Slf4j

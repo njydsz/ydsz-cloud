@@ -46,7 +46,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  * com.njydsz.cronjob.server.core.alert.AlertType#SLOW} 告警， 二者关注点正交。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

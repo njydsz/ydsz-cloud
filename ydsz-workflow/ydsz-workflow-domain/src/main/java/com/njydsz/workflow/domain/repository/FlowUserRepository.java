@@ -20,7 +20,7 @@ import com.njydsz.workflow.domain.vo.FlowUserVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowUserRepository {
 

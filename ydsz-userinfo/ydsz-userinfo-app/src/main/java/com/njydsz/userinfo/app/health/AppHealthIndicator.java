@@ -22,7 +22,7 @@ import com.njydsz.userinfo.domain.repository.UserAccountRepository;
  * <p>仅在 {@code ydsz.userinfo.platform=app} 时激活，检查项：Redis 连通性、JWT 配置、用户表连通性。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @ConditionalOnPlatform("app")

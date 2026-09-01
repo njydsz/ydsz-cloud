@@ -18,7 +18,7 @@ import com.njydsz.common.config.hotreload.ConfigChangeListener;
  * ConfigChangeBridge} 自动分发配置变更事件， 替代原有的自建配置变更监听机制（保留 {@link RuleHotReloader} 中的业务逻辑）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

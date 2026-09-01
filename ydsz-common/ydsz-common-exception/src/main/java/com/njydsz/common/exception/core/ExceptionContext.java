@@ -28,7 +28,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * 跨线程传播场景应通过快照拷贝而非直接引用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.exception.custom.AbstractYdszException
  */
 public class ExceptionContext implements Serializable {

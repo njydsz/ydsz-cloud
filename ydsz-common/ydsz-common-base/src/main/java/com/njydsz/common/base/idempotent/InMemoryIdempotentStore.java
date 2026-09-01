@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * <p><b>注意：</b>此实现仅适用于单节点部署，分布式环境请使用 Redis 实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class InMemoryIdempotentStore implements IdempotentStore {
 

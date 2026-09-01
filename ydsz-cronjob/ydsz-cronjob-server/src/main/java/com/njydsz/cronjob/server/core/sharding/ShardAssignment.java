@@ -9,6 +9,6 @@ package com.njydsz.cronjob.server.core.sharding;
  * @param nodeId 执行节点 ID（对应 ydsz_job_node.node_id）
  * @param shardIndex 分片索引（0-based）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record ShardAssignment(String nodeId, int shardIndex) {}

@@ -51,7 +51,7 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Tag(name = "WebHook 事件订阅", description = "订阅 CRUD、过滤查询、测试推送")
 @Slf4j

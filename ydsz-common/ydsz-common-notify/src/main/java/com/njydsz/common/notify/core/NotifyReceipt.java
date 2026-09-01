@@ -16,7 +16,7 @@ import java.time.Instant;
  * @param errorMessage 错误信息（失败时）
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record NotifyReceipt(
     String messageId,

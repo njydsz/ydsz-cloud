@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>线程安全</b>：由 @Data 生成 setter，属可变持久化实体；仅在单请求/单事务内使用，勿跨线程共享。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

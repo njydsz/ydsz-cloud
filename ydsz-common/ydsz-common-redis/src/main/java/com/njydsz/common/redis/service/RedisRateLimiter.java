@@ -54,7 +54,7 @@ import com.njydsz.common.redis.enums.RedisOperationException;
  * <p><b>线程安全：</b>所有方法均为线程安全，底层基于 Redis 单线程 + Lua 原子性保证。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisRateLimiter {

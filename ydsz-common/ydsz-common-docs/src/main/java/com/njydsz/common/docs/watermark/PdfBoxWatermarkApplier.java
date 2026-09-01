@@ -27,7 +27,7 @@ import com.njydsz.common.docs.exception.DocumentExceptionCode;
  * 避免硬依赖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

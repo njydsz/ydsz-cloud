@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于不同流程定义之间的效率横向对比，包含各流程的完成数、平均耗时、驳回率及逾期率。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowEfficiencyComparisonVO implements Serializable {

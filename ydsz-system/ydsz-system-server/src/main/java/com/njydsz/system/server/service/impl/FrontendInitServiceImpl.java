@@ -27,7 +27,7 @@ import com.njydsz.system.server.service.FrontendInitService;
  * <p>聚合前端初始化所需数据，减少前端启动时的请求次数。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

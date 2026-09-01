@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
  * 自定义注解中标注策略标识，注册表自动发现并注册。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ExpressionEvalStrategy 表达式引擎策略枚举
  * @see ExpressionEvaluator 表达式求值器接口
  */

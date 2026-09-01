@@ -18,7 +18,7 @@ import com.njydsz.common.queue.constant.QueueChannels;
  *   <li>{@link #FLOW_TIMEOUT} - 流程超时事件（供 cronjob 模块消费触发超时处理任务）
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public final class FlowQueueChannels {

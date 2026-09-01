@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>封装消息发送所需的全部信息，支持多通道路由。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MessageRequest implements Serializable {

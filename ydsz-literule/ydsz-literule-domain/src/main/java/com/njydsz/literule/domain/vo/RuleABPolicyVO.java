@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回 A/B 测试策略的完整信息，包含灰度比例、自动回滚阈值、 评估窗口及通知渠道配置，支撑规则灰度发布的效果评估与安全回滚。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleABPolicyVO implements Serializable {

@@ -30,11 +30,11 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * <p>使用 Redis 原子计数器 {@code userinfo:session:total} 维护全局活跃会话总数，支持多实例 部署场景下的准确统计。登录成功时 INCR，登出/驱逐时
  * DECR。Gauge 读取该计数器值， 消除单节点 {@code AtomicLong} 无法跨实例聚合的问题。
  *
- * <p><b>1.0.0 变更</b>：删除 MeterRegistry 构造参数，改为继承 SentryMetricsAdapter 通过 MetricsCollector SPI
+ * <p><b>26.09.01 变更</b>：删除 MeterRegistry 构造参数，改为继承 SentryMetricsAdapter 通过 MetricsCollector SPI
  * 注册指标，符合《云顶编码规范》第 27.2.1 节。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

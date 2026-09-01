@@ -13,7 +13,7 @@ import com.njydsz.message.server.token.UnsubscribeTokenPayload;
  * <p>管理用户对模板/渠道/标签的退订关系。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface UnsubscribeService {
 

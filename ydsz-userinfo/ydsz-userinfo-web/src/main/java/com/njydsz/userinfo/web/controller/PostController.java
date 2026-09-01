@@ -53,7 +53,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see PostService 岗位业务逻辑
  * @see com.njydsz.userinfo.domain.vo.PostVO 岗位VO
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（兼任岗位维护）

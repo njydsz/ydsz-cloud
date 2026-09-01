@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
  * <p>便于在 Grafana 中监控锁竞争热点与潜在的死锁风险。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)

@@ -67,7 +67,7 @@ import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.receipt.ReadStatusSyncService 已读状态同步服务
  */
 @Tag(name = "已读状态", description = "消息已读/未读状态同步")

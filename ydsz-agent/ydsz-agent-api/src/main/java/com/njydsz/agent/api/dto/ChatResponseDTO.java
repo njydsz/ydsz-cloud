@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * <p>封装 Agent 对话的响应结果，包括回复内容、 实际使用的模型、Token 用量统计和响应时间。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Schema(description = "对话响应")
 public class ChatResponseDTO implements Serializable {
@@ -99,7 +99,7 @@ public class ChatResponseDTO implements Serializable {
    * <p>记录单次 LLM 调用的 Token 消耗明细，用于成本分析和用量监控。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static class TokenUsageDTO implements Serializable {
     private static final long serialVersionUID = 1L;

@@ -43,7 +43,7 @@ import com.njydsz.literule.server.orchestrator.RuleChain;
  * List&lt;RuleChain&gt; chains = RuleDslConverter.toChains(dsl, ruleMap, evaluator);
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -177,7 +177,7 @@ public final class RuleDslConverter {
    *
    * @param entry DSL 规则条目
    * @return RuleDefinitionDTO
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static RuleDefinitionDTO toRuleDefinition(RuleDslEntry entry) {
     RuleSeverity defaultSeverity = parseSeverity(entry.getSeverity(), RuleSeverity.INFO);

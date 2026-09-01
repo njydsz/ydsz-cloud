@@ -34,7 +34,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * <p><b>时序说明：</b>实现 {@link SmartInitializingSingleton}，在全部单例 Bean 实例化完成后 执行扫描注册与 i18n key fail-fast
  * 校验，保证校验时机晚于注册，避免"校验空转"。
  *
- * <p><b>性能优化（1.0.0）：</b>优先读取编译时生成的索引文件 META-INF/spring/ydsz-exception-codes.idx， 仅在索引不存在时回退到 ASM
+ * <p><b>性能优化（26.09.01）：</b>优先读取编译时生成的索引文件 META-INF/spring/ydsz-exception-codes.idx， 仅在索引不存在时回退到 ASM
  * 字节码扫描，减少启动开销。
  *
  * <p><b>使用方式：</b>业务模块可在 src/main/resources/META-INF/spring/ydsz-exception-codes.idx
@@ -48,7 +48,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * <p>Gradle/Maven 插件可在编译时自动生成此文件，避免运行时 ASM 扫描开销。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class ExceptionCodeScanner implements SmartInitializingSingleton {

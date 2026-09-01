@@ -33,7 +33,7 @@ import com.njydsz.common.safe.ratelimit.spi.RateLimitRuleProvider;
  * <p><b>注：</b>本类在 {@code AutoConfiguration.imports} 中注册， 由 Spring Boot 4.x 自动装配机制加载。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @AutoConfiguration

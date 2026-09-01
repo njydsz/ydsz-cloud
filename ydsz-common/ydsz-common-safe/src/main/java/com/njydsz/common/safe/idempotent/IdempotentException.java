@@ -6,7 +6,7 @@ package com.njydsz.common.safe.idempotent;
  * <p>当检测到重复请求时抛出此异常，表示该请求已被处理过。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class IdempotentException extends RuntimeException {
 

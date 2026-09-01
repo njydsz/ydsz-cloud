@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>按 message_group 折叠后的分组视图,包含最新消息和未读计数。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class NotificationGroupVO {

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * <p>在消息被定时（延迟到 DND 结束后或其他原因）时发布，携带计划发送时间。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class MessageScheduledEvent extends MessageDomainEvent {
 

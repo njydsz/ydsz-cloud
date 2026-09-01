@@ -23,7 +23,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * <p><b>多租户：</b>租户过滤由 MyBatis 拦截器（{@code ydsz-common-jdbc}）自动注入， 本类无需显式声明 {@code tenantId}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.domain.query.PageQuery 父类（分页参数）
  */
 @Data

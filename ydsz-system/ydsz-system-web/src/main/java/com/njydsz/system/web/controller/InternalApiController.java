@@ -48,7 +48,7 @@ import com.njydsz.system.server.service.DictItemService;
  * 如工作流模块查询字典项、用户模块校验应用密钥等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AppInfoService 应用注册业务逻辑
  * @see ConfigService 配置业务逻辑
  * @see DictItemService 字典项业务逻辑

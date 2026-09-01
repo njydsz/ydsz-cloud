@@ -28,7 +28,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * <p>P2-修正：使用 JobRepository 替换 JobMapper 传递，符合 DDD 分层规范。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 @EnableScheduling

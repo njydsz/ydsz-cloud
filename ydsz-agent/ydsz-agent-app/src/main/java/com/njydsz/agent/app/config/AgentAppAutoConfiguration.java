@@ -18,7 +18,7 @@ import com.njydsz.common.base.config.PlatformMode;
  * <p>可通过 {@code ydsz.agent.enabled=false} 禁用整个 Agent 模块的 App 端装配。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)

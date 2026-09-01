@@ -47,7 +47,7 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
  *
  * @param <T> 数据泛型
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see IResponse
  */
 @Getter
@@ -82,7 +82,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    * <p>该常量表示系统未知错误（C99999），用于与 {@link #SUCCESS} 进行反向校验场景。 命名明确区分"通用错误"与"未知错误"语义，避免与 {@code error()}
    * 方法名混淆。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static final String UNKNOWN_CODE = YdszResultCode.UNKNOWN.getCode();
 
@@ -117,7 +117,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    *
    * <p>volatile + 懒加载：为 {@code null} 时首次访问从 {@link RequestContext#getRequestId()} 解析并缓存。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private transient volatile String requestId;
 
@@ -127,7 +127,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    * <p>volatile + 懒加载：traceId 被解析后若 spanId 为空， 自动调用 {@link
    * com.njydsz.common.core.trace.TraceIdGenerator#generateSpanId()} 生成。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private transient volatile String spanId;
 
@@ -139,11 +139,11 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    *
    * <p>用于携带额外的上下文信息，如 debugInfo、cost 等。 为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 控制）。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private Map<String, Object> extensions;
 
-  // 分页字段已迁移至 {@link PageResponse}（1.0.0）。分页接口请直接返回 {@code PageResponse<T>}。
+  // 分页字段已迁移至 {@link PageResponse}（26.09.01）。分页接口请直接返回 {@code PageResponse<T>}。
 
   /**
    * 默认构造函数。
@@ -181,7 +181,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    * @param data 响应数据
    * @param requestId 请求 ID
    * @param spanId Span ID
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public YdszResponse(String code, String msg, T data, String requestId, String spanId) {
     this.code = code;
@@ -339,7 +339,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    *
    * @param resolver 消息解析器实现
    * @return true=设置成功（首次），false=已存在解析器（忽略）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static boolean setResolverIfAbsent(MessageResolver resolver) {
     boolean success = RESOLVER.compareAndSet(null, resolver);
@@ -455,7 +455,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    * <p>供网关/过滤器在入口处强制设置 traceId 使用，替代旧版 {@code setTraceId}。 仅应在明确需要覆盖懒解析值时使用（如网关统一写入 traceId 到响应体）。
    *
    * @param traceId 要设置的 traceId
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void assignTraceId(String traceId) {
     this.traceId = traceId;
@@ -510,7 +510,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    * @param key 扩展键
    * @param value 扩展值
    * @return 当前响应对象（支持链式调用）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public YdszResponse<T> putExtension(String key, Object value) {
     if (key == null || key.isEmpty()) {
@@ -528,7 +528,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    *
    * @param key 扩展键
    * @return 扩展值；不存在返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public Object getExtension(String key) {
     return this.extensions != null ? this.extensions.get(key) : null;
@@ -540,7 +540,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
    * <p>调用方可直接操作返回的 Map 实现批量添加、移除等定制逻辑， 避免为核心响应类引入过多的封装方法。
    *
    * @return 扩展字段 Map（可能为 null 表示无扩展）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public Map<String, Object> getExtensions() {
     return this.extensions != null

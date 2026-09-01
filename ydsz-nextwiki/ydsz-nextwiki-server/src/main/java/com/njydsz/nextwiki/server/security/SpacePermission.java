@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * <p><b>空间 ID 参数：</b>使用 {@link SpaceId} 标注的参数将被自动提取并查询空间权限。若方法参数名就是 {@code spaceId}，可省略 {@link SpaceId} 注解。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Documented
 @Target(ElementType.METHOD)

@@ -28,7 +28,7 @@ import com.njydsz.workflow.infra.entity.FlowAttachment;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.infra.entity.FlowAttachment 审批附件实体
  * @see com.njydsz.workflow.server.service.FlowAttachmentService 审批附件 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

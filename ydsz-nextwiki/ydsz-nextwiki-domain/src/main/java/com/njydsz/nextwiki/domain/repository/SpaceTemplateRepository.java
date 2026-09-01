@@ -9,7 +9,7 @@ import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
  * 空间模板仓储接口
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface SpaceTemplateRepository {
 

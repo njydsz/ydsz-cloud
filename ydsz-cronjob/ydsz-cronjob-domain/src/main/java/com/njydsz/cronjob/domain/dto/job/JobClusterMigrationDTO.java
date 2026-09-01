@@ -22,7 +22,7 @@ import lombok.Data;
  * </ol>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "任务集群漂移请求 DTO")

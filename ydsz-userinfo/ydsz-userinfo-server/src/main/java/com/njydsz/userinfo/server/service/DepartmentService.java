@@ -16,7 +16,7 @@ import com.njydsz.userinfo.domain.vo.DepartmentVO;
  * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface DepartmentService {
 

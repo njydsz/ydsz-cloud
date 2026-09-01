@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>包含连接外部调度系统所需的所有配置信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ConnectorConfig {

@@ -24,7 +24,7 @@ import java.util.Set;
  * @param updatedAt 更新时间
  * @param createdBy 创建者用户 ID
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record OAuth2Application(
     String id,

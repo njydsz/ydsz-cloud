@@ -30,7 +30,7 @@ import java.util.Objects;
  * @param nodes 节点列表（不可为空）
  * @param edges 边列表（可为空，表示单节点 DAG）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record DagDefinition(List<DagNode> nodes, List<DagEdge> edges) {
 

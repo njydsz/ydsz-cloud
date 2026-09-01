@@ -22,7 +22,7 @@ import com.njydsz.common.notify.template.TemplateEngine;
  * <p>通过群机器人 Webhook 发送消息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 @ConditionalOnProperty(prefix = "ydsz.notify.feishu", name = "url")

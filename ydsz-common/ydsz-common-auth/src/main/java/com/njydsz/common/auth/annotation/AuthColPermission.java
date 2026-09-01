@@ -60,7 +60,7 @@ import com.njydsz.common.auth.model.ColumnScopeInfo;
  * }
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @see ColumnScopeInfo
  * @see ColumnScopeAware
  * @author ydsz-team
@@ -114,7 +114,7 @@ public @interface AuthColPermission {
    * 列权限过滤模式枚举。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   enum ColumnMode {
     /** 读模式：过滤返回数据，无权限字段置为 null。 */

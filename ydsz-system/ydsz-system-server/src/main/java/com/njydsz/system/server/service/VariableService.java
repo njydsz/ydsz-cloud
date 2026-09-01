@@ -43,7 +43,7 @@ import com.njydsz.system.domain.vo.VariableVO;
  * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ConfigService 系统配置 Service（按分组的同类结构）
  * @see com.njydsz.system.infra.entity.Variable 系统变量实体
  */

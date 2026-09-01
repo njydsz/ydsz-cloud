@@ -18,7 +18,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
  * <p>P1-10 增强：支持批量推送（{@link #batchSend}）和富媒体推送（通过 channelMeta 传入 imageUrl / actionUrl）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface PushProvider {
 

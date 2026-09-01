@@ -28,7 +28,7 @@ import com.njydsz.common.exception.custom.SysException;
  * // → "规则 [RULE_B] 表达式编译失败：'amount >'，原因：unexpected token"
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class RuleEvaluationException extends SysException {

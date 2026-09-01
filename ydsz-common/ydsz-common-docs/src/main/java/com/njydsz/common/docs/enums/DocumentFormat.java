@@ -10,7 +10,7 @@ import org.apache.tika.Tika;
  * <p>定义系统支持的所有文档格式类型，用于解析器路由和格式检测。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum DocumentFormat {
 

@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
  * <p>支持的过滤操作符详见 {@link Operator}，支持 EQ、IN、BETWEEN 等多种语义。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

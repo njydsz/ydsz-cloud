@@ -90,7 +90,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AgentMetadataController 元数据查询接口（可用模型 / 已注册工具）
  * @see AgentFacade Agent 应用门面
  * @see AgentRequestGuard 请求守卫（幂等 + 限流 + 业务校验）

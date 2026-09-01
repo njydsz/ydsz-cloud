@@ -34,11 +34,11 @@ import com.njydsz.common.json.YdszJson;
  *   <li>CUSTOM：回指定节点
  * </ul>
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>值对象置于 {@code domain/vo/} 包下，
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>值对象置于 {@code domain/vo/} 包下，
  * 以 {@code Config} 结尾，不可变对象。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.domain.enums.FlowNodeType#APPROVAL
  */
 @Getter

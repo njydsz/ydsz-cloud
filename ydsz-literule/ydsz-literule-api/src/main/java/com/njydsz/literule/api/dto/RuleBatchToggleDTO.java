@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/batch-toggle} 接口，批量启用/停用规则。 启用时校验 status=PUBLISHED，未发布的规则不能启用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "规则批量启停请求体")

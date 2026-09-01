@@ -15,7 +15,7 @@ import lombok.Data;
  * <p>封装所有搜索引擎通用的搜索参数，包括关键词、分页、排序、过滤、高亮等。 各业务模块通过 {@code SearchProvider} 补充特定于实体的搜索逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

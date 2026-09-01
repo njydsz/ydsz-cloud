@@ -33,7 +33,7 @@ import com.njydsz.message.server.service.core.GuardService;
  * <p>降级策略：Redis 异常时 fail-open（返回 true），仅记 WARN 日志，不阻断业务。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -100,7 +100,7 @@ public class GuardServiceImpl implements GuardService {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>委托 {@link RedisRateLimiter#tryAcquireTokenBucket} 令牌桶限流， rateLimiter 不可用或异常时降级放行（返回 true）。
    *
    * @param key 限流 key（拼接 RATE_LIMIT_KEY_PREFIX 后作为 Redis 令牌桶 key）
@@ -130,7 +130,7 @@ public class GuardServiceImpl implements GuardService {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>从用户偏好读取 hourlyLimit/dailyLimit，使用 Redis INCR + EXPIRE 计数，任一维度超限即返回 false。
    *
    * @param userId 用户标识（用于拼接频率计数 Redis key）
@@ -192,7 +192,7 @@ public class GuardServiceImpl implements GuardService {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>同时递增小时和日频率计数器（Redis INCR + EXPIRE）。
    *
    * @param userId 用户标识（用于拼接频率计数 Redis key）

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * 钉钉 / 企业微信 / 飞书群机器人的默认地址、密钥与超时。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Component

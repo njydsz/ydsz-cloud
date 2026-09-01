@@ -28,7 +28,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * <p>1.2.1 起从 {@link SerializationProvider} 内部类提取为独立类， 降低上帝类的复杂度。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class ThreadLocalSnapshot {
 

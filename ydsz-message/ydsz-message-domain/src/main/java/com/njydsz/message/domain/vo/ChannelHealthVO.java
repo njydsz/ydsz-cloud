@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * <p>反映单个消息通道的实时运行状态，包含熔断器状态、启用状态、滑动窗口失败计数等运维关键指标，供管理后台通道监控面板和系统健康检查接口使用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

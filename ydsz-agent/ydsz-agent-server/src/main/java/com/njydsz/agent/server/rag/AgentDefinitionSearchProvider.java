@@ -19,7 +19,7 @@ import com.njydsz.common.search.provider.SearchProvider;
  * 若未来需要搜索字段权重配置或单条加载能力，应在 {@link SearchProvider} 接口中统一设计。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

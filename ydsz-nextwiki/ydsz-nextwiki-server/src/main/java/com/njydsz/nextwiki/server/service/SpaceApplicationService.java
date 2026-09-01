@@ -30,7 +30,7 @@ import com.njydsz.nextwiki.server.security.SpacePermission.Level;
  * <p>提供空间管理的完整业务编排：创建、更新、删除、成员管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

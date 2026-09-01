@@ -15,7 +15,7 @@ import com.njydsz.common.queue.service.IMessagePublisher;
  * <p>无需持久化。消息不落盘，订阅者必须在线，否则消息丢失。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class RedisPubSubPublisher implements IMessagePublisher {
 

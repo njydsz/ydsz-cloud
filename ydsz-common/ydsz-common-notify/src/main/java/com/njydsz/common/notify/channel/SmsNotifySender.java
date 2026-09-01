@@ -49,7 +49,7 @@ import com.njydsz.common.notify.provider.SmsProvider;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 @ConditionalOnProperty(prefix = "ydsz.notify.sms", name = "enabled", havingValue = "true")

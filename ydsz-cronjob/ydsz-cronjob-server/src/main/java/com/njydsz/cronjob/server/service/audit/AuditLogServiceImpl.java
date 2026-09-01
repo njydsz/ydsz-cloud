@@ -17,7 +17,7 @@ import com.njydsz.cronjob.domain.vo.AuditLogVO;
  * <p>实现 {@link AuditLogService} 接口，提供 cronjob 模块操作审计日志的分页查询能力。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

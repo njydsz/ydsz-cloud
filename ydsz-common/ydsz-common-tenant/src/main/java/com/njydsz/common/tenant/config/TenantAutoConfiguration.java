@@ -57,7 +57,7 @@ import com.njydsz.common.tenant.web.TenantContextWebFilter;
  * <p>不引入 {@code common-tenant} 依赖或设为 false 时， 无任何租户逻辑，{@code MpBaseEntity.tenantId} 字段被忽略。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @AutoConfiguration

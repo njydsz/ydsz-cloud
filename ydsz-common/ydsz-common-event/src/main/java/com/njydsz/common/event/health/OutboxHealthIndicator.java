@@ -23,8 +23,8 @@ import com.njydsz.common.event.repository.OutboxRepository;
  * <p>查询优化：仅统计非 SENT 状态的消息（SENT 消息由清理任务定期删除， 不参与健康检查），避免在大表上对 SENT 行做无意义的 COUNT。
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 移除对 EventProperties 的依赖，使用内置常量阈值
+ * @since 26.09.01
+ * @since 26.09.01 移除对 EventProperties 的依赖，使用内置常量阈值
  */
 public class OutboxHealthIndicator implements HealthIndicator {
 

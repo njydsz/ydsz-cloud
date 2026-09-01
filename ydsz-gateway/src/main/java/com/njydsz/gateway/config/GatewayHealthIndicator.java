@@ -27,7 +27,7 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
  *   <li>网关指标
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

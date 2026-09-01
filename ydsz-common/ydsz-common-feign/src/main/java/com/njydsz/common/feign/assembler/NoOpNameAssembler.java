@@ -14,7 +14,7 @@ import java.util.function.Function;
  * <p>通过 {@code @ConditionalOnMissingBean} 确保仅在无其他实现时生效。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NoOpNameAssembler implements NameAssembler {
 

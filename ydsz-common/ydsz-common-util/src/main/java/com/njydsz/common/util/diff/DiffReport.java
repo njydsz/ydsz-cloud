@@ -17,7 +17,7 @@ import com.njydsz.common.util.message.MessageUtils;
  * <p>封装一次更新操作中所有字段的变更差异，支持生成 JSON 和可读文本格式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Experimental("能力储备：字段级差异对比（审计日志场景），当前平台内暂无消费方，启用前请确认测试覆盖")
 @Getter

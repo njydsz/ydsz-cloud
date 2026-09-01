@@ -17,7 +17,7 @@ import com.njydsz.system.domain.dto.EntityVersionDTO;
  * <p><b>发布时机：</b>由业务 Service（如 {@code ConfigServiceImpl}）在写操作成功后、事务提交前发布。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see EntityVersionDTO 版本创建参数 DTO
  */
 public class VersionSnapshotEvent {

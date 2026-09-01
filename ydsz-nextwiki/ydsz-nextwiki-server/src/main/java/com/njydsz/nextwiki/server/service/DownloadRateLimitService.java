@@ -41,7 +41,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * + EXPIRE 在同一个脚本中执行），避免原 INCR 后 EXPIRE 失败 导致 key 永不过期的限流卡死 bug。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

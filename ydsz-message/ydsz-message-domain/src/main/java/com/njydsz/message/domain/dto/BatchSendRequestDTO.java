@@ -21,7 +21,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * <p>异步模式下立即返回 batchId，后台异步处理，前端通过 {@code /batch/{batchId}/progress} 查询进度。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class BatchSendRequestDTO {

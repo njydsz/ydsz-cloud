@@ -10,7 +10,7 @@ import java.util.Optional;
  * <p>此为骨架接口，提供 {@link InMemoryNotifyReceiptTracker} 默认实现。 生产环境可替换为基于 Redis 或数据库的实现，支持持久化和跨实例查询。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface NotifyReceiptTracker {
 

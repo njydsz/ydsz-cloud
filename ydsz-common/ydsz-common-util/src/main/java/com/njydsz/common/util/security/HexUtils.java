@@ -11,7 +11,7 @@ import java.util.HexFormat;
  * <p><b>线程安全：</b>{@link HexFormat} 实例本身线程安全，本类所有方法均为无状态纯函数。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class HexUtils {
 

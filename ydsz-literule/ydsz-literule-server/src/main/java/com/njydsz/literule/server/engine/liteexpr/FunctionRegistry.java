@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>未找到时返回 null（Parser 不报错，Interpreter 在调用时报错）
  * </ol>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class FunctionRegistry {

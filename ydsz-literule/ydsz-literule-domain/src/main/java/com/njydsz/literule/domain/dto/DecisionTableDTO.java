@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>创建时 {@code id} 字段不传，更新时传入 {@code id}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class DecisionTableDTO implements Serializable {

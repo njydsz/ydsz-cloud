@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于 {@code /workflow/trigger} 接口，创建流程实例完成时的自动触发规则。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "流程自动触发规则创建请求体")

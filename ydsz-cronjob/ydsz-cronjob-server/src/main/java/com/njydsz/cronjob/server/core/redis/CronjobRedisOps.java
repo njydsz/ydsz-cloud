@@ -24,7 +24,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * 依据 §22.5.3 报备保留 {@code RLock} 直用，不通过本入口。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

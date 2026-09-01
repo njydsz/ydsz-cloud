@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供统一搜索 SPI、多引擎策略、索引同步、搜索建议、业务重排、搜索分析与质量追踪能力 |
 | **依赖** | common-core、common-json、common-domain、common-util、common-exception；可选依赖 common-jdbc、common-cache、common-redis、common-docs、spring-context、spring-web、spring-jdbc、spring-boot-autoconfigure、spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api、resilience4j-circuitbreaker、apm-toolkit-trace、swagger-annotations-jakarta |
-| **版本** | 1.0.0 |
+| **版本** | 26.09.01 |
 
 ## 核心能力
 
@@ -385,7 +385,7 @@ public void repairIfNeeded(String tenantId) {
 
 ## 注意事项
 
-1. **PG 引擎依赖扩展**：`PgSearchStrategy` 默认使用 `search_zh` 中文分词配置，需在 PG 安装 `zhparser` 或 `jieba` 扩展；若未安装，构造时会自动降级到 `simple` 配置。索引表 DDL 见 `deploy/sql/modules/1.0.0_search.sql`，需手动执行。
+1. **PG 引擎依赖扩展**：`PgSearchStrategy` 默认使用 `search_zh` 中文分词配置，需在 PG 安装 `zhparser` 或 `jieba` 扩展；若未安装，构造时会自动降级到 `simple` 配置。索引表 DDL 见 `deploy/sql/modules/26.09.01_search.sql`，需手动执行。
 2. **引擎降级**：主引擎不可用或搜索异常时，自动降级到内存引擎，降级结果会标记 `degraded=true`；`memory` 引擎始终可用作兜底。
 3. **熔断器保护**：`UnifiedSearchService` 内置 Resilience4j 熔断器，连续失败达 `circuit-breaker.failure-threshold` 次触发熔断（OPEN），等待 `wait-duration` 秒后进入半开（HALF_OPEN）探测，探测成功恢复 CLOSED。
 4. **深分页保护**：翻页深度（page × pageSize）超过 `max-page-depth`（默认 5000）时抛出 `IllegalArgumentException`，防止深分页拖垮引擎；支持游标分页的字段可通过 `SearchRequest.cursor` + `SearchResponse.nextCursor` 实现。
@@ -398,6 +398,6 @@ public void repairIfNeeded(String tenantId) {
 
 ## 变更记录
 
-- **1.0.0**（2026-08-16）：补充 `SearchPipeline` / `ZeroResultHandler` / `PersistentDeadLetterQueue` / `AdvancedQueryParser` / `ChineseTokenizer` 等组件文档；对齐 `SearchAutoConfiguration` 实际 Bean 清单（22+ 个 Bean）
-- **1.0.0**（2026-08-16）：精简架构 — 移除 ES/Solr/OpenSearch/RediSearch 空壳引擎实现，合并三重内存索引，统一搜索缓存为共享 Bean，合并 SuggestionService 与 EnhancedSuggestionService，清理 Pipeline 占位符 Filter，简化 SearchProvider SPI（合并 getAllDocumentIds + loadById 为 loadAll），重写 README 与代码对齐
-- **1.0.0**（2026-08-02）：初始版本
+- **26.09.01**（2026-08-16）：补充 `SearchPipeline` / `ZeroResultHandler` / `PersistentDeadLetterQueue` / `AdvancedQueryParser` / `ChineseTokenizer` 等组件文档；对齐 `SearchAutoConfiguration` 实际 Bean 清单（22+ 个 Bean）
+- **26.09.01**（2026-08-16）：精简架构 — 移除 ES/Solr/OpenSearch/RediSearch 空壳引擎实现，合并三重内存索引，统一搜索缓存为共享 Bean，合并 SuggestionService 与 EnhancedSuggestionService，清理 Pipeline 占位符 Filter，简化 SearchProvider SPI（合并 getAllDocumentIds + loadById 为 loadAll），重写 README 与代码对齐
+- **26.09.01**（2026-08-02）：初始版本

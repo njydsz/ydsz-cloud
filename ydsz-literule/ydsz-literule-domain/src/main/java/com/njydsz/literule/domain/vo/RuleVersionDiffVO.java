@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端展示单条规则两个版本之间的差异，既可整体呈现（版本号、差异条目列表、 摘要），也可逐字段呈现（类型、字段名、前后值）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleVersionDiffVO {

@@ -23,7 +23,7 @@ import java.util.List;
  *
  * <p>每个 Token 携带精确的行列位置，用于前端错误高亮。
  *
- * @since 1.0.0
+ * @since 26.09.01
  */
 
 /**
@@ -32,7 +32,7 @@ import java.util.List;
  * <p>所属包：{@code com.njydsz.literule.server.engine.liteexpr}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ExprLexer {
 

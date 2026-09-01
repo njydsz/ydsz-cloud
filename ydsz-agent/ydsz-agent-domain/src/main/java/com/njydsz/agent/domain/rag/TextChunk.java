@@ -13,7 +13,7 @@ import java.util.Objects;
  * <p><b>线程安全</b>：字段 final 且 metadata/embedding 经不可变封装，构造后不可变，可安全跨线程检索与传递。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class TextChunk implements Serializable {
 

@@ -18,7 +18,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * 关联，按时间顺序串联形成完整链路。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

@@ -6,7 +6,7 @@ package com.njydsz.agent.domain.memory;
  * <p>定义记忆整合相关的领域事件类型，用于事件总线通信。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class MemoryConsolidationEvent {
 

@@ -15,7 +15,7 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
  * <p>在连接建立时从 handshake attributes 中提取 userId 并注册 Session， 在连接关闭时注销 Session。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SessionWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecoratorFactory {
 

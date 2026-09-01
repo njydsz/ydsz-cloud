@@ -15,7 +15,7 @@ import com.njydsz.workflow.domain.gateway.FlowAssigneeResolver;
  *
  * <p>当业务模块未提供 FlowAssigneeResolver Bean 时使用本兜底实现。 不展开 ROLE/DEPT/LEADER/POSITION，assigneeId 原样保留。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

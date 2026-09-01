@@ -11,7 +11,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * <p>认证异常（A02xxx）、权限异常（A03xxx）和安全异常（C01xxx）。 覆盖身份认证、会话管理、权限校验、Token 安全、CSRF 防护等安全场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CoreExceptionCode
  * @see RateLimitExceptionCode
  */

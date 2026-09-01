@@ -53,7 +53,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  * <p><b>HTTP 状态码：</b>使用 {@link HttpServletResponse#setStatus(int)} 动态设置 与异常对象中声明的 HTTP 状态码一致的响应状态码。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see BaseExceptionHandler
  * @see ValidationExceptionHandler
  * @see YdszExceptionHandlerAutoConfiguration

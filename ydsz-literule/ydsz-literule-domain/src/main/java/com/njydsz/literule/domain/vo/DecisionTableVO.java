@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回决策表的完整信息，包含决策表基本信息、命中策略、 优先级及审计字段。决策表是一种结构化的规则表达形式，以行列方式组织 条件与动作的映射关系。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class DecisionTableVO implements Serializable {

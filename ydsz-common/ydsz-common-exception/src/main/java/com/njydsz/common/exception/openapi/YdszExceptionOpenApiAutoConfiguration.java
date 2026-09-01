@@ -24,7 +24,7 @@ import com.njydsz.common.exception.config.YdszExceptionCoreAutoConfiguration;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration(
     after = YdszExceptionCoreAutoConfiguration.class)

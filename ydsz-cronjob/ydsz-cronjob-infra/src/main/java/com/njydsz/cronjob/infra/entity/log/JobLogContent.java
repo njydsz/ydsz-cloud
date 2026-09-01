@@ -18,7 +18,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * 写入的逐行日志。 与 {@link JobLog}（执行级汇总）互补，本表为行级明细，供前端 SSE 实时滚动展示。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

@@ -9,7 +9,7 @@ import com.njydsz.common.base.auth.BaseAuthInfo;
  *
  * @author ydsz-team
  * @see BaseAuthInfo
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class WebAuthInfo extends BaseAuthInfo {
 

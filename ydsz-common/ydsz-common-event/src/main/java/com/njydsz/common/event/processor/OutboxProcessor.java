@@ -41,7 +41,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  * <p>退避策略：baseDelay * 2^min(retryCount,30)，最大不超过 maxBackoffSeconds。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class OutboxProcessor {
 

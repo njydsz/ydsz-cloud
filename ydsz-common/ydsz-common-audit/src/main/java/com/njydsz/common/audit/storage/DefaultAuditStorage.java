@@ -16,7 +16,7 @@ import com.njydsz.common.audit.domain.AuditLog;
  * <p>通过内存队列缓存审计日志，仅用于开发和测试环境。 生产环境应使用 {@link JdbcAuditStorage} 持久化到数据库。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DefaultAuditStorage implements AuditWriter {
 

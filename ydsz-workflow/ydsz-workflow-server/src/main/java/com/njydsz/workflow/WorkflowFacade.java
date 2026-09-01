@@ -36,7 +36,7 @@ import com.njydsz.workflow.domain.vo.FlowTimelineVO;
  *   <li><b>辅助操作</b>：暂存待审 / 已阅 / 沟通 / 任务级挂起激活
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  * @see com.njydsz.workflow.server.service.FlowInstanceService 流程实例服务
  * @see com.njydsz.workflow.server.service.FlowTaskService 任务服务
@@ -47,8 +47,8 @@ public interface WorkflowFacade {
 
   /**
    * 启动流程
-   * 
-   * 
+   *
+   *
    *
    * @param dto 启动参数（含 flowCode / businessType / businessId / variables / initiatorId）
    * @return 新创建的流程实例 ID

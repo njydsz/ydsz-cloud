@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供 MyBatis-Plus 增强、动态数据源、数据权限、SQL 防火墙、SQL 追踪等能力 |
 | **依赖** | common-core、common-domain、common-exception、common-util、common-json、common-cache；可选依赖 dynamic-datasource、mysql-connector-j、postgresql、spring-boot-actuator、spring-boot-health |
-| **版本** | 1.0.0 |
+| **版本** | 26.09.01 |
 
 ## 核心能力
 
@@ -24,14 +24,14 @@
 
 拦截器链执行顺序（按添加顺序）：
 
-1. `OptimisticLockerInnerInterceptor` — 乐观锁（MP 内置，配合 `@Version` 注解；1.0.0 起替代自研拦截器）
+1. `OptimisticLockerInnerInterceptor` — 乐观锁（MP 内置，配合 `@Version` 注解；26.09.01 起替代自研拦截器）
 2. `CombinedFieldFillInterceptor` — 字段填充（合并多 Handler 单次解析，配合 `FieldFillHandler` 体系）
 3. SPI 拦截器 — 外部模块通过 `InnerInterceptorProvider` 注入（按 order 排序）
 4. `RowPermissionInnerInterceptor` + `ColPermissionInnerInterceptor` — 数据权限
 5. `PaginationInnerInterceptor` — 分页（动态适配 DbType + maxLimit 安全加固）
 6. `SqlFirewallInnerInterceptor` — SQL 防火墙（置于链末端，所有改写完成后做安全校验）
 
-> 逻辑删除采用 MP 原生 `@TableLogic`（1.0.0 起统一），不再使用自研拦截器。
+> 逻辑删除采用 MP 原生 `@TableLogic`（26.09.01 起统一），不再使用自研拦截器。
 
 ### 2. 动态数据源
 
@@ -72,7 +72,7 @@ public class UserService {
 | `AbstractSqlHandler` | SQL 处理抽象基类 |
 | `FieldFillConfiguration` | 字段填充配置（`ydsz.jdbc.field-fill.*`） |
 
-> 说明：1.0.0 起逻辑删除统一使用 MP `@TableLogic`、乐观锁统一使用 MP `OptimisticLockerInnerInterceptor`（`@Version`），原自研 `LogicalDeleteInterceptor` / `OptimisticLockInterceptor` / `MyMetaObjectHandler` 已移除。动态数据源用于多库场景；**SQL 级自动读写分离（SELECT 走从库）未实现**，读写分离由 `Dynamic-Datasource`（baomidou）在数据源层面提供。
+> 说明：26.09.01 起逻辑删除统一使用 MP `@TableLogic`、乐观锁统一使用 MP `OptimisticLockerInnerInterceptor`（`@Version`），原自研 `LogicalDeleteInterceptor` / `OptimisticLockInterceptor` / `MyMetaObjectHandler` 已移除。动态数据源用于多库场景；**SQL 级自动读写分离（SELECT 走从库）未实现**，读写分离由 `Dynamic-Datasource`（baomidou）在数据源层面提供。
 
 ### 4. 数据权限
 
@@ -470,4 +470,4 @@ ydsz:
 
 ## 变更记录
 
-- **1.0.0**（2026-08-02）：补全 SQL 防火墙、SQL 追踪、SPI 扩展点、健康检查章节；完善配置项表与使用示例。1.0.0 起逻辑删除/乐观锁统一收口到 MP 原生注解，移除自研拦截器与读写分离/数据库熔断。
+- **26.09.01**（2026-08-02）：补全 SQL 防火墙、SQL 追踪、SPI 扩展点、健康检查章节；完善配置项表与使用示例。26.09.01 起逻辑删除/乐观锁统一收口到 MP 原生注解，移除自研拦截器与读写分离/数据库熔断。

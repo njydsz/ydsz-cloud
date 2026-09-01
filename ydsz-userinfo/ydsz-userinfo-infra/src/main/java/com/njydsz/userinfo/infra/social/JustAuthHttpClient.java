@@ -27,7 +27,7 @@ import com.njydsz.common.json.YdszJson;
  * <p><b>线程安全：</b>无状态实现，可多线程并发调用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

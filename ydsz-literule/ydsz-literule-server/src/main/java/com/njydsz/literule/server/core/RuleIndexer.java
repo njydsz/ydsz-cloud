@@ -49,7 +49,7 @@ import com.njydsz.literule.domain.enums.RuleEnvironment;
  *
  * <p>性能预期：规则数 1000+ 时，单次评估候选规则数降至 10-100 条，性能提升 10-20x。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -285,7 +285,7 @@ public class RuleIndexer {
    * @param scenario 场景（null 或 "DEFAULT" 表示全部）
    * @param triggeredMutexGroups 已命中的互斥组集合（用于排除）
    * @return 候选规则列表（按优先级排序）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<Rule> findCandidates(
       String tenantId, String environment, String scenario, Set<String> triggeredMutexGroups) {
@@ -398,7 +398,7 @@ public class RuleIndexer {
    * <p>用于 {@link DefaultRuleEngine} 判断是否需要执行第二层字段过滤。
    *
    * @return true=倒排索引已构建且非空
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public boolean hasFieldIndex() {
     return !ruleToFields.isEmpty();
@@ -414,7 +414,7 @@ public class RuleIndexer {
    * @param tenantId 租户 ID
    * @param factKeys 当前 facts 的 key 集合
    * @return 候选规则列表（条件表达式中引用的字段全部存在于 facts 中的规则）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<Rule> findCandidatesByFacts(String tenantId, Set<String> factKeys) {
     if (!indexEnabled) {
@@ -467,7 +467,7 @@ public class RuleIndexer {
    * @param candidates 已有候选规则列表
    * @param factKeys 当前 facts 的 key 集合
    * @return 过滤后的候选规则列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<Rule> filterByFacts(List<Rule> candidates, Set<String> factKeys) {
     if (!indexEnabled || ruleToFields.isEmpty()) {
@@ -521,7 +521,7 @@ public class RuleIndexer {
    * 获取环境索引大小（用于测试和监控）
    *
    * @return 环境索引中的 key 数量
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public int getEnvironmentIndexSize() {
     return environmentIndex.size();

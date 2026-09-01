@@ -22,7 +22,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p>支持多种密码加密方式：BCrypt（推荐）、PBKDF2（推荐）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Experimental("零采用；密码策略 SPI 略复杂，待简化")
 @Slf4j
@@ -57,7 +57,7 @@ public final class PwdUtils {
    *
    * <p>迭代次数存储在编码密码中（salt:iterations:hash）， 验证旧密码时使用存储的迭代次数，不受默认值变化影响。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static final String ITERATIONS_CONFIG_KEY = "ydsz.util.password.pbkdf2.iterations";
 
@@ -101,7 +101,7 @@ public final class PwdUtils {
    * 获取当前生效的 PBKDF2 默认迭代次数。
    *
    * @return 当前默认迭代次数（≥ 1000）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static int getDefaultIterations() {
     return DEFAULT_ITERATIONS;
@@ -117,7 +117,7 @@ public final class PwdUtils {
    * {@link #verifyPasswordBCrypt(String, String)} 前可先检查，避免 {@link NoClassDefFoundError}。
    *
    * @return BCrypt 可用返回 true
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static boolean isBcryptAvailable() {
     try {
@@ -350,7 +350,7 @@ public final class PwdUtils {
    *
    * @param password 密码（可为 null）
    * @return 密码强度级别；null 或空串返回 VERY_WEAK
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static PasswordStrengthChecker.PasswordStrengthLevel checkPasswordStrengthLevel(
       String password) {
@@ -363,7 +363,7 @@ public final class PwdUtils {
    * @param password 密码
    * @param locale 语言区域（{@link Locale#CHINESE} / {@link Locale#ENGLISH} 等）
    * @return 本地化描述字符串（弱/中等/强 等）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String describePasswordStrength(String password, Locale locale) {
     PasswordStrengthChecker.PasswordStrengthLevel level =
@@ -377,7 +377,7 @@ public final class PwdUtils {
    * @param password 当前密码（可为 null）
    * @param locale 语言区域
    * @return 建议文本（可能为空；不会返回 null）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String suggestPasswordImprovement(String password, Locale locale) {
     return getPasswordStrengthChecker().suggest(password, locale);

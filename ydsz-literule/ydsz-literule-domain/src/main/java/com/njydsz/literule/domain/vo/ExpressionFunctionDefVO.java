@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>用于前端展示规则表达式中可调用内置函数的元信息（名称、签名、示例等）， 辅助业务人员编写表达式并做语法提示。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ExpressionFunctionDefVO {

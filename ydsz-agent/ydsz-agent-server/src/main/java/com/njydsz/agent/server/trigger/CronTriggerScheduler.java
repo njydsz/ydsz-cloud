@@ -21,7 +21,7 @@ import com.njydsz.agent.domain.trigger.TriggerRepository;
  * <p>注意：此为轻量级实现，生产环境建议迁移至 Quartz 或 Spring Scheduling 的动态 cron 注册。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class CronTriggerScheduler {

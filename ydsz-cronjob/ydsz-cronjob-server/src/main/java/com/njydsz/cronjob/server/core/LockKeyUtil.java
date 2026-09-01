@@ -16,7 +16,7 @@ package com.njydsz.cronjob.server.core;
  * / JobNodeReaper / JobServiceImpl 等） 都应通过本工具类构造锁 key，禁止在业务代码中直接拼接。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class LockKeyUtil {
 

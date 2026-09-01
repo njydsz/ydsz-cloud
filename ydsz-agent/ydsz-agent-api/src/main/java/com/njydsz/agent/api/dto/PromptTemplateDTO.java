@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @param version 模板版本
  * @param description 模板描述
  * @param createdAt 创建时间
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public record PromptTemplateDTO(

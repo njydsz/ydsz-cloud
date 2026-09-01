@@ -38,7 +38,7 @@ import org.springframework.core.NamedThreadLocal;
  * Hint，有 Hint 时直接使用 Hint 指定的路由。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource
  */
 public final class HintManager {

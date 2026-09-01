@@ -34,7 +34,7 @@ import com.njydsz.userinfo.api.client.OrgQueryClient;
  * {@code @ConditionalOnMissingBean(NameAssembler.class)}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(OrgQueryClient.class)

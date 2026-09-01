@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>用于前端展示规则表达式中可引用变量的元信息（名称、类型、示例值、分类）， 支撑规则编辑时的变量提示与校验。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class VariableDefinitionVO {

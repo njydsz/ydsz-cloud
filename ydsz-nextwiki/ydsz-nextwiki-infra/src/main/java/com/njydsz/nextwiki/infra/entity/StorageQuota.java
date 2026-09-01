@@ -15,7 +15,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>按用户/租户/项目维度设置存储上限，上传时校验配额。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

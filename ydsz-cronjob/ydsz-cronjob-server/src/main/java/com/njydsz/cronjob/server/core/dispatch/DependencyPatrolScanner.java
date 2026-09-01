@@ -40,7 +40,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

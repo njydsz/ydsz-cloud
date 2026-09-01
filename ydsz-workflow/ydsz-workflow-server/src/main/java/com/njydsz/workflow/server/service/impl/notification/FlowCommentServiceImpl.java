@@ -87,7 +87,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * {@code @EventListener} 监听 {@code COMMENT_CREATED} 事件，由审计模块自行持久化。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowCommentService 接口定义
  * @see FlowCommentVO 评论值对象
  * @see FlowAuditLogVO 审计日志值对象（操作轨迹，与评论分离）

@@ -8,7 +8,7 @@ package com.njydsz.common.search.provider;
  * <p>类型安全性由调用方保证（调用方知道 Provider 的实际泛型类型）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class ProviderTypeBridge {
 

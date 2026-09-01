@@ -37,11 +37,11 @@ import com.njydsz.common.util.id.IdGenerator;
  *   <li>业务代码正常 release 时，取消定时任务，避免误释放
  * </ul>
  *
- * <p>自 1.0.0 起实现 {@link DistributedLocker} 接口， 可纳入 {@link
+ * <p>自 26.09.01 起实现 {@link DistributedLocker} 接口， 可纳入 {@link
  * com.njydsz.common.lock.strategy.LockStrategy} 统一管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisSemaphore implements DistributedLocker {

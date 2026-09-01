@@ -19,7 +19,7 @@ import com.njydsz.common.safe.ratelimit.spi.RateLimitRuleProvider;
  * <p>从 {@link RateLimitProperties#rules} 加载静态规则，适用于简单场景。 复杂场景下可由 Nacos / Apollo / DB 提供器替换。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class ConfigRuleProvider implements RateLimitRuleProvider {

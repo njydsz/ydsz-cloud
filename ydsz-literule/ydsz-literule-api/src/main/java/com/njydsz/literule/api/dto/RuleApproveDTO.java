@@ -9,7 +9,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/{ruleCode}/approve} 接口，将规则从 DRAFT/REVIEW 状态变更为 PUBLISHED，并记录审批人、审批时间、审批意见。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "规则审批通过请求体")

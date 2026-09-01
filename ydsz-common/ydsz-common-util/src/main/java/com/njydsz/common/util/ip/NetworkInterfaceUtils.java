@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供本机 IP 地址、主机名的枚举和获取。 自 1.4.0 起从原 {@code IpAddrUtils} 拆分为独立类。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public final class NetworkInterfaceUtils {

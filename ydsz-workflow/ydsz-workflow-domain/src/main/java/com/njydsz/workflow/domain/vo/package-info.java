@@ -14,6 +14,6 @@
  * <p><b>设计原则：</b>VO 仅包含展示所需的字段，不包含敏感信息（如密码、内部 ID 等）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 package com.njydsz.workflow.domain.vo;

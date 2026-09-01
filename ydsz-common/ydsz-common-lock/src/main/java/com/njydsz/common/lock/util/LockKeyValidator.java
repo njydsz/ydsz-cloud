@@ -12,7 +12,7 @@ package com.njydsz.common.lock.util;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class LockKeyValidator {
 

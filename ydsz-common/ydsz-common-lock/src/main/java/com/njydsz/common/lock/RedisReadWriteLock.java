@@ -43,7 +43,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p><b>自动续期：</b> 注入 {@link TaskScheduler} 后，读锁/写锁持有期间按租约时间 1/3 间隔自动续期， 防止长操作期间锁因 TTL 到期被强制释放。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisReadWriteLock implements ReadWriteLock {

@@ -24,7 +24,7 @@ import com.njydsz.workflow.server.service.FlowChartService;
  * <p>PNG 依赖外部渲染能力（如 Batik / Playwright），本接口返回 null，由业务系统按需集成。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowChartService
  */
 @Slf4j

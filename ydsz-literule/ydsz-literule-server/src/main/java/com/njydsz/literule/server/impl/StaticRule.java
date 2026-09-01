@@ -11,7 +11,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *
  * <p>用于编程式注册规则，保持与原 AlertRule 编码习惯兼容。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class StaticRule implements Rule {
@@ -50,7 +50,7 @@ public class StaticRule implements Rule {
    * @param priority 优先级
    * @param scope 作用域（null 表示全部场景）
    * @param evaluator 评估函数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public StaticRule(
       String code,

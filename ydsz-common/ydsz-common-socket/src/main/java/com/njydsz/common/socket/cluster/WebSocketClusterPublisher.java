@@ -18,7 +18,7 @@ import com.njydsz.common.socket.trace.WebSocketTraceContext;
  * <p>降级策略：Redis 异常时返回 false，调用方回退到本地直接推送。 熔断保护：连续失败时触发熔断，直接返回 false 降级（P0-2）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

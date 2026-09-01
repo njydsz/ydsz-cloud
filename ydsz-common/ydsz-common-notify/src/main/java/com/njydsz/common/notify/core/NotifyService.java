@@ -12,7 +12,7 @@ import com.njydsz.common.notify.enums.NotifyPriority;
  * <p>支持邮件、企业微信、钉钉、飞书等全渠道消息发送。 核心入口为 {@link #send(NotifyRequest)}，其他方法为其便捷封装。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface NotifyService {
 

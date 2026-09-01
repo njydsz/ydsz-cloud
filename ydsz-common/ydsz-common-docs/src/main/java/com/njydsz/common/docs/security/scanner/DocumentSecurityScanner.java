@@ -11,7 +11,7 @@ import com.njydsz.common.docs.enums.DocumentFormat;
  * <p>对文档进行安全风险检测，包括 Office 宏、嵌入对象、PDF JavaScript、外部链接等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface DocumentSecurityScanner {
 

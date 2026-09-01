@@ -35,7 +35,7 @@ import com.njydsz.common.cache.stats.CacheStats;
  * <p>使用前提：Spring Boot Actuator 在 classpath 中。端点通过 {@link Endpoint @Endpoint} 注解自动注册。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Endpoint(id = "cache-metrics")
 public class CacheMetricsEndpoint {

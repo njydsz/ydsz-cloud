@@ -20,7 +20,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * 细分错误码使用 {@link LockExceptionCode} 枚举。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DistributedLockException extends BusinessException {
 

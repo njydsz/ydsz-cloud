@@ -12,7 +12,7 @@ import jakarta.validation.constraints.NotBlank;
  * <p>封装通过指定 Agent 执行任务的请求参数， 支持 ReAct、Plan-Execute、Router 等多种 Agent 模式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Schema(description = "Agent 执行请求")
 public class AgentExecutionRequestDTO implements Serializable {

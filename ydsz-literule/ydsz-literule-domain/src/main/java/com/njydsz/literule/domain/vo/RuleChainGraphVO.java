@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回规则链编排图的完整信息。规则链图以有向无环图（DAG） 方式编排多条规则的执行顺序，支持条件分支和并行执行，适用于复杂决策场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleChainGraphVO implements Serializable {

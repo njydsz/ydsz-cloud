@@ -93,7 +93,7 @@ import com.njydsz.system.server.service.AppInfoService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AppInfoService 应用注册 Service 接口
  * @see com.njydsz.system.infra.entity.AppInfo 应用实体
  */

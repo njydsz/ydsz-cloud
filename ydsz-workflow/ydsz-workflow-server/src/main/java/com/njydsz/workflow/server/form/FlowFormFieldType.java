@@ -5,7 +5,7 @@ package com.njydsz.workflow.server.form;
  *
  * <p>审批表单设计器的字段类型体系。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public enum FlowFormFieldType {

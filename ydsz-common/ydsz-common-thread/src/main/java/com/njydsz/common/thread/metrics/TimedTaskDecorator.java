@@ -19,7 +19,7 @@ import org.springframework.lang.NonNull;
  * <p>线程安全：使用不可变包装对象传递时间戳，无跨任务串扰风险， 避免全局 {@code ConcurrentMap} 在高并发场景下因 threadId 复用导致的数据污染。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ThreadPoolTimerMetrics
  */
 @Slf4j

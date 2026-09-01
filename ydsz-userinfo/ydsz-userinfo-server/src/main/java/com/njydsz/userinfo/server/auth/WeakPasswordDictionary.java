@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
  * <p>对标互联网大厂安全标准（美团/阿里/字节均要求弱密码字典校验）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

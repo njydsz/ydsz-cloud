@@ -19,7 +19,7 @@ import com.njydsz.cronjob.api.client.CronjobServiceClient;
  * <p>注意：必须返回 error 而非 success(null)， 否则调用方通过 {@code isSuccess()} 检查会误判为触发成功。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

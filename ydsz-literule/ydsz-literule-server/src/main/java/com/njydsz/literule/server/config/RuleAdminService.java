@@ -42,7 +42,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  * <p>若配置了 {@link RuleConfigBroadcaster}，变更事件将通过广播器同步到所有节点， 实现分布式热加载一致性。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RuleAdminService {
@@ -132,7 +132,7 @@ public class RuleAdminService {
    * 设置分布式广播器
    *
    * @param broadcaster 广播器实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setBroadcaster(RuleConfigBroadcaster broadcaster) {
     this.broadcaster = broadcaster;
@@ -145,7 +145,7 @@ public class RuleAdminService {
    * {@code OutboxProcessor} 失败重试， 消除"DB 已提交但广播失败导致其他节点缓存陈旧"的双写不一致。 未配置时降级为直接广播（向后兼容）。
    *
    * @param outboxService Outbox 服务实例（可为 null）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setOutboxService(OutboxService outboxService) {
     this.outboxService = outboxService;
@@ -157,7 +157,7 @@ public class RuleAdminService {
    * <p>用于将规则创建/更新操作异步同步到 ydsz-common-search 统一搜索索引。 未引入 {@code ydsz-common-search} 时可不设置，同步自动跳过。
    *
    * @param searchIndexEventBridgeProvider 桥接器的惰性提供者
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setSearchIndexEventBridgeProvider(
       ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider) {
@@ -168,7 +168,7 @@ public class RuleAdminService {
    * 设置节点标识
    *
    * @param nodeId 节点标识
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setNodeId(String nodeId) {
     this.nodeId = nodeId;
@@ -178,7 +178,7 @@ public class RuleAdminService {
    * 设置是否启用 dry-run 仿真
    *
    * @param dryRunEnabled 是否启用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setDryRunEnabled(boolean dryRunEnabled) {
     this.dryRunEnabled = dryRunEnabled;
@@ -188,7 +188,7 @@ public class RuleAdminService {
    * 设置规则冲突检测器
    *
    * @param conflictDetector 冲突检测器实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setConflictDetector(RuleConflictDetector conflictDetector) {
     this.conflictDetector = conflictDetector;
@@ -198,7 +198,7 @@ public class RuleAdminService {
    * 设置是否启用冲突检测
    *
    * @param conflictDetectionEnabled 是否启用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setConflictDetectionEnabled(boolean conflictDetectionEnabled) {
     this.conflictDetectionEnabled = conflictDetectionEnabled;
@@ -208,7 +208,7 @@ public class RuleAdminService {
    * 设置 ERROR 级别冲突是否阻塞保存
    *
    * @param conflictDetectionBlockOnError 是否阻塞
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setConflictDetectionBlockOnError(boolean conflictDetectionBlockOnError) {
     this.conflictDetectionBlockOnError = conflictDetectionBlockOnError;
@@ -232,7 +232,7 @@ public class RuleAdminService {
    *
    * @param pageQuery 分页查询参数
    * @return 分页结果（PageResponse 封装的 RuleDefinitionDTO 列表）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public PageResponse<List<RuleDefinitionDTO>> pageRuleDefinitions(
       PageQuery pageQuery) {
@@ -305,7 +305,7 @@ public class RuleAdminService {
    * @param offset 分页偏移
    * @param limit 分页大小
    * @return 搜索结果列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public List<RuleDefinitionDTO> search(
       String query, String status, String category, Boolean enabled, int offset, int limit) {
@@ -320,7 +320,7 @@ public class RuleAdminService {
    * @param category 分类过滤
    * @param enabled 启停过滤
    * @return 匹配的规则总数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public int searchCount(String query, String status, String category, Boolean enabled) {
     return searchService.searchCount(query, status, category, enabled);
@@ -412,7 +412,7 @@ public class RuleAdminService {
    * @param ruleCode 规则编码
    * @param owner 责任人（工号/用户名）
    * @param operator 操作人
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Transactional(rollbackFor = Exception.class)
   public void updateOwner(String ruleCode, String owner, String operator) {
@@ -444,7 +444,7 @@ public class RuleAdminService {
    * @param ruleCode 规则编码
    * @param path 分类路径
    * @param operator 操作人
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Transactional(rollbackFor = Exception.class)
   public void updateCategoryPath(String ruleCode, String path, String operator) {
@@ -608,7 +608,7 @@ public class RuleAdminService {
    * @param defaultSeverity 默认严重度（severityExpression 为空时使用）
    * @param facts 事实数据
    * @return 评估结果；表达式非法或评估异常时返回未触发结果
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public RuleResultVO evaluateWithExpression(
       String ruleCode,
@@ -671,7 +671,7 @@ public class RuleAdminService {
    * @param expression 表达式字符串
    * @param facts 事实数据
    * @return 追踪结果（含求值结果和追踪树）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public ExpressionEngine.TraceResult traceExpression(
       String expression, Map<String, Object> facts) {
@@ -703,7 +703,7 @@ public class RuleAdminService {
    * </ul>
    *
    * @param definition 待保存的规则定义
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private void validateStatusTransition(RuleDefinitionDTO definition) {
     String statusStr = definition.getStatus();
@@ -756,7 +756,7 @@ public class RuleAdminService {
    * <p>根据配置决定是否启用、ERROR 级别冲突是否阻塞保存。 WARN 级别冲突仅记录日志。
    *
    * @param definition 待保存的规则定义
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private void detectConflicts(RuleDefinitionDTO definition) {
     if (!conflictDetectionEnabled || conflictDetector == null) {
@@ -823,7 +823,7 @@ public class RuleAdminService {
    * </ol>
    *
    * @param event 规则变更事件
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private void publishRefreshEvent(RuleConfigRefreshEvent event) {
     // 1. 本地事件（当前节点热加载）

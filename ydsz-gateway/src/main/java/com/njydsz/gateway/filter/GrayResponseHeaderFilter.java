@@ -34,7 +34,7 @@ import com.njydsz.gateway.config.GatewayMetrics;
  * <p>执行顺序：{@code HIGHEST_PRECEDENCE + 150}，在所有业务过滤器之后、API 版本头之前执行，
  * 确保在响应提交前写入响应头。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

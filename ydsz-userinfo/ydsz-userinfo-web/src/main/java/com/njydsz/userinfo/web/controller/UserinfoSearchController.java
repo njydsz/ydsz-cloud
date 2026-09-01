@@ -60,7 +60,7 @@ import com.njydsz.userinfo.web.dto.UserSearchQuery;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.system.web.controller.GlobalSearchController 全局搜索（跨实体）
  * @see UnifiedSearchService 统一搜索服务
  */

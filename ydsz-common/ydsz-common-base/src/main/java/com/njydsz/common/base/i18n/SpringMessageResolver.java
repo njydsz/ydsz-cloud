@@ -14,7 +14,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
  * <p>支持从 Spring {@link MessageSource} 按当前 {@link Locale} 解析消息， 解析失败时静默回退到 defaultValue。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MessageResolverHolder
  * @see MessageResolverHolder.MessageResolver
  */

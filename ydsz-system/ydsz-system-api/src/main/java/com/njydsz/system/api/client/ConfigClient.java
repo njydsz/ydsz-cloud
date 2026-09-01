@@ -15,7 +15,7 @@ import com.njydsz.system.api.fallback.ConfigClientFallback;
  * <p>提供配置值的远程查询能力，走 Redis 二级缓存，高频调用安全。 典型场景：工作流模块查询 SLA 超时时间、定时任务查询调度策略等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FeignClient(
     name = FeignClientConstants.SYSTEM,

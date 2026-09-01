@@ -33,7 +33,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SuppressWarnings("deprecation")
 public final class PolymorphicTypeResolver {

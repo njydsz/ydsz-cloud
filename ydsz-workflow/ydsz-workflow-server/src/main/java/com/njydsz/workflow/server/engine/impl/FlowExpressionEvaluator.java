@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>本组件作为 Aviator 引擎不可用时的降级路径（legacy path），保留原有 ${} 语法兼容。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

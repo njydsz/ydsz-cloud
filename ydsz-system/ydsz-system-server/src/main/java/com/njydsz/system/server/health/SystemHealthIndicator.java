@@ -47,7 +47,7 @@ import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
  * <p><b>访问端点：</b>{@code GET /actuator/health/system}（由 Actuator 自动暴露）
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see org.springframework.boot.health.contributor.HealthIndicator Spring Boot 健康检查接口
  * @see com.njydsz.common.web.health.AbstractModuleHealthIndicator 通用健康检查基类
  * @see com.njydsz.common.jdbc.health.DataSourceHealthIndicator 数据源健康检查

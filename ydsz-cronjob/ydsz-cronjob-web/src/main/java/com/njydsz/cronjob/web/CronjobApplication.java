@@ -15,7 +15,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * 定时任务调度服务启动类
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.cronjob", "com.njydsz.common"})
 @EnableDiscoveryClient

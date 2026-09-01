@@ -16,7 +16,7 @@ import java.util.List;
  * 把分组编码直接作为办理人 ID 处理（兼容降级）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.domain.enums.FlowAssigneeType#GROUP_CLAIM
  * @see com.njydsz.workflow.domain.enums.FlowAssigneeType#GROUP_ALL
  */

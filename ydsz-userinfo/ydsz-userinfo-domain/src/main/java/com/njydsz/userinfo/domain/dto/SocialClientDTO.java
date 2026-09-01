@@ -15,7 +15,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * 通过 BCrypt 加密存储。更新时如果 appSecret 为空则保留原值（不修改密钥）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class SocialClientDTO {

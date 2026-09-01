@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端展示已安装规则集是否有新版本可升级， 包含已安装版本与最新版本对比、是否有更新及安装时间等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class PackUpdateInfoVO {

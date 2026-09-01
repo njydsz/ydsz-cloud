@@ -12,7 +12,7 @@ import java.util.Map;
  *
  * <p>本接口定义在 domain 层，业务模块实现后注册为 Spring Bean 即可，无需依赖 server 层。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface FlowAssigneeResolver {

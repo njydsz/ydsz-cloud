@@ -38,7 +38,7 @@ import org.w3c.dom.NodeList;
  *
  * <p>无 BPMNDI 段时（手写或简化 BPMN）跳过，map 保持为空，调用方需降级到自动布局。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

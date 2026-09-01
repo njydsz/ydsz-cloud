@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回批量发送的进度和统计信息，包含总条数、成功/失败/跳过数、 批次状态及时间线，支撑批量发送运维监控。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgBatchVO implements Serializable {

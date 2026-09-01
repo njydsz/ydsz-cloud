@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端展示规则冲突检测结果：当两条规则在相同或相关字段上可能产生 相互矛盾的判定时，标记为冲突，并列出重叠字段与严重级别，辅助梳理规则集。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleConflictInfoVO {

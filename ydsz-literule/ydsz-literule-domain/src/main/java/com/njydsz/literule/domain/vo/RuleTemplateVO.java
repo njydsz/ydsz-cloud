@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回规则模板的完整信息。规则模板预置条件表达式、 严重度表达式和告警模板，用户基于模板快速创建规则，按行业和标签分类管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleTemplateVO implements Serializable {

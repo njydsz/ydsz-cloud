@@ -25,7 +25,7 @@ import com.njydsz.literule.infra.entity.RuleDefinitionDTO;
  * <p>承载规则定义、规则结果、引擎统计等核心实体的 Entity ↔ VO 转换。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface RuleCoreConverter {

@@ -24,10 +24,10 @@ import java.lang.annotation.Target;
  * // {"userId":"A"} / {"user_id":"A"} / {"uid":"A"}
  * </pre>
  *
- * <p><b>F-3 恢复说明：</b>1.0.0.x 曾将该注解标记废弃并移除了实现，因外部 API 多命名兼容为刚需，1.0.0 恢复支持（见 BeanReader 别名字段匹配）。
+ * <p><b>F-3 恢复说明：</b>26.09.01.x 曾将该注解标记废弃并移除了实现，因外部 API 多命名兼容为刚需，26.09.01 恢复支持（见 BeanReader 别名字段匹配）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)

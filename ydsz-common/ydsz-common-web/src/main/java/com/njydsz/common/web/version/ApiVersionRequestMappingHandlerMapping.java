@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * <p>自定义 HandlerMapping，在构建 RequestMappingInfo 时注入 {@link ApiVersionCondition}， 实现基于版本的接口路由。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class ApiVersionRequestMappingHandlerMapping extends RequestMappingHandlerMapping {

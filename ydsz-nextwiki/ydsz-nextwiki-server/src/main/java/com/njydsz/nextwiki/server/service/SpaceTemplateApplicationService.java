@@ -23,7 +23,7 @@ import com.njydsz.nextwiki.domain.vo.SpaceVO;
  * <p>提供预定义空间结构模板的管理功能：查询可用模板、创建自定义模板、使用模板创建空间。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

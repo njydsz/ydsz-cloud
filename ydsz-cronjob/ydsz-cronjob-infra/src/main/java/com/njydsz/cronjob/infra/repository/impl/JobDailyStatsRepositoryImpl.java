@@ -20,7 +20,7 @@ import com.njydsz.cronjob.infra.mapper.log.JobDailyStatsMapper;
  * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

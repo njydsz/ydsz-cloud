@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>由消费方（如 project 模块）提供实现，通过分析条件表达式中的变量引用， 检测多条规则之间是否存在重叠。将原有 {@code RuleConflictDetector} 的能力抽象为
  * SPI， 避免 literule 模块直接依赖 project 模块。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface RuleConflictDetectorProvider {

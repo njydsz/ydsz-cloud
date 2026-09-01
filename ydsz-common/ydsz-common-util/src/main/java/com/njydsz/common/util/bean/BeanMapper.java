@@ -64,7 +64,7 @@ import com.njydsz.common.util.string.StringUtils;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class BeanMapper {
 
@@ -117,7 +117,7 @@ public final class BeanMapper {
    * @param targetClass 目标 Bean 类型
    * @param <T> Bean 类型
    * @return 填充后的 Bean 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toBeanInternal(Map<String, Object> map, Class<T> targetClass) {
     if (map == null) {
@@ -200,7 +200,7 @@ public final class BeanMapper {
    *
    * @param clazz 目标类型
    * @return 字段名 → setter Method 映射（字段名采用原始 setter 名去除 set + 首字母小写）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Map<String, Method> getCachedSetters(Class<?> clazz) {
     return SETTER_CACHE.computeIfAbsent(clazz, k -> scanSetters(clazz));
@@ -211,7 +211,7 @@ public final class BeanMapper {
    *
    * @param clazz 目标类型
    * @return 字段名 → setter 的不可变 Map
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Map<String, Method> scanSetters(Class<?> clazz) {
     Map<String, Method> setterMap = new LinkedHashMap<>();
@@ -236,7 +236,7 @@ public final class BeanMapper {
    *
    * @param method 方法对象
    * @return 是否为 setter
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static boolean isSetter(Method method) {
     if (method == null) {
@@ -262,7 +262,7 @@ public final class BeanMapper {
    * 默认日期时间格式：{@code yyyy-MM-dd HH:mm:ss}
    *
    * @return 默认日期时间格式化器
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static DateTimeFormatter getDefaultDateFormatter() {
     return DEFAULT_DATE_FORMATTER;
@@ -275,7 +275,7 @@ public final class BeanMapper {
    * @param paramType 目标参数类型
    * @param setter setter 方法（用于提取泛型参数，可为 null）
    * @return 转换后的值，转换失败返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Object convertValue(Object value, Class<?> paramType, Method setter) {
     return convertValue(value, paramType, DEFAULT_DATE_FORMATTER, setter);
@@ -298,7 +298,7 @@ public final class BeanMapper {
    * @param dateFormatter 日期格式化器
    * @param setter setter 方法（用于提取泛型参数，可为 null）
    * @return 转换后的值，转换失败返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Object convertValue(
       Object value, Class<?> paramType, DateTimeFormatter dateFormatter, Method setter) {
@@ -422,7 +422,7 @@ public final class BeanMapper {
    * @param value 原始值
    * @param optionalGenericType Optional 的泛型类型（如 Optional<User> 的 ParameterizedType）
    * @return 包装后的 Optional
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Object convertOptional(Object value, Type optionalGenericType) {
     if (value == null) {
@@ -454,7 +454,7 @@ public final class BeanMapper {
    * @param setter setter 方法（用于提取泛型参数）
    * @param formatter 日期格式化器
    * @return 转换后的 List；无法转换时返回原始 List
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Object convertToList(List<?> rawList, Method setter, DateTimeFormatter formatter) {
     try {
@@ -498,7 +498,7 @@ public final class BeanMapper {
    * @param rawMap 原始 Map
    * @param setter setter 方法（用于提取泛型参数）
    * @return 转换后的 Map；无法转换时返回浅拷贝 Map
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static Object convertToMap(Map<?, ?> rawMap, Method setter) {
     try {
@@ -527,7 +527,7 @@ public final class BeanMapper {
    * @param <T> 类型
    * @return 新实例
    * @throws IllegalArgumentException 无无参构造器或实例化失败
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T createInstance(Class<T> clazz) {
     try {
@@ -558,7 +558,7 @@ public final class BeanMapper {
    * <p>实现原理：通过匿名子类的 {@code getGenericSuperclass()} 捕获 {@code ParameterizedType}， 从而在运行时获取完整的泛型参数信息。
    *
    * @param <T> 目标泛型类型
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public abstract static class TypeReference<T> {
     private final Type type;
@@ -651,7 +651,7 @@ public final class BeanMapper {
    * @param <T> Bean 类型
    * @return 填充后的 Bean 实例
    * @throws IllegalArgumentException 入参为 null、targetClass 无无参构造器、或实例化失败
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toBean(Map<String, Object> source, Class<T> targetClass) {
     Objects.requireNonNull(targetClass, "targetClass must not be null");
@@ -682,7 +682,7 @@ public final class BeanMapper {
    * @param typeRef 泛型类型引用
    * @param <T> 目标类型
    * @return 转换后的对象
-   * @since 1.0.0
+   * @since 26.09.01
    */
   // 泛型擦除：convertListWithType/convertMapWithType 返回 List<Object>/Map<String,Object>，
   // 无法在编译期验证与 T 的一致性
@@ -736,7 +736,7 @@ public final class BeanMapper {
    * @param targetClass 目标类型
    * @param <T> 目标类型泛型
    * @return 转换后的对象；source 为 null 时返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toBeanOrRecord(Map<String, Object> source, Class<T> targetClass) {
     Objects.requireNonNull(source, "source must not be null");
@@ -756,7 +756,7 @@ public final class BeanMapper {
    * @param rawList 原始 List
    * @param elementType 元素类型
    * @return 转换后的 List
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static List<Object> convertListWithType(List<?> rawList, Type elementType) {
     List<Object> result = new ArrayList<>(rawList.size());
@@ -772,7 +772,7 @@ public final class BeanMapper {
    * @param rawMap 原始 Map
    * @param valueType 值类型
    * @return 转换后的 Map
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Map<String, Object> convertMapWithType(Map<?, ?> rawMap, Type valueType) {
     Map<String, Object> result = new LinkedHashMap<>(rawMap.size());
@@ -788,7 +788,7 @@ public final class BeanMapper {
    * @param item 原始元素
    * @param targetType 目标类型
    * @return 转换后的元素
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Object convertSingleItem(Object item, Type targetType) {
     if (item == null) {
@@ -835,7 +835,7 @@ public final class BeanMapper {
    * @param clazz 目标类型（Record 或 POJO）
    * @param <T> 目标类型
    * @return 填充后的实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T instantiateRecord(Map<String, Object> map, Class<T> clazz) {
     RecordComponent[] components = clazz.getRecordComponents();
@@ -877,7 +877,7 @@ public final class BeanMapper {
    * @param paramType 目标参数类型
    * @param genericType 泛型类型
    * @return 转换后的值
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Object convertComponentValue(Object value, Class<?> paramType, Type genericType) {
     // 类型完全匹配

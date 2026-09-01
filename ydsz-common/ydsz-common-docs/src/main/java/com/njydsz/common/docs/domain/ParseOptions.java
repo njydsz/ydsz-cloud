@@ -12,7 +12,7 @@ import com.njydsz.common.docs.enums.ParseProfile;
  * <p>控制解析行为的可配置参数。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

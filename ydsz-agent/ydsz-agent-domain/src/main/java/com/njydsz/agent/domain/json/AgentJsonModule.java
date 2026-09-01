@@ -23,7 +23,7 @@ import com.njydsz.common.json.module.ModuleSerializerRegistry;
  * SafeJsonModule} 同源机制）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class AgentJsonModule implements JsonModule, JsonModule.SpringFactory {
 

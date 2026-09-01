@@ -13,7 +13,7 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
  *
  * <p>literule 模块的 {@code RuleAdminController} 通过此接口反转依赖调用模板市场能力。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface RuleTemplateProvider {

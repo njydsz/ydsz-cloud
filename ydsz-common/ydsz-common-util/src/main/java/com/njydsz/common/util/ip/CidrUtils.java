@@ -17,7 +17,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>自 1.4.0 起从原 {@code IpAddrUtils} 拆分为独立类，聚焦于 CIDR 网段运算。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public final class CidrUtils {

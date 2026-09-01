@@ -18,7 +18,7 @@ import com.njydsz.common.util.message.MessageUtils;
  * <p>仅当容器中存在 {@link MessageSource} Bean 时才激活，不会影响无 Spring 上下文场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration(after = UtilAutoConfiguration.class)
 @ConditionalOnClass(MessageSource.class)

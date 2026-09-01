@@ -61,7 +61,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SuppressWarnings("deprecation")
 public final class SerializationProvider {
@@ -90,7 +90,7 @@ public final class SerializationProvider {
    * 持有），因其需通过 {@link BeanSerializerCache} 的二级缓存 Key（Class + NamingStrategy）直接访问， 与序列化流程解耦。快照 {@link
    * ThreadLocalSnapshot} 单独保存/恢复它。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static final class SerializationContext {
 
@@ -366,7 +366,7 @@ public final class SerializationProvider {
    * 设置当前线程的全局日期格式。
    *
    * @param dateFormat 日期格式字符串，空字符串表示使用默认 ISO 格式
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void setDateFormat(String dateFormat) {
     SerializationContext.CONTEXT.get().dateFormat = dateFormat != null ? dateFormat : "";
@@ -376,7 +376,7 @@ public final class SerializationProvider {
    * 获取当前线程的全局日期格式。
    *
    * @return 日期格式字符串，空字符串表示使用默认 ISO 格式
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String getDateFormat() {
     return SerializationContext.CONTEXT.get().dateFormat;
@@ -386,7 +386,7 @@ public final class SerializationProvider {
    * 设置序列化失败时是否抛出异常。
    *
    * @param failOnError true=抛异常，false=记录日志返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void setFailOnError(boolean failOnError) {
     SerializationContext.CONTEXT.get().failOnError = failOnError;
@@ -396,7 +396,7 @@ public final class SerializationProvider {
    * 获取序列化失败时是否抛出异常。
    *
    * @return true=抛异常，false=记录日志返回 null
-   * @since 1.0.0
+   * @since 26.09.01
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   public static boolean isFailOnError() {
@@ -506,7 +506,7 @@ public final class SerializationProvider {
    * 获取当前线程的 JSONWriter 池实例（替代原 {@code FAST_WRITER_POOL.get()}）。
    *
    * @return 当前线程的 JSONWriter
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static JSONWriter getFastWriterPool() {
     // 池化缓冲重入防护：嵌套序列化返回独立实例，避免 reset() 清空外层内容（P0 修复）
@@ -521,7 +521,7 @@ public final class SerializationProvider {
    * 获取当前线程的视图类（替代原 {@code CURRENT_VIEW_CLASS.get()}）。
    *
    * @return 当前线程的视图类，null 表示无视图过滤
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Class<?> getCurrentViewClass() {
     return SerializationContext.CONTEXT.get().currentViewClass;
@@ -531,7 +531,7 @@ public final class SerializationProvider {
    * 设置当前线程的视图类（替代原 {@code CURRENT_VIEW_CLASS.set(viewClass)}）。
    *
    * @param viewClass 视图类，null 表示清除视图过滤
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void setCurrentViewClass(Class<?> viewClass) {
     SerializationContext.CONTEXT.get().currentViewClass = viewClass;
@@ -541,7 +541,7 @@ public final class SerializationProvider {
    * 获取当前线程的循环引用检测集合（替代原 {@code SERIALIZING_OBJECTS.get()}）。
    *
    * @return 当前线程的已序列化对象集合
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Set<Object> getSerializingObjects() {
     return SerializationContext.CONTEXT.get().serializingObjects;
@@ -551,7 +551,7 @@ public final class SerializationProvider {
    * 获取当前线程的 StringBuilder 池实例（替代原 {@code SB_POOL.get()}）。
    *
    * @return 当前线程的 StringBuilder
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static StringBuilder getSbPool() {
     return SerializationContext.CONTEXT.get().sbPool;
@@ -561,7 +561,7 @@ public final class SerializationProvider {
    * 设置当前线程的 StringBuilder 池实例（替代原 {@code SB_POOL.set(sb)}）。
    *
    * @param sb 新的 StringBuilder 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void setSbPool(StringBuilder sb) {
     SerializationContext.CONTEXT.get().sbPool = sb;
@@ -690,7 +690,7 @@ public final class SerializationProvider {
     // 快速路径：如果 BeanSerializer 已缓存且标记为 primitiveOnly（无嵌套对象字段），
     // 则不可能产生循环引用，跳过 serializingObjects 的 add/remove 和 contains 检查。
     // 纯原始类型 Bean 在大对象图中数量最多，此举可显著降低 IdentityHashMap 压力。
-    // @since 1.0.0
+    // @since 26.09.01
     BeanSerializer primitiveSerializer = null;
     if (isBeanType) {
       PropertyNamingStrategy strategyForLookup = FieldMetadataLoader.NAMING_STRATEGY.get();
@@ -942,7 +942,7 @@ public final class SerializationProvider {
    *
    * @param obj 要序列化的对象
    * @return UTF-8 编码的字节数组
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static byte[] serializeToBytes(Object obj) {
     if (obj == null) {
@@ -988,7 +988,7 @@ public final class SerializationProvider {
    *
    * @param obj 要序列化的对象
    * @param out 输出流
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void serializeToStream(Object obj, OutputStream out) {
     if (obj == null) {
@@ -1022,7 +1022,7 @@ public final class SerializationProvider {
    *
    * @param obj 要序列化的对象
    * @param writer 字符输出流
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void serializeToWriter(Object obj, Writer writer) {
     if (obj == null) {
@@ -1362,7 +1362,7 @@ public final class SerializationProvider {
    * @param message 错误消息（不含字段路径，方法自动附加）
    * @param cause 原始异常（可为 null）
    * @return 包含字段路径诊断信息的序列化异常
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static JsonSerializationException newSerializationException(
       int errorCode, String message, Throwable cause) {

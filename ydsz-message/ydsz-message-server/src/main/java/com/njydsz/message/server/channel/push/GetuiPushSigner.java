@@ -9,7 +9,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * DigestUtils#sha256Hex(String)} 统一实现。 纯静态方法，可独立单元测试。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class GetuiPushSigner {
 

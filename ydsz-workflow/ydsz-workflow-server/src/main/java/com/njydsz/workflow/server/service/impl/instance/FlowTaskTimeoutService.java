@@ -23,7 +23,7 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
  * <p>由独立 Scheduler 周期调度（{@code @Scheduled}，默认 1 分钟）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -38,7 +38,7 @@ public class FlowTaskTimeoutService {
 
   /**
    * 标记任务为 TIMEOUT 状态。
-   * 
+   *
    * <p>任务状态必须为 PENDING/CLAIMED，否则抛 BAD_REQUEST。完成后写审计日志、 触发 onTaskTimeout 事件、累计指标。
    *
    * @param taskId 任务 ID
@@ -77,7 +77,7 @@ public class FlowTaskTimeoutService {
 
   /**
    * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起为 SUSPENDED。
-   * 
+   *
    * <p>仅修改任务状态，不推进流程、不取消其它任务。挂起期间不计超时 （JobScanner 应跳过 SUSPENDED）。激活后回到 PENDING，需重新签收。
    *
    * @param taskId 任务 ID
@@ -105,7 +105,7 @@ public class FlowTaskTimeoutService {
 
   /**
    * P2-1: 任务级激活 — 将 SUSPENDED 任务恢复为 PENDING。
-   * 
+   *
    * <p>激活后清空签收人（assigneeId/assigneeName），需重新签收。
    *
    * @param taskId 任务 ID

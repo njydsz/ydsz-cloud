@@ -11,7 +11,7 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
  * <p>登录成功后由 {@code AuthServiceImpl.login()} 组装， 包含访问令牌、刷新令牌和当前登录用户的基本信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class LoginVO {

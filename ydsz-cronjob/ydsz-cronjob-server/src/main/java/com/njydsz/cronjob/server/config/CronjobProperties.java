@@ -31,7 +31,7 @@ import org.springframework.validation.annotation.Validated;
  * 实现启动即报错。子配置类（{@link LeaderConfig}、{@link NodeConfig}）通过字段级 JSR-380 注解约束。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Configuration
@@ -174,7 +174,7 @@ public class CronjobProperties {
     return node;
   }
 
-  /** SpEL 表达式缓存配置（已废弃，1.0.0 移除） */
+  /** SpEL 表达式缓存配置（已废弃，26.09.01 移除） */
   @Deprecated
   private SpelConfig spel = new SpelConfig();
 

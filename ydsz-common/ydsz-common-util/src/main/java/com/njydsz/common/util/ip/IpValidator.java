@@ -12,7 +12,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>聚焦于 IP 格式校验（IPv4/IPv6）、内网/私有地址判断、IP 类型识别。 自 1.4.0 起从原 {@code IpAddrUtils} 拆分为独立类。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class IpValidator {
 

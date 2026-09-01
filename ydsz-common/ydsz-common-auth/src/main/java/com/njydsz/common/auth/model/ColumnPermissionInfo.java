@@ -20,7 +20,7 @@ import java.util.Set;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ColumnPermission
  * @see ColumnScopeInfo
  */

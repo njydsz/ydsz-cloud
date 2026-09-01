@@ -14,7 +14,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * 所有 {@code parse()} / {@code canTransitTo()} 方法委托给 {@link UserLifecycleStatusEnum}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @deprecated 使用 {@link UserLifecycleStatusEnum} 替代，支持完整用户生命周期状态机
  * @see UserLifecycleStatusEnum
  */

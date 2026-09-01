@@ -14,7 +14,7 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
  * <p>定义规则版本持久化的标准操作，包括版本保存、查询、回滚等。 消费方可提供自定义实现（如数据库 + Redis 缓存）以满足不同性能与一致性需求。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface RuleVersionRepository {
 

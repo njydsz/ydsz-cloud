@@ -31,7 +31,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  *   <li>新：广播失败落 Outbox 表，可重试、可监控（OutboxHealthIndicator）、可人工补偿
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class RuleConfigOutboxRelay {

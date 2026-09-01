@@ -27,7 +27,7 @@ import com.njydsz.common.json.type.JsonType;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
 
@@ -66,7 +66,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
    * <p>支持 {@code List<User>}、{@code Map<String, Object>} 等泛型类型的反序列化， 解决简单 Class 类型无法表达泛型参数的问题。
    *
    * @param typeRef 泛型类型引用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public YdszJsonRedisSerializer(JsonType<?> typeRef) {
     this.clazz = Object.class;
@@ -134,7 +134,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
    *
    * @param typeRef 泛型类型引用
    * @return 序列化器实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static YdszJsonRedisSerializer of(JsonType<?> typeRef) {
     return new YdszJsonRedisSerializer(typeRef);

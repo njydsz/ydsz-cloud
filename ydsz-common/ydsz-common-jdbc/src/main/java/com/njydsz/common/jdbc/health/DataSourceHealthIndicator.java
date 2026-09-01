@@ -23,7 +23,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * <p><b>设计说明：</b>健康检查仅读取 HikariPoolMXBean 的指标数据，不实际获取数据库连接， 避免在连接池高负载时加剧连接竞争。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DataSourceHealthIndicator implements HealthIndicator {

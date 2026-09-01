@@ -33,7 +33,7 @@ import com.njydsz.system.infra.entity.DictItem;
  * 条以内），无需额外分页。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DictItem 字典项实体
  * @see com.njydsz.system.server.service.DictItemService 字典项 Service
  */

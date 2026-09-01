@@ -9,7 +9,7 @@ import java.util.Map;
  * <p>记录单个 Agent 在 Team Run 中的执行信息和状态。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class TeamRunMember {
 

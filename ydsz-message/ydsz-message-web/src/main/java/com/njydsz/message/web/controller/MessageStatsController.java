@@ -73,7 +73,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.core.MessageStatsService 消息统计服务
  * @see MessageStatsDTO 总览 VO
  * @see FunnelStatsDTO 漏斗 VO

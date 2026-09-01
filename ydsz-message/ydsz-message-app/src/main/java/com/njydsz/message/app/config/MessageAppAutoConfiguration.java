@@ -13,7 +13,7 @@ import com.njydsz.message.app.openapi.MessageAppOpenApiConfiguration;
  * 消息中心模块 App 端自动配置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)

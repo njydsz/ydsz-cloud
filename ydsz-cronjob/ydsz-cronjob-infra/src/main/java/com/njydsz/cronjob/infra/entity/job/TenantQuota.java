@@ -18,7 +18,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * TenantQuotaMapper} 在 ydsz-cronjob-infra）， 因此本实体归属 ydsz-cronjob-domain，不归 ydsz-system。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

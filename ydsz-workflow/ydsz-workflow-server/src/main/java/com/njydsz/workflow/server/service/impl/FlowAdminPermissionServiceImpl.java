@@ -94,7 +94,7 @@ import com.njydsz.workflow.server.service.FlowAdminPermissionService;
  * ydsz-common-auth} 的 RBAC 权限体系管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowAdminPermissionService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowAdminRoleVO 管理员角色值对象
  * @see TenantContext 租户上下文

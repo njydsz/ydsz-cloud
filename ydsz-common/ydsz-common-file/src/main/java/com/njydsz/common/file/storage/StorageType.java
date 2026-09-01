@@ -22,7 +22,7 @@ package com.njydsz.common.file.storage;
  * endpoint/region 即可对接 MinIO、Ceph、腾讯云 COS 等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class StorageType {
 

@@ -38,7 +38,7 @@ import com.njydsz.common.queue.service.IMessageSubscriber;
  * 调度消息回调。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisPubSubSubscriber implements IMessageSubscriber {

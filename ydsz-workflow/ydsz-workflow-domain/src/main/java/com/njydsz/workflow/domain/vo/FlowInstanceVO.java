@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回流程实例数据。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowInstanceVO implements Serializable {

@@ -19,7 +19,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * <p>活跃追踪缓存使用 LRU（最近最少使用）淘汰策略： 当缓存达到上限时自动移除最久未被访问的条目， 避免 FIFO 淘汰可能移除正在使用的活跃条目。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SlowTraceDetector {

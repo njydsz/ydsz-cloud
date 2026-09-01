@@ -4,8 +4,8 @@ package com.njydsz.cronjob.domain.job;
  * 任务执行日志器接口
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 由 common-domain 迁入 cronjob-domain
+ * @since 26.09.01
+ * @since 26.09.01 由 common-domain 迁入 cronjob-domain
  */
 public interface JobLogger {
 

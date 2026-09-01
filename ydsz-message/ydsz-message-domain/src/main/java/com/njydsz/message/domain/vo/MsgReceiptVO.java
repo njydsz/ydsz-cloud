@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于返回消息回执的完整信息，包含回执类型、供应商信息及原始响应。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgReceiptVO implements Serializable {

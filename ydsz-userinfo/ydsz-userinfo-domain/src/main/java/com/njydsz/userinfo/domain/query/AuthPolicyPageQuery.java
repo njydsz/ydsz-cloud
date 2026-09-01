@@ -10,7 +10,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * 认证策略分页查询参数（P3-1）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

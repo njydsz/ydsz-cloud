@@ -32,7 +32,7 @@ import com.njydsz.common.json.YdszJson;
  * <p><b>设计约束：</b>本类为无状态静态工具，所有过滤器拒绝路径统一调用 {@link #write(ServerWebExchange, HttpStatus,
  * GatewayErrorCode, String, String)}，禁止再各自拼接 JSON。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

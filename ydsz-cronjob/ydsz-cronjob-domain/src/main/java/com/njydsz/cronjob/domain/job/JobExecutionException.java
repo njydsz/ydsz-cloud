@@ -7,7 +7,7 @@ package com.njydsz.cronjob.domain.job;
  * 超时等场景。替代原始的 {@code throws Exception} 以提供明确的异常契约。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class JobExecutionException extends Exception {
 

@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * ExceptionCode}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ResultCode
  * @see com.njydsz.common.core.response.YdszResponse#error(ResultCode)
  */

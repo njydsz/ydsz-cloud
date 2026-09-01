@@ -17,7 +17,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @YdszExceptionCode(module = "docs", description = "文档管理")
 public enum DocumentExceptionCode implements ExceptionCode {

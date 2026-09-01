@@ -28,7 +28,7 @@ package com.njydsz.common.jdbc.enums;
  * dynamic-datasource-spring-boot3-starter} 才能启用多数据源功能。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum DataSourceType {
   /** 主库 - 用于写操作 */

@@ -27,7 +27,7 @@ import com.njydsz.common.redis.config.RedisProperties;
  * <p>提供 SCAN、Lua 脚本执行、Pipeline 高级用法等操作。 SCAN 是替代 KEYS 命令的安全遍历方式，不会阻塞 Redis 服务器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisAdvancedOps {

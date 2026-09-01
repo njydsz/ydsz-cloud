@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>用于前端以树形结构展示规则分类（如按行业/模块分组）。 每个节点包含名称、层级路径、是否根节点及下属规则数量。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class CategoryNodeVO {

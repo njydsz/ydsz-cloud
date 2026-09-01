@@ -15,7 +15,7 @@ import com.njydsz.literule.domain.vo.RuleABRollbackVO;
  * 消费方可通过装配自定义实现覆盖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ABTestAutoRollbackProvider {
 

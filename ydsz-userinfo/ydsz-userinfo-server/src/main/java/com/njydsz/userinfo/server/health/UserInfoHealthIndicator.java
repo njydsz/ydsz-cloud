@@ -21,7 +21,7 @@ import com.njydsz.userinfo.domain.repository.UserAccountRepository;
  * <p>检查项：Redis 连通性、JWT 配置、用户表连通性、角色表连通性。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)

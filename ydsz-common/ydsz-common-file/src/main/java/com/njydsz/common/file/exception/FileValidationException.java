@@ -11,7 +11,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * 便于全局异常处理器统一识别并返回标准化错误响应。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FileExceptionCode
  * @see BusinessException
  */

@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于为套餐批量配置可访问菜单列表。 通过套餐 ID + 菜单 ID 列表一次性设置套餐的菜单权限。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class TenantPlanMenuDTO {

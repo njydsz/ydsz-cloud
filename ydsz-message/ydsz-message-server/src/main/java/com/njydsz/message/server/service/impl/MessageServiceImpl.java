@@ -67,7 +67,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  * <p>支持单发、批量、聚合、定时、灰度、A/B 等多种发送模式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -141,17 +141,17 @@ public class MessageServiceImpl implements MessageService {
 
   /**
    * P2-6: 内部发送方法,携带级联深度。
-   * 
+   *
    * <p>顶层消息 depth=0,级联子消息 depth 递增,超过 {@link MessageConstants#MAX_CASCADE_DEPTH} 跳过。 级联触发时机：父消息
    * {@code doDispatch} 成功后,遍历 {@link MessageRequest#getCascadeTo()}, 为每个子消息设置 {@code parentMsgId =
    * 父 msgId} 后递归调用本方法。 单条级联消息失败不影响其他级联消息(try-catch 吞异常记 WARN)。
-   * 
+   *
    * <p>P1-3: 拆分为 preprocess → renderContent → persistAndDispatch 三个阶段, 聚合路径(insert + appendOrStart
    * + updateById)用 {@code @Transactional} 保证原子性。
-   * 
+   *
    * <p>P1-A4: 支持异步发送模式。当 {@code ydsz.message.defaultAsync=true} 且请求未显式要求同步时, 落库 PENDING + 写入
    * OutboxEvent 后立即返回, 由 OutboxEventScheduler 异步投递 MQ。
-   * 
+   *
    *
    * @param request 消息发送请求
    * @param depth 当前级联深度（0 表示顶层消息）

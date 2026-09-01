@@ -12,7 +12,7 @@ import java.util.Map;
  * 借鉴 MateClaw 的 Team Runs 设计，支持顺序、并行、层级、协商等多种协作模式。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class TeamRun {
 

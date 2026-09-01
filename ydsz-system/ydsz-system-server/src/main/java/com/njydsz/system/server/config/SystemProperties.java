@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.system")
@@ -53,7 +53,7 @@ public class SystemProperties {
   private Cache cache = new Cache();
 
   /** 系统版本号（用于前端展示，对应 ydsz.system.version） */
-  private String version = "1.0.0";
+  private String version = "26.09.01";
 
   /** 配置缓存配置。 */
   @Data

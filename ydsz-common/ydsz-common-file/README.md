@@ -439,7 +439,7 @@ public Result<String> complete(
 | `UploadProgressListener` | 上传进度回调接口 | 业务方实现，作为方法参数传入 |
 | `DefaultStorageFactory.register(type, provider)` | 通过代码注册自定义存储类型 | 业务方扩展（非 Bean 方式） |
 
-### SPI 注册自定义存储后端示例（1.0.0 新增）
+### SPI 注册自定义存储后端示例（26.09.01 新增）
 
 以下示例演示如何通过 `DefaultStorageFactory.register()` 注册自研对象存储后端（如 Ceph Rook / 私有 S3 网关）：
 
@@ -541,7 +541,7 @@ public class CephStorageRegisterConfig {
 
 ## 变更记录
 
-- **1.0.0**（2026-08-16）：
+- **26.09.01**（2026-08-16）：
   - `ydsz-common-redis` 和 `ydsz-common-json` 升级为必需依赖；新增 `tika-core` 必需依赖
   - 新增 `ydsz-common-lock`、`ydsz-common-thread` 可选依赖
   - `FileScheduler` 从 `FileConfiguration` 中分离为独立类，持有 `@EnableScheduling`
@@ -553,4 +553,4 @@ public class CephStorageRegisterConfig {
   - 补充 file.* 指标看板配置文档（Grafana 5 面板）
   - 补充大文件断点续传接入指南（前后端三步 API + 异常清单）
   - 补充 SPI 注册自定义存储后端示例（Ceph 配置示例）
-- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

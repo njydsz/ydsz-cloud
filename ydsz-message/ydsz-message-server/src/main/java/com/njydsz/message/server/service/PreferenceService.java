@@ -28,7 +28,7 @@ import com.njydsz.message.domain.vo.MsgPreferenceVO;
  * <p><b>默认值：</b>用户无偏好记录时视为"全部接收"(与 {@link SubscriptionService} 的默认订阅语义一致)。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgPreferenceVO 偏好VO
  * @see SubscriptionService 订阅关系服务
  */

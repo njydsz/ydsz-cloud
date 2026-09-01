@@ -27,7 +27,7 @@ import com.njydsz.common.netty.server.AbstractNettyServer;
  * <p>通过 {@code /actuator/netty/{serverName}} 查看指定 Server 详情。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Endpoint(id = "netty")
 @RequiredArgsConstructor

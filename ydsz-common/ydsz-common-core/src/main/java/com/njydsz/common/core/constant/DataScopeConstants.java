@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>替代原枚举 {@code DataScopeType}，改用常量 + String 方案消除跨模块枚举耦合。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class DataScopeConstants {
 

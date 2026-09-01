@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>统一的任务信息模型，用于跨调度系统的任务导入/导出。 不同外部系统的任务模型差异通过字段映射转换为本结构。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ConnectorTaskInfo {

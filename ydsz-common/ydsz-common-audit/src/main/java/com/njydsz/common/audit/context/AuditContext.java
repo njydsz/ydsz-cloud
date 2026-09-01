@@ -13,7 +13,7 @@ import com.njydsz.common.core.context.RequestContext;
 /**
  * 审计上下文（基于 RequestContext 统一存储）
  *
- * <p>管理审计日志的上下文信息（IP、URL、Token、BusinessNo 等），确保线程隔离。 自 1.0.0 起数据体统一存入 {@link
+ * <p>管理审计日志的上下文信息（IP、URL、Token、BusinessNo 等），确保线程隔离。 自 26.09.01 起数据体统一存入 {@link
  * BizContextKeys#KEY_AUDIT_DATA}， 由 {@link RequestContext} 的 TransmittableThreadLocal 承载，配合 TTL 线程池
  * 可自动跨线程传播，替代原独立 {@code ThreadLocal}（原 {@code InheritableThreadLocal} 仅在创建线程时继承，无法覆盖线程池复用场景）。
  *
@@ -22,7 +22,7 @@ import com.njydsz.common.core.context.RequestContext;
  *
  * <p>通用字段（如 operatorId/operatorName）已从 {@link RequestContext} 获取， 避免重复存储，保持数据一致性。
  *
- * <h3>operatorName 获取策略（1.0.0 改进）</h3>
+ * <h3>operatorName 获取策略（26.09.01 改进）</h3>
  *
  * <p>获取逻辑按优先级：
  *
@@ -34,7 +34,7 @@ import com.njydsz.common.core.context.RequestContext;
  * </ol>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class AuditContext {
 
@@ -259,7 +259,7 @@ public class AuditContext {
     /**
      * 获取操作人姓名
      *
-     * <p>1.0.0 改进：不再固定返回 null，改为通过反射从 RequestContext 中提取。 当项目中存在 common-auth 模块并配置 AuthFilter
+     * <p>26.09.01 改进：不再固定返回 null，改为通过反射从 RequestContext 中提取。 当项目中存在 common-auth 模块并配置 AuthFilter
      * 时，可自动获取到操作人姓名； 未引入 common-auth 或认证上下文中无用户信息时返回 null，不影响审计落库。
      *
      * <p>获取策略：

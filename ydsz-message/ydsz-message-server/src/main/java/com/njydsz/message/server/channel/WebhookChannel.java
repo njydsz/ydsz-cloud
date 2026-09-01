@@ -51,7 +51,7 @@ import com.njydsz.message.server.config.ChannelProperties;
  * <p>超时取 {@code ydsz.webhook.connect-timeout / read-timeout}。发送失败被捕获并转为失败结果。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

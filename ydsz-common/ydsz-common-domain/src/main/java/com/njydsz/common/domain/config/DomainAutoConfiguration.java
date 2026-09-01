@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * <p>激活 {@link DomainProperties} 配置属性绑定。 通过 {@code ydsz.domain.enabled=false} 关闭自动装配。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnProperty(

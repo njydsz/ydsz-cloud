@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于展示审批流程的整体效率指标，包括任务总数、平均耗时、代理率及逾期率。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowEfficiencyStatsVO implements Serializable {

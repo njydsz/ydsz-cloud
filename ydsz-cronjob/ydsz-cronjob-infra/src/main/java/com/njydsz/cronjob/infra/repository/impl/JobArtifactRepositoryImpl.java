@@ -17,7 +17,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobArtifactMapper;
  * 任务产物 Repository 实现（Infra 层）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

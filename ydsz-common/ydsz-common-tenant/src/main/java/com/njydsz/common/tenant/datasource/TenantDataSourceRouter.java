@@ -22,7 +22,7 @@ import com.njydsz.common.tenant.metrics.TenantMetrics;
  * <p><b>解析策略：</b>通过 {@link DatasourceKeyResolver} SPI 接口自定义解析逻辑， 内置命名约定解析器和配置映射解析器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class TenantDataSourceRouter {

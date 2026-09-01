@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于评估流程定义迁移对正在运行实例的影响，提供风险等级和建议。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowMigrationImpactVO implements Serializable {

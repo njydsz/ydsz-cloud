@@ -50,7 +50,7 @@ import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
  * <p><b>缓存治理：</b>发布/停用/切换/回滚时通过 {@link CacheEvict} 双层失效本地与 Redis 集群缓存。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

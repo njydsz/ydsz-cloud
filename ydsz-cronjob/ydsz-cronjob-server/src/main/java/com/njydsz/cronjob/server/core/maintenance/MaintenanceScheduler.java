@@ -44,7 +44,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * <p>调度器设计与 Worker 健康检查框架。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

@@ -45,7 +45,7 @@ import com.njydsz.message.server.channel.MessageChannel;
  * 配置（默认 9123）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -73,7 +73,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
 
   /**
    * 构造 TCP 推送通道。
-   * 
+   *
    *
    * @param properties Netty 配置属性（含 boss/worker 线程数、TCP keepAlive 等）
    * @param snowflakeIdGenerator 分布式 ID 生成器，用于构建推送 traceId

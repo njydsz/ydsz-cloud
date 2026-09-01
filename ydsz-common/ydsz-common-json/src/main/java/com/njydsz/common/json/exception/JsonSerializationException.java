@@ -6,7 +6,7 @@ package com.njydsz.common.json.exception;
  * <p>在 JSON 序列化过程中抛出的异常。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class JsonSerializationException extends JsonException {
 

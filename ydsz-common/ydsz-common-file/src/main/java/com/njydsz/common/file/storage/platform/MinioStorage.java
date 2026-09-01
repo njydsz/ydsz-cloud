@@ -71,7 +71,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>通过 {@code getPresignedObjectUrl} 生成临时下载链接，支持过期时间配置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AbstractFileStorage
  * @see MinioClient
  */

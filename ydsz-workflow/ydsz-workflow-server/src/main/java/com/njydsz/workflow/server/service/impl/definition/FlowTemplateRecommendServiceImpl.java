@@ -26,7 +26,7 @@ import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
  * <p>推荐结果综合考虑模板相似度、最近使用频次、租户/部门匹配度，支持个性化排序。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

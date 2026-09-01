@@ -25,7 +25,7 @@ import org.springframework.util.StringUtils;
  * <p>当 owasp-java-html-sanitizer 依赖不存在时，自动降级为简单转义。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class EmailContentSanitizer {
 

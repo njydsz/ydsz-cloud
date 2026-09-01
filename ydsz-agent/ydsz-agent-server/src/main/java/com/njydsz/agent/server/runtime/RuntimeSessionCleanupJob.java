@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * 默认每 10 分钟执行一次，清理超过 2 小时的过期会话。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

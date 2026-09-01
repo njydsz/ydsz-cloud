@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/{ruleCode}/reject} 接口，将规则从 DRAFT/REVIEW/PUBLISHED 状态变更为 ARCHIVED，并记录驳回理由。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "规则审批驳回请求体")

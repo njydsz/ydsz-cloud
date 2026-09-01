@@ -19,7 +19,7 @@ import com.njydsz.cronjob.infra.mapper.event.StoredEventMapper;
  * <p>实现 {@link EventStoreRepository} 接口，封装 ydsz_event_store 表的数据访问。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

@@ -9,7 +9,7 @@ import com.njydsz.common.notify.enums.NotifyPriority;
  * <p>封装一次通知发送所需的全部上下文信息，支持事务后发送、优先级路由等高级特性。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NotifyRequest {
 
@@ -172,7 +172,7 @@ public class NotifyRequest {
    * NotifyRequest 构建器
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static class Builder {
 

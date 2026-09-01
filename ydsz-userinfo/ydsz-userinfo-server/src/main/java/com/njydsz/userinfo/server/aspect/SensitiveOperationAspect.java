@@ -25,7 +25,7 @@ import com.njydsz.userinfo.server.auth.SensitiveVerifyService;
  * <p><b>切点表达式：</b>匹配所有标注 {@code @SensitiveOperation} 的方法。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Aspect

@@ -8,7 +8,7 @@ import java.util.List;
  * <p>IM 渠道已读回执同步至消息中心。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ReadStatusSyncService {
 

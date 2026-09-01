@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * <p>测试时可直接调用 {@link #reset()} 重置状态，无需反射。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class MessageResolverRegistry {
 

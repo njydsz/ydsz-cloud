@@ -14,7 +14,7 @@ package com.njydsz.agent.domain.channel;
  * <p>借鉴 MateClaw 的多渠道设计，实现错误隔离和独立恢复。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ChannelAdapter {
 

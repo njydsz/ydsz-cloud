@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * <p>支持 AAD（Additional Authenticated Data）的 AEAD 加密， 用于带上下文的加密场景（如用户 ID 绑定密文防串用）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CryptoProvider
  * @see CryptoProviderRegistry
  * @see CryptoAutoConfiguration
@@ -167,7 +167,7 @@ public final class CryptoUtils {
    * @param keyId 密钥标识（由 KeyProvider 实现方定义语义）
    * @return Base64 编码密文
    * @see KeyProviderRegistry
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String encryptWithKeyId(String plaintext, String keyId) {
     return encrypt(plaintext, KeyProviderRegistry.resolve(keyId));
@@ -180,7 +180,7 @@ public final class CryptoUtils {
    * @param keyId 密钥标识
    * @return 明文字符串（UTF-8 解码）
    * @see KeyProviderRegistry
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String decryptWithKeyId(String base64Ciphertext, String keyId) {
     return decrypt(base64Ciphertext, KeyProviderRegistry.resolve(keyId));
@@ -194,7 +194,7 @@ public final class CryptoUtils {
    * @param aad 附加认证数据（解密时需一致）
    * @return Base64 编码密文
    * @see KeyProviderRegistry
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String encryptWithKeyIdAndAad(String plaintext, String keyId, byte[] aad) {
     return encryptWithAad(plaintext, KeyProviderRegistry.resolve(keyId), aad);
@@ -208,7 +208,7 @@ public final class CryptoUtils {
    * @param aad 附加认证数据（必须与加密时一致）
    * @return 明文字符串
    * @see KeyProviderRegistry
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String decryptWithKeyIdAndAad(String base64Ciphertext, String keyId, byte[] aad) {
     return decryptWithAad(base64Ciphertext, KeyProviderRegistry.resolve(keyId), aad);
@@ -331,7 +331,7 @@ public final class CryptoUtils {
    * }</pre>
    *
    * @param key 待擦除的密钥字节数组；为 null 时无操作
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void destroyKey(byte[] key) {
     if (key != null) {

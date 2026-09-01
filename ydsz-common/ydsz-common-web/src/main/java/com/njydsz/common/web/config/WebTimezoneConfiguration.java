@@ -12,7 +12,7 @@ import com.njydsz.common.base.config.BaseTimezoneConfiguration;
  * <p>通过 {@code TimeZoneContext} ThreadLocal 暴露给 Jackson 序列化器，保证时间字段按用户时区输出。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 public class WebTimezoneConfiguration extends BaseTimezoneConfiguration {}

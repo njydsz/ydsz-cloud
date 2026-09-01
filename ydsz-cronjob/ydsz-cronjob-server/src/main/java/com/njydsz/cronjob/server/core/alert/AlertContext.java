@@ -23,7 +23,7 @@ import java.io.Serializable;
  * @param tenantId 租户 ID
  * @param recovery 是否为恢复通知（true=恢复通知，false=正常告警）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record AlertContext(
     AlertType alertType,

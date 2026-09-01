@@ -13,7 +13,7 @@ import lombok.Data;
  * 长时间运行（LONG_RUNNING）等类型，支持按告警等级分类。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowAnomalyVO implements Serializable {

@@ -35,7 +35,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowInstanceStatus 实例级状态
  * @see com.njydsz.workflow.infra.entity.FlowRunTask 任务实体
  */
@@ -91,7 +91,7 @@ public enum FlowTaskStatus implements BaseStatusEnum<FlowTaskStatus> {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>与 {@link #isFinished()} 语义对齐。
    *
    * @return true 表示终态（COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT）；false-非终态

@@ -10,7 +10,7 @@ import com.njydsz.cronjob.domain.vo.JobArtifactVO;
  * 任务产物 Repository（domain 层契约）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface JobArtifactRepository {
 

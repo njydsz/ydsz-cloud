@@ -16,7 +16,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *
  * @param <T> 异常类型
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public abstract class YdszExceptionBuilder<T extends AbstractYdszException> {
 
@@ -213,7 +213,7 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException> {
    *
    * @param entries 待追加的键值对，可为 {@code null}
    * @return 当前构建器，便于链式调用
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public YdszExceptionBuilder<T> snapshots(Map<String, ?> entries) {
     if (entries == null || entries.isEmpty()) {

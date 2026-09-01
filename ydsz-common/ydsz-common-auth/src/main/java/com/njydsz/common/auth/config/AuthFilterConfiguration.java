@@ -18,7 +18,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  * <p>WebAuthFilter 通过该配置决定哪些请求放行、哪些需要校验 Token。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @EnableConfigurationProperties(AuthFilterProperties.class)

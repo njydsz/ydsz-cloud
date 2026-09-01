@@ -15,7 +15,7 @@ import lombok.Data;
  * objectMapper.convertValue} 转为 {@link com.njydsz.literule.domain.api.RuleDefinitionDTO}，且导入时容错（单条失败跳过）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "规则导入请求体")

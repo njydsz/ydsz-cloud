@@ -31,7 +31,7 @@ import com.njydsz.common.socket.session.SessionWebSocketHandlerDecoratorFactory;
  * <p>认证拦截器（{@link WebSocketAuthInterceptor}）和消息拦截器（{@link StompMessageInterceptor}） 为可选依赖，未配置时降级跳过。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

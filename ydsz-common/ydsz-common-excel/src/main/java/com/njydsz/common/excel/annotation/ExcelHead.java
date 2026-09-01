@@ -5,7 +5,7 @@ package com.njydsz.common.excel.annotation;
  *
  * @author ydsz-team
 
- * @version 1.0.0
+ * @version 26.09.01
  */
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -44,7 +44,7 @@ import java.lang.annotation.Target;
  *
  * @see ExcelProperty
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

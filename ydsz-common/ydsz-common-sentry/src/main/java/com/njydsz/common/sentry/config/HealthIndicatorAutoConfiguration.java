@@ -24,7 +24,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * <p>仅在 Actuator health 相关类存在时装配，避免非 Web 或未引入 Actuator 的模块启动失败。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter({

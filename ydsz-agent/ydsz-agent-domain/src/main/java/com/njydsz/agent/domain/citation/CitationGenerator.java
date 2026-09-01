@@ -11,7 +11,7 @@ import com.njydsz.agent.domain.rag.TextChunk;
  * 将 TextChunk 转换为前端可展示的 Citation 对象。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface CitationGenerator {
 

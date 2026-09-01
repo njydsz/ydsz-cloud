@@ -34,7 +34,7 @@ import lombok.experimental.SuperBuilder;
  * com.njydsz.system.domain.dto.VariableDTO} 负责。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.system.infra.entity.Variable 系统变量实体
  * @see ConfigVO 系统配置 VO（按分组的同类结构）
  */

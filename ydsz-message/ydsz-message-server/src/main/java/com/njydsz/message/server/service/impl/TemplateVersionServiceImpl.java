@@ -34,7 +34,7 @@ import com.njydsz.message.server.template.TemplateEngine;
  * <p>支持版本对比、回滚到任意历史版本、灰度发布时引用指定版本。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

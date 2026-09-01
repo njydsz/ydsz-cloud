@@ -12,7 +12,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
  * 通过组件级绑定注解映射到 HTTP 请求。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param authorization Authorization 请求头（Bearer access_token）
  * @param clientId 客户端 ID（必须已注册）
  * @param redirectUri 回调地址（必须在 clientId 的白名单中）

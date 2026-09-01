@@ -30,7 +30,7 @@ import com.njydsz.cronjob.domain.vo.OutboxEventVO;
  * <p>对标 Debezium Outbox Pattern、Eventuate Tram、Axon Framework 的 Event Bus。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

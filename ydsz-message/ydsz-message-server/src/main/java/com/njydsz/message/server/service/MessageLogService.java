@@ -27,7 +27,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  * 重置后立即通过 {@code ChannelRouter} 重新投递。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MsgLogVO 消息日志 VO
  * @see MessageStatsService 消息统计服务
  */

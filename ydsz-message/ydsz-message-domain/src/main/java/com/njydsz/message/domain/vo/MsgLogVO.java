@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回消息发送日志的完整信息，包含通道、模板、发送状态、 重试信息、灰度标记、回执状态及成本等，支撑消息全链路追踪与运维排查。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgLogVO implements Serializable {

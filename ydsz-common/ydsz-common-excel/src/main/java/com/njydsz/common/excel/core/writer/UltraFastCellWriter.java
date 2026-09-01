@@ -20,7 +20,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  * <p>通过预编译的类型处理路径和内联优化， 最小化方法调用和对象创建开销。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  *     <h3>优化策略</h3>
  *     <ul>
  *       <li>类型特化 - 针对常见类型提供专用写入路径
@@ -120,7 +120,7 @@ public final class UltraFastCellWriter {
    *
    * @author ydsz-team
 
-   * @version 1.0.0
+   * @version 26.09.01
    */
   private String formatDate(Date date, String pattern) {
     String fmt = pattern != null ? pattern : "yyyy-MM-dd HH:mm:ss";

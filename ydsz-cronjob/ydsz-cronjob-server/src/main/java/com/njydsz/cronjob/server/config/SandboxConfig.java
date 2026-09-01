@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>控制 SandboxScriptExecutor 的安全隔离行为。 启用后，SHELL/GLUE 类型任务的脚本将在受限环境中执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class SandboxConfig {

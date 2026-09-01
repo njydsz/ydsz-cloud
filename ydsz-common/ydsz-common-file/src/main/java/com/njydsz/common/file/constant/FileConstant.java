@@ -6,7 +6,7 @@ package com.njydsz.common.file.constant;
  * <p>仅保留模块内实际引用的常量，无引用项已清理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FileConstant {
 

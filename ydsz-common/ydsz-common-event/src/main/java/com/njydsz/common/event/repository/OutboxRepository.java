@@ -33,8 +33,8 @@ import com.njydsz.common.event.model.OutboxStatus;
  * PROCESSING，确保同一消息只被一个实例处理。
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段的读写
+ * @since 26.09.01
+ * @since 26.09.01 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段的读写
  */
 public class OutboxRepository {
 

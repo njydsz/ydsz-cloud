@@ -25,7 +25,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * <p>使用 {@link ConcurrentHashMap} 存储工具注册条目，线程安全。 支持编程式注册和注解扫描注册（通过 {@code ToolAnnotationScanner}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DefaultToolRegistry implements ToolRegistry {

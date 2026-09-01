@@ -43,7 +43,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * dept_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see Company 公司实体
  * @see Department 部门实体
  */

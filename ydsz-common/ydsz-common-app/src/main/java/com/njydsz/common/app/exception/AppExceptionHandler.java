@@ -42,7 +42,7 @@ import com.njydsz.common.exception.handler.BaseExceptionHandler;
  * Advice 之前执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see BaseExceptionHandler
  * @see BusinessException
  * @see AppApi

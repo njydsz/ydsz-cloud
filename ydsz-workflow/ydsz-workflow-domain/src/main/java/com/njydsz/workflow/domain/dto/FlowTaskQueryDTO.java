@@ -12,7 +12,7 @@ import lombok.Data;
  * 支持多条件组合过滤运行时任务列表。所有字段均为可选，为空时忽略该条件。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowTaskQueryDTO {

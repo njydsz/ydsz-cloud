@@ -27,7 +27,7 @@ import com.njydsz.common.util.api.Experimental;
  * FQN-OK），避免同名类遮蔽导致编译冲突。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Experimental("零采用；常规文件操作建议优先使用 JDK NIO Files API")
 @Slf4j

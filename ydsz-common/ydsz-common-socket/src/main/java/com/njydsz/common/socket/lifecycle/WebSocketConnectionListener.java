@@ -8,7 +8,7 @@ package com.njydsz.common.socket.lifecycle;
  * <p>实现类注册为 Spring Bean 后，{@code WebSocketSessionEventListener} 会在连接/断开时自动调用所有注册的 Listener。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface WebSocketConnectionListener {
 

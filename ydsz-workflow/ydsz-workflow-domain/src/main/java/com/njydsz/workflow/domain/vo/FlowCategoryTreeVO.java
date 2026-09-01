@@ -20,7 +20,7 @@ import lombok.Data;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowCategoryVO 扁平结构 VO
  * @see com.njydsz.common.domain.tree.TreeBuilder 通用树构建器
  */

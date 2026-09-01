@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
  * @param operator 操作人
  * @param occurredAt 事件发生时间
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record JobEvent(
     String eventId,

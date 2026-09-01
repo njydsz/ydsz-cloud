@@ -36,7 +36,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * permission_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see Role 角色实体
  * @see Menu 菜单/权限实体
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller（含 {@code assignPermissions}

@@ -30,7 +30,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.web.filter.ApiSignatureFilter 签名校验过滤器
  * @see com.njydsz.userinfo.server.config.ApiSignatureProperties 签名配置
  */

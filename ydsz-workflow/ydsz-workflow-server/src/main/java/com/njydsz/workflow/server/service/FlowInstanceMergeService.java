@@ -11,7 +11,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
  * <p>多个同模板实例合并处理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowInstanceMergeService {
 
@@ -64,7 +64,7 @@ public interface FlowInstanceMergeService {
    * @param operatorId 操作人 ID
    * @param tenantId 租户 ID
    * @return 合并组 ID VO
-   * @since 1.0.0
+   * @since 26.09.01
    */
   StringVO mergeInstancesVO(List<String> instanceIds, String operatorId, String tenantId);
 

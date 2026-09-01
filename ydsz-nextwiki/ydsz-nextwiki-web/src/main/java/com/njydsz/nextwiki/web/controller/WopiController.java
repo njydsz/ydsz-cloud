@@ -88,7 +88,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ApiVersion("v1")
 @Slf4j
@@ -312,7 +312,7 @@ public class WopiController {
    * 编辑器展现只读还是可编辑模式；{@code version} 变化会触发编辑器重新拉取内容， 因此内容更新后务必同步递增，否则用户会看到陈旧文档。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @lombok.Data
   @lombok.Builder
@@ -355,7 +355,7 @@ public class WopiController {
    * 用户改动，返回 200 + error 可让其保留本地副本并给出明确提示。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @lombok.Data
   @lombok.Builder

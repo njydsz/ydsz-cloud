@@ -32,7 +32,7 @@ import com.njydsz.message.server.service.core.ReachStrategyService;
  * <p>免打扰判断：基于用户偏好中的 DND 配置，结合用户时区判断当前是否在免打扰时段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -201,7 +201,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
 
   /**
    * 计算单个通道的综合评分。
-   * 
+   *
    * <p>评分 = 活跃度 * 0.4 + 打开率 * 0.3 + 偏好 * 0.2 + 成本 * 0.1
    *
    * @param channel 通道标识（如 SMS、EMAIL、INAPP）

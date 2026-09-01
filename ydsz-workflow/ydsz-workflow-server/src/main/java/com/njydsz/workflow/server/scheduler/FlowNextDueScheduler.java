@@ -40,7 +40,7 @@ import com.njydsz.workflow.server.service.FlowSlaService;
  * <p><b>事务边界：</b>调度器本身不开启事务，仅触发 {@link FlowSlaService} 执行 SLA 检查。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -9,7 +9,7 @@ import lombok.Data;
  * <p>描述外部系统对特定事件的订阅关系，包含回调 URL、订阅事件类型、 签名密钥等。由 {@link WebhookDispatcher} 统一管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

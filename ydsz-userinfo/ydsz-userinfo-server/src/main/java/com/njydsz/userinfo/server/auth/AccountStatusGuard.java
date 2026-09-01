@@ -26,7 +26,7 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
  * <p><b>DDD 合规：</b>通过 {@link UserAccountRepository} 访问数据，不直接依赖 Mapper。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserAccountCredentialVO 用户认证凭据 VO
  */
 @Slf4j

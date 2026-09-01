@@ -64,7 +64,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  * @see MethodHandle
  * @see ASMFieldAccessor
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ReflectCache {
 
@@ -257,7 +257,7 @@ public class ReflectCache {
    *
    * @author ydsz-team
 
-   * @version 1.0.0
+   * @version 26.09.01
    */
   public static void clearCache() {
     FIELD_CACHE.clear();

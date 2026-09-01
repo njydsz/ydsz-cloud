@@ -40,7 +40,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  * YdszExceptionHandlerAutoConfiguration} 负责条件装配与 Bean 注入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MvcExceptionHandler
  * @see YdszExceptionHandlerAutoConfiguration
  */

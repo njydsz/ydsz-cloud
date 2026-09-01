@@ -26,7 +26,7 @@ import java.util.Iterator;
  * 的部分更新场景（如 HTTP PATCH 方法）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see JsonPatch
  */
 public final class JsonMergePatch {

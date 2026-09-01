@@ -45,7 +45,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FeignClient(
     name = FeignClientConstants.LITERULE,
@@ -84,7 +84,7 @@ public interface LiteRuleClient {
    * @param scenario 场景标识（可选，用于规则过滤和统计分组）
    * @param facts 事实数据
    * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @PostMapping(FeignClientConstants.LITERULE_PATH_EVALUATE)
   YdszResponse<List<RuleResultVO>> evaluate(

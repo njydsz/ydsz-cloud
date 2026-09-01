@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供多渠道消息发送、模板渲染、限流熔断、重试死信、降级聚合、安全签名、偏好国际化等能力 |
 | **依赖** | common-core、common-util、common-thread、common-exception、common-domain、common-event、common-safe、common-config、common-redis、common-json；可选依赖 spring-boot-starter-mail、owasp-java-html-sanitizer、micrometer-core、jasypt-spring-boot-starter、spring-boot-starter-data-redis、httpclient5、spring-boot-actuator、spring-boot-health、spring-boot-configuration-processor |
-| **版本** | 1.0.0 |
+| **版本** | 26.09.01 |
 
 ## 核心能力
 
@@ -557,4 +557,4 @@ public class WebhookNotifySender implements NotifyChannelStrategy {
 
 ## 变更记录
 
-- **1.0.0**（2026-08-02）：补全接入方式、配置项表、使用示例、SPI 扩展点、健康检查、注意事项章节；完善渠道策略、Provider 抽象、熔断状态机、限流聚合、邮件安全等核心能力描述
+- **26.09.01**（2026-08-02）：补全接入方式、配置项表、使用示例、SPI 扩展点、健康检查、注意事项章节；完善渠道策略、Provider 抽象、熔断状态机、限流聚合、邮件安全等核心能力描述

@@ -8,7 +8,7 @@ package com.njydsz.common.netty.api;
  * <p>实现类应确保线程安全，所有计数操作支持高并发场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ConnectionMetrics {
 

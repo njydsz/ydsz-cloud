@@ -40,7 +40,7 @@ import com.njydsz.agent.server.rag.RagService;
  * 形成构造器循环依赖。使用 {@link Lazy} 延迟注入打破循环，Spring 会代理目标 Bean 直到首次实际调用时才初始化。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class AgentFactory {

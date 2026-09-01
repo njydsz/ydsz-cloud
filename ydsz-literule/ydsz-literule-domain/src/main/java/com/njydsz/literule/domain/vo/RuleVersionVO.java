@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端展示规则单次版本快照的信息，包含版本号、定义 JSON、变更说明与操作人， 支撑版本查看与回溯。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RuleVersionVO {

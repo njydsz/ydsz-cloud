@@ -71,7 +71,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>通过 {@code generatePresignedUrl} 生成临时下载/上传链接，支持自定义 HTTP 方法和过期时间。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AbstractFileStorage
  * @see COSClient
  */

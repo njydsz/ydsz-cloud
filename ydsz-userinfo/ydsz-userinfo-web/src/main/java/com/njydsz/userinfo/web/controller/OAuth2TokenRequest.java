@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * <p>封装 {@code POST /token} 端点的全部表单参数，避免方法参数数量超限（云顶编码规范 5.4 节）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param grantType 授权类型（authorization_code / refresh_token）
  * @param code 授权码（authorization_code 必填）
  * @param refreshToken 刷新令牌（refresh_token 必填）

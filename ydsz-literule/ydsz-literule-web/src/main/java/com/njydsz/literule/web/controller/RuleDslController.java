@@ -61,7 +61,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  * <p>预览接口解析 DSL 文本，构建临时规则实例，对提供的事实数据进行 dry-run 评估。 不持久化、不注册到引擎，适合在编辑器中实时查看规则触发情况。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RuleDslImportExportController DSL 导入 / 导出接口
  * @see ExpressionEngine 表达式校验器
  * @see RuleDslParser DSL 解析器

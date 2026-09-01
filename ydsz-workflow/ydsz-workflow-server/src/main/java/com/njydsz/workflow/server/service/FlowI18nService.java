@@ -9,7 +9,7 @@ import java.util.Map;
  * <p>多语言标题/意见/通知。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowI18nService {
 

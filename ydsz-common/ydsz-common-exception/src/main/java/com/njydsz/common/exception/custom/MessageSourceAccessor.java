@@ -43,7 +43,7 @@ import org.springframework.lang.Nullable;
  * MessageSource} 注入到本 Bean 和 {@link MessageSourceHolder}， 两者行为一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class MessageSourceAccessor {
 

@@ -6,7 +6,7 @@ package com.njydsz.agent.domain.document;
  * <p>定义支持的输出文档格式。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum DocumentFormat {
 

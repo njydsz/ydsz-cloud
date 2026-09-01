@@ -20,7 +20,7 @@ import lombok.Getter;
  * 渲染时直接遍历指令列表，时间复杂度从 O(正则匹配次数) 降为 O(指令数)。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 public class TemplateAst {

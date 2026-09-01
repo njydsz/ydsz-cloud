@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * @param timestamp 事件发生时间
  * @param mfaType MFA 类型（TOTP/SMS/EMAIL）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record MfaTriggeredEvent(
     String userId, String username, LocalDateTime timestamp, String mfaType) {}

@@ -32,7 +32,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowTaskStatus 任务级状态枚举
  * @see com.njydsz.workflow.infra.entity.FlowInstance 流程实例实体
  */
@@ -96,7 +96,7 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
 
   /**
    * {@inheritDoc}
-   * 
+   *
    * <p>与 {@link #isFinished()} 语义对齐：终态包含已回滚（ROLLED_BACK）。
    *
    * @return true 表示终态（COMPLETED / TERMINATED / REJECTED / ROLLED_BACK）；false-非终态

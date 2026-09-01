@@ -51,7 +51,7 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
  * <b>无需修改主流程</b> {@code FlowTaskPassService}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowPerformType 会签类型枚举
  * @see CountersignStrategyFactory 策略工厂
  * @see FlowTaskPassService 主流程（策略调用方）
@@ -69,7 +69,7 @@ public interface CountersignStrategy {
 
   /**
    * 预检查：当前用户通过操作的前置校验。
-   * 
+   *
    * <p>默认无操作；子类可按需重写。
    *
    * @param task 当前运行时任务
@@ -81,7 +81,7 @@ public interface CountersignStrategy {
 
   /**
    * 当前用户已通过：累加 approveFinished 等计数。
-   * 
+   *
    * <p>主流程在调用本方法前已完成"完成当前 task 并归档"动作；本方法负责 更新会签维度的状态（如并行计数器）。
    *
    * @param task 当前运行时任务

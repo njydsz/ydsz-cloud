@@ -29,7 +29,7 @@ import com.njydsz.workflow.domain.vo.FlowCategoryVO;
  * <p><b>DDD 分层规范：</b>Service 层返回 VO 而非 DO，避免 web 层直接依赖 infra 层实体。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.server.service.impl.FlowCategoryServiceImpl 实现类
  * @see com.njydsz.workflow.infra.entity.FlowDefinition 流程定义（{@code category} 字段引用本表分类编码）
  */
@@ -42,7 +42,7 @@ public interface FlowCategoryService {
    *
    * @param tenantId 租户 ID
    * @return 分类 VO 列表（扁平结构）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   List<FlowCategoryVO> listAllVO(String tenantId);
 
@@ -53,7 +53,7 @@ public interface FlowCategoryService {
    *
    * @param tenantId 租户 ID
    * @return 分类树形结构根节点列表，无数据返回空列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   List<FlowCategoryTreeVO> tree(String tenantId);
 

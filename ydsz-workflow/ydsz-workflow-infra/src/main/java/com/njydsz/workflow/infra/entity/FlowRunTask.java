@@ -62,7 +62,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowHisTask 任务归档表
  * @see com.njydsz.workflow.domain.enums.FlowTaskStatus 任务状态枚举
  * @see com.njydsz.workflow.domain.enums.FlowPerformType 会签类型枚举

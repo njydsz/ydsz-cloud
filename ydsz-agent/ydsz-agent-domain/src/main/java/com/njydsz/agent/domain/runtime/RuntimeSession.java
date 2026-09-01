@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * 不可变对象，所有字段均为 final。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class RuntimeSession {
 

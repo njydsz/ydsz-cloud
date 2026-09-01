@@ -16,7 +16,7 @@ package com.njydsz.workflow.server.engine.expr;
  * 通过 {@link ExpressionEvaluatorRegistry} 自动发现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ExpressionEvaluator 表达式求值器接口
  * @see ExpressionEvaluatorRegistry 表达式引擎注册表
  */

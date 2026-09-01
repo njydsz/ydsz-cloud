@@ -18,7 +18,7 @@ import com.njydsz.cronjob.domain.repository.event.EventStoreRepository;
  * <p>实现 {@link EventStoreService} 接口，提供事件追加和查询能力。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

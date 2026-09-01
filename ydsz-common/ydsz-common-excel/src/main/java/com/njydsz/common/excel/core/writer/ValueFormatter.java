@@ -22,7 +22,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  * <p>处理所有类型值到单元格的写入，包括字符串、数字、布尔、日期等类型。 使用DateTimeFormatter缓存避免重复创建格式化器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ExcelWriter
  */
 public class ValueFormatter {

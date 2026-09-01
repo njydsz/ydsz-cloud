@@ -33,7 +33,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Endpoint(id = "threadpools")
 public class ThreadPoolMetricsEndpoint {

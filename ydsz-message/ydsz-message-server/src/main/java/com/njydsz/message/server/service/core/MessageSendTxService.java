@@ -24,7 +24,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  * 避免 msgLog 已落库但 Outbox 写入失败的不一致场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.event.OutboxDomainEventPublisher
  */
 @Slf4j

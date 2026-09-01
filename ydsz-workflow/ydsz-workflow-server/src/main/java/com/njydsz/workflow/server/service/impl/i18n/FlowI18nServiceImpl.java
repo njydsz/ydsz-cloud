@@ -64,7 +64,7 @@ import com.njydsz.workflow.server.service.FlowI18nService;
  * <p><b>未来扩展：</b>如需支持更多语言 / 从 Nacos 加载翻译项 / 支持占位符（如 {@code "你有 {0} 个待办"}）， 可在本类基础上扩展，无需修改接口契约。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowI18nService 接口定义
  */
 @Slf4j

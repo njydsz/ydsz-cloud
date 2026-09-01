@@ -42,7 +42,7 @@ import com.njydsz.common.json.YdszJson;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class ObjectNode extends JsonNode {
 
@@ -503,7 +503,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param name 字段名
    * @return ObjectNode 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public ObjectNode getObjectNode(String name) {
     JsonNode node = fields.get(name);
@@ -518,7 +518,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param name 字段名
    * @return ArrayNode 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public ArrayNode getArrayNode(String name) {
     JsonNode node = fields.get(name);
@@ -702,7 +702,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param map 源 Map，null 返回空 ObjectNode
    * @return ObjectNode 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static ObjectNode fromMap(Map<?, ?> map) {
     ObjectNode node = new ObjectNode();

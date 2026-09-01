@@ -15,7 +15,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * <p>同时用于创建和更新场景：创建时 {@code id} 可不传，更新时 {@code id} 必填。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MenuDTO implements Serializable {

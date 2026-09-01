@@ -44,7 +44,7 @@ import com.njydsz.message.server.config.ChannelProperties;
  * 编码。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

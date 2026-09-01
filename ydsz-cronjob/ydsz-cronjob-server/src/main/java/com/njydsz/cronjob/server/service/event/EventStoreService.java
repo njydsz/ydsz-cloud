@@ -11,7 +11,7 @@ import com.njydsz.cronjob.domain.event.JobEvent;
  * <p>提供事件追加和查询能力，供业务层记录领域事件、供查询层读取事件流。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface EventStoreService {
 

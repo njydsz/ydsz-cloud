@@ -56,7 +56,7 @@ import com.njydsz.cronjob.server.config.HttpConfig;
  * <p>使用 JDK 内置 {@link HttpClient}，避免引入第三方 HTTP 客户端依赖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

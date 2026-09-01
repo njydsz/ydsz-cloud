@@ -20,7 +20,7 @@ import com.njydsz.userinfo.server.service.CompanyDeptService;
  * <p>一个公司可包含多个部门。用于跨公司组织架构展示与权限合并。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

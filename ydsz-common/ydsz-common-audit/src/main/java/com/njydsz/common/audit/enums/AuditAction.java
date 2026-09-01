@@ -9,7 +9,7 @@ package com.njydsz.common.audit.enums;
  * <p><b>编码规范：</b>1-99 为通用操作，99 为兜底的 {@link #OTHER}。 新增业务专属操作建议从 100 起，避免与通用枚举冲突。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum AuditAction {
 

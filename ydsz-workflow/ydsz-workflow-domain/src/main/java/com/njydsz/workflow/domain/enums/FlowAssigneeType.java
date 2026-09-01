@@ -8,7 +8,7 @@ package com.njydsz.workflow.domain.enums;
  * 将从当前节点候选办理人中排除；若排除后候选人为空，则自动跳过该节点（记录审计日志）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum FlowAssigneeType {
 

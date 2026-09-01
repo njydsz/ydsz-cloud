@@ -37,7 +37,7 @@ import com.njydsz.cronjob.server.service.audit.AuditLogService;
  * <p>需要 {@code CRONJOB_AUDIT_VIEW} 权限，通常仅管理员可查看。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Tag(name = "操作审计", description = "cronjob 操作审计日志分页查询")
 @Slf4j

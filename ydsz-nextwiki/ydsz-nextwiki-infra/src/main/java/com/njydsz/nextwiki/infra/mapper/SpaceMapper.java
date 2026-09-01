@@ -16,7 +16,7 @@ import com.njydsz.nextwiki.infra.entity.Space;
  * <p>对应数据表 {@code nw_space}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface SpaceMapper extends BaseMapper<Space> {

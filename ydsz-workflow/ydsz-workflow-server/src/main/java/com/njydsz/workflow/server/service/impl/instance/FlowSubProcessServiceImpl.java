@@ -86,7 +86,7 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowSubProcessService 接口定义
  * @see WorkflowFacade 工作流门面
  * @see com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer 流程推进引擎

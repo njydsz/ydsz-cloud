@@ -25,7 +25,7 @@ import com.njydsz.common.netty.transport.NativeTransportDetector.TransportType;
  * <p>优雅关闭时等待 {@code shutdownGracefully()} 完成，避免在途消息丢失。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class NettyEventLoopPool {

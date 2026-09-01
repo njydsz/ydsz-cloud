@@ -34,7 +34,7 @@ import com.njydsz.common.util.http.RequestContextUtils;
  * <p>拦截 {@link RateLimit} 注解，执行限流决策。 限流被拒绝时抛出 {@link BusinessException}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Aspect

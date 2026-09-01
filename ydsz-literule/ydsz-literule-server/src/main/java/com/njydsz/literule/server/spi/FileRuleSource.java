@@ -55,7 +55,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  *
  * <p>WatchService 监听为可选能力（{@link #supportsWatch()} 返回 true）， 文件变更时回调已注册的 {@link Consumer} 监听器。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

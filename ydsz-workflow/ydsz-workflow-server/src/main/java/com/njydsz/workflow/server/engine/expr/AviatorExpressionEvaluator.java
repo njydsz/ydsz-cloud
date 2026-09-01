@@ -34,7 +34,7 @@ import com.njydsz.common.exception.custom.SysException;
  * <p>业务系统如需更强大的规则引擎能力（如规则链、决策表），可自行实现 {@link ExpressionEvaluator} 并注册为 Bean 覆盖本实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -9,7 +9,7 @@ import com.njydsz.common.base.filter.AbstractContentCachingFilter;
  * <p>通过 {@link AppContentCacheProperties} 注入最大缓存大小（字节）， 默认 2MB，防止大文件上传场景下的 OOM。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AbstractContentCachingFilter
  * @see AppContentCacheProperties
  */

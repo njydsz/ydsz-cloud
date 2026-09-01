@@ -30,7 +30,7 @@ import com.njydsz.message.server.service.core.SmsProviderStrategyService;
  * <p>轮询使用 AtomicInteger 游标，权重使用配置文件中的权重比例， 成本优先按 provider 成本排序，可用性优先跳过连续失败超过阈值的 provider。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

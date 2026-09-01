@@ -9,7 +9,7 @@ import java.util.Map;
  * <p>统一指标采集抽象，底层可切换 Micrometer / 内存计数器 / 其他实现。 业务模块通过此接口上报指标，无需关心底层监控方案。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface MetricsCollector {
 

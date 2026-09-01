@@ -16,7 +16,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
  * 告警日志 Repository 实现（Infra 层）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

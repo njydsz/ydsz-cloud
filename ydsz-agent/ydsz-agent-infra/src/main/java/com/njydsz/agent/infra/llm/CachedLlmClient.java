@@ -44,7 +44,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * <p><b>线程安全</b>：无状态装饰器 + {@link ConcurrentHashMap} 互斥表，可安全并发调用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class CachedLlmClient implements LlmClient {

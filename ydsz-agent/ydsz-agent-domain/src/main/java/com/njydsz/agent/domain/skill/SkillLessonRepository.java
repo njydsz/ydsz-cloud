@@ -9,7 +9,7 @@ import java.util.Optional;
  * <p>定义 SkillLesson 的持久化操作。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface SkillLessonRepository {
 

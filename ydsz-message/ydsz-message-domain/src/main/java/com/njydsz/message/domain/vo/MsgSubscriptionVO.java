@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回用户订阅关系的完整信息，包含订阅主题、通道、 状态及退订时间，支撑消息订阅管理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgSubscriptionVO implements Serializable {

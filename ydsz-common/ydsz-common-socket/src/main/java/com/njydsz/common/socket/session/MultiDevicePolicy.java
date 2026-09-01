@@ -4,7 +4,7 @@ package com.njydsz.common.socket.session;
  * 多端登录策略枚举（P1-3）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum MultiDevicePolicy {
 

@@ -17,7 +17,7 @@ import com.njydsz.common.queue.service.IMessagePublisher;
  * <p>如：日志收集、指标异步聚合。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class RedisListPublisher implements IMessagePublisher {
 

@@ -45,7 +45,7 @@ import com.njydsz.common.util.string.StringUtils;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 
 /**
@@ -54,7 +54,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>所属包：{@code com.njydsz.common.feign.compress}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class GzipRequestCompressInterceptor implements RequestInterceptor {
 

@@ -48,7 +48,7 @@ import com.njydsz.common.web.config.InternalSignatureProperties;
  * 密钥经 Nacos 加密配置下发、网关与各服务对齐后按服务粒度开启。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class InternalSignatureFilter extends OncePerRequestFilter {

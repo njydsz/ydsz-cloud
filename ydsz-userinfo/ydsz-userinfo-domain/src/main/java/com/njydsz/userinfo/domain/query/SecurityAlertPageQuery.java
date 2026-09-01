@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.alert.SecurityAlert;
  * <p>用于安全告警分页查询接口，封装过滤条件与分页参数。 所有过滤条件均为可选，未设置则不作为筛选条件。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

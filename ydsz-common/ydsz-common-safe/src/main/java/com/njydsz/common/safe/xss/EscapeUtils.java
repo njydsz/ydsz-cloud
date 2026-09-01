@@ -17,7 +17,7 @@ import com.njydsz.common.util.string.StringUtils;
  * 同时支持转义和反转义 6. 危险协议过滤 - 禁止 javascript:、data:、vbscript: 等危险 URL 协议
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class EscapeUtils {
 

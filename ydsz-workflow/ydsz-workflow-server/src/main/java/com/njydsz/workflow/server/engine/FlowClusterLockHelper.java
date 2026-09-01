@@ -23,7 +23,7 @@ import com.njydsz.common.lock.strategy.LockStrategy;
  * <p>降级策略：{@link LockStrategy} Bean 不存在（单节点/测试环境未装配 ydsz-common-lock）时， {@link #tryRun(String,
  * long, Supplier)} 直接执行任务不做加锁，保证功能可用。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

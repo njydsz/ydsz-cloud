@@ -13,7 +13,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * <p>限流相关码已迁移至 {@link RateLimitExceptionCode}， 认证/权限/安全码已迁移至 {@link SecurityExceptionCode}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SecurityExceptionCode
  * @see RateLimitExceptionCode
  */

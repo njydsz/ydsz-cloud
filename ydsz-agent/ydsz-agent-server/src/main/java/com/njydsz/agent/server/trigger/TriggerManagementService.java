@@ -20,7 +20,7 @@ import com.njydsz.agent.domain.trigger.TriggerType;
  * 作为触发器聚合的应用服务层，协调领域对象与仓储。</p>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

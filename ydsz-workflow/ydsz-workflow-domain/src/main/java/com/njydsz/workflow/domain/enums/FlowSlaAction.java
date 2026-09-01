@@ -19,7 +19,7 @@ package com.njydsz.workflow.domain.enums;
  * 链路始终闭环：要么任务被人处理，要么被系统自动推进， 要么持续通知管理员介入，绝不出现"标记 TIMEOUT 后流程卡死"的情况。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum FlowSlaAction {
 

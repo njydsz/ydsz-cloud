@@ -17,7 +17,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>当 Redis 不可用时的降级方案。消息存储在内存队列中， 服务重启后丢失。生产环境建议使用 Redis 持久化实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class InMemoryDeadLetterHandler implements DeadLetterHandler {
 

@@ -102,7 +102,7 @@ import com.njydsz.literule.server.spi.ZookeeperRuleSource;
  * <p>通过 {@code ydsz.literule.*} 配置规则文件路径、组件扫描包、监控启用等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration
@@ -348,7 +348,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param poolSize 线程池大小
    * @return 守护线程池
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static ExecutorService createFallbackTimeoutExecutor(int poolSize) {
     // 使用 common-thread ExecutorUtils 创建超时线程池（符合云顶规范 15.4）
@@ -472,7 +472,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param evaluator 表达式求值器
    * @return ABTestService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -485,7 +485,7 @@ public class LiteRuleAutoConfiguration {
    * A/B 测试策略仓库（默认内存实现，可被数据库实现覆盖）
    *
    * @return ABTestRepository 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -501,7 +501,7 @@ public class LiteRuleAutoConfiguration {
    * @param ruleAdminService 规则管理服务
    * @param traceRepositoryProvider 执行轨迹仓库（可选，P0-2 真实指标源；嵌入式无持久化场景可为空）
    * @return ABTestAutoRollbackProvider 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -523,7 +523,7 @@ public class LiteRuleAutoConfiguration {
    * @param evaluator 表达式求值器
    * @param registryProvider 变量注册表（可选）
    * @return ExpressionValidationService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -611,7 +611,7 @@ public class LiteRuleAutoConfiguration {
    * @param broadcasterProvider 广播器（可选）
    * @param eventPublisher 事件发布器
    * @return DecisionTableAdminService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -636,7 +636,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param repository 决策表 Repository
    * @return DecisionTableQueryService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -649,7 +649,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param repository 执行轨迹 Repository
    * @return RuleTraceQueryService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -732,7 +732,7 @@ public class LiteRuleAutoConfiguration {
    * @param outboxRepositoryProvider Outbox 仓储（可选）
    * @param nodeIdProvider 节点 ID 提供者（可选）
    * @return RuleConfigOutboxRelay 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -761,7 +761,7 @@ public class LiteRuleAutoConfiguration {
    * @param broadcaster 规则配置广播器
    * @param nodeIdProvider 当前节点标识（可选）
    * @return RuleConfigOutboxGateway 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(EventPublishGateway.class)
@@ -784,7 +784,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param evaluator 表达式求值器（用于条件断点评估）
    * @return RuleDebugger 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -802,7 +802,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param tenantPropsProvider 租户配置（可选，未引入 common-tenant 时跳过校验）
    * @return 校验通过时的占位标记对象
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(name = "liteRuleTenantIsolationValidator")
@@ -842,7 +842,7 @@ public class LiteRuleAutoConfiguration {
    * @param evaluator 表达式求值器
    * @param graphProviderProvider 画布数据源 SPI（可选）
    * @return DefaultGraphExecutionProvider 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -868,7 +868,7 @@ public class LiteRuleAutoConfiguration {
    * @param recordRepoProvider 审批记录持久化仓库（可选）
    * @param permissionCheckerProvider 权限检查器（可选）
    * @return RuleApprovalService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -911,7 +911,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param configProvider 规则配置提供者
    * @return RulePermissionChecker 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -948,7 +948,7 @@ public class LiteRuleAutoConfiguration {
    * @param redissonClientProvider Redisson 客户端（可选，不存在时降级为仅 L1）
    * @param properties 配置属性
    * @return CachingRuleConfigProvider 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(CachingRuleConfigProvider.class)
@@ -992,7 +992,7 @@ public class LiteRuleAutoConfiguration {
    * @param evaluator 表达式求值器，用于判定事件是否满足模式中的匹配条件，不可为 {@code null}
    * @param properties 规则引擎配置，当前仅作为装配入参保留，不参与引擎构造
    * @return CEPEngine 实例，容器内单例；CEP 未启用时不注册该 Bean
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1018,7 +1018,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param ruleEngine 规则引擎   * @param cepEngineProvider 表达式引擎提供者（可选）
    * @return LiteRuleHealthIndicator 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1046,7 +1046,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param configProvider 规则配置提供者
    * @return DbRuleSource 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(DbRuleSource.class)
@@ -1069,7 +1069,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param properties 配置属性
    * @return NacosRuleSource 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(NacosRuleSource.class)
@@ -1095,7 +1095,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param properties 配置属性
    * @return ApolloRuleSource 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(ApolloRuleSource.class)
@@ -1117,7 +1117,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param properties 配置属性
    * @return ZookeeperRuleSource 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(ZookeeperRuleSource.class)
@@ -1143,7 +1143,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param sources 所有 RuleConfigProvider Bean
    * @return RuleSourceManager 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1173,7 +1173,7 @@ public class LiteRuleAutoConfiguration {
    * @param applicationContext Spring 容器，用于枚举候选 Bean 并读取规则注解元数据
    * @param properties 规则引擎配置，提供扫描基包等注册参数，不可为 {@code null}
    * @return LiteRuleAnnotationRegistrar 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1204,7 +1204,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param properties 配置属性
    * @return FileRuleSource 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1250,7 +1250,7 @@ public class LiteRuleAutoConfiguration {
    * @param properties 配置属性
    * @param providersProvider 所有 ModelInputProvider Bean（可选，含 Mock）
    * @return ModelInputRegistry 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1307,7 +1307,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param properties 配置属性
    * @return MockModelInputProvider 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1347,7 +1347,7 @@ public class LiteRuleAutoConfiguration {
    * @param properties 配置属性
    * @param providersProvider 所有 FactProvider Bean（可选）
    * @return FactProviderRegistry 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1395,7 +1395,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param handlersProvider 所有 RuleActionHandler Bean（可选）
    * @return RuleActionDispatcher 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1424,7 +1424,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param eventPublisher Spring 事件发布器
    * @return DefaultAlertActionHandler 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1453,7 +1453,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param properties 配置属性
    * @return ParallelRuleEvaluator 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1503,7 +1503,7 @@ public class LiteRuleAutoConfiguration {
    * @param versionRepoProvider 版本仓库（可选，未配置时不支持回滚预览）
    * @param properties 配置属性
    * @return RuleLifecycleService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1546,7 +1546,7 @@ public class LiteRuleAutoConfiguration {
    * @param versionRepoProvider 版本仓库（可选，支持版本回放）
    * @param evaluator 表达式求值器
    * @return ExecutionReplayService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1581,7 +1581,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param auditLogStoreProvider 审计日志存储（可选，为空使用内存存储）
    * @return RuleAuditLogService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1612,7 +1612,7 @@ public class LiteRuleAutoConfiguration {
    * @param evaluator 表达式求值器
    * @param properties 配置属性
    * @return LiteRuleSdk 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean(LiteRuleSdk.class)
@@ -1641,7 +1641,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param cepEngine CEP 引擎（可选注入，未启用时跳过）
    * @return LiteRuleMaintenanceTask 实例；仅当容器中存在 {@link CEPEngine} Bean 时才会注册
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean
@@ -1656,7 +1656,7 @@ public class LiteRuleAutoConfiguration {
    *
    * <p>分离为独立类避免 AutoConfiguration 直接持有 @Scheduled 方法 导致的条件装配复杂化。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static class LiteRuleMaintenanceTask {
 
@@ -1689,7 +1689,7 @@ public class LiteRuleAutoConfiguration {
    *
    * @param ruleAdminService 规则管理服务
    * @return RuleStressTestService 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Bean
   @ConditionalOnMissingBean

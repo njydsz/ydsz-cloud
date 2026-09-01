@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回用户对消息的反馈信息，包含评分、反馈类型和内容， 支撑消息质量评估和用户满意度分析。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgFeedbackVO implements Serializable {

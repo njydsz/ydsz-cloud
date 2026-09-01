@@ -10,7 +10,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * 消息订阅关系分页查询 Query。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

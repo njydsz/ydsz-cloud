@@ -8,14 +8,14 @@ import java.util.Map;
  * <p>抽象 ydsz-agent 模块的 Agent 执行能力，domain 层通过本接口调用 AI Agent，
  * infra 层提供适配器实现（Feign 调用 Agent 服务）。
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>外部依赖抽象接口置于 {@code domain/gateway/} 包下、
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>外部依赖抽象接口置于 {@code domain/gateway/} 包下、
  * 以 {@code Client} 结尾（符合 §34.2.1 表格：gateway/ 外部依赖抽象接口）。
  *
  * <p>借鉴 Flowlong 的「AI 审批」概念，将 AI Agent 作为流程节点执行器，
  * 实现自然语言驱动的审批决策自动化。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface AgentServiceClient {
 

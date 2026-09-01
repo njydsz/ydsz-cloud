@@ -37,7 +37,7 @@ import com.njydsz.agent.domain.vo.PromptVersionVO;
  * <p>首次读取后缓存在内存中，写操作同步更新缓存与数据库， 确保单实例内读取一致性。多实例部署时依赖数据库保证最终一致性。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Service
 public class PromptManagementService {

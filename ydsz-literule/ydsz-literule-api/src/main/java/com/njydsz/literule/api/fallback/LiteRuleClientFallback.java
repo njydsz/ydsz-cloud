@@ -21,7 +21,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  * <p>注意：必须返回 error 而非 success(emptyList)， 否则调用方通过 {@code isSuccess()} 检查会误判为评估成功（无规则触发）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

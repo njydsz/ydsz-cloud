@@ -125,7 +125,7 @@
 | `FilterOrder` | Servlet Filter 执行顺序常量，定义各 Filter 的 `order` 值（基于 `Ordered.HIGHEST_PRECEDENCE` 体系）；所有数字与 `docs/BASE_INTERCEPTOR_ORDER.md` 保持一致 |
 | `InterceptorOrder` | Spring MVC Interceptor 执行顺序常量，定义各 Interceptor 的 `order` 值（自然数体系） |
 | `AdviceOrder` | ControllerAdvice 执行顺序常量，定义各 Advice 的 `order` 值（自然数体系） |
-| `DocConstants` | OpenAPI 文档常量，集中维护 `OPENAPI_VERSION`（3.0.3）、`DEFAULT_API_DOCS_PATH`、`DEFAULT_KNIFE4J_PATH`、`DEFAULT_GROUP_NAME`、`DEFAULT_API_VERSION`（1.0.0）、格式标识、配置属性前缀等 |
+| `DocConstants` | OpenAPI 文档常量，集中维护 `OPENAPI_VERSION`（3.0.3）、`DEFAULT_API_DOCS_PATH`、`DEFAULT_KNIFE4J_PATH`、`DEFAULT_GROUP_NAME`、`DEFAULT_API_VERSION`（26.09.01）、格式标识、配置属性前缀等 |
 | `HttpHeaderConstants` | HTTP 头部常量，集中定义框架使用的标准/自定义请求头名称（`X-Request-Id`、`X-User-Id`、`X-Tenant-Id`、`X-Access-Token` 等） |
 | `BaseAuthInfo` | 认证上下文信息抽象基类（继承 `YdszAuthInfo`），子类覆盖 `getServiceTypeCode()` 返回具体服务类型编码（"WEB"/"APP"/"API"），用于业务层区分请求来源 |
 
@@ -234,10 +234,10 @@ public class CustomTraceProperties extends BaseTraceProperties {
 | `ydsz.doc.production-enabled` | false | 生产环境是否允许访问文档 |
 | `ydsz.doc.api-docs-path` | `/v3/api-docs` | OpenAPI 文档 JSON 路径 |
 | `ydsz.doc.knife4j-path` | `/doc.html` | Knife4j 文档访问路径 |
-| `ydsz.doc.doc-version` | 1.0.0 | 文档版本号 |
+| `ydsz.doc.doc-version` | 26.09.01 | 文档版本号 |
 | `ydsz.doc.info.title` | `YDSZ API 文档` | 文档标题 |
 | `ydsz.doc.info.description` | `YDSZ 公共框架 API 文档` | 文档描述 |
-| `ydsz.doc.info.version` | 1.0.0 | API 版本 |
+| `ydsz.doc.info.version` | 26.09.01 | API 版本 |
 | `ydsz.doc.groups` | `[]` | 分组配置列表（空时单分组模式） |
 | `ydsz.doc.export.enabled` | true | 是否启用文档导出 |
 | `ydsz.doc.export.format` | `json` | 默认导出格式（json/yaml/html/markdown） |
@@ -279,7 +279,7 @@ ydsz:
     info:
       title: 我的应用 API 文档
       description: 业务模块接口说明
-      version: 1.0.0
+      version: 26.09.01
     groups:
       - name: user
         title: 用户服务
@@ -405,10 +405,10 @@ AbstractMetricsHolder.recordDuration(registry, "ydsz_flow_", "eval_duration_ms",
 
 ## 变更记录
 
-- **1.0.0**（2026-08-17）：
+- **26.09.01**（2026-08-17）：
   - 补全 `BaseSecurityHeadersProperties`（`ydsz.base.security-headers`）、`BaseRequestProperties`（`ydsz.base.request`）/ `RequestBodySizeLimitFilter` 文档
   - 补全 `api` 包（`ApiVersion` / `ApiVersionOpenApiCustomizer` / `ApiVersionResolver`）文档
   - 补全 `HttpHeaderConstants`、`ConditionalOnPlatform` / `PlatformCondition` / `PlatformMode` 文档
   - 更新依赖说明：标注 common-auth / common-safe 为直接依赖（非传递）
-- **1.0.0**（2026-08-17）：补全限流、幂等、i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
-- **1.0.0**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点（含抽象基类扩展点）、健康检查端点、注意事项；统一版本号为 1.0.0
+- **26.09.01**（2026-08-17）：补全限流、幂等、i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
+- **26.09.01**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点（含抽象基类扩展点）、健康检查端点、注意事项；统一版本号为 26.09.01

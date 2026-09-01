@@ -18,7 +18,7 @@ import com.njydsz.common.util.id.TracerUtils;
  * <p><b>兼容性说明：</b>本类保留原有静态方法签名，作为薄适配层，降低业务调用方迁移成本。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see TracerUtils 统一链路追踪工具类
  */
 public final class TraceContext {

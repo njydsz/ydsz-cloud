@@ -33,7 +33,7 @@ import com.njydsz.message.domain.enums.core.SendStrategyEnum;
  * <p>发送后由 {@code MessageService} 统一走渠道路由 → 限流 → 发送 → 回执 → 重试 全链路。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.enums.core.SendStrategyEnum 发送策略枚举
  * @see com.njydsz.message.domain.enums.core.MessageChannelEnum 消息通道枚举
  */

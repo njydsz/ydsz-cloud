@@ -51,7 +51,7 @@ import com.njydsz.userinfo.server.config.ApiSignatureProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ApiSignatureProperties 签名配置
  * @see ApiSignatureUtil 签名工具类
  */

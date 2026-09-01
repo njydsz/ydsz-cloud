@@ -16,7 +16,7 @@ package com.njydsz.agent.server.rag;
  * <p><b>注意</b>：粗估算法（字符除系数）与真实 Tokenizer 有 ±20% 偏差，但足以满足预算控制需求。 如需精确控制，可替换为 tiktoken / HuggingFace Tokenizer 实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class TokenEstimator {
 

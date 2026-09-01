@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/validate-expression} 接口，校验条件/严重度/模板表达式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "表达式校验请求体")

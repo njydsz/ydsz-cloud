@@ -72,7 +72,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.config.PreferenceService 用户偏好服务
  * @see com.njydsz.message.domain.entity.config.MsgPreference 偏好实体
  */

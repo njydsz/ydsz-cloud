@@ -42,7 +42,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>索引设计：</b>普通索引 {@code idx_user_id}（{@code user_id}）、 {@code idx_post_id}（{@code post_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserAccount 用户实体
  * @see Post 岗位实体
  */

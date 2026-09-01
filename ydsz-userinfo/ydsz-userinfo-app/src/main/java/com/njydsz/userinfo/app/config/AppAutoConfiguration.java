@@ -20,7 +20,7 @@ import com.njydsz.userinfo.app.openapi.AppOpenApiConfiguration;
  * <p>通过 {@link ConditionalOnPlatform} 注解控制激活条件，与 Web 端组件互斥。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform("app")

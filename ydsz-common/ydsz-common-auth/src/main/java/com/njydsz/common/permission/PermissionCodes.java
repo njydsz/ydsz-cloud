@@ -6,7 +6,7 @@ package com.njydsz.common.permission;
  * <p>集中管理各业务模块的接口权限码，供 {@code @AuthApiPermission} 注解引用， 避免各模块重复定义或硬编码字符串。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class PermissionCodes {
 

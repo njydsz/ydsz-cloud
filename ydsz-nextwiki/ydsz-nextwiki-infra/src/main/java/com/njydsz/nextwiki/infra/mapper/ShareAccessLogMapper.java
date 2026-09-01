@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.infra.entity.ShareAccessLog;
  * 分享访问日志 Mapper。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface ShareAccessLogMapper extends BaseMapper<ShareAccessLog> {

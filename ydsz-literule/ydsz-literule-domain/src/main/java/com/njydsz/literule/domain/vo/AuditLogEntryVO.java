@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于前端展示规则变更的审计轨迹，包含操作人、操作类型、 变更前/后快照及字段级差异，便于合规追溯与问题排查。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class AuditLogEntryVO {

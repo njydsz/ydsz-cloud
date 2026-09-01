@@ -35,7 +35,7 @@ import com.njydsz.common.queue.service.IMessagePublisher;
  * <p>{@link #publishBatch(List)} 使用 Redis Pipeline 批量写入， 减少网络往返开销，提升吞吐量。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see IMessagePublisher
  * @see RedisStreamSubscriber
  */

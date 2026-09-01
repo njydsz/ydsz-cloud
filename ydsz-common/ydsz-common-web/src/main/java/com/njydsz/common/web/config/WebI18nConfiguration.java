@@ -12,7 +12,7 @@ import com.njydsz.common.base.config.BaseI18nConfiguration;
  * <p>优先级：{@code X-Lang} Header > {@code Accept-Language} > Cookie > Session。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 public class WebI18nConfiguration extends BaseI18nConfiguration {

@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于展示流程中各节点的耗时分布情况，包括平均耗时、最大耗时、P50/P90 分位数及处理数量。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowNodeDurationVO implements Serializable {

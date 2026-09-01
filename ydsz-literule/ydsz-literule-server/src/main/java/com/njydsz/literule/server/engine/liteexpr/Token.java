@@ -11,7 +11,7 @@ package com.njydsz.literule.server.engine.liteexpr;
  * @param line 行号（1-based）
  * @param column 列号（1-based）
  * @param offset 在源代码中的字符偏移量（0-based）
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public record Token(

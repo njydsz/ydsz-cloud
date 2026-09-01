@@ -12,7 +12,7 @@ import com.njydsz.system.domain.vo.DictItemVO;
  * <p>提供批量新增、批量导入（Excel）、批量导出等能力。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface DictItemBatchService {
 

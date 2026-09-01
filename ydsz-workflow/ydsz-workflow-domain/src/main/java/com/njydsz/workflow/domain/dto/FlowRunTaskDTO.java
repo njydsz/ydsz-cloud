@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 FlowRunTaskRepository 的 save/update 方法入参，
  * 符合 §34.2.1（dto/ 命令请求参数 以 DTO 结尾）。
  *
- * <p><b>命名合规说明（1.0.0 DDD 分层规范）：</b>CUD 入参必须是 dto/ 下的 DTO 对象，
+ * <p><b>命名合规说明（26.09.01 DDD 分层规范）：</b>CUD 入参必须是 dto/ 下的 DTO 对象，
  * 禁止使用 VO（符合 §34.2.1）。
  *
  * <p><b>字段对齐说明：</b>本 DTO 字段覆盖 {@link com.njydsz.workflow.domain.vo.FlowRunTaskVO} 中
@@ -20,7 +20,7 @@ import lombok.Data;
  * Service 层不应先 new VO 充当 DTO 再用 BeanUtils 拷贝 —— 应直接 new DTO 填充数据。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowRunTaskDTO {

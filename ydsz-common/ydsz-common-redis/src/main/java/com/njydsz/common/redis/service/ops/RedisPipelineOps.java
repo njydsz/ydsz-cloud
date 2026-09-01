@@ -8,7 +8,7 @@ package com.njydsz.common.redis.service.ops;
  * <p><b>注意：</b>所有操作都在 Pipeline 上下文中执行，不会立即返回结果。 结果将在 Pipeline 执行完毕后统一返回。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface RedisPipelineOps {
 

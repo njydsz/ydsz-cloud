@@ -17,7 +17,7 @@ import com.njydsz.common.feign.config.FeignProperties;
  * 每个服务名称对应一个独立的熔断器实例，参数从 {@code ydsz.feign.circuit-breaker.*} 配置读取。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {

@@ -15,7 +15,7 @@ import com.njydsz.common.json.YdszJson;
  * <p>使用 Redis List 存储死信消息（LPUSH 入队，LRANGE 查询）， 保留最近 1000 条死信消息，供人工排查。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

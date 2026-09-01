@@ -16,7 +16,7 @@ import com.njydsz.common.event.model.OutboxMessage;
  * <p>生产环境应配置实际的 {@link EventPublishGateway} 实现（如 RocketMQ/Kafka）， 否则事件将持续重试直至进入死信。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NoopEventPublishGateway implements EventPublishGateway {
 

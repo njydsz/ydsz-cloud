@@ -53,7 +53,7 @@ import com.njydsz.common.safe.config.SafeConfiguration;
  * ydsz.safe.api-signature.enabled} 和 {@code ydsz.safe.security-headers.enabled} 控制启用，本模块不再重复注册。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)

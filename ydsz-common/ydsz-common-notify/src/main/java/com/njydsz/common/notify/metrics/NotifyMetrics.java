@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * <p>当 micrometer-core 依赖不存在时，自动降级为 no-op（不影响功能）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NotifyMetrics {
 

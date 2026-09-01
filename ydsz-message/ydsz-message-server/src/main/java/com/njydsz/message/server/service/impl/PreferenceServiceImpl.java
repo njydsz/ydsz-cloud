@@ -25,7 +25,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
  * <p>偏好检查在消息发送前触发，未通过则跳过发送并打上 SKIPPED 状态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

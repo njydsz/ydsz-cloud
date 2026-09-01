@@ -50,7 +50,7 @@ import com.njydsz.common.feign.exception.OpenFeignException;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see BadRequestException
  * @see NotFoundException
  * @see OpenFeignException

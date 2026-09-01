@@ -9,7 +9,7 @@ package com.njydsz.common.feign.circuitbreaker;
  * <p>当未注册实现时，{@code FeignResponseInterceptor} 跳过熔断逻辑（降级为无保护模式）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CircuitBreakerFeignConfiguration
  */
 public interface FeignCircuitBreakerStrategy {

@@ -30,7 +30,7 @@ import com.njydsz.common.queue.service.IMessagePublisher;
  * <p>支持按租户分片、TTL 过期清理、最大长度限制。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {

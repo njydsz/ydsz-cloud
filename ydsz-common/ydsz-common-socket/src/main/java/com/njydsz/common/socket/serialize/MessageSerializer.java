@@ -6,7 +6,7 @@ package com.njydsz.common.socket.serialize;
  * <p>抽象消息序列化逻辑，默认使用 {@link JsonMessageSerializer}（JSON）， 业务方可替换为 Protobuf 等其他协议实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface MessageSerializer {
 

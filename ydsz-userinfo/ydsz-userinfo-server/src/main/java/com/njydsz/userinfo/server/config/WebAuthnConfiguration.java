@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>注册 WebAuthn 相关的 Bean，当 ydsz.userinfo.webauthn.enabled=true 时激活。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 @EnableConfigurationProperties(WebAuthnProperties.class)

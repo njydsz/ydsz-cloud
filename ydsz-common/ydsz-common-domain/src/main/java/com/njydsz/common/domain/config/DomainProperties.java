@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>集中管理 domain 模块的所有配置项（{@code ydsz.domain.*}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.domain")

@@ -13,7 +13,7 @@ package com.njydsz.literule.server.engine.liteexpr;
  *
  * <p>栈效应标注约定：{@code →} 前面为操作前栈，后面为操作后栈。 例如 {@code [a, b] → [result]} 表示弹出 a、b，压入 result。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public enum BytecodeOpcode {

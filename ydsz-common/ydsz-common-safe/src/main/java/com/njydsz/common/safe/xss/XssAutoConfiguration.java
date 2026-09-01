@@ -18,7 +18,7 @@ import com.njydsz.common.json.module.JsonModule;
  * JsonAutoConfiguration} 的模块注册流程统一。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnProperty(

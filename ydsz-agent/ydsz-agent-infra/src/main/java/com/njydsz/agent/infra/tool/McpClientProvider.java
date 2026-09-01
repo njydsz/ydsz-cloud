@@ -13,7 +13,7 @@ import com.njydsz.agent.server.config.AgentProperties;
  * io.modelcontextprotocol:sdk 依赖，注释与实现保持一致）； 未来接入官方 SDK 或 stdio/streamable-http 传输时新增实现类即可。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface McpClientProvider {
 

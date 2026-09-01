@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>用于回收站条目的创建和更新操作，作为 Repository 接口 CUD 方法的入参。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @SuperBuilder

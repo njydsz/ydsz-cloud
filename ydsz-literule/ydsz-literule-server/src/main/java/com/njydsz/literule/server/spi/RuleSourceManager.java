@@ -24,7 +24,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  *   <li>故障切换：主数据源不可用时自动降级到备选数据源
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

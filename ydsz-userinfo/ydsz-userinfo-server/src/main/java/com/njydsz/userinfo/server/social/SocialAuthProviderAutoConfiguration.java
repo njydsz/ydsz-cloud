@@ -18,7 +18,7 @@ import com.njydsz.userinfo.domain.social.SocialAuthProvider;
  * <p>自定义 Provider 可在 Spring 容器初始化后通过 {@link SocialAuthProviderRegistry#register(SocialAuthProvider)} 动态注册。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

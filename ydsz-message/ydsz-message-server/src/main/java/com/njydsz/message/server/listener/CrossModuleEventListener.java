@@ -31,7 +31,7 @@ import com.njydsz.common.notify.helper.NotifyHelper;
  * 对于无明确接收人的事件（receiver=null），不再发送无效通知。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

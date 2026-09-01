@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>记录两个版本之间节点和跳转条件的变化详情，用于版本对比功能。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowDefinitionDiffVO implements Serializable {

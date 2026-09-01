@@ -23,7 +23,7 @@ import com.njydsz.common.notify.ratelimit.NotifyRateLimiterManager;
  * <p>使用 {@link SendContext} 在步骤间传递状态，每个步骤可通过 {@link SendContext#hasResult()} 判断是否已短路返回。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SendChain {
 

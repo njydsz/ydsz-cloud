@@ -35,7 +35,7 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
  * <p>执行顺序：HIGH_PRECEDENCE + 10，确保在业务逻辑之前执行
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class TraceFilter extends OncePerRequestFilter {
 

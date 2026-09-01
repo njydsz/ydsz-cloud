@@ -56,7 +56,7 @@ import com.njydsz.system.server.service.VariableService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ConfigController 系统配置 Controller（面向后端）
  * @see com.njydsz.system.server.service.VariableService 变量业务逻辑
  */

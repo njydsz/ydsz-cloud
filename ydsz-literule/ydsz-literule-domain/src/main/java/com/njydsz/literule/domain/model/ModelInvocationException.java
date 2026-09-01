@@ -6,7 +6,7 @@ import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 /**
  * 模型调用异常（基础设施层异常）
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class ModelInvocationException extends SysException {

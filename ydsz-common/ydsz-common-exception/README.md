@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供统一异常层级体系、错误码注册中心、RFC 7807 ProblemDetail、国际化 i18n、全局异常处理器、异常指标监控等能力 |
 | **依赖** | common-core、common-json；可选依赖 spring-webmvc、spring-webflux、spring-jdbc、spring-boot-validation、micrometer-core、spring-boot-actuator、spring-boot-health |
-| **版本** | 1.0.0 |
+| **版本** | 26.09.01 |
 
 ## 核心能力
 
@@ -336,7 +336,7 @@ ydsz:
 
 ## 变更记录
 
-- **1.0.0**（2026-08-10）：错误码体系架构重构：
+- **26.09.01**（2026-08-10）：错误码体系架构重构：
   - 移除不存在的 `UnifiedExceptionCode` / `ExceptionCodeRegistry` / `ResultCodeRegistry` 引用
   - `YdszResultCode` → `YdszExceptionCode`，`ResultCodeScanner` → `ExceptionCodeScanner`
   - `ResultCode`（core）精简为协议层三要素：`getCode()` / `getModule()`（default: "core"） / `getKey()`（default: `module.code`） / `getMsg()`

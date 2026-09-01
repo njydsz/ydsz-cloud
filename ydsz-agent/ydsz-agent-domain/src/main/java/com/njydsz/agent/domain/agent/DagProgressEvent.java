@@ -22,7 +22,7 @@ import java.util.Objects;
  * <p>通过 SSE {@code progress} 事件推送，前端据此渲染节点级进度条 / 状态指示灯。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class DagProgressEvent implements Serializable {
 

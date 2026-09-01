@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于前端展示某条 CEP 模式被事件流命中的记录， 包含命中的模式、规则、匹配到的事件及命中时的度量值。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class CEPHitVO {

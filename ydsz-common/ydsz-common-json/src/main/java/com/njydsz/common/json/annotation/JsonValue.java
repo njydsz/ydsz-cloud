@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * <p>序列化结果为数字 1/0，而非字符串 "ACTIVE"/"INACTIVE"。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

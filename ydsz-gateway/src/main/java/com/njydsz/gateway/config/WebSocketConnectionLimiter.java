@@ -37,7 +37,7 @@ import reactor.core.publisher.Mono;
  * ydsz.gateway.websocket.counter-ttl-seconds: 3600
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

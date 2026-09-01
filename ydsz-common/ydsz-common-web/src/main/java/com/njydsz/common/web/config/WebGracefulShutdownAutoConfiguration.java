@@ -39,7 +39,7 @@ import org.springframework.context.event.ContextClosedEvent;
  * 会在停机开始时输出日志，便于运维观测。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)

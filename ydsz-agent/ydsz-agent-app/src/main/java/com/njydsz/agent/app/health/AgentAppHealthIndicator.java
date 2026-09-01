@@ -14,7 +14,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * <p>当前为预留实现，待 App 端控制器接入后补充模块特有探针（如 LLM Provider 连通性、RAG 向量存储等）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class AgentAppHealthIndicator implements HealthIndicator {
 

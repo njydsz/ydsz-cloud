@@ -28,7 +28,7 @@ import com.njydsz.common.core.response.PageResponse;
  * 业务模块同时依赖 core + jdbc 时即可使用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see PageResponse
  * @see IPage
  */

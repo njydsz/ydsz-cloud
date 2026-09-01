@@ -9,7 +9,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  *
  * <p>抽象表达式引擎，默认提供 {@link com.njydsz.literule.server.engine.liteexpr.LiteExprEngine}。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface ExpressionEngine {
@@ -53,7 +53,7 @@ public interface ExpressionEngine {
    *
    * @param expression 表达式字符串
    * @return 校验结果
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default ExpressionValidationResult validateDetailed(String expression) {
     long start = System.nanoTime();
@@ -72,7 +72,7 @@ public interface ExpressionEngine {
    * <p>用于向前端暴露自动补全 + 文档悬浮。 默认返回 {@link ExpressionFunctionDef#defaults()}。
    *
    * @return 已注册函数定义列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default List<ExpressionFunctionDef> registeredFunctionDefs() {
     return ExpressionFunctionDef.defaults();
@@ -88,7 +88,7 @@ public interface ExpressionEngine {
    * @param expression 表达式字符串
    * @param context 规则上下文
    * @return 求值结果 + 追踪树
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default TraceResult evalBooleanWithTrace(String expression, RuleContextVO context) {
     long start = System.nanoTime();
@@ -109,7 +109,7 @@ public interface ExpressionEngine {
    *
    * @param result 求值结果
    * @param traceTree 追踪树根节点
-   * @since 1.0.0
+   * @since 26.09.01
    */
   record TraceResult(boolean result, ExpressionTraceNode traceTree) {}
 }

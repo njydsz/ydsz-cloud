@@ -20,7 +20,7 @@ import lombok.Setter;
  * {@link com.njydsz.cronjob.server.core.outbox.OutboxPublisher} 异步扫描并发布。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

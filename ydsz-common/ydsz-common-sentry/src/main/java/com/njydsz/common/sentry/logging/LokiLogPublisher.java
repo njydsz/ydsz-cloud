@@ -24,7 +24,7 @@ import com.njydsz.common.sentry.spi.LogPublisher;
  * <p>通过 HTTP 将结构化 JSON 日志推送到 Loki。 作为 ELK 方案的备选/降级方案。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class LokiLogPublisher implements LogPublisher, AutoCloseable {

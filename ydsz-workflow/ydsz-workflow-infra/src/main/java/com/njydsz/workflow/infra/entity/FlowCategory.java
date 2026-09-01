@@ -33,7 +33,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowDefinition 流程定义（{@code category} 字段引用本表）
  * @see com.njydsz.workflow.server.service.FlowCategoryService 分类服务
  */

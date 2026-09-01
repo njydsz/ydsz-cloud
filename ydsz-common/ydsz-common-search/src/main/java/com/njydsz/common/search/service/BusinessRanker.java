@@ -18,7 +18,7 @@ import com.njydsz.common.search.config.SearchProperties;
  * <p>结合业务因子（热度、新鲜度、个性化）调整 ES 检索结果排序。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RequiredArgsConstructor

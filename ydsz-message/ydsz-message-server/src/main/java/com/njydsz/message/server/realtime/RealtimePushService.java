@@ -13,7 +13,7 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
  * ydsz-common-socket} 模块的 {@link RealtimePushTemplate}， 本类保留为业务门面，确保现有调用方无需修改注入路径。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

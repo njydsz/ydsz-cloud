@@ -46,7 +46,7 @@ import java.lang.annotation.Target;
  * <p><b>兼容性：</b>与历史 {@code com.njydsz.common.annotation.DataScope} 字段语义完全一致， 新代码统一使用本注解。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.auth.aspect.AuthRowPermissionAspect 行级权限 AOP
  */
 @Target(ElementType.METHOD)

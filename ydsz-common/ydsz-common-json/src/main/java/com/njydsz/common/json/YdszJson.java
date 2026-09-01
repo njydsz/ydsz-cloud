@@ -69,7 +69,7 @@ import com.njydsz.common.json.type.TypeFactory;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class YdszJson {
 
@@ -92,7 +92,7 @@ public class YdszJson {
    *
    * <p>volatile 保证 {@link #reloadDefaultMapper()} 后的可见性。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static volatile JsonMapper defaultMapper = new JsonMapper();
 
@@ -102,7 +102,7 @@ public class YdszJson {
    * <p>当通过 {@link JsonConfig#install(JsonConfig)} 变更全局配置后调用此方法， 使 YdszJson 静态方法立即使用新配置。
    * 正常情况下无需显式调用——{@link JsonConfig#install(JsonConfig)} 内部会自动触发。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void reloadDefaultMapper() {
     defaultMapper = new JsonMapper(JsonConfig.copyOf(null));
@@ -115,7 +115,7 @@ public class YdszJson {
    * JsonMapper.DEFAULT} 是 类加载时的 static final 快照，{@link JsonConfig#install(JsonConfig)} 后不会刷新）。
    *
    * @return 当前默认 Mapper 实例（volatile 保证可见性，永不为 null）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static JsonMapper getDefaultMapper() {
     return defaultMapper;
@@ -158,7 +158,7 @@ public class YdszJson {
    *
    * @param json 紧凑 JSON 字符串
    * @return 格式化后的 JSON 字符串；解析失败时返回原始字符串
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String format(String json) {
     if (json == null || json.isEmpty()) {
@@ -194,7 +194,7 @@ public class YdszJson {
    * @param patchJson Patch JSON 数组字符串
    * @return 应用 Patch 后的 JSON 字符串
    * @throws com.njydsz.common.json.exception.JsonException 当 Patch 操作失败时（如路径不存在、TEST 失败等）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String patch(String targetJson, String patchJson) {
     // P-2 优化：统一走 JsonNode 树路径（readTree → applyToTree → toJson），
@@ -223,7 +223,7 @@ public class YdszJson {
    * @param patchJson Merge Patch JSON 字符串
    * @return 应用 Patch 后的 JSON 字符串
    * @throws JsonException 如果 patch 操作失败
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static String mergePatch(String targetJson, String patchJson) {
     JsonNode target = readTree(targetJson);
@@ -315,7 +315,7 @@ public class YdszJson {
    * @param elementClass 集合元素类型
    * @return 反序列化后的集合对象，json 为空时返回 null
    * @throws IllegalArgumentException 如果 collectionClass 是 Map 类型（应使用 fromJsonToMap）
-   * @since 1.0.0
+   * @since 26.09.01
    *
    * @param <T> 泛型类型
    */
@@ -413,7 +413,7 @@ public class YdszJson {
    * @param <T> 目标类型泛型
    * @return 转换后的对象实例
    * @throws JsonException 如果转换失败
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T convertValue(Object fromValue, Class<T> toValueType) {
     return defaultMapper.convertValue(fromValue, toValueType);
@@ -430,7 +430,7 @@ public class YdszJson {
    * @param <T> 目标类型泛型
    * @return 转换后的对象实例
    * @throws JsonException 如果转换失败
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T convertValue(Object fromValue, JsonType<T> toValueTypeRef) {
     return defaultMapper.convertValue(fromValue, toValueTypeRef);
@@ -458,7 +458,7 @@ public class YdszJson {
    * @param json JSON 字符串
    * @return ObjectNode 实例，json 为 null/blank 返回 null
    * @throws JsonException 如果 JSON 不是对象（如为数组或标量）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static ObjectNode parseObject(String json) {
     if (json == null || json.isBlank()) {
@@ -480,7 +480,7 @@ public class YdszJson {
    * @param json JSON 字符串
    * @return ArrayNode 实例，json 为 null/blank 返回 null
    * @throws JsonException 如果 JSON 不是数组
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static ArrayNode parseArrayNode(String json) {
     if (json == null || json.isBlank()) {
@@ -640,7 +640,7 @@ public class YdszJson {
    *
    * @param obj 要序列化的对象
    * @param out 输出流
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void toJson(Object obj, OutputStream out) {
     SerializationProvider.serializeToStream(obj, out);
@@ -655,7 +655,7 @@ public class YdszJson {
    * @param obj 要序列化的对象
    * @param writer 字符输出流
    * @throws JsonException 如果写入失败
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void toJson(Object obj, Writer writer) {
     SerializationProvider.serializeToWriter(obj, writer);
@@ -673,7 +673,7 @@ public class YdszJson {
    * @param clazz 目标类型
    * @param <T> 类型参数
    * @return 反序列化后的对象
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toObject(InputStream in, Class<T> clazz) {
     return toObject(in, DEFAULT_MAX_INPUT_STREAM_SIZE, clazz);
@@ -690,7 +690,7 @@ public class YdszJson {
    * @param <T> 类型参数
    * @return 反序列化后的对象；若输入流为空返回 null
    * @throws JsonException 读取超限或 IO 错误
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toObject(InputStream in, long maxBytes, Class<T> clazz) {
     if (in == null) {
@@ -714,7 +714,7 @@ public class YdszJson {
    * @param typeRef 类型引用
    * @param <T> 类型参数
    * @return 反序列化后的对象
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T toObject(InputStream in, JsonType<T> typeRef) {
     if (in == null) {
@@ -741,7 +741,7 @@ public class YdszJson {
    * @param maxBytes 最大允许读取字节数
    * @return 读取的字节数组（长度不超过 maxBytes）
    * @throws IOException 读取失败或超过大小限制
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static byte[] readBoundedBytes(InputStream input, long maxBytes) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream(8192);
@@ -774,7 +774,7 @@ public class YdszJson {
    * SerializationProvider} / {@code DeserializationProvider} 的元数据缓存构建，语义保持一致。
    *
    * @param classes 需要预热的类型列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void warmup(Class<?>... classes) {
     if (classes == null || classes.length == 0) {
@@ -862,7 +862,7 @@ public class YdszJson {
    *
    * @param json 待校验字符串
    * @return true 如果字符串为合法 JSON
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static boolean isValidJson(String json) {
     if (json == null || json.isEmpty()) {
@@ -897,7 +897,7 @@ public class YdszJson {
    * <p>清理内容包括：序列化/反序列化上下文、字段命名策略、解析缓冲池、 读取器池、深度覆盖与精度模式覆盖。调用后本线程后续 JSON 调用行为不变 （均会按默认值重新初始化）。正在进行的嵌套
    * JSON 调用栈内禁止调用。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void cleanupThread() {
     SerializationProvider.clearThreadLocals();
@@ -920,7 +920,7 @@ public class YdszJson {
    *
    * @param patchJson Patch JSON 数组字符串
    * @return Patch 操作列表
-   * @since 1.0.0
+   * @since 26.09.01
    * @see com.njydsz.common.json.tree.JsonPatch#parse(String)
    */
   public static List<PatchOp> parsePatch(String patchJson) {
@@ -935,7 +935,7 @@ public class YdszJson {
    * @param clazz 目标类型
    * @param <T> 目标类型参数
    * @return Patch 后的新对象
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T applyPatch(String patchJson, T target, Class<T> clazz) {
     return JsonPatch.apply(patchJson, target, clazz);
@@ -951,7 +951,7 @@ public class YdszJson {
    * @param clazz 目标类型
    * @param <T> 目标类型参数
    * @return Patch 后的新对象
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> T applyMergePatch(String mergeJson, T target, Class<T> clazz) {
     return JsonPatch.applyMerge(mergeJson, target, clazz);

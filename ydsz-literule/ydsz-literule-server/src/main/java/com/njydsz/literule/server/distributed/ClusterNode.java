@@ -10,7 +10,7 @@ import lombok.Data;
 /**
  * 集群节点信息（P2-16 分布式执行）
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Data

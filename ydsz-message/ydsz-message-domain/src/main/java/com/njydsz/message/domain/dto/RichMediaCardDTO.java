@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
  * <p>用于企微/钉钉/飞书等 IM 通道的结构化消息，支持标题、内容、按钮、链接等丰富交互元素。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

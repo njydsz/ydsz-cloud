@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>脚本规则：script 字段为 Groovy 脚本源码，运行在沙箱中。 通过 sandbox_enabled 控制是否启用沙箱安全限制。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @SuperBuilder

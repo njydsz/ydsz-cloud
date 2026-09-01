@@ -57,7 +57,7 @@ import java.lang.annotation.Target;
  * YdszJson.toJson} 指定视图。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})

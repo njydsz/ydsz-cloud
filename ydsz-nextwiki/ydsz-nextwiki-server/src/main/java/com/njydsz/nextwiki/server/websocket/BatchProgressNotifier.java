@@ -34,7 +34,7 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
  * <p><b>降级策略：</b>当 WebSocket 模块未引入时（{@link RealtimePushTemplate} 不可用），静默降级为 no-op，不影响批量任务正常执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

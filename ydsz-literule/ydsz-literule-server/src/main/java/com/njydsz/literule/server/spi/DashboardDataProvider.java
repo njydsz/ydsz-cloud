@@ -14,7 +14,7 @@ import com.njydsz.literule.domain.vo.RuleDashboardTrendVO;
  * <p>由消费方（如 project 模块）提供实现，聚合规则引擎执行指标， 提供概览 / 趋势 / 分布 / Top 规则 / 实时指标 5 类聚合视图。 literule 模块的 {@code
  * RuleDashboardController} 通过此接口反转依赖， 避免直接依赖 project 模块的服务实现。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface DashboardDataProvider {

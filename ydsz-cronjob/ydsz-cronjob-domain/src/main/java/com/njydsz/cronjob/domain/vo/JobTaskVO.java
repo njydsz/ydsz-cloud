@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回 MapReduce 子任务数据，对应实体 {@link com.njydsz.cronjob.domain.entity.job.JobTask}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class JobTaskVO implements Serializable {

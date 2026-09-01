@@ -47,7 +47,7 @@ import com.njydsz.system.server.service.TenantService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see TenantService 租户业务逻辑
  */
 @Tag(name = "租户管理", description = "多租户 CRUD")

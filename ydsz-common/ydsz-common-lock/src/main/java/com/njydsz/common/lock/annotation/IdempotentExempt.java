@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * <p>也可标注在方法上，表示该方法豁免幂等检查（如定时触发接口）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

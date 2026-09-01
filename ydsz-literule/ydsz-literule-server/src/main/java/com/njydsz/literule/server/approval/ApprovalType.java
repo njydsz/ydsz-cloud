@@ -11,7 +11,7 @@ package com.njydsz.literule.server.approval;
  *   <li>{@link #SEQUENCE} - 顺序审批，按 approvers 列表顺序依次审批
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public enum ApprovalType {

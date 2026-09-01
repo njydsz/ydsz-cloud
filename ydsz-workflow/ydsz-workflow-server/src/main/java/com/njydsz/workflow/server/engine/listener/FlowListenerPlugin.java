@@ -15,7 +15,7 @@ import com.njydsz.workflow.server.engine.FlowEventContext;
  * <p><b>生命周期回调：</b>只需覆写关心的方法，其余走默认空实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowListenerPluginExecutor 插件执行器
  * @see FlowListenerConfig 设计器中的配置绑定
  */

@@ -66,7 +66,7 @@ import com.njydsz.gateway.config.WebSocketConnectionLimiter;
  * <p>{@code HIGHEST_PRECEDENCE + 8}，在 {@link AuthGlobalFilter}(+10) 之前执行， WebSocket
  * 请求由本过滤器处理并标记为已认证，{@link AuthGlobalFilter} 检测到标记后跳过。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

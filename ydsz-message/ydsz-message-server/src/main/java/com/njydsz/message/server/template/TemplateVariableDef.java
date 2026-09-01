@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>描述模板中每个变量的类型、是否必填、默认值、枚举可选值等元信息， 用于渲染前自动校验 + 前端可视化编辑器渲染表单。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class TemplateVariableDef {

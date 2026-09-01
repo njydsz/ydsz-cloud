@@ -25,7 +25,7 @@ import com.njydsz.common.sentry.spi.AlertPublisher;
  * 邮件；common-notify 未引入时告警仅落日志， 不抛异常也不阻断启动。P3 及以下级别不外发通知。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)

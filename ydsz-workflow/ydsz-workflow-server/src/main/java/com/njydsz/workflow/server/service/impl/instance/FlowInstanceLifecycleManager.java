@@ -66,7 +66,7 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  * <p><b>并发控制：</b>关键操作通过 {@link YdszDistributedLock} 注解保护。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

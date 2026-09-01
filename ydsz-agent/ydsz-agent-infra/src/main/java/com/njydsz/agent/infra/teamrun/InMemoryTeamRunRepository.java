@@ -19,7 +19,7 @@ import com.njydsz.agent.domain.teamrun.TeamRunRepository;
  * 生产环境建议替换为基于数据库的实现。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class InMemoryTeamRunRepository implements TeamRunRepository {

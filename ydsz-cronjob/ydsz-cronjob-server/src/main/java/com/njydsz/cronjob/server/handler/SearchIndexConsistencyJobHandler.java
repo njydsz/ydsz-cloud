@@ -40,7 +40,7 @@ import com.njydsz.cronjob.domain.job.JobHandler;
  * <p><b>依赖触发：</b>仅当 classpath 存在 {@code ydsz-common-search} 时激活。 未引入搜索模块的应用不会装配本 Handler，也不会报错。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see IndexConsistencyChecker
  */
 @Slf4j

@@ -33,7 +33,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * tenant_id} 过滤，防止跨租户文档被召回。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class HybridRetriever implements Retriever {

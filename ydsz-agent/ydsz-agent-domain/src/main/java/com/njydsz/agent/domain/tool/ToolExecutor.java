@@ -11,7 +11,7 @@ import java.util.Map;
  * 不要在实现内部持有跨调用共享的可变状态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FunctionalInterface
 public interface ToolExecutor {

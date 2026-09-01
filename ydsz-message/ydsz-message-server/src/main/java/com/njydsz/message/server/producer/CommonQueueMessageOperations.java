@@ -27,7 +27,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * <p>事务消息降级为同步发送（common-queue 抽象暂不支持事务消息）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

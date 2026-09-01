@@ -30,7 +30,7 @@ import com.njydsz.common.lock.spi.CurrentUserIdResolver;
  * CurrentUserIdResolver} SPI 接口注入， 由上层业务模块（如 ydsz-common-auth）提供实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RepeatSubmit
  */
 @Slf4j

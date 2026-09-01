@@ -13,7 +13,7 @@ import com.njydsz.common.search.api.SearchResponse;
  * 声明自身能力。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface SearchStrategy {
 

@@ -10,7 +10,7 @@ import com.njydsz.common.exception.custom.SysException;
  *
  * <p>继承 {@link SysException}，纳入 common-exception 统一异常体系。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class FactCollectionException extends SysException {

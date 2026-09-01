@@ -12,7 +12,7 @@ import com.njydsz.common.base.config.BaseOpenApiConfiguration;
  * <p>支持与 base 不同的标题/描述/版本，覆盖移动端的 Swagger/Knife4j 展示。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 public class AppOpenApiConfiguration extends BaseOpenApiConfiguration {

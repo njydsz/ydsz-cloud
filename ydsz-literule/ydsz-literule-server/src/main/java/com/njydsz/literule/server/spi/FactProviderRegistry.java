@@ -42,7 +42,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  *   <li>本注册中心在模型注入之前执行，采集的事实可供模型 provider 使用
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

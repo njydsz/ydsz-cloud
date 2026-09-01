@@ -25,11 +25,11 @@ import com.njydsz.common.json.YdszJson;
  *   <li>{@link ServiceType#AUTO_PASS} — 自动通过（默认，无需额外配置）
  * </ul>
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>值对象置于 {@code domain/vo/} 包下，
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>值对象置于 {@code domain/vo/} 包下，
  * 以 {@code Config} 结尾，不可变对象（所有字段 final）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @ToString

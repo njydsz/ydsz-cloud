@@ -18,7 +18,7 @@ import com.njydsz.cronjob.infra.mapper.job.SysAuditLogMapper;
  * <p>实现 {@link AuditLogRepository} 接口，封装 ydsz_job_audit_log 表的查询操作。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

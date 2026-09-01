@@ -14,11 +14,11 @@ package com.njydsz.workflow.domain.event;
  *   <li>扩展性：未来可支持异步发布、事务内发布等高级特性
  * </ul>
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>领域事件发布器置于 {@code domain/event/} 包下，
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>领域事件发布器置于 {@code domain/event/} 包下，
  * 作为领域事件基础设施的抽象接口（符合 §34.2.1 表格：event/ 领域事件类）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowDomainEvent 领域事件基类
  */
 public interface DomainEventPublisher {

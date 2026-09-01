@@ -15,7 +15,7 @@ import com.njydsz.cronjob.server.core.dispatch.JobScanner;
  * <p>此实现仅为适配层，保持 {@link JobScanner} 的原有行为不变。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Configuration

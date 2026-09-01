@@ -20,7 +20,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  * 本实现为模拟框架，预留 API 调用位。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

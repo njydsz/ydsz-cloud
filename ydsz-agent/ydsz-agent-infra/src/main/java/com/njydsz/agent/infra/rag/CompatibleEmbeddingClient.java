@@ -20,7 +20,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  * <p>覆盖多种 Embedding API。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class CompatibleEmbeddingClient implements EmbeddingClient {

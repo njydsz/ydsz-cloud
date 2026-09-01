@@ -12,7 +12,7 @@ import com.njydsz.common.sentry.domain.LogEvent;
  * <p>将 LogEvent 序列化为结构化 JSON 字符串，兼容 LogstashEncoder 格式。 底层委托 {@link YdszJson} 统一 JSON 引擎。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class LogEventSerializer {
 

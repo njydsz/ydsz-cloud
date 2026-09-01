@@ -56,7 +56,7 @@ import com.njydsz.gateway.config.RateLimitProperties;
  *
  * <p>Redis 不可用时直接放行，保证可用性。生产环境建议通过集群 Redis 或 Sentinel 避免单点故障。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

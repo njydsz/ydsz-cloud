@@ -18,7 +18,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
  * COMPLETED / FAILED 事件实现：用量审计、失败告警、运营分析。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

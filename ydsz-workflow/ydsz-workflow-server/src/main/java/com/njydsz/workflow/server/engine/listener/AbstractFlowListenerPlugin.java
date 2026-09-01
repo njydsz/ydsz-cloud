@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>业务方继承此类实现 {@link FlowListenerPlugin}，只需覆写关心的方法。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public abstract class AbstractFlowListenerPlugin implements FlowListenerPlugin {

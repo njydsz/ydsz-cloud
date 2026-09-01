@@ -9,7 +9,7 @@ import java.io.Serializable;
  * 返回，传递给 {@link SocialAuthProvider#getUserInfo} 使用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @param accessToken 访问令牌（平台 API 调用凭证）
  * @param refreshToken 刷新令牌（用于续期 access_token，可为 null）
  * @param expiresIn 访问令牌有效期（秒，从获取时刻起算）

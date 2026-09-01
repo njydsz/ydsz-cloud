@@ -27,7 +27,7 @@ import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
  * <p><b>DDD 合规：</b>仅依赖 domain 层接口，不耦合 infra 实现类。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class AgentHealthIndicator extends AbstractModuleHealthIndicator {

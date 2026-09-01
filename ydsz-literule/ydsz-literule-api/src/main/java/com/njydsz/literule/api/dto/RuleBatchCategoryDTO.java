@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/batch-category} 接口，批量调整规则分类。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "规则批量分类调整请求体")

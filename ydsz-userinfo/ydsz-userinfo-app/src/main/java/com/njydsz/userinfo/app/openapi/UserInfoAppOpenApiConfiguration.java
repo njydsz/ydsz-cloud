@@ -8,7 +8,7 @@ import com.njydsz.common.app.config.AppOpenApiConfiguration;
  * 用户信息模块 App 端 OpenAPI 配置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 public class UserInfoAppOpenApiConfiguration extends AppOpenApiConfiguration {

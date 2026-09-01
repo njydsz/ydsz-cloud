@@ -29,7 +29,7 @@ import com.njydsz.common.netty.api.ConnectionMetrics;
  * <p>当 MeterRegistry 不在 classpath 时降级为空操作（no-op）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class NettyChannelMetrics implements ConnectionMetrics {

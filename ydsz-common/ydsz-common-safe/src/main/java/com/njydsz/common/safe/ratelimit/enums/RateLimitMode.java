@@ -6,7 +6,7 @@ package com.njydsz.common.safe.ratelimit.enums;
  * <p>区分本地限流、集群限流与自适应限流，对应不同实现策略。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum RateLimitMode {
 

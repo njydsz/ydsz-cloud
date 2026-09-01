@@ -20,7 +20,7 @@ import com.njydsz.workflow.server.service.FlowDelegateAuthService;
  * <p>用于合规审计与事后追溯。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -72,7 +72,7 @@ public class FlowTaskAuditService {
 
   /**
    * 解析 assigneeId 中的真实用户 ID。
-   * 
+   *
    * <p>仅当 assigneeId 是纯数字时返回其值（系统用户 ID 场景），否则返回 null 表示"非代理场景"。
    *
    * @param assigneeId 办理人 ID

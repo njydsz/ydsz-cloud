@@ -14,7 +14,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * <p>错误码使用 {@link CoreExceptionCode#IDEMPOTENT_REJECT}（A07001）， i18n 消息键 {@code idempotent.reject}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class IdempotentException extends BusinessException {
 

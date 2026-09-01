@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 集群内部署时应将可信代理收敛为明确的入口网关/LB 出口 IP 集合。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConfigurationProperties(prefix = "ydsz.util")
 public class TrustedProxyProperties {

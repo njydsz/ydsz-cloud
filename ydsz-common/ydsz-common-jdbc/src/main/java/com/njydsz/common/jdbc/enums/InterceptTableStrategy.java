@@ -4,7 +4,7 @@ package com.njydsz.common.jdbc.enums;
  * 拦截表策略枚举，定义拦截器如何处理表
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum InterceptTableStrategy {
   /** 包含模式 - 只处理指定的表 */

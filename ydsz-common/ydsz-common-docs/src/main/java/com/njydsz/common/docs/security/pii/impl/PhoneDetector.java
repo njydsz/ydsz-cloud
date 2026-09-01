@@ -20,7 +20,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * <p>脱敏策略为"前 3 后 4"，与 {@link SensitiveUtil#phone} 一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class PhoneDetector implements PiiDetector {

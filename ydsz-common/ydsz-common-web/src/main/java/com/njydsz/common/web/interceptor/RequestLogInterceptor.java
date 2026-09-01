@@ -21,7 +21,7 @@ import com.njydsz.common.web.metrics.WebMetrics;
  * @author ydsz-team
  * @see BaseRequestLogInterceptor
  * @see WebMetrics
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)

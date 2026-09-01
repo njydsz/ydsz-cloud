@@ -27,7 +27,7 @@ import com.njydsz.common.util.id.IdGenerator;
  *   <li>attributes：事件属性（用于聚合、模式匹配时的字段比较）
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Data

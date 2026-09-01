@@ -63,7 +63,7 @@ import java.lang.annotation.Target;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AuthApiPermission
  * @see AuthRowPermission
  * @see AuthColPermission
@@ -119,7 +119,7 @@ public @interface AuthMenuPermission {
   /**
    * 权限类型枚举。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   enum PermissionType {
     /**

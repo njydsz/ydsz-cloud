@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
  * 基于本地文件的检查点存储实现（向后兼容）
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class LocalCheckpointStore implements CheckpointStore {

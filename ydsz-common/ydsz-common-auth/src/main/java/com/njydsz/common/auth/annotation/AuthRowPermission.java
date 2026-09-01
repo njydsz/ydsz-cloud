@@ -74,7 +74,7 @@ import com.njydsz.common.auth.model.DataScopeInfo;
  * com.njydsz.common.jdbc.permission.DataPermissionContext}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DataScopeInfo
  * @see DataScopeAware
  * @see com.njydsz.common.domain.constant.DataScopeConstants

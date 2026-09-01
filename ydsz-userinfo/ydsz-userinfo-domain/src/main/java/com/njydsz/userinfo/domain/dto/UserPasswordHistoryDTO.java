@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于保存密码历史记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserPasswordHistoryDTO implements Serializable {

@@ -24,7 +24,7 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
  * <p>基于反馈数据训练送达最佳时机、内容优化模型（与 {@code DeliveryTimeOptimizer} 配合）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

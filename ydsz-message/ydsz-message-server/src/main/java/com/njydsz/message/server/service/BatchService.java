@@ -21,7 +21,7 @@ import com.njydsz.message.domain.vo.MsgBatchVO;
  * <p><b>批次状态：</b>{@code PENDING → PROCESSING → COMPLETED / FAILED}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgBatchVO 批次VO
  * @see AggregateService 聚合批次服务(按 group+receiver 聚合多条消息为单条摘要)
  */

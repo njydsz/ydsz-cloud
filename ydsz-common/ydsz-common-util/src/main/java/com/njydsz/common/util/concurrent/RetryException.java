@@ -6,7 +6,7 @@ package com.njydsz.common.util.concurrent;
  * <p>当 {@link RetryUtils} 的所有重试尝试均失败（或执行过程中线程被中断）时抛出， 包装最后一次失败的异常作为 {@link #getCause()}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class RetryException extends RuntimeException {
 

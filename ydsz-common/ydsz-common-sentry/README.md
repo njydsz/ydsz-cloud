@@ -90,7 +90,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `CircuitBreaker` | 统一熔断器，1.0.0 起委托 Resilience4j 实现（原 v1.x 自实现 AtomicReference + CAS 状态机已替换）；状态 CLOSED → OPEN → HALF_OPEN → CLOSED |
+| `CircuitBreaker` | 统一熔断器，26.09.01 起委托 Resilience4j 实现（原 v1.x 自实现 AtomicReference + CAS 状态机已替换）；状态 CLOSED → OPEN → HALF_OPEN → CLOSED |
 
 状态机：
 
@@ -241,7 +241,7 @@ public class SearchService {
 | `ydsz.sentry.tracing.slow-trace-threshold-millis` | 3000 | 慢追踪阈值（毫秒） |
 | `ydsz.sentry.tracing.otel.enabled` | false | 是否启用 OTel SDK 自动初始化 |
 | `ydsz.sentry.tracing.otel.service-name` | - | 服务名（默认使用 sentry.appName） |
-| `ydsz.sentry.tracing.otel.service-version` | `1.0.0` | 服务版本 |
+| `ydsz.sentry.tracing.otel.service-version` | `26.09.01` | 服务版本 |
 | `ydsz.sentry.tracing.otel.service-namespace` | `ydsz` | 服务命名空间 |
 | `ydsz.sentry.tracing.otel.service-instance-id` | - | 服务实例 ID（不填则随机生成雪花 ID） |
 | `ydsz.sentry.tracing.otel.sampler` | `parent-based` | 采样器（always-on / always-off / ratio / parent-based / composite） |
@@ -274,7 +274,7 @@ public class SearchService {
 
 ## 配置验证
 
-1.0.0 起，`SentryProperties` 通过 JSR-303 Bean Validation 约束配置合法范围，启动时自动校验：
+26.09.01 起，`SentryProperties` 通过 JSR-303 Bean Validation 约束配置合法范围，启动时自动校验：
 
 - **采样率**（`sampler-ratio`、`tail-sampling.record-ratio`）：必须在 0.0 ~ 1.0 之间
 - **端口类**（`elk.port`）：必须在 1 ~ 65535 之间
@@ -445,12 +445,12 @@ ydsz:
 
 ## 变更记录
 
-- **1.0.0**（2026-08-17）：
+- **26.09.01**（2026-08-17）：
   - 更新依赖说明：标注 `resilience4j-core` / `resilience4j-circuitbreaker` 为直接依赖（scope=compile）
   - 补全 `NoOpLogPublisher`（空操作发布器降级）文档
   - 补全自动配置子类：`MetricsAutoConfiguration` / `LoggingAutoConfiguration` / `TracingAutoConfiguration` / `AlertingAutoConfiguration` / `SlaAutoConfiguration` / `SelfMonitorAutoConfiguration` / `HealthIndicatorAutoConfiguration`
   - 补全 `SentryMetricsAdapter`（Micrometer ↔ Sentry 指标适配器）、`SentryInfoContributor` 文档
-- **1.0.0**（2026-08-16）：
+- **26.09.01**（2026-08-16）：
   - 配置验证：SentryProperties 添加 JSR-303 约束注解（@Min/@Max/@NotBlank），启动时自动校验
   - OTel SDK 不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播
   - CircuitBreaker 替换为 Resilience4j 实现
@@ -460,4 +460,4 @@ ydsz:
   - 采样策略对齐 OTel 标准：明确 parent-based 为推荐策略
   - SLA 框架添加 Micrometer Observation 对齐说明
   - 日志方案默认行为显式化：移除 Loki 隐式降级，改用 NoOpLogPublisher
-- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

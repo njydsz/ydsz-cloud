@@ -16,7 +16,7 @@ import com.njydsz.common.search.provider.SearchProviderRegistry;
  * <p>全量/增量重建 ES 索引。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class IndexRebuildService {

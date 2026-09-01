@@ -28,7 +28,7 @@ import com.njydsz.common.json.YdszJson;
  *
  * <p>心跳超时清理采用惰性删除策略：{@link #getAliveNodes()} 时过滤超时节点， 不依赖后台定时任务，降低系统复杂度。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public class RedisNodeRegistry implements NodeRegistry {

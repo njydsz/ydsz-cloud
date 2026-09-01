@@ -23,7 +23,7 @@ import com.njydsz.literule.infra.entity.DecisionTable;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DecisionTable 决策表实体
  * @see com.njydsz.literule.server.service.DecisionTableService 决策表 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

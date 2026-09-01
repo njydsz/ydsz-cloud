@@ -27,7 +27,7 @@ import com.njydsz.userinfo.domain.social.SocialUserInfo;
  * 钉钉接入文档</a>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -40,10 +40,10 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
   private static final String DEFAULT_AUTHORIZE_URL = "https://login.dingtalk.com/oauth2/auth";
 
   /** 钉钉令牌端点（可通过 ydsz.userinfo.social.providers.dingtalk.access-token-url 覆盖） */
-  private static final String DEFAULT_ACCESS_TOKEN_URL = "https://api.dingtalk.com/1.0.0/oauth2/userAccessToken";
+  private static final String DEFAULT_ACCESS_TOKEN_URL = "https://api.dingtalk.com/26.09.01/oauth2/userAccessToken";
 
   /** 钉钉用户信息端点（可通过 ydsz.userinfo.social.providers.dingtalk.user-info-url 覆盖） */
-  private static final String DEFAULT_USER_INFO_URL = "https://api.dingtalk.com/1.0.0/contact/users";
+  private static final String DEFAULT_USER_INFO_URL = "https://api.dingtalk.com/26.09.01/contact/users";
 
   /** 默认令牌过期时间（秒） */
   private static final long DEFAULT_EXPIRE_IN = 7200L;

@@ -9,7 +9,7 @@ import java.util.Map;
  * <p>由消费方（如 project 模块）提供实现，按决策表编码加载并评估决策表， 返回命中行的动作值列表。将原有 {@code DecisionTableEvalService} 的能力抽象为
  * SPI， 避免 literule 模块直接依赖 project 模块。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface DecisionTableEvalProvider {

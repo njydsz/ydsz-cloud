@@ -42,7 +42,7 @@ import com.njydsz.common.json.YdszJson;
  *   <li>{@link WebExceptionHandler}：统一异常 → RFC 7807 / YdszResponse JSON 映射
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

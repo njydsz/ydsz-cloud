@@ -68,7 +68,7 @@ import com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingServic
  * 「<b>永远成立</b>」（即不评估条件），所有 enabled 规则都会触发。 生产环境应保证 {@code ydsz-literule} 已正确引入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowAutoTriggerService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowAutoTriggerVO 自动触发规则值对象
  * @see WorkflowFacade 工作流门面
@@ -153,7 +153,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /**
    * 处理单条触发规则
-   * 
+   *
    * <p>通过卫语句（Guard Clause）提前返回不满足条件的触发， 成功路径保持线性流程 → 评估条件 → 启动目标流程 → 写审计日志。
    *
    * @param trigger 自动触发规则实体
@@ -191,8 +191,8 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   /**
    * 评估触发规则的条件表达式。
-   * 
-   * 
+   *
+   *
    *
    * @param trigger 自动触发规则实体
    * @param variables 流程变量

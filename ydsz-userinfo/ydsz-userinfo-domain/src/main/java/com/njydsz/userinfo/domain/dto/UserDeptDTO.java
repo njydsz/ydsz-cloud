@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于创建用户-部门关联关系。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserDeptDTO implements Serializable {

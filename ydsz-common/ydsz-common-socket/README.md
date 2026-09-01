@@ -405,10 +405,10 @@ public class ProtobufMessageSerializer implements MessageSerializer {
 
 ## 变更记录
 
-- **1.0.0**（2026-08-17）：
+- **26.09.01**（2026-08-17）：
   - 更新依赖说明：标注 common-redis / common-util / common-json / spring-boot-autoconfigure 为直接依赖，移除不存在的 common-auth 直接依赖（改为 optional）
   - 补全 `LocalSessionRegistry`、`SessionWebSocketHandlerDecoratorFactory`（Session 包）文档
   - 补全 `NetworkMetrics`（网络层指标）文档
   - 补全 `WebSocketClusterAutoConfiguration` 激活条件说明
-- **1.0.0**（2026-08-16）：精简过度设计 — 移除 MessageCompressor（推荐使用 permessage-deflate）、SlowConnectionDetector（职责错位）、MessageAckService（半成品）；移除 LocalSessionRegistry Serializable 标记；修复 RateLimiter 原子性（Lua 脚本）；精简心跳机制（统一 Redis 存储，消除双重 TTL）；精简审计服务（移除自研异步框架）；精简熔断器（移除事件消费者）；移除未使用配置项（Compression、SlowConnection、Ack、dbPersistThreshold）
-- **1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **26.09.01**（2026-08-16）：精简过度设计 — 移除 MessageCompressor（推荐使用 permessage-deflate）、SlowConnectionDetector（职责错位）、MessageAckService（半成品）；移除 LocalSessionRegistry Serializable 标记；修复 RateLimiter 原子性（Lua 脚本）；精简心跳机制（统一 Redis 存储，消除双重 TTL）；精简审计服务（移除自研异步框架）；精简熔断器（移除事件消费者）；移除未使用配置项（Compression、SlowConnection、Ack、dbPersistThreshold）
+- **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

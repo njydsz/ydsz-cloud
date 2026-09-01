@@ -11,7 +11,7 @@ import lombok.Data;
  * DAG 工作流手动触发 DTO（P2 DAG 增强）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "DAG 触发表单")

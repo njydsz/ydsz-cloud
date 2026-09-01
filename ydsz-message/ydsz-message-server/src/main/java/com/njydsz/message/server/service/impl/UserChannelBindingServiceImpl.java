@@ -25,7 +25,7 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
  * <p>发送前根据用户 ID 解析实际地址，支持多渠道优先级。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

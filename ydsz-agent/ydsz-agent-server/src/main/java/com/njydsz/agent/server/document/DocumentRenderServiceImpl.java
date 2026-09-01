@@ -27,7 +27,7 @@ import com.njydsz.agent.domain.document.DocumentTemplate;
  * 当前实现提供基础框架，实际渲染逻辑可根据需要扩展。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class DocumentRenderServiceImpl implements DocumentRenderService {

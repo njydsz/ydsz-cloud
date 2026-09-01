@@ -10,7 +10,7 @@ import java.util.Optional;
  * 支持按租户、触发类型、启用状态等维度查询。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface TriggerRepository {
 

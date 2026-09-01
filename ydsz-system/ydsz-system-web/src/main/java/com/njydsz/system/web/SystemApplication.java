@@ -20,7 +20,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * 等公共模块。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.system", "com.njydsz.common"})
 @EnableDiscoveryClient

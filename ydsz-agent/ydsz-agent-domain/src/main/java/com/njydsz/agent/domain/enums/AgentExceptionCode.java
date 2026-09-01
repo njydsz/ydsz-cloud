@@ -22,7 +22,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @YdszExceptionCode(module = "agent", description = "AI Agent")

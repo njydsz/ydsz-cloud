@@ -28,7 +28,7 @@ import com.njydsz.workflow.infra.entity.FlowCc;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.infra.entity.FlowCc 抄送实体
  * @see com.njydsz.workflow.server.service.FlowCcService 抄送 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -38,7 +38,7 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
 
   /**
    * 查"抄送我的"（分页）
-   * 
+   *
    *
    * @param tenantId 租户 ID
    * @param ccUserId 被抄送人用户 ID
@@ -82,7 +82,7 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
 
   /**
    * P2-3: 统计全局未读抄送数（Prometheus Gauge 监控指标）
-   * 
+   *
    * <p>无 tenant/ccUser 过滤，统计 ydsz_flow_cc 表所有未读记录数。
    *
    * @return 全局未读抄送数

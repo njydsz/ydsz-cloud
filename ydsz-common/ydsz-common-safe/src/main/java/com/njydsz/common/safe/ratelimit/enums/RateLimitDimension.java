@@ -6,7 +6,7 @@ package com.njydsz.common.safe.ratelimit.enums;
  * <p>标识限流统计的维度，决定限流 key 的生成方式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum RateLimitDimension {
 

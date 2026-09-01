@@ -8,7 +8,7 @@ import com.njydsz.common.docs.domain.DocumentContent;
  * <p>定义文档预处理的标准规范。预处理器按链式调用， 前一个处理器的输出作为下一个处理器的输入。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface DocumentPreprocessor {
 

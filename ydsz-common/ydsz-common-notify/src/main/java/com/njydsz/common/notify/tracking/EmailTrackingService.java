@@ -46,7 +46,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p>当 Redis 不可用时，降级为内存计数器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class EmailTrackingService {
 

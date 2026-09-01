@@ -14,7 +14,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * <p>基于 OpenTelemetry API 实现，当 OTel SDK 存在时自动接入。 作为 SkyWalking 之外的未来标准追踪方案。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class OpenTelemetryTraceContext implements TraceContext {

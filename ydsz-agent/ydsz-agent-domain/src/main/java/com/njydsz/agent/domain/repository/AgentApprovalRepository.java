@@ -15,7 +15,7 @@ import com.njydsz.agent.domain.vo.AgentApprovalVO;
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface AgentApprovalRepository {
 

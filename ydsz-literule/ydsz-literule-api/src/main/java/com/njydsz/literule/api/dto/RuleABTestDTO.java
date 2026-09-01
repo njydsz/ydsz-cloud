@@ -18,7 +18,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * <p>候选规则通常由前端基于当前规则克隆并修改条件/严重度表达式后提交， 服务端仅做评估对比，不落库、不发布事件、不记录统计。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "A/B 测试请求体")

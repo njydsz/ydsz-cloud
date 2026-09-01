@@ -15,7 +15,7 @@ import com.njydsz.message.infra.entity.OutboxEvent;
  * <p>提供 Outbox 表的 CRUD 操作，以及乐观锁状态流转 SQL。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface OutboxEventMapper extends BaseMapper<OutboxEvent> {

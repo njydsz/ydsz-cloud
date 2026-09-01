@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * <p>用于前端展示操作审计轨迹，包含操作人、操作行为、操作对象、时间、结果等关键信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class AuditLogVO implements Serializable {
 

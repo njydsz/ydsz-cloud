@@ -1,21 +1,21 @@
-com.njydsz:ydsz-common-event:jar:1.0.0-SNAPSHOT
-+- com.njydsz:ydsz-common-core:jar:1.0.0-SNAPSHOT:compile
+com.njydsz:ydsz-common-event:jar:26.09.01-SNAPSHOT
++- com.njydsz:ydsz-common-core:jar:26.09.01-SNAPSHOT:compile
 |  +- (org.slf4j:slf4j-api:jar:2.0.18:compile - version managed from 2.0.18; omitted for duplicate)
 |  +- jakarta.validation:jakarta.validation-api:jar:3.1.1:compile (version managed from 3.1.1)
 |  +- jakarta.annotation:jakarta.annotation-api:jar:3.0.0:compile (version managed from 3.0.0)
-|  +- (com.njydsz:ydsz-common-json:jar:1.0.0-SNAPSHOT:compile - version managed from 1.0.0-SNAPSHOT; omitted for duplicate)
+|  +- (com.njydsz:ydsz-common-json:jar:26.09.01-SNAPSHOT:compile - version managed from 26.09.01-SNAPSHOT; omitted for duplicate)
 |  +- com.alibaba:transmittable-thread-local:jar:2.14.5:compile (version managed from 2.14.5)
 |  +- org.springframework.boot:spring-boot:jar:4.1.0:compile (version managed from 4.1.0; scope not updated to compile)
 |  |  +- (org.springframework:spring-core:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
 |  |  \- (org.springframework:spring-context:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
 |  \- org.springframework.boot:spring-boot-autoconfigure:jar:4.1.0:compile (version managed from 4.1.0)
 |     \- (org.springframework.boot:spring-boot:jar:4.1.0:compile - version managed from 4.1.0; omitted for duplicate)
-+- com.njydsz:ydsz-common-exception:jar:1.0.0-SNAPSHOT:compile
-|  +- (com.njydsz:ydsz-common-core:jar:1.0.0-SNAPSHOT:compile - version managed from 1.0.0-SNAPSHOT; omitted for duplicate)
-|  +- com.njydsz:ydsz-common-util:jar:1.0.0-SNAPSHOT:compile (version managed from 1.0.0-SNAPSHOT)
-|  |  +- (com.njydsz:ydsz-common-core:jar:1.0.0-SNAPSHOT:compile - version managed from 1.0.0-SNAPSHOT; omitted for duplicate)
-|  |  +- (com.njydsz:ydsz-common-domain:jar:1.0.0-SNAPSHOT:compile - version managed from 1.0.0-SNAPSHOT; omitted for duplicate)
-|  |  +- (com.njydsz:ydsz-common-json:jar:1.0.0-SNAPSHOT:compile - version managed from 1.0.0-SNAPSHOT; omitted for duplicate)
++- com.njydsz:ydsz-common-exception:jar:26.09.01-SNAPSHOT:compile
+|  +- (com.njydsz:ydsz-common-core:jar:26.09.01-SNAPSHOT:compile - version managed from 26.09.01-SNAPSHOT; omitted for duplicate)
+|  +- com.njydsz:ydsz-common-util:jar:26.09.01-SNAPSHOT:compile (version managed from 26.09.01-SNAPSHOT)
+|  |  +- (com.njydsz:ydsz-common-core:jar:26.09.01-SNAPSHOT:compile - version managed from 26.09.01-SNAPSHOT; omitted for duplicate)
+|  |  +- (com.njydsz:ydsz-common-domain:jar:26.09.01-SNAPSHOT:compile - version managed from 26.09.01-SNAPSHOT; omitted for duplicate)
+|  |  +- (com.njydsz:ydsz-common-json:jar:26.09.01-SNAPSHOT:compile - version managed from 26.09.01-SNAPSHOT; omitted for duplicate)
 |  |  +- org.yaml:snakeyaml:jar:2.6:compile (version managed from 2.6)
 |  |  \- (org.slf4j:slf4j-api:jar:2.0.18:compile - version managed from 2.0.18; omitted for duplicate)
 |  \- (org.slf4j:slf4j-api:jar:2.0.18:compile - version managed from 2.0.18; omitted for duplicate)
@@ -24,16 +24,16 @@ com.njydsz:ydsz-common-event:jar:1.0.0-SNAPSHOT
 |  |  \- (org.springframework:spring-core:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
 |  +- org.springframework:spring-core:jar:7.0.8:compile (version managed from 7.0.8; scope not updated to compile)
 |  |  +- commons-logging:commons-logging:jar:1.3.5:compile (version managed from 1.3.5)
-|  |  \- (org.jspecify:jspecify:jar:1.0.0:compile - version managed from 1.0.0; omitted for duplicate)
+|  |  \- (org.jspecify:jspecify:jar:26.09.01:compile - version managed from 26.09.01; omitted for duplicate)
 |  \- (org.springframework:spring-tx:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
 +- org.springframework:spring-tx:jar:7.0.8:compile
 |  +- (org.springframework:spring-beans:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
 |  \- (org.springframework:spring-core:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
-+- com.njydsz:ydsz-common-json:jar:1.0.0-SNAPSHOT:compile
++- com.njydsz:ydsz-common-json:jar:26.09.01-SNAPSHOT:compile
 |  \- (org.projectlombok:lombok:jar:1.18.42:compile - version managed from 1.18.42; omitted for duplicate)
-+- com.njydsz:ydsz-common-domain:jar:1.0.0-SNAPSHOT:compile
-|  +- (com.njydsz:ydsz-common-core:jar:1.0.0-SNAPSHOT:compile - version managed from 1.0.0-SNAPSHOT; omitted for duplicate)
-|  +- (com.njydsz:ydsz-common-json:jar:1.0.0-SNAPSHOT:compile - version managed from 1.0.0-SNAPSHOT; omitted for duplicate)
++- com.njydsz:ydsz-common-domain:jar:26.09.01-SNAPSHOT:compile
+|  +- (com.njydsz:ydsz-common-core:jar:26.09.01-SNAPSHOT:compile - version managed from 26.09.01-SNAPSHOT; omitted for duplicate)
+|  +- (com.njydsz:ydsz-common-json:jar:26.09.01-SNAPSHOT:compile - version managed from 26.09.01-SNAPSHOT; omitted for duplicate)
 |  +- (jakarta.validation:jakarta.validation-api:jar:3.1.1:compile - version managed from 3.1.1; omitted for duplicate)
 |  \- org.springframework:spring-context:jar:7.0.8:compile (version managed from 7.0.8)
 |     +- org.springframework:spring-aop:jar:7.0.8:compile (version managed from 7.0.8)
@@ -50,11 +50,11 @@ com.njydsz:ydsz-common-event:jar:1.0.0-SNAPSHOT
 +- org.springframework.boot:spring-boot-health:jar:4.1.0:compile
 |  \- (org.springframework.boot:spring-boot:jar:4.1.0:compile - version managed from 4.1.0; omitted for duplicate)
 +- io.micrometer:micrometer-core:jar:1.17.0:compile
-|  +- org.jspecify:jspecify:jar:1.0.0:compile (version managed from 1.0.0; scope not updated to compile)
+|  +- org.jspecify:jspecify:jar:26.09.01:compile (version managed from 26.09.01; scope not updated to compile)
 |  +- io.micrometer:micrometer-commons:jar:1.17.0:compile (version managed from 1.17.0)
-|  |  \- (org.jspecify:jspecify:jar:1.0.0:compile - version managed from 1.0.0; omitted for duplicate)
+|  |  \- (org.jspecify:jspecify:jar:26.09.01:compile - version managed from 26.09.01; omitted for duplicate)
 |  +- io.micrometer:micrometer-observation:jar:1.17.0:compile (version managed from 1.17.0)
-|  |  +- (org.jspecify:jspecify:jar:1.0.0:compile - version managed from 1.0.0; omitted for duplicate)
+|  |  +- (org.jspecify:jspecify:jar:26.09.01:compile - version managed from 26.09.01; omitted for duplicate)
 |  |  \- (io.micrometer:micrometer-commons:jar:1.17.0:compile - version managed from 1.17.0; omitted for duplicate)
 |  \- org.hdrhistogram:HdrHistogram:jar:2.2.2:runtime
 +- org.apache.rocketmq:rocketmq-spring-boot-starter:jar:2.3.1:compile
@@ -186,7 +186,7 @@ com.njydsz:ydsz-common-event:jar:1.0.0-SNAPSHOT
 |  |  |  |  +- com.google.guava:guava:jar:33.4.8-jre:compile (version managed from 32.0.1-jre; scope not updated to compile)
 |  |  |  |  |  +- com.google.guava:failureaccess:jar:1.0.3:compile
 |  |  |  |  |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
-|  |  |  |  |  +- (org.jspecify:jspecify:jar:1.0.0:compile - version managed from 1.0.0; omitted for duplicate)
+|  |  |  |  |  +- (org.jspecify:jspecify:jar:26.09.01:compile - version managed from 26.09.01; omitted for duplicate)
 |  |  |  |  |  \- com.google.j2objc:j2objc-annotations:jar:3.0.0:compile
 |  |  |  |  +- (commons-codec:commons-codec:jar:1.17.1:compile - version managed from 1.13; omitted for duplicate)
 |  |  |  |  +- io.opentelemetry:opentelemetry-exporter-otlp:jar:1.62.0:compile (version managed from 1.29.0)
@@ -332,22 +332,22 @@ com.njydsz:ydsz-common-event:jar:1.0.0-SNAPSHOT
 |  |  +- org.opentest4j:opentest4j:jar:1.3.0:test
 |  |  +- org.junit.platform:junit-platform-commons:jar:6.0.3:test (version managed from 6.0.3)
 |  |  |  +- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
-|  |  |  \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|  |  |  \- (org.jspecify:jspecify:jar:26.09.01:test - version managed from 26.09.01; omitted for duplicate)
 |  |  +- org.apiguardian:apiguardian-api:jar:1.1.2:test
-|  |  \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|  |  \- (org.jspecify:jspecify:jar:26.09.01:test - version managed from 26.09.01; omitted for duplicate)
 |  +- org.junit.jupiter:junit-jupiter-params:jar:6.0.3:test (version managed from 6.0.3)
 |  |  +- (org.junit.jupiter:junit-jupiter-api:jar:6.0.3:test - version managed from 6.0.3; omitted for duplicate)
 |  |  +- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
-|  |  \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|  |  \- (org.jspecify:jspecify:jar:26.09.01:test - version managed from 26.09.01; omitted for duplicate)
 |  \- org.junit.jupiter:junit-jupiter-engine:jar:6.0.3:test (version managed from 6.0.3)
 |     +- org.junit.platform:junit-platform-engine:jar:6.0.3:test (version managed from 6.0.3)
 |     |  +- (org.opentest4j:opentest4j:jar:1.3.0:test - omitted for duplicate)
 |     |  +- (org.junit.platform:junit-platform-commons:jar:6.0.3:test - version managed from 6.0.3; omitted for duplicate)
 |     |  +- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
-|     |  \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|     |  \- (org.jspecify:jspecify:jar:26.09.01:test - version managed from 26.09.01; omitted for duplicate)
 |     +- (org.junit.jupiter:junit-jupiter-api:jar:6.0.3:test - version managed from 6.0.3; omitted for duplicate)
 |     +- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
-|     \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|     \- (org.jspecify:jspecify:jar:26.09.01:test - version managed from 26.09.01; omitted for duplicate)
 +- org.springframework.boot:spring-boot-starter-test:jar:4.1.0:test
 |  +- (org.springframework.boot:spring-boot-starter:jar:4.1.0:test - version managed from 4.1.0; omitted for duplicate)
 |  +- org.springframework.boot:spring-boot-test:jar:4.1.0:test (version managed from 4.1.0)

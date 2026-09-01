@@ -13,7 +13,7 @@ import com.njydsz.agent.domain.rag.TextChunk;
  * <p>仅做截断处理，不做任何重排。当未配置 Reranker 或配置为 {@code none} 时使用， 保持与原始混合检索一致的输出。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class IdentityReranker implements Reranker {

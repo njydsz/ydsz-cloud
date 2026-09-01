@@ -19,7 +19,7 @@ import java.util.List;
  * <p><b>权限叠加规则：</b>流程创建者默认拥有该流程的管理和设计权限（不需额外角色）， 管理员角色在创建者权限基础上生效。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowAdminPermissionService {
 

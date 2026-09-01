@@ -24,7 +24,7 @@ package com.njydsz.common.cache.stats;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class CacheStats {
 
@@ -325,7 +325,7 @@ public class CacheStats {
    *     .build();
    * }</pre>
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static final class Builder {
     private long hitCount;

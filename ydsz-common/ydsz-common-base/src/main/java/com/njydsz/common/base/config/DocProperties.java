@@ -30,7 +30,7 @@ import com.njydsz.common.base.constant.DocConstants;
  *     knife4j-path: /doc.html
  *     info:
  *       title: 我的应用 API 文档
- *       version: 1.0.0
+ *       version: 26.09.01
  *     groups:
  *       - name: default
  *         base-package: com.example.controller
@@ -43,7 +43,7 @@ import com.njydsz.common.base.constant.DocConstants;
  * <p><b>线程安全性：</b>本类由 Spring Boot 配置属性绑定机制管理， 绑定完成后通常视为只读；若业务方在运行时修改属性需自行保证线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.doc")
@@ -103,7 +103,7 @@ public class DocProperties {
    * <p>对应 OpenAPI 规范中的 {@code info} 对象，承载文档的基础元数据。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class OpenApiInfo {
@@ -131,7 +131,7 @@ public class DocProperties {
    * 联系人信息类
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class Contact {
@@ -150,7 +150,7 @@ public class DocProperties {
    * 许可证信息类
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class License {
@@ -168,7 +168,7 @@ public class DocProperties {
    * <p>用于在多分组模式下定义单个 API 分组，支持按包扫描或按路径匹配两种方式。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class GroupConfig {
@@ -202,7 +202,7 @@ public class DocProperties {
    * 导出配置类
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class ExportConfig {
@@ -223,7 +223,7 @@ public class DocProperties {
    * <p>用于在生产环境下对 API 文档入口进行简单的 HTTP Basic 认证保护。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Data
   public static class BasicAuth {

@@ -6,7 +6,7 @@ package com.njydsz.common.safe.csrf;
  * <p>定义 CSRF 令牌生成策略，支持自定义实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface CsrfTokenGenerator {
 

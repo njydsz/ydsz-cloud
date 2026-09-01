@@ -20,7 +20,7 @@ import com.njydsz.common.base.config.DocProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Conditional(DefaultDocExporter.DefaultDocExporterCondition.class)
 public class DefaultDocExporter extends AbstractDocExporter {
@@ -132,7 +132,7 @@ public class DefaultDocExporter extends AbstractDocExporter {
      * 导出开关条件：{@code ydsz.doc.export.enabled=true}（缺省按 true 处理）。
      *
      * @author ydsz-team
-     * @since 1.0.0
+     * @since 26.09.01
      */
     @ConditionalOnProperty(
         prefix = "ydsz.doc.export",
@@ -145,7 +145,7 @@ public class DefaultDocExporter extends AbstractDocExporter {
      * 导出器类型条件：{@code ydsz.doc.exporter=default}（缺省按 default 处理）。
      *
      * @author ydsz-team
-     * @since 1.0.0
+     * @since 26.09.01
      */
     @ConditionalOnProperty(
         prefix = "ydsz.doc",

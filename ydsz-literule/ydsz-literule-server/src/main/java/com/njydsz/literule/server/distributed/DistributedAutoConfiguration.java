@@ -23,7 +23,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  * <p>保证多个节点之间规则一致性与故障节点自动剔除。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 @ConditionalOnProperty(prefix = "ydsz.literule.distributed", name = "enabled", havingValue = "true")

@@ -18,7 +18,7 @@ import com.njydsz.common.sentry.spi.SlaCollector;
  * <p>装配 {@link DefaultSlaCollector} 与 {@link SlaMetricAspect}， 拦截标注了 SLA 注解的方法自动统计成功率与耗时。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(MetricsAutoConfiguration.class)

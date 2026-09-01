@@ -6,7 +6,7 @@ package com.njydsz.message.domain.enums.core;
  * <p>定义消息从接入到投递全链路的关键节点类型，用于轨迹记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum MsgTraceNodeEnum {
 

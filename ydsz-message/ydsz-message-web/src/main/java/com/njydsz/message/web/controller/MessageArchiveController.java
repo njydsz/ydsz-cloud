@@ -71,7 +71,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.archive.MessageArchiveService 消息归档服务
  * @see MsgLog 发送日志实体
  */

@@ -30,7 +30,7 @@ import com.njydsz.message.domain.vo.MsgRouteRuleVO;
  * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgRouteRuleVO 路由规则VO
  * @see com.njydsz.message.server.service.core.MessageService 消息发送主流程(调用 match 选择通道/模板)
  */

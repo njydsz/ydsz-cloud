@@ -5,7 +5,7 @@ package com.njydsz.common.excel.core.listener;
  *
  * @author ydsz-team
 
- * @version 1.0.0
+ * @version 26.09.01
  */
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
@@ -25,7 +25,7 @@ import com.njydsz.common.excel.core.metadata.ReadMetadata;
  * @see ReadListener
  * @see ExcelReader
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ReadHandler {
 

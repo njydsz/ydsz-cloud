@@ -13,7 +13,7 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "1.0.0"
+  version: "26.09.01"
   source: "docs/云顶编码规范.md v1.0.3"
   last_synced: "2026-08-31"
   total_rules: 42

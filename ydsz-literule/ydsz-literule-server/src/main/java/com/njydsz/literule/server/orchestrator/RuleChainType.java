@@ -13,7 +13,7 @@ package com.njydsz.literule.server.orchestrator;
  *   <li>{@link #SWITCH} - 分支选择：从上下文中取分支 key，执行对应分支规则
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public enum RuleChainType {

@@ -39,7 +39,7 @@ spring:
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
         metadata:
-          version: 1.0.0
+          version: 26.09.01
           port: 9006
         ip-type: IPv4
       # ---------- 配置中心 ----------

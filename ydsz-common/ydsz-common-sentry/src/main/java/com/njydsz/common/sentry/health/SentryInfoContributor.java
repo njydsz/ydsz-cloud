@@ -27,7 +27,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @RequiredArgsConstructor
 public class SentryInfoContributor implements InfoContributor {

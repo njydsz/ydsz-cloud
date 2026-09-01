@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>线程安全</b>：命中列表使用 {@link CopyOnWriteArrayList}，状态与指令使用 volatile / AtomicReference。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

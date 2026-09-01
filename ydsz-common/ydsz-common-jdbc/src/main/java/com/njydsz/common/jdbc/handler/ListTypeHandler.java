@@ -66,7 +66,7 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  *
  * @param <E> List 元素类型
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see JsonTypeHandler 通用 JSON 类型处理器
  */
 public class ListTypeHandler<E> extends BaseTypeHandler<List<E>> {

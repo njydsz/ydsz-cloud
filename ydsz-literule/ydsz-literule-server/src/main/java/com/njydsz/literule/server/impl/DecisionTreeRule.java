@@ -43,7 +43,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *     .build();
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -83,7 +83,7 @@ public class DecisionTreeRule implements Rule {
    * @param def 决策树定义
    * @param evaluator 表达式求值器
    * @return DecisionTreeRule 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static DecisionTreeRule from(DecisionTreeDefinitionDTO def, ExpressionEngine evaluator) {
     return new DecisionTreeRule(

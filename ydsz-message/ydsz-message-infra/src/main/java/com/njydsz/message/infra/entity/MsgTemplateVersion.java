@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>P1-6: 记录模板每次审核通过/拒绝的版本快照，支持版本回滚和历史对比。 每次模板内容变更并审核通过后，自动插入一条版本记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */@Data
 @SuperBuilder
 @NoArgsConstructor

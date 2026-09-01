@@ -29,7 +29,7 @@ import com.njydsz.agent.server.config.AgentProperties;
  * 避免静默降级为 SSE 导致连接行为与配置不符。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class McpToolAdapter {

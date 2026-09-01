@@ -48,7 +48,7 @@ import com.njydsz.common.lock.scheduler.LockWatchDog.WatchTask;
  * <p><b>安全注意：</b>本控制器应仅内网访问或通过网关配置访问控制， 避免外部调用 {@code force-unlock} 导致数据不一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController

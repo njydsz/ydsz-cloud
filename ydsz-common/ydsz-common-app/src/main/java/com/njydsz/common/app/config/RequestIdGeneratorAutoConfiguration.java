@@ -14,7 +14,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * RequestIdGenerator}，替代已弃用的 {@code SpringContextHolder} 查找。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 public class RequestIdGeneratorAutoConfiguration {

@@ -43,7 +43,7 @@ import com.njydsz.common.json.type.JsonType;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see <a href="https://tools.ietf.org/html/rfc6902">RFC 6902 - JSON Patch</a>
  * @see <a href="https://tools.ietf.org/html/rfc7396">RFC 7396 - JSON Merge Patch</a>
  */

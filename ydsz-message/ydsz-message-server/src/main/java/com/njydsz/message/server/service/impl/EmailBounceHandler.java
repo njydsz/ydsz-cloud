@@ -16,7 +16,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>标记邮箱失效。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

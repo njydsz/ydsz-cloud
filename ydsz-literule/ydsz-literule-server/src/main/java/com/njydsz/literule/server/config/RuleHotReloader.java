@@ -52,7 +52,7 @@ import com.njydsz.literule.server.spi.ScriptConfigProvider;
  *
  * <p>当 SPI Bean 不存在时，对应规则类型不会被加载（向后兼容）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -98,7 +98,7 @@ public class RuleHotReloader {
    * 设置决策表配置提供者
    *
    * @param provider 决策表配置提供者
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setDecisionTableConfigProvider(DecisionTableConfigProvider provider) {
     this.decisionTableConfigProvider = provider;
@@ -108,7 +108,7 @@ public class RuleHotReloader {
    * 设置评分卡配置提供者
    *
    * @param provider 评分卡配置提供者
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setScorecardConfigProvider(ScorecardConfigProvider provider) {
     this.scorecardConfigProvider = provider;
@@ -118,7 +118,7 @@ public class RuleHotReloader {
    * 设置决策树配置提供者
    *
    * @param provider 决策树配置提供者
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setDecisionTreeConfigProvider(DecisionTreeConfigProvider provider) {
     this.decisionTreeConfigProvider = provider;
@@ -128,7 +128,7 @@ public class RuleHotReloader {
    * 设置脚本规则配置提供者
    *
    * @param provider 脚本配置提供者
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setScriptConfigProvider(ScriptConfigProvider provider) {
     this.scriptConfigProvider = provider;
@@ -138,7 +138,7 @@ public class RuleHotReloader {
    * 设置规则集市场提供者（P0-F4 规则包批量热更新）
    *
    * @param packProviderProvider 规则集提供者（可选）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void setPackProvider(ObjectProvider<RulePackProvider> packProviderProvider) {
     this.packProvider = packProviderProvider != null ? packProviderProvider.getIfAvailable() : null;

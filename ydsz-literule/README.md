@@ -13,7 +13,7 @@
 | **JVM 进程** | 独立 JVM 进程，独立端口，注册到 Nacos |
 | **服务注册** | Nacos Discovery（服务名 `ydsz-literule`） |
 | **配置中心** | Nacos Config（`spring-cloud-starter-alibaba-nacos-config`） |
-| **当前版本** | `1.0.0-SNAPSHOT`（项目版本号统一为 1.0.0） |
+| **当前版本** | `26.09.01-SNAPSHOT`（项目版本号统一为 26.09.01） |
 | **脚手架状态** | ✅ 已包含 `@SpringBootApplication` 启动类、`application.yml` / `bootstrap.yml`，可独立部署 |
 
 ## 分层结构（DDD 六层）
@@ -157,7 +157,7 @@ com.njydsz.literule.server
 mvn -pl ydsz-literule -am clean package
 
 # 启动服务
-java -jar ydsz-literule-web/target/ydsz-literule-web-1.0.0-SNAPSHOT.jar
+java -jar ydsz-literule-web/target/ydsz-literule-web-26.09.01-SNAPSHOT.jar
 ```
 
 > **外部服务调用规则引擎**：通过 REST API（`/v1/rule-engine/**`）或 Feign Client（`LiteRuleClient`，已就绪）调用，不直接依赖 server/web 子模块。
@@ -469,8 +469,8 @@ mvn -pl ydsz-literule -am test
 
 ## 版本与变更
 
-- **首发版本**：1.0.0（2026-06-30）
-- **当前版本**：`1.0.0-SNAPSHOT`（项目版本号统一为 1.0.0，详见 `.trae/rules/version-policy.md`）
+- **首发版本**：26.09.01（2026-06-30）
+- **当前版本**：`26.09.01-SNAPSHOT`（项目版本号统一为 26.09.01，详见 `.trae/rules/version-policy.md`）
 - **变更需走 PR + Code Review**
 - **跨服务回归**：任何修改需回归依赖规则引擎的 project / userinfo / agent 等服务（通过 REST API 或 Feign 调用）
 

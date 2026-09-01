@@ -25,7 +25,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
  * <p>提供消息模板预览 / 试发能力，方便模板编辑后即时验证效果。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgTemplateVersionVO 模板版本 VO
  * @see TemplateService 模板主 Service
  */

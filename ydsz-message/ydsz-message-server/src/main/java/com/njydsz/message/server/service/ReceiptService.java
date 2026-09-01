@@ -32,7 +32,7 @@ import com.njydsz.message.domain.vo.MsgReceiptVO;
  * <p><b>幂等性：</b>同一条消息的多次回执以 {@code (msgId, receiptStatus, receiptAt)} 唯一键去重, 重复回调不会产生重复记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.domain.vo.MsgReceiptVO 回执VO
  * @see ReadStatusSyncService 已读状态同步服务
  * @see ReadReceiptService 全通道已读回执服务(邮件追踪像素/短信短链)

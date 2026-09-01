@@ -21,7 +21,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  * 评估为纯仿真：不发布事件、不记录统计、不落库。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class ABTestService {

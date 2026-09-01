@@ -12,7 +12,7 @@ import com.njydsz.common.docs.enums.PiiType;
  * <p>定义个人身份信息检测的标准规范，每种 PII 类型对应一个实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface PiiDetector {
 

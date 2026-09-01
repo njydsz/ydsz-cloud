@@ -19,7 +19,7 @@ import com.njydsz.cronjob.infra.entity.job.SysAuditLog;
  * <p>cronjob 模块仅关注 {@code module = 'cronjob'} 的记录，所有查询自动过滤。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface SysAuditLogMapper extends BaseMapper<SysAuditLog> {

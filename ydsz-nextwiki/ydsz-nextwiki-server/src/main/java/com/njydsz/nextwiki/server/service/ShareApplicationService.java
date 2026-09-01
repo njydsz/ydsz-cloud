@@ -35,7 +35,7 @@ import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
  * ShareAccessLogDomainService}（日志构造）两个领域服务。数据访问由本层通过 Repository 接口完成。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

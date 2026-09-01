@@ -19,7 +19,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>每个 cronjob 实例启动时注册一条记录，定时（默认 10s）更新 last_heartbeat。 Leader 节点扫描时通过 last_heartbeat 判断节点是否在线。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

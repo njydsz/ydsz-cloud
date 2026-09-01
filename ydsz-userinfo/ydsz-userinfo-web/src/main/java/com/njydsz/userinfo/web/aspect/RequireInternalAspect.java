@@ -33,7 +33,7 @@ import com.njydsz.userinfo.web.filter.ApiSignatureFilter;
  * 签名未通过或未配置时，回退到原有的 IP 标记头校验逻辑。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RequireInternal 内部接口标记注解
  * @see InternalCallProperties 内部调用配置
  * @see ApiSignatureProperties 签名配置

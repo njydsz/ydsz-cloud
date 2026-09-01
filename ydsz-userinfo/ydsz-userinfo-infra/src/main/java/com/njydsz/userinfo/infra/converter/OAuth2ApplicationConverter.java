@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * <p>提供 OAuth2Application ↔ OAuth2Application 的转换方法。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper(componentModel = "spring")
 @Component

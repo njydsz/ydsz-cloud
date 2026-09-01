@@ -18,7 +18,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * <p>两个入口共享同一套 server 层（应用服务），仅 Controller 层根据端特性做差异化适配。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SpringBootApplication(scanBasePackages = "com.njydsz.nextwiki")
 @EnableDiscoveryClient

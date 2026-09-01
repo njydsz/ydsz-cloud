@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>用于前端展示表达式语法/语义校验结果，包含是否通过、错误类型与精确的位置 （行/列），辅助业务人员定位并修正表达式错误。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ExpressionValidationResultVO {

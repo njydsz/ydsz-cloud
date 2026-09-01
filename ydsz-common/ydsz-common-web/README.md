@@ -335,14 +335,14 @@ public class UserController {
     @GetMapping
     @ApiVersion("1.0")
     public UserVO getUserV1() {
-        // 1.0.0 实现
+        // 26.09.01 实现
         return new UserVO();
     }
 
     @GetMapping
     @ApiVersion("2.0")
     public UserVO getUserV2() {
-        // 1.0.0 实现
+        // 26.09.01 实现
         return new UserVO();
     }
 }
@@ -518,10 +518,10 @@ ydsz:
 
 ## 变更记录
 
-- **1.0.0**（2026-08-17）：
+- **26.09.01**（2026-08-17）：
   - 补全 `FilterIgnoreProperties`（`ydsz.web.filter-ignore.*`）配置文档
   - 补全 `WebhookProperties`（`ydsz.webhook.*`）配置文档（原错误表述"无独立配置属性"已修正）
   - 修正 Webhook 默认超时时间（connect=5000ms / read=10000ms）和连接池参数（max=50 / per-route=20）
   - 补全 `WebFilterOrder` 常量类说明
-- **1.0.0**（2026-08-17）：补全 `AbstractModuleHealthIndicator`（模块健康检查抽象基类）、`WebCoreAutoConfiguration`（Web 核心自动配置）文档
-- **1.0.0**（2026-08-02）：补全 API 版本控制、Multipart 文件上传、Webhook 调度、优雅停机章节；新增接入方式、使用示例、注意事项章节；扩充配置项与自动配置表。响应压缩章节已删除（未实现）。
+- **26.09.01**（2026-08-17）：补全 `AbstractModuleHealthIndicator`（模块健康检查抽象基类）、`WebCoreAutoConfiguration`（Web 核心自动配置）文档
+- **26.09.01**（2026-08-02）：补全 API 版本控制、Multipart 文件上传、Webhook 调度、优雅停机章节；新增接入方式、使用示例、注意事项章节；扩充配置项与自动配置表。响应压缩章节已删除（未实现）。

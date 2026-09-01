@@ -6,7 +6,7 @@ package com.njydsz.cronjob.server.core.alert;
  * <p>定义告警触发条件，对应 {@code ydsz_job_alert_rule.alert_type} 字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum AlertType {
 

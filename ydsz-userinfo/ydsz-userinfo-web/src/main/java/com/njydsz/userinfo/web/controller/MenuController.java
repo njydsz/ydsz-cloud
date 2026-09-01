@@ -64,7 +64,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.server.service.MenuService 菜单业务逻辑
  * @see com.njydsz.userinfo.domain.vo.MenuVO 菜单VO
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller（关联分配）

@@ -27,7 +27,7 @@ import com.njydsz.workflow.infra.entity.FlowNode;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.infra.entity.FlowNode 流程节点实体
  * @see com.njydsz.workflow.server.service.FlowNodeService 流程节点 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

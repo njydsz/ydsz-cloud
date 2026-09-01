@@ -9,7 +9,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * <p>文档解析、预处理、安全扫描、PII 检测、脱敏、水印等操作失败时抛出。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DocumentException extends BusinessException {
 

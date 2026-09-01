@@ -66,7 +66,7 @@ import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
  * 接口加 {@link AuthApiPermission} 权限控制（{@link PermissionCodes#CRONJOB_JOB_VIEW}）； 只读不写，无需幂等/限流/审计。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Tag(name = "任务执行拓扑图", description = "DAG 实例执行拓扑可视化：节点/边/执行状态/历史")

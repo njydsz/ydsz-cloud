@@ -22,7 +22,7 @@ import com.njydsz.common.search.config.SearchProperties;
  * 以支持引擎不实现对应能力的场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SearchEngineRegistry {

@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>标识流程中可以执行撤回操作的已完成节点，用于撤回功能的可选节点展示。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowRecallableNodeVO implements Serializable {

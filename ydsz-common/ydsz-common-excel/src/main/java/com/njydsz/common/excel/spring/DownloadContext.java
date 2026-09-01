@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
  * <p>封装 HTTP 响应所需的下载元数据：文件名、Content-Type 等。 供 {@link ExcelWebSupport} 在写入 HttpServletResponse 时使用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class DownloadContext {
 

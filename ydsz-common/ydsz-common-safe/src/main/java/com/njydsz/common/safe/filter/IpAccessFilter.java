@@ -32,7 +32,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  * <p><b>降级策略：</b>Redis 异常时不阻断服务（fail-open），仅记录日志。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see IpAccessService
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)

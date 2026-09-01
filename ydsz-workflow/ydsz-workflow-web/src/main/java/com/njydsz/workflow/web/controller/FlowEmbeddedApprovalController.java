@@ -67,7 +67,7 @@ import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.server.service.FlowEmbeddedApprovalService 嵌入式审批服务
  * @see com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO 嵌入式快捷操作 DTO
  * @see com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO 嵌入式面板视图 DTO

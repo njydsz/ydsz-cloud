@@ -17,7 +17,7 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  * <p>当 Micrometer 不可用或熔断时，自动降级为内存计数器。 基于 LongAdder / DoubleAdder 实现，零依赖，始终可用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class InMemoryMetricsCollector implements MetricsCollector {

@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>业务方可注册 {@link ErrorEventListener} 接收告警事件。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class ErrorEventSpanProcessor implements SpanProcessor {

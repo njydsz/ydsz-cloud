@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>委托链：本处理器只做计数，实际拒绝策略（AbortPolicy / CallerRunsPolicy 等）由 delegate 决定，行为不变。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class CountingRejectedExecutionHandler implements RejectedExecutionHandler {
 

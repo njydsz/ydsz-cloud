@@ -9,7 +9,7 @@ package com.njydsz.nextwiki.domain.service;
  * <p>实现类应保证原子性：并发场景下 {@link #increment} / {@link #decrement} 需通过 Redis INCR/DECR 等原子操作保证计数准确。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface StorageReferenceService {
 

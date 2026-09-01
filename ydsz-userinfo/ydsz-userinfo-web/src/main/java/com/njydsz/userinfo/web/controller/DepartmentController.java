@@ -37,7 +37,7 @@ import com.njydsz.userinfo.server.service.DepartmentService;
  * <p><b>安全特性：</b>写接口启用 {@link Idempotent} 防重复、{@link RateLimit} 限流、{@link Audit} 审计日志。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.server.service.DepartmentService 部门业务逻辑
  */
 @Slf4j

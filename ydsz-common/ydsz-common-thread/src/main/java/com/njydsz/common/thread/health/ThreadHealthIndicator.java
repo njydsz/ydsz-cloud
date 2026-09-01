@@ -26,13 +26,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *
  * <p>当任何线程池无法获取底层 {@link ThreadPoolExecutor} 时，健康状态为 DOWN。
  *
- * <p>1.0.0 变更：收紧扫描范围，只检查 ydsz-common-thread 注册的 Bean， 避免误纳业务自定义线程池导致健康检查误报。
+ * <p>26.09.01 变更：收紧扫描范围，只检查 ydsz-common-thread 注册的 Bean， 避免误纳业务自定义线程池导致健康检查误报。
  *
- * <p>1.0.0 修复：移除基于 {@link String#contains} 的伪存活判定， 改用 {@link ExecutorService#isShutdown()} 标准 API
+ * <p>26.09.01 修复：移除基于 {@link String#contains} 的伪存活判定， 改用 {@link ExecutorService#isShutdown()} 标准 API
  * 检测存活状态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class ThreadHealthIndicator implements HealthIndicator, ApplicationContextAware {
 
@@ -166,7 +166,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
    *
    * @param beanName Bean 名称
    * @return {@code true} 如果由 ydsz-common-thread 模块管理
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private boolean isManagedByYdsz(String beanName) {
     return beanName != null && beanName.endsWith("Executor");

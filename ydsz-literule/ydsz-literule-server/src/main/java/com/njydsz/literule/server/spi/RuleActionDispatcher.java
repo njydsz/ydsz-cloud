@@ -14,7 +14,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  * <p>聚合所有 {@link RuleActionHandler}，在规则触发后统一分发。 由 {@code LiteRuleAutoConfiguration} 自动装配并注入到 {@code
  * DefaultRuleEngine}。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

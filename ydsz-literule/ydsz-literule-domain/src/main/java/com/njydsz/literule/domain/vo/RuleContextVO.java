@@ -25,7 +25,7 @@ import com.njydsz.literule.domain.enums.RuleEnvironment;
  * {@link #getEnvironment()} 完全匹配。 默认 "default"，向后兼容。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class RuleContextVO implements Serializable {
 
@@ -93,7 +93,7 @@ public final class RuleContextVO implements Serializable {
    * @param tenantId 租户 ID
    * @param environment 环境标识（dev/staging/prod/default）
    * @return RuleContextVO 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static RuleContextVO of(
       Map<String, Object> facts,
@@ -119,7 +119,7 @@ public final class RuleContextVO implements Serializable {
    * @param traceId 追踪 ID
    * @param tenantId 租户 ID
    * @return RuleContextVO 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static RuleContextVO of(
       Map<String, Object> facts, String scenario, String source, String traceId, String tenantId) {
@@ -206,7 +206,7 @@ public final class RuleContextVO implements Serializable {
    * <p>引擎评估时仅放行 {@code rule.getTenantId() == this.tenantId} 的规则， 默认 "1"（单租户部署，向后兼容）。
    *
    * @return 租户 ID；默认 "1"
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public String getTenantId() {
     return tenantId;
@@ -219,7 +219,7 @@ public final class RuleContextVO implements Serializable {
    * RuleEnvironment#DEFAULT "default"} 时匹配任何上下文环境； 非 "default" 时必须与本字段完全匹配。默认 "default"（向后兼容）。
    *
    * @return 环境标识；默认 "default"
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public String getEnvironment() {
     return environment;
@@ -231,7 +231,7 @@ public final class RuleContextVO implements Serializable {
    * <p>懒初始化、线程封闭（同一 evaluate 调用链内共享）。用于冗余条件/表达式计算缓存。 仅读取不纳入序列化（{@code transient}）。
    *
    * @return 表达式缓存 Map（key=表达式，value=求值结果）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public Map<String, Object> getExpressionCache() {
     // P0-4 修复：AtomicReference 确保线程安全的懒初始化
@@ -253,7 +253,7 @@ public final class RuleContextVO implements Serializable {
    *
    * <p>在复用同一 {@link RuleContextVO} 进行多次独立评估前调用，避免跨批次污染。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public void clearExpressionCache() {
     Map<String, Object> cache = expressionCacheRef.get();

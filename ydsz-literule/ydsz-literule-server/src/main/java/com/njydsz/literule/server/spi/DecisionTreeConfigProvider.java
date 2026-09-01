@@ -9,7 +9,7 @@ import com.njydsz.literule.domain.dto.DecisionTreeDefinitionDTO;
  *
  * <p>由消费方提供实现，从数据库加载决策树定义。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface DecisionTreeConfigProvider {

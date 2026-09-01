@@ -8,7 +8,7 @@ package com.njydsz.common.feign;
  * <p>服务名常量与 Nacos 注册名、Gateway 路由 ID 保持一致，确保全局统一。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class FeignClientConstants {
 

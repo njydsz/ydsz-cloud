@@ -31,7 +31,7 @@ import com.njydsz.common.auth.metrics.AuthMetrics;
  * <p><b>注意：</b>请求处理耗时由 Spring MVC 内置的 {@code http.server.requests} 指标覆盖， 本类不再重复采集，避免 URI 标签基数爆炸问题。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AuthMetrics
  */
 public class AppMetrics implements AuthMetrics {

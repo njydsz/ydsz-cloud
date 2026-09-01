@@ -63,7 +63,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>通过 {@code generateUploadPolicy} 生成前端直传策略（基于 STS Token）， 支持回调 URL 和文件大小限制。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see AbstractFileStorage
  * @see OSS
  */

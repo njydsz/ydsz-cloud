@@ -19,7 +19,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * PushProvider}（getui / mock），无匹配时降级到 mock。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -44,7 +44,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class JsonConfig implements Serializable {
 
@@ -175,7 +175,7 @@ public final class JsonConfig implements Serializable {
    * 安装后会自增全局配置版本号 {@link #CONFIG_VERSION} 并通知所有注册的 {@link ConfigChangeListener}。
    *
    * @param newConfig 新的全局配置实例（由 Builder 构建）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void install(JsonConfig newConfig) {
     if (newConfig == null) {
@@ -202,7 +202,7 @@ public final class JsonConfig implements Serializable {
    * </ul>
    *
    * @param listener 监听器实例，null 忽略
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void addChangeListener(ConfigChangeListener listener) {
     if (listener != null) {
@@ -214,7 +214,7 @@ public final class JsonConfig implements Serializable {
    * 移除配置变更监听器。
    *
    * @param listener 待移除的监听器
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static void removeChangeListener(ConfigChangeListener listener) {
     CHANGE_LISTENERS.remove(listener);
@@ -226,7 +226,7 @@ public final class JsonConfig implements Serializable {
    * <p>每次 install() 自增。缓存组件可存储创建时的版本号， 用于检测配置是否已变更并触发自动失效。
    *
    * @return 当前配置版本号
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static long getConfigVersion() {
     return CONFIG_VERSION.get();
@@ -275,7 +275,7 @@ public final class JsonConfig implements Serializable {
    *
    * @param config 源配置
    * @return 独立副本（默认配置，当 config 为 null 时）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static JsonConfig copyOf(JsonConfig config) {
     if (config == null) {
@@ -404,7 +404,7 @@ public final class JsonConfig implements Serializable {
    * <p>启用后，带有 {@link com.njydsz.common.json.annotation.JsonRootName} 注解的类 在序列化时将被包裹在根名称中，反序列化时自动解包。
    *
    * @return 是否启用根名称包裹
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public boolean isWrapRootValue() {
     return wrapRootValue;
@@ -495,7 +495,7 @@ public final class JsonConfig implements Serializable {
    * </pre>
    *
    * @return 新的 Builder 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Builder builder() {
     return new Builder();
@@ -507,7 +507,7 @@ public final class JsonConfig implements Serializable {
    * <p>对标 Jackson ObjectMapper.Builder 和 FastJSON2 JSON.config() 的 Builder 模式， 提供类型安全的链式配置构建方式。构建后的
    * JsonConfig 实例字段在 {@code build()} 时 一次性写入，建议作为不可变实例使用（如需修改请重新构建新实例）。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static final class Builder {
     private PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
@@ -757,7 +757,7 @@ public final class JsonConfig implements Serializable {
    *
    * <p><b>线程安全：</b>监听器可能被并发回调，实现需保证线程安全。 <b>执行约束：</b>监听器不应执行耗时操作，避免阻塞配置安装流程。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @FunctionalInterface
   public interface ConfigChangeListener {

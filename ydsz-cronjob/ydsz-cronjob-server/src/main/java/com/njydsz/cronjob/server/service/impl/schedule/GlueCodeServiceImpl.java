@@ -38,7 +38,7 @@ import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
  * <p>支持 Source / Online 两种加载方式。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -354,10 +354,10 @@ public class GlueCodeServiceImpl implements GlueCodeService {
 
   /**
    * 根据语言执行代码（内存编译，不持久化）。
-   * 
+   *
    * <p>P0-F4 修复：原实现对 PYTHON/SHELL/JAVASCRIPT 返回"not supported in memory"，与
    * {@code GlueJobHandler} 的实际执行能力（进程沙箱 / ScriptEngine）矛盾。现对齐执行路径：
-   * 
+   *
    * <ul>
    * <li>GROOVY/JAVA：GroovyClassLoader 内存编译执行（保留原有逻辑）
    * <li>PYTHON/SHELL：通过 {@link SandboxScriptExecutor} 进程沙箱执行（与 GlueJobHandler 一致，

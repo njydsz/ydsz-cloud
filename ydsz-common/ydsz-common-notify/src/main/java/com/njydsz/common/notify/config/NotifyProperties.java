@@ -19,7 +19,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  * <p>绑定 application.yml 中 ydsz.notify 前缀的配置项， 支持邮件、短信、企业微信、钉钉、飞书、站内信等多种通知渠道的配置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.notify")

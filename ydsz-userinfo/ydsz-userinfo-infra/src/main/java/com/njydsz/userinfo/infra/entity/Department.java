@@ -31,7 +31,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * parent_id}）、{@code idx_leader_id}（{@code leader_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see UserDept 用户-部门中间表
  * @see UserAccount 用户实体（含 {@code deptId} 字段，支持 {@code dept:xxx} 审批人展开）
  * @see com.njydsz.userinfo.web.controller.DepartmentController 部门 Controller

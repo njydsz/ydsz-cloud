@@ -76,7 +76,7 @@ import com.njydsz.message.server.service.core.MessageService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.message.server.service.core.MessageService 消息发送服务
  * @see com.njydsz.common.feign.MessageRequest 共享消息请求 DTO
  * @see com.njydsz.message.domain.enums.core.SendStrategyEnum 发送策略枚举

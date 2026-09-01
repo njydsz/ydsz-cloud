@@ -6,7 +6,7 @@ package com.njydsz.common.cache.support;
  * <p>封装缓存加载过程中发生的各类错误，包括数据源访问失败、反序列化失败、超时等场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class CacheLoadException extends RuntimeException {
 

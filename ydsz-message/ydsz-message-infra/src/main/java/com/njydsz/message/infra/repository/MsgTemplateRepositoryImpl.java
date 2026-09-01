@@ -24,7 +24,7 @@ import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
  * <p>实现 {@link MsgTemplateRepository} 接口，封装 MsgTemplateMapper 数据访问细节。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

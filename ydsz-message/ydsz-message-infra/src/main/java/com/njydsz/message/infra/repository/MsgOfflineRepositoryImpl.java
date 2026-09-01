@@ -22,7 +22,7 @@ import com.njydsz.message.infra.mapper.config.MsgOfflineMapper;
  * <p>实现 {@link MsgOfflineRepository} 接口，封装 MsgOfflineMapper 数据访问细节。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

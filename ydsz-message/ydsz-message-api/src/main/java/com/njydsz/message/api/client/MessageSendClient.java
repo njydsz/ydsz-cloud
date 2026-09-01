@@ -23,7 +23,7 @@ import com.njydsz.message.api.fallback.MessageSendClientFallback;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 /**
  * MessageSendClient Feign 客户端接口，声明跨服务远程调用。
@@ -31,7 +31,7 @@ import com.njydsz.message.api.fallback.MessageSendClientFallback;
  * <p>所属包：{@code com.njydsz.message.api.client}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FeignClient(
     name = FeignClientConstants.MESSAGE,

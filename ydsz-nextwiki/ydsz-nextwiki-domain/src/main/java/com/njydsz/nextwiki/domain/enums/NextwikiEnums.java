@@ -6,7 +6,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * 网盘知识库枚举集合
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class NextwikiEnums {
 

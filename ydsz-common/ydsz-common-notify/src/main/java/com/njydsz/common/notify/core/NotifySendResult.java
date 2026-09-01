@@ -4,7 +4,7 @@ package com.njydsz.common.notify.core;
  * 消息发送结果统一封装
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface NotifySendResult {
 

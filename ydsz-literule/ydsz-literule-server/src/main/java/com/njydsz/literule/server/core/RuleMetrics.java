@@ -17,7 +17,7 @@ import com.njydsz.literule.domain.enums.RuleSeverity;
  *   <li>{@link InMemoryRuleMetrics} — 内存计数器实现，测试/降级场景使用
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface RuleMetrics {
@@ -70,7 +70,7 @@ public interface RuleMetrics {
    * 获取累计评估次数（健康检查读取入口）
    *
    * @return 累计评估次数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   long getTotalEvaluations();
 
@@ -78,7 +78,7 @@ public interface RuleMetrics {
    * 获取累计触发次数（健康检查读取入口）
    *
    * @return 累计触发次数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   long getTotalTriggered();
 
@@ -86,7 +86,7 @@ public interface RuleMetrics {
    * 获取累计异常次数（健康检查读取入口）
    *
    * @return 累计异常次数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   long getTotalErrors();
 
@@ -94,7 +94,7 @@ public interface RuleMetrics {
    * 获取当前注册规则数（健康检查读取入口）
    *
    * @return 当前注册规则数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   int getRegisteredRules();
 
@@ -102,7 +102,7 @@ public interface RuleMetrics {
    * 获取最近一次评估遍历的规则数（统计快照读取入口）
    *
    * @return 最近一次评估遍历的规则数
-   * @since 1.0.0
+   * @since 26.09.01
    */
   int getLastEvaluatedRules();
 
@@ -116,7 +116,7 @@ public interface RuleMetrics {
    *
    * @param topN 返回条数
    * @return 规则统计快照列表（按平均耗时倒序）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default List<RuleStatSnapshot> getSlowRuleStats(int topN) {
     return List.of();
@@ -129,7 +129,7 @@ public interface RuleMetrics {
    *
    * @param topN 返回条数
    * @return 规则统计快照列表（按评估次数倒序）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   default List<RuleStatSnapshot> getHotRuleStats(int topN) {
     return List.of();

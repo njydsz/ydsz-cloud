@@ -13,7 +13,7 @@ import lombok.Data;
  * com.njydsz.workflow.infra.entity.FlowAttachment} 对齐， 仅保留业务可见字段，不暴露内部版本号/审计字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowAttachmentDTO implements Serializable {

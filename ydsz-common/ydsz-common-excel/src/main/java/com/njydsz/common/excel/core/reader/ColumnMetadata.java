@@ -33,7 +33,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.FieldSetter;
  * <p>在100K行场景下，可减少约20-30%的CPU开销， 读取性能提升约15-25%。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class ColumnMetadata {
 
@@ -130,7 +130,7 @@ public final class ColumnMetadata {
    *
    * @author ydsz-team
 
-   * @version 1.0.0
+   * @version 26.09.01
    */
   private static int resolveTypeId(Class<?> targetType) {
     if (targetType == String.class) {

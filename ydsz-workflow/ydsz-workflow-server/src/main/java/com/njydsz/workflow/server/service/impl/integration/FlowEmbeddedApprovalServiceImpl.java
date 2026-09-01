@@ -89,7 +89,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * <p><b>合规约束：</b>本类不涉及电子签章（CA 证书 / 司法存证 / 合同防篡改等）能力， 嵌入式审批面板的「签署生效」诉求由独立「电子签章服务」承担，本服务仅作为审批流转的承接方。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowEmbeddedApprovalService 接口定义
  * @see com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO 嵌入式审批面板视图
  * @see FlowInstanceService 流程实例服务
@@ -384,9 +384,9 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
 
   /**
    * 当前用户是否可撤回（P0-4 修复：补全下游已处理判断）
-   * 
+   *
    * <p>撤回条件：
-   * 
+   *
    * <ol>
    * <li>操作人是发起人
    * <li>实例未结束（RUNNING）

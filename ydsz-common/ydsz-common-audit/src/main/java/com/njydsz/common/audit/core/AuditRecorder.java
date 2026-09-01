@@ -10,7 +10,7 @@ import com.njydsz.common.audit.domain.AuditLog;
  * <p>定义审计日志记录的统一抽象，支持同步、异步、批量三种记录方式。 实现类可基于 BlockingQueue、Disruptor、消息队列等不同技术实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface AuditRecorder {
 

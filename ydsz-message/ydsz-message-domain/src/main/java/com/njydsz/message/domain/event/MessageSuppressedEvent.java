@@ -10,7 +10,7 @@ import com.njydsz.message.domain.enums.core.MessageChannelEnum;
  * <p>在消息被频控 / 抑制规则拦截时发布，携带抑制原因、原始通道与业务类型。 用于审计、风控分析与频控规则优化。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class MessageSuppressedEvent extends MessageDomainEvent {
 

@@ -19,7 +19,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * 的执行数据，供前端趋势图展示（成功率/耗时折线图）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

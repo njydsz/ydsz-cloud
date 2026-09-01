@@ -13,7 +13,7 @@ package com.njydsz.literule.domain.enums;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum HitPolicy {
   /** 唯一命中：多行匹配时报错 */

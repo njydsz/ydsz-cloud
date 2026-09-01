@@ -24,7 +24,7 @@ import com.njydsz.common.exception.enums.ExceptionCategory;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -65,7 +65,7 @@ public @interface YdszExceptionCode {
   String replacement() default "";
 
   /**
-   * 该模块错误码的引入版本号（语义化版本，如 "1.0.0"、"2.3.0"）。
+   * 该模块错误码的引入版本号（语义化版本，如 "26.09.01"、"2.3.0"）。
    *
    * <p>用于：
    *
@@ -75,7 +75,7 @@ public @interface YdszExceptionCode {
    * </ul>
    *
    * @return 引入版本号；空字符串表示未指定
-   * @since 1.0.0
+   * @since 26.09.01
    */
   String since() default "";
 

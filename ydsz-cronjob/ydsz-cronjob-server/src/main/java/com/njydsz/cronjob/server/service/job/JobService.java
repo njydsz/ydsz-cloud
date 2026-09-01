@@ -33,7 +33,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * = Exception.class)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.cronjob.domain.vo.JobVO 任务视图对象
  * @see com.njydsz.cronjob.server.service.JobHistoryService 任务历史 Service
  */

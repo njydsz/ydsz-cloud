@@ -34,7 +34,7 @@ import com.njydsz.userinfo.server.device.DeviceSessionVO;
  * <p><b>接口路径：</b>{@code /api/v1/devices}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController

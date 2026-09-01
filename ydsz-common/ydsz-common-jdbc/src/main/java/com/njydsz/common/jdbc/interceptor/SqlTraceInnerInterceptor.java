@@ -59,7 +59,7 @@ import com.njydsz.common.jdbc.monitor.SqlFingerprint;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SlowSqlInnerInterceptor
  * @see SqlAuditInterceptor
  */
@@ -91,7 +91,7 @@ import com.njydsz.common.jdbc.monitor.SqlFingerprint;
  * <p>基于 MyBatis-Plus InnerInterceptor 实现 SQL 执行追踪、审计日志和 Micrometer 指标采集。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SqlTraceInnerInterceptor
     implements InnerInterceptor, Ordered, MeterBinder, Interceptor {

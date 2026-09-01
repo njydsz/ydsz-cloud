@@ -78,7 +78,7 @@ import com.njydsz.system.infra.entity.Variable;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.system.infra.entity AppInfo / Config / DictItem / DictType / EntityVersion /
  *     Variable
  * @see com.njydsz.system.domain.vo AppInfoVO / ConfigVO / DictItemVO / DictTypeVO / EntityVersionVO /

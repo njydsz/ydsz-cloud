@@ -48,7 +48,7 @@ package com.njydsz.common.json.module;
  * 收敛，确保可发现、可治理、可测试。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface JsonModule {
 
@@ -83,7 +83,7 @@ public interface JsonModule {
    * @return 模块版本
    */
   default String getVersion() {
-    return "1.0.0";
+    return "26.09.01";
   }
 
   /**

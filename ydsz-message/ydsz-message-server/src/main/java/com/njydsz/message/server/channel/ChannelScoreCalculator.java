@@ -32,7 +32,7 @@ import com.njydsz.message.server.metric.MessageMetrics;
  * <p>成功率默认 0.95（无可用指标时兜底），用户打开率默认 0.5（预留扩展口，待用户行为数据接入后替换）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -62,7 +62,7 @@ public class ChannelScoreCalculator {
 
   /**
    * 构造器注入。
-   * 
+   *
    *
    * @param messageMetrics 消息指标（用于后续查询通道成功率，当前为预留扩展口）
    * @param messageProperties 消息模块配置属性（含 cost 子配置项评分权重）

@@ -19,7 +19,7 @@ import com.njydsz.common.netty.exception.NettyException;
  * <p>支持 PKCS12 / JKS 密钥库加载，一键开启单向/双向认证。 生成的 {@link SslContext} 可直接用于 Netty Pipeline 的 SSL Handler。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class SslContextFactory {

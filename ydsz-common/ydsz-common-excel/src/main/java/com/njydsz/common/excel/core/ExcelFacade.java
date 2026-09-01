@@ -48,8 +48,8 @@ import com.njydsz.common.excel.exception.ExcelWriteException;
  * }</pre>
  *
  * @author ydsz-team
- * @version 1.0.0
- * @since 1.0.0
+ * @version 26.09.01
+ * @since 26.09.01
  * @see ExcelReader
  * @see ExcelWriter
  */

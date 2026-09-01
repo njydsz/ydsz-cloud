@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * 遵循模块"不依赖业务侧组件扫描"的装配原则）。业务方也可自定义 Bean 覆盖（{@code @ConditionalOnMissingBean}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class TempFileManager implements AutoCloseable {

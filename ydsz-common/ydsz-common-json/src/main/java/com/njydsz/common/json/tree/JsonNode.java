@@ -32,7 +32,7 @@ import java.util.Map;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public abstract class JsonNode {
 
@@ -304,7 +304,7 @@ public abstract class JsonNode {
    * 可直接安全共享引用；容器节点（ObjectNode / ArrayNode）可变，需要深拷贝。
    *
    * @return true 如果节点为叶子节点
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public boolean isLeaf() {
     return !isObject() && !isArray();
@@ -317,7 +317,7 @@ public abstract class JsonNode {
    * ArrayNode）必须重写此方法返回全新的嵌套副本。
    *
    * @return 当前节点的深拷贝（叶子节点返回 this）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public JsonNode deepCopy() {
     return this;

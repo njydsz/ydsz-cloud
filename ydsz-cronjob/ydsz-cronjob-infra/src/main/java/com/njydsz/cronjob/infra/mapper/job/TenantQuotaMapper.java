@@ -25,7 +25,7 @@ import com.njydsz.cronjob.infra.entity.job.TenantQuota;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.cronjob.domain.entity.job.TenantQuota 配额实体
  * @see com.njydsz.cronjob.server.service.TenantQuotaService 配额 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

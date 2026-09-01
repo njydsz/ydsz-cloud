@@ -53,7 +53,7 @@ import com.njydsz.common.json.type.JsonType;
  *
  * <p>路由校验（Route ID 唯一性、格式、URI 合法性等）应在配置时（Nacos Dashboard / CI/CD）完成， 而非在网关运行时执行。网关仅做基础 JSON 解析，解析失败时回退到 Java 路由。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

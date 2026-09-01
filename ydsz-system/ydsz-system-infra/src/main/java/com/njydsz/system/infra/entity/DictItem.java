@@ -31,7 +31,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>索引设计：</b>索引 {@code idx_type_code}（{@code type_code}）加速按类型查询。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DictType 字典类型实体（字典两级体系上层）
  */
 @Data

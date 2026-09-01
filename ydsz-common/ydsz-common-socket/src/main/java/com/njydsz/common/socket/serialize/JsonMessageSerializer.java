@@ -10,7 +10,7 @@ import com.njydsz.common.json.YdszJson;
  * <p>使用项目统一的 {@link YdszJson} 引擎进行序列化/反序列化。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class JsonMessageSerializer implements MessageSerializer {

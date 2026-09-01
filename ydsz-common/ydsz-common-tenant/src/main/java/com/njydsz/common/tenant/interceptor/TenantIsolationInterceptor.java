@@ -69,7 +69,7 @@ import com.njydsz.common.tenant.metrics.TenantMetrics;
  * <p>此拦截器通过 {@link TenantInterceptorProvider} SPI 注册到 {@code MybatisPlusInterceptor} 链中（order=400）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see TenantProperties
  * @see TenantContextHolder
  * @see TenantInterceptorProvider
@@ -91,7 +91,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
    *
    * <p><b>注意：</b>默认关闭，需通过 {@code ydsz.tenant.sql-cache.enabled=true} 开启。
    *
-   * @since 1.0.0 由 ConcurrentHashMap 迁移至 ydsz-common-cache（修复 P0-1 缓存 Key 不完整缺陷）
+   * @since 26.09.01 由 ConcurrentHashMap 迁移至 ydsz-common-cache（修复 P0-1 缓存 Key 不完整缺陷）
    */
   private final Cache<String, String> sqlCache;
 
@@ -643,7 +643,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
    * <p>{@code value} 可能为单值或 {@link List} 多值（对应 IN 条件）， 由 {@link #buildTenantConditions} 按值类型构造等价条件。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private static class TenantFieldValue {
     final String column;

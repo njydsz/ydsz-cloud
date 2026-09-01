@@ -22,7 +22,7 @@ import com.njydsz.userinfo.api.vo.UserAccountVO;
  * 检查会误判为查询成功（结果为空）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

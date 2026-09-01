@@ -12,7 +12,7 @@ import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
  * 保证与 {@link UserAccountService} 的创建/改密链路一致（事务、密码历史、索引同步、领域事件、会话驱逐、审计）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SelfRegisterDTO 注册请求 DTO
  * @see ForgotPasswordDTO 找回密码请求 DTO
  * @see AccountUnlockDTO 账号解锁请求 DTO

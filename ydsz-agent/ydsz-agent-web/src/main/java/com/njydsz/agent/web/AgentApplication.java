@@ -16,7 +16,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * <p>提供 LLM 对话、Agent 编排、Tool Calling、RAG 知识增强、记忆管理等 AI 能力。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.agent", "com.njydsz.common"})
 @EnableDiscoveryClient

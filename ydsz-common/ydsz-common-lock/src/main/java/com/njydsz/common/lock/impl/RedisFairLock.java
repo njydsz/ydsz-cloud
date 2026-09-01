@@ -31,7 +31,7 @@ import com.njydsz.common.lock.core.DistributedLocker;
  * <p><b>适用场景：</b>需要严格按顺序执行的分布式任务，避免饥饿问题。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DistributedLocker
  * @see RedisReentrantLock
  */

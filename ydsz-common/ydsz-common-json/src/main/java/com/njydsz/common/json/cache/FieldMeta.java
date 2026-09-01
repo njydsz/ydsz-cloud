@@ -65,7 +65,7 @@ import com.njydsz.common.json.type.FieldTypeCode;
  * 元数据，拆分到独立类会引入 不必要的间接调用和对象分配开销，降低序列化/反序列化热路径性能。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @SuppressWarnings("deprecation")
 public final class FieldMeta {

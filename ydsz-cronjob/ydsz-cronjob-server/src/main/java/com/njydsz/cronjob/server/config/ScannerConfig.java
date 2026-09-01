@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>控制 JobScanner 的扫描间隔、批量大小、并行派发等行为。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ScannerConfig {

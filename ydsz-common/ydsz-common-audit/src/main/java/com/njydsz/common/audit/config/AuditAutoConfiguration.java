@@ -56,7 +56,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * <p>优先级与覆盖规则：所有 Bean 均标注 {@code @ConditionalOnMissingBean}， 业务方可提供同名 Bean 进行覆盖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @RequiredArgsConstructor

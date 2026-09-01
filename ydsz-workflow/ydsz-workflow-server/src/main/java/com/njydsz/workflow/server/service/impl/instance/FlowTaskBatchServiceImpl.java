@@ -25,7 +25,7 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
  * <p>支持最大 500 条/批，避免单次请求过大。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

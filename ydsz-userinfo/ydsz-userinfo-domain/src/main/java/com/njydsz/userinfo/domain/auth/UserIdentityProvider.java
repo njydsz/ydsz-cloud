@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.enums.IdentityProviderType;
  * <p>每个认证源实现此接口，由 {@link UserIdentityProviderFactory} 根据用户类型路由到对应实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface UserIdentityProvider {
 

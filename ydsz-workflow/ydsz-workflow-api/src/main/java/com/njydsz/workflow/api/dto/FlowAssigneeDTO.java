@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>定义 Feign 客户端接口的参数类型，供跨服务调用方引用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowAssigneeDTO implements Serializable {

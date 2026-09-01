@@ -12,7 +12,7 @@ import com.njydsz.common.web.interceptor.ApiVersionInterceptor;
  * <p>注册 API 版本拦截器，自动将 {@code X-Api-Version} 等版本相关响应头写入所有接口响应。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Configuration
 public class NextwikiWebMvcConfig implements WebMvcConfigurer {

@@ -83,7 +83,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
  * slaConfig}）但由 {@link FlowSlaServiceImpl} 处理。 定时器是 BPMN 原生事件，SLA 是 ydsz 工作流扩展。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowTimerService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowTimerVO 定时器值对象
  * @see com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer 流程推进引擎

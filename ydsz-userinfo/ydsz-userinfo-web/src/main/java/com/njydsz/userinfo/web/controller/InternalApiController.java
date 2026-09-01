@@ -68,7 +68,7 @@ import com.njydsz.userinfo.web.annotation.RequireInternal;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.feign.client.UserInfoInternalClient Feign Client 接口
  */
 @Slf4j

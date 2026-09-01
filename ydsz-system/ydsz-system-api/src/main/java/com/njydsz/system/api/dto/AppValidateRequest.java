@@ -8,7 +8,7 @@ import lombok.Data;
  * 应用密钥校验请求 DTO。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "应用密钥校验请求")

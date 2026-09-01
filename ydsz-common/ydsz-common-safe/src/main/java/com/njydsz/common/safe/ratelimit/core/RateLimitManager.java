@@ -28,7 +28,7 @@ import com.njydsz.common.safe.ratelimit.spi.RateLimitRuleProvider;
  * 连续失败时自动熔断，避免级联故障。熔断期间直接降级为本地限流或放行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RateLimitManager {

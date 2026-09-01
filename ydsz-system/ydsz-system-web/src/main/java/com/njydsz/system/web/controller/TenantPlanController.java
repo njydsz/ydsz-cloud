@@ -42,7 +42,7 @@ import com.njydsz.system.server.service.TenantPlanService;
  * <p><b>接口路径：</b>{@code /api/v1/tenant-plan}
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see TenantPlanService 套餐业务逻辑
  */
 @Tag(name = "租户套餐管理", description = "套餐 CRUD / 菜单配置")

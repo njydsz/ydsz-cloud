@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * <p>适用于以 Java 编码方式实现复杂规则逻辑的场景，兼顾"声明式注册"与"命令式求值"。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

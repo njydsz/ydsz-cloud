@@ -18,7 +18,7 @@ import lombok.Data;
  *   <li>变量名也存入常量池（{@link VarName VarName} 标记类型），避免执行时反射
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Data

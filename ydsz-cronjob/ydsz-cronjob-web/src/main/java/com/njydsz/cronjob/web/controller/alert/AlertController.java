@@ -58,7 +58,7 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Tag(name = "任务告警规则", description = "告警规则 CRUD、启停、告警日志查询")
 @Slf4j

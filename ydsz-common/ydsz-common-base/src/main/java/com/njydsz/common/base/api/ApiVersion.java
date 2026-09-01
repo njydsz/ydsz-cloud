@@ -41,7 +41,7 @@ import java.lang.annotation.Target;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -62,7 +62,7 @@ public @interface ApiVersion {
    *
    * <p>用于生成 API 变更日志与兼容性说明。默认为空表示未知。
    *
-   * @return 语义化版本号（如 "1.0.0"）
+   * @return 语义化版本号（如 "26.09.01"）
    */
   String since() default "";
 

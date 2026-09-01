@@ -17,7 +17,7 @@ import com.njydsz.cronjob.infra.entity.job.Job;
  * <p>对应 ydsz_job 表，提供按 jobKey 查询、启动加载 NORMAL 任务、统计字段更新。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface JobMapper extends BaseMapper<Job> {

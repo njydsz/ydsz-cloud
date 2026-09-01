@@ -6,7 +6,7 @@ import lombok.Data;
  * 用户-角色关联 VO，用于 Controller 返回，不包含 deleted、createdBy 等内部维护字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserRoleVO {

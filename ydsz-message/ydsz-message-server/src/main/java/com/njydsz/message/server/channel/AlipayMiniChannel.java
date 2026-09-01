@@ -34,7 +34,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * <p>降级策略：未配置 AppID/privateKey 或 provider=mock 时降级为日志输出。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

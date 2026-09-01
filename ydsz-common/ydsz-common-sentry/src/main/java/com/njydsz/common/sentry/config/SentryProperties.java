@@ -21,7 +21,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>各子配置通过 JSR-303 注解约束合法范围，启动时自动校验。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Validated
@@ -261,9 +261,9 @@ public class SentryProperties {
     /** 服务名（默认使用 sentry.appName） */
     private String serviceName;
 
-    /** 服务版本（默认 1.0.0） */
+    /** 服务版本（默认 26.09.01） */
     @NotBlank(message = "服务版本不能为空")
-    private String serviceVersion = "1.0.0";
+    private String serviceVersion = "26.09.01";
 
     /** 服务命名空间（业务域） */
     @NotBlank(message = "服务命名空间不能为空")

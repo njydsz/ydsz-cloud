@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/{ruleCode}/status} 接口，切换规则生命周期状态 （DRAFT / REVIEW / PUBLISHED / ARCHIVED 等）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "规则状态变更请求体")

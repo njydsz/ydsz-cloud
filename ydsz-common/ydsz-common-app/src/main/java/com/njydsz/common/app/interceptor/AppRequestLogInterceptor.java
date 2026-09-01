@@ -23,7 +23,7 @@ import com.njydsz.common.core.context.RequestContext;
  * <p><b>线程安全性：</b>无状态拦截器，线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端展示同一规则集在两个版本之间的规则变更情况， 包含新增、移除与修改的规则编码列表，支撑版本对比与升级预览。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class PackDiffVO {

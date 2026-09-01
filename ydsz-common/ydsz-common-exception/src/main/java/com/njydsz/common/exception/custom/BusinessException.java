@@ -27,7 +27,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *   <li>异常分类：BUSINESS
  * </ul>
  *
- * <p><b>推荐使用方式（1.0.0）：</b>
+ * <p><b>推荐使用方式（26.09.01）：</b>
  *
  * <pre>{@code
  * // 1. 预定义异常码（推荐）
@@ -48,7 +48,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *     .data("field", "username");
  * }</pre>
  *
- * <p><b>精简设计（1.0.0）：</b>仅保留 3 个核心构造函数， 其他参数化构造通过 {@link #builder()} 链式 Builder 完成，消除 15+ 构造函数爆炸问题。
+ * <p><b>精简设计（26.09.01）：</b>仅保留 3 个核心构造函数， 其他参数化构造通过 {@link #builder()} 链式 Builder 完成，消除 15+ 构造函数爆炸问题。
  *
  * <p><b>使用示例：</b>
  *
@@ -72,7 +72,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CoreExceptionCode
  * @see ExceptionCategory#BUSINESS
  */

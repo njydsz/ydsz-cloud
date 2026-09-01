@@ -29,7 +29,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *
  * <p>动作键约定与决策表一致：{@code severity} / {@code title} / {@code description} / {@code currentValue}。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

@@ -35,7 +35,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * idx_parent_id}（{@code parent_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CompanyDept 公司-部门中间表
  * @see Department 部门实体
  * @see com.njydsz.userinfo.web.controller.CompanyController 公司 Controller

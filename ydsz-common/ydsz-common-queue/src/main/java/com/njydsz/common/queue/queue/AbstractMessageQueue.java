@@ -25,7 +25,7 @@ import com.njydsz.common.queue.service.IMessageSubscriber;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public abstract class AbstractMessageQueue implements IMessageQueue {
 

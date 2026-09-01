@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>索引设计：</b>唯一索引 {@code uk_type_code}（{@code type_code}）保证类型编码全局唯一。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DictItem 字典项实体（字典两级体系下层）
  * @see com.njydsz.system.server.service.DictVersionService 字典版本管理
  */

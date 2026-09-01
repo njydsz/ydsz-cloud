@@ -18,7 +18,7 @@ import com.njydsz.nextwiki.domain.vo.TrashItemVO;
  * <p>采用单例 + 手动映射方式，避免引入 MapStruct 编译期依赖。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @deprecated 违反云顶编码规范§34.2.2 — Converter 只能放在 infra 层。
  *             <p><b>DDD 合规路径：</b>
  *             <ul>

@@ -10,7 +10,7 @@ import java.util.List;
  * <p><b>线程安全</b>：分块器通常为无状态单例，实现须保证并发 chunk 调用的线程安全（不依赖可变实例字段）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface TextChunker {
 

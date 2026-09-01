@@ -76,7 +76,7 @@ import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Validated
@@ -192,7 +192,7 @@ public class TenantProperties {
    *       expire-minutes: 10
    * </pre>
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private SqlCacheConfig sqlCache = new SqlCacheConfig();
 

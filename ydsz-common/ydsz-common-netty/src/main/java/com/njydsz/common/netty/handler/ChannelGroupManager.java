@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>维护所有活跃 Channel 的全局组，支持批量推送/广播。 同时维护业务级 Channel 分组（按 groupKey 分组），支持按分组推送。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class ChannelGroupManager {

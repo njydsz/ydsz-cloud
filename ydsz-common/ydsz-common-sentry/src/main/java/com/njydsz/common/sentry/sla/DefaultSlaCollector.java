@@ -30,7 +30,7 @@ import com.njydsz.common.sentry.spi.SlaCollector;
  * <p>使用 {@link ConcurrentHashMap} 存储运行中的 SLA 上下文，支持并发采集。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see SlaCollector
  * @see SlaMetricAspect
  * @see SlaDefinition

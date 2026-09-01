@@ -10,7 +10,7 @@ import com.njydsz.literule.domain.vo.RuleDependencyVO;
  * <p>由消费方（如 project 模块）提供实现，提供规则依赖的 CRUD、循环依赖检测、 级联禁用影响范围计算等能力。将原有 {@code RuleDependencyService}
  * 的能力抽象为 SPI， 避免 literule 模块直接依赖 project 模块。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface RuleDependencyProvider {

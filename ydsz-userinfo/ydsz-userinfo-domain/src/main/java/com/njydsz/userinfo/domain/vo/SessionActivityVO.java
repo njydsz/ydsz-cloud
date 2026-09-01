@@ -20,7 +20,7 @@ import java.io.Serializable;
  * @param activeUserCount 当前活跃用户数（去重）
  * @param avgSessionDuration 平均会话持续时长（分钟）
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record SessionActivityVO(
     int totalActiveSessions,

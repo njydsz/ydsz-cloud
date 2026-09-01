@@ -16,7 +16,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  * <p>将规则触发结果转换为 {@link RuleTriggeredEvent} 并发布 Spring 事件， 消费方可通过 {@code @EventListener}
  * 监听此事件，转换为统一告警通知。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

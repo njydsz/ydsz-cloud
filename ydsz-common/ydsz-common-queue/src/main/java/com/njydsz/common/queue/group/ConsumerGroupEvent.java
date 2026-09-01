@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>记录 Redis Stream 消费组中消费者变化的事件信息， 包括消费者ID、事件类型、触发时间等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

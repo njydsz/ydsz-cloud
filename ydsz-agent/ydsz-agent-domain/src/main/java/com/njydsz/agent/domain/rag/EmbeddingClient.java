@@ -12,7 +12,7 @@ import com.njydsz.agent.domain.gateway.LlmException;
  * <p><b>线程安全</b>：Embedding 客户端一般为单例且被并发调用，实现须线程安全，且 embed/embedBatch 不应缓存可变中间结果。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface EmbeddingClient {
 

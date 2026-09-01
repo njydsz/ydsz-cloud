@@ -6,7 +6,7 @@ package com.njydsz.common.docs.enums;
  * <p>表示文档安全扫描结果的严重程度。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum SecurityLevel {
 

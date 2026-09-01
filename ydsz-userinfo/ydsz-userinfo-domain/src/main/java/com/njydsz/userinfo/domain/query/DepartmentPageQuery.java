@@ -10,7 +10,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * 部门分页查询参数，继承 {@link PageQuery} 提供分页基础字段。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

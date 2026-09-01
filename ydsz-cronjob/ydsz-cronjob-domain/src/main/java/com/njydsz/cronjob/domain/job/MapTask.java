@@ -6,7 +6,7 @@ import java.util.Objects;
  * MapReduce 子任务定义
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class MapTask {
 

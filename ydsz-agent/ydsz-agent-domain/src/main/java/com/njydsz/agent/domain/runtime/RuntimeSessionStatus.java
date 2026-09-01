@@ -6,7 +6,7 @@ package com.njydsz.agent.domain.runtime;
  * <p>定义 Agent 执行会话在其生命周期中可能处于的所有状态。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum RuntimeSessionStatus {
 

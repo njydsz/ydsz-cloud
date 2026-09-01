@@ -34,7 +34,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
  * <p>支持分页查询、按渠道/状态/时间/接收人筛选，是消息中心的「对账单」。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

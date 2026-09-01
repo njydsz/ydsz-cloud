@@ -8,7 +8,7 @@ import java.util.List;
  * <p>支持钉钉、飞书、企业微信等 IM 渠道的富文本/卡片消息发送。 包含标题、内容、按钮、跳转链接等交互元素。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class CardMessage {
 

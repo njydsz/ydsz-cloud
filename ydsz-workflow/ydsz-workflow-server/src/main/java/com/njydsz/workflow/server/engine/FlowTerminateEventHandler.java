@@ -22,10 +22,10 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
  *   <li>终止事件：实例状态设为 TERMINATED，任务标记为 CANCELLED
  * </ul>
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>运行时处理器置于
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>运行时处理器置于
  * {@code server/engine/} 包下，负责 BPMN 事件语义的运行时解释。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

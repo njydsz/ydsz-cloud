@@ -18,7 +18,7 @@ import lombok.Data;
  * <p>各阶段转化率 = 下一阶段 / 上一阶段 * 100，整体转化率 = clicked / sent * 100。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "消息转化漏斗统计")

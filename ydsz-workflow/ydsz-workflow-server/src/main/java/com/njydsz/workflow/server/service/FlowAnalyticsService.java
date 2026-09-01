@@ -15,7 +15,7 @@ import com.njydsz.workflow.domain.vo.FlowTrendVO;
  * <p>多维度统计流程实例、任务、SLA 数据。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface FlowAnalyticsService {
 

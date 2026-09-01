@@ -42,10 +42,10 @@ import com.njydsz.common.lock.renewal.LockRenewalService;
  *   <li>批量续期减少 Redis 网络往返次数
  * </ul>
  *
- * <p><b>1.0.0 变更：</b>续期脚本统一委托给 {@link LockRenewalService}，消除双锁冗余。
+ * <p><b>26.09.01 变更：</b>续期脚本统一委托给 {@link LockRenewalService}，消除双锁冗余。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class LockWatchDog {
@@ -65,7 +65,7 @@ public class LockWatchDog {
   /** 泄漏检测间隔（毫秒） */
   private static final long LEAK_DETECT_INTERVAL_MS = 60_000L;
 
-  /** 统一的续期脚本服务（1.0.0 引入，替代散落在各处的重复脚本） */
+  /** 统一的续期脚本服务（26.09.01 引入，替代散落在各处的重复脚本） */
   private final LockRenewalService renewalService;
 
   /** Redis 模板 */
@@ -168,7 +168,7 @@ public class LockWatchDog {
   /**
    * 构造器注入
    *
-   * @param renewalService 统一的锁续期服务（1.0.0 引入）
+   * @param renewalService 统一的锁续期服务（26.09.01 引入）
    * @param scheduler 调度线程池（由 Spring 管理）
    * @param stringRedisTemplate Redis 模板
    * @param maxRenewTimes 最大续期次数，超过后停止续期，锁自动过期
@@ -399,7 +399,7 @@ public class LockWatchDog {
   /**
    * 带重试机制的续期（根据锁类型选择对应脚本）
    *
-   * <p>1.0.0 变更：统一使用 {@link LockRenewalService} 执行续期，消除本地脚本冗余。
+   * <p>26.09.01 变更：统一使用 {@link LockRenewalService} 执行续期，消除本地脚本冗余。
    *
    * @param lockKey 锁的键
    * @param clientId 客户端标识

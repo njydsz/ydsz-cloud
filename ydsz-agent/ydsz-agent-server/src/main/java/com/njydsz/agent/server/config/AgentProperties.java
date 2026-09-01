@@ -13,7 +13,7 @@ import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
  * Agent 模块配置属性
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConfigurationProperties(prefix = "ydsz.agent")
 public class AgentProperties {

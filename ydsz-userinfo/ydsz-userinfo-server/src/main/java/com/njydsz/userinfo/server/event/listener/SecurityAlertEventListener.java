@@ -19,7 +19,7 @@ import com.njydsz.userinfo.server.alert.SecurityAlertService;
  * <p>优先级 20（高优先级，安全事件需要及时响应）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Order(20)

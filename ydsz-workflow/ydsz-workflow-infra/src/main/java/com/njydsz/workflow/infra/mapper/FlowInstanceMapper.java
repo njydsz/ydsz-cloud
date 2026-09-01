@@ -32,7 +32,7 @@ import com.njydsz.workflow.infra.entity.FlowInstance;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.infra.entity.FlowInstance 流程实例实体
  * @see com.njydsz.workflow.server.service.FlowInstanceService 流程实例 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -87,7 +87,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
 
   /**
    * P2-18: 更新流程变量 JSON（用于持久化 terminate reason 等元信息）
-   * 
+   *
    *
    * @param id 流程实例 ID
    * @param variable 流程变量 JSON 字符串
@@ -125,7 +125,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
 
   /**
    * 更新实例的 dueAt 字段（子流程超时用）
-   * 
+   *
    *
    * @param id 流程实例 ID
    * @param dueAt 截止日期时间

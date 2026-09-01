@@ -23,7 +23,7 @@ import com.njydsz.system.domain.vo.DictTypeVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see DictItemService 字典项 Service
  * @see com.njydsz.system.infra.entity.DictType 字典类型实体
  */

@@ -20,7 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.api.version")
@@ -44,7 +44,7 @@ public class ApiVersionProperties {
    *
    * <p>校验项包括 since/deprecatedAt 版本格式、sunsetAt 日期格式、版本逻辑一致性。 默认 true。设置为 false 可关闭校验（不推荐）。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private boolean validate = true;
 
@@ -60,7 +60,7 @@ public class ApiVersionProperties {
    *   <li>请求版本 "1.0" 匹配接口版本 "1" → true
    * </ul>
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private boolean flexibleMatching = false;
 }

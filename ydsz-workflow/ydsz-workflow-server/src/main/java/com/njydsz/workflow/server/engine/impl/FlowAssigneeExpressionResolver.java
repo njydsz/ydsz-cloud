@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>注意：本类的 {@link #resolveAssigneeLegacy} 需接收外部求值函数以处理三元条件中的子表达式求值。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

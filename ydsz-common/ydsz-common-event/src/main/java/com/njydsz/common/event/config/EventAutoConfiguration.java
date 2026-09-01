@@ -50,11 +50,11 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 将 {@code @Import(RocketMqGatewayConfiguration.class)} 改为嵌套 {@code @Configuration}，
+ * @since 26.09.01
+ * @since 26.09.01 将 {@code @Import(RocketMqGatewayConfiguration.class)} 改为嵌套 {@code @Configuration}，
  *     修复条件注解失效问题
- * @since 1.0.0 移除 JSON Schema 校验框架和同步投递模式的自动配置，精简职责
- * @since 1.0.0 移除已废弃的 EventStore 接口支持，统一使用 DomainEventPublisher
+ * @since 26.09.01 移除 JSON Schema 校验框架和同步投递模式的自动配置，精简职责
+ * @since 26.09.01 移除已废弃的 EventStore 接口支持，统一使用 DomainEventPublisher
  */
 @AutoConfiguration
 @EnableConfigurationProperties(EventProperties.class)
@@ -216,8 +216,8 @@ public class EventAutoConfiguration {
    * <p>封装 RocketMQ 生产者 Bean 注册逻辑，支持事务消息、顺序消息、延迟消息。
    *
    * @author ydsz-team
-   * @since 1.0.0
-   * @since 1.0.0 由独立顶层配置类改为嵌套配置类
+   * @since 26.09.01
+   * @since 26.09.01 由独立顶层配置类改为嵌套配置类
    */
   @Configuration
   // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用

@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.entity.UserLoginHistory;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface UserLoginHistoryMapper extends BaseMapper<UserLoginHistory> {

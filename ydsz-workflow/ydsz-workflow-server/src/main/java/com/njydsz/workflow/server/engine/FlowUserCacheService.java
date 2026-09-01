@@ -31,10 +31,10 @@ import com.njydsz.workflow.server.config.FlowProperties;
  *   <li>失效：被动过期 + 主动 evict（用户信息变更时）
  * </ul>
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范）：</b>通过 domain 层 {@link NameServiceClient}
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>通过 domain 层 {@link NameServiceClient}
  * 网关接口获取用户信息，server 层缓存实现与网关接口解耦。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

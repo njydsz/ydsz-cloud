@@ -25,7 +25,7 @@ import com.njydsz.common.json.YdszJson;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -117,7 +117,7 @@ public class TemplateVariableValidator {
 
   /**
    * 校验单个变量类型。
-   * 
+   *
    *
    * @param name 变量名（用于拼接错误消息）
    * @param value 变量实际值

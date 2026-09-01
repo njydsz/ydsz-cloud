@@ -69,7 +69,7 @@ import com.njydsz.workflow.server.service.FlowCommentService;
  * 通知被回复人；提及人（{@code @xxx}）索引便于 @ 检索。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowCommentService 评论服务（含常用语能力）
  * @see FlowComment 评论实体
  * @see FlowCommentCreateDTO 评论创建 DTO

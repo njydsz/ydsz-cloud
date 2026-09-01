@@ -29,7 +29,7 @@ import com.njydsz.workflow.infra.entity.FlowTimer;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.infra.entity.FlowTimer 定时器实体
  * @see com.njydsz.workflow.server.scheduler.FlowTimerScheduler 定时器调度器
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -39,7 +39,7 @@ public interface FlowTimerMapper extends BaseMapper<FlowTimer> {
 
   /**
    * 扫描到点的 PENDING 定时器（status = PENDING AND fire_at <= now AND deleted = 0）
-   * 
+   *
    *
    * @param now 当前时间（用于判断定时器是否到期）
    * @param limit 返回条数上限

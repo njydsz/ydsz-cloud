@@ -38,10 +38,10 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
  * <p>催办通知通过 {@link FlowNotificationService} 推送，覆盖站内信 + IM 双通道。 分布式锁通过 {@link
  * DistributedScheduled} 保证集群只有一个节点执行。
  *
- * <p><b>架构合规说明（1.0.0 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * <p><b>架构合规说明（26.09.01 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
  * 禁止 server 层直接注入 infra Mapper（符合 §34.2.3）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -188,7 +188,7 @@ public class FlowAutoUrgeScheduler {
 
   /**
    * 推送 IM 通知。
-   * 
+   *
    * <p>通过 NotificationHelper 的 send 方法发送到 DINGTALK/WECHAT 通道。 实际推送由通知中心服务异步执行，此处只负责投递消息。
    *
    * @param receiverId 接收人用户 ID

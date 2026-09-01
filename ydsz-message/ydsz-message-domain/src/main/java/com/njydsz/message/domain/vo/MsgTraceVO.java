@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于返回消息轨迹的完整信息，包含节点类型、状态及耗时等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MsgTraceVO implements Serializable {

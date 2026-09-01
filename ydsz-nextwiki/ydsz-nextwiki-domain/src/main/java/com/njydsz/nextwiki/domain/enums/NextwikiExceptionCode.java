@@ -23,7 +23,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * <p><b>稳定性：</b>错误码是业务契约，修改/废弃必须保留向前兼容。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @YdszExceptionCode(module = "nextwiki", description = "知识库")
 public enum NextwikiExceptionCode implements ExceptionCode {

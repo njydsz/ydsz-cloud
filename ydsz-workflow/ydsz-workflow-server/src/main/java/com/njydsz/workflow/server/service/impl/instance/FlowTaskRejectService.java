@@ -45,7 +45,7 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
  * <p>驳回后清理未来节点的待办与未触发的定时器，保留完整轨迹。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service
@@ -87,7 +87,7 @@ public class FlowTaskRejectService {
 
   /**
    * 驳回任务。
-   * 
+   *
    * <p>P1-11: 支持退回任意历史节点。 GAP-P0-2: 当 {@code dto.targetNodeCodes} 非空且 size > 1 时，在所有指定节点
    * 同时创建待办任务；否则降级到单节点退回（{@code dto.targetNodeCode}）。
    *
@@ -204,7 +204,7 @@ public class FlowTaskRejectService {
 
   /**
    * P0-1 修复: 退回到发起人 — 解析 startNode 下游第一个审批节点作为退回目标。
-   * 
+   *
    * <p>原实现直接返回 startNode.getNodeCode()（开始节点本身）， 导致退回后不会生成有意义的待办任务。修正为沿 PASS 出边找到 第一个 APPROVAL
    * 类型节点，找不到时回退到开始节点。
    *

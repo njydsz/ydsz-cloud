@@ -37,7 +37,7 @@ import com.njydsz.common.file.storage.StorageType;
  * <p><b>安全约束：</b>{@code accessKey} / {@code secretKey} 强烈建议通过 环境变量或 Vault 注入，不要硬编码在配置文件中。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see StorageType
  */
 @Data

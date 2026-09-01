@@ -19,10 +19,10 @@ import lombok.extern.slf4j.Slf4j;
  * executor.setRejectedExecutionHandler(metered);
  * }</pre>
  *
- * <p>1.0.0 新增：由 {@code ThreadPoolExecutorFactory} 自动装配，业务方无需手动包装。
+ * <p>26.09.01 新增：由 {@code ThreadPoolExecutorFactory} 自动装配，业务方无需手动包装。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ThreadPoolMetrics
  */
 @Slf4j

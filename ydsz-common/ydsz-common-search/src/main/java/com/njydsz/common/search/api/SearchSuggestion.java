@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
  * <p>典型用途：搜索框下拉联想词、搜索无结果时的智能纠错提示。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Builder

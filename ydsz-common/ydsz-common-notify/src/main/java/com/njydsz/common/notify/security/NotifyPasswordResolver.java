@@ -20,7 +20,7 @@ import com.njydsz.common.notify.config.NotifyProperties;
  * ydsz-common-config 模块的重复 Jasypt 参数配置，确保 CLI 与运行时的加密行为一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NotifyPasswordResolver {
 

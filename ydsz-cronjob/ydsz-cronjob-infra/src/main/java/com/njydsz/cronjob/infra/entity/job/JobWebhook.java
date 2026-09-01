@@ -17,7 +17,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>记录用户配置的 WebHook 订阅，在任务生命周期事件发生时推送通知。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

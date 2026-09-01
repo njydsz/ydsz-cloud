@@ -27,7 +27,7 @@ import com.njydsz.message.server.channel.MessageChannel;
  * spring.mail.username}。{@link JavaMailSender} 为可选注入， 未配置邮件时发送直接返回 fail。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component
@@ -48,7 +48,7 @@ public class EmailChannel implements MessageChannel {
 
   /**
    * 构造方法。
-   * 
+   *
    *
    * @param mailSender JavaMail 发送器（未配置邮件时注入 null）
    * @param snowflakeIdGenerator 分布式 ID 生成器，用于构建 traceId

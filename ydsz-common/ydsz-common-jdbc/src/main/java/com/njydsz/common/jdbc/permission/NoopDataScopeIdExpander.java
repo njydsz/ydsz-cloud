@@ -11,7 +11,7 @@ import java.util.Set;
  * <p>业务模块需要「本部门及下级部门」等级联数据权限时，应提供自定义实现 覆盖本 Bean（实现 {@link DataScopeIdExpander} 并在容器中注册即可）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class NoopDataScopeIdExpander implements DataScopeIdExpander {
 

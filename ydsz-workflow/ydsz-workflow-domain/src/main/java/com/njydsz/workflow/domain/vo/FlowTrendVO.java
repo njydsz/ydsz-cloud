@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于按时间维度展示审批流程的数量与耗时变化趋势，适用于折线图等可视化场景。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowTrendVO implements Serializable {

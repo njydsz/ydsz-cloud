@@ -31,7 +31,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConfigurationProperties(prefix = "ydsz.json")
 @Validated
@@ -110,7 +110,7 @@ public class JsonProperties {
    * <p>设置为 true 可将 {@code JacksonAutoConfiguration} 加入 {@code
    * spring.autoconfigure.exclude}，适用于强隔离或排查序列化兼容问题的场景。
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private boolean disableJacksonAutoConfiguration = false;
 

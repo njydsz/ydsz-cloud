@@ -40,7 +40,7 @@ import com.njydsz.common.base.health.YdszHealthIndicator;
  * <p>横切点执行顺序参考 {@code docs/BASE_INTERCEPTOR_ORDER.md}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnWebApplication

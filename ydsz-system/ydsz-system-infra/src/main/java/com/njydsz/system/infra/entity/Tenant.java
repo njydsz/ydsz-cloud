@@ -33,7 +33,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * plan_id}）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see TenantPlan 租户套餐
  * @see com.njydsz.common.core.context.RequestContext 请求上下文
  */

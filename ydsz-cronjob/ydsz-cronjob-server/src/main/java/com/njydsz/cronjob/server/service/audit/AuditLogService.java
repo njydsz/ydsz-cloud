@@ -12,7 +12,7 @@ import com.njydsz.cronjob.domain.vo.AuditLogVO;
  * <p>提供 cronjob 模块操作审计日志的查询能力，支持分页、时间范围、操作类型过滤。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface AuditLogService {
 

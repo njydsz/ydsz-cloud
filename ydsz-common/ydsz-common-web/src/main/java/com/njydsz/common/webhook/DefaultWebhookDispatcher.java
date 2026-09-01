@@ -39,7 +39,7 @@ import com.njydsz.common.json.YdszJson;
  * <p>通过 {@code @ConditionalOnMissingBean} 注册，业务方可覆盖此 Bean 提供自定义实现（如基于 Redis 持久化订阅、异步线程池投递等）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 @ConditionalOnMissingBean(WebhookDispatcher.class)

@@ -34,7 +34,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * @param maxGenericDepth 泛型递归深度上限
  * @param useBigDecimal 是否将浮点数解析为 BigDecimal
  * @param wrapRootValue 是否启用根名称包裹
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public record JsonRuntimeConfig(

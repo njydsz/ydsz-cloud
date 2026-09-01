@@ -32,7 +32,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  * 支持 {@code \t}、{@code \r} 转义。默认值为完整 OWASP 前缀集。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ExcelConfig#isFormulaInjectionProtection()
  */
 public final class FormulaInjectionGuard {

@@ -26,7 +26,7 @@ import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
  * <p><b>异常隔离：</b>各监听器异常不会相互影响，{@code UserAuthEventDispatcher} 会捕获并记录异常日志后继续执行后续监听器。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface UserAuthEventListener {
 

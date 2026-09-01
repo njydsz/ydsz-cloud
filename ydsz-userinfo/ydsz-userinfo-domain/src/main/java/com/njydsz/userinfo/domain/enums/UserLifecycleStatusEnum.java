@@ -33,7 +33,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * <p><b>向后兼容：</b>{@link EnableStatusEnum} 保留为兼容层，新代码应使用本类。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see EnableStatusEnum
  * @see BaseStatusEnum
  */

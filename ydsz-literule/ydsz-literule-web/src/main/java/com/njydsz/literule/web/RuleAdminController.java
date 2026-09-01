@@ -59,7 +59,7 @@ import com.njydsz.literule.server.version.RuleVersionDiffService;
  *
  * <p>1.6.0 起从 project 模块迁移至 literule 模块，通过 SPI 接口反转依赖， 避免 literule 直接依赖 project 模块。
  *
- * <p>1.0.0 重构：原"胖 Controller"按功能域拆分为 14 个 Controller，本类只保留 核心规则 CRUD + 版本管理 + 表达式校验 + dry-run +
+ * <p>26.09.01 重构：原"胖 Controller"按功能域拆分为 14 个 Controller，本类只保留 核心规则 CRUD + 版本管理 + 表达式校验 + dry-run +
  * stats + abTest。 其他能力拆分至同包下的以下 Controller（共享基路径 {@code /ruleEngine/rules}）：
  *
  * <ul>
@@ -79,7 +79,7 @@ import com.njydsz.literule.server.version.RuleVersionDiffService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController
@@ -109,7 +109,7 @@ public class RuleAdminController {
    *
    * @param pageQuery 分页查询参数（pageNum / pageSize / orderItems）
    * @return 分页规则定义列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Operation(summary = "分页查询规则定义", description = "分页查询规则引擎中所有规则定义，支持按页码、页大小、排序字段进行分页")
   @ApiResponse(responseCode = "200", description = "分页规则定义列表")
@@ -226,7 +226,7 @@ public class RuleAdminController {
    * @param oldVersion 旧版本号
    * @param newVersion 新版本号
    * @return 结构化 Diff 结果
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @GetMapping("/{ruleCode}/version-diff")
   public YdszResponse<RuleVersionDiffVO> versionDiff(
@@ -345,7 +345,7 @@ public class RuleAdminController {
    * @param traceId 链路追踪 ID（可选，取 X-Trace-Id 请求头）
    * @param facts 事实数据
    * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Operation(summary = "规则评估（正式模式）", description = "记录统计、发布触发事件并触发动作分发的正式规则评估")
   @ApiResponse(responseCode = "200", description = "触发的规则结果列表")
@@ -388,7 +388,7 @@ public class RuleAdminController {
    *
    * @param request 包含 expression 和 facts 的请求体
    * @return 追踪结果（含求值结果和追踪树）
-   * @since 1.0.0
+   * @since 26.09.01
    */
   @Audit(
       module = "规则管理",

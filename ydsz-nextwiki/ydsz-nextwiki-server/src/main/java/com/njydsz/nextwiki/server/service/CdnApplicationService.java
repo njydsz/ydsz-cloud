@@ -15,7 +15,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * <p>文件下载/预览走 CDN 边缘节点。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

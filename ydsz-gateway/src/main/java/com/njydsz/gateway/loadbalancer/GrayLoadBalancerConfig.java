@@ -46,7 +46,7 @@ import reactor.core.publisher.Mono;
  *
  * <p><b>降级：</b>健康检查装饰器异常（如探活超时）不影响请求主链路， 仅将该实例标记为不可用；若所有实例均不可用则退化为全量列表（fail-open）。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

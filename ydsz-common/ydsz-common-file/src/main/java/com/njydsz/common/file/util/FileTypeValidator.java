@@ -39,7 +39,7 @@ import com.njydsz.common.file.exception.FileExceptionCode;
  * ydsz.file.check-magic-number=true|false}，默认启用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

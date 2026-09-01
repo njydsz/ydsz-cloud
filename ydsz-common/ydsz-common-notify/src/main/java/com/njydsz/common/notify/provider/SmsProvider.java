@@ -9,7 +9,7 @@ import java.util.Map;
  * <p>抽象短信发送能力，支持阿里云、腾讯云、华为云等多厂商快速接入。 各厂商通过实现此接口并配合 {@code @ConditionalOnProperty} 条件注册。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface SmsProvider {
 

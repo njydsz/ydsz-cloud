@@ -15,7 +15,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>支持多实例部署时断点续传检查点共享。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisCheckpointStore implements CheckpointStore {

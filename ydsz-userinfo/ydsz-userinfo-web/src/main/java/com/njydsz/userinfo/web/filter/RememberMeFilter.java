@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.config.RememberMeProperties;
  * <p><b>兼容性：</b>Remember-Me 功能关闭时直接放行所有请求，不影响现有认证流程。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see RememberMeService Remember-Me 服务
  * @see RememberMeProperties Remember-Me 配置
  */

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  *
  * <p>描述一个审批级别的完整配置，包括审批类型、所需人数、审批角色与指定审批人。 一个 {@link ApprovalFlow} 由多个 ApprovalStep 按级别（level）顺序组成。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Data

@@ -46,7 +46,7 @@ import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
  * <p>该处理器依赖 {@link AuthInfoUtils} 获取当前用户上下文， 需要确保请求链路中已正确设置用户认证信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CreatedByHandler 创建人处理器
  * @see FieldFillConfiguration 字段填充配置
  * @see RequestContext 请求上下文

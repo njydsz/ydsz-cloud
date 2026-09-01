@@ -22,7 +22,7 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
  * <p>自动清理回收站过期条目、搜索索引重建。 使用分布式锁确保多实例部署时同一任务不会被并发执行。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

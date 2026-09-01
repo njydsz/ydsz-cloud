@@ -12,7 +12,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * <p>错误码格式：AUTH-BIZ-xxx，便于日志检索和问题定位。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 public enum AuthErrorCode implements ExceptionCode {

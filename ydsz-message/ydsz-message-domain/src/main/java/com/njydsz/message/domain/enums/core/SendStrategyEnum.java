@@ -16,7 +16,7 @@ package com.njydsz.message.domain.enums.core;
  * <p>默认值：{@link #SYNC}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum SendStrategyEnum {
 

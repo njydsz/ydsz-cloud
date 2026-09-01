@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>不包含 deleted、createdBy 等内部维护字段。 树形结构请使用 {@link MenuTreeVO}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class MenuVO {

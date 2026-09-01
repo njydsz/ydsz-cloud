@@ -6,7 +6,7 @@ package com.njydsz.common.redis.config;
  * <p>业务模块可通过实现此接口，从配置中获取 Redis Key 前缀， 统一管理 Redis Key 命名规范。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface RedisKeyPrefixProvider {
 

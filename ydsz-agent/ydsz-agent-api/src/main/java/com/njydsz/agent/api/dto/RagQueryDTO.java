@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotBlank;
  * <p>封装对 RAG 知识库的检索请求参数， 包括查询文本、返回数量、相似度阈值等。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Schema(description = "RAG 查询请求")
 public class RagQueryDTO implements Serializable {

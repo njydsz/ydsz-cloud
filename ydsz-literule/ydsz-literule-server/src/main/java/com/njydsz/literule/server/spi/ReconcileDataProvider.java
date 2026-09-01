@@ -9,7 +9,7 @@ import java.util.List;
  *
  * <p>由消费方实现，提供 ReconcileHandler 对账检查所需的数据。 literule 模块通过此接口反转 Mapper 依赖。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public interface ReconcileDataProvider {

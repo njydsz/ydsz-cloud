@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * <p>提供移动端特有的健康检查逻辑（如推送通道状态、离线缓存状态等）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class NextwikiAppHealthIndicator implements HealthIndicator {

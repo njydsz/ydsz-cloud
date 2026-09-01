@@ -4,7 +4,7 @@
 
 `ydsz-common-core` 是整个 YDSZ 平台的基石模块，提供最基础且被所有上层模块依赖的核心能力：统一 API 响应封装、业务结果码定义、请求级上下文传播、多协议链路追踪、分页响应封装、全局常量、国际化消息资源与 Spring Boot 自动配置。
 
-**当前版本**：`1.0.0-SNAPSHOT`
+**当前版本**：`26.09.01-SNAPSHOT`
 
 ---
 
@@ -191,12 +191,12 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，注册 springMessageResolver、pageConstantsInitializer |
 | `config` | `CoreProperties` | 配置属性绑定（`@ConfigurationProperties("ydsz.core")`），含 `feature-flags` 映射支持 |
 | `config` | `SpringMessageResolver` | Spring MessageSource 适配器，将 i18n 解析绑定到 YdszResponse |
-| `context` | `BizContextKeys` | 业务级上下文键名常量（认证/租户/列权限/审计/缓存），@since 1.0.0 |
-| `context` | `RequestSnapshot` | HTTP 请求不可变快照（method/URI/headers/traceId），取代直接持有 `HttpServletRequest`，@since 1.0.0 |
-| `model` | `CurrentUser` | 当前用户极简身份契约接口（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 1.0.0 |
-| `feature` | `FeatureFlagService` | 特性开关服务接口（`isEnabled` / `isEnabled(name, default)`），@since 1.0.0 |
-| `feature` | `FeatureFlagContext` | 特性开关静态门面，供非 Spring 注入场景便捷访问，@since 1.0.0 |
-| `feature` | `ConfigDrivenFeatureFlagService` | 基于配置的特性开关实现（`ydsz.core.feature-flags.*`），支持运行期动态刷新，@since 1.0.0 |
+| `context` | `BizContextKeys` | 业务级上下文键名常量（认证/租户/列权限/审计/缓存），@since 26.09.01 |
+| `context` | `RequestSnapshot` | HTTP 请求不可变快照（method/URI/headers/traceId），取代直接持有 `HttpServletRequest`，@since 26.09.01 |
+| `model` | `CurrentUser` | 当前用户极简身份契约接口（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 26.09.01 |
+| `feature` | `FeatureFlagService` | 特性开关服务接口（`isEnabled` / `isEnabled(name, default)`），@since 26.09.01 |
+| `feature` | `FeatureFlagContext` | 特性开关静态门面，供非 Spring 注入场景便捷访问，@since 26.09.01 |
+| `feature` | `ConfigDrivenFeatureFlagService` | 基于配置的特性开关实现（`ydsz.core.feature-flags.*`），支持运行期动态刷新，@since 26.09.01 |
 
 ---
 
@@ -537,7 +537,7 @@ core 模块仅保留两个通用响应消息 key：
 | `core.success` | 操作成功通用消息（`YdszResponse.success()` 默认使用） |
 | `core.error` | 操作失败通用消息（`YdszResponse.error()` 兜底使用） |
 
-> **设计原则**：`error.{ENUM_NAME}`（与 `YdszResultCode` 枚举一一对应）等具体错误码文案已于 1.0.0 移除。各业务模块应在自己的 `i18n/messages.properties` 中维护错误码 key（格式：`{module}.{code}` 或业务自定义 key），不在 core 模块维护。`YdszResultCode` 仅提供协议级码段常量（code + msg），i18n 解析委托给各模块的消息资源。
+> **设计原则**：`error.{ENUM_NAME}`（与 `YdszResultCode` 枚举一一对应）等具体错误码文案已于 26.09.01 移除。各业务模块应在自己的 `i18n/messages.properties` 中维护错误码 key（格式：`{module}.{code}` 或业务自定义 key），不在 core 模块维护。`YdszResultCode` 仅提供协议级码段常量（code + msg），i18n 解析委托给各模块的消息资源。
 
 ---
 
@@ -568,11 +568,11 @@ com.njydsz.common.core.config.CoreAutoConfiguration
 | `ydsz.core.max-page-size` | `Integer` | `1000` | 运行时最大每页记录数（1-5000） |
 | `ydsz.core.default-page-size` | `Integer` | `20` | 运行时默认每页记录数（1-5000） |
 | `ydsz.core.tenant-mdc-filter-order` | `Integer` | `HIGHEST_PRECEDENCE + 100` | 租户 MDC 过滤器优先级 |
-| `ydsz.core.default-locale` | `String` | `zh-CN` | 默认语言环境，用于 i18n 消息解析与 RequestContext 兜底（@since 1.0.0） |
-| `ydsz.core.api-version.default` | `String` | `v1` | 默认 API 版本号（@since 1.0.0） |
-| `ydsz.core.api-version.header` | `String` | `X-Api-Version` | 客户端声明版本的 HTTP 请求头名称（@since 1.0.0） |
-| `ydsz.core.api-version.routes.<version>` | `List<String>` | `[]` | 版本号到 URL 路径模式的路由规则（@since 1.0.0） |
-| `ydsz.core.feature-flags.<name>` | `Boolean` | `true` | 特性开关配置（如 `ydsz.core.feature-flags.user-register-sms`），未配置默认开启（@since 1.0.0） |
+| `ydsz.core.default-locale` | `String` | `zh-CN` | 默认语言环境，用于 i18n 消息解析与 RequestContext 兜底（@since 26.09.01） |
+| `ydsz.core.api-version.default` | `String` | `v1` | 默认 API 版本号（@since 26.09.01） |
+| `ydsz.core.api-version.header` | `String` | `X-Api-Version` | 客户端声明版本的 HTTP 请求头名称（@since 26.09.01） |
+| `ydsz.core.api-version.routes.<version>` | `List<String>` | `[]` | 版本号到 URL 路径模式的路由规则（@since 26.09.01） |
+| `ydsz.core.feature-flags.<name>` | `Boolean` | `true` | 特性开关配置（如 `ydsz.core.feature-flags.user-register-sms`），未配置默认开启（@since 26.09.01） |
 
 ### 配置示例
 
@@ -598,7 +598,7 @@ ydsz:
 <parent>
     <groupId>com.njydsz</groupId>
     <artifactId>ydsz-common</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>26.09.01-SNAPSHOT</version>
 </parent>
 
 <dependencies>
@@ -679,12 +679,12 @@ ydsz:
 
 ## 变更记录
 
-- **1.0.0**（2026-08-17）：
-  - 新增 `CurrentUser` 接口（`model` 包），定义当前用户极简身份契约（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 1.0.0
+- **26.09.01**（2026-08-17）：
+  - 新增 `CurrentUser` 接口（`model` 包），定义当前用户极简身份契约（uniqueId/identityType/dataScope/tenantId/permissionIds），@since 26.09.01
   - 新增特性开关：`FeatureFlagService` 接口 + `FeatureFlagContext` 静态门面 + `ConfigDrivenFeatureFlagService` 配置驱动实现，配置前缀 `ydsz.core.feature-flags.*`
-  - 新增 `RequestSnapshot`（HTTP 请求不可变快照）与 `BizContextKeys`（业务上下文键名常量），@since 1.0.0
+  - 新增 `RequestSnapshot`（HTTP 请求不可变快照）与 `BizContextKeys`（业务上下文键名常量），@since 26.09.01
   - `CoreProperties` 新增 `feature-flags` 映射支持
-- **1.0.0**（2026-08-10）：
+- **26.09.01**（2026-08-10）：
   - `ResultCode` 接口新增 `getModule()` default（返回 "core"），`getKey()` default 改为 `getModule() + "." + getCode()`，业务枚举可覆盖 `getModule()` 获得模块感知的 i18n key 前缀
   - `YdszResultCode` 移除 `httpStatus` 字段及 getter，构造函数退化为 `(code, msg)` 二元组
   - core i18n messages 精简为 `core.success` / `core.error` 两个通用协议级 key，移除全部 `error.{ENUM_NAME}` 错误码消息

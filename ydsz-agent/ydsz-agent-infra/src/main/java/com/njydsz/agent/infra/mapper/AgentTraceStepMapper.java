@@ -11,7 +11,7 @@ import com.njydsz.agent.infra.entity.AgentTraceStep;
  * <p>映射 {@code ydsz_agt_trace_step} 表，存储 Agent 执行过程中每一步的明细。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface AgentTraceStepMapper extends BaseMapper<AgentTraceStep> {}

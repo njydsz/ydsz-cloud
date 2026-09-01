@@ -40,7 +40,7 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
  * <p>扫描周期可通过 {@code ydsz.cronjob.dag-scan.interval-ms} 调整（默认 5000ms）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

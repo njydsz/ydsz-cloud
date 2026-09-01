@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用户通过手机号 + 验证码验证身份后，设置新密码。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ForgotPasswordDTO implements Serializable {

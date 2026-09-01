@@ -21,13 +21,13 @@ import java.lang.annotation.Target;
  *     @GetMapping
  *     @ApiVersion("1.0")
  *     public Result<UserVO> getUserV1() {
- *         // 1.0.0 实现
+ *         // 26.09.01 实现
  *     }
  *
  *     @GetMapping
  *     @ApiVersion("2.0")
  *     public Result<UserVO> getUserV2() {
- *         // 1.0.0 实现
+ *         // 26.09.01 实现
  *     }
  * }
  * }</pre>
@@ -40,7 +40,7 @@ import java.lang.annotation.Target;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

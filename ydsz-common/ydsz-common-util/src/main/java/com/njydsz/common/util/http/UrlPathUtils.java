@@ -19,7 +19,7 @@ import org.springframework.util.AntPathMatcher;
  *   <li>{@code /login} — 精确匹配
  * </ul>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 public final class UrlPathUtils {

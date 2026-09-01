@@ -55,7 +55,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  *
  * <p>当 JWT Bearer Token 认证失败时，此过滤器提供备选认证方式。 两者互补：内部用户用 JWT，外部系统用 API Key。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

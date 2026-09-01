@@ -28,7 +28,7 @@ import com.njydsz.common.docs.parser.DocumentParser;
  * <p>解析 Markdown 文件，提取标题层级、段落、列表等结构化内容。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

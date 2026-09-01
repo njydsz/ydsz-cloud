@@ -11,7 +11,7 @@ import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
  * <p>封装 JobDagNodeInstance 数据访问细节，server 层通过本接口访问，不直接依赖 Mapper 或 Entity。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface DagNodeInstanceRepository {
 

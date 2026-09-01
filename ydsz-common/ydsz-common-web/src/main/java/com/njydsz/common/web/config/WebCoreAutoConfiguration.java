@@ -19,7 +19,7 @@ import com.njydsz.common.web.filter.TenantMdcFilter;
  * <p>注册 Servlet Filter 和过滤器配置属性绑定，这些不属于 L1 基础设施层。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnWebApplication

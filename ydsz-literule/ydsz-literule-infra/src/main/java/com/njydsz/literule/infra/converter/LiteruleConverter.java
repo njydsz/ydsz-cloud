@@ -47,8 +47,8 @@ import com.njydsz.literule.infra.entity.RuleVersionHistory;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0 重构为门面模式，委托给子转换器
+ * @since 26.09.01
+ * @since 26.09.01 重构为门面模式，委托给子转换器
  */
 public class LiteruleConverter {
 

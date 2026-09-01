@@ -6,7 +6,7 @@ package com.njydsz.literule.domain.vo;
  * <p>将规则执行统计从引擎内部解耦，使编排层（{@code RuleChain}） 也能将执行结果统一记录到引擎统计中，消除编排层与引擎层统计割裂问题。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @FunctionalInterface
 public interface StatsRecorderVO {

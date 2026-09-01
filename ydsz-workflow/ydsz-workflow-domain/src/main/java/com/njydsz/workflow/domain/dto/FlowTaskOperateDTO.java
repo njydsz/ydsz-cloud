@@ -17,7 +17,7 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
  * 自建工作流引擎 - 任务操作 DTO
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class FlowTaskOperateDTO implements Serializable {

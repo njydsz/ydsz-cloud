@@ -19,7 +19,7 @@ import com.njydsz.agent.domain.model.ToolDefinition;
  * ConcurrentHashMap），避免并发注册导致工具定义竞态。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface ToolRegistry {
 

@@ -32,7 +32,7 @@ import com.njydsz.agent.domain.trigger.TriggerType;
  * <p>借鉴 MateClaw 的 Triggers 系统设计，确保事件驱动架构的健壮性。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class TriggerEvaluationService {

@@ -21,7 +21,7 @@ import java.util.Map;
  * @param activeUserCount 当前活跃用户数（去重）
  * @param sessionsPerDevice 分端会话统计
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public record UserSessionStatisticsVO(
     int totalActiveSessions,

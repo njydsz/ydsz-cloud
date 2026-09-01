@@ -25,7 +25,7 @@ import com.njydsz.common.cache.spring.YdszCacheProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.common.cache.spring.YdszCacheProperties
  */
 @Configuration

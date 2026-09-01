@@ -31,7 +31,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
  * Exception.class)}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see MsgTemplateVO 模板实体
  * @see com.njydsz.message.server.service.TemplateVersionService 模板版本 Service
  */

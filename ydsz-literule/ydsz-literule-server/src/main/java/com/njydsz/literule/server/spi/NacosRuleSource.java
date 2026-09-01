@@ -27,7 +27,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * <p>依赖：需在 classpath 中引入 {@code com.alibaba.nacos:nacos-client}。 当 Nacos 客户端不在 classpath 中时，{@link
  * #isAvailable()} 返回 false，不参与数据源选择。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

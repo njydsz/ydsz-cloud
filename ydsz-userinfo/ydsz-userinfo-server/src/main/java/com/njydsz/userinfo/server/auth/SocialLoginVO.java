@@ -9,7 +9,7 @@ import lombok.Data;
  * 专用于社交登录场景，额外携带来源平台信息。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class SocialLoginVO {

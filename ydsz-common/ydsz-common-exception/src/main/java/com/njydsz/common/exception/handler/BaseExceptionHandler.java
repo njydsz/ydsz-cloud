@@ -45,7 +45,7 @@ import com.njydsz.common.exception.util.ExceptionDesensitizer;
  * 输出格式切换、统一指标记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see BusinessException
  * @see YdszResponse
  * @see ProblemDetail

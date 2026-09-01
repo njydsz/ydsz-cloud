@@ -23,7 +23,7 @@ import com.njydsz.literule.domain.enums.RuleStatusEnum;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter
@@ -92,7 +92,7 @@ public class RuleDefinitionDTO extends MpBaseEntity<String> {
   /**
    * 互斥组名称（同组内首个命中后跳过其余规则；null 表示无互斥组）
    *
-   * @since 1.0.0
+   * @since 26.09.01
    */
   private String mutexGroup;
 

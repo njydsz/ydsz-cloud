@@ -20,7 +20,7 @@ package com.njydsz.common.safe.encrypt;
  * EncryptTypeHandler#looksLikeCiphertext(String)} 自动识别密文格式，而不是无差别地返回原值。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum DecryptFailureStrategy {
 

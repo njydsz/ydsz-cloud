@@ -39,7 +39,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
  * 由 Resilience4j 提供滑动窗口统计、状态自动流转、半开探测与事件总线能力。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class CircuitBreaker {

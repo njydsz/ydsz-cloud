@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于前端展示一次规则集（知识包）安装的整体结果， 包含成功/失败计数及失败的规则编码，便于定位安装异常。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class InstallResultVO {

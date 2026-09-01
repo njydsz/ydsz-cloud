@@ -5,7 +5,7 @@ package com.njydsz.common.exception.enums;
  *
  * <p>用于标识异常所属的分类，便于异常统计和分类处理。 监控系统可基于此维度对异常进行分类统计、聚类分析。
  *
- * <p><b>5 大分类（自 1.0.0 起）：</b>
+ * <p><b>5 大分类（自 26.09.01 起）：</b>
  *
  * <ul>
  *   <li>{@link #BUSINESS} (A) - 业务逻辑校验失败、业务流程中断，对应 HTTP 4xx
@@ -19,7 +19,7 @@ package com.njydsz.common.exception.enums;
  * 实现细粒度归类，无需额外枚举值。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see ExceptionLevel
  */
 public enum ExceptionCategory {

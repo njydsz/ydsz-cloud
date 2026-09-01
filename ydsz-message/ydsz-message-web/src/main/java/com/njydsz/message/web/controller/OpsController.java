@@ -37,7 +37,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
  * <p><b>安全要求：</b>所有接口均需高权限认证（{@code MESSAGE_LOG_VIEW} 或 {@code MESSAGE_TEMPLATE_EDIT}），防止越权操作。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see CachedTemplateEngine 模板引擎缓存
  * @see BloomFilterDeduplicator 消息去重过滤器
  */

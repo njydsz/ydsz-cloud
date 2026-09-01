@@ -8,7 +8,7 @@ import lombok.Data;
  * <p>由 {@code UserInfoConverter.entityToVO()} 从 {@code Role} 实体转换而来。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class RoleVO {

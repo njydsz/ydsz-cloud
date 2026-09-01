@@ -44,7 +44,7 @@ import com.njydsz.common.netty.server.NettyServerLifecycle;
  * 注入到所有 {@link AbstractNettyServer} 和 {@link AbstractNettyClient} Bean 中，业务方无需手动处理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @AutoConfiguration

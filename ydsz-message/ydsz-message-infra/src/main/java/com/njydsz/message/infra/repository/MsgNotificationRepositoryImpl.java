@@ -24,7 +24,7 @@ import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
  * <p>实现 {@link MsgNotificationRepository} 接口，封装 MsgNotificationMapper 数据访问细节。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

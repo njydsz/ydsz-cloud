@@ -12,7 +12,7 @@ import java.util.Objects;
  * <p><b>线程安全</b>：字段 final 且停止词列表不可变，构造后只读，可安全被多个 LLM 调用线程并发读取。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class LlmModelConfig implements Serializable {
 

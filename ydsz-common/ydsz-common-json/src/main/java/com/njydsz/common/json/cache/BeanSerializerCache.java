@@ -31,7 +31,7 @@ import com.njydsz.common.json.writer.BeanSerializer;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class BeanSerializerCache {
 
@@ -84,7 +84,7 @@ public final class BeanSerializerCache {
    * @param clazz Bean 类
    * @param strategy 命名策略
    * @return 已缓存的 BeanSerializer，或 null 如果尚未缓存
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static BeanSerializer get(Class<?> clazz, PropertyNamingStrategy strategy) {
     ConcurrentMap<PropertyNamingStrategy, BeanSerializer> strategyMap = CACHE.get(clazz);

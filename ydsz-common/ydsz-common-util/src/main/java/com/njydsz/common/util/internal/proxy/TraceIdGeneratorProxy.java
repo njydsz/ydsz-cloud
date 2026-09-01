@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
    * <p>当 ydsz-common-core 不在 classpath 时，降级为基于共享 SecureRandom 的内置实现 （TraceId 带时间戳前缀，保持时间有序语义）。
    *
    * @author ydsz-team
-   * @since 1.0.0
+   * @since 26.09.01
    */
 public final class TraceIdGeneratorProxy {
 

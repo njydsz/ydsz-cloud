@@ -26,7 +26,7 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
  * 创建时 {@code id} 不传，更新时传入 {@code id}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface AgentDefinitionRepository {
 

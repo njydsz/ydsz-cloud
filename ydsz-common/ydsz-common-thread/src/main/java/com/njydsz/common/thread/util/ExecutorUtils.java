@@ -55,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
  * </table>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
   // CHECKSTYLE.ON: LineLength
 @Slf4j
@@ -411,7 +411,7 @@ public final class ExecutorUtils {
    *
    * @param executor 原始线程池
    * @return TTL 透传包装的线程池；若 TTL 库不可用则返回原始线程池
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static ExecutorService toTtlThreadPool(ExecutorService executor) {
     if (executor == null) {
@@ -430,7 +430,7 @@ public final class ExecutorUtils {
    *
    * @param nThreads 线程数
    * @return TTL 包装的固定线程池
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static ExecutorService newTtlFixedThreadPool(int nThreads) {
     return toTtlThreadPool(newFixedThreadPool(nThreads));
@@ -442,7 +442,7 @@ public final class ExecutorUtils {
    * @param nThreads 线程数
    * @param threadNamePrefix 线程名前缀
    * @return TTL 包装的固定线程池
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static ExecutorService newTtlFixedThreadPool(int nThreads, String threadNamePrefix) {
     return toTtlThreadPool(newFixedThreadPool(nThreads, threadNamePrefix));
@@ -455,7 +455,7 @@ public final class ExecutorUtils {
    *
    * @param runnable 原始 Runnable
    * @return TTL 包装的 Runnable；若 TTL 库不可用则返回原始 Runnable
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static Runnable toTtlRunnable(Runnable runnable) {
     if (runnable == null) {
@@ -474,7 +474,7 @@ public final class ExecutorUtils {
    * @param callable 原始 Callable
    * @param <T> 返回类型
    * @return TTL 包装的 Callable；若 TTL 库不可用则返回原始 Callable
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static <T> Callable<T> toTtlCallable(Callable<T> callable) {
     if (callable == null) {

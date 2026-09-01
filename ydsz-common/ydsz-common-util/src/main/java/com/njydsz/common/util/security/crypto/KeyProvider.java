@@ -31,7 +31,7 @@ package com.njydsz.common.util.security.crypto;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see KeyProviderRegistry
  */
 @FunctionalInterface

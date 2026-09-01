@@ -19,7 +19,7 @@ import com.njydsz.agent.domain.runtime.RuntimeSessionStore;
  * 生产环境建议替换为 Redis 实现以支持集群部署。</p>
  *
  * @author ydsz-agent
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Component
 public class InMemoryRuntimeSessionStore implements RuntimeSessionStore {

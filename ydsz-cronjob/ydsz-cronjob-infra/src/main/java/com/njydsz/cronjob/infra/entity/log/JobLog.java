@@ -23,7 +23,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * #handlerEndTime}），支持全链路执行耗时分解分析。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Getter
 @Setter

@@ -10,7 +10,7 @@ package com.njydsz.common.base.constant;
  * <p><b>线程安全性：</b>所有字段均为 {@code public static final}，线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class HttpHeaderConstants {
 

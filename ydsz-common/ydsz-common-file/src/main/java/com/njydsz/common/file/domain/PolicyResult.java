@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>封装服务端生成的直传凭证，前端可直接使用该凭证上传文件到云存储。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

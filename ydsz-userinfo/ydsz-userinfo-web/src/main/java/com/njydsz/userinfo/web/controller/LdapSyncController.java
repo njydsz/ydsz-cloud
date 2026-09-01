@@ -29,7 +29,7 @@ import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
  * <p><b>启用条件：</b>{@code ydsz.userinfo.ldap.sync.enabled=true}。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @RestController

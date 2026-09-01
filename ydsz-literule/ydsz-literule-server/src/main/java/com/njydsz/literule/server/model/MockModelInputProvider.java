@@ -17,7 +17,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  * <p>输出 key 无需带 "model." 前缀，由 {@link ModelInputRegistry#collectAllModelOutputs} 统一添加。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class MockModelInputProvider extends AbstractModelInputProvider {

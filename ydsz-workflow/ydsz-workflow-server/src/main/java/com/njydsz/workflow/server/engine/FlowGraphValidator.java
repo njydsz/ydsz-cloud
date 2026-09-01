@@ -33,7 +33,7 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
  *
  * <p>注意：BPMN 中的循环（rework loop）是合法的，本校验器不拒绝环， 仅在日志中记录检测到的环路。
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j

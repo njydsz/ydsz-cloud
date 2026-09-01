@@ -22,7 +22,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
  * 配置开关。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Service

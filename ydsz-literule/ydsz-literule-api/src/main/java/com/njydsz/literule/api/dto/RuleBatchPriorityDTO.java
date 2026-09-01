@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/batch-priority} 接口，批量调整规则优先级。 {@code delta} 为增量（可为负），最终优先级钳制在 0-100 范围。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 @Schema(description = "规则批量优先级调整请求体")

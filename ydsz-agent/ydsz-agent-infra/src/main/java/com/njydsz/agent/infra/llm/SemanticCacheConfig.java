@@ -9,7 +9,7 @@ package com.njydsz.agent.infra.llm;
  * {@link SemanticLlmCache} 类注释），未启用语义相似度匹配。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public final class SemanticCacheConfig {
 

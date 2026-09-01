@@ -378,7 +378,7 @@ mvn spring-boot:run
 
 ### Q5：收藏夹 / 最近访问端点返回 404
 
-`UserFavoriteController` 与 `UserRecentController` 从 1.0.0 起独立部署，需确认 nextwiki 服务版本 >= 1.1.0。收藏排序更新使用 `POST /favorites/{nodeId}/sort`（非 PUT），注意 HTTP 方法。
+`UserFavoriteController` 与 `UserRecentController` 从 26.09.01 起独立部署，需确认 nextwiki 服务版本 >= 1.1.0。收藏排序更新使用 `POST /favorites/{nodeId}/sort`（非 PUT），注意 HTTP 方法。
 
 ### Q6：批量下载/移动任务状态查询
 

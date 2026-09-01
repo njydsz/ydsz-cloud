@@ -13,7 +13,7 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
  * <p>由 {@code UserInfoConverter.entityToVO()} 从 {@code UserAccount} 实体转换而来， 供前端展示和跨模块查询使用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class UserAccountVO {

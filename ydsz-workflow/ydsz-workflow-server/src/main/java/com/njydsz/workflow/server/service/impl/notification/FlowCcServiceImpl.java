@@ -58,7 +58,7 @@ import com.njydsz.workflow.server.service.FlowCcService;
  * 继续推进。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see FlowCcService 接口定义
  * @see FlowCcVO 抄送值对象
  * @see FlowAssigneeResolver 审批人解析器（{@code role:/dept:} 展开）
@@ -386,9 +386,9 @@ public class FlowCcServiceImpl implements FlowCcService {
 
   /**
    * 展开单个权限标识 token 为用户 ID 列表
-   * 
+   *
    * <p>支持的格式：
-   * 
+   *
    * <ul>
    * <li>user:1001 → 直接取 1001
    * <li>role:hr / dept:10 / position:PM / leader:1001 → 通过 assigneeResolver.expandUsers() 展开

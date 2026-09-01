@@ -183,7 +183,7 @@ COMMENT ON COLUMN ydsz_flow_template.use_count IS '使用次数（被导入到�
 COMMENT ON COLUMN ydsz_flow_template.sort_order IS '排序权重（越大越靠前，模板市场首页展示用）';
 COMMENT ON COLUMN ydsz_flow_template.parent_template_id IS '父模板 ID（跨模板继承关系，STANDALONE 时为 NULL）';
 COMMENT ON COLUMN ydsz_flow_template.version IS '模板版本号（从 1 开始单调递增，同一 templateCode 下唯一）';
-COMMENT ON COLUMN ydsz_flow_template.version_label IS '版本标签（如 1.0.0 / 1.0.0-rc1，可选可读标识）';
+COMMENT ON COLUMN ydsz_flow_template.version_label IS '版本标签（如 26.09.01 / 26.09.01-rc1，可选可读标识）';
 COMMENT ON COLUMN ydsz_flow_template.inherit_type IS '继承类型（STANDALONE=独立，CLONE=克隆，INHERIT=继承）';
 COMMENT ON COLUMN ydsz_flow_template.is_latest IS '是否当前 templateCode 下最新版本（0=否，1=是）';
 COMMENT ON COLUMN ydsz_flow_template.status IS '状态标识';

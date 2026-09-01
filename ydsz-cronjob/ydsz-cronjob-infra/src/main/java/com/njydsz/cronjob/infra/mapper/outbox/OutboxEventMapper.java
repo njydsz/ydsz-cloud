@@ -15,7 +15,7 @@ import com.njydsz.cronjob.infra.entity.OutboxEvent;
  * <p>提供待发布事件的查询、状态更新等操作。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface OutboxEventMapper extends BaseMapper<OutboxEvent> {

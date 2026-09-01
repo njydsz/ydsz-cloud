@@ -14,7 +14,7 @@ import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
  * 中存在但 ExcelProperties 未声明，配置了不生效。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @ConfigurationProperties(prefix = "ydsz.excel")
 public class ExcelProperties {

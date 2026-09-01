@@ -71,7 +71,7 @@ import com.njydsz.nextwiki.infra.entity.UserRecent;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Mapper
 public interface NextwikiConverter {

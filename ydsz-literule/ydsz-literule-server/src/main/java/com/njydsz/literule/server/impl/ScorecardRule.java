@@ -49,7 +49,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *     .build();
  * </pre>
  *
- * @since 1.0.0
+ * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
@@ -119,7 +119,7 @@ public class ScorecardRule implements Rule {
    * @param def 评分卡定义
    * @param evaluator 表达式求值器
    * @return ScorecardRule 实例
-   * @since 1.0.0
+   * @since 26.09.01
    */
   public static ScorecardRule from(ScorecardDefinitionDTO def, ExpressionEngine evaluator) {
     ScorecardRuleBuilder b =

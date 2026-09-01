@@ -6,7 +6,7 @@ package com.njydsz.common.redis.enums;
  * <p>当 {@link FailOpenPolicy#FAIL_THROW} 策略生效时，Redis 操作失败会抛出此异常。 封装了操作的 key、操作名称和原始异常，便于上层统一处理。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class RedisOperationException extends RuntimeException {
 

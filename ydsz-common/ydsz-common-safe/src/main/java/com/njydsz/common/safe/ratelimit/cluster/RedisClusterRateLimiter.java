@@ -32,7 +32,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  * 配置决定：PASS（放行，默认）/ BLOCK（拒绝）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 public class RedisClusterRateLimiter implements ClusterRateLimiter {

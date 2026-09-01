@@ -8,7 +8,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * 服务商回执回调 DTO
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Data
 public class ReceiptCallbackDTO {

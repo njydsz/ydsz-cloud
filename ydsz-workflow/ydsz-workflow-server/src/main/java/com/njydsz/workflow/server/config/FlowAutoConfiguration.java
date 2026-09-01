@@ -32,7 +32,7 @@ import com.njydsz.workflow.server.service.impl.integration.NameServiceClientAdap
  * 装配入口，与项目其他模块保持一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnProperty(

@@ -16,7 +16,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * <p><b>P1-2 架构优化</b>：继承 {@link SentryMetricsAdapter}，消除重复的 Counter/Timer 缓存和降级模式代码。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @Slf4j
 @Component

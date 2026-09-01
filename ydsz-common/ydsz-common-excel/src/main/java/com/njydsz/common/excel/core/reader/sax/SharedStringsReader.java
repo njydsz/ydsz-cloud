@@ -35,7 +35,7 @@ import java.util.Map;
  * 与 POI SharedStringsTable 的 phonetic 语义一致（取 t 文本、忽略注音）。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class SharedStringsReader {
   /** LRU缓存容量 */

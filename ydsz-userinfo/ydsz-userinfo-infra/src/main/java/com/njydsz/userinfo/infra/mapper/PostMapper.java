@@ -25,7 +25,7 @@ import com.njydsz.userinfo.infra.entity.Post;
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.userinfo.infra.entity.Post 岗位实体
  * @see com.njydsz.userinfo.infra.mapper.UserPostMapper 用户-岗位关联 Mapper
  */

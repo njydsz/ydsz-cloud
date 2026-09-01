@@ -37,7 +37,7 @@ import com.njydsz.common.json.util.JsonTypeUtils;
  * <p>列表场景通过预估容量和跳过异常元素保证吞吐量。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see BeanReader
  * @see CreatorResolver
  * @see BuilderResolver

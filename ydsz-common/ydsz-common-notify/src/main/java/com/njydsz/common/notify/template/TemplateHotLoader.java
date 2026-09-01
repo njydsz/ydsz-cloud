@@ -10,7 +10,7 @@ import java.util.List;
  * <p>此为骨架接口，提供 {@link FileTemplateHotLoader} 文件实现示例。 生产环境可替换为基于 Redis 或数据库的实现。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public interface TemplateHotLoader {
 

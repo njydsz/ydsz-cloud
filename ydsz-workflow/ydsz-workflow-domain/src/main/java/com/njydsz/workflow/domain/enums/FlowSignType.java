@@ -10,7 +10,7 @@ package com.njydsz.workflow.domain.enums;
  * 作为列值，与 DB 默认值保持一致。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public enum FlowSignType {
 

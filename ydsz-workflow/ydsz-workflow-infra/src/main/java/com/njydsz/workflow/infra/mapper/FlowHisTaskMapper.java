@@ -30,7 +30,7 @@ import com.njydsz.workflow.infra.entity.FlowHisTask;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  * @see com.njydsz.workflow.infra.entity.FlowHisTask 历史任务实体
  * @see com.njydsz.workflow.server.service.FlowTaskHistoryService 已办 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -50,7 +50,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
 
   /**
    * 查用户已办（历史，真分页：LIMIT/OFFSET）
-   * 
+   *
    *
    * @param assigneeId 办理人用户 ID
    * @param tenantId 租户 ID
@@ -94,7 +94,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
 
   /**
    * P2-33: 多维筛选已办分页查询（真分页：LIMIT/OFFSET）
-   * 
+   *
    *
    * @param assigneeId 办理人用户 ID
    * @param businessType 业务类型过滤（可空）

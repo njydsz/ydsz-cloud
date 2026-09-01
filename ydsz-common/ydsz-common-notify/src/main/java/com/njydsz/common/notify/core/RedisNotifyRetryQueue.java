@@ -19,7 +19,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>支持多实例部署时重试数据共享，服务重启后数据不丢失。 使用 ZSET 按重试时间排序，Hash 存储消息详情。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 public class RedisNotifyRetryQueue implements NotifyRetryQueue {
 
