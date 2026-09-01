@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonSerialize;
+import com.njydsz.common.json.annotation.JsonTypeInfo;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
@@ -1157,6 +1158,14 @@ public final class SerializationProvider {
     JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
     if (classAnnotation != null) {
       return false;
+    }
+
+    // P1 能力补齐：@JsonTypeInfo 多态类型必须走 ValueWriter 注解路径（输出类型标识），
+    // 此处检查自身与父类层级（注解通常声明在基类上）
+    for (Class<?> c = clazz; c != null && c != Object.class; c = c.getSuperclass()) {
+      if (c.isAnnotationPresent(com.njydsz.common.json.annotation.JsonTypeInfo.class)) {
+        return false;
+      }
     }
 
     // 检查是否有视图过滤

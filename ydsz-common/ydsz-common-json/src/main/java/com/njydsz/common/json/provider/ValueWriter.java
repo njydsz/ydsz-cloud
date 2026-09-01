@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.json.annotation.JsonTypeInfo;
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
@@ -646,8 +647,14 @@ public final class ValueWriter {
 
     boolean hasFieldAnnotations = FieldMetadataLoader.hasFieldAnnotations(fields);
 
+    // P1 能力补齐：@JsonTypeInfo 多态类型必须走注解路径（输出类型标识），
+    // 否则无字段注解的多态 Bean 会被无注解快速路径绕过
+    boolean polymorphic =
+        clazz.getAnnotation(JsonTypeInfo.class) != null
+            || PolymorphicTypeResolver.resolveTypeId(clazz) != null;
+
     // 如果没有注解，使用优化方式
-    if (classAnnotation == null && !hasFieldAnnotations) {
+    if (classAnnotation == null && !hasFieldAnnotations && !polymorphic) {
       writeBeanNoAnnotationOptimized(obj, sb, clazz, fields);
       return;
     }

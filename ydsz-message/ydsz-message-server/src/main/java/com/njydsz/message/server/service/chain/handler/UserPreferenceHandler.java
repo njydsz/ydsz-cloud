@@ -227,6 +227,8 @@ public class UserPreferenceHandler implements SendHandler {
    *
    * @param request 消息发送请求
    * @return 优先级字符串（如 NORMAL、URGENT）
+   */
+  private String parsePriority(MessageRequest request) {
     return request.getPriority() != null ? request.getPriority() : "NORMAL";
   }
 }
