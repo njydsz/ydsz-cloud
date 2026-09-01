@@ -7,8 +7,7 @@
  *
  * <p>核心能力分层：</p>
  * <ul>
- *   <li>规则评估：{@code DefaultRuleEngine} 提供统一评估入口；{@code ParallelRuleEvaluator} 支持并行评估；
- *       {@code ShardAwareRuleEngine} 实现分片感知的分布式评估</li>
+ *   <li>规则评估：{@code DefaultRuleEngine} 提供统一评估入口；{@code ParallelRuleEvaluator} 支持并行评估</li>
  *   <li>生命周期管理：{@code RuleLifecycleService} 覆盖规则的创建、发布、下线、归档全流程，
  *       集成 {@code RuleApprovalWorkflowBridge} 审批工作流</li>
  *   <li>DSL 解析：{@code RuleDslParser} 解析规则 DSL 为内部模型，{@code RuleDslConverter} 支持多格式转换导出</li>
@@ -25,7 +24,6 @@
  *   <li>{@code RuleLifecycleService} -- 规则生命周期服务，驱动状态流转</li>
  *   <li>{@code RuleDslParser} -- 规则 DSL 解析器</li>
  *   <li>{@code RuleChain} / {@code RuleChainGraph} -- 规则链与图执行模型</li>
- *   <li>{@code ShardAwareRuleEngine} -- 分片感知的分布式规则引擎（@Deprecated，计划移除）</li>
  *   <li>{@code CEPEngine} -- 复杂事件处理引擎</li>
  *   <li>{@code RuleHotReloader} -- 规则热加载器，监听配置变更事件触发即时生效</li>
  *   <li>{@code LiteRuleSdk} / {@code LiteRuleSdkBuilder} -- SDK 入口，便于第三方接入</li>

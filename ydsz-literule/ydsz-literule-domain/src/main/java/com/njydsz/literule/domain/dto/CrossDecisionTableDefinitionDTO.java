@@ -73,7 +73,7 @@ import com.njydsz.literule.domain.Rule;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CrossDecisionTableDefinitionDTODTO implements Serializable {
+public class CrossDecisionTableDefinitionDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

@@ -34,7 +34,7 @@ import com.njydsz.literule.domain.Rule;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScriptDefinitionDTODTO implements Serializable {
+public class ScriptDefinitionDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

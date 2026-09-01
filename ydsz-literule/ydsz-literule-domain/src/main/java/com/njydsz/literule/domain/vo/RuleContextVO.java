@@ -27,7 +27,7 @@ import com.njydsz.literule.domain.enums.RuleEnvironment;
  * @author ydsz-team
  * @since 1.0.0
  */
-public final class RuleContextVOVO implements Serializable {
+public final class RuleContextVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

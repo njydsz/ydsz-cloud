@@ -47,7 +47,7 @@ import com.njydsz.literule.domain.enums.HitPolicy;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DecisionTableDefinitionDTODTO implements Serializable {
+public class DecisionTableDefinitionDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

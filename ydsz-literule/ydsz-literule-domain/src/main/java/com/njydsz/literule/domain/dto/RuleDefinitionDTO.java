@@ -25,7 +25,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RuleDefinitionDTODTO implements Serializable {
+public class RuleDefinitionDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

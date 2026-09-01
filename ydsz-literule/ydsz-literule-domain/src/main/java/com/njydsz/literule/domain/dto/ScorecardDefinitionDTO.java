@@ -67,7 +67,7 @@ import com.njydsz.literule.domain.Rule;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScorecardDefinitionDTODTO implements Serializable {
+public class ScorecardDefinitionDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

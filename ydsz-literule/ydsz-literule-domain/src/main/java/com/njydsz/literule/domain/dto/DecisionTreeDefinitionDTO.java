@@ -57,7 +57,7 @@ import com.njydsz.literule.domain.Rule;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DecisionTreeDefinitionDTODTO implements Serializable {
+public class DecisionTreeDefinitionDTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
