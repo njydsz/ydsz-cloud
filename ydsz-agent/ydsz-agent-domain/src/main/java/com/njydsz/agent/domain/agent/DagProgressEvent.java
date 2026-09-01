@@ -64,6 +64,17 @@ public final class DagProgressEvent implements Serializable {
   /** 事件时间 */
   private final LocalDateTime timestamp;
 
+  /**
+   * 全参构造。
+   *
+   * @param eventType 事件类型
+   * @param nodeId 节点 ID（编排级事件可为 null）
+   * @param nodeType 节点类型（CHAT / REACT / RAG 等）
+   * @param completedCount 已完成的节点计数
+   * @param totalCount 总节点计数
+   * @param error 错误信息（仅 NODE_FAILED）
+   * @param timestamp 事件时间（null 时取当前时间）
+   */
   public DagProgressEvent(
       String eventType,
       String nodeId,
@@ -81,55 +92,127 @@ public final class DagProgressEvent implements Serializable {
     this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
   }
 
-  /** 便捷工厂：创建编排启动事件 */
+  /**
+   * 便捷工厂：创建编排启动事件。
+   *
+   * @param executionId 执行 ID
+   * @param totalCount 总节点计数
+   * @return 编排启动事件
+   */
   public static DagProgressEvent dagStarted(String executionId, int totalCount) {
     return new DagProgressEvent(DAG_STARTED, executionId, null, 0, totalCount, null, LocalDateTime.now());
   }
 
-  /** 便捷工厂：创建编排完成事件 */
+  /**
+   * 便捷工厂：创建编排完成事件。
+   *
+   * @param executionId 执行 ID
+   * @param totalCount 总节点计数
+   * @return 编排完成事件
+   */
   public static DagProgressEvent dagCompleted(String executionId, int totalCount) {
     return new DagProgressEvent(DAG_COMPLETED, executionId, null, totalCount, totalCount, null, LocalDateTime.now());
   }
 
-  /** 便捷工厂：创建节点启动事件 */
+  /**
+   * 便捷工厂：创建节点启动事件。
+   *
+   * @param nodeId 节点 ID
+   * @param nodeType 节点类型
+   * @param completed 已完成的节点计数
+   * @param total 总节点计数
+   * @return 节点启动事件
+   */
   public static DagProgressEvent nodeStarted(String nodeId, String nodeType, int completed, int total) {
     return new DagProgressEvent(NODE_STARTED, nodeId, nodeType, completed, total, null, LocalDateTime.now());
   }
 
-  /** 便捷工厂：创建节点完成事件 */
+  /**
+   * 便捷工厂：创建节点完成事件。
+   *
+   * @param nodeId 节点 ID
+   * @param nodeType 节点类型
+   * @param completed 已完成的节点计数
+   * @param total 总节点计数
+   * @return 节点完成事件
+   */
   public static DagProgressEvent nodeCompleted(String nodeId, String nodeType, int completed, int total) {
     return new DagProgressEvent(NODE_COMPLETED, nodeId, nodeType, completed, total, null, LocalDateTime.now());
   }
 
-  /** 便捷工厂：创建节点失败事件 */
+  /**
+   * 便捷工厂：创建节点失败事件。
+   *
+   * @param nodeId 节点 ID
+   * @param nodeType 节点类型
+   * @param completed 已完成的节点计数
+   * @param total 总节点计数
+   * @param error 错误信息
+   * @return 节点失败事件
+   */
   public static DagProgressEvent nodeFailed(String nodeId, String nodeType, int completed, int total, String error) {
     return new DagProgressEvent(NODE_FAILED, nodeId, nodeType, completed, total, error, LocalDateTime.now());
   }
 
+  /**
+   * 获取事件类型。
+   *
+   * @return 事件类型
+   */
   public String getEventType() {
     return eventType;
   }
 
+  /**
+   * 获取节点 ID。
+   *
+   * @return 节点 ID（编排级事件为 null）
+   */
   public String getNodeId() {
     return nodeId;
   }
 
+  /**
+   * 获取节点类型。
+   *
+   * @return 节点类型（CHAT / REACT / RAG 等）
+   */
   public String getNodeType() {
     return nodeType;
   }
 
+  /**
+   * 获取已完成节点计数。
+   *
+   * @return 已完成的节点计数
+   */
   public int getCompletedCount() {
     return completedCount;
   }
 
+  /**
+   * 获取总节点计数。
+   *
+   * @return 总节点计数
+   */
   public int getTotalCount() {
     return totalCount;
   }
 
+  /**
+   * 获取错误信息。
+   *
+   * @return 错误信息（仅 NODE_FAILED，其余为 null）
+   */
   public String getError() {
     return error;
   }
 
+  /**
+   * 获取事件时间。
+   *
+   * @return 事件时间
+   */
   public LocalDateTime getTimestamp() {
     return timestamp;
   }
