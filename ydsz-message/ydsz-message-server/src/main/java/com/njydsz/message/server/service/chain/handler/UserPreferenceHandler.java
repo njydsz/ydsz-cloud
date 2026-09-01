@@ -86,7 +86,7 @@ public class UserPreferenceHandler implements SendHandler {
     if (pref == null || !Integer.valueOf(1).equals(pref.getDndEnabled())) {
       return true;
     }
-    if (!isInDndPeriod(pref)) {
+    if (!isInDndWindow(pref)) {
       return true;
     }
     // 在 DND 时段内

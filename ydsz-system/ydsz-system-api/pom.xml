@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-system-api</artifactId>
     <name>ydsz-system-api</name>
-    <description>API Layer - Feign Client + DTO/VO + Fallback</description>
+    <description>API Layer - Feign Client + Fallback</description>
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>
