@@ -172,12 +172,14 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
                       v ->
                           circuitBreaker.onSuccess(
                               java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(
-                                  System.nanoTime() - startNanos)))
+                                  System.nanoTime() - startNanos),
+                              java.util.concurrent.TimeUnit.MILLISECONDS))
                   .doOnError(
                       t ->
                           circuitBreaker.onError(
                               java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(
                                   System.nanoTime() - startNanos),
+                              java.util.concurrent.TimeUnit.MILLISECONDS,
                               t));
             })
         .onErrorResume(

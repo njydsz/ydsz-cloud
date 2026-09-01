@@ -110,21 +110,21 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
   }
 
   private CircuitBreaker getOrCreate(String serviceName) {
-    return registry.computeIfAbsent(
+    // 使用 circuitBreaker(name, supplier) 实现懒加载：同名熔断器已存在时直接返回，
+    // 不存在时通过 supplier 构建配置并创建，避免 computeIfAbsent 内部递归调用 registry
+    return registry.circuitBreaker(
         serviceName,
-        name -> {
+        () -> {
           // 熔断参数从配置读取（ydsz.feign.circuit-breaker.*），不再硬编码，支持按环境调优
           FeignProperties.CircuitBreaker cbConfig = properties.getCircuitBreaker();
-          CircuitBreakerConfig config =
-              CircuitBreakerConfig.custom()
-                  .failureRateThreshold(cbConfig.getFailureRateThreshold())
-                  .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold())
-                  .slowCallDurationThreshold(Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
-                  .waitDurationInOpenState(Duration.ofMillis(cbConfig.getWaitDurationMs()))
-                  .minimumNumberOfCalls(cbConfig.getMinimumNumberOfCalls())
-                  .slidingWindowSize(cbConfig.getSlidingWindowSize())
-                  .build();
-          return registry.circuitBreaker(name, config);
+          return CircuitBreakerConfig.custom()
+              .failureRateThreshold(cbConfig.getFailureRateThreshold())
+              .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold())
+              .slowCallDurationThreshold(Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
+              .waitDurationInOpenState(Duration.ofMillis(cbConfig.getWaitDurationMs()))
+              .minimumNumberOfCalls(cbConfig.getMinimumNumberOfCalls())
+              .slidingWindowSize(cbConfig.getSlidingWindowSize())
+              .build();
         });
   }
 }

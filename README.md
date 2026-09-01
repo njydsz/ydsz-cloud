@@ -87,7 +87,7 @@ ydsz-cloud/
 │   ├── ydsz-common-tenant    # L4：多租户隔离
 │   ├── ydsz-common-auth      # L5：JWT / RBAC / TOTP 2FA
 │   ├── ydsz-common-safe      # L5：脱敏 / XSS / 限流 / CSRF
-│   ├── ydsz-common-feign     # L5：OpenFeign + 自研熔断（common-safe 引擎）
+│   ├── ydsz-common-feign     # L5：OpenFeign + Resilience4j 熔断
 │   ├── ydsz-common-audit     # L5：操作日志 / 审计
 │   ├── ydsz-common-notify    # L5：6 种通知渠道抽象
 │   ├── ydsz-common-queue     # L5：6 种 MQ 抽象（Stream/Kafka/Rocket/List/PubSub/Rabbit）

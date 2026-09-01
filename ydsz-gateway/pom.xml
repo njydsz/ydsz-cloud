@@ -99,13 +99,15 @@
         </dependency>
 
         <!--
-            P0-A2: 网关熔断 — Resilience4j (spring-cloud-starter-circuitbreaker-resilience4j)。
+            P0-A2: 网关熔断 — Resilience4j (resilience4j-circuitbreaker)。
             替代 2026-09-01 之前的平台自研弹性引擎（ydsz-common-safe resilience 包）；
             响应式集成采用 Mono.defer + 许可获取 + doOnSuccess/doOnError 三段式手动记录。
+            直接使用 resilience4j-circuitbreaker（而非 spring-cloud-starter），
+            避免离线环境无法解析 spring-cloud-starter-circuitbreaker-resilience4j 导致构建中断。
         -->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
 
         <!-- Actuator 健康检查 -->
