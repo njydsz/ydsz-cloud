@@ -84,92 +84,99 @@ public class BytecodeInterpreter {
             0, 0);
       }
 
-      int opcode = code[ip++] & 0xFF;
+      int opcodeByte = code[ip++] & BytecodeCompiler.BYTE_MASK;
+      BytecodeOpcode opcode;
+      try {
+        opcode = BytecodeOpcode.fromCode(opcodeByte);
+      } catch (IllegalArgumentException e) {
+        throw new LiteExprException(
+            "未知字节码操作码: 0x" + Integer.toHexString(opcodeByte), 0, 0);
+      }
       switch (opcode) {
-        case 0x01 -> push(stack, sp++, null); // LOAD_NULL
-        case 0x02 -> { // LOAD_CONST
+        case LOAD_NULL -> push(stack, sp++, null);
+        case LOAD_CONST -> {
           int constIdx = readU16(code, ip);
           ip += 2;
           push(stack, sp++, constants.get(constIdx));
         }
-        case 0x10 -> { // LOAD_VAR
+        case LOAD_VAR -> {
           int nameIdx = readU16(code, ip);
           ip += 2;
           Object varNameObj = constants.get(nameIdx);
           String varName = ((BytecodeCompiler.VarName) varNameObj).name();
           push(stack, sp++, variables.get(varName));
         }
-        case 0x20 -> { // ADD
+        case ADD -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, add(a, b));
         }
-        case 0x21 -> { // SUB
+        case SUB -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, subtract(a, b));
         }
-        case 0x22 -> { // MUL
+        case MUL -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, multiply(a, b));
         }
-        case 0x23 -> { // DIV
+        case DIV -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, divide(a, b));
         }
-        case 0x24 -> { // MOD
+        case MOD -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, modulo(a, b));
         }
-        case 0x25 -> { // NEG
+        case NEG -> {
           Object a = pop(stack, --sp);
           push(stack, sp++, negate(a));
         }
-        case 0x26 -> { // DUP — 栈顶复制，用于短路求值保留操作数结果；直接读取数组以保留原槽位值
+        case DUP -> { // 栈顶复制，用于短路求值保留操作数结果；直接读取数组以保留原槽位值
           Object top = stack[sp - 1];
           push(stack, sp++, top);
         }
-        case 0x27 -> // POP — 弹出并丢弃栈顶值，用于短路求值的栈平衡
+        case POP -> // 弹出并丢弃栈顶值，用于短路求值的栈平衡
             pop(stack, --sp);
-        case 0x30 -> { // CMP_GT
+        case CMP_GT -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, compare(a, b) > 0);
         }
-        case 0x31 -> { // CMP_GE
+        case CMP_GE -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, compare(a, b) >= 0);
         }
-        case 0x32 -> { // CMP_LT
+        case CMP_LT -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, compare(a, b) < 0);
         }
-        case 0x33 -> { // CMP_LE
+        case CMP_LE -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, compare(a, b) <= 0);
         }
-        case 0x34 -> { // CMP_EQ
+        case CMP_EQ -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, isEqual(a, b));
         }
-        case 0x35 -> { // CMP_NE
+        case CMP_NE -> {
           Object b = pop(stack, --sp);
           Object a = pop(stack, --sp);
           push(stack, sp++, !isEqual(a, b));
         }
-        case 0x50 -> { // JUMP
+        case JUMP -> {
           int offset = readU16(code, ip);
           ip += 2;
           ip += offset;
         }
-        case 0x51 -> { // JUMP_IF_FALSE
+        case JUMP_IF_FALSE -> {
           int offset = readU16(code, ip);
           ip += 2;
           Object cond = pop(stack, --sp);
@@ -177,7 +184,7 @@ public class BytecodeInterpreter {
             ip += offset;
           }
         }
-        case 0x52 -> { // JUMP_IF_TRUE
+        case JUMP_IF_TRUE -> {
           int offset = readU16(code, ip);
           ip += 2;
           Object cond = pop(stack, --sp);
@@ -185,7 +192,7 @@ public class BytecodeInterpreter {
             ip += offset;
           }
         }
-        case 0x53 -> { // JUMP_IF_NULL
+        case JUMP_IF_NULL -> {
           int offset = readU16(code, ip);
           ip += 2;
           Object ref = pop(stack, --sp);
@@ -193,18 +200,17 @@ public class BytecodeInterpreter {
             ip += offset;
           }
         }
-        case 0x40, 0x41 -> { // LOGIC_AND / LOGIC_OR — 已通过 JUMP_IF_FALSE/TRUE 实现短路，此处不应到达
-          throw new LiteExprException(
-              "逻辑运算操作码不应直接执行: 0x" + Integer.toHexString(opcode), 0, 0);
-        }
-        case 0x42 -> { // LOGIC_NOT
+        case LOGIC_AND, LOGIC_OR -> // 已通过 JUMP_IF_FALSE/TRUE 实现短路，此处不应到达
+            throw new LiteExprException(
+                "逻辑运算操作码不应直接执行: 0x" + Integer.toHexString(opcode.code()), 0, 0);
+        case LOGIC_NOT -> {
           Object a = pop(stack, --sp);
           push(stack, sp++, !isTruthy(a));
         }
-        case 0x60 -> { // CALL_FUNCTION
+        case CALL_FUNCTION -> {
           int nameIdx = readU16(code, ip);
           ip += 2;
-          int argCount = code[ip++] & 0xFF;
+          int argCount = code[ip++] & BytecodeCompiler.BYTE_MASK;
           String funcName = ((BytecodeCompiler.VarName) constants.get(nameIdx)).name();
           Object[] args = new Object[argCount];
           for (int i = argCount - 1; i >= 0; i--) {
@@ -213,23 +219,23 @@ public class BytecodeInterpreter {
           // TODO: 实现函数调用委托到 FunctionRegistry
           push(stack, sp++, callFunction(funcName, args));
         }
-        case 0x70 -> { // GET_MEMBER
+        case GET_MEMBER -> {
           int nameIdx = readU16(code, ip);
           ip += 2;
           Object obj = pop(stack, --sp);
           String member = ((BytecodeCompiler.VarName) constants.get(nameIdx)).name();
           push(stack, sp++, getMember(obj, member));
         }
-        case 0x71 -> { // GET_INDEX
+        case GET_INDEX -> {
           Object key = pop(stack, --sp);
           Object coll = pop(stack, --sp);
           push(stack, sp++, getIndex(coll, key));
         }
-        case 0xFF -> { // RETURN
+        case RETURN -> {
           return pop(stack, --sp);
         }
         default -> throw new LiteExprException(
-            "未知字节码操作码: 0x" + Integer.toHexString(opcode), 0, 0);
+            "未知字节码操作码: 0x" + Integer.toHexString(opcode.code()), 0, 0);
       }
     }
 
@@ -250,12 +256,13 @@ public class BytecodeInterpreter {
   }
 
   private static int readU16(byte[] code, int offset) {
-    return ((code[offset] & 0xFF) << 8) | (code[offset + 1] & 0xFF);
+    return ((code[offset] & BytecodeCompiler.BYTE_MASK) << BytecodeCompiler.BYTE_SHIFT)
+        | (code[offset + 1] & BytecodeCompiler.BYTE_MASK);
   }
 
   /** 创建操作数栈 — 基于常量池大小给出合理初始容量 */
   private static Object[] createStack(List<Object> constants) {
-    return new Object[Math.max(16, constants.size() * 2 + 16)];
+    return new Object[Math.max(MIN_STACK_CAPACITY, constants.size() * 2 + MIN_STACK_CAPACITY)];
   }
 
   // ===== 算术运算 =====

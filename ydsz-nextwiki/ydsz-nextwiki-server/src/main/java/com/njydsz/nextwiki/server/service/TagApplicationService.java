@@ -75,7 +75,6 @@ public class TagApplicationService {
    * @param fileNodeId 文件节点 ID
    * @param tagIds 标签 ID 列表（可空；为空表示解绑全部）
    * @param userId 操作者 ID
-   * @return 无返回值
    * @throws 由 {@link TagDomainService} 在节点不存在/无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(tagIds.size())（逐条建立关系）

@@ -168,7 +168,6 @@ public class SearchApplicationService {
    *
    * <p><b>S3-P2-3 优化：</b>采用分页批次处理，避免一次性全量加载导致 OOM。
    *
-   * @return 无返回值
    * @complexity O(N)（N 为文件总数，分页批次遍历重建索引，耗时较长）
    * @note 非事务（批量操作）；执行期间建议避开高峰期，避免影响在线搜索
    * @see com.njydsz.nextwiki.server.job.NextwikiScheduledJobs#rebuildSearchIndex()

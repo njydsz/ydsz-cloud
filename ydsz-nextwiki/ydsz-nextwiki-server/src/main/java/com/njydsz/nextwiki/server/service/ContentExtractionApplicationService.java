@@ -67,7 +67,6 @@ public class ContentExtractionApplicationService {
    *
    * @param fileNodeId 文件节点 ID
    * @param userId 操作人 ID（透传给索引，用于权限字段归属）
-   * @return 无返回值
    * @concurrency 异步执行，失败不影响主链路；同一文件可能被并发触发，索引以最终写入为准
    * @note 本方法本身无事务边界，异常被吞掉仅告警
    */
@@ -90,7 +89,6 @@ public class ContentExtractionApplicationService {
    *
    * @param fileNodeId 文件节点 ID
    * @param userId 操作人 ID
-   * @return 无返回值
    * @note 节点不存在或非文件时静默返回；提取失败（如存储不可用）仅记 warn，不影响上传主流程
    * @complexity O(contentLength)（读取 + 解析 + 截取 + 索引写入）
    * @concurrency 无共享可变状态，可并发；幂等（重复索引以最新内容覆盖）

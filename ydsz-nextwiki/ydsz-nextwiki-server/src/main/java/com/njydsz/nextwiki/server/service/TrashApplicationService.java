@@ -58,7 +58,6 @@ public class TrashApplicationService {
    *
    * @param trashItemId 回收站项目 ID
    * @param userId 操作者 ID（需为该项目所有者）
-   * @return 无返回值
    * @throws 由 {@link TrashDomainService} 在项目不存在/状态非法时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次恢复写入）
@@ -88,7 +87,6 @@ public class TrashApplicationService {
    *
    * @param trashItemIds 回收站项目 ID 列表
    * @param userId 操作者 ID
-   * @return 无返回值
    * @throws 由 {@link TrashDomainService} 在参数非法时抛出的业务异常（单条失败策略见领域服务）
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(trashItemIds.size())
@@ -110,7 +108,6 @@ public class TrashApplicationService {
    *
    * @param trashItemId 回收站项目 ID
    * @param userId 操作者 ID
-   * @return 无返回值
    * @throws 由 {@link TrashDomainService} 在项目不存在时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次物理删除 + 一次记录移除）
@@ -133,7 +130,6 @@ public class TrashApplicationService {
    * 清空用户回收站（永久删除全部回收站文件，不可逆）。
    *
    * @param userId 操作者 ID
-   * @return 无返回值
    * @throws 由 {@link TrashDomainService} 在无权限时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(n)（n 为回收站文件数）

@@ -482,7 +482,6 @@ public class ChunkUploadApplicationService {
    * <p>无论 Redis 会话是否存在都尝试清理临时分片与合并文件及会话键，保证不残留孤儿数据。
    *
    * @param uploadId 会话 ID
-   * @return 无返回值
    * @note 幂等：重复取消不会报错（清理失败仅告警日志）
    * @complexity O(totalChunks)（逐文件删除）+ Redis 删除
    */

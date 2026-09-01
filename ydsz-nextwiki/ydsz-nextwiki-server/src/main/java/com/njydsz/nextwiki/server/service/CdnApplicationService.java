@@ -30,7 +30,6 @@ public class CdnApplicationService {
    * <p>CDN 未启用时直接跳过，仅打印 debug 日志，不发起任何外部调用。
    *
    * @param urls 待预热的完整 URL 列表，为 {@code null} 时由调用方保证非空
-   * @return 无返回值
    * @note 无副作用到业务数据；CDN 未启用时为空操作，线程安全
    * @complexity O(urls.size())（仅打点日志，未真正实现预热推送，后续可对接厂商 API）
    */
@@ -52,7 +51,6 @@ public class CdnApplicationService {
    * <p>CDN 未启用时直接跳过。
    *
    * @param urls 待刷新的完整 URL 列表
-   * @return 无返回值
    * @note 无业务数据副作用；CDN 未启用时为空操作，线程安全
    * @complexity O(urls.size())（当前仅打点日志，未对接厂商刷新 API）
    */
@@ -74,7 +72,6 @@ public class CdnApplicationService {
    * <p>CDN 未启用时直接返回，不发请求。
    *
    * @param directoryPath 待刷新的目录路径（CDN 侧前缀）
-   * @return 无返回值
    * @note 无业务数据副作用；CDN 未启用时为空操作，线程安全
    */
   public void refreshDirectory(String directoryPath) {
@@ -93,7 +90,6 @@ public class CdnApplicationService {
    * <p>内部先由 {@link #generateCdnUrl(String)} 拼出完整 URL 再下发刷新指令；CDN 未启用时直接返回。
    *
    * @param storageKey 存储对象键（即对象存储中的 key，如 {@code user/xxx/file.pdf}）
-   * @return 无返回值
    * @note 无业务数据副作用；CDN 未启用时为空操作，线程安全
    */
   public void purgeCache(String storageKey) {

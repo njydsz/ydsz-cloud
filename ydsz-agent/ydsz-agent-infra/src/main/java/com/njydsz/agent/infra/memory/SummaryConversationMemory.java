@@ -58,6 +58,27 @@ public class SummaryConversationMemory implements ConversationMemory {
   /** 摘要 Redis TTL（秒），与对话记忆 TTL 对齐（24 小时） */
   private static final long SUMMARY_TTL_SECONDS = 24 * 3600L;
 
+  /** 默认 Token 预算 */
+  private static final int DEFAULT_TOKEN_BUDGET = 4000;
+
+  /** 默认 Token 与字符数换算比例 */
+  private static final double DEFAULT_TOKEN_CHAR_RATIO = 2.5;
+
+  /** 默认触发摘要的对话条数阈值 */
+  private static final int DEFAULT_SUMMARY_THRESHOLD = 20;
+
+  /** 默认摘要后保留的最近对话条数 */
+  private static final int DEFAULT_KEEP_RECENT_COUNT = 10;
+
+  /** 拼入摘要请求的单条消息内容截断长度 */
+  private static final int MESSAGE_TRUNCATE_LENGTH = 500;
+
+  /** 摘要生成温度 */
+  private static final double SUMMARY_TEMPERATURE = 0.3;
+
+  /** 摘要生成最大输出 Token 数 */
+  private static final int SUMMARY_MAX_TOKENS = 800;
+
   /** 委托的记忆实现 */
   private final ConversationMemory delegate;
 
@@ -118,7 +139,8 @@ public class SummaryConversationMemory implements ConversationMemory {
       int summaryThreshold,
       int keepRecentCount,
       RedisStringOps redisOps) {
-    this(delegate, llmClient, model, summaryThreshold, keepRecentCount, redisOps, 4000, 2.5);
+    this(delegate, llmClient, model, summaryThreshold, keepRecentCount, redisOps,
+        DEFAULT_TOKEN_BUDGET, DEFAULT_TOKEN_CHAR_RATIO);
   }
 
   /**
@@ -145,11 +167,11 @@ public class SummaryConversationMemory implements ConversationMemory {
     this.delegate = delegate;
     this.llmClient = llmClient;
     this.model = model;
-    this.summaryThreshold = summaryThreshold > 0 ? summaryThreshold : 20;
-    this.keepRecentCount = keepRecentCount > 0 ? keepRecentCount : 10;
+    this.summaryThreshold = summaryThreshold > 0 ? summaryThreshold : DEFAULT_SUMMARY_THRESHOLD;
+    this.keepRecentCount = keepRecentCount > 0 ? keepRecentCount : DEFAULT_KEEP_RECENT_COUNT;
     this.redisOps = redisOps;
-    this.tokenBudget = tokenBudget > 0 ? tokenBudget : 4000;
-    this.tokenCharRatio = tokenCharRatio > 0 ? tokenCharRatio : 2.5;
+    this.tokenBudget = tokenBudget > 0 ? tokenBudget : DEFAULT_TOKEN_BUDGET;
+    this.tokenCharRatio = tokenCharRatio > 0 ? tokenCharRatio : DEFAULT_TOKEN_CHAR_RATIO;
   }
 
   @Override
@@ -305,7 +327,7 @@ public class SummaryConversationMemory implements ConversationMemory {
     }
     sb.append("\n需要追加压缩的对话：\n");
     for (ChatMessage msg : messages) {
-      sb.append(msg.getRole()).append(": ").append(truncate(msg.getContent(), 500)).append("\n");
+      sb.append(msg.getRole()).append(": ").append(truncate(msg.getContent(), MESSAGE_TRUNCATE_LENGTH)).append("\n");
     }
 
     ChatRequest request =
@@ -315,8 +337,8 @@ public class SummaryConversationMemory implements ConversationMemory {
                 List.of(
                     ChatMessage.system("你是对话摘要助手，负责将对话历史压缩为简洁摘要。"),
                     ChatMessage.user(sb.toString(), conversationId)))
-            .temperature(0.3)
-            .maxTokens(800)
+            .temperature(SUMMARY_TEMPERATURE)
+            .maxTokens(SUMMARY_MAX_TOKENS)
             .build();
 
     ChatResponse response = llmClient.chat(request);

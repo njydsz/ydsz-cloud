@@ -545,7 +545,6 @@ public class FileApplicationService {
    *
    * @param nodeId 待删除节点 ID
    * @param userId 操作人 ID
-   * @return 无返回值
    * @throws BusinessException 无删除权限、节点不存在、锁忙时抛出
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}，软删+入回收站+配额同事务
    * @concurrency 加 {@code nextwiki:lock:folder:{nodeId}} 分布式锁，防止与移动/重命名并发
@@ -958,7 +957,6 @@ public class FileApplicationService {
    *
    * @param nodeId 文件节点 ID
    * @param userId 操作人 ID（同时记为最后更新人）
-   * @return 无返回值
    * @throws BusinessException 节点不存在时抛出 FILE_NOT_FOUND
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}（一次字段更新）
    * @complexity O(1)（一次查询 + 一次更新）
