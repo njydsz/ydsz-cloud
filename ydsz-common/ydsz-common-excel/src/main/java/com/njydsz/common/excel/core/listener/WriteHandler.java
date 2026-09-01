@@ -363,11 +363,10 @@ public class WriteHandler {
 
       DataValidation validation = dvHelper.createValidation(constraint, addressList);
       validation.setShowErrorBox(config.isShowErrorMessage());
-      if (config.getErrorTitle() != null) {
-        validation.setErrorTitle(config.getErrorTitle());
-      }
-      if (config.getError() != null) {
-        validation.setErrorText(config.getError());
+      if (config.getErrorTitle() != null || config.getError() != null) {
+        validation.createErrorBox(
+            config.getErrorTitle() != null ? config.getErrorTitle() : "",
+            config.getError() != null ? config.getError() : "");
       }
       applyErrorStyle(validation, config.getErrorStyle());
 
@@ -383,8 +382,8 @@ public class WriteHandler {
    * <ul>
    *   <li>LIST → 显式列表（逗号分隔候选值拆分，Excel 展示为下拉框）
    *   <li>DATE → 日期约束（yyyy-MM-dd 格式）
-   *   <li>INTEGER / DECIMAL / TEXT_LENGTH → 数值/文本长度约束
-   *   <li>CUSTOM → 自定义公式约束
+   *   <li>INTEGER / DECIMAL / TEXT_LENGTH 及其他 → 数值/文本长度约束
+   *       （POI ValidationType 未定义 CUSTOM 常量，自定义公式约束请经 helper 直接构造）
    * </ul>
    *
    * @param dvHelper Sheet 的验证助手
@@ -404,9 +403,6 @@ public class WriteHandler {
           config.getFormula1(),
           config.getFormula2(),
           DEFAULT_VALIDATION_DATE_FORMAT);
-    }
-    if (type == DataValidationConstraint.ValidationType.CUSTOM) {
-      return dvHelper.createCustomConstraint(config.getFormula1());
     }
     // INTEGER / DECIMAL / TEXT_LENGTH
     return dvHelper.createNumericConstraint(

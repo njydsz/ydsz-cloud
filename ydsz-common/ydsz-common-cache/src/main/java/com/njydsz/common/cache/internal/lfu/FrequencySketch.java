@@ -43,6 +43,8 @@ public final class FrequencySketch {
   private int countersPerLong = 16;
   /** 定位 long 槽所需移位位数（4bit 为 4，8bit 为 3） */
   private int countersPerLongShift = 4;
+  /** 分片衰减游标：下一个待衰减 chunk 的起始槽位（推进依赖调用方写锁串行化，见 {@link #resetPortion}） */
+  private int resetCursor;
 
   public FrequencySketch() {
     ensureCapacity(1024);
@@ -225,6 +227,43 @@ public final class FrequencySketch {
       } while (!TABLE_VARHANDLE.compareAndSet(
           currentTable, i, slot, (slot >>> 1) & resetHalveMask));
     }
+    resetCursor = 0;
+  }
+
+  /**
+   * 分片衰减：每次调用仅对 {@code 1/chunks} 的表做减半，把全表衰减的停顿摊平到多次触发。
+   *
+   * <p><b>动机（P1 性能修复）</b>：旧路径在写锁内调用 {@link #reset()} 做全表 O(表长) 逐槽 CAS——
+   * 容量 10,000 的表长约 16k，持锁期间写路径完全停顿，读路径的机会性提升也被阻塞。
+   * 分片后每次仅重置一个 chunk，持锁时间缩短为原来的 {@code 1/chunks}。
+   *
+   * <p><b>语义等价性</b>：调用方以 {@code 原阈值 / chunks} 的频率触发本方法， 累计 {@code chunks}
+   * 次后全表各槽恰好减半一轮——与单次全表减半的总衰减量一致。衰减过渡期内（部分 chunk 已减半、
+   * 部分未减半）不同 key 的频率比较基准存在最多 1 bit 的偏差， 远小于 Count-Min Sketch
+   * 本身的哈希碰撞误差，对淘汰决策的影响可忽略。
+   *
+   * <p>线程安全：逐槽 CAS，可与 {@link #increment(Object)} 并发执行。游标 {@code resetCursor}
+   * 的推进依赖调用方的串行化保证（{@code WindowTinyLFUCache} 在写锁内调用，天然串行），
+   * 并发调用本方法会导致 chunk 重复衰减（频率被多减一半，趋势性偏冷），不会损坏数据结构。
+   *
+   * @param chunks 分片数（每次重置表长的 1/chunks），必须 >= 1；大于表长时退化为逐槽分片
+   */
+  public void resetPortion(int chunks) {
+    long[] currentTable = table;
+    int chunkSize = Math.max(1, currentTable.length / Math.max(1, chunks));
+    int start = resetCursor;
+    if (start >= currentTable.length) {
+      start = 0;
+    }
+    int end = Math.min(currentTable.length, start + chunkSize);
+    for (int i = start; i < end; i++) {
+      long slot;
+      do {
+        slot = (long) TABLE_VARHANDLE.getVolatile(currentTable, i);
+      } while (!TABLE_VARHANDLE.compareAndSet(
+          currentTable, i, slot, (slot >>> 1) & resetHalveMask));
+    }
+    resetCursor = end >= currentTable.length ? 0 : end;
   }
 
   private int hash(Object e) {

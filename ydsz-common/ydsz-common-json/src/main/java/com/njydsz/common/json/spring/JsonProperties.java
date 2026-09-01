@@ -70,7 +70,12 @@ public class JsonProperties {
   @Min(1)
   private int maxGenericDepth = 64;
 
-  /** 是否启用性能监控 */
+  /**
+   * 是否启用性能监控（Micrometer 指标采集）。
+   *
+   * <p><b>预留配置（P1 文档纠偏）：当前版本无消费方，设置后不产生任何监控指标。</b>
+   * Micrometer 集成规划中，落地前请勿依赖此开关。默认 true。
+   */
   private boolean monitoringEnabled = true;
 
   /** 是否使用 BigDecimal 解析浮点数（金融场景精度保护） */

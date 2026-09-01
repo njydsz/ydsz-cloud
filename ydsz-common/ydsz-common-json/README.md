@@ -1,8 +1,8 @@
 # ydsz-common-json
 
-> YDSZ 高性能 JSON 引擎（L1 工具层）— 零依赖、char[] 零拷贝、FNV-1a 哈希字段匹配、递归下降解析、JsonNode 树模型、Jackson 兼容注解
+> YDSZ 高性能 JSON 引擎（L1 工具层）— 零依赖、char[] 直接操作、哈希优先字段匹配、递归下降解析、JsonNode 树模型、Jackson 兼容注解
 
-纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 char[] 直接操作、零拷贝反序列化、ThreadLocal 对象池、FNV-1a 哈希字段匹配、快速数值解析等技术实现高性能；通过 Jackson 兼容注解实现平滑迁移。
+纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 char[] 直接操作、直接到 Bean 字段的反序列化、ThreadLocal 对象池、哈希优先字段匹配、快速数值解析等技术实现高性能；通过 Jackson 兼容注解实现平滑迁移。
 
 **YdszJson 的架构设计兼具 Jackson 的"配置不可变"哲学和 Fastjson2 的"静态入口便利"。** `YdszJson` 作为静态入口提供 `toJson` / `toObject` 等零配置开箱即用体验，与 FastJSON 的静态工具风格一脉相承；而底层 `JsonConfig` 采用 `final` 字段构建不可变配置，配合 `JsonMapper.copyOf()` 以"副本 + 不可变替换"方式替代运行期可变状态，实现与 Jackson 相同的线程安全语义。两层 API 共享同一委托链（`YdszJson` → `JsonMapper` → `Engine` → `Provider` → `Parser`），行为完全一致，用户可根据场景自由选择而无需担心序列化行为分歧。
 
@@ -37,7 +37,7 @@
 | Spring Boot 集成（JsonAutoConfiguration/JsonHttpMessageConverter） | **Stable** | |
 | Module 系统（JsonModule SPI） | **Beta** | |
 | @JsonCreator 构造器模式 | **Beta** | |
-| JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Beta** | 1.0.0 新增 |
+| JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Stable** | P1 轮完成 RFC 合规修复（数值等价/路径缺失/中间节点/整文档路径），10 项合规用例回归 |
 | TypeRef 泛型工厂 | **Beta** | 1.0.0 新增 |
 | JSON Schema 校验（JsonSchemaValidator，Draft-07 子集） | **未提供** | 完整规范支持请使用 networknt/json-schema-validator |
 | @JsonBuilder 构造器模式 | **未提供** | 推荐使用 @JsonCreator + 静态工厂方法 |
@@ -70,7 +70,7 @@
 | `JSONReader` | JSON 解析器（流式 / 事件驱动 / 递归下降，直接解析到 Bean 字段，无需 Map 中转） |
 | `JsonParserUtil` (parser) | JSON 通用解析工具（parseObject/parseArray/parseNumber，JIT 优化 + 循环展开） |
 | `JSONWriter` / `BeanSerializer` | JSON 生成器（流式写入，`toUtf8Bytes()` 字节序列化）、Bean 序列化器 |
-| `BeanReader` | Bean 反序列化读取器（字段哈希缓存 O(1) 匹配，直接 char[] 解析） |
+| `BeanReader` | Bean 反序列化读取器（字段按哈希优先匹配的线性扫描，直接 char[] 解析；宽 Bean 为 O(字段数)，未建哈希索引表——以 JMH 实测为准） |
 | `BeanDeserializerEngine` | Bean 反序列化引擎 |
 
 ### 3. Provider 与字段缓存（provider / cache 包）
@@ -438,13 +438,28 @@ String formatted = YdszJson.format(compactJson);
 |---------|------|
 | char[] 直接操作 | 避免 StringBuilder 中间分配 |
 | 零拷贝反序列化 | 直接解析 JSON 到 Bean 字段，无需 Map 中转 |
-| FNV-1a 字段哈希 | O(1) 字段匹配（与 Jackson 同量级；差异请以 JMH 基准实测为准） |
+| 字段哈希优先匹配 | 逐字段以 hashCode 短路比较（避免字符串逐字符比对），整体为 O(字段数) 线性扫描——与 Jackson 早期实现同量级；性能差异请以 JMH 基准实测为准（基准套件建设中） |
 | ThreadLocal 对象池 | StringBuilder / JSONWriter 复用，减少 GC |
 | ASCII 快速路径 | byte[] → char[] 跳过 UTF-8 解码 |
 | 分级 StringBuilder | 小/中/大 JSON 预分配合适容量 |
 | 不可变配置 + 原子替换 | 线程安全的配置管理 |
 
 ## 最新变更
+
+### 1.0.0（P1 合规与治理修复轮：2026-09-01）
+
+> 累计 **30 项 JUnit 测试全绿**（新增 JsonPatch RFC 合规 10 用例）。checkstyle 0 违规。
+
+| 优先级 | 变更 | 说明 |
+|------|------|------|
+| P1 | JsonPatch RFC 6902 合规修复（3 处） | ① test 数值按值比较（`1`/`1.0`/`1L` 等价，§4.6）；② test 路径缺失必须失败（区分"路径缺失"与"显式 null"）；③ ADD 不再自动创建中间节点（父路径必须存在，RFC 规定）；④ 整文档路径 `""` 支持 ADD/REPLACE/TEST（返回新根，`YdszJson.patch` 已改为使用返回值）；⑤ JSON Pointer `/` 修正为空键成员（RFC 6901，原误判为整文档） |
+| P1 | JMX 配置观测修复 | `JsonConfigViewer.getConfigDetails` 改用 `getInstance()`——原先 `copyOf(null)` 永远返回默认配置，热更新验证形同虚设 |
+| P1 | `TYPE_CODE_CACHE` 上界 | `ValueWriter` 类型代码缓存由无界 ConcurrentHashMap 改为 `BoundedLruCache`（1024），消除长期运行内存增长风险（其余缓存均已设界，独此处遗漏） |
+| P1 | 深度限制统一 | `BeanReader` 深度校验改走 `reader.resolveMaxDepth()`（线程级覆盖 > 实例级 > 静态全局）——原先硬编码 `DEFAULT_MAX_DEPTH`，多 Mapper 自定义深度在 BeanReader 路径失效 |
+| P1 | warmup 补 `@PatchMapping` | `JsonWarmupRunner.isRequestMappingMethod` 漏扫 PATCH 接口类型，已补 |
+| P1 | 监听器生命周期对称 | `JsonAutoConfiguration` 配置变更监听器改为字段持有，`@PreDestroy` 注销——原先匿名注册后不移除，容器热重启时静态监听列表累积泄漏 |
+| P1 | StringInterner 重写 | 全局 `synchronized` 改为 `ConcurrentHashMap` 无锁实现（javadoc 曾虚标"分段锁"）；"LRU 淘汰"虚标修正为上界整表清空。当前零调用，标注为能力储备（`@Experimental`） |
+| P1 | 文档纠偏 | README 撤回"O(1) 字段匹配"（实际为哈希优先线性扫描）、"零拷贝"等虚标；`monitoring-enabled` 在 JsonProperties javadoc 标注为预留未生效 |
 
 ### 1.0.0（P0 止血修复轮：2026-09-01）
 
@@ -462,7 +477,8 @@ String formatted = YdszJson.format(compactJson);
 
 ### 1.0.0（性能与正确性修复）
 
-> 本轮变更对标 Jackson / FastJSON2 实践与互联网大厂研发规范，经 239 项单元测试全量回归。
+> 本轮变更对标 Jackson / FastJSON2 实践与互联网大厂研发规范。
+> **勘误**：原文声称"经 239 项单元测试全量回归"——该测试集未随仓库留存（当时 `.gitignore` 曾忽略全部 `src/test` 目录，2026-09-01 已解除），本条目不可验证；当前有效回归基线为 P0/P1 轮建立的 30 项测试。
 
 | 优先级 | 变更 | 说明 |
 |------|------|------|
@@ -497,4 +513,4 @@ String formatted = YdszJson.format(compactJson);
 
 ---
 
-*文档更新日期：2026-08-15 | 功能版本：1.0.0 | 审计方法：全量源码静态走读 + 实际代码证据交叉验证 + 239 项单元测试回归*
+*文档更新日期：2026-09-01 | 功能版本：1.0.0 | 审计方法：全量源码静态走读 + 实际代码证据交叉验证 + 复现程序实跑 + 30 项单元测试回归（P0/P1 轮建立）*

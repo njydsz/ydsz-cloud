@@ -199,9 +199,9 @@ public class YdszJson {
   public static String patch(String targetJson, String patchJson) {
     // P-2 优化：统一走 JsonNode 树路径（readTree → applyToTree → toJson），
     // 去掉原先 parseMap → Map 中转的两次结构转换（Map → tree → Map）。
+    // P1 修复：使用 applyToTree 返回值——整文档路径操作（path=""）会替换根节点。
     ObjectNode tree = (ObjectNode) readTree(targetJson);
-    JsonPatch.applyToTree(patchJson, tree);
-    return toJson(tree);
+    return toJson(JsonPatch.applyToTree(patchJson, tree));
   }
 
   /**
