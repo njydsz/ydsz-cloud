@@ -260,6 +260,16 @@ public class PendingEntryListCleaner {
     private List<PendingEntryInfo> pendingEntries;
     private LocalDateTime timestamp;
 
+    /**
+     * 构造一份"无待处理消息"的空统计，用于 Redis 未返回 PEL 摘要或采集发生异常时的降级返回。
+     *
+     * <p>返回的 {@code pendingEntries} 是新建的可变空 {@code ArrayList}（不是共享的不可变集合），
+     * {@code timestamp} 取调用时刻，便于调用方区分"此刻确实没有积压"与"数据未采集到"。
+     *
+     * @param channel Stream 键名，原样回填到结果中
+     * @param groupName 消费者组名，原样回填到结果中
+     * @return 积压量、消费者数均为 0 且待处理条目为空列表的统计对象，不会为 {@code null}
+     */
     public static PelStatistics empty(String channel, String groupName) {
       return PelStatistics.builder()
           .channel(channel)
