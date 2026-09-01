@@ -208,10 +208,10 @@ cd ../../ydsz-agent/ydsz-agent-web && mvn spring-boot:run
 ```
 ydsz-{module}/
 ├── pom.xml                          # 父 POM
-├── ydsz-{module}-api/               # API 层：Feign Client + DTO
 ├── ydsz-{module}-domain/            # 领域层：Entity + VO + Repository 接口
 ├── ydsz-{module}-infra/             # 基础设施层：Repository 实现 + 外部集成
 ├── ydsz-{module}-server/            # 应用服务层：Service + 事务编排
+├── ydsz-{module}-api/               # API 层：Feign Client + DTO
 ├── ydsz-{module}-app/               # App 层：Controller + 启动类 + 配置
 └── ydsz-{module}-web/               # Web 层：Controller + 启动类 + 配置
 ```
@@ -236,24 +236,6 @@ ydsz-{module}/
 | 模块 README | `ydsz-*/README.md` | 各模块详细说明文档 |
 | 本地开发环境 | `./docs/本地开发环境.md` | 本地中间件与 Nacos 配置说明 |
 | API 文档 | Knife4j 聚合 | 启动后访问 `:9000/doc.html` |
-
----
-
-## 已知事项
-
-> 本节记录与代码事实相关的、需要读者注意的已知差异与约束，避免被文档误导。
-
-1. **端口冲突（部署约束）**：`ydsz-nextwiki-web`（:9003）与 `ydsz-userinfo-app`（:9003）默认端口相同。两者通常不会同机部署（Web 控制台与移动端入口），但若需同机运行，须通过 Nacos 配置将其中一个改为其他端口。
-2. **禁止 Flyway / Liquibase**：全仓统一禁止 schema-migration 框架。各模块数据库 DDL 以 SQL 脚本形式管理在 `deploy/sql/` 或模块 `src/main/resources/sql/` 下，**需手动执行**初始化，不存在自动迁移。早期个别模块 README 曾出现"由 Flyway 维护"的措辞，已校准为手动执行（见 `ydsz-nextwiki`、`ydsz-agent` README 对应说明）。
-3. **common 分层口径**：`ydsz-common` 的分层（L1-L6）以 `ydsz-common/pom.xml` 的 `<modules>` 声明为生效口径（json/util/cache/excel 为 L1，core 为 L2）。历史版本中编码规范 §22.2 与 pom 注释存在层级标注差异，**2026-08 已校准**：规范 §22.2 表格与 pom 构建机制、`enforce-l1-purity` 检查三方一致，无遗留差异。
-4. **`ydsz-common-metrics` 为占位条目**：该坐标仅出现在 `ydsz-common/pom.xml` 的 `dependencyManagement` 中，无对应模块目录，也无任何消费者，并非真实子模块（common 实际为 30 个子模块）。
-5. **gateway 不依赖 `common-web`**：网关为 WebFlux 反应式栈，按需挑选 11 个细粒度 common 子模块，不引入 servlet 栈的 `common-web`。
-6. **质量守护分层启用**：默认构建仅启用 Checkstyle + Enforcer + L1 纯度 + SBOM（红线级，阻断）；SpotBugs / OWASP DC / JaCoCo / Spotless 通过 Maven profile 按需开启——`mvn verify -Pquality`（报告模式，不阻断，用于基线巡检）、`mvn verify -Pquality-enforce`（门禁模式：JaCoCo 行≥80%/分支≥70% + OWASP CVSS≥7 阻断 + SpotBugs failOnError）。
-7. **存量分层穿透（技术债，ArchUnit 规则已降级守护）**：以下源码级跨层引用为历史存量，ArchUnit 规则已按现状降级并在测试类中以 TODO 标注，修复后应收紧为硬性红线：
-    - `ydsz-userinfo` / `ydsz-workflow`：`api -> domain`（Feign Client 引用 domain VO/DTO，待契约模型下沉 api 模块）；
-    - `ydsz-agent`：`infra -> server`（`infra.tool` 引用 `server.config.AgentProperties`，待配置类下沉）；
-    - `ydsz-message` / `ydsz-cronjob` / `ydsz-agent`：`web -> infra` 源码引用（转换器/实体/LLM 客户端直用，待编排逻辑下沉 app/server 层）。
-    注：`ydsz-system-web` 对 `ydsz-system-infra` 的 pom 依赖为**运行时装配依赖**（Spring 自动装配注入 Repository 实现至 server 层接口），web 源码零 import（由 ArchUnit 规则守护），不属穿透。
 
 ---
 

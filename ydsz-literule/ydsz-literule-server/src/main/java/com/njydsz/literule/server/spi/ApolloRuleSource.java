@@ -29,7 +29,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * @author ydsz-team
  */
 @Slf4j
-public class ApolloRuleSource implements RuleSource {
+public class ApolloRuleSource implements RuleConfigProvider {
 
   private final String namespace;
   private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>();

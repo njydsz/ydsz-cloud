@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInvocationException;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 模型输入注册中心（P3-1 规则+模型融合）
@@ -329,3 +329,4 @@ public class ModelInputRegistry {
     return fallbackOnError;
   }
 }
+

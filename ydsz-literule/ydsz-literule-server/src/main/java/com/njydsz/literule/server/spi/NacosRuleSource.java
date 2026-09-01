@@ -31,7 +31,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * @author ydsz-team
  */
 @Slf4j
-public class NacosRuleSource implements RuleSource {
+public class NacosRuleSource implements RuleConfigProvider {
 
     /** 配置拉取超时（毫秒） */
   private static final long CONFIG_TIMEOUT_MS = 5000L;

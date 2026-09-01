@@ -6,7 +6,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.model.AbstractModelInputProvider;
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * Mock 模型输入提供者（本地调试/联调用）
@@ -68,3 +68,4 @@ public class MockModelInputProvider extends AbstractModelInputProvider {
     return new LinkedHashMap<>(outputs);
   }
 }
+

@@ -28,9 +28,6 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
 @YdszExceptionCode(module = "nextwiki", description = "知识库")
 public enum NextwikiExceptionCode implements ExceptionCode {
 
-  /** 缺省 HTTP 状态码 */
-  private static final int DEFAULT_HTTP_STATUS = 400;
-
   // 文件相关 W01xxx
   /** 参数错误 */
   PARAM_ERROR("W01999", "nextwiki.param.error"),
@@ -182,6 +179,9 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   INTERNAL_ERROR("W09001", "nextwiki.internal.error", 500),
   /** 操作正在处理中（锁竞争） */
   LOCK_BUSY("W09002", "nextwiki.lock.busy", 409);
+
+  /** 缺省 HTTP 状态码 */
+  private static final int DEFAULT_HTTP_STATUS = 400;
 
   /** 错误码（业务契约，不应轻易变更） */
   private final String code;

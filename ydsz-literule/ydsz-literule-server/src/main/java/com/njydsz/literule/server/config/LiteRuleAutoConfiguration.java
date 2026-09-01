@@ -88,7 +88,6 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RulePackProvider;
-import com.njydsz.literule.server.spi.RuleSource;
 import com.njydsz.literule.server.spi.RuleSourceManager;
 import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
@@ -1048,7 +1047,7 @@ public class LiteRuleAutoConfiguration {
    * @since 1.0.0
    */
   @Bean
-  @ConditionalOnMissingBean(RuleSource.class)
+  @ConditionalOnMissingBean(DbRuleSource.class)
   @ConditionalOnBean(RuleConfigProvider.class)
   @ConditionalOnProperty(
       prefix = "ydsz.literule.rule-source",
@@ -1071,7 +1070,7 @@ public class LiteRuleAutoConfiguration {
    * @since 1.0.0
    */
   @Bean
-  @ConditionalOnMissingBean(RuleSource.class)
+  @ConditionalOnMissingBean(NacosRuleSource.class)
   @ConditionalOnProperty(
       prefix = "ydsz.literule.rule-source",
       name = "type",
@@ -1097,7 +1096,7 @@ public class LiteRuleAutoConfiguration {
    * @since 1.0.0
    */
   @Bean
-  @ConditionalOnMissingBean(RuleSource.class)
+  @ConditionalOnMissingBean(ApolloRuleSource.class)
   @ConditionalOnProperty(
       prefix = "ydsz.literule.rule-source",
       name = "type",
@@ -1119,7 +1118,7 @@ public class LiteRuleAutoConfiguration {
    * @since 1.0.0
    */
   @Bean
-  @ConditionalOnMissingBean(RuleSource.class)
+  @ConditionalOnMissingBean(ZookeeperRuleSource.class)
   @ConditionalOnProperty(
       prefix = "ydsz.literule.rule-source",
       name = "type",
@@ -1137,19 +1136,19 @@ public class LiteRuleAutoConfiguration {
   /**
    * 规则数据源管理器 Bean（P1-11）
    *
-   * <p>当存在 {@link RuleSource} Bean 时自动装配，管理多个数据源并提供统一切换能力。 自动注册所有 {@link RuleSource}
+   * <p>当存在 {@link RuleConfigProvider} Bean 时自动装配，管理多个数据源并提供统一切换能力。 自动注册所有数据源
    * Bean，首个可用数据源设为主数据源。
    *
-   * @param sources 所有 RuleSource Bean
+   * @param sources 所有 RuleConfigProvider Bean
    * @return RuleSourceManager 实例
    * @since 1.0.0
    */
   @Bean
   @ConditionalOnMissingBean
-  @ConditionalOnBean(RuleSource.class)
-  public RuleSourceManager ruleSourceManager(List<RuleSource> sources) {
+  @ConditionalOnBean(RuleConfigProvider.class)
+  public RuleSourceManager ruleSourceManager(List<RuleConfigProvider> sources) {
     RuleSourceManager manager = new RuleSourceManager();
-    for (RuleSource source : sources) {
+    for (RuleConfigProvider source : sources) {
       manager.registerSource(source);
     }
     log.info("[LiteRule-Source] 规则数据源管理器已初始化（sources={}）", sources.size());

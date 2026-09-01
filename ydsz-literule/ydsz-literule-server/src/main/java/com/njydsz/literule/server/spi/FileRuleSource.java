@@ -59,7 +59,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  * @author ydsz-team
  */
 @Slf4j
-public class FileRuleSource implements RuleSource {
+public class FileRuleSource implements RuleConfigProvider {
 
   private static final String CLASSPATH_PREFIX = "classpath:";
   private static final String FILE_PREFIX = "file:";
