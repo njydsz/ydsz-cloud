@@ -1,6 +1,10 @@
 package com.njydsz.common.cache.internal;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,10 +29,11 @@ import com.njydsz.common.cache.support.AsyncFunction;
  * <p>封装了以下通用功能，消除子类重复代码：
  *
  * <ul>
- *   <li>命中/未命中计数与命中率统计
+ *   <li>命中/未命中/淘汰/加载计数与完整统计（{@code getStats()}）
  *   <li>删除监听器管理与通知
- *   <li>带加载器的获取（{@code get(key, loader)}）
- *   <li>异步获取（{@code getAsync(key, loader)}）
+ *   <li>带加载器的获取（{@code get(key, loader)}，含加载计时统计）
+ *   <li>批量加载获取（{@code getAll(keys, loader)}，单批一次加载统计）
+ *   <li>异步获取（{@code getAsync(key, loader)}，单飞 + 加载统计）
  * </ul>
  *
  * <p>子类只需实现 {@link #getIfPresent(Object)}、{@link #put(Object, Object)}、 {@link
@@ -55,6 +60,15 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
 
   /** 淘汰计数器（因容量限制被驱逐的条目数） */
   protected final LongAdder evictionCount = new LongAdder();
+
+  /** 加载成功次数（loader 正常返回，含返回 null 的"确认不存在"） */
+  protected final LongAdder loadSuccessCount = new LongAdder();
+
+  /** 加载异常次数（loader 抛出异常） */
+  protected final LongAdder loadExceptionCount = new LongAdder();
+
+  /** 总加载耗时（纳秒，成功与异常加载均计入） */
+  protected final LongAdder totalLoadTimeNanos = new LongAdder();
 
   /** 删除监听器列表 */
   protected final List<RemovalListener<? super K, ? super V>> listeners =
@@ -183,6 +197,8 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
   /**
    * 获取缓存值，如果不存在则使用加载器加载并放入缓存。
    *
+   * <p>加载统计（对标 Caffeine recordStats）：loader 调用计时并计入 加载成功/异常次数与总加载耗时，经 {@link #getStats()} 暴露。
+   *
    * @param key 缓存键
    * @param loader 值加载器
    * @return 缓存值或加载的值
@@ -191,9 +207,18 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
   public V get(K key, Function<K, V> loader) {
     V value = getIfPresent(key);
     if (value == null && loader != null) {
-      value = loader.apply(key);
-      if (value != null) {
-        put(key, value);
+      long start = System.nanoTime();
+      try {
+        value = loader.apply(key);
+        totalLoadTimeNanos.add(System.nanoTime() - start);
+        loadSuccessCount.increment();
+        if (value != null) {
+          put(key, value);
+        }
+      } catch (Exception e) {
+        totalLoadTimeNanos.add(System.nanoTime() - start);
+        loadExceptionCount.increment();
+        throw e;
       }
     }
     return value;
@@ -434,13 +459,21 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
       ourFuture.complete(second);
       return castFuture(ourFuture);
     }
+    // 持有加载权：仅本线程记录加载统计（等待方共享同一 Future，不重复计数）
+    long loadStart = System.nanoTime();
     loader
         .apply(key)
         .whenComplete(
             (v, err) -> {
               try {
-                if (err == null && v != null) {
-                  put(key, v);
+                totalLoadTimeNanos.add(System.nanoTime() - loadStart);
+                if (err == null) {
+                  loadSuccessCount.increment();
+                  if (v != null) {
+                    put(key, v);
+                  }
+                } else {
+                  loadExceptionCount.increment();
                 }
               } finally {
                 asyncLoadingFutures.remove(key, ourFuture);
@@ -488,23 +521,82 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
   /**
    * 获取缓存统计信息。
    *
+   * <p>完整统计（对标 Caffeine recordStats）：命中/未命中/淘汰计数之外， 包含 {@code get(key, loader)}、
+   * {@code getAsync} 与 {@code getAll(keys, loader)} 路径的 加载成功/异常次数与总加载耗时。 loadCount =
+   * 加载成功次数 + 加载异常次数。
+   *
    * @return 缓存统计快照
    */
   @Override
   public CacheStats getStats() {
-    return new CacheStats(hitCount.sum(), missCount.sum(), evictionCount.sum(), 0, 0, 0, 0);
+    long success = loadSuccessCount.sum();
+    long failure = loadExceptionCount.sum();
+    return new CacheStats(
+        hitCount.sum(),
+        missCount.sum(),
+        evictionCount.sum(),
+        success + failure,
+        success,
+        failure,
+        totalLoadTimeNanos.sum());
   }
 
   /**
-   * 重置命中与未命中计数器。
+   * 重置命中/未命中与加载统计计数器。
    *
-   * <p>仅清零 {@code hitCount} 与 {@code missCount}，不重置淘汰计数 {@code evictionCount}，
-   * 也不清空缓存数据本身。用于在监控周期切换时重新起算命中率。
+   * <p>清零 {@code hitCount}、{@code missCount} 与全部加载统计（次数/耗时）， 不重置淘汰计数 {@code
+   * evictionCount}，也不清空缓存数据本身。 用于在监控周期切换时重新起算命中率与平均加载耗时。
    */
   @Override
   public void resetStats() {
     hitCount.reset();
     missCount.reset();
+    loadSuccessCount.reset();
+    loadExceptionCount.reset();
+    totalLoadTimeNanos.reset();
+  }
+
+  /**
+   * 批量获取，未命中的键集合由加载器一次性批量加载（记录批量加载统计）。
+   *
+   * <p>单次批量调用计一次加载（成功或异常）并累计整批耗时—— 对标 Caffeine 的批量加载统计口径，避免 N
+   * 个缺失键膨胀为 N 次加载。
+   *
+   * @param keys 待查询的键集合
+   * @param loader 批量加载器，入参为缺失键集合，返回值为键到值的映射
+   * @return 命中与加载合并后的结果映射（不含加载不到的键）
+   */
+  @Override
+  public Map<K, V> getAll(Collection<K> keys, Function<Set<K>, Map<K, V>> loader) {
+    Map<K, V> result = getAll(keys);
+    if (loader == null || keys == null || keys.isEmpty()) {
+      return result;
+    }
+    Set<K> missing = new LinkedHashSet<>(keys);
+    missing.removeAll(result.keySet());
+    if (missing.isEmpty()) {
+      return result;
+    }
+    long start = System.nanoTime();
+    Map<K, V> loaded;
+    try {
+      loaded = loader.apply(missing);
+    } catch (Exception e) {
+      totalLoadTimeNanos.add(System.nanoTime() - start);
+      loadExceptionCount.increment();
+      throw e;
+    }
+    totalLoadTimeNanos.add(System.nanoTime() - start);
+    loadSuccessCount.increment();
+    if (loaded != null) {
+      for (Map.Entry<K, V> entry : loaded.entrySet()) {
+        if (entry.getKey() != null && entry.getValue() != null) {
+          put(entry.getKey(), entry.getValue());
+          result.put(entry.getKey(), entry.getValue());
+        }
+      }
+    }
+    return result;
   }
 
   /**

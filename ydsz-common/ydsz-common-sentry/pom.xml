@@ -98,17 +98,10 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-        <!-- Resilience4j 熔断器（替代自实现 CircuitBreaker） -->
+        <!-- 平台自研弹性引擎（熔断器，替代第三方弹性库） -->
         <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-core</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <!-- Resilience4j CircuitBreaker 模块（包含 CircuitBreakerConfig、CircuitBreakerRegistry 等类） -->
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-circuitbreaker</artifactId>
-            <scope>compile</scope>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
         </dependency>
         <!-- Bean Validation（配置属性验证） -->
         <dependency>

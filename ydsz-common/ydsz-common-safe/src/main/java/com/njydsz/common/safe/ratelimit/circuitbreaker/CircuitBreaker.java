@@ -3,19 +3,20 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.safe.resilience.CallNotPermittedException;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 
 /**
- * 熔断器（基于 Resilience4j 实现）
+ * 熔断器（基于平台自研弹性引擎 {@link com.njydsz.common.safe.resilience.CircuitBreaker}）
  *
  * <p><b>三态机：</b>
  *
@@ -28,15 +29,15 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
  * <p><b>触发条件（可配置）：</b>
  *
  * <ul>
- *   <li>失败率阈值（failureRateThreshold，默认 50%）
- *   <li>慢调用率阈值（slowCallRateThreshold，默认 100%）
+ *   <li>失败率阈值（failureRateThreshold，默认 0.5）
+ *   <li>慢调用率阈值（slowCallRateThreshold，默认 1.0）
  *   <li>最小调用数（minimumNumberOfCalls，默认 10）
  *   <li>滑动窗口大小（slidingWindowSize，默认 100）
  *   <li>开启后等待时间（waitDurationInOpenState，默认 10s）
  * </ul>
  *
- * <p>底层委托给 {@link io.github.resilience4j.circuitbreaker.CircuitBreaker}，
- * 提供更成熟的滑动窗口统计、状态事件、Micrometer 指标等能力。
+ * <p>每个资源标识对应一个独立的底层熔断器实例，由自研引擎提供滑动窗口统计、
+ * 状态自动流转、半开探测与事件总线能力（内网项目不引入第三方弹性库）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -44,18 +45,14 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 @Slf4j
 public class CircuitBreaker {
 
-  /** 资源 → 熔断器实例 */
-  private final ConcurrentHashMap<String, io.github.resilience4j.circuitbreaker.CircuitBreaker>
-      breakers = new ConcurrentHashMap<>();
+  /** 资源 → 底层熔断器实例 */
+  private final Map<String, com.njydsz.common.safe.resilience.CircuitBreaker> breakers =
+      new ConcurrentHashMap<>();
 
   private final CircuitBreakerConfig config;
-  private final CircuitBreakerRegistry registry;
 
   public CircuitBreaker(CircuitBreakerConfig config) {
     this.config = config;
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig resilience4jConfig =
-        config.toResilience4jConfig();
-    this.registry = CircuitBreakerRegistry.of(resilience4jConfig);
   }
 
   public CircuitBreaker() {
@@ -71,7 +68,7 @@ public class CircuitBreaker {
    * @return 限流决策（含执行结果或拒绝原因）
    */
   public <T> RateLimitDecision tryAcquire(String resource, CircuitBreakerCallback<T> callback) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
+    com.njydsz.common.safe.resilience.CircuitBreaker cb = getOrCreate(resource);
     try {
       T result =
           cb.executeSupplier(
@@ -93,6 +90,8 @@ public class CircuitBreaker {
           .timestamp(Instant.now())
           .reason("circuit breaker pass")
           .build();
+    } catch (CallNotPermittedException ex) {
+      return blockedDecision(resource, "circuit breaker open: " + ex.getMessage());
     } catch (Exception ex) {
       return blockedDecision(resource, "circuit breaker failure: " + ex.getMessage());
     }
@@ -115,8 +114,7 @@ public class CircuitBreaker {
    * @param resource 资源标识
    */
   public void forceOpen(String resource) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
-    cb.transitionToForcedOpenState();
+    getOrCreate(resource).transitionToForcedOpenState();
   }
 
   /**
@@ -125,8 +123,7 @@ public class CircuitBreaker {
    * @param resource 资源标识
    */
   public void forceClose(String resource) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
-    cb.reset();
+    getOrCreate(resource).transitionToClosedState();
   }
 
   /**
@@ -136,32 +133,34 @@ public class CircuitBreaker {
    * @return 熔断器状态（未创建时返回 CLOSED）
    */
   public State getState(String resource) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = breakers.get(resource);
+    com.njydsz.common.safe.resilience.CircuitBreaker cb = breakers.get(resource);
     if (cb == null) {
       return State.CLOSED;
     }
-    return switch (cb.getState()) {
+    return toLocalState(cb.getState());
+  }
+
+  /** 获取或创建指定资源的熔断器实例。 */
+  private com.njydsz.common.safe.resilience.CircuitBreaker getOrCreate(String resource) {
+    return breakers.computeIfAbsent(resource, key -> newEngineBreaker(config, key));
+  }
+
+  /** 由本类配置构建底层引擎熔断器（名称 = 前缀-资源名，便于日志定位）。 */
+  private static com.njydsz.common.safe.resilience.CircuitBreaker newEngineBreaker(
+      CircuitBreakerConfig config, String resource) {
+    String prefix = config.getName() == null ? "ratelimit" : config.getName();
+    return new com.njydsz.common.safe.resilience.CircuitBreaker(
+        prefix + "-" + resource, config.toEngineConfig());
+  }
+
+  /** 引擎状态 → 本地三态映射（FORCED_OPEN 视为 OPEN）。 */
+  private static State toLocalState(
+      com.njydsz.common.safe.resilience.CircuitBreaker.State engineState) {
+    return switch (engineState) {
       case CLOSED -> State.CLOSED;
-      case OPEN -> State.OPEN;
+      case OPEN, FORCED_OPEN -> State.OPEN;
       case HALF_OPEN -> State.HALF_OPEN;
-      case DISABLED, METRICS_ONLY, FORCED_OPEN -> State.OPEN;
     };
-  }
-
-  /** 获取或创建指定资源的熔断器实例 */
-  private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreate(String resource) {
-    return breakers.computeIfAbsent(resource, registry::circuitBreaker);
-  }
-
-  /**
-   * 获取 Resilience4j 原生熔断器（供高级场景使用）
-   *
-   * @param resource 资源标识
-   * @return Resilience4j 熔断器实例；未创建时返回 null
-   */
-  public io.github.resilience4j.circuitbreaker.CircuitBreaker getResilience4jCircuitBreaker(
-      String resource) {
-    return breakers.get(resource);
   }
 
   /**
@@ -196,7 +195,7 @@ public class CircuitBreaker {
     T call() throws Throwable;
   }
 
-  /** 熔断器配置（与 Resilience4j CircuitBreakerConfig 映射）。 */
+  /** 熔断器配置（阈值语义为 0-1 比例，映射到引擎百分比配置）。 */
   @Data
   @Builder
   @NoArgsConstructor
@@ -226,6 +225,9 @@ public class CircuitBreaker {
     /** 滑动窗口类型 */
     @Builder.Default private SlidingWindowType slidingWindowType = SlidingWindowType.COUNT_BASED;
 
+    /** 熔断器名称（用于日志与事件） */
+    @Builder.Default private String name = "ratelimit";
+
     /**
      * 创建采用默认参数的熔断器配置。
      *
@@ -238,10 +240,9 @@ public class CircuitBreaker {
       return new CircuitBreakerConfig();
     }
 
-    /** 转换为 Resilience4j CircuitBreakerConfig */
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toResilience4jConfig() {
-      SlidingWindowType swType = this.slidingWindowType;
-      return io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+    /** 转换为自研引擎配置（阈值 0-1 → 百分比）。 */
+    com.njydsz.common.safe.resilience.CircuitBreakerConfig toEngineConfig() {
+      return com.njydsz.common.safe.resilience.CircuitBreakerConfig.custom()
           .failureRateThreshold((float) (this.failureRateThreshold * 100))
           .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))
           .slowCallDurationThreshold(Duration.ofMillis(this.slowCallDurationThresholdMillis))
@@ -250,12 +251,11 @@ public class CircuitBreaker {
           .permittedNumberOfCallsInHalfOpenState(this.permittedNumberOfCallsInHalfOpenState)
           .slidingWindowSize(this.slidingWindowSize)
           .slidingWindowType(
-              SlidingWindowType.COUNT_BASED.equals(swType)
-                  ? io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType
+              SlidingWindowType.COUNT_BASED.equals(this.slidingWindowType)
+                  ? com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType
                       .COUNT_BASED
-                  : io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType
+                  : com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType
                       .TIME_BASED)
-          .recordException(recordException -> true)
           .build();
     }
   }

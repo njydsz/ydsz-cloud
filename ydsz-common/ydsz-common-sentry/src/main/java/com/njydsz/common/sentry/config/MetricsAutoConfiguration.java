@@ -3,8 +3,6 @@ package com.njydsz.common.sentry.config;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -31,15 +29,16 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  *   <li>{@link MicrometerMetricsCollector}：Micrometer 指标采集（优先）
  *   <li>{@link InMemoryMetricsCollector}：内存指标采集（降级）
  *   <li>{@link SystemMetricsCollector}：系统资源指标（CPU/内存/磁盘/GC）
- *   <li>{@link CircuitBreaker}：ELK/Loki 通道独立熔断器（基于 Resilience4j）
+ *   <li>{@link CircuitBreaker}：ELK/Loki 通道独立熔断器（基于平台自研弹性引擎）
  * </ul>
  *
  * <h3>1.0.0 变更</h3>
  *
  * <ul>
- *   <li>CircuitBreaker 底层替换为 Resilience4j，移除自实现滑动窗口
- *   <li>新增 {@link CircuitBreakerRegistry} 共享 Bean，统一管理熔断器配置
- *   <li>Resilience4j 已自动导出 Micrometer 指标，移除手动 Gauge 绑定
+ *   <li>熔断底层改为平台自研弹性引擎（common-safe resilience 包），移除第三方弹性库依赖
+ *   <li>新增自研 {@code CircuitBreakerRegistry} 共享 Bean，统一管理熔断器配置
+ *   <li>修复历史缺陷：SentryProperties 失败率阈值（0-1）此前直传百分比语义 API，
+ *       实际生效阈值缩小 100 倍；现已正确换算
  * </ul>
  *
  * @author ydsz-team
@@ -121,38 +120,34 @@ public class MetricsAutoConfiguration {
   }
 
   /**
-   * 注册共享的 Resilience4j CircuitBreakerRegistry。
+   * 注册共享的自研 CircuitBreakerRegistry。
    *
-   * <p>使用 Sentry 配置的默认熔断参数创建全局 Registry， 所有熔断器（ELK/Loki 通道）共享此 Registry 以便统一管理指标与事件。
-   *
-   * <p>Resilience4j 的熔断器指标会自动导出到 Micrometer（如果 MeterRegistry 可用）， 指标前缀为 {@code
-   * resilience4j.circuitbreaker}，无需手动绑定 Gauge。
+   * <p>使用 Sentry 配置的默认熔断参数创建全局 Registry， 所有熔断器（ELK/Loki 通道）共享此
+   * Registry 以便统一管理与事件订阅。指标导出请订阅各熔断器的 事件发布器并桥接 Micrometer。
    *
    * @param properties 监控配置
-   * @return 共享的 CircuitBreakerRegistry
+   * @return 共享的自研 CircuitBreakerRegistry
    */
   @Bean
-  @ConditionalOnMissingBean(CircuitBreakerRegistry.class)
-  @ConditionalOnClass(CircuitBreakerRegistry.class)
-  /**
-   * circuit breaker registry。
-   * @param properties 参数
-   * @return 结果
-   */
-  public CircuitBreakerRegistry circuitBreakerRegistry(SentryProperties properties) {
+  @ConditionalOnMissingBean(
+      beanTypes = com.njydsz.common.safe.resilience.CircuitBreakerRegistry.class)
+  public com.njydsz.common.safe.resilience.CircuitBreakerRegistry circuitBreakerRegistry(
+      SentryProperties properties) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
-    CircuitBreakerConfig config =
-        CircuitBreakerConfig.custom()
-            .failureRateThreshold((float) cb.getFailureRateThreshold())
-            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+    com.njydsz.common.safe.resilience.CircuitBreakerConfig config =
+        com.njydsz.common.safe.resilience.CircuitBreakerConfig.custom()
+            // SentryProperties 阈值为 0-1 比例，换算为引擎百分比语义
+            .failureRateThreshold((float) (cb.getFailureRateThreshold() * 100))
+            .slidingWindowType(
+                com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType
+                    .TIME_BASED)
             .slidingWindowSize(cb.getSlidingWindowSize())
             .waitDurationInOpenState(java.time.Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))
             .minimumNumberOfCalls(10)
             .permittedNumberOfCallsInHalfOpenState(1)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
-            .recordException(e -> true)
             .build();
-    return CircuitBreakerRegistry.of(config);
+    return new com.njydsz.common.safe.resilience.CircuitBreakerRegistry(config);
   }
 
   /**

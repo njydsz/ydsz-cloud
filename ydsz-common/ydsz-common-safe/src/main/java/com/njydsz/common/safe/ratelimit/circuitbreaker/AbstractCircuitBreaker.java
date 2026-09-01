@@ -3,7 +3,6 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -229,17 +228,6 @@ public abstract class AbstractCircuitBreaker {
    */
   public String getName() {
     return config.getName();
-  }
-
-  /**
-   * 获取底层 Resilience4j CircuitBreaker 实例（可选，供高级场景使用）。
-   *
-   * <p>默认返回 null，使用 Resilience4j 实现的子类可覆写。
-   *
-   * @return Resilience4j CircuitBreaker 实例；默认 null
-   */
-  public CircuitBreaker getDelegate() {
-    return null;
   }
 
   /**

@@ -199,7 +199,8 @@ public final class CircuitBreaker {
       try {
         if (stateRef.get() == State.HALF_OPEN) {
           int success = halfOpenSuccess.incrementAndGet();
-          if (success >= config.getPermittedNumberOfCallsInHalfOpenState()) {
+          if (success >= config.getPermittedNumberOfCallsInHalfOpenState()
+              && stateRef.compareAndSet(State.HALF_OPEN, State.CLOSED)) {
             transitionTo(State.HALF_OPEN, State.CLOSED);
             metrics.reset();
           }
@@ -243,7 +244,7 @@ public final class CircuitBreaker {
     if (current == State.HALF_OPEN) {
       halfOpenLock.lock();
       try {
-        if (stateRef.get() == State.HALF_OPEN) {
+        if (stateRef.compareAndSet(State.HALF_OPEN, State.OPEN)) {
           transitionTo(State.HALF_OPEN, State.OPEN);
           metrics.reset();
         }

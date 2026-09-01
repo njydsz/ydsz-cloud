@@ -1,8 +1,9 @@
 package com.njydsz.common.audit.diff;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 变更 diff 快照计算器 —— 计算操作前后的字段级差异。
@@ -37,7 +40,6 @@ import lombok.NoArgsConstructor;
  * <p>注意：diff 本质是快照级别的文本比对，不替代业务层的操作性日志；
  * 当同一字段在同一请求内被多次变更时，仅保留「第一次」和「最后一次」。
  *
- * @path ydsz-common/ydsz-common-audit/src/main/java/com/njydsz/common/audit/diff/DiffSnapshotHelper.java
  * @author ydsz-team
  * @since 4.1.0 (P2-14)
  */
@@ -91,11 +93,17 @@ public final class DiffSnapshotHelper {
     }
     // 两者都有（可能变更）
     for (String key : before.keySet()) {
-      if (ignored.contains(key) || !after.containsKey(key)) continue;
+      if (ignored.contains(key) || !after.containsKey(key)) {
+        continue;
+      }
       Object oldVal = before.get(key);
       Object newVal = after.get(key);
-      if (oldVal == null && newVal == null) continue;
-      if (oldVal != null && oldVal.equals(newVal)) continue;
+      if (oldVal == null && newVal == null) {
+        continue;
+      }
+      if (oldVal != null && oldVal.equals(newVal)) {
+        continue;
+      }
       result.getChangedFields().add(
           new FieldChange(key, oldVal == null ? null : oldVal.toString(), newVal == null ? null : newVal.toString()));
     }
@@ -109,11 +117,13 @@ public final class DiffSnapshotHelper {
    */
   @SuppressWarnings("unchecked")
   private static Map<String, Object> parseJson(String json) {
-    if (json == null || json.isBlank()) return Collections.emptyMap();
+    if (json == null || json.isBlank()) {
+      return Collections.emptyMap();
+    }
     try {
       // 采用 ydsz-common-json 统一 JSON（项目禁止使用 Jackson/Fastjson2，见 §6.2）
       // 返回 Map（具体实现类由 ydsz-common-json 内部决定）
-      return com.njydsz.common.json.YdszJson.toMap(json);
+      return YdszJson.toMap(json);
     } catch (Exception e) {
       // 解析失败时返回空 map（避免 diff 计算阻断审计主流程）
       return Collections.emptyMap();
@@ -132,27 +142,38 @@ public final class DiffSnapshotHelper {
 
     /** 发生变更的字段列表 */
     @Builder.Default
-    private java.util.List<FieldChange> changedFields = new java.util.ArrayList<>();
+    private List<FieldChange> changedFields = new ArrayList<>();
 
     /** 新增的字段列表 */
     @Builder.Default
-    private java.util.List<String> addedFields = new java.util.ArrayList<>();
+    private List<String> addedFields = new ArrayList<>();
 
     /** 删除的字段列表 */
     @Builder.Default
-    private java.util.List<String> removedFields = new java.util.ArrayList<>();
+    private List<String> removedFields = new ArrayList<>();
 
-    /** 是否「无变更」（纯便捷方法，等价于三个列表都为空） */
+    /** 是否「无变更」（纯便捷方法，等价于三个列表都为空）
+     *
+     * @return 三个列表都为空时返回 true
+     */
     public boolean isEmpty() {
       return changedFields.isEmpty() && addedFields.isEmpty() && removedFields.isEmpty();
     }
 
-    /** 创建空 diff（无变化） */
+    /** 创建空 diff（无变化）
+     *
+     * @return 空的 DiffResult 实例
+     */
     public static DiffResult empty() {
       return new DiffResult();
     }
 
-    /** 创建「全新创建」diff（只含新增字段） */
+    /**
+     * 创建「全新创建」diff（只含新增字段）
+     *
+     * @param afterJson 变更后 JSON 字符串
+     * @return 包含新增字段列表的 DiffResult
+     */
     public static DiffResult create(String afterJson) {
       DiffResult r = new DiffResult();
       Map<String, Object> after = parseJson(afterJson);
@@ -160,7 +181,12 @@ public final class DiffSnapshotHelper {
       return r;
     }
 
-    /** 创建「完全删除」diff（只含移除字段） */
+    /**
+     * 创建「完全删除」diff（只含移除字段）
+     *
+     * @param beforeJson 变更前 JSON 字符串
+     * @return 包含删除字段列表的 DiffResult
+     */
     public static DiffResult delete(String beforeJson) {
       DiffResult r = new DiffResult();
       Map<String, Object> before = parseJson(beforeJson);
@@ -181,7 +207,7 @@ public final class DiffSnapshotHelper {
       /** 旧值（字符串化） */
       private String old;
       /** 新值（字符串化） */
-      private String new_;
+      private String newValue;
     }
   }
 }

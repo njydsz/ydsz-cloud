@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.cache.api.CachePolicy;
 import com.njydsz.common.cache.internal.AbstractCache;
 import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.stats.CacheStats;
 
 /**
  * 分段锁高性能缓存（采样 LRU 淘汰版）。
@@ -225,15 +224,8 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return total == 0 ? 0.0 : (double) hitCount.sum() / total;
   }
 
-  /**
-   * 获取缓存统计快照。
-   *
-   * @return 包含命中数与未命中数的统计对象
-   */
-  @Override
-  public CacheStats getStats() {
-    return new CacheStats(hitCount.sum(), missCount.sum());
-  }
+  // getStats() 不再覆写：继承 AbstractCache 的完整统计
+  // （旧覆写仅返回命中/未命中，丢弃了淘汰计数与加载统计，属统计有损回归）。
 
   /**
    * 获取缓存策略查询接口 — 支持运行时调整最大容量（缩容立即生效）。

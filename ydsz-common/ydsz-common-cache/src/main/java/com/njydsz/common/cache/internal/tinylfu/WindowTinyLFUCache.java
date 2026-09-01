@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -12,10 +14,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.cache.api.CachePolicy;
 import com.njydsz.common.cache.internal.AbstractCache;
 import com.njydsz.common.cache.internal.lfu.FrequencySketch;
 import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.stats.CacheStats;
 
 /**
  * Window-TinyLFU 缓存实现（Caffeine 架构）。
@@ -40,7 +42,8 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
 
   private static final Logger LOG = LoggerFactory.getLogger(WindowTinyLFUCache.class);
 
-  private final int maxSize;
+  /** 最大容量（条目数）；volatile 支持经 {@link #policy()} 运行时调整 */
+  private volatile int maxSize;
   private final ConcurrentHashMap<K, Node<K, V>> data;
   private final Node<K, V> windowHead;
   private Node<K, V> windowTail;
@@ -59,8 +62,8 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
   private static final int RESET_CHUNKS = 8;
   /** 分片衰减触发阈值（shiftThreshold / RESET_CHUNKS，至少 1） */
   private final int resetThreshold;
-  /** Window 队列容量上限（maxSize 的 1%，至少 1），Caffeine 标准分段 */
-  private final int maxWindowSize;
+  /** Window 队列容量上限（maxSize 的 1%，至少 1），Caffeine 标准分段；随容量调整同步重算 */
+  private volatile int maxWindowSize;
   private volatile long totalCount;
 
   public WindowTinyLFUCache(int maxCapacity) {
@@ -514,14 +517,111 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     return total == 0 ? 0.0 : (double) hitCount.sum() / total;
   }
 
+  // getStats() 不再覆写：继承 AbstractCache 的完整统计
+  // （旧覆写仅返回命中/未命中，丢弃了淘汰计数与加载统计，属统计有损回归）。
+
   /**
-   * 获取缓存统计快照。
+   * 获取缓存策略查询接口 — 支持运行时调整最大容量。
    *
-   * @return 包含命中数与未命中数的统计对象
+   * <p>缩容立即生效（写锁内按 W-TinyLFU 频率竞争淘汰至新容量）； 扩容仅影响后续写入的淘汰判定。
+   * Window 配额（容量的 1%）随容量同步重算； 频率草图容量不追溯扩容（计数精度随容量增长平缓退化，与 Caffeine 同口径）。
+   *
+   * @return 缓存策略
    */
   @Override
-  public CacheStats getStats() {
-    return new CacheStats(hitCount.sum(), missCount.sum());
+  public CachePolicy policy() {
+    return new CachePolicy() {
+      /**
+       * 查询淘汰策略（W-TinyLFU 频率淘汰，按条目数计量）。
+       *
+       * @return 淘汰策略，始终非空
+       */
+      @Override
+      public Optional<EvictionPolicy> eviction() {
+        return Optional.of(
+            new EvictionPolicy() {
+              /**
+               * 获取当前最大容量。
+               *
+               * @return 当前最大容量（条目数）
+               */
+              @Override
+              public OptionalLong getMaximum() {
+                return OptionalLong.of(maxSize);
+              }
+
+              /**
+               * 调整最大容量（&lt;1 抛 IllegalArgumentException）。
+               *
+               * <p>缩容时在写锁内触发频率竞争淘汰；扩容立即放宽写入门槛。
+               *
+               * @param maximumSize 新的最大容量（条目数，&ge;1）
+               */
+              @Override
+              public void setMaximum(long maximumSize) {
+                if (maximumSize < 1) {
+                  throw new IllegalArgumentException("maximumSize must be >= 1");
+                }
+                if (maximumSize > Integer.MAX_VALUE) {
+                  throw new IllegalArgumentException(
+                      "maximumSize must be <= " + Integer.MAX_VALUE);
+                }
+                int oldMaxSize = maxSize;
+                maxSize = (int) maximumSize;
+                maxWindowSize = Math.max(1, (int) (maximumSize * 0.01));
+                LOG.info(
+                    "WindowTinyLFUCache 最大容量调整: {} -> {}", oldMaxSize, maxSize);
+                if (maximumSize < oldMaxSize) {
+                  shrinkToCapacity();
+                }
+              }
+
+              /**
+               * 获取当前加权大小（本实现按条目数计量，不支持权重）。
+               *
+               * @return {@link OptionalLong#empty()}，不支持权重统计
+               */
+              @Override
+              public OptionalLong weightedSize() {
+                return OptionalLong.empty();
+              }
+
+              /**
+               * 是否使用权重（本实现按条目数淘汰）。
+               *
+               * @return 恒为 {@code false}
+               */
+              @Override
+              public boolean isWeighted() {
+                return false;
+              }
+            });
+      }
+
+      /**
+       * 查询过期策略（过期由 ExpirableCache 装饰器负责，内核不支持）。
+       *
+       * @return {@link Optional#empty()}，本内核不管理过期
+       */
+      @Override
+      public Optional<ExpirationPolicy> expiration() {
+        return Optional.empty();
+      }
+    };
+  }
+
+  /** 运行时缩容：写锁内按频率竞争淘汰至总量不超过当前容量。 */
+  private void shrinkToCapacity() {
+    writeLock.lock();
+    try {
+      while (sizeCounter.get() > maxSize) {
+        if (!evictOnce()) {
+          break;
+        }
+      }
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   /**
