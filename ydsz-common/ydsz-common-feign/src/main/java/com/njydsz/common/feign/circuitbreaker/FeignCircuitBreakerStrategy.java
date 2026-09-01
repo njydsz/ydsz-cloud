@@ -3,14 +3,14 @@ package com.njydsz.common.feign.circuitbreaker;
 /**
  * Feign 熔断器策略接口。
  *
- * <p>封装 Resilience4j 熔断器与 Feign 调用的集成点，提供请求许可判断和结果反馈。 实现类由 {@link Resilience4jFeignConfiguration}
+ * <p>封装平台自研熔断器与 Feign 调用的集成点，提供请求许可判断和结果反馈。 实现类由 {@link CircuitBreakerFeignConfiguration}
  * 注册（需启用 {@code ydsz.feign.circuit-breaker.enabled=true}）。
  *
  * <p>当未注册实现时，{@code FeignResponseInterceptor} 跳过熔断逻辑（降级为无保护模式）。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see Resilience4jFeignConfiguration
+ * @see CircuitBreakerFeignConfiguration
  */
 public interface FeignCircuitBreakerStrategy {
 

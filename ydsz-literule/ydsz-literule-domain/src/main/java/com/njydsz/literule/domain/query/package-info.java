@@ -11,5 +11,8 @@
  * </ul>
  *
  * <p>当前模块使用 {@code ydsz-common-domain} 的 {@code PageQuery} 作为基类。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 package com.njydsz.literule.domain.query;

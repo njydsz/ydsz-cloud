@@ -16,6 +16,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -101,8 +102,9 @@ public class FastReaderXlsxSpecComplianceTest {
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
             + "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
             + "<sheetData>"
-            + "<row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c></row>"
-            + "<row r=\"2\"><c r=\"A2\" t=\"s\"><v>1</v></c></row>"
+            + "<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>名称</t></is></c></row>"
+            + "<row r=\"2\"><c r=\"A2\" t=\"s\"><v>0</v></c></row>"
+            + "<row r=\"3\"><c r=\"A3\" t=\"s\"><v>1</v></c></row>"
             + "</sheetData></worksheet>";
     File file = createManualXlsx(tempDir.resolve("phonetic.xlsx").toFile(), sstXml, sheetXml);
 
@@ -165,7 +167,7 @@ public class FastReaderXlsxSpecComplianceTest {
     Date written = cal.getTime();
     try (XSSFWorkbook wb = new XSSFWorkbook();
         FileOutputStream fos = new FileOutputStream(file)) {
-      // 1904 窗口 workbook：序列值起点为 1904-01-01（与 1900 窗口差约 4 年）
+      // 1904 窗口 workbook 声明（序列值起点为 1904-01-01，与 1900 窗口差 1462 天）
       wb.getCTWorkbook().addNewWorkbookPr().setDate1904(true);
       Sheet sheet = wb.createSheet("S1");
       Row header = sheet.createRow(0);
@@ -178,13 +180,15 @@ public class FastReaderXlsxSpecComplianceTest {
       dateStyle.setDataFormat(
           wb.getCreationHelper().createDataFormat().getFormat("yyyy-mm-dd"));
       Cell dateCell = data.createCell(1);
-      dateCell.setCellValue(written);
+      // 显式按 1904 窗口计算序列值写入（POI setCellValue(Date) 的窗口取数存在版本差异，
+      // 测试以 DateUtil.getExcelDate(date, true) 锁定写入端语义）
+      dateCell.setCellValue(DateUtil.getExcelDate(written, true));
       dateCell.setCellStyle(dateStyle);
 
       wb.write(fos);
     }
 
-    // use1904Windowing=true：序列值按 1904 窗口还原为写入的日期
+    // use1904Windowing=true：1904 序列值还原为写入的日期（默认 1900 解读会偏 4 年）
     ReadMetadata metadata = new ReadMetadata();
     metadata.setClazz(DateRow.class);
     metadata.setFilePath(file.getAbsolutePath());
