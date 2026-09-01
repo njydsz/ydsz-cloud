@@ -17,8 +17,8 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import com.njydsz.common.excel.annotation.ContentStyle;
 import com.njydsz.common.excel.annotation.ExcelProperty;
+import com.njydsz.common.excel.annotation.ExcelStyle;
 import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.listener.WriteLifecycleHandler;
@@ -89,14 +89,16 @@ public class FastWriterGracefulFallbackTest {
     metadata.setFilePath(out.getAbsolutePath());
     metadata.setExcelConfig(ExcelConfig.builder().useFastWriter(true).build());
 
-    new ExcelWriter(metadata).doWrite(List.of(new StyledRow("加粗列"))).finish();
+    ExcelWriter styledWriter = new ExcelWriter(metadata);
+    styledWriter.doWrite(List.of(new StyledRow("加粗列")));
+    styledWriter.finish();
 
-    // fast 引擎不写样式——POI 直读发现非默认加粗/字重即证明降级后样式生效
+    // fast 引擎不写样式——POI 直读发现数据列加粗即证明降级后样式生效
     try (Workbook wb = WorkbookFactory.create(out, null, true)) {
       Sheet sheet = wb.getSheetAt(0);
       Row header = sheet.getRow(0);
       Cell cell = header.getCell(0);
-      boolean bold = cell.getCellStyle().getFont().getBold();
+      boolean bold = wb.getFontAt(cell.getCellStyle().getFontIndexAsInt()).getBold();
       assertTrue(bold, "样式注解在 fast 配置下应经 POI 降级路径生效（加粗）");
       assertEquals("名称", cell.getStringCellValue());
     }
@@ -114,7 +116,9 @@ public class FastWriterGracefulFallbackTest {
     metadata.setFilePath(out.getAbsolutePath());
     metadata.setExcelConfig(ExcelConfig.builder().useFastWriter(true).build());
 
-    new ExcelWriter(metadata).doWrite(List.of(new SimpleRow("A"), new SimpleRow("B"))).finish();
+    ExcelWriter plainWriter = new ExcelWriter(metadata);
+    plainWriter.doWrite(List.of(new SimpleRow("A"), new SimpleRow("B")));
+    plainWriter.finish();
 
     try (Workbook wb = WorkbookFactory.create(out, null, true)) {
       Sheet sheet = wb.getSheetAt(0);
@@ -149,7 +153,7 @@ public class FastWriterGracefulFallbackTest {
   /** 带样式注解的行 DTO（触发 POI 降级） */
   public static class StyledRow {
     @ExcelProperty(value = "名称")
-    @ContentStyle(bold = true)
+    @ExcelStyle(dataBold = true)
     private String name;
 
     public StyledRow() {}
