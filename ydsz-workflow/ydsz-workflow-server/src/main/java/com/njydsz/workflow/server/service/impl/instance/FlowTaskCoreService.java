@@ -748,8 +748,8 @@ public class FlowTaskCoreService {
   /**
    * 更新实例当前节点
    *
-   * @param instance 参数说明
-   * @param nextNodes 参数说明
+   * @param instance 当前流程实例
+   * @param nextNodes 审批通过后的下游节点列表
    */
   private void updateInstanceNode(FlowInstanceVO instance, List<FlowNodeVO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
@@ -812,8 +812,8 @@ public class FlowTaskCoreService {
    * <p>原实现直接返回 startNode.getNodeCode()（开始节点本身）， 导致退回后不会生成有意义的待办任务。修正为沿 PASS 出边找到 第一个 APPROVAL
    * 类型节点，找不到时回退到开始节点。
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 第一个下游审批节点编码；未找到时返回 startNode 编码；definitionCacheService 不可用时返回 null
    */
   private String resolveInitiatorNodeCode(String definitionId) {
     if (definitionCacheService == null || definitionId == null) {

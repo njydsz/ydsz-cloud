@@ -392,8 +392,8 @@ public class FlowDefinitionMigrationManager {
   /**
    * 根据 definitionId 查询流程定义，不存在则抛出 NOT_FOUND。
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 流程定义 VO；不存在时抛 {@code NOT_FOUND}
    */
   private FlowDefinitionVO findDefinitionOrThrow(String definitionId) {
     FlowDefinitionVO def = definitionRepository.findById(definitionId)
@@ -410,9 +410,9 @@ public class FlowDefinitionMigrationManager {
   /**
    * 根据 flowCode + 版本号查找定义版本，不存在则抛出 NOT_FOUND。
    *
-   * @param flowCode 参数说明
-   * @param version 参数说明
-   * @return 返回值说明
+   * @param flowCode 流程编码
+   * @param version 目标版本号整数
+   * @return 匹配的流程定义 VO；不存在时抛 {@code NOT_FOUND}
    */
   private FlowDefinitionVO findVersionOrThrow(String flowCode, Integer version) {
     String versionStr = String.valueOf(version);
@@ -448,9 +448,9 @@ public class FlowDefinitionMigrationManager {
   /**
    * 加载两个版本的节点和连线数据，返回差异上下文。
    *
-   * @param defV1 参数说明
-   * @param defV2 参数说明
-   * @return 返回值说明
+   * @param defV1 待对比的老版本流程定义 VO
+   * @param defV2 待对比的新版本流程定义 VO
+   * @return 加载了两个版本的节点与连线映射的上下文对象
    */
   private VersionDiffContext loadVersionContext(FlowDefinitionVO defV1, FlowDefinitionVO defV2) {
     List<FlowNodeVO> nodesV1 = nodeRepository.findByDefinitionId(defV1.getId());
@@ -528,10 +528,10 @@ public class FlowDefinitionMigrationManager {
   /**
    * 比较单字段，different 时放入 changes Map。
    *
-   * @param changes 参数说明
-   * @param fieldName 参数说明
-   * @param oldVal 参数说明
-   * @param newVal 参数说明
+   * @param changes 变更收集器（key=fieldName, value={old, new}）
+   * @param fieldName 字段名（如 nodeName / nodeType）
+   * @param oldVal 版本 1 字段值
+   * @param newVal 版本 2 字段值
    */
   private void compareField(Map<String, Map<String, Object>> changes,
       String fieldName, String oldVal, String newVal) {
@@ -593,11 +593,11 @@ public class FlowDefinitionMigrationManager {
   /**
    * 输出版本差异对比日志。
    *
-   * @param flowCode 参数说明
-   * @param version1 参数说明
-   * @param version2 参数说明
-   * @param nodeDiff 参数说明
-   * @param skipDiff 参数说明
+   * @param flowCode 流程编码（日志上下文）
+   * @param version1 版本 1 编号
+   * @param version2 版本 2 编号
+   * @param nodeDiff 节点差异 Map（含 added / removed / modified）
+   * @param skipDiff 连线差异 Map（含 added / removed）
    */
   private void logDiffResult(String flowCode, Integer version1, Integer version2,
       Map<String, Object> nodeDiff, Map<String, Object> skipDiff) {
@@ -631,8 +631,8 @@ public class FlowDefinitionMigrationManager {
   /**
    * 从 ext JSON 中提取 sourceRef，拼接 key
    *
-   * @param skip 参数说明
-   * @return 返回值说明
+   * @param skip 连线 VO（含 ext 中的 sourceRef 与 nextNodeCode）
+   * @return 连线唯一键（格式：sourceRef->nextNodeCode）；信息缺失时回退 skip.id
    */
   private String buildSkipKey(FlowSkipVO skip) {
     String sourceRef = null;
@@ -673,8 +673,8 @@ public class FlowDefinitionMigrationManager {
   /**
    * 解析版本号字符串为整数
    *
-   * @param versionStr 参数说明
-   * @return 返回值说明
+   * @param versionStr 版本号字符串（如 "1.0" / "2" / null）
+   * @return 整数版本号（小数部分截断）；为空 / 解析失败时返回 0
    */
   private Integer parseVersionInt(String versionStr) {
     if (!StringUtils.hasText(versionStr)) {
@@ -692,13 +692,13 @@ public class FlowDefinitionMigrationManager {
   /**
    * 根据风险等级和影响范围生成迁移建议
    *
-   * @param riskLevel 参数说明
-   * @param runningTotal 参数说明
-   * @param stuckInstances 参数说明
-   * @param affectedInstances 参数说明
-   * @param removedNodes 参数说明
-   * @param modifiedNodes 参数说明
-   * @return 返回值说明
+   * @param riskLevel 影响分析风险等级（NONE / LOW / MEDIUM / HIGH）
+   * @param runningTotal 老版本在途实例总数
+   * @param stuckInstances 卡死在已删除节点的实例子列表
+   * @param affectedInstances 停留在已修改节点的实例子列表
+   * @param removedNodes 已删除的节点变更项列表
+   * @param modifiedNodes 已修改的节点变更项列表
+   * @return 按风险等级组装的迁移建议字符串列表
    */
   private List<String> buildRecommendations(
       String riskLevel,

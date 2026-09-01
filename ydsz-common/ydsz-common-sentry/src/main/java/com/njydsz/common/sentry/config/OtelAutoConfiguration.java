@@ -130,7 +130,10 @@ public class OtelAutoConfiguration {
    * <p>1.0.0 变更：不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播， 避免与
    * opentelemetry-spring-boot-starter 等第三方配置冲突。
    *
-   * @return OpenTelemetrySdk 实例
+   * @param sentryProperties 可观测配置，其中 {@code tracing.otel} 段决定采样率、导出方式与资源属性
+   * @param exporterProvider 用户自定义的 {@code SpanExporter} 延迟提供者；取不到时按配置构建默认导出器
+   * @param customProcessorsProvider 用户追加的 {@code SpanProcessor} 列表提供者；取不到时不追加任何处理器
+   * @return OpenTelemetrySdk 实例（以 {@code OtelSdkInitializer} 形式承载，{@code initMethod} 阶段完成构建）
    */
   @Bean(name = "ydszOpenTelemetrySdk", initMethod = "build", destroyMethod = "close")
   @ConditionalOnMissingBean(name = "ydszOpenTelemetrySdk")

@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * <p><b>优化技术：</b>
  *
  * <ul>
- *   <li>类型代码缓存 - 使用 ConcurrentHashMap 缓存类型代码，替代 instanceof 链
+ *   <li>类型代码缓存 - 使用 BoundedLruCache 缓存类型代码，替代 instanceof 链
  *   <li>小整数缓存 - 0-9999 的整数直接查表，避免 String.valueOf 开销
  *   <li>快速字符串编码 - 两次遍历快速路径，减少转义判断开销
  *   <li>循环引用检测 - 使用 IdentityHashMap 保证引用比较
@@ -85,8 +84,13 @@ public final class ValueWriter {
   static final byte TYPE_CODE_OPTIONAL = 17;
   static final byte TYPE_CODE_UUID = 18;
 
-  /** 类型代码缓存（Class -> 类型代码） */
-  static final ConcurrentHashMap<Class<?>, Byte> TYPE_CODE_CACHE = new ConcurrentHashMap<>(256);
+  /**
+   * 类型代码缓存（Class -> 类型代码）。
+   *
+   * <p>P1 修复：原为无界 ConcurrentHashMap，业务每序列化一个新 Bean 类型即新增条目且永不淘汰，
+   * 长期运行存在内存增长风险（其余缓存均已设界，独此处遗漏）。现改为 BoundedLruCache（上界 1024）。
+   */
+  static final BoundedLruCache<Class<?>, Byte> TYPE_CODE_CACHE = new BoundedLruCache<>(1024);
 
   /** 十六进制字符表（用于 \\uXXXX 转义） */
   private static final char[] HEX = "0123456789abcdef".toCharArray();
@@ -160,7 +164,6 @@ public final class ValueWriter {
     TYPE_CODE_CACHE.put(clazz, typeCode);
     return typeCode;
   }
-
   /**
    * 写入值（类型代码优化版）
    * <p>使用类型代码替代 instanceof 链，提高分支预测准确率。

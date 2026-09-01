@@ -48,6 +48,9 @@ public class WriteHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(WriteHandler.class);
 
+  /** DATE 类型验证约束使用的日期格式（formula1/formula2 的解析格式） */
+  private static final String DEFAULT_VALIDATION_DATE_FORMAT = "yyyy-MM-dd";
+
   /**
    * 单元格数据格式化器接口
    *
@@ -333,6 +336,11 @@ public class WriteHandler {
    *
    * <p>支持数字范围验证、下拉列表验证等
    *
+   * <p>P2-12 修复：此前无视 {@code config.getValidationType()} 一律
+   * {@code createFormulaListConstraint}——下拉列表的候选值被当作公式（下拉失效），
+   * 数字区间/日期验证全部退化为公式列表。现按验证类型分派构造约束， 并接线此前从未生效的
+   * errorStyle / errorTitle / error 提示配置。
+   *
    * @param sheet 目标Sheet
    * @param firstRow 起始行
    * @param lastRow 结束行
@@ -351,15 +359,87 @@ public class WriteHandler {
       CellRangeAddressList addressList =
           new CellRangeAddressList(firstRow, lastRow, firstCol, lastCol);
       DataValidationHelper dvHelper = sheet.getDataValidationHelper();
-      DataValidationConstraint constraint =
-          dvHelper.createFormulaListConstraint(config.getFormula1());
+      DataValidationConstraint constraint = createConstraint(dvHelper, config);
 
       DataValidation validation = dvHelper.createValidation(constraint, addressList);
       validation.setShowErrorBox(config.isShowErrorMessage());
+      if (config.getErrorTitle() != null) {
+        validation.setErrorTitle(config.getErrorTitle());
+      }
+      if (config.getError() != null) {
+        validation.setErrorText(config.getError());
+      }
+      applyErrorStyle(validation, config.getErrorStyle());
 
       sheet.addValidationData(validation);
     } catch (Exception e) {
       LOG.warn("应用数据验证失败", e);
+    }
+  }
+
+  /**
+   * 按验证类型分派构造约束。
+   *
+   * <ul>
+   *   <li>LIST → 显式列表（逗号分隔候选值拆分，Excel 展示为下拉框）
+   *   <li>DATE → 日期约束（yyyy-MM-dd 格式）
+   *   <li>INTEGER / DECIMAL / TEXT_LENGTH → 数值/文本长度约束
+   *   <li>CUSTOM → 自定义公式约束
+   * </ul>
+   *
+   * @param dvHelper Sheet 的验证助手
+   * @param config 数据验证配置
+   * @return 对应类型的 POI 验证约束
+   */
+  private static DataValidationConstraint createConstraint(
+      DataValidationHelper dvHelper, DataValidationConfig config) {
+    int type = config.getValidationType();
+    if (type == DataValidationConstraint.ValidationType.LIST) {
+      // 显式列表：formula1 为逗号分隔的候选值（旧实现误作公式，下拉失效）
+      return dvHelper.createExplicitListConstraint(splitListValues(config.getFormula1()));
+    }
+    if (type == DataValidationConstraint.ValidationType.DATE) {
+      return dvHelper.createDateConstraint(
+          config.getOperatorType(),
+          config.getFormula1(),
+          config.getFormula2(),
+          DEFAULT_VALIDATION_DATE_FORMAT);
+    }
+    if (type == DataValidationConstraint.ValidationType.CUSTOM) {
+      return dvHelper.createCustomConstraint(config.getFormula1());
+    }
+    // INTEGER / DECIMAL / TEXT_LENGTH
+    return dvHelper.createNumericConstraint(
+        type, config.getOperatorType(), config.getFormula1(), config.getFormula2());
+  }
+
+  /** 逗号分隔的候选值拆分（去空白，忽略空段）。 */
+  private static String[] splitListValues(String listValues) {
+    if (listValues == null || listValues.isEmpty()) {
+      return new String[0];
+    }
+    String[] parts = listValues.split(",");
+    List<String> values = new ArrayList<>(parts.length);
+    for (String part : parts) {
+      String trimmed = part.trim();
+      if (!trimmed.isEmpty()) {
+        values.add(trimmed);
+      }
+    }
+    return values.toArray(new String[0]);
+  }
+
+  /** 应用错误提示样式（stop 阻止输入 / warning 警告允许 / information 信息提示）。 */
+  private static void applyErrorStyle(DataValidation validation, String errorStyle) {
+    if (errorStyle == null) {
+      return;
+    }
+    if ("warning".equalsIgnoreCase(errorStyle)) {
+      validation.setErrorStyle(DataValidation.ErrorStyle.WARNING);
+    } else if ("information".equalsIgnoreCase(errorStyle)) {
+      validation.setErrorStyle(DataValidation.ErrorStyle.INFO);
+    } else {
+      validation.setErrorStyle(DataValidation.ErrorStyle.STOP);
     }
   }
 

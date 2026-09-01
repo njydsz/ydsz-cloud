@@ -337,8 +337,8 @@ public class FlowDefinitionPublishManager {
   /**
    * 发布前版本兼容性校验
    *
-   * @param def 参数说明
-   * @param force 参数说明
+   * @param def 当前待发布的流程定义 VO
+   * @param force 是否强制发布（跳过 HIGH 风险阻断）
    */
   private void checkPublishCompatibility(FlowDefinitionVO def, boolean force) {
     String flowCode = def.getFlowCode();
@@ -429,9 +429,9 @@ public class FlowDefinitionPublishManager {
   /**
    * 从影响分析结果中提取 long 值（兼容嵌套 Map 结构）
    *
-   * @param root 参数说明
-   * @param keys 参数说明
-   * @return 返回值说明
+   * @param root 影响分析结果 Map
+   * @param keys 嵌套 key 路径（按层级深入取值）
+   * @return 解析到的 long 值；路径中途断链或最终值非 Number 时返回 0L
    */
   private long extractLong(Map<String, Object> root, String... keys) {
     Object current = root;
@@ -451,9 +451,9 @@ public class FlowDefinitionPublishManager {
   /**
    * 从影响分析结果中提取 String 列表
    *
-   * @param root 参数说明
-   * @param key 参数说明
-   * @return 返回值说明
+   * @param root 影响分析结果 Map
+   * @param key 要读取的列表属性名
+   * @return 字符串列表；value 非 List 或为空时返回空列表
    */
   private List<String> extractStringList(Map<String, Object> root, String key) {
     Object value = root.get(key);

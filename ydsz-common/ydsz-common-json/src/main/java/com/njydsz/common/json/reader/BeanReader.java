@@ -200,7 +200,9 @@ public final class BeanReader<T> {
   }
 
   private T readObject(JSONReader reader, int depth) {
-    if (depth > JSONReader.DEFAULT_MAX_DEPTH) {
+    // P1 修复：统一走 resolveMaxDepth()（线程级调用覆盖 > 实例级 > 静态全局），
+    // 原先硬编码 DEFAULT_MAX_DEPTH 导致多 Mapper 自定义深度在 BeanReader 路径失效
+    if (depth > reader.resolveMaxDepth()) {
       throw new JsonDeserializationException(
           "JSON nesting depth exceeds limit: " + depth, reader.pos);
     }

@@ -198,7 +198,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /**
    * GAP-P0-3: 并加签
    *
-   * @param dto 参数说明
+   * @param dto 任务操作参数（taskId / userId / targetUserId / targetUserName）
    */
   @Override
   public void countersignParallelTask(FlowTaskOperateDTO dto) {
@@ -262,9 +262,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /**
    * GAP-P0-4: 一键通过所有待办
    *
-   * @param userId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param userId 操作用户 ID（一键通过其名下所有待办）
+   * @param comment 审批意见（写入每条通过任务的 comment）
+   * @return 实际一键通过的任务数
    */
   @Override
   public int passAllTodoTasks(String userId, String comment) {
@@ -628,8 +628,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /**
    * 判断 action 是否为任务自身操作（已在 HIS_TASK 中体现，回放时跳过）。
    *
-   * @param action 参数说明
-   * @return 返回值说明
+   * @param action 审计动作类型码（如 TASK_CREATED / PASS / REJECT 等）
+   * @return true 表示该 action 是任务自身操作（已在 HIS_TASK 中体现，回放时跳过）
    */
   private boolean isTaskAction(String action) {
     return action.startsWith("TASK_")
@@ -746,8 +746,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /**
    * 根据任务状态映射到回放节点状态
    *
-   * @param taskStatus 参数说明
-   * @return 返回值说明
+   * @param taskStatus 任务状态枚举名（如 PASSED / REJECTED / SKIPPED）
+   * @return 回放节点状态字符串（ENTERED / PASSED / REJECTED / SKIPPED）
    */
   private String mapNodeState(String taskStatus) {
     if (taskStatus == null) {

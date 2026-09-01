@@ -704,8 +704,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /**
    * 将 detectLongRunningInstances 返回的 Map 列表转换为 FlowAnomalyVO 列表
    *
-   * @param rows 参数说明
-   * @return 返回值说明
+   * @param rows 长期运行实例查询结果（Map 列表，含 instanceId / currentNodeCode / currentNodeName / description）
+   * @return 转换后的异常 VO 列表；空列表时返回 {@code List.of()}
    */
   private List<FlowAnomalyVO> convertLongRunningToAnomalyVO(List<Map<String, Object>> rows) {
     if (rows == null || rows.isEmpty()) {
@@ -840,8 +840,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /**
    * 安全类型转换：Object → double
    *
-   * @param val 参数说明
-   * @return 返回值说明
+   * @param val 待转换的原始值（Number / String / null 等）
+   * @return double 数值；null 或解析失败时返回 0.0
    */
   private double toDouble(Object val) {
     if (val == null) {
@@ -861,8 +861,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /**
    * 安全类型转换：Object → long
    *
-   * @param val 参数说明
-   * @return 返回值说明
+   * @param val 待转换的原始值（Number / String / null 等）
+   * @return long 数值；null 或解析失败时返回 0L
    */
   private long toLong(Object val) {
     if (val == null) {

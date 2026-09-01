@@ -188,7 +188,7 @@ public class FlowDefinitionDeployManager {
   /**
    * 校验部署参数：flowCode/flowName 不能为空。
    *
-   * @param dto 参数说明
+   * @param dto 部署 DTO（含 flowCode / flowName 等必填字段）
    */
   private void validateDeployParams(FlowDeployProcessDTO dto) {
     if (dto == null || !StringUtils.hasText(dto.getFlowCode()) || !StringUtils.hasText(dto.getFlowName())) {
@@ -202,9 +202,9 @@ public class FlowDefinitionDeployManager {
   /**
    * 校验版本冲突：flowCode + version + tenantId 组合唯一。
    *
-   * @param flowCode 参数说明
-   * @param version 参数说明
-   * @param tenantId 参数说明
+   * @param flowCode 流程编码
+   * @param version 版本号字符串（如 "1.0"）
+   * @param tenantId 租户 ID
    */
   private void checkVersionConflict(String flowCode, String version, String tenantId) {
     FlowDefinitionVO existing = definitionRepository.findPublished(flowCode, version, tenantId)
@@ -220,9 +220,9 @@ public class FlowDefinitionDeployManager {
   /**
    * BPMN 模式下解析节点列表，注入节点坐标。
    *
-   * @param dto 参数说明
-   * @param version 参数说明
-   * @return 返回值说明
+   * @param dto 部署 DTO（含 bpmnXml）
+   * @param version 版本号字符串
+   * @return 从 BPMN XML 解析出的节点列表（含坐标注入）
    */
   private List<FlowNodeVO> parseBpmnNodes(FlowDeployProcessDTO dto, String version) {
     BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
@@ -245,8 +245,8 @@ public class FlowDefinitionDeployManager {
   /**
    * 向节点列表注入 BPMNDI 坐标信息。
    *
-   * @param nodes 参数说明
-   * @param bpmnModel 参数说明
+   * @param nodes 待注入坐标的节点列表
+   * @param bpmnModel BPMN 模型（包含 BPMNDI 图形信息）
    */
   private void injectNodeCoordinates(List<FlowNodeVO> nodes, BpmnModel bpmnModel) {
     Map<String, BpmnModel.NodeCoordinate> nodeCoords = bpmnModel.getNodeCoordinates();
@@ -266,8 +266,8 @@ public class FlowDefinitionDeployManager {
   /**
    * BPMN 模式下解析跳转列表。
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * @param dto 部署 DTO（含 bpmnXml）
+   * @return 从 BPMN XML 解析出的跳转列表
    */
   private List<FlowSkipVO> parseBpmnSkips(FlowDeployProcessDTO dto) {
     BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
@@ -277,8 +277,8 @@ public class FlowDefinitionDeployManager {
   /**
    * JSON 模式下解析节点列表，校验开始节点和编码唯一性。
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * @param dto 部署 DTO（含 nodes 列表）
+   * @return 从 DTO 节点列表构造的节点 VO 列表
    */
   private List<FlowNodeVO> parseJsonNodes(FlowDeployProcessDTO dto) {
     List<FlowNodeVO> nodes = new ArrayList<>(dto.getNodes().size());
@@ -320,8 +320,8 @@ public class FlowDefinitionDeployManager {
   /**
    * JSON 模式下解析跳转列表。
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * @param dto 部署 DTO（含 skips 列表）
+   * @return 从 DTO 跳转列表构造的跳转 VO 列表
    */
   private List<FlowSkipVO> parseJsonSkips(FlowDeployProcessDTO dto) {
     List<FlowSkipVO> skips = new ArrayList<>(dto.getSkips() != null ? dto.getSkips().size() : DEFAULT_COLLECTION_CAPACITY);
@@ -342,10 +342,10 @@ public class FlowDefinitionDeployManager {
   /**
    * 保存流程定义。
    *
-   * @param dto 参数说明
-   * @param version 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param dto 部署 DTO（含 flowCode / flowName / formPath 等）
+   * @param version 版本号字符串（保存时自动 parse 为 int）
+   * @param tenantId 租户 ID
+   * @return 已持久化的流程定义 VO（含生成的 ID）
    */
   private FlowDefinitionVO saveDefinition(FlowDeployProcessDTO dto, String version, String tenantId) {
     FlowDefinitionDTO defDto = new FlowDefinitionDTO();
@@ -360,11 +360,11 @@ public class FlowDefinitionDeployManager {
   /**
    * 批量保存节点。
    *
-   * @param nodes 参数说明
-   * @param definitionId 参数说明
-   * @param flowCode 参数说明
-   * @param tenantId 参数说明
-   * @param providerTraceId 参数说明
+   * @param nodes 待保存的节点 VO 列表
+   * @param definitionId 流程定义 ID（外键）
+   * @param flowCode 流程编码
+   * @param tenantId 租户 ID
+   * @param providerTraceId 链路追踪 ID
    */
   private void saveNodes(List<FlowNodeVO> nodes, String definitionId, String flowCode,
       String tenantId, String providerTraceId) {
@@ -380,11 +380,11 @@ public class FlowDefinitionDeployManager {
   /**
    * 批量保存跳转。
    *
-   * @param skips 参数说明
-   * @param definitionId 参数说明
-   * @param flowCode 参数说明
-   * @param tenantId 参数说明
-   * @param providerTraceId 参数说明
+   * @param skips 待保存的跳转 VO 列表
+   * @param definitionId 流程定义 ID（外键）
+   * @param flowCode 流程编码
+   * @param tenantId 租户 ID
+   * @param providerTraceId 链路追踪 ID
    */
   private void saveSkips(List<FlowSkipVO> skips, String definitionId, String flowCode,
       String tenantId, String providerTraceId) {
@@ -483,8 +483,8 @@ public class FlowDefinitionDeployManager {
   /**
    * 读取 ZipInputStream 当前 entry 的全部字节（不关闭流）
    *
-   * @param zis 参数说明
-   * @return 返回值说明
+   * @param zis 当前 {@link ZipEntry} 对应的输入流
+   * @return 当前 entry 的全部字节内容
    */
   private byte[] readAllBytes(ZipInputStream zis) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -499,8 +499,8 @@ public class FlowDefinitionDeployManager {
   /**
    * 从 zip entry 路径中提取文件名（去掉目录和扩展名）
    *
-   * @param fileName 参数说明
-   * @return 返回值说明
+   * @param fileName zip entry 完整路径（如 processes/leave.bpmn）
+   * @return 去除目录前缀和扩展名的基本名（如 leave）
    */
   private String extractBaseName(String fileName) {
     String name = fileName;

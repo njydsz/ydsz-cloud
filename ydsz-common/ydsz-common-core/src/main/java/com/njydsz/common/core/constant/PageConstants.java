@@ -229,6 +229,7 @@ public final class PageConstants {
      * @return 原始入参与归一化结果不一致时返回 {@code true}，即页大小被替换为默认值或被截断；
      *     入参本就合法时返回 {@code false}
      */
+    public boolean isAdjusted() {
       return adjusted;
     }
   }

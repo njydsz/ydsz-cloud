@@ -23,17 +23,29 @@ public record EngineCapability(
     boolean supportsCursor,
     boolean supportsSuggest,
     boolean supportsIndexing) {
-  /** 全部能力支持（PG/ES/Solr/OpenSearch） */
+  /**
+   * 全部能力支持（PG/ES/Solr/OpenSearch）。
+   *
+   * @return 七项能力全部为 {@code true} 的能力描述，不会为 {@code null}
+   */
   public static EngineCapability full() {
     return new EngineCapability(true, true, true, true, true, true, true);
   }
 
-  /** 仅搜索，不支持显式索引（RediSearch 直接索引数据源） */
+  /**
+   * 仅搜索，不支持显式索引（RediSearch 直接索引数据源）。
+   *
+   * @return 关闭游标分页与显式索引的能力描述，不会为 {@code null}
+   */
   public static EngineCapability searchOnly() {
     return new EngineCapability(true, true, true, true, false, true, false);
   }
 
-  /** 最小能力（内存引擎） */
+  /**
+   * 最小能力（内存引擎）。
+   *
+   * @return 仅开启全文检索、高亮、建议与显式索引，关闭模糊匹配、聚合与游标分页的能力描述，不会为 {@code null}
+   */
   public static EngineCapability minimal() {
     return new EngineCapability(true, false, true, false, false, true, true);
   }

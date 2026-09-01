@@ -50,75 +50,75 @@ public interface WorkflowFacade {
    * 
    * 
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * @param dto 启动参数（含 flowCode / businessType / businessId / variables / initiatorId）
+   * @return 新创建的流程实例 ID
    */
   String startProcess(FlowStartProcessDTO dto);
 
   /**
    * 通过业务类型 + 业务 ID 查实例
    *
-   * @param businessType 参数说明
-   * @param businessId 参数说明
-   * @return 返回值说明
+   * @param businessType 业务类型编码
+   * @param businessId 业务主键 ID
+   * @return 流程实例视图 DTO，未找到返回 null
    */
   FlowInstanceViewDTO getByBusiness(String businessType, String businessId);
 
   /**
    * 完成任务（通过/拒绝）
    *
-   * @param dto 参数说明
+   * @param dto 任务操作参数（taskId / userId / comment / variables）
    */
   void completeTask(FlowTaskOperateDTO dto);
 
   /**
    * 签收任务
    *
-   * @param taskId 参数说明
-   * @param userId 参数说明
+   * @param taskId 待签收的任务 ID
+   * @param userId 签收人 ID
    */
   void claimTask(String taskId, String userId);
 
   /**
    * 转办任务
    *
-   * @param dto 参数说明
+   * @param dto 任务操作参数（taskId / userId / targetUserId / comment）
    */
   void transferTask(FlowTaskOperateDTO dto);
 
   /**
    * 委派任务（任务保留原办理人，被委派人处理后回到原办理人）
    *
-   * @param dto 参数说明
+   * @param dto 任务操作参数（taskId / userId / targetUserId / comment）
    */
   void delegateTask(FlowTaskOperateDTO dto);
 
   /**
    * 退回任务
    *
-   * @param dto 参数说明
+   * @param dto 任务操作参数（taskId / userId / comment / targetNodeCode）
    */
   void rejectTask(FlowTaskOperateDTO dto);
 
   /**
    * 终止流程
    *
-   * @param processInstanceId 参数说明
-   * @param reason 参数说明
+   * @param processInstanceId 流程实例 ID
+   * @param reason 终止原因（写入审计日志）
    */
   void terminateProcess(String processInstanceId, String reason);
 
   /**
    * 挂起流程
    *
-   * @param processInstanceId 参数说明
+   * @param processInstanceId 流程实例 ID
    */
   void suspendProcess(String processInstanceId);
 
   /**
    * 激活流程
    *
-   * @param processInstanceId 参数说明
+   * @param processInstanceId 流程实例 ID
    */
   void activateProcess(String processInstanceId);
 
@@ -193,7 +193,7 @@ public interface WorkflowFacade {
   /**
    * GAP-P0-3: 并加签 — 与原审批人并行审批，所有人审完才推进
    *
-   * @param dto 参数说明
+   * @param dto 任务操作参数（taskId / userId / targetUserId / targetUserName）
    */
   void countersignParallelTask(FlowTaskOperateDTO dto);
 

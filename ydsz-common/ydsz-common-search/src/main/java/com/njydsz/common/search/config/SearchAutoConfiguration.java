@@ -98,6 +98,15 @@ public class SearchAutoConfiguration {
   @ConditionalOnClass({DataSource.class, JdbcTemplate.class})
   static class PgEngineConfiguration {
 
+    /**
+     * 创建 PostgreSQL 全文检索策略。
+     *
+     * <p>数据源不可用时降级为内存策略并记录告警，保证搜索能力不因数据源缺失而整体不可用。
+     *
+     * @param dataSourceProvider 数据源延迟提供者
+     * @param properties 搜索配置，其中 {@code pg} 段决定 PG 方言与索引相关参数
+     * @return PG 搜索策略，不会为 {@code null}；数据源缺失时返回 {@code InMemorySearchStrategy}
+     */
     @Bean
     @ConditionalOnMissingBean(name = "pgSearchStrategy")
     @ConditionalOnProperty(
@@ -116,7 +125,13 @@ public class SearchAutoConfiguration {
     }
   }
 
-  /** Memory 引擎 — 始终可用（降级兜底）。 */
+  /**
+   * Memory 引擎 — 始终可用（降级兜底）。
+   *
+   * <p>无外部依赖，作为所有引擎不可用时的最后兜底，也是 PG 数据源缺失时的降级目标。
+   *
+   * @return 内存搜索策略实例，不会为 {@code null}；数据仅存于本 JVM 堆内，重启即丢失
+   */
   @Bean
   @ConditionalOnMissingBean(name = "memorySearchStrategy")
   public SearchStrategy memorySearchStrategy() {

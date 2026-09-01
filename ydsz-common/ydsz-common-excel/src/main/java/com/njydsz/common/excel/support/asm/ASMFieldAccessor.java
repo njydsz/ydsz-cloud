@@ -16,6 +16,10 @@ import com.njydsz.common.excel.exception.ExcelExceptionCode;
 /**
  * 字段访问器 - 基于 MethodHandle 的高性能字段访问实现
  *
+ * <p><b>命名澄清（P2-12 标注）</b>：类名中的 {@code ASM} 为历史遗留——本类<b>从不生成或加载字节码</b>，
+ * 实际基于 {@code java.lang.invoke.MethodHandle} 实现（见下）。保留类名仅为避免公共 API
+ * 破坏性变更；新代码不应据此推断存在 ASM 字节码生成。
+ *
  * <p>使用 Java 原生 MethodHandle 替代反射，获得接近直接调用的性能。 MethodHandle 由 JVM 内联优化，在热点场景下可达到与 ASM 字节码相当的性能，
  * 同时避免了动态类加载带来的 Metaspace 压力与维护成本。
  *

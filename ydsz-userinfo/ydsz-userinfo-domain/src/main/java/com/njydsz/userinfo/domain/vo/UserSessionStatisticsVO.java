@@ -23,7 +23,7 @@ import java.util.Map;
  * @author ydsz-team
  * @since 1.0.0
  */
-public record UserSessionStatistics(
+public record UserSessionStatisticsVO(
     int totalActiveSessions,
     int activeUserCount,
     Map<String, Integer> sessionsPerDevice) implements Serializable {

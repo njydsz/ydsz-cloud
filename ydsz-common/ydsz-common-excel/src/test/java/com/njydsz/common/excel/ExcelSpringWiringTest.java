@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
+import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.excel.spring.ExcelAutoConfiguration;
@@ -62,6 +63,23 @@ public class ExcelSpringWiringTest {
               assertEquals("yyyy/MM/dd", config.getDefaultDateFormat());
               assertEquals(7, config.getMaxReadFileSizeMB());
               assertEquals(true, config.isUseFastReader());
+            });
+  }
+
+  @Test
+  void reservedPropertiesBindToExcelConfigBean() {
+    // P2-12 回归：use1904-windowing / validation-mode / max-read-cache-size 三个预留配置
+    // 此前 ExcelProperties 未声明，配置了不生效
+    runner.withPropertyValues(
+            "ydsz.excel.use-1904-windowing=true",
+            "ydsz.excel.validation-mode=COLLECT_ALL",
+            "ydsz.excel.max-read-cache-size=2048")
+        .run(
+            context -> {
+              ExcelConfig config = context.getBean(ExcelConfig.class);
+              assertEquals(true, config.isUse1904Windowing());
+              assertEquals(ValidationMode.COLLECT_ALL, config.getValidationMode());
+              assertEquals(2048, config.getMaxReadCacheSize());
             });
   }
 
@@ -149,6 +167,9 @@ public class ExcelSpringWiringTest {
               assertEquals("UP", indicator.health().getStatus().getCode());
               assertEquals(true, indicator.health().getDetails().get("fastReader"));
               assertEquals(true, indicator.health().getDetails().containsKey("maxReadMb"));
+              // P2：真实探测明细——临时目录可写（fast 引擎流式解析/落盘的硬依赖）
+              assertEquals(true, indicator.health().getDetails().get("tempDirWritable"));
+              assertEquals(true, indicator.health().getDetails().containsKey("tempDir"));
             });
   }
 

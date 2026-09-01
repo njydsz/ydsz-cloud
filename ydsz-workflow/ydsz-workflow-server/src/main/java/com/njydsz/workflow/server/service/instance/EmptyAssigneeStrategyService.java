@@ -74,11 +74,11 @@ public class EmptyAssigneeStrategyService {
    * 创建 EmptyAssigneeStrategyService 实例
    * 
    *
-   * @param taskRepository 参数说明
-   * @param archiveService 参数说明
-   * @param support 参数说明
-   * @param assigneeResolutionService 参数说明
-   * @param advanceCallback 参数说明   */
+   * @param taskRepository 运行时任务仓储
+   * @param archiveService 任务归档服务
+   * @param support 任务支持组件（事件 / 审计 / 工作流事件）
+   * @param assigneeResolutionService 办理人解析服务
+   * @param advanceCallback 自动通过后推进到下一节点的回调
   public EmptyAssigneeStrategyService(
       FlowRunTaskRepository taskRepository,
       FlowTaskArchiveService archiveService,
@@ -139,11 +139,11 @@ public class EmptyAssigneeStrategyService {
   /**
    * AUTO_PASS 策略：标记任务为已完成（自动通过），归档并推进到下一节点
    *
-   * @param task 参数说明
-   * @param instance 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param task 待处理的运行时任务 DTO
+   * @param instance 当前流程实例
+   * @param node 当前流程节点
+   * @param variables 合并后的流程变量
+   * @return 持久化后的任务 ID
    */
   private String handleAutoPass(
       FlowRunTaskDTO dto, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
@@ -166,13 +166,13 @@ public class EmptyAssigneeStrategyService {
    * 将任务分配给指定的回退用户（管理员或指定人员）
    * 
    *
-   * @param logMsg 参数说明
-   * @param task 参数说明
-   * @param instance 参数说明
-   * @param node 参数说明
-   * @param userId 参数说明
-   * @param fallbackName 参数说明
-   * @return 返回值说明
+   * @param logMsg 日志模板（含 instanceId / nodeCode / userId 三个占位符）
+   * @param task 待处理的运行时任务 DTO
+   * @param instance 当前流程实例
+   * @param node 当前流程节点
+   * @param userId 回退分配用户 ID
+   * @param fallbackName 回退策略名称（用于 assigneeName 字段）
+   * @return 持久化后的任务 ID
    */
   private String assignToFallbackUser(
       FlowRunTaskDTO dto,
@@ -192,11 +192,11 @@ public class EmptyAssigneeStrategyService {
   /**
    * FALLBACK 策略：回退到原有 resolveAssignee 逻辑
    *
-   * @param task 参数说明
-   * @param instance 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param task 待处理的运行时任务 DTO
+   * @param instance 当前流程实例
+   * @param node 当前流程节点
+   * @param variables 合并后的流程变量
+   * @return 持久化并解析办理人后的任务 ID
    */
   private String fallbackToResolveAssignee(
       FlowRunTaskDTO dto, FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
@@ -209,11 +209,11 @@ public class EmptyAssigneeStrategyService {
   /**
    * 写入 ydsz_flow_user 记录
    *
-   * @param task 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @param explicit 参数说明
-   * @param instance 参数说明
+   * @param task 运行时任务（已持久化）
+   * @param node 当前流程节点
+   * @param variables 合并后的流程变量
+   * @param explicit 显式指定的办理人配置（可为 null）
+   * @param instance 当前流程实例
    */
   private void resolveAssignee(
       FlowRunTaskVO task,
@@ -227,9 +227,9 @@ public class EmptyAssigneeStrategyService {
   /**
    * AUTO_PASS 后推进到下一节点（含递归深度保护）
    *
-   * @param instance 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
+   * @param instance 当前流程实例
+   * @param node 当前流程节点
+   * @param variables 合并后的流程变量
    */
   private void advanceAfterAutoPass(
       FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {

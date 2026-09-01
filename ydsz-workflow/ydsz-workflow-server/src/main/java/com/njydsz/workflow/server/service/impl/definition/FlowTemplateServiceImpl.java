@@ -994,9 +994,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   /**
    * 生成模板编码
    *
-   * @param category 参数说明
-   * @param templateName 参数说明
-   * @return 返回值说明
+   * @param category 模板分类（用作模板编码前缀，自动转小写 + 空白替换）
+   * @param templateName 模板名称（用作模板编码后缀，自动去标点 + 截断）
+   * @return 模板编码（格式：{category}_{templateName}，仅保留小写字母/数字/下划线）
    */
   private String generateTemplateCode(String category, String templateName) {
     String prefix =
@@ -1016,8 +1016,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   /**
    * 根据流程定义详情生成 BPMN 2.0 XML
    *
-   * @param detail 参数说明
-   * @return 返回值说明
+   * @param detail 流程定义详情（含 definition + nodes + skips）
+   * @return BPMN 2.0 标准 XML 字符串；detail 为 null 或不含 definition 时抛异常
    */
   private String generateBpmnXml(FlowDefinitionDetailVO detail) {
     FlowDefinitionVO definition = detail.getDefinition();
@@ -1185,8 +1185,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
   /**
    * XML 转义
    *
-   * @param s 参数说明
-   * @return 返回值说明
+   * @param s 待转义的原始 XML 字符串
+   * @return 转义后的字符串（替换 & < > " ' 五个特殊字符）；s=null 时返回空字符串
    */
   private String escapeXml(String s) {
     if (s == null) {

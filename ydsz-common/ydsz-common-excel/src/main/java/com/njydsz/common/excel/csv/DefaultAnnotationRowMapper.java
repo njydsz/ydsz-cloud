@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
@@ -23,6 +25,11 @@ import com.njydsz.common.excel.tabular.TabularRowMapper;
  * 基于 {@code @ExcelProperty} 注解的默认行映射器。
  *
  * <p>解析顺序：按 {@link ExcelProperty#order()} 升序；order 相同时按字段声明顺序。 标注了 {@link ExcelIgnore} 的字段会被跳过。
+ *
+ * <p>P2-12 修复：① 日期字段的序列化/反序列化尊重 {@link ExcelProperty#dateFormat()}
+ * （此前一律 ISO 默认格式，与 Excel 读写路径行为不一致）；② {@link Date} 字段不可解析时不再
+ * 静默兜底为 epoch 毫秒（产出 1970-01-01 附近的错误数据）——仅纯数字字符串按 epoch 毫秒解释，
+ * 其余格式错误抛出携带原始值的异常。
  *
  * <h2>使用示例</h2>
  *
@@ -48,9 +55,15 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+  /** dateFormat 模式串 → DateTimeFormatter 缓存（线程安全，模式串不可变） */
+  private static final Map<String, DateTimeFormatter> FORMATTER_CACHE =
+      new ConcurrentHashMap<>();
+
   private final Class<T> clazz;
   private final List<String> headers;
   private final List<Field> orderedFields;
+  /** 各字段（与 orderedFields 同序）的 @ExcelProperty.dateFormat，空串表示未指定 */
+  private final String[] dateFormats;
   private final ASMFieldAccessor.FieldGetter[] getters;
   private final ASMFieldAccessor.FieldSetter[] setters;
 
@@ -58,11 +71,13 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
     this.clazz = clazz;
     this.orderedFields = collectOrderedFields(clazz);
     this.headers = buildHeaders(orderedFields);
+    this.dateFormats = new String[orderedFields.size()];
     this.getters = new ASMFieldAccessor.FieldGetter[orderedFields.size()];
     this.setters = new ASMFieldAccessor.FieldSetter[orderedFields.size()];
     for (int i = 0; i < orderedFields.size(); i++) {
       Field f = orderedFields.get(i);
       f.setAccessible(true);
+      this.dateFormats[i] = f.getAnnotation(ExcelProperty.class).dateFormat();
       this.getters[i] = ASMFieldAccessor.getGetter(clazz, f);
       this.setters[i] = ASMFieldAccessor.getSetter(clazz, f);
     }
@@ -102,10 +117,12 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
           continue;
         }
         Field f = orderedFields.get(i);
-        Object converted = convert(v, f.getType());
+        Object converted = convert(v, f.getType(), dateFormats[i]);
         setters[i].set(instance, converted);
       }
       return instance;
+    } catch (IllegalStateException | IllegalArgumentException e) {
+      throw e;
     } catch (Exception e) {
       throw new IllegalStateException(
           "Failed to instantiate " + clazz.getName() + " from CSV row", e);
@@ -125,7 +142,7 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
       } catch (Exception e) {
         raw = null;
       }
-      values[i] = stringify(raw);
+      values[i] = stringify(raw, dateFormats[i]);
     }
     return values;
   }
@@ -138,7 +155,7 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
     for (int i = 0; i < headers.size(); i++) {
       if (columnName.equalsIgnoreCase(headers.get(i))) {
         try {
-          return Optional.ofNullable(stringify(getters[i].get(object)));
+          return Optional.ofNullable(stringify(getters[i].get(object), dateFormats[i]));
         } catch (Exception e) {
           return Optional.empty();
         }
@@ -174,8 +191,12 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
     return hs;
   }
 
-  /** 简单字符串 → 类型转换（支持基本类型、Number、Boolean、String、Date）。 */
-  private static Object convert(String value, Class<?> targetType) {
+  /**
+   * 简单字符串 → 类型转换（支持基本类型、Number、Boolean、String、日期时间）。
+   *
+   * <p>日期时间类型在 {@code dateFormat} 非空时按其解析/格式化（与 Excel 读写路径行为一致）， 为空时回退 ISO 默认格式。
+   */
+  private static Object convert(String value, Class<?> targetType, String dateFormat) {
     if (targetType == String.class) {
       return value;
     }
@@ -205,39 +226,67 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
       return new BigDecimal(value);
     }
     if (targetType == LocalDate.class) {
-      return LocalDate.parse(value);
+      return LocalDate.parse(value, formatterFor(dateFormat, DateTimeFormatter.ISO_LOCAL_DATE));
     }
     if (targetType == LocalDateTime.class) {
-      return LocalDateTime.parse(value);
+      return LocalDateTime.parse(
+          value, formatterFor(dateFormat, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     }
     if (targetType == LocalTime.class) {
-      return LocalTime.parse(value);
+      return LocalTime.parse(value, formatterFor(dateFormat, DateTimeFormatter.ISO_LOCAL_TIME));
     }
     if (targetType == Date.class) {
-      try {
-        LocalDateTime ldt = LocalDateTime.parse(value, DATE_TIME_FORMATTER);
-        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
-      } catch (Exception ex) {
-        return new Date(Long.parseLong(value));
-      }
+      return convertDate(value, dateFormat);
     }
     // 兜底：原样返回字符串
     return value;
   }
 
-  private static String stringify(Object value) {
+  /**
+   * Date 字段转换：依次尝试 dateFormat（或默认 yyyy-MM-dd HH:mm:ss）解析； 仅纯数字字符串按 epoch
+   * 毫秒解释；其余格式错误抛出携带原始值的异常（不再静默产出 1970 附近的错误数据）。
+   */
+  private static Date convertDate(String value, String dateFormat) {
+    DateTimeFormatter formatter = formatterFor(dateFormat, DATE_TIME_FORMATTER);
+    try {
+      LocalDateTime ldt = LocalDateTime.parse(value, formatter);
+      return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+    } catch (Exception ex) {
+      if (value.chars().allMatch(Character::isDigit)) {
+        return new Date(Long.parseLong(value));
+      }
+      throw new IllegalArgumentException(
+          "无法将 \"" + value + "\" 解析为 Date（dateFormat=" + (dateFormat.isEmpty() ? "默认" : dateFormat) + "）", ex);
+    }
+  }
+
+  /** dateFormat 为空时回退默认 formatter；非空时从缓存取（不存在则创建）。 */
+  private static DateTimeFormatter formatterFor(String dateFormat, DateTimeFormatter fallback) {
+    if (dateFormat == null || dateFormat.isEmpty()) {
+      return fallback;
+    }
+    return FORMATTER_CACHE.computeIfAbsent(dateFormat, DateTimeFormatter::ofPattern);
+  }
+
+  private static String stringify(Object value, String dateFormat) {
     if (value == null) {
       return "";
     }
     if (value instanceof LocalDateTime) {
-      return value.toString();
+      return ((LocalDateTime) value).format(
+          formatterFor(dateFormat, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     }
     if (value instanceof LocalDate) {
-      return value.toString();
+      return ((LocalDate) value).format(
+          formatterFor(dateFormat, DateTimeFormatter.ISO_LOCAL_DATE));
+    }
+    if (value instanceof LocalTime) {
+      return ((LocalTime) value).format(
+          formatterFor(dateFormat, DateTimeFormatter.ISO_LOCAL_TIME));
     }
     if (value instanceof Date) {
-      return DATE_TIME_FORMATTER.format(
-          ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+      return formatterFor(dateFormat, DATE_TIME_FORMATTER)
+          .format(((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
     }
     return value.toString();
   }

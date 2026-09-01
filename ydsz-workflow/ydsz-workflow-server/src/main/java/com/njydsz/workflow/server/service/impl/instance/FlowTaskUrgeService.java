@@ -113,7 +113,7 @@ public class FlowTaskUrgeService {
   /**
    * 记录催办指标（按 flowCode 维度）
    *
-   * @param instanceId 参数说明
+   * @param instanceId 流程实例 ID（用于获取 flowCode 维度的指标标记）
    */
   private void recordUrgeMetrics(String instanceId) {
     if (flowMetrics == null) {

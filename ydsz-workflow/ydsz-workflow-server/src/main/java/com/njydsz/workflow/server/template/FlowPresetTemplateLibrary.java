@@ -72,7 +72,7 @@ public class FlowPresetTemplateLibrary {
   /**
    * 获取所有预置模板。
    *
-   * @return 返回值说明
+   * @return 全部预置模板模板定义列表（6 个内置模板），无数据返回空列表
    */
   public List<FlowTemplateDefinition> listAll() {
     return new ArrayList<>(templates);
@@ -81,8 +81,8 @@ public class FlowPresetTemplateLibrary {
   /**
    * 按分类筛选模板。
    *
-   * @param category 参数说明
-   * @return 返回值说明
+   * @param category 模板分类（如 HR / FINANCE / ADMIN / PROJECT），为空时返回全部
+   * @return 符合分类条件的模板列表，无匹配返回空列表
    */
   public List<FlowTemplateDefinition> listByCategory(String category) {
     if (category == null || category.isEmpty()) {
@@ -96,8 +96,8 @@ public class FlowPresetTemplateLibrary {
   /**
    * 按编码获取模板。
    *
-   * @param templateCode 参数说明
-   * @return 返回值说明
+   * @param templateCode 模板编码（如 preset_leave / preset_expense_reimbursement）
+   * @return 匹配的模板定义，不存在返回 null
    */
   public FlowTemplateDefinition getByCode(String templateCode) {
     return templates.stream()
@@ -109,9 +109,9 @@ public class FlowPresetTemplateLibrary {
   // ============================== 模板构建方法 ==============================
 
   /**
-   * 请假审批模板
+   * 请假审批模板：发起人 → 直属上级 → HR 审批 → 结束。
    *
-   * @return 返回值说明
+   * @return 请假审批预置模板定义
    */
   private FlowTemplateDefinition buildLeaveTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
@@ -143,9 +143,9 @@ public class FlowPresetTemplateLibrary {
   }
 
   /**
-   * 费用报销模板
+   * 费用报销模板：发起人 → 直属上级 → 财务审批 → 出纳付款 → 结束。
    *
-   * @return 返回值说明
+   * @return 费用报销预置模板定义
    */
   private FlowTemplateDefinition buildExpenseReimbursementTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
@@ -179,9 +179,9 @@ public class FlowPresetTemplateLibrary {
   }
 
   /**
-   * 采购申请模板
+   * 采购申请模板：发起人 → 部门负责人 → 采购审批 → 财务审批 → 结束。
    *
-   * @return 返回值说明
+   * @return 采购申请预置模板定义
    */
   private FlowTemplateDefinition buildPurchaseRequestTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
@@ -216,9 +216,9 @@ public class FlowPresetTemplateLibrary {
   }
 
   /**
-   * 出差申请模板
+   * 出差申请模板：发起人 → 直属上级 → HR 审批 → 结束。
    *
-   * @return 返回值说明
+   * @return 出差申请预置模板定义
    */
   private FlowTemplateDefinition buildBusinessTripTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
@@ -250,9 +250,9 @@ public class FlowPresetTemplateLibrary {
   }
 
   /**
-   * 用印申请模板
+   * 用印申请模板：发起人 → 直属上级 → 行政审批 → 结束。
    *
-   * @return 返回值说明
+   * @return 用印申请预置模板定义
    */
   private FlowTemplateDefinition buildSealApplicationTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
@@ -284,9 +284,9 @@ public class FlowPresetTemplateLibrary {
   }
 
   /**
-   * 项目立项模板
+   * 项目立项模板：发起人 → 部门负责人 → 项目总监 → 总经理审批 → 结束。
    *
-   * @return 返回值说明
+   * @return 项目立项预置模板定义
    */
   private FlowTemplateDefinition buildProjectInitiationTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();

@@ -167,7 +167,7 @@ public class FlowTaskOperateService {
    * <p>GAP-P2-9: 节点级 freeJump 白名单校验（仅自由流操作 action=JUMP 时启用）。 历史管理员强制跳转（无 action 字段或 action !=
    * JUMP）保持原有放行语义。
    *
-   * @param dto 参数说明
+   * @param dto 任务操作参数（taskId / userId / comment / targetNodeCode / targetAssignees）
    */
   @Transactional(rollbackFor = Exception.class)
   public void jump(FlowTaskOperateDTO dto) {
@@ -247,10 +247,10 @@ public class FlowTaskOperateService {
    * 
    * <p>对标钉钉/飞书"取回"。审批人 PASS 后下一节点待办尚未处理时， 可取回自己的审批：取消下一节点待办，在本节点重新生成 PENDING 任务。
    *
-   * @param hisTaskId 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param hisTaskId 历史任务 ID（欲取回的任务）
+   * @param operatorId 操作人 ID（必须是原办理人）
+   * @param comment 取回原因 / 备注
+   * @return 重新生成的 PENDING 任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public String retract(String hisTaskId, String operatorId, String comment) {
@@ -294,8 +294,8 @@ public class FlowTaskOperateService {
   /**
    * 根据 ID 查询历史任务，不存在则抛出 NOT_FOUND。
    *
-   * @param hisTaskId 参数说明
-   * @return 返回值说明
+   * @param hisTaskId 历史任务 ID
+   * @return 历史任务 VO；不存在时抛 {@code NOT_FOUND}
    */
   private FlowHisTaskVO findHisTaskOrThrow(String hisTaskId) {
     FlowHisTaskVO hisTask = hisTaskRepository.findById(hisTaskId).orElse(null);
@@ -312,8 +312,8 @@ public class FlowTaskOperateService {
   /**
    * 校验取回权限：历史任务状态为 COMPLETED 且操作人为办理人。
    *
-   * @param hisTask 参数说明
-   * @param operatorId 参数说明
+   * @param hisTask 待校验的历史任务
+   * @param operatorId 操作人 ID（用于权限比对）
    */
   private void validateRetractPermission(FlowHisTaskVO hisTask, String operatorId) {
     if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
@@ -334,8 +334,8 @@ public class FlowTaskOperateService {
   /**
    * 根据 ID 查询流程实例，不存在则抛出 NOT_FOUND。
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return 流程实例 VO；不存在时抛 {@code NOT_FOUND}
    */
   private FlowInstanceVO findInstanceOrThrow(String instanceId) {
     return instanceRepository.findById(instanceId)
@@ -349,7 +349,7 @@ public class FlowTaskOperateService {
   /**
    * 校验流程实例为 RUNNING 状态。
    *
-   * @param instance 参数说明
+   * @param instance 待校验的流程实例
    */
   private void validateInstanceRunning(FlowInstanceVO instance) {
     if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
@@ -364,7 +364,7 @@ public class FlowTaskOperateService {
   /**
    * 校验下一节点待办全部为 PENDING（未被 CLAIMED/COMPLETED）。
    *
-   * @param instanceId 参数说明
+   * @param instanceId 流程实例 ID
    */
   private void validateNextTasksAllPending(String instanceId) {
     List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByInstance(instanceId);
@@ -382,10 +382,10 @@ public class FlowTaskOperateService {
   /**
    * 重新生成取回后的 PENDING 任务（复用历史任务的元数据）。
    *
-   * @param hisTask 参数说明
-   * @param instance 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param hisTask 被取回的历史任务（取其元数据重建 PENDING 任务）
+   * @param instance 当前流程实例
+   * @param comment 分配给新任务的备注
+   * @return 重新创建的 PENDING 运行时任务 VO
    */
   private FlowRunTaskVO recreateRetractTask(FlowHisTaskVO hisTask, FlowInstanceVO instance, String comment) {
     FlowRunTaskDTO dto = new FlowRunTaskDTO();
@@ -417,8 +417,8 @@ public class FlowTaskOperateService {
   /**
    * 标记历史任务为 RETRACTED 状态。
    *
-   * @param hisTaskId 参数说明
-   * @param comment 参数说明
+   * @param hisTaskId 历史任务 ID
+   * @param comment 取回原因
    */
   private void markHisTaskRetracted(String hisTaskId, String comment) {
     FlowHisTaskVO update = new FlowHisTaskVO();
@@ -433,8 +433,8 @@ public class FlowTaskOperateService {
   /**
    * 解析 assigneeId 中的真实用户 ID。
    *
-   * @param assigneeId 参数说明
-   * @return 返回值说明
+   * @param assigneeId 带前缀的办理人 ID（如 "USER:123"）
+   * @return 纯数字用户 ID；不符合纯数字格式时返回 null
    */
   private String parseAssignorId(String assigneeId) {
     if (assigneeId == null || !assigneeId.matches("\\d+")) {
@@ -446,8 +446,8 @@ public class FlowTaskOperateService {
   /**
    * GAP-P2-9: 判断目标节点是否开启自由跳转白名单。
    *
-   * @param node 参数说明
-   * @return 返回值说明
+   * @param node 目标流程节点
+   * @return true 表示该节点开启自由跳转白名单
    */
   private boolean isFreeJumpEnabled(FlowNodeVO node) {
     Map<String, Object> ext = parseExtConfig(node.getExt());

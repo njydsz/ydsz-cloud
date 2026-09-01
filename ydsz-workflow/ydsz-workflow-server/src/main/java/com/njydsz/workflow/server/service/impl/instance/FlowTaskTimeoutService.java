@@ -108,8 +108,8 @@ public class FlowTaskTimeoutService {
    * 
    * <p>激活后清空签收人（assigneeId/assigneeName），需重新签收。
    *
-   * @param taskId 参数说明
-   * @param operatorId 参数说明
+   * @param taskId 任务 ID
+   * @param operatorId 操作人 ID（通常为空，系统定时任务操作者标记为空）
    */
   @Transactional(rollbackFor = Exception.class)
   public void activateTask(String taskId, String operatorId) {
@@ -134,8 +134,8 @@ public class FlowTaskTimeoutService {
   /**
    * 取消某实例的全部 PENDING 任务（终止/驳回终态时使用）
    *
-   * @param instanceId 参数说明
-   * @param taskStatus 参数说明
+   * @param instanceId 流程实例 ID
+   * @param taskStatus 目标取消状态枚举名（如 CANCELED / TERMINATED）
    */
   public void cancelByInstance(String instanceId, String taskStatus) {
     taskRepository.updateStatusByInstance(instanceId, taskStatus);

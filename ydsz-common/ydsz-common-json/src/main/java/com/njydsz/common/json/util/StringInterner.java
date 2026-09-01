@@ -1,5 +1,6 @@
 package com.njydsz.common.json.util;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -10,10 +11,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p><b>设计思路：</b>
  *
  * <ul>
- *   <li>使用固定大小的哈希表，避免 ConcurrentHashMap 的额外开销
- *   <li>采用分段锁策略，减少并发冲突
+ *   <li>基于 {@link ConcurrentHashMap} 的无锁读路径（原实现的 synchronized 全局锁已移除，
+ *       P1 修复：javadoc 曾声称"分段锁"实为方法级全局锁，高并发字段名驻留会完全串行化）
  *   <li>仅缓存短字符串（默认 ≤ 64 字符），避免大字符串占用内存
- *   <li>使用 LRU 淘汰策略，控制内存占用
+ *   <li>条目数达到上界（容量的 1.5 倍）时整表清空（P1 修复：原实现同样为整表清空，
+ *       但 javadoc 虚标为"LRU 淘汰"；驻留是纯优化而非语义保证，清空安全——调用方
+ *       拿到的字符串始终合法，仅失去引用合并收益）
  * </ul>
  *
  * <p><b>性能优势：</b>
@@ -24,44 +27,31 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li>对于高频重复字段名、枚举值等场景效果显著
  * </ul>
  *
+ * <p><b>能力储备状态：</b>当前模块内部暂无调用方（{@code @Experimental}）。作为 L1 工具
+ * 能力保留，启用前应补充并发基准测试（JMH）验证收益。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 public final class StringInterner {
 
-  /** 默认表大小（2的幂次，便于位运算）。扩容至 4096 以适应生产环境字段名和短字符串数量。 */
+  /** 默认表容量（2 的幂次，便于位运算）。扩容至 4096 以适应生产环境字段名和短字符串数量。 */
   private static final int DEFAULT_CAPACITY = 4096;
 
   /** 最大字符串长度（超过此长度不缓存） */
   private static final int MAX_STRING_LENGTH = 64;
 
-  /** 哈希表 */
-  private volatile Entry[] table;
+  /** 驻留表（无锁读，写路径为 CAS） */
+  private final ConcurrentHashMap<String, String> table;
 
-  /** 表大小掩码 */
-  private final int mask;
+  /** 表容量（条目数上界 = 容量的 1.5 倍，超界整表清空） */
+  private final int capacity;
 
   /** 缓存命中计数 */
   private final AtomicInteger hitCount = new AtomicInteger(0);
 
   /** 缓存未命中计数 */
   private final AtomicInteger missCount = new AtomicInteger(0);
-
-  /** Entry 总数计数器，用于 LRU 淘汰触发 */
-  private volatile int size = 0;
-
-  /** 字符串条目 */
-  private static final class Entry {
-    final String value;
-    final int hashCode;
-    volatile Entry next;
-
-    Entry(String value, int hashCode) {
-      this.value = value;
-      this.hashCode = hashCode;
-      this.next = null;
-    }
-  }
 
   /** 创建默认大小的字符串驻留器 */
   public StringInterner() {
@@ -71,7 +61,7 @@ public final class StringInterner {
   /**
    * 创建指定大小的字符串驻留器
    *
-   * @param capacity 表大小（必须是 2 的幂次）
+   * @param capacity 表容量（内部向上取整为 2 的幂次）
    */
   public StringInterner(int capacity) {
     // 确保容量是 2 的幂次
@@ -79,8 +69,8 @@ public final class StringInterner {
     while (cap < capacity) {
       cap <<= 1;
     }
-    this.mask = cap - 1;
-    this.table = new Entry[cap];
+    this.capacity = cap;
+    this.table = new ConcurrentHashMap<>(cap);
   }
 
   /**
@@ -89,7 +79,7 @@ public final class StringInterner {
    * <p>如果字符串已存在于缓存中，则返回缓存的实例；否则将新字符串加入缓存并返回。
    *
    * @param str 待驻留的字符串
-   * @return 驻留后的字符串实例
+   * @return 驻留后的字符串实例（超长字符串原样返回，不做缓存）
    */
   public String intern(String str) {
     if (str == null) {
@@ -101,67 +91,19 @@ public final class StringInterner {
       return str;
     }
 
-    int hash = hash(str);
-    int index = hash & mask;
-
-    // 先尝试读取（无锁快速路径）
-    Entry[] currentTable = table;
-    Entry entry = currentTable[index];
-    while (entry != null) {
-      if (entry.hashCode == hash && entry.value.equals(str)) {
-        hitCount.incrementAndGet();
-        return entry.value;
-      }
-      entry = entry.next;
+    String existing = table.putIfAbsent(str, str);
+    if (existing != null) {
+      hitCount.incrementAndGet();
+      return existing;
     }
 
-    // 缓存未命中，需要同步添加
     missCount.incrementAndGet();
-    return internSlow(str, hash, index);
-  }
 
-  /**
-   * 驻留字符串（慢速路径，需要同步）
-   *
-   * @param str 待驻留的字符串
-   * @param hash 字符串哈希值
-   * @param index 哈希表索引
-   * @return 驻留后的字符串实例
-   */
-  private synchronized String internSlow(String str, int hash, int index) {
-    // 双重检查
-    Entry[] currentTable = table;
-    Entry entry = currentTable[index];
-    while (entry != null) {
-      if (entry.hashCode == hash && entry.value.equals(str)) {
-        return entry.value;
-      }
-      entry = entry.next;
+    // 有界控制：条目数超过容量 1.5 倍时整表清空（驻留为纯优化，清空不影响正确性）
+    if (table.size() > capacity + (capacity >>> 1)) {
+      table.clear();
     }
-
-    // 添加新条目
-    Entry newEntry = new Entry(str, hash);
-    newEntry.next = currentTable[index];
-    currentTable[index] = newEntry;
-
-    // LRU 淘汰：Entry 数量超过容量 1.5 倍时触发清理
-    if (++size > currentTable.length * 3 / 2) {
-      this.table = new Entry[currentTable.length];
-      this.size = 0;
-    }
-
     return str;
-  }
-
-  /**
-   * 计算字符串哈希值（优化版本）
-   *
-   * @param str 字符串
-   * @return 哈希值
-   */
-  private static int hash(String str) {
-    // 使用 String 标准 hashCode，分布性优于仅取首尾的采样 hash
-    return str.hashCode();
   }
 
   /**

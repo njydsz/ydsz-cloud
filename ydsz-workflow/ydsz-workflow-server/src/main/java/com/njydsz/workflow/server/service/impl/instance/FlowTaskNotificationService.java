@@ -135,8 +135,8 @@ public class FlowTaskNotificationService {
   /**
    * 流程被驳回事件
    *
-   * @param instanceId 参数说明
-   * @param reason 参数说明
+   * @param instanceId 流程实例 ID
+   * @param reason 驳回原因
    */
   public void fireInstanceRejected(String instanceId, String reason) {
     support.fireEvent(l -> l.onInstanceRejected(instanceId, reason), null);

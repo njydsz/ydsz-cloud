@@ -80,7 +80,8 @@ public class JsonConfigViewer implements JsonConfigViewerMBean {
 
   @Override
   public String getConfigDetails() {
-    JsonConfig config = JsonConfig.copyOf(null);
+    // P1 修复：读取当前已安装配置（原 copyOf(null) 永远返回默认配置，热更新观测形同虚设）
+    JsonConfig config = JsonConfig.getInstance();
     if (config == null) {
       return "JsonConfig not initialized";
     }

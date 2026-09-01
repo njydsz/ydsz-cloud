@@ -236,7 +236,15 @@ public class RedisConfiguration {
     return template;
   }
 
-  /** 注册 Redis 健康检查指示器 */
+  /**
+   * 注册 Redis 健康检查指示器
+   *
+   * <p>仅在 Actuator 的 {@code HealthIndicator} 存在于类路径且容器尚无同类型 Bean 时注册，
+   * 使 {@code /actuator/health} 能反映 Redis 连通性。
+   *
+   * @param connectionFactory Redis 连接工厂，健康探测时复用其连接配置
+   * @return Redis 健康指示器实例，不会为 {@code null}
+   */
   @Bean
   @ConditionalOnMissingBean
   @ConditionalOnClass(HealthIndicator.class)

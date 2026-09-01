@@ -2,10 +2,16 @@ package com.njydsz.common.excel.spring;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
+
 /**
  * Excel 模块配置属性
  *
  * <p>通过 {@code ydsz.excel.*} 前缀绑定 application.yml 中的配置项。 所有字段均有默认值，用户仅需覆盖需要自定义的部分。
+ *
+ * <p>P2-12 修复：补齐 {@code use1904Windowing} / {@code validationMode} / {@code
+ * maxReadCacheSize} 三个 ExcelConfig 预留配置的绑定——此前这些配置项在 ExcelConfig
+ * 中存在但 ExcelProperties 未声明，配置了不生效。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -57,6 +63,15 @@ public class ExcelProperties {
 
   /** SXSSF 写入缓存大小，默认 100 */
   private Integer writeCacheSize = 100;
+
+  /** 是否使用 1904 日期窗口（Mac Excel 兼容），默认 false（1900 窗口） */
+  private Boolean use1904Windowing = false;
+
+  /** 数据校验模式，默认 FAIL_FAST（遇错即抛）；可选 COLLECT_ALL（全量收集后抛） */
+  private ValidationMode validationMode = ValidationMode.FAIL_FAST;
+
+  /** 读缓存大小（条），默认 1024 */
+  private Integer maxReadCacheSize = 1024;
 
   public Integer getReadBufferSize() {
     return readBufferSize;
@@ -176,5 +191,29 @@ public class ExcelProperties {
 
   public void setWriteCacheSize(Integer writeCacheSize) {
     this.writeCacheSize = writeCacheSize;
+  }
+
+  public Boolean getUse1904Windowing() {
+    return use1904Windowing;
+  }
+
+  public void setUse1904Windowing(Boolean use1904Windowing) {
+    this.use1904Windowing = use1904Windowing;
+  }
+
+  public ValidationMode getValidationMode() {
+    return validationMode;
+  }
+
+  public void setValidationMode(ValidationMode validationMode) {
+    this.validationMode = validationMode;
+  }
+
+  public Integer getMaxReadCacheSize() {
+    return maxReadCacheSize;
+  }
+
+  public void setMaxReadCacheSize(Integer maxReadCacheSize) {
+    this.maxReadCacheSize = maxReadCacheSize;
   }
 }

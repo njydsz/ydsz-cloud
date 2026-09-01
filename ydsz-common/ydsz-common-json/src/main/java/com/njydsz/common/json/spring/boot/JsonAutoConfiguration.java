@@ -18,6 +18,7 @@ import org.springframework.core.convert.converter.Converter;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.internal.JsonConfig;
+import com.njydsz.common.json.internal.JsonConfig.ConfigChangeListener;
 import com.njydsz.common.json.module.JsonModule;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.PolymorphicTypeResolver;
@@ -146,6 +147,14 @@ public class JsonAutoConfiguration {
     /** JMX MBean（配置运维视图），在 @PostConstruct 阶段注册 */
     private JsonConfigViewer configViewer;
 
+    /**
+     * 配置变更监听器（命名策略/日期格式/枚举序号变化时清空字段缓存）。
+     *
+     * <p>P1 修复：持有引用以便 {@code @PreDestroy} 注销——原先匿名注册后从不移除，
+     * 容器热重启场景下监听器在静态列表中累积泄漏。
+     */
+    private ConfigChangeListener cacheInvalidationListener;
+
     public JsonConfigBean(JsonProperties properties, List<JsonModule> springModules) {
       this.properties = properties;
       this.springModules = springModules;
@@ -198,7 +207,7 @@ public class JsonAutoConfiguration {
       // 自动清空 BeanSerializerCache 中已烘焙的字段名缓存，使配置热更新真正生效。
       // 背景：README 注意事项第 7 点明确指出"命名策略在字段元数据加载时缓存，后续切换对已缓存类无效"，
       // 本修复通过 ConfigChangeListener 机制消除该隐性陷阱。
-      JsonConfig.addChangeListener(
+      cacheInvalidationListener =
           (oldConfig, nextConfig, newVersion) -> {
             if (oldConfig == null) {
               return;
@@ -217,7 +226,8 @@ public class JsonAutoConfiguration {
             if (needClear) {
               BeanSerializerCache.clear();
             }
-          });
+          };
+      JsonConfig.addChangeListener(cacheInvalidationListener);
 
       // 注册 JMX MBean（配置运维视图），暴露配置版本号、缓存大小等指标
       configViewer = new JsonConfigViewer();
@@ -236,6 +246,11 @@ public class JsonAutoConfiguration {
       // 注销 JMX MBean
       if (configViewer != null) {
         configViewer.unregister();
+      }
+      // P1 修复：注销配置变更监听器，防止容器热重启时静态监听列表累积泄漏
+      if (cacheInvalidationListener != null) {
+        JsonConfig.removeChangeListener(cacheInvalidationListener);
+        cacheInvalidationListener = null;
       }
       BeanSerializerCache.clear();
       SerializerCache.clear();

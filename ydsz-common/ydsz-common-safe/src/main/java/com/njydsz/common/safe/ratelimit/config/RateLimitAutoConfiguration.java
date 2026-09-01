@@ -69,6 +69,11 @@ public class RateLimitAutoConfiguration {
    *
    * <p>当 classpath 中存在 {@link StringRedisTemplate} 时注入到 {@link RedisClusterRateLimiter}； 否则返回
    * {@code null}，{@link RateLimitManager} 将在 CLUSTER 模式下降级为本地限流。
+   *
+   * @param properties 限流配置，取其中的集群 Key 前缀与失败降级开关
+   * @param redisTemplateProvider {@code StringRedisTemplate} 的延迟提供者；取不到时传入 {@code null}，
+   *     由 {@code RedisClusterRateLimiter} 自行降级
+   * @return 集群限流器实例
    */
   @Bean
   @ConditionalOnMissingBean

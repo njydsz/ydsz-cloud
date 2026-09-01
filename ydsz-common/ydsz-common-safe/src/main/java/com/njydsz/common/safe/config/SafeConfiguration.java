@@ -366,7 +366,15 @@ public class SafeConfiguration {
   }
 
   // XssJsonMessageConverter 已注册为 Bean，Spring Boot 4.1 自动检测 HttpMessageConverter Bean 并注册到转换器链
-  /** 注册 CSRF 令牌生成器 */
+  /**
+   * 注册 CSRF 令牌生成器
+   *
+   * <p>采用默认的 {@code DefaultCsrfTokenGenerator}，令牌的持久化与读取全部委托给注入的存储库，
+   * 单机部署对应内存存储，Redis 可用时对应 {@link #redisCsrfTokenRepository}。
+   *
+   * @param tokenRepository CSRF 令牌存储库，决定令牌的存放位置与过期策略
+   * @return CSRF 令牌生成器实例，不会为 {@code null}
+   */
   @Bean
   @ConditionalOnMissingBean(CsrfTokenGenerator.class)
   public CsrfTokenGenerator csrfTokenGenerator(CsrfTokenRepository tokenRepository) {
@@ -376,7 +384,12 @@ public class SafeConfiguration {
   /**
    * 注册 CSRF 令牌存储库（Redis 分布式环境）
    *
-   * <p>当 RedisStringOps 可用时，自动使用 Redis 存储以支持分布式部署。
+   * <p>当 RedisStringOps 可用时，自动使用 Redis 存储以支持分布式部署。该 Bean 标注 {@code @Primary}，
+   * 会优先于单机内存存储库被注入。
+   *
+   * @param properties CSRF 配置属性，其中 {@code expirationSeconds} 决定令牌在 Redis 中的存活时间
+   * @param redisStringOps Redis String 操作门面，作为令牌的实际读写通道
+   * @return 基于 Redis 的 CSRF 令牌存储库实例，不会为 {@code null}
    */
   @Bean
   @Primary
@@ -537,7 +550,9 @@ public class SafeConfiguration {
    *
    * <p>提供验证码生成、图片绘制、Redis 存储、校验等能力。 需要 RedisStringOps 可用（验证码存储依赖 Redis）。
    *
-   * @return 验证码生成器实例
+   * @param redisStringOps Redis String 操作门面，用于存取验证码答案与过期时间
+   * @param properties 验证码配置，{@code ttlSeconds} 为有效期、{@code codeLength} 为验证码位数
+   * @return 验证码生成器实例，不会为 {@code null}
    */
   @Bean
   @ConditionalOnMissingBean(CaptchaGenerator.class)

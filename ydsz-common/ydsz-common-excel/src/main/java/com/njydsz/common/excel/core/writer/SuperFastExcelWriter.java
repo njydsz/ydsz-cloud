@@ -71,6 +71,9 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  * <ul>
  *   <li><b>线程安全性</b>：实例持有行缓冲区、行游标、单元格引用暂存等可变状态， <b>既不能跨线程共享，也不能重复调用 {@code doWrite}</b>（行号会累加）。
  *       每次导出请新建实例。
+ *   <li><b>回调限制（P2-12 标注）</b>：本引擎不触发 {@code WriteHandler} / {@code WriteLifecycleHandler}
+ *       回调，也不应用 {@code @ExcelStyle} / {@code @ContentStyle} 样式注解——与 POI 写引擎（ExcelWriter）
+ *       行为不一致。需要回调或样式定制的场景请使用默认 POI 路径。
  *   <li><b>输出目标优先级</b>：{@code filePath} &gt; {@code file} &gt; {@code outputStream}， 三者均未设置时抛
  *       {@link IllegalArgumentException}。
  *   <li>写文件路径时先在系统临时目录落地 sheet1.xml 再转存进 ZIP， 临时目录在 {@code finally} 中递归删除，清理失败仅记 warn 不影响结果。

@@ -1,5 +1,6 @@
 package com.njydsz.common.json.tree;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -133,21 +134,62 @@ public final class JsonPatch {
   }
 
   /**
-   * 将 RFC 6902 Patch 直接应用到 JsonNode 树（原地修改），返回同一棵树。
+   * 将 RFC 6902 Patch 直接应用到 JsonNode 树（原地修改），返回应用后的根节点。
    *
    * <p>P-2 优化：供树模型调用方直接操作，避免 {code Map} 中转 （原先 {@code YdszJson.patch} 走 parseMap → Map → tree → Map
    * → String 的多重转换）。
    *
+   * <p><b>P1 RFC 6902 合规修复：</b>整文档路径 {@code ""}（root path）在 ADD/REPLACE 操作下
+   * 替换整棵文档并返回新根节点（值必须为 JSON 对象，受返回类型约束）；TEST/REMOVE/MOVE/COPY
+   * 的整文档路径暂不支持，将抛出明确异常。调用方应使用返回值而非入参引用。
+   *
    * @param patchJson Patch JSON 数组字符串
    * @param tree 目标树（必须是 ObjectNode）
-   * @return 应用 Patch 后的同一棵树（原地修改）
+   * @return 应用 Patch 后的根节点（整文档操作可能返回新根）
    */
   public static ObjectNode applyToTree(String patchJson, ObjectNode tree) {
     List<PatchOp> ops = parse(patchJson);
+    ObjectNode root = tree;
     for (PatchOp op : ops) {
-      applyOp(tree, op);
+      String[] segments = parsePath(op.path);
+      if (segments.length == 0) {
+        root = applyRootOp(root, op);
+        continue;
+      }
+      applyOp(root, op, segments);
     }
-    return tree;
+    return root;
+  }
+
+  /**
+   * 应用整文档路径（{@code path = ""}）操作（P1 RFC 6902 合规修复）。
+   *
+   * @param root 当前文档根节点
+   * @param op Patch 操作
+   * @return 替换后的新根节点
+   */
+  private static ObjectNode applyRootOp(ObjectNode root, PatchOp op) {
+    switch (op.op) {
+      case ADD, REPLACE -> {
+        JsonNode value = TreeConverter.convertToJsonNode(op.value);
+        if (value instanceof ObjectNode objValue) {
+          return objValue;
+        }
+        throw new JsonException(
+            "Root-path " + op.op + " value must be a JSON object, but was: "
+                + value.getClass().getSimpleName());
+      }
+      case TEST -> {
+        // 整文档 TEST：将 value 转树后与当前根做数值等价比较
+        JsonNode value = TreeConverter.convertToJsonNode(op.value);
+        if (!value.toString().equals(root.toString())) {
+          throw new JsonException("TEST failed at root: document mismatch");
+        }
+        return root;
+      }
+      default -> throw new JsonException(
+          "Root-path is only supported for ADD/REPLACE/TEST, but got: " + op.op);
+    }
   }
 
   /**
@@ -194,7 +236,8 @@ public final class JsonPatch {
     if (opStr == null || opStr.isEmpty()) {
       throw new JsonException("Patch operation must have 'op' field");
     }
-    if (path == null || path.isEmpty()) {
+    if (path == null) {
+      // P1 修复：空字符串 path 是合法的整文档路径（RFC 6902），仅 null/缺失非法
       throw new JsonException("Patch operation must have 'path' field");
     }
 
@@ -211,10 +254,9 @@ public final class JsonPatch {
     return new PatchOp(op, path, value, from);
   }
 
-  /** 对 ObjectNode 应用单个 Patch 操作。 */
-  private static void applyOp(ObjectNode tree, PatchOp op) {
-    String[] segments = parsePath(op.path);
-    PathResolution resolution = resolvePath(tree, segments, op.op);
+  /** 对 ObjectNode 应用单个 Patch 操作（非整文档路径）。 */
+  private static void applyOp(ObjectNode tree, PatchOp op, String[] segments) {
+    PathResolution resolution = resolvePath(tree, segments);
 
     switch (op.op) {
       case ADD -> applyAdd(resolution, segments[segments.length - 1], op.value);
@@ -291,38 +333,83 @@ public final class JsonPatch {
     }
   }
 
-  /** Test 操作：验证指定路径的值是否匹配。 */
+  /**
+   * Test 操作：验证指定路径的值是否匹配（RFC 6902 §4.6）。
+   *
+   * <p>P1 合规修复：数值按值比较（{@code 1}、{@code 1L}、{@code 1.0}、{@code 1.00} 视为相等）；
+   * 目标路径不存在时一律失败（此前路径缺失与显式 null 值混淆，value 为 null 时会误判通过）。
+   */
   private static void applyTest(PathResolution resolution, String lastSegment, Object expected) {
+    if (!pathExists(resolution, lastSegment)) {
+      throw new JsonException("TEST failed at '" + lastSegment + "': path does not exist");
+    }
     Object actual = getValueAt(resolution, lastSegment);
-    if (!Objects.equals(actual, expected)) {
+    if (!jsonValueEquals(actual, expected)) {
       throw new JsonException(
           "TEST failed at '" + lastSegment + "': expected " + expected + " but got " + actual);
     }
   }
 
+  /**
+   * 判断目标路径是否存在（区分"路径缺失"与"显式 null 值"）。
+   *
+   * @param resolution 路径解析结果
+   * @param lastSegment 最后一段路径
+   * @return 路径存在返回 true
+   */
+  private static boolean pathExists(PathResolution resolution, String lastSegment) {
+    if (resolution.parent instanceof ObjectNode objNode) {
+      return objNode.has(lastSegment);
+    }
+    if (resolution.parent instanceof ArrayNode arrNode) {
+      try {
+        int idx = parseIndex(lastSegment, arrNode.size());
+        return idx < arrNode.size();
+      } catch (JsonException e) {
+        return false;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * RFC 6902 §4.6 语义相等比较：数值按值比较，其余按 {@link Objects#equals}。
+   *
+   * @param actual 实际值
+   * @param expected 期望值
+   * @return 相等返回 true
+   */
+  private static boolean jsonValueEquals(Object actual, Object expected) {
+    if (actual instanceof Number actualNum && expected instanceof Number expectedNum) {
+      return new BigDecimal(actualNum.toString())
+          .compareTo(new BigDecimal(expectedNum.toString())) == 0;
+    }
+    return Objects.equals(actual, expected);
+  }
+
   /** Move 操作：将值从 from 路径移动到 path 路径。 */
   private static void applyMove(ObjectNode tree, PatchOp op) {
     String[] fromSegments = parsePath(op.from);
-    PathResolution fromResolution = resolvePath(tree, fromSegments, Operation.MOVE);
+    PathResolution fromResolution = resolvePath(tree, fromSegments);
 
     // 获取 from 值
     Object value = getValueAt(fromResolution, fromSegments[fromSegments.length - 1]);
     // 删除 from 位置
     applyRemove(fromResolution, fromSegments[fromSegments.length - 1]);
     // 添加值到新位置
-    PathResolution toResolution = resolvePath(tree, parsePath(op.path), Operation.ADD);
+    PathResolution toResolution = resolvePath(tree, parsePath(op.path));
     applyAdd(toResolution, parsePath(op.path)[parsePath(op.path).length - 1], value);
   }
 
   /** Copy 操作：将值从 from 路径复制到 path 路径。 */
   private static void applyCopy(ObjectNode tree, PatchOp op) {
     String[] fromSegments = parsePath(op.from);
-    PathResolution fromResolution = resolvePath(tree, fromSegments, Operation.COPY);
+    PathResolution fromResolution = resolvePath(tree, fromSegments);
 
     // 获取 from 值（复制时不删除）
     Object value = getValueAt(fromResolution, fromSegments[fromSegments.length - 1]);
     // 添加值到新位置
-    PathResolution toResolution = resolvePath(tree, parsePath(op.path), Operation.ADD);
+    PathResolution toResolution = resolvePath(tree, parsePath(op.path));
     applyAdd(toResolution, parsePath(op.path)[parsePath(op.path).length - 1], value);
   }
 
@@ -364,17 +451,23 @@ public final class JsonPatch {
     }
   }
 
-  /** 解析 JSON Pointer 路径（去掉前导 /，分割）。 */
+  /**
+   * 解析 JSON Pointer 路径（去掉前导 /，分割）。
+   *
+   * <p>P1 RFC 6902 合规修复：空字符串 {@code ""} 表示整文档路径（返回空段数组）；
+   * {@code "/"} 表示空键成员（返回单空段，此前被误判为整文档路径）。
+   */
   private static String[] parsePath(String path) {
-    if (path == null || path.isEmpty() || "/".equals(path)) {
+    if (path == null || path.isEmpty()) {
       return new String[0];
     }
     if (!path.startsWith("/")) {
-      throw new JsonException("JSON Pointer path must start with '/': " + path);
+      throw new JsonException("JSON Pointer path must start with '/' or be empty: " + path);
     }
     String content = path.substring(1);
     if (content.isEmpty()) {
-      return new String[0];
+      // "/" 指向空键成员（RFC 6901），非整文档
+      return new String[] {""};
     }
     // 解码 JSON Pointer 转义：~1 → /, ~0 → ~
     String[] segments = content.split("/");
@@ -384,8 +477,13 @@ public final class JsonPatch {
     return segments;
   }
 
-  /** 解析路径，返回父节点和最后一段。 如果中间路径段不存在且 op 是 ADD，则创建中间节点。 */
-  private static PathResolution resolvePath(ObjectNode root, String[] segments, Operation op) {
+  /**
+   * 解析路径，返回父节点和最后一段。
+   *
+   * <p>P1 RFC 6902 合规修复：ADD 操作不再自动创建中间容器节点——RFC 规定目标位置的父节点必须已存在，
+   * 原实现静默创建中间对象会掩盖调用方路径拼写错误。
+   */
+  private static PathResolution resolvePath(ObjectNode root, String[] segments) {
     if (segments.length == 0) {
       return new PathResolution(null, "");
     }
@@ -399,14 +497,7 @@ public final class JsonPatch {
       JsonNode next = getChild(current, seg);
 
       if (next == null || next.isNull()) {
-        if (op == Operation.ADD) {
-          // 创建中间节点
-          ObjectNode intermediate = new ObjectNode();
-          ((ObjectNode) current).put(seg, intermediate);
-          next = intermediate;
-        } else {
-          throw new JsonException("Path segment '" + seg + "' does not exist");
-        }
+        throw new JsonException("Path segment '" + seg + "' does not exist");
       }
       current = next;
     }

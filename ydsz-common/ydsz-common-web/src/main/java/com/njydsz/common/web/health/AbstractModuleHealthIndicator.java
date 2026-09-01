@@ -76,7 +76,13 @@ public abstract class AbstractModuleHealthIndicator implements HealthIndicator {
     }
   }
 
-  /** 标记 Redis 未配置（可选依赖场景）。 */
+  /**
+   * 标记 Redis 未配置（可选依赖场景）。
+   *
+   * <p>写入 {@code UNKNOWN} 明细而不改变整体健康状态，避免把"未接入可选依赖"误判为故障。
+   *
+   * @param builder 健康状态构建器，本方法只追加明细、不调用 {@code down()}
+   */
   protected void checkRedisNotConfigured(Health.Builder builder) {
     builder.withDetail("redis", "UNKNOWN - not configured");
   }
@@ -147,7 +153,17 @@ public abstract class AbstractModuleHealthIndicator implements HealthIndicator {
     }
   }
 
-  /** 安全地添加可选组件的简单状态。组件为 null 时标记 NOT_CONFIGURED。 */
+  /**
+   * 安全地添加可选组件的简单状态。组件为 null 时标记 NOT_CONFIGURED。
+   *
+   * <p>{@code statusSupplier} 抛异常时同样只追加 {@code ERROR} 明细，不降级整体状态，
+   * 因此可选组件的抖动不会让模块健康检查直接失败。
+   *
+   * @param builder 健康状态构建器
+   * @param componentName 明细项名称，直接作为 health details 的键
+   * @param component 可选组件实例，为 {@code null} 表示未接入
+   * @param statusSupplier 状态文案提供者，仅在 {@code component} 非 {@code null} 时调用
+   */
   protected void checkOptionalStatus(
       Health.Builder builder,
       String componentName,
@@ -166,7 +182,15 @@ public abstract class AbstractModuleHealthIndicator implements HealthIndicator {
 
   // ──────────────────── 通用辅助方法 ────────────────────
 
-  /** 提取异常信息（仅取 message，避免堆栈污染 details）。 */
+  /**
+   * 提取异常信息（仅取 message，避免堆栈污染 details）。
+   *
+   * <p>优先取 {@code cause} 的描述，因为连接池/驱动抛出的包装异常本身 message 常为空；
+   * 仍取不到时退化为异常类名，保证明细项永不为空。
+   *
+   * @param e 健康检查过程中捕获的异常，不应为 {@code null}
+   * @return 单行异常描述，不会为 {@code null}；无任何可用信息时返回异常类的简单名
+   */
   protected String extractMessage(Exception e) {
     Throwable cause = e.getCause();
     if (cause != null) {

@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -111,6 +112,8 @@ public class JsonWarmupRunner implements ApplicationRunner {
         || method.isAnnotationPresent(PostMapping.class)
         || method.isAnnotationPresent(PutMapping.class)
         || method.isAnnotationPresent(DeleteMapping.class)
+        // P1 修复：PATCH 接口类型此前漏扫，不被预热
+        || method.isAnnotationPresent(PatchMapping.class)
         || method.isAnnotationPresent(RequestMapping.class);
   }
 

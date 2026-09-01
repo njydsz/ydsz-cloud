@@ -43,6 +43,7 @@ import com.njydsz.common.excel.core.writer.SuperFastExcelWriter;
 import com.njydsz.common.excel.core.writer.UltraFastCellWriter;
 import com.njydsz.common.excel.core.writer.ValueFormatter;
 import com.njydsz.common.excel.core.writer.WorkbookFactory;
+import com.njydsz.common.excel.exception.ExcelExceptionCode;
 import com.njydsz.common.excel.exception.ExcelWriteException;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 import com.njydsz.common.excel.support.cache.ReflectCache;
@@ -1141,9 +1142,16 @@ public class ExcelWriter {
   }
 
   /**
-   * 超高速批量写入 - 使用预计算元数据和ASM加速
+   * 超高速批量写入 - 使用预计算元数据与 MethodHandle 加速
    *
-   * <p>零分配写入循环，适用于大数据量场景。 通过预计算元数据、缓存样式和ASM字节码访问，避免运行时的所有开销。
+   * <p>零分配写入循环，适用于大数据量场景。 通过预计算元数据、缓存样式和 MethodHandle
+   * 字段访问，避免运行时的所有开销。
+   *
+   * <p><b>与 {@code doWrite} 的行为差异（P2-12 标注）</b>：本方法不触发
+   * {@code WriteHandler.afterRowWrite} 等行级回调，单元格样式走预计算路径；<b>公式注入消毒与
+   * {@code doWrite} 已对齐</b>（typed 路径经 UltraFastCellWriter、无类型路径委托 {@code writeRow}，
+   * 均受 {@code ExcelConfig.formulaInjectionProtection} 控制）。需要完整回调或样式定制的场景请使用
+   * {@code doWrite}。
    *
    * @param dataList 数据列表
    */
@@ -1151,6 +1159,10 @@ public class ExcelWriter {
     if (dataList == null || dataList.isEmpty()) {
       return;
     }
+
+    // P2-12 修复：独立调用（未经 doWrite）时补初始化——initWorkbook 定位 Sheet 并写表头，
+    // 否则 sheet / ultraFastCellWriter 为 null 直接 NPE
+    ensureInitializedForBatch();
 
     Class<?> clazz = metadata.getClazz();
     if (clazz == null) {
@@ -1192,6 +1204,35 @@ public class ExcelWriter {
           cell.setBlank();
         }
       }
+    }
+  }
+
+  /**
+   * writeBatch 独立调用时的惰性初始化。
+   *
+   * <p>复用 {@code doWrite} 的初始化路径：初始化工作簿、定位 Sheet、写表头（含
+   * UltraFastCellWriter 构建）。若已经 {@code doWrite} 初始化过则跳过（幂等）。
+   */
+  private void ensureInitializedForBatch() {
+    if (sheet != null && ultraFastCellWriter != null) {
+      return;
+    }
+    try {
+      initWorkbook();
+      context.setSheet(sheet);
+      currentRowIndex = Math.max(0, metadata.getHeadRowNumber() - 1);
+      List<WriteHeaderProperty> headProperties;
+      if (metadata.getClazz() == null && !metadata.getHeadList().isEmpty()) {
+        headProperties = metadata.getHeadList();
+      } else {
+        headProperties = analyzeClass();
+      }
+      writeHead(headProperties);
+    } catch (IOException e) {
+      throw new ExcelWriteException(
+          ExcelExceptionCode.WRITE_WORKBOOK_CREATE_FAILED,
+          "writeBatch 初始化工作簿失败",
+          e);
     }
   }
 

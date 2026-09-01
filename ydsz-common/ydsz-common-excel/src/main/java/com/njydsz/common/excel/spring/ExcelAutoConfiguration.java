@@ -110,6 +110,10 @@ public class ExcelAutoConfiguration {
         .strictNumberConversion(properties.getStrictNumberConversion())
         .headRowNumber(properties.getHeadRowNumber())
         .writeCacheSize(properties.getWriteCacheSize())
+        // P2-12 修复：补齐 ExcelConfig 预留配置的绑定（此前配置了不生效）
+        .use1904Windowing(properties.getUse1904Windowing())
+        .validationMode(properties.getValidationMode())
+        .maxReadCacheSize(properties.getMaxReadCacheSize())
         .build();
   }
 

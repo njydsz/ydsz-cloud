@@ -155,11 +155,11 @@ public class FlowFormValidator {
   /**
    * 子表单校验：行数限制 + 递归校验每行字段。
    *
-   * @param field 参数说明
-   * @param value 参数说明
-   * @param allData 参数说明
-   * @param errors 参数说明
-   * @param fieldKey 参数说明
+   * @param field 子表单字段定义
+   * @param value 字段实际取值（应为 List&lt;Map&gt;）
+   * @param allData 全量表单数据（用于联动规则求值）
+   * @param errors 错误收集器
+   * @param fieldKey 当前字段键（可能含嵌套前缀，如 parent.subKey）
    */
   private void validateSubForm(
       FlowFormField field,
@@ -430,9 +430,9 @@ public class FlowFormValidator {
   /**
    * 判断字段是否被联动规则隐藏。
    *
-   * @param field 参数说明
-   * @param allData 参数说明
-   * @return 返回值说明
+   * @param field 字段定义（含 linkages 联动规则）
+   * @param allData 全量表单数据（含触发源字段的实际值）
+   * @return true 表示该字段被联动规则隐藏
    */
   private boolean isHiddenByLinkage(FlowFormField field, Map<String, Object> allData) {
     if (field.getLinkages() == null || field.getLinkages().isEmpty()) {
@@ -460,9 +460,9 @@ public class FlowFormValidator {
   /**
    * 判断字段是否必填（考虑联动 SET_REQUIRED 规则）。
    *
-   * @param field 参数说明
-   * @param allData 参数说明
-   * @return 返回值说明
+   * @param field 字段定义（含 validation.required / linkages 联动规则）
+   * @param allData 全量表单数据（联动 SET_REQUIRED 触发时使用）
+   * @return true 表示该字段在当前联动状态下为必填
    */
   private boolean isRequired(FlowFormField field, Map<String, Object> allData) {
     boolean baseRequired = Boolean.TRUE.equals(field.getRequired());
@@ -488,10 +488,10 @@ public class FlowFormValidator {
   /**
    * 评估联动条件是否满足。
    *
-   * @param operator 参数说明
-   * @param actual 参数说明
-   * @param expected 参数说明
-   * @return 返回值说明
+   * @param operator 运算符（EQ / NE / IN / CONTAINS / GT / LT / GTE / LTE）
+   * @param actual 表单字段实际取值
+   * @param expected 联动规则目标值（标量或列表）
+   * @return true 表示条件满足
    */
   private boolean evaluateCondition(String operator, Object actual, Object expected) {
     if (operator == null || operator.isEmpty()) {
@@ -579,8 +579,8 @@ public class FlowFormValidator {
   /**
    * 从 JSON 字符串解析表单 Schema。
    *
-   * @param json 参数说明
-   * @return 返回值说明
+   * @param json 表单 Schema JSON 字符串
+   * @return 解析后的 {@link FlowFormSchema} 对象；json 为空或解析失败时返回 null
    */
   public FlowFormSchema parseSchema(String json) {
     if (!StringUtils.hasText(json)) {

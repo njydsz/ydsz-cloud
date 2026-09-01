@@ -504,8 +504,8 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
   /**
    * 将 Map 形式的 payload 转换为强类型 NotificationFeignDTO
    *
-   * @param payload 参数说明
-   * @return 返回值说明
+   * @param payload Map 形式的原始通知载荷（含 title/content/level/category/senderId 等键）
+   * @return 强类型的通知服务 DTO，payload 为 null 时返回空对象
    */
   private NotificationFeignDTO toFeignDTO(Map<String, Object> payload) {
     NotificationFeignDTO dto = new NotificationFeignDTO();

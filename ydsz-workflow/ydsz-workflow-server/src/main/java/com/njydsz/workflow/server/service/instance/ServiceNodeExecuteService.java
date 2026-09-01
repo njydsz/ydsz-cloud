@@ -83,14 +83,14 @@ public class ServiceNodeExecuteService {
    * 创建 ServiceNodeExecuteService 实例
    * 
    *
-   * @param serviceNodeExecutor 参数说明
-   * @param taskRepository 参数说明
-   * @param archiveService 参数说明
-   * @param support 参数说明
-   * @param eventSubscriptionService 参数说明
-   * @param nodeRepository 参数说明
-   * @param instanceRepository 参数说明
-   * @param advanceCallback 参数说明   */
+   * @param serviceNodeExecutor 服务节点执行器（HTTP / SCRIPT / AUTO_PASS）
+   * @param taskRepository 运行时任务仓储
+   * @param archiveService 任务归档服务
+   * @param support 任务支持组件（事件 / 审计 / 工作流事件）
+   * @param eventSubscriptionService 事件订阅服务（error boundary 触发）
+   * @param nodeRepository 流程节点仓储
+   * @param instanceRepository 流程实例仓储
+   * @param advanceCallback 执行成功后推进到下一节点的回调
   public ServiceNodeExecuteService(
       FlowServiceNodeExecutor serviceNodeExecutor,
       FlowRunTaskRepository taskRepository,
@@ -283,9 +283,9 @@ public class ServiceNodeExecuteService {
   /**
    * 执行成功后推进到下一节点（含递归深度保护）
    *
-   * @param instance 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
+   * @param instance 当前流程实例
+   * @param node 当前服务节点
+   * @param variables 合并后的流程变量
    */
   private void advanceAfterSuccess(
       FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
