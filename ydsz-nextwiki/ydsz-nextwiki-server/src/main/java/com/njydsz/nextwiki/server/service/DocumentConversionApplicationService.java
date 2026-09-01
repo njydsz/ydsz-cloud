@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.server.service;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ public class DocumentConversionApplicationService {
    * @param outputFormat 目标格式（如 "html"、"pdf"）
    * @param inputStream 源文件输入流（方法内会读尽，调用方不必复用）
    * @param outputStream 目标文件输出流（方法内写入转换结果，调用方负责关闭）
-   * @throws Exception 不支持的格式组合抛 {@link UnsupportedOperationException}；IO/编码异常原样抛出
+   * @throws IOException 不支持的格式组合抛 {@link UnsupportedOperationException}；IO/编码异常原样抛出
    * @complexity O(contentLength)（全量读入内存后做正则/字符串替换）
    * @note 本服务为无状态纯转换，线程安全；大文件会整体载入内存，注意内存占用
    * @see #convertMarkdownToHtml(InputStream, OutputStream)
@@ -43,7 +44,7 @@ public class DocumentConversionApplicationService {
    */
   public void convert(
       String inputFormat, String outputFormat, InputStream inputStream, OutputStream outputStream)
-      throws Exception {
+      throws IOException {
     String key = (inputFormat + "->" + outputFormat).toLowerCase();
     log.info("[DocumentConversionApplicationService] 格式转换: {}", key);
 
@@ -58,7 +59,7 @@ public class DocumentConversionApplicationService {
 
   /** Markdown 转 HTML */
   private void convertMarkdownToHtml(InputStream inputStream, OutputStream outputStream)
-      throws Exception {
+      throws IOException {
     String markdown = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
     // 简化的 Markdown 转 HTML（实际应使用 flexmark-java 或 commonmark-java）
     String html =
@@ -92,7 +93,7 @@ public class DocumentConversionApplicationService {
    * <p>TODO: 集成 OpenPDF 或 Flying Saucer 库实现真正的 HTML→PDF 转换。 当前版本仅输出 HTML 内容作为占位。
    */
   private void convertHtmlToPdf(InputStream inputStream, OutputStream outputStream)
-      throws Exception {
+      throws IOException {
     String html = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
     log.info(
         "[DocumentConversionApplicationService] HTML→PDF 转换（TODO: 待集成 OpenPDF/Flying Saucer, HTML 长度: {}）",
@@ -103,7 +104,7 @@ public class DocumentConversionApplicationService {
 
   /** 纯文本转 HTML */
   private void convertTextToHtml(InputStream inputStream, OutputStream outputStream)
-      throws Exception {
+      throws IOException {
     String text = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
     String escaped =
         text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>");
@@ -117,7 +118,7 @@ public class DocumentConversionApplicationService {
 
   /** CSV 转 HTML 表格 */
   private void convertCsvToHtml(InputStream inputStream, OutputStream outputStream)
-      throws Exception {
+      throws IOException {
     String csv = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
     String[] lines = csv.split("\n");
     StringBuilder html = new StringBuilder();

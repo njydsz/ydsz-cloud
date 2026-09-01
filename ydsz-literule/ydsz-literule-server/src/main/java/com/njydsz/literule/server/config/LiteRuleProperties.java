@@ -80,6 +80,9 @@ public class LiteRuleProperties {
   /** 默认线程池空闲保活时间（秒） */
   private static final long DEFAULT_KEEP_ALIVE_SECONDS = 60L;
 
+  /** 默认索引启用阈值（规则数达到该值才启用索引） */
+  private static final int DEFAULT_INDEX_BYPASS_THRESHOLD = 200;
+
   /** 是否启用自动注册内置规则 */
   private boolean autoRegisterBuiltinRules = true;
 
@@ -735,7 +738,7 @@ public class LiteRuleProperties {
      * </ul>
      */
     @Min(1)
-    private int bypassThreshold = 200;
+    private int bypassThreshold = DEFAULT_INDEX_BYPASS_THRESHOLD;
   }
 
   /**

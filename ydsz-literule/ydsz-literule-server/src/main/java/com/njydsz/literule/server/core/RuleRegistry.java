@@ -33,8 +33,11 @@ public class RuleRegistry {
   /** 规则索引器（大规则量场景索引优化） */
   private final RuleIndexer ruleIndexer = new RuleIndexer();
 
+  /** 默认索引启用阈值（规则数达到该值才启用索引） */
+  private static final int DEFAULT_INDEX_BYPASS_THRESHOLD = 200;
+
   /** 索引未启用时的规则量阈值 */
-  private volatile int indexBypassThreshold = 200;
+  private volatile int indexBypassThreshold = DEFAULT_INDEX_BYPASS_THRESHOLD;
 
   /** 统计记录器（用于清理注销规则的统计） */
   private volatile RuleStatistics statistics;

@@ -63,6 +63,9 @@ public class PreviewApplicationService {
   private static final Set<String> OFFICE_SUFFIXES =
       Set.of("doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf");
 
+  /** LibreOffice 转换超时时间（秒） */
+  private static final int LIBREOFFICE_TIMEOUT_SECONDS = 120;
+
   /** 支持直接预览的文件后缀（无需转换） */
   private static final Set<String> DIRECT_PREVIEW_SUFFIXES =
       Set.of("pdf", "txt", "md", "html", "htm", "csv", "json", "xml");
@@ -77,7 +80,6 @@ public class PreviewApplicationService {
    * <p>内部捕获全部异常仅记日志，避免阻塞上传主流程或导致事务回滚；真正逻辑见 {@link #doGeneratePreview}。
    *
    * @param fileNodeId 文件节点 ID（据此下载原文件并生成预览/缩略图）
-   * @return 无返回值
    * @concurrency 异步执行，失败不影响主链路；同一文件可能并发触发，结果以最后写入为准
    * @note 本方法无事务边界，异常被吞掉仅告警
    * @complexity 取决于文件类型：Office 需 LibreOffice 进程转换（最慢），图片/直读类较快
@@ -133,7 +135,9 @@ public class PreviewApplicationService {
    * @note 纯判断，无副作用
    */
   public boolean isPreviewSupported(String suffix) {
-    if (suffix == null) return false;
+    if (suffix == null) {
+      return false;
+    }
     String s = suffix.toLowerCase();
     return OFFICE_SUFFIXES.contains(s)
         || DIRECT_PREVIEW_SUFFIXES.contains(s)
@@ -149,18 +153,26 @@ public class PreviewApplicationService {
    * @note 纯判断，无副作用
    */
   public String getPreviewType(String suffix) {
-    if (suffix == null) return "none";
+    if (suffix == null) {
+      return "none";
+    }
     String s = suffix.toLowerCase();
-    if (OFFICE_SUFFIXES.contains(s)) return "office";
-    if (DIRECT_PREVIEW_SUFFIXES.contains(s)) return "direct";
-    if (IMAGE_SUFFIXES.contains(s)) return "image";
+    if (OFFICE_SUFFIXES.contains(s)) {
+      return "office";
+    }
+    if (DIRECT_PREVIEW_SUFFIXES.contains(s)) {
+      return "direct";
+    }
+    if (IMAGE_SUFFIXES.contains(s)) {
+      return "image";
+    }
     return "none";
   }
 
   // ==================== 私有方法 ====================
 
   /** 从存储下载文件到临时路径 */
-  private Path downloadToTemp(FileNodeVO node) throws Exception {
+  private Path downloadToTemp(FileNodeVO node) throws IOException {
     IFileStorage storage = resolveStorage();
     if (storage == null) {
       throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
@@ -186,7 +198,7 @@ public class PreviewApplicationService {
   }
 
   /** Office 文档转 PDF（调用 LibreOffice headless） 转换后将 PDF 上传到存储作为预览副本。 */
-  private void convertOfficeToPdf(FileNodeVO node) throws Exception {
+  private void convertOfficeToPdf(FileNodeVO node) throws IOException, InterruptedException {
     Path inputFile = null;
     Path outputDir = null;
     try {
@@ -215,7 +227,7 @@ public class PreviewApplicationService {
       pb.redirectErrorStream(true);
       Process process = pb.start();
 
-      boolean finished = process.waitFor(120, TimeUnit.SECONDS);
+      boolean finished = process.waitFor(LIBREOFFICE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
       if (!finished) {
         process.destroyForcibly();
         throw new BusinessException(NextwikiExceptionCode.PREVIEW_GENERATION_FAILED);
@@ -314,7 +326,8 @@ public class PreviewApplicationService {
    * <p>将本地临时文件通过 {@link IFileStorage#upload} 上传到存储后端。
    */
   private void uploadFileToStorage(
-      IFileStorage storage, Path filePath, String storageKey, String contentType) throws Exception {
+      IFileStorage storage, Path filePath, String storageKey, String contentType)
+      throws IOException {
     MultipartFile multipartFile = new PathBackedMultipartFile(filePath, storageKey, contentType);
     FileStorage uploaded = storage.upload(null, storageKey, multipartFile);
     log.debug("[PreviewApplicationService] 上传到存储: key={}, size={}", storageKey, uploaded.getSize());

@@ -61,6 +61,9 @@ public class SemanticLlmCache {
   /** L1 本地缓存写入后过期时间（分钟） */
   private static final int L1_EXPIRE_MINUTES = 5;
 
+  /** 日志中缓存 key 的截断长度 */
+  private static final int LOG_KEY_TRUNCATE_LENGTH = 16;
+
   /** 缓存名称（用于健康检查和监控） */
   private static final String CACHE_NAME = "agent:semantic-llm";
 
@@ -99,7 +102,7 @@ public class SemanticLlmCache {
     // L1: 本地 Caffeine 缓存查询（无网络开销）
     CachedLlmResponse l1Result = l1Cache.getIfPresent(key);
     if (l1Result != null) {
-      log.debug("[SemanticCache] L1 命中: key={}", key.substring(0, 16) + "...");
+      log.debug("[SemanticCache] L1 命中: key={}", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...");
       return l1Result;
     }
     // L2: Redis 分布式缓存查询
@@ -113,7 +116,7 @@ public class SemanticLlmCache {
         if (result != null) {
           l1Cache.put(key, result);
         }
-        log.debug("[SemanticCache] L2 命中: key={}", key.substring(0, 16) + "...");
+        log.debug("[SemanticCache] L2 命中: key={}", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...");
         return result;
       }
     } catch (Exception e) {
@@ -148,7 +151,7 @@ public class SemanticLlmCache {
       redisTemplate.opsForZSet().add(LRU_INDEX_KEY, key, Instant.now().toEpochMilli());
       evictIfOverCapacity();
       log.debug(
-          "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, 16) + "...", ttl.toMinutes());
+          "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...", ttl.toMinutes());
     } catch (Exception e) {
       log.warn("[SemanticCache] L2 缓存写入失败", e);
     }

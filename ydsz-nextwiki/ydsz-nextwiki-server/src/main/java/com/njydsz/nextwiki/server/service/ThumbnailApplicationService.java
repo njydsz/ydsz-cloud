@@ -66,7 +66,6 @@ public class ThumbnailApplicationService {
    * <p>内部捕获全部异常仅记日志，不阻塞主流程；真正逻辑见 {@link #generateThumbnail}。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 无返回值
    * @concurrency 异步执行；异常被吞掉仅告警
    * @note 本方法无事务边界
    */
@@ -87,20 +86,21 @@ public class ThumbnailApplicationService {
    * key（缩略图后续可由预览服务补充）。存储未配置时退化为仅写 key。
    *
    * @param fileNodeId 文件节点 ID
-   * @return 无返回值
-   * @throws Exception 下载/缩放/上传过程中的 IO 或图像读取异常（仅异步入口吞掉，同步调用会向上抛）
+   * @throws IOException 下载/缩放/上传过程中的 IO 或图像读取异常（仅异步入口吞掉，同步调用会向上抛）
    * @complexity O(imagePixels)（图片解码 + 双线性缩放 + 编码上传）
    * @concurrency 无共享可变状态，可并发；同一文件并发生成以最后写入为准
    * @note 方法结束在 {@code finally} 清理原图临时文件；缩略图临时文件在成功后删除
    */
-  public void generateThumbnail(String fileNodeId) throws Exception {
+  public void generateThumbnail(String fileNodeId) throws IOException {
     FileNodeVO node = fileNodeRepository.findById(fileNodeId).orElse(null);
     if (node == null || !node.isFile()) {
       return;
     }
 
     String suffix = node.getSuffix();
-    if (suffix == null) return;
+    if (suffix == null) {
+      return;
+    }
     suffix = suffix.toLowerCase();
 
     String thumbnailKey = "wiki/thumbnail/" + fileNodeId + "_thumb.png";
@@ -221,12 +221,12 @@ public class ThumbnailApplicationService {
    * @param targetSize 目标边长上限（像素），取宽高缩放比的较小值以保证完整可见
    * @return 缩放后的 {@link BufferedImage}（RGB 类型）
    * @throws IllegalArgumentException 图像无法解码（{@code ImageIO.read} 返回 null）时抛出
-   * @throws Exception 图像 IO 异常
+   * @throws IOException 图像 IO 异常
    * @complexity O(originalPixels)（一次解码 + 一次绘制缩放）
    * @note 纯计算，无副作用；线程安全
    */
   public BufferedImage generateThumbnailImage(InputStream inputStream, int targetSize)
-      throws Exception {
+      throws IOException {
     BufferedImage original = ImageIO.read(inputStream);
     if (original == null) {
       throw new IllegalArgumentException("无法读取图片");

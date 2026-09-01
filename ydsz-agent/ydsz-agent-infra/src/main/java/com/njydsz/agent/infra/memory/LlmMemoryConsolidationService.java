@@ -43,8 +43,16 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
     private static final double DEFAULT_IMPORTANCE = 0.5;
     private static final double HIGH_IMPORTANCE = 0.8;
 
+    /** 日志中事实内容的截断长度 */
+    private static final int LOG_CONTENT_TRUNCATE_LENGTH = 50;
+
+    /** 正则匹配组：重要度字段索引 */
+    private static final int IMPORTANCE_GROUP_INDEX = 3;
+
     private static final Pattern FACT_PATTERN = Pattern.compile(
-            "\\{\\s*\"category\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"content\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"importance\"\\s*:\\s*([0-9.]+)\\s*\\}");
+            "\\{\\s*\"category\"\\s*:\\s*\"([^\"]+)\"\\s*,"
+                    + "\\s*\"content\"\\s*:\\s*\"([^\"]+)\"\\s*,"
+                    + "\\s*\"importance\"\\s*:\\s*([0-9.]+)\\s*\\}");
 
     private static final String EXTRACTION_PROMPT = """
             你是一个专业的记忆分析助手。请从以下对话中提取有价值的记忆事实。
@@ -126,8 +134,8 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
             log.info("记忆事实已提取: tenantId={}, category={}, importance={}, content={}",
                     fact.getTenantId(), fact.getCategory(),
                     fact.getImportance(),
-                    fact.getContent().length() > 50
-                            ? fact.getContent().substring(0, 50) + "..."
+                    fact.getContent().length() > LOG_CONTENT_TRUNCATE_LENGTH
+                            ? fact.getContent().substring(0, LOG_CONTENT_TRUNCATE_LENGTH) + "..."
                             : fact.getContent());
         }
         return facts.size();
@@ -170,7 +178,7 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
             try {
                 String category = matcher.group(1);
                 String content = matcher.group(2);
-                double importance = Double.parseDouble(matcher.group(3));
+                double importance = Double.parseDouble(matcher.group(IMPORTANCE_GROUP_INDEX));
 
                 MemoryExtractedFact fact = MemoryExtractedFact.builder()
                         .factId(UUID.randomUUID().toString())
