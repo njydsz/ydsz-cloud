@@ -571,6 +571,8 @@ public final class FieldMetadataLoader {
    *   <li>{@code @JsonInclude} 非 ALWAYS 策略（{@link FieldMeta#includeStrategy}）
    *   <li>{@code @JsonProperty(access = WRITE_ONLY)}（{@link FieldMeta#serializable}，P0 修复：
    *       access 注解必须走 ValueWriter 注解路径，否则 WRITE_ONLY 敏感字段会被快速路径照常输出）
+   *   <li>{@code @JsonView}（P1 能力补齐：视图过滤只在 ValueWriter 注解路径生效，
+   *       带视图注解的 Bean 若走无注解快速路径会被整体绕过）
    * </ul>
    *
    * @param fields 字段元数据列表，为 {@code null} 时按"无注解"处理
@@ -584,7 +586,8 @@ public final class FieldMetadataLoader {
     for (FieldMeta field : fields) {
       if (field.isDateType()
           || !field.serializable
-          || field.includeStrategy != JsonInclude.Include.ALWAYS) {
+          || field.includeStrategy != JsonInclude.Include.ALWAYS
+          || field.field.isAnnotationPresent(JsonView.class)) {
         return true;
       }
     }

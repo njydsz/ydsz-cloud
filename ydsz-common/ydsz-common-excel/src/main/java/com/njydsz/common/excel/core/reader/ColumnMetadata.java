@@ -209,6 +209,15 @@ public final class ColumnMetadata {
           return convertStringToTarget(str, targetType, dateFormat);
 
         case NUMERIC:
+          // 深度完善·方案 B：fast 路径 SimpleCell 预转换的日期优先（其 getCellStyle()
+          // 为 null，DateUtil.isCellDateFormatted 恒 false——此前数值型日期单元格被当
+          // 纯数字读入 Date 字段产生错值）。POI 路径（真实 Cell）不受影响。
+          if (cell instanceof SimpleCell) {
+            Date fastDate = ((SimpleCell) cell).getDateCellValue();
+            if (fastDate != null) {
+              return convertDateToTarget(fastDate, targetType);
+            }
+          }
           if (DateUtil.isCellDateFormatted(cell)) {
             Date date = cell.getDateCellValue();
             return convertDateToTarget(date, targetType);

@@ -178,6 +178,17 @@ public class SuperFastExcelReader {
         }
       }
 
+      // 样式表解析（深度完善·方案 B）：判定数值单元格是否日期格式（numFmt），
+      // 缺失时 fast 引擎把数值型日期单元格当纯数字读入（已知限制存档项）
+      StylesReader stylesReader = null;
+      ZipEntry stylesEntry = zipFile.getEntry("xl/styles.xml");
+      if (stylesEntry != null) {
+        stylesReader = new StylesReader();
+        try (InputStream is = bounded(zipFile.getInputStream(stylesEntry))) {
+          stylesReader.parse(is);
+        }
+      }
+
       // Sheet 数据：bounded 复制到临时文件（大小可信化——zip 头的 getSize 可伪造），
       // 再按实际大小决定内存加载或文件流式解析
       Path tempSheetFile = Files.createTempFile("ydsz_sheet_", ".xml");
@@ -192,13 +203,13 @@ public class SuperFastExcelReader {
           byte[] bytes = Files.readAllBytes(tempSheetFile);
           Files.deleteIfExists(tempSheetFile);
           tempSheetFile = null;
-          parseSheetStream(new ByteArrayInputStream(bytes), ssReader);
+          parseSheetStream(new ByteArrayInputStream(bytes), ssReader, stylesReader);
         } else {
           LOG.debug(
               "大文件模式: sheet XML 大小={}MB, 使用临时文件流式解析", actualSize / 1024 / 1024);
           try (InputStream sheetStream =
               new BufferedInputStream(Files.newInputStream(tempSheetFile))) {
-            parseSheetStream(sheetStream, ssReader);
+            parseSheetStream(sheetStream, ssReader, stylesReader);
           }
         }
       } finally {
@@ -214,9 +225,10 @@ public class SuperFastExcelReader {
   }
 
   /** 解析 sheet XML 流并通知监听器。 */
-  private void parseSheetStream(InputStream sheetStream, SharedStringsReader ssReader)
+  private void parseSheetStream(
+      InputStream sheetStream, SharedStringsReader ssReader, StylesReader stylesReader)
       throws Exception {
-    SheetXmlReader sheetReader = new SheetXmlReader(this, ssReader);
+    SheetXmlReader sheetReader = new SheetXmlReader(this, ssReader, stylesReader);
     sheetReader.parse(sheetStream);
   }
 
