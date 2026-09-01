@@ -21,9 +21,9 @@ import com.njydsz.common.domain.query.PageQuery;
  * @author ydsz-team
  * @since 1.0.0
  */
-public final class NextwikiDTOs {
+public final class NextwikiDto {
 
-  private NextwikiDTOs() {}
+  private NextwikiDto() {}
 
   /** 创建目录请求 */
   @Data

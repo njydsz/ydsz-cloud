@@ -236,48 +236,6 @@ public class FlowCcServiceImpl implements FlowCcService {
   }
 
   /**
-   * 分页查询「抄送我的」（已废弃 DTO 版本，委托 {@link #pageMyCc(String, String, FlowCcQuery)}）。
-   *
-   * @param tenantId 租户 ID
-   * @param userId 接收人 ID
-   * @param query 查询条件
-   * @return 抄送列表
-   */
-  @Override
-  @Deprecated
-  @Transactional(readOnly = true)
-  public List<FlowCcVO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
-    if (query == null) {
-      return List.of();
-    }
-    FlowCcQuery q = new FlowCcQuery();
-    q.setReadStatus(query.getReadStatus());
-    q.setPageNum(query.getPageNum());
-    q.setPageSize(query.getPageSize());
-    return pageMyCc(tenantId, userId, q);
-  }
-
-  /**
-   * 统计「抄送我的」总数（已废弃 DTO 版本，委托 {@link #countMyCc(String, String, FlowCcQuery)}）。
-   *
-   * @param tenantId 租户 ID
-   * @param userId 接收人 ID
-   * @param query 查询条件
-   * @return 总数
-   */
-  @Override
-  @Deprecated
-  @Transactional(readOnly = true)
-  public long countMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
-    if (query == null) {
-      return 0L;
-    }
-    FlowCcQuery q = new FlowCcQuery();
-    q.setReadStatus(query.getReadStatus());
-    return countMyCc(tenantId, userId, q);
-  }
-
-  /**
    * 分页查询「抄送我的」（封装为 {@link YdszResponse}）
    *
    * <p>与 {@link #pageMyCc} + {@link #countMyCc} 组合等价，本方法在服务层一次性完成 「分页查询 + 总数统计 + 异常兜底 +
