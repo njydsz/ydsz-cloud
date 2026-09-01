@@ -255,11 +255,11 @@ public class AliyunSmsProvider implements SmsProvider {
   @Override
   public MessageResult queryReceipt(String providerTraceId, String phone) {
     if (!StringUtils.hasText(providerTraceId) || !StringUtils.hasText(phone)) {
-      return MessageResult.fail("SMS", "providerTraceId 或手机号为空");
+      return MessageResult.fail("SMS", null, "providerTraceId 或手机号为空", "providerTraceId 或手机号为空", null);
     }
     if (!StringUtils.hasText(config.getAccessKeyId())
         || !StringUtils.hasText(config.getAccessKeySecret())) {
-      return MessageResult.fail("SMS", MessageUtils.getMessage("sms.credential.not.configured", "阿里云 SMS 凭证未配置"));
+      return MessageResult.fail("SMS", null, MessageUtils.getMessage("sms.credential.not.configured", "阿里云 SMS 凭证未配置"), MessageUtils.getMessage("sms.credential.not.configured", "阿里云 SMS 凭证未配置"), null);
     }
     // 从 ALIYUN-{bizId}-{idx} 中提取 bizId
     String bizId = providerTraceId;
@@ -297,7 +297,7 @@ public class AliyunSmsProvider implements SmsProvider {
             } else if ("FAILED".equals(sendStatus)) {
               String failMsg = MessageUtils.getMessage("sms.send.failed",
                   new Object[] {errMsg}, "发送失败: " + errMsg);
-              MessageResult r = MessageResult.fail("SMS", failMsg);
+              MessageResult r = MessageResult.fail("SMS", null, failMsg, failMsg, null);
               r.setProviderTraceId(providerTraceId);
               return r;
             }
@@ -307,10 +307,10 @@ public class AliyunSmsProvider implements SmsProvider {
         MessageResult r = new MessageResult("SMS", "UNKNOWN", providerTraceId, null);
         return r;
       }
-      return MessageResult.fail("SMS", code + ": " + MapUtils.getString(json, "Message"));
+      return MessageResult.fail("SMS", null, code + ": " + MapUtils.getString(json, "Message"), code + ": " + MapUtils.getString(json, "Message"), null);
     } catch (Exception e) {
       log.error("[AliyunSms] 回执查询异常: bizId={} err={}", bizId, e.getMessage(), e);
-      return MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail("SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 }
