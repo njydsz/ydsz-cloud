@@ -2,7 +2,7 @@ package com.njydsz.literule.domain.expression;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 表达式求值器接口
@@ -21,7 +21,7 @@ public interface ExpressionEngine {
    * @param context 规则上下文
    * @return 表达式结果；求值异常返回 false
    */
-  boolean evalBoolean(String expression, RuleContext context);
+  boolean evalBoolean(String expression, RuleContextVO context);
 
   /**
    * 求值表达式（通用类型）
@@ -33,7 +33,7 @@ public interface ExpressionEngine {
    * @param context 规则上下文
    * @return 表达式结果；求值异常返回 null
    */
-  Object eval(String expression, RuleContext context);
+  Object eval(String expression, RuleContextVO context);
 
   /**
    * 校验表达式语法是否合法
@@ -90,7 +90,7 @@ public interface ExpressionEngine {
    * @return 求值结果 + 追踪树
    * @since 1.0.0
    */
-  default TraceResult evalBooleanWithTrace(String expression, RuleContext context) {
+  default TraceResult evalBooleanWithTrace(String expression, RuleContextVO context) {
     long start = System.nanoTime();
     boolean result = evalBoolean(expression, context);
     long elapsed = System.nanoTime() - start;
