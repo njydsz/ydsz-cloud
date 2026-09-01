@@ -110,5 +110,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+
+        <!-- swagger-annotations-jakarta: @Schema 注解（DiffResult 结构化描述，optional 不强制下游传递） -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

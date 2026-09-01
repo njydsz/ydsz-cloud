@@ -86,6 +86,20 @@ public final class CircuitBreaker {
   }
 
   /**
+   * 创建指定名称与配置的熔断器实例。
+   *
+   * <p>工厂方法，供本包外部（如限流模块）在需要独立管理熔断器map时使用；
+   * Spring/注册表场景请优先使用 {@link CircuitBreakerRegistry}。
+   *
+   * @param name 熔断器名称
+   * @param config 熔断器配置
+   * @return 熔断器实例
+   */
+  public static CircuitBreaker of(String name, CircuitBreakerConfig config) {
+    return new CircuitBreaker(name, config);
+  }
+
+  /**
    * 获取熔断器名称。
    *
    * @return 名称

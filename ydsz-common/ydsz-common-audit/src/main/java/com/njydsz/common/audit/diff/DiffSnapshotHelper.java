@@ -105,7 +105,7 @@ public final class DiffSnapshotHelper {
         continue;
       }
       result.getChangedFields().add(
-          new FieldChange(key, oldVal == null ? null : oldVal.toString(), newVal == null ? null : newVal.toString()));
+          new DiffResult.FieldChange(key, oldVal == null ? null : oldVal.toString(), newVal == null ? null : newVal.toString()));
     }
     return result;
   }
@@ -123,7 +123,7 @@ public final class DiffSnapshotHelper {
     try {
       // 采用 ydsz-common-json 统一 JSON（项目禁止使用 Jackson/Fastjson2，见 §6.2）
       // 返回 Map（具体实现类由 ydsz-common-json 内部决定）
-      return YdszJson.toMap(json);
+      return YdszJson.parseMap(json);
     } catch (Exception e) {
       // 解析失败时返回空 map（避免 diff 计算阻断审计主流程）
       return Collections.emptyMap();

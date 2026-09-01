@@ -149,7 +149,7 @@ public class CircuitBreaker {
   private static com.njydsz.common.safe.resilience.CircuitBreaker newEngineBreaker(
       CircuitBreakerConfig config, String resource) {
     String prefix = config.getName() == null ? "ratelimit" : config.getName();
-    return new com.njydsz.common.safe.resilience.CircuitBreaker(
+    return com.njydsz.common.safe.resilience.CircuitBreaker.of(
         prefix + "-" + resource, config.toEngineConfig());
   }
 
