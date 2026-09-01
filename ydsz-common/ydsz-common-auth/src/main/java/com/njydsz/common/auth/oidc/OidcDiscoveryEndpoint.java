@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.oidc;
+﻿package com.njydsz.common.auth.oidc;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  */
-public record OidcDiscoveryEndpointVO(
+public record OidcDiscoveryEndpoint(
     String issuer,
     String authorizationEndpoint,
     String tokenEndpoint,

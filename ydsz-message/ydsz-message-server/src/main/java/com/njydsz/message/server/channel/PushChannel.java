@@ -43,7 +43,7 @@ public class PushChannel implements MessageChannel {
   @Override
   public MessageResult send(MessageRequest request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, "推送目标不能为空");
+      return MessageResult.fail(CHANNEL_TYPE, null, "推送目标不能为空", "推送目标不能为空", null);
     }
     PushProvider provider = selectProvider();
     MessageResult result = provider.send(request, null);

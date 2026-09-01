@@ -62,6 +62,6 @@ public interface SmsProvider {
    * @return 回执结果：状态（DELIVERED/FAILED/UNKNOWN）+ 错误码 + 错误描述
    */
   default MessageResult queryReceipt(String providerTraceId, String phone) {
-    return MessageResult.fail("SMS", "当前 provider 未实现回执查询");
+    return MessageResult.fail("SMS", null, "当前 provider 未实现回执查询", "当前 provider 未实现回执查询", null);
   }
 }

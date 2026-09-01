@@ -110,7 +110,7 @@ public class WebhookChannel implements MessageChannel {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn("[WEBHOOK] 未配置 Webhook URL，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, "Webhook URL 未配置");
+      return MessageResult.fail(CHANNEL_TYPE, null, "Webhook URL 未配置", "Webhook URL 未配置", null);
     }
     Map<String, Object> payload = new HashMap<>();
     payload.put("text", request.getContent() == null ? "" : request.getContent());
@@ -150,10 +150,10 @@ public class WebhookChannel implements MessageChannel {
           maskUrl(webhookUrl),
           statusCode,
           response.getBody());
-      return MessageResult.fail(CHANNEL_TYPE, "HTTP " + statusCode);
+      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + statusCode, "HTTP " + statusCode, null);
     } catch (Exception e) {
       log.error("[WEBHOOK] 发送异常: url={} reason={}", maskUrl(webhookUrl), e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

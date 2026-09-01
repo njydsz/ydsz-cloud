@@ -63,7 +63,7 @@ public class SmsChannel implements MessageChannel {
   @Override
   public MessageResult send(MessageRequest request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, "接收人手机号不能为空");
+      return MessageResult.fail(CHANNEL_TYPE, null, "接收人手机号不能为空", "接收人手机号不能为空", null);
     }
     SmsProvider provider = selectProvider();
     MsgTemplateVO template = resolveTemplate(request);
