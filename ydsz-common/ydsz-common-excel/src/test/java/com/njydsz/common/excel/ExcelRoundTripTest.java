@@ -1,8 +1,8 @@
 package com.njydsz.common.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -235,12 +236,14 @@ public class ExcelRoundTripTest {
   }
 
   @Test
-  void fastNumericDateCellIsKnownLimitation() {
-    // 已知限制（P1）：数值型日期单元格在 fast 引擎下被当普通数字，Date 字段保持 null。
-    // 日期列需以字符串 + dateFormat 写入（见 fastDateStringParsedWithDateFormat）。
+  void fastNumericDateCellIsConverted() {
+    // 深度完善（方案 B）：fast 引擎解析 styles.xml numFmt 判定日期样式，
+    // 数值序列值转换为 Date——原"已知限制"（被当纯数字、Date 字段 null）已解除。
     List<DateRow> rows = readDateRowsWithFastEngine(dateFormattedFile);
     assertEquals(1, rows.size());
-    assertNull(rows.get(0).getTime());
+    assertEquals(
+        LocalDate.of(2024, 6, 1),
+        rows.get(0).getTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
   }
 
   // ==================== fast 写入引擎 round-trip ====================
