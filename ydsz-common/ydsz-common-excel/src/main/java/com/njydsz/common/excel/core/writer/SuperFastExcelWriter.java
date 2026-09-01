@@ -452,7 +452,8 @@ public class SuperFastExcelWriter {
 
   private void writeStringCellInline(int col, String value) {
     if (getExcelConfig().isFormulaInjectionProtection()) {
-      value = FormulaInjectionGuard.sanitizeFormulaInjection(value);
+      // P1 修复：XLSX 路径用空格前缀（撇号在 XLSX 中会字面显示），分路径策略见 FormulaInjectionGuard
+      value = FormulaInjectionGuard.sanitizeForXlsx(value);
     }
     int strLen = value.length();
     int capacity = 64 + strLen * 2;
@@ -506,7 +507,7 @@ public class SuperFastExcelWriter {
 
   private void writeStringCell(int col, String value, UltraFastSharedStrings ss) {
     if (getExcelConfig().isFormulaInjectionProtection()) {
-      value = FormulaInjectionGuard.sanitizeFormulaInjection(value);
+      value = FormulaInjectionGuard.sanitizeForXlsx(value);
     }
     int strLen = value.length();
     if (strLen > 50) {

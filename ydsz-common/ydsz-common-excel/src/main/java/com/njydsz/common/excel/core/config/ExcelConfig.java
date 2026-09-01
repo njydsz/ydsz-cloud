@@ -138,7 +138,7 @@ public class ExcelConfig {
   /**
    * 获取被视为公式注入风险的单元格起始字符列表。
    *
-   * @return 危险前缀列表（默认 {@code =}、{@code +}）
+   * @return 危险前缀列表（默认为 OWASP 完整前缀集 {@code =}、{@code +}、{@code -}、{@code @}、{@code \t}、{@code \r}）
    */
   public static List<String> getFormulaInjectionPrefixes() {
     return FormulaInjectionGuard.getFormulaInjectionPrefixes();
@@ -147,7 +147,8 @@ public class ExcelConfig {
   /**
    * 判断字符串是否存在 CSV/Excel 公式注入风险。
    *
-   * <p>纯检测，不改写入参；实际转义由 {@link #sanitizeFormulaInjection(String)} 完成。 委派给 {@link
+   * <p>纯检测，不改写入参；实际转义由 {@link #sanitizeFormulaInjection(String)}（CSV 路径）或
+   * {@link #sanitizeForXlsx(String)}（XLSX 路径）完成。 委派给 {@link
    * FormulaInjectionGuard}，不受 {@code formulaInjectionProtection} 开关影响。
    *
    * @param value 待检测的单元格文本，可为 {@code null}
@@ -158,15 +159,29 @@ public class ExcelConfig {
   }
 
   /**
-   * 对存在公式注入风险的文本做转义处理。
+   * 对存在公式注入风险的文本做转义处理（CSV 路径策略）。
    *
-   * <p>委派给 {@link FormulaInjectionGuard}：命中危险前缀时加前导字符使其被 Excel 当作纯文本，未命中则原样返回。
+   * <p>委派给 {@link FormulaInjectionGuard}：命中危险前缀时加前导撇号（Excel 导入 CSV
+   * 时隐藏显示）。XLSX 写入路径请改用 {@link #sanitizeForXlsx(String)}。
    *
    * @param value 待处理的单元格文本，可为 {@code null}
    * @return 转义后的安全文本
    */
   public String sanitizeFormulaInjection(String value) {
     return FormulaInjectionGuard.sanitizeFormulaInjection(value);
+  }
+
+  /**
+   * 对存在公式注入风险的文本做转义处理（XLSX 路径策略）。
+   *
+   * <p>委派给 {@link FormulaInjectionGuard}：命中危险前缀时加前导空格（OOXML 字符串单元格
+   * 本身免疫求值，此为纵深防御；撇号在 XLSX 中会字面显示）。
+   *
+   * @param value 待处理的单元格文本，可为 {@code null}
+   * @return 转义后的安全文本
+   */
+  public String sanitizeForXlsx(String value) {
+    return FormulaInjectionGuard.sanitizeForXlsx(value);
   }
 
   public int getCompressionLevel() {

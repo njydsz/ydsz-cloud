@@ -151,9 +151,15 @@
 
 | 类 | 说明 |
 |---|---|
-| `FormulaInjectionGuard` | 公式注入防护工具类（检测 `=` / `+` / `-` / `@` 前缀，自动添加 `'` 前缀转义） |
+| `FormulaInjectionGuard` | 公式注入防护工具类（检测 OWASP 完整危险前缀集 `=` / `+` / `-` / `@` / `\t` / `\r`，分路径转义） |
 
 默认开启（`ydsz.excel.formula-injection-protection=true`），覆盖所有写入路径（`SuperFastExcelWriter` / `ValueFormatter`）。
+
+分路径转义策略：
+- **XLSX 路径**：命中危险前缀时添加前导**空格**（OOXML 字符串单元格本身不会被求值为公式，空格前缀为纵深防御，阻断"另存/复制为 CSV 后被 Excel 重新求值"的二次注入链；撇号在 XLSX 单元格中会字面显示，故不使用）。
+- **CSV 路径**：`sanitizeFormulaInjection` 添加前导撇号 `'`（Excel 导入 CSV 时将其解释为文本标记并隐藏，OWASP 推荐）。
+
+检测前缀可通过系统属性 `ydsz.excel.formula-injection-prefixes` 覆盖（逗号分隔，支持 `\t`、`\r` 转义），默认为 OWASP 完整前缀集。
 
 ### 11. Spring 集成
 
@@ -399,7 +405,7 @@ ASM 加速启用条件：
 
 ## 注意事项
 
-- **公式注入防护**：默认开启，覆盖所有写入路径。如业务确实需要写入公式（`@ExcelProperty.formula()`），公式本身不会被防护，但用户数据中的 `=` / `+` / `-` / `@` 前缀会被自动转义
+- **公式注入防护**：默认开启，覆盖所有写入路径。如业务确实需要写入公式（`@ExcelProperty.formula()`），公式本身不会被防护，但用户数据中的 OWASP 危险前缀（`=` / `+` / `-` / `@` / `\t` / `\r`）会被自动转义（XLSX 路径加前导空格、CSV 路径加前导撇号，见第 10 节）
 - **大文件内存配置**：读取大于 `streamingParseThresholdMB`（默认 10MB）的文件时自动切换临时文件管道，确保 `java.io.tmpdir` 可写（健康检查会监控）
 - **样式管理**：单元格样式由 `StyleManager`（LRU）统一管理，自定义样式种类极多时可调整容量
 - **ASM 降级**：生成类超过 5000 自动降级，可通过 `ASMFieldAccessor.clearCache()` 手动重置
