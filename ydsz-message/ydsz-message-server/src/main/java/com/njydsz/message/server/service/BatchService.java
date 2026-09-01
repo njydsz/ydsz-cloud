@@ -1,6 +1,6 @@
 package com.njydsz.message.server.service.batch;
 
-import com.njydsz.message.domain.dto.BatchProgressVO;
+import com.njydsz.message.domain.dto.BatchProgressDTO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 
@@ -41,7 +41,7 @@ public interface BatchService {
    * @param batchId 批次 ID
    * @return 进度 VO
    */
-  BatchProgressVO getProgress(String batchId);
+  BatchProgressDTO getProgress(String batchId);
 
   /**
    * 异步执行批次发送（后台线程调用）。

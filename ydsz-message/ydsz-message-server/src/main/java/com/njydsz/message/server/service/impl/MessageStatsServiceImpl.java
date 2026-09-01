@@ -12,12 +12,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.message.domain.dto.ChannelStatsVO;
-import com.njydsz.message.domain.dto.CostStatsVO;
-import com.njydsz.message.domain.dto.FunnelStatsVO;
+import com.njydsz.message.domain.dto.ChannelStatsDTO;
+import com.njydsz.message.domain.dto.CostStatsDTO;
+import com.njydsz.message.domain.dto.FunnelStatsDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
-import com.njydsz.message.domain.dto.MessageStatsVO;
-import com.njydsz.message.domain.dto.ReceiptStatsVO;
+import com.njydsz.message.domain.dto.MessageStatsDTO;
+import com.njydsz.message.domain.dto.ReceiptStatsDTO;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
@@ -50,7 +50,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   private final MessageProperties messageProperties;
 
   @Override
-  public MessageStatsVO getOverview(LocalDateTime start, LocalDateTime end) {
+  public MessageStatsDTO getOverview(LocalDateTime start, LocalDateTime end) {
     LocalDateTime[] range = normalizeRange(start, end);
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
@@ -62,7 +62,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     long recalled = countByStatus(MessageStatusEnum.RECALLED, actualStart, actualEnd);
     long total = success + failed + retry + dead + recalled;
 
-    MessageStatsVO vo = new MessageStatsVO();
+    MessageStatsDTO vo = new MessageStatsDTO();
     vo.setTotal(total);
     vo.setSuccess(success);
     vo.setFailed(failed);
@@ -77,12 +77,12 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   }
 
   @Override
-  public List<ChannelStatsVO> getChannelStats(LocalDateTime start, LocalDateTime end) {
+  public List<ChannelStatsDTO> getChannelStats(LocalDateTime start, LocalDateTime end) {
     LocalDateTime[] range = normalizeRange(start, end);
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
 
-    List<ChannelStatsVO> result = new ArrayList<>();
+    List<ChannelStatsDTO> result = new ArrayList<>();
     for (MessageChannelEnum ch : MessageChannelEnum.values()) {
       String channel = ch.name();
       long success =
@@ -99,7 +99,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
         continue;
       }
 
-      ChannelStatsVO vo = new ChannelStatsVO();
+      ChannelStatsDTO vo = new ChannelStatsDTO();
       vo.setChannel(channel);
       vo.setTotal(total);
       vo.setSuccess(success);
@@ -114,7 +114,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   }
 
   @Override
-  public ReceiptStatsVO getReceiptStats(LocalDateTime start, LocalDateTime end) {
+  public ReceiptStatsDTO getReceiptStats(LocalDateTime start, LocalDateTime end) {
     LocalDateTime[] range = normalizeRange(start, end);
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
@@ -128,7 +128,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     long timeout = countByReceiptStatus(ReceiptStatusEnum.TIMEOUT, actualStart, actualEnd);
     long none = countByReceiptStatus(ReceiptStatusEnum.NONE, actualStart, actualEnd);
 
-    ReceiptStatsVO vo = new ReceiptStatsVO();
+    ReceiptStatsDTO vo = new ReceiptStatsDTO();
     vo.setTotal(total);
     vo.setDelivered(delivered);
     vo.setRead(read);
@@ -194,7 +194,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   }
 
   @Override
-  public FunnelStatsVO getFunnel(
+  public FunnelStatsDTO getFunnel(
       LocalDateTime start, LocalDateTime end, String channel, String templateCode) {
     LocalDateTime[] range = normalizeRange(start, end);
     LocalDateTime actualStart = range[0];
@@ -235,7 +235,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
             actualStart,
             actualEnd);
 
-    FunnelStatsVO vo = new FunnelStatsVO();
+    FunnelStatsDTO vo = new FunnelStatsDTO();
     vo.setSent(sent);
     vo.setDelivered(delivered);
     vo.setRead(read);
@@ -254,7 +254,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   }
 
   @Override
-  public CostStatsVO getCostStats(LocalDateTime start, LocalDateTime end) {
+  public CostStatsDTO getCostStats(LocalDateTime start, LocalDateTime end) {
     LocalDateTime[] range = normalizeRange(start, end);
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
@@ -265,7 +265,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
             ? costCfg.getUnitPrices()
             : Collections.emptyMap();
 
-    List<CostStatsVO.ChannelCost> channelCosts = new ArrayList<>();
+    List<CostStatsDTO.ChannelCost> channelCosts = new ArrayList<>();
     BigDecimal totalCost = BigDecimal.ZERO;
 
     for (Map.Entry<String, BigDecimal> entry : unitPrices.entrySet()) {
@@ -281,7 +281,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
 
       BigDecimal channelCost = unitPrice.multiply(BigDecimal.valueOf(msgCount));
 
-      CostStatsVO.ChannelCost cc = new CostStatsVO.ChannelCost();
+      CostStatsDTO.ChannelCost cc = new CostStatsDTO.ChannelCost();
       cc.setChannel(channel);
       cc.setMessageCount(msgCount);
       cc.setUnitPrice(unitPrice);
@@ -290,7 +290,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
       totalCost = totalCost.add(channelCost);
     }
 
-    CostStatsVO vo = new CostStatsVO();
+    CostStatsDTO vo = new CostStatsDTO();
     vo.setTotalCost(totalCost);
     vo.setChannels(channelCosts);
     vo.setStart(actualStart.toString());

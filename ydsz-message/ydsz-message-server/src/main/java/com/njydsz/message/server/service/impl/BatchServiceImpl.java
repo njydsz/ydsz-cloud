@@ -19,7 +19,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.domain.dto.BatchProgressVO;
+import com.njydsz.message.domain.dto.BatchProgressDTO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.BatchSendResult;
 import com.njydsz.message.domain.event.BatchCompletedEvent;
@@ -134,7 +134,7 @@ public class BatchServiceImpl implements BatchService {
   }
 
   @Override
-  public BatchProgressVO getProgress(String batchId) {
+  public BatchProgressDTO getProgress(String batchId) {
     if (!StringUtils.hasText(batchId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -150,7 +150,7 @@ public class BatchServiceImpl implements BatchService {
           .message("批次不存在: " + batchId)
           .build();
     }
-    BatchProgressVO vo = new BatchProgressVO();
+    BatchProgressDTO vo = new BatchProgressDTO();
     vo.setBatchId(batch.getBatchId());
     vo.setBatchName(batch.getBatchName());
     vo.setChannel(batch.getChannel());

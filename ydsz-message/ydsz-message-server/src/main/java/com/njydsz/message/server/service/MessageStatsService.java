@@ -3,11 +3,11 @@ package com.njydsz.message.server.service.core;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.message.domain.dto.ChannelStatsVO;
-import com.njydsz.message.domain.dto.CostStatsVO;
-import com.njydsz.message.domain.dto.FunnelStatsVO;
-import com.njydsz.message.domain.dto.MessageStatsVO;
-import com.njydsz.message.domain.dto.ReceiptStatsVO;
+import com.njydsz.message.domain.dto.ChannelStatsDTO;
+import com.njydsz.message.domain.dto.CostStatsDTO;
+import com.njydsz.message.domain.dto.FunnelStatsDTO;
+import com.njydsz.message.domain.dto.MessageStatsDTO;
+import com.njydsz.message.domain.dto.ReceiptStatsDTO;
 
 /**
  * 消息统计服务接口。
@@ -26,7 +26,7 @@ public interface MessageStatsService {
    * @param end 结束时间（含），null 则当前时间
    * @return 总览统计
    */
-  MessageStatsVO getOverview(LocalDateTime start, LocalDateTime end);
+  MessageStatsDTO getOverview(LocalDateTime start, LocalDateTime end);
 
   /**
    * 按通道维度的发送统计。
@@ -35,7 +35,7 @@ public interface MessageStatsService {
    * @param end 结束时间（含）
    * @return 各通道统计列表
    */
-  List<ChannelStatsVO> getChannelStats(LocalDateTime start, LocalDateTime end);
+  List<ChannelStatsDTO> getChannelStats(LocalDateTime start, LocalDateTime end);
 
   /**
    * 回执统计。
@@ -44,7 +44,7 @@ public interface MessageStatsService {
    * @param end 结束时间（含）
    * @return 回执统计
    */
-  ReceiptStatsVO getReceiptStats(LocalDateTime start, LocalDateTime end);
+  ReceiptStatsDTO getReceiptStats(LocalDateTime start, LocalDateTime end);
 
   /**
    * P2-2: 消息转化漏斗分析。
@@ -58,7 +58,7 @@ public interface MessageStatsService {
    * @param templateCode 模板编码过滤（可选，null/空 则不过滤）
    * @return 漏斗统计（含各阶段数量与转化率）
    */
-  FunnelStatsVO getFunnel(
+  FunnelStatsDTO getFunnel(
       LocalDateTime start, LocalDateTime end, String channel, String templateCode);
 
   /**
@@ -70,5 +70,5 @@ public interface MessageStatsService {
    * @param end 结束时间（含），null 则当前时间
    * @return 成本统计（含各通道明细与总成本）
    */
-  CostStatsVO getCostStats(LocalDateTime start, LocalDateTime end);
+  CostStatsDTO getCostStats(LocalDateTime start, LocalDateTime end);
 }

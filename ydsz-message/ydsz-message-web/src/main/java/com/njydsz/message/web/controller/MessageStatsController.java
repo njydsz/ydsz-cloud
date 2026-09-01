@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.message.domain.dto.ChannelStatsVO;
-import com.njydsz.message.domain.dto.CostStatsVO;
-import com.njydsz.message.domain.dto.FunnelStatsVO;
-import com.njydsz.message.domain.dto.MessageStatsVO;
-import com.njydsz.message.domain.dto.ReceiptStatsVO;
+import com.njydsz.message.domain.dto.ChannelStatsDTO;
+import com.njydsz.message.domain.dto.CostStatsDTO;
+import com.njydsz.message.domain.dto.FunnelStatsDTO;
+import com.njydsz.message.domain.dto.MessageStatsDTO;
+import com.njydsz.message.domain.dto.ReceiptStatsDTO;
 import com.njydsz.message.server.service.core.MessageStatsService;
 
 /**
@@ -75,9 +75,9 @@ import com.njydsz.message.server.service.core.MessageStatsService;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.message.server.service.core.MessageStatsService 消息统计服务
- * @see MessageStatsVO 总览 VO
- * @see FunnelStatsVO 漏斗 VO
- * @see CostStatsVO 成本 VO
+ * @see MessageStatsDTO 总览 VO
+ * @see FunnelStatsDTO 漏斗 VO
+ * @see CostStatsDTO 成本 VO
  */
 @Slf4j
 @Tag(name = "消息统计看板", description = "发送/重试/死信/回执聚合指标")
@@ -99,7 +99,7 @@ public class MessageStatsController {
   @Operation(summary = "发送总览统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/overview")
-  public YdszResponse<MessageStatsVO> overview(
+  public YdszResponse<MessageStatsDTO> overview(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -117,7 +117,7 @@ public class MessageStatsController {
   @Operation(summary = "通道维度发送统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/channel")
-  public YdszResponse<List<ChannelStatsVO>> channelStats(
+  public YdszResponse<List<ChannelStatsDTO>> channelStats(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -135,7 +135,7 @@ public class MessageStatsController {
   @Operation(summary = "回执统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/receipt")
-  public YdszResponse<ReceiptStatsVO> receiptStats(
+  public YdszResponse<ReceiptStatsDTO> receiptStats(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -158,7 +158,7 @@ public class MessageStatsController {
   @Operation(summary = "消息转化漏斗分析")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/funnel")
-  public YdszResponse<FunnelStatsVO> funnel(
+  public YdszResponse<FunnelStatsDTO> funnel(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -180,7 +180,7 @@ public class MessageStatsController {
   @Operation(summary = "成本看板")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/cost")
-  public YdszResponse<CostStatsVO> cost(
+  public YdszResponse<CostStatsDTO> cost(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
           LocalDateTime start,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
