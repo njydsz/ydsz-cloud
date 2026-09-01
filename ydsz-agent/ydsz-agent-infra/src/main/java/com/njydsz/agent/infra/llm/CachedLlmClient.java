@@ -7,14 +7,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import com.njydsz.agent.domain.model.TokenUsage;
-import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 带缓存的 LLM 客户端（装饰器模式）

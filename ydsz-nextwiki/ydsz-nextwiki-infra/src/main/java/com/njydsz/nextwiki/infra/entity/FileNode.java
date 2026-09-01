@@ -107,12 +107,20 @@ public class FileNode extends MpBaseEntity<String> implements Serializable {
   @TableField("storage_class")
   private String storageClass;
 
-  /** 是否为目录 */
+  /**
+   * 是否为目录。
+   *
+   * @return 节点类型为 folder 时返回 true
+   */
   public boolean isFolder() {
     return TYPE_FOLDER.equals(nodeType);
   }
 
-  /** 是否为文件 */
+  /**
+   * 是否为文件。
+   *
+   * @return 节点类型为 file 时返回 true
+   */
   public boolean isFile() {
     return TYPE_FILE.equals(nodeType);
   }

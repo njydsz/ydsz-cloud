@@ -8,13 +8,13 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.dto.CrossDecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
-import com.njydsz.literule.domain.enums.HitPolicy;
-import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
-import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.dto.ScorecardDefinitionDTO;
+import com.njydsz.literule.domain.enums.HitPolicy;
+import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.CrossDecisionTableRule;
 import com.njydsz.literule.server.impl.DecisionTableRule;

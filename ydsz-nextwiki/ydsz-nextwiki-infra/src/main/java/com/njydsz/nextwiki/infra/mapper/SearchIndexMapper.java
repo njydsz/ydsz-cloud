@@ -38,19 +38,35 @@ import com.njydsz.nextwiki.infra.entity.SearchIndex;
 @Mapper
 public interface SearchIndexMapper extends BaseMapper<SearchIndex> {
 
-  /** 新增或更新索引（PostgreSQL ON CONFLICT 语义） */
+  /**
+   * 新增或更新索引（PostgreSQL ON CONFLICT 语义）。
+   *
+   * @param index 索引实体
+   * @return 受影响行数
+   */
   int upsert(@Param("index") SearchIndex index);
 
-  /** 根据文件节点ID删除索引（物理删除） */
+  /**
+   * 根据文件节点ID删除索引（物理删除）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 受影响行数
+   */
   int deleteByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
-  /** 根据文件节点ID查询索引 */
+  /**
+   * 根据文件节点ID查询索引。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 索引实体（不存在时为 null）
+   */
   SearchIndex selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /**
    * 查询所有未删除的文件节点ID（用于索引重建）
    *
    * @param createdBy 创建人，传 null 查询全部
+   * @return 文件节点 ID 列表
    */
   @Select({
     "<script>",

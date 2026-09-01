@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.njydsz.agent.domain.model.ChatChunk;
 
 import lombok.extern.slf4j.Slf4j;
 

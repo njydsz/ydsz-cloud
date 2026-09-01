@@ -304,7 +304,7 @@ public class AliyunSmsProvider implements SmsProvider {
           }
         }
         // 未查询到详情,返回 UNKNOWN
-        MessageResult r = new MessageResult("SMS", "UNKNOWN", providerTraceId, null);
+        MessageResult r = new MessageResult(false, null, providerTraceId, "UNKNOWN", null, null, null, null);
         return r;
       }
       return MessageResult.fail("SMS", null, code + ": " + MapUtils.getString(json, "Message"), code + ": " + MapUtils.getString(json, "Message"), null);

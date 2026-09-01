@@ -66,7 +66,14 @@ public interface FileAclMapper extends BaseMapper<FileAcl> {
   @Delete("DELETE FROM nw_file_acl WHERE file_node_id = #{fileNodeId}")
   int deleteByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
-  /** 查询有效权限（含继承自父目录的权限） */
+  /**
+   * 查询有效权限（含继承自父目录的权限）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param userId 用户 ID
+   * @param roleIds 用户角色 ID 列表
+   * @return 生效的 ACL 规则列表
+   */
   List<FileAcl> selectEffectivePermissions(
       @Param("fileNodeId") String fileNodeId,
       @Param("userId") String userId,

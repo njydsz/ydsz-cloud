@@ -434,7 +434,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             "[FlowNotify][WEBHOOK] 发送失败: userId={} url={} err={}",
             userId,
             webhookUrl,
-            result.getData().getErrorMessage());
+            result.getData().getUserMessage());
       }
     } catch (Exception e) {
       log.warn(

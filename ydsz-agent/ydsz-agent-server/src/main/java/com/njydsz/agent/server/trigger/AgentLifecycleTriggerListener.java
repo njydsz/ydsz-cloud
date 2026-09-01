@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.njydsz.agent.domain.event.AgentDomainEvent;
-import com.njydsz.agent.domain.trigger.TriggerType;
 
 import lombok.extern.slf4j.Slf4j;
 

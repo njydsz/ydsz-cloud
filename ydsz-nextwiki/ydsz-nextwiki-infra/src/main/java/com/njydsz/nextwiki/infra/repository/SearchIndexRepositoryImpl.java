@@ -39,6 +39,12 @@ import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
 @RequiredArgsConstructor
 public class SearchIndexRepositoryImpl implements SearchIndexRepository {
 
+  /** 高级搜索默认页码（未指定时使用） */
+  private static final int DEFAULT_PAGE = 1;
+
+  /** 高级搜索默认每页条数（未指定时使用） */
+  private static final int DEFAULT_PAGE_SIZE = 20;
+
   private final SearchIndexMapper searchIndexMapper;
   private final NextwikiConverter converter;
 
@@ -79,8 +85,8 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
   @Override
   public PageResponse<List<SearchIndexVO>> searchAdvanced(SearchQuery query) {
     Page<SearchIndex> pageParam = new Page<>(
-        query.getPage() != null ? query.getPage() : 1,
-        query.getPageSize() != null ? query.getPageSize() : 20);
+        query.getPage() != null ? query.getPage() : DEFAULT_PAGE,
+        query.getPageSize() != null ? query.getPageSize() : DEFAULT_PAGE_SIZE);
     IPage<SearchIndex> result =
         searchIndexMapper.searchAdvanced(pageParam, query);
     List<SearchIndexVO> vos = converter.searchIndexListToVO(result.getRecords());

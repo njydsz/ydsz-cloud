@@ -241,7 +241,7 @@ public class AggregateServiceImpl implements AggregateService {
       log.warn(
           "[Aggregate] 批次发送失败,回退 READY: id={} err={}",
           batch.getId(),
-          result == null ? "无响应" : result.getErrorMessage());
+          result == null ? "无响应" : result.getUserMessage());
       revertToReady(batch.getId());
       return false;
     } catch (Exception e) {

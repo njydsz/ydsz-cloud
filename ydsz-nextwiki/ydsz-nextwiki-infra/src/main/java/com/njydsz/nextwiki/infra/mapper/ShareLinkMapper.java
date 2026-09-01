@@ -79,8 +79,13 @@ public interface ShareLinkMapper extends BaseMapper<ShareLink> {
       "UPDATE nw_share_link SET access_count = access_count + 1, updated_at = NOW() WHERE id = #{id}")
   int incrementAccessCount(@Param("id") String id);
 
-  /** 带 revision 乐观锁的更新（更新失败返回 0） */
-  int updateWithRevision(@Param("shareLink") ShareLink ShareLink);
+  /**
+   * 带 revision 乐观锁的更新（更新失败返回 0）。
+   *
+   * @param shareLink 分享链接实体（revision 须与库内当前值一致）
+   * @return 受影响行数（0 表示版本冲突未更新）
+   */
+  int updateWithRevision(@Param("shareLink") ShareLink shareLink);
 
   /**
    * 查询即将到期的活跃分享链接（未发送过提醒的）。

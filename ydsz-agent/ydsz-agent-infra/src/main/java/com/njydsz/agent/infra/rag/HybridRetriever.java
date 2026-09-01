@@ -13,7 +13,6 @@ import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.Retriever;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
-import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 混合检索器（Hybrid Retrieval）

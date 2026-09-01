@@ -64,7 +64,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
       if (result.isSuccess()) {
         return NotifySendResult.success(result.getTraceId(), notifyChannel.getName());
       }
-      return NotifySendResult.failure(result.getErrorMessage(), notifyChannel.getName());
+      return NotifySendResult.failure(result.getUserMessage(), notifyChannel.getName());
     } catch (Exception e) {
       log.error(
           "[NotifyAdapter] 通道发送异常: channel={} receiver={} err={}",
@@ -95,7 +95,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
       if (result.isSuccess()) {
         return NotifySendResult.success(result.getTraceId(), notifyChannel.getName());
       }
-      return NotifySendResult.failure(result.getErrorMessage(), notifyChannel.getName());
+      return NotifySendResult.failure(result.getUserMessage(), notifyChannel.getName());
     } catch (Exception e) {
       log.error(
           "[NotifyAdapter] 模板发送异常: channel={} template={} err={}",

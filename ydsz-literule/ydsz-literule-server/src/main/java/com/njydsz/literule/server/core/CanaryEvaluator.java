@@ -3,8 +3,8 @@ package com.njydsz.literule.server.core;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**

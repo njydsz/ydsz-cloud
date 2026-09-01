@@ -20,12 +20,11 @@ import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.server.event.AgentEventPublisher;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
-import com.njydsz.agent.server.event.AgentEventPublisher;
 import com.njydsz.agent.server.quota.TenantQuotaService;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 对话服务

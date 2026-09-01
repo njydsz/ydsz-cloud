@@ -2,19 +2,17 @@ package com.njydsz.agent.infra.converter;
 
 import java.util.List;
 
-import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.agent.domain.dto.AgentApprovalDTO;
+import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.dto.AgentTraceDTO;
 import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
 import com.njydsz.agent.domain.dto.PromptVersionDTO;
 import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
-import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.domain.vo.AgentTraceStepVO;

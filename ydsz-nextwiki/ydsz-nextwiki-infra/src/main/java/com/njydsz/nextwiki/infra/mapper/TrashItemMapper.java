@@ -68,8 +68,13 @@ public interface TrashItemMapper extends BaseMapper<TrashItem> {
    */
   int countActiveTrash(@Param("userId") String userId);
 
-  /** 带 revision 乐观锁的更新（更新失败返回 0） */
-  int updateWithRevision(@Param("trashItem") TrashItem TrashItem);
+  /**
+   * 带 revision 乐观锁的更新（更新失败返回 0）。
+   *
+   * @param trashItem 回收站条目实体（revision 须与库内当前值一致）
+   * @return 受影响行数（0 表示版本冲突未更新）
+   */
+  int updateWithRevision(@Param("trashItem") TrashItem trashItem);
 
   /**
    * 批量插入回收站条目（用于批量删除场景）。

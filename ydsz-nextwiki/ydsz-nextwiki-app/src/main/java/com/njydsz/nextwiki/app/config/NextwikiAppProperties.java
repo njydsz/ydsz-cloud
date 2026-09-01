@@ -14,14 +14,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "nextwiki.app")
 public class NextwikiAppProperties {
 
+  /** 移动端默认分页大小默认值 */
+  private static final int DEFAULT_PAGE_SIZE_VALUE = 20;
+
+  /** 移动端最大分页大小默认值 */
+  private static final int MAX_PAGE_SIZE_VALUE = 100;
+
   /** 是否启用移动端 API */
   private boolean enabled = true;
 
   /** 移动端默认分页大小 */
-  private int defaultPageSize = 20;
+  private int defaultPageSize = DEFAULT_PAGE_SIZE_VALUE;
 
   /** 移动端最大分页大小 */
-  private int maxPageSize = 100;
+  private int maxPageSize = MAX_PAGE_SIZE_VALUE;
 
   public boolean isEnabled() {
     return enabled;

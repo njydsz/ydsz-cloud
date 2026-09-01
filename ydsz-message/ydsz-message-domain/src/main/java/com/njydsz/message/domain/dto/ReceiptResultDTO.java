@@ -36,8 +36,8 @@ public class ReceiptResultDTO {
    * @param status 回执状态
    * @return 回执结果实例
    */
-  public static ReceiptResult of(ReceiptStatusEnum status) {
-    return new ReceiptResult(status, null, null);
+  public static ReceiptResultDTO of(ReceiptStatusEnum status) {
+    return new ReceiptResultDTO(status, null, null);
   }
 
   /**
@@ -47,7 +47,7 @@ public class ReceiptResultDTO {
    * @param providerMsg 服务商消息
    * @return 回执结果实例
    */
-  public static ReceiptResult of(ReceiptStatusEnum status, String providerMsg) {
-    return new ReceiptResult(status, providerMsg, null);
+  public static ReceiptResultDTO of(ReceiptStatusEnum status, String providerMsg) {
+    return new ReceiptResultDTO(status, providerMsg, null);
   }
 }

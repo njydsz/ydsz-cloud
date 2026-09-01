@@ -88,6 +88,8 @@
         <errorprone.version>2.49.0</errorprone.version>
         <openpdf.version>1.3.30</openpdf.version>
         <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
+        <!-- JaCoCo：测试破零配套（2026-09-01），覆盖率报告与后续增量门禁使用 -->
+        <jacoco.version>0.8.12</jacoco.version>
         <!-- seata.version 与 sentry.version 属性均已移除（2026-09-01 对标清理 P1）：
              - seata：ydsz-common-seata 模块 0 使用点已删除，声明随行移除；
              - sentry：ydsz-common-sentry 实为自研 OTel 告警/监控模块，从不依赖 Sentry SDK，
@@ -1128,6 +1130,29 @@
                             </path>
                         </annotationProcessorPaths>
                     </configuration>
+                </plugin>
+                <!-- JaCoCo 覆盖率（2026-09-01 测试破零配套）：
+                     仅在 pluginManagement 预置配置，模块按需启用：
+                     mvn test jacoco:report（当前由 CI 后续迭代接入增量覆盖率门禁） -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
         </plugins>
         </pluginManagement>

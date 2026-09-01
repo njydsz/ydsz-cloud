@@ -17,7 +17,6 @@ import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 租户 LLM 配额管理服务

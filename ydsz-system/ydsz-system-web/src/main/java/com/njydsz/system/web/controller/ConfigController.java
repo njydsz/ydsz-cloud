@@ -34,7 +34,6 @@ import com.njydsz.system.domain.dto.ConfigBatchDTO;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.CursorPageResponseVO;
 import com.njydsz.system.domain.vo.ImportResultVO;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.ConfigService;
@@ -105,7 +104,7 @@ public class ConfigController {
    */
   @Operation(summary = "游标分页查询")
   @GetMapping("/cursor")
-  public YdszResponse<CursorPageResponseVO<ConfigVO>> pageByCursor(
+  public YdszResponse<PageResponse<List<ConfigVO>>> pageByCursor(
       @RequestParam(required = false) String configGroup,
       @RequestParam(required = false) String configKey,
       @RequestParam(defaultValue = "20") int pageSize,

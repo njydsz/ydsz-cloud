@@ -168,7 +168,7 @@ public class ChannelRouter {
           breaker.recordSuccess(cost, TimeUnit.MILLISECONDS);
         } else {
           breaker.recordFailure(
-              cost, TimeUnit.MILLISECONDS, new RuntimeException(result.getErrorMessage()));
+              cost, TimeUnit.MILLISECONDS, new RuntimeException(result.getUserMessage()));
           // P2-4: 记录通道级业务错误指标
           messageMetrics.recordChannelError(channel, "BUSINESS_ERROR");
         }
@@ -271,13 +271,13 @@ public class ChannelRouter {
       log.warn(
           "[ChannelRouter] dispatchWithScore: 通道发送失败尝试下一个 channel={} err={}",
           channelScore.channel(),
-          lastResult.getErrorMessage());
+          lastResult.getUserMessage());
     }
 
     // 4. 全部失败，返回最后一个失败结果
     log.error(
         "[ChannelRouter] dispatchWithScore: 所有通道均失败, lastError={}",
-        lastResult != null ? lastResult.getErrorMessage() : "unknown");
+        lastResult != null ? lastResult.getUserMessage() : "unknown");
     return lastResult;
   }
 
@@ -369,7 +369,7 @@ public class ChannelRouter {
     }
     MessageResult result = dispatch(request);
     if (!result.isSuccess()) {
-      throw SysException.builder().message(result.getErrorMessage()).build();
+      throw SysException.builder().message(result.getUserMessage()).build();
     }
     return result.getTraceId();
   }

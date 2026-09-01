@@ -118,7 +118,7 @@ public class SmsChannel implements MessageChannel {
     if ("SUCCESS".equals(result.getStatus())) {
       return Optional.of(ReceiptResultDTO.of(ReceiptStatusEnum.DELIVERED, traceId));
     } else if ("FAILED".equals(result.getStatus())) {
-      return Optional.of(ReceiptResultDTO.of(ReceiptStatusEnum.FAILED, result.getErrorMessage()));
+      return Optional.of(ReceiptResultDTO.of(ReceiptStatusEnum.FAILED, result.getUserMessage()));
     }
     // UNKNOWN 状态不更新回执,返回 empty
     return Optional.empty();

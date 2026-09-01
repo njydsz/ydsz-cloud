@@ -84,6 +84,11 @@ public interface StorageQuotaMapper extends BaseMapper<StorageQuota> {
       @Param("bytesDelta") long bytesDelta,
       @Param("fileCountDelta") int fileCountDelta);
 
-  /** 带 revision 乐观锁的更新（更新失败返回 0） */
+  /**
+   * 带 revision 乐观锁的更新（更新失败返回 0）。
+   *
+   * @param quota 配额实体（revision 须与库内当前值一致）
+   * @return 受影响行数（0 表示版本冲突未更新）
+   */
   int updateWithRevision(@Param("quota") StorageQuota quota);
 }

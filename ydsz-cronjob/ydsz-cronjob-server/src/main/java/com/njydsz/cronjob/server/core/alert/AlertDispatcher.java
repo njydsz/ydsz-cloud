@@ -393,7 +393,7 @@ public class AlertDispatcher {
       MessageResult msgResult = result.getData();
       if (msgResult != null && !msgResult.isSuccess()) {
         throw new AlertSendException(
-            msgResult.getErrorMessage() != null ? msgResult.getErrorMessage() : "send failed");
+            msgResult.getUserMessage() != null ? msgResult.getUserMessage() : "send failed");
       }
     } catch (AlertSendException e) {
       // P2-10: 主渠道失败时，尝试通过 common-notify IM 渠道直推

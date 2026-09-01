@@ -29,7 +29,6 @@ import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.CursorPageResponseVO;
 import com.njydsz.system.domain.vo.ImportResultVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
@@ -137,7 +136,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public CursorPageResponseVO<ConfigVO> pageByCursor(
+  public PageResponse<List<ConfigVO>> pageByCursor(
       String configGroup, String configKey, int pageSize, String cursor) {
     // 1. 校验并归一化页大小
     int safePageSize = Math.min(Math.max(pageSize, 1), MAX_CURSOR_PAGE_SIZE);
@@ -155,7 +154,7 @@ public class ConfigServiceImpl implements ConfigService {
       }
     }
 
-    return CursorPageResponseVO.of(records, nextCursor);
+    return PageResponse.ofCursor(records, nextCursor);
   }
 
   @Override

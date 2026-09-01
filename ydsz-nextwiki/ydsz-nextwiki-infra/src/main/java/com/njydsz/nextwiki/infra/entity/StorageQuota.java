@@ -42,7 +42,12 @@ public class StorageQuota extends MpBaseEntity<String> implements Serializable {
   /** 已使用文件数量 */
   private Integer fileCountUsed;
 
-  /** 检查是否有足够空间 */
+  /**
+   * 检查是否有足够空间。
+   *
+   * @param requiredBytes 所需字节数
+   * @return 剩余空间足够时返回 true（未设上限时恒为 true）
+   */
   public boolean hasSpace(long requiredBytes) {
     if (quotaLimit == null || quotaLimit <= 0) {
       return true;
@@ -51,7 +56,11 @@ public class StorageQuota extends MpBaseEntity<String> implements Serializable {
     return used + requiredBytes <= quotaLimit;
   }
 
-  /** 检查是否有足够文件数量 */
+  /**
+   * 检查是否有足够文件数量。
+   *
+   * @return 剩余文件数量配额大于 0 时返回 true（未设上限时恒为 true）
+   */
   public boolean hasFileCountSlot() {
     if (fileCountLimit == null || fileCountLimit <= 0) {
       return true;

@@ -13,7 +13,6 @@ import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * PostgreSQL pgvector 向量存储实现

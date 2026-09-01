@@ -20,7 +20,6 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
-import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * Agent 执行器抽象基类

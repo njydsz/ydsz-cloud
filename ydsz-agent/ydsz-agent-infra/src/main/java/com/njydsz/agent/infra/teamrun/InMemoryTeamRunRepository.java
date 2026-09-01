@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.njydsz.agent.domain.teamrun.TeamRun;
 import com.njydsz.agent.domain.teamrun.TeamRunRepository;
-import com.njydsz.agent.domain.teamrun.TeamRunStatus;
 
 import org.springframework.stereotype.Component;
 

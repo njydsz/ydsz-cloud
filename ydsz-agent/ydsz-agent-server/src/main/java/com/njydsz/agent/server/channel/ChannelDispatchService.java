@@ -5,8 +5,8 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.njydsz.agent.domain.channel.ChannelAdapter;
 import com.njydsz.agent.domain.channel.ChannelAdapter.ChannelStatus;
+import com.njydsz.agent.domain.channel.ChannelAdapter;
 import com.njydsz.agent.domain.channel.ChannelRequest;
 import com.njydsz.agent.domain.channel.ChannelResponse;
 import com.njydsz.agent.domain.channel.ChannelType;

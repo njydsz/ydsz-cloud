@@ -1,7 +1,6 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -8,9 +8,9 @@ import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.literule.domain.model.ModelInvocationException;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.server.model.ModelInputRegistry;
-import com.njydsz.literule.domain.model.ModelInvocationException;
 import com.njydsz.literule.server.spi.FactCollectionException;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
 

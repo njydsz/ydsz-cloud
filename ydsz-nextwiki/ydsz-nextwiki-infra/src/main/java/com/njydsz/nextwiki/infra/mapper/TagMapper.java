@@ -58,13 +58,13 @@ public interface TagMapper extends BaseMapper<Tag> {
   /**
    * 插入文件-标签关联记录（中间表 nw_file_tag）。
    *
-   * @param FileTag 关联实体（id/fileNodeId/tagId/createdBy/updatedBy 由调用方填充，revision/deleted 默认 0）
+   * @param fileTag 关联实体（id/fileNodeId/tagId/createdBy/updatedBy 由调用方填充，revision/deleted 默认 0）
    * @return 受影响行数
    */
   @Insert(
       "INSERT INTO nw_file_tag (id, file_node_id, tag_id, created_by, created_at, updated_by, updated_at, revision, deleted) "
           + "VALUES (#{id}, #{fileNodeId}, #{tagId}, #{createdBy}, NOW(), #{updatedBy}, NOW(), 0, 0)")
-  int insertFileTag(FileTag FileTag);
+  int insertFileTag(FileTag fileTag);
 
   /**
    * 删除指定文件节点与指定标签的单条关联。

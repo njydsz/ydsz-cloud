@@ -6,12 +6,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.literule.domain.vo.RuleContextVO;
-import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.domain.vo.RuleResultVO;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 /**

@@ -6,12 +6,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.dto.DecisionTreeDefinitionDTO;
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.vo.RuleContextVO;
-import com.njydsz.literule.domain.vo.RuleResultVO;
+import com.njydsz.literule.domain.dto.DecisionTreeDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 决策树规则：基于树形条件判断结构逐层求值，到达叶子节点返回结果

@@ -9,16 +9,16 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
-import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
+import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.common.util.message.MessageUtils;
-import com.njydsz.nextwiki.domain.vo.FileNodeVO;
-import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
 
 /**
  * 知识库文件搜索提供者

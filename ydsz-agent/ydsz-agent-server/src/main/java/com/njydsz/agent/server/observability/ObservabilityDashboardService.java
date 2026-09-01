@@ -9,8 +9,6 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.agent.server.analytics.CostAnalysisService;
-import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 
 /**
  * 可观测性面板服务

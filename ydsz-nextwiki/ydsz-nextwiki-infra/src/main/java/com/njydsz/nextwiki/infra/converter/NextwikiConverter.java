@@ -28,15 +28,15 @@ import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 import com.njydsz.nextwiki.domain.vo.FileAclVO;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.FileTagVO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
 import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
+import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
-import com.njydsz.nextwiki.domain.vo.FileTagVO;
-import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 import com.njydsz.nextwiki.infra.entity.FileAcl;
 import com.njydsz.nextwiki.infra.entity.FileComment;
@@ -76,6 +76,7 @@ import com.njydsz.nextwiki.infra.entity.UserRecent;
 @Mapper
 public interface NextwikiConverter {
 
+  /** 转换器单例（MapStruct 编译期生成实现类） */
   NextwikiConverter INSTANT = Mappers.getMapper(NextwikiConverter.class);
 
   // ===== FileNode =====

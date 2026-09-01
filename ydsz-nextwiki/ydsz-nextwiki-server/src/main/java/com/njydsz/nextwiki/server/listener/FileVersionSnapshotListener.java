@@ -13,9 +13,9 @@ import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.event.FileVersionSnapshotEvent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
+import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
-import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 
 /**
  * 文件版本快照事件监听器 — 在主写事务提交后异步创建文件版本记录。

@@ -14,7 +14,6 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
-import com.njydsz.agent.server.rag.RagService;
 
 /**
  * Agent 工厂

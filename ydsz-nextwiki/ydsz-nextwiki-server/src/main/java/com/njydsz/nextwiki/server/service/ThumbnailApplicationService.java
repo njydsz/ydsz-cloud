@@ -21,10 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.domain.vo.FileNodeVO;
-import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
 /**
  * 缩略图服务。

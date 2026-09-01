@@ -35,6 +35,20 @@ public class PageResponse<T> extends YdszResponse<T> {
   /** 每页记录数。 */
   @Getter @Setter private Long pageSize;
 
+  /**
+   * 下一页游标（null 表示已无更多数据）。
+   *
+   * <p>仅游标分页模式有效，偏移量模式下为 null。
+   */
+  @Getter @Setter private String nextCursor;
+
+  /**
+   * 是否有下一页。
+   *
+   * <p>仅游标分页模式有效，偏移量模式下参考 {@link #getPages()} 与当前 pageNum 判断。
+   */
+  @Getter @Setter private Boolean hasMore;
+
   /** 由工厂方法构造。 */
   public PageResponse() {
     super();
@@ -102,5 +116,54 @@ public class PageResponse<T> extends YdszResponse<T> {
       return 0;
     }
     return (total + size - 1) / size;
+  }
+
+  // ======================== 游标分页工厂方法 ========================
+
+  /**
+   * 返回游标分页成功响应。
+   *
+   * <p>使用游标分页模式时调用本方法，返回的数据直接在 {@link #getData()} 中， 无需 total/pageNum/pageSize 等偏移量字段。
+   *
+   * @param records 数据列表
+   * @param nextCursor 下一页游标（null 表示已无更多数据）
+   * @param <T> 数据类型
+   * @return 游标分页成功响应
+   */
+  public static <T> PageResponse<T> ofCursor(List<T> records, String nextCursor) {
+    PageResponse<T> response = new PageResponse<>();
+    response.setCode(YdszResultCode.SUCCESS.getCode());
+    response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
+    response.setData((T) records);
+    response.setNextCursor(nextCursor);
+    response.setHasMore(nextCursor != null);
+    return response;
+  }
+
+  /**
+   * 返回游标分页空响应（无更多数据）。
+   *
+   * @param <T> 数据类型
+   * @return 空游标分页响应
+   */
+  public static <T> PageResponse<T> emptyCursor() {
+    PageResponse<T> response = new PageResponse<>();
+    response.setCode(YdszResultCode.SUCCESS.getCode());
+    response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
+    response.setData((T) java.util.Collections.emptyList());
+    response.setNextCursor(null);
+    response.setHasMore(false);
+    return response;
+  }
+
+  /**
+   * 判断当前是否为游标分页模式。
+   *
+   * <p>判断依据：{@link #nextCursor} 非空 或 {@link #hasMore} 非 null。
+   *
+   * @return true 表示游标分页模式，false 表示偏移量分页模式
+   */
+  public boolean isCursorMode() {
+    return nextCursor != null || hasMore != null;
   }
 }

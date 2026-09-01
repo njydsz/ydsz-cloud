@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
-import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.UserRecentVO;

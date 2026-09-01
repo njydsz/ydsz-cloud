@@ -9,7 +9,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.CursorPageResponseVO;
 import com.njydsz.system.domain.vo.ImportResultVO;
 
 
@@ -72,7 +71,7 @@ public interface ConfigService {
    * @param cursor 游标（上一页最后一条记录 ID，首次查询传 null）
    * @return 游标分页响应
    */
-  CursorPageResponseVO<ConfigVO> pageByCursor(String configGroup, String configKey, int pageSize, String cursor);
+  PageResponse<List<ConfigVO>> pageByCursor(String configGroup, String configKey, int pageSize, String cursor);
 
   /**
    * 按 ID 查询配置

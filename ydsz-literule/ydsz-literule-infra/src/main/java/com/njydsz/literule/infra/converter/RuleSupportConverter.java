@@ -7,8 +7,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.dto.DecisionTableDTO;
-import com.njydsz.literule.domain.dto.RuleVersionDTO;
 import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
+import com.njydsz.literule.domain.dto.RuleVersionDTO;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
