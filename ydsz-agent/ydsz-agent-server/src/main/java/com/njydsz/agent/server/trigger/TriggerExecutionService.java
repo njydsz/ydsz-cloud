@@ -22,6 +22,9 @@ import com.njydsz.agent.domain.trigger.AgentTrigger;
 @Slf4j
 public class TriggerExecutionService {
 
+    /** 执行 ID 中 UUID 的截取长度 */
+    private static final int EXECUTION_ID_UUID_LENGTH = 8;
+
     private final AgentExecutionDelegate executionDelegate;
 
     public TriggerExecutionService(AgentExecutionDelegate executionDelegate) {
@@ -91,7 +94,7 @@ public class TriggerExecutionService {
      * @return 唯一执行 ID
      */
     private String generateExecutionId() {
-        return "trigger-" + UUID.randomUUID().toString().substring(0, 8);
+        return "trigger-" + UUID.randomUUID().toString().substring(0, EXECUTION_ID_UUID_LENGTH);
     }
 
     /**
@@ -110,6 +113,12 @@ public class TriggerExecutionService {
 
     /**
      * Agent 执行请求。
+     *
+     * @param executionId 执行 ID
+     * @param tenantId 租户 ID
+     * @param agentCode 目标 Agent 编码
+     * @param agentType Agent 类型
+     * @param metadata 触发上下文元数据
      */
     public record AgentExecutionRequest(
             String executionId,

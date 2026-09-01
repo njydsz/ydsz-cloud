@@ -25,22 +25,11 @@
             <artifactId>ydsz-common-json</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- snakeyaml（YAML 解析，YamlUtils 使用） -->
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-        </dependency>
 
         <!--slf4j-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <!--transmittable-thread-local (RequestHolder AuthInfo 跨线程传递)-->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>transmittable-thread-local</artifactId>
-            <optional>true</optional>
         </dependency>
         <!--lombok-->
         <dependency>
