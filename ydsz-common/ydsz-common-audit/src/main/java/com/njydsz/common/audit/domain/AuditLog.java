@@ -69,6 +69,22 @@ public class AuditLog implements Serializable {
   /** 响应结果（已脱敏/截断；默认不记录） */
   private String responseResult;
 
+  /**
+   * 变更前快照（JSON）。
+   *
+   * <p>仅当 {@link com.njydsz.common.audit.annotation.Audit#recordDiff()} = true 时
+   * 在方法执行前由切面查询记录。用于 diff 追溯（如：更新前的用户信息）。
+   */
+  private String diffBeforeSnapshot;
+
+  /**
+   * 变更后快照（JSON）。
+   *
+   * <p>方法执行后由切面捕获（含方法返回值）。与 {@link #diffBeforeSnapshot} 配合
+   * 记录完整的变更 diff。
+   */
+  private String diffAfterSnapshot;
+
   /** 错误信息（业务方法抛异常时记录） */
   private String errorMessage;
 

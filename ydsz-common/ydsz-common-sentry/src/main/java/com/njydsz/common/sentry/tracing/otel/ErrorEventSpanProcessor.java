@@ -164,9 +164,18 @@ public class ErrorEventSpanProcessor implements SpanProcessor {
   // 配置
   // ============================================================================
 
+  /**
+   * 错误事件判定配置。
+   *
+   * <p>当前仅控制「慢 Span」这一路判定：Span 结束时若耗时超过阈值，且 Span 类型不是 {@code CLIENT} /
+   * {@code PRODUCER}（避免把下游调用与消息发送重复计为慢请求），则产生一个 {@code Reason.SLOW} 的错误事件。
+   *
+   * <p>把阈值设为 {@code 0} 或负数即可整体关闭慢 Span 检测；Span 自带错误状态与 HTTP 5xx 两路判定不受此配置影响。
+   */
   @Data
   public static class ErrorEventConfig {
-    /** 慢 Span 阈值（毫秒） */
+
+    /** 慢 Span 阈值（毫秒），耗时严格大于该值才触发；{@code <= 0} 表示关闭慢 Span 检测 */
     private long slowThresholdMillis = 3000;
   }
 

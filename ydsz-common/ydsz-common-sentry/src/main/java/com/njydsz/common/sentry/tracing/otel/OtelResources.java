@@ -40,11 +40,16 @@ public final class OtelResources {
     throw new UnsupportedOperationException("OtelResources is a utility class");
   }
 
-  /** 创建 YDSZ 标准 Resource */
   /**
-   * create。
-   * @param config 参数
-   * @return 结果
+   * 按配置组装 YDSZ 标准的 OTel {@link Resource}。
+   *
+   * <p>依次写入 OTel 语义约定属性（服务名 / 版本 / 命名空间 / 实例 ID / 部署环境）、可选的主机与进程信息，
+   * 最后追加 {@code ydsz.*} 自定义属性；为 {@code null} 的字段一律跳过，不会写入空值属性。
+   *
+   * <p>采集主机信息需要读取主机名与 {@code os.arch}，失败时只记录 debug 日志并跳过，不影响 Resource 生成。
+   *
+   * @param config 资源描述配置，不允许为 {@code null}；未显式设置的字段走 {@code @Builder.Default} 默认值
+   * @return 组装好的 OTel {@link Resource}，不会为 {@code null}
    */
   public static Resource create(YdszResourceConfig config) {
     try {
@@ -115,11 +120,15 @@ public final class OtelResources {
     }
   }
 
-  /** 使用默认配置创建 */
   /**
-   * create default。
-   * @param serviceName 参数
-   * @return 结果
+   * 仅指定服务名、其余字段取默认值的快捷构造入口。
+   *
+   * <p>等价于 {@code create(YdszResourceConfig.builder().serviceName(serviceName).build())}，
+   * 适用于只关心服务名归属、不在意版本/命名空间/实例 ID 的轻量接入场景。
+   *
+   * @param serviceName 服务名，将写入 {@code service.name} 资源属性；为 {@code null} 时会落到默认的
+   *     {@code ydsz-unknown}
+   * @return 组装好的 OTel {@link Resource}，不会为 {@code null}
    */
   public static Resource createDefault(String serviceName) {
     return create(YdszResourceConfig.builder().serviceName(serviceName).build());

@@ -191,9 +191,19 @@ public class SearchProperties {
 
   // ==================== 引擎特定内部类 ====================
 
+  /**
+   * PostgreSQL 全文检索引擎的专属配置，对应 {@code ydsz.search.pg.*}。
+   *
+   * <p>仅在 {@code primary} 或 {@code fallbacks} 中包含 {@code pg} 引擎时生效；检索走 {@code
+   * tsvector} 列上的 {@code to_tsquery} / {@code ts_rank}，因此 {@code searchConfig} 必须与建索引时
+   * 使用的文本搜索配置保持一致，否则会出现"索引能建但查不到"的现象。
+   *
+   * <p>{@code indexTable} 指向存放 {@code tsvector} 的业务索引表，各业务模块可指向各自的表以隔离数据。
+   */
   @Data
   public static class PgConfig {
-    /** PG tsvector 搜索配置（search_zh / simple） */
+
+    /** PG tsvector 搜索配置（search_zh / simple），需与建索引时使用的配置一致 */
     private String searchConfig = "search_zh";
 
     /** 索引表名 */
