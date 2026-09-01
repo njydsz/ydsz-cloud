@@ -72,9 +72,9 @@ public class RuleAuditLogService {
   // ==================== 记录操作 ====================
 
   /** 记录规则创建
-   * @param def 参数说明
-   * @param operator 参数说明
-   * @param source 参数说明
+   * @param def 新规则定义
+   * @param operator 操作人用户名（工号或SSO账号）
+   * @param source 操作来源（MANUAL/API/SCHEDULED/SDK）
    */
   public void logCreate(RuleDefinitionDTO def, String operator, String source) {
     AuditLogEntry entry =
@@ -92,11 +92,11 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则更新
-   * @param changeDesc 参数说明
-      * @param source 参数说明
-      * @param operator 参数说明
-      * @param newDef 参数说明
-      * @param oldDef 参数说明
+   * @param oldDef 更新前规则定义
+   * @param newDef 更新后规则定义
+   * @param operator 操作人用户名
+   * @param source 操作来源
+   * @param changeDesc 变更描述（如修改原因）
    */
   public void logUpdate(
       RuleDefinitionDTO oldDef,
@@ -123,11 +123,11 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则启停切换
-   * @param ruleCode 参数说明
-   * @param oldEnabled 参数说明
-   * @param newEnabled 参数说明
-   * @param operator 参数说明
-   * @param source 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param oldEnabled 切换前启用状态
+   * @param newEnabled 切换后启用状态
+   * @param operator 操作人用户名
+   * @param source 操作来源
    */
   public void logToggle(
       String ruleCode, boolean oldEnabled, boolean newEnabled, String operator, String source) {
@@ -145,11 +145,11 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则状态变更
-   * @param ruleCode 参数说明
-   * @param oldStatus 参数说明
-   * @param newStatus 参数说明
-   * @param operator 参数说明
-   * @param source 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param oldStatus 变更前状态
+   * @param newStatus 变更后状态
+   * @param operator 操作人用户名
+   * @param source 操作来源
    */
   public void logStatusChange(
       String ruleCode, String oldStatus, String newStatus, String operator, String source) {
@@ -167,11 +167,11 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则回滚
-   * @param ruleCode 参数说明
-   * @param fromVersion 参数说明
-   * @param toVersion 参数说明
-   * @param operator 参数说明
-   * @param source 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param fromVersion 回滚前版本号
+   * @param toVersion 回滚目标版本号
+   * @param operator 操作人用户名
+   * @param source 操作来源
    */
   public void logRollback(
       String ruleCode, int fromVersion, int toVersion, String operator, String source) {
@@ -189,11 +189,11 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则审批通过
-   * @param ruleCode 参数说明
-   * @param approver 参数说明
-   * @param level 参数说明
-   * @param comment 参数说明
-   * @param source 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param approver 审批人用户名
+   * @param level 审批级别（如 L1/L2）
+   * @param comment 审批意见
+   * @param source 操作来源
    */
   public void logApprove(
       String ruleCode, String approver, String level, String comment, String source) {
@@ -211,11 +211,11 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则审批驳回
-   * @param ruleCode 参数说明
-   * @param rejecter 参数说明
-   * @param level 参数说明
-   * @param reason 参数说明
-   * @param source 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param rejecter 驳回人用户名
+   * @param level 审批级别
+   * @param reason 驳回原因
+   * @param source 操作来源
    */
   public void logReject(
       String ruleCode, String rejecter, String level, String reason, String source) {
@@ -233,11 +233,11 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则导入
-   * @param ruleCode 参数说明
-   * @param ruleName 参数说明
-   * @param operator 参数说明
-   * @param source 参数说明
-   * @param importedCount 参数说明
+   * @param ruleCode 首个导入规则编码
+   * @param ruleName 首个导入规则名称
+   * @param operator 操作人用户名
+   * @param source 操作来源
+   * @param importedCount 导入规则总条数
    */
   public void logImport(
       String ruleCode, String ruleName, String operator, String source, int importedCount) {
@@ -256,10 +256,10 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则导出
-   * @param ruleCode 参数说明
-   * @param operator 参数说明
-   * @param source 参数说明
-   * @param format 参数说明
+   * @param ruleCode 导出规则编码
+   * @param operator 操作人用户名
+   * @param source 操作来源
+   * @param format 导出文件格式（JSON/YAML/EXCEL）
    */
   public void logExport(String ruleCode, String operator, String source, String format) {
     AuditLogEntry entry =
@@ -276,9 +276,9 @@ public class RuleAuditLogService {
   }
 
   /** 记录规则删除
-   * @param ruleCode 参数说明
-   * @param operator 参数说明
-   * @param source 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param operator 操作人用户名
+   * @param source 操作来源
    */
   public void logDelete(String ruleCode, String operator, String source) {
     AuditLogEntry entry =
@@ -294,11 +294,11 @@ public class RuleAuditLogService {
   }
 
   /** 记录操作失败
-   * @param ruleCode 参数说明
-   * @param action 参数说明
-   * @param operator 参数说明
-   * @param source 参数说明
-   * @param errorMessage 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param action 审计操作类型
+   * @param operator 操作人用户名
+   * @param source 操作来源
+   * @param errorMessage 失败原因
    */
   public void logFailure(
       String ruleCode, AuditAction action, String operator, String source, String errorMessage) {
@@ -318,45 +318,45 @@ public class RuleAuditLogService {
   // ==================== 查询操作 ====================
 
   /** 按规则编码查询审计日志
-   * @param ruleCode 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param ruleCode 规则唯一编码
+   * @param limit 返回条数上限
+   * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryByRuleCode(String ruleCode, int limit) {
     return store.queryByRuleCode(ruleCode, limit);
   }
 
   /** 按操作人查询审计日志
-   * @param operator 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param operator 操作人用户名
+   * @param limit 返回条数上限
+   * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryByOperator(String operator, int limit) {
     return store.queryByOperator(operator, limit);
   }
 
   /** 按操作类型查询审计日志
-   * @param action 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param action 审计操作类型
+   * @param limit 返回条数上限
+   * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryByAction(AuditAction action, int limit) {
     return store.queryByAction(action, limit);
   }
 
   /** 按时间范围查询审计日志
-   * @param start 参数说明
-   * @param end 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param start 起始时间（含）
+   * @param end 结束时间（不含）
+   * @param limit 返回条数上限
+   * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryByTimeRange(LocalDateTime start, LocalDateTime end, int limit) {
     return store.queryByTimeRange(start, end, limit);
   }
 
   /** 查询最近的审计日志
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param limit 返回条数上限
+   * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryRecent(int limit) {
     return store.queryRecent(limit);
@@ -458,39 +458,39 @@ public class RuleAuditLogService {
 
   /** 审计操作类型 */
   public enum AuditAction {
-    /** 常量说明 */
+    /** 创建规则 */
     CREATE,
-    /** 常量说明 */
+    /** 更新规则 */
     UPDATE,
-    /** 常量说明 */
+    /** 规则启停切换 */
     TOGGLE,
-    /** 常量说明 */
+    /** 规则状态变更 */
     STATUS_CHANGE,
-    /** 常量说明 */
+    /** 规则版本回滚 */
     ROLLBACK,
-    /** 常量说明 */
+    /** 审批通过 */
     APPROVE,
-    /** 常量说明 */
+    /** 审批驳回 */
     REJECT,
-    /** 常量说明 */
+    /** 规则导入 */
     IMPORT,
-    /** 常量说明 */
+    /** 规则导出 */
     EXPORT,
-    /** 常量说明 */
+    /** 规则删除 */
     DELETE,
-    /** 常量说明 */
+    /** 规则试跑（dry-run） */
     DRY_RUN,
-    /** 常量说明 */
+    /** 规则压测 */
     STRESS_TEST,
-    /** 常量说明 */
+    /** 规则回放 */
     REPLAY
   }
 
   /** 审计结果 */
   public enum AuditResult {
-    /** 常量说明 */
+    /** 操作成功 */
     SUCCESS,
-    /** 常量说明 */
+    /** 操作失败 */
     FAILURE
   }
 

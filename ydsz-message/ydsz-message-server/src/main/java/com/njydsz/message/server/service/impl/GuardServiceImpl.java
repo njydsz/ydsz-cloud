@@ -103,9 +103,9 @@ public class GuardServiceImpl implements GuardService {
    * 
    * <p>委托 {@link RedisRateLimiter#tryAcquireTokenBucket} 令牌桶限流， rateLimiter 不可用或异常时降级放行（返回 true）。
    *
-   * @param key 参数说明
-   * @param permits 参数说明
-   * @return 返回值说明
+   * @param key 限流 key（拼接 RATE_LIMIT_KEY_PREFIX 后作为 Redis 令牌桶 key）
+   * @param permits 本次请求消耗的令牌数
+   * @return 是否成功获取令牌（true=放行，false=限流拒绝）
    */
   @Override
   public boolean tryAcquire(String key, int permits) {
@@ -133,10 +133,10 @@ public class GuardServiceImpl implements GuardService {
    * 
    * <p>从用户偏好读取 hourlyLimit/dailyLimit，使用 Redis INCR + EXPIRE 计数，任一维度超限即返回 false。
    *
-   * @param userId 参数说明
-   * @param channel 参数说明
-   * @param bizType 参数说明
-   * @return 返回值说明
+   * @param userId 用户标识（用于拼接频率计数 Redis key）
+   * @param channel 消息通道
+   * @param bizType 业务类型（用于隔离不同业务场景的频率限制）
+   * @return 是否未超限（true=放行，false=频率超限拒绝）
    */
   @Override
   public boolean checkFrequency(String userId, String channel, String bizType) {
@@ -195,9 +195,9 @@ public class GuardServiceImpl implements GuardService {
    * 
    * <p>同时递增小时和日频率计数器（Redis INCR + EXPIRE）。
    *
-   * @param userId 参数说明
-   * @param channel 参数说明
-   * @param bizType 参数说明
+   * @param userId 用户标识（用于拼接频率计数 Redis key）
+   * @param channel 消息通道
+   * @param bizType 业务类型（用于隔离不同业务场景的频率计数）
    */
   @Override
   public void recordFrequency(String userId, String channel, String bizType) {
@@ -224,11 +224,11 @@ public class GuardServiceImpl implements GuardService {
   /**
    * {@inheritDoc}
    *
-   * @param channel 参数说明
-   * @param receiver 参数说明
-   * @param templateCode 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param channel 消息通道标识
+   * @param receiver 接收人（手机号/邮箱等，receiver 维度限流）
+   * @param templateCode 模板编码（template 维度限流）
+   * @param tenantId 租户标识（tenant 维度限流，租户级每日限额）
+   * @return 是否通过所有限流检查（true=放行，false=被限流拒绝）
    */
   @Override
   public boolean checkSendLimit(
@@ -274,12 +274,12 @@ public class GuardServiceImpl implements GuardService {
   /**
    * {@inheritDoc}
    *
-   * @param channel 参数说明
-   * @param receiver 参数说明
-   * @param templateCode 参数说明
-   * @param tenantId 参数说明
-   * @param priority 参数说明
-   * @return 返回值说明
+   * @param channel 消息通道标识
+   * @param receiver 接收人（receiver 维度限流）
+   * @param templateCode 模板编码（template 维度限流）
+   * @param tenantId 租户标识（tenant 维度限流）
+   * @param priority 消息优先级（URGENT/HIGH 可跳过部分限流）
+   * @return 是否通过所有限流检查（true=放行，false=被限流拒绝）
    */
   @Override
   public boolean checkSendLimit(
@@ -298,8 +298,8 @@ public class GuardServiceImpl implements GuardService {
   /**
    * {@inheritDoc}
    *
-   * @param dedupKey 参数说明
-   * @return 返回值说明
+   * @param dedupKey 去重 key（拼接 DEDUP_KEY_PREFIX 后作为 Redis key）
+   * @return 是否首次到达（true=首次放行，false=重复消息跳过）
    */
   @Override
   public boolean tryDedup(String dedupKey) {
@@ -329,7 +329,7 @@ public class GuardServiceImpl implements GuardService {
   /**
    * {@inheritDoc}
    *
-   * @return 返回值说明
+   * @return 去重 key 的 TTL（从配置读取，默认 60s）
    */
   @Override
   public Duration getDedupTtl() {

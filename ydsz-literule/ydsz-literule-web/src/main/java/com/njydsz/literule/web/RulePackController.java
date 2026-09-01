@@ -74,7 +74,7 @@ public class RulePackController {
   private final ObjectProvider<RuleStressTestService> ruleStressTestServiceProvider;
 
   /** 列出全部规则集（市场首页）
-   * @return 返回值说明
+   * @return 规则集列表（按发布时间倒序）
    */
   @GetMapping("/packs")
   public YdszResponse<List<RulePackVO>> listPacks() {
@@ -83,8 +83,8 @@ public class RulePackController {
   }
 
   /** 搜索规则集
-   * @param keyword 参数说明
-      * @return 返回值说明
+   * @param keyword 搜索关键词（支持名称/描述模糊匹配）
+   * @return 匹配的规则集列表
    */
   @GetMapping("/packs/search")
   public YdszResponse<List<RulePackVO>> searchPacks(
@@ -96,8 +96,8 @@ public class RulePackController {
   }
 
   /** 查询规则集最新版本
-   * @param packCode 参数说明
-      * @return 返回值说明
+   * @param packCode 规则集唯一编码
+   * @return 最新版本规则集信息
    */
   @GetMapping("/packs/{packCode}/latest")
   public YdszResponse<RulePackVO> getLatestPack(@PathVariable String packCode) {
@@ -106,8 +106,8 @@ public class RulePackController {
   }
 
   /** 查询规则集的所有版本
-   * @param packCode 参数说明
-      * @return 返回值说明
+   * @param packCode 规则集唯一编码
+   * @return 版本列表（按版本号倒序）
    */
   @GetMapping("/packs/{packCode}/versions")
   public YdszResponse<List<RulePackVO>> listPackVersions(@PathVariable String packCode) {
@@ -118,9 +118,9 @@ public class RulePackController {
   }
 
   /** 查询规则集指定版本（含规则定义快照，P2-8）
-   * @param packCode 参数说明
-   * @param version 参数说明
-      * @return 返回值说明
+   * @param packCode 规则集唯一编码
+   * @param version 版本号字符串
+   * @return 指定版本的规则集信息
    */
   @GetMapping("/packs/{packCode}/versions/{version}")
   public YdszResponse<RulePackVO> getPackVersion(
@@ -130,10 +130,10 @@ public class RulePackController {
   }
 
   /** 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表
-   * @param operator 参数说明
-      * @return 返回值说明
-      * @param packCode 参数说明
-      * @param version 参数说明
+   * @param packCode 规则集唯一编码
+   * @param version 回滚目标版本号
+   * @param operator 操作人用户名
+   * @return 回滚安装结果
    */
   @Audit(
       module = "规则管理",
@@ -152,10 +152,10 @@ public class RulePackController {
   }
 
   /** 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异
-   * @param toVersion 参数说明
-      * @return 返回值说明
-      * @param packCode 参数说明
-      * @param fromVersion 参数说明
+   * @param packCode 规则集唯一编码
+   * @param fromVersion 基准版本号
+   * @param toVersion 目标版本号
+   * @return 版本差异信息
    */
   @GetMapping("/packs/{packCode}/diff")
   public YdszResponse<PackDiffVO> diffPack(
@@ -168,9 +168,9 @@ public class RulePackController {
   }
 
   /** 发布规则集到市场
-   * @param operator 参数说明
-      * @return 返回值说明
-      * @param pack 参数说明
+   * @param pack 待发布的规则集信息
+   * @param operator 操作人用户名
+   * @return 发布后的规则集信息
    */
   @Idempotent(key = "ruleAdmin:publishPack", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -189,12 +189,10 @@ public class RulePackController {
 
   /** 安装规则集（一键导入）
 
-      * @return 返回值说明
-
-
-      * @param packCode 参数说明
-   * @param version 参数说明
-   * @param operator 参数说明
+   * @param packCode 规则集唯一编码
+   * @param version 指定版本号（为空则安装最新版本）
+   * @param operator 操作人用户名
+   * @return 安装结果（含成功/失败计数）
    */
   @Audit(
       module = "规则管理",
@@ -213,8 +211,8 @@ public class RulePackController {
   }
 
   /** 删除规则集
-   * @param id 参数说明
-      * @return 返回值说明
+   * @param id 规则集唯一标识
+   * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:deletePack", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -230,9 +228,9 @@ public class RulePackController {
   }
 
   /** 标记为官方
-   * @param official 参数说明
-      * @return 返回值说明
-      * @param id 参数说明
+   * @param id 规则集唯一标识
+   * @param official 是否官方（true/false）
+   * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:markOfficialPack", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -250,9 +248,9 @@ public class RulePackController {
   }
 
   /** 评分（0-5）
-   * @param id 参数说明
-   * @param rating 参数说明
-      * @return 返回值说明
+   * @param id 规则集唯一标识
+   * @param rating 评分值（0.0-5.0）
+   * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:ratePack", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -362,9 +360,9 @@ public class RulePackController {
   /**
    * 批量更新知识包到最新版本
    *
-   * @param operator 操作人
+   * @param packCodes 待更新的规则集编码列表
+   * @param operator 操作人用户名
    * @return 每个包的更新结果
-      * @param packCodes 参数说明
    */
   @Audit(
       module = "规则管理",

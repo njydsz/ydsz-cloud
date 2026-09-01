@@ -57,10 +57,10 @@ public class RuleDependencyController {
   private final RuleDependencyProvider ruleDependencyProvider;
 
   /** 添加规则依赖
-   * @param operator 参数说明
-      * @return 返回值说明
-      * @param dto 参数说明
-      * @param ruleCode 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param dto 依赖关系请求数据
+   * @param operator 操作人用户名
+   * @return 添加后的依赖关系信息
    */
   @Idempotent(key = "ruleAdmin:addDependency", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -84,9 +84,9 @@ public class RuleDependencyController {
   }
 
   /** 删除规则依赖
-   * @param ruleCode 参数说明
-   * @param dependsOnRuleCode 参数说明
-      * @return 返回值说明
+   * @param ruleCode 规则唯一编码
+   * @param dependsOnRuleCode 被依赖规则编码
+   * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:removeDependency", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -103,8 +103,8 @@ public class RuleDependencyController {
   }
 
   /** 查询规则的依赖（正向：依赖了哪些）
-   * @param ruleCode 参数说明
-      * @return 返回值说明
+   * @param ruleCode 规则唯一编码
+   * @return 正向依赖列表
    */
   @GetMapping("/{ruleCode}/dependencies")
   public YdszResponse<List<RuleDependencyVO>> listDependencies(@PathVariable String ruleCode) {
@@ -112,8 +112,8 @@ public class RuleDependencyController {
   }
 
   /** 查询被依赖（反向：被哪些规则依赖）
-   * @param ruleCode 参数说明
-      * @return 返回值说明
+   * @param ruleCode 规则唯一编码
+   * @return 反向依赖列表
    */
   @GetMapping("/{ruleCode}/dependents")
   public YdszResponse<List<RuleDependencyVO>> listDependents(@PathVariable String ruleCode) {
@@ -121,8 +121,8 @@ public class RuleDependencyController {
   }
 
   /** 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表）
-   * @param ruleCode 参数说明
-      * @return 返回值说明
+   * @param ruleCode 规则唯一编码
+   * @return 需要级联禁用的规则编码列表
    */
   @GetMapping("/{ruleCode}/cascading-disable")
   public YdszResponse<List<StringVO>> cascadingDisable(@PathVariable String ruleCode) {

@@ -114,9 +114,9 @@ public class MessageSendService {
   /**
    * 解析降级通道列表。
    *
-   * @param matchedRule 参数说明
-   * @param currentChannel 参数说明
-   * @return 返回值说明
+   * @param matchedRule 命中的路由规则（从中提取 fallbackChannel 降级通道）
+   * @param currentChannel 当前已发送失败的通道（排除在降级列表之外）
+   * @return 可用的降级通道列表（可能为空）
    */
   public List<String> resolveFallbackChannels(MsgRouteRuleVO matchedRule, String currentChannel) {
     if (matchedRule == null) {
@@ -133,10 +133,10 @@ public class MessageSendService {
   /**
    * 按降级链顺序逐个尝试，任一成功即返回。
    *
-   * @param logVO 参数说明
-   * @param fallbackChannels 参数说明
-   * @param prevCost 参数说明
-   * @return 返回值说明
+   * @param logVO 消息日志 VO（channel 将被替换为降级通道尝试）
+   * @param fallbackChannels 降级通道列表（按优先级排序）
+   * @param prevCost 上次发送已消耗的毫秒时间（累积计算）
+   * @return 降级返回的发送结果；若全部降级失败则返回 null
    */
   public MessageResult tryFallbackChain(
       MsgLogVO logVO, List<String> fallbackChannels, long prevCost) {
@@ -182,10 +182,10 @@ public class MessageSendService {
   /**
    * 失败处理：retryCount < MAX → RETRY + nextRetryAt（指数退避），否则 FAILED。
    *
-   * @param logVO 参数说明
-   * @param e 参数说明
-   * @param cost 参数说明
-   * @return 返回值说明
+   * @param logVO 消息日志 VO
+   * @param e 发送过程中抛出的异常
+   * @param cost 本次已消耗的毫秒时间
+   * @return 发送结果（包含重试或失败信息）
    */
   public MessageResult handleFailure(MsgLogVO logVO, Exception e, long cost) {
     int retryCount = logVO.getRetryCount() == null ? 0 : logVO.getRetryCount();
@@ -221,8 +221,8 @@ public class MessageSendService {
   /**
    * 按通道计算单条消息成本。
    *
-   * @param channel 参数说明
-   * @return 返回值说明
+   * @param channel 消息通道标识
+   * @return 该通道的单条消息成本（从配置中读取，未配置则返回 0）
    */
   public BigDecimal calculateCost(String channel) {
     MessageProperties.CostConfig cfg = messageProperties.getCost();

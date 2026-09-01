@@ -136,7 +136,7 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 注册 Micrometer 监控指标。
    *
-   * @param meterRegistry 参数说明
+   * @param meterRegistry Micrometer 指标注册器，用于注册缓存容量、命中率、驱逐数等监控指标
    */
   @PostConstruct
   public void registerMetrics(@Autowired(required = false) MeterRegistry meterRegistry) {
@@ -184,8 +184,8 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 获取或编译模板 AST。
    *
-   * @param template 参数说明
-   * @return 返回值说明
+   * @param template 待编译的原始模板字符串
+   * @return 编译后的模板 AST；若缓存命中则直接返回缓存对象
    */
   private TemplateAst getOrCompile(String template) {
     return astCache.get(
@@ -199,8 +199,8 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 将模板编译为 AST。
    *
-   * @param template 参数说明
-   * @return 返回值说明
+   * @param template 待编译的原始模板字符串
+   * @return 编译后的模板 AST 指令列表包装对象
    */
   private TemplateAst compile(String template) {
     List<TemplateAst.AstInstruction> instructions = new ArrayList<>();
@@ -261,9 +261,9 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 查找下一个特殊标记的位置（$、{ 等模板语法起始字符）。
    *
-   * @param template 参数说明
-   * @param fromIndex 参数说明
-   * @return 返回值说明
+   * @param template 原始模板字符串
+   * @param fromIndex 从此位置开始向后搜索
+   * @return 下一个特殊标记的起始位置；若不存在则返回模板长度
    */
   private int findNextSpecial(String template, int fromIndex) {
     int len = template.length();
@@ -282,9 +282,9 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 使用 AST 渲染模板。
    *
-   * @param ast 参数说明
-   * @param params 参数说明
-   * @return 返回值说明
+   * @param ast 编译后的模板 AST
+   * @param params 渲染参数 key→value 映射
+   * @return 渲染后的字符串
    */
   private String renderAst(TemplateAst ast, Map<String, Object> params) {
     StringBuilder result = new StringBuilder();
@@ -324,9 +324,9 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 渲染单个变量（含管道过滤器）。
    *
-   * @param expression 参数说明
-   * @param params 参数说明
-   * @return 返回值说明
+   * @param expression 含可选管道过滤器的变量表达式（如 "user.name|truncate:20"）
+   * @param params 渲染参数 key→value 映射
+   * @return 渲染后的字符串（null 值返回空字符串）
    */
   private String renderVar(String expression, Map<String, Object> params) {
     String[] parts = expression.split("\\|");
@@ -341,9 +341,9 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 应用管道过滤器（委托至 {@link TemplateFilterUtil}）。
    *
-   * @param value 参数说明
-   * @param filterExpr 参数说明
-   * @return 返回值说明
+   * @param value 过滤前的原始值
+   * @param filterExpr 过滤器表达式（如 "truncate:20" 或 "date:yyyy-MM-dd"）
+   * @return 过滤后的值
    */
   private Object applyFilter(Object value, String filterExpr) {
     return TemplateFilterUtil.applyFilter(value, filterExpr);
@@ -352,9 +352,9 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 解析占位符 key 对应的值（委托至 {@link TemplateFilterUtil}）。
    *
-   * @param params 参数说明
-   * @param key 参数说明
-   * @return 返回值说明
+   * @param params 渲染参数 key→value 映射
+   * @param key 待解析的占位符 key（支持嵌套路径如 "user.name"）
+   * @return 解析到的值；若 key 不存在则返回 null
    */
   private Object resolve(Map<String, Object> params, String key) {
     return TemplateFilterUtil.resolve(params, key);
@@ -363,8 +363,8 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * truthy 判定（委托至 {@link TemplateFilterUtil}）。
    *
-   * @param value 参数说明
-   * @return 返回值说明
+   * @param value 待判定的对象
+   * @return 若 value 为非 null、非 false、非空集合/字符串则返回 true
    */
   private boolean isTruthy(Object value) {
     return TemplateFilterUtil.isTruthy(value);
@@ -373,8 +373,8 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 校验必填参数。
    *
-   * @param params 参数说明
-   * @param requiredKeys 参数说明
+   * @param params 待校验的渲染参数
+   * @param requiredKeys 必须非空的 key 集合
    */
   private void validateRequired(Map<String, Object> params, Set<String> requiredKeys) {
     for (String key : requiredKeys) {
@@ -415,7 +415,7 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 当前缓存大小。
    *
-   * @return 返回值说明
+   * @return 当前缓存中的 AST 条目数
    */
   public long cacheSize() {
     return astCache.estimatedSize();
@@ -467,7 +467,7 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 缓存详细统计信息。
    *
-   * @return 返回值说明
+   * @return 包含缓存大小、命中率、驱逐数的格式化字符串
    */
   public String cacheStats() {
     return String.format(

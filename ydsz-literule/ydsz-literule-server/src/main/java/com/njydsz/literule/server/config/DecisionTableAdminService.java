@@ -32,7 +32,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 @Slf4j
 public class DecisionTableAdminService {
 
-    /** 节点 ID 取前缀长度 */
+    /** 节点 ID 前缀长度：取分布式 ID 前 8 位作为本节点标识 */
   private static final int NODE_ID_PREFIX_LENGTH = 8;
 
   private final RuleEngine ruleEngine;
@@ -64,24 +64,24 @@ public class DecisionTableAdminService {
   }
 
   /** 查询全部决策表
-   * @return 返回值说明
+   * @return 决策表定义列表
    */
   public List<DecisionTableDefinitionDTO> listAll() {
     return configProvider.loadAllTables();
   }
 
   /** 根据编码查询
-   * @param tableCode 参数说明
-   * @return 返回值说明
+   * @param tableCode 决策表唯一编码
+   * @return 决策表定义，不存在时返回 null
    */
   public DecisionTableDefinitionDTO getByCode(String tableCode) {
     return configProvider.findByCode(tableCode);
   }
 
   /** 新增/更新决策表
-   * @param definition 参数说明
-   * @param operator 参数说明
-   * @param changeDesc 参数说明
+   * @param definition 决策表定义
+   * @param operator 操作人用户名
+   * @param changeDesc 变更描述
    * @return 保存后的决策表定义
    */
   @Transactional(rollbackFor = Exception.class)
@@ -101,9 +101,9 @@ public class DecisionTableAdminService {
   }
 
   /** 切换启停
-   * @param tableCode 参数说明
-   * @param enabled 参数说明
-   * @param operator 参数说明
+   * @param tableCode 决策表唯一编码
+   * @param enabled 启用/禁用状态
+   * @param operator 操作人用户名
    */
   @Transactional(rollbackFor = Exception.class)
   public void toggle(String tableCode, boolean enabled, String operator) {
@@ -118,8 +118,8 @@ public class DecisionTableAdminService {
   }
 
   /** 删除决策表
-   * @param tableCode 参数说明
-   * @param operator 参数说明
+   * @param tableCode 决策表唯一编码
+   * @param operator 操作人用户名
    */
   @Transactional(rollbackFor = Exception.class)
   public void delete(String tableCode, String operator) {
@@ -131,9 +131,9 @@ public class DecisionTableAdminService {
   }
 
   /** dry-run：构建临时 DecisionTableRule 评估（不注册到引擎）
-   * @param tableCode 参数说明
-   * @param facts 参数说明
-   * @return 返回值说明
+   * @param tableCode 决策表唯一编码
+   * @param facts 评估事实数据
+   * @return 评估结果，不存在返回 null
    */
   public RuleResultVO dryRun(String tableCode, Map<String, Object> facts) {
     DecisionTableDefinitionDTO def = configProvider.findByCode(tableCode);

@@ -61,8 +61,8 @@ public class RichMediaRenderer {
   /**
    * 渲染为 HTML 邮件正文。
    *
-   * @param media 参数说明
-   * @return 返回值说明
+   * @param media 富媒体内容对象（含标题/正文/图片/附件/按钮等素材）
+   * @return HTML 格式的邮件正文；若 media 为 null 则返回 null
    */
   public String renderHtml(RichMediaContentDTO media) {
     if (media == null) {
@@ -135,8 +135,8 @@ public class RichMediaRenderer {
   /**
    * 渲染为 Markdown 格式（站内信/IM 通道使用）。
    *
-   * @param media 参数说明
-   * @return 返回值说明
+   * @param media 富媒体内容对象
+   * @return Markdown 格式的字符串；若 media 为 null 则返回 null
    */
   public String renderMarkdown(RichMediaContentDTO media) {
     if (media == null) {
@@ -182,8 +182,8 @@ public class RichMediaRenderer {
   /**
    * 渲染为纯文本摘要（SMS 通道降级使用）。
    *
-   * @param media 参数说明
-   * @return 返回值说明
+   * @param media 富媒体内容对象
+   * @return 纯文本摘要字符串；若 media 为 null 则返回 null
    */
   public String renderPlainText(RichMediaContentDTO media) {
     if (media == null) {
@@ -208,8 +208,8 @@ public class RichMediaRenderer {
   /**
    * 简易 Markdown 转 HTML（仅处理标题、粗体、链接、列表等基本格式）。
    *
-   * @param md 参数说明
-   * @return 返回值说明
+   * @param md Markdown 原始文本
+   * @return 转换后的 HTML 字符串；若 md 为 null 则返回空字符串
    */
   private String markdownToHtml(String md) {
     if (md == null) {

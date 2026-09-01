@@ -144,10 +144,10 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   /**
    * 按状态统计数量（带时间范围）。
    *
-   * @param status 参数说明
-   * @param start 参数说明
-   * @param end 参数说明
-   * @return 返回值说明
+   * @param status 消息发送状态（如 SUCCESS、FAILED 等）
+   * @param start 统计起始时间
+   * @param end 统计结束时间
+   * @return 符合状态的消息数量
    */
   private long countByStatus(MessageStatusEnum status, LocalDateTime start, LocalDateTime end) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();
@@ -160,11 +160,11 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   /**
    * 按状态 + 通道统计数量（带时间范围）。
    *
-   * @param status 参数说明
-   * @param channel 参数说明
-   * @param start 参数说明
-   * @param end 参数说明
-   * @return 返回值说明
+   * @param status 消息发送状态
+   * @param channel 消息通道标识（如 SMS、EMAIL）
+   * @param start 统计起始时间
+   * @param end 统计结束时间
+   * @return 符合状态+通道的消息数量
    */
   private long countByStatusAndChannel(
       MessageStatusEnum status, String channel, LocalDateTime start, LocalDateTime end) {
@@ -179,10 +179,10 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   /**
    * 按回执状态统计数量（带时间范围）。
    *
-   * @param status 参数说明
-   * @param start 参数说明
-   * @param end 参数说明
-   * @return 返回值说明
+   * @param status 回执状态（如 DELIVERED、READ、CLICKED 等）
+   * @param start 统计起始时间
+   * @param end 统计结束时间
+   * @return 符合回执状态的消息数量
    */
   private long countByReceiptStatus(
       ReceiptStatusEnum status, LocalDateTime start, LocalDateTime end) {
@@ -358,9 +358,9 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   /**
    * 规范化时间范围：start 为 null 时取 24h 前，end 为 null 时取当前时间。
    *
-   * @param start 参数说明
-   * @param end 参数说明
-   * @return 返回值说明
+   * @param start 统计起始时间（为空时默认取 end 前 24 小时）
+   * @param end 统计结束时间（为空时默认取当前时间）
+   * @return 包含 actualStart 和 actualEnd 的时间范围数组
    */
   private LocalDateTime[] normalizeRange(LocalDateTime start, LocalDateTime end) {
     LocalDateTime actualEnd = end != null ? end : LocalDateTime.now();
@@ -371,8 +371,8 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   /**
    * 保留两位小数。
    *
-   * @param value 参数说明
-   * @return 返回值说明
+   * @param value 原始浮点值
+   * @return 保留两位小数的结果
    */
   private double round2(double value) {
     return Math.round(value * 100.0) / 100.0;
