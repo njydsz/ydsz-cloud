@@ -94,12 +94,12 @@ public class WeComAppChannel implements MessageChannel {
 
     String accessToken = getAccessToken(cfg);
     if (accessToken == null) {
-      return MessageResult.fail(CHANNEL_TYPE, "获取企微 access_token 失败");
+      return MessageResult.fail(CHANNEL_TYPE, null, "获取企微 access_token 失败", "获取企微 access_token 失败", null);
     }
 
     String receiver = request.getReceiver();
     if (!StringUtils.hasText(receiver)) {
-      return MessageResult.fail(CHANNEL_TYPE, "接收人(userId)不能为空");
+      return MessageResult.fail(CHANNEL_TYPE, null, "接收人(userId)不能为空", "接收人(userId)不能为空", null);
     }
 
     Map<String, Object> payload = buildPayload(request, cfg.getAgentId(), receiver);
@@ -125,13 +125,13 @@ public class WeComAppChannel implements MessageChannel {
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
         log.error("[WECOM_APP] 发送失败: errcode={} errmsg={}", errcode, errmsg);
-        return MessageResult.fail(CHANNEL_TYPE, "errcode=" + errcode + ", errmsg=" + errmsg);
+        return MessageResult.fail(CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg, "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
       log.error("[WECOM_APP] 发送失败: status={}", response.getStatusCode());
-      return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
+      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[WECOM_APP] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

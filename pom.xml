@@ -278,11 +278,7 @@
                 <artifactId>ydsz-common-search</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-seata</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            <!-- ydsz-common-seata 管理项已随模块移除（2026-09-01 对标清理 P1） -->
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-config</artifactId>
@@ -846,12 +842,9 @@
                 <version>${rocketmq.spring.version}</version>
             </dependency>
 
-            <!-- Seata 分布式事务（AT 模式） -->
-            <dependency>
-                <groupId>org.apache.seata</groupId>
-                <artifactId>seata-spring-boot-starter</artifactId>
-                <version>${seata.version}</version>
-            </dependency>
+            <!-- Seata 分布式事务管理项已于 2026-09-01 移除（对标清理 P1）：
+                 全仓 0 个 @GlobalTransactional 使用点，ydsz-common-seata 模块已删除。
+                 引入真实分布式事务场景时，连同 seata.version 属性与部署文档一并恢复。 -->
 
             <!-- MinIO -->
             <dependency>

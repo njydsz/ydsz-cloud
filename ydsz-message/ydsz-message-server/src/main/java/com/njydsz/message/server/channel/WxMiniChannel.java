@@ -84,7 +84,7 @@ public class WxMiniChannel implements MessageChannel {
   @Override
   public MessageResult send(MessageRequest request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, "微信小程序接收人(OpenID)不能为空");
+      return MessageResult.fail(CHANNEL_TYPE, null, "微信小程序接收人(OpenID)不能为空", "微信小程序接收人(OpenID)不能为空", null);
     }
 
     MessageProperties.WxMiniConfig config = messageProperties.getWxMini();
@@ -98,7 +98,7 @@ public class WxMiniChannel implements MessageChannel {
     try {
       String accessToken = getAccessToken(config);
       if (accessToken == null) {
-        return MessageResult.fail(CHANNEL_TYPE, "获取微信 access_token 失败");
+        return MessageResult.fail(CHANNEL_TYPE, null, "获取微信 access_token 失败", "获取微信 access_token 失败", null);
       }
 
       String url =
@@ -143,12 +143,12 @@ public class WxMiniChannel implements MessageChannel {
             request.getReceiver(),
             resultBody != null ? resultBody.get("errcode") : "N/A",
             errMsg);
-        return MessageResult.fail(CHANNEL_TYPE, "微信小程序发送失败: " + errMsg);
+        return MessageResult.fail(CHANNEL_TYPE, null, "微信小程序发送失败: " + errMsg, "微信小程序发送失败: " + errMsg, null);
       }
     } catch (Exception e) {
       log.error(
           "[WxMiniChannel] 发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 
