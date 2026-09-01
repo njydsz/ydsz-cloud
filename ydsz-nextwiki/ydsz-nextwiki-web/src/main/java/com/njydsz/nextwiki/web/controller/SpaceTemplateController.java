@@ -22,6 +22,7 @@ import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -162,45 +163,45 @@ public class SpaceTemplateController {
 
   /** 创建模板请求 */
   @lombok.Data
-  @io.swagger.v3.oas.annotations.media.Schema(description = "创建模板请求")
+  @Schema(description = "创建模板请求")
   public static class CreateTemplateRequest {
-    @io.swagger.v3.oas.annotations.media.Schema(description = "模板名称", required = true)
+    @Schema(description = "模板名称", required = true)
     @jakarta.validation.constraints.NotBlank(message = "模板名称不能为空")
     private String name;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "模板描述")
+    @Schema(description = "模板描述")
     private String description;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "模板分类：general / project / meeting / knowledge")
+    @Schema(description = "模板分类：general / project / meeting / knowledge")
     private String category;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "模板结构JSON（定义目录树）", required = true)
+    @Schema(description = "模板结构JSON（定义目录树）", required = true)
     @jakarta.validation.constraints.NotBlank(message = "模板结构不能为空")
     private String structureJson;
   }
 
   /** 更新模板请求 */
   @lombok.Data
-  @io.swagger.v3.oas.annotations.media.Schema(description = "更新模板请求")
+  @Schema(description = "更新模板请求")
   public static class UpdateTemplateRequest {
-    @io.swagger.v3.oas.annotations.media.Schema(description = "模板名称")
+    @Schema(description = "模板名称")
     private String name;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "模板描述")
+    @Schema(description = "模板描述")
     private String description;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "模板分类")
+    @Schema(description = "模板分类")
     private String category;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "模板结构JSON")
+    @Schema(description = "模板结构JSON")
     private String structureJson;
   }
 
   /** 使用模板请求 */
   @lombok.Data
-  @io.swagger.v3.oas.annotations.media.Schema(description = "使用模板创建空间请求")
+  @Schema(description = "使用模板创建空间请求")
   public static class UseTemplateRequest {
-    @io.swagger.v3.oas.annotations.media.Schema(description = "新空间名称", required = true)
+    @Schema(description = "新空间名称", required = true)
     @jakarta.validation.constraints.NotBlank(message = "空间名称不能为空")
     private String spaceName;
   }

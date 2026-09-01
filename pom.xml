@@ -89,10 +89,8 @@
         <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
         <!-- JaCoCo：测试破零配套（2026-09-01），覆盖率报告与后续增量门禁使用 -->
         <jacoco.version>0.8.12</jacoco.version>
-        <!-- seata.version 与 sentry.version 属性均已移除（2026-09-01 对标清理 P1）：
-             - seata：ydsz-common-seata 模块 0 使用点已删除，声明随行移除；
-             - sentry：ydsz-common-sentry 实为自研 OTel 告警/监控模块，从不依赖 Sentry SDK，
-               此版本属性此前仅管理未消费。 -->
+        <!-- Resilience4j（Spring Cloud CircuitBreaker 官方实现，替代自研熔断引擎 2026-09-01） -->
+        <resilience4j.version>2.4.0</resilience4j.version>
 
         <ttl.version>2.14.5</ttl.version>
         <disruptor.version>3.4.4</disruptor.version>
@@ -598,12 +596,30 @@
                 <version>${dynamic-datasource.version}</version>
             </dependency>
 
-            <!-- Sentinel 稳定性组件已于 2026-09-01 移除（对标清理 P1）：
-                 全仓 0 个使用点（无 import/@SentinelResource/规则配置），
-                 弹性容错由平台自研引擎 ydsz-common-safe（com.njydsz.common.safe.resilience）承担
-                 （网关 CircuitBreakerGlobalFilter + ydsz-common-feign 熔断适配器），
-                 第三方弹性库（Resilience4j 等）已按内网自研约束移除，决策详见 docs/ADR-0004-resilience-self-hosted.md。
-                 如未来需要引入限流规则中心，请连同 README 技术栈说明一并评估。 -->
+            <!-- Resilience4j + Spring Cloud CircuitBreaker（替代自研熔断引擎 2026-09-01）：
+                 - resilience4j-core / resilience4j-circuitbreaker：核心熔断能力
+                 - spring-cloud-starter-circuitbreaker-resilience4j：Spring Cloud Gateway 集成
+                 版本由 resilience4j.version 统一管控，传递依赖由 Spring Cloud BOM 管理。 -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-core</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-micrometer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-consumer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
 
             <!-- fastjson2: 统一版本管理（rocketmq-acl 5.3.0 传递依赖 2.0.43，需提升到项目版本） -->
             <dependency>
@@ -616,10 +632,6 @@
                 <artifactId>fastjson2-extension</artifactId>
                 <version>${fastjson2.version}</version>
             </dependency>
-
-            <!-- 弹性容错（熔断/重试）由平台自研引擎 ydsz-common-safe 提供，
-                 第三方弹性库（Resilience4j 等）已按内网自研约束移除，
-                 详见 docs/ADR-0004-resilience-self-hosted.md -->
 
 
 

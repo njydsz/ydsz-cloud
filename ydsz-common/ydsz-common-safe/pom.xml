@@ -107,10 +107,14 @@
             <artifactId>mybatis</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Resilience4j 核心熔断能力（替代自研引擎 2026-09-01） -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-consumer</artifactId>
         </dependency>
 
     </dependencies>

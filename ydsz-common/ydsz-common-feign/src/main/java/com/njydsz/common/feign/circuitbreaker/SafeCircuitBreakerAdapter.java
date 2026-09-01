@@ -3,21 +3,18 @@ package com.njydsz.common.feign.circuitbreaker;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.feign.config.FeignProperties;
-import com.njydsz.common.safe.resilience.CircuitBreaker;
-import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
-import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 
 /**
- * 平台自研熔断器适配器。
+ * 基于 Resilience4j 的 Feign 熔断器适配器。
  *
- * <p>封装自研弹性引擎 {@link com.njydsz.common.safe.resilience.CircuitBreaker} 实例，
- * 实现 {@link FeignCircuitBreakerStrategy} 接口。 每个服务名称对应一个独立的熔断器实例。
- *
- * <p>历史说明：1.0.0 曾基于 Resilience4j；因内网项目不允许引入第三方弹性库竞品，
- * 现改为平台自研引擎（决策见 docs/ADR-0004-resilience-self-hosted.md），对外 API 保持兼容。
+ * <p>封装 Resilience4j {@link CircuitBreaker} 实现，实现 {@link FeignCircuitBreakerStrategy} 接口。
+ * 每个服务名称对应一个独立的熔断器实例，参数从 {@code ydsz.feign.circuit-breaker.*} 配置读取。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -31,7 +28,7 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
   private final CircuitBreakerRegistry registry;
 
   /**
-   * 构造自研熔断适配器。
+   * 构造熔断适配器。
    *
    * @param properties Feign 配置属性
    * @param statePersistence 状态持久化（可为 null）
@@ -44,7 +41,7 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
     this.properties = properties;
     this.statePersistence = statePersistence;
     this.metricsExporter = metricsExporter;
-    this.registry = new CircuitBreakerRegistry(CircuitBreakerConfig.ofDefaults());
+    this.registry = CircuitBreakerRegistry.ofDefaults();
   }
 
   @Override
@@ -70,15 +67,13 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
     return switch (getOrCreate(serviceName).getState()) {
       case OPEN -> CircuitBreakerState.OPEN;
       case HALF_OPEN -> CircuitBreakerState.HALF_OPEN;
-      case FORCED_OPEN -> CircuitBreakerState.FORCED_OPEN;
       default -> CircuitBreakerState.CLOSED;
     };
   }
 
   @Override
   public CircuitBreakerMetrics getMetrics(String serviceName) {
-    CircuitBreaker.Metrics metrics =
-        getOrCreate(serviceName).getMetrics();
+    CircuitBreaker.Metrics metrics = getOrCreate(serviceName).getMetrics();
     return new CircuitBreakerMetrics() {
       @Override
       public float getFailureRate() {
@@ -107,7 +102,9 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
 
       @Override
       public long getAverageDuration() {
-        return metrics.getAverageDurationMs();
+        // Resilience4j circuitbreaker 2.x Metrics API 不直接暴露时长聚合，依赖 Micrometer 聚合；
+        // 为兼容 FeignCircuitBreakerMetricsExporter 调用，保留返回 0（指标由 micrometer-resilience4j 采集）
+        return 0L;
       }
     };
   }
@@ -115,17 +112,19 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
   private CircuitBreaker getOrCreate(String serviceName) {
     return registry.computeIfAbsent(
         serviceName,
-        () -> {
+        name -> {
           // 熔断参数从配置读取（ydsz.feign.circuit-breaker.*），不再硬编码，支持按环境调优
           FeignProperties.CircuitBreaker cbConfig = properties.getCircuitBreaker();
-          return CircuitBreakerConfig.custom()
-              .failureRateThreshold(cbConfig.getFailureRateThreshold())
-              .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold())
-              .slowCallDurationThreshold(Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
-              .waitDurationInOpenState(Duration.ofMillis(cbConfig.getWaitDurationMs()))
-              .minimumNumberOfCalls(cbConfig.getMinimumNumberOfCalls())
-              .slidingWindowSize(cbConfig.getSlidingWindowSize())
-              .build();
+          CircuitBreakerConfig config =
+              CircuitBreakerConfig.custom()
+                  .failureRateThreshold(cbConfig.getFailureRateThreshold())
+                  .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold())
+                  .slowCallDurationThreshold(Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
+                  .waitDurationInOpenState(Duration.ofMillis(cbConfig.getWaitDurationMs()))
+                  .minimumNumberOfCalls(cbConfig.getMinimumNumberOfCalls())
+                  .slidingWindowSize(cbConfig.getSlidingWindowSize())
+                  .build();
+          return registry.circuitBreaker(name, config);
         });
   }
 }

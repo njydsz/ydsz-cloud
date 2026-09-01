@@ -1,8 +1,8 @@
 package com.njydsz.common.feign.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -15,14 +15,14 @@ import com.njydsz.common.feign.config.FeignConfiguration;
 import com.njydsz.common.feign.config.FeignProperties;
 
 /**
- * 平台自研熔断器自动配置类。
+ * Resilience4j 熔断器自动配置类。
  *
- * <p>当配置启用时，自动注册基于自研弹性引擎的熔断器策略。
+ * <p>当配置启用时，自动注册基于 Resilience4j 的 Feign 熔断器策略。
  *
  * <p><b>生效条件：</b>
  *
  * <ul>
- *   <li>classpath 中存在自研引擎 {@code CircuitBreaker}
+ *   <li>classpath 中存在 Resilience4j {@code CircuitBreaker}
  *   <li>{@code ydsz.feign.circuit-breaker.enabled=true}
  *   <li>尚未注册其他 {@link FeignCircuitBreakerStrategy} Bean
  * </ul>
@@ -30,15 +30,14 @@ import com.njydsz.common.feign.config.FeignProperties;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @AutoConfiguration(after = FeignConfiguration.class)
-@ConditionalOnClass(com.njydsz.common.safe.resilience.CircuitBreaker.class)
+@ConditionalOnClass(CircuitBreaker.class)
 @ConditionalOnProperty(
     prefix = "ydsz.feign.circuit-breaker",
     name = "enabled",
     havingValue = "true")
 public class CircuitBreakerFeignConfiguration {
-
-  private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerFeignConfiguration.class);
 
   /**
    * 注册熔断器指标导出器。
@@ -59,7 +58,7 @@ public class CircuitBreakerFeignConfiguration {
   }
 
   /**
-   * 注册自研熔断器策略 Bean。
+   * 注册 Resilience4j 熔断器策略 Bean。
    *
    * <p>自动注入 {@link CircuitBreakerStatePersistence}（用于状态持久化） 和 {@link
    * FeignCircuitBreakerMetricsExporter}（用于指标自动注册）。
@@ -82,7 +81,7 @@ public class CircuitBreakerFeignConfiguration {
     if (exporter != null) {
       exporter.setCircuitBreakerStrategy(adapter);
     }
-    LOG.info("[Feign] 使用平台自研熔断器策略");
+    log.info("[Feign] 使用 Resilience4j 熔断器策略");
     return adapter;
   }
 }

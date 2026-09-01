@@ -99,10 +99,14 @@
         </dependency>
 
         <!--
-            P0-A2: 网关熔断 — 平台自研弹性引擎（ydsz-common-safe resilience 包）。
-            复用 common-sentry 提供的共享 CircuitBreakerRegistry；
+            P0-A2: 网关熔断 — Resilience4j (spring-cloud-starter-circuitbreaker-resilience4j)。
+            替代 2026-09-01 之前的平台自研弹性引擎（ydsz-common-safe resilience 包）；
             响应式集成采用 Mono.defer + 许可获取 + doOnSuccess/doOnError 三段式手动记录。
         -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
 
         <!-- Actuator 健康检查 -->
         <dependency>

@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +22,6 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
-import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
-import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ChannelScore;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ScoreConfig;
@@ -68,11 +68,11 @@ public class ChannelRouter {
   private final Map<String, CircuitBreaker> breakerCache = new ConcurrentHashMap<>();
 
   /**
-   * D-5: 从 MessageProperties.CircuitBreakerConfig 构建熔断配置，消除硬编码。
+   * D-5: 从 MessageProperties.CircuitBreakerConfig 构建 Resilience4j 熔断配置，消除硬编码。
    *
    * <p>在 {@link #initChannels()} 中构建，确保配置已注入完成。
    *
-   * @return 根据消息模块配置构建的熔断器配置对象
+   * @return 根据消息模块配置构建的 Resilience4j CircuitBreakerConfig
    */
   private CircuitBreakerConfig buildCircuitBreakerConfig() {
     MessageProperties.CircuitBreakerConfig cb = messageProperties.getCircuitBreaker();
@@ -88,16 +88,12 @@ public class ChannelRouter {
   }
 
   /**
-   * 收集所有 MessageChannel Bean 并按通道类型注册,同时为每个通道创建独立熔断器。
-   *
-   * <p>使用 {@link com.njydsz.common.sentry.resilience.CircuitBreaker} 封装平台自研弹性引擎，
-   * 符合《云顶编码规范》：业务模块不得直接使用底层熔断实现。
+   * 收集所有 MessageChannel Bean 并按通道类型注册，同时为每个通道创建 Resilience4j 熔断器。
    */
   @PostConstruct
   public void initChannels() {
     Map<String, MessageChannel> beans = applicationContext.getBeansOfType(MessageChannel.class);
-    CircuitBreakerConfig engineConfig =
-        buildCircuitBreakerConfig();
+    CircuitBreakerConfig engineConfig = buildCircuitBreakerConfig();
     CircuitBreakerRegistry engineRegistry = CircuitBreakerRegistry.of(engineConfig);
     for (MessageChannel channel : beans.values()) {
       String type = channel.channelType() == null ? "" : channel.channelType().trim().toUpperCase();
@@ -106,8 +102,7 @@ public class ChannelRouter {
         continue;
       }
       channelCache.put(type, channel);
-      // 使用 common-sentry CircuitBreaker 封装自研引擎，符合编码规范
-      breakerCache.put(type, new CircuitBreaker("ch-" + type, engineConfig, engineRegistry));
+      breakerCache.put(type, engineRegistry.circuitBreaker("ch-" + type, engineConfig));
     }
     log.info("[ChannelRouter] 已注册 {} 个消息通道(含熔断器): {}", channelCache.size(), channelCache.keySet());
   }
@@ -146,11 +141,11 @@ public class ChannelRouter {
     String channel = request.getChannel();
     MessageChannel target = route(channel);
     CircuitBreaker breaker = breakerCache.get(channel.trim().toUpperCase());
-    // 熔断开启时快速失败,不调用真实通道
-    if (breaker != null && !breaker.canExecute()) {
-      log.warn("[ChannelRouter] 通道熔断中,快速失败: channel={} state={}", channel, breaker.getState());
+    // 熔断开启时快速失败，不调用真实通道
+    if (breaker != null && breaker.getState() == CircuitBreaker.State.OPEN) {
+      log.warn("[ChannelRouter] 通道熔断中，快速失败: channel={} state={}", channel, breaker.getState());
       messageMetrics.recordChannelError(channel, "CIRCUIT_BREAKER");
-      return MessageResult.fail(channel, null, "通道熔断中,请稍后重试", "通道熔断中,请稍后重试", null);
+      return MessageResult.fail(channel, null, "通道熔断中，请稍后重试", "通道熔断中，请稍后重试", null);
     }
     long start = System.currentTimeMillis();
     try {
@@ -162,12 +157,12 @@ public class ChannelRouter {
           result.isSuccess() ? "SUCCESS" : "FAILED",
           cost,
           breaker == null ? "N/A" : breaker.getState());
-      // 业务失败(非异常)也计入熔断失败率
+      // 业务失败（非异常）也计入熔断失败率
       if (breaker != null) {
         if (result.isSuccess()) {
-          breaker.recordSuccess(cost, TimeUnit.MILLISECONDS);
+          breaker.onSuccess(cost, TimeUnit.MILLISECONDS);
         } else {
-          breaker.recordFailure(
+          breaker.onError(
               cost, TimeUnit.MILLISECONDS, new RuntimeException(result.getUserMessage()));
           // P2-4: 记录通道级业务错误指标
           messageMetrics.recordChannelError(channel, "BUSINESS_ERROR");
@@ -179,7 +174,7 @@ public class ChannelRouter {
     } catch (Exception e) {
       long cost = System.currentTimeMillis() - start;
       if (breaker != null) {
-        breaker.recordFailure(cost, TimeUnit.MILLISECONDS, e);
+        breaker.onError(cost, TimeUnit.MILLISECONDS, e);
       }
       // P2-4: 记录通道级异常指标
       messageMetrics.recordChannelError(channel, "EXCEPTION");
@@ -276,7 +271,7 @@ public class ChannelRouter {
 
     // 4. 全部失败，返回最后一个失败结果
     log.error(
-        "[ChannelRouter] dispatchWithScore: 所有通道均失败, lastError={}",
+        "[ChannelRouter] dispatchWithScore: 所有通道均失败， lastError={}",
         lastResult != null ? lastResult.getUserMessage() : "unknown");
     return lastResult;
   }
@@ -362,7 +357,7 @@ public class ChannelRouter {
         request.setParams(YdszJson.fromJsonToMap(templateParams, String.class, Object.class));
       } catch (Exception e) {
         log.warn(
-            "[ChannelRouter] templateParams 解析失败,忽略: msgId={}, err={}",
+            "[ChannelRouter] templateParams 解析失败，忽略: msgId={}, err={}",
             logVO.getMsgId(),
             e.getMessage());
       }

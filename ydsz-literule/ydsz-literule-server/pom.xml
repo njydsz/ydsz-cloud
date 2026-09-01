@@ -110,10 +110,15 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
-        <!-- 规则熔断：自研弹性引擎（RuleCircuitBreaker 直接使用） -->
+        <!-- 规则熔断：ydsz-common-safe + Resilience4j（RuleCircuitBreaker 直接 import Resilience4j） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+        <!-- Resilience4j 核心熔断能力（RuleCircuitBreaker 直接 import） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
         <!-- P1-6: 搜索 Provider SPI（规则定义搜索） -->
         <dependency>

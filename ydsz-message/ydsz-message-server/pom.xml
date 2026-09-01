@@ -125,10 +125,15 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
-        <!-- 通道熔断：自研弹性引擎（ChannelRouter 直接使用） -->
+        <!-- 通道熔断：ydsz-common-safe + Resilience4j（ChannelRouter 直接 import Resilience4j） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+        <!-- Resilience4j 核心熔断能力（ChannelRouter 直接 import） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
         <!-- P1-3: 事务性 Outbox 事件模式 -->
         <dependency>

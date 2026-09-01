@@ -107,10 +107,14 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-        <!-- 平台自研弹性引擎（熔断降级，替代第三方弹性库） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+        <!-- Resilience4j 核心熔断能力（替代自研引擎 2026-09-01） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
         <!-- SkyWalking Trace（可选） -->
         <dependency>

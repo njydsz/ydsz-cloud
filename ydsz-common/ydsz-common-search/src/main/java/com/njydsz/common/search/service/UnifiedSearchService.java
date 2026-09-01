@@ -10,12 +10,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import io.vavr.control.Try;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import com.njydsz.common.safe.resilience.CircuitBreaker;
-import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
-import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
 import com.njydsz.common.search.api.SearchFilter;
@@ -53,7 +55,7 @@ public class UnifiedSearchService {
   private final ThreadPoolTaskExecutor searchExecutor;
   private final BusinessRanker ranker;
 
-  /** 平台自研熔断器（common-safe 弹性引擎），提供标准化状态机与 HALF_OPEN 自动探测 */
+  /** Resilience4j 熔断器，提供标准化状态机与 HALF_OPEN 自动探测 */
   private final CircuitBreaker circuitBreaker;
 
   private final Semaphore searchConcurrencyLimit;
@@ -221,11 +223,8 @@ public class UnifiedSearchService {
       long textProcessMs = phaseTimer.lap();
       metrics.recordTextProcess(textProcessMs);
 
-      // P4-12: 使用平台自研熔断器判断是否允许请求通过
-      if (circuitBreaker.getState()
-              == CircuitBreaker.State.OPEN
-          || circuitBreaker.getState()
-              == CircuitBreaker.State.FORCED_OPEN) {
+      // Resilience4j 熔断器状态判断
+      if (circuitBreaker.getState() == CircuitBreaker.State.OPEN) {
         log.warn("[UnifiedSearch] 熔断器开启，拒绝搜索: state={}", circuitBreaker.getState());
         return SearchResponse.empty(request.getPage(), request.getPageSize());
       }
@@ -253,18 +252,26 @@ public class UnifiedSearchService {
 
       SearchResponse response;
       try {
-        // P4-12: 使用 CircuitBreaker 包装搜索执行，自动统计成功/失败
+        // 使用 Resilience4j Try + CircuitBreaker 包装搜索执行，自动统计成功/失败
         List<SearchProvider<?>> providers = providerRegistry.getProviders(request.getTypes());
         long engineStart = System.nanoTime();
         response =
-            circuitBreaker.executeSupplier(
-                () -> {
-                  if (providers.isEmpty() || providers.size() == 1) {
-                    return searchWithTimeout(request);
-                  } else {
-                    return searchMultiType(request, providers);
-                  }
-                });
+            Try.ofSupplier(
+                    CircuitBreaker.decorateSupplier(
+                        circuitBreaker,
+                        () -> {
+                          if (providers.isEmpty() || providers.size() == 1) {
+                            return searchWithTimeout(request);
+                          } else {
+                            return searchMultiType(request, providers);
+                          }
+                        }))
+                .getOrElseGet(
+                    throwable -> {
+                      // CallNotPermittedException = 熔断开启；其他异常 = 搜索失败
+                      return SearchResponse.empty(request.getPage(), request.getPageSize());
+                    });
+
         long engineQueryMs = (System.nanoTime() - engineStart) / 1_000_000;
         metrics.recordEngineQuery(engineQueryMs);
 
@@ -509,15 +516,16 @@ public class UnifiedSearchService {
   }
 
   /**
-   * 创建平台自研熔断器实例。
+   * 创建 Resilience4j 熔断器实例。
    *
-   * <p>使用搜索配置中的熔断参数，启动滑动窗口统计。 配置包括：失败阈值、熔断等待时长、半开状态允许请求数。
+   * <p>使用搜索配置中的熔断参数，启动滑动窗口统计。
+   * 配置包括：失败阈值、熔断等待时长、半开状态允许请求数。
    *
    * @param properties 搜索配置
-   * @return 配置好的 CircuitBreaker 实例
+   * @return Resilience4j CircuitBreaker 实例
    */
   static CircuitBreaker createCircuitBreaker(SearchProperties properties) {
-    SearchProperties.CircuitBreakerConfig config = properties.getCircuitBreaker();
+    SearchProperties.CircuitBreakerConfig searchCb = properties.getCircuitBreaker();
 
     CircuitBreakerConfig cbConfig =
         CircuitBreakerConfig.custom()
@@ -527,9 +535,9 @@ public class UnifiedSearchService {
             // 失败率阈值达到 50% 时触发熔断
             .failureRateThreshold(50)
             // 熔断持续时间（秒）
-            .waitDurationInOpenState(Duration.ofSeconds(config.getWaitDuration()))
+            .waitDurationInOpenState(Duration.ofSeconds(searchCb.getWaitDuration()))
             // 半开状态允许通过的请求数
-            .permittedNumberOfCallsInHalfOpenState(config.getHalfOpenRequests())
+            .permittedNumberOfCallsInHalfOpenState(searchCb.getHalfOpenRequests())
             // 慢调用视为失败：搜索超过 80% 超时时长即视为慢调用
             .slowCallRateThreshold(80)
             .slowCallDurationThreshold(
@@ -538,23 +546,27 @@ public class UnifiedSearchService {
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .build();
 
-    CircuitBreakerRegistry registry = new CircuitBreakerRegistry(cbConfig);
+    CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(cbConfig);
     CircuitBreaker breaker = registry.circuitBreaker("search-circuit-breaker");
 
     // 注册状态变更监听器，输出结构化日志
     breaker
         .getEventPublisher()
         .onStateTransition(
-            event ->
+            (CircuitBreakerOnStateTransitionEvent event) ->
                 log.warn(
                     "[UnifiedSearch] 熔断器状态变更: {} -> {}",
                     event.getStateTransition().getFromState(),
-                    event.getStateTransition().getToState()))
+                    event.getStateTransition().getToState()));
+    breaker
+        .getEventPublisher()
         .onError(
             event ->
                 log.debug(
                     "[UnifiedSearch] 熔断器记录失败: {}",
-                    event.getThrowable() == null ? "unknown" : event.getThrowable().getMessage()))
+                    event.getThrowable() == null ? "unknown" : event.getThrowable().getMessage()));
+    breaker
+        .getEventPublisher()
         .onSuccess(event -> log.debug("[UnifiedSearch] 熔断器记录成功"));
 
     return breaker;

@@ -1,40 +1,37 @@
 package com.njydsz.literule.server.core;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
-import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
-import com.njydsz.common.sentry.resilience.CircuitBreaker;
-
 /**
- * 规则熔断器（基于 ydsz-common-sentry 统一熔断能力）。
+ * 规则熔断器（基于 Resilience4j）。
  *
- * <p>每个规则编码独立维护一个熔断器，底层委托 sentry {@link CircuitBreaker}（平台自研弹性引擎），
+ * <p>每个规则编码独立维护一个熔断器，底层委托 Resilience4j {@link CircuitBreaker}，
  * 提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
  *
- * <h3>1.0.0 变更</h3>
+ * <h3>1.0.0 变更（2026-09-01）</h3>
  *
- * <p>底层实现委托 {@code ydsz-common-sentry} 的 {@link CircuitBreaker} 封装（平台自研弹性引擎，
- * 决策见 docs/ADR-0004-resilience-self-hosted.md），获得以下收益：
+ * <p>底层实现改为 Resilience4j（{@code resilience4j-circuitbreaker}），移除自研引擎依赖：
  *
  * <ul>
- *   <li>全仓统一的熔断状态机与事件总线
- *   <li>符合编码规范第 27.5 节"禁止自建熔断器"的要求
- *   <li>修复历史缺陷：错误率阈值（0-1）此前直传百分比语义 API，实际生效阈值缩小 100 倍
+ *   <li>使用 Resilience4j {@link CircuitBreakerRegistry} 与 {@link CircuitBreaker} 标准 API
+ *   <li>使用 Resilience4j {@link CircuitBreakerConfig} 配置（阈值换算百分比语义）
  * </ul>
  *
  * @since 1.0.0
  * @author ydsz-team
- * @see com.njydsz.common.sentry.resilience.CircuitBreaker
  */
 @Slf4j
 public class RuleCircuitBreaker {
 
-  /** 熔断状态（与 sentry CircuitBreaker.State 一一对应） */
+  /** 熔断状态（与 Resilience4j CircuitBreaker.State 兼容） */
   public enum State {
     /** 关闭：正常评估 */
     CLOSED,
@@ -48,10 +45,10 @@ public class RuleCircuitBreaker {
   private final int minEvaluations;
   private final long openStateMs;
 
-  /** 共享的自研引擎注册表（所有规则共用配置模板） */
+  /** 共享的 Resilience4j 注册表（所有规则共用配置模板） */
   private final CircuitBreakerRegistry sharedRegistry;
 
-  /** 每个规则一个独立熔断器（sentry 封装） */
+  /** 每个规则一个独立熔断器（Resilience4j 实例） */
   private final ConcurrentMap<String, CircuitBreaker> breakers = new ConcurrentHashMap<>();
 
   /**
@@ -72,13 +69,13 @@ public class RuleCircuitBreaker {
     this.minEvaluations = Math.max(1, minEvaluations);
     this.openStateMs = openStateMs;
 
-    // 构建共享的自研引擎配置（阈值 0-1 换算为百分比语义）
+    // 构建共享的 Resilience4j 配置（阈值 0-1 换算为百分比语义）
     CircuitBreakerConfig config =
         CircuitBreakerConfig.custom()
             .failureRateThreshold((float) (errorRateThreshold * 100))
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
             .slidingWindowSize(this.minEvaluations)
-            .waitDurationInOpenState(java.time.Duration.ofMillis(openStateMs))
+            .waitDurationInOpenState(Duration.ofMillis(openStateMs))
             .minimumNumberOfCalls(this.minEvaluations)
             .permittedNumberOfCallsInHalfOpenState(1)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
@@ -104,8 +101,7 @@ public class RuleCircuitBreaker {
     if (breaker == null) {
       return true;
     }
-    // 使用 sentry CircuitBreaker 统一 canExecute API
-    return breaker.canExecute();
+    return breaker.getState() != CircuitBreaker.State.OPEN;
   }
 
   /**
@@ -119,15 +115,13 @@ public class RuleCircuitBreaker {
         breakers.computeIfAbsent(
             ruleCode,
             k ->
-                new CircuitBreaker(
-                    "literule-" + k, buildBreakerConfig(), sharedRegistry));
+                sharedRegistry.circuitBreaker(
+                    "literule-" + k, buildBreakerConfig()));
 
     if (success) {
-      // 使用 sentry CircuitBreaker 统一 recordSuccess API
-      breaker.recordSuccess(0, TimeUnit.MILLISECONDS);
+      breaker.onSuccess(0, TimeUnit.MILLISECONDS);
     } else {
-      // 使用 sentry CircuitBreaker 统一 recordFailure API
-      breaker.recordFailure(
+      breaker.onError(
           0, TimeUnit.MILLISECONDS, new RuntimeException("Rule evaluation failure"));
     }
 
@@ -157,19 +151,19 @@ public class RuleCircuitBreaker {
         .failureRateThreshold((float) (errorRateThreshold * 100))
         .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
         .slidingWindowSize(minEvaluations)
-        .waitDurationInOpenState(java.time.Duration.ofMillis(openStateMs))
+        .waitDurationInOpenState(Duration.ofMillis(openStateMs))
         .minimumNumberOfCalls(minEvaluations)
         .permittedNumberOfCallsInHalfOpenState(1)
         .automaticTransitionFromOpenToHalfOpenEnabled(true)
         .build();
   }
 
-  /** 将 sentry CircuitBreaker.State 转换为本地 State */
-  private static State toLocalState(CircuitBreaker.State sentryState) {
-    return switch (sentryState) {
+  /** 将 Resilience4j CircuitBreaker.State 转换为本地 State */
+  private static State toLocalState(CircuitBreaker.State engineState) {
+    return switch (engineState) {
       case OPEN -> State.OPEN;
       case HALF_OPEN -> State.HALF_OPEN;
-      case CLOSED -> State.CLOSED;
+      default -> State.CLOSED;
     };
   }
 
@@ -181,7 +175,6 @@ public class RuleCircuitBreaker {
   public void reset(String ruleCode) {
     CircuitBreaker removed = breakers.remove(ruleCode);
     if (removed != null) {
-      // 从注册表中移除，释放资源
       sharedRegistry.remove("literule-" + ruleCode);
     }
   }

@@ -1,8 +1,11 @@
 package com.njydsz.common.sentry.config;
 
+import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +21,6 @@ import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.common.sentry.spi.MetricsCollector;
-import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
-import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
@@ -31,16 +32,14 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  *   <li>{@link MicrometerMetricsCollector}：Micrometer 指标采集（优先）
  *   <li>{@link InMemoryMetricsCollector}：内存指标采集（降级）
  *   <li>{@link SystemMetricsCollector}：系统资源指标（CPU/内存/磁盘/GC）
- *   <li>{@link CircuitBreaker}：ELK/Loki 通道独立熔断器（基于平台自研弹性引擎）
+ *   <li>{@link CircuitBreaker}：ELK/Loki 通道独立熔断器（基于 Resilience4j）
  * </ul>
  *
- * <h3>1.0.0 变更</h3>
+ * <h3>1.0.0 变更（2026-09-01）</h3>
  *
  * <ul>
- *   <li>熔断底层改为平台自研弹性引擎（common-safe resilience 包），移除第三方弹性库依赖
- *   <li>新增自研 {@code CircuitBreakerRegistry} 共享 Bean，统一管理熔断器配置
- *   <li>修复历史缺陷：SentryProperties 失败率阈值（0-1）此前直传百分比语义 API，
- *       实际生效阈值缩小 100 倍；现已正确换算
+ *   <li>熔断底层改为 Resilience4j（{@code resilience4j-circuitbreaker}），移除自研引擎依赖
+ *   <li>新增 Resilience4j {@code CircuitBreakerRegistry} 共享 Bean，统一管理熔断器配置
  * </ul>
  *
  * @author ydsz-team
@@ -69,11 +68,6 @@ public class MetricsAutoConfiguration {
         name = "primary",
         havingValue = "micrometer",
         matchIfMissing = true)
-    /**
-     * micrometer metrics collector。
-     * @param meterRegistry 参数
-     * @return 结果
-     */
     public MicrometerMetricsCollector micrometerMetricsCollector(MeterRegistry meterRegistry) {
       return new MicrometerMetricsCollector(meterRegistry);
     }
@@ -87,10 +81,6 @@ public class MetricsAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(MetricsCollector.class)
   @ConditionalOnProperty(prefix = "ydsz.sentry.metrics", name = "primary", havingValue = "memory")
-  /**
-   * in memory metrics。
-   * @return 结果
-   */
   public InMemoryMetricsCollector inMemoryMetricsCollector() {
     return new InMemoryMetricsCollector();
   }
@@ -122,61 +112,57 @@ public class MetricsAutoConfiguration {
   }
 
   /**
-   * 注册共享的自研 CircuitBreakerRegistry。
+   * 注册 Resilience4j 共享熔断器注册中心。
    *
-   * <p>使用 Sentry 配置的默认熔断参数创建全局 Registry， 所有熔断器（ELK/Loki 通道）共享此
-   * Registry 以便统一管理与事件订阅。指标导出请订阅各熔断器的 事件发布器并桥接 Micrometer。
+   * <p>使用 Sentry 配置的默认熔断参数创建全局 Registry，
+   * 所有熔断器（ELK/Loki 通道）共享此 Registry 以便统一管理与事件订阅。
+   * 若 Spring 容器已存在 Resilience4j {@code CircuitBreakerRegistry} Bean（由 spring-cloud-starter-circuitbreaker-resilience4j 等自动装配），
+   * 则本方法不生效（@ConditionalOnMissingBean 保证唯一性）。
    *
    * @param properties 监控配置
-   * @return 共享的自研 CircuitBreakerRegistry
+   * @return Resilience4j 共享 CircuitBreakerRegistry
    */
   @Bean
-  @ConditionalOnMissingBean(
-      beanTypes = CircuitBreakerRegistry.class)
-  public CircuitBreakerRegistry circuitBreakerRegistry(
-      SentryProperties properties) {
+  @ConditionalOnMissingBean(CircuitBreakerRegistry.class)
+  public CircuitBreakerRegistry circuitBreakerRegistry(SentryProperties properties) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     CircuitBreakerConfig config =
         CircuitBreakerConfig.custom()
-            // SentryProperties 阈值为 0-1 比例，换算为引擎百分比语义
+            // SentryProperties 阈值为 0-1 比例，换算为 Resilience4j 百分比语义
             .failureRateThreshold((float) (cb.getFailureRateThreshold() * 100))
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
             .slidingWindowSize(cb.getSlidingWindowSize())
-            .waitDurationInOpenState(java.time.Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))
+            .waitDurationInOpenState(Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))
             .minimumNumberOfCalls(10)
             .permittedNumberOfCallsInHalfOpenState(1)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .build();
-    return new CircuitBreakerRegistry(config);
+    log.info("[Sentry] Resilience4j CircuitBreakerRegistry 初始化完成");
+    return CircuitBreakerRegistry.of(config);
   }
 
   /**
    * 为 ELK（Logstash）日志通道装配独立熔断器。
    *
    * @param properties 监控配置
+   * @param registry 共享注册中心
    * @return ELK 通道专用熔断器
    */
   @Bean("elkCircuitBreaker")
   @ConditionalOnMissingBean(name = "elkCircuitBreaker")
   @ConditionalOnProperty(prefix = "ydsz.sentry.logging.elk", name = "enabled", havingValue = "true")
-  /**
-   * elk circuit breaker。
-   * @param properties 参数
-   * @return 结果
-   */
-  public CircuitBreaker elkCircuitBreaker(SentryProperties properties) {
+  public CircuitBreaker elkCircuitBreaker(
+      SentryProperties properties, CircuitBreakerRegistry registry) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
-    return new CircuitBreaker(
-        "elk-logstash",
-        cb.getFailureRateThreshold(),
-        cb.getSlidingWindowSize(),
-        cb.getHalfOpenAfterSeconds() * 1000L);
+    CircuitBreakerConfig config = buildChannelConfig(cb);
+    return CircuitBreaker.fromRegistry("elk-logstash", config, registry);
   }
 
   /**
    * 为 Loki 日志通道装配独立熔断器。
    *
    * @param properties 监控配置
+   * @param registry 共享注册中心
    * @return Loki 通道专用熔断器
    */
   @Bean("lokiCircuitBreaker")
@@ -186,25 +172,28 @@ public class MetricsAutoConfiguration {
       name = "enabled",
       havingValue = "true",
       matchIfMissing = true)
-  /**
-   * loki circuit breaker。
-   * @param properties 参数
-   * @return 结果
-   */
-  public CircuitBreaker lokiCircuitBreaker(SentryProperties properties) {
+  public CircuitBreaker lokiCircuitBreaker(
+      SentryProperties properties, CircuitBreakerRegistry registry) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
-    return new CircuitBreaker(
-        "loki",
-        cb.getFailureRateThreshold(),
-        cb.getSlidingWindowSize(),
-        cb.getHalfOpenAfterSeconds() * 1000L);
+    CircuitBreakerConfig config = buildChannelConfig(cb);
+    return CircuitBreaker.fromRegistry("loki", config, registry);
+  }
+
+  /** 构建通道熔断配置（SentryProperties 0-1 比例 → Resilience4j 百分比）。 */
+  private static CircuitBreakerConfig buildChannelConfig(SentryProperties.CircuitBreakerConfig cb) {
+    return CircuitBreakerConfig.custom()
+        .failureRateThreshold((float) (cb.getFailureRateThreshold() * 100))
+        .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+        .slidingWindowSize(cb.getSlidingWindowSize())
+        .waitDurationInOpenState(Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))
+        .minimumNumberOfCalls(10)
+        .permittedNumberOfCallsInHalfOpenState(1)
+        .automaticTransitionFromOpenToHalfOpenEnabled(true)
+        .build();
   }
 
   /** 容器关闭时停止系统指标采集线程。 */
   @PreDestroy
-  /**
-   * destroy。
-   */
   public void destroy() {
     if (systemMetricsScheduler != null) {
       systemMetricsScheduler.shutdown();

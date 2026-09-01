@@ -3,8 +3,11 @@ package com.njydsz.gateway.filter;
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,10 +23,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.common.safe.resilience.CallNotPermittedException;
-import com.njydsz.common.safe.resilience.CircuitBreaker;
-import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
-import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayErrorWriter;
@@ -32,10 +31,9 @@ import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.PathGuard;
 
 /**
- * 网关熔断全局过滤器（P0-A2）。
+ * 网关全局熔断过滤器（P0-A2，基于 Resilience4j）。
  *
- * <p>基于平台自研弹性引擎 {@link CircuitBreakerRegistry}（复用 common-sentry 提供的共享注册中心），
- * 按路由 ID 维护独立熔断器，对下游调用失败率超阈值时快速失败并返回 503，
+ * <p>按路由 ID 维护独立熔断器，对下游调用失败率超阈值时快速失败并返回 503，
  * 防止下游服务雪崩时网关被拖垮：
  *
  * <ul>
@@ -45,24 +43,49 @@ import com.njydsz.gateway.config.PathGuard;
  *   <li>探测成功恢复 CLOSED，失败重新 OPEN
  * </ul>
  *
- * <p><b>响应式集成：</b>以 Mono.defer + 许可获取 + doOnSuccess/doOnError 三段式手动记录替代
- * 第三方弹性库的响应式算子（订阅时获取许可、完成时记录成败，语义等价）。
+ * <h3>配置方式（任选其一）</h3>
+ *
+ * <p>1. spring.cloud.gateway 内置过滤器（全局路由自动生效）：
+ *
+ * <pre>
+ * spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *         - id: userinfo-service
+ *           uri: lb://ydsz-userinfo
+ *           predicates:
+ *             - Path=/api/user/**
+ *           filters:
+ *             - name: CircuitBreaker
+ *               args:
+ *                 name: userinfoCircuitBreaker
+ *                 fallbackUri: forward:/fallback/userinfo
+ * </pre>
+ *
+ * <p>2. 本过滤器（按路由名称细粒度控制 + 指标接入 {@link GatewayMetrics}）：
+ *
+ * <pre>
+ * ydsz:
+ *   gateway:
+ *     circuit-breaker:
+ *       failure-rate-threshold: 50
+ *       wait-duration-in-open-state-ms: 10000
+ *       sliding-window-size: 10
+ *       minimum-number-of-calls: 5
+ * </pre>
+ *
+ * <h3>响应式集成</h3>
+ *
+ * <p>以 Mono.defer + 许可获取 + doOnSuccess/doOnError 三段式手动记录替代
+ * Resilience4j 预置响应式算子（订阅时获取许可、完成时记录成败，语义等价）。
  *
  * <p><b>豁免路径：</b>健康检查 / 认证入口等白名单路径不参与熔断，避免探针失败导致 K8s 摘除网关实例。
  *
- * <p><b>配置项（前缀 {@code ydsz.gateway.circuit-breaker}）：</b>
+ * <p><b>处理顺序：</b>{@code HIGHEST_PRECEDENCE + 45}，位于限流（+30）之后，路由转发（+100）之前。
  *
- * <pre>
- * failure-rate-threshold: 50        # 失败率阈值（百分比）
- * wait-duration-in-open-state: 10s  # OPEN 状态持续时间
- * sliding-window-size: 10           # 滑动窗口大小（次数）
- * minimum-number-of-calls: 5        # 最少调用次数（低于此不参与判定）
- * </pre>
- *
- * <p>执行顺序：{@code HIGHEST_PRECEDENCE + 45}，位于限流（+30）之后，路由转发（+100）之前。
- *
- * @since 1.0.0
  * @author ydsz-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component
@@ -133,12 +156,14 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
         circuitBreakerRegistry.circuitBreaker(routeId, defaultCircuitBreakerConfig());
     registerStateMetrics(routeId, circuitBreaker);
 
-    // 三段式手动记录（替代第三方弹性库的响应式算子）：
+    // 三段式手动记录（替代 Resilience4j 预置响应式算子）：
     // 订阅时获取许可 → 完成记录成功 → 异常记录失败；熔断中直接抛 CallNotPermittedException
     return Mono.defer(
             () -> {
               if (!circuitBreaker.tryAcquirePermission()) {
-                return Mono.error(new CallNotPermittedException(circuitBreaker));
+                return Mono.error(
+                    io.github.resilience4j.circuitbreaker.CallNotPermittedException
+                        .createCallNotPermittedException(circuitBreaker));
               }
               long startNanos = System.nanoTime();
               return chain
@@ -146,19 +171,18 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
                   .doOnSuccess(
                       v ->
                           circuitBreaker.onSuccess(
-                              elapsedMs(startNanos), TimeUnit.MILLISECONDS))
+                              java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(
+                                  System.nanoTime() - startNanos)))
                   .doOnError(
                       t ->
                           circuitBreaker.onError(
-                              elapsedMs(startNanos), TimeUnit.MILLISECONDS, t));
+                              java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(
+                                  System.nanoTime() - startNanos),
+                              t));
             })
         .onErrorResume(
-            CallNotPermittedException.class, e -> rejectCircuitOpen(exchange, routeId));
-  }
-
-  /** 计算已流逝毫秒。 */
-  private static long elapsedMs(long startNanos) {
-    return Math.max(0L, (System.nanoTime() - startNanos) / 1_000_000L);
+            io.github.resilience4j.circuitbreaker.CallNotPermittedException.class,
+            e -> rejectCircuitOpen(exchange, routeId));
   }
 
   /**
@@ -174,13 +198,14 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
         .slidingWindowSize(slidingWindowSize)
         .minimumNumberOfCalls(minimumNumberOfCalls)
         .permittedNumberOfCallsInHalfOpenState(permittedNumberOfCallsInHalfOpenState)
+        .automaticTransitionFromOpenToHalfOpenEnabled(true)
         .build();
   }
 
   /**
    * 为路由注册熔断器状态指标监听（每个路由仅注册一次）。
    *
-   * <p>将自研引擎状态机事件映射为 {@code ydsz_gateway_circuit_breaker_state} 指标
+   * <p>将 Resilience4j 状态机事件映射为 {@code ydsz_gateway_circuit_breaker_state} 指标
    * （0=CLOSED, 1=OPEN, 2=HALF_OPEN），供 Grafana 观测网关熔断状态。
    *
    * @param routeId 路由 ID
@@ -194,19 +219,15 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
     circuitBreaker
         .getEventPublisher()
         .onStateTransition(
-            event -> {
+            (CircuitBreakerOnStateTransitionEvent event) -> {
               int state;
-              switch (event.getStateTransition().getToState()) {
-                case OPEN:
-                case FORCED_OPEN:
-                  state = STATE_OPEN;
-                  break;
-                case HALF_OPEN:
-                  state = STATE_HALF_OPEN;
-                  break;
-                default:
-                  state = STATE_CLOSED;
-                  break;
+              CircuitBreaker.State toState = event.getStateTransition().getToState();
+              if (toState == CircuitBreaker.State.OPEN) {
+                state = STATE_OPEN;
+              } else if (toState == CircuitBreaker.State.HALF_OPEN) {
+                state = STATE_HALF_OPEN;
+              } else {
+                state = STATE_CLOSED;
               }
               gatewayMetrics.setCircuitBreakerState(routeId, state);
             });
@@ -231,13 +252,7 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
         exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID));
   }
 
-  /**
-   * 过滤器执行顺序：{@code HIGHEST_PRECEDENCE + 45}。
-   *
-   * <p>位于限流（+30）之后、路由转发（+100）之前：先完成鉴权与限流拦截，再对真实下游调用施加熔断保护。
-   *
-   * @return 顺序值
-   */
+  /** 过滤器执行顺序：{@code HIGHEST_PRECEDENCE + 45}。 */
   @Override
   public int getOrder() {
     return GatewayFilterOrder.CIRCUIT_BREAKER.getOrder();

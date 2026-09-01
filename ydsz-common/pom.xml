@@ -561,8 +561,8 @@
 
             <!-- fastjson2 版本覆盖 -->
 
-            <!-- 弹性容错已回归平台自研引擎 ydsz-common-safe（com.njydsz.common.safe.resilience），
-                 Resilience4j 版本覆盖条目已全部移除，决策详见 docs/ADR-0004-resilience-self-hosted.md -->
+            <!-- 弹性容错（熔断）由 Resilience4j 提供（替代自研引擎 2026-09-01），
+                 版本覆盖详见根 pom.xml resilience4j.version 属性。 -->
 
             <!-- jetbrains annotations -->
             <dependency>
@@ -586,11 +586,8 @@
                 <scope>runtime</scope>
             </dependency>
 
-            <!-- Sentinel 声明已于 2026-09-01 移除（对标清理 P1）：
-                 全仓 0 个使用点，弹性容错由平台自研引擎 ydsz-common-safe 提供，详见 docs/ADR-0004-resilience-self-hosted.md。 -->
-
-        </dependencies>
-    </dependencyManagement>
+    </dependencies>
+</dependencyManagement>
 
     <!-- 所有子模块继承的公共依赖 -->
     <dependencies>

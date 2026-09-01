@@ -21,6 +21,7 @@ import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.server.service.SpaceApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -217,43 +218,43 @@ public class SpaceController {
 
   /** 创建空间请求 */
   @lombok.Data
-  @io.swagger.v3.oas.annotations.media.Schema(description = "创建空间请求")
+  @Schema(description = "创建空间请求")
   public static class CreateSpaceRequest {
-    @io.swagger.v3.oas.annotations.media.Schema(description = "空间名称", required = true)
+    @Schema(description = "空间名称", required = true)
     @jakarta.validation.constraints.NotBlank(message = "空间名称不能为空")
     @jakarta.validation.constraints.Size(max = 128, message = "空间名称不能超过128个字符")
     private String name;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "空间描述")
+    @Schema(description = "空间描述")
     private String description;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "可见性：private / organization / public")
+    @Schema(description = "可见性：private / organization / public")
     private String visibility;
   }
 
   /** 更新空间请求 */
   @lombok.Data
-  @io.swagger.v3.oas.annotations.media.Schema(description = "更新空间请求")
+  @Schema(description = "更新空间请求")
   public static class UpdateSpaceRequest {
-    @io.swagger.v3.oas.annotations.media.Schema(description = "空间名称")
+    @Schema(description = "空间名称")
     private String name;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "空间描述")
+    @Schema(description = "空间描述")
     private String description;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "可见性：private / organization / public")
+    @Schema(description = "可见性：private / organization / public")
     private String visibility;
   }
 
   /** 添加成员请求 */
   @lombok.Data
-  @io.swagger.v3.oas.annotations.media.Schema(description = "添加成员请求")
+  @Schema(description = "添加成员请求")
   public static class AddMemberRequest {
-    @io.swagger.v3.oas.annotations.media.Schema(description = "目标用户ID", required = true)
+    @Schema(description = "目标用户ID", required = true)
     @jakarta.validation.constraints.NotBlank(message = "用户ID不能为空")
     private String userId;
 
-    @io.swagger.v3.oas.annotations.media.Schema(description = "角色：owner / admin / editor / viewer", required = true)
+    @Schema(description = "角色：owner / admin / editor / viewer", required = true)
     @jakarta.validation.constraints.NotBlank(message = "角色不能为空")
     private String role;
   }
