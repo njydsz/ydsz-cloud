@@ -121,14 +121,19 @@
 
 **测试实证暴露的新事实**（对照组用例发现）：POI 写引擎与读引擎的 headRowNumber 语义错位为**双向断裂**——旧写引擎默认导出首行空白，且自有文件读回必抛"Excel文件为空或没有表头行"；修复后写读 round-trip 全通。唯一业务写调用方 literule `DecisionTableExcelExporter.headRowNumber(0)` 经 clamp 兼容，行为不变。
 
-**P1（1-2 个迭代）** — ✅ 第 5、6 项已于 2026-09-01 完成（模块测试 28/28 通过，BUILD SUCCESS）
+**P1（1-2 个迭代）** — ✅ 全部 4 项落地任务（第 5-8 项）已于 2026-09-01 完成（模块测试 42/42 通过，BUILD SUCCESS）
 5. ✅ 公式注入防护对齐 OWASP 前缀集 + XLSX/CSV 分路径策略（`FormulaInjectionGuard` 重写：六前缀 `= + - @ \t \r`；XLSX 用前导空格阻断"另存 CSV 二次求值"链、CSV 保留撇号转义；`ValueFormatter`/`SuperFastExcelWriter` 共 4 处调用点切换；`FormulaInjectionGuardTest` 6 用例）
 6. ✅ Spring 三入口配置接线统一 + ExcelHealthIndicator 注册（**部分完成**：接线与 Bean 注册已落地；健康检查仍为配置回显，tempDirWritable 等真实探测未实做，随 P2 处理）
    - 接线修复：`ExcelTemplate` read/write 三方法、`ExcelExportHelper`（新增构造注入）均接线 ExcelConfig；`ExcelAutoConfiguration` 为 ExportHelper 传入 config；新增 `ExcelReader.config()` 流式方法（与 `ExcelWriter.config()` 对称，读路径此前无配置入口）；ExcelHealthIndicator 经嵌套配置类注册（隔离 spring-boot-health optional 依赖的类引用，规避 NoClassDefFoundError）
    - 修复中暴露的三个**更深断点**（均已修复）：① `ExcelWriter` 的 `ValueFormatter` 构造时固化 defaults，链式 `config()` 变更后不重建 → 统一 `rebuildValueFormatter()`；② `UltraFastCellWriter`（typed POI 写**主路径**）完全不接收 ExcelConfig，公式注入消毒在该路径失效（P1-1 修复时漏网）→ 接入 config；③ `finish()` 非幂等，`doWrite`（单 Sheet 自动 finish）后显式 `finish()` 触发已关闭 workbook 二次写入（POI: Cannot write data, document seems to have been closed already）→ 以既有 `writeCompleted` 标志幂等化
    - 新增 `ExcelSpringWiringTest` 5 用例：以"配置属性 → 输出行为差异"为证（default-date-format 改变日期列输出、formula-injection-protection=false 关闭消毒、动态导出表头仍在首行、HealthIndicator Bean 注册且 UP）
 7. ✅ DataValidator 委托标准 Validator（双路径：classpath 存在 Jakarta Bean Validation 实现时委托标准 `Validator`——全约束覆盖含 `@NotBlank`/`@Email`/自定义约束，此前静默放行；实现缺席时回退内置五规则，保持 L1 零强制依赖。错误提示字段名优先映射 `@ExcelProperty.value()`。测试域引入 spring-boot-starter-validation，`DataValidatorTest` 7 用例——核心证据为 @NotBlank 空串与 @Email 格式两类"旧路径必然漏放"的约束被实际拦截）
-8. fast 路径 Sheet 选择 + zip bomb 膨胀比防护
+8. ✅ fast 路径 Sheet 选择 + zip bomb 膨胀比防护（`SuperFastExcelReader` 重写 + `ExcelReader` fast 分支接线）
+   - **Sheet 选择**：`read(Path)` 改经 `ZipFile` 随机访问，解析 `xl/workbook.xml`（sheet 声明顺序）与 `xl/_rels/workbook.xml.rels`（rId→Target 映射）定位目标 sheet。sheetName 精确匹配（未命中抛"Sheet不存在"，与 POI 路径语义对齐）；sheetIndex 0-based 按声明顺序（越界回落第一个，对齐 POI getSheet）；workbook.xml/rels 缺失时回落第一个 sheet entry（兼容非标准生成器）。此前 fast 引擎固定读 zip 第一个 sheet entry，`ExcelFacade.read(...).sheet("名")` 在 fast 路径被静默忽略
+   - **zip bomb 防护**：所有解压读取（sheet XML / sharedStrings / InputStream 落盘）经 `BoundedInputStream` 限流——解压后累计超过 `maxReadFileSizeMB` 即中断抛异常。以"解压后绝对量上限"阻断，与 POI ZipSecureFile 膨胀比（MIN_INFLATE_RATIO）防护等价且更直观；此前依赖 `ZipEntry.getSize()`（zip 头可伪造、常为 -1）事后检查，临时文件分支先写满磁盘再校验，防护形同虚设
+   - **config 接线**：`ExcelReader` fast 分支传递 `ExcelConfig` / `sheetName` / `sheetIndex` / `skipEmptyRows`（默认值同步对齐 POI 路径语义），`maxReadFileSizeMB` 等配置此前对 fast 引擎无效（内部恒用 defaults()）
+   - `read(InputStream)` 改为 bounded 落临时文件后委托 `read(Path)`（InputStream 无法随机访问）
+   - 新增 `FastReaderSheetSelectionAndZipBombTest` 7 用例：双 Sheet 文件按 sheetName/sheetIndex 选择、默认第一个、按名未命中即失败、越界回落；zip bomb 双入口（sheet entry / SST entry 解压后 50MB + maxReadFileSizeMB=1）均被 BoundedInputStream 拦截——炸弹文件压缩后 KB 级，绕过基于压缩体积的预检查，验证的是解压阶段限流
 9. 完成架构决策（方案 A/B/C）评审——建议与语雀架构文档同步
 
 **P2（随迭代）**

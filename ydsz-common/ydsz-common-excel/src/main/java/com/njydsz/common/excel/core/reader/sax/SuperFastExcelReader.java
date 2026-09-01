@@ -3,17 +3,21 @@ package com.njydsz.common.excel.core.reader.sax;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +32,8 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.ObjectInstantiator;
 /**
  * 超高性能 Excel 读取器，基于 XML 流式解析实现
  *
- * <p>完全不依赖 POI，不使用 OPCPackage、SharedStringsTable、SAXParser 等组件， 直接通过 ZipInputStream 解压 xlsx 文件，手动解析
- * XML 提取数据。
+ * <p>完全不依赖 POI，不使用 OPCPackage、SharedStringsTable、SAXParser 等组件， 直接通过 ZIP/XML
+ * 手动解析提取数据。
  *
  * <h3>核心优化</h3>
  *
@@ -41,6 +45,19 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.ObjectInstantiator;
  *   <li>文件大小限制：通过 ExcelConfig.maxReadFileSizeMB 防止超大文件 OOM
  *   <li>MethodHandle 字段访问：使用 MethodHandle 替代反射
  * </ul>
+ *
+ * <h3>Sheet 选择（P1-4 修复）</h3>
+ *
+ * <p>{@link #read(Path)} 通过 {@link ZipFile} 随机访问解析 {@code xl/workbook.xml} 与 {@code
+ * xl/_rels/workbook.xml.rels}，按 sheetName（精确匹配）或 sheetIndex（workbook 声明顺序， 0-based，
+ * 越界回落第一个——与 POI 路径 getSheet 语义对齐）定位目标 sheet。 此前固定读取 zip 中第一个 sheet
+ * entry，忽略调用方的 Sheet 选择配置。
+ *
+ * <h3>zip bomb 膨胀比防护（P1-4 修复）</h3>
+ *
+ * <p>所有解压读取（SST / sheet XML / InputStream 落盘）均经 {@link BoundedInputStream} 限流：
+ * 单个部件解压后超过 {@code maxReadFileSizeMB} 即中断并抛出异常——压缩前体积再小也无法膨胀越限。
+ * 此前依赖 {@code ZipEntry.getSize()}（来自 zip 头，可伪造，常为 -1）事后检查， 临时文件分支先写满磁盘再校验，防护形同虚设。
  *
  * <h3>性能对比</h3>
  *
@@ -94,107 +111,363 @@ public class SuperFastExcelReader {
   /** 最大读取行数限制，0 表示不限制 */
   int maxRows = 0;
 
-  /** 是否跳过空行，默认true */
-  boolean skipEmptyRows = true;
+  /** 是否跳过空行，默认 false（与 POI 路径默认语义对齐） */
+  boolean skipEmptyRows = false;
 
   /**
-   * 读取 XLSX 文件
+   * Excel 全局配置。P1-4 修复：此前 fast 引擎内部恒用 ExcelConfig.defaults()，
+   * maxReadFileSizeMB 等配置对本引擎无效。
+   */
+  private ExcelConfig excelConfig;
+
+  /** Sheet 选择：按名称（精确匹配，优先于 sheetIndex） */
+  private String sheetName;
+
+  /** Sheet 选择：按 workbook 声明顺序（0-based，越界回落第一个，与 POI getSheet 对齐） */
+  private Integer sheetIndex;
+
+  /**
+   * 读取 XLSX 文件。
    *
-   * <p>对大文件采用流式处理策略：当 sheet XML 超过内存阈值时， 自动切换为临时文件管道方式，避免 OOM。
+   * <p>InputStream 无法随机访问（Sheet 选择需先读 workbook.xml 再定位 entry）， bounded 落临时文件后走
+   * {@link #read(Path)}。
    *
    * @param inputStream xlsx 文件输入流
    * @throws Exception 解析异常
    */
   public void read(InputStream inputStream) throws Exception {
-    // 文件大小安全检查
-    ExcelConfig config = ExcelConfig.defaults();
-    int maxFileSizeMB = config.getMaxReadFileSizeMB();
-
-    ZipInputStream zis = new ZipInputStream(inputStream);
-    ZipEntry entry;
-
-    SharedStringsReader ssReader = null;
-    InputStream sheetStream = null;
-    Path tempSheetFile = null;
-
+    long limit = inflateLimitBytes();
+    Path tempFile = Files.createTempFile("ydsz_xlsx_", ".zip");
     try {
-      while ((entry = zis.getNextEntry()) != null) {
-        String name = entry.getName();
-
-        if ("xl/sharedStrings.xml".equals(name)) {
-          // SST 解析：流式读取，内存中只保留字符串索引
-          ssReader = new SharedStringsReader();
-          ssReader.parse(zis);
-        } else if (name.startsWith("xl/worksheets/sheet") && name.endsWith(".xml")) {
-          // Sheet 数据：根据大小决定加载策略
-          long estimatedSize = entry.getSize();
-
-          if (estimatedSize > IN_MEMORY_THRESHOLD || estimatedSize == -1) {
-            // 大文件或未知大小：使用临时文件
-            tempSheetFile = Files.createTempFile("ydsz_sheet_", ".xml");
-            Files.copy(zis, tempSheetFile, StandardCopyOption.REPLACE_EXISTING);
-            long actualSize = Files.size(tempSheetFile);
-
-            // 文件大小安全检查
-            long maxSizeBytes = (long) maxFileSizeMB * 1024 * 1024;
-            if (actualSize > maxSizeBytes) {
-              Files.deleteIfExists(tempSheetFile);
-              throw ExcelReadException.invalidFormat(
-                  name, "文件大小超过限制: " + (actualSize / 1024 / 1024) + "MB > " + maxFileSizeMB + "MB");
-            }
-
-            // 如果实际大小小于阈值，直接加载到内存并删除临时文件
-            if (actualSize <= IN_MEMORY_THRESHOLD) {
-              sheetStream = new ByteArrayInputStream(Files.readAllBytes(tempSheetFile));
-              Files.deleteIfExists(tempSheetFile);
-              tempSheetFile = null;
-            } else {
-              sheetStream = new BufferedInputStream(Files.newInputStream(tempSheetFile));
-              LOG.debug("大文件模式: sheet XML 大小={}MB, 使用临时文件流式解析", actualSize / 1024 / 1024);
-            }
-          } else {
-            // 小文件：直接加载到内存
-            sheetStream = new ByteArrayInputStream(readAllBytes(zis, (int) estimatedSize));
-          }
-          break;
-        }
-        zis.closeEntry();
-      }
-
-      if (sheetStream == null) {
-        throw ExcelReadException.invalidFormat("unknown", "Sheet 不存在");
-      }
-
-      try {
-        SheetXmlReader sheetReader = new SheetXmlReader(this, ssReader);
-        sheetReader.parse(sheetStream);
-      } finally {
-        sheetStream.close();
-      }
+      // bounded：压缩流本身也限 maxReadFileSizeMB，防止超大文件落盘
+      Files.copy(
+          new BoundedInputStream(inputStream, limit),
+          tempFile,
+          StandardCopyOption.REPLACE_EXISTING);
+      read(tempFile);
     } finally {
-      // 确保临时文件被清理
-      if (tempSheetFile != null) {
-        try {
-          Files.deleteIfExists(tempSheetFile);
-        } catch (IOException e) {
-          LOG.warn("清理临时文件失败: {}", tempSheetFile, e);
-        }
-      }
-      zis.close();
+      Files.deleteIfExists(tempFile);
     }
   }
 
-  /** 读取 InputStream 的所有字节（带预估大小，减少扩容开销） */
-  private byte[] readAllBytes(InputStream is, int estimatedSize) throws IOException {
-    int capacity = Math.max(8192, estimatedSize + 1024);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream(capacity);
-    byte[] buffer = new byte[8192];
+  /**
+   * 读取 XLSX 文件（文件源，推荐入口）。
+   *
+   * <p>通过 {@link ZipFile} 随机访问：先解析 workbook.xml 与 rels 定位目标 sheet， 再流式解析 SST 与
+   * sheet XML。对大 sheet 采用流式处理策略：超过内存阈值时使用临时文件管道，避免 OOM。
+   *
+   * @param file xlsx 文件路径
+   * @throws Exception 解析异常
+   */
+  public void read(Path file) throws Exception {
+    try (ZipFile zipFile = new ZipFile(file.toFile())) {
+      String targetEntry = resolveTargetSheetEntry(zipFile);
+
+      ZipEntry sheetEntry = zipFile.getEntry(targetEntry);
+      if (sheetEntry == null) {
+        throw ExcelReadException.invalidFormat(targetEntry, "Sheet 不存在");
+      }
+
+      // SST 解析：流式读取，内存中只保留字符串索引；bounded 防 sharedStrings.xml 膨胀攻击
+      SharedStringsReader ssReader = null;
+      ZipEntry sstEntry = zipFile.getEntry("xl/sharedStrings.xml");
+      if (sstEntry != null) {
+        ssReader = new SharedStringsReader();
+        try (InputStream is = bounded(zipFile.getInputStream(sstEntry))) {
+          ssReader.parse(is);
+        }
+      }
+
+      // Sheet 数据：bounded 复制到临时文件（大小可信化——zip 头的 getSize 可伪造），
+      // 再按实际大小决定内存加载或文件流式解析
+      Path tempSheetFile = Files.createTempFile("ydsz_sheet_", ".xml");
+      try {
+        Files.copy(
+            bounded(zipFile.getInputStream(sheetEntry)),
+            tempSheetFile,
+            StandardCopyOption.REPLACE_EXISTING);
+        long actualSize = Files.size(tempSheetFile);
+
+        if (actualSize <= IN_MEMORY_THRESHOLD) {
+          byte[] bytes = Files.readAllBytes(tempSheetFile);
+          Files.deleteIfExists(tempSheetFile);
+          tempSheetFile = null;
+          parseSheetStream(new ByteArrayInputStream(bytes), ssReader);
+        } else {
+          LOG.debug(
+              "大文件模式: sheet XML 大小={}MB, 使用临时文件流式解析", actualSize / 1024 / 1024);
+          try (InputStream sheetStream =
+              new BufferedInputStream(Files.newInputStream(tempSheetFile))) {
+            parseSheetStream(sheetStream, ssReader);
+          }
+        }
+      } finally {
+        if (tempSheetFile != null) {
+          try {
+            Files.deleteIfExists(tempSheetFile);
+          } catch (IOException e) {
+            LOG.warn("清理临时文件失败: {}", tempSheetFile, e);
+          }
+        }
+      }
+    }
+  }
+
+  /** 解析 sheet XML 流并通知监听器。 */
+  private void parseSheetStream(InputStream sheetStream, SharedStringsReader ssReader)
+      throws Exception {
+    SheetXmlReader sheetReader = new SheetXmlReader(this, ssReader);
+    sheetReader.parse(sheetStream);
+  }
+
+  // ==================== Sheet 选择（workbook.xml + rels 解析） ====================
+
+  /**
+   * 解析目标 sheet 的 zip entry 名。
+   *
+   * <p>优先级：sheetName（精确匹配，未命中抛异常）＞ sheetIndex（声明顺序，越界回落第一个）＞ 第一个 sheet。
+   * workbook.xml / rels 缺失或无映射时回落第一个 sheet entry（兼容非标准生成器）。
+   *
+   * @param zipFile zip 文件
+   * @return 目标 entry 名
+   * @throws IOException 读取异常
+   */
+  private String resolveTargetSheetEntry(ZipFile zipFile) throws IOException {
+    ZipEntry workbookEntry = zipFile.getEntry("xl/workbook.xml");
+    if (workbookEntry == null) {
+      return fallbackFirstSheetEntry(zipFile);
+    }
+
+    List<SheetRef> sheets;
+    try (InputStream is = bounded(zipFile.getInputStream(workbookEntry))) {
+      sheets = parseWorkbookSheets(new String(readAll(is), StandardCharsets.UTF_8));
+    }
+    if (sheets.isEmpty()) {
+      return fallbackFirstSheetEntry(zipFile);
+    }
+
+    Map<String, String> rels = new HashMap<>();
+    ZipEntry relsEntry = zipFile.getEntry("xl/_rels/workbook.xml.rels");
+    if (relsEntry != null) {
+      try (InputStream is = bounded(zipFile.getInputStream(relsEntry))) {
+        rels = parseRelationships(new String(readAll(is), StandardCharsets.UTF_8));
+      }
+    }
+
+    if (sheetName != null && !sheetName.isEmpty()) {
+      for (SheetRef sheet : sheets) {
+        if (sheetName.equals(sheet.name)) {
+          String entry = rels.get(sheet.rid);
+          if (entry != null) {
+            return toEntryName(entry);
+          }
+        }
+      }
+      // 对齐 POI 路径语义：按名未命中即失败（POI getSheet 返回 null → ExcelReader 抛"Sheet不存在"）
+      throw ExcelReadException.invalidFormat(sheetName, "Sheet不存在");
+    }
+
+    int index = sheetIndex != null ? sheetIndex : 0;
+    if (index < 0 || index >= sheets.size()) {
+      index = 0;
+    }
+    String entry = rels.get(sheets.get(index).rid);
+    if (entry == null) {
+      return fallbackFirstSheetEntry(zipFile);
+    }
+    return toEntryName(entry);
+  }
+
+  /** 回落：zip 中第一个 sheet entry（兼容 workbook.xml 缺失的非标准文件）。 */
+  private static String fallbackFirstSheetEntry(ZipFile zipFile) {
+    Enumeration<? extends ZipEntry> entries = zipFile.entries();
+    while (entries.hasMoreElements()) {
+      ZipEntry entry = entries.nextElement();
+      String name = entry.getName();
+      if (name.startsWith("xl/worksheets/sheet") && name.endsWith(".xml")) {
+        return name;
+      }
+    }
+    return "xl/worksheets/sheet1.xml";
+  }
+
+  /** 将 rels Target 转为 zip entry 名（rel 目标相对 xl/ 目录）。 */
+  private static String toEntryName(String target) {
+    if (target.startsWith("/")) {
+      return target.substring(1);
+    }
+    return "xl/" + target;
+  }
+
+  /** 解析 workbook.xml 中的 sheet 声明（保持声明顺序）。 */
+  private static List<SheetRef> parseWorkbookSheets(String xml) {
+    List<SheetRef> result = new ArrayList<>();
+    int pos = 0;
+    while (true) {
+      int start = xml.indexOf("<sheet ", pos);
+      if (start < 0) {
+        break;
+      }
+      int end = xml.indexOf('>', start);
+      if (end < 0) {
+        break;
+      }
+      String tag = xml.substring(start, end);
+      String name = extractAttribute(tag, "name");
+      String rid = extractAttribute(tag, "r:id");
+      if (rid == null) {
+        rid = extractAttribute(tag, "id");
+      }
+      if (name != null && rid != null) {
+        result.add(new SheetRef(xmlUnescape(name), rid));
+      }
+      pos = end + 1;
+    }
+    return result;
+  }
+
+  /** 解析 rels 中的 Id → Target 映射。 */
+  private static Map<String, String> parseRelationships(String xml) {
+    Map<String, String> result = new HashMap<>();
+    int pos = 0;
+    while (true) {
+      int start = xml.indexOf("<Relationship ", pos);
+      if (start < 0) {
+        break;
+      }
+      int endTag = xml.indexOf('>', start);
+      if (endTag < 0) {
+        break;
+      }
+      int selfClose = xml.indexOf("/>", start);
+      int end = (selfClose >= 0 && selfClose < endTag) ? selfClose : endTag;
+      String tag = xml.substring(start, end);
+      String id = extractAttribute(tag, "Id");
+      String target = extractAttribute(tag, "Target");
+      if (id != null && target != null) {
+        result.put(id, target);
+      }
+      pos = endTag + 1;
+    }
+    return result;
+  }
+
+  /** 从标签文本中提取属性值（支持双/单引号）。 */
+  private static String extractAttribute(String tag, String attr) {
+    int idx = tag.indexOf(attr + "=\"");
+    if (idx >= 0) {
+      int valueStart = idx + attr.length() + 2;
+      int valueEnd = tag.indexOf('"', valueStart);
+      if (valueEnd > valueStart) {
+        return tag.substring(valueStart, valueEnd);
+      }
+    }
+    idx = tag.indexOf(attr + "='");
+    if (idx >= 0) {
+      int valueStart = idx + attr.length() + 2;
+      int valueEnd = tag.indexOf('\'', valueStart);
+      if (valueEnd > valueStart) {
+        return tag.substring(valueStart, valueEnd);
+      }
+    }
+    return null;
+  }
+
+  /** 最小 XML 反转义（workbook sheet 名）。 */
+  private static String xmlUnescape(String s) {
+    return s
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+        .replace("&amp;", "&");
+  }
+
+  /** 读尽小部件（workbook.xml / rels，bounded 后体积可控）。 */
+  private static byte[] readAll(InputStream is) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
+    byte[] buffer = new byte[4096];
     int len;
     while ((len = is.read(buffer)) > 0) {
       baos.write(buffer, 0, len);
     }
     return baos.toByteArray();
   }
+
+  // ==================== zip bomb 防护 ====================
+
+  /** 解压安全上限（字节）：maxReadFileSizeMB。 */
+  private long inflateLimitBytes() {
+    return (long) excelConfig().getMaxReadFileSizeMB() * 1024L * 1024L;
+  }
+
+  /** 包一层解压限流（防膨胀攻击）。 */
+  private InputStream bounded(InputStream in) {
+    return new BoundedInputStream(in, inflateLimitBytes());
+  }
+
+  /** 生效的 ExcelConfig（未设置时回退默认值）。 */
+  ExcelConfig excelConfig() {
+    return excelConfig != null ? excelConfig : ExcelConfig.defaults();
+  }
+
+  /**
+   * 解压限流流：累计读取超过 limit 即抛异常。
+   *
+   * <p>zip bomb 的本质是"压缩前体积小、解压后巨大"——以解压后绝对量上限阻断， 与 POI
+   * ZipSecureFile 的膨胀比（MIN_INFLATE_RATIO）防护等价且更直观。
+   */
+  static final class BoundedInputStream extends FilterInputStream {
+
+    private final long limit;
+    private long totalRead = 0;
+
+    BoundedInputStream(InputStream in, long limit) {
+      super(in);
+      this.limit = limit;
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      int n = super.read(b, off, len);
+      if (n > 0) {
+        totalRead += n;
+        checkLimit();
+      }
+      return n;
+    }
+
+    @Override
+    public int read() throws IOException {
+      int c = super.read();
+      if (c >= 0) {
+        totalRead++;
+        checkLimit();
+      }
+      return c;
+    }
+
+    private void checkLimit() {
+      if (totalRead > limit) {
+        throw ExcelReadException.invalidFormat(
+            "zip", "解压内容超过安全上限（疑似 zip bomb 膨胀攻击）: limit=" + (limit / 1024 / 1024) + "MB");
+      }
+    }
+  }
+
+  /** workbook.xml 中的 sheet 声明（声明顺序 + rId）。 */
+  private static final class SheetRef {
+
+    final String name;
+    final String rid;
+
+    SheetRef(String name, String rid) {
+      this.name = name;
+      this.rid = rid;
+    }
+  }
+
+  // ==================== setter ====================
 
   /**
    * 设置列元数据数组
@@ -280,5 +553,32 @@ public class SuperFastExcelReader {
    */
   public void setSkipEmptyRows(boolean skipEmptyRows) {
     this.skipEmptyRows = skipEmptyRows;
+  }
+
+  /**
+   * 设置 Excel 全局配置（P1-4：maxReadFileSizeMB 等配置对 fast 引擎生效）
+   *
+   * @param excelConfig Excel 配置，null 时回退默认值
+   */
+  public void setExcelConfig(ExcelConfig excelConfig) {
+    this.excelConfig = excelConfig;
+  }
+
+  /**
+   * 设置目标 Sheet 名称（精确匹配，优先于 {@link #setSheetIndex(Integer)}）
+   *
+   * @param sheetName Sheet 名称
+   */
+  public void setSheetName(String sheetName) {
+    this.sheetName = sheetName;
+  }
+
+  /**
+   * 设置目标 Sheet 序号（workbook 声明顺序，0-based；越界回落第一个，与 POI getSheet 对齐）
+   *
+   * @param sheetIndex Sheet 序号
+   */
+  public void setSheetIndex(Integer sheetIndex) {
+    this.sheetIndex = sheetIndex;
   }
 }

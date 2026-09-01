@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -491,26 +492,32 @@ public class ExcelReader {
 
         if (config.isUseFastReader() && hasFileSource) {
           useFastReader = true;
-          String fastPath = filePath != null ? filePath : metadata.getFile().getAbsolutePath();
-          try (FileInputStream fis = new FileInputStream(fastPath)) {
-            SuperFastExcelReader superFastReader = new SuperFastExcelReader();
-            superFastReader.setColumnMetadataArray(columnMetadataArray);
-            // P0 修复：fast 路径列元数据此前恒为 null（仅 POI parseSheet 构建），
-            // 此处接入元数据工厂，由 SheetXmlReader 收集表头后按注解规则（index 优先、名称匹配）惰性构建
-            superFastReader.setMetadataFactory(
-                headerNames ->
-                    headerAnalyzer.analyzeClassMetadataFromNames(headerNames, new HashMap<>()));
-            superFastReader.setInstantiator(ASMFieldAccessor.getInstantiator(metadata.getClazz()));
-            superFastReader.setContext(context);
-            superFastReader.setListeners(listeners);
-            // headRowNumber 语义为 1-based 表头行号（1=第一行是表头），fast 引擎内部使用 0-based 索引
-            superFastReader.setHeadRowNumber(Math.max(0, metadata.getHeadRowNumber() - 1));
-            Integer maxRows = metadata.getMaxRows();
-            if (maxRows != null && maxRows > 0) {
-              superFastReader.setMaxRows(maxRows);
-            }
-            superFastReader.read(fis);
+          Path fastPath =
+              filePath != null ? Path.of(filePath) : metadata.getFile().toPath();
+          SuperFastExcelReader superFastReader = new SuperFastExcelReader();
+          superFastReader.setColumnMetadataArray(columnMetadataArray);
+          // P0 修复：fast 路径列元数据此前恒为 null（仅 POI parseSheet 构建），
+          // 此处接入元数据工厂，由 SheetXmlReader 收集表头后按注解规则（index 优先、名称匹配）惰性构建
+          superFastReader.setMetadataFactory(
+              headerNames ->
+                  headerAnalyzer.analyzeClassMetadataFromNames(headerNames, new HashMap<>()));
+          superFastReader.setInstantiator(ASMFieldAccessor.getInstantiator(metadata.getClazz()));
+          superFastReader.setContext(context);
+          superFastReader.setListeners(listeners);
+          // headRowNumber 语义为 1-based 表头行号（1=第一行是表头），fast 引擎内部使用 0-based 索引
+          superFastReader.setHeadRowNumber(Math.max(0, metadata.getHeadRowNumber() - 1));
+          Integer maxRows = metadata.getMaxRows();
+          if (maxRows != null && maxRows > 0) {
+            superFastReader.setMaxRows(maxRows);
           }
+          // P1-4：fast 引擎接入 ExcelConfig（解压限流等安全配置）与 Sheet 选择（sheetName/sheetIndex），
+          // skipEmptyRows 语义与 POI 路径对齐（metadata 缺省时不过滤空行）
+          superFastReader.setExcelConfig(config);
+          superFastReader.setSheetName(metadata.getSheetName());
+          superFastReader.setSheetIndex(metadata.getSheetIndex());
+          superFastReader.setSkipEmptyRows(Boolean.TRUE.equals(metadata.getSkipEmptyRows()));
+          // read(Path)：ZipFile 随机访问，支持 workbook.xml/rels 解析的 Sheet 选择与解压限流防护
+          superFastReader.read(fastPath);
           notifyEnd();
           ExcelMetrics.recordRead(
               Duration.ofNanos(System.nanoTime() - startTime),
