@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.domain.query.FlowCcQuery;
-import com.njydsz.workflow.domain.query.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
@@ -105,17 +104,6 @@ public interface FlowCcService {
    */
   long countMyCc(String tenantId, String userId, FlowCcQuery query);
 
-  /**
-   * 查"抄送我的"总数（已废弃）。
-   * 
-   *
-   * @param tenantId 参数说明
-   * @param userId 参数说明
-   * @param query 参数说明
-   * @return 返回值说明
-   */
-  @Deprecated
-  long countMyCc(String tenantId, String userId, FlowCcQueryDTO query);
 
   /**
    * 查"抄送我的"分页（VO 版本，避免 Controller 层接触 DO）

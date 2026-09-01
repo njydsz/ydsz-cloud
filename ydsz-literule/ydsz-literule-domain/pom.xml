@@ -21,6 +21,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
+        <!-- ydsz-common-event: DomainEvent 基类（RuleConfigRefreshEvent 继承） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
@@ -42,16 +43,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <!-- ydsz-common-json -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-        <!-- ExecutorUtils 线程池构建工具（ModelInputRegistry 使用） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-thread</artifactId>
         </dependency>
         <!-- ydsz-common-util: IdGenerator（RuleContext 使用） -->
         <dependency>
