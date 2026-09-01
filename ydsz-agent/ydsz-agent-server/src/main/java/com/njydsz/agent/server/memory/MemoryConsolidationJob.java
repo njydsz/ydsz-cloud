@@ -1,11 +1,12 @@
 package com.njydsz.agent.server.memory;
 
-import com.njydsz.agent.server.config.AgentProperties;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.njydsz.agent.server.config.AgentProperties;
 
 /**
  * 记忆整合定时任务（Dreaming 机制）。

@@ -3,14 +3,13 @@ package com.njydsz.agent.server.event;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.event.AgentDomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Agent 事件统一发布器

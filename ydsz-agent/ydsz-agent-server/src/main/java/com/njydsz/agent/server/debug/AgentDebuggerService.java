@@ -2,7 +2,6 @@ package com.njydsz.agent.server.debug;
 
 import java.util.List;
 
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
@@ -12,6 +11,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.trace.TraceMeta;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
  * Agent 调试服务

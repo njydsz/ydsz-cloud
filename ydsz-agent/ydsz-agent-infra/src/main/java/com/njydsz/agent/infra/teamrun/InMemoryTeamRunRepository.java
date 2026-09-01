@@ -7,10 +7,10 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.agent.domain.teamrun.TeamRun;
 import com.njydsz.agent.domain.teamrun.TeamRunRepository;
-
-import org.springframework.stereotype.Component;
 
 /**
  * 基于内存的 Team Run 仓储实现。

@@ -153,7 +153,9 @@ public class WebhookChannel implements MessageChannel {
       return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + statusCode, "HTTP " + statusCode, null);
     } catch (Exception e) {
       log.error("[WEBHOOK] 发送异常: url={} reason={}", maskUrl(webhookUrl), e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
+      return MessageResult.fail(
+          CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+          e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

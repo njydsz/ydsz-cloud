@@ -131,7 +131,9 @@ public class EmailChannel implements MessageChannel {
       return MessageResult.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
       log.error("[EMAIL] 发送失败: to={} reason={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
+      return MessageResult.fail(
+          CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+          e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

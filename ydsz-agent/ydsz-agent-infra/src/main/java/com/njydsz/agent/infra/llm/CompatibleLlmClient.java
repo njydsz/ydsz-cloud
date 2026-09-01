@@ -10,9 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-// CHECKSTYLE.OFF: RegexpSinglelineJava - WebClient 底层 Reactor Netty 连接器配置（CONNECT_TIMEOUT_MILLIS）
 import com.njydsz.common.json.tree.ObjectNode;
-import io.netty.channel.ChannelOption;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -72,6 +70,18 @@ public class CompatibleLlmClient implements LlmClient {
 
   /** 默认最大并发请求数 */
   private static final int DEFAULT_MAX_CONCURRENT = 50;
+
+  /** 连接建立超时（毫秒） */
+  private static final int CONNECT_TIMEOUT_MILLIS = 5000;
+
+  /** 单 Provider 最大连接数（同步 + 流式共用） */
+  private static final int MAX_CONNECTIONS = 100;
+
+  /** 空闲连接自动回收时间（秒） */
+  private static final int MAX_IDLE_SECONDS = 30;
+
+  /** 等待可用连接的超时（秒），超时快速失败 */
+  private static final int PENDING_ACQUIRE_SECONDS = 10;
 
   /** Provider 标识 */
   private final String provider;
@@ -145,9 +155,9 @@ public class CompatibleLlmClient implements LlmClient {
    */
   private static ConnectionProvider createConnectionProvider() {
     return ConnectionProvider.builder("agent-llm-shared")
-        .maxConnections(100)
-        .maxIdleTime(Duration.ofSeconds(30))
-        .pendingAcquireTimeout(Duration.ofSeconds(10))
+        .maxConnections(MAX_CONNECTIONS)
+        .maxIdleTime(Duration.ofSeconds(MAX_IDLE_SECONDS))
+        .pendingAcquireTimeout(Duration.ofSeconds(PENDING_ACQUIRE_SECONDS))
         .build();
   }
 
@@ -161,7 +171,7 @@ public class CompatibleLlmClient implements LlmClient {
    */
   private HttpClient createNettyHttpClient(ConnectionProvider provider) {
     return HttpClient.create(provider)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+        .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS)
         .responseTimeout(Duration.ofSeconds(this.timeoutSeconds));
   }
 

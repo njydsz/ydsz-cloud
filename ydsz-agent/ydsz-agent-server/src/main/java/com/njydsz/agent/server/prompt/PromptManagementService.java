@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import com.njydsz.agent.domain.vo.PromptVersionVO;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
@@ -17,6 +16,7 @@ import com.njydsz.agent.domain.dto.PromptVersionDTO;
 import com.njydsz.agent.domain.repository.PromptTemplateRepository;
 import com.njydsz.agent.domain.repository.PromptVersionRepository;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
+import com.njydsz.agent.domain.vo.PromptVersionVO;
 
 /**
  * Prompt 管理服务

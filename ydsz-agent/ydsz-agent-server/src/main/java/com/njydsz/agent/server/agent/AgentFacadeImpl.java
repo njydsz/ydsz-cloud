@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-
-import com.njydsz.common.thread.util.ExecutorUtils;
 import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +19,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.server.chat.ChatService;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * Agent 应用门面实现

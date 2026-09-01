@@ -11,11 +11,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Objects;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.document.DocumentFormat;
 import com.njydsz.agent.domain.document.DocumentRenderService;
 import com.njydsz.agent.domain.document.DocumentTemplate;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档渲染服务实现。

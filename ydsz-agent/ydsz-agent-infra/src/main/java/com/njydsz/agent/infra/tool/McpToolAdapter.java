@@ -5,9 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.tool.ToolDefinition;
 import com.njydsz.agent.server.config.AgentProperties;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * MCP 工具适配器

@@ -1,14 +1,5 @@
 package com.njydsz.agent.infra.memory;
 
-import com.njydsz.agent.domain.conversation.Conversation;
-import com.njydsz.agent.domain.gateway.LlmClient;
-import com.njydsz.agent.domain.memory.MemoryConsolidationService;
-import com.njydsz.agent.domain.memory.MemoryExtractedFact;
-import com.njydsz.agent.domain.model.ChatMessage;
-import com.njydsz.agent.domain.model.MessageRole;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +7,16 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.agent.domain.conversation.Conversation;
+import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.memory.MemoryConsolidationService;
+import com.njydsz.agent.domain.memory.MemoryExtractedFact;
+import com.njydsz.agent.domain.model.ChatMessage;
+import com.njydsz.agent.domain.model.MessageRole;
 
 /**
  * 基于 LLM 的记忆整合服务实现。

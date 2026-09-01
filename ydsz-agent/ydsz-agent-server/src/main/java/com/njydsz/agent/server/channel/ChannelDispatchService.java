@@ -5,13 +5,13 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.njydsz.agent.domain.channel.ChannelAdapter.ChannelStatus;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.channel.ChannelAdapter;
+import com.njydsz.agent.domain.channel.ChannelAdapter.ChannelStatus;
 import com.njydsz.agent.domain.channel.ChannelRequest;
 import com.njydsz.agent.domain.channel.ChannelResponse;
 import com.njydsz.agent.domain.channel.ChannelType;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 渠道调度服务。

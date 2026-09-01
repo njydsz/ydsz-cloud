@@ -1,12 +1,13 @@
 package com.njydsz.agent.infra.citation;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
 import com.njydsz.agent.domain.citation.Citation;
 import com.njydsz.agent.domain.citation.CitationGenerator;
 import com.njydsz.agent.domain.rag.TextChunk;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * 默认引用生成器实现。

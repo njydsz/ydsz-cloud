@@ -2,9 +2,10 @@ package com.njydsz.agent.infra.rag;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunk;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 恒等 Reranker（关闭重排序时的默认实现）

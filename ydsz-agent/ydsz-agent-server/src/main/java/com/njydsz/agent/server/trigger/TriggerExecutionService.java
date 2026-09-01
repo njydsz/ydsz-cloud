@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.njydsz.agent.domain.trigger.AgentTrigger;
-
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.agent.domain.trigger.AgentTrigger;
 
 /**
  * 触发器执行服务。

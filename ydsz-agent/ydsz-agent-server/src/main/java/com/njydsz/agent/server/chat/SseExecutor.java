@@ -9,10 +9,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * SSE 流式执行器（统一封装心跳保活、虚拟线程、断连检测、cleanup 逻辑）

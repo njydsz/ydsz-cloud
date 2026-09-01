@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.ExecutionPlan;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -23,7 +25,6 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Plan-and-Execute Agent 执行器

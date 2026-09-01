@@ -1,12 +1,13 @@
 package com.njydsz.agent.server.memory;
 
-import com.njydsz.agent.domain.event.AgentDomainEvent;
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import com.njydsz.agent.domain.event.AgentDomainEvent;
 
 /**
  * 对话结束事件监听器 — 触发实时记忆整合。

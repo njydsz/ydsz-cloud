@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.skill.LessonType;
 import com.njydsz.agent.domain.skill.SkillLesson;
 import com.njydsz.agent.domain.skill.SkillLessonRepository;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Skill 经验记录器。

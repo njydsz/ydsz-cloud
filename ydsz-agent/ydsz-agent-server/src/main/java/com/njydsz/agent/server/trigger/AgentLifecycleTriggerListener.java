@@ -3,9 +3,9 @@ package com.njydsz.agent.server.trigger;
 import java.util.Map;
 import java.util.Objects;
 
-import com.njydsz.agent.domain.event.AgentDomainEvent;
-
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.agent.domain.event.AgentDomainEvent;
 
 /**
  * Agent 生命周期事件触发器监听器。

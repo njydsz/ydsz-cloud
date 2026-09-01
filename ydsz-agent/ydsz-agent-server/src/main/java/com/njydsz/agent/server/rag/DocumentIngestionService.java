@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.njydsz.agent.domain.rag.VectorStore;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.TextChunker;
+import com.njydsz.agent.domain.rag.VectorStore;
 
 /**
  * 文档摄入服务

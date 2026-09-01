@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.njydsz.common.tenant.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -24,6 +23,7 @@ import com.njydsz.agent.server.event.AgentEventPublisher;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.quota.TenantQuotaService;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**

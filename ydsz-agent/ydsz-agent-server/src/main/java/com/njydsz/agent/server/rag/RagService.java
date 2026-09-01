@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.njydsz.common.docs.service.DocumentService;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.rag.Retriever;
@@ -14,6 +13,7 @@ import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
+import com.njydsz.common.docs.service.DocumentService;
 
 /**
  * RAG 检索服务

@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import com.njydsz.common.util.id.IdGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentDag;
@@ -31,6 +30,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * DAG 编排执行器（Node + Edge + State 图引擎）

@@ -1,6 +1,5 @@
 package com.njydsz.agent.server.health;
 
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 
@@ -10,6 +9,7 @@ import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 
 /**
  * Agent 模块健康检查。

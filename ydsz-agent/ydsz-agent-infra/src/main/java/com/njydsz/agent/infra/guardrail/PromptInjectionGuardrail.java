@@ -3,9 +3,10 @@ package com.njydsz.agent.infra.guardrail;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Prompt 注入检测护栏

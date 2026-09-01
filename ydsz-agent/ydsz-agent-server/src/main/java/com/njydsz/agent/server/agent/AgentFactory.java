@@ -1,6 +1,5 @@
 package com.njydsz.agent.server.agent;
 
-import com.njydsz.agent.server.rag.RagService;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
@@ -14,6 +13,7 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.agent.server.rag.RagService;
 
 /**
  * Agent 工厂

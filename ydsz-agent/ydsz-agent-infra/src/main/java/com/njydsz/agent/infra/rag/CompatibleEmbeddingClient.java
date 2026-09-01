@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.tree.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestClient;
 
@@ -13,6 +12,7 @@ import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.ObjectNode;
 
 /**
  * Embedding 客户端实现

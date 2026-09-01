@@ -9,16 +9,16 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import com.njydsz.agent.domain.teamrun.TeamRun;
 import com.njydsz.agent.domain.teamrun.TeamRunMember;
 import com.njydsz.agent.domain.teamrun.TeamRunMemberStatus;
 import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.domain.teamrun.TeamRunRepository;
 import com.njydsz.agent.domain.teamrun.TeamRunStatus;
-
 import com.njydsz.common.thread.util.ExecutorUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * Team Run 编排服务。

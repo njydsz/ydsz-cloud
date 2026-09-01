@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.trace.TraceMeta;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 内存执行链路记录器

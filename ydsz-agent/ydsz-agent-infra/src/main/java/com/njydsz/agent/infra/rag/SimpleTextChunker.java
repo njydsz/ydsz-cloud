@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.common.util.id.IdGenerator;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 固定大小分块器（带重叠）

@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-
 import javax.sql.DataSource;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +21,6 @@ import com.njydsz.agent.domain.gateway.Text2SQLService;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Text2SQL 基础实现（Schema-Aware Prompt + LLM 生成 SQL + 安全护栏 + JDBC 执行）。

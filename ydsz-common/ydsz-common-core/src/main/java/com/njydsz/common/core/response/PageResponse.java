@@ -1,5 +1,7 @@
 package com.njydsz.common.core.response;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -150,7 +152,7 @@ public class PageResponse<T> extends YdszResponse<T> {
     PageResponse<T> response = new PageResponse<>();
     response.setCode(YdszResultCode.SUCCESS.getCode());
     response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
-    response.setData((T) java.util.Collections.emptyList());
+    response.setData(null);
     response.setNextCursor(null);
     response.setHasMore(false);
     return response;

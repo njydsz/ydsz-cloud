@@ -1,9 +1,10 @@
 package com.njydsz.agent.infra.guardrail;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * PII 脱敏输出护栏（P1-3 优化）。

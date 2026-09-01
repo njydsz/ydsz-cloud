@@ -1,14 +1,15 @@
 package com.njydsz.agent.server.memory;
 
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import com.njydsz.agent.domain.conversation.Conversation;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.memory.MemoryConsolidationService;
 import com.njydsz.agent.domain.memory.MemoryExtractedFact;
 import com.njydsz.agent.domain.model.ChatMessage;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * 对话记忆整合应用服务。

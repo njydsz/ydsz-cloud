@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.tenant.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -13,6 +12,7 @@ import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.Retriever;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 混合检索器（Hybrid Retrieval）

@@ -134,10 +134,14 @@ public class GetuiPushProvider implements PushProvider {
       }
       log.warn(
           "[GetuiPush] 推送失败: cid={} code={} msg={}", cid, code, MapUtils.getString(json, "msg"));
-      return MessageResult.fail("PUSH", null, code + ": " + MapUtils.getString(json, "msg"), code + ": " + MapUtils.getString(json, "msg"), null);
+      return MessageResult.fail(
+          "PUSH", null, code + ": " + MapUtils.getString(json, "msg"),
+          code + ": " + MapUtils.getString(json, "msg"), null);
     } catch (Exception e) {
       log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage(), e);
-      return MessageResult.fail("PUSH", null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
+      return MessageResult.fail(
+          "PUSH", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+          e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

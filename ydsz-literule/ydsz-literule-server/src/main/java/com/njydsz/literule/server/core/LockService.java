@@ -3,10 +3,10 @@ package com.njydsz.literule.server.core;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import com.njydsz.common.lock.core.DistributedLocker;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.lock.core.DistributedLocker;
 
 /**
  * 分布式锁服务封装（P1-3：synchronized 升级为分布式锁）

@@ -8,11 +8,11 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.agent.domain.skill.LessonType;
 import com.njydsz.agent.domain.skill.SkillLesson;
 import com.njydsz.agent.domain.skill.SkillLessonRepository;
-
-import org.springframework.stereotype.Component;
 
 /**
  * 基于内存的 Skill 经验仓储实现。

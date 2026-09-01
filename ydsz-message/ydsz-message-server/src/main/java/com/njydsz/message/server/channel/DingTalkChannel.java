@@ -125,13 +125,17 @@ public class DingTalkChannel implements MessageChannel {
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
         log.error("[DINGTALK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
-        return MessageResult.fail(CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg, "errcode=" + errcode + ", errmsg=" + errmsg, null);
+        return MessageResult.fail(
+            CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg,
+            "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
       log.error("[DINGTALK] 发送失败: status={}", response.getStatusCode());
       return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[DINGTALK] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
+      return MessageResult.fail(
+          CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+          e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

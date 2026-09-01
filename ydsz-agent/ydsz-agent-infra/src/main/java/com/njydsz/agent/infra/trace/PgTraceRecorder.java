@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.entity.AgentTrace;
 import com.njydsz.agent.infra.entity.AgentTraceStep;
@@ -15,7 +17,6 @@ import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 数据库执行链路记录器

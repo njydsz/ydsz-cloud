@@ -137,7 +137,9 @@ public class FeishuChannel implements MessageChannel {
       return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[FEISHU] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(), e.getClass().getSimpleName() + ": " + e.getMessage(), null);
+      return MessageResult.fail(
+          CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+          e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
   }
 

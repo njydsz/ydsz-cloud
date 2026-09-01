@@ -4,11 +4,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
-
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * SSE 心跳统一调度器。

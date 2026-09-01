@@ -191,8 +191,9 @@ public class MessageServiceImpl implements MessageService {
           rendered.content().length(),
           maxLen,
           ctx.getChannel());
+      String tooLongMsg = "消息内容超过最大长度限制: " + rendered.content().length() + " > " + maxLen;
       return MessageResult.fail(
-          ctx.getChannel(), null, "消息内容超过最大长度限制: " + rendered.content().length() + " > " + maxLen, "消息内容超过最大长度限制: " + rendered.content().length() + " > " + maxLen, null);
+          ctx.getChannel(), null, tooLongMsg, tooLongMsg, null);
     }
 
     // ③ 构造落库对象
@@ -503,7 +504,8 @@ public class MessageServiceImpl implements MessageService {
       return MessageResult.fail(null, null, "消息不存在: " + msgId, "消息不存在: " + msgId, null);
     }
     if (!MessageStatusEnum.SCHEDULED.name().equals(logVO.getStatus())) {
-      return MessageResult.fail(logVO.getChannel(), null, "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）", "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）", null);
+      String cancelErrMsg = "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）";
+      return MessageResult.fail(logVO.getChannel(), null, cancelErrMsg, cancelErrMsg, null);
     }
     logVO.setStatus(MessageStatusEnum.SKIPPED.name());
     logVO.setErrorMessage("USER_CANCELLED");
