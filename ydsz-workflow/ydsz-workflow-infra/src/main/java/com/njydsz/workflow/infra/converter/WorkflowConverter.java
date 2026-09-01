@@ -38,6 +38,7 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.domain.vo.FlowTemplateVO;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.vo.StringVO;
 import com.njydsz.workflow.infra.entity.FlowAdminRole;
 import com.njydsz.workflow.infra.entity.FlowAttachment;
@@ -309,7 +310,7 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
     if (slaConfig == null) {
       return null;
     }
-    return com.njydsz.common.json.YdszJson.toJson(slaConfig);
+    return YdszJson.toJson(slaConfig);
   }
 
   /**

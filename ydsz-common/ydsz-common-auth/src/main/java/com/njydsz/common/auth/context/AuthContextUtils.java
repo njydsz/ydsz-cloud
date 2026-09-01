@@ -8,6 +8,7 @@ import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.LoginUser;
+import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
@@ -257,7 +258,7 @@ public final class AuthContextUtils {
       TenantContextHolder.clear();
       return;
     }
-    TenantContextHolder.set(com.njydsz.common.tenant.TenantContext.of(tenantId));
+    TenantContextHolder.set(TenantContext.of(tenantId));
   }
 
   // ==================== 清理 ====================

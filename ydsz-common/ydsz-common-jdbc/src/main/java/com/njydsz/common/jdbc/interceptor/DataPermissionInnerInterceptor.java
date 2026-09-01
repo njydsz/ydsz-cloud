@@ -6,6 +6,7 @@ import java.util.Set;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Select;
@@ -180,7 +181,7 @@ public abstract class DataPermissionInnerInterceptor extends CachingJsqlParserSu
    * @param table 目标表
    * @return 需要拦截时返回 true
    */
-  public boolean shouldApply(net.sf.jsqlparser.schema.Table table) {
+  public boolean shouldApply(Table table) {
     return DataPermissionHelper.shouldApply(table, config, normalizedTables);
   }
 

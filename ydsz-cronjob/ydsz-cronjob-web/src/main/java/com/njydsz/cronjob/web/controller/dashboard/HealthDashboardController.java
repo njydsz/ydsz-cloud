@@ -4,6 +4,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.InetAddress;
+import com.sun.management.SunOperatingSystemMXBean;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;

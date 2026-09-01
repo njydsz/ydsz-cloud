@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.config;
 
+import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 
 import io.jsonwebtoken.security.Keys;
@@ -43,7 +44,7 @@ public class OidcConfiguration {
    */
   @Bean
   public JwksEndpointVO jwksEndpoint(TokenProperties tokenProperties) {
-    byte[] secretBytes = tokenProperties.getSecretKey().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    byte[] secretBytes = tokenProperties.getSecretKey().getBytes(StandardCharsets.UTF_8);
     SecretKey secretKey = Keys.hmacShaKeyFor(secretBytes);
     return new JwksEndpointVO(secretKey.getEncoded(), tokenProperties.getPublicKeyPem());
   }
