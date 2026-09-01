@@ -43,6 +43,16 @@ public final class AgentExecutionRequest {
   /** 本次允许调用的工具名白名单，不可变列表；为空表示不限制、使用 Agent 注册的全部工具 */
   private final List<String> enabledTools;
 
+  /**
+   * 全参构造。
+   *
+   * @param conversationId 对话 ID（null 时按单轮无记忆会话处理）
+   * @param userInput 本轮用户输入原文（不可为 null）
+   * @param systemPrompt 系统提示词（null 时沿用 Agent 定义）
+   * @param variables Prompt 模板渲染变量（null 时按空 Map 处理）
+   * @param maxIterations ReAct 循环最大迭代轮次（非正数按默认 10 处理）
+   * @param enabledTools 工具名白名单（null 时表示不限制）
+   */
   public AgentExecutionRequest(
       String conversationId,
       String userInput,
@@ -59,26 +69,56 @@ public final class AgentExecutionRequest {
     this.enabledTools = enabledTools != null ? List.copyOf(enabledTools) : Collections.emptyList();
   }
 
+  /**
+   * 获取对话 ID。
+   *
+   * @return 对话 ID（单轮会话为 null）
+   */
   public String getConversationId() {
     return conversationId;
   }
 
+  /**
+   * 获取用户输入原文。
+   *
+   * @return 本轮用户输入原文
+   */
   public String getUserInput() {
     return userInput;
   }
 
+  /**
+   * 获取系统提示词。
+   *
+   * @return 系统提示词（未覆盖时为 null）
+   */
   public String getSystemPrompt() {
     return systemPrompt;
   }
 
+  /**
+   * 获取 Prompt 模板渲染变量。
+   *
+   * @return 不可变变量映射（未传入时为空 Map）
+   */
   public Map<String, Object> getVariables() {
     return variables;
   }
 
+  /**
+   * 获取最大迭代轮次。
+   *
+   * @return ReAct 循环最大迭代轮次
+   */
   public int getMaxIterations() {
     return maxIterations;
   }
 
+  /**
+   * 获取工具名白名单。
+   *
+   * @return 不可变工具白名单（空表示不限制）
+   */
   public List<String> getEnabledTools() {
     return enabledTools;
   }

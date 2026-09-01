@@ -49,7 +49,7 @@ public interface ModelInputProvider {
    * @param context 规则上下文（含 facts）
    * @return 模型输出 Map；null 或空 Map 表示无输出
    */
-  Map<String, Object> getModelOutput(RuleContext context);
+  Map<String, Object> getModelOutput(RuleContextVO context);
 
   /**
    * 模型标识（如 "risk-model-v1"、"fraud-detection-v2"）
@@ -57,7 +57,7 @@ public interface ModelInputProvider {
    * <p>用于：
    *
    * <ul>
-   *   <li>通过 {@link ModelInputRegistry#getModelOutputs(String, RuleContext)} 定点获取
+   *   <li>通过 {@link ModelInputRegistry#getModelOutputs(String, RuleContextVO)} 定点获取
    *   <li>日志与监控中区分不同模型的调用情况
    * </ul>
    *

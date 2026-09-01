@@ -21,15 +21,31 @@ public final class ToolRegistration {
   /** 工具执行器 */
   private final ToolExecutor executor;
 
+  /**
+   * 构造注册条目。
+   *
+   * @param definition 工具定义（元数据）
+   * @param executor 工具执行器
+   */
   public ToolRegistration(ToolDefinition definition, ToolExecutor executor) {
     this.definition = definition;
     this.executor = executor;
   }
 
+  /**
+   * 获取工具定义。
+   *
+   * @return 工具定义（元数据）
+   */
   public ToolDefinition getDefinition() {
     return definition;
   }
 
+  /**
+   * 获取工具执行器。
+   *
+   * @return 工具执行器
+   */
   public ToolExecutor getExecutor() {
     return executor;
   }

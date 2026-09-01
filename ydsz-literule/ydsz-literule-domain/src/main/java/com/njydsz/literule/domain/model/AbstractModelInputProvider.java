@@ -45,7 +45,7 @@ public abstract class AbstractModelInputProvider implements ModelInputProvider {
   private final AtomicBoolean initialized = new AtomicBoolean(false);
 
   @Override
-  public final Map<String, Object> getModelOutput(RuleContext context) {
+  public final Map<String, Object> getModelOutput(RuleContextVO context) {
     ensureInit();
     if (!isEnabled()) {
       return Map.of();
@@ -72,7 +72,7 @@ public abstract class AbstractModelInputProvider implements ModelInputProvider {
    * @param context 规则上下文（含 facts）
    * @return 模型输出 Map；null 或空 Map 表示无输出
    */
-  protected abstract Map<String, Object> doGetModelOutput(RuleContext context);
+  protected abstract Map<String, Object> doGetModelOutput(RuleContextVO context);
 
   /**
    * 初始化钩子（可选覆写）

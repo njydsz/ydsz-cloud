@@ -63,8 +63,8 @@ public class MockModelInputProvider extends AbstractModelInputProvider {
     return modelId;
   }
 
-  @Override
-  protected Map<String, Object> doGetModelOutput(RuleContext context) {
+    @Override
+  protected Map<String, Object> doGetModelOutput(RuleContextVO context) {
     return new LinkedHashMap<>(outputs);
   }
 }
