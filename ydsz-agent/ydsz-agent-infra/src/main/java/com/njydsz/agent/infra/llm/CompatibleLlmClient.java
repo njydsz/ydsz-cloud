@@ -83,6 +83,27 @@ public class CompatibleLlmClient implements LlmClient {
   /** 等待可用连接的超时（秒），超时快速失败 */
   private static final int PENDING_ACQUIRE_SECONDS = 10;
 
+  /** 默认请求超时（秒） */
+  private static final int DEFAULT_TIMEOUT_SECONDS = 60;
+
+  /** SSE "data: " 前缀长度 */
+  private static final int SSE_DATA_PREFIX_LENGTH = 6;
+
+  /** HTTP 401 未授权状态码 */
+  private static final int HTTP_UNAUTHORIZED = 401;
+
+  /** HTTP 403 禁止访问状态码 */
+  private static final int HTTP_FORBIDDEN = 403;
+
+  /** HTTP 404 资源不存在状态码 */
+  private static final int HTTP_NOT_FOUND = 404;
+
+  /** HTTP 429 请求过多状态码 */
+  private static final int HTTP_TOO_MANY_REQUESTS = 429;
+
+  /** HTTP 5xx 服务器错误最小状态码 */
+  private static final int HTTP_SERVER_ERROR_MIN = 500;
+
   /** Provider 标识 */
   private final String provider;
 
@@ -122,7 +143,7 @@ public class CompatibleLlmClient implements LlmClient {
     this.provider = provider;
         this.baseUrl = baseUrl != null ? baseUrl : "";
     this.apiKey = apiKey;
-    this.timeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : 60;
+    this.timeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : DEFAULT_TIMEOUT_SECONDS;
     this.maxRetries = maxRetries > 0 ? maxRetries : DEFAULT_MAX_RETRIES;
     this.concurrencyLimiter =
         new Semaphore(maxConcurrent > 0 ? maxConcurrent : DEFAULT_MAX_CONCURRENT);
@@ -273,7 +294,7 @@ public class CompatibleLlmClient implements LlmClient {
                   throw new LlmException("LLM 流式调用被取消（连接中断）", LlmException.ErrorType.CANCELED);
                 }
                 if (line.startsWith("data: ")) {
-                  String sseDataFragment = line.substring(6).trim();
+                  String sseDataFragment = line.substring(SSE_DATA_PREFIX_LENGTH).trim();
                   if ("[DONE]".equals(sseDataFragment)) {
                     return;
                   }
@@ -482,16 +503,16 @@ public class CompatibleLlmClient implements LlmClient {
 
   /** HTTP 状态码映射到 LLM 错误类型 */
   private LlmException.ErrorType mapHttpError(int statusCode) {
-    if (statusCode == 401 || statusCode == 403) {
+    if (statusCode == HTTP_UNAUTHORIZED || statusCode == HTTP_FORBIDDEN) {
       return LlmException.ErrorType.AUTH_FAILED;
     }
-    if (statusCode == 404) {
+    if (statusCode == HTTP_NOT_FOUND) {
       return LlmException.ErrorType.MODEL_NOT_FOUND;
     }
-    if (statusCode == 429) {
+    if (statusCode == HTTP_TOO_MANY_REQUESTS) {
       return LlmException.ErrorType.RATE_LIMITED;
     }
-    if (statusCode >= 500) {
+    if (statusCode >= HTTP_SERVER_ERROR_MIN) {
       return LlmException.ErrorType.PROVIDER_ERROR;
     }
     return LlmException.ErrorType.INVALID_RESPONSE;
