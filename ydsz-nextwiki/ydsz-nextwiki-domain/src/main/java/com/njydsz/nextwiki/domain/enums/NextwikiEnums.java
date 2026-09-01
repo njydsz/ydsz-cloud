@@ -64,9 +64,15 @@ public final class NextwikiEnums {
      */
     @Override
     public boolean canTransitTo(ShareStatus target) {
-      if (target == null) return false;
-      if (this == target) return true;
-      if (this.isTerminal()) return false;
+      if (target == null) {
+        return false;
+      }
+      if (this == target) {
+        return true;
+      }
+      if (this.isTerminal()) {
+        return false;
+      }
       return switch (this) {
         case ACTIVE -> target == EXPIRED || target == REVOKED;
         default -> false;
@@ -80,9 +86,13 @@ public final class NextwikiEnums {
      * @return 枚举值；未匹配返回 null
      */
     public static ShareStatus fromCode(String code) {
-      if (code == null) return null;
+      if (code == null) {
+        return null;
+      }
       for (ShareStatus s : values()) {
-        if (s.code.equalsIgnoreCase(code)) return s;
+        if (s.code.equalsIgnoreCase(code)) {
+          return s;
+        }
       }
       return null;
     }
@@ -144,9 +154,15 @@ public final class NextwikiEnums {
      */
     @Override
     public boolean canTransitTo(TrashStatus target) {
-      if (target == null) return false;
-      if (this == target) return true;
-      if (this.isTerminal()) return false;
+      if (target == null) {
+        return false;
+      }
+      if (this == target) {
+        return true;
+      }
+      if (this.isTerminal()) {
+        return false;
+      }
       return switch (this) {
         case IN_TRASH -> target == RESTORED || target == PURGED;
         default -> false;
@@ -160,9 +176,13 @@ public final class NextwikiEnums {
      * @return 枚举值；未匹配返回 null
      */
     public static TrashStatus fromCode(String code) {
-      if (code == null) return null;
+      if (code == null) {
+        return null;
+      }
       for (TrashStatus s : values()) {
-        if (s.code.equalsIgnoreCase(code)) return s;
+        if (s.code.equalsIgnoreCase(code)) {
+          return s;
+        }
       }
       return null;
     }

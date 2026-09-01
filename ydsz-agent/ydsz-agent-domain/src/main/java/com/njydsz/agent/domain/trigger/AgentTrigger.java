@@ -1,9 +1,7 @@
 package com.njydsz.agent.domain.trigger;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Agent 触发器聚合根。

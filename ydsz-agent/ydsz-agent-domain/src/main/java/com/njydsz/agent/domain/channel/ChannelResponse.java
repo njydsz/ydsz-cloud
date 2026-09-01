@@ -1,7 +1,6 @@
 package com.njydsz.agent.domain.channel;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * 渠道响应值对象。

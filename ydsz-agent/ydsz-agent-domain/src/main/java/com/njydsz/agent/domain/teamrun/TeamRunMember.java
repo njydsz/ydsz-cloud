@@ -2,7 +2,6 @@ package com.njydsz.agent.domain.teamrun;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Team Run 成员值对象。

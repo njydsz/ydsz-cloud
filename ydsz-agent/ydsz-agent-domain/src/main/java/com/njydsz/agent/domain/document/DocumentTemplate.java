@@ -1,7 +1,6 @@
 package com.njydsz.agent.domain.document;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * 文档模板值对象。
