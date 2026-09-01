@@ -101,9 +101,9 @@ public class VariableSourceResolver {
   /**
    * 解析单个变量。
    *
-   * @param source 参数说明
-   * @param context 参数说明
-   * @return 返回值说明
+   * @param source 变量数据源配置（含 sourceType 和 sourceExpr）
+   * @param context 上下文参数（bizId/bizType 等，用于表达式取值）
+   * @return 解析后的变量值；解析失败时返回 null
    */
   private Object resolveOne(MsgVariableSourceVO source, Map<String, Object> context) {
     String type = source.getSourceType();
@@ -148,9 +148,9 @@ public class VariableSourceResolver {
   /**
    * SQL 数据源：执行查询并返回第一行第一列的值。
    *
-   * @param sql 参数说明
-   * @param context 参数说明
-   * @return 返回值说明
+   * @param sql SQL 查询语句（支持 :param 占位符，运行时替换为 context 值）
+   * @param context 上下文参数（占位符替换来源）
+   * @return 查询结果第一行第一列的值；失败时返回 null
    */
   private Object resolveSql(String sql, Map<String, Object> context) {
     try {
@@ -166,9 +166,9 @@ public class VariableSourceResolver {
   /**
    * BEAN 数据源：调用 Spring Bean 方法。 表达式格式: beanName.methodName(#bizId)
    *
-   * @param expr 参数说明
-   * @param context 参数说明
-   * @return 返回值说明
+   * @param expr Bean 表达式（格式: beanName.methodName(#arg1,#arg2)）
+   * @param context 上下文参数（表达式中 #key 占位符替换来源）
+   * @return 方法调用返回值；失败时返回 null
    */
   private Object resolveBean(String expr, Map<String, Object> context) {
     try {
@@ -210,9 +210,9 @@ public class VariableSourceResolver {
   /**
    * HTTP 数据源（简化实现，GET 请求）。
    *
-   * @param url 参数说明
-   * @param context 参数说明
-   * @return 返回值说明
+   * @param url HTTP GET 请求 URL（支持 #{param} 占位符）
+   * @param context 上下文参数（URL 占位符替换来源）
+   * @return HTTP 响应 body 反序列化后的 JSON 对象；失败时返回 null
    */
   private Object resolveHttp(String url, Map<String, Object> context) {
     try {

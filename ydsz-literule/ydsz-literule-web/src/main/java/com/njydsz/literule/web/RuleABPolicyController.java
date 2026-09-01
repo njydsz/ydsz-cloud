@@ -59,20 +59,20 @@ public class RuleABPolicyController {
   /** A/B 测试自动回滚服务（SPI，由 project 模块提供实现） */
   private final ABTestAutoRollbackProvider abTestAutoRollbackProvider;
 
-  /** 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
-   * @param ruleCode 参数说明
-      * @return 返回值说明
+    /** 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
+   * @param ruleCode 规则唯一编码
+   * @return AB Test 自动回滚策略信息
    */
   @GetMapping("/{ruleCode}/ab-policy")
   public YdszResponse<RuleABPolicyVO> getABPolicy(@PathVariable String ruleCode) {
     return YdszResponse.success(abTestAutoRollbackProvider.getPolicy(ruleCode));
   }
 
-  /** 更新规则的 AB Test 自动回滚策略
-   * @param operator 参数说明
-      * @return 返回值说明
-      * @param dto 参数说明
-      * @param ruleCode 参数说明
+    /** 更新规则的 AB Test 自动回滚策略
+   * @param ruleCode 规则唯一编码
+   * @param dto 策略请求数据
+   * @param operator 操作人用户名
+   * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:updateAbpolicy", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -92,9 +92,9 @@ public class RuleABPolicyController {
     return YdszResponse.success();
   }
 
-  /** 查询规则的回滚历史
-   * @param ruleCode 参数说明
-      * @return 返回值说明
+    /** 查询规则的回滚历史
+   * @param ruleCode 规则唯一编码
+   * @return 回滚历史列表
    */
   @GetMapping("/{ruleCode}/ab-rollbacks")
   public YdszResponse<List<RuleABRollbackVO>> listRollbackHistory(@PathVariable String ruleCode) {
@@ -102,9 +102,9 @@ public class RuleABPolicyController {
         abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
   }
 
-  /** 主动触发 AB Test 评估（人工立即检查）
-   * @param ruleCode 参数说明
-      * @return 返回值说明
+    /** 主动触发 AB Test 评估（人工立即检查）
+   * @param ruleCode 规则唯一编码
+   * @return 是否需要回滚（true/false）
    */
   @Idempotent(key = "ruleAdmin:evaluateAb", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -121,10 +121,10 @@ public class RuleABPolicyController {
   /**
    * 人工回滚（Owner 主动请求 / 紧急操作）
    *
-   * @param reason MANUAL / OWNER_REQUEST
-      * @return 返回值说明
-      * @param ruleCode 参数说明
-      * @param operator 参数说明
+      * @param ruleCode 规则唯一编码
+   * @param reason 回滚原因（MANUAL/OWNER_REQUEST）
+   * @param operator 操作人用户名
+   * @return 回滚操作结果
    */
   @Idempotent(key = "ruleAdmin:manualRollback", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

@@ -1,7 +1,7 @@
 package com.njydsz.common.util.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -11,8 +11,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.util.http.ServletRequestUtils;
 import com.njydsz.common.util.http.TrustedProxyConfiguration;

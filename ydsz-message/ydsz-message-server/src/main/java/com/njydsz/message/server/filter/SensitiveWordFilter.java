@@ -49,7 +49,8 @@ public class SensitiveWordFilter {
    * 
    * <p>支持运行时通过 {@link #reload(Set)} 刷新词库。
    *
-   * @param messageProperties 参数说明   */
+   * @param messageProperties 消息模块配置属性（含敏感词过滤配置 SensitiveFilterConfig）
+   */
   public SensitiveWordFilter(MessageProperties messageProperties) {
     this.messageProperties = messageProperties;
     MessageProperties.SensitiveFilterConfig cfg = messageProperties.getSensitiveFilter();
@@ -59,7 +60,7 @@ public class SensitiveWordFilter {
   /**
    * 当前是否启用敏感词过滤。
    *
-   * @return 返回值说明
+   * @return 当前是否启用敏感词过滤（由配置 sensitiveFilter.enabled 决定）
    */
   private boolean isEnabled() {
     return messageProperties.getSensitiveFilter().isEnabled();
@@ -178,9 +179,9 @@ public class SensitiveWordFilter {
   /**
    * 递归收集 DFA 树中的所有完整词（用于 currentWords 快照）。
    *
-   * @param node 参数说明
-   * @param prefix 参数说明
-   * @param result 参数说明
+   * @param node 当前 DFA 节点
+   * @param prefix 从根到当前节点路径构成的前缀
+   * @param result 收集到的完整敏感词集合
    */
   private void collectWords(DfaNode node, StringBuilder prefix, Set<String> result) {
     if (node.isEnd && prefix.length() > 0) {
@@ -196,8 +197,8 @@ public class SensitiveWordFilter {
   /**
    * 解析配置字符串：支持逗号分隔。
    *
-   * @param raw 参数说明
-   * @return 返回值说明
+   * @param raw 原始配置字符串（逗号分隔的敏感词列表）
+   * @return 解析后的敏感词集合；为空时返回空 Set
    */
   private Set<String> parseWords(String raw) {
     if (!StringUtils.hasText(raw)) {

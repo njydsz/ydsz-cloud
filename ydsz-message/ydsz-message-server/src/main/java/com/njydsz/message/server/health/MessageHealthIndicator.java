@@ -87,8 +87,8 @@ public class MessageHealthIndicator extends AbstractModuleHealthIndicator {
   /**
    * 轻量探针：仅查询指定状态是否存在记录（LIMIT 1），避免 COUNT 扫描大表。
    *
-   * @param status 参数说明
-   * @return 返回值说明
+   * @param status 要探测的消息状态（如 DEAD、RETRY、SCHEDULED）
+   * @return 是否存在该状态的消息（true=存在积压）
    */
   private boolean probeStatus(String status) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();

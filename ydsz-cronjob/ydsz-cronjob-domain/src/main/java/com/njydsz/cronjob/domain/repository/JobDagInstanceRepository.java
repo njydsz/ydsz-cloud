@@ -70,16 +70,16 @@ public interface JobDagInstanceRepository {
   /**
    * 标记实例为终态。
    *
-   * @param instanceId 参数说明
-   * @param status 参数说明
-   * @param finishedAt 参数说明
-   * @param durationMs 参数说明
-   * @param errorMessage 参数说明
-   * @param totalNodes 参数说明
-   * @param successNodes 参数说明
-   * @param failedNodes 参数说明
-   * @param skippedNodes 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @param status 终态状态（SUCCESS/FAILED/PARTIAL_SUCCESS）
+   * @param finishedAt 结束时间
+   * @param durationMs 执行耗时（毫秒）
+   * @param errorMessage 错误信息（成功时传 null）
+   * @param totalNodes 节点总数
+   * @param successNodes 成功节点数
+   * @param failedNodes 失败节点数
+   * @param skippedNodes 跳过节点数
+   * @return 受影响行数（0 表示非 RUNNING 状态）
    */
   int markFinished(
       String instanceId,
@@ -95,52 +95,52 @@ public interface JobDagInstanceRepository {
   /**
    * 更新实例上下文（contextJson）。
    *
-   * @param instanceId 参数说明
-   * @param contextJson 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @param contextJson 新的上下文 JSON 字符串
+   * @return 受影响行数
    */
   int updateContext(String instanceId, String contextJson);
 
   /**
    * 原子合并实例上下文（PostgreSQL jsonb || 操作符）。
    *
-   * @param instanceId 参数说明
-   * @param mergeJson 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @param mergeJson 待合并的 JSON 片段（PostgreSQL jsonb || 操作）
+   * @return 受影响行数（0 表示实例不存在或已删除）
    */
   int mergeContextAtomic(String instanceId, String mergeJson);
 
   /**
    * 统计指定 DAG 的活跃（RUNNING/PAUSED）实例数量。
    *
-   * @param dagId 参数说明
-   * @return 返回值说明
+   * @param dagId DAG 定义 ID
+   * @return 活跃（RUNNING/PAUSED）实例数量
    */
   int countActiveInstances(String dagId);
 
   /**
    * 标记实例为 PAUSED。
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @return 受影响行数（0 表示非 RUNNING 状态）
    */
   int markPaused(String instanceId);
 
   /**
    * 标记实例为 RESUMED。
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @return 受影响行数（0 表示非 PAUSED 状态）
    */
   int markResumed(String instanceId);
 
   /**
    * 标记实例为 CANCELED。
    *
-   * @param instanceId 参数说明
-   * @param canceledAt 参数说明
-   * @param durationMs 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @param canceledAt 取消时间
+   * @param durationMs 已执行耗时（毫秒）
+   * @return 受影响行数（0 表示非 RUNNING/PAUSED 状态）
    */
   int markCanceled(String instanceId, LocalDateTime canceledAt, long durationMs);
 

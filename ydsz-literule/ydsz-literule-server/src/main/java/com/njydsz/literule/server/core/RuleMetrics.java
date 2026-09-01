@@ -23,13 +23,13 @@ import com.njydsz.literule.domain.enums.RuleSeverity;
 public interface RuleMetrics {
 
   /** 记录单次评估
-   * @param error 参数说明
-      * @param severity 参数说明
-      * @param triggered 参数说明
-      * @param scenario 参数说明
-      * @param ruleCode 参数说明
-      * @param elapsedMs 耗时（毫秒）
-*/
+   * @param ruleCode 规则唯一编码
+   * @param scenario 业务场景标识
+   * @param triggered 是否触发
+   * @param severity 规则严重级别
+   * @param error 是否异常
+   * @param elapsedMs 评估耗时（毫秒）
+   */
   void recordEvaluation(
       String ruleCode,
       String scenario,
@@ -39,30 +39,30 @@ public interface RuleMetrics {
       long elapsedMs);
 
   /** 记录熔断状态
-   * @param ruleCode 参数说明
-   * @param state 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param state 熔断器状态描述（OPEN/HALF_OPEN/CLOSED）
    */
   void recordBreakerState(String ruleCode, String state);
 
   /** 记录 Trace 队列积压
-   * @param queueSize 参数说明
+   * @param queueSize 当前队列大小
    */
   void recordTraceQueueSize(int queueSize);
 
   /** 记录当前注册规则数
-   * @param count 参数说明
+   * @param count 已注册的规则总数
    */
   void recordRegisteredRules(int count);
 
   /** 记录单次评估遍历的规则数
-   * @param count 参数说明
+   * @param count 遍历的规则数量
    */
   void recordEvaluatedRules(int count);
 
   /** 记录慢规则告警
-   * @param ruleCode 参数说明
-   * @param elapsedMs 参数说明
-   * @param thresholdMs 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param elapsedMs 实际评估耗时（毫秒）
+   * @param thresholdMs 慢规则阈值（毫秒）
    */
   void recordSlowRule(String ruleCode, long elapsedMs, long thresholdMs);
 

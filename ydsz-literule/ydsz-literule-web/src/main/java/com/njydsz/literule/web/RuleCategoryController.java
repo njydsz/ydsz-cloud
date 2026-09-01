@@ -61,7 +61,7 @@ public class RuleCategoryController {
    * 获取规则目录树
    *
    * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
-      * @return 返回值说明
+   * @return 规则目录树根节点
    */
   @GetMapping("/category-tree")
   public YdszResponse<CategoryNodeVO> categoryTree() {
@@ -73,7 +73,7 @@ public class RuleCategoryController {
    * 按分类路径前缀查询规则
    *
    * @param path 分类路径前缀，例如 "finance" / "finance/credit"
-      * @return 返回值说明
+   * @return 规则定义列表
    */
   @GetMapping("/by-category-path")
   public YdszResponse<List<RuleDefinitionVO>> listByCategoryPath(
@@ -85,8 +85,8 @@ public class RuleCategoryController {
   }
 
   /** 按 Owner 查询规则
-   * @param owner 参数说明
-      * @return 返回值说明
+   * @param owner 责任人用户名
+   * @return 规则定义列表
    */
   @GetMapping("/by-owner")
   public YdszResponse<List<RuleDefinitionVO>> listByOwner(
@@ -98,10 +98,10 @@ public class RuleCategoryController {
   }
 
   /** 设置规则责任人
-   * @param operator 参数说明
-      * @return 返回值说明
-      * @param ruleCode 参数说明
-      * @param owner 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param owner 责任人用户名
+   * @param operator 操作人用户名
+   * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:setOwner", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -120,10 +120,10 @@ public class RuleCategoryController {
   }
 
   /** 设置规则分类路径
-   * @param operator 参数说明
-      * @return 返回值说明
-      * @param ruleCode 参数说明
-      * @param path 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param path 分类路径（如 "finance/credit"）
+   * @param operator 操作人用户名
+   * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:setCategoryPath", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

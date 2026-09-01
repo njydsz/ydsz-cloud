@@ -101,7 +101,7 @@ public class CEPEngine implements Serializable {
   }
 
   /** 注册模式
-   * @param pattern 参数说明
+   * @param pattern CEP 模式定义
    */
   public void registerPattern(CEPPattern pattern) {
     if (pattern == null || pattern.getId() == null) {
@@ -113,7 +113,7 @@ public class CEPEngine implements Serializable {
   }
 
   /** 注销模式
-   * @param patternId 参数说明
+   * @param patternId 模式唯一标识
    */
   public void unregisterPattern(String patternId) {
     if (patternId == null) {
@@ -125,7 +125,7 @@ public class CEPEngine implements Serializable {
   }
 
   /** 添加命中监听器
-   * @param listener 参数说明
+   * @param listener 命中事件消费者回调
    */
   public void addListener(Consumer<CEPHit> listener) {
     if (listener != null) {
@@ -134,14 +134,14 @@ public class CEPEngine implements Serializable {
   }
 
   /** 移除监听器
-   * @param listener 参数说明
+   * @param listener 已注册的监听器回调
    */
   public void removeListener(Consumer<CEPHit> listener) {
     listeners.remove(listener);
   }
 
   /** 投递事件
-   * @param event 参数说明
+   * @param event 待处理的业务事件
    */
   public void feed(CEPEvent event) {
     if (event == null) {
@@ -259,22 +259,22 @@ public class CEPEngine implements Serializable {
   }
 
   /** 获取已注册模式数量
-   * @return 返回值说明
+   * @return 当前注册的模式数量
    */
   public int patternCount() {
     return patterns.size();
   }
 
   /** 获取所有命中次数（自启动以来）
-   * @return 返回值说明
+   * @return 累计命中次数
    */
   public long totalHits() {
     return totalHits.get();
   }
 
   /** 清理指定分区的状态
-   * @param patternId 参数说明
-   * @param partitionKey 参数说明
+   * @param patternId 模式唯一标识
+   * @param partitionKey 分区键值
    */
   public void clearPartition(String patternId, String partitionKey) {
     if (patternId == null || partitionKey == null) {
@@ -350,7 +350,7 @@ public class CEPEngine implements Serializable {
   }
 
   /** 列出已注册模式
-   * @return 返回值说明
+   * @return 模式列表（不可修改）
    */
   public List<CEPPattern> listPatterns() {
     return Collections.unmodifiableList(new ArrayList<>(patterns.values()));

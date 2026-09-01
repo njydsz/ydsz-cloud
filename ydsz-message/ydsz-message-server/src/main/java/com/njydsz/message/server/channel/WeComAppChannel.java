@@ -142,8 +142,8 @@ public class WeComAppChannel implements MessageChannel {
   /**
    * 获取企微 access_token（Redis 缓存，提前续期）。
    *
-   * @param cfg 参数说明
-   * @return 返回值说明
+   * @param cfg 企业微信应用配置（含 CorpId/CorpSecret/BaseUrl）
+   * @return 有效的 access_token；获取失败时返回 null
    */
   private String getAccessToken(ChannelProperties.WeComAppConfig cfg) {
     try {

@@ -100,8 +100,8 @@ public class SmsChannel implements MessageChannel {
   /**
    * P0-4: 查询短信回执（委托给 provider）。
    *
-   * @param logVO 参数说明
-   * @return 返回值说明
+   * @param logVO 消息日志 VO（含 providerTraceId 和 receiver 手机号，用于查询回执）
+   * @return 短信回执结果（DELIVERED/FAILED）；无法查询时返回 Optional.empty()
    */
   @Override
   public Optional<ReceiptResultDTO> queryReceipt(MsgLogVO logVO) {

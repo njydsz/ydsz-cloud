@@ -102,6 +102,8 @@
         <pdfbox.version>3.0.4</pdfbox.version>
         <!-- Jsoup (HTML 解析) -->
         <jsoup.version>1.18.3</jsoup.version>
+        <!-- springdoc: 构建期 OpenAPI spec 生成 -->
+        <springdoc.maven.plugin.version>1.4</springdoc.maven.plugin.version>
         <!-- Prometheus（Sentry 7.13.0 要求 ≥1.7.0，Spring Boot 4.1.0 BOM 管理 1.5.1，取高版本） -->
         <prometheus.version>1.7.0</prometheus.version>
 
@@ -1154,6 +1156,21 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!-- springdoc: 构建期生成 OpenAPI spec JSON artifact (供前端契约生成消费) -->
+                <plugin>
+                    <groupId>org.springdoc</groupId>
+                    <artifactId>springdoc-openapi-maven-plugin</artifactId>
+                    <version>${springdoc.maven.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>generate-openapi-spec</id>
+                            <phase>compile</phase>
+                            <goals>
+                                <goal>generate</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
         </plugins>
         </pluginManagement>
 
@@ -1200,4 +1217,35 @@
             <url>https://maven.aliyun.com/repository/spring</url>
         </repository>
     </repositories>
+
+    <!-- ============================================================
+         Profile: openapi-spec
+         用法: mvn clean compile -P openapi-spec (-DskipTests)
+         效果: 各 *-web 模块的 compile 阶段生成 openapi.json 到
+               target/openapi/ 目录，供前端 pnpm gen:api 消费（static 模式由前端侧配置）。
+         ============================================================ -->
+    <profiles>
+        <profile>
+            <id>openapi-spec</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.springdoc</groupId>
+                            <artifactId>springdoc-openapi-maven-plugin</artifactId>
+                            <configuration>
+                                <outputDir>${project.build.directory}/openapi</outputDir>
+                                <outputFileName>openapi</outputFileName>
+                                <apiDocsUrl>http://localhost:${server.port:/v3/api-docs</apiDocsUrl>
+                                <skip>false</skip>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -25,17 +25,17 @@ public interface JobDagVersionRepository {
   /**
    * 查询指定 DAG 的最大版本号。
    *
-   * @param dagId 参数说明
-   * @return 返回值说明
+   * @param dagId DAG 定义 ID
+   * @return 最大版本号；无记录时返回 {@code Optional.empty()}
    */
   Optional<Integer> findMaxVersion(String dagId);
 
   /**
    * 根据 DAG ID 和版本号查询版本记录。
    *
-   * @param dagId 参数说明
-   * @param version 参数说明
-   * @return 返回值说明
+   * @param dagId DAG 定义 ID
+   * @param version 版本号
+   * @return 匹配的版本记录；不存在时返回 {@code Optional.empty()}
    */
   Optional<JobDagVersionVO> findByVersion(String dagId, Integer version);
 

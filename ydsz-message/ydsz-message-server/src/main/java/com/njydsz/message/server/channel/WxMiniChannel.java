@@ -157,8 +157,8 @@ public class WxMiniChannel implements MessageChannel {
   /**
    * 获取微信 access_token（Redis 缓存，7200s 有效期）。
    *
-   * @param config 参数说明
-   * @return 返回值说明
+   * @param config 微信小程序配置（含 AppId/AppSecret/BaseUrl）
+   * @return 有效的 access_token；获取失败时返回 null
    */
   private String getAccessToken(MessageProperties.WxMiniConfig config) {
     try {
@@ -210,8 +210,8 @@ public class WxMiniChannel implements MessageChannel {
   /**
    * Mock 发送（开发环境降级）。
    *
-   * @param request 参数说明
-   * @return 返回值说明
+   * @param request 消息请求（含 receiver/templateCode/content）
+   * @return 模拟发送结果（status=SUCCESS，traceId 含 MOCK 前缀）
    */
   private MessageResult mockSend(MessageRequest request) {
     String traceId = "WX_MINI-MOCK-" + String.valueOf(snowflakeIdGenerator.nextId());
