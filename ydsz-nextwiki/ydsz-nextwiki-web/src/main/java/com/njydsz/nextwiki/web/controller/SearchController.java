@@ -23,7 +23,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 import com.njydsz.nextwiki.server.service.SearchApplicationService;
 
@@ -111,7 +111,7 @@ public class SearchController {
   @Operation(summary = "综合搜索", description = "支持文件类型/时间范围/大小范围/标签多维度高级筛选")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
   public YdszResponse<SearchResultVO> search(
-      @Valid @RequestBody NextwikiDTOs.SearchRequest request,
+      @Valid @RequestBody NextwikiDto.SearchRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     SearchResultVO result = searchApplicationService.searchWithFilters(request, userId);

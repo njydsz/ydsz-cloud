@@ -18,7 +18,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 
 /**
  * 存储直传（Presigned URL）REST API Controller。
@@ -65,7 +65,7 @@ public class PresignedUrlController {
   @Operation(summary = "生成上传预签名 URL")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
   public YdszResponse<PresignedUrlResponse> generateUploadUrl(
-      @Valid @RequestBody NextwikiDTOs.PresignedUrlRequest request,
+      @Valid @RequestBody NextwikiDto.PresignedUrlRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     String url =
@@ -98,7 +98,7 @@ public class PresignedUrlController {
   @Operation(summary = "生成下载预签名 URL")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DOWNLOAD)
   public YdszResponse<PresignedUrlResponse> generateDownloadUrl(
-      @Valid @RequestBody NextwikiDTOs.PresignedUrlRequest request,
+      @Valid @RequestBody NextwikiDto.PresignedUrlRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     String url =

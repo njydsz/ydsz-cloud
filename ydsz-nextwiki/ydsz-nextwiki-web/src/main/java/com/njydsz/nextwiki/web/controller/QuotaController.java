@@ -19,7 +19,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.server.service.QuotaApplicationService;
 
@@ -115,7 +115,7 @@ public class QuotaController {
   @Operation(summary = "设置配额（管理员）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_SET)
   public YdszResponse<StorageQuotaVO> setQuota(
-      @Valid @RequestBody NextwikiDTOs.SetQuotaRequest request,
+      @Valid @RequestBody NextwikiDto.SetQuotaRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     StorageQuotaVO quota =
         quotaApplicationService.setQuota(

@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.model;
+package com.njydsz.literule.server.model;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -15,13 +15,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.model.ModelInputProvider;
+import com.njydsz.literule.domain.model.ModelInvocationException;
+import com.njydsz.literule.domain.vo.RuleContext;
 
 /**
  * 模型输入注册中心（P3-1 规则+模型融合）
  *
  * <p>管理所有 {@link ModelInputProvider} 的注册/注销，并对外提供聚合查询能力。 规则引擎在评估前调用 {@link #collectAllModelOutputs}
- * 获取全部模型输出， 合并到 {@link RuleContextVO} 的 facts 中，使规则表达式可通过 {@code model.<field>} 引用。
+ * 获取全部模型输出， 合并到 {@link RuleContext} 的 facts 中，使规则表达式可通过 {@code model.<field>} 引用。
  *
  * <h3>核心能力</h3>
  *
@@ -193,7 +195,7 @@ public class ModelInputRegistry {
    * @param context 规则上下文
    * @return 模型输出 Map；不存在或失败返回空 Map
    */
-  public Map<String, Object> getModelOutputs(String modelId, RuleContextVO context) {
+  public Map<String, Object> getModelOutputs(String modelId, RuleContext context) {
     if (modelId == null) {
       return Collections.emptyMap();
     }
@@ -211,21 +213,22 @@ public class ModelInputRegistry {
   /**
    * 聚合所有已启用 provider 的输出
    *
-   * <p>返回的 Map 的 key 统一带 {@code "model."} 前缀， 例如 {@code "model.score"}、{@code "model.probability"}。
-   * 多个 provider 的输出会合并；同名字段后者覆盖前者（按注册顺序）。
+   * <p>返回的 Map 的 key 统一带 {@code "model."} 前缀， 例如 {@code "model.score"}、{@code
+   * "model.probability"}。 多个 provider 的输出会合并；同名字段后者覆盖前者（按注册顺序）。
    *
    * <p>异常处理：
    *
    * <ul>
    *   <li>provider 抛异常或超时：记录 WARN，跳过该 provider
-   *   <li>{@code fallbackOnError=false} 时，任一 provider 失败将抛出 {@link ModelInvocationException} 中断聚合
+   *   <li>{@code fallbackOnError=false} 时，任一 provider 失败将抛出 {@link ModelInvocationException}
+   *       中断聚合
    *   <li>provider {@link ModelInputProvider#isEnabled()} 返回 false：跳过，不调用
    * </ul>
    *
    * @param context 规则上下文
    * @return 聚合后的 Map（key 带 "model." 前缀）；无 provider 或全部失败返回空 Map
    */
-  public Map<String, Object> collectAllModelOutputs(RuleContextVO context) {
+  public Map<String, Object> collectAllModelOutputs(RuleContext context) {
     if (providers.isEmpty()) {
       return Collections.emptyMap();
     }
@@ -272,7 +275,7 @@ public class ModelInputRegistry {
    * @param context 规则上下文
    * @return 模型输出；失败时返回空 Map（fallbackOnError=true）或抛异常（false）
    */
-  private Map<String, Object> safeInvoke(ModelInputProvider provider, RuleContextVO context) {
+  private Map<String, Object> safeInvoke(ModelInputProvider provider, RuleContext context) {
     Future<Map<String, Object>> future = null;
     try {
       future = executor.submit(() -> provider.getModelOutput(context));

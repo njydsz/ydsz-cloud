@@ -27,7 +27,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.server.service.BatchTaskService;
@@ -149,7 +149,7 @@ public class FileBatchController {
   @Operation(summary = "批量移动")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
   public YdszResponse<FileApplicationService.BatchResultDTO> batchMove(
-      @Valid @RequestBody NextwikiDTOs.BatchMoveRequest request,
+      @Valid @RequestBody NextwikiDto.BatchMoveRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileApplicationService.BatchResultDTO result =
@@ -264,7 +264,7 @@ public class FileBatchController {
   @Operation(summary = "异步批量移动")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
   public YdszResponse<String> asyncBatchMove(
-      @Valid @RequestBody NextwikiDTOs.BatchMoveRequest request,
+      @Valid @RequestBody NextwikiDto.BatchMoveRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     String taskId =

@@ -23,7 +23,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.dto.TagDTO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.server.service.TagApplicationService;
@@ -116,7 +116,7 @@ public class TagController {
   @Operation(summary = "创建标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
   public YdszResponse<TagDTO> createTag(
-      @Valid @RequestBody NextwikiDTOs.CreateTagRequest request,
+      @Valid @RequestBody NextwikiDto.CreateTagRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     TagDTO tagDTO = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
     return YdszResponse.success(tagDTO);
@@ -155,7 +155,7 @@ public class TagController {
   @Operation(summary = "为文件绑定标签")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_BIND)
   public YdszResponse<Void> bindTag(
-      @Valid @RequestBody NextwikiDTOs.BindTagRequest request,
+      @Valid @RequestBody NextwikiDto.BindTagRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     tagApplicationService.batchBindTags(request.getFileNodeId(), request.getTagIds(), userId);
     return YdszResponse.success();

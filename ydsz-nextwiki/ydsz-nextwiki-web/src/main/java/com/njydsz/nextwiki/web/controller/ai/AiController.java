@@ -23,7 +23,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 import com.njydsz.nextwiki.server.service.AiSummaryService;
 
 /**
@@ -69,11 +69,11 @@ public class AiController {
   @PostMapping("/summary")
   @Operation(summary = "生成文件智能摘要")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_AI_SUMMARY)
-  public YdszResponse<NextwikiDTOs.SummaryResult> generateSummary(
-      @Valid @RequestBody NextwikiDTOs.GenerateSummaryRequest request,
+  public YdszResponse<NextwikiDto.SummaryResult> generateSummary(
+      @Valid @RequestBody NextwikiDto.GenerateSummaryRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    NextwikiDTOs.SummaryResult result =
+    NextwikiDto.SummaryResult result =
         aiSummaryService.generateSummary(
             request.getFileNodeId(), request.getSummaryType(), request.getMaxLength());
     return YdszResponse.success(result);

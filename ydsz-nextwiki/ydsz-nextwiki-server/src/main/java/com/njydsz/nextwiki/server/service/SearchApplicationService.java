@@ -19,7 +19,7 @@ import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
 import com.njydsz.nextwiki.domain.query.SearchQuery;
@@ -121,7 +121,7 @@ public class SearchApplicationService {
    * @complexity 引擎路径 O(query + filters)；DB 路径同 {@link SearchDomainService#search}
    * @note 降级时筛选条件不生效，返回未筛选的全量关键词匹配结果
    */
-  public SearchResultVO searchWithFilters(NextwikiDTOs.SearchRequest request, String userId) {
+  public SearchResultVO searchWithFilters(NextwikiDto.SearchRequest request, String userId) {
     int pageNum = request.getEffectivePageNum();
     int pageSize = request.getEffectivePageSize();
 

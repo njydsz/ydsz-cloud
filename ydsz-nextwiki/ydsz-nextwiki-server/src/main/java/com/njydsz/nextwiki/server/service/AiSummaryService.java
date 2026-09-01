@@ -2,7 +2,7 @@ package com.njydsz.nextwiki.server.service;
 
 import java.util.List;
 
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs.SummaryResult;
+import com.njydsz.nextwiki.api.dto.NextwikiDto.SummaryResult;
 
 /**
  * AI 智能摘要服务（预留接口）。

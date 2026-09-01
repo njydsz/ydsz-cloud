@@ -28,7 +28,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
 import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
@@ -92,7 +92,7 @@ public class ShareController {
   @Operation(summary = "创建分享链接")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
   public YdszResponse<ShareLinkVO> createShare(
-      @Valid @RequestBody NextwikiDTOs.CreateShareRequest request,
+      @Valid @RequestBody NextwikiDto.CreateShareRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     ShareLinkVO result;
@@ -141,7 +141,7 @@ public class ShareController {
   @Operation(summary = "验证分享链接访问权限")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
   public YdszResponse<ShareLinkVO> verifyAccess(
-      @Valid @RequestBody NextwikiDTOs.VerifyShareRequest request, HttpServletRequest httpRequest) {
+      @Valid @RequestBody NextwikiDto.VerifyShareRequest request, HttpServletRequest httpRequest) {
     ShareLinkVO result =
         shareApplicationService.verifyAccess(
             request.getShareCode(), request.getExtractCode(), request.getPassword());

@@ -30,7 +30,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.nextwiki.api.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 import com.njydsz.nextwiki.server.service.FileApplicationService;
@@ -161,7 +161,7 @@ public class FileController {
   @Operation(summary = "创建目录")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FOLDER_CREATE)
   public YdszResponse<FileNodeVO> createFolder(
-      @Valid @RequestBody NextwikiDTOs.CreateFolderRequest request,
+      @Valid @RequestBody NextwikiDto.CreateFolderRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileNodeVO result =
@@ -217,7 +217,7 @@ public class FileController {
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
   public YdszResponse<FileNodeVO> move(
       @PathVariable String nodeId,
-      @Valid @RequestBody NextwikiDTOs.MoveRequest request,
+      @Valid @RequestBody NextwikiDto.MoveRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileNodeVO result = fileApplicationService.move(nodeId, request.getTargetParentId(), userId);
@@ -241,7 +241,7 @@ public class FileController {
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
   public YdszResponse<FileNodeVO> rename(
       @PathVariable String nodeId,
-      @Valid @RequestBody NextwikiDTOs.RenameRequest request,
+      @Valid @RequestBody NextwikiDto.RenameRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     FileNodeVO result = fileApplicationService.rename(nodeId, request.getNewName(), userId);
@@ -333,7 +333,7 @@ public class FileController {
   @Operation(summary = "批量排序", description = "拖拽排序后批量更新节点排序值")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
   public YdszResponse<Integer> batchSort(
-      @Valid @RequestBody NextwikiDTOs.BatchSortRequest request,
+      @Valid @RequestBody NextwikiDto.BatchSortRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     int updated = fileApplicationService.batchSort(request.getParentId(), request.getItems(), userId);
