@@ -36,12 +36,22 @@ public class FilePermissionDomainService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  /** 权限位常量 */
+  /** 权限位常量：读取 */
   public static final int PERM_READ = 1;
+
+  /** 权限位常量：写入 */
   public static final int PERM_WRITE = 2;
+
+  /** 权限位常量：删除 */
   public static final int PERM_DELETE = 4;
+
+  /** 权限位常量：分享 */
   public static final int PERM_SHARE = 8;
+
+  /** 权限位常量：下载 */
   public static final int PERM_DOWNLOAD = 16;
+
+  /** 权限位常量：全部权限（读|写|删|分享|下载） */
   public static final int PERM_ALL = PERM_READ | PERM_WRITE | PERM_DELETE | PERM_SHARE | PERM_DOWNLOAD;
 
   /**
@@ -122,7 +132,13 @@ public class FilePermissionDomainService {
     return false;
   }
 
-  /** 检查 ACL 是否拥有指定权限 */
+  /**
+   * 检查 ACL 是否拥有指定权限。
+   *
+   * @param acl ACL DTO（权限掩码位运算组合）
+   * @param permission 目标权限位
+   * @return ACL 权限掩码包含目标权限位时返回 true
+   */
   public static boolean hasPermission(FileAclDTO acl, int permission) {
     return acl.getPermissionMask() != null && (acl.getPermissionMask() & permission) == permission;
   }

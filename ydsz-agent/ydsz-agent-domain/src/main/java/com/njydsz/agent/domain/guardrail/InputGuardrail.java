@@ -27,10 +27,18 @@ public interface InputGuardrail {
    */
   GuardrailResult check(String input);
 
-  /** 护栏名称 */
+  /**
+   * 获取护栏名称。
+   *
+   * @return 护栏名称
+   */
   String getName();
 
-  /** 优先级（数字越小优先级越高） */
+  /**
+   * 获取优先级。
+   *
+   * @return 优先级（数字越小优先级越高）
+   */
   default int getPriority() {
     return 100;
   }

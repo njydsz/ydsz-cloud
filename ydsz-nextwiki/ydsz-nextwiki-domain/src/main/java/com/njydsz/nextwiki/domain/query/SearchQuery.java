@@ -96,15 +96,21 @@ public class SearchQuery implements Serializable {
     @Schema(description = "字段值")
     private String value;
 
-    /**
-     * 字段限定语法枚举（支持的字段限定前缀）。
-     *
-     * <p>与前端约定形如 {@code name:xxx, tag:yyy, path:zzz, suffix:pdf, content:text}
-     */
+    // 字段限定语法枚举（支持的字段限定前缀），与前端约定形如 name:xxx, tag:yyy, path:zzz, suffix:pdf, content:text
+
+    /** 字段限定前缀：文件名 */
     public static final String FIELD_NAME = "name";
+
+    /** 字段限定前缀：正文内容 */
     public static final String FIELD_CONTENT = "content";
+
+    /** 字段限定前缀：标签 */
     public static final String FIELD_TAG = "tag";
+
+    /** 字段限定前缀：路径 */
     public static final String FIELD_PATH = "path";
+
+    /** 字段限定前缀：文件后缀 */
     public static final String FIELD_SUFFIX = "suffix";
   }
 }

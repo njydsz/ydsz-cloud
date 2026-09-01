@@ -9,6 +9,12 @@ package com.njydsz.agent.domain.citation;
  * <p>借鉴 MateClaw 的 LLM Wiki 引用抽屉设计——每个回答中的引用
  * 都可以追溯到原始知识库中的具体位置。</p>
  *
+ * @param documentId    文档 ID
+ * @param documentTitle 文档标题
+ * @param chunkIndex    块序号
+ * @param textExcerpt   文本摘录
+ * @param score         相似度得分
+ * @param sourcePath    来源路径
  * @author ydsz-agent
  * @since 1.0.0
  */

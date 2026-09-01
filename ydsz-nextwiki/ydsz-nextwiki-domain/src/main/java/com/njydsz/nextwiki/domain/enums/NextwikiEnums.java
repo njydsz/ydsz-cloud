@@ -32,8 +32,11 @@ public final class NextwikiEnums {
 
   /** 分享状态 */
   public enum ShareStatus implements BaseStatusEnum<ShareStatus> {
+    /** 分享生效中 */
     ACTIVE("active"),
+    /** 分享已过期（到达过期时间） */
     EXPIRED("expired"),
+    /** 分享已撤销（被所有者主动取消） */
     REVOKED("revoked");
 
     private final String code;
@@ -122,8 +125,11 @@ public final class NextwikiEnums {
 
   /** 回收站状态 */
   public enum TrashStatus implements BaseStatusEnum<TrashStatus> {
+    /** 在回收站中（可还原/彻底删除） */
     IN_TRASH("in_trash"),
+    /** 已还原到原位置 */
     RESTORED("restored"),
+    /** 已彻底清除（不可恢复） */
     PURGED("purged");
 
     private final String code;

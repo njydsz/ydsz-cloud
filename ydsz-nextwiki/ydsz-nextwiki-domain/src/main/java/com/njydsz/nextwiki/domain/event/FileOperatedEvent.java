@@ -47,13 +47,24 @@ public class FileOperatedEvent implements Serializable {
   /** 额外参数（如移动操作的目标路径） */
   private String extra;
 
-  /** 操作类型常量 */
+  /** 操作类型常量：上传 */
   public static final String OP_UPLOAD = "UPLOAD";
 
+  /** 操作类型常量：删除 */
   public static final String OP_DELETE = "DELETE";
+
+  /** 操作类型常量：移动 */
   public static final String OP_MOVE = "MOVE";
+
+  /** 操作类型常量：重命名 */
   public static final String OP_RENAME = "RENAME";
+
+  /** 操作类型常量：分享 */
   public static final String OP_SHARE = "SHARE";
+
+  /** 操作类型常量：回收站还原 */
   public static final String OP_RESTORE = "RESTORE";
+
+  /** 操作类型常量：版本回滚 */
   public static final String OP_VERSION_ROLLBACK = "VERSION_ROLLBACK";
 }

@@ -49,6 +49,13 @@ public interface ChannelAdapter {
 
     /**
      * 渠道状态信息。
+     *
+     * @param channelType 渠道类型
+     * @param healthy 是否健康可用
+     * @param totalRequests 累计请求数
+     * @param failedRequests 累计失败请求数
+     * @param failureRate 失败率（0.0-1.0）
+     * @param lastError 最近一次错误信息（无错误时为 null）
      */
     record ChannelStatus(
             ChannelType channelType,

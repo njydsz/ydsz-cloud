@@ -48,7 +48,12 @@ public interface Text2SQLService {
       String generatedSql,
       long executionTimeMs) {
 
-    /** 创建空结果 */
+    /**
+     * 创建空结果。
+     *
+     * @param sql 实际执行的 SQL（供审计）
+     * @return 空结果实例
+     */
     public static Text2SQLResult empty(String sql) {
       return new Text2SQLResult(List.of(), List.of(), 0, sql, 0);
     }
@@ -56,9 +61,6 @@ public interface Text2SQLService {
 
   /**
    * Text2SQL 异常。
-   *
-   * @param message 错误描述
-   * @param errorCode 错误码
    */
   class Text2SQLException extends RuntimeException {
 

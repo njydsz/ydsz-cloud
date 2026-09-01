@@ -15,9 +15,17 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 public @interface ToolParam {
 
-  /** 参数描述 */
+  /**
+   * 参数描述。
+   *
+   * @return 参数描述文本
+   */
   String value() default "";
 
-  /** 是否必填 */
+  /**
+   * 是否必填。
+   *
+   * @return 必填返回 true
+   */
   boolean required() default true;
 }

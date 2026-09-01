@@ -55,7 +55,6 @@
         <okhttp3.version>4.12.0</okhttp3.version>
         <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
         <resilience4j.version>2.4.0</resilience4j.version>
-        <sentinel.version>1.8.8</sentinel.version>
         <error-prone-annotations.version>2.49.0</error-prone-annotations.version>
         <fastjson2.version>2.0.62</fastjson2.version>
         <asm.version>9.7.1</asm.version>
@@ -649,12 +648,8 @@
                 <scope>runtime</scope>
             </dependency>
 
-            <!-- Sentinel flow control (optional, for advanced distributed rate limiting) -->
-            <dependency>
-                <groupId>com.alibaba.csp</groupId>
-                <artifactId>sentinel-core</artifactId>
-                <version>${sentinel.version}</version>
-            </dependency>
+            <!-- Sentinel 声明已于 2026-09-01 移除（对标清理 P1）：
+                 全仓 0 个使用点，熔断/重试由 Resilience4j 承担，详见根 pom 说明。 -->
 
         </dependencies>
     </dependencyManagement>

@@ -88,6 +88,11 @@ public class TagDomainService {
     return new TagDiff(toAdd, toRemove);
   }
 
-  /** 标签差异结果 */
+  /**
+   * 标签差异结果。
+   *
+   * @param toAdd 需新增的标签 ID 列表
+   * @param toRemove 需移除的标签 ID 列表
+   */
   public record TagDiff(List<String> toAdd, List<String> toRemove) {}
 }

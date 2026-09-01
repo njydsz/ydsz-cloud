@@ -89,7 +89,9 @@
         <openpdf.version>1.3.30</openpdf.version>
         <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
         <seata.version>2.5.0</seata.version>
-        <sentry.version>7.13.0</sentry.version>
+        <!-- io.sentry Sentry SDK 版本号已移除（2026-09-01 对标清理）：
+             ydsz-common-sentry 实为自研 OTel 告警/监控模块，从不依赖 Sentry SDK，
+             此版本属性此前仅管理未消费。 -->
 
         <ttl.version>2.14.5</ttl.version>
         <disruptor.version>3.4.4</disruptor.version>
@@ -597,30 +599,11 @@
                 <version>${dynamic-datasource.version}</version>
             </dependency>
 
-            <!-- Sentinel (Spring Cloud Alibaba 2025.1.0.0 内置版本 1.8.9) -->
-            <dependency>
-                <groupId>com.alibaba.csp</groupId>
-                <artifactId>sentinel-core</artifactId>
-                <version>1.8.9</version>
-            </dependency>
-            <!-- Spring Boot 4.x WebMVC 适配器 (Jakarta EE 10+) -->
-            <dependency>
-                <groupId>com.alibaba.csp</groupId>
-                <artifactId>sentinel-spring-webmvc-v6x-adapter</artifactId>
-                <version>1.8.9</version>
-            </dependency>
-            <!-- Spring Cloud Gateway 适配器 -->
-            <dependency>
-                <groupId>com.alibaba.csp</groupId>
-                <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
-                <version>1.8.9</version>
-            </dependency>
-            <!-- P0-阶段二-4: Sentinel 规则 Nacos 数据源（动态推送） -->
-            <dependency>
-                <groupId>com.alibaba.csp</groupId>
-                <artifactId>sentinel-datasource-nacos</artifactId>
-                <version>1.8.9</version>
-            </dependency>
+            <!-- Sentinel 稳定性组件已于 2026-09-01 移除（对标清理 P1）：
+                 全仓 0 个使用点（无 import/@SentinelResource/规则配置），
+                 实际熔断/重试由 Resilience4j 承担（网关 CircuitBreakerGlobalFilter +
+                 ydsz-common-feign 熔断适配器），避免双熔断组件并存的认知成本。
+                 如未来需要引入限流规则中心，请连同 README 技术栈说明一并评估。 -->
 
             <!-- fastjson2: 统一版本管理（rocketmq-acl 5.3.0 传递依赖 2.0.43，需提升到项目版本） -->
             <dependency>

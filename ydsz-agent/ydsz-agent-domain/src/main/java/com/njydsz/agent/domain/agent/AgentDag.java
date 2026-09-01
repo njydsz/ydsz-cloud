@@ -148,6 +148,15 @@ public final class AgentDag implements Serializable {
     /** 节点额外配置 */
     private final Map<String, Object> config;
 
+    /**
+     * 构造节点。
+     *
+     * @param id 节点 ID（不可为 null）
+     * @param agentType Agent 类型（不可为 null）
+     * @param prompt 节点提示词（null 时取空串）
+     * @param inputFrom 输入来源节点 ID（可为 null）
+     * @param config 节点额外配置（null 时为空 Map）
+     */
     public Node(
         String id, String agentType, String prompt, String inputFrom, Map<String, Object> config) {
       this.id = Objects.requireNonNull(id, "id 不能为 null");
@@ -157,22 +166,47 @@ public final class AgentDag implements Serializable {
       this.config = config != null ? Map.copyOf(config) : Map.of();
     }
 
+    /**
+     * 获取节点 ID。
+     *
+     * @return 节点 ID
+     */
     public String getId() {
       return id;
     }
 
+    /**
+     * 获取 Agent 类型。
+     *
+     * @return Agent 类型
+     */
     public String getAgentType() {
       return agentType;
     }
 
+    /**
+     * 获取节点提示词。
+     *
+     * @return 节点提示词
+     */
     public String getPrompt() {
       return prompt;
     }
 
+    /**
+     * 获取输入来源节点 ID。
+     *
+     * @return 输入来源节点 ID（无来源时为 null）
+     */
     public String getInputFrom() {
       return inputFrom;
     }
 
+    /**
+     * 获取节点额外配置。
+     *
+     * @return 不可变配置映射
+     */
     public Map<String, Object> getConfig() {
       return config;
     }

@@ -53,7 +53,11 @@ public interface ToolRegistry {
    */
   List<ToolDefinition> getToolDefinitions();
 
-  /** 获取已注册工具数 */
+  /**
+   * 获取已注册工具数。
+   *
+   * @return 已注册工具数
+   */
   int size();
 
   /**

@@ -182,6 +182,12 @@ public class FolderDomainService {
         && candidate.getPath().startsWith(ancestor.getPath());
   }
 
-  /** 目录统计信息 */
+  /**
+   * 目录统计信息。
+   *
+   * @param fileCount 文件数量
+   * @param folderCount 子目录数量
+   * @param totalSize 总大小（字节）
+   */
   public record FolderStats(int fileCount, int folderCount, long totalSize) {}
 }

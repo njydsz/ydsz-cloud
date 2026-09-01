@@ -24,12 +24,24 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Tool {
 
-  /** 工具名称（默认使用方法名） */
+  /**
+   * 工具名称（默认使用方法名）。
+   *
+   * @return 工具名称（空串时使用方法名）
+   */
   String name() default "";
 
-  /** 工具描述（告诉 LLM 这个工具做什么） */
+  /**
+   * 工具描述。
+   *
+   * @return 工具描述（告诉 LLM 这个工具做什么）
+   */
   String description() default "";
 
-  /** 是否启用 */
+  /**
+   * 是否启用。
+   *
+   * @return 启用返回 true
+   */
   boolean enabled() default true;
 }
