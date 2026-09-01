@@ -159,7 +159,7 @@ public class MessageServiceImpl implements MessageService {
    */
   private MessageResult sendInternal(MessageRequest request, int depth) {
     if (request == null) {
-      return MessageResult.fail(null, "消息请求为空");
+      return MessageResult.fail(null, null, "消息请求为空", "消息请求为空", null);
     }
     // P2-6: 级联深度保护(防御性,正常路径下 triggerCascade 已提前拦截)
     if (depth > MessageConstants.MAX_CASCADE_DEPTH) {
@@ -168,7 +168,7 @@ public class MessageServiceImpl implements MessageService {
           depth,
           MessageConstants.MAX_CASCADE_DEPTH,
           SensitiveUtil.scanAndMask(request.getReceiver()));
-      return MessageResult.fail(request.getChannel(), "级联深度超限");
+      return MessageResult.fail(request.getChannel(), null, "级联深度超限", "级联深度超限", null);
     }
 
     // ① 预处理管线：P2-1 根据场景自动选择模板（模板发送/简单直发/批量/回调）
@@ -192,7 +192,7 @@ public class MessageServiceImpl implements MessageService {
           maxLen,
           ctx.getChannel());
       return MessageResult.fail(
-          ctx.getChannel(), "消息内容超过最大长度限制: " + rendered.content().length() + " > " + maxLen);
+          ctx.getChannel(), null, "消息内容超过最大长度限制: " + rendered.content().length() + " > " + maxLen, "消息内容超过最大长度限制: " + rendered.content().length() + " > " + maxLen, null);
     }
 
     // ③ 构造落库对象
@@ -325,7 +325,7 @@ public class MessageServiceImpl implements MessageService {
       MessageRequest request, SendContext ctx, MsgLogVO logDO, RenderedContent rendered) {
     // 模板缺失: renderContent 标记 templateMissing=true 时直接返回失败
     if (rendered.templateMissing()) {
-      return MessageResult.fail(ctx.getChannel(), "模板不存在: " + ctx.getTemplateCode());
+      return MessageResult.fail(ctx.getChannel(), null, "模板不存在: " + ctx.getTemplateCode(), "模板不存在: " + ctx.getTemplateCode(), null);
     }
     // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
     if (request.getScheduledAt() != null && request.getScheduledAt().isAfter(LocalDateTime.now())) {
@@ -439,7 +439,7 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public MessageResult sendDirect(MessageSendDTO dto) {
     if (dto == null) {
-      return MessageResult.fail(null, "发送参数为空");
+      return MessageResult.fail(null, null, "发送参数为空", "发送参数为空", null);
     }
     MessageRequest request = new MessageRequest();
     request.setChannel(dto.getChannel());
@@ -492,7 +492,7 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public MessageResult cancelScheduledMessage(String msgId) {
     if (!StringUtils.hasText(msgId)) {
-      return MessageResult.fail(null, "消息 ID 不能为空");
+      return MessageResult.fail(null, null, "消息 ID 不能为空", "消息 ID 不能为空", null);
     }
     MessageLogQueryDTO query = new MessageLogQueryDTO();
     query.setMsgId(msgId);
@@ -500,10 +500,10 @@ public class MessageServiceImpl implements MessageService {
     query.setPageSize(1);
     MsgLogVO logVO = msgLogRepository.findOne(query).orElse(null);
     if (logVO == null) {
-      return MessageResult.fail(null, "消息不存在: " + msgId);
+      return MessageResult.fail(null, null, "消息不存在: " + msgId, "消息不存在: " + msgId, null);
     }
     if (!MessageStatusEnum.SCHEDULED.name().equals(logVO.getStatus())) {
-      return MessageResult.fail(logVO.getChannel(), "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）");
+      return MessageResult.fail(logVO.getChannel(), null, "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）", "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）", null);
     }
     logVO.setStatus(MessageStatusEnum.SKIPPED.name());
     logVO.setErrorMessage("USER_CANCELLED");
@@ -607,7 +607,7 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public MessageResult sendAsync(MessageRequest request) {
     if (request == null) {
-      return MessageResult.fail(null, "消息请求为空");
+      return MessageResult.fail(null, null, "消息请求为空", "消息请求为空", null);
     }
     // 确保有 messageId
     if (!StringUtils.hasText(request.getMessageId())) {
@@ -659,7 +659,7 @@ public class MessageServiceImpl implements MessageService {
           "[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
     } catch (Exception e) {
       log.error("[Message] 异步消息落库失败: msgId={} err={}", request.getMessageId(), e.getMessage(), e);
-      return MessageResult.fail(request.getChannel(), "消息落库失败: " + e.getMessage());
+      return MessageResult.fail(request.getChannel(), null, "消息落库失败: " + e.getMessage(), "消息落库失败: " + e.getMessage(), null);
     }
     // ② 写入 Outbox 表（与业务同事务语义，由 OutboxEventScheduler 异步投递 MQ）
     try {

@@ -80,13 +80,23 @@ public final class ToolRegistration {
     private final Map<String, Object> parametersSchema = new HashMap<>();
     private ToolExecutor executor;
 
-    /** 设置工具名，需在注册表内全局唯一；LLM 依据该名称发起 Function Calling，命名建议用小写下划线。 */
+    /**
+     * 设置工具名，需在注册表内全局唯一。
+     *
+     * @param name 工具名（建议小写下划线）
+     * @return 当前 Builder
+     */
     public Builder name(String name) {
       this.name = name;
       return this;
     }
 
-    /** 设置工具用途描述，该文本会随 tools 定义发给 LLM，直接影响模型的选择准确率，应写清适用场景与边界。 */
+    /**
+     * 设置工具用途描述，该文本会随 tools 定义发给 LLM。
+     *
+     * @param description 工具描述
+     * @return 当前 Builder
+     */
     public Builder description(String description) {
       this.description = description;
       return this;
@@ -113,7 +123,12 @@ public final class ToolRegistration {
       return this;
     }
 
-    /** 绑定实际执行逻辑；执行器会被 Agent 在工具调用线程上直接调用，实现需自行保证线程安全与超时控制。 */
+    /**
+     * 绑定实际执行逻辑。
+     *
+     * @param executor 工具执行器（实现需自行保证线程安全与超时控制）
+     * @return 当前 Builder
+     */
     public Builder executor(ToolExecutor executor) {
       this.executor = executor;
       return this;

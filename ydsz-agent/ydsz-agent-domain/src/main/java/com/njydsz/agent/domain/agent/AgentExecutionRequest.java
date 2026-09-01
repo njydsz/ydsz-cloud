@@ -147,37 +147,67 @@ public final class AgentExecutionRequest {
     private int maxIterations = 10; // Builder 默认值，与构造兜底保持一致，避免未设值时陷入无限迭代
     private List<String> enabledTools;
 
-    /** 绑定对话 ID 以启用历史记忆检索；不设置则本次按无上下文的单轮会话执行。 */
+    /**
+     * 绑定对话 ID 以启用历史记忆检索。
+     *
+     * @param conversationId 对话 ID
+     * @return 当前 Builder
+     */
     public Builder conversationId(String conversationId) {
       this.conversationId = conversationId;
       return this;
     }
 
-    /** 设置用户输入原文，必填；未设置时 {@link #build()} 会抛出 {@link NullPointerException}。 */
+    /**
+     * 设置用户输入原文，必填；未设置时 {@link #build()} 会抛出 {@link NullPointerException}。
+     *
+     * @param userInput 用户输入原文
+     * @return 当前 Builder
+     */
     public Builder userInput(String userInput) {
       this.userInput = userInput;
       return this;
     }
 
-    /** 覆盖 Agent 默认系统提示词，仅对本次执行生效；不设置则沿用 Agent 定义的人设。 */
+    /**
+     * 覆盖 Agent 默认系统提示词，仅对本次执行生效。
+     *
+     * @param systemPrompt 系统提示词
+     * @return 当前 Builder
+     */
     public Builder systemPrompt(String systemPrompt) {
       this.systemPrompt = systemPrompt;
       return this;
     }
 
-    /** 设置 Prompt 模板渲染变量；传 {@code null} 时按空 Map 处理，模板占位符将保持未替换。 */
+    /**
+     * 设置 Prompt 模板渲染变量。
+     *
+     * @param variables 模板变量（null 时按空 Map 处理）
+     * @return 当前 Builder
+     */
     public Builder variables(Map<String, Object> variables) {
       this.variables = variables;
       return this;
     }
 
-    /** 设置 ReAct 循环迭代上限，传非正数时回落为默认 10；该值直接决定单次执行的 token 消耗上界。 */
+    /**
+     * 设置 ReAct 循环迭代上限。
+     *
+     * @param maxIterations 迭代上限（非正数时回落为默认 10）
+     * @return 当前 Builder
+     */
     public Builder maxIterations(int maxIterations) {
       this.maxIterations = maxIterations;
       return this;
     }
 
-    /** 设置本次可调用的工具白名单；传 {@code null} 或空列表表示不限制，放开 Agent 已注册的全部工具。 */
+    /**
+     * 设置本次可调用的工具白名单。
+     *
+     * @param enabledTools 工具白名单（null 或空表示不限制）
+     * @return 当前 Builder
+     */
     public Builder enabledTools(List<String> enabledTools) {
       this.enabledTools = enabledTools;
       return this;

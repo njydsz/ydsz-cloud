@@ -213,55 +213,100 @@ public final class ChatRequest implements Serializable {
     private List<ToolDefinition> tools;
     private String toolChoice;
 
-    /** 指定目标模型标识，必填；未设置时 {@link #build()} 会抛出 {@link NullPointerException}。 */
+    /**
+     * 指定目标模型标识，必填。
+     *
+     * @param model 模型标识
+     * @return 当前 Builder
+     */
     public Builder model(String model) {
       this.model = model;
       return this;
     }
 
-    /** 设置对话消息序列，必填且需按时序排列；未设置时 {@link #build()} 会抛出 {@link NullPointerException}。 */
+    /**
+     * 设置对话消息序列，必填且需按时序排列。
+     *
+     * @param messages 消息序列
+     * @return 当前 Builder
+     */
     public Builder messages(List<ChatMessage> messages) {
       this.messages = messages;
       return this;
     }
 
-    /** 设置采样温度，取值区间随 Provider 而异（通常 [0, 2]），越大越发散；不校验越界，由 Provider 侧拒绝。 */
+    /**
+     * 设置采样温度。
+     *
+     * @param temperature 采样温度（通常 [0, 2]）
+     * @return 当前 Builder
+     */
     public Builder temperature(double temperature) {
       this.temperature = temperature;
       return this;
     }
 
-    /** 设置单次响应生成 Token 上限，直接决定本次调用的成本封顶，不含 prompt 侧消耗。 */
+    /**
+     * 设置单次响应生成 Token 上限。
+     *
+     * @param maxTokens Token 上限
+     * @return 当前 Builder
+     */
     public Builder maxTokens(int maxTokens) {
       this.maxTokens = maxTokens;
       return this;
     }
 
-    /** 设置 nucleus 采样阈值，取值 (0, 1]；与 temperature 同时调低会显著降低多样性，建议只调其一。 */
+    /**
+     * 设置 nucleus 采样阈值。
+     *
+     * @param topP 采样阈值，取值 (0, 1]
+     * @return 当前 Builder
+     */
     public Builder topP(double topP) {
       this.topP = topP;
       return this;
     }
 
-    /** 设置停止序列，命中任一序列即截断生成；传 {@code null} 表示不设停止词。 */
+    /**
+     * 设置停止序列。
+     *
+     * @param stop 停止序列列表（null 表示不设停止词）
+     * @return 当前 Builder
+     */
     public Builder stop(List<String> stop) {
       this.stop = stop;
       return this;
     }
 
-    /** 设置是否走流式输出；为 {@code true} 时必须使用 {@code LlmClient#stream} 调用，否则响应无法正常解析。 */
+    /**
+     * 设置是否走流式输出。
+     *
+     * @param stream 是否流式输出
+     * @return 当前 Builder
+     */
     public Builder stream(boolean stream) {
       this.stream = stream;
       return this;
     }
 
-    /** 设置本次开放给模型的工具定义；传 {@code null} 或空列表表示关闭 Function Calling。 */
+    /**
+     * 设置本次开放给模型的工具定义。
+     *
+     * @param tools 工具定义列表（null 或空表示关闭 Function Calling）
+     * @return 当前 Builder
+     */
     public Builder tools(List<ToolDefinition> tools) {
       this.tools = tools;
       return this;
     }
 
-    /** 设置工具选择策略，取值 {@code auto} / {@code none} / 具体工具名；{@code null} 时由 Provider 默认策略决定。 */
+    /**
+     * 设置工具选择策略。
+     *
+     * @param toolChoice 取值 {@code auto} / {@code none} / 具体工具名
+     * @return 当前 Builder
+     */
     public Builder toolChoice(String toolChoice) {
       this.toolChoice = toolChoice;
       return this;

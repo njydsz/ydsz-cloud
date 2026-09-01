@@ -93,7 +93,6 @@ ydsz-cloud/
 │   ├── ydsz-common-queue     # L5：6 种 MQ 抽象（Stream/Kafka/Rocket/List/PubSub/Rabbit）
 │   ├── ydsz-common-event     # L5：事务性 Outbox
 │   ├── ydsz-common-config    # L5：配置变更桥接
-│   ├── ydsz-common-seata     # L5：Seata 分布式事务
 │   ├── ydsz-common-socket    # L5：WebSocket 集群广播
 │   ├── ydsz-common-netty     # L5：TCP 通信
 │   ├── ydsz-common-file      # L5：7 种存储平台 / 分片 / 秒传
@@ -161,16 +160,19 @@ mvn clean package -DskipTests
 
 ### 数据库初始化
 
-> 项目规范**禁止**使用 Flyway / Liquibase 等 schema-migration 框架。数据库 DDL 统一以 SQL 脚本形式管理，存放于各模块的 `deploy/sql/` 目录下。
+> 项目规范**禁止**使用 Flyway / Liquibase 等 schema-migration 框架。数据库 DDL 统一以 SQL 脚本形式管理，**唯一维护目录为 `data/postgre/`**（按服务一文件，如 `data/postgre/ydsz-system.sql`）。
+>
+> 注：`data/legacy-dialects/` 下的 MySQL / Oracle 方言脚本为历史遗留转译产物，**不再随 PostgreSQL 版本同步维护**，仅作迁移参考。
 
 ```bash
 # 1. 创建数据库
 psql -U postgres -c "CREATE DATABASE ydsz_cloud;"
 
-# 2. 按模块导入初始化脚本（示例）
-psql -U postgres -d ydsz_cloud -f ydsz-userinfo/ydsz-userinfo-web/src/main/resources/sql/init.sql
-psql -U postgres -d ydsz_cloud -f ydsz-system/ydsz-system-web/src/main/resources/sql/init.sql
-# ...依此类推
+# 2. 按模块导入初始化脚本（唯一事实源：data/postgre/，示例）
+psql -U postgres -d ydsz_cloud -f data/postgre/ydsz-common.sql
+psql -U postgres -d ydsz_cloud -f data/postgre/ydsz-userinfo.sql
+psql -U postgres -d ydsz_cloud -f data/postgre/ydsz-system.sql
+# ...依此类推（data/postgre/ 下其余模块脚本）
 ```
 
 ### 本地启动
