@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 import com.njydsz.common.safe.resilience.CallNotPermittedException;
+import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
 
 /**
  * 熔断器（基于平台自研弹性引擎 {@link com.njydsz.common.safe.resilience.CircuitBreaker}）
@@ -46,6 +47,7 @@ import com.njydsz.common.safe.resilience.CallNotPermittedException;
 public class CircuitBreaker {
 
   /** 资源 → 底层熔断器实例 */
+  // FQN-OK: name conflict with CircuitBreaker
   private final Map<String, com.njydsz.common.safe.resilience.CircuitBreaker> breakers =
       new ConcurrentHashMap<>();
 
@@ -68,6 +70,7 @@ public class CircuitBreaker {
    * @return 限流决策（含执行结果或拒绝原因）
    */
   public <T> RateLimitDecision tryAcquire(String resource, CircuitBreakerCallback<T> callback) {
+    // FQN-OK: name conflict with CircuitBreaker
     com.njydsz.common.safe.resilience.CircuitBreaker cb = getOrCreate(resource);
     try {
       T result =
@@ -133,6 +136,7 @@ public class CircuitBreaker {
    * @return 熔断器状态（未创建时返回 CLOSED）
    */
   public State getState(String resource) {
+    // FQN-OK: name conflict with CircuitBreaker
     com.njydsz.common.safe.resilience.CircuitBreaker cb = breakers.get(resource);
     if (cb == null) {
       return State.CLOSED;
@@ -141,6 +145,7 @@ public class CircuitBreaker {
   }
 
   /** 获取或创建指定资源的熔断器实例。 */
+  // FQN-OK: name conflict with CircuitBreaker
   private com.njydsz.common.safe.resilience.CircuitBreaker getOrCreate(String resource) {
     return breakers.computeIfAbsent(resource, key -> newEngineBreaker(config, key));
   }
@@ -149,12 +154,14 @@ public class CircuitBreaker {
   private static com.njydsz.common.safe.resilience.CircuitBreaker newEngineBreaker(
       CircuitBreakerConfig config, String resource) {
     String prefix = config.getName() == null ? "ratelimit" : config.getName();
+    // FQN-OK: name conflict with CircuitBreaker
     return com.njydsz.common.safe.resilience.CircuitBreaker.of(
         prefix + "-" + resource, config.toEngineConfig());
   }
 
   /** 引擎状态 → 本地三态映射（FORCED_OPEN 视为 OPEN）。 */
   private static State toLocalState(
+      // FQN-OK: name conflict with CircuitBreaker
       com.njydsz.common.safe.resilience.CircuitBreaker.State engineState) {
     return switch (engineState) {
       case CLOSED -> State.CLOSED;
@@ -241,8 +248,8 @@ public class CircuitBreaker {
     }
 
     /** 转换为自研引擎配置（阈值 0-1 → 百分比）。 */
-    com.njydsz.common.safe.resilience.CircuitBreakerConfig toEngineConfig() {
-      return com.njydsz.common.safe.resilience.CircuitBreakerConfig.custom()
+    CircuitBreakerConfig toEngineConfig() {
+      return CircuitBreakerConfig.custom()
           .failureRateThreshold((float) (this.failureRateThreshold * 100))
           .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))
           .slowCallDurationThreshold(Duration.ofMillis(this.slowCallDurationThresholdMillis))
@@ -252,10 +259,8 @@ public class CircuitBreaker {
           .slidingWindowSize(this.slidingWindowSize)
           .slidingWindowType(
               SlidingWindowType.COUNT_BASED.equals(this.slidingWindowType)
-                  ? com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType
-                      .COUNT_BASED
-                  : com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType
-                      .TIME_BASED)
+                  ? CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
+                  : CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
           .build();
     }
   }

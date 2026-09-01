@@ -15,7 +15,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.safe.resilience.CircuitBreaker;
 import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
-import com.njydsz.common.safe.resilience.CircuitBreakerEvent;
 import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;

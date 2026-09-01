@@ -18,6 +18,8 @@ import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.common.sentry.spi.MetricsCollector;
+import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
+import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
@@ -130,24 +132,22 @@ public class MetricsAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(
-      beanTypes = com.njydsz.common.safe.resilience.CircuitBreakerRegistry.class)
-  public com.njydsz.common.safe.resilience.CircuitBreakerRegistry circuitBreakerRegistry(
+      beanTypes = CircuitBreakerRegistry.class)
+  public CircuitBreakerRegistry circuitBreakerRegistry(
       SentryProperties properties) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
-    com.njydsz.common.safe.resilience.CircuitBreakerConfig config =
-        com.njydsz.common.safe.resilience.CircuitBreakerConfig.custom()
+    CircuitBreakerConfig config =
+        CircuitBreakerConfig.custom()
             // SentryProperties 阈值为 0-1 比例，换算为引擎百分比语义
             .failureRateThreshold((float) (cb.getFailureRateThreshold() * 100))
-            .slidingWindowType(
-                com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType
-                    .TIME_BASED)
+            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
             .slidingWindowSize(cb.getSlidingWindowSize())
             .waitDurationInOpenState(java.time.Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))
             .minimumNumberOfCalls(10)
             .permittedNumberOfCallsInHalfOpenState(1)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .build();
-    return new com.njydsz.common.safe.resilience.CircuitBreakerRegistry(config);
+    return new CircuitBreakerRegistry(config);
   }
 
   /**

@@ -5,6 +5,9 @@ import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
+import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
+
 /**
  * 熔断降级保护器（基于平台自研弹性引擎）。
  *
@@ -48,6 +51,7 @@ public class CircuitBreaker {
   }
 
   private final String name;
+  // FQN-OK: name conflict with CircuitBreaker
   private final com.njydsz.common.safe.resilience.CircuitBreaker delegate;
 
   /**
@@ -64,14 +68,13 @@ public class CircuitBreaker {
       int slidingWindowSizeSeconds,
       long halfOpenAfterMillis) {
     this.name = name;
+    // FQN-OK: name conflict with CircuitBreaker
     this.delegate =
         new com.njydsz.common.safe.resilience.CircuitBreaker(
             name,
-            com.njydsz.common.safe.resilience.CircuitBreakerConfig.custom()
+            CircuitBreakerConfig.custom()
                 .failureRateThreshold((float) (failureRateThreshold * 100))
-                .slidingWindowType(
-                    com.njydsz.common.safe.resilience.CircuitBreakerConfig.SlidingWindowType
-                        .TIME_BASED)
+                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
                 .slidingWindowSize(slidingWindowSizeSeconds)
                 .waitDurationInOpenState(java.time.Duration.ofMillis(halfOpenAfterMillis))
                 .minimumNumberOfCalls(10)
@@ -96,8 +99,8 @@ public class CircuitBreaker {
    */
   public CircuitBreaker(
       String name,
-      com.njydsz.common.safe.resilience.CircuitBreakerConfig config,
-      com.njydsz.common.safe.resilience.CircuitBreakerRegistry registry) {
+      CircuitBreakerConfig config,
+      CircuitBreakerRegistry registry) {
     this.name = name;
     this.delegate = registry.circuitBreaker(name, config);
     log.info("[Sentry] CircuitBreaker '{}' 初始化完成（共享 Registry）", name);
@@ -131,6 +134,7 @@ public class CircuitBreaker {
    * @return {@code true} 允许执行；{@code false} 应走降级
    */
   public boolean canExecute() {
+    // FQN-OK: name conflict with CircuitBreaker
     com.njydsz.common.safe.resilience.CircuitBreaker.State state = delegate.getState();
     return state != com.njydsz.common.safe.resilience.CircuitBreaker.State.OPEN
         && state != com.njydsz.common.safe.resilience.CircuitBreaker.State.FORCED_OPEN;
@@ -205,6 +209,7 @@ public class CircuitBreaker {
    *
    * @return 自研引擎 CircuitBreaker 实例
    */
+  // FQN-OK: name conflict with CircuitBreaker
   public com.njydsz.common.safe.resilience.CircuitBreaker getDelegate() {
     return delegate;
   }

@@ -21,6 +21,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.safe.resilience.CallNotPermittedException;
+import com.njydsz.common.safe.resilience.CircuitBreaker;
 import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
 import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.gateway.config.GatewayConstants;
@@ -128,7 +129,7 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
     }
     String routeId = route.getId();
 
-    com.njydsz.common.safe.resilience.CircuitBreaker circuitBreaker =
+    CircuitBreaker circuitBreaker =
         circuitBreakerRegistry.circuitBreaker(routeId, defaultCircuitBreakerConfig());
     registerStateMetrics(routeId, circuitBreaker);
 
@@ -185,8 +186,7 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
    * @param routeId 路由 ID
    * @param circuitBreaker 熔断器实例
    */
-  private void registerStateMetrics(
-      String routeId, com.njydsz.common.safe.resilience.CircuitBreaker circuitBreaker) {
+  private void registerStateMetrics(String routeId, CircuitBreaker circuitBreaker) {
     if (!metricListenersRegistered.add(routeId)) {
       return;
     }

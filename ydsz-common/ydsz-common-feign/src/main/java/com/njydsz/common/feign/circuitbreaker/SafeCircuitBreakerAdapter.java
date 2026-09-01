@@ -6,6 +6,9 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.feign.config.FeignProperties;
+import com.njydsz.common.safe.resilience.CircuitBreaker;
+import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
+import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 
 /**
  * 平台自研熔断器适配器。
@@ -25,7 +28,7 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
   private final FeignProperties properties;
   private final CircuitBreakerStatePersistence statePersistence;
   private final FeignCircuitBreakerMetricsExporter metricsExporter;
-  private final com.njydsz.common.safe.resilience.CircuitBreakerRegistry registry;
+  private final CircuitBreakerRegistry registry;
 
   /**
    * 构造自研熔断适配器。
@@ -41,8 +44,7 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
     this.properties = properties;
     this.statePersistence = statePersistence;
     this.metricsExporter = metricsExporter;
-    this.registry = new com.njydsz.common.safe.resilience.CircuitBreakerRegistry(
-        com.njydsz.common.safe.resilience.CircuitBreakerConfig.ofDefaults());
+    this.registry = new CircuitBreakerRegistry(CircuitBreakerConfig.ofDefaults());
   }
 
   @Override
@@ -75,7 +77,7 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
 
   @Override
   public CircuitBreakerMetrics getMetrics(String serviceName) {
-    com.njydsz.common.safe.resilience.CircuitBreaker.Metrics metrics =
+    CircuitBreaker.Metrics metrics =
         getOrCreate(serviceName).getMetrics();
     return new CircuitBreakerMetrics() {
       @Override
@@ -110,13 +112,13 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
     };
   }
 
-  private com.njydsz.common.safe.resilience.CircuitBreaker getOrCreate(String serviceName) {
+  private CircuitBreaker getOrCreate(String serviceName) {
     return registry.computeIfAbsent(
         serviceName,
         () -> {
           // 熔断参数从配置读取（ydsz.feign.circuit-breaker.*），不再硬编码，支持按环境调优
           FeignProperties.CircuitBreaker cbConfig = properties.getCircuitBreaker();
-          return com.njydsz.common.safe.resilience.CircuitBreakerConfig.custom()
+          return CircuitBreakerConfig.custom()
               .failureRateThreshold(cbConfig.getFailureRateThreshold())
               .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold())
               .slowCallDurationThreshold(Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
