@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.vo.UserSessionStatistics;
+import com.njydsz.userinfo.domain.vo.UserSessionStatisticsVO;
 import com.njydsz.userinfo.domain.vo.UserSessionVO;
 
 /**
@@ -136,11 +136,11 @@ public class UserSessionAdminService {
    *
    * @return 会话统计 record
    */
-  public UserSessionStatistics getSessionStatistics() {
+  public UserSessionStatisticsVO getSessionStatistics() {
     // 完整实现需要遍历所有用户或通过全局会话索引获取
     // 当前返回零值，避免 N+1 查询
     log.debug("getSessionStatistics called - requires global session index for accurate data");
-    return new UserSessionStatistics(0, 0, new HashMap<>(INITIAL_CAPACITY));
+    return new UserSessionStatisticsVO(0, 0, new HashMap<>(INITIAL_CAPACITY));
   }
 
   /**

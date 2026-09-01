@@ -7,12 +7,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.dto.RichMediaContent;
+import com.njydsz.message.domain.dto.RichMediaContentDTO;
 
 /**
  * P1-2: 富媒体消息渲染器。
  *
- * <p>将 {@link RichMediaContent} 渲染为通道特定的格式：
+ * <p>将 {@link RichMediaContentDTO} 渲染为通道特定的格式：
  *
  * <ul>
  *   <li>EMAIL: 渲染为 HTML 邮件正文（含内联图片、附件链接、操作按钮）
@@ -38,7 +38,7 @@ public class RichMediaRenderer {
    * @param params 模板参数
    * @return 富媒体内容；无则返回 null
    */
-  public RichMediaContent extractFromParams(Map<String, Object> params) {
+  public RichMediaContentDTO extractFromParams(Map<String, Object> params) {
     if (params == null || params.isEmpty()) {
       return null;
     }
@@ -47,8 +47,8 @@ public class RichMediaRenderer {
       return null;
     }
     try {
-      if (raw instanceof RichMediaContent) {
-        return (RichMediaContent) raw;
+      if (raw instanceof RichMediaContentDTO) {
+        return (RichMediaContentDTO) raw;
       }
       String json = raw instanceof String ? (String) raw : YdszJson.toJson(raw);
       return YdszJson.fromJson(json, RichMediaContent.class);
@@ -64,7 +64,7 @@ public class RichMediaRenderer {
    * @param media 参数说明
    * @return 返回值说明
    */
-  public String renderHtml(RichMediaContent media) {
+  public String renderHtml(RichMediaContentDTO media) {
     if (media == null) {
       return null;
     }
@@ -102,7 +102,7 @@ public class RichMediaRenderer {
     if (media.getAttachments() != null && !media.getAttachments().isEmpty()) {
       html.append(
           "<div style=\"margin:16px 0;\"><p style=\"color:#666;font-size:14px;\">附件：</p><ul>");
-      for (RichMediaContent.Attachment att : media.getAttachments()) {
+      for (RichMediaContentDTO.Attachment att : media.getAttachments()) {
         html.append("<li><a href=\"")
             .append(att.getUrl())
             .append("\" style=\"color:#1890ff;\">")
@@ -115,7 +115,7 @@ public class RichMediaRenderer {
     // 操作按钮
     if (media.getButtons() != null && !media.getButtons().isEmpty()) {
       html.append("<div style=\"margin:24px 0;text-align:center;\">");
-      for (RichMediaContent.ActionButton btn : media.getButtons()) {
+      for (RichMediaContentDTO.ActionButton btn : media.getButtons()) {
         if ("OPEN_URL".equals(btn.getActionType())) {
           html.append("<a href=\"")
               .append(btn.getActionValue())
@@ -138,7 +138,7 @@ public class RichMediaRenderer {
    * @param media 参数说明
    * @return 返回值说明
    */
-  public String renderMarkdown(RichMediaContent media) {
+  public String renderMarkdown(RichMediaContentDTO media) {
     if (media == null) {
       return null;
     }
@@ -159,13 +159,13 @@ public class RichMediaRenderer {
     }
     if (media.getAttachments() != null && !media.getAttachments().isEmpty()) {
       md.append("**附件：**\n");
-      for (RichMediaContent.Attachment att : media.getAttachments()) {
+      for (RichMediaContentDTO.Attachment att : media.getAttachments()) {
         md.append("- [").append(att.getFilename()).append("](").append(att.getUrl()).append(")\n");
       }
       md.append("\n");
     }
     if (media.getButtons() != null && !media.getButtons().isEmpty()) {
-      for (RichMediaContent.ActionButton btn : media.getButtons()) {
+      for (RichMediaContentDTO.ActionButton btn : media.getButtons()) {
         if ("OPEN_URL".equals(btn.getActionType())) {
           md.append("[")
               .append(btn.getText())
@@ -185,7 +185,7 @@ public class RichMediaRenderer {
    * @param media 参数说明
    * @return 返回值说明
    */
-  public String renderPlainText(RichMediaContent media) {
+  public String renderPlainText(RichMediaContentDTO media) {
     if (media == null) {
       return null;
     }

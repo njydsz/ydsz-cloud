@@ -31,7 +31,7 @@ import com.njydsz.common.json.YdszJson;
  * @since 1.0.0
  */
 @Slf4j
-public class JwksEndpoint {
+public class JwksEndpointVO {
 
   /** JWKS 密钥类型：八位字节序列（对称密钥） */
   private static final String KTY_OCT = "oct";
@@ -66,7 +66,7 @@ public class JwksEndpoint {
    * @param hmacSecret   HMAC 签名密钥字节数组
    * @param publicKeyPem RSA 公钥 PEM 字符串（可为 null 或空表示不使用 RSA）
    */
-  public JwksEndpoint(byte[] hmacSecret, String publicKeyPem) {
+  public JwksEndpointVO(byte[] hmacSecret, String publicKeyPem) {
     this.hmacSecret = hmacSecret;
     this.publicKeyPem = publicKeyPem;
   }

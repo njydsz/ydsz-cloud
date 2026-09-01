@@ -21,7 +21,7 @@ import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.ImportResultVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.service.ConfigExcelService;
 import com.njydsz.system.server.vo.ConfigExcelVO;
@@ -79,11 +79,11 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public ImportResult importConfigs(InputStream inputStream) {
+  public ImportResultVO importConfigs(InputStream inputStream) {
     // 1. 读取 Excel 文件
     List<ConfigExcelVO> excelRows = readExcel(inputStream);
     if (excelRows.isEmpty()) {
-      return ImportResult.builder()
+      return ImportResultVO.builder()
           .totalCount(0)
           .successCount(0)
           .failCount(0)
@@ -110,7 +110,7 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     int successCount = saveValidItemsBatch(validItems, errors);
 
     // 4. 构建导入结果
-    return ImportResult.builder()
+    return ImportResultVO.builder()
         .totalCount(excelRows.size())
         .successCount(successCount)
         .failCount(excelRows.size() - successCount - skipCount)

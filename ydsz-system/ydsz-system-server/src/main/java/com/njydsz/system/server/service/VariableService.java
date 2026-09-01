@@ -5,7 +5,7 @@ import java.util.List;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.query.VariablePageQuery;
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.ImportResultVO;
 import com.njydsz.system.domain.vo.VariableVO;
 
 
@@ -153,5 +153,5 @@ public interface VariableService {
    * @param inputStream Excel 文件输入流
    * @return 导入结果（成功数、失败数、跳过数）
    */
-  ImportResult importVariables(InputStream inputStream);
+  ImportResultVO importVariables(InputStream inputStream);
 }

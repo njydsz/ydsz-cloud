@@ -12,7 +12,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-public class FlowCcQueryDTO implements Serializable {
+public class FlowCcQuery implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 

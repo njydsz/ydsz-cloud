@@ -32,7 +32,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.repository.VariableRepository;
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.ImportResultVO;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
@@ -413,11 +413,11 @@ public class VariableServiceImpl implements VariableService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public ImportResult importVariables(InputStream inputStream) {
+  public ImportResultVO importVariables(InputStream inputStream) {
     // 1. 读取 Excel 文件
     List<VariableExcelVO> excelRows = readExcel(inputStream);
     if (excelRows.isEmpty()) {
-      return ImportResult.builder()
+      return ImportResultVO.builder()
           .totalCount(0)
           .successCount(0)
           .failCount(0)
@@ -444,7 +444,7 @@ public class VariableServiceImpl implements VariableService {
     int successCount = saveValidItemsBatch(validItems, errors);
 
     // 4. 构建导入结果
-    return ImportResult.builder()
+    return ImportResultVO.builder()
         .totalCount(excelRows.size())
         .successCount(successCount)
         .failCount(excelRows.size() - successCount - skipCount)

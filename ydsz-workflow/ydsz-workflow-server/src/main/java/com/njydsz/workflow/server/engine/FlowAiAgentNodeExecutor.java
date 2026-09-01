@@ -17,8 +17,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient.AgentExecutionResult;
-import com.njydsz.workflow.domain.vo.AiAgentNodeConfig;
-import com.njydsz.workflow.domain.vo.AiAgentNodeConfig.FallbackStrategy;
+import com.njydsz.workflow.domain.vo.AiAgentNodeConfigVO;
+import com.njydsz.workflow.domain.vo.AiAgentNodeConfigVO.FallbackStrategy;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.server.engine.impl.FlowVariableReplacer;
 
@@ -138,7 +138,7 @@ public class FlowAiAgentNodeExecutor {
    * @throws SysException Agent 配置非法、执行异常且无法兜底时抛出
    */
   public boolean execute(FlowNodeVO node, String instanceId, Map<String, Object> variables) {
-    AiAgentNodeConfig config = node.getAiAgentNodeConfig();
+    AiAgentNodeConfigVO config = node.getAiAgentNodeConfig();
     String nodeCode = node.getNodeCode();
 
     // 校验 agentId
@@ -181,7 +181,7 @@ public class FlowAiAgentNodeExecutor {
    * @param nodeCode 节点编码（日志用）
    * @return Agent 执行结果，全部重试失败时返回 null
    */
-  private AgentExecutionResult executeWithRetry(AiAgentNodeConfig config, String prompt,
+  private AgentExecutionResult executeWithRetry(AiAgentNodeConfigVO config, String prompt,
       Map<String, Object> context, String instanceId, String nodeCode) {
     int maxAttempts = config.isRetryFallback() ? config.getRetryMax() + 1 : 1;
     AgentExecutionResult lastResult = null;
@@ -216,7 +216,7 @@ public class FlowAiAgentNodeExecutor {
    * @param context 上下文
    * @return Agent 执行结果
    */
-  private AgentExecutionResult executeSingleAttempt(AiAgentNodeConfig config, String prompt,
+  private AgentExecutionResult executeSingleAttempt(AiAgentNodeConfigVO config, String prompt,
       Map<String, Object> context) {
     // 使用 CompletableFuture + 线程池实现超时控制
     CompletableFuture<AgentExecutionResult> future = CompletableFuture.supplyAsync(
@@ -252,7 +252,7 @@ public class FlowAiAgentNodeExecutor {
    * @param cause 触发兜底的原因
    * @return 兜底后的审批决策
    */
-  private boolean applyFallback(AiAgentNodeConfig config, String instanceId, String nodeCode,
+  private boolean applyFallback(AiAgentNodeConfigVO config, String instanceId, String nodeCode,
       String cause) {
     FallbackStrategy strategy = config.getFallbackStrategy();
     log.warn("[Flow-AI-Agent] 实例 {} 节点 {} 触发兜底策略: {}, 原因: {}", instanceId, nodeCode, strategy,

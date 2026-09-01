@@ -35,7 +35,7 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  */
-public record OidcDiscoveryEndpoint(
+public record OidcDiscoveryEndpointVO(
     String issuer,
     String authorizationEndpoint,
     String tokenEndpoint,

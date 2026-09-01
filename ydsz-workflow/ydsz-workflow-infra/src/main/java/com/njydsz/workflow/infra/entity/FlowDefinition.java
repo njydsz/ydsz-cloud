@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.json.annotation.JsonView;
-import com.njydsz.workflow.domain.vo.FlowViews;
+import com.njydsz.workflow.domain.vo.FlowViewsVO;
 
 /**
  * 流程定义实体
@@ -74,15 +74,15 @@ public class FlowDefinition extends MpBaseEntity<String> {
    * <p>建议使用 snake_case 命名（如 {@code project_initiation} / {@code contract_change}），
    * 同一编码可对应多个版本（{@code flowVersion}），由 {@code uk_flow_code_version} 唯一索引保证。
    */
-  @JsonView(FlowViews.Summary.class)
+  @JsonView(FlowViewsVO.Summary.class)
   private String flowCode;
 
   /** 流程名称（前端展示） */
-  @JsonView(FlowViews.Summary.class)
+  @JsonView(FlowViewsVO.Summary.class)
   private String flowName;
 
   /** 流程类别（用于分类筛选，如「项目类」「合同类」「人事类」） */
-  @JsonView(FlowViews.Summary.class)
+  @JsonView(FlowViewsVO.Summary.class)
   private String category;
 
   /**
@@ -92,7 +92,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    * 下的不同版本独立发布，支持灰度切换。
    */
   @TableField("flow_version")
-  @JsonView(FlowViews.Summary.class)
+  @JsonView(FlowViewsVO.Summary.class)
   private String flowVersion;
 
   /**
@@ -100,7 +100,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    *
    * <p>取值：{@code CLASSICS} 经典（横向流转图）/ {@code MIMIC} 仿钉钉（纵向审批面板）。
    */
-  @JsonView(FlowViews.Detail.class)
+  @JsonView(FlowViewsVO.Detail.class)
   private String modelValue;
 
   /**
@@ -109,7 +109,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    * <p>{@code Y}=使用自定义表单（{@code formPath} 指向 Vue 组件路径）， {@code N}=使用系统内置表单（基于 {@code
    * ydsz_form_definition}）。
    */
-  @JsonView(FlowViews.Detail.class)
+  @JsonView(FlowViewsVO.Detail.class)
   private String formCustom;
 
   /**
@@ -118,7 +118,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    * <p>当 {@code formCustom=Y} 时，指向 Vue 组件路径（如 {@code workflow/forms/ProjectInitiationForm.vue}）； 当
    * {@code formCustom=N} 时，存储表单定义 ID。
    */
-  @JsonView(FlowViews.Detail.class)
+  @JsonView(FlowViewsVO.Detail.class)
   private String formPath;
 
   /**
@@ -126,7 +126,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    *
    * <p>{@code 0}=挂起（不可发起新实例，但已运行实例不受影响）， {@code 1}=激活（正常接收新实例）。
    */
-  @JsonView(FlowViews.Summary.class)
+  @JsonView(FlowViewsVO.Summary.class)
   private Integer activityStatus;
 
   /**
@@ -135,7 +135,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    * <p>{@code 0}=未发布（草稿态，设计师可见但不可发起）， {@code 1}=已发布（可发起流程实例）， {@code 9}=失效（已废弃，不可再发起，老实例仍可继续运行）。
    */
   @TableField("is_publish")
-  @JsonView(FlowViews.Summary.class)
+  @JsonView(FlowViewsVO.Summary.class)
   private Integer isPublish;
 
   /**
@@ -144,7 +144,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    * <p>取值：{@code NONE}=无监听器，{@code GLOBAL}=全局监听器，{@code FLOW}=流程级监听器。 监听器由 {@code FlowListener}
    * 接口实现，由引擎在事件点回调。
    */
-  @JsonView(FlowViews.Detail.class)
+  @JsonView(FlowViewsVO.Detail.class)
   private String listenerType;
 
   /**
@@ -152,7 +152,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    *
    * <p>如 {@code projectFlowListener}，由 Spring 容器在流程启动时通过 Bean 名称查找。
    */
-  @JsonView(FlowViews.Detail.class)
+  @JsonView(FlowViewsVO.Detail.class)
   private String listenerPath;
 
   /**
@@ -160,11 +160,11 @@ public class FlowDefinition extends MpBaseEntity<String> {
    *
    * <p>业务侧自定义元数据（如超时配置、抄送规则、审批人默认值等），以 JSON 字符串存储。
    */
-  @JsonView(FlowViews.Detail.class)
+  @JsonView(FlowViewsVO.Detail.class)
   private String ext;
 
   /** 流程描述（说明流程的业务用途与适用场景） */
-  @JsonView(FlowViews.Detail.class)
+  @JsonView(FlowViewsVO.Detail.class)
   private String description;
 
   /**
@@ -173,7 +173,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    * <p>由上游业务系统传入（如 {@code project_initiation} 立项创建时），便于跨系统链路追踪。 与 {@code ydsz_provider_trace_id}
    * 全链路追踪协议对齐。
    */
-  @JsonView(FlowViews.Detail.class)
+  @JsonView(FlowViewsVO.Detail.class)
   private String providerTraceId;
 
   // ============================== P3-1: 灰度发布 ==============================

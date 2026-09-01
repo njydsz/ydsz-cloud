@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.server.spi.FactProvider;
 
 /**
@@ -25,7 +25,7 @@ import com.njydsz.literule.server.spi.FactProvider;
  *     }
  *
  *     {@literal @Override}
- *     protected Map<String, Object> doGetFacts(RuleContext context) {
+ *     protected Map<String, Object> doGetFacts(RuleContextVO context) {
  *         // 业务逻辑：查询 DB/Redis/API
  *         return Map.of("budgetUsedRatio", 0.85);
  *     }
@@ -46,7 +46,7 @@ public abstract class AbstractFactProvider implements FactProvider {
   private final AtomicBoolean initialized = new AtomicBoolean(false);
 
   @Override
-  public final Map<String, Object> getFacts(RuleContext context) {
+  public final Map<String, Object> getFacts(RuleContextVO context) {
     ensureInit();
     // 前置检查：若禁用则直接返回空
     if (!isEnabled()) {
@@ -75,7 +75,7 @@ public abstract class AbstractFactProvider implements FactProvider {
    * @param context 规则上下文（含已有 facts）
    * @return 事实数据 Map；null 或空 Map 表示无数据
    */
-  protected abstract Map<String, Object> doGetFacts(RuleContext context);
+  protected abstract Map<String, Object> doGetFacts(RuleContextVO context);
 
   /**
    * 初始化钩子（可选覆写）

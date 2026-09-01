@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.dto.RichMediaContent;
+import com.njydsz.message.domain.dto.RichMediaContentDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.service.TemplateService;
@@ -113,7 +113,7 @@ public class MessageRenderService {
     }
 
     // 富媒体消息渲染
-    RichMediaContent richMedia = richMediaRenderer.extractFromParams(request.getParams());
+    RichMediaContentDTO richMedia = richMediaRenderer.extractFromParams(request.getParams());
     if (richMedia != null) {
       String renderedContent =
           switch (ctx.getChannel() == null ? "" : ctx.getChannel().toUpperCase()) {

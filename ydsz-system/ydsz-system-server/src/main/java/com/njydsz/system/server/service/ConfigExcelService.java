@@ -1,7 +1,7 @@
 package com.njydsz.system.server.service;
 import java.io.InputStream;
 
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.ImportResultVO;
 
 
 
@@ -16,7 +16,7 @@ import com.njydsz.system.domain.vo.ImportResult;
  *       批量插入（insertBatch 消除 N+1）、精准缓存失效、搜索索引同步
  * </ul>
  *
- * <p><b>部分成功语义：</b>导入过程对单条错误不中断（跳过并收集错误明细），返回 {@link ImportResult}
+ * <p><b>部分成功语义：</b>导入过程对单条错误不中断（跳过并收集错误明细），返回 {@link ImportResultVO}
  * 包含成功/跳过/失败条数与逐条错误列表；Excel 解析级异常（文件损坏等）直接抛出，
  * 由全局异常处理器统一返回错误响应。
  *
@@ -40,5 +40,5 @@ public interface ConfigExcelService {
    * @param inputStream Excel 输入流（.xlsx）
    * @return 导入结果（成功/跳过/失败条数 + 逐条错误明细）
    */
-  ImportResult importConfigs(InputStream inputStream);
+  ImportResultVO importConfigs(InputStream inputStream);
 }

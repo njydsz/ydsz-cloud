@@ -6,7 +6,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemVO;
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.ImportResultVO;
 
 
 
@@ -186,5 +186,5 @@ public interface DictItemService {
    * @param inputStream Excel 文件输入流
    * @return 导入结果（成功数、失败数、跳过数）
    */
-  ImportResult importDictItems(InputStream inputStream);
+  ImportResultVO importDictItems(InputStream inputStream);
 }

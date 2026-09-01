@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.common.auth.oidc.JwksEndpoint;
+import com.njydsz.common.auth.oidc.JwksEndpointVO;
 import com.njydsz.common.auth.token.TokenProperties;
 
 /**
@@ -18,7 +18,7 @@ import com.njydsz.common.auth.token.TokenProperties;
  *
  * <ul>
  *   <li>{@link OidcProperties} — 配置属性绑定
- *   <li>{@link JwksEndpoint} — JWKS 公钥端点
+ *   <li>{@link JwksEndpointVO} — JWKS 公钥端点
  * </ul>
  *
  * @author ydsz-team
@@ -42,9 +42,9 @@ public class OidcConfiguration {
    * @return JWKS 公钥端点实例
    */
   @Bean
-  public JwksEndpoint jwksEndpoint(TokenProperties tokenProperties) {
+  public JwksEndpointVO jwksEndpoint(TokenProperties tokenProperties) {
     byte[] secretBytes = tokenProperties.getSecretKey().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     SecretKey secretKey = Keys.hmacShaKeyFor(secretBytes);
-    return new JwksEndpoint(secretKey.getEncoded(), tokenProperties.getPublicKeyPem());
+    return new JwksEndpointVO(secretKey.getEncoded(), tokenProperties.getPublicKeyPem());
   }
 }

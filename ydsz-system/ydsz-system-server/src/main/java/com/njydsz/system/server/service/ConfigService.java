@@ -9,8 +9,8 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.CursorPageResponse;
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.CursorPageResponseVO;
+import com.njydsz.system.domain.vo.ImportResultVO;
 
 
 
@@ -72,7 +72,7 @@ public interface ConfigService {
    * @param cursor 游标（上一页最后一条记录 ID，首次查询传 null）
    * @return 游标分页响应
    */
-  CursorPageResponse<ConfigVO> pageByCursor(String configGroup, String configKey, int pageSize, String cursor);
+  CursorPageResponseVO<ConfigVO> pageByCursor(String configGroup, String configKey, int pageSize, String cursor);
 
   /**
    * 按 ID 查询配置
@@ -182,7 +182,7 @@ public interface ConfigService {
    * @param inputStream Excel 文件输入流
    * @return 导入结果（成功数、失败数、跳过数）
    */
-  ImportResult importConfigs(InputStream inputStream);
+  ImportResultVO importConfigs(InputStream inputStream);
 
   // ============================== 强类型配置读取 ==============================
 

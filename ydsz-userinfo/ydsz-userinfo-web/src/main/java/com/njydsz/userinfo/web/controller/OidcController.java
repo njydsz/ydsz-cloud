@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.userinfo.server.config.OidcProperties;
-import com.njydsz.userinfo.web.vo.JwksEndpoint;
-import com.njydsz.userinfo.web.vo.OidcDiscoveryEndpoint;
+import com.njydsz.userinfo.web.vo.JwksEndpointVO;
+import com.njydsz.userinfo.web.vo.OidcDiscoveryEndpointVO;
 
 /**
  * OIDC（OpenID Connect）协议端点 Controller
@@ -44,7 +44,7 @@ public class OidcController {
   private final OidcProperties oidcProperties;
 
   /** JWKS 公钥端点 */
-  private final JwksEndpoint jwksEndpoint;
+  private final JwksEndpointVO jwksEndpoint;
 
   /** OIDC 基础 URL */
   private final String baseUrl;
@@ -69,8 +69,8 @@ public class OidcController {
   @Operation(
       summary = "OIDC Discovery 元数据",
       description = "返回 OpenID Connect Provider 的标准配置元数据，供客户端自动发现端点与能力")
-  public ResponseEntity<OidcDiscoveryEndpoint> discovery() {
-    OidcDiscoveryEndpoint metadata = new OidcDiscoveryEndpoint(
+  public ResponseEntity<OidcDiscoveryEndpointVO> discovery() {
+    OidcDiscoveryEndpointVO metadata = new OidcDiscoveryEndpointVO(
         oidcProperties.getIssuer(),
         baseUrl + "/api/v1/oauth2/authorize",
         baseUrl + "/api/v1/oauth2/token",
@@ -79,22 +79,22 @@ public class OidcController {
         baseUrl + "/api/v1/oauth2/revoke",
         baseUrl + "/api/v1/oauth2/introspect",
         List.of(
-            OidcDiscoveryEndpoint.SCOPE_OPENID,
+            OidcDiscoveryEndpointVO.SCOPE_OPENID,
             "profile",
             "email",
             "tenant"),
-        List.of(OidcDiscoveryEndpoint.RESPONSE_TYPE_CODE),
-        List.of(OidcDiscoveryEndpoint.RESPONSE_MODE_QUERY),
+        List.of(OidcDiscoveryEndpointVO.RESPONSE_TYPE_CODE),
+        List.of(OidcDiscoveryEndpointVO.RESPONSE_MODE_QUERY),
         List.of(
-            OidcDiscoveryEndpoint.GRANT_TYPE_AUTHORIZATION_CODE,
+            OidcDiscoveryEndpointVO.GRANT_TYPE_AUTHORIZATION_CODE,
             "refresh_token"),
-        List.of(OidcDiscoveryEndpoint.SUBJECT_TYPE_PUBLIC),
+        List.of(OidcDiscoveryEndpointVO.SUBJECT_TYPE_PUBLIC),
         List.of(
-            OidcDiscoveryEndpoint.AUTH_METHOD_CLIENT_SECRET_BASIC,
-            OidcDiscoveryEndpoint.AUTH_METHOD_CLIENT_SECRET_POST),
+            OidcDiscoveryEndpointVO.AUTH_METHOD_CLIENT_SECRET_BASIC,
+            OidcDiscoveryEndpointVO.AUTH_METHOD_CLIENT_SECRET_POST),
         List.of(
-            OidcDiscoveryEndpoint.ALG_RS256,
-            OidcDiscoveryEndpoint.ALG_HS256),
+            OidcDiscoveryEndpointVO.ALG_RS256,
+            OidcDiscoveryEndpointVO.ALG_HS256),
         List.of(
             "sub", "preferred_username", "tenant_id", "email", "name", "iss", "aud", "exp", "iat"));
     log.debug("OIDC Discovery 请求: issuer={}", oidcProperties.getIssuer());

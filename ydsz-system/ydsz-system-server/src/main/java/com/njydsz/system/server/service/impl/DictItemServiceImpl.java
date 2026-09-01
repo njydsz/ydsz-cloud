@@ -29,7 +29,7 @@ import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.DictItemVO;
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.ImportResultVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.DictItemService;
@@ -484,11 +484,11 @@ public class DictItemServiceImpl implements DictItemService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public ImportResult importDictItems(InputStream inputStream) {
+  public ImportResultVO importDictItems(InputStream inputStream) {
     // 1. 读取 Excel 文件
     List<DictItemExcelVO> excelRows = readExcel(inputStream);
     if (excelRows.isEmpty()) {
-      return ImportResult.builder()
+      return ImportResultVO.builder()
           .totalCount(0)
           .successCount(0)
           .failCount(0)
@@ -515,7 +515,7 @@ public class DictItemServiceImpl implements DictItemService {
     int successCount = saveValidItemsBatch(validItems, errors);
 
     // 4. 构建导入结果
-    return ImportResult.builder()
+    return ImportResultVO.builder()
         .totalCount(excelRows.size())
         .successCount(successCount)
         .failCount(excelRows.size() - successCount - skipCount)

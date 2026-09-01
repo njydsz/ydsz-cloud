@@ -29,8 +29,8 @@ import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.CursorPageResponse;
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.CursorPageResponseVO;
+import com.njydsz.system.domain.vo.ImportResultVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
@@ -137,7 +137,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public CursorPageResponse<ConfigVO> pageByCursor(
+  public CursorPageResponseVO<ConfigVO> pageByCursor(
       String configGroup, String configKey, int pageSize, String cursor) {
     // 1. 校验并归一化页大小
     int safePageSize = Math.min(Math.max(pageSize, 1), MAX_CURSOR_PAGE_SIZE);
@@ -155,7 +155,7 @@ public class ConfigServiceImpl implements ConfigService {
       }
     }
 
-    return CursorPageResponse.of(records, nextCursor);
+    return CursorPageResponseVO.of(records, nextCursor);
   }
 
   @Override
@@ -384,7 +384,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public ImportResult importConfigs(InputStream inputStream) {
+  public ImportResultVO importConfigs(InputStream inputStream) {
     return configExcelService.importConfigs(inputStream);
   }
 

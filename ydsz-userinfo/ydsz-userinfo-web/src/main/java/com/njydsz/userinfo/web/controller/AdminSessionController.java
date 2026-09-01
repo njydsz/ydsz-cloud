@@ -27,7 +27,7 @@ import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.UserBanRequestDTO;
 import com.njydsz.userinfo.domain.enums.BanType;
 import com.njydsz.userinfo.domain.vo.BanInfoVO;
-import com.njydsz.userinfo.domain.vo.UserSessionStatistics;
+import com.njydsz.userinfo.domain.vo.UserSessionStatisticsVO;
 import com.njydsz.userinfo.domain.vo.UserSessionVO;
 import com.njydsz.userinfo.server.auth.UserBanService;
 import com.njydsz.userinfo.server.auth.UserSessionAdminService;
@@ -199,7 +199,7 @@ public class AdminSessionController {
    */
   @GetMapping("/sessions/statistics")
   @Operation(summary = "查询会话统计", description = "查询全会话统计：总数/活跃用户数/分端分布")
-  public YdszResponse<UserSessionStatistics> getSessionStatistics() {
+  public YdszResponse<UserSessionStatisticsVO> getSessionStatistics() {
     return YdszResponse.success(userSessionAdminService.getSessionStatistics());
   }
 }

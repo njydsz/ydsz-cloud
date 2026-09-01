@@ -300,12 +300,12 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
   FlowNode entityToEntity(FlowNodeVO vo);
 
   /**
-   * 将 SlaConfig 值对象序列化为 JSON 字符串。
+   * 将 SlaConfigVO 值对象序列化为 JSON 字符串。
    *
    * @param slaConfig SLA 配置值对象
    * @return JSON 字符串，null 时返回 null
    */
-  default String mapSlaConfig(com.njydsz.workflow.domain.vo.SlaConfig slaConfig) {
+  default String mapSlaConfig(com.njydsz.workflow.domain.vo.SlaConfigVO slaConfig) {
     if (slaConfig == null) {
       return null;
     }

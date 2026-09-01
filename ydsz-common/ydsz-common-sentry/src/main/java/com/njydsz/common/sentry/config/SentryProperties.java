@@ -65,7 +65,7 @@ public class SentryProperties {
   /** SLA 配置 */
   @Valid
   @NotNull(message = "SLA 配置不能为空")
-  private SlaConfig sla = new SlaConfig();
+  private SlaConfigVO sla = new SlaConfigVO();
 
   /** 指标采集配置（主采集器与系统资源指标）。 */
   @Data
@@ -406,7 +406,7 @@ public class SentryProperties {
 
   /** SLA 上报配置。 */
   @Data
-  public static class SlaConfig {
+  public static class SlaConfigVO {
     private boolean enabled = true;
   }
 }

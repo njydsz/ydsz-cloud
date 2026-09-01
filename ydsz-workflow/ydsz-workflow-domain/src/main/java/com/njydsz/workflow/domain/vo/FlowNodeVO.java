@@ -51,25 +51,25 @@ public class FlowNodeVO implements Serializable {
   private transient volatile Map<String, Object> parsedExt;
 
   /** SLA 配置懒解析缓存（不参与序列化）。 */
-  private transient volatile SlaConfig parsedSlaConfig;
+  private transient volatile SlaConfigVO parsedSlaConfig;
 
   /** 服务节点配置懒解析缓存（不参与序列化）。 */
-  private transient volatile ServiceNodeConfig parsedServiceNodeConfig;
+  private transient volatile ServiceNodeConfigVO parsedServiceNodeConfig;
 
   /** 会签配置懒解析缓存（不参与序列化）。 */
-  private transient volatile CountersignConfig parsedCountersignConfig;
+  private transient volatile CountersignConfigVO parsedCountersignConfig;
 
   /** 办理人配置懒解析缓存（不参与序列化）。 */
-  private transient volatile AssigneeConfig parsedAssigneeConfig;
+  private transient volatile AssigneeConfigVO parsedAssigneeConfig;
 
   /** AI 审批节点配置懒解析缓存（不参与序列化）。 */
-  private transient volatile AiAgentNodeConfig parsedAiAgentNodeConfig;
+  private transient volatile AiAgentNodeConfigVO parsedAiAgentNodeConfig;
 
   /** 驳回策略配置懒解析缓存（不参与序列化）。 */
-  private transient volatile RejectStrategyConfig parsedRejectStrategyConfig;
+  private transient volatile RejectStrategyConfigVO parsedRejectStrategyConfig;
 
   /** 催办通道配置懒解析缓存（不参与序列化）。 */
-  private transient volatile UrgeChannelConfig parsedUrgeChannelConfig;
+  private transient volatile UrgeChannelConfigVO parsedUrgeChannelConfig;
 
   // ==================== ext 懒解析基础设施 ====================
 
@@ -109,7 +109,7 @@ public class FlowNodeVO implements Serializable {
    *
    * @return SLA 配置值对象（不可变，非 null）
    */
-  public SlaConfig getSlaConfig() {
+  public SlaConfigVO getSlaConfig() {
     if (parsedSlaConfig != null) {
       return parsedSlaConfig;
     }
@@ -117,7 +117,7 @@ public class FlowNodeVO implements Serializable {
       if (parsedSlaConfig != null) {
         return parsedSlaConfig;
       }
-      parsedSlaConfig = SlaConfig.fromExt(getExtMap());
+      parsedSlaConfig = SlaConfigVO.fromExt(getExtMap());
       return parsedSlaConfig;
     }
   }
@@ -139,7 +139,7 @@ public class FlowNodeVO implements Serializable {
    *
    * @return 服务节点配置值对象（不可变，非 null）
    */
-  public ServiceNodeConfig getServiceNodeConfig() {
+  public ServiceNodeConfigVO getServiceNodeConfig() {
     if (parsedServiceNodeConfig != null) {
       return parsedServiceNodeConfig;
     }
@@ -147,7 +147,7 @@ public class FlowNodeVO implements Serializable {
       if (parsedServiceNodeConfig != null) {
         return parsedServiceNodeConfig;
       }
-      parsedServiceNodeConfig = ServiceNodeConfig.fromExt(getExtMap());
+      parsedServiceNodeConfig = ServiceNodeConfigVO.fromExt(getExtMap());
       return parsedServiceNodeConfig;
     }
   }
@@ -157,7 +157,7 @@ public class FlowNodeVO implements Serializable {
    *
    * @return 会签配置值对象（不可变，非 null）
    */
-  public CountersignConfig getCountersignConfig() {
+  public CountersignConfigVO getCountersignConfig() {
     if (parsedCountersignConfig != null) {
       return parsedCountersignConfig;
     }
@@ -165,7 +165,7 @@ public class FlowNodeVO implements Serializable {
       if (parsedCountersignConfig != null) {
         return parsedCountersignConfig;
       }
-      parsedCountersignConfig = CountersignConfig.fromExt(getExtMap());
+      parsedCountersignConfig = CountersignConfigVO.fromExt(getExtMap());
       return parsedCountersignConfig;
     }
   }
@@ -175,7 +175,7 @@ public class FlowNodeVO implements Serializable {
    *
    * @return 办理人配置值对象（不可变，非 null）
    */
-  public AssigneeConfig getAssigneeConfig() {
+  public AssigneeConfigVO getAssigneeConfig() {
     if (parsedAssigneeConfig != null) {
       return parsedAssigneeConfig;
     }
@@ -183,7 +183,7 @@ public class FlowNodeVO implements Serializable {
       if (parsedAssigneeConfig != null) {
         return parsedAssigneeConfig;
       }
-      parsedAssigneeConfig = AssigneeConfig.fromExt(getExtMap());
+      parsedAssigneeConfig = AssigneeConfigVO.fromExt(getExtMap());
       return parsedAssigneeConfig;
     }
   }
@@ -193,7 +193,7 @@ public class FlowNodeVO implements Serializable {
    *
    * @return AI 审批节点配置值对象（不可变，非 null）
    */
-  public AiAgentNodeConfig getAiAgentNodeConfig() {
+  public AiAgentNodeConfigVO getAiAgentNodeConfig() {
     if (parsedAiAgentNodeConfig != null) {
       return parsedAiAgentNodeConfig;
     }
@@ -201,7 +201,7 @@ public class FlowNodeVO implements Serializable {
       if (parsedAiAgentNodeConfig != null) {
         return parsedAiAgentNodeConfig;
       }
-      parsedAiAgentNodeConfig = AiAgentNodeConfig.fromExt(getExtMap());
+      parsedAiAgentNodeConfig = AiAgentNodeConfigVO.fromExt(getExtMap());
       return parsedAiAgentNodeConfig;
     }
   }
@@ -211,7 +211,7 @@ public class FlowNodeVO implements Serializable {
    *
    * @return 驳回策略配置值对象（不可变，非 null）
    */
-  public RejectStrategyConfig getRejectStrategyConfig() {
+  public RejectStrategyConfigVO getRejectStrategyConfig() {
     if (parsedRejectStrategyConfig != null) {
       return parsedRejectStrategyConfig;
     }
@@ -219,7 +219,7 @@ public class FlowNodeVO implements Serializable {
       if (parsedRejectStrategyConfig != null) {
         return parsedRejectStrategyConfig;
       }
-      parsedRejectStrategyConfig = RejectStrategyConfig.fromExt(getExtMap());
+      parsedRejectStrategyConfig = RejectStrategyConfigVO.fromExt(getExtMap());
       return parsedRejectStrategyConfig;
     }
   }
@@ -229,7 +229,7 @@ public class FlowNodeVO implements Serializable {
    *
    * @return 催办通道配置值对象（不可变，非 null）
    */
-  public UrgeChannelConfig getUrgeChannelConfig() {
+  public UrgeChannelConfigVO getUrgeChannelConfig() {
     if (parsedUrgeChannelConfig != null) {
       return parsedUrgeChannelConfig;
     }
@@ -237,7 +237,7 @@ public class FlowNodeVO implements Serializable {
       if (parsedUrgeChannelConfig != null) {
         return parsedUrgeChannelConfig;
       }
-      parsedUrgeChannelConfig = UrgeChannelConfig.fromExt(getExtMap());
+      parsedUrgeChannelConfig = UrgeChannelConfigVO.fromExt(getExtMap());
       return parsedUrgeChannelConfig;
     }
   }

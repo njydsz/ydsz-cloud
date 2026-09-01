@@ -34,8 +34,8 @@ import com.njydsz.system.domain.dto.ConfigBatchDTO;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.CursorPageResponse;
-import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.CursorPageResponseVO;
+import com.njydsz.system.domain.vo.ImportResultVO;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.ConfigService;
 
@@ -105,7 +105,7 @@ public class ConfigController {
    */
   @Operation(summary = "游标分页查询")
   @GetMapping("/cursor")
-  public YdszResponse<CursorPageResponse<ConfigVO>> pageByCursor(
+  public YdszResponse<CursorPageResponseVO<ConfigVO>> pageByCursor(
       @RequestParam(required = false) String configGroup,
       @RequestParam(required = false) String configKey,
       @RequestParam(defaultValue = "20") int pageSize,
@@ -349,11 +349,11 @@ public class ConfigController {
   @RateLimit(resource = "system.config.import", threshold = 5)
   @AuthApiPermission(apiCodes = "sys:config:add")
   @PostMapping("/import")
-  public YdszResponse<ImportResult> importConfigs(@RequestParam("file") MultipartFile file)
+  public YdszResponse<ImportResultVO> importConfigs(@RequestParam("file") MultipartFile file)
       throws IOException {
     if (file == null || file.isEmpty()) {
       return YdszResponse.success(
-          ImportResult.builder()
+          ImportResultVO.builder()
               .totalCount(0)
               .successCount(0)
               .failCount(0)
@@ -364,7 +364,7 @@ public class ConfigController {
     // Service 层返回部分成功明细（成功/跳过/失败条数 + 逐条错误）；
     // Excel 解析或数据库异常直接抛出，由 common-exception 全局处理器返回错误响应（《云顶编码规范》18.4），
     // 不在 Controller 内吞异常包装为 success。
-    ImportResult result = configService.importConfigs(file.getInputStream());
+    ImportResultVO result = configService.importConfigs(file.getInputStream());
     return YdszResponse.success(result);
   }
 }
