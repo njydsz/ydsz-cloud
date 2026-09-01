@@ -3,7 +3,6 @@ package com.njydsz.literule.domain.dto;
 import java.io.Serializable;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

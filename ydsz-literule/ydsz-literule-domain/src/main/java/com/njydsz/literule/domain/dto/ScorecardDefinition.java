@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.njydsz.literule.domain.Rule;
-import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
