@@ -58,10 +58,13 @@ public final class ValueFormatter {
       formatArray(obj, sb, indent);
     } else if (obj instanceof Map) {
       formatMap((Map<?, ?>) obj, sb, indent);
+    } else if (clazz == Double.class) {
+      // P0 修复：NaN/Infinity 统一输出 null，避免裸 "NaN" 字面量产生非法 JSON
+      ValueWriter.writeDouble((Double) obj, sb);
+    } else if (clazz == Float.class) {
+      ValueWriter.writeFloat((Float) obj, sb);
     } else if (clazz == Integer.class
         || clazz == Long.class
-        || clazz == Double.class
-        || clazz == Float.class
         || clazz == Boolean.class
         || clazz == Character.class
         || clazz == Short.class

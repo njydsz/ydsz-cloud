@@ -377,7 +377,10 @@ public class SheetXmlReader {
       return;
     }
 
+    // P0-2 修复：表头行收集列名（含 SST 解析），供 resolveMetadata() 惰性构建列元数据。
+    // 此前表头行单元格值被直接丢弃，且 parseDataCell 因列元数据恒为 null 丢弃全部数据。
     if (currentRow == reader.headRowNumber) {
+      reader.headerNames.put(currentCol, resolveSharedString(value));
       return;
     }
 
@@ -388,11 +391,14 @@ public class SheetXmlReader {
   }
 
   private void parseDataCell(int col, String value) {
-    if (reader.columnMetadataArray == null) {
+    // P0-2 修复：此前 columnMetadataArray 恒为 null 直接 return，fast 路径整行数据丢失；
+    // 改为通过 resolveMetadata() 惰性构建（首个数据单元格到达时表头行已收集完毕）
+    ColumnMetadata[] metadataArray = reader.resolveMetadata();
+    if (metadataArray == null) {
       return;
     }
 
-    for (ColumnMetadata colMeta : reader.columnMetadataArray) {
+    for (ColumnMetadata colMeta : metadataArray) {
       if (colMeta.columnIndex == col) {
         Object convertedValue = convertCellValue(value, colMeta);
         try {
@@ -410,8 +416,7 @@ public class SheetXmlReader {
     }
   }
 
-  private Object convertCellValue(String value, ColumnMetadata colMeta) {
-    if (value == null || value.isEmpty()) {
+  private Object convertCellValue(String value, ColumnMetadata colMeta) {    if (value == null || value.isEmpty()) {
       return null;
     }
 

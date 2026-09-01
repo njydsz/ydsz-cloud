@@ -151,6 +151,103 @@ public class HeaderAnalyzer {
   }
 
   /**
+   * 基于表头列名映射分析类元数据（fast 读取路径，无 POI Row 依赖）
+   *
+   * <p>P0-2 修复配套方法。映射规则与 {@link #analyzeClassMetadata(Row, List, Map)} 完全一致：
+   *
+   * <ol>
+   *   <li>被@ExcelIgnore标记的字段会被忽略
+   *   <li>优先使用index指定列索引
+   *   <li>其次使用@ExcelProperty的value作为列名
+   *   <li>最后使用字段名作为列名
+   *   <li>列名匹配采用精确匹配策略（automaticTrim 时先 trim）
+   * </ol>
+   *
+   * @param headerNames 0-based 列索引 → 表头列名（由 fast 引擎流式收集，含 SST 解析）
+   * @param fieldMap 列索引到字段的映射(出参)
+   * @return 列元数据数组
+   */
+  public ColumnMetadata[] analyzeClassMetadataFromNames(
+      Map<Integer, String> headerNames, Map<Integer, Field> fieldMap) {
+    Class<?> clazz = metadata.getClazz();
+    Field[] fields = ReflectCache.getCachedFields(clazz);
+
+    int maxCol = 0;
+    for (int col : headerNames.keySet()) {
+      if (col + 1 > maxCol) {
+        maxCol = col + 1;
+      }
+    }
+
+    Set<String> excludeFields = metadata.getExcludeColumnFiledNames();
+    Set<String> includeFields = metadata.getIncludeColumnFiledNames();
+
+    Map<Integer, String> dateFormats = new HashMap<>();
+    int columnCount = 0;
+    for (Field field : fields) {
+      if (field.isAnnotationPresent(ExcelIgnore.class)) {
+        continue;
+      }
+
+      ExcelProperty annotation = field.getAnnotation(ExcelProperty.class);
+      if (annotation == null) {
+        continue;
+      }
+
+      String fieldName = !annotation.value().isEmpty() ? annotation.value() : field.getName();
+
+      if (excludeFields != null && excludeFields.contains(fieldName)) {
+        continue;
+      }
+      if (includeFields != null && !includeFields.isEmpty() && !includeFields.contains(fieldName)) {
+        continue;
+      }
+
+      int fieldIndex = annotation.index();
+
+      int targetCol;
+      if (fieldIndex >= 0) {
+        targetCol = fieldIndex;
+      } else {
+        targetCol = -1;
+        for (int col = 0; col < maxCol; col++) {
+          if (headerNameEquals(headerNames.get(col), fieldName)) {
+            targetCol = col;
+            break;
+          }
+        }
+      }
+
+      if (targetCol >= 0 && targetCol < maxCol) {
+        field.setAccessible(true);
+        fieldMap.put(targetCol, field);
+
+        String dateFormat =
+            !annotation.dateFormat().isEmpty()
+                ? annotation.dateFormat()
+                : getExcelConfig().getDefaultDateFormat();
+        dateFormats.put(targetCol, dateFormat);
+        columnCount++;
+      }
+    }
+
+    ColumnMetadata[] columnMetadataArray = new ColumnMetadata[columnCount];
+    int idx = 0;
+    boolean automaticTrim = getExcelConfig().isAutomaticTrim();
+    for (Map.Entry<Integer, Field> entry : fieldMap.entrySet()) {
+      int col = entry.getKey();
+      Field field = entry.getValue();
+      FieldSetter setter = ReflectCache.getFieldSetter(clazz, field);
+      Class<?> targetType = field.getType();
+      String dateFormat = dateFormats.get(col);
+      columnMetadataArray[idx++] =
+          new ColumnMetadata(col, setter, targetType, dateFormat, automaticTrim);
+    }
+
+    return columnMetadataArray;
+  }
+
+  /**
    * 分析表头(无类型映射模式)
    *
    * <p>当未指定Class时,直接读取表头名称作为Map的key。 每列的名称取自表头单元格的字符串值。

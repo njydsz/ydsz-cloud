@@ -71,7 +71,7 @@
             <artifactId>bcprov-jdk18on</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Micrometer（MeteredThreadPoolExecutor 线程池指标注册） -->
+        <!-- Micrometer（IdGenerator 降级指标 / TempFileManager 跟踪数指标注册） -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
@@ -98,6 +98,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+        </dependency>
+        <!-- 测试（JUnit 5 + AssertJ，版本由 spring-boot-starter-parent BOM 管理） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

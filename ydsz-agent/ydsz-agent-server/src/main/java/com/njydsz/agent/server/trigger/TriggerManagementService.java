@@ -31,6 +31,12 @@ public class TriggerManagementService {
     /** 单租户最大触发器数量 */
     private static final int MAX_TRIGGERS_PER_TENANT = 50;
 
+    /** 默认每小时最大执行次数 */
+    private static final int DEFAULT_MAX_EXECUTIONS_PER_HOUR = 60;
+
+    /** 触发器 ID 中 UUID 的截取长度 */
+    private static final int TRIGGER_ID_UUID_LENGTH = 8;
+
     public TriggerManagementService(TriggerRepository triggerRepository) {
         this.triggerRepository = Objects.requireNonNull(triggerRepository, "triggerRepository 不能为 null");
     }
@@ -90,7 +96,7 @@ public class TriggerManagementService {
                 .matchPattern(matchPattern)
                 .config(config)
                 .enabled(true)
-                .maxExecutionsPerHour(maxExecutionsPerHour != null ? maxExecutionsPerHour : 60)
+                .maxExecutionsPerHour(maxExecutionsPerHour != null ? maxExecutionsPerHour : DEFAULT_MAX_EXECUTIONS_PER_HOUR)
                 .createdAt(now)
                 .totalTriggerCount(0)
                 .build();
@@ -260,7 +266,7 @@ public class TriggerManagementService {
      * @return 唯一触发器 ID
      */
     private String generateTriggerId() {
-        return "trg-" + UUID.randomUUID().toString().substring(0, 8);
+        return "trg-" + UUID.randomUUID().toString().substring(0, TRIGGER_ID_UUID_LENGTH);
     }
 
     /**
