@@ -183,11 +183,13 @@ public class UserPreferenceHandler implements SendHandler {
 
   /**
    * 判断当前是否在 DND 免打扰时段。
-   * 
+   *
    * <p>复用 {@link DndService#isInWindow} 实现，消除重复的跨天窗口判断逻辑。
    *
    * @param pref 用户的偏好设置（含 DND 时段配置）
    * @return 当前时间处于 DND 时段内时返回 true
+   */
+  private boolean isInDndWindow(UserPreference pref) {
     String start = pref.getDndStart();
     String end = pref.getDndEnd();
     if (!StringUtils.hasText(start) || !StringUtils.hasText(end)) {
@@ -208,6 +210,8 @@ public class UserPreferenceHandler implements SendHandler {
    *
    * @param value 时间字符串（HH:mm 格式）
    * @return 解析成功返回 LocalTime，失败返回 null
+   */
+  private LocalTime parseTimeSafely(String value) {
     if (!StringUtils.hasText(value)) {
       return null;
     }

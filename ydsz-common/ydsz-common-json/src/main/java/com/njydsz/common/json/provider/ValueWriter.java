@@ -669,6 +669,21 @@ public final class ValueWriter {
       first = false;
     }
 
+    // P1 能力补齐：@JsonTypeInfo 多态类型标识输出（As.PROPERTY），
+    // 与反序列化侧 resolveType 配合实现多态 round-trip 闭环
+    PolymorphicTypeResolver.TypeId typeId = PolymorphicTypeResolver.resolveTypeId(clazz);
+    if (typeId != null && typeId.includeAs() == JsonTypeInfo.As.PROPERTY) {
+      if (!first) {
+        sb.append(',');
+      }
+      sb.append('"')
+          .append(typeId.property())
+          .append("\":\"")
+          .append(typeId.name())
+          .append('"');
+      first = false;
+    }
+
     for (FieldMeta field : fields) {
       // @JsonProperty(access = WRITE_ONLY)：仅反序列化写入，序列化不输出（P0 安全修复）
       if (!field.serializable) {
@@ -683,19 +698,20 @@ public final class ValueWriter {
       Class<?> currentView = SerializationProvider.getCurrentViewClass();
       if (currentView != null) {
         JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);
-        if (viewAnnotation == null) {
-          continue;
-        }
-        Class<?>[] viewClasses = viewAnnotation.value();
-        boolean visible = false;
-        for (Class<?> vc : viewClasses) {
-          if (vc == currentView || vc.isAssignableFrom(currentView)) {
-            visible = true;
-            break;
+        // P1 能力对齐：Jackson DEFAULT_VIEW_INCLUSION 默认语义——未标注 @JsonView 的字段
+        // 在任意视图下均输出（原先无注解字段被直接隐藏，与 Jackson 默认行为相反）
+        if (viewAnnotation != null) {
+          Class<?>[] viewClasses = viewAnnotation.value();
+          boolean visible = false;
+          for (Class<?> vc : viewClasses) {
+            if (vc == currentView || vc.isAssignableFrom(currentView)) {
+              visible = true;
+              break;
+            }
           }
-        }
-        if (!visible) {
-          continue;
+          if (!visible) {
+            continue;
+          }
         }
       }
 

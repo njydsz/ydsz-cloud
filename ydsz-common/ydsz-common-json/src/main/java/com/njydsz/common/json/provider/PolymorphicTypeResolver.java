@@ -151,6 +151,60 @@ public final class PolymorphicTypeResolver {
   }
 
   /**
+   * 序列化侧类型标识（typeProperty + typeName + includeAs 三元组）。
+   *
+   * <p>P1 能力补齐：序列化侧输出 {@code @JsonTypeInfo} 属性，修复多态 round-trip 断裂
+   * （此前仅反序列化侧识别类型属性，序列化不输出 → 生成侧无法闭环）。
+   *
+   * @param property 类型属性名
+   * @param name 类型标识名
+   * @param includeAs 包含结构
+   */
+  public record TypeId(String property, String name, JsonTypeInfo.As includeAs) {}
+
+  /**
+   * 解析实际类型的序列化侧类型标识。
+   *
+   * <p>沿类层级向上查找 {@code @JsonTypeInfo} 声明（注解通常在基类上），再从对应
+   * {@link TypeMapping} 反查实际类型的标识名。仅 {@code As.PROPERTY} 结构返回非 null
+   * （WRAPPER_ARRAY/WRAPPER_OBJECT 序列化输出暂不支持）。
+   *
+   * @param actualType 对象的实际运行时类型
+   * @return 类型标识，无多态声明或结构不支持时返回 null
+   */
+  public static TypeId resolveTypeId(Class<?> actualType) {
+    for (Class<?> c = actualType; c != null && c != Object.class; c = c.getSuperclass()) {
+      JsonTypeInfo typeInfo = c.getAnnotation(JsonTypeInfo.class);
+      if (typeInfo == null) {
+        continue;
+      }
+      TypeMapping mapping = getTypeMapping(c);
+      if (mapping == null) {
+        return null;
+      }
+      String name = null;
+      // Jackson 兼容：子类上的 @JsonTypeName 优先
+      JsonTypeName jsonTypeName = actualType.getAnnotation(JsonTypeName.class);
+      if (jsonTypeName != null && !jsonTypeName.value().isEmpty()) {
+        name = jsonTypeName.value();
+      }
+      if (name == null) {
+        for (Map.Entry<String, Class<?>> entry : mapping.nameToType.entrySet()) {
+          if (entry.getValue() == actualType) {
+            name = entry.getKey();
+            break;
+          }
+        }
+      }
+      if (name == null) {
+        return null;
+      }
+      return new TypeId(mapping.typeProperty, name, mapping.getIncludeAs());
+    }
+    return null;
+  }
+
+  /**
    * 从 JSON 中提取类型属性值
    *
    * <p>基于 JSON token 流解析（P0-3 修复）：先完整解析 JSON 为结构化对象， 再按键精确取值。替代原先的文本级 {@code indexOf} 扫描——文本扫描会被
