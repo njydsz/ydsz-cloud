@@ -188,6 +188,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
       String contentType) {
     try {
       PutObjectRequest request = new PutObjectRequest(bucketName, objectName, inputStream);
+      // FQN-OK: name conflict with ObjectMetadata
       com.obs.services.model.ObjectMetadata metadata =
           new com.obs.services.model.ObjectMetadata();
       metadata.setContentLength(size);
@@ -439,6 +440,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
       if (obsObject == null) {
         return null;
       }
+      // FQN-OK: name conflict with ObjectMetadata
       com.obs.services.model.ObjectMetadata obsMetadata =
           obsObject.getMetadata();
       ObjectMetadata metadata = new ObjectMetadata();
@@ -490,6 +492,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         if (objects.size() >= maxKeys) {
           break;
         }
+        // FQN-OK: name conflict with ObjectMetadata
         com.obs.services.model.ObjectMetadata obsMetadata =
             obsObject.getMetadata();
         ObjectMetadata om = new ObjectMetadata();

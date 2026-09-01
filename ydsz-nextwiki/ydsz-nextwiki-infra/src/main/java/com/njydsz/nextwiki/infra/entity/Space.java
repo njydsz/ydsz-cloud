@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  *
  * <p><b>S3-P2-01：空间管理聚合根</b>
  *
- * <p>对应知识库空间表 {@code nw_space}，表示一个知识库空间（类似 Confluence 的 Space）。 空间是文件节点的顶级容器，每个文件节点必须属于一个空间。
+ * <p>对应知识库空间表 {@code ydsz_wiki_space}，表示一个知识库空间（类似 Confluence 的 Space）。 空间是文件节点的顶级容器，每个文件节点必须属于一个空间。
  *
  * @author ydsz-team
  * @since 1.0.0

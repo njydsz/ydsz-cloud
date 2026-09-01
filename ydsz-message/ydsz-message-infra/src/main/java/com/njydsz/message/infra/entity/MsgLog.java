@@ -83,11 +83,28 @@ public class MsgLog implements Serializable {
 
   // ===== 领域行为 =====
 
+  /**
+   * 标记消息为发送中状态。
+   *
+   * <p>状态流转：待发送/重试 → 发送中
+   *
+   * @throws IllegalStateException 当当前状态不允许流转到发送中时
+   */
   public void markAsSending() {
     validateTransition(MessageStatusEnum.SENDING);
     this.status = MessageStatusEnum.SENDING;
   }
 
+  /**
+   * 标记消息为发送成功。
+   *
+   * <p>状态流转：发送中 → 成功
+   *
+   * @param providerTraceId 服务商追踪 ID
+   * @param costMs 发送耗时（毫秒）
+   * @param cost 发送费用
+   * @throws IllegalStateException 当当前状态不允许流转到成功时
+   */
   public void markAsSuccess(String providerTraceId, long costMs, BigDecimal cost) {
     validateTransition(MessageStatusEnum.SUCCESS);
     this.status = MessageStatusEnum.SUCCESS;
@@ -96,12 +113,28 @@ public class MsgLog implements Serializable {
     this.cost = cost;
   }
 
+  /**
+   * 标记消息为发送失败。
+   *
+   * <p>状态流转：发送中 → 失败
+   *
+   * @param errorMessage 错误信息
+   * @throws IllegalStateException 当当前状态不允许流转到失败时
+   */
   public void markAsFailed(String errorMessage) {
     validateTransition(MessageStatusEnum.FAILED);
     this.status = MessageStatusEnum.FAILED;
     this.errorMessage = errorMessage;
   }
 
+  /**
+   * 标记消息为重试状态。
+   *
+   * <p>状态流转：失败 → 重试，自动累加重试次数。
+   *
+   * @param nextRetryAt 下次重试时间
+   * @throws IllegalStateException 当当前状态不允许流转到重试时
+   */
   public void markAsRetry(LocalDateTime nextRetryAt) {
     validateTransition(MessageStatusEnum.RETRY);
     this.status = MessageStatusEnum.RETRY;
@@ -113,6 +146,13 @@ public class MsgLog implements Serializable {
     }
   }
 
+  /**
+   * 标记消息为已撤回。
+   *
+   * <p>状态流转：成功 → 已撤回，同时更新撤回状态和撤回时间。
+   *
+   * @throws IllegalStateException 当当前状态不允许流转到已撤回时
+   */
   public void markAsRecalled() {
     validateTransition(MessageStatusEnum.RECALLED);
     this.status = MessageStatusEnum.RECALLED;
@@ -120,11 +160,24 @@ public class MsgLog implements Serializable {
     this.recallAt = LocalDateTime.now();
   }
 
+  /**
+   * 标记消息为已跳过。
+   *
+   * <p>状态流转：待发送 → 已跳过（如通道熔断、去重命中时跳过发送）。
+   *
+   * @throws IllegalStateException 当当前状态不允许流转到已跳过时
+   */
   public void markAsSkipped() {
     validateTransition(MessageStatusEnum.SKIPPED);
     this.status = MessageStatusEnum.SKIPPED;
   }
 
+  /**
+   * 判断消息是否可流转到目标状态。
+   *
+   * @param targetStatus 目标状态
+   * @return true 表示允许流转
+   */
   public boolean canTransitionTo(MessageStatusEnum targetStatus) {
     if (this.status == null) {
       return true;
@@ -132,6 +185,13 @@ public class MsgLog implements Serializable {
     return this.status.canTransitTo(targetStatus);
   }
 
+  /**
+   * 判断消息是否处于终态（成功/失败/已撤回/已跳过）。
+   *
+   * <p>终态消息不再参与任何状态流转。
+   *
+   * @return true 表示已处于终态
+   */
   public boolean isTerminal() {
     if (this.status == null) {
       return false;

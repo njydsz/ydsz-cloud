@@ -67,7 +67,6 @@ public class FlowChartServiceImpl implements FlowChartService {
   private final FlowNodeRepository nodeRepository;
 
   @Override
-  @SuppressWarnings("unchecked")
   public String generateSvg(
       String definitionId,
       Set<String> activeNodeCodes,
@@ -91,6 +90,8 @@ public class FlowChartServiceImpl implements FlowChartService {
       String coordinate = node.getCoordinate();
       if (coordinate != null && !coordinate.isBlank()) {
         try {
+          // 泛型擦除：Map.class 原始类型转换，调用方已约束 JSON 结构安全
+          @SuppressWarnings("unchecked")
           Map<String, Object> coordMap = YdszJson.fromJson(coordinate, Map.class);
           if (coordMap != null && coordMap.containsKey("x") && coordMap.containsKey("y")) {
             double x = parseDouble(coordMap.get("x"));

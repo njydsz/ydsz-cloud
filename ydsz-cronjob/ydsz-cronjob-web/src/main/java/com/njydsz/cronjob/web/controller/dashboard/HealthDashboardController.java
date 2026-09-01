@@ -348,6 +348,7 @@ public class HealthDashboardController {
     int score = 100;
 
     // 系统资源扣分
+    // 泛型擦除：健康检查 Map 结构由内部构造，类型安全
     @SuppressWarnings("unchecked")
     Map<String, Object> system = (Map<String, Object>) health.get("system");
     if (system != null) {
@@ -360,6 +361,7 @@ public class HealthDashboardController {
     }
 
     // 任务异常扣分
+    // 泛型擦除：健康检查 Map 结构由内部构造，类型安全
     @SuppressWarnings("unchecked")
     Map<String, Object> tasks = (Map<String, Object>) health.get("tasks");
     if (tasks != null) {
@@ -370,6 +372,7 @@ public class HealthDashboardController {
     }
 
     // 最近失败扣分
+    // 泛型擦除：健康检查 Map 结构由内部构造，类型安全
     @SuppressWarnings("unchecked")
     Map<String, Object> issues = (Map<String, Object>) health.get("recentIssues");
     if (issues != null) {

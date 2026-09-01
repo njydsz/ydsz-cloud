@@ -170,6 +170,7 @@ public class CosStorage extends AbstractFileStorage {
           folderName.endsWith(FileConstant.DIR_SPLIT)
               ? folderName
               : folderName + FileConstant.DIR_SPLIT;
+      // FQN-OK: name conflict with ObjectMetadata
       com.qcloud.cos.model.ObjectMetadata metadata =
           cosClient.getObjectMetadata(bucketName, key);
       return metadata != null;
@@ -430,6 +431,7 @@ public class CosStorage extends AbstractFileStorage {
   @Override
   protected ObjectMetadata doGetMetadata(String bucketName, String objectName) {
     try {
+      // FQN-OK: name conflict with ObjectMetadata
       com.qcloud.cos.model.ObjectMetadata cosMetadata =
           cosClient.getObjectMetadata(
               bucketName, objectName); // FQN-OK: name conflict with ObjectMetadata
