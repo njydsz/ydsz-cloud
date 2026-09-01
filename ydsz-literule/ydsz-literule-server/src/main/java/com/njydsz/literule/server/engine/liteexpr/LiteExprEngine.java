@@ -376,15 +376,19 @@ public class LiteExprEngine implements ExpressionEngine {
     return defs;
   }
 
-  /** 获取函数注册表（用于业务侧注册自定义函数）
-   * @return 返回值说明
+  /**
+   * 获取函数注册表（用于业务侧注册自定义函数）
+   *
+   * @return 函数注册表实例
    */
   public FunctionRegistry getFunctionRegistry() {
     return functionRegistry;
   }
 
-  /** 获取编译器（用于缓存管理等）
-   * @return 返回值说明
+  /**
+   * 获取编译器（用于缓存管理等）
+   *
+   * @return LiteExpr 编译器实例
    */
   public LiteExprCompiler getCompiler() {
     return compiler;
@@ -414,8 +418,10 @@ public class LiteExprEngine implements ExpressionEngine {
     sandbox.applyPolicy(forbiddenMethods, forbiddenRoots, allowedFunctions);
   }
 
-  /** 缓存大小
-   * @return 返回值说明
+  /**
+   * 缓存大小
+   *
+   * @return 编译器缓存中估计的已编译表达式数量
    */
   public long cacheSize() {
     return compiler.cacheSize();

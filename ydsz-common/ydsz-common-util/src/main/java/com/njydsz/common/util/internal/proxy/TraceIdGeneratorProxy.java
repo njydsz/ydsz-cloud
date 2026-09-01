@@ -49,6 +49,9 @@ public final class TraceIdGeneratorProxy {
   /** 降级 TraceId 时间戳前缀的十六进制长度（12 位，可表示到公元 10889 年） */
   private static final int FALLBACK_TIMESTAMP_HEX_LENGTH = 12;
 
+  /** 十六进制字符查表（降级实现按位输出单个 hex 字符，禁止用 append(int) 产生十进制串） */
+  private static final char[] HEX_CHARS = "0123456789abcdef".toCharArray();
+
   private TraceIdGeneratorProxy() {
     throw new UnsupportedOperationException("Utility class should not be instantiated");
   }
@@ -232,7 +235,7 @@ public final class TraceIdGeneratorProxy {
     StringBuilder sb = new StringBuilder(TRACE_ID_LENGTH);
     sb.append(timestampHex, 0, FALLBACK_TIMESTAMP_HEX_LENGTH);
     for (int i = 0; i < TRACE_ID_LENGTH - FALLBACK_TIMESTAMP_HEX_LENGTH; i++) {
-      sb.append(FALLBACK_RANDOM.nextInt(16));
+      sb.append(HEX_CHARS[FALLBACK_RANDOM.nextInt(16)]);
     }
     return sb.toString();
   }
@@ -246,7 +249,7 @@ public final class TraceIdGeneratorProxy {
   private static String fallbackGenerateHex(int length) {
     StringBuilder sb = new StringBuilder(length);
     for (int i = 0; i < length; i++) {
-      sb.append(FALLBACK_RANDOM.nextInt(16));
+      sb.append(HEX_CHARS[FALLBACK_RANDOM.nextInt(16)]);
     }
     return sb.toString();
   }

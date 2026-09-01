@@ -151,11 +151,11 @@ public class MessageLogServiceImpl implements MessageLogService {
 
   /**
    * P1-4: 手动重发死信。
-   * 
+   *
    * <p>仅 DEAD 状态可重发。重置 retryCount / errorMessage / nextRetryAt， 流转为 SENDING 后立即通过 {@link
    * ChannelRouter#dispatch(MsgLogVO)} 重新投递。 投递失败则进入 RETRY 状态（retryCount=1）走正常重试调度，而非立即再次死信。
    *
-   * @param logId 参数说明
+   * @param logId 待重发的死信日志 ID
    */
   @Override
   public void resendDead(String logId) {

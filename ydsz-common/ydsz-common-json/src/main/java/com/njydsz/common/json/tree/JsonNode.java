@@ -39,7 +39,7 @@ public abstract class JsonNode {
   /**
    * 判断是否为对象
    *
-   * @return 返回值说明
+   * @return 当前节点为 JSON 对象时返回 {@code true}；基类默认返回 {@code false}，由 {@code ObjectNode} 覆盖为 {@code true}
    */
   public boolean isObject() {
     return false;
@@ -48,7 +48,7 @@ public abstract class JsonNode {
   /**
    * 判断是否为数组
    *
-   * @return 返回值说明
+   * @return 当前节点为 JSON 数组时返回 {@code true}；基类默认返回 {@code false}，由 {@code ArrayNode} 覆盖为 {@code true}
    */
   public boolean isArray() {
     return false;
@@ -57,7 +57,7 @@ public abstract class JsonNode {
   /**
    * 判断是否为字符串
    *
-   * @return 返回值说明
+   * @return 当前节点为 JSON 字符串时返回 {@code true}；基类默认返回 {@code false}，由 {@code TextNode} 覆盖为 {@code true}
    */
   public boolean isTextual() {
     return false;
@@ -66,7 +66,7 @@ public abstract class JsonNode {
   /**
    * 判断是否为数值
    *
-   * @return 返回值说明
+   * @return 当前节点为 JSON 数值时返回 {@code true}；基类默认返回 {@code false}，由 {@code NumberNode} 覆盖为 {@code true}
    */
   public boolean isNumber() {
     return false;
@@ -75,7 +75,7 @@ public abstract class JsonNode {
   /**
    * 判断是否为布尔值
    *
-   * @return 返回值说明
+   * @return 当前节点为 JSON 布尔值时返回 {@code true}；基类默认返回 {@code false}，由 {@code BooleanNode} 覆盖为 {@code true}
    */
   public boolean isBoolean() {
     return false;
@@ -84,7 +84,7 @@ public abstract class JsonNode {
   /**
    * 判断是否为 null
    *
-   * @return 返回值说明
+   * @return 当前节点为 JSON null 时返回 {@code true}；基类默认返回 {@code false}，由 {@code NullNode} 覆盖为 {@code true}
    */
   public boolean isNull() {
     return false;
@@ -144,7 +144,7 @@ public abstract class JsonNode {
   /**
    * 转换为字符串
    *
-   * @return 返回值说明
+   * @return 节点对应的字符串；基类默认返回空字符串，对象 / 数组等非文本节点同样返回空字符串而非 {@code null}
    */
   public String asText() {
     return "";
@@ -155,7 +155,8 @@ public abstract class JsonNode {
    * <p>对齐 Jackson 语义：若 {@link #asText()} 返回 null，则返回默认值。 容器节点（ObjectNode / ArrayNode）应覆盖此方法直接返回默认值。
    *
    * @param defaultValue 默认值
-   * @return 返回值说明
+   * @return 节点对应的字符串；{@link #asText()} 返回 {@code null} 时返回 {@code defaultValue}，
+   *     容器节点覆盖后直接返回 {@code defaultValue}
    */
   public String asText(String defaultValue) {
     String str = asText();
@@ -165,7 +166,7 @@ public abstract class JsonNode {
   /**
    * 转换为整数
    *
-   * @return 返回值说明
+   * @return 节点对应的 int 值；基类默认返回 {@code 0}，非数值节点同样返回 {@code 0}（不抛异常、不做精度校验）
    */
   public int asInt() {
     return 0;
@@ -176,7 +177,7 @@ public abstract class JsonNode {
    * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。
    *
    * @param defaultValue 默认值
-   * @return 返回值说明
+   * @return 节点对应的 int 值；非数值节点返回 {@code defaultValue}
    */
   public int asInt(int defaultValue) {
     return defaultValue;
@@ -185,7 +186,7 @@ public abstract class JsonNode {
   /**
    * 转换为长整数
    *
-   * @return 返回值说明
+   * @return 节点对应的 long 值；基类默认返回 {@code 0L}，非数值节点同样返回 {@code 0L}
    */
   public long asLong() {
     return 0L;
@@ -196,7 +197,7 @@ public abstract class JsonNode {
    * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。
    *
    * @param defaultValue 默认值
-   * @return 返回值说明
+   * @return 节点对应的 long 值；非数值节点返回 {@code defaultValue}
    */
   public long asLong(long defaultValue) {
     return defaultValue;
@@ -205,7 +206,7 @@ public abstract class JsonNode {
   /**
    * 转换为双精度数
    *
-   * @return 返回值说明
+   * @return 节点对应的 double 值；基类默认返回 {@code 0.0}，非数值节点同样返回 {@code 0.0}
    */
   public double asDouble() {
     return 0.0;
@@ -216,7 +217,7 @@ public abstract class JsonNode {
    * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。
    *
    * @param defaultValue 默认值
-   * @return 返回值说明
+   * @return 节点对应的 double 值；非数值节点返回 {@code defaultValue}
    */
   public double asDouble(double defaultValue) {
     return defaultValue;
@@ -225,7 +226,7 @@ public abstract class JsonNode {
   /**
    * 转换为布尔值
    *
-   * @return 返回值说明
+   * @return 节点对应的 boolean 值；基类默认返回 {@code false}，非布尔节点同样返回 {@code false}
    */
   public boolean asBoolean() {
     return false;
@@ -236,7 +237,7 @@ public abstract class JsonNode {
    * <p>对齐 Jackson 语义：非布尔节点返回默认值。布尔节点（BooleanNode）应覆盖此方法。
    *
    * @param defaultValue 默认值
-   * @return 返回值说明
+   * @return 节点对应的 boolean 值；非布尔节点返回 {@code defaultValue}
    */
   public boolean asBoolean(boolean defaultValue) {
     return defaultValue;
@@ -245,7 +246,8 @@ public abstract class JsonNode {
   /**
    * 判断是否为缺失节点
    *
-   * @return 返回值说明
+   * @return 当前节点为缺失节点（{@code MissingNode}）时返回 {@code true}；基类默认返回 {@code false}，
+   *     {@code MissingNode} 覆盖为 {@code true}
    */
   public boolean isMissing() {
     return false;
@@ -280,7 +282,7 @@ public abstract class JsonNode {
   /**
    * 获取子节点数量
    *
-   * @return 返回值说明
+   * @return 子节点数量：对象为字段个数、数组为元素个数，叶子节点与 {@code MissingNode} 返回 {@code 0}
    */
   public int size() {
     return 0;
@@ -290,7 +292,7 @@ public abstract class JsonNode {
    * 是否有指定字段
    *
    * @param fieldName 字段名
-   * @return 返回值说明
+   * @return 对象节点存在该字段时返回 {@code true}；非对象节点一律返回 {@code false}
    */
   public boolean has(String fieldName) {
     return false;
@@ -300,7 +302,7 @@ public abstract class JsonNode {
    * 是否有指定索引
    *
    * @param index 索引
-   * @return 返回值说明
+   * @return 数组节点存在该下标（{@code 0 <= index < size()}）时返回 {@code true}；非数组节点一律返回 {@code false}
    */
   public boolean has(int index) {
     return false;
@@ -309,7 +311,7 @@ public abstract class JsonNode {
   /**
    * 字段名迭代器（仅对象）
    *
-   * @return 返回值说明
+   * @return 字段名迭代器，不会为 {@code null}；非对象节点返回空迭代器
    */
   public Iterator<String> fieldNames() {
     return Collections.emptyIterator();
@@ -318,7 +320,7 @@ public abstract class JsonNode {
   /**
    * 元素迭代器（仅数组）
    *
-   * @return 返回值说明
+   * @return 子元素迭代器，按下标顺序遍历，不会为 {@code null}；非数组节点返回空迭代器
    */
   public Iterator<JsonNode> elements() {
     return Collections.emptyIterator();
@@ -327,7 +329,7 @@ public abstract class JsonNode {
   /**
    * 转换为 Map
    *
-   * @return 返回值说明
+   * @return 字段名到子节点的映射，不会为 {@code null}；非对象节点返回不可变的空 {@code Map}
    */
   public Map<String, JsonNode> asMap() {
     return Collections.emptyMap();
@@ -336,7 +338,7 @@ public abstract class JsonNode {
   /**
    * 转换为 List
    *
-   * @return 返回值说明
+   * @return 子节点列表，按下标顺序排列，不会为 {@code null}；非数组节点返回不可变的空 {@code List}
    */
   public List<JsonNode> asList() {
     return Collections.emptyList();
@@ -345,7 +347,8 @@ public abstract class JsonNode {
   /**
    * 转换为原始值
    *
-   * @return 返回值说明
+   * @return 节点承载的原始值（{@code String} / {@code Number} / {@code Boolean} / {@code Map} / {@code List}）；
+   *     基类默认返回 {@code null}
    */
   public Object asValue() {
     return null;

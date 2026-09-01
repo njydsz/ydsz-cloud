@@ -10,8 +10,8 @@ import com.njydsz.common.util.security.DigestUtils;
  *
  * <p>算法：HmacSHA256，密钥为 appSecret，签名内容为 timestamp + nonce + encrypt， 计算结果经 Base64 编码后与回调签名比对。
  *
- * @since 1.0.0
  * @author ydsz-team
+ * @since 1.0.0
  */
 public final class HmacSignatureUtil {
 

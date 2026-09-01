@@ -33,9 +33,9 @@ public class SendPipeline implements InitializingBean {
 
   /**
    * Spring 自动注入所有 {@link SendHandler} 实现。
-   * 
    *
-   * @param handlerList 参数说明   */
+   * @param handlerList Spring 容器中所有 SendHandler Bean 列表（自动注入）
+   */
   public SendPipeline(List<SendHandler> handlerList) {
     this.handlers = new CopyOnWriteArrayList<>(handlerList);
     this.handlers.sort(ORDER_COMPARATOR);

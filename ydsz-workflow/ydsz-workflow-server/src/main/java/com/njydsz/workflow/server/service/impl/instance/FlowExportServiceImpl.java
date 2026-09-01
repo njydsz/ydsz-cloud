@@ -126,9 +126,9 @@ public class FlowExportServiceImpl implements FlowExportService {
   /**
    * 构建水印文本（含 userId + instanceId），用于溯源。
    *
-   * @param userIdentifier 参数说明
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param userIdentifier 操作人标识（用户名或工号）
+   * @param instanceId 流程实例 ID
+   * @return 拼接后的水印文本
    */
   private String buildWatermark(String userIdentifier, String instanceId) {
     return userIdentifier + (instanceId != null ? "/" + instanceId : "");
@@ -137,8 +137,8 @@ public class FlowExportServiceImpl implements FlowExportService {
   /**
    * 输出 HTML head + 内嵌 CSS 样式。
    *
-   * @param html 参数说明
-   * @param title 参数说明
+   * @param html HTML 构建器
+   * @param title 页面标题
    */
   private void appendHtmlHeader(StringBuilder html, String title) {
     html.append("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">");
@@ -170,8 +170,8 @@ public class FlowExportServiceImpl implements FlowExportService {
   /**
    * 输出水印 div（50 个 span）。
    *
-   * @param html 参数说明
-   * @param watermark 参数说明
+   * @param html HTML 构建器
+   * @param watermark 水印文本
    */
   private void appendWatermarkDiv(StringBuilder html, String watermark) {
     html.append("<div class=\"watermark\">");
@@ -184,8 +184,8 @@ public class FlowExportServiceImpl implements FlowExportService {
   /**
    * 输出标题区域（含流程编码/实例ID/发起时间）。
    *
-   * @param html 参数说明
-   * @param instance 参数说明
+   * @param html HTML 构建器
+   * @param instance 流程实例
    */
   private void appendTitleSection(StringBuilder html, FlowInstanceVO instance) {
     html.append("<div class=\"header\">");
@@ -200,8 +200,8 @@ public class FlowExportServiceImpl implements FlowExportService {
   /**
    * 输出表单数据表格。
    *
-   * @param html 参数说明
-   * @param formData 参数说明
+   * @param html HTML 构建器
+   * @param formData 表单数据映射
    */
   private void appendFormDataTable(StringBuilder html, Map<String, Object> formData) {
     html.append("<h2>表单数据</h2><table>");
@@ -220,8 +220,8 @@ public class FlowExportServiceImpl implements FlowExportService {
   /**
    * 输出审批轨迹时间线。
    *
-   * @param html 参数说明
-   * @param history 参数说明
+   * @param html HTML 构建器
+   * @param history 历史任务列表
    */
   private void appendTimeline(StringBuilder html, List<FlowHisTaskVO> history) {
     html.append("<h2>审批轨迹</h2><div class=\"timeline\">");
@@ -238,8 +238,8 @@ public class FlowExportServiceImpl implements FlowExportService {
   /**
    * 输出单个审批轨迹节点。
    *
-   * @param html 参数说明
-   * @param task 参数说明
+   * @param html HTML 构建器
+   * @param task 历史任务实体
    */
   private void appendTimelineItem(StringBuilder html, FlowHisTaskVO task) {
     html.append("<div class=\"timeline-item\">");

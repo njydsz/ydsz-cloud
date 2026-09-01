@@ -44,8 +44,13 @@ import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
 @RequiredArgsConstructor
 public class FileNodeRepositoryImpl implements FileNodeRepository {
 
+  /** 分布式 ID 生成器（Snowflake 算法，生成节点唯一 ID） */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
+
+  /** 文件节点 MyBatis Mapper（数据库 CRUD 原始操作） */
   private final FileNodeMapper fileNodeMapper;
+
+  /** DTO/VO/DO 转换器（实体与视图对象之间的映射） */
   private final NextwikiConverter converter;
 
   @Override

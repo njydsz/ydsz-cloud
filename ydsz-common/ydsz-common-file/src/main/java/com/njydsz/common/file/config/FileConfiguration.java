@@ -236,6 +236,30 @@ public class FileConfiguration {
     return new FileTypeValidator(fileProperties.isCheckMagicNumber());
   }
 
+  /**
+   * 注册文件存储提供者，是文件模块与具体存储后端之间唯一的装配出口。
+   *
+   * <p>按配置选择本地或对象存储实现，并把秒传去重、病毒扫描、失败重试、监控指标、上传并发保护等增强能力
+   * <b>按需挂接</b>到工厂上。这些能力一律通过 {@link ObjectProvider} 惰性获取，缺依赖时静默跳过而非启动失败，
+   * 保证文件模块在最小依赖集下依然可用。
+   *
+   * <p>删除与异步上传两个线程池同为可选注入，Bean 名称分别是 {@code fileDeleteExecutor} 与 {@code
+   * fileUploadExecutor}，由 ydsz-common-thread 统一托管生命周期；未装配时相应操作退回调用方线程执行。
+   *
+   * @param fileProperties 文件存储配置，决定存储类型、bucket 以及是否开启上传并发控制
+   * @param fileUploadProperties 上传行为配置，如分片大小与并发度
+   * @param multipartContextStore 分片上传上下文存储，用于跨请求续传时恢复上传会话
+   * @param checkpointService 断点信息服务，用于断点续传进度持久化
+   * @param redisProvider Redis 模板提供者，为 {@code null} 时跳过上传并发保护
+   * @param dedupProvider 文件秒传去重服务提供者，未装配时不启用秒传
+   * @param virusScannerProvider 病毒扫描器提供者，未装配时跳过上传扫描
+   * @param metricsProvider 监控指标提供者，未装配时不采集存储侧指标
+   * @param retryHelperProvider 存储重试助手提供者，未装配时不做失败重试
+   * @param fileTypeValidator 文件类型校验器，必填，用于后缀白名单与魔数校验
+   * @param deleteExecutorProvider 删除操作线程池提供者，未装配时删除走调用方线程
+   * @param asyncUploadExecutorProvider 异步上传线程池提供者，未装配时不启用异步上传
+   * @return 文件存储提供者实例，不会为 {@code null}
+   */
   @Bean
   @ConditionalOnMissingBean(IFileStorageProvider.class)
   public IFileStorageProvider fileStorageProvider(

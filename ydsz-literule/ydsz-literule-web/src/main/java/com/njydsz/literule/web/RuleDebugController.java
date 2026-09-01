@@ -67,7 +67,7 @@ public class RuleDebugController {
   // ==================== 断点管理 ====================
 
   /** 查询全部断点
-   * @return 返回值说明
+   * @return 断点列表
    */
   @GetMapping("/breakpoints")
   public YdszResponse<Object> listBreakpoints() {
@@ -124,8 +124,8 @@ public class RuleDebugController {
   }
 
   /** 删除断点
-   * @param breakpointId 参数说明
-      * @return 返回值说明
+   * @param breakpointId 断点唯一标识
+   * @return 删除结果（true 表示成功）
    */
   @DeleteMapping("/breakpoints/{breakpointId}")
   public YdszResponse<Object> removeBreakpoint(@PathVariable String breakpointId) {
@@ -170,8 +170,8 @@ public class RuleDebugController {
   }
 
   /** 查询会话详情（含历史命中）
-   * @param sessionId 参数说明
-      * @return 返回值说明
+   * @param sessionId 调试会话唯一标识
+   * @return 会话详情（含断点命中历史）
    */
   @GetMapping("/sessions/{sessionId}")
   public YdszResponse<Object> getSession(@PathVariable String sessionId) {
@@ -232,8 +232,8 @@ public class RuleDebugController {
   }
 
   /** 终止调试会话
-   * @param sessionId 参数说明
-      * @return 返回值说明
+   * @param sessionId 调试会话唯一标识
+   * @return 终止结果（true 表示成功）
    */
   @DeleteMapping("/sessions/{sessionId}")
   public YdszResponse<Object> terminateSession(@PathVariable String sessionId) {
@@ -246,7 +246,7 @@ public class RuleDebugController {
   }
 
   /** 查询全部活跃会话
-   * @return 返回值说明
+   * @return 活跃调试会话列表
    */
   @GetMapping("/sessions")
   public YdszResponse<Object> listSessions() {

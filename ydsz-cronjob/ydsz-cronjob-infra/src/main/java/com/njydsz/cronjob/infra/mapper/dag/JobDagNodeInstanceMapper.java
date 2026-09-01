@@ -41,8 +41,8 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   /**
    * 根据 DAG 实例 ID 查询所有节点实例。
    *
-   * @param dagInstanceId 参数说明
-   * @return 返回值说明
+   * @param dagInstanceId DAG 实例 ID
+   * @return 节点实例列表（按创建时间升序）；无记录时返回空列表
    */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
@@ -60,9 +60,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
    * <p>注意：LOOP 场景下同一 (dagInstanceId, jobId) 可能存在多个实例 （原始 body 节点 + N 个 iter 实例），本方法仅返回其中一条（不确定）。
    * LOOP 相关的批量查询请使用 {@link #selectAllByDagInstanceAndJob}。
    *
-   * @param dagInstanceId 参数说明
-   * @param jobId 参数说明
-   * @return 返回值说明
+   * @param dagInstanceId DAG 实例 ID
+   * @param jobId 任务定义 ID
+   * @return 节点实例；不存在时返回 null
    */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
@@ -86,9 +86,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
    * 
    * 本方法返回全部实例，供 LOOP iter 完成处理逻辑聚合判断使用。
    *
-   * @param dagInstanceId 参数说明
-   * @param jobId 参数说明
-   * @return 返回值说明
+   * @param dagInstanceId DAG 实例 ID
+   * @param jobId 任务定义 ID
+   * @return 全部节点实例列表（按创建时间升序，含 LOOP iter 实例）；无记录时返回空列表
    */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
@@ -128,9 +128,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   /**
    * 标记节点开始执行（PENDING → RUNNING）。
    *
-   * @param id 参数说明
-   * @param startedAt 参数说明
-   * @return 返回值说明
+   * @param id 节点实例 ID
+   * @param startedAt 节点开始执行的时间
+   * @return 受影响行数（1=标记成功；0=状态非 PENDING 或节点不存在）
    */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'RUNNING', started_at = #{startedAt}, "
@@ -141,14 +141,14 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   /**
    * 标记节点执行结束（SUCCESS / FAILED / SKIPPED）。
    *
-   * @param id 参数说明
-   * @param finalStatus 参数说明
-   * @param finishedAt 参数说明
-   * @param durationMs 参数说明
-   * @param resultJson 参数说明
-   * @param errorMessage 参数说明
-   * @param logId 参数说明
-   * @return 返回值说明
+   * @param id 节点实例 ID
+   * @param finalStatus 最终状态（SUCCESS / FAILED / SKIPPED）
+   * @param finishedAt 节点执行结束时间
+   * @param durationMs 节点执行耗时（毫秒）
+   * @param resultJson 节点执行结果 JSON（成功时填充）
+   * @param errorMessage 节点执行错误信息（失败时填充）
+   * @param logId 关联的任务执行日志 ID
+   * @return 受影响行数（1=标记成功；0=状态非 RUNNING 或节点不存在）
    */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = #{finalStatus}, "
@@ -168,8 +168,8 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   /**
    * 标记节点为 SKIPPED（前置失败且 FAIL_FAST 时跳过）。
    *
-   * @param id 参数说明
-   * @return 返回值说明
+   * @param id 节点实例 ID
+   * @return 受影响行数（1=标记成功；0=状态非 PENDING 或节点不存在）
    */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'SKIPPED', "
@@ -180,8 +180,8 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   /**
    * 标记节点重试（FAILED → RETRYING → PENDING，由 DAG 执行器重新触发）。
    *
-   * @param id 参数说明
-   * @return 返回值说明
+   * @param id 节点实例 ID
+   * @return 受影响行数（1=标记重试成功；0=重试次数已耗尽或状态非 FAILED）
    */
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'PENDING', "
@@ -196,9 +196,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
    * 
    * <p>与 {@link #selectByDagInstanceAndJob} 区别：本方法按 jobKey 而非 jobId 查找。
    *
-   * @param dagInstanceId 参数说明
-   * @param jobKey 参数说明
-   * @return 返回值说明
+   * @param dagInstanceId DAG 实例 ID
+   * @param jobKey 任务 KEY（精确匹配，区别于 jobId 查找）
+   * @return 节点实例；不存在时返回 null
    */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
@@ -214,9 +214,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   /**
    * 根据 DAG 实例 ID 和节点状态查询节点实例列表。
    *
-   * @param dagInstanceId 参数说明
-   * @param status 参数说明
-   * @return 返回值说明
+   * @param dagInstanceId DAG 实例 ID
+   * @param status 节点状态（PENDING / RUNNING / SUCCESS / FAILED / SKIPPED / WAITING_FOR_APPROVAL）
+   * @return 符合条件的节点实例列表（按创建时间升序）；无记录时返回空列表
    */
   @Select(
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "

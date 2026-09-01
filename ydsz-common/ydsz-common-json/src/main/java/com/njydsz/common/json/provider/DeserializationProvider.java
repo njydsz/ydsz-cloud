@@ -240,7 +240,8 @@ public final class DeserializationProvider {
    * @param <T> 泛型类型
    * @param json JSON 字符串
    * @param clazz 目标类型
-   * @return 返回值说明
+   * @return 反序列化得到的目标类型实例；{@code json} 为 {@code null} 或空串时返回 {@code null}，
+   *     目标类注册了自定义反序列化器时优先由其产出（同样可能为 {@code null}）
    */
   public static <T> T deserialize(String json, Class<T> clazz) {
     if (json == null || json.isEmpty()) {

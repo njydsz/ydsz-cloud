@@ -171,7 +171,8 @@ public final class JSONReader {
    * 计算特性值
    *
    * @param features 特性
-   * @return 返回值说明
+   * @return 各特性掩码按位或得到的特性值；{@code features} 为空或元素全为 {@code null} 时为 {@code 0}，
+   *     {@code null} 元素会被忽略
    */
   public static long of(Feature... features) {
     if (features == null) {
@@ -190,7 +191,8 @@ public final class JSONReader {
    * 从集合计算特性值
    *
    * @param features 特性
-   * @return 返回值说明
+   * @return 集合内各特性掩码按位或得到的特性值；集合为 {@code null} 或空时为 {@code 0}，
+   *     {@code null} 元素会被忽略
    */
   public static long of(Set<Feature> features) {
     if (features == null) {
@@ -573,7 +575,7 @@ public final class JSONReader {
    * 查看当前字符（不跳过空白，不移动位置）
    * <p>在已调用 skipWhitespace() 后使用，避免 peek() 的双重空白扫描开销
    *
-   * @return 返回值说明
+   * @return 当前位置的字符；已读到末尾（{@code pos >= len}）时返回空字符 {@code '\0'}，读取位置保持不变
    */
   public char peekChar() {
     return (pos < len) ? buf[pos] : '\0';
@@ -703,7 +705,7 @@ public final class JSONReader {
    * 读取浮点数（快速路径：直接从 char[] 解析，避免 String 分配）
    * <p>对于有效数字不超过7位且无指数的常见浮点数，直接从 char[] 计算， 消除 new String() + Float.parseFloat() 的分配和解析开销
    *
-   * @return 返回值说明
+   * @return 解析出的 float 值；已读到输入末尾时抛出 {@link IllegalStateException}，格式非法时同样抛出运行时异常
    */
   public float readFloat() {
     skipWhitespace();
@@ -869,7 +871,7 @@ public final class JSONReader {
    * 直接读取字符串值（跳过 skipWhitespace，在已定位到引号位置时使用）
    * <p>解析器中 readFieldNameHash() 已跳过空白和冒号， 使用此方法避免重复的 skipWhitespace() 调用
    *
-   * @return 返回值说明
+   * @return 解析出的字符串内容（转义序列已解码）；当前位置不是引号时退化为 {@link #readString()}
    */
   public String readStringDirect() {
     if (pos >= len || buf[pos] != '"') {
@@ -1036,7 +1038,7 @@ public final class JSONReader {
    * <p>对于有效数字不超过15位且无指数的常见浮点数，直接从 char[] 计算， 消除 new String() + Double.parseDouble() 的分配和解析开销
    * <p>参考 FastJSON2 底层实现：significand / POW10[scale] 直接计算， 避免 String 中间对象创建和 JDK 解析器开销
    *
-   * @return 返回值说明
+   * @return 解析出的 double 值；已读到输入末尾时抛出 {@link IllegalStateException}，格式非法时同样抛出运行时异常
    */
   public double readDouble() {
     skipWhitespace();
@@ -1283,7 +1285,7 @@ public final class JSONReader {
   /**
    * 读取字段名哈希码（FNV-1a，避免创建 String 对象）
    *
-   * @return 返回值说明
+   * @return 字段名的 FNV-1a 哈希值；已读到末尾或遇到对象结束符 {@code '}'} 时返回 {@code -1}
    */
   public long readFieldNameHash() {
     if (pos >= len) {

@@ -4,7 +4,16 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * 分片上传配置属性
+ * 文件上传配置属性
+ *
+ * <p>绑定前缀 ydsz.file.upload.*，控制文件上传的行为开关：是否启用分片 MD5 校验、
+ * 分片大小限制、临时文件清理策略等。
+ *
+ * <p>配置模式：
+ * <pre>
+ * ydsz.file.upload:
+ *   chunk-md5-check: false
+ * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0

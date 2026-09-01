@@ -75,7 +75,8 @@ public final class RequestSnapshot {
   /**
    * 返回不可变请求头视图（仅包含构造时拷贝的键）。
    *
-   * @return 返回值说明
+   * @return 请求头快照，不会为 {@code null}；未拷贝任何请求头时返回空 {@code Map}。
+   *     返回视图不可修改，尝试写入会抛出 {@link UnsupportedOperationException}
    */
   public Map<String, String> getHeaders() {
     return headers;

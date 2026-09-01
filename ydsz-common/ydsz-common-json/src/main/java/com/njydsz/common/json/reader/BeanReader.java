@@ -69,23 +69,26 @@ public final class BeanReader<T> {
   public Constructor<T> defaultConstructor;
 
   /**
-   * 字段说明（方法（null 表示无））。
+   * 兜底接收未匹配字段的方法（标注 {@code @JsonAnySetter}）。
    *
-   * @JsonAnySetter 方法（null 表示无）
+   * <p>为 {@code null} 表示目标 Bean 未声明该方法，此时 JSON 中找不到对应字段读取器的键会被静默丢弃，
+   * 不会报错也不会保留。
    */
   public final Method anySetterMethod;
 
   /**
-   * 字段说明（标注的构造函数（null 表示使用默认构造函数））。
+   * 标注 {@code @JsonCreator} 的构造函数，用于无默认构造的不可变 Bean。
    *
-   * @JsonCreator 标注的构造函数（null 表示使用默认构造函数）
+   * <p>为 {@code null} 表示走默认无参构造路径；存在无参构造时本字段恒为 {@code null}，
+   * 两个构造路径互斥。
    */
   private final Constructor<?> creatorConstructor;
 
   /**
-   * 字段说明（构造函数参数名映射（对应 JSON 字段名，null 表示未解析））。
+   * {@code @JsonCreator} 构造函数的参数名映射，元素为各参数对应的 JSON 字段名。
    *
-   * @JsonCreator 构造函数参数名映射（对应 JSON 字段名，null 表示未解析）
+   * <p>取值优先级：{@code @JsonCreator(parameterNames=...)} → 参数上的 {@code @JsonProperty#value()}
+   * → 形参名。走默认无参构造时为 {@code null}。
    */
   private final String[] creatorParameterNames;
 
@@ -427,16 +430,16 @@ public final class BeanReader<T> {
     public final int jsonNameHash;
 
     /**
-     * 字段说明（备用名称（不含主名称；空数组表示无别名））。
+     * {@code @JsonAlias} 声明的备用匹配名，不含主名称，且已剔除与主名称重复的项。
      *
-     * @JsonAlias 备用名称（不含主名称；空数组表示无别名）
+     * <p>空数组表示无别名。别名仅在反序列化时参与匹配，序列化仍只输出主名称。
      */
     public final String[] aliasNames;
 
     /**
-     * 字段说明（备用名称哈希（与 aliasNames 一一对应））。
+     * {@code aliasNames} 各元素的哈希值，与 {@link #aliasNames} 下标一一对应。
      *
-     * @JsonAlias 备用名称哈希（与 aliasNames 一一对应）
+     * <p>构造期预计算，反序列化时按哈希比对以避开字符串创建；无别名时为长度 0 的数组。
      */
     public final int[] aliasHashes;
 
@@ -450,9 +453,10 @@ public final class BeanReader<T> {
     public final int typeCode;
 
     /**
-     * 字段说明（(pattern=...) 指定的日期格式（null 表示使用默认格式列表））。
+     * {@code @JsonFormat(pattern=...)} 指定的日期格式。
      *
-     * @JsonFormat(pattern=...) 指定的日期格式（null 表示使用默认格式列表）
+     * <p>为 {@code null} 表示未声明或 pattern 为空，此时按内置默认格式列表依次尝试解析。
+     * 序列化与反序列化共用同一 pattern。
      */
     public final String datePattern;
 
@@ -525,6 +529,17 @@ public final class BeanReader<T> {
       readValue(reader, obj, 0);
     }
 
+    /**
+     * 将 reader 当前位置的值按字段类型写入目标对象（带嵌套深度控制）。
+     *
+     * <p>在 {@link #readValue(JSONReader, Object)} 基础上增加 {@code depth} 参数，
+     * 解析嵌套 Bean 时加一后向下传递，由 {@code readObject} 在超过 {@code JSONReader.DEFAULT_MAX_DEPTH}
+     * 时抛出反序列化异常，以此阻断超深嵌套 JSON 造成的栈溢出。
+     *
+     * @param reader 已定位到值起始位置的 {@link JSONReader}
+     * @param obj 目标 Bean 实例，读取到的值通过反射写入其对应字段
+     * @param depth 当前嵌套深度，最外层调用传 {@code 0}，每向下一层递增
+     */
     @SuppressWarnings("deprecation")
     public void readValue(JSONReader reader, Object obj, int depth) {
       try {

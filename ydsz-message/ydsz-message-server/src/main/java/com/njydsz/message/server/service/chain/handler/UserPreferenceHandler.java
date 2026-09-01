@@ -126,13 +126,13 @@ public class UserPreferenceHandler implements SendHandler {
   /**
    * 智能定时处理：延迟到 DND 结束后发送。
    *
-   * @param request 参数说明
-   * @param ctx 参数说明
-   * @param pref 参数说明
-   * @param stc 参数说明
-   * @param channel 参数说明
-   * @param receiver 参数说明
-   * @return 返回值说明
+     * @param request 消息发送请求
+   * @param ctx 管线上下文
+   * @param pref 用户偏好设置
+   * @param stc 智能定时配置
+   * @param channel 消息通道标识
+   * @param receiver 接收方标识
+   * @return true 表示继续管线，false 表示中断（延迟到定时后发送）
    */
   private boolean handleSmartTiming(
       MessageRequest request,
@@ -186,10 +186,8 @@ public class UserPreferenceHandler implements SendHandler {
    * 
    * <p>复用 {@link DndService#isInWindow} 实现，消除重复的跨天窗口判断逻辑。
    *
-   * @param pref 参数说明
-   * @return 返回值说明
-   */
-  private boolean isInDndPeriod(MsgPreferenceVO pref) {
+   * @param pref 用户的偏好设置（含 DND 时段配置）
+   * @return 当前时间处于 DND 时段内时返回 true
     String start = pref.getDndStart();
     String end = pref.getDndEnd();
     if (!StringUtils.hasText(start) || !StringUtils.hasText(end)) {
@@ -208,10 +206,8 @@ public class UserPreferenceHandler implements SendHandler {
   /**
    * 安全解析时间字符串。
    *
-   * @param value 参数说明
-   * @return 返回值说明
-   */
-  private LocalTime parseTime(String value) {
+   * @param value 时间字符串（HH:mm 格式）
+   * @return 解析成功返回 LocalTime，失败返回 null
     if (!StringUtils.hasText(value)) {
       return null;
     }
@@ -225,10 +221,8 @@ public class UserPreferenceHandler implements SendHandler {
   /**
    * 解析消息优先级。
    *
-   * @param request 参数说明
-   * @return 返回值说明
-   */
-  private String resolvePriority(MessageRequest request) {
+   * @param request 消息发送请求
+   * @return 优先级字符串（如 NORMAL、URGENT）
     return request.getPriority() != null ? request.getPriority() : "NORMAL";
   }
 }

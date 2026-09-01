@@ -11,6 +11,9 @@ import com.njydsz.common.safe.annotation.Xss;
  *
  * <p>同时用于创建和更新场景：创建时 {@code platform} 必填，更新时 {@code id} 必填。
  *
+ * <p><b>安全注意：</b>appSecret 明文仅在创建/更新请求中传输（由 HTTPS 保护），服务端接收后
+ * 通过 BCrypt 加密存储。更新时如果 appSecret 为空则保留原值（不修改密钥）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

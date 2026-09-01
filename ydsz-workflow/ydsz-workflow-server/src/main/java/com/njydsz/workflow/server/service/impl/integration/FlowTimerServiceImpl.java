@@ -264,7 +264,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
   /**
    * 边界定时器触发：取消 userTask，触发"超时分支"（节点 ext 中标记的 boundarySkip）
    *
-   * @param timer 参数说明
+   * @param timer 待触发的边界定时器实体
    */
   private void fireBoundary(FlowTimerVO timer) {
     FlowRunTaskVO task = taskRepository.findById(timer.getBoundaryTaskId()).orElse(null);
@@ -401,7 +401,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
   /**
    * 复用 FlowInstanceServiceImpl.generateTasksForNodes（包内访问）
    *
-   * @return 返回值说明
+   * @return 流程实例服务
    */
   private FlowInstanceService instanceService() {
     return advancer.getInstanceService();

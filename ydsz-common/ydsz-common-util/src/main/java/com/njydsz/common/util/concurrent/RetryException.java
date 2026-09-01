@@ -16,7 +16,7 @@ public class RetryException extends RuntimeException {
   /**
    * 构造重试异常。
    *
-   * @param message 异常描述信息
+   * @param message 异常描述信息，会作为 {@link #getMessage()} 直接返回；为空时调用方只能依赖 {@code cause} 定位失败原因
    * @param cause 最后一次失败的异常（可为 null）
    */
   public RetryException(String message, Throwable cause) {

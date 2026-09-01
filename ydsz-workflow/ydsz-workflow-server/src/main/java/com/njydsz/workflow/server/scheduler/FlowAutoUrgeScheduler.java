@@ -123,9 +123,9 @@ public class FlowAutoUrgeScheduler {
   /**
    * 自动催办单个实例的超时任务。
    *
-   * @param instanceId 参数说明
-   * @param tasks 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param tasks 该实例下的超时任务列表
+   * @return 实际催办的接收人数量
    */
   private int autoUrgeInstance(String instanceId, List<FlowRunTaskVO> tasks) {
     Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
@@ -191,10 +191,10 @@ public class FlowAutoUrgeScheduler {
    * 
    * <p>通过 NotificationHelper 的 send 方法发送到 DINGTALK/WECHAT 通道。 实际推送由通知中心服务异步执行，此处只负责投递消息。
    *
-   * @param receiverId 参数说明
-   * @param title 参数说明
-   * @param content 参数说明
-   * @param instanceId 参数说明
+   * @param receiverId 接收人用户 ID
+   * @param title 通知标题
+   * @param content 通知正文
+   * @param instanceId 流程实例 ID（用于去重/幂等）
    */
   private void pushImNotification(
       String receiverId, String title, String content, String instanceId) {

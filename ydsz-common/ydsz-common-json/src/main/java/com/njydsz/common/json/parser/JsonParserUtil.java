@@ -512,7 +512,8 @@ public final class JsonParserUtil {
   /**
    * 查询当前线程是否使用 BigDecimal 解析浮点数。
    *
-   * @return 返回值说明
+   * @return 当前线程已开启 {@code BigDecimal} 浮点解析时返回 {@code true}；
+   *     该开关按线程隔离（{@link ThreadLocal}），未显式设置时默认 {@code false}
    */
   public static boolean isUseBigDecimal() {
     return USE_BIG_DECIMAL.get();
@@ -1276,7 +1277,7 @@ public final class JsonParserUtil {
    *
    * @param json JSON 字符串
    * @param fieldName 字段名
-   * @return 返回值说明
+   * @return 字段对应的 int 值；字段不存在或字段值无法解析为整数时返回 {@code 0}（不抛异常）
    */
   public static int parseIntField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
@@ -1308,7 +1309,7 @@ public final class JsonParserUtil {
    *
    * @param json JSON 字符串
    * @param fieldName 字段名
-   * @return 返回值说明
+   * @return 字段对应的 long 值；字段不存在或字段值无法解析为长整数时返回 {@code 0L}（不抛异常）
    */
   public static long parseLongField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
@@ -1340,7 +1341,7 @@ public final class JsonParserUtil {
    *
    * @param json JSON 字符串
    * @param fieldName 字段名
-   * @return 返回值说明
+   * @return 字段对应的 double 值；字段不存在或字段值无法解析为浮点数时返回 {@code 0.0}（不抛异常）
    */
   public static double parseDoubleField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
@@ -1374,7 +1375,8 @@ public final class JsonParserUtil {
    *
    * @param json JSON 字符串
    * @param fieldName 字段名
-   * @return 返回值说明
+   * @return 字段对应的字符串，含转义序列时已解码；
+   *     字段不存在或字段值不是 JSON 字符串时返回 {@code null}
    */
   public static String parseStringField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
@@ -1416,7 +1418,8 @@ public final class JsonParserUtil {
    *
    * @param json JSON 字符串
    * @param fieldName 字段名
-   * @return 返回值说明
+   * @return 字段值为 JSON {@code true} 时返回 {@code true}；
+   *     字段不存在、值为 {@code false} 或其他非 {@code true} 内容时均返回 {@code false}
    */
   public static boolean parseBooleanField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
@@ -1506,7 +1509,8 @@ public final class JsonParserUtil {
    * @param <T> 泛型类型
    * @param json JSON 字符串
    * @param clazz 目标类型
-   * @return 返回值说明
+   * @return 元素已按 {@code clazz} 逐个强转的列表；底层解析返回 {@code null} 时本方法同样返回 {@code null}，
+   *     数组为空时返回空列表。元素实际类型与 {@code clazz} 不符时抛出 {@link ClassCastException}
    */
   public static <T> List<T> parseArray(String json, Class<T> clazz) {
     List<Object> list = parseArray(json);
@@ -1526,7 +1530,8 @@ public final class JsonParserUtil {
    * @param <T> 泛型类型
    * @param json JSON 字符串
    * @param clazz 目标类型
-   * @return 返回值说明
+   * @return 反序列化后的目标类型实例；{@code clazz} 为 {@code Map} 及其子类型时直接返回解析出的 {@code Map}，
+   *     否则先解析为 {@code Map} 再经 JSON 往返转换为目标 Bean。JSON 为空时返回 {@code null}
    */
   public static <T> T parseObject(String json, Class<T> clazz) {
     // Map 及其子类直接 cast 返回

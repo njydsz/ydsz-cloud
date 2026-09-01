@@ -67,9 +67,8 @@ public class DndService {
   /**
    * DND 决策结果（行动建议 + 延迟目标时间）。
    *
-   * @param decision 参数说明
-   * @param deferUntil 参数说明
-   * @return 返回值说明
+     * @param decision DND 决策类型（ALLOW / DEFER / DROP）
+   * @param deferUntil 延迟目标时间（仅 DEFER 时非 null）
    */
   public record DndResult(DndDecision decision, LocalDateTime deferUntil) {
     /** 放行结果单例。 */
@@ -79,8 +78,8 @@ public class DndService {
      * 构造延迟结果。
      * 
      *
-     * @param deferUntil 参数说明
-     * @return 返回值说明
+     * @param deferUntil 延迟发送的目标时间
+     * @return 包含 DEFER 决策和延迟目标时间的结果
      */
     public static DndResult defer(LocalDateTime deferUntil) {
       return new DndResult(DndDecision.DEFER, deferUntil);

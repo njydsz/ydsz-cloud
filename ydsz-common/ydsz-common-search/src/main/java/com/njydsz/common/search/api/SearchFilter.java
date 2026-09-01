@@ -12,6 +12,11 @@ import lombok.NoArgsConstructor;
 /**
  * 搜索过滤条件
  *
+ * <p>封装单个字段的多值过滤规则，用于构建搜索引擎（如 Elasticsearch）的 Query DSL。
+ * 同一字段下多个值以 OR 关系组合，不同 Filter 之间以 AND 关系组合。
+ *
+ * <p>支持的过滤操作符详见 {@link Operator}，支持 EQ、IN、BETWEEN 等多种语义。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

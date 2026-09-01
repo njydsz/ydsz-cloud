@@ -267,10 +267,10 @@ public class AggregateServiceImpl implements AggregateService {
   }
 
   /**
-   * 加载摘要模板：按约定编码 DIGEST_{aggregateGroup} 查找, 找到则用模板 content,否则回退默认摘要文案。
+   * 加载摘要模板：按约定编码 DIGEST_{aggregateGroup} 查找，找到则用模板 content，否则回退默认摘要文案。
    *
-   * @param batch 参数说明
-   * @return 返回值说明
+   * @param batch 聚合批次（取 aggregateGroup/channel/tenantId 查模板）
+   * @return 摘要模板内容字符串
    */
   private String loadDigestTemplate(MsgAggregateVO batch) {
     String group = batch.getAggregateGroup();

@@ -7,9 +7,20 @@ import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * SAML 身份提供者配置统一 DTO（P2-1 CUD 入参）。
+ * SAML 2.0 身份提供者（IdP）配置统一 DTO（P2-1 CUD 入参）。
  *
  * <p>同时用于创建和更新场景：创建时 {@code entityId} 必填，更新时 {@code entityId} 必填。
+ *
+ * <p><b>字段语义：</b>
+ *
+ * <ul>
+ *   <li>{@code entityId} — IdP Entity ID（唯一标识 URI，作为主键）</li>
+ *   <li>{@code ssoUrl} — IdP SSO 端点 URL（SP 重定向用户至此发起 SSO）</li>
+ *   <li>{@code certificate} — IdP 公钥证书（PEM 格式，用于验证 SAML Response 签名）</li>
+ *   <li>{@code emailAttribute} — SAML Assertion 中邮箱属性名（默认 emailAddress）</li>
+ *   <li>{@code displayNameAttribute} — SAML Assertion 中显示名称属性名（默认 displayName）</li>
+ *   <li>{@code status} — 状态（ENABLED/DISABLED），禁用后该 IdP 不可登录</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0

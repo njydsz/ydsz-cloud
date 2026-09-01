@@ -67,7 +67,8 @@ public class AliyunSmsProvider implements SmsProvider {
    * 生产构造：从 {@link MessageProperties} 读取阿里云配置并构建 RestTemplate。
    * 
    *
-   * @param messageProperties 参数说明   */
+   * @param messageProperties 消息模块配置属性（含 aliyun 子配置项 AccessKeyId/AccessKeySecret/Endpoint 等）
+   */
   public AliyunSmsProvider(MessageProperties messageProperties) {
     this.config = messageProperties.getSms().getAliyun();
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -195,9 +196,9 @@ public class AliyunSmsProvider implements SmsProvider {
    * <p>参数构造：PhoneNumberJson = ["phone1","phone2",...]， SignNameJson =
    * ["sign","sign",...]，TemplateParamJson = [{...},{...},...]。
    *
-   * @param requests 参数说明
-   * @param template 参数说明
-   * @return 返回值说明
+   * @param requests 待批量发送的消息请求列表（每批不超过 100 条）
+   * @param template 短信模板（提供 signName / providerKey）
+   * @return 与 requests 一一对应的发送结果列表
    */
   private List<MessageResult> doBatchSend(List<MessageRequest> requests, MsgTemplateVO template) {
     List<MessageResult> results = new ArrayList<>(requests.size());

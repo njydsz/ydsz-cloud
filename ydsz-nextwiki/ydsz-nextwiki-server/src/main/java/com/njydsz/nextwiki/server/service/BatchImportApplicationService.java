@@ -49,6 +49,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 @RequiredArgsConstructor
 public class BatchImportApplicationService {
 
+  /** 文件应用服务（单文件上传/创建目录，批量导入的底层委托） */
   private final FileApplicationService fileApplicationService;
 
   /** P0-1: 并发上传线程池（由 ydsz-common-thread 统一管理，配置项: ydsz.thread.pools.nextwikiBatchImport） */

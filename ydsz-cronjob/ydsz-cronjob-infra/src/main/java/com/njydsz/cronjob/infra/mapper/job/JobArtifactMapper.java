@@ -41,8 +41,8 @@ public interface JobArtifactMapper extends BaseMapper<JobArtifact> {
   /**
    * 按日志 ID 查询产物列表。
    *
-   * @param logId 参数说明
-   * @return 返回值说明
+   * @param logId 执行日志 ID
+   * @return 产物列表（按创建时间降序）；无记录时返回空列表
    */
   @Select(
       "SELECT id, job_id, log_id, job_key, artifact_name, artifact_type, storage_path, "
@@ -55,9 +55,9 @@ public interface JobArtifactMapper extends BaseMapper<JobArtifact> {
   /**
    * 清理过期产物（硬删除）。
    *
-   * @param before 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param before 过期分界时间（删除 expire_at 早于该时间的产物）
+   * @param limit 单批最多删除条数
+   * @return 实际删除条数
    */
   @Delete(
       "DELETE FROM ydsz_job_artifact WHERE expire_at IS NOT NULL AND expire_at < #{before} LIMIT #{limit}")

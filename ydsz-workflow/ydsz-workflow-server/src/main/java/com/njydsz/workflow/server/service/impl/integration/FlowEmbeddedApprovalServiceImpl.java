@@ -309,10 +309,10 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   /**
    * 计算当前用户在流程中的角色
    *
-   * @param instance 参数说明
-   * @param pending 参数说明
-   * @param userId 参数说明
-   * @return 返回值说明
+   * @param instance 流程实例
+   * @param pending 当前 PENDING 任务列表
+   * @param userId 当前用户 ID
+   * @return 角色编码（INITIATOR/APPROVER/OBSERVER）
    */
   private String computeMyRole(FlowInstanceVO instance, List<FlowRunTaskVO> pending, String userId) {
     if (userId == null) {
@@ -334,10 +334,10 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   /**
    * 计算当前用户可执行的操作
    *
-   * @param instance 参数说明
-   * @param pending 参数说明
-   * @param userId 参数说明
-   * @return 返回值说明
+   * @param instance 流程实例
+   * @param pending 当前 PENDING 任务列表
+   * @param userId 当前用户 ID
+   * @return 可执行动作编码列表
    */
   private List<String> computeActions(
       FlowInstanceVO instance, List<FlowRunTaskVO> pending, String userId) {
@@ -394,10 +394,10 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
    * <li>【P0-4 新增】无已完成的历史任务 — 如果有审批人已处理过任务，说明流程已推进到下游，不可撤回
    * </ol>
    *
-   * @param instance 参数说明
-   * @param pending 参数说明
-   * @param userId 参数说明
-   * @return 返回值说明
+   * @param instance 流程实例
+   * @param pending 当前 PENDING 任务列表
+   * @param userId 当前用户 ID
+   * @return true=允许撤回
    */
   private boolean canRecall(FlowInstanceVO instance, List<FlowRunTaskVO> pending, String userId) {
     if (userId == null) {
@@ -436,9 +436,9 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   /**
    * 判定 task 是否属于指定 userId（USER/ROLE/DEPT 等多种 assigneeType 均纳入判断）
    *
-   * @param t 参数说明
-   * @param userId 参数说明
-   * @return 返回值说明
+   * @param t 任务实体
+   * @param userId 用户 ID
+   * @return true=任务属于该用户
    */
   private boolean isMine(FlowRunTaskVO t, String userId) {
     if (t == null || userId == null) {
@@ -464,9 +464,9 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   /**
    * 找到当前用户 mine 的第一个未完成任务
    *
-   * @param instanceId 参数说明
-   * @param userId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param userId 用户 ID
+   * @return 属于该用户的第一个未完成任务；不存在返回 null
    */
   private FlowRunTaskVO findMyTask(String instanceId, String userId) {
     if (userId == null) {
@@ -484,9 +484,9 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   /**
    * 构造当前待办视图
    *
-   * @param pending 参数说明
-   * @param userId 参数说明
-   * @return 返回值说明
+   * @param pending 当前 PENDING 任务列表
+   * @param userId 当前用户 ID
+   * @return 当前任务视图列表
    */
   private List<EmbeddedApprovalViewDTO.CurrentTaskView> buildCurrentTaskViews(
       List<FlowRunTaskVO> pending, String userId) {

@@ -70,9 +70,9 @@ public class NotifyChannelBridgeConfiguration implements InitializingBean {
 
   /**
    * 构造通道桥接配置。
-   * 
    *
-   * @param beanFactory 参数说明   */
+   * @param beanFactory Spring Bean 工厂（用于获取所有 MessageChannel Bean 实例）
+   */
   public NotifyChannelBridgeConfiguration(ListableBeanFactory beanFactory) {
     this.beanFactory = beanFactory;
   }

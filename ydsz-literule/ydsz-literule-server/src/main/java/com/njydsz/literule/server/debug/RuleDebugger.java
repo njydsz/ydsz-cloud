@@ -99,8 +99,10 @@ public class RuleDebugger {
 
   // ==================== 当前评估规则上下文 ====================
 
-  /** 进入规则评估（设置 ThreadLocal 当前规则编码）
-   * @param ruleCode 参数说明
+  /**
+   * 进入规则评估（设置 ThreadLocal 当前规则编码）
+   *
+   * @param ruleCode 当前正在评估的规则编码
    */
   public static void enterRule(String ruleCode) {
     CURRENT_RULE_CODE.set(ruleCode);
@@ -185,8 +187,10 @@ public class RuleDebugger {
     log.info("[LiteRule-Debug] 删除断点: id={}", breakpointId);
   }
 
-  /** 删除指定规则的全部断点
-   * @param ruleCode 参数说明
+  /**
+   * 删除指定规则的全部断点
+   *
+   * @param ruleCode 规则编码（用于筛选匹配的断点）
    */
   public void removeBreakpointsByRule(String ruleCode) {
     breakpoints.remove(ruleCode);

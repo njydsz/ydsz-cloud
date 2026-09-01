@@ -14,6 +14,7 @@ import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
 import com.njydsz.common.cache.internal.tinylfu.WindowTinyLFUCache;
 import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.support.CacheLoader;
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
 import com.njydsz.common.cache.support.CacheWriter;
 import com.njydsz.common.cache.support.Expiry;
 
@@ -61,6 +62,9 @@ public final class CacheBuilder<K, V> {
 
   /** maximumSize 未设置（-1）时的兜底容量 */
   private static final int DEFAULT_UNBOUNDED_CAPACITY = 1024;
+
+  /** 监听器异步回调的默认线程池名（CacheThreadPoolManager 统一管理） */
+  private static final String LISTENER_POOL_NAME = "listenerPool";
 
   /** 缓存类型（默认 TINYLFU，命中率最优） */
   private CacheType type = CacheType.TINYLFU;
@@ -119,6 +123,12 @@ public final class CacheBuilder<K, V> {
 
   /** 缓存名称（可选，用于监控标识） */
   private String cacheName;
+
+  /** 空值占位 TTL 下界（毫秒，0 表示未配置，构建后使用接口默认 30~60 秒） */
+  private long nullValueMinExpireMs = 0;
+
+  /** 空值占位 TTL 上界（毫秒，0 表示未配置） */
+  private long nullValueMaxExpireMs = 0;
 
   /** 是否启用健康检查注册（默认 true） */
   private boolean healthCheckEnabled = true;
@@ -220,6 +230,32 @@ public final class CacheBuilder<K, V> {
    */
   public CacheBuilder<K, V> healthCheckEnabled(boolean healthCheckEnabled) {
     this.healthCheckEnabled = healthCheckEnabled;
+    return this;
+  }
+
+  /**
+   * 设置空值占位 TTL 区间（防穿透空标记的过期时间，带随机抖动防雪崩）。
+   *
+   * <p>这是缓存级策略，配置后调用点可用两参 {@code getWithProtection(key, loader)}， 无需在每次调用重复传参（对标 Spring
+   * Cache 的 null TTL 配置惯例）。 未配置时使用接口默认区间 30~60 秒。
+   *
+   * @param minDuration 最小过期时长（必须 &gt; 0）
+   * @param maxDuration 最大过期时长（必须 &gt;= minDuration）
+   * @param unit 时间单位
+   * @return this
+   */
+  public CacheBuilder<K, V> nullValueExpire(long minDuration, long maxDuration, TimeUnit unit) {
+    if (unit == null) {
+      throw new IllegalArgumentException("unit must not be null");
+    }
+    if (minDuration <= 0) {
+      throw new IllegalArgumentException("minDuration must be greater than 0");
+    }
+    if (maxDuration < minDuration) {
+      throw new IllegalArgumentException("maxDuration must be >= minDuration");
+    }
+    this.nullValueMinExpireMs = unit.toMillis(minDuration);
+    this.nullValueMaxExpireMs = Math.max(this.nullValueMinExpireMs, unit.toMillis(maxDuration));
     return this;
   }
 
@@ -377,6 +413,13 @@ public final class CacheBuilder<K, V> {
     validate();
     Cache<K, V> cache = createBaseCache();
     cache = applyDecorators(cache);
+    // 监听器异步接线（P2 修复）：显式配置优先，未配置时默认挂 CacheThreadPoolManager
+    // 的 listenerPool（daemon 线程池）——旧实现 listenerExecutor 是死配置，回调在写锁内同步执行
+    cache.setListenerExecutor(resolveListenerExecutor());
+    // 实例级空值 TTL 注入（调用点两参 getWithProtection 生效）
+    if (nullValueMinExpireMs > 0 && nullValueMaxExpireMs > 0) {
+      cache.setNullValueTtl(nullValueMinExpireMs, nullValueMaxExpireMs);
+    }
     // 健康检查自动注册
     if (healthCheckEnabled
         && healthIndicator != null
@@ -385,6 +428,21 @@ public final class CacheBuilder<K, V> {
       healthIndicator.registerCache(cacheName, cache);
     }
     return cache;
+  }
+
+  /**
+   * 解析删除监听器回调执行器。
+   *
+   * <p>显式配置的 {@code listenerExecutor} 优先； 未配置时默认使用 {@link CacheThreadPoolManager}
+   * 统一管理的 listenerPool（daemon 线程池）， 对标 Caffeine RemovalListeners.async 的回调不阻塞缓存操作线程。
+   *
+   * @return 监听器回调执行器
+   */
+  private Executor resolveListenerExecutor() {
+    if (listenerExecutor != null) {
+      return listenerExecutor;
+    }
+    return CacheThreadPoolManager.getInstance().getOrCreatePool(LISTENER_POOL_NAME);
   }
 
   /**
@@ -491,6 +549,12 @@ public final class CacheBuilder<K, V> {
 
     // 应用装饰器后再包装为 LoadingCache
     Cache<K, V> decoratedCache = applyDecorators(baseCache);
+    // 监听器异步接线（与 build() 路径一致）
+    decoratedCache.setListenerExecutor(resolveListenerExecutor());
+    // 实例级空值 TTL 注入（与 build() 路径一致）
+    if (nullValueMinExpireMs > 0 && nullValueMaxExpireMs > 0) {
+      decoratedCache.setNullValueTtl(nullValueMinExpireMs, nullValueMaxExpireMs);
+    }
 
     long effectiveRefreshDuration = refreshAfterWriteDuration > 0 ? refreshAfterWriteDuration : 0;
     TimeUnit effectiveRefreshUnit =

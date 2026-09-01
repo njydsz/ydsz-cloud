@@ -133,8 +133,13 @@ public class FileApplicationService {
     this.transactionTemplate = new TransactionTemplate(transactionManager);
   }
 
+  /** 分布式锁前缀：目录树操作（移动/重命名/删除）防并发 */
   private static final String LOCK_PREFIX = "nextwiki:lock:folder:";
+
+  /** 分布式锁自动过期时间（毫秒）：防止持锁节点崩溃导致死锁 */
   private static final long LOCK_LEASE_MS = 30_000L;
+
+  /** 获取分布式锁最大等待时间（毫秒）：超时则抛 LOCK_BUSY 业务异常 */
   private static final long LOCK_WAIT_MS = 3_000L;
 
   @Autowired(required = false)
@@ -397,7 +402,7 @@ public class FileApplicationService {
    * @param name 新目录名（会经 {@link #sanitizeFileName} 净化）
    * @param userId 操作人 ID
    * @return 新建目录节点视图 {@link FileNodeVO}
-   * @throws BusinessException 父目录不存在/非目录、名称非法时抛出
+   * @throws BusinessException 父目录不存在（FILE_FOLDER_NOT_FOUND）、父节点非目录（FILE_PARENT_NOT_FOLDER）、名称非法（SPACE_NAME_INVALID）时抛出
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次父目录解析 + 一次节点写入）
    * @note 线程安全（无共享可变状态）
@@ -417,18 +422,6 @@ public class FileApplicationService {
     return saved;
   }
 
-  /**
-   * 列出目录（支持排序、过滤、分页，使用数据库分页避免全量加载）
-   *
-   * @param parentId 父目录ID
-   * @param userId 用户ID
-   * @param sortBy 排序字段：name / size / time（默认 time）
-   * @param sortDir 排序方向：asc / desc（默认 desc）
-   * @param type 过滤类型：all / file / folder（默认 all）
-   * @param page 页码（从 1 开始，默认 1）
-   * @param pageSize 每页大小（默认 50）
-   * @return 分页结果（含 total/pageCount）
-   */
   /**
    * 列出目录下子节点（支持排序/类型过滤/数据库分页，避免全量加载）。
    *
@@ -937,6 +930,7 @@ public class FileApplicationService {
    *
    * @param nodeId 文件节点 ID
    * @return 版本记录列表 {@link FileVersionVO}（可能为空，非 {@code null}）
+   * @throws BusinessException 节点不存在时抛出 FILE_NOT_FOUND
    * @complexity O(1)（一次按节点 ID 查询）
    * @note 只读，无事务边界
    */

@@ -40,10 +40,10 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
   /**
    * 根据 flowCode + version 查最新已发布版本
    *
-   * @param flowCode 参数说明
-   * @param version 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param flowCode 流程定义编码
+   * @param version 版本号
+   * @param tenantId 租户 ID
+   * @return 已发布的流程定义；不存在返回 null
    */
   FlowDefinition selectPublished(
       @Param("flowCode") String flowCode,
@@ -53,9 +53,9 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
   /**
    * 根据 flowCode 查最新版本（不区分发布状态）
    *
-   * @param flowCode 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param flowCode 流程定义编码
+   * @param tenantId 租户 ID
+   * @return 最新版本流程定义；不存在返回 null
    */
   FlowDefinition selectLatestByCode(
       @Param("flowCode") String flowCode, @Param("tenantId") String tenantId);
@@ -63,9 +63,9 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
   /**
    * 发布（更新 is_publish）
    *
-   * @param id 参数说明
-   * @param isPublish 参数说明
-   * @return 返回值说明
+   * @param id 流程定义 ID
+   * @param isPublish 发布状态（1 发布/9 取消发布）
+   * @return 受影响行数
    */
   int publish(@Param("id") String id, @Param("isPublish") Integer isPublish);
 

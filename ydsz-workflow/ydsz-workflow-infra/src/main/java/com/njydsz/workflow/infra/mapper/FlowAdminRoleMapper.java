@@ -38,9 +38,9 @@ public interface FlowAdminRoleMapper extends BaseMapper<FlowAdminRole> {
   /**
    * 查询用户在指定租户下的所有有效角色。
    *
-   * @param userId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @return 管理员角色列表
    */
   List<FlowAdminRole> selectByUserId(
       @Param("userId") String userId, @Param("tenantId") String tenantId);
@@ -48,10 +48,10 @@ public interface FlowAdminRoleMapper extends BaseMapper<FlowAdminRole> {
   /**
    * 查询用户是否拥有指定角色。
    *
-   * @param userId 参数说明
-   * @param roleCode 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param userId 用户 ID
+   * @param roleCode 角色编码
+   * @param tenantId 租户 ID
+   * @return 匹配的管理员角色；不存在返回 null
    */
   FlowAdminRole selectByUserAndRole(
       @Param("userId") String userId,

@@ -59,8 +59,10 @@ public class RuleImportExportController {
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
 
-  /** 导出全部规则为 JSON
-   * @return 返回值说明
+  /**
+   * 导出全部规则为 JSON
+   *
+   * @return 全部规则定义的 JSON 格式数据（不含内部字段）
    */
   @GetMapping("/export")
   public YdszResponse<Map<String, Object>> exportRules() {
@@ -164,10 +166,12 @@ public class RuleImportExportController {
     return s;
   }
 
-  /** 导入规则（JSON 格式）
-   * @param operator 参数说明
-      * @return 返回值说明
-      * @param dto 参数说明
+  /**
+   * 导入规则（JSON 格式）
+   *
+   * @param dto 导入请求参数（包含待导入的规则定义列表）
+   * @param operator 操作人用户名
+   * @return 导入结果（导入成功数和跳过数）
    */
   @Idempotent(key = "ruleAdmin:importRules", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

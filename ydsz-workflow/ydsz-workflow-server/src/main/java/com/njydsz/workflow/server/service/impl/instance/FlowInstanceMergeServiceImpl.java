@@ -126,10 +126,10 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
    * <p>校验所有实例存在、状态为 RUNNING 且 flowCode 相同，生成合并组 ID 并存入 Redis。
    * 
    *
-   * @param instanceIds 参数说明
-   * @param operatorId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param instanceIds 待合并的实例 ID 列表（≥2 个）
+   * @param operatorId 操作人 ID
+   * @param tenantId 租户 ID
+   * @return 合并组 ID
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -200,10 +200,10 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
    * 
    * <p>符合 DDD 分层规范：Service 层内部完成 String→StringVO 转换。
    *
-   * @param instanceIds 参数说明
-   * @param operatorId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param instanceIds 待合并的实例 ID 列表
+   * @param operatorId 操作人 ID
+   * @param tenantId 租户 ID
+   * @return 合并组 ID 视图对象
    */
   @Override
   public StringVO mergeInstancesVO(List<String> instanceIds, String operatorId, String tenantId) {

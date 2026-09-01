@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
@@ -322,14 +323,20 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 获取缓存值（不触发加载），并检查是否过期。
    *
-   * <p>过期语义：读路径先查底层缓存，命中后再比对过期时间戳； 已过期则同步删除并返回 null（计入未命中）。 未过期时按 expireAfterAccess / 自定义 Expiry
-   * 刷新过期时间（写后过期模式不受影响）。
+   * <p>过期语义：读路径先查底层缓存，命中后再比对过期时间戳； 已过期则同步删除并返回 null（计入未命中）。 未过期时按 expireAfterAccess / 自定义
+   * Expiry 刷新过期时间（写后过期模式不受影响）。
+   *
+   * <p>null 键统一契约：返回 null 且不计入 hit/miss 统计（与 WindowTinyLFU/Striped 实现对齐， null
+   * 键属于调用方防御性查询，不应污染命中率）。
    *
    * @param key 缓存键
    * @return 缓存值；未命中或已过期时返回 {@code null}
    */
   @Override
   public V getIfPresent(K key) {
+    if (key == null) {
+      return null;
+    }
     V value = delegate.getIfPresent(key);
     if (value == null) {
       missCount.increment();
@@ -802,6 +809,39 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public void addListener(RemovalListener<? super K, ? super V> listener) {
     delegate.addListener(listener);
+  }
+
+  /**
+   * 配置删除监听器异步回调执行器（透传底层缓存）。
+   *
+   * @param executor 回调执行器；null 表示恢复同步执行
+   */
+  @Override
+  public void setListenerExecutor(Executor executor) {
+    delegate.setListenerExecutor(executor);
+  }
+
+  /**
+   * 配置实例级空值占位 TTL 区间（透传底层缓存）。
+   *
+   * @param minExpireMs 最小过期时间（毫秒）
+   * @param maxExpireMs 最大过期时间（毫秒）
+   */
+  @Override
+  public void setNullValueTtl(long minExpireMs, long maxExpireMs) {
+    delegate.setNullValueTtl(minExpireMs, maxExpireMs);
+  }
+
+  /**
+   * 带防护的缓存获取（透传底层缓存的实例级空值 TTL 配置）。
+   *
+   * @param key 缓存键
+   * @param loader 值加载器
+   * @return 缓存值
+   */
+  @Override
+  public V getWithProtection(K key, Function<K, V> loader) {
+    return delegate.getWithProtection(key, loader);
   }
 
   /**

@@ -31,7 +31,8 @@ public class FlowListenerPluginExecutor {
    * 构造器注入所有 {@link FlowListenerPlugin} 实现
    *
    *
-   * @param plugins 参数说明   */
+   * @param plugins Spring 容器中所有 {@link FlowListenerPlugin} 实现列表
+   */
   public FlowListenerPluginExecutor(List<FlowListenerPlugin> plugins) {
     this.pluginMap = new HashMap<>();
     for (FlowListenerPlugin plugin : plugins) {
@@ -95,13 +96,13 @@ public class FlowListenerPluginExecutor {
   /**
    * 分发事件到具体插件的对应回调
    *
-   * @param plugin 参数说明
-   * @param eventType 参数说明
-   * @param instanceId 参数说明
-   * @param taskId 参数说明
-   * @param nodeCode 参数说明
-   * @param variables 参数说明
-   * @param ctx 参数说明
+   * @param plugin 监听器插件实例
+   * @param eventType 监听事件类型
+   * @param instanceId 流程实例 ID
+   * @param taskId 任务 ID（可空）
+   * @param nodeCode 节点编码（可空）
+   * @param variables 流程变量（可空）
+   * @param ctx 事件上下文（可空）
    */
   private void dispatch(FlowListenerPlugin plugin, FlowListenerEventType eventType,
       String instanceId, String taskId, String nodeCode,

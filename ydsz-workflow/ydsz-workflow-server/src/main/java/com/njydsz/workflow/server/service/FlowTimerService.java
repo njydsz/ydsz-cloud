@@ -71,7 +71,7 @@ public interface FlowTimerService {
   /**
    * 查询实例的所有定时器
    *
-   * @param instanceId 参数说明
+   * @param instanceId 流程实例 ID
    * @return 定时器 VO 列表
    */
   List<FlowTimerVO> listByInstance(String instanceId);
@@ -79,8 +79,8 @@ public interface FlowTimerService {
   /**
    * 统计实例的 PENDING 定时器数
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return 当前 PENDING 状态的定时器数量
    */
   long countPending(String instanceId);
 }

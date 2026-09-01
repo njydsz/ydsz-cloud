@@ -777,7 +777,8 @@ public class RedisStreamOps {
     /**
      * 判断是否处于高积压状态（需要限流）
      *
-     * @return 返回值说明
+     * @return 本次读取条数少于实际批次大小时返回 {@code true}，表示消费者跟不上生产速度（或 Stream 已无更多消息）；
+     *     读取条数达到批次大小时返回 {@code false}
      */
     public boolean isBackpressured() {
       return messages.size() < actualBatch;

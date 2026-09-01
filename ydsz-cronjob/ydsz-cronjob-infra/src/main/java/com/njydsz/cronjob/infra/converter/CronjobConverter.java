@@ -196,8 +196,8 @@ public interface CronjobConverter {
    * 
    * <p>VO 与实体字段名基本一致（除审计字段、级联字段外），MapStruct 可自动映射。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo DAG 工作流视图对象
+   * @return DAG 实体（审计字段、级联字段由服务层处理）
    */
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -354,8 +354,8 @@ public interface CronjobConverter {
   /**
    * P0-F3: VO → Entity（testWebhook 需要以实体形式发送测试事件）
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo Webhook 配置视图对象
+   * @return Webhook 配置实体
    */
   JobWebhook voToEntity(JobWebhookVO vo);
 

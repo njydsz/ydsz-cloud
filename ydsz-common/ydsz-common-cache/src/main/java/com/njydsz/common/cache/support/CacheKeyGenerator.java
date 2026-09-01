@@ -80,7 +80,7 @@ public final class CacheKeyGenerator {
   /**
    * 批量生成缓存 key 前缀（用于 SCAN 匹配）
    *
-   * @return 返回值说明
+   * @return 以 {@code *} 结尾的 SCAN 匹配模式，不会为 {@code null}；前缀与命名空间均为空时返回 {@code "*"}
    */
   public String generatePrefixPattern() {
     StringBuilder sb = new StringBuilder();
@@ -109,7 +109,7 @@ public final class CacheKeyGenerator {
   /**
    * 获取前缀
    *
-   * @return 返回值说明
+   * @return 一级业务前缀，不会为 {@code null}；构建时未设置时为空串
    */
   public String getPrefix() {
     return prefix;
@@ -118,7 +118,7 @@ public final class CacheKeyGenerator {
   /**
    * 获取命名空间
    *
-   * @return 返回值说明
+   * @return 二级命名空间，不会为 {@code null}；构建时未设置时为空串
    */
   public String getNamespace() {
     return namespace;
@@ -127,7 +127,7 @@ public final class CacheKeyGenerator {
   /**
    * 创建 Builder
    *
-   * @return 返回值说明
+   * @return 全新的构建器实例，不会为 {@code null}；每次调用互不影响，构建器本身线程不安全
    */
   public static Builder builder() {
     return new Builder();

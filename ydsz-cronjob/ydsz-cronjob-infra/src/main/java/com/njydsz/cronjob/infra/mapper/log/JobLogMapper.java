@@ -180,8 +180,8 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   /**
    * P1-3: 查询指定节点上 RUNNING 状态的日志（故障转移用）。
    *
-   * @param nodeId 参数说明
-   * @return 返回值说明
+   * @param nodeId 节点 ID（执行节点标识）
+   * @return 该节点上 RUNNING 状态的日志列表；无记录时返回空列表
    */
   @Select(
       "SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
@@ -196,9 +196,9 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   /**
    * P1-3: 标记指定节点上 RUNNING 日志为 FAILED（节点掉线故障转移）。
    *
-   * @param nodeId 参数说明
-   * @param now 参数说明
-   * @return 返回值说明
+   * @param nodeId 节点 ID（掉线节点标识）
+   * @param now 当前时间（标记为日志结束时间）
+   * @return 受影响行数（成功标记为 FAILED 的日志条数）
    */
   @Update(
       "UPDATE ydsz_job_log "

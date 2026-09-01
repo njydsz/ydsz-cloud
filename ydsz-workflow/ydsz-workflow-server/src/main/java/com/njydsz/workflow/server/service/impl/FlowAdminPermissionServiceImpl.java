@@ -222,8 +222,8 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
   /**
    * 检查角色是否有效（启用 + 未过期）。
    *
-   * @param role 参数说明
-   * @return 返回值说明
+   * @param role 管理员角色实体
+   * @return true=角色有效
    */
   private boolean isRoleValid(FlowAdminRoleVO role) {
     if (role == null) {

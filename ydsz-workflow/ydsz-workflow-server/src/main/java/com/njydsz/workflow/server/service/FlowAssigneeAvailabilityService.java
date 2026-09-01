@@ -59,7 +59,7 @@ public class FlowAssigneeAvailabilityService {
   /**
    * 增加审批人待办计数
    *
-   * @param userId 参数说明
+   * @param userId 审批人用户 ID
    */
   public void incTodoCount(String userId) {
     if (!StringUtils.hasText(userId)) {
@@ -80,7 +80,7 @@ public class FlowAssigneeAvailabilityService {
   /**
    * 减少审批人待办计数
    *
-   * @param userId 参数说明
+   * @param userId 审批人用户 ID
    */
   public void decTodoCount(String userId) {
     if (!StringUtils.hasText(userId)) {

@@ -110,8 +110,10 @@ public class LiteExprSandbox {
 
   public LiteExprSandbox() {}
 
-  /** 从函数注册表初始化白名单
-   * @param registry 参数说明
+  /**
+   * 从函数注册表初始化白名单
+   *
+   * @param registry 函数注册表，从中提取所有已注册函数名作为白名单
    */
   public void syncFunctions(FunctionRegistry registry) {
     allowedFunctions.clear();
@@ -158,8 +160,10 @@ public class LiteExprSandbox {
     clearCache();
   }
 
-  /** 追加危险方法名
-   * @param method 参数说明
+  /**
+   * 追加危险方法名
+   *
+   * @param method 危险方法名（如 {@code "exit"}、{@code "exec"}）
    */
   public void addForbiddenMethod(String method) {
     if (method != null && !method.isBlank()) {
@@ -168,8 +172,10 @@ public class LiteExprSandbox {
     }
   }
 
-  /** 追加危险类/属性链根
-   * @param root 参数说明
+  /**
+   * 追加危险类/属性链根
+   *
+   * @param root 危险类名或属性链根（如 {@code "java.lang.Runtime"}）
    */
   public void addForbiddenRoot(String root) {
     if (root != null && !root.isBlank()) {

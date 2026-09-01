@@ -64,9 +64,9 @@ public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstance> {
   /**
    * 查询指定时间范围前的归档记录
    *
-   * @param threshold 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param threshold 归档时间阈值（早于此时间的记录）
+   * @param limit 返回条数上限
+   * @return 历史实例列表
    */
   List<FlowHisInstance> selectByArchivedAtBefore(
       @Param("threshold") LocalDateTime threshold, @Param("limit") int limit);

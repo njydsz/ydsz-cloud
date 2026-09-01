@@ -40,13 +40,13 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
    * 查"抄送我的"（分页）
    * 
    *
-   * @param tenantId 参数说明
-   * @param ccUserId 参数说明
-   * @param readStatus 参数说明
-   * @param flowCode 参数说明
-   * @param offset 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param ccUserId 被抄送人用户 ID
+   * @param readStatus 阅读状态过滤（READ/UNREAD，可空）
+   * @param flowCode 流程编码过滤（可空）
+   * @param offset 分页偏移量
+   * @param limit 每页大小
+   * @return 抄送列表
    */
   List<FlowCc> selectCcByUserPage(
       @Param("tenantId") String tenantId,
@@ -59,11 +59,11 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
   /**
    * 统计"抄送我的"总数
    *
-   * @param tenantId 参数说明
-   * @param ccUserId 参数说明
-   * @param readStatus 参数说明
-   * @param flowCode 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param ccUserId 被抄送人用户 ID
+   * @param readStatus 阅读状态过滤（可空）
+   * @param flowCode 流程编码过滤（可空）
+   * @return 符合条件的抄送总数
    */
   long countCcByUser(
       @Param("tenantId") String tenantId,
@@ -74,9 +74,9 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
   /**
    * 统计"抄送我的"未读数
    *
-   * @param tenantId 参数说明
-   * @param ccUserId 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param ccUserId 被抄送人用户 ID
+   * @return 未读抄送数
    */
   long countCcUnreadByUser(@Param("tenantId") String tenantId, @Param("ccUserId") String ccUserId);
 
@@ -85,17 +85,17 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
    * 
    * <p>无 tenant/ccUser 过滤，统计 ydsz_flow_cc 表所有未读记录数。
    *
-   * @return 返回值说明
+   * @return 全局未读抄送数
    */
   long countUnread();
 
   /**
    * 标记抄送为已读
    *
-   * @param id 参数说明
-   * @param ccUserId 参数说明
-   * @param readAt 参数说明
-   * @return 返回值说明
+   * @param id 抄送记录 ID
+   * @param ccUserId 已读人用户 ID
+   * @param readAt 阅读时间
+   * @return 受影响行数
    */
   int markRead(
       @Param("id") String id,
@@ -105,10 +105,10 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
   /**
    * 全部标记为已读
    *
-   * @param tenantId 参数说明
-   * @param ccUserId 参数说明
-   * @param readAt 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param ccUserId 用户 ID
+   * @param readAt 已读时间
+   * @return 受影响行数
    */
   int markAllRead(
       @Param("tenantId") String tenantId,
@@ -118,9 +118,9 @@ public interface FlowCcMapper extends BaseMapper<FlowCc> {
   /**
    * 查实例的抄送列表
    *
-   * @param tenantId 参数说明
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param instanceId 流程实例 ID
+   * @return 抄送列表
    */
   List<FlowCc> selectByInstanceId(
       @Param("tenantId") String tenantId, @Param("instanceId") String instanceId);

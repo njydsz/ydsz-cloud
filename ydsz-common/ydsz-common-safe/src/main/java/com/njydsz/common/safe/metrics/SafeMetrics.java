@@ -52,7 +52,10 @@ public class SafeMetrics {
   private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
 
   /**
-   * 方法说明。
+   * 构造安全指标采集器，并在 Micrometer 不可用时降级为纯内存计数。
+   *
+   * <p>有 {@code MeterRegistry} 时，各计数值会同时写入 Micrometer {@code Counter}；
+   * 为 {@code null} 时仅累加内存 {@code AtomicLong}，指标不外泄到监控系统，进程重启即清零。
    *
    * @param meterRegistry Micrometer MeterRegistry（可为 null，降级为内存计数）
    */

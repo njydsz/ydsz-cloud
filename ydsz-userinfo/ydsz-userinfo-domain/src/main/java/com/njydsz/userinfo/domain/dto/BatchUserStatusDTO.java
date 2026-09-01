@@ -11,7 +11,8 @@ import lombok.Data;
 /**
  * 批量用户状态操作 DTO。
  *
- * <p>用于批量启用/禁用/删除用户账号。
+ * <p>用于批量启用/禁用/删除用户账号。单次操作用户数量受 {@code ydsz.userinfo.batch-size-limit} 限制
+ * （默认 500），超出时需分批调用。
  *
  * @author ydsz-team
  * @since 1.0.0

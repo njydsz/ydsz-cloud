@@ -76,8 +76,8 @@ public class ChannelResolveHandler implements SendHandler {
   /**
    * 判断通道是否启用：优先 ChannelRouter，回退 MessageProperties.channelEnabled。
    *
-   * @param channel 参数说明
-   * @return 返回值说明
+   * @param channel 通道标识（如 SMS、EMAIL、INAPP）
+   * @return 通道已启用返回 true
    */
   private boolean isChannelEnabled(String channel) {
     try {
@@ -101,8 +101,8 @@ public class ChannelResolveHandler implements SendHandler {
   /**
    * 解析 receiver 为通道原生联系方式。
    *
-   * @param request 参数说明
-   * @param ctx 参数说明
+   * @param request 消息发送请求（receiver 可能是 userId，需解析为通道原生标识）
+   * @param ctx 管线输出上下文（解析后更新 receiver）
    */
   private void resolveChannelUser(MessageRequest request, SendContext ctx) {
     String receiver = ctx.getReceiver();

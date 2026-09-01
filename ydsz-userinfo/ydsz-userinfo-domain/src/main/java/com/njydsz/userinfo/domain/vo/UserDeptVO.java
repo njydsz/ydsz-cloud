@@ -3,7 +3,12 @@ package com.njydsz.userinfo.domain.vo;
 import lombok.Data;
 
 /**
- * 用户-部门关联 VO，用于 Controller 返回，不包含 deleted、createdBy 等内部维护字段。
+ * 用户-部门关联视图对象。
+ *
+ * <p>表示用户与部门之间的多对多关联关系。一个用户可以属于多个部门（矩阵式组织架构），
+ * isPrimary 字段标识主部门（用于审批等场景的默认归属）。
+ *
+ * <p>不包含 deleted、createdBy 等内部维护字段。
  *
  * @author ydsz-team
  * @since 1.0.0

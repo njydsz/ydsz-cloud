@@ -39,7 +39,10 @@ public class SecurityEventListener {
   private final SecurityAuditLogger auditLogger;
 
   /**
-   * 方法说明。
+   * 构造安全事件监听器，绑定指标采集与审计日志两条下游链路。
+   *
+   * <p>两个依赖均允许为 {@code null}：缺失时 {@link #onSecurityEvent(SecurityEvent)} 会静默跳过对应环节，
+   * 保证安全事件的处理永不因观测组件缺失而中断。
    *
    * @param safeMetrics Micrometer 指标采集器（可为 null，降级跳过指标采集）
    * @param auditLogger 安全审计日志记录器（可为 null，降级跳过审计日志）

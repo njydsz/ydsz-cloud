@@ -33,8 +33,8 @@ public class FlowTaskNotificationService {
   /**
    * 任务完成事件（无 vars）
    *
-   * @param taskId 参数说明
-   * @param action 参数说明
+   * @param taskId 任务 ID
+   * @param action 完成动作（PASS/REJECT 等）
    */
   public void fireTaskCompleted(String taskId, String action) {
     fireTaskCompleted(taskId, action, null);
@@ -45,9 +45,9 @@ public class FlowTaskNotificationService {
    * 
    * <p>同时调用两版监听器：老版（taskId/action/vars）和 P2-37 引入的 携带 {@link FlowEventContext} 的新版本，保证向后兼容。
    *
-   * @param taskId 参数说明
-   * @param action 参数说明
-   * @param vars 参数说明
+   * @param taskId 任务 ID
+   * @param action 完成动作（PASS/REJECT 等）
+   * @param vars 流程变量上下文
    */
   public void fireTaskCompleted(String taskId, String action, Map<String, Object> vars) {
     support.fireEvent(l -> l.onTaskCompleted(taskId, action, vars), taskId);

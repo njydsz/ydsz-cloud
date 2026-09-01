@@ -738,8 +738,10 @@ public class ScriptRule implements Rule {
     return Character.toUpperCase(s.charAt(0)) + s.substring(1);
   }
 
-  /** 获取脚本内容
-   * @return 返回值说明
+  /**
+   * 获取脚本内容
+   *
+   * @return 原始脚本代码字符串
    */
   public String getScript() {
     return script;
@@ -755,8 +757,10 @@ public class ScriptRule implements Rule {
     return language;
   }
 
-  /** 是否启用沙箱
-   * @return 返回值说明
+  /**
+   * 是否启用沙箱
+   *
+   * @return true 表示脚本执行在沙箱安全环境中进行
    */
   public boolean isSandboxEnabled() {
     return sandboxEnabled;

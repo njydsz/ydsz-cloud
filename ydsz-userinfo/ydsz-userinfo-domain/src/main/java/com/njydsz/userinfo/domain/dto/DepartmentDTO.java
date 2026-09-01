@@ -13,6 +13,15 @@ import com.njydsz.common.safe.annotation.Xss;
  * 部门请求 DTO。
  *
  * <p>同时用于创建和更新场景：创建时 {@code id} 可不传，更新时 {@code id} 必填。
+ * 部门通过 parentId 自关联形成树形组织架构，"0" 表示根节点。
+ *
+ * <p><b>字段语义：</b>
+ *
+ * <ul>
+ *   <li>{@code deptCode} — 部门编码（全局唯一，建议格式 DEPT_XXX），业务侧引用</li>
+ *   <li>{@code parentId} — 父部门 ID（"0" 表示根部门）</li>
+ *   <li>{@code tenantId} — 租户 ID（多租户场景下区分归属租户）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0

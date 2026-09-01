@@ -30,14 +30,21 @@
 | `EnhancedLoadingCache` | 增强版自动加载缓存，支持自动加载、自动刷新 |
 | `FrequencySketch` | 频率草图，为 TinyLFU 提供访问频率统计 |
 
+**并发语义（对标 Caffeine / ConcurrentHashMap）**：`putIfAbsent` / `computeIfAbsent` / `compute` / `merge` 均为原子操作——同一 key 并发下 mapping/function 仅执行一次（per-key 单飞），结果对全部等待者可见；mapping 抛出的异常传播给所有等待者且不重复执行。`getAsync` 同样具备单飞语义：并发调用共享同一次加载 Future。null 键查询统一返回 null 且不计入 miss 统计（防御式查询不污染命中率）。
+
 ### 2. 缓存防护（三防）
 
 | 类 | 说明 |
 |---|---|
-| `CacheProtectionGuard` | 防护守卫：防穿透（null 缓存空标记）、防击穿（per-cache Key 级锁）、防雪崩（空值占位 [minExpire, maxExpire] 随机过期） |
+| `CacheProtectionGuard` | 防护守卫：防穿透（null 缓存空标记）、防击穿（per-cache Key 级锁）、防雪崩（空值占位 [minExpire, maxExpire] 随机过期）；加载异常传播给所有等待者（对标 Caffeine），并提供 `registerNullPlaceholder` / `isNullPlaceholderActive` 公共 API 供注解路径复用 |
 | `NullValueGuard` | 空值占位管理（per-cache 实例级状态，使用 `WeakHashMap` 关联 Cache 实例，GC 自动清理） |
 
 `Cache` 接口默认方法 `getWithProtection(key, loader, minExpireMs, maxExpireMs)` 委托给 `CacheProtectionGuard`，业务方无需感知防护细节。
+
+**空值 TTL 的两种配置方式**：
+
+- **实例级（P2）**：`CacheBuilder.nullValueExpire(min, max, unit)` 构建时注入，调用点直接使用两参重载 `getWithProtection(key, loader)`（未配置时默认 30~60 秒随机过期）。
+- **注解级（Spring 路径）**：`ydsz.cache.null-value-ttl-min/max`（支持 per-cache 覆盖），valueLoader 返回 null 时注册短 TTL 空值占位而非跟随主 TTL 的 NullValue 条目，大幅缩小"后端恢复后仍被 null 屏蔽"的窗口。
 
 ### 3. 装饰器
 
@@ -90,7 +97,7 @@
 | `CacheKeyGenerator` | 缓存 Key 生成器 |
 | `AsyncFunction` | 异步函数接口 |
 | `CacheThreadPoolManager` | 缓存线程池管理器，实现 `DisposableBean` 在 Spring 容器关闭时自动清理 |
-| `RemovalListener` | 删除监听器接口（`@FunctionalInterface`） |
+| `RemovalListener` | 删除监听器接口（`@FunctionalInterface`）；回调默认经 `listenerPool` 守护线程池异步派发（对标 Caffeine RemovalListeners.async），可通过 `Cache.setListenerExecutor` 自定义或恢复同步 |
 | `RemovalCause` | 删除原因枚举（EXPIRED / EXPLICIT / REPLACED / SIZE） |
 | `CacheLoadException` | 缓存加载异常（loader 执行失败时包装） |
 
@@ -157,10 +164,18 @@ User cached = cache.getIfPresent("user:1");
 // 带加载器的 get（自动缓存）
 User user = cache.get("user:1", key -> loadUserFromDb(key));
 
-// 带三防的 get
+// 带三防的 get（显式空值占位 TTL）
 User safe = cache.getWithProtection("user:1",
         key -> loadUserFromDb(key),
         60_000, 300_000);  // 空值占位 60~300 秒随机过期
+
+// 带三防的 get（构建时已配置 nullValueExpire，调用点免传 TTL）
+Cache<String, User> cache2 = YdszCache.<String, User>newBuilder()
+        .type(CacheType.TINYLFU)
+        .maximumSize(10_000)
+        .nullValueExpire(30, 60, TimeUnit.SECONDS)  // 空值占位 30~60 秒随机过期
+        .build();
+User safe2 = cache2.getWithProtection("user:1", key -> loadUserFromDb(key));
 ```
 
 ## 配置项
@@ -176,6 +191,8 @@ User safe = cache.getWithProtection("user:1",
 | `ydsz.cache.refresh-after-write` | 0 | 写入后自动刷新间隔（0 表示不刷新） |
 | `ydsz.cache.initial-capacity` | 64 | 初始容量 |
 | `ydsz.cache.allow-null-values` | true | 是否允许缓存 null 值（防穿透） |
+| `ydsz.cache.null-value-ttl-min` | 0 | 注解路径空值占位 TTL 下界（毫秒，0 表示禁用走 NullValue + 主 TTL） |
+| `ydsz.cache.null-value-ttl-max` | 0 | 注解路径空值占位 TTL 上界（毫秒，实际过期时间区间内随机抖动） |
 | `ydsz.cache.record-stats` | true | 是否启用统计 |
 | `ydsz.cache.caches.<name>.*` | - | per-cache 独立配置（覆盖全局默认，字段同上） |
 | `ydsz.cache.health-check.enabled` | true | 缓存健康检查开关 |
@@ -285,5 +302,6 @@ management:
 
 ## 变更记录
 
+- **1.0.0**（2026-09-01）：并发语义加固（对标 Caffeine / ConcurrentHashMap）——`putIfAbsent`/`computeIfAbsent`/`compute`/`merge` 原子化（per-key 单飞，等待者不丢失自身操作）；`getAsync` 单飞共享加载 Future；`getWithProtection` 失败传播给所有等待者且无递归重试风暴，空值占位不再屏蔽真实值；RemovalListener 默认异步派发（`setListenerExecutor` 可自定义）；新增空值 TTL 两种配置（`CacheBuilder.nullValueExpire` 实例级 + `ydsz.cache.null-value-ttl-*` 注解级，均支持 per-cache）；null 键统计口径统一（不计 miss）。单元测试 17 → 31 个。
 - **1.0.0**（2026-08-15）：架构精简重构，移除 LRU/Weighted/Concurrent/弱引用缓存实现、多级缓存（L1+L2 Redis）、热点 Key 追踪、Resilience4j 熔断降级、内存感知淘汰、SWR、WriteBehind 等未落地能力；统一使用 Spring Cache 标准注解（@Cacheable/@CacheEvict）；下线 AsyncCache/AsyncLoadingCacheImpl；精简 pom 依赖（移除 resilience4j、aspectjweaver、spring-aop、skywalking、lombok、common-redis、common-json）；保留核心能力（TINYLFU/STRIPED + 三防 + ExpirableCache + WriteThroughCache + Spring Cache 适配 + Micrometer 指标 + Actuator 端点 + 健康检查）。
 - **1.0.0**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。

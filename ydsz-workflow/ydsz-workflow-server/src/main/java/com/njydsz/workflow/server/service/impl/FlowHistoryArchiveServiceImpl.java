@@ -306,8 +306,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
    * 
    * 
    *
-   * @param instance 参数说明
-   * @return 返回值说明
+   * @param instance 待归档的流程实例
+   * @return true=归档成功；false=存在未完成任务跳过
    */
   @Transactional(rollbackFor = Exception.class)
   public boolean archiveOne(FlowInstanceVO instance) {
@@ -356,8 +356,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   /**
    * 主表 DO → 归档表 DO
    *
-   * @param ins 参数说明
-   * @return 返回值说明
+   * @param ins 流程实例实体
+   * @return 归档实体
    */
   private FlowHisInstanceVO toHisInstance(FlowInstanceVO ins) {
     FlowHisInstanceVO his = new FlowHisInstanceVO();
@@ -393,8 +393,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   /**
    * 判定任务是否处于终态
    *
-   * @param status 参数说明
-   * @return 返回值说明
+   * @param status 任务状态编码
+   * @return true=处于终态
    */
   private boolean isTerminalTaskStatus(String status) {
     if (status == null) {
@@ -410,9 +410,9 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   /**
    * 解析整型参数：null 或非正数则回退到默认值
    *
-   * @param input 参数说明
-   * @param defaultVal 参数说明
-   * @return 返回值说明
+   * @param input 输入整数值（可空）
+   * @param defaultVal 默认值
+   * @return 有效整数值
    */
   private int resolveInt(Integer input, int defaultVal) {
     return input == null || input <= 0 ? defaultVal : input;
@@ -421,9 +421,9 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   /**
    * 解析长整型参数：null 或非正数则回退到默认值
    *
-   * @param input 参数说明
-   * @param defaultVal 参数说明
-   * @return 返回值说明
+   * @param input 输入长整型值（可空）
+   * @param defaultVal 默认值
+   * @return 有效长整型值
    */
   private long resolveLong(Long input, long defaultVal) {
     return input == null || input <= 0 ? defaultVal : input;

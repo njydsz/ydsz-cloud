@@ -366,10 +366,10 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
   /**
    * P1-4: 批量驳回
    *
-   * @param taskIds 参数说明
-   * @param userId 参数说明
-   * @param comment 参数说明
-   * @param targetNodeCode 参数说明
+   * @param taskIds 待驳回的任务 ID 列表
+   * @param userId 操作人用户 ID
+   * @param comment 驳回意见
+   * @param targetNodeCode 驳回目标节点编码（可空）
    */
   @Override
   public void batchReject(
@@ -380,11 +380,11 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
   /**
    * P1-4: 批量转办
    *
-   * @param taskIds 参数说明
-   * @param userId 参数说明
-   * @param comment 参数说明
-   * @param targetUserId 参数说明
-   * @param targetUserName 参数说明
+   * @param taskIds 待转办的任务 ID 列表
+   * @param userId 操作人用户 ID
+   * @param comment 转办意见
+   * @param targetUserId 目标办理人 ID
+   * @param targetUserName 目标办理人姓名
    */
   @Override
   public void batchTransfer(
@@ -399,10 +399,10 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
   /**
    * P1-4: 批量催办
    *
-   * @param instanceIds 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instanceIds 流程实例 ID 列表
+   * @param operatorId 催办操作人 ID
+   * @param comment 催办意见
+   * @return 实际催办的任务数量
    */
   @Override
   public int batchUrge(List<String> instanceIds, String operatorId, String comment) {

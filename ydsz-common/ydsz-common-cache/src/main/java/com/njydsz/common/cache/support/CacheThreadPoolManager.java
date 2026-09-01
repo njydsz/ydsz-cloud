@@ -81,7 +81,8 @@ public class CacheThreadPoolManager implements DisposableBean {
    * 创建或获取指定名称的线程池
    *
    * @param name 名称
-   * @return 返回值说明
+   * @return 与 {@code name} 绑定的线程池，不会为 {@code null}；同名首次调用时新建，后续复用同一实例。
+   *     规模固定为默认核心数（CPU 核数的一半，最小 2）与两倍最大线程数
    */
   public ExecutorService getOrCreatePool(String name) {
     return getOrCreatePool(name, DEFAULT_POOL_SIZE, DEFAULT_POOL_SIZE * 2);
@@ -93,7 +94,8 @@ public class CacheThreadPoolManager implements DisposableBean {
    * @param name 名称
    * @param coreSize coreSize 参数
    * @param maxSize maxSize 参数
-   * @return 返回值说明
+   * @return 与 {@code name} 绑定的线程池，不会为 {@code null}；同名已存在时直接返回既有实例，
+   *     此时 {@code coreSize} 与 {@code maxSize} 不生效
    */
   public ExecutorService getOrCreatePool(String name, int coreSize, int maxSize) {
     return pools.computeIfAbsent(name, n -> createPool(n, coreSize, maxSize));
@@ -192,7 +194,8 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 获取所有线程池的状态信息
    *
-   * @return 返回值说明
+   * @return 多行状态文本，按池名逐行输出活跃线程数、核心/最大线程数、队列长度与已完成任务数；
+   *     尚无任何线程池时返回空串
    */
   public String getPoolStatus() {
     StringBuilder sb = new StringBuilder();

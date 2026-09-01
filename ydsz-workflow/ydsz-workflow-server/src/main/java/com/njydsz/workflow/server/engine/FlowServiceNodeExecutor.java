@@ -155,9 +155,9 @@ public class FlowServiceNodeExecutor {
   /**
    * HTTP 类型：通过 RestTemplate 调用外部接口
    *
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param node 服务节点实体
+   * @param variables 流程变量（作为 HTTP 请求体）
+   * @return 执行结果（成功/失败 + 消息）
    */
   private ServiceExecutionResult executeHttp(
       FlowNodeVO node, Map<String, Object> variables) {
@@ -245,10 +245,10 @@ public class FlowServiceNodeExecutor {
    * </ul>
    *
    *
-   * @param node 参数说明
-   * @param config 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param node 服务节点实体
+   * @param config 节点扩展配置（含 script 字段）
+   * @param variables 流程变量环境
+   * @return 执行结果（成功/失败 + 消息）
    */
   private ServiceExecutionResult executeScript(
       FlowNodeVO node, Map<String, Object> variables) {

@@ -55,10 +55,10 @@ public interface FlowSubProcessService {
   /**
    * DTO 构造工具：把子流程启动所需参数封装
    *
-   * @param parentInstance 参数说明
-   * @param subFlowCode 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param parentInstance 父流程实例 VO
+   * @param subFlowCode 子流程编码
+   * @param variables 传递给子流程的变量 Map
+   * @return 子流程启动 DTO
    */
   FlowStartProcessDTO buildSubProcessStartDTO(
       FlowInstanceVO parentInstance, String subFlowCode, Map<String, Object> variables);

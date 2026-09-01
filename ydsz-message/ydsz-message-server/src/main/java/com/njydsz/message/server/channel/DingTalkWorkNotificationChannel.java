@@ -144,8 +144,8 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
   /**
    * 获取钉钉 access_token（Redis 缓存，提前续期）。
    *
-   * @param cfg 参数说明
-   * @return 返回值说明
+   * @param cfg 钉钉工作通知配置（含 AppKey/AppSecret/BaseUrl）
+   * @return 有效的 access_token；获取失败时返回 null
    */
   private String getAccessToken(ChannelProperties.DingTalkWorkConfig cfg) {
     try {

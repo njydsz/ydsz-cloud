@@ -135,10 +135,10 @@ public class FlowI18nServiceImpl implements FlowI18nService {
   /**
    * 静态注册工具：在类加载时注册翻译项到 {@link #MESSAGE_RESOURCE}
    *
-   * @param enumType 参数说明
-   * @param enumName 参数说明
-   * @param zhCN 参数说明
-   * @param enUS 参数说明
+   * @param enumType 枚举类型（如 FlowSlaAction）
+   * @param enumName 枚举名称（如 AUTO_PASS）
+   * @param zhCN 中文翻译
+   * @param enUS 英文翻译
    */
   private static void register(String enumType, String enumName, String zhCN, String enUS) {
     MESSAGE_RESOURCE

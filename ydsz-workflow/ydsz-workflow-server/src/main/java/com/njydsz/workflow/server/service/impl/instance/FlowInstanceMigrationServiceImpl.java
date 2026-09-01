@@ -243,7 +243,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   /**
    * 校验迁移参数：sourceDefinitionId / targetDefinitionId 不能为空且不能相同。
    *
-   * @param dto 参数说明
+   * @param dto 实例迁移参数
    */
   private void validateMigrationParams(InstanceMigrationDTO dto) {
     if (dto == null || dto.getSourceDefinitionId() == null || dto.getTargetDefinitionId() == null) {
@@ -263,9 +263,9 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   /**
    * 根据 ID 查找流程定义，不存在时抛出 NOT_FOUND 异常。
    *
-   * @param defId 参数说明
-   * @param errMsg 参数说明
-   * @return 返回值说明
+   * @param defId 流程定义 ID
+   * @param errMsg 异常提示信息
+   * @return 流程定义实体
    */
   private FlowDefinitionVO findDefinitionOrThrow(String defId, String errMsg) {
     return definitionRepository.findById(defId)
@@ -278,8 +278,8 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   /**
    * 校验两个流程定义的 flowCode 是否一致，不一致时抛出 BAD_REQUEST。
    *
-   * @param sourceDef 参数说明
-   * @param targetDef 参数说明
+   * @param sourceDef 源流程定义
+   * @param targetDef 目标流程定义
    */
   private void validateFlowCodeConsistency(FlowDefinitionVO sourceDef, FlowDefinitionVO targetDef) {
     if (!Objects.equals(sourceDef.getFlowCode(), targetDef.getFlowCode())) {
@@ -294,14 +294,14 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   /**
    * 迁移单个实例（防御式：每个实例独立 try-catch，单个失败不影响其他）。
    *
-   * @param instance 参数说明
-   * @param details 参数说明
-   * @param counters 参数说明
-   * @param dryRun 参数说明
-   * @param targetDefId 参数说明
-   * @param targetDef 参数说明
-   * @param nodeMapping 参数说明
-   * @param targetNodeMap 参数说明
+   * @param instance 待迁移的实例
+   * @param details 迁移明细列表（输出参数）
+   * @param counters 迁移计数器（输出参数）
+   * @param dryRun 是否试运行（true=不实际写入）
+   * @param targetDefId 目标定义 ID
+   * @param targetDef 目标流程定义
+   * @param nodeMapping 节点编码映射
+   * @param targetNodeMap 目标节点索引
    */
   private void migrateSingleInstance(FlowInstanceVO instance, List<MigrationDetail> details,
       MigrationCounters counters, boolean dryRun, String targetDefId,
@@ -347,13 +347,13 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   /**
    * 执行实际迁移操作：更新实例的 definitionId / flowVersion / currentNodeCode。
    *
-   * @param instance 参数说明
-   * @param targetDefId 参数说明
-   * @param targetDef 参数说明
-   * @param oldNodeCode 参数说明
-   * @param newNodeCode 参数说明
-   * @param nodeMapping 参数说明
-   * @param targetNodeMap 参数说明
+   * @param instance 待迁移的实例
+   * @param targetDefId 目标定义 ID
+   * @param targetDef 目标流程定义
+   * @param oldNodeCode 原节点编码
+   * @param newNodeCode 目标节点编码
+   * @param nodeMapping 节点编码映射
+   * @param targetNodeMap 目标节点索引
    */
   private void performMigration(FlowInstanceVO instance, String targetDefId,
       FlowDefinitionVO targetDef, String oldNodeCode, String newNodeCode,
@@ -378,11 +378,11 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   /**
    * 构建迁移结果 DTO。
    *
-   * @param instances 参数说明
-   * @param details 参数说明
-   * @param counters 参数说明
-   * @param nodeMapping 参数说明
-   * @return 返回值说明
+   * @param instances 迁移的实例列表
+   * @param details 迁移明细列表
+   * @param counters 迁移计数器
+   * @param nodeMapping 应用的节点映射
+   * @return 迁移结果 DTO
    */
   private InstanceMigrationResultDTO buildMigrationResult(List<FlowInstanceVO> instances,
       List<MigrationDetail> details, MigrationCounters counters,

@@ -53,7 +53,10 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 @RequiredArgsConstructor
 public class PreviewApplicationService {
 
+  /** 文件节点数据仓储（查询/更新文件元数据） */
   private final FileNodeRepository fileNodeRepository;
+
+  /** NextWiki 全局配置（预览临时目录、LibreOffice 路径、超时等） */
   private final NextwikiProperties properties;
 
   @Autowired(required = false)

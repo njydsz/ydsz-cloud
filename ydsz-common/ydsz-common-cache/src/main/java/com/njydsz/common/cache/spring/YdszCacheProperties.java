@@ -28,12 +28,17 @@ import com.njydsz.common.cache.builder.CacheType;
  *     expire-after-write: 30
  *     expire-time-unit: MINUTES
  *     allow-null-values: true
+ *     # 空值占位 TTL（毫秒，防穿透短 TTL，0 表示禁用走 NullValue + 主 TTL）
+ *     null-value-ttl-min: 30000
+ *     null-value-ttl-max: 60000
  *     # per-cache 配置（覆盖全局默认）
  *     caches:
  *       users:
  *         type: TINYLFU
  *         maximum-size: 5000
  *         expire-after-write: 60
+ *         null-value-ttl-min: 5000
+ *         null-value-ttl-max: 10000
  *       orders:
  *         type: STRIPED
  *         maximum-size: 20000
@@ -78,6 +83,17 @@ public class YdszCacheProperties {
   private boolean recordStats = true;
 
   /**
+   * 空值占位 TTL 下界（毫秒）。
+   *
+   * <p>大于 0 时启用注解路径空值短 TTL（防穿透）：valueLoader 返回 null 后注册带随机抖动的短 TTL 占位，
+   * 占位期内不回源，过期自动恢复。0 表示禁用，走 NullValue 包装 + 主 TTL 的旧行为。
+   */
+  private long nullValueTtlMin = 0;
+
+  /** 空值占位 TTL 上界（毫秒），实际过期时间在 [min, max] 区间内随机抖动以防雪崩 */
+  private long nullValueTtlMax = 0;
+
+  /**
    * per-cache 配置映射
    *
    * <p>key 为缓存名称，value 为该缓存的独立配置（覆盖全局默认值）
@@ -94,6 +110,10 @@ public class YdszCacheProperties {
     private Long expireAfterAccess;
     private Long refreshAfterWrite;
     private Boolean recordStats;
+    /** 空值占位 TTL 下界（毫秒），覆盖全局 nullValueTtlMin */
+    private Long nullValueTtlMin;
+    /** 空值占位 TTL 上界（毫秒），覆盖全局 nullValueTtlMax */
+    private Long nullValueTtlMax;
 
     public CacheType getType() {
       return type;
@@ -157,6 +177,22 @@ public class YdszCacheProperties {
 
     public void setRecordStats(Boolean recordStats) {
       this.recordStats = recordStats;
+    }
+
+    public Long getNullValueTtlMin() {
+      return nullValueTtlMin;
+    }
+
+    public void setNullValueTtlMin(Long nullValueTtlMin) {
+      this.nullValueTtlMin = nullValueTtlMin;
+    }
+
+    public Long getNullValueTtlMax() {
+      return nullValueTtlMax;
+    }
+
+    public void setNullValueTtlMax(Long nullValueTtlMax) {
+      this.nullValueTtlMax = nullValueTtlMax;
     }
   }
 
@@ -238,6 +274,22 @@ public class YdszCacheProperties {
 
   public void setRecordStats(boolean recordStats) {
     this.recordStats = recordStats;
+  }
+
+  public long getNullValueTtlMin() {
+    return nullValueTtlMin;
+  }
+
+  public void setNullValueTtlMin(long nullValueTtlMin) {
+    this.nullValueTtlMin = nullValueTtlMin;
+  }
+
+  public long getNullValueTtlMax() {
+    return nullValueTtlMax;
+  }
+
+  public void setNullValueTtlMax(long nullValueTtlMax) {
+    this.nullValueTtlMax = nullValueTtlMax;
   }
 
   public Map<String, CacheConfig> getCaches() {

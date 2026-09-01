@@ -89,8 +89,10 @@ public class LiteExprCompiler {
     cache.invalidateAll();
   }
 
-  /** 当前缓存数量（估计值，本地缓存异步维护，非精确）
-   * @return 返回值说明
+  /**
+   * 当前缓存数量（估计值，本地缓存异步维护，非精确）
+   *
+   * @return 编译缓存中估计的条目数量
    */
   public long cacheSize() {
     return cache.estimatedSize();
@@ -112,8 +114,8 @@ public class LiteExprCompiler {
    * </ul>
    *
    * <p>仅折叠全字面量子表达式，包含变量的子表达式不折叠。
-      * @param node 参数说明
-   * @return 返回值说明
+      * @param node 待折叠的 AST 表达式节点
+   * @return 折叠后的表达式节点；若无法折叠则返回原始节点副本
    */
   public ExprNode constantFold(ExprNode node) {
     if (node == null) {
@@ -315,9 +317,11 @@ public class LiteExprCompiler {
     }
   }
 
-  /** 从 AST 中提取所有函数调用名
-   * @param ast 参数说明
-   * @return 返回值说明
+  /**
+   * 从 AST 中提取所有函数调用名
+   *
+   * @param ast 抽象语法树根节点
+   * @return 函数名列表（去重、按出现顺序）
    */
   public List<String> extractFunctions(ExprNode ast) {
     Set<String> functions = new LinkedHashSet<>();

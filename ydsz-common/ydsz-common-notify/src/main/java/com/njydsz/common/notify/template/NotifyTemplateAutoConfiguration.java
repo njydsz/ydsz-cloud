@@ -41,7 +41,15 @@ public class NotifyTemplateAutoConfiguration {
 
   private static final Logger LOG = LoggerFactory.getLogger(NotifyTemplateAutoConfiguration.class);
 
-  /** 创建 SpEL 模板引擎 */
+  /**
+   * 创建 SpEL 模板引擎。
+   *
+   * <p>变量校验器为可选依赖：装配后可在渲染前拦截缺失变量，未装配时缺参问题要到渲染阶段才暴露为渲染失败。
+   *
+   * @param properties 模板配置属性，决定模板基础路径与是否启用模板缓存
+   * @param validatorProvider 模板变量校验器提供者，可选依赖；未装配时跳过渲染前校验
+   * @return 模板引擎实例，不会为 {@code null}
+   */
   @Bean
   @ConditionalOnMissingBean(TemplateEngine.class)
   public TemplateEngine templateEngine(
@@ -57,7 +65,16 @@ public class NotifyTemplateAutoConfiguration {
     return engine;
   }
 
-  /** 注册预定义的模板 */
+  /**
+   * 注册预定义的模板。
+   *
+   * <p>以 {@link ApplicationRunner} 形式在容器就绪后执行，确保业务侧声明的 {@link NotifyTemplate} Bean
+   * 已全部装配完成再统一注册，避免注册时遗漏尚未初始化的模板；未定义任何模板时仅跳过，不视为启动失败。
+   *
+   * @param templateEngine 模板引擎，预定义模板将批量注册到其中
+   * @param predefinedTemplatesProvider 业务侧声明的预定义模板列表提供者，可选依赖； 未装配或为空列表时不执行注册
+   * @return 容器就绪后执行模板注册的启动任务，不会为 {@code null}
+   */
   @Bean
   public ApplicationRunner templateRegistrar(
       TemplateEngine templateEngine,

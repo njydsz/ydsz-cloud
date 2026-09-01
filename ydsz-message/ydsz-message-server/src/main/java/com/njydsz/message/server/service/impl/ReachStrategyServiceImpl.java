@@ -204,9 +204,9 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
    * 
    * <p>评分 = 活跃度 * 0.4 + 打开率 * 0.3 + 偏好 * 0.2 + 成本 * 0.1
    *
-   * @param channel 参数说明
-   * @param profile 参数说明
-   * @return 返回值说明
+   * @param channel 通道标识（如 SMS、EMAIL、INAPP）
+   * @param profile 用户触达画像（含活跃度/打开率/偏好等数据）
+   * @return 综合评分（0-100，越高越推荐）
    */
   private double calculateChannelScore(String channel, UserReachProfileDTO profile) {
     // 活跃度评分（0-100 → 0-1）
@@ -236,9 +236,9 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
   }
 
   /**
-   * 返回默认画像。
+   * 返回默认画像（Redis 缓存无数据时兜底使用）。
    *
-   * @return 返回值说明
+   * @return 带有默认值的用户触达画像
    */
   private UserReachProfileDTO defaultProfile() {
     UserReachProfileDTO profile = new UserReachProfileDTO();
@@ -249,6 +249,6 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     return profile;
   }
 
-  /** 通道评分内部记录 */
+  /** 通道评分内部记录（通道标识 + 评分）。 */
   private record ChannelScore(String channel, double score) {}
 }

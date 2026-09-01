@@ -50,8 +50,9 @@ public class EmailChannel implements MessageChannel {
    * 构造方法。
    * 
    *
-   * @param mailSender 参数说明
-   * @param snowflakeIdGenerator 参数说明   */
+   * @param mailSender JavaMail 发送器（未配置邮件时注入 null）
+   * @param snowflakeIdGenerator 分布式 ID 生成器，用于构建 traceId
+   */
   public EmailChannel(
       @Autowired(required = false) JavaMailSender mailSender,
       SnowflakeIdGenerator snowflakeIdGenerator) {

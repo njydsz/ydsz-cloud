@@ -94,7 +94,7 @@ public enum FlowTaskStatus implements BaseStatusEnum<FlowTaskStatus> {
    * 
    * <p>与 {@link #isFinished()} 语义对齐。
    *
-   * @return 返回值说明
+   * @return true 表示终态（COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT）；false-非终态
    */
   @Override
   public boolean isTerminal() {

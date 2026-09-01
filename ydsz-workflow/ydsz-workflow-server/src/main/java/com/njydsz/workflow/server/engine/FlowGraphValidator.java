@@ -95,8 +95,8 @@ public class FlowGraphValidator {
   /**
    * 校验 START / END 节点存在性，返回起始节点编码。
    *
-   * @param nodes 参数说明
-   * @return 返回值说明
+   * @param nodes 节点列表
+   * @return 起始节点编码
    */
   private String validateStartAndEndNodes(List<FlowNodeVO> nodes) {
     List<FlowNodeVO> startNodes = nodes.stream()
@@ -130,9 +130,9 @@ public class FlowGraphValidator {
   /**
    * 构建邻接表（正向 + 反向），并校验跳转无悬空边。
    *
-   * @param nodeMap 参数说明
-   * @param skips 参数说明
-   * @return 返回值说明
+   * @param nodeMap 节点索引映射
+   * @param skips 跳转列表
+   * @return 构建好的正/反向图边
    */
   private GraphEdges buildAdjacencyLists(Map<String, FlowNodeVO> nodeMap, List<FlowSkipVO> skips) {
     Map<String, List<String>> outEdges = new HashMap<>(nodeMap.size());
@@ -168,9 +168,9 @@ public class FlowGraphValidator {
   /**
    * 校验所有节点从 START 可达。
    *
-   * @param startCode 参数说明
-   * @param edges 参数说明
-   * @param nodes 参数说明
+   * @param startCode 起始节点编码
+   * @param edges 图边结构
+   * @param nodes 节点列表
    */
   private void validateReachability(String startCode, GraphEdges edges, List<FlowNodeVO> nodes) {
     Set<String> reachable = bfs(startCode, edges.outEdges);
@@ -186,8 +186,8 @@ public class FlowGraphValidator {
   /**
    * 校验每个非 END 节点都能到达 END 节点。
    *
-   * @param nodes 参数说明
-   * @param edges 参数说明
+   * @param nodes 节点列表
+   * @param edges 图边结构
    */
   private void validateCanReachEnd(List<FlowNodeVO> nodes, GraphEdges edges) {
     List<String> endNodes = nodes.stream()
@@ -211,8 +211,8 @@ public class FlowGraphValidator {
   /**
    * 校验无孤立节点：非 START 节点有入边，非 END 节点有出边。
    *
-   * @param nodes 参数说明
-   * @param edges 参数说明
+   * @param nodes 节点列表
+   * @param edges 图边结构
    */
   private void validateNoIsolatedNodes(List<FlowNodeVO> nodes, GraphEdges edges) {
     for (FlowNodeVO node : nodes) {
@@ -230,9 +230,9 @@ public class FlowGraphValidator {
   /**
    * 从指定起点 BFS 遍历，返回所有可达节点
    *
-   * @param start 参数说明
-   * @param edges 参数说明
-   * @return 返回值说明
+   * @param start 遍历起始节点编码
+   * @param edges 邻接表边映射
+   * @return 从起点可达的节点编码集合
    */
   private Set<String> bfs(String start, Map<String, List<String>> edges) {
     Set<String> visited = new HashSet<>(edges.size());
@@ -257,8 +257,8 @@ public class FlowGraphValidator {
    *
    * <p>委托 {@link FlowSkipUtils#extractSourceNodeCode} 统一实现，避免三处重复。
    *
-   * @param skip 参数说明
-   * @return 返回值说明
+   * @param skip 跳转实体
+   * @return 源节点编码
    */
   private String extractSourceRef(FlowSkipVO skip) {
     return FlowSkipUtils.extractSourceNodeCode(skip);
@@ -267,8 +267,8 @@ public class FlowGraphValidator {
   /**
    * 环路检测（DFS + 颜色标记法），仅记录日志不拒绝
    *
-   * @param nodeCodes 参数说明
-   * @param edges 参数说明
+   * @param nodeCodes 全部节点编码集合
+   * @param edges 邻接表边映射
    */
   private void detectCycles(Set<String> nodeCodes, Map<String, List<String>> edges) {
     Set<String> visited = new HashSet<>(nodeCodes.size());

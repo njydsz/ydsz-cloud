@@ -89,6 +89,12 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
 
   private TimeUnit refreshAfterWriteTimeUnit = TimeUnit.MINUTES;
 
+  /** 全局空值占位 TTL 下界（毫秒，0 表示禁用注解级空值短 TTL） */
+  private long nullValueTtlMin = 0;
+
+  /** 全局空值占位 TTL 上界（毫秒，0 表示禁用） */
+  private long nullValueTtlMax = 0;
+
   private Function<String, Cache<Object, Object>> cacheBuilder;
 
   /** per-cache 配置映射 */
@@ -173,6 +179,19 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
   }
 
   /**
+   * 设置全局空值占位 TTL 区间（毫秒，带随机抖动防雪崩）。
+   *
+   * <p>大于 0 时启用注解路径空值短 TTL（防穿透）；per-cache 配置可覆盖该全局值。 0 表示禁用。
+   *
+   * @param minMs 最小过期时间（毫秒）
+   * @param maxMs 最大过期时间（毫秒）
+   */
+  public void setNullValueTtl(long minMs, long maxMs) {
+    this.nullValueTtlMin = Math.max(0, minMs);
+    this.nullValueTtlMax = Math.max(this.nullValueTtlMin, maxMs);
+  }
+
+  /**
    * 设置预定义的缓存名称
    *
    * @param cacheNames cacheNames 参数
@@ -210,6 +229,20 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
     Cache<Object, Object> delegate = buildCache(name);
     createdCaches.add(delegate);
     SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.allowNullValues);
+
+    // 注解级空值短 TTL（防穿透）：per-cache 配置优先，回退全局默认
+    YdszCacheProperties.CacheConfig perCache = perCacheConfigs.get(name);
+    long effectiveNullTtlMin =
+        perCache != null && perCache.getNullValueTtlMin() != null
+            ? perCache.getNullValueTtlMin()
+            : this.nullValueTtlMin;
+    long effectiveNullTtlMax =
+        perCache != null && perCache.getNullValueTtlMax() != null
+            ? perCache.getNullValueTtlMax()
+            : this.nullValueTtlMax;
+    if (effectiveNullTtlMin > 0) {
+      newCache.setNullValueTtl(effectiveNullTtlMin, Math.max(effectiveNullTtlMin, effectiveNullTtlMax));
+    }
 
     SpringYdszCache existing = this.cacheMap.putIfAbsent(name, newCache);
     return existing != null ? existing : newCache;

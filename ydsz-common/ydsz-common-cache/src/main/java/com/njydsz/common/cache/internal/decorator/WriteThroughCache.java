@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -276,6 +277,43 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   }
 
   /**
+   * 配置删除监听器异步回调执行器（本层与底层缓存均生效）。
+   *
+   * @param executor 回调执行器；null 表示恢复同步执行
+   */
+  @Override
+  public void setListenerExecutor(Executor executor) {
+    this.listenerExecutor = executor;
+    delegate.setListenerExecutor(executor);
+  }
+
+  /**
+   * 配置实例级空值占位 TTL 区间（透传底层缓存）。
+   *
+   * @param minExpireMs 最小过期时间（毫秒）
+   * @param maxExpireMs 最大过期时间（毫秒）
+   */
+  @Override
+  public void setNullValueTtl(long minExpireMs, long maxExpireMs) {
+    delegate.setNullValueTtl(minExpireMs, maxExpireMs);
+  }
+
+  /**
+   * 带防护的缓存获取（透传底层缓存的实例级空值 TTL 配置）。
+   *
+   * @param key 缓存键
+   * @param loader 值加载器
+   * @return 缓存值
+   */
+  @Override
+  public V getWithProtection(K key, Function<K, V> loader) {
+    return delegate.getWithProtection(key, loader);
+  }
+
+  /** 删除监听器回调执行器（null 时同步执行，保持向后兼容） */
+  private volatile Executor listenerExecutor;
+
+  /**
    * 计算并写入缓存（直接委托，不写后端）。
    *
    * <p>注意：此路径不会同步后端存储，需要持久化时请使用 {@link #put}。
@@ -385,19 +423,40 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   }
 
   /**
-   * 通知删除监听器
+   * 通知删除监听器。
+   *
+   * <p>配置了 {@code listenerExecutor} 时回调异步执行（对标 Caffeine RemovalListeners.async），
+   * 不阻塞缓存操作线程；未配置时保持同步执行。
    *
    * @param key 缓存键
    * @param value 缓存值
    * @param cause 删除原因
    */
   protected void notifyRemoval(K key, V value, RemovalCause cause) {
+    Executor executor = listenerExecutor;
     for (RemovalListener<? super K, ? super V> listener : listeners) {
-      try {
-        listener.onRemoval(key, value, cause);
-      } catch (Exception e) {
-        // 忽略监听器异常
+      if (executor != null) {
+        executor.execute(() -> invokeListenerSafely(listener, key, value, cause));
+      } else {
+        invokeListenerSafely(listener, key, value, cause);
       }
+    }
+  }
+
+  /**
+   * 安全调用单个监听器（异常仅记录，不影响缓存操作）。
+   *
+   * @param listener 监听器
+   * @param key 缓存键
+   * @param value 缓存值
+   * @param cause 删除原因
+   */
+  private void invokeListenerSafely(
+      RemovalListener<? super K, ? super V> listener, K key, V value, RemovalCause cause) {
+    try {
+      listener.onRemoval(key, value, cause);
+    } catch (Exception e) {
+      // 忽略监听器异常
     }
   }
 

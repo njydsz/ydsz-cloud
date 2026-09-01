@@ -128,9 +128,11 @@ public class RuleGraphController {
     return YdszResponse.success(result);
   }
 
-  /** 删除画布
-   * @param ruleCode 参数说明
-      * @return 返回值说明
+  /**
+   * 删除画布
+   *
+   * @param ruleCode 规则编码（关联规则链画布的唯一标识）
+   * @return 操作成功返回空结果
    */
   @Idempotent(key = "ruleAdmin:deleteChainGraph", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -149,8 +151,10 @@ public class RuleGraphController {
    * 校验画布结构（不保存）
    *
    * <p>供前端"实时校验"按钮调用，返回 ERROR/WARN 两级问题。
-      * @return 返回值说明
-      * @param graph 参数说明
+   *
+   * @param ruleCode 规则编码
+   * @param graph 规则链画布数据（包含节点和边的完整结构）
+   * @return 校验问题列表（ERROR/WARN 两级），为空表示校验通过
    */
   @Audit(
       module = "规则管理",

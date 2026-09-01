@@ -81,7 +81,7 @@ public class RuleDecisionTableController {
   private final ExcelWebSupport excelWebSupport;
 
   /** 查询全部决策表
-   * @return 返回值说明
+   * @return 决策表列表
    */
   @GetMapping("/decision-tables")
   public YdszResponse<List<DecisionTableVO>> listDecisionTables() {
@@ -89,8 +89,8 @@ public class RuleDecisionTableController {
   }
 
   /** 查询单条决策表
-   * @param tableCode 参数说明
-      * @return 返回值说明
+   * @param tableCode 决策表唯一编码
+   * @return 决策表信息，不存在返回 null
    */
   @GetMapping("/decision-tables/{tableCode}")
   public YdszResponse<DecisionTableVO> getDecisionTable(@PathVariable String tableCode) {
@@ -99,8 +99,8 @@ public class RuleDecisionTableController {
   }
 
   /** 保存决策表
-   * @param dto 参数说明
-      * @return 返回值说明
+   * @param dto 决策表数据传输对象
+   * @return 保存后的决策表信息
    */
   @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -116,8 +116,8 @@ public class RuleDecisionTableController {
   }
 
   /** 删除决策表
-   * @param id 参数说明
-      * @return 返回值说明
+   * @param id 决策表唯一标识
+   * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:deleteDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

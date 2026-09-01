@@ -96,7 +96,8 @@ public final class ContextKey<T> {
   /**
    * 获取键名。
    *
-   * @return 返回值说明
+   * @return 键名字符串，实例创建后不可变，且不会为 {@code null}；
+   *     {@link #equals(Object)} 与 {@link #hashCode()} 均以该键名与类型共同判定
    */
   public String key() {
     return key;
@@ -105,7 +106,7 @@ public final class ContextKey<T> {
   /**
    * 获取值类型。
    *
-   * @return 返回值说明
+   * @return 该键绑定的值类型 {@code Class}，不会为 {@code null}；{@link #cast(Object)} 依据此类型做安全转换
    */
   public Class<T> type() {
     return type;

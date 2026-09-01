@@ -93,9 +93,9 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
    * <p>PostgreSQL 特有优化：使用 ctid = ANY(ARRAY(...)) 替代 id IN (SELECT id ...)，
    * 直接通过物理行地址定位数据页，避免二次索引扫描，大表删除性能提升 3-5 倍。
    *
-   * @param before 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param before 过期分界时间（删除此时间之前创建的告警日志）
+   * @param limit 单批最多删除条数
+   * @return 实际删除条数
    */
   @Delete(
       "DELETE FROM ydsz_job_alert_dispatch "

@@ -175,7 +175,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   /**
    * 校验委托授权参数。
    *
-   * @param auth 参数说明
+   * @param auth 待校验的委托授权实体
    */
   private void validateDelegateAuth(FlowDelegateAuthVO auth) {
     if (auth == null) {
@@ -205,7 +205,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   /**
    * 校验 scope 必填字段。
    *
-   * @param auth 参数说明
+   * @param auth 待校验的委托授权实体
    */
   private void validateScopeFields(FlowDelegateAuthVO auth) {
     switch (auth.getScopeType()) {
@@ -233,7 +233,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   /**
    * 填充默认值。
    *
-   * @param auth 参数说明
+   * @param auth 待填充默认值的委托授权实体
    */
   private void fillDefaultValues(FlowDelegateAuthVO auth) {
     if (auth.getTenantId() == null) {
@@ -248,7 +248,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
   /**
    * 尝试离线自动转发（失败不影响授权创建）。
    *
-   * @param authId 参数说明
+   * @param authId 委托授权记录 ID
    */
   private void tryOfflineAutoForward(String authId) {
     try {

@@ -10,9 +10,17 @@ import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
- * 语言请求 DTO。
+ * 语言配置请求 DTO。
  *
  * <p>同时用于创建和更新场景：创建时 {@code id} 可不传，更新时 {@code id} 必填。
+ *
+ * <p><b>字段语义：</b>
+ *
+ * <ul>
+ *   <li>{@code languageCode} — 语言编码（ISO 639-1 + ISO 3166-1，如 zh-CN / en-US）</li>
+ *   <li>{@code isDefault} — 是否默认语言（1=是，全局仅允许一个默认语言）</li>
+ *   <li>{@code status} — 启用状态（ENABLED/DISABLED），禁用后该语言不在用户切换器中显示</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0

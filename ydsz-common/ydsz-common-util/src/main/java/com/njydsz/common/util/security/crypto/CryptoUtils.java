@@ -155,6 +155,65 @@ public final class CryptoUtils {
     return new String(plaintext, StandardCharsets.UTF_8);
   }
 
+  // ==================== 密钥标识加密（KeyProvider SPI） ====================
+
+  /**
+   * 使用密钥标识加密字符串——密钥由注册的 {@link KeyProvider} 解析。
+   *
+   * <p>密钥来源收敛入口：业务方注册 KeyProvider Bean 后，调用方只需传 keyId，
+   * 无需在业务代码中出现裸密钥。未注册 KeyProvider 时抛出 {@link CryptoException} 并给出注册指引。
+   *
+   * @param plaintext 明文字符串（UTF-8 编码）
+   * @param keyId 密钥标识（由 KeyProvider 实现方定义语义）
+   * @return Base64 编码密文
+   * @see KeyProviderRegistry
+   * @since 1.0.0
+   */
+  public static String encryptWithKeyId(String plaintext, String keyId) {
+    return encrypt(plaintext, KeyProviderRegistry.resolve(keyId));
+  }
+
+  /**
+   * 使用密钥标识解密字符串——密钥由注册的 {@link KeyProvider} 解析。
+   *
+   * @param base64Ciphertext Base64 编码密文
+   * @param keyId 密钥标识
+   * @return 明文字符串（UTF-8 解码）
+   * @see KeyProviderRegistry
+   * @since 1.0.0
+   */
+  public static String decryptWithKeyId(String base64Ciphertext, String keyId) {
+    return decrypt(base64Ciphertext, KeyProviderRegistry.resolve(keyId));
+  }
+
+  /**
+   * 使用密钥标识与 AAD 的 AEAD 加密——密钥由注册的 {@link KeyProvider} 解析。
+   *
+   * @param plaintext 明文字符串
+   * @param keyId 密钥标识
+   * @param aad 附加认证数据（解密时需一致）
+   * @return Base64 编码密文
+   * @see KeyProviderRegistry
+   * @since 1.0.0
+   */
+  public static String encryptWithKeyIdAndAad(String plaintext, String keyId, byte[] aad) {
+    return encryptWithAad(plaintext, KeyProviderRegistry.resolve(keyId), aad);
+  }
+
+  /**
+   * 使用密钥标识与 AAD 的 AEAD 解密——密钥由注册的 {@link KeyProvider} 解析。
+   *
+   * @param base64Ciphertext Base64 编码密文
+   * @param keyId 密钥标识
+   * @param aad 附加认证数据（必须与加密时一致）
+   * @return 明文字符串
+   * @see KeyProviderRegistry
+   * @since 1.0.0
+   */
+  public static String decryptWithKeyIdAndAad(String base64Ciphertext, String keyId, byte[] aad) {
+    return decryptWithAad(base64Ciphertext, KeyProviderRegistry.resolve(keyId), aad);
+  }
+
   // ==================== AEAD 加密（带 AAD） ====================
 
   /**

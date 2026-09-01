@@ -61,10 +61,10 @@ public class FlowDefinitionCacheService {
    *
    * <p>缓存 TTL 与容量从 {@link FlowProperties} 读取（P1-2: 硬编码值迁移至 YAML）。
    *
-   * @param flowNodeRepository 参数说明
-   * @param flowSkipRepository 参数说明
-   * @param broadcasterProvider 参数说明
-   * @param properties 参数说明
+   * @param flowNodeRepository 流程节点仓储接口
+   * @param flowSkipRepository 跳转规则仓储接口
+   * @param broadcasterProvider 集群缓存失效广播器提供者（可选）
+   * @param properties 工作流配置属性
    */
   public FlowDefinitionCacheService(
       FlowNodeRepository flowNodeRepository,
@@ -129,8 +129,8 @@ public class FlowDefinitionCacheService {
   /**
    * 获取流程定义下全部节点（缓存）。
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 全部节点列表；无数据返回空列表
    */
   public List<FlowNodeVO> getAllNodes(String definitionId) {
     if (definitionId == null) {
@@ -144,9 +144,9 @@ public class FlowDefinitionCacheService {
   /**
    * 按 nodeCode 查单节点（P1: O(1) Map 查找）。
    *
-   * @param definitionId 参数说明
-   * @param nodeCode 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @return 匹配的节点实体；不存在返回 null
    */
   public FlowNodeVO getNodeByCode(String definitionId, String nodeCode) {
     if (nodeCode == null) {
@@ -160,8 +160,8 @@ public class FlowDefinitionCacheService {
   /**
    * 查开始节点（nodeType = START，P1: 使用 nodeByCode 索引缓存）。
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 开始节点实体；不存在返回 null
    */
   public FlowNodeVO getStartNode(String definitionId) {
     return metadataCache.get(buildCacheKey(definitionId), this::loadMetadata).getNodes().stream()
@@ -175,8 +175,8 @@ public class FlowDefinitionCacheService {
   /**
    * 获取流程定义下全部跳转（缓存）。
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 全部跳转列表；无数据返回空列表
    */
   public List<FlowSkipVO> getAllSkips(String definitionId) {
     if (definitionId == null) {
@@ -192,9 +192,9 @@ public class FlowDefinitionCacheService {
    * 
    * <p>返回该节点所有 skipType 的出边，调用方按需过滤 skipType。
    *
-   * @param definitionId 参数说明
-   * @param nodeCode 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 源节点编码
+   * @return 该节点的出发跳转列表；无数据返回空列表
    */
   public List<FlowSkipVO> getSkipsByNodeCode(String definitionId, String nodeCode) {
     if (nodeCode == null) {
@@ -212,9 +212,9 @@ public class FlowDefinitionCacheService {
   /**
    * 查指向某节点的跳转（按 nextNodeCode 过滤，用于退回时找前驱，P1: O(1) Map 查找）。
    *
-   * @param definitionId 参数说明
-   * @param nextNodeCode 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @param nextNodeCode 目标节点编码
+   * @return 指向该节点的跳转列表；无数据返回空列表
    */
   public List<FlowSkipVO> getSkipsByNextNode(String definitionId, String nextNodeCode) {
     if (nextNodeCode == null) {
@@ -259,8 +259,8 @@ public class FlowDefinitionCacheService {
    * <p>替代原有的多个独立缓存加载方法（loadNodes/loadSkips/loadSkipSourceRefIndex/
    * loadNodeByCodeIndex/loadSkipsByNextNodeIndex）， 单次缓存调用完成全部数据加载和索引构建，减少缓存操作次数。
    *
-   * @param cacheKey 参数说明
-   * @return 返回值说明
+   * @param cacheKey 缓存 key（tenantId:definitionId）
+   * @return 完整元数据对象（含节点、跳转及索引）
    */
   private FlowDefinitionMetadata loadMetadata(String cacheKey) {
     List<FlowNodeVO> nodes = loadNodes(cacheKey);

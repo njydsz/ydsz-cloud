@@ -119,9 +119,9 @@ public class TemplateVariableValidator {
    * 校验单个变量类型。
    * 
    *
-   * @param name 参数说明
-   * @param value 参数说明
-   * @param def 参数说明
+   * @param name 变量名（用于拼接错误消息）
+   * @param value 变量实际值
+   * @param def 变量定义（含 type/enumValues 等约束）
    */
   private String checkType(String name, Object value, TemplateVariableDef def) {
     try {

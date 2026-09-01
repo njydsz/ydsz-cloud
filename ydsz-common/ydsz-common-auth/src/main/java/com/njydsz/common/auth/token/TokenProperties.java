@@ -9,6 +9,27 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Token 配置属性
  *
+ * <p>绑定前缀 ydsz.auth.token.*，控制 JWT 鉴权体系的核心参数：密钥、有效期、签发者等信息。
+ *
+ * <p>支持的 Token 类型：
+ * <ul>
+ *   <li>Access Token — 短期访问凭证，默认 2 小时</li>
+ *   <li>Refresh Token — 长期刷新凭证，默认 7 天，用于续期 Access Token</li>
+ *   <li>ID Token — 身份标识 Token，默认 10 分钟，用于 OAuth 场景</li>
+ * </ul>
+ *
+ * <p>启动时由 {@link TokenProperties#validate()} 校验 secretKey 是否已配置且长度满足 ≥32 字节，
+ * 不满足将直接抛出 IllegalStateException 阻止服务启动。
+ *
+ * <p>配置模式：
+ * <pre>
+ * ydsz.auth.token:
+ *   secret-key: "your-256-bit-secret-key-at-least-32-bytes"
+ *   access-token-expire-seconds: 7200
+ *   refresh-token-expire-seconds: 604800
+ *   issuer: "ydsz-auth"
+ * </pre>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

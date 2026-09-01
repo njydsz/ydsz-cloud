@@ -365,10 +365,10 @@ public class GlueCodeServiceImpl implements GlueCodeService {
    * <li>JAVASCRIPT：通过临时 ScriptEngine 执行（Nashorn/GraalJS，与 GlueJobHandler 一致）
    * </ul>
    *
-   * @param sourceCode 参数说明
-   * @param language 参数说明
-   * @param paramsJson 参数说明
-   * @return 返回值说明
+   * @param sourceCode 待执行的脚本源代码
+   * @param language 脚本语言类型（GROOVY / JAVA / JAVASCRIPT）
+   * @param paramsJson 脚本执行参数 JSON 字符串
+   * @return 脚本执行返回值
    */
   private Object executeByLanguage(String sourceCode, String language, String paramsJson)
       throws JobExecutionException, IOException, NoSuchMethodException, InstantiationException,

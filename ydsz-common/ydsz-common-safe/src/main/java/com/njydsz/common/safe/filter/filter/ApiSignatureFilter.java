@@ -101,7 +101,10 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   private final SecurityEventPublisher eventPublisher;
 
   /**
-   * 方法说明。
+   * 构造开放 API 签名校验过滤器，装配时间戳窗口、防重放与事件上报能力。
+   *
+   * <p>签名头名称、时间容差、排除路径等规则全部来自 {@code properties}；
+   * {@code nonceCache} 用于拦截重放的 Nonce，{@code eventPublisher} 在校验失败时发布安全事件。
    *
    * @param properties 签名配置属性
    * @param nonceCache 防重放 Nonce 缓存

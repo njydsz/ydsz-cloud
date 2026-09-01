@@ -99,7 +99,8 @@ public class YdszExceptionCoreAutoConfiguration {
    * <p>扫描与 i18n key 校验在全部单例 Bean 实例化完成后执行（{@code SmartInitializingSingleton}）， 确保 fail-fast
    * 校验基于完整注册表，而非空表空转。
    *
-   * @param errorCodeTable errorCodeTable 参数说明
+   * @param errorCodeTable 错误码注册表，扫描到的 {@code @YdszExceptionCode} 全部注册到此表；
+   *     由 {@link #errorCodeTable()} 提供，容器缺失时由该方法兜底创建空表
    * @param messageSource 国际化消息源
    * @param env Spring 环境对象
    * @return 处理结果
@@ -241,7 +242,8 @@ public class YdszExceptionCoreAutoConfiguration {
   /**
    * 注册异常指标统计器。
    *
-   * @param meterRegistry meterRegistry 参数说明
+   * @param meterRegistry Micrometer 指标注册表，由 Spring Boot Actuator 提供；
+   *     仅在类路径与实际 Bean 均存在时才注册本指标统计器
    * @return 处理结果
    */
   @Bean

@@ -35,7 +35,10 @@ public class CachedBodyHttpServletRequestWrapper extends HttpServletRequestWrapp
   private final byte[] cachedBody;
 
   /**
-   * 方法说明。
+   * 用已读取的请求体副本包装原始请求，使请求体可被重复读取。
+   *
+   * <p>包装后 {@link #getInputStream()} 与 {@link #getReader()} 每次都返回基于同一份字节的新流，
+   * 供签名校验、XSS 过滤等多个 Filter 依次读取。{@code cachedBody} 为 {@code null} 时按空请求体处理。
    *
    * @param request 原始 HTTP 请求
    * @param cachedBody 已读取的请求体字节数组

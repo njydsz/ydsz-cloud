@@ -1332,21 +1332,42 @@ public abstract class AbstractFileStorage implements IFileStorage {
     return suffix != null && CODE_SUFFIXES.contains(suffix.toLowerCase());
   }
 
-  /** 校验上传 ID 格式 */
+  /**
+   * 校验分片上传会话 ID 的合法性。
+   *
+   * <p>拒绝空白串与长度超过 64 字符的值：前者无法唯一定位一次上传会话， 后者超出各对象存储厂商对 uploadId 的长度约定，提前拦截可省掉一次必然失败的网络往返。
+   *
+   * @param uploadId 初始化分片上传时由存储后端返回的会话 ID，不允许为空白或超过 64 字符
+   * @throws BusinessException uploadId 为空白或长度超过 64 时抛出，错误码 {@code MULTIPART_UPLOAD_FAILED}
+   */
   protected void validateUploadId(String uploadId) {
     if (StringUtils.isBlank(uploadId) || uploadId.length() > 64) {
       throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
     }
   }
 
-  /** 校验分片编号 */
+  /**
+   * 校验单个分片序号的合法性。
+   *
+   * <p>各对象存储厂商的分片编号均从 1 开始计数，故此处只拦截非正数； 不设上限是因为各厂商允许的分片数远大于 {@code int} 取值范围，设限反而可能误伤合法请求。
+   *
+   * @param partNumber 分片序号，从 1 开始，<strong>必须大于 0</strong>
+   * @throws BusinessException partNumber 小于等于 0 时抛出，错误码 {@code MULTIPART_UPLOAD_FAILED}
+   */
   protected void validatePartNumber(int partNumber) {
     if (partNumber <= 0) {
       throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
     }
   }
 
-  /** 校验分片编号列表 */
+  /**
+   * 校验待合并的分片序号列表，供合并分片前的批量前置校验使用。
+   *
+   * <p>先整体判空再逐元素校验，任一项非法即整批拒绝：合并请求的分片必须完整且连续合法， 「部分通过」在分片合并场景下没有业务意义，反而会产出损坏的最终对象。
+   *
+   * @param partNumbers 待合并的分片序号列表，不允许为 {@code null} 或空列表； 元素不允许为 {@code null} 且必须大于 0
+   * @throws BusinessException 列表为空，或任一元素为 {@code null}、小于等于 0 时抛出， 错误码 {@code MULTIPART_UPLOAD_FAILED}
+   */
   protected void validatePartNumbers(List<Integer> partNumbers) {
     if (partNumbers == null || partNumbers.isEmpty()) {
       throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
@@ -1358,7 +1379,19 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
   }
 
-  /** 构建分片对象名称 */
+  /**
+   * 按固定层级拼出单个分片在存储中的对象名。
+   *
+   * <p>分片统一落在 {@code CHUNK_DIR_PREFIX} 目录下，按 {@code 对象名/uploadId/分片序号} 三级组织，
+   * 使同一次上传会话的所有分片在对象列表中自然聚簇，便于合并后整目录清理与残留排查。
+   *
+   * <p>分片序号经 {@code CHUNK_FILE_NAME_FORMAT} 补零定长，使得按对象名字典序遍历得到的顺序 与分片序号一致，合并时无需再额外排序。
+   *
+   * @param objectName 最终合并产物的对象名，应已由 {@code resolveObjectKey} 处理过前缀
+   * @param uploadId 分片上传会话 ID，应已通过 {@link #validateUploadId(String)} 校验
+   * @param partNumber 分片序号，从 1 开始，应已通过 {@link #validatePartNumber(int)} 校验
+   * @return 该分片对应的完整对象名，不会为 {@code null}
+   */
   protected String buildChunkObjectName(String objectName, String uploadId, int partNumber) {
     return CHUNK_DIR_PREFIX
         + FileConstant.DIR_SPLIT
@@ -1369,7 +1402,18 @@ public abstract class AbstractFileStorage implements IFileStorage {
         + String.format(CHUNK_FILE_NAME_FORMAT, partNumber);
   }
 
-  /** 安全中止分片上传（失败时清理资源） */
+  /**
+   * 尽力而为地中止一次分片上传，不向调用方抛出任何异常。
+   *
+   * <p>专供异常分支收尾使用：此时主流程已经失败，若清理动作再抛异常会覆盖掉真正有价值的原始失败原因，
+   * 因此这里吞掉异常仅打 warn 日志，把已上传分片的回收交由存储后端的生命周期规则兜底。
+   *
+   * <p>uploadId 为空白时直接返回，因为会话尚未成功创建，服务端没有需要回收的残留分片。
+   *
+   * @param bucketName 已解析的存储桶名称
+   * @param objectName 本次分片上传对应的最终对象名，仅用于日志定位
+   * @param uploadId 分片上传会话 ID，为空白时静默跳过，视为无需清理
+   */
   protected void safeAbortMultipartUpload(String bucketName, String objectName, String uploadId) {
     if (StringUtils.isBlank(uploadId)) {
       return;
@@ -1386,7 +1430,18 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
   }
 
-  /** 创建目录（以 / 结尾的 0 字节对象） */
+  /**
+   * 以空对象模拟目录，适配对象存储扁平 KV 模型下无真实目录的现状。
+   *
+   * <p>对象存储没有目录实体，所谓目录只是命名约定：写入一个以 {@code /} 结尾的 0 字节对象，
+   * 控制台与列表接口据此渲染出层级视图。内容类型固定为 {@code application/directory} 便于识别与过滤。
+   *
+   * <p>底层写入失败统一包装为业务异常，避免存储 SDK 的异常类型泄漏到调用方。
+   *
+   * @param bucketName 已解析的存储桶名称
+   * @param folderName 目录对象名，<strong>必须以 {@code /} 结尾</strong>，否则不会被识别为目录
+   * @throws BusinessException 底层写入存储失败时抛出，错误码 {@code FILE_OPERATE_FAILED}
+   */
   protected void createFolderByEmptyObject(String bucketName, String folderName) {
     try (InputStream emptyStream = new ByteArrayInputStream(new byte[] {})) {
       doPutObject(bucketName, folderName, emptyStream, 0L, "application/directory");
@@ -1623,7 +1678,20 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
   }
 
-  /** 计算输入流的 MD5（会消费流，调用者需自行重新获取流） */
+  /**
+   * 计算输入流内容的 MD5 摘要，用于秒传校验与内容完整性比对。
+   *
+   * <p><strong>会读完并消费掉整个输入流</strong>，且不做内容缓冲复用：调用方若还要使用同一份数据，
+   * 必须自行重新打开流并承担二次读取的开销。大文件场景因此建议改用分片 ETag 校验，而非全量 MD5。
+   *
+   * <p>按 8KB 分块增量 {@code update}，避免把整份内容一次性载入内存。
+   *
+   * <p>读取或摘要失败时<strong>返回 {@code null} 而非抛出</strong>：MD5 在本类中仅服务秒传等可降级路径，
+   * 拿不到摘要时退回普通上传即可，不应阻断主流程。
+   *
+   * @param inputStream 待计算摘要的流，由调用方负责关闭，不允许为 {@code null}
+   * @return 32 位十六进制 MD5 摘要；计算失败时为 {@code null}
+   */
   protected String computeMd5(InputStream inputStream) {
     try {
       MessageDigest md = MessageDigest.getInstance("MD5");

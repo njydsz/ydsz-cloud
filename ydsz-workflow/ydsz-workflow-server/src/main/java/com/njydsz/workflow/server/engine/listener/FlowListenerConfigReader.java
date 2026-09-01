@@ -74,8 +74,8 @@ public final class FlowListenerConfigReader {
   /**
    * 将 Map 转换为 {@link FlowListenerConfig}
    *
-   * @param map 参数说明
-   * @return 返回值说明
+   * @param map 包含监听器配置的 Map（键：eventType / pluginName / enabled / priority）
+   * @return 转换后的监听器配置对象
    */
   private static FlowListenerConfig toConfig(Map<?, ?> map) {
     FlowListenerConfig config = new FlowListenerConfig();

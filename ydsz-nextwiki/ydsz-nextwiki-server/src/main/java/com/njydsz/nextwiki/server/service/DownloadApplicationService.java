@@ -27,7 +27,10 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 @RequiredArgsConstructor
 public class DownloadApplicationService {
 
+  /** 文件节点数据仓储（查询文件元数据获取 storageKey） */
   private final FileNodeRepository fileNodeRepository;
+
+  /** 下载限流服务（限流检查与签名 URL 生成/校验） */
   private final DownloadRateLimitService rateLimitService;
 
   @Autowired(required = false)

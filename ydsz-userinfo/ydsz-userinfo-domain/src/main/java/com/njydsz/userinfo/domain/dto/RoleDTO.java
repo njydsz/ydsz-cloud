@@ -14,6 +14,15 @@ import com.njydsz.common.safe.annotation.Xss;
  *
  * <p>同时用于创建和更新场景：创建时 {@code id} 可不传，更新时 {@code id} 必填。
  *
+ * <p><b>字段语义：</b>
+ *
+ * <ul>
+ *   <li>{@code roleCode} — 角色编码（全局唯一，建议格式 ROLE_XXX），用于权限匹配</li>
+ *   <li>{@code dataScope} — 数据权限范围（ALL/DEPT_AND_CHILD/DEPT/SELF/CUSTOM），控制角色可见数据范围</li>
+ *   <li>{@code builtIn} — 是否内置角色（true 时禁止删除与修改编码）</li>
+ *   <li>{@code tenantId} — 租户 ID（"0" = 平台级角色，跨租户可见）</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

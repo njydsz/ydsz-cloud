@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -86,7 +87,9 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
    *
    * <p>监听器异常不会影响缓存正常操作，仅记录警告日志。
    *
-   * <p>当删除原因为 {@link RemovalCause#SIZE} 时，同时递增淘汰计数器。
+   * <p><b>异步派发（对标 Caffeine RemovalListeners.async）</b>：配置了 {@code
+   * listenerExecutor} 时回调在执行器上异步执行——底层实现的淘汰/删除常持有写锁， 同步回调慢逻辑会拖慢整条读写路径。
+   * 未配置时保持同步执行（向后兼容）。 {@link RemovalCause#SIZE} 的淘汰计数始终同步递增，不受异步影响。
    *
    * @param key 被删除的键
    * @param value 被删除的值
@@ -99,13 +102,82 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     if (listeners.isEmpty()) {
       return;
     }
+    Executor executor = listenerExecutor;
     for (RemovalListener<? super K, ? super V> listener : listeners) {
-      try {
-        listener.onRemoval(key, value, cause);
-      } catch (Exception e) {
-        LOG.warn("缓存删除监听器执行异常, key={}, cause={}", key, cause, e);
+      if (executor != null) {
+        executor.execute(() -> invokeListenerSafely(listener, key, value, cause));
+      } else {
+        invokeListenerSafely(listener, key, value, cause);
       }
     }
+  }
+
+  /**
+   * 安全调用单个删除监听器（异常仅记录警告，不影响缓存操作）。
+   *
+   * @param listener 监听器
+   * @param key 被删除的键
+   * @param value 被删除的值
+   * @param cause 删除原因
+   */
+  private void invokeListenerSafely(
+      RemovalListener<? super K, ? super V> listener, K key, V value, RemovalCause cause) {
+    try {
+      listener.onRemoval(key, value, cause);
+    } catch (Exception e) {
+      LOG.warn("缓存删除监听器执行异常, key={}, cause={}", key, cause, e);
+    }
+  }
+
+  /**
+   * 删除监听器回调执行器（null 时同步执行，保持向后兼容）。
+   */
+  private volatile Executor listenerExecutor;
+
+  /**
+   * 配置删除监听器异步回调执行器。
+   *
+   * @param executor 回调执行器；null 表示恢复同步执行
+   */
+  @Override
+  public void setListenerExecutor(Executor executor) {
+    this.listenerExecutor = executor;
+  }
+
+  /**
+   * 实例级空值占位 TTL 下界（毫秒）。默认 0 表示未配置，使用接口默认区间 30~60 秒。
+   */
+  private volatile long nullValueMinExpireMs = 0;
+
+  /**
+   * 实例级空值占位 TTL 上界（毫秒）。默认 0 表示未配置，使用接口默认区间 30~60 秒。
+   */
+  private volatile long nullValueMaxExpireMs = 0;
+
+  /**
+   * 配置实例级空值占位 TTL 区间（由 CacheBuilder 注入，调用点无需重复传参）。
+   *
+   * @param minExpireMs 最小过期时间（毫秒）
+   * @param maxExpireMs 最大过期时间（毫秒）
+   */
+  @Override
+  public void setNullValueTtl(long minExpireMs, long maxExpireMs) {
+    this.nullValueMinExpireMs = minExpireMs;
+    this.nullValueMaxExpireMs = maxExpireMs;
+  }
+
+  /**
+   * 带防护的缓存获取（使用实例级空值 TTL 配置，未配置时回退接口默认区间）。
+   *
+   * @param key 缓存键
+   * @param loader 值加载器
+   * @return 缓存值
+   */
+  @Override
+  public V getWithProtection(K key, Function<K, V> loader) {
+    long min = nullValueMinExpireMs > 0 ? nullValueMinExpireMs : DEFAULT_NULL_VALUE_TTL_MIN_MS;
+    long max = nullValueMaxExpireMs > 0 ? nullValueMaxExpireMs : DEFAULT_NULL_VALUE_TTL_MAX_MS;
+    return getWithProtection(key, loader, min, max);
   }
 
   /**
@@ -216,6 +288,9 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
   /**
    * 原子的 compute（同一 key 的并发 compute 按抵达顺序串行化）。
    *
+   * <p>等待方完成等待后重新竞争加载权执行自身的 remap（对标 ConcurrentHashMap.compute 语义：
+   * 每个调用方的重映射都必须生效，不得因排队而丢弃）。
+   *
    * @param key 缓存键
    * @param remappingFunction 重映射函数
    * @return 新值；重映射为 null 时移除条目并返回 null
@@ -225,38 +300,44 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     if (key == null || remappingFunction == null) {
       return null;
     }
-    CompletableFuture<Object> ourSignal = new CompletableFuture<>();
-    CompletableFuture<Object> winner = atomicSignals.putIfAbsent(key, ourSignal);
-    if (winner != null) {
-      try {
-        winner.join();
-      } catch (CompletionException e) {
-        throw unwrapCompletion(e);
-      }
-      return getIfPresent(key);
-    }
-    try {
-      V oldValue = getIfPresent(key);
-      V newValue = remappingFunction.apply(key, oldValue);
-      if (newValue == null) {
-        if (oldValue != null) {
-          remove(key);
+    while (true) {
+      CompletableFuture<Object> ourSignal = new CompletableFuture<>();
+      CompletableFuture<Object> winner = atomicSignals.putIfAbsent(key, ourSignal);
+      if (winner != null) {
+        try {
+          winner.join();
+        } catch (CompletionException e) {
+          throw unwrapCompletion(e);
         }
-      } else {
-        put(key, newValue);
+        // 排队完成，重新竞争加载权执行自身重映射（不得丢弃本次调用）
+        continue;
       }
-      return newValue;
-    } catch (Exception e) {
-      ourSignal.completeExceptionally(e);
-      throw asRuntime(e);
-    } finally {
-      atomicSignals.remove(key, ourSignal);
-      ourSignal.complete(null);
+      try {
+        V oldValue = getIfPresent(key);
+        V newValue = remappingFunction.apply(key, oldValue);
+        if (newValue == null) {
+          if (oldValue != null) {
+            remove(key);
+          }
+        } else {
+          put(key, newValue);
+        }
+        return newValue;
+      } catch (Exception e) {
+        ourSignal.completeExceptionally(e);
+        throw asRuntime(e);
+      } finally {
+        atomicSignals.remove(key, ourSignal);
+        ourSignal.complete(null);
+      }
     }
   }
 
   /**
    * 原子的 merge（对标 ConcurrentHashMap.merge，同一 key 并发按抵达顺序串行化）。
+   *
+   * <p>等待方完成等待后重新竞争加载权执行自身的合并（对标 CHM.merge 语义： 每个调用方的合并都必须生效——16
+   * 线程并发 merge(key, 1, sum) 结果必须为 16，排队不得导致调用丢失）。
    *
    * @param key 缓存键
    * @param value 待合并值
@@ -268,31 +349,34 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     if (key == null || value == null || remappingFunction == null) {
       return getIfPresent(key);
     }
-    CompletableFuture<Object> ourSignal = new CompletableFuture<>();
-    CompletableFuture<Object> winner = atomicSignals.putIfAbsent(key, ourSignal);
-    if (winner != null) {
+    while (true) {
+      CompletableFuture<Object> ourSignal = new CompletableFuture<>();
+      CompletableFuture<Object> winner = atomicSignals.putIfAbsent(key, ourSignal);
+      if (winner != null) {
+        try {
+          winner.join();
+        } catch (CompletionException e) {
+          throw unwrapCompletion(e);
+        }
+        // 排队完成，重新竞争加载权执行自身合并（不得丢弃本次调用）
+        continue;
+      }
       try {
-        winner.join();
-      } catch (CompletionException e) {
-        throw unwrapCompletion(e);
+        V oldValue = getIfPresent(key);
+        V newValue = (oldValue == null) ? value : remappingFunction.apply(oldValue, value);
+        if (newValue == null) {
+          remove(key);
+        } else {
+          put(key, newValue);
+        }
+        return newValue;
+      } catch (Exception e) {
+        ourSignal.completeExceptionally(e);
+        throw asRuntime(e);
+      } finally {
+        atomicSignals.remove(key, ourSignal);
+        ourSignal.complete(null);
       }
-      return getIfPresent(key);
-    }
-    try {
-      V oldValue = getIfPresent(key);
-      V newValue = (oldValue == null) ? value : remappingFunction.apply(oldValue, value);
-      if (newValue == null) {
-        remove(key);
-      } else {
-        put(key, newValue);
-      }
-      return newValue;
-    } catch (Exception e) {
-      ourSignal.completeExceptionally(e);
-      throw asRuntime(e);
-    } finally {
-      atomicSignals.remove(key, ourSignal);
-      ourSignal.complete(null);
     }
   }
 
@@ -320,6 +404,10 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
   /**
    * 异步获取缓存值，如果不存在则使用异步加载器加载并放入缓存。
    *
+   * <p><b>单飞语义（对标 Caffeine AsyncCache）</b>：同一 key 的并发异步加载共享同一个
+   * Future，loader 仅执行一次，结果对全部等待方可见；loader 异常传播给全部等待方。 旧实现每个并发调用方各自执行 loader，与同步路径
+   * {@code getWithProtection} 的防击穿能力不一致。
+   *
    * @param key 缓存键
    * @param loader 异步值加载器
    * @return 异步完成的缓存值
@@ -330,15 +418,58 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     if (value != null) {
       return CompletableFuture.completedFuture(value);
     }
-    return loader
+    if (key == null || loader == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    // 单飞：同一 key 的并发异步加载共享同一 Future（对标 Caffeine AsyncCache）
+    CompletableFuture<Object> ourFuture = new CompletableFuture<>();
+    CompletableFuture<Object> winner = asyncLoadingFutures.putIfAbsent(key, ourFuture);
+    if (winner != null) {
+      return castFuture(winner);
+    }
+    // 持有加载权：double-check 缓存（获取信号期间其他路径可能已写入）
+    V second = getIfPresent(key);
+    if (second != null) {
+      asyncLoadingFutures.remove(key, ourFuture);
+      ourFuture.complete(second);
+      return castFuture(ourFuture);
+    }
+    loader
         .apply(key)
-        .thenApply(
-            v -> {
-              if (v != null) {
-                put(key, v);
+        .whenComplete(
+            (v, err) -> {
+              try {
+                if (err == null && v != null) {
+                  put(key, v);
+                }
+              } finally {
+                asyncLoadingFutures.remove(key, ourFuture);
+                if (err != null) {
+                  ourFuture.completeExceptionally(err);
+                } else {
+                  ourFuture.complete(v);
+                }
               }
-              return v;
             });
+    return castFuture(ourFuture);
+  }
+
+  /**
+   * 异步单飞 Future 映射（key -> 进行中的加载 Future），与同步信号 {@code atomicSignals} 分离。
+   */
+  private final ConcurrentHashMap<Object, CompletableFuture<Object>> asyncLoadingFutures =
+      new ConcurrentHashMap<>();
+
+  /**
+   * 信号 Future 的类型安全转换（Future 实际承载的即为 V 实例）。
+   *
+   * @param <T> 目标值类型
+   * @param future 原始 Future
+   * @return 转换后的 Future
+   */
+  @SuppressWarnings("unchecked")
+  private <T> CompletableFuture<T> castFuture(CompletableFuture<Object> future) {
+    return (CompletableFuture<T>) future;
   }
 
   /**

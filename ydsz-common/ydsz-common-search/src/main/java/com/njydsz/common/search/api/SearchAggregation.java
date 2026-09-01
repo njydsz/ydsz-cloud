@@ -13,6 +13,12 @@ import lombok.NoArgsConstructor;
 /**
  * 搜索聚合/分面结果
  *
+ * <p>封装搜索引擎返回的聚合数据，用于前端分面导航（Faceted Search）。
+ * 每个聚合对象对应一个 {@code field}，包含多个 {@link Bucket}（桶），
+ * 每个桶表示一个分面值及其命中数（doc count）。
+ *
+ * <p>典型用途：商品搜索的分类筛选、标签汇总、价格区间分布等。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

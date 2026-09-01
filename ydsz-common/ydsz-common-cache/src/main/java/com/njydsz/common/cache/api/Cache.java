@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -46,7 +47,9 @@ public interface Cache<K, V> {
   /**
    * 获取缓存值（如果存在）
    *
-   * @param key 缓存键
+   * <p>null 键统一契约：返回 null 且不计入 hit/miss 统计（防御性查询不污染命中率），全部实现保持一致。
+   *
+   * @param key 缓存键，为 null 时返回 null
    * @return 缓存值，如果不存在则返回 null
    */
   V getIfPresent(K key);
@@ -392,6 +395,16 @@ public interface Cache<K, V> {
    */
   default void addListener(RemovalListener<? super K, ? super V> listener) {}
 
+  /**
+   * 配置删除监听器回调执行器（对标 Caffeine RemovalListeners.async）。
+   *
+   * <p>配置后监听器回调在指定执行器上异步执行， 不阻塞缓存操作线程（底层实现的淘汰/删除常持有写锁，
+   * 同步回调会拖慢读写路径）。未配置时保持同步执行（向后兼容）。 装饰器实现应透传到底层缓存。
+   *
+   * @param executor 回调执行器；null 表示恢复同步执行
+   */
+  default void setListenerExecutor(Executor executor) {}
+
   // ============================================================================
   // 遍历
   // ============================================================================
@@ -429,6 +442,38 @@ public interface Cache<K, V> {
   default V getWithProtection(K key, Function<K, V> loader, long minExpireMs, long maxExpireMs) {
     return CacheProtectionGuard.getWithProtection(this, key, loader, minExpireMs, maxExpireMs);
   }
+
+  /**
+   * 带防护的缓存获取（防穿透/雪崩/击穿），使用实例级空值 TTL 配置。
+   *
+   * <p>空值占位 TTL 是缓存级策略（对标 Spring Cache 的 null TTL 配置惯例）， 应通过 builder 配置一次，
+   * 而非在每次调用点重复决策（旧 API 迫使 15+ 处业务代码内联传参）。 实例未配置时使用默认区间 30~60
+   * 秒（带随机抖动，防雪崩）；个别调用点需要不同 TTL 时仍可用四参版本覆盖。
+   *
+   * @param key 缓存键
+   * @param loader 值加载器
+   * @return 缓存值
+   * @see CacheProtectionGuard#getWithProtection
+   */
+  default V getWithProtection(K key, Function<K, V> loader) {
+    return getWithProtection(key, loader, DEFAULT_NULL_VALUE_TTL_MIN_MS, DEFAULT_NULL_VALUE_TTL_MAX_MS);
+  }
+
+  /**
+   * 配置实例级空值占位 TTL 区间（毫秒，带随机抖动）。
+   *
+   * <p>装饰器实现应透传到底层缓存；由 CacheBuilder 构建时注入。
+   *
+   * @param minExpireMs 最小过期时间（毫秒）
+   * @param maxExpireMs 最大过期时间（毫秒）
+   */
+  default void setNullValueTtl(long minExpireMs, long maxExpireMs) {}
+
+  /** 实例未配置空值 TTL 时的默认下界（30 秒） */
+  long DEFAULT_NULL_VALUE_TTL_MIN_MS = 30_000L;
+
+  /** 实例未配置空值 TTL 时的默认上界（60 秒） */
+  long DEFAULT_NULL_VALUE_TTL_MAX_MS = 60_000L;
 
   /**
    * 创建空值占位符

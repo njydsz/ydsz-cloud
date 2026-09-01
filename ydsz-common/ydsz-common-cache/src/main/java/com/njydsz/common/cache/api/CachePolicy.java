@@ -47,7 +47,7 @@ public interface CachePolicy {
     /**
      * 获取最大容量
      *
-     * @return 返回值说明
+     * @return 当前最大容量（条目数或权重上限）；未设置容量上限时返回 {@link OptionalLong#empty()}
      */
     OptionalLong getMaximum();
 
@@ -61,14 +61,14 @@ public interface CachePolicy {
     /**
      * 获取当前加权大小（如果使用权重）
      *
-     * @return 返回值说明
+     * @return 当前加权大小；缓存未启用权重统计时返回 {@link OptionalLong#empty()}
      */
     OptionalLong weightedSize();
 
     /**
      * 是否使用权重
      *
-     * @return 返回值说明
+     * @return 条目按权重（而非条目数）计量时返回 {@code true}；按条目数淘汰时返回 {@code false}
      */
     boolean isWeighted();
   }
@@ -79,7 +79,7 @@ public interface CachePolicy {
     /**
      * 获取写入后过期时间（纳秒），0 表示不过期
      *
-     * @return 返回值说明
+     * @return 写入后过期时间（纳秒）；{@code 0} 表示不按写入时间过期
      */
     long getExpiresAfterWriteNanos();
 
@@ -93,7 +93,7 @@ public interface CachePolicy {
     /**
      * 获取访问后过期时间（纳秒），0 表示不过期
      *
-     * @return 返回值说明
+     * @return 访问后过期时间（纳秒）；{@code 0} 表示不按访问时间过期
      */
     long getExpiresAfterAccessNanos();
 
@@ -107,7 +107,8 @@ public interface CachePolicy {
     /**
      * 是否使用自定义过期策略
      *
-     * @return 返回值说明
+     * @return 使用按条目动态计算过期时间的自定义 Expiry 时返回 {@code true}；
+     *     使用固定过期时间时返回 {@code false}
      */
     boolean isCustomExpiry();
   }

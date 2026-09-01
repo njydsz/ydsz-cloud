@@ -97,7 +97,7 @@ public interface SmsProvider {
      * 用于告警归类与重试策略判断（如限流、参数错误），{@code errorMessage} 供人工排查。
      *
      * @param errorCode 厂商返回的错误码，非空
-     * @param errorMessage 错误描述信息
+     * @param errorMessage 厂商返回的原始错误描述，供人工排查；可为 {@code null}，此时仅保留错误码
      * @return 失败结果
      */
     public static SmsSendResult failure(String errorCode, String errorMessage) {

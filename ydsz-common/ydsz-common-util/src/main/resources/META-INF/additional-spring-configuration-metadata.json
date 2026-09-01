@@ -3,22 +3,98 @@
     {
       "name": "ydsz.util.snowflake.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用 Snowflake ID 自动配置（默认 true）。设置为 false 时禁用 SnowflakeIdGenerator 注册。"
+      "description": "是否启用 Snowflake ID 自动配置（默认 true）。设置为 false 时禁用 SnowflakeIdGenerator 注册。",
+      "defaultValue": true
     },
     {
       "name": "ydsz.util.snowflake.worker-id",
       "type": "java.lang.Long",
-      "description": "工作节点ID（范围 0-1023，显式配置，最高优先级；未配置时由 WorkerIdAllocator 策略链自动分配）。"
+      "description": "工作节点ID（范围 0-1023，显式配置，最高优先级；未配置时由 WorkerIdAllocator 策略链自动分配：PodOrdinal → IpHash）。"
     },
     {
       "name": "ydsz.util.snowflake.datacenter-id",
       "type": "java.lang.Long",
-      "description": "数据中心ID（范围 0-31，未配置时基于主机名哈希自动计算）。"
+      "description": "数据中心ID（范围 0-31，未配置时依次查 ydsz.util.snowflake.datacenter-id 系统属性/环境变量、旧版 ydsz.snowflake.datacenterId（已弃用），最后基于主机名哈希自动计算）。"
     },
     {
       "name": "ydsz.util.snowflake.node-id",
       "type": "java.lang.String",
-      "description": "节点标识（用于 PodOrdinal/FilePersisted 分配策略，未配置时自动解析 HOSTNAME 或本机主机名）。"
+      "description": "节点标识（用于 PodOrdinal 分配策略与排障，未配置时自动解析 HOSTNAME/INSTANCE_INDEX/POD_INDEX 环境变量或本机主机名）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.epoch",
+      "type": "java.lang.Long",
+      "description": "Snowflake 起始纪元（毫秒时间戳，默认 2020-01-01T00:00:00Z = 1577836800000）。集群内所有节点必须一致，否则同一路径下 ID 排序语义断裂。"
+    },
+    {
+      "name": "ydsz.util.snowflake.sequence-bits",
+      "type": "java.lang.Integer",
+      "description": "每毫秒序列号位数（1-13，默认 7 = 每毫秒 128 个 ID）。调优：单节点写入峰值 > 12.8万 ID/s 时提高；注意 workerId(10bit)+datacenterId(5bit)+sequenceBits 总位数不得超过 63。",
+      "defaultValue": 7
+    },
+    {
+      "name": "ydsz.util.trusted-proxies",
+      "type": "java.util.Set<java.lang.String>",
+      "description": "可信代理 IP 集合（X-Forwarded-For 采信来源）。默认空 = 仅内网/回环地址可信。K8s 集群内所有 Pod IP 均为内网地址，任意 Pod 伪造的 X-Forwarded-For 都会被采信——集群内部署时必须收敛为明确的入口网关 IP。",
+      "defaultValue": []
+    },
+    {
+      "name": "ydsz.util.tempfile.retention",
+      "type": "java.time.Duration",
+      "description": "临时文件保留时长（TTL 兜底清理阈值，默认 24h）。超过该时长仍未删除的受跟踪临时文件由后台任务回收。",
+      "defaultValue": "24h"
+    },
+    {
+      "name": "ydsz.util.tempfile.cleanup-interval",
+      "type": "java.time.Duration",
+      "description": "TTL 兜底清理任务的执行间隔（默认 10m）。",
+      "defaultValue": "10m"
+    },
+    {
+      "name": "ydsz.util.crypto.default-algorithm",
+      "type": "java.lang.String",
+      "description": "默认加密算法（默认 AES-256-GCM，JDK 自带无需额外依赖）。SM4-GCM 需要 BouncyCastle 在 classpath。系统属性 crypto.algorithm 优先级更高。",
+      "defaultValue": "AES-256-GCM"
+    }
+  ],
+  "hints": [
+    {
+      "name": "ydsz.util.snowflake.sequence-bits",
+      "values": [
+        {
+          "value": 7,
+          "description": "默认。每毫秒 128 个 ID，单节点峰值 12.8万 ID/s。"
+        },
+        {
+          "value": 10,
+          "description": "每毫秒 1024 个 ID，单节点峰值 102.4万 ID/s（高写入场景）。"
+        },
+        {
+          "value": 13,
+          "description": "上限。每毫秒 8192 个 ID（批量导入/日志型写入场景）。"
+        }
+      ]
+    },
+    {
+      "name": "ydsz.util.crypto.default-algorithm",
+      "values": [
+        {
+          "value": "AES-128-GCM",
+          "description": "AES 128 位密钥 GCM（JDK 自带）。"
+        },
+        {
+          "value": "AES-192-GCM",
+          "description": "AES 192 位密钥 GCM（JDK 自带）。"
+        },
+        {
+          "value": "AES-256-GCM",
+          "description": "AES 256 位密钥 GCM（JDK 自带，默认）。"
+        },
+        {
+          "value": "SM4-GCM",
+          "description": "国密 SM4 GCM（需 BouncyCastle 依赖）。"
+        }
+      ]
     }
   ]
 }

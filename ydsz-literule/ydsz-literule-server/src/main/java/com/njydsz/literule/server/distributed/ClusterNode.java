@@ -46,9 +46,9 @@ public class ClusterNode {
   }
 
   /** 判断节点是否存活（心跳在 30 秒内）
-   * @param now 参数说明
-   * @param heartbeatTimeoutMs 参数说明
-   * @return 返回值说明
+   * @param now 当前时间戳（毫秒）
+   * @param heartbeatTimeoutMs 心跳超时阈值（毫秒）
+   * @return 节点是否存活
    */
   public boolean isAlive(long now, long heartbeatTimeoutMs) {
     return (now - lastHeartbeatAt) < heartbeatTimeoutMs;
@@ -77,9 +77,9 @@ public class ClusterNode {
   }
 
   /** 构建单节点列表（开发/测试用）
-   * @param nodeId 参数说明
-   * @param address 参数说明
-   * @return 返回值说明
+   * @param nodeId 节点唯一标识
+   * @param address 节点地址（host:port）
+   * @return 包含单个节点的列表
    */
   public static List<ClusterNode> singleNode(String nodeId, String address) {
     return new ArrayList<>(Collections.singletonList(new ClusterNode(nodeId, address)));

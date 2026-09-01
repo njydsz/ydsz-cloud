@@ -627,7 +627,8 @@ public final class SerializationProvider {
    * 序列化对象
    *
    * @param obj 对象
-   * @return 返回值说明
+   * @return JSON 字符串，不会为 {@code null}；{@code obj} 为 {@code null} 时返回字面量 {@code "null"}，
+   *     {@code JsonNode} 树模型直接走 {@code toString()}，其余类型按 Bean 反射序列化
    */
   public static String serialize(Object obj) {
     if (obj == null) {
@@ -818,7 +819,8 @@ public final class SerializationProvider {
    * 格式化序列化（带缩进）
    *
    * @param obj 对象
-   * @return 返回值说明
+   * @return 带缩进换行的 JSON 字符串，不会为 {@code null}；{@code obj} 为 {@code null} 时返回字面量
+   *     {@code "null"}。输出比 {@link #serialize(Object)} 体积更大，仅用于日志与调试
    */
   public static String format(Object obj) {
     if (obj == null) {

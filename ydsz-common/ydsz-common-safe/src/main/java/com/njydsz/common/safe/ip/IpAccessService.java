@@ -48,7 +48,11 @@ public class IpAccessService {
   private final List<CidrBlock> staticWhitelistCidrs = new ArrayList<>();
 
   /**
-   * 方法说明。
+   * 构造 IP 访问控制服务并完成本地缓存与静态名单的预热。
+   *
+   * <p>构造期间会建立黑名单本地缓存（写后过期 + 容量上限均取自 {@code properties}），
+   * 并将配置中的静态黑名单/白名单解析为 {@code CidrBlock} 列表常驻内存；
+   * 后续 {@link #isAllowed(String)} 先命中静态名单，再回查 Redis 动态名单。
    *
    * @param properties IP 访问控制配置
    * @param redisStringOps Redis String 操作

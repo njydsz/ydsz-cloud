@@ -66,7 +66,7 @@ import com.njydsz.literule.server.config.RuleTraceQueryService;
 @Tag(name = "规则执行追踪", description = "执行链路查询、历史回放与变更影响分析")
 public class RuleTraceController {
 
-    /** 追踪记录查询条数上限 */
+    /** 变更影响分析查询 trace 记录上限（最多 5000 条） */
   private static final int MAX_TRACE_LIMIT = 5000;
 
   /** 规则执行轨迹查询服务（P1-12 收口：web 不直接依赖 domain Repository） */
@@ -76,8 +76,8 @@ public class RuleTraceController {
   private final RuleAdminService ruleAdminService;
 
   /** 按 traceId 查询执行链路
-   * @param traceId 参数说明
-      * @return 返回值说明
+   * @param traceId 追踪记录唯一标识
+   * @return 执行链路列表
    */
   @GetMapping("/traces/{traceId}")
   public YdszResponse<List<RuleExecutionTraceVO>> getTrace(@PathVariable String traceId) {
@@ -85,9 +85,9 @@ public class RuleTraceController {
   }
 
   /** 按规则编码查询最近链路
-   * @param limit 参数说明
-      * @return 返回值说明
-      * @param ruleCode 参数说明
+   * @param ruleCode 规则唯一编码
+   * @param limit 返回条数上限（默认 20，最大 100）
+   * @return 执行链路列表
    */
   @GetMapping("/traces/rule/{ruleCode}")
   public YdszResponse<List<RuleExecutionTraceVO>> getTracesByRule(

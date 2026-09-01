@@ -198,8 +198,8 @@ public class FlowTaskPassService {
   /**
    * 委派回归处理：被委派人通过后任务回到原办理人
    *
-   * @param task 参数说明
-   * @param dto 参数说明
+   * @param task 当前运行时任务
+   * @param dto 任务操作 DTO
    */
   private void handleDelegateReturn(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     auditService.logDelegateOperation(task, "DELEGATE_RETURN");
@@ -221,7 +221,7 @@ public class FlowTaskPassService {
    * 共享同一 {@code formNode}，消除同一 pass 链路中对 nodeRepository 的重复回查。
    *
    * @param task 任务
-   * @param variables 参数说明
+   * @param variables 表单提交变量
    * @param instance 实例
    * @param formNode 当前任务对应节点（可为 null，表示节点不存在则跳过校验）
    */
@@ -252,11 +252,11 @@ public class FlowTaskPassService {
   /**
    * 流程推进
    *
-   * @param instance 参数说明
-   * @param task 参数说明
-   * @param vars 参数说明
-   * @param performType 参数说明
-   * @param dto 参数说明
+   * @param instance 当前流程实例
+   * @param task 当前运行时任务
+   * @param vars 合并后的流程变量
+   * @param performType 会签类型
+   * @param dto 任务操作 DTO
    */
   private void advanceProcess(
       FlowInstanceVO instance,
@@ -293,8 +293,8 @@ public class FlowTaskPassService {
   /**
    * 更新实例当前节点
    *
-   * @param instance 参数说明
-   * @param nextNodes 参数说明
+   * @param instance 当前流程实例
+   * @param nextNodes 推进后的下一批节点
    */
   private void updateInstanceNode(FlowInstanceVO instance, List<FlowNodeVO> nextNodes) {
     if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {

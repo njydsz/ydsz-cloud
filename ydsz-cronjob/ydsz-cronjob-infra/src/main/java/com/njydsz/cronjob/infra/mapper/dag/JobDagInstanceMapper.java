@@ -43,9 +43,9 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   /**
    * 根据 DAG 定义 ID 查询实例列表（按创建时间倒序）。
    *
-   * @param dagId 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param dagId DAG 定义 ID
+   * @param limit 最多返回条数
+   * @return 该 DAG 的实例列表（按创建时间降序），无记录时返回空列表
    */
   @Select(
       "SELECT id, dag_id, dag_key, status, trigger_type, trigger_by, trigger_trace_id, "
@@ -60,8 +60,8 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   /**
    * 查询指定状态的 DAG 实例（如查询 RUNNING 状态用于超时检测）。
    *
-   * @param status 参数说明
-   * @return 返回值说明
+   * @param status 实例状态（RUNNING/PAUSED/SUCCESS/FAILED/CANCELED）
+   * @return 指定状态的实例列表（按创建时间升序），无记录时返回空列表
    */
   @Select(
       "SELECT id, dag_id, dag_key, status, trigger_type, trigger_by, trigger_trace_id, "
@@ -92,9 +92,9 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   /**
    * 标记 DAG 实例开始执行（PENDING → RUNNING）。
    *
-   * @param instanceId 参数说明
-   * @param startedAt 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @param startedAt 节点开始执行时间
+   * @return 受影响行数（0 表示非 PENDING 状态）
    */
   @Update(
       "UPDATE ydsz_job_dag_instance SET status = 'RUNNING', started_at = #{startedAt}, "
@@ -106,16 +106,16 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   /**
    * 标记 DAG 实例结束（SUCCESS/FAILED/PARTIAL_SUCCESS/CANCELED）。
    *
-   * @param instanceId 参数说明
-   * @param finalStatus 参数说明
-   * @param finishedAt 参数说明
-   * @param durationMs 参数说明
-   * @param errorMessage 参数说明
-   * @param totalNodes 参数说明
-   * @param successNodes 参数说明
-   * @param failedNodes 参数说明
-   * @param skippedNodes 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @param finalStatus 终态状态（SUCCESS/FAILED/PARTIAL_SUCCESS/CANCELED）
+   * @param finishedAt 结束时间
+   * @param durationMs 执行耗时（毫秒）
+   * @param errorMessage 错误信息（成功时传 null）
+   * @param totalNodes 节点总数
+   * @param successNodes 成功节点数
+   * @param failedNodes 失败节点数
+   * @param skippedNodes 跳过节点数
+   * @return 受影响行数（0 表示非 RUNNING 状态）
    */
   @Update(
       "UPDATE ydsz_job_dag_instance SET status = #{finalStatus}, finished_at = #{finishedAt}, "
@@ -138,9 +138,9 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   /**
    * 更新 DAG 实例上下文 JSON（跨节点传参用）。
    *
-   * @param instanceId 参数说明
-   * @param contextJson 参数说明
-   * @return 返回值说明
+   * @param instanceId DAG 实例 ID
+   * @param contextJson 新的上下文 JSON 字符串
+   * @return 受影响行数
    */
   @Update(
       "UPDATE ydsz_job_dag_instance SET context_json = #{contextJson}, "
@@ -173,8 +173,8 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   /**
    * 统计指定 DAG 的活跃（RUNNING/PAUSED）实例数（并发控制用）。
    *
-   * @param dagId 参数说明
-   * @return 返回值说明
+   * @param dagId DAG 定义 ID
+   * @return 活跃（RUNNING/PAUSED）实例数量
    */
   @Select(
       "SELECT COUNT(1) FROM ydsz_job_dag_instance "

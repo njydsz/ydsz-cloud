@@ -156,9 +156,9 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
    * 
    * <p>通过卫语句（Guard Clause）提前返回不满足条件的触发， 成功路径保持线性流程 → 评估条件 → 启动目标流程 → 写审计日志。
    *
-   * @param trigger 参数说明
-   * @param instance 参数说明
-   * @param variables 参数说明
+   * @param trigger 自动触发规则实体
+   * @param instance 源流程实例
+   * @param variables 流程变量
    */
   private void processTrigger(
       FlowAutoTriggerVO trigger, FlowInstanceVO instance, Map<String, Object> variables) {
@@ -194,9 +194,9 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
    * 
    * 
    *
-   * @param trigger 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param trigger 自动触发规则实体
+   * @param variables 流程变量
+   * @return true=条件成立可触发
    */
   private boolean evaluateCondition(FlowAutoTriggerVO trigger, Map<String, Object> variables) {
     String expr = trigger.getConditionExpression();
@@ -218,10 +218,10 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   /**
    * 构建目标流程的启动 DTO。
    *
-   * @param trigger 参数说明
-   * @param instance 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param trigger 自动触发规则实体
+   * @param instance 源流程实例
+   * @param variables 流程变量
+   * @return 目标流程启动参数
    */
   private FlowStartProcessDTO buildStartProcessDTO(
       FlowAutoTriggerVO trigger, FlowInstanceVO instance, Map<String, Object> variables) {
@@ -242,9 +242,9 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   /**
    * 构建自动触发流程的标题
    *
-   * @param trigger 参数说明
-   * @param instance 参数说明
-   * @return 返回值说明
+   * @param trigger 自动触发规则实体
+   * @param instance 源流程实例
+   * @return 自动触发流程标题
    */
   private String buildTriggerTitle(FlowAutoTriggerVO trigger, FlowInstanceVO instance) {
     String base =
@@ -257,10 +257,10 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   /**
    * 写入审计日志
    *
-   * @param instance 参数说明
-   * @param trigger 参数说明
-   * @param success 参数说明
-   * @param comment 参数说明
+   * @param instance 源流程实例
+   * @param trigger 自动触发规则实体
+   * @param success 是否触发成功
+   * @param comment 审计描述
    */
   private void writeAuditLog(
       FlowInstanceVO instance, FlowAutoTriggerVO trigger, boolean success, String comment) {
@@ -278,11 +278,11 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
   /**
    * 构造审计日志实体（供 {@link #writeAuditLog} 调用）。
    *
-   * @param instance 参数说明
-   * @param trigger 参数说明
-   * @param success 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instance 源流程实例
+   * @param trigger 自动触发规则实体
+   * @param success 是否触发成功
+   * @param comment 审计描述
+   * @return 审计日志实体
    */
   private FlowAuditLogVO buildAuditLogEntry(
       FlowInstanceVO instance, FlowAutoTriggerVO trigger, boolean success, String comment) {

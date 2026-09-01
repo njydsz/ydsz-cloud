@@ -39,18 +39,18 @@ public interface FlowSkipMapper extends BaseMapper<FlowSkip> {
   /**
    * 查某定义的全部跳转
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 该定义下的全部跳转规则列表
    */
   List<FlowSkip> selectByDefinitionId(@Param("definitionId") String definitionId);
 
   /**
    * 查某节点的出发跳转
    *
-   * @param definitionId 参数说明
-   * @param nodeCode 参数说明
-   * @param skipType 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 源节点编码
+   * @param skipType 跳转类型（PASS / REJECT 等）
+   * @return 匹配的跳转规则列表
    */
   List<FlowSkip> selectByNodeCode(
       @Param("definitionId") String definitionId,
@@ -60,9 +60,9 @@ public interface FlowSkipMapper extends BaseMapper<FlowSkip> {
   /**
    * 查指向某节点的跳转（用于退回时找前驱）
    *
-   * @param definitionId 参数说明
-   * @param nextNodeCode 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @param nextNodeCode 目标节点编码
+   * @return 匹配的跳转规则列表（前驱跳转）
    */
   List<FlowSkip> selectByNextNode(
       @Param("definitionId") String definitionId, @Param("nextNodeCode") String nextNodeCode);
@@ -70,8 +70,8 @@ public interface FlowSkipMapper extends BaseMapper<FlowSkip> {
   /**
    * 删除某定义的全部跳转
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 受影响行数
    */
   int deleteByDefinitionId(@Param("definitionId") String definitionId);
 }

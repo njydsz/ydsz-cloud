@@ -76,8 +76,8 @@ public enum FieldTypeCode {
   /**
    * 按当前编码方案获取枚举（直接匹配）。
    *
-   * @param code 错误码
-   * @return 返回值说明
+   * @param code 待匹配的类型码
+   * @return 对应的枚举常量，不会为 {@code null}；无任何枚举匹配时降级返回 {@link #NESTED_OBJECT}
    */
   public static FieldTypeCode of(int code) {
     for (FieldTypeCode tc : values()) {
@@ -93,7 +93,8 @@ public enum FieldTypeCode {
    * @param code 旧系统的 int 类型码
    * @param source 来源标识（"FieldMeta"）
    *
-   * @return 返回值说明
+   * @return 对应的枚举常量，不会为 {@code null}；当前各来源编码表已与内部编码统一，
+   *     实际等价于 {@link #of(int)}，未识别时降级返回 {@link #NESTED_OBJECT}
    */
   public static FieldTypeCode fromLegacy(int code, String source) {
     return of(code);

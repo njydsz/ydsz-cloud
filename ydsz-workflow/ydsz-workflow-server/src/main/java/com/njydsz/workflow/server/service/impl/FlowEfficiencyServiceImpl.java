@@ -251,10 +251,10 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
    * <p>数据来源为 {@code ydsz_flow_audit_log}，统计 businessType=DELEGATE_PROXY 且 action 为 PASS/REJECT 的记录，
    * 即代理人真正代替原办理人完成审批的操作数。
    *
-   * @param tenantId 参数说明
-   * @param startTime 参数说明
-   * @param endTime 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param startTime 查询时间下界
+   * @param endTime 查询时间上界
+   * @return 代批操作数
    */
   private long countDelegateActions(String tenantId, String startTime, String endTime) {
     try {
@@ -407,11 +407,11 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /**
    * 查询历史任务（带时间范围过滤）
    *
-   * @param tenantId 参数说明
-   * @param startTime 参数说明
-   * @param endTime 参数说明
-   * @param flowCode 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param startTime 查询时间下界
+   * @param endTime 查询时间上界
+   * @param flowCode 流程编码（可空）
+   * @return 历史任务列表
    */
   private List<FlowHisTaskVO> queryHisTasks(
       String tenantId, String startTime, String endTime, String flowCode) {
@@ -426,8 +426,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /**
    * 从 nodeDurationStats 返回的 Map 中提取 avgDurationMs
    *
-   * @param row 参数说明
-   * @return 返回值说明
+   * @param row 节点统计结果 Map
+   * @return 平均耗时毫秒
    */
   private double extractAvgDuration(Map<String, Object> row) {
     Object val = row.get("avgDurationMs");
@@ -443,9 +443,9 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /**
    * 按粒度格式化时间标签
    *
-   * @param dt 参数说明
-   * @param gran 参数说明
-   * @return 返回值说明
+   * @param dt 时间对象
+   * @param gran 粒度（DAY/WEEK/MONTH）
+   * @return 格式化后的时间标签
    */
   private String formatTimeLabel(LocalDateTime dt, String gran) {
     return switch (gran) {
@@ -463,8 +463,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /**
    * 安全解析日期时间字符串
    *
-   * @param str 参数说明
-   * @return 返回值说明
+   * @param str 日期时间字符串
+   * @return 解析后的 LocalDateTime；解析失败返回 null
    */
   private LocalDateTime parseDateTime(String str) {
     if (!StringUtils.hasText(str)) {

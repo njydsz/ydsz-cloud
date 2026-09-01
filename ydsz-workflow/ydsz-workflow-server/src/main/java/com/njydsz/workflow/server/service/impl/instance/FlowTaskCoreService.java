@@ -625,8 +625,8 @@ public class FlowTaskCoreService {
   /**
    * 标记任务超时
    *
-   * @param taskId 参数说明
-   * @param reason 参数说明
+   * @param taskId 任务 ID
+   * @param reason 超时原因描述
    */
   @Transactional(rollbackFor = Exception.class)
   public void timeoutTask(String taskId, String reason) {
@@ -636,9 +636,9 @@ public class FlowTaskCoreService {
   /**
    * 任务级挂起
    *
-   * @param taskId 参数说明
-   * @param operatorId 参数说明
-   * @param reason 参数说明
+   * @param taskId 任务 ID
+   * @param operatorId 操作人 ID
+   * @param reason 挂起原因
    */
   @Transactional(rollbackFor = Exception.class)
   public void suspendTask(String taskId, String operatorId, String reason) {
@@ -648,8 +648,8 @@ public class FlowTaskCoreService {
   /**
    * 任务级激活
    *
-   * @param taskId 参数说明
-   * @param operatorId 参数说明
+   * @param taskId 任务 ID
+   * @param operatorId 激活操作人 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public void activateTask(String taskId, String operatorId) {
@@ -659,8 +659,8 @@ public class FlowTaskCoreService {
   /**
    * 取消某实例全部 PENDING 任务
    *
-   * @param instanceId 参数说明
-   * @param taskStatus 参数说明
+   * @param instanceId 流程实例 ID
+   * @param taskStatus 目标取消状态
    */
   public void cancelByInstance(String instanceId, String taskStatus) {
     flowTaskTimeoutService.cancelByInstance(instanceId, taskStatus);
@@ -671,8 +671,8 @@ public class FlowTaskCoreService {
   /**
    * 委派回归处理：被委派人通过后任务回到原办理人
    *
-   * @param task 参数说明
-   * @param dto 参数说明
+   * @param task 当前运行时任务
+   * @param dto 任务操作 DTO
    */
   private void handleDelegateReturn(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     auditService.logDelegateOperation(task, AUDIT_TYPE_DELEGATE_RETURN);
@@ -690,9 +690,9 @@ public class FlowTaskCoreService {
   /**
    * 表单字段权限校验 + P0-3 表单 Schema 校验
    *
-   * @param task 参数说明
-   * @param variables 参数说明
-   * @param instance 参数说明
+   * @param task 当前运行时任务
+   * @param variables 表单提交变量
+   * @param instance 当前流程实例
    */
   private void validateFormFieldPerms(
       FlowRunTaskVO task, Map<String, Object> variables, FlowInstanceVO instance) {
@@ -719,11 +719,11 @@ public class FlowTaskCoreService {
   /**
    * 流程推进
    *
-   * @param instance 参数说明
-   * @param task 参数说明
-   * @param vars 参数说明
-   * @param performType 参数说明
-   * @param dto 参数说明
+   * @param instance 当前流程实例
+   * @param task 当前运行时任务
+   * @param vars 合并后的流程变量
+   * @param performType 会签类型
+   * @param dto 任务操作 DTO
    */
   private void advanceProcess(
       FlowInstanceVO instance,

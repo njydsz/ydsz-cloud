@@ -166,8 +166,8 @@ public class AlipayMiniChannel implements MessageChannel {
   /**
    * Mock 发送（开发环境降级）。
    *
-   * @param request 参数说明
-   * @return 返回值说明
+   * @param request 消息请求（含 receiver/templateCode/content）
+   * @return 模拟发送结果（status=SUCCESS，traceId 含 MOCK 前缀）
    */
   private MessageResult mockSend(MessageRequest request) {
     String traceId = "ALIPAY_MINI-MOCK-" + String.valueOf(snowflakeIdGenerator.nextId());

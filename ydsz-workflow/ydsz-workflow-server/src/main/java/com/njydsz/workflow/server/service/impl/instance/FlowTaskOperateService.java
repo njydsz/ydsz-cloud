@@ -83,7 +83,7 @@ public class FlowTaskOperateService {
    * 
    * <p>原办理人变为 assignorId，新办理人变为 assigneeId，状态保持 CLAIMED。
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId/targetUserId 等）
    */
   @Transactional(rollbackFor = Exception.class)
   public void transfer(FlowTaskOperateDTO dto) {
@@ -123,7 +123,7 @@ public class FlowTaskOperateService {
    * <p>原办理人变为 assignorId，新办理人变为 assigneeId，任务状态置为 DELEGATED。 被委派人通过时（FlowTaskPassService）会检测
    * DELEGATED 状态，自动回归原办理人。
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId/targetUserId 等）
    */
   @Transactional(rollbackFor = Exception.class)
   public void delegate(FlowTaskOperateDTO dto) {

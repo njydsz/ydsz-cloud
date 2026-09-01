@@ -55,16 +55,16 @@ public class CEPEvent implements Serializable {
   @Builder.Default private Map<String, Object> attributes = new HashMap<>();
 
   /** 获取属性值（缺失时返回 null）
-   * @param key 参数说明
-   * @return 返回值说明
+   * @param key 属性键名
+   * @return 属性值，不存在返回 null
    */
   public Object attr(String key) {
     return attributes == null ? null : attributes.get(key);
   }
 
   /** 获取数值属性（缺失或类型不匹配时返回 0.0）
-   * @param key 参数说明
-   * @return 返回值说明
+   * @param key 属性键名
+   * @return 数值属性值，解析失败兜底为 0.0
    */
   public double attrDouble(String key) {
     Object v = attr(key);
@@ -83,9 +83,9 @@ public class CEPEvent implements Serializable {
   }
 
   /** 链式添加属性
-   * @param key 参数说明
-   * @param value 参数说明
-   * @return 返回值说明
+   * @param key 属性键名
+   * @param value 属性值
+   * @return 当前事件实例（链式调用）
    */
   public CEPEvent withAttr(String key, Object value) {
     if (attributes == null) {

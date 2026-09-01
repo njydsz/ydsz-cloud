@@ -134,8 +134,10 @@ public class ConsistentHashSharder {
     return owner != null && nodeId != null && nodeId.equals(owner.getNodeId());
   }
 
-  /** 获取当前环上的节点数量
-   * @return 返回值说明
+  /**
+   * 获取当前环上的节点数量
+   *
+   * @return 一致性哈希环上去重后的节点数量
    */
   public int getNodeCount() {
     TreeMap<Long, ClusterNode> r = this.ring;
@@ -143,8 +145,10 @@ public class ConsistentHashSharder {
     return (int) count;
   }
 
-  /** 获取当前节点签名
-   * @return 返回值说明
+  /**
+   * 获取当前节点签名
+   *
+   * @return 节点签名（基于节点列表 MD5），节点列表变化时签名变化
    */
   public String getNodeSignature() {
     return nodeSignature;

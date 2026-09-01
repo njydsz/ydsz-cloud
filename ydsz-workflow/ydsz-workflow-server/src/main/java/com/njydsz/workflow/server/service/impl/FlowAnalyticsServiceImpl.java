@@ -234,8 +234,8 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
   /**
    * 安全类型转换：Object → long，解析失败返回 0
    *
-   * @param obj 参数说明
-   * @return 返回值说明
+   * @param obj 待转换的 Object
+   * @return 转换后的 long 值；失败返回 0
    */
   private long toLong(Object obj) {
     if (obj == null) {
@@ -254,8 +254,8 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
   /**
    * 安全类型转换：Object → double，解析失败返回 0.0
    *
-   * @param obj 参数说明
-   * @return 返回值说明
+   * @param obj 待转换的 Object
+   * @return 转换后的 double 值；失败返回 0.0
    */
   private double toDouble(Object obj) {
     if (obj == null) {

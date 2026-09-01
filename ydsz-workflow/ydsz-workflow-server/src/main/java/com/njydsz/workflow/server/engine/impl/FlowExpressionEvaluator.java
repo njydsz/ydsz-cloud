@@ -41,7 +41,8 @@ public class FlowExpressionEvaluator {
    * 构造注入变量替换器
    *
    *
-   * @param variableReplacer 参数说明   */
+   * @param variableReplacer 变量占位符替换器
+   */
   public FlowExpressionEvaluator(FlowVariableReplacer variableReplacer) {
     this.variableReplacer = variableReplacer;
   }
@@ -68,9 +69,9 @@ public class FlowExpressionEvaluator {
   /**
    * 顶层 || 逻辑或：任一子表达式为 true 即为 true。例如：${a > 100} || ${b < 50}
    *
-   * @param expr 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param expr 条件表达式
+   * @param variables 流程变量上下文
+   * @return true 表示任意子表达式为 true
    */
   boolean evaluateOr(String expr, Map<String, Object> variables) {
     String[] parts = FlowExpressionUtils.splitTopLevel(expr, "||");
@@ -85,9 +86,9 @@ public class FlowExpressionEvaluator {
   /**
    * 顶层 && 逻辑与：所有子表达式为 true 才为 true。例如：${a > 100} && ${b < 50}
    *
-   * @param expr 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param expr 条件表达式
+   * @param variables 流程变量上下文
+   * @return true 表示所有子表达式为 true
    */
   boolean evaluateAnd(String expr, Map<String, Object> variables) {
     String[] parts = FlowExpressionUtils.splitTopLevel(expr, "&&");
@@ -102,9 +103,9 @@ public class FlowExpressionEvaluator {
   /**
    * 逻辑非：!expr 形式，支持嵌套（如 !!flag）。
    *
-   * @param expr 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param expr 条件表达式（可含 ! 前缀）
+   * @param variables 流程变量上下文
+   * @return true 表示子表达式求值结果为 false
    */
   boolean evaluateNot(String expr, Map<String, Object> variables) {
     String trimmed = expr.trim();

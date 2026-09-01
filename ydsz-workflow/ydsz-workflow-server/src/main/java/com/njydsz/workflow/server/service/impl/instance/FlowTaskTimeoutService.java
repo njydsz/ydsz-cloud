@@ -41,8 +41,8 @@ public class FlowTaskTimeoutService {
    * 
    * <p>任务状态必须为 PENDING/CLAIMED，否则抛 BAD_REQUEST。完成后写审计日志、 触发 onTaskTimeout 事件、累计指标。
    *
-   * @param taskId 参数说明
-   * @param reason 参数说明
+   * @param taskId 任务 ID
+   * @param reason 超时原因描述
    */
   @Transactional(rollbackFor = Exception.class)
   public void timeoutTask(String taskId, String reason) {
@@ -80,9 +80,9 @@ public class FlowTaskTimeoutService {
    * 
    * <p>仅修改任务状态，不推进流程、不取消其它任务。挂起期间不计超时 （JobScanner 应跳过 SUSPENDED）。激活后回到 PENDING，需重新签收。
    *
-   * @param taskId 参数说明
-   * @param operatorId 参数说明
-   * @param reason 参数说明
+   * @param taskId 任务 ID
+   * @param operatorId 操作人 ID
+   * @param reason 挂起原因
    */
   @Transactional(rollbackFor = Exception.class)
   public void suspendTask(String taskId, String operatorId, String reason) {

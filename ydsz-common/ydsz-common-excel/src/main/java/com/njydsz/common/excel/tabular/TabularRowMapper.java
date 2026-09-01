@@ -27,7 +27,8 @@ public interface TabularRowMapper<T> {
   /**
    * 获取表头列名列表（顺序与原始数据列一致）。
    *
-   * @return 返回值说明
+   * @return 表头列名列表，顺序与 {@code toRow} 入参、{@code fromRow} 返回值的列序一致；
+   *     不会为 {@code null}，无表头时返回空列表
    */
   List<String> headers();
 

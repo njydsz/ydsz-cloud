@@ -38,7 +38,8 @@ public class FlowAssigneeExpressionResolver {
    * 构造注入变量替换器
    *
    *
-   * @param variableReplacer 参数说明   */
+   * @param variableReplacer 变量占位符替换器
+   */
   public FlowAssigneeExpressionResolver(FlowVariableReplacer variableReplacer) {
     this.variableReplacer = variableReplacer;
   }

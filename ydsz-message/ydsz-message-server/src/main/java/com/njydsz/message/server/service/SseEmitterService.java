@@ -253,8 +253,8 @@ public class SseEmitterService {
   /**
    * 为订阅注册清理处理程序（超时/完成/异常）。
    *
-   * @param batchId 参数说明
-   * @param subscription 参数说明
+   * @param batchId 批次 ID（用于日志标识）
+   * @param subscription 待注册清理回调的 SSE 订阅对象
    */
   private void registerCleanupHandlers(String batchId, SseEmitterSubscription subscription) {
     SseEmitter emitter = subscription.emitter();
@@ -276,9 +276,9 @@ public class SseEmitterService {
   }
 
   /**
-   * 清理无效订阅。
+   * 清理无效订阅（已从批次订阅列表中移除）。
    *
-   * @param sub 参数说明
+   * @param sub 需要清理的 SSE 订阅记录
    */
   private void removeSubscription(SseEmitterSubscription sub) {
     List<SseEmitterSubscription> subs = subscriptions.get(sub.batchId());

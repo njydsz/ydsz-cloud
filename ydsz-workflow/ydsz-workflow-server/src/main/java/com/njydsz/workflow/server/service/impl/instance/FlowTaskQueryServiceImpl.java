@@ -134,8 +134,8 @@ private static final int MAX_PAGE_SIZE = 100;
   /**
    * 查实例的当前 PENDING 任务
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return PENDING 任务列表
    */
   public List<FlowRunTaskVO> listPendingByInstance(String instanceId) {
     return taskRepository.findPendingByInstance(instanceId);
@@ -144,9 +144,9 @@ private static final int MAX_PAGE_SIZE = 100;
   /**
    * 查用户的待办
    *
-   * @param assigneeId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param assigneeId 办理人 ID
+   * @param tenantId 租户 ID
+   * @return 待办任务列表
    */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
   public List<FlowRunTaskVO> listTodoByAssignee(String assigneeId, String tenantId) {
@@ -159,11 +159,11 @@ private static final int MAX_PAGE_SIZE = 100;
    * 查用户的待办（多维度匹配：直接分配 + ROLE/DEPT 展开 + ydsz_flow_user 关联）
    * 
    *
-   * @param userId 参数说明
-   * @param roleCodes 参数说明
-   * @param deptIds 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param userId 用户 ID
+   * @param roleCodes 角色编码列表（可空）
+   * @param deptIds 部门 ID 列表（可空）
+   * @param tenantId 租户 ID
+   * @return 多维匹配的待办任务列表
    */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
   public List<FlowRunTaskVO> listTodoByUser(
@@ -200,9 +200,9 @@ private static final int MAX_PAGE_SIZE = 100;
   /**
    * 查用户的已办
    *
-   * @param assigneeId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param assigneeId 办理人 ID
+   * @param tenantId 租户 ID
+   * @return 已办任务列表
    */
   @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
   public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId) {

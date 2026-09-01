@@ -129,9 +129,9 @@ public class RuleBatchController {
    *
    * <p>P0-5 关键修复：列表加 checkbox 后批量操作接口。 启用时同时校验 status=PUBLISHED，未发布的规则不能启用。
    *
+   * @param dto 批量启停请求参数（包含规则编码列表和启停状态）
    * @param operator 操作人
    * @return 成功与失败明细
-      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:batchToggle", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -177,9 +177,9 @@ public class RuleBatchController {
   /**
    * 批量调整规则优先级
    *
+   * @param dto 批量调整优先级请求参数（包含规则编码列表和优先级偏移量）
    * @param operator 操作人
    * @return 成功与失败明细
-      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:batchPriority", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(
@@ -227,8 +227,8 @@ public class RuleBatchController {
    * 批量调整规则分类
    *
    * @param operator 操作人
+   * @param dto 批量调整分类请求参数（包含规则编码列表和目标分类路径）
    * @return 成功与失败明细
-      * @param dto 参数说明
    */
   @Idempotent(key = "ruleAdmin:batchCategory", ttlSeconds = 5, message = "请勿重复提交")
   @Audit(

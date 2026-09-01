@@ -63,9 +63,9 @@ public class FlowAutoConfiguration {
   /**
    * 工作流 Prometheus 指标收集器 Bean
    *
-   * @param instanceRepository 参数说明
-   * @param taskRepository 参数说明
-   * @return 返回值说明
+   * @param instanceRepository 流程实例仓储接口
+   * @param taskRepository 运行时任务仓储接口
+   * @return 工作流 Prometheus 指标收集器
    */
   @Bean
   @ConditionalOnMissingBean(FlowMetrics.class)

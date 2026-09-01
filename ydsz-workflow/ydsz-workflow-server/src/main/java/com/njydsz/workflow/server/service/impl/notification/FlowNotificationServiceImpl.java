@@ -328,10 +328,10 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
   /**
    * INAPP 通道：通过 NotificationClient Feign 调用 notification 服务写入站内信。
    *
-   * @param userId 参数说明
-   * @param title 参数说明
-   * @param content 参数说明
-   * @param extra 参数说明
+   * @param userId 接收人 ID
+   * @param title 通知标题
+   * @param content 通知内容
+   * @param extra 扩展参数（含 bizType/bizId 等）
    */
   private void sendInApp(String userId, String title, String content, Map<String, Object> extra) {
     Map<String, Object> payload = new HashMap<>();
@@ -363,10 +363,10 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
   /**
    * EMAIL 通道：同样通过 NotificationClient 投递（channel=EMAIL）， 由 notification 服务负责实际邮件发送。
    *
-   * @param userId 参数说明
-   * @param title 参数说明
-   * @param content 参数说明
-   * @param extra 参数说明
+   * @param userId 接收人 ID
+   * @param title 通知标题
+   * @param content 通知内容
+   * @param extra 扩展参数（含 receiver 等）
    */
   private void sendEmail(String userId, String title, String content, Map<String, Object> extra) {
     Map<String, Object> payload = new HashMap<>();
@@ -403,10 +403,10 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
    * WEBHOOK 通道：通过 {@link NotificationClient#sendMessage} 委托消息中心发送到 extra.webhookUrl 指定的机器人地址。
    * webhookUrl 未配置时直接跳过（不算异常）。
    *
-   * @param userId 参数说明
-   * @param title 参数说明
-   * @param content 参数说明
-   * @param extra 参数说明
+   * @param userId 接收人 ID
+   * @param title 通知标题
+   * @param content 通知内容
+   * @param extra 扩展参数（含 webhookUrl）
    */
   private void sendWebhook(String userId, String title, String content, Map<String, Object> extra) {
     String webhookUrl = extra == null ? null : (String) extra.get("webhookUrl");

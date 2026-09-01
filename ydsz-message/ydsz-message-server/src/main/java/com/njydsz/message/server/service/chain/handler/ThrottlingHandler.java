@@ -111,9 +111,9 @@ public class ThrottlingHandler implements SendHandler {
   /**
    * 构建通道级限流 key：通道 + 业务类型。
    *
-   * @param channel 参数说明
-   * @param bizType 参数说明
-   * @return 返回值说明
+   * @param channel 通道标识（如 SMS、EMAIL）
+   * @param bizType 业务类型（如 order、notify）
+   * @return 限流 key 字符串
    */
   private String buildChannelLimitKey(String channel, String bizType) {
     return "channel:"

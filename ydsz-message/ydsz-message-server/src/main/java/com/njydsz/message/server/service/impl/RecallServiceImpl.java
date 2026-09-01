@@ -158,8 +158,8 @@ public class RecallServiceImpl implements RecallService {
    *
    * <p>校验撤回时间窗口（默认 30 分钟），超时不可撤回。 撤回后更新状态为 RECALLED 并推送前端撤回事件。
    *
-   * @param msgId 参数说明
-   * @return 返回值说明
+   * @param msgId 消息 ID（msgId）
+   * @return 撤回成功返回 true，已撤回幂等返回 false
    */
   @Override
   @Transactional(rollbackFor = Exception.class)

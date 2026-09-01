@@ -82,7 +82,8 @@ public class ExcelWriteException extends ExcelException {
    *
    * @param filePath 文件路径
    * @param reason 原因
-   * @return 返回值说明
+   * @return 携带 {@code WRITE_FILE_ACCESS_FAILED} 错误码的异常实例，不会为 {@code null}；
+   *     上下文参数依次为 {@code filePath}、{@code reason}
    */
   public static ExcelWriteException fileAccessFailed(String filePath, String reason) {
     String message = MessageUtils.getMessage(
@@ -99,7 +100,8 @@ public class ExcelWriteException extends ExcelException {
    * @param filePath 文件路径
    * @param requiredSpace 所需空间
    * @param availableSpace 可用空间
-   * @return 返回值说明
+   * @return 携带 {@code WRITE_INSUFFICIENT_SPACE} 错误码的异常实例，不会为 {@code null}；
+   *     上下文参数依次为 {@code filePath}、{@code requiredSpace}、{@code availableSpace}（单位：字节）
    */
   public static ExcelWriteException insufficientSpace(
       String filePath, long requiredSpace, long availableSpace) {
@@ -119,7 +121,8 @@ public class ExcelWriteException extends ExcelException {
    * @param clazz 目标类型
    * @param fieldName 字段名
    * @param reason 原因
-   * @return 返回值说明
+   * @return 携带 {@code WRITE_ANNOTATION_ERROR} 错误码的异常实例，不会为 {@code null}；
+   *     出错字段名已回填，上下文参数使用 {@code clazz} 的全限定名而非简单名
    */
   public static ExcelWriteException invalidAnnotation(
       Class<?> clazz, String fieldName, String reason) {
@@ -141,7 +144,8 @@ public class ExcelWriteException extends ExcelException {
    * @param fieldName 字段名
    * @param value 值
    * @param cause 原因
-   * @return 返回值说明
+   * @return 携带 {@code WRITE_DATA_FAILED} 错误码的异常实例，不会为 {@code null}；
+   *     数据索引与字段名已回填，底层写入异常被保留为 {@code cause}
    */
   public static ExcelWriteException dataWriteFailed(
       int index, String fieldName, Object value, Throwable cause) {

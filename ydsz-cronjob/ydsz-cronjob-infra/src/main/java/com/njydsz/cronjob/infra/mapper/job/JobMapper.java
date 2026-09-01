@@ -106,8 +106,8 @@ public interface JobMapper extends BaseMapper<Job> {
   /**
    * P1-6: 重置连续失败计数为 0（任务执行成功时调用）。
    *
-   * @param id 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @return 受影响行数
    */
   @Update("UPDATE ydsz_job SET consecutive_fail_count = 0 WHERE id = #{id}")
   int resetConsecutiveFail(@Param("id") String id);
@@ -115,8 +115,8 @@ public interface JobMapper extends BaseMapper<Job> {
   /**
    * P1-6: 递增连续失败计数（任务执行失败时调用）。
    *
-   * @param id 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @return 受影响行数
    */
   @Update(
       "UPDATE ydsz_job SET consecutive_fail_count = consecutive_fail_count + 1 WHERE id = #{id}")
@@ -125,8 +125,8 @@ public interface JobMapper extends BaseMapper<Job> {
   /**
    * P1-6: 标记任务为 AUTO_PAUSED（熔断自动暂停）。
    *
-   * @param id 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @return 受影响行数（1=成功标记；0=任务状态不是 NORMAL 无需标记）
    */
   @Update("UPDATE ydsz_job SET status = 'AUTO_PAUSED' WHERE id = #{id} AND status = 'NORMAL'")
   int markAutoPaused(@Param("id") String id);
@@ -134,8 +134,8 @@ public interface JobMapper extends BaseMapper<Job> {
   /**
    * P1-6: 查询连续失败计数。
    *
-   * @param id 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @return 当前连续失败次数；任务不存在时返回 null
    */
   @Select("SELECT consecutive_fail_count FROM ydsz_job WHERE id = #{id}")
   Integer selectConsecutiveFailCount(@Param("id") String id);

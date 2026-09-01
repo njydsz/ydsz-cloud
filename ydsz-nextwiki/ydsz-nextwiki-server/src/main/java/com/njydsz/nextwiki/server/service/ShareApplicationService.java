@@ -51,14 +51,31 @@ public class ShareApplicationService {
   /** 锁定时长（分钟） */
   private static final long LOCK_DURATION_MINUTES = 30;
 
+  /** 分享链接领域服务（链接生命周期管理：创建/校验/撤销） */
   private final ShareLinkDomainService shareLinkDomainService;
+
+  /** 分享访问日志领域服务（日志 DTO 构造） */
   private final ShareAccessLogDomainService shareAccessLogDomainService;
+
+  /** 分享链接数据仓储（分享链接表的 CRUD 操作） */
   private final ShareLinkRepository shareLinkRepository;
+
+  /** 分享访问日志数据仓储（访问日志表的 CRUD 操作） */
   private final ShareAccessLogRepository shareAccessLogRepository;
+
+  /** 分享目标用户数据仓储（分享接收者表的 CRUD 操作） */
   private final ShareRecipientRepository shareRecipientRepository;
+
+  /** 文件权限服务（分享前的权限校验） */
   private final FilePermissionService filePermissionService;
+
+  /** 文件节点数据仓储（查询文件节点获取 storageKey 等元数据） */
   private final FileNodeRepository fileNodeRepository;
+
+  /** 密码加密器（BCrypt 哈希生成与匹配） */
   private final BCryptPasswordEncoder passwordEncoder;
+
+  /** Redis 字符串操作（防暴力破解失败计数与锁） */
   private final RedisStringOps stringOps;
 
   /**

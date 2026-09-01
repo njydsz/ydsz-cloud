@@ -41,10 +41,10 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
 
   /**
    * 构造方法，通过 {@link IMessageQueueProvider} 创建 publisher。
-   * 
    *
-   * @param queueProviderProvider 参数说明
-   * @param snowflakeIdGenerator 参数说明   */
+   * @param queueProviderProvider 消息队列提供者（用于创建 IMessageQueue 实例）
+   * @param snowflakeIdGenerator 分布式 ID 生成器（用于消息 ID 兜底生成）
+   */
   public CommonQueueMessageOperations(
       ObjectProvider<IMessageQueueProvider> queueProviderProvider,
       SnowflakeIdGenerator snowflakeIdGenerator) {

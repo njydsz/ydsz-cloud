@@ -93,7 +93,8 @@ public final class JSONWriter {
    * 计算特性值
    *
    * @param features 特性
-   * @return 返回值说明
+   * @return 各特性掩码按位或得到的特性值；{@code features} 为空或元素全为 {@code null} 时为 {@code 0}，
+   *     {@code null} 元素会被忽略
    */
   public static long of(Feature... features) {
     if (features == null) {
@@ -112,7 +113,8 @@ public final class JSONWriter {
    * 从集合计算特性值
    *
    * @param features 特性
-   * @return 返回值说明
+   * @return 集合内各特性掩码按位或得到的特性值；集合为 {@code null} 或空时为 {@code 0}，
+   *     {@code null} 元素会被忽略
    */
   public static long of(Set<Feature> features) {
     if (features == null) {
@@ -954,7 +956,8 @@ public final class JSONWriter {
    * 直接获取内部 char[] 缓冲区和长度（避免 String 拷贝）
    * <p>调用者必须在使用完毕后调用 reset()，否则数据会被覆盖
    *
-   * @return 返回值说明
+   * @return 内部 {@code char[]} 缓冲区引用本身（非拷贝）；只有前 {@link #size()} 个字符为有效内容，
+   *     读取方用完必须调用 {@link #reset()}，否则下一次写入会覆盖尚未消费的数据
    */
   public char[] getBuffer() {
     return buf;
@@ -980,7 +983,7 @@ public final class JSONWriter {
   /**
    * 获取当前容量
    *
-   * @return 返回值说明
+   * @return 当前缓冲区容量（字符数），大于等于已写入字符数；缓冲区为 {@code null} 时会抛出 {@link NullPointerException}
    */
   public int capacity() {
     return buf.length;
@@ -989,7 +992,7 @@ public final class JSONWriter {
   /**
    * 获取已写入字符数
    *
-   * @return 返回值说明
+   * @return 已写入的字符数，即 {@link #getPosition()}；调用 {@link #reset()} 后归零
    */
   public int size() {
     return pos;
@@ -1000,7 +1003,7 @@ public final class JSONWriter {
    * <p>生成的序列化器通过 getBuffer() + getPosition() 获取直接缓冲区访问， 消除 write() 方法调用的 externalSb 检查和
    * ensureCapacity 检查开销
    *
-   * @return 返回值说明
+   * @return 当前写入位置（下一个字符将写入的下标），与 {@link #size()} 等价
    */
   public int getPosition() {
     return pos;

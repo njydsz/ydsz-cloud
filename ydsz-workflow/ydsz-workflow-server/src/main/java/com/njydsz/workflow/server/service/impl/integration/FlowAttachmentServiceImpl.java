@@ -184,8 +184,8 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
    * 
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
    *
-   * @param taskId 参数说明
-   * @return 返回值说明
+   * @param taskId 任务 ID（用于定位附件）
+   * @return 附件视图列表
    */
   /**
    * {@inheritDoc}
@@ -271,10 +271,10 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
    * <li>未配置 → 返回 null（previewable=false，前端降级下载）
    * </ul>
    *
-   * @param previewType 参数说明
-   * @param downloadUrl 参数说明
-   * @param ext 参数说明
-   * @return 返回值说明
+   * @param previewType 预览类型（OFFICE/IMAGE/PDF/VIDEO/TEXT）
+   * @param downloadUrl 附件下载 URL
+   * @param ext 文件扩展名
+   * @return 预览 URL；不支持或未配置返回 null
    */
   private String buildPreviewUrl(String previewType, String downloadUrl, String ext) {
     if (!StringUtils.hasText(downloadUrl)) {

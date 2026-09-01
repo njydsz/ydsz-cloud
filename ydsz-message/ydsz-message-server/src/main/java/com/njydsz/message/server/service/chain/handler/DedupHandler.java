@@ -83,15 +83,15 @@ public class DedupHandler implements SendHandler {
 
   /**
    * 构建去重 key：bizId + receiver + templateCode，含 channel 时追加 channel 维度。
-   * 
+   *
    * <p>格式：
    * <ul>
    * <li>有 channel：ydsz:msg:dedup:{bizId}:{receiver}:{templateCode}:{channel}</li>
    * <li>无 channel：ydsz:msg:dedup:{bizId}:{receiver}:{templateCode}</li>
    * </ul>
    *
-   * @param request 参数说明
-   * @return 返回值说明
+   * @param request 消息发送请求（取 bizId/receiver/templateCode/channel 字段）
+   * @return 去重 key 字符串，bizId 为空时返回 null
    */
   private String buildDedupKey(MessageRequest request) {
     if (!StringUtils.hasText(request.getBizId())) {

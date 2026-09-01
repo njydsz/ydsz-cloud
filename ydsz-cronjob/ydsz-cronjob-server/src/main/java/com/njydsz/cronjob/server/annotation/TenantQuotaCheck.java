@@ -36,7 +36,7 @@ public @interface TenantQuotaCheck {
   /**
    * 配额检查类型。
    *
-   * @return 返回值说明
+   * @return 配额检查类型（JOB / CONCURRENT / DAILY_EXECUTION）
    */
   QuotaType type();
 

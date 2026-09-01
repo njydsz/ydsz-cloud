@@ -281,8 +281,8 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
    * 
    * <p>符合 DDD 分层规范：Service 层内部完成 DO→VO 转换。
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return 订阅视图列表
    */
   @Override
   public List<FlowEventSubscriptionVO> listByInstanceVO(String instanceId) {
@@ -308,9 +308,9 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   /**
    * 触发订阅 — 标记 COMPLETED，取消边界任务（如有），推进流程
    *
-   * @param sub 参数说明
-   * @param payload 参数说明
-   * @param triggerSource 参数说明
+   * @param sub 事件订阅实体
+   * @param payload 触发时的消息载荷 JSON
+   * @param triggerSource 触发来源标识
    */
   private void triggerSubscription(
       FlowEventSubscriptionVO sub, String payload, String triggerSource) {
@@ -387,8 +387,8 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   /**
    * 取消边界事件关联的 userTask
    *
-   * @param taskId 参数说明
-   * @param errorCode 参数说明
+   * @param taskId 边界任务 ID
+   * @param errorCode 错误事件编码
    */
   private void cancelBoundaryTask(String taskId, String errorCode) {
     FlowRunTaskVO task = taskRepository.findById(taskId).orElse(null);

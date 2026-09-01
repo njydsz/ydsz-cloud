@@ -91,7 +91,7 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
    * 获取缓存值（不触发加载），并更新访问热度。
    *
    * <p>命中时向频率草图登记访问（用于淘汰决策）； 处于 Probation 队列的条目会尝试提升到 Protected 队列 （提升在写锁内重新校验有效性，避免并发淘汰下的野指针）。
-   * null 键直接返回 null 并计入 miss。
+   * null 键返回 null 且不计入 miss（与其他实现的统计口径统一）。
    *
    * @param key 缓存键，为 null 时返回 {@code null}
    * @return 缓存值；未命中时返回 {@code null}

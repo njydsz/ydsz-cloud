@@ -39,19 +39,19 @@ public interface FlowUserMapper extends BaseMapper<FlowUser> {
   /**
    * 查某 task 的所有用户
    *
-   * @param taskId 参数说明
-   * @return 返回值说明
+   * @param taskId 任务 ID
+   * @return 该任务下的全部用户关联列表
    */
   List<FlowUser> selectByTaskId(@Param("taskId") String taskId);
 
   /**
    * 标记用户已处理
    *
-   * @param taskId 参数说明
-   * @param userId 参数说明
-   * @param comment 参数说明
-   * @param processAt 参数说明
-   * @return 返回值说明
+   * @param taskId 任务 ID
+   * @param userId 处理人用户 ID
+   * @param comment 处理意见
+   * @param processAt 处理时间
+   * @return 受影响行数
    */
   int markProcessed(
       @Param("taskId") String taskId,
@@ -62,9 +62,9 @@ public interface FlowUserMapper extends BaseMapper<FlowUser> {
   /**
    * 查某实例某节点未处理的用户（会签场景）
    *
-   * @param instanceId 参数说明
-   * @param nodeCode 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 节点编码
+   * @return 未处理的用户关联列表
    */
   List<FlowUser> selectUnprocessedByInstanceAndNode(
       @Param("instanceId") String instanceId, @Param("nodeCode") String nodeCode);
@@ -72,9 +72,9 @@ public interface FlowUserMapper extends BaseMapper<FlowUser> {
   /**
    * 查某用户待办关联的任务 ID（通过 ydsz_flow_user 表）
    *
-   * @param userId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @return 关联的任务 ID 列表
    */
   List<Long> selectTaskIdsByUser(
       @Param("userId") String userId, @Param("tenantId") String tenantId);
@@ -82,8 +82,8 @@ public interface FlowUserMapper extends BaseMapper<FlowUser> {
   /**
    * 批量插入
    *
-   * @param list 参数说明
-   * @return 返回值说明
+   * @param list 待插入的用户实体列表
+   * @return 实际插入行数
    */
   int batchInsert(@Param("list") List<FlowUser> list);
 }

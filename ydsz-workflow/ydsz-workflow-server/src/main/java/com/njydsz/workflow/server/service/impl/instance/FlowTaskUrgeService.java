@@ -46,10 +46,10 @@ public class FlowTaskUrgeService {
    * 
    * 
    *
-   * @param instanceId 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param operatorId 催办操作人 ID
+   * @param comment 催办意见
+   * @return 被催办的任务处理人 ID 列表
    */
   public List<String> urge(String instanceId, String operatorId, String comment) {
     if (operatorId != null
@@ -76,11 +76,11 @@ public class FlowTaskUrgeService {
    * 
    * <p>nodeCode 为空时退化为实例级催办。 P0-2: 节点级限流（同一催办人对该节点 30 分钟内只允许一次）。
    *
-   * @param instanceId 参数说明
-   * @param nodeCode 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 目标节点编码
+   * @param operatorId 催办操作人 ID
+   * @param comment 催办意见
+   * @return 被催办的任务处理人 ID 列表
    */
   public List<String> urgeByNode(
       String instanceId, String nodeCode, String operatorId, String comment) {

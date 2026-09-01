@@ -413,8 +413,8 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   /**
    * 从节点 ext JSON 提取子流程编码
    *
-   * @param node 参数说明
-   * @return 返回值说明
+   * @param node 流程节点实体
+   * @return 子流程编码；未配置返回 null
    */
   private String extractSubFlowCode(FlowNodeVO node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
@@ -439,8 +439,8 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   /**
    * 从节点 ext JSON 提取子流程超时小时数
    *
-   * @param node 参数说明
-   * @return 返回值说明
+   * @param node 流程节点实体
+   * @return 子流程超时小时数；未配置返回 null
    */
   private Double extractSubProcessTimeout(FlowNodeVO node) {
     if (node.getExt() == null || node.getExt().isBlank()) {
@@ -496,8 +496,8 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   /**
    * 触发 onInstanceStart 事件
    *
-   * @param instanceId 参数说明
-   * @param variables 参数说明
+   * @param instanceId 子流程实例 ID
+   * @param variables 流程变量
    */
   private void fireInstanceStart(String instanceId, Map<String, Object> variables) {
     if (eventListeners == null) {

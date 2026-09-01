@@ -296,8 +296,8 @@ public final class RuleGraphValidator {
    * 按 level 汇总（用于前端展示）
    *
    * @param issues 问题列表
+   * @param level 校验级别过滤条件（ERROR/WARN）
    * @return 不可修改的分类集合
-      * @param level 参数说明
    */
   public static Set<GraphValidationIssue> filterByLevel(
       List<GraphValidationIssue> issues, Level level) {

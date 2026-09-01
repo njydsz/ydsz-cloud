@@ -88,8 +88,10 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
     }
   }
 
-  /** 注销画布
-   * @param ruleCode 参数说明
+  /**
+   * 注销画布
+   *
+   * @param ruleCode 规则编码（关联注册表中的规则链画布）
    */
   public void unregisterGraph(String ruleCode) {
     graphRegistry.remove(ruleCode);

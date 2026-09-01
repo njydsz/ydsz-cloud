@@ -41,25 +41,25 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 根据实例 ID 查所有任务
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return 任务列表
    */
   List<FlowRunTask> selectByInstanceId(@Param("instanceId") String instanceId);
 
   /**
    * 查某实例的当前 PENDING 任务
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return PENDING 状态任务列表
    */
   List<FlowRunTask> selectPendingByInstance(@Param("instanceId") String instanceId);
 
   /**
    * 查某节点 PENDING 任务
    *
-   * @param instanceId 参数说明
-   * @param nodeCode 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 节点编码
+   * @return 该节点下 PENDING 状态任务列表
    */
   List<FlowRunTask> selectPendingByNode(
       @Param("instanceId") String instanceId, @Param("nodeCode") String nodeCode);
@@ -67,9 +67,9 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 查用户的待办
    *
-   * @param assigneeId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param assigneeId 办理人用户 ID
+   * @param tenantId 租户 ID
+   * @return 待办任务列表
    */
   List<FlowRunTask> selectTodoByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
@@ -78,11 +78,11 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * 查用户的待办（真分页：LIMIT/OFFSET）
    * 
    *
-   * @param assigneeId 参数说明
-   * @param tenantId 参数说明
-   * @param offset 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param assigneeId 办理人用户 ID
+   * @param tenantId 租户 ID
+   * @param offset 分页偏移量
+   * @param limit 每页大小
+   * @return 待办任务分页列表
    */
   List<FlowRunTask> selectTodoByAssigneePage(
       @Param("assigneeId") String assigneeId,
@@ -93,9 +93,9 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 统计用户待办总数（用于分页计算总页数）
    *
-   * @param assigneeId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param assigneeId 办理人用户 ID
+   * @param tenantId 租户 ID
+   * @return 待办任务总数
    */
   long countTodoByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
@@ -127,9 +127,9 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 查用户已办
    *
-   * @param assigneeId 参数说明
-   * @param tenantId 参数说明
-   * @return 返回值说明
+   * @param assigneeId 办理人用户 ID
+   * @param tenantId 租户 ID
+   * @return 已办任务列表
    */
   List<FlowRunTask> selectDoneByAssignee(
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
@@ -137,12 +137,12 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 标记任务完成
    *
-   * @param id 参数说明
-   * @param taskStatus 参数说明
-   * @param comment 参数说明
-   * @param finishAt 参数说明
-   * @param durationMs 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @param taskStatus 任务最终状态（COMPLETED/REJECTED）
+   * @param comment 审批意见
+   * @param finishAt 完成时间
+   * @param durationMs 处理耗时毫秒
+   * @return 受影响行数
    */
   int completeTask(
       @Param("id") String id,
@@ -154,17 +154,17 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 会签计数器 +1
    *
-   * @param id 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @return 受影响行数
    */
   int incrementFinished(@Param("id") String id);
 
   /**
    * 取消某实例下所有 PENDING 任务
    *
-   * @param instanceId 参数说明
-   * @param taskStatus 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param taskStatus 目标取消状态
+   * @return 受影响行数
    */
   int cancelByInstance(
       @Param("instanceId") String instanceId, @Param("taskStatus") String taskStatus);
@@ -173,10 +173,10 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * P0-1: 取消单个任务（边界事件触发时使用）
    * 
    *
-   * @param id 参数说明
-   * @param taskStatus 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @param taskStatus 目标取消状态
+   * @param comment 取消原因
+   * @return 受影响行数
    */
   int cancelTask(
       @Param("id") String id,
@@ -186,10 +186,10 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 跳过某节点剩余 PENDING（同会签场景）
    *
-   * @param instanceId 参数说明
-   * @param nodeCode 参数说明
-   * @param taskStatus 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 节点编码
+   * @param taskStatus 目标跳过状态
+   * @return 受影响行数
    */
   int skipByNode(
       @Param("instanceId") String instanceId,
@@ -200,8 +200,8 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * P2-18: 冻结某实例下所有 PENDING/CLAIMED 任务（流程挂起时调用）
    * 
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return 受影响行数
    */
   int freezeByInstance(@Param("instanceId") String instanceId);
 
@@ -209,17 +209,17 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * P2-18: 解冻某实例下所有 FROZEN 任务（流程激活时调用，回到 PENDING）
    * 
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return 受影响行数
    */
   int unfreezeByInstance(@Param("instanceId") String instanceId);
 
   /**
    * 统计某实例某节点的未完成任务数（用于并行网关 join 判断）
    *
-   * @param instanceId 参数说明
-   * @param nodeCode 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 节点编码
+   * @return 未完成任务数
    */
   int countPendingByNode(
       @Param("instanceId") String instanceId, @Param("nodeCode") String nodeCode);
@@ -227,9 +227,9 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 更新会签计数（设置 approveFinished）
    *
-   * @param id 参数说明
-   * @param approveFinished 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @param approveFinished 会签已完成数
+   * @return 受影响行数
    */
   int updateApproveFinished(
       @Param("id") String id, @Param("approveFinished") Integer approveFinished);
@@ -237,11 +237,11 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 更新任务办理人信息（用于会签场景下多人共用一个任务时切换办理人）
    *
-   * @param id 参数说明
-   * @param assigneeId 参数说明
-   * @param assigneeName 参数说明
-   * @param assigneeType 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @param assigneeId 新办理人 ID
+   * @param assigneeName 新办理人姓名
+   * @param assigneeType 办理人类型
+   * @return 受影响行数
    */
   int updateAssignee(
       @Param("id") String id,
@@ -344,10 +344,10 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * P1-6: 标记 SLA 动作（用于审计：AUTO_PASS / AUTO_REJECT / ESCALATE 等）
    *
-   * @param id 参数说明
-   * @param slaAction 参数说明
-   * @param slaEscalated 参数说明
-   * @return 返回值说明
+   * @param id 任务 ID
+   * @param slaAction SLA 动作（AUTO_PASS/AUTO_REJECT/ESCALATE）
+   * @param slaEscalated 是否已升级
+   * @return 受影响行数
    */
   int markSlaAction(
       @Param("id") String id,

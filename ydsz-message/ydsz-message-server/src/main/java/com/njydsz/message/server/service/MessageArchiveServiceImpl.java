@@ -128,16 +128,16 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
   /**
    * 数据库 LIKE 降级搜索。
    *
-   * @param keyword 参数说明
-   * @param channel 参数说明
-   * @param status 参数说明
-   * @param bizType 参数说明
-   * @param startTime 参数说明
-   * @param endTime 参数说明
-   * @param tenantId 参数说明
-   * @param pageNum 参数说明
-   * @param pageSize 参数说明
-   * @return 返回值说明
+   * @param keyword 搜索关键词（模糊匹配内容/接收人/模板/业务ID）
+   * @param channel 通道过滤（可空）
+   * @param status 状态过滤（可空）
+   * @param bizType 业务类型过滤（可空）
+   * @param startTime 开始时间（可空）
+   * @param endTime 结束时间（可空）
+   * @param tenantId 租户 ID
+   * @param pageNum 页码
+   * @param pageSize 页大小
+   * @return 消息分页结果
    */
   private PageResponse<List<MsgLogVO>> searchByDatabase(
       String keyword,

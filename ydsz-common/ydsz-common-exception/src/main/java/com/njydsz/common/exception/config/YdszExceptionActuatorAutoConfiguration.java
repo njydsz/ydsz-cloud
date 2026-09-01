@@ -58,7 +58,7 @@ public class YdszExceptionActuatorAutoConfiguration {
    *
    * @param messageSource 国际化消息源
    * @param properties 异常模块配置属性
-   * @param errorCodeTable errorCodeTable 参数说明
+   * @param errorCodeTable 全量错误码注册表，提供端点输出的异常码与文档条目；由核心装配扫描注册，为空时端点返回空字典
    * @return 处理结果
    */
   @Bean
@@ -81,8 +81,8 @@ public class YdszExceptionActuatorAutoConfiguration {
    * <p>向 Actuator 暴露异常体系的运行状态（异常计数、错误码注册数量等）。
    *
    * @param properties 异常模块配置属性
-   * @param metricsProvider metricsProvider 参数说明
-   * @param errorCodeTableProvider errorCodeTableProvider 参数说明
+   * @param metricsProvider 异常指标采集器的延迟提供者，未装配时健康指示器跳过异常计数明细
+   * @param errorCodeTableProvider 错误码注册表的延迟提供者，未装配时健康指示器跳过错误码注册数量统计
    * @return 处理结果
    */
   @Bean

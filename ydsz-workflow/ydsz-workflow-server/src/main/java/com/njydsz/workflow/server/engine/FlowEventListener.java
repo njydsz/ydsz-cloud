@@ -132,36 +132,36 @@ public interface FlowEventListener {
   /**
    * 任务转办时触发
    *
-   * @param taskId 参数说明
-   * @param fromUserId 参数说明
-   * @param toUserId 参数说明
+   * @param taskId 被转办的任务 ID
+   * @param fromUserId 原办理人 ID
+   * @param toUserId 目标办理人 ID
    */
   default void onTaskTransferred(String taskId, String fromUserId, String toUserId) {}
 
   /**
    * 任务委派时触发
    *
-   * @param taskId 参数说明
-   * @param fromUserId 参数说明
-   * @param toUserId 参数说明
+   * @param taskId 被委派任务 ID
+   * @param fromUserId 原办理人 ID
+   * @param toUserId 代理人 ID
    */
   default void onTaskDelegated(String taskId, String fromUserId, String toUserId) {}
 
   /**
    * 任务加签时触发（action=BEFORE/AFTER）
    *
-   * @param taskId 参数说明
-   * @param targetUserId 参数说明
-   * @param action 参数说明
+   * @param taskId 被加签的任务 ID
+   * @param targetUserId 加签目标人 ID
+   * @param action 加签类型（BEFORE/AFTER/PARALLEL）
    */
   default void onTaskCountersigned(String taskId, String targetUserId, String action) {}
 
   /**
    * 任务自由跳转时触发
    *
-   * @param taskId 参数说明
-   * @param fromNodeCode 参数说明
-   * @param toNodeCode 参数说明
+   * @param taskId 跳转的任务 ID
+   * @param fromNodeCode 源节点编码
+   * @param toNodeCode 目标节点编码
    */
   default void onTaskJumped(String taskId, String fromNodeCode, String toNodeCode) {}
 
@@ -170,8 +170,8 @@ public interface FlowEventListener {
   /**
    * 任务超时时触发
    *
-   * @param taskId 参数说明
-   * @param instanceId 参数说明
+   * @param taskId 超时任务 ID
+   * @param instanceId 所属实例 ID
    */
   default void onTaskTimeout(String taskId, String instanceId) {}
 
@@ -180,17 +180,17 @@ public interface FlowEventListener {
   /**
    * 任务完成后（携带上下文元数据）
    *
-   * @param taskId 参数说明
-   * @param ctx 参数说明
+   * @param taskId 任务 ID
+   * @param ctx 事件上下文元数据
    */
   default void onTaskCompleted(String taskId, FlowEventContext ctx) {}
 
   /**
    * 实例终止时（携带上下文元数据）
    *
-   * @param instanceId 参数说明
-   * @param reason 参数说明
-   * @param ctx 参数说明
+   * @param instanceId 实例 ID
+   * @param reason 终止原因
+   * @param ctx 事件上下文元数据
    */
   default void onInstanceTerminated(String instanceId, String reason, FlowEventContext ctx) {}
 

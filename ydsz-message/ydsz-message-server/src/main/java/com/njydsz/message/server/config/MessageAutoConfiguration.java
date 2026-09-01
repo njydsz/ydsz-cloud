@@ -51,10 +51,10 @@ public class MessageAutoConfiguration {
   /**
    * P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component）
    *
-   * @param redisStringOps 参数说明
-   * @param msgLogRepository 参数说明
-   * @param channelRouter 参数说明
-   * @return 返回值说明
+   * @param redisStringOps Redis 底层 API（用于健康检查 Sentinel/PING 探测）
+   * @param msgLogRepository 消息日志 Repository（队列积压轻量探针 LIMIT 1）
+   * @param channelRouter 通道路由器（获取已注册表通道列表与通道数量）
+   * @return MessageHealthIndicator Bean
    */
   @Bean
   @ConditionalOnClass(HealthIndicator.class)

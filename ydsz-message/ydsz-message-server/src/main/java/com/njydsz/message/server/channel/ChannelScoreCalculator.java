@@ -64,8 +64,9 @@ public class ChannelScoreCalculator {
    * 构造器注入。
    * 
    *
-   * @param messageMetrics 参数说明
-   * @param messageProperties 参数说明   */
+   * @param messageMetrics 消息指标（用于后续查询通道成功率，当前为预留扩展口）
+   * @param messageProperties 消息模块配置属性（含 cost 子配置项评分权重）
+   */
   public ChannelScoreCalculator(MessageMetrics messageMetrics, MessageProperties messageProperties) {
     this.messageMetrics = messageMetrics;
     this.messageProperties = messageProperties;

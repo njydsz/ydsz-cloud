@@ -99,12 +99,12 @@ public class RetryPreviewService {
 
   /**
    * 计算第 N 次重试的退避时间（毫秒）。
-   * 
+   *
    * <p>公式：{@code min(baseBackoffMs * backoffMultiplier^retryIndex, maxBackoffMs)}
    *
-   * @param retryIndex 参数说明
-   * @param preset 参数说明
-   * @return 返回值说明
+   * @param retryIndex 重试序号（从 0 开始）
+   * @param preset 重试预设档位配置
+   * @return 本次重试的退避毫秒数
    */
   private long calcBackoffMs(int retryIndex, RetryPreset preset) {
     if (preset.getMaxRetryCount() == 0) {

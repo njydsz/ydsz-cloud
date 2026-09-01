@@ -396,9 +396,9 @@ public class FlowCcServiceImpl implements FlowCcService {
    * <li>其他 → 尝试通过 assigneeResolver 展开
    * </ul>
    *
-   * @param token 参数说明
-   * @param variables 参数说明
-   * @param userIds 参数说明
+   * @param token 办理人标识 token（如 user:1001、role:hr）
+   * @param variables 流程变量
+   * @param userIds 展开后的用户 ID 集合（输出参数）
    */
   private void expandToken(String token, Map<String, Object> variables, Set<String> userIds) {
     try {
@@ -455,12 +455,12 @@ public class FlowCcServiceImpl implements FlowCcService {
   /**
    * 构建 FlowCcVO 记录
    *
-   * @param instance 参数说明
-   * @param node 参数说明
-   * @param userId 参数说明
-   * @param now 参数说明
-   * @param traceId 参数说明
-   * @return 返回值说明
+   * @param instance 流程实例
+   * @param node 当前节点
+   * @param userId 被抄送人 ID
+   * @param now 当前时间
+   * @param traceId 分布式追踪 ID
+   * @return 抄送实体
    */
   private FlowCcVO buildCcVO(
       FlowInstanceVO instance, FlowNodeVO node, String userId, LocalDateTime now, String traceId) {
@@ -485,8 +485,8 @@ public class FlowCcServiceImpl implements FlowCcService {
   /**
    * 安全解析 Long
    *
-   * @param str 参数说明
-   * @return 返回值说明
+   * @param str 待解析的字符串
+   * @return 解析后的 Long 值；失败返回 null
    */
   private Long tryParseLong(String str) {
     try {

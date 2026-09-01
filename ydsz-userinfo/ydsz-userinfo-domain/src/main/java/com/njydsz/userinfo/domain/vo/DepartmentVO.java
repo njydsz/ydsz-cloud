@@ -3,9 +3,13 @@ package com.njydsz.userinfo.domain.vo;
 import lombok.Data;
 
 /**
- * 部门 VO，扁平结构，用于 Controller 列表返回。
+ * 部门视图对象（扁平结构）。
  *
- * <p>不包含 deleted、createdBy 等内部维护字段。 树形结构请使用 {@link DepartmentTreeVO}。
+ * <p>用于 Controller 列表查询接口。部门通过 parentId 自关联形成树形组织架构，
+ * 支持多级嵌套（如 集团 → 事业部 → 部门 → 小组）。
+ *
+ * <p>不包含 deleted、createdBy 等内部维护字段。
+ * 树形结构请使用 {@link DepartmentTreeVO}。
  *
  * @author ydsz-team
  * @since 1.0.0

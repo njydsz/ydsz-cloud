@@ -130,8 +130,8 @@ public interface WorkflowConverter {
   /**
    * 抄送规则 VO → 抄送规则。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 抄送规则视图对象
+   * @return 抄送规则实体
    */
   FlowCcRule entityToEntity(FlowCcRuleVO vo);
 
@@ -163,8 +163,8 @@ public interface WorkflowConverter {
   /**
    * 历史实例 VO → 历史实例。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 历史实例视图对象
+   * @return 历史实例实体
    */
   FlowHisInstance entityToEntity(FlowHisInstanceVO vo);
 
@@ -218,8 +218,8 @@ public interface WorkflowConverter {
   /**
    * 委派授权 PostDTO → Entity（创建场景）。
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * @param dto 创建委派授权的请求 DTO
+   * @return 委托授权实体（系统字段由 DB 或 Service 层填充）
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
@@ -236,8 +236,8 @@ public interface WorkflowConverter {
   /**
    * 委派授权 PutDTO → Entity（更新场景）。
    *
-   * @param dto 参数说明
-   * @return 返回值说明
+   * @param dto 更新委派授权的请求 DTO
+   * @return 委托授权实体
    */
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -253,48 +253,48 @@ public interface WorkflowConverter {
   /**
    * 流程实例 VO → 流程实例。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 流程实例视图对象
+   * @return 流程实例实体
    */
   FlowInstance entityToEntity(FlowInstanceVO vo);
 
 /**
  * 运行时任务 VO → 运行时任务。
  *
- * @param vo 参数说明
- * @return 返回值说明
+ * @param vo 运行时任务视图对象
+ * @return 运行时任务实体
  */
 FlowRunTask entityToEntity(FlowRunTaskVO vo);
 
 /**
  * 运行时任务 DTO → 运行时任务。
  *
- * @param dto 参数说明
- * @return 返回值说明
+ * @param dto 运行时任务请求 DTO
+ * @return 运行时任务实体
  */
 FlowRunTask dtoToEntity(FlowRunTaskDTO dto);
 
 /**
  * 流程定义 DTO → 流程定义。
  *
- * @param dto 参数说明
- * @return 返回值说明
+ * @param dto 流程定义请求 DTO
+ * @return 流程定义实体
  */
 FlowDefinition dtoToEntity(FlowDefinitionDTO dto);
 
 /**
  * 流程分类 DTO → 流程分类。
  *
- * @param dto 参数说明
- * @return 返回值说明
+ * @param dto 流程分类请求 DTO
+ * @return 流程分类实体
  */
 FlowCategory dtoToEntity(FlowCategoryDTO dto);
 
   /**
    * 流程节点 VO → 流程节点。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 流程节点视图对象
+   * @return 流程节点实体
    */
   @Mapping(target = "slaConfig", expression = "java(mapSlaConfig(vo.getSlaConfig()))")
   FlowNode entityToEntity(FlowNodeVO vo);
@@ -315,120 +315,120 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
   /**
    * 流程定义 VO → 流程定义。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 流程定义视图对象
+   * @return 流程定义实体
    */
   FlowDefinition entityToEntity(FlowDefinitionVO vo);
 
   /**
    * 审计日志 VO → 审计日志。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 审计日志视图对象
+   * @return 审计日志实体
    */
   FlowAuditLog entityToEntity(FlowAuditLogVO vo);
 
   /**
    * 历史任务 VO → 历史任务。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 历史任务视图对象
+   * @return 历史任务实体
    */
   FlowHisTask entityToEntity(FlowHisTaskVO vo);
 
   /**
    * 定时器 VO → 定时器。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 定时器视图对象
+   * @return 定时器实体
    */
   FlowTimer entityToEntity(FlowTimerVO vo);
 
   /**
    * 事件订阅 VO → 事件订阅。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 事件订阅视图对象
+   * @return 事件订阅实体
    */
   FlowEventSubscription entityToEntity(FlowEventSubscriptionVO vo);
 
   /**
    * 自动触发 VO → 自动触发。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 自动触发视图对象
+   * @return 自动触发实体
    */
   FlowAutoTrigger entityToEntity(FlowAutoTriggerVO vo);
 
   /**
    * 附件 VO → 附件。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 附件视图对象
+   * @return 附件实体
    */
   FlowAttachment entityToEntity(FlowAttachmentVO vo);
 
   /**
    * 抄送 VO → 抄送。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 抄送视图对象
+   * @return 抄送实体
    */
   FlowCc entityToEntity(FlowCcVO vo);
 
   /**
    * 审批意见 VO → 审批意见。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 审批意见视图对象
+   * @return 审批意见实体
    */
   FlowComment entityToEntity(FlowCommentVO vo);
 
   /**
    * 流程分类 VO → 流程分类。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 流程分类视图对象
+   * @return 流程分类实体
    */
   FlowCategory entityToEntity(FlowCategoryVO vo);
 
   /**
    * 流程模板 VO → 流程模板。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 流程模板视图对象
+   * @return 流程模板实体
    */
   FlowTemplate entityToEntity(FlowTemplateVO vo);
 
   /**
    * 委托授权 VO → 委托授权。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 委托授权视图对象
+   * @return 委托授权实体
    */
   FlowDelegateAuth entityToEntity(FlowDelegateAuthVO vo);
 
   /**
    * 管理员角色 VO → 管理员角色。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 管理员角色视图对象
+   * @return 管理员角色实体
    */
   FlowAdminRole entityToEntity(FlowAdminRoleVO vo);
 
   /**
    * 节点跳转 VO → 节点跳转。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 节点跳转视图对象
+   * @return 节点跳转实体
    */
   FlowSkip entityToEntity(FlowSkipVO vo);
 
   /**
    * 流程用户 VO → 流程用户。
    *
-   * @param vo 参数说明
-   * @return 返回值说明
+   * @param vo 流程用户视图对象
+   * @return 流程用户实体
    */
   FlowUser entityToEntity(FlowUserVO vo);
 
@@ -503,8 +503,8 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
   /**
    * 流程实例 → 流程实例 DTO（更新场景）。
    *
-   * @param entity 参数说明
-   * @return 返回值说明
+   * @param entity 流程实例实体
+   * @return 流程实例 DTO
    */
   FlowInstanceDTO entityToDto(FlowInstance entity);
 
@@ -519,8 +519,8 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
   /**
    * 运行时任务 → 运行时任务 DTO（更新场景，如有需要）。
    *
-   * @param entity 参数说明
-   * @return 返回值说明
+   * @param entity 运行时任务实体
+   * @return 任务操作 DTO
    */
   FlowTaskOperateDTO runTaskToDto(FlowRunTask entity);
 
@@ -528,8 +528,8 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
   /**
    * 字符串 → {@link StringVO}（如合并组 ID 包装）。
    *
-   * @param value 参数说明
-   * @return 返回值说明
+   * @param value 原始字符串值
+   * @return 包装后的 StringVO；null 时返回 null
    */
   default StringVO entityToVO(String value) {
     return value == null ? null : new StringVO(value);
@@ -538,8 +538,8 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
   /**
    * 字符串列表 → {@link StringVO} 列表（如已审批人 ID 列表包装）。
    *
-   * @param values 参数说明
-   * @return 返回值说明
+   * @param values 原始字符串列表
+   * @return 包装后的 StringVO 列表；null 时返回空列表
    */
   default List<StringVO> stringListToVO(List<String> values) {
     if (values == null) {

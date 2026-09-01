@@ -75,8 +75,8 @@ public class FlowTaskAuditService {
    * 
    * <p>仅当 assigneeId 是纯数字时返回其值（系统用户 ID 场景），否则返回 null 表示"非代理场景"。
    *
-   * @param assigneeId 参数说明
-   * @return 返回值说明
+   * @param assigneeId 办理人 ID
+   * @return 纯数字形式的办理人 ID；非纯数字返回 null
    */
   private String parseAssignorId(String assigneeId) {
     if (assigneeId == null || !assigneeId.matches("\\d+")) {

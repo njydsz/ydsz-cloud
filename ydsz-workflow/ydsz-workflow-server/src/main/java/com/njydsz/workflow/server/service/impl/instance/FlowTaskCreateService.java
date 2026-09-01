@@ -261,8 +261,8 @@ public class FlowTaskCreateService {
    * 
    * <p>将 advanceAfterAutoPass 的调用封装为回调，解耦递归深度保护逻辑。
    *
-   * @param ctx 参数说明
-   * @return 返回值说明
+   * @param ctx 自动通过推进上下文（含 instance/node/variables）
+   * @return null
    */
   private Void handleAdvanceAfterAutoPass(EmptyAssigneeStrategyService.AdvanceContext ctx) {
     advanceAfterAutoPass(ctx.getInstance(), ctx.getNode(), ctx.getVariables());
@@ -301,8 +301,8 @@ public class FlowTaskCreateService {
    * 
    * <p>将 advanceAfterAutoPass 的调用封装为回调，解耦递归深度保护逻辑。
    *
-   * @param ctx 参数说明
-   * @return 返回值说明
+   * @param ctx 服务节点推进上下文（含 instance/node/variables）
+   * @return null
    */
   private Void handleAdvanceAfterServiceNode(ServiceNodeExecuteService.AdvanceContext ctx) {
     advanceAfterAutoPass(ctx.getInstance(), ctx.getNode(), ctx.getVariables());
@@ -340,10 +340,10 @@ public class FlowTaskCreateService {
   /**
    * 创建任务（向后兼容重载）
    *
-   * @param instanceId 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param node 目标节点
+   * @param variables 流程变量
+   * @return 创建的任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public String createTask(String instanceId, FlowNodeVO node, Map<String, Object> variables) {
@@ -356,11 +356,11 @@ public class FlowTaskCreateService {
    * <p>GAP-P2-9 自由流扩展：{@code explicitAssignees} 非空时直接作为目标节点办理人， 跳过 {@code node.permissionFlag} /
    * {@code ext.collection} 解析逻辑。 为空时回退到原有解析逻辑（向后兼容）。
    *
-   * @param instanceId 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @param explicitAssignees 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param node 目标节点
+   * @param variables 流程变量
+   * @param explicitAssignees 显式指定的办理人 ID 列表（可空）
+   * @return 创建的任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public String createTask(

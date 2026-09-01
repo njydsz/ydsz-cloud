@@ -312,10 +312,10 @@ public class GlueJobHandler implements JobHandler {
    *
    * <p>P1-4: 优先使用 Groovy Docker 沙箱（若启用），否则使用 SecureASTCustomizer 进程内编译。
    *
-   * @param jobId 参数说明
-   * @param sourceCode 参数说明
-   * @param paramsJson 参数说明
-   * @return 返回值说明
+   * @param jobId 任务 ID（用于缓存编译后的 Class）
+   * @param sourceCode Groovy 源代码
+   * @param paramsJson 任务执行参数 JSON 字符串
+   * @return Groovy 脚本执行返回值
    */
   private Object executeGroovy(String jobId, String sourceCode, String paramsJson)
       throws JobExecutionException {

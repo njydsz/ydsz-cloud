@@ -49,7 +49,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 @Slf4j
 public class DecisionTreeRule implements Rule {
 
-    /** 纳秒到毫秒的换算系数 */
+    /** 纳秒到毫秒的换算系数（1 毫秒 = 100 万纳秒） */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
   private final String code;
@@ -239,9 +239,9 @@ public class DecisionTreeRule implements Rule {
     private boolean leaf;
 
     /** 创建条件节点
-     * @param conditionExpression 参数说明
-     * @param trueBranch 参数说明
-     * @param falseBranch 参数说明
+     * @param conditionExpression LiteExpr 条件表达式
+     * @param trueBranch 条件为 true 时的子节点
+     * @param falseBranch 条件为 false 时的子节点
      * @return 条件决策节点
      */
     public static DecisionNode condition(
@@ -255,10 +255,10 @@ public class DecisionTreeRule implements Rule {
     }
 
     /** 创建叶子节点
-     * @param severity 参数说明
-     * @param title 参数说明
-     * @param description 参数说明
-     * @return 返回值说明
+     * @param severity 决策严重度
+     * @param title 决策标题
+     * @param description 决策描述
+     * @return 叶子决策节点
      */
     public static DecisionNode leaf(RuleSeverity severity, String title, String description) {
       return DecisionNode.builder()

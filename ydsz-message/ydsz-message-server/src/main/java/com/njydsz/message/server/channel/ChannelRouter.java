@@ -69,10 +69,10 @@ public class ChannelRouter {
 
   /**
    * D-5: 从 MessageProperties.CircuitBreakerConfig 构建熔断配置，消除硬编码。
-   * 
+   *
    * <p>在 {@link #initChannels()} 中构建，确保配置已注入完成。
    *
-   * @return 返回值说明
+   * @return 根据消息模块配置构建的熔断器配置对象
    */
   private CircuitBreakerConfig buildCircuitBreakerConfig() {
     MessageProperties.CircuitBreakerConfig cb = messageProperties.getCircuitBreaker();

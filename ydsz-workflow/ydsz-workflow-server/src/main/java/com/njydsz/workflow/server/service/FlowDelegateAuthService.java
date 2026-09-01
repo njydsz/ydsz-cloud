@@ -55,9 +55,9 @@ public interface FlowDelegateAuthService {
   /**
    * 启用/停用
    *
-   * @param authId 参数说明
-   * @param status 参数说明
-   * @param operatorId 参数说明
+   * @param authId 授权记录 ID
+   * @param status 目标状态（ENABLED / DISABLED）
+   * @param operatorId 操作人用户 ID
    */
   void updateStatus(String authId, String status, String operatorId);
 
@@ -104,20 +104,20 @@ public interface FlowDelegateAuthService {
   /**
    * 分页查询"我代理处理的日志"
    *
-   * @param delegateUserId 参数说明
-   * @param page 参数说明
-   * @param size 参数说明
-   * @return 返回值说明
+   * @param delegateUserId 代理人用户 ID
+   * @param page 页码（从 0 开始）
+   * @param size 每页条数
+   * @return 分页包装的代理处理日志
    */
   YdszResponse<?> listDelegateLog(String delegateUserId, int page, int size);
 
   /**
    * 分页查询"我的被代理日志"
    *
-   * @param ownerUserId 参数说明
-   * @param page 参数说明
-   * @param size 参数说明
-   * @return 返回值说明
+   * @param ownerUserId 授权人用户 ID
+   * @param page 页码（从 0 开始）
+   * @param size 每页条数
+   * @return 分页包装的被代理日志
    */
   YdszResponse<?> listOwnerLog(String ownerUserId, int page, int size);
 

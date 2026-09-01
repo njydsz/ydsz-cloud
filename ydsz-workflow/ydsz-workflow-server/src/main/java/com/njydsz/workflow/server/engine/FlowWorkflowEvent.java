@@ -44,11 +44,11 @@ public class FlowWorkflowEvent extends ApplicationEvent {
    * 构造工作流事件。
    *
    *
-   * @param source 参数说明
-   * @param eventType 参数说明
-   * @param instanceId 参数说明
-   * @param taskId 参数说明
-   * @param data 参数说明   */
+   * @param source 事件发布源对象
+   * @param eventType 事件类型（如 TASK_CREATED / INSTANCE_COMPLETED）
+   * @param instanceId 关联的流程实例 ID
+   * @param taskId 关联的任务 ID（可为 null）
+   * @param data 附加数据 Map（可为 null）   */
   public FlowWorkflowEvent(
       Object source, String eventType, String instanceId, String taskId, Map<String, Object> data) {
     super(source);

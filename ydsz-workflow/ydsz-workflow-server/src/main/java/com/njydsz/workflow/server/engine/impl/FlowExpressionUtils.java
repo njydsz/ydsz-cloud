@@ -41,7 +41,6 @@ public final class FlowExpressionUtils {
   /**
    * 私有构造禁止实例化
    *
-   * @return 返回值说明
    */
   private FlowExpressionUtils() {
     throw new UnsupportedOperationException("Utility class");

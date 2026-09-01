@@ -75,8 +75,9 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
    * 构造 TCP 推送通道。
    * 
    *
-   * @param properties 参数说明
-   * @param snowflakeIdGenerator 参数说明   */
+   * @param properties Netty 配置属性（含 boss/worker 线程数、TCP keepAlive 等）
+   * @param snowflakeIdGenerator 分布式 ID 生成器，用于构建推送 traceId
+   */
   public TcpPushChannel(NettyProperties properties, SnowflakeIdGenerator snowflakeIdGenerator) {
     super(PUSH_PORT, properties);
     this.pushPort = PUSH_PORT;

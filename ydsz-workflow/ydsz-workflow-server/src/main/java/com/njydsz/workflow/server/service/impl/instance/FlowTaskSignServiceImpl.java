@@ -216,7 +216,7 @@ public class FlowTaskSignServiceImpl {
    * 
    * 与后加签（PARALLEL 并行）不同，并加签的加签人与原审批人<b>同时</b>收到待办， 互不阻塞，全部审完后才推进到下一节点。
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO（含 taskId/targetUserId 等）
    */
   @Transactional(rollbackFor = Exception.class)
   public void countersignParallel(FlowTaskOperateDTO dto) {

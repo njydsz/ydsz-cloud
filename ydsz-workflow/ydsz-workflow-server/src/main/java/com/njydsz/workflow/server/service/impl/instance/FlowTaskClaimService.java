@@ -71,9 +71,9 @@ public class FlowTaskClaimService {
   /**
    * 将任务设置为已签收状态（不持久化）。
    *
-   * @param src 参数说明
-   * @param userId 参数说明
-   * @return 返回值说明
+   * @param src 待签收的任务实体
+   * @param userId 签收人 ID
+   * @return 签收后的任务实体（状态置为 CLAIMED）
    */
   private FlowRunTaskVO applyClaim(FlowRunTaskVO src, String userId) {
     src.setAssigneeId(String.valueOf(userId));

@@ -258,10 +258,10 @@ public class DefaultFlowAdvancer {
    * <p>显式传入 {@code targetNodeCode} 时优先按其回退；未指定时由 {@link #resolveRejectTarget} 推导。
    * 推导不出目标或目标节点不存在时抛异常，不会静默把流程留在原地。
    *
-   * @param currentInstance 参数说明
-   * @param currentNodeCode 参数说明
-   * @param targetNodeCode 参数说明
-   * @return 返回值说明
+   * @param currentInstance 当前流程实例
+   * @param currentNodeCode 当前节点编码
+   * @param targetNodeCode 回退目标节点编码（可空）
+   * @return 包含单个目标节点的列表
    */
   private List<FlowNodeVO> executeRejectRollback(
       FlowInstanceVO currentInstance, String currentNodeCode, String targetNodeCode) {
@@ -293,10 +293,10 @@ public class DefaultFlowAdvancer {
    * 
    * <p>无下游节点时返回空列表（流程结束）；有下游时交由 {@link #aggregateJoinResults} 执行网关 join 聚合逻辑。
    *
-   * @param currentInstance 参数说明
-   * @param currentNode 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param currentInstance 当前流程实例
+   * @param currentNode 当前节点实体
+   * @param variables 流程变量
+   * @return 下一批目标节点列表
    */
   private List<FlowNodeVO> executePassUpdate(
       FlowInstanceVO currentInstance, FlowNodeVO currentNode, Map<String, Object> variables) {
@@ -316,9 +316,9 @@ public class DefaultFlowAdvancer {
    * 
    * <p>跳过不存在的目标节点并告警；对于 join 节点委托 {@link #tryAggregateJoin} 执行令牌聚合逻辑，未满足聚合条件的分支不进入返回列表（静默等待）。
    *
-   * @param currentInstance 参数说明
-   * @param skips 参数说明
-   * @return 返回值说明
+   * @param currentInstance 当前流程实例
+   * @param skips 当前节点的正向跳转列表
+   * @return 经 join 聚合后的下一批节点列表
    */
   private List<FlowNodeVO> aggregateJoinResults(FlowInstanceVO currentInstance, List<FlowSkipVO> skips) {
     List<FlowNodeVO> nextNodes = new ArrayList<>(skips.size());
@@ -349,9 +349,9 @@ public class DefaultFlowAdvancer {
    * 
    * 
    *
-   * @param currentInstance 参数说明
-   * @param joinNode 参数说明
-   * @return 返回值说明
+   * @param currentInstance 当前流程实例
+   * @param joinNode join 类型目标节点
+   * @return true=允许通过聚合检查；false=继续等待
    */
   private boolean tryAggregateJoin(FlowInstanceVO currentInstance, FlowNodeVO joinNode) {
     String definitionId = currentInstance.getDefinitionId();
@@ -625,8 +625,8 @@ public class DefaultFlowAdvancer {
   /**
    * 判断是否为 join 节点（并行/包容网关）
    *
-   * @param node 参数说明
-   * @return 返回值说明
+   * @param node 节点实体
+   * @return true=该节点是 join 类型网关
    */
   private boolean isJoinNode(FlowNodeVO node) {
     return node.getNodeType() != null
@@ -691,9 +691,9 @@ public class DefaultFlowAdvancer {
   /**
    * 判断节点是否有多个入边
    *
-   * @param definitionId 参数说明
-   * @param nodeCode 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @return true=该节点有多条入边
    */
   private boolean hasMultipleIncoming(String definitionId, String nodeCode) {
     List<FlowSkipVO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);

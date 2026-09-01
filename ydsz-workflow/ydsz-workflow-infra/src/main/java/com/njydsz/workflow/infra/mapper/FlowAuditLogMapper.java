@@ -39,16 +39,16 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLog> {
   /**
    * 查某实例的全部审计日志（按时间正序）
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return 审计日志列表（按时间正序）
    */
   List<FlowAuditLog> selectByInstanceId(@Param("instanceId") String instanceId);
 
   /**
    * 查某任务的操作记录
    *
-   * @param taskId 参数说明
-   * @return 返回值说明
+   * @param taskId 任务 ID
+   * @return 任务审计日志列表
    */
   List<FlowAuditLog> selectByTaskId(@Param("taskId") String taskId);
 

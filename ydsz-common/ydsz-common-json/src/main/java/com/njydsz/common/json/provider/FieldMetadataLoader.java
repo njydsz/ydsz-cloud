@@ -546,8 +546,9 @@ public final class FieldMetadataLoader {
    *       access 注解必须走 ValueWriter 注解路径，否则 WRITE_ONLY 敏感字段会被快速路径照常输出）
    * </ul>
    *
-   * @param fields 字段列表
-   * @return 返回值说明
+   * @param fields 字段元数据列表，为 {@code null} 时按"无注解"处理
+   * @return 存在任一影响序列化结果的注解时返回 {@code true}，此时不能走无注解快速路径；
+   *     全部字段均无特殊注解（或 {@code fields} 为 {@code null}）时返回 {@code false}
    */
   public static boolean hasFieldAnnotations(FieldMeta[] fields) {
     if (fields == null) {

@@ -216,7 +216,8 @@ public final class PageConstants {
     /**
      * 获取归一化后的值。
      *
-     * @return 返回值说明
+     * @return 归一化后的页大小，恒为正整数；入参为 {@code null} 或小于 1 时等于
+     *     {@link #getDefaultPageSize()}，超过上限时等于 {@link #getMaxPageSize()}
      */
     public int getValue() {
       return value;
@@ -225,9 +226,9 @@ public final class PageConstants {
     /**
      * 判断是否发生了归一化调整（原始值被截断或替换）。
      *
-     * @return 返回值说明
+     * @return 原始入参与归一化结果不一致时返回 {@code true}，即页大小被替换为默认值或被截断；
+     *     入参本就合法时返回 {@code false}
      */
-    public boolean isAdjusted() {
       return adjusted;
     }
   }

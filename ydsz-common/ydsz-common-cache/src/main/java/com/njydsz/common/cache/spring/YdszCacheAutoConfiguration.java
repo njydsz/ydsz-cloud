@@ -66,6 +66,7 @@ public class YdszCacheAutoConfiguration {
     cacheManager.setExpireAfterAccess(props.getExpireAfterAccess(), props.getExpireTimeUnit());
     cacheManager.setRefreshAfterWrite(props.getRefreshAfterWrite(), props.getExpireTimeUnit());
     cacheManager.setRecordStats(props.isRecordStats());
+    cacheManager.setNullValueTtl(props.getNullValueTtlMin(), props.getNullValueTtlMax());
     // 设置 per-cache 配置
     cacheManager.setPerCacheConfigs(props.getCaches());
     return cacheManager;

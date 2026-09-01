@@ -41,9 +41,9 @@ public interface FlowTimerMapper extends BaseMapper<FlowTimer> {
    * 扫描到点的 PENDING 定时器（status = PENDING AND fire_at <= now AND deleted = 0）
    * 
    *
-   * @param now 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param now 当前时间（用于判断定时器是否到期）
+   * @param limit 返回条数上限
+   * @return 到期待触发的定时器列表
    */
   List<FlowTimer> selectDueTimers(@Param("now") LocalDateTime now, @Param("limit") int limit);
 
@@ -59,26 +59,26 @@ public interface FlowTimerMapper extends BaseMapper<FlowTimer> {
   /**
    * 标记定时器已触发
    *
-   * @param id 参数说明
-   * @param firedAt 参数说明
-   * @return 返回值说明
+   * @param id 定时器 ID
+   * @param firedAt 触发时间
+   * @return 受影响行数
    */
   int markFired(@Param("id") String id, @Param("firedAt") LocalDateTime firedAt);
 
   /**
    * 关闭某实例所有 PENDING 定时器（实例终止/驳回时使用）
    *
-   * @param instanceId 参数说明
-   * @param reason 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param reason 取消原因
+   * @return 受影响行数
    */
   int cancelByInstance(@Param("instanceId") String instanceId, @Param("reason") String reason);
 
   /**
    * 统计实例的 PENDING 定时器数（用于检查流程是否被定时器阻塞）
    *
-   * @param instanceId 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @return PENDING 状态定时器数量
    */
   long countPendingByInstance(@Param("instanceId") String instanceId);
 }

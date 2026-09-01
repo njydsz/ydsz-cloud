@@ -85,9 +85,10 @@ public class DefaultFlowVariableStrategy {
    * 构造注入：使用 {@link ObjectProvider} 支持可选依赖。
    *
    *
-   * @param evaluatorProvider 参数说明
-   * @param expressionEvaluatorLegacy 参数说明
-   * @param assigneeResolverLegacy 参数说明   */
+   * @param evaluatorProvider Aviator 表达式求值器提供者（可选）
+   * @param expressionEvaluatorLegacy 正则条件表达式求值器（降级路径）
+   * @param assigneeResolverLegacy 办理人表达式解析器（正则路径）
+   */
   public DefaultFlowVariableStrategy(
       ObjectProvider<ExpressionEvaluator> evaluatorProvider,
       FlowExpressionEvaluator expressionEvaluatorLegacy,

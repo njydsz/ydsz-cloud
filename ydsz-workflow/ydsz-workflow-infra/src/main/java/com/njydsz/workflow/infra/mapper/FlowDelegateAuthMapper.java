@@ -41,10 +41,10 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuth> {
    * 按授权人查询授权列表
    * 
    *
-   * @param tenantId 参数说明
-   * @param ownerUserId 参数说明
-   * @param status 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param ownerUserId 授权人用户 ID
+   * @param status 授权状态过滤（ENABLED/DISABLED/EXPIRED，可空）
+   * @return 授权列表
    */
   List<FlowDelegateAuth> selectByOwner(
       @Param("tenantId") String tenantId,
@@ -54,10 +54,10 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuth> {
   /**
    * 按被授权人查询授权列表
    *
-   * @param tenantId 参数说明
-   * @param delegateUserId 参数说明
-   * @param status 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param delegateUserId 被授权人用户 ID
+   * @param status 授权状态过滤（ENABLED/DISABLED/EXPIRED，可空）
+   * @return 授权列表
    */
   List<FlowDelegateAuth> selectByDelegate(
       @Param("tenantId") String tenantId,
@@ -92,28 +92,28 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuth> {
   /**
    * 扫描过期记录（endTime < now 且 status=ENABLED）
    *
-   * @param now 参数说明
-   * @param limit 参数说明
-   * @return 返回值说明
+   * @param now 当前时间（用于判断过期）
+   * @param limit 返回条数上限
+   * @return 过期授权列表
    */
   List<FlowDelegateAuth> selectExpired(@Param("now") LocalDateTime now, @Param("limit") int limit);
 
   /**
    * 批量标记过期
    *
-   * @param now 参数说明
-   * @param updatedAt 参数说明
-   * @return 返回值说明
+   * @param now 当前时间
+   * @param updatedAt 更新时间
+   * @return 受影响行数
    */
   int markExpired(@Param("now") LocalDateTime now, @Param("updatedAt") LocalDateTime updatedAt);
 
   /**
    * 启用/停用
    *
-   * @param id 参数说明
-   * @param status 参数说明
-   * @param updatedAt 参数说明
-   * @return 返回值说明
+   * @param id 授权记录 ID
+   * @param status 目标状态（ENABLED/DISABLED）
+   * @param updatedAt 更新时间
+   * @return 受影响行数
    */
   int updateStatus(
       @Param("id") String id,

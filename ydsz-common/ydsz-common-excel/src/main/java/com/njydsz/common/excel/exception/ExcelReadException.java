@@ -97,7 +97,8 @@ public class ExcelReadException extends ExcelException {
    * 创建文件不存在的异常
    *
    * @param filePath 文件路径
-   * @return 返回值说明
+   * @return 携带 {@code READ_FILE_NOT_FOUND} 错误码的异常实例，不会为 {@code null}；
+   *     {@code filePath} 作为上下文参数占位，供国际化消息模板填充
    */
   public static ExcelReadException fileNotFound(String filePath) {
     String message = MessageUtils.getMessage(
@@ -113,7 +114,8 @@ public class ExcelReadException extends ExcelException {
    *
    * @param filePath 文件路径
    * @param reason 原因
-   * @return 返回值说明
+   * @return 携带 {@code READ_INVALID_FORMAT} 错误码的异常实例，不会为 {@code null}；
+   *     上下文参数依次为 {@code filePath}、{@code reason}，{@code reason} 为 {@code null} 时消息中无原因描述
    */
   public static ExcelReadException invalidFormat(String filePath, String reason) {
     String message = MessageUtils.getMessage(
@@ -132,7 +134,8 @@ public class ExcelReadException extends ExcelException {
    * @param rawValue 原始值
    * @param targetType 目标类型
    * @param cause 原因
-   * @return 返回值说明
+   * @return 携带 {@code READ_CONVERSION_FAILED} 错误码的异常实例，不会为 {@code null}；
+   *     行号、列号与原始单元格值已回填到异常上，原始转换异常被保留为 {@code cause}
    */
   public static ExcelReadException conversionFailed(
       int row, int col, Object rawValue, Class<?> targetType, Throwable cause) {
@@ -157,7 +160,8 @@ public class ExcelReadException extends ExcelException {
    * @param fieldName 字段名
    * @param value 值
    * @param reason 原因
-   * @return 返回值说明
+   * @return 携带 {@code READ_VALIDATION_FAILED} 错误码的异常实例，不会为 {@code null}； 仅回填行号，{@code
+   *     value} 不会写入 {@code rawCellValue}（该字段仍为 {@code null}）
    */
   public static ExcelReadException validationFailed(
       int row, String fieldName, Object value, String reason) {

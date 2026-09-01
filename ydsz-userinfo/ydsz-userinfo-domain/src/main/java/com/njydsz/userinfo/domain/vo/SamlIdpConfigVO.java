@@ -5,7 +5,21 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * SAML 身份提供者配置视图出参（P2-1 查询返回值）。
+ * SAML 2.0 身份提供者（IdP）配置视图对象（P2-1）。
+ *
+ * <p>展示已配置的外部 SAML IdP 信息，供管理端 IdP 配置管理界面展示和编辑。
+ *
+ * <p><b>字段语义：</b>
+ *
+ * <ul>
+ *   <li>{@code name} — IdP 显示名称（如"公司 ADFS"、"Okta"）</li>
+ *   <li>{@code entityId} — IdP Entity ID（唯一标识 URI）</li>
+ *   <li>{@code ssoUrl} — IdP SSO 端点 URL（SP 重定向用户至此发起 SSO）</li>
+ *   <li>{@code certificate} — IdP 公钥证书（PEM 格式，用于验证 SAML Response 签名）</li>
+ *   <li>{@code emailAttribute} — SAML Assertion 中邮箱属性名（如 emailAddress）</li>
+ *   <li>{@code displayNameAttribute} — SAML Assertion 中显示名称属性名（如 displayName）</li>
+ *   <li>{@code status} — 状态（ENABLED/DISABLED），禁用后该 IdP 不可登录</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0

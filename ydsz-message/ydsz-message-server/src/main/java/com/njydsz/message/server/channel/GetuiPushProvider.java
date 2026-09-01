@@ -62,8 +62,9 @@ public class GetuiPushProvider implements PushProvider {
    * 生产构造：从 {@link MessageProperties} 读取个推配置并构建 RestTemplate。
    * 
    *
-   * @param messageProperties 参数说明
-   * @param snowflakeIdGenerator 参数说明   */
+   * @param messageProperties 消息模块配置属性（含 getui 子配置 AppId/AppKey/MasterSecret/BaseUrl 等）
+   * @param snowflakeIdGenerator 分布式 ID 生成器，用于生成 request_id
+   */
   public GetuiPushProvider(
       MessageProperties messageProperties, SnowflakeIdGenerator snowflakeIdGenerator) {
     this.config = messageProperties.getPush().getGetui();

@@ -90,31 +90,31 @@ public class FunctionRegistry {
   }
 
   /** 是否包含指定函数
-   * @param name 参数说明
-   * @return 返回值说明
+   * @param name 函数名
+   * @return 是否已注册
    */
   public boolean contains(String name) {
     return functions.containsKey(name);
   }
 
   /** 获取所有已注册函数名
-   * @return 返回值说明
+   * @return 函数名集合
    */
   public Set<String> getFunctionNames() {
     return functions.keySet();
   }
 
   /** 获取函数签名
-   * @param name 参数说明
-   * @return 返回值说明
+   * @param name 函数名
+   * @return 函数签名（如 "max(a, b, ...)"），未注册返回 null
    */
   public String getSignature(String name) {
     return functionSignatures.get(name);
   }
 
   /** 获取函数描述
-   * @param name 参数说明
-   * @return 返回值说明
+   * @param name 函数名
+   * @return 函数描述文本，未设置返回 null
    */
   public String getDescription(String name) {
     return functionDescriptions.get(name);
@@ -131,7 +131,7 @@ public class FunctionRegistry {
   }
 
   /** 获取所有已注册函数名列表
-   * @return 返回值说明
+   * @return 函数名列表（不可修改）
    */
   public List<String> listFunctionNames() {
     return List.copyOf(functions.keySet());

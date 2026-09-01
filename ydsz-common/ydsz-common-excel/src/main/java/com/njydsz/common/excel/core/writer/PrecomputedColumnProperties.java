@@ -1,12 +1,5 @@
 package com.njydsz.common.excel.core.writer;
 
-/**
- * PrecomputedColumnProperties 类
- *
- * @author ydsz-team
-
- * @version 1.0.0
- */
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.CellStyle;

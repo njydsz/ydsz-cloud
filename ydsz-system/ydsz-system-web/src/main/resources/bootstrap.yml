@@ -7,6 +7,20 @@
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
 # =====================================================================
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  default-flat-param-object: true
+  default-support-form-data: true
+  writer-with-order-by-keys: true
+  # 多模块场景下，可通过 urls 配置聚合（仅网关模式使用）
+
 server:
   # HTTP 监听端口（按构建顺序 2/10）
   port: 9001

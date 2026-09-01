@@ -43,10 +43,10 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
   /**
    * 根据业务关联查实例（P1-2: 含 tenant_id 过滤 + 仅活跃状态）
    *
-   * @param tenantId 参数说明
-   * @param businessType 参数说明
-   * @param businessId 参数说明
-   * @return 返回值说明
+   * @param tenantId 租户 ID
+   * @param businessType 业务类型编码
+   * @param businessId 业务单据 ID
+   * @return 匹配的流程实例；不存在返回 null
    */
   FlowInstance selectByBusiness(
       @Param("tenantId") String tenantId,
@@ -69,13 +69,13 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
   /**
    * 状态更新
    *
-   * @param id 参数说明
-   * @param flowStatus 参数说明
-   * @param currentNodeCode 参数说明
-   * @param currentNodeName 参数说明
-   * @param endAt 参数说明
-   * @param durationMs 参数说明
-   * @return 返回值说明
+   * @param id 流程实例 ID
+   * @param flowStatus 目标流程状态
+   * @param currentNodeCode 当前节点编码
+   * @param currentNodeName 当前节点名称
+   * @param endAt 实例结束时间（进行中传 null）
+   * @param durationMs 运行耗时毫秒
+   * @return 受影响行数
    */
   int updateStatus(
       @Param("id") String id,
@@ -89,18 +89,18 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
    * P2-18: 更新流程变量 JSON（用于持久化 terminate reason 等元信息）
    * 
    *
-   * @param id 参数说明
-   * @param variable 参数说明
-   * @return 返回值说明
+   * @param id 流程实例 ID
+   * @param variable 流程变量 JSON 字符串
+   * @return 受影响行数
    */
   int updateVariable(@Param("id") String id, @Param("variable") String variable);
 
   /**
    * 发起人维度查询
    *
-   * @param initiatorId 参数说明
-   * @param flowStatus 参数说明
-   * @return 返回值说明
+   * @param initiatorId 发起人用户 ID
+   * @param flowStatus 流程状态过滤条件（可空）
+   * @return 实例列表
    */
   List<FlowInstance> selectByInitiator(
       @Param("initiatorId") String initiatorId, @Param("flowStatus") String flowStatus);
@@ -127,9 +127,9 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
    * 更新实例的 dueAt 字段（子流程超时用）
    * 
    *
-   * @param id 参数说明
-   * @param dueAt 参数说明
-   * @return 返回值说明
+   * @param id 流程实例 ID
+   * @param dueAt 截止日期时间
+   * @return 受影响行数
    */
   int updateDueAt(@Param("id") String id, @Param("dueAt") LocalDateTime dueAt);
 

@@ -262,7 +262,7 @@ public class BloomFilterDeduplicator {
   /**
    * 创建新的 BloomFilter 实例。
    *
-   * @return 返回值说明
+   * @return 配置好预期插入数和误判率的新 BloomFilter 实例
    */
   private BloomFilter<String> createFilter() {
     return BloomFilter.create(

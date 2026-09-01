@@ -247,8 +247,8 @@ public class MessageConsumer implements RocketMQListener<String> {
   /**
    * 按 msgId 精确查找消息日志 VO。
    *
-   * @param msgId 参数说明
-   * @return 返回值说明
+   * @param msgId 消息 ID（业务 ID）
+   * @return 消息日志 VO，未找到返回 null
    */
   private MsgLogVO findByMsgId(String msgId) {
     MessageLogQueryDTO query = new MessageLogQueryDTO();

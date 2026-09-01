@@ -18,7 +18,7 @@ public interface JobAlertRuleRepository {
   /**
    * 查询所有启用的告警规则。
    *
-   * @return 返回值说明
+   * @return 启用的告警规则 VO 列表；无记录时返回空列表
    */
   List<JobAlertRuleVO> findAllEnabled();
 

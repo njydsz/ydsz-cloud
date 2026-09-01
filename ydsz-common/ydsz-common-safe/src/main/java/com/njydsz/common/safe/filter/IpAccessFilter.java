@@ -45,7 +45,10 @@ public class IpAccessFilter extends OncePerRequestFilter {
   private final List<String> excludes;
 
   /**
-   * 方法说明。
+   * 构造 IP 访问控制过滤器，绑定判定服务与拒绝事件发布通道。
+   *
+   * <p>{@code excludes} 为 {@code null} 时按空列表处理，即所有路径都参与 IP 判定；
+   * 该过滤器以 {@code HIGHEST_PRECEDENCE} 顺序执行，早于鉴权与参数校验相关的过滤器。
    *
    * @param ipAccessService IP 访问控制服务
    * @param eventPublisher 安全事件发布器

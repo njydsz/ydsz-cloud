@@ -362,44 +362,45 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     }
 
     void put(K key, V value) {
-      Node<K, V> newNode = new Node<>(key, value);
-      Node<K, V> existing = map.putIfAbsent(key, newNode);
-      if (existing == null) {
-        size.incrementAndGet();
-        parent.incrementSize();
-        evictLock.lock();
-        try {
-          addToTail(newNode);
-        } finally {
-          evictLock.unlock();
-        }
-        maybeEvict();
-        return;
-      }
-      existing.value = value;
-      existing.lastAccessNanos = System.nanoTime();
+      // P0 修复（JMH 16 线程实跑抓获断链 NPE）：map 与链表两结构的更新必须在同一
+      // evictLock 临界区内原子完成。旧实现 map.putIfAbsent 在锁外发布节点，窗口内
+      // 节点可被并发 remove/evict 摘走，随后 addToTail 把已移除节点接回链表形成幽灵节点；
+      // 幽灵节点指针为残留旧值，后续 removeFromList 依据它错写前驱/后继指针导致断链
+      //（evictOne 采样循环 NPE）。修复后 map 与链表状态转换原子，幽灵节点在结构上不可产生。
       evictLock.lock();
       try {
-        moveToTail(existing);
+        Node<K, V> newNode = new Node<>(key, value);
+        Node<K, V> existing = map.putIfAbsent(key, newNode);
+        if (existing == null) {
+          size.incrementAndGet();
+          parent.incrementSize();
+          addToTail(newNode);
+        } else {
+          existing.value = value;
+          existing.lastAccessNanos = System.nanoTime();
+          moveToTail(existing);
+        }
       } finally {
         evictLock.unlock();
       }
+      maybeEvict();
     }
 
     V remove(K key) {
-      Node<K, V> node = map.remove(key);
-      if (node != null) {
-        size.decrementAndGet();
-        parent.decrementSize();
-        evictLock.lock();
-        try {
+      // P0 修复：同 put，map.remove 与摘链必须在同一临界区内原子完成
+      evictLock.lock();
+      try {
+        Node<K, V> node = map.remove(key);
+        if (node != null) {
+          size.decrementAndGet();
+          parent.decrementSize();
           removeFromList(node);
-        } finally {
-          evictLock.unlock();
+          return node.value;
         }
-        return node.value;
+        return null;
+      } finally {
+        evictLock.unlock();
       }
-      return null;
     }
 
     void clear() {
@@ -463,19 +464,19 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
      *
      * @return 是否淘汰成功
      */
-    private boolean evictOne() {
-      Node<K, V> victim = null;
-      long oldest = Long.MAX_VALUE;
-      int sampled = 0;
-      Node<K, V> current = head.next;
-      while (current != tail && sampled < EVICT_SAMPLE_SIZE) {
-        if (current.lastAccessNanos < oldest) {
-          oldest = current.lastAccessNanos;
-          victim = current;
-        }
-        sampled++;
-        current = current.next;
+  private boolean evictOne() {
+    Node<K, V> victim = null;
+    long oldest = Long.MAX_VALUE;
+    int sampled = 0;
+    Node<K, V> current = head.next;
+    while (current != tail && sampled < EVICT_SAMPLE_SIZE) {
+      if (current.lastAccessNanos < oldest) {
+        oldest = current.lastAccessNanos;
+        victim = current;
       }
+      sampled++;
+      current = current.next;
+    }
       if (victim == null || victim.key == null) {
         return false;
       }

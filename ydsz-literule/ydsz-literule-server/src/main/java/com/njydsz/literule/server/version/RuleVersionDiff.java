@@ -77,15 +77,19 @@ public class RuleVersionDiff implements Serializable {
     UNCHANGED
   }
 
-  /** 是否有变更
-   * @return 返回值说明
+  /**
+   * 是否有变更
+   *
+   * @return true 表示存在至少一个非 UNCHANGED 的差异条目
    */
   public boolean hasChanges() {
     return entries != null && entries.stream().anyMatch(e -> e.getType() != DiffType.UNCHANGED);
   }
 
-  /** 变更字段数
-   * @return 返回值说明
+  /**
+   * 变更字段数
+   *
+   * @return 状态不为 UNCHANGED 的差异条目数量
    */
   public int changeCount() {
     if (entries == null) {

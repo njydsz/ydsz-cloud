@@ -146,8 +146,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
   /**
    * 轮询选择。
    *
-   * @param providers 参数说明
-   * @return 返回值说明
+   * @param providers 可用服务商列表
+   * @return 按轮询顺序选中的服务商
    */
   private SmsProvider selectRoundRobin(List<SmsProvider> providers) {
     int idx = Math.abs(roundRobinIndex.getAndIncrement()) % providers.size();
@@ -157,8 +157,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
   /**
    * 权重选择。
    *
-   * @param providers 参数说明
-   * @return 返回值说明
+   * @param providers 可用服务商列表
+   * @return 按权重随机选中的服务商
    */
   private SmsProvider selectWeighted(List<SmsProvider> providers) {
     Map<String, Integer> weights = parseWeights();
@@ -178,8 +178,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
   /**
    * 成本优先（aliyun < tencent < mock）。
    *
-   * @param providers 参数说明
-   * @return 返回值说明
+   * @param providers 可用服务商列表
+   * @return 单位成本最低的服务商
    */
   private SmsProvider selectCostFirst(List<SmsProvider> providers) {
     return providers.stream()
@@ -195,8 +195,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
   /**
    * 可用性优先（跳过连续失败超过阈值的 provider）。
    *
-   * @param providers 参数说明
-   * @return 返回值说明
+   * @param providers 可用服务商列表
+   * @return 连续失败未超阈值的服务商，全超阈值时降级返回第一个
    */
   private SmsProvider selectAvailabilityFirst(List<SmsProvider> providers) {
     for (SmsProvider p : providers) {
@@ -232,8 +232,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
   /**
    * OD-4: 从 MessageProperties.CostConfig 读取成本，消除硬编码 switch。
    *
-   * @param providerType 参数说明
-   * @return 返回值说明
+   * @param providerType 服务商类型（如 ALIYUN、TENCENT、MOCK）
+   * @return 单位成本（以毫为单位），无配置时返回默认值
    */
   private int getProviderCost(String providerType) {
     // OD-4: 从配置读取成本，无配置时默认 50

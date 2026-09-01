@@ -50,9 +50,10 @@ public final class BeanSerializer {
   public final int estimatedSize;
 
   /**
-   * 字段说明（方法（null 表示无））。
+   * 输出动态字段的方法（标注 {@code @JsonAnyGetter}）。
    *
-   * @JsonAnyGetter 方法（null 表示无）
+   * <p>为 {@code null} 表示目标 Bean 未声明该方法，序列化时只输出 {@link #fields} 中登记的固定字段；
+   * 非 {@code null} 时其返回的 {@code Map} 键值对会作为顶层字段一并展开。
    */
   public final Method anyGetterMethod;
 

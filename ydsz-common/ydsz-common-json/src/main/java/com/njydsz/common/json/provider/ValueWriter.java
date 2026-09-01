@@ -1006,9 +1006,10 @@ public final class ValueWriter {
   /**
    * 格式化日期（带模式）
    *
-   * @param value 值
-   * @param pattern 模式
-   * @return 返回值说明
+   * @param value 待格式化的日期时间值，支持 {@code TemporalAccessor} 等类型
+   * @param pattern {@link java.time.format.DateTimeFormatter} 兼容的日期格式串
+   * @return 格式化后的日期字符串；{@code value} 为 {@code null} 时返回 {@code null}，
+   *     {@code pattern} 非法或值类型无法格式化时同样返回 {@code null}（不抛异常）
    */
   public static String formatDateWithPattern(Object value, String pattern) {
     if (value == null) {

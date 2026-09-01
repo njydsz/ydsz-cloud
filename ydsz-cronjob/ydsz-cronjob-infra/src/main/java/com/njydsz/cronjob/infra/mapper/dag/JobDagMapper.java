@@ -41,8 +41,8 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
   /**
    * 根据 dag_key 查询 DAG 定义。
    *
-   * @param dagKey 参数说明
-   * @return 返回值说明
+   * @param dagKey DAG 唯一编码
+   * @return DAG 实体；不存在时返回 null
    */
   @Select(
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
@@ -55,7 +55,7 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
   /**
    * 查询所有启用状态（ENABLED）且触发类型为 CRON 的 DAG（调度器扫描用）。
    *
-   * @return 返回值说明
+   * @return ENABLED 且 CRON 类型的 DAG 列表（调度器扫描用），无记录时返回空列表
    */
   @Select(
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
@@ -69,7 +69,7 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
   /**
    * 查询所有 ENABLED 状态的 DAG。
    *
-   * @return 返回值说明
+   * @return 所有 ENABLED 状态的 DAG 列表，无记录时返回空列表
    */
   @Select(
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
@@ -82,10 +82,10 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
   /**
    * 更新 DAG 触发统计（fire_count +1，last_fire_time 更新）。
    *
-   * @param dagId 参数说明
-   * @param fireTime 参数说明
-   * @param nextFireTime 参数说明
-   * @return 返回值说明
+   * @param dagId DAG 定义 ID
+   * @param fireTime 本次触发时间（更新 last_fire_time）
+   * @param nextFireTime 下次触发时间（更新 next_fire_time）
+   * @return 受影响行数
    */
   @Update(
       "UPDATE ydsz_job_dag SET fire_count = fire_count + 1, last_fire_time = #{fireTime}, "

@@ -121,8 +121,8 @@ public class BpmnXmlParser {
   /**
    * 校验根元素为 definitions。
    *
-   * @param doc 参数说明
-   * @return 返回值说明
+   * @param doc BPMN XML DOM 文档
+   * @return definitions 根元素
    */
   private Element validateRootElement(Document doc) {
     Element root = doc.getDocumentElement();
@@ -139,8 +139,8 @@ public class BpmnXmlParser {
   /**
    * 查找 process 元素，不存在则抛出异常。
    *
-   * @param root 参数说明
-   * @return 返回值说明
+   * @param root definitions 根元素
+   * @return process 元素
    */
   private Element findProcessOrThrow(Element root) {
     Element process = bpmnElementHelper.findChild(root, "process");
@@ -156,8 +156,8 @@ public class BpmnXmlParser {
   /**
    * 根据 process 元素构建 BpmnModel（processId / processName）。
    *
-   * @param process 参数说明
-   * @return 返回值说明
+   * @param process process 元素
+   * @return 构建的 BpmnModel（含 processId/processName）
    */
   private BpmnModel buildBpmnModel(Element process) {
     BpmnModel model = new BpmnModel();
@@ -195,8 +195,8 @@ public class BpmnXmlParser {
   /**
    * 解析 process 的子元素，填充 nodes 和 skips。
    *
-   * @param children 参数说明
-   * @param model 参数说明
+   * @param children process 的全部子节点列表
+   * @param model 待填充的 BpmnModel
    */
   private void parseProcessChildren(NodeList children, BpmnModel model) {
     List<FlowNodeVO> nodes = new ArrayList<>(children.getLength());
@@ -248,8 +248,8 @@ public class BpmnXmlParser {
   /**
    * 补全 skip.nextNodeType 字段。
    *
-   * @param nodes 参数说明
-   * @param skips 参数说明
+   * @param nodes 节点列表
+   * @param skips 跳转列表（将被补全 nextNodeType）
    */
   private void fillSkipNextNodeType(List<FlowNodeVO> nodes, List<FlowSkipVO> skips) {
     Map<String, FlowNodeVO> nodeByCode = new HashMap<>(nodes.size());
@@ -267,7 +267,7 @@ public class BpmnXmlParser {
   /**
    * 校验解析结果：节点编码唯一且必须含开始节点。
    *
-   * @param model 参数说明
+   * @param model 解析生成的 BpmnModel
    */
   private void validateParseResult(BpmnModel model) {
     List<FlowNodeVO> nodes = model.getNodes();
@@ -290,8 +290,8 @@ public class BpmnXmlParser {
   /**
    * 解析 BPMNDI 段，提取节点坐标信息（用于流程图可视化高亮）。
    *
-   * @param root 参数说明
-   * @param model 参数说明
+   * @param root definitions 根元素
+   * @param model 待填充坐标的 BpmnModel
    */
   private void parseDiagramCoordinates(Element root, BpmnModel model) {
     Map<String, BpmnModel.NodeCoordinate> nodeCoords = new HashMap<>(model.getNodes().size());

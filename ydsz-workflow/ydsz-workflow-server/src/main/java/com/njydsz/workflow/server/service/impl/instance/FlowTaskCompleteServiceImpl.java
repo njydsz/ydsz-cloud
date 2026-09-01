@@ -52,10 +52,10 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 创建任务（向后兼容重载）
    *
-   * @param instanceId 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param node 目标节点
+   * @param variables 流程变量
+   * @return 创建的任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public String createTask(String instanceId, FlowNodeVO node, Map<String, Object> variables) {
@@ -65,11 +65,11 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 创建任务（支持显式指定办理人）
    *
-   * @param instanceId 参数说明
-   * @param node 参数说明
-   * @param variables 参数说明
-   * @param explicitAssignees 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param node 目标节点
+   * @param variables 流程变量
+   * @param explicitAssignees 显式指定的办理人 ID 列表
+   * @return 创建的任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public String createTask(
@@ -85,8 +85,8 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 签收
    *
-   * @param taskId 参数说明
-   * @param userId 参数说明
+   * @param taskId 任务 ID
+   * @param userId 签收用户 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public void claim(String taskId, String userId) {
@@ -98,7 +98,7 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 通过
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO
    */
   @Transactional(rollbackFor = Exception.class)
   public void pass(FlowTaskOperateDTO dto) {
@@ -110,7 +110,7 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 驳回
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO
    */
   @Transactional(rollbackFor = Exception.class)
   public void reject(FlowTaskOperateDTO dto) {
@@ -122,7 +122,7 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 转办
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO
    */
   @Transactional(rollbackFor = Exception.class)
   public void transfer(FlowTaskOperateDTO dto) {
@@ -132,7 +132,7 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 委派
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO
    */
   @Transactional(rollbackFor = Exception.class)
   public void delegate(FlowTaskOperateDTO dto) {
@@ -142,7 +142,7 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 自由跳转
    *
-   * @param dto 参数说明
+   * @param dto 任务操作 DTO
    */
   @Transactional(rollbackFor = Exception.class)
   public void jump(FlowTaskOperateDTO dto) {
@@ -152,10 +152,10 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 取回（已审批后取回）
    *
-   * @param hisTaskId 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param hisTaskId 历史任务 ID
+   * @param operatorId 取回操作人 ID
+   * @param comment 取回原因
+   * @return 新创建的任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public String retract(String hisTaskId, String operatorId, String comment) {
@@ -167,10 +167,10 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 实例级催办
    *
-   * @param instanceId 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param operatorId 催办操作人 ID
+   * @param comment 催办意见
+   * @return 被催办的任务 ID 列表
    */
   public List<String> urge(String instanceId, String operatorId, String comment) {
     return urgeService.urge(instanceId, operatorId, comment);
@@ -179,11 +179,11 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 节点级催办
    *
-   * @param instanceId 参数说明
-   * @param nodeCode 参数说明
-   * @param operatorId 参数说明
-   * @param comment 参数说明
-   * @return 返回值说明
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 目标节点编码
+   * @param operatorId 催办操作人 ID
+   * @param comment 催办意见
+   * @return 被催办的任务 ID 列表
    */
   public List<String> urgeByNode(
       String instanceId, String nodeCode, String operatorId, String comment) {
@@ -195,8 +195,8 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 标记任务超时
    *
-   * @param taskId 参数说明
-   * @param reason 参数说明
+   * @param taskId 任务 ID
+   * @param reason 超时原因描述
    */
   @Transactional(rollbackFor = Exception.class)
   public void timeoutTask(String taskId, String reason) {
@@ -206,9 +206,9 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 任务级挂起
    *
-   * @param taskId 参数说明
-   * @param operatorId 参数说明
-   * @param reason 参数说明
+   * @param taskId 任务 ID
+   * @param operatorId 操作人 ID
+   * @param reason 挂起原因
    */
   @Transactional(rollbackFor = Exception.class)
   public void suspendTask(String taskId, String operatorId, String reason) {
@@ -218,8 +218,8 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 任务级激活
    *
-   * @param taskId 参数说明
-   * @param operatorId 参数说明
+   * @param taskId 任务 ID
+   * @param operatorId 激活操作人 ID
    */
   @Transactional(rollbackFor = Exception.class)
   public void activateTask(String taskId, String operatorId) {
@@ -229,8 +229,8 @@ public class FlowTaskCompleteServiceImpl {
   /**
    * 取消某实例全部 PENDING 任务
    *
-   * @param instanceId 参数说明
-   * @param taskStatus 参数说明
+   * @param instanceId 流程实例 ID
+   * @param taskStatus 目标取消状态
    */
   public void cancelByInstance(String instanceId, String taskStatus) {
     timeoutService.cancelByInstance(instanceId, taskStatus);

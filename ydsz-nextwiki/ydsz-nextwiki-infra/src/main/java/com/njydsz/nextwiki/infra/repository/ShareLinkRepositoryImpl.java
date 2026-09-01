@@ -34,8 +34,13 @@ import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
 @RequiredArgsConstructor
 public class ShareLinkRepositoryImpl implements ShareLinkRepository {
 
+  /** 分布式 ID 生成器（Snowflake 算法，生成分享链接唯一 ID） */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
+
+  /** 分享链接 MyBatis Mapper（数据库 CRUD 原始操作） */
   private final ShareLinkMapper shareLinkMapper;
+
+  /** DTO/VO/DO 转换器（实体与视图对象之间的映射） */
   private final NextwikiConverter converter;
 
   @Override

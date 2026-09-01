@@ -87,6 +87,56 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- JMH 基准（test scope：为内核替换决策留存当前实现 vs Caffeine 对照数据；不进入主代码 classpath，不影响 L1 零依赖纯度） -->
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>1.37</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>1.37</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Caffeine（test scope：仅用于基准对照，主代码零依赖约束不变） -->
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <!-- JaCoCo 覆盖率（P2 #13，2026-09-01）：prepare-agent + report 执行由根 pom pluginManagement
+           预置，此处按需启用本模块；check 门禁阈值依据当日基线实测设定（见 analysis-report §5） -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+      <!-- test 编译单独启用 JMH 注解处理器（根 pom 的 annotationProcessorPaths 会屏蔽 classpath 处理器发现，
+           此处仅对 default-testCompile 生效，主代码编译路径不变） -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-testCompile</id>
+            <configuration>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>org.openjdk.jmh</groupId>
+                  <artifactId>jmh-generator-annprocess</artifactId>
+                  <version>1.37</version>
+                </path>
+              </annotationProcessorPaths>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

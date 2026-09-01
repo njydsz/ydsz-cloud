@@ -109,7 +109,7 @@ public class RuleAdminService {
    * @param configProvider 规则配置提供者
    * @param versionRepository 版本仓库（可为 null）
    * @param eventPublisher 事件发布器
-      * @param ruleDefinitionRepository 参数说明
+   * @param ruleDefinitionRepository 规则定义仓库（用于分页查询和搜索）
    */
   public RuleAdminService(
       RuleEngine ruleEngine,

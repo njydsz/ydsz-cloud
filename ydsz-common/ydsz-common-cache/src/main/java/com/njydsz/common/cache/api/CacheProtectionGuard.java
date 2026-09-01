@@ -173,8 +173,21 @@ public final class CacheProtectionGuard {
     }
 
     // 等待其他线程完成加载
-    existing.join();
-    // join 失败抛 CompletionException：失败传播给等待者（对标 Caffeine），守卫不递归重试
+    try {
+      existing.join();
+    } catch (CompletionException e) {
+      // 解包还原加载线程的原始异常（对标 Caffeine：所有调用方收到同一异常实例）。
+      // 不解包时等待者拿到的是 CompletionException 包装，与加载线程的异常类型不一致
+      Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException) {
+        throw (RuntimeException) cause;
+      }
+      if (cause instanceof Error) {
+        throw (Error) cause;
+      }
+      throw e;
+    }
+    // join 失败抛原始异常：失败传播给等待者（对标 Caffeine），守卫不递归重试
 
     // 从缓存读取结果（类型安全，无需 unchecked cast）
     V loaded = cache.getIfPresent(key);
@@ -288,5 +301,46 @@ public final class CacheProtectionGuard {
    */
   public static boolean isNullPlaceholderKey(Cache<?, ?> cache, Object key) {
     return NullValueGuard.isNullKeyRegistered(cache, key);
+  }
+
+  /**
+   * 注册带 TTL 的空值占位符（供 Spring 注解路径等外部调用方使用）。
+   *
+   * <p>与 {@code getWithProtection} 内部的注册逻辑一致：过期时间在 [minExpireMs, maxExpireMs]
+   * 区间内随机抖动（防雪崩）。
+   *
+   * @param cache 缓存实例
+   * @param key 缓存键
+   * @param minExpireMs 最小过期时间（毫秒）
+   * @param maxExpireMs 最大过期时间（毫秒）
+   */
+  public static void registerNullPlaceholder(
+      Cache<?, ?> cache, Object key, long minExpireMs, long maxExpireMs) {
+    CacheProtectionGuard guard = forCache(cache);
+    registerNullPlaceholder(guard, cache, key, minExpireMs, maxExpireMs);
+  }
+
+  /**
+   * 判断空值占位符是否处于活动期（已注册且未过期）。
+   *
+   * <p>占位符已过期时惰性清理（注销注册并移除过期时间）， 返回 false 允许调用方重新回源——与
+   * {@code getWithProtection} 读路径的过期语义一致。
+   *
+   * @param cache 缓存实例
+   * @param key 缓存键
+   * @return true 表示占位期内（应返回 null 防穿透）
+   */
+  public static boolean isNullPlaceholderActive(Cache<?, ?> cache, Object key) {
+    if (!NullValueGuard.isNullKeyRegistered(cache, key)) {
+      return false;
+    }
+    CacheProtectionGuard guard = forCache(cache);
+    Long expiration = guard.nullKeyExpirations.get(key);
+    if (expiration == null || System.currentTimeMillis() > expiration) {
+      NullValueGuard.unregisterNullKey(cache, key);
+      guard.nullKeyExpirations.remove(key);
+      return false;
+    }
+    return true;
   }
 }

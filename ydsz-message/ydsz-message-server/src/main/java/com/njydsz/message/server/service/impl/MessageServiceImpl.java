@@ -153,9 +153,9 @@ public class MessageServiceImpl implements MessageService {
    * OutboxEvent 后立即返回, 由 OutboxEventScheduler 异步投递 MQ。
    * 
    *
-   * @param request 参数说明
-   * @param depth 参数说明
-   * @return 返回值说明
+   * @param request 消息发送请求
+   * @param depth 当前级联深度（0 表示顶层消息）
+   * @return 发送结果
    */
   private MessageResult sendInternal(MessageRequest request, int depth) {
     if (request == null) {
@@ -273,10 +273,10 @@ public class MessageServiceImpl implements MessageService {
   /**
    * P1-3: 构造落库 MsgLogVO。
    *
-   * @param request 参数说明
-   * @param ctx 参数说明
-   * @param rendered 参数说明
-   * @return 返回值说明
+   * @param request 原始消息发送请求
+   * @param ctx 管线预处理上下文
+   * @param rendered 渲染后的消息内容
+   * @return 构造好的消息日志实体
    */
   private MsgLogVO buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
     MsgLogVO logDO = new MsgLogVO();
@@ -526,8 +526,8 @@ public class MessageServiceImpl implements MessageService {
   /**
    * P0-3: 解析发送优先级,优先使用请求中的 priority,回退全局配置。
    *
-   * @param request 参数说明
-   * @return 返回值说明
+   * @param request 消息发送请求（优先取请求中的 priority 字段）
+   * @return 优先级字符串（如 NORMAL、URGENT）
    */
   private String resolvePriority(MessageRequest request) {
     if (request != null && StringUtils.hasText(request.getPriority())) {
@@ -690,10 +690,10 @@ public class MessageServiceImpl implements MessageService {
   /**
    * 发布领域事件到 Outbox（DomainEventPublisher 不可用时静默跳过）。
    *
-   * @param aggregateType 参数说明
-   * @param aggregateId 参数说明
-   * @param eventType 参数说明
-   * @param payload 参数说明
+   * @param aggregateType 聚合根类型（如 Message）
+   * @param aggregateId 聚合根 ID（如 msgId）
+   * @param eventType 事件类型（如 StatusChanged）
+   * @param payload 事件负载 JSON
    */
   private void publishEvent(
       String aggregateType, String aggregateId, String eventType, String payload) {

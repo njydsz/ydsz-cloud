@@ -224,10 +224,12 @@ public class ExprTraceBuilder {
     nodes.add(tn);
   }
 
-  /** 构建根追踪节点
-   * @param ast 参数说明
-   * @param result 参数说明
-   * @return 返回值说明
+  /**
+   * 构建根追踪节点
+   *
+   * @param ast 抽象语法树根节点
+   * @param result 表达式求值结果
+   * @return 根追踪节点（包含所有子节点的追踪信息）
    */
   public TraceNode buildRoot(ExprNode ast, Object result) {
     if (nodes.size() == 1) {

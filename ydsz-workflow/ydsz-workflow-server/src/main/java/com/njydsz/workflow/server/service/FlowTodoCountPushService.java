@@ -25,7 +25,7 @@ public interface FlowTodoCountPushService {
   /**
    * 安全推送：任何异常都被吞掉（事件回调路径使用）
    *
-   * @param userId 参数说明
+   * @param userId 用户 ID
    */
   void pushTodoCountSafe(String userId);
 

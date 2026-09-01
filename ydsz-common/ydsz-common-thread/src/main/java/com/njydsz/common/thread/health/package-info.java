@@ -7,6 +7,7 @@
  *   <li>{@link com.njydsz.common.thread.health.ThreadHealthIndicator} — 线程池健康检查
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 package com.njydsz.common.thread.health;

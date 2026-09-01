@@ -90,8 +90,8 @@ public class TemplateAst {
     /**
      * 静态文本指令
      *
-     * @param text 参数说明
-     * @return 返回值说明
+     * @param text 静态文本内容
+     * @return 静态文本指令实例
      */
     static AstInstruction text(String text) {
       return new AstInstruction(InstructionType.TEXT, text, null, null, null, null, null, null);
@@ -100,8 +100,8 @@ public class TemplateAst {
     /**
      * 变量指令
      *
-     * @param expression 参数说明
-     * @return 返回值说明
+     * @param expression 变量表达式（变量名或管道表达式）
+     * @return 变量指令实例
      */
     static AstInstruction var(String expression) {
       return new AstInstruction(
@@ -111,10 +111,10 @@ public class TemplateAst {
     /**
      * if 条件指令
      *
-     * @param conditionKey 参数说明
-     * @param trueBranch 参数说明
-     * @param falseBranch 参数说明
-     * @return 返回值说明
+     * @param conditionKey 条件判断键
+     * @param trueBranch 条件为真时的分支 AST
+     * @param falseBranch 条件为假时的分支 AST（可为 null）
+     * @return 条件指令实例
      */
     static AstInstruction ifBlock(
         String conditionKey, TemplateAst trueBranch, TemplateAst falseBranch) {
@@ -125,9 +125,9 @@ public class TemplateAst {
     /**
      * each 循环指令
      *
-     * @param iterationKey 参数说明
-     * @param body 参数说明
-     * @return 返回值说明
+     * @param iterationKey 循环迭代变量键
+     * @param body 循环体 AST
+     * @return 循环指令实例
      */
     static AstInstruction eachBlock(String iterationKey, TemplateAst body) {
       return new AstInstruction(

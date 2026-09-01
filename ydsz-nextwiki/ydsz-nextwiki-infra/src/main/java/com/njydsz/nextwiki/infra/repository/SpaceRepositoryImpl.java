@@ -38,8 +38,13 @@ import com.njydsz.nextwiki.infra.mapper.SpaceMapper;
 @RequiredArgsConstructor
 public class SpaceRepositoryImpl implements SpaceRepository {
 
+  /** 空间 MyBatis Mapper（数据库 CRUD 原始操作） */
   private final SpaceMapper spaceMapper;
+
+  /** 分布式 ID 生成器（Snowflake 算法，生成空间唯一 ID） */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
+
+  /** DTO/VO/DO 转换器（实体与视图对象之间的映射） */
   private final NextwikiConverter nextwikiConverter;
 
   @Override

@@ -38,17 +38,17 @@ public interface FlowNodeMapper extends BaseMapper<FlowNode> {
   /**
    * 根据定义 ID 查全部节点
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 节点列表
    */
   List<FlowNode> selectByDefinitionId(@Param("definitionId") String definitionId);
 
   /**
    * 根据 definitionId + nodeCode 查单节点
    *
-   * @param definitionId 参数说明
-   * @param nodeCode 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @param nodeCode 节点编码
+   * @return 匹配的节点实体；不存在返回 null
    */
   FlowNode selectByCode(
       @Param("definitionId") String definitionId, @Param("nodeCode") String nodeCode);
@@ -56,24 +56,24 @@ public interface FlowNodeMapper extends BaseMapper<FlowNode> {
   /**
    * 查开始节点
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 开始节点实体
    */
   FlowNode selectStartNode(@Param("definitionId") String definitionId);
 
   /**
    * 查结束节点列表
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 结束节点列表
    */
   List<FlowNode> selectEndNodes(@Param("definitionId") String definitionId);
 
   /**
    * 删除某定义的全部节点（重定义时用）
    *
-   * @param definitionId 参数说明
-   * @return 返回值说明
+   * @param definitionId 流程定义 ID
+   * @return 受影响行数
    */
   int deleteByDefinitionId(@Param("definitionId") String definitionId);
 }
