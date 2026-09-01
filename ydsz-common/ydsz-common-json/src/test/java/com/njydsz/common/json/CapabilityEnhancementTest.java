@@ -41,10 +41,14 @@ class CapabilityEnhancementTest {
 
   interface DetailView extends BasicView {}
 
-  /** 视图测试 Bean：name 无注解（应默认输出），id 标注 BasicView，secret 标注 DetailView */
+  /** 视图测试 Bean：name 无注解（应默认输出），id 标注 BasicView，secret 标注 DetailView（字段级注解——模块当前支持形式） */
   static class ViewBean {
     private String name = "n";
+
+    @JsonView(BasicView.class)
     private Long id = 1L;
+
+    @JsonView(DetailView.class)
     private String secret = "s";
 
     String getName() {
@@ -55,7 +59,6 @@ class CapabilityEnhancementTest {
       this.name = name;
     }
 
-    @JsonView(BasicView.class)
     Long getId() {
       return id;
     }
@@ -64,7 +67,6 @@ class CapabilityEnhancementTest {
       this.id = id;
     }
 
-    @JsonView(DetailView.class)
     String getSecret() {
       return secret;
     }

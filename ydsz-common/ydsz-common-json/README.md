@@ -446,6 +446,19 @@ String formatted = YdszJson.format(compactJson);
 
 ## 最新变更
 
+### 1.0.0（能力深化轮：2026-09-01，自研路线确立）
+
+> 战略约束确认：公司内网项目，云顶编码规范不允许引入竞品 JSON 库——**自研路线唯一**，全面深化自有能力。
+> 累计 **39 项 JUnit 测试全绿**（新增能力用例 9 项）。
+
+| 优先级 | 变更 | 说明 |
+|------|------|------|
+| P1 | @JsonView 默认包含语义 | 对齐 Jackson DEFAULT_VIEW_INCLUSION：未标注 @JsonView 的字段在任意视图下输出（原先被直接隐藏）。`hasFieldAnnotations` 同步计入 @JsonView，避免带视图注解的 Bean 被无视图逻辑的快速路径绕过。已知边界：当前仅支持字段级注解，getter 方法级注解为 P2 待补 |
+| P1 | @JsonTypeInfo 序列化输出 | `PolymorphicTypeResolver.resolveTypeId` 沿类层级解析类型标识（@JsonTypeName 优先），ValueWriter 输出 `As.PROPERTY` 类型属性——与反序列化侧 `resolveType` 配合实现多态 round-trip 闭环（此前序列化不输出类型，多态往返断裂） |
+| P1 | List 多态反序列化修复 | `deserializeBeanListFast` 逐元素调用 `resolveType` 解析具体子类型——原先直接按声明类型反序列化，抽象基类列表必然 ClassCastException |
+| P1 | 树模型基线 API | `JsonNode.at()`（RFC 6901 指针，区分空指针/非法指针）、`findValue()`/`findValues()`（深度优先查找）、`ObjectNode.fields()`（键值对视图）——对标 Jackson JsonNode 常用面 |
+| P1 | 测试恢复与守护 | 并行会话误删的回归测试已恢复入库（YdszJsonRegressionTest 20 用例 + JsonPatchComplianceTest 10 用例重建），junit-jupiter 依赖恢复 |
+
 ### 1.0.0（P1 合规与治理修复轮：2026-09-01）
 
 > 累计 **30 项 JUnit 测试全绿**（新增 JsonPatch RFC 合规 10 用例）。checkstyle 0 违规。
