@@ -5,7 +5,7 @@ import java.util.List;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.domain.dto.BatchSendResult;
+import com.njydsz.message.domain.dto.BatchSendResultDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -74,7 +74,7 @@ public interface MessageService {
    * @param batchId 批次 ID（业务侧生成）
    * @return 批量发送结果（含成功/失败/跳过计数 + 失败明细）
    */
-  BatchSendResult batchSend(List<MessageRequest> requests, String batchId);
+  BatchSendResultDTO batchSend(List<MessageRequest> requests, String batchId);
 
   /**
    * 分页查询消息发送日志

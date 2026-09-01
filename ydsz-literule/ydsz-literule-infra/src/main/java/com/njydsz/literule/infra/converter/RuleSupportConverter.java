@@ -7,8 +7,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
-import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
+import com.njydsz.literule.domain.dto.RuleVersionDTO;
+import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
@@ -61,9 +61,9 @@ public interface RuleSupportConverter {
 
   List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistory> entities);
 
-  // ===== RuleVersionSaveDTO → RuleVersionHistory =====
+  // ===== RuleVersionDTO → RuleVersionHistory =====
   @Mapping(target = "id", ignore = true)
-  RuleVersionHistory postDtoToEntity(RuleVersionSaveDTO dto);
+  RuleVersionHistory postDtoToEntity(RuleVersionDTO dto);
 
   // ===== DecisionTable PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
@@ -86,5 +86,7 @@ public interface RuleSupportConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "lastEvaluatedAt", ignore = true)
   @Mapping(target = "lastRollbackAt", ignore = true)
-  RuleABPolicy putDtoToEntity(RuleABPolicyPutDTO dto);
+  RuleABPolicy putDtoToEntity(RuleABPolicyDTO dto);
 }
+
+

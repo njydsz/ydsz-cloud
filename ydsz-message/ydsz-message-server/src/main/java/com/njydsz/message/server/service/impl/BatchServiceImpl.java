@@ -21,7 +21,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.BatchProgressDTO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
-import com.njydsz.message.domain.dto.BatchSendResult;
+import com.njydsz.message.domain.dto.BatchSendResultDTO;
 import com.njydsz.message.domain.event.BatchCompletedEvent;
 import com.njydsz.message.domain.query.MsgBatchQuery;
 import com.njydsz.message.domain.repository.MsgBatchRepository;
@@ -300,7 +300,7 @@ public class BatchServiceImpl implements BatchService {
       }
     }
 
-    BatchSendResult batchResult = new BatchSendResult(batchId, requests.size(), success, failure, skipped);
+    BatchSendResultDTO batchResult = new BatchSendResultDTO(batchId, requests.size(), success, failure, skipped);
 
     // P1-A3: 断点续传时增量累加计数，首次执行时直接覆盖
     if (incremental) {

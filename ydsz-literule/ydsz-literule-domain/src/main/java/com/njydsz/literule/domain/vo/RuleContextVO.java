@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.literule.domain.enums.RuleEnvironment;
 
 /**
  * 规则评估上下文
@@ -26,7 +27,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 1.0.0
  */
-public final class RuleContextVO implements Serializable {
+public final class RuleContextVOVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -57,14 +58,14 @@ public final class RuleContextVO implements Serializable {
   /**
    * 表达式求值结果缓存（P2-9 条件冗余计算缓存）
    *
-   * <p>{@code transient} 不随上下文序列化；仅在单次 {@code evaluate} 生命周期内有效， 随 {@link RuleContext} 一起被
+   * <p>{@code transient} 不随上下文序列化；仅在单次 {@code evaluate} 生命周期内有效， 随 {@link RuleContextVO} 一起被
    * GC，无需额外失效/清理逻辑。 key=表达式字符串，value=该表达式在当前 facts 下的求值结果。 跨规则、同规则内（条件/严重度/模板）重复表达式均可复用，避免冗余计算。
    */
   private transient volatile Map<String, Object> expressionCache;
   private final transient AtomicReference<Map<String, Object>> expressionCacheRef =
       new AtomicReference<>();
 
-  private RuleContext(
+  private RuleContextVO(
       Map<String, Object> facts,
       String scenario,
       String source,
@@ -91,10 +92,10 @@ public final class RuleContextVO implements Serializable {
    * @param traceId 追踪 ID
    * @param tenantId 租户 ID
    * @param environment 环境标识（dev/staging/prod/default）
-   * @return RuleContext 实例
+   * @return RuleContextVO 实例
    * @since 1.0.0
    */
-  public static RuleContext of(
+  public static RuleContextVO of(
       Map<String, Object> facts,
       String scenario,
       String source,
@@ -103,7 +104,7 @@ public final class RuleContextVO implements Serializable {
       String environment) {
     Objects.requireNonNull(facts, "facts 不能为 null");
     String env = (environment == null) ? DEFAULT_ENVIRONMENT : environment;
-    return new RuleContext(facts, scenario, source, traceId, tenantId, env);
+    return new RuleContextVO(facts, scenario, source, traceId, tenantId, env);
   }
 
   /**
@@ -117,10 +118,10 @@ public final class RuleContextVO implements Serializable {
    * @param source 触发来源
    * @param traceId 追踪 ID
    * @param tenantId 租户 ID
-   * @return RuleContext 实例
+   * @return RuleContextVO 实例
    * @since 1.0.0
    */
-  public static RuleContext of(
+  public static RuleContextVO of(
       Map<String, Object> facts, String scenario, String source, String traceId, String tenantId) {
     return of(facts, scenario, source, traceId, tenantId, DEFAULT_ENVIRONMENT);
   }
@@ -132,9 +133,9 @@ public final class RuleContextVO implements Serializable {
    * @param scenario 业务场景
    * @param source 触发来源
    * @param traceId 追踪 ID
-   * @return RuleContext 实例
+   * @return RuleContextVO 实例
    */
-  public static RuleContext of(
+  public static RuleContextVO of(
       Map<String, Object> facts, String scenario, String source, String traceId) {
     return of(facts, scenario, source, traceId, DEFAULT_TENANT_ID, DEFAULT_ENVIRONMENT);
   }
@@ -145,9 +146,9 @@ public final class RuleContextVO implements Serializable {
    * @param facts 事实数据
    * @param scenario 业务场景
    * @param source 触发来源
-   * @return RuleContext 实例
+   * @return RuleContextVO 实例
    */
-  public static RuleContext of(Map<String, Object> facts, String scenario, String source) {
+  public static RuleContextVO of(Map<String, Object> facts, String scenario, String source) {
     return of(
         facts, scenario, source, IdGenerator.nextIdStr(), DEFAULT_TENANT_ID, DEFAULT_ENVIRONMENT);
   }
@@ -156,9 +157,9 @@ public final class RuleContextVO implements Serializable {
    * 从 Map 构建上下文（默认场景为 DEFAULT、租户 "0"）
    *
    * @param facts 事实数据
-   * @return RuleContext 实例
+   * @return RuleContextVO 实例
    */
-  public static RuleContext of(Map<String, Object> facts) {
+  public static RuleContextVO of(Map<String, Object> facts) {
     return of(
         facts,
         "DEFAULT",
@@ -250,7 +251,7 @@ public final class RuleContextVO implements Serializable {
   /**
    * 清空表达式求值缓存（P2-9）
    *
-   * <p>在复用同一 {@link RuleContext} 进行多次独立评估前调用，避免跨批次污染。
+   * <p>在复用同一 {@link RuleContextVO} 进行多次独立评估前调用，避免跨批次污染。
    *
    * @since 1.0.0
    */
@@ -263,7 +264,7 @@ public final class RuleContextVO implements Serializable {
 
   @Override
   public String toString() {
-    return "RuleContext{scenario='"
+    return "RuleContextVO{scenario='"
         + scenario
         + "', source='"
         + source

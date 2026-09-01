@@ -12,7 +12,7 @@ import java.util.List;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class BatchSendResult {
+public class BatchSendResultDTO {
 
   /** 接收者总数 */
   private final int totalCount;
@@ -34,7 +34,7 @@ public class BatchSendResult {
    * @param failureCount 失败数
    * @param details 各接收者发送明细
    */
-  public BatchSendResult(
+  public BatchSendResultDTO(
       int totalCount, int successCount, int failureCount, List<ReceiverSendResult> details) {
     this.totalCount = totalCount;
     this.successCount = successCount;

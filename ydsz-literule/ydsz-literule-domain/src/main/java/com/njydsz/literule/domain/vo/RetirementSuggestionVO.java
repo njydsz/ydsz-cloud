@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RetirementSuggestionVO implements Serializable {
+public class RetirementSuggestionVOVO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

@@ -77,3 +77,4 @@ public class RuleExecutionTraceRepositoryImpl implements RuleExecutionTraceRepos
     return converter.ruleExecutionTraceListToVO(entities);
   }
 }
+

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -28,7 +29,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.domain.dto.BatchSendResult;
+import com.njydsz.message.domain.dto.BatchSendResultDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
@@ -105,7 +106,7 @@ public class MessageController {
    * </ul>
    *
    * @param dto 消息发送请求体（含 strategy 策略字段）
-   * @return 发送结果（SYNC/DIRECT/ASYNC/TRANSACTIONAL 返回 MessageResult，BATCH 返回 BatchSendResult）
+   * @return 发送结果（SYNC/DIRECT/ASYNC/TRANSACTIONAL 返回 MessageResult，BATCH 返回 BatchSendResultDTO）
    */
   @Operation(
       summary = "统一消息发送",
@@ -154,72 +155,12 @@ public class MessageController {
         if (requests == null || requests.isEmpty()) {
           yield YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量请求列表为空");
         }
-        BatchSendResult result = messageService.batchSend(requests, dto.getBatchId());
+        BatchSendResultDTO result = messageService.batchSend(requests, dto.getBatchId());
         yield YdszResponse.success(result);
       }
     };
   }
 
-  /**
-   * 直接发送消息（使用本模块 DTO）。
-   *
-   * <p><b>已废弃</b>：请统一使用 {@code POST /send} + {@code strategy=DIRECT}。
-   *
-   * @deprecated 已迁移到统一发送端点 {@link #send(MessageSendDTO)}，设置 {@code strategy=DIRECT} 即可。
-   * @param dto 消息发送请求体
-   * @return 发送结果
-   */
-  @Operation(summary = "直接发送消息(本模块 DTO)", description = "已废弃，请统一使用 POST /send + strategy=DIRECT。"
-            + "原功能：同步发送单条消息，使用本模块 MessageSendDTO。")
-  @ApiResponse(responseCode = "200", description = "操作成功")
-  @ApiResponse(responseCode = "400", description = "请求参数错误")
-  @ApiResponse(responseCode = "429", description = "请求过于频繁")
-  @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:message:sendDirect", ttlSeconds = 5)
-  @Audit(
-      module = "消息管理",
-      type = AuditType.OPERATION,
-      action = AuditAction.CREATE,
-      content = "'sendDirect'")
-  @RateLimit(resource = "message.message.sendDirect", threshold = 50)
-  @Deprecated
-  @PostMapping("/sendDirect")
-  public YdszResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
-    dto.setStrategy(SendStrategyEnum.DIRECT);
-    return (YdszResponse<MessageResult>) send(dto);
-  }
-
-  /**
-   * 异步发送：投递到 RocketMQ，由 {@code MessageConsumer} 消费后调用 {@link MessageService#send}。 立即返回
-   * messageId，业务侧可通过 {@code /log/page} 查询最终发送状态。
-   *
-   * <p><b>已废弃</b>：请统一使用 {@code POST /send} + {@code strategy=ASYNC}。
-   *
-   * @deprecated 已迁移到统一发送端点 {@link #send(MessageSendDTO)}，设置 {@code strategy=ASYNC} 即可。
-   * @param request 消息请求
-   * @return 含 messageId 的发送结果
-   */
-  @Operation(summary = "异步发送消息(先落库再投递 MQ)", description = "已废弃，请统一使用 POST /send + strategy=ASYNC。"
-            + "原功能：异步发送单条消息，先将消息以 PENDING 状态落库保证不丢失，再投递到 RocketMQ。")
-  @ApiResponse(responseCode = "200", description = "操作成功")
-  @ApiResponse(responseCode = "400", description = "请求参数错误")
-  @ApiResponse(responseCode = "429", description = "请求过于频繁")
-  @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:message:sendAsync", ttlSeconds = 5)
-  @Audit(
-      module = "消息管理",
-      type = AuditType.OPERATION,
-      action = AuditAction.CREATE,
-      content = "'sendAsync'")
-  @RateLimit(resource = "message.message.sendAsync", threshold = 50)
-  @Deprecated
-  @PostMapping("/sendAsync")
-  public YdszResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
-    MessageSendDTO dto = new MessageSendDTO();
-    dto.setStrategy(SendStrategyEnum.ASYNC);
-    fillFromRequest(dto, request);
-    return (YdszResponse<MessageResult>) send(dto);
-  }
 
   /**
    * 分页查询发送日志。
@@ -258,75 +199,6 @@ public class MessageController {
     return YdszResponse.success(messageService.cancelScheduledMessage(msgId));
   }
 
-  /**
-   * P2-3: 事务消息发送（RocketMQ 半消息）。
-   *
-   * <p>通过 RocketMQ 事务消息机制,确保通知请求仅在本地事务校验（通道/模板有效性）通过后才投递。 未配置 RocketMQ 时降级为同步发送。
-   *
-   * <p><b>已废弃</b>：请统一使用 {@code POST /send} + {@code strategy=TRANSACTIONAL}。
-   *
-   * @deprecated 已迁移到统一发送端点 {@link #send(MessageSendDTO)}，设置 {@code strategy=TRANSACTIONAL} 即可。
-   * @param request 消息请求
-   * @return 发送结果
-   */
-  @Operation(summary = "事务消息发送(RocketMQ 半消息)", description = "已废弃，请统一使用 POST /send + strategy=TRANSACTIONAL。"
-            + "原功能：基于 RocketMQ 事务消息机制（半消息）发送通知。")
-  @ApiResponse(responseCode = "200", description = "操作成功")
-  @ApiResponse(responseCode = "400", description = "请求参数错误")
-  @ApiResponse(responseCode = "429", description = "请求过于频繁")
-  @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:message:sendTransactionally", ttlSeconds = 5)
-  @Audit(
-      module = "消息管理",
-      type = AuditType.OPERATION,
-      action = AuditAction.CREATE,
-      content = "'sendTransactionally'")
-  @RateLimit(resource = "message.message.sendTransactionally", threshold = 50)
-  @Deprecated
-  @PostMapping("/sendTransactional")
-  public YdszResponse<MessageResult> sendTransactionally(
-      @Valid @RequestBody MessageRequest request) {
-    MessageSendDTO dto = new MessageSendDTO();
-    dto.setStrategy(SendStrategyEnum.TRANSACTIONAL);
-    fillFromRequest(dto, request);
-    return (YdszResponse<MessageResult>) send(dto);
-  }
-
-  /**
-   * 批量发送消息（同步循环,限制 100 条/批）。
-   *
-   * <p><b>已废弃</b>：请统一使用 {@code POST /send} + {@code strategy=BATCH}，并在 DTO 中携带 {@code batchRequests} +
-   * {@code batchId}。
-   *
-   * @deprecated 已迁移到统一发送端点 {@link #send(MessageSendDTO)}，设置 {@code strategy=BATCH} 并携带 batchRequests +
-   *             batchId 即可。
-   * @param requests 消息请求列表
-   * @param batchId 批次 ID（业务侧生成,用于进度查询）
-   * @return 批量发送结果
-   */
-  @Operation(summary = "批量发送消息(限制 100 条/批)", description = "已废弃，请统一使用 POST /send + strategy=BATCH。原功能：同步批量发送消息，逐条循环发送。"
-            + "单次请求最多 100 条。")
-  @ApiResponse(responseCode = "200", description = "操作成功")
-  @ApiResponse(responseCode = "400", description = "请求参数错误")
-  @ApiResponse(responseCode = "429", description = "请求过于频繁")
-  @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-  @Idempotent(key = "ydsz:message:message:batchSend", ttlSeconds = 5)
-  @Audit(
-      module = "消息管理",
-      type = AuditType.OPERATION,
-      action = AuditAction.CREATE,
-      content = "'batchSend'")
-  @RateLimit(resource = "message.message.batchSend", threshold = 50)
-  @Deprecated
-  @PostMapping("/batchSend")
-  public YdszResponse<BatchSendResult> batchSend(
-      @Valid @RequestBody List<MessageRequest> requests, @RequestParam String batchId) {
-    MessageSendDTO dto = new MessageSendDTO();
-    dto.setStrategy(SendStrategyEnum.BATCH);
-    dto.setBatchRequests(requests);
-    dto.setBatchId(batchId);
-    return (YdszResponse<BatchSendResult>) send(dto);
-  }
 
   /**
    * 查询批次发送进度：按 bizId=batchId 分页查询发送日志。
@@ -372,24 +244,5 @@ public class MessageController {
     request.setPriority(dto.getPriority());
     request.setMessageId(dto.getMessageId());
     return request;
-  }
-
-  /**
-   * 从 MessageRequest 填充 MessageSendDTO 的共有字段（用于废弃端点的委托转发）。
-   *
-   * @param dto 本模块 DTO（strategy 已设置）
-   * @param request 共享请求 DTO
-   */
-  private void fillFromRequest(MessageSendDTO dto, MessageRequest request) {
-    dto.setChannel(request.getChannel());
-    dto.setReceiver(request.getReceiver());
-    dto.setSubject(request.getSubject());
-    dto.setContent(request.getContent());
-    dto.setBizType(request.getBizType());
-    dto.setBizId(request.getBizId());
-    dto.setTemplateCode(request.getTemplateCode());
-    dto.setParams(request.getParams());
-    dto.setPriority(request.getPriority());
-    dto.setMessageId(request.getMessageId());
   }
 }

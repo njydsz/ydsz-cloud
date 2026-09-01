@@ -38,7 +38,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  *
  * <ul>
  *   <li>本注册中心采集业务事实数据，直接合并到 facts（无前缀）
- *   <li>{@link com.njydsz.literule.domain.model.ModelInputRegistry} 采集模型输出，以 {@code model.} 前缀注入
+   * <li>{@link com.njydsz.literule.server.model.ModelInputRegistry} 采集模型输出，以 {@code model.} 前缀注入
  *   <li>本注册中心在模型注入之前执行，采集的事实可供模型 provider 使用
  * </ul>
  *

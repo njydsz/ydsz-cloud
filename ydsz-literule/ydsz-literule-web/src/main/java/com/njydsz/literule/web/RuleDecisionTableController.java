@@ -34,7 +34,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.spi.DecisionTableEvalProvider;
-import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
+import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
@@ -111,7 +111,7 @@ public class RuleDecisionTableController {
   @RateLimit(resource = "literule.rule_decision_table.saveDecisionTable", threshold = 50)
   @PostMapping("/decision-tables")
   public YdszResponse<DecisionTableVO> saveDecisionTable(
-      @Valid @RequestBody DecisionTablePostDTO dto) {
+      @Valid @RequestBody DecisionTableDTO dto) {
     return YdszResponse.success(decisionTableQueryService.save(dto));
   }
 
@@ -249,3 +249,5 @@ public class RuleDecisionTableController {
     }
   }
 }
+
+

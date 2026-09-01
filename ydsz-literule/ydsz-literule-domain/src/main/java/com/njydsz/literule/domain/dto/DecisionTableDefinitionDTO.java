@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.njydsz.literule.domain.enums.HitPolicy;
+
 /**
  * 决策表定义（DMN 风格）
  *
@@ -45,7 +47,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DecisionTableDefinitionDTO implements Serializable {
+public class DecisionTableDefinitionDTODTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

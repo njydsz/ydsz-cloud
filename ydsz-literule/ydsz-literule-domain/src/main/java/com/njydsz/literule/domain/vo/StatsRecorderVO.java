@@ -9,7 +9,7 @@ package com.njydsz.literule.domain.vo;
  * @since 1.0.0
  */
 @FunctionalInterface
-public interface StatsRecorderVO {
+public interface StatsRecorderVOVO {
 
   /**
    * 记录一次规则评估

@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleStatus;
-import com.njydsz.literule.domain.dto.post.ApprovalRecordSaveDTO;
+import com.njydsz.literule.domain.dto.ApprovalRecordDTO;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.server.core.LockService;
@@ -756,7 +756,7 @@ public class RuleApprovalService {
     recordStore.put(record.getRuleCode(), record);
     if (recordRepository != null) {
       try {
-        ApprovalRecordSaveDTO saveDTO = recordToSaveDTO(record);
+        ApprovalRecordDTO saveDTO = recordToSaveDTO(record);
         recordRepository.save(saveDTO);
       } catch (Exception e) {
         log.warn("[Approval] 审批记录持久化失败: ruleCode={}, err={}", record.getRuleCode(), e.getMessage());
@@ -777,9 +777,9 @@ public class RuleApprovalService {
     return record;
   }
 
-  /** ApprovalRecord（server 对象） → ApprovalRecordSaveDTO */
-  private ApprovalRecordSaveDTO recordToSaveDTO(ApprovalRecord record) {
-    ApprovalRecordSaveDTO dto = new ApprovalRecordSaveDTO();
+  /** ApprovalRecord（server 对象） → ApprovalRecordDTO */
+  private ApprovalRecordDTO recordToSaveDTO(ApprovalRecord record) {
+    ApprovalRecordDTO dto = new ApprovalRecordDTO();
     dto.setRecordId(record.getRecordId());
     dto.setRuleCode(record.getRuleCode());
     dto.setFlowCode(record.getFlowCode());
@@ -788,9 +788,9 @@ public class RuleApprovalService {
     dto.setCreatedAt(record.getCreatedAt());
     dto.setUpdatedAt(record.getUpdatedAt());
     if (record.getLogs() != null) {
-      List<ApprovalRecordSaveDTO.ApprovalLogDTO> logDTOs = record.getLogs().stream()
+      List<ApprovalRecordDTO.ApprovalLogDTO> logDTOs = record.getLogs().stream()
           .map(log -> {
-            ApprovalRecordSaveDTO.ApprovalLogDTO logDTO = new ApprovalRecordSaveDTO.ApprovalLogDTO();
+            ApprovalRecordDTO.ApprovalLogDTO logDTO = new ApprovalRecordDTO.ApprovalLogDTO();
             logDTO.setLevel(log.getLevel());
             logDTO.setApprover(log.getApprover());
             logDTO.setAction(log.getAction());
@@ -979,3 +979,5 @@ public class RuleApprovalService {
     return Collections.unmodifiableMap(new LinkedHashMap<>(recordStore));
   }
 }
+
+

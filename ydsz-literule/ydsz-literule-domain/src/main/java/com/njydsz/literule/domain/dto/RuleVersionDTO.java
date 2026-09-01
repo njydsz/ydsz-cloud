@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.dto.post;
+package com.njydsz.literule.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -6,17 +6,20 @@ import java.io.Serializable;
 import lombok.Data;
 
 /**
- * 规则版本保存 DTO。
+ * 规则版本 DTO（统一新增/修改）。
  *
- * <p>用于 {@code RuleVersionRepository.saveVersion()} 参数，封装规则版本快照的完整信息。
+ * <p>创建时 {@code id} 字段不传，更新时传入 {@code id}。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class RuleVersionSaveDTO implements Serializable {
+public class RuleVersionDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
+
+  /** 版本记录 ID（主键，更新时传入） */
+  private Long id;
 
   /** 规则编码 */
   private String ruleCode;

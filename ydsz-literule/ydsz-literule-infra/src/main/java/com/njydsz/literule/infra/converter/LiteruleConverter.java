@@ -9,9 +9,9 @@ import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
-import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
-import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
+import com.njydsz.literule.domain.dto.DecisionTableDTO;
+import com.njydsz.literule.domain.dto.RuleVersionDTO;
+import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
@@ -156,8 +156,8 @@ public class LiteruleConverter {
     return support.ruleVersionListToVO(entities);
   }
 
-  // ===== RuleVersionSaveDTO → RuleVersionHistory =====
-  public RuleVersionHistory postDtoToEntity(RuleVersionSaveDTO dto) {
+  // ===== RuleVersionDTO → RuleVersionHistory =====
+  public RuleVersionHistory postDtoToEntity(RuleVersionDTO dto) {
     return support.postDtoToEntity(dto);
   }
 
@@ -197,12 +197,14 @@ public class LiteruleConverter {
   }
 
   // ===== DecisionTable PostDTO → Entity =====
-  public DecisionTable postDtoToEntity(DecisionTablePostDTO dto) {
+  public DecisionTable postDtoToEntity(DecisionTableDTO dto) {
     return support.postDtoToEntity(dto);
   }
 
   // ===== RuleABPolicy PutDTO → Entity =====
-  public RuleABPolicy putDtoToEntity(RuleABPolicyPutDTO dto) {
+  public RuleABPolicy putDtoToEntity(RuleABPolicyDTO dto) {
     return support.putDtoToEntity(dto);
   }
 }
+
+

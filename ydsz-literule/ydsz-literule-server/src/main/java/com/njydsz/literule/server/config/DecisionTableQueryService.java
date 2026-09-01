@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 
-import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
+import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 
@@ -48,7 +48,7 @@ public class DecisionTableQueryService {
    * @param dto 决策表入参
    * @return 保存后的决策表 VO
    */
-  public DecisionTableVO save(DecisionTablePostDTO dto) {
+  public DecisionTableVO save(DecisionTableDTO dto) {
     return repository.save(dto);
   }
 
@@ -61,3 +61,5 @@ public class DecisionTableQueryService {
     repository.deleteById(id);
   }
 }
+
+

@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.njydsz.literule.domain.Rule;
+
 /**
  * 交叉决策表定义（决策矩阵，P1-6）
  *
@@ -71,7 +73,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CrossDecisionTableDefinitionDTO implements Serializable {
+public class CrossDecisionTableDefinitionDTODTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

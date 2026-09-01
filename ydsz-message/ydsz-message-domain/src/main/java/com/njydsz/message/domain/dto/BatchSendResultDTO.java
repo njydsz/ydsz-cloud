@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BatchSendResult {
+public class BatchSendResultDTO {
 
   /** 批次 ID（业务侧生成,用于关联进度查询） */
   private String batchId;

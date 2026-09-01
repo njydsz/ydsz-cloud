@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.njydsz.literule.domain.enums.RuleSeverity;
+import com.njydsz.literule.domain.vo.RuleContextVO;
+
 /**
  * 规则定义（元数据）
  *
@@ -22,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RuleDefinitionDTO implements Serializable {
+public class RuleDefinitionDTODTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -84,7 +87,7 @@ public class RuleDefinitionDTO implements Serializable {
   private String descriptionTemplate;
 
   /** 优先级（数值越小越先执行） */
-  @Builder.Default private int priority = Rule.DEFAULT_PRIORITY;
+  @Builder.Default private int priority = com.njydsz.literule.domain.Rule.DEFAULT_PRIORITY;
 
   /** 是否启用 */
   @Builder.Default private boolean enabled = true;
@@ -175,7 +178,7 @@ public class RuleDefinitionDTO implements Serializable {
   /**
    * 灰度候选版本表达式（条件/严重度表达式，覆盖主版本）
    *
-   * <p>当流量被分到灰度桶时，使用此候选表达式构造一条临时规则进行评估， 结果会被标记 {@link RuleResultVO#isCanary()} = true，便于运营对比新旧命中差异。
+   * <p>当流量被分到灰度桶时，使用此候选表达式构造一条临时规则进行评估， 结果会被标记 {@link com.njydsz.literule.domain.vo.RuleResultVO#isCanary()} = true，便于运营对比新旧命中差异。
    *
    * @since 1.0.0
    */

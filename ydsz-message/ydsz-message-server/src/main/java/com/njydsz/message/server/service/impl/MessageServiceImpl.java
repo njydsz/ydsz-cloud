@@ -30,7 +30,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
-import com.njydsz.message.domain.dto.BatchSendResult;
+import com.njydsz.message.domain.dto.BatchSendResultDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -455,9 +455,9 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
-  public BatchSendResult batchSend(List<MessageRequest> requests, String batchId) {
+  public BatchSendResultDTO batchSend(List<MessageRequest> requests, String batchId) {
     if (requests == null || requests.isEmpty() || !StringUtils.hasText(batchId)) {
-      return new BatchSendResult(batchId, 0, 0, 0, 0);
+      return new BatchSendResultDTO(batchId, 0, 0, 0, 0);
     }
     // 限制单批最大 100 条,防止阻塞过久
     int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
@@ -475,7 +475,7 @@ public class MessageServiceImpl implements MessageService {
     dto.setAsync(true);
     MsgBatchVO msgBatch = batchService.submitBatch(dto);
     // 异步模式下返回初始进度（实际处理在后台线程池执行）
-    BatchSendResult result = new BatchSendResult(batchId, msgBatch.getTotal(), 0, 0, 0);
+    BatchSendResultDTO result = new BatchSendResultDTO(batchId, msgBatch.getTotal(), 0, 0, 0);
     log.info(
         "[Message] 批量发送已提交: batchId={} total={} status={}",
         batchId,

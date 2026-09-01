@@ -411,7 +411,7 @@ public class NotifyServiceImpl implements NotifyService {
    * @return 异步批量发送结构化结果
    */
   @Override
-  public CompletableFuture<BatchSendResult> parallelBatchSendDetailed(
+  public CompletableFuture<BatchSendResultDTO> parallelBatchSendDetailed(
       NotifyChannel channel, List<String> receivers, String title, String content) {
     if (!tryAcquireCircuitBreaker(channel)) {
       return CompletableFuture.completedFuture(
@@ -434,13 +434,13 @@ public class NotifyServiceImpl implements NotifyService {
       return CompletableFuture.completedFuture(buildBatchResultFromSingle(receivers, batchResult));
     }
 
-    List<CompletableFuture<BatchSendResult.ReceiverSendResult>> futures =
+    List<CompletableFuture<BatchSendResultDTO.ReceiverSendResult>> futures =
         receivers.stream()
             .map(
                 receiver ->
                     CompletableFuture.supplyAsync(
                         () ->
-                            new BatchSendResult.ReceiverSendResult(
+                            new BatchSendResultDTO.ReceiverSendResult(
                                 receiver, strategy.send(receiver, title, content)),
                         parallelExecutor))
             .collect(Collectors.toList());
@@ -449,12 +449,12 @@ public class NotifyServiceImpl implements NotifyService {
         CompletableFuture.allOf(futures.toArray(new CompletableFuture<?>[0]));
     return allFutures.thenApply(
         v -> {
-          List<BatchSendResult.ReceiverSendResult> details = new ArrayList<>();
+          List<BatchSendResultDTO.ReceiverSendResult> details = new ArrayList<>();
           int successCount = 0;
           int failureCount = 0;
-          for (CompletableFuture<BatchSendResult.ReceiverSendResult> future : futures) {
+          for (CompletableFuture<BatchSendResultDTO.ReceiverSendResult> future : futures) {
             try {
-              BatchSendResult.ReceiverSendResult item = future.get();
+              BatchSendResultDTO.ReceiverSendResult item = future.get();
               details.add(item);
               if (item.result().isSuccess()) {
                 successCount++;
@@ -466,7 +466,7 @@ public class NotifyServiceImpl implements NotifyService {
             }
           }
           recordCircuitResult(channel, failureCount == 0);
-          return new BatchSendResult(receivers.size(), successCount, failureCount, details);
+          return new BatchSendResultDTO(receivers.size(), successCount, failureCount, details);
         });
   }
 
@@ -478,16 +478,16 @@ public class NotifyServiceImpl implements NotifyService {
    * @param channelName 渠道名称
    * @return 批量错误结果
    */
-  private BatchSendResult buildBatchErrorResult(
+  private BatchSendResultDTO buildBatchErrorResult(
       List<String> receivers, String errorMessage, String channelName) {
-    List<BatchSendResult.ReceiverSendResult> details =
+    List<BatchSendResultDTO.ReceiverSendResult> details =
         receivers.stream()
             .map(
                 r ->
-                    new BatchSendResult.ReceiverSendResult(
+                    new BatchSendResultDTO.ReceiverSendResult(
                         r, NotifySendResult.failure(errorMessage, channelName)))
             .collect(Collectors.toList());
-    return new BatchSendResult(receivers.size(), 0, receivers.size(), details);
+    return new BatchSendResultDTO(receivers.size(), 0, receivers.size(), details);
   }
 
   /**
@@ -497,15 +497,15 @@ public class NotifyServiceImpl implements NotifyService {
    * @param batchResult 批量发送结果
    * @return 批量结构化结果
    */
-  private BatchSendResult buildBatchResultFromSingle(
+  private BatchSendResultDTO buildBatchResultFromSingle(
       List<String> receivers, NotifySendResult batchResult) {
-    List<BatchSendResult.ReceiverSendResult> details =
+    List<BatchSendResultDTO.ReceiverSendResult> details =
         receivers.stream()
-            .map(r -> new BatchSendResult.ReceiverSendResult(r, batchResult))
+            .map(r -> new BatchSendResultDTO.ReceiverSendResult(r, batchResult))
             .collect(Collectors.toList());
     int successCount = batchResult.isSuccess() ? receivers.size() : 0;
     int failureCount = batchResult.isSuccess() ? 0 : receivers.size();
-    return new BatchSendResult(receivers.size(), successCount, failureCount, details);
+    return new BatchSendResultDTO(receivers.size(), successCount, failureCount, details);
   }
 
   /**

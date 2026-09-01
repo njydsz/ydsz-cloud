@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
+import com.njydsz.literule.domain.dto.post.DecisionTableDTO;
 import com.njydsz.literule.domain.repository.DecisionTableRepository;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.infra.converter.LiteruleConverter;
@@ -52,7 +52,7 @@ public class DecisionTableRepositoryImpl implements DecisionTableRepository {
   }
 
   @Override
-  public DecisionTableVO save(DecisionTablePostDTO dto) {
+  public DecisionTableVO save(DecisionTableDTO dto) {
     DecisionTable entity = converter.postDtoToEntity(dto);
     if (entity.getId() != null) {
       decisionTableMapper.updateById(entity);
@@ -67,3 +67,5 @@ public class DecisionTableRepositoryImpl implements DecisionTableRepository {
     decisionTableMapper.deleteById(id);
   }
 }
+
+

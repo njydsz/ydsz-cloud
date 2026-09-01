@@ -2,7 +2,7 @@ package com.njydsz.literule.domain.repository;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.post.ApprovalRecordSaveDTO;
+import com.njydsz.literule.domain.dto.ApprovalRecordDTO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 
 /**
@@ -20,7 +20,7 @@ public interface ApprovalRecordRepository {
    *
    * @param saveDTO 审批记录保存 DTO
    */
-  void save(ApprovalRecordSaveDTO saveDTO);
+  void save(ApprovalRecordDTO saveDTO);
 
   /**
    * 根据规则编码查询审批记录
@@ -30,3 +30,4 @@ public interface ApprovalRecordRepository {
    */
   List<ApprovalRecordVO> findByRuleCode(String ruleCode);
 }
+

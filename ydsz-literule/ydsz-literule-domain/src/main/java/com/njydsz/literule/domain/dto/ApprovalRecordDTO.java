@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.dto.post;
+package com.njydsz.literule.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -8,19 +8,19 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * 审批记录保存 DTO。
+ * 审批记录 DTO（统一新增/修改）。
  *
- * <p>用于 {@code ApprovalRecordRepository.save()} 参数，封装审批记录的完整信息。
+ * <p>创建时 {@code recordId} 字段不传，更新时传入 {@code recordId}。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class ApprovalRecordSaveDTO implements Serializable {
+public class ApprovalRecordDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 审批记录 ID（主键） */
+  /** 审批记录 ID（主键，更新时传入） */
   private String recordId;
 
   /** 关联规则编码 */

@@ -11,7 +11,7 @@ import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
-import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
+import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.domain.vo.CategoryNodeVO;
@@ -114,8 +114,8 @@ public interface LiteruleWebConverter {
   // ===== ExpressionPreviewResult → ExpressionPreviewResultVO =====
   ExpressionPreviewResultVO entityToVO(ExpressionPreviewResult entity);
 
-  // ===== RuleABPolicyPutDTO → RuleABPolicyVO =====
-  RuleABPolicyVO putDtoToVO(RuleABPolicyPutDTO dto);
+  // ===== RuleABPolicyDTO → RuleABPolicyVO =====
+  RuleABPolicyVO putDtoToVO(RuleABPolicyDTO dto);
 
   // ===== RuleDefinitionDTO (api) → RuleDefinitionVO =====
   @Mapping(source = "code", target = "ruleCode")
@@ -157,3 +157,5 @@ public interface LiteruleWebConverter {
    */
   ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity);
 }
+
+

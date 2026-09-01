@@ -24,7 +24,7 @@ import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.expression.ExpressionTraceNode;
-import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
+import com.njydsz.literule.domain.dto.RuleVersionDTO;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
@@ -360,7 +360,7 @@ public class RuleAdminService {
 
     // 保存版本快照（同一事务内，失败则整体回滚）
     if (versionRepository != null) {
-      RuleVersionSaveDTO saveDTO = new RuleVersionSaveDTO();
+      RuleVersionDTO saveDTO = new RuleVersionDTO();
       saveDTO.setRuleCode(saved.getCode());
       saveDTO.setRuleName(saved.getName());
       saveDTO.setVersion(saved.getVersion());
@@ -870,3 +870,5 @@ public class RuleAdminService {
     }
   }
 }
+
+

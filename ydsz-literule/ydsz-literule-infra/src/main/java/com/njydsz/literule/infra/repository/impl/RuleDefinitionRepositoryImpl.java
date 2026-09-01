@@ -115,3 +115,4 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
     return query.trim();
   }
 }
+

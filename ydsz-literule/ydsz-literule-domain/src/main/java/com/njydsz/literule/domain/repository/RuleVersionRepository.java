@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
+import com.njydsz.literule.domain.dto.RuleVersionDTO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 
@@ -25,7 +25,7 @@ public interface RuleVersionRepository {
    *
    * @param saveDTO 规则版本保存 DTO（包含规则编码、版本号、定义 JSON、变更描述、操作人）
    */
-  void saveVersion(RuleVersionSaveDTO saveDTO);
+  void saveVersion(RuleVersionDTO saveDTO);
 
   /**
    * 查询规则的版本历史
@@ -59,3 +59,4 @@ public interface RuleVersionRepository {
    */
   Optional<RuleDefinitionVO> rollback(String ruleCode, int version, String operator);
 }
+

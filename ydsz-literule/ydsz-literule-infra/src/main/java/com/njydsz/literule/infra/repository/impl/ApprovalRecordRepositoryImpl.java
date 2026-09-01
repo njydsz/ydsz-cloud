@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.literule.domain.dto.post.ApprovalRecordSaveDTO;
+import com.njydsz.literule.domain.dto.post.ApprovalRecordDTO;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 
@@ -36,10 +36,10 @@ import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
 
   /** 主存储：ruleCode → 审批记录 DTO */
-  private final Map<String, ApprovalRecordSaveDTO> store = new ConcurrentHashMap<>();
+  private final Map<String, ApprovalRecordDTO> store = new ConcurrentHashMap<>();
 
   @Override
-  public void save(ApprovalRecordSaveDTO saveDTO) {
+  public void save(ApprovalRecordDTO saveDTO) {
     if (saveDTO == null || saveDTO.getRuleCode() == null) {
       log.warn("[ApprovalRecord] 保存参数忽略：saveDTO 或 ruleCode 为空");
       return;
@@ -60,7 +60,7 @@ public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
     if (ruleCode == null) {
       return List.of();
     }
-    ApprovalRecordSaveDTO dto = store.get(ruleCode);
+    ApprovalRecordDTO dto = store.get(ruleCode);
     if (dto == null) {
       return List.of();
     }
@@ -73,7 +73,7 @@ public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
    * @param dto 审批记录 DTO
    * @return 审批记录 VO
    */
-  private ApprovalRecordVO toVO(ApprovalRecordSaveDTO dto) {
+  private ApprovalRecordVO toVO(ApprovalRecordDTO dto) {
     ApprovalRecordVO vo = new ApprovalRecordVO();
     vo.setRecordId(dto.getRecordId());
     vo.setRuleCode(dto.getRuleCode());
@@ -85,3 +85,5 @@ public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
     return vo;
   }
 }
+
+

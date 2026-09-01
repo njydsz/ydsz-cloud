@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.dto.put;
+package com.njydsz.literule.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -7,19 +7,19 @@ import java.math.BigDecimal;
 import lombok.Data;
 
 /**
- * 规则 A/B 测试策略修改请求 DTO。
+ * 规则 A/B 测试策略 DTO（统一新增/修改）。
  *
- * <p>用于 PUT 接口更新 A/B 测试策略，包含自动回滚配置、错误率阈值、 评估窗口和通知渠道等参数。不含系统管理字段（如 lastEvaluatedAt/lastRollbackAt）。
+ * <p>创建时 {@code id} 字段不传，更新时传入 {@code id}。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class RuleABPolicyPutDTO implements Serializable {
+public class RuleABPolicyDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  /** 策略唯一标识（主键） */
+  /** 策略唯一标识（主键，更新时传入） */
   private String id;
 
   /** 关联的规则编码 */

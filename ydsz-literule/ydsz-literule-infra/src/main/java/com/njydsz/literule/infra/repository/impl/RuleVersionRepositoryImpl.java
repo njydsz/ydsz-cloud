@@ -12,8 +12,9 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.literule.domain.dto.RuleDefinition;
 import com.njydsz.literule.domain.enums.RuleSeverity;
-import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
+import com.njydsz.literule.domain.dto.post.RuleVersionDTO;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
@@ -53,7 +54,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
   private final LiteruleConverter converter = LiteruleConverter.INSTANCE;
 
   @Override
-  public void saveVersion(RuleVersionSaveDTO saveDTO) {
+  public void saveVersion(RuleVersionDTO saveDTO) {
     RuleVersionHistory entity = converter.postDtoToEntity(saveDTO);
     ruleVersionHistoryMapper.insert(entity);
   }
@@ -112,10 +113,10 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     log.info("[LiteRule] 回滚前快照已保存: ruleCode={}, backupVersion={}", ruleCode, nextVersion);
 
     // 4. 从目标版本反序列化规则定义并恢复到主表
-    com.njydsz.literule.domain.dto.RuleDefinitionDTO targetDefinition;
+    com.njydsz.literule.domain.dto.RuleDefinitionDTO targetDefinition; // FQN-OK: name conflict with infra entity RuleDefinitionDTO
     try {
       targetDefinition = YdszJson.fromJson(
-          targetVersion.getDefinitionJson(), com.njydsz.literule.domain.dto.RuleDefinition.class);
+          targetVersion.getDefinitionJson(), RuleDefinition.class);
     } catch (Exception e) {
       log.error("[LiteRule] 反序列化目标版本失败: ruleCode={}, version={}, error={}",
           ruleCode, version, e.getMessage(), e);
@@ -139,7 +140,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     }
 
     // 5. 保存回滚操作版本记录
-    RuleVersionSaveDTO rollbackRecord = new RuleVersionSaveDTO();
+    RuleVersionDTO rollbackRecord = new RuleVersionDTO();
     rollbackRecord.setRuleCode(ruleCode);
     rollbackRecord.setRuleName(updateEntity.getRuleName());
     rollbackRecord.setVersion(updateEntity.getVersion());
@@ -180,8 +181,8 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @param rule 规则定义
    * @return RuleDefinitionDTO api 定义
    */
-  private com.njydsz.literule.domain.dto.RuleDefinitionDTO apiFromDo(RuleDefinitionDTO rule) {
-    com.njydsz.literule.domain.dto.RuleDefinitionDTO def = new com.njydsz.literule.domain.dto.RuleDefinitionDTO();
+  private com.njydsz.literule.domain.dto.RuleDefinitionDTO apiFromDo(RuleDefinitionDTO rule) { // FQN-OK: name conflict with infra entity RuleDefinitionDTO
+    com.njydsz.literule.domain.dto.RuleDefinitionDTO def = new com.njydsz.literule.domain.dto.RuleDefinitionDTO(); // FQN-OK: name conflict with infra entity RuleDefinitionDTO
     def.setCode(rule.getRuleCode());
     def.setName(rule.getRuleName());
     def.setCategory(rule.getCategory());
@@ -219,7 +220,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @param def api 规则定义
    * @return RuleDefinitionDTO
    */
-  private RuleDefinitionDTO doFromApi(com.njydsz.literule.domain.dto.RuleDefinitionDTO def) {
+  private RuleDefinitionDTO doFromApi(com.njydsz.literule.domain.dto.RuleDefinitionDTO def) { // FQN-OK: name conflict with infra entity RuleDefinitionDTO
     RuleDefinitionDTO rule = new RuleDefinitionDTO();
     rule.setRuleCode(def.getCode());
     rule.setRuleName(def.getName());
@@ -243,3 +244,5 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     return rule;
   }
 }
+
+

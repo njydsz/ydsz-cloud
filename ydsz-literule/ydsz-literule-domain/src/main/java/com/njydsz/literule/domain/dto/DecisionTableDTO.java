@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.dto.post;
+package com.njydsz.literule.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -8,17 +8,20 @@ import java.util.Map;
 import lombok.Data;
 
 /**
- * 决策表新增请求 DTO。
+ * 决策表请求 DTO（统一新增/修改）。
  *
- * <p>用于 POST 接口创建决策表，包含决策表基本信息、条件列/动作列定义、 决策行数据及命中策略配置。
+ * <p>创建时 {@code id} 字段不传，更新时传入 {@code id}。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class DecisionTablePostDTO implements Serializable {
+public class DecisionTableDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
+
+  /** 决策表 ID（更新时传入） */
+  private Long id;
 
   /** 决策表编码，业务唯一 */
   private String tableCode;

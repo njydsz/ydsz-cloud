@@ -23,7 +23,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
+import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
@@ -84,7 +84,7 @@ public class RuleABPolicyController {
   @PutMapping("/{ruleCode}/ab-policy")
   public YdszResponse<Void> updateABPolicy(
       @PathVariable String ruleCode,
-      @Valid @RequestBody RuleABPolicyPutDTO dto,
+      @Valid @RequestBody RuleABPolicyDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleABPolicyVO policy = LiteruleWebConverter.INSTANCE.putDtoToVO(dto);
     policy.setRuleCode(ruleCode);
@@ -142,3 +142,5 @@ public class RuleABPolicyController {
         abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason));
   }
 }
+
+

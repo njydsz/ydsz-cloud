@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.njydsz.literule.domain.Rule;
+
 /**
  * 脚本规则定义（DTO）
  *
@@ -23,7 +25,7 @@ import lombok.NoArgsConstructor;
  * <p>沙箱模式（默认启用）禁止 System.exit / Runtime.exec / 反射 / 文件 I/O / 网络访问等危险 API。
  *
  * <p>持久化于 {@code ydsz_rule_script}（见 V048，script 字段为 TEXT）， 由 {@code ScriptConfigProvider} SPI 加载，
- * 通过 {@link com.njydsz.literule.server.impl.ScriptRule#from(ScriptDefinition)} 转换为可执行规则。
+ * 通过 {@code ScriptRule#from(ScriptDefinitionDTO)} 转换为可执行规则。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -32,7 +34,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScriptDefinitionDTO implements Serializable {
+public class ScriptDefinitionDTODTO implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

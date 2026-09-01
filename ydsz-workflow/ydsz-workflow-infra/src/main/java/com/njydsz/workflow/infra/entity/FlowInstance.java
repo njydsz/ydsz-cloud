@@ -18,6 +18,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.event.FlowDomainEvent;
+import com.njydsz.workflow.domain.event.FlowInstanceResumedEvent;
+import com.njydsz.workflow.domain.event.FlowInstanceRolledBackEvent;
+import com.njydsz.workflow.domain.event.FlowInstanceSuspendedEvent;
 import com.njydsz.workflow.domain.statemachine.FlowInstanceStateMachine;
 
 /**
@@ -303,17 +306,17 @@ public class FlowInstance extends MpBaseEntity<String> {
       FlowInstanceStatus current, FlowInstanceStatus target, String operatorId) {
     switch (target) {
       case SUSPENDED -> domainEvents.add(
-          new com.njydsz.workflow.domain.event.FlowInstanceSuspendedEvent(
+          new FlowInstanceSuspendedEvent(
               this, instanceId(), flowCode, flowName, businessType, businessId, initiatorId, null));
       case RUNNING -> {
         if (current == FlowInstanceStatus.SUSPENDED) {
           domainEvents.add(
-              new com.njydsz.workflow.domain.event.FlowInstanceResumedEvent(
+              new FlowInstanceResumedEvent(
                   this, instanceId(), flowCode, flowName, businessType, businessId, initiatorId));
         }
       }
       case ROLLED_BACK -> domainEvents.add(
-          new com.njydsz.workflow.domain.event.FlowInstanceRolledBackEvent(
+          new FlowInstanceRolledBackEvent(
               this, instanceId(), flowCode, flowName, businessType, businessId, initiatorId,
               rejectReason));
       default -> {

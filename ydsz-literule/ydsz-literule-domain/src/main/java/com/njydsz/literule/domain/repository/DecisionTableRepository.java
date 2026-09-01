@@ -3,7 +3,7 @@ package com.njydsz.literule.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
+import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 
 /**
@@ -47,7 +47,7 @@ public interface DecisionTableRepository {
    * @param dto 决策表保存 DTO
    * @return 保存后的决策表 VO
    */
-  DecisionTableVO save(DecisionTablePostDTO dto);
+  DecisionTableVO save(DecisionTableDTO dto);
 
   /**
    * 根据 ID 删除决策表。
@@ -56,3 +56,4 @@ public interface DecisionTableRepository {
    */
   void deleteById(String id);
 }
+
