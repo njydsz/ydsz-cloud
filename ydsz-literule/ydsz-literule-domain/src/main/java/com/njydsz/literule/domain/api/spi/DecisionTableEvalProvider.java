@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.api.spi;
+package com.njydsz.literule.domain.spi;
 
 import java.util.List;
 import java.util.Map;

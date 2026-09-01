@@ -98,7 +98,7 @@ public class ExpressionValidationService {
    * 校验严重度表达式（可选，返回值应为 RED/YELLOW/INFO）
    *
    * <p>仅校验语法合法性，不强制返回值约束（因为严重度表达式可以返回任意字符串， 由 {@link
-   * com.njydsz.literule.domain.api.RuleSeverity#fromCode(String)} 解析）。
+   * com.njydsz.literule.domain.enums.RuleSeverity#fromCode(String)} 解析）。
    *
    * @param expression 严重度表达式
    * @return 校验结果

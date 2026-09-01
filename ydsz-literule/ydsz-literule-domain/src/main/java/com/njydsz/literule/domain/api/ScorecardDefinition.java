@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
  *
  * <p>持久化于 {@code ydsz_rule_scorecard}（见 V048），由 {@code ScorecardConfigProvider} SPI 加载， 通过 {@link
  * com.njydsz.literule.server.impl.ScorecardRule#from(ScorecardDefinition,
- * com.njydsz.literule.domain.api.expression.ExpressionEngine)} 转换为可执行规则。
+ * com.njydsz.literule.domain.expression.ExpressionEngine)} 转换为可执行规则。
  *
  * <p>JSON 示例（复杂评分卡）：
  *
