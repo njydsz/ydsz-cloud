@@ -13,7 +13,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 /**
  * 规则数据源管理器（P1-5）
  *
- * <p>管理多个 {@link RuleSource} 实例，提供统一的数据源选择和切换能力。
+ * <p>管理多个 {@link RuleConfigProvider} 实例，提供统一的数据源选择和切换能力。
  *
  * <p>功能：
  *
@@ -30,8 +30,8 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 @Slf4j
 public class RuleSourceManager {
 
-  private final Map<RuleSource.SourceType, RuleSource> sources = new ConcurrentHashMap<>();
-  private volatile RuleSource activeSource;
+  private final Map<RuleConfigProvider.SourceType, RuleConfigProvider> sources = new ConcurrentHashMap<>();
+  private volatile RuleConfigProvider activeSource;
   private final List<Consumer<List<RuleDefinitionDTO>>> globalListeners = new CopyOnWriteArrayList<>();
 
   /**
@@ -39,7 +39,7 @@ public class RuleSourceManager {
    *
    * @param source 数据源实例
    */
-  public synchronized void registerSource(RuleSource source) {
+  public synchronized void registerSource(RuleConfigProvider source) {
     if (source == null || !source.isAvailable()) {
       log.debug("[RuleSourceManager] 数据源 {} 不可用，跳过注册", source != null ? source.getType() : "null");
       return;
@@ -66,8 +66,8 @@ public class RuleSourceManager {
    * @param type 目标数据源类型
    * @return true=切换成功
    */
-  public synchronized boolean switchSource(RuleSource.SourceType type) {
-    RuleSource target = sources.get(type);
+  public synchronized boolean switchSource(RuleConfigProvider.SourceType type) {
+    RuleConfigProvider target = sources.get(type);
     if (target == null || !target.isAvailable()) {
       log.warn("[RuleSourceManager] 数据源 {} 不可用，切换失败", type);
       return false;
@@ -85,7 +85,7 @@ public class RuleSourceManager {
    * @return 启用的规则定义列表
    */
   public List<RuleDefinitionDTO> loadEnabledRules() {
-    RuleSource source = getAvailableSource();
+    RuleConfigProvider source = getAvailableSource();
     if (source == null) {
       log.warn("[RuleSourceManager] 无可用数据源，返回空列表");
       return List.of();
@@ -98,12 +98,12 @@ public class RuleSourceManager {
    *
    * @return 可用数据源；全部不可用返回 null
    */
-  private RuleSource getAvailableSource() {
+  private RuleConfigProvider getAvailableSource() {
     if (activeSource != null && activeSource.isAvailable()) {
       return activeSource;
     }
     // 主数据源不可用，尝试其他数据源
-    for (RuleSource source : sources.values()) {
+    for (RuleConfigProvider source : sources.values()) {
       if (source.isAvailable()) {
         log.warn("[RuleSourceManager] 主数据源不可用，降级到: type={}", source.getType());
         activeSource = source;
@@ -123,7 +123,7 @@ public class RuleSourceManager {
   public void addGlobalChangeListener(Consumer<List<RuleDefinitionDTO>> listener) {
     globalListeners.add(listener);
     // 向所有支持 Watch 的数据源注册监听
-    for (RuleSource source : sources.values()) {
+    for (RuleConfigProvider source : sources.values()) {
       if (source.supportsWatch()) {
         source.addChangeListener(listener);
       }
@@ -146,7 +146,7 @@ public class RuleSourceManager {
    *
    * @return 主数据源；未设置返回 null
    */
-  public RuleSource getActiveSource() {
+  public RuleConfigProvider getActiveSource() {
     return activeSource;
   }
 
@@ -155,13 +155,13 @@ public class RuleSourceManager {
    *
    * @return 数据源映射
    */
-  public Map<RuleSource.SourceType, RuleSource> getSources() {
+  public Map<RuleConfigProvider.SourceType, RuleConfigProvider> getSources() {
     return Map.copyOf(sources);
   }
 
   /** 销毁全部数据源 */
   public synchronized void destroy() {
-    for (RuleSource source : sources.values()) {
+    for (RuleConfigProvider source : sources.values()) {
       try {
         source.destroy();
       } catch (Exception e) {

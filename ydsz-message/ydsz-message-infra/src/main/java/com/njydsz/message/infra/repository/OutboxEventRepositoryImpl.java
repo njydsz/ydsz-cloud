@@ -21,6 +21,8 @@ import com.njydsz.message.infra.mapper.OutboxEventMapper;
  * Outbox 事件仓储实现（Infra 层）。
  *
  * <p>实现 {@link OutboxEventRepository} 接口，封装 OutboxEventMapper 数据访问细节。
+ * 因 domain 事件 {@code OutboxEvent} 与 infra 实体 {@code OutboxEvent} 同名冲突，
+ * 依据规范 5.4 节，infra 实体以行内 FQN 引用并附 FQN-OK 注释。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -37,7 +39,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public boolean save(OutboxEvent event) {
-    com.njydsz.message.infra.entity.OutboxEvent entity = toEntity(event);
+    com.njydsz.message.infra.entity.OutboxEvent entity = toEntity(event); // FQN-OK: name conflict with OutboxEvent
     return outboxEventMapper.insert(entity) > 0;
   }
 
@@ -48,20 +50,20 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public List<OutboxEvent> findPending(int limit, LocalDateTime beforeTime) {
-    Page<com.njydsz.message.infra.entity.OutboxEvent> page = new Page<>(1, limit);
-    LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent> wrapper =
-        new LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent>()
-            .eq(com.njydsz.message.infra.entity.OutboxEvent::getStatus, "PENDING")
-            .le(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt, beforeTime)
-            .orderByAsc(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt);
-    List<com.njydsz.message.infra.entity.OutboxEvent> records =
+    Page<com.njydsz.message.infra.entity.OutboxEvent> page = new Page<>(1, limit); // FQN-OK: name conflict with OutboxEvent
+    LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent> wrapper = // FQN-OK: name conflict with OutboxEvent
+        new LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent>() // FQN-OK: name conflict with OutboxEvent
+            .eq(com.njydsz.message.infra.entity.OutboxEvent::getStatus, "PENDING") // FQN-OK: name conflict with OutboxEvent
+            .le(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt, beforeTime) // FQN-OK: name conflict with OutboxEvent
+            .orderByAsc(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt); // FQN-OK: name conflict with OutboxEvent
+    List<com.njydsz.message.infra.entity.OutboxEvent> records = // FQN-OK: name conflict with OutboxEvent
         outboxEventMapper.selectPage(page, wrapper).getRecords();
     return records.stream().map(this::toEvent).toList();
   }
 
   @Override
   public boolean markPublishing(String id) {
-    com.njydsz.message.infra.entity.OutboxEvent current = outboxEventMapper.selectById(id);
+    com.njydsz.message.infra.entity.OutboxEvent current = outboxEventMapper.selectById(id); // FQN-OK: name conflict with OutboxEvent
     if (current == null) {
       return false;
     }
@@ -92,13 +94,16 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 
   @Override
   public PageResponse<List<OutboxEvent>> findPage(String status, int pageNum, int pageSize) {
-    Page<com.njydsz.message.infra.entity.OutboxEvent> page = new Page<>(pageNum, Math.min(pageSize, 100));
-    LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent> wrapper = new LambdaQueryWrapper<>();
+    Page<com.njydsz.message.infra.entity.OutboxEvent> page = // FQN-OK: name conflict with OutboxEvent
+        new Page<>(pageNum, Math.min(pageSize, 100));
+    LambdaQueryWrapper<com.njydsz.message.infra.entity.OutboxEvent> wrapper = // FQN-OK: name conflict with OutboxEvent
+        new LambdaQueryWrapper<>();
     if (status != null && !status.isBlank()) {
-      wrapper.eq(com.njydsz.message.infra.entity.OutboxEvent::getStatus, status);
+      wrapper.eq(com.njydsz.message.infra.entity.OutboxEvent::getStatus, status); // FQN-OK: name conflict with OutboxEvent
     }
-    wrapper.orderByDesc(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt);
-    Page<com.njydsz.message.infra.entity.OutboxEvent> resultPage = outboxEventMapper.selectPage(page, wrapper);
+    wrapper.orderByDesc(com.njydsz.message.infra.entity.OutboxEvent::getCreatedAt); // FQN-OK: name conflict with OutboxEvent
+    Page<com.njydsz.message.infra.entity.OutboxEvent> resultPage = // FQN-OK: name conflict with OutboxEvent
+        outboxEventMapper.selectPage(page, wrapper);
     List<OutboxEvent> events = resultPage.getRecords().stream().map(this::toEvent).toList();
     return PageResponse.success(
         resultPage.getTotal(),
@@ -108,7 +113,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   }
 
   /** Entity → Event 转换。 */
-  private OutboxEvent toEvent(com.njydsz.message.infra.entity.OutboxEvent entity) {
+  private OutboxEvent toEvent(com.njydsz.message.infra.entity.OutboxEvent entity) { // FQN-OK: name conflict with OutboxEvent
     OutboxEvent event = new OutboxEvent();
     event.setId(entity.getId());
     event.setAggregateType(entity.getAggregateType());
@@ -124,8 +129,8 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   }
 
   /** Event → Entity 转换。 */
-  private com.njydsz.message.infra.entity.OutboxEvent toEntity(OutboxEvent event) {
-    com.njydsz.message.infra.entity.OutboxEvent entity = new com.njydsz.message.infra.entity.OutboxEvent();
+  private com.njydsz.message.infra.entity.OutboxEvent toEntity(OutboxEvent event) { // FQN-OK: name conflict with OutboxEvent
+    var entity = new com.njydsz.message.infra.entity.OutboxEvent(); // FQN-OK: name conflict with OutboxEvent
     entity.setId(event.getId());
     entity.setAggregateType(event.getAggregateType());
     entity.setAggregateId(event.getAggregateId());
