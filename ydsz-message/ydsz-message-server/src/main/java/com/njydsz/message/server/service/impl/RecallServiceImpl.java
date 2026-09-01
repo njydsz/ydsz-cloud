@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -291,12 +290,42 @@ public class RecallServiceImpl implements RecallService {
   /**
    * 将 MsgNotificationVO 转换为 MsgNotificationDTO（用于 Repository 更新操作）。
    *
+   * <p>使用显式字段映射替代 BeanUtils.copyProperties（编码规范 34.6 禁止反射式拷贝）。
+   *
    * @param vo 通知 VO
    * @return 通知 DTO
    */
   private MsgNotificationDTO convertToNotificationDTO(MsgNotificationVO vo) {
     MsgNotificationDTO dto = new MsgNotificationDTO();
-    BeanUtils.copyProperties(vo, dto);
+    dto.setId(vo.getId());
+    dto.setTitle(vo.getTitle());
+    dto.setContent(vo.getContent());
+    dto.setLevel(vo.getLevel());
+    dto.setCategory(vo.getCategory());
+    dto.setPriority(vo.getPriority());
+    dto.setSenderId(vo.getSenderId());
+    dto.setReceiverId(vo.getReceiverId());
+    dto.setBizType(vo.getBizType());
+    dto.setBizId(vo.getBizId());
+    dto.setMessageGroup(vo.getMessageGroup());
+    dto.setBatchId(vo.getBatchId());
+    dto.setActionUrl(vo.getActionUrl());
+    dto.setActionText(vo.getActionText());
+    dto.setIcon(vo.getIcon());
+    dto.setExtra(vo.getExtra());
+    dto.setSourceModule(vo.getSourceModule());
+    dto.setReadStatus(vo.getReadStatus());
+    dto.setReadTime(vo.getReadTime());
+    dto.setRecallStatus(vo.getRecallStatus());
+    dto.setRecallAt(vo.getRecallAt());
+    dto.setExpiredAt(vo.getExpiredAt());
+    dto.setMentionUserIds(vo.getMentionUserIds());
+    dto.setStatus(vo.getStatus());
+    dto.setCreatedBy(vo.getCreatedBy());
+    dto.setCreatedAt(vo.getCreatedAt());
+    dto.setUpdatedBy(vo.getUpdatedBy());
+    dto.setUpdatedAt(vo.getUpdatedAt());
+    dto.setTenantId(vo.getTenantId());
     return dto;
   }
 }

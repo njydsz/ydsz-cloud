@@ -178,12 +178,20 @@ public class SearchDomainService {
     String name = index.getName() != null ? index.getName().toLowerCase() : "";
     String lowerKeyword = keyword.toLowerCase();
 
-    if (name.equals(lowerKeyword)) return 1.0f;
-    if (name.startsWith(lowerKeyword)) return 0.8f;
-    if (name.contains(lowerKeyword)) return 0.6f;
+    if (name.equals(lowerKeyword)) {
+      return 1.0f;
+    }
+    if (name.startsWith(lowerKeyword)) {
+      return 0.8f;
+    }
+    if (name.contains(lowerKeyword)) {
+      return 0.6f;
+    }
 
     String path = index.getPath() != null ? index.getPath().toLowerCase() : "";
-    if (path.contains(lowerKeyword)) return 0.3f;
+    if (path.contains(lowerKeyword)) {
+      return 0.3f;
+    }
 
     return 0.1f;
   }
