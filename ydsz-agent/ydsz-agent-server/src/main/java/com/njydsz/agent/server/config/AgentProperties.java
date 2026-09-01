@@ -965,17 +965,24 @@ public class AgentProperties {
    * <p>控制单租户在 LLM 调用层面的用量上限，包含每日 Token 限额和月度预算限额。 配额为 0 表示不限制该维度。
    */
   public static class Quota {
+
+    /** 默认每日 Token 限额 */
+    private static final long DEFAULT_DAILY_TOKEN_LIMIT = 1000000L;
+
+    /** 默认告警阈值（0.0-1.0） */
+    private static final double DEFAULT_ALERT_THRESHOLD = 0.8;
+
     /** 是否启用配额校验 */
     private boolean enabled = true;
 
     /** 每日 Token 限额（0 = 不限制） */
-    private long dailyTokenLimit = 1000000L;
+    private long dailyTokenLimit = DEFAULT_DAILY_TOKEN_LIMIT;
 
     /** 月度预算（USD，0 = 不限制） */
     private double monthlyBudgetUsd = 1000.0;
 
     /** 告警阈值（0.0-1.0，默认 0.8 即 80%） */
-    private double alertThreshold = 0.8;
+    private double alertThreshold = DEFAULT_ALERT_THRESHOLD;
 
     public boolean isEnabled() {
       return enabled;
@@ -1016,17 +1023,27 @@ public class AgentProperties {
    * <p>控制 Agent 运行时管理面板的行为，包括会话清理间隔、最大会话保留时长等。
    */
   public static class Runtime {
+
+    /** 默认会话清理任务执行间隔（毫秒，10 分钟） */
+    private static final long DEFAULT_CLEANUP_INTERVAL_MS = 600000L;
+
+    /** 默认非活跃会话最大保留时长（分钟，2 小时） */
+    private static final int DEFAULT_STALE_THRESHOLD_MINUTES = 120;
+
+    /** 默认单次查询最大返回会话数 */
+    private static final int DEFAULT_MAX_QUERY_LIMIT = 200;
+
     /** 是否启用运行时管理功能（会话追踪、强制回收） */
     private boolean enabled = true;
 
     /** 会话清理任务执行间隔（毫秒），默认 10 分钟 */
-    private long cleanupIntervalMs = 600000L;
+    private long cleanupIntervalMs = DEFAULT_CLEANUP_INTERVAL_MS;
 
     /** 非活跃会话最大保留时长（分钟），默认 120 分钟（2 小时） */
-    private int staleThresholdMinutes = 120;
+    private int staleThresholdMinutes = DEFAULT_STALE_THRESHOLD_MINUTES;
 
     /** 单次查询最大返回会话数，默认 200 */
-    private int maxQueryLimit = 200;
+    private int maxQueryLimit = DEFAULT_MAX_QUERY_LIMIT;
 
     public boolean isEnabled() {
       return enabled;
@@ -1067,6 +1084,13 @@ public class AgentProperties {
    * <p>控制对话后记忆提取和定时 Dreaming 任务的行为。
    */
   public static class MemoryConsolidation {
+
+    /** 默认触发记忆提取的最小消息数 */
+    private static final int DEFAULT_MIN_MESSAGES = 4;
+
+    /** 默认单次批量处理最大对话数 */
+    private static final int DEFAULT_BATCH_SIZE = 50;
+
     /** 是否启用记忆整合功能 */
     private boolean enabled = false;
 
@@ -1080,10 +1104,10 @@ public class AgentProperties {
     private String dreamingCron = "0 30 2 * * ?";
 
     /** 触发记忆提取的最小消息数 */
-    private int minMessages = 4;
+    private int minMessages = DEFAULT_MIN_MESSAGES;
 
     /** 单次批量处理最大对话数 */
-    private int batchSize = 50;
+    private int batchSize = DEFAULT_BATCH_SIZE;
 
     public boolean isEnabled() {
       return enabled;

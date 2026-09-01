@@ -848,15 +848,22 @@ public class SuperFastExcelWriter {
     DateTimeFormatter dateFormatObj;
   }
 
-  /** 获取 Workbook XML 字节，使用 @ExcelSheet 注解的 name 作为 Sheet 名称 */
+  /**
+   * 获取 Workbook XML 字节。
+   *
+   * <p>Sheet 名称优先级：显式 sheet(name) 配置（{@code WriteMetadata.sheetName}） &gt; {@code @ExcelSheet} 注解 &gt; 默认 "Sheet1"。
+   */
   private byte[] getWorkbookBytes() {
-    String sheetName = "Sheet1";
+    String sheetName = metadata.getSheetName();
     Class<?> clazz = metadata.getClazz();
-    if (clazz != null) {
+    if ((sheetName == null || sheetName.isEmpty()) && clazz != null) {
       ExcelSheet sheetAnnotation = clazz.getAnnotation(ExcelSheet.class);
       if (sheetAnnotation != null && !sheetAnnotation.name().isEmpty()) {
         sheetName = sheetAnnotation.name();
       }
+    }
+    if (sheetName == null || sheetName.isEmpty()) {
+      sheetName = "Sheet1";
     }
     // XML 转义
     sheetName =
