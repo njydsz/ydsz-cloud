@@ -106,6 +106,33 @@ public final class FieldMetadataLoader {
     return fields;
   }
 
+  /**
+   * 解析一个类的可序列化字段清单，产出供序列化/反序列化复用的 {@link FieldMeta} 数组。
+   *
+   * <p>字段收集范围：从 {@code clazz} 自身沿继承链向上直到 {@code Object} 之前，同名字段以子类优先
+   * （见 {@link #collectDeclaredAndInheritedFields}）；{@code static} 与 {@code transient} 字段一律跳过。
+   *
+   * <p>生效的注解按以下优先级依次叠加，后者覆盖前者：
+   *
+   * <ol>
+   *   <li>类级 {@link JsonClass}：{@code ignores} 直接剔除、{@code includes} 作为白名单、{@code
+   *       ordering} 决定序号、{@code naming} 决定命名策略
+   *   <li>{@code @JsonPropertyOrder}：显式 {@code value} 序号优先于 {@code ordering}；{@code
+   *       alphabetic=true} 且未给出任何显式序号时改为按 JSON 名升序
+   *   <li>{@code @JsonNaming}（Jackson 兼容）：实例化失败时告警并回退到上一步的命名策略
+   *   <li>{@code @JsonIgnoreProperties} 与原生的 Jackson 同名注解：并入 {@code ignores}
+   *   <li>字段级 {@code @JsonProperty} 重命名 / {@code @JsonIgnore} 剔除
+   *   <li>方法级 {@code @JsonGetter} / {@code @JsonSetter}：最后再覆盖一次 JSON 名
+   * </ol>
+   *
+   * <p><b>容错约定：</b>单个字段 {@code setAccessible} 失败时只告警并跳过该字段，不让整个类解析失败。
+   *
+   * <p><b>线程安全：</b>本方法无共享写状态，可并发调用；命名策略取自线程本地变量 {@code
+   * NAMING_STRATEGY}，调用方需自行保证该变量在使用期间已正确设置。
+   *
+   * @param clazz 待解析的目标类，不允许为 {@code null}
+   * @return 字段元数据数组，按最终序号升序；不会为 {@code null}，类无任何可序列化字段时返回长度为 0 的数组
+   */
   public static FieldMeta[] loadFields(Class<?> clazz) {
     JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
 

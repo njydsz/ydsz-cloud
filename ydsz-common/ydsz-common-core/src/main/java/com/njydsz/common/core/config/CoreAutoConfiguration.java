@@ -107,6 +107,18 @@ public class CoreAutoConfiguration {
     return service;
   }
 
+  /**
+   * 在所有单例就绪后把分页默认值灌入 {@link PageConstants} 静态持有者。
+   *
+   * <p>选择 {@link SmartInitializingSingleton} 而非 {@code @PostConstruct}：分页常量可能被其他 Bean
+   * 在初始化阶段读取，必须等全部单例（含可能被 {@code BeanPostProcessor} 增强过的 {@code
+   * CoreProperties}）创建完成后再统一赋值，避免读到未绑定的默认值。
+   *
+   * <p>本类为包级可见的启动期一次性组件，无状态、不对外暴露。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
   static class PageConstantsInitializer implements SmartInitializingSingleton {
 
     private final CoreProperties properties;

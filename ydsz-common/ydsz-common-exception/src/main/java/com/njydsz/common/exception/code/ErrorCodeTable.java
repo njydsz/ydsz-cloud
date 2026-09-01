@@ -231,18 +231,43 @@ public class ErrorCodeTable {
       this.description = description;
     }
 
+    /**
+     * 模块名，即 {@code @YdszExceptionCode} 上声明的模块标识。
+     *
+     * @return 模块名，构造时确定，不会为 {@code null}
+     */
     public String name() {
       return name;
     }
 
+    /**
+     * 模块的人类可读描述，用于错误码文档导出。
+     *
+     * @return 模块描述，未配置时为空字符串而非 {@code null}
+     */
     public String description() {
       return description;
     }
 
+    /**
+     * 该模块下已注册的全部错误码。
+     *
+     * <p>返回的是内部 {@link ConcurrentHashMap} 的<b>实时视图</b>而非快照：启动期扫描注册后仍会随
+     * 新错误码的注册而变化。仅用于遍历读取，调用方不应直接修改。
+     *
+     * @return 错误码 key 到 {@link CodeEntry} 的映射，不会为 {@code null}，未注册任何错误码时为空 {@code Map}
+     */
     public Map<String, CodeEntry> codes() {
       return codes;
     }
 
+    /**
+     * 模块级默认异常分类，供文档导出与统计使用。
+     *
+     * <p>该值由模块声明方通过 {@code setDefaultCategory} 设置，{@code volatile} 保证跨线程可见。
+     *
+     * @return 默认异常分类；为 {@code null} 表示该模块未声明，需按错误码 key 前缀推断分类
+     */
     public ExceptionCategory defaultCategory() {
       return defaultCategory;
     }

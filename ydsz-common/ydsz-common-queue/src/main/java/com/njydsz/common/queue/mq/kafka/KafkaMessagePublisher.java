@@ -121,11 +121,33 @@ public class KafkaMessagePublisher implements IMessagePublisher {
     }
   }
 
+  /**
+   * 发布延迟消息。
+   *
+   * <p>Kafka 原生不支持任意延迟投递（仅部分版本提供固定层级的延迟 topic），因此本实现<b>不保证延迟语义
+   * </b>：记录一条 warn 日志后立即按普通消息投递，即消息会被消费者立刻收到。
+   *
+   * <p>依赖延迟投递的业务请改用 RocketMQ 等支持定时消息的通道，或在上层自行实现延迟队列。
+   *
+   * @param message 待投递消息，不允许为 {@code null}
+   * @param delayMillis 期望延迟毫秒数，本实现忽略该参数
+   */
   public void publishDelayed(QueueMessage message, long delayMillis) {
     log.warn("[Kafka] 延迟消息暂不支持，topic={}", topic);
     publish(message);
   }
 
+  /**
+   * 发布顺序消息，以消息分组键作为 Kafka 分区键保证分区内有序。
+   *
+   * <p>前提条件：{@code message.isSequential()} 为 {@code true}，即已设置 {@code messageGroupKey}；
+   * Kafka 只能保证<b>同一分区内</b>的顺序，跨分区仍可能乱序，因此同一业务流的消息必须使用相同的分组键。
+   *
+   * <p>发布器已关闭（{@code closed == true}）时静默返回，不投递也不抛异常。
+   *
+   * @param message 待投递的顺序消息，必须设置 {@code messageGroupKey}，否则视为非法参数
+   * @throws IllegalArgumentException 消息为 {@code null} 或未设置 {@code messageGroupKey} 时抛出
+   */
   public void publishSequential(QueueMessage message) {
     if (message == null || !message.isSequential()) {
       throw new IllegalArgumentException("顺序消息必须设置 messageGroupKey");
