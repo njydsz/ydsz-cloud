@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.SerializationProvider;
+import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.reader.JSONReader;
 
 /**
@@ -103,6 +104,16 @@ public final class JsonConfig implements Serializable {
   private final boolean wrapRootValue;
 
   /**
+   * 反序列化遇到未知字段时是否抛出异常（P1.5 新增）。
+   *
+   * <p>对标 Jackson {@code FAIL_ON_UNKNOWN_PROPERTIES}。默认 {@code false}（容错跳过，
+   * 与本模块历史行为一致）；设为 {@code true} 后 BeanReader 遇到无法匹配的字段将抛出
+   * {@link com.njydsz.common.json.exception.JsonDeserializationException}（含字段名与位置），
+   * 用于接口契约严格场景（如拼写错误字段的显式暴露）。
+   */
+  private final boolean failOnUnknownProperties;
+
+  /**
    * 全参数构造函数（包可见，仅供 Builder 内部使用）。
    *
    * <p>所有字段通过此构造函数一次性写入，之后不可修改。 默认值由 {@link Builder} 预先填充。
@@ -120,6 +131,7 @@ public final class JsonConfig implements Serializable {
    * @param maxGenericDepth 泛型递归深度上限
    * @param useBigDecimal 是否使用 BigDecimal 解析浮点数
    * @param wrapRootValue 是否启用根名称包裹
+   * @param failOnUnknownProperties 反序列化遇未知字段时是否抛出异常
    */
   JsonConfig(
       PropertyNamingStrategy namingStrategy,
@@ -134,7 +146,8 @@ public final class JsonConfig implements Serializable {
       int maxDepth,
       int maxGenericDepth,
       boolean useBigDecimal,
-      boolean wrapRootValue) {
+      boolean wrapRootValue,
+      boolean failOnUnknownProperties) {
     this.namingStrategy = namingStrategy;
     this.circularReferenceStrategy = circularReferenceStrategy;
     this.writeNulls = writeNulls;
@@ -148,6 +161,7 @@ public final class JsonConfig implements Serializable {
     this.maxGenericDepth = maxGenericDepth;
     this.useBigDecimal = useBigDecimal;
     this.wrapRootValue = wrapRootValue;
+    this.failOnUnknownProperties = failOnUnknownProperties;
   }
 
   /**
@@ -397,6 +411,15 @@ public final class JsonConfig implements Serializable {
   }
 
   /**
+   * 反序列化遇到未知字段时是否抛出异常。
+   *
+   * @return {@code true} 严格模式（抛异常），默认 {@code false}（容错跳过）
+   */
+  public boolean isFailOnUnknownProperties() {
+    return failOnUnknownProperties;
+  }
+
+  /**
    * 应用配置到序列化提供者
    *
    * <p>将当前配置应用到 SerializationProvider
@@ -413,6 +436,8 @@ public final class JsonConfig implements Serializable {
     // 传播 maxDepth 到反序列化路径（JSONReader 全局配置）
     JSONReader.setMaxDepth(maxDepth);
     JSONReader.setMaxGenericDepth(maxGenericDepth);
+    // 传播 failOnUnknownProperties 到 BeanReader（P1.5：未知字段严格模式）
+    BeanReader.setFailOnUnknownProperties(failOnUnknownProperties);
     // wrapRootValue 不需要传播到 SerializationContext，因为它在 serialize() 入口处检查
   }
 

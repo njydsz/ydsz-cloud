@@ -24,6 +24,7 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.excel.annotation.ContentStyle;
 import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.annotation.ExcelSheet;
@@ -552,7 +553,12 @@ public class ExcelWriter {
           && isXlsx
           && !append
           && metadata.getClazz() != null
-          && !isMultiSheetWriting) {
+          && !isMultiSheetWriting
+          // 深度完善·方案 B：显式降级——fast 引擎不触发 WriteLifecycleHandler 回调、
+          // 不应用样式注解。注册了回调或 DTO 带样式注解时回落 POI 路径，
+          // 消除"配置了但静默失效"的能力差异（此前仅 javadoc 标注限制）
+          && callbacks.isEmpty()
+          && !hasStyleAnnotations(metadata.getClazz())) {
         useFastPath = true;
         SuperFastExcelWriter fastWriter = new SuperFastExcelWriter(metadata);
         fastWriter.doWrite(data);
