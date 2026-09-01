@@ -50,6 +50,9 @@ public class RedisConversationMemory implements ConversationMemory {
   /** 剩余 TTL 低于此阈值（秒）时才执行续期，避免活跃长对话被每次 save 无限续期 */
   private static final long TTL_RENEW_THRESHOLD_SECONDS = 3600L;
 
+  /** 一小时的秒数 */
+  private static final long SECONDS_PER_HOUR = 3600L;
+
   /** String 操作组件（expire / delete / hasKey） */
   private final RedisStringOps stringOps;
 
@@ -88,7 +91,7 @@ public class RedisConversationMemory implements ConversationMemory {
     // P1 优化：仅当剩余 TTL 低于阈值时才续期，避免活跃长对话被每次 save 无限续期、Redis 内存不释放
     long remainTtl = stringOps.getExpire(key);
     if (remainTtl < TTL_RENEW_THRESHOLD_SECONDS) {
-      stringOps.expire(key, ttlHours * 3600L);
+      stringOps.expire(key, ttlHours * SECONDS_PER_HOUR);
     }
   }
 
@@ -259,7 +262,7 @@ public class RedisConversationMemory implements ConversationMemory {
     public int completionTokens;
 
     /** 默认构造器（兼容旧数据反序列化，版本号初始为 0 表示 v1 格式） */
-    public SerializedMessage() {
+    SerializedMessage() {
       this.version = CURRENT_VERSION;
     }
   }

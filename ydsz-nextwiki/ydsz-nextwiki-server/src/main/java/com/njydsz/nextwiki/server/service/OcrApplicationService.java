@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -67,7 +68,8 @@ public class OcrApplicationService {
    *
    * <p>调用 tesseract 命令行工具识别图片中的文字。 流程：将输入流写入临时文件 -> 调用 tesseract 命令 -> 读取标准输出 -> 清理临时文件。
    */
-  private OcrResult recognizeByTesseract(InputStream imageStream) throws Exception {
+  private OcrResult recognizeByTesseract(InputStream imageStream)
+      throws IOException, InterruptedException {
     String language = properties.getOcr().getLanguage();
     String tesseractPath = properties.getOcr().getTesseractPath();
     log.info("[OcrApplicationService] Tesseract OCR（语言: {}）", language);
@@ -99,7 +101,7 @@ public class OcrApplicationService {
    *
    * <p>TODO: 集成阿里云 OCR API（需要 aliyun-ocr-sdk 依赖）
    */
-  private OcrResult recognizeByAliyun(InputStream imageStream) throws Exception {
+  private OcrResult recognizeByAliyun(InputStream imageStream) {
     log.info("[OcrApplicationService] 阿里云 OCR（TODO: 待集成阿里云 OCR SDK）");
     return OcrResult.skipped("阿里云 OCR 尚未集成");
   }
@@ -109,7 +111,7 @@ public class OcrApplicationService {
    *
    * <p>TODO: 集成腾讯云 OCR API（需要 tencentcloud-sdk-java 依赖）
    */
-  private OcrResult recognizeByTencent(InputStream imageStream) throws Exception {
+  private OcrResult recognizeByTencent(InputStream imageStream) {
     log.info("[OcrApplicationService] 腾讯云 OCR（TODO: 待集成腾讯云 OCR SDK）");
     return OcrResult.skipped("腾讯云 OCR 尚未集成");
   }

@@ -31,6 +31,12 @@ import java.util.List;
  */
 public class BytecodeCompiler implements ExprNodeVisitor<Void> {
 
+  /** 字节掩码（无符号字节取值 0~255） */
+  static final int BYTE_MASK = 0xFF;
+
+  /** 字节位移位数（u16 高字节） */
+  static final int BYTE_SHIFT = 8;
+
   /** 字节码输出缓冲区 */
   private final ArrayList<Byte> bytecode = new ArrayList<>();
 
@@ -223,13 +229,13 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
 
   /** 发射 u16 操作数（大端序） */
   private void emitU16(int value) {
-    bytecode.add((byte) ((value >> 8) & 0xFF));
-    bytecode.add((byte) (value & 0xFF));
+    bytecode.add((byte) ((value >> BYTE_SHIFT) & BYTE_MASK));
+    bytecode.add((byte) (value & BYTE_MASK));
   }
 
   /** 发射 u8 操作数 */
   private void emitU8(int value) {
-    bytecode.add((byte) (value & 0xFF));
+    bytecode.add((byte) (value & BYTE_MASK));
   }
 
   /** 发射跳转指令并返回操作数位置（用于后续回填） */
@@ -244,8 +250,8 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
   private void patchJump(int operandPos) {
     int currentPos = bytecode.size();
     int offset = currentPos - (operandPos + 2);
-    bytecode.set(operandPos, (byte) ((offset >> 8) & 0xFF));
-    bytecode.set(operandPos + 1, (byte) (offset & 0xFF));
+    bytecode.set(operandPos, (byte) ((offset >> BYTE_SHIFT) & BYTE_MASK));
+    bytecode.set(operandPos + 1, (byte) (offset & BYTE_MASK));
   }
 
   /**

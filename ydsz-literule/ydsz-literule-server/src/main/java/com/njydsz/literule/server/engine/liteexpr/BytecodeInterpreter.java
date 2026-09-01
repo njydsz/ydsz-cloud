@@ -33,6 +33,9 @@ public class BytecodeInterpreter {
   /** 墙上时钟超时检查采样间隔 */
   private static final long DEADLINE_CHECK_INTERVAL = 0xFF;
 
+  /** 操作数栈最小初始容量 */
+  private static final int MIN_STACK_CAPACITY = 16;
+
   private final FunctionRegistry functionRegistry;
   private final long maxSteps;
 

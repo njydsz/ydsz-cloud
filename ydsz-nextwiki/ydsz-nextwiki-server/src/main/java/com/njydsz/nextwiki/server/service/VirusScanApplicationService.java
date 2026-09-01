@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
@@ -46,6 +47,9 @@ public class VirusScanApplicationService {
   /** INSTREAM 单次发送分块大小（字节） */
   private static final int CHUNK_SIZE = 4096;
 
+  /** chunk 长度头字节数（INSTREAM 协议为 4 字节大端序） */
+  private static final int CHUNK_LENGTH_BYTES = 4;
+
   /**
    * 扫描输入流（门面方法：前置校验 + 委托 {@link #doScan} + 异常兜底）。
    *
@@ -77,7 +81,7 @@ public class VirusScanApplicationService {
   }
 
   /** 执行 ClamAV INSTREAM 扫描 */
-  private ScanResult doScan(InputStream inputStream) throws Exception {
+  private ScanResult doScan(InputStream inputStream) throws IOException {
     String host = properties.getVirusScan().getHost();
     int port = properties.getVirusScan().getPort();
     try (Socket socket = new Socket(host, port)) {
@@ -94,13 +98,14 @@ public class VirusScanApplicationService {
       while ((bytesRead = inputStream.read(buffer)) != -1) {
         // 发送 chunk 长度（4 字节，大端序）
         byte[] chunkSize =
-            ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(bytesRead).array();
+            ByteBuffer.allocate(CHUNK_LENGTH_BYTES).order(ByteOrder.BIG_ENDIAN).putInt(bytesRead).array();
         out.write(chunkSize);
         out.write(buffer, 0, bytesRead);
       }
 
       // 发送结束标记（0 长度 chunk）
-      out.write(ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(0).array());
+      out.write(
+          ByteBuffer.allocate(CHUNK_LENGTH_BYTES).order(ByteOrder.BIG_ENDIAN).putInt(0).array());
       out.flush();
 
       // 读取响应
