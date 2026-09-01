@@ -67,8 +67,10 @@ public class DedupHandler implements SendHandler {
               ctx.getBizType()));
       ctx.setErrorResult(MessageResult.fail(
           ctx.getChannel(),
+          MessageExceptionCode.MESSAGE_DUPLICATED.getCode(),
           "消息重复,已忽略",
-          MessageExceptionCode.MESSAGE_DUPLICATED.getCode()));
+          "消息重复,已忽略",
+          null));
       return false;
     }
     return true;

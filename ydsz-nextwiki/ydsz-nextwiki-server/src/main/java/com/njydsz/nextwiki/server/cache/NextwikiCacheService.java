@@ -79,6 +79,15 @@ public class NextwikiCacheService {
   /** 互斥锁持有超时（秒） */
   private static final long LOCK_LEASE_S = 10;
 
+  /** 缓存击穿保护重试等待时间（毫秒） */
+  private static final long RETRY_WAIT_MILLIS = 50;
+
+  /** TTL 抖动幅度分母（基础 TTL 的 1/10） */
+  private static final long TTL_JITTER_FRACTION = 10;
+
+  /** TTL 抖动回落分母（基础 TTL 的 1/20） */
+  private static final long TTL_JITTER_REDUCE_FRACTION = 20;
+
   private final RedisStringOps redisStringOps;
   private final NextwikiMetrics nextwikiMetrics;
 
@@ -439,7 +448,7 @@ public class NextwikiCacheService {
         if (cached != null) {
           return Optional.of((T) cached);
         }
-        Thread.sleep(50);
+        Thread.sleep(RETRY_WAIT_MILLIS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         break;
@@ -469,7 +478,7 @@ public class NextwikiCacheService {
             return cached;
           }
         }
-        Thread.sleep(50);
+        Thread.sleep(RETRY_WAIT_MILLIS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         break;
@@ -541,7 +550,7 @@ public class NextwikiCacheService {
    * @return 偏移后的 TTL
    */
   private long jitterTtl(long baseTtl) {
-    long jitter = ThreadLocalRandom.current().nextLong(baseTtl / 10);
-    return baseTtl + jitter - (baseTtl / 20);
+    long jitter = ThreadLocalRandom.current().nextLong(baseTtl / TTL_JITTER_FRACTION);
+    return baseTtl + jitter - (baseTtl / TTL_JITTER_REDUCE_FRACTION);
   }
 }

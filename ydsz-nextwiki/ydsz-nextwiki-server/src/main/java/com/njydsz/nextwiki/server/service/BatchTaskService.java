@@ -47,6 +47,9 @@ public class BatchTaskService {
   /** 任务状态保留时长（24 小时，过期自动清理，不再依赖内存遍历） */
   private static final Duration TASK_TTL = Duration.ofHours(24);
 
+  /** 操作类型前缀长度（如 "move:" 为 5 个字符） */
+  private static final int OPERATION_PREFIX_LENGTH = 5;
+
   /** Redis 字符串操作（任务状态读写） */
   private final RedisStringOps stringOps;
 
@@ -171,7 +174,7 @@ public class BatchTaskService {
       FileApplicationService fileService = getService();
       BatchResultDTO result;
       if (operation.startsWith("move:")) {
-        String targetParentId = operation.substring(5);
+        String targetParentId = operation.substring(OPERATION_PREFIX_LENGTH);
         result = fileService.batchMove(nodeIds, targetParentId, userId);
       } else {
         result = fileService.batchDelete(nodeIds, userId);

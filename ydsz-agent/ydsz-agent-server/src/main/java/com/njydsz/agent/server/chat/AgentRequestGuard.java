@@ -124,7 +124,11 @@ public class AgentRequestGuard {
     return "";
   }
 
-  /** 释放幂等锁（业务异常时调用，允许重试） */
+  /**
+   * 释放幂等锁（业务异常时调用，允许重试）。
+   *
+   * @param requestId 幂等请求 ID
+   */
   public void releaseIdempotent(String requestId) {
     if (requestId == null || requestId.isBlank()) {
       return;

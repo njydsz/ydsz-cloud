@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -84,6 +85,12 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 @RequiredArgsConstructor
 public class FileApplicationService {
 
+  /** 每兆字节数（字节） */
+  private static final long BYTES_PER_MB = 1024 * 1024;
+
+  /** 文件名最大长度（字符，含扩展名） */
+  private static final int MAX_FILENAME_LENGTH = 255;
+
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
@@ -112,7 +119,7 @@ public class FileApplicationService {
   private final PlatformTransactionManager transactionManager;
 
   /** 批量任务线程池（使用 ydsz-common-thread 统一管理的 nextwikiTaskExecutor） */
-  @org.springframework.beans.factory.annotation.Qualifier("nextwikiTaskExecutor")
+  @Qualifier("nextwikiTaskExecutor")
   private final Executor batchTaskExecutor;
 
   /** 缓存服务（文件详情、目录列表、配额用量 Redis 缓存） */
@@ -1086,7 +1093,7 @@ public class FileApplicationService {
     long maxFileSize = properties.getUpload().getMaxFileSize();
     if (file.getSize() > maxFileSize) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_TOO_LARGE)
-          .data("maxSize", maxFileSize / 1024 / 1024 + "MB");
+          .data("maxSize", maxFileSize / BYTES_PER_MB + "MB");
     }
     String filename = sanitizeFileName(file.getOriginalFilename());
     if (filename == null || filename.isEmpty()) {
@@ -1304,11 +1311,12 @@ public class FileApplicationService {
     // 去除特殊字符（保留中文、字母、数字、点、下划线、短横线、空格、括号）
     name = name.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9._\\- ()（）]", "_");
     // 限制文件名长度（含扩展名，最大 255 字符）
-    if (name.length() > 255) {
+    if (name.length() > MAX_FILENAME_LENGTH) {
       String suffix = extractSuffix(name);
       String baseName =
           suffix.isEmpty() ? name : name.substring(0, name.length() - suffix.length() - 1);
-      name = baseName.substring(0, 255 - suffix.length() - 1) + "." + suffix;
+      name =
+          baseName.substring(0, MAX_FILENAME_LENGTH - suffix.length() - 1) + "." + suffix;
     }
     return name;
   }
@@ -1381,7 +1389,12 @@ public class FileApplicationService {
         .orElse(null);
   }
 
-  /** 批量操作结果 */
+  /**
+   * 批量操作结果
+   *
+   * @param successCount 成功数量
+   * @param failedItems 失败项明细列表
+   */
   public record BatchResultDTO(int successCount, List<FailedItem> failedItems) {
 
     /**

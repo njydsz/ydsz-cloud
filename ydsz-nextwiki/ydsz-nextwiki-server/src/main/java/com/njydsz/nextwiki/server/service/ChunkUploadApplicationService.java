@@ -70,6 +70,9 @@ import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 @Service
 public class ChunkUploadApplicationService {
 
+  /** 每兆字节数（字节） */
+  private static final long BYTES_PER_MB = 1024 * 1024;
+
   private final RedisStringOps stringOps;
   private final RedisCollectionOps collectionOps;
   private final FileNodeRepository fileNodeRepository;
@@ -220,7 +223,7 @@ public class ChunkUploadApplicationService {
     }
     if (chunk.getSize() > MAX_CHUNK_SIZE) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_TOO_LARGE)
-          .data("maxChunkSize", MAX_CHUNK_SIZE / 1024 / 1024 + "MB");
+          .data("maxChunkSize", MAX_CHUNK_SIZE / BYTES_PER_MB + "MB");
     }
 
     try {

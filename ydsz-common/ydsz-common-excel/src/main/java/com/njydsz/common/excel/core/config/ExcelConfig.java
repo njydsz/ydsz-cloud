@@ -221,8 +221,8 @@ public class ExcelConfig {
     private int maxReadFileSizeMB = DEFAULT_MAX_READ_FILE_SIZE_MB;
     private int maxWriteFileSizeMB = DEFAULT_MAX_WRITE_FILE_SIZE_MB;
     private boolean formulaInjectionProtection = true;
-    private boolean useFastReader = true;
-    private boolean useFastWriter = true;
+    private boolean useFastReader = false;
+    private boolean useFastWriter = false;
     private int compressionLevel = Deflater.BEST_SPEED;
     private boolean use1904Windowing = false;
     private int headRowNumber = DEFAULT_HEAD_ROW_NUMBER;

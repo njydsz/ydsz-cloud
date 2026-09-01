@@ -111,7 +111,10 @@ public class SendPipelineFacade {
         ctx.setErrorResult(
             MessageResult.fail(
                 ctx.getChannel(),
-                "管线处理异常 [" + handler.name() + "]: " + e.getMessage()));
+                null,
+                "管线处理异常 [" + handler.name() + "]: " + e.getMessage(),
+                "管线处理异常 [" + handler.name() + "]: " + e.getMessage(),
+                null));
         return ctx;
       }
     }

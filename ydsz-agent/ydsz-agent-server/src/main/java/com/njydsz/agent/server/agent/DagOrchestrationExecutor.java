@@ -189,7 +189,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     try {
       CompletableFuture.allOf(futureMap.values().toArray(new CompletableFuture[0]))
           // 整图总超时 300s（5 分钟）：任一节点超时即视为编排失败，避免长尾任务长期占用线程
-          .orTimeout(300, TimeUnit.SECONDS)
+          .orTimeout(DAG_TOTAL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
           .join();
     } catch (CompletionException e) {
       if (e.getCause() instanceof TimeoutException) {
@@ -293,6 +293,9 @@ public class DagOrchestrationExecutor implements AgentExecutor {
 
   /** 默认节点超时（秒），当节点未配置 timeoutSeconds 时使用 */
   private static final int DEFAULT_NODE_TIMEOUT_SECONDS = 60;
+
+  /** 整图总超时（秒，5 分钟）：任一节点超时即视为编排失败，避免长尾任务长期占用线程 */
+  private static final int DAG_TOTAL_TIMEOUT_SECONDS = 300;
 
   /** 节点子 Agent 默认最大迭代次数（ReAct/Plan 循环兜底熔断） */
   private static final int DEFAULT_NODE_MAX_ITERATIONS = 10;
@@ -911,7 +914,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
 
     try {
       CompletableFuture.allOf(futureMap.values().toArray(new CompletableFuture[0]))
-          .orTimeout(300, TimeUnit.SECONDS)
+          .orTimeout(DAG_TOTAL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
           .join();
     } catch (CompletionException e) {
       if (e.getCause() instanceof TimeoutException) {

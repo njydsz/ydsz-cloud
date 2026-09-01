@@ -67,6 +67,9 @@ public class BatchImportApplicationService {
   /** ZIP 炸弹防护：总解压大小上限（500MB） */
   private static final long MAX_TOTAL_UNCOMPRESSED = 500L * 1024 * 1024;
 
+  /** 每兆字节数（字节） */
+  private static final long BYTES_PER_MB = 1024 * 1024;
+
   /**
    * 批量上传文件（并发处理，单批上限 {@link #MAX_BATCH_SIZE}）。
    *
@@ -199,7 +202,7 @@ public class BatchImportApplicationService {
           if (totalUncompressed > MAX_TOTAL_UNCOMPRESSED) {
             log.warn(
                 "[BatchImportApplicationService] 总解压大小超过限制: {}MB",
-                MAX_TOTAL_UNCOMPRESSED / 1024 / 1024);
+                MAX_TOTAL_UNCOMPRESSED / BYTES_PER_MB);
             break;
           }
 

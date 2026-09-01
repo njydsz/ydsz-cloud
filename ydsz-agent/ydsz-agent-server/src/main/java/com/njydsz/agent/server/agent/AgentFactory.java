@@ -128,7 +128,11 @@ public class AgentFactory {
     return createExecutor(definition.getType().name());
   }
 
-  /** 获取默认 Agent 执行器（ReAct 模式） */
+  /**
+   * 获取默认 Agent 执行器（ReAct 模式）。
+   *
+   * @return 默认执行器实例
+   */
   public AgentExecutor getDefaultExecutor() {
     return createExecutor("REACT");
   }

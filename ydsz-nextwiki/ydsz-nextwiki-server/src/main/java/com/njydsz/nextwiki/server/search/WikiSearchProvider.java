@@ -42,6 +42,22 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
 @RequiredArgsConstructor
 public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
 
+  /** 字段权重：标题（最高） */
+  private static final float WEIGHT_TITLE = 3.0f;
+
+  /** 字段权重：内容 */
+  private static final float WEIGHT_CONTENT = 2.0f;
+
+  /** 字段权重：作者/备注 */
+  private static final float WEIGHT_AUTHOR = 1.0f;
+
+  /** 字段权重：标签 */
+  private static final float WEIGHT_TAGS = 1.5f;
+
+  /** 字段权重：状态/类型等低权重字段 */
+  private static final float WEIGHT_LOW = 0.5f;
+
+
   private final FileNodeRepository fileNodeRepository;
   private final SearchIndexRepository searchIndexRepository;
   private final TagRepository tagRepository;
@@ -117,7 +133,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .name("title")
             .label(MessageUtils.getMessage("nextwiki.search.field.name", "文件名"))
             .type(FieldType.TEXT)
-            .weight(3.0f)
+            .weight(WEIGHT_TITLE)
             .searchable(true)
             .highlightable(true)
             .sortable(true)
@@ -126,7 +142,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .name("subtitle")
             .label(MessageUtils.getMessage("nextwiki.search.field.path", "路径"))
             .type(FieldType.TEXT)
-            .weight(2.0f)
+            .weight(WEIGHT_CONTENT)
             .searchable(true)
             .highlightable(true)
             .build(),
@@ -134,7 +150,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .name("content")
             .label(MessageUtils.getMessage("nextwiki.search.field.content", "全文"))
             .type(FieldType.TEXT)
-            .weight(1.0f)
+            .weight(WEIGHT_AUTHOR)
             .searchable(true)
             .highlightable(true)
             .build(),
@@ -142,7 +158,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .name("tags")
             .label(MessageUtils.getMessage("nextwiki.search.field.tags", "标签"))
             .type(FieldType.TAG)
-            .weight(1.5f)
+            .weight(WEIGHT_TAGS)
             .searchable(true)
             .aggregatable(true)
             .build(),
@@ -150,7 +166,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .name("status")
             .label(MessageUtils.getMessage("nextwiki.search.field.shareStatus", "共享状态"))
             .type(FieldType.KEYWORD)
-            .weight(0.5f)
+            .weight(WEIGHT_LOW)
             .searchable(false)
             .aggregatable(true)
             .build(),
@@ -158,7 +174,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .name("suffix")
             .label(MessageUtils.getMessage("nextwiki.search.field.fileType", "文件类型"))
             .type(FieldType.KEYWORD)
-            .weight(0.5f)
+            .weight(WEIGHT_LOW)
             .searchable(false)
             .aggregatable(true)
             .build());

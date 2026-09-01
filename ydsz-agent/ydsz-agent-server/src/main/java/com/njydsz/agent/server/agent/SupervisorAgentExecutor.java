@@ -81,6 +81,15 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   /** 规划阶段系统 Prompt（默认值，可被数据库模板覆盖） */
   private static final String DEFAULT_PLAN_SYSTEM_PROMPT = "你是任务规划器，只输出 JSON 格式的执行计划。";
 
+  /** 汇总阶段温度 */
+  private static final double SYNTHESIZE_TEMPERATURE = 0.5;
+
+  /** 规划阶段最大输出 Token 数 */
+  private static final int PLAN_MAX_TOKENS = 500;
+
+  /** Markdown 代码块围栏字符长度（```） */
+  private static final int MD_FENCE_LENGTH = 3;
+
   /** Agent 工厂 */
   private final AgentFactory agentFactory;
 
@@ -468,7 +477,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
                 List.of(
                     ChatMessage.system("你是结果汇总助手，负责将多个子任务结果整合为连贯的最终回复。"),
                     ChatMessage.user(synthesizePrompt.toString(), convId)))
-            .temperature(0.5)
+            .temperature(SYNTHESIZE_TEMPERATURE)
             .maxTokens(properties.getLlm().getMaxTokens())
             .stream(true)
             .build();
@@ -540,7 +549,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
                     ChatMessage.system(planSystemPrompt),
                     ChatMessage.user(planPrompt, null)))
             .temperature(0.0)
-            .maxTokens(500)
+            .maxTokens(PLAN_MAX_TOKENS)
             .build();
     try {
       ChatResponse planResponse = llmClient.chat(planRequest);
@@ -570,7 +579,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       if (json.contains("```")) {
         int start = json.indexOf("```");
         int end = json.lastIndexOf("```");
-        String inner = json.substring(start + 3, end);
+        String inner = json.substring(start + MD_FENCE_LENGTH, end);
         if (inner.startsWith("json")) {
           inner = inner.substring(4);
         }

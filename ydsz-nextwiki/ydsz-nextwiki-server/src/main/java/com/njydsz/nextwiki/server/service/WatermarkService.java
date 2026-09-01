@@ -75,6 +75,36 @@ public class WatermarkService {
   /** 水印透明度（0-255，越小越透明） */
   private static final int WATERMARK_OPACITY = 50;
 
+  /** 水印字体最小字号（像素） */
+  private static final int MIN_FONT_SIZE = 16;
+
+  /** 字号按图片短边缩放的分母 */
+  private static final int FONT_SIZE_DIVISOR = 25;
+
+  /** 水印灰度 RGB 分量值 */
+  private static final int WATERMARK_GRAY_RGB = 128;
+
+  /** 水印透明度（AlphaComposite） */
+  private static final float WATERMARK_ALPHA = 0.2f;
+
+  /** 水印平铺水平步长附加间距（像素） */
+  private static final int TILE_SPACING_X = 100;
+
+  /** 水印平铺垂直步长附加间距（像素） */
+  private static final int TILE_SPACING_Y = 80;
+
+  /** 水印旋转角度（度） */
+  private static final double WATERMARK_ROTATE_DEGREES = 30;
+
+  /** 用户 ID 掩码：保留前 3 位 */
+  private static final int MASK_ID_KEEP_CHARS = 3;
+
+  /** 用户 ID 掩码最小长度 */
+  private static final int MASK_ID_MIN_LENGTH = 4;
+
+  /** 用户 ID 掩码占位符 */
+  private static final String MASK_ID_PLACEHOLDER = "****";
+
   /** 水印时间格式 */
   private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -146,7 +176,7 @@ public class WatermarkService {
             RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // 设置字体（根据图片大小调整）
-        int fontSize = Math.max(16, Math.min(width, height) / 25);
+        int fontSize = Math.max(MIN_FONT_SIZE, Math.min(width, height) / FONT_SIZE_DIVISOR);
         Font font = new Font("SansSerif", Font.BOLD, fontSize);
         g2d.setFont(font);
 
@@ -156,18 +186,24 @@ public class WatermarkService {
         int textHeight = fontMetrics.getHeight();
 
         // 设置颜色和透明度
-        g2d.setColor(new Color(128, 128, 128, WATERMARK_OPACITY));
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f));
+        g2d.setColor(
+            new Color(
+                WATERMARK_GRAY_RGB,
+                WATERMARK_GRAY_RGB,
+                WATERMARK_GRAY_RGB,
+                WATERMARK_OPACITY));
+        g2d.setComposite(
+            AlphaComposite.getInstance(AlphaComposite.SRC_OVER, WATERMARK_ALPHA));
 
         // 对角线平铺水印
-        int stepX = textWidth + 100;
-        int stepY = textHeight + 80;
+        int stepX = textWidth + TILE_SPACING_X;
+        int stepY = textHeight + TILE_SPACING_Y;
         for (int y = 0; y < height + stepY; y += stepY) {
           for (int x = -stepX / 2; x < width + stepX; x += stepX) {
             // 绘制旋转 30 度的文字
-            g2d.rotate(Math.toRadians(30), x, y);
+            g2d.rotate(Math.toRadians(WATERMARK_ROTATE_DEGREES), x, y);
             g2d.drawString(watermarkText, x, y);
-            g2d.rotate(Math.toRadians(-30), x, y);
+            g2d.rotate(-Math.toRadians(WATERMARK_ROTATE_DEGREES), x, y);
           }
         }
       } finally {
@@ -218,9 +254,11 @@ public class WatermarkService {
    * @return 掩码后的ID（如 "123****890"）
    */
   private String maskUserId(String userId) {
-    if (userId == null || userId.length() <= 4) {
+    if (userId == null || userId.length() <= MASK_ID_MIN_LENGTH) {
       return "****";
     }
-    return userId.substring(0, 3) + "****" + userId.substring(userId.length() - 3);
+    return userId.substring(0, MASK_ID_KEEP_CHARS)
+        + MASK_ID_PLACEHOLDER
+        + userId.substring(userId.length() - MASK_ID_KEEP_CHARS);
   }
 }

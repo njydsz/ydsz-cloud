@@ -124,7 +124,11 @@ public class HumanApprovalService {
     return approvalId;
   }
 
-  /** 获取待审批请求列表（按创建时间倒序）。 */
+  /**
+   * 获取待审批请求列表（按创建时间倒序）。
+   *
+   * @return 待审批请求列表
+   */
   public List<ApprovalRequest> listPending() {
     try {
       List<AgentApprovalVO> vos =
@@ -142,7 +146,12 @@ public class HumanApprovalService {
     }
   }
 
-  /** 获取审批请求（内存缓存优先，未命中回查数据库）。 */
+  /**
+   * 获取审批请求（内存缓存优先，未命中回查数据库）。
+   *
+   * @param approvalId 审批请求 ID
+   * @return 审批请求，不存在时返回 null
+   */
   public ApprovalRequest getApproval(String approvalId) {
     ApprovalRequest cached = pendingApprovals.get(approvalId);
     if (cached != null) {
@@ -166,6 +175,11 @@ public class HumanApprovalService {
    * 审批通过。
    *
    * <p>更新内存与数据库状态为 APPROVED，发布 {@code AGENT_APPROVAL_RESOLVED} 事件， 订阅方可据此恢复被暂停的 Agent 步骤。
+   *
+   * @param approvalId 审批请求 ID
+   * @param approver 审批人
+   * @param comment 审批意见
+   * @return 操作是否成功
    */
   public boolean approve(String approvalId, String approver, String comment) {
     return resolve(approvalId, ApprovalStatus.APPROVED, approver, comment);
@@ -175,12 +189,22 @@ public class HumanApprovalService {
    * 审批拒绝。
    *
    * <p>更新内存与数据库状态为 REJECTED，发布 {@code AGENT_APPROVAL_RESOLVED} 事件， 订阅方可据此中止被暂停的 Agent 步骤或走拒绝分支。
+   *
+   * @param approvalId 审批请求 ID
+   * @param approver 审批人
+   * @param comment 审批意见
+   * @return 操作是否成功
    */
   public boolean reject(String approvalId, String approver, String comment) {
     return resolve(approvalId, ApprovalStatus.REJECTED, approver, comment);
   }
 
-  /** 检查审批状态 */
+  /**
+   * 检查审批状态。
+   *
+   * @param approvalId 审批请求 ID
+   * @return 审批状态，不存在时返回 null
+   */
   public ApprovalStatus getStatus(String approvalId) {
     ApprovalRequest request = getApproval(approvalId);
     return request != null ? request.getStatus() : null;

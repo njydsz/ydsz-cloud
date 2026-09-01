@@ -142,8 +142,18 @@ public class AgentProperties {
 
   /** LLM 相关配置组（默认 Provider、模型、密钥、价格等）。 */
   public static class Llm {
-/** 默认 Provider */
-private String defaultProvider = "default";
+
+    /** 默认温度 */
+    private static final double DEFAULT_TEMPERATURE = 0.7;
+
+    /** 默认最大 Token */
+    private static final int DEFAULT_MAX_TOKENS = 2048;
+
+    /** 默认调用超时（秒） */
+    private static final int DEFAULT_TIMEOUT_SECONDS = 60;
+
+    /** 默认 Provider */
+    private String defaultProvider = "default";
 
     /** 默认模型名称 */
     private String defaultModel = "default-model";
@@ -155,13 +165,13 @@ private String defaultProvider = "default";
     private String baseUrl = "";
 
     /** 默认温度 */
-    private double temperature = 0.7;
+    private double temperature = DEFAULT_TEMPERATURE;
 
     /** 默认最大 Token */
-    private int maxTokens = 2048;
+    private int maxTokens = DEFAULT_MAX_TOKENS;
 
     /** 调用超时（秒） */
-    private int timeoutSeconds = 60;
+    private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
 
     /** 多 Provider 配置 */
     private Map<String, ProviderConfig> providers = new LinkedHashMap<>();
@@ -302,17 +312,33 @@ private String defaultProvider = "default";
 
   /** 对话记忆相关配置组（TTL 与上下文窗口大小）。 */
   public static class Memory {
+
+    /** 默认对话记忆 TTL（小时） */
+    private static final int DEFAULT_TTL_HOURS = 24;
+
+    /** 默认滑动窗口最大消息数 */
+    private static final int DEFAULT_MAX_MESSAGES = 20;
+
+    /** 默认触发摘要压缩的消息条数阈值 */
+    private static final int DEFAULT_SUMMARY_THRESHOLD = 20;
+
+    /** 默认上下文 Token 预算（估算值） */
+    private static final int DEFAULT_TOKEN_BUDGET = 4000;
+
+    /** 默认 Token 估算的字符系数（Char/Token） */
+    private static final double DEFAULT_TOKEN_CHAR_RATIO = 2.5;
+
     /** 对话记忆 TTL（小时） */
-    private int ttlHours = 24;
+    private int ttlHours = DEFAULT_TTL_HOURS;
 
     /** 滑动窗口最大消息数 */
-    private int maxMessages = 20;
+    private int maxMessages = DEFAULT_MAX_MESSAGES;
 
     /** 是否启用摘要压缩记忆（长对话自动压缩为摘要，避免上下文膨胀） */
     private boolean summaryEnabled = false;
 
     /** 触发摘要压缩的消息条数阈值 */
-    private int summaryThreshold = 20;
+    private int summaryThreshold = DEFAULT_SUMMARY_THRESHOLD;
 
     /** 压缩后保留的最近原始消息条数 */
     private int summaryKeepRecent = 10;
@@ -323,14 +349,14 @@ private String defaultProvider = "default";
      * <p>当对话历史估算 Token 数超过此预算时，触发摘要压缩。 基于字符数估算（中文约 1.5 Char/Token，英文约 4 Char/Token），
      * 默认 4000 Token 适合大多数 LLM 的上下文窗口。
      */
-    private int tokenBudget = 4000;
+    private int tokenBudget = DEFAULT_TOKEN_BUDGET;
 
     /**
      * Token 估算的字符系数（Char/Token）。
      *
      * <p>中文为主场景取 1.5，英文为主取 4.0，中英混合取 2.5。 用于将字符数转换为估算 Token 数。
      */
-    private double tokenCharRatio = 2.5;
+    private double tokenCharRatio = DEFAULT_TOKEN_CHAR_RATIO;
 
     public int getTtlHours() {
       return ttlHours;
@@ -402,6 +428,25 @@ private String defaultProvider = "default";
 
   /** RAG 检索相关配置组（开关、向量存储类型、Embedding 模型等）。 */
   public static class Rag {
+
+    /** 默认向量维度 */
+    private static final int DEFAULT_DIMENSION = 1536;
+
+    /** 默认分块大小（字符数） */
+    private static final int DEFAULT_CHUNK_SIZE = 500;
+
+    /** 默认分块重叠（字符数） */
+    private static final int DEFAULT_CHUNK_OVERLAP = 50;
+
+    /** 默认检索 Top-K */
+    private static final int DEFAULT_TOP_K = 5;
+
+    /** 默认最小相似度阈值 */
+    private static final double DEFAULT_MIN_SCORE = 0.7;
+
+    /** 默认上下文 Token 预算（估算值） */
+    private static final int DEFAULT_CONTEXT_TOKEN_BUDGET = 3000;
+
     /** 是否启用 RAG */
     private boolean enabled = false;
 
@@ -418,19 +463,19 @@ private String defaultProvider = "default";
     private String embeddingBaseUrl = "";
 
     /** 向量维度 */
-    private int dimension = 1536;
+    private int dimension = DEFAULT_DIMENSION;
 
     /** 分块大小 */
-    private int chunkSize = 500;
+    private int chunkSize = DEFAULT_CHUNK_SIZE;
 
     /** 分块重叠 */
-    private int chunkOverlap = 50;
+    private int chunkOverlap = DEFAULT_CHUNK_OVERLAP;
 
     /** 检索 Top-K */
-    private int topK = 5;
+    private int topK = DEFAULT_TOP_K;
 
     /** 最小相似度阈值 */
-    private double minScore = 0.7;
+    private double minScore = DEFAULT_MIN_SCORE;
 
     /**
      * 上下文 Token 预算（估算值）。
@@ -438,7 +483,7 @@ private String defaultProvider = "default";
      * <p>RAG 检索结果拼接为上下文时，总 Token 不超过此预算。 默认 3000 Token（约占 GPT-4o 上下文窗口的 25%），
      * 避免检索结果占用过多上下文导致 LLM 回复质量下降。
      */
-    private int contextTokenBudget = 3000;
+    private int contextTokenBudget = DEFAULT_CONTEXT_TOKEN_BUDGET;
 
     /**
      * 是否启用 Reranker 精排（对召回结果做重排序，提升 Top-K 精确度）。
@@ -591,14 +636,21 @@ private String defaultProvider = "default";
    * <p>基于 Redis 缓存 LLM 响应，对 deterministic (temperature=0) 请求生效。
    */
   public static class Cache {
+
+    /** 默认缓存 TTL（分钟） */
+    private static final int DEFAULT_TTL_MINUTES = 60;
+
+    /** 默认最大缓存条目数 */
+    private static final int DEFAULT_MAX_SIZE = 500;
+
     /** 是否启用语义缓存 */
     private boolean enabled = false;
 
     /** 缓存 TTL（分钟） */
-    private int ttlMinutes = 60;
+    private int ttlMinutes = DEFAULT_TTL_MINUTES;
 
     /** 最大缓存条目数 */
-    private int maxSize = 500;
+    private int maxSize = DEFAULT_MAX_SIZE;
 
     public boolean isEnabled() {
       return enabled;
@@ -749,8 +801,11 @@ private String defaultProvider = "default";
     /** SSE 端点 URL（transport=sse 时必填） */
     private String url;
 
+    /** 默认调用超时（秒） */
+    private static final int DEFAULT_MCP_TIMEOUT_SECONDS = 30;
+
     /** 调用超时（秒） */
-    private int timeoutSeconds = 30;
+    private int timeoutSeconds = DEFAULT_MCP_TIMEOUT_SECONDS;
 
     /** 是否启用 */
     private boolean enabled = true;
@@ -851,12 +906,16 @@ private String defaultProvider = "default";
    * <p>控制工具执行的超时、错误处理等行为。
    */
   public static class Tool {
+
+    /** 默认工具执行超时（秒） */
+    private static final int DEFAULT_TOOL_TIMEOUT_SECONDS = 30;
+
     /**
      * 工具执行超时（秒）。
      *
      * <p>工具执行超过此时间未完成将被中断，防止单个工具挂起阻塞整个 Agent 迭代循环。
      */
-    private int timeoutSeconds = 30;
+    private int timeoutSeconds = DEFAULT_TOOL_TIMEOUT_SECONDS;
 
     public int getTimeoutSeconds() {
       return timeoutSeconds;

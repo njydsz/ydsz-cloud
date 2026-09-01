@@ -28,11 +28,11 @@ public class ExcelProperties {
   /** 是否自动 trim 字符串，默认 true */
   private Boolean automaticTrim = true;
 
-  /** 是否使用快速读取（零 POI），默认 true */
-  private Boolean useFastReader = true;
+  /** 是否使用快速读取（零 POI），默认 false（POI 兼容路径，正确性优先） */
+  private Boolean useFastReader = false;
 
-  /** 是否使用快速写入（零 POI），默认 true */
-  private Boolean useFastWriter = true;
+  /** 是否使用快速写入（零 POI），默认 false（POI 兼容路径，正确性优先） */
+  private Boolean useFastWriter = false;
 
   /** 流式解析阈值（MB），默认 10 */
   private Integer streamingParseThresholdMb = 10;

@@ -43,6 +43,15 @@ public class CostAnalysisService {
   private static final ExecutorService USAGE_WRITE_EXECUTOR =
       ExecutorUtils.newVirtualThreadExecutor("agent-cost-analysis-");
 
+  /** 当日结束时间：23 时 */
+  private static final int END_OF_DAY_HOUR = 23;
+
+  /** 当日结束时间：59 分 */
+  private static final int END_OF_DAY_MINUTE = 59;
+
+  /** 当日结束时间：59 秒 */
+  private static final int END_OF_DAY_SECOND = 59;
+
   /** Token 用量记录 Repository */
   private final TokenUsageRecordRepository tokenUsageRecordRepository;
 
@@ -111,7 +120,9 @@ public class CostAnalysisService {
    */
   public ModelUsageStats getStatsByModel(LocalDate start, LocalDate end) {
     List<TokenUsageRecordVO> records =
-        tokenUsageRecordRepository.findByCreatedAtRange(start.atStartOfDay(), end.atTime(23, 59, 59));
+        tokenUsageRecordRepository.findByCreatedAtRange(
+            start.atStartOfDay(),
+            end.atTime(END_OF_DAY_HOUR, END_OF_DAY_MINUTE, END_OF_DAY_SECOND));
     long prompt = records.stream().mapToLong(TokenUsageRecordVO::getPromptTokens).sum();
     long completion = records.stream().mapToLong(TokenUsageRecordVO::getCompletionTokens).sum();
     long total = records.stream().mapToLong(TokenUsageRecordVO::getTotalTokens).sum();
@@ -211,17 +222,20 @@ public class CostAnalysisService {
     private long callCount;
   }
 
-  /** 按模型用量与成本汇总（所有金额单位均为 USD） */
+  /**
+   * 按模型用量与成本汇总（所有金额单位均为 USD）。
+   *
+   * @param promptTokens 提示词 Token 累计数
+   * @param completionTokens 补全 Token 累计数
+   * @param totalTokens 总 Token 累计数
+   * @param cost 总成本（USD）
+   * @param requestCount 请求次数
+   */
   public record ModelUsageStats(
-      /** 提示词 Token 累计数 */
       long promptTokens,
-      /** 补全 Token 累计数 */
       long completionTokens,
-      /** 总 Token 累计数 */
       long totalTokens,
-      /** 总成本（USD） */
       double cost,
-      /** 请求次数 */
       long requestCount) {}
 
   /**
@@ -249,10 +263,13 @@ public class CostAnalysisService {
     /** 默认：deepseek-chat 单价（USD / 千 Token） */
     private static final double DEFAULT_DEEPSEEK = 0.00014;
 
+    /** 默认价格表初始容量 */
+    private static final int DEFAULT_PRICE_MAP_CAPACITY = 5;
+
     private final Map<String, Double> prices;
 
     public ModelPriceConfig() {
-      Map<String, Double> defaultPrices = new LinkedHashMap<>(5);
+      Map<String, Double> defaultPrices = new LinkedHashMap<>(DEFAULT_PRICE_MAP_CAPACITY);
       // 注意：子串匹配场景下必须"长键优先"，gpt-4o-mini 需排在 gpt-4o 之前，否则会被错误命中
       defaultPrices.put("gpt-4o-mini", DEFAULT_GPT4O_MINI);
       defaultPrices.put("gpt-4o", DEFAULT_GPT4O);
@@ -273,7 +290,7 @@ public class CostAnalysisService {
                 Collectors.toMap(
                     Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
       } else {
-        Map<String, Double> defaultPrices = new LinkedHashMap<>(5);
+        Map<String, Double> defaultPrices = new LinkedHashMap<>(DEFAULT_PRICE_MAP_CAPACITY);
         defaultPrices.put("gpt-4o-mini", DEFAULT_GPT4O_MINI);
         defaultPrices.put("gpt-4o", DEFAULT_GPT4O);
         defaultPrices.put("gpt-4-turbo", DEFAULT_GPT4_TURBO);

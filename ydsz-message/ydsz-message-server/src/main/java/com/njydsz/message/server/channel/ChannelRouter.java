@@ -240,7 +240,7 @@ public class ChannelRouter {
 
     if (enabledChannels.isEmpty()) {
       log.warn("[ChannelRouter] dispatchWithScore: 无可用启用通道");
-      return MessageResult.fail(null, "无可用启用通道", "无可用启用通道", null);
+      return MessageResult.fail(null, null, "无可用启用通道", "无可用启用通道", null);
     }
 
     // 2. 按评分降序排序

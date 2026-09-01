@@ -26,6 +26,12 @@ import com.njydsz.common.json.YdszJson;
 @RequiredArgsConstructor
 public class AgentDefinitionServiceImpl implements AgentDefinitionService {
 
+  /** 默认模型温度：在创造性与稳定性之间取平衡 */
+  private static final double DEFAULT_TEMPERATURE = 0.7;
+
+  /** 单次对话最大 Token 默认值，避免单请求占用过多额度 */
+  private static final int DEFAULT_MAX_TOKENS = 2048;
+
   /** Agent 定义 Repository */
   private final AgentDefinitionRepository agentDefinitionRepository;
 
@@ -133,10 +139,10 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         tools.add(String.valueOf(t));
       }
     }
-    // 模型温度默认值 0.7：在创造性与稳定性之间取平衡，缺省时使用
-    double temperature = vo.getTemperature() != null ? vo.getTemperature() : 0.7;
-    // 单次对话最大 Token 默认 2048，缺省时使用，避免单请求占用过多额度
-    int maxTokens = vo.getMaxTokens() != null ? vo.getMaxTokens() : 2048;
+    // 模型温度默认值：在创造性与稳定性之间取平衡，缺省时使用
+    double temperature = vo.getTemperature() != null ? vo.getTemperature() : DEFAULT_TEMPERATURE;
+    // 单次对话最大 Token 默认值，缺省时使用，避免单请求占用过多额度
+    int maxTokens = vo.getMaxTokens() != null ? vo.getMaxTokens() : DEFAULT_MAX_TOKENS;
     // 从 modelConfig JSON 中提取 modelId（如果有）
     String modelId = null;
     // 推理最大迭代次数默认 10，限制 ReAct 循环次数防止无限调用工具/超支

@@ -30,6 +30,21 @@ public class TokenCostCalculator {
   /** 未知模型兜底单价（USD / 千 Token） */
   private static final double FALLBACK_PRICE = 0.001;
 
+  /** 默认：gpt-4o-mini 单价（USD / 千 Token） */
+  private static final double PRICE_GPT4O_MINI = 0.00015;
+
+  /** 默认：gpt-4o 单价（USD / 千 Token） */
+  private static final double PRICE_GPT4O = 0.0025;
+
+  /** 默认：gpt-4-turbo 单价（USD / 千 Token） */
+  private static final double PRICE_GPT4_TURBO = 0.01;
+
+  /** 默认：gpt-3.5 单价（USD / 千 Token） */
+  private static final double PRICE_GPT35 = 0.0005;
+
+  /** 默认：deepseek 单价（USD / 千 Token） */
+  private static final double PRICE_DEEPSEEK = 0.00014;
+
   private final AgentProperties properties;
 
   public TokenCostCalculator(AgentProperties properties) {
@@ -106,19 +121,19 @@ public class TokenCostCalculator {
   private double estimatePriceByModelPrefix(String model) {
     String lower = model.toLowerCase();
     if (lower.contains("gpt-4o-mini")) {
-      return 0.00015;
+      return PRICE_GPT4O_MINI;
     }
     if (lower.contains("gpt-4o")) {
-      return 0.0025;
+      return PRICE_GPT4O;
     }
     if (lower.contains("gpt-4-turbo")) {
-      return 0.01;
+      return PRICE_GPT4_TURBO;
     }
     if (lower.contains("gpt-3.5")) {
-      return 0.0005;
+      return PRICE_GPT35;
     }
     if (lower.contains("deepseek")) {
-      return 0.00014;
+      return PRICE_DEEPSEEK;
     }
     return FALLBACK_PRICE;
   }

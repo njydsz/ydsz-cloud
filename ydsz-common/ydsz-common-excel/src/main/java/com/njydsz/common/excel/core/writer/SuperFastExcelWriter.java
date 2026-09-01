@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -415,7 +416,13 @@ public class SuperFastExcelWriter {
         writeStringCell(col, (String) value, ss);
         break;
       case 2:
-        writeNumberCell(col, ((Number) value).longValue());
+        // P0 修复：浮点类型（Double/Float/BigDecimal）必须以 double 写入，
+        // 此前统一 longValue() 会截断所有小数（如 12.75 → 12）
+        if (value instanceof Double || value instanceof Float || value instanceof BigDecimal) {
+          writeDoubleCell(col, ((Number) value).doubleValue());
+        } else {
+          writeNumberCell(col, ((Number) value).longValue());
+        }
         break;
       case 3:
         writeDateCell(col, value, dateFormat);
@@ -549,17 +556,18 @@ public class SuperFastExcelWriter {
     closeCellTag();
   }
 
-  private void writeDateCell(int col, Object value, DateTimeFormatter dateFormat) {
-    String dateStr;
-    if (value instanceof LocalDateTime ldt) {
-      dateStr = ldt.format(dateFormat);
-    } else if (value instanceof LocalDate ld) {
-      dateStr = ld.format(dateFormat);
-    } else {
-      dateStr = ((Date) value).toInstant().atZone(ZoneId.systemDefault()).format(dateFormat);
+  /**
+   * 写入浮点数值单元格。
+   *
+   * <p>NaN/Infinity 不是合法的 OOXML 数值，降级为 inline 字符串单元格写出，避免产出损坏文件。
+   */
+  private void writeDoubleCell(int col, double value) {
+    if (Double.isNaN(value) || Double.isInfinite(value)) {
+      writeStringCellInline(col, Double.toString(value));
+      return;
     }
-
-    ensureCapacity(64);
+    String dStr = Double.toString(value);
+    ensureCapacity(64 + dStr.length());
     rowBuffer[rowBufferPos++] = '<';
     rowBuffer[rowBufferPos++] = 'c';
     rowBuffer[rowBufferPos++] = ' ';
@@ -572,8 +580,22 @@ public class SuperFastExcelWriter {
     rowBuffer[rowBufferPos++] = '<';
     rowBuffer[rowBufferPos++] = 'v';
     rowBuffer[rowBufferPos++] = '>';
-    writeStringToBuffer(dateStr, false);
+    writeStringToBuffer(dStr, false);
     closeCellTag();
+  }
+
+  private void writeDateCell(int col, Object value, DateTimeFormatter dateFormat) {
+    String dateStr;
+    if (value instanceof LocalDateTime ldt) {
+      dateStr = ldt.format(dateFormat);
+    } else if (value instanceof LocalDate ld) {
+      dateStr = ld.format(dateFormat);
+    } else {
+      dateStr = ((Date) value).toInstant().atZone(ZoneId.systemDefault()).format(dateFormat);
+    }
+    // P0 修复：此前日期字符串直接写入无 t 属性的 <v>（数值单元格），
+    // 产出 Excel 判定损坏的文件；改为合法的 inlineStr 字符串单元格
+    writeStringCellInline(col, dateStr);
   }
 
   private void writeBooleanCell(int col, Boolean value) {
@@ -601,25 +623,9 @@ public class SuperFastExcelWriter {
   }
 
   private void writeGenericCell(int col, Object value) {
-    String strValue = value.toString();
-    if (getExcelConfig().isFormulaInjectionProtection()) {
-      strValue = FormulaInjectionGuard.sanitizeFormulaInjection(strValue);
-    }
-    ensureCapacity(64);
-    rowBuffer[rowBufferPos++] = '<';
-    rowBuffer[rowBufferPos++] = 'c';
-    rowBuffer[rowBufferPos++] = ' ';
-    rowBuffer[rowBufferPos++] = 'r';
-    rowBuffer[rowBufferPos++] = '=';
-    rowBuffer[rowBufferPos++] = '"';
-    writeCellRef(col);
-    rowBuffer[rowBufferPos++] = '"';
-    rowBuffer[rowBufferPos++] = '>';
-    rowBuffer[rowBufferPos++] = '<';
-    rowBuffer[rowBufferPos++] = 'v';
-    rowBuffer[rowBufferPos++] = '>';
-    writeStringToBuffer(strValue, true);
-    closeCellTag();
+    // P0 修复：toString 值直接写入无 t 属性的 <v> 会产出非法 XML（数值单元格装文本）；
+    // 改为合法的 inlineStr 字符串单元格（含公式注入防护，与主路径行为一致）
+    writeStringCellInline(col, value.toString());
   }
 
   private void closeCellTag() {

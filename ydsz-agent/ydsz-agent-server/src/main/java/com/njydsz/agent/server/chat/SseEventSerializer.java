@@ -25,6 +25,9 @@ public final class SseEventSerializer {
   /** SSE 行结束符（规范要求 \r\n，但 \n 在绝大多数客户端也兼容） */
   private static final String LINE_END = "\n";
 
+  /** 序列化缓冲区初始容量 */
+  private static final int BUFFER_INITIAL_CAPACITY = 128;
+
   /** 禁止实例化工具类 */
   private SseEventSerializer() {}
 
@@ -46,7 +49,7 @@ public final class SseEventSerializer {
     if (event == null) {
       return "";
     }
-    StringBuilder sb = new StringBuilder(128);
+    StringBuilder sb = new StringBuilder(BUFFER_INITIAL_CAPACITY);
     sb.append("event: ").append(event.getEvent()).append(LINE_END);
     sb.append("data: ").append(YdszJson.toJson(event.getData())).append(LINE_END);
     sb.append(LINE_END);

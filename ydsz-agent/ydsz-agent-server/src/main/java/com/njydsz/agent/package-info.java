@@ -10,7 +10,8 @@
  * <ul>
  *   <li>通过 {@code AgentFactory} 统一创建各类 Agent 实例，配合 {@code AbstractAgentExecutor} 模板方法提供可复用的执行骨架</li>
  *   <li>{@code ChatService} / {@code SseExecutor} / {@code SseHeartbeatScheduler} 协作完成 SSE 长连接流式输出与心跳续期</li>
- *   <li>{@code RagService} 与 {@code DocumentIngestionService} 构建检索增强管线，对接领域层的 {@code VectorStore}、{@code Retriever}、{@code TextChunker} 等网关接口</li>
+ *   <li>{@code RagService} 与 {@code DocumentIngestionService} 构建检索增强管线，
+ *       对接领域层的 {@code VectorStore}、{@code Retriever}、{@code TextChunker} 等网关接口</li>
  *   <li>{@code AgentFacadeImpl} 作为对外的聚合门面，统一暴露给 Web 层与其他上游调用方</li>
  *   <li>内置护栏（{@code GuardrailService}、{@code AgentRequestGuard}）对输入输出进行 PII 脱敏与 Prompt 注入防护</li>
  * </ul>
@@ -26,7 +27,8 @@
  *   <li>{@code DocumentIngestionService} -- 文档摄入服务，负责解析、分片、嵌入与入库</li>
  *   <li>{@code AgentFactory} -- Agent 工厂，根据定义类型实例化对应执行器</li>
  *   <li>{@code AbstractAgentExecutor} -- 抽象执行器基类，定义执行模板与钩子方法</li>
- *   <li>{@code ReActAgentExecutor} / {@code PlanExecuteAgentExecutor} / {@code RagAgentExecutor} / {@code SupervisorAgentExecutor} / {@code SimpleAgentExecutor} -- 多种执行策略实现</li>
+ *   <li>{@code ReActAgentExecutor} / {@code PlanExecuteAgentExecutor} / {@code RagAgentExecutor}
+ *       / {@code SupervisorAgentExecutor} / {@code SimpleAgentExecutor} -- 多种执行策略实现</li>
  * </ul>
  *
  * @author ydsz-team

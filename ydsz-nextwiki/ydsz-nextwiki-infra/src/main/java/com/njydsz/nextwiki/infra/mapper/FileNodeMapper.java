@@ -351,6 +351,19 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
       @Param("folderPath") String folderPath, @Param("tenantId") String tenantId);
 
   /**
+   * 查询文件夹的全部后代节点（不含分页）。
+   *
+   * @param folderPath 文件夹路径（需以 {@code /} 结尾）
+   * @param tenantId 租户 ID（P1-7：显式租户过滤）
+   * @return 后代节点全量列表
+   */
+  @Select(
+      "SELECT * FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
+          + "AND deleted = 0 AND tenant_id = #{tenantId}")
+  List<FileNode> selectAllDescendantsByPath(
+      @Param("folderPath") String folderPath, @Param("tenantId") String tenantId);
+
+  /**
    * 查询冷数据候选（长期未访问的文件）。
    *
    * @param threshold 时间阈值（updated_at 早于此时间的文件）

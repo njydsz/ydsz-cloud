@@ -208,22 +208,43 @@ public class SseExecutor {
    */
   public record SseChunk(String content, boolean finished, String finishReason, Object toolCalls) {
 
-    /** 创建增量内容 chunk */
+    /**
+     * 创建增量内容 chunk。
+     *
+     * @param content 增量文本内容
+     * @return SSE 分块
+     */
     public static SseChunk content(String content) {
       return new SseChunk(content, false, null, null);
     }
 
-    /** 创建带完成标记的 chunk */
+    /**
+     * 创建带完成标记的 chunk。
+     *
+     * @param content 增量文本内容
+     * @param finishReason 结束原因
+     * @param toolCalls 工具调用列表
+     * @return SSE 分块
+     */
     public static SseChunk content(String content, String finishReason, Object toolCalls) {
       return new SseChunk(content, false, finishReason, toolCalls);
     }
 
-    /** 创建完成 chunk */
+    /**
+     * 创建完成 chunk。
+     *
+     * @param finishReason 结束原因
+     * @return SSE 分块
+     */
     public static SseChunk finish(String finishReason) {
       return new SseChunk(null, true, finishReason, null);
     }
 
-    /** 转换为 Map（用于 SseEmitter.event().data()） */
+    /**
+     * 转换为 Map（用于 SseEmitter.event().data()）。
+     *
+     * @return 事件数据 Map
+     */
     public Map<String, Object> toMap() {
       Map<String, Object> map = new LinkedHashMap<>();
       map.put("content", content != null ? content : "");

@@ -62,7 +62,11 @@ public class SendPipeline implements InitializingBean {
         log.error("[Pipeline] Handler 执行异常: handler={} err={}", handler.name(), e.getMessage(), e);
         ctx.setErrorResult(
             MessageResult.fail(
-                ctx.getChannel(), "管线处理异常 [" + handler.name() + "]: " + e.getMessage()));
+                ctx.getChannel(),
+                null,
+                "管线处理异常 [" + handler.name() + "]: " + e.getMessage(),
+                "管线处理异常 [" + handler.name() + "]: " + e.getMessage(),
+                null));
         return ctx;
       }
     }

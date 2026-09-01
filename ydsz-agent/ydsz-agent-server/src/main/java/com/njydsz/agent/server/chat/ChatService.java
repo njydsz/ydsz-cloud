@@ -682,7 +682,8 @@ public class ChatService {
           traceId, "LLM_CALL_ERROR", "Multimodal stream LLM call failed", request, e.getMessage(), duration);
       traceRecorder.endTrace(traceId, "FAILED");
       runtimeMetrics.recordExecution("multimodal", false, duration);
-      eventPublisher.publishExecutionFailed(executionId, resolveTenantId(convId), "CHAT_MULTIMODAL_STREAM", model, duration, e.getMessage());
+      eventPublisher.publishExecutionFailed(
+          executionId, resolveTenantId(convId), "CHAT_MULTIMODAL_STREAM", model, duration, e.getMessage());
       log.error("[Chat-Stream] 多模态流式 LLM 调用失败: convId={}, error={}", convId, e.getMessage());
       memory.save(
           convId,
@@ -721,12 +722,21 @@ public class ChatService {
         actualCost.getActualCostUsd());
   }
 
-  /** 获取对话历史 */
+  /**
+   * 获取对话历史。
+   *
+   * @param conversationId 会话 ID
+   * @return 对话消息列表
+   */
   public List<ChatMessage> getHistory(String conversationId) {
     return memory.load(conversationId, properties.getMemory().getMaxMessages());
   }
 
-  /** 清除对话历史 */
+  /**
+   * 清除对话历史。
+   *
+   * @param conversationId 会话 ID
+   */
   public void clearHistory(String conversationId) {
     memory.clear(conversationId);
   }

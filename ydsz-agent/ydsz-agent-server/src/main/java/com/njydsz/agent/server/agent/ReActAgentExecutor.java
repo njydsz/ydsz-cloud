@@ -63,6 +63,9 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   private static final ExecutorService TOOL_EXECUTOR =
       ExecutorUtils.newVirtualThreadExecutor("agent-react-executor-");
 
+  /** 工具结果推送时的截断长度 */
+  private static final int TOOL_RESULT_TRUNCATE_LENGTH = 200;
+
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
 
@@ -273,7 +276,9 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     if (result == null) {
       return "";
     }
-    return result.length() > 200 ? result.substring(0, 200) + "..." : result;
+    return result.length() > TOOL_RESULT_TRUNCATE_LENGTH
+        ? result.substring(0, TOOL_RESULT_TRUNCATE_LENGTH) + "..."
+        : result;
   }
 
   /**

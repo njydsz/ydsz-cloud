@@ -58,6 +58,9 @@ public class SearchQueryParser {
       Pattern.compile("\"([^\"]+)\"");
 
   /** 支持的字段限定前缀 */
+  /** 默认分页大小 */
+  private static final int DEFAULT_PAGE_SIZE = 20;
+
   private static final List<String> SUPPORTED_FIELDS =
       Arrays.asList(
           FieldQuery.FIELD_NAME,
@@ -73,7 +76,7 @@ public class SearchQueryParser {
    * @return 解析后的 {@link SearchQuery}（永不返回 null）
    */
   public SearchQuery parse(String rawInput) {
-    return parse(rawInput, null, "all", 1, 20);
+    return parse(rawInput, null, "all", 1, DEFAULT_PAGE_SIZE);
   }
 
   /**
@@ -185,7 +188,13 @@ public class SearchQueryParser {
     // 按空格分词，处理 +/- 前缀和 AND/OR/NOT
     String[] tokens = input.trim().split("\\s+");
 
+    // 上一次已作为 NOT 排除词消费掉的 token 下标（-1 表示无），避免在循环体内修改控制变量
+    int skippedTokenIndex = -1;
+
     for (int i = 0; i < tokens.length; i++) {
+      if (i == skippedTokenIndex) {
+        continue;
+      }
       String token = tokens[i].trim();
       if (token.isEmpty()) {
         continue;
@@ -204,7 +213,7 @@ public class SearchQueryParser {
           String nextToken = tokens[i + 1].trim();
           if (!nextToken.isEmpty()) {
             builder.mustExcludeTerm(nextToken);
-            i++; // 跳过下一个词
+            skippedTokenIndex = i + 1; // 记录已消费的下一个词下标
           }
         }
         continue;

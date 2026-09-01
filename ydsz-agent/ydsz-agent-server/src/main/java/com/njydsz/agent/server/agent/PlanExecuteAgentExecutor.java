@@ -57,6 +57,15 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
   /** 最终汇总提示 */
   private static final String SYNTHESIZING_MESSAGE = "[汇总中] 正在整理最终回复...\n";
 
+  /** 日志中步骤结果的截断长度 */
+  private static final int STEP_RESULT_TRUNCATE_LENGTH = 200;
+
+  /** 规划阶段温度：偏低以保证步骤分解稳定、可复现 */
+  private static final double PLAN_TEMPERATURE = 0.3;
+
+  /** 规划输出最大 Token 数：规划输出较短，超出将被截断导致解析失败 */
+  private static final int PLAN_MAX_TOKENS = 512;
+
   private final ToolRegistry toolRegistry;
 
   public PlanExecuteAgentExecutor(
@@ -368,7 +377,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
               stepIdx + 1,
               plan.getSteps().size(),
               step.getDescription(),
-              truncate(stepResponse.getContent(), 200));
+              truncate(stepResponse.getContent(), STEP_RESULT_TRUNCATE_LENGTH));
       chunkConsumer.accept(ChatChunk.content(responseId, model, stepMsg));
 
       stepIdx++;
@@ -448,9 +457,9 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
                     ChatMessage.system(planSystemPrompt),
                     ChatMessage.user(planPrompt, null)))
             // 规划阶段温度 0.3：偏低以保证步骤分解稳定、可复现
-            .temperature(0.3)
+            .temperature(PLAN_TEMPERATURE)
             // 规划输出较短，maxTokens 512 足够；超出将被截断导致解析失败
-            .maxTokens(512)
+            .maxTokens(PLAN_MAX_TOKENS)
             .build();
 
     ChatResponse planResponse = llmClient.chat(planRequest);
@@ -499,9 +508,9 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
                     ChatMessage.system(replanSystemPrompt),
                     ChatMessage.user(replanPrompt, null)))
             // 规划阶段温度 0.3：偏低以保证步骤分解稳定、可复现
-            .temperature(0.3)
+            .temperature(PLAN_TEMPERATURE)
             // 规划输出较短，maxTokens 512 足够；超出将被截断导致解析失败
-            .maxTokens(512)
+            .maxTokens(PLAN_MAX_TOKENS)
             .build();
 
     try {
