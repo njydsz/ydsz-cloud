@@ -552,8 +552,8 @@ public class LiteRuleProperties {
   /**
    * 规则+模型融合配置（P3-1）
    *
-   * <p>控制 {@link com.njydsz.literule.domain.model.ModelInputRegistry} 与 {@link
-   * com.njydsz.literule.domain.model.MockModelInputProvider} 的行为。 默认关闭（{@code
+   * <p>控制 {@link com.njydsz.literule.server.model.ModelInputRegistry} 与 {@link
+   * com.njydsz.literule.server.model.MockModelInputProvider} 的行为。 默认关闭（{@code
    * enabled=false}），需显式启用以保证向后兼容。
    *
    * @since 1.0.0

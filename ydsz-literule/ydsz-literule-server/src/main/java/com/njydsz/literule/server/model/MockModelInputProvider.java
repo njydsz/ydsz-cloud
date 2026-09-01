@@ -1,11 +1,12 @@
-package com.njydsz.literule.domain.model;
+package com.njydsz.literule.server.model;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.model.AbstractModelInputProvider;
+import com.njydsz.literule.domain.vo.RuleContext;
 
 /**
  * Mock 模型输入提供者（本地调试/联调用）
@@ -63,7 +64,7 @@ public class MockModelInputProvider extends AbstractModelInputProvider {
   }
 
   @Override
-  protected Map<String, Object> doGetModelOutput(RuleContextVO context) {
+  protected Map<String, Object> doGetModelOutput(RuleContext context) {
     return new LinkedHashMap<>(outputs);
   }
 }

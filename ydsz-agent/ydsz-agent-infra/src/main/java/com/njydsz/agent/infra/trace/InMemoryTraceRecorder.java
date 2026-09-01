@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.agent.domain.trace.TraceMeta;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
@@ -39,7 +40,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   private static final int EVICT_MARGIN = 10;
 
   /** 链路元数据存储 */
-  private final Map<String, TraceMeta> traceMetas = new ConcurrentHashMap<>();
+  private final Map<String, RecordedTraceMeta> traceMetas = new ConcurrentHashMap<>();
 
   @Override
   public String startTrace(String conversationId, String agentId) {
@@ -47,7 +48,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     String traceId = TraceIdGenerator.generateSortableTraceId();
     traces.put(traceId, new ArrayList<>());
     traceStatus.put(traceId, "RUNNING");
-    traceMetas.put(traceId, new TraceMeta(traceId, conversationId, agentId, LocalDateTime.now()));
+    traceMetas.put(traceId, new RecordedTraceMeta(traceId, conversationId, agentId, LocalDateTime.now()));
     log.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
     return traceId;
   }
@@ -103,7 +104,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   @Override
   public void endTrace(String traceId, String status) {
     traceStatus.put(traceId, status);
-    TraceMeta meta = traceMetas.get(traceId);
+    RecordedTraceMeta meta = traceMetas.get(traceId);
     if (meta != null) {
       meta.setStatus(status);
       List<TraceStep> steps = traces.getOrDefault(traceId, List.of());
@@ -157,7 +158,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     LocalDateTime cutoff = LocalDateTime.now().minusHours(TTL_HOURS);
     traceMetas.values().stream()
         .filter(meta -> meta.getStartedAt().isBefore(cutoff))
-        .map(TraceMeta::getTraceId)
+        .map(RecordedTraceMeta::getTraceId)
         .forEach(
             tid -> {
               traces.remove(tid);
@@ -168,9 +169,9 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     if (traces.size() >= MAX_TRACES) {
       int toRemove = traces.size() - MAX_TRACES + EVICT_MARGIN;
       traceMetas.values().stream()
-          .sorted(Comparator.comparing(TraceMeta::getStartedAt))
+          .sorted(Comparator.comparing(RecordedTraceMeta::getStartedAt))
           .limit(toRemove)
-          .map(TraceMeta::getTraceId)
+          .map(RecordedTraceMeta::getTraceId)
           .forEach(
               tid -> {
                 traces.remove(tid);
@@ -185,9 +186,9 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   public List<String> listRecentTraces(int limit) {
     int safeLimit = limit > 0 ? limit : 10;
     return traceMetas.values().stream()
-        .sorted(Comparator.comparing(TraceMeta::getStartedAt).reversed())
+        .sorted(Comparator.comparing(RecordedTraceMeta::getStartedAt).reversed())
         .limit(safeLimit)
-        .map(TraceMeta::getTraceId)
+        .map(RecordedTraceMeta::getTraceId)
         .toList();
   }
 
@@ -195,14 +196,14 @@ public class InMemoryTraceRecorder implements TraceRecorder {
    * {@inheritDoc}
    */
   @Override
-  public List<com.njydsz.agent.domain.trace.TraceMeta> listRecentTraceMetas(int limit) { // FQN-OK: name conflict with inner TraceMeta
+  public List<TraceMeta> listRecentTraceMetas(int limit) {
     int safeLimit = limit > 0 ? limit : 10;
     return traceMetas.values().stream()
-        .sorted(Comparator.comparing(TraceMeta::getStartedAt).reversed())
+        .sorted(Comparator.comparing(RecordedTraceMeta::getStartedAt).reversed())
         .limit(safeLimit)
         .map(
             meta ->
-                new com.njydsz.agent.domain.trace.TraceMeta( // FQN-OK: name conflict with inner TraceMeta
+                new TraceMeta(
                     meta.getTraceId(),
                     meta.getConversationId(),
                     meta.getAgentId(),
@@ -217,12 +218,12 @@ public class InMemoryTraceRecorder implements TraceRecorder {
    * {@inheritDoc}
    */
   @Override
-  public com.njydsz.agent.domain.trace.TraceMeta getTraceMeta(String traceId) { // FQN-OK: name conflict with inner TraceMeta
-    TraceMeta meta = traceMetas.get(traceId);
+  public TraceMeta getTraceMeta(String traceId) {
+    RecordedTraceMeta meta = traceMetas.get(traceId);
     if (meta == null) {
       return null;
     }
-    return new com.njydsz.agent.domain.trace.TraceMeta( // FQN-OK: name conflict with inner TraceMeta
+    return new TraceMeta(
         meta.getTraceId(),
         meta.getConversationId(),
         meta.getAgentId(),
@@ -233,7 +234,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   }
 
   /** 链路元数据 */
-  public static class TraceMeta {
+  public static class RecordedTraceMeta {
     /** 链路 ID */
     private final String traceId;
 
@@ -252,7 +253,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     /** 总耗时（毫秒） */
     private volatile long totalDurationMs;
 
-    public TraceMeta(
+    public RecordedTraceMeta(
         String traceId, String conversationId, String agentId, LocalDateTime startedAt) {
       this.traceId = traceId;
       this.conversationId = conversationId;
