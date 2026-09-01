@@ -145,6 +145,17 @@ public final class SerializationProvider {
     /** 当前序列化深度（防止 StackOverflow 的安全网） */
     public int serializationDepth;
 
+    /**
+     * 池化缓冲重入防护深度（P0 修复）。
+     *
+     * <p>序列化入口方法（serialize / serializeToBytes / format / serializeWithView 等）
+     * 进入时 +1、退出时 -1。仅最外层（depth ≤ 1）允许复用 fastWriterPool / sbPool；
+     * 嵌套序列化（容器内 Bean 经 JSONWriter.writeObjectInline → YdszJson.toJson 重入）
+     * 必须使用独立缓冲实例，避免嵌套对池实例 reset() 时清空外层已写入内容、
+     * 或对 sbPool setLength(0) 时污染外层缓冲。
+     */
+    int poolDepth;
+
     private SerializationContext() {
       // 仅内部创建
     }
@@ -703,6 +714,9 @@ public final class SerializationProvider {
     }
 
     try {
+      // 池化缓冲重入防护：最外层（poolDepth == 1）才允许复用 fastWriterPool / sbPool
+      ctx.poolDepth++;
+
       // 统一快速路径：Bean/Collection/Map 三条路径提取到 tryFastPathToWriter
       JSONWriter writer = tryFastPathToWriter(obj, ctx);
       if (writer != null) {
@@ -735,6 +749,7 @@ public final class SerializationProvider {
     } catch (Exception e) {
       throw wrapSerializationException(obj, e);
     } finally {
+      ctx.poolDepth--;
       if (isBeanType && !skipCycleDetection) {
         objects.remove(obj);
       }

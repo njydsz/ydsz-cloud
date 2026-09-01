@@ -351,23 +351,24 @@ public class PromptManagementService {
    * Prompt 模板（当前版本快照）
    *
    * <p>对外返回的不可变视图，与数据库实体解耦。
+   *
+   * @param code 模板唯一编码
+   * @param name 模板名称
+   * @param content 模板内容，支持 #{var} 占位符
+   * @param description 模板描述
+   * @param category 分类
+   * @param version 当前版本号
+   * @param createdAt 创建时间
+   * @param updatedAt 最近更新时间
    */
   public record PromptTemplate(
-      /** 模板唯一编码 */
       String code,
-      /** 模板名称 */
       String name,
-      /** 模板内容，支持 #{var} 占位符 */
       String content,
-      /** 模板描述 */
       String description,
-      /** 分类 */
       String category,
-      /** 当前版本号 */
       int version,
-      /** 创建时间 */
       LocalDateTime createdAt,
-      /** 最近更新时间 */
       LocalDateTime updatedAt) {
 
     public PromptTemplate {
@@ -375,15 +376,18 @@ public class PromptManagementService {
     }
   }
 
-  /** Prompt 模板的历史版本 */
+  /**
+   * Prompt 模板的历史版本。
+   *
+   * @param code 所属模板编码
+   * @param version 版本号
+   * @param content 该版本的模板内容快照
+   * @param createdAt 版本创建时间
+   */
   public record PromptVersion(
-      /** 所属模板编码 */
       String code,
-      /** 版本号 */
       int version,
-      /** 该版本的模板内容快照 */
       String content,
-      /** 版本创建时间 */
       LocalDateTime createdAt) {
 
     public PromptVersion {

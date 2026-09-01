@@ -35,6 +35,12 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @Slf4j
 public class AgentDebuggerService {
 
+  /** 重放默认温度 */
+  private static final double REPLAY_TEMPERATURE = 0.7;
+
+  /** 重放默认最大 Token 数 */
+  private static final int REPLAY_MAX_TOKENS = 2048;
+
   private final TraceRecorder traceRecorder;
   private final AgentFactory agentFactory;
 
@@ -83,8 +89,8 @@ public class AgentDebuggerService {
             null,
             List.of(),
             // 重放使用默认推理参数：temperature 0.7、maxTokens 2048、最大迭代 10
-            0.7,
-            2048,
+            REPLAY_TEMPERATURE,
+            REPLAY_MAX_TOKENS,
             10,
             null);
 

@@ -99,7 +99,11 @@ public class DocumentIngestionService {
     log.info("[RAG-Ingest] 删除文档索引: docId={}", documentId);
   }
 
-  /** 获取向量存储统计 */
+  /**
+   * 获取向量存储统计。
+   *
+   * @return 向量存储统计信息
+   */
   public VectorStoreStats getStats() {
     return new VectorStoreStats(
         vectorStore.count(),

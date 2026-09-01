@@ -127,7 +127,8 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
             writer.printf("  <title>%s</title>%n",
                     template != null && template.getTitle() != null ? template.getTitle() : "文档");
             writer.println("  <style>");
-            writer.println("    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }");
+            writer.println("    body { font-family: -apple-system, BlinkMacSystemFont, "
+                    + "'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }");
             writer.println("    h1, h2, h3 { color: #333; }");
             writer.println("    code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }");
             writer.println("    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }");

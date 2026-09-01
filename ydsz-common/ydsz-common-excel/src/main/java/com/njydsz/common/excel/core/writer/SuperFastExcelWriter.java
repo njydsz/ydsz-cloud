@@ -851,12 +851,13 @@ public class SuperFastExcelWriter {
   /**
    * 获取 Workbook XML 字节。
    *
-   * <p>Sheet 名称优先级：显式 sheet(name) 配置（{@code WriteMetadata.sheetName}） &gt; {@code @ExcelSheet} 注解 &gt; 默认 "Sheet1"。
+   * <p>Sheet 名称解析优先级与 POI 兼容路径一致：{@code @ExcelSheet} 注解（doWrite 期折叠进 metadata 的契约） &gt; 显式
+   * {@code sheet(name)} 配置 &gt; 默认 "Sheet1"。 此前仅读注解，显式 {@code sheet("用户列表")} 在 fast 路径被静默忽略。
    */
   private byte[] getWorkbookBytes() {
     String sheetName = metadata.getSheetName();
     Class<?> clazz = metadata.getClazz();
-    if ((sheetName == null || sheetName.isEmpty()) && clazz != null) {
+    if (clazz != null) {
       ExcelSheet sheetAnnotation = clazz.getAnnotation(ExcelSheet.class);
       if (sheetAnnotation != null && !sheetAnnotation.name().isEmpty()) {
         sheetName = sheetAnnotation.name();

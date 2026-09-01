@@ -20,6 +20,9 @@ package com.njydsz.agent.server.rag;
  */
 public final class TokenEstimator {
 
+  /** 默认中英混合字符系数（Char/Token） */
+  public static final double DEFAULT_TOKEN_CHAR_RATIO = 2.5;
+
   /** 工具类不可实例化 */
   private TokenEstimator() {}
 
@@ -44,7 +47,7 @@ public final class TokenEstimator {
    * @return 估算 Token 数
    */
   public static int estimate(String text) {
-    return estimate(text, 2.5);
+    return estimate(text, DEFAULT_TOKEN_CHAR_RATIO);
   }
 
   /**

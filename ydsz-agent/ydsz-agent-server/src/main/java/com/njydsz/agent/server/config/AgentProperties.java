@@ -1164,26 +1164,45 @@ public class AgentProperties {
    * <p>控制事件驱动触发器的行为，包括启用状态、扫描间隔、租户限额等。
    */
   public static class Trigger {
+
+    /** 默认定时触发器扫描间隔（毫秒，60 秒） */
+    private static final long DEFAULT_SCAN_INTERVAL_MS = 60000L;
+
+    /** 默认触发器清理任务执行间隔（毫秒，10 分钟） */
+    private static final long DEFAULT_CLEANUP_INTERVAL_MS = 600000L;
+
+    /** 默认单租户最大触发器数量 */
+    private static final int DEFAULT_MAX_TRIGGERS_PER_TENANT = 50;
+
+    /** 默认每小时最大执行次数 */
+    private static final int DEFAULT_MAX_EXECUTIONS_PER_HOUR = 60;
+
+    /** 默认去重窗口（分钟） */
+    private static final int DEFAULT_DEDUPLICATION_WINDOW_MINUTES = 5;
+
+    /** 默认最大递归深度（防止触发器链无限循环） */
+    private static final int DEFAULT_MAX_RECURSION_DEPTH = 3;
+
     /** 是否启用触发器功能 */
     private boolean enabled = true;
 
     /** 定时触发器扫描间隔（毫秒），默认 60 秒 */
-    private long scanIntervalMs = 60000L;
+    private long scanIntervalMs = DEFAULT_SCAN_INTERVAL_MS;
 
     /** 触发器清理任务执行间隔（毫秒），默认 10 分钟 */
-    private long cleanupIntervalMs = 600000L;
+    private long cleanupIntervalMs = DEFAULT_CLEANUP_INTERVAL_MS;
 
     /** 单租户最大触发器数量 */
-    private int maxTriggersPerTenant = 50;
+    private int maxTriggersPerTenant = DEFAULT_MAX_TRIGGERS_PER_TENANT;
 
     /** 默认每小时最大执行次数 */
-    private int defaultMaxExecutionsPerHour = 60;
+    private int defaultMaxExecutionsPerHour = DEFAULT_MAX_EXECUTIONS_PER_HOUR;
 
     /** 去重窗口（分钟） */
-    private int deduplicationWindowMinutes = 5;
+    private int deduplicationWindowMinutes = DEFAULT_DEDUPLICATION_WINDOW_MINUTES;
 
     /** 最大递归深度（防止触发器链无限循环） */
-    private int maxRecursionDepth = 3;
+    private int maxRecursionDepth = DEFAULT_MAX_RECURSION_DEPTH;
 
     public boolean isEnabled() {
       return enabled;

@@ -49,6 +49,15 @@ public class RagService {
   /** 上下文模板固定开销 Token 估算（标题行 + 分隔线 + 结尾提示 ≈ 50 Token） */
   private static final int CONTEXT_TEMPLATE_OVERHEAD_TOKENS = 50;
 
+  /** 日志中查询文本的截断长度 */
+  private static final int LOG_QUERY_TRUNCATE_LENGTH = 50;
+
+  /** 剩余预算低于此 Token 数时不再截断追加文本 */
+  private static final int MIN_REMAINING_TOKENS_FOR_TRUNCATE = 50;
+
+  /** 引用展示时引用内容的截断长度 */
+  private static final int CITATION_TRUNCATE_LENGTH = 200;
+
   private final VectorStore vectorStore;
   private final ObjectProvider<Retriever> retrieverProvider;
   private final DocumentService documentService;
@@ -99,7 +108,7 @@ public class RagService {
     }
     log.info(
         "[RAG] 检索完成: query='{}', mode={}, results={}",
-        truncate(query, 50),
+        truncate(query, LOG_QUERY_TRUNCATE_LENGTH),
         retriever != null ? "hybrid" : "vector",
         chunks.size());
     return chunks;
@@ -130,7 +139,7 @@ public class RagService {
       int chunkTokens = TokenEstimator.estimate(chunk.getContent(), tokenCharRatio);
       if (chunkTokens > remainingTokens) {
         // 超出预算：截断当前块或跳过
-        if (remainingTokens > 50) {
+        if (remainingTokens > MIN_REMAINING_TOKENS_FOR_TRUNCATE) {
           // 剩余预算足够容纳部分文本，截断并追加省略标记
           int maxChars = TokenEstimator.maxCharsForBudget(chunk.getContent(), remainingTokens, tokenCharRatio);
           sb.append("--- 参考资料 [").append(i + 1).append("] ---\n");
@@ -188,7 +197,7 @@ public class RagService {
               chunk.getDocumentId(),
               chunk.getDocumentTitle(),
               chunk.getSource(),
-              truncate(chunk.getContent(), 200)));
+              truncate(chunk.getContent(), CITATION_TRUNCATE_LENGTH)));
     }
     return citations;
   }

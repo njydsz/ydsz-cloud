@@ -467,24 +467,27 @@ public class ExcelReader {
       }
 
       if (isXlsx && metadata.getClazz() != null) {
-        int thresholdMB = config.getStreamingParseThresholdMB();
-        long fileSizeMB = 0;
-        if (filePath != null) {
-          File file = new File(filePath);
-          fileSizeMB = file.length() / BYTES_PER_MB;
-        }
+        // P0 修复：fast 引擎仅支持文件源，InputStream 输入回退 POI 兼容路径。
+        // 此前 InputStream 场景 filePath 与 file 均为 null，metadata.getFile().getAbsolutePath() 必然 NPE。
+        // 同时移除"大文件自动升级 fast"逻辑：fast 引擎为显式 opt-in，避免未开启时被阈值静默升级。
+        boolean hasFileSource = filePath != null || metadata.getFile() != null;
 
-        if (fileSizeMB >= thresholdMB || config.isUseFastReader()) {
+        if (config.isUseFastReader() && hasFileSource) {
           useFastReader = true;
-          try (FileInputStream fis =
-              new FileInputStream(
-                  filePath != null ? filePath : metadata.getFile().getAbsolutePath())) {
+          String fastPath = filePath != null ? filePath : metadata.getFile().getAbsolutePath();
+          try (FileInputStream fis = new FileInputStream(fastPath)) {
             SuperFastExcelReader superFastReader = new SuperFastExcelReader();
             superFastReader.setColumnMetadataArray(columnMetadataArray);
+            // P0 修复：fast 路径列元数据此前恒为 null（仅 POI parseSheet 构建），
+            // 此处接入元数据工厂，由 SheetXmlReader 收集表头后按注解规则（index 优先、名称匹配）惰性构建
+            superFastReader.setMetadataFactory(
+                headerNames ->
+                    headerAnalyzer.analyzeClassMetadataFromNames(headerNames, new HashMap<>()));
             superFastReader.setInstantiator(ASMFieldAccessor.getInstantiator(metadata.getClazz()));
             superFastReader.setContext(context);
             superFastReader.setListeners(listeners);
-            superFastReader.setHeadRowNumber(metadata.getHeadRowNumber());
+            // headRowNumber 语义为 1-based 表头行号（1=第一行是表头），fast 引擎内部使用 0-based 索引
+            superFastReader.setHeadRowNumber(Math.max(0, metadata.getHeadRowNumber() - 1));
             Integer maxRows = metadata.getMaxRows();
             if (maxRows != null && maxRows > 0) {
               superFastReader.setMaxRows(maxRows);
@@ -654,7 +657,10 @@ public class ExcelReader {
    */
   private void parseSheet(Sheet sheet) throws IOException {
     int headRowNumber = metadata.getHeadRowNumber();
-    Row headRow = sheet.getRow(headRowNumber);
+    // P0 修复：headRowNumber 语义为 1-based 表头行号（1=第一行是表头，数据从第 2 行起）。
+    // 此前直接作为 0-based 索引使用（getRow(1) 取到第二行），默认配置下静默丢弃首行。
+    int headerRowIndex = Math.max(0, headRowNumber - 1);
+    Row headRow = sheet.getRow(headerRowIndex);
 
     if (headRow == null) {
       throw new IllegalArgumentException("Excel文件为空或没有表头行");
@@ -670,7 +676,7 @@ public class ExcelReader {
     }
 
     int lastRowNum = sheet.getLastRowNum();
-    int startRow = headRowNumber + 1;
+    int startRow = headerRowIndex + 1;
 
     boolean skipEmptyRows = Boolean.TRUE.equals(metadata.getSkipEmptyRows());
     boolean checkColumnCount = Boolean.TRUE.equals(metadata.getCheckColumnCount());

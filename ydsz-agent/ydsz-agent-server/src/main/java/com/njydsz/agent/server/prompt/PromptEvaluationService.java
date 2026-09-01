@@ -37,6 +37,12 @@ public class PromptEvaluationService {
   /** 默认用户消息模板（评估时用于触发 LLM 响应） */
   private static final String DEFAULT_EVAL_USER_MESSAGE = "请根据以上系统提示进行回复。";
 
+  /** 估算成本：千 Prompt Token 单价（USD，GPT-4 级别定价近似） */
+  private static final double COST_PER_1K_PROMPT_TOKENS = 0.001;
+
+  /** 估算成本：千补全 Token 单价（USD，GPT-4 级别定价近似） */
+  private static final double COST_PER_1K_COMPLETION_TOKENS = 0.002;
+
   private final PromptManagementService promptManagementService;
   private final LlmClient llmClient;
   private final AgentProperties properties;
@@ -90,7 +96,8 @@ public class PromptEvaluationService {
     String content = response.getContent() != null ? response.getContent() : "";
 
     // 估算成本（基于 GPT-4 级别定价的微美元近似）
-    double estimatedCostUsd = (promptTokens * 0.001 + completionTokens * 0.002) / 1000.0;
+    double estimatedCostUsd =
+        (promptTokens * COST_PER_1K_PROMPT_TOKENS + completionTokens * COST_PER_1K_COMPLETION_TOKENS) / 1000.0;
 
     log.info(
         "[PromptEval] 评估完成: template={}, duration={}ms, tokens={}, cost={}",
