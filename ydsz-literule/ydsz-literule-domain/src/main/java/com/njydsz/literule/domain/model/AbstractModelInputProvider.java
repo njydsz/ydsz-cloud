@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.vo.RuleContext;
 
 /**
  * ModelInputProvider 抽象基类（P3-1 SPI Adapter）
@@ -45,7 +45,7 @@ public abstract class AbstractModelInputProvider implements ModelInputProvider {
   private final AtomicBoolean initialized = new AtomicBoolean(false);
 
   @Override
-  public final Map<String, Object> getModelOutput(RuleContextVO context) {
+  public final Map<String, Object> getModelOutput(RuleContext context) {
     ensureInit();
     if (!isEnabled()) {
       return Map.of();
@@ -72,7 +72,7 @@ public abstract class AbstractModelInputProvider implements ModelInputProvider {
    * @param context 规则上下文（含 facts）
    * @return 模型输出 Map；null 或空 Map 表示无输出
    */
-  protected abstract Map<String, Object> doGetModelOutput(RuleContextVO context);
+  protected abstract Map<String, Object> doGetModelOutput(RuleContext context);
 
   /**
    * 初始化钩子（可选覆写）
