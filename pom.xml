@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.0.8</version>
         <relativePath/>
     </parent>
 
@@ -47,9 +47,9 @@
         <!-- Checkstyle 全局开关：false = 构建时强制执行 checkstyle 校验（云顶规范红线）；临时跳过需显式 -Dcheckstyle.skip=true -->
         <checkstyle.skip>false</checkstyle.skip>
         <!--Spring-->
-        <spring-boot.version>4.1.0</spring-boot.version>
+        <spring-boot.version>4.0.8</spring-boot.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
-        <spring-cloud-alibaba.version>2025.26.09.01</spring-cloud-alibaba.version>
+        <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
 
         <!-- 组件版本 -->
         <mybatis-plus.version>3.5.16</mybatis-plus.version>
@@ -101,7 +101,7 @@
         <jsoup.version>1.18.3</jsoup.version>
         <!-- springdoc: 构建期 OpenAPI spec 生成 -->
         <springdoc.maven.plugin.version>1.4</springdoc.maven.plugin.version>
-        <!-- Prometheus（Sentry 7.13.0 要求 ≥1.7.0，Spring Boot 4.1.0 BOM 管理 1.5.1，取高版本） -->
+        <!-- Prometheus（Sentry 7.13.0 要求 ≥1.7.0，Spring Boot 4.0.8 BOM 管理 1.5.1，取高版本） -->
         <prometheus.version>1.7.0</prometheus.version>
 
         <!-- 版本收敛治理（原 Maven Enforcer 治理遗留，现通过 DM 统一锁定版本消除多版本冲突） -->

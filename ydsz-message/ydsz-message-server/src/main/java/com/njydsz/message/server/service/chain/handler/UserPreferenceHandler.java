@@ -189,7 +189,7 @@ public class UserPreferenceHandler implements SendHandler {
    * @param pref 用户的偏好设置（含 DND 时段配置）
    * @return 当前时间处于 DND 时段内时返回 true
    */
-  private boolean isInDndWindow(UserPreference pref) {
+  private boolean isInDndWindow(MsgPreferenceVO pref) {
     String start = pref.getDndStart();
     String end = pref.getDndEnd();
     if (!StringUtils.hasText(start) || !StringUtils.hasText(end)) {
