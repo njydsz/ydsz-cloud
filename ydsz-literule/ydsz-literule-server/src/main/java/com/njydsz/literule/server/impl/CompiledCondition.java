@@ -48,6 +48,12 @@ public interface CompiledCondition {
     /** 区间表达式正则 */
     Pattern INTERVAL_PATTERN = Pattern.compile("^(\\[|\\()([^,]+),([^\\]\\)]+)(\\]|\\))$");
 
+    /** 正则第 3 分组：区间上界 / 比较阈值 */
+    int GROUP_VALUE = 3;
+
+    /** 正则第 4 分组：区间右括号 */
+    int GROUP_CLOSE = 4;
+
     /** 枚举表达式正则 */
     Pattern ENUM_PATTERN = Pattern.compile("^([^|]+(?:\\|[^|]+)+)$");
 
@@ -138,7 +144,7 @@ public interface CompiledCondition {
   /**
    * 空值匹配条件
    *
-   * @param matchNull true 表示匹配 null；false 表示匹配非 null
+   * <p>matchNull 为 true 表示匹配 null，false 表示匹配非 null。
    */
   class NullCondition implements CompiledCondition {
     private final boolean matchNull;
@@ -164,9 +170,9 @@ public interface CompiledCondition {
 
     IntervalCondition(Matcher matcher) {
       this.leftInclusive = "[".equals(matcher.group(1));
-      this.rightInclusive = "]".equals(matcher.group(4));
+      this.rightInclusive = "]".equals(matcher.group(GROUP_CLOSE));
       this.min = parseDouble(matcher.group(2));
-      this.max = parseDouble(matcher.group(3));
+      this.max = parseDouble(matcher.group(GROUP_VALUE));
     }
 
     @Override
@@ -209,7 +215,7 @@ public interface CompiledCondition {
 
     ComparisonCondition(Matcher matcher) {
       this.operator = matcher.group(1);
-      this.threshold = parseDouble(matcher.group(3));
+      this.threshold = parseDouble(matcher.group(GROUP_VALUE));
     }
 
     @Override
@@ -288,6 +294,9 @@ public interface CompiledCondition {
 
   /**
    * 解析 double 值（支持整数和小数）
+   *
+   * @param str 数值字符串
+   * @return 解析后的 double 值
    */
   static double parseDouble(String str) {
     return new BigDecimal(str.trim()).doubleValue();
@@ -295,6 +304,9 @@ public interface CompiledCondition {
 
   /**
    * 将对象转换为 double
+   *
+   * @param obj 待转换对象
+   * @return 转换后的 double 值
    */
   static double toDouble(Object obj) {
     if (obj instanceof Number num) {

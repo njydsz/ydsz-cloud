@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.server.converter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
@@ -175,7 +176,7 @@ public final class NextwikiConverter {
     if (vos == null || vos.isEmpty()) {
       return List.of();
     }
-    return vos.stream().map(this::versionToDTO).collect(java.util.stream.Collectors.toList());
+    return vos.stream().map(this::versionToDTO).collect(Collectors.toList());
   }
 
   /**
@@ -188,7 +189,7 @@ public final class NextwikiConverter {
     if (dtos == null || dtos.isEmpty()) {
       return List.of();
     }
-    return dtos.stream().map(this::versionToVO).collect(java.util.stream.Collectors.toList());
+    return dtos.stream().map(this::versionToVO).collect(Collectors.toList());
   }
 
   /**
@@ -203,7 +204,7 @@ public final class NextwikiConverter {
     if (vos == null || vos.isEmpty()) {
       return List.of();
     }
-    return vos.stream().map(this::shareLinkToDTO).collect(java.util.stream.Collectors.toList());
+    return vos.stream().map(this::shareLinkToDTO).collect(Collectors.toList());
   }
 
   /**
@@ -240,7 +241,7 @@ public final class NextwikiConverter {
     if (vos == null || vos.isEmpty()) {
       return List.of();
     }
-    return vos.stream().map(this::trashItemToDTO).collect(java.util.stream.Collectors.toList());
+    return vos.stream().map(this::trashItemToDTO).collect(Collectors.toList());
   }
 
   /**

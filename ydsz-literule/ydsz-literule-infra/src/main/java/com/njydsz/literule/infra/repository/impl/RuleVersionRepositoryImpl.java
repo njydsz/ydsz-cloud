@@ -181,8 +181,10 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @param rule 规则定义
    * @return RuleDefinitionDTO api 定义
    */
-  private com.njydsz.literule.domain.dto.RuleDefinitionDTO apiFromDo(RuleDefinitionDTO rule) { // FQN-OK: name conflict with infra entity RuleDefinitionDTO
-    com.njydsz.literule.domain.dto.RuleDefinitionDTO def = new com.njydsz.literule.domain.dto.RuleDefinitionDTO(); // FQN-OK: name conflict with infra entity RuleDefinitionDTO
+  // FQN-OK: name conflict with infra entity RuleDefinitionDTO
+  private com.njydsz.literule.domain.dto.RuleDefinitionDTO apiFromDo(RuleDefinitionDTO rule) {
+    // FQN-OK: name conflict with infra entity RuleDefinitionDTO
+    com.njydsz.literule.domain.dto.RuleDefinitionDTO def = new com.njydsz.literule.domain.dto.RuleDefinitionDTO();
     def.setCode(rule.getRuleCode());
     def.setName(rule.getRuleName());
     def.setCategory(rule.getCategory());
@@ -220,7 +222,8 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @param def api 规则定义
    * @return RuleDefinitionDTO
    */
-  private RuleDefinitionDTO doFromApi(com.njydsz.literule.domain.dto.RuleDefinitionDTO def) { // FQN-OK: name conflict with infra entity RuleDefinitionDTO
+  // FQN-OK: name conflict with infra entity RuleDefinitionDTO
+  private RuleDefinitionDTO doFromApi(com.njydsz.literule.domain.dto.RuleDefinitionDTO def) {
     RuleDefinitionDTO rule = new RuleDefinitionDTO();
     rule.setRuleCode(def.getCode());
     rule.setRuleName(def.getName());

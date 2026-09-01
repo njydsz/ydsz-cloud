@@ -34,6 +34,10 @@ spring:
 # YDSZ · Gateway · DEV 环境特有配置
 # =====================================================================
 ydsz:
+  # DEV 开启文档（DocAutoConfiguration 开关，matchIfMissing=false）；
+  # 缺失该键时 springdoc/knife4j 配置整体不加载
+  doc:
+    enabled: true
   # JSON 引擎配置（ydsz-common-json）
   json:
     enabled: true
@@ -75,7 +79,7 @@ logging:
     "[com.njydsz]": DEBUG
     "[org.springframework.cloud.gateway]": INFO
 
-# SpringDoc / Knife4j dev 环境开启
+# SpringDoc / Knife4j dev 环境开启（开关见上方 ydsz.doc.enabled）
 springdoc:
   api-docs:
     enabled: true

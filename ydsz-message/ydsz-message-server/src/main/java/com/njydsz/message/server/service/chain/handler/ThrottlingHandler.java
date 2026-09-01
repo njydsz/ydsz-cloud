@@ -55,8 +55,10 @@ public class ThrottlingHandler implements SendHandler {
       messageMetrics.recordSend(channel, "FAILED", 0);
       ctx.setErrorResult(MessageResult.fail(
           channel,
+          MessageExceptionCode.SEND_RATE_LIMITED.getCode(),
           "发送限流，请稍后重试",
-          MessageExceptionCode.SEND_RATE_LIMITED.getCode()));
+          "发送限流，请稍后重试",
+          null));
       return false;
     }
     // 2. 多维度限流校验
@@ -65,8 +67,10 @@ public class ThrottlingHandler implements SendHandler {
       messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
       ctx.setErrorResult(MessageResult.fail(
           channel,
+          MessageExceptionCode.SEND_DIMENSION_LIMITED.getCode(),
           "多维度限流：receiver/template/tenant 超限",
-          MessageExceptionCode.SEND_DIMENSION_LIMITED.getCode()));
+          "多维度限流：receiver/template/tenant 超限",
+          null));
       return false;
     }
     // 3. 用户频率校验
@@ -75,8 +79,10 @@ public class ThrottlingHandler implements SendHandler {
       messageMetrics.recordSend(channel, "FAILED", 0);
       ctx.setErrorResult(MessageResult.fail(
           channel,
+          MessageExceptionCode.SEND_FREQUENCY_LIMITED.getCode(),
           "发送频率超限",
-          MessageExceptionCode.SEND_FREQUENCY_LIMITED.getCode()));
+          "发送频率超限",
+          null));
       return false;
     }
     // 4. 发送方配额校验
@@ -88,8 +94,10 @@ public class ThrottlingHandler implements SendHandler {
       messageMetrics.recordSend(channel, "QUOTA_EXCEEDED", 0);
       ctx.setErrorResult(MessageResult.fail(
           channel,
+          MessageExceptionCode.SEND_QUOTA_EXHAUSTED.getCode(),
           "发送方配额已用尽: senderId=" + senderId,
-          MessageExceptionCode.SEND_QUOTA_EXHAUSTED.getCode()));
+          "发送方配额已用尽: senderId=" + senderId,
+          null));
       return false;
     }
     return true;

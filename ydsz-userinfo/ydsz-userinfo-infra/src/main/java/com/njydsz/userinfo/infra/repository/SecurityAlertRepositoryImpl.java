@@ -130,7 +130,8 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
         com.njydsz.userinfo.infra.entity.SecurityAlert::getStatus, // FQN-OK: name conflict with SecurityAlert
         com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus.PENDING.name()); // FQN-OK: name conflict with SecurityAlert
     if (riskLevel != null) {
-      wrapper.eq(com.njydsz.userinfo.infra.entity.SecurityAlert::getRiskLevel, riskLevel.name()); // FQN-OK: name conflict with SecurityAlert
+      // FQN-OK: name conflict with SecurityAlert
+    wrapper.eq(com.njydsz.userinfo.infra.entity.SecurityAlert::getRiskLevel, riskLevel.name());
     }
     wrapper.orderByDesc(com.njydsz.userinfo.infra.entity.SecurityAlert::getCreatedAt); // FQN-OK: name conflict with SecurityAlert
     wrapper.last("LIMIT " + limit);

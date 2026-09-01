@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.server.service;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -42,8 +43,12 @@ public class VersionDiffService {
    * @return 差异结果（按行粒度的变更列表）
    */
   public DiffResult diff(String oldContent, String newContent) {
-    if (oldContent == null) oldContent = "";
-    if (newContent == null) newContent = "";
+    if (oldContent == null) {
+      oldContent = "";
+    }
+    if (newContent == null) {
+      newContent = "";
+    }
 
     List<String> oldLines = splitLines(oldContent);
     List<String> newLines = splitLines(newContent);
@@ -66,7 +71,7 @@ public class VersionDiffService {
    * @param inputStream 输入流
    * @return 文本内容
    */
-  public String readTextContent(java.io.InputStream inputStream) {
+  public String readTextContent(InputStream inputStream) {
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
       StringBuilder sb = new StringBuilder();
@@ -114,10 +119,8 @@ public class VersionDiffService {
     String[] parts = content.split("\n", -1);
     for (String part : parts) {
       // 移除尾部 \r（Windows 换行符）
-      if (part.endsWith("\r")) {
-        part = part.substring(0, part.length() - 1);
-      }
-      lines.add(part);
+      String trimmed = part.endsWith("\r") ? part.substring(0, part.length() - 1) : part;
+      lines.add(trimmed);
     }
     // 移除最后一个空行（由末尾 \n 导致）
     if (!lines.isEmpty() && lines.get(lines.size() - 1).isEmpty()) {
@@ -168,7 +171,8 @@ public class VersionDiffService {
 
     // 回溯生成 diff 条目
     List<DiffEntry> entries = new ArrayList<>();
-    int i = m, j = n;
+    int i = m;
+    int j = n;
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0 && Objects.equals(oldLines.get(i - 1), newLines.get(j - 1))) {
         // 相同行

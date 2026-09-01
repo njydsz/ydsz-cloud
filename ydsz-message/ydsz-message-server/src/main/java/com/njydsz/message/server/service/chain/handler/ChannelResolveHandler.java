@@ -52,8 +52,10 @@ public class ChannelResolveHandler implements SendHandler {
       log.warn("[Message] 通道未启用: {}", channel);
       ctx.setErrorResult(MessageResult.fail(
           channel,
+          MessageExceptionCode.CHANNEL_NOT_ENABLED.getCode(),
           "通道未启用: " + channel,
-          MessageExceptionCode.CHANNEL_NOT_ENABLED.getCode()));
+          "通道未启用: " + channel,
+          null));
       return false;
     }
     // 解析 userId 到通道原生联系方式

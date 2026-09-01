@@ -11,6 +11,10 @@ mybatis-plus:
 
 # 调度服务配置
 ydsz:
+  # DEV 开启文档（DocAutoConfiguration 开关，matchIfMissing=false）；
+  # 暴露 /v3/api-docs 供前端契约链路（unified-contract.mjs / gen-contract.py）消费
+  doc:
+    enabled: true
   cronjob:
     node-discovery:
       type: nacos
@@ -95,3 +99,10 @@ ydsz:
         thread-name-prefix: cron-scan-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30
+
+# DEV 暴露 OpenAPI 端点（配合 ydsz.doc.enabled）
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

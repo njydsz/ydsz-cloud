@@ -69,8 +69,10 @@ public class UserPreferenceHandler implements SendHandler {
         messageMetrics.recordSend(channel, "BLOCKED", 0);
         ctx.setErrorResult(MessageResult.fail(
             channel,
+            MessageExceptionCode.USER_UNSUBSCRIBED.getCode(),
             "用户已退订该消息",
-            MessageExceptionCode.USER_UNSUBSCRIBED.getCode()));
+            "用户已退订该消息",
+            null));
         return false;
       }
     }
@@ -109,8 +111,10 @@ public class UserPreferenceHandler implements SendHandler {
     messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
     ctx.setErrorResult(MessageResult.fail(
         channel,
+        MessageExceptionCode.DND_PERIOD_ACTIVE.getCode(),
         "当前为免打扰时段",
-        MessageExceptionCode.DND_PERIOD_ACTIVE.getCode()));
+        "当前为免打扰时段",
+        null));
     return false;
   }
 
@@ -159,8 +163,10 @@ public class UserPreferenceHandler implements SendHandler {
       messageMetrics.recordSend(channel, "DND_DROPPED", 0);
       ctx.setErrorResult(MessageResult.fail(
           channel,
+          MessageExceptionCode.DND_DEFER_EXCEED.getCode(),
           "免打扰时段消息延迟过久,已丢弃",
-          MessageExceptionCode.DND_DEFER_EXCEED.getCode()));
+          "免打扰时段消息延迟过久,已丢弃",
+          null));
       return false;
     }
     log.info(

@@ -14,3 +14,15 @@ spring:
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
   type-aliases-package: com.njydsz.workflow.entity
+
+# DEV 开启文档（DocAutoConfiguration 开关，matchIfMissing=false）；
+# 暴露 /v3/api-docs 供前端契约链路（unified-contract.mjs / gen-contract.py）消费
+ydsz:
+  doc:
+    enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

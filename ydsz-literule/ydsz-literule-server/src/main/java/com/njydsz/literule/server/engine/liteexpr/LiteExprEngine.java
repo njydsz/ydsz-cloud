@@ -3,6 +3,7 @@ package com.njydsz.literule.server.engine.liteexpr;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -73,8 +74,7 @@ public class LiteExprEngine implements ExpressionEngine {
   private final boolean bytecodeEnabled;
 
   /** 编译后的字节码程序缓存（P0-2：避免重复编译同一表达式） */
-  private final java.util.concurrent.ConcurrentHashMap<String, CompiledProgram> bytecodeCache =
-      new java.util.concurrent.ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, CompiledProgram> bytecodeCache = new ConcurrentHashMap<>();
 
   /** 单次表达式求值超时（纳秒）；0=不启用墙上时钟超时（节点预算仍生效） */
   private final long maxEvalNanos;

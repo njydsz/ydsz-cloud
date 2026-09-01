@@ -56,8 +56,10 @@ public class SuppressionHandler implements SendHandler {
       messageMetrics.recordSend(channel, "SUPPRESSED", 0);
       ctx.setErrorResult(MessageResult.fail(
           channel,
+          MessageExceptionCode.CHANNEL_SUPPRESSED.getCode(),
           "跨渠道抑制: 已有其他渠道发送",
-          MessageExceptionCode.CHANNEL_SUPPRESSED.getCode()));
+          "跨渠道抑制: 已有其他渠道发送",
+          null));
       return false;
     }
     return true;

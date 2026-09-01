@@ -15,6 +15,10 @@ spring:
 
 # YDSZ 消息引擎配置（仅保留 DEV 特有项）
 ydsz:
+  # DEV 开启文档（DocAutoConfiguration 开关，matchIfMissing=false）；
+  # 暴露 /v3/api-docs 供前端契约链路（unified-contract.mjs / gen-contract.py）消费
+  doc:
+    enabled: true
   message:
     global-daily-limit: 0
     global-hourly-limit: 0
