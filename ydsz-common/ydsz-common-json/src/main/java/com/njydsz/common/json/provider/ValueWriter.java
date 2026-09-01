@@ -502,6 +502,12 @@ public final class ValueWriter {
    * @param sb 字符串缓冲区
    */
   public static void writeFloat(float value, StringBuilder sb) {
+    // P0 修复：NaN/Infinity 统一输出 null（与 writeDouble/writeNumberInline 策略一致），
+    // 避免 Float.toString 输出 "NaN"/"Infinity" 字面量产生非法 JSON
+    if (Float.isNaN(value) || Float.isInfinite(value)) {
+      sb.append("null");
+      return;
+    }
     // 快速路径：整数值直接输出
     if (value == (int) value && Math.abs(value) < 1e7) {
       sb.append((int) value).append(".0");
