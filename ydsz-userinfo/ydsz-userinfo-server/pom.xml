@@ -111,6 +111,21 @@
             <artifactId>webauthn4j-core</artifactId>
             <version>0.21.0.RELEASE</version>
         </dependency>
+        <!--
+            Jackson core/databind: webauthn4j 内部依赖 Jackson 进行 CBOR/JSON 序列化。
+            项目规范禁止业务代码直接使用 Jackson 进行 JSON 序列化/反序列化，
+            但 webauthn4j 作为底层安全库在内部使用 Jackson，需保留编译期可见性。
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- JJWT (OidcConfiguration 需要 io.jsonwebtoken.security.Keys) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

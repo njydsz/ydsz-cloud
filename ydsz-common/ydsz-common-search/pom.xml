@@ -151,5 +151,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
+        <!-- Jackson annotations（编译期消除 @JsonInclude 等注解的"未知枚举常量"警告） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

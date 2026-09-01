@@ -36,7 +36,7 @@ public class JwksEndpointVO {
   private final byte[] hmacSecret;
   private final String publicKeyPem;
 
-  public JwksEndpoint(byte[] hmacSecret, String publicKeyPem) {
+  public JwksEndpointVO(byte[] hmacSecret, String publicKeyPem) {
     this.hmacSecret = hmacSecret;
     this.publicKeyPem = publicKeyPem;
   }

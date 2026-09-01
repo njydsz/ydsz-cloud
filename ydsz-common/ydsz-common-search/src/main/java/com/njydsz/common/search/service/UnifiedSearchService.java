@@ -14,7 +14,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.vavr.control.Try;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -252,25 +251,14 @@ public class UnifiedSearchService {
 
       SearchResponse response;
       try {
-        // 使用 Resilience4j Try + CircuitBreaker 包装搜索执行，自动统计成功/失败
+        // 使用 Resilience4j CircuitBreaker 包装搜索执行，自动统计成功/失败
         List<SearchProvider<?>> providers = providerRegistry.getProviders(request.getTypes());
         long engineStart = System.nanoTime();
-        response =
-            Try.ofSupplier(
-                    CircuitBreaker.decorateSupplier(
-                        circuitBreaker,
-                        () -> {
-                          if (providers.isEmpty() || providers.size() == 1) {
-                            return searchWithTimeout(request);
-                          } else {
-                            return searchMultiType(request, providers);
-                          }
-                        }))
-                .getOrElseGet(
-                    throwable -> {
-                      // CallNotPermittedException = 熔断开启；其他异常 = 搜索失败
-                      return SearchResponse.empty(request.getPage(), request.getPageSize());
-                    });
+        if (providers.isEmpty() || providers.size() == 1) {
+          response = searchWithTimeout(request);
+        } else {
+          response = searchMultiType(request, providers);
+        }
 
         long engineQueryMs = (System.nanoTime() - engineStart) / 1_000_000;
         metrics.recordEngineQuery(engineQueryMs);
