@@ -337,12 +337,12 @@ class CacheInterfaceCapabilityTest {
     }
 
     @Override
-    public java.util.Set<String> keySet() {
+    public Set<String> keySet() {
       return store.keySet();
     }
 
     @Override
-    public java.util.Collection<String> values() {
+    public Collection<String> values() {
       return store.values();
     }
   }
