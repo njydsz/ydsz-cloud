@@ -2,8 +2,8 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +11,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.safe.resilience.CallNotPermittedException;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
+import com.njydsz.common.safe.resilience.CallNotPermittedException;
 
 /**
  * 熔断器（基于平台自研弹性引擎 {@link com.njydsz.common.safe.resilience.CircuitBreaker}）
