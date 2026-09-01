@@ -45,7 +45,7 @@ public class ChannelResolveHandler implements SendHandler {
   public boolean handle(MessageRequest request, SendContext ctx) {
     String channel = request.getChannel();
     if (!StringUtils.hasText(channel)) {
-      ctx.setErrorResult(MessageResult.fail(null, "消息通道不能为空"));
+      ctx.setErrorResult(MessageResult.fail(null, null, "消息通道不能为空", "消息通道不能为空", null));
       return false;
     }
     if (!isChannelEnabled(channel)) {

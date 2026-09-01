@@ -141,7 +141,7 @@ public class UserPreferenceHandler implements SendHandler {
     LocalTime end = parseTime(pref.getDndEnd());
     if (start == null || end == null) {
       messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
-      ctx.setErrorResult(MessageResult.fail(channel, "当前为免打扰时段"));
+      ctx.setErrorResult(MessageResult.fail(channel, null, "当前为免打扰时段", "当前为免打扰时段", null));
       return false;
     }
     LocalDateTime now = LocalDateTime.now();

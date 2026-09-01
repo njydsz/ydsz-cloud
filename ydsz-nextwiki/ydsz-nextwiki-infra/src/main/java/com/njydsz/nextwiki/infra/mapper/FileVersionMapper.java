@@ -38,27 +38,60 @@ import com.njydsz.nextwiki.infra.entity.FileVersion;
 @Mapper
 public interface FileVersionMapper extends BaseMapper<FileVersion> {
 
-  /** 查询文件的版本历史 */
+  /**
+   * 查询文件的版本历史。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 版本列表（按版本号降序）
+   */
   List<FileVersion> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
-  /** 查询指定版本 */
+  /**
+   * 查询指定版本。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param versionNumber 版本号
+   * @return 版本实体（不存在时为 null）
+   */
   FileVersion selectByVersion(
       @Param("fileNodeId") String fileNodeId, @Param("versionNumber") Integer versionNumber);
 
-  /** 查询活跃版本 */
+  /**
+   * 查询活跃版本。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 活跃版本实体（不存在时为 null）
+   */
   FileVersion selectActiveVersion(@Param("fileNodeId") String fileNodeId);
 
-  /** 设置活跃版本（-1 表示全部设为非活跃） */
+  /**
+   * 设置活跃版本（-1 表示全部设为非活跃）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param versionNumber 目标版本号
+   * @return 受影响行数
+   */
   @Update(
       "UPDATE nw_file_version SET is_active = CASE WHEN version_number = #{versionNumber} THEN true ELSE false END "
           + "WHERE file_node_id = #{fileNodeId}")
   int setActiveVersion(
       @Param("fileNodeId") String fileNodeId, @Param("versionNumber") Integer versionNumber);
 
-  /** 统计版本数 */
+  /**
+   * 统计版本数。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 版本数量
+   */
   int countByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
-  /** 查询最旧版本（按版本号升序） */
+  /**
+   * 查询最旧版本（按版本号升序）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param limit 返回数量上限
+   * @return 最旧版本列表
+   */
   List<FileVersion> selectOldestVersions(
       @Param("fileNodeId") String fileNodeId, @Param("limit") int limit);
 
@@ -83,6 +116,11 @@ public interface FileVersionMapper extends BaseMapper<FileVersion> {
   int deleteExcessVersions(
       @Param("fileNodeId") String fileNodeId, @Param("keepCount") int keepCount);
 
-  /** 带 revision 乐观锁的更新（更新失败返回 0） */
+  /**
+   * 带 revision 乐观锁的更新（更新失败返回 0）。
+   *
+   * @param version 待更新的版本实体（含 revision）
+   * @return 受影响行数
+   */
   int updateWithRevision(@Param("version") FileVersion version);
 }
