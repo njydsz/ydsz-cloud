@@ -85,6 +85,11 @@
               checks="IllegalImport"
               message=".*Executors.*"/>
 
+    <!-- common-util TempFileManager：L1 工具模块禁止向下依赖 ydsz-common-thread，内部兜底清理调度器使用
+         Executors.newSingleThreadScheduledExecutor（短生命周期守护线程池，有界单线程），代码内已含 OFF 注释；
+         import 语句在文件顶部无法注释豁免，此处文件级豁免 IllegalImport -->
+    <suppress files="TempFileManager\.java" checks="IllegalImport" message=".*Executors.*"/>
+
     <!-- gateway：网络/校验密集型实现（IP 校验、健康检查、过滤器配置），算法类规则豁免，红线规则保留 -->
     <suppress files="ydsz-gateway[\\/]src[\\/]main[\\/]"
               checks="MagicNumber|CyclomaticComplexity|ParameterNumber|MethodLength|NestedIfDepth|IllegalThrows"/>

@@ -542,6 +542,8 @@ public final class FieldMetadataLoader {
    * <ul>
    *   <li>{@code @JsonFormat} 日期格式（{@link FieldMeta#isDateType()}）
    *   <li>{@code @JsonInclude} 非 ALWAYS 策略（{@link FieldMeta#includeStrategy}）
+   *   <li>{@code @JsonProperty(access = WRITE_ONLY)}（{@link FieldMeta#serializable}，P0 修复：
+   *       access 注解必须走 ValueWriter 注解路径，否则 WRITE_ONLY 敏感字段会被快速路径照常输出）
    * </ul>
    *
    * @param fields 字段列表
@@ -552,7 +554,9 @@ public final class FieldMetadataLoader {
       return false;
     }
     for (FieldMeta field : fields) {
-      if (field.isDateType() || field.includeStrategy != JsonInclude.Include.ALWAYS) {
+      if (field.isDateType()
+          || !field.serializable
+          || field.includeStrategy != JsonInclude.Include.ALWAYS) {
         return true;
       }
     }

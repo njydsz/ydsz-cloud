@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonInclude;
+import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.exception.JsonSerializationException;
 import com.njydsz.common.json.type.FieldTypeCode;
@@ -140,6 +141,15 @@ public final class FieldMeta {
 
   /** 包含策略（来自 @JsonInclude 注解，默认 ALWAYS） */
   public final JsonInclude.Include includeStrategy;
+
+  /**
+   * 是否参与序列化（来自 @JsonProperty.access，P0 修复）。
+   *
+   * <p>{@code Access.WRITE_ONLY}（如密码字段）时为 false——该字段只接受反序列化写入，
+   * 序列化时不输出，对标 Jackson 语义。此前注解声明了 access 但全模块零消费，
+   * WRITE_ONLY 标注的敏感字段会被照常序列化输出（安全缺陷）。
+   */
+  public final boolean serializable;
 
   /** 类型代码（优化序列化分支预测） */
   public final int serializeTypeCode;
@@ -258,6 +268,12 @@ public final class FieldMeta {
 
     // 加载 @JsonInclude 包含策略
     this.includeStrategy = resolveIncludeStrategy(field);
+
+    // 加载 @JsonProperty.access 访问模式（P0 修复：WRITE_ONLY 字段不参与序列化）
+    JsonProperty accessProperty = field.getAnnotation(JsonProperty.class);
+    this.serializable =
+        !(accessProperty != null
+            && accessProperty.access() == JsonProperty.Access.WRITE_ONLY);
 
     field.setAccessible(true);
 

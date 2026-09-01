@@ -66,13 +66,13 @@ public @interface JsonProperty {
    */
   Access access() default Access.AUTO;
 
-  /** 访问模式枚举（与 Jackson 一致）。 */
+  /** 访问模式枚举（语义与 Jackson 一致，P0 修复：原注释方向写反）。 */
   enum Access {
-    /** 自动：遵循全局可见性配置 */
+    /** 自动：双向参与（遵循全局可见性配置） */
     AUTO,
-    /** 仅读：参与反序列化，不参与序列化 */
+    /** 仅读：只参与序列化（从 Bean 读出输出），反序列化忽略该字段（对标 Jackson READ_ONLY） */
     READ_ONLY,
-    /** 仅写：参与序列化，不参与反序列化 */
+    /** 仅写：只参与反序列化（从 JSON 写入 Bean），序列化不输出该字段（对标 Jackson WRITE_ONLY，如密码） */
     WRITE_ONLY,
     /** 读写：同时参与序列化和反序列化 */
     READ_WRITE

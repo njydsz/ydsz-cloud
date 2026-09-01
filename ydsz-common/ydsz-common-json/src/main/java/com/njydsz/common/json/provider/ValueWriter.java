@@ -667,6 +667,11 @@ public final class ValueWriter {
     }
 
     for (FieldMeta field : fields) {
+      // @JsonProperty(access = WRITE_ONLY)：仅反序列化写入，序列化不输出（P0 安全修复）
+      if (!field.serializable) {
+        continue;
+      }
+
       // 列权限字段排除检查
       if (SerializationProvider.isFieldExcluded(field.jsonName)) {
         continue;
@@ -1110,6 +1115,10 @@ public final class ValueWriter {
     }
 
     for (FieldMeta nestedField : nestedFields) {
+      // @JsonProperty(access = WRITE_ONLY)：序列化不输出（P0 安全修复）
+      if (!nestedField.serializable) {
+        continue;
+      }
       Object nestedValue;
       try {
         nestedValue = nestedField.getValue(nestedObj);

@@ -828,6 +828,12 @@ public final class BeanReader<T> {
     if (field.getAnnotation(JsonIgnore.class) != null) {
       return true;
     }
+    // P0 修复：@JsonProperty(access = READ_ONLY) 字段只参与序列化，反序列化忽略（对标 Jackson）
+    JsonProperty propertyAnnotation = field.getAnnotation(JsonProperty.class);
+    if (propertyAnnotation != null
+        && propertyAnnotation.access() == JsonProperty.Access.READ_ONLY) {
+      return true;
+    }
     // P1-8：Jackson @JsonIgnore 兜底
     if (JacksonAnnotationBridge.isIgnored(field)) {
       return true;

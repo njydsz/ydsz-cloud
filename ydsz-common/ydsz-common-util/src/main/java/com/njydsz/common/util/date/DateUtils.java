@@ -24,7 +24,7 @@ import com.njydsz.common.util.api.Experimental;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Experimental("零采用；节假日日历与国际化场景待验证")
+@Experimental("能力储备：java.time 常用封装，当前平台内暂无消费方；节假日日历与国际化场景待验证")
 public final class DateUtils {
 
   /** 默认日期时间格式：yyyy-MM-dd HH:mm:ss */

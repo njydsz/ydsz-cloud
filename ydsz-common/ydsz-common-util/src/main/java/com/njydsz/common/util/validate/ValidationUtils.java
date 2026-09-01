@@ -25,7 +25,7 @@ import com.njydsz.common.util.api.Experimental;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Experimental("零采用；覆盖面待扩充（护照、港澳台手机号等）")
+@Experimental("能力储备：常用格式校验工具，当前平台内暂无消费方；覆盖面待扩充（护照、港澳台证件等）")
 public final class ValidationUtils {
 
   /** 中国大陆手机号正则：1开头，第二位3-9，共11位 */

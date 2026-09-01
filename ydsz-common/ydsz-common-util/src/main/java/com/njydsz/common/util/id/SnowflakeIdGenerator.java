@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.LongSupplier;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,8 +25,9 @@ import com.njydsz.common.util.security.DigestUtils;
  * +------+----------------------+-------------+-------------+---------+
  * }</pre>
  *
- * <p>workerId 占 10 位（0-1023），与 {@link WorkerIdAllocator} 策略链的分配契约对齐 （支持 StatefulSet 最多 1024 副本 / IP
- * 哈希 / 文件兜底随机）， 避免分配器产出值超出 ID 结构可承载范围导致启动失败。
+ * <p>workerId 占 10 位（0-1023），与 {@link WorkerIdAllocator} 策略链的分配契约对齐 （默认链：StatefulSet 序数 → IP
+ * 哈希；业务方可通过 {@link WorkerIdAllocatorChain#prepend} 前置自定义策略， 如基于 Redis/DB 的注册表实现），
+ * 避免分配器产出值超出 ID 结构可承载范围导致启动失败。
  *
  * <p>序列号位数可通过构造器配置（{@code sequenceBits}），默认 7 位（每毫秒 128 个）， 最高 13 位（每毫秒 8192 个）。位数越高，每毫秒并发能力越强，
  * 但其余字段位数固定，总位数不能超过 63 位。
@@ -109,6 +111,12 @@ public class SnowflakeIdGenerator {
   /** Snowflake 配置属性（resolveNodeId 读取 node-id 配置使用） */
   private final SnowflakeProperties properties;
 
+  /** workerId 分配策略链名称（用于健康检查/排障时定位分配来源） */
+  private final String allocatorName;
+
+  /** 时间源（毫秒）。默认系统时钟；测试可注入受控时钟验证时钟回拨路径。 */
+  private final LongSupplier clock;
+
   /** 状态（高位 = 相对 epoch 的时间戳毫秒数，低位 = 序列号）。 -1 表示未初始化（首次生成时自动填充当前时间戳 + 序列号 0）。 */
   private final AtomicLong state = new AtomicLong(-1L);
 
@@ -126,6 +134,22 @@ public class SnowflakeIdGenerator {
    */
   public SnowflakeIdGenerator(
       SnowflakeProperties properties, WorkerIdAllocator allocator, int sequenceBits) {
+    this(properties, allocator, sequenceBits, System::currentTimeMillis);
+  }
+
+  /**
+   * 测试专用构造器：注入受控时间源，用于验证时钟回拨处理路径。
+   *
+   * @param properties Snowflake 配置属性
+   * @param allocator WorkerId 分配策略链
+   * @param sequenceBits 序列号位数（1-${@link #MAX_SEQUENCE_BITS}）
+   * @param clock 时间源（返回当前毫秒时间戳）
+   */
+  SnowflakeIdGenerator(
+      SnowflakeProperties properties,
+      WorkerIdAllocator allocator,
+      int sequenceBits,
+      LongSupplier clock) {
     if (sequenceBits < 1 || sequenceBits > MAX_SEQUENCE_BITS) {
       throw new IllegalArgumentException(
           String.format(
@@ -137,6 +161,7 @@ public class SnowflakeIdGenerator {
     this.workerIdShift = sequenceBits;
     this.datacenterIdShift = sequenceBits + WORKER_ID_BITS;
     this.timestampLeftShift = sequenceBits + WORKER_ID_BITS + DATACENTER_ID_BITS;
+    this.clock = clock;
 
     this.properties = properties;
     String nodeId = resolveNodeId();
@@ -162,6 +187,7 @@ public class SnowflakeIdGenerator {
     }
     // EPOCH：显式配置优先，否则使用默认值
     this.epoch = properties.getEpoch() != null ? properties.getEpoch() : DEFAULT_EPOCH;
+    this.allocatorName = allocator.name();
     log.info(
         "SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}, "
             + "sequenceBits: {}, epoch: {}, allocator: {}",
@@ -169,7 +195,7 @@ public class SnowflakeIdGenerator {
         this.datacenterId,
         this.sequenceBits,
         this.epoch,
-        allocator.name());
+        allocatorName);
   }
 
   /**
@@ -329,7 +355,7 @@ public class SnowflakeIdGenerator {
   }
 
   private long timeGen() {
-    return System.currentTimeMillis();
+    return clock.getAsLong();
   }
 
   /**
@@ -407,10 +433,27 @@ public class SnowflakeIdGenerator {
   }
 
   private static long computeDatacenterId() {
+    // 规范前缀优先（与 SnowflakeProperties 的 ydsz.util.snowflake.* 命名空间对齐）
     String configured =
-        System.getProperty(
-            "ydsz.snowflake.datacenterId", System.getenv("YDSZ_SNOWFLAKE_DATACENTER_ID"));
-    if (configured != null && !configured.isEmpty()) {
+        firstNonBlank(
+            System.getProperty("ydsz.util.snowflake.datacenter-id"),
+            System.getenv("YDSZ_UTIL_SNOWFLAKE_DATACENTER_ID"));
+    if (configured == null) {
+      // 兼容旧前缀（已弃用），保留一版并打印告警引导迁移
+      String legacy =
+          firstNonBlank(
+              System.getProperty("ydsz.snowflake.datacenterId"),
+              System.getenv("YDSZ_SNOWFLAKE_DATACENTER_ID"));
+      if (legacy != null) {
+        log.warn(
+            "系统属性/环境变量前缀 'ydsz.snowflake.datacenterId' / 'YDSZ_SNOWFLAKE_DATACENTER_ID'"
+                + " 已弃用，请迁移至 'ydsz.util.snowflake.datacenter-id' /"
+                + " 'YDSZ_UTIL_SNOWFLAKE_DATACENTER_ID'（或直接使用 Spring 配置"
+                + " ydsz.util.snowflake.datacenter-id）");
+        configured = legacy;
+      }
+    }
+    if (configured != null) {
       try {
         long id = Long.parseLong(configured);
         if (id >= 0 && id <= MAX_DATACENTER_ID) {
@@ -430,10 +473,37 @@ public class SnowflakeIdGenerator {
     }
   }
 
+  /**
+   * 返回第一个非空字符串。
+   *
+   * @param candidates 候选值（可变参数，按优先级排列）
+   * @return 首个非 null 且非 blank 的值；全部为空时返回 null
+   */
+  private static String firstNonBlank(String... candidates) {
+    for (String candidate : candidates) {
+      if (candidate != null && !candidate.isBlank()) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
   // ==================== Getter ====================
 
   public long getWorkerId() {
     return workerId;
+  }
+
+  /**
+   * 获取 workerId 分配策略链名称。
+   *
+   * <p>用于健康检查与运维排障：当多个节点报告相同 workerId 时， 可据此判断分配来源（PodOrdinal/IpHash/自定义策略）。
+   *
+   * @return 分配策略链名称（如 {@code "Chain(PodOrdinal → IpHash)"}）
+   * @since 1.0.0
+   */
+  public String getAllocatorName() {
+    return allocatorName;
   }
 
   public long getDatacenterId() {
@@ -470,7 +540,7 @@ public class SnowflakeIdGenerator {
   public long getLastTimestamp() {
     long currentState = state.get();
     if (currentState < 0) {
-      return System.currentTimeMillis();
+      return clock.getAsLong();
     }
     return extractTimestamp(currentState) + epoch;
   }

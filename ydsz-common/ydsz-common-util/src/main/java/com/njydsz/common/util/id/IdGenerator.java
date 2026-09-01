@@ -3,6 +3,7 @@ package com.njydsz.common.util.id;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -81,6 +82,23 @@ public final class IdGenerator {
   private static final AtomicBoolean DEGRADED_WARNED = new AtomicBoolean(false);
 
   /**
+   * 降级累计计数（可观测性）。
+   *
+   * <p>由 {@code UtilAutoConfiguration} 注册为 Micrometer Gauge（{@code ydsz.util.id.degraded}）。 非 0
+   * 表示有调用生成过随机数降级 ID，可能与 Snowflake 主键空间冲突， 需要告警关注（降级只打一次日志，监控系统靠此指标感知）。
+   */
+  private static final AtomicLong DEGRADED_COUNT = new AtomicLong();
+
+  /**
+   * 获取降级累计计数（用于 Micrometer 指标注册与测试断言）。
+   *
+   * @return 降级累计次数
+   */
+  public static AtomicLong getDegradedCount() {
+    return DEGRADED_COUNT;
+  }
+
+  /**
    * 配置降级策略。
    *
    * @param useUuid {@code true} 时使用 {@code UUID.getMostSignificantBits()} 降级； {@code false}（推荐）时使用
@@ -148,6 +166,7 @@ public final class IdGenerator {
       return CACHED.get();
     } catch (Exception e) {
       lastFailureMillis = System.currentTimeMillis();
+      DEGRADED_COUNT.incrementAndGet();
       log.warn("获取 SnowflakeIdGenerator Bean 失败，ID 降级为随机数，原因: {}", e.getMessage());
       return null;
     }
@@ -160,6 +179,7 @@ public final class IdGenerator {
    */
   private static void warnFallback(String reason) {
     lastFailureMillis = System.currentTimeMillis();
+    DEGRADED_COUNT.incrementAndGet();
     // 仅首次降级时打印 WARN（含调用方提示），后续由冷却期抑制，避免日志风暴
     if (DEGRADED_WARNED.compareAndSet(false, true)) {
       log.warn(
@@ -173,5 +193,6 @@ public final class IdGenerator {
     CACHED.set(null);
     lastFailureMillis = 0L;
     DEGRADED_WARNED.set(false);
+    DEGRADED_COUNT.set(0L);
   }
 }

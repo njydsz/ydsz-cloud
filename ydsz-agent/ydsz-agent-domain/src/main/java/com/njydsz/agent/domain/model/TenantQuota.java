@@ -37,14 +37,6 @@ public final class TenantQuota implements Serializable {
   /** 告警阈值（0.0-1.0，默认 0.8 即 80%） */
   private final double alertThreshold;
 
-  public TenantQuota(
-      String tenantId, long dailyTokenLimit, double monthlyBudgetUsd, double alertThreshold) {
-    this.tenantId = tenantId != null ? tenantId : "default";
-    this.dailyTokenLimit = Math.max(dailyTokenLimit, 0);
-    this.monthlyBudgetUsd = Math.max(monthlyBudgetUsd, 0);
-    this.alertThreshold = alertThreshold > 0 ? alertThreshold : DEFAULT_ALERT_THRESHOLD;
-  }
-
   /**
    * 全参构造。
    *

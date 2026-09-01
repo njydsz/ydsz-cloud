@@ -10,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * 字段差异计算器
  *
@@ -38,6 +40,7 @@ import org.slf4j.LoggerFactory;
  * @see DiffField
  * @see DiffReport
  */
+@Experimental("能力储备：字段级差异对比（审计日志场景），当前平台内暂无消费方，启用前请确认测试覆盖")
 public class DiffCalculator {
 
   private static final Logger LOG = LoggerFactory.getLogger(DiffCalculator.class);
