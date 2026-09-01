@@ -3,12 +3,8 @@ package com.njydsz.gateway.filter;
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +20,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import com.njydsz.common.safe.resilience.CallNotPermittedException;
+import com.njydsz.common.safe.resilience.CircuitBreakerConfig;
+import com.njydsz.common.safe.resilience.CircuitBreakerRegistry;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayErrorWriter;
@@ -34,7 +33,7 @@ import com.njydsz.gateway.config.PathGuard;
 /**
  * 网关熔断全局过滤器（P0-A2）。
  *
- * <p>基于 Resilience4j {@link CircuitBreakerRegistry}（复用 common-sentry 提供的共享注册中心），
+ * <p>基于平台自研弹性引擎 {@link CircuitBreakerRegistry}（复用 common-sentry 提供的共享注册中心），
  * 按路由 ID 维护独立熔断器，对下游调用失败率超阈值时快速失败并返回 503，
  * 防止下游服务雪崩时网关被拖垮：
  *
@@ -44,6 +43,9 @@ import com.njydsz.gateway.config.PathGuard;
  *   <li>等待 {@code wait-duration-in-open-state}（默认 10s）后进入 HALF_OPEN，放行少量探测流量
  *   <li>探测成功恢复 CLOSED，失败重新 OPEN
  * </ul>
+ *
+ * <p><b>响应式集成：</b>以 Mono.defer + 许可获取 + doOnSuccess/doOnError 三段式手动记录替代
+ * 第三方弹性库的响应式算子（订阅时获取许可、完成时记录成败，语义等价）。
  *
  * <p><b>豁免路径：</b>健康检查 / 认证入口等白名单路径不参与熔断，避免探针失败导致 K8s 摘除网关实例。
  *
@@ -126,15 +128,36 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
     }
     String routeId = route.getId();
 
-    CircuitBreaker circuitBreaker =
+    com.njydsz.common.safe.resilience.CircuitBreaker circuitBreaker =
         circuitBreakerRegistry.circuitBreaker(routeId, defaultCircuitBreakerConfig());
     registerStateMetrics(routeId, circuitBreaker);
 
-    return chain
-        .filter(exchange)
-        .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+    // 三段式手动记录（替代第三方弹性库的响应式算子）：
+    // 订阅时获取许可 → 完成记录成功 → 异常记录失败；熔断中直接抛 CallNotPermittedException
+    return Mono.defer(
+            () -> {
+              if (!circuitBreaker.tryAcquirePermission()) {
+                return Mono.error(new CallNotPermittedException(circuitBreaker));
+              }
+              long startNanos = System.nanoTime();
+              return chain
+                  .filter(exchange)
+                  .doOnSuccess(
+                      v ->
+                          circuitBreaker.onSuccess(
+                              elapsedMs(startNanos), TimeUnit.MILLISECONDS))
+                  .doOnError(
+                      t ->
+                          circuitBreaker.onError(
+                              elapsedMs(startNanos), TimeUnit.MILLISECONDS, t));
+            })
         .onErrorResume(
             CallNotPermittedException.class, e -> rejectCircuitOpen(exchange, routeId));
+  }
+
+  /** 计算已流逝毫秒。 */
+  private static long elapsedMs(long startNanos) {
+    return Math.max(0L, (System.nanoTime() - startNanos) / 1_000_000L);
   }
 
   /**
@@ -150,20 +173,20 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
         .slidingWindowSize(slidingWindowSize)
         .minimumNumberOfCalls(minimumNumberOfCalls)
         .permittedNumberOfCallsInHalfOpenState(permittedNumberOfCallsInHalfOpenState)
-        .recordExceptions(Throwable.class)
         .build();
   }
 
   /**
    * 为路由注册熔断器状态指标监听（每个路由仅注册一次）。
    *
-   * <p>将 Resilience4j 状态机事件映射为 {@code ydsz_gateway_circuit_breaker_state} 指标
+   * <p>将自研引擎状态机事件映射为 {@code ydsz_gateway_circuit_breaker_state} 指标
    * （0=CLOSED, 1=OPEN, 2=HALF_OPEN），供 Grafana 观测网关熔断状态。
    *
    * @param routeId 路由 ID
    * @param circuitBreaker 熔断器实例
    */
-  private void registerStateMetrics(String routeId, CircuitBreaker circuitBreaker) {
+  private void registerStateMetrics(
+      String routeId, com.njydsz.common.safe.resilience.CircuitBreaker circuitBreaker) {
     if (!metricListenersRegistered.add(routeId)) {
       return;
     }
@@ -175,6 +198,7 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
               int state;
               switch (event.getStateTransition().getToState()) {
                 case OPEN:
+                case FORCED_OPEN:
                   state = STATE_OPEN;
                   break;
                 case HALF_OPEN:

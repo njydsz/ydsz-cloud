@@ -472,6 +472,8 @@ public final class JsonConfig implements Serializable {
         + useBigDecimal
         + ", wrapRootValue="
         + wrapRootValue
+        + ", failOnUnknownProperties="
+        + failOnUnknownProperties
         + '}';
   }
 
@@ -521,6 +523,7 @@ public final class JsonConfig implements Serializable {
     private int maxGenericDepth = DEFAULT_MAX_GENERIC_DEPTH;
     private boolean useBigDecimal = false;
     private boolean wrapRootValue = false;
+    private boolean failOnUnknownProperties = false;
 
     /** 私有构造函数，通过 {@link JsonConfig#builder()} 创建实例。 */
     private Builder() {}

@@ -633,6 +633,26 @@ public class ExcelWriter {
   private boolean writeCompleted = false;
 
   /**
+   * DTO 是否携带样式注解（{@code @ExcelStyle} / {@code @ContentStyle}）。
+   *
+   * <p>深度完善·方案 B：fast 写引擎不应用样式注解——DTO 带样式注解时 doWrite 的
+   * fast 分支据此回落 POI 路径，保证样式配置不静默失效。字段级反射扫描仅在每次
+   * 导出决策时执行一次，成本可忽略。
+   *
+   * @param clazz 数据类型
+   * @return 任一字段带样式注解返回 true
+   */
+  private static boolean hasStyleAnnotations(Class<?> clazz) {
+    for (Field field : clazz.getDeclaredFields()) {
+      if (field.isAnnotationPresent(ExcelStyle.class)
+          || field.isAnnotationPresent(ContentStyle.class)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * 设置多Sheet写入模式
    *
    * <p>在多Sheet写入时调用,避免快速写入器覆盖已有内容

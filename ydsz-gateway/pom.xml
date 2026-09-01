@@ -99,19 +99,10 @@
         </dependency>
 
         <!--
-            P0-A2: 网关熔断
-              - resilience4j-reactor:    CircuitBreakerOperator 响应式包装（自动记录成功/失败、状态流转）
-              - resilience4j-circuitbreaker: 熔断器核心（复用 common-sentry 提供的共享 CircuitBreakerRegistry）
-            版本由根 POM resilience4j-bom (2.4.0) 统一管理。
+            P0-A2: 网关熔断 — 平台自研弹性引擎（ydsz-common-safe resilience 包）。
+            复用 common-sentry 提供的共享 CircuitBreakerRegistry；
+            响应式集成采用 Mono.defer + 许可获取 + doOnSuccess/doOnError 三段式手动记录。
         -->
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-reactor</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-circuitbreaker</artifactId>
-        </dependency>
 
         <!-- Actuator 健康检查 -->
         <dependency>
