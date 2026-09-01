@@ -42,7 +42,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
  *   <li><b>批量删除</b>：每批最多删除 {@code batchSize} 条（默认 1000）， 循环执行直至无过期数据，避免大事务锁表
  *   <li><b>容错隔离</b>：单表清理异常不影响其他表，每表独立 try-catch
  *   <li><b>硬删除</b>：使用 DELETE 物理删除，真正释放磁盘空间（非逻辑删除）
- *   <li><b>审计日志联动</b>：当容器中存在 {@link JdbcAuditStorage} Bean 时， 自动清理 sys_audit_log
+   *   <li><b>审计日志联动</b>：当容器中存在 {@link JdbcAuditStorage} Bean 时， 自动清理 ydsz_job_audit_log
  *       中超过保留天数的记录，生命周期与审计配置一致
  * </ul>
  *

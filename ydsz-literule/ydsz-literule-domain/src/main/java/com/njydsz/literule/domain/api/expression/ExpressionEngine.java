@@ -2,7 +2,7 @@ package com.njydsz.literule.domain.api.expression;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContext;
 
 /**
  * 表达式求值器接口

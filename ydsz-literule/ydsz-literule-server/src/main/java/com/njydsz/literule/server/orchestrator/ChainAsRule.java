@@ -4,9 +4,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.api.Rule;
-import com.njydsz.literule.domain.api.RuleContext;
-import com.njydsz.literule.domain.api.RuleResult;
+import com.njydsz.literule.domain.Rule;
+import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleResult;
 
 /**
  * RuleChain → Rule 适配器（P1-7）

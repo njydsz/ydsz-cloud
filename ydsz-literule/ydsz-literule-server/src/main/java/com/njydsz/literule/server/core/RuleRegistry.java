@@ -5,7 +5,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.api.Rule;
+import com.njydsz.literule.domain.Rule;
 
 /**
  * 规则注册表 — 管理规则的注册、注销和索引维护

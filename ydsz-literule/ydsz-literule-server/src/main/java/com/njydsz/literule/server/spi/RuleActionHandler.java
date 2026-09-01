@@ -2,8 +2,8 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.api.RuleContext;
-import com.njydsz.literule.domain.api.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleResult;
 
 /**
  * 规则动作处理器 SPI

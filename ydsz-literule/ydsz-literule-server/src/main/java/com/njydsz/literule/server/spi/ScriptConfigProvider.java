@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.api.ScriptDefinition;
+import com.njydsz.literule.domain.dto.ScriptDefinition;
 
 /**
  * 脚本规则配置提供者接口（SPI）

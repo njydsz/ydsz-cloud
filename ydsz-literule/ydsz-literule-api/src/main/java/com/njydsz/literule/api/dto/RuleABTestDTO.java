@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinition;
 
 /**
  * A/B 测试请求体 DTO

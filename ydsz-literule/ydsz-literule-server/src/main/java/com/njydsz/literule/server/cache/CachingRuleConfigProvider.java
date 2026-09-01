@@ -18,7 +18,7 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
-import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinition;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.spi.RuleConfigProvider;

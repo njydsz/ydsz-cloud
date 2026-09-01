@@ -3,7 +3,7 @@ package com.njydsz.literule.server.spi;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.literule.domain.api.RuleResult;
+import com.njydsz.literule.domain.vo.RuleResult;
 
 /**
  * 画布执行提供者 SPI

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.api.RuleContext;
+import com.njydsz.literule.domain.vo.RuleContext;
 import com.njydsz.literule.server.spi.FactProvider;
 
 /**

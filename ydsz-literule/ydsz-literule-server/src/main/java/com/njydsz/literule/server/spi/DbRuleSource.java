@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinition;
 
 /**
  * 数据库规则数据源

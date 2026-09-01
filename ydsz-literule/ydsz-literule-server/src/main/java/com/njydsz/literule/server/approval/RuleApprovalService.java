@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.literule.domain.api.RuleDefinition;
-import com.njydsz.literule.domain.api.RuleStatus;
+import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.dto.post.ApprovalRecordSaveDTO;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;

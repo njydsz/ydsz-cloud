@@ -14,8 +14,8 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.cache.stats.CacheStats;
-import com.njydsz.literule.domain.api.RuleContext;
-import com.njydsz.literule.domain.api.RuleResult;
+import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleResult;
 
 /**
  * 评估结果缓存（P1-1 高性能优化 - 基于 Caffeine）

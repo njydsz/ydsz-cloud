@@ -7,11 +7,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.api.RuleContext;
-import com.njydsz.literule.domain.api.RuleDefinition;
-import com.njydsz.literule.domain.api.RuleResult;
-import com.njydsz.literule.domain.api.RuleSeverity;
-import com.njydsz.literule.domain.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.enums.RuleSeverity;
+import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 /**

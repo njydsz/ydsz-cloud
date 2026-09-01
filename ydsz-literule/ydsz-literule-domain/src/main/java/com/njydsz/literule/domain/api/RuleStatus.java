@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.api;
+package com.njydsz.literule.domain.enums;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -15,7 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.api.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinition;
 
 /**
  * 规则操作审计日志服务（P3-5 RBAC 与审计日志）

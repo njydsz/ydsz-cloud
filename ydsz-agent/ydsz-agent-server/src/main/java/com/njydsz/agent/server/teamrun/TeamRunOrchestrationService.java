@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import com.njydsz.agent.domain.teamrun.TeamRun;
 import com.njydsz.agent.domain.teamrun.TeamRunMember;
@@ -17,6 +16,7 @@ import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.domain.teamrun.TeamRunRepository;
 import com.njydsz.agent.domain.teamrun.TeamRunStatus;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -43,8 +43,9 @@ public class TeamRunOrchestrationService {
     private final TeamRunRepository teamRunRepository;
     private final AgentExecutionService agentExecutionService;
 
-    /** 用于并行执行的线程池 */
-    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+    /** 用于并行执行的线程池（IO 密集型，VirtualThread） */
+    private final ExecutorService executorService =
+        ExecutorUtils.newVirtualThreadExecutor("ydsz-agent-teamrun-");
 
     /** 单租户最大 Team Run 数量 */
     private static final int MAX_TEAM_RUNS_PER_TENANT = 20;

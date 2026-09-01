@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.api.RuleContext;
-import com.njydsz.literule.domain.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
  * 条件表达式匹配器（P0-3 抽取自 DecisionTableRule，供决策表/交叉决策表复用）

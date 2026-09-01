@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.api.RuleExecutionTrace;
+import com.njydsz.literule.domain.vo.RuleExecutionTrace;
 
 /**
  * 规则执行轨迹记录器（SPI）

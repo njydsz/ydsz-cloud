@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.api;
+package com.njydsz.literule.domain;
 
 import com.njydsz.common.core.constant.SystemConstants;
 

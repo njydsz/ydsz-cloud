@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.api;
+package com.njydsz.literule.domain.enums;
 
 /**
  * 规则严重度枚举

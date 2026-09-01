@@ -2,7 +2,7 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.api.ScorecardDefinition;
+import com.njydsz.literule.domain.dto.ScorecardDefinition;
 
 /**
  * 评分卡配置提供者接口（SPI）

@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.literule.domain.api.RuleContext;
-import com.njydsz.literule.domain.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
  * 编译后的决策表条件（P1-5：决策表预编译，消除运行时正则）

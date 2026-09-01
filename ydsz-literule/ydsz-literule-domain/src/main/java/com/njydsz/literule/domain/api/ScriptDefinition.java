@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.api;
+package com.njydsz.literule.domain.dto;
 
 import java.io.Serializable;
 

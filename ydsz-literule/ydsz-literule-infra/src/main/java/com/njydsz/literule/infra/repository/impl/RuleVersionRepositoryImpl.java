@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.literule.domain.api.RuleSeverity;
+import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.dto.post.RuleVersionSaveDTO;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;

@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.api.Rule;
-import com.njydsz.literule.domain.api.RuleContext;
-import com.njydsz.literule.domain.api.RuleResult;
+import com.njydsz.literule.domain.Rule;
+import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleResult;
 
 /**
  * 规则分组并行评估器（P2-3 高性能优化）

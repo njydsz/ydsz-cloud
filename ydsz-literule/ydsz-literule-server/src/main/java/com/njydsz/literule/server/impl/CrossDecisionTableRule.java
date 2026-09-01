@@ -7,12 +7,12 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.literule.domain.api.CrossDecisionTableDefinition;
-import com.njydsz.literule.domain.api.Rule;
-import com.njydsz.literule.domain.api.RuleContext;
-import com.njydsz.literule.domain.api.RuleResult;
-import com.njydsz.literule.domain.api.RuleSeverity;
-import com.njydsz.literule.domain.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.dto.CrossDecisionTableDefinition;
+import com.njydsz.literule.domain.Rule;
+import com.njydsz.literule.domain.vo.RuleContext;
+import com.njydsz.literule.domain.vo.RuleResult;
+import com.njydsz.literule.domain.enums.RuleSeverity;
+import com.njydsz.literule.domain.expression.ExpressionEngine;
 
 /**
  * 交叉决策表规则（决策矩阵运行时，P0-3 补全）

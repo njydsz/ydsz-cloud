@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.api.RuleEngine;
+import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 

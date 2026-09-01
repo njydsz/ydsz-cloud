@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.literule.domain.api.RuleExecutionTrace;
+import com.njydsz.literule.domain.vo.RuleExecutionTrace;
 import com.njydsz.literule.server.spi.TraceRecorder;
 
 /**

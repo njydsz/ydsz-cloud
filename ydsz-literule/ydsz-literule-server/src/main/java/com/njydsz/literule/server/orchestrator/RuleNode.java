@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import com.njydsz.literule.domain.api.Rule;
+import com.njydsz.literule.domain.Rule;
 
 /**
  * 编排节点抽象

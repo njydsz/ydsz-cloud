@@ -5,7 +5,7 @@ import java.util.List;
 
 import lombok.Data;
 
-import com.njydsz.literule.domain.api.RulePack;
+import com.njydsz.literule.domain.vo.RulePack;
 
 /**
  * 规则集市场提供者 SPI

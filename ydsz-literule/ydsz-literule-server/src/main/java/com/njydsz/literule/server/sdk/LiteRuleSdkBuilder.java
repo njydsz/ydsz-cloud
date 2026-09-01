@@ -1,7 +1,7 @@
 package com.njydsz.literule.server.sdk;
 
-import com.njydsz.literule.domain.api.RuleEngine;
-import com.njydsz.literule.domain.api.expression.ExpressionEngine;
+import com.njydsz.literule.domain.RuleEngine;
+import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
 import com.njydsz.literule.server.engine.liteexpr.LiteExprEngine;
 
