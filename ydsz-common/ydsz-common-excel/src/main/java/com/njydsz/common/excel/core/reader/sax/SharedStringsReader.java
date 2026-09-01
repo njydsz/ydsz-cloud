@@ -20,6 +20,20 @@ import java.util.Map;
  *
  * 对于包含百万级共享字符串的大文件，可显著降低内存占用。
  *
+ * <h3>rich text 多 run 支持（深度完善·方案 B）</h3>
+ *
+ * <p>SST 条目形态：纯文本 {@code <si><t>文本</t></si>} 与 rich text
+ * {@code <si><r><t>run1</t></r><r><t>run2</t></r></si>}。此前解析只取第一个
+ * {@code <t>}，多 run 条目静默丢失第二个 run 起的全部内容；富文本单元格（POI
+ * RichTextString、Excel 分段着色）读取结果不完整。现按 {@code <si>} 边界拼接全部
+ * run 文本。
+ *
+ * <h3>phonetic（注音）过滤</h3>
+ *
+ * <p>日文注音条目含 {@code <rPh sb="0" eb="2"><t>とうきょう</t></rPh>}（假名注音，
+ * 辅助输入而非显示内容）。{@code <rPh>} 区间内的 {@code <t>} 不参与拼接，
+ * 与 POI SharedStringsTable 的 phonetic 语义一致（取 t 文本、忽略注音）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -1,8 +1,8 @@
 package com.njydsz.literule.web;
 
+import org.mapstruct.factory.Mappers;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
