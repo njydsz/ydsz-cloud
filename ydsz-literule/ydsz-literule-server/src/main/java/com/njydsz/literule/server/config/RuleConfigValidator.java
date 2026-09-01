@@ -54,6 +54,16 @@ public class RuleConfigValidator {
     this.validator = validator;
   }
 
+  /**
+   * 启动阶段执行全量配置校验。
+   *
+   * <p>由 {@link PostConstruct} 触发，依次完成 JSR-303 注解校验与分布式、缓存、熔断、并行、模型、
+   * 事实六组跨字段业务约束校验。校验前会清空上一轮结果，保证重复调用不会累积重复项。
+   *
+   * <p><b>副作用：</b>校验发现的问题（含 WARN 级建议）统一写入 {@code validationErrors}，
+   * 并输出 WARN 日志；本方法本身不抛出异常、不阻塞应用启动，调用方需自行读取
+   * {@code validationErrors} 判断是否放行。
+   */
   @PostConstruct
   public void validate() {
     validationErrors.clear();

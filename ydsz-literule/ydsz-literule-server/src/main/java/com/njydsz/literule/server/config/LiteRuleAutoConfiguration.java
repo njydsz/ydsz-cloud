@@ -989,7 +989,9 @@ public class LiteRuleAutoConfiguration {
    *
    * <p>可通过 {@code ydsz.literule.cep.enabled=false} 关闭。
    *
-   * @return CEPEngine 实例
+   * @param evaluator 表达式求值器，用于判定事件是否满足模式中的匹配条件，不可为 {@code null}
+   * @param properties 规则引擎配置，当前仅作为装配入参保留，不参与引擎构造
+   * @return CEPEngine 实例，容器内单例；CEP 未启用时不注册该 Bean
    * @since 1.0.0
    */
   @Bean
@@ -1166,6 +1168,10 @@ public class LiteRuleAutoConfiguration {
    * {@code @RuleDefinitionMeta}（纯声明式表达式规则）并自动注册到引擎。 通过 {@code
    * ydsz.literule.annotation-scan-base-packages} 指定扫描基包（逗号分隔）。
    *
+   * @param ruleEngine 规则引擎，扫描到的声明式规则最终注册到该引擎
+   * @param evaluator 表达式求值器，用于编译 {@code @RuleDefinitionMeta} 上声明的表达式
+   * @param applicationContext Spring 容器，用于枚举候选 Bean 并读取规则注解元数据
+   * @param properties 规则引擎配置，提供扫描基包等注册参数，不可为 {@code null}
    * @return LiteRuleAnnotationRegistrar 实例
    * @since 1.0.0
    */
@@ -1634,6 +1640,7 @@ public class LiteRuleAutoConfiguration {
    * <p>每 60 秒执行一次 CEP 过期事件清理，防止事件队列无限增长。 依赖 @EnableScheduling 注解（已在类级别添加）。
    *
    * @param cepEngine CEP 引擎（可选注入，未启用时跳过）
+   * @return LiteRuleMaintenanceTask 实例；仅当容器中存在 {@link CEPEngine} Bean 时才会注册
    * @since 1.0.0
    */
   @Bean

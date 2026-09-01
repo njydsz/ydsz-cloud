@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p>自动注册熔断状态、失败率、调用次数等关键指标到 Micrometer， 可通过 Actuator /actuator/metrics 端点查看。
  *
- * <p><b>自动注册机制：</b>当 {@link Resilience4jCircuitBreakerAdapter} 创建新熔断器时， 通过回调自动注册该服务的指标，无需外部手动调用。
+ * <p><b>自动注册机制：</b>当 {@link SafeCircuitBreakerAdapter} 创建新熔断器时， 通过回调自动注册该服务的指标，无需外部手动调用。
  *
  * <p>注册的指标：
  *
