@@ -186,7 +186,7 @@ public class ModelInputRegistry {
     return !providers.isEmpty();
   }
 
-  /**
+    /**
    * 获取指定模型的输出（不带 "model." 前缀）
    *
    * <p>按 modelId 精确匹配，返回该 provider 的原始输出。 超时/异常处理与 {@link #collectAllModelOutputs} 一致。
@@ -195,7 +195,7 @@ public class ModelInputRegistry {
    * @param context 规则上下文
    * @return 模型输出 Map；不存在或失败返回空 Map
    */
-  public Map<String, Object> getModelOutputs(String modelId, RuleContext context) {
+  public Map<String, Object> getModelOutputs(String modelId, RuleContextVO context) {
     if (modelId == null) {
       return Collections.emptyMap();
     }
@@ -228,7 +228,7 @@ public class ModelInputRegistry {
    * @param context 规则上下文
    * @return 聚合后的 Map（key 带 "model." 前缀）；无 provider 或全部失败返回空 Map
    */
-  public Map<String, Object> collectAllModelOutputs(RuleContext context) {
+  public Map<String, Object> collectAllModelOutputs(RuleContextVO context) {
     if (providers.isEmpty()) {
       return Collections.emptyMap();
     }
@@ -275,7 +275,7 @@ public class ModelInputRegistry {
    * @param context 规则上下文
    * @return 模型输出；失败时返回空 Map（fallbackOnError=true）或抛异常（false）
    */
-  private Map<String, Object> safeInvoke(ModelInputProvider provider, RuleContext context) {
+  private Map<String, Object> safeInvoke(ModelInputProvider provider, RuleContextVO context) {
     Future<Map<String, Object>> future = null;
     try {
       future = executor.submit(() -> provider.getModelOutput(context));

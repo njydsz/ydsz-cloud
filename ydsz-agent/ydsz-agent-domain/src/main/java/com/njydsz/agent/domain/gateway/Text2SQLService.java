@@ -64,18 +64,37 @@ public interface Text2SQLService {
 
     private static final long serialVersionUID = 1L;
 
+    /** 错误码 */
     private final String errorCode;
 
+    /**
+     * 构造异常。
+     *
+     * @param message 错误描述
+     * @param errorCode 错误码
+     */
     public Text2SQLException(String message, String errorCode) {
       super(message);
       this.errorCode = errorCode;
     }
 
+    /**
+     * 构造异常（携带根因）。
+     *
+     * @param message 错误描述
+     * @param errorCode 错误码
+     * @param cause 根因异常
+     */
     public Text2SQLException(String message, String errorCode, Throwable cause) {
       super(message, cause);
       this.errorCode = errorCode;
     }
 
+    /**
+     * 获取错误码。
+     *
+     * @return 错误码
+     */
     public String getErrorCode() {
       return errorCode;
     }

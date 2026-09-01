@@ -26,11 +26,26 @@ public final class AgentDag implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  /** DAG 唯一标识 */
   private final String id;
+
+  /** DAG 名称（null 时取 id） */
   private final String name;
+
+  /** 节点表（nodeId -> Node，不可变） */
   private final Map<String, Node> nodes;
+
+  /** 边表（nodeId -> 依赖的节点 ID 列表，不可变） */
   private final Map<String, List<String>> edges;
 
+  /**
+   * 构造 DAG。
+   *
+   * @param id DAG 唯一标识（不可为 null）
+   * @param name DAG 名称（null 时取 id）
+   * @param nodes 节点表
+   * @param edges 边表（nodeId -> 依赖节点 ID 列表）
+   */
   public AgentDag(
       String id, String name, Map<String, Node> nodes, Map<String, List<String>> edges) {
     this.id = Objects.requireNonNull(id, "id 不能为 null");
@@ -39,23 +54,47 @@ public final class AgentDag implements Serializable {
     this.edges = Collections.unmodifiableMap(new HashMap<>(edges));
   }
 
+  /**
+   * 获取 DAG 唯一标识。
+   *
+   * @return DAG 唯一标识
+   */
   public String getId() {
     return id;
   }
 
+  /**
+   * 获取 DAG 名称。
+   *
+   * @return DAG 名称
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * 获取节点表。
+   *
+   * @return 不可变节点表（nodeId -> Node）
+   */
   public Map<String, Node> getNodes() {
     return nodes;
   }
 
+  /**
+   * 获取边表。
+   *
+   * @return 不可变边表（nodeId -> 依赖节点 ID 列表）
+   */
   public Map<String, List<String>> getEdges() {
     return edges;
   }
 
-  /** 获取所有入度为 0 的节点（可立即执行的节点） */
+  /**
+   * 获取所有入度为 0 的节点（可立即执行的节点）。
+   *
+   * @return 根节点列表
+   */
   public List<Node> getRootNodes() {
     Set<String> hasIncoming = new HashSet<>();
     for (List<String> deps : edges.values()) {
@@ -71,7 +110,12 @@ public final class AgentDag implements Serializable {
     return roots;
   }
 
-  /** 获取指定节点的所有依赖节点 */
+  /**
+   * 获取指定节点的所有依赖节点。
+   *
+   * @param nodeId 节点 ID
+   * @return 依赖节点列表（定义不一致的依赖 ID 静默跳过）
+   */
   public List<Node> getDependencies(String nodeId) {
     List<String> depIds = edges.getOrDefault(nodeId, List.of());
     List<Node> deps = new ArrayList<>();
