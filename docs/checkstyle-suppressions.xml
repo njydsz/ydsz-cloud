@@ -44,9 +44,9 @@
     <suppress files="ydsz-common-json[\\/]src[\\/]main[\\/]"
               checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
 
-    <!-- common-excel：自研 Excel 引擎 -->
+    <!-- common-excel：自研 Excel 引擎（算法密集型实现，Javadoc 含大量 XML 结构示例，豁免 JavadocStyle 与 ModifiedControlVariable） -->
     <suppress files="ydsz-common-excel[\\/]src[\\/]main[\\/]"
-              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
+              checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows|JavadocStyle|ModifiedControlVariable"/>
 
     <!-- common-util：L1 工具模块（位运算/编码/算法密集型实现） -->
     <suppress files="ydsz-common-util[\\/]src[\\/]main[\\/]"

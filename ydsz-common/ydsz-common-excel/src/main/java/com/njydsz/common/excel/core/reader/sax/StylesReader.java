@@ -13,6 +13,7 @@ import java.util.Map;
  * <p>深度完善（方案 B）：fast 引擎此前不解析 styles.xml，数值型日期单元格
  * （如 {@code <c s="1"><v>45123.5</v></c>} 配合日期 numFmt）一律按纯数字读入，
  * {@code Date} 字段拿到的是错误值——即 {@code fastNumericDateCellIsKnownLimitation}
+ * 所标记的历史行为。本次引入 styles.xml 解析逻辑，通过 numFmt 与 cellXfs 反查
  * 存档的已知限制。本读取器补齐该缺口：
  *
  * <ol>

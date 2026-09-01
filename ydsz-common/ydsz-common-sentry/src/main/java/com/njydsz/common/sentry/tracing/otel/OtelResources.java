@@ -138,9 +138,22 @@ public final class OtelResources {
   // 配置
   // ============================================================================
 
+  /**
+   * 构造 OTel {@link Resource} 所需的资源描述，采用 Builder 模式，未设置的字段走 {@code @Builder.Default}。
+   *
+   * <p>字段与 OTel 语义约定属性一一对应：{@code serviceName → service.name}、{@code serviceVersion →
+   * service.version}、{@code serviceNamespace → service.namespace}、{@code serviceInstanceId →
+   * service.instance.id}、{@code environment → deployment.environment}。
+   *
+   * <p><b>运维约定：</b>{@code serviceInstanceId} 建议填雪花 ID，用于在同一服务多副本之间区分遥测来源；
+   * 留空时该属性不会被写入，后端将无法按实例聚合。
+   *
+   * <p>本类由 Lombok 生成 Builder，非线程安全，应在装配期构造一次后复用。
+   */
   @Data
   @Builder
   public static class YdszResourceConfig {
+
     /** 服务名 */
     @Builder.Default private String serviceName = "ydsz-unknown";
 

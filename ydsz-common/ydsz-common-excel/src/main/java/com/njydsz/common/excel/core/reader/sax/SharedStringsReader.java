@@ -44,10 +44,10 @@ public class SharedStringsReader {
   /** 原始字节数据（懒加载模式保留） */
   private byte[] rawData;
 
-  /** 每个字符串在rawData中的起始偏移量 */
+  /** 每个字符串内容区间在rawData中的起始偏移量（si 内容起点） */
   private int[] offsets;
 
-  /** 每个字符串在rawData中的字节长度 */
+  /** 每个字符串内容区间的字节长度 */
   private int[] lengths;
 
   /** 字符串总数 */
@@ -61,9 +61,6 @@ public class SharedStringsReader {
 
   /** 是否使用预加载模式 */
   private boolean usePreload = true;
-
-  /** 解码用StringBuilder */
-  private final StringBuilder buffer = new StringBuilder(256);
 
   public SharedStringsReader() {
     lruCache =
@@ -79,16 +76,16 @@ public class SharedStringsReader {
     rawData = readAllBytesDirect(is);
     int len = rawData.length;
 
-    // 第一遍：统计字符串数量
+    // 第一遍：统计字符串数量（<si> 或自闭合 <si/>）
     int count = 0;
     int pos = 0;
     while (pos < len) {
-      int siStart = findSubstring(rawData, pos, len, "<si>");
+      int siStart = findTagStart(rawData, pos, len, "si");
       if (siStart == -1) {
         break;
       }
       count++;
-      pos = siStart + 4;
+      pos = siStart + 3;
     }
 
     if (count == 0) {
@@ -107,32 +104,12 @@ public class SharedStringsReader {
       pos = 0;
       int idx = 0;
       while (pos < len) {
-        int siStart = findSubstring(rawData, pos, len, "<si>");
+        int siStart = findTagStart(rawData, pos, len, "si");
         if (siStart == -1) {
           break;
         }
-
-        int tStart = findSubstring(rawData, siStart + 4, len, "<t");
-        if (tStart == -1) {
-          pos = siStart + 4;
-          continue;
-        }
-
-        int tContentStart = findChar(rawData, tStart, len, '>');
-        if (tContentStart == -1) {
-          pos = tStart + 2;
-          continue;
-        }
-        tContentStart++;
-
-        int tEnd = findSubstring(rawData, tContentStart, len, "</t>");
-        if (tEnd == -1) {
-          pos = tContentStart + 1;
-          continue;
-        }
-
-        preloadedStrings[idx++] = decodeUtf8(rawData, tContentStart, tEnd - tContentStart);
-        pos = tEnd + 4;
+        preloadedStrings[idx++] = extractSiText(siStart);
+        pos = advancePastSi(siStart, len);
       }
       stringCount = idx;
       // 释放原始数据
@@ -140,7 +117,7 @@ public class SharedStringsReader {
       return;
     }
 
-    // 大文件：懒加载模式，仅记录偏移量和长度
+    // 大文件：懒加载模式，记录每个 si 内容区间（多 run 拼接推迟到 getString）
     usePreload = false;
     offsets = new int[count];
     lengths = new int[count];
@@ -148,37 +125,141 @@ public class SharedStringsReader {
     pos = 0;
     int idx = 0;
     while (pos < len) {
-      int siStart = findSubstring(rawData, pos, len, "<si>");
+      int siStart = findTagStart(rawData, pos, len, "si");
       if (siStart == -1) {
         break;
       }
-
-      int tStart = findSubstring(rawData, siStart + 4, len, "<t");
-      if (tStart == -1) {
-        pos = siStart + 4;
-        continue;
+      int contentStart = siContentStart(siStart, len);
+      int siEnd = siContentEnd(siStart, len);
+      // 自闭合 <si/> 仍占一个 SST 索引（以空区间占位），保证后续字符串索引不错位
+      if (contentStart < 0) {
+        contentStart = Math.min(siEnd, len);
+        siEnd = contentStart;
       }
-
-      int tContentStart = findChar(rawData, tStart, len, '>');
-      if (tContentStart == -1) {
-        pos = tStart + 2;
-        continue;
-      }
-      tContentStart++;
-
-      int tEnd = findSubstring(rawData, tContentStart, len, "</t>");
-      if (tEnd == -1) {
-        pos = tContentStart + 1;
-        continue;
-      }
-
-      offsets[idx] = tContentStart;
-      lengths[idx] = tEnd - tContentStart;
+      offsets[idx] = contentStart;
+      lengths[idx] = Math.max(0, siEnd - contentStart);
       idx++;
-
-      pos = tEnd + 4;
+      pos = advancePastSi(siStart, len);
     }
     stringCount = idx;
+  }
+
+  /**
+   * 提取指定 si 条目的完整文本（多 run 拼接，phonetic 过滤）。
+   *
+   * @param siStart si 起始标签位置（{@code <si}）
+   * @return 拼接后的文本；自闭合或无文本 run 时为空串
+   */
+  private String extractSiText(int siStart) {
+    int contentStart = siContentStart(siStart, rawData.length);
+    int siEnd = siContentEnd(siStart, rawData.length);
+    if (contentStart < 0 || siEnd < contentStart) {
+      return "";
+    }
+    return extractRunsText(rawData, contentStart, siEnd);
+  }
+
+  /** si 起始标签的内容起点（{@code <si>} 后）；自闭合时返回 -1。 */
+  private int siContentStart(int siStart, int len) {
+    int tagEnd = findChar(rawData, siStart, len, '>');
+    if (tagEnd < 0) {
+      return -1;
+    }
+    if (rawData[tagEnd - 1] == '/') {
+      return -1;
+    }
+    return tagEnd + 1;
+  }
+
+  /** si 内容终点（{@code </si>} 位置）；未闭合时返回 len。 */
+  private int siContentEnd(int siStart, int len) {
+    int tagEnd = findChar(rawData, siStart, len, '>');
+    if (tagEnd < 0) {
+      return len;
+    }
+    if (rawData[tagEnd - 1] == '/') {
+      return tagEnd - 1;
+    }
+    int close = findSubstring(rawData, tagEnd, len, "</si>");
+    return close >= 0 ? close : len;
+  }
+
+  /** 返回下一个扫描起点（跨过当前 si，避免 si 内文本干扰下一轮 si 定位）。 */
+  private int advancePastSi(int siStart, int len) {
+    int siEnd = siContentEnd(siStart, len);
+    return Math.max(siStart + 3, siEnd + 5);
+  }
+
+  /**
+   * 提取区间内全部文本 run 并拼接（多 run 支持），跳过 phonetic（{@code <rPh>}）区间。
+   *
+   * <p>同时供 {@link SheetXmlReader} 处理 inlineStr 富文本单元格（{@code <is><r><t>…</t></r>…</is>}
+   * 复用——SST 条目与 inlineStr 的 run 结构同构。
+   *
+   * @param data 原始字节数组
+   * @param from 区间起点（含）
+   * @param to 区间终点（不含）
+   * @return 拼接后的文本；无文本 run 时为空串
+   */
+  static String extractRunsText(byte[] data, int from, int to) {
+    if (from >= to) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder(Math.min(64, to - from));
+    int pos = from;
+    while (pos < to) {
+      int tStart = findTagStart(data, pos, to, "t");
+      if (tStart < 0) {
+        break;
+      }
+      int tagEnd = findChar(data, tStart, to, '>');
+      if (tagEnd < 0) {
+        break;
+      }
+      pos = tagEnd + 1;
+      // 自闭合 <t/>：内容为空
+      if (data[tagEnd - 1] == '/') {
+        continue;
+      }
+      int tEnd = findSubstring(data, pos, to, "</t>");
+      if (tEnd < 0) {
+        break;
+      }
+      if (!inPhoneticRegion(data, from, to, tStart)) {
+        sb.append(decodeUtf8(data, pos, tEnd - pos));
+      }
+      pos = tEnd + 4;
+    }
+    return sb.toString();
+  }
+
+  /** 判断指定位置是否落在某个 {@code <rPh>…</rPh>}（phonetic）区间内。 */
+  private static boolean inPhoneticRegion(byte[] data, int from, int to, int position) {
+    int pos = from;
+    while (pos < to) {
+      int phStart = findSubstring(data, pos, to, "<rPh");
+      if (phStart < 0) {
+        return false;
+      }
+      int phTagEnd = findChar(data, phStart, to, '>');
+      if (phTagEnd < 0) {
+        return false;
+      }
+      // 自闭合 <rPh/>：无注音内容
+      if (data[phTagEnd - 1] == '/') {
+        pos = phTagEnd + 1;
+        continue;
+      }
+      int phEnd = findSubstring(data, phTagEnd, to, "</rPh>");
+      if (phEnd < 0) {
+        return false;
+      }
+      if (position > phStart && position < phEnd) {
+        return true;
+      }
+      pos = phEnd + 6;
+    }
+    return false;
   }
 
   private byte[] readAllBytesDirect(InputStream is) throws IOException {
@@ -191,7 +272,33 @@ public class SharedStringsReader {
     return baos.toByteArray();
   }
 
-  private int findSubstring(byte[] data, int start, int len, String pattern) {
+  /**
+   * 定位标签起点（{@code <name} 且下一字符为空白、{@code >} 或 {@code /}），
+   * 避免误匹配同前缀的其他标签（如 {@code <si>} 与假想的 {@code <size>}）。
+   */
+  private static int findTagStart(byte[] data, int start, int len, String tagName) {
+    byte[] prefix = ("<" + tagName).getBytes(StandardCharsets.UTF_8);
+    int plen = prefix.length;
+    for (int i = start; i <= len - plen; i++) {
+      boolean match = true;
+      for (int j = 0; j < plen; j++) {
+        if (data[i + j] != prefix[j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        byte next = (i + plen < len) ? data[i + plen] : 0;
+        if (next == ' ' || next == '>' || next == '/' || next == '\n' || next == '\r'
+            || next == '\t') {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  private static int findSubstring(byte[] data, int start, int len, String pattern) {
     byte[] patternBytes = pattern.getBytes(StandardCharsets.UTF_8);
     int plen = patternBytes.length;
     for (int i = start; i <= len - plen; i++) {
@@ -209,7 +316,7 @@ public class SharedStringsReader {
     return -1;
   }
 
-  private int findChar(byte[] data, int start, int len, char ch) {
+  private static int findChar(byte[] data, int start, int len, char ch) {
     for (int i = start; i < len; i++) {
       if (data[i] == (byte) ch) {
         return i;
@@ -218,8 +325,8 @@ public class SharedStringsReader {
     return -1;
   }
 
-  private String decodeUtf8(byte[] data, int start, int len) {
-    buffer.setLength(0);
+  private static String decodeUtf8(byte[] data, int start, int len) {
+    StringBuilder buffer = new StringBuilder(len + 8);
     int end = start + len;
     int i = start;
     while (i < end) {
@@ -250,7 +357,7 @@ public class SharedStringsReader {
     return buffer.toString();
   }
 
-  private String decodeEntity(byte[] data, int start, int end) {
+  private static String decodeEntity(byte[] data, int start, int end) {
     if (start + 5 <= end
         && data[start + 1] == 'a'
         && data[start + 2] == 'm'
@@ -289,7 +396,7 @@ public class SharedStringsReader {
     return null;
   }
 
-  private int getEntityLength(byte[] data, int start, int end) {
+  private static int getEntityLength(byte[] data, int start, int end) {
     for (int i = start + 1; i < end && i < start + 10; i++) {
       if (data[i] == ';') {
         return i - start + 1;
@@ -317,12 +424,13 @@ public class SharedStringsReader {
       return cached;
     }
 
-    // 按需解码
+    // 按需解码（多 run 拼接 + phonetic 过滤）
     if (index >= stringCount || rawData == null) {
       return null;
     }
 
-    String decoded = decodeUtf8(rawData, offsets[index], lengths[index]);
+    String decoded =
+        extractRunsText(rawData, offsets[index], offsets[index] + lengths[index]);
     lruCache.put(index, decoded);
     return decoded;
   }

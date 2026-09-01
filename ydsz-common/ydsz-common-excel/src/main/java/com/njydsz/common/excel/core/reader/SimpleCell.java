@@ -1,6 +1,7 @@
 package com.njydsz.common.excel.core.reader;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -40,14 +41,55 @@ public final class SimpleCell implements Cell {
   private final CellType cellType;
 
   /**
+   * 数值型日期单元格的转换结果（深度完善·方案 B）。
+   *
+   * <p>fast 路径识别到日期样式（styles.xml numFmt 判定）后，将 Excel 序列值按
+   * 1900/1904 窗口转换为 {@link Date} 装载于此；{@link #getDateCellValue()} 与
+   * {@link #getLocalDateTimeCellValue()} 据此返回真实日期。非日期单元格为 null。
+   */
+  private final Date dateValue;
+
+  /**
    * 创建轻量级单元格
    *
    * @param value 单元格值
    * @param cellType 单元格类型
    */
   public SimpleCell(String value, CellType cellType) {
+    this(value, cellType, null);
+  }
+
+  /**
+   * 创建轻量级单元格（含日期值）
+   *
+   * @param value 单元格原始值（Excel 序列值文本）
+   * @param cellType 单元格类型
+   * @param dateValue 日期转换结果；非日期单元格传 null
+   */
+  public SimpleCell(String value, CellType cellType, Date dateValue) {
     this.value = value;
     this.cellType = cellType;
+    this.dateValue = dateValue;
+  }
+
+  /**
+   * 创建数值型日期单元格。
+   *
+   * @param rawValue Excel 序列值文本
+   * @param dateValue 按 1900/1904 窗口转换后的日期
+   * @return 装载日期值的轻量单元格
+   */
+  public static SimpleCell forDate(String rawValue, Date dateValue) {
+    return new SimpleCell(rawValue, CellType.NUMERIC, dateValue);
+  }
+
+  /**
+   * 是否为日期格式的数值单元格（fast 路径样式判定结果）。
+   *
+   * @return 是返回 true
+   */
+  public boolean isDateFormatted() {
+    return dateValue != null;
   }
 
   @Override
@@ -86,12 +128,14 @@ public final class SimpleCell implements Cell {
 
   @Override
   public Date getDateCellValue() {
-    return null;
+    return dateValue;
   }
 
   @Override
   public LocalDateTime getLocalDateTimeCellValue() {
-    return null;
+    return dateValue == null
+        ? null
+        : LocalDateTime.ofInstant(dateValue.toInstant(), ZoneId.systemDefault());
   }
 
   @Override

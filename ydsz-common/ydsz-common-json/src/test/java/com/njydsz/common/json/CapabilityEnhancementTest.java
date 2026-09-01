@@ -121,7 +121,7 @@ class CapabilityEnhancementTest {
   @Test
   @DisplayName("JsonView: 无注解字段在视图下输出（Jackson DEFAULT_VIEW_INCLUSION 对齐）")
   void unannotatedFieldIncludedInView() {
-    String json = YdszJson.toJson(new ViewBean(), BasicView.class);
+    String json = JsonMapper.getDefault().toJson(new ViewBean(), BasicView.class);
 
     assertTrue(json.contains("\"name\""), "无注解字段应默认输出: " + json);
     assertTrue(json.contains("\"id\""), "BasicView 标注字段应输出: " + json);
@@ -131,7 +131,7 @@ class CapabilityEnhancementTest {
   @Test
   @DisplayName("JsonView: 视图继承（DetailView 派生自 BasicView，父视图字段可见）")
   void viewInheritanceVisible() {
-    String json = YdszJson.toJson(new ViewBean(), DetailView.class);
+    String json = JsonMapper.getDefault().toJson(new ViewBean(), DetailView.class);
 
     assertTrue(json.contains("\"id\""), "父视图字段应可见: " + json);
     assertTrue(json.contains("secret"), "本视图字段应可见: " + json);
