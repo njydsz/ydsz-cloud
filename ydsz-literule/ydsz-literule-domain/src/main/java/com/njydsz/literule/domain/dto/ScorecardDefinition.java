@@ -3,12 +3,12 @@ package com.njydsz.literule.domain.dto;
 import java.io.Serializable;
 import java.util.List;
 
-import com.njydsz.literule.domain.Rule;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.literule.domain.Rule;
 
 /**
  * 评分卡规则定义（DTO）

@@ -10,11 +10,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
-import com.njydsz.nextwiki.domain.vo.TagVO;
-import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
+import com.njydsz.nextwiki.domain.vo.TagVO;
 
 /**
  * 搜索领域服务

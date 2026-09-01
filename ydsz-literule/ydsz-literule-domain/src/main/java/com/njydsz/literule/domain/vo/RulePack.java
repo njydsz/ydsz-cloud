@@ -3,11 +3,11 @@ package com.njydsz.literule.domain.vo;
 import java.io.Serializable;
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
+
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * 规则集（RulePackVO）元数据

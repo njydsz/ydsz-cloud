@@ -4,12 +4,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.literule.domain.Rule;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.literule.domain.Rule;
 
 /**
  * 交叉决策表定义（决策矩阵，P1-6）

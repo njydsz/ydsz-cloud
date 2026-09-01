@@ -4,12 +4,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.literule.domain.enums.HitPolicy;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.literule.domain.enums.HitPolicy;
 
 /**
  * 决策表定义（DMN 风格）

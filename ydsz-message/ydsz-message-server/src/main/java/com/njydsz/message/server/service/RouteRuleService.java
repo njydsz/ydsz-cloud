@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.config;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;

@@ -1,7 +1,8 @@
 package com.njydsz.agent.domain.memory;
 
-import com.njydsz.agent.domain.conversation.Conversation;
 import java.util.List;
+
+import com.njydsz.agent.domain.conversation.Conversation;
 
 /**
  * 记忆整合服务网关接口。

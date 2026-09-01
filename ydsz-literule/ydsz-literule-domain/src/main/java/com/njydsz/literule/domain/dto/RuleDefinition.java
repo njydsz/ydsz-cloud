@@ -4,13 +4,13 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.literule.domain.enums.RuleSeverity;
-import com.njydsz.literule.domain.vo.RuleContextVO;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.literule.domain.enums.RuleSeverity;
+import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 规则定义（元数据）

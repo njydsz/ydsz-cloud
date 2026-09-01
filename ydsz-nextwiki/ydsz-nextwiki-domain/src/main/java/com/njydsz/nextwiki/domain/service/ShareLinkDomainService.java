@@ -10,11 +10,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.dto.ShareRecipientDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiEnums.ShareStatus;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 
 /**
  * 分享链接领域服务。

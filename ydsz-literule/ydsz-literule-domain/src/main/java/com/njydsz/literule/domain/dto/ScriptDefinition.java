@@ -2,12 +2,12 @@ package com.njydsz.literule.domain.dto;
 
 import java.io.Serializable;
 
-import com.njydsz.literule.domain.Rule;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.literule.domain.Rule;
 
 /**
  * 脚本规则定义（DTO）

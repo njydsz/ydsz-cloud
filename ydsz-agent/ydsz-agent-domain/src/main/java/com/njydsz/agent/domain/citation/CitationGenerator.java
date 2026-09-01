@@ -1,7 +1,8 @@
 package com.njydsz.agent.domain.citation;
 
-import com.njydsz.agent.domain.rag.TextChunk;
 import java.util.List;
+
+import com.njydsz.agent.domain.rag.TextChunk;
 
 /**
  * 引用生成器网关接口。

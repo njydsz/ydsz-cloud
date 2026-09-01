@@ -6,14 +6,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.literule.domain.enums.HitPolicy;
-import com.njydsz.literule.domain.enums.RuleSeverity;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.literule.domain.enums.HitPolicy;
+import com.njydsz.literule.domain.enums.RuleSeverity;
 
 /**
  * 规则评估结果

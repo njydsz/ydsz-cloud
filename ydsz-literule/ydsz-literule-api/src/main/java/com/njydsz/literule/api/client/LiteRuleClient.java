@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.api.fallback.LiteRuleClientFallback;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 
 /**
  * 规则引擎服务 Feign 客户端
