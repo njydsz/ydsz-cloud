@@ -150,7 +150,7 @@ public class ChannelRouter {
     if (breaker != null && !breaker.canExecute()) {
       log.warn("[ChannelRouter] 通道熔断中,快速失败: channel={} state={}", channel, breaker.getState());
       messageMetrics.recordChannelError(channel, "CIRCUIT_BREAKER");
-      return MessageResult.fail(channel, "通道熔断中,请稍后重试");
+      return MessageResult.fail(channel, null, "通道熔断中,请稍后重试", "通道熔断中,请稍后重试", null);
     }
     long start = System.currentTimeMillis();
     try {
@@ -190,7 +190,7 @@ public class ChannelRouter {
           breaker == null ? "N/A" : breaker.getState(),
           e);
       // P3-2: 透传 root cause 链，避免包装异常掩盖真实错误原因
-      return MessageResult.fail(channel, buildErrorMessageWithCause(e));
+      return MessageResult.fail(channel, null, buildErrorMessageWithCause(e), buildErrorMessageWithCause(e), null);
     }
   }
 

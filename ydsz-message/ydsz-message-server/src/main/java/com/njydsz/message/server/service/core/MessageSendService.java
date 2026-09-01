@@ -203,7 +203,7 @@ public class MessageSendService {
           retryCount,
           logVO.getNextRetryAt(),
           e.getMessage());
-      return MessageResult.fail(logVO.getChannel(), "发送失败,已加入重试队列: " + e.getMessage());
+      return MessageResult.fail(logVO.getChannel(), null, "发送失败,已加入重试队列: " + e.getMessage(), "发送失败,已加入重试队列: " + e.getMessage(), null);
     }
     logVO.setStatus(MessageStatusEnum.FAILED.name());
     msgLogRepository.update(logVO);
@@ -215,7 +215,7 @@ public class MessageSendService {
         maskedReceiver,
         retryCount,
         e.getMessage());
-    return MessageResult.fail(logVO.getChannel(), e.getMessage());
+    return MessageResult.fail(logVO.getChannel(), null, e.getMessage(), e.getMessage(), null);
   }
 
   /**
