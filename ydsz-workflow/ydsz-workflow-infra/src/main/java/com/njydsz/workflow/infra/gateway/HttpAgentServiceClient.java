@@ -95,7 +95,7 @@ public class HttpAgentServiceClient implements AgentServiceClient {
       throw e;
     } catch (Exception e) {
       log.error("[Workflow-Agent] Agent 调用异常: agentCode={}, error={}", agentCode, e.getMessage(), e);
-      throw WorkflowException.of(WorkflowExceptionCode.AI_AGENT_EXECUTION_ERROR,
+      throw new WorkflowException(WorkflowExceptionCode.AI_AGENT_EXECUTION_ERROR,
           "Agent 服务调用失败: " + e.getMessage());
     }
   }

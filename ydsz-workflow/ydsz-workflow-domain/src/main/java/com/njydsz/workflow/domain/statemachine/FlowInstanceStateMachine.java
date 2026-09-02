@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
-import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
+import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 
 /**
  * 流程实例状态机（Domain 层）。

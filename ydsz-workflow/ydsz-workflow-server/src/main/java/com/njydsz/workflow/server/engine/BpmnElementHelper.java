@@ -12,7 +12,7 @@ import org.w3c.dom.NodeList;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
-import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
+import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
