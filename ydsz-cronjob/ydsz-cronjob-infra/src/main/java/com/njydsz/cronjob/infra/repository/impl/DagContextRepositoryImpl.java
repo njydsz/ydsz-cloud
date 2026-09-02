@@ -21,7 +21,7 @@ import com.njydsz.cronjob.infra.mapper.dag.JobDagContextMapper;
  * <p>节点结果独立存储，避免 CAS 更新整行 context_json，解决行锁竞争与 JSON 写入放大问题。
  *
  * @author ydsz-team
- * @since 1.0.2
+ * @since 26.09.01
  */
 @Repository
 @RequiredArgsConstructor

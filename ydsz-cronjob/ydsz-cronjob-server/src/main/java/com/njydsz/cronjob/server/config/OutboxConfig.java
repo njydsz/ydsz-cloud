@@ -19,7 +19,7 @@ import lombok.Data;
  * <p>依据《云顶编码规范》§24 配置管理规范：所有可调整参数必须通过配置项暴露，禁止硬编码。
  *
  * @author ydsz-team
- * @since 1.0.2
+ * @since 26.09.01
  */
 @Data
 public class OutboxConfig {

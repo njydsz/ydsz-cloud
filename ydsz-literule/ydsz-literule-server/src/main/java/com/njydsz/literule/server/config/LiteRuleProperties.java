@@ -707,7 +707,7 @@ public class LiteRuleProperties {
      *
      * <p>控制 RuleIndexer 的索引启用/绕过阈值。
      *
-     * @since 1.4.0
+     * @since 26.09.01
      */
     private IndexConfig index = new IndexConfig();
   }
@@ -717,7 +717,7 @@ public class LiteRuleProperties {
    *
    * <p>控制 RuleIndexer 的索引启用/绕过阈值。
    *
-   * @since 1.4.0
+   * @since 26.09.01
    */
   @Data
   public static class IndexConfig {

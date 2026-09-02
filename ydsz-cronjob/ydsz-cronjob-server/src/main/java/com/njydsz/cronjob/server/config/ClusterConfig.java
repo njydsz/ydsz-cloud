@@ -16,7 +16,7 @@ import lombok.Data;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.2
+ * @since 26.09.01
  */
 @Data
 public class ClusterConfig {

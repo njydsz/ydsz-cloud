@@ -15,7 +15,7 @@ import com.njydsz.cronjob.infra.entity.dag.JobDagContext;
  * <p>提供节点级结果的 CRUD 操作，避免 CAS 更新整行 context_json。
  *
  * @author ydsz-team
- * @since 1.0.2
+ * @since 26.09.01
  */
 @Mapper
 public interface JobDagContextMapper extends BaseMapper<JobDagContext> {

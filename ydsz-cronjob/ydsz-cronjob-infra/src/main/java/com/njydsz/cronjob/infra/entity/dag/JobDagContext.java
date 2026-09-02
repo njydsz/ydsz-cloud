@@ -17,7 +17,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
  * 避免 MapStruct 与 {@code @SuperBuilder} 继承的兼容性问题。
  *
  * @author ydsz-team
- * @since 1.0.2
+ * @since 26.09.01
  */
 @Data
 @NoArgsConstructor

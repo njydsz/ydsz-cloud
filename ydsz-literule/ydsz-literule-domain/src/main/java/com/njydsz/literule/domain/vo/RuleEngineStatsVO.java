@@ -2,7 +2,10 @@ package com.njydsz.literule.domain.vo;
 
 import java.util.Map;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 规则引擎运行统计视图对象（VO）。
@@ -13,6 +16,9 @@ import lombok.Data;
  * @since 26.09.01
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RuleEngineStatsVO {
 
   /** 累计评估次数（全部规则评估的总调用数） */
@@ -51,6 +57,9 @@ public class RuleEngineStatsVO {
    * <p>用于 {@link #perRuleStats} 的值类型，记录单条规则的执行统计。
    */
   @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class RuleStat {
     /** 执行次数 */
     private long executions;
@@ -58,5 +67,7 @@ public class RuleEngineStatsVO {
     private long triggered;
     /** 错误次数 */
     private long errors;
+    /** 总耗时（毫秒） */
+    private long totalElapsedMs;
   }
 }

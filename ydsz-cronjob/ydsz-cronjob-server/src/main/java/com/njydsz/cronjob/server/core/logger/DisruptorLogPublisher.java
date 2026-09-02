@@ -38,7 +38,7 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
  * <p>剩余容量通过 {@link #getRemainingCapacity()} 暴露，可用于 Prometheus 告警（缓冲区使用率 > 80% 时预警）。
  *
  * @author ydsz-team
- * @since 1.0.2
+ * @since 26.09.01
  */
 @Slf4j
 @Component

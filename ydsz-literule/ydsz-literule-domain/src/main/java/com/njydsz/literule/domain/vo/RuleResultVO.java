@@ -2,7 +2,12 @@ package com.njydsz.literule.domain.vo;
 
 import java.time.LocalDateTime;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import com.njydsz.literule.domain.enums.RuleSeverity;
 
 /**
  * 规则评估结果视图对象（VO）。
@@ -13,6 +18,9 @@ import lombok.Data;
  * @since 26.09.01
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RuleResultVO {
 
   /** 规则编码 */
@@ -27,8 +35,8 @@ public class RuleResultVO {
   /** 是否命中触发（true=命中并产生告警） */
   private boolean triggered;
 
-  /** 命中严重级别（HIGH/MEDIUM/LOW/INFO） */
-  private String severity;
+  /** 命中严重级别 */
+  private RuleSeverity severity;
 
   /** 告警标题（命中时根据模板生成） */
   private String title;
@@ -56,4 +64,34 @@ public class RuleResultVO {
 
   /** 命中所属桶（如 NORMAL/CANARY，标识来自全量还是灰度） */
   private String canaryBucket;
+
+  /** 是否灰度 */
+  private boolean canary;
+
+  /** 获取严重级别权重 */
+  public int getSeverityWeight() {
+    return severity != null ? severity.getWeight() : 0;
+  }
+
+  /**
+   * 创建一个未命中的结果
+   *
+   * @param reason 未命中原因描述
+   * @return 未命中的 RuleResultVO
+   */
+  public RuleResultVO notTriggered(String reason) {
+    this.triggered = false;
+    this.title = null;
+    this.description = reason;
+    return this;
+  }
+
+  /**
+   * 获取权重（兼容方法）
+   *
+   * @return 权重值
+   */
+  public int getWeight() {
+    return getSeverityWeight();
+  }
 }
