@@ -83,7 +83,7 @@ public class UrgeChannelConfigVO implements Serializable {
     }
   }
 
-  private UrgeChannelConfig(List<String> urgeChannels, int urgeIntervalMinutes, int urgeMaxCount,
+  private UrgeChannelConfigVO(List<String> urgeChannels, int urgeIntervalMinutes, int urgeMaxCount,
       boolean urgeEnabled) {
     this.urgeChannels = urgeChannels != null && !urgeChannels.isEmpty() ? urgeChannels
         : DEFAULT_URGE_CHANNELS;
@@ -99,16 +99,16 @@ public class UrgeChannelConfigVO implements Serializable {
    * @param extMap 节点 ext JSON 解析后的 Map，不可为 null
    * @return 催办通道配置值对象（不可变）
    */
-  public static UrgeChannelConfig fromExt(Map<String, Object> extMap) {
+  public static UrgeChannelConfigVO fromExt(Map<String, Object> extMap) {
     if (extMap == null || extMap.isEmpty()) {
-      return new UrgeChannelConfig(DEFAULT_URGE_CHANNELS, DEFAULT_URGE_INTERVAL_MINUTES,
+      return new UrgeChannelConfigVO(DEFAULT_URGE_CHANNELS, DEFAULT_URGE_INTERVAL_MINUTES,
           DEFAULT_URGE_MAX_COUNT, true);
     }
     List<String> channels = parseChannels(extMap.get("urgeChannels"));
     int interval = parseIntSafe(extMap.get("urgeIntervalMinutes"), DEFAULT_URGE_INTERVAL_MINUTES);
     int maxCount = parseIntSafe(extMap.get("urgeMaxCount"), DEFAULT_URGE_MAX_COUNT);
     boolean enabled = parseBooleanSafe(extMap.get("urgeEnabled"), true);
-    return new UrgeChannelConfig(channels, interval, maxCount, enabled);
+    return new UrgeChannelConfigVO(channels, interval, maxCount, enabled);
   }
 
   /**
@@ -117,16 +117,16 @@ public class UrgeChannelConfigVO implements Serializable {
    * @param extJson ext JSON 字符串，可为 null 或空
    * @return 催办通道配置值对象（不可变）
    */
-  public static UrgeChannelConfig fromExtJson(String extJson) {
+  public static UrgeChannelConfigVO fromExtJson(String extJson) {
     if (extJson == null || extJson.isBlank()) {
-      return new UrgeChannelConfig(DEFAULT_URGE_CHANNELS, DEFAULT_URGE_INTERVAL_MINUTES,
+      return new UrgeChannelConfigVO(DEFAULT_URGE_CHANNELS, DEFAULT_URGE_INTERVAL_MINUTES,
           DEFAULT_URGE_MAX_COUNT, true);
     }
     try {
       Map<String, Object> map = YdszJson.parseMap(extJson);
       return fromExt(map);
     } catch (Exception e) {
-      return new UrgeChannelConfig(DEFAULT_URGE_CHANNELS, DEFAULT_URGE_INTERVAL_MINUTES,
+      return new UrgeChannelConfigVO(DEFAULT_URGE_CHANNELS, DEFAULT_URGE_INTERVAL_MINUTES,
           DEFAULT_URGE_MAX_COUNT, true);
     }
   }

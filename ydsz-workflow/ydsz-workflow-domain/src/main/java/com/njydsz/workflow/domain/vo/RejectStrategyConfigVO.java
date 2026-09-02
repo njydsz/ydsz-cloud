@@ -69,7 +69,7 @@ public class RejectStrategyConfigVO implements Serializable {
   /** 自定义驳回目标节点编码 */
   private final String customTarget;
 
-  private RejectStrategyConfig(RejectStrategy rejectStrategy,
+  private RejectStrategyConfigVO(RejectStrategy rejectStrategy,
       List<RejectStrategy> allowedStrategies, ReExecuteMode reExecuteMode, String customTarget) {
     this.rejectStrategy = rejectStrategy != null ? rejectStrategy : DEFAULT_STRATEGY;
     this.allowedStrategies =
@@ -85,16 +85,16 @@ public class RejectStrategyConfigVO implements Serializable {
    * @param extMap 节点 ext JSON 解析后的 Map，不可为 null
    * @return 驳回策略配置值对象（不可变）
    */
-  public static RejectStrategyConfig fromExt(Map<String, Object> extMap) {
+  public static RejectStrategyConfigVO fromExt(Map<String, Object> extMap) {
     if (extMap == null || extMap.isEmpty()) {
-      return new RejectStrategyConfig(DEFAULT_STRATEGY, DEFAULT_ALLOWED_STRATEGIES,
+      return new RejectStrategyConfigVO(DEFAULT_STRATEGY, DEFAULT_ALLOWED_STRATEGIES,
           DEFAULT_RE_EXECUTE_MODE, "");
     }
     RejectStrategy strategy = parseRejectStrategy(extMap.get("rejectStrategy"));
     List<RejectStrategy> allowed = parseAllowedStrategies(extMap.get("allowedStrategies"));
     ReExecuteMode mode = parseReExecuteMode(extMap.get("reExecuteMode"));
     String customTarget = parseStringSafe(extMap.get("customTarget"));
-    return new RejectStrategyConfig(strategy, allowed, mode, customTarget);
+    return new RejectStrategyConfigVO(strategy, allowed, mode, customTarget);
   }
 
   /**
@@ -103,16 +103,16 @@ public class RejectStrategyConfigVO implements Serializable {
    * @param extJson ext JSON 字符串，可为 null 或空
    * @return 驳回策略配置值对象（不可变）
    */
-  public static RejectStrategyConfig fromExtJson(String extJson) {
+  public static RejectStrategyConfigVO fromExtJson(String extJson) {
     if (extJson == null || extJson.isBlank()) {
-      return new RejectStrategyConfig(DEFAULT_STRATEGY, DEFAULT_ALLOWED_STRATEGIES,
+      return new RejectStrategyConfigVO(DEFAULT_STRATEGY, DEFAULT_ALLOWED_STRATEGIES,
           DEFAULT_RE_EXECUTE_MODE, "");
     }
     try {
       Map<String, Object> map = YdszJson.parseMap(extJson);
       return fromExt(map);
     } catch (Exception e) {
-      return new RejectStrategyConfig(DEFAULT_STRATEGY, DEFAULT_ALLOWED_STRATEGIES,
+      return new RejectStrategyConfigVO(DEFAULT_STRATEGY, DEFAULT_ALLOWED_STRATEGIES,
           DEFAULT_RE_EXECUTE_MODE, "");
     }
   }

@@ -93,7 +93,7 @@ public class UserPreferenceHandler implements SendHandler {
     MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
     boolean channelDisruptive = stc != null && stc.isDisruptive(channel);
     boolean urgentBypass =
-        stc != null && stc.isUrgentBypassDnd() && "URGENT".equals(resolvePriority(request));
+        stc != null && stc.isUrgentBypassDnd() && "URGENT".equals(parsePriority(request));
     if (!channelDisruptive) {
       log.debug("[Message] 非打扰型通道绕过 DND: channel={}", channel);
       return true;
@@ -141,8 +141,8 @@ public class UserPreferenceHandler implements SendHandler {
       MessageProperties.SmartTimingConfig stc,
       String channel,
       String receiver) {
-    LocalTime start = parseTime(pref.getDndStart());
-    LocalTime end = parseTime(pref.getDndEnd());
+    LocalTime start = parseTimeSafely(pref.getDndStart());
+    LocalTime end = parseTimeSafely(pref.getDndEnd());
     if (start == null || end == null) {
       messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
       ctx.setErrorResult(MessageResult.fail(channel, null, "当前为免打扰时段", "当前为免打扰时段", null));

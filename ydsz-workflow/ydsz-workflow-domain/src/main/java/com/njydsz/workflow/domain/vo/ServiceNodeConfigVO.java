@@ -55,7 +55,7 @@ public class ServiceNodeConfigVO implements Serializable {
   /** 脚本内容（SCRIPT 类型时有效） */
   private final String script;
 
-  private ServiceNodeConfig(ServiceType serviceType, String url, String method, String script) {
+  private ServiceNodeConfigVO(ServiceType serviceType, String url, String method, String script) {
     this.serviceType = serviceType != null ? serviceType : DEFAULT_TYPE;
     this.url = url != null ? url : "";
     this.method = method != null ? method.toUpperCase() : DEFAULT_METHOD;
@@ -68,15 +68,15 @@ public class ServiceNodeConfigVO implements Serializable {
    * @param extMap 节点 ext JSON 解析后的 Map，不可为 null
    * @return 服务节点配置值对象（不可变）
    */
-  public static ServiceNodeConfig fromExt(Map<String, Object> extMap) {
+  public static ServiceNodeConfigVO fromExt(Map<String, Object> extMap) {
     if (extMap == null || extMap.isEmpty()) {
-      return new ServiceNodeConfig(DEFAULT_TYPE, "", DEFAULT_METHOD, "");
+      return new ServiceNodeConfigVO(DEFAULT_TYPE, "", DEFAULT_METHOD, "");
     }
     ServiceType type = parseServiceType(extMap.get("serviceType"));
     String url = parseStringSafe(extMap.get("url"));
     String method = parseStringSafe(extMap.get("method"));
     String script = parseStringSafe(extMap.get("script"));
-    return new ServiceNodeConfig(type, url, method, script);
+    return new ServiceNodeConfigVO(type, url, method, script);
   }
 
   /**
@@ -85,15 +85,15 @@ public class ServiceNodeConfigVO implements Serializable {
    * @param extJson ext JSON 字符串，可为 null 或空
    * @return 服务节点配置值对象（不可变）
    */
-  public static ServiceNodeConfig fromExtJson(String extJson) {
+  public static ServiceNodeConfigVO fromExtJson(String extJson) {
     if (extJson == null || extJson.isBlank()) {
-      return new ServiceNodeConfig(DEFAULT_TYPE, "", DEFAULT_METHOD, "");
+      return new ServiceNodeConfigVO(DEFAULT_TYPE, "", DEFAULT_METHOD, "");
     }
     try {
       Map<String, Object> map = YdszJson.parseMap(extJson);
       return fromExt(map);
     } catch (Exception e) {
-      return new ServiceNodeConfig(DEFAULT_TYPE, "", DEFAULT_METHOD, "");
+      return new ServiceNodeConfigVO(DEFAULT_TYPE, "", DEFAULT_METHOD, "");
     }
   }
 

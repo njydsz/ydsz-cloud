@@ -53,7 +53,7 @@ public class SlaConfigVO implements Serializable {
   /** 升级用户 ID（ESCALATE 动作时有效） */
   private final String escalateUserId;
 
-  private SlaConfig(int timeoutMinutes, FlowSlaAction action, String escalateUserId) {
+  private SlaConfigVO(int timeoutMinutes, FlowSlaAction action, String escalateUserId) {
     this.timeoutMinutes = Math.max(0, timeoutMinutes);
     this.action = action != null ? action : DEFAULT_ACTION;
     this.escalateUserId = escalateUserId != null ? escalateUserId : "";
@@ -65,14 +65,14 @@ public class SlaConfigVO implements Serializable {
    * @param extMap 节点 ext JSON 解析后的 Map，不可为 null
    * @return SLA 配置值对象（不可变）
    */
-  public static SlaConfig fromExt(Map<String, Object> extMap) {
+  public static SlaConfigVO fromExt(Map<String, Object> extMap) {
     if (extMap == null || extMap.isEmpty()) {
-      return new SlaConfig(0, DEFAULT_ACTION, "");
+      return new SlaConfigVO(0, DEFAULT_ACTION, "");
     }
     int timeout = parseIntSafe(extMap.get("timeout"), 0);
     FlowSlaAction action = parseSlaAction(extMap.get("timeoutStrategy"));
     String escalateUser = parseStringSafe(extMap.get("escalateUser"));
-    return new SlaConfig(timeout, action, escalateUser);
+    return new SlaConfigVO(timeout, action, escalateUser);
   }
 
   /**
@@ -81,15 +81,15 @@ public class SlaConfigVO implements Serializable {
    * @param extJson ext JSON 字符串，可为 null 或空
    * @return SLA 配置值对象（不可变）
    */
-  public static SlaConfig fromExtJson(String extJson) {
+  public static SlaConfigVO fromExtJson(String extJson) {
     if (extJson == null || extJson.isBlank()) {
-      return new SlaConfig(0, DEFAULT_ACTION, "");
+      return new SlaConfigVO(0, DEFAULT_ACTION, "");
     }
     try {
       Map<String, Object> map = YdszJson.parseMap(extJson);
       return fromExt(map);
     } catch (Exception e) {
-      return new SlaConfig(0, DEFAULT_ACTION, "");
+      return new SlaConfigVO(0, DEFAULT_ACTION, "");
     }
   }
 

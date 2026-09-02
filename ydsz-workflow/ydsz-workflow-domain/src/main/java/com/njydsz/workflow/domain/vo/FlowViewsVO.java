@@ -18,7 +18,7 @@ package com.njydsz.workflow.domain.vo;
  */
 public final class FlowViewsVO {
 
-  private FlowViews() {}
+  private FlowViewsVO() {}
 
   /** 列表视图：仅包含列表页需要的核心字段。 */
   public interface Summary {}

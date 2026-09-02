@@ -56,7 +56,7 @@ public class CountersignConfigVO implements Serializable {
   /** 通过率阈值（0~1，WEIGHTED 模式使用） */
   private final BigDecimal votePassRate;
 
-  private CountersignConfig(FlowPerformType performType, int approveCount, BigDecimal votePassRate) {
+  private CountersignConfigVO(FlowPerformType performType, int approveCount, BigDecimal votePassRate) {
     this.performType = performType != null ? performType : DEFAULT_PERFORM_TYPE;
     this.approveCount = Math.max(1, approveCount);
     this.votePassRate =
@@ -70,15 +70,15 @@ public class CountersignConfigVO implements Serializable {
    * @param extMap 节点 ext JSON 解析后的 Map，不可为 null
    * @return 会签配置值对象（不可变）
    */
-  public static CountersignConfig fromExt(Map<String, Object> extMap) {
+  public static CountersignConfigVO fromExt(Map<String, Object> extMap) {
     if (extMap == null || extMap.isEmpty()) {
-      return new CountersignConfig(DEFAULT_PERFORM_TYPE, 1, DEFAULT_VOTE_PASS_RATE);
+      return new CountersignConfigVO(DEFAULT_PERFORM_TYPE, 1, DEFAULT_VOTE_PASS_RATE);
     }
     FlowPerformType type = parsePerformType(extMap.get("performType"));
     int approveCount = parseIntSafe(extMap.get("approveCount"), 1);
     BigDecimal voteRate = parseBigDecimalSafe(extMap.get("votePassRate"),
         DEFAULT_VOTE_PASS_RATE);
-    return new CountersignConfig(type, approveCount, voteRate);
+    return new CountersignConfigVO(type, approveCount, voteRate);
   }
 
   /**
@@ -87,15 +87,15 @@ public class CountersignConfigVO implements Serializable {
    * @param extJson ext JSON 字符串，可为 null 或空
    * @return 会签配置值对象（不可变）
    */
-  public static CountersignConfig fromExtJson(String extJson) {
+  public static CountersignConfigVO fromExtJson(String extJson) {
     if (extJson == null || extJson.isBlank()) {
-      return new CountersignConfig(DEFAULT_PERFORM_TYPE, 1, DEFAULT_VOTE_PASS_RATE);
+      return new CountersignConfigVO(DEFAULT_PERFORM_TYPE, 1, DEFAULT_VOTE_PASS_RATE);
     }
     try {
       Map<String, Object> map = YdszJson.parseMap(extJson);
       return fromExt(map);
     } catch (Exception e) {
-      return new CountersignConfig(DEFAULT_PERFORM_TYPE, 1, DEFAULT_VOTE_PASS_RATE);
+      return new CountersignConfigVO(DEFAULT_PERFORM_TYPE, 1, DEFAULT_VOTE_PASS_RATE);
     }
   }
 

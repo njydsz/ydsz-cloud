@@ -68,7 +68,7 @@ public class AiAgentNodeConfigVO implements Serializable {
   /** 单次调用超时毫秒 */
   private final int timeoutMs;
 
-  private AiAgentNodeConfig(
+  private AiAgentNodeConfigVO(
       String agentId,
       String promptTemplate,
       String outputSchema,
@@ -89,9 +89,9 @@ public class AiAgentNodeConfigVO implements Serializable {
    * @param extMap 节点 ext JSON 解析后的 Map，不可为 null
    * @return AI 审批节点配置值对象（不可变）
    */
-  public static AiAgentNodeConfig fromExt(Map<String, Object> extMap) {
+  public static AiAgentNodeConfigVO fromExt(Map<String, Object> extMap) {
     if (extMap == null || extMap.isEmpty()) {
-      return new AiAgentNodeConfig("", "", "", DEFAULT_FALLBACK_STRATEGY, DEFAULT_RETRY_MAX,
+      return new AiAgentNodeConfigVO("", "", "", DEFAULT_FALLBACK_STRATEGY, DEFAULT_RETRY_MAX,
           DEFAULT_TIMEOUT_MS);
     }
     String agentId = parseStringSafe(extMap.get("agentId"));
@@ -100,7 +100,7 @@ public class AiAgentNodeConfigVO implements Serializable {
     FallbackStrategy strategy = parseFallbackStrategy(extMap.get("fallbackStrategy"));
     int retryMax = parsePositiveInt(extMap.get("retryMax"), DEFAULT_RETRY_MAX);
     int timeoutMs = parsePositiveInt(extMap.get("timeoutMs"), DEFAULT_TIMEOUT_MS);
-    return new AiAgentNodeConfig(agentId, promptTemplate, outputSchema, strategy, retryMax,
+    return new AiAgentNodeConfigVO(agentId, promptTemplate, outputSchema, strategy, retryMax,
         timeoutMs);
   }
 
@@ -110,16 +110,16 @@ public class AiAgentNodeConfigVO implements Serializable {
    * @param extJson ext JSON 字符串，可为 null 或空
    * @return AI 审批节点配置值对象（不可变）
    */
-  public static AiAgentNodeConfig fromExtJson(String extJson) {
+  public static AiAgentNodeConfigVO fromExtJson(String extJson) {
     if (extJson == null || extJson.isBlank()) {
-      return new AiAgentNodeConfig("", "", "", DEFAULT_FALLBACK_STRATEGY, DEFAULT_RETRY_MAX,
+      return new AiAgentNodeConfigVO("", "", "", DEFAULT_FALLBACK_STRATEGY, DEFAULT_RETRY_MAX,
           DEFAULT_TIMEOUT_MS);
     }
     try {
       Map<String, Object> map = YdszJson.parseMap(extJson);
       return fromExt(map);
     } catch (Exception e) {
-      return new AiAgentNodeConfig("", "", "", DEFAULT_FALLBACK_STRATEGY, DEFAULT_RETRY_MAX,
+      return new AiAgentNodeConfigVO("", "", "", DEFAULT_FALLBACK_STRATEGY, DEFAULT_RETRY_MAX,
           DEFAULT_TIMEOUT_MS);
     }
   }

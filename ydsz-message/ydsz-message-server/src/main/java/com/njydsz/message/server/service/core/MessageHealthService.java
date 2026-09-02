@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.message.domain.vo.ChannelHealthVO;
 import com.njydsz.message.domain.vo.SystemHealthVO;
 import com.njydsz.message.server.channel.ChannelRouter;
@@ -93,8 +93,8 @@ public class MessageHealthService {
       CircuitBreaker breaker = entry.getValue();
 
       boolean enabled = channelEnabled == null || channelEnabled.getOrDefault(channel, true);
-      int failureCount = breaker.getFailureCount();
-      int totalCount = breaker.getTotalCount();
+      int failureCount = breaker.getMetrics().getNumberOfFailedCalls();
+      int totalCount = breaker.getMetrics().getNumberOfBufferedCalls();
       double failureRate = totalCount > 0
           ? BigDecimal.valueOf((double) failureCount / totalCount)
               .setScale(SCALE, RoundingMode.HALF_UP)

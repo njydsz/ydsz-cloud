@@ -51,7 +51,7 @@ public class AssigneeConfigVO implements Serializable {
   /** 指定用户 ID（ASSIGN_SPECIFIED 策略时使用） */
   private final String specifiedUserId;
 
-  private AssigneeConfig(EmptyStrategy emptyStrategy, String adminUserId,
+  private AssigneeConfigVO(EmptyStrategy emptyStrategy, String adminUserId,
       String specifiedUserId) {
     this.emptyStrategy = emptyStrategy != null ? emptyStrategy : DEFAULT_EMPTY_STRATEGY;
     this.adminUserId = adminUserId != null ? adminUserId : DEFAULT_ADMIN_USER_ID;
@@ -64,16 +64,16 @@ public class AssigneeConfigVO implements Serializable {
    * @param extMap 节点 ext JSON 解析后的 Map，不可为 null
    * @return 办理人配置值对象（不可变）
    */
-  public static AssigneeConfig fromExt(Map<String, Object> extMap) {
+  public static AssigneeConfigVO fromExt(Map<String, Object> extMap) {
     if (extMap == null || extMap.isEmpty()) {
-      return new AssigneeConfig(DEFAULT_EMPTY_STRATEGY, DEFAULT_ADMIN_USER_ID,
+      return new AssigneeConfigVO(DEFAULT_EMPTY_STRATEGY, DEFAULT_ADMIN_USER_ID,
           DEFAULT_ADMIN_USER_ID);
     }
     EmptyStrategy strategy = parseEmptyStrategy(extMap.get("emptyStrategy"));
     String adminUser = parseStringSafe(extMap.get("adminUserId"), DEFAULT_ADMIN_USER_ID);
     String specifiedUser = parseStringSafe(extMap.get("specifiedUserId"),
         DEFAULT_ADMIN_USER_ID);
-    return new AssigneeConfig(strategy, adminUser, specifiedUser);
+    return new AssigneeConfigVO(strategy, adminUser, specifiedUser);
   }
 
   /**
@@ -82,16 +82,16 @@ public class AssigneeConfigVO implements Serializable {
    * @param extJson ext JSON 字符串，可为 null 或空
    * @return 办理人配置值对象（不可变）
    */
-  public static AssigneeConfig fromExtJson(String extJson) {
+  public static AssigneeConfigVO fromExtJson(String extJson) {
     if (extJson == null || extJson.isBlank()) {
-      return new AssigneeConfig(DEFAULT_EMPTY_STRATEGY, DEFAULT_ADMIN_USER_ID,
+      return new AssigneeConfigVO(DEFAULT_EMPTY_STRATEGY, DEFAULT_ADMIN_USER_ID,
           DEFAULT_ADMIN_USER_ID);
     }
     try {
       Map<String, Object> map = YdszJson.parseMap(extJson);
       return fromExt(map);
     } catch (Exception e) {
-      return new AssigneeConfig(DEFAULT_EMPTY_STRATEGY, DEFAULT_ADMIN_USER_ID,
+      return new AssigneeConfigVO(DEFAULT_EMPTY_STRATEGY, DEFAULT_ADMIN_USER_ID,
           DEFAULT_ADMIN_USER_ID);
     }
   }
