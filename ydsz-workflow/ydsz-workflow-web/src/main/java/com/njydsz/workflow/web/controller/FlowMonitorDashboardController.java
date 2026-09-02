@@ -327,14 +327,14 @@ public class FlowMonitorDashboardController {
       dashboard.put("efficiency", efficiencyService.efficiencyStats(tenantId, null, null));
     } catch (Exception e) {
       log.warn("[Dashboard] efficiency 查询失败: {}", e.getMessage());
-      dashboard.put("efficiency", new LinkedHashMap<>());
+      dashboard.put("efficiency", new LinkedHashMap<>(16));
     }
 
     try {
       dashboard.put("healthScore", efficiencyService.healthScore(tenantId, null, null));
     } catch (Exception e) {
       log.warn("[Dashboard] healthScore 查询失败: {}", e.getMessage());
-      dashboard.put("healthScore", new LinkedHashMap<>());
+      dashboard.put("healthScore", new LinkedHashMap<>(16));
     }
 
     return YdszResponse.success(dashboard);
@@ -353,7 +353,7 @@ public class FlowMonitorDashboardController {
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<Map<String, Object>> rows = taskService.selectOverdueTopN(tenantId, limit);
-    return YdszResponse.success(rows != null ? rows : new ArrayList<>());
+    return YdszResponse.success(rows != null ? rows : new ArrayList<>(0));
   }
 
   /**
@@ -369,7 +369,7 @@ public class FlowMonitorDashboardController {
       @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<Map<String, Object>> rows = taskService.selectWorkloadByAssignee(tenantId, limit);
-    return YdszResponse.success(rows != null ? rows : new ArrayList<>());
+    return YdszResponse.success(rows != null ? rows : new ArrayList<>(0));
   }
 
   /**
@@ -390,7 +390,7 @@ public class FlowMonitorDashboardController {
     LocalDateTime endDt = parseDateTime(endTime);
     List<Map<String, Object>> rows =
         efficiencyService.selectFlowEfficiencyComparison(tenantId, startDt, endDt);
-    return YdszResponse.success(rows != null ? rows : new ArrayList<>());
+    return YdszResponse.success(rows != null ? rows : new ArrayList<>(0));
   }
 
   // ============== GAP-P2: 审批效率分析 ==============
@@ -491,7 +491,7 @@ public class FlowMonitorDashboardController {
    */
   private Map<String, Object> mapAnomaly(FlowAnomalyVO a) {
     String type = a.getType() != null ? a.getType() : "UNKNOWN";
-    Map<String, Object> item = new LinkedHashMap<>();
+    Map<String, Object> item = new LinkedHashMap<>(16);
     String anomalyType;
     switch (type) {
       case "STUCK" -> anomalyType = "STUCK";
@@ -558,7 +558,7 @@ public class FlowMonitorDashboardController {
    * @return 概览统计数据 Map
    */
   private Map<String, Object> buildOverview(String tenantId) {
-    Map<String, Object> overview = new LinkedHashMap<>();
+    Map<String, Object> overview = new LinkedHashMap<>(16);
     long running = 0;
     try {
       List<Map<String, Object>> statusCounts = instanceService.selectCountGroupByStatus(tenantId);

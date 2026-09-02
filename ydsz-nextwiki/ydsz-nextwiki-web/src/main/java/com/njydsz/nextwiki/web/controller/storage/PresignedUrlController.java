@@ -1,9 +1,10 @@
 package com.njydsz.nextwiki.web.controller.storage;
 
+import java.time.Duration;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 
 /**
@@ -49,6 +50,9 @@ import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 @Tag(name = "存储直传", description = "Presigned URL 生成、直传凭证")
 public class PresignedUrlController {
 
+  /** 默认预签名 URL 过期时间（秒）。 */
+  private static final int DEFAULT_EXPIRE_SECONDS = 3600;
+
   /** 文件存储实现 */
   private final IFileStorage fileStorage;
 
@@ -73,13 +77,13 @@ public class PresignedUrlController {
             null,
             request.getObjectKey(),
             Duration.ofSeconds(
-                request.getExpireSeconds() != null ? request.getExpireSeconds() : 3600));
+                request.getExpireSeconds() != null ? request.getExpireSeconds() : DEFAULT_EXPIRE_SECONDS));
 
     PresignedUrlResponse response = new PresignedUrlResponse();
     response.setPresignedUrl(url);
     response.setObjectKey(request.getObjectKey());
     response.setExpireSeconds(
-        request.getExpireSeconds() != null ? request.getExpireSeconds() : 3600);
+        request.getExpireSeconds() != null ? request.getExpireSeconds() : DEFAULT_EXPIRE_SECONDS);
     response.setMethod("PUT");
 
     return YdszResponse.success(response);
@@ -104,13 +108,13 @@ public class PresignedUrlController {
     String url =
         fileStorage.generatePresignedUrl(
             request.getObjectKey(),
-            request.getExpireSeconds() != null ? request.getExpireSeconds() : 3600);
+            request.getExpireSeconds() != null ? request.getExpireSeconds() : DEFAULT_EXPIRE_SECONDS);
 
     PresignedUrlResponse response = new PresignedUrlResponse();
     response.setPresignedUrl(url);
     response.setObjectKey(request.getObjectKey());
     response.setExpireSeconds(
-        request.getExpireSeconds() != null ? request.getExpireSeconds() : 3600);
+        request.getExpireSeconds() != null ? request.getExpireSeconds() : DEFAULT_EXPIRE_SECONDS);
     response.setMethod("GET");
 
     return YdszResponse.success(response);

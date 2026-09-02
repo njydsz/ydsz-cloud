@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.system.domain.dto.AppValidateRequest;
 import com.njydsz.system.api.fallback.AppInfoClientFallback;
+import com.njydsz.system.domain.dto.AppValidateRequest;
 
 /**
  * 应用密钥校验 Feign 客户端（供跨服务调用）。

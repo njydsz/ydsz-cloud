@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.system.api.fallback.DictClientFallback;
 import com.njydsz.system.domain.dto.DictItemGetRequest;
 import com.njydsz.system.domain.dto.DictListRequest;
-import com.njydsz.system.api.fallback.DictClientFallback;
 
 /**
  * 字典查询 Feign 客户端（供跨服务调用）。

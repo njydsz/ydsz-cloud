@@ -113,7 +113,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     log.info("[LiteRule] 回滚前快照已保存: ruleCode={}, backupVersion={}", ruleCode, nextVersion);
 
     // 4. 从目标版本反序列化规则定义并恢复到主表
-    com.njydsz.literule.domain.dto.RuleDefinitionDTO targetDefinition;
+    RuleDefinitionDTO targetDefinition;
     try {
       targetDefinition = YdszJson.fromJson(
           targetVersion.getDefinitionJson(), RuleDefinitionDTO.class);
@@ -181,8 +181,8 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @param rule 规则定义
    * @return RuleDefinitionDTO api 定义
    */
-  private com.njydsz.literule.domain.dto.RuleDefinitionDTO apiFromDo(RuleDefinition rule) {
-    com.njydsz.literule.domain.dto.RuleDefinitionDTO def = new com.njydsz.literule.domain.dto.RuleDefinitionDTO();
+  private RuleDefinitionDTO apiFromDo(RuleDefinition rule) {
+    RuleDefinitionDTO def = new RuleDefinitionDTO();
     def.setCode(rule.getRuleCode());
     def.setName(rule.getRuleName());
     def.setCategory(rule.getCategory());
@@ -220,7 +220,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
    * @param def api 规则定义
    * @return RuleDefinition
    */
-  private RuleDefinition doFromApi(com.njydsz.literule.domain.dto.RuleDefinitionDTO def) {
+  private RuleDefinition doFromApi(RuleDefinitionDTO def) {
     RuleDefinition rule = new RuleDefinition();
     rule.setRuleCode(def.getCode());
     rule.setRuleName(def.getName());
