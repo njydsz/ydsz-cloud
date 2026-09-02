@@ -5,7 +5,10 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 规则执行轨迹视图对象（VO）。
@@ -16,6 +19,9 @@ import lombok.Data;
  * @since 26.09.01
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RuleExecutionTraceVO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
@@ -67,4 +73,13 @@ public class RuleExecutionTraceVO implements Serializable {
 
   /** 更新时间 */
   private LocalDateTime updatedAt;
+
+  /**
+   * 检查是否命中触发（兼容方法）
+   *
+   * @return 如果命中触发返回 true，否则返回 false
+   */
+  public boolean isTriggered() {
+    return Boolean.TRUE.equals(triggered);
+  }
 }

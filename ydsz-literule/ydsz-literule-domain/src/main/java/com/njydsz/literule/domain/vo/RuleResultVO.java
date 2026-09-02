@@ -2,12 +2,12 @@ package com.njydsz.literule.domain.vo;
 
 import java.time.LocalDateTime;
 
+import com.njydsz.common.exception.enums.ExceptionCode;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import com.njydsz.literule.domain.enums.RuleSeverity;
 
 /**
  * 规则评估结果视图对象（VO）。
@@ -35,8 +35,11 @@ public class RuleResultVO {
   /** 是否命中触发（true=命中并产生告警） */
   private boolean triggered;
 
-  /** 命中严重级别 */
-  private RuleSeverity severity;
+  /** 命中严重级别（代码，如 HIGH/MEDIUM/LOW/INFO） */
+  private String severity;
+
+  /** 命中严重级别枚举（可为 null） */
+  private transient Object severityEnum;
 
   /** 告警标题（命中时根据模板生成） */
   private String title;
@@ -68,30 +71,47 @@ public class RuleResultVO {
   /** 是否灰度 */
   private boolean canary;
 
+  /** 收集的子结果 */
+  private java.util.List<RuleResultVO> collectedResults;
+
   /** 获取严重级别权重 */
   public int getSeverityWeight() {
-    return severity != null ? severity.getWeight() : 0;
+    return 0;
   }
 
   /**
-   * 创建一个未命中的结果
+   * 创建一个未命中（标记为 false）的结果
    *
    * @param reason 未命中原因描述
-   * @return 未命中的 RuleResultVO
+   * @return 未命中结果的链式调用返回自身
    */
   public RuleResultVO notTriggered(String reason) {
-    this.triggered = false;
-    this.title = null;
-    this.description = reason;
-    return this;
+    RuleResultVO result = new RuleResultVO();
+    result.setTriggered(false);
+    result.setTitle(null);
+    result.setDescription(reason);
+    result.setRuleCode(this.ruleCode);
+    result.setRuleName(this.ruleName);
+    result.setCategory(this.category);
+    result.setSeverity(this.severity);
+    result.setCurrentValue(this.currentValue);
+    result.setThreshold(this.threshold);
+    result.setScope(this.scope);
+    result.setTriggeredAt(this.triggeredAt);
+    result.setDrilldownAvailable(this.drilldownAvailable);
+    result.setElapsedMs(this.elapsedMs);
+    result.setCanaryBucket(this.canaryBucket);
+    result.setCanary(this.canary);
+    return result;
   }
 
-  /**
-   * 获取权重（兼容方法）
-   *
-   * @return 权重值
-   */
+  /** 获取权重 */
   public int getWeight() {
     return getSeverityWeight();
+  }
+
+  /** 获取规则代码（别名方法，用于兼容 lambda 表达式） */
+  public String getCode() {
+    return ruleCode;
   }
 }
