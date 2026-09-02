@@ -12,7 +12,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -245,8 +244,8 @@ public class RuleAdminController {
     }
 
     try {
-      RuleDefinitionDTO oldDef = YdszJson.fromJson(oldV.getDefinitionJson(), RuleDefinition.class);
-      RuleDefinitionDTO newDef = YdszJson.fromJson(newV.getDefinitionJson(), RuleDefinition.class);
+      RuleDefinitionDTO oldDef = YdszJson.fromJson(oldV.getDefinitionJson(), RuleDefinitionDTO.class);
+      RuleDefinitionDTO newDef = YdszJson.fromJson(newV.getDefinitionJson(), RuleDefinitionDTO.class);
       return YdszResponse.success(
           LiteruleWebConverter.INSTANCE.entityToVO(ruleVersionDiffService.diff(oldDef, newDef)));
     } catch (Exception e) {

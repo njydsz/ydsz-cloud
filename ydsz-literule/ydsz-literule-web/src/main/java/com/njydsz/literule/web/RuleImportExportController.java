@@ -197,7 +197,7 @@ public class RuleImportExportController {
           skipped++;
           continue;
         }
-        RuleDefinitionDTO def = YdszJson.convertValue(ruleMap, RuleDefinition.class);
+        RuleDefinitionDTO def = YdszJson.convertValue(ruleMap, RuleDefinitionDTO.class);
         // 导入时重置版本和状态
         def.setVersion(1);
         def.setStatus("DRAFT");

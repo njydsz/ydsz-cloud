@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.client.DictClient;
-import com.njydsz.system.api.dto.DictItemGetRequest;
-import com.njydsz.system.api.dto.DictListRequest;
+import com.njydsz.system.domain.dto.DictItemGetRequest;
+import com.njydsz.system.domain.dto.DictListRequest;
 
 /**
  * {@link DictClient} 的 FallbackFactory。

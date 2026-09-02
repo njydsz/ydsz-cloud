@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.client.AppInfoClient;
-import com.njydsz.system.api.dto.AppValidateRequest;
+import com.njydsz.system.domain.dto.AppValidateRequest;
 
 /**
  * {@link AppInfoClient} 的 FallbackFactory。

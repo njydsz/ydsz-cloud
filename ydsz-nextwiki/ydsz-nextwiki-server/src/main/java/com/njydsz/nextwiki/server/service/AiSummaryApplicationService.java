@@ -57,6 +57,9 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @Service
 public class AiSummaryApplicationService implements AiSummaryService {
 
+  /** 默认哈希表初始容量 */
+  private static final int DEFAULT_MAP_CAPACITY = 128;
+
   /** 摘要最大句子数 */
   private static final int MAX_SENTENCES = 5;
 
@@ -396,7 +399,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
     }
 
     // 统计词频
-    Map<String, Integer> wordFreq = new HashMap<>(128);
+    Map<String, Integer> wordFreq = new HashMap<>(DEFAULT_MAP_CAPACITY);
     for (String word : words) {
       wordFreq.merge(word, 1, Integer::sum);
     }
@@ -428,7 +431,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
   private Set<String> tokenize(String text) {
     // 移除标点和特殊字符，按空格分词
     String cleaned = text.replaceAll("[\\p{Punct}\\p{IsPunctuation}0-9a-zA-Z\\s]+", " ");
-    Set<String> words = new HashSet<>(128);
+    Set<String> words = new HashSet<>(DEFAULT_MAP_CAPACITY);
     // 简单的中文 n-gram 分词（2-4字），过滤停用词
     for (int len = 2; len <= NGRAM_MAX_LENGTH; len++) {
       for (int i = 0; i <= cleaned.length() - len; i++) {

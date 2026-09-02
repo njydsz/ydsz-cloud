@@ -312,12 +312,49 @@ rules:
 
   - id: "YDIZ-DDD-005"
     category: "ddd"
-    severity: "P1"
-    title: "api 模块必须依赖 domain，禁止自建 VO"
-    description: "api 模块必须依赖 domain 模块，通过 domain 层的 VO/枚举/Query 定义 Feign 接口方法签名。禁止在 api 模块内部自建 domain/vo 包。"
-    pattern: "api 模块中存在 vo/dto/entity 自建包"
-    fix: "引用 domain 层的 VO 对象"
-    source: "编码规范 22.1 节"
+    severity: "P0"
+    title: "【强制】api 模块禁止自建 domain/vo/dto/query 子包"
+    description: |
+      api 模块是纯契约层，仅定义 FeignClient 接口签名和 Assembler（VO↔DTO 转换），通过依赖 domain 模块复用 VO/DTO/Query/枚举 作为方法签名类型。
+      **禁止**在 api 模块内部新建 domain/、vo/、dto/、query/ 子包（即 api 模块下不允许出现任何 DTO/Query 类文件）。
+      DTO/Query 应定义在 {module}-domain 模块的 dto/、query/ 包中，api 模块通过 pom 依赖引用。
+      本条为【强制】规则，违反将导致 api 模块职责污染，破坏 DDD 分层架构。
+    pattern: |
+      api 模块下出现以下任一情况：
+      1. 新建 *.java 文件且 package 含 .vo. 或 .dto. 或 .query. 子路径
+      2. api 模块内部定义 @Data / @Builder 注解的 DTO/Query 类
+      3. FeignClient 接口签名中使用 api 模块自身定义的 DTO（应使用 domain 模块的 DTO）
+    fix: |
+      1. 将 DTO/Query 类从 api 模块迁移至 domain 模块（{module}-domain/src/main/java/.../domain/dto/ 或 domain/query/）
+      2. 更新 api 模块所有 import 引用指向 domain 模块
+      3. 确保 api 模块的 pom.xml 已依赖 {module}-domain
+    example_bad: |
+      // ❌ 违规：api 模块自建 dto 包
+      // 文件：ydsz-system-api/src/main/java/com/njydsz/system/api/dto/ConfigQuery.java
+      package com.njydsz.system.api.dto;
+      @Data
+      public class ConfigQuery { private String key; }
+
+      // ❌ 违规：FeignClient 使用 api 模块自建的 DTO
+      @FeignClient(name = "ydsz-system")
+      public interface ConfigClient {
+          @GetMapping("/config")
+          ConfigDTO getConfig(ConfigQuery query); // ConfigQuery 来自 api 自身
+      }
+    example_good: |
+      // ✅ 正确：DTO 定义在 domain 模块
+      // 文件：ydsz-system-domain/src/main/java/com/njydsz/system/domain/dto/ConfigQuery.java
+      package com.njydsz.system.domain.dto;
+      @Data
+      public class ConfigQuery { private String key; }
+
+      // ✅ 正确：FeignClient 引用 domain 模块的 DTO
+      @FeignClient(name = "ydsz-system")
+      public interface ConfigClient {
+          @GetMapping("/config")
+          ConfigDTO getConfig(ConfigQuery query); // 引用自 {module}-domain
+      }
+    source: "编码规范 §34.3.1、§34.3.1.1 — 【强制】"
 
   - id: "YDIZ-DDD-006"
     category: "ddd"

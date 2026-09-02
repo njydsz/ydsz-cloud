@@ -336,7 +336,8 @@ public class SpaceApplicationService {
    * @param spaceId 空间 ID
    * @param targetUserId 目标用户 ID
    * @param operatorId 操作人 ID（需具备 ADMIN 权限）
-   * @throws BusinessException 空间不存在（SPACE_NOT_FOUND）、成员不存在（SPACE_MEMBER_NOT_FOUND）、尝试移除所有者（SPACE_MEMBER_ROLE_INVALID）、权限不足（PERMISSION_DENIED）时抛出
+   * @throws BusinessException 空间不存在（SPACE_NOT_FOUND）、成员不存在（SPACE_MEMBER_NOT_FOUND）、
+   *     尝试移除所有者（SPACE_MEMBER_ROLE_INVALID）、权限不足（PERMISSION_DENIED）时抛出
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    */
   @Transactional(rollbackFor = Exception.class)
