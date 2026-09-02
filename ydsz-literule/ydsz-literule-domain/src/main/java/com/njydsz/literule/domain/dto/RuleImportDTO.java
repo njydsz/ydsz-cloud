@@ -1,4 +1,4 @@
-package com.njydsz.literule.api.dto;
+package com.njydsz.literule.domain.dto;
 
 import java.util.List;
 import java.util.Map;

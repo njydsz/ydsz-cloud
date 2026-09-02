@@ -1,10 +1,12 @@
-package com.njydsz.agent.api.dto;
+package com.njydsz.agent.domain.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
 /**
  * Agent 执行请求 DTO
@@ -14,10 +16,11 @@ import jakarta.validation.constraints.NotBlank;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Data
 @Schema(description = "Agent 执行请求")
 public class AgentExecutionRequestDTO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** Agent 编码（指定使用哪个 Agent 执行） */
   @Schema(description = "Agent 编码（指定使用哪个 Agent）")
@@ -51,68 +54,4 @@ public class AgentExecutionRequestDTO implements Serializable {
   /** 是否流式输出（true 时通过 SSE 逐块返回结果） */
   @Schema(description = "是否流式输出")
   private boolean stream;
-
-  public String getAgentCode() {
-    return agentCode;
-  }
-
-  public void setAgentCode(String agentCode) {
-    this.agentCode = agentCode;
-  }
-
-  public String getConversationId() {
-    return conversationId;
-  }
-
-  public void setConversationId(String conversationId) {
-    this.conversationId = conversationId;
-  }
-
-  public String getRequestId() {
-    return requestId;
-  }
-
-  public void setRequestId(String requestId) {
-    this.requestId = requestId;
-  }
-
-  public String getUserInput() {
-    return userInput;
-  }
-
-  public void setUserInput(String userInput) {
-    this.userInput = userInput;
-  }
-
-  public String getSystemPrompt() {
-    return systemPrompt;
-  }
-
-  public void setSystemPrompt(String systemPrompt) {
-    this.systemPrompt = systemPrompt;
-  }
-
-  public Integer getMaxIterations() {
-    return maxIterations;
-  }
-
-  public void setMaxIterations(Integer maxIterations) {
-    this.maxIterations = maxIterations;
-  }
-
-  public List<String> getEnabledTools() {
-    return enabledTools;
-  }
-
-  public void setEnabledTools(List<String> enabledTools) {
-    this.enabledTools = enabledTools;
-  }
-
-  public boolean isStream() {
-    return stream;
-  }
-
-  public void setStream(boolean stream) {
-    this.stream = stream;
-  }
 }

@@ -1,4 +1,4 @@
-package com.njydsz.literule.api.dto;
+package com.njydsz.literule.domain.dto;
 
 import java.util.Map;
 
@@ -6,8 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * A/B 测试请求体 DTO

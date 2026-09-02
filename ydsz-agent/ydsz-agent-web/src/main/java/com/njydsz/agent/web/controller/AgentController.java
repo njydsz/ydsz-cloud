@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.njydsz.agent.api.dto.AgentExecutionRequestDTO;
-import com.njydsz.agent.api.dto.BatchChatRequestDTO;
-import com.njydsz.agent.api.dto.BatchChatResponseDTO;
-import com.njydsz.agent.api.dto.ChatRequestDTO;
-import com.njydsz.agent.api.dto.ChatResponseDTO;
+import com.njydsz.agent.domain.dto.AgentExecutionRequestDTO;
+import com.njydsz.agent.domain.dto.BatchChatRequestDTO;
+import com.njydsz.agent.domain.dto.BatchChatResponseDTO;
+import com.njydsz.agent.domain.dto.ChatRequestDTO;
+import com.njydsz.agent.domain.dto.ChatResponseDTO;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatMessage;

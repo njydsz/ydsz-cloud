@@ -59,6 +59,7 @@ import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
@@ -1006,13 +1007,13 @@ public class FileApplicationService {
    * @note 前端应传完整排序列表（含所有子节点），服务端按新值全量覆盖
    */
   @Transactional(rollbackFor = Exception.class)
-  public int batchSort(String parentId, List<com.njydsz.nextwiki.api.dto.NextwikiDto.SortItem> items, String userId) {
+  public int batchSort(String parentId, List<NextwikiDto.SortItem> items, String userId) {
     if (items == null || items.isEmpty()) {
       return 0;
     }
 
     List<String> nodeIds = items.stream()
-        .map(com.njydsz.nextwiki.api.dto.NextwikiDto.SortItem::getNodeId)
+        .map(NextwikiDto.SortItem::getNodeId)
         .collect(Collectors.toList());
 
     // 批量查询节点详情
@@ -1031,7 +1032,7 @@ public class FileApplicationService {
     // 组装更新 DTO 列表
     List<FileNodeDTO> updateDTOs = new ArrayList<>(items.size());
     LocalDateTime now = LocalDateTime.now();
-    for (com.njydsz.nextwiki.api.dto.NextwikiDto.SortItem item : items) {
+    for (NextwikiDto.SortItem item : items) {
       FileNodeDTO dto = new FileNodeDTO();
       dto.setId(item.getNodeId());
       dto.setSort(item.getSort());

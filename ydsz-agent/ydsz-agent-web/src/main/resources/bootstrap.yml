@@ -63,11 +63,11 @@ ydsz:
     write-nulls: false
     monitoring-enabled: true
     warmup-classes:
-      - com.njydsz.agent.api.dto.ChatMessage
-      - com.njydsz.agent.api.dto.ChatRequest
-      - com.njydsz.agent.api.dto.ToolCall
-      - com.njydsz.agent.api.dto.ToolDefinition
-      - com.njydsz.agent.api.dto.TokenUsage
+      - com.njydsz.agent.domain.model.ChatMessage
+      - com.njydsz.agent.domain.model.ChatRequest
+      - com.njydsz.agent.domain.model.ToolCall
+      - com.njydsz.agent.domain.model.ToolDefinition
+      - com.njydsz.agent.domain.model.TokenUsage
   agent:
     enabled: true
     llm:

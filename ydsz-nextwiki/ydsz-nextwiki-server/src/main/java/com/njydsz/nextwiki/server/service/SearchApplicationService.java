@@ -19,7 +19,7 @@ import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
-import com.njydsz.nextwiki.api.dto.NextwikiDto;
+import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
 import com.njydsz.nextwiki.domain.query.SearchQuery;

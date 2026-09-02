@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.agent.api.dto.AgentTraceDetailDTO;
-import com.njydsz.agent.api.dto.AgentTraceListDTO;
+import com.njydsz.agent.domain.dto.AgentTraceDetailDTO;
+import com.njydsz.agent.domain.dto.AgentTraceListDTO;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.trace.TraceMeta;

@@ -1,10 +1,12 @@
-package com.njydsz.agent.api.dto;
+package com.njydsz.agent.domain.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
 /**
  * 对话请求 DTO
@@ -23,10 +25,11 @@ import jakarta.validation.constraints.NotBlank;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Data
 @Schema(description = "对话请求")
 public class ChatRequestDTO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 对话 ID（null 表示新建对话，非 null 表示续接已有对话） */
   @Schema(description = "对话 ID（null 表示新建对话）")
@@ -65,70 +68,6 @@ public class ChatRequestDTO implements Serializable {
   @Schema(description = "最大 Token（可选）")
   private Integer maxTokens;
 
-  public String getConversationId() {
-    return conversationId;
-  }
-
-  public void setConversationId(String conversationId) {
-    this.conversationId = conversationId;
-  }
-
-  public String getRequestId() {
-    return requestId;
-  }
-
-  public void setRequestId(String requestId) {
-    this.requestId = requestId;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  public List<ContentPartDTO> getMultimodalContent() {
-    return multimodalContent;
-  }
-
-  public void setMultimodalContent(List<ContentPartDTO> multimodalContent) {
-    this.multimodalContent = multimodalContent;
-  }
-
-  public String getSystemPrompt() {
-    return systemPrompt;
-  }
-
-  public void setSystemPrompt(String systemPrompt) {
-    this.systemPrompt = systemPrompt;
-  }
-
-  public String getModel() {
-    return model;
-  }
-
-  public void setModel(String model) {
-    this.model = model;
-  }
-
-  public Double getTemperature() {
-    return temperature;
-  }
-
-  public void setTemperature(Double temperature) {
-    this.temperature = temperature;
-  }
-
-  public Integer getMaxTokens() {
-    return maxTokens;
-  }
-
-  public void setMaxTokens(Integer maxTokens) {
-    this.maxTokens = maxTokens;
-  }
-
   /**
    * 多模态内容段落 DTO
    *
@@ -137,7 +76,7 @@ public class ChatRequestDTO implements Serializable {
   @Schema(description = "多模态内容段落")
   public static class ContentPartDTO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     /** 内容类型（text / image_url） */
     @Schema(description = "内容类型（text / image_url）")

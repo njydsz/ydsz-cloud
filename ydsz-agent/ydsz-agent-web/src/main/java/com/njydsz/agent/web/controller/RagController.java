@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.agent.api.dto.DocumentIngestDTO;
-import com.njydsz.agent.api.dto.RagQueryDTO;
+import com.njydsz.agent.domain.dto.DocumentIngestDTO;
+import com.njydsz.agent.domain.dto.RagQueryDTO;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.server.rag.DocumentIngestionService;
 import com.njydsz.agent.server.rag.RagService;

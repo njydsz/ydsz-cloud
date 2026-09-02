@@ -1,4 +1,4 @@
-package com.njydsz.agent.api.dto;
+package com.njydsz.agent.domain.dto;
 
 /**
  * Agent 执行轨迹详情 DTO

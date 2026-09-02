@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.api.dto;
+package com.njydsz.nextwiki.domain.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

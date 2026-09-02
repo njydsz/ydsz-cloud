@@ -1,11 +1,13 @@
-package com.njydsz.agent.api.dto;
+package com.njydsz.agent.domain.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 /**
  * 批量对话请求 DTO
@@ -31,10 +33,11 @@ import jakarta.validation.constraints.Size;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Data
 @Schema(description = "批量对话请求")
 public class BatchChatRequestDTO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 请求幂等键（防重，建议每条请求唯一） */
   @Schema(description = "请求幂等键（防重，建议每条请求唯一）")
@@ -62,63 +65,14 @@ public class BatchChatRequestDTO implements Serializable {
   @Schema(description = "系统提示词（可选，所有条目共享）")
   private String systemPrompt;
 
-  public String getRequestId() {
-    return requestId;
-  }
-
-  public void setRequestId(String requestId) {
-    this.requestId = requestId;
-  }
-
-  public List<BatchChatItem> getItems() {
-    return items;
-  }
-
-  public void setItems(List<BatchChatItem> items) {
-    this.items = items;
-  }
-
-  public String getModel() {
-    return model;
-  }
-
-  public void setModel(String model) {
-    this.model = model;
-  }
-
-  public Double getTemperature() {
-    return temperature;
-  }
-
-  public void setTemperature(Double temperature) {
-    this.temperature = temperature;
-  }
-
-  public Integer getMaxTokens() {
-    return maxTokens;
-  }
-
-  public void setMaxTokens(Integer maxTokens) {
-    this.maxTokens = maxTokens;
-  }
-
-  public String getSystemPrompt() {
-    return systemPrompt;
-  }
-
-  public void setSystemPrompt(String systemPrompt) {
-    this.systemPrompt = systemPrompt;
-  }
-
   /**
    * 批量对话单条条目
    *
    * <p>每条包含独立的用户消息和对话 ID，共享外层模型配置。
    */
-  @Schema(description = "批量对话单条条目")
   public static class BatchChatItem implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     /** 条目唯一标识（用于响应中对应结果，由调用方保证唯一） */
     @Schema(description = "条目唯一标识（用于响应匹配）")

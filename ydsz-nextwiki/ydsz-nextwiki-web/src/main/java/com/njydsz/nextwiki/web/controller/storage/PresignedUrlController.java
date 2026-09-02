@@ -18,7 +18,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.nextwiki.api.dto.NextwikiDto;
+import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 
 /**
  * 存储直传（Presigned URL）REST API Controller。

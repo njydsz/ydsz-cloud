@@ -1,9 +1,11 @@
-package com.njydsz.agent.api.dto;
+package com.njydsz.agent.domain.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
 /**
  * 文档摄入请求 DTO
@@ -13,10 +15,11 @@ import jakarta.validation.constraints.NotBlank;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Data
 @Schema(description = "文档摄入请求")
 public class DocumentIngestDTO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 文档 ID（必填，唯一标识待摄入的文档） */
   @NotBlank(message = "文档 ID 不能为空")
@@ -35,36 +38,4 @@ public class DocumentIngestDTO implements Serializable {
   /** 文档来源（nextwiki/project/contract，用于来源过滤） */
   @Schema(description = "来源（nextwiki/project/contract）")
   private String source;
-
-  public String getDocumentId() {
-    return documentId;
-  }
-
-  public void setDocumentId(String documentId) {
-    this.documentId = documentId;
-  }
-
-  public String getContent() {
-    return content;
-  }
-
-  public void setContent(String content) {
-    this.content = content;
-  }
-
-  public String getDocumentTitle() {
-    return documentTitle;
-  }
-
-  public void setDocumentTitle(String documentTitle) {
-    this.documentTitle = documentTitle;
-  }
-
-  public String getSource() {
-    return source;
-  }
-
-  public void setSource(String source) {
-    this.source = source;
-  }
 }

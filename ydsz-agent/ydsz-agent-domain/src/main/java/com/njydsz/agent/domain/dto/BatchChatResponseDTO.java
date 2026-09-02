@@ -1,9 +1,11 @@
-package com.njydsz.agent.api.dto;
+package com.njydsz.agent.domain.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 批量对话响应 DTO
@@ -16,10 +18,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Data
 @Schema(description = "批量对话响应")
 public class BatchChatResponseDTO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 批量结果列表（与请求 items 顺序一致） */
   @Schema(description = "批量结果列表（与请求 items 顺序一致）")
@@ -37,47 +40,14 @@ public class BatchChatResponseDTO implements Serializable {
   @Schema(description = "失败条目数")
   private int failedCount;
 
-  public List<BatchResultItem> getResults() {
-    return results;
-  }
-
-  public void setResults(List<BatchResultItem> results) {
-    this.results = results;
-  }
-
-  public long getTotalDurationMs() {
-    return totalDurationMs;
-  }
-
-  public void setTotalDurationMs(long totalDurationMs) {
-    this.totalDurationMs = totalDurationMs;
-  }
-
-  public int getSuccessCount() {
-    return successCount;
-  }
-
-  public void setSuccessCount(int successCount) {
-    this.successCount = successCount;
-  }
-
-  public int getFailedCount() {
-    return failedCount;
-  }
-
-  public void setFailedCount(int failedCount) {
-    this.failedCount = failedCount;
-  }
-
   /**
    * 批量对话单条结果
    *
    * <p>每条结果与请求中的 {@link BatchChatRequestDTO.BatchChatItem} 通过 {@link #itemId} 对应。
    */
-  @Schema(description = "批量对话单条结果")
   public static class BatchResultItem implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     /** 条目标识（与请求中 itemId 对应） */
     @Schema(description = "条目标识（与请求中 itemId 对应）")

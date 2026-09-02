@@ -71,7 +71,7 @@ public interface AgentFacade {
   /**
    * 批量对话条目（应用层）
    *
-   * <p>封装单条对话请求的参数，与 {@link com.njydsz.agent.api.dto.BatchChatRequestDTO.BatchChatItem} 结构对应。
+   * <p>封装单条对话请求的参数，与 {@link com.njydsz.agent.domain.dto.BatchChatRequestDTO.BatchChatItem} 结构对应。
    */
   class BatchChatItem {
     private final String itemId;

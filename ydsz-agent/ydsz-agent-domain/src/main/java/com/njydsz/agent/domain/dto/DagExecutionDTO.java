@@ -1,9 +1,11 @@
-package com.njydsz.agent.api.dto;
+package com.njydsz.agent.domain.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
 /**
  * DAG 编排请求 DTO
@@ -13,10 +15,11 @@ import jakarta.validation.constraints.NotBlank;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Data
 @Schema(description = "DAG 编排请求")
 public class DagExecutionDTO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** YAML DSL 内容，定义 DAG 节点和边（必填） */
   @NotBlank(message = "DSL 内容不能为空")
@@ -52,28 +55,4 @@ public class DagExecutionDTO implements Serializable {
    */
   @Schema(description = "续跑的执行 ID（空则全新执行）", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   private String resumeExecutionId;
-
-  public String getDsl() {
-    return dsl;
-  }
-
-  public void setDsl(String dsl) {
-    this.dsl = dsl;
-  }
-
-  public String getUserInput() {
-    return userInput;
-  }
-
-  public void setUserInput(String userInput) {
-    this.userInput = userInput;
-  }
-
-  public String getResumeExecutionId() {
-    return resumeExecutionId;
-  }
-
-  public void setResumeExecutionId(String resumeExecutionId) {
-    this.resumeExecutionId = resumeExecutionId;
-  }
 }

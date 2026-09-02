@@ -1,9 +1,11 @@
-package com.njydsz.agent.api.dto;
+package com.njydsz.agent.domain.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
 /**
  * RAG 查询请求 DTO
@@ -13,10 +15,11 @@ import jakarta.validation.constraints.NotBlank;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Data
 @Schema(description = "RAG 查询请求")
 public class RagQueryDTO implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 查询文本（必填，将向量化后进行相似度检索） */
   @NotBlank(message = "查询内容不能为空")
@@ -34,36 +37,4 @@ public class RagQueryDTO implements Serializable {
   /** 是否包含上下文文本（默认 true，false 时仅返回元数据） */
   @Schema(description = "是否包含上下文文本（默认 true）")
   private Boolean includeContext;
-
-  public String getQuery() {
-    return query;
-  }
-
-  public void setQuery(String query) {
-    this.query = query;
-  }
-
-  public Integer getTopK() {
-    return topK;
-  }
-
-  public void setTopK(Integer topK) {
-    this.topK = topK;
-  }
-
-  public Double getMinScore() {
-    return minScore;
-  }
-
-  public void setMinScore(Double minScore) {
-    this.minScore = minScore;
-  }
-
-  public Boolean getIncludeContext() {
-    return includeContext;
-  }
-
-  public void setIncludeContext(Boolean includeContext) {
-    this.includeContext = includeContext;
-  }
 }
