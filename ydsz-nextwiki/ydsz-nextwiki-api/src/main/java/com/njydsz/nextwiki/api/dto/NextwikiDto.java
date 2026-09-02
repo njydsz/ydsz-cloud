@@ -312,28 +312,7 @@ public final class NextwikiDto {
     private String parentId;
   }
 
-  /** AI 摘要结果 DTO */
-  @Data
-  @NoArgsConstructor
-  @Schema(description = "AI 摘要结果")
-  public static class SummaryResult implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    @Schema(description = "文件节点ID")
-    private String fileNodeId;
-
-    @Schema(description = "摘要内容")
-    private String summary;
-
-    @Schema(description = "摘要类型")
-    private String summaryType;
-
-    @Schema(description = "内容字数")
-    private Integer wordCount;
-
-    @Schema(description = "生成时间")
-    private LocalDateTime generatedAt;
-  }
+  // SummaryResult 已移至 domain.vo.SummaryResult
 
   /** 预签名 URL 请求 */
   @Data
