@@ -15,8 +15,8 @@
         <module>ydsz-system-domain</module>
         <module>ydsz-system-infra</module>
         <module>ydsz-system-server</module>
-        <module>ydsz-system-api</module>
         <module>ydsz-system-app</module>
         <module>ydsz-system-web</module>
+        <module>ydsz-system-api</module>
     </modules>
 </project>

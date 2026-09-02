@@ -15,8 +15,8 @@
         <module>ydsz-userinfo-domain</module>
         <module>ydsz-userinfo-infra</module>
         <module>ydsz-userinfo-server</module>
-        <module>ydsz-userinfo-api</module>
         <module>ydsz-userinfo-app</module>
         <module>ydsz-userinfo-web</module>
+        <module>ydsz-userinfo-api</module>
     </modules>
 </project>

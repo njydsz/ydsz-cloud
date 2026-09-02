@@ -15,8 +15,8 @@
         <module>ydsz-message-domain</module>
         <module>ydsz-message-infra</module>
         <module>ydsz-message-server</module>
-        <module>ydsz-message-api</module>
         <module>ydsz-message-app</module>
         <module>ydsz-message-web</module>
+        <module>ydsz-message-api</module>
     </modules>
 </project>
