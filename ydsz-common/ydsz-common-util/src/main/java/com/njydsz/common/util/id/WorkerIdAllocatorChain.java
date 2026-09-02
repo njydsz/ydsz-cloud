@@ -51,7 +51,7 @@ public final class WorkerIdAllocatorChain implements WorkerIdAllocator {
    * @return 新的策略链实例
    */
   public WorkerIdAllocatorChain prepend(WorkerIdAllocator allocator) {
-    List<WorkerIdAllocator> newChain = new ArrayList<>();
+    List<WorkerIdAllocator> newChain = new ArrayList<>(16);
     newChain.add(allocator);
     newChain.addAll(chain);
     return new WorkerIdAllocatorChain(newChain);

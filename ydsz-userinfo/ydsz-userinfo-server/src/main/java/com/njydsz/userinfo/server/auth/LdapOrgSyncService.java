@@ -224,7 +224,7 @@ public class LdapOrgSyncService {
       return new SyncResult(0, 0, 0, 0, 0, List.of());
     }
 
-    List<String> errors = new ArrayList<>();
+    List<String> errors = new ArrayList<>(16);
     int created = 0;
     int updated = 0;
     int failed = 0;
@@ -234,7 +234,7 @@ public class LdapOrgSyncService {
     sorted.sort((a, b) -> countDnComponents(a.dn()) - countDnComponents(b.dn()));
 
     // DN → ydsz 部门 ID 映射（用于层级关联）
-    Map<String, String> dnToDeptId = new LinkedHashMap<>();
+    Map<String, String> dnToDeptId = new LinkedHashMap<>(16);
 
     for (LdapDepartment ldapDept : sorted) {
       try {
@@ -301,14 +301,14 @@ public class LdapOrgSyncService {
    * @return 调和结果
    */
   public SyncResult reconcileUsers(List<LdapUser> ldapUsers) {
-    List<String> errors = new ArrayList<>();
+    List<String> errors = new ArrayList<>(16);
     int created = 0;
     int updated = 0;
     int deactivated = 0;
     int failed = 0;
 
     // 构建 LDAP 用户名集合（用于判断孤儿用户）
-    Set<String> ldapUsernames = new HashSet<>();
+    Set<String> ldapUsernames = new HashSet<>(16);
 
     for (LdapUser user : ldapUsers) {
       try {

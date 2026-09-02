@@ -49,7 +49,7 @@ public class IpAddressDetector implements PiiDetector {
     }
 
     String text = content.getText();
-    List<PiiFinding> findings = new ArrayList<>();
+    List<PiiFinding> findings = new ArrayList<>(16);
     Matcher matcher = IPV4_PATTERN.matcher(text);
 
     while (matcher.find()) {

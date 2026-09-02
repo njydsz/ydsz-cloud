@@ -219,7 +219,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
    * @since 26.09.01
    */
   public static Set<String> loadWeakPasswordsFromClasspath(String classpathResource) {
-    Set<String> result = new HashSet<>();
+    Set<String> result = new HashSet<>(16);
     try (InputStream is =
         DefaultPasswordStrengthChecker.class.getResourceAsStream(classpathResource)) {
       if (is == null) {

@@ -76,7 +76,7 @@ public class DagDefinitionCodec {
     }
 
     // 解析 nodes
-    List<DagNode> nodes = new ArrayList<>();
+    List<DagNode> nodes = new ArrayList<>(16);
     ArrayNode nodesArr = root.getArrayNode("nodes");
     if (nodesArr == null || nodesArr.isEmpty()) {
       throw SysException.builder()
@@ -123,7 +123,7 @@ public class DagDefinitionCodec {
     }
 
     // 解析 edges（可为空）
-    List<DagEdge> edges = new ArrayList<>();
+    List<DagEdge> edges = new ArrayList<>(16);
     ArrayNode edgesArr = root.getArrayNode("edges");
     if (edgesArr != null) {
       for (int i = 0; i < edgesArr.size(); i++) {
@@ -141,7 +141,7 @@ public class DagDefinitionCodec {
     }
 
     // 校验边的 from/to 必须存在于节点列表
-    Set<String> nodeKeys = new HashSet<>();
+    Set<String> nodeKeys = new HashSet<>(16);
     for (DagNode node : nodes) {
       nodeKeys.add(node.jobKey());
     }

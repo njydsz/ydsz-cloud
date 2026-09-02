@@ -16,7 +16,7 @@ import com.njydsz.common.json.deserializer.JsonDeserializer;
  */
 public final class ModuleDeserializerRegistry {
 
-  private final Map<Class<?>, JsonDeserializer<?>> deserializers = new LinkedHashMap<>();
+  private final Map<Class<?>, JsonDeserializer<?>> deserializers = new LinkedHashMap<>(16);
 
   ModuleDeserializerRegistry() {}
 

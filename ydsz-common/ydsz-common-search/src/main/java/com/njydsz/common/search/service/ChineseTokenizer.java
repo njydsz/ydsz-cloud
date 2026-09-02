@@ -103,7 +103,7 @@ public interface ChineseTokenizer {
         // boundary.next()
         Method next = breakIteratorClass.getMethod("next");
 
-        List<String> tokens = new ArrayList<>();
+        List<String> tokens = new ArrayList<>(16);
         int end;
         while ((end = (int) next.invoke(boundary)) != DONE) {
           String word = text.substring(start, end).trim().toLowerCase();
@@ -144,7 +144,7 @@ public interface ChineseTokenizer {
       if (text == null || text.isBlank()) {
         return Collections.emptyList();
       }
-      List<String> tokens = new ArrayList<>();
+      List<String> tokens = new ArrayList<>(16);
       for (String token : text.toLowerCase().split("\\s+")) {
         if (!token.isBlank() && !stopWords.contains(token)) {
           tokens.add(token);
@@ -223,7 +223,7 @@ public interface ChineseTokenizer {
         Class<?> segTokenClass = Class.forName(SEG_TOKEN_CLASS);
         Method getWordMethod = segTokenClass.getMethod("getWord");
 
-        List<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>(16);
         for (Object token : segTokens) {
           String word = ((String) getWordMethod.invoke(token)).trim().toLowerCase();
           if (!word.isBlank() && !stopWords.contains(word) && word.length() > 1) {

@@ -54,10 +54,10 @@ public class DashboardController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/overview")
   public YdszResponse<Map<String, Object>> getOverview() {
-    Map<String, Object> data = new LinkedHashMap<>();
+    Map<String, Object> data = new LinkedHashMap<>(16);
 
     // 1. 任务状态分布
-    Map<String, Long> statusDistribution = new LinkedHashMap<>();
+    Map<String, Long> statusDistribution = new LinkedHashMap<>(16);
     statusDistribution.put("NORMAL", jobRepository.countByStatus("NORMAL"));
     statusDistribution.put("PAUSED", jobRepository.countByStatus("PAUSED"));
     statusDistribution.put("AUTO_PAUSED", jobRepository.countByStatus("AUTO_PAUSED"));
@@ -66,14 +66,14 @@ public class DashboardController {
 
     // 2. 分组任务数量统计
     List<String> groups = jobRepository.listDistinctGroups();
-    Map<String, Long> groupStats = new LinkedHashMap<>();
+    Map<String, Long> groupStats = new LinkedHashMap<>(16);
     for (String group : groups) {
       groupStats.put(group, jobRepository.countByGroup(group));
     }
     data.put("groupStats", groupStats);
 
     // 3. 汇总指标
-    Map<String, Object> summary = new LinkedHashMap<>();
+    Map<String, Object> summary = new LinkedHashMap<>(16);
     summary.put("total", jobRepository.countAll());
     summary.put("normalCount", jobRepository.countByStatus("NORMAL"));
     summary.put("pausedCount", jobRepository.countByStatus("PAUSED"));

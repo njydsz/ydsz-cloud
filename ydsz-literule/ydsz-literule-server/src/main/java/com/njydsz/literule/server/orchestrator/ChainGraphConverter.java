@@ -55,8 +55,8 @@ public final class ChainGraphConverter {
    */
   public static RuleChainGraph toGraph(RuleChain chain, String graphId, String graphName) {
     Objects.requireNonNull(chain, "chain 不能为 null");
-    List<ChainNodeDTO> nodes = new ArrayList<>();
-    List<ChainEdgeDTO> edges = new ArrayList<>();
+    List<ChainNodeDTO> nodes = new ArrayList<>(16);
+    List<ChainEdgeDTO> edges = new ArrayList<>(16);
     AtomicInteger nodeSeq = new AtomicInteger(0);
 
     String rootId = "node-" + nodeSeq.incrementAndGet();
@@ -157,7 +157,7 @@ public final class ChainGraphConverter {
       Map<String, Object> meta =
           rootNode.getMetadata() != null
               ? new LinkedHashMap<>(rootNode.getMetadata())
-              : new LinkedHashMap<>();
+              : new LinkedHashMap<>(16);
       meta.put("condition", condition);
       rootNode.setMetadata(meta);
     }
@@ -246,7 +246,7 @@ public final class ChainGraphConverter {
       Map<String, Object> meta =
           rootNode.getMetadata() != null
               ? new LinkedHashMap<>(rootNode.getMetadata())
-              : new LinkedHashMap<>();
+              : new LinkedHashMap<>(16);
       meta.put("branchKey", branchKey);
       rootNode.setMetadata(meta);
     }
@@ -359,7 +359,7 @@ public final class ChainGraphConverter {
     // 则把所有 SINGLE 节点按 nodes 列表顺序组成 THEN 链，
     // 对应 toGraph("扁平化 THEN 链") 的反向还原。
     if ("SINGLE".equals(root.getNodeType())) {
-      List<ChainNodeDTO> allSingles = new ArrayList<>();
+      List<ChainNodeDTO> allSingles = new ArrayList<>(16);
       for (ChainNodeDTO n : graph.getNodes()) {
         if ("SINGLE".equals(n.getNodeType())) {
           allSingles.add(n);
@@ -392,7 +392,7 @@ public final class ChainGraphConverter {
         }
       case "ELIF":
         {
-          Map<String, Rule> branchMap = new LinkedHashMap<>();
+          Map<String, Rule> branchMap = new LinkedHashMap<>(16);
           Rule elseRule = null;
           for (ChainEdgeDTO edge : graph.getEdges()) {
             if (!root.getNodeId().equals(edge.getSourceNodeId())) {
@@ -423,7 +423,7 @@ public final class ChainGraphConverter {
           } else if (root.getLabel() != null && root.getLabel().contains("=")) {
             branchKey = root.getLabel().split("=")[0].trim();
           }
-          Map<String, Rule> branchMap = new LinkedHashMap<>();
+          Map<String, Rule> branchMap = new LinkedHashMap<>(16);
           Rule defaultRule = null;
           for (ChainEdgeDTO edge : graph.getEdges()) {
             if (!root.getNodeId().equals(edge.getSourceNodeId())) {
@@ -453,7 +453,7 @@ public final class ChainGraphConverter {
   /** 构建顺序链（THEN / WHEN） */
   private static RuleChain buildSequenceChain(
       List<ChainNodeDTO> children, RuleChainGraph graph, RuleResolver resolver, boolean parallel) {
-    List<Rule> rules = new ArrayList<>();
+    List<Rule> rules = new ArrayList<>(16);
     for (ChainNodeDTO c : children) {
       Rule r = resolveNode(c, resolver);
       if (r != null) {
@@ -525,7 +525,7 @@ public final class ChainGraphConverter {
       if (children == null || children.isEmpty()) {
         return null;
       }
-      List<Rule> rules = new ArrayList<>();
+      List<Rule> rules = new ArrayList<>(16);
       for (ChainNodeDTO child : children) {
         Rule r = resolveNodeWithContext(child, graph, resolver);
         if (r != null) {
@@ -558,7 +558,7 @@ public final class ChainGraphConverter {
       case "THEN":
       case "WHEN":
         {
-          List<Rule> rules = new ArrayList<>();
+          List<Rule> rules = new ArrayList<>(16);
           for (ChainNodeDTO child : children) {
             Rule r = resolveNodeWithContext(child, graph, resolver);
             if (r != null) {
@@ -588,7 +588,7 @@ public final class ChainGraphConverter {
         }
       default:
         // 其他类型降级为 THEN
-        List<Rule> rules = new ArrayList<>();
+        List<Rule> rules = new ArrayList<>(16);
         for (ChainNodeDTO child : children) {
           Rule r = resolveNodeWithContext(child, graph, resolver);
           if (r != null) {
@@ -601,7 +601,7 @@ public final class ChainGraphConverter {
 
   /** 查找节点的所有直接子节点 */
   private static List<ChainNodeDTO> findChildren(RuleChainGraph graph, String parentId) {
-    List<ChainNodeDTO> result = new ArrayList<>();
+    List<ChainNodeDTO> result = new ArrayList<>(16);
     if (graph.getNodes() == null) {
       return result;
     }

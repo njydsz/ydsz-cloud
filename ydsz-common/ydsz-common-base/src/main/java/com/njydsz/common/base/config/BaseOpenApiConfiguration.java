@@ -123,7 +123,7 @@ public abstract class BaseOpenApiConfiguration {
 
   /** 构建请求头参数映射（用于文档展示） */
   private Map<String, Header> createHeaderParams() {
-    Map<String, Header> headers = new LinkedHashMap<>();
+    Map<String, Header> headers = new LinkedHashMap<>(16);
 
     headers.put(HttpHeaderConstants.X_SERVICE_TYPE, createHeader("服务类型", false));
     headers.put(HttpHeaderConstants.X_USER_LANGUAGE, createHeader("用户系统语言", false));
@@ -146,7 +146,7 @@ public abstract class BaseOpenApiConfiguration {
 
   /** 构建安全方案映射 */
   private Map<String, SecurityScheme> createSecuritySchemes() {
-    Map<String, SecurityScheme> schemes = new LinkedHashMap<>();
+    Map<String, SecurityScheme> schemes = new LinkedHashMap<>(16);
     schemes.put(
         "Bearer",
         new SecurityScheme()

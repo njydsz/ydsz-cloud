@@ -53,7 +53,7 @@ public class LogEvent {
   private String username;
 
   /** 附加字段 */
-  @Builder.Default private Map<String, Object> extra = new LinkedHashMap<>();
+  @Builder.Default private Map<String, Object> extra = new LinkedHashMap<>(16);
 
   /** 异常堆栈 */
   private String stackTrace;
@@ -67,7 +67,7 @@ public class LogEvent {
    */
   public LogEvent addExtra(String key, Object value) {
     if (extra == null) {
-      extra = new LinkedHashMap<>();
+      extra = new LinkedHashMap<>(16);
     }
     extra.put(key, value);
     return this;

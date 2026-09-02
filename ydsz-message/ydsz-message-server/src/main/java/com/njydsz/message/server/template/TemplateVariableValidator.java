@@ -69,7 +69,7 @@ public class TemplateVariableValidator {
     if (varDefs == null || varDefs.isEmpty()) {
       return;
     }
-    List<String> errors = new ArrayList<>();
+    List<String> errors = new ArrayList<>(16);
 
     for (TemplateVariableDef def : varDefs) {
       String name = def.getName();

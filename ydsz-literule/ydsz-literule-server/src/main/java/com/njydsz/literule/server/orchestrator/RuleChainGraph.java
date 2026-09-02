@@ -86,10 +86,10 @@ public class RuleChainGraph implements Serializable {
   @Builder.Default private String status = "DRAFT";
 
   /** 节点列表 */
-  @Builder.Default private List<ChainNodeDTO> nodes = new ArrayList<>();
+  @Builder.Default private List<ChainNodeDTO> nodes = new ArrayList<>(16);
 
   /** 连线列表 */
-  @Builder.Default private List<ChainEdgeDTO> edges = new ArrayList<>();
+  @Builder.Default private List<ChainEdgeDTO> edges = new ArrayList<>(16);
 
   /** 画布视口（前端缩放和平移状态） */
   private Viewport viewport;

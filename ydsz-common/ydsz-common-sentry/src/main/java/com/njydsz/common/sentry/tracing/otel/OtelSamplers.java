@@ -124,10 +124,10 @@ public final class OtelSamplers {
     @Builder.Default private double defaultRatio = 0.1;
 
     /** 服务名 → 采样率 */
-    @Builder.Default private Map<String, Double> serviceRatios = new HashMap<>();
+    @Builder.Default private Map<String, Double> serviceRatios = new HashMap<>(16);
 
     /** 灰度标签 → 采样率（命中该 tag 的请求按此采样率） */
-    @Builder.Default private Map<String, Double> grayTagRatios = new HashMap<>();
+    @Builder.Default private Map<String, Double> grayTagRatios = new HashMap<>(16);
 
     /** 健康检查路径前缀（这些路径不采样） */
     @Builder.Default

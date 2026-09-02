@@ -51,7 +51,7 @@ public final class SecurityHeaderConfigurer {
    * @return 安全头键值对（有序，按添加优先级排列）
    */
   public static Map<String, String> computeHeaders(SecurityHeaderProperties properties) {
-    Map<String, String> headers = new LinkedHashMap<>();
+    Map<String, String> headers = new LinkedHashMap<>(16);
 
     if (properties == null || !properties.isEnabled()) {
       return headers;

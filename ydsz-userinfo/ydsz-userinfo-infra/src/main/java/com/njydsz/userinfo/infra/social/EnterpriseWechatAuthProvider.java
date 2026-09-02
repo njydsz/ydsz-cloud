@@ -100,7 +100,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
     // 企业微信需要先获取 access_token（企业级别的）
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
 
-    Map<String, String> tokenParams = new HashMap<>();
+    Map<String, String> tokenParams = new HashMap<>(16);
     tokenParams.put("corpid", config.getAppId());
     tokenParams.put("corpsecret", config.getAppSecret());
 
@@ -115,7 +115,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
 
     // 用 access_token 和 code 获取用户信息
     String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
-    Map<String, String> userParams = new HashMap<>();
+    Map<String, String> userParams = new HashMap<>(16);
     userParams.put("access_token", accessToken);
     userParams.put("code", code);
 
@@ -138,7 +138,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
 
     // 获取用户详情
     String detailUrl = config.getOrDefaultUserDetailUrl(DEFAULT_USER_DETAIL_URL);
-    Map<String, String> params = new HashMap<>();
+    Map<String, String> params = new HashMap<>(16);
     params.put("access_token", token.accessToken());
     params.put("userid", token.openId());
 

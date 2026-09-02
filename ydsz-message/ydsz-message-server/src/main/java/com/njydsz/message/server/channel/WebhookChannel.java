@@ -112,7 +112,7 @@ public class WebhookChannel implements MessageChannel {
       log.warn("[WEBHOOK] 未配置 Webhook URL，跳过发送: receiver={}", request.getReceiver());
       return MessageResult.fail(CHANNEL_TYPE, null, "Webhook URL 未配置", "Webhook URL 未配置", null);
     }
-    Map<String, Object> payload = new HashMap<>();
+    Map<String, Object> payload = new HashMap<>(16);
     payload.put("text", request.getContent() == null ? "" : request.getContent());
     payload.put("title", request.getSubject() == null ? "YDSZ 通知" : request.getSubject());
     // 添加 msgId 供下游去重追踪

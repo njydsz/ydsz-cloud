@@ -758,7 +758,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
    */
   @Override
   public Set<K> keySet() {
-    Set<K> keys = new HashSet<>();
+    Set<K> keys = new HashSet<>(16);
     for (K key : delegate.keySet()) {
       if (!isExpired(key)) {
         keys.add(key);

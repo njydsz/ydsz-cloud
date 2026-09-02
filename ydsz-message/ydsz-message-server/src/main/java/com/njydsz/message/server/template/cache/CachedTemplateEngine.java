@@ -203,7 +203,7 @@ public class CachedTemplateEngine implements TemplateEngine {
    * @return 编译后的模板 AST 指令列表包装对象
    */
   private TemplateAst compile(String template) {
-    List<TemplateAst.AstInstruction> instructions = new ArrayList<>();
+    List<TemplateAst.AstInstruction> instructions = new ArrayList<>(16);
     int pos = 0;
     int len = template.length();
     while (pos < len) {

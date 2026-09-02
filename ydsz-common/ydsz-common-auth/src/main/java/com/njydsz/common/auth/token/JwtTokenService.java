@@ -230,7 +230,7 @@ public class JwtTokenService implements TokenService {
     Instant now = Instant.now();
     Instant expiration = now.plusSeconds(expireSeconds);
 
-    Map<String, Object> claims = new HashMap<>();
+    Map<String, Object> claims = new HashMap<>(16);
     claims.put(CLAIM_USER_ID, userInfo.getUserId());
     claims.put(CLAIM_USERNAME, userInfo.getUsername());
     claims.put(CLAIM_TENANT_ID, userInfo.getTenantId());

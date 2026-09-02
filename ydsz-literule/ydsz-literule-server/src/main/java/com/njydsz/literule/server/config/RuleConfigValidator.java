@@ -41,7 +41,7 @@ public class RuleConfigValidator {
   private final Validator validator;
 
   /** 校验错误列表（供监控/测试读取） */
-  private final List<String> validationErrors = new ArrayList<>();
+  private final List<String> validationErrors = new ArrayList<>(4);
 
   /**
    * 构造器注入（P1-14：@Autowired 字段注入改构造器注入）

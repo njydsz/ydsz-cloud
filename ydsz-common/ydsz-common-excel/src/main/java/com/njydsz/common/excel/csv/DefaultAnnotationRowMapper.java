@@ -168,7 +168,7 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
 
   private static List<Field> collectOrderedFields(Class<?> clazz) {
     Field[] all = ReflectCache.getCachedFields(clazz);
-    List<Field> annotated = new ArrayList<>();
+    List<Field> annotated = new ArrayList<>(16);
     for (Field f : all) {
       if (f.isAnnotationPresent(ExcelIgnore.class)) {
         continue;

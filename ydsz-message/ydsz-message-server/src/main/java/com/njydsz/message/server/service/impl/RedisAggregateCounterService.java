@@ -80,7 +80,7 @@ public class RedisAggregateCounterService {
         // 首次创建，设置过期时间和批次占位标记
         redisStringOps.expire(counterKey, Duration.ofMinutes(DEFAULT_AGGREGATE_WINDOW_MINUTES + 1));
         // 记录首次占位信息（批次元数据）
-        Map<String, String> batchMeta = new HashMap<>();
+        Map<String, String> batchMeta = new HashMap<>(16);
         batchMeta.put("channel", channel);
         batchMeta.put("tenantId", tenantId);
         batchMeta.put("firstAt", LocalDateTime.now().toString());

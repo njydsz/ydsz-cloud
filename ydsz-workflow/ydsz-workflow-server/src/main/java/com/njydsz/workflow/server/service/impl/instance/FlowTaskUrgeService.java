@@ -61,7 +61,7 @@ public class FlowTaskUrgeService {
           .build();
     }
     List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByInstance(instanceId);
-    List<String> urged = new ArrayList<>();
+    List<String> urged = new ArrayList<>(16);
     for (FlowRunTaskVO task : pendingTasks) {
       urged.add(task.getAssigneeId());
       support.audit(task, "URGE", operatorId, null, comment);
@@ -97,7 +97,7 @@ public class FlowTaskUrgeService {
       }
     }
     List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByNode(instanceId, nodeCode);
-    List<String> urged = new ArrayList<>();
+    List<String> urged = new ArrayList<>(16);
     for (FlowRunTaskVO task : pendingTasks) {
       urged.add(task.getAssigneeId());
       support.audit(task, "URGE", operatorId, null, comment);

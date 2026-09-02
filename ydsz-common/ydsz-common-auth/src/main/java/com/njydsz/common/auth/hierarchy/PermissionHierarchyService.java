@@ -86,8 +86,8 @@ public class PermissionHierarchyService {
     if (hierarchy == null) {
       return Collections.emptySet();
     }
-    Set<String> result = new HashSet<>();
-    collectChildren(hierarchy, code.trim(), result, new HashSet<>());
+    Set<String> result = new HashSet<>(16);
+    collectChildren(hierarchy, code.trim(), result, new HashSet<>(16));
     return Collections.unmodifiableSet(result);
   }
 

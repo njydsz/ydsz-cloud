@@ -178,7 +178,7 @@ public class GroovyDockerSandboxExecutor {
    * @return Docker 命令参数列表
    */
   private List<String> buildDockerCommand(SandboxConfig config, Path scriptFile, String paramsJson) {
-    List<String> cmd = new ArrayList<>();
+    List<String> cmd = new ArrayList<>(16);
     cmd.add("docker");
     cmd.add("run");
     cmd.add("--rm");

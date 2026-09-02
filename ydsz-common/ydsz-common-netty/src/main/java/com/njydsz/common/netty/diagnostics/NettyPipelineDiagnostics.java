@@ -33,7 +33,7 @@ public class NettyPipelineDiagnostics {
    * @return Pipeline 中所有 Handler 名称列表（按顺序）
    */
   public static List<String> dumpPipeline(Channel channel) {
-    List<String> handlers = new ArrayList<>();
+    List<String> handlers = new ArrayList<>(16);
     if (channel == null) {
       return handlers;
     }

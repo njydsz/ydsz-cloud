@@ -825,7 +825,7 @@ public class FlowTaskCoreService {
         return null;
       }
       // 沿 PASS 出边找下游第一个 APPROVAL 节点
-      String found = findFirstApprovalNode(definitionId, startNode.getNodeCode(), new HashSet<>());
+      String found = findFirstApprovalNode(definitionId, startNode.getNodeCode(), new HashSet<>(16));
       return found != null ? found : startNode.getNodeCode();
     } catch (Exception e) {
       log.warn("[Flow] 解析开始节点下游失败: definitionId={} err={}", definitionId, e.getMessage());

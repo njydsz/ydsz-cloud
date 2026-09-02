@@ -188,7 +188,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
    */
   @Override
   public Set<K> keySet() {
-    Set<K> keys = new HashSet<>();
+    Set<K> keys = new HashSet<>(16);
     for (final Segment<K, V> segment : segments) {
       keys.addAll(segment.keySet());
     }
@@ -432,7 +432,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     }
 
     Collection<V> values() {
-      List<V> result = new ArrayList<>();
+      List<V> result = new ArrayList<>(16);
       for (final Node<K, V> node : map.values()) {
         result.add(node.value);
       }

@@ -32,7 +32,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 public class ApolloRuleSource implements RuleConfigProvider {
 
   private final String namespace;
-  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>();
+  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>(4);
 
   /** Apollo Config 实例（反射获取，避免硬依赖） */
   private Object apolloConfig;

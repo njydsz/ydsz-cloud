@@ -1,6 +1,4 @@
-package com.njydsz.common.web.config;
-
-import java.util.ArrayList;
+new ArrayList<>(16)port java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +41,7 @@ public class FilterIgnoreProperties {
   private List<String> authFilterIgnoreServiceNames = new ArrayList<>();
 
   /** 安全排除 URL 模式列表（与内置默认值合并） */
-  private List<String> securityExcludeUrls = new ArrayList<>();
+  private List<String> securityExcludeUrls = new ArrayList<>(4);
 
   /**
    * 是否用配置值整体替换内置默认值。

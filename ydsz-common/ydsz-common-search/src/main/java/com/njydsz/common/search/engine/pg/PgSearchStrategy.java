@@ -117,7 +117,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         return SearchResponse.empty(request.getPage(), request.getPageSize());
       }
 
-      List<Object> whereParams = new ArrayList<>();
+      List<Object> whereParams = new ArrayList<>(16);
       StringBuilder where = new StringBuilder(" WHERE 1=1");
 
       if (request.isFuzzy()) {
@@ -166,7 +166,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             .build();
       }
 
-      List<Object> queryParams = new ArrayList<>();
+      List<Object> queryParams = new ArrayList<>(16);
       StringBuilder selectSql =
           new StringBuilder("SELECT id, doc_type, title, subtitle, snippet, status, ");
 
@@ -679,7 +679,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
 
   private List<SearchAggregation> executeAggregations(
       StringBuilder where, List<Object> params, List<String> aggFields) {
-    List<SearchAggregation> aggregations = new ArrayList<>();
+    List<SearchAggregation> aggregations = new ArrayList<>(16);
     for (String field : aggFields) {
       try {
         String safeField = sanitizeColumnName(field);

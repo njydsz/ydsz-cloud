@@ -47,7 +47,7 @@ public class FileLifecycleProperties {
   private String bucket;
 
   /** 生命周期清理规则列表 */
-  private List<LifecycleRule> rules = new ArrayList<>();
+  private List<LifecycleRule> rules = new ArrayList<>(4);
 
   /** 是否仅模拟执行（true 时只打印日志不实际删除） */
   private boolean dryRun = false;

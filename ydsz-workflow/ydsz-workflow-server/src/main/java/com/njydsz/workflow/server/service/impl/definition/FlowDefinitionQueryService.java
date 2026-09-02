@@ -155,7 +155,7 @@ public class FlowDefinitionQueryService {
     }
     List<FlowNodeVO> nodes = nodeRepository.findByDefinitionId(definitionId);
     List<FlowSkipVO> skips = skipRepository.findByDefinitionId(definitionId);
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("definition", definition);
     result.put("nodes", nodes);
     result.put("skips", skips);
@@ -187,7 +187,7 @@ public class FlowDefinitionQueryService {
         definitionRepository.findByFlowCodeAndTenantId(def.getFlowCode(), tenantId);
     List<Map<String, Object>> result = new ArrayList<>(versions.size());
     for (FlowDefinitionVO v : versions) {
-      Map<String, Object> map = new LinkedHashMap<>();
+      Map<String, Object> map = new LinkedHashMap<>(16);
       map.put("id", v.getId());
       map.put("version", v.getFlowVersion());
       map.put("flowName", v.getFlowName());

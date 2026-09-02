@@ -201,7 +201,7 @@ public class FeignProperties {
     private long acquireTimeoutMs = 100;
 
     /** 按服务维度配置最大并发请求数 */
-    private Map<String, Integer> serviceMaxConcurrent = new HashMap<>();
+    private Map<String, Integer> serviceMaxConcurrent = new HashMap<>(16);
   }
 
   /** GZIP 请求压缩配置 */

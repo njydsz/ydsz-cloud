@@ -222,7 +222,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     if (!StringUtils.hasText(queryString)) {
       return "";
     }
-    List<String> pairs = new ArrayList<>();
+    List<String> pairs = new ArrayList<>(16);
     for (String pair : queryString.split(QUERY_SEPARATOR)) {
       if (!StringUtils.hasText(pair)) {
         continue;

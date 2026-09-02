@@ -307,7 +307,7 @@ public class OtelAutoConfiguration {
 
   private static List<SpanEvaluationProcessor.SamplingRule> buildTailSamplingRules(
       SentryProperties.TailSamplingConfig config) {
-    List<SpanEvaluationProcessor.SamplingRule> rules = new ArrayList<>();
+    List<SpanEvaluationProcessor.SamplingRule> rules = new ArrayList<>(16);
     if (config.isErrorStatus()) {
       rules.add(SpanEvaluationProcessor.Rules.errorStatus());
     }

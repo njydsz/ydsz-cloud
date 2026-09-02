@@ -99,7 +99,7 @@ public class SecurityAuditLogger {
   public void log(String action, String sourceIp, String userId, Map<String, Object> details) {
     String traceId = resolveTraceId();
 
-    Map<String, Object> logEntry = new HashMap<>();
+    Map<String, Object> logEntry = new HashMap<>(16);
     logEntry.put("timestamp", Instant.now().toString());
     logEntry.put("traceId", traceId != null ? traceId : "");
     logEntry.put("action", action);

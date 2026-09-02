@@ -58,7 +58,7 @@ public class ScheduleCalendarService {
   public List<ScheduleItem> getScheduleCalendar(LocalDateTime from, int hours, int maxPerJob) {
     List<JobVO> normalJobs = jobRepository.findAllNormal();
     LocalDateTime to = from.plusHours(hours);
-    List<ScheduleItem> items = new ArrayList<>();
+    List<ScheduleItem> items = new ArrayList<>(16);
     for (JobVO job : normalJobs) {
       if (job.getCronExpression() == null || job.getCronExpression().isBlank()) {
         continue;

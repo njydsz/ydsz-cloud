@@ -70,10 +70,10 @@ public class ClusterSlotUtil {
    */
   public static <T> Map<Integer, List<T>> groupBySlot(
       List<T> items, Function<T, String> keyExtractor) {
-    Map<Integer, List<T>> groups = new HashMap<>();
+    Map<Integer, List<T>> groups = new HashMap<>(16);
     for (T item : items) {
       int slot = calculateSlot(keyExtractor.apply(item));
-      groups.computeIfAbsent(slot, k -> new ArrayList<>()).add(item);
+      groups.computeIfAbsent(slot, k -> new ArrayList<>(8)).add(item);
     }
     return groups;
   }

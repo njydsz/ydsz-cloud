@@ -42,7 +42,7 @@ public class SentryInfoContributor implements InfoContributor {
    * @param builder 参数
    */
   public void contribute(Info.Builder builder) {
-    Map<String, Object> sentryInfo = new HashMap<>();
+    Map<String, Object> sentryInfo = new HashMap<>(16);
 
     if (metricsCollector != null) {
       sentryInfo.put("metrics.collector", metricsCollector.getName());

@@ -144,7 +144,7 @@ public class ExpressionValidationService {
     }
 
     // 提取占位符中引用的变量
-    List<String> referencedVars = new ArrayList<>();
+    List<String> referencedVars = new ArrayList<>(16);
     Matcher m = TEMPLATE_PLACEHOLDER_PATTERN.matcher(template);
     while (m.find()) {
       String var = m.group(1).trim();
@@ -178,7 +178,7 @@ public class ExpressionValidationService {
     if (referenced == null || referenced.isEmpty()) {
       return base;
     }
-    List<String> undefined = new ArrayList<>();
+    List<String> undefined = new ArrayList<>(16);
     for (String var : referenced) {
       if (!variableRegistry.contains(var)) {
         undefined.add(var);
@@ -210,7 +210,7 @@ public class ExpressionValidationService {
    * @return 校验结果列表（与输入顺序一致）
    */
   public Map<String, ExpressionValidationResult> validateBatch(Map<String, String> expressions) {
-    Map<String, ExpressionValidationResult> results = new LinkedHashMap<>();
+    Map<String, ExpressionValidationResult> results = new LinkedHashMap<>(16);
     if (expressions == null) {
       return results;
     }

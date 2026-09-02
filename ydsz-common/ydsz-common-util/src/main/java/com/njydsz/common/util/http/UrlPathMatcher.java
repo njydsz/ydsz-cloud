@@ -80,8 +80,8 @@ public final class UrlPathMatcher {
       return new UrlPathMatcher(Collections.emptySet(), Collections.emptyList());
     }
 
-    Set<String> exactSet = new HashSet<>();
-    List<String> wildcardList = new ArrayList<>();
+    Set<String> exactSet = new HashSet<>(16);
+    List<String> wildcardList = new ArrayList<>(16);
     for (String pattern : patterns) {
       if (pattern == null || pattern.isEmpty()) {
         continue;

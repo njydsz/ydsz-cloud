@@ -86,7 +86,7 @@ public final class BeanUpdateUtil {
    */
   private static String[] combineNullPropertyNames(Object source, String... ignoreProperties) {
     final BeanWrapper wrapper = new BeanWrapperImpl(source);
-    Set<String> ignored = new HashSet<>();
+    Set<String> ignored = new HashSet<>(16);
     // 1. 收集额外固定忽略属性
     if (ignoreProperties != null) {
       ignored.addAll(Arrays.asList(ignoreProperties));

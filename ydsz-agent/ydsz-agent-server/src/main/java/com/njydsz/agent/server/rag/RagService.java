@@ -185,7 +185,7 @@ public class RagService {
    * @return 引用摘要列表
    */
   public List<Citation> getCitations(List<TextChunk> chunks) {
-    List<Citation> citations = new ArrayList<>();
+    List<Citation> citations = new ArrayList<>(16);
     if (chunks == null) {
       return citations;
     }

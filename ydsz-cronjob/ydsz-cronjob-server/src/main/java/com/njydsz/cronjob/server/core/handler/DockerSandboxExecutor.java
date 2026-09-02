@@ -197,7 +197,7 @@ public class DockerSandboxExecutor {
       String interpreter,
       String containerName,
       Map<String, String> envVars) {
-    List<String> cmd = new ArrayList<>();
+    List<String> cmd = new ArrayList<>(16);
     cmd.add("docker");
     cmd.add("run");
     cmd.add("--rm");

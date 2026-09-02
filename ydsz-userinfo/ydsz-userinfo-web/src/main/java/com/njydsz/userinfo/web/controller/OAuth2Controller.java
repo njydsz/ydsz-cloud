@@ -360,7 +360,7 @@ public class OAuth2Controller {
         .toList();
 
     // 3. 构建响应
-    Map<String, Object> consentInfo = new HashMap<>();
+    Map<String, Object> consentInfo = new HashMap<>(16);
     consentInfo.put("user", Map.of(
         "userId", userInfo.getUserId(),
         "username", userInfo.getUsername()));
@@ -631,7 +631,7 @@ public class OAuth2Controller {
       String grantedScope,
       OAuthCodeContext context,
       UserInfo userInfo) {
-    Map<String, Object> tokenResponse = new HashMap<>();
+    Map<String, Object> tokenResponse = new HashMap<>(16);
     tokenResponse.put("access_token", accessToken);
     tokenResponse.put("refresh_token", refreshToken);
     tokenResponse.put("token_type", "Bearer");
@@ -790,7 +790,7 @@ public class OAuth2Controller {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
     }
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     UserInfo userInfo = tokenService.parseAccessToken(token);
     boolean active = userInfo != null && tokenService.validateAccessToken(token);
     result.put("active", active);

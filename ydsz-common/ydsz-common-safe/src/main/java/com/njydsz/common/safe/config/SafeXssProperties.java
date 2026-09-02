@@ -121,7 +121,7 @@ public class SafeXssProperties {
    *   - "vbscript:[^\"']*"
    * }</pre>
    */
-  private List<String> customPatterns = new ArrayList<>();
+  private List<String> customPatterns = new ArrayList<>(4);
 
   /**
    * 白名单 HTML 标签

@@ -63,7 +63,7 @@ public class LocalSessionRegistry {
    */
   public List<String> getSessionIds(String userId) {
     Set<String> sessionIds = userSessionsMap.get(userId);
-    return sessionIds != null ? new ArrayList<>(sessionIds) : new ArrayList<>();
+    return sessionIds != null ? new ArrayList<>(sessionIds) : new ArrayList<>(16);
   }
 
   /**

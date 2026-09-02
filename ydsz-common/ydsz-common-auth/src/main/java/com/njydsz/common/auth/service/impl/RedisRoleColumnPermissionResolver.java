@@ -127,8 +127,8 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     if (roleCodes == null || roleCodes.isEmpty()) {
       return ColumnScopeInfo.empty();
     }
-    Map<String, Set<String>> visibleColumnsByTable = new LinkedHashMap<>();
-    Map<String, Set<String>> editableColumnsByTable = new LinkedHashMap<>();
+    Map<String, Set<String>> visibleColumnsByTable = new LinkedHashMap<>(16);
+    Map<String, Set<String>> editableColumnsByTable = new LinkedHashMap<>(16);
     for (String roleCode : roleCodes) {
       ColumnScopeInfo scopeInfo = cache.getIfPresent(roleCode);
       if (scopeInfo == null) {
@@ -189,7 +189,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     if (rule == null || rule.isNull() || rule.isMissing()) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> out = new LinkedHashMap<>();
+    Map<String, Set<String>> out = new LinkedHashMap<>(16);
     for (Map.Entry<String, JsonNode> entry : rule.asMap().entrySet()) {
       String table = entry.getKey();
       if (StringUtils.isBlank(table)) {
@@ -241,7 +241,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     if (source == null || source.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> out = new LinkedHashMap<>();
+    Map<String, Set<String>> out = new LinkedHashMap<>(16);
     for (Map.Entry<String, Set<String>> entry : source.entrySet()) {
       out.put(entry.getKey(), Collections.unmodifiableSet(new LinkedHashSet<>(entry.getValue())));
     }

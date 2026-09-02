@@ -54,5 +54,5 @@ public class IpAccessControlProperties {
   private String whitelist = "";
 
   /** 白名单放行的路径前缀 */
-  private List<String> whitelistSkipPaths = new ArrayList<>();
+  private List<String> whitelistSkipPaths = new ArrayList<>(4);
 }

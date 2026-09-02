@@ -1,4 +1,4 @@
-package com.njydsz.common.exception.batch;
+new ArrayList<>(16).batch;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -237,7 +237,7 @@ public class BatchBusinessException extends BusinessException {
     if (failureItems.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, Integer> aggregation = new LinkedHashMap<>();
+    Map<String, Integer> aggregation = new LinkedHashMap<>(16);
     for (FailureItem item : failureItems) {
       aggregation.merge(item.getCode(), 1, Integer::sum);
     }
@@ -255,9 +255,9 @@ public class BatchBusinessException extends BusinessException {
     if (failureItems.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, List<Object>> group = new LinkedHashMap<>();
+    Map<String, List<Object>> group = new LinkedHashMap<>(16);
     for (FailureItem item : failureItems) {
-      group.computeIfAbsent(item.getCode(), k -> new ArrayList<>()).add(item.getItemId());
+      group.computeIfAbsent(item.getCode(), k -> new ArrayList<>(8)).add(item.getItemId());
     }
     return Collections.unmodifiableMap(group);
   }

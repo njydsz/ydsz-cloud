@@ -80,16 +80,16 @@ public class JobQueueController {
     DefaultTaskDispatcher dispatcher = taskDispatcherProvider.getIfAvailable();
     if (dispatcher == null) {
       log.debug("[JobQueue] TaskDispatcher 不可用，返回空状态");
-      return YdszResponse.success(new HashMap<>());
+      return YdszResponse.success(new HashMap<>(16));
     }
     // 2. 获取线程池
     ThreadPoolExecutor pool = dispatcher.getTaskExecutorPool();
     if (pool == null) {
       log.debug("[JobQueue] 线程池未初始化，返回空状态");
-      return YdszResponse.success(new HashMap<>());
+      return YdszResponse.success(new HashMap<>(16));
     }
     // 3. 采集线程池实时指标
-    Map<String, Object> status = new HashMap<>();
+    Map<String, Object> status = new HashMap<>(16);
     status.put("activeCount", pool.getActiveCount());
     status.put("poolSize", pool.getPoolSize());
     status.put("maximumPoolSize", pool.getMaximumPoolSize());

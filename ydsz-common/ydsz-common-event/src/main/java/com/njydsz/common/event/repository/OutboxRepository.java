@@ -341,7 +341,7 @@ public class OutboxRepository {
     return jdbcTemplate.query(
         sql,
         rs -> {
-          Map<String, Long> result = new HashMap<>();
+          Map<String, Long> result = new HashMap<>(16);
           while (rs.next()) {
             result.put(rs.getString("status"), rs.getLong("cnt"));
           }
@@ -445,7 +445,7 @@ public class OutboxRepository {
     // tableName validated at construction (see findPending) — safe from SQL injection
     StringBuilder sql =
         new StringBuilder("SELECT * FROM ").append(tableName).append(" WHERE status = ?");
-    List<Object> params = new ArrayList<>();
+    List<Object> params = new ArrayList<>(16);
     params.add(status.name());
 
     if (eventTypeFilter != null && !eventTypeFilter.isBlank()) {
@@ -464,7 +464,7 @@ public class OutboxRepository {
     // COUNT 查询
     StringBuilder countSql =
         new StringBuilder("SELECT COUNT(*) FROM ").append(tableName).append(" WHERE status = ?");
-    List<Object> countParams = new ArrayList<>();
+    List<Object> countParams = new ArrayList<>(16);
     countParams.add(status.name());
     if (eventTypeFilter != null && !eventTypeFilter.isBlank()) {
       countSql.append(" AND event_type = ?");
@@ -514,7 +514,7 @@ public class OutboxRepository {
             .append(
                 " SET status = ?, retry_count = 0, next_retry_at = ?, updated_at = ?, error_message = NULL")
             .append(" WHERE status = ?");
-    List<Object> params = new ArrayList<>();
+    List<Object> params = new ArrayList<>(16);
     params.add(OutboxStatus.PENDING.name());
     params.add(Timestamp.from(Instant.now()));
     params.add(Timestamp.from(Instant.now()));
@@ -541,7 +541,7 @@ public class OutboxRepository {
     // tableName validated at construction (see findPending) — safe from SQL injection
     StringBuilder sql =
         new StringBuilder("DELETE FROM ").append(tableName).append(" WHERE id = ? AND status IN (");
-    List<Object> params = new ArrayList<>();
+    List<Object> params = new ArrayList<>(16);
     params.add(id);
     int i = 0;
     for (OutboxStatus s : terminalStatuses) {

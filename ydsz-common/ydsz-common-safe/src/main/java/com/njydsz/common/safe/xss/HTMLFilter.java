@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.xss;
+new HashMap<>(16) ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)package com.njydsz.common.safe.xss;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -649,7 +649,7 @@ public final class HTMLFilter {
    * 实例；标签名匹配均不区分大小写。
    */
   public static class Builder {
-    private final Map<String, List<String>> vAllowed = new HashMap<>();
+    private final Map<String, List<String>> vAllowed = new HashMap<>(16);
     private final List<String> vSelfClosingTags = new ArrayList<>();
     private final List<String> vNeedClosingTags = new ArrayList<>();
     private final List<String> vDisallowed = new ArrayList<>();
@@ -685,7 +685,7 @@ public final class HTMLFilter {
      */
     public Builder allowTagWithAttributes(String tag, String... attributes) {
       String tagName = tag.toLowerCase();
-      List<String> attrs = vAllowed.computeIfAbsent(tagName, k -> new ArrayList<>());
+      List<String> attrs = vAllowed.computeIfAbsent(tagName, k -> new ArrayList<>(8));
       Collections.addAll(attrs, attributes);
       return this;
     }

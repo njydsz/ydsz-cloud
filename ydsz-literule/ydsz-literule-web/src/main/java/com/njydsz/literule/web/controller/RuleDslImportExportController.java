@@ -109,8 +109,8 @@ public class RuleDslImportExportController {
 
       int successCount = 0;
       int failCount = 0;
-      List<String> errors = new ArrayList<>();
-      List<String> importedCodes = new ArrayList<>();
+      List<String> errors = new ArrayList<>(16);
+      List<String> importedCodes = new ArrayList<>(16);
 
       if (dsl.getRules() != null) {
         for (RuleDslEntry entry : dsl.getRules()) {
@@ -127,7 +127,7 @@ public class RuleDslImportExportController {
         }
       }
 
-      Map<String, Object> result = new LinkedHashMap<>();
+      Map<String, Object> result = new LinkedHashMap<>(16);
       result.put("totalRules", dsl.getRules() != null ? dsl.getRules().size() : 0);
       result.put("successCount", successCount);
       result.put("failCount", failCount);
@@ -173,7 +173,7 @@ public class RuleDslImportExportController {
     String yaml =
         RuleDslExporter.exportYaml(allRules, "exported-rules", "导出时间: " + LocalDateTime.now());
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("format", "yaml");
     result.put("ruleCount", allRules.size());
     result.put("content", yaml);
@@ -196,7 +196,7 @@ public class RuleDslImportExportController {
 
     String yaml = RuleDslExporter.exportSingleRule(def);
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("format", "yaml");
     result.put("ruleCode", ruleCode);
     result.put("content", yaml);

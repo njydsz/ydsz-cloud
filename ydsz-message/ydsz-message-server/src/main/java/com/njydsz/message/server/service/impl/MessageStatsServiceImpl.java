@@ -82,7 +82,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
 
-    List<ChannelStatsDTO> result = new ArrayList<>();
+    List<ChannelStatsDTO> result = new ArrayList<>(16);
     for (MessageChannelEnum ch : MessageChannelEnum.values()) {
       String channel = ch.name();
       long success =
@@ -265,7 +265,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
             ? costCfg.getUnitPrices()
             : Collections.emptyMap();
 
-    List<CostStatsDTO.ChannelCost> channelCosts = new ArrayList<>();
+    List<CostStatsDTO.ChannelCost> channelCosts = new ArrayList<>(16);
     BigDecimal totalCost = BigDecimal.ZERO;
 
     for (Map.Entry<String, BigDecimal> entry : unitPrices.entrySet()) {

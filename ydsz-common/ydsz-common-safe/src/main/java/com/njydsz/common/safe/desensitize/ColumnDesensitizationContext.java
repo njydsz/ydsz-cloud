@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.desensitize;
+new LinkedHashMap<>(16)kage com.njydsz.common.safe.desensitize;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -106,7 +106,7 @@ public class ColumnDesensitizationContext {
     if (table == null || column == null || config == null) {
       return;
     }
-    rules.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, config);
+    rules.computeIfAbsent(table, k -> new LinkedHashMap<>(16)).put(column, config);
   }
 
   /**

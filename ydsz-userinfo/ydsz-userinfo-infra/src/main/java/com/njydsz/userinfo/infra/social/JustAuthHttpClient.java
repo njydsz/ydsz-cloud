@@ -119,7 +119,7 @@ public class JustAuthHttpClient {
    */
   private Map<String, Object> parseResponse(String body) {
     if (body == null || body.isBlank()) {
-      return new HashMap<>();
+      return new HashMap<>(0);
     }
     return YdszJson.fromJsonToMap(body, String.class, Object.class);
   }

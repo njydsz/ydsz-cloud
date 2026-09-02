@@ -469,7 +469,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
 
   /** 写入队列中剩余的日志 */
   private void flushRemaining() {
-    List<AuditLog> remaining = new ArrayList<>();
+    List<AuditLog> remaining = new ArrayList<>(16);
     queue.drainTo(remaining);
     if (!remaining.isEmpty()) {
       LOG.info("【异步审计记录器】写入剩余 {} 条审计日志", remaining.size());

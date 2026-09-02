@@ -153,7 +153,7 @@ public class BpmnElementHelper {
    * @return ext 属性对应的 Map（非 null）
    */
   public Map<String, Object> readOrInitExt(FlowNodeVO node) {
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new HashMap<>(16);
     String ext = node.getExt();
     if (ext != null && !ext.isBlank() && !"{}".equals(ext.trim())) {
       try {

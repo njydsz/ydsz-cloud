@@ -201,7 +201,7 @@ public final class OtelExporterFactory {
     private boolean enabled = true;
 
     /** 请求头（如 Authorization） */
-    private Map<String, String> headers = new HashMap<>();
+    private Map<String, String> headers = new HashMap<>(16);
 
     /** 超时（毫秒） */
     private long timeoutMillis = 10000;

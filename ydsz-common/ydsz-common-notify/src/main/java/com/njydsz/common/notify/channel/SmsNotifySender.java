@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.channel;
+new HashMap<>(16)shMap<>(16)new HashMap<>(16)package com.njydsz.common.notify.channel;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -264,7 +264,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
       }
       return params;
     }
-    return new HashMap<>();
+    return new HashMap<>(0);
   }
 
   /**

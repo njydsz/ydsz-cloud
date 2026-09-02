@@ -72,7 +72,7 @@ public class RuleImportExportController {
         rules.stream()
             .map(
                 r -> {
-                  Map<String, Object> map = new LinkedHashMap<>();
+                  Map<String, Object> map = new LinkedHashMap<>(16);
                   map.put("code", r.getCode());
                   map.put("name", r.getName());
                   map.put("category", r.getCategory());
@@ -92,7 +92,7 @@ public class RuleImportExportController {
                   return map;
                 })
             .collect(Collectors.toList());
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("exportTime", LocalDateTime.now().toString());
     result.put("ruleCount", rules.size());
     result.put("rules", exportData);
@@ -208,7 +208,7 @@ public class RuleImportExportController {
         skipped++;
       }
     }
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("imported", imported);
     result.put("skipped", skipped);
     return YdszResponse.success(result);

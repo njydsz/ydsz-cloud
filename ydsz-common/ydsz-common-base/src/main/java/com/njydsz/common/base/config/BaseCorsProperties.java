@@ -1,6 +1,4 @@
-package com.njydsz.common.base.config;
-
-import java.util.ArrayList;
+new ArrayList<>(16)l.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -81,7 +79,7 @@ public abstract class BaseCorsProperties {
    *
    * <p>默认为空，即不暴露额外响应头。 常见需要暴露的头：X-Request-Id, X-Total-Count, Content-Disposition 等。
    */
-  private List<String> exposedHeaders = new ArrayList<>();
+  private List<String> exposedHeaders = new ArrayList<>(4);
 
   /**
    * 预检请求（OPTIONS）缓存时间（秒）
@@ -118,7 +116,7 @@ public abstract class BaseCorsProperties {
    * @return 警告信息列表，为空表示配置安全
    */
   public List<String> validateSecurity() {
-    List<String> warnings = new ArrayList<>();
+    List<String> warnings = new ArrayList<>(16);
 
     if (!enabled) {
       return warnings;

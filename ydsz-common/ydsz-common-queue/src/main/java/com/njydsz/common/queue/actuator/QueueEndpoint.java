@@ -58,7 +58,7 @@ public class QueueEndpoint {
    */
   @ReadOperation
   public Map<String, Object> queuesSummary() {
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("queueType", queueProperties.getResolvedType().getValue());
     result.put("enabled", queueProperties.isEnabled());
     result.put("streamGroup", queueProperties.getStreamGroup());
@@ -74,7 +74,7 @@ public class QueueEndpoint {
    */
   @ReadOperation
   public Map<String, Object> queueDetail(@Selector String queueType) {
-    Map<String, Object> detail = new HashMap<>();
+    Map<String, Object> detail = new HashMap<>(16);
     detail.put("queueType", queueType);
     detail.put("configuration", queueProperties.toString());
 

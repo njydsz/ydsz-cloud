@@ -58,7 +58,7 @@ public class YdszCacheProperties {
 
   @NotNull private CacheType type = CacheType.TINYLFU;
 
-  private List<String> cacheNames = new ArrayList<>();
+  private List<String> cacheNames = new ArrayList<>(4);
 
   @Min(1)
   private long maximumSize = 1000;
@@ -98,7 +98,7 @@ public class YdszCacheProperties {
    *
    * <p>key 为缓存名称，value 为该缓存的独立配置（覆盖全局默认值）
    */
-  private Map<String, CacheConfig> caches = new LinkedHashMap<>();
+  private Map<String, CacheConfig> caches = new LinkedHashMap<>(16);
 
   /** Per-cache 配置类 */
   public static class CacheConfig {

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.auth;
+new HashSet<>(16)info.server.auth;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -214,7 +214,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
       }
       return result;
     }
-    return new HashSet<>();
+    return new HashSet<>(0);
   }
 
   /**
@@ -224,9 +224,9 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
    * @return 分类后的权限码映射（Menu/BUTTON/API）
    */
   private Map<String, Set<String>> categorizePermissions(List<MenuVO> menus) {
-    Set<String> menuPerms = new HashSet<>();
-    Set<String> buttonPerms = new HashSet<>();
-    Set<String> apiPerms = new HashSet<>();
+    Set<String> menuPerms = new HashSet<>(16);
+    Set<String> buttonPerms = new HashSet<>(16);
+    Set<String> apiPerms = new HashSet<>(16);
 
     for (MenuVO menu : menus) {
       String permCode = menu.getPermissionCode();

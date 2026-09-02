@@ -35,7 +35,7 @@ public class RuleTraceBuilder {
     String conditionResult =
         result != null && result.getThreshold() != null ? result.getThreshold() : null;
 
-    Map<String, Object> resultSnapshot = new LinkedHashMap<>();
+    Map<String, Object> resultSnapshot = new LinkedHashMap<>(16);
     if (result != null) {
       resultSnapshot.put("triggered", result.isTriggered());
       resultSnapshot.put("severity", severity);

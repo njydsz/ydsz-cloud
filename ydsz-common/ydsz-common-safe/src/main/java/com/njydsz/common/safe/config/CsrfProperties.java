@@ -1,6 +1,4 @@
-package com.njydsz.common.safe.config;
-
-import java.util.ArrayList;
+new ArrayList<>(16)l.ArrayList;
 import java.util.List;
 
 import lombok.Data;
@@ -132,7 +130,7 @@ public class CsrfProperties {
    * <p>为空时只允许 Origin 与请求 Host 一致的同源请求。 支持精确匹配和通配符匹配（如 {@code https://*.example.com}）。 仅在 {@link
    * #checkOrigin} 为 true 时生效。
    */
-  private List<String> allowedOrigins = new ArrayList<>();
+  private List<String> allowedOrigins = new ArrayList<>(4);
 
   /**
    * Cookie 的 Secure 标志

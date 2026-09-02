@@ -85,7 +85,7 @@ public class InMemoryDeadLetterHandler implements DeadLetterHandler {
   @Override
   public List<DeadLetterEntry> getDeadLetters(int maxCount) {
     int limit = maxCount > 0 ? maxCount : 100;
-    List<DeadLetterEntry> result = new ArrayList<>();
+    List<DeadLetterEntry> result = new ArrayList<>(16);
     for (DeadLetterEntry entry : deadLetterQueue) {
       if (result.size() >= limit) {
         break;

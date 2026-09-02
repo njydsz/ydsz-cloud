@@ -87,7 +87,7 @@ public class NotifyLiteProperties {
     private int maxAttachmentSizeMb = 20;
 
     /** 额外 JavaMail 属性 */
-    private Map<String, String> properties = new HashMap<>();
+    private Map<String, String> properties = new HashMap<>(16);
   }
 
   /** 企业微信渠道简化配置 */

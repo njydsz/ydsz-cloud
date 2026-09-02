@@ -72,7 +72,7 @@ public class ExpressionValidationResult implements Serializable {
    *
    * <p>用于前端编辑器的"已使用变量"提示，不参与合法性判断。 当 VariableRegistry（P2-4）落地后，这里会替换为"已使用 vs 已定义"对比结果。
    */
-  @Builder.Default private List<String> referencedVariables = new ArrayList<>();
+  @Builder.Default private List<String> referencedVariables = new ArrayList<>(16);
 
   /**
    * 快速构造合法结果
@@ -92,7 +92,7 @@ public class ExpressionValidationResult implements Serializable {
         .errorColumn(-1)
         .expression(expression)
         .parseTimeMs(parseTimeMs)
-        .referencedVariables(referencedVariables != null ? referencedVariables : new ArrayList<>())
+        .referencedVariables(referencedVariables != null ? referencedVariables : new ArrayList<>(16))
         .build();
   }
 
@@ -115,7 +115,7 @@ public class ExpressionValidationResult implements Serializable {
         .errorColumn(-1)
         .expression(expression)
         .parseTimeMs(parseTimeMs)
-        .referencedVariables(new ArrayList<>())
+        .referencedVariables(new ArrayList<>(16))
         .build();
   }
 }

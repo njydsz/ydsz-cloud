@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.config;
+new ArrayList<>(16)fig;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -604,7 +604,7 @@ public class LiteRuleProperties {
      * <p>key 为模型字段名（无需 "model." 前缀），value 为数值/字符串/布尔。 未配置时使用 MockModelInputProvider
      * 默认值（modelScore=0.75, predictProbability=0.05）。
      */
-    private Map<String, Object> mockOutputs = new LinkedHashMap<>();
+    private Map<String, Object> mockOutputs = new LinkedHashMap<>(16);
   }
 
   /**
@@ -852,7 +852,7 @@ public class LiteRuleProperties {
     private List<String> forbiddenRoots = new ArrayList<>();
 
     /** 追加的白名单函数（业务自定义函数，合并到函数白名单） */
-    private List<String> allowedFunctions = new ArrayList<>();
+    private List<String> allowedFunctions = new ArrayList<>(4);
   }
 
   /**

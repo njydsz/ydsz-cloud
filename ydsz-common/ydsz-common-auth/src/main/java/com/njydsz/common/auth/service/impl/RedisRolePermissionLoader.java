@@ -179,9 +179,9 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     }
 
     try {
-      Set<String> menuPerms = new HashSet<>();
-      Set<String> buttonPerms = new HashSet<>();
-      Set<String> apiPerms = new HashSet<>();
+      Set<String> menuPerms = new HashSet<>(16);
+      Set<String> buttonPerms = new HashSet<>(16);
+      Set<String> apiPerms = new HashSet<>(16);
 
       loadFromRoleMenuKey(role, menuPerms, buttonPerms);
       loadFromRoleApiKey(role, apiPerms);
@@ -297,9 +297,9 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         String apiData =
             (uncachedCount + i < allResults.size()) ? allResults.get(uncachedCount + i) : null;
 
-        Set<String> menuPerms = new HashSet<>();
-        Set<String> buttonPerms = new HashSet<>();
-        Set<String> apiPerms = new HashSet<>();
+        Set<String> menuPerms = new HashSet<>(16);
+        Set<String> buttonPerms = new HashSet<>(16);
+        Set<String> apiPerms = new HashSet<>(16);
 
         // 解析 menu-key 数据（menus + buttons）
         JsonNode menuNode = parseJsonSafe(menuData, role);

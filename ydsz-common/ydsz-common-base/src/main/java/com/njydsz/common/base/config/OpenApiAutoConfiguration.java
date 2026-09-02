@@ -110,7 +110,7 @@ public class OpenApiAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(name = "groupedOpenApis")
   public List<GroupedOpenApi> groupedOpenApis() {
-    List<GroupedOpenApi> apis = new ArrayList<>();
+    List<GroupedOpenApi> apis = new ArrayList<>(16);
     List<DocProperties.GroupConfig> groups = docProperties.getGroups();
 
     if (groups == null || groups.isEmpty()) {

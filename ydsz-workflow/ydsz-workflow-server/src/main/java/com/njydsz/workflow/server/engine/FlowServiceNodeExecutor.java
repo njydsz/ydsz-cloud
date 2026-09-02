@@ -141,7 +141,7 @@ public class FlowServiceNodeExecutor {
     }
     try {
       Expression expression = aviatorInstance.compile(expr, true);
-      Map<String, Object> env = new HashMap<>();
+      Map<String, Object> env = new HashMap<>(16);
       if (variables != null) {
         env.putAll(variables);
       }
@@ -263,7 +263,7 @@ public class FlowServiceNodeExecutor {
       Expression expression = aviatorInstance.compile(script, true);
 
       // 构建执行环境（传入流程变量）
-      Map<String, Object> env = new HashMap<>();
+      Map<String, Object> env = new HashMap<>(16);
       if (variables != null) {
         env.putAll(variables);
       }

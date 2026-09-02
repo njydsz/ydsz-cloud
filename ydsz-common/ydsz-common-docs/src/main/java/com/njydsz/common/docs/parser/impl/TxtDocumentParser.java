@@ -58,7 +58,7 @@ public class TxtDocumentParser implements DocumentParser {
     }
 
     Charset charset = resolveCharset(options);
-    List<DocumentSection> sections = new ArrayList<>();
+    List<DocumentSection> sections = new ArrayList<>(16);
     StringBuilder fullText = new StringBuilder();
 
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset))) {

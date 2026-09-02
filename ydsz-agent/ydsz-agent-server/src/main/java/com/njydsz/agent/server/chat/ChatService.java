@@ -743,7 +743,7 @@ public class ChatService {
 
   private List<ChatMessage> buildMessages(
       String conversationId, String userMessage, String systemPrompt) {
-    List<ChatMessage> messages = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>(16);
     String prompt = systemPrompt != null ? systemPrompt : getDefaultSystemPrompt();
     messages.add(ChatMessage.system(prompt));
     List<ChatMessage> history =
@@ -766,7 +766,7 @@ public class ChatService {
    */
   private List<ChatMessage> buildMessages(
       String conversationId, MessageContent multimodalContent, String systemPrompt) {
-    List<ChatMessage> messages = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>(16);
     String prompt = systemPrompt != null ? systemPrompt : getDefaultSystemPrompt();
     messages.add(ChatMessage.system(prompt));
     List<ChatMessage> history =

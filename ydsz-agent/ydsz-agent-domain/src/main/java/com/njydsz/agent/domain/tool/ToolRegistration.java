@@ -77,7 +77,7 @@ public final class ToolRegistration {
   public static class Builder {
     private String name;
     private String description;
-    private final Map<String, Object> parametersSchema = new HashMap<>();
+    private final Map<String, Object> parametersSchema = new HashMap<>(16);
     private ToolExecutor executor;
 
     /**
@@ -114,7 +114,7 @@ public final class ToolRegistration {
      * @return 当前 Builder，便于链式调用
      */
     public Builder addParameter(String paramName, String paramDesc, boolean required) {
-      Map<String, Object> param = new HashMap<>();
+      Map<String, Object> param = new HashMap<>(16);
       // 当前 Builder 仅支持 string 类型参数（简化约定）；如需 object/number 等复杂类型应直接构造 ToolDefinition
       param.put("type", "string");
       param.put("description", paramDesc);
@@ -140,7 +140,7 @@ public final class ToolRegistration {
      * @return 绑定定义与执行器的注册条目
      */
     public ToolRegistration build() {
-      Map<String, Object> schema = new HashMap<>();
+      Map<String, Object> schema = new HashMap<>(16);
       schema.put("type", "object");
       schema.put("properties", parametersSchema);
       ToolDefinition def = new ToolDefinition(name, description, schema);

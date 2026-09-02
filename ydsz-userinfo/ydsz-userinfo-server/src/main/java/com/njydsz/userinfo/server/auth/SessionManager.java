@@ -298,7 +298,7 @@ public class SessionManager {
     if (tokens.isEmpty()) {
       return List.of();
     }
-    List<Map<String, String>> result = new ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>(16);
     for (String token : tokens) {
       Map<String, String> details = getSessionDeviceDetails(token);
       if (!details.isEmpty()) {
@@ -493,7 +493,7 @@ public class SessionManager {
    * @return 会话 Hash 数据 Map
    */
   private Map<String, Object> buildSessionInfo(SessionInfoContext context) {
-    Map<String, Object> sessionInfo = new HashMap<>();
+    Map<String, Object> sessionInfo = new HashMap<>(16);
     // P2-5: 会话 Hash schema 版本号，便于未来字段变更的平滑迁移与兼容性判断
     sessionInfo.put("schemaVersion", SESSION_SCHEMA_VERSION);
     sessionInfo.put("userId", context.userId());
@@ -527,7 +527,7 @@ public class SessionManager {
     if (accessToken == null || accessToken.isBlank()) {
       return Map.of();
     }
-    Map<String, String> details = new HashMap<>();
+    Map<String, String> details = new HashMap<>(16);
     String loginIp = redisHashOps.hGet(accessToken, SESSION_LOGIN_IP_FIELD, String.class);
     String userAgent = redisHashOps.hGet(accessToken, SESSION_USER_AGENT_FIELD, String.class);
     String loginTime = redisHashOps.hGet(accessToken, SESSION_LOGIN_TIME_FIELD, String.class);

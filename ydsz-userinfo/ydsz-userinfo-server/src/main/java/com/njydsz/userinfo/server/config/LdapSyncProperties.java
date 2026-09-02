@@ -75,7 +75,7 @@ public class LdapSyncProperties {
    *
    * <p>Key 为 LDAP 属性名（如 uid、displayName、mail），Value 为 ydsz 字段名（如 username、realName、email）。
    */
-  private Map<String, String> userAttributes = new HashMap<>();
+  private Map<String, String> userAttributes = new HashMap<>(16);
 
   /** 是否同步部门层级关系（基于 DN 解析父子结构）。 */
   private boolean departmentHierarchyEnabled = true;

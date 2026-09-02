@@ -62,7 +62,7 @@ public class NotifyAuditService {
       NotifySendResult result,
       long durationMs,
       String templateCode) {
-    Map<String, Object> auditEntry = new LinkedHashMap<>();
+    Map<String, Object> auditEntry = new LinkedHashMap<>(16);
     auditEntry.put("timestamp", Instant.now().toString());
     auditEntry.put("traceId", NotifyTraceContext.getTraceId());
     auditEntry.put("channel", channel != null ? channel.getName() : "unknown");

@@ -310,7 +310,7 @@ public class IndexSyncService {
     }
 
     // 重放内存队列（向后兼容）
-    List<IndexOperation> snapshot = new ArrayList<>();
+    List<IndexOperation> snapshot = new ArrayList<>(16);
     IndexOperation op;
     while ((op = deadLetterQueue.poll()) != null) {
       snapshot.add(op);
@@ -430,7 +430,7 @@ public class IndexSyncService {
     for (int i = 0; i < entities.size(); i += batchSize) {
       int end = Math.min(i + batchSize, entities.size());
       List<T> batch = entities.subList(i, end);
-      List<IndexDocument> documents = new ArrayList<>();
+      List<IndexDocument> documents = new ArrayList<>(16);
       for (T entity : batch) {
         try {
           IndexDocument doc = provider.toIndexDocument(entity);

@@ -155,7 +155,7 @@ public class RuleChain {
    */
   public static RuleChain then(Rule... rules) {
     Objects.requireNonNull(rules, "rules 不能为 null");
-    List<RuleNode> nodeList = new ArrayList<>();
+    List<RuleNode> nodeList = new ArrayList<>(16);
     for (Rule rule : rules) {
       if (rule != null) {
         nodeList.add(RuleNode.of(rule));
@@ -180,7 +180,7 @@ public class RuleChain {
    */
   public static RuleChain when(Rule... rules) {
     Objects.requireNonNull(rules, "rules 不能为 null");
-    List<RuleNode> nodeList = new ArrayList<>();
+    List<RuleNode> nodeList = new ArrayList<>(16);
     for (Rule rule : rules) {
       if (rule != null) {
         nodeList.add(RuleNode.of(rule));
@@ -242,7 +242,7 @@ public class RuleChain {
   public static RuleChain switchOn(String branchKey, Map<String, Rule> branches, Rule defaultRule) {
     Objects.requireNonNull(branchKey, "branchKey 不能为 null");
     Objects.requireNonNull(branches, "branches 不能为 null");
-    Map<String, RuleNode> nodeMap = new LinkedHashMap<>();
+    Map<String, RuleNode> nodeMap = new LinkedHashMap<>(16);
     for (Map.Entry<String, Rule> entry : branches.entrySet()) {
       if (entry.getKey() != null && entry.getValue() != null) {
         nodeMap.put(entry.getKey(), RuleNode.of(entry.getValue()));
@@ -269,7 +269,7 @@ public class RuleChain {
    */
   public static RuleChain elif(Map<String, Rule> branches, Rule elseRule) {
     Objects.requireNonNull(branches, "branches 不能为 null");
-    List<Map.Entry<String, RuleNode>> branchList = new ArrayList<>();
+    List<Map.Entry<String, RuleNode>> branchList = new ArrayList<>(16);
     for (Map.Entry<String, Rule> entry : branches.entrySet()) {
       if (entry.getKey() != null && entry.getValue() != null) {
         branchList.add(Map.entry(entry.getKey(), RuleNode.of(entry.getValue())));
@@ -353,7 +353,7 @@ public class RuleChain {
    */
   private List<RuleResultVO> evaluateThen(
       RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
-    List<RuleResultVO> results = new ArrayList<>();
+    List<RuleResultVO> results = new ArrayList<>(16);
     if (nodes == null) {
       return results;
     }
@@ -379,7 +379,7 @@ public class RuleChain {
       StatsRecorderVO statsRecorder,
       ExecutorService parallelExecutor,
       long timeoutMs) {
-    List<RuleResultVO> results = new ArrayList<>();
+    List<RuleResultVO> results = new ArrayList<>(16);
     if (nodes == null || nodes.isEmpty()) {
       return results;
     }
@@ -387,7 +387,7 @@ public class RuleChain {
     // P1-4: 当调用方未提供 executor 时，使用专用守护线程池而非 ForkJoinPool.commonPool()
     ExecutorService executor = parallelExecutor != null ? parallelExecutor : WHEN_FALLBACK_EXECUTOR;
     // 并行执行所有节点
-    List<CompletableFuture<List<RuleResultVO>>> futures = new ArrayList<>();
+    List<CompletableFuture<List<RuleResultVO>>> futures = new ArrayList<>(16);
     for (RuleNode node : nodes) {
       futures.add(
           CompletableFuture.supplyAsync(
@@ -431,7 +431,7 @@ public class RuleChain {
    */
   private List<RuleResultVO> evaluateIf(
       RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
-    List<RuleResultVO> results = new ArrayList<>();
+    List<RuleResultVO> results = new ArrayList<>(16);
     if (evaluator == null) {
       log.warn("[LiteRule-Chain] IF 链缺少 ExpressionEngine，跳过求值");
       return results;
@@ -458,7 +458,7 @@ public class RuleChain {
    */
   private List<RuleResultVO> evaluateSwitch(
       RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
-    List<RuleResultVO> results = new ArrayList<>();
+    List<RuleResultVO> results = new ArrayList<>(16);
     if (branchMap == null || branchKey == null) {
       return results;
     }
@@ -488,7 +488,7 @@ public class RuleChain {
   /** ELIF 语义：依次求值多个条件表达式，执行第一个匹配的分支；无匹配则执行 else 分支 */
   private List<RuleResultVO> evaluateElif(
       RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
-    List<RuleResultVO> results = new ArrayList<>();
+    List<RuleResultVO> results = new ArrayList<>(16);
     if (evaluator == null) {
       log.warn("[LiteRule-Chain] ELIF 链缺少 ExpressionEngine，跳过求值");
       return results;
@@ -534,7 +534,7 @@ public class RuleChain {
    */
   private List<RuleResultVO> evaluateNode(
       RuleNode node, RuleContextVO context, ExpressionEngine evaluator, StatsRecorderVO statsRecorder) {
-    List<RuleResultVO> results = new ArrayList<>();
+    List<RuleResultVO> results = new ArrayList<>(16);
     if (node == null) {
       return results;
     }

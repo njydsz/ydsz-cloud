@@ -1,4 +1,4 @@
-package com.njydsz.agent.infra.tool;
+new ArrayList<>(16)e com.njydsz.agent.infra.tool;
 
 import java.io.IOException;
 import java.net.URI;
@@ -214,7 +214,7 @@ public class SseMcpClientProvider implements McpClientProvider {
     }
     Object toolsObj = resultMap.get("tools");
     if (!(toolsObj instanceof List<?> toolsList)) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
     List<McpToolAdapter.McpToolDescriptor> descriptors = new ArrayList<>(toolsList.size());
     for (Object tool : toolsList) {

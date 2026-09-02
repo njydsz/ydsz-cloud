@@ -79,7 +79,7 @@ public class DagDefinitionValidator {
           .message("error.cronjob.msg_dag_no_nodes")
           .build();
     }
-    Set<String> seen = new HashSet<>();
+    Set<String> seen = new HashSet<>(16);
     for (DagNode node : definition.nodes()) {
       if (node.jobKey() == null || node.jobKey().isBlank()) {
         throw SysException.builder()
@@ -98,11 +98,11 @@ public class DagDefinitionValidator {
 
   /** 校验边完整性和无自环。 */
   private void validateEdges(DagDefinition definition) {
-    Set<String> nodeKeys = new HashSet<>();
+    Set<String> nodeKeys = new HashSet<>(16);
     for (DagNode node : definition.nodes()) {
       nodeKeys.add(node.jobKey());
     }
-    Set<String> seenEdges = new HashSet<>();
+    Set<String> seenEdges = new HashSet<>(16);
     for (DagEdge edge : definition.edges()) {
       if (edge.from() == null || edge.to() == null) {
         throw SysException.builder()
@@ -157,7 +157,7 @@ public class DagDefinitionValidator {
    * <p>遇到 GRAY 节点表示存在环。
    */
   private void validateNoCycles(DagDefinition definition) {
-    Map<String, Integer> color = new HashMap<>();
+    Map<String, Integer> color = new HashMap<>(16);
     for (DagNode node : definition.nodes()) {
       color.put(node.jobKey(), 0); // WHITE
     }

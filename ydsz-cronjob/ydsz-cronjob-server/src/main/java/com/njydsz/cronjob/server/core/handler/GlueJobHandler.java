@@ -381,7 +381,7 @@ public class GlueJobHandler implements JobHandler {
     if (executor == null) {
       throw new IllegalStateException("SandboxScriptExecutor 未注册，Python GLUE 任务无法执行");
     }
-    Map<String, String> envVars = new HashMap<>();
+    Map<String, String> envVars = new HashMap<>(16);
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "PYTHON", SCRIPT_TIMEOUT_SECONDS, envVars);
@@ -401,7 +401,7 @@ public class GlueJobHandler implements JobHandler {
     if (executor == null) {
       throw new IllegalStateException("SandboxScriptExecutor 未注册，Shell GLUE 任务无法执行");
     }
-    Map<String, String> envVars = new HashMap<>();
+    Map<String, String> envVars = new HashMap<>(16);
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "SHELL", SCRIPT_TIMEOUT_SECONDS, envVars);

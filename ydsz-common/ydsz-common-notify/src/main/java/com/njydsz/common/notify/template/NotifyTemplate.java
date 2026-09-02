@@ -43,7 +43,7 @@ public class NotifyTemplate implements Serializable {
   private NotifyChannel channelType;
 
   /** 模板变量定义，key=变量名，value=变量描述 */
-  private transient Map<String, String> variables = new HashMap<>();
+  private transient Map<String, String> variables = new HashMap<>(16);
 
   public NotifyTemplate() {}
 

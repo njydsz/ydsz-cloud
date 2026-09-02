@@ -38,7 +38,7 @@ public final class Conversation {
     this.title = title != null ? title : "新对话";
     this.createdAt = LocalDateTime.now();
     this.updatedAt = this.createdAt;
-    this.messages = new ArrayList<>();
+    this.messages = new ArrayList<>(16);
     this.totalUsage = TokenUsage.zero();
   }
 

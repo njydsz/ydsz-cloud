@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+new LinkedHashMap<>(16)nkedHashMap<>(16)package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -294,7 +294,7 @@ public class FlowExportServiceImpl implements FlowExportService {
 
   private List<FlowHisTaskVO> loadHistory(String instanceId) {
     List<FlowHisTaskVO> history = hisTaskRepository.findByInstanceId(instanceId);
-    return history != null ? history : new ArrayList<>();
+    return history != null ? history : new ArrayList<>(16);
   }
 
   private Map<String, Object> parseVariables(String json) {
@@ -306,7 +306,7 @@ public class FlowExportServiceImpl implements FlowExportService {
       return map != null ? map : new LinkedHashMap<>();
     } catch (Exception e) {
       log.warn("[Export] 变量解析失败: {}", e.getMessage());
-      return new LinkedHashMap<>();
+      return new LinkedHashMap<>(0);
     }
   }
 

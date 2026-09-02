@@ -1,4 +1,4 @@
-package com.njydsz.common.excel.core.reader;
+new HashMap<>(16)eader;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public class RowParser {
     this.metadata = metadata;
     this.context = context;
     this.fieldSetterCache = new HashMap<>();
-    this.targetTypeCache = new HashMap<>();
+    this.targetTypeCache = new HashMap<>(16);
     this.converterChain = ConverterRegistry.getDefaultChain();
   }
 
@@ -100,7 +100,7 @@ public class RowParser {
       Map<Integer, Field> fieldMap,
       ColumnMetadata[] columnMetadataArray) {
     if (metadata.getClazz() == null) {
-      Map<String, Object> data = new LinkedHashMap<>();
+      Map<String, Object> data = new LinkedHashMap<>(16);
       for (int col = 0; col < headers.size(); col++) {
         Cell cell = row.getCell(col);
         Object value = getCellValue(cell);

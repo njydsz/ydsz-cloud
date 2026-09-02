@@ -170,7 +170,7 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
      */
     private List<MemoryExtractedFact> parseExtractedFacts(String response, String tenantId,
                                                           Conversation conversation) {
-        List<MemoryExtractedFact> facts = new ArrayList<>();
+        List<MemoryExtractedFact> facts = new ArrayList<>(16);
         Matcher matcher = FACT_PATTERN.matcher(response);
 
         int count = 0;

@@ -49,7 +49,7 @@ public class FileTypeValidator {
   private final boolean checkMagicNumberEnabled;
 
   /** 后缀名到预期 Magic Number 类型的映射 */
-  private static final Map<String, String> EXT_MAGIC_MAP = new HashMap<>();
+  private static final Map<String, String> EXT_MAGIC_MAP = new HashMap<>(16);
 
   private static final Set<String> ALLOWED_UNKNOWN_EXTENSIONS =
       Set.of(

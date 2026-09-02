@@ -42,7 +42,7 @@ public class EmailDetector implements PiiDetector {
     }
 
     String text = content.getText();
-    List<PiiFinding> findings = new ArrayList<>();
+    List<PiiFinding> findings = new ArrayList<>(16);
 
     for (SensitiveUtil.PiiMatch match : SensitiveUtil.scanWithPositions(text)) {
       if (match.type() != SensitiveType.EMAIL) {

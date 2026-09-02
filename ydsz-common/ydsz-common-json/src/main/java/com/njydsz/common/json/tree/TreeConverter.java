@@ -59,7 +59,7 @@ public final class TreeConverter {
       return BooleanNode.of((Boolean) value);
     }
     if (value instanceof Map<?, ?> mapValue) {
-      Map<String, JsonNode> fields = new LinkedHashMap<>();
+      Map<String, JsonNode> fields = new LinkedHashMap<>(16);
       for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
         String key;
         if (entry.getKey() instanceof String) {
@@ -72,7 +72,7 @@ public final class TreeConverter {
       return new ObjectNode(fields);
     }
     if (value instanceof List<?> listValue) {
-      List<JsonNode> elements = new ArrayList<>();
+      List<JsonNode> elements = new ArrayList<>(16);
       for (Object item : listValue) {
         elements.add(convertToJsonNode(item));
       }
@@ -96,7 +96,7 @@ public final class TreeConverter {
       return null;
     }
     if (node instanceof ObjectNode objectNode) {
-      Map<String, Object> map = new LinkedHashMap<>();
+      Map<String, Object> map = new LinkedHashMap<>(16);
       for (Map.Entry<String, JsonNode> entry : objectNode.entrySet()) {
         map.put(entry.getKey(), convertToJavaObject(entry.getValue()));
       }

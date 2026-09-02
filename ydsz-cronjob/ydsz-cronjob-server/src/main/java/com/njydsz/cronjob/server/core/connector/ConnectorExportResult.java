@@ -26,7 +26,7 @@ public class ConnectorExportResult {
   private int skipped;
 
   /** 错误详情列表 */
-  private List<String> errors = new ArrayList<>();
+  private List<String> errors = new ArrayList<>(4);
 
   /**
    * 创建成功结果。

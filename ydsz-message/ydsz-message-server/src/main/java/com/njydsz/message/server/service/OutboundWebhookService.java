@@ -72,7 +72,7 @@ public class OutboundWebhookService {
    * @param logDO 消息日志
    */
   public void fireEvent(String event, MsgLogVO logDO) {
-    Map<String, Object> payload = new HashMap<>();
+    Map<String, Object> payload = new HashMap<>(16);
     payload.put("event", event);
     payload.put("timestamp", System.currentTimeMillis());
     payload.put("msgId", logDO.getId());

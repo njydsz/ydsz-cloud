@@ -106,7 +106,7 @@ public class TemplatePreviewController {
     }
 
     Map<String, Object> params =
-        req.getParams() == null ? new HashMap<>() : new HashMap<>(req.getParams());
+        req.getParams() == null ? new HashMap<>(16) : new HashMap<>(req.getParams());
 
     // P0-3: 变量校验+填充默认值
     if (StringUtils.hasText(template.getVariableDefs())) {
@@ -116,7 +116,7 @@ public class TemplatePreviewController {
       }
     }
 
-    Map<String, String> result = new HashMap<>();
+    Map<String, String> result = new HashMap<>(16);
     result.put("content", templateEngine.render(template.getContent(), params));
     result.put(
         "subject",
@@ -141,7 +141,7 @@ public class TemplatePreviewController {
     if (req == null || !StringUtils.hasText(req.getTemplate())) {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "模板内容不能为空");
     }
-    Map<String, Object> params = req.getParams() == null ? new HashMap<>() : req.getParams();
+    Map<String, Object> params = req.getParams() == null ? new HashMap<>(16) : req.getParams();
     String rendered = templateEngine.render(req.getTemplate(), params);
     return YdszResponse.success(rendered);
   }

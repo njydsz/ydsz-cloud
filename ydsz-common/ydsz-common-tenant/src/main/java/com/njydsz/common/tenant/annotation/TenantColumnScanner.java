@@ -45,7 +45,7 @@ public class TenantColumnScanner {
    * @return 表名 → 租户列名映射（key 已小写规范化）
    */
   public Map<String, String> scanTableColumnMappings() {
-    Map<String, String> scannedMappings = new LinkedHashMap<>();
+    Map<String, String> scannedMappings = new LinkedHashMap<>(16);
     ClassPathScanningCandidateComponentProvider scanner =
         new ClassPathScanningCandidateComponentProvider(false);
     scanner.addIncludeFilter(new AnnotationTypeFilter(TenantColumn.class));

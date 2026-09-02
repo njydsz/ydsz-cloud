@@ -93,8 +93,8 @@ public final class FieldMetadataLoader {
    * @since 26.09.01
    */
   public static List<Field> collectDeclaredAndInheritedFields(Class<?> clazz) {
-    List<Field> fields = new ArrayList<>();
-    Set<String> seen = new HashSet<>();
+    List<Field> fields = new ArrayList<>(16);
+    Set<String> seen = new HashSet<>(16);
     Class<?> current = clazz;
     while (current != null && current != Object.class) {
       for (Field f : current.getDeclaredFields()) {
@@ -168,7 +168,7 @@ public final class FieldMetadataLoader {
     }
 
     JsonPropertyOrder propertyOrder = clazz.getAnnotation(JsonPropertyOrder.class);
-    Map<String, Integer> propertyOrderMapping = new HashMap<>();
+    Map<String, Integer> propertyOrderMapping = new HashMap<>(16);
     boolean alphabeticSort = false;
     if (propertyOrder != null) {
       if (propertyOrder.value().length > 0) {
@@ -499,9 +499,9 @@ public final class FieldMetadataLoader {
     return COMPUTED_PROPERTIES_CACHE.computeIfAbsent(
         clazz,
         c -> {
-          List<Method> computed = new ArrayList<>();
+          List<Method> computed = new ArrayList<>(16);
           // 获取已加载的字段名集合
-          Set<String> fieldNames = new HashSet<>();
+          Set<String> fieldNames = new HashSet<>(16);
           Field[] fields = c.getDeclaredFields();
           for (Field f : fields) {
             int mods = f.getModifiers();

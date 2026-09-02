@@ -449,7 +449,7 @@ public class NotifyServiceImpl implements NotifyService {
         CompletableFuture.allOf(futures.toArray(new CompletableFuture<?>[0]));
     return allFutures.thenApply(
         v -> {
-          List<BatchSendResultDTO.ReceiverSendResult> details = new ArrayList<>();
+          List<BatchSendResultDTO.ReceiverSendResult> details = new ArrayList<>(16);
           int successCount = 0;
           int failureCount = 0;
           for (CompletableFuture<BatchSendResultDTO.ReceiverSendResult> future : futures) {

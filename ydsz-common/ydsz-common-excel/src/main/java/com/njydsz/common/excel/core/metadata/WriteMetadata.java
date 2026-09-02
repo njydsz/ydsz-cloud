@@ -140,7 +140,7 @@ public class WriteMetadata {
     this.dataRowNumber = 0;
     this.useScientificNotation = false;
     this.locked = false;
-    this.headList = new ArrayList<>();
+    this.headList = new ArrayList<>(16);
     this.automaticTrim = true;
     this.maxChanLength = 1024;
     this.excelType = "xlsx";

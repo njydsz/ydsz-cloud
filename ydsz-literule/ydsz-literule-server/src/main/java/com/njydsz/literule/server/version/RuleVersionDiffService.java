@@ -76,7 +76,7 @@ public class RuleVersionDiffService {
           .build();
     }
 
-    List<RuleVersionDiff.DiffEntry> entries = new ArrayList<>();
+    List<RuleVersionDiff.DiffEntry> entries = new ArrayList<>(16);
 
     // 基本信息
     compareField(entries, "code", "规则编码", oldDef.getCode(), newDef.getCode());

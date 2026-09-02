@@ -117,7 +117,7 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
               .withDetail("encryptorPasswordSource", keySource)
               .withDetail("encryptedPropertyCount", encryptedCount);
       // 仅显示前 MAX_DETAIL_ITEMS 个属性名
-      Set<String> displayKeys = new HashSet<>();
+      Set<String> displayKeys = new HashSet<>(16);
       int count = 0;
       for (String key : encryptedKeys) {
         if (count++ >= MAX_DETAIL_ITEMS) {
@@ -190,7 +190,7 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
 
   /** 查找所有 ENC() 格式属性的键名集合 */
   private Set<String> findEncryptedPropertyKeys() {
-    Set<String> keys = new HashSet<>();
+    Set<String> keys = new HashSet<>(16);
     for (PropertySource<?> ps : environment.getPropertySources()) {
       if (ps instanceof EnumerablePropertySource<?> enumerable) {
         for (String key : enumerable.getPropertyNames()) {

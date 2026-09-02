@@ -46,7 +46,7 @@ public class PassportDetector implements PiiDetector {
     }
 
     String text = content.getText();
-    List<PiiFinding> findings = new ArrayList<>();
+    List<PiiFinding> findings = new ArrayList<>(16);
     Matcher matcher = PASSPORT_PATTERN.matcher(text);
 
     while (matcher.find()) {

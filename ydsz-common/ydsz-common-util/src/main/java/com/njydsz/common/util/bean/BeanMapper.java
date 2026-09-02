@@ -1,4 +1,4 @@
-package com.njydsz.common.util.bean;
+new LinkedHashMap<>(16)l.bean;
 
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
@@ -941,7 +941,7 @@ public final class BeanMapper {
    */
   private static Map<String, Object> toStringObjectMap(Map<?, ?> map) {
     if (map == null) {
-      return new LinkedHashMap<>();
+      return new LinkedHashMap<>(0);
     }
     Map<String, Object> result = new LinkedHashMap<>(map.size());
     for (Map.Entry<?, ?> entry : map.entrySet()) {

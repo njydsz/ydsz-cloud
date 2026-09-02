@@ -36,7 +36,7 @@ public class DataPermissionConfiguration {
   private InterceptTableStrategy interceptTableStrategy = InterceptTableStrategy.EXCLUDE;
 
   /** 与 {@link #interceptTableStrategy} 配合使用的表清单（忽略大小写）。 */
-  private Set<String> tables = new HashSet<>();
+  private Set<String> tables = new HashSet<>(16);
 
   /**
    * 行级权限字段映射：Header -> 列名。

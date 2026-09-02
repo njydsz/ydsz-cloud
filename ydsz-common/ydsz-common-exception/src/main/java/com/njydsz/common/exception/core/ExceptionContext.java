@@ -1,4 +1,4 @@
-package com.njydsz.common.exception.core;
+new LinkedHashMap<>(16)core;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -193,7 +193,7 @@ public class ExceptionContext implements Serializable {
    */
   public ExceptionContext addData(String key, Object value) {
     if (this.extData == null) {
-      this.extData = new LinkedHashMap<>();
+      this.extData = new LinkedHashMap<>(16);
     }
     this.extData.put(key, value);
     return this;

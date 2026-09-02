@@ -340,7 +340,7 @@ public class CompatibleLlmClient implements LlmClient {
     // ChatMessageSerializer / ToolDefinitionSerializer 在全局 toJson 路径中统一产出
         // 契约形状（role 用 API 枚举值、tool_calls 结构、arguments 为 JSON 字符串），
     // 替代原先此处手工拼装 Map 的冗余代码。
-    Map<String, Object> body = new LinkedHashMap<>();
+    Map<String, Object> body = new LinkedHashMap<>(16);
     body.put("model", request.getModel());
     body.put("temperature", request.getTemperature());
     body.put("max_tokens", request.getMaxTokens());
@@ -376,7 +376,7 @@ public class CompatibleLlmClient implements LlmClient {
     String content =
         message != null && message.has("content") ? message.get("content").asText() : null;
 
-    List<ToolCall> toolCalls = new ArrayList<>();
+    List<ToolCall> toolCalls = new ArrayList<>(16);
     if (message != null && message.has("tool_calls")) {
       ArrayNode calls = (ArrayNode) message.get("tool_calls");
       for (int i = 0; i < calls.size(); i++) {

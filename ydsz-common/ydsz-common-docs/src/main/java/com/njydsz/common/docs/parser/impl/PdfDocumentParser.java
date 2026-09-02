@@ -122,7 +122,7 @@ public class PdfDocumentParser implements DocumentParser {
       String fullText = stripper.getText(document);
 
       // 根据 profile 决定输出结构化程度
-      List<DocumentSection> sections = new ArrayList<>();
+      List<DocumentSection> sections = new ArrayList<>(16);
       if (profile != ParseProfile.TEXT_ONLY) {
         // 单次全量抽取后按换页符 \f 分割，保留页码信息（O(1) 抽取替代 O(N) 遍历）
         if (fullText != null && !fullText.isEmpty()) {

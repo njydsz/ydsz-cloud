@@ -68,7 +68,7 @@ public class SuggestionService {
         return Collections.emptyList();
       }
       String normalizedPrefix = prefix.trim().toLowerCase();
-      List<String> results = new ArrayList<>();
+      List<String> results = new ArrayList<>(16);
 
       // 策略 1：引擎前缀建议
       SearchSuggestion suggestion =

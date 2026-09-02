@@ -78,7 +78,7 @@ public class DecisionTableRule implements Rule {
   public RuleResultVO evaluate(RuleContextVO context) {
     long start = System.nanoTime();
     try {
-      List<DecisionTableDefinitionDTO.Row> matchedRows = new ArrayList<>();
+      List<DecisionTableDefinitionDTO.Row> matchedRows = new ArrayList<>(16);
       for (DecisionTableDefinitionDTO.Row row : definition.getRows()) {
         if (row.getConditions() == null || row.getConditions().isEmpty()) {
           matchedRows.add(row);

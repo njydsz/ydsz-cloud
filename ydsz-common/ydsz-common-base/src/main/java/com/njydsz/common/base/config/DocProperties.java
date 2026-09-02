@@ -1,4 +1,4 @@
-package com.njydsz.common.base.config;
+new ArrayList<>(16)com.njydsz.common.base.config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -195,7 +195,7 @@ public class DocProperties {
     private List<String> packages = new ArrayList<>();
 
     /** 匹配的路径模式列表（支持多路径匹配） */
-    private List<String> paths = new ArrayList<>();
+    private List<String> paths = new ArrayList<>(4);
   }
 
   /**

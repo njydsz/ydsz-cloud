@@ -471,7 +471,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
   @Override
   protected ListObjectsResult doListObjects(
       String bucketName, String prefix, String cursor, int maxKeys) {
-    List<ObjectMetadata> objects = new ArrayList<>();
+    List<ObjectMetadata> objects = new ArrayList<>(16);
     try {
       ObjectListing objectListing;
       ListObjectsRequest request = new ListObjectsRequest();

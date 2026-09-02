@@ -111,7 +111,7 @@ public class GetuiPushProvider implements PushProvider {
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
       headers.set("token", token);
-      Map<String, Object> body = new HashMap<>();
+      Map<String, Object> body = new HashMap<>(16);
       body.put("request_id", String.valueOf(snowflakeIdGenerator.nextId()));
       body.put("audience", Map.of("cid", new String[] {cid}));
       String title = StringUtils.hasText(request.getSubject()) ? request.getSubject() : "通知";
@@ -176,7 +176,7 @@ public class GetuiPushProvider implements PushProvider {
       String timestamp = String.valueOf(System.currentTimeMillis());
       String sign = GetuiPushSigner.sign(config.getAppKey(), timestamp, config.getMasterSecret());
       String url = config.getBaseUrl() + "/v2/" + config.getAppId() + "/auth";
-      Map<String, Object> body = new HashMap<>();
+      Map<String, Object> body = new HashMap<>(16);
       body.put("sign", sign);
       body.put("timestamp", timestamp);
       body.put("appkey", config.getAppKey());

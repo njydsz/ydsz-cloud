@@ -65,8 +65,8 @@ public class ExcelDocumentParser implements DocumentParser {
 
     try {
       List<RawSheetData> sheets = ExcelFacade.readAllSheets(inputStream);
-      List<DocumentTable> tables = new ArrayList<>();
-      List<DocumentSection> sections = new ArrayList<>();
+      List<DocumentTable> tables = new ArrayList<>(16);
+      List<DocumentSection> sections = new ArrayList<>(16);
       StringBuilder fullText = new StringBuilder();
 
       for (RawSheetData sheet : sheets) {

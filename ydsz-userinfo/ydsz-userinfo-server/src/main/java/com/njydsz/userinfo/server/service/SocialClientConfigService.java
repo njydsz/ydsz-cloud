@@ -157,7 +157,7 @@ public class SocialClientConfigService {
    * @return 平台标识 → 配置映射
    */
   public Map<String, SocialAuthProperties.ProviderConfig> getMergedProviderConfigs() {
-    Map<String, SocialAuthProperties.ProviderConfig> merged = new HashMap<>();
+    Map<String, SocialAuthProperties.ProviderConfig> merged = new HashMap<>(16);
 
     // 1. 先加载 YAML 配置
     if (socialAuthProperties.getProviders() != null) {

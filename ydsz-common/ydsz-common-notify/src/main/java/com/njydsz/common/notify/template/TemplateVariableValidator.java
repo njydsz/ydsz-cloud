@@ -108,7 +108,7 @@ public class TemplateVariableValidator {
       return;
     }
 
-    Set<String> checkedVars = new HashSet<>();
+    Set<String> checkedVars = new HashSet<>(16);
 
     for (Map.Entry<String, String> entry : variableDefs.entrySet()) {
       String varName = entry.getKey();

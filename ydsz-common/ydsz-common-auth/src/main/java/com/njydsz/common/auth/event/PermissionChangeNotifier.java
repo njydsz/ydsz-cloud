@@ -104,7 +104,7 @@ public class PermissionChangeNotifier {
   private List<PermissionChangeListener> loadListeners() {
     ServiceLoader<PermissionChangeListener> loader =
         ServiceLoader.load(PermissionChangeListener.class);
-    List<PermissionChangeListener> listenerList = new ArrayList<>();
+    List<PermissionChangeListener> listenerList = new ArrayList<>(16);
     for (PermissionChangeListener listener : loader) {
       listenerList.add(listener);
     }

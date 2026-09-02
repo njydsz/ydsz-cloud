@@ -189,7 +189,7 @@ public class SummaryConversationMemory implements ConversationMemory {
 
   @Override
   public List<ChatMessage> load(String conversationId, int maxMessages) {
-    List<ChatMessage> messages = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>(16);
 
     String summary = loadSummary(conversationId);
     if (summary != null && !summary.isBlank()) {
@@ -220,7 +220,7 @@ public class SummaryConversationMemory implements ConversationMemory {
   @Override
   public List<ChatMessage> loadWithTokenBudget(
       String conversationId, int tokenBudget, double tokenCharRatio) {
-    List<ChatMessage> result = new ArrayList<>();
+    List<ChatMessage> result = new ArrayList<>(16);
     // 摘要优先（占用部分预算）
     String summary = loadSummary(conversationId);
     if (summary != null && !summary.isBlank()) {

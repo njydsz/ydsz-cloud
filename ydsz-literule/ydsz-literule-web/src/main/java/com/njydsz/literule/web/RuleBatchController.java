@@ -149,7 +149,7 @@ public class RuleBatchController {
     Boolean enabled = dto.getEnabled();
     // @NotEmpty + @NotNull 已校验非空，移除手动校验
     int success = 0;
-    List<String> failed = new ArrayList<>();
+    List<String> failed = new ArrayList<>(16);
     for (String code : ruleCodes) {
       try {
         RuleDefinitionDTO def = ruleAdminService.getByCode(code);
@@ -168,7 +168,7 @@ public class RuleBatchController {
         failed.add(code + ": " + e.getMessage());
       }
     }
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("success", success);
     result.put("failed", failed);
     return YdszResponse.success(result);
@@ -199,7 +199,7 @@ public class RuleBatchController {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "delta 不能为 0");
     }
     int success = 0;
-    List<String> failed = new ArrayList<>();
+    List<String> failed = new ArrayList<>(16);
     for (String code : ruleCodes) {
       try {
         RuleDefinitionDTO def = ruleAdminService.getByCode(code);
@@ -217,7 +217,7 @@ public class RuleBatchController {
         failed.add(code + ": " + e.getMessage());
       }
     }
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("success", success);
     result.put("failed", failed);
     return YdszResponse.success(result);
@@ -245,7 +245,7 @@ public class RuleBatchController {
     String category = dto.getCategory();
     // @NotEmpty + @NotBlank 已校验非空，移除手动校验
     int success = 0;
-    List<String> failed = new ArrayList<>();
+    List<String> failed = new ArrayList<>(16);
     for (String code : ruleCodes) {
       try {
         RuleDefinitionDTO def = ruleAdminService.getByCode(code);
@@ -260,7 +260,7 @@ public class RuleBatchController {
         failed.add(code + ": " + e.getMessage());
       }
     }
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("success", success);
     result.put("failed", failed);
     return YdszResponse.success(result);

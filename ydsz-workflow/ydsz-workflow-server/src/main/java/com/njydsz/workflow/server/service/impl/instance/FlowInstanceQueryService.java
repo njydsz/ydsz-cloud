@@ -171,7 +171,7 @@ public class FlowInstanceQueryService {
     }
     // 排除当前待办节点（撤回到当前节点无意义），转换为强类型 VO
     String currentNodeCode = instance.getCurrentNodeCode();
-    List<FlowRecallableNodeVO> result = new ArrayList<>();
+    List<FlowRecallableNodeVO> result = new ArrayList<>(16);
     for (Map<String, Object> n : passedNodes) {
       Object code = n.get("nodeCode");
       if (code != null && !code.toString().equals(currentNodeCode)) {
@@ -317,7 +317,7 @@ public class FlowInstanceQueryService {
         }
       }
     }
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("instanceId", instanceId);
     result.put("taskId", taskId);
     result.put("nodeCode", nodeCode);

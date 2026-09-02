@@ -52,16 +52,16 @@ public class ThreadPoolMetricsEndpoint {
   @ReadOperation
   public Map<String, Object> allPoolMetrics() {
     List<CronjobThreadPoolRegistry.ThreadPoolMetrics> metricsList = registry.getMetrics();
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
 
     int totalPools = metricsList.size();
     int totalActive = 0;
     int totalQueueSize = 0;
     long totalCompleted = 0;
 
-    Map<String, Object> pools = new LinkedHashMap<>();
+    Map<String, Object> pools = new LinkedHashMap<>(16);
     for (CronjobThreadPoolRegistry.ThreadPoolMetrics m : metricsList) {
-      Map<String, Object> poolDetail = new LinkedHashMap<>();
+      Map<String, Object> poolDetail = new LinkedHashMap<>(16);
       poolDetail.put("corePoolSize", m.corePoolSize());
       poolDetail.put("maximumPoolSize", m.maximumPoolSize());
       poolDetail.put("activeCount", m.activeCount());
@@ -109,7 +109,7 @@ public class ThreadPoolMetricsEndpoint {
         .findFirst()
         .map(
             m -> {
-              Map<String, Object> detail = new LinkedHashMap<>();
+              Map<String, Object> detail = new LinkedHashMap<>(16);
               detail.put("name", m.name());
               detail.put("corePoolSize", m.corePoolSize());
               detail.put("maximumPoolSize", m.maximumPoolSize());

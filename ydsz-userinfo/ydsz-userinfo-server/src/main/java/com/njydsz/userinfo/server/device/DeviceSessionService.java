@@ -59,7 +59,7 @@ public class DeviceSessionService {
     }
 
     List<Map<String, String>> sessionDetails = sessionManager.listSessionDeviceDetails(userId);
-    List<DeviceSessionVO> result = new ArrayList<>();
+    List<DeviceSessionVO> result = new ArrayList<>(16);
 
     for (Map<String, String> details : sessionDetails) {
       DeviceSessionVO vo = new DeviceSessionVO();

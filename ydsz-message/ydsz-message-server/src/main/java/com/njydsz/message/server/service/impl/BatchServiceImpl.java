@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.impl.batch;
+new ArrayList<>(16)e com.njydsz.message.server.service.impl.batch;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -212,7 +212,7 @@ public class BatchServiceImpl implements BatchService {
       return requests != null ? requests : new ArrayList<>();
     } catch (Exception e) {
       log.warn("[Batch] payload 反序列化失败: {}", e.getMessage(), e);
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
   }
 

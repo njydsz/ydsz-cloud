@@ -80,7 +80,7 @@ public class MentionService {
    */
   public List<String> extractMentions(String content) {
     if (content == null || content.isBlank()) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
 
     Set<String> mentions = new LinkedHashSet<>();

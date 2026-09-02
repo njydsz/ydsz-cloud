@@ -182,13 +182,13 @@ public class AuthRowPermissionAspect {
     context.setDataScope(info.getScope());
     context.setUserId(info.getUserId());
     context.setCompanyIds(
-        info.getCompanyIds() != null ? new HashSet<>(info.getCompanyIds()) : new HashSet<>());
+        info.getCompanyIds() != null ? new HashSet<>(info.getCompanyIds()) : new HashSet<>(16));
     context.setDeptIds(
-        info.getDeptIds() != null ? new HashSet<>(info.getDeptIds()) : new HashSet<>());
+        info.getDeptIds() != null ? new HashSet<>(info.getDeptIds()) : new HashSet<>(16));
     context.setProjectIds(
-        info.getProjectIds() != null ? new HashSet<>(info.getProjectIds()) : new HashSet<>());
+        info.getProjectIds() != null ? new HashSet<>(info.getProjectIds()) : new HashSet<>(16));
     context.setRegionIds(
-        info.getRegionIds() != null ? new HashSet<>(info.getRegionIds()) : new HashSet<>());
+        info.getRegionIds() != null ? new HashSet<>(info.getRegionIds()) : new HashSet<>(16));
     return context;
   }
 

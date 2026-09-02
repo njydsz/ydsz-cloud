@@ -68,7 +68,7 @@ public class TextChunker implements DocumentPreprocessor {
       return content;
     }
 
-    List<DocumentSection> chunkedSections = new ArrayList<>();
+    List<DocumentSection> chunkedSections = new ArrayList<>(16);
     List<String> chunks =
         splitIntoChunks(text, properties.getMaxChunkSize(), properties.getChunkOverlap());
 
@@ -78,7 +78,7 @@ public class TextChunker implements DocumentPreprocessor {
     }
 
     // 保留原始分节 + 追加分块结果
-    List<DocumentSection> allSections = new ArrayList<>();
+    List<DocumentSection> allSections = new ArrayList<>(16);
     if (content.getSections() != null) {
       allSections.addAll(content.getSections());
     }
@@ -125,7 +125,7 @@ public class TextChunker implements DocumentPreprocessor {
    * @return 分块结果，按原文顺序排列；不会返回 {@code null}
    */
   private List<String> splitIntoChunks(String text, int maxChunkSize, int overlap) {
-    List<String> chunks = new ArrayList<>();
+    List<String> chunks = new ArrayList<>(16);
 
     // 尝试按段落分割
     String[] paragraphs = text.split("\n\n");
@@ -174,7 +174,7 @@ public class TextChunker implements DocumentPreprocessor {
    * @return 分块结果，按原文顺序排列；不会返回 {@code null}
    */
   private List<String> splitBySentence(String text, int maxChunkSize, int overlap) {
-    List<String> chunks = new ArrayList<>();
+    List<String> chunks = new ArrayList<>(16);
     String[] sentences = text.split("(?<=[。．.！？!?\\n])");
     StringBuilder current = new StringBuilder();
 

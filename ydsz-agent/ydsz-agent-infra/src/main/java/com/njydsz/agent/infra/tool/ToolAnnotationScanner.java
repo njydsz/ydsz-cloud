@@ -108,7 +108,7 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
 
   /** 从方法参数构建 JSON Schema */
   private Map<String, Object> buildParametersSchema(Method method) {
-    Map<String, Object> properties = new HashMap<>();
+    Map<String, Object> properties = new HashMap<>(16);
     Parameter[] parameters = method.getParameters();
     for (int i = 0; i < parameters.length; i++) {
       Parameter param = parameters[i];
@@ -122,14 +122,14 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
         required = paramAnnotation.required();
       }
 
-      Map<String, Object> paramSchema = new HashMap<>();
+      Map<String, Object> paramSchema = new HashMap<>(16);
       paramSchema.put("type", mapJavaTypeToJsonType(param.getType()));
       paramSchema.put("description", paramDesc);
       paramSchema.put("required", required);
       properties.put(paramName, paramSchema);
     }
 
-    Map<String, Object> schema = new HashMap<>();
+    Map<String, Object> schema = new HashMap<>(16);
     schema.put("type", "object");
     schema.put("properties", properties);
     return schema;

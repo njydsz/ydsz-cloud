@@ -255,7 +255,7 @@ public class ExceptionInfo implements Serializable {
      */
     public Builder detail(String key, Object value) {
       if (this.details == null) {
-        this.details = new LinkedHashMap<>();
+        this.details = new LinkedHashMap<>(16);
       }
       this.details.put(key, value);
       return this;

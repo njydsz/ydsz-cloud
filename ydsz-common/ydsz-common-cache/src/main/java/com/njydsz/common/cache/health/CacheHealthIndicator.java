@@ -128,7 +128,7 @@ public class CacheHealthIndicator {
    * @return 健康状态详情
    */
   public HealthResult health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     Status overallStatus = Status.UP;
 
     for (Entry<String, Cache<?, ?>> entry : monitoredCaches.entrySet()) {
@@ -146,7 +146,7 @@ public class CacheHealthIndicator {
           overallStatus = Status.WARN;
         }
       } catch (Exception e) {
-        Map<String, Object> errorDetails = new HashMap<>();
+        Map<String, Object> errorDetails = new HashMap<>(16);
         errorDetails.put("status", Status.DOWN);
         errorDetails.put("error", e.getMessage());
         details.put(cacheName, errorDetails);
@@ -161,7 +161,7 @@ public class CacheHealthIndicator {
 
   /** 检查单个缓存的健康状态 */
   private Map<String, Object> checkCacheHealth(Cache<?, ?> cache) {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     Status status = Status.UP;
 
     long size = cache.estimatedSize();

@@ -294,7 +294,7 @@ public class BpmnNodeParser {
       switch (local.toLowerCase()) {
         case "timereventdefinition" -> {
           hasTimer = true;
-          Map<String, Object> timer = new HashMap<>();
+          Map<String, Object> timer = new HashMap<>(16);
           Element timeCycle = bpmnElementHelper.findChild(e, "timeCycle");
           Element timeDate = bpmnElementHelper.findChild(e, "timeDate");
           Element timeDuration = bpmnElementHelper.findChild(e, "timeDuration");
@@ -375,7 +375,7 @@ public class BpmnNodeParser {
         local = e.getNodeName();
       }
       // 收集所有自定义属性为键值对
-      Map<String, String> attrs = new HashMap<>();
+      Map<String, String> attrs = new HashMap<>(16);
       if (e.hasAttributes()) {
         var attrMap = e.getAttributes();
         for (int j = 0; j < attrMap.getLength(); j++) {

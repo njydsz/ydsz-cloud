@@ -47,7 +47,7 @@ public class SocialAuthProperties {
   private boolean enabled = false;
 
   /** 各平台配置（key 为平台标识，如 enterprise_wechat/dingtalk/feishu）。 */
-  private Map<String, ProviderConfig> providers = new HashMap<>();
+  private Map<String, ProviderConfig> providers = new HashMap<>(16);
 
   /**
    * 平台提供者配置。

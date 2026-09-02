@@ -60,7 +60,7 @@ public class IpAccessFilter extends OncePerRequestFilter {
       List<String> excludes) {
     this.ipAccessService = ipAccessService;
     this.eventPublisher = eventPublisher;
-    this.excludes = excludes != null ? excludes : new ArrayList<>();
+    this.excludes = excludes != null ? excludes : new ArrayList<>(16);
   }
 
   @Override

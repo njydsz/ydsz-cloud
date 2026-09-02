@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.config;
+new ArrayList<>(16).config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +70,7 @@ public class IpAccessProperties {
   private List<String> staticWhitelist = new ArrayList<>();
 
   /** 排除路径列表（Ant 风格） */
-  private List<String> excludes = new ArrayList<>();
+  private List<String> excludes = new ArrayList<>(4);
 
   /** 访问控制模式枚举 */
   public enum AccessMode {

@@ -768,8 +768,8 @@ public class SuperFastExcelWriter {
   private void analyzeClass(Class<?> clazz) {
     try {
       Field[] declaredFields = clazz.getDeclaredFields();
-      List<int[]> orderList = new ArrayList<>(); // [order, fieldIndex]
-      List<Field> annotatedFields = new ArrayList<>();
+      List<int[]> orderList = new ArrayList<>(16); // [order, fieldIndex]
+      List<Field> annotatedFields = new ArrayList<>(16);
 
       for (int i = 0; i < declaredFields.length; i++) {
         Field field = declaredFields[i];
@@ -794,7 +794,7 @@ public class SuperFastExcelWriter {
 
       fieldInfoSize = orderList.size();
       fieldInfoArray = new FieldAccessorInfo[fieldInfoSize];
-      fieldInfoMap = new HashMap<>();
+      fieldInfoMap = new HashMap<>(16);
       columnTypeIds = new byte[fieldInfoSize];
 
       for (int compactIdx = 0; compactIdx < orderList.size(); compactIdx++) {

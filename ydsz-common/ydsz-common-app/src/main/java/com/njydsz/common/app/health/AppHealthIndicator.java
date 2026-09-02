@@ -54,11 +54,11 @@ public class AppHealthIndicator implements HealthIndicator {
    */
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     details.put("module", "app");
 
     // API 签名验证状态（由 safe 模块提供，app 模块报告配置摘要）
-    Map<String, Object> signatureStatus = new LinkedHashMap<>();
+    Map<String, Object> signatureStatus = new LinkedHashMap<>(16);
     signatureStatus.put("enabled", signatureProperties.isEnabled());
     signatureStatus.put(
         "hasSecret",

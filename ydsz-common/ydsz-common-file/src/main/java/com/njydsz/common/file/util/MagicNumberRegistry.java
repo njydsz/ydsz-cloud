@@ -175,7 +175,7 @@ public final class MagicNumberRegistry {
   }
 
   private static void mapExtToMagic(String ext, String type) {
-    EXT_TO_MAGIC_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new HashSet<>()).add(type);
+    EXT_TO_MAGIC_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new HashSet<>(16)).add(type);
   }
 
   private static byte[] hex(String hexStr) {

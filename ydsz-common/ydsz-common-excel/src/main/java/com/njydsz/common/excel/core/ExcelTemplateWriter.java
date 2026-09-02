@@ -164,13 +164,13 @@ public class ExcelTemplateWriter {
   }
 
   private Map<Integer, Field> buildColumnMapping(Sheet sheet, int headerRow, Field[] fields) {
-    Map<Integer, Field> mapping = new LinkedHashMap<>();
+    Map<Integer, Field> mapping = new LinkedHashMap<>(16);
     Row row = sheet.getRow(headerRow);
     if (row == null) {
       return mapping;
     }
 
-    Map<String, Field> nameToField = new HashMap<>();
+    Map<String, Field> nameToField = new HashMap<>(16);
     for (Field field : fields) {
       ExcelProperty prop = field.getAnnotation(ExcelProperty.class);
       if (prop != null && !field.isAnnotationPresent(ExcelIgnore.class)) {

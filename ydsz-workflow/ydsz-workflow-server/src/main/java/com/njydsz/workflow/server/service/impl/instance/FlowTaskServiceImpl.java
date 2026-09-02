@@ -512,7 +512,7 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
     if (todos == null || todos.isEmpty()) {
       return 0;
     }
-    List<String> taskIds = new ArrayList<>();
+    List<String> taskIds = new ArrayList<>(16);
     for (FlowRunTaskVO task : todos) {
       taskIds.add(task.getId());
     }
@@ -522,8 +522,8 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   @Override
   public List<Map<String, Object>> overdueStats(String flowCode, LocalDateTime startTime, LocalDateTime endTime) {
-    List<Map<String, Object>> result = new ArrayList<>();
-    Map<String, Object> stats = new LinkedHashMap<>();
+    List<Map<String, Object>> result = new ArrayList<>(16);
+    Map<String, Object> stats = new LinkedHashMap<>(16);
     stats.put("flowCode", flowCode);
     stats.put("overdueCount", queryService.countOverdue(flowCode, null));
     result.add(stats);

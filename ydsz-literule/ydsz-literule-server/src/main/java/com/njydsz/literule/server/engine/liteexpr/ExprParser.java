@@ -248,7 +248,7 @@ public class ExprParser {
 
   /** 解析函数参数列表 */
   private List<ExprNode> parseArguments() {
-    List<ExprNode> args = new ArrayList<>();
+    List<ExprNode> args = new ArrayList<>(16);
     if (check(TokenType.RPAREN)) {
       return args;
     }
@@ -261,7 +261,7 @@ public class ExprParser {
   /** 解析列表字面量 [1, 2, 3] */
   private ExprNode parseList() {
     Token bracket = previous(); // '['
-    List<ExprNode> elements = new ArrayList<>();
+    List<ExprNode> elements = new ArrayList<>(16);
     if (!check(TokenType.RBRACKET)) {
       do {
         elements.add(parseExpression());
@@ -274,7 +274,7 @@ public class ExprParser {
   /** 解析字典字面量 {key: value, ...} */
   private ExprNode parseMap() {
     Token brace = previous(); // '{'
-    Map<ExprNode, ExprNode> entries = new LinkedHashMap<>();
+    Map<ExprNode, ExprNode> entries = new LinkedHashMap<>(16);
     if (!check(TokenType.RBRACE)) {
       do {
         ExprNode key = parseExpression();
@@ -295,7 +295,7 @@ public class ExprParser {
    */
   private ExprNode parseTemplateString() {
     Token start = previous(); // 第一个 TEMPLATE_STR
-    List<ExprNode> parts = new ArrayList<>();
+    List<ExprNode> parts = new ArrayList<>(16);
     // 如果第一个 TEMPLATE_STR 不是反引号开始标记（有前缀文本）
     if (!"`".equals(start.lexeme())) {
       parts.add(new LiteralNode(start.literal(), start.line(), start.column()));

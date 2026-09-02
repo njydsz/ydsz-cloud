@@ -97,7 +97,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
    */
   @PostConstruct
   private void initHashedKeys() {
-    Set<String> hashes = new HashSet<>();
+    Set<String> hashes = new HashSet<>(16);
     if (validKeyList != null) {
       for (String key : validKeyList) {
         if (key != null && !key.isBlank()) {

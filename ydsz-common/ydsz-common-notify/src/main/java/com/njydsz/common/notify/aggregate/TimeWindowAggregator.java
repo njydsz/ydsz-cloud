@@ -156,7 +156,7 @@ public class TimeWindowAggregator implements NotificationAggregator {
    * @return key 到聚合消息的映射
    */
   public Map<String, AggregatedMessage> flushAll() {
-    Map<String, AggregatedMessage> result = new HashMap<>();
+    Map<String, AggregatedMessage> result = new HashMap<>(16);
     for (String key : new ArrayList<>(buffer.keySet())) {
       CopyOnWriteArrayList<PendingMessage> list = buffer.remove(key);
       if (list != null && !list.isEmpty()) {

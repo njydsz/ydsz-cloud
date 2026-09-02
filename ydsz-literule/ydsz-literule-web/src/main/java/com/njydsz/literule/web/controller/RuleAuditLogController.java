@@ -190,7 +190,7 @@ public class RuleAuditLogController {
     vo.setBeforeSnapshot(e.getBeforeSnapshot());
     vo.setAfterSnapshot(e.getAfterSnapshot());
     if (e.getFieldDiffs() != null) {
-      Map<String, Object> diffs = new LinkedHashMap<>();
+      Map<String, Object> diffs = new LinkedHashMap<>(16);
       e.getFieldDiffs().forEach(diffs::put);
       vo.setFieldDiffs(diffs);
     }

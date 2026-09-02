@@ -132,7 +132,7 @@ public class HybridRetriever implements Retriever {
 
   private List<TextChunk> rrfFuse(
       List<TextChunk> vectorResults, List<TextChunk> fullTextResults, int topK) {
-    Map<String, RrfEntry> entryMap = new HashMap<>();
+    Map<String, RrfEntry> entryMap = new HashMap<>(16);
 
     for (int i = 0; i < vectorResults.size(); i++) {
       TextChunk chunk = vectorResults.get(i);
@@ -175,7 +175,7 @@ public class HybridRetriever implements Retriever {
                   + TABLE_NAME
                   + " "
                   + "WHERE deleted = false AND content ILIKE ? ");
-      List<Object> params = new ArrayList<>();
+      List<Object> params = new ArrayList<>(16);
       String pattern = "%" + query.replace("%", "\\%").replace("_", "\\_") + "%";
       params.add(pattern);
       // 多租户：全文检索走 JdbcTemplate，需显式追加租户过滤，避免跨租户召回

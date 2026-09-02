@@ -99,7 +99,7 @@ public class SearchApplicationService {
 
     SearchResultVO result;
     if (registry != null && unifiedSearch != null && registry.isPrimaryAvailable()) {
-      result = searchViaEngine(unifiedSearch, keyword, userId, page, pageSize, new ArrayList<>());
+      result = searchViaEngine(unifiedSearch, keyword, userId, page, pageSize, new ArrayList<>(16));
     } else {
       log.info("[SearchApplicationService] 搜索引擎不可用，降级 DB LIKE: keyword={}", keyword);
       result = searchViaDatabase(keyword, scope, page, pageSize);
@@ -346,7 +346,7 @@ public class SearchApplicationService {
             .pageSize(pageSize)
             .userId(userId)
             .highlight(true)
-            .filters(filters != null ? filters : new ArrayList<>())
+            .filters(filters != null ? filters : new ArrayList<>(16))
             .build();
 
     try {
@@ -417,7 +417,7 @@ public class SearchApplicationService {
       Long minSize,
       Long maxSize,
       List<String> tags) {
-    List<SearchFilter> filters = new ArrayList<>();
+    List<SearchFilter> filters = new ArrayList<>(16);
 
     // 文件类型筛选（suffix IN）
     if (fileTypes != null && !fileTypes.isEmpty()) {
@@ -546,7 +546,7 @@ public class SearchApplicationService {
   private SearchResultVO searchViaEngineAdvanced(
       UnifiedSearchService unifiedSearch, SearchQuery searchQuery, String userId) {
     // 将高级语法转换为引擎的 SearchFilter 列表
-    List<SearchFilter> filters = new ArrayList<>();
+    List<SearchFilter> filters = new ArrayList<>(16);
 
     // suffix 字段限定 → IN 过滤
     if (searchQuery.getFieldQueries() != null) {

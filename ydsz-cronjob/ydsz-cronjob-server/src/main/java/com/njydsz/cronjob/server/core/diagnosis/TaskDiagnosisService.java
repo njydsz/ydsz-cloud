@@ -138,7 +138,7 @@ public class TaskDiagnosisService {
     if (normalJobs.isEmpty()) {
       return Collections.emptyList();
     }
-    List<TaskDiagnosis> results = new ArrayList<>();
+    List<TaskDiagnosis> results = new ArrayList<>(16);
     for (JobVO job : normalJobs) {
       try {
         List<JobLogVO> recentLogs = selectRecentLogs(job.getId(), DIAGNOSIS_WINDOW_HOURS);
@@ -249,7 +249,7 @@ public class TaskDiagnosisService {
   private List<String> generateSuggestions(
       double successRate, double cvDuration, long timeoutCount, long total,
       int consecutiveFailures, double avgDuration) {
-    List<String> suggestions = new ArrayList<>();
+    List<String> suggestions = new ArrayList<>(16);
 
     if (successRate < SUCCESS_RATE_WARN_THRESHOLD) {
       suggestions.add(String.format("成功率 %.1f%% 偏低，建议检查 handler 逻辑或外部依赖健康状态", successRate));

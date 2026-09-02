@@ -127,7 +127,7 @@ public class DefaultCheckpointService implements CheckpointService {
         return null;
       }
 
-      List<UploadCheckpoint.UploadedPart> recoveredParts = new ArrayList<>();
+      List<UploadCheckpoint.UploadedPart> recoveredParts = new ArrayList<>(16);
       long uploadedBytes = 0;
       for (PartInfo part : existingParts) {
         UploadCheckpoint.UploadedPart uploadedPart = new UploadCheckpoint.UploadedPart();
@@ -165,7 +165,7 @@ public class DefaultCheckpointService implements CheckpointService {
       }
       List<UploadCheckpoint.UploadedPart> parts = checkpoint.getUploadedParts();
       if (parts == null) {
-        parts = new ArrayList<>();
+        parts = new ArrayList<>(16);
         checkpoint.setUploadedParts(parts);
       }
 

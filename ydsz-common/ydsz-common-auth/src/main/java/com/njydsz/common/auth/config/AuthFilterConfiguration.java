@@ -138,7 +138,7 @@ public class AuthFilterConfiguration {
    * @return 所有忽略的 URL
    */
   public Set<String> getAllIgnoreUrls() {
-    Set<String> allUrls = new HashSet<>();
+    Set<String> allUrls = new HashSet<>(16);
     allUrls.addAll(FilterIgnoreConstants.getCommonIgnoreUrls());
     allUrls.addAll(properties.getCommonIgnoreUrl());
     allUrls.addAll(properties.getGatewayIgnoreUrl());

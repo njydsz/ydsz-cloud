@@ -64,7 +64,7 @@ public class TraceIntegrationHelper {
    * @return 标签 Map
    */
   public Map<String, String> buildJobTags(String jobKey, String triggerType, int shardIndex) {
-    Map<String, String> tags = new LinkedHashMap<>();
+    Map<String, String> tags = new LinkedHashMap<>(16);
     tags.put("job.key", jobKey != null ? jobKey : "unknown");
     tags.put("job.trigger", triggerType != null ? triggerType : "UNKNOWN");
     tags.put("job.shard", String.valueOf(shardIndex));
@@ -86,7 +86,7 @@ public class TraceIntegrationHelper {
       String jobKey, String triggerType, boolean success, long durationMs, String errorMessage) {
     try {
       // 业务标签
-      Map<String, String> tags = new LinkedHashMap<>();
+      Map<String, String> tags = new LinkedHashMap<>(16);
       tags.put("job.key", jobKey != null ? jobKey : "unknown");
       tags.put("job.trigger", triggerType != null ? triggerType : "UNKNOWN");
       tags.put("job.duration_ms", String.valueOf(durationMs));

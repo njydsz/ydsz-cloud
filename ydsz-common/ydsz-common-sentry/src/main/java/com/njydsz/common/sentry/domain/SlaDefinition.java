@@ -33,7 +33,7 @@ public class SlaDefinition {
   private long evaluationWindowSeconds = 300;
 
   /** SLA 步骤分解 */
-  private List<SlaStep> steps = new ArrayList<>();
+  private List<SlaStep> steps = new ArrayList<>(4);
 
   /** SLA 步骤 */
   @Data

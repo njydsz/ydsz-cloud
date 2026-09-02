@@ -252,7 +252,7 @@ public class JobExecutionProfiler {
   private List<String> generateOptimizationSuggestions(
       long p50, long p90, long p99, long avg, double stabilityScore,
       double successRate, int timeoutCount, int totalCount) {
-    List<String> suggestions = new ArrayList<>();
+    List<String> suggestions = new ArrayList<>(16);
 
     // P99 耗时过长
     if (p99 > P99_DURATION_WARN_SECONDS * 1000) {

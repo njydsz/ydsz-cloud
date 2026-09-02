@@ -57,7 +57,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
           .build();
     }
 
-    List<SecurityScanResult.SecurityFinding> findings = new ArrayList<>();
+    List<SecurityScanResult.SecurityFinding> findings = new ArrayList<>(16);
     Path tempFile = null;
 
     try {

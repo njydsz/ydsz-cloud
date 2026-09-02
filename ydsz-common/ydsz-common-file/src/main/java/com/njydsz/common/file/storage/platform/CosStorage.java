@@ -356,11 +356,11 @@ public class CosStorage extends AbstractFileStorage {
     try {
       ListPartsRequest listPartsRequest = new ListPartsRequest(bucketName, objectName, uploadId);
       PartListing partListing = cosClient.listParts(listPartsRequest);
-      Map<Integer, PartSummary> uploadedPartMap = new HashMap<>();
+      Map<Integer, PartSummary> uploadedPartMap = new HashMap<>(16);
       for (PartSummary uploadedPart : partListing.getParts()) {
         uploadedPartMap.put(uploadedPart.getPartNumber(), uploadedPart);
       }
-      List<PartETag> partETags = new ArrayList<>();
+      List<PartETag> partETags = new ArrayList<>(16);
       for (Integer partNumber : partNumbers) {
         PartSummary uploadedPart = uploadedPartMap.get(partNumber);
         if (uploadedPart == null || StringUtils.isBlank(uploadedPart.getETag())) {
@@ -407,7 +407,7 @@ public class CosStorage extends AbstractFileStorage {
 
   @Override
   protected List<PartInfo> listParts(String bucketName, String objectName, String uploadId) {
-    List<PartInfo> parts = new ArrayList<>();
+    List<PartInfo> parts = new ArrayList<>(16);
     try {
       ListPartsRequest listPartsRequest = new ListPartsRequest(bucketName, objectName, uploadId);
       PartListing partListing = cosClient.listParts(listPartsRequest);
@@ -461,7 +461,7 @@ public class CosStorage extends AbstractFileStorage {
   @Override
   protected ListObjectsResult doListObjects(
       String bucketName, String prefix, String cursor, int maxKeys) {
-    List<ObjectMetadata> objects = new ArrayList<>();
+    List<ObjectMetadata> objects = new ArrayList<>(16);
     try {
       ListObjectsRequest request = new ListObjectsRequest();
       request.setBucketName(bucketName);

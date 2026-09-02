@@ -30,7 +30,7 @@ public class ColumnPermissionInfo {
 
   /** 构造空的列权限信息集合。 */
   public ColumnPermissionInfo() {
-    this.columnMap = new LinkedHashMap<>();
+    this.columnMap = new LinkedHashMap<>(16);
   }
 
   /**

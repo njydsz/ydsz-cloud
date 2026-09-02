@@ -50,7 +50,7 @@ public class RedisMessageRetryQueue implements MessageRetryQueue {
   @Override
   public List<RetryableMessage> dequeueExpired(int maxCount) {
     long now = System.currentTimeMillis();
-    List<RetryableMessage> expired = new ArrayList<>();
+    List<RetryableMessage> expired = new ArrayList<>(16);
     try {
       var tuples = redisTemplate.opsForZSet().rangeByScoreWithScores(RETRY_QUEUE_KEY, 0, now);
       if (tuples == null || tuples.isEmpty()) {

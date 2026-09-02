@@ -129,7 +129,7 @@ public class SecurityHeaderProperties {
    *
    * <p>这些路径的响应不会添加安全头部，支持 Ant 风格路径匹配。 通常用于静态资源、文件下载等不需要安全头部的端点。
    */
-  private List<String> excludes = new ArrayList<>();
+  private List<String> excludes = new ArrayList<>(4);
 
   /** CSP 配置 */
   @Data

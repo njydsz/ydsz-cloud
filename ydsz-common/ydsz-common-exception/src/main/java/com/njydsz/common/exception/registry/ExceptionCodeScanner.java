@@ -358,7 +358,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
       // 提取注解中的模块默认分类
       YdszExceptionCode annotation = clazz.getAnnotation(YdszExceptionCode.class);
       ExceptionCategory moduleCategory = annotation != null ? annotation.category() : null;
-      Map<String, ExceptionCode> codeMap = new HashMap<>();
+      Map<String, ExceptionCode> codeMap = new HashMap<>(16);
       for (Object constant : clazz.getEnumConstants()) {
         ExceptionCode code = (ExceptionCode) constant;
         if (errorCodeTable != null) {

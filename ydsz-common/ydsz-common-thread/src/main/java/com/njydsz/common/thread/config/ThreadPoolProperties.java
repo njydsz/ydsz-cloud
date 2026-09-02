@@ -91,7 +91,7 @@ public class ThreadPoolProperties {
   private String beanNamePrefix = "";
 
   /** 线程池配置映射，key 为线程池名称（如 io、cpu、batch），Bean 名称为 beanNamePrefix + key + "Executor"。 */
-  private Map<String, PoolConfig> pools = new LinkedHashMap<>();
+  private Map<String, PoolConfig> pools = new LinkedHashMap<>(16);
 
   /** 单个线程池配置。 */
   @Data

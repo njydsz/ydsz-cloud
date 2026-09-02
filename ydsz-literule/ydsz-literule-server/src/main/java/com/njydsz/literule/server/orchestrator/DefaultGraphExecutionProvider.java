@@ -157,7 +157,7 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
     if (graph == null) {
       return List.of(ruleCode);
     }
-    List<String> invalid = new ArrayList<>();
+    List<String> invalid = new ArrayList<>(16);
     for (ChainNodeDTO node : graph.getNodes()) {
       if (!"SINGLE".equals(node.getNodeType()) || node.getRuleCode() == null) {
         continue;

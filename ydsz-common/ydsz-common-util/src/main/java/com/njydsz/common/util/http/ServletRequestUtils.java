@@ -109,7 +109,7 @@ public final class ServletRequestUtils {
    * @return 请求头 Map（key 为头名，value 为头值）；request 为 null 返回空 Map
    */
   public static Map<String, String> getHeaders(HttpServletRequest request) {
-    Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new HashMap<>(16);
     if (request == null) {
       return map;
     }
@@ -147,7 +147,7 @@ public final class ServletRequestUtils {
    * @return 参数 Map；request 为 null 返回空 Map
    */
   public static Map<String, String> getParamMap(HttpServletRequest request) {
-    Map<String, String> params = new HashMap<>();
+    Map<String, String> params = new HashMap<>(16);
     if (request == null) {
       return params;
     }

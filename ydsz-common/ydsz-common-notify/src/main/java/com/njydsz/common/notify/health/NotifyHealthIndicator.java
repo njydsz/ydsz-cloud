@@ -59,7 +59,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
   @Override
   public Health health() {
     try {
-      Map<String, Object> channels = new LinkedHashMap<>();
+      Map<String, Object> channels = new LinkedHashMap<>(16);
       int configuredCount = 0;
 
       // 邮件渠道
@@ -169,7 +169,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
       // P0-3：熔断器状态报告
       NotifyCircuitBreakerRegistry breakerRegistry = circuitBreakerProvider.getIfAvailable();
       if (breakerRegistry != null) {
-        Map<String, Object> breakerStates = new LinkedHashMap<>();
+        Map<String, Object> breakerStates = new LinkedHashMap<>(16);
         breakerRegistry
             .getAllStates()
             .forEach((channel, state) -> breakerStates.put(channel.getName(), state.name()));

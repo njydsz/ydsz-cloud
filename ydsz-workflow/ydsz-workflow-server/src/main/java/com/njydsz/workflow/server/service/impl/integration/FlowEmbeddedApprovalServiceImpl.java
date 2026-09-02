@@ -523,7 +523,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
       }
       List<Map<String, Object>> out = new ArrayList<>(his.size());
       for (FlowHisTaskVO t : his) {
-        Map<String, Object> m = new LinkedHashMap<>();
+        Map<String, Object> m = new LinkedHashMap<>(16);
         m.put("type", "TASK");
         m.put("taskId", t.getId());
         m.put("nodeCode", t.getNodeCode());
@@ -550,7 +550,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
    * 单独拉取，本接口不返回以保持轻量。 仅返回最简的节点信息用于高亮当前节点。
    */
   private Map<String, Object> loadDiagram(FlowInstanceVO instance) {
-    Map<String, Object> light = new LinkedHashMap<>();
+    Map<String, Object> light = new LinkedHashMap<>(16);
     light.put("currentNodeCode", instance.getCurrentNodeCode());
     light.put("currentNodeName", instance.getCurrentNodeName());
     light.put("flowCode", instance.getFlowCode());

@@ -1,6 +1,4 @@
-package com.njydsz.workflow.server.engine;
-
-import java.util.ArrayList;
+new ArrayList<>(16)rrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -284,7 +282,7 @@ public class FlowDefinitionCacheService {
     Map<String, List<FlowSkipVO>> skipsByTarget = new HashMap<>(skips.size());
     for (FlowSkipVO skip : skips) {
       if (skip.getNextNodeCode() != null) {
-        skipsByTarget.computeIfAbsent(skip.getNextNodeCode(), k -> new ArrayList<>()).add(skip);
+        skipsByTarget.computeIfAbsent(skip.getNextNodeCode(), k -> new ArrayList<>(8)).add(skip);
       }
     }
 

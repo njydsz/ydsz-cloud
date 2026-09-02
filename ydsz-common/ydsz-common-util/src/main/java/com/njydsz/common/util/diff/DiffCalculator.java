@@ -82,7 +82,7 @@ public class DiffCalculator {
     }
 
     List<FieldMeta> metas = getFieldMetas(oldObj.getClass());
-    List<FieldDiff> diffs = new ArrayList<>();
+    List<FieldDiff> diffs = new ArrayList<>(16);
 
     for (FieldMeta meta : metas) {
       if (meta.annotation.ignore()) {
@@ -123,7 +123,7 @@ public class DiffCalculator {
     return fieldMetaCache.computeIfAbsent(
         clazz,
         c -> {
-          List<FieldMeta> metas = new ArrayList<>();
+          List<FieldMeta> metas = new ArrayList<>(16);
           Class<?> current = c;
           while (current != null && current != Object.class) {
             for (Field field : current.getDeclaredFields()) {

@@ -44,13 +44,13 @@ public class NettyActuatorEndpoint {
    */
   @ReadOperation
   public Map<String, Object> nettySummary() {
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
 
     // Server 状态
-    Map<String, Object> serversDetail = new LinkedHashMap<>();
+    Map<String, Object> serversDetail = new LinkedHashMap<>(16);
     for (AbstractNettyServer server : servers) {
       String name = server.getClass().getSimpleName();
-      Map<String, Object> serverDetail = new LinkedHashMap<>();
+      Map<String, Object> serverDetail = new LinkedHashMap<>(16);
       serverDetail.put("running", server.isRunning());
       serverDetail.put("port", server.getPort());
       serverDetail.put("activeChannels", server.getChannelGroupManager().globalSize());
@@ -61,7 +61,7 @@ public class NettyActuatorEndpoint {
 
     // EventLoop 池状态
     if (eventLoopPool != null) {
-      Map<String, Object> poolDetail = new LinkedHashMap<>();
+      Map<String, Object> poolDetail = new LinkedHashMap<>(16);
       poolDetail.put("bossRefCount", eventLoopPool.getBossRefCount());
       poolDetail.put("workerRefCount", eventLoopPool.getWorkerRefCount());
       poolDetail.put("bossGroupActive", eventLoopPool.isBossGroupActive());
@@ -72,7 +72,7 @@ public class NettyActuatorEndpoint {
 
     // 指标摘要
     if (metrics != null) {
-      Map<String, Object> metricsDetail = new LinkedHashMap<>();
+      Map<String, Object> metricsDetail = new LinkedHashMap<>(16);
       metricsDetail.put("activeChannels", metrics.getActiveChannels());
       metricsDetail.put("totalBytesRead", metrics.getTotalBytesRead());
       metricsDetail.put("totalBytesWritten", metrics.getTotalBytesWritten());
@@ -90,7 +90,7 @@ public class NettyActuatorEndpoint {
    */
   @ReadOperation
   public Map<String, Object> serverDetail(@Selector String serverName) {
-    Map<String, Object> detail = new LinkedHashMap<>();
+    Map<String, Object> detail = new LinkedHashMap<>(16);
 
     for (AbstractNettyServer server : servers) {
       if (server.getClass().getSimpleName().equals(serverName)) {

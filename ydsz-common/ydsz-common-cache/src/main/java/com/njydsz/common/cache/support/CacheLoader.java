@@ -71,7 +71,7 @@ public interface CacheLoader<K, V> {
    * @throws Exception 加载异常
    */
   default Map<K, V> loadAll(Iterable<? extends K> keys) throws Exception {
-    Map<K, V> result = new HashMap<>();
+    Map<K, V> result = new HashMap<>(16);
     for (K key : keys) {
       V value = load(key);
       if (value != null) {

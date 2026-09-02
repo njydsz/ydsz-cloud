@@ -199,7 +199,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     try {
       Map<String, Object> params;
       if (templateParams instanceof Map<?, ?> rawMap) {
-        params = new LinkedHashMap<>();
+        params = new LinkedHashMap<>(16);
         rawMap.forEach((k, v) -> params.put(String.valueOf(k), v));
       } else {
         params = Map.of();

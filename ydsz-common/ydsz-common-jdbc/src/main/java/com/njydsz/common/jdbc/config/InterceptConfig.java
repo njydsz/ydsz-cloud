@@ -56,7 +56,7 @@ public class InterceptConfig {
    *   <li>INCLUDE 模式：仅对在此集合中的表进行拦截
    * </ul>
    */
-  private Set<String> tables = new HashSet<>();
+  private Set<String> tables = new HashSet<>(16);
 
   /**
    * 目标字段名

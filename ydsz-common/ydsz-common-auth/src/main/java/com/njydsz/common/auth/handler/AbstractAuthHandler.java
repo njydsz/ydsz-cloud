@@ -121,7 +121,7 @@ public abstract class AbstractAuthHandler implements AuthHandler {
     if (StringUtils.isBlank(value)) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> out = new LinkedHashMap<>();
+    Map<String, Set<String>> out = new LinkedHashMap<>(16);
     String[] blocks = value.split(";");
     for (String block : blocks) {
       if (StringUtils.isBlank(block) || !block.contains(":")) {

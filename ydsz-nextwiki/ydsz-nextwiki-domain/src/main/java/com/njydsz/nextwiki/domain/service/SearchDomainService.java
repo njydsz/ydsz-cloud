@@ -97,7 +97,7 @@ public class SearchDomainService {
         page,
         pageSize);
 
-    List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
+    List<SearchResultVO.SearchHitVO> hits = new ArrayList<>(16);
     for (SearchIndexVO index : indices) {
       float score = calculateScore(index, keyword);
       hits.add(

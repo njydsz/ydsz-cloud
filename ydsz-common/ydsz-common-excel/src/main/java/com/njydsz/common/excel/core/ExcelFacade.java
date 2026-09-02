@@ -1,4 +1,4 @@
-package com.njydsz.common.excel.core;
+new ArrayList<>(16).excel.core;
 
 import java.io.File;
 import java.io.IOException;
@@ -242,7 +242,7 @@ public class ExcelFacade {
    * List<Object> sheet2Data = ...; // 第二个Sheet的数据
    *
    * // 使用Map指定每个Sheet的名称和数据
-   * Map<String, List<?>> sheets = new LinkedHashMap<>();
+   * Map<String, List<?>> sheets = new LinkedHashMap<>(16);
    * sheets.put("用户信息", sheet1Data);
    * sheets.put("部门信息", sheet2Data);
    * ExcelFacade.writeMultiple("output.xlsx", User.class, sheets);
@@ -374,10 +374,10 @@ public class ExcelFacade {
    */
   public static List<RawSheetData> readAllSheets(InputStream inputStream) {
     if (inputStream == null) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
     try (Workbook workbook = WorkbookFactory.create(inputStream)) {
-      List<RawSheetData> result = new ArrayList<>();
+      List<RawSheetData> result = new ArrayList<>(16);
       int sheetCount = workbook.getNumberOfSheets();
       for (int i = 0; i < sheetCount; i++) {
         Sheet sheet = workbook.getSheetAt(i);
@@ -399,8 +399,8 @@ public class ExcelFacade {
    */
   private static RawSheetData parseSheetData(Sheet sheet) {
     String sheetName = sheet.getSheetName();
-    List<String> headers = new ArrayList<>();
-    List<List<String>> rows = new ArrayList<>();
+    List<String> headers = new ArrayList<>(16);
+    List<List<String>> rows = new ArrayList<>(16);
 
     int rowCount = sheet.getPhysicalNumberOfRows();
     if (rowCount == 0) {
@@ -423,7 +423,7 @@ public class ExcelFacade {
       if (row == null) {
         continue;
       }
-      List<String> cells = new ArrayList<>();
+      List<String> cells = new ArrayList<>(16);
       int lastCol = row.getLastCellNum();
       for (int c = 0; c < lastCol; c++) {
         Cell cell = row.getCell(c);

@@ -66,5 +66,5 @@ public class ApiSignatureProperties {
   private String headerAppId = "X-App-Id";
 
   /** 排除签名验证的路径列表（Ant 风格） */
-  private List<String> excludes = new ArrayList<>();
+  private List<String> excludes = new ArrayList<>(4);
 }

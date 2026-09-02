@@ -400,7 +400,7 @@ public class RuleAdminController {
   public YdszResponse<ExpressionEngine.TraceResult> traceExpression(
       @RequestBody Map<String, Object> request) {
     String expression = (String) request.get("expression");
-    Map<String, Object> facts = new HashMap<>();
+    Map<String, Object> facts = new HashMap<>(16);
     Object raw = request.get("facts");
     if (raw instanceof Map<?, ?> rawMap) {
       rawMap.forEach((k, v) -> facts.put(String.valueOf(k), v));

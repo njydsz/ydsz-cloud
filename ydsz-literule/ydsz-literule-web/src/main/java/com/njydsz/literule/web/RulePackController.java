@@ -304,12 +304,12 @@ public class RulePackController {
     if (ruleCode != null && ruleCode.isBlank()) {
       ruleCode = null;
     }
-    List<Map<String, Object>> factsList = new ArrayList<>();
+    List<Map<String, Object>> factsList = new ArrayList<>(16);
     Object rawList = request.get("factsList");
     if (rawList instanceof List<?> list) {
       for (Object item : list) {
         if (item instanceof Map<?, ?> rawMap) {
-          Map<String, Object> facts = new HashMap<>();
+          Map<String, Object> facts = new HashMap<>(16);
           rawMap.forEach((k, v) -> facts.put(String.valueOf(k), v));
           factsList.add(facts);
         }
@@ -377,7 +377,7 @@ public class RulePackController {
     if (packCodes == null || packCodes.isEmpty()) {
       return YdszResponse.success(List.of());
     }
-    List<InstallResult> results = new ArrayList<>();
+    List<InstallResult> results = new ArrayList<>(16);
     for (String packCode : packCodes) {
       try {
         results.add(rulePackProvider.install(packCode, null, operator));

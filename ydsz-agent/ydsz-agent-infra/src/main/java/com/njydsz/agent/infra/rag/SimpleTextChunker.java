@@ -64,7 +64,7 @@ public class SimpleTextChunker implements TextChunker {
     if (text == null || text.isBlank()) {
       return List.of();
     }
-    List<TextChunk> chunks = new ArrayList<>();
+    List<TextChunk> chunks = new ArrayList<>(16);
     List<String> segments = splitByParagraph(text);
     StringBuilder buffer = new StringBuilder();
     int chunkIndex = 0;
@@ -106,7 +106,7 @@ public class SimpleTextChunker implements TextChunker {
   }
 
   private List<String> splitByParagraph(String text) {
-    List<String> segments = new ArrayList<>();
+    List<String> segments = new ArrayList<>(16);
     String[] paragraphs = text.split("\n\n+");
     for (String para : paragraphs) {
       if (para.length() > chunkSize) {

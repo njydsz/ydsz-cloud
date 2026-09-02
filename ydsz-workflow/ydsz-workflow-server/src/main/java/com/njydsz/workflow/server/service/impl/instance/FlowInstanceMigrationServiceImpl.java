@@ -168,7 +168,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     // 目标节点编码集合，便于快速判断
     Map<String, FlowNodeVO> targetNodeMap =
         targetNodes.stream().collect(Collectors.toMap(FlowNodeVO::getNodeCode, n -> n, (a, b) -> a));
-    Map<String, String> mapping = new LinkedHashMap<>();
+    Map<String, String> mapping = new LinkedHashMap<>(16);
     for (FlowNodeVO src : sourceNodes) {
       String code = src.getNodeCode();
       if (StringUtils.hasText(code) && targetNodeMap.containsKey(code)) {
@@ -224,7 +224,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
 
     // 查询源定义下所有运行中实例并逐实例迁移
     List<FlowInstanceVO> instances = instanceRepository.findRunningByDefinition(sourceDefId, tenantId);
-    List<MigrationDetail> details = new ArrayList<>();
+    List<MigrationDetail> details = new ArrayList<>(16);
     MigrationCounters counters = new MigrationCounters();
 
     for (FlowInstanceVO instance : instances) {

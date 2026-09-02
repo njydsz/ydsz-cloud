@@ -95,7 +95,7 @@ public class SuperFastExcelReader {
    * <p>P0-2 修复：fast 路径此前无法构建列元数据（POI 路径在 parseSheet 中通过 HeaderAnalyzer
    * 构建，fast 路径拿不到 POI Row），导致所有数据单元格被 parseDataCell 直接丢弃。
    */
-  final Map<Integer, String> headerNames = new HashMap<>();
+  final Map<Integer, String> headerNames = new HashMap<>(16);
 
   /**
    * 列元数据工厂：当 {@link #columnMetadataArray} 为 null 时，基于收集到的表头列名惰性构建列元数据。
@@ -266,7 +266,7 @@ public class SuperFastExcelReader {
       return fallbackFirstSheetEntry(zipFile);
     }
 
-    Map<String, String> rels = new HashMap<>();
+    Map<String, String> rels = new HashMap<>(16);
     ZipEntry relsEntry = zipFile.getEntry("xl/_rels/workbook.xml.rels");
     if (relsEntry != null) {
       try (InputStream is = bounded(zipFile.getInputStream(relsEntry))) {
@@ -321,7 +321,7 @@ public class SuperFastExcelReader {
 
   /** 解析 workbook.xml 中的 sheet 声明（保持声明顺序）。 */
   private static List<SheetRef> parseWorkbookSheets(String xml) {
-    List<SheetRef> result = new ArrayList<>();
+    List<SheetRef> result = new ArrayList<>(16);
     int pos = 0;
     while (true) {
       int start = xml.indexOf("<sheet ", pos);
@@ -348,7 +348,7 @@ public class SuperFastExcelReader {
 
   /** 解析 rels 中的 Id → Target 映射。 */
   private static Map<String, String> parseRelationships(String xml) {
-    Map<String, String> result = new HashMap<>();
+    Map<String, String> result = new HashMap<>(16);
     int pos = 0;
     while (true) {
       int start = xml.indexOf("<Relationship ", pos);

@@ -73,7 +73,7 @@ public class ClassMetadataCache {
     metadata.setClazz(clazz);
 
     Field[] fields = clazz.getDeclaredFields();
-    List<FieldInfo> fieldInfoList = new ArrayList<>();
+    List<FieldInfo> fieldInfoList = new ArrayList<>(16);
 
     for (Field field : fields) {
       if (field.isAnnotationPresent(ExcelIgnore.class)) {
@@ -108,7 +108,7 @@ public class ClassMetadataCache {
     metadata.setClazz(clazz);
 
     Field[] fields = clazz.getDeclaredFields();
-    List<FieldInfo> fieldInfoList = new ArrayList<>();
+    List<FieldInfo> fieldInfoList = new ArrayList<>(16);
 
     for (Field field : fields) {
       if (field.isAnnotationPresent(ExcelIgnore.class)) {
@@ -221,7 +221,7 @@ public class ClassMetadataCache {
      */
     public void setFieldInfoList(List<FieldInfo> fieldInfoList) {
       this.fieldInfoList = fieldInfoList;
-      this.nameToIndexMap = new HashMap<>();
+      this.nameToIndexMap = new HashMap<>(16);
       for (int i = 0; i < fieldInfoList.size(); i++) {
         FieldInfo info = fieldInfoList.get(i);
         nameToIndexMap.put(info.getName(), i);

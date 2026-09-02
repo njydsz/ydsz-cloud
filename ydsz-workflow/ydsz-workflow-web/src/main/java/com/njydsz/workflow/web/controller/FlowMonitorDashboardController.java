@@ -219,7 +219,7 @@ public class FlowMonitorDashboardController {
     List<Map<String, Object>> result = new ArrayList<>(topN);
     if (rows != null) {
       for (Map<String, Object> row : rows) {
-        Map<String, Object> item = new LinkedHashMap<>();
+        Map<String, Object> item = new LinkedHashMap<>(16);
         try {
           item.put("userId", Long.parseLong(String.valueOf(row.get("assigneeId"))));
         } catch (NumberFormatException e) {
@@ -264,7 +264,7 @@ public class FlowMonitorDashboardController {
     List<Map<String, Object>> result = new ArrayList<>(LIST_INIT_CAPACITY_32);
     if (rows != null) {
       for (Map<String, Object> row : rows) {
-        Map<String, Object> item = new LinkedHashMap<>();
+        Map<String, Object> item = new LinkedHashMap<>(16);
         item.put("flowCode", row.get("flowCode"));
         item.put(
             "flowName", row.get("flowName") == null ? row.get("flowCode") : row.get("flowName"));
@@ -626,7 +626,7 @@ public class FlowMonitorDashboardController {
     List<Map<String, Object>> completedCounts =
         instanceService.selectDailyCompletedCount(tenantId, startDt, endDt);
 
-    Map<String, long[]> byDate = new LinkedHashMap<>();
+    Map<String, long[]> byDate = new LinkedHashMap<>(16);
     for (int i = 0; i < effectiveDays; i++) {
       byDate.put(start.plusDays(i).toString(), new long[] {0, 0});
     }
@@ -649,7 +649,7 @@ public class FlowMonitorDashboardController {
 
     List<Map<String, Object>> result = new ArrayList<>(effectiveDays);
     for (Map.Entry<String, long[]> entry : byDate.entrySet()) {
-      Map<String, Object> row = new LinkedHashMap<>();
+      Map<String, Object> row = new LinkedHashMap<>(16);
       row.put("date", entry.getKey());
       row.put("newCount", entry.getValue()[0]);
       row.put("completedCount", entry.getValue()[1]);

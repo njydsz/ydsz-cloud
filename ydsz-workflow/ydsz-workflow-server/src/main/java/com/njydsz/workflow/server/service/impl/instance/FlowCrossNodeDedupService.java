@@ -88,14 +88,14 @@ public class FlowCrossNodeDedupService {
           taskRepository.findByInstanceId(instanceId).stream()
               .filter(t -> FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()))
               .toList();
-      Set<String> excluded = new HashSet<>();
+      Set<String> excluded = new HashSet<>(16);
       for (FlowRunTaskVO t : done) {
         if (t.getAssigneeId() != null && !"SYSTEM_AUTO_PASS".equals(t.getAssigneeName())) {
           excluded.add(t.getAssigneeId());
         }
       }
       int beforeSize = userIds.size();
-      List<String> deduped = new ArrayList<>();
+      List<String> deduped = new ArrayList<>(16);
       for (String uid : userIds) {
         if (!excluded.contains(uid)) {
           deduped.add(uid);

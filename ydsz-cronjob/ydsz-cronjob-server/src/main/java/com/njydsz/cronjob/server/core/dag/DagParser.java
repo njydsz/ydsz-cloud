@@ -1,6 +1,4 @@
-package com.njydsz.cronjob.server.core.dag;
-
-import java.util.ArrayDeque;
+new ArrayList<>(16)import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
@@ -42,7 +40,7 @@ public class DagParser {
     if (adj == null || adj.isEmpty()) {
       return Collections.emptyList();
     }
-    Map<String, Integer> inDegree = new HashMap<>();
+    Map<String, Integer> inDegree = new HashMap<>(16);
     for (String node : adj.keySet()) {
       inDegree.putIfAbsent(node, 0);
     }
@@ -89,8 +87,8 @@ public class DagParser {
     if (adj == null || adj.isEmpty()) {
       return false;
     }
-    Set<String> visited = new HashSet<>();
-    Set<String> inStack = new HashSet<>();
+    Set<String> visited = new HashSet<>(16);
+    Set<String> inStack = new HashSet<>(16);
     for (String node : adj.keySet()) {
       if (dfsHasCycle(node, adj, visited, inStack)) {
         return true;
@@ -132,7 +130,7 @@ public class DagParser {
     if (start == null || adj == null) {
       return Collections.emptySet();
     }
-    Set<String> result = new HashSet<>();
+    Set<String> result = new HashSet<>(16);
     Deque<String> queue = new ArrayDeque<>();
     queue.add(start);
     while (!queue.isEmpty()) {
@@ -160,16 +158,16 @@ public class DagParser {
     if (target == null || adj == null) {
       return Collections.emptySet();
     }
-    Map<String, List<String>> reverse = new HashMap<>();
+    Map<String, List<String>> reverse = new HashMap<>(16);
     for (Map.Entry<String, List<String>> entry : adj.entrySet()) {
       String parent = entry.getKey();
       if (entry.getValue() != null) {
         for (String child : entry.getValue()) {
-          reverse.computeIfAbsent(child, k -> new ArrayList<>()).add(parent);
+          reverse.computeIfAbsent(child, k -> new ArrayList<>(8)).add(parent);
         }
       }
     }
-    Set<String> result = new HashSet<>();
+    Set<String> result = new HashSet<>(16);
     Deque<String> queue = new ArrayDeque<>();
     queue.add(target);
     while (!queue.isEmpty()) {

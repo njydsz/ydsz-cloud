@@ -232,7 +232,7 @@ public abstract class AbstractDocExporter implements DocExporter {
       return YdszJson.fromJson(apiDocs, new JsonType<Map<String, Object>>() {});
     } catch (Exception e) {
       LOG.warn("解析 OpenAPI 文档失败: {}", e.getMessage());
-      return new LinkedHashMap<>();
+      return new LinkedHashMap<>(0);
     }
   }
 
@@ -246,7 +246,7 @@ public abstract class AbstractDocExporter implements DocExporter {
    */
   protected static Map<String, Object> asMap(Object value) {
     if (value instanceof Map<?, ?> raw) {
-      Map<String, Object> result = new LinkedHashMap<>();
+      Map<String, Object> result = new LinkedHashMap<>(16);
       for (Map.Entry<?, ?> entry : raw.entrySet()) {
         result.put(String.valueOf(entry.getKey()), entry.getValue());
       }
@@ -263,7 +263,7 @@ public abstract class AbstractDocExporter implements DocExporter {
    */
   protected static List<Map<String, Object>> asMapList(Object value) {
     if (value instanceof List<?> raw) {
-      List<Map<String, Object>> result = new ArrayList<>();
+      List<Map<String, Object>> result = new ArrayList<>(16);
       for (Object item : raw) {
         Map<String, Object> map = asMap(item);
         if (map != null) {
@@ -283,7 +283,7 @@ public abstract class AbstractDocExporter implements DocExporter {
    */
   protected static List<String> asStringList(Object value) {
     if (value instanceof List<?> raw) {
-      List<String> result = new ArrayList<>();
+      List<String> result = new ArrayList<>(16);
       for (Object item : raw) {
         result.add(String.valueOf(item));
       }

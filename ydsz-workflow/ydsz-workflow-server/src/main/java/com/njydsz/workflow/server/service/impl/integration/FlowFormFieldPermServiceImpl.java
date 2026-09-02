@@ -106,7 +106,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
       if (raw == null || raw.isEmpty()) {
         return Collections.emptyMap();
       }
-      Map<String, String> perms = new LinkedHashMap<>();
+      Map<String, String> perms = new LinkedHashMap<>(16);
       for (Map.Entry<String, Object> entry : raw.entrySet()) {
         if (entry.getValue() != null) {
           perms.put(entry.getKey(), String.valueOf(entry.getValue()).toUpperCase());

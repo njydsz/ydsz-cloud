@@ -366,7 +366,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
     }
 
     // 选取 Top-N 句子（按原始顺序排列）
-    List<int[]> ranked = new ArrayList<>();
+    List<int[]> ranked = new ArrayList<>(16);
     for (int i = 0; i < n; i++) {
       ranked.add(new int[] {i, (int) (scores[i] * 1000)});
     }
@@ -417,7 +417,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
   private List<String> splitSentences(String content) {
     // 中文句号、英文句号、感叹号、问号、换行（P1-4：复用缓存的正则）
     Matcher matcher = SENTENCE_SPLIT_PATTERN.matcher(content);
-    List<String> sentences = new ArrayList<>();
+    List<String> sentences = new ArrayList<>(16);
     while (matcher.find()) {
       String sentence = matcher.group().trim();
       if (sentence.length() >= MIN_SENTENCE_LENGTH) {

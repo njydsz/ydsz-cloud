@@ -53,7 +53,7 @@ public class CoreHealthIndicator implements HealthIndicator {
 
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
 
     // ========== 进程基本信息 ==========
     RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();

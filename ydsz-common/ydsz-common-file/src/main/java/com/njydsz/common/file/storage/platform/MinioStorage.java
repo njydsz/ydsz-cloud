@@ -305,7 +305,7 @@ public class MinioStorage extends AbstractFileStorage {
   protected void doCompleteMultipartUpload(
       String bucketName, String objectName, String uploadId, List<Integer> partNumbers) {
     try {
-      List<ComposeSource> sources = new ArrayList<>();
+      List<ComposeSource> sources = new ArrayList<>(16);
       for (Integer partNumber : partNumbers) {
         String chunkObjectName = buildChunkObjectName(objectName, uploadId, partNumber);
         minioClient.statObject(
@@ -373,7 +373,7 @@ public class MinioStorage extends AbstractFileStorage {
 
   @Override
   protected List<PartInfo> listParts(String bucketName, String objectName, String uploadId) {
-    List<PartInfo> parts = new ArrayList<>();
+    List<PartInfo> parts = new ArrayList<>(16);
     try {
       String prefix =
           CHUNK_DIR_PREFIX
@@ -490,7 +490,7 @@ public class MinioStorage extends AbstractFileStorage {
   @Override
   protected ListObjectsResult doListObjects(
       String bucketName, String prefix, String cursor, int maxKeys) {
-    List<ObjectMetadata> objects = new ArrayList<>();
+    List<ObjectMetadata> objects = new ArrayList<>(16);
     try {
       ListObjectsArgs.Builder argsBuilder =
           ListObjectsArgs.builder().bucket(bucketName).recursive(false).maxKeys(maxKeys + 1);

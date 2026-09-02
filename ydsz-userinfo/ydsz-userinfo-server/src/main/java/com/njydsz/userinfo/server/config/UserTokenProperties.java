@@ -58,7 +58,7 @@ public class UserTokenProperties {
   private int autoRenewalThresholdPercent = DEFAULT_AUTO_RENEWAL_THRESHOLD_PERCENT;
 
   /** 分端会话限制配置（deviceType → 最大会话数，-1 表示不限制）。 */
-  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>();
+  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>(16);
 
   /**
    * 获取指定设备类型的最大会话数。

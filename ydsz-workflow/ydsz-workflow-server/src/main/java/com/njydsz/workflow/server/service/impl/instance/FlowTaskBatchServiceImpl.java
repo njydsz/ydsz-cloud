@@ -67,7 +67,7 @@ public class FlowTaskBatchServiceImpl {
     }
 
     int successCount = 0;
-    List<Map<String, Object>> failedItems = new ArrayList<>();
+    List<Map<String, Object>> failedItems = new ArrayList<>(16);
 
     for (int i = 0; i < taskIds.size(); i++) {
       String taskId = taskIds.get(i);
@@ -80,7 +80,7 @@ public class FlowTaskBatchServiceImpl {
         completeService.pass(dto);
         successCount++;
       } catch (Exception e) {
-        Map<String, Object> fail = new LinkedHashMap<>();
+        Map<String, Object> fail = new LinkedHashMap<>(16);
         fail.put("index", i + 1);
         fail.put("taskId", taskId);
         String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
@@ -90,7 +90,7 @@ public class FlowTaskBatchServiceImpl {
       }
     }
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("successCount", successCount);
     result.put("failedCount", failedItems.size());
     result.put("failedItems", failedItems);
@@ -128,7 +128,7 @@ public class FlowTaskBatchServiceImpl {
     }
 
     int successCount = 0;
-    List<Map<String, Object>> failedItems = new ArrayList<>();
+    List<Map<String, Object>> failedItems = new ArrayList<>(16);
 
     for (int i = 0; i < taskIds.size(); i++) {
       String taskId = taskIds.get(i);
@@ -142,7 +142,7 @@ public class FlowTaskBatchServiceImpl {
         completeService.reject(dto);
         successCount++;
       } catch (Exception e) {
-        Map<String, Object> fail = new LinkedHashMap<>();
+        Map<String, Object> fail = new LinkedHashMap<>(16);
         fail.put("index", i + 1);
         fail.put("taskId", taskId);
         String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
@@ -152,7 +152,7 @@ public class FlowTaskBatchServiceImpl {
       }
     }
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("successCount", successCount);
     result.put("failedCount", failedItems.size());
     result.put("failedItems", failedItems);
@@ -194,7 +194,7 @@ public class FlowTaskBatchServiceImpl {
     }
 
     int successCount = 0;
-    List<Map<String, Object>> failedItems = new ArrayList<>();
+    List<Map<String, Object>> failedItems = new ArrayList<>(16);
 
     for (int i = 0; i < taskIds.size(); i++) {
       String taskId = taskIds.get(i);
@@ -209,7 +209,7 @@ public class FlowTaskBatchServiceImpl {
         completeService.transfer(dto);
         successCount++;
       } catch (Exception e) {
-        Map<String, Object> fail = new LinkedHashMap<>();
+        Map<String, Object> fail = new LinkedHashMap<>(16);
         fail.put("index", i + 1);
         fail.put("taskId", taskId);
         String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
@@ -219,7 +219,7 @@ public class FlowTaskBatchServiceImpl {
       }
     }
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("successCount", successCount);
     result.put("failedCount", failedItems.size());
     result.put("failedItems", failedItems);

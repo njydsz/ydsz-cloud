@@ -87,7 +87,7 @@ public class FrontendInitServiceImpl implements FrontendInitService {
           ));
     } catch (Exception e) {
       log.warn("[FrontendInitService] 获取公开配置失败: {}", e.getMessage(), e);
-      return new HashMap<>();
+      return new HashMap<>(0);
     }
   }
 

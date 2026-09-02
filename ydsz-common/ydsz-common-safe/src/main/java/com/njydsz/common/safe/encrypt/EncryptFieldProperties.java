@@ -72,5 +72,5 @@ public class EncryptFieldProperties {
    * String base64Key = Base64.getEncoder().encodeToString(key.getEncoded());
    * }</pre>
    */
-  private Map<Integer, String> keys = new LinkedHashMap<>();
+  private Map<Integer, String> keys = new LinkedHashMap<>(16);
 }

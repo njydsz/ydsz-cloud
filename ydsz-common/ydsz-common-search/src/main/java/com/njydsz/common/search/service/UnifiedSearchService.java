@@ -472,7 +472,7 @@ public class UnifiedSearchService {
 
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-    List<SearchHit> allHits = new ArrayList<>();
+    List<SearchHit> allHits = new ArrayList<>(16);
     long total = 0;
     for (CompletableFuture<SearchResponse> future : futures) {
       SearchResponse resp = future.join();

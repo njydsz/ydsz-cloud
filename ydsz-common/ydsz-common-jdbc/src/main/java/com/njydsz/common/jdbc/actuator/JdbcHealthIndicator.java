@@ -78,7 +78,7 @@ public class JdbcHealthIndicator {
 
     /** 追加 SQL 解析缓存统计信息 */
     private void appendCacheInfo(Health.Builder builder) {
-      Map<String, Object> cacheStats = new LinkedHashMap<>();
+      Map<String, Object> cacheStats = new LinkedHashMap<>(16);
       cacheStats.put("size", sqlAstCache.size());
       cacheStats.put("maxSize", sqlAstCache.maxSize());
       builder.withDetail("sqlAstCache", cacheStats);

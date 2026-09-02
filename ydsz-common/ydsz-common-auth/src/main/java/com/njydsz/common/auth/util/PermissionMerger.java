@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.util;
+new HashSet<>(16);
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -77,7 +77,7 @@ public final class PermissionMerger {
   private static final class PermissionSet {
     private final Set<String> menuPerms = new HashSet<>();
     private final Set<String> buttonPerms = new HashSet<>();
-    private final Set<String> apiPerms = new HashSet<>();
+    private final Set<String> apiPerms = new HashSet<>(16);
 
     void addMenuPermission(String perm) {
       if (perm != null) {

@@ -54,7 +54,7 @@ public class RetryPreviewService {
    * @return 每个预设对应的时间线
    */
   public Map<String, Map<String, Object>> previewAllPresets() {
-    Map<String, Map<String, Object>> result = new HashMap<>();
+    Map<String, Map<String, Object>> result = new HashMap<>(16);
     for (RetryPreset preset : RetryPreset.values()) {
       result.put(preset.getCode(), previewRetrySchedule(preset));
     }
@@ -62,7 +62,7 @@ public class RetryPreviewService {
   }
 
   private Map<String, Object> previewRetrySchedule(RetryPreset preset) {
-    Map<String, Object> preview = new HashMap<>();
+    Map<String, Object> preview = new HashMap<>(16);
     preview.put("preset", preset.getCode());
     preview.put("displayName", preset.getDisplayName());
     preview.put("maxRetryCount", preset.getMaxRetryCount());
@@ -70,7 +70,7 @@ public class RetryPreviewService {
     preview.put("backoffMultiplier", preset.getBackoffMultiplier());
     preview.put("maxBackoffMs", preset.getMaxBackoffMs());
 
-    List<Map<String, Object>> timeline = new ArrayList<>();
+    List<Map<String, Object>> timeline = new ArrayList<>(16);
     long cumulativeMs = 0L;
     LocalDateTime baseTime = LocalDateTime.now();
 
@@ -79,7 +79,7 @@ public class RetryPreviewService {
       cumulativeMs += backoffMs;
       LocalDateTime triggerAt = baseTime.plusNanos(backoffMs * NANOS_PER_MILLI);
 
-      Map<String, Object> entry = new HashMap<>();
+      Map<String, Object> entry = new HashMap<>(16);
       entry.put("retryIndex", retry + 1); // 第 N 次重试（从 1 开始）
       entry.put("backoffMs", backoffMs);
       entry.put("backoffSeconds", String.format("%.1f", backoffMs / 1000.0));

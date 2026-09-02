@@ -63,7 +63,7 @@ public class XssFilter extends OncePerRequestFilter {
   private static final Logger LOG = LoggerFactory.getLogger(XssFilter.class);
 
   /** 默认 XSS 排除路径列表 */
-  private static final List<String> DEFAULT_EXCLUDES = new ArrayList<>();
+  private static final List<String> DEFAULT_EXCLUDES = new ArrayList<>(4);
 
   static {
     DEFAULT_EXCLUDES.add("/error");
@@ -93,7 +93,7 @@ public class XssFilter extends OncePerRequestFilter {
    * @param excludes 排除路径列表（null 时使用默认）
    */
   public XssFilter(List<String> excludes) {
-    this.excludes = excludes == null ? new ArrayList<>() : new ArrayList<>(excludes);
+    this.excludes = excludes == null ? new ArrayList<>(16) : new ArrayList<>(excludes);
     if (this.excludes.isEmpty()) {
       this.excludes.addAll(DEFAULT_EXCLUDES);
     }
@@ -112,7 +112,7 @@ public class XssFilter extends OncePerRequestFilter {
       List<String> excludes,
       SecurityEventPublisher eventPublisher,
       SafeAlertProperties alertProperties) {
-    this.excludes = excludes == null ? new ArrayList<>() : new ArrayList<>(excludes);
+    this.excludes = excludes == null ? new ArrayList<>(16) : new ArrayList<>(excludes);
     if (this.excludes.isEmpty()) {
       this.excludes.addAll(DEFAULT_EXCLUDES);
     }

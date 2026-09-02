@@ -129,7 +129,7 @@ public class ExcelWriter {
     this.context = new WriteContext(metadata);
     this.currentRowIndex = 0;
     this.append = false;
-    this.callbacks = new ArrayList<>();
+    this.callbacks = new ArrayList<>(16);
     this.styleManager = new StyleManager(512);
     this.workbookFactory = new WorkbookFactory();
     rebuildValueFormatter();
@@ -505,7 +505,7 @@ public class ExcelWriter {
    * @return 当前写入器实例
    */
   public ExcelWriter head(List<String> headers) {
-    List<WriteHeaderProperty> headList = new ArrayList<>();
+    List<WriteHeaderProperty> headList = new ArrayList<>(16);
     for (int i = 0; i < headers.size(); i++) {
       WriteHeaderProperty property = new WriteHeaderProperty();
       property.setName(headers.get(i));
@@ -862,7 +862,7 @@ public class ExcelWriter {
    * @return 表头属性列表
    */
   private List<WriteHeaderProperty> analyzeClass() {
-    List<WriteHeaderProperty> headProperties = new ArrayList<>();
+    List<WriteHeaderProperty> headProperties = new ArrayList<>(16);
     if (metadata.getClazz() == null) {
       return headProperties;
     }
@@ -887,7 +887,7 @@ public class ExcelWriter {
 
       ExcelSheet.MergedRegion[] mergedRegions = sheetAnnotation.mergedRegions();
       if (mergedRegions != null && mergedRegions.length > 0) {
-        List<int[]> regionList = new ArrayList<>();
+        List<int[]> regionList = new ArrayList<>(16);
         for (ExcelSheet.MergedRegion region : mergedRegions) {
           regionList.add(
               new int[] {
@@ -899,7 +899,7 @@ public class ExcelWriter {
       }
     }
 
-    List<Field> annotatedFields = new ArrayList<>();
+    List<Field> annotatedFields = new ArrayList<>(16);
     for (Field field : fields) {
       if (field.isAnnotationPresent(ExcelIgnore.class)) {
         continue;

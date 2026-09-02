@@ -276,7 +276,7 @@ public class LiteExprEngine implements ExpressionEngine {
           .errorColumn(e.getColumn())
           .expression(expression)
           .parseTimeMs(elapsed)
-          .referencedVariables(new ArrayList<>())
+          .referencedVariables(new ArrayList<>(16))
           .build();
     } catch (Exception e) {
       long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
@@ -363,7 +363,7 @@ public class LiteExprEngine implements ExpressionEngine {
 
   @Override
   public List<ExpressionFunctionDef> registeredFunctionDefs() {
-    List<ExpressionFunctionDef> defs = new ArrayList<>();
+    List<ExpressionFunctionDef> defs = new ArrayList<>(16);
     for (String name : functionRegistry.listFunctionNames()) {
       String sig = functionRegistry.getSignature(name);
       String desc = functionRegistry.getDescription(name);
@@ -455,7 +455,7 @@ public class LiteExprEngine implements ExpressionEngine {
           default -> ExpressionTraceNode.NodeType.ROOT;
         };
 
-    List<ExpressionTraceNode> children = new ArrayList<>();
+    List<ExpressionTraceNode> children = new ArrayList<>(16);
     if (trace.children() != null) {
       for (ExprTraceBuilder.TraceNode child : trace.children()) {
         children.add(convertTraceTree(child, child.expression(), null, 0));

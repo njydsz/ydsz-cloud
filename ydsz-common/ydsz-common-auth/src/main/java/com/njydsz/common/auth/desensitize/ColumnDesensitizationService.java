@@ -142,7 +142,7 @@ public class ColumnDesensitizationService {
     if (StringUtils.isBlank(roleCode)) {
       return ColumnDesensitizationContext.empty();
     }
-    Set<String> roleCodes = new HashSet<>();
+    Set<String> roleCodes = new HashSet<>(16);
     for (String code : roleCode.split(",")) {
       String trimmed = code.trim();
       if (StringUtils.isNotBlank(trimmed)) {

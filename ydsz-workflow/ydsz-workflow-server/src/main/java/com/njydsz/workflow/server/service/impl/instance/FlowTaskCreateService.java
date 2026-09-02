@@ -961,7 +961,7 @@ public class FlowTaskCreateService {
     Map<String, Object> config = parseExtConfig(ext);
     Object weights = config.get("userWeights");
     if (weights instanceof Map<?, ?> m) {
-      Map<String, Integer> result = new HashMap<>();
+      Map<String, Integer> result = new HashMap<>(16);
       for (Map.Entry<?, ?> e : m.entrySet()) {
         if (e.getValue() instanceof Number n) {
           result.put(String.valueOf(e.getKey()), n.intValue());
@@ -1007,8 +1007,8 @@ public class FlowTaskCreateService {
       if (leaders == null || leaders.isEmpty()) {
         return Collections.emptyList();
       }
-      List<String> result = new ArrayList<>();
-      Set<String> seen = new HashSet<>();
+      List<String> result = new ArrayList<>(16);
+      Set<String> seen = new HashSet<>(16);
       for (Long uid : leaders) {
         String s = String.valueOf(uid);
         String stopAtUserId = (String) extConfig.get("stopAtUserId");
@@ -1322,8 +1322,8 @@ public class FlowTaskCreateService {
     if (resolved == null) {
       return Collections.emptyList();
     }
-    List<String> result = new ArrayList<>();
-    Set<String> seen = new HashSet<>();
+    List<String> result = new ArrayList<>(16);
+    Set<String> seen = new HashSet<>(16);
     for (String token : resolved.split(",")) {
       expandTokenToAssignees(token.trim(), node, variables, result, seen);
     }
@@ -1463,7 +1463,7 @@ public class FlowTaskCreateService {
     if (value == null) {
       return Collections.emptyList();
     }
-    List<String> result = new ArrayList<>();
+    List<String> result = new ArrayList<>(16);
     if (value instanceof List<?> list) {
       for (Object item : list) {
         if (item == null) {

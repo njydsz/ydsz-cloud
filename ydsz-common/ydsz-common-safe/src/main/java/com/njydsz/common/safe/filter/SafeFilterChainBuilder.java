@@ -33,7 +33,7 @@ public class SafeFilterChainBuilder {
 
   private static final Logger LOG = LoggerFactory.getLogger(SafeFilterChainBuilder.class);
 
-  private final List<FilterRegistrationDescriptor<?>> descriptors = new ArrayList<>();
+  private final List<FilterRegistrationDescriptor<?>> descriptors = new ArrayList<>(4);
 
   /**
    * 注册一个过滤器描述符

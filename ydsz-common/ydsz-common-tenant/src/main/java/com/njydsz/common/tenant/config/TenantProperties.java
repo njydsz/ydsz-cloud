@@ -1,7 +1,4 @@
-package com.njydsz.common.tenant.config;
-
-import java.util.ArrayList;
-import java.util.Collections;
+new HashSet<>(16)t java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -130,7 +127,7 @@ public class TenantProperties {
    *   <li>{@code multiValue} — 是否多值（默认 false，单值用 {@code = ?}，多值用 {@code IN (...)}）
    * </ul>
    */
-  private List<TenantField> tenantFields = new ArrayList<>();
+  private List<TenantField> tenantFields = new ArrayList<>(4);
 
   /**
    * per-table 列名覆盖映射。
@@ -145,7 +142,7 @@ public class TenantProperties {
   private Set<String> ignoreTables = new HashSet<>();
 
   /** URL 级白名单（跳过租户隔离的请求路径）。 */
-  private Set<String> anonUrls = new HashSet<>();
+  private Set<String> anonUrls = new HashSet<>(16);
 
   /**
    * 跨租户数据共享配置。
@@ -175,7 +172,7 @@ public class TenantProperties {
    *         globex: "ds_globex_read"
    * </pre>
    */
-  private Map<String, String> datasourceMapping = new HashMap<>();
+  private Map<String, String> datasourceMapping = new HashMap<>(16);
 
   /**
    * SQL 改写缓存配置。

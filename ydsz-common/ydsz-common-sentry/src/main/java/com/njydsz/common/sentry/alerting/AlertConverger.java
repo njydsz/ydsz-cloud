@@ -157,7 +157,7 @@ public class AlertConverger implements AlertPublisher {
    */
   public void cleanupExpiredSilence() {
     Instant now = Instant.now();
-    List<String> expiredKeys = new ArrayList<>();
+    List<String> expiredKeys = new ArrayList<>(16);
     silenceMap.forEach(
         (key, value) -> {
           if (value.plusMillis(silencePeriodMillis).isBefore(now)) {

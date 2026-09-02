@@ -517,7 +517,7 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
       throw new IllegalArgumentException("extension key must not be null or empty");
     }
     if (this.extensions == null) {
-      this.extensions = new HashMap<>();
+      this.extensions = new HashMap<>(16);
     }
     this.extensions.put(key, value);
     return this;

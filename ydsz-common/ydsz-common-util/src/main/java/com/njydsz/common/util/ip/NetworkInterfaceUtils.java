@@ -57,7 +57,7 @@ public final class NetworkInterfaceUtils {
    * @return 本机 IP 地址列表，可能为空
    */
   public static List<String> listLocalIps() {
-    List<String> ips = new ArrayList<>();
+    List<String> ips = new ArrayList<>(16);
     try {
       Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
       while (interfaces.hasMoreElements()) {

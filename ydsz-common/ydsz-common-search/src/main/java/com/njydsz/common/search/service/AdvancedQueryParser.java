@@ -77,16 +77,16 @@ public class AdvancedQueryParser {
     if (rawQuery == null || rawQuery.isBlank()) {
       return new ParseResult(
           "",
-          new ArrayList<>(),
-          new ArrayList<>(),
-          new ArrayList<>(),
-          new ArrayList<>(),
-          new ArrayList<>());
+          new ArrayList<>(16),
+          new ArrayList<>(16),
+          new ArrayList<>(16),
+          new ArrayList<>(16),
+          new ArrayList<>(16));
     }
 
     // 提取 field:value 结构化过滤
-    List<SearchFilter> filters = new ArrayList<>();
-    List<String> types = new ArrayList<>();
+    List<SearchFilter> filters = new ArrayList<>(16);
+    List<String> types = new ArrayList<>(16);
     Matcher fieldMatcher = FIELD_VALUE_PATTERN.matcher(rawQuery);
     StringBuffer fieldCleaned = new StringBuffer();
     while (fieldMatcher.find()) {
@@ -110,7 +110,7 @@ public class AdvancedQueryParser {
     fieldMatcher.appendTail(fieldCleaned);
 
     // 提取精确短语
-    List<String> phrases = new ArrayList<>();
+    List<String> phrases = new ArrayList<>(16);
     Matcher phraseMatcher = PHRASE_PATTERN.matcher(fieldCleaned.toString());
     StringBuffer phraseCleaned = new StringBuffer();
     while (phraseMatcher.find()) {
@@ -124,9 +124,9 @@ public class AdvancedQueryParser {
             : fieldCleaned.toString();
 
     // 解析布尔逻辑词元
-    List<String> mustTerms = new ArrayList<>();
-    List<String> shouldTerms = new ArrayList<>();
-    List<String> mustNotTerms = new ArrayList<>();
+    List<String> mustTerms = new ArrayList<>(16);
+    List<String> shouldTerms = new ArrayList<>(16);
+    List<String> mustNotTerms = new ArrayList<>(16);
 
     // 简化实现：解析 AND/OR/NOT 词元
     parseBooleanTokens(remainingText, mustTerms, shouldTerms, mustNotTerms);
@@ -263,11 +263,11 @@ public class AdvancedQueryParser {
 
     // 合并 types 和 filters
     List<String> combinedTypes =
-        new ArrayList<>(request.getTypes() != null ? request.getTypes() : new ArrayList<>());
+        new ArrayList<>(request.getTypes() != null ? request.getTypes() : new ArrayList<>(16));
     combinedTypes.addAll(result.types());
 
     List<SearchFilter> combinedFilters =
-        new ArrayList<>(request.getFilters() != null ? request.getFilters() : new ArrayList<>());
+        new ArrayList<>(request.getFilters() != null ? request.getFilters() : new ArrayList<>(16));
     combinedFilters.addAll(result.filters());
 
     log.debug(

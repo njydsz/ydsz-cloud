@@ -688,9 +688,9 @@ public final class DeserializationProvider {
     if (rawType == TreeMap.class) {
       return new TreeMap<>();
     } else if (rawType == LinkedHashMap.class) {
-      return new LinkedHashMap<>();
+      return new LinkedHashMap<>(0);
     }
-    return new HashMap<>();
+    return new HashMap<>(0);
   }
 
   /**

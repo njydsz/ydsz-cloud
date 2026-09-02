@@ -31,7 +31,7 @@ public class UserIdentityProviderFactory {
    * @param providers 所有 UserIdentityProvider 实现的 Spring Bean 列表
    */
   public UserIdentityProviderFactory(List<UserIdentityProvider> providers) {
-    providerMap = new HashMap<>();
+    providerMap = new HashMap<>(16);
     for (UserIdentityProvider provider : providers) {
       providerMap.put(provider.getType(), provider);
     }

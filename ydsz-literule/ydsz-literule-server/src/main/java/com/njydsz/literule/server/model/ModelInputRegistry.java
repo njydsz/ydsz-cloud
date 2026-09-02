@@ -232,7 +232,7 @@ public class ModelInputRegistry {
     if (providers.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, Object> aggregated = new LinkedHashMap<>();
+    Map<String, Object> aggregated = new LinkedHashMap<>(16);
     for (ModelInputProvider provider : providers) {
       if (!provider.isEnabled()) {
         if (LOGGER.isDebugEnabled()) {

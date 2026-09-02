@@ -76,5 +76,5 @@ public class IndexDocument implements Serializable {
   private Instant updatedAt;
 
   /** 扩展字段（参与搜索，但不一定高亮） */
-  @Builder.Default private Map<String, Object> metadata = new HashMap<>();
+  @Builder.Default private Map<String, Object> metadata = new HashMap<>(16);
 }

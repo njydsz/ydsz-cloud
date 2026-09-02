@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+new HashMap<>(16)e com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -131,7 +131,7 @@ public class FlowInstanceVariableManager {
       return map == null ? new HashMap<>() : map;
     } catch (Exception e) {
       log.warn("[Flow] 解析 variable JSON 失败，返回空 Map: {}", e.getMessage());
-      return new HashMap<>();
+      return new HashMap<>(0);
     }
   }
 

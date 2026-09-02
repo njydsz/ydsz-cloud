@@ -314,7 +314,7 @@ public class FlowAiAgentNodeExecutor {
    */
   private Map<String, Object> buildContext(String instanceId, String nodeCode,
       Map<String, Object> variables) {
-    Map<String, Object> context = new HashMap<>();
+    Map<String, Object> context = new HashMap<>(16);
     if (variables != null) {
       context.putAll(variables);
     }

@@ -1,6 +1,4 @@
-package com.njydsz.common.file.util;
-
-import java.io.IOException;
+new HashSet<>(16)Exception;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -135,7 +133,7 @@ public final class FileTypeDetector {
       String type, byte[] magic, int offset, String asciiTag, String... extensions) {
     SIGNATURES.put(type, new MagicSignature(magic, offset, asciiTag));
     for (String ext : extensions) {
-      EXT_TO_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new HashSet<>()).add(type);
+      EXT_TO_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new HashSet<>(16)).add(type);
     }
   }
 

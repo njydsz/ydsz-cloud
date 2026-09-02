@@ -90,5 +90,5 @@ public class ApiSignatureProperties {
   private long ttlMillis = DEFAULT_TTL_MILLIS;
 
   /** 不需要签名的路径列表 */
-  private List<String> excludePaths = new ArrayList<>();
+  private List<String> excludePaths = new ArrayList<>(4);
 }

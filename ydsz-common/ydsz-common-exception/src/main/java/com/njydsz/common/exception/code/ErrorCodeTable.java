@@ -172,7 +172,7 @@ public class ErrorCodeTable {
    * @return 模块名 → 该模块下 CodeEntry 集合的不可变 map
    */
   public Map<String, Map<String, CodeEntry>> groupByModule() {
-    Map<String, Map<String, CodeEntry>> result = new LinkedHashMap<>();
+    Map<String, Map<String, CodeEntry>> result = new LinkedHashMap<>(16);
     for (Map.Entry<String, ModuleEntry> entry : moduleIndex.entrySet()) {
       result.put(entry.getKey(), Collections.unmodifiableMap(entry.getValue().codes()));
     }

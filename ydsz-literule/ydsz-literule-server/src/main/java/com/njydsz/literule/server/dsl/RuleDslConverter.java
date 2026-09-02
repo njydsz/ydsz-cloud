@@ -305,7 +305,7 @@ public final class RuleDslConverter {
     if (entry.getRows() != null) {
       List<DecisionTableDefinitionDTO.Row> rows = new ArrayList<>(entry.getRows().size());
       for (Map<String, Object> rm : entry.getRows()) {
-        Map<String, String> conditions = new LinkedHashMap<>();
+        Map<String, String> conditions = new LinkedHashMap<>(16);
         Object condObj = rm.get("conditions");
         if (condObj instanceof Map<?, ?> cm) {
           for (Map.Entry<?, ?> e : cm.entrySet()) {
@@ -314,7 +314,7 @@ public final class RuleDslConverter {
             }
           }
         }
-        Map<String, Object> actions = new LinkedHashMap<>();
+        Map<String, Object> actions = new LinkedHashMap<>(16);
         Object actObj = rm.get("actions");
         if (actObj instanceof Map<?, ?> am) {
           for (Map.Entry<?, ?> e : am.entrySet()) {
@@ -366,7 +366,7 @@ public final class RuleDslConverter {
     List<CrossDecisionTableDefinitionDTO.Bucket> rowBuckets = parseBuckets(entry.getRowBuckets());
     List<CrossDecisionTableDefinitionDTO.Bucket> columnBuckets =
         parseBuckets(entry.getColumnBuckets());
-    Map<String, Map<String, Object>> cells = new LinkedHashMap<>();
+    Map<String, Map<String, Object>> cells = new LinkedHashMap<>(16);
     if (entry.getCells() != null) {
       cells.putAll(entry.getCells());
     }
@@ -435,7 +435,7 @@ public final class RuleDslConverter {
 
   /** 构建 ELIF 链 */
   private static RuleChain buildElifChain(ChainDslEntry entry, Map<String, Rule> ruleMap) {
-    Map<String, Rule> branches = new LinkedHashMap<>();
+    Map<String, Rule> branches = new LinkedHashMap<>(16);
     for (Map.Entry<String, String> e : entry.getBranches().entrySet()) {
       Rule r = resolveRule(e.getValue(), ruleMap, entry.getName());
       branches.put(e.getKey(), r);
@@ -449,7 +449,7 @@ public final class RuleDslConverter {
 
   /** 构建 SWITCH 链 */
   private static RuleChain buildSwitchChain(ChainDslEntry entry, Map<String, Rule> ruleMap) {
-    Map<String, Rule> branches = new LinkedHashMap<>();
+    Map<String, Rule> branches = new LinkedHashMap<>(16);
     for (Map.Entry<String, String> e : entry.getBranches().entrySet()) {
       Rule r = resolveRule(e.getValue(), ruleMap, entry.getName());
       branches.put(e.getKey(), r);

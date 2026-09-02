@@ -172,7 +172,7 @@ public class CostAnalysisService {
   public Map<String, ModelCostStats> getStatsByModel(LocalDateTime start, LocalDateTime end) {
     List<TokenUsageRecordVO> records =
         tokenUsageRecordRepository.findByCreatedAtRange(start, end);
-    Map<String, MutableCostStats> agg = new LinkedHashMap<>();
+    Map<String, MutableCostStats> agg = new LinkedHashMap<>(16);
     for (TokenUsageRecordVO record : records) {
       String model = record.getModelName() != null ? record.getModelName() : "unknown";
       MutableCostStats stats = agg.computeIfAbsent(model, k -> new MutableCostStats());
@@ -183,7 +183,7 @@ public class CostAnalysisService {
       stats.totalCostUsd +=
           record.getTotalTokens() * priceConfig.getPrice(record.getModelName()) / 1000.0;
     }
-    Map<String, ModelCostStats> result = new LinkedHashMap<>();
+    Map<String, ModelCostStats> result = new LinkedHashMap<>(16);
     agg.forEach(
         (model, stats) ->
             result.put(

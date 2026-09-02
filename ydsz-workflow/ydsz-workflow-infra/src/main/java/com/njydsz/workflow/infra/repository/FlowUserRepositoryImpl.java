@@ -101,7 +101,7 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
 
   @Override
   public int deleteByInstanceAndNodeAndUser(String instanceId, String nodeCode, String userId) {
-    Map<String, Object> deleteMap = new HashMap<>();
+    Map<String, Object> deleteMap = new HashMap<>(16);
     deleteMap.put("instance_id", instanceId);
     deleteMap.put("node_code", nodeCode);
     deleteMap.put("user_id", userId);

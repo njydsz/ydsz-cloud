@@ -165,7 +165,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
         return;
       }
 
-      List<String> expiredKeys = new ArrayList<>();
+      List<String> expiredKeys = new ArrayList<>(16);
       for (int i = 0; i < keys.size(); i++) {
         String json = values.get(i);
         if (json != null) {
@@ -195,7 +195,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
 
   /** 使用 SCAN 扫描匹配的键（避免 KEYS 阻塞） */
   private List<String> scanKeys() {
-    List<String> keys = new ArrayList<>();
+    List<String> keys = new ArrayList<>(16);
     try {
       ScanOptions options = ScanOptions.scanOptions().match(SCAN_PATTERN).count(100).build();
 

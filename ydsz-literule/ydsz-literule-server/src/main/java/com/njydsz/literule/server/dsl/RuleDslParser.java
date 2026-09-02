@@ -337,7 +337,7 @@ public final class RuleDslParser {
     b.columnBuckets(asListOfMaps(map.get("column_buckets")));
     Object cellsObj = map.get("cells");
     if (cellsObj instanceof Map<?, ?> cm) {
-      Map<String, Map<String, Object>> cells = new LinkedHashMap<>();
+      Map<String, Map<String, Object>> cells = new LinkedHashMap<>(16);
       for (Map.Entry<?, ?> e : cm.entrySet()) {
         if (e.getKey() != null && e.getValue() instanceof Map<?, ?> vm) {
           cells.put(String.valueOf(e.getKey()), asStringMap(vm));
@@ -348,7 +348,7 @@ public final class RuleDslParser {
     // canary_conditions
     Object canaryCondsObj = map.get("canary_conditions");
     if (canaryCondsObj instanceof List<?> cl) {
-      List<String> conds = new ArrayList<>();
+      List<String> conds = new ArrayList<>(16);
       for (Object c : cl) {
         if (c != null) {
           conds.add(String.valueOf(c));
@@ -425,7 +425,7 @@ public final class RuleDslParser {
     // branches（ELIF/SWITCH 使用）
     Object branchesObj = map.get("branches");
     if (branchesObj instanceof Map<?, ?> bm) {
-      Map<String, String> branches = new LinkedHashMap<>();
+      Map<String, String> branches = new LinkedHashMap<>(16);
       for (Map.Entry<?, ?> e : bm.entrySet()) {
         if (e.getKey() != null && e.getValue() != null) {
           branches.put(String.valueOf(e.getKey()), String.valueOf(e.getValue()));

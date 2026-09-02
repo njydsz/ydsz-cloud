@@ -153,7 +153,7 @@ public class SseExecutor {
       return;
     }
     try {
-      Map<String, Object> data = new LinkedHashMap<>();
+      Map<String, Object> data = new LinkedHashMap<>(16);
       data.put("content", "");
       data.put("finished", true);
       emitter.send(SseEmitter.event().data(data).name("done"));
@@ -168,7 +168,7 @@ public class SseExecutor {
       return;
     }
     try {
-      Map<String, Object> data = new LinkedHashMap<>();
+      Map<String, Object> data = new LinkedHashMap<>(16);
       data.put("error", e.getMessage() != null ? e.getMessage() : "未知错误");
       data.put("finished", true);
       emitter.send(SseEmitter.event().data(data).name("error"));
@@ -246,7 +246,7 @@ public class SseExecutor {
      * @return 事件数据 Map
      */
     public Map<String, Object> toMap() {
-      Map<String, Object> map = new LinkedHashMap<>();
+      Map<String, Object> map = new LinkedHashMap<>(16);
       map.put("content", content != null ? content : "");
       map.put("finished", finished);
       if (finishReason != null) {

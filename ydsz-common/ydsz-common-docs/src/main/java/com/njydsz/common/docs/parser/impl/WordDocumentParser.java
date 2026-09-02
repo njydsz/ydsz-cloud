@@ -65,8 +65,8 @@ public class WordDocumentParser implements DocumentParser {
     }
 
     try (XWPFDocument document = new XWPFDocument(inputStream)) {
-      List<DocumentSection> sections = new ArrayList<>();
-      List<DocumentTable> tables = new ArrayList<>();
+      List<DocumentSection> sections = new ArrayList<>(16);
+      List<DocumentTable> tables = new ArrayList<>(16);
       StringBuilder fullText = new StringBuilder();
 
       // 解析段落
@@ -92,9 +92,9 @@ public class WordDocumentParser implements DocumentParser {
       // 解析表格
       if (options == null || options.isExtractTables()) {
         for (XWPFTable table : document.getTables()) {
-          List<List<String>> rows = new ArrayList<>();
+          List<List<String>> rows = new ArrayList<>(16);
           for (XWPFTableRow row : table.getRows()) {
-            List<String> cells = new ArrayList<>();
+            List<String> cells = new ArrayList<>(16);
             for (XWPFTableCell cell : row.getTableCells()) {
               cells.add(cell.getText() != null ? cell.getText().trim() : "");
             }

@@ -192,7 +192,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
    */
   @Override
   public Map<String, Object> testCode(String sourceCode, String language, String paramsJson) {
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     if (sourceCode == null || sourceCode.isBlank()) {
       result.put("success", false);
       result.put("error", "Source code is empty");
@@ -226,7 +226,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
   @Override
   public Map<String, String> getCodeTemplate(String language) {
     String lang = StringUtils.hasText(language) ? language.toUpperCase() : "GROOVY";
-    Map<String, String> template = new HashMap<>();
+    Map<String, String> template = new HashMap<>(16);
     template.put("language", lang);
     switch (lang) {
       case "GROOVY", "JAVA" -> {
@@ -307,7 +307,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
    */
   @Override
   public Map<String, Object> diffVersions(String jobId, Integer versionA, Integer versionB) {
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     if (!StringUtils.hasText(jobId) || versionA == null || versionB == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -398,7 +398,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         if (executor == null) {
           return language + " sandbox executor is not available, please save and execute via job dispatch";
         }
-        Map<String, String> envVars = new HashMap<>();
+        Map<String, String> envVars = new HashMap<>(16);
         envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
         SandboxScriptExecutor.SandboxResult sandboxResult =
             executor.execute(sourceCode, language, (int) (TEST_TIMEOUT_MS / 1000), envVars);
@@ -441,13 +441,13 @@ public class GlueCodeServiceImpl implements GlueCodeService {
   private List<Map<String, Object>> computeLineDiff(String codeA, String codeB) {
     String[] linesA = codeA != null ? codeA.split("\n") : new String[0];
     String[] linesB = codeB != null ? codeB.split("\n") : new String[0];
-    List<Map<String, Object>> diffs = new ArrayList<>();
+    List<Map<String, Object>> diffs = new ArrayList<>(16);
     int maxLines = Math.max(linesA.length, linesB.length);
     for (int i = 0; i < maxLines; i++) {
       String lineA = i < linesA.length ? linesA[i] : "";
       String lineB = i < linesB.length ? linesB[i] : "";
       if (!lineA.equals(lineB)) {
-        Map<String, Object> diff = new HashMap<>();
+        Map<String, Object> diff = new HashMap<>(16);
         diff.put("line", i + 1);
         diff.put("type", lineA.isEmpty() ? "ADDED" : (lineB.isEmpty() ? "REMOVED" : "MODIFIED"));
         diff.put("old", lineA);

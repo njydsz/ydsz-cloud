@@ -144,7 +144,7 @@ public class RuleDebugger {
             .condition(condition)
             .enabled(true)
             .build();
-    breakpoints.computeIfAbsent(ruleCode, k -> new ArrayList<>()).add(bp);
+    breakpoints.computeIfAbsent(ruleCode, k -> new ArrayList<>(8)).add(bp);
     log.info(
         "[LiteRule-Debug] 新增断点: id={}, ruleCode={}, nodeType={}, expr={}",
         bp.getId(),
@@ -224,7 +224,7 @@ public class RuleDebugger {
    * @return 只读快照
    */
   public List<Breakpoint> listBreakpoints() {
-    List<Breakpoint> result = new ArrayList<>();
+    List<Breakpoint> result = new ArrayList<>(16);
     breakpoints.values().forEach(result::addAll);
     return List.copyOf(result);
   }

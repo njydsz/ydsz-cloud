@@ -324,7 +324,7 @@ public class FlowPresetTemplateLibrary {
 
   private Map<String, Object> buildNode(
       String code, String name, String type, String permissionFlag, int x, int y) {
-    Map<String, Object> node = new LinkedHashMap<>();
+    Map<String, Object> node = new LinkedHashMap<>(16);
     node.put("nodeCode", code);
     node.put("nodeName", name);
     node.put("nodeType", type);
@@ -336,7 +336,7 @@ public class FlowPresetTemplateLibrary {
   }
 
   private Map<String, Object> buildSkip(String source, String target, String skipType) {
-    Map<String, Object> skip = new LinkedHashMap<>();
+    Map<String, Object> skip = new LinkedHashMap<>(16);
     skip.put("sourceRef", source);
     skip.put("nextNodeCode", target);
     skip.put("skipType", skipType);

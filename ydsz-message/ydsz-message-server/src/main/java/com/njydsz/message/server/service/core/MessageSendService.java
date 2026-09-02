@@ -122,7 +122,7 @@ public class MessageSendService {
     if (matchedRule == null) {
       return Collections.emptyList();
     }
-    List<String> result = new ArrayList<>();
+    List<String> result = new ArrayList<>(16);
     String single = matchedRule.getFallbackChannel();
     if (StringUtils.hasText(single) && !single.equalsIgnoreCase(currentChannel)) {
       result.add(single.trim().toUpperCase());

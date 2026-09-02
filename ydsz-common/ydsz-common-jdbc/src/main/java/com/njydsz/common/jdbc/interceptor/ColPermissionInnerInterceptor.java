@@ -183,7 +183,7 @@ public class ColPermissionInnerInterceptor extends DataPermissionInnerIntercepto
    * @return 需要移除的列索引列表
    */
   private List<Integer> findColumnsToRemove(List<Column> columns, Set<String> allowed) {
-    List<Integer> removeIndexes = new ArrayList<>();
+    List<Integer> removeIndexes = new ArrayList<>(16);
     for (int i = 0; i < columns.size(); i++) {
       String col = normalizeColumnName(columns.get(i).getColumnName());
       if (!allowed.contains(col)) {
@@ -276,7 +276,7 @@ public class ColPermissionInnerInterceptor extends DataPermissionInnerIntercepto
       return;
     }
 
-    List<SelectItem<?>> out = new ArrayList<>();
+    List<SelectItem<?>> out = new ArrayList<>(16);
     for (SelectItem<?> item : items) {
       Expression exp = item.getExpression();
       if (exp instanceof AllColumns) {
@@ -353,7 +353,7 @@ public class ColPermissionInnerInterceptor extends DataPermissionInnerIntercepto
    * @return 展开后的 SelectItem 列表
    */
   private List<SelectItem<?>> expandAllColumns(List<Table> tables, DataPermissionContext context) {
-    List<SelectItem<?>> expanded = new ArrayList<>();
+    List<SelectItem<?>> expanded = new ArrayList<>(16);
     for (Table table : tables) {
       if (!hasVisibleRule(table, context)) {
         SelectItem<AllTableColumns> item = new SelectItem<>(new AllTableColumns(table));
@@ -377,7 +377,7 @@ public class ColPermissionInnerInterceptor extends DataPermissionInnerIntercepto
    * @return 由允许列构成的 SelectItem 列表
    */
   private List<SelectItem<?>> buildAllowedSelectItems(Table table, Set<String> allowed) {
-    List<SelectItem<?>> out = new ArrayList<>();
+    List<SelectItem<?>> out = new ArrayList<>(16);
     for (String column : allowed) {
       SelectItem<Column> item = new SelectItem<>(new Column(table, column));
       out.add(item);
@@ -392,7 +392,7 @@ public class ColPermissionInnerInterceptor extends DataPermissionInnerIntercepto
    * @return 需要拦截的表列表
    */
   private List<Table> extractTables(PlainSelect plain) {
-    List<Table> tables = new ArrayList<>();
+    List<Table> tables = new ArrayList<>(16);
     if (plain == null) {
       return tables;
     }

@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+new HashMap<>(16)e com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -133,7 +133,7 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
       return map == null ? new HashMap<>() : map;
     } catch (Exception e) {
       log.warn("[Flow] 解析 variable JSON 失败，返回空 Map: {}", e.getMessage());
-      return new HashMap<>();
+      return new HashMap<>(0);
     }
   }
 
@@ -394,7 +394,7 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
             businessId,
             instanceId);
       } catch (Exception e) {
-        Map<String, Object> fail = new LinkedHashMap<>();
+        Map<String, Object> fail = new LinkedHashMap<>(16);
         fail.put("index", i + 1);
         fail.put("businessId", businessId);
         String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
@@ -405,7 +405,7 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
       }
     }
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("successCount", successCount);
     result.put("failedCount", failedItems.size());
     result.put("instanceIds", instanceIds);

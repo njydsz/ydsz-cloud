@@ -62,7 +62,7 @@ public class RollbackPreviewVO implements Serializable {
   private String rollbackBlockedReason;
 
   /** 字段差异列表 */
-  @Builder.Default private List<FieldDiff> diffs = new ArrayList<>();
+  @Builder.Default private List<FieldDiff> diffs = new ArrayList<>(16);
 
   /**
    * 获取差异数量。

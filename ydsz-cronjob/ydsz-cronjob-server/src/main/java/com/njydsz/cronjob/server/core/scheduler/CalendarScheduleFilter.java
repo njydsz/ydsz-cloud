@@ -120,7 +120,7 @@ public class CalendarScheduleFilter {
       if (holidaysArr == null || holidaysArr.isEmpty()) {
         return Set.of();
       }
-      Set<LocalDate> holidays = new HashSet<>();
+      Set<LocalDate> holidays = new HashSet<>(16);
       for (int i = 0; i < holidaysArr.size(); i++) {
         try {
           holidays.add(LocalDate.parse(holidaysArr.getString(i)));

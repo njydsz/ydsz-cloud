@@ -117,7 +117,7 @@ public class ReadMetadata {
     this.readCacheSize = 1024;
     this.useScientificNotation = false;
     this.mandatoryUseInputStream = false;
-    this.headList = new ArrayList<>();
+    this.headList = new ArrayList<>(16);
     this.currentReadRow = new AtomicInteger(0);
   }
 

@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.config;
+new ArrayList<>(16).common.auth.config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,5 +42,5 @@ public class AuthFilterProperties {
   private Boolean verifyPermission = true;
 
   /** 仅校验 Token 但不校验权限的路径，如 /api/inner/** */
-  private List<String> onlyVerifyToken = new ArrayList<>();
+  private List<String> onlyVerifyToken = new ArrayList<>(4);
 }

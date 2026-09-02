@@ -161,7 +161,7 @@ public final class TeamRun {
      * @return 新的 TeamRun 实例
      */
     public TeamRun withUpdatedMember(String memberId, TeamRunMember newMember) {
-        List<TeamRunMember> newMembers = new ArrayList<>();
+        List<TeamRunMember> newMembers = new ArrayList<>(16);
         for (TeamRunMember m : this.members) {
             if (m.getMemberId().equals(memberId)) {
                 newMembers.add(newMember);

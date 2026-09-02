@@ -78,9 +78,9 @@ public class HtmlDocumentParser implements DocumentParser {
       throw new DocumentException(DocumentExceptionCode.PARSE_FAILED, e);
     }
 
-    List<DocumentSection> sections = new ArrayList<>();
-    List<DocumentTable> tables = new ArrayList<>();
-    List<DocumentImage> images = new ArrayList<>();
+    List<DocumentSection> sections = new ArrayList<>(16);
+    List<DocumentTable> tables = new ArrayList<>(16);
+    List<DocumentImage> images = new ArrayList<>(16);
     StringBuilder fullText = new StringBuilder();
 
     // 提取标题层级
@@ -126,10 +126,10 @@ public class HtmlDocumentParser implements DocumentParser {
     if (options == null || options.isExtractTables()) {
       Elements tableElements = doc.select("table");
       for (Element tableEl : tableElements) {
-        List<List<String>> rows = new ArrayList<>();
+        List<List<String>> rows = new ArrayList<>(16);
         Elements trs = tableEl.select("tr");
         for (Element tr : trs) {
-          List<String> row = new ArrayList<>();
+          List<String> row = new ArrayList<>(16);
           for (Element cell : tr.select("th,td")) {
             row.add(cell.text().trim());
           }

@@ -239,7 +239,7 @@ public final class PermissionUtils {
    */
   public static Set<String> mergeRolePermissions(
       Map<String, Set<String>> rolePermissions, Set<String> roleCodes) {
-    Set<String> merged = new HashSet<>();
+    Set<String> merged = new HashSet<>(16);
     if (rolePermissions == null || roleCodes == null) {
       return merged;
     }

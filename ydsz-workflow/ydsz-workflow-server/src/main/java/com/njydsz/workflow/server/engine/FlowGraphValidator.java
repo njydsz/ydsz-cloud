@@ -138,8 +138,8 @@ public class FlowGraphValidator {
     Map<String, List<String>> outEdges = new HashMap<>(nodeMap.size());
     Map<String, List<String>> inEdges = new HashMap<>(nodeMap.size());
     for (String code : nodeMap.keySet()) {
-      outEdges.put(code, new ArrayList<>());
-      inEdges.put(code, new ArrayList<>());
+      outEdges.put(code, new ArrayList<>(16));
+      inEdges.put(code, new ArrayList<>(16));
     }
 
     int validSkipCount = 0;

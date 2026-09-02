@@ -80,7 +80,7 @@ public class FileProperties {
   private String region;
 
   /** 允许上传的文件后缀列表（为空时使用默认白名单；配置后以当前列表为准） */
-  private List<String> allowedSuffixes = new ArrayList<>();
+  private List<String> allowedSuffixes = new ArrayList<>(4);
 
   /** 单文件最大大小（字节，默认 100MB = 104857600 字节） */
   private Long maxFileSize = 104857600L;

@@ -77,7 +77,7 @@ public class GatewayHealthIndicator implements HealthIndicator {
    */
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     boolean healthy = true;
 
     // Redis 连通性检查

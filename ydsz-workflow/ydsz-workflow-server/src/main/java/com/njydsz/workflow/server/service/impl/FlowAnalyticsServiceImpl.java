@@ -114,7 +114,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     // P1-5: 使用单 SQL 聚合查询替代多次 COUNT（5 次 → 1 次）
     Map<String, Object> hisStats = hisTaskRepository.selectOverviewStats(tid, startTime, endTime);
     if (hisStats == null) {
-      hisStats = new LinkedHashMap<>();
+      hisStats = new LinkedHashMap<>(16);
     }
 
     long totalHis = toLong(hisStats.get("totalTasks"));

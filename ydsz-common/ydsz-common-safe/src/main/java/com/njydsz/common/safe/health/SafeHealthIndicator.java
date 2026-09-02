@@ -53,7 +53,7 @@ public class SafeHealthIndicator implements HealthIndicator {
 
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     details.put("module", "safe");
 
     // Redis 连通性检测（可选依赖）
@@ -79,7 +79,7 @@ public class SafeHealthIndicator implements HealthIndicator {
     }
 
     // 安全能力清单（实际注册状态由 @ConditionalOnProperty 决定）
-    Map<String, String> capabilities = new LinkedHashMap<>();
+    Map<String, String> capabilities = new LinkedHashMap<>(16);
     capabilities.put("xss", "OWASP Sanitizer + configurable policies");
     capabilities.put("csrf", "Synchronizer / Double Submit dual mode");
     capabilities.put("rateLimit", "Token Bucket + Resilience4j Circuit Breaker");
@@ -94,7 +94,7 @@ public class SafeHealthIndicator implements HealthIndicator {
     // 安全指标累计值（SLO 监控数据）
     SafeMetrics safeMetrics = safeMetricsProvider.getIfAvailable();
     if (safeMetrics != null) {
-      Map<String, Long> metrics = new LinkedHashMap<>();
+      Map<String, Long> metrics = new LinkedHashMap<>(16);
       metrics.put("xssAttacks", safeMetrics.getXssAttacksCount());
       metrics.put("csrfFailures", safeMetrics.getCsrfFailuresCount());
       metrics.put("rateLimitTriggered", safeMetrics.getRateLimitTriggeredCount());

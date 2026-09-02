@@ -49,7 +49,7 @@ public class DocsHealthIndicator implements HealthIndicator {
    */
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     details.put("enabled", properties.isEnabled());
     details.put("maxFileSizeMb", properties.getMaxFileSizeMb());
     details.put("supportedFormats", parserRegistry.getSupportedFormats());

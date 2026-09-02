@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.trace;
+new HashMap<>(16)race;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public class MessageTrace implements Serializable {
    */
   public void addTimestamp(String stage) {
     if (this.timestamps == null) {
-      this.timestamps = new HashMap<>();
+      this.timestamps = new HashMap<>(16);
     }
     this.timestamps.put(stage, System.currentTimeMillis());
   }

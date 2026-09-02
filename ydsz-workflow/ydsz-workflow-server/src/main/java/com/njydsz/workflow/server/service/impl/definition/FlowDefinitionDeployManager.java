@@ -417,7 +417,7 @@ public class FlowDefinitionDeployManager {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
     int successCount = 0;
-    List<Map<String, String>> failedItems = new ArrayList<>();
+    List<Map<String, String>> failedItems = new ArrayList<>(16);
 
     try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
       ZipEntry entry;
@@ -456,7 +456,7 @@ public class FlowDefinitionDeployManager {
           successCount++;
           log.info("[Flow] zip 批量导入成功: fileName={} flowCode={}", fileName, flowCode);
         } catch (Exception e) {
-          Map<String, String> fail = new LinkedHashMap<>();
+          Map<String, String> fail = new LinkedHashMap<>(16);
           fail.put("fileName", fileName);
           fail.put(
               "reason", e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
@@ -473,7 +473,7 @@ public class FlowDefinitionDeployManager {
           .build();
     }
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("successCount", successCount);
     result.put("failedItems", failedItems);
     log.info("[Flow] zip 批量导入完成: success={} failed={}", successCount, failedItems.size());

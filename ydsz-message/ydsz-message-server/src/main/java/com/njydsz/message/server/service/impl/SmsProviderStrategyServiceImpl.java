@@ -123,7 +123,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
    */
   @Override
   public Map<String, long[]> getProviderStats() {
-    Map<String, long[]> stats = new HashMap<>();
+    Map<String, long[]> stats = new HashMap<>(16);
     try {
       String daySuffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
       for (String provider : new String[] {"aliyun", "tencent", "mock"}) {
@@ -212,7 +212,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
 
   /** 解析权重配置（从 {@link MessageProperties.SmsConfig#getWeights()} 读取）。 */
   private Map<String, Integer> parseWeights() {
-    Map<String, Integer> weights = new HashMap<>();
+    Map<String, Integer> weights = new HashMap<>(16);
     String weightsConfig = messageProperties.getSms().getWeights();
     if (weightsConfig != null && !weightsConfig.isBlank()) {
       for (String pair : weightsConfig.split(",")) {

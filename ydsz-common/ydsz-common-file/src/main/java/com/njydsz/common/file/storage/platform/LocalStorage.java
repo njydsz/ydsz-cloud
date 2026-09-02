@@ -314,7 +314,7 @@ public class LocalStorage extends AbstractFileStorage {
 
   @Override
   protected List<PartInfo> listParts(String bucketName, String objectName, String uploadId) {
-    List<PartInfo> parts = new ArrayList<>();
+    List<PartInfo> parts = new ArrayList<>(16);
     Path uploadRootPath = resolveUploadRootPath(bucketName, objectName, uploadId);
 
     if (!Files.exists(uploadRootPath)) {
@@ -373,7 +373,7 @@ public class LocalStorage extends AbstractFileStorage {
   @Override
   protected ListObjectsResult doListObjects(
       String bucketName, String prefix, String cursor, int maxKeys) {
-    List<ObjectMetadata> objects = new ArrayList<>();
+    List<ObjectMetadata> objects = new ArrayList<>(16);
     Path bucketPath = resolveLocalPath(bucketName, "");
 
     if (!Files.exists(bucketPath) || !Files.isDirectory(bucketPath)) {

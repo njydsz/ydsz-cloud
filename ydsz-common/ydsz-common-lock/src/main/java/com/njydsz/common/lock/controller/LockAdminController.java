@@ -91,7 +91,7 @@ public class LockAdminController {
   @GetMapping("/metrics")
   @Operation(summary = "获取锁指标", description = "获取当前锁子系统的运行时指标快照")
   public YdszResponse<Map<String, Object>> metrics() {
-    Map<String, Object> metrics = new HashMap<>();
+    Map<String, Object> metrics = new HashMap<>(16);
     metrics.put("acquireSuccessCount", lockMetrics.getAcquireSuccessCount());
     metrics.put("acquireFailCount", lockMetrics.getAcquireFailCount());
     metrics.put("releaseCount", lockMetrics.getReleaseCount());
@@ -118,7 +118,7 @@ public class LockAdminController {
   public YdszResponse<Map<String, Object>> lockStatus(
       @Parameter(description = "锁 key（不含 ydsz 前缀）") @PathVariable("key") String key) {
     String fullKey = LOCK_KEY_PREFIX + key;
-    Map<String, Object> status = new HashMap<>();
+    Map<String, Object> status = new HashMap<>(16);
     status.put("key", fullKey);
     Boolean exists = redisTemplate.hasKey(fullKey);
     status.put("exists", exists != null && exists);
@@ -143,7 +143,7 @@ public class LockAdminController {
   public YdszResponse<Map<String, Object>> forceUnlock(
       @Parameter(description = "锁 key（不含 ydsz 前缀）") @PathVariable("key") String key) {
     String fullKey = LOCK_KEY_PREFIX + key;
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("key", fullKey);
     Boolean deleted = redisTemplate.delete(fullKey);
     boolean success = deleted != null && deleted;
@@ -162,7 +162,7 @@ public class LockAdminController {
   @GetMapping("/watchdog/tasks")
   @Operation(summary = "查看活跃续期任务", description = "列出当前 WatchDog 正在续期的锁任务数")
   public YdszResponse<Map<String, Object>> activeWatchdogTasks() {
-    Map<String, Object> info = new HashMap<>();
+    Map<String, Object> info = new HashMap<>(16);
     info.put("activeRenewalTasks", lockWatchDog.getActiveTaskCount());
     info.put("timestamp", System.currentTimeMillis());
     return YdszResponse.success(info);
@@ -209,7 +209,7 @@ public class LockAdminController {
     int normalizedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
     int skip = Math.max(page, 0) * normalizedSize;
 
-    List<Map<String, Object>> activeLockList = new ArrayList<>();
+    List<Map<String, Object>> activeLockList = new ArrayList<>(16);
     int scanned = 0;
 
     // 使用 SCAN 渐进式遍历，每次扫描 SCAN_BATCH_SIZE 个 key
@@ -233,7 +233,7 @@ public class LockAdminController {
       }
     }
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("locks", activeLockList);
     result.put("page", page);
     result.put("size", normalizedSize);
@@ -263,7 +263,7 @@ public class LockAdminController {
       @Parameter(description = "Redis key 模式")
           @RequestParam(value = "pattern", defaultValue = "lock:*")
           String pattern) {
-    Map<String, Integer> categoryCount = new HashMap<>();
+    Map<String, Integer> categoryCount = new HashMap<>(16);
     int totalActive = 0;
 
     // 仅扫描前 200 个 key 做统计摘要（避免大库阻塞）
@@ -283,7 +283,7 @@ public class LockAdminController {
       }
     }
 
-    Map<String, Object> summary = new HashMap<>();
+    Map<String, Object> summary = new HashMap<>(16);
     summary.put("totalActive", totalActive);
     summary.put("categoryDistribution", categoryCount);
     summary.put("metrics", buildMetricsSnapshot());
@@ -323,7 +323,7 @@ public class LockAdminController {
 
     int successCount = 0;
     int failCount = 0;
-    List<String> failedKeys = new ArrayList<>();
+    List<String> failedKeys = new ArrayList<>(16);
 
     for (String key : keys) {
       String fullKey = LOCK_KEY_PREFIX + key;
@@ -343,7 +343,7 @@ public class LockAdminController {
       }
     }
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("totalRequested", keys.size());
     result.put("successCount", successCount);
     result.put("failCount", failCount);
@@ -365,7 +365,7 @@ public class LockAdminController {
    * @return 本批次扫描到的锁 key 列表
    */
   private List<String> scanKeysBatch(String pattern, int batchSize) {
-    List<String> keys = new ArrayList<>();
+    List<String> keys = new ArrayList<>(16);
     ScanOptions options = ScanOptions.scanOptions().match(pattern).count(batchSize).build();
     try (Cursor<String> cursor = redisTemplate.scan(options)) {
       while (cursor.hasNext() && keys.size() < batchSize) {
@@ -384,7 +384,7 @@ public class LockAdminController {
    * @return 锁信息 Map
    */
   private Map<String, Object> buildLockInfo(String key) {
-    Map<String, Object> info = new HashMap<>();
+    Map<String, Object> info = new HashMap<>(16);
     info.put("key", key);
     try {
       Long ttl = redisTemplate.getExpire(key, TimeUnit.MILLISECONDS);
@@ -418,7 +418,7 @@ public class LockAdminController {
    * @return 指标快照
    */
   private Map<String, Object> buildMetricsSnapshot() {
-    Map<String, Object> snapshot = new HashMap<>();
+    Map<String, Object> snapshot = new HashMap<>(16);
     snapshot.put("acquireSuccessCount", lockMetrics.getAcquireSuccessCount());
     snapshot.put("acquireFailCount", lockMetrics.getAcquireFailCount());
     snapshot.put("lockTimeoutCount", lockMetrics.getLockTimeoutCount());

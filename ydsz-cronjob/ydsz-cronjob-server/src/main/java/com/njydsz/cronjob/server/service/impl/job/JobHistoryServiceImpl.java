@@ -257,14 +257,14 @@ public class JobHistoryServiceImpl implements JobHistoryService {
    * @return 差异字段列表，每个元素包含 field/oldValue/newValue
    */
   private List<Map<String, Object>> diffFields(JobVO job1, JobVO job2) {
-    List<Map<String, Object>> diffs = new ArrayList<>();
+    List<Map<String, Object>> diffs = new ArrayList<>(16);
     Map<String, Object> snapshot1 = YdszJson.parseMap(YdszJson.toJson(job1));
     Map<String, Object> snapshot2 = YdszJson.parseMap(YdszJson.toJson(job2));
     for (String field : COMPARE_FIELDS) {
       Object oldValue = snapshot1.get(field);
       Object newValue = snapshot2.get(field);
       if (!Objects.equals(oldValue, newValue)) {
-        Map<String, Object> diff = new LinkedHashMap<>();
+        Map<String, Object> diff = new LinkedHashMap<>(16);
         diff.put("field", field);
         diff.put("oldValue", oldValue);
         diff.put("newValue", newValue);

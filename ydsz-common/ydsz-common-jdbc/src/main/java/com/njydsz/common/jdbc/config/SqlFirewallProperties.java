@@ -55,5 +55,5 @@ public class SqlFirewallProperties {
   private boolean blockPermissionOps = true;
 
   /** DROP/TRUNCATE 操作的表白名单（忽略大小写） */
-  private Set<String> allowTables = new HashSet<>();
+  private Set<String> allowTables = new HashSet<>(16);
 }

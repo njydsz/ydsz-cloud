@@ -92,7 +92,7 @@ public class OfflineMessageService implements OfflineMessageStore {
     if (userId == null) {
       return List.of();
     }
-    List<String> result = new ArrayList<>();
+    List<String> result = new ArrayList<>(16);
 
     // 先从数据库拉取持久化的离线消息
     try {

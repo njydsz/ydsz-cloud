@@ -156,7 +156,7 @@ public class FlowInstance extends MpBaseEntity<String> {
    * com.njydsz.workflow.domain.event.DomainEventPublisher} 发布。
    * 设计参考：DDD 聚合根的事件收集-发布模式（避免在聚合内直接依赖事件发布器）。
    */
-  private final transient List<FlowDomainEvent> domainEvents = new ArrayList<>();
+  private final transient List<FlowDomainEvent> domainEvents = new ArrayList<>(16);
 
   /** 状态机实例（无状态单例，延迟初始化） */
   private static volatile FlowInstanceStateMachine stateMachine;

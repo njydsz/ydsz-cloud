@@ -52,7 +52,7 @@ public final class OtelSdkBuilder {
 
   private Resource resource;
   private Sampler sampler;
-  private final List<SpanProcessor> processors = new ArrayList<>();
+  private final List<SpanProcessor> processors = new ArrayList<>(4);
   private SpanExporter exporter;
   private OtelExporterFactory.BatchConfig batchConfig = OtelExporterFactory.BatchConfig.defaults();
   private TextMapPropagator[] propagators;

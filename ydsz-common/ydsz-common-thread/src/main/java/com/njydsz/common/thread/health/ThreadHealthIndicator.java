@@ -81,7 +81,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
    */
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     boolean anyDown = false;
 
     if (applicationContext == null) {

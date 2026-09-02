@@ -1,7 +1,4 @@
-package com.njydsz.userinfo.server.config;
-
-import java.util.HashMap;
-import java.util.List;
+new HashMap<>(16)mport java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -234,7 +231,7 @@ public class UserInfoProperties {
    *       api: -1
    * </pre>
    */
-  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>();
+  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>(16);
 
   /**
    * 获取指定设备类型的最大会话数。

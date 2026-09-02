@@ -140,7 +140,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     publishExceptionEvent(e, request.getRequestURI(), traceId, resolvedMsg);
 
     // 构建 207 响应体
-    Map<String, Object> batchResult = new LinkedHashMap<>();
+    Map<String, Object> batchResult = new LinkedHashMap<>(16);
     batchResult.put("successCount", e.getSuccessCount());
     batchResult.put("failureCount", e.getFailureCount());
     batchResult.put("totalCount", e.getTotalCount());

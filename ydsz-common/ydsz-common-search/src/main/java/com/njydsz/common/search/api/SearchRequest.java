@@ -1,4 +1,4 @@
-package com.njydsz.common.search.api;
+new ArrayList<>(16)com.njydsz.common.search.api;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -105,7 +105,7 @@ public class SearchRequest implements Serializable {
   /** 操作人角色列表（权限过滤） */
   @Schema(description = "操作人角色列表")
   @Builder.Default
-  private List<String> roles = new ArrayList<>();
+  private List<String> roles = new ArrayList<>(4);
 
   /** 操作人部门 ID（权限过滤） */
   @Schema(description = "操作人部门ID")

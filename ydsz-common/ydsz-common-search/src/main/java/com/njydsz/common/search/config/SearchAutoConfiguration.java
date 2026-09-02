@@ -170,7 +170,7 @@ public class SearchAutoConfiguration {
     @Override
     public String[] selectImports(AnnotationMetadata metadata) {
       // ServiceLoader 方式加载各引擎 Starter 的 EngineStarterConfigurer 实现
-      List<String> configClasses = new ArrayList<>();
+      List<String> configClasses = new ArrayList<>(16);
       ServiceLoader<EngineStarterConfigurer> loader =
           ServiceLoader.load(EngineStarterConfigurer.class);
       for (EngineStarterConfigurer configurer : loader) {

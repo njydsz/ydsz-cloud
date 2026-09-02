@@ -1,6 +1,4 @@
-package com.njydsz.common.safe.ratelimit.properties;
-
-import java.util.ArrayList;
+new ArrayList<>(16)port java.util.ArrayList;
 import java.util.List;
 
 import lombok.Data;
@@ -60,7 +58,7 @@ public class RateLimitProperties {
   private List<RateLimitRule> rules = new ArrayList<>();
 
   /** 热点参数特殊配置（key 索引 → 阈值） */
-  private List<HotParamRule> hotParams = new ArrayList<>();
+  private List<HotParamRule> hotParams = new ArrayList<>(4);
 
   /** 熔断器配置（保护 Redis 集群限流调用） */
   private CircuitBreakerProperties circuitBreaker = new CircuitBreakerProperties();

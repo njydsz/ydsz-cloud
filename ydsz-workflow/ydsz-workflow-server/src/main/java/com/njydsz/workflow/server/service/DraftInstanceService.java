@@ -113,7 +113,7 @@ public class DraftInstanceService {
     // 保存草稿数据到 variables
     Map<String, Object> variables = dto.getDraftData();
     if (variables == null) {
-      variables = new HashMap<>();
+      variables = new HashMap<>(16);
     }
     variables.put("_draft", true);
     variables.put("_draftSavedAt", LocalDateTime.now().toString());
@@ -175,7 +175,7 @@ public class DraftInstanceService {
     // 更新草稿数据（variable 字段为 JSON 字符串，经 YdszJson 反序列化后合并）
     Map<String, Object> variables = dto.getDraftData();
     if (variables == null) {
-      variables = new HashMap<>();
+      variables = new HashMap<>(16);
     }
     if (draft.getVariable() != null && !draft.getVariable().isBlank()) {
       variables.putAll(YdszJson.parseMap(draft.getVariable()));
@@ -231,7 +231,7 @@ public class DraftInstanceService {
       Map<String, Object> variables =
           draft.getVariable() != null && !draft.getVariable().isBlank()
               ? YdszJson.parseMap(draft.getVariable())
-              : new HashMap<>();
+              : new HashMap<>(16);
       variables.putAll(draftData);
       variables.put("_draft", false);
       variables.put("_draftSubmittedAt", LocalDateTime.now().toString());

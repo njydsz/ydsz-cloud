@@ -16,7 +16,7 @@ public class NextwikiAppHealthIndicator implements HealthIndicator {
 
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     details.put("module", "nextwiki");
     details.put("platform", "app");
     return Health.up().withDetails(details).build();

@@ -111,8 +111,8 @@ public class RedisNodeRegistry implements NodeRegistry {
     try {
       RMap<String, String> map = redissonClient.getMap(NODES_KEY);
       long now = System.currentTimeMillis();
-      List<ClusterNode> alive = new ArrayList<>();
-      List<String> deadNodeIds = new ArrayList<>();
+      List<ClusterNode> alive = new ArrayList<>(16);
+      List<String> deadNodeIds = new ArrayList<>(16);
 
       for (Map.Entry<String, String> entry : map.entrySet()) {
         try {
@@ -171,7 +171,7 @@ public class RedisNodeRegistry implements NodeRegistry {
     try {
       RMap<String, String> map = redissonClient.getMap(NODES_KEY);
       long now = System.currentTimeMillis();
-      List<String> deadNodeIds = new ArrayList<>();
+      List<String> deadNodeIds = new ArrayList<>(16);
 
       for (Map.Entry<String, String> entry : map.entrySet()) {
         try {

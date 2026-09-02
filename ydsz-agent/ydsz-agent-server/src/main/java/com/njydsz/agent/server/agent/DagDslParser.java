@@ -68,7 +68,7 @@ public class DagDslParser {
       throw new IllegalArgumentException("DSL 缺少 nodes 定义");
     }
 
-    Map<String, AgentDag.Node> nodes = new HashMap<>();
+    Map<String, AgentDag.Node> nodes = new HashMap<>(16);
     for (Map.Entry<?, ?> entry : nodesYaml.entrySet()) {
       String nodeId = String.valueOf(entry.getKey());
       Object nodeDefRaw = entry.getValue();
@@ -83,7 +83,7 @@ public class DagDslParser {
       nodes.put(nodeId, new AgentDag.Node(nodeId, agentType, prompt, inputFrom, config));
     }
 
-    Map<String, List<String>> edges = new HashMap<>();
+    Map<String, List<String>> edges = new HashMap<>(16);
     if (edgesRaw instanceof Map<?, ?> edgesYaml) {
       for (Map.Entry<?, ?> entry : edgesYaml.entrySet()) {
         String nodeId = String.valueOf(entry.getKey());

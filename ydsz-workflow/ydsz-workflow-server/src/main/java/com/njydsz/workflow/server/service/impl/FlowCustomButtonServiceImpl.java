@@ -138,7 +138,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     Map<String, Object> extJson =
         StringUtils.hasText(node.getExt())
             ? FlowNodeExt.parseSafe(node.getExt())
-            : new LinkedHashMap<>();
+            : new LinkedHashMap<>(16);
     // 写入 customButtons
     if (buttons == null || buttons.isEmpty()) {
       extJson.remove("customButtons");
@@ -192,7 +192,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     String targetNodeCode =
         button.get("targetNodeCode") != null ? String.valueOf(button.get("targetNodeCode")) : null;
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("taskId", taskId);
     result.put("buttonCode", buttonCode);
     result.put("action", action);
@@ -299,7 +299,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
       if (buttons == null) {
         return List.of();
       }
-      List<Map<String, Object>> result = new ArrayList<>();
+      List<Map<String, Object>> result = new ArrayList<>(16);
       if (buttons instanceof List<?> list) {
         for (Object item : list) {
           if (item instanceof Map<?, ?> map) {

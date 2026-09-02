@@ -259,7 +259,7 @@ public class DataPermissionContextResolver {
     if (StringUtils.isBlank(value)) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> out = new HashMap<>();
+    Map<String, Set<String>> out = new HashMap<>(16);
     String[] blocks = value.split(";");
     for (String block : blocks) {
       if (StringUtils.isBlank(block) || !block.contains(":")) {

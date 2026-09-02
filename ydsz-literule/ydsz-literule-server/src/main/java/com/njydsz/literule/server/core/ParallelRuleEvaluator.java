@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.core;
+new ArrayList<>(16)om.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -210,7 +210,7 @@ public class ParallelRuleEvaluator {
   private List<RuleResultVO> evaluateSequential(
       List<Rule> rules, RuleContextVO context, RuleEvaluator evaluator) {
     List<RuleResultVO> triggered = new ArrayList<>();
-    Set<String> triggeredGroups = new HashSet<>();
+    Set<String> triggeredGroups = new HashSet<>(16);
     for (Rule rule : rules) {
       String mutexGroup = rule.getMutexGroup();
       if (mutexGroup != null && !mutexGroup.isBlank() && triggeredGroups.contains(mutexGroup)) {
@@ -265,12 +265,12 @@ public class ParallelRuleEvaluator {
    * @return groupId → 规则列表（组内按优先级排序）
    */
   private Map<String, List<Rule>> groupByMutex(List<Rule> rules) {
-    Map<String, List<Rule>> groups = new LinkedHashMap<>();
+    Map<String, List<Rule>> groups = new LinkedHashMap<>(16);
     for (Rule rule : rules) {
       String mutexGroup = rule.getMutexGroup();
       String groupId =
           (mutexGroup != null && !mutexGroup.isBlank()) ? mutexGroup : "INDEP_" + rule.getCode();
-      groups.computeIfAbsent(groupId, k -> new ArrayList<>()).add(rule);
+      groups.computeIfAbsent(groupId, k -> new ArrayList<>(8)).add(rule);
     }
     // 组内按优先级排序
     for (List<Rule> groupRules : groups.values()) {

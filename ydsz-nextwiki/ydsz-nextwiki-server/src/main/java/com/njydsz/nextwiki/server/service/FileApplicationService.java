@@ -619,7 +619,7 @@ public class FileApplicationService {
 
     // 批量查询节点，避免 N 次单条查询
     List<FileNodeVO> nodes = fileNodeRepository.findByIds(nodeIds);
-    Map<String, FileNodeVO> nodeMap = new HashMap<>();
+    Map<String, FileNodeVO> nodeMap = new HashMap<>(16);
     for (FileNodeVO node : nodes) {
       nodeMap.put(node.getId(), node);
     }
@@ -643,7 +643,7 @@ public class FileApplicationService {
 
     // 等待所有任务完成并收集结果
     int success = 0;
-    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>();
+    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>(16);
     for (int i = 0; i < futures.size(); i++) {
       try {
         String error = futures.get(i).get();
@@ -695,7 +695,7 @@ public class FileApplicationService {
 
     // 等待所有任务完成并收集结果
     int success = 0;
-    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>();
+    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>(16);
     for (int i = 0; i < futures.size(); i++) {
       try {
         String error = futures.get(i).get();

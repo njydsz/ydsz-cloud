@@ -79,7 +79,7 @@ public class SecurityEventPublisher implements ApplicationEventPublisherAware {
   }
 
   private List<SecurityAlertListener> loadSpiListeners() {
-    List<SecurityAlertListener> listeners = new ArrayList<>();
+    List<SecurityAlertListener> listeners = new ArrayList<>(16);
     ServiceLoader<SecurityAlertListener> loader = ServiceLoader.load(SecurityAlertListener.class);
     for (SecurityAlertListener listener : loader) {
       listeners.add(listener);

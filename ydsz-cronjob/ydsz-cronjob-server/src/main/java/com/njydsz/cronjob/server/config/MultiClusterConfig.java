@@ -49,7 +49,7 @@ public class MultiClusterConfig {
   private boolean enabled = false;
 
   /** 远程集群配置映射（key = 集群名称，如 "beijing"、"shanghai"） */
-  private Map<String, RemoteCluster> clusters = new HashMap<>();
+  private Map<String, RemoteCluster> clusters = new HashMap<>(16);
 
   /**
    * 远程集群连接信息。

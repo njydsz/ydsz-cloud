@@ -46,7 +46,7 @@ public class CacheMetricsEndpoint {
   private final Map<String, Cache<?, ?>> monitoredCaches;
 
   public CacheMetricsEndpoint() {
-    this.monitoredCaches = new LinkedHashMap<>();
+    this.monitoredCaches = new LinkedHashMap<>(16);
   }
 
   /**
@@ -76,8 +76,8 @@ public class CacheMetricsEndpoint {
    */
   @ReadOperation
   public Map<String, Object> allCacheMetrics() {
-    Map<String, Object> result = new LinkedHashMap<>();
-    List<Map<String, Object>> cachesList = new ArrayList<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
+    List<Map<String, Object>> cachesList = new ArrayList<>(16);
     long totalSize = 0;
     long totalHits = 0;
     long totalMisses = 0;
@@ -173,7 +173,7 @@ public class CacheMetricsEndpoint {
 
   /** 构建单个缓存的详细指标 */
   private Map<String, Object> buildCacheMetrics(String name, Cache<?, ?> cache) {
-    Map<String, Object> metrics = new LinkedHashMap<>();
+    Map<String, Object> metrics = new LinkedHashMap<>(16);
 
     try {
       long size = cache.estimatedSize();

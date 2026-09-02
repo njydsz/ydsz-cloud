@@ -104,7 +104,7 @@ public final class ExceptionDesensitizer {
    *
    * <p>顺序影响优先级：靠前的规则优先匹配； 重叠匹配场景下后续规则在剩余文本上继续执行。
    */
-  private static final List<DesensitizeRule> RULES = new ArrayList<>();
+  private static final List<DesensitizeRule> RULES = new ArrayList<>(4);
 
   static {
     // 0. JWT Token（三段 base64 用 . 分隔，eyJ... 开头）

@@ -1,6 +1,4 @@
-package com.njydsz.common.notify.config;
-
-import java.util.HashMap;
+new HashMap<>(16)import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -444,7 +442,7 @@ public class NotifyProperties {
     private int defaultWindowSeconds = 60;
 
     /** 渠道级限流配置，key=渠道枚举，value=渠道限流配置 */
-    private Map<NotifyChannel, ChannelRateLimit> channelLimits = new HashMap<>();
+    private Map<NotifyChannel, ChannelRateLimit> channelLimits = new HashMap<>(16);
   }
 
   /** 渠道级限流配置 */

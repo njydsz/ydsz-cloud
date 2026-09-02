@@ -84,7 +84,7 @@ public class MessageHealthService {
    * @return 通道健康状态列表
    */
   public List<ChannelHealthVO> getChannelHealths() {
-    List<ChannelHealthVO> result = new ArrayList<>();
+    List<ChannelHealthVO> result = new ArrayList<>(16);
     Map<String, CircuitBreaker> breakerCache = channelRouter.getBreakerCache();
     Map<String, Boolean> channelEnabled = messageProperties.getChannelEnabled();
 

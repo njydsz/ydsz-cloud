@@ -1,7 +1,4 @@
-package com.njydsz.common.safe.ip;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+new ArrayList<>(16)t java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +42,7 @@ public class IpAccessService {
 
   private final Cache<String, Boolean> blacklistCache;
   private final List<CidrBlock> staticBlacklistCidrs = new ArrayList<>();
-  private final List<CidrBlock> staticWhitelistCidrs = new ArrayList<>();
+  private final List<CidrBlock> staticWhitelistCidrs = new ArrayList<>(4);
 
   /**
    * 构造 IP 访问控制服务并完成本地缓存与静态名单的预热。

@@ -71,7 +71,7 @@ public class PendingEntryListCleaner {
    * @return 超时的 Pending 消息列表
    */
   public List<PendingEntryInfo> scanStaleEntries(Duration idleThreshold) {
-    List<PendingEntryInfo> staleEntries = new ArrayList<>();
+    List<PendingEntryInfo> staleEntries = new ArrayList<>(16);
     try {
       PendingMessagesSummary summary = redisTemplate.opsForStream().pending(channel, groupName);
       if (summary == null) {
@@ -183,7 +183,7 @@ public class PendingEntryListCleaner {
 
       long totalPending = summary.getTotalPendingMessages();
       int consumerCount = summary.getPendingMessagesPerConsumer().size();
-      List<PendingEntryInfo> allPending = new ArrayList<>();
+      List<PendingEntryInfo> allPending = new ArrayList<>(16);
 
       summary
           .getPendingMessagesPerConsumer()
@@ -276,7 +276,7 @@ public class PendingEntryListCleaner {
           .groupName(groupName)
           .totalPending(0)
           .consumerCount(0)
-          .pendingEntries(new ArrayList<>())
+          .pendingEntries(new ArrayList<>(16))
           .timestamp(LocalDateTime.now())
           .build();
     }

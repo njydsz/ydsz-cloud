@@ -40,7 +40,7 @@ public class ZookeeperRuleSource implements RuleConfigProvider {
 
   private final String connectString;
   private final String path;
-  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>();
+  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>(4);
 
   /** CuratorFramework 实例（反射创建，避免硬依赖） */
   private Object client;

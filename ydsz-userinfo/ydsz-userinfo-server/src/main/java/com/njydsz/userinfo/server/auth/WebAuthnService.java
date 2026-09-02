@@ -144,7 +144,7 @@ public class WebAuthnService {
     storeChallenge(challenge, userId, "REGISTER");
 
     // 构建注册选项（Passkey 模式：residentKey = required）
-    Map<String, Object> options = new HashMap<>();
+    Map<String, Object> options = new HashMap<>(16);
     options.put("challenge", challenge);
     options.put("rp", Map.of(
         "name", webAuthnProperties.getRelyingPartyName(),
@@ -190,7 +190,7 @@ public class WebAuthnService {
     storeChallenge(challenge, anonymousUserId, "AUTHENTICATE_PASSKEY");
 
     // 构建认证选项（Passkey 模式：allowCredentials 为空）
-    Map<String, Object> options = new HashMap<>();
+    Map<String, Object> options = new HashMap<>(16);
     options.put("challenge", challenge);
     options.put("timeout", WEBAUTHN_TIMEOUT_MILLIS);
     options.put("userVerification", "preferred");
@@ -269,7 +269,7 @@ public class WebAuthnService {
     storeChallenge(challenge, userId, "REGISTER");
 
     // 构建注册选项
-    Map<String, Object> options = new HashMap<>();
+    Map<String, Object> options = new HashMap<>(16);
     options.put("challenge", challenge);
     options.put("rp", Map.of(
         "name", webAuthnProperties.getRelyingPartyName(),
@@ -350,7 +350,7 @@ public class WebAuthnService {
     storeChallenge(challenge, userId, "AUTHENTICATE");
 
     // 构建认证选项
-    Map<String, Object> options = new HashMap<>();
+    Map<String, Object> options = new HashMap<>(16);
     options.put("challenge", challenge);
     options.put("timeout", WEBAUTHN_TIMEOUT_MILLIS);
     options.put("userVerification", "preferred");

@@ -125,7 +125,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
     String timestampNs = String.valueOf(event.getTimestamp().toEpochMilli() * 1_000_000);
     String logLine = LogEventSerializer.toJson(event);
 
-    Map<String, String> streamLabels = new LinkedHashMap<>();
+    Map<String, String> streamLabels = new LinkedHashMap<>(16);
     streamLabels.put("app", event.getAppName() != null ? event.getAppName() : "ydsz");
     streamLabels.put("level", event.getLevel() != null ? event.getLevel().name() : "INFO");
     if (event.getProfile() != null) {
@@ -135,7 +135,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
       streamLabels.put("traceId", event.getTraceId());
     }
 
-    Map<String, Object> payload = new LinkedHashMap<>();
+    Map<String, Object> payload = new LinkedHashMap<>(16);
     payload.put(
         "streams",
         new Object[] {
@@ -200,11 +200,11 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
       String line = LogEventSerializer.toJson(event);
       values.add(new Object[] {ts, line});
     }
-    Map<String, String> labels = new LinkedHashMap<>();
+    Map<String, String> labels = new LinkedHashMap<>(16);
     labels.put("app", appName);
     labels.put(
         "level", events.get(0).getLevel() != null ? events.get(0).getLevel().name() : "INFO");
-    Map<String, Object> payload = new LinkedHashMap<>();
+    Map<String, Object> payload = new LinkedHashMap<>(16);
     payload.put("streams", new Object[] {Map.of("stream", labels, "values", values)});
     return YdszJson.toJson(payload);
   }

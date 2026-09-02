@@ -72,7 +72,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
       return buildRejectedResponse("您的输入被安全护栏拒绝");
     }
 
-    List<ChatMessage> messages = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>(16);
     String systemPrompt =
         resolveSystemPrompt(
             request,
@@ -139,7 +139,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
       return;
     }
 
-    List<ChatMessage> messages = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>(16);
     String systemPrompt =
         resolveSystemPrompt(
             request,

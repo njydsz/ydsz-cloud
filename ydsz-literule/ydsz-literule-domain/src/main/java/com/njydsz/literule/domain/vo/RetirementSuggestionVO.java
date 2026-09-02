@@ -69,7 +69,7 @@ public class RetirementSuggestionVO implements Serializable {
   private double errorRate;
 
   /** 建议操作 */
-  @Builder.Default private List<String> recommendedActions = new ArrayList<>();
+  @Builder.Default private List<String> recommendedActions = new ArrayList<>(16);
 
   /** 建议生成时间 */
   private LocalDateTime suggestedAt;

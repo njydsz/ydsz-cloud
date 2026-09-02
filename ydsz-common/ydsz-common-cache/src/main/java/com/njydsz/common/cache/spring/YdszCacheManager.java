@@ -63,7 +63,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
   private final Map<String, SpringYdszCache> cacheMap = new ConcurrentHashMap<>();
 
   /** 已创建的底层 Cache 实例（用于生命周期管理） */
-  private final List<Cache<?, ?>> createdCaches = Collections.synchronizedList(new ArrayList<>());
+  private final List<Cache<?, ?>> createdCaches = Collections.synchronizedList(new ArrayList<>(16));
 
   private Collection<String> cacheNames;
 

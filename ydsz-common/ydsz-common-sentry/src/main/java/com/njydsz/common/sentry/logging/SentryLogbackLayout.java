@@ -85,7 +85,7 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
       builder.username(event.getMDCPropertyMap().get("username"));
       // 可配置的额外 MDC 字段
       if (mdcFields != null && !mdcFields.isBlank()) {
-        Map<String, Object> extraMdc = new LinkedHashMap<>();
+        Map<String, Object> extraMdc = new LinkedHashMap<>(16);
         for (String field : mdcFields.split(",")) {
           String trimmed = field.trim();
           if (!trimmed.isEmpty()

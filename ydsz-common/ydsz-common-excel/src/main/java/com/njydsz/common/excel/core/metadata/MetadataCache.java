@@ -81,7 +81,7 @@ public class MetadataCache {
 
     CachedWriteMetadata cached = new CachedWriteMetadata();
     Field[] fields = clazz.getDeclaredFields();
-    List<Field> annotatedFields = new ArrayList<>();
+    List<Field> annotatedFields = new ArrayList<>(16);
 
     for (Field field : fields) {
       if (field.isAnnotationPresent(ExcelProperty.class)) {

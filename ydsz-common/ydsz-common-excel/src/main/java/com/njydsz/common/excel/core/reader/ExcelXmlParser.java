@@ -590,7 +590,7 @@ public class ExcelXmlParser {
    * @return 含值的单元格列表，按解析顺序排列；无数据时返回空列表而非 {@code null}
    */
   public static List<ParsedCell> parseCells(byte[] sheetData, ChunkedSSTTable sstTable) {
-    List<ParsedCell> cells = new ArrayList<>();
+    List<ParsedCell> cells = new ArrayList<>(16);
     ExcelXmlParser parser = new ExcelXmlParser(8192);
 
     parser.parse(

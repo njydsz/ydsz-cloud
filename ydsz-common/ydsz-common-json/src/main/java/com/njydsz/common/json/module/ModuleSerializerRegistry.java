@@ -16,7 +16,7 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  */
 public final class ModuleSerializerRegistry {
 
-  private final Map<Class<?>, JsonSerializer<?>> serializers = new LinkedHashMap<>();
+  private final Map<Class<?>, JsonSerializer<?>> serializers = new LinkedHashMap<>(16);
 
   ModuleSerializerRegistry() {}
 

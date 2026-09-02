@@ -243,7 +243,7 @@ record MemberAccessNode(ExprNode target, String member, int line, int column) im
 
   /** 提取完整的属性链（如 a.b.c → ["a", "b", "c"]） */
   public List<String> memberChain() {
-    ArrayList<String> chain = new ArrayList<>();
+    ArrayList<String> chain = new ArrayList<>(16);
     ExprNode current = this;
     while (current instanceof MemberAccessNode man) {
       chain.add(0, man.member());

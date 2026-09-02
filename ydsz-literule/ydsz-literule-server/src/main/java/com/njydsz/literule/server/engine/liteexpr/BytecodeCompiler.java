@@ -1,6 +1,4 @@
-package com.njydsz.literule.server.engine.liteexpr;
-
-import java.util.ArrayList;
+new ArrayList<>(16) java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,7 +39,7 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
   private final ArrayList<Byte> bytecode = new ArrayList<>();
 
   /** 常量池 */
-  private final List<Object> constantPool = new ArrayList<>();
+  private final List<Object> constantPool = new ArrayList<>(4);
 
   /** 源表达式文本 */
   private final String sourceExpression;

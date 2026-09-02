@@ -63,7 +63,7 @@ public class CompatibleEmbeddingClient implements EmbeddingClient {
 
   @Override
   public List<List<Float>> embedBatch(List<String> texts) {
-    Map<String, Object> body = new HashMap<>();
+    Map<String, Object> body = new HashMap<>(16);
     body.put("model", model);
     body.put("input", texts);
     body.put("dimensions", dimension);

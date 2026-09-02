@@ -1,4 +1,4 @@
-package com.njydsz.common.jdbc.interceptor;
+new ArrayList<>(16)e com.njydsz.common.jdbc.interceptor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -78,9 +78,9 @@ public final class JSqlParserHelper {
   public static List<Expression> getUpdateSetsExpressions(Update update) {
     List<UpdateSet> updateSets = update.getUpdateSets();
     if (updateSets == null || updateSets.isEmpty()) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
-    List<Expression> expressions = new ArrayList<>();
+    List<Expression> expressions = new ArrayList<>(16);
     for (UpdateSet updateSet : updateSets) {
       ExpressionList<?> valueList = updateSet.getValues();
       if (valueList != null) {
@@ -114,7 +114,7 @@ public final class JSqlParserHelper {
    */
   public static List<Expression> getJoinOnExpressions(Join join) {
     Collection<Expression> onExpressions = join.getOnExpressions();
-    return onExpressions != null ? new ArrayList<>(onExpressions) : new ArrayList<>();
+    return onExpressions != null ? new ArrayList<>(onExpressions) : new ArrayList<>(16);
   }
 
   /**
@@ -126,7 +126,7 @@ public final class JSqlParserHelper {
    * @param expr ON 表达式
    */
   public static void setJoinOnExpression(Join join, Expression expr) {
-    List<Expression> expressions = new ArrayList<>();
+    List<Expression> expressions = new ArrayList<>(16);
     expressions.add(expr);
     setJoinOnExpressions(join, expressions);
   }

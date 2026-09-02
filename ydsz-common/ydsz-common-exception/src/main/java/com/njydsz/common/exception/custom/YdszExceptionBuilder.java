@@ -200,7 +200,7 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException> {
    */
   public YdszExceptionBuilder<T> snapshot(String key, Object value) {
     if (this.snapshotMap == null) {
-      this.snapshotMap = new LinkedHashMap<>();
+      this.snapshotMap = new LinkedHashMap<>(16);
     }
     this.snapshotMap.put(key, value == null ? null : value.toString());
     return this;

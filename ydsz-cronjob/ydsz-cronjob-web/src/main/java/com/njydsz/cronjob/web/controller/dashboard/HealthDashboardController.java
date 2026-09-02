@@ -127,7 +127,7 @@ public class HealthDashboardController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping
   public YdszResponse<Map<String, Object>> getHealth() {
-    Map<String, Object> health = new LinkedHashMap<>();
+    Map<String, Object> health = new LinkedHashMap<>(16);
 
     // 1. 基本信息
     health.put("timestamp", LocalDateTime.now().toString());

@@ -160,7 +160,7 @@ public class FlowQueuePublisher {
    * <p><b>使用示例：</b>
    *
    * <pre>{@code
-   * Map<String, Object> data = new HashMap<>();
+   * Map<String, Object> data = new HashMap<>(16);
    * data.put("initiationId", "12345");
    * data.put("action", "markProcessing");
    * queuePublisher.publish("INITIATION_STATUS_SYNC", data);

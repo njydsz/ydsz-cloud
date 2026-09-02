@@ -62,7 +62,7 @@ public class WeakPasswordDictionary {
    * @param path classpath 路径
    */
   private void loadDictionary(String path) {
-    Set<String> loaded = new HashSet<>();
+    Set<String> loaded = new HashSet<>(16);
     try {
       ClassPathResource resource = new ClassPathResource(path);
       if (!resource.exists()) {

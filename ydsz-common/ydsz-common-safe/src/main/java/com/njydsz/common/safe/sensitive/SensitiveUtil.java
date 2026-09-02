@@ -50,7 +50,7 @@ public final class SensitiveUtil {
   private static final Map<Pattern, SensitiveType> PII_SCAN_PATTERNS;
 
   static {
-    Map<Pattern, SensitiveType> map = new LinkedHashMap<>();
+    Map<Pattern, SensitiveType> map = new LinkedHashMap<>(16);
     // 身份证号：18 位（前 17 位数字 + 末位数字或 X），严格匹配
     map.put(
         Pattern.compile(

@@ -58,7 +58,7 @@ public class RebalanceMonitor implements DisposableBean {
 
   private ScheduledExecutorService scheduler;
   private ScheduledFuture<?> scheduledTask;
-  private volatile Set<String> lastConsumerSnapshot = new HashSet<>();
+  private volatile Set<String> lastConsumerSnapshot = new HashSet<>(16);
 
   /**
    * 创建消费组 Rebalance 监控器
@@ -183,7 +183,7 @@ public class RebalanceMonitor implements DisposableBean {
    * <p>使用 XPENDING 命令获取消费组中所有有 pending 消息的消费者。
    */
   private Set<String> fetchCurrentConsumers() {
-    Set<String> consumers = new HashSet<>();
+    Set<String> consumers = new HashSet<>(16);
     try {
       PendingMessagesSummary summary = redisTemplate.opsForStream().pending(channel, groupName);
       if (summary != null) {

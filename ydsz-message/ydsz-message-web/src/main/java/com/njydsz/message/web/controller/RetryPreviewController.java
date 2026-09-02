@@ -81,9 +81,9 @@ public class RetryPreviewController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/presets")
   public YdszResponse<Map<String, Object>> listPresets() {
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     for (RetryPreset preset : RetryPreset.values()) {
-      Map<String, Object> info = new LinkedHashMap<>();
+      Map<String, Object> info = new LinkedHashMap<>(16);
       info.put("code", preset.getCode());
       info.put("displayName", preset.getDisplayName());
       info.put("maxRetryCount", preset.getMaxRetryCount());

@@ -38,10 +38,10 @@ public class IndexConsistencyChecker {
    * @return 巡检结果
    */
   public ConsistencyReport check(String tenantId) {
-    Map<String, Long> dbCounts = new HashMap<>();
-    Map<String, Long> indexCounts = new HashMap<>();
-    Map<String, Long> missingFromIndex = new HashMap<>();
-    Map<String, Long> orphanInIndex = new HashMap<>();
+    Map<String, Long> dbCounts = new HashMap<>(16);
+    Map<String, Long> indexCounts = new HashMap<>(16);
+    Map<String, Long> missingFromIndex = new HashMap<>(16);
+    Map<String, Long> orphanInIndex = new HashMap<>(16);
 
     List<SearchProvider<?>> providers = providerRegistry.getAllProviders();
     if (providers.isEmpty()) {

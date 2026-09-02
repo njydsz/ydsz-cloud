@@ -105,7 +105,7 @@ public class FlowAssigneeAvailabilityService {
    * @return Map 包含：status (IDLE/NORMAL/BUSY/OVERLOADED), todoCount, lastActive
    */
   public Map<String, Object> getAvailability(String userId) {
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("userId", userId);
     result.put("date", LocalDate.now().toString());
 
@@ -137,7 +137,7 @@ public class FlowAssigneeAvailabilityService {
    * @return userId → availability Map
    */
   public Map<String, Map<String, Object>> batchGetAvailability(Set<String> userIds) {
-    Map<String, Map<String, Object>> result = new HashMap<>();
+    Map<String, Map<String, Object>> result = new HashMap<>(16);
     if (userIds == null || userIds.isEmpty()) {
       return result;
     }

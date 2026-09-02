@@ -242,7 +242,7 @@ public class ThreadPoolRegistrar
    * @since 26.09.01
    */
   public Map<String, String> getManagedBeanNames() {
-    Map<String, String> result = new LinkedHashMap<>();
+    Map<String, String> result = new LinkedHashMap<>(16);
     if (properties.getPools() == null || properties.getPools().isEmpty()) {
       return result;
     }

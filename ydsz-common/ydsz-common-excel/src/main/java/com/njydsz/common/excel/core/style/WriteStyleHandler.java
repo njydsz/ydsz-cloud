@@ -1,4 +1,4 @@
-package com.njydsz.common.excel.core.style;
+new HashMap<>(16)mmon.excel.core.style;
 
 /**
  * WriteStyleHandler 类
@@ -86,7 +86,7 @@ public class WriteStyleHandler {
     this.workbook = workbook;
     this.headStyleCache = new HashMap<>();
     this.dataStyleCache = new HashMap<>();
-    this.colorIndexCache = new HashMap<>();
+    this.colorIndexCache = new HashMap<>(16);
     initColorCache();
   }
 

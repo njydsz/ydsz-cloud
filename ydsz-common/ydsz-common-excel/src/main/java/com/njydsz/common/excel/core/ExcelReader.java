@@ -139,7 +139,7 @@ public class ExcelReader {
   public ExcelReader(ReadMetadata metadata) {
     this.metadata = metadata;
     this.context = new AnalysisContext(metadata);
-    this.listeners = new ArrayList<>();
+    this.listeners = new ArrayList<>(4);
     this.headerAnalyzer = new HeaderAnalyzer(metadata);
     this.rowParser = new RowParser(metadata, context);
     this.inputSourceDetector = new InputSourceDetector(metadata);
@@ -500,7 +500,7 @@ public class ExcelReader {
           // 此处接入元数据工厂，由 SheetXmlReader 收集表头后按注解规则（index 优先、名称匹配）惰性构建
           superFastReader.setMetadataFactory(
               headerNames ->
-                  headerAnalyzer.analyzeClassMetadataFromNames(headerNames, new HashMap<>()));
+                  headerAnalyzer.analyzeClassMetadataFromNames(headerNames, new HashMap<>(16)));
           superFastReader.setInstantiator(ASMFieldAccessor.getInstantiator(metadata.getClazz()));
           superFastReader.setContext(context);
           superFastReader.setListeners(listeners);
@@ -576,7 +576,7 @@ public class ExcelReader {
    * @return 数据列表
    */
   public <T> List<T> doReadAll() {
-    List<T> result = new ArrayList<>();
+    List<T> result = new ArrayList<>(16);
     doRead(
         new ReadListener<T>() {
           @Override
@@ -690,8 +690,8 @@ public class ExcelReader {
       throw new IllegalArgumentException("Excel文件为空或没有表头行");
     }
 
-    List<String> headers = new ArrayList<>();
-    Map<Integer, Field> fieldMap = new HashMap<>();
+    List<String> headers = new ArrayList<>(16);
+    Map<Integer, Field> fieldMap = new HashMap<>(16);
 
     if (metadata.getClazz() != null) {
       columnMetadataArray = headerAnalyzer.analyzeClassMetadata(headRow, headers, fieldMap);

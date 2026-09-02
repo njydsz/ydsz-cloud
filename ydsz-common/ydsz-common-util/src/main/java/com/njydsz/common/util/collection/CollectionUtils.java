@@ -1,4 +1,4 @@
-package com.njydsz.common.util.collection;
+new ArrayList<>(16)rayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)package com.njydsz.common.util.collection;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -463,10 +463,10 @@ public final class CollectionUtils {
       Collection<T> source, Function<? super T, ? extends K> keyMapper) {
     Objects.requireNonNull(keyMapper, "keyMapper must not be null");
     if (isEmpty(source)) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
     Set<K> seen = new LinkedHashSet<>();
-    List<T> result = new ArrayList<>();
+    List<T> result = new ArrayList<>(16);
     for (T item : source) {
       if (seen.add(keyMapper.apply(item))) {
         result.add(item);

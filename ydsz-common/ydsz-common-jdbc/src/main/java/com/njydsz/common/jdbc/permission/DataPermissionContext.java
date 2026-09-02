@@ -1,4 +1,4 @@
-package com.njydsz.common.jdbc.permission;
+new HashSet<>(16)jydsz.common.jdbc.permission;
 
 /**
  * 数据权限上下文。
@@ -44,7 +44,7 @@ public class DataPermissionContext {
   private Set<String> projectIds = new HashSet<>();
 
   /** 区域ID集合 */
-  private Set<String> regionIds = new HashSet<>();
+  private Set<String> regionIds = new HashSet<>(16);
 
   /** 列级权限规则：table -> allowed columns（小写化后比对）。 */
   private Map<String, Set<String>> visibleColumnsByTable = Collections.emptyMap();

@@ -438,7 +438,7 @@ public class AgentController {
   @Operation(summary = "获取对话历史")
   public YdszResponse<List<Map<String, Object>>> history(@RequestParam String conversationId) {
     List<ChatMessage> messages = agentFacade.getHistory(conversationId);
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<Map<String, Object>> result = new ArrayList<>(16);
     for (ChatMessage msg : messages) {
       result.add(
           Map.of(

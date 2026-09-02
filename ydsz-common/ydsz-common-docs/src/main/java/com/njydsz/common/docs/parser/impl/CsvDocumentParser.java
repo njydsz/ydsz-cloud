@@ -67,7 +67,7 @@ public class CsvDocumentParser implements DocumentParser {
     }
 
     Charset charset = resolveCharset(options);
-    List<List<String>> rows = new ArrayList<>();
+    List<List<String>> rows = new ArrayList<>(16);
     StringBuilder fullText = new StringBuilder();
 
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset));
@@ -75,7 +75,7 @@ public class CsvDocumentParser implements DocumentParser {
 
       int colCount = 0;
       for (CSVRecord record : parser) {
-        List<String> row = new ArrayList<>();
+        List<String> row = new ArrayList<>(16);
         for (int i = 0; i < record.size(); i++) {
           row.add(record.get(i));
         }

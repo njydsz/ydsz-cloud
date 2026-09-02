@@ -315,7 +315,7 @@ public class DataValidator {
   private static void validateCollectAll(Object obj, int rowNum) {
     Class<?> clazz = obj.getClass();
     Field[] fields = ReflectCache.getCachedFields(clazz);
-    List<ValidationError> errors = new ArrayList<>();
+    List<ValidationError> errors = new ArrayList<>(16);
 
     for (Field field : fields) {
       ExcelProperty annotation = field.getAnnotation(ExcelProperty.class);

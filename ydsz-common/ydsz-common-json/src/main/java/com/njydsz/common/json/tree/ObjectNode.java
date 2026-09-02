@@ -50,7 +50,7 @@ public final class ObjectNode extends JsonNode {
 
   /** 创建空的 JSON 对象节点 */
   public ObjectNode() {
-    this.fields = new LinkedHashMap<>();
+    this.fields = new LinkedHashMap<>(16);
   }
 
   /**
@@ -237,7 +237,7 @@ public final class ObjectNode extends JsonNode {
 
   @Override
   public Object asValue() {
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     for (Map.Entry<String, JsonNode> entry : fields.entrySet()) {
       JsonNode node = entry.getValue();
       result.put(entry.getKey(), node != null ? node.asValue() : null);

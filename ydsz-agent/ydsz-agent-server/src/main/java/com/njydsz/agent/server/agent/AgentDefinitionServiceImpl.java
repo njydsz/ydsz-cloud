@@ -132,7 +132,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
     if (vo == null) {
       return null;
     }
-    List<String> tools = new ArrayList<>();
+    List<String> tools = new ArrayList<>(16);
     if (vo.getToolNames() != null && !vo.getToolNames().isBlank()) {
       List<Object> parsed = YdszJson.parseArray(vo.getToolNames());
       for (Object t : parsed) {

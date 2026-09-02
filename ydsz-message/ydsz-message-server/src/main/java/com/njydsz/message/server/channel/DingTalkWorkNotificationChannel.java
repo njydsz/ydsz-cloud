@@ -193,21 +193,21 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
       }
     }
 
-    Map<String, Object> msg = new HashMap<>();
+    Map<String, Object> msg = new HashMap<>(16);
     if ("markdown".equals(msgType)) {
       msg.put("msgtype", "markdown");
-      Map<String, Object> markdown = new HashMap<>();
+      Map<String, Object> markdown = new HashMap<>(16);
       markdown.put("title", subject);
       markdown.put("text", content);
       msg.put("markdown", markdown);
     } else {
       msg.put("msgtype", "text");
-      Map<String, Object> text = new HashMap<>();
+      Map<String, Object> text = new HashMap<>(16);
       text.put("content", content);
       msg.put("text", text);
     }
 
-    Map<String, Object> payload = new HashMap<>();
+    Map<String, Object> payload = new HashMap<>(16);
     payload.put("agent_id", agentId);
     payload.put("userid_list", receiver);
     payload.put("msg", msg);

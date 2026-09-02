@@ -157,7 +157,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
     if (context == null || context.isAdmin()) {
       return List.of();
     }
-    List<SearchFilter> filters = new ArrayList<>();
+    List<SearchFilter> filters = new ArrayList<>(16);
     // 租户隔离
     if (context.getTenantId() != null && !context.getTenantId().isBlank()) {
       filters.add(

@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.approval;
+new ArrayList<>(16)m.njydsz.literule.server.approval;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -90,7 +90,7 @@ public class ApprovalRecord implements Serializable {
    */
   public void appendLog(ApprovalLog log) {
     if (this.logs == null) {
-      this.logs = new ArrayList<>();
+      this.logs = new ArrayList<>(16);
     }
     this.logs.add(log);
   }

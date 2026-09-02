@@ -124,7 +124,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
         profile.setClickRate(Double.parseDouble(clickRateStr));
       }
       // 解析通道活跃度
-      Map<String, Integer> scores = new HashMap<>();
+      Map<String, Integer> scores = new HashMap<>(16);
       for (Map.Entry<String, String> e : raw.entrySet()) {
         String key = e.getKey();
         if (key.startsWith("score:")) {

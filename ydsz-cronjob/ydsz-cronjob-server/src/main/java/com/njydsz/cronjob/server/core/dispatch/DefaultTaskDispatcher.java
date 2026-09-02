@@ -519,7 +519,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
     String firstLogId = null;
     // P2-4: 本地分片直接执行；远程分片按节点聚合后批量派发（一次 HTTP 携带该节点全部分片）
-    Map<String, List<ShardAssignment>> remoteShardsByNode = new HashMap<>();
+    Map<String, List<ShardAssignment>> remoteShardsByNode = new HashMap<>(16);
     for (ShardAssignment assignment : assignments) {
       String assignedNodeId = assignment.nodeId();
       if (localNodeId != null && localNodeId.equals(assignedNodeId)) {
@@ -530,7 +530,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         }
       } else {
         remoteShardsByNode
-            .computeIfAbsent(assignedNodeId, k -> new ArrayList<>())
+            .computeIfAbsent(assignedNodeId, k -> new ArrayList<>(8))
             .add(assignment);
       }
     }
@@ -1345,7 +1345,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       return;
     }
     try {
-      Map<String, Object> payload = new HashMap<>();
+      Map<String, Object> payload = new HashMap<>(16);
       payload.put("jobKey", job.getJobKey());
       payload.put("jobName", job.getJobName());
       payload.put("logId", log0.getId());
@@ -1398,7 +1398,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           job.getJobKey());
       return;
     }
-    Map<String, Object> metadata = new HashMap<>();
+    Map<String, Object> metadata = new HashMap<>(16);
     metadata.put("jobId", job.getId());
     metadata.put("jobKey", job.getJobKey());
     metadata.put("jobName", job.getJobName() != null ? job.getJobName() : "");

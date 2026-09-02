@@ -1,6 +1,4 @@
-package com.njydsz.common.search.service;
-
-import java.io.BufferedReader;
+new HashMap<>(16)feredReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -221,7 +219,7 @@ public class SearchTextProcessor {
     return result.toString();
   }
 
-  private final Map<String, String> pinyinMap = new HashMap<>();
+  private final Map<String, String> pinyinMap = new HashMap<>(16);
 
   /** 同义词 Trie 树，用于高效多模式匹配。 */
   private static final class SynonymTrie {
@@ -240,7 +238,7 @@ public class SearchTextProcessor {
     }
 
     Set<String> matchAll(String text) {
-      Set<String> matches = new HashSet<>();
+      Set<String> matches = new HashSet<>(16);
       if (text == null || text.isBlank()) {
         return matches;
       }
@@ -268,7 +266,7 @@ public class SearchTextProcessor {
     private static final class TrieNode {
 
       /** 子节点映射（字符 → 子节点） */
-      final Map<Character, TrieNode> children = new HashMap<>();
+      final Map<Character, TrieNode> children = new HashMap<>(16);
 
       /** 完整词（非空表示该节点结束一个词） */
       String word = null;

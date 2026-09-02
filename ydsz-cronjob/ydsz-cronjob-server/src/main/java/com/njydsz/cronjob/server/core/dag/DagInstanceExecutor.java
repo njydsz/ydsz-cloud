@@ -1206,11 +1206,11 @@ public class DagInstanceExecutor {
   public Map<String, Object> getDagContext(String dagInstanceId) {
     JobDagInstanceVO instance = dagInstanceRepository.findById(dagInstanceId).orElse(null);
     if (instance == null) {
-      return new LinkedHashMap<>();
+      return new LinkedHashMap<>(0);
     }
     ObjectNode parsed = parseContextJson(instance.getContextJson());
     Object ctxValue = parsed.asValue();
-    Map<String, Object> result = ctxValue instanceof Map ? Map.class.cast(ctxValue) : new LinkedHashMap<>();
+    Map<String, Object> result = ctxValue instanceof Map ? Map.class.cast(ctxValue) : new LinkedHashMap<>(16);
     return result;
   }
 }

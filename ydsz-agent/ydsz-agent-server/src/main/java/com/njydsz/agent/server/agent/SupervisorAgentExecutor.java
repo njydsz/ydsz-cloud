@@ -137,7 +137,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
 
     // 2. 按依赖顺序执行子任务（depends_on 拓扑调度，无依赖者先执行）
     List<String> results = new ArrayList<>(subTasks.size());
-    Map<Integer, String> taskResults = new HashMap<>();
+    Map<Integer, String> taskResults = new HashMap<>(16);
     TokenUsage[] totalUsage = {TokenUsage.zero()};
     List<SubTask> pending = new ArrayList<>(subTasks);
     while (!pending.isEmpty()) {
@@ -274,7 +274,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
 
     // 2. 流式执行子任务
     List<String> results = new ArrayList<>(subTasks.size());
-    Map<Integer, String> taskResults = new HashMap<>();
+    Map<Integer, String> taskResults = new HashMap<>(16);
     TokenUsage[] totalUsage = {TokenUsage.zero()};
     StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
     List<SubTask> pending = new ArrayList<>(subTasks);
@@ -630,7 +630,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
     if (value == null) {
       return List.of();
     }
-    List<Integer> dependsOn = new ArrayList<>();
+    List<Integer> dependsOn = new ArrayList<>(16);
     if (value instanceof List<?> list) {
       for (Object item : list) {
         dependsOn.add(parseTaskId(item));

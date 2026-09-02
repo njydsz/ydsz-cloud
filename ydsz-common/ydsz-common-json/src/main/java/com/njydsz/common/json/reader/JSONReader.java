@@ -1475,7 +1475,7 @@ public final class JSONReader {
           JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
     }
     pos++;
-    List<Object> result = new ArrayList<>();
+    List<Object> result = new ArrayList<>(16);
     while (pos < len) {
       skipWhitespace();
       if (pos >= len) {
@@ -1582,7 +1582,7 @@ public final class JSONReader {
           JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
     }
     pos++;
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     while (pos < len) {
       skipWhitespace();
       if (pos >= len) {

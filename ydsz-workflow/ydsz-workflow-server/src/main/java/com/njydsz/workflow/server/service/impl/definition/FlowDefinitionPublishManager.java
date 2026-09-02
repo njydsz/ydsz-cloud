@@ -289,7 +289,7 @@ public class FlowDefinitionPublishManager {
       migrateDto.setSourceDefinitionId(currentDef.getId());
       migrateDto.setTargetDefinitionId(previousDef.getId());
       migrateDto.setTenantId(tid);
-      Map<String, String> nodeMapping = new HashMap<>();
+      Map<String, String> nodeMapping = new HashMap<>(16);
       List<FlowNodeVO> oldNodes = nodeRepository.findByDefinitionId(currentDef.getId());
       List<FlowNodeVO> newNodes = nodeRepository.findByDefinitionId(previousDef.getId());
       Set<String> newNodeCodes =
@@ -310,15 +310,15 @@ public class FlowDefinitionPublishManager {
       log.error("[Flow] 一键回滚实例迁移异常: flowCode={} err={}", flowCode, e.getMessage(), e);
     }
 
-    Map<String, Object> fromInfo = new LinkedHashMap<>();
+    Map<String, Object> fromInfo = new LinkedHashMap<>(16);
     fromInfo.put("id", currentDef.getId());
     fromInfo.put("flowVersion", currentDef.getFlowVersion());
 
-    Map<String, Object> toInfo = new LinkedHashMap<>();
+    Map<String, Object> toInfo = new LinkedHashMap<>(16);
     toInfo.put("id", previousDef.getId());
     toInfo.put("flowVersion", previousDef.getFlowVersion());
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("fromDefinition", fromInfo);
     result.put("toDefinition", toInfo);
     result.put("migrationImpact", migrationImpact);
@@ -458,7 +458,7 @@ public class FlowDefinitionPublishManager {
   private List<String> extractStringList(Map<String, Object> root, String key) {
     Object value = root.get(key);
     if (value instanceof List) {
-      List<String> result = new ArrayList<>();
+      List<String> result = new ArrayList<>(16);
       for (Object item : (List<?>) value) {
         if (item != null) {
           result.add(String.valueOf(item));

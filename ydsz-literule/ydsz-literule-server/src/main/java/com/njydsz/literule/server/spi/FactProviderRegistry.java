@@ -211,7 +211,7 @@ public class FactProviderRegistry {
             .sorted(Comparator.comparingInt(FactProvider::getOrder))
             .collect(Collectors.toList());
 
-    Map<String, Object> aggregated = new LinkedHashMap<>();
+    Map<String, Object> aggregated = new LinkedHashMap<>(16);
     // 构建逐步增强的上下文（前一个 provider 的输出可供后续 provider 读取）
     Map<String, Object> progressiveFacts = new LinkedHashMap<>(context.getFacts());
 

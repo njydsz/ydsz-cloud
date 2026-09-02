@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.service;
+new ArrayList<>(16)ki.server.service;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -140,17 +140,17 @@ public class VersionDiffService {
 
     // 边界情况
     if (m == 0 && n == 0) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
     if (m == 0) {
-      List<DiffEntry> entries = new ArrayList<>();
+      List<DiffEntry> entries = new ArrayList<>(16);
       for (int j = 0; j < n; j++) {
         entries.add(DiffEntry.builder().type(DiffType.ADD).newLine(j + 1).content(newLines.get(j)).build());
       }
       return entries;
     }
     if (n == 0) {
-      List<DiffEntry> entries = new ArrayList<>();
+      List<DiffEntry> entries = new ArrayList<>(16);
       for (int i = 0; i < m; i++) {
         entries.add(DiffEntry.builder().type(DiffType.DELETE).oldLine(i + 1).content(oldLines.get(i)).build());
       }
@@ -170,7 +170,7 @@ public class VersionDiffService {
     }
 
     // 回溯生成 diff 条目
-    List<DiffEntry> entries = new ArrayList<>();
+    List<DiffEntry> entries = new ArrayList<>(16);
     int i = m;
     int j = n;
     while (i > 0 || j > 0) {

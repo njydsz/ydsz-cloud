@@ -43,7 +43,7 @@ public class BpmnSkipParser {
     String targetRef = elem.getAttribute("targetRef");
     // A9: sourceNodeCode 独立列存储源节点编码（替代 ext JSON 中的 sourceRef）
     skip.setSourceNodeCode(sourceRef);
-    Map<String, Object> ext = new HashMap<>();
+    Map<String, Object> ext = new HashMap<>(16);
     ext.put("sourceRef", sourceRef);
     ext.put("targetRef", targetRef);
     ext.put("sequenceFlowId", elem.getAttribute("id"));

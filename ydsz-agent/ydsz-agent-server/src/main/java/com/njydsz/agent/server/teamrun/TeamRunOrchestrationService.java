@@ -96,7 +96,7 @@ public class TeamRunOrchestrationService {
                 .title(title)
                 .description(description)
                 .pattern(pattern)
-                .members(new ArrayList<>())
+                .members(new ArrayList<>(16))
                 .status(TeamRunStatus.CREATED)
                 .initiatedBy(initiatedBy)
                 .createdAt(now)

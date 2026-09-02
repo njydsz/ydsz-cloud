@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.handler;
+new ArrayList<>(16)b.server.core.handler;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -214,7 +214,7 @@ public class ScriptJobHandler implements JobHandler {
       scriptContent = Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
     // 构建环境变量（从系统环境变量中选取白名单项）
-    Map<String, String> envVars = new HashMap<>();
+    Map<String, String> envVars = new HashMap<>(16);
     envVars.put("PATH", System.getenv().getOrDefault("PATH", "/usr/bin:/bin"));
     envVars.put("HOME", System.getenv().getOrDefault("HOME", "/tmp"));
     // 将参数作为环境变量传递（ARGS_0, ARGS_1, ...）
@@ -445,7 +445,7 @@ public class ScriptJobHandler implements JobHandler {
   /** 解析参数列表。 */
   private List<String> parseArgs(ArrayNode argsArray) {
     if (argsArray == null || argsArray.isEmpty()) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
     List<String> args = new ArrayList<>(argsArray.size());
     for (JsonNode arg : argsArray.asList()) {

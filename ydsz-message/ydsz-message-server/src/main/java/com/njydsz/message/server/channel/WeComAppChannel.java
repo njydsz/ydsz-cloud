@@ -191,17 +191,17 @@ public class WeComAppChannel implements MessageChannel {
       }
     }
 
-    Map<String, Object> payload = new HashMap<>();
+    Map<String, Object> payload = new HashMap<>(16);
     payload.put("touser", receiver);
     payload.put("msgtype", msgType);
     payload.put("agentid", agentId);
 
     if ("markdown".equals(msgType)) {
-      Map<String, Object> markdown = new HashMap<>();
+      Map<String, Object> markdown = new HashMap<>(16);
       markdown.put("content", content);
       payload.put("markdown", markdown);
     } else if ("textcard".equals(msgType)) {
-      Map<String, Object> textcard = new HashMap<>();
+      Map<String, Object> textcard = new HashMap<>(16);
       textcard.put("title", subject);
       textcard.put("description", content);
       textcard.put(
@@ -209,7 +209,7 @@ public class WeComAppChannel implements MessageChannel {
           request.getParams() != null ? request.getParams().getOrDefault("actionUrl", "") : "");
       payload.put("textcard", textcard);
     } else {
-      Map<String, Object> text = new HashMap<>();
+      Map<String, Object> text = new HashMap<>(16);
       text.put("content", content);
       payload.put("text", text);
     }

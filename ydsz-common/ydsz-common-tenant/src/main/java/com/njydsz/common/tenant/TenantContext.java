@@ -1,4 +1,4 @@
-package com.njydsz.common.tenant;
+new HashMap<>(16)n.tenant;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -301,7 +301,7 @@ public final class TenantContext {
   public static final class Builder {
 
     private final String tenantId;
-    private final Map<String, Object> fields = new HashMap<>();
+    private final Map<String, Object> fields = new HashMap<>(16);
     private boolean systemTenant;
     private boolean superAdmin;
     private boolean skipIsolation;

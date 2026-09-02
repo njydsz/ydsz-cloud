@@ -79,7 +79,7 @@ public class SearchIndexRebuildJobHandler implements JobHandler {
     // 执行全量重建（内部使用单线程池串行执行）
     int rebuilt = rebuildService.rebuildAll(type, tenantId);
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("type", type);
     result.put("tenantId", tenantId);
     result.put("rebuilt", rebuilt);

@@ -47,7 +47,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   public String startTrace(String conversationId, String agentId) {
     evictExpiredTraces();
     String traceId = TraceIdGenerator.generateSortableTraceId();
-    traces.put(traceId, new ArrayList<>());
+    traces.put(traceId, new ArrayList<>(16));
     traceStatus.put(traceId, "RUNNING");
     traceMetas.put(traceId, new RecordedTraceMeta(traceId, conversationId, agentId, LocalDateTime.now()));
     log.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
@@ -76,7 +76,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
       double cost) {
     List<TraceStep> steps = traces.get(traceId);
     if (steps == null) {
-      steps = new ArrayList<>();
+      steps = new ArrayList<>(16);
       traces.put(traceId, steps);
     }
     int index = steps.size();

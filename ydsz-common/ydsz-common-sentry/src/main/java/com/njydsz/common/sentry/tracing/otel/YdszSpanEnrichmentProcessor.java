@@ -174,6 +174,6 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
     @Builder.Default private List<String> sources = List.of("mdc");
 
     /** 环境变量属性映射（envKey -> attrName） */
-    @Builder.Default private Map<String, String> envAttrs = new HashMap<>();
+    @Builder.Default private Map<String, String> envAttrs = new HashMap<>(16);
   }
 }

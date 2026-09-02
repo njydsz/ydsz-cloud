@@ -125,7 +125,7 @@ public class DefaultFlowRoutingService {
       log.warn("[FlowRoute] 实例不存在，跳过异常检测: instanceId={}", instanceId);
       return Collections.emptyList();
     }
-    List<Map<String, Object>> anomalies = new ArrayList<>();
+    List<Map<String, Object>> anomalies = new ArrayList<>(16);
     detectTimeout(instanceId, anomalies);
     detectStuck(instanceId, anomalies);
     detectLoop(instanceId, anomalies);
@@ -155,7 +155,7 @@ public class DefaultFlowRoutingService {
       if (task.getDueAt().isBefore(now)
           && !FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
         long overdueMinutes = Duration.between(task.getDueAt(), now).toMinutes();
-        Map<String, Object> anomaly = new LinkedHashMap<>();
+        Map<String, Object> anomaly = new LinkedHashMap<>(16);
         anomaly.put("type", "TIMEOUT");
         anomaly.put("taskId", task.getId());
         anomaly.put("nodeCode", task.getNodeCode());
@@ -193,7 +193,7 @@ public class DefaultFlowRoutingService {
       }
       long hours = Duration.between(createdAt, now).toHours();
       if (hours >= STUCK_HOURS_THRESHOLD) {
-        Map<String, Object> anomaly = new LinkedHashMap<>();
+        Map<String, Object> anomaly = new LinkedHashMap<>(16);
         anomaly.put("type", "STUCK");
         anomaly.put("taskId", task.getId());
         anomaly.put("nodeCode", task.getNodeCode());
@@ -230,7 +230,7 @@ public class DefaultFlowRoutingService {
                 .map(FlowAuditLogVO::getNodeName)
                 .findFirst()
                 .orElse(entry.getKey());
-        Map<String, Object> anomaly = new LinkedHashMap<>();
+        Map<String, Object> anomaly = new LinkedHashMap<>(16);
         anomaly.put("type", "LOOP");
         anomaly.put("nodeCode", entry.getKey());
         anomaly.put("nodeName", nodeName);

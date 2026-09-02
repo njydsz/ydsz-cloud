@@ -92,7 +92,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
    *
    * <p>存储属于当前节点的所有直接子节点。 空列表表示叶子节点。
    */
-  @Builder.Default @Setter private List<T> children = new ArrayList<>();
+  @Builder.Default @Setter private List<T> children = new ArrayList<>(16);
 
   /**
    * 排序字段
@@ -144,7 +144,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
    */
   public T addChild(T child) {
     if (children == null) {
-      children = new ArrayList<>();
+      children = new ArrayList<>(16);
     }
     children.add(child);
     this.leaf = false;
@@ -159,7 +159,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
    */
   public T addChildren(List<T> childList) {
     if (children == null) {
-      children = new ArrayList<>();
+      children = new ArrayList<>(16);
     }
     if (childList != null && !childList.isEmpty()) {
       children.addAll(childList);

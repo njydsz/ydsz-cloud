@@ -154,7 +154,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
       candidates = instanceRepository.findArchiveCandidates(statuses, threshold, batch);
     } catch (Exception e) {
       log.error("[FlowHistoryArchive] 查询历史实例失败: {}", e.getMessage(), e);
-      Map<String, Object> err = new HashMap<>();
+      Map<String, Object> err = new HashMap<>(16);
       err.put("ok", false);
       err.put("error", e.getMessage());
       return err;
@@ -162,7 +162,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
     if (candidates == null || candidates.isEmpty()) {
       log.info("[FlowHistoryArchive] 无需归档 days={}", days);
-      Map<String, Object> empty = new LinkedHashMap<>();
+      Map<String, Object> empty = new LinkedHashMap<>(16);
       empty.put("ok", true);
       empty.put("archived", 0);
       empty.put("days", days);
@@ -217,7 +217,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         errors,
         cost);
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("ok", true);
     result.put("total", candidates.size());
     result.put("archived", archived);
@@ -233,7 +233,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     long start = System.currentTimeMillis();
     int days = resolveInt(purgeDays, history.getPurgeDays());
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("purgeDays", days);
 
     if (!history.isPurgeEnabled()) {
@@ -288,7 +288,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
   @Override
   public Map<String, Object> getArchiveConfig() {
-    Map<String, Object> config = new LinkedHashMap<>();
+    Map<String, Object> config = new LinkedHashMap<>(16);
     config.put("archiveEnabled", history.isArchiveEnabled());
     config.put("retentionDays", history.getRetentionDays());
     config.put("batchSize", history.getBatchSize());
@@ -316,7 +316,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     // 1. 校验所有任务都已归档到 his_task
     List<FlowRunTaskVO> tasks = taskRepository.findByInstanceId(instanceId);
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(instanceId);
-    Set<String> archivedTaskIds = new HashSet<>();
+    Set<String> archivedTaskIds = new HashSet<>(16);
     if (hisTasks != null) {
       for (FlowHisTaskVO his : hisTasks) {
         if (his.getTaskId() != null) {

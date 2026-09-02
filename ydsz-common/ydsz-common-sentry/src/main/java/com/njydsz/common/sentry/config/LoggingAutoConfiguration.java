@@ -58,7 +58,7 @@ public class LoggingAutoConfiguration {
   @ConditionalOnMissingBean(LogPublisher.class)
   public LogPublisher logPublisher(
       SentryProperties properties, ObjectProvider<CircuitBreaker> circuitBreakers) {
-    List<LogPublisher> publishers = new ArrayList<>();
+    List<LogPublisher> publishers = new ArrayList<>(16);
 
     SentryProperties.ElkConfig elkConfig = properties.getLogging().getElk();
     if (elkConfig.isEnabled()) {

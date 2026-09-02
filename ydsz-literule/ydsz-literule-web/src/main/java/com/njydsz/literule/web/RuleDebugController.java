@@ -115,7 +115,7 @@ public class RuleDebugController {
     String expression = request.get("expression");
     String condition = request.get("condition");
     String breakpointId = debugger.addBreakpoint(ruleCode, nodeType, expression, condition);
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("breakpointId", breakpointId);
     result.put("ruleCode", ruleCode);
     result.put("nodeType", nodeType);
@@ -163,7 +163,7 @@ public class RuleDebugController {
       return YdszResponse.error("ruleCode 不能为空");
     }
     String sessionId = debugger.createSession(ruleCode);
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("sessionId", sessionId);
     result.put("ruleCode", ruleCode);
     return YdszResponse.success(result);
@@ -183,7 +183,7 @@ public class RuleDebugController {
     if (session == null) {
       return YdszResponse.error("会话不存在: " + sessionId);
     }
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("sessionId", session.getSessionId());
     result.put("ruleCode", session.getRuleCode());
     result.put("state", session.getState().name());
@@ -258,7 +258,7 @@ public class RuleDebugController {
         debugger.listSessions().stream()
             .map(
                 s -> {
-                  Map<String, Object> view = new LinkedHashMap<>();
+                  Map<String, Object> view = new LinkedHashMap<>(16);
                   view.put("sessionId", s.getSessionId());
                   view.put("ruleCode", s.getRuleCode());
                   view.put("state", s.getState().name());
@@ -273,7 +273,7 @@ public class RuleDebugController {
     return hits.stream()
         .map(
             h -> {
-              Map<String, Object> view = new LinkedHashMap<>();
+              Map<String, Object> view = new LinkedHashMap<>(16);
               view.put("breakpointId", h.getBreakpointId());
               view.put("ruleCode", h.getRuleCode());
               view.put("nodeType", h.getNodeType());

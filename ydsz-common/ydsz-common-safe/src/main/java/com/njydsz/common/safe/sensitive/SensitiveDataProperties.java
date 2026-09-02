@@ -48,7 +48,7 @@ public class SensitiveDataProperties {
   private boolean statisticsEnabled = false;
 
   /** 全局脱敏规则列表 */
-  private List<GlobalDesensitizeRule> globalRules = new ArrayList<>();
+  private List<GlobalDesensitizeRule> globalRules = new ArrayList<>(4);
 
   /** 全局脱敏规则 */
   @Data

@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.ratelimit.model;
+new HashMap<>(16)6)package com.njydsz.common.safe.ratelimit.model;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public class RateLimitContext implements Serializable {
    */
   public RateLimitContext putHotParam(int index, Object value) {
     if (this.hotParams == null) {
-      this.hotParams = new HashMap<>();
+      this.hotParams = new HashMap<>(16);
     }
     this.hotParams.put(index, value);
     return this;

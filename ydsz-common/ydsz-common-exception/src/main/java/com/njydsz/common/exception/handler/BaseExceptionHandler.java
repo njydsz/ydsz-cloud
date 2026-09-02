@@ -384,7 +384,7 @@ public abstract class BaseExceptionHandler {
       info.setMessage(ex.getMessage());
       info.setHttpStatus(ex.getHttpStatus());
       if (includeExceptionInfo()) {
-        Map<String, Object> details = new LinkedHashMap<>();
+        Map<String, Object> details = new LinkedHashMap<>(16);
         details.put("stackTrace", getStackTraceString(throwable));
         if (ex.getExtData() != null) {
           ex.getExtData().forEach((k, v) -> details.put(k, v));

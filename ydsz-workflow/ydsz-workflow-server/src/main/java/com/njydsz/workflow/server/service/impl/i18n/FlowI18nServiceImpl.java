@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.i18n;
+new LinkedHashMap<>(16)erver.service.impl.i18n;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -143,7 +143,7 @@ public class FlowI18nServiceImpl implements FlowI18nService {
   private static void register(String enumType, String enumName, String zhCN, String enUS) {
     MESSAGE_RESOURCE
         .computeIfAbsent(enumType, k -> new LinkedHashMap<>())
-        .computeIfAbsent(enumName, k -> new LinkedHashMap<>())
+        .computeIfAbsent(enumName, k -> new LinkedHashMap<>(16))
         .put("zh_CN", zhCN);
     MESSAGE_RESOURCE.get(enumType).get(enumName).put("en_US", enUS);
   }
@@ -170,9 +170,9 @@ public class FlowI18nServiceImpl implements FlowI18nService {
     if (enumMap == null) {
       return List.of();
     }
-    List<Map<String, String>> result = new ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>(16);
     for (Map.Entry<String, Map<String, String>> entry : enumMap.entrySet()) {
-      Map<String, String> item = new LinkedHashMap<>();
+      Map<String, String> item = new LinkedHashMap<>(16);
       item.put("name", entry.getKey());
       item.put("description", entry.getValue().getOrDefault(loc, entry.getValue().get("zh_CN")));
       item.put("messageKey", enumType + "." + entry.getKey());
@@ -218,14 +218,14 @@ public class FlowI18nServiceImpl implements FlowI18nService {
    */
   @Override
   public List<Map<String, String>> getSupportedLocales() {
-    List<Map<String, String>> locales = new ArrayList<>();
-    Map<String, String> zhCN = new LinkedHashMap<>();
+    List<Map<String, String>> locales = new ArrayList<>(16);
+    Map<String, String> zhCN = new LinkedHashMap<>(16);
     zhCN.put("code", "zh_CN");
     zhCN.put("name", "简体中文");
     zhCN.put("default", "true");
     locales.add(zhCN);
 
-    Map<String, String> enUS = new LinkedHashMap<>();
+    Map<String, String> enUS = new LinkedHashMap<>(16);
     enUS.put("code", "en_US");
     enUS.put("name", "English");
     enUS.put("default", "false");

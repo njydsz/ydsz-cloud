@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+new HashSet<>(16)e com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.HashSet;
 import java.util.List;
@@ -137,7 +137,7 @@ public class FlowAssigneeDedupService {
       return completedAssignees != null ? new HashSet<>(completedAssignees) : new HashSet<>();
     } catch (Exception e) {
       log.warn("[FlowDedup] P2-7 获取已审批人列表失败: instanceId={} err={}", instanceId, e.getMessage());
-      return new HashSet<>();
+      return new HashSet<>(0);
     }
   }
 

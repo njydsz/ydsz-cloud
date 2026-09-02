@@ -1,4 +1,4 @@
-package com.njydsz.common.domain.tree;
+new ArrayList<>(16)rrayList<>(16)new ArrayList<>(16)package com.njydsz.common.domain.tree;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
@@ -451,15 +451,15 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     }
 
     // 2. 建立 parentId -> 子节点列表 分组
-    Map<String, List<T>> parentIdMap = new HashMap<>();
+    Map<String, List<T>> parentIdMap = new HashMap<>(16);
     for (T item : flatList) {
       String pid = parentIdGetter.apply(item);
       String key = pid == null ? rootParentId : pid;
-      parentIdMap.computeIfAbsent(key, k -> new ArrayList<>()).add(item);
+      parentIdMap.computeIfAbsent(key, k -> new ArrayList<>(8)).add(item);
     }
 
     // 3. 筛选根节点（parentId=null 或 parentId="0" 或 父节点不存在）
-    List<T> roots = new ArrayList<>();
+    List<T> roots = new ArrayList<>(16);
     for (T item : flatList) {
       String pid = parentIdGetter.apply(item);
       if (pid == null || rootParentId.equals(pid) || !nodeMap.containsKey(pid)) {
@@ -524,7 +524,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
       } else {
         // 无子节点，设置空列表
-        childrenSetter.accept(node, new ArrayList<>());
+        childrenSetter.accept(node, new ArrayList<>(16));
       }
     }
 
@@ -538,7 +538,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
         childrenSetter.accept(root, children);
       } else {
-        childrenSetter.accept(root, new ArrayList<>());
+        childrenSetter.accept(root, new ArrayList<>(16));
       }
     }
 

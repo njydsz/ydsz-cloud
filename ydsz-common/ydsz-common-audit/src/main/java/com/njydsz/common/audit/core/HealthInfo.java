@@ -42,7 +42,7 @@ public class HealthInfo {
    */
   public static HealthInfo up(Map<String, Object> details) {
     return new HealthInfo(
-        Status.UP, details != null ? new LinkedHashMap<>(details) : new LinkedHashMap<>());
+        Status.UP, details != null ? new LinkedHashMap<>(details) : new LinkedHashMap<>(16));
   }
 
   /**
@@ -51,7 +51,7 @@ public class HealthInfo {
    * @return HealthInfo 实例
    */
   public static HealthInfo up() {
-    return new HealthInfo(Status.UP, new LinkedHashMap<>());
+    return new HealthInfo(Status.UP, new LinkedHashMap<>(16));
   }
 
   /**
@@ -62,7 +62,7 @@ public class HealthInfo {
    */
   public static HealthInfo down(Map<String, Object> details) {
     return new HealthInfo(
-        Status.DOWN, details != null ? new LinkedHashMap<>(details) : new LinkedHashMap<>());
+        Status.DOWN, details != null ? new LinkedHashMap<>(details) : new LinkedHashMap<>(16));
   }
 
   /**
@@ -72,7 +72,7 @@ public class HealthInfo {
    * @return HealthInfo 实例
    */
   public static HealthInfo down(String error) {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     details.put("error", error);
     return down(details);
   }

@@ -236,7 +236,7 @@ public final class BeanReader<T> {
     T obj;
     // @JsonCreator 路径：先解析全部字段到临时 Map，读完再调用构造函数
     if (creatorConstructor != null) {
-      Map<String, Object> pending = new HashMap<>();
+      Map<String, Object> pending = new HashMap<>(16);
       Object parsed = readObjectFields(reader, depth, pending);
       if (parsed != null) {
         // 已通过默认构造 + 字段赋值完成（参数名未解析成功时降级）
@@ -981,7 +981,7 @@ public final class BeanReader<T> {
     } catch (NumberFormatException e) {
       LOGGER.debug("[BeanReader] 日期非数字时间戳格式，继续按字符串解析: value={}", s);
     }
-    List<DateTimeFormatter> candidates = new ArrayList<>();
+    List<DateTimeFormatter> candidates = new ArrayList<>(16);
     if (pattern != null) {
       try {
         candidates.add(DateTimeFormatter.ofPattern(pattern));

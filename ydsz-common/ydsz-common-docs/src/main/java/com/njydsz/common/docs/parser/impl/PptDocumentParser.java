@@ -66,8 +66,8 @@ public class PptDocumentParser implements DocumentParser {
     }
 
     try (XMLSlideShow ppt = new XMLSlideShow(inputStream)) {
-      List<DocumentSection> sections = new ArrayList<>();
-      List<DocumentTable> tables = new ArrayList<>();
+      List<DocumentSection> sections = new ArrayList<>(16);
+      List<DocumentTable> tables = new ArrayList<>(16);
       StringBuilder fullText = new StringBuilder();
 
       List<XSLFSlide> slides = ppt.getSlides();
@@ -92,11 +92,11 @@ public class PptDocumentParser implements DocumentParser {
             }
           } else if (shape instanceof XSLFTable tableShape) {
             // 表格形状
-            List<List<String>> rows = new ArrayList<>();
+            List<List<String>> rows = new ArrayList<>(16);
             int numRows = tableShape.getNumberOfRows();
             int maxCols = 0;
             for (int r = 0; r < numRows; r++) {
-              List<String> cells = new ArrayList<>();
+              List<String> cells = new ArrayList<>(16);
               int numCols = tableShape.getNumberOfColumns();
               maxCols = Math.max(maxCols, numCols);
               for (int c = 0; c < numCols; c++) {

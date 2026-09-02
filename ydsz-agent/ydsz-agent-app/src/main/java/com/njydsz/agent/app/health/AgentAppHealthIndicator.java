@@ -20,7 +20,7 @@ public class AgentAppHealthIndicator implements HealthIndicator {
 
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     details.put("module", "agent");
     details.put("platform", "app");
     // TODO: 接入 App 端特有探针（LLM Provider / RAG / 对话记忆等）

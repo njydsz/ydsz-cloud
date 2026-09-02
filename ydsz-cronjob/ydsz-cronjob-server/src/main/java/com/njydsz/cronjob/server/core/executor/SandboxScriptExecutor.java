@@ -183,7 +183,7 @@ public class SandboxScriptExecutor {
               : sandbox.getDockerShellImage();
 
       // 2. 构造 docker run 命令
-      List<String> cmd = new ArrayList<>();
+      List<String> cmd = new ArrayList<>(16);
       cmd.add("docker");
       cmd.add("run");
       cmd.add("--rm");

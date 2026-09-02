@@ -83,7 +83,7 @@ public class WebHealthIndicator implements HealthIndicator {
 
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
 
     details.put("corsEnabled", corsProperties.isEnabled());
     details.put("corsAllowCredentials", corsProperties.isAllowCredentials());
@@ -140,7 +140,7 @@ public class WebHealthIndicator implements HealthIndicator {
   private void collectHeapMemoryDetails(Map<String, Object> details) {
     MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
     MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
-    Map<String, Object> memoryDetails = new LinkedHashMap<>();
+    Map<String, Object> memoryDetails = new LinkedHashMap<>(16);
     memoryDetails.put("usedMB", heapUsage.getUsed() / BYTES_PER_MB);
     memoryDetails.put("committedMB", heapUsage.getCommitted() / BYTES_PER_MB);
     memoryDetails.put("maxMB", heapUsage.getMax() / BYTES_PER_MB);

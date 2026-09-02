@@ -206,7 +206,7 @@ public class DomainEvent extends ApplicationEvent {
     private String eventType;
     private String aggregateId;
     private String aggregateType;
-    private final Map<String, Object> metadata = new HashMap<>();
+    private final Map<String, Object> metadata = new HashMap<>(16);
 
     private Builder() {}
 

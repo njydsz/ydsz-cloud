@@ -571,7 +571,7 @@ public class RedisStreamOps {
       long acknowledgedCount = 0;
       for (MapRecord<String, Object, Object> record : claimed) {
         List<String> keys = Arrays.asList(deadLetterKey, formattedKey);
-        List<Object> args = new ArrayList<>();
+        List<Object> args = new ArrayList<>(16);
         args.add(groupName);
         args.add(record.getId().getValue());
 

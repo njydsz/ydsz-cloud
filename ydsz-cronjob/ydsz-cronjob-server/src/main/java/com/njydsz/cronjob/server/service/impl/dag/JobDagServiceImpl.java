@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.service.impl.dag;
+new ArrayList<>(16)ver.service.impl.dag;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -488,7 +488,7 @@ public class JobDagServiceImpl implements JobDagService {
     }
     for (DagEdge edge : definition.edges()) {
       adj.computeIfAbsent(edge.from(), k -> new ArrayList<>()).add(edge.to());
-      adj.computeIfAbsent(edge.to(), k -> new ArrayList<>());
+      adj.computeIfAbsent(edge.to(), k -> new ArrayList<>(8));
     }
     return adj;
   }

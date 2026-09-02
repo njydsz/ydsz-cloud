@@ -1107,6 +1107,24 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!--
+                    maven-source-plugin: 为 api 模块生成 sources 附件（二方/三方消费者依赖时能够获得源码提示）。
+                    默认不激活，仅在 -P api-publish profile 下由 api 模块显式引入。
+                -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
         </plugins>
         </pluginManagement>
 
@@ -1181,6 +1199,31 @@
                         </plugin>
                     </plugins>
                 </pluginManagement>
+            </build>
+        </profile>
+
+        <!-- ============================================================
+             Profile: api-publish
+             用法: mvn deploy -P api-publish -pl ydsz-xxx-api -DskipTests
+             效果:
+               1. 为 api 模块生成 sources 附件（源码提示 → IDE 自动关联）
+               2. 仅构建指定 api 模块（-pl 限定），不触发整个 reactor
+               3. deploy 到 distributionManagement 配置的私服仓库
+
+             前提: 须在 ~/.m2/settings.xml 或根 pom 的 <distributionManagement> 中配置目标仓库 URL 与认证信息。
+             ============================================================ -->
+        <profile>
+            <id>api-publish</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                </plugins>
             </build>
         </profile>
     </profiles>

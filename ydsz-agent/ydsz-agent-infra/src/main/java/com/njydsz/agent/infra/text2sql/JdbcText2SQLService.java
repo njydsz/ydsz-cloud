@@ -270,9 +270,9 @@ public class JdbcText2SQLService implements Text2SQLService {
         for (int i = 1; i <= colCount; i++) {
           columns.add(meta.getColumnLabel(i));
         }
-        List<Map<String, Object>> rows = new ArrayList<>();
+        List<Map<String, Object>> rows = new ArrayList<>(16);
         while (rs.next()) {
-          Map<String, Object> row = new LinkedHashMap<>();
+          Map<String, Object> row = new LinkedHashMap<>(16);
           for (int i = 1; i <= colCount; i++) {
             row.put(columns.get(i - 1), rs.getObject(i));
           }

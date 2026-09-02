@@ -1,6 +1,4 @@
-package com.njydsz.common.sentry.config;
-
-import java.util.HashMap;
+new HashMap<>(16)t java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -312,7 +310,7 @@ public class SentryProperties {
     private BatchConfig batch = new BatchConfig();
 
     /** 资源自定义属性 */
-    private Map<String, String> resourceAttributes = new HashMap<>();
+    private Map<String, String> resourceAttributes = new HashMap<>(16);
 
     /** OTel 批量导出器配置（队列与调度参数）。 */
     @Data

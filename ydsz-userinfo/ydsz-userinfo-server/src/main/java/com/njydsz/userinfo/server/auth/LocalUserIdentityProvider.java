@@ -62,7 +62,7 @@ public class LocalUserIdentityProvider implements UserIdentityProvider {
         });
 
     if (passwordEncoder.matches(credentials, credential.getPassword())) {
-      Map<String, String> result = new HashMap<>();
+      Map<String, String> result = new HashMap<>(16);
       result.put("userId", credential.getId());
       result.put("username", credential.getUsername());
       result.put("tenantId", credential.getTenantId());

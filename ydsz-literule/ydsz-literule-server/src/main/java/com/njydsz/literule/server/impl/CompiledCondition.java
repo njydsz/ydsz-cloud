@@ -194,7 +194,7 @@ public interface CompiledCondition {
     private final Set<String> values;
 
     EnumCondition(String expr) {
-      this.values = new HashSet<>();
+      this.values = new HashSet<>(16);
       for (String part : expr.split("\\|")) {
         values.add(part.trim());
       }

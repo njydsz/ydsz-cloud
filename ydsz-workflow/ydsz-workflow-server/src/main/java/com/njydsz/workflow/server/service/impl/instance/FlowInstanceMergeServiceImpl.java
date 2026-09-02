@@ -178,7 +178,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     }
 
     // 存储合并组元信息
-    Map<String, String> detail = new LinkedHashMap<>();
+    Map<String, String> detail = new LinkedHashMap<>(16);
     detail.put("operatorId", operatorId != null ? operatorId : "");
     detail.put("tenantId", tid);
     detail.put("flowCode", flowCodes.iterator().next());
@@ -312,7 +312,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     Map<String, String> detail =
         redisHashOps.hGetAll(MERGE_GROUP_DETAIL_KEY + mergeGroupId, String.class);
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("mergeGroupId", mergeGroupId);
     result.put("instanceIds", new ArrayList<>(instanceIds));
     result.put("instanceCount", instanceIds.size());
@@ -321,11 +321,11 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     result.put("createdAt", detail.get("createdAt"));
 
     // 获取实例摘要
-    List<Map<String, Object>> instanceDetails = new ArrayList<>();
+    List<Map<String, Object>> instanceDetails = new ArrayList<>(16);
     for (String instanceId : instanceIds) {
       FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
       if (instance != null) {
-        Map<String, Object> info = new LinkedHashMap<>();
+        Map<String, Object> info = new LinkedHashMap<>(16);
         info.put("instanceId", instance.getId());
         info.put("flowName", instance.getFlowName());
         info.put("flowStatus", instance.getFlowStatus());
@@ -363,10 +363,10 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
             .filter(t -> StringUtils.hasText(t.getFlowCode()))
             .collect(Collectors.groupingBy(FlowRunTaskVO::getFlowCode));
 
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<Map<String, Object>> result = new ArrayList<>(16);
     for (Map.Entry<String, List<FlowRunTaskVO>> entry : grouped.entrySet()) {
       if (entry.getValue().size() >= 2) {
-        Map<String, Object> group = new LinkedHashMap<>();
+        Map<String, Object> group = new LinkedHashMap<>(16);
         group.put("flowCode", entry.getKey());
         group.put("flowName", entry.getValue().get(0).getFlowName());
         group.put("taskCount", entry.getValue().size());

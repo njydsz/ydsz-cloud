@@ -1,7 +1,4 @@
-package com.njydsz.agent.server.config;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+new LinkedHashMap<>(16)Map;
 import java.util.List;
 import java.util.Map;
 
@@ -177,7 +174,7 @@ public class AgentProperties {
     private Map<String, ProviderConfig> providers = new LinkedHashMap<>();
 
     /** 模型价格配置（key = 模型名前缀，value = 每千 token 价格 USD） */
-    private Map<String, Double> modelPrices = new LinkedHashMap<>();
+    private Map<String, Double> modelPrices = new LinkedHashMap<>(16);
 
     public String getDefaultProvider() {
       return defaultProvider;
@@ -611,7 +608,7 @@ public class AgentProperties {
     private boolean enabled = false;
 
     /** MCP Server 列表 */
-    private List<ServerInfo> servers = new ArrayList<>();
+    private List<ServerInfo> servers = new ArrayList<>(4);
 
     public boolean isEnabled() {
       return enabled;

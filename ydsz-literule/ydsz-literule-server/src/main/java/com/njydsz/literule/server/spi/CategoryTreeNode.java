@@ -39,7 +39,7 @@ public class CategoryTreeNode extends TreeNode<CategoryTreeNode, String> impleme
   private int ruleCount;
 
   /** 该分类下的责任人列表 */
-  private List<String> owners = new ArrayList<>();
+  private List<String> owners = new ArrayList<>(4);
 
   /** 是否根节点（true=顶层分类，用于前端高亮展示） */
   private boolean root;

@@ -195,7 +195,7 @@ public final class ColumnPermissionFilter {
    * @return 实例字段数组
    */
   private static Field[] collectInstanceFields(Class<?> clazz) {
-    List<Field> fieldList = new ArrayList<>();
+    List<Field> fieldList = new ArrayList<>(16);
     Class<?> current = clazz;
     while (current != null && current != Object.class) {
       for (Field field : current.getDeclaredFields()) {

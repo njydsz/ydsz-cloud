@@ -202,7 +202,7 @@ public class LiteExprSandbox {
     if (cached != null) {
       return cached;
     }
-    List<String> violations = new ArrayList<>();
+    List<String> violations = new ArrayList<>(16);
     checkNode(ast, violations);
     SandboxResult result;
     if (violations.isEmpty()) {

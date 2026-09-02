@@ -25,7 +25,7 @@ public final class LogEventSerializer {
    * @return 结果
    */
   public static String toJson(LogEvent event) {
-    Map<String, Object> map = new LinkedHashMap<>();
+    Map<String, Object> map = new LinkedHashMap<>(16);
     map.put("@timestamp", event.getTimestamp() != null ? event.getTimestamp().toString() : null);
 
     if (event.getLevel() != null) {

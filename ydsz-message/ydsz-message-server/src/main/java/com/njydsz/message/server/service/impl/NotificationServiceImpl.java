@@ -204,7 +204,7 @@ public class NotificationServiceImpl implements NotificationService {
   public PageResponse<List<NotificationGroupVO>> inboxGrouped(String userId, NotificationQueryDTO query) {
     // 查询用户全部通知（按时间倒序），按 message_group 折叠
     PageResponse<List<MsgNotificationVO>> allPage = inbox(userId, query);
-    Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>();
+    Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>(16);
 
     for (MsgNotificationVO n : allPage.getData()) {
       String groupKey = n.getMessageGroup();

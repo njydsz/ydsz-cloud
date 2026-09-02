@@ -39,7 +39,7 @@ public class NacosRuleSource implements RuleConfigProvider {
   private final String serverAddr;
   private final String dataId;
   private final String group;
-  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>();
+  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>(4);
 
   /** Nacos ConfigService 实例（反射创建，避免硬依赖） */
   private Object configService;

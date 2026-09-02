@@ -323,7 +323,7 @@ public class EmailTrackingService {
   /** 构建事件 JSON 字符串 */
   private String buildEventJson(
       TrackingEvent event, long timestamp, String userAgent, Map<String, String> metadata) {
-    Map<String, Object> eventMap = new HashMap<>();
+    Map<String, Object> eventMap = new HashMap<>(16);
     eventMap.put("event", event.name());
     eventMap.put("timestamp", timestamp);
     if (userAgent != null) {

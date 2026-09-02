@@ -1,4 +1,4 @@
-package com.njydsz.common.domain.query;
+new ArrayList<>(16)ery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,7 +136,7 @@ public class PageQuery extends BaseQuery {
    * @return 当前对象，支持链式调用
    */
   public PageQuery setOrderItems(List<OrderItem> orderItems) {
-    this.orderItems = new ArrayList<>();
+    this.orderItems = new ArrayList<>(16);
     if (orderItems != null) {
       for (OrderItem item : orderItems) {
         if (item != null && item.getColumn() != null) {
@@ -173,7 +173,7 @@ public class PageQuery extends BaseQuery {
   /** 惰性初始化排序列表。 */
   private void ensureOrderItems() {
     if (orderItems == null) {
-      orderItems = new ArrayList<>();
+      orderItems = new ArrayList<>(16);
     }
   }
 

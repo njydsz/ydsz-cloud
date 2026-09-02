@@ -47,7 +47,7 @@ public class WebSocketAuditService {
    * @param remoteIp 远程 IP
    */
   public void auditConnect(String userId, String sessionId, String remoteIp) {
-    Map<String, Object> entry = new LinkedHashMap<>();
+    Map<String, Object> entry = new LinkedHashMap<>(16);
     entry.put("timestamp", Instant.now().toString());
     entry.put("traceId", getTraceId());
     entry.put("event", "CONNECT");
@@ -67,7 +67,7 @@ public class WebSocketAuditService {
    * @param durationMs 连接时长（毫秒）
    */
   public void auditDisconnect(String userId, String sessionId, long durationMs) {
-    Map<String, Object> entry = new LinkedHashMap<>();
+    Map<String, Object> entry = new LinkedHashMap<>(16);
     entry.put("timestamp", Instant.now().toString());
     entry.put("traceId", getTraceId());
     entry.put("event", "DISCONNECT");
@@ -94,7 +94,7 @@ public class WebSocketAuditService {
       boolean success,
       long durationMs,
       String error) {
-    Map<String, Object> entry = new LinkedHashMap<>();
+    Map<String, Object> entry = new LinkedHashMap<>(16);
     entry.put("timestamp", Instant.now().toString());
     entry.put("traceId", getTraceId());
     entry.put("event", "PUSH");

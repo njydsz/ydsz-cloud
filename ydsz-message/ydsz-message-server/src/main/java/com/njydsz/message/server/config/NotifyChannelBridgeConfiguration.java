@@ -87,7 +87,7 @@ public class NotifyChannelBridgeConfiguration implements InitializingBean {
     }
 
     Map<String, MessageChannel> channels = beanFactory.getBeansOfType(MessageChannel.class);
-    List<NotifyChannelStrategy> registered = new ArrayList<>();
+    List<NotifyChannelStrategy> registered = new ArrayList<>(16);
 
     for (Map.Entry<String, MessageChannel> entry : channels.entrySet()) {
       MessageChannel channel = entry.getValue();

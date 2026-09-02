@@ -488,7 +488,7 @@ public class SamlService {
    * @return 用户属性 Map（nameId + attributes）
    */
   private Map<String, String> extractAttributes(Document document) {
-    Map<String, String> result = new HashMap<>();
+    Map<String, String> result = new HashMap<>(16);
 
     // 提取 NameID
     NodeList nameIdNodes = document.getElementsByTagNameNS(SAML2_ASSERTION_NS, "NameID");

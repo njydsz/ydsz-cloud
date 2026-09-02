@@ -1,4 +1,4 @@
-package com.njydsz.common.excel.api.result;
+new ArrayList<>(16)w ArrayList<>(16)new ArrayList<>(16)package com.njydsz.common.excel.api.result;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -399,7 +399,7 @@ public class ExcelReadResult<T> {
    * @param <T> 数据类型
    */
   public static class Builder<T> {
-    private List<T> data = new ArrayList<>();
+    private List<T> data = new ArrayList<>(4);
     private int totalRows;
     private long elapsedTime;
     private boolean success;

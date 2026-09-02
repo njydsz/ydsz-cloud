@@ -553,7 +553,7 @@ public class YdszJson {
     // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
     Type type = TypeFactory.getInstance().constructCollectionType(List.class, clazz);
     List<T> result = defaultMapper.toObject(json, type);
-    return result != null ? result : new ArrayList<>();
+    return result != null ? result : new ArrayList<>(16);
   }
 
   /**
@@ -594,7 +594,7 @@ public class YdszJson {
     if (result != null) {
       return result;
     }
-    return new LinkedHashMap<>();
+    return new LinkedHashMap<>(0);
   }
 
   // ==================== 便捷方法（字节数组 / 类型安全 Map） ====================

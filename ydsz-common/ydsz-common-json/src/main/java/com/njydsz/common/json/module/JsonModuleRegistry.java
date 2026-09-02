@@ -68,7 +68,7 @@ public final class JsonModuleRegistry {
 
   private final Set<Class<?>> moduleDeserializerTypes = ConcurrentHashMap.newKeySet();
 
-  private final List<JsonModule> modules = Collections.synchronizedList(new ArrayList<>());
+  private final List<JsonModule> modules = Collections.synchronizedList(new ArrayList<>(16));
 
   private volatile boolean initialized = false;
 

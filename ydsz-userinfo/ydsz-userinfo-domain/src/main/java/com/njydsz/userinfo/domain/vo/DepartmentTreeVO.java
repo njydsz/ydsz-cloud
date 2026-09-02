@@ -38,5 +38,5 @@ public class DepartmentTreeVO {
   private String status;
 
   /** 子部门列表 */
-  private List<DepartmentTreeVO> children = new ArrayList<>();
+  private List<DepartmentTreeVO> children = new ArrayList<>(4);
 }

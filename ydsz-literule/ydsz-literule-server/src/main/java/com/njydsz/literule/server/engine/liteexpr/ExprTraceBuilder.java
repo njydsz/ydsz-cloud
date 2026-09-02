@@ -1,6 +1,4 @@
-package com.njydsz.literule.server.engine.liteexpr;
-
-import java.util.ArrayList;
+new ArrayList<>(16)port java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -64,7 +62,7 @@ public class ExprTraceBuilder {
     }
   }
 
-  private final List<TraceNode> nodes = new ArrayList<>();
+  private final List<TraceNode> nodes = new ArrayList<>(4);
 
   /**
    * 记录一个变量叶子节点（如 {@code amount}）。

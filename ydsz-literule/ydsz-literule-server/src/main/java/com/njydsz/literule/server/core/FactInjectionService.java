@@ -188,7 +188,7 @@ public class FactInjectionService {
         }
         if (hasModels) {
             // 扁平 key（"model.score"）转换为嵌套结构（{"model": {"score": ...}}）
-            Map<String, Object> nestedModel = new LinkedHashMap<>();
+            Map<String, Object> nestedModel = new LinkedHashMap<>(16);
             for (Map.Entry<String, Object> entry : modelOutputs.entrySet()) {
                 String key = entry.getKey();
                 if (key.startsWith(ModelInputRegistry.MODEL_KEY_PREFIX)) {
@@ -294,7 +294,7 @@ public class FactInjectionService {
             return context;
         }
         // 扁平 key（"model.score"）转换为嵌套结构（{"model": {"score": ...}}）
-        Map<String, Object> nestedModel = new LinkedHashMap<>();
+        Map<String, Object> nestedModel = new LinkedHashMap<>(16);
         for (Map.Entry<String, Object> entry : modelOutputs.entrySet()) {
             String key = entry.getKey();
             if (key.startsWith(ModelInputRegistry.MODEL_KEY_PREFIX)) {

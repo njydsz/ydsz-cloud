@@ -71,7 +71,7 @@ public class SearchIndexConsistencyJobHandler implements JobHandler {
     // 执行巡检 + 自动修复
     int repaired = checker.autoRepair(tenantId);
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("tenantId", tenantId);
     result.put("repaired", repaired);
     result.put("checkedAt", LocalDateTime.now().toString());

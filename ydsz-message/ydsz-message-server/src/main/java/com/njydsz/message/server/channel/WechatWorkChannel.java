@@ -149,14 +149,14 @@ public class WechatWorkChannel implements MessageChannel {
       }
     }
 
-    Map<String, Object> payload = new HashMap<>();
+    Map<String, Object> payload = new HashMap<>(16);
     payload.put("msgtype", msgType);
     if ("markdown".equals(msgType)) {
-      Map<String, Object> markdown = new HashMap<>();
+      Map<String, Object> markdown = new HashMap<>(16);
       markdown.put("content", content);
       payload.put("markdown", markdown);
     } else {
-      Map<String, Object> text = new HashMap<>();
+      Map<String, Object> text = new HashMap<>(16);
       text.put("content", content);
       payload.put("text", text);
     }

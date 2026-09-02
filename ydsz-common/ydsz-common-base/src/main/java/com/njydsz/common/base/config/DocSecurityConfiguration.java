@@ -158,7 +158,7 @@ public class DocSecurityConfiguration {
    * @return URL 拦截路径列表
    */
   private List<String> buildDocUrlPatterns() {
-    List<String> patterns = new ArrayList<>();
+    List<String> patterns = new ArrayList<>(16);
     // Knife4j 入口
     patterns.add(docProperties.getKnife4jPath());
     // OpenAPI JSON 入口及子路径

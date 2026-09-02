@@ -1502,7 +1502,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     checkpoint.setLastModifyTime(LocalDateTime.now());
     checkpoint.setUploadedBytes(0L);
     checkpoint.setUploadedPartsCount(0);
-    checkpoint.setUploadedParts(new ArrayList<>());
+    checkpoint.setUploadedParts(new ArrayList<>(16));
 
     // 初始化时计算文件 MD5
     if (isChunkMd5CheckEnabled()) {

@@ -112,7 +112,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       return buildRejectedResponse("输入被护栏拒绝");
     }
 
-    List<ChatMessage> messages = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>(16);
     messages.add(ChatMessage.system(buildSystemPrompt(request, userInput)));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
@@ -199,7 +199,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       return;
     }
 
-    List<ChatMessage> messages = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>(16);
     messages.add(ChatMessage.system(buildSystemPrompt(request, userInput)));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));

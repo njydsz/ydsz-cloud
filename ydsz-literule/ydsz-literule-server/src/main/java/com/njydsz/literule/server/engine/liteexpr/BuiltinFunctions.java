@@ -472,7 +472,7 @@ public final class BuiltinFunctions {
               Object coll = args[0];
               LiteExprFunction predicate = (LiteExprFunction) args[1];
               if (coll instanceof Collection<?> c) {
-                List<Object> result = new ArrayList<>();
+                List<Object> result = new ArrayList<>(16);
                 for (Object e : c) {
                   if (Boolean.TRUE.equals(predicate.call(e))) {
                     result.add(e);
@@ -492,7 +492,7 @@ public final class BuiltinFunctions {
               Object coll = args[0];
               LiteExprFunction mapper = (LiteExprFunction) args[1];
               if (coll instanceof Collection<?> c) {
-                List<Object> result = new ArrayList<>();
+                List<Object> result = new ArrayList<>(16);
                 for (Object e : c) {
                   result.add(mapper.call(e));
                 }

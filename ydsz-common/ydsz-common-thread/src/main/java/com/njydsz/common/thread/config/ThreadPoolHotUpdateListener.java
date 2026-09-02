@@ -1,4 +1,4 @@
-package com.njydsz.common.thread.config;
+new LinkedHashMap<>(16)ead.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -201,7 +201,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
 
   private Map<String, ThreadPoolTaskExecutor> getExecutors() {
     if (applicationContext == null) {
-      return new LinkedHashMap<>();
+      return new LinkedHashMap<>(0);
     }
     return applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
   }

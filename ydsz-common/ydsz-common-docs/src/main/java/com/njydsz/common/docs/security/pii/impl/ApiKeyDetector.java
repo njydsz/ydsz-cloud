@@ -56,7 +56,7 @@ public class ApiKeyDetector implements PiiDetector {
     }
 
     String text = content.getText();
-    List<PiiFinding> findings = new ArrayList<>();
+    List<PiiFinding> findings = new ArrayList<>(16);
 
     // key=value 格式
     Matcher kvMatcher = KEY_VALUE_PATTERN.matcher(text);

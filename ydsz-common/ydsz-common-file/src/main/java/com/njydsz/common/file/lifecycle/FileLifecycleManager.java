@@ -221,7 +221,7 @@ public class FileLifecycleManager {
     private int skippedCount = 0;
     private boolean success = true;
     private String message;
-    private List<String> errors = new ArrayList<>();
+    private List<String> errors = new ArrayList<>(4);
 
     public CleanupResult() {}
 

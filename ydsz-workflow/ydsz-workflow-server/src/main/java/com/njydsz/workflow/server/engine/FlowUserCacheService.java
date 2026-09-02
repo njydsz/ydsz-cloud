@@ -107,7 +107,7 @@ public class FlowUserCacheService {
       return Collections.emptyMap();
     }
     Map<String, String> result = new HashMap<>(userIds.size());
-    List<String> missedIds = new ArrayList<>();
+    List<String> missedIds = new ArrayList<>(16);
 
     // 1. 批量查缓存
     for (String userId : userIds) {

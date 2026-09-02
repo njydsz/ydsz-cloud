@@ -64,7 +64,7 @@ public class MacroDetector implements DocumentSecurityScanner {
           .success(true)
           .build();
     }
-    List<SecurityScanResult.SecurityFinding> findings = new ArrayList<>();
+    List<SecurityScanResult.SecurityFinding> findings = new ArrayList<>(16);
 
     // 后缀检测
     String ext = extractExtension(fileName);

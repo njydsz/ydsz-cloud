@@ -42,7 +42,7 @@ public class StylesReader {
   private static final int[][] BUILTIN_DATE_RANGES = {{14, 22}, {45, 47}};
 
   /** 自定义 numFmtId → formatCode（numFmts 部件） */
-  private final Map<Integer, String> customFormats = new HashMap<>();
+  private final Map<Integer, String> customFormats = new HashMap<>(16);
 
   /** cellXfs 列表：下标即样式索引（s 属性），值为该 xf 的 numFmtId（缺省 0 = General） */
   private int[] xfNumFmtIds = new int[0];

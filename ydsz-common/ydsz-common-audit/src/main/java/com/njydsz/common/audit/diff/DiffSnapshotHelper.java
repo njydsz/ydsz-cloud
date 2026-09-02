@@ -1,4 +1,4 @@
-package com.njydsz.common.audit.diff;
+new ArrayList<>(16)f;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -150,7 +150,7 @@ public final class DiffSnapshotHelper {
 
     /** 删除的字段列表 */
     @Builder.Default
-    private List<String> removedFields = new ArrayList<>();
+    private List<String> removedFields = new ArrayList<>(4);
 
     /** 是否「无变更」（纯便捷方法，等价于三个列表都为空）
      *

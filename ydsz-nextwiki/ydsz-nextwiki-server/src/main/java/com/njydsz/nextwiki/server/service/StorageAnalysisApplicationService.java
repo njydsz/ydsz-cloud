@@ -82,7 +82,7 @@ public class StorageAnalysisApplicationService {
    */
   public Map<String, TypeStats> statsByType(String userId) {
     List<FileStatVO> stats = fileNodeRepository.statsBySuffixAndUser(userId);
-    Map<String, TypeStats> result = new HashMap<>();
+    Map<String, TypeStats> result = new HashMap<>(16);
 
     long grandTotal = stats.stream().mapToLong(FileStatVO::getTotalSize).sum();
 

@@ -53,7 +53,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  *     public Map<String, Object> getFacts(RuleContextVO context) {
  *         String projectId = (String) context.get("projectId");
  *         ProjectBudget budget = projectMapper.selectBudget(projectId);
- *         Map<String, Object> facts = new HashMap<>();
+ *         Map<String, Object> facts = new HashMap<>(16);
  *         facts.put("budgetUsedRatio", budget.getUsedRatio());
  *         facts.put("budgetTotal", budget.getTotal());
  *         facts.put("budgetRemaining", budget.getRemaining());

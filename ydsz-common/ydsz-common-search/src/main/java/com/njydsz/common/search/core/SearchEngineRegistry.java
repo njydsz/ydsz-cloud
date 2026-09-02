@@ -59,7 +59,7 @@ public class SearchEngineRegistry {
       log.warn("[SearchEngineRegistry] 主引擎 '{}' 未找到，可用引擎: {}", primaryName, engineMap.keySet());
     }
 
-    this.fallbackChain = new ArrayList<>();
+    this.fallbackChain = new ArrayList<>(16);
     if (properties.getFallbacks() != null) {
       for (String fallbackName : properties.getFallbacks()) {
         SearchStrategy fallback = engineMap.get(fallbackName);

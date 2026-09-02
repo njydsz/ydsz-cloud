@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+new HashMap<>(16)shMap<>(16)new HashMap<>(16)new HashMap<>(16)new HashMap<>(16)package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -387,13 +387,13 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   @Override
   @Transactional(readOnly = true)
   public List<Map<String, Object>> listSubProcessTree(String parentInstanceId) {
-    List<Map<String, Object>> tree = new ArrayList<>();
+    List<Map<String, Object>> tree = new ArrayList<>(16);
     if (parentInstanceId == null) {
       return tree;
     }
     List<FlowInstanceVO> children = listChildren(parentInstanceId);
     for (FlowInstanceVO child : children) {
-      Map<String, Object> node = new LinkedHashMap<>();
+      Map<String, Object> node = new LinkedHashMap<>(16);
       node.put("instanceId", child.getId());
       node.put("instanceName", child.getTitle());
       node.put("flowCode", child.getFlowCode());
@@ -543,7 +543,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
       Map<String, Object> map = YdszJson.parseMap(variableJson);
       return map == null ? new HashMap<>() : map;
     } catch (Exception e) {
-      return new HashMap<>();
+      return new HashMap<>(0);
     }
   }
 }

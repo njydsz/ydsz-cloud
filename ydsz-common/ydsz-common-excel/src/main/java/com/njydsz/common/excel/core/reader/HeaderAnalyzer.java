@@ -85,7 +85,7 @@ public class HeaderAnalyzer {
     Set<String> excludeFields = metadata.getExcludeColumnFiledNames();
     Set<String> includeFields = metadata.getIncludeColumnFiledNames();
 
-    Map<Integer, String> dateFormats = new HashMap<>();
+    Map<Integer, String> dateFormats = new HashMap<>(16);
     int columnCount = 0;
     for (Field field : fields) {
       if (field.isAnnotationPresent(ExcelIgnore.class)) {
@@ -182,7 +182,7 @@ public class HeaderAnalyzer {
     Set<String> excludeFields = metadata.getExcludeColumnFiledNames();
     Set<String> includeFields = metadata.getIncludeColumnFiledNames();
 
-    Map<Integer, String> dateFormats = new HashMap<>();
+    Map<Integer, String> dateFormats = new HashMap<>(16);
     int columnCount = 0;
     for (Field field : fields) {
       if (field.isAnnotationPresent(ExcelIgnore.class)) {

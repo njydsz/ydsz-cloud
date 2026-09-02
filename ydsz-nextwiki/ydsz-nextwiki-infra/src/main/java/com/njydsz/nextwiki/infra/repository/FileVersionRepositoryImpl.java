@@ -95,7 +95,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
       return 0;
     }
 
-    List<String> ids = new ArrayList<>();
+    List<String> ids = new ArrayList<>(16);
     for (FileVersion v : excessVersions) {
       ids.add(v.getId());
     }

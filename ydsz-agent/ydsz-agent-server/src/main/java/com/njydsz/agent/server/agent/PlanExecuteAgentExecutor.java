@@ -109,7 +109,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
     log.info("[Plan-Execute] 计划生成: steps={}", plan.getSteps().size());
 
     plan.markExecuting();
-    List<String> stepResults = new ArrayList<>();
+    List<String> stepResults = new ArrayList<>(16);
     TokenUsage totalUsage = TokenUsage.zero();
     // 最大重规划次数 2：单步连续失败后允许重试生成剩余步骤两次，超过则抛出原始异常
     int maxReplans = 2;
@@ -291,7 +291,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
     log.info("[Plan-Execute-Stream] 计划生成: steps={}", plan.getSteps().size());
 
     plan.markExecuting();
-    List<String> stepResults = new ArrayList<>();
+    List<String> stepResults = new ArrayList<>(16);
     TokenUsage totalUsage = TokenUsage.zero();
     int maxReplans = 2;
     int replanCount = 0;
@@ -525,7 +525,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
   }
 
   private ExecutionPlan parsePlan(String goal, String planText) {
-    List<ExecutionPlan.PlanStep> steps = new ArrayList<>();
+    List<ExecutionPlan.PlanStep> steps = new ArrayList<>(16);
     Matcher matcher = STEP_PATTERN.matcher(planText);
     int index = 0;
     while (matcher.find()) {

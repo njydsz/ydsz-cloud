@@ -84,7 +84,7 @@ public class JwksEndpoint {
    * @return JWKS 标准 JSON 字符串，格式如 {"keys":[{...}]}
    */
   public String generateJwks() {
-    List<Map<String, Object>> keys = new ArrayList<>();
+    List<Map<String, Object>> keys = new ArrayList<>(16);
 
     if (publicKeyPem != null && !publicKeyPem.isBlank()) {
       try {
@@ -98,7 +98,7 @@ public class JwksEndpoint {
       keys.add(buildHmacKey(hmacSecret));
     }
 
-    Map<String, Object> jwks = new LinkedHashMap<>();
+    Map<String, Object> jwks = new LinkedHashMap<>(16);
     jwks.put("keys", keys);
     return YdszJson.toJson(jwks);
   }
@@ -110,7 +110,7 @@ public class JwksEndpoint {
    * @return JWK Map 结构
    */
   private Map<String, Object> buildHmacKey(byte[] secretKey) {
-    Map<String, Object> key = new LinkedHashMap<>();
+    Map<String, Object> key = new LinkedHashMap<>(16);
     key.put("kty", KTY_OCT);
     key.put("use", USE_SIG);
     key.put("alg", ALG_HS256);
@@ -136,7 +136,7 @@ public class JwksEndpoint {
     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
     RSAPublicKey rsaPublicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
 
-    Map<String, Object> key = new LinkedHashMap<>();
+    Map<String, Object> key = new LinkedHashMap<>(16);
     key.put("kty", KTY_RSA);
     key.put("use", USE_SIG);
     key.put("alg", ALG_RS256);

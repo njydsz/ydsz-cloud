@@ -217,7 +217,7 @@ public class CEPEngine implements Serializable {
             .matchedEvents(events)
             .hitAt(Instant.now())
             .metric(metric)
-            .context(new HashMap<>())
+            .context(new HashMap<>(16))
             .build();
     if (trigger != null) {
       hit.getContext().put("partitionKey", trigger.getPartitionKey());
@@ -243,7 +243,7 @@ public class CEPEngine implements Serializable {
   private boolean evaluateFilter(String filter, CEPEvent event) {
     try {
       // 包装事件到 context：$event
-      Map<String, Object> ctx = new HashMap<>();
+      Map<String, Object> ctx = new HashMap<>(16);
       ctx.put("event", event);
       ctx.put("type", event.getType());
       ctx.put("partitionKey", event.getPartitionKey());

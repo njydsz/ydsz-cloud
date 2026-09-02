@@ -41,7 +41,7 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
    * @param fields 激活的租户字段列表（来自 TenantProperties）
    */
   public TenantContextFeignInterceptor(List<TenantField> fields) {
-    this.fieldByKey = new HashMap<>();
+    this.fieldByKey = new HashMap<>(16);
     if (fields != null) {
       for (TenantField field : fields) {
         String key = TenantHeaderContract.effectiveKey(field);

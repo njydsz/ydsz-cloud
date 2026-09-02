@@ -1,7 +1,4 @@
-package com.njydsz.common.feign.aspect;
-
-import java.io.IOException;
-import java.util.LinkedHashMap;
+new LinkedHashMap<>(16)util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -57,7 +54,7 @@ public class YdszFeignLogger extends Logger {
   private static final Map<String, Pattern> JSON_PATTERNS = new LinkedHashMap<>();
 
   /** 预编译的 HTTP 头/日志格式脱敏正则。 */
-  private static final Map<String, Pattern> HEADER_PATTERNS = new LinkedHashMap<>();
+  private static final Map<String, Pattern> HEADER_PATTERNS = new LinkedHashMap<>(16);
 
   static {
     for (String field : SENSITIVE_FIELDS) {

@@ -163,7 +163,7 @@ public class RulePermissionChecker {
     if (ruleCodes == null || ruleCodes.isEmpty()) {
       return Collections.emptyList();
     }
-    List<String> unauthorized = new ArrayList<>();
+    List<String> unauthorized = new ArrayList<>(16);
     for (String code : ruleCodes) {
       if (!hasPermissionForRule(permission, code, operator)) {
         unauthorized.add(code);

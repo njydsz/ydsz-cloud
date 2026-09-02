@@ -265,8 +265,8 @@ public class RuleApprovalService {
               .flowCode(flow.getFlowCode())
               .currentLevel(1)
               .currentStatus(ApprovalRecord.STATUS_PENDING)
-              .currentLevelApprovedApprovers(new ArrayList<>())
-              .logs(new ArrayList<>())
+              .currentLevelApprovedApprovers(new ArrayList<>(16))
+              .logs(new ArrayList<>(16))
               .createdAt(LocalDateTime.now())
               .updatedAt(LocalDateTime.now())
               .build();
@@ -646,7 +646,7 @@ public class RuleApprovalService {
    */
   public List<ApprovalRecord> listPendingApprovals(String approver) {
     requireNonBlank(approver, "approver");
-    List<ApprovalRecord> result = new ArrayList<>();
+    List<ApprovalRecord> result = new ArrayList<>(16);
     for (ApprovalRecord record : recordStore.values()) {
       if (!ApprovalRecord.STATUS_PENDING.equals(record.getCurrentStatus())
           && !ApprovalRecord.STATUS_DELEGATED.equals(record.getCurrentStatus())) {

@@ -85,7 +85,7 @@ public class TenantIndexValidator {
   /** 实际校验逻辑（数据库元数据查询）。 */
   private void doValidateIndexes() {
     log.info("开始校验租户表索引...");
-    List<IndexWarning> warnings = new ArrayList<>();
+    List<IndexWarning> warnings = new ArrayList<>(16);
 
     try (Connection conn = dataSource.getConnection()) {
       DatabaseMetaData metaData = conn.getMetaData();
@@ -196,7 +196,7 @@ public class TenantIndexValidator {
    * @return 校验报告 Map
    */
   public Map<String, Object> generateReport() {
-    Map<String, Object> report = new LinkedHashMap<>();
+    Map<String, Object> report = new LinkedHashMap<>(16);
     report.put("enabled", properties.isEnabled());
     report.put("tenantColumn", properties.getTenantColumn());
     report.put("ignoreTables", properties.getNormalizedIgnoreTables());

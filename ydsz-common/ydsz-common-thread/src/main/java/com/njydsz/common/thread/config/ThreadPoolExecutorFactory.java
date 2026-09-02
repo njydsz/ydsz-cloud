@@ -131,7 +131,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
       return;
     }
 
-    List<TaskDecorator> decorators = new ArrayList<>();
+    List<TaskDecorator> decorators = new ArrayList<>(16);
 
     // 1. 用户配置的 TaskDecorator（如 MDC、RequestContext 传播）
     List<String> decoratorBeanNames = config.getTaskDecoratorBeanNames();
@@ -201,7 +201,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
    * @return TaskDecorator 列表（可能为空）
    */
   private List<TaskDecorator> resolveTaskDecorator(String beanName, String poolName) {
-    List<TaskDecorator> result = new ArrayList<>();
+    List<TaskDecorator> result = new ArrayList<>(16);
     if (!applicationContext.containsBean(beanName)) {
       LOG.warn("ydsz-thread: TaskDecorator Bean [{}] 不存在，跳过 (pool={})", beanName, poolName);
       return result;

@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.infra.repository;
+new ArrayList<>(16)e com.njydsz.nextwiki.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -306,7 +306,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     }
     String path = folder.getPath();
     if (path == null || path.isEmpty()) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
     return converter.fileNodeListToVO(
         fileNodeMapper.selectAllDescendantsByPath(path, TenantContextHolder.getTenantId()));

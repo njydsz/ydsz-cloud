@@ -98,7 +98,7 @@ public class CrossDomainSsoProperties {
    * <p>CORS 预检和令牌交换端点仅放行此列表中的 Origin，防止未授权的第三方域窃取 Token。
    * 列表为空时拒绝所有跨域请求（安全兜底）。
    */
-  private List<String> trustedDomains = new ArrayList<>();
+  private List<String> trustedDomains = new ArrayList<>(4);
 
   /**
    * postMessage 目标域名，默认 "*"。

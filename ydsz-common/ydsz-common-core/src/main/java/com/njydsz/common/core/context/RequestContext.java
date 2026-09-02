@@ -507,7 +507,7 @@ public final class RequestContext {
   public static Map<String, String> getExtraHeaders() {
     Object obj = get(BizContextKeys.KEY_EXTRA_HEADERS);
     if (obj instanceof Map<?, ?> raw) {
-      Map<String, String> result = new LinkedHashMap<>();
+      Map<String, String> result = new LinkedHashMap<>(16);
       for (Map.Entry<?, ?> entry : raw.entrySet()) {
         if (entry.getKey() instanceof String k && entry.getValue() instanceof String v) {
           result.put(k, v);

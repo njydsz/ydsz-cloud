@@ -198,7 +198,7 @@ public class PgVectorStore implements VectorStore {
                 WHERE embedding IS NOT NULL
                   AND (embedding <=> ?::vector) < ?
                 """);
-    List<Object> params = new ArrayList<>();
+    List<Object> params = new ArrayList<>(16);
     params.add(vectorStr);
     params.add(vectorStr);
     params.add(minDistance);
@@ -214,7 +214,7 @@ public class PgVectorStore implements VectorStore {
       return jdbcTemplate.query(
           sql.toString(),
           (rs, rowNum) -> {
-            Map<String, Object> metadata = new HashMap<>();
+            Map<String, Object> metadata = new HashMap<>(16);
             String metadataJson = rs.getString("metadata");
             if (metadataJson != null && !metadataJson.isBlank()) {
               metadata = YdszJson.fromJson(metadataJson, Map.class);

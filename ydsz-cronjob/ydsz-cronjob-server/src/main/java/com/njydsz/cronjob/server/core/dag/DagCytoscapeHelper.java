@@ -91,7 +91,7 @@ public final class DagCytoscapeHelper {
                   String status = nodeStatusMap.getOrDefault(jobKey, DagNodeStatus.PENDING.name());
                   Long duration = durationMap != null ? durationMap.get(jobKey) : null;
 
-                  Map<String, Object> nodeData = new LinkedHashMap<>();
+                  Map<String, Object> nodeData = new LinkedHashMap<>(16);
                   nodeData.put("id", jobKey);
                   nodeData.put("label", node.label() != null ? node.label() : jobKey);
                   nodeData.put("nodeType", node.nodeType());
@@ -113,7 +113,7 @@ public final class DagCytoscapeHelper {
         definition.edges().stream()
             .map(
                 edge -> {
-                  Map<String, Object> edgeData = new LinkedHashMap<>();
+                  Map<String, Object> edgeData = new LinkedHashMap<>(16);
                   edgeData.put("id", "edge_" + edge.from() + "_" + edge.to());
                   edgeData.put("source", edge.from());
                   edgeData.put("target", edge.to());
@@ -127,7 +127,7 @@ public final class DagCytoscapeHelper {
                 })
             .toList();
 
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("nodes", cytoscapeNodes);
     result.put("edges", cytoscapeEdges);
     return result;

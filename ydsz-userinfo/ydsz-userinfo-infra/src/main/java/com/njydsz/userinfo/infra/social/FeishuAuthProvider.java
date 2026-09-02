@@ -95,7 +95,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
 
-    Map<String, String> tokenParams = new HashMap<>();
+    Map<String, String> tokenParams = new HashMap<>(16);
     tokenParams.put("app_id", config.getAppId());
     tokenParams.put("app_secret", config.getAppSecret());
     tokenParams.put("code", code);

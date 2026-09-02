@@ -74,7 +74,7 @@ public class JsonWarmupRunner implements ApplicationRunner {
 
   /** 扫描所有 Controller Bean，提取需预热的类型集合。 */
   private Set<Class<?>> scanControllerTypes() {
-    Set<Class<?>> types = new HashSet<>();
+    Set<Class<?>> types = new HashSet<>(16);
     String[] beanNames = applicationContext.getBeanNamesForAnnotation(RestController.class);
     for (String beanName : beanNames) {
       collectTypesFromController(applicationContext.getType(beanName), types);

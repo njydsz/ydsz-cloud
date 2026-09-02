@@ -64,7 +64,7 @@ public final class RuleDslExporter {
    * @return YAML 格式的 DSL 文本（含单条 rules 段）
    */
   public static String exportSingleRule(RuleDefinitionDTO rule) {
-    List<RuleDefinitionDTO> rules = new ArrayList<>();
+    List<RuleDefinitionDTO> rules = new ArrayList<>(16);
     rules.add(rule);
     return exportYaml(rules, rule.getCode(), rule.getName());
   }
@@ -78,7 +78,7 @@ public final class RuleDslExporter {
    * @return DSL 模型
    */
   public static RuleDsl toDsl(List<RuleDefinitionDTO> rules, String name, String description) {
-    List<RuleDslEntry> entries = new ArrayList<>();
+    List<RuleDslEntry> entries = new ArrayList<>(16);
     if (rules != null) {
       for (RuleDefinitionDTO def : rules) {
         RuleDslEntry entry = toDslEntry(def);
@@ -88,7 +88,7 @@ public final class RuleDslExporter {
       }
     }
 
-    Map<String, Object> meta = new LinkedHashMap<>();
+    Map<String, Object> meta = new LinkedHashMap<>(16);
     meta.put("name", name != null ? name : "exported-rules");
     meta.put("description", description != null ? description : "");
     meta.put("version", "2.0");
@@ -146,7 +146,7 @@ public final class RuleDslExporter {
    * @return YAML 文本
    */
   public static String toYaml(RuleDsl dsl) {
-    Map<String, Object> root = new LinkedHashMap<>();
+    Map<String, Object> root = new LinkedHashMap<>(16);
 
     // meta 段
     if (dsl.getMeta() != null) {
@@ -155,7 +155,7 @@ public final class RuleDslExporter {
 
     // rules 段
     if (dsl.getRules() != null && !dsl.getRules().isEmpty()) {
-      List<Map<String, Object>> rulesList = new ArrayList<>();
+      List<Map<String, Object>> rulesList = new ArrayList<>(16);
       for (RuleDslEntry entry : dsl.getRules()) {
         rulesList.add(entryToMap(entry));
       }
@@ -164,7 +164,7 @@ public final class RuleDslExporter {
 
     // chains 段
     if (dsl.getChains() != null && !dsl.getChains().isEmpty()) {
-      List<Map<String, Object>> chainsList = new ArrayList<>();
+      List<Map<String, Object>> chainsList = new ArrayList<>(16);
       for (ChainDslEntry entry : dsl.getChains()) {
         chainsList.add(chainEntryToMap(entry));
       }
@@ -183,7 +183,7 @@ public final class RuleDslExporter {
 
   /** 将 DSL 条目转换为 Map（用于 YAML 序列化） */
   private static Map<String, Object> entryToMap(RuleDslEntry entry) {
-    Map<String, Object> m = new LinkedHashMap<>();
+    Map<String, Object> m = new LinkedHashMap<>(16);
     m.put("code", entry.getCode());
     m.put("name", entry.getName());
     if (entry.getType() != null && !"expression".equals(entry.getType())) {
@@ -252,9 +252,9 @@ public final class RuleDslExporter {
       m.put("yellow_threshold", entry.getYellowThreshold());
     }
     if (entry.getFactors() != null && !entry.getFactors().isEmpty()) {
-      List<Map<String, Object>> factors = new ArrayList<>();
+      List<Map<String, Object>> factors = new ArrayList<>(16);
       for (RuleDslEntry.FactorDsl f : entry.getFactors()) {
-        Map<String, Object> fm = new LinkedHashMap<>();
+        Map<String, Object> fm = new LinkedHashMap<>(16);
         if (f.getWhen() != null) {
           fm.put("when", f.getWhen());
         }
@@ -275,9 +275,9 @@ public final class RuleDslExporter {
       m.put("factors", factors);
     }
     if (entry.getGrades() != null && !entry.getGrades().isEmpty()) {
-      List<Map<String, Object>> grades = new ArrayList<>();
+      List<Map<String, Object>> grades = new ArrayList<>(16);
       for (RuleDslEntry.GradeDsl g : entry.getGrades()) {
-        Map<String, Object> gm = new LinkedHashMap<>();
+        Map<String, Object> gm = new LinkedHashMap<>(16);
         if (g.getLabel() != null) {
           gm.put("label", g.getLabel());
         }
@@ -339,7 +339,7 @@ public final class RuleDslExporter {
 
   /** 将链 DSL 条目转换为 Map */
   private static Map<String, Object> chainEntryToMap(ChainDslEntry entry) {
-    Map<String, Object> m = new LinkedHashMap<>();
+    Map<String, Object> m = new LinkedHashMap<>(16);
     if (entry.getName() != null) {
       m.put("name", entry.getName());
     }

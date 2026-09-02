@@ -69,7 +69,7 @@ public class YdszHealthIndicator implements HealthIndicator {
 
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
 
     // 时区状态
     String currentTimezone = TimeZone.getDefault().getID();
@@ -120,7 +120,7 @@ public class YdszHealthIndicator implements HealthIndicator {
   private double collectHeapMemoryDetails(Map<String, Object> details) {
     MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
     MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
-    Map<String, Object> memoryDetails = new LinkedHashMap<>();
+    Map<String, Object> memoryDetails = new LinkedHashMap<>(16);
     memoryDetails.put("usedMB", heapUsage.getUsed() / BYTES_PER_MB);
     memoryDetails.put("committedMB", heapUsage.getCommitted() / BYTES_PER_MB);
     memoryDetails.put("maxMB", heapUsage.getMax() / BYTES_PER_MB);

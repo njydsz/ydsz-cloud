@@ -382,7 +382,7 @@ public class RuleAuditLogService {
     if (def == null) {
       return Collections.emptyMap();
     }
-    Map<String, Object> snapshot = new LinkedHashMap<>();
+    Map<String, Object> snapshot = new LinkedHashMap<>(16);
     snapshot.put("code", def.getCode());
     snapshot.put("name", def.getName());
     snapshot.put("conditionExpression", def.getConditionExpression());
@@ -403,7 +403,7 @@ public class RuleAuditLogService {
   }
 
   private Map<String, FieldDiff> computeFieldDiff(RuleDefinitionDTO oldDef, RuleDefinitionDTO newDef) {
-    Map<String, FieldDiff> diffs = new LinkedHashMap<>();
+    Map<String, FieldDiff> diffs = new LinkedHashMap<>(16);
     if (oldDef == null || newDef == null) {
       return diffs;
     }

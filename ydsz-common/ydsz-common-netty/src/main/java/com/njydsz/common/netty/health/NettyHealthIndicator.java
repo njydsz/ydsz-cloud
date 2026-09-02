@@ -55,7 +55,7 @@ public class NettyHealthIndicator implements HealthIndicator {
   @Override
   public Health health() {
     Health.Builder builder = Health.up();
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
 
     boolean allRunning = true;
     for (AbstractNettyServer server : servers) {
@@ -64,7 +64,7 @@ public class NettyHealthIndicator implements HealthIndicator {
       if (!running) {
         allRunning = false;
       }
-      Map<String, Object> serverDetail = new LinkedHashMap<>();
+      Map<String, Object> serverDetail = new LinkedHashMap<>(16);
       serverDetail.put("running", running);
       serverDetail.put("port", server.getPort());
       serverDetail.put("activeChannels", server.getChannelGroupManager().globalSize());
@@ -79,7 +79,7 @@ public class NettyHealthIndicator implements HealthIndicator {
 
     // EventLoop 池状态
     if (eventLoopPool != null) {
-      Map<String, Object> poolDetail = new LinkedHashMap<>();
+      Map<String, Object> poolDetail = new LinkedHashMap<>(16);
       poolDetail.put("bossRefCount", eventLoopPool.getBossRefCount());
       poolDetail.put("workerRefCount", eventLoopPool.getWorkerRefCount());
       poolDetail.put("bossGroupActive", eventLoopPool.isBossGroupActive());
@@ -89,7 +89,7 @@ public class NettyHealthIndicator implements HealthIndicator {
 
     // 指标摘要
     if (metrics != null) {
-      Map<String, Object> metricsDetail = new LinkedHashMap<>();
+      Map<String, Object> metricsDetail = new LinkedHashMap<>(16);
       metricsDetail.put("activeChannels", metrics.getActiveChannels());
       metricsDetail.put("totalBytesRead", metrics.getTotalBytesRead());
       metricsDetail.put("totalBytesWritten", metrics.getTotalBytesWritten());

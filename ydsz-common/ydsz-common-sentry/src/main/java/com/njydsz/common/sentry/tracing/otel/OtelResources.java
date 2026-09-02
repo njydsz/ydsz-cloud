@@ -176,6 +176,6 @@ public final class OtelResources {
     @Builder.Default private boolean includeProcessInfo = true;
 
     /** 自定义属性 */
-    @Builder.Default private Map<String, String> customAttributes = new HashMap<>();
+    @Builder.Default private Map<String, String> customAttributes = new HashMap<>(16);
   }
 }

@@ -644,7 +644,7 @@ public class JsonMapper {
         List<T> typedList = (List<T>) list;
         return typedList;
       }
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     } finally {
       if (snapshot != null) {
         restoreConfig(snapshot);

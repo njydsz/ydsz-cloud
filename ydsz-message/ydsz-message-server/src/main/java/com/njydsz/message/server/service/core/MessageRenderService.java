@@ -89,7 +89,7 @@ public class MessageRenderService {
       }
       // 变量数据源自动拉取
       if (request.getParams() != null) {
-        Map<String, Object> varCtx = new HashMap<>();
+        Map<String, Object> varCtx = new HashMap<>(16);
         if (StringUtils.hasText(request.getBizId())) {
           varCtx.put("bizId", request.getBizId());
         }

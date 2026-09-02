@@ -293,7 +293,7 @@ public class AuthColPermissionAspect {
     if (colInfo == null || colInfo.isEmpty()) {
       return Collections.emptySet();
     }
-    Set<String> excluded = new HashSet<>();
+    Set<String> excluded = new HashSet<>(16);
     for (String columnName : colInfo.getAllColumns()) {
       if (!isReadable(columnName, mode, colInfo, strict)) {
         excluded.add(columnName);
@@ -546,7 +546,7 @@ public class AuthColPermissionAspect {
     if (columns == null || columns.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> result = new LinkedHashMap<>();
+    Map<String, Set<String>> result = new LinkedHashMap<>(16);
     result.put(normalizeColumn(table), columns);
     return result;
   }
@@ -616,7 +616,7 @@ public class AuthColPermissionAspect {
     if (StringUtils.isBlank(value)) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> out = new LinkedHashMap<>();
+    Map<String, Set<String>> out = new LinkedHashMap<>(16);
     String[] blocks = value.split(";");
     for (String block : blocks) {
       if (StringUtils.isBlank(block) || !block.contains(":")) {
@@ -640,7 +640,7 @@ public class AuthColPermissionAspect {
     if (rules == null || rules.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> normalized = new LinkedHashMap<>();
+    Map<String, Set<String>> normalized = new LinkedHashMap<>(16);
     for (Map.Entry<String, Set<String>> entry : rules.entrySet()) {
       String table = normalizeColumn(entry.getKey());
       if (StringUtils.isBlank(table) || entry.getValue() == null || entry.getValue().isEmpty()) {
@@ -707,7 +707,7 @@ public class AuthColPermissionAspect {
     return FIELD_LIST_CACHE.computeIfAbsent(
         clazz,
         k -> {
-          List<Field> fields = new ArrayList<>();
+          List<Field> fields = new ArrayList<>(16);
           Class<?> current = k;
           while (current != null && current != Object.class) {
             fields.addAll(Arrays.asList(current.getDeclaredFields()));
@@ -831,7 +831,7 @@ public class AuthColPermissionAspect {
         FIELD_LIST_CACHE.computeIfAbsent(
             clazz,
             k -> {
-              List<Field> fields = new ArrayList<>();
+              List<Field> fields = new ArrayList<>(16);
               Class<?> current = k;
               while (current != null && current != Object.class) {
                 fields.addAll(Arrays.asList(current.getDeclaredFields()));

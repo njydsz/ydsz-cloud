@@ -160,7 +160,7 @@ public class RbacPermissionEvaluator {
       return;
     }
 
-    Set<String> userRoles = userInfo != null ? parseUserRoles(userInfo) : new HashSet<>();
+    Set<String> userRoles = userInfo != null ? parseUserRoles(userInfo) : new HashSet<>(16);
     if (isSuperAdmin(userRoles)) {
       return;
     }
@@ -229,7 +229,7 @@ public class RbacPermissionEvaluator {
       return;
     }
 
-    Set<String> userRoles = userInfo != null ? parseUserRoles(userInfo) : new HashSet<>();
+    Set<String> userRoles = userInfo != null ? parseUserRoles(userInfo) : new HashSet<>(16);
     if (isSuperAdmin(userRoles)) {
       return;
     }
@@ -366,7 +366,7 @@ public class RbacPermissionEvaluator {
         return true;
       }
       RolePermissions rp = getPermissionsByRoleCodes(userRoles);
-      Set<String> allPerms = new HashSet<>();
+      Set<String> allPerms = new HashSet<>(16);
       if (rp.getMenuPermissions() != null) {
         allPerms.addAll(rp.getMenuPermissions());
       }
@@ -399,9 +399,9 @@ public class RbacPermissionEvaluator {
       return cached;
     }
 
-    Set<String> menu = new HashSet<>();
-    Set<String> button = new HashSet<>();
-    Set<String> api = new HashSet<>();
+    Set<String> menu = new HashSet<>(16);
+    Set<String> button = new HashSet<>(16);
+    Set<String> api = new HashSet<>(16);
 
     // 使用批量加载（Redis Pipeline）替代逐个加载，将 2N 次 GET 合并为 1 次往返
     try {
@@ -539,8 +539,8 @@ public class RbacPermissionEvaluator {
     MDC.put("permission.type", type.name());
     MDC.put("permission.checkMode", orMode ? "OR" : "AND");
     try {
-      Set<String> matchedPermissions = new HashSet<>();
-      Set<String> missingPermissions = new HashSet<>();
+      Set<String> matchedPermissions = new HashSet<>(16);
+      Set<String> missingPermissions = new HashSet<>(16);
 
       for (String required : requiredPerms) {
         boolean found = hasPermission(grantedPerms, required);

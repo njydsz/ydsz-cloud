@@ -120,7 +120,7 @@ public class RuleGraphController {
     }
     // 2. 保存
     RuleChainGraph saved = ruleChainGraphProvider.save(ruleCode, graph, operator);
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = new LinkedHashMap<>(16);
     result.put("valid", true);
     result.put("issues", issues);
     result.put("graph", saved);

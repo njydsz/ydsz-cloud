@@ -320,7 +320,7 @@ public class DocumentService {
     try {
       tempFile = tempFileManager.createAndWrite("ydsz-docs-scan-", ".tmp", inputStream);
 
-      List<SecurityScanResult.SecurityFinding> allFindings = new ArrayList<>();
+      List<SecurityScanResult.SecurityFinding> allFindings = new ArrayList<>(16);
       boolean allSuccess = true;
       String lastError = null;
 
@@ -376,7 +376,7 @@ public class DocumentService {
       return List.of();
     }
 
-    List<PiiFinding> allFindings = new ArrayList<>();
+    List<PiiFinding> allFindings = new ArrayList<>(16);
     for (PiiDetector detector : piiDetectors) {
       try {
         List<PiiFinding> findings = detector.detect(content);

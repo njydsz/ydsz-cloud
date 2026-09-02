@@ -146,7 +146,7 @@ public final class SensitiveDataProcessor {
 
       if (obj instanceof Map) {
         Map<Object, Object> map = (Map<Object, Object>) obj;
-        Map<Object, Object> result = new HashMap<>();
+        Map<Object, Object> result = new HashMap<>(16);
         for (Map.Entry<Object, Object> entry : map.entrySet()) {
           result.put(entry.getKey(), processInternal(entry.getValue(), maxDepth - 1, visited));
         }
@@ -372,7 +372,7 @@ public final class SensitiveDataProcessor {
 
   /** 获取类的所有实例字段（按声明顺序）。 */
   private static List<Field> getAllFields(Class<?> clazz) {
-    List<Field> fields = new ArrayList<>();
+    List<Field> fields = new ArrayList<>(16);
     Class<?> current = clazz;
     while (current != null && current != Object.class) {
       for (Field field : current.getDeclaredFields()) {

@@ -134,7 +134,7 @@ public class FlowAutoApproveService {
    */
   private Map<String, Object> buildAutoApproveContext(
       FlowInstanceVO instance, FlowRunTaskVO task, FlowNodeVO node, Map<String, Object> variables) {
-    Map<String, Object> env = new HashMap<>();
+    Map<String, Object> env = new HashMap<>(16);
     if (variables != null) {
       env.putAll(variables);
     }

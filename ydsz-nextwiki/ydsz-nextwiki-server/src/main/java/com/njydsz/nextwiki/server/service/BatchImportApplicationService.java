@@ -95,7 +95,7 @@ public class BatchImportApplicationService {
       return BatchImportResult.error("批量上传数量超过限制: " + MAX_BATCH_SIZE);
     }
 
-    List<CompletableFuture<FileNodeVO>> futures = new ArrayList<>();
+    List<CompletableFuture<FileNodeVO>> futures = new ArrayList<>(16);
     for (MultipartFile file : files) {
       CompletableFuture<FileNodeVO> future =
           CompletableFuture.supplyAsync(
@@ -150,7 +150,7 @@ public class BatchImportApplicationService {
         zipFile.getOriginalFilename(),
         parentId);
 
-    List<FileNodeVO> importedFiles = new ArrayList<>();
+    List<FileNodeVO> importedFiles = new ArrayList<>(16);
     int totalCount = 0;
     int failedCount = 0;
     long totalUncompressed = 0;

@@ -99,7 +99,7 @@ public class FileHealthIndicator implements HealthIndicator {
 
   /** 实际执行健康检查逻辑（发起远端 bucketExists 探测） */
   private Health performHealthCheck() {
-    Map<String, Object> details = new LinkedHashMap<>();
+    Map<String, Object> details = new LinkedHashMap<>(16);
     try {
       IFileStorage storage = fileStorageProvider.getStorage();
       details.put("storageType", storage.getClass().getSimpleName());

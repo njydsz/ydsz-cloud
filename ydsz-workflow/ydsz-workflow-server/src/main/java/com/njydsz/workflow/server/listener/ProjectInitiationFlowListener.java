@@ -503,7 +503,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>();
+      Map<String, Object> data = new HashMap<>(16);
       data.put("title", title);
       data.put("content", content);
       data.put("taskId", taskId);

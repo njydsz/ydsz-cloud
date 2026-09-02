@@ -153,11 +153,11 @@ public class JobController {
   @GetMapping("/cron/validate")
   public YdszResponse<Map<String, Object>> validateCron(
       @RequestParam String expr, @RequestParam(defaultValue = "5") int count) {
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     try {
       CronExpression cron = CronExpression.parse(expr);
       result.put("valid", true);
-      List<String> nextFireTimes = new ArrayList<>();
+      List<String> nextFireTimes = new ArrayList<>(16);
       LocalDateTime now = LocalDateTime.now();
       for (int i = 0; i < count; i++) {
         now = cron.next(now);

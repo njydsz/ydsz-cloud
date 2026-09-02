@@ -294,7 +294,7 @@ public class AuthController {
     String code = generateDeviceCode();
 
     // 3. 存储用户信息到 Redis（5 分钟有效，一次性使用）
-    Map<String, String> codeData = new HashMap<>();
+    Map<String, String> codeData = new HashMap<>(16);
     codeData.put("userId", userInfo.getUserId());
     codeData.put("username", userInfo.getUsername());
     codeData.put("tenantId", userInfo.getTenantId() != null ? userInfo.getTenantId() : "1");
@@ -303,7 +303,7 @@ public class AuthController {
         YdszJson.toJson(codeData),
         DEVICE_CODE_TTL_SECONDS);
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("deviceCode", code);
     result.put("expiresIn", DEVICE_CODE_TTL_SECONDS);
     return YdszResponse.success(result);
@@ -514,7 +514,7 @@ public class AuthController {
     // 开启安全操作模式
     secondaryAuthService.openSafe(request.getPassword(), request.getScene(), effectiveTtl);
 
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("scene", request.getScene());
     result.put("level", level.name());
     result.put("ttlSeconds", effectiveTtl.getSeconds());

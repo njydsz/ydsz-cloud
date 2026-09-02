@@ -46,11 +46,11 @@ public class QueryParser {
    */
   public ParseResult parse(String rawQuery) {
     if (rawQuery == null || rawQuery.isBlank()) {
-      return new ParseResult(rawQuery, new ArrayList<>(), new ArrayList<>());
+      return new ParseResult(rawQuery, new ArrayList<>(16), new ArrayList<>(16));
     }
 
-    List<SearchFilter> filters = new ArrayList<>();
-    List<String> types = new ArrayList<>();
+    List<SearchFilter> filters = new ArrayList<>(16);
+    List<String> types = new ArrayList<>(16);
     String remainingKeyword = rawQuery;
 
     Matcher matcher = FIELD_VALUE_PATTERN.matcher(rawQuery);
@@ -112,7 +112,7 @@ public class QueryParser {
             .titleOnly(request.isTitleOnly());
 
     List<String> combinedTypes =
-        new ArrayList<>(request.getTypes() != null ? request.getTypes() : new ArrayList<>());
+        new ArrayList<>(request.getTypes() != null ? request.getTypes() : new ArrayList<>(16));
     combinedTypes.addAll(result.types());
     builder.types(combinedTypes);
 

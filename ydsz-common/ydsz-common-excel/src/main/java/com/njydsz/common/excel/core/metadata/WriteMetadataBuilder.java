@@ -249,7 +249,7 @@ public class WriteMetadataBuilder {
   public WriteMetadataBuilder excludeColumns(String... fieldNames) {
     Set<String> set = metadata.getExcludeColumnFiledNames();
     if (set == null) {
-      set = new HashSet<>();
+      set = new HashSet<>(16);
       metadata.setExcludeColumnFiledNames(set);
     }
     set.addAll(Arrays.asList(fieldNames));
@@ -326,7 +326,7 @@ public class WriteMetadataBuilder {
   public WriteMetadataBuilder mergedRegion(int startRow, int endRow, int startCol, int endCol) {
     List<int[]> regions = metadata.getMergedRegions();
     if (regions == null) {
-      regions = new ArrayList<>();
+      regions = new ArrayList<>(16);
       metadata.setMergedRegions(regions);
     }
     regions.add(new int[] {startRow, endRow, startCol, endCol});

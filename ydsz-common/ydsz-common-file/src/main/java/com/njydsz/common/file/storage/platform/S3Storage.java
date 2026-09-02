@@ -457,11 +457,11 @@ public class S3Storage extends AbstractFileStorage {
                   .key(objectName)
                   .uploadId(uploadId)
                   .build());
-      Map<Integer, Part> uploadedPartMap = new HashMap<>();
+      Map<Integer, Part> uploadedPartMap = new HashMap<>(16);
       for (Part uploadedPart : listPartsResponse.parts()) {
         uploadedPartMap.put(uploadedPart.partNumber(), uploadedPart);
       }
-      List<CompletedPart> completedParts = new ArrayList<>();
+      List<CompletedPart> completedParts = new ArrayList<>(16);
       for (Integer partNumber : partNumbers) {
         Part uploadedPart = uploadedPartMap.get(partNumber);
         if (uploadedPart == null || StringUtils.isBlank(uploadedPart.eTag())) {
@@ -518,7 +518,7 @@ public class S3Storage extends AbstractFileStorage {
 
   @Override
   protected List<PartInfo> listParts(String bucketName, String objectName, String uploadId) {
-    List<PartInfo> parts = new ArrayList<>();
+    List<PartInfo> parts = new ArrayList<>(16);
     try {
       ListPartsResponse listPartsResponse =
           s3Client.listParts(
@@ -575,7 +575,7 @@ public class S3Storage extends AbstractFileStorage {
   @Override
   protected ListObjectsResult doListObjects(
       String bucketName, String prefix, String cursor, int maxKeys) {
-    List<ObjectMetadata> objects = new ArrayList<>();
+    List<ObjectMetadata> objects = new ArrayList<>(16);
     try {
       ListObjectsV2Request.Builder requestBuilder =
           ListObjectsV2Request.builder().bucket(bucketName).maxKeys(maxKeys + 1);

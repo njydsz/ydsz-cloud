@@ -170,7 +170,7 @@ public class ExecutionReplayService {
       return BatchReplayResult.empty();
     }
 
-    List<ReplayDiffEntry> diffs = new ArrayList<>();
+    List<ReplayDiffEntry> diffs = new ArrayList<>(16);
     int consistentCount = 0;
     int diffCount = 0;
     int skippedCount = 0;
@@ -341,7 +341,7 @@ public class ExecutionReplayService {
     ReplayDiff diffVsHistory = computeDiff(historicalTriggered, versionTriggered);
     ReplayDiff diffVsCurrent = computeDiff(versionTriggered, currentTriggered);
 
-    Map<String, Object> extra = new LinkedHashMap<>();
+    Map<String, Object> extra = new LinkedHashMap<>(16);
     extra.put("versionDef", versionDef);
     extra.put("versionResult", versionResult);
     extra.put("diffVsCurrent", diffVsCurrent);

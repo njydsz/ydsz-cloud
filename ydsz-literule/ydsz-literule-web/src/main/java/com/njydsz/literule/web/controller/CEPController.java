@@ -87,7 +87,7 @@ public class CEPController {
   /** 最近命中记录（内存暂存，最多 200 条，用于运维查看） */
   private static final int MAX_RECENT_HITS = 200;
 
-  private final List<CEPHit> recentHits = new ArrayList<>();
+  private final List<CEPHit> recentHits = new ArrayList<>(4);
 
   /**
    * 启动时注册 CEP 命中监听器。
@@ -115,7 +115,7 @@ public class CEPController {
           RuleEngine ruleEngine = ruleEngineProvider.getIfAvailable();
           if (ruleEngine != null && hit.getRuleCode() != null) {
             try {
-              Map<String, Object> facts = new HashMap<>();
+              Map<String, Object> facts = new HashMap<>(16);
               facts.put("cepHit", hit);
               facts.put("patternId", hit.getPatternId());
               facts.put("ruleCode", hit.getRuleCode());
@@ -245,7 +245,7 @@ public class CEPController {
     CEPEvent event = toEvent(body);
     engine.feed(event);
     int hitsAfter = (int) engine.totalHits();
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("fed", true);
     result.put("triggeredHits", hitsAfter - hitsBefore);
     return YdszResponse.success(result);
@@ -362,7 +362,7 @@ public class CEPController {
     }
     Object attrs = body.get("attributes");
     if (attrs instanceof Map<?, ?> rawMap) {
-      Map<String, Object> typed = new HashMap<>();
+      Map<String, Object> typed = new HashMap<>(16);
       rawMap.forEach((k, v) -> typed.put(String.valueOf(k), v));
       b.attributes(typed);
     }

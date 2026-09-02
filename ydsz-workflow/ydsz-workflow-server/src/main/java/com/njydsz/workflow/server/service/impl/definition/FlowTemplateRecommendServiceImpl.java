@@ -46,7 +46,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
   private final FlowInstanceRepository instanceRepository;
 
   /** 业务类型到模板分类的映射 */
-  private static final Map<String, String> BUSINESS_CATEGORY_MAP = new LinkedHashMap<>();
+  private static final Map<String, String> BUSINESS_CATEGORY_MAP = new LinkedHashMap<>(16);
 
   static {
     BUSINESS_CATEGORY_MAP.put("LEAVE", "HR");
@@ -78,7 +78,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     }
 
     // 2. 获取用户历史发起记录
-    Map<String, Integer> userFlowCount = new LinkedHashMap<>();
+    Map<String, Integer> userFlowCount = new LinkedHashMap<>(16);
     try {
       List<FlowInstanceVO> instances = instanceRepository.selectByInitiator(userId, null);
       if (instances != null) {
@@ -99,7 +99,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             .max()
             .orElse(1);
 
-    List<Map<String, Object>> scored = new ArrayList<>();
+    List<Map<String, Object>> scored = new ArrayList<>(16);
     for (FlowTemplateVO template : allTemplates) {
       double score = 0.0;
       String reason = "";
@@ -124,7 +124,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
       // 基础分（权重 0.2）：所有模板都有
       score += BASE_SCORE_BONUS;
 
-      Map<String, Object> item = new LinkedHashMap<>();
+      Map<String, Object> item = new LinkedHashMap<>(16);
       item.put("templateCode", template.getTemplateCode());
       item.put("templateName", template.getTemplateName());
       item.put("category", template.getCategory());
@@ -176,9 +176,9 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             .limit(limit)
             .collect(Collectors.toList());
 
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<Map<String, Object>> result = new ArrayList<>(16);
     for (FlowTemplateVO template : sorted) {
-      Map<String, Object> item = new LinkedHashMap<>();
+      Map<String, Object> item = new LinkedHashMap<>(16);
       item.put("templateCode", template.getTemplateCode());
       item.put("templateName", template.getTemplateName());
       item.put("category", template.getCategory());

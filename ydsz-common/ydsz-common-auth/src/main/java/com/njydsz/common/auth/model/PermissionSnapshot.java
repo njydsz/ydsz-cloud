@@ -84,9 +84,9 @@ public final class PermissionSnapshot {
    */
   public static PermissionSnapshot of(
       String userId, String tenantId, Set<String> userRoles, RolePermissions... rolePermissions) {
-    Set<String> menuSet = new HashSet<>();
-    Set<String> buttonSet = new HashSet<>();
-    Set<String> apiSet = new HashSet<>();
+    Set<String> menuSet = new HashSet<>(16);
+    Set<String> buttonSet = new HashSet<>(16);
+    Set<String> apiSet = new HashSet<>(16);
 
     if (rolePermissions != null) {
       for (RolePermissions rp : rolePermissions) {

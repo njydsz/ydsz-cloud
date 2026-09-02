@@ -74,7 +74,7 @@ public class AgentMetadataController {
   @GetMapping("/models")
   @Operation(summary = "获取可用模型列表", description = "返回当前 Agent 支持的 LLM Provider 列表")
   public YdszResponse<List<Map<String, Object>>> models() {
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<Map<String, Object>> result = new ArrayList<>(16);
     if (llmClient instanceof LlmClientRouter router) {
       for (String provider : router.getAvailableProviders()) {
         result.add(Map.of("provider", provider, "available", true));

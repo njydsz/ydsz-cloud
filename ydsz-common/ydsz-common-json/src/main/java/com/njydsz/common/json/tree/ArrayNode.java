@@ -47,7 +47,7 @@ public final class ArrayNode extends JsonNode {
 
   /** 创建空的 JSON 数组节点 */
   public ArrayNode() {
-    this.elements = new ArrayList<>();
+    this.elements = new ArrayList<>(16);
   }
 
   /**

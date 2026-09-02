@@ -508,6 +508,6 @@ public final class YdszSpan {
    * @return 结果
    */
   public static Map<String, Object> attrs() {
-    return new HashMap<>();
+    return new HashMap<>(0);
   }
 }

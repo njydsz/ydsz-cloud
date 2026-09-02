@@ -229,7 +229,7 @@ public class AlertDispatcher {
    */
   private void broadcastAlert(AlertContext context, JobAlertRuleVO rule, boolean recovery) {
     try {
-      Map<String, Object> data = new HashMap<>();
+      Map<String, Object> data = new HashMap<>(16);
       data.put("alertCode", "CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
       data.put("alertType", rule.getAlertType());
       data.put("alertLevel", rule.getAlertLevel());
@@ -367,7 +367,7 @@ public class AlertDispatcher {
     request.setBizType("CRONJOB_ALERT");
     request.setBizId(String.valueOf(rule.getId()));
     request.setReceiver(receivers.isEmpty() ? null : String.join(",", receivers));
-    Map<String, Object> params = new HashMap<>();
+    Map<String, Object> params = new HashMap<>(16);
     params.put("ruleId", rule.getId());
     params.put("ruleName", rule.getRuleName());
     params.put("alertType", rule.getAlertType());

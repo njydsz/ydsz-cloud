@@ -58,7 +58,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
     try {
       long count = taskRepository.countPendingByAssignee(userId);
-      Map<String, Object> data = new HashMap<>();
+      Map<String, Object> data = new HashMap<>(16);
       data.put("userId", userId);
       data.put("todoCount", count);
       data.put("timestamp", System.currentTimeMillis());
@@ -84,7 +84,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>();
+      Map<String, Object> data = new HashMap<>(16);
       data.put("userId", userId);
       data.put("taskId", task.getId());
       data.put("taskTitle", task.getTitle());
@@ -113,7 +113,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>();
+      Map<String, Object> data = new HashMap<>(16);
       data.put("userId", operatorUserId);
       data.put("taskId", task.getId());
       data.put("instanceId", task.getInstanceId());
@@ -138,7 +138,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>();
+      Map<String, Object> data = new HashMap<>(16);
       data.put("userId", operatorUserId);
       data.put("taskId", task.getId());
       data.put("instanceId", task.getInstanceId());
@@ -177,7 +177,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
     try {
       long count = taskRepository.countPendingByAssignee(userId);
-      Map<String, Object> data = new HashMap<>();
+      Map<String, Object> data = new HashMap<>(16);
       data.put("userId", userId);
       data.put("todoCount", count);
       data.put("timestamp", System.currentTimeMillis());

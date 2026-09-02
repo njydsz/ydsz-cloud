@@ -83,7 +83,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   @Override
   public Map<String, Long> countByStatus() {
     List<Map<String, Object>> rows = outboxEventMapper.countGroupByStatus();
-    Map<String, Long> result = new HashMap<>();
+    Map<String, Long> result = new HashMap<>(16);
     for (Map<String, Object> row : rows) {
       String status = (String) row.get("status");
       Long count = ((Number) row.get("count")).longValue();

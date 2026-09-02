@@ -128,7 +128,7 @@ public class ShareLinkDomainService {
     shareLink.setUpdatedBy(userId);
 
     // 处理定向分享目标用户
-    List<ShareRecipientDTO> recipients = new ArrayList<>();
+    List<ShareRecipientDTO> recipients = new ArrayList<>(16);
     if (targetUserIds != null && !targetUserIds.isEmpty()) {
       for (String targetUserId : targetUserIds) {
         ShareRecipientDTO recipient =

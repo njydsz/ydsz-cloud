@@ -164,7 +164,7 @@ public class ScorecardRule implements Rule {
     long start = System.nanoTime();
     try {
       double totalScore = baseScore;
-      List<String> hitDetails = new ArrayList<>();
+      List<String> hitDetails = new ArrayList<>(16);
 
       for (ScoreFactor factor : factors) {
         try {

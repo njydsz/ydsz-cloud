@@ -237,7 +237,7 @@ public class JobGroupController {
     // 1. 通过 Repository 获取去重分组列表
     List<String> groups = jobRepository.listDistinctGroups();
     // 2. 逐组统计任务数
-    Map<String, Integer> counts = new LinkedHashMap<>();
+    Map<String, Integer> counts = new LinkedHashMap<>(16);
     for (String group : groups) {
       counts.put(group, (int) jobRepository.countByGroup(group));
     }
@@ -248,10 +248,10 @@ public class JobGroupController {
       counts.put("default", (int) defaultCount);
     }
     // 3. 转换为前端友好的 List<Map> 格式
-    List<Map<String, Object>> result = new ArrayList<>();
+    List<Map<String, Object>> result = new ArrayList<>(16);
     counts.forEach(
         (group, count) -> {
-          Map<String, Object> item = new LinkedHashMap<>();
+          Map<String, Object> item = new LinkedHashMap<>(16);
           item.put("jobGroup", group);
           item.put("jobCount", count);
           result.add(item);

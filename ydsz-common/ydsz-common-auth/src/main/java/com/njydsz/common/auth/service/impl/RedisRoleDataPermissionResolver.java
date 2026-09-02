@@ -158,7 +158,7 @@ public class RedisRoleDataPermissionResolver {
     if (roleCodes == null || roleCodes.isEmpty()) {
       return DataScopeInfo.empty();
     }
-    List<DataScopeInfo> all = new ArrayList<>();
+    List<DataScopeInfo> all = new ArrayList<>(16);
     // 分离缓存命中和未命中的角色
     List<String> uncachedRoles = new ArrayList<>(roleCodes.size());
     for (String role : roleCodes) {
@@ -216,7 +216,7 @@ public class RedisRoleDataPermissionResolver {
         keys.size() > 1
             ? redisStringOps.mget(keys)
             : Collections.singletonList(redisStringOps.get(keys.get(0), String.class));
-    Map<String, DataScopeInfo> result = new LinkedHashMap<>();
+    Map<String, DataScopeInfo> result = new LinkedHashMap<>(16);
     Iterator<String> itRole = roleCodes.iterator();
     Iterator<String> itJson = jsonList.iterator();
     while (itRole.hasNext()) {
@@ -285,10 +285,10 @@ public class RedisRoleDataPermissionResolver {
   }
 
   private DataScopeInfo parseArray(ArrayNode arr) {
-    Set<String> companies = new HashSet<>();
-    Set<String> depts = new HashSet<>();
-    Set<String> projects = new HashSet<>();
-    Set<String> regions = new HashSet<>();
+    Set<String> companies = new HashSet<>(16);
+    Set<String> depts = new HashSet<>(16);
+    Set<String> projects = new HashSet<>(16);
+    Set<String> regions = new HashSet<>(16);
     String maxScope = null;
     String tenantId = null;
     String userId = null;
@@ -336,10 +336,10 @@ public class RedisRoleDataPermissionResolver {
   }
 
   private DataScopeInfo mergeDataScopeInfoList(List<DataScopeInfo> all) {
-    Set<String> companies = new HashSet<>();
-    Set<String> depts = new HashSet<>();
-    Set<String> projects = new HashSet<>();
-    Set<String> regions = new HashSet<>();
+    Set<String> companies = new HashSet<>(16);
+    Set<String> depts = new HashSet<>(16);
+    Set<String> projects = new HashSet<>(16);
+    Set<String> regions = new HashSet<>(16);
     String maxScope = null;
     String tenantId = null;
     String userId = null;
@@ -398,7 +398,7 @@ public class RedisRoleDataPermissionResolver {
     if (arr == null || arr.isNull() || !arr.isArray()) {
       return Collections.emptySet();
     }
-    Set<String> set = new HashSet<>();
+    Set<String> set = new HashSet<>(16);
     Iterator<JsonNode> items = arr.elements();
     while (items.hasNext()) {
       JsonNode item = items.next();

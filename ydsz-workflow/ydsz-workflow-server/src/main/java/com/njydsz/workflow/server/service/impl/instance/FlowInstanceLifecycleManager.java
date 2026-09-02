@@ -381,7 +381,7 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     // 7. 记录重审元信息到 variable JSON
     try {
       Map<String, Object> vars = parseVariables(instance.getVariable());
-      Map<String, Object> reopenInfo = new LinkedHashMap<>();
+      Map<String, Object> reopenInfo = new LinkedHashMap<>(16);
       reopenInfo.put("operatorId", operatorId);
       reopenInfo.put("reason", reason);
       reopenInfo.put("reopenedAt", now.toString());
@@ -485,7 +485,7 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     Map<String, Object> variables = getVariables(instanceId);
     String taskId = taskService.createTask(instanceId, appendedNode, variables);
 
-    Map<String, Object> appendedInfo = new HashMap<>();
+    Map<String, Object> appendedInfo = new HashMap<>(16);
     appendedInfo.put("nodeCode", appendedNodeCode);
     appendedInfo.put("nodeName", nodeName);
     appendedInfo.put("assigneeType", assigneeType);
@@ -495,7 +495,7 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     appendedInfo.put("createdAt", LocalDateTime.now().toString());
 
     Map<String, Object> vars = getVariables(instanceId);
-    List<Map<String, Object>> appendedNodes = new ArrayList<>();
+    List<Map<String, Object>> appendedNodes = new ArrayList<>(16);
     Object existing = vars.get("appendedNodes");
     if (existing instanceof List<?> list) {
       for (Object item : list) {

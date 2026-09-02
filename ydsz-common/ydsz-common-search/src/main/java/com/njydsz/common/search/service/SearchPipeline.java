@@ -93,7 +93,7 @@ public class SearchPipeline {
 
   /** 管道构建器。 */
   public static class Builder {
-    private final List<TextFilter> filters = new ArrayList<>();
+    private final List<TextFilter> filters = new ArrayList<>(4);
 
     public Builder addFilter(TextFilter filter) {
       if (filter != null) {

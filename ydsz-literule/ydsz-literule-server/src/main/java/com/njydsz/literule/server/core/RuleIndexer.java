@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.core;
+new ArrayList<>(16)ist<>(16)new ArrayList<>(16)package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -606,7 +606,7 @@ public class RuleIndexer {
     String mutexGroup = rule.getMutexGroup();
     if (mutexGroup != null && !mutexGroup.isBlank()) {
       String mutexKey = tenantId + "|" + mutexGroup;
-      mutexGroupIndex.computeIfAbsent(mutexKey, k -> new ArrayList<>()).add(rule);
+      mutexGroupIndex.computeIfAbsent(mutexKey, k -> new ArrayList<>(8)).add(rule);
     }
 
     // 倒排索引（P1-2）：从条件表达式提取字段，构建 field -> ruleCodes 和 ruleCode -> fields
@@ -681,7 +681,7 @@ public class RuleIndexer {
     if (expr == null || expr.isBlank()) {
       return Collections.emptyMap();
     }
-    Map<String, Set<String>> result = new HashMap<>();
+    Map<String, Set<String>> result = new HashMap<>(16);
     // 匹配 var OP value 或 var OP value 的子句（AND 拆分后）
     for (String clause : expr.split("&&|\\|\\|")) {
       Matcher m = COMPARISON_PATTERN.matcher(clause.trim());
@@ -689,7 +689,7 @@ public class RuleIndexer {
         String var = m.group(1);
         String op = m.group(2);
         if (!EXPR_KEYWORDS.contains(var) && !var.matches("\\d+")) {
-          result.computeIfAbsent(var, k -> new HashSet<>()).add(op);
+          result.computeIfAbsent(var, k -> new HashSet<>(16)).add(op);
         }
       }
     }

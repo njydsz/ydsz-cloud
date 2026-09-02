@@ -201,8 +201,8 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
    * @return 分包后的消息批次列表
    */
   private List<List<OutboxMessage>> splitBySize(List<OutboxMessage> messages) {
-    List<List<OutboxMessage>> batches = new ArrayList<>();
-    List<OutboxMessage> currentBatch = new ArrayList<>();
+    List<List<OutboxMessage>> batches = new ArrayList<>(16);
+    List<OutboxMessage> currentBatch = new ArrayList<>(16);
     int currentBytes = 0;
 
     for (OutboxMessage msg : messages) {
@@ -211,7 +211,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
         // 单条消息超过 4MB，单独成批
         if (!currentBatch.isEmpty()) {
           batches.add(currentBatch);
-          currentBatch = new ArrayList<>();
+          currentBatch = new ArrayList<>(16);
           currentBytes = 0;
         }
         batches.add(List.of(msg));
@@ -219,7 +219,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
       }
       if (currentBytes + msgBytes > BATCH_MAX_BYTES && !currentBatch.isEmpty()) {
         batches.add(currentBatch);
-        currentBatch = new ArrayList<>();
+        currentBatch = new ArrayList<>(16);
         currentBytes = 0;
       }
       currentBatch.add(msg);

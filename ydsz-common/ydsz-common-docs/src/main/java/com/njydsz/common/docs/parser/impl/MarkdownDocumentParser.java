@@ -65,7 +65,7 @@ public class MarkdownDocumentParser implements DocumentParser {
       throw new DocumentException(DocumentExceptionCode.DOCUMENT_EMPTY);
     }
 
-    List<DocumentSection> sections = new ArrayList<>();
+    List<DocumentSection> sections = new ArrayList<>(16);
     StringBuilder fullText = new StringBuilder();
 
     try (BufferedReader reader =

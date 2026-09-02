@@ -278,7 +278,7 @@ public class WriteHandler {
    */
   public static List<ConditionalFormattingConfig> buildConditionalFormatting(
       String condition, String trueColor, String falseColor) {
-    List<ConditionalFormattingConfig> configs = new ArrayList<>();
+    List<ConditionalFormattingConfig> configs = new ArrayList<>(16);
     if (condition != null && !condition.isEmpty()) {
       configs.add(new ConditionalFormattingConfig(condition).setFontColor(trueColor).setBold(true));
     }

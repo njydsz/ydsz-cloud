@@ -209,7 +209,7 @@ public class FlowTaskTransferServiceImpl implements FlowTaskTransferService {
       dto.setInitiatorId(managerId);
 
       // 设置流程变量
-      Map<String, Object> variables = new HashMap<>();
+      Map<String, Object> variables = new HashMap<>(16);
       variables.put("projectId", projectId);
       variables.put("projectName", projectName);
       variables.put("managerId", managerId);

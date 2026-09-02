@@ -277,7 +277,7 @@ public class AsyncLogPublisher implements LogPublisher, AutoCloseable {
       Thread.currentThread().interrupt();
     }
     // drain 剩余队列
-    List<LogEvent> remaining = new ArrayList<>();
+    List<LogEvent> remaining = new ArrayList<>(16);
     queue.drainTo(remaining);
     if (!remaining.isEmpty()) {
       log.info("[Sentry] AsyncLogPublisher 关闭中，drain 剩余 {} 条日志", remaining.size());

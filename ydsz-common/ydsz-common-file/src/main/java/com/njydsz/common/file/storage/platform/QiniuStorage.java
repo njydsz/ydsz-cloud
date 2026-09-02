@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage.platform;
+new ArrayList<>(16).file.storage.platform;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -392,7 +392,7 @@ public class QiniuStorage extends AbstractFileStorage {
         if (StringUtils.isBlank(eTag)) {
           throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
-        Map<String, Object> partInfo = new HashMap<>();
+        Map<String, Object> partInfo = new HashMap<>(16);
         partInfo.put(ApiUploadV2CompleteUpload.Request.PART_NUMBER, partNumber);
         partInfo.put(ApiUploadV2CompleteUpload.Request.PART_ETG, eTag);
         parts.add(partInfo);
@@ -443,7 +443,7 @@ public class QiniuStorage extends AbstractFileStorage {
 
   @Override
   protected List<PartInfo> listParts(String bucketName, String objectName, String uploadId) {
-    return new ArrayList<>();
+    return new ArrayList<>(0);
   }
 
   @Override

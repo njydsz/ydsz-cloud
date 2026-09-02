@@ -92,7 +92,7 @@ public class ConverterRegistry {
   }
 
   private static ConverterChain createDefaultChain() {
-    List<CellValueConverter> converters = new ArrayList<>();
+    List<CellValueConverter> converters = new ArrayList<>(16);
     converters.add(new StringConverter());
     converters.add(new NumberConverter());
     converters.add(new BooleanConverter());

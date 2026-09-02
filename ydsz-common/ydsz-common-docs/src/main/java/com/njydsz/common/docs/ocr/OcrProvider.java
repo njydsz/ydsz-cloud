@@ -75,7 +75,7 @@ public class OcrProvider {
    */
   public List<byte[]> renderPages(InputStream inputStream, String fileName, int dpi, int maxPages) {
     Path tempFile = null;
-    List<byte[]> images = new ArrayList<>();
+    List<byte[]> images = new ArrayList<>(16);
 
     try {
       tempFile = tempFileManager.createAndWrite("ydsz-docs-ocr-", ".pdf", inputStream);
@@ -128,7 +128,7 @@ public class OcrProvider {
           .build();
     }
 
-    List<DocumentSection> sections = new ArrayList<>();
+    List<DocumentSection> sections = new ArrayList<>(16);
     StringBuilder fullText = new StringBuilder();
 
     for (int i = 0; i < pageImages.size(); i++) {

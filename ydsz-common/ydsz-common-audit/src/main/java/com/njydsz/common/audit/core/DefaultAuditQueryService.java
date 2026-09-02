@@ -1,6 +1,4 @@
-package com.njydsz.common.audit.core;
-
-import java.time.LocalDateTime;
+new ArrayList<>(16)me.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -601,7 +599,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
     private final List<String> conditions = new ArrayList<>();
 
-    private final List<Object> params = new ArrayList<>();
+    private final List<Object> params = new ArrayList<>(4);
 
     private LocalDateTime startTime;
 

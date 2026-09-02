@@ -115,7 +115,7 @@ public class JobTaskController {
     int running = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.RUNNING.name());
     int success = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.SUCCESS.name());
     int failed = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.FAILED.name());
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     result.put("total", total);
     result.put("pending", pending);
     result.put("running", running);

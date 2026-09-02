@@ -1,4 +1,4 @@
-package com.njydsz.common.util.collection;
+new LinkedHashMap<>(16)l.collection;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -27,7 +27,7 @@ import com.njydsz.common.util.bean.BeanMapper;
  * <p><b>不提供的能力（直接使用 JDK / Stream API）：</b>
  *
  * <ul>
- *   <li>Map 创建 → {@code new HashMap<>()} / {@code new LinkedHashMap<>()} / {@link Map#of(Object,
+ *   <li>Map 创建 → {@code new HashMap<>(16)} / {@code new LinkedHashMap<>()} / {@link Map#of(Object,
  *       Object)}
  *   <li>Map 转换/过滤 → {@link java.util.Map#replaceAll(java.util.function.BiFunction)} / stream
  *   <li>Map 合并 → {@link Map#merge(Object, Object, java.util.function.BiFunction)} / {@code new
@@ -158,7 +158,7 @@ public final class MapUtils {
    */
   public static Map<String, Object> toStringObjectMap(Map<?, ?> map) {
     if (map == null) {
-      return new LinkedHashMap<>();
+      return new LinkedHashMap<>(0);
     }
     Map<String, Object> result = new LinkedHashMap<>(map.size());
     for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -200,7 +200,7 @@ public final class MapUtils {
    */
   public static <T> List<T> safeCastList(Object obj, Class<T> element) {
     if (!(obj instanceof List<?> raw)) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
     List<T> result = new ArrayList<>(raw.size());
     for (Object item : raw) {

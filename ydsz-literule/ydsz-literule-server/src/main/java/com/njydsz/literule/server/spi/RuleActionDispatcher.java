@@ -20,7 +20,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 @Slf4j
 public class RuleActionDispatcher {
 
-  private final List<RuleActionHandler> handlers = new ArrayList<>();
+  private final List<RuleActionHandler> handlers = new ArrayList<>(4);
 
   /**
    * 注册动作处理器

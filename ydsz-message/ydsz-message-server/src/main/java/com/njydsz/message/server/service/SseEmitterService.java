@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service;
+new ArrayList<>(16)rayList<>(16)package com.njydsz.message.server.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -245,7 +245,7 @@ public class SseEmitterService {
     }
     // 返回 lastEventId 之后的所有事件
     if (lastIndex + 1 >= log.size()) {
-      return new ArrayList<>(); // 没有缺失事件
+      return new ArrayList<>(0); // 没有缺失事件
     }
     return new ArrayList<>(log.subList(lastIndex + 1, log.size()));
   }

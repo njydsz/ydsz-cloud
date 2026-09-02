@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.config;
+new ArrayList<>(16)er.config;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -240,7 +240,7 @@ public class RuleConflictDetector {
       return;
     }
     // 按变量分组收集比较条件
-    Map<String, List<ComparisonCondition>> byVar = new LinkedHashMap<>();
+    Map<String, List<ComparisonCondition>> byVar = new LinkedHashMap<>(16);
     for (String clause : clauses) {
       ComparisonCondition cc = parseComparison(clause.trim());
       if (cc != null) {
@@ -306,11 +306,11 @@ public class RuleConflictDetector {
       return;
     }
     // 按变量分组
-    Map<String, List<ComparisonCondition>> byVar = new LinkedHashMap<>();
+    Map<String, List<ComparisonCondition>> byVar = new LinkedHashMap<>(16);
     for (String clause : clauses) {
       ComparisonCondition cc = parseComparison(clause.trim());
       if (cc != null) {
-        byVar.computeIfAbsent(cc.variable, k -> new ArrayList<>()).add(cc);
+        byVar.computeIfAbsent(cc.variable, k -> new ArrayList<>(8)).add(cc);
       }
     }
     for (Map.Entry<String, List<ComparisonCondition>> entry : byVar.entrySet()) {
@@ -352,7 +352,7 @@ public class RuleConflictDetector {
    * @return AND 子句列表；含 OR 时整表达式作为一个子句返回
    */
   private List<String> splitAndClauses(String expr) {
-    List<String> result = new ArrayList<>();
+    List<String> result = new ArrayList<>(16);
     if (expr == null || expr.isBlank()) {
       return result;
     }
@@ -487,7 +487,7 @@ public class RuleConflictDetector {
    * @return 比较条件列表（可能为空）
    */
   private List<ComparisonCondition> parseConditions(String expression) {
-    List<ComparisonCondition> result = new ArrayList<>();
+    List<ComparisonCondition> result = new ArrayList<>(16);
     if (expression == null || expression.isBlank()) {
       return result;
     }

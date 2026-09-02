@@ -88,7 +88,7 @@ public class AuditAspect {
   private final AuditTemplateProcessor templateProcessor;
 
   /** 敏感参数名集合（构造时从配置初始化） */
-  private final Set<String> sensitiveParams = new HashSet<>();
+  private final Set<String> sensitiveParams = new HashSet<>(16);
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;

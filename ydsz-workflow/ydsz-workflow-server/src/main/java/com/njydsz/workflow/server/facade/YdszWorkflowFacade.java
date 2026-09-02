@@ -302,7 +302,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     }
     String currentNodeCode = instance.getCurrentNodeCode();
     // 在每个 node 上标注 active: true/false（currentNodeCode 匹配则为 active）
-    List<FlowDiagramVO.DiagramNodeVO> nodes = new ArrayList<>();
+    List<FlowDiagramVO.DiagramNodeVO> nodes = new ArrayList<>(16);
     if (detail.getNodes() != null) {
       for (FlowNodeVO n : detail.getNodes()) {
         FlowDiagramVO.DiagramNodeVO diagramNode = new FlowDiagramVO.DiagramNodeVO();

@@ -149,7 +149,7 @@ public class JobStatsController {
         durationSamples++;
       }
     }
-    Map<String, Object> summary = new HashMap<>();
+    Map<String, Object> summary = new HashMap<>(16);
     summary.put("jobId", jobId);
     summary.put("startDate", startDate);
     summary.put("endDate", endDate);
@@ -182,9 +182,9 @@ public class JobStatsController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/dashboard")
   public YdszResponse<Map<String, Object>> dashboard() {
-    Map<String, Object> dashboard = new HashMap<>();
+    Map<String, Object> dashboard = new HashMap<>(16);
     // 1. 任务状态分布（通过 Repository 统计）
-    Map<String, Object> taskStats = new HashMap<>();
+    Map<String, Object> taskStats = new HashMap<>(16);
     taskStats.put("total", jobRepository.countAll());
     taskStats.put("normal", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_NORMAL));
     taskStats.put("paused", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_PAUSED));
@@ -194,7 +194,7 @@ public class JobStatsController {
 
     // 2. 今日执行统计（通过 Repository 统计）
     LocalDateTime todayStart = LocalDate.now().atStartOfDay();
-    Map<String, Object> todayExec = new HashMap<>();
+    Map<String, Object> todayExec = new HashMap<>(16);
     long todayTotal = jobLogRepository.countByStatusAfter(null, todayStart);
     long todaySuccess = jobLogRepository.countByStatusAfter("SUCCESS", todayStart);
     long todayFailed = jobLogRepository.countByStatusAfter("FAILED", todayStart);
@@ -213,7 +213,7 @@ public class JobStatsController {
     // 3. Prometheus 指标
     CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
     if (metrics != null) {
-      Map<String, Object> systemMetrics = new HashMap<>();
+      Map<String, Object> systemMetrics = new HashMap<>(16);
       systemMetrics.put("running", todayRunning);
       dashboard.put("systemMetrics", systemMetrics);
     }
@@ -252,13 +252,13 @@ public class JobStatsController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
           LocalDate date) {
     LocalDate queryDate = date != null ? date : LocalDate.now();
-    List<Map<String, Object>> heatmap = new ArrayList<>();
+    List<Map<String, Object>> heatmap = new ArrayList<>(16);
     for (int hour = 0; hour < HOURS_PER_DAY; hour++) {
       LocalDateTime hourStart = queryDate.atTime(hour, 0);
       LocalDateTime hourEnd = queryDate.atTime(hour, MINUTE_END, SECOND_END);
       // 通过 Repository 统计每小时的执行数量
       long count = jobLogRepository.countByTimeRange(hourStart, hourEnd);
-      Map<String, Object> entry = new HashMap<>();
+      Map<String, Object> entry = new HashMap<>(16);
       entry.put("hour", hour);
       entry.put("count", count);
       heatmap.add(entry);

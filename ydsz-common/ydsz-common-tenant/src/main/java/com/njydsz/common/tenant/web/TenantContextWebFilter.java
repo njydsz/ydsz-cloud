@@ -86,7 +86,7 @@ public class TenantContextWebFilter implements Filter {
       }
 
       // 2. 逐字段解析值
-      Map<String, Object> fields = new HashMap<>();
+      Map<String, Object> fields = new HashMap<>(16);
       String tenantId = null;
 
       for (TenantField field : activeFields) {

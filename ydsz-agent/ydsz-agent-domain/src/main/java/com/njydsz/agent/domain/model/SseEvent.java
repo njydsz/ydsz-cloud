@@ -148,7 +148,7 @@ public final class SseEvent {
    * @return SSE 事件
    */
   public static SseEvent done(String finishReason, TokenUsage usage) {
-    Map<String, Object> dataMap = new HashMap<>();
+    Map<String, Object> dataMap = new HashMap<>(16);
     dataMap.put("finishReason", finishReason);
     if (usage != null) {
       dataMap.put(

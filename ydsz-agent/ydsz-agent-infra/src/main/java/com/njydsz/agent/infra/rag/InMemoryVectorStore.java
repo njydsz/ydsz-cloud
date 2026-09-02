@@ -75,7 +75,7 @@ public class InMemoryVectorStore implements VectorStore {
       return List.of();
     }
     String currentTenant = resolveTenantId();
-    List<ScoredChunk> scored = new ArrayList<>();
+    List<ScoredChunk> scored = new ArrayList<>(16);
     for (TextChunk chunk : store) {
       if (!chunk.hasEmbedding()) {
         continue;

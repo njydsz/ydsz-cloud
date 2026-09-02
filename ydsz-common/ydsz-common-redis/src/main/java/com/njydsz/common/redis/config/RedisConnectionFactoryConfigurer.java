@@ -414,7 +414,7 @@ public class RedisConnectionFactoryConfigurer {
    * @return Redis 节点列表
    */
   private List<RedisNode> buildRedisNodes(Collection<String> nodes) {
-    List<RedisNode> redisNodes = new ArrayList<>();
+    List<RedisNode> redisNodes = new ArrayList<>(16);
     if (nodes != null) {
       for (String node : nodes) {
         String[] parts = node.split(":");

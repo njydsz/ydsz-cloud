@@ -52,7 +52,7 @@ public class CEPEvent implements Serializable {
   @Builder.Default private String partitionKey = "default";
 
   /** 事件属性 */
-  @Builder.Default private Map<String, Object> attributes = new HashMap<>();
+  @Builder.Default private Map<String, Object> attributes = new HashMap<>(16);
 
   /** 获取属性值（缺失时返回 null）
    * @param key 属性键名
@@ -89,7 +89,7 @@ public class CEPEvent implements Serializable {
    */
   public CEPEvent withAttr(String key, Object value) {
     if (attributes == null) {
-      attributes = new HashMap<>();
+      attributes = new HashMap<>(16);
     }
     attributes.put(key, value);
     return this;

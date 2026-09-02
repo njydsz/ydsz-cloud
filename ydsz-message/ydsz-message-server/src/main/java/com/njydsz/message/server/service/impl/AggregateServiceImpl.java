@@ -218,7 +218,7 @@ public class AggregateServiceImpl implements AggregateService {
     batch.setBatchStatus(AggregateBatchStatusEnum.SENDING.name());
     try {
       // 渲染摘要内容：优先按 bizType 查找摘要模板 DIGEST_{group},回退默认模板
-      Map<String, Object> params = new HashMap<>();
+      Map<String, Object> params = new HashMap<>(16);
       params.put("count", batch.getMessageCount());
       params.put("group", batch.getAggregateGroup());
       String digestTemplate = loadDigestTemplate(batch);
