@@ -22,6 +22,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleDslVO;
@@ -242,7 +243,7 @@ public class RuleDslController {
           Map<String, Object> r = new LinkedHashMap<>();
           r.put("ruleCode", result.getRuleCode());
           r.put("triggered", result.isTriggered());
-          r.put("severity", result.getSeverity() != null ? result.getSeverity().name() : null);
+          r.put("severity", result.getSeverity() != null ? RuleSeverity.fromCode(result.getSeverity()).name() : null);
           r.put("title", result.getTitle());
           r.put("description", result.getDescription());
           results.add(r);
