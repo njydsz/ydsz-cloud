@@ -32,7 +32,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_execution_trace", autoResultMap = true)
-public class RuleExecutionTraceVO extends MpBaseIdEntity<String> {
+public class RuleExecutionTrace extends MpBaseIdEntity<String> {
 
   /** 追踪 ID（同一批次评估共享） */
   private String traceId;

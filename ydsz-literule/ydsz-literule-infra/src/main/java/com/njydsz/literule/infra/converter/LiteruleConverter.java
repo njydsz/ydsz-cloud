@@ -28,10 +28,10 @@ import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.infra.entity.RuleABPolicy;
 import com.njydsz.literule.infra.entity.RuleABRollback;
 import com.njydsz.literule.infra.entity.RuleChainGraph;
-import com.njydsz.literule.infra.entity.RuleDefinitionDTO;
+import com.njydsz.literule.infra.entity.RuleDefinition;
 import com.njydsz.literule.infra.entity.RuleDependency;
-import com.njydsz.literule.infra.entity.RuleExecutionTraceVO;
-import com.njydsz.literule.infra.entity.RulePackVO;
+import com.njydsz.literule.infra.entity.RuleExecutionTrace;
+import com.njydsz.literule.infra.entity.RulePack;
 import com.njydsz.literule.infra.entity.RuleTemplate;
 import com.njydsz.literule.infra.entity.RuleVersionHistory;
 
