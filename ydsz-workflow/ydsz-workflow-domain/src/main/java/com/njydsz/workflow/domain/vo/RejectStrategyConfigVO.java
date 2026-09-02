@@ -191,7 +191,6 @@ public class RejectStrategyConfigVO implements Serializable {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private static List<RejectStrategy> parseAllowedStrategies(Object value) {
     if (value == null) {
       return DEFAULT_ALLOWED_STRATEGIES;

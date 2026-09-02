@@ -147,10 +147,16 @@ public class HealthDashboardController {
     health.put("scheduler", getSchedulerHealth());
 
     // 6. 最近异常
-    health.put("recentIssues", getRecentIssues());
+    Map<String, Object> recentIssues = getRecentIssues();
+    health.put("recentIssues", recentIssues);
 
-    // 7. 综合健康评分
-    health.put("overallScore", calculateOverallScore(health));
+    // 7. 综合健康评分（从 health Map 获取已解析的 system/tasks Map）
+    @SuppressWarnings("unchecked")
+    Map<String, Object> system = (Map<String, Object>) health.get("system");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> tasks = (Map<String, Object>) health.get("tasks");
+    int overallScore = calculateOverallScore(system, tasks, recentIssues);
+    health.put("overallScore", overallScore);
 
     return YdszResponse.success(health);
   }
@@ -341,45 +347,36 @@ public class HealthDashboardController {
   /**
    * 计算综合健康评分（0-100）。
    *
-   * @param health 健康数据
+   * <p>采用强类型参数接收各维度健康数据，避免从泛型 Map 中取值时的 unchecked 强转，
+   * 同时提升方法可读性和编译期类型安全。
+   *
+   * @param system 系统资源健康数据
+   * @param tasks 任务健康数据
+   * @param issues 最近异常数据
    * @return 综合评分
    */
-  private int calculateOverallScore(Map<String, Object> health) {
+  private int calculateOverallScore(Map<String, Object> system,
+      Map<String, Object> tasks, Map<String, Object> issues) {
     int score = 100;
 
     // 系统资源扣分
-    // 泛型擦除：健康检查 Map 结构由内部构造，类型安全
-    @SuppressWarnings("unchecked")
-    Map<String, Object> system = (Map<String, Object>) health.get("system");
-    if (system != null) {
-      String healthLevel = (String) system.get("healthLevel");
-      if ("WARNING".equals(healthLevel)) {
-        score -= WARNING_SCORE_DEDUCTION;
-      } else if ("CRITICAL".equals(healthLevel)) {
-        score -= CRITICAL_SCORE_DEDUCTION;
-      }
+    String healthLevel = (String) system.get("healthLevel");
+    if ("WARNING".equals(healthLevel)) {
+      score -= WARNING_SCORE_DEDUCTION;
+    } else if ("CRITICAL".equals(healthLevel)) {
+      score -= CRITICAL_SCORE_DEDUCTION;
     }
 
     // 任务异常扣分
-    // 泛型擦除：健康检查 Map 结构由内部构造，类型安全
-    @SuppressWarnings("unchecked")
-    Map<String, Object> tasks = (Map<String, Object>) health.get("tasks");
-    if (tasks != null) {
-      long error = ((Number) tasks.getOrDefault("error", 0L)).longValue();
-      if (error > 0) {
-        score -= Math.min(ERROR_SCORE_MAX_DEDUCTION, error * ERROR_SCORE_MULTIPLIER);
-      }
+    long error = ((Number) tasks.getOrDefault("error", 0L)).longValue();
+    if (error > 0) {
+      score -= Math.min(ERROR_SCORE_MAX_DEDUCTION, error * ERROR_SCORE_MULTIPLIER);
     }
 
     // 最近失败扣分
-    // 泛型擦除：健康检查 Map 结构由内部构造，类型安全
-    @SuppressWarnings("unchecked")
-    Map<String, Object> issues = (Map<String, Object>) health.get("recentIssues");
-    if (issues != null) {
-      int failureCount = ((Number) issues.getOrDefault("failureCount", 0)).intValue();
-      if (failureCount > 0) {
-        score -= Math.min(FAILURE_SCORE_MAX_DEDUCTION, failureCount * FAILURE_SCORE_MULTIPLIER);
-      }
+    int failureCount = ((Number) issues.getOrDefault("failureCount", 0)).intValue();
+    if (failureCount > 0) {
+      score -= Math.min(FAILURE_SCORE_MAX_DEDUCTION, failureCount * FAILURE_SCORE_MULTIPLIER);
     }
 
     return Math.max(0, score);

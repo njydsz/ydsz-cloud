@@ -56,6 +56,15 @@ public class GlobalTopologyController {
   /** 单次查询最大任务数上限 */
   private static final int MAX_TOPOLOGY_JOBS = 500;
 
+  /** 任务映射初始容量（用于构建 taskKey → JobVO 映射） */
+  private static final int JOB_MAP_INITIAL_CAPACITY = 128;
+
+  /** 节点/边列表初始容量（用于拓扑图数据构建） */
+  private static final int TOPOLOGY_LIST_INITIAL_CAPACITY = 64;
+
+  /** 统计信息 Map 初始容量（total/running/paused/failed） */
+  private static final int STATS_MAP_INITIAL_CAPACITY = 16;
+
   /** 任务定义 Repository */
   private final JobRepository jobRepository;
 
@@ -90,7 +99,7 @@ public class GlobalTopologyController {
     }
 
     // 2. 构建任务 KEY → JobVO 映射（用于边构建时查找）
-    Map<String, JobVO> jobMap = new HashMap<>();
+    Map<String, JobVO> jobMap = new HashMap<>(JOB_MAP_INITIAL_CAPACITY);
     for (JobVO job : jobs) {
       if (job.getJobKey() != null) {
         jobMap.put(job.getJobKey(), job);
@@ -98,7 +107,7 @@ public class GlobalTopologyController {
     }
 
     // 3. 构建节点列表
-    List<Map<String, Object>> nodes = new ArrayList<>();
+    List<Map<String, Object>> nodes = new ArrayList<>(TOPOLOGY_LIST_INITIAL_CAPACITY);
     for (JobVO job : jobs) {
       Map<String, Object> node = new LinkedHashMap<>();
       node.put("id", job.getId());
@@ -112,7 +121,7 @@ public class GlobalTopologyController {
     }
 
     // 4. 从 DAG 定义中提取依赖边
-    List<Map<String, String>> links = new ArrayList<>();
+    List<Map<String, String>> links = new ArrayList<>(TOPOLOGY_LIST_INITIAL_CAPACITY);
     List<JobDagVO> dags = dagRepository.findEnabledDags();
     for (JobDagVO dag : dags) {
       if (dag.getDagDefinition() == null) {
@@ -149,7 +158,7 @@ public class GlobalTopologyController {
    * @return 统计 Map（total/running/paused/failed）
    */
   private Map<String, Object> buildStats(List<JobVO> jobs) {
-    Map<String, Object> stats = new LinkedHashMap<>();
+    Map<String, Object> stats = new LinkedHashMap<>(STATS_MAP_INITIAL_CAPACITY);
     long total = jobs.size();
     long running = jobs.stream().filter(j -> "RUNNING".equals(j.getStatus())).count();
     long paused = jobs.stream().filter(j -> "PAUSED".equals(j.getStatus())).count();

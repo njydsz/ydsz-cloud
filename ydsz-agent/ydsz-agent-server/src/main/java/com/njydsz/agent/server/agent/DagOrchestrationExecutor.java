@@ -143,7 +143,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     }
 
     List<String> sortedNodeIds = topologicalSort(dag);
-    Map<String, CompletableFuture<Void>> futureMap = new HashMap<>();
+    Map<String, CompletableFuture<Void>> futureMap = new HashMap<>(dag.getNodes().size());
 
     // LOOP 循环体节点由 LOOP 节点在循环内调度，不参与主图调度，避免双重执行
     Set<String> loopBodyNodeIds = collectLoopBodyNodeIds(dag);
@@ -850,7 +850,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     }
 
     List<String> sortedNodeIds = topologicalSort(dag);
-    Map<String, CompletableFuture<Void>> futureMap = new HashMap<>();
+    Map<String, CompletableFuture<Void>> futureMap = new HashMap<>(dag.getNodes().size());
     Set<String> loopBodyNodeIds = collectLoopBodyNodeIds(dag);
 
     // P2-#14: 用于计算当前完成进度的原子计数器

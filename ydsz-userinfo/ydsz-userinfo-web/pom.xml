@@ -63,6 +63,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
+        <!-- ydsz-common-feign（提供 EnableYdszFeign 注解） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

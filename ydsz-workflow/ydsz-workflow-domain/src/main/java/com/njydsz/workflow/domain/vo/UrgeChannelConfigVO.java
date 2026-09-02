@@ -150,7 +150,6 @@ public class UrgeChannelConfigVO implements Serializable {
 
   // ==================== 内部工具方法 ====================
 
-  @SuppressWarnings("unchecked")
   private static List<String> parseChannels(Object value) {
     if (value == null) {
       return DEFAULT_URGE_CHANNELS;

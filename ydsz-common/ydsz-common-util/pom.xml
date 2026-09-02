@@ -23,7 +23,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!--slf4j-->

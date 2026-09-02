@@ -313,7 +313,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     }
 
     // 使用 LinkedHashMap 保持参数顺序（便于日志排查）
-    Map<String, String> sanitized = new LinkedHashMap<>();
+    Map<String, String> sanitized = new LinkedHashMap<>(16);
     for (Map.Entry<String, List<String>> entry : queryParams.entrySet()) {
       String key = entry.getKey();
       String firstValue =

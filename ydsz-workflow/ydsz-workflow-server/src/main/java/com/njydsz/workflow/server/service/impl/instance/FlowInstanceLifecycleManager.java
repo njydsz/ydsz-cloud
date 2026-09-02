@@ -499,11 +499,8 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     Object existing = vars.get("appendedNodes");
     if (existing instanceof List<?> list) {
       for (Object item : list) {
-        if (item instanceof Map) {
-          // 泛型擦除：List<?> 经 instanceof 判断为 Map 后安全转换
-          @SuppressWarnings("unchecked")
-          Map<String, Object> map = (Map<String, Object>) item;
-          appendedNodes.add(map);
+        if (item instanceof Map<?,?> itemMap) {
+          appendedNodes.add(new LinkedHashMap<>(itemMap));
         }
       }
     }
