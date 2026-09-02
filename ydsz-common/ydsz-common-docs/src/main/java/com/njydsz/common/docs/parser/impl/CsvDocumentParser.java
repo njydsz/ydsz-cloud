@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.parser.impl;
+package com.njydsz.common.docs.parser.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.dispatch;
+package com.njydsz.cronjob.server.core.dispatch;
 
 import com.njydsz.cronjob.domain.vo.JobVO;
 

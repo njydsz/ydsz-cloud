@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.core;
+package com.njydsz.common.safe.ratelimit.core;
 
 import java.util.List;
 import java.util.Optional;

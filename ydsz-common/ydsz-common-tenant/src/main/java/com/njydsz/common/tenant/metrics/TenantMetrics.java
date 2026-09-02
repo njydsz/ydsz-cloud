@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant.metrics;
+package com.njydsz.common.tenant.metrics;
 
 import java.util.concurrent.atomic.AtomicLong;
 

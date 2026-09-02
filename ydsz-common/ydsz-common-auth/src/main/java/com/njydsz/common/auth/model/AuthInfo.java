@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.model;
+package com.njydsz.common.auth.model;
 
 import java.util.Map;
 import java.util.Set;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.app.openapi;
+package com.njydsz.userinfo.app.openapi;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 

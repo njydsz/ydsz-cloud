@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.infra.mapper;
+package com.njydsz.literule.infra.mapper;
 
 import java.time.LocalDateTime;
 import java.util.List;

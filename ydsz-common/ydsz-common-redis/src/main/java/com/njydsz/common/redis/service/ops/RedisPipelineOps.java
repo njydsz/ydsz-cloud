@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.redis.service.ops;
+package com.njydsz.common.redis.service.ops;
 
 /**
  * Pipeline 操作接口

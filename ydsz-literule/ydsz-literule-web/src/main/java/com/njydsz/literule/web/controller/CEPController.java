@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.web.controller;
+package com.njydsz.literule.web.controller;
 
 import java.time.Instant;
 import java.util.ArrayList;

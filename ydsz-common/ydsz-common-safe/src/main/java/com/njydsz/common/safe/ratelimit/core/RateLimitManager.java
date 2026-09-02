@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.core;
+package com.njydsz.common.safe.ratelimit.core;
 
 import java.time.Duration;
 import java.time.Instant;

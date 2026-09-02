@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.idempotent;
+package com.njydsz.common.lock.idempotent;
 
 /**
  * 幂等能力不可用异常

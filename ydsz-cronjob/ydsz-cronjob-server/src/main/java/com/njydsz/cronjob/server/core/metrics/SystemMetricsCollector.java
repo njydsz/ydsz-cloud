@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.metrics;
+package com.njydsz.cronjob.server.core.metrics;
 
 import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;

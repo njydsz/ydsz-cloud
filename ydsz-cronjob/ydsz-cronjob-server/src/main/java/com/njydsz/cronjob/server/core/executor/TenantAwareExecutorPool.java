@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.executor;
+package com.njydsz.cronjob.server.core.executor;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;

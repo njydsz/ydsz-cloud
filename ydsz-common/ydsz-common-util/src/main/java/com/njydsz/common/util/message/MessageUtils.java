@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.message;
+package com.njydsz.common.util.message;
 
 import java.lang.reflect.Method;
 import java.util.Locale;

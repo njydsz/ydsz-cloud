@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.infra.entity.dag;
+package com.njydsz.cronjob.infra.entity.dag;
 
 import java.io.Serial;
 

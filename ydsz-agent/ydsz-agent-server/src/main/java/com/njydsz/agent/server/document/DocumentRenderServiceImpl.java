@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.document;
+package com.njydsz.agent.server.document;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.distributed;
+package com.njydsz.literule.server.distributed;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

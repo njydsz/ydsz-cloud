@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.webhook;
+package com.njydsz.common.webhook;
 
 import lombok.Builder;
 import lombok.Data;

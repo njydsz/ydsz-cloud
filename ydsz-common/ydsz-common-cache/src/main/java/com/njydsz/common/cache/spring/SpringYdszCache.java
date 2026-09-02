@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.cache.spring;
+package com.njydsz.common.cache.spring;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.desensitize;
+package com.njydsz.common.safe.desensitize;
 
 /**
  * 列脱敏规则枚举。

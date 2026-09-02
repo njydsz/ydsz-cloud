@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.config;
+package com.njydsz.userinfo.infra.config;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;

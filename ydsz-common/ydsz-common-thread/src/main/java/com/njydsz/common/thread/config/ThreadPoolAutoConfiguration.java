@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.thread.config;
+package com.njydsz.common.thread.config;
 
 import java.util.Collections;
 import java.util.Map;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.enums;
+package com.njydsz.common.docs.enums;
 
 /**
  * 解析输出轮廓，约束 {@link com.njydsz.common.docs.domain.DocumentContent} 中各字段的填充程度。

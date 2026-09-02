@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.channel;
+package com.njydsz.common.notify.channel;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.sse;
+package com.njydsz.userinfo.server.sse;
 
 import java.util.Map;
 

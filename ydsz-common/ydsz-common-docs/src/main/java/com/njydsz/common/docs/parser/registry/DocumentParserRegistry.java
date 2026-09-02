@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.parser.registry;
+package com.njydsz.common.docs.parser.registry;
 
 import java.util.Collections;
 import java.util.List;

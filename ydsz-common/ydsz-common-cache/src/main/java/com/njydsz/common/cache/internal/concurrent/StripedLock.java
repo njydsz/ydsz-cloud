@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.cache.internal.concurrent;
+package com.njydsz.common.cache.internal.concurrent;
 
 import java.util.Arrays;
 import java.util.concurrent.locks.ReentrantLock;

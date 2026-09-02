@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.auth;.auth
+package com.njydsz.userinfo.server.auth;.auth
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;

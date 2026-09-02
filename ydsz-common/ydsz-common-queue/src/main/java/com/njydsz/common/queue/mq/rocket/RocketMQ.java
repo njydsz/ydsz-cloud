@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.mq.rocket;
+package com.njydsz.common.queue.mq.rocket;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

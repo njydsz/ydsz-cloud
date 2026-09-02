@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.interceptor;
+package com.njydsz.common.base.interceptor;
 
 import java.util.concurrent.ThreadLocalRandom;
 

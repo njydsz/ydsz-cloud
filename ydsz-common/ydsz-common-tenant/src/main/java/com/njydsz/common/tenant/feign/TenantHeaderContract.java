@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant.feign;
+package com.njydsz.common.tenant.feign;
 
 import org.springframework.util.StringUtils;
 

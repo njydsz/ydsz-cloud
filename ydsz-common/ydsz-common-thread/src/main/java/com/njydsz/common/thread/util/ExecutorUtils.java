@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.thread.util;
+package com.njydsz.common.thread.util;
 
 import java.util.Comparator;
 import java.util.concurrent.ArrayBlockingQueue;

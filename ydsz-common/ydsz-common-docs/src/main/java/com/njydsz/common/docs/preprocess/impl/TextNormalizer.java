@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.preprocess.impl;
+package com.njydsz.common.docs.preprocess.impl;
 
 import java.text.Normalizer;
 

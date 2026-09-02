@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.service;
+package com.njydsz.common.search.service;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.filter;
+package com.njydsz.common.web.filter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.domain;
+package com.njydsz.common.sentry.domain;
 
 import java.time.Duration;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.cache.internal.decorator;
+package com.njydsz.common.cache.internal.decorator;
 
 import java.util.ArrayList;
 import java.util.Collection;

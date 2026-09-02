@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.cleaner;
+package com.njydsz.cronjob.server.core.cleaner;
 
 import java.time.LocalDateTime;
 

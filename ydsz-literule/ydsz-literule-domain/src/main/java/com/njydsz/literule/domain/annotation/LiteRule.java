@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.annotation;
+package com.njydsz.literule.domain.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

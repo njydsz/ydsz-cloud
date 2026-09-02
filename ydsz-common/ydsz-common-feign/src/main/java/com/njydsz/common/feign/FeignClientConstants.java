@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign;
+package com.njydsz.common.feign;
 
 /**
  * FeignClient 服务名与路径常量。
@@ -57,8 +57,12 @@ public final class FeignClientConstants {
 
   // ======================== 消息服务路径常量 ========================
 
-  /** 消息发送路径 */
-  public static final String MESSAGE_PATH_SEND = "/api/v1/message/send";
+  /**
+   * 消息发送路径（内部 Feign 通道）
+   *
+   * <p>指向 {@code InternalMessageApiController} 内部端点，仅供跨服务 Feign 调用，对公网不可访问。
+   */
+  public static final String MESSAGE_PATH_SEND = "/api/internal/message/send";
 
   /** 消息广播路径（P1-6 修正：实际端点位于 /notifications 子路径） */
   public static final String MESSAGE_PATH_BROADCAST = "/api/v1/message/notifications/broadcast";

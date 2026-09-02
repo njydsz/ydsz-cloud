@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.codec;
+package com.njydsz.common.feign.codec;
 
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;

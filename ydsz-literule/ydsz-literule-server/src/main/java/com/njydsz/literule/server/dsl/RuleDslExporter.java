@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.dsl;
+package com.njydsz.literule.server.dsl;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

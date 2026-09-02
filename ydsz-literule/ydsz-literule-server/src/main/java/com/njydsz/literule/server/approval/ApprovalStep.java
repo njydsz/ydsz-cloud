@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.approval;
+package com.njydsz.literule.server.approval;
 
 import java.io.Serializable;
 import java.util.List;

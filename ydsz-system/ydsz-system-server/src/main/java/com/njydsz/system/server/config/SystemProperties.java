@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.server.config;
+package com.njydsz.system.server.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

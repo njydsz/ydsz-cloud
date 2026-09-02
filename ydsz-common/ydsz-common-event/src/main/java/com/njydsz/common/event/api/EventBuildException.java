@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.event.api;
+package com.njydsz.common.event.api;
 
 import com.njydsz.common.exception.custom.AbstractYdszException;
 

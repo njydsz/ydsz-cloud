@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.dedup;
+package com.njydsz.common.queue.dedup;
 
 import lombok.extern.slf4j.Slf4j;
 

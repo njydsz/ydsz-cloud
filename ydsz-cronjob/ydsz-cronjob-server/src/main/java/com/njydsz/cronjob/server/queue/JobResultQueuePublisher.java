@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.queue;
+package com.njydsz.cronjob.server.queue;
 
 import java.util.HashMap;
 import java.util.Map;

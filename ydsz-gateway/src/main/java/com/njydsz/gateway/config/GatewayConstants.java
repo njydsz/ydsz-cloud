@@ -1,4 +1,4 @@
-﻿package com.njydsz.gateway.config;
+package com.njydsz.gateway.config;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.constant.InternalSignatureHeaderConstants;

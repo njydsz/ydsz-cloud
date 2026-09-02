@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.logger;
+package com.njydsz.cronjob.server.core.logger;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.RingBuffer;

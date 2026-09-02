@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.push;
+package com.njydsz.common.socket.push;
 
 /**
  * 推送结果返回值（P2-5）。

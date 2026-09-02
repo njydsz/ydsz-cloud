@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.web.controller;
+package com.njydsz.system.web.controller;
 
 import java.util.List;
 

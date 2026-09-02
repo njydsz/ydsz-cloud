@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.id;
+package com.njydsz.common.util.id;
 
 /**
  * 时钟回拨异常

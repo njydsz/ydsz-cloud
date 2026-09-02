@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.config;
+package com.njydsz.common.lock.config;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;

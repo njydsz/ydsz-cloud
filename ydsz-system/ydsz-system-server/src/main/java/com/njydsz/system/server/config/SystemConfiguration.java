@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.server.config;
+package com.njydsz.system.server.config;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.constant;
+package com.njydsz.common.base.constant;
 
 /**
  * ControllerAdvice 执行顺序常量。

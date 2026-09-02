@@ -1,4 +1,4 @@
-﻿package com.njydsz.gateway.filter;
+package com.njydsz.gateway.filter;
 
 import java.util.Set;
 import java.util.regex.Pattern;

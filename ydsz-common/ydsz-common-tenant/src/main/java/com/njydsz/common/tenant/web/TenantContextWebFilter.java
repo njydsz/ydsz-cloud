@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant.web;
+package com.njydsz.common.tenant.web;
 
 import java.io.IOException;
 import java.util.ArrayList;

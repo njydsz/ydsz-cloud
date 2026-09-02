@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.engine.impl;
+package com.njydsz.workflow.server.engine.impl;
 
 import java.util.Map;
 import java.util.function.BiFunction;

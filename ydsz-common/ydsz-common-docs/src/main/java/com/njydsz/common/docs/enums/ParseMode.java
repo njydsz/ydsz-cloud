@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.enums;
+package com.njydsz.common.docs.enums;
 
 /**
  * 文档解析模式

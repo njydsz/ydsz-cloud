@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Agent 核心业务服务层，负责 Agent 定义管理、对话执行、SSE 流式输出、RAG 检索增强、Prompt 管理、DAG 编排等核心能力.
  *
  * <p>本模块是 Agent 子系统的核心服务实现层，封装了从 Agent 定义 CRUD、Agent 工厂创建、不同执行器

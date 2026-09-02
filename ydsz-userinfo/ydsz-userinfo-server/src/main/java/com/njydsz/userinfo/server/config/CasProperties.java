@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.config;
+package com.njydsz.userinfo.server.config;
 
 import java.time.Duration;
 

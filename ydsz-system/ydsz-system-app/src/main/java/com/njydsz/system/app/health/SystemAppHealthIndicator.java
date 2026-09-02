@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.app.health;
+package com.njydsz.system.app.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.scheduler;
+package com.njydsz.cronjob.server.core.scheduler;
 
 /**
  * 调度类型枚举（P0-3）。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant.datasource;
+package com.njydsz.common.tenant.datasource;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

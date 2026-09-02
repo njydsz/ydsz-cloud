@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.tracing.otel;
+package com.njydsz.common.sentry.tracing.otel;
 
 import java.util.HashMap;
 import java.util.Map;

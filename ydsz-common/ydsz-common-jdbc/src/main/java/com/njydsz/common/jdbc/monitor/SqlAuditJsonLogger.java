@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.monitor;
+package com.njydsz.common.jdbc.monitor;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

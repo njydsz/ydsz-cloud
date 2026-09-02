@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.batch;.batch
+package com.njydsz.common.exception.batch;.batch
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;

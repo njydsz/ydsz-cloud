@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.permission;
+package com.njydsz.common.jdbc.permission;
 
 /**
  * 数据权限上下文 ThreadLocal 持有器。

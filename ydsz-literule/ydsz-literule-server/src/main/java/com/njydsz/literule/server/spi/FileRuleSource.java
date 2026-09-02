@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.spi;
+package com.njydsz.literule.server.spi;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.http;
+package com.njydsz.common.util.http;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service.impl.template;
+package com.njydsz.message.server.service.impl.template;
 
 import java.time.LocalDateTime;
 import java.util.List;

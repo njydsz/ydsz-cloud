@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.security;
+package com.njydsz.common.notify.security;
 
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;

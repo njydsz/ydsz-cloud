@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.util;
+package com.njydsz.common.lock.util;
 
 import java.lang.reflect.Method;
 import java.util.Map;

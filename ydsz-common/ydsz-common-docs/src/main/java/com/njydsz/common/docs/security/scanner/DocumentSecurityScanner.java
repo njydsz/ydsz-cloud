@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.security.scanner;
+package com.njydsz.common.docs.security.scanner;
 
 import java.io.InputStream;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.server.service;
+package com.njydsz.system.server.service;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.List;

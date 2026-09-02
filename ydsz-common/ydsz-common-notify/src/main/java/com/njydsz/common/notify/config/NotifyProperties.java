@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.config;.config
+package com.njydsz.common.notify.config;.config
 import java.util.List;
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.event.listener;
+package com.njydsz.userinfo.server.event.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

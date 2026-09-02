@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.outbox.subscriber;
+package com.njydsz.cronjob.server.core.outbox.subscriber;
 
 import java.util.Collections;
 import java.util.Map;

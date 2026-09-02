@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.config;
+package com.njydsz.cronjob.server.config;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;

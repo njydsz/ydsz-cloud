@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.social;
+package com.njydsz.userinfo.domain.social;
 
 import java.io.Serializable;
 

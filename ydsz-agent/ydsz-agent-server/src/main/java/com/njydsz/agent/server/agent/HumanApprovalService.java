@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.agent;
+package com.njydsz.agent.server.agent;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

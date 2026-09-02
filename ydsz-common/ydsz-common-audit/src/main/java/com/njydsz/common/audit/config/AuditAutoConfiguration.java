@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.audit.config;
+package com.njydsz.common.audit.config;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;

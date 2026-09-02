@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.approval;
+package com.njydsz.literule.server.approval;
 
 /**
  * 规则审批与工作流引擎桥接 SPI（P1-5 架构优化）。

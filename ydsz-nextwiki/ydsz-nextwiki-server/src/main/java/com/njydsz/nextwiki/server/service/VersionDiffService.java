@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.server.service;.service
+package com.njydsz.nextwiki.server.service;.service
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;

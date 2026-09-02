@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.search;
+package com.njydsz.userinfo.server.search;
 
 import java.time.ZoneId;
 import java.util.ArrayList;

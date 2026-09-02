@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.event.config;
+package com.njydsz.common.event.config;
 
 import lombok.Getter;
 import lombok.Setter;

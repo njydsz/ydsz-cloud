@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.internal.proxy;
+package com.njydsz.common.util.internal.proxy;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;

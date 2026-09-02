@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.logger;
+package com.njydsz.cronjob.server.core.logger;
 
 import java.util.ArrayList;
 import java.util.List;

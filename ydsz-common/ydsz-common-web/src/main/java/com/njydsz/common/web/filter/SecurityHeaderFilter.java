@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.filter;
+package com.njydsz.common.web.filter;
 
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.safe.filter.BaseSecurityHeaderFilter;

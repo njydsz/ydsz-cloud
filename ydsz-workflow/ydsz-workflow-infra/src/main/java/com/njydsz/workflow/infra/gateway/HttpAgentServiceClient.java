@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.infra.gateway;
+package com.njydsz.workflow.infra.gateway;
 
 import java.util.Map;
 

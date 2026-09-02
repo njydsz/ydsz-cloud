@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.template;
+package com.njydsz.workflow.server.template;
 
 import java.io.Serial;
 import java.io.Serializable;

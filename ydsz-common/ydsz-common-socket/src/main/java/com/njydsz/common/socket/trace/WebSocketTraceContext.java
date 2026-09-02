@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.trace;
+package com.njydsz.common.socket.trace;
 
 import org.slf4j.MDC;
 

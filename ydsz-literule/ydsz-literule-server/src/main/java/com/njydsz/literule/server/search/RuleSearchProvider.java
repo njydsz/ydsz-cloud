@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.search;
+package com.njydsz.literule.server.search;
 
 import java.time.ZoneId;
 import java.util.List;

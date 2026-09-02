@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.idempotent;
+package com.njydsz.common.base.idempotent;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

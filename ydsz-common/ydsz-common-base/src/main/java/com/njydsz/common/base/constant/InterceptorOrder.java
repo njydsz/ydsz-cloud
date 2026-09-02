@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.constant;
+package com.njydsz.common.base.constant;
 
 /**
  * Spring MVC Interceptor 执行顺序常量。

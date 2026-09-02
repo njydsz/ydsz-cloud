@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.web;
+package com.njydsz.nextwiki.web;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.web.controller.alert;
+package com.njydsz.cronjob.web.controller.alert;
 
 import java.time.LocalDateTime;
 import java.util.List;

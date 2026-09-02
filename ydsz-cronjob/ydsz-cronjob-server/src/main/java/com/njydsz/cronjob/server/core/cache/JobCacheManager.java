@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.cache;
+package com.njydsz.cronjob.server.core.cache;
 
 import java.util.concurrent.TimeUnit;
 

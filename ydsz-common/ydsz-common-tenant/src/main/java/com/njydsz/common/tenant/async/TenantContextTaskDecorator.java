@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant.async;
+package com.njydsz.common.tenant.async;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.trace;
+package com.njydsz.common.feign.trace;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

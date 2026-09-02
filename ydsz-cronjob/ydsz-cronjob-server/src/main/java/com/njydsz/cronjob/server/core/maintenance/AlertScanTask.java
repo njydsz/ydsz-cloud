@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.maintenance;
+package com.njydsz.cronjob.server.core.maintenance;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

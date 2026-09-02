@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.metrics;
+package com.njydsz.common.safe.ratelimit.metrics;
 
 import java.util.concurrent.atomic.AtomicLong;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.queue;
+package com.njydsz.cronjob.server.queue;
 
 import com.njydsz.common.queue.constant.QueueChannels;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.code;
+package com.njydsz.common.exception.code;
 
 import com.njydsz.common.core.code.ResultCode;
 

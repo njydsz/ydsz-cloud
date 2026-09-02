@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.consumer;
+package com.njydsz.message.server.consumer;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;

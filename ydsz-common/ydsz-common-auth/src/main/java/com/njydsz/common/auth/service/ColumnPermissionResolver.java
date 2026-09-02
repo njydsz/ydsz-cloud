@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.service;
+package com.njydsz.common.auth.service;
 
 import com.njydsz.common.auth.model.ColumnScopeInfo;
 import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;

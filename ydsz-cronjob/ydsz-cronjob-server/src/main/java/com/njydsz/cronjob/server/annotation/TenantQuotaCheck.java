@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.annotation;
+package com.njydsz.cronjob.server.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

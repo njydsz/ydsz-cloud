@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.domain.dto;
+package com.njydsz.system.domain.dto;
 
 import java.util.List;
 

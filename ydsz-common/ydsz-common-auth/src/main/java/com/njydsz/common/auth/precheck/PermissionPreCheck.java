@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.precheck;
+package com.njydsz.common.auth.precheck;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;

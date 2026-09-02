@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.distributed;
+package com.njydsz.literule.server.distributed;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

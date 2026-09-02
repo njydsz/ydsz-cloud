@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.ratelimit;
+package com.njydsz.common.socket.ratelimit;
 
 import java.time.Duration;
 import java.util.Collections;

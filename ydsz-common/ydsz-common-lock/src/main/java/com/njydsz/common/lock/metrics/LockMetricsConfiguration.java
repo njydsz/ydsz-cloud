@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.metrics;
+package com.njydsz.common.lock.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

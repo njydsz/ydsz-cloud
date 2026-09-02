@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.api;
+package com.njydsz.common.netty.api;
 
 /**
  * 连接指标接口 — 定义网络连接模块的公共指标契约。

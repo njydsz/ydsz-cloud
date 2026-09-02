@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.ratelimit;
+package com.njydsz.common.base.ratelimit;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

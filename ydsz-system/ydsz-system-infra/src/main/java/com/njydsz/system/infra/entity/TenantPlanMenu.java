@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.infra.entity;
+package com.njydsz.system.infra.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

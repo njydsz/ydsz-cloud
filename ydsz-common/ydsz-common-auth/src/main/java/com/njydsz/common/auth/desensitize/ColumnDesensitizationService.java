@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.desensitize;
+package com.njydsz.common.auth.desensitize;
 
 import java.util.HashSet;
 import java.util.Iterator;

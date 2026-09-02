@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.config;
+package com.njydsz.userinfo.infra.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;

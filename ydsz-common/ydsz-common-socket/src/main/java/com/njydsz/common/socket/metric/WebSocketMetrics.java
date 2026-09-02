@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.metric;
+package com.njydsz.common.socket.metric;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;

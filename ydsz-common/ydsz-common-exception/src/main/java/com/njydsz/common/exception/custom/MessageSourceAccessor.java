@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.custom;
+package com.njydsz.common.exception.custom;
 
 import java.util.Locale;
 

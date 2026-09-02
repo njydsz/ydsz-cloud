@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.datasource;
+package com.njydsz.common.jdbc.datasource;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

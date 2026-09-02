@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.cache.spring;
+package com.njydsz.common.cache.spring;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

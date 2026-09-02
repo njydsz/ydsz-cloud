@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.config;
+package com.njydsz.userinfo.server.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

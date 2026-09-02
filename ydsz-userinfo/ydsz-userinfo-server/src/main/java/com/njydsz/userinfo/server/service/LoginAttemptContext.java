@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.service;
+package com.njydsz.userinfo.server.service;
 
 /**
  * 登录尝试上下文（参数对象）。

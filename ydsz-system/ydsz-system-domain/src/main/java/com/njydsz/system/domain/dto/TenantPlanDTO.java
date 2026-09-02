@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.domain.dto;
+package com.njydsz.system.domain.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

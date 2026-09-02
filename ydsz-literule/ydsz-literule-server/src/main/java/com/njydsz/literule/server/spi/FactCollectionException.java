@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.spi;
+package com.njydsz.literule.server.spi;
 
 import com.njydsz.common.exception.custom.SysException;
 

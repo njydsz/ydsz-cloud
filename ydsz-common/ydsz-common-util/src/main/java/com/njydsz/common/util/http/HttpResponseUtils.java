@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.http;
+package com.njydsz.common.util.http;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.trace;
+package com.njydsz.common.exception.trace;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.service.impl.integration;
+package com.njydsz.workflow.server.service.impl.integration;
 
 import java.util.Collections;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.security;
+package com.njydsz.common.security;
 
 import java.util.regex.Pattern;
 

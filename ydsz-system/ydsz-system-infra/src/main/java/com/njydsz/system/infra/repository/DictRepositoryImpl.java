@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.infra.repository;
+package com.njydsz.system.infra.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;

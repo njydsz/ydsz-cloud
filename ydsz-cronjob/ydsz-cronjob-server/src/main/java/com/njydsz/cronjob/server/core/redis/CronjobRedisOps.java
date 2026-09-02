@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.redis;
+package com.njydsz.cronjob.server.core.redis;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

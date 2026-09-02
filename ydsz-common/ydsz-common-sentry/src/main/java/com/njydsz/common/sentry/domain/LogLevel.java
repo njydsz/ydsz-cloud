@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.domain;
+package com.njydsz.common.sentry.domain;
 
 /**
  * 日志级别枚举

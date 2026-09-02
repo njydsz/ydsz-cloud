@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.desensitize;
+package com.njydsz.common.safe.desensitize;
 
 /**
  * 敏感数据类型枚举（字段级脱敏类型）。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.constant;
+package com.njydsz.common.queue.constant;
 
 /**
  * 跨模块消息通道常量注册中心

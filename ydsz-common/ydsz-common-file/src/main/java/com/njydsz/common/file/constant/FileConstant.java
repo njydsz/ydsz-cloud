@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.file.constant;
+package com.njydsz.common.file.constant;
 
 /**
  * 文件存储模块公共常量

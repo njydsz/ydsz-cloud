@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.aspect;
+package com.njydsz.common.safe.aspect;
 
 import java.util.regex.Pattern;
 

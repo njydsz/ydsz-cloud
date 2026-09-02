@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.exception;
+package com.njydsz.common.docs.exception;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCode;

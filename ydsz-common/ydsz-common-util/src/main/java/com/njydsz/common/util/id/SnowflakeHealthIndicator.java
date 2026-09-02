@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.id;
+package com.njydsz.common.util.id;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;

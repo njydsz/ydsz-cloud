@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.metrics;
+package com.njydsz.common.web.metrics;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;

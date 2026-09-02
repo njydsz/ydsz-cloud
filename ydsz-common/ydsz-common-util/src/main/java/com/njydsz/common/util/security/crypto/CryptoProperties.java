@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.security.crypto;
+package com.njydsz.common.util.security.crypto;
 
 import lombok.Getter;
 import lombok.Setter;

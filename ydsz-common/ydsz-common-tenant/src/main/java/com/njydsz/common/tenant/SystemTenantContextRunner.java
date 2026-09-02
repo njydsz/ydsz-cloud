@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant;
+package com.njydsz.common.tenant;
 
 import java.util.concurrent.Callable;
 

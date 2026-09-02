@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.adapter;
+package com.njydsz.common.sentry.adapter;
 
 import java.time.Duration;
 import java.util.Collections;

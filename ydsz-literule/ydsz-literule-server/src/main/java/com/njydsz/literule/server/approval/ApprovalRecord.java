@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.approval;.approval
+package com.njydsz.literule.server.approval;.approval
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

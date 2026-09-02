@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.enums;
+package com.njydsz.literule.domain.enums;
 
 /**
  * 决策表命中策略（对齐 DMN 1.4 标准）

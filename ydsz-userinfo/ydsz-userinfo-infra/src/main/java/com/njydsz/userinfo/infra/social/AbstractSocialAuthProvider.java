@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.social;
+package com.njydsz.userinfo.infra.social;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

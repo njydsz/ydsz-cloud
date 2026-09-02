@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.exception;
+package com.njydsz.common.auth.exception;
 
 import java.util.Collections;
 import java.util.Set;

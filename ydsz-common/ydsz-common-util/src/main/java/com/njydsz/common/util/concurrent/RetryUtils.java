@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.concurrent;
+package com.njydsz.common.util.concurrent;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;

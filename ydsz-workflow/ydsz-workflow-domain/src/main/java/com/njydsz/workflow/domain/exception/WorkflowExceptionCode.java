@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.domain.exception;
+package com.njydsz.workflow.domain.exception;
 
 import lombok.Getter;
 

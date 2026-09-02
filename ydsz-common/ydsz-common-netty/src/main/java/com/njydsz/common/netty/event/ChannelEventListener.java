@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.event;
+package com.njydsz.common.netty.event;
 
 import io.netty.channel.Channel;
 

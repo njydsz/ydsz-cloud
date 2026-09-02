@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.domain.tree;.tree
+package com.njydsz.common.domain.tree;.tree
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;

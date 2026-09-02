@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.web.controller.config;
+package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 

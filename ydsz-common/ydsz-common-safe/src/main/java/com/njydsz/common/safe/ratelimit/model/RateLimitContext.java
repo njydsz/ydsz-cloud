@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.model;.model
+package com.njydsz.common.safe.ratelimit.model;.model
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;

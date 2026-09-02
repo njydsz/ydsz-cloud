@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.sharding;
+package com.njydsz.cronjob.server.core.sharding;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

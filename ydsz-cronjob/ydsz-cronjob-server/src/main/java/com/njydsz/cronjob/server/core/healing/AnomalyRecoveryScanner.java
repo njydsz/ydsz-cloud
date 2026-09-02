@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.healing;
+package com.njydsz.cronjob.server.core.healing;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

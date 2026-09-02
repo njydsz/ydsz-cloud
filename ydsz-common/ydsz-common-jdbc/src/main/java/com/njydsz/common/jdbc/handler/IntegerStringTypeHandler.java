@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.handler;
+package com.njydsz.common.jdbc.handler;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;

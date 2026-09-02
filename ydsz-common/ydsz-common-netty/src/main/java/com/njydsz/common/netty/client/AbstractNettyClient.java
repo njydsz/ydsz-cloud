@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.client;
+package com.njydsz.common.netty.client;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;

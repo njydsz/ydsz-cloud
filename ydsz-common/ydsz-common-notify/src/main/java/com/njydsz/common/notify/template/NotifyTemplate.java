@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.template;
+package com.njydsz.common.notify.template;
 
 import java.io.Serializable;
 import java.util.HashMap;

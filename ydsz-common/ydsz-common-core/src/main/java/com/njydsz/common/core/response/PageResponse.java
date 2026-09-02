@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.response;
+package com.njydsz.common.core.response;
 
 import java.util.List;
 

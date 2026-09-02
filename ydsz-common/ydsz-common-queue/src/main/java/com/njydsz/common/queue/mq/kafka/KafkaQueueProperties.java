@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.mq.kafka;
+package com.njydsz.common.queue.mq.kafka;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

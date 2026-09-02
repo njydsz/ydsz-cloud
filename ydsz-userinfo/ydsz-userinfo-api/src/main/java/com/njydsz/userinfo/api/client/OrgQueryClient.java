@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.api.client;
+package com.njydsz.userinfo.api.client;
 
 import java.util.List;
 import java.util.Map;

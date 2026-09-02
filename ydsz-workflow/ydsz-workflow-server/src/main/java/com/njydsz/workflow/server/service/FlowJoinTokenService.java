@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.service;
+package com.njydsz.workflow.server.service;
 
 /**
  * 加签 Token 服务。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.server.service;
+package com.njydsz.nextwiki.server.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

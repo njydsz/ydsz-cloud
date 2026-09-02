@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.config;
+package com.njydsz.common.feign.config;
 
 import java.util.concurrent.TimeUnit;
 

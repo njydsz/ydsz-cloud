@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.security.pii;
+package com.njydsz.common.docs.security.pii;
 
 import java.util.List;
 

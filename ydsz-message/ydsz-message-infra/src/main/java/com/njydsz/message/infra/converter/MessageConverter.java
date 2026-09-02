@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.infra.converter;
+package com.njydsz.message.infra.converter;
 
 import java.util.List;
 

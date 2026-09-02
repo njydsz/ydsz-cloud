@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.resilience;
+package com.njydsz.common.sentry.resilience;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;

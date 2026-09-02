@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.trace;
+package com.njydsz.userinfo.server.trace;
 
 import com.njydsz.common.util.id.TracerUtils;
 

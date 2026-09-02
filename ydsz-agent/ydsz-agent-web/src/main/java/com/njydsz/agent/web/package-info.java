@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Agent Web 层，提供 REST 控制器与 Spring Boot 自动配置.
  *
  * <p>本模块是 Agent 子系统的用户接口层，以 Spring Boot 应用为核心载体，对外暴露 HTTP/REST API。

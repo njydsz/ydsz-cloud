@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.exception;
+package com.njydsz.common.jdbc.exception;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCode;

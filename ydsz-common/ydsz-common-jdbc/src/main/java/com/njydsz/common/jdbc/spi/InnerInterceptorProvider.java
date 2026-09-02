@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.spi;
+package com.njydsz.common.jdbc.spi;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.infra.mapper.job;
+package com.njydsz.cronjob.infra.mapper.job;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

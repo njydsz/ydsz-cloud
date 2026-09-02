@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.aop;
+package com.njydsz.common.safe.ratelimit.aop;
 
 import java.lang.reflect.Method;
 import java.time.Duration;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.util;
+package com.njydsz.common.auth.util;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 线程池编程式工具类。
  *
  * <p>包含 {@link com.njydsz.common.thread.util.ExecutorUtils} 线程池工厂， 提供配置驱动（{@code

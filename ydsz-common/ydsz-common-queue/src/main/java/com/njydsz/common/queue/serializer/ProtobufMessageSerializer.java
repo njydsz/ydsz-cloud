@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.serializer;
+package com.njydsz.common.queue.serializer;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicReference;

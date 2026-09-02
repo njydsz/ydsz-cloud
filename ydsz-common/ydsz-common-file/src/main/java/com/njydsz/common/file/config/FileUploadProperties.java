@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.file.config;
+package com.njydsz.common.file.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

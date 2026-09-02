@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.audit;
+package com.njydsz.common.notify.audit;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;

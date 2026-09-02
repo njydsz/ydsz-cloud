@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.config;
+package com.njydsz.userinfo.domain.config;
 
 /**
  * MFA 密钥加密器（策略接口）。

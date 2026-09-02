@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.dto;
+package com.njydsz.userinfo.server.dto;
 
 import lombok.Data;
 

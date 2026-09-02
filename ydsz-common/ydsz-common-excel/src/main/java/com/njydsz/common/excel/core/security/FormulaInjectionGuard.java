@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.excel.core.security;
+package com.njydsz.common.excel.core.security;
 
 import java.util.ArrayList;
 import java.util.Arrays;

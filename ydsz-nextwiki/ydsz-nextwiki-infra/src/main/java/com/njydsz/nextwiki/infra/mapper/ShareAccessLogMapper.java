@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.infra.mapper;
+package com.njydsz.nextwiki.infra.mapper;
 
 import java.util.List;
 import java.util.Map;

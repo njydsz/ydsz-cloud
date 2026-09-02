@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.event;
+package com.njydsz.literule.domain.event;
 
 import java.util.HashMap;
 import java.util.Map;

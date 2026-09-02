@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.domain.event;
+package com.njydsz.nextwiki.domain.event;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

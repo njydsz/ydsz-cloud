@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.metrics;
+package com.njydsz.common.queue.metrics;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

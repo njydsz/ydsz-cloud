@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.event;
+package com.njydsz.common.notify.event;
 
 import java.io.Serial;
 import java.time.LocalDateTime;

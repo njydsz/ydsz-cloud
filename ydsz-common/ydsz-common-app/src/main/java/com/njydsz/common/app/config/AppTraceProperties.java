@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.app.config;
+package com.njydsz.common.app.config;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

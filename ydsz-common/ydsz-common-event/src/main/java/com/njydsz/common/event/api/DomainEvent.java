@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.event.api;
+package com.njydsz.common.event.api;
 
 import java.time.LocalDateTime;
 import java.util.Collections;

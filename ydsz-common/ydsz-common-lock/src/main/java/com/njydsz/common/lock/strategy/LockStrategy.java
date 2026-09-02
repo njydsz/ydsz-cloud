@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.strategy;
+package com.njydsz.common.lock.strategy;
 
 import java.util.List;
 

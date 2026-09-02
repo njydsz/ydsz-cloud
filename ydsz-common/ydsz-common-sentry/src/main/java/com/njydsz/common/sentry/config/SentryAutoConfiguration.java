@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.config;
+package com.njydsz.common.sentry.config;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.ObjectProvider;

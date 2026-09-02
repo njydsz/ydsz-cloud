@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.server.health;
+package com.njydsz.nextwiki.server.health;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

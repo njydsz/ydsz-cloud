@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.filter;
+package com.njydsz.common.web.filter;
 
 import com.njydsz.common.base.filter.AbstractContentCachingFilter;
 import com.njydsz.common.web.config.WebContentCacheProperties;

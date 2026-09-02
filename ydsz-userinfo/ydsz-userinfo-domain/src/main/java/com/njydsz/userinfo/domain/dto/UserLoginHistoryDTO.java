@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.dto;
+package com.njydsz.userinfo.domain.dto;
 
 import java.io.Serializable;
 

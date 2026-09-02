@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.datasource.hint;
+package com.njydsz.common.jdbc.datasource.hint;
 
 /**
  * Hint 类型枚举，定义强制路由的目标数据源类型。

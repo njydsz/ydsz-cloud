@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.sla;
+package com.njydsz.common.sentry.sla;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

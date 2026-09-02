@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.config;
+package com.njydsz.common.web.config;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.ImportSelector;

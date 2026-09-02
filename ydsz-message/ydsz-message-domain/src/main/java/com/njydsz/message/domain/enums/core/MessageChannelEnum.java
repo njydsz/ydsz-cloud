@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.domain.enums.core;
+package com.njydsz.message.domain.enums.core;
 
 /**
  * 消息发送通道枚举（8 通道统一抽象）

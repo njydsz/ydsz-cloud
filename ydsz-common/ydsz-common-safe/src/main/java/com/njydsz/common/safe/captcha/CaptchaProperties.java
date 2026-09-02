@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.captcha;
+package com.njydsz.common.safe.captcha;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

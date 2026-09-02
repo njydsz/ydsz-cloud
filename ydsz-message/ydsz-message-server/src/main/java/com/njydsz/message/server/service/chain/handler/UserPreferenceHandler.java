@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service.chain.handler;
+package com.njydsz.message.server.service.chain.handler;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.event;
+package com.njydsz.userinfo.domain.event;
 
 import com.njydsz.userinfo.domain.event.auth.AccountBannedEvent;
 import com.njydsz.userinfo.domain.event.auth.AccountLockedEvent;

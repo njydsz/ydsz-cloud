@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.scheduler;
+package com.njydsz.cronjob.server.core.scheduler;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

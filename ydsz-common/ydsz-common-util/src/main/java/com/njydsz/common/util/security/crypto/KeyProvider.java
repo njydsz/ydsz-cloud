@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.security.crypto;
+package com.njydsz.common.util.security.crypto;
 
 /**
  * 密钥来源 SPI——收敛密钥获取路径的统一扩展点。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.service.impl;
+package com.njydsz.common.queue.service.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;

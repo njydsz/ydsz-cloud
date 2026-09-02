@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.vo;
+package com.njydsz.userinfo.domain.vo;
 
 /**
  * 设备分布 VO。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.diff;
+package com.njydsz.common.util.diff;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

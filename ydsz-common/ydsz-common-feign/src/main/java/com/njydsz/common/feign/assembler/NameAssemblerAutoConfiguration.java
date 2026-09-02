@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.assembler;
+package com.njydsz.common.feign.assembler;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

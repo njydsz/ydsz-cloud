@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.infra.entity;
+package com.njydsz.literule.infra.entity;
 
 import java.util.List;
 import java.util.Map;

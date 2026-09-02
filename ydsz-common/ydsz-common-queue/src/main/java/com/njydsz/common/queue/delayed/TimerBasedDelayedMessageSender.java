@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.delayed;
+package com.njydsz.common.queue.delayed;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

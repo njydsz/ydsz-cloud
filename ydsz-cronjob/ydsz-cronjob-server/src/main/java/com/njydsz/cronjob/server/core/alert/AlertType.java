@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.alert;
+package com.njydsz.cronjob.server.core.alert;
 
 /**
  * 告警类型枚举（P5 告警 + 监控）。

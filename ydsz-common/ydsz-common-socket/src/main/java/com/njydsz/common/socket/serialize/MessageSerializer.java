@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.serialize;
+package com.njydsz.common.socket.serialize;
 
 /**
  * 消息序列化器接口（P3-5）。

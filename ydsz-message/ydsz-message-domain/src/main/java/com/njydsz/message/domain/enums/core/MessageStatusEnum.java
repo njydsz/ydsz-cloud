@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.domain.enums.core;
+package com.njydsz.message.domain.enums.core;
 
 import com.njydsz.common.domain.enums.BaseStatusEnum;
 

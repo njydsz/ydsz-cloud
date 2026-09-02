@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.engine.liteexpr;
+package com.njydsz.literule.server.engine.liteexpr;
 
 /**
  * LiteExpr 自定义函数接口

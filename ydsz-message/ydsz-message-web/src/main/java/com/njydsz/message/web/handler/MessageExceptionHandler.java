@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.web.handler;
+package com.njydsz.message.web.handler;
 
 import java.util.Arrays;
 import java.util.Optional;

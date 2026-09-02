@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.vo;
+package com.njydsz.userinfo.domain.vo;
 
 /**
  * 登录失败原因分布 VO。

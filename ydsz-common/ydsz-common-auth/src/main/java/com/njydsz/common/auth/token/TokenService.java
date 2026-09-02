@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.token;
+package com.njydsz.common.auth.token;
 
 import com.njydsz.common.auth.model.UserInfo;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.config;
+package com.njydsz.userinfo.server.config;
 
 import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.security;
+package com.njydsz.common.util.security;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;

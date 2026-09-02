@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.enums;
+package com.njydsz.common.socket.enums;
 
 /**
  * WebSocket 消息优先级枚举（P1-4）。

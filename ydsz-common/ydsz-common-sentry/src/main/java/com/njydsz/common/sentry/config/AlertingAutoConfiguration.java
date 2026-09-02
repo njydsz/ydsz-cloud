@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.config;
+package com.njydsz.common.sentry.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

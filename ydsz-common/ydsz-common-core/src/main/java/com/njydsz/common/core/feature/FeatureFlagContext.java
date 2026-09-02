@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.feature;
+package com.njydsz.common.core.feature;
 
 /**
  * 特性开关静态门面。

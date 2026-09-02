@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.infra.entity.event;
+package com.njydsz.cronjob.infra.entity.event;
 
 import java.io.Serial;
 import java.time.LocalDateTime;

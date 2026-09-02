@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant.interceptor;
+package com.njydsz.common.tenant.interceptor;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 

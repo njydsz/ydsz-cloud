@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.web.config;
+package com.njydsz.agent.web.config;
 
 import java.time.Duration;
 import java.util.List;

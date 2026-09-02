@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.server.health;
+package com.njydsz.system.server.health;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

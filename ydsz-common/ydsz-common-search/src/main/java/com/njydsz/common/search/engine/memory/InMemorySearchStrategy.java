@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.engine.memory;
+package com.njydsz.common.search.engine.memory;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.event;
+package com.njydsz.message.server.event;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

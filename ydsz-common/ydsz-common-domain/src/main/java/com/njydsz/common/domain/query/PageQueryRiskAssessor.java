@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.domain.query;
+package com.njydsz.common.domain.query;
 
 /**
  * 分页查询风险评估器（纯函数工具）。

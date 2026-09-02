@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.endpoint;
+package com.njydsz.common.exception.endpoint;
 
 import java.util.ArrayList;
 import java.util.Comparator;

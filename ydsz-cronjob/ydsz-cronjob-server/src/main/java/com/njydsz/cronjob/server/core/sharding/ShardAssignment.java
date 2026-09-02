@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.sharding;
+package com.njydsz.cronjob.server.core.sharding;
 
 /**
  * 分片分配结果（P3 阶段引入）。

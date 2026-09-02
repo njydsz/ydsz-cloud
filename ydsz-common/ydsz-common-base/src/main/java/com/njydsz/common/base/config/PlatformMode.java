@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.config;
+package com.njydsz.common.base.config;
 
 /**
  * 平台运行模式枚举。

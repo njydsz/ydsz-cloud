@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.datasource;
+package com.njydsz.common.jdbc.datasource;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.group;
+package com.njydsz.common.queue.group;
 
 import java.time.LocalDateTime;
 

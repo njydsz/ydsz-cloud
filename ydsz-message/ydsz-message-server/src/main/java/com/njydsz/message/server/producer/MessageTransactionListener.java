@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.producer;
+package com.njydsz.message.server.producer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.domain.constants;
+package com.njydsz.cronjob.domain.constants;
 
 /**
  * 定时任务模块常量类。

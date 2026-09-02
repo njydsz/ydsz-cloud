@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.config;
+package com.njydsz.common.util.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;

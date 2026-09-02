@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.config;
+package com.njydsz.common.exception.config;
 
 import lombok.Getter;
 import lombok.Setter;

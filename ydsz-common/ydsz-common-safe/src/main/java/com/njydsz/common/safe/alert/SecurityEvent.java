@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.alert;
+package com.njydsz.common.safe.alert;
 
 import java.io.Serializable;
 import java.time.Instant;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.config;
+package com.njydsz.common.core.config;
 
 import java.util.Locale;
 

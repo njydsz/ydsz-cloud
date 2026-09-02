@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.domain.vo;
+package com.njydsz.nextwiki.domain.vo;
 
 import java.io.Serializable;
 import java.util.List;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.circuitbreaker;
+package com.njydsz.common.feign.circuitbreaker;
 
 /**
  * Feign 熔断器策略接口。

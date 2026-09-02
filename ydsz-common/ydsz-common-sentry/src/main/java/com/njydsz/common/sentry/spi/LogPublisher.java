@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.spi;
+package com.njydsz.common.sentry.spi;
 
 import java.util.List;
 

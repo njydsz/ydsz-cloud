@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.redis.annotation;
+package com.njydsz.common.redis.annotation;
 
 import java.lang.reflect.Method;
 import java.time.Duration;

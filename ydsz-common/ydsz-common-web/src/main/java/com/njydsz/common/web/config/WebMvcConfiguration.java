@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.config;
+package com.njydsz.common.web.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;

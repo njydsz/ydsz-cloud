@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core;
+package com.njydsz.cronjob.server.core;
 
 /**
  * 任务完成事件。

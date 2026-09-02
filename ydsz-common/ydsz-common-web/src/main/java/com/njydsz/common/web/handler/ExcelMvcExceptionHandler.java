@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.handler;
+package com.njydsz.common.web.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

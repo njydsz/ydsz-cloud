@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.web.controller.device;
+package com.njydsz.userinfo.web.controller.device;
 
 import java.util.List;
 

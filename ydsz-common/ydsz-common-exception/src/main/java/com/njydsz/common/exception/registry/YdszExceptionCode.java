@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.registry;
+package com.njydsz.common.exception.registry;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

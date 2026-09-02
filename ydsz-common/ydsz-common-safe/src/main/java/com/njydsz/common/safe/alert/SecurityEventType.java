@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.alert;
+package com.njydsz.common.safe.alert;
 
 /**
  * 安全事件类型枚举

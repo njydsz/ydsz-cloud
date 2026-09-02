@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.domain.gateway;
+package com.njydsz.workflow.domain.gateway;
 
 import java.util.List;
 import java.util.Map;

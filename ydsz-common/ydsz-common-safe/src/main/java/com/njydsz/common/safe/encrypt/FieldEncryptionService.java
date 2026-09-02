@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.encrypt;
+package com.njydsz.common.safe.encrypt;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

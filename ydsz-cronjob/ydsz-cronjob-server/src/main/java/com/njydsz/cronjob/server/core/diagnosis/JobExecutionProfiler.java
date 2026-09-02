@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.diagnosis;
+package com.njydsz.cronjob.server.core.diagnosis;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

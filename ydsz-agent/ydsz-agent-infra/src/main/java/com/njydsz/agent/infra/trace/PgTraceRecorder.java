@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.infra.trace;
+package com.njydsz.agent.infra.trace;
 
 import java.time.LocalDateTime;
 import java.util.List;

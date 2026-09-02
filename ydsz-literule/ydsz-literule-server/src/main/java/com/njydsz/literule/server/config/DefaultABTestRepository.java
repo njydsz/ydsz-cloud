@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.config;
+package com.njydsz.literule.server.config;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

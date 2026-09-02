@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.vo;
+package com.njydsz.literule.domain.vo;
 
 import java.io.Serializable;
 import java.util.Collections;

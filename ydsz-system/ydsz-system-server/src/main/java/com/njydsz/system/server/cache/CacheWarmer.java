@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.server.cache;
+package com.njydsz.system.server.cache;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

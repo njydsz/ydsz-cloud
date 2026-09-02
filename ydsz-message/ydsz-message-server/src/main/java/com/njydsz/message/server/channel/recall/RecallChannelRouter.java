@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.channel.recall;
+package com.njydsz.message.server.channel.recall;
 
 import java.util.List;
 import java.util.Map;

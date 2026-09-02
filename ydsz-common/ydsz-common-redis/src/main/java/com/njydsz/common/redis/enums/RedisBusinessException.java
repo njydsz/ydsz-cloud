@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.redis.enums;
+package com.njydsz.common.redis.enums;
 
 /**
  * Redis 业务异常

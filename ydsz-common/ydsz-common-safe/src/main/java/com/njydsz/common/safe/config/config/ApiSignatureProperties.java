@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.config;
+package com.njydsz.common.safe.config;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.infra.mapper.log;
+package com.njydsz.cronjob.infra.mapper.log;
 
 import java.time.LocalDateTime;
 import java.util.List;

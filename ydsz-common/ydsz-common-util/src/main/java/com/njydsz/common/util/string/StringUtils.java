@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.string;
+package com.njydsz.common.util.string;
 
 import java.text.Normalizer;
 import java.util.Collection;

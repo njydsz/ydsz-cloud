@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.domain.dto.alert;
+package com.njydsz.cronjob.domain.dto.alert;
 
 import java.io.Serial;
 import java.io.Serializable;

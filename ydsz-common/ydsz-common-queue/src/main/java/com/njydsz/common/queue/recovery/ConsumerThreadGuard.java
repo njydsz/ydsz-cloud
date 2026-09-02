@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.recovery;
+package com.njydsz.common.queue.recovery;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;

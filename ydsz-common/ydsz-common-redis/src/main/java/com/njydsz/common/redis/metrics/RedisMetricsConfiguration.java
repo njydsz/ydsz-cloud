@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.redis.metrics;
+package com.njydsz.common.redis.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

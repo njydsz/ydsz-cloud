@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service.chain.handler;
+package com.njydsz.message.server.service.chain.handler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

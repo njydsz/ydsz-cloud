@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.domain.enums;
+package com.njydsz.cronjob.domain.enums;
 
 import lombok.Getter;
 

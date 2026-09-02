@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.annotation;
+package com.njydsz.common.jdbc.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

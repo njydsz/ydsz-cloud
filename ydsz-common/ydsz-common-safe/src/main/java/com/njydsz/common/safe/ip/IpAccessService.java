@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ip;.ip
+package com.njydsz.common.safe.ip;.ip
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;

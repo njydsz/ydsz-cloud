@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.password;
+package com.njydsz.common.safe.password;
 
 import java.util.Locale;
 

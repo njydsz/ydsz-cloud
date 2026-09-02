@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.alerting;
+package com.njydsz.common.sentry.alerting;
 
 import java.time.Instant;
 import java.util.ArrayList;

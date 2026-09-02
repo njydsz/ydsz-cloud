@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.serialize;
+package com.njydsz.common.socket.serialize;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.domain.enums;
+package com.njydsz.nextwiki.domain.enums;
 
 import com.njydsz.common.domain.enums.BaseStatusEnum;
 

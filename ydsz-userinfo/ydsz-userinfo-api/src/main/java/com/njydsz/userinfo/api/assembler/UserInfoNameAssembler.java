@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.api.assembler;
+package com.njydsz.userinfo.api.assembler;
 
 import java.util.ArrayList;
 import java.util.Collection;

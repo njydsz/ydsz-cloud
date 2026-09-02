@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.web.controller;
+package com.njydsz.userinfo.web.controller;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

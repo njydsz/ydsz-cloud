@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.datasource.hint;
+package com.njydsz.common.jdbc.datasource.hint;
 
 import java.util.Objects;
 

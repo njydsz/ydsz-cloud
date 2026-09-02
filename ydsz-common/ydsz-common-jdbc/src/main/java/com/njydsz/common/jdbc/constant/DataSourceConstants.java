@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.constant;
+package com.njydsz.common.jdbc.constant;
 
 /**
  * 数据源常量定义。

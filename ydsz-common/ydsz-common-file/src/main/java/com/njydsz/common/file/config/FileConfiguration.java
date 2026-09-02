@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.file.config;
+package com.njydsz.common.file.config;
 
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;

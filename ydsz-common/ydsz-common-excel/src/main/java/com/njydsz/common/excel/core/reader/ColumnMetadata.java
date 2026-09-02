@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.excel.core.reader;
+package com.njydsz.common.excel.core.reader;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;

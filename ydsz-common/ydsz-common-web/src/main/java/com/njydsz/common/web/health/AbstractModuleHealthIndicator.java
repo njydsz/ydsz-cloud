@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.health;
+package com.njydsz.common.web.health;
 
 import java.util.Map;
 import java.util.concurrent.Callable;

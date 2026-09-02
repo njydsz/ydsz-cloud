@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.server.service;
+package com.njydsz.system.server.service;
 import com.njydsz.system.domain.enums.QuotaType;
 
 

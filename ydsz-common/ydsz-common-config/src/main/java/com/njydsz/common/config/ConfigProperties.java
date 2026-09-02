@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.config;
+package com.njydsz.common.config;
 
 import lombok.Getter;
 import lombok.Setter;

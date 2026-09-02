@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.config;
+package com.njydsz.workflow.server.config;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.convert;
+package com.njydsz.common.docs.convert;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

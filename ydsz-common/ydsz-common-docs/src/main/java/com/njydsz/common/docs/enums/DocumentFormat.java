@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.enums;
+package com.njydsz.common.docs.enums;
 
 import java.io.InputStream;
 

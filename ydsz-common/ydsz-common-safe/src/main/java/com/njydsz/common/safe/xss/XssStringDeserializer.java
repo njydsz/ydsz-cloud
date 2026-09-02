@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.xss;
+package com.njydsz.common.safe.xss;
 
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.reader.JSONReader;

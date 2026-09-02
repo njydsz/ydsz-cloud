@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.enums;
+package com.njydsz.common.exception.enums;
 
 /**
  * 异常类别枚举

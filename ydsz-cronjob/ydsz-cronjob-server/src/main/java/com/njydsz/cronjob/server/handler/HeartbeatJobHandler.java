@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.handler;
+package com.njydsz.cronjob.server.handler;
 
 import java.lang.management.ManagementFactory;
 import java.util.Map;

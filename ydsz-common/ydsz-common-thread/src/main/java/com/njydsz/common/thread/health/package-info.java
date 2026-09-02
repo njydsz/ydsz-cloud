@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Spring Boot Actuator 健康检查指标。
  *
  * <p>包含以下核心类：

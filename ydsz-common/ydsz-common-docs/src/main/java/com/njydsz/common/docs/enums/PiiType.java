@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.enums;
+package com.njydsz.common.docs.enums;
 
 /**
  * PII（个人身份信息）类型枚举

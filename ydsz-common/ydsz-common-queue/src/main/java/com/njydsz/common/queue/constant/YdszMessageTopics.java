@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.constant;
+package com.njydsz.common.queue.constant;
 
 /**
  * 消息中心通道常量定义

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.file.util;
+package com.njydsz.common.file.util;
 
 import java.util.Collections;
 import java.util.HashMap;

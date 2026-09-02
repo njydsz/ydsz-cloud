@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.cache.metrics;
+package com.njydsz.common.cache.metrics;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;

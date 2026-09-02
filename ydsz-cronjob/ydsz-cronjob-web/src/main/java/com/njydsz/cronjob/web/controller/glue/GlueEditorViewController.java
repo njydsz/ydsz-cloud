@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.web.controller.glue;
+package com.njydsz.cronjob.web.controller.glue;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

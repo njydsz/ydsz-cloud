@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.config;
+package com.njydsz.common.netty.config;
 
 import jakarta.validation.constraints.Min;
 import lombok.Data;

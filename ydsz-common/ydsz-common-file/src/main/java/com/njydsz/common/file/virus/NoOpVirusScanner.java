@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.file.virus;
+package com.njydsz.common.file.virus;
 
 import java.io.InputStream;
 

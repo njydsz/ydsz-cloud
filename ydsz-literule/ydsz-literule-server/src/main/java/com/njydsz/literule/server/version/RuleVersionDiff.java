@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.version;
+package com.njydsz.literule.server.version;
 
 import java.io.Serializable;
 import java.util.List;

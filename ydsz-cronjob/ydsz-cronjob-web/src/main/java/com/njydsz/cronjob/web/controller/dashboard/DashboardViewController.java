@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.web.controller.dashboard;
+package com.njydsz.cronjob.web.controller.dashboard;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.enums;
+package com.njydsz.literule.domain.enums;
 
 /**
  * 规则环境维度常量（P1-5 多环境隔离）

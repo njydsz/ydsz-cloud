@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.annotation;
+package com.njydsz.common.auth.annotation;
 
 /**
  * 权限校验模式枚举。

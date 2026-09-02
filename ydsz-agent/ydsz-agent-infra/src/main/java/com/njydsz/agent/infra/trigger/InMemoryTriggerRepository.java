@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.infra.trigger;
+package com.njydsz.agent.infra.trigger;
 
 import java.util.List;
 import java.util.Map;

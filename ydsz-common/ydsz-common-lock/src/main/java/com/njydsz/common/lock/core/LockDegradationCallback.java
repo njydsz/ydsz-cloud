@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.core;
+package com.njydsz.common.lock.core;
 
 /**
  * 锁降级回调接口

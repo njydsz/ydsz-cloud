@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.web;
+package com.njydsz.agent.web;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.infra.mapper;
+package com.njydsz.userinfo.infra.mapper;
 
 import java.util.List;
 

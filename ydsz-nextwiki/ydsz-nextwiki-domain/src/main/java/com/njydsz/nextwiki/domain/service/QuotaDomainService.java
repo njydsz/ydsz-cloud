@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.domain.service;
+package com.njydsz.nextwiki.domain.service;
 
 import lombok.extern.slf4j.Slf4j;
 

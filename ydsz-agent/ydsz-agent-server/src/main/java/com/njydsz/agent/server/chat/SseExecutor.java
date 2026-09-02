@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.chat;
+package com.njydsz.agent.server.chat;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;

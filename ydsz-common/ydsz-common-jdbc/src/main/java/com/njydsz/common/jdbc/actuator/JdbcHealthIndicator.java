@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.actuator;
+package com.njydsz.common.jdbc.actuator;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

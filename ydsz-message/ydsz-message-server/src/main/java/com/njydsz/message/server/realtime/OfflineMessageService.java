@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.realtime;
+package com.njydsz.message.server.realtime;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

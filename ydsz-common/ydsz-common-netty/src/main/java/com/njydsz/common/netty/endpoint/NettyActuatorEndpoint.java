@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.endpoint;
+package com.njydsz.common.netty.endpoint;
 
 import java.util.LinkedHashMap;
 import java.util.List;

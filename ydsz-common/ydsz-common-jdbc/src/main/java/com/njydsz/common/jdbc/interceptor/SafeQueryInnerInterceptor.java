@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.interceptor;
+package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
 import java.util.Map;

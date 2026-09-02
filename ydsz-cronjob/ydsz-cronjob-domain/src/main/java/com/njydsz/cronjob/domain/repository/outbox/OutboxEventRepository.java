@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.domain.repository.outbox;
+package com.njydsz.cronjob.domain.repository.outbox;
 
 import java.time.LocalDateTime;
 import java.util.List;

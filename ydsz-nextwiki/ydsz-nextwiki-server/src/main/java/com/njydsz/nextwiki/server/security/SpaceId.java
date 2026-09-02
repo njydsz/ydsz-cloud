@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.server.security;
+package com.njydsz.nextwiki.server.security;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

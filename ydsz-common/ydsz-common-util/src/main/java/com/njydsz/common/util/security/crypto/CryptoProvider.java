@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.security.crypto;
+package com.njydsz.common.util.security.crypto;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;

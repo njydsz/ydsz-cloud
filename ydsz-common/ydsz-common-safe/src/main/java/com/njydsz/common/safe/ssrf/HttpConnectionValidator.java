@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ssrf;
+package com.njydsz.common.safe.ssrf;
 
 import java.net.InetAddress;
 import java.net.URI;

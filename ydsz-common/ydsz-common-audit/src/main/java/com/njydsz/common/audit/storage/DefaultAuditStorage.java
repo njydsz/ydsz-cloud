@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.audit.storage;
+package com.njydsz.common.audit.storage;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;

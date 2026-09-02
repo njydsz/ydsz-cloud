@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.auth;
+package com.njydsz.userinfo.domain.auth;
 
 import java.util.Map;
 

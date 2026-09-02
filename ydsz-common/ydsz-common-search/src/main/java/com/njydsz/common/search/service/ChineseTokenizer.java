@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.service;
+package com.njydsz.common.search.service;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

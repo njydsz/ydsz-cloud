@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.indexer;
+package com.njydsz.common.search.indexer;
 
 import java.io.InputStream;
 

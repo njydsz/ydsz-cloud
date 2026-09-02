@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.api.client;
+package com.njydsz.literule.api.client;
 
 import java.util.List;
 import java.util.Map;

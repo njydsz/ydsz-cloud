@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.analytics;
+package com.njydsz.common.search.analytics;
 
 import java.util.concurrent.atomic.AtomicLong;
 

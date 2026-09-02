@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.session;
+package com.njydsz.common.socket.session;
 
 import java.util.List;
 import java.util.Map;

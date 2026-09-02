@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.ocr;
+package com.njydsz.common.docs.ocr;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;

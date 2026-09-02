@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.id;
+package com.njydsz.common.util.id;
 
 /**
  * 策略不适用异常——当前 WorkerIdAllocator 无法处理当前环境时抛出。

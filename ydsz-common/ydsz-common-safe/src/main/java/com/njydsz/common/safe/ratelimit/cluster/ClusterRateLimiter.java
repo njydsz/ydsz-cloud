@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.cluster;
+package com.njydsz.common.safe.ratelimit.cluster;
 
 import java.util.List;
 

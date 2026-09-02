@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.aspect;
+package com.njydsz.common.lock.aspect;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;

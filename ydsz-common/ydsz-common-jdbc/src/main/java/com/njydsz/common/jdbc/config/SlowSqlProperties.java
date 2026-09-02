@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.config;
+package com.njydsz.common.jdbc.config;
 
 import jakarta.validation.constraints.Min;
 import lombok.Data;

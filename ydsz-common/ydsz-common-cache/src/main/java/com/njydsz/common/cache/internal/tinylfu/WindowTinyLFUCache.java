@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.cache.internal.tinylfu;
+package com.njydsz.common.cache.internal.tinylfu;
 
 import java.util.ArrayList;
 import java.util.Collection;

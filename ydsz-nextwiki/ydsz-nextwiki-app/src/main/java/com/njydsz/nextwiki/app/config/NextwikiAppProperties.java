@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.app.config;
+package com.njydsz.nextwiki.app.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

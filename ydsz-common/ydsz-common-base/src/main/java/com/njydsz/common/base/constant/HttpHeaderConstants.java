@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.constant;
+package com.njydsz.common.base.constant;
 
 /**
  * HTTP 请求头常量（base 模块内部使用）

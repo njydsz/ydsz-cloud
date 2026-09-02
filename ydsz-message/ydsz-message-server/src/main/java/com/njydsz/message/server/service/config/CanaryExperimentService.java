@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service.config;
+package com.njydsz.message.server.service.config;
 
 import com.njydsz.message.domain.dto.TemplateCanaryDTO;
 

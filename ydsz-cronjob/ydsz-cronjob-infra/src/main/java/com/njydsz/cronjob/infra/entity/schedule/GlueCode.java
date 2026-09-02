@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.infra.entity.schedule;
+package com.njydsz.cronjob.infra.entity.schedule;
 
 import java.io.Serial;
 

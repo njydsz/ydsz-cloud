@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service;
+package com.njydsz.message.server.service;
 
 import java.lang.reflect.Method;
 import java.time.Duration;

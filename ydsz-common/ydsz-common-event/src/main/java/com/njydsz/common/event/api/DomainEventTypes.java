@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.event.api;
+package com.njydsz.common.event.api;
 
 /**
  * 统一领域事件类型注册表

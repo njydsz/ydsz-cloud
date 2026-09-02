@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.config;.config
+package com.njydsz.common.auth.config;.config
 import java.util.ArrayList;
 import java.util.List;
 

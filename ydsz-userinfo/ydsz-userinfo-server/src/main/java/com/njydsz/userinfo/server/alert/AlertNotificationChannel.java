@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.alert;
+package com.njydsz.userinfo.server.alert;
 
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 

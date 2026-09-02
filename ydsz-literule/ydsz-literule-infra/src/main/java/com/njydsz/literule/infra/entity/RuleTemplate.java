@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.infra.entity;
+package com.njydsz.literule.infra.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;

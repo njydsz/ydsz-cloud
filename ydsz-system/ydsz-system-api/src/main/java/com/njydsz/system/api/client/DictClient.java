@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.api.client;
+package com.njydsz.system.api.client;
 
 import java.util.List;
 

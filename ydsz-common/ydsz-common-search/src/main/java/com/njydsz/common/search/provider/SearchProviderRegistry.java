@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.provider;
+package com.njydsz.common.search.provider;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.expression;
+package com.njydsz.literule.domain.expression;
 
 import java.io.Serializable;
 import java.util.List;

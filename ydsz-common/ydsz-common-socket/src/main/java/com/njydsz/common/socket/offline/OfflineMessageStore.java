@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.offline;
+package com.njydsz.common.socket.offline;
 
 import java.util.List;
 

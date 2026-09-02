@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.service.schedule;
+package com.njydsz.cronjob.server.service.schedule;
 
 import java.util.List;
 import java.util.Map;

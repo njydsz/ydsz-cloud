@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.service.impl.schedule;
+package com.njydsz.cronjob.server.service.impl.schedule;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

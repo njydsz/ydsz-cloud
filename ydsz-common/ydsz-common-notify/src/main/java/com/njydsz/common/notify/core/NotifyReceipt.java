@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.core;
+package com.njydsz.common.notify.core;
 
 import java.time.Instant;
 

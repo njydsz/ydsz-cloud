@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.metrics;
+package com.njydsz.common.lock.metrics;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.config;
+package com.njydsz.common.util.config;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

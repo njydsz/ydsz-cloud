@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.context;
+package com.njydsz.common.core.context;
 
 /**
  * 业务级上下文键名常量。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.domain.query;
+package com.njydsz.common.domain.query;
 
 import java.io.Serializable;
 import java.util.Locale;

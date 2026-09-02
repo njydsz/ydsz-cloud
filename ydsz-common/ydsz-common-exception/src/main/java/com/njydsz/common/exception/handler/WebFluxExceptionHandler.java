@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.handler;
+package com.njydsz.common.exception.handler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.alert;
+package com.njydsz.cronjob.server.core.alert;
 
 import java.util.Collections;
 import java.util.List;

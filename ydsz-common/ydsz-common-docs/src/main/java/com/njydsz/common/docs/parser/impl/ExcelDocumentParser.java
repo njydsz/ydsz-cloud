@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.parser.impl;
+package com.njydsz.common.docs.parser.impl;
 
 import java.io.InputStream;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.algorithm;
+package com.njydsz.common.safe.ratelimit.algorithm;
 
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;

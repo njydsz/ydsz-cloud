@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.channel;
+package com.njydsz.message.server.channel;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

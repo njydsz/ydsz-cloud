@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.web.controller;
+package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
 import java.util.Map;

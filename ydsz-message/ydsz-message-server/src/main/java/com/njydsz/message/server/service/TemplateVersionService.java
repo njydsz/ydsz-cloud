@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service.template;
+package com.njydsz.message.server.service.template;
 
 import java.util.List;
 

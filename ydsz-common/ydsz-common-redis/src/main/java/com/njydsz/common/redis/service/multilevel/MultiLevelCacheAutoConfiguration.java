@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.redis.service.multilevel;
+package com.njydsz.common.redis.service.multilevel;
 
 import java.util.Objects;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.leader;
+package com.njydsz.cronjob.server.core.leader;
 
 import java.time.Duration;
 import java.util.Collections;

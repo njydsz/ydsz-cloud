@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.service;
+package com.njydsz.literule.domain.service;
 
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 

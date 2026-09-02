@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.config;
+package com.njydsz.userinfo.domain.config;
 
 import java.util.HashMap;
 import java.util.Map;

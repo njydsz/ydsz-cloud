@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.id;
+package com.njydsz.common.util.id;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;

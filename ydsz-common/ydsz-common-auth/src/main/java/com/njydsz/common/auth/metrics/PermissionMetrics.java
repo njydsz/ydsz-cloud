@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.metrics;
+package com.njydsz.common.auth.metrics;
 
 /**
  * 权限校验（Authorization）统一指标采集契约。

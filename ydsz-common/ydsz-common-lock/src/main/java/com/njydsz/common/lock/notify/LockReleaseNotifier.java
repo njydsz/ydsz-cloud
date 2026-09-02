@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.notify;
+package com.njydsz.common.lock.notify;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;

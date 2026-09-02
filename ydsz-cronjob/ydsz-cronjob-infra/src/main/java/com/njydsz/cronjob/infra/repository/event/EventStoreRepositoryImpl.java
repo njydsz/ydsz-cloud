@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.infra.repository.event;
+package com.njydsz.cronjob.infra.repository.event;
 
 import java.time.LocalDateTime;
 import java.util.Collections;

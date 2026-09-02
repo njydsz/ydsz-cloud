@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.cache;
+package com.njydsz.literule.server.cache;
 
 import java.time.Duration;
 import java.util.Collections;

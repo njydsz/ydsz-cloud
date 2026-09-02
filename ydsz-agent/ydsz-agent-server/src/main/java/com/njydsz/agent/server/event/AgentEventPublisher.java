@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.event;
+package com.njydsz.agent.server.event;
 
 import java.util.HashMap;
 import java.util.Map;

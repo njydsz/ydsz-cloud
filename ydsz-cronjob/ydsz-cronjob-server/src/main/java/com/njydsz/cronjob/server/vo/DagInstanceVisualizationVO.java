@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.vo;
+package com.njydsz.cronjob.server.vo;
 
 import java.util.List;
 

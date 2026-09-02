@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.impl;
+package com.njydsz.common.lock.impl;
 
 import java.time.Duration;
 import java.util.Arrays;

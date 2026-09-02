@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.domain.enums.receipt;
+package com.njydsz.message.domain.enums.receipt;
 
 /**
  * 消息回执类型枚举。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.config;
+package com.njydsz.common.queue.config;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;

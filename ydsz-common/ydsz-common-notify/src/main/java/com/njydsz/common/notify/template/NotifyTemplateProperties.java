@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.template;
+package com.njydsz.common.notify.template;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

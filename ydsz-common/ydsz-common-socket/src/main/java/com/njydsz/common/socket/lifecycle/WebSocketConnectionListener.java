@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.lifecycle;
+package com.njydsz.common.socket.lifecycle;
 
 /**
  * WebSocket 连接生命周期监听器接口（P3-5）。

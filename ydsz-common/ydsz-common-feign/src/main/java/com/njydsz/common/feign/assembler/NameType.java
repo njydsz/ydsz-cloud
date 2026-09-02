@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.assembler;
+package com.njydsz.common.feign.assembler;
 
 /**
  * 名称富化类型枚举。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant;
+package com.njydsz.common.tenant;
 
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.ContextKey;

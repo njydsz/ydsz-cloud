@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service.impl.batch;
+package com.njydsz.message.server.service.impl.batch;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.preprocess.pipeline;
+package com.njydsz.common.docs.preprocess.pipeline;
 
 import java.util.Comparator;
 import java.util.List;

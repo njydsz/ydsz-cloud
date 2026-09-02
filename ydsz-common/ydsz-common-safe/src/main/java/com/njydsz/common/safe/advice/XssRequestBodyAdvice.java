@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.advice;
+package com.njydsz.common.safe.advice;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

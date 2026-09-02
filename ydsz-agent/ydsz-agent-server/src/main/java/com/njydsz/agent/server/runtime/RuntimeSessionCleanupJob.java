@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.runtime;
+package com.njydsz.agent.server.runtime;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

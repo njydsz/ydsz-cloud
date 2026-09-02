@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.webhook;
+package com.njydsz.common.webhook;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

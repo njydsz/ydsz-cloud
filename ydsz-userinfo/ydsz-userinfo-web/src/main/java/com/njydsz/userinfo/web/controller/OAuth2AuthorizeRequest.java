@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.web.controller;
+package com.njydsz.userinfo.web.controller;
 
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;

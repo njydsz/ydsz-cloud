@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.config.cli;
+package com.njydsz.common.config.cli;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;

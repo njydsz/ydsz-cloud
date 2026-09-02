@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.trace;
+package com.njydsz.common.core.trace;
 
 import java.util.Collections;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.service.impl.schedule;
+package com.njydsz.cronjob.server.service.impl.schedule;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

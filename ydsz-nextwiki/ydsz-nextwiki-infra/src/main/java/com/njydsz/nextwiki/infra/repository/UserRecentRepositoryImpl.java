@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.infra.repository;
+package com.njydsz.nextwiki.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;

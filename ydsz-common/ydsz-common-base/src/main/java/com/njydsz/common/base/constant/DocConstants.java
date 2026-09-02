@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.constant;
+package com.njydsz.common.base.constant;
 
 /**
  * OpenAPI 文档常量类

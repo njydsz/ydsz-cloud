@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.redis.tenant;
+package com.njydsz.common.redis.tenant;
 
 import java.util.function.Supplier;
 

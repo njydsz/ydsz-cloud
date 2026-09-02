@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.infra.entity;
+package com.njydsz.system.infra.entity;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;

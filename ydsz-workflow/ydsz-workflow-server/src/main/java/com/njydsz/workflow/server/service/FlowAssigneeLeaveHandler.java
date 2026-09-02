@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.service;
+package com.njydsz.workflow.server.service;
 
 /**
  * 审批人离职处理器。

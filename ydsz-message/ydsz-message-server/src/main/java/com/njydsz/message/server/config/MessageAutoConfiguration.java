@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.config;
+package com.njydsz.message.server.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

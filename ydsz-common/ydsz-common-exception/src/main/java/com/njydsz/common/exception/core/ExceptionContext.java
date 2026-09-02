@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.core;.core
+package com.njydsz.common.exception.core;.core
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;

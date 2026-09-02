@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.config;
+package com.njydsz.message.server.config;
 
 import java.time.LocalDateTime;
 import java.util.Map;

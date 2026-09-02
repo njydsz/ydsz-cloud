@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.circuitbreaker;
+package com.njydsz.common.safe.ratelimit.circuitbreaker;
 
 /**
  * 熔断器执行异常

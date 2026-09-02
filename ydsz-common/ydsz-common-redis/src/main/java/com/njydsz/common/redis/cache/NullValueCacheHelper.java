@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.redis.cache;
+package com.njydsz.common.redis.cache;
 
 import java.time.Duration;
 import java.util.function.Supplier;

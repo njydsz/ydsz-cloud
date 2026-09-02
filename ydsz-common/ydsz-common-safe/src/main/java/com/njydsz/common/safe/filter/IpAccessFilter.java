@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.filter;
+package com.njydsz.common.safe.filter;
 
 import java.io.IOException;
 import java.util.ArrayList;

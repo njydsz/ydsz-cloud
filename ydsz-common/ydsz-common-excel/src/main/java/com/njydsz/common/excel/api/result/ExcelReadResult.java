@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.excel.api.result;
+package com.njydsz.common.excel.api.result;
 
 import java.util.ArrayList;
 import java.util.List;

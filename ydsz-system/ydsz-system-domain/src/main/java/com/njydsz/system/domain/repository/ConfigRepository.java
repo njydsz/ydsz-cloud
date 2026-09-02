@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.domain.repository;
+package com.njydsz.system.domain.repository;
 
 import java.util.List;
 import java.util.Optional;

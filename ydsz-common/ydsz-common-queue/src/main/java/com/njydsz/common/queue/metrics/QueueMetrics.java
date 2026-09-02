@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.metrics;
+package com.njydsz.common.queue.metrics;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;

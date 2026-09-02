@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.domain.query;
+package com.njydsz.system.domain.query;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

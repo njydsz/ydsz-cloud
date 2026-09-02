@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service.batch;
+package com.njydsz.message.server.service.batch;
 
 import com.njydsz.message.domain.dto.BatchProgressDTO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;

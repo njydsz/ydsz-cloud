@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.core;
+package com.njydsz.common.lock.core;
 
 import java.util.concurrent.atomic.LongAdder;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.security;
+package com.njydsz.common.util.security;
 
 import java.security.Security;
 

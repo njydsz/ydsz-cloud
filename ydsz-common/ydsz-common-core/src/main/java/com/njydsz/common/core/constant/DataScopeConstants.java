@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.constant;
+package com.njydsz.common.core.constant;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

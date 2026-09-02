@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.core;.core
+package com.njydsz.literule.server.core;.core
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

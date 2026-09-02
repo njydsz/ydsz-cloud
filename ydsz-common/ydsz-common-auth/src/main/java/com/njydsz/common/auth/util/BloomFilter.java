@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.util;
+package com.njydsz.common.auth.util;
 
 import java.util.BitSet;
 import java.util.concurrent.atomic.AtomicLong;

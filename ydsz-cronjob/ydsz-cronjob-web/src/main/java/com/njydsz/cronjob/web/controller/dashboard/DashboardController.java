@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.web.controller.dashboard;
+package com.njydsz.cronjob.web.controller.dashboard;
 
 import java.util.LinkedHashMap;
 import java.util.List;

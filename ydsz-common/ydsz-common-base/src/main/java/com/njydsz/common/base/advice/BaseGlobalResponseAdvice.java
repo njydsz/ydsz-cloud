@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.advice;
+package com.njydsz.common.base.advice;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;

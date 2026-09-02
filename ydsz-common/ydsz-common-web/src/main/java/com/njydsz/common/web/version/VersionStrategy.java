@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.version;
+package com.njydsz.common.web.version;
 
 /**
  * API 版本提取策略枚举。

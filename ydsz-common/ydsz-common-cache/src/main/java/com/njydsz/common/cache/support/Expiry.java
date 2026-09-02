@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.cache.support;
+package com.njydsz.common.cache.support;
 
 /**
  * 自定义过期策略接口

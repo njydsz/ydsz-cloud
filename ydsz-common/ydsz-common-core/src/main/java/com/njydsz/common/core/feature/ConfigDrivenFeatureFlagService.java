@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.feature;
+package com.njydsz.common.core.feature;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

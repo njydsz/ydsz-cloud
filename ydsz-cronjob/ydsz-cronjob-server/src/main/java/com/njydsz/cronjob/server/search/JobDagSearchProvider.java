@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.search;
+package com.njydsz.cronjob.server.search;
 
 import java.time.ZoneId;
 

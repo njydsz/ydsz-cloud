@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.permission;
+package com.njydsz.common.jdbc.permission;
 
 import java.util.Arrays;
 import java.util.Collections;

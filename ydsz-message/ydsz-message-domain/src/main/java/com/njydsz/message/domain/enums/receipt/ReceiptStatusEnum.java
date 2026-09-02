@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.domain.enums.receipt;
+package com.njydsz.message.domain.enums.receipt;
 
 import com.njydsz.common.domain.enums.BaseStatusEnum;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.infra.entity;
+package com.njydsz.cronjob.infra.entity;
 
 import java.io.Serial;
 import java.io.Serializable;

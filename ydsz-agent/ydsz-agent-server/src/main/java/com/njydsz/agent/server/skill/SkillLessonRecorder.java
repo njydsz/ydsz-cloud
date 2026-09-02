@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.skill;
+package com.njydsz.agent.server.skill;
 
 import java.time.LocalDateTime;
 import java.util.List;

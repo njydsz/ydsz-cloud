@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.debug;
+package com.njydsz.literule.server.debug;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

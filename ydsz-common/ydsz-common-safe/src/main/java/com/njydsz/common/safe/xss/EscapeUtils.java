@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.xss;
+package com.njydsz.common.safe.xss;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.codec;
+package com.njydsz.common.feign.codec;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

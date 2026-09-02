@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.domain.dto;
+package com.njydsz.cronjob.domain.dto;
 
 import java.util.Collections;
 import java.util.List;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.enums;
+package com.njydsz.common.jdbc.enums;
 
 /**
  * 拦截表策略枚举，定义拦截器如何处理表

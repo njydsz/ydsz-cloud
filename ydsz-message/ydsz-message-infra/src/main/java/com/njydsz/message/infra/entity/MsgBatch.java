@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.infra.entity;
+package com.njydsz.message.infra.entity;
 
 import java.io.Serial;
 import java.time.LocalDateTime;

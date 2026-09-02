@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.auth;
+package com.njydsz.common.web.auth;
 
 import java.util.Collections;
 import java.util.Map;

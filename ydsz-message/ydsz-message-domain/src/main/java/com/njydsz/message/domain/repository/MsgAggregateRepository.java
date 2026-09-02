@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.domain.repository;
+package com.njydsz.message.domain.repository;
 
 import java.util.List;
 import java.util.Optional;

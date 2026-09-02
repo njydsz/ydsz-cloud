@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.interceptor;
+package com.njydsz.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import lombok.extern.slf4j.Slf4j;

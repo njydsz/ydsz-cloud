@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.cep;
+package com.njydsz.literule.server.cep;
 
 import java.io.Serial;
 import java.io.Serializable;

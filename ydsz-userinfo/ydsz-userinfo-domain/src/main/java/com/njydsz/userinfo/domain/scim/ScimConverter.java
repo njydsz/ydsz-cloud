@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.domain.scim;
+package com.njydsz.userinfo.domain.scim;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;

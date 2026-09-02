@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.config;.config
+package com.njydsz.common.safe.config;.config
 import java.util.List;
 
 import lombok.Data;

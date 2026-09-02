@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.scheduler;
+package com.njydsz.common.lock.scheduler;
 
 import java.time.Duration;
 import java.util.Collections;

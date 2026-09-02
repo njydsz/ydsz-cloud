@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.annotation;
+package com.njydsz.common.lock.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

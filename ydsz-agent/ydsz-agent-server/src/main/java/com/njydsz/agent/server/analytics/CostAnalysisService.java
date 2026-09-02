@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.analytics;
+package com.njydsz.agent.server.analytics;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.enums;
+package com.njydsz.common.safe.ratelimit.enums;
 
 /**
  * 限流结果枚举

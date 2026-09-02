@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.auth;
+package com.njydsz.userinfo.server.auth;
 
 /**
  * API 签名请求要素值对象。

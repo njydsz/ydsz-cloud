@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.provider;
+package com.njydsz.common.search.provider;
 
 /**
  * Provider 类型桥接工具

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.auth;
+package com.njydsz.common.web.auth;
 
 import com.njydsz.common.base.auth.BaseAuthInfo;
 

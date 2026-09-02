@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.channel;
+package com.njydsz.message.server.channel;
 
 import java.util.List;
 import java.util.Map;

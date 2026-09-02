@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.file.config;
+package com.njydsz.common.file.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

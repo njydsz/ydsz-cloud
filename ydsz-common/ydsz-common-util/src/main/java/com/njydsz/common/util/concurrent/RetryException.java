@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.concurrent;
+package com.njydsz.common.util.concurrent;
 
 /**
  * 重试耗尽异常（unchecked）。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.logging;
+package com.njydsz.common.sentry.logging;
 
 import java.net.InetAddress;
 import java.time.Instant;

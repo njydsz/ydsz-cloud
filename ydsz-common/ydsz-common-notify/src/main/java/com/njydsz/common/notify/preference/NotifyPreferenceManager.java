@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.preference;
+package com.njydsz.common.notify.preference;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;

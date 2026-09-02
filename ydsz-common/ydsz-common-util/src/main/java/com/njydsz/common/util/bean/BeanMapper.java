@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.bean;
+package com.njydsz.common.util.bean;
 
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;

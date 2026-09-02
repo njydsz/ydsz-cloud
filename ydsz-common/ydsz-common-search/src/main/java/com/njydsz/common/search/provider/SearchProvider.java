@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.provider;
+package com.njydsz.common.search.provider;
 
 import java.util.Collections;
 import java.util.List;

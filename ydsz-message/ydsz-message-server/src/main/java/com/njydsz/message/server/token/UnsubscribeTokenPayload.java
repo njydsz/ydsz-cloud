@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.token;
+package com.njydsz.message.server.token;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

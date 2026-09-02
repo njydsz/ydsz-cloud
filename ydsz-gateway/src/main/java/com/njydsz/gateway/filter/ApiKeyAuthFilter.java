@@ -1,4 +1,4 @@
-﻿package com.njydsz.gateway.filter;
+package com.njydsz.gateway.filter;
 
 import java.util.HashSet;
 import java.util.List;

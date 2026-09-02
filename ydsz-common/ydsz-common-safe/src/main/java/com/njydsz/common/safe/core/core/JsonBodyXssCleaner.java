@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.core;
+package com.njydsz.common.safe.core;
 
 import java.util.Iterator;
 

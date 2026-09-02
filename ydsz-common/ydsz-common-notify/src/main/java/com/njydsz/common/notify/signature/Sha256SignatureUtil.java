@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.signature;
+package com.njydsz.common.notify.signature;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

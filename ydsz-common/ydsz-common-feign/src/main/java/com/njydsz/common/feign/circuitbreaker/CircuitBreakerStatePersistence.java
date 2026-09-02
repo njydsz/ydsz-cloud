@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.circuitbreaker;
+package com.njydsz.common.feign.circuitbreaker;
 
 import java.time.Duration;
 

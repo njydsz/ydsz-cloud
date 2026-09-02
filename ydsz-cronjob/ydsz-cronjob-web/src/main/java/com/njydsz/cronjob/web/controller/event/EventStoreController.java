@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.web.controller.event;
+package com.njydsz.cronjob.web.controller.event;
 
 import java.util.List;
 

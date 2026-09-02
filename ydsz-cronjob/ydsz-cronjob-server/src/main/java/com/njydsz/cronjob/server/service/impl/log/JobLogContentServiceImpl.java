@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.service.impl.log;
+package com.njydsz.cronjob.server.service.impl.log;
 
 import java.util.Collections;
 import java.util.List;

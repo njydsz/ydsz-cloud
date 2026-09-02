@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.maintenance;
+package com.njydsz.cronjob.server.core.maintenance;
 
 /**
  * 扫描任务接口（P2-O3：统一扫描器契约）。

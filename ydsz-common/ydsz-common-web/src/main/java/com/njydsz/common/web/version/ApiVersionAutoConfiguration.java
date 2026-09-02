@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.version;
+package com.njydsz.common.web.version;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

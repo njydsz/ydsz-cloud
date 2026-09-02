@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core;
+package com.njydsz.cronjob.server.core;
 
 /**
  * 任务锁 key 构造工具（P0-11）。

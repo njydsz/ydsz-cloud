@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.sync;
+package com.njydsz.common.search.sync;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

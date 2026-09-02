@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.service;
+package com.njydsz.common.queue.service;
 
 import java.io.Closeable;
 import java.util.List;

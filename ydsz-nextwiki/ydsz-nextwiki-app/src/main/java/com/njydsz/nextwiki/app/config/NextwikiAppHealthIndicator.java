@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.app.config;
+package com.njydsz.nextwiki.app.config;
 
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;

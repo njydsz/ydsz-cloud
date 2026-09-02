@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.event;
+package com.njydsz.message.server.event;
 
 import java.time.LocalDateTime;
 import java.util.List;

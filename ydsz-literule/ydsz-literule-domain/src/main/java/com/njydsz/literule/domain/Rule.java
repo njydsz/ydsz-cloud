@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain;
+package com.njydsz.literule.domain;
 
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;

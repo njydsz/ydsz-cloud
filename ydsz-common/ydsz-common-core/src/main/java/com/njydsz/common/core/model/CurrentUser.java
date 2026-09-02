@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.model;
+package com.njydsz.common.core.model;
 
 import java.util.Set;
 

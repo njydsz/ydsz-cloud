@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.util;
+package com.njydsz.common.auth.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

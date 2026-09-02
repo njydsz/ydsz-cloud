@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.app.openapi;
+package com.njydsz.literule.app.openapi;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 

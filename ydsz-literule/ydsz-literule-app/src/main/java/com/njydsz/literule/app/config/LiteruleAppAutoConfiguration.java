@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.app.config;
+package com.njydsz.literule.app.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

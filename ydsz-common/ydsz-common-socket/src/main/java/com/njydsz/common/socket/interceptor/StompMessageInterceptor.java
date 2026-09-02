@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.socket.interceptor;
+package com.njydsz.common.socket.interceptor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

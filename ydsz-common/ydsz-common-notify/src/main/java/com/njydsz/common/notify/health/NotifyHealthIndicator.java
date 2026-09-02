@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.health;
+package com.njydsz.common.notify.health;
 
 import java.util.LinkedHashMap;
 import java.util.List;

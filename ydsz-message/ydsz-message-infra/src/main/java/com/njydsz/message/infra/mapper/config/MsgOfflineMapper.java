@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.infra.mapper.config;
+package com.njydsz.message.infra.mapper.config;
 
 import java.util.List;
 

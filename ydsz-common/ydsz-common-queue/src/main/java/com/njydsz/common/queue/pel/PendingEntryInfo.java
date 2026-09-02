@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.queue.pel;
+package com.njydsz.common.queue.pel;
 
 import java.time.LocalDateTime;
 

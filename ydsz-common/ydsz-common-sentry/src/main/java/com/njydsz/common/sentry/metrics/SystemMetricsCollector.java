@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.sentry.metrics;
+package com.njydsz.common.sentry.metrics;
 
 import java.io.File;
 import java.lang.management.GarbageCollectorMXBean;

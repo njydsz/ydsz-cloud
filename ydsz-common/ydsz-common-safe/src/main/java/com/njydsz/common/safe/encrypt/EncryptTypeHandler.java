@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.encrypt;
+package com.njydsz.common.safe.encrypt;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;

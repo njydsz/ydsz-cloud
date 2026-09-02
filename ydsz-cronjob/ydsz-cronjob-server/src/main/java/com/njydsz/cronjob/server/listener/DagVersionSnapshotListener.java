@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.listener;
+package com.njydsz.cronjob.server.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

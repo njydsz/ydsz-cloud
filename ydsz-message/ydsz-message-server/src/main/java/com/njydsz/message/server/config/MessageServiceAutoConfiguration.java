@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.config;
+package com.njydsz.message.server.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;

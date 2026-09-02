@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.health;
+package com.njydsz.message.server.health;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.encrypt;
+package com.njydsz.common.safe.encrypt;
 
 /**
  * 字段解密失败时的处理策略

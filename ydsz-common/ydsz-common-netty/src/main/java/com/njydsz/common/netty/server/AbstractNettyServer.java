@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.server;
+package com.njydsz.common.netty.server;
 
 import java.net.BindException;
 import java.net.InetSocketAddress;

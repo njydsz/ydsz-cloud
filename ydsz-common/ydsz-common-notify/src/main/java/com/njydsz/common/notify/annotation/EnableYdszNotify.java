@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.annotation;
+package com.njydsz.common.notify.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

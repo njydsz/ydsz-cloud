@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.auth;
+package com.njydsz.userinfo.server.auth;
 
 /**
  * SAML 认证异常

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.constant;
+package com.njydsz.common.auth.constant;
 
 /**
  * HTTP 请求头常量 — 网关内部签名。

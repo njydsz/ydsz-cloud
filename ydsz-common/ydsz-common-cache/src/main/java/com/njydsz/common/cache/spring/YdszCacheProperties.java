@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.cache.spring;
+package com.njydsz.common.cache.spring;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

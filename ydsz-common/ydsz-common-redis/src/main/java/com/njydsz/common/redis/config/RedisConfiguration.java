@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.redis.config;
+package com.njydsz.common.redis.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.framework.ProxyFactory;

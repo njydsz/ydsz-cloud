@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.impl;
+package com.njydsz.common.lock.impl;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;

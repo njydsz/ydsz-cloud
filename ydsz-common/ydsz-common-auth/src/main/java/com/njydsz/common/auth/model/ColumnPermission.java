@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.model;
+package com.njydsz.common.auth.model;
 
 /**
  * 单个字段的列权限定义。

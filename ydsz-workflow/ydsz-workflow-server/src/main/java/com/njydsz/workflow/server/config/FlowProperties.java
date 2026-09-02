@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.config;
+package com.njydsz.workflow.server.config;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

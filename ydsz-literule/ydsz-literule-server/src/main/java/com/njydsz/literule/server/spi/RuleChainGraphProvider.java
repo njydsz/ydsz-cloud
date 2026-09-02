@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.spi;
+package com.njydsz.literule.server.spi;
 
 import com.njydsz.literule.server.orchestrator.RuleChainGraph;
 

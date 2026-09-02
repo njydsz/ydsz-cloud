@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.excel.core.metadata;
+package com.njydsz.common.excel.core.metadata;
 
 import java.io.File;
 import java.io.InputStream;

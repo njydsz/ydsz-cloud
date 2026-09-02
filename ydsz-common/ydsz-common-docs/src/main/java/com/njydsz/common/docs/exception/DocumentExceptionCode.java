@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.exception;
+package com.njydsz.common.docs.exception;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;

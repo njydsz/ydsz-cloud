@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.web.controller.glue;
+package com.njydsz.cronjob.web.controller.glue;
 
 import java.io.Serial;
 import java.io.Serializable;

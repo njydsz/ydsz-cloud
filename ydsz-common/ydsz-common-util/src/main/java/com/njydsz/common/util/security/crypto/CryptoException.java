@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.security.crypto;
+package com.njydsz.common.util.security.crypto;
 
 /**
  * 加密操作异常——所有加密/解密失败都包装为此异常。

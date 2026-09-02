@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.security;
+package com.njydsz.common.auth.security;
 
 import java.nio.charset.StandardCharsets;
 import javax.crypto.Mac;

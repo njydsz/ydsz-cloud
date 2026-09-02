@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.queue;
+package com.njydsz.agent.server.queue;
 
 import com.njydsz.common.queue.constant.QueueChannels;
 

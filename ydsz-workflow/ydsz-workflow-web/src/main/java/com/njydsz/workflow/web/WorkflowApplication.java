@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.web;
+package com.njydsz.workflow.web;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

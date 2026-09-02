@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.metrics;
+package com.njydsz.common.safe.metrics;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;

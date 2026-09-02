@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.search.service;.service
+package com.njydsz.common.search.service;.service
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.file.storage;
+package com.njydsz.common.file.storage;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

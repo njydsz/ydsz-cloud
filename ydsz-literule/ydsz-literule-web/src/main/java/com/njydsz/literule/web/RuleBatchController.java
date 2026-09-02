@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.web;
+package com.njydsz.literule.web;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

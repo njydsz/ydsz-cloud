@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.health;
+package com.njydsz.common.base.health;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;

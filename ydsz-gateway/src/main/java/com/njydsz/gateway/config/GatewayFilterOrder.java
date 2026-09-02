@@ -1,4 +1,4 @@
-﻿package com.njydsz.gateway.config;
+package com.njydsz.gateway.config;
 
 import org.springframework.core.Ordered;
 

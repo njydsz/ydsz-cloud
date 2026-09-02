@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.web.config;
+package com.njydsz.common.web.config;
 
 import jakarta.servlet.MultipartConfigElement;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

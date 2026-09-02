@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core;
+package com.njydsz.cronjob.server.core;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

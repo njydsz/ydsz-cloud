@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.metrics;
+package com.njydsz.common.safe.metrics;
 
 /**
  * 安全模块度量标准（Metrics Standards）

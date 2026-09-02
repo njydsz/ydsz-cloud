@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.domain.job;
+package com.njydsz.cronjob.domain.job;
 
 /**
  * 任务执行上下文作用域（AutoCloseable）。

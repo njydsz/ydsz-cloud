@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.domain.event;
+package com.njydsz.workflow.domain.event;
 
 /**
  * 领域事件发布器接口（Domain 层契约）。

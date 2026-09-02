@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 字段级加密能力。
  *
  * <p>提供声明式字段级加密，通过 {@code @EncryptField} 注解 + {@code EncryptTypeHandler} 实现自动入库加密、出库解密。

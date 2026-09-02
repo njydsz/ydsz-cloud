@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.exception;
+package com.njydsz.common.lock.exception;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;

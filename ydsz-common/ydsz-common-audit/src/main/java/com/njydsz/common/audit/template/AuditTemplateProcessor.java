@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.audit.template;
+package com.njydsz.common.audit.template;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.form;
+package com.njydsz.workflow.server.form;
 
 import java.io.Serial;
 import java.io.Serializable;

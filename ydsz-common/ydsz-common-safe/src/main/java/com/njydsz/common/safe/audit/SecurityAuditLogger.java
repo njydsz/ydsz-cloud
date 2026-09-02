@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.audit;
+package com.njydsz.common.safe.audit;
 
 import java.time.Instant;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.audit.event;
+package com.njydsz.common.audit.event;
 
 import lombok.Builder;
 import lombok.Getter;

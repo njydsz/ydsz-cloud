@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.domain.vo;
+package com.njydsz.workflow.domain.vo;
 
 import java.util.List;
 

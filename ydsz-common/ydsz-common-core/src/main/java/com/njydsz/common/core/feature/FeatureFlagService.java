@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.feature;
+package com.njydsz.common.core.feature;
 
 /**
  * 特性开关（Feature Flag）服务接口。

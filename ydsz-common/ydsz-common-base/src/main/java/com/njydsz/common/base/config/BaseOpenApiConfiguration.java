@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.base.config;
+package com.njydsz.common.base.config;
 
 import java.util.LinkedHashMap;
 import java.util.List;

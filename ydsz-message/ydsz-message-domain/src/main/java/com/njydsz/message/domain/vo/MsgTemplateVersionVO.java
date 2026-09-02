@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.domain.vo;
+package com.njydsz.message.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;

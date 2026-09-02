@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.docs.preprocess;
+package com.njydsz.common.docs.preprocess;
 
 import com.njydsz.common.docs.domain.DocumentContent;
 

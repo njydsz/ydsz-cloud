@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.vo;
+package com.njydsz.literule.domain.vo;
 
 /**
  * 统计记录器

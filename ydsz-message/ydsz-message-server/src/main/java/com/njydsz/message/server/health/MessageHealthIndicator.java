@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.health;
+package com.njydsz.message.server.health;
 
 import java.util.List;
 import java.util.Map;

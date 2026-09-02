@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.infra.converter;
+package com.njydsz.system.infra.converter;
 import java.util.List;
 
 import org.mapstruct.IterableMapping;

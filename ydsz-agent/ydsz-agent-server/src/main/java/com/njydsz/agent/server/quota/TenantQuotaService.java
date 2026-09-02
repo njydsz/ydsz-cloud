@@ -1,4 +1,4 @@
-﻿package com.njydsz.agent.server.quota;
+package com.njydsz.agent.server.quota;
 
 import java.time.LocalDate;
 import java.time.YearMonth;

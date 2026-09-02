@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.excel.spring;
+package com.njydsz.common.excel.spring;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

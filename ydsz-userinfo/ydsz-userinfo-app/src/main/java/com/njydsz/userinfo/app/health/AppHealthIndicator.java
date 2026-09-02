@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.app.health;
+package com.njydsz.userinfo.app.health;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

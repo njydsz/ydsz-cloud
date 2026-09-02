@@ -1,4 +1,4 @@
-﻿package com.njydsz.gateway.loadbalancer;
+package com.njydsz.gateway.loadbalancer;
 
 import java.util.function.BiFunction;
 

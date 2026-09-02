@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.alert;
+package com.njydsz.common.safe.alert;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

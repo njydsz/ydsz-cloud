@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.csrf;
+package com.njydsz.common.safe.csrf;
 
 import java.time.Instant;
 

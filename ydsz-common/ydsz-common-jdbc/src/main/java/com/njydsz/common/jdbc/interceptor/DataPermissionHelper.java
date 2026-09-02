@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.interceptor;
+package com.njydsz.common.jdbc.interceptor;
 
 import java.lang.reflect.Method;
 import java.util.Collections;

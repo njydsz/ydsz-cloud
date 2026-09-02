@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.exception.handler;
+package com.njydsz.common.exception.handler;
 
 import java.net.URI;
 import java.time.Instant;

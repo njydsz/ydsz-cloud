@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.server.service;
+package com.njydsz.nextwiki.server.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

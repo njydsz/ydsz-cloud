@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.signature;
+package com.njydsz.common.notify.signature;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

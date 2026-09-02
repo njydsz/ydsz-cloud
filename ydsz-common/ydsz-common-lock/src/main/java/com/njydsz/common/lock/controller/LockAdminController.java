@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.lock.controller;
+package com.njydsz.common.lock.controller;
 
 import java.util.ArrayList;
 import java.util.Collections;

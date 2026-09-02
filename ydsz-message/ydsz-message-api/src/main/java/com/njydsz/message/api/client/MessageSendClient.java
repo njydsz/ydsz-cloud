@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.api.client;
+package com.njydsz.message.api.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;

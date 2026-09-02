@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.tenant.redis;
+package com.njydsz.common.tenant.redis;
 
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;

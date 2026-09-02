@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.feign.aspect;
+package com.njydsz.common.feign.aspect;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

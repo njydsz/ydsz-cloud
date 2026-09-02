@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.service;
+package com.njydsz.message.server.service;
 
 import java.util.List;
 import java.util.Map;

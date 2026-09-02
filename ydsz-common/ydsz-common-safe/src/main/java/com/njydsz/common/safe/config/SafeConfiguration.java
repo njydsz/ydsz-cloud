@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.config;
+package com.njydsz.common.safe.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;

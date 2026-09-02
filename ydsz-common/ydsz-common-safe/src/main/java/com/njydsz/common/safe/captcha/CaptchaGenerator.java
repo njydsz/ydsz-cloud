@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.captcha;
+package com.njydsz.common.safe.captcha;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

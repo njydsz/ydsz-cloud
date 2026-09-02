@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.server.service;
+package com.njydsz.userinfo.server.service;
 
 import com.njydsz.userinfo.domain.dto.AccountUnlockDTO;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;

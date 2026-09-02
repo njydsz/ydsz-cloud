@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.sdk;
+package com.njydsz.literule.server.sdk;
 
 import java.util.ArrayList;
 import java.util.List;

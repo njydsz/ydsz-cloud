@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.auth.constant;
+package com.njydsz.common.auth.constant;
 
 import lombok.Getter;
 

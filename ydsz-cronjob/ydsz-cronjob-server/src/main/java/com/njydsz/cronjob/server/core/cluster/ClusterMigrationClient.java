@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.core.cluster;
+package com.njydsz.cronjob.server.core.cluster;
 
 import java.net.URI;
 import java.net.http.HttpClient;

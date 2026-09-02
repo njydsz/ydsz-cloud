@@ -1,4 +1,4 @@
-﻿package com.njydsz.cronjob.server.health;
+package com.njydsz.cronjob.server.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

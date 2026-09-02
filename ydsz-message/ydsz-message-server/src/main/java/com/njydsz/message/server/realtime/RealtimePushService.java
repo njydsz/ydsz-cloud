@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.server.realtime;
+package com.njydsz.message.server.realtime;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.safe.ratelimit.decorator;
+package com.njydsz.common.safe.ratelimit.decorator;
 
 import java.time.Instant;
 

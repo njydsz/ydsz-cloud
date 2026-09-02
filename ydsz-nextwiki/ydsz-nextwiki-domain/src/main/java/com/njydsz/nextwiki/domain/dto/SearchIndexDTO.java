@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.domain.dto;
+package com.njydsz.nextwiki.domain.dto;
 
 import java.io.Serializable;
 

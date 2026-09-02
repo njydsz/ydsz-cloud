@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.server.metrics;
+package com.njydsz.nextwiki.server.metrics;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.util.date;
+package com.njydsz.common.util.date;
 
 import java.time.DateTimeException;
 import java.time.DayOfWeek;

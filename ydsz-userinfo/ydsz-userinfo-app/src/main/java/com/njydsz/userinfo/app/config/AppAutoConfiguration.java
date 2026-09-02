@@ -1,4 +1,4 @@
-﻿package com.njydsz.userinfo.app.config;
+package com.njydsz.userinfo.app.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;

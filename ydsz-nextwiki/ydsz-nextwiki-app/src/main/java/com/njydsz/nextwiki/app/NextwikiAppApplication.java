@@ -1,4 +1,4 @@
-﻿package com.njydsz.nextwiki.app;
+package com.njydsz.nextwiki.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

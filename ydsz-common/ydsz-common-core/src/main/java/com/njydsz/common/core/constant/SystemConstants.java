@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.constant;
+package com.njydsz.common.core.constant;
 
 /**
  * 系统级常量定义。

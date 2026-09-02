@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.notify.security;
+package com.njydsz.common.notify.security;
 
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.slf4j.Logger;
