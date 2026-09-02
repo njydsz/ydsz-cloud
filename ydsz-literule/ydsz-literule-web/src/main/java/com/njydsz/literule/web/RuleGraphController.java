@@ -30,7 +30,6 @@ import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
-import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.StringVO;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.orchestrator.RuleChainGraph;
@@ -152,7 +151,6 @@ public class RuleGraphController {
    *
    * <p>供前端"实时校验"按钮调用，返回 ERROR/WARN 两级问题。
    *
-   * @param ruleCode 规则编码
    * @param graph 规则链画布数据（包含节点和边的完整结构）
    * @return 校验问题列表（ERROR/WARN 两级），为空表示校验通过
    */
