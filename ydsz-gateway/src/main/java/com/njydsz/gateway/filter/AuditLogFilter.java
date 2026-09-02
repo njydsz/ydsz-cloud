@@ -178,7 +178,7 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
     String sanitizedPath = sanitizePath(path);
 
     // 使用 SLF4J key=value 结构化格式（日志平台原生解析）
-    Map<String, String> fields = new HashMap<>();
+    Map<String, String> fields = new HashMap<>(16);
     fields.put("eventType", "AUDIT");
     fields.put("traceId", safeValue(traceId));
     fields.put("userId", safeValue(userId));

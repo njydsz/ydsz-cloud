@@ -341,7 +341,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
    */
   private List<String> computeActions(
       FlowInstanceVO instance, List<FlowRunTaskVO> pending, String userId) {
-    List<String> actions = new ArrayList<>();
+    List<String> actions = new ArrayList<>(8);
     if (userId == null) {
       return actions;
     }

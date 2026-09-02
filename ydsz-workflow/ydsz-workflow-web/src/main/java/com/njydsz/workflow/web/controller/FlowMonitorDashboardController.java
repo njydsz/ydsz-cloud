@@ -175,7 +175,7 @@ public class FlowMonitorDashboardController {
     int total = all.size();
     int from = Math.min((pageNum - 1) * pageSize, total);
     int to = Math.min(from + pageSize, total);
-    List<Map<String, Object>> page = from < to ? all.subList(from, to) : new ArrayList<>();
+    List<Map<String, Object>> page = from < to ? all.subList(from, to) : new ArrayList<>(0);
 
     return PageResponse.success((long) total, (long) pageNum, (long) pageSize, page);
   }
@@ -289,38 +289,38 @@ public class FlowMonitorDashboardController {
   @Operation(summary = "监控仪表盘聚合数据（首屏一次加载）")
   public YdszResponse<Map<String, Object>> monitorDashboard() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    Map<String, Object> dashboard = new LinkedHashMap<>();
+    Map<String, Object> dashboard = new LinkedHashMap<>(16);
 
     try {
       dashboard.put("overview", buildOverview(tenantId));
     } catch (Exception e) {
       log.warn("[Dashboard] overview 聚合失败: {}", e.getMessage());
-      dashboard.put("overview", new LinkedHashMap<>());
+      dashboard.put("overview", new LinkedHashMap<>(16));
     }
 
     try {
       dashboard.put("instanceTrend", buildInstanceTrend(tenantId, TREND_DAYS));
     } catch (Exception e) {
       log.warn("[Dashboard] instanceTrend 聚合失败: {}", e.getMessage());
-      dashboard.put("instanceTrend", new ArrayList<>());
+      dashboard.put("instanceTrend", new ArrayList<>(0));
     }
 
     try {
       List<Map<String, Object>> overdueTop = taskService.selectOverdueTopN(tenantId, OVERDUE_TOP_N);
-      dashboard.put("overdueTop5", overdueTop != null ? overdueTop : new ArrayList<>());
+      dashboard.put("overdueTop5", overdueTop != null ? overdueTop : new ArrayList<>(0));
     } catch (Exception e) {
       log.warn("[Dashboard] overdueTop5 查询失败: {}", e.getMessage());
-      dashboard.put("overdueTop5", new ArrayList<>());
+      dashboard.put("overdueTop5", new ArrayList<>(0));
     }
 
     try {
       List<FlowAnomalyVO> anomalies =
           efficiencyService.detectAnomalies(
               tenantId, ANOMALY_TOP_N, STUCK_HOURS_THRESHOLD, LONG_RUNNING_DAYS);
-      dashboard.put("anomalyTop5", anomalies != null ? anomalies : new ArrayList<>());
+      dashboard.put("anomalyTop5", anomalies != null ? anomalies : new ArrayList<>(0));
     } catch (Exception e) {
       log.warn("[Dashboard] anomalyTop5 查询失败: {}", e.getMessage());
-      dashboard.put("anomalyTop5", new ArrayList<>());
+      dashboard.put("anomalyTop5", new ArrayList<>(0));
     }
 
     try {

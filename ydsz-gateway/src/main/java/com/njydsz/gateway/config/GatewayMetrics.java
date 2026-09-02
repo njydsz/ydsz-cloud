@@ -254,7 +254,7 @@ public class GatewayMetrics {
     if (keyValuePairs == null || keyValuePairs.length == 0) {
       return Collections.emptyMap();
     }
-    Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new HashMap<>(16);
     for (int i = 0; i < keyValuePairs.length - 1; i += 2) {
       map.put(keyValuePairs[i], keyValuePairs[i + 1]);
     }

@@ -305,7 +305,7 @@ public class FlowDesignerController {
   @Operation(summary = "获取办理人类型列表（设计器下拉选择）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   public YdszResponse<List<Map<String, String>>> listAssigneeTypes() {
-    List<Map<String, String>> result = new ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>(16);
     for (FlowAssigneeType t : FlowAssigneeType.values()) {
       result.add(Map.of("code", t.name(), "desc", t.getDesc()));
     }
@@ -338,7 +338,7 @@ public class FlowDesignerController {
   @Operation(summary = "获取所有监听器事件类型")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   public YdszResponse<List<Map<String, String>>> listListenerEventTypes() {
-    List<Map<String, String>> result = new ArrayList<>();
+    List<Map<String, String>> result = new ArrayList<>(16);
     for (FlowListenerEventType t : FlowListenerEventType.values()) {
       result.add(Map.of("code", t.getCode(), "desc", t.getDesc()));
     }
