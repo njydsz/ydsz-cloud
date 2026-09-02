@@ -512,7 +512,7 @@ public class ChunkUploadApplicationService {
   public Set<Integer> getUploadedChunks(String uploadId) {
     Set<String> uploaded = collectionOps.sMembers(KEY_UPLOADED_CHUNKS + uploadId, String.class);
     if (uploaded == null) {
-      return new HashSet<>();
+      return new HashSet<>(16);
     }
     return uploaded.stream().map(Integer::parseInt).collect(Collectors.toSet());
   }

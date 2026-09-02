@@ -24,8 +24,8 @@ import java.util.Set;
  */
 public final class MagicNumberRegistry {
 
-  private static final Map<String, byte[]> REGISTRY = new HashMap<>();
-  private static final Map<String, Set<String>> EXT_TO_MAGIC_TYPES = new HashMap<>();
+  private static final Map<String, byte[]> REGISTRY = new HashMap<>(32);
+  private static final Map<String, Set<String>> EXT_TO_MAGIC_TYPES = new HashMap<>(32);
 
   static {
     register("PNG", hex("89 50 4E 47"));

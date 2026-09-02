@@ -395,7 +395,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    * @return 循环体节点 ID 集合
    */
   private static Set<String> collectLoopBodyNodeIds(AgentDag dag) {
-    Set<String> loopBodyNodeIds = new HashSet<>();
+    Set<String> loopBodyNodeIds = new HashSet<>(16);
     for (AgentDag.Node node : dag.getNodes().values()) {
       String nodeType = (String) node.getConfig().getOrDefault("nodeType", "AGENT");
       if ("LOOP".equalsIgnoreCase(nodeType)) {
@@ -641,9 +641,9 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    * @throws IllegalArgumentException DAG 存在环
    */
   private List<String> topologicalSort(AgentDag dag) {
-    List<String> result = new ArrayList<>();
-    Set<String> visited = new HashSet<>();
-    Set<String> visiting = new HashSet<>();
+    List<String> result = new ArrayList<>(dag.getNodes().size());
+    Set<String> visited = new HashSet<>(16);
+    Set<String> visiting = new HashSet<>(16);
     for (String nodeId : dag.getNodes().keySet()) {
       topologicalVisit(dag, nodeId, visited, visiting, result);
     }

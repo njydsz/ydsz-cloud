@@ -50,10 +50,10 @@ public final class FileTypeDetector {
   private static final int MAGIC_HEADER_SIZE = 32;
 
   /** 文件类型到 Magic 签名的映射 */
-  private static final Map<String, MagicSignature> SIGNATURES = new HashMap<>();
+  private static final Map<String, MagicSignature> SIGNATURES = new HashMap<>(32);
 
   /** 文件扩展名到文件类型集合的映射 */
-  private static final Map<String, Set<String>> EXT_TO_TYPES = new HashMap<>();
+  private static final Map<String, Set<String>> EXT_TO_TYPES = new HashMap<>(32);
 
   static {
     register("JPEG", new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF}, "jpg", "jpeg");

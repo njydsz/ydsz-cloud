@@ -422,13 +422,13 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   private Map<String, Object> parseVariables(String variableJson) {
     if (!StringUtils.hasText(variableJson)) {
-      return new HashMap<>();
+      return new HashMap<>(16);
     }
     try {
       Map<String, Object> m = YdszJson.parseMap(variableJson);
-      return m != null ? m : new HashMap<>();
+      return m != null ? m : new HashMap<>(16);
     } catch (Exception e) {
-      return new HashMap<>();
+      return new HashMap<>(16);
     }
   }
 }

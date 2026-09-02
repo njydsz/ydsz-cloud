@@ -513,7 +513,61 @@ rules:
     source: "编码规范 13 章"
 
   # ============================================
-  # 十二、工程约束（3 条）
+  # 十二、编译器警告处理（1 条，P0）
+  # ============================================
+  - id: "YDIZ-WARN-001"
+    category: "warnings"
+    severity: "P0"
+    title: "【强制】禁止使用 @SuppressWarnings 抑制告警，应直接修复根因"
+    description: |
+      警告是编译器帮助发现潜在问题的机制，必须通过修复代码根因来解决，而非简单抑制。
+      AI 编码时严禁生成 @SuppressWarnings 注解来'消除'告警，必须从代码层面彻底解决问题。
+
+      **禁止抑制的情形及正确做法**：
+      - unchecked 警告 → 使用泛型明确类型，改用 TypeReference、Class.cast() 等类型安全方式
+      - unused 警告 → 删除未使用代码，如因框架要求保留需添加注释说明理由
+      - rawtypes 警告 → 补充完整泛型参数，避免使用原始类型
+      - PMD/NullAway 等工具告警 → 修复底层代码问题
+
+      **允许保留的例外情形（需紧跟注释说明原因）**：
+      1. @SuperBuilder（Lombok）场景 — Lombok 生成代码触发 unchecked 警告且无法在源码层面修复
+      2. 核心基础模块为兼容旧版 API 的 deprecation 警告（需注明兼容目的和版本）
+      3. 泛型擦除导致编译期无法验证的类型转换（如 Class<?> → Class<T>）
+      4. 调用第三方库 API 返回原始类型（如 JSqlParser、反射 Method.invoke() 等）
+
+      所有允许保留的 @SuppressWarnings 必须紧跟单行注释说明具体原因。
+    pattern: "代码中出现 @SuppressWarnings 注解"
+    example_bad: |
+      // ❌ 用注解掩盖类型安全问题
+      @SuppressWarnings("unchecked")
+      public Map<String, Object> parseJson(String json) {
+          return objectMapper.readValue(json, Map.class);
+      }
+
+      // ❌ 用注解保留无用代码
+      @SuppressWarnings("unused")
+      private void deprecatedMethod() { }
+    example_good: |
+      // ✅ 使用 TypeReference 解决类型安全问题
+      public Map<String, Object> parseJson(String json) {
+          return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+      }
+
+      // ✅ 删除无用代码
+
+      // ✅ @SuperBuilder 场景允许使用（例外）
+      @SuppressWarnings("unchecked") // @SuperBuilder 生成的代码触发 unchecked 警告，Lombok 层面无法修复
+      @Data @SuperBuilder
+      public class UserAccount { private String username; }
+    fix: |
+      1. 识别警告根本原因
+      2. 优先通过代码重构/类型精确化解决
+      3. 仅当确属允许例外时保留，并添加注释说明原因
+      4. CR 时重点审查所有 @SuppressWarnings
+    source: "编码规范 §6.10（强制）"
+
+  # ============================================
+  # 十三、工程约束（3 条）
   # ============================================
   - id: "YDIZ-ENG-001"
     category: "engineering"
@@ -558,4 +612,5 @@ stats:
   common-reuse: 8
   security: 2
   engineering: 3
-  total: 45
+  warnings: 1
+  total: 46

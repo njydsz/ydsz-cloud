@@ -409,10 +409,10 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
   private Map<String, Object> parseVariables(String variableJson) {
     if (variableJson == null || variableJson.isBlank()) {
-      return new HashMap<>();
+      return new HashMap<>(16);
     }
     Map<String, Object> map = YdszJson.parseMap(variableJson);
-    return map == null ? new HashMap<>() : map;
+    return map == null ? new HashMap<>(16) : map;
   }
 
   private String nullSafe(String s) {

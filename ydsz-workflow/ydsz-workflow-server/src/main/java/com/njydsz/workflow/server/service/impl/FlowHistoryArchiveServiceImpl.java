@@ -173,7 +173,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     int archived = 0;
     int missing = 0;
     int errors = 0;
-    List<String> archivedIds = new ArrayList<>();
+    List<String> archivedIds = new ArrayList<>(16);
 
     for (FlowInstanceVO instance : candidates) {
       if (System.currentTimeMillis() - start > maxMs) {

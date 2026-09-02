@@ -30,6 +30,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
+        <!-- Spring Cloud OpenFeign（提供 EnableDiscoveryClient 和 Feign 能力） -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <!-- ydsz-common-feign（提供 EnableYdszFeign 注解） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
         <!-- spring-boot-health（Spring Boot 4.x: Health/HealthIndicator 迁移到独立模块） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

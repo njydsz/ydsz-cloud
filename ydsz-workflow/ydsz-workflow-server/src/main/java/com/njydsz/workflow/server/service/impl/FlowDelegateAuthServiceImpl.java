@@ -569,7 +569,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     if (tenantId == null || ownerUserId == null) {
       return ownerUserId;
     }
-    Set<String> visited = new HashSet<>();
+    Set<String> visited = new HashSet<>(16);
     visited.add(ownerUserId);
     String currentUserId = ownerUserId;
     int depth = 0;
