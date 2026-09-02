@@ -12,11 +12,6 @@
     <name>ydsz-nextwiki-server</name>
     <description>Application Layer - 应用服务编排、异步管线、事件监听</description>
     <dependencies>
-        <!-- api 层（Feign Client + DTO：NextwikiDTOs.SortItem/SummaryResult 等） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-nextwiki-api</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-domain</artifactId>
@@ -109,7 +104,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
-
 
     </dependencies>
 </project>

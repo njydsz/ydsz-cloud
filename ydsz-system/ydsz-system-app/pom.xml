@@ -19,10 +19,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-system-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-system-domain</artifactId>
         </dependency>
         <!-- HealthIndicator（SystemAppHealthIndicator 使用，修复缺失依赖导致的编译失败） -->

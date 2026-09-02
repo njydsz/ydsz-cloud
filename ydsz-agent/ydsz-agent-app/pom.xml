@@ -18,11 +18,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-app</artifactId>
         </dependency>
-        <!-- Agent 模块 API 契约 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-agent-api</artifactId>
-        </dependency>
         <!-- Agent 模块领域层 -->
         <dependency>
             <groupId>com.njydsz</groupId>

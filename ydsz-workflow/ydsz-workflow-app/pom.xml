@@ -23,11 +23,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
         </dependency>
-        <!-- 本模块 API 契约 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-api</artifactId>
-        </dependency>
         <!-- 本模块领域层 -->
         <dependency>
             <groupId>com.njydsz</groupId>

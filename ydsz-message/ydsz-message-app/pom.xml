@@ -19,10 +19,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-message-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-domain</artifactId>
         </dependency>
         <!-- Actuator：提供健康检查端点（HealthContributor API） -->

@@ -249,8 +249,8 @@ public class RuleTraceController {
       boolean currentTriggered = currentResult != null && currentResult.isTriggered();
       String historicalSeverity = trace.getSeverity();
       String currentSeverity =
-          currentResult != null && currentResult.getSeverity() != null
-              ? currentResult.getSeverity().name()
+          currentResult != null && currentResult.getSeverity() != null && RuleSeverity.fromCode(currentResult.getSeverity()) != null
+              ? RuleSeverity.fromCode(currentResult.getSeverity()).name()
               : null;
 
       // 严重度归一化（null 视为一致）
@@ -373,7 +373,10 @@ public class RuleTraceController {
       boolean historicalTriggered = Boolean.TRUE.equals(trace.getTriggered());
       boolean newTriggered = newResult.isTriggered();
       String historicalSeverity = trace.getSeverity();
-      String newSeverity = newResult.getSeverity() != null ? newResult.getSeverity().name() : null;
+      String newSeverity = newResult.getSeverity() != null
+              && RuleSeverity.fromCode(newResult.getSeverity()) != null
+                      ? RuleSeverity.fromCode(newResult.getSeverity()).name()
+                      : null;
 
       if (historicalTriggered) {
         historicalTriggeredCount++;

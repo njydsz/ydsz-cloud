@@ -17,11 +17,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-domain</artifactId>
         </dependency>
-        <!-- ydsz-literule-api: RuleResult / RuleDefinition / RuleContext 等 API 类型 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-api</artifactId>
-        </dependency>
         <!-- common-web 传递引入: common-base(→core/util/exception), common-auth, common-safe, common-redis -->
         <!-- common-jdbc 传递引入: common-domain -->
         <!-- P1-A1: 显式声明 common-auth（使用 @EnableYdszAuth / @AuthApiPermission 等能力） -->
@@ -30,7 +25,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
-                <dependency>
+        <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-lock</artifactId>
         </dependency>

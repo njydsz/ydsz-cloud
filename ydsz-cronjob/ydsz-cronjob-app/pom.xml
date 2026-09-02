@@ -19,10 +19,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-cronjob-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-cronjob-domain</artifactId>
         </dependency>
         <!-- P0-FIX: CronjobAppHealthIndicator 使用 Spring Boot 4.x 新结构 spring-boot-health（Health/HealthIndicator
