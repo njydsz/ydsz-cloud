@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.reader;
+package com.njydsz.common.json.reader;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

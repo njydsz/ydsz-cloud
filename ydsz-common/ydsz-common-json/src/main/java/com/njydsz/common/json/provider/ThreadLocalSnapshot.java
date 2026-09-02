@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.provider;
+package com.njydsz.common.json.provider;
 
 import java.util.Set;
 

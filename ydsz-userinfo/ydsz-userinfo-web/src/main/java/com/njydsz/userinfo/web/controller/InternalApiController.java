@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -69,7 +70,7 @@ import com.njydsz.userinfo.web.annotation.RequireInternal;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.common.feign.client.UserInfoInternalClient Feign Client 接口
+ * @see com.njydsz.userinfo.api.client.OrgQueryClient Feign Client 接口
  */
 @Slf4j
 @Validated
@@ -97,6 +98,8 @@ public class InternalApiController {
    * @param userId 用户 ID（雪花算法字符串）
    * @return 用户 VO；不存在时为 null
    */
+  @RateLimit(resource = "userinfo.internalapi.getUserInfo", threshold = 100)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:get-user-info:' + #userId", ttlSeconds = 5)
   @GetMapping("/user/info")
   @Operation(summary = "根据 userId 查询用户信息（内部调用）")
   public YdszResponse<UserAccountVO> getUserInfo(@RequestParam String userId) {
@@ -112,6 +115,8 @@ public class InternalApiController {
    *
    * @return 部门树形结构列表（每个节点含 children）
    */
+  @RateLimit(resource = "userinfo.internalapi.getDeptTree", threshold = 50)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:get-dept-tree'", ttlSeconds = 5)
   @GetMapping("/dept/tree")
   @Operation(summary = "查询部门树形结构（内部调用）")
   public YdszResponse<List<DepartmentTreeVO>> getDeptTree() {
@@ -125,6 +130,8 @@ public class InternalApiController {
    *
    * @return 部门列表
    */
+  @RateLimit(resource = "userinfo.internalapi.getDeptList", threshold = 50)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:get-dept-list'", ttlSeconds = 5)
   @GetMapping("/dept/list")
   @Operation(summary = "查询部门列表（内部调用）")
   public YdszResponse<List<DepartmentVO>> getDeptList() {
@@ -141,6 +148,8 @@ public class InternalApiController {
    * @param roleCode 角色编码（如 {@code PM} / {@code FINANCE}）
    * @return 该角色下的用户 ID 列表；角色不存在时返回空列表
    */
+  @RateLimit(resource = "userinfo.internalapi.listUserIdsByRole", threshold = 100)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:list-user-ids-by-role:' + #roleCode", ttlSeconds = 5)
   @GetMapping("/user/list-by-role")
   @Operation(summary = "按角色编码查询用户 ID 列表（工作流 role:xxx 展开，带缓存）")
   public YdszResponse<List<String>> listUserIdsByRole(@RequestParam String roleCode) {
@@ -155,6 +164,8 @@ public class InternalApiController {
    * @param userId 用户 ID
    * @return 用户的角色编码列表；用户无角色时返回空列表
    */
+  @RateLimit(resource = "userinfo.internalapi.listRoleCodesByUser", threshold = 100)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:list-role-codes-by-user:' + #userId", ttlSeconds = 5)
   @GetMapping("/user/role-codes")
   @Operation(summary = "查询用户拥有的角色编码列表（工作流待办反查）")
   public YdszResponse<List<String>> listRoleCodesByUserId(@RequestParam String userId) {
@@ -171,6 +182,8 @@ public class InternalApiController {
    * @param userId 用户 ID
    * @return 部门 ID 列表
    */
+  @RateLimit(resource = "userinfo.internalapi.listDeptIdsByUser", threshold = 100)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:list-dept-ids-by-user:' + #userId", ttlSeconds = 5)
   @GetMapping("/user/dept-ids")
   @Operation(summary = "查询用户所属部门 ID 列表（工作流待办反查）")
   public YdszResponse<List<String>> listDeptIdsByUserId(@RequestParam String userId) {
@@ -187,6 +200,8 @@ public class InternalApiController {
    * @param userId 用户 ID
    * @return 直属上级用户 ID；无上级时返回 null
    */
+  @RateLimit(resource = "userinfo.internalapi.getLeaderByUser", threshold = 100)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:get-leader-by-user:' + #userId", ttlSeconds = 5)
   @GetMapping("/user/leader")
   @Operation(summary = "查询用户直属上级 ID（工作流 leader:xxx 展开，带缓存）")
   public YdszResponse<String> getLeaderByUserId(@RequestParam String userId) {
@@ -203,6 +218,8 @@ public class InternalApiController {
    * @param positionCode 岗位编码（如 {@code PM} / {@code QA}）
    * @return 该岗位下的用户 ID 列表；岗位不存在时返回空列表
    */
+  @RateLimit(resource = "userinfo.internalapi.listUserIdsByPosition", threshold = 100)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:list-user-ids-by-position:' + #positionCode", ttlSeconds = 5)
   @GetMapping("/user/list-by-position")
   @Operation(summary = "按岗位编码查询用户 ID 列表（工作流 position:xxx 展开，带缓存）")
   public YdszResponse<List<String>> listUserIdsByPosition(@RequestParam String positionCode) {
@@ -219,6 +236,8 @@ public class InternalApiController {
    * @param deptId 部门 ID（雪花算法字符串）
    * @return 部门负责人用户 ID；部门不存在或无负责人时返回 null
    */
+  @RateLimit(resource = "userinfo.internalapi.getDeptLeaderById", threshold = 100)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:get-dept-leader-by-id:' + #deptId", ttlSeconds = 5)
   @GetMapping("/dept/leader-by-id")
   @Operation(summary = "按部门 ID 查询部门负责人（工作流 dept:数字 展开，带缓存）")
   public YdszResponse<String> getDeptLeaderByDeptId(@RequestParam String deptId) {
@@ -235,6 +254,8 @@ public class InternalApiController {
    * @param deptCode 部门编码（如 {@code TECH} / {@code FINANCE}）
    * @return 部门负责人用户 ID；部门不存在或无负责人时返回 null
    */
+  @RateLimit(resource = "userinfo.internalapi.getDeptLeaderByCode", threshold = 100)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:get-dept-leader-by-code:' + #deptCode", ttlSeconds = 5)
   @GetMapping("/dept/leader-by-code")
   @Operation(summary = "按部门编码查询部门负责人（工作流 dept:非数字 展开，带缓存）")
   public YdszResponse<String> getDeptLeaderByDeptCode(@RequestParam String deptCode) {

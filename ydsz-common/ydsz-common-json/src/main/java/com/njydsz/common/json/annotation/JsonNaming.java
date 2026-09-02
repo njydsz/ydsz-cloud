@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.annotation;
+package com.njydsz.common.json.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

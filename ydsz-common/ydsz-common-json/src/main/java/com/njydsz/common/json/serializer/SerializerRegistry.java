@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.serializer;
+package com.njydsz.common.json.serializer;
 
 import java.util.Map;
 import java.util.Set;

@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.01"
-  source: "docs/云顶编码规范.md v1.0.3"
+  version: "26.09.02"
+  source: "docs/云顶编码规范.md v1.0.5"
   last_synced: "2026-09-02"
-  last_updated: "2026-09-02（YDIZ-IMPORT-001 增强：增加 FQN 详细示例、扩展 checkstyle 检测范围至 java.time/math/sql/nio 等 JDK 包）"
-  total_rules: 42
+  last_updated: "2026-09-02（新增 YDIZ-CODE-001 文件编码规范：UTF-8 无 BOM，P0 阻断级）"
+  total_rules: 47
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -25,7 +25,47 @@ meta:
 
 rules:
   # ============================================
-  # 一、Import 导入规范（5 条，全部 P0）
+  # 一、文件编码规范（1 条，P0）
+  # ============================================
+  - id: "YDIZ-CODE-001"
+    category: "encoding"
+    severity: "P0"
+    title: "【强制】所有源文件必须使用 UTF-8（无 BOM）编码"
+    description: |
+      所有项目源文件（Java、XML、YAML、properties、Markdown、Python 等）必须使用 **UTF-8 无 BOM** 编码保存。
+
+      **为什么禁止 BOM**：
+      - BOM（Byte Order Mark，字节顺序标记）是 Unicode 文件开头的特殊标记字节（EF BB BF）
+      - UTF-8 是字节顺序无关的编码，BOM 在 UTF-8 中不仅无用，还会导致许多工具链解析错误
+      - Java 编译器（javac）不允许源文件以 BOM 开头，若有 BOM 会报 "illegal character: \ufeff" 错误
+      - Shell 脚本、PHP、Python 等解释型语言的 shebang 行（#!...）被 BOM 破坏后无法执行
+      - Maven/Gradle 构建、MyBatis XML 解析、YAML 配置解析均可能因 BOM 失败
+
+      **项目现状**：
+      - .editorconfig 已配置 charset = utf-8，但 Windows 环境下部分编辑器（VS、旧版 IntelliJ 新建文件模板）仍会默认追加 BOM
+      - AI 编码工具（CatPaw、WorkBuddy 等）生成新文件时必须显式指定无 BOM 编码，禁止依赖系统默认编码
+      - 中文 Windows 系统默认编码为 GBK，若未显式指定 UTF-8，保存的中文注释/字符串可能被错误编码
+
+      **修复方式**：
+      - IntelliJ：Settings → Editor → File Encodings → 勾选 "Transparent native-to-ascii conversion"，确保 "Project Encoding" 和 "Default encoding for properties files" 均为 UTF-8，且 "with BOM" 相关选项不勾选
+      - VS Code：默认使用 UTF-8 无 BOM，确认 "files.encoding" 设置为 "utf8" 而非 "utf8bom"
+    pattern: "文件开头 3 个字节为 EF BB BF（UTF-8 BOM 标记）"
+    fix: |
+      1. 使用编辑器重新保存为 UTF-8 无 BOM格式（IntelliJ: File → File Encoding → UTF-8 并选择 "Remove BOM"；VS Code: 右下角点击编码 → Save with Encoding → UTF-8（无 BOM））
+      2. 批量修复可用命令：find . -name "*.java" -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
+      3. AI 生成新文件时必须在文件创建后立即确认编码为 UTF-8 无 BOM
+    example_bad: |
+      ❌ 文件开头存在 BOM（不可见，但 hexdump 可看到 EF BB BF）
+      hexdump -C File.java | head -1
+      00000000  ef bb bf 70 61 63 6b 61  67 65  ...（BOM 字节）
+    example_good: |
+      ✅ 文件开头直接是有效字符
+      hexdump -C File.java | head -1
+      00000000  70 61 63 6b 61 67 65 20  63 6f 6d 2e ...（无 BOM）
+    source: "编码规范 §1.1 字符编码与换行符 - 【强制】"
+
+  # ============================================
+  # 二、Import 导入规范（5 条，全部 P0）
   # ============================================
   - id: "YDIZ-IMPORT-001"
     category: "import"
@@ -95,7 +135,7 @@ rules:
     source: "编码规范 22.3 节、23.6 节"
 
   # ============================================
-  # 二、命名规范（4 条）
+  # 三、命名规范（4 条）
   # ============================================
   - id: "YDIZ-NAME-001"
     category: "naming"
@@ -142,7 +182,7 @@ rules:
     source: "编码规范 2.1 节"
 
   # ============================================
-  # 三、OOP 规约（5 条）
+  # 四、OOP 规约（5 条）
   # ============================================
   - id: "YDIZ-OOP-001"
     category: "oop"
@@ -196,7 +236,7 @@ rules:
     source: "编码规范附录 D 第 17 项"
 
   # ============================================
-  # 四、异常与日志（3 条）
+  # 五、异常与日志（3 条）
   # ============================================
   - id: "YDIZ-LOG-001"
     category: "logging"
@@ -228,7 +268,7 @@ rules:
     source: "编码规范附录 D 第 15/16 项"
 
   # ============================================
-  # 五、日期时间（2 条）
+  # 六、日期时间（2 条）
   # ============================================
   - id: "YDIZ-DATE-001"
     category: "datetime"
@@ -251,7 +291,7 @@ rules:
     source: "编码规范 7.2 节"
 
   # ============================================
-  # 六、集合与数据结构（2 条）
+  # 七、集合与数据结构（2 条）
   # ============================================
   - id: "YDIZ-COLL-001"
     category: "collection"
@@ -272,7 +312,7 @@ rules:
     source: "编码规范 9.2 节"
 
   # ============================================
-  # 七、DDD 分层架构（6 条，全部 P0）
+  # 八、DDD 分层架构（6 条，全部 P0）
   # ============================================
   - id: "YDIZ-DDD-001"
     category: "ddd"
@@ -366,7 +406,7 @@ rules:
     source: "编码规范附录 D 第 24 项"
 
   # ============================================
-  # 八、并发规范（3 条）
+  # 九、并发规范（3 条）
   # ============================================
   - id: "YDIZ-CONC-001"
     category: "concurrency"
@@ -396,7 +436,7 @@ rules:
     source: "编码规范 21.1 节"
 
   # ============================================
-  # 九、性能规范（2 条）
+  # 十、性能规范（2 条）
   # ============================================
   - id: "YDIZ-PERF-001"
     category: "performance"
@@ -417,7 +457,7 @@ rules:
     source: "编码规范通用最佳实践"
 
   # ============================================
-  # 十、common 模块能力复用（8 条，全部 P0 或 P1）
+  # 十一、common 模块能力复用（8 条，全部 P0 或 P1）
   # ============================================
   - id: "YDIZ-COMMON-001"
     category: "common-reuse"
@@ -492,7 +532,7 @@ rules:
     source: "编码规范 23.6 节"
 
   # ============================================
-  # 十一、安全规范（2 条）
+  # 十二、安全规范（2 条）
   # ============================================
   - id: "YDIZ-SEC-001"
     category: "security"
@@ -513,7 +553,7 @@ rules:
     source: "编码规范 13 章"
 
   # ============================================
-  # 十二、编译器警告处理（1 条，P0）
+  # 十三、编译器警告处理（1 条，P0）
   # ============================================
   - id: "YDIZ-WARN-001"
     category: "warnings"
@@ -567,7 +607,7 @@ rules:
     source: "编码规范 §6.10（强制）"
 
   # ============================================
-  # 十三、工程约束（3 条）
+  # 十四、工程约束（3 条）
   # ============================================
   - id: "YDIZ-ENG-001"
     category: "engineering"
@@ -600,6 +640,7 @@ rules:
 # 附录：按 category 统计
 # ============================================
 stats:
+  encoding: 1
   import: 5
   naming: 4
   oop: 5
@@ -613,4 +654,4 @@ stats:
   security: 2
   engineering: 3
   warnings: 1
-  total: 46
+  total: 47

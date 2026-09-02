@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.spring;
+package com.njydsz.common.json.spring;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

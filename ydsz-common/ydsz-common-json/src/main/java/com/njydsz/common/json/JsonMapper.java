@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json;
+package com.njydsz.common.json;
 
 import java.io.InputStream;
 import java.io.OutputStream;

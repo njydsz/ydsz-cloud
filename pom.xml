@@ -1052,6 +1052,7 @@
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
+                        <encoding>UTF-8</encoding>
                         <compilerArgs>
                             <arg>-Xlint:-classfile</arg>
                         </compilerArgs>

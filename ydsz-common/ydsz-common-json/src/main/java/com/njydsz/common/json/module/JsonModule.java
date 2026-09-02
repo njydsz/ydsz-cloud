@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.module;
+package com.njydsz.common.json.module;
 
 /**
  * YdszJson 模块接口

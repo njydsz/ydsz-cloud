@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.tree;
+package com.njydsz.common.json.tree;
 
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicInteger;

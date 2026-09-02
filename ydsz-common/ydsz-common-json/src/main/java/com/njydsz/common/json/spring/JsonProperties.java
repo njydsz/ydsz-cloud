@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.spring;
+package com.njydsz.common.json.spring;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

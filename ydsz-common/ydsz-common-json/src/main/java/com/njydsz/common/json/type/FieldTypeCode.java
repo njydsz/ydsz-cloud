@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.type;
+package com.njydsz.common.json.type;
 
 /**
  * 统一的字段类型码枚举（P1-A4 类型码统一方案）。

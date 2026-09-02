@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.deserializer;
+package com.njydsz.common.json.deserializer;
 
 import com.njydsz.common.json.reader.JSONReader;
 

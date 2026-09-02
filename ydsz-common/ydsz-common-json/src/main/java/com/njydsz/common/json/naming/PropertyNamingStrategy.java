@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.naming;
+package com.njydsz.common.json.naming;
 
 import java.io.Serializable;
 

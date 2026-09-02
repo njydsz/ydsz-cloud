@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.spring.boot;
+package com.njydsz.common.json.spring.boot;
 
 import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;

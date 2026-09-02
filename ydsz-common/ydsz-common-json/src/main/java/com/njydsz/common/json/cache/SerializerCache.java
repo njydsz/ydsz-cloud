@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.cache;
+package com.njydsz.common.json.cache;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.writer;
+package com.njydsz.common.json.writer;
 
   // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 import java.io.IOException;

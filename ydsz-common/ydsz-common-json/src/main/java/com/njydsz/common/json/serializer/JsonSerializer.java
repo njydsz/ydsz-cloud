@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.serializer;
+package com.njydsz.common.json.serializer;
 
 import com.njydsz.common.json.writer.JSONWriter;
 

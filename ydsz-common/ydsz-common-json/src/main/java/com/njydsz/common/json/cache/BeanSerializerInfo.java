@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.cache;
+package com.njydsz.common.json.cache;
 
 import java.lang.invoke.MethodHandle;
 
