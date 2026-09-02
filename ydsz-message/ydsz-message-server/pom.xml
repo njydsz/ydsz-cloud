@@ -82,7 +82,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

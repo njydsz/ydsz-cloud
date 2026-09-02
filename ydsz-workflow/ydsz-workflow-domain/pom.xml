@@ -14,10 +14,6 @@
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-workflow-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
         <!-- ydsz-common-exception（错误码枚举实现 ExceptionCode 接口） -->

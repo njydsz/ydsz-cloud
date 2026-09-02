@@ -16,16 +16,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-domain</artifactId>
         </dependency>
-        <!-- MapStruct（MessageConverter 使用 @Mapper 注解） -->
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-        </dependency>
         <!-- MyBatis-Plus（Entity 使用 @TableName注解、Mapper 继承 BaseMapper） -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <version>${mybatis-plus.version}</version>
+        </dependency>
+        <!-- MapStruct（MessageConverter 使用 @Mapper 注解） -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
         </dependency>
         <!-- ydsz-common-jdbc（MpBaseEntity / MpBaseIdEntity 基类） -->
         <dependency>
