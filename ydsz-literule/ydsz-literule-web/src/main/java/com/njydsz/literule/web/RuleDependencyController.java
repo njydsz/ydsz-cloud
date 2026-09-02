@@ -22,7 +22,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.api.dto.RuleDependencyAddDTO;
+import com.njydsz.literule.domain.dto.RuleDependencyAddDTO;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
 import com.njydsz.literule.domain.vo.StringVO;
 import com.njydsz.literule.server.spi.RuleDependencyProvider;

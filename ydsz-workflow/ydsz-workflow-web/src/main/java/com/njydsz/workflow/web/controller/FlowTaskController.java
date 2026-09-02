@@ -432,7 +432,7 @@ public class FlowTaskController {
   @Operation(summary = "批量驳回任务")
   public YdszResponse<Void> batchReject(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     String userId = AuthContextUtils.getUserId();
-    List<String> taskIds = new ArrayList<>();
+    List<String> taskIds = new ArrayList<>(16);
     String comment = null;
     String targetNodeCode = null;
     for (FlowTaskOperateDTO dto : dtos) {
@@ -467,7 +467,7 @@ public class FlowTaskController {
   @Operation(summary = "批量转办任务")
   public YdszResponse<Void> batchTransfer(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     String userId = AuthContextUtils.getUserId();
-    List<String> taskIds = new ArrayList<>();
+    List<String> taskIds = new ArrayList<>(16);
     String comment = null;
     String targetUserId = null;
     String targetUserName = null;

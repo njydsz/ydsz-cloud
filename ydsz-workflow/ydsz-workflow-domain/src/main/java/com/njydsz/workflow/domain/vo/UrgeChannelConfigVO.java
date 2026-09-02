@@ -139,7 +139,7 @@ public class UrgeChannelConfigVO implements Serializable {
   public List<String> getValidChannels() {
     List<String> valid = List.of(Channel.INAPP, Channel.EMAIL, Channel.WEBHOOK, Channel.SMS,
         Channel.WECOM, Channel.DINGTALK, Channel.FEISHU);
-    List<String> result = new ArrayList<>();
+    List<String> result = new ArrayList<>(8);
     for (String ch : urgeChannels) {
       if (valid.contains(ch)) {
         result.add(ch);
