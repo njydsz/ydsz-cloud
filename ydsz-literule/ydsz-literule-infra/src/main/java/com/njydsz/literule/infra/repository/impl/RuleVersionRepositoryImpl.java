@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.literule.domain.dto.RuleDefinition;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.dto.RuleVersionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
@@ -116,7 +116,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     com.njydsz.literule.domain.dto.RuleDefinitionDTO targetDefinition;
     try {
       targetDefinition = YdszJson.fromJson(
-          targetVersion.getDefinitionJson(), RuleDefinition.class);
+          targetVersion.getDefinitionJson(), RuleDefinitionDTO.class);
     } catch (Exception e) {
       log.error("[LiteRule] 反序列化目标版本失败: ruleCode={}, version={}, error={}",
           ruleCode, version, e.getMessage(), e);

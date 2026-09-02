@@ -34,7 +34,7 @@ public class RuleEngineStatsVO {
   private int lastEvaluatedRules;
 
   /** 各规则统计明细（规则编码 → 统计对象） */
-  private Map<String, Object> perRuleStats;
+  private Map<String, RuleStat> perRuleStats;
 
   /** 执行次数（与 totalEvaluations 并行的另一统计口径，用于交叉校验） */
   private long executions;
@@ -44,4 +44,19 @@ public class RuleEngineStatsVO {
 
   /** 错误次数（与 totalErrors 并行的另一统计口径） */
   private long errors;
+
+  /**
+   * 单规则统计明细（内部类）。
+   *
+   * <p>用于 {@link #perRuleStats} 的值类型，记录单条规则的执行统计。
+   */
+  @Data
+  public static class RuleStat {
+    /** 执行次数 */
+    private long executions;
+    /** 命中次数 */
+    private long triggered;
+    /** 错误次数 */
+    private long errors;
+  }
 }

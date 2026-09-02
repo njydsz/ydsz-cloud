@@ -166,30 +166,31 @@ public class LiteruleConverter {
     return component.ruleChainGraphListToVO(entities);
   }
 
-  // ===== RuleDefinitionDTO =====
+  // ===== RuleDefinition (infra entity) =====
 
   /**
    * 将规则定义持久化实体转换为视图对象。
    *
- * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(com.njydsz.literule.infra.entity.RuleDefinition)}，
- * 条件表达式与动作定义原样带出。
+   * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(com.njydsz.literule.infra.entity.RuleDefinition)}，
+   * 条件表达式与动作定义原样带出。
    *
    * @param entity 规则定义持久化实体（含条件表达式、动作与生效时间窗），为 {@code null} 时返回 {@code null}
    * @return 规则定义视图对象；入参为 {@code null} 时返回 {@code null}
    */
-  public RuleDefinitionVO entityToVO(RuleDefinitionDTO entity) {
+  public RuleDefinitionVO entityToVO(com.njydsz.literule.infra.entity.RuleDefinition entity) {
     return core.entityToVO(entity);
   }
 
   /**
-   * 批量将规则定义实体转换为视图对象列表。
+   * 批量将规则定义持久化实体转换为视图对象列表。
    *
    * <p>门面方法，委托给 {@link RuleCoreConverter#ruleDefinitionListToVO(List)}，返回顺序与入参一致。
    *
-   * @param entities 规则定义实体列表；为 {@code null} 时返回 {@code null}，空列表时返回空列表
+   * @param entities 规则定义持久化实体列表；为 {@code null} 时返回 {@code null}，空列表时返回空列表
    * @return 规则定义视图对象列表，顺序与入参一致
    */
-  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDTO> entities) {
+  public List<RuleDefinitionVO> ruleDefinitionListToVO(
+      List<com.njydsz.literule.infra.entity.RuleDefinition> entities) {
     return core.ruleDefinitionListToVO(entities);
   }
 

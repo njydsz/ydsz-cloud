@@ -201,7 +201,7 @@ public class LiteRuleSdk {
   /** 链式规则构建器 */
   public static class RuleBuilder {
     private final LiteRuleSdk sdk;
-    private final RuleDefinitionDTO.RuleDefinitionBuilder builder;
+    private final com.njydsz.literule.domain.dto.RuleDefinitionDTO.RuleDefinitionDTOBuilder builder;
 
     RuleBuilder(LiteRuleSdk sdk, String code) {
       this.sdk = sdk;

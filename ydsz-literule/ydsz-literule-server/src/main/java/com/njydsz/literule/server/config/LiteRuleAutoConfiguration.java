@@ -89,6 +89,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RulePackProvider;
 import com.njydsz.literule.server.spi.RuleSourceManager;
+import com.njydsz.literule.server.benchmark.RuleStressTestService;
 import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
 import com.njydsz.literule.server.spi.TraceRecorder;

@@ -15,7 +15,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.exception.ExcelWriteException;
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.enums.HitPolicy;
-import com.njydsz.literule.server.service.DecisionTableExcelService;
+import com.njydsz.literule.domain.service.DecisionTableExcelService;
 
 /**
  * 决策表 Excel 导入导出器（P0-3）
