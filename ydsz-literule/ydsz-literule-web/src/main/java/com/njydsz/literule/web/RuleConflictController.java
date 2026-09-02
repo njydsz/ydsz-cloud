@@ -1,7 +1,8 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
-import java.util.List;
-
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
+import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
@@ -10,9 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
-import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
+import java.util.List;
 
 /**
  * 规则冲突检测 Controller

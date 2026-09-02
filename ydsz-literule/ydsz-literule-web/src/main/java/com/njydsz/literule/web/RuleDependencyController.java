@@ -1,7 +1,15 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
-import java.util.List;
-
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.literule.api.dto.RuleDependencyAddDTO;
+import com.njydsz.literule.domain.vo.RuleDependencyVO;
+import com.njydsz.literule.domain.vo.StringVO;
+import com.njydsz.literule.server.spi.RuleDependencyProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -16,16 +24,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.api.dto.RuleDependencyAddDTO;
-import com.njydsz.literule.domain.vo.RuleDependencyVO;
-import com.njydsz.literule.domain.vo.StringVO;
-import com.njydsz.literule.server.spi.RuleDependencyProvider;
+import java.util.List;
 
 /**
  * 规则依赖 Controller

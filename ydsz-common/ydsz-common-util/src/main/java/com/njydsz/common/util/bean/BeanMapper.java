@@ -22,15 +22,12 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -93,16 +90,6 @@ public final class BeanMapper {
    */
   private static final ConcurrentHashMap<Method, BiConsumer<Object, Object>> SETTER_INVOKER_CACHE =
       new ConcurrentHashMap<>();
-
-  /** {@code java.time.*} 包类名前缀集合，用于 toBean 时区分日期类型。 */
-  private static final Set<String> JAVA_TIME_TYPES =
-      new HashSet<>(
-          Arrays.asList(
-              "java.time.LocalDate",
-              "java.time.LocalDateTime",
-              "java.time.LocalTime",
-              "java.time.Instant",
-              "java.time.ZonedDateTime"));
 
   /** 默认日期时间格式：{@code yyyy-MM-dd HH:mm:ss} */
   private static final DateTimeFormatter DEFAULT_DATE_FORMATTER =

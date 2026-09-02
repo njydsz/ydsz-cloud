@@ -15,7 +15,8 @@
 meta:
   version: "26.09.01"
   source: "docs/云顶编码规范.md v1.0.3"
-  last_synced: "2026-08-31"
+  last_synced: "2026-09-02"
+  last_updated: "2026-09-02（YDIZ-IMPORT-001 增强：增加 FQN 详细示例、扩展 checkstyle 检测范围至 java.time/math/sql/nio 等 JDK 包）"
   total_rules: 42
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
@@ -29,13 +30,31 @@ rules:
   - id: "YDIZ-IMPORT-001"
     category: "import"
     severity: "P0"
-    title: "禁止行内全限定名（FQN）"
-    description: "所有类型引用必须通过文件顶部的 import 语句声明，严禁在代码体中使用全限定类名。"
-    pattern: "代码体中出现 xxx.yyy.Zzz 全限定名（非 import 行）"
-    fix: "将 FQN 拆为顶部 import + 代码体使用简单名"
-    example_bad: "new org.apache.ibatis.io.Resources.NamedThreadLocal<>(\"key\");"
-    example_good: "import org.apache.ibatis.io.Resources;\n...\nnew Resources.NamedThreadLocal<>(\"key\");"
-    source: "编码规范 5.1 节"
+    title: "【强制】禁止行内全限定类名（FQN）"
+    description: |
+      所有类型引用必须通过文件顶部的 import 语句声明，严禁在代码体中使用全限定类名（Fully Qualified Name）。
+      适用范围：所有 JDK 标准库（java.util、java.time、java.math、java.io、java.sql、java.nio 等）和第三方库。
+      特殊说明：System.getProperty("java.io.tmpdir") 中字符串字面量内部的 "java.io" 不属于 FQN 规避范围，但字段、参数、方法体中的类型必须引用 import 后的简单名。
+    pattern: "代码体中出现 java.xxx.Yyy、org.xxx.Yyy、com.xxx.Yyy 等全限定名（非 import 行、非字符串常量）"
+    fix: "将 FQN 拆为顶部 import + 代码体使用简单名。import 放在 java.* 组，组内按字母序排列"
+    example_bad: |
+      // 违规：字段声明中使用 FQN
+      private java.time.LocalDateTime createdAt;
+
+      // 违规：方法参数中使用 FQN
+      void banUser(String id, java.math.BigDecimal amount) { ... }
+
+      // 违规：方法体中使用 FQN
+      entity.setReadTime(java.time.LocalDateTime.now());
+    example_good: |
+      import java.math.BigDecimal;
+      import java.time.LocalDateTime;
+
+      // 正确：字段、参数、方法体均使用简单名
+      private LocalDateTime createdAt;
+      void banUser(String id, BigDecimal amount) { ... }
+      entity.setReadTime(LocalDateTime.now());
+    source: "编码规范 5.1 节 - 强制 | checkstyle.xml 2.2 节 RegexpSinglelineJava FQN 检测"
 
   - id: "YDIZ-IMPORT-002"
     category: "import"

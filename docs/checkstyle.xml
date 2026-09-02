@@ -218,10 +218,10 @@
         <!-- 检测代码体中使用的全限定类名（行内 FQN） -->
         <module name="RegexpSinglelineJava">
             <property name="format"
-                      value="^\s*(?!import\b|package\b|[a-zA-Z_$][a-zA-Z0-9_$]*\s*\.\s*[a-zA-Z_$]|//|/\*|\*|&lt;[^&gt;]+&gt;).*\b(java\.util\.|java\.io\.|java\.net\.|java\.lang\.reflect\.|org\.springframework\.|com\.google\.common\.|com\.fasterxml\.jackson\.|com\.alibaba\.fastjson).*\b"/>
+                      value="^\s*(?!import\b|package\b|[a-zA-Z_$][a-zA-Z0-9_$]*\s*\.\s*[a-zA-Z_$]|//|/\*|\*|&lt;[^&gt;]+&gt;|System\.getProperty\(|getName\(\)\s*\.|\.class\b).*\b(java\.(util|time|math|io|sql|nio|lang|net|security|text|beans)|javafx\.|org\.springframework\.|com\.google\.common\.|com\.fasterxml\.jackson\.|com\.alibaba\.fastjson).*\b"/>
             <property name="ignoreComments" value="true"/>
             <property name="message"
-                      value="代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节"/>
+                      value="【强制-行内FQN】代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。违规示例：java.time.LocalDateTime、java.math.BigDecimal、java.util.List。参考：云顶编码规范 5.1 节"/>
         </module>
 
         <!-- ============================================ -->

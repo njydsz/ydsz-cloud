@@ -1,7 +1,8 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
-import java.util.stream.Collectors;
-
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.Ordered;
@@ -20,9 +21,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import java.util.stream.Collectors;
 
 /**
  * 全局异常处理器（规则引擎 Web 层）

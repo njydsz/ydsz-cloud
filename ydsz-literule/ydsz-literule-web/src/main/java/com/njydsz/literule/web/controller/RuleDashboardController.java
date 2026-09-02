@@ -1,7 +1,13 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
-import java.util.List;
-
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.literule.domain.vo.RuleDashboardDistributionVO;
+import com.njydsz.literule.domain.vo.RuleDashboardOverviewVO;
+import com.njydsz.literule.domain.vo.RuleDashboardRealtimeVO;
+import com.njydsz.literule.domain.vo.RuleDashboardTopRuleVO;
+import com.njydsz.literule.domain.vo.RuleDashboardTrendVO;
+import com.njydsz.literule.server.core.RuleMetrics;
+import com.njydsz.literule.server.spi.DashboardDataProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
@@ -15,14 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.literule.domain.vo.RuleDashboardDistributionVO;
-import com.njydsz.literule.domain.vo.RuleDashboardOverviewVO;
-import com.njydsz.literule.domain.vo.RuleDashboardRealtimeVO;
-import com.njydsz.literule.domain.vo.RuleDashboardTopRuleVO;
-import com.njydsz.literule.domain.vo.RuleDashboardTrendVO;
-import com.njydsz.literule.server.core.RuleMetrics;
-import com.njydsz.literule.server.spi.DashboardDataProvider;
+import java.util.List;
 
 /**
  * 规则引擎监控大盘 Controller

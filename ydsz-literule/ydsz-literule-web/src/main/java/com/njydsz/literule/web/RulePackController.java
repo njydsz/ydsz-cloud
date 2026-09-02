@@ -1,10 +1,20 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.literule.domain.vo.InstallResultVO;
+import com.njydsz.literule.domain.vo.PackDiffVO;
+import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
+import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.server.benchmark.RuleStressTestService;
+import com.njydsz.literule.server.spi.RulePackProvider;
+import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,21 +33,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.domain.vo.InstallResultVO;
-import com.njydsz.literule.domain.vo.PackDiffVO;
-import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
-import com.njydsz.literule.domain.vo.RulePackVO;
-import com.njydsz.literule.domain.vo.RulePackVO;
-import com.njydsz.literule.server.benchmark.RuleStressTestService;
-import com.njydsz.literule.server.spi.RulePackProvider;
-import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 规则集市场 Controller
