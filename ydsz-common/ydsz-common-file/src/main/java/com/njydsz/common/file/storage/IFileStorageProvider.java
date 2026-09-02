@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage;
+﻿package com.njydsz.common.file.storage;
 
 /**
  * 文件存储提供者接口

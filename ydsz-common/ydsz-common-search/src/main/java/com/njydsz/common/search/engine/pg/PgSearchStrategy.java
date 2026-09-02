@@ -1,4 +1,4 @@
-package com.njydsz.common.search.engine.pg;
+﻿package com.njydsz.common.search.engine.pg;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;

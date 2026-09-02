@@ -1,4 +1,4 @@
-package com.njydsz.system.app.openapi;
+﻿package com.njydsz.system.app.openapi;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 

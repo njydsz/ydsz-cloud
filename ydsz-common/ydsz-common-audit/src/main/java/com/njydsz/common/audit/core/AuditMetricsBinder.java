@@ -1,4 +1,4 @@
-package com.njydsz.common.audit.core;
+﻿package com.njydsz.common.audit.core;
 
 import java.util.concurrent.TimeUnit;
 

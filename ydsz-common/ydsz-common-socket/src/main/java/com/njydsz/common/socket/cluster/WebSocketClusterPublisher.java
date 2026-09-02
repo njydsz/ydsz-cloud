@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.cluster;
+﻿package com.njydsz.common.socket.cluster;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

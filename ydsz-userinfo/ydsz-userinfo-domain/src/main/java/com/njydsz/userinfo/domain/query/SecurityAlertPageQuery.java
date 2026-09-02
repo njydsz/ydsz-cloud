@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.query;
+﻿package com.njydsz.userinfo.domain.query;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.njydsz.common.docs.watermark;
+﻿package com.njydsz.common.docs.watermark;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

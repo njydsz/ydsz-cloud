@@ -1,4 +1,4 @@
-package com.njydsz.common.cache.internal.lfu;
+﻿package com.njydsz.common.cache.internal.lfu;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;

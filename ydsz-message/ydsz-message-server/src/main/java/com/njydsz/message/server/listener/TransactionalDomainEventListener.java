@@ -1,4 +1,4 @@
-package com.njydsz.message.server.listener;
+﻿package com.njydsz.message.server.listener;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

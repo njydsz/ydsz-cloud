@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.queue;
+﻿package com.njydsz.common.queue.queue;
 
 import java.util.concurrent.ExecutorService;
 

@@ -1,4 +1,4 @@
-package com.njydsz.common.netty.pool;
+﻿package com.njydsz.common.netty.pool;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;

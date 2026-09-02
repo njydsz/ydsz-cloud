@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.token;
+﻿package com.njydsz.common.auth.token;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;

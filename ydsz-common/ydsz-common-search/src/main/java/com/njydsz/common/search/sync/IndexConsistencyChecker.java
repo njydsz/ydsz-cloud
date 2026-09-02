@@ -1,4 +1,4 @@
-package com.njydsz.common.search.sync;
+﻿package com.njydsz.common.search.sync;
 
 import java.util.HashMap;
 import java.util.HashSet;

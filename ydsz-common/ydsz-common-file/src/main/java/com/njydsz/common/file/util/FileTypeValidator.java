@@ -1,4 +1,4 @@
-package com.njydsz.common.file.util;
+﻿package com.njydsz.common.file.util;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-package com.njydsz.common.base.auth;
+﻿package com.njydsz.common.base.auth;
 
 import com.njydsz.common.auth.model.YdszAuthInfo;
 

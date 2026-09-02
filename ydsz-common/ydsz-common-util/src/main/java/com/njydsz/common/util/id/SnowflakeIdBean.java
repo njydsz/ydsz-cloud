@@ -1,4 +1,4 @@
-package com.njydsz.common.util.id;
+﻿package com.njydsz.common.util.id;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

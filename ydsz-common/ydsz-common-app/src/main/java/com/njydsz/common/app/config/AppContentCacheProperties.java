@@ -1,4 +1,4 @@
-package com.njydsz.common.app.config;
+﻿package com.njydsz.common.app.config;
 
 import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;

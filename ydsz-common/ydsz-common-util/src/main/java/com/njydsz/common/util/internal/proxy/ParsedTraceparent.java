@@ -1,4 +1,4 @@
-package com.njydsz.common.util.internal.proxy;
+﻿package com.njydsz.common.util.internal.proxy;
 
 /**
  * W3C traceparent 头的解析结果。

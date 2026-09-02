@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.spi;
+﻿package com.njydsz.literule.server.spi;
 
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;

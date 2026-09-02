@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage;
+﻿package com.njydsz.common.file.storage;
 
 import java.util.function.Predicate;
 import java.util.function.Supplier;

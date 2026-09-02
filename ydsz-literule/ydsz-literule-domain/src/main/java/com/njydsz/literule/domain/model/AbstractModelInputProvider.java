@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.model;
+﻿package com.njydsz.literule.domain.model;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;

@@ -1,5 +1,4 @@
-package com.njydsz.common.auth.config.AuthFilterProperties;
-
+﻿package com.njydsz.common.auth.config;.config
 import java.util.ArrayList;
 import java.util.List;
 

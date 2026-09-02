@@ -1,5 +1,4 @@
-package com.njydsz.common.safe.xss.HTMLFilter;
-
+﻿package com.njydsz.common.safe.xss;.xss
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

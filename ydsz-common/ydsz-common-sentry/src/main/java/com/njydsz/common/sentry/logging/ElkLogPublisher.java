@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.logging;
+﻿package com.njydsz.common.sentry.logging;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.ratelimit.algorithm;
+﻿package com.njydsz.common.safe.ratelimit.algorithm;
 
 import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
 import com.njydsz.common.safe.ratelimit.model.RateLimitContext;

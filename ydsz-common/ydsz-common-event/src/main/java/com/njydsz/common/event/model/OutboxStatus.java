@@ -1,4 +1,4 @@
-package com.njydsz.common.event.model;
+﻿package com.njydsz.common.event.model;
 
 /**
  * Outbox 消息状态枚举

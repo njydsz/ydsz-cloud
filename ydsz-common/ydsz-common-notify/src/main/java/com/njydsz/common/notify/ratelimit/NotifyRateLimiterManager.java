@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.ratelimit;
+﻿package com.njydsz.common.notify.ratelimit;
 
 import java.time.Duration;
 import java.util.EnumMap;

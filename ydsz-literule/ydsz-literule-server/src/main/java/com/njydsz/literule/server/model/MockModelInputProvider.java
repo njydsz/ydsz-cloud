@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.model;
+﻿package com.njydsz.literule.server.model;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

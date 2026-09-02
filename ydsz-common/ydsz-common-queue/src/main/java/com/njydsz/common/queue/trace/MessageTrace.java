@@ -1,5 +1,4 @@
-package com.njydsz.common.queue.trace.MessageTrace;
-
+﻿package com.njydsz.common.queue.trace;.trace
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;

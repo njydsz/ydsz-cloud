@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.annotation;
+﻿package com.njydsz.common.auth.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

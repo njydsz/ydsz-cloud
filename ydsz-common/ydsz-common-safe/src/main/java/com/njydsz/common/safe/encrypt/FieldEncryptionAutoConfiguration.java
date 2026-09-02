@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.encrypt;
+﻿package com.njydsz.common.safe.encrypt;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

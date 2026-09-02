@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.config.condition;
+﻿package com.njydsz.common.safe.config.condition;
 
 import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -1,4 +1,4 @@
-package com.njydsz.common.exception.enums;
+﻿package com.njydsz.common.exception.enums;
 
 import com.njydsz.common.core.code.ResultCode;
 

@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.outbox;
+﻿package com.njydsz.cronjob.server.core.outbox;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

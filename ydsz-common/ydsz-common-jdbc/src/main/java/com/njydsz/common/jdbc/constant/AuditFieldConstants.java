@@ -1,4 +1,4 @@
-package com.njydsz.common.jdbc.constant;
+﻿package com.njydsz.common.jdbc.constant;
 
 /**
  * 审计字段常量定义

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.social;
+﻿package com.njydsz.userinfo.domain.social;
 
 /**
  * 社交认证提供者接口（统一抽象层）。

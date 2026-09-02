@@ -1,4 +1,4 @@
-package com.njydsz.workflow.app.health;
+﻿package com.njydsz.workflow.app.health;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;

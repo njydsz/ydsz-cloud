@@ -1,4 +1,4 @@
-package com.njydsz.common.util.config;
+﻿package com.njydsz.common.util.config;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;

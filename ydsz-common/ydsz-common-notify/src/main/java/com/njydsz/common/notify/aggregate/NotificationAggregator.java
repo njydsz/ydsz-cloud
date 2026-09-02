@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.aggregate;
+﻿package com.njydsz.common.notify.aggregate;
 
 import java.util.List;
 import java.util.Map;

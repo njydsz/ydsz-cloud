@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.alert;
+﻿package com.njydsz.userinfo.domain.alert;
 
 import java.time.LocalDateTime;
 import java.util.List;

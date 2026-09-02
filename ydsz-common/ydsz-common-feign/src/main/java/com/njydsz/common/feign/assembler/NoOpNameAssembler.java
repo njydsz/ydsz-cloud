@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.assembler;
+﻿package com.njydsz.common.feign.assembler;
 
 import java.util.Collection;
 import java.util.Collections;

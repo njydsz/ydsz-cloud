@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.vo;
+﻿package com.njydsz.userinfo.web.vo;
 
 import java.util.List;
 

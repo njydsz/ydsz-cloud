@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.csrf.impl;
+﻿package com.njydsz.common.safe.csrf.impl;
 
 import java.security.SecureRandom;
 import java.util.Base64;

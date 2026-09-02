@@ -1,4 +1,4 @@
-package com.njydsz.common.audit.core;
+﻿package com.njydsz.common.audit.core;
 
 /**
  * 审计日志写入异常

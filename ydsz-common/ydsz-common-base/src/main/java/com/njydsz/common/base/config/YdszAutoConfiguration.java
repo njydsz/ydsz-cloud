@@ -1,4 +1,4 @@
-package com.njydsz.common.base.config;
+﻿package com.njydsz.common.base.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

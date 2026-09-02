@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.query;
+﻿package com.njydsz.userinfo.domain.query;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

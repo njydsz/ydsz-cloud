@@ -1,4 +1,4 @@
-package com.njydsz.common.base.ratelimit;
+﻿package com.njydsz.common.base.ratelimit;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

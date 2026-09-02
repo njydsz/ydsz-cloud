@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.ratelimit.spring;
+﻿package com.njydsz.common.safe.ratelimit.spring;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

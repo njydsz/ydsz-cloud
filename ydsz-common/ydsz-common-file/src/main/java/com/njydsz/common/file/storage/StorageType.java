@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage;
+﻿package com.njydsz.common.file.storage;
 
 /**
  * 存储类型 SPI

@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.cluster;
+﻿package com.njydsz.common.redis.cluster;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

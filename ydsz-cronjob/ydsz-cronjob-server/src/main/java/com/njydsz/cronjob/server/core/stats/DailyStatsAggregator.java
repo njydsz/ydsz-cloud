@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.stats;
+﻿package com.njydsz.cronjob.server.core.stats;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

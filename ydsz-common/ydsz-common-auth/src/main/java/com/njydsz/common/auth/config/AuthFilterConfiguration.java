@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.config;
+﻿package com.njydsz.common.auth.config;
 
 import java.util.HashSet;
 import java.util.List;

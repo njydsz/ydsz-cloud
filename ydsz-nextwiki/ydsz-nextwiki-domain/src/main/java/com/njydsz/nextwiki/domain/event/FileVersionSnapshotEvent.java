@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.domain.event;
+﻿package com.njydsz.nextwiki.domain.event;
 
 import org.springframework.context.ApplicationEvent;
 

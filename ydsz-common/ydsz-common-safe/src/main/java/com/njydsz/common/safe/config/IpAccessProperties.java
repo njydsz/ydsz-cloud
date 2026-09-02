@@ -1,5 +1,4 @@
-package com.njydsz.common.safe.config.IpAccessProperties;
-
+﻿package com.njydsz.common.safe.config;.config
 import java.util.ArrayList;
 import java.util.List;
 

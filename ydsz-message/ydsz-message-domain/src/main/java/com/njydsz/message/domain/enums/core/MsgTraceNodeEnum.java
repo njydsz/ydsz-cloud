@@ -1,4 +1,4 @@
-package com.njydsz.message.domain.enums.core;
+﻿package com.njydsz.message.domain.enums.core;
 
 /**
  * 消息轨迹节点类型枚举。

@@ -1,5 +1,4 @@
-package com.njydsz.common.base.config.DocProperties;
-
+﻿package com.njydsz.common.base.config;.config
 import java.util.ArrayList;
 import java.util.List;
 

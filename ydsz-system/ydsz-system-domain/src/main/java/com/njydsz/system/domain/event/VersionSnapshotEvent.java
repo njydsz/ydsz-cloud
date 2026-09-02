@@ -1,4 +1,4 @@
-package com.njydsz.system.domain.event;
+﻿package com.njydsz.system.domain.event;
 
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 

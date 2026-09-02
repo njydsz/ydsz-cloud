@@ -1,4 +1,4 @@
-package com.njydsz.common.json.spring.boot;
+﻿package com.njydsz.common.json.spring.boot;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;

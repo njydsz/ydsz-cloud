@@ -1,4 +1,4 @@
-package com.njydsz.common.base.config;
+﻿package com.njydsz.common.base.config;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

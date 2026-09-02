@@ -1,4 +1,4 @@
-package com.njydsz.message.app.openapi;
+﻿package com.njydsz.message.app.openapi;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 

@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.config;
+﻿package com.njydsz.nextwiki.server.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

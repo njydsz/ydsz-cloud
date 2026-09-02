@@ -1,4 +1,4 @@
-package com.njydsz.literule.infra.entity;
+﻿package com.njydsz.literule.infra.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

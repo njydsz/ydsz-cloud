@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.auth;
+﻿package com.njydsz.common.socket.auth;
 
 import java.util.List;
 import java.util.Map;

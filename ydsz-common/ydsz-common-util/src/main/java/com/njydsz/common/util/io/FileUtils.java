@@ -1,4 +1,4 @@
-package com.njydsz.common.util.io;
+﻿package com.njydsz.common.util.io;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.njydsz.common.config.hotreload;
+﻿package com.njydsz.common.config.hotreload;
 
 import java.util.Collections;
 import java.util.List;

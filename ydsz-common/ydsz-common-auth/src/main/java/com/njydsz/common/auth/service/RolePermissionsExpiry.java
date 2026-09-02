@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.service;
+﻿package com.njydsz.common.auth.service;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;

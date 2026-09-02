@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.interceptor;
+﻿package com.njydsz.common.feign.interceptor;
 
 import java.util.Collection;
 

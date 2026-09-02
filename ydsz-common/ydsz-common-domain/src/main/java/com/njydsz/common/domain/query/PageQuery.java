@@ -1,5 +1,4 @@
-package com.njydsz.common.domain.query.PageQuery;
-
+﻿package com.njydsz.common.domain.query;.query
 import java.util.ArrayList;
 import java.util.List;
 

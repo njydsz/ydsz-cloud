@@ -1,4 +1,4 @@
-package com.njydsz.common.util.security.crypto;
+﻿package com.njydsz.common.util.security.crypto;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.event.auth;
+﻿package com.njydsz.userinfo.domain.event.auth;
 
 import java.time.LocalDateTime;
 

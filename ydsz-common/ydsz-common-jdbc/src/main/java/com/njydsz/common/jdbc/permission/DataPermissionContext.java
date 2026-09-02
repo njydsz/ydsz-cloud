@@ -1,5 +1,4 @@
-package com.njydsz.common.jdbc.permission.DataPermissionContext;
-
+﻿package com.njydsz.common.jdbc.permission;.permission
 /**
  * 数据权限上下文。
  *

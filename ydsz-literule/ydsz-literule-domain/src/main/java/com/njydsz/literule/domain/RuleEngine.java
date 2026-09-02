@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain;
+﻿package com.njydsz.literule.domain;
 
 import java.util.List;
 

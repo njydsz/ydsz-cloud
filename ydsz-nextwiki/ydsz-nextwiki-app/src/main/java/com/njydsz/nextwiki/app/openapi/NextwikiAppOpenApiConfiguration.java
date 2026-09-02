@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.app.openapi;
+﻿package com.njydsz.nextwiki.app.openapi;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 

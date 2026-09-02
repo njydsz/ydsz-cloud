@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.annotation;
+﻿package com.njydsz.common.safe.annotation;
 
 /**
  * 敏感操作等级（P1-8）。

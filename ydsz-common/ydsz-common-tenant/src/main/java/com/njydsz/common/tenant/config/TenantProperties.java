@@ -1,5 +1,4 @@
-package com.njydsz.common.tenant.config.TenantProperties;
-
+﻿package com.njydsz.common.tenant.config;.config
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

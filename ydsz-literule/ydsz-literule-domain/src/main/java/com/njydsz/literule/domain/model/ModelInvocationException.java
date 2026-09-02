@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.model;
+﻿package com.njydsz.literule.domain.model;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;

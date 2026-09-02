@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.provider;
+﻿package com.njydsz.common.notify.provider;
 
 import com.njydsz.common.notify.channel.EmailMessage;
 import com.njydsz.common.notify.core.NotifySendResult;

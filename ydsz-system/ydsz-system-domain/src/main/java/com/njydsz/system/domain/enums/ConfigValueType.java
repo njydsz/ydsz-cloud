@@ -1,4 +1,4 @@
-package com.njydsz.system.domain.enums;
+﻿package com.njydsz.system.domain.enums;
 
 import java.util.regex.Pattern;
 

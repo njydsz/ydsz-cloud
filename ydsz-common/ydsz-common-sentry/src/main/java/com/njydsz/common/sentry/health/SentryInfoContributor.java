@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.health;
+﻿package com.njydsz.common.sentry.health;
 
 import java.util.HashMap;
 import java.util.Map;

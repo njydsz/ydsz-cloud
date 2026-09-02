@@ -1,4 +1,4 @@
-package com.njydsz.message.domain.enums;
+﻿package com.njydsz.message.domain.enums;
 
 import lombok.Getter;
 

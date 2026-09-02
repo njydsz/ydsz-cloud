@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry;
+﻿package com.njydsz.common.sentry;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;

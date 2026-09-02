@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.sensitive;
+﻿package com.njydsz.common.safe.sensitive;
 
 /**
  * 敏感数据处理异常

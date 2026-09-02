@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.config;
+﻿package com.njydsz.common.notify.config;
 
 import java.time.Duration;
 import java.util.List;

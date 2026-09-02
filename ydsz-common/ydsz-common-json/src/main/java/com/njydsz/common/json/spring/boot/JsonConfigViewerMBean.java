@@ -1,4 +1,4 @@
-package com.njydsz.common.json.spring.boot;
+﻿package com.njydsz.common.json.spring.boot;
 
 /**
  * YdszJson 配置 JMX MBean 接口。

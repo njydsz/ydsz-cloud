@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.i18n;
+﻿package com.njydsz.common.notify.i18n;
 
 import java.util.Locale;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.app.config;
+﻿package com.njydsz.userinfo.app.config;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

@@ -1,4 +1,4 @@
-package com.njydsz.common.cache.constant;
+﻿package com.njydsz.common.cache.constant;
 
 /**
  * 缓存名称常量定义。

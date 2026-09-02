@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.sla;
+﻿package com.njydsz.common.sentry.sla;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

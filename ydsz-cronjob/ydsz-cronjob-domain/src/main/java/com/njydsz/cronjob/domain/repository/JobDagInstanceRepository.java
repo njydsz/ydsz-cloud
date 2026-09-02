@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.domain.repository;
+﻿package com.njydsz.cronjob.domain.repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

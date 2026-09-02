@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.dispatch;
+﻿package com.njydsz.cronjob.server.core.dispatch;
 
 import java.math.BigDecimal;
 import java.util.Comparator;

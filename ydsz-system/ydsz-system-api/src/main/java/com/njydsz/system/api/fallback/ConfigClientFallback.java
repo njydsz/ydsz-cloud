@@ -1,4 +1,4 @@
-package com.njydsz.system.api.fallback;
+﻿package com.njydsz.system.api.fallback;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;

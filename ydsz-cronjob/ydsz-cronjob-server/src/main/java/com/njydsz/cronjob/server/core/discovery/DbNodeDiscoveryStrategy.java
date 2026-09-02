@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.discovery;
+﻿package com.njydsz.cronjob.server.core.discovery;
 
 import java.net.InetAddress;
 import java.util.Collections;

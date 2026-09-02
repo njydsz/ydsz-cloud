@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.compress;
+﻿package com.njydsz.common.feign.compress;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

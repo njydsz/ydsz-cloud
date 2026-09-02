@@ -1,4 +1,4 @@
-package com.njydsz.system.domain.vo;
+﻿package com.njydsz.system.domain.vo;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

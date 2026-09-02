@@ -1,4 +1,4 @@
-package com.njydsz.agent.server.trigger;
+﻿package com.njydsz.agent.server.trigger;
 
 import java.util.Map;
 import java.util.Objects;

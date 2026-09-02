@@ -1,4 +1,4 @@
-package com.njydsz.common.domain.config;
+﻿package com.njydsz.common.domain.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

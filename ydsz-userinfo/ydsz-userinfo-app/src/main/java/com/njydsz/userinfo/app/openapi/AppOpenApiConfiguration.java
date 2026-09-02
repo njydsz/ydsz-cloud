@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.app.openapi;
+﻿package com.njydsz.userinfo.app.openapi;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;

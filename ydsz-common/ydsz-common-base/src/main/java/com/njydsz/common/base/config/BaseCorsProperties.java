@@ -1,5 +1,4 @@
-package com.njydsz.common.base.config.BaseCorsProperties;
-
+﻿package com.njydsz.common.base.config;.config
 import java.util.Arrays;
 import java.util.List;
 

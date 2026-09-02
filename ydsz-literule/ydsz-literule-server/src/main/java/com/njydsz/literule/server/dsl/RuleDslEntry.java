@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.dsl;
+﻿package com.njydsz.literule.server.dsl;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

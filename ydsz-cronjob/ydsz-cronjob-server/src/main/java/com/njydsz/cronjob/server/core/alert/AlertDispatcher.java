@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.alert;
+﻿package com.njydsz.cronjob.server.core.alert;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

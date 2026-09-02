@@ -1,4 +1,4 @@
-package com.njydsz.common.util.password;
+﻿package com.njydsz.common.util.password;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

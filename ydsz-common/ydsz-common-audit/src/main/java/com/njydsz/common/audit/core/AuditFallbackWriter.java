@@ -1,4 +1,4 @@
-package com.njydsz.common.audit.core;
+﻿package com.njydsz.common.audit.core;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

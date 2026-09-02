@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.app.config;
+﻿package com.njydsz.nextwiki.app.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

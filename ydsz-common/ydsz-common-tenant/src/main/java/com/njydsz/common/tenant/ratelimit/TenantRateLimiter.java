@@ -1,4 +1,4 @@
-package com.njydsz.common.tenant.ratelimit;
+﻿package com.njydsz.common.tenant.ratelimit;
 
 import java.time.Duration;
 

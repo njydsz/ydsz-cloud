@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.service;
+﻿package com.njydsz.nextwiki.server.service;
 
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;

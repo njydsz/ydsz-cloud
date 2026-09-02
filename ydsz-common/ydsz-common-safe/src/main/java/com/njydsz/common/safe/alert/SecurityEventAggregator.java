@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.alert;
+﻿package com.njydsz.common.safe.alert;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;

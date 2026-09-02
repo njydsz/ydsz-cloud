@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.config;
+﻿package com.njydsz.message.server.service.config;
 
 import java.time.Duration;
 import java.util.Map;

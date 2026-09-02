@@ -1,4 +1,4 @@
-package com.njydsz.system.server.util;
+﻿package com.njydsz.system.server.util;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicLong;

@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.debug;
+﻿package com.njydsz.literule.server.debug;
 
 import lombok.Builder;
 import lombok.Data;

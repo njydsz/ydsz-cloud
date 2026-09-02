@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.security;
+﻿package com.njydsz.nextwiki.server.security;
 
 /**
  * 知识库空间权限码常量（S4-P3-03）。

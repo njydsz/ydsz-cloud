@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.domain.job;
+﻿package com.njydsz.cronjob.domain.job;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.njydsz.common.netty.exception;
+﻿package com.njydsz.common.netty.exception;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;

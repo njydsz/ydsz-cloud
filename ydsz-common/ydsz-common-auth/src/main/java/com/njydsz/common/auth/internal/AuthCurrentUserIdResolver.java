@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.internal;
+﻿package com.njydsz.common.auth.internal;
 
 import org.springframework.stereotype.Component;
 

@@ -1,4 +1,4 @@
-package com.njydsz.common.jdbc.entity;
+﻿package com.njydsz.common.jdbc.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.ratelimit.circuitbreaker;
+﻿package com.njydsz.common.safe.ratelimit.circuitbreaker;
 
 import java.time.Duration;
 import java.time.Instant;

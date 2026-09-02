@@ -1,4 +1,4 @@
-package com.njydsz.common.exception.health;
+﻿package com.njydsz.common.exception.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

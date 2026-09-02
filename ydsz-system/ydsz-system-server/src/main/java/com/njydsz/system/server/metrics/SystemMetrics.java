@@ -1,4 +1,4 @@
-package com.njydsz.system.server.metrics;
+﻿package com.njydsz.system.server.metrics;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

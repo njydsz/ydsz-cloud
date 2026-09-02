@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.approval;
+﻿package com.njydsz.literule.server.approval;
 
 /**
  * 审批类型（P1-3 多级审批流）

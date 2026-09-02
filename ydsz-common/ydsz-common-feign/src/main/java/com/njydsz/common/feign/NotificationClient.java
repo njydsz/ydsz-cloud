@@ -1,4 +1,4 @@
-package com.njydsz.common.feign;
+﻿package com.njydsz.common.feign;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;

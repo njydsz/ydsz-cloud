@@ -1,4 +1,4 @@
-package com.njydsz.common.docs.watermark;
+﻿package com.njydsz.common.docs.watermark;
 
 /**
  * PDF 水印叠加能力抽象。

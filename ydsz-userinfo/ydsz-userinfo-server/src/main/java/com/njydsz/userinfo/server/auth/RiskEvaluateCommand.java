@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.auth;
+﻿package com.njydsz.userinfo.server.auth;
 
 /**
  * 登录风险评估参数值对象。

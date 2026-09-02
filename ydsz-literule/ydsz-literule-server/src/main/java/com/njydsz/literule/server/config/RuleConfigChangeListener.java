@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.config;
+﻿package com.njydsz.literule.server.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

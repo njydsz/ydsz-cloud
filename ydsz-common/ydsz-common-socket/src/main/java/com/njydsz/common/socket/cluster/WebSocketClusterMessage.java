@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.cluster;
+﻿package com.njydsz.common.socket.cluster;
 
 import java.util.List;
 

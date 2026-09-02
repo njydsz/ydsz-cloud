@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.social;
+﻿package com.njydsz.userinfo.domain.social;
 
 /**
  * 社交认证运行时异常。

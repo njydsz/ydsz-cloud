@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.version;
+﻿package com.njydsz.literule.server.version;
 
 import java.util.ArrayList;
 import java.util.List;

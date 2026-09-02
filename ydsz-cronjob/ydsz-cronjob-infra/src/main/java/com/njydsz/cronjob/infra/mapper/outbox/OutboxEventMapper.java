@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.infra.mapper.outbox;
+﻿package com.njydsz.cronjob.infra.mapper.outbox;
 
 import java.time.LocalDateTime;
 import java.util.List;

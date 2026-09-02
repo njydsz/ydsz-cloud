@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.auth;
+﻿package com.njydsz.userinfo.server.auth;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

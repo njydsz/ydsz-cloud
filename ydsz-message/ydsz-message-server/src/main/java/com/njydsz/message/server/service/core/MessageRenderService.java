@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.core;
+﻿package com.njydsz.message.server.service.core;
 
 import java.util.HashMap;
 import java.util.Map;

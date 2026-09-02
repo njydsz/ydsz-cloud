@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.mention;
+﻿package com.njydsz.nextwiki.server.mention;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.mq.rabbit;
+﻿package com.njydsz.common.queue.mq.rabbit;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;

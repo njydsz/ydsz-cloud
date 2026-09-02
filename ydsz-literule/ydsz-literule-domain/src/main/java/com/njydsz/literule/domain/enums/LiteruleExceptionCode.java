@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.enums;
+﻿package com.njydsz.literule.domain.enums;
 
 import lombok.Getter;
 

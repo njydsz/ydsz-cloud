@@ -1,4 +1,4 @@
-package com.njydsz.common.thread.config;
+﻿package com.njydsz.common.thread.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

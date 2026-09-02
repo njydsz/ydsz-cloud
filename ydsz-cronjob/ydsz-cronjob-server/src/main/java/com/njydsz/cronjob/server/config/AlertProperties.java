@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.config;
+﻿package com.njydsz.cronjob.server.config;
 
 import java.time.Duration;
 

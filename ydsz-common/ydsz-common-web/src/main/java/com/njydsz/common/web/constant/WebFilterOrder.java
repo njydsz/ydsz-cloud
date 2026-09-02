@@ -1,4 +1,4 @@
-package com.njydsz.common.web.constant;
+﻿package com.njydsz.common.web.constant;
 
 import org.springframework.core.Ordered;
 

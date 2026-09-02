@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.domain.query;
+﻿package com.njydsz.nextwiki.domain.query;
 
 import java.io.Serializable;
 

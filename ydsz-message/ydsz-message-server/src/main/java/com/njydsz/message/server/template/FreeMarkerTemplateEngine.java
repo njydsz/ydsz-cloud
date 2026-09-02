@@ -1,4 +1,4 @@
-package com.njydsz.message.server.template;
+﻿package com.njydsz.message.server.template;
 
 import java.io.StringWriter;
 import java.util.Map;

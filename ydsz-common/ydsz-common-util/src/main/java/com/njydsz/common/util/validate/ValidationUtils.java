@@ -1,4 +1,4 @@
-package com.njydsz.common.util.validate;
+﻿package com.njydsz.common.util.validate;
 
 import java.util.regex.Pattern;
 

@@ -1,4 +1,4 @@
-package com.njydsz.common.json.type;
+﻿package com.njydsz.common.json.type;
 
 import java.lang.reflect.Type;
 import java.util.List;

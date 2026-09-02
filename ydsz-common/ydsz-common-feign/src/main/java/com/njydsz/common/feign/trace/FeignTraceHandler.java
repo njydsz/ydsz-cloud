@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.trace;
+﻿package com.njydsz.common.feign.trace;
 
 /**
  * Feign 链路追踪器接口。

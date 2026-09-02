@@ -1,4 +1,4 @@
-package com.njydsz.message.domain.constant;
+﻿package com.njydsz.message.domain.constant;
 
 import com.njydsz.common.core.constant.SystemConstants;
 

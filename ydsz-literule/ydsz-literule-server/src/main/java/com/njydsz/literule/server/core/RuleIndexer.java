@@ -1,5 +1,4 @@
-package com.njydsz.literule.server.core.RuleIndexer;
-
+﻿package com.njydsz.literule.server.core;.core
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;

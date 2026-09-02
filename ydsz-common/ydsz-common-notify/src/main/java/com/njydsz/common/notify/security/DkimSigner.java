@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.security;
+﻿package com.njydsz.common.notify.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;

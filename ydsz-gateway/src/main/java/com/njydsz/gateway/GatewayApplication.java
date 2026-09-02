@@ -1,4 +1,4 @@
-package com.njydsz.gateway;
+﻿package com.njydsz.gateway;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringApplication;

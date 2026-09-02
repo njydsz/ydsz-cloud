@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.serializer;
+﻿package com.njydsz.common.queue.serializer;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

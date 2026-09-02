@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.codec;
+﻿package com.njydsz.common.feign.codec;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;

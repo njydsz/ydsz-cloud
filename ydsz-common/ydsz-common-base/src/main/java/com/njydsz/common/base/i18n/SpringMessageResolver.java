@@ -1,4 +1,4 @@
-package com.njydsz.common.base.i18n;
+﻿package com.njydsz.common.base.i18n;
 
 import java.util.Locale;
 

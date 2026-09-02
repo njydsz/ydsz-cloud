@@ -1,5 +1,4 @@
-package com.njydsz.common.safe.ratelimit.properties.RateLimitProperties;
-
+﻿package com.njydsz.common.safe.ratelimit.properties;.properties
 import java.util.List;
 
 import lombok.Data;

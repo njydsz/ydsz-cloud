@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.api.client;
+﻿package com.njydsz.userinfo.api.client;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.userinfo.api.fallback.OrgQueryClientFallback;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -41,7 +42,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 @FeignClient(
     name = FeignClientConstants.USERINFO,
     contextId = "orgQueryClient",
-    fallback = OrgQueryClientFallback.class)
+    fallbackFactory = OrgQueryClientFallback.class)
 public interface OrgQueryClient {
 
   /**

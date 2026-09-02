@@ -1,4 +1,4 @@
-package com.njydsz.common.search.config;
+﻿package com.njydsz.common.search.config;
 
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.type.AnnotationMetadata;

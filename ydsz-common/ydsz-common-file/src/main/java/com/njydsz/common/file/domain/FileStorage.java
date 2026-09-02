@@ -1,4 +1,4 @@
-package com.njydsz.common.file.domain;
+﻿package com.njydsz.common.file.domain;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

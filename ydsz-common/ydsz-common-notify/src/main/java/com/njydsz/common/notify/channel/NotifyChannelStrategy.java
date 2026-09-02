@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.channel;
+﻿package com.njydsz.common.notify.channel;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;

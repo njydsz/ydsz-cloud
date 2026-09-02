@@ -1,4 +1,4 @@
-package com.njydsz.common.jdbc.health;
+﻿package com.njydsz.common.jdbc.health;
 
 import javax.sql.DataSource;
 

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.vo;
+﻿package com.njydsz.userinfo.domain.vo;
 
 /**
  * MFA 覆盖率统计 VO。

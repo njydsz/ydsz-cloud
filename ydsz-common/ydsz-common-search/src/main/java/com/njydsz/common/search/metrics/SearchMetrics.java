@@ -1,4 +1,4 @@
-package com.njydsz.common.search.metrics;
+﻿package com.njydsz.common.search.metrics;
 
 import java.time.Duration;
 import java.util.ArrayList;

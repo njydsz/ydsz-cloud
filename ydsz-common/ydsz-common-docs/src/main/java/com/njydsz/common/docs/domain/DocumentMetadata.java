@@ -1,4 +1,4 @@
-package com.njydsz.common.docs.domain;
+﻿package com.njydsz.common.docs.domain;
 
 import java.time.LocalDateTime;
 import java.util.Map;

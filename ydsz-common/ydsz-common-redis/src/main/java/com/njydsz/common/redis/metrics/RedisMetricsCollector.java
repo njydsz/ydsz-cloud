@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.metrics;
+﻿package com.njydsz.common.redis.metrics;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;

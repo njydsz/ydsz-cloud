@@ -1,4 +1,4 @@
-package com.njydsz.message.server.token;
+﻿package com.njydsz.message.server.token;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;

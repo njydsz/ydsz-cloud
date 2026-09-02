@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.event;
+﻿package com.njydsz.common.redis.event;
 
 import java.time.Instant;
 

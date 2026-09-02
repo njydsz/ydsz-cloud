@@ -1,4 +1,4 @@
-package com.njydsz.common.base.config;
+﻿package com.njydsz.common.base.config;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

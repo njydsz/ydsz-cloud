@@ -1,4 +1,4 @@
-package com.njydsz.common.core.code;
+﻿package com.njydsz.common.core.code;
 
 /**
  * 统一结果码接口 — 三要素最小契约（i18n 属于 core 标配能力）。

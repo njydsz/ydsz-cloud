@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.health;
+﻿package com.njydsz.common.socket.health;
 
 import java.util.concurrent.atomic.AtomicLong;
 

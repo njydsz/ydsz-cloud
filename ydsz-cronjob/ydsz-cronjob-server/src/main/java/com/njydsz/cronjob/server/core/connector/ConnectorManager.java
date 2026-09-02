@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.connector;
+﻿package com.njydsz.cronjob.server.core.connector;
 
 import java.util.List;
 import java.util.Map;

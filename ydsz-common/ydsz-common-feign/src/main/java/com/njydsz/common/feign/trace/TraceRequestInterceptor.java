@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.trace;
+﻿package com.njydsz.common.feign.trace;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;

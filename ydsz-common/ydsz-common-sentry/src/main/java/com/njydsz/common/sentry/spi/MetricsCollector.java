@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.spi;
+﻿package com.njydsz.common.sentry.spi;
 
 import java.time.Duration;
 import java.util.Map;

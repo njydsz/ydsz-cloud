@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ydsz-gateway 网关模块，提供请求路由、鉴权过滤、限流、灰度负载均衡、WebSocket 连接管理、CORS 等网关能力.
  *
  * <p>本模块作为整个 ydsz-cloud 平台的统一入口网关，基于 Spring Cloud Gateway 构建，负责所有下游微服务

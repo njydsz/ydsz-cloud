@@ -1,4 +1,4 @@
-package com.njydsz.literule.api.fallback;
+﻿package com.njydsz.literule.api.fallback;
 
 import java.util.List;
 import java.util.Map;

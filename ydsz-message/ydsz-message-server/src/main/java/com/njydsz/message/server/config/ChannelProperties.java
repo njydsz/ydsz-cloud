@@ -1,4 +1,4 @@
-package com.njydsz.message.server.config;
+﻿package com.njydsz.message.server.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

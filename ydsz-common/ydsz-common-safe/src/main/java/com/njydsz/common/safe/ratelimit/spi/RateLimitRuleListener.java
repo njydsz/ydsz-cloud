@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.ratelimit.spi;
+﻿package com.njydsz.common.safe.ratelimit.spi;
 
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 

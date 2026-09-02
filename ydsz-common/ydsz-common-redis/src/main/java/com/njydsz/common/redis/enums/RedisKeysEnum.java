@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.enums;
+﻿package com.njydsz.common.redis.enums;
 
 import java.util.Arrays;
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package com.njydsz.common.exception.config;
+﻿package com.njydsz.common.exception.config;
 
 import java.util.Collections;
 import java.util.List;

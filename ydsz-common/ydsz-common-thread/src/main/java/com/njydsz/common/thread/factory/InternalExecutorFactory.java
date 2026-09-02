@@ -1,4 +1,4 @@
-package com.njydsz.common.thread.factory;
+﻿package com.njydsz.common.thread.factory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;

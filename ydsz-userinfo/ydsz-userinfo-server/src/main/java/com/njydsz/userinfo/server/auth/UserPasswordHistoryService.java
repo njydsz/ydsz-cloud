@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.auth;
+﻿package com.njydsz.userinfo.server.auth;
 
 /**
  * 密码历史服务接口

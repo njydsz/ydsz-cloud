@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.model;
+﻿package com.njydsz.common.auth.model;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

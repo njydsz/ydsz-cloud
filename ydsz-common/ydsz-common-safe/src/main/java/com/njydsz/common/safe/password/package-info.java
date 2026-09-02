@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 密码强度校验能力。
  *
  * <p>提供统一的密码强度校验，业务模块必须使用 {@link com.njydsz.common.safe.password.PasswordStrengthValidator}，

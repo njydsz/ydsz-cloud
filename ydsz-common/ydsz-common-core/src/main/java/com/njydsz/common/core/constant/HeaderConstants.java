@@ -1,4 +1,4 @@
-package com.njydsz.common.core.constant;
+﻿package com.njydsz.common.core.constant;
 
 /**
  * 公共模块 HTTP 请求头常量定义（核心层保留通用协议常量）。

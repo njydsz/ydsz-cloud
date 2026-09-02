@@ -1,4 +1,4 @@
-package com.njydsz.common.audit.exception;
+﻿package com.njydsz.common.audit.exception;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;

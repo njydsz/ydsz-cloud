@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.canary;
+﻿package com.njydsz.cronjob.server.core.canary;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;

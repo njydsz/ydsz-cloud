@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.handler;
+﻿package com.njydsz.common.auth.handler;
 
 import java.util.Collections;
 import java.util.Enumeration;

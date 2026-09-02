@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.auth;
+﻿package com.njydsz.userinfo.server.auth;
 
 import java.io.BufferedReader;
 import java.io.IOException;

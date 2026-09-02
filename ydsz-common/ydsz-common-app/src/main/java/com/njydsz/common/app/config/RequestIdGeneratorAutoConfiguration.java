@@ -1,4 +1,4 @@
-package com.njydsz.common.app.config;
+﻿package com.njydsz.common.app.config;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.ObjectProvider;

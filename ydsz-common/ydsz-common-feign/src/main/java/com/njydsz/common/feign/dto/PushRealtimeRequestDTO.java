@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.dto;
+﻿package com.njydsz.common.feign.dto;
 
 import java.io.Serial;
 import java.io.Serializable;

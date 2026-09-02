@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.ratelimit.model;
+﻿package com.njydsz.common.safe.ratelimit.model;
 
 import java.io.Serializable;
 import java.time.Duration;

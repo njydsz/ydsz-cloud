@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.core;
+﻿package com.njydsz.common.notify.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

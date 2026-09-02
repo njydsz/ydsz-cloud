@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.precheck;
+﻿package com.njydsz.common.auth.precheck;
 
 import java.util.Set;
 

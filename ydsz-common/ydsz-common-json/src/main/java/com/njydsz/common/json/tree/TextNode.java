@@ -1,4 +1,4 @@
-package com.njydsz.common.json.tree;
+﻿package com.njydsz.common.json.tree;
 
 /**
  * JSON 文本节点

@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.health;
+﻿package com.njydsz.common.queue.health;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;

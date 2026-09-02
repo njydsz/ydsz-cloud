@@ -1,5 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance.FlowInstanceVariableManager;
-
+﻿package com.njydsz.workflow.server.service.impl.instance;.instance
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

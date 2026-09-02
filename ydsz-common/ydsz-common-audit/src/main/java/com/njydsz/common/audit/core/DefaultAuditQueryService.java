@@ -1,5 +1,4 @@
-package com.njydsz.common.audit.core.DefaultAuditQueryService;
-
+﻿package com.njydsz.common.audit.core;.core
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

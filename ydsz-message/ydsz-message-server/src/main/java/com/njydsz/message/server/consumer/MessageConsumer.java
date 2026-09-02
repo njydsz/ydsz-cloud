@@ -1,4 +1,4 @@
-package com.njydsz.message.server.consumer;
+﻿package com.njydsz.message.server.consumer;
 
 import java.lang.management.ManagementFactory;
 import java.time.Duration;

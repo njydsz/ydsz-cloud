@@ -1,4 +1,4 @@
-package com.njydsz.common.jdbc.constant;
+﻿package com.njydsz.common.jdbc.constant;
 
 /**
  * HTTP 请求头常量 — 数据权限域。

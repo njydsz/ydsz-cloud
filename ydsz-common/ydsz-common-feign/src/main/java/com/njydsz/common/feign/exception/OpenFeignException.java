@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.exception;
+﻿package com.njydsz.common.feign.exception;
 
 import lombok.Getter;
 

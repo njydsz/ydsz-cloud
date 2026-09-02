@@ -1,4 +1,4 @@
-package com.njydsz.common.json.util;
+﻿package com.njydsz.common.json.util;
 
 /**
  * JSON 类型判断工具类（统一 isSimpleType / getTypeCode 等重复实现）。

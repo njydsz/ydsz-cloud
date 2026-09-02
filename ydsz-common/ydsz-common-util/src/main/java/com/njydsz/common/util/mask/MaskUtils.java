@@ -1,4 +1,4 @@
-package com.njydsz.common.util.mask;
+﻿package com.njydsz.common.util.mask;
 
 import com.njydsz.common.util.api.Experimental;
 

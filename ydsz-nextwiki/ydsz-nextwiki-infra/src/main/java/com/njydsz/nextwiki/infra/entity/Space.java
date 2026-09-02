@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.infra.entity;
+﻿package com.njydsz.nextwiki.infra.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

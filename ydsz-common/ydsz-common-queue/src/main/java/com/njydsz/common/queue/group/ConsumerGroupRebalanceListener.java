@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.group;
+﻿package com.njydsz.common.queue.group;
 
 /**
  * 消费者组 Rebalance 事件监听器

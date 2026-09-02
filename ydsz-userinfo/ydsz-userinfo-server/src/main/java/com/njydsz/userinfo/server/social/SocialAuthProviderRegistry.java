@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.social;
+﻿package com.njydsz.userinfo.server.social;
 
 import java.util.List;
 import java.util.Map;

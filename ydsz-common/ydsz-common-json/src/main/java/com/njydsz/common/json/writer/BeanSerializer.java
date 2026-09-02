@@ -1,4 +1,4 @@
-package com.njydsz.common.json.writer;
+﻿package com.njydsz.common.json.writer;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;

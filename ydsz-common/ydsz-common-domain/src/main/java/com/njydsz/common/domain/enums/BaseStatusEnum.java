@@ -1,4 +1,4 @@
-package com.njydsz.common.domain.enums;
+﻿package com.njydsz.common.domain.enums;
 
 import java.util.List;
 

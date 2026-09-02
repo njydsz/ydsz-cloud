@@ -1,4 +1,4 @@
-package com.njydsz.system.server.schedule;
+﻿package com.njydsz.system.server.schedule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

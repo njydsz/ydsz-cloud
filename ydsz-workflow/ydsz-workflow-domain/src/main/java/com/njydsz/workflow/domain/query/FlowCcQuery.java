@@ -1,4 +1,4 @@
-package com.njydsz.workflow.domain.query;
+﻿package com.njydsz.workflow.domain.query;
 
 import java.io.Serial;
 

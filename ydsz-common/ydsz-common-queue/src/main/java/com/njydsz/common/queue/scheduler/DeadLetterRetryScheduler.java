@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.scheduler;
+﻿package com.njydsz.common.queue.scheduler;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;

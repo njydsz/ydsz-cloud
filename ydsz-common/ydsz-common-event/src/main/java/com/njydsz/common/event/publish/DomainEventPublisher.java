@@ -1,4 +1,4 @@
-package com.njydsz.common.event.publish;
+﻿package com.njydsz.common.event.publish;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

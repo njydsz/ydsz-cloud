@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.infra.mapper.job;
+﻿package com.njydsz.cronjob.infra.mapper.job;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;

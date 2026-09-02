@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.annotation;
+﻿package com.njydsz.common.queue.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

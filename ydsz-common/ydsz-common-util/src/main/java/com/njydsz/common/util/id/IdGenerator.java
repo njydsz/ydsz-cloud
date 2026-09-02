@@ -1,4 +1,4 @@
-package com.njydsz.common.util.id;
+﻿package com.njydsz.common.util.id;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;

@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.service;
+﻿package com.njydsz.common.queue.service;
 
 /**
  * 消息订阅者接口（精简版）。

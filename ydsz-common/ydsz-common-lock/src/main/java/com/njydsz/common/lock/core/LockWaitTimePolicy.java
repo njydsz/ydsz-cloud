@@ -1,4 +1,4 @@
-package com.njydsz.common.lock.core;
+﻿package com.njydsz.common.lock.core;
 
 /**
  * 锁等待时间策略接口

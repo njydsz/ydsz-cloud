@@ -1,4 +1,4 @@
-package com.njydsz.common.tenant.validation;
+﻿package com.njydsz.common.tenant.validation;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;

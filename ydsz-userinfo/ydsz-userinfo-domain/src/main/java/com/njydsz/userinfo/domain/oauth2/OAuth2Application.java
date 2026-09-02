@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.oauth2;
+﻿package com.njydsz.userinfo.domain.oauth2;
 
 import java.time.LocalDateTime;
 import java.util.List;

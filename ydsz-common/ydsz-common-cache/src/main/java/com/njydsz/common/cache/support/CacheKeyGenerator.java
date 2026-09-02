@@ -1,4 +1,4 @@
-package com.njydsz.common.cache.support;
+﻿package com.njydsz.common.cache.support;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

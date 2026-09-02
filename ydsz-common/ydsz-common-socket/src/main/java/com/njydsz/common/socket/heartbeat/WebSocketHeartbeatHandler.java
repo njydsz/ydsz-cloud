@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.heartbeat;
+﻿package com.njydsz.common.socket.heartbeat;
 
 import java.util.Map;
 import java.util.Set;

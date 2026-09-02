@@ -1,4 +1,4 @@
-package com.njydsz.workflow.domain.dto;
+﻿package com.njydsz.workflow.domain.dto;
 
 import java.io.Serial;
 import java.time.LocalDateTime;

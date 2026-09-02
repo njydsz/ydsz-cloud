@@ -1,4 +1,4 @@
-package com.njydsz.common.json.module;
+﻿package com.njydsz.common.json.module;
 
 import java.util.ArrayList;
 import java.util.Collection;

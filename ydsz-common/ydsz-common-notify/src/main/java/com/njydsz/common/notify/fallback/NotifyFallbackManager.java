@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.fallback;
+﻿package com.njydsz.common.notify.fallback;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.njydsz.message.domain.dto;
+﻿package com.njydsz.message.domain.dto;
 
 import java.math.BigDecimal;
 import java.util.List;

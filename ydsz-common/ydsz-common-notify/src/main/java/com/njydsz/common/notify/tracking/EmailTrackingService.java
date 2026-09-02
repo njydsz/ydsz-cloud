@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.tracking;
+﻿package com.njydsz.common.notify.tracking;
 
 import java.time.Duration;
 import java.util.HashMap;

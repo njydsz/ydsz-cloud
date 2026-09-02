@@ -1,4 +1,4 @@
-package com.njydsz.common.jdbc.config;
+﻿package com.njydsz.common.jdbc.config;
 
 import java.util.Arrays;
 import java.util.List;

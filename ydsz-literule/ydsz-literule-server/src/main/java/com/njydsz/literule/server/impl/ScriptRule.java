@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.impl;
+﻿package com.njydsz.literule.server.impl;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;

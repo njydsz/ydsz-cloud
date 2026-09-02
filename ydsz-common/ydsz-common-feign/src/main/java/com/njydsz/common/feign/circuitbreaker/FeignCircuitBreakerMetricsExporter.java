@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.circuitbreaker;
+﻿package com.njydsz.common.feign.circuitbreaker;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

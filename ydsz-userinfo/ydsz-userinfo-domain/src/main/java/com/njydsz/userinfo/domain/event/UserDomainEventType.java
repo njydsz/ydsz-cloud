@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.event;
+﻿package com.njydsz.userinfo.domain.event;
 
 import lombok.Getter;
 

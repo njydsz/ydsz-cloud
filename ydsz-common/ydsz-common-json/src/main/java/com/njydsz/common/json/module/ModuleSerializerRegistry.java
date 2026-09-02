@@ -1,4 +1,4 @@
-package com.njydsz.common.json.module;
+﻿package com.njydsz.common.json.module;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

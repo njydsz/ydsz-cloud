@@ -1,4 +1,4 @@
-package com.njydsz.common.search.config;
+﻿package com.njydsz.common.search.config;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.queue;
+﻿package com.njydsz.common.queue.queue;
 
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;

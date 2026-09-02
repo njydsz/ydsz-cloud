@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.model;
+﻿package com.njydsz.common.auth.model;
 
 /**
  * 数据权限可注入标记接口。

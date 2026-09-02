@@ -1,5 +1,4 @@
-package com.njydsz.workflow.server.service.impl.i18n.FlowI18nServiceImpl;
-
+﻿package com.njydsz.workflow.server.service.impl.i18n;.i18n
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

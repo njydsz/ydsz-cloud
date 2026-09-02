@@ -1,4 +1,4 @@
-package com.njydsz.system.server.service.impl;
+﻿package com.njydsz.system.server.service.impl;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;

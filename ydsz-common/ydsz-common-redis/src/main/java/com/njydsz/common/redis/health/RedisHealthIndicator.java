@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.health;
+﻿package com.njydsz.common.redis.health;
 
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;

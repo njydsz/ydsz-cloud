@@ -1,4 +1,4 @@
-package com.njydsz.literule.infra.repository.impl;
+﻿package com.njydsz.literule.infra.repository.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;

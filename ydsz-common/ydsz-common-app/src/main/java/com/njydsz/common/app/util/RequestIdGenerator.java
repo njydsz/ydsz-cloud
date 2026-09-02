@@ -1,4 +1,4 @@
-package com.njydsz.common.app.util;
+﻿package com.njydsz.common.app.util;
 
 import java.util.function.Supplier;
 

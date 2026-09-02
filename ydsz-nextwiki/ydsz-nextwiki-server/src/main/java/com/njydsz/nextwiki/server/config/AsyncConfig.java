@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.config;
+﻿package com.njydsz.nextwiki.server.config;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

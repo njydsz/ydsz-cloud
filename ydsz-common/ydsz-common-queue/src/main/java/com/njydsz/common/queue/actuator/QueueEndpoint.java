@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.actuator;
+﻿package com.njydsz.common.queue.actuator;
 
 import java.util.HashMap;
 import java.util.Map;

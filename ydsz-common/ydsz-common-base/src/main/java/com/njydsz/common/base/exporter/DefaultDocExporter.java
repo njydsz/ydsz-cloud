@@ -1,4 +1,4 @@
-package com.njydsz.common.base.exporter;
+﻿package com.njydsz.common.base.exporter;
 
 import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

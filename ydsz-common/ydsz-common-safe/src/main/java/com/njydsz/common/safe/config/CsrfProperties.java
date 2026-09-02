@@ -1,5 +1,4 @@
-package com.njydsz.common.safe.config.CsrfProperties;
-
+﻿package com.njydsz.common.safe.config;.config
 import java.util.List;
 
 import lombok.Data;

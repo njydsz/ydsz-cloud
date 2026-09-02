@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.api.assembler;
+﻿package com.njydsz.userinfo.api.assembler;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

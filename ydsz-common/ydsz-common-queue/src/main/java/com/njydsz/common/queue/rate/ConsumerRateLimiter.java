@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.rate;
+﻿package com.njydsz.common.queue.rate;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;

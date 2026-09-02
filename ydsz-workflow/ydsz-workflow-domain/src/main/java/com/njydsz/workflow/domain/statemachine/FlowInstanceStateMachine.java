@@ -1,4 +1,4 @@
-package com.njydsz.workflow.domain.statemachine;
+﻿package com.njydsz.workflow.domain.statemachine;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.njydsz.common.json.parser;
+﻿package com.njydsz.common.json.parser;
 
 import java.io.Closeable;
 import java.io.IOException;

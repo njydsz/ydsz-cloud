@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.cache;
+﻿package com.njydsz.nextwiki.server.cache;
 
 import java.util.Collections;
 import java.util.List;

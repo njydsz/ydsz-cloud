@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage;
+﻿package com.njydsz.common.file.storage;
 
 /**
  * 检查点存储接口

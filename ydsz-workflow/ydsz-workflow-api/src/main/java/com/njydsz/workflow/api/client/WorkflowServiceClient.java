@@ -1,4 +1,4 @@
-package com.njydsz.workflow.api.client;
+﻿package com.njydsz.workflow.api.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

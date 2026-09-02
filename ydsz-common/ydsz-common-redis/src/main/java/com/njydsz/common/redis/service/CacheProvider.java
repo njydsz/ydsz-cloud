@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.service;
+﻿package com.njydsz.common.redis.service;
 
 import java.util.List;
 import java.util.function.Supplier;

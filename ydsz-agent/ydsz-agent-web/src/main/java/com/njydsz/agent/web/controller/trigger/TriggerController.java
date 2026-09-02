@@ -1,4 +1,4 @@
-package com.njydsz.agent.web.controller.trigger;
+﻿package com.njydsz.agent.web.controller.trigger;
 
 import java.util.List;
 import java.util.Map;

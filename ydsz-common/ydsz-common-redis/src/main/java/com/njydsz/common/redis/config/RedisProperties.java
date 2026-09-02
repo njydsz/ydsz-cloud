@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.config;
+﻿package com.njydsz.common.redis.config;
 
 import java.time.Duration;
 import java.util.Collection;

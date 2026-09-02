@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.constant;
+﻿package com.njydsz.common.socket.constant;
 
 /**
  * WebSocket 公共常量集中定义。

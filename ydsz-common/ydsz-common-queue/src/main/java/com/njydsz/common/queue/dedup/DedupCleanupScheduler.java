@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.dedup;
+﻿package com.njydsz.common.queue.dedup;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

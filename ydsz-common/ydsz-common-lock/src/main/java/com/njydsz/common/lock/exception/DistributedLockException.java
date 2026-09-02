@@ -1,4 +1,4 @@
-package com.njydsz.common.lock.exception;
+﻿package com.njydsz.common.lock.exception;
 
 import java.time.LocalDateTime;
 

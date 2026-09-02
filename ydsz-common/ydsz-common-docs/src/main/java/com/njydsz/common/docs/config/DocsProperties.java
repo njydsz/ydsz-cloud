@@ -1,4 +1,4 @@
-package com.njydsz.common.docs.config;
+﻿package com.njydsz.common.docs.config;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

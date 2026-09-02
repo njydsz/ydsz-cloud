@@ -1,5 +1,4 @@
-package com.njydsz.nextwiki.infra.repository.FileNodeRepositoryImpl;
-
+﻿package com.njydsz.nextwiki.infra.repository;.repository
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

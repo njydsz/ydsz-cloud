@@ -1,4 +1,4 @@
-package com.njydsz.common.event.config;
+﻿package com.njydsz.common.event.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;

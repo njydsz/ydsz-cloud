@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.impl.receipt;
+﻿package com.njydsz.message.server.service.impl.receipt;
 
 import java.time.LocalDateTime;
 import java.util.List;

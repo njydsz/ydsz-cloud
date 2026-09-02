@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.tracing;
+﻿package com.njydsz.common.sentry.tracing;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;

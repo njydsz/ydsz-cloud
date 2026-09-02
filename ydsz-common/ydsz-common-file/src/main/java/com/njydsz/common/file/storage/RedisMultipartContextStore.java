@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage;
+﻿package com.njydsz.common.file.storage;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;

@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.health;
+﻿package com.njydsz.common.auth.health;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

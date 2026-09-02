@@ -1,4 +1,4 @@
-package com.njydsz.workflow.domain.event;
+﻿package com.njydsz.workflow.domain.event;
 
 import java.io.Serial;
 

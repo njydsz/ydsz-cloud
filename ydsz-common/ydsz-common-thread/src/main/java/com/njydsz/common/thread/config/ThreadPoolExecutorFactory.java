@@ -1,4 +1,4 @@
-package com.njydsz.common.thread.config;
+﻿package com.njydsz.common.thread.config;
 
 import java.util.ArrayList;
 import java.util.List;

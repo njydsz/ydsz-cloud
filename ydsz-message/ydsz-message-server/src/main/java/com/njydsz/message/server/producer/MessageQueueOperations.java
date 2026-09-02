@@ -1,4 +1,4 @@
-package com.njydsz.message.server.producer;
+﻿package com.njydsz.message.server.producer;
 
 import com.njydsz.common.feign.MessageRequest;
 

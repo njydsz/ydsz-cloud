@@ -1,4 +1,4 @@
-package com.njydsz.common.core.context;
+﻿package com.njydsz.common.core.context;
 
 /**
  * 上下文键，提供类型安全的上下文存取。

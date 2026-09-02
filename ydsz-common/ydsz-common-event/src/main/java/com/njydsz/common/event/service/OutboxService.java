@@ -1,4 +1,4 @@
-package com.njydsz.common.event.service;
+﻿package com.njydsz.common.event.service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;

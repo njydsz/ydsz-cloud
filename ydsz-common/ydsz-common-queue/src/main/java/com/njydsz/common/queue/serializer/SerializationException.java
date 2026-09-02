@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.serializer;
+﻿package com.njydsz.common.queue.serializer;
 
 /**
  * 序列化异常

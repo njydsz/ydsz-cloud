@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.resilience;
+﻿package com.njydsz.common.socket.resilience;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

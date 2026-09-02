@@ -1,4 +1,4 @@
-package com.njydsz.common.cache.health;
+﻿package com.njydsz.common.cache.health;
 
 import java.util.Map;
 

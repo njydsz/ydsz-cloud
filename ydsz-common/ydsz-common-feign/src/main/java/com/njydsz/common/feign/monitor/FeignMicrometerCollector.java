@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.monitor;
+﻿package com.njydsz.common.feign.monitor;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;

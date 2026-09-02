@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.push;
+﻿package com.njydsz.common.socket.push;
 
 /**
  * 推送上下文（P1-6）。

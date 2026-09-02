@@ -1,4 +1,4 @@
-package com.njydsz.common.audit.domain;
+﻿package com.njydsz.common.audit.domain;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.domain.service;
+﻿package com.njydsz.nextwiki.domain.service;
 
 /**
  * 存储引用计数服务。

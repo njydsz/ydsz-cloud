@@ -1,4 +1,4 @@
-package com.njydsz.agent.server.chat;
+﻿package com.njydsz.agent.server.chat;
 
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 

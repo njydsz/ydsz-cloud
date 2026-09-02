@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.websocket;
+﻿package com.njydsz.nextwiki.server.websocket;
 
 import java.util.HashMap;
 import java.util.Map;

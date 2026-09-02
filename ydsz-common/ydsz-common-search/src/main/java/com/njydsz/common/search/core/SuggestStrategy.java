@@ -1,4 +1,4 @@
-package com.njydsz.common.search.core;
+﻿package com.njydsz.common.search.core;
 
 import com.njydsz.common.search.api.SearchSuggestion;
 

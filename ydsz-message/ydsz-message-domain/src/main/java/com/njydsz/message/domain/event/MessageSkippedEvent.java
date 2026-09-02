@@ -1,4 +1,4 @@
-package com.njydsz.message.domain.event;
+﻿package com.njydsz.message.domain.event;
 
 import java.io.Serial;
 

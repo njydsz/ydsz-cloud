@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.xss;
+﻿package com.njydsz.common.safe.xss;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

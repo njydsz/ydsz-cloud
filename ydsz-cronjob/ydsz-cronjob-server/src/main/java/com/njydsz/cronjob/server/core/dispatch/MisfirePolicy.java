@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.dispatch;
+﻿package com.njydsz.cronjob.server.core.dispatch;
 
 /**
  * Misfire 策略枚举（P2-1）。

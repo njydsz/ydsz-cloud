@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.filter;
+﻿package com.njydsz.common.safe.filter;
 
 import java.util.ArrayList;
 import java.util.Comparator;

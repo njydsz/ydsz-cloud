@@ -1,4 +1,4 @@
-package com.njydsz.common.cache.stats;
+﻿package com.njydsz.common.cache.stats;
 
 /**
  * 缓存统计信息类

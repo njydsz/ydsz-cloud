@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.util;
+﻿package com.njydsz.common.safe.util;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

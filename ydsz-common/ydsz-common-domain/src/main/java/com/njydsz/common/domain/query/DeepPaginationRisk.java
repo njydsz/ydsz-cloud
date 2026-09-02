@@ -1,4 +1,4 @@
-package com.njydsz.common.domain.query;
+﻿package com.njydsz.common.domain.query;
 
 /**
  * 深度分页风险评估结果。

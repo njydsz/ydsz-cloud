@@ -1,4 +1,4 @@
-package com.njydsz.common.docs.ocr;
+﻿package com.njydsz.common.docs.ocr;
 
 /**
  * OCR 引擎接口

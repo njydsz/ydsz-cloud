@@ -1,4 +1,4 @@
-package com.njydsz.common.jdbc.config;
+﻿package com.njydsz.common.jdbc.config;
 
 import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

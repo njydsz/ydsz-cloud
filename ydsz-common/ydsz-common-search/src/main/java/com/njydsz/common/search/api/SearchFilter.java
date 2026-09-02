@@ -1,4 +1,4 @@
-package com.njydsz.common.search.api;
+﻿package com.njydsz.common.search.api;
 
 import java.io.Serializable;
 import java.util.List;

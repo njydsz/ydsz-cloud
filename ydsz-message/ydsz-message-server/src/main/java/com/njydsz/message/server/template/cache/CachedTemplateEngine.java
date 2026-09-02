@@ -1,4 +1,4 @@
-package com.njydsz.message.server.template.cache;
+﻿package com.njydsz.message.server.template.cache;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

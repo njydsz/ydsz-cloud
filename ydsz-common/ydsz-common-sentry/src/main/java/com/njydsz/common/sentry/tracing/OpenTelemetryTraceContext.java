@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.tracing;
+﻿package com.njydsz.common.sentry.tracing;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;

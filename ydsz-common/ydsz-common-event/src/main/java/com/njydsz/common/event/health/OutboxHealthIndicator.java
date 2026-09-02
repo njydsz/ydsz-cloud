@@ -1,4 +1,4 @@
-package com.njydsz.common.event.health;
+﻿package com.njydsz.common.event.health;
 
 import java.time.Instant;
 import java.util.Map;

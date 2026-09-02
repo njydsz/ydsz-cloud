@@ -1,4 +1,4 @@
-package com.njydsz.common.lock.idempotent;
+﻿package com.njydsz.common.lock.idempotent;
 
 import java.util.Collections;
 

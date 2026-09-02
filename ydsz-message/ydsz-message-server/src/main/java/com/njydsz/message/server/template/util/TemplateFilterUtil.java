@@ -1,4 +1,4 @@
-package com.njydsz.message.server.template.util;
+﻿package com.njydsz.message.server.template.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

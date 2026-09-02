@@ -1,4 +1,4 @@
-package com.njydsz.common.json.internal;
+﻿package com.njydsz.common.json.internal;
 
 import java.io.Serializable;
 import java.util.List;

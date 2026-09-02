@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.constant;
+﻿package com.njydsz.common.redis.constant;
 
 /**
  * Redis Lua 脚本常量仓库。

@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.monitor;
+﻿package com.njydsz.common.feign.monitor;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.hierarchy;
+﻿package com.njydsz.common.auth.hierarchy;
 
 import java.util.Collections;
 import java.util.HashSet;

@@ -1,4 +1,4 @@
-package com.njydsz.common.feign;
+﻿package com.njydsz.common.feign;
 
 /**
  * FeignClient 服务名与路径常量。

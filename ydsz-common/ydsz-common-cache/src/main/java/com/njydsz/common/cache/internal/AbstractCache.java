@@ -1,4 +1,4 @@
-package com.njydsz.common.cache.internal;
+﻿package com.njydsz.common.cache.internal;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;

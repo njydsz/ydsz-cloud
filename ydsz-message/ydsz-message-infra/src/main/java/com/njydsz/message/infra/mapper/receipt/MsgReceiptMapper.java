@@ -1,4 +1,4 @@
-package com.njydsz.message.infra.mapper.receipt;
+﻿package com.njydsz.message.infra.mapper.receipt;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;

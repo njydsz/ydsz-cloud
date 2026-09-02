@@ -1,4 +1,4 @@
-package com.njydsz.common.util.id;
+﻿package com.njydsz.common.util.id;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

@@ -1,5 +1,4 @@
-package com.njydsz.common.file.util.FileTypeDetector;
-
+﻿package com.njydsz.common.file.util;.util
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;

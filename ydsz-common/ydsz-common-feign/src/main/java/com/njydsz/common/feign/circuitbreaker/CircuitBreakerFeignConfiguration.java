@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.circuitbreaker;
+﻿package com.njydsz.common.feign.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.micrometer.core.instrument.MeterRegistry;

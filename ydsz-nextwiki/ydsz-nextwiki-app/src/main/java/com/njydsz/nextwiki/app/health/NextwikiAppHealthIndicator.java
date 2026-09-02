@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.app.health;
+﻿package com.njydsz.nextwiki.app.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

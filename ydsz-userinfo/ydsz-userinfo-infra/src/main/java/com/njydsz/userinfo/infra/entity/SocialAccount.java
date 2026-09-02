@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.entity;
+﻿package com.njydsz.userinfo.infra.entity;
 
 import java.time.LocalDateTime;
 

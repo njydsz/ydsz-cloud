@@ -1,4 +1,4 @@
-package com.njydsz.common.lock.util;
+﻿package com.njydsz.common.lock.util;
 
 /**
  * 锁键校验工具类

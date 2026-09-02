@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.config;
+﻿package com.njydsz.userinfo.server.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

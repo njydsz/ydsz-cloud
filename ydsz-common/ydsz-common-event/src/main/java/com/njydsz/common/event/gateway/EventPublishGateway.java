@@ -1,4 +1,4 @@
-package com.njydsz.common.event.gateway;
+﻿package com.njydsz.common.event.gateway;
 
 import java.util.List;
 

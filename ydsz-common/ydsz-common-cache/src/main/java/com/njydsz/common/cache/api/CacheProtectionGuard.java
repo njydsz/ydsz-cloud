@@ -1,4 +1,4 @@
-package com.njydsz.common.cache.api;
+﻿package com.njydsz.common.cache.api;
 
 import java.util.ArrayList;
 import java.util.Collection;

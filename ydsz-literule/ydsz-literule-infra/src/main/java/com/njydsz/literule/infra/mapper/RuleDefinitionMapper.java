@@ -1,4 +1,4 @@
-package com.njydsz.literule.infra.mapper;
+﻿package com.njydsz.literule.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;

@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.event;
+﻿package com.njydsz.common.auth.event;
 
 import java.util.ArrayList;
 import java.util.List;

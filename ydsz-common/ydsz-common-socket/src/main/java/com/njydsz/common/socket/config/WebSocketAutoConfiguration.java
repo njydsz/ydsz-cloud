@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.config;
+﻿package com.njydsz.common.socket.config;
 
 import java.util.List;
 

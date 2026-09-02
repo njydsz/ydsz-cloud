@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.mq.kafka;
+﻿package com.njydsz.common.queue.mq.kafka;
 
 import java.util.List;
 import java.util.Properties;

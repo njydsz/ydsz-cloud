@@ -1,4 +1,4 @@
-package com.njydsz.system.server.service.rollback;
+﻿package com.njydsz.system.server.service.rollback;
 
 /**
  * 回滚策略接口 — 定义资源重建契约。

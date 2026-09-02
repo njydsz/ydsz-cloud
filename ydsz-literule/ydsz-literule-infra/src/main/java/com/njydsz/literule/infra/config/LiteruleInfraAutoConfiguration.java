@@ -1,4 +1,4 @@
-package com.njydsz.literule.infra.config;
+﻿package com.njydsz.literule.infra.config;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

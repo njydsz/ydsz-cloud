@@ -1,4 +1,4 @@
-package com.njydsz.agent.server.chat;
+﻿package com.njydsz.agent.server.chat;
 
 import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.common.json.YdszJson;

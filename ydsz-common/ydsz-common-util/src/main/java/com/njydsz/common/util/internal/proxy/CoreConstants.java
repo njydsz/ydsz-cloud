@@ -1,4 +1,4 @@
-package com.njydsz.common.util.internal.proxy;
+﻿package com.njydsz.common.util.internal.proxy;
 
 /**
  * ydsz-common-core 模块中使用的常量副本。

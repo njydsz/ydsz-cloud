@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.domain;
+﻿package com.njydsz.common.sentry.domain;
 
 /**
  * 告警严重级别

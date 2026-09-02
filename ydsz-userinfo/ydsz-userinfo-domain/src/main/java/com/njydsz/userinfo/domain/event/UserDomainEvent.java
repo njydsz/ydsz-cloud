@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.event;
+﻿package com.njydsz.userinfo.domain.event;
 
 import java.time.LocalDateTime;
 import java.util.Collections;

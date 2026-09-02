@@ -1,4 +1,4 @@
-package com.njydsz.message.web;
+﻿package com.njydsz.message.web;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

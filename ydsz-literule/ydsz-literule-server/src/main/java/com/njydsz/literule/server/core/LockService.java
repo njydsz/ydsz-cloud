@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.core;
+﻿package com.njydsz.literule.server.core;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;

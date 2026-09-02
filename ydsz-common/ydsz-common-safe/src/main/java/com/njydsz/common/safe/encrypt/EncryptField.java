@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.encrypt;
+﻿package com.njydsz.common.safe.encrypt;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

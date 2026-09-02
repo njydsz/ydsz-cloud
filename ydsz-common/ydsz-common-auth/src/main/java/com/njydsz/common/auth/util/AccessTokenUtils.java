@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.util;
+﻿package com.njydsz.common.auth.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package com.njydsz.common.web.health;
+﻿package com.njydsz.common.web.health;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;

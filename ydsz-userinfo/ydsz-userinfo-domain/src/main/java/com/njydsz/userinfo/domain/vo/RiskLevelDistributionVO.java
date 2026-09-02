@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.vo;
+﻿package com.njydsz.userinfo.domain.vo;
 
 /**
  * 风险等级分布 VO。

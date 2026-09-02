@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.mq.rabbit;
+﻿package com.njydsz.common.queue.mq.rabbit;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

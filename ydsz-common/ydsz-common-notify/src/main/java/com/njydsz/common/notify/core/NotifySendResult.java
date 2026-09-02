@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.core;
+﻿package com.njydsz.common.notify.core;
 
 /**
  * 消息发送结果统一封装

@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.core;
+﻿package com.njydsz.common.notify.core;
 
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.enums.NotifyType;

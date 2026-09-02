@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.vo;
+﻿package com.njydsz.userinfo.domain.vo;
 
 /**
  * 异常会话 VO。

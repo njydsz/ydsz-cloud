@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.event;
+﻿package com.njydsz.userinfo.server.event;
 
 import java.util.Comparator;
 import java.util.List;

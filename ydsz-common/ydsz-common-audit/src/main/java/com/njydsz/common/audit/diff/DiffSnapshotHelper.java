@@ -1,5 +1,4 @@
-package com.njydsz.common.audit.diff.DiffSnapshotHelper;
-
+﻿package com.njydsz.common.audit.diff;.diff
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;

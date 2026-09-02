@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.config;
+﻿package com.njydsz.common.socket.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.core;
+﻿package com.njydsz.message.server.service.core;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

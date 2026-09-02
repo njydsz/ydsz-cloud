@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.oauth2;
+﻿package com.njydsz.userinfo.domain.oauth2;
 
 import java.util.List;
 import java.util.Optional;

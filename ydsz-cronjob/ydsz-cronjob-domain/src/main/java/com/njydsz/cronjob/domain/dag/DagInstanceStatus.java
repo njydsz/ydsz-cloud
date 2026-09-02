@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.domain.dag;
+﻿package com.njydsz.cronjob.domain.dag;
 
 import com.njydsz.common.domain.enums.BaseStatusEnum;
 

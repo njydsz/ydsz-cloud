@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.service.cluster;
+﻿package com.njydsz.cronjob.server.service.cluster;
 
 import java.util.ArrayList;
 import java.util.Collections;

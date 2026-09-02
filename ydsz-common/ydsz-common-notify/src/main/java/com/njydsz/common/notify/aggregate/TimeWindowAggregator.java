@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.aggregate;
+﻿package com.njydsz.common.notify.aggregate;
 
 import java.util.ArrayList;
 import java.util.HashMap;

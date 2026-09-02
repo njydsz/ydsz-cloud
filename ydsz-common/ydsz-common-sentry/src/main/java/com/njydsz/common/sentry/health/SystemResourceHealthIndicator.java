@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.health;
+﻿package com.njydsz.common.sentry.health;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

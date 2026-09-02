@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.vo;
+﻿package com.njydsz.userinfo.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;

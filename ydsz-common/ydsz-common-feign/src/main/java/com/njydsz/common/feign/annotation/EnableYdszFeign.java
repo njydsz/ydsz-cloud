@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.annotation;
+﻿package com.njydsz.common.feign.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

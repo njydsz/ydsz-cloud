@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.security;
+﻿package com.njydsz.literule.server.security;
 
 import java.util.ArrayList;
 import java.util.Collection;

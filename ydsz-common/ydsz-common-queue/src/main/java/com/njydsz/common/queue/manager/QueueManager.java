@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.manager;
+﻿package com.njydsz.common.queue.manager;
 
 import java.util.Collection;
 import java.util.Collections;

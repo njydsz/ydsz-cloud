@@ -1,4 +1,4 @@
-package com.njydsz.common.permission;
+﻿package com.njydsz.common.permission;
 
 /**
  * 全局权限码常量池。

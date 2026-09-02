@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.infra.mapper;
+﻿package com.njydsz.nextwiki.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;

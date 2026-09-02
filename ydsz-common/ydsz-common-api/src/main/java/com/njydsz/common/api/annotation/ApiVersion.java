@@ -1,4 +1,4 @@
-package com.njydsz.common.api.annotation;
+﻿package com.njydsz.common.api.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

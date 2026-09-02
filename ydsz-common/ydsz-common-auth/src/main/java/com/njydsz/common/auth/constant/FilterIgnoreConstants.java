@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.constant;
+﻿package com.njydsz.common.auth.constant;
 
 import java.util.Collections;
 import java.util.Set;

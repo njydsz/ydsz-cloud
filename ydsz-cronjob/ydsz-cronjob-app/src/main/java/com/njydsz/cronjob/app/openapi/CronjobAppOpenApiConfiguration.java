@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.app.openapi;
+﻿package com.njydsz.cronjob.app.openapi;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 

@@ -1,4 +1,4 @@
-package com.njydsz.workflow.app.config;
+﻿package com.njydsz.workflow.app.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

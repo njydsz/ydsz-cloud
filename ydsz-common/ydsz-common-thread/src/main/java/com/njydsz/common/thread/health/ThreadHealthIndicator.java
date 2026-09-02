@@ -1,4 +1,4 @@
-package com.njydsz.common.thread.health;
+﻿package com.njydsz.common.thread.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

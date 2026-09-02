@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.ratelimit.properties;
+﻿package com.njydsz.common.safe.ratelimit.properties;
 
 import lombok.Data;
 

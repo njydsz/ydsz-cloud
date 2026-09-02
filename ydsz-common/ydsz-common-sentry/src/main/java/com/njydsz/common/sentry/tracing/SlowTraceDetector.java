@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.tracing;
+﻿package com.njydsz.common.sentry.tracing;
 
 import java.time.Duration;
 import java.util.Collections;

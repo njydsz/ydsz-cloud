@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.core;
+﻿package com.njydsz.literule.server.core;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;

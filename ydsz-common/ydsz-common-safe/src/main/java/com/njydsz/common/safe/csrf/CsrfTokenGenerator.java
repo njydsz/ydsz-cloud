@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.csrf;
+﻿package com.njydsz.common.safe.csrf;
 
 /**
  * CSRF 令牌生成器接口

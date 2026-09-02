@@ -1,4 +1,4 @@
-package com.njydsz.message.server.producer;
+﻿package com.njydsz.message.server.producer;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendCallback;

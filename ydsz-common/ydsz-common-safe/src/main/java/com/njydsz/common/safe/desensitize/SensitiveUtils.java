@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.desensitize;
+﻿package com.njydsz.common.safe.desensitize;
 
 import java.util.regex.Pattern;
 

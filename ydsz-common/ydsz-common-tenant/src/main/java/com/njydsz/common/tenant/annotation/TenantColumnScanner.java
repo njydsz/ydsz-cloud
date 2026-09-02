@@ -1,4 +1,4 @@
-package com.njydsz.common.tenant.annotation;
+﻿package com.njydsz.common.tenant.annotation;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;

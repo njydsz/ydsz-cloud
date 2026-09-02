@@ -1,4 +1,4 @@
-package com.njydsz.common.app.filter;
+﻿package com.njydsz.common.app.filter;
 
 import com.njydsz.common.app.config.AppContentCacheProperties;
 import com.njydsz.common.base.filter.AbstractContentCachingFilter;

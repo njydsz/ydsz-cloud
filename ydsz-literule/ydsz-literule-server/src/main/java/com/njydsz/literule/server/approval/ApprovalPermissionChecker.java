@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.approval;
+﻿package com.njydsz.literule.server.approval;
 
 /**
  * 审批权限检查器（SPI，P1-3 多级审批流）

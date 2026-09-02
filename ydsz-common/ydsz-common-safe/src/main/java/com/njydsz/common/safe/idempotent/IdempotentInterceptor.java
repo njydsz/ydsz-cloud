@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.idempotent;
+﻿package com.njydsz.common.safe.idempotent;
 
 import java.io.IOException;
 import java.lang.reflect.Method;

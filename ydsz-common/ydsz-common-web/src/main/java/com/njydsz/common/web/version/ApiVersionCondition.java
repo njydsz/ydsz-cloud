@@ -1,4 +1,4 @@
-package com.njydsz.common.web.version;
+﻿package com.njydsz.common.web.version;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

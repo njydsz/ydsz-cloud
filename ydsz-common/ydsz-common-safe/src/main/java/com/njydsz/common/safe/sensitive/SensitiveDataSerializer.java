@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.sensitive;
+﻿package com.njydsz.common.safe.sensitive;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.serializer.JsonSerializer;

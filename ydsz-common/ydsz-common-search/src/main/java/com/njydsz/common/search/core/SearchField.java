@@ -1,4 +1,4 @@
-package com.njydsz.common.search.core;
+﻿package com.njydsz.common.search.core;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

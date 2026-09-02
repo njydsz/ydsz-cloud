@@ -1,4 +1,4 @@
-package com.njydsz.common.exception.openapi;
+﻿package com.njydsz.common.exception.openapi;
 
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

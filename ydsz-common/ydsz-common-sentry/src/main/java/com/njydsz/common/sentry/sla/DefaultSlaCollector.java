@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.sla;
+﻿package com.njydsz.common.sentry.sla;
 
 import java.time.Duration;
 import java.util.HashMap;

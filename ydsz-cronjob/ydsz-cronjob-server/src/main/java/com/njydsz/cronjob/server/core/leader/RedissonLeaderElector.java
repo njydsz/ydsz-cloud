@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.leader;
+﻿package com.njydsz.cronjob.server.core.leader;
 
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;

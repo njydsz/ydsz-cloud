@@ -1,4 +1,4 @@
-package com.njydsz.common.base.config;
+﻿package com.njydsz.common.base.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

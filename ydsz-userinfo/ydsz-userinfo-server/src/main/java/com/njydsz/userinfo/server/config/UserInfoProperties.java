@@ -1,5 +1,4 @@
-package com.njydsz.userinfo.server.config.UserInfoProperties;
-
+﻿package com.njydsz.userinfo.server.config;.config
 import java.util.Map;
 import java.util.Set;
 

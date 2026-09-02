@@ -1,4 +1,4 @@
-package com.njydsz.common.domain.identity;
+﻿package com.njydsz.common.domain.identity;
 
 import java.io.Serial;
 import java.io.Serializable;

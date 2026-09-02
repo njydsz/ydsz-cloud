@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.logging;
+﻿package com.njydsz.common.sentry.logging;
 
 import java.net.URI;
 import java.net.http.HttpClient;

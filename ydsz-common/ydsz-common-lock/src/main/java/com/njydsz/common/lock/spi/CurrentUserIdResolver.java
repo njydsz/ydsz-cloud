@@ -1,4 +1,4 @@
-package com.njydsz.common.lock.spi;
+﻿package com.njydsz.common.lock.spi;
 
 /**
  * 当前用户 ID 解析器 SPI 接口

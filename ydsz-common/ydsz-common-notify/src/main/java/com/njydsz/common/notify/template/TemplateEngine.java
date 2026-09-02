@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.template;
+﻿package com.njydsz.common.notify.template;
 
 import java.util.Collection;
 import java.util.Collections;

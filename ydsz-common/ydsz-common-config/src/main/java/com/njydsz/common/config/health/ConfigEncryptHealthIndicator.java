@@ -1,4 +1,4 @@
-package com.njydsz.common.config.health;
+﻿package com.njydsz.common.config.health;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.enums;
+﻿package com.njydsz.common.notify.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.xss;
+﻿package com.njydsz.common.safe.xss;
 
 import org.owasp.html.PolicyFactory;
 

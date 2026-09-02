@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.domain.repository;
+﻿package com.njydsz.cronjob.domain.repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

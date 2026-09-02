@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.config;
+﻿package com.njydsz.common.auth.config;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

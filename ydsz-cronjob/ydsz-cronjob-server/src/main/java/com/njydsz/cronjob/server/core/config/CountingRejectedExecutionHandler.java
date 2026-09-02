@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.config;
+﻿package com.njydsz.cronjob.server.core.config;
 
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;

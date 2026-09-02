@@ -1,4 +1,4 @@
-package com.njydsz.common.search.core;
+﻿package com.njydsz.common.search.core;
 
 /**
  * 引擎能力描述

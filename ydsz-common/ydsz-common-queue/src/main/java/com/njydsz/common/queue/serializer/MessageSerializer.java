@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.serializer;
+﻿package com.njydsz.common.queue.serializer;
 
 import com.njydsz.common.queue.domain.QueueMessage;
 

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.oauth2;
+﻿package com.njydsz.userinfo.server.oauth2;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;

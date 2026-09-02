@@ -1,4 +1,4 @@
-package com.njydsz.common.cache.builder;
+﻿package com.njydsz.common.cache.builder;
 
 /**
  * 缓存类型枚举

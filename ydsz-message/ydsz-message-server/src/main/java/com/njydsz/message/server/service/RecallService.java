@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.receipt;
+﻿package com.njydsz.message.server.service.receipt;
 
 /**
  * 消息撤回服务接口。

@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.impl.config;
+﻿package com.njydsz.message.server.service.impl.config;
 
 import java.time.Duration;
 import java.util.Collections;

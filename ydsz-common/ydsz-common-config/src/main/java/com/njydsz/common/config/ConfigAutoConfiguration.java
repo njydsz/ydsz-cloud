@@ -1,4 +1,4 @@
-package com.njydsz.common.config;
+﻿package com.njydsz.common.config;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

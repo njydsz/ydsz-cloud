@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.converter;
+﻿package com.njydsz.userinfo.infra.converter;
 
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;

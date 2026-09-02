@@ -1,4 +1,4 @@
-package com.njydsz.system.infra.mapper;
+﻿package com.njydsz.system.infra.mapper;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;

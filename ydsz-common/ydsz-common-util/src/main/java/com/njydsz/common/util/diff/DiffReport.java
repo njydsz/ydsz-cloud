@@ -1,4 +1,4 @@
-package com.njydsz.common.util.diff;
+﻿package com.njydsz.common.util.diff;
 
 import java.io.Serializable;
 import java.util.Collections;

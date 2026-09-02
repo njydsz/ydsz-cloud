@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.trace;
+﻿package com.njydsz.common.queue.trace;
 
 import org.slf4j.MDC;
 

@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.vo;
+﻿package com.njydsz.literule.domain.vo;
 
 import java.time.LocalDateTime;
 import java.util.List;

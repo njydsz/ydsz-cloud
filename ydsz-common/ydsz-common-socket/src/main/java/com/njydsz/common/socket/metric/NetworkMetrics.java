@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.metric;
+﻿package com.njydsz.common.socket.metric;
 
 /**
  * 网络连接指标顶层契约（P2-9）。

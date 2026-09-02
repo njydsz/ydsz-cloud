@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.event;
+﻿package com.njydsz.common.auth.event;
 
 /**
  * 权限变更事件 SPI 接口。

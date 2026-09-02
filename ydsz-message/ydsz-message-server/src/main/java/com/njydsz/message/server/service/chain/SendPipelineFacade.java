@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.chain;
+﻿package com.njydsz.message.server.service.chain;
 
 import java.util.Comparator;
 import java.util.List;

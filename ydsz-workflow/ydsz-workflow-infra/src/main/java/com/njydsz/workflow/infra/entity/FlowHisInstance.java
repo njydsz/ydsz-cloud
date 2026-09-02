@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.entity;
+﻿package com.njydsz.workflow.infra.entity;
 
 import java.io.Serial;
 import java.time.LocalDateTime;

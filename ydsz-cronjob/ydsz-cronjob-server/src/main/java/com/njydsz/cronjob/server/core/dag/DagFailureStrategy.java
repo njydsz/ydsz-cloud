@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.dag;
+﻿package com.njydsz.cronjob.server.core.dag;
 
 /**
  * DAG 失败传播策略枚举（P0-1 架构优化：统一枚举）。

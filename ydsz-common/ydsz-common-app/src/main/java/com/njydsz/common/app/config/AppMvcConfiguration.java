@@ -1,4 +1,4 @@
-package com.njydsz.common.app.config;
+﻿package com.njydsz.common.app.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;

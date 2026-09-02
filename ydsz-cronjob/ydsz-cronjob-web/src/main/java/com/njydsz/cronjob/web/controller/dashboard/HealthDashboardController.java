@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.web.controller.dashboard;
+﻿package com.njydsz.cronjob.web.controller.dashboard;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;

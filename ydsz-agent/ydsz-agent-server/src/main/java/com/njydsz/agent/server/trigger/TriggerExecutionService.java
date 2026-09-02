@@ -1,4 +1,4 @@
-package com.njydsz.agent.server.trigger;
+﻿package com.njydsz.agent.server.trigger;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

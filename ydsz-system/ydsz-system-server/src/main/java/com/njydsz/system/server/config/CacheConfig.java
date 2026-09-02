@@ -1,4 +1,4 @@
-package com.njydsz.system.server.config;
+﻿package com.njydsz.system.server.config;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;

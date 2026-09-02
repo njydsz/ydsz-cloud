@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.web;
+﻿package com.njydsz.cronjob.web;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service.receipt;
+﻿package com.njydsz.message.server.service.receipt;
 
 /**
  * 已读回执 Service。

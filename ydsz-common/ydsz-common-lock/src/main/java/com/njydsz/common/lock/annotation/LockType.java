@@ -1,4 +1,4 @@
-package com.njydsz.common.lock.annotation;
+﻿package com.njydsz.common.lock.annotation;
 
 /**
  * 锁类型枚举

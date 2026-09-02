@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.device;
+﻿package com.njydsz.userinfo.server.device;
 
 import java.time.LocalDateTime;
 

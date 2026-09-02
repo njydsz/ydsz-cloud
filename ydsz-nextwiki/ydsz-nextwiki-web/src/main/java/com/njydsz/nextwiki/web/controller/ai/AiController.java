@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.web.controller.ai;
+﻿package com.njydsz.nextwiki.web.controller.ai;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.njydsz.common.queue.compress;
+﻿package com.njydsz.common.queue.compress;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

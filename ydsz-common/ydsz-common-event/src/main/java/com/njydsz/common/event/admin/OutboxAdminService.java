@@ -1,4 +1,4 @@
-package com.njydsz.common.event.admin;
+﻿package com.njydsz.common.event.admin;
 
 import java.time.Instant;
 import java.util.List;

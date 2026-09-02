@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.config;
+﻿package com.njydsz.cronjob.server.config;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;

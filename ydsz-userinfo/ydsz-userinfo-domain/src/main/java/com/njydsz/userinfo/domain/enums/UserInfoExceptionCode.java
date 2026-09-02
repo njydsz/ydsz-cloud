@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.enums;
+﻿package com.njydsz.userinfo.domain.enums;
 
 import lombok.Getter;
 

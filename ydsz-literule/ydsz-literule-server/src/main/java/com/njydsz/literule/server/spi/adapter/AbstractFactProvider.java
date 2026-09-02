@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.spi.adapter;
+﻿package com.njydsz.literule.server.spi.adapter;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;

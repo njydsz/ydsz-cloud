@@ -1,4 +1,4 @@
-package com.njydsz.common.event.model;
+﻿package com.njydsz.common.event.model;
 
 import java.time.Instant;
 

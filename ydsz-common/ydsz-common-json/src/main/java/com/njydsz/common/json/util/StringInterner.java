@@ -1,4 +1,4 @@
-package com.njydsz.common.json.util;
+﻿package com.njydsz.common.json.util;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;

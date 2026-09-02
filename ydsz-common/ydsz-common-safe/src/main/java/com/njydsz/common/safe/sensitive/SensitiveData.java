@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.sensitive;
+﻿package com.njydsz.common.safe.sensitive;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.health;
+﻿package com.njydsz.literule.server.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

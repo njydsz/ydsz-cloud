@@ -1,4 +1,4 @@
-package com.njydsz.common.tenant.health;
+﻿package com.njydsz.common.tenant.health;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

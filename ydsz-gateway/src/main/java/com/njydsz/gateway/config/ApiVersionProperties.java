@@ -1,4 +1,4 @@
-package com.njydsz.gateway.config;
+﻿package com.njydsz.gateway.config;
 
 import java.util.List;
 import java.util.Map;

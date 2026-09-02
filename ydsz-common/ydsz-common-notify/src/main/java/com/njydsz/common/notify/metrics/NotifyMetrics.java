@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.metrics;
+﻿package com.njydsz.common.notify.metrics;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;

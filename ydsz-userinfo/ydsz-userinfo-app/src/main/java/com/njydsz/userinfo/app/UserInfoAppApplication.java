@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.app;
+﻿package com.njydsz.userinfo.app;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

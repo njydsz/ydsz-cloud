@@ -1,4 +1,4 @@
-package com.njydsz.common.notify.signature;
+﻿package com.njydsz.common.notify.signature;
 
 import com.njydsz.common.util.security.DigestUtils;
 

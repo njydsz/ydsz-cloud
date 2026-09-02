@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.enums;
+﻿package com.njydsz.userinfo.domain.enums;
 
 /**
  * 身份提供者类型枚举（P2-2 多账号认证体系）。

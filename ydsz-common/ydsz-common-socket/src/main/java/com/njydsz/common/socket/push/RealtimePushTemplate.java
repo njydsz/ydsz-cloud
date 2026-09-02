@@ -1,4 +1,4 @@
-package com.njydsz.common.socket.push;
+﻿package com.njydsz.common.socket.push;
 
 import java.util.List;
 

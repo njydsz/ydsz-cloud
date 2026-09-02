@@ -1,4 +1,4 @@
-package com.njydsz.common.config.hotreload;
+﻿package com.njydsz.common.config.hotreload;
 
 /**
  * 配置变更监听器

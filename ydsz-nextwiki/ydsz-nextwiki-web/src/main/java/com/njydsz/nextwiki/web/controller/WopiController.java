@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.web.controller;
+﻿package com.njydsz.nextwiki.web.controller;
 
 import java.io.IOException;
 import java.nio.file.Files;
