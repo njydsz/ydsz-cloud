@@ -16,8 +16,8 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.infra.entity.RuleABPolicy;
 import com.njydsz.literule.infra.entity.RuleDependency;
-import com.njydsz.literule.infra.entity.RuleExecutionTraceVO;
-import com.njydsz.literule.infra.entity.RulePackVO;
+import com.njydsz.literule.infra.entity.RuleExecutionTrace;
+import com.njydsz.literule.infra.entity.RulePack;
 import com.njydsz.literule.infra.entity.RuleVersionHistory;
 
 /**
@@ -39,15 +39,15 @@ public interface RuleSupportConverter {
 
   List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependency> entities);
 
-  // ===== RuleExecutionTraceVO =====
-  RuleExecutionTraceVO entityToVO(RuleExecutionTraceVO entity);
+  // ===== RuleExecutionTrace =====
+  RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity);
 
-  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceVO> entities);
+  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities);
 
-  // ===== RulePackVO =====
-  RulePackVO entityToVO(RulePackVO entity);
+  // ===== RulePack =====
+  RulePackVO entityToVO(RulePack entity);
 
-  List<RulePackVO> rulePackListToVO(List<RulePackVO> entities);
+  List<RulePackVO> rulePackListToVO(List<RulePack> entities);
 
   // ===== RuleVersionHistory → RuleVersionVO =====
   @Mapping(target = "id", source = "id")

@@ -17,7 +17,7 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
-import com.njydsz.literule.infra.entity.RuleDefinitionDTO;
+import com.njydsz.literule.infra.entity.RuleDefinition;
 
 /**
  * 规则核心转换器（P2-2 拆分）
@@ -33,10 +33,10 @@ public interface RuleCoreConverter {
   /** MapStruct 单例实例 */
   RuleCoreConverter INSTANCE = Mappers.getMapper(RuleCoreConverter.class);
 
-  // ===== RuleDefinitionDTO ↔ VO =====
-  RuleDefinitionVO entityToVO(RuleDefinitionDTO entity);
+  // ===== RuleDefinition ↔ VO =====
+  RuleDefinitionVO entityToVO(RuleDefinition entity);
 
-  List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDTO> entities);
+  List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinition> entities);
 
   // ===== RuleDefinitionDTO (api) → RuleDefinitionVO =====
   @Mapping(source = "code", target = "ruleCode")

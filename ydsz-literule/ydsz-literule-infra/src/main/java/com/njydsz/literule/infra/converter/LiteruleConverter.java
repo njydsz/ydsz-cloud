@@ -28,7 +28,6 @@ import com.njydsz.literule.infra.entity.DecisionTable;
 import com.njydsz.literule.infra.entity.RuleABPolicy;
 import com.njydsz.literule.infra.entity.RuleABRollback;
 import com.njydsz.literule.infra.entity.RuleChainGraph;
-import com.njydsz.literule.infra.entity.RuleDefinition;
 import com.njydsz.literule.infra.entity.RuleDependency;
 import com.njydsz.literule.infra.entity.RuleExecutionTrace;
 import com.njydsz.literule.infra.entity.RulePack;
@@ -172,8 +171,8 @@ public class LiteruleConverter {
   /**
    * 将规则定义持久化实体转换为视图对象。
    *
-   * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(com.njydsz.literule.infra.entity.RuleDefinitionDTO)}，
-   * 条件表达式与动作定义原样带出。
+ * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(com.njydsz.literule.infra.entity.RuleDefinition)}，
+ * 条件表达式与动作定义原样带出。
    *
    * @param entity 规则定义持久化实体（含条件表达式、动作与生效时间窗），为 {@code null} 时返回 {@code null}
    * @return 规则定义视图对象；入参为 {@code null} 时返回 {@code null}
@@ -220,18 +219,18 @@ public class LiteruleConverter {
     return support.ruleDependencyListToVO(entities);
   }
 
-  // ===== RuleExecutionTraceVO =====
+  // ===== RuleExecutionTrace =====
 
   /**
    * 将规则执行轨迹实体转换为视图对象。
    *
-   * <p>门面方法，实际映射委托给 {@link RuleSupportConverter#entityToVO(com.njydsz.literule.infra.entity.RuleExecutionTraceVO)}。
+   * <p>门面方法，实际映射委托给 {@link RuleSupportConverter#entityToVO(com.njydsz.literule.infra.entity.RuleExecutionTrace)}。
    * 事实快照与结果快照为 JSON 字段，转换时整体透传。
    *
    * @param entity 执行轨迹实体（含 traceId、条件求值结果与耗时），为 {@code null} 时返回 {@code null}
    * @return 执行轨迹视图对象；入参为 {@code null} 时返回 {@code null}
    */
-  public RuleExecutionTraceVO entityToVO(RuleExecutionTraceVO entity) {
+  public RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity) {
     return support.entityToVO(entity);
   }
 
@@ -243,22 +242,22 @@ public class LiteruleConverter {
    * @param entities 执行轨迹实体列表；为 {@code null} 时返回 {@code null}，空列表时返回空列表
    * @return 执行轨迹视图对象列表，顺序与入参一致
    */
-  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceVO> entities) {
+  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities) {
     return support.ruleExecutionTraceListToVO(entities);
   }
 
-  // ===== RulePackVO =====
+  // ===== RulePack =====
 
   /**
    * 将规则集持久化实体转换为视图对象。
    *
-   * <p>门面方法，实际映射委托给 {@link RuleSupportConverter#entityToVO(com.njydsz.literule.infra.entity.RulePackVO)}。
+   * <p>门面方法，实际映射委托给 {@link RuleSupportConverter#entityToVO(com.njydsz.literule.infra.entity.RulePack)}。
    * 标签与规则编码列表在库中以 JSON 字符串存储，转换时不做拆分。
    *
    * @param entity 规则集实体（含集编码、版本号与规则快照），为 {@code null} 时返回 {@code null}
    * @return 规则集视图对象；入参为 {@code null} 时返回 {@code null}
    */
-  public RulePackVO entityToVO(RulePackVO entity) {
+  public RulePackVO entityToVO(RulePack entity) {
     return support.entityToVO(entity);
   }
 
@@ -270,7 +269,7 @@ public class LiteruleConverter {
    * @param entities 规则集实体列表；为 {@code null} 时返回 {@code null}，空列表时返回空列表
    * @return 规则集视图对象列表，顺序与入参一致
    */
-  public List<RulePackVO> rulePackListToVO(List<RulePackVO> entities) {
+  public List<RulePackVO> rulePackListToVO(List<RulePack> entities) {
     return support.rulePackListToVO(entities);
   }
 
