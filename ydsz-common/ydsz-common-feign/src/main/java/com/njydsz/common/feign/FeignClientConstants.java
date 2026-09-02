@@ -73,49 +73,38 @@ public final class FeignClientConstants {
 
   // ======================== 定时任务服务路径常量 ========================
 
-  /** 定时任务触发路径 */
-  public static final String CRONJOB_PATH_TRIGGER = "/api/v1/cronjob/{id}/trigger";
+  /** 定时任务触发路径（内部 Feign 通道） */
+  public static final String CRONJOB_PATH_TRIGGER = "/api/internal/cronjob/{id}/trigger";
 
-  /** 定时任务详情查询路径 */
-  public static final String CRONJOB_PATH_GET = "/api/v1/cronjob/{id}";
+  /** 定时任务详情查询路径（内部 Feign 通道） */
+  public static final String CRONJOB_PATH_GET = "/api/internal/cronjob/{id}";
 
-  /** 定时任务暂停路径 */
-  public static final String CRONJOB_PATH_PAUSE = "/api/v1/cronjob/{id}/pause";
+  /** 定时任务暂停路径（内部 Feign 通道） */
+  public static final String CRONJOB_PATH_PAUSE = "/api/internal/cronjob/{id}/pause";
 
-  /** 定时任务恢复路径 */
-  public static final String CRONJOB_PATH_RESUME = "/api/v1/cronjob/{id}/resume";
+  /** 定时任务恢复路径（内部 Feign 通道） */
+  public static final String CRONJOB_PATH_RESUME = "/api/internal/cronjob/{id}/resume";
 
   // ======================== 规则引擎服务路径常量 ========================
 
-  /**
-   * 规则评估（dry-run）路径。
-   *
-   * <p>P0-2 修正：旧值 {@code /ruleEngine/rules/dryRun} 为历史遗留路径，与 literule 实际暴露的
-   * {@code RuleAdminController}（{@code @RequestMapping("/api/v1/literule/rules") + @PostMapping("/dry-run")}）不匹配，
-   * Feign 调用必然 404 后静默走 fallback。现对齐 kebab-case 新约定。
-   */
-  public static final String LITERULE_PATH_DRY_RUN = "/api/v1/literule/rules/dry-run";
+  /** 规则评估（dry-run）路径（内部 Feign 通道） */
+  public static final String LITERULE_PATH_DRY_RUN = "/api/internal/literule/rules/dry-run";
 
-  /**
-   * 规则评估（正式）路径。
-   *
-   * <p>P0-2 修正：旧值 {@code /ruleEngine/rules/evaluate} 在后端不存在；现指向
-   * {@code RuleAdminController#evaluate}（本迭代补建的正式评估端点）。
-   */
-  public static final String LITERULE_PATH_EVALUATE = "/api/v1/literule/rules/evaluate";
+  /** 规则评估（正式）路径（内部 Feign 通道） */
+  public static final String LITERULE_PATH_EVALUATE = "/api/internal/literule/rules/evaluate";
 
   // ======================== 工作流服务路径常量 ========================
 
-  /** 流程启动路径 */
-  public static final String WORKFLOW_PATH_START = "/api/v1/workflow/engine/instance/start";
+  /** 流程启动路径（内部 Feign 通道） */
+  public static final String WORKFLOW_PATH_START = "/api/internal/engine/instance/start";
 
-  /** 按业务查询流程路径 */
+  /** 按业务查询流程路径（内部 Feign 通道） */
   public static final String WORKFLOW_PATH_GET_BY_BUSINESS =
-      "/api/v1/workflow/engine/instance/byBusiness";
+      "/api/internal/engine/instance/byBusiness";
 
-  /** 流程终止路径 */
+  /** 流程终止路径（内部 Feign 通道） */
   public static final String WORKFLOW_PATH_TERMINATE =
-      "/api/v1/workflow/engine/instance/{id}/terminate";
+      "/api/internal/engine/instance/{id}/terminate";
 
   // ======================== 用户中心内部 API 路径常量 ========================
 

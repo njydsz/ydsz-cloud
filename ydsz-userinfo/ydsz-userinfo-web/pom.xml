@@ -68,6 +68,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
+        <!-- common-lock: @Idempotent 注解（InternalApiController 幂等保护） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-lock</artifactId>
+        </dependency>
+        <!-- common-safe: @RateLimit 注解（InternalApiController 限流） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
