@@ -1,7 +1,7 @@
 package com.njydsz.common.sentry.resilience;
 
-import java.util.concurrent.TimeUnit;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;

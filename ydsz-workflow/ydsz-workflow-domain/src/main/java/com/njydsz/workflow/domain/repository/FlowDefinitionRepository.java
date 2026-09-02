@@ -2,6 +2,7 @@ package com.njydsz.workflow.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
@@ -181,9 +182,9 @@ public interface FlowDefinitionRepository {
   int casLock(
       String definitionId,
       String userId,
-      java.time.LocalDateTime now,
+      LocalDateTime now,
       String lockedBy,
-      java.time.LocalDateTime timeoutExpired,
+      LocalDateTime timeoutExpired,
       Integer revision);
 
   /**

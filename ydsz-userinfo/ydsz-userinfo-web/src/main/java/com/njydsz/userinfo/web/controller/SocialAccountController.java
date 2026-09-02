@@ -3,6 +3,7 @@ package com.njydsz.userinfo.web.controller;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -150,7 +151,7 @@ case "FEISHU" -> "IM";
       String platformName,
       String appId,
       boolean bound,
-      java.time.LocalDateTime boundAt,
+      LocalDateTime boundAt,
       String nickname) {
   }
 }

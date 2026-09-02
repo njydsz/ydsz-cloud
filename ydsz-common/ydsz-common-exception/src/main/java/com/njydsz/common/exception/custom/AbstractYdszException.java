@@ -343,11 +343,11 @@ public abstract class AbstractYdszException extends RuntimeException
     this.ctx.setCategory(category);
   }
 
-    public LocalDateTime getTimestamp() {
+  public LocalDateTime getTimestamp() {
     return ctx == null ? null : ctx.getTimestamp();
   }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+  public void setTimestamp(LocalDateTime timestamp) {
     if (this.ctx == null) {
       this.ctx = new ExceptionContext();
     }
