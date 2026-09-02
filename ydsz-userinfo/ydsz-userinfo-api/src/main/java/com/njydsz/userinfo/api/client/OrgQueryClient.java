@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.userinfo.api.vo.DepartmentTreeVO;
-import com.njydsz.userinfo.api.vo.DepartmentVO;
-import com.njydsz.userinfo.api.vo.UserAccountVO;
+import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
  * 组织架构查询 Feign 客户端（供跨服务调用）。

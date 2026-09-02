@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.workflow.api.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.api.fallback.WorkflowServiceClientFallback;
-import com.njydsz.workflow.api.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 
 /**
  * 工作流服务 Feign 客户端（指向自研 ydsz_flow_* 引擎）
