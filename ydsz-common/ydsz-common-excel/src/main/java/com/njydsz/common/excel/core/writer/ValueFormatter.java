@@ -120,7 +120,7 @@ public class ValueFormatter {
    * @return 如果是 Date 返回 true
    */
   private static boolean isSqlDate(Object value) {
-    return value != null && "java.sql.Date".equals(value.getClass().getName());
+    return value != null && Date.class.isAssignableFrom(value.getClass()) && !Date.class.equals(value.getClass());
   }
 
   /**

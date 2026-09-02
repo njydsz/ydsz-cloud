@@ -169,7 +169,7 @@ public final class ColumnMetadata {
     if (targetType == Timestamp.class) {
       return TYPE_TIMESTAMP;
     }
-    if (targetType.getName().equals("java.sql.Date")) {
+    if (Date.class.isAssignableFrom(targetType) && !Date.class.equals(targetType)) {
       return TYPE_SQL_DATE;
     }
     if (targetType == BigDecimal.class) {

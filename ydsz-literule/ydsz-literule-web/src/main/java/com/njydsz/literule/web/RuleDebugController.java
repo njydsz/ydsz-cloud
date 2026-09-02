@@ -1,16 +1,12 @@
-﻿package com.njydsz.literule.web;
+package com.njydsz.literule.web;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.literule.server.debug.BreakpointHit;
-import com.njydsz.literule.server.debug.DebugCommand;
-import com.njydsz.literule.server.debug.DebugSession;
-import com.njydsz.literule.server.debug.RuleDebugger;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,9 +17,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.literule.server.debug.BreakpointHit;
+import com.njydsz.literule.server.debug.DebugCommand;
+import com.njydsz.literule.server.debug.DebugSession;
+import com.njydsz.literule.server.debug.RuleDebugger;
 
 /**
  * 规则断点调试 Controller（P0-F1 / E2 一站式调试入口）
@@ -284,3 +285,4 @@ public class RuleDebugController {
         .toList();
   }
 }
+

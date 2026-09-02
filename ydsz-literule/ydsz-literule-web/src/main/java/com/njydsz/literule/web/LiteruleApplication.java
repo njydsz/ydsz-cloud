@@ -1,13 +1,14 @@
-﻿package com.njydsz.literule.web;
+package com.njydsz.literule.web;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.SpringApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 规则引擎服务启动类
@@ -53,3 +54,4 @@ public class LiteruleApplication {
     SpringApplication.run(LiteruleApplication.class, args);
   }
 }
+

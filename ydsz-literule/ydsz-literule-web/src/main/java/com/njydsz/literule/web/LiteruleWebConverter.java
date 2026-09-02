@@ -1,4 +1,8 @@
-﻿package com.njydsz.literule.web;
+package com.njydsz.literule.web;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
@@ -35,9 +39,6 @@ import com.njydsz.literule.server.spi.RulePackProvider.PackDiff;
 import com.njydsz.literule.server.spi.RulePackProvider.PackUpdateInfo;
 import com.njydsz.literule.server.spi.RuleVersion;
 import com.njydsz.literule.server.version.RuleVersionDiff;
-import org.mapstruct.factory.Mappers;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 /**
  * literule-web 模块的 MapStruct 转换器。
@@ -153,5 +154,6 @@ public interface LiteruleWebConverter {
    */
   ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity);
 }
+
 
 
