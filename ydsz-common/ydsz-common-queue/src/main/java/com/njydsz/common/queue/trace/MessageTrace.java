@@ -1,4 +1,4 @@
-new HashMap<>(16)race;
+package com.njydsz.common.queue.trace.MessageTrace;
 
 import java.io.Serializable;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-new LinkedHashMap<>(16)kage com.njydsz.common.safe.desensitize;
+package com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

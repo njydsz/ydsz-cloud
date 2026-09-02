@@ -1,4 +1,4 @@
-new LinkedHashMap<>(16)erver.service.impl.i18n;
+package com.njydsz.workflow.server.service.impl.i18n.FlowI18nServiceImpl;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

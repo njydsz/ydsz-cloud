@@ -1,4 +1,4 @@
-new ArrayList<>(16)com.njydsz.common.search.api;
+package com.njydsz.common.search.api.SearchRequest;
 
 import java.io.Serializable;
 import java.util.ArrayList;

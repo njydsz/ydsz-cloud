@@ -1,4 +1,4 @@
-new HashSet<>(16)info.server.auth;
+package com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 
 import java.time.Duration;
 import java.util.Collections;

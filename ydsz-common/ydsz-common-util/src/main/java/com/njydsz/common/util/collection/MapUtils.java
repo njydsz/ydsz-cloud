@@ -1,4 +1,4 @@
-new LinkedHashMap<>(16)l.collection;
+package com.njydsz.common.util.collection.MapUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

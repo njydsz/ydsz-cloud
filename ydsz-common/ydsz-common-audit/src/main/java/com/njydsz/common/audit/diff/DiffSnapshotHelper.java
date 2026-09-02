@@ -1,4 +1,4 @@
-new ArrayList<>(16)f;
+package com.njydsz.common.audit.diff.DiffSnapshotHelper;
 
 import java.io.Serializable;
 import java.util.ArrayList;

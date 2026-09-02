@@ -1,4 +1,5 @@
-new HashMap<>(16)feredReader;
+package com.njydsz.common.search.service.SearchTextProcessor;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-new HashMap<>(16)shMap<>(16)new HashMap<>(16)package com.njydsz.common.notify.channel;
+package com.njydsz.common.notify.channel.SmsNotifySender;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

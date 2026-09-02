@@ -1,4 +1,5 @@
-new ArrayList<>(16)l.ArrayList;
+package com.njydsz.common.base.config.BaseCorsProperties;
+
 import java.util.Arrays;
 import java.util.List;
 

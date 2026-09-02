@@ -1,4 +1,4 @@
-new ArrayList<>(16)ki.server.service;
+package com.njydsz.nextwiki.server.service.VersionDiffService;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-new ArrayList<>(16)ist<>(16)new ArrayList<>(16)package com.njydsz.literule.server.core;
+package com.njydsz.literule.server.core.RuleIndexer;
 
 import java.util.ArrayList;
 import java.util.Collections;

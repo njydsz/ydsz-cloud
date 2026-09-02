@@ -1,4 +1,4 @@
-new ArrayList<>(16)e com.njydsz.agent.infra.tool;
+package com.njydsz.agent.infra.tool.SseMcpClientProvider;
 
 import java.io.IOException;
 import java.net.URI;

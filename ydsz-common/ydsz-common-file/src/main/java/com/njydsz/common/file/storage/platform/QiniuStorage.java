@@ -1,4 +1,4 @@
-new ArrayList<>(16).file.storage.platform;
+package com.njydsz.common.file.storage.platform.QiniuStorage;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

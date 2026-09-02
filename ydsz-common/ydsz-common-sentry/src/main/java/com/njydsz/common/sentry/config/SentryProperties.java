@@ -1,4 +1,5 @@
-new HashMap<>(16)t java.util.HashMap;
+package com.njydsz.common.sentry.config.SentryProperties;
+
 import java.util.List;
 import java.util.Map;
 

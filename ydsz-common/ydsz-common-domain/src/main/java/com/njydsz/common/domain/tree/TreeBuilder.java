@@ -1,4 +1,4 @@
-new ArrayList<>(16)rrayList<>(16)new ArrayList<>(16)package com.njydsz.common.domain.tree;
+package com.njydsz.common.domain.tree.TreeBuilder;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;

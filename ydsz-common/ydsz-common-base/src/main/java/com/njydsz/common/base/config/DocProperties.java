@@ -1,4 +1,4 @@
-new ArrayList<>(16)com.njydsz.common.base.config;
+package com.njydsz.common.base.config.DocProperties;
 
 import java.util.ArrayList;
 import java.util.List;

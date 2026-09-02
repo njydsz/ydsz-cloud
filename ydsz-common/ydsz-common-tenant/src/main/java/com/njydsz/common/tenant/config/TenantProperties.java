@@ -1,4 +1,5 @@
-new HashSet<>(16)t java.util.Collections;
+package com.njydsz.common.tenant.config.TenantProperties;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

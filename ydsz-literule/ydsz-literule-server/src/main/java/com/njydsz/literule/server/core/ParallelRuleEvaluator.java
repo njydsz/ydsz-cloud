@@ -1,4 +1,4 @@
-new ArrayList<>(16)om.njydsz.literule.server.core;
+package com.njydsz.literule.server.core.ParallelRuleEvaluator;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,4 +1,4 @@
-new ArrayList<>(16)er.config;
+package com.njydsz.literule.server.config.RuleConflictDetector;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

@@ -1,4 +1,4 @@
-new ArrayList<>(16)e com.njydsz.message.server.service.impl.batch;
+package com.njydsz.message.server.service.impl.BatchServiceImpl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

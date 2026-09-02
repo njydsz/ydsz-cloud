@@ -1,4 +1,5 @@
-new HashSet<>(16)Exception;
+package com.njydsz.common.file.util.FileTypeDetector;
+
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;

@@ -1,4 +1,4 @@
-new ArrayList<>(16)rayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)package com.njydsz.common.util.collection;
+package com.njydsz.common.util.collection.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,4 +1,4 @@
-new ArrayList<>(16).batch;
+package com.njydsz.common.exception.batch.BatchBusinessException;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;

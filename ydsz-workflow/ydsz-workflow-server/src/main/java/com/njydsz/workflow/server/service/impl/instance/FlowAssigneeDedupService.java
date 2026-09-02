@@ -1,4 +1,4 @@
-new HashSet<>(16)e com.njydsz.workflow.server.service.impl.instance;
+package com.njydsz.workflow.server.service.impl.instance.FlowAssigneeDedupService;
 
 import java.util.HashSet;
 import java.util.List;

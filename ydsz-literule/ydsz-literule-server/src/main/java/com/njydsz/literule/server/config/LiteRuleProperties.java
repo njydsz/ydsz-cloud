@@ -1,4 +1,4 @@
-new ArrayList<>(16)fig;
+package com.njydsz.literule.server.config.LiteRuleProperties;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

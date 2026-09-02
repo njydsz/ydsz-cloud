@@ -1,4 +1,4 @@
-new ArrayList<>(16).config;
+package com.njydsz.common.safe.config.IpAccessProperties;
 
 import java.util.ArrayList;
 import java.util.List;

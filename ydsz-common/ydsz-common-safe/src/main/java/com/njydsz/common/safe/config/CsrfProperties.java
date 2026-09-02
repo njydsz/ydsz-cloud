@@ -1,4 +1,5 @@
-new ArrayList<>(16)l.ArrayList;
+package com.njydsz.common.safe.config.CsrfProperties;
+
 import java.util.List;
 
 import lombok.Data;

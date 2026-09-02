@@ -1,4 +1,4 @@
-new ArrayList<>(16)ery;
+package com.njydsz.common.domain.query.PageQuery;
 
 import java.util.ArrayList;
 import java.util.List;

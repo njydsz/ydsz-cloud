@@ -1,4 +1,5 @@
-new LinkedHashMap<>(16)Map;
+package com.njydsz.agent.server.config.AgentProperties;
+
 import java.util.List;
 import java.util.Map;
 

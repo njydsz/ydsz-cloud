@@ -1,4 +1,4 @@
-new ArrayList<>(16)e com.njydsz.common.jdbc.interceptor;
+package com.njydsz.common.jdbc.interceptor.JSqlParserHelper;
 
 import java.util.ArrayList;
 import java.util.Collection;

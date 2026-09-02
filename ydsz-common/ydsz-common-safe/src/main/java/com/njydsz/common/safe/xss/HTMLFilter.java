@@ -1,4 +1,4 @@
-new HashMap<>(16) ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)new ArrayList<>(16)package com.njydsz.common.safe.xss;
+package com.njydsz.common.safe.xss.HTMLFilter;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-new HashMap<>(16)e com.njydsz.workflow.server.service.impl.instance;
+package com.njydsz.workflow.server.service.impl.instance.FlowInstanceVariableManager;
 
 import java.util.Collections;
 import java.util.HashMap;

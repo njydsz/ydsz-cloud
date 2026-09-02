@@ -1,4 +1,5 @@
-new LinkedHashMap<>(16)util.LinkedHashMap;
+package com.njydsz.common.feign.aspect.YdszFeignLogger;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;

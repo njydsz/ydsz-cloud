@@ -1,4 +1,4 @@
-new ArrayList<>(16).common.auth.config;
+package com.njydsz.common.auth.config.AuthFilterProperties;
 
 import java.util.ArrayList;
 import java.util.List;

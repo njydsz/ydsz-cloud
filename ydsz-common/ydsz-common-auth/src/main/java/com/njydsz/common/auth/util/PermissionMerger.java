@@ -1,4 +1,4 @@
-new HashSet<>(16);
+package com.njydsz.common.auth.util.PermissionMerger;
 
 import java.util.Collections;
 import java.util.HashSet;

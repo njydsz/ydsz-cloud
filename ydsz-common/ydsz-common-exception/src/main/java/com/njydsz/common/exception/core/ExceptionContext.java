@@ -1,4 +1,4 @@
-new LinkedHashMap<>(16)core;
+package com.njydsz.common.exception.core.ExceptionContext;
 
 import java.io.Serial;
 import java.io.Serializable;

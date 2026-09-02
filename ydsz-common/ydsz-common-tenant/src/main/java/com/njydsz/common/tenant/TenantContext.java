@@ -1,4 +1,4 @@
-new HashMap<>(16)n.tenant;
+package com.njydsz.common.tenant.TenantContext;
 
 import java.util.ArrayList;
 import java.util.Collections;

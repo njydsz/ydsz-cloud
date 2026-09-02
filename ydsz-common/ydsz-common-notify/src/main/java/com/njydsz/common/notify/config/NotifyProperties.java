@@ -1,4 +1,5 @@
-new HashMap<>(16)import java.util.HashMap;
+package com.njydsz.common.notify.config.NotifyProperties;
+
 import java.util.List;
 import java.util.Map;
 

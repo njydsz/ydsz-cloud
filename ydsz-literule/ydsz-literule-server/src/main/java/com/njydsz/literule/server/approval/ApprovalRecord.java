@@ -1,4 +1,4 @@
-new ArrayList<>(16)m.njydsz.literule.server.approval;
+package com.njydsz.literule.server.approval.ApprovalRecord;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

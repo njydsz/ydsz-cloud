@@ -1,4 +1,4 @@
-new HashSet<>(16)jydsz.common.jdbc.permission;
+package com.njydsz.common.jdbc.permission.DataPermissionContext;
 
 /**
  * 数据权限上下文。

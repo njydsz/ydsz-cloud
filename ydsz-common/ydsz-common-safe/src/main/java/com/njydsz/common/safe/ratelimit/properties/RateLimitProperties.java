@@ -1,4 +1,5 @@
-new ArrayList<>(16)port java.util.ArrayList;
+package com.njydsz.common.safe.ratelimit.properties.RateLimitProperties;
+
 import java.util.List;
 
 import lombok.Data;

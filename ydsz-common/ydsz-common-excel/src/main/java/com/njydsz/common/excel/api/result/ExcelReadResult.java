@@ -1,4 +1,4 @@
-new ArrayList<>(16)w ArrayList<>(16)new ArrayList<>(16)package com.njydsz.common.excel.api.result;
+package com.njydsz.common.excel.api.result.ExcelReadResult;
 
 import java.util.ArrayList;
 import java.util.List;

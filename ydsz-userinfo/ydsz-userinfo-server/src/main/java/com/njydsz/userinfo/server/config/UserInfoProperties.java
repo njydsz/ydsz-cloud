@@ -1,4 +1,5 @@
-new HashMap<>(16)mport java.util.List;
+package com.njydsz.userinfo.server.config.UserInfoProperties;
+
 import java.util.Map;
 import java.util.Set;
 

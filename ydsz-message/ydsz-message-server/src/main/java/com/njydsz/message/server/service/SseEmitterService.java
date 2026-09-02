@@ -1,4 +1,4 @@
-new ArrayList<>(16)rayList<>(16)package com.njydsz.message.server.service;
+package com.njydsz.message.server.service.SseEmitterService;
 
 import java.io.IOException;
 import java.util.ArrayList;
