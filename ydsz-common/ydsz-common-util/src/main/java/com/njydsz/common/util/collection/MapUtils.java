@@ -1,4 +1,4 @@
-package com.njydsz.common.util.collection.MapUtils;
+package com.njydsz.common.util.collection;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

@@ -1,4 +1,4 @@
-package com.njydsz.common.util.collection.CollectionUtils;
+package com.njydsz.common.util.collection;
 
 import java.util.ArrayList;
 import java.util.Collection;

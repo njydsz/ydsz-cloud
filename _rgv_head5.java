@@ -1,4 +1,6 @@
-new ArrayList<>(16)va.io.Serializable;
+package com.njydsz.literule.server.orchestrator;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,7 +79,7 @@ public final class RuleGraphValidator {
     }
 
     // 3. 节点 ID 唯一性
-    Set<String> nodeIds = new HashSet<>(16);
+    Set<String> nodeIds = new HashSet<>();
     for (ChainNodeDTO n : nodes) {
       if (n.getNodeId() == null || n.getNodeId().isBlank()) {
         issues.add(GraphValidationIssue.error("MISSING_NODE_ID", "存在未设置 nodeId 的节点"));
@@ -89,8 +91,8 @@ public final class RuleGraphValidator {
     }
 
     // 4. 边校验：自环 / 悬空 / 重复
-    Set<String> edgeFingerprints = new HashSet<>(16);
-    Set<String> referencedNodes = new HashSet<>(16);
+    Set<String> edgeFingerprints = new HashSet<>();
+    Set<String> referencedNodes = new HashSet<>();
     for (ChainEdgeDTO e : edges) {
       if (e.getSourceNodeId() == null || e.getTargetNodeId() == null) {
         issues.add(GraphValidationIssue.error("EDGE_NULL_ENDPOINT", "边的 source/target 不能为空"));
@@ -161,7 +163,7 @@ public final class RuleGraphValidator {
       Set<String> nodeIds,
       List<GraphValidationIssue> issues) {
     // 邻接表（仅保留两端均合法的边，自环在第 4 步已单独报告）
-    Map<String, List<String>> adjacency = new HashMap<>(16);
+    Map<String, List<String>> adjacency = new HashMap<>();
     for (ChainEdgeDTO e : edges) {
       if (e.getSourceNodeId() == null
           || e.getTargetNodeId() == null
@@ -169,13 +171,13 @@ public final class RuleGraphValidator {
         continue;
       }
       if (nodeIds.contains(e.getSourceNodeId()) && nodeIds.contains(e.getTargetNodeId())) {
-        adjacency.computeIfAbsent(e.getSourceNodeId(), k -> new ArrayList<>(8))
+        adjacency.computeIfAbsent(e.getSourceNodeId(), k -> new ArrayList<>())
             .add(e.getTargetNodeId());
       }
     }
 
-    Map<String, Integer> color = new HashMap<>(16);
-    List<String> path = new ArrayList<>(16);
+    Map<String, Integer> color = new HashMap<>();
+    List<String> path = new ArrayList<>();
     for (ChainNodeDTO n : nodes) {
       if (n.getNodeId() != null && color.getOrDefault(n.getNodeId(), 0) == 0) {
         dfsCycle(n.getNodeId(), adjacency, color, path, issues);
