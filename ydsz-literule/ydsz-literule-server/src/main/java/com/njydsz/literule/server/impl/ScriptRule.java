@@ -435,7 +435,7 @@ public class ScriptRule implements Rule {
           .ruleName(name)
           .category(category)
           .triggered(true)
-          .severity(severity)
+          .severity(severity.getCode())
           .title(title)
           .description(desc)
           .scope(scope)

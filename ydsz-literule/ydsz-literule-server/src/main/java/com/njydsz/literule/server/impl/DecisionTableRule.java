@@ -213,7 +213,7 @@ public class DecisionTableRule implements Rule {
         .ruleName(getName())
         .category(getCategory())
         .triggered(true)
-        .severity(severity)
+        .severity(severity.getCode())
         .title(title)
         .description(description)
         .currentValue(currentValue)

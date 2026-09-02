@@ -618,12 +618,12 @@ public class RuleAdminService {
       Map<String, Object> facts) {
     // 表达式语法校验
     if (!evaluator.validate(conditionExpression)) {
-      return RuleResultVO.notTriggered(ruleCode);
+      return new RuleResultVO().notTriggered(ruleCode);
     }
     if (severityExpression != null
         && !severityExpression.isBlank()
         && !evaluator.validate(severityExpression)) {
-      return RuleResultVO.notTriggered(ruleCode);
+      return new RuleResultVO().notTriggered(ruleCode);
     }
 
     // 构造临时规则定义
@@ -647,7 +647,7 @@ public class RuleAdminService {
           ruleCode,
           conditionExpression,
           e.getMessage());
-      return RuleResultVO.notTriggered(ruleCode);
+      return new RuleResultVO().notTriggered(ruleCode);
     }
   }
 

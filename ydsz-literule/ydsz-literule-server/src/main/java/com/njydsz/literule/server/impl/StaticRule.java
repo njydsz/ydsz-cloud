@@ -109,7 +109,7 @@ public class StaticRule implements Rule {
   public RuleResultVO evaluate(RuleContextVO context) {
     RuleResultVO result = evaluator.apply(context);
     if (result == null) {
-      return RuleResultVO.notTriggered(code);
+      return new RuleResultVO().notTriggered(code);
     }
     return result;
   }

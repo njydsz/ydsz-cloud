@@ -134,7 +134,7 @@ public class ApolloRuleSource implements RuleConfigProvider {
       return List.of();
     }
     try {
-      return YdszJson.parseArray(json, RuleDefinition.class);
+      return YdszJson.parseArray(json, RuleDefinitionDTO.class);
     } catch (Exception e) {
       log.error("[ApolloRuleSource] JSON 解析失败: {}", e.getMessage());
       return List.of();

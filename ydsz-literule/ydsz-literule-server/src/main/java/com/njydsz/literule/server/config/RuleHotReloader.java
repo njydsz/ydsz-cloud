@@ -348,13 +348,13 @@ public class RuleHotReloader {
     }
     try {
       RulePackVO pack = packProvider.getLatest(packCode);
-      if (pack == null || pack.getRuleCodes() == null || pack.getRuleCodes().isEmpty()) {
+      if (pack == null || pack.getRuleCodes() == null || pack.getRuleCodes().isBlank()) {
         log.warn("[LiteRule] 规则包 {} 不存在或无规则，降级为全量重载", packCode);
         fullReload(operator);
         return;
       }
       int success = 0;
-      for (String ruleCode : pack.getRuleCodes()) {
+      for (String ruleCode : pack.getRuleCodes().split(",")) {
         try {
           reloadSingle(ruleCode, operator);
           success++;
@@ -365,7 +365,7 @@ public class RuleHotReloader {
       log.info(
           "[LiteRule] 规则包批量热更新完成: packCode={}, rules={}, success={}, operator={}",
           packCode,
-          pack.getRuleCodes().size(),
+          pack.getRuleCodes().isEmpty() ? 0 : pack.getRuleCodes().split(",").length,
           success,
           operator);
     } catch (Exception e) {

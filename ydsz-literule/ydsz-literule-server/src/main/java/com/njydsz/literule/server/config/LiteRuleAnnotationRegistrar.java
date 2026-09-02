@@ -122,7 +122,7 @@ public class LiteRuleAnnotationRegistrar implements SmartInitializingSingleton {
       }
       // 仅扫描标注了 @Component 的 RuleDefinitionDTO 子类（避免误将抽象/接口类实例化）
       Map<String, RuleDefinitionDTO> defBeans =
-          applicationContext.getBeansOfType(RuleDefinition.class);
+          applicationContext.getBeansOfType(RuleDefinitionDTO.class);
       for (RuleDefinitionDTO bean : defBeans.values()) {
         if (!bean.getClass().getPackageName().startsWith(pkg)) {
           continue;

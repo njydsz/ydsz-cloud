@@ -31,7 +31,7 @@ public class RuleTraceBuilder {
   public RuleExecutionTraceVO buildTrace(
       RuleContextVO context, Rule rule, RuleResultVO result, long elapsedMs, Exception exception) {
     String severity =
-        result != null && result.getSeverity() != null ? result.getSeverity().getCode() : null;
+        result != null && result.getSeverity() != null ? result.getSeverity() : null;
     String conditionResult =
         result != null && result.getThreshold() != null ? result.getThreshold() : null;
 
@@ -43,17 +43,18 @@ public class RuleTraceBuilder {
       resultSnapshot.put("description", result.getDescription());
     }
 
-    return new RuleExecutionTraceVO(
-        context.getTraceId(),
-        rule.getCode(),
-        rule.getName(),
-        context.getScenario(),
-        result != null && result.isTriggered(),
-        severity,
-        conditionResult,
-        elapsedMs,
-        new LinkedHashMap<>(context.getFacts()),
-        resultSnapshot,
-        exception != null ? exception.getMessage() : null);
+    return RuleExecutionTraceVO.builder()
+        .traceId(context.getTraceId())
+        .ruleCode(rule.getCode())
+        .ruleName(rule.getName())
+        .scenario(context.getScenario())
+        .triggered(result != null && result.isTriggered())
+        .severity(severity)
+        .conditionResult(conditionResult)
+        .elapsedMs(elapsedMs)
+        .factsSnapshot(new LinkedHashMap<>(context.getFacts()))
+        .resultSnapshot(resultSnapshot)
+        .errorMessage(exception != null ? exception.getMessage() : null)
+        .build();
   }
 }

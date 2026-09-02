@@ -168,7 +168,7 @@ public class DecisionTreeRule implements Rule {
           .ruleName(name)
           .category(category)
           .triggered(true)
-          .severity(result.severity)
+          .severity(result.severity.getCode())
           .title(result.title)
           .description(result.description)
           .triggeredAt(LocalDateTime.now())

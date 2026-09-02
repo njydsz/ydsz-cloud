@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 
+import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 
@@ -35,7 +36,7 @@ public class DefaultAlertActionHandler implements RuleActionHandler {
         RuleTriggeredEvent event = new RuleTriggeredEvent();
         event.setRuleCode(result.getRuleCode());
         event.setRuleName(result.getRuleName());
-        event.setSeverity(result.getSeverity() != null ? result.getSeverity().name() : null);
+        event.setSeverity(result.getSeverity() != null ? RuleSeverity.fromCode(result.getSeverity()).name() : null);
         event.setTitle(result.getTitle());
         event.setDescription(result.getDescription());
         event.setFacts(context != null ? context.getFacts() : null);

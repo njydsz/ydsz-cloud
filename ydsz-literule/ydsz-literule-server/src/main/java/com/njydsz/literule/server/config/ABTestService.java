@@ -59,8 +59,8 @@ public class ABTestService {
         .ruleCode(currentDef.getCode())
         .currentTriggered(currentResult.isTriggered())
         .candidateTriggered(candidateResult.isTriggered())
-        .currentSeverity(currentResult.getSeverity())
-        .candidateSeverity(candidateResult.getSeverity())
+        .currentSeverity(RuleSeverity.fromCode(currentResult.getSeverity()))
+        .candidateSeverity(RuleSeverity.fromCode(candidateResult.getSeverity()))
         .winner(winner)
         .conclusion(conclusion)
         .evaluatedAt(LocalDateTime.now())
@@ -81,7 +81,7 @@ public class ABTestService {
     } catch (Exception e) {
       log.warn("[LiteRule-ABTest] 规则评估异常，按未触发处理: ruleCode={}, error={}",
           definition.getCode(), e.getMessage());
-      return RuleResultVO.notTriggered(definition.getCode());
+      return new RuleResultVO().notTriggered(definition.getCode());
     }
   }
 
@@ -98,9 +98,10 @@ public class ABTestService {
     boolean currentTriggered = currentResult.isTriggered();
     boolean candidateTriggered = candidateResult.isTriggered();
     if (currentTriggered && candidateTriggered) {
-      int currentWeight = currentResult.getSeverity() != null ? currentResult.getSeverity().getWeight() : 0;
-      int candidateWeight =
-          candidateResult.getSeverity() != null ? candidateResult.getSeverity().getWeight() : 0;
+      RuleSeverity currentSev = RuleSeverity.fromCode(currentResult.getSeverity());
+      RuleSeverity candidateSev = RuleSeverity.fromCode(candidateResult.getSeverity());
+      int currentWeight = currentSev != null ? currentSev.getWeight() : 0;
+      int candidateWeight = candidateSev != null ? candidateSev.getWeight() : 0;
       if (candidateWeight > currentWeight) {
         return Winner.CANDIDATE;
       }
@@ -159,7 +160,7 @@ public class ABTestService {
     if (result == null || !result.isTriggered() || result.getSeverity() == null) {
       return "未触发";
     }
-    return result.getSeverity().getDesc();
+    return RuleSeverity.fromCode(result.getSeverity()).getDesc();
   }
 
   /** A/B 对比胜者 */

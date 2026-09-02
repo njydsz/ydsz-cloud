@@ -210,8 +210,7 @@ public final class RuleDslConverter {
 
   /** 将 DSL 规则条目转换为 ScorecardDefinitionDTO（scorecard 类型） */
   private static ScorecardDefinitionDTO toScorecardDefinition(RuleDslEntry entry) {
-    ScorecardDefinitionDTO.ScorecardDefinitionBuilder b =
-        ScorecardDefinitionDTO.builder()
+    var b = ScorecardDefinitionDTO.builder()
             .ruleCode(entry.getCode())
             .ruleName(entry.getName())
             .category(entry.getCategory())
@@ -265,8 +264,7 @@ public final class RuleDslConverter {
 
   /** 将 DSL 规则条目转换为 DecisionTableDefinitionDTO（decision_table 类型） */
   private static DecisionTableDefinitionDTO toDecisionTableDefinition(RuleDslEntry entry) {
-    DecisionTableDefinitionDTO.DecisionTableDefinitionBuilder b =
-        DecisionTableDefinitionDTO.builder()
+    var b = DecisionTableDefinitionDTO.builder()
             .tableCode(entry.getCode())
             .tableName(entry.getName())
             .category(entry.getCategory())

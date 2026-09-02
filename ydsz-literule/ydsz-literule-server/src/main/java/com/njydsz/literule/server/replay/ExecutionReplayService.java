@@ -196,7 +196,7 @@ public class ExecutionReplayService {
       String historicalSeverity = trace.getSeverity();
       String currentSeverity =
           currentResult != null && currentResult.getSeverity() != null
-              ? currentResult.getSeverity().name()
+              ? RuleSeverity.fromCode(currentResult.getSeverity()).name()
               : null;
 
       boolean severityConsistent = severityEquals(historicalSeverity, currentSeverity);
@@ -380,7 +380,7 @@ public class ExecutionReplayService {
     Map<String, Object> replayFacts = facts;
     if (replayFacts == null || replayFacts.isEmpty()) {
       if (traceRecorder == null) {
-        return RuleResultVO.notTriggered(ruleCode);
+        return new RuleResultVO().notTriggered(ruleCode);
       }
       List<RuleExecutionTraceVO> traces = traceRecorder.getByTraceId(traceId);
       if (!traces.isEmpty()) {

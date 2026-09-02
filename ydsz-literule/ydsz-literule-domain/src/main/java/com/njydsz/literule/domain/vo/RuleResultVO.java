@@ -73,7 +73,11 @@ public class RuleResultVO {
   /** 收集的子结果 */
   private List<RuleResultVO> collectedResults;
 
-  /** 获取严重级别权重 */
+  /**
+   * 获取严重级别权重。
+   *
+   * @return 严重级别权重值
+   */
   public int getSeverityWeight() {
     return 0;
   }
@@ -104,12 +108,20 @@ public class RuleResultVO {
     return result;
   }
 
-  /** 获取权重 */
+  /**
+   * 获取权重。
+   *
+   * @return 规则权重
+   */
   public int getWeight() {
     return getSeverityWeight();
   }
 
-  /** 获取规则代码（别名方法，用于兼容 lambda 表达式） */
+  /**
+   * 获取规则代码（别名方法，用于兼容 lambda 表达式）。
+   *
+   * @return 规则代码
+   */
   public String getCode() {
     return ruleCode;
   }

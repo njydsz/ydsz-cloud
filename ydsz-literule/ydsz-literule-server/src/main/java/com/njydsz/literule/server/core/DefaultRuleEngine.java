@@ -746,14 +746,14 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
       try {
         RuleResultVO result = rule.evaluate(context);
         if (result == null) {
-          result = RuleResultVO.notTriggered(rule.getCode());
+          result = new RuleResultVO().notTriggered(rule.getCode());
         }
         all.add(result);
         // 短路计数递增
         if (enableShortCircuit
             && result.isTriggered()
             && result.getSeverity() != null
-            && result.getSeverity().getWeight() >= minSeverity.getWeight()) {
+            && RuleSeverity.fromCode(result.getSeverity()).getWeight() >= minSeverity.getWeight()) {
           qualifiedCount++;
         }
       } catch (Exception e) {
@@ -1363,7 +1363,7 @@ return ruleRegistry.getIndexBypassThreshold();
             rule.getCode(),
             scenario,
             outcome.isTriggered,
-            result != null ? result.getSeverity() : null,
+            result != null && result.getSeverity() != null ? RuleSeverity.fromCode(result.getSeverity()) : null,
             outcome.isError,
             elapsed);
       } catch (Exception me) {

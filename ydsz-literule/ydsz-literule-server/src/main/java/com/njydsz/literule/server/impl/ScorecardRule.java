@@ -221,7 +221,7 @@ public class ScorecardRule implements Rule {
           .ruleName(name)
           .category(category)
           .triggered(true)
-          .severity(severity)
+          .severity(severity.getCode())
           .title(title)
           .description(desc.toString())
           .currentValue(String.valueOf(totalScore))

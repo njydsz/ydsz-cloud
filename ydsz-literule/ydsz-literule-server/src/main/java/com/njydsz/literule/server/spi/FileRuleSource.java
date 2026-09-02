@@ -350,8 +350,7 @@ public class FileRuleSource implements RuleConfigProvider {
     if (entry == null || entry.getCode() == null || entry.getCode().isBlank()) {
       return null;
     }
-    RuleDefinitionDTO.RuleDefinitionBuilder b =
-        RuleDefinitionDTO.builder()
+    var b = RuleDefinitionDTO.builder()
             .code(entry.getCode())
             .name(entry.getName())
             .category(entry.getCategory())

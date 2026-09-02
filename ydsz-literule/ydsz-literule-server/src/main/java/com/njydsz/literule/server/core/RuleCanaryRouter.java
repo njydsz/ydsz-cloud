@@ -153,7 +153,7 @@ public class RuleCanaryRouter {
               .build();
     }
     if (result == null) {
-      result = RuleResultVO.notTriggered(original.getCode());
+      result = new RuleResultVO().notTriggered(original.getCode());
     }
     result.setCanary(true);
     result.setCanaryBucket("CANARY");

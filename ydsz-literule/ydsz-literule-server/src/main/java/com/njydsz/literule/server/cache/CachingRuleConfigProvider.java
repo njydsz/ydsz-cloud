@@ -309,7 +309,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
             log.debug("[LiteRule-Cache] L2 命中 NULL 标记: {}", l2Key);
             return L1_NULL_MARKER;
           }
-          RuleDefinitionDTO l2Value = YdszJson.fromJson(json, RuleDefinition.class);
+          RuleDefinitionDTO l2Value = YdszJson.fromJson(json, RuleDefinitionDTO.class);
           if (l2Value != null) {
             log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
             return l2Value;
