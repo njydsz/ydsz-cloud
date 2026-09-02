@@ -13,7 +13,7 @@ import com.njydsz.literule.app.openapi.LiteRuleAppOpenApiConfiguration;
  * 规则引擎模块 App 端自动配置。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 26.09.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)
