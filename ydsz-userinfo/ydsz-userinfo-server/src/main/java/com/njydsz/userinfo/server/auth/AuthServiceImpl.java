@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 import io.micrometer.core.instrument.Timer;
 import jakarta.servlet.http.HttpServletResponse;
@@ -392,8 +394,8 @@ public class AuthServiceImpl implements AuthService {
     String loginTimeStr = sessionDetails.getOrDefault("loginTime", "");
     if (loginTimeStr != null && !loginTimeStr.isEmpty()) {
       try {
-        java.time.LocalDateTime loginTime = java.time.LocalDateTime.parse(loginTimeStr);
-        sessionDuration = java.time.Duration.between(loginTime, java.time.LocalDateTime.now()).toMillis();
+    LocalDateTime loginTime = LocalDateTime.parse(loginTimeStr);
+    sessionDuration = Duration.between(loginTime, LocalDateTime.now()).toMillis();
       } catch (Exception e) {
         log.debug("解析 loginTime 失败，跳过会话时长统计: {}", loginTimeStr);
       }

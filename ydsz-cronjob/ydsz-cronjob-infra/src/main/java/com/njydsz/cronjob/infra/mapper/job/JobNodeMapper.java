@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.infra.mapper.job;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -123,8 +124,8 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
       @Param("nodeId") String nodeId,
       @Param("lastHeartbeat") LocalDateTime lastHeartbeat,
       @Param("runningCount") int runningCount,
-      @Param("cpuUsage") java.math.BigDecimal cpuUsage,
-      @Param("memUsagePct") java.math.BigDecimal memUsagePct,
+            @Param("cpuUsage") BigDecimal cpuUsage,
+            @Param("memUsagePct") BigDecimal memUsagePct,
       @Param("status") String status);
 
   /**

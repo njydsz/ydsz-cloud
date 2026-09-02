@@ -198,7 +198,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
       @Param("id") String id,
       @Param("banType") String banType,
       @Param("banReason") String banReason,
-      @Param("banExpireAt") java.time.LocalDateTime banExpireAt,
+      @Param("banExpireAt") LocalDateTime banExpireAt,
       @Param("bannedBy") String bannedBy);
 
   /**

@@ -1,6 +1,7 @@
 package com.njydsz.agent.web.controller.teamrun;
 
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -223,7 +224,7 @@ public class TeamRunController {
       String description,
       TeamRunPattern pattern,
       String initiatedBy,
-      java.util.Map<String, Object> context) {
+      Map<String, Object> context) {
   }
 
   /**

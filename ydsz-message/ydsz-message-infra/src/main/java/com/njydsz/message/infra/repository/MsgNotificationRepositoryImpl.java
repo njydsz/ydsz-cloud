@@ -2,6 +2,7 @@ package com.njydsz.message.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -113,7 +114,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     }
     MsgNotification entity = new MsgNotification();
     entity.setReadStatus(1);
-    entity.setReadTime(java.time.LocalDateTime.now());
+      entity.setReadTime(LocalDateTime.now());
     return msgNotificationMapper.update(entity, wrapper);
   }
 
@@ -124,7 +125,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   }
 
   @Override
-  public int markExpired(java.time.LocalDateTime now) {
+  public int markExpired(LocalDateTime now) {
     QueryWrapper<MsgNotification> wrapper = new QueryWrapper<>();
     wrapper.lt("expired_at", now);
     wrapper.eq("deleted", 0);

@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.infra.repository.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class JobDailyStatsRepositoryImpl implements JobDailyStatsRepository {
 
   @Override
   public List<JobDailyStatsVO> findByJobIdAndDateRange(
-      String jobId, java.time.LocalDate startDate, java.time.LocalDate endDate) {
+      String jobId, LocalDate startDate, LocalDate endDate) {
     LocalDateTime start = startDate.atStartOfDay();
     LocalDateTime end = endDate.atTime(END_HOUR, END_MINUTE, END_SECOND);
     return findByJobIdAndDateRange(jobId, start, end);

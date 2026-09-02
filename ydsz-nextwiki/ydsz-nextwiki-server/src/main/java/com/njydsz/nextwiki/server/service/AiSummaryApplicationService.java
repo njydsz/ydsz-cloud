@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 import lombok.Builder;
 import lombok.Data;
@@ -163,7 +164,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
         placeholderSummary.substring(0, Math.min(placeholderSummary.length(), actualLength)));
     result.setSummaryType(type);
     result.setWordCount(Math.min(placeholderSummary.length(), actualLength));
-    result.setGeneratedAt(java.time.LocalDateTime.now());
+    result.setGeneratedAt(LocalDateTime.now());
 
     log.info(
         "[AiSummaryApplicationService] 生成文件级摘要(预留): fileNodeId={}, type={}, length={}",

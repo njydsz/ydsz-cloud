@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.domain.vo;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -44,13 +45,13 @@ public class StorageQuotaVO implements Serializable {
   private String createdBy;
 
   @Schema(description = "创建时间")
-  private java.time.LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @Schema(description = "更新人")
   private String updatedBy;
 
   @Schema(description = "更新时间")
-  private java.time.LocalDateTime updatedAt;
+  private LocalDateTime updatedAt;
 
   @Schema(description = "乐观锁版本号")
   private Integer revision;

@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -329,7 +330,7 @@ public class DownloadController {
    * @param bytes 需要跳过的字节数
    * @throws java.io.IOException 读取失败时抛出
    */
-  private void skipFully(InputStream is, long bytes) throws java.io.IOException {
+  private void skipFully(InputStream is, long bytes) throws IOException {
     long remaining = bytes;
     while (remaining > 0) {
       long skipped = is.skip(remaining);

@@ -2,6 +2,7 @@ package com.njydsz.message.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import lombok.Builder;
 import lombok.Data;
@@ -61,5 +62,5 @@ public class MsgCanaryDTO implements Serializable {
   private Boolean deleted;
 
   /** 创建时间 */
-  private java.time.LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 }

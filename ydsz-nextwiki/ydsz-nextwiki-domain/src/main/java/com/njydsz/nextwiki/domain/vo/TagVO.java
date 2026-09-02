@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.domain.vo;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -38,5 +39,5 @@ public class TagVO implements Serializable {
   private String createdBy;
 
   @Schema(description = "创建时间")
-  private java.time.LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 }

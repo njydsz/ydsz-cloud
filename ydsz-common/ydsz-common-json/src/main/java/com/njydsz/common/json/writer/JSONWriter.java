@@ -428,7 +428,7 @@ public final class JSONWriter {
     int scale = value.scale();
     if (scale == 0) {
       // 无小数部分，直接使用 unscaledValue
-      java.math.BigInteger unscaled = value.unscaledValue();
+      BigInteger unscaled = value.unscaledValue();
       if (unscaled.bitLength() <= 63) {
         // 在 long 范围内，直接写入长整数，避免 toPlainString()
         writeLong(unscaled.longValue());
@@ -445,7 +445,7 @@ public final class JSONWriter {
 
     // 快速路径 2：小 scale 且 unscaled 在 long 范围内
     if (scale > 0 && scale <= 18) {
-      java.math.BigInteger unscaled = value.unscaledValue();
+      BigInteger unscaled = value.unscaledValue();
       if (unscaled.bitLength() <= 63) {
         long unscaledLong = unscaled.longValue();
         if (unscaledLong != 0) {

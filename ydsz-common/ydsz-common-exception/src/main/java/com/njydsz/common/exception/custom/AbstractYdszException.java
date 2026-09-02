@@ -1,5 +1,6 @@
 package com.njydsz.common.exception.custom;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -342,11 +343,11 @@ public abstract class AbstractYdszException extends RuntimeException
     this.ctx.setCategory(category);
   }
 
-  public java.time.LocalDateTime getTimestamp() {
+    public LocalDateTime getTimestamp() {
     return ctx == null ? null : ctx.getTimestamp();
   }
 
-  public void setTimestamp(java.time.LocalDateTime timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
     if (this.ctx == null) {
       this.ctx = new ExceptionContext();
     }

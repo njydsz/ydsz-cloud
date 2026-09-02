@@ -1,6 +1,7 @@
 package com.njydsz.common.sentry.resilience;
 
 import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import java.util.function.Supplier;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -68,7 +69,7 @@ public class CircuitBreaker {
             .failureRateThreshold((float) (failureRateThreshold * 100))
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
             .slidingWindowSize(slidingWindowSizeSeconds)
-            .waitDurationInOpenState(java.time.Duration.ofMillis(halfOpenAfterMillis))
+            .waitDurationInOpenState(Duration.ofMillis(halfOpenAfterMillis))
             .minimumNumberOfCalls(10)
             .permittedNumberOfCallsInHalfOpenState(1)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)

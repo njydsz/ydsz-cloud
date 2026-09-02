@@ -1,6 +1,7 @@
 package com.njydsz.agent.web.controller.trigger;
 
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -263,7 +264,7 @@ public class TriggerController {
       String targetAgentType,
       String cronExpression,
       String matchPattern,
-      java.util.Map<String, Object> config,
+      Map<String, Object> config,
       Integer maxExecutionsPerHour) {
   }
 
@@ -282,7 +283,7 @@ public class TriggerController {
       String description,
       String cronExpression,
       String matchPattern,
-      java.util.Map<String, Object> config,
+      Map<String, Object> config,
       Integer maxExecutionsPerHour) {
   }
 }

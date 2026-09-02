@@ -1,8 +1,7 @@
 package com.njydsz.literule.domain.vo;
 
 import java.time.LocalDateTime;
-
-import com.njydsz.common.exception.enums.ExceptionCode;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -72,7 +71,7 @@ public class RuleResultVO {
   private boolean canary;
 
   /** 收集的子结果 */
-  private java.util.List<RuleResultVO> collectedResults;
+  private List<RuleResultVO> collectedResults;
 
   /** 获取严重级别权重 */
   public int getSeverityWeight() {

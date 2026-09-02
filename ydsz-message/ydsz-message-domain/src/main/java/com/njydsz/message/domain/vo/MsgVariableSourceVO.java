@@ -2,6 +2,7 @@ package com.njydsz.message.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import lombok.Data;
 
@@ -46,11 +47,11 @@ public class MsgVariableSourceVO implements Serializable {
   private String createdBy;
 
   /** 创建时间 */
-  private java.time.LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 
   /** 更新人 */
   private String updatedBy;
 
   /** 更新时间 */
-  private java.time.LocalDateTime updatedAt;
+  private LocalDateTime updatedAt;
 }

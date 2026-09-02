@@ -156,7 +156,7 @@ public class FileCommentController {
       @RequestHeader(value = AuthHeaderConstants.X_USER_NAME, required = false) String userName) {
 
     // 提取 @ 提及（S4-P3-04）
-    java.util.List<String> mentions = mentionService.extractMentions(request.getContent());
+    List<String> mentions = mentionService.extractMentions(request.getContent());
 
     FileCommentDTO comment =
         FileCommentDTO.builder()

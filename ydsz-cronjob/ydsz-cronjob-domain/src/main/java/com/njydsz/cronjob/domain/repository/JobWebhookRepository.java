@@ -2,6 +2,7 @@ package com.njydsz.cronjob.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 
@@ -63,7 +64,7 @@ public interface JobWebhookRepository {
    * @param id Webhook ID
    * @param updatedAt 更新时间
    */
-  void deleteById(String id, java.time.LocalDateTime updatedAt);
+  void deleteById(String id, LocalDateTime updatedAt);
 
   /**
    * 根据 ID 查询 WebHook 详情。

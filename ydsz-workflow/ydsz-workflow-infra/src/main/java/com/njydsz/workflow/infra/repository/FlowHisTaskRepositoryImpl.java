@@ -95,22 +95,22 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
 
   @Override
   public Map<String, Object> selectOverviewStats(
-      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime) {
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime) {
     return hisTaskMapper.selectOverviewStats(tenantId, startTime, endTime);
   }
 
   @Override
   public List<Map<String, Object>> selectApproverEfficiency(
       String tenantId,
-      java.time.LocalDateTime startTime,
-      java.time.LocalDateTime endTime,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
       int limit) {
     return hisTaskMapper.selectApproverEfficiency(tenantId, startTime, endTime, limit);
   }
 
   @Override
   public List<Map<String, Object>> selectFlowEfficiencyComparison(
-      String tenantId, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime) {
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime) {
     return hisTaskMapper.selectFlowEfficiencyComparison(tenantId, startTime, endTime);
   }
 
@@ -122,8 +122,8 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
   @Override
   public List<Map<String, Object>> selectApprovalTrend(
       String tenantId,
-      java.time.LocalDateTime startTime,
-      java.time.LocalDateTime endTime,
+      LocalDateTime startTime,
+      LocalDateTime endTime,
       String granularity) {
     return hisTaskMapper.selectApprovalTrend(tenantId, startTime, endTime, granularity);
   }
@@ -146,7 +146,7 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
 
   @Override
   public List<FlowHisTaskVO> selectDonePage(String assigneeId, String businessType, String flowCode,
-      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime,
+      LocalDateTime startTime, LocalDateTime endTime,
       String tenantId, int offset, int limit) {
     return converter.flowHisTaskListToVO(
         hisTaskMapper.selectDonePage(assigneeId, businessType, flowCode, startTime, endTime, tenantId, offset, limit));
@@ -159,7 +159,7 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
 
   @Override
   public long countDone(String assigneeId, String businessType, String flowCode,
-      java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String tenantId) {
+      LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
     return hisTaskMapper.countDone(assigneeId, businessType, flowCode, startTime, endTime, tenantId);
   }
 

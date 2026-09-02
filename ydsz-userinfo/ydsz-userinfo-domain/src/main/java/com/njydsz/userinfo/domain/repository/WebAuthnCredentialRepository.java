@@ -2,6 +2,7 @@ package com.njydsz.userinfo.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 
@@ -52,7 +53,7 @@ public interface WebAuthnCredentialRepository {
    * @param credentialId 凭证 ID
    * @param lastUsedAt 最后使用时间
    */
-  void updateLastUsedAt(String credentialId, java.time.LocalDateTime lastUsedAt);
+  void updateLastUsedAt(String credentialId, LocalDateTime lastUsedAt);
 
   /**
    * 删除凭证

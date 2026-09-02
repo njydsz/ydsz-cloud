@@ -575,7 +575,7 @@ public class OutboxRepository {
      * @throws java.sql.SQLException 读取列数据失败
      */
     @Override
-    public OutboxMessage mapRow(ResultSet rs, int rowNum) throws java.sql.SQLException {
+    public OutboxMessage mapRow(ResultSet rs, int rowNum) throws SQLException {
       Timestamp nextRetry = rs.getTimestamp("next_retry_at");
       Timestamp sentAt = rs.getTimestamp("sent_at");
       Timestamp createdAt = rs.getTimestamp("created_at");

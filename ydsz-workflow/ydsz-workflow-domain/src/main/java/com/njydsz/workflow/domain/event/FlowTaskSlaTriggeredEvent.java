@@ -1,6 +1,7 @@
 package com.njydsz.workflow.domain.event;
 
 import java.io.Serial;
+import java.time.LocalDateTime;
 
 import lombok.Getter;
 import lombok.ToString;
@@ -39,7 +40,7 @@ public class FlowTaskSlaTriggeredEvent extends FlowDomainEvent {
   private final String slaAction;
 
   /** 截止时间 */
-  private final java.time.LocalDateTime dueAt;
+  private final LocalDateTime dueAt;
 
   public FlowTaskSlaTriggeredEvent(
       Object source,
@@ -49,7 +50,7 @@ public class FlowTaskSlaTriggeredEvent extends FlowDomainEvent {
       String nodeName,
       String assigneeId,
       String slaAction,
-      java.time.LocalDateTime dueAt) {
+      LocalDateTime dueAt) {
     super(source);
     this.taskId = taskId;
     this.instanceId = instanceId;

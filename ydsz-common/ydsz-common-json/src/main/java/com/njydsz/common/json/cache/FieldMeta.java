@@ -136,7 +136,7 @@ public final class FieldMeta {
   public final String format;
 
   /** 日期格式化时区（@JsonFormat.timezone，null 表示系统默认） */
-  public final java.time.ZoneId timezone;
+  public final ZoneId timezone;
 
   /** 日期格式化区域（@JsonFormat.locale，null 表示系统默认） */
   public final Locale locale;

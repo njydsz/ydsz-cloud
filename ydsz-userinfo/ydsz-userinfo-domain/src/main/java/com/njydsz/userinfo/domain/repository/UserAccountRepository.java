@@ -3,6 +3,7 @@ package com.njydsz.userinfo.domain.repository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
@@ -145,7 +146,7 @@ public interface UserAccountRepository {
    * @param lockUntil 账号锁定到期时间（由 Service 层根据 lockDurationMinutes 计算后传入）
    * @return 影响行数（用户不存在或已删除时为 0）
    */
-  int increaseLoginFailCount(String id, int threshold, java.time.LocalDateTime lockUntil);
+  int increaseLoginFailCount(String id, int threshold, LocalDateTime lockUntil);
 
   /**
    * 原子重置登录成功状态：清零失败计数、清除锁定时间、记录最近登录信息。
@@ -218,7 +219,7 @@ public interface UserAccountRepository {
       String id,
       String banType,
       String banReason,
-      java.time.LocalDateTime banExpireAt,
+      LocalDateTime banExpireAt,
       String bannedBy);
 
   /**
@@ -291,7 +292,7 @@ public interface UserAccountRepository {
    * @param expireAt 到期时间阈值（一般传当前时间）
    * @return 到期用户 ID 列表
    */
-  List<String> findIdsByBanTypeAndExpireAtBefore(String banType, java.time.LocalDateTime expireAt);
+  List<String> findIdsByBanTypeAndExpireAtBefore(String banType, LocalDateTime expireAt);
 
   /**
    * 查询锁定到期的用户 ID 列表。
@@ -302,5 +303,5 @@ public interface UserAccountRepository {
    * @param now 当前时间阈值
    * @return 到期用户 ID 列表
    */
-  List<String> findIdsByLockedUntilBefore(java.time.LocalDateTime now);
+  List<String> findIdsByLockedUntilBefore(LocalDateTime now);
 }

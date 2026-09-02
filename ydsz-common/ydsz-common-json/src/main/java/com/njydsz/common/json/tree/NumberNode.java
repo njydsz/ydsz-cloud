@@ -1,5 +1,6 @@
 package com.njydsz.common.json.tree;
 
+import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -139,7 +140,7 @@ public final class NumberNode extends JsonNode {
         || n instanceof Long
         || n instanceof Short
         || n instanceof Byte
-        || n instanceof java.math.BigInteger
+        || n instanceof BigInteger
         || n instanceof AtomicInteger
         || n instanceof AtomicLong;
   }

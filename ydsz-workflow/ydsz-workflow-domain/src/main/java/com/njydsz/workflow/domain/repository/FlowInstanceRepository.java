@@ -110,7 +110,7 @@ public interface FlowInstanceRepository {
    * @param limit 最大返回数量
    * @return 流程实例 VO 列表
    */
-  List<FlowInstanceVO> findSuspendedBefore(java.time.LocalDateTime before, int limit);
+  List<FlowInstanceVO> findSuspendedBefore(LocalDateTime before, int limit);
 
   /**
    * 根据 ID 删除流程实例（逻辑删除）。
@@ -144,7 +144,7 @@ public interface FlowInstanceRepository {
       String flowStatus,
       String currentNodeCode,
       String currentNodeName,
-      java.time.LocalDateTime endAt,
+      LocalDateTime endAt,
       Long durationMs);
 
   /**

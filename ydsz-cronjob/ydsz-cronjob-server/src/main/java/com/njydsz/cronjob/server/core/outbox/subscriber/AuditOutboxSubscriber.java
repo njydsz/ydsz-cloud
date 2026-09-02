@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.server.core.outbox.subscriber;
 
 import java.util.function.Consumer;
+import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +94,7 @@ public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
     auditLog.setModule(AUDIT_MODULE);
     auditLog.setBusinessNo(event.getEventKey());
     auditLog.setContent(truncate(event.getPayload(), MAX_PAYLOAD_STORE_LENGTH));
-    auditLog.setOperationTime(java.time.LocalDateTime.now());
+    auditLog.setOperationTime(LocalDateTime.now());
     writer.write(auditLog);
   }
 
