@@ -206,46 +206,4 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
 
   private Set<String> toStringSet(Object value) {
     if (value instanceof List<?> list) {
-      Set<String> result = new HashSet<>();
-      for (Object item : list) {
-        if (item != null) {
-          result.add(item.toString());
-        }
-      }
-      return result;
-    }
-    return new HashSet<>(0);
-  }
-
-  /**
-   * 按菜单类型分类权限码。
-   *
-   * @param menus 菜单列表
-   * @return 分类后的权限码映射（Menu/BUTTON/API）
-   */
-  private Map<String, Set<String>> categorizePermissions(List<MenuVO> menus) {
-    Set<String> menuPerms = new HashSet<>(16);
-    Set<String> buttonPerms = new HashSet<>(16);
-    Set<String> apiPerms = new HashSet<>(16);
-
-    for (MenuVO menu : menus) {
-      String permCode = menu.getPermissionCode();
-      if (permCode == null || permCode.isBlank()) {
-        continue;
-      }
-      String type = menu.getMenuType();
-      if ("BUTTON".equals(type)) {
-        buttonPerms.add(permCode);
-      } else if ("API".equals(type)) {
-        apiPerms.add(permCode);
-      } else {
-        menuPerms.add(permCode);
-      }
-    }
-    Map<String, Set<String>> result = new HashMap<>(PERMISSION_CATEGORY_COUNT);
-    result.put("Menu", menuPerms);
-    result.put("BUTTON", buttonPerms);
-    result.put("API", apiPerms);
-    return result;
-  }
-}
+      Set<String> result = new HashSet<>(16);

@@ -68,30 +68,4 @@ public class ApprovalRecord implements Serializable {
   private String currentStatus;
 
   /** 审批日志（按时间顺序追加） */
-  @Builder.Default private List<ApprovalLog> logs = new ArrayList<>();
-
-  /**
-   * 当前级别已通过审批人列表（用于 COUNTERSIGN/SEQUENCE 进度追踪）
-   *
-   * <p>当某一级别全部通过后，此列表会在进入下一级时清空。
-   */
-  @Builder.Default private List<String> currentLevelApprovedApprovers = new ArrayList<>();
-
-  /** 创建时间 */
-  private LocalDateTime createdAt;
-
-  /** 更新时间 */
-  private LocalDateTime updatedAt;
-
-  /**
-   * 追加审批日志
-   *
-   * @param log 审批日志
-   */
-  public void appendLog(ApprovalLog log) {
-    if (this.logs == null) {
-      this.logs = new ArrayList<>(16);
-    }
-    this.logs.add(log);
-  }
-}
+  @Builder.Default private List<ApprovalLog> logs = new ArrayList<>(16);

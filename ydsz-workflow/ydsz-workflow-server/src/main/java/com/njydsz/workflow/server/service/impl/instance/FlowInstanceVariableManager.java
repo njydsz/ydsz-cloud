@@ -124,27 +124,4 @@ public class FlowInstanceVariableManager {
    */
   Map<String, Object> parseVariables(String variable) {
     if (!StringUtils.hasText(variable)) {
-      return new HashMap<>();
-    }
-    try {
-      Map<String, Object> map = YdszJson.parseMap(variable);
-      return map == null ? new HashMap<>() : map;
-    } catch (Exception e) {
-      log.warn("[Flow] 解析 variable JSON 失败，返回空 Map: {}", e.getMessage());
       return new HashMap<>(0);
-    }
-  }
-
-  /**
-   * 将 {@code Map<?,?>} 强转为 {@code Map<String, Object>}。
-   *
-   * <p>ext JSON 由业务方配置（节点扩展字段），运行时信任其结构为 Map&lt;String,Object&gt;， 因此这里的强转是安全的。该方法仅用于抑制 unchecked
-   * cast 编译警告。
-   *
-   * @param m 原始 Map
-   * @return 强转后的 Map
-   */
-  static Map<String, Object> castToStringObjectMap(Map<?, ?> m) {
-    return MapUtils.toStringObjectMap(m);
-  }
-}

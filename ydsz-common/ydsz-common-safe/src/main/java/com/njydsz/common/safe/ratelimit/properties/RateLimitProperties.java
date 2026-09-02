@@ -56,11 +56,4 @@ public class RateLimitProperties {
   private String clusterKeyPrefix = "ydsz:ratelimit:";
 
   /** 规则列表（静态配置） */
-  private List<RateLimitRule> rules = new ArrayList<>();
-
-  /** 热点参数特殊配置（key 索引 → 阈值） */
-  private List<HotParamRule> hotParams = new ArrayList<>(4);
-
-  /** 熔断器配置（保护 Redis 集群限流调用） */
-  private CircuitBreakerProperties circuitBreaker = new CircuitBreakerProperties();
-}
+  private List<RateLimitRule> rules = new ArrayList<>(4);

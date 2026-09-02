@@ -35,43 +35,4 @@ public class DataPermissionContext {
   private String userId;
 
   /** 公司ID集合 */
-  private Set<String> companyIds = new HashSet<>();
-
-  /** 部门ID集合 */
-  private Set<String> deptIds = new HashSet<>();
-
-  /** 项目ID集合 */
-  private Set<String> projectIds = new HashSet<>();
-
-  /** 区域ID集合 */
-  private Set<String> regionIds = new HashSet<>(16);
-
-  /** 列级权限规则：table -> allowed columns（小写化后比对）。 */
-  private Map<String, Set<String>> visibleColumnsByTable = Collections.emptyMap();
-
-  /** 列级权限规则：table -> editable columns（小写化后比对）。 */
-  private Map<String, Set<String>> editableColumnsByTable = Collections.emptyMap();
-
-  /**
-   * 返回一个空的 DataPermissionContext 实例。
-   *
-   * @return 所有字段为默认空值的上下文
-   */
-  public static DataPermissionContext empty() {
-    return new DataPermissionContext();
-  }
-
-  /**
-   * 是否缺少全部行级约束信息。
-   *
-   * @return {@code true} 表示数据范围、用户、部门、项目等约束均未设置
-   */
-  public boolean isEmptyRowScope() {
-    return dataScope == null
-        && userId == null
-        && companyIds.isEmpty()
-        && deptIds.isEmpty()
-        && projectIds.isEmpty()
-        && regionIds.isEmpty();
-  }
-}
+  private Set<String> companyIds = new HashSet<>(16);

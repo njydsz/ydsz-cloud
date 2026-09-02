@@ -484,47 +484,4 @@ public class JobDagServiceImpl implements JobDagService {
     Map<String, List<String>> adj = new HashMap<>(definition.nodes().size() * 2);
     // 确保所有节点都在邻接表中（即使没有出边）
     for (DagNode node : definition.nodes()) {
-      adj.computeIfAbsent(node.jobKey(), k -> new ArrayList<>());
-    }
-    for (DagEdge edge : definition.edges()) {
-      adj.computeIfAbsent(edge.from(), k -> new ArrayList<>()).add(edge.to());
-      adj.computeIfAbsent(edge.to(), k -> new ArrayList<>(8));
-    }
-    return adj;
-  }
-
-  /**
-   * 校验 CRON 触发类型必须提供 cronExpression。
-   *
-   * @param triggerType 触发类型
-   * @param cronExpression Cron 表达式
-   * @throws SysException 当 triggerType=CRON 且 cronExpression 为空时抛出
-   */
-  private void validateCronExpression(String triggerType, String cronExpression) {
-    if ("CRON".equals(triggerType) && !StringUtils.hasText(cronExpression)) {
-      throw SysException.builder()
-          .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("error.cronjob.msg_dag_cron_required")
-          .build();
-    }
-  }
-
-  /**
-   * 计算 Cron 表达式的下次触发时间。
-   *
-   * <p>使用 Spring 6 的 {@link CronExpression}（基于 LocalDateTime，无需时区转换）。 解析或计算失败时返回 {@code null}（catch
-   * 异常避免抛出）。
-   *
-   * @param cron Cron 表达式
-   * @return 下次触发时间；表达式非法或无法计算时返回 null
-   */
-  private LocalDateTime nextFireTime(String cron) {
-    try {
-      CronExpression expr = CronExpression.parse(cron);
-      return expr.next(LocalDateTime.now());
-    } catch (Exception e) {
-      log.warn("[JobDag] 计算 nextFireTime 失败: cron={} err={}", cron, e.getMessage());
-      return null;
-    }
-  }
-}
+      adj.computeIfAbsent(node.jobKey(), k -> new ArrayList<>(8))

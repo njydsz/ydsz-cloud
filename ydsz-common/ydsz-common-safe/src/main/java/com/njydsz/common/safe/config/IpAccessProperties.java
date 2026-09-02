@@ -64,19 +64,4 @@ public class IpAccessProperties {
   private long localCacheTtlSeconds = 10;
 
   /** 静态黑名单（启动时加载，支持 IP 和 CIDR 网段） */
-  private List<String> staticBlacklist = new ArrayList<>();
-
-  /** 静态白名单（启动时加载，支持 IP 和 CIDR 网段） */
-  private List<String> staticWhitelist = new ArrayList<>();
-
-  /** 排除路径列表（Ant 风格） */
-  private List<String> excludes = new ArrayList<>(4);
-
-  /** 访问控制模式枚举 */
-  public enum AccessMode {
-    /** 黑名单模式：黑名单中的 IP 被拒绝 */
-    BLACKLIST,
-    /** 白名单模式：白名单中的 IP 放行 */
-    WHITELIST
-  }
-}
+  private List<String> staticBlacklist = new ArrayList<>(4);
