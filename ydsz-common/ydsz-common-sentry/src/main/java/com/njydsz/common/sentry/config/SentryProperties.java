@@ -283,10 +283,63 @@ public class SentryProperties {
     /** 服务级采样率覆盖（service name -> ratio） */
     private Map<String, Double> samplerServiceRatios = new HashMap<>(16);
 
+    /** 灰度标签采样率（gray tag -> ratio） */
+    private Map<String, Double> samplerGrayTagRatios = new HashMap<>(16);
+
+    /** 健康检查路径前缀（不采样） */
+    private List<String> healthCheckPaths = List.of("/actuator", "/health", "/metrics");
+
+    /** 是否启用 Span 属性自动注入（MDC/RequestContext/env） */
+    private boolean enrichmentEnabled = true;
+
+    /** 自动注入来源列表 */
+    private List<String> enrichmentSources = List.of("mdc");
+
     /** 尾部采样策略（基于请求结果的智能采样） */
     @Valid
     @NotNull(message = "尾部采样配置不能为空")
     private TailSamplingConfig tailSampling = new TailSamplingConfig();
+
+    /** 错误事件配置 */
+    @Valid
+    private ErrorEventConfig errorEvent = new ErrorEventConfig();
+
+    /** OTel 批量导出器配置（队列与调度参数） */
+    @Valid
+    private BatchConfig batch = new BatchConfig();
+
+    /** 资源自定义属性 */
+    private Map<String, String> resourceAttributes = new HashMap<>(16);
+
+    /** 错误事件发布配置（慢 Span 阈值等）。 */
+    @Data
+    @Validated
+    public static class ErrorEventConfig {
+      /** 是否启用错误事件发布 */
+      private boolean enabled = true;
+
+      /** 慢 Span 阈值（毫秒） */
+      private long slowThresholdMillis = 3000;
+    }
+
+    /** OTel 批量导出器配置（队列与调度参数）。 */
+    @Data
+    @Validated
+    public static class BatchConfig {
+      /** 队列大小 */
+      @Min(value = 256, message = "队列大小不能小于 256")
+      private int maxQueueSize = 2048;
+
+      /** 批量导出大小 */
+      @Min(value = 1, message = "批量导出大小不能小于 1")
+      private int maxExportBatchSize = 512;
+
+      /** 调度延迟（毫秒） */
+      private long scheduleDelayMillis = 5000;
+
+      /** 导出超时（毫秒） */
+      private long exporterTimeoutMillis = 30000;
+    }
   }
 
   /** 尾部采样配置（基于请求结果的智能采样）。 */
@@ -303,6 +356,26 @@ public class SentryProperties {
 
     /** 根操作名采样率覆盖 */
     private Map<String, Double> rootSpanNameRatios = new HashMap<>(16);
+
+    /** 总采样率（未命中规则时的概率采样） */
+    @Min(value = 0, message = "总采样率不能小于 0")
+    @Max(value = 1, message = "总采样率不能大于 1")
+    private double recordRatio = 0.05;
+
+    /** 是否 100% 采集错误 Span（HTTP 5xx / OTel StatusCode.ERROR） */
+    private boolean errorStatus = true;
+
+    /** 慢请求阈值（毫秒，>0 时 100% 采集超过该阈值的 Span） */
+    private long slowThresholdMillis = 3000;
+
+    /** 错误码前缀（命中前缀的 100% 采集） */
+    private List<String> errorCodePrefixes = List.of("A0", "B0", "C0");
+
+    /** 灰度标签列表（命中即 100% 采集） */
+    private List<String> grayTags = List.of();
+
+    /** 是否 100% 采集压测流量 */
+    private boolean pressureTraffic = true;
   }
 
   /** 告警配置（Webhook / 通知渠道）。 */
@@ -324,6 +397,19 @@ public class SentryProperties {
     @Min(value = 1, message = "连续触发阈值不能小于 1")
     @Max(value = 20, message = "连续触发阈值不能大于 20")
     private int consecutiveThreshold = 3;
+
+    /** 静默期（毫秒，同一问题静默期内不重复告警） */
+    @Min(value = 0, message = "静默期不能小于 0")
+    private long silencePeriodMillis = 300000;
+
+    /** 是否记录告警日志 */
+    private boolean logAlerts = true;
+
+    /** 钉钉告警接收者 */
+    private String dingtalkReceiver = "";
+
+    /** 邮件告警接收者 */
+    private String emailReceiver = "";
   }
 
   /** SLA 配置（可用性与延迟目标）。 */
