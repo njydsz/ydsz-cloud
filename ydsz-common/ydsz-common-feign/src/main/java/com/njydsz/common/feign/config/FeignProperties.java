@@ -188,8 +188,6 @@ public class FeignProperties {
   }
 
   /** 信号量隔离（Bulkhead）配置 */
-  @Getter
-  @Setter
   public static class Bulkhead {
     /** 是否启用信号量隔离，默认false */
     private boolean enabled = false;
@@ -202,6 +200,31 @@ public class FeignProperties {
 
     /** 按服务维度配置最大并发请求数 */
     private Map<String, Integer> serviceMaxConcurrent = new HashMap<>(16);
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+    }
+    public int getDefaultMaxConcurrent() {
+      return defaultMaxConcurrent;
+    }
+    public void setDefaultMaxConcurrent(int defaultMaxConcurrent) {
+      this.defaultMaxConcurrent = defaultMaxConcurrent;
+    }
+    public long getAcquireTimeoutMs() {
+      return acquireTimeoutMs;
+    }
+    public void setAcquireTimeoutMs(long acquireTimeoutMs) {
+      this.acquireTimeoutMs = acquireTimeoutMs;
+    }
+    public Map<String, Integer> getServiceMaxConcurrent() {
+      return serviceMaxConcurrent;
+    }
+    public void setServiceMaxConcurrent(Map<String, Integer> serviceMaxConcurrent) {
+      this.serviceMaxConcurrent = serviceMaxConcurrent;
+    }
   }
 
   /** GZIP 请求压缩配置 */

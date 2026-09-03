@@ -112,7 +112,7 @@ public final class DeserializationProvider {
    * @param <T> 类型参数
    * @return 反序列化后的对象
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，deserializeToObject() 返回 Object，强转 T 编译期无法验证
   public static <T> T deserialize(byte[] bytes, Type type) {
     return (T) deserializeToObject(bytes, type);
   }
@@ -127,7 +127,7 @@ public final class DeserializationProvider {
    * @param <T> 类型参数
    * @return 反序列化后的对象
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，deserializeToObject() 返回 Object，强转 T 编译期无法验证
   public static <T> T deserialize(String json, Type type) {
     return (T) deserializeToObject(json, type);
   }
@@ -295,7 +295,7 @@ public final class DeserializationProvider {
    * @param <T> 目标类型参数
    * @return 转换后的目标类型值
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，Number→T 拆箱转换编译期无法验证类型安全
   private static <T> T castResult(Object result, Class<?> clazz) {
     if (result == null) {
       return null;

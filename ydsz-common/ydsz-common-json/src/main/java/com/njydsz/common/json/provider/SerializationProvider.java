@@ -63,7 +63,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，框架内部使用 Date 已废弃方法，需保持兼容
 public final class SerializationProvider {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SerializationProvider.class);
@@ -1305,7 +1305,7 @@ public final class SerializationProvider {
    * @param value 要序列化的对象
    * @return JSON 字符串
    */
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({"unchecked", "rawtypes"}) // @SuppressWarnings 保留原因：泛型擦除，Object 强转为 JsonSerializer 编译期无法验证
   private static String invokeCustomSerializer(Object serializer, Object value) {
     JSONWriter out = new JSONWriter(new StringBuilder(256));
     ((JsonSerializer) serializer).serialize(value, out);

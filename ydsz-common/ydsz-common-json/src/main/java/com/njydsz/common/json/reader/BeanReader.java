@@ -51,7 +51,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，JDK 1.1 起 Date 构造/解析方法标注 @Deprecated，框架需保持兼容
 public final class BeanReader<T> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BeanReader.class);
@@ -554,7 +554,7 @@ public final class BeanReader<T> {
      * @param reader 已定位到值起始的 JSONReader
      * @param obj 目标 Bean 实例，字段值写入其中
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API
     public void readValue(JSONReader reader, Object obj) {
       readValue(reader, obj, 0);
     }
@@ -570,7 +570,7 @@ public final class BeanReader<T> {
      * @param obj 目标 Bean 实例，读取到的值通过反射写入其对应字段
      * @param depth 当前嵌套深度，最外层调用传 {@code 0}，每向下一层递增
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API
     public void readValue(JSONReader reader, Object obj, int depth) {
       try {
         switch (typeCode) {
@@ -911,12 +911,12 @@ public final class BeanReader<T> {
     DateTimeFormatter.ISO_LOCAL_DATE, DateTimeFormatter.ofPattern("yyyy-MM-dd"),
   };
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，parseDate 内部使用 new Date(long) 已废弃的构造方法
   private static LocalDateTime parseLocalDateTime(String s) {
     return parseLocalDateTime(s, null);
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，parseDate 内部使用 new Date(long) 已废弃的构造方法
   private static LocalDateTime parseLocalDateTime(String s, String pattern) {
     if (s == null || s.isEmpty()) {
       return null;
@@ -939,12 +939,12 @@ public final class BeanReader<T> {
     return null;
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，parseDate 内部使用 new Date(long) 已废弃的构造方法
   private static LocalDate parseLocalDate(String s) {
     return parseLocalDate(s, null);
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，parseDate 内部使用 new Date(long) 已废弃的构造方法
   private static LocalDate parseLocalDate(String s, String pattern) {
     if (s == null || s.isEmpty()) {
       return null;
@@ -966,12 +966,12 @@ public final class BeanReader<T> {
     return null;
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，方法内部使用 new Date(long) 已废弃的构造方法
   private static Date parseDate(String s) {
     return parseDate(s, null);
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，方法内部使用 new Date(long) 已废弃的构造方法
   private static Date parseDate(String s, String pattern) {
     if (s == null || s.isEmpty()) {
       return null;
@@ -1003,7 +1003,7 @@ public final class BeanReader<T> {
     return null;
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({"unchecked", "rawtypes"}) // @SuppressWarnings 保留原因：泛型擦除，Class<?> 强转 Class<Enum> 编译期无法验证
   private static Object parseEnum(Class<?> enumType, String s) {
     if (s == null || s.isEmpty()) {
       return null;

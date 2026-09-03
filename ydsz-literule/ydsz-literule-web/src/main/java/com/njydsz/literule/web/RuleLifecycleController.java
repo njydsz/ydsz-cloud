@@ -27,6 +27,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.literule.infra.converter.LiteruleWebConverter;
 import com.njydsz.literule.domain.dto.RuleApproveDTO;
 import com.njydsz.literule.domain.dto.RuleDelegateDTO;
 import com.njydsz.literule.domain.dto.RuleRejectDTO;

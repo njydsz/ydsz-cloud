@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * @see BuilderResolver
  * @see CreatorResolver
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，框架内部使用 Date 已废弃方法，需保持兼容
 final class TypeConverter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TypeConverter.class);
@@ -80,7 +80,7 @@ final class TypeConverter {
 
     // 枚举转换：String → Enum
     if (targetType.isEnum() && value instanceof String) {
-      @SuppressWarnings({"rawtypes", "unchecked"})
+      @SuppressWarnings({"rawtypes", "unchecked"}) // @SuppressWarnings 保留原因：泛型擦除，Class<?> 强转 Class<? extends Enum> 编译期无法验证
       Class<? extends Enum> enumType = targetType.asSubclass(Enum.class);
       try {
         return Enum.valueOf(enumType, (String) value);

@@ -67,7 +67,7 @@ import com.njydsz.common.json.type.FieldTypeCode;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，JDK 1.1 起 Date 系列方法标注 @Deprecated，框架需保持兼容
 public final class FieldMeta {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldMeta.class);

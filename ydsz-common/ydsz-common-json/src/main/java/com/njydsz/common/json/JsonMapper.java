@@ -519,7 +519,7 @@ public class JsonMapper {
     validateJsonSizeBytes(bytes.length);
     ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
     try {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，() 返回 Object，编译期无法验证强转 T 的类型安全
       T result = (T) DeserializationProvider.deserializeToObject(bytes, type);
       return result;
     } finally {
@@ -640,7 +640,7 @@ public class JsonMapper {
               json, TypeFactory.getInstance().constructCollectionType(List.class, elementClass));
       if (result instanceof List<?> list) {
         // 优化：直接 unchecked cast 返回，消除 O(n) 拷贝
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，List<?> 强转 List<T> 编译期无法验证
         List<T> typedList = (List<T>) list;
         return typedList;
       }
@@ -791,7 +791,7 @@ public class JsonMapper {
     }
     // 容器类型直接从树转换
     if (isContainerType(clazz)) {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：TreeConverter.convertToJavaObject() 返回 Object，编译期无法验证
       T result = (T) TreeConverter.convertToJavaObject(node);
       return result;
     }
@@ -816,7 +816,7 @@ public class JsonMapper {
       return null;
     }
     if (typeRef.getType() instanceof Class<?> clazz) {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，treeToValue() 返回 JsonNode，强转 T 编译期无法验证
       T direct = (T) treeToValue(node, clazz);
       return direct;
     }
@@ -862,7 +862,7 @@ public class JsonMapper {
    * @param <T> 目标类型参数
    * @return 转换后的标量值
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，数值类型转换 Object→T 编译期无法验证
   private <T> T toScalarValue(JsonNode node, Class<T> clazz) {
     if (clazz == String.class) {
       return clazz.cast(node.asText());

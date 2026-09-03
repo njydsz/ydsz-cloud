@@ -66,11 +66,7 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <scope>provided</scope>
-        </dependency>
+        <!-- mapstruct: 已迁移至 infra 模块，web 模块通过 infra 传递依赖获取注解 -->
         <!-- ydsz-common-json -->
         <dependency>
             <groupId>com.njydsz</groupId>

@@ -26,7 +26,7 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  * @see CreatorResolver
  * @see TypeConverter
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，框架内部使用 Date 已废弃方法，需保持兼容
 final class BuilderResolver {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BuilderResolver.class);

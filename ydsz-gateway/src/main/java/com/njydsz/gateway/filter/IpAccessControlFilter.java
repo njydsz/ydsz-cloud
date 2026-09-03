@@ -81,17 +81,27 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
   /** 白名单配置分隔符 */
   private static final String WHITELIST_SEPARATOR = "[,\\n]";
 
+  /**
+   * 默认本地缓存 TTL（秒）：IP 黑名单 L1 缓存的过期时间。
+   *
+   * <p>该值是缓存构建时的兜底默认，实际运行时由 {@link IpAccessControlProperties#getBlacklistTtlSeconds()} 注入学性。
+   * 10s TTL 可在 99% 的恶意请求被 L1 拦截，同时保证黑名单更新在 10s 内全局生效。
+   */
+  private static final long DEFAULT_BLACKLIST_CACHE_TTL_SECONDS = 10L;
+
+  /**
+   * 默认本地缓存最大容量：IP 黑名单 L1 缓存的最大条目数。
+   *
+   * <p>该值是缓存构建时的兜底默认，实际运行时由 {@link IpAccessControlProperties#getBlacklistMaxSize()} 注入学性。
+   * 50,000 条足够覆盖中大规模恶意 IP 列表，内存占用约 5MB（每个 String key ~100B + Boolean value ~16B）。
+   */
+  private static final long DEFAULT_BLACKLIST_CACHE_MAX_SIZE = 50_000L;
+
   private final IpAccessControlProperties properties;
   private final ReactiveStringRedisTemplate redisTemplate;
 
-  /** L1 本地缓存：IP → 是否在黑名单中 */
-  private final Cache<String, Boolean> localCache =
-      YdszCache.<String, Boolean>newBuilder()
-          .type(CacheType.STRIPED)
-          .name("gateway:ip-blacklist")
-          .expireAfterWrite(10, TimeUnit.SECONDS)
-          .maximumSize(50_000)
-          .build();
+  /** L1 本地缓存：IP → 是否在黑名单中（延迟到 @PostConstruct 初始化，以便读取配置属性） */
+  private Cache<String, Boolean> localCache;
 
   /** 缓存解析后的白名单集合 */
   private final AtomicReference<Set<String>> cachedWhitelist = new AtomicReference<>(Set.of());
@@ -100,13 +110,16 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
   private volatile String lastRawWhitelist = null;
 
   /**
-   * 启动时校验 IP 访问控制配置的合法性。
+   * 初始化本地缓存并校验 IP 访问控制配置的合法性。
    *
    * <p>校验规则：
    * <ul>
    *   <li>blacklistFailMode 必须为 fail-open 或 fail-closed</li>
    *   <li>白名单 skip-paths 不应包含敏感路径（如 /admin/**）而无显式配置</li>
    * </ul>
+   *
+   * <p>本地 L1 缓存参数从 {@link IpAccessControlProperties} 注入学性获取，
+   * 实现缓存配置外部化，无需改代码即可调整缓存大小和 TTL。
    *
    * @throws IllegalStateException 配置非法时抛出，阻止应用启动
    */
@@ -117,6 +130,28 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
       throw new IllegalStateException(
           "IP 访问控制配置非法： blacklistFailMode 必须为 fail-open 或 fail-closed，当前值=" + failMode);
     }
+
+    long ttlSeconds = properties.getBlacklistTtlSeconds();
+    long maxSize = properties.getBlacklistMaxSize();
+    if (ttlSeconds <= 0) {
+      log.warn("[IpAccess] blacklistTtlSeconds={} 非法，回退默认值 {}s", ttlSeconds, DEFAULT_BLACKLIST_CACHE_TTL_SECONDS);
+      ttlSeconds = DEFAULT_BLACKLIST_CACHE_TTL_SECONDS;
+    }
+    if (maxSize <= 0) {
+      log.warn("[IpAccess] blacklistMaxSize={} 非法，回退默认值 {}", maxSize, DEFAULT_BLACKLIST_CACHE_MAX_SIZE);
+      maxSize = DEFAULT_BLACKLIST_CACHE_MAX_SIZE;
+    }
+
+    // 初始化 L1 本地缓存（参数从配置属性注入学性获取）
+    this.localCache =
+        YdszCache.<String, Boolean>newBuilder()
+            .type(CacheType.STRIPED)
+            .name("gateway:ip-blacklist")
+            .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
+            .maximumSize(maxSize)
+            .build();
+
+    log.info("[IpAccess] L1 本地缓存已初始化: ttlSeconds={}s maxSize={}", ttlSeconds, maxSize);
 
     boolean blacklistEnabled = properties.isBlacklistEnabled();
     boolean whitelistEnabled = properties.isWhitelistEnabled();

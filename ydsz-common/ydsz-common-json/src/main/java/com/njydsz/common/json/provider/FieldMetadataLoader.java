@@ -46,7 +46,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，框架内部使用 Date 已废弃方法，需保持兼容
 public final class FieldMetadataLoader {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldMetadataLoader.class);
