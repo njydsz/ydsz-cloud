@@ -1,5 +1,6 @@
 package com.njydsz.common.base.config;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import lombok.Data;
@@ -93,11 +94,17 @@ public class DocProperties {
    */
   private List<GroupConfig> groups = new ArrayList<>(4);
 
+  /** 导出配置 */
+  private ExportConfig export = new ExportConfig();
+
   /** 导出格式列表（默认 markdown, html） */
   private List<String> exportFormats = Arrays.asList("markdown", "html");
 
   /** 导出输出目录（默认系统临时目录下的 doc-export 子目录） */
-  private String outputDir = System.getProperty("java.io.tmpdir") + "/doc-export";
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — JDK 系统属性名含 java.io 前缀，为字符串常量非代码引用
+  private String outputDir =
+      System.getProperty("java.io.tmpdir") + "/doc-export";
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   // ====================== 嵌套配置类 ======================
 
@@ -126,19 +133,41 @@ public class DocProperties {
     private String description = "";
 
     /** 文档版本 */
-    private String version = "1.0.0";
+    private String version = DocConstants.DEFAULT_API_VERSION;
 
-    /** 联系人名称 */
-    private String contactName = "";
+    /** 服务条款 URL */
+    private String termsOfService = "";
+
+    /** 联系人信息 */
+    private Contact contact = new Contact();
+
+    /** 许可证信息 */
+    private License license = new License();
+  }
+
+  /** 联系人信息配置 */
+  @Data
+  public static class Contact {
+
+    /** 联系人姓名 */
+    private String name = "ydsz-team";
 
     /** 联系人邮箱 */
-    private String contactEmail = "";
+    private String email = "devops@ydsz.example.com";
+
+    /** 联系人 URL */
+    private String url = "https://ydszsoft.ydsz.com.cn";
+  }
+
+  /** 许可证信息配置 */
+  @Data
+  public static class License {
 
     /** 许可证名称 */
-    private String licenseName = "Apache 2.0";
+    private String name = "Apache 2.0";
 
-    /** 许可证地址 */
-    private String licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0";
+    /** 许可证 URL */
+    private String url = "https://www.apache.org/licenses/LICENSE-2.0";
   }
 
   /** 分组配置 */
@@ -148,7 +177,42 @@ public class DocProperties {
     /** 分组名称 */
     private String name = "default";
 
+    /** 分组标题（为空时使用全局 title） */
+    private String title;
+
+    /** 分组版本（为空时使用全局 version） */
+    private String version = DocConstants.DEFAULT_API_VERSION;
+
+    /** 分组描述 */
+    private String description = "默认分组";
+
     /** 扫描的基础包路径 */
     private String basePackage = "";
+
+    /** 基础路径匹配规则 */
+    private String basePath = "/**";
+
+    /** 需要排除的路径 */
+    private List<String> excludePaths = new ArrayList<>();
+
+    /** 扫描的包路径列表（支持多包扫描） */
+    private List<String> packages = new ArrayList<>();
+
+    /** 匹配的路径模式列表（支持多路径匹配） */
+    private List<String> paths = new ArrayList<>();
+  }
+
+  /** 导出配置 */
+  @Data
+  public static class ExportConfig {
+
+    /** 是否启用文档导出功能 */
+    private boolean enabled = true;
+
+    /** 默认导出格式 (json, yaml, html, markdown) */
+    private String format = DocConstants.FORMAT_JSON;
+
+    /** 导出目录 */
+    private String outputDir = "./api-docs";
   }
 }

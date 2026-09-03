@@ -1,4 +1,5 @@
 package com.njydsz.common.base.config;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -87,4 +88,56 @@ public abstract class BaseCorsProperties {
    * <p>默认值为 "/**"，表示匹配所有路径。
    */
   private String pathPattern = "/**";
+
+  /** 暴露给客户端的响应头列表 */
+  private List<String> exposedHeaders = new ArrayList<>();
+
+  /** 过滤器注册顺序（值越小优先级越高） */
+  private int order = 0;
+
+  /**
+   * 校验 CORS 配置的安全性，检测不安全的组合并返回警告信息。
+   *
+   * <p>检查项：allowCredentials=true 且含通配符（CSRF 风险）、启用但来源为空（静默失败）、
+   * 来源/方法/头均为通配符（过度开放）。
+   *
+   * @return 警告信息列表，为空表示配置安全
+   */
+  public List<String> validateSecurity() {
+    List<String> warnings = new ArrayList<>();
+
+    if (!enabled) {
+      return warnings;
+    }
+
+    // 检查 1：allowCredentials=true 且 allowedOriginPatterns 包含 "*"
+    if (allowCredentials && containsWildcard(allowedOriginPatterns)) {
+      warnings.add("安全风险：allowCredentials=true 且 allowedOriginPatterns 包含 \"*\"，"
+          + "可能导致 CSRF 攻击。建议显式指定允许的域名列表。");
+    }
+
+    // 检查 2：CORS 启用但未配置任何允许来源
+    if (allowedOriginPatterns == null || allowedOriginPatterns.isEmpty()) {
+      warnings.add("配置警告：CORS 已启用但 allowedOriginPatterns 为空，"
+          + "将不会有任何跨域请求被允许。请配置允许的来源或禁用 CORS。");
+    }
+
+    // 检查 3：allowedOriginPatterns、allowedMethods、allowedHeaders 均为 "*"
+    if (containsWildcard(allowedOriginPatterns)
+        && containsWildcard(allowedMethods)
+        && containsWildcard(allowedHeaders)) {
+      warnings.add("安全风险：allowedOriginPatterns、allowedMethods、allowedHeaders 均为 \"*\"，"
+          + "CORS 配置过度开放。生产环境建议显式指定允许的方法和头。");
+    }
+
+    return warnings;
+  }
+
+  /** 检查列表中是否包含通配符 "*"。 */
+  private boolean containsWildcard(List<String> list) {
+    if (list == null || list.isEmpty()) {
+      return false;
+    }
+    return list.stream().anyMatch("*"::equals);
+  }
 }
