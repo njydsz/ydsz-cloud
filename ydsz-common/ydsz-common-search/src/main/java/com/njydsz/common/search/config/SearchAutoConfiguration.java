@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -248,7 +250,13 @@ public class SearchAutoConfiguration {
     int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
     int maxSize = Math.max(4, coreSize * 2);
     ExecutorService internal =
-        factory.createThreadPool("searchExecutor", coreSize, maxSize, 60, 256, false);
+        InternalExecutorFactory.newCustomThreadPool(
+            "searchExecutor",
+            coreSize,
+            maxSize,
+            60L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(256));
     return DelegatingTaskExecutor.wrap(internal);
   }
 
@@ -264,7 +272,13 @@ public class SearchAutoConfiguration {
     int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
     int maxSize = Math.max(4, coreSize * 2);
     ExecutorService internal =
-        factory.createThreadPool("indexSyncExecutor", coreSize, maxSize, 60, 512, false);
+        InternalExecutorFactory.newCustomThreadPool(
+            "indexSyncExecutor",
+            coreSize,
+            maxSize,
+            60L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(512));
     return DelegatingTaskExecutor.wrap(internal);
   }
 
