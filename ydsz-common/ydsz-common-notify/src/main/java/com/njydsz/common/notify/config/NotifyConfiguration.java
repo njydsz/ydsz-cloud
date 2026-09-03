@@ -163,8 +163,8 @@ public class NotifyConfiguration {
       props.put(
           "mail.smtp.ssl.checkserveridentity",
           String.valueOf(email.getSsl().isCheckServerIdentity()));
-      if (StringUtils.hasText(email.getSsl().getTrustStorePath())) {
-        props.put("mail.smtp.ssl.trust", email.getSsl().getTrustStorePath());
+      if (StringUtils.hasText(email.getSsl().getTrustStore())) {
+        props.put("mail.smtp.ssl.trust", email.getSsl().getTrustStore());
       }
     }
 

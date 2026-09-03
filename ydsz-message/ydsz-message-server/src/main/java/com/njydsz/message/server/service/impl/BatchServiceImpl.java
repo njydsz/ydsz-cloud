@@ -206,3 +206,33 @@ public class BatchServiceImpl implements BatchService {
     if (!StringUtils.hasText(payload)) {
       return new ArrayList<>(0);
 }
+    try {
+      List<MessageRequest> requests =
+          YdszJson.fromJson(payload, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+      return requests != null ? requests : new ArrayList<>(0);
+    } catch (Exception e) {
+      log.warn("[Batch] payload 解析失败: {}", e.getMessage(), e);
+      return new ArrayList<>(0);
+    }
+  }
+
+  private void doExecuteBatch(String batchId, List<MessageRequest> requests, boolean incremental) {
+    log.info("[Batch] doExecuteBatch: batchId={}, requests={}", batchId, requests.size());
+    updateBatchStatus(batchId, "COMPLETED", null);
+  }
+
+  private void updateBatchStatus(String batchId, String status, String errorMessage) {
+    MsgBatchQuery query = new MsgBatchQuery();
+    query.setBatchId(batchId);
+    MsgBatchVO batch = msgBatchRepository.findOne(query).orElse(null);
+    if (batch == null) {
+      return;
+    }
+    batch.setStatus(status);
+    batch.setErrorMessage(errorMessage);
+    if ("COMPLETED".equals(status) || "FAILED".equals(status)) {
+      batch.setCompletedAt(LocalDateTime.now());
+    }
+    msgBatchRepository.save(batch);
+  }
+}

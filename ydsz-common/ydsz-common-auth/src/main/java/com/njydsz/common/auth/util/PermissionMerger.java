@@ -1,5 +1,5 @@
 package com.njydsz.common.auth.util;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -128,11 +128,10 @@ public final class PermissionMerger {
      * @return 转换后的 RolePermissions
      */
     RolePermissions toRolePermissions() {
-      RolePermissions rp = new RolePermissions();
-      rp.setMenuPermissions(new HashSet<>(menuPerms));
-      rp.setButtonPermissions(new HashSet<>(buttonPerms));
-      rp.setApiPermissions(new HashSet<>(apiPerms));
-      return rp;
+      return new RolePermissions(
+          new HashSet<>(menuPerms),
+          new HashSet<>(buttonPerms),
+          new HashSet<>(apiPerms));
     }
   }
 }

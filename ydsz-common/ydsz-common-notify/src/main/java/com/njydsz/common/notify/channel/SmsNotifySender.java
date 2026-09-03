@@ -219,11 +219,11 @@ public class SmsNotifySender implements NotifyChannelStrategy {
           restTemplate.postForObject(
               smsConfig.getEndpoint(), new HttpEntity<>(body, headers), String.class);
       JsonNode root = YdszJson.readTree(response);
-      String code = root.path("Code").asString();
+      String code = root.path("Code").asText();
       if ("OK".equalsIgnoreCase(code)) {
-        return NotifySendResult.success(root.path("BizId").asString(), getChannel().getName());
+        return NotifySendResult.success(root.path("BizId").asText(), getChannel().getName());
       }
-      return NotifySendResult.failure(root.path("Message").asString(code), getChannel().getName());
+      return NotifySendResult.failure(root.path("Message").asText(code), getChannel().getName());
     } catch (Exception e) {
       LOG.error("[SmsNotifySender] 直接发送失败：phone={}, error={}", phone, e.getMessage(), e);
       return NotifySendResult.failure("发送异常: " + e.getMessage(), getChannel().getName());

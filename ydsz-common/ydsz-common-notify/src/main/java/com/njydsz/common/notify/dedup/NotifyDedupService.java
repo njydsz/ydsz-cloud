@@ -63,7 +63,7 @@ public class NotifyDedupService {
       return false;
     }
     String fingerprint = computeFingerprint(receiver, title, content);
-    int windowSeconds = properties.getDedup().getWindowSeconds();
+    long windowSeconds = properties.getDedup().getWindowSeconds();
     String redisKey = properties.getDedup().getRedisKeyPrefix() + fingerprint;
 
     if (redisStringOps != null) {

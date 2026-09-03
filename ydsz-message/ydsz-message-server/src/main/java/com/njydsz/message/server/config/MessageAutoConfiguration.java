@@ -59,16 +59,13 @@ public class MessageAutoConfiguration {
    * <p>监控指标通过 {@link com.njydsz.common.sentry.adapter.SentryMetricsAdapter} 桥接注册，
    * 不再直接注入 {@link MeterRegistry}，符合《云顶编码规范》第 27.2.1 节要求。
    *
-   * @param messageProperties 消息模块配置属性
    * @return CachedTemplateEngine 实例
    */
   @Bean
   @ConditionalOnMissingBean(TemplateEngine.class)
   @ConditionalOnClass(MeterRegistry.class)
-  public CachedTemplateEngine cachedTemplateEngine(MessageProperties messageProperties) {
-    int maxCacheSize = DEFAULT_TEMPLATE_CACHE_MAX_SIZE;
-    long expireAfterWriteMinutes = DEFAULT_TEMPLATE_CACHE_EXPIRE_MINUTES;
-    return new CachedTemplateEngine(maxCacheSize, expireAfterWriteMinutes);
+  public CachedTemplateEngine cachedTemplateEngine() {
+    return new CachedTemplateEngine(DEFAULT_TEMPLATE_CACHE_MAX_SIZE, DEFAULT_TEMPLATE_CACHE_EXPIRE_MINUTES);
   }
 
   /** 默认模板 AST 缓存最大容量 */

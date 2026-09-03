@@ -40,6 +40,18 @@ public class AuthFilterProperties {
   /** 是否开启权限校验，默认 false（仅校验 Token 不校验细粒度权限） */
   private boolean verifyPermission = false;
 
+  /**
+   * 获取是否开启细粒度权限校验（包装类型，供 AuthFilterConfiguration 调用）。
+   *
+   * <p>Lombok @Data 对 primitive boolean 生成 isXxx() 方法；此处显式提供 getVerifyPermission()，
+   * 与 AuthFilterProperties 其它 Boolean 风格 getter 命名保持一致。
+   *
+   * @return 是否校验权限
+   */
+  public Boolean getVerifyPermission() {
+    return verifyPermission;
+  }
+
   /** 仅校验 Token 但不校验权限的路径（开启 verify-permission 后生效） */
   private List<String> onlyVerifyToken = new ArrayList<>(4);
 }

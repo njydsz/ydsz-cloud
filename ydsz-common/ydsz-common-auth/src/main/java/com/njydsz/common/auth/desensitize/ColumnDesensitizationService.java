@@ -259,16 +259,6 @@ public class ColumnDesensitizationService {
     if (source == null || source.isEmpty()) {
       return;
     }
-
-    for (String table : source.getAllTables()) {
-      Set<String> columns = source.getColumns(table);
-      for (String column : columns) {
-        ColumnDesensitizationContext.DesensitizationRuleConfig config =
-            source.getRule(table, column);
-        if (config != null) {
-          target.addRule(table, column, config);
-        }
-      }
-    }
+    target.merge(source);
   }
 }

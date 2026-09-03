@@ -153,9 +153,49 @@ public class TenantProperties {
    */
   private Map<String, List<String>> tenantSharing = new HashMap<>(8);
 
+  /**
+   * per-tenant 数据源映射（ISOLATE_DB 模式）。
+   *
+   * <p>key=租户 ID，value=数据源 key（对应 Spring 的 Bean 名）。
+   */
+  private Map<String, String> datasourceMapping = new HashMap<>(8);
+
+  /** SQL 改写缓存配置（默认关闭）。 */
+  private SqlCache sqlCache = new SqlCache();
+
   // -----------------------------------------------------------------------
   // 内部类型定义
   // -----------------------------------------------------------------------
+
+  /**
+   * SQL 改写缓存配置。
+   *
+   * @author ydsz-team
+   * @since 26.09.01
+   */
+  @Data
+  public static class SqlCache {
+    /** 是否启用（默认 false）。 */
+    private boolean enabled = false;
+    /** 最大缓存条目数（默认 2000）。 */
+    private long maxSize = 2000L;
+    /** 未访问过期时间（分钟，默认 10）。 */
+    private long expireMinutes = 10L;
+
+    public SqlCache() {}
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public long getMaxSize() {
+      return maxSize;
+    }
+
+    public long getExpireMinutes() {
+      return expireMinutes;
+    }
+  }
 
   /**
    * 租户隔离模式枚举。
@@ -180,7 +220,6 @@ public class TenantProperties {
    * @author ydsz-team
    * @since 26.09.01
    */
-  @Data
   public static class TenantField {
     /** 数据库列名（必填）。 */
     private String column;
@@ -201,6 +240,38 @@ public class TenantProperties {
      */
     public TenantField(String column) {
       this.column = column;
+    }
+
+    public String getColumn() {
+      return column;
+    }
+
+    public void setColumn(String column) {
+      this.column = column;
+    }
+
+    public String getClaim() {
+      return claim;
+    }
+
+    public void setClaim(String claim) {
+      this.claim = claim;
+    }
+
+    public String getHeader() {
+      return header;
+    }
+
+    public void setHeader(String header) {
+      this.header = header;
+    }
+
+    public boolean isMultiValue() {
+      return multiValue;
+    }
+
+    public void setMultiValue(boolean multiValue) {
+      this.multiValue = multiValue;
     }
   }
 
@@ -246,11 +317,73 @@ public class TenantProperties {
   }
 
   /**
+   * 获取归一化的忽略表集合（全部小写）。
+   *
+   * @return 归一化后的表名集合（小写）
+   */
+  public Set<String> getNormalizedIgnoreTables() {
+    if (ignoreTables == null || ignoreTables.isEmpty()) {
+      return Collections.emptySet();
+    }
+    Set<String> normalized = new LinkedHashSet<>(ignoreTables.size());
+    for (String table : ignoreTables) {
+      if (table != null && !table.isBlank()) {
+        normalized.add(table.strip().toLowerCase());
+      }
+    }
+    return normalized;
+  }
+
+  /**
+   * 解析指定表使用的租户列名（per-table 覆盖优先，回退到缺省列名）。
+   *
+   * @param tableName 表名
+   * @return 列名，无覆盖时返回 null
+   */
+  public String resolveColumn(String tableName) {
+    if (tableColumnMapping == null || tableName == null) {
+      return null;
+    }
+    // 尝试精确匹配
+    String column = tableColumnMapping.get(tableName.toLowerCase());
+    if (column != null && !column.isBlank()) {
+      return column.strip();
+    }
+    // 兼容带 schema 前缀的表名
+    int dotIndex = tableName.lastIndexOf('.');
+    if (dotIndex > 0 && dotIndex < tableName.length() - 1) {
+      column = tableColumnMapping.get(tableName.substring(dotIndex + 1).toLowerCase());
+      if (column != null && !column.isBlank()) {
+        return column.strip();
+      }
+    }
+    return null;
+  }
+
+  /**
    * 获取跨租户共享映射。
    *
    * @return 跨租户共享映射（key=租户 ID，value=可访问源租户 ID 列表）
    */
   public Map<String, List<String>> getTenantSharing() {
     return tenantSharing != null ? tenantSharing : Collections.emptyMap();
+  }
+
+  /**
+   * 获取 per-tenant 数据源映射（ISOLATE_DB 模式）。
+   *
+   * @return 数据源 key 映射
+   */
+  public Map<String, String> getDatasourceMapping() {
+    return datasourceMapping != null ? datasourceMapping : Collections.emptyMap();
+  }
+
+  /**
+   * 获取 SQL 改写缓存配置。
+   *
+   * @return 缓存配置
+   */
+  public SqlCache getSqlCache() {
+    return sqlCache != null ? sqlCache : new SqlCache();
   }
 }

@@ -258,7 +258,7 @@ public final class AuthContextUtils {
       TenantContextHolder.clear();
       return;
     }
-    TenantContextHolder.set(TenantContext.of(tenantId));
+    TenantContextHolder.set(TenantContext.builder(tenantId).build());
   }
 
   // ==================== 清理 ====================
