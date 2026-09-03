@@ -178,18 +178,9 @@ public class BatchBusinessException extends BusinessException {
   }
 
   /**
-   * 获取总项数量（成功 + 失败）
+   * 获取总项数（成功数 + 失败数）
    *
-   * @return 总项数量
-   */
-  public int getTotalCount() {
-    return successItems.size() + failureItems.size();
-  }
-
-  /**
-   * 获取总项数量（成功 + 失败）
-   *
-   * @return 总项数量
+   * @return 总项数
    */
   public int getTotalCount() {
     return successItems.size() + failureItems.size();

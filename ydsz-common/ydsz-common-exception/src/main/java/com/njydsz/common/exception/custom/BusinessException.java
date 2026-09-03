@@ -130,6 +130,18 @@ public class BusinessException extends AbstractYdszException {
     init(exceptionCode, new Object[] {}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
   }
 
+  /**
+   * 使用错误码和消息键构造业务异常（供子类快速指定默认码/键）。
+   *
+   * @param code 错误码字符串
+   * @param key 国际化消息键
+   */
+  protected BusinessException(String code, String key) {
+    super();
+    initFields(code, key, new Object[] {});
+    initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+  }
+
   // ==================== 业务方法 ====================
 
   /**
