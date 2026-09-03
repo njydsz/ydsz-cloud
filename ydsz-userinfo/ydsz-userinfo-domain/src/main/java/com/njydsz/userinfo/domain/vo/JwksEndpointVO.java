@@ -25,6 +25,9 @@ import com.njydsz.common.json.YdszJson;
 @Slf4j
 public class JwksEndpointVO {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
   private static final String KTY_OCT = "oct";
   private static final String KTY_RSA = "RSA";
   private static final String USE_SIG = "sig";
@@ -42,7 +45,7 @@ public class JwksEndpointVO {
   }
 
   public String generateJwks() {
-    List<Map<String, Object>> keys = new ArrayList<>(16);
+    List<Map<String, Object>> keys = new ArrayList<>(CAPACITY);
 
     if (publicKeyPem != null && !publicKeyPem.isBlank()) {
       try {
@@ -56,13 +59,13 @@ public class JwksEndpointVO {
       keys.add(buildHmacKey(hmacSecret));
     }
 
-    Map<String, Object> jwks = new LinkedHashMap<>(16);
+    Map<String, Object> jwks = new LinkedHashMap<>(CAPACITY);
     jwks.put("keys", keys);
     return YdszJson.toJson(jwks);
   }
 
   private Map<String, Object> buildHmacKey(byte[] secretKey) {
-    Map<String, Object> key = new LinkedHashMap<>(16);
+    Map<String, Object> key = new LinkedHashMap<>(CAPACITY);
     key.put("kty", KTY_OCT);
     key.put("use", USE_SIG);
     key.put("alg", ALG_HS256);
@@ -78,7 +81,7 @@ public class JwksEndpointVO {
     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
     RSAPublicKey rsaPublicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(keySpec);
 
-    Map<String, Object> key = new LinkedHashMap<>(16);
+    Map<String, Object> key = new LinkedHashMap<>(CAPACITY);
     key.put("kty", KTY_RSA);
     key.put("use", USE_SIG);
     key.put("alg", ALG_RS256);

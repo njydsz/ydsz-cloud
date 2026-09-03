@@ -16,6 +16,9 @@ import lombok.Data;
 @Data
 public class DepartmentTreeVO {
 
+  /** 子部门列表初始容量 */
+  private static final int CHILDREN_CAPACITY = 4;
+
   /** 部门唯一标识 */
   private String id;
 
@@ -38,5 +41,5 @@ public class DepartmentTreeVO {
   private String status;
 
   /** 子部门列表 */
-  private List<DepartmentTreeVO> children = new ArrayList<>(4);
+  private List<DepartmentTreeVO> children = new ArrayList<>(CHILDREN_CAPACITY);
 }

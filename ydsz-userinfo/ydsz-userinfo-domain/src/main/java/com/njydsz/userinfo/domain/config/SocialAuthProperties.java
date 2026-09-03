@@ -43,11 +43,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.userinfo.social")
 public class SocialAuthProperties {
 
+  /** providers 配置 Map 初始容量 */
+  private static final int PROVIDERS_CAPACITY = 16;
+
   /** 社交认证全局开关（默认 false，需显式开启）。 */
   private boolean enabled = false;
 
   /** 各平台配置（key 为平台标识，如 enterprise_wechat/dingtalk/feishu）。 */
-  private Map<String, ProviderConfig> providers = new HashMap<>(16);
+  private Map<String, ProviderConfig> providers = new HashMap<>(PROVIDERS_CAPACITY);
 
   /**
    * 平台提供者配置。
