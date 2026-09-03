@@ -245,11 +245,14 @@ public final class RuleDslConverter {
     if (entry.getGrades() != null) {
       List<ScorecardDefinitionDTO.ScoreGrade> grades = new ArrayList<>(entry.getGrades().size());
       for (RuleDslEntry.GradeDsl g : entry.getGrades()) {
-        double min = (g.getRange() != null && g.getRange().size() >= 1) ? g.getRange().get(0) : 0.0;
-        double max =
+        BigDecimal min =
+            (g.getRange() != null && g.getRange().size() >= 1)
+                ? new BigDecimal(g.getRange().get(0).toString())
+                : BigDecimal.ZERO;
+        BigDecimal max =
             (g.getRange() != null && g.getRange().size() >= 2)
-                ? g.getRange().get(1)
-                : Double.MAX_VALUE;
+                ? new BigDecimal(g.getRange().get(1).toString())
+                : new BigDecimal(String.valueOf(Double.MAX_VALUE));
         grades.add(
             ScorecardDefinitionDTO.ScoreGrade.builder()
                 .label(g.getLabel())

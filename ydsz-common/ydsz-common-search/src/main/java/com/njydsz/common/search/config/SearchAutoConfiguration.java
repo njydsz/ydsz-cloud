@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
@@ -186,19 +189,26 @@ public class SearchAutoConfiguration {
   }
 
   // ==================== 线程池装配 ====================
+  // 优先通过 ydz-common-thread 的 InternalExecutorFactory 统一管理线程池生命周期（队列、拒绝策略、线程命名），
+  // 未引入 common-thread 时回退为传统自创建线程池。
 
   /**
    * 搜索执行线程池 — 供 {@link UnifiedSearchService} 使用。
    *
-   * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方注入自定义线程池覆盖。 当 classpath 存在 {@code
-   * ydsz-common-thread} 且配置了 {@code ydsz.thread.pools.searchExecutor} 时，业务方应注入对应的统一管理线程池。
+   * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方注入自定义线程池覆盖。
    *
    * @param properties 搜索配置
    * @return 搜索执行线程池
    */
   @Bean("searchExecutor")
   @ConditionalOnMissingBean(name = "searchExecutor")
-  public ThreadPoolTaskExecutor searchExecutor(SearchProperties properties) {
+  public ThreadPoolTaskExecutor searchExecutor(
+      SearchProperties properties,
+      ObjectProvider<InternalExecutorFactory> factoryProvider) {
+    InternalExecutorFactory factory = factoryProvider.getIfAvailable();
+    if (factory != null) {
+      return createManagedSearchExecutor(properties, factory);
+    }
     return UnifiedSearchService.createDefaultSearchExecutor(properties);
   }
 
@@ -212,8 +222,50 @@ public class SearchAutoConfiguration {
    */
   @Bean("indexSyncExecutor")
   @ConditionalOnMissingBean(name = "indexSyncExecutor")
-  public ThreadPoolTaskExecutor indexSyncExecutor(SearchProperties properties) {
+  public ThreadPoolTaskExecutor indexSyncExecutor(
+      SearchProperties properties,
+      ObjectProvider<InternalExecutorFactory> factoryProvider) {
+    InternalExecutorFactory factory = factoryProvider.getIfAvailable();
+    if (factory != null) {
+      return createManagedIndexSyncExecutor(properties, factory);
+    }
     return IndexSyncService.createDefaultIndexSyncExecutor(properties);
+  }
+
+  /**
+   * 基于 {@link InternalExecutorFactory} 创建受管理的搜索线程池。
+   *
+   * <p>{@link InternalExecutorFactory#createThreadPool} 负责队列策略、拒绝策略与线程命名生命周期，
+   * 返回的 {@link ExecutorService} 通过 {@link DelegatingTaskExecutor} 适配为 Spring {@link ThreadPoolTaskExecutor}，
+   * 保证 {@code @PreDestroy} 关闭时触发 ManagedExecutorService 的优雅停机钩子。
+   *
+   * @param properties 搜索配置
+   * @param factory 线程池统一工厂（由 ydz-common-thread 提供）
+   * @return 适配后的 ThreadPoolTaskExecutor
+   */
+  private ThreadPoolTaskExecutor createManagedSearchExecutor(
+      SearchProperties properties, InternalExecutorFactory factory) {
+    int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
+    int maxSize = Math.max(4, coreSize * 2);
+    ExecutorService internal =
+        factory.createThreadPool("searchExecutor", coreSize, maxSize, 60, 256, false);
+    return DelegatingTaskExecutor.wrap(internal);
+  }
+
+  /**
+   * 基于 {@link InternalExecutorFactory} 创建受管理的索引同步线程池。
+   *
+   * @param properties 搜索配置
+   * @param factory 线程池统一工厂
+   * @return 适配后的 ThreadPoolTaskExecutor
+   */
+  private ThreadPoolTaskExecutor createManagedIndexSyncExecutor(
+      SearchProperties properties, InternalExecutorFactory factory) {
+    int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
+    int maxSize = Math.max(4, coreSize * 2);
+    ExecutorService internal =
+        factory.createThreadPool("indexSyncExecutor", coreSize, maxSize, 60, 512, false);
+    return DelegatingTaskExecutor.wrap(internal);
   }
 
   // ==================== 核心服务装配 ====================

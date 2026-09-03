@@ -1,5 +1,6 @@
 package com.njydsz.literule.web.controller;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -322,7 +323,7 @@ public class CEPController {
     vo.setRuleCode(p.getRuleCode());
     vo.setName(p.getName());
     vo.setWindow(p.getWindow());
-    vo.setThreshold(p.getThreshold());
+    vo.setThreshold(BigDecimal.valueOf(p.getThreshold()));
     vo.setEventType(p.getEventType());
     vo.setFilter(p.getFilter());
     vo.setDescription(p.getDescription());
@@ -339,7 +340,7 @@ public class CEPController {
             ? null
             : h.getMatchedEvents().stream().map(e -> (Object) e).toList());
     vo.setHitAt(h.getHitAt());
-    vo.setMetric(h.getMetric());
+    vo.setMetric(BigDecimal.valueOf(h.getMetric()));
     vo.setContext(h.getContext());
     return vo;
   }
