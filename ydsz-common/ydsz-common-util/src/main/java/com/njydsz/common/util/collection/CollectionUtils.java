@@ -401,7 +401,7 @@ public final class CollectionUtils {
     if (isEmpty(source)) {
       return new ArrayList<>();
     }
-    List<List<T>> result = new ArrayList<>();
+    List<List<T>> result = new ArrayList<>((source.size() + batchSize - 1) / batchSize);
     List<T> currentBatch = new ArrayList<>(batchSize);
     for (T item : source) {
       currentBatch.add(item);
@@ -466,7 +466,7 @@ public final class CollectionUtils {
       return new ArrayList<>();
     }
     Set<K> seen = new LinkedHashSet<>();
-    List<T> result = new ArrayList<>();
+    List<T> result = new ArrayList<>(source.size());
     for (T item : source) {
       if (seen.add(keyMapper.apply(item))) {
         result.add(item);

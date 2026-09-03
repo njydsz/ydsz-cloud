@@ -127,7 +127,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     for (T node : nodeList) {
       nodeMap.put(node.getId(), node);
     }
-    List<T> roots = new ArrayList<>();
+    List<T> roots = new ArrayList<>(nodeList.size());
     Comparator<T> comparator = sortComparator != null ? sortComparator : defaultSortComparator();
     for (T node : nodeList) {
       ID parentId = node.getParentId();
@@ -169,7 +169,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     for (T node : flatList) {
       nodeMap.put(idExtractor.apply(node), node);
     }
-    List<T> roots = new ArrayList<>();
+    List<T> roots = new ArrayList<>(flatList.size());
     Comparator<T> comparator = Comparator.comparing(
         sortExtractor, Comparator.nullsLast(Integer::compareTo));
     for (T node : flatList) {

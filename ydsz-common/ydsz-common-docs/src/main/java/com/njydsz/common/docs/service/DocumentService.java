@@ -274,7 +274,10 @@ public class DocumentService {
     try {
       tempFile = tempFileManager.createAndWrite("ydsz-docs-sec-", ".tmp", inputStream);
 
-      SecurityScanResult scanResult = scanSecurity(Files.newInputStream(tempFile), fileName);
+      SecurityScanResult scanResult;
+      try (InputStream scanStream = Files.newInputStream(tempFile)) {
+        scanResult = scanSecurity(scanStream, fileName);
+      }
       if (properties.isBlockOnHighRisk()
           && scanResult.getSecurityLevel() != null
           && scanResult.getSecurityLevel().ordinal() >= SecurityLevel.HIGH.ordinal()) {
@@ -289,7 +292,9 @@ public class DocumentService {
             .elapsed(Duration.ZERO)
             .build();
       }
-      return parse(Files.newInputStream(tempFile), fileName, options);
+      try (InputStream parseStream = Files.newInputStream(tempFile)) {
+        return parse(parseStream, fileName, options);
+      }
     } catch (Exception e) {
       return DocumentParseResult.builder()
           .success(false)

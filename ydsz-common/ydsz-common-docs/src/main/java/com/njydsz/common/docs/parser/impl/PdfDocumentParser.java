@@ -99,65 +99,61 @@ public class PdfDocumentParser implements DocumentParser {
       // 写入临时文件，PDFBox 3.x 优先从文件加载以减少内存占用
       tempFile = tempFileManager.createAndWrite("ydsz-docs-pdf-", ".pdf", inputStream);
 
-      PDDocument document = Loader.loadPDF(tempFile.toFile());
+      try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {
+        // 检查加密
+        if (document.isEncrypted()) {
+          throw new DocumentException(
+              DocumentExceptionCode.DOCUMENT_ENCRYPTED, "PDF 文档已加密，需要密码: " + fileName);
+        }
 
-      // 检查加密
-      if (document.isEncrypted()) {
-        document.close();
-        throw new DocumentException(
-            DocumentExceptionCode.DOCUMENT_ENCRYPTED, "PDF 文档已加密，需要密码: " + fileName);
-      }
+        int pageCount = document.getNumberOfPages();
 
-      int pageCount = document.getNumberOfPages();
+        // 页数限制
+        if (opts.getMaxPages() > 0 && pageCount > opts.getMaxPages()) {
+          pageCount = opts.getMaxPages();
+        }
 
-      // 页数限制
-      if (opts.getMaxPages() > 0 && pageCount > opts.getMaxPages()) {
-        pageCount = opts.getMaxPages();
-      }
+        PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setStartPage(1);
+        stripper.setEndPage(pageCount);
 
-      PDFTextStripper stripper = new PDFTextStripper();
-      stripper.setStartPage(1);
-      stripper.setEndPage(pageCount);
+        String fullText = stripper.getText(document);
 
-      String fullText = stripper.getText(document);
-
-      // 根据 profile 决定输出结构化程度
-      List<DocumentSection> sections = new ArrayList<>(16);
-      if (profile != ParseProfile.TEXT_ONLY) {
-        // 单次全量抽取后按换页符 \f 分割，保留页码信息（O(1) 抽取替代 O(N) 遍历）
-        if (fullText != null && !fullText.isEmpty()) {
-          String[] pageTexts = fullText.split("\f", -1);
-          for (int i = 0; i < pageTexts.length && i < pageCount; i++) {
-            String pageText = pageTexts[i];
-            if (pageText != null && !pageText.isBlank()) {
-              sections.add(
-                  DocumentSection.builder()
-                      .type("paragraph")
-                      .content(pageText.trim())
-                      .pageNumber(i + 1)
-                      .build());
+        // 根据 profile 决定输出结构化程度
+        List<DocumentSection> sections = new ArrayList<>(16);
+        if (profile != ParseProfile.TEXT_ONLY) {
+          // 单次全量抽取后按换页符 \f 分割，保留页码信息（O(1) 抽取替代 O(N) 遍历）
+          if (fullText != null && !fullText.isEmpty()) {
+            String[] pageTexts = fullText.split("\f", -1);
+            for (int i = 0; i < pageTexts.length && i < pageCount; i++) {
+              String pageText = pageTexts[i];
+              if (pageText != null && !pageText.isBlank()) {
+                sections.add(
+                    DocumentSection.builder()
+                        .type("paragraph")
+                        .content(pageText.trim())
+                        .pageNumber(i + 1)
+                        .build());
+              }
             }
           }
         }
+
+        // 提取元数据（TEXT_ONLY 模式可跳过）
+        DocumentMetadata metadata = null;
+        if (profile != ParseProfile.TEXT_ONLY) {
+          metadata = extractMetadata(document, fileName, opts);
+        }
+
+        return DocumentContent.builder()
+            .text(fullText)
+            .sections(sections)
+            .images(List.of())
+            .metadata(metadata)
+            .totalChars(fullText != null ? fullText.length() : 0)
+            .totalPages(pageCount)
+            .build();
       }
-
-      // 提取元数据（TEXT_ONLY 模式可跳过）
-      DocumentMetadata metadata = null;
-      if (profile != ParseProfile.TEXT_ONLY) {
-        metadata = extractMetadata(document, fileName, opts);
-      }
-
-      document.close();
-
-      return DocumentContent.builder()
-          .text(fullText)
-          .sections(sections)
-          .images(List.of())
-          .metadata(metadata)
-          .totalChars(fullText != null ? fullText.length() : 0)
-          .totalPages(pageCount)
-          .build();
-
     } catch (DocumentException e) {
       throw e;
     } catch (IOException e) {
@@ -199,32 +195,29 @@ public class PdfDocumentParser implements DocumentParser {
     try {
       tempFile = tempFileManager.createAndWrite("ydsz-docs-pdf-stream-", ".pdf", inputStream);
 
-      PDDocument document = Loader.loadPDF(tempFile.toFile());
+      try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {
+        if (document.isEncrypted()) {
+          throw new DocumentException(
+              DocumentExceptionCode.DOCUMENT_ENCRYPTED, "PDF 文档已加密: " + fileName);
+        }
 
-      if (document.isEncrypted()) {
-        document.close();
-        throw new DocumentException(
-            DocumentExceptionCode.DOCUMENT_ENCRYPTED, "PDF 文档已加密: " + fileName);
-      }
+        int pageCount = document.getNumberOfPages();
+        PDFTextStripper stripper = new PDFTextStripper();
 
-      int pageCount = document.getNumberOfPages();
-      PDFTextStripper stripper = new PDFTextStripper();
-
-      for (int i = 0; i < pageCount; i++) {
-        try {
-          stripper.setStartPage(i + 1);
-          stripper.setEndPage(i + 1);
-          String pageText = stripper.getText(document);
-          if (pageText != null && !pageText.isBlank()) {
-            consumer.accept(new PageContent(i + 1, pageText.trim()));
+        for (int i = 0; i < pageCount; i++) {
+          try {
+            stripper.setStartPage(i + 1);
+            stripper.setEndPage(i + 1);
+            String pageText = stripper.getText(document);
+            if (pageText != null && !pageText.isBlank()) {
+              consumer.accept(new PageContent(i + 1, pageText.trim()));
+            }
+          } catch (Exception e) {
+            log.warn("[PdfDocumentParser] 第 {} 页流式抽取失败: {}", i + 1, e.getMessage());
+            // 单页失败不中断后续页面
           }
-        } catch (Exception e) {
-          log.warn("[PdfDocumentParser] 第 {} 页流式抽取失败: {}", i + 1, e.getMessage());
-          // 单页失败不中断后续页面
         }
       }
-
-      document.close();
     } catch (DocumentException e) {
       throw e;
     } catch (Exception e) {

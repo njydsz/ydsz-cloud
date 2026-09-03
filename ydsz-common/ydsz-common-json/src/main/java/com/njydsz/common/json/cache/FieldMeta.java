@@ -186,10 +186,10 @@ public final class FieldMeta {
   private final transient DateTimeFormatter cachedFormatter;
 
   /** 序列化类型码查找表（避免 computeSerializeTypeCode 的 if-else 链） */
-  private static final Map<Class<?>, Integer> SERIALIZE_TYPE_CODE_MAP = new HashMap<>();
+  private static final Map<Class<?>, Integer> SERIALIZE_TYPE_CODE_MAP = new HashMap<>(32);
 
   /** 字段类型码查找表（避免 computeFieldTypeCode 的 if-else 链） */
-  private static final Map<Class<?>, FieldTypeCode> FIELD_TYPE_CODE_MAP = new HashMap<>();
+  private static final Map<Class<?>, FieldTypeCode> FIELD_TYPE_CODE_MAP = new HashMap<>(64);
 
   static {
     SERIALIZE_TYPE_CODE_MAP.put(String.class, TYPE_CODE_STRING);

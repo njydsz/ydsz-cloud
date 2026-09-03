@@ -7,14 +7,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.YdszCache;
@@ -23,6 +23,7 @@ import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.util.TemplateFilterUtil;
 
@@ -46,12 +47,16 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  *   <li>缓存命中率、容量等指标自动暴露到 Micrometer {@code ydsz.message.template.cache.*}
  * </ul>
  *
+ * <p><b>符合《云顶编码规范》第 27.2.1 节</b>：继承 {@link SentryMetricsAdapter} 桥接指标注册，
+ * 不直接操作 {@link MeterRegistry}。监控指标通过 {@code MetricsCollector} SPI 统一上报。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @Component
-public class CachedTemplateEngine implements TemplateEngine {
+@ConditionalOnClass(MeterRegistry.class)
+public class CachedTemplateEngine extends SentryMetricsAdapter implements TemplateEngine {
   /** if/else 正则 false 分支组 */
   private static final int IF_ELSE_GROUP_FALSE = 3;
 
@@ -103,12 +108,11 @@ public class CachedTemplateEngine implements TemplateEngine {
    *
    * @param maxCacheSize 最大缓存容量
    * @param expireAfterWriteMinutes 写入后过期时间（分钟）
-   * @param meterRegistry 指标注册器（可选，未注入时不注册监控指标）
    */
   public CachedTemplateEngine(
       int maxCacheSize,
-      long expireAfterWriteMinutes,
-      @Autowired(required = false) MeterRegistry meterRegistry) {
+      long expireAfterWriteMinutes) {
+    super("ydsz_message_template_");
     this.astCache =
         YdszCache.<String, TemplateAst>newBuilder()
             .name(CACHE_NAME)
@@ -136,26 +140,22 @@ public class CachedTemplateEngine implements TemplateEngine {
   /**
    * 注册 Micrometer 监控指标。
    *
-   * @param meterRegistry Micrometer 指标注册器，用于注册缓存容量、命中率、驱逐数等监控指标
+   * <p>通过 {@link SentryMetricsAdapter#gauge(String, Supplier, String...)} 注册动态 Gauge，
+   * 符合《云顶编码规范》第 27.2.1 节「禁止直接操作 MeterRegistry」的强制要求。
+   * 使用 {@code ydsz.message.template.cache.*} 指标前缀。
    */
   @PostConstruct
-  public void registerMetrics(@Autowired(required = false) MeterRegistry meterRegistry) {
-    if (meterRegistry != null) {
-      Tags tags = Tags.of("engine", "template.ast");
-      meterRegistry.gauge(
-          "ydsz.message.template.cache.size", tags, astCache, c -> (double) c.estimatedSize());
-      meterRegistry.gauge(
-          "ydsz.message.template.cache.hit.rate",
-          tags,
-          astCache,
-          c -> c.getHitRate());
-      meterRegistry.gauge(
-          "ydsz.message.template.cache.eviction.count",
-          tags,
-          astCache,
-          c -> (double) c.getStats().getEvictionCount());
-      log.info("[TemplateAst] 缓存监控指标已注册");
-    }
+  public void registerMetrics() {
+    // 注册缓存容量 Gauge（动态 Supplier）
+    gauge("cache.size", () -> (double) astCache.estimatedSize(),
+        "engine", "template.ast");
+    // 注册缓存命中率 Gauge（动态 Supplier）
+    gauge("cache.hit.rate", () -> astCache.getHitRate(),
+        "engine", "template.ast");
+    // 注册缓存驱逐数 Gauge（动态 Supplier）
+    gauge("cache.eviction.count", () -> (double) astCache.getStats().getEvictionCount(),
+        "engine", "template.ast");
+    log.info("[TemplateAst] 缓存监控指标已注册（通过 SentryMetricsAdapter 桥接）");
   }
 
   @Override

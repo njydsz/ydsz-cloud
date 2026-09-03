@@ -90,9 +90,8 @@ public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
    */
   private void addPdfWatermarkPage(PDDocument document, PDPage page, String watermarkText)
       throws IOException {
-    PDPageContentStream contentStream =
-        new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true);
-    try {
+    try (PDPageContentStream contentStream =
+        new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true)) {
       contentStream.setFont(
           new PDType1Font(Standard14Fonts.FontName.HELVETICA), WATERMARK_FONT_SIZE);
       float pageSize = page.getMediaBox().getHeight();
@@ -101,8 +100,6 @@ public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
       contentStream.newLineAtOffset(WATERMARK_X_OFFSET, pageSize / WATERMARK_Y_RATIO);
       contentStream.showText(watermarkText);
       contentStream.endText();
-    } finally {
-      contentStream.close();
     }
   }
 }
