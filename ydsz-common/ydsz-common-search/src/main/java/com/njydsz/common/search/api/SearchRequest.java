@@ -117,4 +117,26 @@ public class SearchRequest implements Serializable {
   @Schema(description = "是否仅搜索标题")
   @Builder.Default
   private boolean titleOnly = false;
+
+  /** 游标（用于 keyset 分页） */
+  @Schema(description = "游标（用于 keyset 分页）")
+  private String cursor;
+
+  // ==================== 手动 Getter/Setter（Lombok 兼容 fallback） ====================
+
+  public String getCursor() {
+    return cursor;
+  }
+
+  public void setCursor(String cursor) {
+    this.cursor = cursor;
+  }
+
+  public List<SearchAggregation> getAggregations() {
+    return aggregations;
+  }
+
+  public void setAggregations(List<SearchAggregation> aggregations) {
+    this.aggregations = aggregations;
+  }
 }

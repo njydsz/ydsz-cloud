@@ -76,4 +76,26 @@ public class SearchHit implements Serializable {
   /** 更新时间（ISO 格式字符串） */
   @Schema(description = "更新时间")
   private String updatedAt;
+
+  // ==================== 手动 Setter（Lombok 兼容 fallback） ====================
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public void setTags(List<String> tags) {
+    this.tags = tags;
+  }
+
+  public void setCreatedAt(String createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public void setUpdatedAt(String updatedAt) {
+    this.updatedAt = updatedAt;
+  }
+
+  public void setHighlight(String highlight) {
+    this.highlight = highlight;
+  }
 }

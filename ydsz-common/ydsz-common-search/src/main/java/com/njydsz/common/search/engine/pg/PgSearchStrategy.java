@@ -678,9 +678,13 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
   }
 
   private List<SearchAggregation> executeAggregations(
-      StringBuilder where, List<Object> params, List<String> aggFields) {
+      StringBuilder where, List<Object> params, List<SearchAggregation> aggConfigs) {
     List<SearchAggregation> aggregations = new ArrayList<>(16);
-    for (String field : aggFields) {
+    for (SearchAggregation aggConfig : aggConfigs) {
+      String field = aggConfig.getField();
+      if (field == null || field.isBlank()) {
+        continue;
+      }
       try {
         String safeField = sanitizeColumnName(field);
         String sql =
