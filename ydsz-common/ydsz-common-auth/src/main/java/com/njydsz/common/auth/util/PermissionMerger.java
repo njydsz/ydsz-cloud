@@ -134,3 +134,5 @@ public final class PermissionMerger {
       rp.setApiPermissions(new HashSet<>(apiPerms));
       return rp;
     }
+  }
+}

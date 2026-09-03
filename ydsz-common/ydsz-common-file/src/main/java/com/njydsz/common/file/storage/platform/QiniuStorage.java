@@ -401,9 +401,8 @@ public class QiniuStorage extends AbstractFileStorage {
 
       String upToken = auth.uploadToken(bucketName);
       ApiUploadV2CompleteUpload.Request request =
-          new ApiUploadV2CompleteUpload.Request(bucketName, upToken, uploadId)
-              .setKey(objectName)
-              .setParts(parts);
+          new ApiUploadV2CompleteUpload.Request(null, upToken, uploadId, parts)
+              .setKey(objectName);
       completeUploadApi.request(request);
       multipartContextStore.delete(uploadId);
       log.info(
@@ -428,7 +427,7 @@ public class QiniuStorage extends AbstractFileStorage {
     try {
       String upToken = auth.uploadToken(bucketName);
       ApiUploadV2AbortUpload.Request request =
-          new ApiUploadV2AbortUpload.Request(bucketName, upToken, uploadId).setKey(objectName);
+          new ApiUploadV2AbortUpload.Request(null, upToken, uploadId).setKey(objectName);
       abortUploadApi.request(request);
       multipartContextStore.delete(uploadId);
       log.info("[Qiniu] abort multipart upload, bucket={}, object={}, uploadId={}", bucketName, objectName, uploadId);

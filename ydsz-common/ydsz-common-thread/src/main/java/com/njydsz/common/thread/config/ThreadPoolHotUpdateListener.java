@@ -333,3 +333,5 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
     public long getCompletedTaskCount() {
       return completedTaskCount;
     }
+  }
+}
