@@ -237,13 +237,21 @@ public class WriteStyleHandler {
     style.setBorderRight(border);
 
     Short topColor = resolveColor(s.borderTopColor());
-    if (topColor != null) style.setTopBorderColor(topColor);
+    if (topColor != null) {
+      style.setTopBorderColor(topColor);
+    }
     Short bottomColor = resolveColor(s.borderBottomColor());
-    if (bottomColor != null) style.setBottomBorderColor(bottomColor);
+    if (bottomColor != null) {
+      style.setBottomBorderColor(bottomColor);
+    }
     Short leftColor = resolveColor(s.borderLeftColor());
-    if (leftColor != null) style.setLeftBorderColor(leftColor);
+    if (leftColor != null) {
+      style.setLeftBorderColor(leftColor);
+    }
     Short rightColor = resolveColor(s.borderRightColor());
-    if (rightColor != null) style.setRightBorderColor(rightColor);
+    if (rightColor != null) {
+      style.setRightBorderColor(rightColor);
+    }
   }
 
   /**

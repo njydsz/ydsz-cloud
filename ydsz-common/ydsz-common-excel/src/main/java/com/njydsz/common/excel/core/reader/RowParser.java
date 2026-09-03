@@ -33,7 +33,6 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  *
  * @author ydsz-team
  * @version 26.09.01
- * @see ExcelReader
  * @since 26.09.01
  */
 public class RowParser {
@@ -177,18 +176,18 @@ public class RowParser {
    * 设置字段值
    */
   private void setFieldValue(Object instance, ColumnMetadata col, Object value) {
-    if (col.setter != null) {
-      col.setter.set(instance, value);
-    } else {
-      Field field = resolveField(instance.getClass(), col.columnIndex);
-      if (field != null) {
-        try {
+    try {
+      if (col.setter != null) {
+        col.setter.set(instance, value);
+      } else {
+        Field field = resolveField(instance.getClass(), col.columnIndex);
+        if (field != null) {
           field.setAccessible(true);
           field.set(instance, value);
-        } catch (IllegalAccessException e) {
-          LOG.debug("无法设置字段值: {}", e.getMessage());
         }
       }
+    } catch (Exception e) {
+      LOG.debug("无法设置字段值: {}", e.getMessage());
     }
   }
 
@@ -211,6 +210,6 @@ public class RowParser {
    * 创建实例
    */
   private Object createInstance(Class<?> clazz) throws Exception {
-    return ReflectCache.getBeanConstructor(clazz).newInstance();
+    return ReflectCache.getInstantiator(clazz).newInstance();
   }
 }

@@ -1,4 +1,5 @@
-package com.njydsz.common.domain.query;.query
+package com.njydsz.common.domain.query;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.json.annotation.JsonIgnore;
 
 import static lombok.AccessLevel.PROTECTED;
 
@@ -63,3 +63,40 @@ public class PageQuery extends BaseQuery {
 
   /** 排序项列表（结构化 OrderItem）。 */
   @Builder.Default private List<OrderItem> orderItems = new ArrayList<>(16);
+
+  /**
+   * 获取排序项列表，为 Lombok @Builder.Default 提供编码访问入口。
+   *
+   * @return 排序项列表
+   */
+  public List<OrderItem> getOrderItems() {
+    return orderItems;
+  }
+
+  /**
+   * 设置排序项列表，为 Lombok @Builder.Default 提供编码赋值入口。
+   *
+   * @param orderItems 排序项列表
+   */
+  public void setOrderItems(List<OrderItem> orderItems) {
+    this.orderItems = orderItems != null ? orderItems : new ArrayList<>(16);
+  }
+
+  /**
+   * 获取查询偏移量（从 0 开始），用于 SQL 分页。
+   *
+   * @return 偏移量
+   */
+  public int getOffset() {
+    return (pageNum - 1) * pageSize;
+  }
+
+  /**
+   * 获取 LIMIT 子句的 limit 值（同 pageSize）。
+   *
+   * @return 每页条数
+   */
+  public int getLimit() {
+    return pageSize;
+  }
+}

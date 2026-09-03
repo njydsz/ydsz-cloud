@@ -1,18 +1,14 @@
-package com.njydsz.common.domain.tree;.tree
+package com.njydsz.common.domain.tree;
+
 import java.io.Serializable;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * 树形结构构建器（轻量版）。
@@ -126,3 +122,72 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
   public List<T> build() {
     if (nodeList.isEmpty()) {
       return new ArrayList<>(0);
+    }
+    Map<ID, T> nodeMap = new HashMap<>(nodeList.size());
+    for (T node : nodeList) {
+      nodeMap.put(node.getId(), node);
+    }
+    List<T> roots = new ArrayList<>();
+    Comparator<T> comparator = sortComparator != null ? sortComparator : defaultSortComparator();
+    for (T node : nodeList) {
+      ID parentId = node.getParentId();
+      if (parentId == null || parentId.equals(rootId)) {
+        roots.add(node);
+      } else {
+        T parent = nodeMap.get(parentId);
+        if (parent != null) {
+          parent.addChild(node);
+        }
+      }
+    }
+    roots.sort(comparator);
+    return roots;
+  }
+
+  /**
+   * 静态便捷方法，支持不继承 TreeNode 的 VO 类构建树。
+   *
+   * @param flatList 扁平列表
+   * @param idExtractor ID 提取器
+   * @param parentIdExtractor 父 ID 提取器
+   * @param childrenSetter 子节点设置器
+   * @param sortExtractor 排序字段提取器
+   * @param <T> VO 类型
+   * @param <ID> ID 类型
+   * @return 构建完成的根节点列表
+   */
+  public static <T, ID> List<T> buildSimple(
+      List<T> flatList,
+      Function<T, ID> idExtractor,
+      Function<T, ID> parentIdExtractor,
+      BiConsumer<T, List<T>> childrenSetter,
+      Function<T, Integer> sortExtractor) {
+    if (flatList == null || flatList.isEmpty()) {
+      return new ArrayList<>(0);
+    }
+    Map<ID, T> nodeMap = new HashMap<>(flatList.size());
+    for (T node : flatList) {
+      nodeMap.put(idExtractor.apply(node), node);
+    }
+    List<T> roots = new ArrayList<>();
+    Comparator<T> comparator = Comparator.comparing(
+        sortExtractor, Comparator.nullsLast(Integer::compareTo));
+    for (T node : flatList) {
+      ID parentId = parentIdExtractor.apply(node);
+      if (parentId == null) {
+        roots.add(node);
+      } else {
+        T parent = nodeMap.get(parentId);
+        if (parent != null) {
+          List<T> children = parent.getChildren() != null
+              ? parent.getChildren()
+              : new ArrayList<>();
+          children.add(node);
+          childrenSetter.accept(parent, children);
+        }
+      }
+    }
+    roots.sort(comparator);
+    return roots;
+  }
+}
