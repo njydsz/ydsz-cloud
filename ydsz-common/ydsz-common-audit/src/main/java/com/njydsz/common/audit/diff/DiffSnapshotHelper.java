@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * 变更 diff 快照计算器 —— 计算操作前后的字段级差异。
@@ -151,12 +152,21 @@ public final class DiffSnapshotHelper {
     @Builder.Default
     private List<String> removedFields = new ArrayList<>(4);
 
-    /** 构建空 diff 结果 */
+    /**
+     * 构建空 diff 结果。
+     *
+     * @return 无任何字段变更的空 DiffResult
+     */
     public static DiffResult empty() {
       return new DiffResult();
     }
 
-    /** 全新创建：所有 after 字段视为新增 */
+    /**
+     * 全新创建：所有 after 字段视为新增。
+     *
+     * @param afterJson 创建后对象的 JSON 快照
+     * @return 仅含新增字段的 DiffResult
+     */
     public static DiffResult create(String afterJson) {
       DiffResult r = new DiffResult();
       Map<String, Object> after = parseJson(afterJson);
@@ -164,7 +174,12 @@ public final class DiffSnapshotHelper {
       return r;
     }
 
-    /** 完全删除：所有 before 字段视为移除 */
+    /**
+     * 完全删除：所有 before 字段视为移除。
+     *
+     * @param beforeJson 删除前对象的 JSON 快照
+     * @return 仅含移除字段的 DiffResult
+     */
     public static DiffResult delete(String beforeJson) {
       DiffResult r = new DiffResult();
       Map<String, Object> before = parseJson(beforeJson);
@@ -188,9 +203,10 @@ public final class DiffSnapshotHelper {
       @Schema(description = "变更前值")
       private String old;
 
-      /** 变更后值 */
+      /** 变更后值（序列化键保持为 "new"，兼容既有审计日志格式） */
       @Schema(description = "变更后值")
-      private String _new;
+      @JsonProperty("new")
+      private String newValue;
     }
   }
 }
