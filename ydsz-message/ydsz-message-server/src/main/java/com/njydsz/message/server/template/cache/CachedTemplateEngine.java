@@ -11,11 +11,8 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.listener.RemovalCause;
@@ -53,7 +50,6 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  * @since 26.09.01
  */
 @Slf4j
-@ConditionalOnClass(MeterRegistry.class)
 public class CachedTemplateEngine extends SentryMetricsAdapter implements TemplateEngine {
   /** if/else 正则 false 分支组 */
   private static final int IF_ELSE_GROUP_FALSE = 3;

@@ -2,8 +2,6 @@ package com.njydsz.agent.server.metrics;
 
 import java.util.concurrent.TimeUnit;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import com.njydsz.agent.domain.gateway.CacheMetricsRecorder;
 import com.njydsz.agent.domain.gateway.LlmException;
@@ -33,7 +31,6 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * @author ydsz-team
  * @since 26.09.01
  */
-@ConditionalOnClass(MeterRegistry.class)
 public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRecorder {
 
   /** LLM 调用次数指标名 */

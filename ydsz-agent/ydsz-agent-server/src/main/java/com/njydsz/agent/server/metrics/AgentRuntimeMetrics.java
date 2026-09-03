@@ -3,8 +3,6 @@ package com.njydsz.agent.server.metrics;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
@@ -44,7 +42,6 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * @author ydsz-team
  * @since 26.09.01
  */
-@ConditionalOnClass(MeterRegistry.class)
 public class AgentRuntimeMetrics extends SentryMetricsAdapter {
 
   // -----------------------------------------------------------------------

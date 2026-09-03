@@ -8,10 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -57,7 +55,6 @@ import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
  */
 @Slf4j
 @Component("cronjobMetrics")
-@ConditionalOnClass(MeterRegistry.class)
 public class CronjobMetrics extends SentryMetricsAdapter {
   /** CPU 高负载权重 */
   private static final double CPU_WEIGHT_HIGH = 0.5;

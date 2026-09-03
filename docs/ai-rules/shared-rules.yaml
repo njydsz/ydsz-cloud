@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.02"
-  source: "docs/云顶编码规范.md v1.0.5"
-  last_synced: "2026-09-02"
-  last_updated: "2026-09-02（新增 YDIZ-CODE-001 文件编码规范：UTF-8 无 BOM，P0 阻断级）"
-  total_rules: 47
+  version: "26.09.03"
+  source: "docs/云顶编码规范.md v1.0.6"
+  last_synced: "2026-09-03"
+  last_updated: "2026-09-03（新增 YDIZ-ARCH-001 架构层级依赖方向规则：高层→低层单向依赖，禁止反向依赖，P0 阻断级）"
+  total_rules: 48
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -637,6 +637,57 @@ rules:
     source: "编码规范 10.1 节"
 
 # ============================================
+# 十五、架构层级规范（1 条，P0）
+# ============================================
+  - id: "YDIZ-ARCH-001"
+    category: "architecture"
+    severity: "P0"
+    title: "【强制】高层模块可以依赖低层模块，低层模块禁止依赖高层模块"
+    description: |
+      项目 ydsz-common 子模块按能力划分为 L1~L6 六个层级（详见编码规范 22.2 层级表）。依赖方向必须严格从上往下（高层→低层），严禁反向。
+
+      **层级与允许依赖关系**：
+      - L1 工具层（json/util/cache/excel）→ 仅允许依赖 JDK + 经批准的第三方库，**禁止依赖任何 L2+ 内部模块**
+      - L2 基础设施层（core）→ 允许依赖 L1
+      - L3 基础服务层（domain/exception）→ 允许依赖 L1、L2
+      - L4 基础数据层（jdbc/redis/lock/thread/tenant）→ 允许依赖 L1~L3
+      - L5 业务服务层（auth/safe/feign/audit/notify/...）→ 允许依赖 L1~L4
+      - L6 应用层（base/app/web）→ 允许依赖 L1~L5
+
+      **判断方法**：模块 A（La）引用模块 B（Lb）时，必须满足 La 层号 ≤ Lb 层号。La > Lb 即为反向依赖，属于违规。
+
+      **核心约束**：
+      1. L1 工具纯度 — L1 模块必须零内部依赖，确保任何模块可安全引用 L1
+      2. 禁止跨级反向依赖 — 即使跨多层（如 L1 → L4）同样违规
+      3. pom.xml 必须显式声明 — import 某模块的类则该模块必须出现在本模块 pom.xml 的 <dependencies> 中
+    pattern: |
+      以下任一情形构成违规：
+      1. L1 模块 import L2+ 内部模块的类（如 ydsz-common-cache 中 import com.njydsz.common.thread.*）
+      2. pom.xml 中未声明的模块在代码中被引用（依赖 reactor 顺序隐式解析）
+      3. 任意模块依赖了层号大于自身的模块
+    example_bad: |
+      // ❌ ydsz-common-cache（L1）import ydsz-common-thread（L4）的 ExecutorUtils
+      package com.njydsz.common.cache.support;
+      import com.njydsz.common.thread.util.ExecutorUtils; // L1 → L4，违规！
+    example_good: |
+      // ✅ L1 模块自行用 JDK API 创建所需对象
+      import java.util.concurrent.ThreadPoolExecutor;
+      ThreadPoolExecutor executor = new ThreadPoolExecutor(
+          coreSize, maxSize, 60L, TimeUnit.SECONDS,
+          new LinkedBlockingQueue<>(1024),
+          new ThreadFactory() { ... },
+          new ThreadPoolExecutor.AbortPolicy());
+
+      // ✅ 或将纯 JDK 能力下沉到 L1 ydsz-common-util，cache 通过 util 复用
+    fix: |
+      1. 识别违规 import 所属的模块及层级
+      2. 若能改用 JDK API：直接替换为 java.util.concurrent 等 JDK 类
+      3. 若必须复用通用工具：将能力下沉到 L1 ydzs-common-util 模块
+      4. 检查并补充 pom.xml 中缺失的显式依赖声明
+      5. 运行 mvn dependency:tree 确认依赖方向正确
+    source: "编码规范 22.2.1（enforce-l1-purity）- 【强制】"
+
+# ============================================
 # 附录：按 category 统计
 # ============================================
 stats:
@@ -652,6 +703,7 @@ stats:
   performance: 2
   common-reuse: 8
   security: 2
+  architecture: 1
   engineering: 3
   warnings: 1
-  total: 47
+  total: 48

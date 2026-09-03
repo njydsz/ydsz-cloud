@@ -3,8 +3,6 @@ package com.njydsz.literule.server.core;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.literule.domain.enums.RuleSeverity;
@@ -35,7 +33,6 @@ import com.njydsz.literule.domain.enums.RuleSeverity;
  * @since 26.09.01
  * @author ydsz-team
  */
-@ConditionalOnClass(MeterRegistry.class)
 public class MicrometerRuleMetrics extends SentryMetricsAdapter implements RuleMetrics {
 
   private final AtomicInteger lastTraceQueueSize = new AtomicInteger(0);
