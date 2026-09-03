@@ -19,8 +19,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Getter
-@Setter
 @ConfigurationProperties(prefix = "ydsz.feign")
 public class FeignProperties {
 
@@ -59,6 +57,62 @@ public class FeignProperties {
 
   /** 响应拦截器配置 */
   private final ResponseInterceptor responseInterceptor = new ResponseInterceptor();
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
+
+  public String getLoggerLevel() {
+    return loggerLevel;
+  }
+
+  public void setLoggerLevel(String loggerLevel) {
+    this.loggerLevel = loggerLevel;
+  }
+
+  public Propagation getPropagation() {
+    return propagation;
+  }
+
+  public Retry getRetry() {
+    return retry;
+  }
+
+  public Timeout getTimeout() {
+    return timeout;
+  }
+
+  public Trace getTrace() {
+    return trace;
+  }
+
+  public Metrics getMetrics() {
+    return metrics;
+  }
+
+  public CircuitBreaker getCircuitBreaker() {
+    return circuitBreaker;
+  }
+
+  public Bulkhead getBulkhead() {
+    return bulkhead;
+  }
+
+  public Compress getCompress() {
+    return compress;
+  }
+
+  public Client getClient() {
+    return client;
+  }
+
+  public ResponseInterceptor getResponseInterceptor() {
+    return responseInterceptor;
+  }
 
   /**
    * 解析日志级别为 Feign 枚举值。

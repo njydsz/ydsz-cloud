@@ -151,10 +151,9 @@ public class HealthDashboardController {
     health.put("recentIssues", recentIssues);
 
     // 7. 综合健康评分（从 health Map 获取已解析的 system/tasks Map）
-    // 泛型擦除：Map<String, Object> 取值后向下转型，编译期无法验证泛型类型，逻辑上由 put 操作保证
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，Map<String, Object> 取值后向下转型，编译期无法验证泛型类型
     Map<String, Object> system = (Map<String, Object>) health.get("system");
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，Map<String, Object> 取值后向下转型，编译期无法验证泛型类型
     Map<String, Object> tasks = (Map<String, Object>) health.get("tasks");
     int overallScore = calculateOverallScore(system, tasks, recentIssues);
     health.put("overallScore", overallScore);

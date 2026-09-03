@@ -3,12 +3,8 @@ package com.njydsz.common.feign;
 import java.io.Serial;
 import java.io.Serializable;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
- * 消息发送结果 DTO（兼容旧 com.njydsz.common.feign.MessageResult）。
- *
+ * 消息发送结果 DTO（兼容旧 com.njydsz.common.feign.MessageResult）。 *
  * <p>错误消息分层：
  *
  * <ul>
@@ -21,8 +17,6 @@ import lombok.NoArgsConstructor;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Data
-@NoArgsConstructor
 public class MessageResult implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
@@ -70,8 +64,23 @@ public class MessageResult implements Serializable {
    */
   private Integer retryAfter;
 
+  /** 无参构造器（Lombok {@code @NoArgsConstructor} 生成失败时的手动回退） */
+  public MessageResult() {}
+
   public boolean isSuccess() {
     return success;
+  }
+
+  public void setSuccess(boolean success) {
+    this.success = success;
+  }
+
+  public String getTraceId() {
+    return traceId;
+  }
+
+  public void setTraceId(String traceId) {
+    this.traceId = traceId;
   }
 
   public String getProviderTraceId() {
@@ -88,6 +97,38 @@ public class MessageResult implements Serializable {
 
   public void setStatus(String status) {
     this.status = status;
+  }
+
+  public String getErrorCode() {
+    return errorCode;
+  }
+
+  public void setErrorCode(String errorCode) {
+    this.errorCode = errorCode;
+  }
+
+  public String getUserMessage() {
+    return userMessage;
+  }
+
+  public void setUserMessage(String userMessage) {
+    this.userMessage = userMessage;
+  }
+
+  public String getDeveloperMessage() {
+    return developerMessage;
+  }
+
+  public void setDeveloperMessage(String developerMessage) {
+    this.developerMessage = developerMessage;
+  }
+
+  public Integer getRetryAfter() {
+    return retryAfter;
+  }
+
+  public void setRetryAfter(Integer retryAfter) {
+    this.retryAfter = retryAfter;
   }
 
   /**
