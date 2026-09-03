@@ -14,9 +14,12 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  */
 public class SystemAppHealthIndicator implements HealthIndicator {
 
+  /** 健康详情 Map 初始容量 */
+  private static final int DETAILS_CAPACITY = 16;
+
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>(16);
+    Map<String, Object> details = new LinkedHashMap<>(DETAILS_CAPACITY);
     details.put("module", "system");
     details.put("platform", "app");
     return Health.up().withDetails(details).build();
