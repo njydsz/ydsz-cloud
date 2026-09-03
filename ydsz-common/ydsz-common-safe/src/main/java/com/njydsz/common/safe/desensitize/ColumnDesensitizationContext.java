@@ -207,4 +207,3 @@ public class ColumnDesensitizationContext {
     return rules.isEmpty();
   }
 }
-}

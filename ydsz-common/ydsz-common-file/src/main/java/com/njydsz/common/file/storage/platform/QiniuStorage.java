@@ -569,3 +569,5 @@ public class QiniuStorage extends AbstractFileStorage {
           e.getMessage());
       return buildObjectUrl(bucketName, objectName);
     }
+
+}
