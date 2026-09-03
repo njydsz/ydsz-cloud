@@ -312,7 +312,7 @@ public final class HTMLFilter {
         return "";
       }
 
-      StringBuilder sb = new StringBuilder("<").appendTagName);
+      StringBuilder sb = new StringBuilder("<").append(tagName);
 
       // 处理属性
       if (attributes != null && !attributes.isEmpty()) {
