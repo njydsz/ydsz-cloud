@@ -56,7 +56,7 @@ public class IpAccessService {
 
     // 构建本地缓存（对标 Caffeine 语义）
     this.blacklistCache =
-        YdszCache.newBuilder()
+        YdszCache.<String, Boolean>newBuilder()
             .type(CacheType.TINYLFU)
             .maximumSize(properties.getLocalCacheSize())
             .expireAfterWrite(properties.getLocalCacheTtlSeconds(), TimeUnit.SECONDS)

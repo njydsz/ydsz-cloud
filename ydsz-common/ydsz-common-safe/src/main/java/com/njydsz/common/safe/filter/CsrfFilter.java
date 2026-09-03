@@ -199,7 +199,7 @@ public class CsrfFilter extends OncePerRequestFilter {
     // 前端需要读取 CSRF Token，不能设置 HttpOnly
     cookie.setHttpOnly(false);
     // Secure 标志：配置优先，未配置时根据请求协议动态决定
-    Boolean cookieSecure = properties.getCookieSecure();
+    Boolean cookieSecure = properties.isCookieSecure();
     if (cookieSecure != null) {
       cookie.setSecure(cookieSecure);
     } else {

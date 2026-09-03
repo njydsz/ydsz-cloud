@@ -125,7 +125,7 @@ public class SecurityEventAggregator {
       return;
     }
     try {
-      ipAccessService.block(command.ip(), command.blockSeconds());
+      ipAccessService.blockIp(command.ip(), command.blockSeconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       LOG.error("【安全事件自动响应】IP 自动封禁失败: ip={}, error={}", command.ip(), e.getMessage());
     }

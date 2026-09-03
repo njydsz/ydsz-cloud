@@ -141,6 +141,15 @@ public class CsrfProperties {
   private String sameSite = "Lax";
 
   /**
+   * 自定义 Session ID 请求头名称
+   *
+   * <p>当应用不使用标准 JSESSIONID Cookie 而使用自定义 Header 传递 Session ID 时配置此属性。
+   * 过滤器优先从此 Header 获取 Session ID，为空或不存在时回退到 JSESSIONID Cookie。
+   * 留空或未配置时不启用此逻辑。
+   */
+  private String sessionIdHeader;
+
+  /**
    * CSRF 防护模式枚举
    *
    * <ul>
