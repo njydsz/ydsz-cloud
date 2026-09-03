@@ -240,15 +240,13 @@ public class DictItemServiceImpl implements DictItemService {
     // 查询指定类型的所有字典项
     List<DictItemVO> flatList = dictRepository.findItemsByTypeCode(typeCode);
 
-    // 使用 TreeBuilder.buildSimple() 构建树形结构（O(n) 迭代，自动填充 level/path）
+    // 使用 TreeBuilder.buildSimple() 构建树形结构（O(n) 迭代；26.09.01 精简版不自动填充 level/path）
     return TreeBuilder.buildSimple(
         flatList,
         DictItemVO::getId,
         DictItemVO::getParentId,
         DictItemVO::setChildren,
-        DictItemVO::getSortOrder,
-        DictItemVO::setLevel,
-        DictItemVO::setPath);
+        DictItemVO::getSortOrder);
   }
 
   /**
