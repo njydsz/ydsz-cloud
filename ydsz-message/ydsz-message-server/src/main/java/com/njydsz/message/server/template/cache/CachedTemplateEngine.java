@@ -15,7 +15,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
@@ -54,7 +53,6 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  * @since 26.09.01
  */
 @Slf4j
-@Component
 @ConditionalOnClass(MeterRegistry.class)
 public class CachedTemplateEngine extends SentryMetricsAdapter implements TemplateEngine {
   /** if/else 正则 false 分支组 */

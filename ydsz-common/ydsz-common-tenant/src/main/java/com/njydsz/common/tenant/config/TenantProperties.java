@@ -1,7 +1,11 @@
 package com.njydsz.common.tenant.config;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -135,4 +139,118 @@ public class TenantProperties {
    * <p><b>注意：</b>当配置了 {@code tenant-fields} 时，此映射覆盖的是 <b>第一个字段</b>的列名（用于 per-table 不同列名场景）。
    */
   private Map<String, String> tableColumnMapping = new HashMap<>(16);
+
+  /** 忽略租户隔离的表列表（忽略大小写）。 */
+  private Set<String> ignoreTables = new LinkedHashSet<>();
+
+  /** URL 级白名单，跳过租户隔离的请求路径（前缀匹配）。 */
+  private Set<String> anonUrls = new LinkedHashSet<>();
+
+  /**
+   * 跨租户共享映射。
+   *
+   * <p>key=租户 ID，value=该租户可访问的源租户 ID 列表。
+   */
+  private Map<String, List<String>> tenantSharing = new HashMap<>(8);
+
+  // -----------------------------------------------------------------------
+  // 内部类型定义
+  // -----------------------------------------------------------------------
+
+  /**
+   * 租户隔离模式枚举。
+   *
+   * @author ydsz-team
+   * @since 26.09.01
+   */
+  public enum TenantMode {
+    /** 单字段模式：只取第一个租户字段注入 SQL。 */
+    SINGLE,
+    /** 多字段组合模式：取全部租户字段注入 SQL（AND 连接）。 */
+    MULTI,
+    /** 独立数据源模式：每租户使用独立数据库。 */
+    ISOLATE_DB,
+    /** Schema 隔离模式：每租户使用独立 PostgreSQL Schema。 */
+    SCHEMA
+  }
+
+  /**
+   * 单个租户字段配置。
+   *
+   * @author ydsz-team
+   * @since 26.09.01
+   */
+  @Data
+  public static class TenantField {
+    /** 数据库列名（必填）。 */
+    private String column;
+    /** JWT claim 名（可选）。 */
+    private String claim;
+    /** HTTP header 名（可选，Feign 跨服务恢复用）。 */
+    private String header;
+    /** 是否多值（默认 false，true → WHERE column IN (...)）。 */
+    private boolean multiValue = false;
+
+    /** 默认构造器（用于反序列化）。 */
+    public TenantField() {}
+
+    /**
+     * 构造指定列名的租户字段（claim/header 均为空，multiValue=false）。
+     *
+     * @param column 数据库列名
+     */
+    public TenantField(String column) {
+      this.column = column;
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // 派生 getter
+  // -----------------------------------------------------------------------
+
+  /**
+   * 获取激活的租户字段列表。
+   *
+   * <p>当 {@link #tenantFields} 非空时直接返回；否则回退到单字段模式（使用 tenantColumn + defaultClaim + defaultHeader）。
+   *
+   * @return 激活的租户字段列表（非空）
+   */
+  public List<TenantField> getActiveTenantFields() {
+    if (tenantFields != null && !tenantFields.isEmpty()) {
+      return tenantFields;
+    }
+    TenantField fallback = new TenantField(tenantColumn);
+    fallback.setClaim(defaultClaim);
+    fallback.setHeader(defaultHeader);
+    return List.of(fallback);
+  }
+
+  /**
+   * 获取归一化的匿名 URL 集合。
+   *
+   * <p>去除空白项，确保返回非空集合。
+   *
+   * @return 归一化后的 URL 前缀集合
+   */
+  public Set<String> getNormalizedAnonUrls() {
+    if (anonUrls == null || anonUrls.isEmpty()) {
+      return Collections.emptySet();
+    }
+    Set<String> normalized = new LinkedHashSet<>(anonUrls.size());
+    for (String url : anonUrls) {
+      if (url != null && !url.isBlank()) {
+        normalized.add(url.strip());
+      }
+    }
+    return normalized;
+  }
+
+  /**
+   * 获取跨租户共享映射。
+   *
+   * @return 跨租户共享映射（key=租户 ID，value=可访问源租户 ID 列表）
+   */
+  public Map<String, List<String>> getTenantSharing() {
+    return tenantSharing != null ? tenantSharing : Collections.emptyMap();
+  }
 }

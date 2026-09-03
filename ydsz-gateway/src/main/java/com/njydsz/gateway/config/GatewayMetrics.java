@@ -190,14 +190,4 @@ public class GatewayMetrics extends SentryMetricsAdapter {
     }
   }
 
-  /**
-   * Null 安全的字符串处理：将 null/空字符串替换为 "unknown"。
-   *
-   * @param value 原始值（可为 null）
-   * @return 非 null 字符串
-   */
-  private static String safe(String value) {
-    return (value == null || value.isEmpty()) ? "unknown" : value;
-  }
-
 }
