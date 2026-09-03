@@ -1,6 +1,7 @@
 package com.njydsz.common.excel.core;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
@@ -248,14 +249,18 @@ public class ExcelFacade {
 
     ExcelWriter writer = new ExcelWriter(metadata);
     int index = 0;
-    for (Map.Entry<String, ?> entry : sheets.entrySet()) {
-      ExcelWriter currentWriter =
-          (index == 0)
-              ? writer.sheet(entry.getKey())
-              : writer.newSheet(entry.getKey());
-      currentWriter.doWrite(entry.getValue());
-      index++;
+    try {
+      for (Map.Entry<String, ?> entry : sheets.entrySet()) {
+        ExcelWriter currentWriter =
+            (index == 0)
+                ? writer.sheet(entry.getKey())
+                : writer.newSheet(entry.getKey());
+        currentWriter.doWrite(entry.getValue());
+        index++;
+      }
+      writer.finish();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to write Excel file: " + fileName, e);
     }
-    writer.finish();
   }
 }
