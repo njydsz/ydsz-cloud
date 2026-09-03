@@ -31,7 +31,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  *       / 失败
  * </ul>
  *
- * <p><b>启用条件：</b>{@code @ConditionalOnClass(MeterRegistry.class)} — Micrometer 存在时启用
+ * <p><b>启用条件：</b>通过 {@link SentryMetricsAdapter} 统一管理，无需 Micrometer 类存在条件
  *
  * @author ydsz-team
  * @since 26.09.01

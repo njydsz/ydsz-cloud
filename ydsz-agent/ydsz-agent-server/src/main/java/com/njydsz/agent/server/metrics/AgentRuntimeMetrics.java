@@ -3,7 +3,6 @@ package com.njydsz.agent.server.metrics;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
