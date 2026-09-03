@@ -1,10 +1,13 @@
 package com.njydsz.common.notify.channel;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -25,6 +28,7 @@ import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.exception.NotifyException;
 import com.njydsz.common.notify.provider.SmsProvider;
 
 /**
@@ -231,11 +235,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
    *
    * @return HTTP 请求头
    */
-  private HttpHeaders buildAuthHeaders() throws Exception {
+  private HttpHeaders buildAuthHeaders() {
     HttpHeaders headers = NotifyChannelStrategy.jsonHeaders();
     String date =
-        java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.format(
-            java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC));
+        DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now(ZoneOffset.UTC));
     String authorization = "acs " + smsConfig.getAccessKeyId() + ":" + sign(date);
     headers.set("Date", date);
     headers.set("Authorization", authorization);
@@ -244,17 +247,22 @@ public class SmsNotifySender implements NotifyChannelStrategy {
   }
 
   /**
-   * 使用 HMAC-SHA1 对字符串进行签名。
+   * 使用 HMAC-SHA1 对请求日期进行签名。
    *
-   * @param data 待签名字符串
+   * @param date RFC-1123 格式的请求日期
    * @return Base64 编码的签名结果
    */
-  private String sign(String data) throws Exception {
+  private String sign(String date) {
     String stringToSign = "POST\napplication/json\n" + date + "\nx-acs-version:2017-05-25\n/";
-    Mac mac = Mac.getInstance("HmacSHA1");
-    mac.init(
-        new SecretKeySpec(smsConfig.getAccessKeySecret().getBytes(StandardCharsets.UTF_8), "HmacSHA1"));
-    byte[] rawHmac = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
-    return Base64.getEncoder().encodeToString(rawHmac);
+    try {
+      Mac mac = Mac.getInstance("HmacSHA1");
+      mac.init(
+          new SecretKeySpec(
+              smsConfig.getAccessKeySecret().getBytes(StandardCharsets.UTF_8), "HmacSHA1"));
+      byte[] rawHmac = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
+      return Base64.getEncoder().encodeToString(rawHmac);
+    } catch (GeneralSecurityException e) {
+      throw new NotifyException("短信签名计算失败", e);
+    }
   }
 }

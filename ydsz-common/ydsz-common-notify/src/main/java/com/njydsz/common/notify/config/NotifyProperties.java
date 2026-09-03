@@ -1,15 +1,12 @@
 package com.njydsz.common.notify.config;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
  * 通知模块配置属性类
@@ -416,7 +413,6 @@ public class NotifyProperties {
   }
 
   /** 限流配置 */
-  @Data
   public static class RateLimit {
 
     /** 是否启用渠道限流 */
@@ -430,6 +426,101 @@ public class NotifyProperties {
 
     /** 限流 Redis Key 前缀 */
     private String redisKeyPrefix = "notify:ratelimit:";
+
+    /** 每个渠道默认最大请求次数（未单独配置渠道时生效） */
+    private int defaultMaxRequests = 100;
+
+    /** 每个渠道默认时间窗口（秒，未单独配置渠道时生效） */
+    private long defaultWindowSeconds = 60;
+
+    /** 各渠道自定义限流配置（key: NotifyChannel） */
+    private Map<NotifyChannel, ChannelRateLimit> channelLimits;
+
+    // ==================== Getter / Setter ====================
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+    }
+
+    public int getMaxPerMinute() {
+      return maxPerMinute;
+    }
+
+    public void setMaxPerMinute(int maxPerMinute) {
+      this.maxPerMinute = maxPerMinute;
+    }
+
+    public int getMaxPerReceiverPerMinute() {
+      return maxPerReceiverPerMinute;
+    }
+
+    public void setMaxPerReceiverPerMinute(int maxPerReceiverPerMinute) {
+      this.maxPerReceiverPerMinute = maxPerReceiverPerMinute;
+    }
+
+    public String getRedisKeyPrefix() {
+      return redisKeyPrefix;
+    }
+
+    public void setRedisKeyPrefix(String redisKeyPrefix) {
+      this.redisKeyPrefix = redisKeyPrefix;
+    }
+
+    public int getDefaultMaxRequests() {
+      return defaultMaxRequests;
+    }
+
+    public void setDefaultMaxRequests(int defaultMaxRequests) {
+      this.defaultMaxRequests = defaultMaxRequests;
+    }
+
+    public long getDefaultWindowSeconds() {
+      return defaultWindowSeconds;
+    }
+
+    public void setDefaultWindowSeconds(long defaultWindowSeconds) {
+      this.defaultWindowSeconds = defaultWindowSeconds;
+    }
+
+    public Map<NotifyChannel, ChannelRateLimit> getChannelLimits() {
+      return channelLimits;
+    }
+
+    public void setChannelLimits(Map<NotifyChannel, ChannelRateLimit> channelLimits) {
+      this.channelLimits = channelLimits;
+    }
+  }
+
+  /** 渠道级限流配置 */
+  public static class ChannelRateLimit {
+
+    /** 该渠道最大请求次数 */
+    private int maxRequests;
+
+    /** 该渠道限流时间窗口（秒） */
+    private long windowSeconds;
+
+    // ==================== Getter / Setter ====================
+
+    public int getMaxRequests() {
+      return maxRequests;
+    }
+
+    public void setMaxRequests(int maxRequests) {
+      this.maxRequests = maxRequests;
+    }
+
+    public long getWindowSeconds() {
+      return windowSeconds;
+    }
+
+    public void setWindowSeconds(long windowSeconds) {
+      this.windowSeconds = windowSeconds;
+    }
   }
 
   /** 定时任务配置 */
