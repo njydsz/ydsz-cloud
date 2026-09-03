@@ -1,5 +1,7 @@
 package com.njydsz.common.feign.aspect;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -7,6 +9,7 @@ import java.util.regex.Pattern;
 import feign.Logger;
 import feign.Request;
 import feign.Response;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -30,7 +33,7 @@ import org.slf4j.LoggerFactory;
  */
 public class YdszFeignLogger extends Logger {
 
-  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger("com.njydsz.feign");
+  private static final Logger LOG = LoggerFactory.getLogger("com.njydsz.feign");
 
   /** Feign 日志级别 */
   private volatile Logger.Level logLevel = Logger.Level.BASIC;
@@ -106,7 +109,9 @@ public class YdszFeignLogger extends Logger {
   }
 
   @Override
-  protected Response logAndRebufferResponse(String configKey, Logger.Level logLevel, Response response, long elapsedTime) throws java.io.IOException {
+  protected Response logAndRebufferResponse(
+          String configKey, Logger.Level logLevel,
+          Response response, long elapsedTime) throws IOException {
     if (!LOG.isDebugEnabled()) {
       return response;
     }
@@ -136,8 +141,11 @@ public class YdszFeignLogger extends Logger {
   }
 
   @Override
-  protected java.io.IOException logIOException(String configKey, Logger.Level logLevel, java.io.IOException ioe, long elapsedTime) {
-    LOG.warn("[Feign#{}] <-- ERROR {} after {}ms: {}", truncateConfigKey(configKey), ioe.getClass().getSimpleName(), elapsedTime, ioe.getMessage());
+  protected IOException logIOException(
+          String configKey, Logger.Level logLevel, IOException ioe, long elapsedTime) {
+    LOG.warn("[Feign#{}] <-- ERROR {} after {}ms: {}",
+            truncateConfigKey(configKey), ioe.getClass().getSimpleName(),
+            elapsedTime, ioe.getMessage());
     return ioe;
   }
 
@@ -155,7 +163,8 @@ public class YdszFeignLogger extends Logger {
     }
     String result = content;
     for (String field : SENSITIVE_FIELDS) {
-      Pattern jsonPattern = JSON_PATTERNS.computeIfAbsent(field, k -> Pattern.compile(String.format(JSON_VALUE_PATTERN_TEMPLATE, Pattern.quote(k))));
+      Pattern jsonPattern = JSON_PATTERNS.computeIfAbsent(field,
+              k -> Pattern.compile(String.format(JSON_VALUE_PATTERN_TEMPLATE, Pattern.quote(k))));
       result = jsonPattern.matcher(result).replaceAll("$1" + MASK_VALUE + "$2");
     }
     return result;
@@ -214,3 +223,4 @@ public class YdszFeignLogger extends Logger {
     this.logLevel = logLevel;
   }
 }
+

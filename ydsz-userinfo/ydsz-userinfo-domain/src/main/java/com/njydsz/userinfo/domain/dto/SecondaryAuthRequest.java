@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.dto;
+package com.njydsz.userinfo.domain.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

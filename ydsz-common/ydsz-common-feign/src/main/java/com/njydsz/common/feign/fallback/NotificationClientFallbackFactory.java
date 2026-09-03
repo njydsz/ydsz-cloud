@@ -1,6 +1,7 @@
 package com.njydsz.common.feign.fallback;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -28,9 +29,10 @@ import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 @Component
 public class NotificationClientFallbackFactory implements FallbackFactory<NotificationClient> {
+
+  private static final Logger log = LoggerFactory.getLogger(NotificationClientFallbackFactory.class);
 
   @Override
   public NotificationClient create(Throwable cause) {

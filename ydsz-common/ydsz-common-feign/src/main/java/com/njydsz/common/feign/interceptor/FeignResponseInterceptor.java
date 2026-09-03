@@ -5,8 +5,9 @@ import java.util.Collection;
 import feign.InvocationContext;
 import feign.Response;
 import feign.ResponseInterceptor;
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
 import com.njydsz.common.feign.exception.OpenFeignException;
@@ -29,8 +30,9 @@ import com.njydsz.common.util.string.StringUtils;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public class FeignResponseInterceptor implements ResponseInterceptor {
+
+  private static final Logger log = LoggerFactory.getLogger(FeignResponseInterceptor.class);
 
   private final FeignResponseMetrics metrics;
   private final boolean logEnabled;

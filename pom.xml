@@ -1055,6 +1055,9 @@
                         <encoding>UTF-8</encoding>
                         <compilerArgs>
                             <arg>-Xlint:-classfile</arg>
+                            <!-- 显式指定注解处理器，防止 spring-boot-configuration-processor 通过 SPI 被发现并干扰 Lombok -->
+                            <arg>-processor</arg>
+                            <arg>lombok.launch.AnnotationProcessorHider$AnnotationProcessor,lombok.launch.AnnotationProcessorHider$ClaimingProcessor,org.mapstruct.ap.MappingProcessor</arg>
                         </compilerArgs>
                         <annotationProcessorPaths>
                             <path>

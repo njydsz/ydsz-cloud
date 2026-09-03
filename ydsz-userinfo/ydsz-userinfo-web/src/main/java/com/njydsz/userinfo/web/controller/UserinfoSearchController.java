@@ -24,7 +24,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.service.UnifiedSearchService;
-import com.njydsz.userinfo.web.dto.UserSearchQuery;
+import com.njydsz.userinfo.domain.dto.UserSearchQuery;
 
 /**
  * 用户搜索 Controller

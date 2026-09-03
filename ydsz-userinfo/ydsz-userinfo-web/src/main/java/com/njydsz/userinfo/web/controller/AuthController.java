@@ -49,8 +49,8 @@ import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.auth.SecondaryAuthService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
-import com.njydsz.userinfo.web.dto.RefreshRequest;
-import com.njydsz.userinfo.web.dto.SecondaryAuthRequest;
+import com.njydsz.userinfo.domain.dto.RefreshRequest;
+import com.njydsz.userinfo.domain.dto.SecondaryAuthRequest;
 
 /**
  * 认证 Controller

@@ -47,5 +47,10 @@
             <artifactId>ydsz-common-util</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- swagger-annotations-jakarta: @Schema 注解（RefreshRequest 等 DTO 使用） -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
     </dependencies>
 </project>
