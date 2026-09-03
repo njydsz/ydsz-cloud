@@ -4,14 +4,19 @@ package com.njydsz.common.excel.core.style;
  * WriteStyleHandler 类
  *
  * @author ydsz-team
- *
+
  * @version 26.09.01
  */
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import com.njydsz.common.excel.annotation.ExcelStyle;
@@ -80,7 +85,3 @@ public class WriteStyleHandler {
   public WriteStyleHandler(Workbook workbook) {
     this.workbook = workbook;
     this.headStyleCache = new HashMap<>(16);
-    this.dataStyleCache = new HashMap<>(16);
-    this.colorIndexCache = new HashMap<>(16);
-  }
-}

@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Excel读取结果封装类 - 结果模式实现
@@ -358,3 +357,4 @@ public class ExcelReadResult<T> {
     }
   }
 }
+
