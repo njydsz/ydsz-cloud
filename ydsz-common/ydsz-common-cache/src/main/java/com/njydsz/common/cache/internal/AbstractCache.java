@@ -500,7 +500,6 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
    * @param future 原始 Future
    * @return 转换后的 Future
    */
-  @SuppressWarnings("unchecked")
   private <T> CompletableFuture<T> castFuture(CompletableFuture<Object> future) {
     return (CompletableFuture<T>) future;
   }

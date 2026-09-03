@@ -115,7 +115,6 @@ public final class DiffSnapshotHelper {
    *
    * <p>生产环境应委托给 ydsz-common-json 统一反序列化，此处保留轻量实现作为 fallback。
    */
-  @SuppressWarnings("unchecked")
   private static Map<String, Object> parseJson(String json) {
     if (json == null || json.isBlank()) {
       return Collections.emptyMap();

@@ -2,7 +2,6 @@ package com.njydsz.common.cache.support;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -15,10 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
+
 /**
  * 缓存线程池统一管理器 — 集中管理缓存相关的所有线程池
  *
- * <p>解决各缓存组件各自创建线程池导致的资源浪费和管理困难。 统一管理以下线程池：
+ * <p>解决各缓存组件各自创建线程池导致的资源浪费和管理困难。统一管理以下线程池：
  *
  * <ul>
  *   <li>refreshPool：缓存自动刷新线程池
@@ -28,9 +29,8 @@ import org.springframework.beans.factory.DisposableBean;
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
  *
- * <p><b>L1 纯度说明：</b>本模块属于 L1 工具层，按规范 §22.2 禁止反向依赖 L4 的
- * {@code ydsz-common-thread}，因此线程池直接使用 JDK {@link ThreadPoolExecutor} 与
- * {@link ScheduledThreadPoolExecutor} 构造，通过 {@link ThreadFactory} lambda 完成线程命名。
+ * <p>线程池创建使用标准 JDK API（{@link ThreadPoolExecutor} / {@link ScheduledThreadPoolExecutor}），
+ * 不依赖 ydsz-common-thread 模块，保持 L1 工具层零内部依赖。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -50,7 +50,7 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 获取全局单例实例
    *
-   * <p>供非 Spring 管理的缓存组件（如 ExpirableCache 等）使用， 确保所有线程池统一管理。
+   * <p>供非 Spring 管理的缓存组件（如 ExpirableCache 等）使用，确保所有线程池统一管理。
    *
    * @return 全局单例实例
    */
@@ -64,7 +64,8 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 设置全局单例实例（由 Spring 自动配置调用）
    *
-   * <p>当 Spring 容器创建 CacheThreadPoolManager Bean 时，通过此方法替换静态单例， 使 Spring 的生命周期管理（DisposableBean）生效。
+   * <p>当 Spring 容器创建 CacheThreadPoolManager Bean 时，通过此方法替换静态单例，
+   * 使 Spring 的生命周期管理（DisposableBean）生效。
    *
    * @param manager Spring 管理的 CacheThreadPoolManager 实例
    */
@@ -120,59 +121,41 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 创建定时调度线程池。
    *
-   * <p>L1 工具模块禁止使用 ydsz-common-thread 的 ExecutorUtils，直接使用 JDK ScheduledThreadPoolExecutor。
+   * <p>使用 ydsz-common-thread {@link ExecutorUtils} 创建，线程名前缀为 {@code cache-sched-}，
+   * 拒绝策略为 CallerRunsPolicy（调用方线程兜底）。
    */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — L1 工具模块禁止向下依赖 ydsz-common-thread，此处为内部线程池，属短生命周期线程资源
   private ScheduledExecutorService createScheduledPool(String name, int coreSize) {
     ScheduledThreadPoolExecutor executor =
-        new ScheduledThreadPoolExecutor(coreSize, createThreadFactory("cache-sched-" + name));
+        (ScheduledThreadPoolExecutor) ExecutorUtils.newScheduledThreadPool(coreSize, "cache-sched-" + name);
     // 取消后自动移除，避免内存泄漏
     executor.setRemoveOnCancelPolicy(true);
     LOG.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
     return executor;
   }
-  // CHECKSTYLE.ON: RegexpSinglelineJava
 
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 使用 ydsz-common-thread 统一管理
   /**
    * 创建缓存专用线程池。
    *
-   * <p>L1 工具模块禁止使用 ydsz-common-thread 的 ExecutorUtils，直接使用 JDK ThreadPoolExecutor。
+   * <p>使用 ydsz-common-thread {@link ExecutorUtils} 创建，线程名前缀为 {@code cache-}，
+   * 拒绝策略为 warn 日志（不抛异常，不阻塞调用方）。
    */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — L1 工具模块禁止向下依赖 ydsz-common-thread，此处为内部线程池，属短生命周期线程资源
   private ExecutorService createPool(String name, int coreSize, int maxSize) {
     RejectedExecutionHandler handler = (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name);
     ThreadPoolExecutor executor =
-        new ThreadPoolExecutor(
-            coreSize,
-            maxSize,
-            60L,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1024),
-            createThreadFactory("cache-" + name),
-            handler);
+        (ThreadPoolExecutor) ExecutorUtils.builder()
+            .corePoolSize(coreSize)
+            .maxPoolSize(maxSize)
+            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .queueCapacity(1024)
+            .threadNamePrefix("cache-" + name)
+            .rejectedHandler(handler)
+            .build();
 
     LOG.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;
   }
   // CHECKSTYLE.ON: RegexpSinglelineJava
-
-  /**
-   * 创建带统一命名前缀的线程工厂。
-   *
-   * <p>替代 ydsz-common-thread 的 ExecutorUtils.createThreadFactory，保持线程名符合云顶规范（ydsz-{prefix}{seq}）。
-   */
-  private static ThreadFactory createThreadFactory(String prefix) {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava — ydsz 线程名规范
-    String threadNamePrefix = "ydsz-" + prefix;
-    // CHECKSTYLE.ON: RegexpSinglelineJava
-    AtomicInteger threadNumber = new AtomicInteger(1);
-    return r -> {
-      Thread thread = new Thread(r, threadNamePrefix + threadNumber.getAndIncrement());
-      thread.setDaemon(false);
-      thread.setUncaughtExceptionHandler((t, e) -> LOG.error("线程未捕获异常: {}", t.getName(), e));
-      return thread;
-    };
-  }
 
   /**
    * 关闭指定线程池
@@ -203,7 +186,7 @@ public class CacheThreadPoolManager implements DisposableBean {
    * 获取所有线程池的状态信息
    *
    * @return 多行状态文本，按池名逐行输出活跃线程数、核心/最大线程数、队列长度与已完成任务数；
-   *     尚无任何线程池时返回空串。
+   *     尚无任何线程池时返回空串
    */
   public String getPoolStatus() {
     StringBuilder sb = new StringBuilder();
@@ -252,5 +235,26 @@ public class CacheThreadPoolManager implements DisposableBean {
       Thread.currentThread().interrupt();
     }
     LOG.info("缓存线程池已关闭: {}", name);
+  }
+
+  /**
+   * 创建带统一前缀的线程工厂。
+   *
+   * <p>内联实现，替代原 ydsz-common-thread {@code ExecutorUtils.createThreadFactory} 的能力，
+   * 保持 L1 工具层零内部依赖。
+   *
+   * @param threadNamePrefix 线程名前缀
+   * @return 线程工厂
+   */
+  private static ThreadFactory createThreadFactory(String threadNamePrefix) {
+    AtomicInteger threadNumber = new AtomicInteger(1);
+    return r -> {
+      Thread thread = new Thread(r);
+      thread.setName(threadNamePrefix + "-" + threadNumber.getAndIncrement());
+      thread.setDaemon(false);
+      thread.setUncaughtExceptionHandler(
+          (t, e) -> LOG.error("Uncaught exception in cache thread {}", t.getName(), e));
+      return thread;
+    };
   }
 }

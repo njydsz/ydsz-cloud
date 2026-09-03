@@ -576,7 +576,6 @@ public final class BeanMapper {
      *
      * @return 原始类型 Class
      */
-    @SuppressWarnings("unchecked") // 泛型擦除导致无法在运行时验证 T 与 rawType 的一致性，逻辑上由 TypeReference 构造保证
     public Class<T> getRawType() {
       if (type instanceof Class<?> c) {
         return (Class<T>) c;
@@ -673,7 +672,6 @@ public final class BeanMapper {
    */
   // 泛型擦除：convertListWithType/convertMapWithType 返回 List<Object>/Map<String,Object>，
   // 无法在编译期验证与 T 的一致性
-  @SuppressWarnings("unchecked")
   public static <T> T toBean(Object source, TypeReference<T> typeRef) {
     Objects.requireNonNull(typeRef, "typeRef must not be null");
     Type type = typeRef.getType();

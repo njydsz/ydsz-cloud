@@ -22,6 +22,11 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-util</artifactId>
     </dependency>
+    <!--thread（ExecutorUtils 编程式工厂）-->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-thread</artifactId>
+    </dependency>
     <!-- Spring Context（Cache 接口） -->
     <dependency>
       <groupId>org.springframework</groupId>

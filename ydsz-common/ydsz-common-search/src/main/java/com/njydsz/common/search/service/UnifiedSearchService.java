@@ -16,9 +16,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
-import com.njydsz.common.thread.adapter.DelegatingTaskExecutor;
-
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
@@ -35,6 +32,8 @@ import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
+import com.njydsz.common.thread.adapter.DelegatingTaskExecutor;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 统一搜索服务接口。

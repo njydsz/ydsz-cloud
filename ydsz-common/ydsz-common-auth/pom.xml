@@ -154,5 +154,13 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!--
+            ydsz-common-jdbc：AuthRowPermissionAspect / AuthColPermissionAspect / ParsedAuthHeaders
+            使用 DataPermissionConstants、DataPermissionContext、DataScopeContextHolder 等权限常量与上下文
+        -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
     </dependencies>
 </project>

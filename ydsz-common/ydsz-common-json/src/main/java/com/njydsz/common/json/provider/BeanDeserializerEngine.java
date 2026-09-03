@@ -164,7 +164,6 @@ final class BeanDeserializerEngine {
         // P1 能力补齐：多态元素按 JSON 内类型属性解析具体子类型
         // （原先直接按 elementClass 反序列化，抽象基类/多态列表必然 ClassCastException）
         Class<?> effectiveType = PolymorphicTypeResolver.resolveType(elementJson, elementClass);
-        @SuppressWarnings("unchecked") // 反射构建实例，泛型类型由运行时解析
         E element = (E) deserializeBeanZeroCopy(elementJson, effectiveType);
         result.add(element);
       }

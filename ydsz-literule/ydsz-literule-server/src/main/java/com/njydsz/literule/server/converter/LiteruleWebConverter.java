@@ -1,4 +1,4 @@
-package com.njydsz.literule.infra.converter;
+package com.njydsz.literule.server.converter;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -41,10 +41,12 @@ import com.njydsz.literule.server.spi.RuleVersion;
 import com.njydsz.literule.server.version.RuleVersionDiff;
 
 /**
- * literule-infra 模块的 MapStruct 转换器。
+ * literule-server 模块的 MapStruct 转换器。
  *
- * <p>承担 server 包源类型到 domain VO 的转换。这些 server 类型无法在 domain 模块的 {@code LiteruleConverter} 中声明，因为
- * domain 模块不依赖 server 模块（避免循环依赖）。 infra 模块同时依赖 domain 与 server，因此在此声明对应映射方法。
+ * <p>承担 server 包源类型到 domain VO 的转换（原位置 literule-infra，2026-09-03 迁层）。
+ *
+ * <p>此前放在 infra 会导致低层反向依赖高层（infra → server）。迁入 server 后，converter 可直接使用
+ * server 自身类型与 domain VO，消除反向依赖，符合 DDD 分层（web → server → domain ← infra）。
  *
  * <p><b>设计要点：</b>
  *

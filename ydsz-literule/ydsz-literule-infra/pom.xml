@@ -16,16 +16,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-domain</artifactId>
         </dependency>
-        <!-- ydsz-literule-api: RuleDefinition / RuleSeverity 等 API 类型 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-api</artifactId>
-        </dependency>
-        <!-- ydsz-literule-server: LiteruleWebConverter 使用 server 类型（ApprovalFlow、RuleChainGraph 等） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-server</artifactId>
-        </dependency>
         <!-- MapStruct（LiteruleConverter/RuleCoreConverter/RuleSupportConverter/RuleComponentConverter 使用 @Mapper 注解） -->
         <dependency>
             <groupId>org.mapstruct</groupId>

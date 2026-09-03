@@ -80,7 +80,6 @@ final class TypeConverter {
 
     // 枚举转换：String → Enum
     if (targetType.isEnum() && value instanceof String) {
-      @SuppressWarnings({"rawtypes", "unchecked"}) // @SuppressWarnings 保留原因：泛型擦除，Class<?> 强转 Class<? extends Enum> 编译期无法验证
       Class<? extends Enum> enumType = targetType.asSubclass(Enum.class);
       try {
         return Enum.valueOf(enumType, (String) value);

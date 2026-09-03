@@ -87,7 +87,6 @@ public class TenantColumnScanner {
    *
    * <p>优先从 MyBatis-Plus 的 {@code @TableName} 注解获取； 未标注时使用类名驼峰 → 下划线命名策略作为回退。
    */
-  @SuppressWarnings("unchecked") // 反射加载 Class<?> 后转为 Class<? extends Annotation>，编译期无法验证但逻辑上安全
   private String resolveTableName(Class<?> clazz) {
     try {
       Class<?> tableNameClass =

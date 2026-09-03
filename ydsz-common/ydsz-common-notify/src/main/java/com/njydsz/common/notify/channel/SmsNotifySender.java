@@ -191,7 +191,6 @@ public class SmsNotifySender implements NotifyChannelStrategy {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public boolean isEnabled() {
     return smsConfig != null && smsConfig.isEnabled();
   }

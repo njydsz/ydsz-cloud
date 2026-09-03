@@ -26,6 +26,18 @@
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
 
+        <!-- ydsz-common-core：GlobalResponseAdvice / TenantMdcFilter 等直接使用 YdszResultCode、TraceId 等能力 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+
+        <!-- ydsz-common-util：StringUtils / DateUtils / DigestUtils 等直接使用（不再依赖传递引入） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
+
         <!-- OpenAPI 注解（common-base 中按 optional 引入，web 层直接使用需显式声明） -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>

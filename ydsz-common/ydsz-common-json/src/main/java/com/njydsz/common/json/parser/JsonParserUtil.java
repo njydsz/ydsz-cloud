@@ -256,7 +256,6 @@ public final class JsonParserUtil {
 
     // 委托给 parseObjectRecursiveImpl 统一实现（参数化初始容量 64）
     Object result = parseObjectRecursiveImpl(chars, startPos, PARSE_OBJECT_INITIAL_CAPACITY, 1);
-    @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，parseObjectRecursiveImpl() 返回 Object，强转 Map 编译期无法验证
     Map<String, Object> map = (Map<String, Object>) result;
     return map;
   }
@@ -281,7 +280,6 @@ public final class JsonParserUtil {
 
     char[] chars = getCharBuffer(json);
     // 委托给 parseArrayRecursiveImpl 统一实现，消除重复代码
-    @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，parseArrayRecursiveImpl() 返回 Object，强转 List 编译期无法验证
     List<Object> result = (List<Object>) parseArrayRecursiveImpl(chars, 0, 1);
     return result;
   }

@@ -34,10 +34,13 @@
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
 
-        <!-- 可选依赖：Feign 跨服务透传 -->
+        <!--
+            可选依赖：OpenFeign feign-core（TenantContextFeignInterceptor 实现 feign.RequestInterceptor）。
+            使用第三方库而非 ydsz-common-feign 模块，消除 L4 → L5 反向依赖。
+        -->
         <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-feign</artifactId>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-core</artifactId>
             <optional>true</optional>
         </dependency>
         <!-- 可选依赖：TaskDecorator 异步传播 -->

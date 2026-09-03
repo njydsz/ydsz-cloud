@@ -271,7 +271,6 @@ public final class BeanReader<T> {
    *
    * @return creator 模式下：若参数名解析失败并降级为默认构造赋值则返回实例，否则 null
    */
-  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，beanType.getDeclaredConstructor() 返回值强转 T 编译期无法验证
   private T readObjectFields(JSONReader reader, int depth, Map<String, Object> pending) {
     // 尝试用默认构造 + 字段赋值（若类实际存在默认构造则走此路径）
     try {
@@ -1003,7 +1002,6 @@ public final class BeanReader<T> {
     return null;
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"}) // @SuppressWarnings 保留原因：泛型擦除，Class<?> 强转 Class<Enum> 编译期无法验证
   private static Object parseEnum(Class<?> enumType, String s) {
     if (s == null || s.isEmpty()) {
       return null;

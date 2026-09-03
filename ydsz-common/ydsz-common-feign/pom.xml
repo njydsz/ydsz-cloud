@@ -32,7 +32,18 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+
+        <!-- Redis 可选依赖：CircuitBreakerStatePersistence 熔断状态持久化（ObjectProvider 延迟获取，运行时可选） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Spring Cloud OpenFeign 核心依赖 -->

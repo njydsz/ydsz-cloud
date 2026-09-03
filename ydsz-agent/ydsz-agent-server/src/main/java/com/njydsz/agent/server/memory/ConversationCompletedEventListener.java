@@ -70,8 +70,6 @@ public class ConversationCompletedEventListener {
      * @return 租户 ID，未找到返回 null
      */
     private String extractTenantId(AgentDomainEvent event) {
-        // 泛型擦除：领域事件metadata结构由内部构造，类型安全
-        @SuppressWarnings("unchecked")
         Map<String, Object> metadata = event.getMetadata();
         if (metadata != null && metadata.containsKey("tenantId")) {
             return String.valueOf(metadata.get("tenantId"));

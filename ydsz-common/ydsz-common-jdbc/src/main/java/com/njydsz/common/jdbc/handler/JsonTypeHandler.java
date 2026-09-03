@@ -99,7 +99,6 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
    * @param <T> 目标泛型类型
    * @return 转换后的 Class 对象
    */
-  @SuppressWarnings("unchecked") // Class 泛型转换惯用法：Class<?> → Class<T>，运行时 T 已被擦除，逻辑上安全
   private static <T> Class<T> rawClass(Class<?> clazz) {
     return (Class<T>) clazz;
   }

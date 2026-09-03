@@ -1305,7 +1305,6 @@ public final class SerializationProvider {
    * @param value 要序列化的对象
    * @return JSON 字符串
    */
-  @SuppressWarnings({"unchecked", "rawtypes"}) // @SuppressWarnings 保留原因：泛型擦除，Object 强转为 JsonSerializer 编译期无法验证
   private static String invokeCustomSerializer(Object serializer, Object value) {
     JSONWriter out = new JSONWriter(new StringBuilder(256));
     ((JsonSerializer) serializer).serialize(value, out);

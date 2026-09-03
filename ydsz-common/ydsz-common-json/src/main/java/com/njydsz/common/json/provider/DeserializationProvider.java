@@ -105,14 +105,13 @@ public final class DeserializationProvider {
    * 泛型桥接：从 UTF-8 字节数组反序列化为指定 Type。
    *
    * <p>调用方用此方法可保留泛型推断 {@code <T>}，内部委托 {@link #deserializeToObject(byte[], Type)} 并作 checked
-   * cast。unchecked 警告集中在桥接方法内（单处 {@code @SuppressWarnings}）。
+   * cast。unchecked 转换集中在桥接方法内，调用方获得类型安全的泛型签名。
    *
    * @param bytes UTF-8 编码的 JSON 字节数组
    * @param type 目标类型（{@link Class} 或 {@link java.lang.reflect.ParameterizedType}）
    * @param <T> 类型参数
    * @return 反序列化后的对象
    */
-  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，deserializeToObject() 返回 Object，强转 T 编译期无法验证
   public static <T> T deserialize(byte[] bytes, Type type) {
     return (T) deserializeToObject(bytes, type);
   }
@@ -127,7 +126,6 @@ public final class DeserializationProvider {
    * @param <T> 类型参数
    * @return 反序列化后的对象
    */
-  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，deserializeToObject() 返回 Object，强转 T 编译期无法验证
   public static <T> T deserialize(String json, Type type) {
     return (T) deserializeToObject(json, type);
   }
@@ -295,7 +293,6 @@ public final class DeserializationProvider {
    * @param <T> 目标类型参数
    * @return 转换后的目标类型值
    */
-  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，Number→T 拆箱转换编译期无法验证类型安全
   private static <T> T castResult(Object result, Class<?> clazz) {
     if (result == null) {
       return null;

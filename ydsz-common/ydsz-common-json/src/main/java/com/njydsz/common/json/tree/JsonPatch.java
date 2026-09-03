@@ -426,7 +426,6 @@ public final class JsonPatch {
         // 嵌套对象：递归 Merge Patch
         JsonNode child = tree.get(key);
         if (child instanceof ObjectNode childObj) {
-          @SuppressWarnings("unchecked") // 核心基础模块：Map 类型转换，无法在编译期验证泛型类型
           Map<String, Object> nestedPatch = (Map<String, Object>) nestedMap;
           applyMergePatch(childObj, nestedPatch);
         } else {

@@ -61,6 +61,9 @@ public class JobDagServiceImpl implements JobDagService {
   /** 默认查询条数上限 */
   private static final int DEFAULT_LIMIT = 50;
 
+  /** 邻接表出边列表初始容量 */
+  private static final int ADJACENCY_CAPACITY = 8;
+
 
   /** DAG 定义 Repository */
   private final JobDagRepository jobDagRepository;
@@ -483,5 +486,12 @@ public class JobDagServiceImpl implements JobDagService {
     Map<String, List<String>> adj = new HashMap<>(definition.nodes().size() * 2);
     // 确保所有节点都在邻接表中（即使没有出边）
     for (DagNode node : definition.nodes()) {
-      adj.computeIfAbsent(node.jobKey(), k -> new ArrayList<>(8))
+      adj.computeIfAbsent(node.jobKey(), k -> new ArrayList<>(ADJACENCY_CAPACITY));
+    }
+    // 填充边：from → [to1, to2, ...]
+    for (DagEdge edge : definition.edges()) {
+      adj.computeIfAbsent(edge.from(), k -> new ArrayList<>(ADJACENCY_CAPACITY)).add(edge.to());
+    }
+    return adj;
+  }
 }

@@ -67,7 +67,6 @@ public class JobCacheManager {
   private final RedisTemplate<String, Object> redisTemplate;
 
   /** L1 本地缓存（window-TinyLFU，线程安全） */
-  @SuppressWarnings("unchecked") // @SuppressWarnings 保留原因：泛型擦除，Cache<?, ?> 经 newBuilder() 构造后类型安全
   private final Cache<String, JobVO> l1Cache =
       (Cache<String, JobVO>) (Cache<?, ?>)
           YdszCache.newBuilder()

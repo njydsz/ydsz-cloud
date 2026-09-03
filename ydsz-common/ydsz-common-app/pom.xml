@@ -25,6 +25,18 @@
             <artifactId>ydsz-common-base</artifactId>
         </dependency>
 
+        <!-- ydsz-common-core：AppGlobalResponseAdvice 直接使用 YdszResultCode 等响应包装能力（显式声明避免隐式传递） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+
+        <!-- ydsz-common-util：StringUtils / DigestUtils / SnowflakeIdGenerator 等直接使用（显式声明避免隐式传递） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
+
         <!-- 异常模块（直接依赖，避免通过 ydsz-common-base 间接引入） -->
         <dependency>
             <groupId>com.njydsz</groupId>

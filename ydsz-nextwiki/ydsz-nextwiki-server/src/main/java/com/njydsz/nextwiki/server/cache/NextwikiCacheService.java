@@ -402,7 +402,6 @@ public class NextwikiCacheService {
    * @return 缓存值；不存在或异常返回 {@code null}
    */
   // 泛型擦除：缓存读取返回 Object，向下转型为 T 在编译期无法验证，调用方保证类型一致
-  @SuppressWarnings("unchecked")
   private <T> Optional<T> getFromCache(String key, Class<?> clazz) {
     try {
       Object cached = redisStringOps.get(key, clazz);
@@ -441,7 +440,6 @@ public class NextwikiCacheService {
    * @return 缓存值或 {@code Optional.empty()}
    */
   // 泛型擦除：缓存读取返回 Object，向下转型为 T 在编译期无法验证，调用方保证类型一致
-  @SuppressWarnings("unchecked")
   private <T> Optional<T> waitForCache(String key, String lockKey) {
     long deadline = System.currentTimeMillis() + LOCK_WAIT_MS;
     while (System.currentTimeMillis() < deadline) {
