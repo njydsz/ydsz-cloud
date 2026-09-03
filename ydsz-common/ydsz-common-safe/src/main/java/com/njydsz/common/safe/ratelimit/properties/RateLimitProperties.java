@@ -57,4 +57,7 @@ public class RateLimitProperties {
 
   /** 规则列表（静态配置） */
   private List<RateLimitRule> rules = new ArrayList<>(4);
+
+  /** 熔断器配置（用于保护 Redis 集群调用） */
+  private CircuitBreakerProperties circuitBreaker = new CircuitBreakerProperties();
 }

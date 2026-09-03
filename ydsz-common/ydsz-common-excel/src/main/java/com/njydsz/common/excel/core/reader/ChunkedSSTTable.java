@@ -72,7 +72,7 @@ public class ChunkedSSTTable {
   private int totalStrings;
 
   /** 是否为简单模式（全量内存） */
-  private boolean isSimpleMode;
+  private boolean simpleMode;
 
   /** 简单模式下的完整 SST 字节数据 */
   private byte[] simpleStrings;
@@ -140,7 +140,7 @@ public class ChunkedSSTTable {
    * @throws IOException 读取异常
    */
   private void parseSimpleMode(InputStream sstStream) throws IOException {
-    isSimpleMode = true;
+    simpleMode = true;
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     byte[] buffer = new byte[8192];
     int read;
@@ -228,7 +228,7 @@ public class ChunkedSSTTable {
   }
 
   private void parseChunkedMode(InputStream sstStream) throws IOException {
-    isSimpleMode = false;
+    simpleMode = false;
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     byte[] buffer = new byte[8192];
     int read;
@@ -337,7 +337,7 @@ public class ChunkedSSTTable {
     }
 
     String str;
-    if (isSimpleMode && simpleStrings != null) {
+    if (simpleMode && simpleStrings != null) {
       int start = (int) offsets[index];
       int len = lengths[index];
       if (start >= 0 && len > 0 && start + len <= simpleStrings.length) {

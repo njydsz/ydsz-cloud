@@ -169,7 +169,8 @@ public class IpAccessService {
       return;
     }
     String key = properties.getRedisKeyPrefix() + BLACKLIST_SUFFIX + ":" + ip;
-    redisStringOps.set(key, "1", duration, unit);
+    long seconds = unit.toSeconds(duration);
+    redisStringOps.set(key, "1", seconds);
     blacklistCache.put(ip, true);
     LOG.info("[IpAccessService] IP 已封禁：ip={}, duration={} {}", ip, duration, unit.name());
   }
@@ -193,7 +194,7 @@ public class IpAccessService {
       return;
     }
     String key = properties.getRedisKeyPrefix() + BLACKLIST_SUFFIX + ":" + ip;
-    redisStringOps.delete(key);
+    redisStringOps.del(key);
     blacklistCache.remove(ip);
     LOG.info("[IpAccessService] IP 已解封：ip={}", ip);
   }
@@ -210,7 +211,7 @@ public class IpAccessService {
     }
     String key = properties.getRedisKeyPrefix() + WHITELIST_SUFFIX + ":" + ip;
     if (durationSeconds > 0) {
-      redisStringOps.set(key, "1", durationSeconds, TimeUnit.SECONDS);
+      redisStringOps.set(key, "1", durationSeconds);
     } else {
       redisStringOps.set(key, "1");
     }

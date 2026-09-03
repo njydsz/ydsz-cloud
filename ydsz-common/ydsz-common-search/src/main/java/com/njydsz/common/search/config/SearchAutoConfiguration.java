@@ -28,6 +28,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.thread.adapter.DelegatingTaskExecutor;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;

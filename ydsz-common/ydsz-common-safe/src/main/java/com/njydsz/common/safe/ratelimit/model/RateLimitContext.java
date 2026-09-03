@@ -43,14 +43,22 @@ public class RateLimitContext implements Serializable {
   /** 请求时间戳（毫秒） */
   private long timestamp;
 
+  /** 方法参数（用于 keyParam 提取和审计） */
+  private Object[] args;
+
+  /** 方法签名（用于审计和方法级识别） */
+  private String methodSignature;
+
   /**
-   * Builder 辅助方法：向 attributes 中添加单个键值对。
+   * Builder 辅助方法：创建一个带有单个键值对的 {@link RateLimitContext} 构建器。
    *
    * @param key 键
    * @param value 值
-   * @return builder 自身（链式调用）
+   * @return 新的 RateLimitContext 实例（仅包含该属性）
    */
-  public static RateLimitContextBuilder put(String key, Object value) {
-    return builder().put(key, value);
+  public static RateLimitContext put(String key, Object value) {
+    Map<String, Object> attrs = new HashMap<>(16);
+    attrs.put(key, value);
+    return RateLimitContext.builder().attributes(attrs).build();
   }
 }

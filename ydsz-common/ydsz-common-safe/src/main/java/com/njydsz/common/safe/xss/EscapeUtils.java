@@ -226,16 +226,6 @@ public class EscapeUtils {
   }
 
   /**
-   * 使用标准策略清理内容中的 XSS 攻击代码
-   *
-   * @param content 待清理的内容
-   * @return 清理后的内容
-   */
-  public static String clean(String content) {
-    return cleanStandard(content);
-  }
-
-  /**
    * 使用宽松策略清理内容中的 XSS 攻击代码
    *
    * <p>保留格式化+图片+链接+样式+表格，适用于富文本编辑器场景（OWASP RELAXED 策略）。
