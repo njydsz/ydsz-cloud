@@ -1,5 +1,6 @@
 package com.njydsz.literule.server.dsl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -198,7 +199,7 @@ public final class RuleDslConverter {
         .scope(entry.getScope())
         .mutexGroup(entry.getMutexGroup())
         .version(entry.getVersion())
-        .canaryRatio(entry.getCanaryRatio() != null ? entry.getCanaryRatio() : 0.0)
+        .canaryRatio(entry.getCanaryRatio() != null ? entry.getCanaryRatio() : BigDecimal.ZERO)
         .canaryConditions(entry.getCanaryConditions())
         .canaryConditionExpression(entry.getCanaryConditionExpression())
         .canarySeverityExpression(entry.getCanarySeverityExpression())
@@ -215,11 +216,11 @@ public final class RuleDslConverter {
             .ruleName(entry.getName())
             .category(entry.getCategory())
             .description(entry.getDescription())
-            .baseScore(entry.getBaseScore() != null ? entry.getBaseScore() : 100.0)
-            .redThreshold(entry.getRedThreshold() != null ? entry.getRedThreshold() : 0.0)
-            .yellowThreshold(entry.getYellowThreshold() != null ? entry.getYellowThreshold() : 0.0)
-            .minScore(entry.getMinScore() != null ? entry.getMinScore() : 0.0)
-            .maxScore(entry.getMaxScore() != null ? entry.getMaxScore() : 100.0)
+            .baseScore(entry.getBaseScore() != null ? entry.getBaseScore() : new BigDecimal("100"))
+            .redThreshold(entry.getRedThreshold() != null ? entry.getRedThreshold() : BigDecimal.ZERO)
+            .yellowThreshold(entry.getYellowThreshold() != null ? entry.getYellowThreshold() : BigDecimal.ZERO)
+            .minScore(entry.getMinScore() != null ? entry.getMinScore() : BigDecimal.ZERO)
+            .maxScore(entry.getMaxScore() != null ? entry.getMaxScore() : new BigDecimal("100"))
             .scoreDirection(parseDirection(entry.getDirection()))
             .priority(entry.getPriority())
             .enabled(entry.isEnabled())
@@ -232,9 +233,9 @@ public final class RuleDslConverter {
         factors.add(
             ScorecardDefinitionDTO.ScoreFactor.builder()
                 .conditionExpression(f.getWhen())
-                .score(f.getScore() != null ? f.getScore() : 0.0)
+                .score(f.getScore() != null ? f.getScore() : BigDecimal.ZERO)
                 .scoreExpression(f.getScoreExpr())
-                .weight(f.getWeight() != null ? f.getWeight() : 1.0)
+                .weight(f.getWeight() != null ? f.getWeight() : new BigDecimal("1.0"))
                 .description(f.getDesc())
                 .build());
       }

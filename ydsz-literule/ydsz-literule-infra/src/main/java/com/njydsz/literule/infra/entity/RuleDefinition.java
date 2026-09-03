@@ -1,5 +1,6 @@
 package com.njydsz.literule.infra.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -133,7 +134,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
   private String reviewComment;
 
   /** 灰度比例（0.0~1.0，0 表示不启用灰度；P1-10 AB Test 自动回滚用） */
-  private Double canaryRatio;
+  private BigDecimal canaryRatio;
 
   /** 灰度条件表达式列表（JSON 数组） */
   private String canaryConditions;
@@ -276,6 +277,6 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @return true 表示启用了灰度发布
    */
   public boolean isCanaryEnabled() {
-    return canaryRatio != null && canaryRatio > 0.0;
+    return canaryRatio != null && canaryRatio.compareTo(BigDecimal.ZERO) > 0;
   }
 }

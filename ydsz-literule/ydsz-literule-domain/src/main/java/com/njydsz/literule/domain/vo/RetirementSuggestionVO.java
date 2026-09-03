@@ -1,6 +1,7 @@
 package com.njydsz.literule.domain.vo;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,10 +64,10 @@ public class RetirementSuggestionVO implements Serializable {
   private long totalErrors;
 
   /** 触发率（0~1.0） */
-  private double triggerRate;
+  private BigDecimal triggerRate;
 
   /** 错误率（0~1.0） */
-  private double errorRate;
+  private BigDecimal errorRate;
 
   /** 建议操作 */
   @Builder.Default private List<String> recommendedActions = new ArrayList<>(16);
@@ -75,7 +76,7 @@ public class RetirementSuggestionVO implements Serializable {
   private LocalDateTime suggestedAt;
 
   /** 置信度（0~1.0，基于样本量计算） */
-  private double confidence;
+  private BigDecimal confidence;
 
   /** 退役原因类型 */
   public enum Reason {

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
@@ -50,7 +49,7 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
  * @since 26.09.01
  */
 @Slf4j
-@ConditionalOnClass(MeterRegistry.class)
+@ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
 public class FlowMetrics extends SentryMetricsAdapter {
 
 

@@ -162,6 +162,7 @@ public class IpAccessService {
    *
    * @param ip IP 地址
    * @param duration 封禁时长
+   * @param unit 封禁时长单位
    */
   public void blockIp(String ip, long duration, TimeUnit unit) {
     if (ip == null || ip.isEmpty()) {
@@ -201,7 +202,7 @@ public class IpAccessService {
    * 将 IP 加入动态白名单。
    *
    * @param ip IP 地址
-   * @param duration 有效时长（秒），0 表示永不过期
+   * @param durationSeconds 有效时长（秒），0 表示永不过期
    */
   public void whitelistIp(String ip, long durationSeconds) {
     if (ip == null || ip.isEmpty()) {

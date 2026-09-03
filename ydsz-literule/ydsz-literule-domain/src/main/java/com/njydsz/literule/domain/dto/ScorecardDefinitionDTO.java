@@ -1,6 +1,7 @@
 package com.njydsz.literule.domain.dto;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -84,22 +85,22 @@ public class ScorecardDefinitionDTO implements Serializable {
   private String description;
 
   /** 基础分（命中因子前的基础值，默认 100） */
-  @Builder.Default private double baseScore = 100;
+  @Builder.Default private BigDecimal baseScore = new BigDecimal("100");
 
   /** 红色阈值（DESCENDING 模式下总分低于此值为 RED；ASCENDING 模式下总分高于此值为 RED） */
-  private double redThreshold;
+  private BigDecimal redThreshold;
 
   /** 黄色阈值（DESCENDING 模式下总分低于此值为 YELLOW；ASCENDING 模式下总分高于此值为 YELLOW） */
-  private double yellowThreshold;
+  private BigDecimal yellowThreshold;
 
   /** 评分方向（默认 DESCENDING：分数越低风险越高） */
   @Builder.Default private ScoreDirection scoreDirection = ScoreDirection.DESCENDING;
 
   /** 最低分（钳制下界，默认 0） */
-  @Builder.Default private double minScore = 0;
+  @Builder.Default private BigDecimal minScore = BigDecimal.ZERO;
 
   /** 最高分（钳制上界，默认 100） */
-  @Builder.Default private double maxScore = 100;
+  @Builder.Default private BigDecimal maxScore = new BigDecimal("100");
 
   /** 评分因子列表 */
   private List<ScoreFactor> factors;
@@ -131,13 +132,13 @@ public class ScorecardDefinitionDTO implements Serializable {
     private String conditionExpression;
 
     /** 命中时的固定得分（正分加分，负分扣分） */
-    @Builder.Default private double score = 0;
+    @Builder.Default private BigDecimal score = BigDecimal.ZERO;
 
     /** 动态分值表达式（LiteExpr，返回 Number；与 score 二选一，优先使用 scoreExpression） */
     private String scoreExpression;
 
     /** 权重（实际得分 = 分值 × 权重，默认 1.0） */
-    @Builder.Default private double weight = 1.0;
+    @Builder.Default private BigDecimal weight = new BigDecimal("1.0");
 
     /** 因子描述（用于结果展示） */
     private String description;
@@ -159,10 +160,10 @@ public class ScorecardDefinitionDTO implements Serializable {
     private String label;
 
     /** 区间下界（含） */
-    private double minScore;
+    private BigDecimal minScore;
 
     /** 区间上界（不含；最高评级可设为 Double.MAX_VALUE） */
-    private double maxScore;
+    private BigDecimal maxScore;
 
     /** 对应的严重度编码（RED/YELLOW/INFO，可选） */
     private String severity;

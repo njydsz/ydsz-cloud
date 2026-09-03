@@ -2,6 +2,7 @@ package com.njydsz.literule.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +37,7 @@ public class RuleDashboardRealtimeVO implements Serializable {
   private long recentErrors;
 
   /** 当前 QPS（次/秒） */
-  private double currentQps;
+  private BigDecimal currentQps;
 
   /** 当前活跃规则数（最近 1 分钟有触发的规则） */
   private long activeRules;

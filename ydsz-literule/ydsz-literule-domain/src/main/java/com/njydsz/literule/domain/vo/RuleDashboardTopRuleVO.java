@@ -2,6 +2,7 @@ package com.njydsz.literule.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import lombok.Builder;
 import lombok.Data;
@@ -48,16 +49,16 @@ public class RuleDashboardTopRuleVO implements Serializable {
   private long errors;
 
   /** 触发率（0~1） */
-  private double triggerRate;
+  private BigDecimal triggerRate;
 
   /** 错误率（0~1） */
-  private double errorRate;
+  private BigDecimal errorRate;
 
   /** 平均耗时（毫秒） */
-  private double avgElapsedMs;
+  private BigDecimal avgElapsedMs;
 
   /** P99 耗时（毫秒） */
-  private double p99ElapsedMs;
+  private BigDecimal p99ElapsedMs;
 
   /** 总耗时（毫秒） */
   private long totalElapsedMs;

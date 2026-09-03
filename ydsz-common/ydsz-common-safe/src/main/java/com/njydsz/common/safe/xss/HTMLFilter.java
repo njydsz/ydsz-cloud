@@ -1,10 +1,7 @@
 package com.njydsz.common.safe.xss;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -450,10 +447,18 @@ public final class HTMLFilter {
     sb.append('"');
     for (char c : value.toCharArray()) {
       switch (c) {
-        case '&': sb.append("&amp;"); break;
-        case '<': sb.append("&lt;"); break;
-        case '>': sb.append("&gt;"); break;
-        case '"': sb.append("&quot;"); break;
+        case '&':
+          sb.append("&amp;");
+          break;
+        case '<':
+          sb.append("&lt;");
+          break;
+        case '>':
+          sb.append("&gt;");
+          break;
+        case '"':
+          sb.append("&quot;");
+          break;
         default:
           if (c < 0x20) {
             sb.append("&#").append((int) c).append(';');
@@ -534,11 +539,21 @@ public final class HTMLFilter {
     StringBuilder sb = new StringBuilder(text.length());
     for (char c : text.toCharArray()) {
       switch (c) {
-        case '&': sb.append("&amp;"); break;
-        case '<': sb.append("&lt;"); break;
-        case '>': sb.append("&gt;"); break;
-        case '"': sb.append("&quot;"); break;
-        default: sb.append(c); break;
+        case '&':
+          sb.append("&amp;");
+          break;
+        case '<':
+          sb.append("&lt;");
+          break;
+        case '>':
+          sb.append("&gt;");
+          break;
+        case '"':
+          sb.append("&quot;");
+          break;
+        default:
+          sb.append(c);
+          break;
       }
     }
     return sb.toString();

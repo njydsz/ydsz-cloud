@@ -1,5 +1,6 @@
 package com.njydsz.literule.domain.vo;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 
 import lombok.Data;
@@ -28,7 +29,7 @@ public class CEPPatternVO {
   private Duration window;
 
   /** 触发阈值（窗口内事件次数达到该值时触发） */
-  private double threshold;
+  private BigDecimal threshold;
 
   /** 关注的事件类型（模式只匹配该类型事件） */
   private String eventType;

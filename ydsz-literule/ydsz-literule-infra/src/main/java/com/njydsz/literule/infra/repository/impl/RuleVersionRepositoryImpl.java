@@ -1,5 +1,6 @@
 package com.njydsz.literule.infra.repository.impl;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -208,7 +209,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     def.setReviewedBy(rule.getReviewedBy());
     def.setReviewedAt(rule.getReviewedAt());
     def.setReviewComment(rule.getReviewComment());
-    def.setCanaryRatio(rule.getCanaryRatio() != null ? rule.getCanaryRatio() : 0.0);
+    def.setCanaryRatio(rule.getCanaryRatio() != null ? rule.getCanaryRatio() : BigDecimal.ZERO);
     def.setCanaryConditionExpression(rule.getCanaryConditionExpression());
     def.setCanarySeverityExpression(rule.getCanarySeverityExpression());
     return def;

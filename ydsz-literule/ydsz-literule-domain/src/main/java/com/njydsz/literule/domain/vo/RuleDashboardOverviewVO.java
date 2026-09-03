@@ -2,6 +2,7 @@ package com.njydsz.literule.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Map;
 
 import lombok.Builder;
@@ -40,28 +41,28 @@ public class RuleDashboardOverviewVO implements Serializable {
   private long todayTriggered;
 
   /** 今日触发率（0~1） */
-  private double todayTriggerRate;
+  private BigDecimal todayTriggerRate;
 
   /** 今日错误次数 */
   private long todayErrors;
 
   /** 今日错误率（0~1） */
-  private double todayErrorRate;
+  private BigDecimal todayErrorRate;
 
   /** 今日活跃规则数（有触发的规则） */
   private long todayActiveRules;
 
   /** P50 耗时（毫秒） */
-  private double p50ElapsedMs;
+  private BigDecimal p50ElapsedMs;
 
   /** P95 耗时（毫秒） */
-  private double p95ElapsedMs;
+  private BigDecimal p95ElapsedMs;
 
   /** P99 耗时（毫秒） */
-  private double p99ElapsedMs;
+  private BigDecimal p99ElapsedMs;
 
   /** 平均耗时（毫秒） */
-  private double avgElapsedMs;
+  private BigDecimal avgElapsedMs;
 
   /** 统计时间窗口起始时间（含） */
   private String since;

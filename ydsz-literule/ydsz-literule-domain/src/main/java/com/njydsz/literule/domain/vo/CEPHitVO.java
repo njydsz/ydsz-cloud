@@ -1,5 +1,6 @@
 package com.njydsz.literule.domain.vo;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class CEPHitVO {
   private Instant hitAt;
 
   /** 命中指标值（如窗口内聚合度量，用于排序/告警分级） */
-  private double metric;
+  private BigDecimal metric;
 
   /** 命中上下文（附加维度信息，如项目/组织等） */
   private Map<String, Object> context;

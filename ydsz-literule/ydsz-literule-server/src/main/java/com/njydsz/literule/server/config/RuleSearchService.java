@@ -1,5 +1,6 @@
 package com.njydsz.literule.server.config;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -130,7 +131,7 @@ public class RuleSearchService {
     def.setReviewedBy(vo.getReviewedBy());
     def.setReviewedAt(vo.getReviewedAt());
     def.setReviewComment(vo.getReviewComment());
-    def.setCanaryRatio(vo.getCanaryRatio() != null ? vo.getCanaryRatio() : 0.0);
+    def.setCanaryRatio(vo.getCanaryRatio() != null ? vo.getCanaryRatio() : BigDecimal.ZERO);
     def.setCanaryConditionExpression(vo.getCanaryConditionExpression());
     def.setCanarySeverityExpression(vo.getCanarySeverityExpression());
     return def;

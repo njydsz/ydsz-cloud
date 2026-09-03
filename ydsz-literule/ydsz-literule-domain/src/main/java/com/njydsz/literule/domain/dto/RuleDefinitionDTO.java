@@ -1,6 +1,7 @@
 package com.njydsz.literule.domain.dto;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -163,7 +164,7 @@ public class RuleDefinitionDTO implements Serializable {
    *
    * @since 26.09.01
    */
-  @Builder.Default private double canaryRatio = 0.0;
+  @Builder.Default private BigDecimal canaryRatio = BigDecimal.ZERO;
 
   /**
    * 灰度条件（LiteExpr 表达式列表，AND 关系）

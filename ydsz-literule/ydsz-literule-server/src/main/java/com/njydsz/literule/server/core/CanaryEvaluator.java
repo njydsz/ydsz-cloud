@@ -1,5 +1,7 @@
 package com.njydsz.literule.server.core;
 
+import java.math.BigDecimal;
+
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.Rule;
@@ -60,7 +62,7 @@ public class CanaryEvaluator {
             return null;
         }
         RuleDefinitionDTO def = rule.getRuleDefinition();
-        if (def == null || def.getCanaryRatio() <= 0) {
+        if (def == null || def.getCanaryRatio().compareTo(BigDecimal.ZERO) <= 0) {
             return null;
         }
         if (def.getCanaryConditionExpression() == null && def.getCanarySeverityExpression() == null) {

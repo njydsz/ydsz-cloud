@@ -129,24 +129,24 @@ public class ScorecardRule implements Rule {
             .category(def.getCategory())
             .priority(def.getPriority())
             .scope(def.getScope())
-            .baseScore(def.getBaseScore())
-            .redThreshold(def.getRedThreshold())
-            .yellowThreshold(def.getYellowThreshold())
+            .baseScore(def.getBaseScore().doubleValue())
+            .redThreshold(def.getRedThreshold().doubleValue())
+            .yellowThreshold(def.getYellowThreshold().doubleValue())
             .scoreDirection(
                 def.getScoreDirection() != null
                     ? def.getScoreDirection()
                     : ScorecardDefinitionDTO.ScoreDirection.DESCENDING)
-            .minScore(def.getMinScore())
-            .maxScore(def.getMaxScore())
+            .minScore(def.getMinScore().doubleValue())
+            .maxScore(def.getMaxScore().doubleValue())
             .evaluator(evaluator);
     if (def.getFactors() != null) {
       for (ScorecardDefinitionDTO.ScoreFactor f : def.getFactors()) {
         b.factor(
             ScoreFactor.builder()
                 .conditionExpression(f.getConditionExpression())
-                .score(f.getScore())
+                .score(f.getScore().doubleValue())
                 .scoreExpression(f.getScoreExpression())
-                .weight(f.getWeight())
+                .weight(f.getWeight().doubleValue())
                 .description(f.getDescription())
                 .build());
       }
@@ -254,7 +254,10 @@ public class ScorecardRule implements Rule {
   /** 按自定义评级映射查找命中区间 */
   private ScorecardDefinitionDTO.ScoreGrade resolveGrade(double totalScore) {
     for (ScorecardDefinitionDTO.ScoreGrade g : grades) {
-      if (totalScore >= g.getMinScore() && totalScore < g.getMaxScore()) {
+      // 边界转换：DTO BigDecimal 字段转为 double 进行比较（计算引擎内部使用 double）
+      double min = g.getMinScore() != null ? g.getMinScore().doubleValue() : Double.MIN_VALUE;
+      double max = g.getMaxScore() != null ? g.getMaxScore().doubleValue() : Double.MAX_VALUE;
+      if (totalScore >= min && totalScore < max) {
         return g;
       }
     }
