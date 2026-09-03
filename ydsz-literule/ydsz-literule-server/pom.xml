@@ -52,11 +52,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
-        <!-- MapStruct（LiteruleWebConverter 使用 @Mapper 注解，2026-09-03 从 infra 迁层引入） -->
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>

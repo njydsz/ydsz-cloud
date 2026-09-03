@@ -378,6 +378,18 @@ public class ScriptJobHandler implements JobHandler {
     return command;
   }
 
-  /** 脚本执行结果。 */
-  public record ScriptResult(int exitCode, String stdout, String stderr) {}
+  /**
+   * 脚本执行结果。
+   *
+   * @param exitCode 退出码（0 = 成功）
+   * @param output 标准输出内容
+   * @param errorMessage 错误信息（成功时为空字符串）
+   */
+  private record ScriptResult(int exitCode, String output, String errorMessage) {
+
+    /** 是否执行成功（退出码为 0 且无错误信息） */
+    private boolean success() {
+      return exitCode == 0 && (errorMessage == null || errorMessage.isEmpty());
+    }
+  }
 }

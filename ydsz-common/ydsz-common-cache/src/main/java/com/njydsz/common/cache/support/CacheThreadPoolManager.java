@@ -134,29 +134,27 @@ public class CacheThreadPoolManager implements DisposableBean {
     return executor;
   }
 
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — 使用 ydsz-common-thread 统一管理
   /**
    * 创建缓存专用线程池。
    *
-   * <p>使用 ydsz-common-thread {@link ExecutorUtils} 创建，线程名前缀为 {@code cache-}，
+   * <p>使用标准 JDK {@link ThreadPoolExecutor} 创建，线程名前缀为 {@code cache-}，
    * 拒绝策略为 warn 日志（不抛异常，不阻塞调用方）。
    */
   private ExecutorService createPool(String name, int coreSize, int maxSize) {
     RejectedExecutionHandler handler = (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name);
     ThreadPoolExecutor executor =
-        (ThreadPoolExecutor) ExecutorUtils.builder()
-            .corePoolSize(coreSize)
-            .maxPoolSize(maxSize)
-            .keepAliveTime(60L, TimeUnit.SECONDS)
-            .queueCapacity(1024)
-            .threadNamePrefix("cache-" + name)
-            .rejectedHandler(handler)
-            .build();
+        new ThreadPoolExecutor(
+            coreSize,
+            maxSize,
+            60L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(1024),
+            createThreadFactory("cache-" + name),
+            handler);
 
     LOG.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;
   }
-  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 关闭指定线程池

@@ -22,11 +22,6 @@
             <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <version>${mybatis-plus.version}</version>
         </dependency>
-        <!-- MapStruct（MessageConverter 使用 @Mapper 注解） -->
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-        </dependency>
         <!-- ydsz-common-jdbc（MpBaseEntity / MpBaseIdEntity 基类） -->
         <dependency>
             <groupId>com.njydsz</groupId>
