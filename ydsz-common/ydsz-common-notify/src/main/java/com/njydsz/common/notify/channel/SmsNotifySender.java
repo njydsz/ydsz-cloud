@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.json.YdszJson;
@@ -256,8 +257,4 @@ public class SmsNotifySender implements NotifyChannelStrategy {
     byte[] rawHmac = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
     return Base64.getEncoder().encodeToString(rawHmac);
   }
-}
-
-import org.springframework.util.StringUtils;
-}
 }

@@ -139,6 +139,17 @@ public class ExceptionContext implements Serializable {
   }
 
   /**
+   * 获取附加数据（不可变视图）。
+   *
+   * <p>与 {@link #getData()} 等价，提供 extData 命名的访问通道。
+   *
+   * @return 不可变附加数据 Map；未设置时返回空 Map
+   */
+  public Map<String, Object> getExtData() {
+    return getData();
+  }
+
+  /**
    * 设置附加数据（覆盖式）。
    *
    * @param data 附加数据 Map，可为 null
@@ -149,6 +160,17 @@ public class ExceptionContext implements Serializable {
     } else {
       this.extData = new LinkedHashMap<>(data);
     }
+  }
+
+  /**
+   * 设置附加数据（覆盖式）。
+   *
+   * <p>与 {@link #setData(Map)} 等价，提供 extData 命名的访问通道。
+   *
+   * @param extData 附加数据 Map，可为 null
+   */
+  public void setExtData(Map<String, Object> extData) {
+    setData(extData);
   }
 
   /**
@@ -164,6 +186,77 @@ public class ExceptionContext implements Serializable {
     }
     this.extData.put(key, value);
     return this;
+  }
+
+  /**
+   * 向上下文快照批量追加条目。
+   *
+   * @param entries 待追加的键值对
+   * @return 当前异常上下文，便于链式调用
+   */
+  public ExceptionContext addSnapshots(Map<String, ?> entries) {
+    if (entries == null || entries.isEmpty()) {
+      return this;
+    }
+    if (this.snapshot == null) {
+      this.snapshot = new LinkedHashMap<>(entries.size());
+    }
+    for (Map.Entry<String, ?> entry : entries.entrySet()) {
+      this.snapshot.put(entry.getKey(), String.valueOf(entry.getValue()));
+    }
+    return this;
+  }
+
+  /**
+   * 批量追加快照条目（等价于多次调用 {@link #addSnapshot(String, Object)}）。
+   *
+   * @param entries 待追加的键值对，可为 null
+   * @return 当前异常上下文，便于链式调用
+   */
+  public ExceptionContext addSnapshots(Map<String, ?> entries) {
+    if (entries == null || entries.isEmpty()) {
+      return this;
+    }
+    for (Map.Entry<String, ?> e : entries.entrySet()) {
+      addSnapshot(e.getKey(), e.getValue());
+    }
+    return this;
+  }
+
+  /**
+   * 获取附加数据（不可变视图）。
+   *
+   * <p>与 {@link #getData()} 语义相同，提供别名以兼容旧代码。
+   *
+   * @return 不可变附加数据 Map；未设置时返回空 Map
+   */
+  public Map<String, Object> getExtData() {
+    return getData();
+  }
+
+  /**
+   * 设置附加数据（覆盖式）。
+   *
+   * <p>与 {@link #setData(Map)} 语义相同，提供别名以兼容旧代码。
+   *
+   * @param extData 附加数据 Map，可为 null
+   */
+  public void setExtData(Map<String, Object> extData) {
+    setData(extData);
+  }
+
+  /**
+   * 批量追加快照条目（链式调用）。
+   *
+   * @param entries 待追加的键值对，可为 null
+   */
+  public void addSnapshots(Map<String, ?> entries) {
+    if (entries == null || entries.isEmpty()) {
+      return;
+    }
+    for (Map.Entry<String, ?> entry : entries.entrySet()) {
+      addSnapshot(entry.getKey(), entry.getValue());
+    }
   }
 
   /**
