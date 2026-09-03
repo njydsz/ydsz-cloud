@@ -81,4 +81,14 @@ public interface FlowSkipRepository {
    * @return 节点跳转 VO 列表
    */
   List<FlowSkipVO> findByDefinitionId(String definitionId);
+
+  /**
+   * P1-9: 批量删除某流程定义下的所有跳转边（逻辑删除，单次 UPDATE）。
+   *
+   * <p>替代 {@code findByDefinitionId} + 逐条 {@code deleteById} 造成的 N+1 删除问题。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 受影响行数
+   */
+  int deleteByDefinitionId(String definitionId);
 }

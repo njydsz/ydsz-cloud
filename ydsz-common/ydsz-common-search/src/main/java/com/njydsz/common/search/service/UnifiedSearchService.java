@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -15,6 +16,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
+import com.njydsz.common.thread.adapter.DelegatingTaskExecutor;
+
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
@@ -142,6 +146,8 @@ public class UnifiedSearchService {
    * 创建默认搜索线程池。
    *
    * <p>仅在未注入外部线程池时使用，线程池参数与原有逻辑保持一致。
+   * 使用 {@link InternalExecutorFactory} 创建符合云顶规范 15.4 的线程池， 并通过 {@link DelegatingTaskExecutor}
+   * 适配为 Spring {@link ThreadPoolTaskExecutor} 以保证优雅停机钩子生效。
    *
    * @param properties 搜索配置
    * @return 默认搜索线程池
@@ -149,18 +155,12 @@ public class UnifiedSearchService {
   public static ThreadPoolTaskExecutor createDefaultSearchExecutor(SearchProperties properties) {
     int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
     int maxSize = Math.max(4, properties.getIndex().getThreadPoolSize() * 2);
-        // CHECKSTYLE.OFF: RegexpSinglelineJava
+    // 使用 InternalExecutorFactory 创建符合云顶规范 15.4 的兜底线程池
     // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
-    ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-    // CHECKSTYLE.ON: RegexpSinglelineJava
-    taskExecutor.setCorePoolSize(coreSize);
-    taskExecutor.setMaxPoolSize(maxSize);
-    taskExecutor.setQueueCapacity(256);
-    taskExecutor.setThreadNamePrefix("ydsz-search-");
-    taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
-    taskExecutor.setAwaitTerminationSeconds(5);
-    taskExecutor.initialize();
-    return taskExecutor;
+    return DelegatingTaskExecutor.wrap(
+        InternalExecutorFactory.newCustomThreadPool(
+            "searchFallback", coreSize, maxSize, 60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(256)));
   }
 
   /**

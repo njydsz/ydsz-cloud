@@ -90,4 +90,9 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
                 .eq(FlowSkip::getDefinitionId, definitionId)
                 .eq(FlowSkip::getDeleted, 0)));
   }
+
+  @Override
+  public int deleteByDefinitionId(String definitionId) {
+    return skipMapper.deleteByDefinitionId(definitionId);
+  }
 }

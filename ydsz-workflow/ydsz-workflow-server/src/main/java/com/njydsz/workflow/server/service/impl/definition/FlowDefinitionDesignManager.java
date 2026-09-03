@@ -189,8 +189,8 @@ public class FlowDefinitionDesignManager {
     boolean hasSkips = dto.getSkips() != null && !dto.getSkips().isEmpty();
     boolean hasBpmn = StringUtils.hasText(dto.getBpmnXml());
     if (hasBpmn || hasNodes || hasSkips) {
-      // 先删除跳转（外键依赖节点，但此处按业务约定先删跳转再删节点）
-      skipRepository.findByDefinitionId(definitionId).forEach(s -> skipRepository.deleteById(s.getId()));
+      // 先删除跳转（外键依赖节点，但此处按业务约定先删跳转再删节点）— P1-9: 批量 DELETE 替代逐条删除的 N+1
+      skipRepository.deleteByDefinitionId(definitionId);
       nodeRepository.deleteByDefinitionId(definitionId);
 
       int expectedNodeSize = dto.getNodes() != null ? dto.getNodes().size() : DEFAULT_COLLECTION_CAPACITY;

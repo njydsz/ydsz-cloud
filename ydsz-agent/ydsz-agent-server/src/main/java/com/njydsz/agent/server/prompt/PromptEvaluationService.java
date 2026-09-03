@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.prompt;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,10 @@ public class PromptEvaluationService {
   private static final String DEFAULT_EVAL_USER_MESSAGE = "请根据以上系统提示进行回复。";
 
   /** 估算成本：千 Prompt Token 单价（USD，GPT-4 级别定价近似） */
-  private static final double COST_PER_1K_PROMPT_TOKENS = 0.001;
+  private static final BigDecimal COST_PER_1K_PROMPT_TOKENS = new BigDecimal("0.001");
 
   /** 估算成本：千补全 Token 单价（USD，GPT-4 级别定价近似） */
-  private static final double COST_PER_1K_COMPLETION_TOKENS = 0.002;
+  private static final BigDecimal COST_PER_1K_COMPLETION_TOKENS = new BigDecimal("0.002");
 
   private final PromptManagementService promptManagementService;
   private final LlmClient llmClient;
@@ -96,12 +97,14 @@ public class PromptEvaluationService {
     String content = response.getContent() != null ? response.getContent() : "";
 
     // 估算成本（基于 GPT-4 级别定价的微美元近似）
-    double estimatedCostUsd =
-        (promptTokens * COST_PER_1K_PROMPT_TOKENS + completionTokens * COST_PER_1K_COMPLETION_TOKENS) / 1000.0;
+    BigDecimal estimatedCostUsd = BigDecimal.valueOf(promptTokens)
+        .multiply(COST_PER_1K_PROMPT_TOKENS)
+        .add(BigDecimal.valueOf(completionTokens).multiply(COST_PER_1K_COMPLETION_TOKENS))
+        .divide(BigDecimal.valueOf(1000), 6, java.math.RoundingMode.HALF_UP);
 
     log.info(
         "[PromptEval] 评估完成: template={}, duration={}ms, tokens={}, cost={}",
-        templateCode, durationMs, totalTokens, String.format("%.6f", estimatedCostUsd));
+        templateCode, durationMs, totalTokens, estimatedCostUsd.toPlainString());
 
     return new PromptEvaluationResult(
         templateCode,
@@ -162,7 +165,7 @@ public class PromptEvaluationService {
       int promptTokens,
       int completionTokens,
       int totalTokens,
-      double estimatedCostUsd,
+      BigDecimal estimatedCostUsd,
       int responseLength,
       String responseContent,
       LocalDateTime evaluatedAt) {}
@@ -204,11 +207,11 @@ public class PromptEvaluationService {
      * @return 节省率（0.1 = 10%）
      */
     public double costSavingRate() {
-      if (resultA.estimatedCostUsd() == 0) {
+      if (resultA.estimatedCostUsd().compareTo(BigDecimal.ZERO) == 0) {
         return 0;
       }
-      return (resultA.estimatedCostUsd() - resultB.estimatedCostUsd())
-          / resultA.estimatedCostUsd();
+      return resultA.estimatedCostUsd().subtract(resultB.estimatedCostUsd())
+          .divide(resultA.estimatedCostUsd(), 4, java.math.RoundingMode.HALF_UP).doubleValue();
     }
   }
 }

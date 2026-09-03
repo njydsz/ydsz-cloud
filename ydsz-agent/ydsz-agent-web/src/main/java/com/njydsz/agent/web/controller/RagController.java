@@ -1,5 +1,6 @@
 package com.njydsz.agent.web.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -144,11 +145,13 @@ public class RagController {
   public YdszResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
     // 参数默认值兜底：topK=5 / minScore=0.7 / includeContext=true
     int topK = request.getTopK() != null ? request.getTopK() : 5;
-    double minScore = request.getMinScore() != null ? request.getMinScore() : 0.7;
+    BigDecimal minScore = request.getMinScore() != null
+        ? BigDecimal.valueOf(request.getMinScore())
+        : new BigDecimal("0.7");
     boolean includeContext = request.getIncludeContext() == null || request.getIncludeContext();
 
-    // 1. 检索 TopK chunk
-    List<TextChunk> chunks = ragService.retrieve(request.getQuery(), topK, minScore);
+    // 1. 检索 TopK chunk（使用 BigDecimal 精度传递，避免浮点误差）
+    List<TextChunk> chunks = ragService.retrieve(request.getQuery(), topK, minScore.doubleValue());
     // 2. 构建引用列表
     List<RagService.Citation> citations = ragService.getCitations(chunks);
     // 3. 拼装上下文（可选）

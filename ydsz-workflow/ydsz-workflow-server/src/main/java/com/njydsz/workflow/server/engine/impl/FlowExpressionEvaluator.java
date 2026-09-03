@@ -35,6 +35,10 @@ public class FlowExpressionEvaluator {
   /** 比较表达式正则捕获组：右侧操作数 */
   private static final int CMP_GROUP_RIGHT = 3;
 
+  /** 完整占位符表达式：整个字符串为 ${...} 形式 */
+  private static final Pattern FULL_PLACEHOLDER =
+      Pattern.compile("^\\$\\{(.+)}\\s*$");
+
   private final FlowVariableReplacer variableReplacer;
 
   /**
@@ -134,7 +138,7 @@ public class FlowExpressionEvaluator {
       return true;
     }
     // 如果整个表达式是单一 ${...} 占位符（允许非标识符内容如 "${var op value}"）
-    Matcher fullPh = Pattern.compile("^\\$\\{(.+)}\\s*$").matcher(expr);
+    Matcher fullPh = FULL_PLACEHOLDER.matcher(expr);
     if (fullPh.matches()) {
       String inner = fullPh.group(1).trim();
       Matcher innerCmp = FlowExpressionUtils.COMPARE_INNER.matcher(inner);

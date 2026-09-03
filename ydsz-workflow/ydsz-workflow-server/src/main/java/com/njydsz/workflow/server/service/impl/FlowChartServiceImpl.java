@@ -33,15 +33,15 @@ import com.njydsz.workflow.server.service.FlowChartService;
 public class FlowChartServiceImpl implements FlowChartService {
 
   /** 节点默认宽度 */
-  private static final double NODE_WIDTH = 120;
+  private static final int NODE_WIDTH = 120;
   /** 节点默认高度 */
-  private static final double NODE_HEIGHT = 50;
+  private static final int NODE_HEIGHT = 50;
   /** 节点间距（水平） */
-  private static final double NODE_GAP_X = 60;
+  private static final int NODE_GAP_X = 60;
   /** 节点间距（垂直） */
-  private static final double NODE_GAP_Y = 80;
+  private static final int NODE_GAP_Y = 80;
   /** 绘图边距 */
-  private static final double PADDING = 40;
+  private static final int PADDING = 40;
 
   /** 自动布局：每行节点数 */
   private static final int NODES_PER_ROW = 3;

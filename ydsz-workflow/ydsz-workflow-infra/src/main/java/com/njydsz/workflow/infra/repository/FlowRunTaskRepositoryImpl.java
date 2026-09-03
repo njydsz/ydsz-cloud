@@ -345,6 +345,16 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
   }
 
+  @Override
+  public List<FlowRunTaskVO> selectTodoByAssignees(Collection<String> assigneeIds, String tenantId) {
+    if (assigneeIds == null || assigneeIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+    List<String> idList = assigneeIds instanceof List ? (List<String>) assigneeIds : new ArrayList<>(assigneeIds);
+    List<FlowRunTask> list = taskMapper.selectTodoByAssignees(idList, tenantId);
+    return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
+  }
+
 @Override
 public List<FlowRunTaskVO> selectTodoByAssigneePage(String assigneeId, String tenantId, int offset, int limit) {
 List<FlowRunTask> list = taskMapper.selectTodoByAssigneePage(assigneeId, tenantId, offset, limit);

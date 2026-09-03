@@ -1,7 +1,5 @@
 package com.njydsz.common.jdbc.monitor;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -253,8 +251,6 @@ public final class SqlAuditJsonLogger {
     if (exception == null) {
       return null;
     }
-    StringWriter sw = new StringWriter();
-    exception.printStackTrace(new PrintWriter(sw));
-    return sw.toString();
+    return org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(exception);
   }
 }

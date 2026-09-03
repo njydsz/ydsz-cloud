@@ -3,12 +3,13 @@ package com.njydsz.common.cache.support;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,55 +113,36 @@ public class CacheThreadPoolManager implements DisposableBean {
     return scheduledPools.computeIfAbsent(name, n -> createScheduledPool(n, coreSize));
   }
 
-  /** 创建定时调度线程池 */
+  /**
+   * 创建定时调度线程池。
+   *
+   * <p>使用 {@link ExecutorUtils#newScheduledThreadPool} 创建符合云顶规范 15.4 的定时线程池。
+   */
   private ScheduledExecutorService createScheduledPool(String name, int coreSize) {
-    ThreadFactory factory =
-        new ThreadFactory() {
-          private final AtomicInteger counter = new AtomicInteger(0);
-
-          @Override
-          public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "ydsz-cache-sched-" + name + "-" + counter.incrementAndGet());
-            t.setDaemon(true);
-            t.setPriority(Thread.NORM_PRIORITY - 1);
-            return t;
-          }
-        };
-
-    // CHECKSTYLE.OFF: RegexpSinglelineJava — CacheThreadPoolManager 为缓存线程池统一管理器（云顶规范 15.4 授权层）
-    ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(coreSize, factory);
+    ScheduledThreadPoolExecutor executor =
+        ExecutorUtils.newScheduledThreadPool(coreSize, "cache-sched-" + name);
+    // 取消后自动移除，避免内存泄漏
     executor.setRemoveOnCancelPolicy(true);
-    // CHECKSTYLE.ON: RegexpSinglelineJava
     LOG.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
     return executor;
   }
 
-  /** 创建缓存专用线程池 */
+  /**
+   * 创建缓存专用线程池。
+   *
+   * <p>使用 {@link ExecutorUtils#newCustomThreadPool} 创建符合云顶规范 15.4 的线程池。
+   */
   private ExecutorService createPool(String name, int coreSize, int maxSize) {
-    ThreadFactory factory =
-        new ThreadFactory() {
-          private final AtomicInteger counter = new AtomicInteger(0);
-
-          @Override
-          public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "ydsz-cache-" + name + "-" + counter.incrementAndGet());
-            t.setDaemon(true);
-            t.setPriority(Thread.NORM_PRIORITY - 1);
-            return t;
-          }
-        };
-
-    // CHECKSTYLE.OFF: RegexpSinglelineJava — CacheThreadPoolManager 为缓存线程池统一管理器（云顶规范 15.4 授权层）
+    RejectedExecutionHandler handler = (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name);
     ThreadPoolExecutor executor =
-        new ThreadPoolExecutor(
+        ExecutorUtils.newCustomThreadPool(
             coreSize,
             maxSize,
             60L,
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1024),
-            factory,
-            (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name));
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+            "cache-" + name,
+            handler);
 
     LOG.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;

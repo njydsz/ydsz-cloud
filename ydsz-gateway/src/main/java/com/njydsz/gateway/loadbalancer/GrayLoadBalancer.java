@@ -184,13 +184,13 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
     if (!(context instanceof RequestDataContext rdc)) {
       return null;
     }
-    RequestData data = rdc.getClientRequest();
-    if (data == null) {
+    RequestData requestData = rdc.getClientRequest();
+    if (requestData == null) {
       return null;
     }
 
     // 1. 优先从 HTTP Header 读取
-    HttpHeaders headers = data.getHeaders();
+    HttpHeaders headers = requestData.getHeaders();
     if (headers != null) {
       String headerTag = headers.getFirst(GRAY_TAG_HEADER);
       if (headerTag != null && !headerTag.isEmpty()) {
@@ -199,7 +199,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
     }
 
     // 2. 回退到 exchange attributes(Filter 写入的备份)
-    Map<String, Object> attrs = data.getAttributes();
+    Map<String, Object> attrs = requestData.getAttributes();
     if (attrs != null) {
       Object attrTag = attrs.get(GRAY_TAG_HEADER);
       if (attrTag instanceof String s && !s.isEmpty()) {

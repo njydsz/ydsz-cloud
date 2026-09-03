@@ -89,15 +89,29 @@
         ORDER BY id ASC
     </select>
 
-    <select id="selectTodoByAssignee" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM ydsz_flow_run_task
-        WHERE assignee_id = #{assigneeId}
-          AND task_status IN ('PENDING', 'CLAIMED')
-          AND status = 'ENABLED'
-          AND deleted = 0
-        ORDER BY priority DESC, created_at ASC
-    </select>
+<select id="selectTodoByAssignee" resultMap="BaseResultMap">
+SELECT <include refid="Base_Column_List"/>
+FROM ydsz_flow_run_task
+WHERE assignee_id = #{assigneeId}
+AND task_status IN ('PENDING', 'CLAIMED')
+AND status = 'ENABLED'
+AND deleted = 0
+ORDER BY priority DESC, created_at ASC
+</select>
+
+<!-- P1-9: 批量查询多个办理人的待办任务（单次 IN 查询，消除 N+1） -->
+<select id="selectTodoByAssignees" resultMap="BaseResultMap">
+SELECT <include refid="Base_Column_List"/>
+FROM ydsz_flow_run_task
+WHERE assignee_id IN
+<foreach collection="assigneeIds" item="id" open="(" separator="," close=")">
+#{id}
+</foreach>
+AND task_status IN ('PENDING', 'CLAIMED')
+AND status = 'ENABLED'
+AND deleted = 0
+ORDER BY priority DESC, created_at ASC
+</select>
 
     <!-- P2-17: 真分页查询 -->
     <select id="selectTodoByAssigneePage" resultMap="BaseResultMap">

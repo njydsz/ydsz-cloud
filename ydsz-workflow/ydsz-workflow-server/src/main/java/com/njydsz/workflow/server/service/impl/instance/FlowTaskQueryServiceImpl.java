@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -183,16 +184,16 @@ private static final int MAX_PAGE_SIZE = 100;
         }
       }
     }
-    // 3. ROLE/DEPT 匹配
+    // 3. ROLE/DEPT 匹配 — P1-9: 批量 IN 查询替代循环中的 N 次单条查询
+    Collection<String> multiAssignees = new ArrayList<>();
     if (roleCodes != null) {
-      for (String rc : roleCodes) {
-        result.addAll(taskRepository.selectTodoByAssignee(rc, tid));
-      }
+      multiAssignees.addAll(roleCodes);
     }
     if (deptIds != null) {
-      for (String did : deptIds) {
-        result.addAll(taskRepository.selectTodoByAssignee(did, tid));
-      }
+      multiAssignees.addAll(deptIds);
+    }
+    if (!multiAssignees.isEmpty()) {
+      result.addAll(taskRepository.selectTodoByAssignees(multiAssignees, tid));
     }
     return new ArrayList<>(result);
   }

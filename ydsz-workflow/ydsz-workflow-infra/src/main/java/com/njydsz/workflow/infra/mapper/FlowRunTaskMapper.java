@@ -75,6 +75,16 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
       @Param("assigneeId") String assigneeId, @Param("tenantId") String tenantId);
 
   /**
+   * P1-9: 批量查询多个办理人的待办任务（单次 IN 查询，消除 N+1）。
+   *
+   * @param assigneeIds 办理人 ID 集合
+   * @param tenantId 租户 ID
+   * @return 命中任务列表
+   */
+  List<FlowRunTask> selectTodoByAssignees(
+      @Param("assigneeIds") List<String> assigneeIds, @Param("tenantId") String tenantId);
+
+  /**
    * 查用户的待办（真分页：LIMIT/OFFSET）
    *
    *

@@ -346,6 +346,18 @@ public interface FlowRunTaskRepository {
   List<FlowRunTaskVO> selectTodoByAssignee(String assigneeId, String tenantId);
 
   /**
+   * P1-9: 批量查询多个办理人的待办任务列表（单次查询，消除循环中的 N+1）。
+   *
+   * <p>用于多维匹配（ROLE/DEPT 展开）场景，将多个 {@code assigneeId}
+   * 合并为一次 IN 查询，避免逐条调用 {@link #selectTodoByAssignee} 产生的数据库往返。
+   *
+   * @param assigneeIds 办理人 ID 集合（非 null，为空时返回空列表）
+   * @param tenantId 租户 ID
+   * @return 命中任务列表（含 assigneeId 字段，调用方可按需分组）
+   */
+  List<FlowRunTaskVO> selectTodoByAssignees(Collection<String> assigneeIds, String tenantId);
+
+  /**
    * P2-1: 查询用户的待办任务分页（真分页：SQL LIMIT/OFFSET）。
    *
    * @param assigneeId 办理人 ID

@@ -19,7 +19,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.audit.aspect.AuditAspect;
 import com.njydsz.common.audit.core.AsyncAuditRecorder;
@@ -36,6 +35,7 @@ import com.njydsz.common.audit.health.AuditHealthIndicator;
 import com.njydsz.common.audit.storage.DefaultAuditStorage;
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
 import com.njydsz.common.audit.template.AuditTemplateProcessor;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
@@ -160,21 +160,18 @@ public class AuditAutoConfiguration {
     int corePoolSize = properties.getAsync().getThreadCoreSize();
     int maxPoolSize = properties.getAsync().getThreadMaxSize();
     int queueCapacity = properties.getAsync().getQueueCapacity();
-    // CHECKSTYLE.OFF: RegexpSinglelineJava
+    // 使用 common-thread ExecutorUtils 创建符合云顶规范 15.4 的线程池
     // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    // CHECKSTYLE.ON: RegexpSinglelineJava
-    executor.setCorePoolSize(corePoolSize);
-    executor.setMaxPoolSize(maxPoolSize);
-    executor.setQueueCapacity(queueCapacity);
-    // 符合云顶编码规范 15.4.4 命名约定：ydsz-{module}-{biz}-
-    executor.setThreadNamePrefix("ydsz-audit-async-");
-    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-    executor.setWaitForTasksToCompleteOnShutdown(true);
-    executor.setAwaitTerminationSeconds((int) properties.getAsync().getShutdownTimeout());
-    executor.initialize();
+    ThreadPoolExecutor executor =
+        ExecutorUtils.builder()
+            .corePoolSize(corePoolSize)
+            .maxPoolSize(maxPoolSize)
+            .queueCapacity(queueCapacity)
+            .threadNamePrefix("ydsz-audit-async-")
+            .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
+            .build();
     LOG.info(
-        "初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy={}",
+        "初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy=CallerRunsPolicy",
         corePoolSize,
         maxPoolSize,
         queueCapacity);

@@ -1,5 +1,7 @@
 package com.njydsz.agent.server.rag;
 
+import java.math.BigDecimal;
+
 /**
  * Token 估算工具
  *
@@ -21,7 +23,7 @@ package com.njydsz.agent.server.rag;
 public final class TokenEstimator {
 
   /** 默认中英混合字符系数（Char/Token） */
-  public static final double DEFAULT_TOKEN_CHAR_RATIO = 2.5;
+  public static final BigDecimal DEFAULT_TOKEN_CHAR_RATIO = new BigDecimal("2.5");
 
   /** 工具类不可实例化 */
   private TokenEstimator() {}
@@ -33,11 +35,12 @@ public final class TokenEstimator {
    * @param tokenCharRatio 字符系数（Char/Token），中文 1.5、英文 4.0、中英混合 2.5
    * @return 估算 Token 数（至少为 0）
    */
-  public static int estimate(String text, double tokenCharRatio) {
+  public static int estimate(String text, BigDecimal tokenCharRatio) {
     if (text == null || text.isEmpty()) {
       return 0;
     }
-    return Math.max(1, (int) Math.ceil(text.length() / tokenCharRatio));
+    return Math.max(1,
+        new BigDecimal(text.length()).divide(tokenCharRatio, 0, java.math.RoundingMode.CEILING).intValue());
   }
 
   /**
@@ -58,7 +61,7 @@ public final class TokenEstimator {
    * @param tokenCharRatio 字符系数
    * @return 可保留的最大字符数
    */
-  public static int maxCharsForBudget(String text, int tokenBudget, double tokenCharRatio) {
-    return (int) (tokenBudget * tokenCharRatio);
+  public static int maxCharsForBudget(String text, int tokenBudget, BigDecimal tokenCharRatio) {
+    return tokenCharRatio.multiply(BigDecimal.valueOf(tokenBudget)).intValue();
   }
 }
