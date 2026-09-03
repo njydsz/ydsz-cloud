@@ -1,4 +1,4 @@
-package com.njydsz.common.thread.config;.config
+package com.njydsz.common.thread.config;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionHandler;

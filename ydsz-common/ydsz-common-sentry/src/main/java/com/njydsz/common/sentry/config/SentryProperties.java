@@ -1,4 +1,4 @@
-package com.njydsz.common.sentry.config;.config
+package com.njydsz.common.sentry.config;
 import java.util.List;
 import java.util.Map;
 

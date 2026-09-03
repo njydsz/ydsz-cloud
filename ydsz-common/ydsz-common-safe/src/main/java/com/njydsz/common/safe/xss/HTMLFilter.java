@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.xss;.xss
+package com.njydsz.common.safe.xss;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

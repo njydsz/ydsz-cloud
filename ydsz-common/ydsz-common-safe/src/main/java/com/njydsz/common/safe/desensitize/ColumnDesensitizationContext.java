@@ -1,4 +1,4 @@
-package com.njydsz.common.safe.desensitize;.desensitize
+package com.njydsz.common.safe.desensitize;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;

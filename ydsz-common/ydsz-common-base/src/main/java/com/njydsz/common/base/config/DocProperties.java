@@ -1,4 +1,4 @@
-package com.njydsz.common.base.config;.config
+package com.njydsz.common.base.config;
 import java.util.ArrayList;
 import java.util.List;
 

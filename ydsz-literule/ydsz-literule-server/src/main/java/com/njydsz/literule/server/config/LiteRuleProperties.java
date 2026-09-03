@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.config;.config
+package com.njydsz.literule.server.config;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

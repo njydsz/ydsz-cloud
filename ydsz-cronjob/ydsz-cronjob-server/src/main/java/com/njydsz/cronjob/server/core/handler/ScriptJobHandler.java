@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.handler;.handler
+package com.njydsz.cronjob.server.core.handler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;

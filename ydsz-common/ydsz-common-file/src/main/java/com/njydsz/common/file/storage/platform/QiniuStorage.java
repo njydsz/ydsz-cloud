@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage.platform;.platform
+package com.njydsz.common.file.storage.platform;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;

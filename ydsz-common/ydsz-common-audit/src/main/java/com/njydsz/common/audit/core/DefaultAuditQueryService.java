@@ -1,4 +1,4 @@
-package com.njydsz.common.audit.core;.core
+package com.njydsz.common.audit.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

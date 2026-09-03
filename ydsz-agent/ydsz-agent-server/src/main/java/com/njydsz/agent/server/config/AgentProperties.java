@@ -1,4 +1,4 @@
-package com.njydsz.agent.server.config;.config
+package com.njydsz.agent.server.config;
 import java.util.List;
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package com.njydsz.common.file.util;.util
+package com.njydsz.common.file.util;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;

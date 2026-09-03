@@ -54,3 +54,11 @@ public final class JSqlParserHelper {
     List<UpdateSet> updateSets = update.getUpdateSets();
     if (updateSets == null || updateSets.isEmpty()) {
       return new ArrayList<>(0);
+    }
+    List<Column> columns = new ArrayList<>(updateSets.size());
+    for (UpdateSet updateSet : updateSets) {
+      columns.addAll(updateSet.getColumns());
+    }
+    return columns;
+  }
+}

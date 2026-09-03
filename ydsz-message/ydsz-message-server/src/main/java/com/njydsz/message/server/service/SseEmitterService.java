@@ -1,4 +1,4 @@
-package com.njydsz.message.server.service;.service
+package com.njydsz.message.server.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

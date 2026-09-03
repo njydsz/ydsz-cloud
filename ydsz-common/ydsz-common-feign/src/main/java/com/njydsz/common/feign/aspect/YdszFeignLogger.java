@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.aspect;.aspect
+package com.njydsz.common.feign.aspect;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
