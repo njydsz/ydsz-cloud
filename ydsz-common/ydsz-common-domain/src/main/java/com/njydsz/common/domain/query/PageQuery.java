@@ -92,6 +92,15 @@ public class PageQuery extends BaseQuery {
   }
 
   /**
+   * 获取查询偏移量（long 类型），用于 SQL 分页。
+   *
+   * @return 偏移量
+   */
+  public long getOffsetLong() {
+    return (long) (pageNum - 1) * pageSize;
+  }
+
+  /**
    * 获取 LIMIT 子句的 limit 值（同 pageSize）。
    *
    * @return 每页条数

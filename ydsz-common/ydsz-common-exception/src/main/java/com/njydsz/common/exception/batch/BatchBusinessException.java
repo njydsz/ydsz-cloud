@@ -1,4 +1,5 @@
-package com.njydsz.common.exception.batch;.batch
+package com.njydsz.common.exception.batch;
+
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,14 +10,13 @@ import java.util.Map;
 
 import lombok.Getter;
 
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.MessageSourceHolder;
+import com.njydsz.common.core.constant.CommonConstants;
+import com.njydsz.common.exception.BusinessException;
 
 /**
- * 批量操作异常（HTTP 207 Multi-Status）
+ * 批量业务异常 - 用于批量操作时收集成功/失败信息
  *
- * <p>用于批量创建/更新/删除等场景，部分成功部分失败时抛出。 全局异常处理器将把此类异常映射为 HTTP 207 状态码， 响应体包含每个子项的处理结果（成功/失败明细）。
+ * <p>在批量处理场景中，部分操作成功、部分操作失败时使用此类收集所有结果。 可以选择在处理完所有项后，如果有失败项则抛出此异常。
  *
  * <p><b>使用示例：</b>
  *
@@ -48,3 +48,92 @@ public class BatchBusinessException extends BusinessException {
 
   /** 成功的子项 ID 列表 */
   private final List<Object> successItems = new ArrayList<>(4);
+
+  /** 失败的子项列表: ID -> [code, message] */
+  private final Map<Object, String[]> failureItems = new LinkedHashMap<>(4);
+
+  /** 私有构造器, 使用静态工厂方法创建实例 */
+  private BatchBusinessException() {
+    super(CommonConstants.BATCH_PARTIAL_SUCCESS_CODE, "batch.partial.success");
+  }
+
+  /**
+   * 创建 BatchBusinessException 实例
+   *
+   * @return 新的实例
+   */
+  public static BatchBusinessException create() {
+    return new BatchBusinessException();
+  }
+
+  /**
+   * 添加成功的子项 ID
+   *
+   * @param itemId 成功项的 ID
+   */
+  public void addSuccess(Object itemId) {
+    successItems.add(itemId);
+  }
+
+  /**
+   * 添加失败的子项信息
+   *
+   * @param itemId 失败项的 ID
+   * @param code 错误码
+   * @param message 错误消息
+   */
+  public void addFailure(Object itemId, String code, String message) {
+    failureItems.put(itemId, new String[]{code, message});
+  }
+
+  /**
+   * 是否有失败项
+   *
+   * @return 如果有失败项返回 true
+   */
+  public boolean hasFailures() {
+    return !failureItems.isEmpty();
+  }
+
+  /**
+   * 获取成功率百分比
+   *
+   * @return 成功率（0-100）
+   */
+  public double getSuccessRate() {
+    int total = successItems.size() + failureItems.size();
+    if (total == 0) {
+      return 0;
+    }
+    return (double) successItems.size() / total * 100;
+  }
+
+  /**
+   * 获取成功项数量
+   *
+   * @return 成功项数量
+   */
+  public int getSuccessCount() {
+    return successItems.size();
+  }
+
+  /**
+   * 获取失败项数量
+   *
+   * @return 失败项数量
+   */
+  public int getFailureCount() {
+    return failureItems.size();
+  }
+
+  /**
+   * 获取格式化的摘要消息
+   *
+   * @return 摘要消息
+   */
+  public String getSummary() {
+    return MessageFormat.format(
+        "Batch completed: {0} success, {1} failure, rate={2}%",
+        successItems.size(), failureItems.size(), String.format("%.1f", getSuccessRate()));
+  }
+}

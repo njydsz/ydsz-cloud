@@ -179,11 +179,12 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
       } else {
         T parent = nodeMap.get(parentId);
         if (parent != null) {
-          List<T> children = parent.getChildren() != null
-              ? parent.getChildren()
+          TreeNode<?, ?> treeNode = (TreeNode<?, ?>) parent;
+          List<Object> children = treeNode.getChildren() != null
+              ? new ArrayList<>(treeNode.getChildren())
               : new ArrayList<>();
           children.add(node);
-          childrenSetter.accept(parent, children);
+          childrenSetter.accept(parent, (List<T>) (List<?>) children);
         }
       }
     }
