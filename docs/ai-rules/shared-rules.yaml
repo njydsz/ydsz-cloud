@@ -326,10 +326,10 @@ rules:
   - id: "YDIZ-DDD-002"
     category: "ddd"
     severity: "P0"
-    title: "Repository 必须返回 VO/DTO，禁止返回 PO/Entity"
-    description: "Repository 接口禁止返回基础设施层实体（PO），必须通过 Converter 转换为 VO/DTO 后返回。"
-    pattern: "Repository 接口签名中返回类型为 entity 包下的类"
-    fix: "在 infra 层通过 MapStruct Converter 转换为 VO"
+    title: "Repository 必须返回 VO/DTO，禁止返回 Entity（PO）"
+    description: "Repository 接口禁止返回 Entity 类型，必须通过 Converter 转换为 VO/DTO 后返回。Converter 定义在 domain 层（参见 YDIZ-DDD-004），infra 层 Repository 实现通过依赖 domain 模块获取 Converter 完成转换。"
+    pattern: "Repository 接口签名中返回类型为 domain/entity 包下的类"
+    fix: "在 infra 层 Repository 实现中注入 domain 层的 MapStruct Converter，完成 Entity→VO 转换"
     source: "编码规范 34.2 节 §34.2.1"
 
   - id: "YDIZ-DDD-003"
@@ -344,10 +344,66 @@ rules:
   - id: "YDIZ-DDD-004"
     category: "ddd"
     severity: "P0"
-    title: "domain 层禁止声明 MapStruct 依赖"
-    description: "禁止 {module}-domain 层 pom.xml 中出现 org.mapstruct 依赖，禁止 domain 包 import MapStruct 类。"
-    pattern: "domain pom.xml 中 <groupId>org.mapstruct</groupId>"
-    fix: "MapStruct Converter 放在 {module}-infra/converter/ 包下"
+    title: "【强制】Entity 和 Converter 必须放在 domain 层，infra 层禁止声明 MapStruct 依赖"
+    description: |
+      Entity（持久化实体）和 Converter（对象转换器）是领域模型的一部分，必须放在 {module}-domain 层。
+      infra 层作为 domain 的实现，通过 pom 依赖 domain 模块来复用 Entity 和 Converter，**禁止**在 infra 层自行定义 MapStruct Converter 或维护 entity 包的副本。
+
+      **分层放置规则**：
+      - {module}-domain/entity/ — 数据库实体类（带 @TableName / @TableField 注解）
+      - {module}-domain/converter/ 或 {module}-domain/model/converter/ — MapStruct 转换器接口
+      - {module}-infra/ — 仅保留 Mapper 和 Repository 实现，通过依赖 domain 模块获取 Entity 和 Converter
+
+      **为什么 Entity 放 domain**：
+      - Entity 是领域模型的核心组成部分，domain 层需要直接定义业务实体
+      - server 层和其他模块可以通过依赖 domain 直接引用 Entity，无需透传 infra
+      - infra 作为 domain 的插件实现，不应"拥有"领域模型，只需提供持久化能力
+
+      **为什么 Converter 放 domain**：
+      - Converter 做的是 Entity↔VO/DTO 的形态转换，属于领域层内部的模型映射逻辑
+      - domain 层已有 Assembler（api 层）、DTO/VO/Query，加上 Converter 形成完整的领域模型定义
+      - domain 声明 MapStruct 依赖（仅编译期处理器）不违反依赖方向原则（domain↛infra，但 MapStruct 是第三方库）
+    pattern: |
+      以下任一情形构成违规：
+      1. entity 包下类文件放在 {module}-infra 模块（应在 domain/entity/）
+      2. MapStruct @Mapper Converter 接口放在 {module}-infra/converter/ 或 {module}-server/converter/（应在 domain/converter/）
+      3. infra 模块 pom.xml 声明了 org.mapstruct 依赖（MapStruct 依赖应声明在 domain 模块）
+    fix: |
+      1. 将 Entity 类从 {module}-infra/entity/ 迁移至 {module}-domain/entity/
+      2. 将 Converter 接口从 {module}-infra/converter/ 迁移至 {module}-domain/converter/ 或 domain/model/converter/
+      3. 将 pom.xml 中 org.mapstruct 依赖从 infra 模块移至 domain 模块
+      4. 更新所有 import 引用（infra/server 层通过依赖 domain 模块引用 Entity 和 Converter）
+      5. infra 模块 pom.xml 确保已依赖 {module}-domain
+    example_bad: |
+      // ❌ Entity 错误地放在 infra 层
+      // 文件：ydsz-userinfo-infra/src/main/java/com/njydsz/userinfo/infra/entity/UserAccount.java
+      package com.njydsz.userinfo.infra.entity;
+      @TableName("ydsz_acct_user")
+      public class UserAccount { ... }
+
+      // ❌ Converter 错误地放在 infra 层
+      // 文件：ydsz-userinfo-infra/src/main/java/com/njydsz/userinfo/infra/converter/UserInfoConverter.java
+      package com.njydsz.userinfo.infra.converter;
+      @Mapper(componentModel = "spring")
+      public interface UserInfoConverter { ... }
+    example_good: |
+      // ✅ Entity 放在 domain 层
+      // 文件：ydsz-userinfo-domain/src/main/java/com/njydsz/userinfo/domain/entity/UserAccount.java
+      package com.njydsz.userinfo.domain.entity;
+      @TableName("ydsz_acpt_user")
+      public class UserAccount { ... }
+
+      // ✅ Converter 放在 domain 层
+      // 文件：ydsz-userinfo-domain/src/main/java/com/njydsz/userinfo/domain/converter/UserInfoConverter.java
+      package com.njydsz.userinfo.domain.converter;
+      @Mapper(componentModel = "spring")
+      public interface UserInfoConverter { ... }
+
+      // ✅ Repository 在 infra 层通过依赖 domain 复用 Entity 和 Converter
+      // 文件：ydsz-userinfo-infra/src/main/java/com/njydsz/userinfo/infra/repository/impl/UserRepositoryImpl.java
+      package com.njydsz.userinfo.infra.repository.impl;
+      import com.njydsz.userinfo.domain.entity.UserAccount;         // 来自 domain
+      import com.njydsz.userinfo.domain.converter.UserInfoConverter; // 来自 domain
     source: "编码规范 34.5 节、附录 D 第 25/26 项"
 
   - id: "YDIZ-DDD-005"

@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.server.core.logger;
 
-import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

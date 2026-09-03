@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.core.handler;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,8 +17,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.tree.ArrayNode;
-import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
@@ -358,5 +355,29 @@ public class ScriptJobHandler implements JobHandler {
    */
   private List<String> buildCommand(String language, Path scriptFile, List<String> args) {
     List<String> command = new ArrayList<>(COLLECTION_CAPACITY);
-}
+    switch (language) {
+      case "python" -> {
+        command.add("python3");
+        command.add(scriptFile.toString());
+      }
+      case "shell" -> {
+        String os = System.getProperty("os.name", "").toLowerCase();
+        if (os.contains("win")) {
+          command.add("cmd");
+          command.add("/c");
+        } else {
+          command.add("bash");
+        }
+        command.add(scriptFile.toString());
+      }
+      default -> throw new IllegalArgumentException("不支持的脚本语言: " + language);
+    }
+    if (args != null) {
+      command.addAll(args);
+    }
+    return command;
+  }
+
+  /** 脚本执行结果。 */
+  public record ScriptResult(int exitCode, String stdout, String stderr) {}
 }

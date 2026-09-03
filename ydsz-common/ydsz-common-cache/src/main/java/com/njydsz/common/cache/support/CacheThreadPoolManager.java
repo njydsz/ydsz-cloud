@@ -14,8 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
-
 /**
  * 缓存线程池统一管理器 — 集中管理缓存相关的所有线程池
  *
@@ -121,12 +119,15 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 创建定时调度线程池。
    *
-   * <p>使用 ydsz-common-thread {@link ExecutorUtils} 创建，线程名前缀为 {@code cache-sched-}，
+   * <p>使用标准 JDK {@link ScheduledThreadPoolExecutor} 创建，线程名前缀为 {@code cache-sched-}，
    * 拒绝策略为 CallerRunsPolicy（调用方线程兜底）。
    */
   private ScheduledExecutorService createScheduledPool(String name, int coreSize) {
     ScheduledThreadPoolExecutor executor =
-        (ScheduledThreadPoolExecutor) ExecutorUtils.newScheduledThreadPool(coreSize, "cache-sched-" + name);
+        new ScheduledThreadPoolExecutor(
+            coreSize,
+            createThreadFactory("cache-sched-" + name),
+            new ThreadPoolExecutor.CallerRunsPolicy());
     // 取消后自动移除，避免内存泄漏
     executor.setRemoveOnCancelPolicy(true);
     LOG.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
