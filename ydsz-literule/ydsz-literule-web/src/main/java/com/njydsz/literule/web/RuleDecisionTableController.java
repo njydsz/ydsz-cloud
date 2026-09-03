@@ -249,6 +249,3 @@ public class RuleDecisionTableController {
     }
   }
 }
-
-
-

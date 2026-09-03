@@ -125,5 +125,3 @@ public class FlowInstanceVariableManager {
     if (!StringUtils.hasText(variable)) {
       return new HashMap<>(0);
 }
-}
-}

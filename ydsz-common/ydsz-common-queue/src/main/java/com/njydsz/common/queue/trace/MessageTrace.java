@@ -56,4 +56,25 @@ public class MessageTrace implements Serializable {
    * <p>key: 阶段名称(sent/delivered/consumed/failed), value: 时间戳(毫秒)
    */
   @Builder.Default private transient Map<String, Long> timestamps = new HashMap<>(16);
+
+  /** 异常信息（消费失败时记录） */
+  private String errorMessage;
+
+  /** 重试次数 */
+  private int retryCount;
+
+  /** 最大重试次数 */
+  private int maxRetry;
+
+  /** 消息轨迹状态枚举 */
+  public enum TraceStatus {
+    /** 已发送 */
+    SENT,
+    /** 已投递 */
+    DELIVERED,
+    /** 已消费 */
+    CONSUMED,
+    /** 消费失败 */
+    FAILED
+  }
 }

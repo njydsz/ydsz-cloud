@@ -67,6 +67,3 @@ public class DecisionTableRepositoryImpl implements DecisionTableRepository {
     decisionTableMapper.deleteById(id);
   }
 }
-
-
-

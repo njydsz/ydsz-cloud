@@ -654,6 +654,3 @@ public class DefaultAuditQueryService implements AuditQueryService {
       }
       return all.toArray();
     }
-  }
-}
-}

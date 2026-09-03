@@ -141,4 +141,3 @@ public class RuleCategoryController {
     return YdszResponse.success();
   }
 }
-

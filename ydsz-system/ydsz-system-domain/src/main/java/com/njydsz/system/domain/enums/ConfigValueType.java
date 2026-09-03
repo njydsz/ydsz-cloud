@@ -240,5 +240,3 @@ public enum ConfigValueType {
     };
   }
 }
-
-}

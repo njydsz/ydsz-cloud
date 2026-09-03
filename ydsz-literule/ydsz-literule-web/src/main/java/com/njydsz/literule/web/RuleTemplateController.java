@@ -107,4 +107,3 @@ public class RuleTemplateController {
             ruleTemplateProvider.importTemplate(templateCode, operator)));
   }
 }
-

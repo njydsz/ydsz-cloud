@@ -130,4 +130,3 @@ public class RuleDependencyController {
         ruleDependencyProvider.cascadingDisable(ruleCode).stream().map(StringVO::new).toList());
   }
 }
-

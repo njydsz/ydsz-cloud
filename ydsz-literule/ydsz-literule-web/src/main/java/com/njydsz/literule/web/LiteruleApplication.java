@@ -54,4 +54,3 @@ public class LiteruleApplication {
     SpringApplication.run(LiteruleApplication.class, args);
   }
 }
-

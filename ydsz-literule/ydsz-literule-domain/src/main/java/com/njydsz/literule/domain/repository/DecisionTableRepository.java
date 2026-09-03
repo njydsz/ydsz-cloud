@@ -56,4 +56,3 @@ public interface DecisionTableRepository {
    */
   void deleteById(String id);
 }
-

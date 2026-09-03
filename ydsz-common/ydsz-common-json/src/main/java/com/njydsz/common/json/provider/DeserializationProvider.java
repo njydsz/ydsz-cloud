@@ -706,5 +706,3 @@ public final class DeserializationProvider {
     DESERIALIZE_DEPTH.remove();
   }
 }
-
-}

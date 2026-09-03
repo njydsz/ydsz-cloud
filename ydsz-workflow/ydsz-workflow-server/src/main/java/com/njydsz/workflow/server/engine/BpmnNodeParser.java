@@ -459,8 +459,3 @@ public class BpmnNodeParser {
     }
   }
 }
-
-}
-}
-}
-}

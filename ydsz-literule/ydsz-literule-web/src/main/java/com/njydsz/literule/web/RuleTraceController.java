@@ -487,4 +487,3 @@ public class RuleTraceController {
     return YdszResponse.success(ruleTraceQueryService.findRecent(limit));
   }
 }
-

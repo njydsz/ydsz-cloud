@@ -532,5 +532,3 @@ public class CompatibleLlmClient implements LlmClient {
     return false;
   }
 }
-
-}

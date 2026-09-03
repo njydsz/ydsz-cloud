@@ -214,4 +214,3 @@ public class RuleImportExportController {
     return YdszResponse.success(result);
   }
 }
-

@@ -62,5 +62,3 @@ public class SseMcpClientProvider implements McpClientProvider {
       log.error("[MCP-SSE] 工具列表获取失败: server={}, error={}", server.getName(), e.getMessage(), e);
       return new ArrayList<>(0);
 }
-}
-}

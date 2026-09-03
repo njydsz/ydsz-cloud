@@ -273,5 +273,3 @@ public class MultiLevelCacheProvider implements CacheProvider {
     l1Cache.invalidateAll();
   }
 }
-
-}

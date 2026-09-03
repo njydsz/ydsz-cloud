@@ -343,5 +343,3 @@ public class SentryProperties {
     /** 是否启用 SLO Burn Rate 告警 */
     private boolean burnRateAlertEnabled = true;
   }
-}
-}

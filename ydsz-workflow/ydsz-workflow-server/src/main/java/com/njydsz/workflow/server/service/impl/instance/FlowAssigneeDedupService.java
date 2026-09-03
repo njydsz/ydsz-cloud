@@ -131,5 +131,3 @@ public class FlowAssigneeDedupService {
     if (instanceId == null) {
       return new HashSet<>(0);
 }
-}
-}

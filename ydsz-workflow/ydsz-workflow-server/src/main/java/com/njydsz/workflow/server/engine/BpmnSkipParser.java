@@ -77,6 +77,3 @@ public class BpmnSkipParser {
     return skip;
   }
 }
-
-}
-}

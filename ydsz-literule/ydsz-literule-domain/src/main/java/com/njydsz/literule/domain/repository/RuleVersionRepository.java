@@ -59,4 +59,3 @@ public interface RuleVersionRepository {
    */
   Optional<RuleDefinitionVO> rollback(String ruleCode, int version, String operator);
 }
-

@@ -127,5 +127,3 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
     if (!StringUtils.hasText(variable)) {
       return new HashMap<>(0);
 }
-}
-}

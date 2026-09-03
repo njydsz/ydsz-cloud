@@ -245,4 +245,3 @@ public class WorkerNodeSelector {
     return heartbeat != null ? heartbeat.getNodeId() : null;
   }
 }
-

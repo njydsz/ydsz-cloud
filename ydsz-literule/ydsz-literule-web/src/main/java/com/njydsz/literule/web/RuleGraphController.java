@@ -258,4 +258,3 @@ public class RuleGraphController {
         filtered.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
   }
 }
-

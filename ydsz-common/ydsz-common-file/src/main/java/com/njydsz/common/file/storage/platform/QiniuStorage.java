@@ -403,7 +403,7 @@ public class QiniuStorage extends AbstractFileStorage {
       ApiUploadV2CompleteUpload.Request request =
           new ApiUploadV2CompleteUpload.Request(bucketName, upToken, uploadId)
               .setKey(objectName)
-               .setParts(parts);
+              .setParts(parts);
       completeUploadApi.request(request);
       multipartContextStore.delete(uploadId);
       log.info(
@@ -569,5 +569,3 @@ public class QiniuStorage extends AbstractFileStorage {
           e.getMessage());
       return buildObjectUrl(bucketName, objectName);
     }
-  }
-}

@@ -109,4 +109,47 @@ public class CsrfProperties {
    * <p>这些路径不需要 CSRF 验证，支持 Ant 风格路径匹配。 通常用于公开接口、GET 请求等。
    */
   private List<String> excludes = new ArrayList<>(4);
+
+  /**
+   * 是否校验请求 Origin 头
+   *
+   * <p>启用后，对于启用 CSRF 防护的请求，将验证请求 Origin 头是否在允许的 Origin 列表中。
+   */
+  private boolean checkOrigin = true;
+
+  /**
+   * 允许的 Origin 列表
+   *
+   * <p>当 checkOrigin 为 true 时，仅允许此列表中的 Origin 发起跨域请求。 支持通配符，如 {@code https://*.example.com}。
+   */
+  private List<String> allowedOrigins = new ArrayList<>(4);
+
+  /**
+   * CSRF Cookie 是否标记 Secure 属性
+   *
+   * <p>启用后，CSRF Cookie 仅在 HTTPS 连接中传输。仅在 HTTPS 环境下启用。
+   */
+  private boolean cookieSecure = true;
+
+  /**
+   * CSRF Cookie 的 SameSite 属性
+   *
+   * <p>可选值：Strict、Lax、None。默认 Lax。 SameSite=None 时需同时启用 Secure。
+   */
+  private String sameSite = "Lax";
+
+  /**
+   * CSRF 防护模式枚举
+   *
+   * <ul>
+   *   <li>SYNCHRONIZER：Synchronizer Token Pattern（服务端存储 Token，验证后刷新）
+   *   <li>DOUBLE_SUBMIT：Double Submit Cookie（无状态，Cookie + Header 双重提交比对）
+   * </ul>
+   */
+  public enum CsrfMode {
+    /** Synchronizer Token Pattern */
+    SYNCHRONIZER,
+    /** Double Submit Cookie */
+    DOUBLE_SUBMIT
+  }
 }

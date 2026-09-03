@@ -489,7 +489,3 @@ public class CachedTemplateEngine implements TemplateEngine {
     return astCache.getStats();
   }
 }
-
-}
-}
-}

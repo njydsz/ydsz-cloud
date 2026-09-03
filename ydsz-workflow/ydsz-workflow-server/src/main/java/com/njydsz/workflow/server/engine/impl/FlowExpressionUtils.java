@@ -192,5 +192,3 @@ public final class FlowExpressionUtils {
     return result.toArray(new String[0]);
   }
 }
-
-}

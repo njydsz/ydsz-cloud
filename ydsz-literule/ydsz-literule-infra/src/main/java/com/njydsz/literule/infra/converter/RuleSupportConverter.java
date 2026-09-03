@@ -88,6 +88,3 @@ public interface RuleSupportConverter {
   @Mapping(target = "lastRollbackAt", ignore = true)
   RuleABPolicy putDtoToEntity(RuleABPolicyDTO dto);
 }
-
-
-

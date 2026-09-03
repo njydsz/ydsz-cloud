@@ -30,4 +30,3 @@ public interface ApprovalRecordRepository {
    */
   List<ApprovalRecordVO> findByRuleCode(String ruleCode);
 }
-

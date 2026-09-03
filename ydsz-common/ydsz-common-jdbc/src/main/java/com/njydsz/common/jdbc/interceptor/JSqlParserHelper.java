@@ -1,13 +1,10 @@
 package com.njydsz.common.jdbc.interceptor;
+
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.insert.Insert;
-import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.update.UpdateSet;
 
@@ -21,7 +18,6 @@ import net.sf.jsqlparser.statement.update.UpdateSet;
  * <ul>
  *   <li>INSERT 语句列操作
  *   <li>UPDATE 语句列和值操作（使用 getUpdateSets）
- *   <li>JOIN 语句 ON 表达式操作
  * </ul>
  *
  * @author ydsz-team

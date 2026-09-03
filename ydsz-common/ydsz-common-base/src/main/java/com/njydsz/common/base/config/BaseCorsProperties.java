@@ -88,4 +88,3 @@ public abstract class BaseCorsProperties {
    */
   private String pathPattern = "/**";
 }
-}

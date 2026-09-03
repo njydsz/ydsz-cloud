@@ -464,5 +464,3 @@ public class LiteruleConverter {
     return support.putDtoToEntity(dto);
   }
 }
-
-

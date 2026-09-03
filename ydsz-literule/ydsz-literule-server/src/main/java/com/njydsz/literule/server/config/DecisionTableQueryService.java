@@ -61,5 +61,3 @@ public class DecisionTableQueryService {
     repository.deleteById(id);
   }
 }
-
-

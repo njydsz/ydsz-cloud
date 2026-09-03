@@ -284,5 +284,3 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     if (folderPath == null || folderPath.isEmpty()) {
       return new ArrayList<>(0);
 }
-}
-}

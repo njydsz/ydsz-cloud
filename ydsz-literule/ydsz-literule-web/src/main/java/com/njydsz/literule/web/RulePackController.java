@@ -389,4 +389,3 @@ public class RulePackController {
         results.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
   }
 }
-

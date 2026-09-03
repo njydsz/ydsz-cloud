@@ -244,6 +244,3 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     return rule;
   }
 }
-
-
-

@@ -147,6 +147,3 @@ public class TemplateAst {
     EACH
   }
 }
-
-}
-}

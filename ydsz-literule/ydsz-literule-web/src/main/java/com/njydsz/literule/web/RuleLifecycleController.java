@@ -473,4 +473,3 @@ public class RuleLifecycleController {
         svc.listFlows().stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
   }
 }
-

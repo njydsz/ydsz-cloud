@@ -142,6 +142,3 @@ public class RuleABPolicyController {
         abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason));
   }
 }
-
-
-

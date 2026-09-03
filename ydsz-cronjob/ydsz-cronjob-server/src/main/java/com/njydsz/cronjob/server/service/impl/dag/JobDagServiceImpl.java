@@ -485,5 +485,3 @@ public class JobDagServiceImpl implements JobDagService {
     for (DagNode node : definition.nodes()) {
       adj.computeIfAbsent(node.jobKey(), k -> new ArrayList<>(8))
 }
-}
-}

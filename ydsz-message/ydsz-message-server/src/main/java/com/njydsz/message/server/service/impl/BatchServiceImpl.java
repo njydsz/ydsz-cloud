@@ -206,5 +206,3 @@ public class BatchServiceImpl implements BatchService {
     if (!StringUtils.hasText(payload)) {
       return new ArrayList<>(0);
 }
-}
-}

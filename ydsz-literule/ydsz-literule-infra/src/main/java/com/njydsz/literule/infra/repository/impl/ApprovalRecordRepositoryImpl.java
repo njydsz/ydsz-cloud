@@ -85,6 +85,3 @@ public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
     return vo;
   }
 }
-
-
-

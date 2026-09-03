@@ -320,5 +320,3 @@ final class BeanDeserializerEngine {
     return JsonTypeUtils.isSimpleType(type);
   }
 }
-
-}

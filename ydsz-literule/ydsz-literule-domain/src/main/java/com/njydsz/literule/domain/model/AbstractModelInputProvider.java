@@ -102,4 +102,3 @@ public abstract class AbstractModelInputProvider implements ModelInputProvider {
     return 0;
   }
 }
-

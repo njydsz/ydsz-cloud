@@ -154,6 +154,3 @@ public interface LiteruleWebConverter {
    */
   ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity);
 }
-
-
-

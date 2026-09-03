@@ -68,4 +68,3 @@ public class MockModelInputProvider extends AbstractModelInputProvider {
     return new LinkedHashMap<>(outputs);
   }
 }
-

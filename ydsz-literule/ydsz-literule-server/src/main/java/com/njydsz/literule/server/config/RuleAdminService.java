@@ -870,5 +870,3 @@ public class RuleAdminService {
     }
   }
 }
-
-

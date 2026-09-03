@@ -502,6 +502,3 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     }
   }
 }
-
-}
-}

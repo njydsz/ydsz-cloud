@@ -150,4 +150,3 @@ public class RuleDashboardController {
     return YdszResponse.success(metrics.getHotRuleStats(limit));
   }
 }
-

@@ -979,5 +979,3 @@ public class RuleApprovalService {
     return Collections.unmodifiableMap(new LinkedHashMap<>(recordStore));
   }
 }
-
-

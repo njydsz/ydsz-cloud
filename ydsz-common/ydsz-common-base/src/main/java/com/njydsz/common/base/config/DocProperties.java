@@ -152,4 +152,3 @@ public class DocProperties {
     private String basePackage = "";
   }
 }
-}

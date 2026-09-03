@@ -266,4 +266,3 @@ public class RuleBatchController {
     return YdszResponse.success(result);
   }
 }
-

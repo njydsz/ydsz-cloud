@@ -43,4 +43,3 @@ public class AuthFilterProperties {
   /** 仅校验 Token 但不校验权限的路径（开启 verify-permission 后生效） */
   private List<String> onlyVerifyToken = new ArrayList<>(4);
 }
-}
