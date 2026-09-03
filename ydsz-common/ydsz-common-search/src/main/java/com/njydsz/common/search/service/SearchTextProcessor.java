@@ -6,12 +6,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +41,11 @@ public class SearchTextProcessor {
   private final Map<String, List<String>> synonymMap = new HashMap<>(16);
   private final Map<String, String> pinyinMap = new HashMap<>(16);
 
-  /** 创建搜索文本预处理器（加载同义词/拼音词典，构建管道）。 */
+  /**
+   * 创建搜索文本预处理器（加载同义词/拼音词典，构建管道）。
+   *
+   * @param properties 搜索配置属性（含同义词/拼音词典路径）
+   */
   public SearchTextProcessor(SearchProperties properties) {
     this.properties = properties;
     this.pipeline = SearchPipeline.fromConfig(properties);
@@ -280,12 +282,20 @@ public class SearchTextProcessor {
     return text + " " + pinyinBuilder;
   }
 
-  /** 获取已加载的同义词词典（只读视图）。 */
+  /**
+   * 获取已加载的同义词词典（只读视图）。
+   *
+   * @return 词 → 同义词列表的只读映射
+   */
   public Map<String, List<String>> getSynonymMap() {
     return Collections.unmodifiableMap(synonymMap);
   }
 
-  /** 获取已加载的拼音词典（只读视图）。 */
+  /**
+   * 获取已加载的拼音词典（只读视图）。
+   *
+   * @return 汉字/词 → 拼音的只读映射
+   */
   public Map<String, String> getPinyinMap() {
     return Collections.unmodifiableMap(pinyinMap);
   }
