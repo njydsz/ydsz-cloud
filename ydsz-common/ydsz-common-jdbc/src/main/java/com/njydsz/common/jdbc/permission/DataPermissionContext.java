@@ -35,3 +35,19 @@ public class DataPermissionContext {
 
   /** 公司ID集合 */
   private Set<String> companyIds = new HashSet<>(16);
+
+  /** 部门ID集合 */
+  private Set<String> deptIds = new HashSet<>(16);
+
+  /** 项目ID集合 */
+  private Set<String> projectIds = new HashSet<>(16);
+
+  /** 区域ID集合 */
+  private Set<String> regionIds = new HashSet<>(16);
+
+  /** 列可见规则（key=表名，value=允许查询的列名集合），用于 SELECT 列过滤 */
+  private Map<String, Set<String>> visibleColumnsByTable = new HashMap<>(16);
+
+  /** 列可编辑规则（key=表名，value=允许编辑的列名集合），用于 INSERT/UPDATE 列过滤 */
+  private Map<String, Set<String>> editableColumnsByTable = new HashMap<>(16);
+}

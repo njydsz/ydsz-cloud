@@ -39,3 +39,4 @@ public class SearchTextProcessor {
   private final SearchProperties properties;
   private final SearchPipeline pipeline;
   private final Map<String, List<String>> synonymMap = new HashMap<>(16);
+}

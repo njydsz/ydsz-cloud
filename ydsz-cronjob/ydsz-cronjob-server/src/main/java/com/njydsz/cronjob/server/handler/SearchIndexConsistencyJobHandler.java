@@ -111,3 +111,5 @@ public class SearchIndexConsistencyJobHandler implements JobHandler {
     return null;
   }
 }
+
+}

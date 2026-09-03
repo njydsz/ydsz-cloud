@@ -386,3 +386,188 @@ public class QiniuStorage extends AbstractFileStorage {
     Collections.sort(sortedParts);
     try {
       List<Map<String, Object>> parts = new ArrayList<>(16);
+      Map<Integer, String> partChunkNames = context.partChunkNames();
+      for (Integer partNumber : sortedParts) {
+        String eTag = partChunkNames.get(partNumber);
+        if (StringUtils.isBlank(eTag)) {
+          safeAbortMultipartUpload(bucketName, objectName, uploadId);
+          throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+        }
+        Map<String, Object> partInfo = new HashMap<>(4);
+        partInfo.put("partNumber", partNumber);
+        partInfo.put("etag", eTag);
+        parts.add(partInfo);
+      }
+
+      String upToken = auth.uploadToken(bucketName);
+      ApiUploadV2CompleteUpload.Request request =
+          new ApiUploadV2CompleteUpload.Request(bucketName, upToken, uploadId)
+              .setKey(objectName)
+               .setParts(parts);
+      completeUploadApi.request(request);
+      multipartContextStore.delete(uploadId);
+      log.info(
+          "[Qiniu] chunked upload completed, bucket={}, object={}, parts={}",
+          bucketName,
+          objectName,
+          parts.size());
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error(
+          "[Qiniu] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
+  }
+
+  @Override
+  protected void doAbortMultipartUpload(String bucketName, String objectName, String uploadId) {
+    try {
+      String upToken = auth.uploadToken(bucketName);
+      ApiUploadV2AbortUpload.Request request =
+          new ApiUploadV2AbortUpload.Request(bucketName, upToken, uploadId).setKey(objectName);
+      abortUploadApi.request(request);
+      multipartContextStore.delete(uploadId);
+      log.info("[Qiniu] abort multipart upload, bucket={}, object={}, uploadId={}", bucketName, objectName, uploadId);
+    } catch (Exception e) {
+      log.warn(
+          "[Qiniu] abort multipart upload failed, bucket={}, object={}, uploadId={}, message={}",
+          bucketName,
+          objectName,
+          uploadId,
+          e.getMessage());
+    }
+  }
+
+  @Override
+  protected List<PartInfo> listParts(String bucketName, String objectName, String uploadId) {
+    // 七牛 Upload V2 协议不提供列举已上传分片的独立 API，
+    // 分片信息由 MultipartContextStore 在上传过程中本地维护。
+    // 此处返回空列表表示不支持远程列举。
+    return Collections.emptyList();
+  }
+
+  @Override
+  protected String normalizeObjectKey(String objectKey) {
+    if (objectKey != null && objectKey.startsWith("/")) {
+      return objectKey.substring(1);
+    }
+    return objectKey;
+  }
+
+  @Override
+  protected ObjectMetadata doGetMetadata(String bucketName, String objectName) {
+    try {
+      FileInfo fileInfo = bucketManager.stat(bucketName, objectName);
+      if (fileInfo == null) {
+        return null;
+      }
+      ObjectMetadata metadata = new ObjectMetadata();
+      metadata.setObjectName(objectName);
+      metadata.setBucketName(bucketName);
+      metadata.setSize(fileInfo.fsize);
+      metadata.setETag(fileInfo.hash);
+      metadata.setContentType(fileInfo.mimeType);
+      metadata.setLastModified(
+          fileInfo.putTime > 0
+              ? LocalDateTime.ofInstant(Instant.ofEpochMilli(fileInfo.putTime / 10000), ZoneId.systemDefault())
+              : null);
+      metadata.setDirectory(false);
+      return metadata;
+    } catch (QiniuException e) {
+      if (e.code() == 612) {
+        return null;
+      }
+      log.error(
+          "[Qiniu] doGetMetadata failed, bucket={}, object={}, code={}, message={}",
+          bucketName,
+          objectName,
+          e.code(),
+          e.getMessage());
+      return null;
+    } catch (Exception e) {
+      log.error(
+          "[Qiniu] doGetMetadata unexpected error, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      return null;
+    }
+  }
+
+  @Override
+  protected ListObjectsResult doListObjects(
+      String bucketName, String prefix, String cursor, int maxKeys) {
+    List<ObjectMetadata> objects = new ArrayList<>(16);
+    try {
+      BucketManager.FileListIterator iterator = bucketManager.createFileListIterator(bucketName, prefix, maxKeys + 1, cursor);
+      boolean hasMore = false;
+      int count = 0;
+      while (iterator.hasNext()) {
+        FileInfo[] items = iterator.next();
+        if (items == null) {
+          break;
+        }
+        for (FileInfo item : items) {
+          if (count >= maxKeys) {
+            hasMore = true;
+            break;
+          }
+          ObjectMetadata om = new ObjectMetadata();
+          om.setObjectName(item.key);
+          om.setBucketName(bucketName);
+          om.setSize(item.fsize);
+          om.setETag(item.hash);
+          om.setContentType(item.mimeType);
+          om.setLastModified(
+              item.putTime > 0
+                  ? LocalDateTime.ofInstant(Instant.ofEpochMilli(item.putTime / 10000), ZoneId.systemDefault())
+                  : null);
+          om.setDirectory(item.key.endsWith(FileConstant.DIR_SPLIT));
+          objects.add(om);
+          count++;
+        }
+        if (hasMore) {
+          break;
+        }
+      }
+      // 七牛 SDK iterator 不直接暴露 nextMarker，使用最后一个 key 作为游标
+      String nextCursor = hasMore && !objects.isEmpty() ? objects.get(objects.size() - 1).getObjectName() : null;
+      ListObjectsResult result = new ListObjectsResult();
+      result.setObjects(objects);
+      result.setHasMore(hasMore);
+      result.setNextCursor(nextCursor);
+      result.setObjectCount(objects.size());
+      return result;
+    } catch (Exception e) {
+      log.error(
+          "[Qiniu] doListObjects failed, bucket={}, prefix={}, message={}",
+          bucketName,
+          prefix,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
+    }
+  }
+
+  @Override
+  protected String doGeneratePresignedUrl(String bucketName, String objectName, int expireSeconds) {
+    if (StringUtils.isBlank(domain)) {
+      log.warn("[Qiniu] generatePresignedUrl failed: domain is not configured");
+      return buildObjectUrl(bucketName, objectName);
+    }
+    try {
+      String baseUrl = domain.endsWith("/") ? domain + objectName : domain + "/" + objectName;
+      return auth.privateDownloadUrl(baseUrl, expireSeconds);
+    } catch (Exception e) {
+      log.error(
+          "[Qiniu] generatePresignedUrl failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      return buildObjectUrl(bucketName, objectName);
+    }
+  }
+}

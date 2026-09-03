@@ -31,3 +31,4 @@ public class SearchRequest implements Serializable {
   @Schema(description = "搜索范围（实体类型列表）")
   @Builder.Default
   private List<String> types = new ArrayList<>(4);
+}

@@ -137,3 +137,4 @@ public class TenantProperties {
    * <p><b>注意：</b>当配置了 {@code tenant-fields} 时，此映射覆盖的是 <b>第一个字段</b>的列名（用于 per-table 不同列名场景）。
    */
   private Map<String, String> tableColumnMapping = new HashMap<>(16);
+}

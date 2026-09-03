@@ -168,3 +168,170 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
    */
   public Map<String, ThreadPoolSnapshot> snapshotAll() {
     Map<String, ThreadPoolSnapshot> result = new LinkedHashMap<>(16);
+    Map<String, ThreadPoolTaskExecutor> executors = getExecutors();
+    for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
+      String poolName = resolvePoolName(entry.getKey());
+      try {
+        ThreadPoolExecutor pool = entry.getValue().getThreadPoolExecutor();
+        result.put(
+            poolName,
+            new ThreadPoolSnapshot(
+                poolName,
+                pool.getCorePoolSize(),
+                pool.getMaximumPoolSize(),
+                pool.getActiveCount(),
+                pool.getPoolSize(),
+                pool.getQueue().size(),
+                pool.getCompletedTaskCount()));
+      } catch (Exception e) {
+        LOG.warn("[ThreadPoolHotUpdate] 线程池 [{}] 快照获取失败: {}", poolName, e.getMessage());
+      }
+    }
+    return result;
+  }
+
+  // ==================== 内部实现 ====================
+
+  /**
+   * 获取所有管理平台线程池。
+   *
+   * @return beanName → executor 映射
+   */
+  protected Map<String, ThreadPoolTaskExecutor> getExecutors() {
+    if (applicationContext == null) {
+      return new LinkedHashMap<>(0);
+    }
+    return applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
+  }
+
+  /**
+   * 根据线程池配置 key 查找对应的执行器。
+   *
+   * @param poolName 线程池配置 key（如 "io"）
+   * @return 对应的执行器，不存在返回 {@code null}
+   */
+  protected ThreadPoolTaskExecutor getExecutor(String poolName) {
+    Map<String, ThreadPoolTaskExecutor> executors = getExecutors();
+    for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
+      if (poolName.equals(resolvePoolName(entry.getKey()))) {
+        return entry.getValue();
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 将 Bean 名称解析为线程池配置 key。
+   *
+   * <p>约定：beanName = prefix + key + "Executor"，去除尾部 "Executor" 即得 key。
+   *
+   * @param beanName Bean 名称
+   * @return 线程池配置 key
+   */
+  private String resolvePoolName(String beanName) {
+    if (beanName != null && beanName.endsWith("Executor")) {
+      return beanName.substring(0, beanName.length() - "Executor".length());
+    }
+    return beanName;
+  }
+
+  /**
+   * 执行实际的核心线程数/最大线程数调整（已校验参数合法性）。
+   *
+   * @param executor 目标执行器
+   * @param newCoreSize 新的核心线程数
+   * @param newMaxSize 新的最大线程数
+   * @param poolName 线程池配置 key（仅用于日志）
+   */
+  private void resizeInternal(
+      ThreadPoolTaskExecutor executor, int newCoreSize, int newMaxSize, String poolName) {
+    // 先扩大 max 再调整 core，避免 core > max 异常
+    if (newMaxSize > executor.getMaxPoolSize()) {
+      executor.setMaxPoolSize(newMaxSize);
+      executor.setCorePoolSize(newCoreSize);
+    } else {
+      executor.setCorePoolSize(newCoreSize);
+      executor.setMaxPoolSize(newMaxSize);
+    }
+    LOG.info("[ThreadPoolHotUpdate] 线程池 [{}] 已调整: core={}, max={}", poolName, newCoreSize, newMaxSize);
+  }
+
+  /**
+   * 根据策略枚举创建拒绝策略实例。
+   *
+   * @param policy 拒绝策略枚举
+   * @return JDK 拒绝策略
+   */
+  private RejectedExecutionHandler createRejectHandler(ThreadPoolProperties.RejectPolicy policy) {
+    switch (policy) {
+      case ABORT:
+        return new ThreadPoolExecutor.AbortPolicy();
+      case CALLER_RUNS:
+        return new ThreadPoolExecutor.CallerRunsPolicy();
+      case DISCARD_OLDEST:
+        return new ThreadPoolExecutor.DiscardOldestPolicy();
+      case DISCARD:
+        return new ThreadPoolExecutor.DiscardPolicy();
+      default:
+        return new ThreadPoolExecutor.CallerRunsPolicy();
+    }
+  }
+
+  // ==================== 内部数据类 ====================
+
+  /** 线程池运行时快照（不可变）。 */
+  public static class ThreadPoolSnapshot {
+    private final String poolName;
+    private final int corePoolSize;
+    private final int maximumPoolSize;
+    private final int activeCount;
+    private final int poolSize;
+    private final int queueSize;
+    private final long completedTaskCount;
+
+    public ThreadPoolSnapshot(
+        String poolName,
+        int corePoolSize,
+        int maximumPoolSize,
+        int activeCount,
+        int poolSize,
+        int queueSize,
+        long completedTaskCount) {
+      this.poolName = poolName;
+      this.corePoolSize = corePoolSize;
+      this.maximumPoolSize = maximumPoolSize;
+      this.activeCount = activeCount;
+      this.poolSize = poolSize;
+      this.queueSize = queueSize;
+      this.completedTaskCount = completedTaskCount;
+    }
+
+    public String getPoolName() {
+      return poolName;
+    }
+
+    public int getCorePoolSize() {
+      return corePoolSize;
+    }
+
+    public int getMaximumPoolSize() {
+      return maximumPoolSize;
+    }
+
+    public int getActiveCount() {
+      return activeCount;
+    }
+
+    public int getPoolSize() {
+      return poolSize;
+    }
+
+    public int getQueueSize() {
+      return queueSize;
+    }
+
+    public long getCompletedTaskCount() {
+      return completedTaskCount;
+    }
+  }
+}

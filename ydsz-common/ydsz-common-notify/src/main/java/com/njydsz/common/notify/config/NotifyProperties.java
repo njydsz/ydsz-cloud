@@ -173,3 +173,5 @@ public class NotifyProperties {
 
     /** 额外 JavaMail 属性（如 mail.smtp.quitwait、mail.smtp.localhost 等） */
     private Map<String, String> properties = new HashMap<>(16);
+}
+}

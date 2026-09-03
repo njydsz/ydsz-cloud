@@ -124,3 +124,6 @@ public class FlowInstanceVariableManager {
   Map<String, Object> parseVariables(String variable) {
     if (!StringUtils.hasText(variable)) {
       return new HashMap<>(0);
+}
+}
+}

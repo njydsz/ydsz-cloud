@@ -92,3 +92,64 @@ public class DocProperties {
    * <p>为空时使用单分组模式，非空时使用多分组模式。
    */
   private List<GroupConfig> groups = new ArrayList<>(4);
+
+  /** 导出格式列表（默认 markdown, html） */
+  private List<String> exportFormats = Arrays.asList("markdown", "html");
+
+  /** 导出输出目录（默认系统临时目录下的 doc-export 子目录） */
+  private String outputDir = System.getProperty("java.io.tmpdir") + "/doc-export";
+
+  // ====================== 嵌套配置类 ======================
+
+  /** Basic 认证配置 */
+  @Data
+  public static class BasicAuth {
+
+    /** 是否启用 Basic 认证 */
+    private boolean enabled = false;
+
+    /** Basic 认证用户名 */
+    private String username = "admin";
+
+    /** Basic 认证密码 */
+    private String password = "admin123";
+  }
+
+  /** OpenAPI 信息配置 */
+  @Data
+  public static class OpenApiInfo {
+
+    /** 文档标题 */
+    private String title = "API Documentation";
+
+    /** 文档描述 */
+    private String description = "";
+
+    /** 文档版本 */
+    private String version = "1.0.0";
+
+    /** 联系人名称 */
+    private String contactName = "";
+
+    /** 联系人邮箱 */
+    private String contactEmail = "";
+
+    /** 许可证名称 */
+    private String licenseName = "Apache 2.0";
+
+    /** 许可证地址 */
+    private String licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0";
+  }
+
+  /** 分组配置 */
+  @Data
+  public static class GroupConfig {
+
+    /** 分组名称 */
+    private String name = "default";
+
+    /** 扫描的基础包路径 */
+    private String basePackage = "";
+  }
+}
+}

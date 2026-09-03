@@ -206,3 +206,6 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
   private Set<String> toStringSet(Object value) {
     if (value instanceof List<?> list) {
       Set<String> result = new HashSet<>(16);
+}
+}
+}

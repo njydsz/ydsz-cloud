@@ -126,3 +126,6 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
   protected Map<String, Object> parseVariables(String variable) {
     if (!StringUtils.hasText(variable)) {
       return new HashMap<>(0);
+}
+}
+}

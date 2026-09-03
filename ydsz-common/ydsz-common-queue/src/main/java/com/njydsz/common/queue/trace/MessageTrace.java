@@ -56,3 +56,4 @@ public class MessageTrace implements Serializable {
    * <p>key: 阶段名称(sent/delivered/consumed/failed), value: 时间戳(毫秒)
    */
   @Builder.Default private transient Map<String, Long> timestamps = new HashMap<>(16);
+}

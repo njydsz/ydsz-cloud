@@ -1700,3 +1700,5 @@ public class LiteRuleAutoConfiguration {
     return new RuleStressTestService(ruleAdminService);
   }
 }
+
+}

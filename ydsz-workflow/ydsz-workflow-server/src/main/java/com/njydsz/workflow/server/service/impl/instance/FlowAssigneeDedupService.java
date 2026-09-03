@@ -130,3 +130,6 @@ public class FlowAssigneeDedupService {
   public Set<String> getApprovedUserIds(String instanceId) {
     if (instanceId == null) {
       return new HashSet<>(0);
+}
+}
+}

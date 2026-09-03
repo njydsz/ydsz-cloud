@@ -68,3 +68,4 @@ public class ApprovalRecord implements Serializable {
 
   /** 审批日志（按时间顺序追加） */
   @Builder.Default private List<ApprovalLog> logs = new ArrayList<>(16);
+}

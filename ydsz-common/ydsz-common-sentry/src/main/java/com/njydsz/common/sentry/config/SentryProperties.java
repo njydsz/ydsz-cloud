@@ -1,4 +1,5 @@
 package com.njydsz.common.sentry.config;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -281,3 +282,66 @@ public class SentryProperties {
 
     /** 服务级采样率覆盖（service name -> ratio） */
     private Map<String, Double> samplerServiceRatios = new HashMap<>(16);
+
+    /** 尾部采样策略（基于请求结果的智能采样） */
+    @Valid
+    @NotNull(message = "尾部采样配置不能为空")
+    private TailSamplingConfig tailSampling = new TailSamplingConfig();
+  }
+
+  /** 尾部采样配置（基于请求结果的智能采样）。 */
+  @Data
+  @Validated
+  public static class TailSamplingConfig {
+    /** 是否启用尾部采样 */
+    private boolean enabled = false;
+
+    /** 采样决策等待时间（毫秒） */
+    @Min(value = 1000, message = "采样决策等待时间不能小于 1000ms")
+    @Max(value = 30000, message = "采样决策等待时间不能大于 30000ms")
+    private long decisionWaitMillis = 5000;
+
+    /** 根操作名采样率覆盖 */
+    private Map<String, Double> rootSpanNameRatios = new HashMap<>(16);
+  }
+
+  /** 告警配置（Webhook / 通知渠道）。 */
+  @Data
+  @Validated
+  public static class AlertingConfig {
+    /** 是否启用告警 */
+    private boolean enabled = true;
+
+    /** Webhook URL（为空则不发送） */
+    private String webhookUrl;
+
+    /** 告警评估间隔（秒） */
+    @Min(value = 10, message = "告警评估间隔不能小于 10 秒")
+    @Max(value = 3600, message = "告警评估间隔不能大于 3600 秒")
+    private int evaluationIntervalSeconds = 60;
+
+    /** 连续触发阈值（超过此次数才发送告警） */
+    @Min(value = 1, message = "连续触发阈值不能小于 1")
+    @Max(value = 20, message = "连续触发阈值不能大于 20")
+    private int consecutiveThreshold = 3;
+  }
+
+  /** SLA 配置（可用性与延迟目标）。 */
+  @Data
+  @Validated
+  public static class SlaConfigVO {
+    /** SLA 目标可用率（0.0 ~ 1.0，如 0.999 表示 99.9%） */
+    @Min(value = 0, message = "SLA 可用率不能小于 0")
+    @Max(value = 1, message = "SLA 可用率不能大于 1")
+    private double availabilityTarget = 0.999;
+
+    /** P99 延迟目标（毫秒） */
+    @Min(value = 100, message = "P99 延迟目标不能小于 100ms")
+    @Max(value = 60000, message = "P99 延迟目标不能大于 60000ms")
+    private long p99LatencyMillis = 3000;
+
+    /** 是否启用 SLO Burn Rate 告警 */
+    private boolean burnRateAlertEnabled = true;
+  }
+}
+}

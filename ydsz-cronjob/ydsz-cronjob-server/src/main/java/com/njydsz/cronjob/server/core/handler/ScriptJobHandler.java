@@ -357,3 +357,5 @@ public class ScriptJobHandler implements JobHandler {
    */
   private List<String> buildCommand(String language, Path scriptFile, List<String> args) {
     List<String> command = new ArrayList<>(16);
+}
+}

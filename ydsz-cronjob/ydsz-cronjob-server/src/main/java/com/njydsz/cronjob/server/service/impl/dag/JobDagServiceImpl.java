@@ -484,3 +484,6 @@ public class JobDagServiceImpl implements JobDagService {
     // 确保所有节点都在邻接表中（即使没有出边）
     for (DagNode node : definition.nodes()) {
       adj.computeIfAbsent(node.jobKey(), k -> new ArrayList<>(8))
+}
+}
+}

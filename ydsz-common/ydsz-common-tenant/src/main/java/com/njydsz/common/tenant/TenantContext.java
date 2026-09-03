@@ -26,3 +26,4 @@ import java.util.Map;
  *
  * // 多字段组合
  * Map<String, Object> fields = new HashMap<>(16);
+}

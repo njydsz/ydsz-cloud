@@ -116,4 +116,167 @@ public final class FileTypeDetector {
   private static void register(String type, byte[] magic, String... extensions) {
     SIGNATURES.put(type, new MagicSignature(magic, 0, null));
     for (String ext : extensions) {
-      EXT_TO_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new HashSet<>(16))
+      EXT_TO_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new HashSet<>(16)).add(type);
+    }
+  }
+
+  /**
+   * 注册带有 ASCII 标签偏移的复合签名。
+   *
+   * <p>某些文件类型的 Magic Number 不是简单的固定字节序列，而是在固定偏移位置 存在特定的 ASCII 字符串标记。例如：WEBP 文件的前 4 字节是 RIFF，第 8-11 字节是 WEBP。
+   *
+   * @param type      文件类型名
+   * @param magic     固定匹配字节
+   * @param tagOffset ASCII 标签在文件头中的偏移位置
+   * @param asciiTag  期望的 ASCII 标签字符串
+   * @param extensions 关联的扩展名列表
+   */
+  private static void register(String type, byte[] magic, int tagOffset, String asciiTag, String... extensions) {
+    SIGNATURES.put(type, new MagicSignature(magic, tagOffset, asciiTag));
+    for (String ext : extensions) {
+      EXT_TO_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new HashSet<>(16)).add(type);
+    }
+  }
+
+  /**
+   * 注册不带扩展名的签名（仅做 Magic Number 识别，不关联扩展名）。
+   *
+   * @param type  文件类型名
+   * @param magic 固定匹配字节
+   */
+  private static void register(String type, byte[] magic) {
+    SIGNATURES.put(type, new MagicSignature(magic, 0, null));
+  }
+
+  // ======================== Magic 签名定义类 ========================
+
+  /**
+   * 表示一个文件 Magic Number 签名，支持固定字节匹配 + 可选的 ASCII 标签偏移匹配。
+   */
+  private static final class MagicSignature {
+    final byte[] prefix;
+    final int tagOffset;
+    final String asciiTag;
+
+    MagicSignature(byte[] prefix, int tagOffset, String asciiTag) {
+      this.prefix = prefix;
+      this.tagOffset = tagOffset;
+      this.asciiTag = asciiTag;
+    }
+
+    boolean matches(byte[] data) {
+      if (data.length < prefix.length) {
+        return false;
+      }
+      for (int i = 0; i < prefix.length; i++) {
+        if (data[i] != prefix[i]) {
+          return false;
+        }
+      }
+      if (asciiTag != null && tagOffset >= 0) {
+        int tagEnd = tagOffset + asciiTag.length();
+        if (data.length < tagEnd) {
+          return false;
+        }
+        for (int i = 0; i < asciiTag.length(); i++) {
+          if (data[tagOffset + i] != (byte) asciiTag.charAt(i)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+  }
+
+  // ======================== 公共检测 API ========================
+
+  /**
+   * 通过文件输入流检测文件类型（读取前 {@link #MAGIC_HEADER_SIZE} 字节）。
+   *
+   * <p>注意：本方法会消费输入流的头部字节。如果调用方仍需使用该流， 应使用 {@code.mark()/reset()} 或重新打开。
+   *
+   * @param inputStream 文件输入流
+   * @return 检测到的文件类型字符串（如 "JPEG"、"PNG"）；未匹配返回 "UNKNOWN"
+   */
+  public static String detect(InputStream inputStream) {
+    try {
+      byte[] header = new byte[MAGIC_HEADER_SIZE];
+      int read = inputStream.read(header, 0, MAGIC_HEADER_SIZE);
+      if (read <= 0) {
+        return "UNKNOWN";
+      }
+      if (read < MAGIC_HEADER_SIZE) {
+        header = java.util.Arrays.copyOf(header, read);
+      }
+      return detect(header);
+    } catch (Exception e) {
+      log.warn("[FileTypeDetector] read header failed: {}", e.getMessage());
+      return "UNKNOWN";
+    }
+  }
+
+  /**
+   * 通过文件字节数组检测文件类型。
+   *
+   * @param data 文件字节数组（建议至少 {@link #MAGIC_HEADER_SIZE} 字节）
+   * @return 检测到的文件类型字符串；未匹配返回 "UNKNOWN"
+   */
+  public static String detect(byte[] data) {
+    if (data == null || data.length == 0) {
+      return "UNKNOWN";
+    }
+    for (Map.Entry<String, MagicSignature> entry : SIGNATURES.entrySet()) {
+      if (entry.getValue().matches(data)) {
+        return entry.getKey();
+      }
+    }
+    return "UNKNOWN";
+  }
+
+  /**
+   * 通过文件扩展名映射到可能对应的文件类型集合。
+   *
+   * @param extension 文件扩展名（不含点号，如 "jpg"、"png"）
+   * @return 该扩展名对应的文件类型集合；未注册时返回空集合
+   */
+  public static Set<String> detectByExtension(String extension) {
+    if (extension == null || extension.isBlank()) {
+      return Collections.emptySet();
+    }
+    Set<String> types = EXT_TO_TYPES.get(extension.toLowerCase());
+    return types != null ? Collections.unmodifiableSet(types) : Collections.emptySet();
+  }
+
+  /**
+   * 判断检测到的类型是否为危险类型（ELF/PE/CLASS）。
+   *
+   * @param detectedType {@link #detect(InputStream)} 或 {@link #detect(byte[])} 的返回值
+   * @return true 表示为危险类型
+   */
+  public static boolean isDangerousType(String detectedType) {
+    if (detectedType == null) {
+      return false;
+    }
+    return "ELF".equals(detectedType)
+        || "PE_EXE".equals(detectedType)
+        || "CLASS".equals(detectedType);
+  }
+
+  /**
+   * 判断检测到的类型是否为图片类型。
+   *
+   * @param detectedType 检测结果
+   * @return true 表示为图片类型
+   */
+  public static boolean isImageType(String detectedType) {
+    if (detectedType == null) {
+      return false;
+    }
+    return switch (detectedType) {
+      case "JPEG", "PNG", "GIF87a", "GIF89a", "BMP", "WEBP", "SVG", "SVG_XML", "ICO",
+              "TIFF_BE", "TIFF_LE" ->
+          true;
+      default -> false;
+    };
+  }
+}

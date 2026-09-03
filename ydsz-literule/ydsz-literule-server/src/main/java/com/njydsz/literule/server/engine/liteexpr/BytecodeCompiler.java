@@ -37,3 +37,4 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
 
   /** 字节码输出缓冲区 */
   private final ArrayList<Byte> bytecode = new ArrayList<>(4);
+}

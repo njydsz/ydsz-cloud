@@ -39,3 +39,18 @@ public class RateLimitContext implements Serializable {
 
   /** 限流 key 上下文（用户 ID、IP、租户 ID 等） */
   @Builder.Default private Map<String, Object> attributes = new HashMap<>(16);
+
+  /** 请求时间戳（毫秒） */
+  private long timestamp;
+
+  /**
+   * Builder 辅助方法：向 attributes 中添加单个键值对。
+   *
+   * @param key 键
+   * @param value 值
+   * @return builder 自身（链式调用）
+   */
+  public static RateLimitContextBuilder put(String key, Object value) {
+    return builder().put(key, value);
+  }
+}

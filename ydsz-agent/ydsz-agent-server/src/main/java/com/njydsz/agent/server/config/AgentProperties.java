@@ -172,3 +172,5 @@ public class AgentProperties {
 
     /** 多 Provider 配置 */
     private Map<String, ProviderConfig> providers = new LinkedHashMap<>(16);
+}
+}

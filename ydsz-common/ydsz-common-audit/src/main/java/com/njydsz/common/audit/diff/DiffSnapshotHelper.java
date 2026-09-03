@@ -142,3 +142,57 @@ public final class DiffSnapshotHelper {
     /** 发生变更的字段列表 */
     @Builder.Default
     private List<FieldChange> changedFields = new ArrayList<>(4);
+
+    /** 新增的字段列表 */
+    @Builder.Default
+    private List<String> addedFields = new ArrayList<>(4);
+
+    /** 删除的字段列表 */
+    @Builder.Default
+    private List<String> removedFields = new ArrayList<>(4);
+
+    /** 构建空 diff 结果 */
+    public static DiffResult empty() {
+      return new DiffResult();
+    }
+
+    /** 全新创建：所有 after 字段视为新增 */
+    public static DiffResult create(String afterJson) {
+      DiffResult r = new DiffResult();
+      Map<String, Object> after = parseJson(afterJson);
+      r.addedFields.addAll(after.keySet());
+      return r;
+    }
+
+    /** 完全删除：所有 before 字段视为移除 */
+    public static DiffResult delete(String beforeJson) {
+      DiffResult r = new DiffResult();
+      Map<String, Object> before = parseJson(beforeJson);
+      r.removedFields.addAll(before.keySet());
+      return r;
+    }
+
+    /** 单个字段变更的描述 */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FieldChange implements Serializable {
+
+      private static final long serialVersionUID = 1L;
+
+      /** 字段名 */
+      @Schema(description = "字段名")
+      private String field;
+
+      /** 变更前值 */
+      @Schema(description = "变更前值")
+      private String old;
+
+      /** 变更后值 */
+      @Schema(description = "变更后值")
+      private String _new;
+    }
+  }
+}
+}
+}

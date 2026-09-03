@@ -89,3 +89,5 @@ public final class HTMLFilter {
 
   static {
     Map<String, String> entities = new HashMap<>(16);
+}
+}

@@ -59,3 +59,33 @@ public abstract class BaseCorsProperties {
    * <p>支持通配符模式，例如 "https://*.example.com"。 推荐明确指定允许的域名，避免使用 "*" 带来的安全风险。
    */
   private List<String> allowedOriginPatterns = new ArrayList<>(4);
+
+  /**
+   * 允许的请求头列表
+   *
+   * <p>默认值为 ["*"]，表示允许所有请求头。
+   */
+  private List<String> allowedHeaders = Arrays.asList("*");
+
+  /**
+   * 允许的请求方法列表
+   *
+   * <p>默认值为 ["GET", "POST", "PUT", "DELETE", "OPTIONS"]。
+   */
+  private List<String> allowedMethods = Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS");
+
+  /**
+   * 预检请求缓存时间（秒）
+   *
+   * <p>默认值为 3600（1 小时），减少浏览器 OPTIONS 预检请求频率。
+   */
+  private long maxAge = 3600;
+
+  /**
+   * 匹配的路径模式
+   *
+   * <p>默认值为 "/**"，表示匹配所有路径。
+   */
+  private String pathPattern = "/**";
+}
+}

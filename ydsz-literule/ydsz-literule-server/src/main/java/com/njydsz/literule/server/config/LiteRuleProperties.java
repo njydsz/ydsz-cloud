@@ -846,3 +846,5 @@ public class LiteRuleProperties {
 
     /** 追加的危险方法名（如 exec / connect / delete） */
     private List<String> forbiddenMethods = new ArrayList<>(4);
+}
+}

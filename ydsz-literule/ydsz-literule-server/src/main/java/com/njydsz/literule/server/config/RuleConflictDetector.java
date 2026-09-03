@@ -74,3 +74,5 @@ public class RuleConflictDetector {
    */
   public List<RuleConflict> detect(RuleDefinitionDTO newDefinition) {
     List<RuleConflict> conflicts = new ArrayList<>(16);
+}
+}

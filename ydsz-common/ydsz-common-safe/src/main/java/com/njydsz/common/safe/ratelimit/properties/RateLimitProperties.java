@@ -1,4 +1,5 @@
 package com.njydsz.common.safe.ratelimit.properties;
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Data;
@@ -56,3 +57,4 @@ public class RateLimitProperties {
 
   /** 规则列表（静态配置） */
   private List<RateLimitRule> rules = new ArrayList<>(4);
+}

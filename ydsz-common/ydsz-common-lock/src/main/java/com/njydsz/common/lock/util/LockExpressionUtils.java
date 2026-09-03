@@ -128,3 +128,5 @@ public final class LockExpressionUtils {
     return parsed.getValue(context);
   }
 }
+
+}

@@ -42,3 +42,4 @@ public class IpAccessService {
 
   private final Cache<String, Boolean> blacklistCache;
   private final List<CidrBlock> staticBlacklistCidrs = new ArrayList<>(4);
+}

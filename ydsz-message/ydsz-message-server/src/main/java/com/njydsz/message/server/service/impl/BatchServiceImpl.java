@@ -205,3 +205,6 @@ public class BatchServiceImpl implements BatchService {
   private List<MessageRequest> parsePayload(String payload) {
     if (!StringUtils.hasText(payload)) {
       return new ArrayList<>(0);
+}
+}
+}

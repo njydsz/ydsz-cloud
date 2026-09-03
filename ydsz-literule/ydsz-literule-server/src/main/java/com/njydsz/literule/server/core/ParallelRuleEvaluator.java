@@ -191,3 +191,5 @@ public class ParallelRuleEvaluator {
 
     // 合并结果
     List<RuleResultVO> allResults = new ArrayList<>(16);
+}
+}

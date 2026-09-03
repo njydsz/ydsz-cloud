@@ -64,3 +64,4 @@ public class IpAccessProperties {
 
   /** 静态黑名单（启动时加载，支持 IP 和 CIDR 网段） */
   private List<String> staticBlacklist = new ArrayList<>(4);
+}

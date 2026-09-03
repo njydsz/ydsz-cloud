@@ -283,3 +283,6 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   public List<FileNodeVO> findDescendantsByPage(String folderPath, int offset, int limit) {
     if (folderPath == null || folderPath.isEmpty()) {
       return new ArrayList<>(0);
+}
+}
+}

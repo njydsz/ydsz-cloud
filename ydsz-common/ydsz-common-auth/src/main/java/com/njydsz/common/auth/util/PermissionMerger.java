@@ -75,3 +75,66 @@ public final class PermissionMerger {
    */
   private static final class PermissionSet {
     private final Set<String> menuPerms = new HashSet<>(16);
+    private final Set<String> buttonPerms = new HashSet<>(16);
+    private final Set<String> apiPerms = new HashSet<>(16);
+
+    /** 添加单个菜单权限 */
+    void addMenuPermission(String perm) {
+      menuPerms.add(perm);
+    }
+
+    /** 批量添加菜单权限 */
+    void addMenuPermissions(Collection<String> perms) {
+      if (perms != null) {
+        menuPerms.addAll(perms);
+      }
+    }
+
+    /** 批量添加按钮权限 */
+    void addButtonPermissions(Collection<String> perms) {
+      if (perms != null) {
+        buttonPerms.addAll(perms);
+      }
+    }
+
+    /** 批量添加 API 权限 */
+    void addApiPermissions(Collection<String> perms) {
+      if (perms != null) {
+        apiPerms.addAll(perms);
+      }
+    }
+
+    /**
+     * 从当前集合中移除 denied 包含的权限（菜单权限做减法，按钮/API 权限保留）。
+     *
+     * @param denied 拒绝集合
+     * @return 新的 PermissionSet，包含移除后的结果
+     */
+    PermissionSet subtract(PermissionSet denied) {
+      PermissionSet result = new PermissionSet();
+      for (String p : menuPerms) {
+        if (!denied.menuPerms.contains(p)) {
+          result.menuPerms.add(p);
+        }
+      }
+      result.buttonPerms.addAll(buttonPerms);
+      result.apiPerms.addAll(apiPerms);
+      return result;
+    }
+
+    /**
+     * 将合并结果转为不可变的 RolePermissions。
+     *
+     * @return 转换后的 RolePermissions
+     */
+    RolePermissions toRolePermissions() {
+      RolePermissions rp = new RolePermissions();
+      rp.setMenuPermissions(new HashSet<>(menuPerms));
+      rp.setButtonPermissions(new HashSet<>(buttonPerms));
+      rp.setApiPermissions(new HashSet<>(apiPerms));
+      return rp;
+    }
+  }
+}
+}
+}

@@ -344,3 +344,6 @@ public class RuleIndexer {
     } else {
       // 精确场景：取 scope 匹配 + scope=ALL/null 的规则
       scopedRules = new ArrayList<>(16);
+}
+}
+}

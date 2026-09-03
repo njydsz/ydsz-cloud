@@ -105,3 +105,5 @@ public class SmsNotifySender implements NotifyChannelStrategy {
       return NotifySendResult.failure("手机号为空", getChannel().getName());
     }
     Map<String, Object> templateParam = new HashMap<>(16);
+}
+}

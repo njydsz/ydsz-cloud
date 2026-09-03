@@ -73,3 +73,4 @@ public class FlowI18nServiceImpl implements FlowI18nService {
   /** i18n 消息资源：enumType -> enumName -> locale -> description */
   private static final Map<String, Map<String, Map<String, String>>> MESSAGE_RESOURCE =
       new LinkedHashMap<>(16);
+}

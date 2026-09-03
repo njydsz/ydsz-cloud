@@ -166,3 +166,4 @@ public class UserInfoProperties {
 
   /** OAuth2 客户端注册表（clientId → 客户端配置）。 */
   private Map<String, OAuth2Client> oauth2Clients = new HashMap<>(16);
+}

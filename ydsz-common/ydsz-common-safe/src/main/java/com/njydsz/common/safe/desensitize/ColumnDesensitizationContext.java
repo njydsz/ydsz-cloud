@@ -45,3 +45,4 @@ public class ColumnDesensitizationContext {
 
   /** 表 → (列 → 规则配置) 的二级映射 */
   private final Map<String, Map<String, DesensitizationRuleConfig>> rules = new LinkedHashMap<>(16);
+}

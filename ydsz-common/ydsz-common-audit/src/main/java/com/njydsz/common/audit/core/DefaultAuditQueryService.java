@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.time.LocalDateTime;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
@@ -598,3 +599,61 @@ public class DefaultAuditQueryService implements AuditQueryService {
   private static class SqlContext {
 
     private final List<String> conditions = new ArrayList<>(4);
+    private final List<Object> params = new ArrayList<>(8);
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private int limit;
+    private int offset;
+
+    void addCondition(String condition, Object... paramValues) {
+      conditions.add(condition);
+      if (paramValues != null) {
+        for (Object p : paramValues) {
+          params.add(p);
+        }
+      }
+    }
+
+    void setTimeRange(LocalDateTime start, LocalDateTime end) {
+      this.startTime = start;
+      this.endTime = end;
+    }
+
+    LocalDateTime getStartTime() {
+      return startTime;
+    }
+
+    LocalDateTime getEndTime() {
+      return endTime;
+    }
+
+    void setPagination(int limit, int offset) {
+      this.limit = limit;
+      this.offset = offset;
+    }
+
+    int getLimit() {
+      return limit;
+    }
+
+    int getOffset() {
+      return offset;
+    }
+
+    List<String> getConditions() {
+      return conditions;
+    }
+
+    Object[] getParamsArray() {
+      List<Object> all = new ArrayList<>(params);
+      if (startTime != null) {
+        all.add(startTime);
+      }
+      if (endTime != null) {
+        all.add(endTime);
+      }
+      return all.toArray();
+    }
+  }
+}
+}

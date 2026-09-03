@@ -59,3 +59,6 @@ public class ExprTraceBuilder {
      */
     public static TraceNode of(String type, String expression, Object result) {
       return new TraceNode(type, expression, null, null, result, false, 0, new ArrayList<>(16),
+}
+}
+}

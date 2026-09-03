@@ -154,3 +154,5 @@ public class SearchIndexRebuildJobHandler implements JobHandler {
     }
   }
 }
+
+}

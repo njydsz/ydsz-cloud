@@ -175,3 +175,5 @@ public class SseEmitterService {
     recordEvent(batchId, eventIdStr, "progress", eventData);
 
     List<SseEmitterSubscription> deadSubs = new ArrayList<>(16);
+}
+}

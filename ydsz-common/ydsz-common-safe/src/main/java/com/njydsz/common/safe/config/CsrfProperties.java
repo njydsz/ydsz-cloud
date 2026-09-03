@@ -109,3 +109,4 @@ public class CsrfProperties {
    * <p>这些路径不需要 CSRF 验证，支持 Ant 风格路径匹配。 通常用于公开接口、GET 请求等。
    */
   private List<String> excludes = new ArrayList<>(4);
+}

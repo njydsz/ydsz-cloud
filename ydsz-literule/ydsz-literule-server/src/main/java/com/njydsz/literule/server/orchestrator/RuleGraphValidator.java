@@ -45,3 +45,5 @@ public final class RuleGraphValidator {
    */
   public static List<GraphValidationIssue> validate(RuleChainGraph graph) {
     List<GraphValidationIssue> issues = new ArrayList<>(16);
+}
+}

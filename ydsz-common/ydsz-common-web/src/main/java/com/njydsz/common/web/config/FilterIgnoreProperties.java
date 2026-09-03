@@ -36,3 +36,4 @@ public class FilterIgnoreProperties {
 
   /** 公共忽略 URL 模式列表（与内置默认值合并） */
   private List<String> commonIgnoreUrls = new ArrayList<>(4);
+}

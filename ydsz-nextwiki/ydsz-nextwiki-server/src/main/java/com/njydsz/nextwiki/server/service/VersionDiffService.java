@@ -112,3 +112,5 @@ public class VersionDiffService {
   /** 按行分割文本 */
   private List<String> splitLines(String content) {
     List<String> lines = new ArrayList<>(16);
+}
+}
