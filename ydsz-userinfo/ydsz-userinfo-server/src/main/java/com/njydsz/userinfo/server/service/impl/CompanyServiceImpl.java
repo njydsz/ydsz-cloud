@@ -64,8 +64,9 @@ public class CompanyServiceImpl implements CompanyService {
   /**
    * {@inheritDoc}
    *
-   * <p>一次性查询全表后在内存中构建树，使用 {@link TreeBuilder#buildSimple} O(n) 算法， 自动填充 {@code level}/{@code path} 元数据。
-   * 公司数据量小（百级别），全量加载可接受。
+   * <p>一次性查询全表后在内存中构建树，使用 {@link TreeBuilder#buildSimple} O(n) 算法。 公司数据量小（百级别），全量加载可接受。
+   *
+   * <p>注：26.09.01 精简版 {@code buildSimple} 不再自动填充 {@code level}/{@code path} 元数据， 当前无下游消费者，保持为 null。
    *
    * @return 公司树形结构根节点列表，无数据返回空列表
    */
@@ -89,14 +90,13 @@ public class CompanyServiceImpl implements CompanyService {
           return treeVO;
         })
         .collect(Collectors.toList());
+    // CompanyTreeVO 无排序字段，传 null 提取器保持 DB 原序（nullsLast 稳定排序）
     return TreeBuilder.buildSimple(
         flatList,
         CompanyTreeVO::getId,
         CompanyTreeVO::getParentId,
         CompanyTreeVO::setChildren,
-        null,
-        CompanyTreeVO::setLevel,
-        CompanyTreeVO::setPath);
+        vo -> null);
   }
 
   @Override

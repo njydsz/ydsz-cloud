@@ -83,6 +83,34 @@ public class PageQuery extends BaseQuery {
   }
 
   /**
+   * 追加升序排序项（链式调用）。
+   *
+   * @param column 排序列名（已通过 SQL 安全校验）
+   * @return 当前查询对象（支持链式调用）
+   */
+  public PageQuery addAscOrder(String column) {
+    if (this.orderItems == null) {
+      this.orderItems = new ArrayList<>(16);
+    }
+    this.orderItems.add(OrderItem.asc(column));
+    return this;
+  }
+
+  /**
+   * 追加降序排序项（链式调用）。
+   *
+   * @param column 排序列名（已通过 SQL 安全校验）
+   * @return 当前查询对象（支持链式调用）
+   */
+  public PageQuery addDescOrder(String column) {
+    if (this.orderItems == null) {
+      this.orderItems = new ArrayList<>(16);
+    }
+    this.orderItems.add(OrderItem.desc(column));
+    return this;
+  }
+
+  /**
    * 获取查询偏移量（从 0 开始），用于 SQL 分页。
    *
    * @return 偏移量
