@@ -257,4 +257,20 @@ public class ExcelFacade {
       return;
     }
 
-    List<SheetData> sheetDataList = new ArrayList<>(16);
+    WriteMetadata metadata = new WriteMetadata();
+    metadata.setClazz(clazz);
+    metadata.setFilePath(fileName);
+
+    ExcelWriter writer = new ExcelWriter(metadata);
+    int index = 0;
+    for (Map.Entry<String, ?> entry : sheets.entrySet()) {
+      ExcelWriter currentWriter =
+          (index == 0)
+              ? writer.sheet(entry.getKey())
+              : writer.newSheet(entry.getKey());
+      currentWriter.doWrite(entry.getValue());
+      index++;
+    }
+    writer.finish();
+  }
+}

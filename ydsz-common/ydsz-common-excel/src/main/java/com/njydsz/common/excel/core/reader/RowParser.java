@@ -74,3 +74,7 @@ public class RowParser {
     this.metadata = metadata;
     this.context = context;
     this.fieldSetterCache = new HashMap<>(16);
+    this.targetTypeCache = new HashMap<>(16);
+    this.converterChain = new ConverterChain();
+  }
+}
