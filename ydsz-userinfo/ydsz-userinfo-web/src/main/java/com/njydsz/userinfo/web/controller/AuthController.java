@@ -41,6 +41,8 @@ import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
+import com.njydsz.userinfo.domain.dto.RefreshRequest;
+import com.njydsz.userinfo.domain.dto.SecondaryAuthRequest;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
@@ -49,8 +51,6 @@ import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.auth.SecondaryAuthService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
-import com.njydsz.userinfo.domain.dto.RefreshRequest;
-import com.njydsz.userinfo.domain.dto.SecondaryAuthRequest;
 
 /**
  * 认证 Controller
@@ -87,6 +87,9 @@ import com.njydsz.userinfo.domain.dto.SecondaryAuthRequest;
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")
 @ApiVersion("1")
 public class AuthController {
+  /** Map 初始容量 */
+  private static final int MAP_CAPACITY = 16;
+
   /** "Bearer " 前缀长度 */
   private static final int BEARER_PREFIX_LENGTH = 7;
 
@@ -294,7 +297,7 @@ public class AuthController {
     String code = generateDeviceCode();
 
     // 3. 存储用户信息到 Redis（5 分钟有效，一次性使用）
-    Map<String, String> codeData = new HashMap<>(16);
+    Map<String, String> codeData = new HashMap<>(MAP_CAPACITY);
     codeData.put("userId", userInfo.getUserId());
     codeData.put("username", userInfo.getUsername());
     codeData.put("tenantId", userInfo.getTenantId() != null ? userInfo.getTenantId() : "1");
@@ -303,7 +306,7 @@ public class AuthController {
         YdszJson.toJson(codeData),
         DEVICE_CODE_TTL_SECONDS);
 
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(MAP_CAPACITY);
     result.put("deviceCode", code);
     result.put("expiresIn", DEVICE_CODE_TTL_SECONDS);
     return YdszResponse.success(result);
@@ -514,7 +517,7 @@ public class AuthController {
     // 开启安全操作模式
     secondaryAuthService.openSafe(request.getPassword(), request.getScene(), effectiveTtl);
 
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(MAP_CAPACITY);
     result.put("scene", request.getScene());
     result.put("level", level.name());
     result.put("ttlSeconds", effectiveTtl.getSeconds());

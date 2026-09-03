@@ -93,6 +93,9 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
 @RequiredArgsConstructor
 @Tag(name = "OAuth2", description = "OAuth2 授权码模式")
 public class OAuth2Controller {
+  /** Map 初始容量 */
+  private static final int MAP_CAPACITY = 16;
+
   /** "Bearer " 前缀长度 */
   private static final int BEARER_PREFIX_LENGTH = 7;
 
@@ -360,7 +363,7 @@ public class OAuth2Controller {
         .toList();
 
     // 3. 构建响应
-    Map<String, Object> consentInfo = new HashMap<>(16);
+    Map<String, Object> consentInfo = new HashMap<>(MAP_CAPACITY);
     consentInfo.put("user", Map.of(
         "userId", userInfo.getUserId(),
         "username", userInfo.getUsername()));
@@ -631,7 +634,7 @@ public class OAuth2Controller {
       String grantedScope,
       OAuthCodeContext context,
       UserInfo userInfo) {
-    Map<String, Object> tokenResponse = new HashMap<>(16);
+    Map<String, Object> tokenResponse = new HashMap<>(MAP_CAPACITY);
     tokenResponse.put("access_token", accessToken);
     tokenResponse.put("refresh_token", refreshToken);
     tokenResponse.put("token_type", "Bearer");
@@ -790,7 +793,7 @@ public class OAuth2Controller {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
     }
 
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(MAP_CAPACITY);
     UserInfo userInfo = tokenService.parseAccessToken(token);
     boolean active = userInfo != null && tokenService.validateAccessToken(token);
     result.put("active", active);

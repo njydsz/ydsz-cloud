@@ -39,6 +39,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @RequiredArgsConstructor
 public class SsoMetricsController {
 
+  /** Map 初始容量 */
+  private static final int MAP_CAPACITY = 16;
+
   /** Redis 中 CAS TGT 活跃数 Key */
   private static final String CAS_ACTIVE_TGT_KEY = "userinfo:cas:tgt:active:count";
 
@@ -69,7 +72,7 @@ public class SsoMetricsController {
     metrics.setOauth2ActiveTokens(getLongFromRedis(OAUTH2_ACTIVE_TOKENS_KEY));
 
     // 协议分布
-    Map<String, Long> protocolDistribution = new HashMap<>(16);
+    Map<String, Long> protocolDistribution = new HashMap<>(MAP_CAPACITY);
     protocolDistribution.put("cas", getLongFromRedis(CAS_ACTIVE_TGT_KEY));
     protocolDistribution.put("oauth2", getLongFromRedis(OAUTH2_ACTIVE_TOKENS_KEY));
     metrics.setProtocolDistribution(protocolDistribution);
