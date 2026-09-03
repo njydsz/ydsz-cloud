@@ -34,6 +34,9 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 @Configuration
 @RequiredArgsConstructor
 public class TaskDiagnosisService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 成功率得分权重 */
   private static final double SUCCESS_SCORE_WEIGHT = 0.5;
 
@@ -138,7 +141,7 @@ public class TaskDiagnosisService {
     if (normalJobs.isEmpty()) {
       return Collections.emptyList();
     }
-    List<TaskDiagnosis> results = new ArrayList<>(16);
+    List<TaskDiagnosis> results = new ArrayList<>(COLLECTION_CAPACITY);
     for (JobVO job : normalJobs) {
       try {
         List<JobLogVO> recentLogs = selectRecentLogs(job.getId(), DIAGNOSIS_WINDOW_HOURS);
@@ -249,7 +252,7 @@ public class TaskDiagnosisService {
   private List<String> generateSuggestions(
       double successRate, double cvDuration, long timeoutCount, long total,
       int consecutiveFailures, double avgDuration) {
-    List<String> suggestions = new ArrayList<>(16);
+    List<String> suggestions = new ArrayList<>(COLLECTION_CAPACITY);
 
     if (successRate < SUCCESS_RATE_WARN_THRESHOLD) {
       suggestions.add(String.format("成功率 %.1f%% 偏低，建议检查 handler 逻辑或外部依赖健康状态", successRate));

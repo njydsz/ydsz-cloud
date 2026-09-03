@@ -101,6 +101,12 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
 @RequiredArgsConstructor
 @ConditionalOnMissingBean(TaskDispatcher.class)
 public class DefaultTaskDispatcher implements TaskDispatcher {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
+  /** 小集合初始容量 */
+  private static final int SMALL_COLLECTION_CAPACITY = 8;
+
 
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
@@ -519,7 +525,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
     String firstLogId = null;
     // P2-4: 本地分片直接执行；远程分片按节点聚合后批量派发（一次 HTTP 携带该节点全部分片）
-    Map<String, List<ShardAssignment>> remoteShardsByNode = new HashMap<>(16);
+    Map<String, List<ShardAssignment>> remoteShardsByNode = new HashMap<>(COLLECTION_CAPACITY);
     for (ShardAssignment assignment : assignments) {
       String assignedNodeId = assignment.nodeId();
       if (localNodeId != null && localNodeId.equals(assignedNodeId)) {
@@ -530,7 +536,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         }
       } else {
         remoteShardsByNode
-            .computeIfAbsent(assignedNodeId, k -> new ArrayList<>(8))
+            .computeIfAbsent(assignedNodeId, k -> new ArrayList<>(SMALL_COLLECTION_CAPACITY))
             .add(assignment);
       }
     }
@@ -1345,7 +1351,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       return;
     }
     try {
-      Map<String, Object> payload = new HashMap<>(16);
+      Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
       payload.put("jobKey", job.getJobKey());
       payload.put("jobName", job.getJobName());
       payload.put("logId", log0.getId());
@@ -1398,7 +1404,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           job.getJobKey());
       return;
     }
-    Map<String, Object> metadata = new HashMap<>(16);
+    Map<String, Object> metadata = new HashMap<>(COLLECTION_CAPACITY);
     metadata.put("jobId", job.getId());
     metadata.put("jobKey", job.getJobKey());
     metadata.put("jobName", job.getJobName() != null ? job.getJobName() : "");

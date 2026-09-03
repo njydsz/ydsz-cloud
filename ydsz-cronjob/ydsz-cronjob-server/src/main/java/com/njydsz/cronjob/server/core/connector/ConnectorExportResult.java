@@ -13,6 +13,9 @@ import lombok.Data;
  */
 @Data
 public class ConnectorExportResult {
+  /** 错误列表初始容量 */
+  private static final int ERRORS_CAPACITY = 4;
+
   /** 总任务数 */
   private int total;
 
@@ -26,7 +29,7 @@ public class ConnectorExportResult {
   private int skipped;
 
   /** 错误详情列表 */
-  private List<String> errors = new ArrayList<>(4);
+  private List<String> errors = new ArrayList<>(ERRORS_CAPACITY);
 
   /**
    * 创建成功结果。

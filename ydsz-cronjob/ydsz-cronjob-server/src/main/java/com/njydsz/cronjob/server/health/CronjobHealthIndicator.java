@@ -35,6 +35,9 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)
 public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 慢节点响应时长阈值（毫秒）：响应时长超过 5000ms 判定为慢节点 */
   private static final long SLOW_NODE_RESPONSE_THRESHOLD_MS = 5000L;
@@ -118,7 +121,7 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
         String leaderRole = cronjobProperties.getLeader().getRole();
         boolean isLeader = leaderElector.isLeader(leaderRole);
         String currentLeader = leaderElector.getCurrentLeader(leaderRole);
-        Map<String, Object> leaderInfo = new LinkedHashMap<>(16);
+        Map<String, Object> leaderInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
         leaderInfo.put("enabled", true);
         leaderInfo.put("isLeader", isLeader);
         leaderInfo.put("currentLeader", currentLeader != null ? currentLeader : "none");
@@ -128,7 +131,7 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
         builder.withDetail("leader", "ERROR - " + extractMessage(e));
       }
     } else {
-      Map<String, Object> leaderInfo = new LinkedHashMap<>(16);
+      Map<String, Object> leaderInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
       leaderInfo.put("enabled", cronjobProperties.getLeader().isEnabled());
       leaderInfo.put("mode", "leaderless");
       builder.withDetail("leader", leaderInfo);
@@ -144,7 +147,7 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
     }
 
     // 4. 调度器配置摘要
-    Map<String, Object> schedulerInfo = new LinkedHashMap<>(16);
+    Map<String, Object> schedulerInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
     schedulerInfo.put("scanIntervalMs", cronjobProperties.getScanner().getIntervalMs());
     schedulerInfo.put("maxBatchSize", cronjobProperties.getScanner().getBatchSize());
     schedulerInfo.put("lockTtlSeconds", cronjobProperties.getScanner().getLockTtlSeconds());
@@ -163,7 +166,7 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
     JobNodeRepository jobNodeRepository = jobNodeRepositoryProvider.getIfAvailable();
     if (jobNodeRepository != null) {
       try {
-        Map<String, Object> nodeHealth = new LinkedHashMap<>(16);
+        Map<String, Object> nodeHealth = new LinkedHashMap<>(COLLECTION_CAPACITY);
         var onlineNodes = jobNodeRepository.findOnlineNodes();
         nodeHealth.put("onlineCount", onlineNodes.size());
 
@@ -192,7 +195,7 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
     WebhookRetryRepository retryRepo = webhookRetryRepositoryProvider.getIfAvailable();
     if (retryRepo != null) {
       try {
-        Map<String, Object> retryInfo = new LinkedHashMap<>(16);
+        Map<String, Object> retryInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
         long pendingCount = retryRepo.countPending();
         long deadCount = retryRepo.countDead();
         retryInfo.put("pendingRetries", pendingCount);

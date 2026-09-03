@@ -50,6 +50,9 @@ import com.njydsz.common.json.tree.ObjectNode;
 @Slf4j
 @Component
 public class CalendarScheduleFilter {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认工作日类型 */
   public static final String DEFAULT_CALENDAR_TYPE = "ALL";
@@ -120,7 +123,7 @@ public class CalendarScheduleFilter {
       if (holidaysArr == null || holidaysArr.isEmpty()) {
         return Set.of();
       }
-      Set<LocalDate> holidays = new HashSet<>(16);
+      Set<LocalDate> holidays = new HashSet<>(COLLECTION_CAPACITY);
       for (int i = 0; i < holidaysArr.size(); i++) {
         try {
           holidays.add(LocalDate.parse(holidaysArr.getString(i)));

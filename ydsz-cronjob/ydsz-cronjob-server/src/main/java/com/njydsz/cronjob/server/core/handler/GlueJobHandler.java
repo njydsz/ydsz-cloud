@@ -78,6 +78,9 @@ import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 @Configuration
 @ConditionalOnMissingBean(GlueJobHandler.class)
 public class GlueJobHandler implements JobHandler {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 脚本执行超时（秒） */
   private static final int SCRIPT_TIMEOUT_SECONDS = 300;
 
@@ -381,7 +384,7 @@ public class GlueJobHandler implements JobHandler {
     if (executor == null) {
       throw new IllegalStateException("SandboxScriptExecutor 未注册，Python GLUE 任务无法执行");
     }
-    Map<String, String> envVars = new HashMap<>(16);
+    Map<String, String> envVars = new HashMap<>(COLLECTION_CAPACITY);
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "PYTHON", SCRIPT_TIMEOUT_SECONDS, envVars);
@@ -401,7 +404,7 @@ public class GlueJobHandler implements JobHandler {
     if (executor == null) {
       throw new IllegalStateException("SandboxScriptExecutor 未注册，Shell GLUE 任务无法执行");
     }
-    Map<String, String> envVars = new HashMap<>(16);
+    Map<String, String> envVars = new HashMap<>(COLLECTION_CAPACITY);
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "SHELL", SCRIPT_TIMEOUT_SECONDS, envVars);

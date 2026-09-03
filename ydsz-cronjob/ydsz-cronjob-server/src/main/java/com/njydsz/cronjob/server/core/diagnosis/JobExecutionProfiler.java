@@ -40,6 +40,9 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
 @Service
 @RequiredArgsConstructor
 public class JobExecutionProfiler {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 画像分析默认时间窗口：7 天 */
   private static final int PROFILE_WINDOW_DAYS = 7;
@@ -252,7 +255,7 @@ public class JobExecutionProfiler {
   private List<String> generateOptimizationSuggestions(
       long p50, long p90, long p99, long avg, double stabilityScore,
       double successRate, int timeoutCount, int totalCount) {
-    List<String> suggestions = new ArrayList<>(16);
+    List<String> suggestions = new ArrayList<>(COLLECTION_CAPACITY);
 
     // P99 耗时过长
     if (p99 > P99_DURATION_WARN_SECONDS * 1000) {

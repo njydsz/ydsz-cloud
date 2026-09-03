@@ -28,6 +28,9 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 @Service
 @RequiredArgsConstructor
 public class ScheduleCalendarService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final JobRepository jobRepository;
 
@@ -58,7 +61,7 @@ public class ScheduleCalendarService {
   public List<ScheduleItem> getScheduleCalendar(LocalDateTime from, int hours, int maxPerJob) {
     List<JobVO> normalJobs = jobRepository.findAllNormal();
     LocalDateTime to = from.plusHours(hours);
-    List<ScheduleItem> items = new ArrayList<>(16);
+    List<ScheduleItem> items = new ArrayList<>(COLLECTION_CAPACITY);
     for (JobVO job : normalJobs) {
       if (job.getCronExpression() == null || job.getCronExpression().isBlank()) {
         continue;

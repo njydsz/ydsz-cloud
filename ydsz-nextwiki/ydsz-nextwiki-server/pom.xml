@@ -16,11 +16,8 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-domain</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-nextwiki-api</artifactId>
-        </dependency>
         <!-- P1-2: 移除 server 对 infra 的直接依赖，符合 DDD 分层（server 仅依赖 domain，infra 由 web 层引入并通过 Spring 自动装配注入 Repository 实现） -->
+        <!-- P1-2 续：移除 server 对 api 的僵尸依赖（java 代码零引用，server 仅通过 domain 对外暴露能力） -->
         <!-- common-web 传递引入: common-base(->core/util/exception), common-auth, common-safe, common-redis -->
         <!-- common-jdbc 传递引入: common-domain -->
         <!-- P1-A1: 显式声明 common-auth（使用 @AuthApiPermission 等能力） -->

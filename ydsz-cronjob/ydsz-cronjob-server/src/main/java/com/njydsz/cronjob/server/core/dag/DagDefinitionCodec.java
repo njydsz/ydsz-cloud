@@ -28,6 +28,9 @@ import com.njydsz.common.json.tree.ObjectNode;
 @Slf4j
 @Component
 public class DagDefinitionCodec {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /**
    * 序列化 DAG 定义为 JSON 字符串（使用 POJO 自动序列化）。
@@ -76,7 +79,7 @@ public class DagDefinitionCodec {
     }
 
     // 解析 nodes
-    List<DagNode> nodes = new ArrayList<>(16);
+    List<DagNode> nodes = new ArrayList<>(COLLECTION_CAPACITY);
     ArrayNode nodesArr = root.getArrayNode("nodes");
     if (nodesArr == null || nodesArr.isEmpty()) {
       throw SysException.builder()
@@ -123,7 +126,7 @@ public class DagDefinitionCodec {
     }
 
     // 解析 edges（可为空）
-    List<DagEdge> edges = new ArrayList<>(16);
+    List<DagEdge> edges = new ArrayList<>(COLLECTION_CAPACITY);
     ArrayNode edgesArr = root.getArrayNode("edges");
     if (edgesArr != null) {
       for (int i = 0; i < edgesArr.size(); i++) {
@@ -141,7 +144,7 @@ public class DagDefinitionCodec {
     }
 
     // 校验边的 from/to 必须存在于节点列表
-    Set<String> nodeKeys = new HashSet<>(16);
+    Set<String> nodeKeys = new HashSet<>(COLLECTION_CAPACITY);
     for (DagNode node : nodes) {
       nodeKeys.add(node.jobKey());
     }

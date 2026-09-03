@@ -44,12 +44,15 @@ import lombok.Data;
  */
 @Data
 public class MultiClusterConfig {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 是否启用多云漂移能力（默认 false，显式开启） */
   private boolean enabled = false;
 
   /** 远程集群配置映射（key = 集群名称，如 "beijing"、"shanghai"） */
-  private Map<String, RemoteCluster> clusters = new HashMap<>(16);
+  private Map<String, RemoteCluster> clusters = new HashMap<>(COLLECTION_CAPACITY);
 
   /**
    * 远程集群连接信息。

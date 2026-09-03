@@ -68,6 +68,9 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Component
 @RequiredArgsConstructor
 public class AlertDispatcher {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final JobAlertRuleRepository jobAlertRuleRepository;
   private final JobAlertLogRepository jobAlertLogRepository;
@@ -229,7 +232,7 @@ public class AlertDispatcher {
    */
   private void broadcastAlert(AlertContext context, JobAlertRuleVO rule, boolean recovery) {
     try {
-      Map<String, Object> data = new HashMap<>(16);
+      Map<String, Object> data = new HashMap<>(COLLECTION_CAPACITY);
       data.put("alertCode", "CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
       data.put("alertType", rule.getAlertType());
       data.put("alertLevel", rule.getAlertLevel());
@@ -367,7 +370,7 @@ public class AlertDispatcher {
     request.setBizType("CRONJOB_ALERT");
     request.setBizId(String.valueOf(rule.getId()));
     request.setReceiver(receivers.isEmpty() ? null : String.join(",", receivers));
-    Map<String, Object> params = new HashMap<>(16);
+    Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
     params.put("ruleId", rule.getId());
     params.put("ruleName", rule.getRuleName());
     params.put("alertType", rule.getAlertType());

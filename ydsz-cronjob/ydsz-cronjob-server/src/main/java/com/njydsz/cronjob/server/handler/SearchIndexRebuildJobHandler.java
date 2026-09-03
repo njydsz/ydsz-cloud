@@ -53,6 +53,9 @@ import com.njydsz.cronjob.domain.job.JobHandler;
 @Component("searchIndexRebuildJobHandler")
 @RequiredArgsConstructor
 public class SearchIndexRebuildJobHandler implements JobHandler {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 索引重建服务（可选注入，未引入 common-search 时为 null） */
   private final ObjectProvider<IndexRebuildService> indexRebuildServiceProvider;
@@ -79,7 +82,7 @@ public class SearchIndexRebuildJobHandler implements JobHandler {
     // 执行全量重建（内部使用单线程池串行执行）
     int rebuilt = rebuildService.rebuildAll(type, tenantId);
 
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY);
     result.put("type", type);
     result.put("tenantId", tenantId);
     result.put("rebuilt", rebuilt);

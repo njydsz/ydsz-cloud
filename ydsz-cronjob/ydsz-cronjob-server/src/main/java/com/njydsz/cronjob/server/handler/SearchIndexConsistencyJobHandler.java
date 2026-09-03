@@ -47,6 +47,9 @@ import com.njydsz.cronjob.domain.job.JobHandler;
 @Component("searchIndexConsistencyJobHandler")
 @RequiredArgsConstructor
 public class SearchIndexConsistencyJobHandler implements JobHandler {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 索引一致性校验器（可选注入，未引入 common-search 时为 null） */
   private final ObjectProvider<IndexConsistencyChecker> consistencyCheckerProvider;
@@ -71,7 +74,7 @@ public class SearchIndexConsistencyJobHandler implements JobHandler {
     // 执行巡检 + 自动修复
     int repaired = checker.autoRepair(tenantId);
 
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY);
     result.put("tenantId", tenantId);
     result.put("repaired", repaired);
     result.put("checkedAt", LocalDateTime.now().toString());

@@ -1,9 +1,7 @@
 package com.njydsz.cronjob.server.core.handler;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,6 +76,9 @@ import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 @Configuration
 @ConditionalOnMissingBean(ScriptJobHandler.class)
 public class ScriptJobHandler implements JobHandler {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** Bean 名称，dispatcher 在 jobType=SHELL 时路由到此 handler */
   public static final String BEAN_NAME = "scriptJobHandler";
@@ -213,7 +214,7 @@ public class ScriptJobHandler implements JobHandler {
       scriptContent = Files.readString(Path.of(path), StandardCharsets.UTF_8);
     }
     // 构建环境变量（从系统环境变量中选取白名单项）
-    Map<String, String> envVars = new HashMap<>(16);
+    Map<String, String> envVars = new HashMap<>(COLLECTION_CAPACITY);
     envVars.put("PATH", System.getenv().getOrDefault("PATH", "/usr/bin:/bin"));
     envVars.put("HOME", System.getenv().getOrDefault("HOME", "/tmp"));
     // 将参数作为环境变量传递（ARGS_0, ARGS_1, ...）
@@ -356,6 +357,6 @@ public class ScriptJobHandler implements JobHandler {
    * </ul>
    */
   private List<String> buildCommand(String language, Path scriptFile, List<String> args) {
-    List<String> command = new ArrayList<>(16);
+    List<String> command = new ArrayList<>(COLLECTION_CAPACITY);
 }
 }

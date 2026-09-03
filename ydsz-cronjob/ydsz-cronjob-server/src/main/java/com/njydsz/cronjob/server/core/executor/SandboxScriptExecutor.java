@@ -36,6 +36,9 @@ import com.njydsz.cronjob.server.config.SandboxConfig;
 @Component
 @RequiredArgsConstructor
 public class SandboxScriptExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 等待超时（秒） */
   private static final long WAIT_TIMEOUT_SECONDS = 5;
 
@@ -183,7 +186,7 @@ public class SandboxScriptExecutor {
               : sandbox.getDockerShellImage();
 
       // 2. 构造 docker run 命令
-      List<String> cmd = new ArrayList<>(16);
+      List<String> cmd = new ArrayList<>(COLLECTION_CAPACITY);
       cmd.add("docker");
       cmd.add("run");
       cmd.add("--rm");

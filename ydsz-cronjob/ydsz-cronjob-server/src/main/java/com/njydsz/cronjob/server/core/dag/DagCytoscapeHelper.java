@@ -67,6 +67,9 @@ import com.njydsz.cronjob.domain.dag.DagNodeStatus;
  * @since 26.09.01
  */
 public final class DagCytoscapeHelper {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private DagCytoscapeHelper() {
     // 工具类
@@ -91,7 +94,7 @@ public final class DagCytoscapeHelper {
                   String status = nodeStatusMap.getOrDefault(jobKey, DagNodeStatus.PENDING.name());
                   Long duration = durationMap != null ? durationMap.get(jobKey) : null;
 
-                  Map<String, Object> nodeData = new LinkedHashMap<>(16);
+                  Map<String, Object> nodeData = new LinkedHashMap<>(COLLECTION_CAPACITY);
                   nodeData.put("id", jobKey);
                   nodeData.put("label", node.label() != null ? node.label() : jobKey);
                   nodeData.put("nodeType", node.nodeType());
@@ -113,7 +116,7 @@ public final class DagCytoscapeHelper {
         definition.edges().stream()
             .map(
                 edge -> {
-                  Map<String, Object> edgeData = new LinkedHashMap<>(16);
+                  Map<String, Object> edgeData = new LinkedHashMap<>(COLLECTION_CAPACITY);
                   edgeData.put("id", "edge_" + edge.from() + "_" + edge.to());
                   edgeData.put("source", edge.from());
                   edgeData.put("target", edge.to());
@@ -127,7 +130,7 @@ public final class DagCytoscapeHelper {
                 })
             .toList();
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("nodes", cytoscapeNodes);
     result.put("edges", cytoscapeEdges);
     return result;

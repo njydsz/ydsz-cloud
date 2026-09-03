@@ -60,6 +60,9 @@ import com.njydsz.cronjob.server.config.SandboxConfig;
 @Component
 @RequiredArgsConstructor
 public class GroovyDockerSandboxExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 输出读取超时（毫秒） */
   private static final long OUTPUT_READ_TIMEOUT_MILLIS = 2000;
@@ -178,7 +181,7 @@ public class GroovyDockerSandboxExecutor {
    * @return Docker 命令参数列表
    */
   private List<String> buildDockerCommand(SandboxConfig config, Path scriptFile, String paramsJson) {
-    List<String> cmd = new ArrayList<>(16);
+    List<String> cmd = new ArrayList<>(COLLECTION_CAPACITY);
     cmd.add("docker");
     cmd.add("run");
     cmd.add("--rm");

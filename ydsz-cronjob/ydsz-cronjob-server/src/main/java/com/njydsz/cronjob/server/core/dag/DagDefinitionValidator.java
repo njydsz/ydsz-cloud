@@ -43,6 +43,9 @@ import com.njydsz.common.exception.custom.SysException;
 @Slf4j
 @Component
 public class DagDefinitionValidator {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 最大节点数 */
   private static final int MAX_NODES = 200;
@@ -79,7 +82,7 @@ public class DagDefinitionValidator {
           .message("error.cronjob.msg_dag_no_nodes")
           .build();
     }
-    Set<String> seen = new HashSet<>(16);
+    Set<String> seen = new HashSet<>(COLLECTION_CAPACITY);
     for (DagNode node : definition.nodes()) {
       if (node.jobKey() == null || node.jobKey().isBlank()) {
         throw SysException.builder()
@@ -98,11 +101,11 @@ public class DagDefinitionValidator {
 
   /** 校验边完整性和无自环。 */
   private void validateEdges(DagDefinition definition) {
-    Set<String> nodeKeys = new HashSet<>(16);
+    Set<String> nodeKeys = new HashSet<>(COLLECTION_CAPACITY);
     for (DagNode node : definition.nodes()) {
       nodeKeys.add(node.jobKey());
     }
-    Set<String> seenEdges = new HashSet<>(16);
+    Set<String> seenEdges = new HashSet<>(COLLECTION_CAPACITY);
     for (DagEdge edge : definition.edges()) {
       if (edge.from() == null || edge.to() == null) {
         throw SysException.builder()
@@ -157,7 +160,7 @@ public class DagDefinitionValidator {
    * <p>遇到 GRAY 节点表示存在环。
    */
   private void validateNoCycles(DagDefinition definition) {
-    Map<String, Integer> color = new HashMap<>(16);
+    Map<String, Integer> color = new HashMap<>(COLLECTION_CAPACITY);
     for (DagNode node : definition.nodes()) {
       color.put(node.jobKey(), 0); // WHITE
     }

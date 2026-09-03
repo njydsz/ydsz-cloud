@@ -37,6 +37,9 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
  */
 @Endpoint(id = "threadpools")
 public class ThreadPoolMetricsEndpoint {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final CronjobThreadPoolRegistry registry;
 
@@ -52,16 +55,16 @@ public class ThreadPoolMetricsEndpoint {
   @ReadOperation
   public Map<String, Object> allPoolMetrics() {
     List<CronjobThreadPoolRegistry.ThreadPoolMetrics> metricsList = registry.getMetrics();
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
     int totalPools = metricsList.size();
     int totalActive = 0;
     int totalQueueSize = 0;
     long totalCompleted = 0;
 
-    Map<String, Object> pools = new LinkedHashMap<>(16);
+    Map<String, Object> pools = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (CronjobThreadPoolRegistry.ThreadPoolMetrics m : metricsList) {
-      Map<String, Object> poolDetail = new LinkedHashMap<>(16);
+      Map<String, Object> poolDetail = new LinkedHashMap<>(COLLECTION_CAPACITY);
       poolDetail.put("corePoolSize", m.corePoolSize());
       poolDetail.put("maximumPoolSize", m.maximumPoolSize());
       poolDetail.put("activeCount", m.activeCount());
@@ -109,7 +112,7 @@ public class ThreadPoolMetricsEndpoint {
         .findFirst()
         .map(
             m -> {
-              Map<String, Object> detail = new LinkedHashMap<>(16);
+              Map<String, Object> detail = new LinkedHashMap<>(COLLECTION_CAPACITY);
               detail.put("name", m.name());
               detail.put("corePoolSize", m.corePoolSize());
               detail.put("maximumPoolSize", m.maximumPoolSize());

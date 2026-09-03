@@ -74,6 +74,9 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 @Component
 @RequiredArgsConstructor
 public class DagInstanceExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** SpEL 表达式解析器（线程安全，可复用） */
   private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
@@ -1210,7 +1213,7 @@ public class DagInstanceExecutor {
     }
     ObjectNode parsed = parseContextJson(instance.getContextJson());
     Object ctxValue = parsed.asValue();
-    Map<String, Object> result = ctxValue instanceof Map ? Map.class.cast(ctxValue) : new LinkedHashMap<>(16);
+    Map<String, Object> result = ctxValue instanceof Map ? Map.class.cast(ctxValue) : new LinkedHashMap<>(COLLECTION_CAPACITY);
     return result;
   }
 }

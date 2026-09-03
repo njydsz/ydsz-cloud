@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +28,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DagParser {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /**
    * 拓扑排序（Kahn 算法）。
@@ -40,7 +42,7 @@ public class DagParser {
     if (adj == null || adj.isEmpty()) {
       return Collections.emptyList();
     }
-    Map<String, Integer> inDegree = new HashMap<>(16);
+    Map<String, Integer> inDegree = new HashMap<>(COLLECTION_CAPACITY);
     for (String node : adj.keySet()) {
       inDegree.putIfAbsent(node, 0);
     }
@@ -57,6 +59,6 @@ public class DagParser {
         queue.add(entry.getKey());
       }
     }
-    List<String> result = new ArrayList<>(16);
+    List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
 }
 }

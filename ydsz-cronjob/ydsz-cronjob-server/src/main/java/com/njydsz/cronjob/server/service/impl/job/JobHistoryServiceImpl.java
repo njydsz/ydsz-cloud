@@ -39,6 +39,9 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
 @Service
 @RequiredArgsConstructor
 public class JobHistoryServiceImpl implements JobHistoryService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 任务历史版本 Repository */
   private final JobHistoryRepository jobHistoryRepository;
@@ -257,14 +260,14 @@ public class JobHistoryServiceImpl implements JobHistoryService {
    * @return 差异字段列表，每个元素包含 field/oldValue/newValue
    */
   private List<Map<String, Object>> diffFields(JobVO job1, JobVO job2) {
-    List<Map<String, Object>> diffs = new ArrayList<>(16);
+    List<Map<String, Object>> diffs = new ArrayList<>(COLLECTION_CAPACITY);
     Map<String, Object> snapshot1 = YdszJson.parseMap(YdszJson.toJson(job1));
     Map<String, Object> snapshot2 = YdszJson.parseMap(YdszJson.toJson(job2));
     for (String field : COMPARE_FIELDS) {
       Object oldValue = snapshot1.get(field);
       Object newValue = snapshot2.get(field);
       if (!Objects.equals(oldValue, newValue)) {
-        Map<String, Object> diff = new LinkedHashMap<>(16);
+        Map<String, Object> diff = new LinkedHashMap<>(COLLECTION_CAPACITY);
         diff.put("field", field);
         diff.put("oldValue", oldValue);
         diff.put("newValue", newValue);
