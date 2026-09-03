@@ -226,17 +226,13 @@ public class EscapeUtils {
   }
 
   /**
-   * 使用自定义 Builder 清理内容中的 XSS 攻击代码
+   * 使用标准策略清理内容中的 XSS 攻击代码
    *
    * @param content 待清理的内容
-   * @param builder HTMLFilter 构建器，用于自定义清洗规则
    * @return 清理后的内容
    */
-  public static String clean(String content, HTMLFilter.Builder builder) {
-    if (StringUtils.isEmpty(content)) {
-      return content;
-    }
-    return builder.build().filter(content);
+  public static String clean(String content) {
+    return cleanStandard(content);
   }
 
   /**

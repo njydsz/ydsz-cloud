@@ -1,9 +1,7 @@
 package com.njydsz.common.safe.desensitize;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 列脱敏上下文。
@@ -68,22 +66,22 @@ public class ColumnDesensitizationContext {
       this.customReplacement = customReplacement;
     }
 
-    /** 获取脱敏规则枚举（null 表示仅标记脱敏但无具体规则，使用默认掩码） */
+    /** 获取脱敏规则枚举（null 表示仅标记脱敏但无具体规则，使用默认掩码）。 */
     public ColumnDesensitizationRule getRule() {
       return rule;
     }
 
-    /** 是否为自定义规则 */
+    /** 是否为自定义规则。 */
     public boolean isCustom() {
       return rule == ColumnDesensitizationRule.CUSTOM;
     }
 
-    /** 获取自定义正则表达式（仅 CUSTOM 规则时有效） */
+    /** 获取自定义正则表达式（仅 CUSTOM 规则时有效）。 */
     public String getCustomPattern() {
       return customPattern;
     }
 
-    /** 获取自定义替换模板（仅 CUSTOM 规则时有效） */
+    /** 获取自定义替换模板（仅 CUSTOM 规则时有效）。 */
     public String getCustomReplacement() {
       return customReplacement;
     }
