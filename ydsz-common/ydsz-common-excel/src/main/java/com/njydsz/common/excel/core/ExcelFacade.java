@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -17,7 +16,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
@@ -87,103 +85,6 @@ public class ExcelFacade {
    */
   public static ExcelReader read(InputStream inputStream) {
     return read(inputStream, null);
-  }
-
-  /**
-   * 读取 Excel 所有 Sheet 数据，返回 {@link RawSheetData} 列表。
-   *
-   * <p>使用 POI DOM 模式（{@link Workbook}）一次性载入所有 Sheet， 每张 Sheet 的第一行为表头，后续行为数据行，全空行自动过滤。 适用于小文件的多
-   * Sheet 读取场景，大文件注意内存占用。
-   *
-   * @param inputStream Excel 输入流（调用方负责关闭）
-   * @return 所有 Sheet 的原始数据列表，每张非空 Sheet 对应一个 {@link RawSheetData}
-   */
-  public static List<RawSheetData> readAllSheets(InputStream inputStream) {
-    if (inputStream == null) {
-      return List.of();
-    }
-    try (Workbook workbook = createWorkbook(inputStream)) {
-      List<RawSheetData> result = new ArrayList<>(workbook.getNumberOfSheets());
-      for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-        Sheet sheet = workbook.getSheetAt(i);
-        if (sheet == null || sheet.getPhysicalNumberOfRows() == 0) {
-          continue;
-        }
-        String sheetName = sheet.getSheetName();
-        List<String> headers = new ArrayList<>(16);
-        List<List<String>> rows = new ArrayList<>(32);
-
-        for (Row row : sheet) {
-          if (row == null) {
-            continue;
-          }
-          List<String> cells = new ArrayList<>(row.getLastCellNum());
-          boolean allEmpty = true;
-          for (int cn = 0; cn < row.getLastCellNum(); cn++) {
-            Cell cell = row.getCell(cn, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-            String value = cellToString(cell);
-            cells.add(value);
-            if (value != null && !value.isBlank()) {
-              allEmpty = false;
-            }
-          }
-          if (allEmpty) {
-            continue;
-          }
-          if (headers.isEmpty()) {
-            headers = cells;
-          } else {
-            rows.add(cells);
-          }
-        }
-        result.add(new RawSheetData(sheetName, headers, rows));
-      }
-      return result;
-    } catch (IOException e) {
-      throw new com.njydsz.common.excel.exception.ExcelReadException(
-          "Failed to read Excel sheets from input stream", e);
-    }
-  }
-
-  /**
-   * 根据输入流创建对应格式的 Workbook（.xlsx 或 .xls）。
-   */
-  private static Workbook createWorkbook(InputStream inputStream) throws IOException {
-    try {
-      return new XSSFWorkbook(inputStream);
-    } catch (Exception e) {
-      return new HSSFWorkbook(inputStream);
-    }
-  }
-
-  /**
-   * 将单元格值转为字符串。
-   */
-  private static String cellToString(Cell cell) {
-    if (cell == null) {
-      return "";
-    }
-    CellType cellType = cell.getCellType();
-    switch (cellType) {
-      case STRING:
-        return cell.getStringCellValue();
-      case NUMERIC:
-        double numeric = cell.getNumericCellValue();
-        if (numeric == Math.floor(numeric) && !Double.isInfinite(numeric)) {
-          return String.valueOf((long) numeric);
-        }
-        return String.valueOf(numeric);
-      case BOOLEAN:
-        return String.valueOf(cell.getBooleanCellValue());
-      case FORMULA:
-        try {
-          return cell.getStringCellValue();
-        } catch (Exception e) {
-          return String.valueOf(cell.getNumericCellValue());
-        }
-      default:
-        return "";
-    }
   }
 
   /**
