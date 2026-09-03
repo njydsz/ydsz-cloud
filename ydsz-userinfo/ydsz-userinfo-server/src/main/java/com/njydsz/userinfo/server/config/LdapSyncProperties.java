@@ -43,6 +43,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.userinfo.ldap.sync")
 public class LdapSyncProperties {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   /** 默认 cron 表达式：每天凌晨 2 点执行。 */
   private static final String DEFAULT_CRON = "0 0 2 * * ?";
 
@@ -75,7 +79,7 @@ public class LdapSyncProperties {
    *
    * <p>Key 为 LDAP 属性名（如 uid、displayName、mail），Value 为 ydsz 字段名（如 username、realName、email）。
    */
-  private Map<String, String> userAttributes = new HashMap<>(16);
+  private Map<String, String> userAttributes = new HashMap<>(CAPACITY);
 
   /** 是否同步部门层级关系（基于 DN 解析父子结构）。 */
   private boolean departmentHierarchyEnabled = true;

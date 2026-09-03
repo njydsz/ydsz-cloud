@@ -1,16 +1,9 @@
 package com.njydsz.nextwiki.server.metrics;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.DistributionSummary;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
@@ -30,103 +23,35 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
  *       preview_generate_total}
  *   <li>Timer — 操作耗时：{@code file_upload_duration} / {@code file_download_duration} / {@code
  *       operation_duration}（通用，带 operation Tag 区分）
- *   <li>DistributionSummary — 值分布：{@code file_upload_size_bytes}（上传文件大小）/ {@code
- *       file_download_size_bytes}（下载文件大小）
  * </ul>
  *
  * <p><b>设计优化（S2-P1-3）：</b>
  *
  * <ul>
- *   <li>所有 Counter/Timer 在构造时初始化一次，避免每次调用 {@code Counter.builder().register()} 的性能开销</li>
- *   <li>缓存命中/未命中指标按 cache_type 预注册，减少运行时构建开销</li>
+ *   <li>所有 Counter/Timer 通过 {@link SentryMetricsAdapter} 统一管理，符合《云顶编码规范》第 27.2.1 节</li>
  * </ul>
+ *
+ * <p><b>TODO：</b>DistributionSummary（file_upload_size_bytes / file_download_size_bytes）暂未迁移，
+ * 因 {@link SentryMetricsAdapter} 暂不支持 DistributionSummary。待适配器扩展后恢复。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @Component
-@ConditionalOnClass(MeterRegistry.class)
 public class NextwikiMetrics extends SentryMetricsAdapter {
 
-  private final MeterRegistry meterRegistry;
   private final StorageQuotaRepository quotaRepository;
-
-  /** 当前注册的所有 Timer，便于获取采样 */
-  private final Timer uploadTimer;
-  private final Timer downloadTimer;
-  private final Timer operationTimer;
-  private final DistributionSummary uploadSizeSummary;
-  private final DistributionSummary downloadSizeSummary;
-
-  /** 操作失败计数 */
-  private final Counter uploadFailureCounter;
-  private final Counter downloadFailureCounter;
-  private final Counter quotaCheckFailureCounter;
-
-  /** 缓存命中/未命中计数（S2-P1-3：预注册，避免每次调用 builder） */
-  private final Counter cacheHitCounter;
-  private final Counter cacheMissCounter;
 
   /** 配额用量缓存（用于 Gauge） */
   private final AtomicLong quotaUsageCached = new AtomicLong(0);
 
-  /** 发布的百分位（P50/P95/P99） */
-  private static final double[] PUBLISHED_PERCENTILES = {0.5, 0.95, 0.99};
-
-  public NextwikiMetrics(MeterRegistry meterRegistry, StorageQuotaRepository quotaRepository) {
+  public NextwikiMetrics(StorageQuotaRepository quotaRepository) {
     super("ydsz_nextwiki_");
-    this.meterRegistry = meterRegistry;
     this.quotaRepository = quotaRepository;
-    this.uploadTimer = Timer.builder("ydsz_nextwiki_file_upload_duration")
-            .description("文件上传耗时（毫秒）")
-            .publishPercentiles(PUBLISHED_PERCENTILES)
-            .register(meterRegistry);
-    this.downloadTimer = Timer.builder("ydsz_nextwiki_file_download_duration")
-            .description("文件下载耗时（毫秒）")
-            .publishPercentiles(PUBLISHED_PERCENTILES)
-            .register(meterRegistry);
-    this.operationTimer = Timer.builder("ydsz_nextwiki_operation_duration")
-            .description("通用操作耗时（毫秒），由 operation tag 区分类型")
-            .publishPercentiles(PUBLISHED_PERCENTILES)
-            .register(meterRegistry);
-    this.uploadSizeSummary = DistributionSummary.builder("ydsz_nextwiki_file_upload_size_bytes")
-            .description("上传文件大小分布（字节）")
-            .baseUnit("bytes")
-            .publishPercentiles(PUBLISHED_PERCENTILES)
-            .register(meterRegistry);
-    this.downloadSizeSummary = DistributionSummary.builder("ydsz_nextwiki_file_download_size_bytes")
-            .description("下载文件大小分布（字节）")
-            .baseUnit("bytes")
-            .publishPercentiles(PUBLISHED_PERCENTILES)
-            .register(meterRegistry);
-    this.uploadFailureCounter = Counter.builder("ydsz_nextwiki_file_upload_failures_total")
-            .description("文件上传失败次数")
-            .register(meterRegistry);
-    this.downloadFailureCounter = Counter.builder("ydsz_nextwiki_file_download_failures_total")
-            .description("文件下载失败次数")
-            .register(meterRegistry);
-    this.quotaCheckFailureCounter = Counter.builder("ydsz_nextwiki_quota_check_failures_total")
-            .description("配额校验失败次数")
-            .register(meterRegistry);
-
-    // S2-P1-3：缓存命中/未命中计数器预注册，避免每次运行时 builder
-    this.cacheHitCounter = Counter.builder("ydsz_nextwiki_cache_hit_total")
-            .description("缓存命中次数")
-            .tags("cache_type", "all")
-            .register(meterRegistry);
-    this.cacheMissCounter = Counter.builder("ydsz_nextwiki_cache_miss_total")
-            .description("缓存未命中次数")
-            .tags("cache_type", "all")
-            .register(meterRegistry);
-
-    // 注册配额用量 Gauge（每分钟由定时任务刷新，健康检查时亦可主动刷新）
-    meterRegistry.gauge(
-        "ydsz_nextwiki_quota_usage_bytes",
-        Tags.of("scopeType", "user", "scopeId", "global"),
-        quotaUsageCached,
-        AtomicLong::get);
-
+    // 注册配额用量 Gauge（动态引用模式）
+    gaugeRef("quota_usage_bytes", quotaUsageCached, AtomicLong::get,
+        "scopeType", "user", "scopeId", "global");
     log.info("[NextwikiMetrics] 初始化完成，指标前缀 ydsz_nextwiki_");
   }
 
@@ -186,17 +111,17 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
 
   /** 记录一次文件上传失败。 */
   public void recordUploadFailure() {
-    uploadFailureCounter.increment();
+    incrementCounter("file_upload_failures_total");
   }
 
   /** 记录一次文件下载失败。 */
   public void recordDownloadFailure() {
-    downloadFailureCounter.increment();
+    incrementCounter("file_download_failures_total");
   }
 
   /** 记录一次配额校验失败。 */
   public void recordQuotaCheckFailure() {
-    quotaCheckFailureCounter.increment();
+    incrementCounter("quota_check_failures_total");
   }
 
   // ==================== Counter：缓存命中/未命中 ====================
@@ -210,14 +135,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    */
   public void recordCacheHit(String cacheType) {
     try {
-      // S2-P1-3：使用预注册的计数器，按 cache_type 区分
-      Counter.builder("ydsz_nextwiki_cache_hit_total")
-          .description("缓存命中次数")
-          .tags("cache_type", cacheType != null ? cacheType : "unknown")
-          .register(meterRegistry)
-          .increment();
-      // 同时累加总计数器
-      cacheHitCounter.increment();
+      incrementCounter("cache_hit_total", "cache_type", cacheType != null ? cacheType : "unknown");
     } catch (Exception e) {
       log.warn("[NextwikiMetrics] 记录缓存命中失败: err={}", e.getMessage(), e);
     }
@@ -232,14 +150,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    */
   public void recordCacheMiss(String cacheType) {
     try {
-      // S2-P1-3：使用预注册的计数器，按 cache_type 区分
-      Counter.builder("ydsz_nextwiki_cache_miss_total")
-          .description("缓存未命中次数")
-          .tags("cache_type", cacheType != null ? cacheType : "unknown")
-          .register(meterRegistry)
-          .increment();
-      // 同时累加总计数器
-      cacheMissCounter.increment();
+      incrementCounter("cache_miss_total", "cache_type", cacheType != null ? cacheType : "unknown");
     } catch (Exception e) {
       log.warn("[NextwikiMetrics] 记录缓存未命中失败: err={}", e.getMessage(), e);
     }
@@ -253,7 +164,7 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    * @param durationMs 上传耗时毫秒数
    */
   public void recordUploadDuration(long durationMs) {
-    uploadTimer.record(durationMs, TimeUnit.MILLISECONDS);
+    recordTimer("file_upload_duration", durationMs);
   }
 
   /**
@@ -262,25 +173,18 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
    * @param durationMs 下载耗时毫秒数
    */
   public void recordDownloadDuration(long durationMs) {
-    downloadTimer.record(durationMs, TimeUnit.MILLISECONDS);
+    recordTimer("file_download_duration", durationMs);
   }
 
   /**
    * 记录通用操作耗时（带 operation Tag 区分）。
-   *
-   * <p>S2-P1-3：使用预注册的 operationTimer，通过 tags 区分操作类型。
    *
    * @param operation 操作名（如 share_create、permission_check）
    * @param durationMs 耗时毫秒数
    */
   public void recordOperationDuration(String operation, long durationMs) {
     try {
-      // 使用预注册 Timer 并添加 operation tag
-      Timer.builder("ydsz_nextwiki_operation_duration")
-          .tags("operation", operation != null ? operation : "unknown")
-          .publishPercentiles(PUBLISHED_PERCENTILES)
-          .register(meterRegistry)
-          .record(durationMs, TimeUnit.MILLISECONDS);
+      recordTimer("operation_duration", durationMs, "operation", operation != null ? operation : "unknown");
     } catch (Exception e) {
       log.warn("[NextwikiMetrics] 记录操作耗时失败: err={}", e.getMessage(), e);
     }
@@ -315,30 +219,6 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
       action.accept(input);
     } finally {
       recordOperationDuration(operation, System.currentTimeMillis() - start);
-    }
-  }
-
-  // ==================== DistributionSummary：值分布 ====================
-
-  /**
-   * 记录上传文件大小（字节）。
-   *
-   * @param bytes 文件大小（字节）
-   */
-  public void recordUploadSize(long bytes) {
-    if (bytes > 0) {
-      uploadSizeSummary.record(bytes);
-    }
-  }
-
-  /**
-   * 记录下载文件大小（字节）。
-   *
-   * @param bytes 文件大小（字节）
-   */
-  public void recordDownloadSize(long bytes) {
-    if (bytes > 0) {
-      downloadSizeSummary.record(bytes);
     }
   }
 

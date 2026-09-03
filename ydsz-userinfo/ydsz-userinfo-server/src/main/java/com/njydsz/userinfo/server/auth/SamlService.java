@@ -66,6 +66,10 @@ import com.njydsz.userinfo.server.service.SamlIdpConfigService;
 @RequiredArgsConstructor
 public class SamlService {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   /** XML Signature 算法 URI */
   private static final String SIGNATURE_ALGORITHM = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256";
 
@@ -488,7 +492,7 @@ public class SamlService {
    * @return 用户属性 Map（nameId + attributes）
    */
   private Map<String, String> extractAttributes(Document document) {
-    Map<String, String> result = new HashMap<>(16);
+    Map<String, String> result = new HashMap<>(CAPACITY);
 
     // 提取 NameID
     NodeList nameIdNodes = document.getElementsByTagNameNS(SAML2_ASSERTION_NS, "NameID");

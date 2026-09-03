@@ -36,6 +36,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.userinfo.token")
 public class UserTokenProperties {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   /** 默认ttlSeconds值（可被配置文件覆盖） */
   private static final long DEFAULT_TTL_SECONDS = 7200;
 
@@ -58,7 +62,7 @@ public class UserTokenProperties {
   private int autoRenewalThresholdPercent = DEFAULT_AUTO_RENEWAL_THRESHOLD_PERCENT;
 
   /** 分端会话限制配置（deviceType → 最大会话数，-1 表示不限制）。 */
-  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>(16);
+  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>(CAPACITY);
 
   /**
    * 获取指定设备类型的最大会话数。

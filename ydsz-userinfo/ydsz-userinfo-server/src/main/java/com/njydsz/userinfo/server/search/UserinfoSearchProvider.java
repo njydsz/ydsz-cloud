@@ -43,6 +43,10 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 @RequiredArgsConstructor
 public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   private final UserAccountRepository userAccountRepository;
 
   /** 真实姓名搜索权重（最高优先级）。 */
@@ -157,7 +161,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
     if (context == null || context.isAdmin()) {
       return List.of();
     }
-    List<SearchFilter> filters = new ArrayList<>(16);
+    List<SearchFilter> filters = new ArrayList<>(CAPACITY);
     // 租户隔离
     if (context.getTenantId() != null && !context.getTenantId().isBlank()) {
       filters.add(

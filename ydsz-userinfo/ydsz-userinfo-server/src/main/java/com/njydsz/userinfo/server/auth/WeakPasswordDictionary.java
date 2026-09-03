@@ -37,6 +37,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class WeakPasswordDictionary {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   /** 默认字典文件路径 */
   private static final String DEFAULT_DICTIONARY_PATH = "weak-passwords.txt";
 
@@ -62,7 +66,7 @@ public class WeakPasswordDictionary {
    * @param path classpath 路径
    */
   private void loadDictionary(String path) {
-    Set<String> loaded = new HashSet<>(16);
+    Set<String> loaded = new HashSet<>(CAPACITY);
     try {
       ClassPathResource resource = new ClassPathResource(path);
       if (!resource.exists()) {

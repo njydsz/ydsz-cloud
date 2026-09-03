@@ -48,6 +48,10 @@ import com.njydsz.userinfo.domain.vo.SocialClientVO;
 @Service
 @RequiredArgsConstructor
 public class SocialClientConfigService {
+
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
   /** YAML 配置默认排序值（排在 DB 配置之后） */
   private static final int YAML_CONFIG_SORT_ORDER = 999;
 
@@ -157,7 +161,7 @@ public class SocialClientConfigService {
    * @return 平台标识 → 配置映射
    */
   public Map<String, SocialAuthProperties.ProviderConfig> getMergedProviderConfigs() {
-    Map<String, SocialAuthProperties.ProviderConfig> merged = new HashMap<>(16);
+    Map<String, SocialAuthProperties.ProviderConfig> merged = new HashMap<>(CAPACITY);
 
     // 1. 先加载 YAML 配置
     if (socialAuthProperties.getProviders() != null) {

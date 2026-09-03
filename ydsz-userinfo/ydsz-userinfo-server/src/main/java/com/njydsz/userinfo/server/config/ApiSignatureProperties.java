@@ -53,6 +53,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.userinfo.api-signature")
 public class ApiSignatureProperties {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 4;
+
+
   /** 默认签名算法 */
   private static final String DEFAULT_ALGORITHM = "HmacSHA256";
 
@@ -90,5 +94,5 @@ public class ApiSignatureProperties {
   private long ttlMillis = DEFAULT_TTL_MILLIS;
 
   /** 不需要签名的路径列表 */
-  private List<String> excludePaths = new ArrayList<>(4);
+  private List<String> excludePaths = new ArrayList<>(CAPACITY);
 }

@@ -6,14 +6,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-
-import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 缓存线程池统一管理器 — 集中管理缓存相关的所有线程池
@@ -27,6 +27,10 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * </ul>
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
+ *
+ * <p><b>L1 纯度说明：</b>本模块属于 L1 工具层，按规范 §22.2 禁止反向依赖 L4 的
+ * {@code ydsz-common-thread}，因此线程池直接使用 JDK {@link ThreadPoolExecutor} 与
+ * {@link ScheduledThreadPoolExecutor} 构造，通过 {@link ThreadFactory} lambda 完成线程命名。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -116,36 +120,58 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 创建定时调度线程池。
    *
-   * <p>使用 {@link ExecutorUtils#newScheduledThreadPool} 创建符合云顶规范 15.4 的定时线程池。
+   * <p>L1 工具模块禁止使用 ydsz-common-thread 的 ExecutorUtils，直接使用 JDK ScheduledThreadPoolExecutor。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — L1 工具模块禁止向下依赖 ydsz-common-thread，此处为内部线程池，属短生命周期线程资源
   private ScheduledExecutorService createScheduledPool(String name, int coreSize) {
     ScheduledThreadPoolExecutor executor =
-        ExecutorUtils.newScheduledThreadPool(coreSize, "cache-sched-" + name);
+        new ScheduledThreadPoolExecutor(coreSize, createThreadFactory("cache-sched-" + name));
     // 取消后自动移除，避免内存泄漏
     executor.setRemoveOnCancelPolicy(true);
     LOG.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
     return executor;
   }
+  // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /**
    * 创建缓存专用线程池。
    *
-   * <p>使用 {@link ExecutorUtils#newCustomThreadPool} 创建符合云顶规范 15.4 的线程池。
+   * <p>L1 工具模块禁止使用 ydsz-common-thread 的 ExecutorUtils，直接使用 JDK ThreadPoolExecutor。
    */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — L1 工具模块禁止向下依赖 ydsz-common-thread，此处为内部线程池，属短生命周期线程资源
   private ExecutorService createPool(String name, int coreSize, int maxSize) {
     RejectedExecutionHandler handler = (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name);
     ThreadPoolExecutor executor =
-        ExecutorUtils.newCustomThreadPool(
+        new ThreadPoolExecutor(
             coreSize,
             maxSize,
             60L,
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1024),
-            "cache-" + name,
+            createThreadFactory("cache-" + name),
             handler);
 
     LOG.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;
+  }
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+
+  /**
+   * 创建带统一命名前缀的线程工厂。
+   *
+   * <p>替代 ydsz-common-thread 的 ExecutorUtils.createThreadFactory，保持线程名符合云顶规范（ydsz-{prefix}{seq}）。
+   */
+  private static ThreadFactory createThreadFactory(String prefix) {
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — ydsz 线程名规范
+    String threadNamePrefix = "ydsz-" + prefix;
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    AtomicInteger threadNumber = new AtomicInteger(1);
+    return r -> {
+      Thread thread = new Thread(r, threadNamePrefix + threadNumber.getAndIncrement());
+      thread.setDaemon(false);
+      thread.setUncaughtExceptionHandler((t, e) -> LOG.error("线程未捕获异常: {}", t.getName(), e));
+      return thread;
+    };
   }
 
   /**
@@ -177,7 +203,7 @@ public class CacheThreadPoolManager implements DisposableBean {
    * 获取所有线程池的状态信息
    *
    * @return 多行状态文本，按池名逐行输出活跃线程数、核心/最大线程数、队列长度与已完成任务数；
-   *     尚无任何线程池时返回空串
+   *     尚无任何线程池时返回空串。
    */
   public String getPoolStatus() {
     StringBuilder sb = new StringBuilder();

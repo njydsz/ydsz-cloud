@@ -66,6 +66,10 @@ import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 @ConditionalOnProperty(prefix = "ydsz.userinfo.ldap.sync", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class LdapOrgSyncService {
+
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
   /** LDAP 外部标识长度（32 位 UUID 去横线） */
   private static final int EXTERNAL_ID_LENGTH = 32;
 
@@ -224,7 +228,7 @@ public class LdapOrgSyncService {
       return new SyncResult(0, 0, 0, 0, 0, List.of());
     }
 
-    List<String> errors = new ArrayList<>(16);
+    List<String> errors = new ArrayList<>(CAPACITY);
     int created = 0;
     int updated = 0;
     int failed = 0;
@@ -234,7 +238,7 @@ public class LdapOrgSyncService {
     sorted.sort((a, b) -> countDnComponents(a.dn()) - countDnComponents(b.dn()));
 
     // DN → ydsz 部门 ID 映射（用于层级关联）
-    Map<String, String> dnToDeptId = new LinkedHashMap<>(16);
+    Map<String, String> dnToDeptId = new LinkedHashMap<>(CAPACITY);
 
     for (LdapDepartment ldapDept : sorted) {
       try {
@@ -301,14 +305,14 @@ public class LdapOrgSyncService {
    * @return 调和结果
    */
   public SyncResult reconcileUsers(List<LdapUser> ldapUsers) {
-    List<String> errors = new ArrayList<>(16);
+    List<String> errors = new ArrayList<>(CAPACITY);
     int created = 0;
     int updated = 0;
     int deactivated = 0;
     int failed = 0;
 
     // 构建 LDAP 用户名集合（用于判断孤儿用户）
-    Set<String> ldapUsernames = new HashSet<>(16);
+    Set<String> ldapUsernames = new HashSet<>(CAPACITY);
 
     for (LdapUser user : ldapUsers) {
       try {

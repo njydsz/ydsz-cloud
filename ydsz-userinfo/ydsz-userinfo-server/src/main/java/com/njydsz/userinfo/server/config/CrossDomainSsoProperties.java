@@ -56,6 +56,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.userinfo.sso")
 public class CrossDomainSsoProperties {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 4;
+
+
   /** 默认cookieMaxAge值（可被配置文件覆盖） */
   private static final int DEFAULT_COOKIE_MAX_AGE = -1;
 
@@ -98,7 +102,7 @@ public class CrossDomainSsoProperties {
    * <p>CORS 预检和令牌交换端点仅放行此列表中的 Origin，防止未授权的第三方域窃取 Token。
    * 列表为空时拒绝所有跨域请求（安全兜底）。
    */
-  private List<String> trustedDomains = new ArrayList<>(4);
+  private List<String> trustedDomains = new ArrayList<>(CAPACITY);
 
   /**
    * postMessage 目标域名，默认 "*"。

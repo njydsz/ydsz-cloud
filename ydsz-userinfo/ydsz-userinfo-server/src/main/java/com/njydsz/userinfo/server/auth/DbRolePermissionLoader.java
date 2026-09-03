@@ -47,6 +47,10 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @RequiredArgsConstructor
 public class DbRolePermissionLoader implements RolePermissionLoader {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   /** 权限分类数（Menu / BUTTON / API 三类）。 */
   private static final int PERMISSION_CATEGORY_COUNT = 3;
 
@@ -205,5 +209,14 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
 
   private Set<String> toStringSet(Object value) {
     if (value instanceof List<?> list) {
-      Set<String> result = new HashSet<>(16);
+      Set<String> result = new HashSet<>(CAPACITY);
+      for (Object item : list) {
+        if (item != null) {
+          result.add(item.toString());
+        }
+      }
+      return result;
+    }
+    return Collections.emptySet();
+  }
 }

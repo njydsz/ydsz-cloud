@@ -34,6 +34,10 @@ import com.njydsz.userinfo.server.auth.SessionManager;
 @Service
 @RequiredArgsConstructor
 public class DeviceSessionService {
+
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
   /** User-Agent 截断长度 */
   private static final int USER_AGENT_MAX_LENGTH = 30;
 
@@ -59,7 +63,7 @@ public class DeviceSessionService {
     }
 
     List<Map<String, String>> sessionDetails = sessionManager.listSessionDeviceDetails(userId);
-    List<DeviceSessionVO> result = new ArrayList<>(16);
+    List<DeviceSessionVO> result = new ArrayList<>(CAPACITY);
 
     for (Map<String, String> details : sessionDetails) {
       DeviceSessionVO vo = new DeviceSessionVO();

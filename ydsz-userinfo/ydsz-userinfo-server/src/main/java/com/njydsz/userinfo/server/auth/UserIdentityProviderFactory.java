@@ -23,6 +23,10 @@ import com.njydsz.userinfo.domain.enums.IdentityProviderType;
 @Component
 public class UserIdentityProviderFactory {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   private final Map<IdentityProviderType, UserIdentityProvider> providerMap;
 
   /**
@@ -31,7 +35,7 @@ public class UserIdentityProviderFactory {
    * @param providers 所有 UserIdentityProvider 实现的 Spring Bean 列表
    */
   public UserIdentityProviderFactory(List<UserIdentityProvider> providers) {
-    providerMap = new HashMap<>(16);
+    providerMap = new HashMap<>(CAPACITY);
     for (UserIdentityProvider provider : providers) {
       providerMap.put(provider.getType(), provider);
     }

@@ -37,6 +37,10 @@ import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 @RequiredArgsConstructor
 public class LocalUserIdentityProvider implements UserIdentityProvider {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   /** 密码编码器（BCrypt，由 UserInfoConfiguration 注册） */
   private final PasswordEncoder passwordEncoder;
 
@@ -62,7 +66,7 @@ public class LocalUserIdentityProvider implements UserIdentityProvider {
         });
 
     if (passwordEncoder.matches(credentials, credential.getPassword())) {
-      Map<String, String> result = new HashMap<>(16);
+      Map<String, String> result = new HashMap<>(CAPACITY);
       result.put("userId", credential.getId());
       result.put("username", credential.getUsername());
       result.put("tenantId", credential.getTenantId());

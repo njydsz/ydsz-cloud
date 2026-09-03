@@ -81,6 +81,10 @@ import com.njydsz.userinfo.server.config.WebAuthnProperties;
 @RequiredArgsConstructor
 public class WebAuthnService {
 
+  /** 集合初始容量 */
+  private static final int CAPACITY = 16;
+
+
   /** 挑战码 Redis Key 前缀 */
   private static final String CHALLENGE_KEY_PREFIX = "webauthn:challenge:";
 
@@ -144,7 +148,7 @@ public class WebAuthnService {
     storeChallenge(challenge, userId, "REGISTER");
 
     // 构建注册选项（Passkey 模式：residentKey = required）
-    Map<String, Object> options = new HashMap<>(16);
+    Map<String, Object> options = new HashMap<>(CAPACITY);
     options.put("challenge", challenge);
     options.put("rp", Map.of(
         "name", webAuthnProperties.getRelyingPartyName(),
@@ -190,7 +194,7 @@ public class WebAuthnService {
     storeChallenge(challenge, anonymousUserId, "AUTHENTICATE_PASSKEY");
 
     // 构建认证选项（Passkey 模式：allowCredentials 为空）
-    Map<String, Object> options = new HashMap<>(16);
+    Map<String, Object> options = new HashMap<>(CAPACITY);
     options.put("challenge", challenge);
     options.put("timeout", WEBAUTHN_TIMEOUT_MILLIS);
     options.put("userVerification", "preferred");
@@ -269,7 +273,7 @@ public class WebAuthnService {
     storeChallenge(challenge, userId, "REGISTER");
 
     // 构建注册选项
-    Map<String, Object> options = new HashMap<>(16);
+    Map<String, Object> options = new HashMap<>(CAPACITY);
     options.put("challenge", challenge);
     options.put("rp", Map.of(
         "name", webAuthnProperties.getRelyingPartyName(),
@@ -350,7 +354,7 @@ public class WebAuthnService {
     storeChallenge(challenge, userId, "AUTHENTICATE");
 
     // 构建认证选项
-    Map<String, Object> options = new HashMap<>(16);
+    Map<String, Object> options = new HashMap<>(CAPACITY);
     options.put("challenge", challenge);
     options.put("timeout", WEBAUTHN_TIMEOUT_MILLIS);
     options.put("userVerification", "preferred");
