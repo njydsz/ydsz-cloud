@@ -404,7 +404,7 @@ public class QiniuStorage extends AbstractFileStorage {
           new ApiUploadV2CompleteUpload.Request(null, upToken, uploadId, parts)
               .setKey(objectName);
       completeUploadApi.request(request);
-      multipartContextStore.delete(uploadId);
+      multipartContextStore.remove(uploadId);
       log.info(
           "[Qiniu] chunked upload completed, bucket={}, object={}, parts={}",
           bucketName,
@@ -429,7 +429,7 @@ public class QiniuStorage extends AbstractFileStorage {
       ApiUploadV2AbortUpload.Request request =
           new ApiUploadV2AbortUpload.Request(null, upToken, uploadId).setKey(objectName);
       abortUploadApi.request(request);
-      multipartContextStore.delete(uploadId);
+      multipartContextStore.remove(uploadId);
       log.info("[Qiniu] abort multipart upload, bucket={}, object={}, uploadId={}", bucketName, objectName, uploadId);
     } catch (Exception e) {
       log.warn(

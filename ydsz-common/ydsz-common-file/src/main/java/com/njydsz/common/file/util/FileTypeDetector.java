@@ -1,6 +1,8 @@
 package com.njydsz.common.file.util;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -206,7 +208,7 @@ public final class FileTypeDetector {
         return "UNKNOWN";
       }
       if (read < MAGIC_HEADER_SIZE) {
-        header = java.util.Arrays.copyOf(header, read);
+        header = Arrays.copyOf(header, read);
       }
       return detect(header);
     } catch (Exception e) {
