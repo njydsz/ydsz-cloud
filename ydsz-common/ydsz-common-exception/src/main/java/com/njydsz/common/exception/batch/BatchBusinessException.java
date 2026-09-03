@@ -9,8 +9,8 @@ import java.util.Map;
 
 import lombok.Getter;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.enums.ExceptionCode;
 
 /**
  * 批量业务异常 - 用于批量操作时收集成功/失败信息
@@ -54,12 +54,8 @@ public class BatchBusinessException extends BusinessException {
 
   /** 私有构造器, 使用静态工厂方法创建实例 */
   private BatchBusinessException() {
-    super(BATCH_PARTIAL_SUCCESS_CODE);
+    super(CoreExceptionCode.BATCH_PARTIAL_SUCCESS);
   }
-
-  /** 批量操作部分成功异常码（静态内部枚举实现，仿照 CoreExceptionCode 风格） */
-  private static final ExceptionCode BATCH_PARTIAL_SUCCESS_CODE =
-      new ExceptionCode() {};
 
   /**
    * 创建 BatchBusinessException 实例

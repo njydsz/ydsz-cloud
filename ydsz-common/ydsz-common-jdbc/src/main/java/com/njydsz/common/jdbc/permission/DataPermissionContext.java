@@ -43,4 +43,32 @@ public class DataPermissionContext {
 
   /** 列可编辑规则（key=表名，value=允许编辑的列名集合），用于 INSERT/UPDATE 列过滤 */
   private Map<String, Set<String>> editableColumnsByTable = new HashMap<>(16);
+
+  /**
+   * 创建空的上下文实例（所有字段使用默认值）。
+   *
+   * <p>当权限上下文为 null 时，使用此方法作为安全降级，不拦截 SQL。
+   *
+   * @return 空上下文实例
+   */
+  public static DataPermissionContext empty() {
+    return new DataPermissionContext();
+  }
+
+  /**
+   * 判断是否存在行级权限范围数据。
+   *
+   * <p>当用户ID、公司ID列表、部门ID列表、项目ID列表、区域ID列表全部为空时，
+   * 认为没有行级权限上下文，返回 true。
+   *
+   * @return 无行级范围数据返回 true，否则返回 false
+   */
+  public boolean isEmptyRowScope() {
+    boolean noUser = userId == null || userId.isBlank();
+    return noUser
+        && (companyIds == null || companyIds.isEmpty())
+        && (deptIds == null || deptIds.isEmpty())
+        && (projectIds == null || projectIds.isEmpty())
+        && (regionIds == null || regionIds.isEmpty());
+  }
 }
