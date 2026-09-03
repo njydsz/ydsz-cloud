@@ -33,6 +33,10 @@ import com.njydsz.userinfo.domain.social.SocialUserInfo;
 @Component
 public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
 
+  /** 请求参数 Map 初始容量 */
+  private static final int PARAMS_CAPACITY = 16;
+
+
   /** 钉钉平台标识 */
   private static final String PLATFORM = "DINGTALK";
 
@@ -97,7 +101,7 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
 
-    Map<String, String> tokenParams = new HashMap<>(16);
+    Map<String, String> tokenParams = new HashMap<>(PARAMS_CAPACITY);
     tokenParams.put("clientId", config.getAppId());
     tokenParams.put("clientSecret", config.getAppSecret());
     tokenParams.put("code", code);

@@ -34,6 +34,10 @@ import com.njydsz.userinfo.domain.social.SocialUserInfo;
 @Component
 public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
 
+  /** 请求参数 Map 初始容量 */
+  private static final int PARAMS_CAPACITY = 16;
+
+
   /** 企业微信平台标识 */
   private static final String PLATFORM = "ENTERPRISE_WECHAT";
 
@@ -100,7 +104,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
     // 企业微信需要先获取 access_token（企业级别的）
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
 
-    Map<String, String> tokenParams = new HashMap<>(16);
+    Map<String, String> tokenParams = new HashMap<>(PARAMS_CAPACITY);
     tokenParams.put("corpid", config.getAppId());
     tokenParams.put("corpsecret", config.getAppSecret());
 
@@ -115,7 +119,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
 
     // 用 access_token 和 code 获取用户信息
     String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
-    Map<String, String> userParams = new HashMap<>(16);
+    Map<String, String> userParams = new HashMap<>(PARAMS_CAPACITY);
     userParams.put("access_token", accessToken);
     userParams.put("code", code);
 
@@ -138,7 +142,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
 
     // 获取用户详情
     String detailUrl = config.getOrDefaultUserDetailUrl(DEFAULT_USER_DETAIL_URL);
-    Map<String, String> params = new HashMap<>(16);
+    Map<String, String> params = new HashMap<>(PARAMS_CAPACITY);
     params.put("access_token", token.accessToken());
     params.put("userid", token.openId());
 

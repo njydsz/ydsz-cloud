@@ -33,6 +33,10 @@ import com.njydsz.userinfo.domain.social.SocialUserInfo;
 @Component
 public class FeishuAuthProvider extends AbstractSocialAuthProvider {
 
+  /** 请求参数 Map 初始容量 */
+  private static final int PARAMS_CAPACITY = 16;
+
+
   /** 飞书平台标识 */
   private static final String PLATFORM = "FEISHU";
 
@@ -95,7 +99,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
 
-    Map<String, String> tokenParams = new HashMap<>(16);
+    Map<String, String> tokenParams = new HashMap<>(PARAMS_CAPACITY);
     tokenParams.put("app_id", config.getAppId());
     tokenParams.put("app_secret", config.getAppSecret());
     tokenParams.put("code", code);
