@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
+
 
 /**
  * 启用/停用状态枚举（通用）。

@@ -1,5 +1,6 @@
 package com.njydsz.literule.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 规则生命周期状态枚举。

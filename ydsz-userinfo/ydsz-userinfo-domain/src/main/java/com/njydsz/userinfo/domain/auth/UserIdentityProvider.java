@@ -3,6 +3,9 @@ package com.njydsz.userinfo.domain.auth;
 import java.util.Map;
 
 
+import com.njydsz.userinfo.domain.enums.IdentityProviderType;
+
+
 /**
  * 用户身份提供者接口（P2-2 多账号认证体系抽象）。
  *

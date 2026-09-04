@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import com.njydsz.common.domain.query.PageQuery;
+
 
 /**
  * SAML 身份提供者配置分页查询参数（P2-1）。
