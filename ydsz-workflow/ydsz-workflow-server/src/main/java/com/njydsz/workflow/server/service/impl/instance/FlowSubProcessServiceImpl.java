@@ -345,4 +345,134 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     dto.setVariables(variables == null ? new HashMap<>(16) : variables);
     return dto;
   }
+
+  // ============================== 私有辅助方法 ==============================
+
+  /**
+   * 从 CallActivity 节点的 ext JSON 中提取子流程编码。
+   *
+   * @param node 节点 VO
+   * @return 子流程编码，未配置返回 null
+   */
+  private String extractSubFlowCode(FlowNodeVO node) {
+    if (node == null) {
+      return null;
+    }
+    Map<String, Object> extMap = node.getExtMap();
+    if (extMap == null || extMap.isEmpty()) {
+      return null;
+    }
+    Object val = extMap.get("subFlowCode");
+    return val == null ? null : String.valueOf(val);
+  }
+
+  /**
+   * 获取流程实例当前的子流程嵌套深度。
+   *
+   * @param instanceId 实例 ID
+   * @return 嵌套深度（0 = 顶层）
+   */
+  private int getNestingDepth(String instanceId) {
+    int depth = 0;
+    String currentId = instanceId;
+    while (currentId != null && depth < 20) {
+      FlowInstanceVO instance = instanceRepository.findById(currentId).orElse(null);
+      if (instance == null || instance.getParentInstanceId() == null) {
+        break;
+      }
+      currentId = instance.getParentInstanceId();
+      depth++;
+    }
+    return depth;
+  }
+
+  /**
+   * 从 CallActivity 节点的 ext JSON 中提取子流程超时时长（小时）。
+   *
+   * @param node 节点 VO
+   * @return 超时小时数，未配置返回 null
+   */
+  private Double extractSubProcessTimeout(FlowNodeVO node) {
+    if (node == null) {
+      return null;
+    }
+    Map<String, Object> extMap = node.getExtMap();
+    if (extMap == null || extMap.isEmpty()) {
+      return null;
+    }
+    Object val = extMap.get("subProcessTimeout");
+    if (val == null) {
+      return null;
+    }
+    if (val instanceof Number) {
+      return ((Number) val).doubleValue();
+    }
+    try {
+      return Double.parseDouble(String.valueOf(val));
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  /**
+   * 发布工作流事件（异步通知）。
+   *
+   * @param eventType 事件类型
+   * @param instanceId 实例 ID
+   * @param targetId 目标 ID
+   */
+  private void publishWorkflowEvent(String eventType, String instanceId, String targetId) {
+    log.info("[SubProcess] 发布事件: event={} instance={} target={}", eventType, instanceId, targetId);
+    if (eventPublisher != null) {
+      try {
+        eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, targetId));
+      } catch (Exception e) {
+        log.warn("[SubProcess] 事件发布失败: err={}", e.getMessage());
+      }
+    }
+  }
+
+  /**
+   * 解析 variable JSON 为 Map，空值返回空 Map。
+   *
+   * @param variable variable JSON 字符串
+   * @return 解析后的 Map
+   */
+  private Map<String, Object> parseVariables(String variable) {
+    if (!StringUtils.hasText(variable)) {
+      return new HashMap<>(0);
+    }
+    try {
+      Map<String, Object> map = YdszJson.parseMap(variable);
+      return map != null ? map : new HashMap<>(0);
+    } catch (Exception e) {
+      log.warn("[SubProcess] 解析变量失败: err={}", e.getMessage());
+      return new HashMap<>(0);
+    }
+  }
+
+  /**
+   * 触发子流程实例启动事件。
+   *
+   * @param instanceId 实例 ID
+   * @param variables 实例变量
+   */
+  private void fireInstanceStart(String instanceId, Map<String, Object> variables) {
+    log.info("[SubProcess] fireInstanceStart: instanceId={}", instanceId);
+    publishWorkflowEvent("SUBPROCESS_STARTED", instanceId, null);
+  }
+
+  @Override
+  public List<FlowInstanceVO> listSubProcessTree(String parentInstanceId) {
+    if (parentInstanceId == null) {
+      return List.of();
+    }
+    List<FlowInstanceVO> tree = new ArrayList<>();
+    List<FlowInstanceVO> children = instanceRepository.findChildren(parentInstanceId);
+    for (FlowInstanceVO child : children) {
+      tree.add(child);
+      tree.addAll(listSubProcessTree(child.getId()));
+    }
+    return tree;
+  }
 }

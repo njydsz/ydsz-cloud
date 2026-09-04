@@ -133,4 +133,23 @@ public class FlowInstanceVariableManager {
       return new HashMap<>(0);
     }
   }
+
+  /**
+   * 将任意 Map 转换为 Map<String, Object>（安全转型）。
+   *
+   * @param raw 原始 Map
+   * @return 类型安全的 Map<String, Object>
+   */
+  Map<String, Object> castToStringObjectMap(Map<?, ?> raw) {
+    if (raw == null) {
+      return new HashMap<>(0);
+    }
+    Map<String, Object> result = new HashMap<>(raw.size());
+    for (Map.Entry<?, ?> entry : raw.entrySet()) {
+      if (entry.getKey() instanceof String) {
+        result.put((String) entry.getKey(), entry.getValue());
+      }
+    }
+    return result;
+  }
 }

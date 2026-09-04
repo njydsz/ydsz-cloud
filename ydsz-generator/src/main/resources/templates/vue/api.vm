@@ -1,0 +1,70 @@
+import request from '@/utils/request'
+
+/**
+ * ${table.tableComment} API 模块
+ *
+ * 由 ydsz-generator 自动生成，对应后端接口 ${table.apiPath}
+ */
+
+/**
+ * 分页查询
+ * @param {Object} params - 查询参数
+ * @returns {Promise}
+ */
+export function get${table.entityName}Page(params) {
+  return request({
+    url: '${table.apiPath}/page',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 按 ID 查询
+ * @param {string} id - 主键
+ * @returns {Promise}
+ */
+export function get${table.entityName}ById(id) {
+  return request({
+    url: `${table.apiPath}/${id}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 创建
+ * @param {Object} data - ${table.tableComment}数据
+ * @returns {Promise}
+ */
+export function save${table.entityName}(data) {
+  return request({
+    url: '${table.apiPath}',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 更新
+ * @param {Object} data - ${table.tableComment}数据（含 ID）
+ * @returns {Promise}
+ */
+export function update${table.entityName}(data) {
+  return request({
+    url: '${table.apiPath}',
+    method: 'put',
+    data
+  })
+}
+
+/**
+ * 删除
+ * @param {string} id - 主键
+ * @returns {Promise}
+ */
+export function remove${table.entityName}(id) {
+  return request({
+    url: `${table.apiPath}/${id}`,
+    method: 'delete'
+  })
+}

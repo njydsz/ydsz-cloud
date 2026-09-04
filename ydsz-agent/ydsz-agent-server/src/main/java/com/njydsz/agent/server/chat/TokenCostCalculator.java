@@ -9,7 +9,7 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.CostEstimate;
 import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.domain.config.AgentProperties;
 
 /**
  * Token 预计算与成本核算组件

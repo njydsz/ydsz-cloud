@@ -372,5 +372,3 @@ public class FlowExportServiceImpl implements FlowExportService {
     long minutes = (durationMs % MILLIS_PER_HOUR) / MILLIS_PER_MINUTE;
     return minutes > 0 ? hours + "小时" + minutes + "分" : hours + "小时";
   }
-}
-}

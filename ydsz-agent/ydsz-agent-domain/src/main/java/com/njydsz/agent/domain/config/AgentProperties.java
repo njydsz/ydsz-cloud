@@ -15,6 +15,18 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class AgentProperties {
 
+  /** MCP 全局配置 */
+  @Data
+  @SuperBuilder
+  public static class Mcp {
+    /** 是否启用 MCP */
+    private Boolean enabled;
+    /** MCP Server 列表 */
+    private java.util.List<ServerInfo> servers;
+    /** 默认超时时间（毫秒） */
+    private Integer defaultTimeout;
+  }
+
   /** MCP Server 连接配置 */
   @Data
   @SuperBuilder

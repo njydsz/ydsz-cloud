@@ -288,8 +288,6 @@ public final class NextwikiConverter {
         .owner(entity.getOwner())
         .createdBy(entity.getCreatedBy())
         .createdAt(entity.getCreatedAt())
-        .updatedBy(entity.getUpdatedBy())
-        .updatedAt(entity.getUpdatedAt())
         .build();
   }
 

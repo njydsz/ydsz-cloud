@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.rag.Retriever;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
-import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.enums.DocumentFormat;

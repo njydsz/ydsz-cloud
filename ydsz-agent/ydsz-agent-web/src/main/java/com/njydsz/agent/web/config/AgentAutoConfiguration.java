@@ -60,7 +60,7 @@ import com.njydsz.agent.server.agent.SupervisorAgentExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.GuardrailService;
-import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.server.health.AgentHealthIndicator;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;

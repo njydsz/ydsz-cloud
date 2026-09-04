@@ -12,7 +12,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.domain.config.AgentProperties;
 
 /**
  * Prompt 评估服务
