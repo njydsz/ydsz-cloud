@@ -1,7 +1,5 @@
 package com.njydsz.generator.config;
 
-import com.njydsz.generator.tool.VelocityDateTool;
-import com.njydsz.generator.tool.VelocityTextTool;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
@@ -48,7 +46,6 @@ public class VelocityConfig {
   public VelocityEngine velocityEngine() {
     VelocityEngine engine = createBaseEngine();
     configureResourceLoader(engine);
-    initGlobalTools(engine);
     engine.init();
     return engine;
   }
@@ -57,31 +54,31 @@ public class VelocityConfig {
     VelocityEngine engine = new VelocityEngine();
     engine.setProperty(RuntimeConstants.INPUT_ENCODING, "UTF-8");
     engine.setProperty("output.encoding", "UTF-8");
-    // 开启 Velocity 宏内联模式，使 #parse 能正确加载全局宏
+    // 开启 Velocity 宏内联模式，全局宏库可被任意模板引用
     engine.setProperty("velocimacro.permissions.allow.inline", true);
     engine.setProperty("velocimacro.permissions.allow.inline.replace.global", true);
     engine.setProperty("velocimacro.permissions.allow.inline.to.replac.global", true);
+    // 配置全局宏库位置
+    engine.setProperty(RuntimeConstants.VM_LIBRARY, "velocity_implicit.vm");
+    engine.setProperty(RuntimeConstants.VM_LIBRARY_AUTORELOAD, true);
     return engine;
   }
 
   private void configureResourceLoader(final VelocityEngine engine) {
     if (templateDir != null && !templateDir.isBlank() && !templateDir.startsWith("classpath")) {
       // 外部文件系统目录模式
-      engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "file");
+      engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "file,classpath");
       engine.setProperty("file.resource.loader.class", FileResourceLoader.class.getName());
       engine.setProperty("file.resource.loader.path", templateDir + "/" + resolveGroup());
       engine.setProperty("file.resource.loader.cache", false);
+      engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+      engine.setProperty("classpath.resource.loader.path", "/templates/" + resolveGroup());
     } else {
       // classpath 模式
       engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
       engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
       engine.setProperty("classpath.resource.loader.path", "/templates/" + resolveGroup());
     }
-  }
-
-  private void initGlobalTools(final VelocityEngine engine) {
-    // 注入全局工具对象，模板中通过 $text 和 $date 访问
-    engine.loadVM("velocity_implicit.vm");
   }
 
   private String resolveGroup() {

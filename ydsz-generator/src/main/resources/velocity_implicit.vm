@@ -1,54 +1,64 @@
-#* velocity 隐式全局变量与宏定义 *#
-#* @vtlvariable name="table" type="com.njydsz.generator.model.TableInfo" *#
-#* @vtlvariable name="config" type="com.njydsz.generator.config.GeneratorProperties.ModuleGroupConfig" *#
-#* @vtlvariable name="text" type="com.njydsz.generator.tool.VelocityTextTool" *#
-#* @vtlvariable name="date" type="com.njydsz.generator.tool.VelocityDateTool" *#
+#* 全局宏定义文件 — 通过 #parse("velocity_implicit.vm") 引入 *#
 
-## 包名后缀设置宏
-#macro(setPackageSuffix $suffix)
-  #set($packageSuffix = ".${suffix}")
-#end
-
-## 类名后缀设置宏
-#macro(setTableSuffix $suffix)
-  #set($classSuffix = "${suffix}")
-#end
-
-## 保存文件路径宏
-#macro(setSavePath $dir $fileName)
-  #set($filePath = "${dir}/${fileName}")
-#end
-
-## 首字母小写
-#macro(firstLowerCase $str)
+## 首字母小写（避免与内置 $StringUtils 冲突，显式声明）
+#macro(textFirstLower $str)
   #if($str && $str.length() > 0)
-    #set($first = $str.substring(0, 1).toLowerCase())
-    #set($rest = $str.substring(1))
-    ${first}${rest}
+    #set($__fl = $str.substring(0, 1).toLowerCase() + $str.substring(1))
+  #else
+    #set($__fl = $str)
   #end
+  ${__fl}
 #end
 
-## 下划线转驼峰
-#macro(camelCase $name)
-  #if($name)
-    #set($result = "")
-    #set($underline = $name.indexOf('_'))
-    #if($underline == -1)
-      #set($result = $name)
-    #else
-      #set($parts = $name.split('_'))
-      #set($first = true)
-      #foreach($part in $parts)
-        #if($first)
-          #set($result = "${result}${part.toLowerCase()}")
-          #set($first = false)
+## 首字母大写
+#macro(textFirstUpper $str)
+  #if($str && $str.length() > 0)
+    #set($__fu = $str.substring(0, 1).toUpperCase() + $str.substring(1))
+  #else
+    #set($__fu = $str)
+  #end
+  ${__fu}
+#end
+
+## 下划线命名 → 驼峰命名
+#macro(textCamelCase $name)
+  #if($name && $name.contains("_"))
+    #set($__parts = $name.split("_"))
+    #set($__result = "")
+    #set($__first = true)
+    #foreach($__p in $__parts)
+      #if($__p.length() > 0)
+        #if($__first)
+          #set($__result = "${__result}${__p.toLowerCase()}")
+          #set($__first = false)
         #else
-          #set($upper = $part.substring(0, 1).toUpperCase())
-          #set($lower = $part.substring(1).toLowerCase())
-          #set($result = "${result}${upper}${lower}")
+          #set($__cu = $__p.substring(0, 1).toUpperCase())
+          #set($__cl = "")
+          #if($__p.length() > 1)
+            #set($__cl = $__p.substring(1).toLowerCase())
+          #end
+          #set($__result = "${__result}${__cu}${__cl}")
         #end
       #end
     #end
-    ${result}
+    ${__result}
+  #else
+    ${name}
   #end
+#end
+
+## 移除表名前缀
+#macro(textRemovePrefix $str $prefix)
+  #if($str && $prefix && $str.startsWith($prefix))
+    #set($__rp = $str.substring($prefix.length()))
+  #else
+    #set($__rp = $str)
+  #end
+  ${__rp}
+#end
+
+## 包名后缀拼接
+#macro(textSetPackageSuffix $suffix)
+  #set($__ps = ".${suffix}")
+  ${__ps}
 #end
