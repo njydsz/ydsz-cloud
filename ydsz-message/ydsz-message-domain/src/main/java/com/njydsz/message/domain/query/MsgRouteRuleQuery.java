@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.query;
 
+import com.njydsz.common.domain.query.PageQuery;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

@@ -27,7 +27,7 @@ import com.njydsz.userinfo.domain.entity.Menu;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.userinfo.infra.entity.Menu 菜单实体（含 permCode 字段）
+ * @see com.njydsz.userinfo.domain.entity.Menu 菜单实体（含 permCode 字段）
  * @see com.njydsz.userinfo.infra.mapper.RolePermissionMapper 角色-权限关联 Mapper
  */
 @Mapper

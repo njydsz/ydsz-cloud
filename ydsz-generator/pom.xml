@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.njydsz</groupId>
+    <artifactId>ydsz-cloud</artifactId>
+    <version>26.09.01-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>ydsz-generator</artifactId>
+  <name>ydsz-generator</name>
+  <description>代码生成器 — 基于数据库表结构自动生成 DDD 分层 CRUD 代码</description>
+
+  <dependencies>
+    <!-- Web: REST API -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- JDBC: 读取数据库元数据 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <!-- 模板引擎: 代码生成模板渲染 -->
+    <dependency>
+      <groupId>org.apache.velocity</groupId>
+      <artifactId>velocity-engine-core</artifactId>
+      <version>${velocity.version}</version>
+    </dependency>
+    <!-- Lombok -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <!-- 内部依赖: 复用 MpBaseEntity 等常量定义 -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-core</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>

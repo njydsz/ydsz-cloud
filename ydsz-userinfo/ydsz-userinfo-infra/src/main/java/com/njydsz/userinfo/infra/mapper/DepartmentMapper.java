@@ -27,7 +27,7 @@ import com.njydsz.userinfo.domain.entity.Department;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.userinfo.infra.entity.Department 部门实体
+ * @see com.njydsz.userinfo.domain.entity.Department 部门实体
  * @see com.njydsz.userinfo.infra.mapper.UserDeptMapper 用户-部门关联 Mapper
  */
 @Mapper

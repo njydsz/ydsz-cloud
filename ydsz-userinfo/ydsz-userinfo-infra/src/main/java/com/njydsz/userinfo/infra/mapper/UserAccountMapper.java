@@ -36,7 +36,7 @@ import com.njydsz.userinfo.domain.entity.UserAccount;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.userinfo.infra.entity.UserAccount 用户实体
+ * @see com.njydsz.userinfo.domain.entity.UserAccount 用户实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper

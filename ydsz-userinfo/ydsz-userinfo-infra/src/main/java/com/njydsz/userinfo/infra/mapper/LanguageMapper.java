@@ -28,7 +28,7 @@ import com.njydsz.userinfo.domain.entity.Language;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.userinfo.infra.entity.Language 语言实体
+ * @see com.njydsz.userinfo.domain.entity.Language 语言实体
  */
 @Mapper
 public interface LanguageMapper extends BaseMapper<Language> {}

@@ -30,7 +30,7 @@ import com.njydsz.userinfo.domain.entity.RolePermission;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.userinfo.infra.entity.RolePermission 角色-权限关联实体
+ * @see com.njydsz.userinfo.domain.entity.RolePermission 角色-权限关联实体
  * @see com.njydsz.userinfo.server.service.RolePermissionService 角色-权限 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

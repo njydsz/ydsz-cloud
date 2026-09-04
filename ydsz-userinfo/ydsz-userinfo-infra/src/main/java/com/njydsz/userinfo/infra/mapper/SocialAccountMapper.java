@@ -27,7 +27,7 @@ import com.njydsz.userinfo.domain.entity.SocialAccount;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.userinfo.infra.entity.SocialAccount 社交账号绑定实体
+ * @see com.njydsz.userinfo.domain.entity.SocialAccount 社交账号绑定实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper

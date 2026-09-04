@@ -26,7 +26,7 @@ import com.njydsz.userinfo.domain.entity.Post;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.userinfo.infra.entity.Post 岗位实体
+ * @see com.njydsz.userinfo.domain.entity.Post 岗位实体
  * @see com.njydsz.userinfo.infra.mapper.UserPostMapper 用户-岗位关联 Mapper
  */
 @Mapper

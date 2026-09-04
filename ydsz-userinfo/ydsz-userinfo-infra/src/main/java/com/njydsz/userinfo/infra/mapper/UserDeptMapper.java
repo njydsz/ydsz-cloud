@@ -26,7 +26,7 @@ import com.njydsz.userinfo.domain.entity.UserDept;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.userinfo.infra.entity.UserDept 用户-部门关联实体
+ * @see com.njydsz.userinfo.domain.entity.UserDept 用户-部门关联实体
  * @see com.njydsz.userinfo.server.service.UserDeptService 用户-部门 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
