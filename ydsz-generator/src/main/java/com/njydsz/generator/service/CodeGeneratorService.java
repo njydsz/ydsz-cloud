@@ -33,8 +33,8 @@ import com.njydsz.generator.model.TableMetadata;
  *   <li>domain/query/{EntityName}PageQuery.java</li>
  *   <li>domain/vo/{EntityName}VO.java</li>
  *   <li>domain/repository/{EntityName}Repository.java</li>
+ *   <li>domain/converter/{ModuleName}Converter.java</li>
  *   <li>infra/mapper/{EntityName}Mapper.java</li>
- *   <li>infra/converter/{ModuleName}Converter.java</li>
  *   <li>infra/repository/{EntityName}RepositoryImpl.java</li>
  *   <li>server/service/{EntityName}Service.java</li>
  *   <li>server/service/impl/{EntityName}ServiceImpl.java</li>
@@ -153,13 +153,13 @@ public class CodeGeneratorService {
     if (config.isGenerateRepository()) {
       generated.add(writeFile("repository.vm", resolvePath(moduleName, "domain/repository", entity + "Repository.java"), rendered));
     }
-    // 4. infra/mapper
+    // 4. domain/converter（领域层转换器）
+    if (config.isGenerateConverter()) {
+      generated.add(writeFile("converter.vm", resolvePath(moduleName, "domain/converter", capitalize(moduleName) + "Converter.java"), rendered));
+    }
+    // 5. infra/mapper
     if (config.isGenerateMapper()) {
       generated.add(writeFile("mapper.vm", resolvePath(moduleName, "infra/mapper", entity + "Mapper.java"), rendered));
-    }
-    // 5. infra/converter
-    if (config.isGenerateConverter()) {
-      generated.add(writeFile("converter.vm", resolvePath(moduleName, "infra/converter", capitalize(moduleName) + "Converter.java"), rendered));
     }
     // 6. infra/repositoryImpl
     if (config.isGenerateRepository()) {

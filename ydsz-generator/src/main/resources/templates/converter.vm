@@ -1,4 +1,4 @@
-package ${package}.infra.converter;
+package ${package}.domain.converter;
 
 import java.util.List;
 
@@ -18,8 +18,9 @@ import ${package}.domain.vo.${table.voName};
  *
  * <p><b>设计要点：</b>
  * <ul>
- *   <li>componentModel = "spring" — 生成 Spring Bean，可直接注入使用</li>
- *   <li>unmappedTargetPolicy = IGNORE — 目标对象多余字段不报错（审计字段由基类处理）</li>
+ *   <li>组件模型 — componentModel = "spring" 生成 Spring Bean，可直接注入使用</li>
+ *   <li>字段策略 — unmappedTargetPolicy = IGNORE 目标对象多余字段不报错（审计字段由基类处理）</li>
+ *   <li>分层位置 — 转换器属于领域层（domain），封装领域模型转换逻辑</li>
  * </ul>
  *
  * @author ${author}

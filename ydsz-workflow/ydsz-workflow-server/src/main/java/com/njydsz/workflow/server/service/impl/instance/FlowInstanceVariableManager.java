@@ -140,7 +140,7 @@ public class FlowInstanceVariableManager {
    * @param raw 原始 Map
    * @return 类型安全的 Map<String, Object>
    */
-  Map<String, Object> castToStringObjectMap(Map<?, ?> raw) {
+  static Map<String, Object> castToStringObjectMap(Map<?, ?> raw) {
     if (raw == null) {
       return new HashMap<>(0);
     }

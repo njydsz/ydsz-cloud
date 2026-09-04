@@ -16,6 +16,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
@@ -137,10 +138,29 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
   }
 
   @Override
+  protected Map<String, Object> getVariables(String instanceId) {
+    if (!StringUtils.hasText(instanceId)) {
+      return new HashMap<>(0);
+    }
+    FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
+    if (instance == null || !StringUtils.hasText(instance.getVariable())) {
+      return new HashMap<>(0);
+    }
+    try {
+      Map<String, Object> map = YdszJson.parseMap(instance.getVariable());
+      return map != null ? map : new HashMap<>(0);
+    } catch (Exception e) {
+      log.warn("[Flow] 解析变量失败: instanceId={} err={}", instanceId, e.getMessage());
+      return new HashMap<>(0);
+    }
+  }
+
+  @Override
   protected FlowInstanceVO saveInstance(FlowInstanceVO instance) {
     if (instance == null) {
       return null;
     }
-    return instanceRepository.save(instance);
+    FlowInstanceDTO dto = toDto(instance);
+    return instanceRepository.save(dto);
   }
 }
