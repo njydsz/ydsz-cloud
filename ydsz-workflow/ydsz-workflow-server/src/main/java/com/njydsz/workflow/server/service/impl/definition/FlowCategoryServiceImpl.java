@@ -132,14 +132,33 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     List<FlowCategoryTreeVO> flatList = all.stream()
         .map(this::toTreeVO)
         .toList();
-    return TreeBuilder.buildSimple(
+    List<FlowCategoryTreeVO> tree = TreeBuilder.buildSimple(
         flatList,
         FlowCategoryTreeVO::getId,
         FlowCategoryTreeVO::getParentId,
         FlowCategoryTreeVO::setChildren,
-        FlowCategoryTreeVO::getSortNum,
-        FlowCategoryTreeVO::setLevel,
-        FlowCategoryTreeVO::setPath);
+        FlowCategoryTreeVO::getSortNum);
+    // 树构建后手动计算 level 与 path
+    for (FlowCategoryTreeVO root : tree) {
+      root.setLevel(0);
+      root.setPath(root.getId() != null ? root.getId() : "");
+      fillChildrenLevelPath(root, 0);
+    }
+    return tree;
+  }
+
+  /** 递归填充子节点 level/path */
+  private void fillChildrenLevelPath(FlowCategoryTreeVO parent, int parentLevel) {
+    if (parent.getChildren() == null) {
+      return;
+    }
+    for (FlowCategoryTreeVO child : parent.getChildren()) {
+      int lvl = parentLevel + 1;
+      child.setLevel(lvl);
+      String parentPath = parent.getPath() != null ? parent.getPath() : "";
+      child.setPath(parentPath + "/" + (child.getId() != null ? child.getId() : ""));
+      fillChildrenLevelPath(child, lvl);
+    }
   }
 
   /**

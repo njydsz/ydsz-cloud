@@ -500,7 +500,9 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     if (existing instanceof List<?> list) {
       for (Object item : list) {
         if (item instanceof Map<?,?> itemMap) {
-          appendedNodes.add(new LinkedHashMap<>(itemMap));
+          @SuppressWarnings("unchecked")
+          Map<String, Object> casted = (Map<String, Object>) itemMap;
+          appendedNodes.add(new LinkedHashMap<>(casted));
         }
       }
     }
