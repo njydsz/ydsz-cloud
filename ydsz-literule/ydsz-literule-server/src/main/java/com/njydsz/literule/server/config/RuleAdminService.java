@@ -502,11 +502,11 @@ public class RuleAdminService {
   public PageResponse<List<RuleVersionVO>> pageVersions(String ruleCode, PageQuery pageQuery) {
     if (versionRepository == null) {
       return PageResponse.empty(
-          (long) pageQuery.getEffectivePageNum(),
-          (long) pageQuery.getEffectivePageSize());
+          (long) pageQuery.getPageNum(),
+          (long) pageQuery.getPageSize());
     }
     return versionRepository.pageVersions(
-        ruleCode, pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
+        ruleCode, pageQuery.getPageNum(), pageQuery.getPageSize());
   }
 
   /**

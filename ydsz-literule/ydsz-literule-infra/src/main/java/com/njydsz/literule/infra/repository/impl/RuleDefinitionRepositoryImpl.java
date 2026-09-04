@@ -58,7 +58,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
   @Override
   public PageResponse<List<RuleDefinitionVO>> pageRuleDefinitions(PageQuery pageQuery) {
     Page<RuleDefinition> page = new Page<>(
-        pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize());
+        pageQuery.getPageNum(), pageQuery.getPageSize());
     LambdaQueryWrapper<RuleDefinition> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByAsc(RuleDefinition::getPriority).orderByDesc(RuleDefinition::getCreatedAt);
     IPage<RuleDefinition> doPage = ruleDefinitionMapper.selectPage(page, wrapper);
@@ -96,7 +96,7 @@ public class RuleDefinitionRepositoryImpl implements RuleDefinitionRepository {
             status,
             category,
             enabled,
-            new Page<>(pageQuery.getEffectivePageNum(), pageQuery.getEffectivePageSize()));
+            new Page<>(pageQuery.getPageNum(), pageQuery.getPageSize()));
     List<RuleDefinitionVO> records = converter.ruleDefinitionListToVO(page.getRecords());
     return PageResponse.success(
         page.getTotal(), page.getCurrent(), page.getSize(), records);

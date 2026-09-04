@@ -122,8 +122,8 @@ public class SearchApplicationService {
    * @note 降级时筛选条件不生效，返回未筛选的全量关键词匹配结果
    */
   public SearchResultVO searchWithFilters(NextwikiDto.SearchRequest request, String userId) {
-    int pageNum = request.getEffectivePageNum();
-    int pageSize = request.getEffectivePageSize();
+    int pageNum = request.getPageNum();
+    int pageSize = request.getPageSize();
 
     // 构建高级筛选条件列表
     List<SearchFilter> filters =
