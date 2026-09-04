@@ -15,15 +15,6 @@ import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.dto.VariableDTO;
-import com.njydsz.system.domain.vo.AppInfoVO;
-import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.DictItemVO;
-import com.njydsz.system.domain.vo.DictTypeVO;
-import com.njydsz.system.domain.vo.EntityVersionVO;
-import com.njydsz.system.domain.vo.TenantPlanMenuVO;
-import com.njydsz.system.domain.vo.TenantPlanVO;
-import com.njydsz.system.domain.vo.TenantVO;
-import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.entity.DictItem;
@@ -33,6 +24,15 @@ import com.njydsz.system.domain.entity.Tenant;
 import com.njydsz.system.domain.entity.TenantPlan;
 import com.njydsz.system.domain.entity.TenantPlanMenu;
 import com.njydsz.system.domain.entity.Variable;
+import com.njydsz.system.domain.vo.AppInfoVO;
+import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.domain.vo.DictItemVO;
+import com.njydsz.system.domain.vo.DictTypeVO;
+import com.njydsz.system.domain.vo.EntityVersionVO;
+import com.njydsz.system.domain.vo.TenantPlanMenuVO;
+import com.njydsz.system.domain.vo.TenantPlanVO;
+import com.njydsz.system.domain.vo.TenantVO;
+import com.njydsz.system.domain.vo.VariableVO;
 
 
 
