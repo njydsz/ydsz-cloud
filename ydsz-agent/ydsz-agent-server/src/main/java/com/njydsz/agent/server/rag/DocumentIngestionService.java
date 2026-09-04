@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.rag.EmbeddingClient;
@@ -27,6 +29,7 @@ import com.njydsz.agent.domain.rag.VectorStore;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Slf4j
 @Service
 public class DocumentIngestionService {
 

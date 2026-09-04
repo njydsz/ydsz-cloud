@@ -16,7 +16,8 @@ import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.memory.MemoryConsolidationService;
 import com.njydsz.agent.domain.memory.MemoryExtractedFact;
 import com.njydsz.agent.domain.model.ChatMessage;
-import com.njydsz.agent.domain.model.MessageRole;
+import com.njydsz.agent.domain.model.ChatRequest;
+import com.njydsz.agent.domain.model.ChatResponse;
 
 /**
  * 基于 LLM 的记忆整合服务实现。
@@ -91,17 +92,17 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
             String conversationText = buildConversationText(conversation);
             String prompt = EXTRACTION_PROMPT + "\n" + conversationText;
 
-            ChatMessage systemMsg = ChatMessage.builder()
-                    .role(MessageRole.SYSTEM)
-                    .content("你是专业的记忆分析助手。严格按照 JSON 格式输出。")
-                    .build();
-            ChatMessage userMsg = ChatMessage.builder()
-                    .role(MessageRole.USER)
-                    .content(prompt)
-                    .build();
+            ChatMessage systemMsg = ChatMessage.system("你是专业的记忆分析助手。严格按照 JSON 格式输出。");
+            ChatMessage userMsg = ChatMessage.user(prompt, null);
 
             List<ChatMessage> messages = List.of(systemMsg, userMsg);
-            String response = llmClient.chat(messages);
+            ChatRequest request = ChatRequest.builder()
+                    .model("default")
+                    .messages(messages)
+                    .build();
+            ChatResponse chatResponse = llmClient.chat(request);
+            String response = chatResponse.getMessage() != null
+                    ? chatResponse.getMessage().getContent() : null;
 
             if (response == null || response.isBlank()) {
                 return Collections.emptyList();
@@ -215,9 +216,7 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
         }
         if (conversation.getMessages() != null) {
             for (ChatMessage msg : conversation.getMessages()) {
-                if (msg.getUserId() != null) {
-                    return msg.getUserId();
-                }
+                // ChatMessage 不含 userId 字段，跳过
             }
         }
         return "unknown";

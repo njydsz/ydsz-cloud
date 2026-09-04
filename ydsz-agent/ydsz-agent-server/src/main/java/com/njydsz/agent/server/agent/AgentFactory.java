@@ -2,6 +2,8 @@ package com.njydsz.agent.server.agent;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.annotation.Lazy;
+
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;

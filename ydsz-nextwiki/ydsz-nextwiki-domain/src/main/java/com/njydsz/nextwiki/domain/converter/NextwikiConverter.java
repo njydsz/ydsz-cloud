@@ -12,9 +12,14 @@ import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.dto.ShareRecipientDTO;
+import com.njydsz.nextwiki.domain.dto.SpaceDTO;
+import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
+import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
 import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
 import com.njydsz.nextwiki.domain.dto.TagDTO;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
+import com.njydsz.nextwiki.domain.dto.UserFavoriteDTO;
+import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.entity.FileComment;
 import com.njydsz.nextwiki.domain.entity.FileNode;
@@ -24,9 +29,14 @@ import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
 import com.njydsz.nextwiki.domain.entity.ShareLink;
 import com.njydsz.nextwiki.domain.entity.ShareRecipient;
+import com.njydsz.nextwiki.domain.entity.Space;
+import com.njydsz.nextwiki.domain.entity.SpaceMember;
+import com.njydsz.nextwiki.domain.entity.SpaceTemplate;
 import com.njydsz.nextwiki.domain.entity.StorageQuota;
 import com.njydsz.nextwiki.domain.entity.Tag;
 import com.njydsz.nextwiki.domain.entity.TrashItem;
+import com.njydsz.nextwiki.domain.entity.UserFavorite;
+import com.njydsz.nextwiki.domain.entity.UserRecent;
 import com.njydsz.nextwiki.domain.vo.FileAclVO;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -37,6 +47,7 @@ import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
 import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
+import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 
@@ -1203,5 +1214,217 @@ public final class NextwikiConverter {
       return List.of();
     }
     return dtos.stream().map(this::dtoToEntity).collect(Collectors.toList());
+  }
+
+  // ==================== Space 转换 ====================
+
+  public Space toSpace(SpaceDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    return Space.builder()
+        .id(dto.getId())
+        .name(dto.getName())
+        .description(dto.getDescription())
+        .iconUrl(dto.getIconUrl())
+        .coverUrl(dto.getCoverUrl())
+        .tenantId(dto.getTenantId())
+        .ownerId(dto.getOwnerId())
+        .status(dto.getStatus())
+        .visibility(dto.getVisibility())
+        .sortOrder(dto.getSortOrder())
+        .memberCount(dto.getMemberCount())
+        .nodeCount(dto.getNodeCount())
+        .quotaLimit(dto.getQuotaLimit())
+        .quotaUsed(dto.getQuotaUsed())
+        .createdAt(dto.getCreatedAt())
+        .createdBy(dto.getCreatedBy())
+        .updatedAt(dto.getUpdatedAt())
+        .updatedBy(dto.getUpdatedBy())
+        .build();
+  }
+
+  public SpaceVO entityToVO(Space entity) {
+    if (entity == null) {
+      return null;
+    }
+    return SpaceVO.builder()
+        .id(entity.getId())
+        .name(entity.getName())
+        .description(entity.getDescription())
+        .iconUrl(entity.getIconUrl())
+        .coverUrl(entity.getCoverUrl())
+        .ownerId(entity.getOwnerId())
+        .status(entity.getStatus())
+        .visibility(entity.getVisibility())
+        .sortOrder(entity.getSortOrder())
+        .memberCount(entity.getMemberCount())
+        .nodeCount(entity.getNodeCount())
+        .quotaLimit(entity.getQuotaLimit())
+        .quotaUsed(entity.getQuotaUsed())
+        .createdAt(entity.getCreatedAt())
+        .updatedAt(entity.getUpdatedAt())
+        .build();
+  }
+
+  public List<SpaceVO> spaceListToVO(List<Space> entities) {
+    if (entities == null || entities.isEmpty()) {
+      return List.of();
+    }
+    return entities.stream().map(this::entityToVO).collect(Collectors.toList());
+  }
+
+  // ==================== SpaceMember 转换 ====================
+
+  public SpaceMember toSpaceMember(SpaceMemberDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    return SpaceMember.builder()
+        .id(dto.getId())
+        .spaceId(dto.getSpaceId())
+        .userId(dto.getUserId())
+        .role(dto.getRole())
+        .tenantId(dto.getTenantId())
+        .joinedAt(dto.getJoinedAt())
+        .createdBy(dto.getCreatedBy())
+        .updatedAt(dto.getUpdatedAt())
+        .updatedBy(dto.getUpdatedBy())
+        .build();
+  }
+
+  public SpaceMemberDTO toSpaceMemberDTO(SpaceMember entity) {
+    if (entity == null) {
+      return null;
+    }
+    return SpaceMemberDTO.builder()
+        .id(entity.getId())
+        .spaceId(entity.getSpaceId())
+        .userId(entity.getUserId())
+        .role(entity.getRole())
+        .tenantId(entity.getTenantId())
+        .joinedAt(entity.getJoinedAt())
+        .createdBy(entity.getCreatedBy())
+        .updatedAt(entity.getUpdatedAt())
+        .updatedBy(entity.getUpdatedBy())
+        .build();
+  }
+
+  // ==================== SpaceTemplate 转换 ====================
+
+  public SpaceTemplate toSpaceTemplate(SpaceTemplateDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    return SpaceTemplate.builder()
+        .id(dto.getId())
+        .name(dto.getName())
+        .description(dto.getDescription())
+        .category(dto.getCategory())
+        .iconUrl(dto.getIconUrl())
+        .tenantId(dto.getTenantId())
+        .systemFlag(dto.getSystemFlag())
+        .publicAccess(dto.getPublicAccess())
+        .structureJson(dto.getStructureJson())
+        .sortOrder(dto.getSortOrder())
+        .usageCount(dto.getUsageCount())
+        .createdAt(dto.getCreatedAt())
+        .createdBy(dto.getCreatedBy())
+        .updatedAt(dto.getUpdatedAt())
+        .updatedBy(dto.getUpdatedBy())
+        .build();
+  }
+
+  public SpaceTemplateDTO toSpaceTemplateDTO(SpaceTemplate entity) {
+    if (entity == null) {
+      return null;
+    }
+    return SpaceTemplateDTO.builder()
+        .id(entity.getId())
+        .name(entity.getName())
+        .description(entity.getDescription())
+        .category(entity.getCategory())
+        .iconUrl(entity.getIconUrl())
+        .tenantId(entity.getTenantId())
+        .systemFlag(entity.getSystemFlag())
+        .publicAccess(entity.getPublicAccess())
+        .structureJson(entity.getStructureJson())
+        .sortOrder(entity.getSortOrder())
+        .usageCount(entity.getUsageCount())
+        .createdAt(entity.getCreatedAt())
+        .createdBy(entity.getCreatedBy())
+        .updatedAt(entity.getUpdatedAt())
+        .updatedBy(entity.getUpdatedBy())
+        .build();
+  }
+
+  // ==================== UserFavorite 转换 ====================
+
+  public UserFavorite toUserFavorite(UserFavoriteDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    return UserFavorite.builder()
+        .id(dto.getId())
+        .userId(dto.getUserId())
+        .nodeId(dto.getNodeId())
+        .tenantId(dto.getTenantId())
+        .sortOrder(dto.getSortOrder())
+        .createdAt(dto.getCreatedAt())
+        .createdBy(dto.getCreatedBy())
+        .updatedAt(dto.getUpdatedAt())
+        .updatedBy(dto.getUpdatedBy())
+        .build();
+  }
+
+  public UserFavoriteDTO toUserFavoriteDTO(UserFavorite entity) {
+    if (entity == null) {
+      return null;
+    }
+    return UserFavoriteDTO.builder()
+        .id(entity.getId())
+        .userId(entity.getUserId())
+        .nodeId(entity.getNodeId())
+        .tenantId(entity.getTenantId())
+        .sortOrder(entity.getSortOrder())
+        .createdAt(entity.getCreatedAt())
+        .createdBy(entity.getCreatedBy())
+        .updatedAt(entity.getUpdatedAt())
+        .updatedBy(entity.getUpdatedBy())
+        .build();
+  }
+
+  // ==================== UserRecent 转换 ====================
+
+  public UserRecent toUserRecent(UserRecentDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    return UserRecent.builder()
+        .id(dto.getId())
+        .userId(dto.getUserId())
+        .nodeId(dto.getNodeId())
+        .tenantId(dto.getTenantId())
+        .accessType(dto.getAccessType())
+        .accessedAt(dto.getAccessedAt())
+        .createdAt(dto.getCreatedAt())
+        .updatedAt(dto.getUpdatedAt())
+        .build();
+  }
+
+  public UserRecentDTO toUserRecentDTO(UserRecent entity) {
+    if (entity == null) {
+      return null;
+    }
+    return UserRecentDTO.builder()
+        .id(entity.getId())
+        .userId(entity.getUserId())
+        .nodeId(entity.getNodeId())
+        .tenantId(entity.getTenantId())
+        .accessType(entity.getAccessType())
+        .accessedAt(entity.getAccessedAt())
+        .createdAt(entity.getCreatedAt())
+        .updatedAt(entity.getUpdatedAt())
+        .build();
   }
 }

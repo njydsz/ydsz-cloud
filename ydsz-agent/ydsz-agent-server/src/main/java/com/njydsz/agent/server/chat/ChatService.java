@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.stereotype.Service;
+
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;

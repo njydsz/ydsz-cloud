@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -117,6 +118,20 @@ public class FlowAssigneeDedupService {
   }
 
   // ============================== 批量操作 ==============================
+
+  /**
+   * 获取实例中已审批过的全部用户 ID 集合（VO 包装版本）。
+   *
+   * <p>返回 {@link StringVO} 列表，便于前端直接绑定。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 已审批用户 ID VO 列表
+   */
+  @Transactional(readOnly = true)
+  public List<StringVO> getApprovedUserIdsVO(String instanceId) {
+    Set<String> ids = getApprovedUserIds(instanceId);
+    return ids.stream().map(StringVO::new).collect(Collectors.toList());
+  }
 
   /**
    * 获取实例中已审批过的全部用户 ID 集合

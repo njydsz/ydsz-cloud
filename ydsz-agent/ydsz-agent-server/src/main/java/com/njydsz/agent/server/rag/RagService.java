@@ -1,9 +1,13 @@
 package com.njydsz.agent.server.rag;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.rag.Retriever;
@@ -34,6 +38,7 @@ import com.njydsz.common.docs.service.DocumentService;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Slf4j
 @Service
 public class RagService {
 
@@ -128,7 +133,7 @@ public class RagService {
       return "";
     }
     int tokenBudget = properties.getRag().getContextTokenBudget();
-    double tokenCharRatio = properties.getMemory().getTokenCharRatio();
+    BigDecimal tokenCharRatio = properties.getMemory().getTokenCharRatio();
     // 扣除模板固定开销
     int remainingTokens = tokenBudget - CONTEXT_TEMPLATE_OVERHEAD_TOKENS;
     StringBuilder sb = new StringBuilder();

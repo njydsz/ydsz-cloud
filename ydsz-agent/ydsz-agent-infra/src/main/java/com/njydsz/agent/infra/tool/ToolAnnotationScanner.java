@@ -83,14 +83,22 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
     ToolExecutor executor =
         arguments -> {
           Object[] args = bindArguments(method, arguments);
-          Object result = method.invoke(bean, args);
-          if (result == null) {
-            return "{}";
+          try {
+            Object result = method.invoke(bean, args);
+            if (result == null) {
+              return "{}";
+            }
+            if (result instanceof String str) {
+              return str;
+            }
+            return YdszJson.toJson(result);
+          } catch (IllegalAccessException e) {
+            log.error("工具方法访问权限不足: tool={}, error={}", toolName, e.getMessage());
+            throw new RuntimeException("工具调用失败（权限不足）: " + toolName, e);
+          } catch (Exception e) {
+            log.error("工具执行异常: tool={}, error={}", toolName, e.getMessage());
+            throw new RuntimeException("工具调用失败: " + toolName, e);
           }
-          if (result instanceof String str) {
-            return str;
-          }
-          return YdszJson.toJson(result);
         };
 
     ToolRegistration registration = new ToolRegistration(definition, executor);

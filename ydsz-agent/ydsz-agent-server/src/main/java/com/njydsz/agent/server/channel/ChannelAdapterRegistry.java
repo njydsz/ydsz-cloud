@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.channel.ChannelAdapter;
-import com.njydsz.agent.domain.channel.ChannelStatus;
+import com.njydsz.agent.domain.channel.ChannelAdapter.ChannelStatus;
 import com.njydsz.agent.domain.channel.ChannelType;
 
 /**

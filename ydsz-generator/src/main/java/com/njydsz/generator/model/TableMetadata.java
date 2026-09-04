@@ -3,6 +3,7 @@ package com.njydsz.generator.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.generator.model.EnumDefinition;
 import lombok.Data;
 
 /**
@@ -51,11 +52,14 @@ public class TableMetadata {
   /** 表注释（COMMENT） */
   private String tableComment;
 
+  /** 默认列列表初始容量 */
+  private static final int DEFAULT_COLUMNS_CAPACITY = 16;
+
   /** 列列表（排除审计字段后的业务字段） */
-  private List<ColumnMetadata> columns = new ArrayList<>(16);
+  private List<ColumnMetadata> columns = new ArrayList<>(DEFAULT_COLUMNS_CAPACITY);
 
   /** 全部列（含审计字段） */
-  private List<ColumnMetadata> allColumns = new ArrayList<>(16);
+  private List<ColumnMetadata> allColumns = new ArrayList<>(DEFAULT_COLUMNS_CAPACITY);
 
   /** 主键列 */
   private ColumnMetadata primaryKey;
@@ -73,7 +77,7 @@ public class TableMetadata {
   private String feignClientName;
 
   /** 枚举定义列表（从字段注释中解析） */
-  private java.util.List<com.njydsz.generator.model.EnumDefinition> enumDefinitions;
+  private List<EnumDefinition> enumDefinitions;
 
   /** 是否包含枚举字段（用于模板条件渲染） */
   private boolean hasEnums;

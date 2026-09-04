@@ -1,5 +1,9 @@
 package com.njydsz.generator.config;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,25 +19,25 @@ public enum DatabaseDialect {
   /** MySQL 数据库 */
   MYSQL("mysql", "com.mysql.cj.jdbc.Driver") {
     @Override
-    public Map<String, String[]> getTypeMapping() {
+    public Map<String, DialectType> getTypeMapping() {
       return Map.ofEntries(
-          Map.entry("varchar", new String[]{"String", "java.lang.String"}),
-          Map.entry("char", new String[]{"String", "java.lang.String"}),
-          Map.entry("text", new String[]{"String", "java.lang.String"}),
-          Map.entry("longtext", new String[]{"String", "java.lang.String"}),
-          Map.entry("int", new String[]{"Integer", "java.lang.Integer"}),
-          Map.entry("tinyint", new String[]{"Integer", "java.lang.Integer"}),
-          Map.entry("smallint", new String[]{"Integer", "java.lang.Integer"}),
-          Map.entry("mediumint", new String[]{"Integer", "java.lang.Integer"}),
-          Map.entry("bigint", new String[]{"Long", "java.lang.Long"}),
-          Map.entry("decimal", new String[]{"BigDecimal", "java.math.BigDecimal"}),
-          Map.entry("numeric", new String[]{"BigDecimal", "java.math.BigDecimal"}),
-          Map.entry("datetime", new String[]{"LocalDateTime", "java.time.LocalDateTime"}),
-          Map.entry("timestamp", new String[]{"LocalDateTime", "java.time.LocalDateTime"}),
-          Map.entry("date", new String[]{"LocalDate", "java.time.LocalDate"}),
-          Map.entry("time", new String[]{"LocalDateTime", "java.time.LocalDateTime"}),
-          Map.entry("bit", new String[]{"Boolean", "java.lang.Boolean"}),
-          Map.entry("json", new String[]{"String", "java.lang.String"})
+          Map.entry("varchar", new DialectType("String", String.class.getName())),
+          Map.entry("char", new DialectType("String", String.class.getName())),
+          Map.entry("text", new DialectType("String", String.class.getName())),
+          Map.entry("longtext", new DialectType("String", String.class.getName())),
+          Map.entry("int", new DialectType("Integer", Integer.class.getName())),
+          Map.entry("tinyint", new DialectType("Integer", Integer.class.getName())),
+          Map.entry("smallint", new DialectType("Integer", Integer.class.getName())),
+          Map.entry("mediumint", new DialectType("Integer", Integer.class.getName())),
+          Map.entry("bigint", new DialectType("Long", Long.class.getName())),
+          Map.entry("decimal", new DialectType("BigDecimal", BigDecimal.class.getName())),
+          Map.entry("numeric", new DialectType("BigDecimal", BigDecimal.class.getName())),
+          Map.entry("datetime", new DialectType("LocalDateTime", LocalDateTime.class.getName())),
+          Map.entry("timestamp", new DialectType("LocalDateTime", LocalDateTime.class.getName())),
+          Map.entry("date", new DialectType("LocalDate", LocalDate.class.getName())),
+          Map.entry("time", new DialectType("LocalDateTime", LocalDateTime.class.getName())),
+          Map.entry("bit", new DialectType("Boolean", Boolean.class.getName())),
+          Map.entry("json", new DialectType("String", String.class.getName()))
       );
     }
   },
@@ -41,20 +45,20 @@ public enum DatabaseDialect {
   /** PostgreSQL 数据库 */
   POSTGRESQL("postgresql", "org.postgresql.Driver") {
     @Override
-    public Map<String, String[]> getTypeMapping() {
+    public Map<String, DialectType> getTypeMapping() {
       return Map.ofEntries(
-          Map.entry("varchar", new String[]{"String", "java.lang.String"}),
-          Map.entry("text", new String[]{"String", "java.lang.String"}),
-          Map.entry("int2", new String[]{"Integer", "java.lang.Integer"}),
-          Map.entry("int4", new String[]{"Integer", "java.lang.Integer"}),
-          Map.entry("int8", new String[]{"Long", "java.lang.Long"}),
-          Map.entry("numeric", new String[]{"BigDecimal", "java.math.BigDecimal"}),
-          Map.entry("bool", new String[]{"Boolean", "java.lang.Boolean"}),
-          Map.entry("timestamp", new String[]{"LocalDateTime", "java.time.LocalDateTime"}),
-          Map.entry("date", new String[]{"LocalDate", "java.time.LocalDate"}),
-          Map.entry("jsonb", new String[]{"String", "java.lang.String"}),
-          Map.entry("json", new String[]{"String", "java.lang.String"}),
-          Map.entry("uuid", new String[]{"String", "java.lang.String"})
+          Map.entry("varchar", new DialectType("String", String.class.getName())),
+          Map.entry("text", new DialectType("String", String.class.getName())),
+          Map.entry("int2", new DialectType("Integer", Integer.class.getName())),
+          Map.entry("int4", new DialectType("Integer", Integer.class.getName())),
+          Map.entry("int8", new DialectType("Long", Long.class.getName())),
+          Map.entry("numeric", new DialectType("BigDecimal", BigDecimal.class.getName())),
+          Map.entry("bool", new DialectType("Boolean", Boolean.class.getName())),
+          Map.entry("timestamp", new DialectType("LocalDateTime", LocalDateTime.class.getName())),
+          Map.entry("date", new DialectType("LocalDate", LocalDate.class.getName())),
+          Map.entry("jsonb", new DialectType("String", String.class.getName())),
+          Map.entry("json", new DialectType("String", String.class.getName())),
+          Map.entry("uuid", new DialectType("String", String.class.getName()))
       );
     }
   },
@@ -62,19 +66,19 @@ public enum DatabaseDialect {
   /** Oracle 数据库 */
   ORACLE("oracle", "oracle.jdbc.OracleDriver") {
     @Override
-    public Map<String, String[]> getTypeMapping() {
+    public Map<String, DialectType> getTypeMapping() {
       return Map.ofEntries(
-          Map.entry("varchar2", new String[]{"String", "java.lang.String"}),
-          Map.entry("nvarchar2", new String[]{"String", "java.lang.String"}),
-          Map.entry("clob", new String[]{"String", "java.lang.String"}),
-          Map.entry("nclob", new String[]{"String", "java.lang.String"}),
-          Map.entry("number", new String[]{"BigDecimal", "java.math.BigDecimal"}),
-          Map.entry("int", new String[]{"Integer", "java.lang.Integer"}),
-          Map.entry("integer", new String[]{"Integer", "java.lang.Integer"}),
-          Map.entry("long", new String[]{"Long", "java.lang.Long"}),
-          Map.entry("date", new String[]{"LocalDateTime", "java.time.LocalDateTime"}),
-          Map.entry("timestamp", new String[]{"LocalDateTime", "java.time.LocalDateTime"}),
-          Map.entry("blob", new String[]{"byte[]", "[B"})
+          Map.entry("varchar2", new DialectType("String", String.class.getName())),
+          Map.entry("nvarchar2", new DialectType("String", String.class.getName())),
+          Map.entry("clob", new DialectType("String", String.class.getName())),
+          Map.entry("nclob", new DialectType("String", String.class.getName())),
+          Map.entry("number", new DialectType("BigDecimal", BigDecimal.class.getName())),
+          Map.entry("int", new DialectType("Integer", Integer.class.getName())),
+          Map.entry("integer", new DialectType("Integer", Integer.class.getName())),
+          Map.entry("long", new DialectType("Long", Long.class.getName())),
+          Map.entry("date", new DialectType("LocalDateTime", LocalDateTime.class.getName())),
+          Map.entry("timestamp", new DialectType("LocalDateTime", LocalDateTime.class.getName())),
+          Map.entry("blob", new DialectType("byte[]", "[B"))
       );
     }
   };
@@ -101,23 +105,36 @@ public enum DatabaseDialect {
   /**
    * 获取各数据库的 JDBC 类型名 → Java 类型映射。
    *
-   * @return 类型映射表（key = JDBC 类型名，value = [短名, 全限定名]）
+   * @return 类型映射表（key = JDBC 类型名，value = 方言类型描述）
    */
-  public abstract Map<String, String[]> getTypeMapping();
+  public abstract Map<String, DialectType> getTypeMapping();
 
   /**
-   * 根据 JDBC 类型名获取对应的 Java 类型。
+   * 根据 JDBC 类型名获取对应的短类型名。
    *
    * @param jdbcTypeName - JDBC 类型名（如 varchar, int4）
-   * @return [短名, 全限定名]，未找到默认 String
+   * @return 短类型名，未找到默认 String
    */
-  public String[] resolveJavaType(String jdbcTypeName) {
+  public String resolveShortType(String jdbcTypeName) {
     if (jdbcTypeName == null) {
-      return new String[]{"String", "java.lang.String"};
+      return "String";
     }
-    Map<String, String[]> mapping = getTypeMapping();
-    String[] result = mapping.get(jdbcTypeName.toLowerCase());
-    return result != null ? result : new String[]{"String", "java.lang.String"};
+    DialectType type = getTypeMapping().get(jdbcTypeName.toLowerCase());
+    return type != null ? type.getShortName() : "String";
+  }
+
+  /**
+   * 根据 JDBC 类型名获取对应的全限定类型名。
+   *
+   * @param jdbcTypeName - JDBC 类型名
+   * @return 全限定类型名，未找到默认 java.lang.String
+   */
+  public String resolveFullType(String jdbcTypeName) {
+    if (jdbcTypeName == null) {
+      return String.class.getName();
+    }
+    DialectType type = getTypeMapping().get(jdbcTypeName.toLowerCase());
+    return type != null ? type.getFullName() : String.class.getName();
   }
 
   /**
@@ -132,10 +149,40 @@ public enum DatabaseDialect {
     }
     String lower = url.toLowerCase();
     for (DatabaseDialect dialect : values()) {
-      if (lower.contains(":" + dialect.identifier + ":") || lower.startsWith("jdbc:" + dialect.identifier)) {
+      if (lower.contains(":" + dialect.identifier + ":")
+          || lower.startsWith("jdbc:" + dialect.identifier)) {
         return dialect;
       }
     }
     return POSTGRESQL;
+  }
+
+  /**
+   * 数据库方言类型描述（短名 + 全名）。
+   *
+   * <p>封装 JDBC 类型名对应的 Java 短类型名和全限定类型名，
+   * 用于代码生成的字段类型渲染。
+   *
+   * @author ydsz-team
+   * @since 26.09.04
+   */
+  public static final class DialectType {
+    /** 短类型名（如 String, Integer） */
+    private final String shortName;
+    /** 全限定类型名（如 java.lang.String） */
+    private final String fullName;
+
+    public DialectType(String shortName, String fullName) {
+      this.shortName = shortName;
+      this.fullName = fullName;
+    }
+
+    public String getShortName() {
+      return shortName;
+    }
+
+    public String getFullName() {
+      return fullName;
+    }
   }
 }

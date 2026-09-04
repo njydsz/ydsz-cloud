@@ -79,7 +79,7 @@ public class SemanticLlmCache {
     this.ttl = ttl;
     this.maxCacheSize = maxCacheSize;
     this.l1Cache =
-        YdszCache.newBuilder()
+        YdszCache.<String, CachedLlmResponse>newBuilder()
             .name(CACHE_NAME)
             .maximumSize(L1_MAX_SIZE)
             .expireAfterWrite(L1_EXPIRE_MINUTES, TimeUnit.MINUTES)

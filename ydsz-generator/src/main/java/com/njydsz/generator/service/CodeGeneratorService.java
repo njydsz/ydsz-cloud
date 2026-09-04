@@ -1,6 +1,7 @@
 package com.njydsz.generator.service;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,6 +57,9 @@ public class CodeGeneratorService {
 
   private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private static final String TEMPLATE_ENCODING = "UTF-8";
+  private static final int FILES_PER_TABLE = 14;
+  private static final int FILES_CONTEXT_SIZE = 14;
+  private static final int CONTEXT_MAP_SIZE = 16;
 
   private final GeneratorProperties properties;
   private final TableMetadataReader metadataReader;
@@ -80,7 +84,7 @@ public class CodeGeneratorService {
   public List<String> generateAllConfigured() {
     ModuleGroupConfig config = properties.resolveEffectiveConfig();
     List<TableMetadata> tables = readTablesForConfig(config);
-    List<String> generated = new ArrayList<>(tables.size() * 8);
+    List<String> generated = new ArrayList<>(tables.size() * FILES_PER_TABLE);
     for (TableMetadata table : tables) {
       generated.addAll(generateAll(table));
     }
@@ -134,56 +138,83 @@ public class CodeGeneratorService {
    */
   private List<String> generateAll(TableMetadata table) {
     ModuleGroupConfig config = properties.resolveEffectiveConfig();
-    List<String> generated = new ArrayList<>(14);
+    List<String> generated = new ArrayList<>(FILES_PER_TABLE);
     Map<String, String> rendered = renderAll(table);
     String entity = table.getEntityName();
     String moduleName = config.getModuleName();
 
     // 1. domain/entity
     if (config.isGenerateEntity()) {
-      generated.add(writeFile("entity.vm", resolvePath(moduleName, "domain/entity", entity + ".java"), rendered));
+      generated.add(writeFile("entity.vm", resolvePath(moduleName, "domain/entity", entity + ".java"),
+          rendered));
     }
-    // 2. domain/dto + vo + query
     if (config.isGenerateModel()) {
-      generated.add(writeFile("dto.vm", resolvePath(moduleName, "domain/dto", entity + "DTO.java"), rendered));
-      generated.add(writeFile("vo.vm", resolvePath(moduleName, "domain/vo", entity + "VO.java"), rendered));
-      generated.add(writeFile("query.vm", resolvePath(moduleName, "domain/query", entity + "PageQuery.java"), rendered));
+      addModelFiles(generated, config, entity, rendered);
     }
     // 3. domain/repository
     if (config.isGenerateRepository()) {
-      generated.add(writeFile("repository.vm", resolvePath(moduleName, "domain/repository", entity + "Repository.java"), rendered));
+      generated.add(writeFile("repository.vm",
+          resolvePath(moduleName, "domain/repository", entity + "Repository.java"), rendered));
     }
-    // 4. domain/converter（领域层转换器）
     if (config.isGenerateConverter()) {
-      generated.add(writeFile("converter.vm", resolvePath(moduleName, "domain/converter", capitalize(moduleName) + "Converter.java"), rendered));
+      addConverterFile(generated, config, moduleName, rendered);
     }
-    // 5. infra/mapper
     if (config.isGenerateMapper()) {
-      generated.add(writeFile("mapper.vm", resolvePath(moduleName, "infra/mapper", entity + "Mapper.java"), rendered));
+      generated.add(writeFile("mapper.vm", resolvePath(moduleName, "infra/mapper", entity + "Mapper.java"),
+          rendered));
     }
-    // 6. infra/repositoryImpl
     if (config.isGenerateRepository()) {
-      generated.add(writeFile("repositoryImpl.vm", resolvePath(moduleName, "infra/repository", entity + "RepositoryImpl.java"), rendered));
+      generated.add(writeFile("repositoryImpl.vm",
+          resolvePath(moduleName, "infra/repository", entity + "RepositoryImpl.java"), rendered));
     }
-    // 7. server/service
     if (config.isGenerateService()) {
-      generated.add(writeFile("service.vm", resolvePath(moduleName, "server/service", entity + "Service.java"), rendered));
-      generated.add(writeFile("serviceImpl.vm", resolvePath(moduleName, "server/service/impl", entity + "ServiceImpl.java"), rendered));
+      addServiceFiles(generated, config, entity, rendered);
     }
-    // 8. web/controller
     if (config.isGenerateController()) {
-      generated.add(writeFile("controller.vm", resolvePath(moduleName, "web/controller", entity + "Controller.java"), rendered));
+      generated.add(writeFile("controller.vm",
+          resolvePath(moduleName, "web/controller", entity + "Controller.java"), rendered));
     }
-    // 9. api/feign
     if (config.isGenerateFeign()) {
-      generated.add(writeFile("feign.vm", resolvePath(moduleName, "api", entity + "FeignClient.java"), rendered));
-      generated.add(writeFile("assembler.vm", resolvePath(moduleName, "api/assembler", entity + "Assembler.java"), rendered));
-      generated.add(writeFile("fallbackFactory.vm", resolvePath(moduleName, "api", entity + "ClientFallbackFactory.java"), rendered));
+      addFeignFiles(generated, config, entity, rendered);
     }
 
     generated.removeIf(path -> path == null || path.isBlank());
     log.info("表 {} 生成完成，共 {} 个文件", table.getTableName(), generated.size());
     return generated;
+  }
+
+  private void addModelFiles(List<String> generated, ModuleGroupConfig config, String entity,
+      Map<String, String> rendered) {
+    generated.add(writeFile("dto.vm", resolvePath(config.getModuleName(), "domain/dto", entity + "DTO.java"),
+        rendered));
+    generated.add(writeFile("vo.vm", resolvePath(config.getModuleName(), "domain/vo", entity + "VO.java"), rendered));
+    generated.add(writeFile("query.vm",
+        resolvePath(config.getModuleName(), "domain/query", entity + "PageQuery.java"), rendered));
+  }
+
+  private void addConverterFile(List<String> generated, ModuleGroupConfig config, String moduleName,
+      Map<String, String> rendered) {
+    String converterName = capitalize(moduleName) + "Converter.java";
+    generated.add(writeFile("converter.vm", resolvePath(moduleName, "domain/converter", converterName),
+        rendered));
+  }
+
+  private void addServiceFiles(List<String> generated, ModuleGroupConfig config, String entity,
+      Map<String, String> rendered) {
+    generated.add(writeFile("service.vm", resolvePath(config.getModuleName(), "server/service", entity + "Service.java"),
+        rendered));
+    generated.add(writeFile("serviceImpl.vm",
+        resolvePath(config.getModuleName(), "server/service/impl", entity + "ServiceImpl.java"), rendered));
+  }
+
+  private void addFeignFiles(List<String> generated, ModuleGroupConfig config, String entity,
+      Map<String, String> rendered) {
+    generated.add(writeFile("feign.vm", resolvePath(config.getModuleName(), "api", entity + "FeignClient.java"),
+        rendered));
+    generated.add(writeFile("assembler.vm",
+        resolvePath(config.getModuleName(), "api/assembler", entity + "Assembler.java"), rendered));
+    generated.add(writeFile("fallbackFactory.vm",
+        resolvePath(config.getModuleName(), "api", entity + "ClientFallbackFactory.java"), rendered));
   }
 
   /**
@@ -193,10 +224,8 @@ public class CodeGeneratorService {
    * @return 模板名 → 渲染后内容的映射
    */
   private Map<String, String> renderAll(TableMetadata table) {
-    ModuleGroupConfig config = properties.resolveEffectiveConfig();
     Map<String, Object> context = buildContext(table);
-    Map<String, String> result = new HashMap<>(14);
-
+    Map<String, String> result = new HashMap<>(FILES_CONTEXT_SIZE);
     for (String templateName : listTemplateNames()) {
       result.put(templateName, renderTemplate(templateName, context));
     }
@@ -213,7 +242,7 @@ public class CodeGeneratorService {
   private String renderTemplate(String templateName, Map<String, Object> context) {
     org.apache.velocity.Template template = velocityEngine.getTemplate(templateName, TEMPLATE_ENCODING);
     VelocityContext vc = new VelocityContext(context);
-    java.io.StringWriter writer = new java.io.StringWriter();
+    StringWriter writer = new StringWriter();
     template.merge(vc, writer);
     return writer.toString();
   }
@@ -227,33 +256,12 @@ public class CodeGeneratorService {
    * @return 实际写入的路径；若跳过则返回 null
    */
   private String writeFile(String templateName, String outputPath, Map<String, String> rendered) {
-    ModuleGroupConfig config = properties.resolveEffectiveConfig();
     Path path = Paths.get(outputPath);
 
-    // 检查文件是否已存在
     if (Files.exists(path)) {
-      String strategy = config.getFileConflictStrategy();
-      switch (strategy) {
-        case "skip" -> {
-          log.debug("文件已存在，跳过: {}", outputPath);
-          return null;
-        }
-        case "merge" -> {
-          // TODO: 实现智能合并（v2.0）
-          log.warn("merge 策略尚未实现，降级为 override: {}", outputPath);
-        }
-        case "prompt" -> {
-          // 在 CLI/REST 模式下默认 skip
-          log.info("文件已存在（使用 skip 策略）: {}", outputPath);
-          return null;
-        }
-        case "override" -> {
-          // 继续执行写入
-          break;
-        }
-        default -> {
-          log.warn("未知冲突策略: {}，降级为 override", strategy);
-        }
+      String strategy = properties.resolveEffectiveConfig().getFileConflictStrategy();
+      if (shouldSkip(strategy, outputPath)) {
+        return null;
       }
     }
 
@@ -267,9 +275,33 @@ public class CodeGeneratorService {
     return outputPath;
   }
 
+  private boolean shouldSkip(String strategy, String outputPath) {
+    switch (strategy) {
+      case "skip" -> {
+        log.debug("文件已存在，跳过: {}", outputPath);
+        return true;
+      }
+      case "merge" -> {
+        log.warn("merge 策略尚未实现，降级为 override: {}", outputPath);
+        return false;
+      }
+      case "prompt" -> {
+        log.info("文件已存在（使用 skip 策略）: {}", outputPath);
+        return true;
+      }
+      case "override" -> {
+        return false;
+      }
+      default -> {
+        log.warn("未知冲突策略: {}，降级为 override", strategy);
+        return false;
+      }
+    }
+  }
+
   private Map<String, Object> buildContext(TableMetadata table) {
     ModuleGroupConfig config = properties.resolveEffectiveConfig();
-    Map<String, Object> ctx = new HashMap<>(16);
+    Map<String, Object> ctx = new HashMap<>(CONTEXT_MAP_SIZE);
     ctx.put("table", table);
     ctx.put("module", config.getModuleName());
     ctx.put("package", config.getPackageName());
@@ -286,7 +318,6 @@ public class CodeGeneratorService {
 
   private String resolvePath(String moduleName, String layer, String fileName) {
     ModuleGroupConfig config = properties.resolveEffectiveConfig();
-    // 输出到目标模块的 src/main/java/com/njydsz/{module}/{layer}/{fileName}
     return config.getOutputDir()
         + "/ydsz-" + moduleName + "/src/main/java/com/njydsz/" + moduleName + "/" + layer + "/" + fileName;
   }

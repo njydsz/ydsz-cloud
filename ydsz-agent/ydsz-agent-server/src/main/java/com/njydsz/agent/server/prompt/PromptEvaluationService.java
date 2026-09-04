@@ -7,6 +7,8 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.stereotype.Service;
+
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;

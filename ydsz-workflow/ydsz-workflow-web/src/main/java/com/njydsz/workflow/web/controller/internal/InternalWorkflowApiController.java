@@ -16,7 +16,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 
 /**
  * 内部 API Controller（服务间 Feign 调用）
@@ -82,11 +82,11 @@ public class InternalWorkflowApiController {
       key = "'ydsz:workflow:internal-api:get-by-business:' + #businessType + ':' + #businessId",
       ttlSeconds = 5)
   @GetMapping("/engine/instance/byBusiness")
-  public YdszResponse<FlowInstanceVO> getByBusiness(
+  public YdszResponse<FlowInstanceViewDTO> getByBusiness(
       @RequestParam("businessType") String businessType,
       @RequestParam("businessId") String businessId) {
     return YdszResponse.success(
-        (FlowInstanceVO) workflowFacade.getByBusiness(businessType, businessId));
+        workflowFacade.getByBusiness(businessType, businessId));
   }
 
   /**

@@ -88,7 +88,7 @@ public class McpToolAdapter {
    */
   public List<ToolDefinition> discoverServerTools(AgentProperties.ServerInfo server) {
     // P1 修复：传输类型校验，避免配置 stdio 时被静默当作 SSE 处理
-    String transport = server.getTransport() != null ? server.getTransport().toLowerCase() : "sse";
+    String transport = server.getTransportType() != null ? server.getTransportType().toLowerCase() : "sse";
     if (!"sse".equals(transport)) {
       throw new IllegalArgumentException(
           "MCP 传输类型暂不支持: " + transport + "（当前仅支持 sse，stdio/streamable-http 待接入官方 SDK）");

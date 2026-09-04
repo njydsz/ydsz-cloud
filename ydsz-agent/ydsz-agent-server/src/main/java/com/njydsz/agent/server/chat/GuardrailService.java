@@ -5,6 +5,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.stereotype.Service;
+
+import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.server.metrics.AgentMetrics;

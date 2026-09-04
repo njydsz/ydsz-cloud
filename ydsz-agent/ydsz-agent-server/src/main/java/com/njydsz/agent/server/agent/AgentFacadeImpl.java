@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
@@ -173,15 +174,42 @@ public class AgentFacadeImpl implements AgentFacade {
   @Override
   public ChatResponse execute(AgentExecutionRequest request) {
     if (request.getAgentCode() != null && agentDefinitionService != null) {
-      AgentDefinition definition = agentDefinitionService.getByCode(request.getAgentCode());
-      if (definition != null) {
+      AgentDefinitionVO vo = agentDefinitionService.getByCode(request.getAgentCode());
+      if (vo != null) {
         log.debug("[AgentFacade] 路由到类型执行器: agentCode={}, type={}",
-            request.getAgentCode(), definition.getType());
+            request.getAgentCode(), vo.getAgentType());
+        AgentDefinition definition = toDomain(vo);
         return agentFactory.getExecutor(definition).execute(request);
       }
     }
     log.debug("[AgentFacade] 使用默认执行器: agentCode={}", request.getAgentCode());
     return agentFactory.getDefaultExecutor().execute(request);
+  }
+
+  /**
+   * 将 AgentDefinitionVO 转换为领域对象 AgentDefinition
+   */
+  private AgentDefinition toDomain(AgentDefinitionVO vo) {
+    AgentDefinition.Type type;
+    try {
+      type = AgentDefinition.Type.valueOf(vo.getAgentType());
+    } catch (Exception e) {
+      type = AgentDefinition.Type.REACT;
+    }
+    List<String> toolNames = vo.getToolNames() != null
+        ? List.of(vo.getToolNames().split(","))
+        : List.of();
+    return new AgentDefinition(
+        vo.getId(),
+        vo.getAgentCode(),
+        vo.getAgentName(),
+        type,
+        vo.getSystemPrompt(),
+        toolNames,
+        vo.getTemperature() != null ? vo.getTemperature() : 0.7,
+        vo.getMaxTokens() != null ? vo.getMaxTokens() : 2048,
+        10,
+        null);
   }
 
   /**

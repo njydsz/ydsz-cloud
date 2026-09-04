@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -425,7 +426,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     log.info("[SubProcess] 发布事件: event={} instance={} target={}", eventType, instanceId, targetId);
     if (eventPublisher != null) {
       try {
-        eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, targetId));
+        eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, null, null));
       } catch (Exception e) {
         log.warn("[SubProcess] 事件发布失败: err={}", e.getMessage());
       }
@@ -463,15 +464,54 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   }
 
   @Override
-  public List<FlowInstanceVO> listSubProcessTree(String parentInstanceId) {
+  @Transactional(readOnly = true)
+  public Map<String, Object> getSubProcessContext(String childInstanceId) {
+    if (childInstanceId == null) {
+      return new HashMap<>(0);
+    }
+    FlowInstanceVO child = instanceRepository.findById(childInstanceId).orElse(null);
+    if (child == null) {
+      log.warn("[SubProcess] 子实例不存在: id={}", childInstanceId);
+      return new HashMap<>(0);
+    }
+    String parentId = child.getParentInstanceId();
+    Map<String, Object> result = new HashMap<>();
+    // 先放入父流程变量
+    if (parentId != null) {
+      Map<String, Object> parentVars = instanceService.getVariables(parentId);
+      if (parentVars != null) {
+        result.putAll(parentVars);
+      }
+    }
+    // 再放入子流程变量（覆盖同名变量，表示子流程的输出）
+    Map<String, Object> childVars = instanceService.getVariables(childInstanceId);
+    if (childVars != null) {
+      result.putAll(childVars);
+    }
+    log.info(
+        "[SubProcess] 获取子流程上下文: childId={} parentId={} contextSize={}",
+        childInstanceId,
+        parentId,
+        result.size());
+    return result;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public List<Map<String, Object>> listSubProcessTree(String parentInstanceId) {
     if (parentInstanceId == null) {
       return List.of();
     }
-    List<FlowInstanceVO> tree = new ArrayList<>();
+    List<Map<String, Object>> tree = new ArrayList<>();
     List<FlowInstanceVO> children = instanceRepository.findChildren(parentInstanceId);
     for (FlowInstanceVO child : children) {
-      tree.add(child);
-      tree.addAll(listSubProcessTree(child.getId()));
+      Map<String, Object> node = new LinkedHashMap<>();
+      node.put("instanceId", child.getId());
+      node.put("instanceName", child.getTitle());
+      node.put("flowCode", child.getFlowCode());
+      node.put("status", child.getFlowStatus());
+      node.put("subProcesses", listSubProcessTree(child.getId()));
+      tree.add(node);
     }
     return tree;
   }

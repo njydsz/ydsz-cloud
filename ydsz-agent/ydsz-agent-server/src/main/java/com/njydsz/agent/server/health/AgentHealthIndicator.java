@@ -1,6 +1,7 @@
 package com.njydsz.agent.server.health;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;

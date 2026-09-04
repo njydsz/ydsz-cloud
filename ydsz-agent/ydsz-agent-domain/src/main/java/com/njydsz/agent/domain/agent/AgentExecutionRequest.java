@@ -11,11 +11,12 @@ import java.util.Objects;
  * <p>封装一次 Agent 调用所需的全部上下文：
  *
  * <ul>
- *   <li>用户输入消息
- *   <li>对话 ID（用于记忆检索）
- *   <li>系统提示词（覆盖 Agent 默认）
- *   <li>额外变量（Prompt 模板渲染）
- *   <li>最大迭代次数（ReAct 模式）
+ *   <li>agentCode — Agent 编码（用于按编码路由到特定 Agent 定义）</li>
+ *   <li>用户输入消息</li>
+ *   <li>对话 ID（用于记忆检索）</li>
+ *   <li>系统提示词（覆盖 Agent 默认）</li>
+ *   <li>额外变量（Prompt 模板渲染）</li>
+ *   <li>最大迭代次数（ReAct 模式）</li>
  * </ul>
  *
  * <p><b>线程安全</b>：全部字段 final 且集合经不可变封装，实例不可变、可安全跨线程传递。
@@ -24,6 +25,9 @@ import java.util.Objects;
  * @since 26.09.01
  */
 public final class AgentExecutionRequest {
+
+  /** Agent 编码，用于按编码路由到特定 Agent 定义；为 {@code null} 时使用默认执行器 */
+  private final String agentCode;
 
   /** 对话 ID，用于从记忆组件回溯历史消息；为 {@code null} 时按单轮无记忆会话处理 */
   private final String conversationId;
@@ -46,6 +50,7 @@ public final class AgentExecutionRequest {
   /**
    * 全参构造。
    *
+   * @param agentCode Agent 编码
    * @param conversationId 对话 ID（null 时按单轮无记忆会话处理）
    * @param userInput 本轮用户输入原文（不可为 null）
    * @param systemPrompt 系统提示词（null 时沿用 Agent 定义）
@@ -54,12 +59,14 @@ public final class AgentExecutionRequest {
    * @param enabledTools 工具名白名单（null 时表示不限制）
    */
   public AgentExecutionRequest(
+      String agentCode,
       String conversationId,
       String userInput,
       String systemPrompt,
       Map<String, Object> variables,
       int maxIterations,
       List<String> enabledTools) {
+    this.agentCode = agentCode;
     this.conversationId = conversationId;
     this.userInput = Objects.requireNonNull(userInput, "userInput 不能为 null");
     this.systemPrompt = systemPrompt;
@@ -67,6 +74,15 @@ public final class AgentExecutionRequest {
     // 未指定迭代上限时默认 10 轮，作为 ReAct 循环的兜底上限，避免工具调用死循环
     this.maxIterations = maxIterations > 0 ? maxIterations : 10;
     this.enabledTools = enabledTools != null ? List.copyOf(enabledTools) : Collections.emptyList();
+  }
+
+  /**
+   * 获取 Agent 编码。
+   *
+   * @return Agent 编码（可为 null）
+   */
+  public String getAgentCode() {
+    return agentCode;
   }
 
   /**
@@ -140,12 +156,24 @@ public final class AgentExecutionRequest {
    * <p>所有 setter 均返回自身以支持链式调用；{@link #build()} 时会以「构造兜底 + 不可变拷贝」 的方式固化集合与默认值，确保产出的请求实例不可变、可安全跨线程传递。
    */
   public static final class Builder {
+    private String agentCode;
     private String conversationId;
     private String userInput;
     private String systemPrompt;
     private Map<String, Object> variables;
     private int maxIterations = 10; // Builder 默认值，与构造兜底保持一致，避免未设值时陷入无限迭代
     private List<String> enabledTools;
+
+    /**
+     * 设置 Agent 编码。
+     *
+     * @param agentCode Agent 编码
+     * @return 当前 Builder
+     */
+    public Builder agentCode(String agentCode) {
+      this.agentCode = agentCode;
+      return this;
+    }
 
     /**
      * 绑定对话 ID 以启用历史记忆检索。
@@ -170,7 +198,7 @@ public final class AgentExecutionRequest {
     }
 
     /**
-     * 覆盖 Agent 默认系统提示词，仅对本次执行生效。
+     * 设置系统提示词。
      *
      * @param systemPrompt 系统提示词
      * @return 当前 Builder
@@ -183,7 +211,7 @@ public final class AgentExecutionRequest {
     /**
      * 设置 Prompt 模板渲染变量。
      *
-     * @param variables 模板变量（null 时按空 Map 处理）
+     * @param variables Prompt 模板渲染变量
      * @return 当前 Builder
      */
     public Builder variables(Map<String, Object> variables) {
@@ -192,9 +220,9 @@ public final class AgentExecutionRequest {
     }
 
     /**
-     * 设置 ReAct 循环迭代上限。
+     * 设置 ReAct 循环最大迭代轮次。
      *
-     * @param maxIterations 迭代上限（非正数时回落为默认 10）
+     * @param maxIterations 最大迭代轮次
      * @return 当前 Builder
      */
     public Builder maxIterations(int maxIterations) {
@@ -203,9 +231,9 @@ public final class AgentExecutionRequest {
     }
 
     /**
-     * 设置本次可调用的工具白名单。
+     * 设置允许调用的工具名白名单。
      *
-     * @param enabledTools 工具白名单（null 或空表示不限制）
+     * @param enabledTools 工具名白名单
      * @return 当前 Builder
      */
     public Builder enabledTools(List<String> enabledTools) {
@@ -214,16 +242,19 @@ public final class AgentExecutionRequest {
     }
 
     /**
-     * 依据当前构建状态产出 {@link AgentExecutionRequest}。
+     * 构建 {@link AgentExecutionRequest} 实例。
      *
-     * <p>集合字段（variables / enabledTools）在此处进行防御性拷贝，后续修改 Builder 持有的引用不会影响已构建的请求对象。
-     *
-     * @return 不可变的 {@link AgentExecutionRequest} 实例
-     * @throws NullPointerException 当 {@link #userInput(String)} 未设置时抛出
+     * @return 新的不可变请求实例
      */
     public AgentExecutionRequest build() {
       return new AgentExecutionRequest(
-          conversationId, userInput, systemPrompt, variables, maxIterations, enabledTools);
+          agentCode,
+          conversationId,
+          userInput,
+          systemPrompt,
+          variables,
+          maxIterations,
+          enabledTools);
     }
   }
 }

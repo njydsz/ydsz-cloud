@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.infra.repository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -284,7 +285,55 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     if (folderPath == null || folderPath.isEmpty()) {
       return new ArrayList<>(0);
     }
-    List<FileNode> list = fileNodeMapper.selectDescendantsByPage(folderPath, offset, limit);
+    List<FileNode> list =
+        fileNodeMapper.selectDescendantsByPage(
+            folderPath, offset, limit, TenantContextHolder.getTenantId());
     return list == null ? Collections.emptyList() : converter.fileNodeListToVO(list);
+  }
+
+  @Override
+  public int countDescendants(String folderPath) {
+    if (folderPath == null || folderPath.isEmpty()) {
+      return 0;
+    }
+    return fileNodeMapper.countDescendantsByPath(folderPath, TenantContextHolder.getTenantId());
+  }
+
+  @Override
+  public List<FileNodeVO> findAllDescendants(String folderId) {
+    if (folderId == null || folderId.isEmpty()) {
+      return new ArrayList<>(0);
+    }
+    FileNode folder = fileNodeMapper.selectById(folderId);
+    if (folder == null || folder.getPath() == null) {
+      return new ArrayList<>(0);
+    }
+    return converter.fileNodeListToVO(
+        fileNodeMapper.selectAllDescendantsByPath(folder.getPath(), TenantContextHolder.getTenantId()));
+  }
+
+  @Override
+  public List<FileNodeVO> findColdCandidates(LocalDateTime threshold, String excludeSuffixes, int limit) {
+    List<String> excludeSuffixesList = null;
+    if (excludeSuffixes != null && !excludeSuffixes.isEmpty()) {
+      excludeSuffixesList = List.of(excludeSuffixes.split(","));
+    }
+    return converter.fileNodeListToVO(
+        fileNodeMapper.selectColdCandidates(threshold, excludeSuffixes, excludeSuffixesList, limit));
+  }
+
+  @Override
+  public long countColdNodes(LocalDateTime threshold) {
+    return fileNodeMapper.countColdNodes(threshold);
+  }
+
+  @Override
+  public PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit) {
+    Page<FileNode> pageParam = new Page<>(offset / limit + 1, limit);
+    IPage<FileNode> result = fileNodeMapper.selectAllWithPage(pageParam);
+    List<FileNodeVO> vos = converter.fileNodeListToVO(result.getRecords());
+    Page<FileNodeVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+    voPage.setRecords(vos);
+    return PageResponses.success(voPage);
   }
 }

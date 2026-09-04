@@ -1,6 +1,9 @@
 package com.njydsz.generator.service;
 
+import java.math.BigDecimal;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,43 +23,56 @@ import com.njydsz.generator.config.DatabaseDialect;
  */
 public final class DbTypeConverter {
 
-  /** jdbcType -> [shortType, fullType]（通用映射，适用于所有数据库） */
-  private static final Map<Integer, String[]> TYPE_MAP = new HashMap<>(32);
+  /** jdbcType -> DialectType（通用映射，适用于所有数据库） */
+  private static final Map<Integer, DatabaseDialect.DialectType> TYPE_MAP = new HashMap<>(32);
 
   /** 当前激活的数据库方言 */
   private static volatile DatabaseDialect currentDialect = DatabaseDialect.POSTGRESQL;
 
   static {
     // String 类
-    TYPE_MAP.put(Types.VARCHAR, new String[]{"String", "java.lang.String"});
-    TYPE_MAP.put(Types.CHAR, new String[]{"String", "java.lang.String"});
-    TYPE_MAP.put(Types.LONGVARCHAR, new String[]{"String", "java.lang.String"});
-    TYPE_MAP.put(Types.NVARCHAR, new String[]{"String", "java.lang.String"});
-    TYPE_MAP.put(Types.NCHAR, new String[]{"String", "java.lang.String"});
-    TYPE_MAP.put(Types.LONGNVARCHAR, new String[]{"String", "java.lang.String"});
-    TYPE_MAP.put(Types.CLOB, new String[]{"String", "java.lang.String"});
-    TYPE_MAP.put(Types.NCLOB, new String[]{"String", "java.lang.String"});
-    TYPE_MAP.put(Types.SQLXML, new String[]{"String", "java.lang.String"});
+    TYPE_MAP.put(Types.VARCHAR, dt(String.class));
+    TYPE_MAP.put(Types.CHAR, dt(String.class));
+    TYPE_MAP.put(Types.LONGVARCHAR, dt(String.class));
+    TYPE_MAP.put(Types.NVARCHAR, dt(String.class));
+    TYPE_MAP.put(Types.NCHAR, dt(String.class));
+    TYPE_MAP.put(Types.LONGNVARCHAR, dt(String.class));
+    TYPE_MAP.put(Types.CLOB, dt(String.class));
+    TYPE_MAP.put(Types.NCLOB, dt(String.class));
+    TYPE_MAP.put(Types.SQLXML, dt(String.class));
     // Integer / Long 类
-    TYPE_MAP.put(Types.INTEGER, new String[]{"Integer", "java.lang.Integer"});
-    TYPE_MAP.put(Types.SMALLINT, new String[]{"Integer", "java.lang.Integer"});
-    TYPE_MAP.put(Types.TINYINT, new String[]{"Integer", "java.lang.Integer"});
-    TYPE_MAP.put(Types.BIGINT, new String[]{"Long", "java.lang.Long"});
+    TYPE_MAP.put(Types.INTEGER, dt(Integer.class));
+    TYPE_MAP.put(Types.SMALLINT, dt(Integer.class));
+    TYPE_MAP.put(Types.TINYINT, dt(Integer.class));
+    TYPE_MAP.put(Types.BIGINT, dt(Long.class));
     // Decimal 类（金融计算用 BigDecimal）
-    TYPE_MAP.put(Types.NUMERIC, new String[]{"BigDecimal", "java.math.BigDecimal"});
-    TYPE_MAP.put(Types.DECIMAL, new String[]{"BigDecimal", "java.math.BigDecimal"});
+    TYPE_MAP.put(Types.NUMERIC, dt(BigDecimal.class));
+    TYPE_MAP.put(Types.DECIMAL, dt(BigDecimal.class));
     // Boolean 类
-    TYPE_MAP.put(Types.BOOLEAN, new String[]{"Boolean", "java.lang.Boolean"});
-    TYPE_MAP.put(Types.BIT, new String[]{"Boolean", "java.lang.Boolean"});
+    TYPE_MAP.put(Types.BOOLEAN, dt(Boolean.class));
+    TYPE_MAP.put(Types.BIT, dt(Boolean.class));
     // Date 类
-    TYPE_MAP.put(Types.TIMESTAMP, new String[]{"LocalDateTime", "java.time.LocalDateTime"});
-    TYPE_MAP.put(Types.TIMESTAMP_WITH_TIMEZONE, new String[]{"LocalDateTime", "java.time.LocalDateTime"});
-    TYPE_MAP.put(Types.DATE, new String[]{"LocalDate", "java.time.LocalDate"});
-    TYPE_MAP.put(Types.TIME, new String[]{"LocalDateTime", "java.time.LocalDateTime"});
+    TYPE_MAP.put(Types.TIMESTAMP, dt(LocalDateTime.class));
+    TYPE_MAP.put(Types.TIMESTAMP_WITH_TIMEZONE, dt(LocalDateTime.class));
+    TYPE_MAP.put(Types.DATE, dt(LocalDate.class));
+    TYPE_MAP.put(Types.TIME, dt(LocalDateTime.class));
   }
 
   private DbTypeConverter() {
     throw new UnsupportedOperationException("Utility class");
+  }
+
+  /**
+   * 根据 Class 对象创建 DialectType 实例。
+   *
+   * @param clazz - Java 类型
+   * @return DialectType 描述
+   */
+  private static DatabaseDialect.DialectType dt(Class<?> clazz) {
+    return new DatabaseDialect.DialectType(
+        clazz.getSimpleName(),
+        clazz.getName()
+    );
   }
 
   /**
@@ -86,8 +102,8 @@ public final class DbTypeConverter {
    * @return Java 短类型名
    */
   public static String toJavaShortType(int jdbcType) {
-    String[] pair = TYPE_MAP.get(jdbcType);
-    return pair != null ? pair[0] : "String";
+    DatabaseDialect.DialectType type = TYPE_MAP.get(jdbcType);
+    return type != null ? type.getShortName() : "String";
   }
 
   /**
@@ -97,8 +113,8 @@ public final class DbTypeConverter {
    * @return Java 全限定类型名
    */
   public static String toJavaType(int jdbcType) {
-    String[] pair = TYPE_MAP.get(jdbcType);
-    return pair != null ? pair[1] : "java.lang.String";
+    DatabaseDialect.DialectType type = TYPE_MAP.get(jdbcType);
+    return type != null ? type.getFullName() : String.class.getName();
   }
 
   /**
@@ -110,7 +126,7 @@ public final class DbTypeConverter {
    * @return Java 短类型名
    */
   public static String toJavaShortTypeByName(String jdbcTypeName) {
-    return currentDialect.resolveJavaType(jdbcTypeName)[0];
+    return currentDialect.resolveShortType(jdbcTypeName);
   }
 
   /**
@@ -120,7 +136,7 @@ public final class DbTypeConverter {
    * @return Java 全限定类型名
    */
   public static String toJavaTypeByName(String jdbcTypeName) {
-    return currentDialect.resolveJavaType(jdbcTypeName)[1];
+    return currentDialect.resolveFullType(jdbcTypeName);
   }
 
   /**

@@ -9,6 +9,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
@@ -39,6 +43,7 @@ import com.njydsz.agent.domain.vo.PromptVersionVO;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Slf4j
 @Service
 public class PromptManagementService {
 

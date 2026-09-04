@@ -4,6 +4,8 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.stereotype.Service;
+
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;

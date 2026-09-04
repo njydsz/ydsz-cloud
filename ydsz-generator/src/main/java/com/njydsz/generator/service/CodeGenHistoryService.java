@@ -31,6 +31,7 @@ public class CodeGenHistoryService {
   private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private static final DateTimeFormatter TIMESTAMP_FMT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
   private static final String HISTORY_DIR = System.getProperty("user.home") + "/.ydsz-generator/history";
+  private static final int PREVIEW_MAX_LENGTH = 200;
 
   /**
    * 记录一次代码生成操作。
@@ -113,22 +114,47 @@ public class CodeGenHistoryService {
     int newIdx = 0;
 
     while (oldIdx < oldLines.length || newIdx < newLines.length) {
-      if (oldIdx < oldLines.length && newIdx < newLines.length
+      if (isBothInRange(oldIdx, oldLines, newIdx, newLines)
           && oldLines[oldIdx].equals(newLines[newIdx])) {
-        diff.append(" ").append(oldLines[oldIdx]).append("\n");
+        appendUnchanged(diff, oldLines[oldIdx]);
         oldIdx++;
         newIdx++;
-      } else if (oldIdx < oldLines.length && (newIdx >= newLines.length
-          || !contains(newLines, oldLines[oldIdx], newIdx))) {
-        diff.append("-").append(oldLines[oldIdx]).append("\n");
+      } else if (shouldDeleteCurrentLine(oldIdx, oldLines, newIdx, newLines)) {
+        appendRemoved(diff, oldLines[oldIdx]);
         oldIdx++;
       } else if (newIdx < newLines.length) {
-        diff.append("+").append(newLines[newIdx]).append("\n");
+        appendAdded(diff, newLines[newIdx]);
         newIdx++;
       }
     }
 
     return diff.toString();
+  }
+
+  private boolean isBothInRange(int oldIdx, String[] oldLines, int newIdx, String[] newLines) {
+    return oldIdx < oldLines.length && newIdx < newLines.length;
+  }
+
+  private boolean shouldDeleteCurrentLine(int oldIdx, String[] oldLines, int newIdx, String[] newLines) {
+    if (oldIdx >= oldLines.length) {
+      return false;
+    }
+    if (newIdx >= newLines.length) {
+      return true;
+    }
+    return !contains(newLines, oldLines[oldIdx], newIdx);
+  }
+
+  private void appendUnchanged(StringBuilder diff, String line) {
+    diff.append(" ").append(line).append("\n");
+  }
+
+  private void appendRemoved(StringBuilder diff, String line) {
+    diff.append("-").append(line).append("\n");
+  }
+
+  private void appendAdded(StringBuilder diff, String line) {
+    diff.append("+").append(line).append("\n");
   }
 
   private String buildHistoryEntry(String moduleName, String tableName,
@@ -151,7 +177,7 @@ public class CodeGenHistoryService {
       String content = Files.readString(p, StandardCharsets.UTF_8);
       String fileName = p.getFileName().toString();
       long size = Files.size(p);
-      return new HistoryEntry(fileName, size, content.substring(0, Math.min(200, content.length())));
+      return new HistoryEntry(fileName, size, content.substring(0, Math.min(PREVIEW_MAX_LENGTH, content.length())));
     } catch (IOException e) {
       return new HistoryEntry(p.getFileName().toString(), 0, "");
     }

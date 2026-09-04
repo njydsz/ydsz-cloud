@@ -15,6 +15,7 @@ public final class DocumentTemplate {
     private final String templateName;
     private final String title;
     private final String author;
+    private final String system;
     private final String headerText;
     private final String footerText;
     private final Map<String, Object> variables;
@@ -23,6 +24,7 @@ public final class DocumentTemplate {
         this.templateName = builder.templateName;
         this.title = builder.title;
         this.author = builder.author;
+        this.system = builder.system;
         this.headerText = builder.headerText;
         this.footerText = builder.footerText;
         this.variables = builder.variables != null ? Map.copyOf(builder.variables) : Map.of();
@@ -44,6 +46,10 @@ public final class DocumentTemplate {
         return author;
     }
 
+    public String getSystem() {
+        return system;
+    }
+
     public String getHeaderText() {
         return headerText;
     }
@@ -60,6 +66,7 @@ public final class DocumentTemplate {
         private String templateName;
         private String title;
         private String author;
+        private String system;
         private String headerText;
         private String footerText;
         private Map<String, Object> variables;
@@ -76,6 +83,11 @@ public final class DocumentTemplate {
 
         public Builder author(String author) {
             this.author = author;
+            return this;
+        }
+
+        public Builder system(String system) {
+            this.system = system;
             return this;
         }
 

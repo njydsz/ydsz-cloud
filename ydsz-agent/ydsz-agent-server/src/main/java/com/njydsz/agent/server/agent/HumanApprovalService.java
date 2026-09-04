@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +48,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * @since 26.09.01
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class HumanApprovalService {
 
