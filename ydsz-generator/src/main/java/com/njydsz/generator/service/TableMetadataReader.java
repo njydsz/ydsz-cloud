@@ -13,7 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.generator.config.GeneratorProperties;
+import com.njydsz.generator.config.GeneratorProperties.ModuleGroupConfig;
 import com.njydsz.generator.model.ColumnMetadata;
+import com.njydsz.generator.model.EnumDefinition;
 import com.njydsz.generator.model.TableMetadata;
 
 /**
@@ -91,7 +93,13 @@ public class TableMetadataReader {
       throw new RuntimeException("读取表 " + tableName + " 元数据失败", e);
     }
 
-    log.info("读取表 {} 元数据: {} 列, {} 业务字段", tableName, allColumns.size(), bizColumns.size());
+    // 5. 解析枚举定义
+    List<EnumDefinition> enums = parseEnumDefinitions(bizColumns);
+    metadata.setEnumDefinitions(enums);
+    metadata.setHasEnums(!enums.isEmpty());
+
+    log.info("读取表 {} 元数据: {} 列, {} 业务字段, {} 枚举类型",
+        tableName, allColumns.size(), bizColumns.size(), enums.size());
     return metadata;
   }
 
@@ -240,5 +248,106 @@ public class TableMetadataReader {
       return str;
     }
     return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+  }
+
+  /**
+   * 从列元数据中解析枚举定义。
+   *
+   * <p>解析策略：若列的 enumValues 非空且包含 `{@code 值=标签;值=标签}` 格式的值，
+   * 则生成对应的 {@link EnumDefinition}。
+   *
+   * @param columns - 列元数据列表
+   * @return 枚举定义列表
+   */
+  private static List<EnumDefinition> parseEnumDefinitions(List<ColumnMetadata> columns) {
+    List<EnumDefinition> enums = new ArrayList<>(4);
+    for (ColumnMetadata col : columns) {
+      String enumRaw = col.getEnumValues();
+      if (enumRaw == null || enumRaw.isBlank()) {
+        continue;
+      }
+      String[] pairs = enumRaw.split("[;；]");
+      List<EnumDefinition.EnumItem> items = new ArrayList<>(pairs.length);
+      for (String pair : pairs) {
+        String[] kv = pair.split("=");
+        if (kv.length == 2) {
+          try {
+            int value = Integer.parseInt(kv[0].trim());
+            EnumDefinition.EnumItem item = EnumDefinition.EnumItem.builder()
+                .code(toEnumConstantName(kv[1].trim()))
+                .value(value)
+                .label(kv[1].trim())
+                .build();
+            items.add(item);
+          } catch (NumberFormatException e) {
+            // 非数值型枚举值，跳过
+            log.warn("解析枚举值失败（非数值）: {} = {}", kv[0], kv[1]);
+          }
+        }
+      }
+      if (!items.isEmpty()) {
+        EnumDefinition def = EnumDefinition.builder()
+            .enumClassName(toEnumClassName(col.getJavaFieldName()))
+            .fieldName(col.getColumnName())
+            .description(col.getComment().replaceAll(":.*", "").trim())
+            .items(items)
+            .valueType("Integer")
+            .build();
+        enums.add(def);
+      }
+    }
+    return enums;
+  }
+
+  /**
+   * 将字段名转为枚举类名（如 {@code tenantStatus} → {@code TenantStatusEnum}）。
+   *
+   * @param fieldName - Java 字段名
+   * @return 枚举类名
+   */
+  private static String toEnumClassName(String fieldName) {
+    return camelToPascal(fieldName) + "Enum";
+  }
+
+  /**
+   * 转为枚举常量名（如 {@code 启用} → {@code ENABLED}，{@code 禁用} → {@code DISABLED}）。
+   *
+   * <p>实际项目中常量名通常为英文，此处提供简化的音译映射；若注释已为英文则直接使用。
+   *
+   * @param label - 中文标签
+   * @return 枚举常量名
+   */
+  private static String toEnumConstantName(String label) {
+    // 若标签本身已为英文单词，直接大写
+    if (label.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
+      return label.toUpperCase();
+    }
+    // 预定义映射表（可扩展）
+    return switch (label) {
+      case "启用" -> "ENABLED";
+      case "禁用" -> "DISABLED";
+      case "是" -> "YES";
+      case "否" -> "NO";
+      case "成功" -> "SUCCESS";
+      case "失败" -> "FAILED";
+      case "待处理" -> "PENDING";
+      case "处理中" -> "PROCESSING";
+      case "已完成" -> "COMPLETED";
+      case "已取消" -> "CANCELLED";
+      default -> label.replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fa5]", "_").toUpperCase();
+    };
+  }
+
+  /**
+   * 驼峰命名转 PascalCase。
+   *
+   * @param camel - 驼峰字符串
+   * @return PascalCase 字符串
+   */
+  private static String camelToPascal(String camel) {
+    if (camel == null || camel.isEmpty()) {
+      return camel;
+    }
+    return Character.toUpperCase(camel.charAt(0)) + camel.substring(1);
   }
 }

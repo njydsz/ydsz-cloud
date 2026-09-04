@@ -65,4 +65,27 @@ public class TableMetadata {
 
   /** 权限前缀（如 {@code sys:tenant}） */
   private String permissionPrefix;
+
+  /** Mapper 接口名（如 {@code TenantMapper}） */
+  private String mapperName;
+
+  /** FeignClient 接口名（如 {@code TenantFeignClient}） */
+  private String feignClientName;
+
+  /** 枚举定义列表（从字段注释中解析） */
+  private java.util.List<com.njydsz.generator.model.EnumDefinition> enumDefinitions;
+
+  /** 是否包含枚举字段（用于模板条件渲染） */
+  private boolean hasEnums;
+
+  /** 包路径段：domain */
+  private String domainPackage;
+  /** 包路径段：infra */
+  private String infraPackage;
+  /** 包路径段：server */
+  private String serverPackage;
+  /** 包路径段：web */
+  private String webPackage;
+  /** 包路径段：api */
+  private String apiPackage;
 }

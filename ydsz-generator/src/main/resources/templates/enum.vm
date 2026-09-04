@@ -1,0 +1,59 @@
+#foreach($enum in $table.enumDefinitions)
+package ${package}.domain.enums;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+/**
+ * ${enum.description}
+ *
+ * <p>对应字段 ${enum.fieldName} 的枚举值定义。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Getter
+@AllArgsConstructor
+public enum ${enum.enumClassName} {
+
+#foreach($item in $enum.items)
+  /** ${item.label} */
+  ${item.code}(${item.value}, "${item.label}")#if($foreach.hasNext),
+#end
+  ;
+
+  /** 枚举值 */
+  private final Integer value;
+
+  /** 中文描述 */
+  private final String label;
+
+  /**
+   * 根据 value 查找枚举。
+   *
+   * @param value 枚举值
+   * @return 匹配的枚举，未找到返回 {@code Optional.empty()}
+   */
+  public static Optional<${enum.enumClassName}> fromValue(Integer value) {
+    if (value == null) {
+      return Optional.empty();
+    }
+    return Arrays.stream(values())
+        .filter(e -> value.equals(e.getValue()))
+        .findFirst();
+  }
+
+  /**
+   * 根据 value 获取标签。
+   *
+   * @param value 枚举值
+   * @return 中文描述，未找到返回 {@code "-"}
+   */
+  public static String getLabelByValue(Integer value) {
+    return fromValue(value).map(${enum.enumClassName}::getLabel).orElse("-");
+  }
+}
+#end

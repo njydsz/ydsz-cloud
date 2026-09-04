@@ -126,4 +126,13 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
   protected Map<String, Object> parseVariables(String variable) {
     if (!StringUtils.hasText(variable)) {
       return new HashMap<>(0);
+    }
+    try {
+      Map<String, Object> map = YdszJson.parseMap(variable);
+      return map != null ? map : new HashMap<>(0);
+    } catch (Exception e) {
+      log.warn("[Flow] 解析变量失败: err={}", e.getMessage());
+      return new HashMap<>(0);
+    }
+  }
 }

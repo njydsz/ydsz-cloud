@@ -130,4 +130,45 @@ public class FlowAssigneeDedupService {
   public Set<String> getApprovedUserIds(String instanceId) {
     if (instanceId == null) {
       return new HashSet<>(0);
+    }
+    try {
+      List<String> completedAssignees = hisTaskRepository.selectCompletedAssigneeIds(instanceId);
+      if (completedAssignees == null || completedAssignees.isEmpty()) {
+        return new HashSet<>(0);
+      }
+      return new HashSet<>(completedAssignees);
+    } catch (Exception e) {
+      log.warn("[FlowDedup] P2-7 获取已审批人失败: instanceId={} err={}", instanceId, e.getMessage());
+      return new HashSet<>(0);
+    }
+  }
+
+  // ============================== 列表过滤 ==============================
+
+  /**
+   * 从候选用户列表中过滤掉已审批过的用户。
+   *
+   * <p>推送给会签 / 普通节点的「净候选列表」，避免同一用户重复审批。
+   *
+   * @param instanceId 流程实例 ID
+   * @param candidates 候选用户 ID 列表
+   * @return 过滤后列表（不包含已审批用户）
+   */
+  @Transactional(readOnly = true)
+  public Set<String> filterApprovedUsers(String instanceId, List<String> candidates) {
+    if (candidates == null || candidates.isEmpty()) {
+      return new HashSet<>(0);
+    }
+    Set<String> approved = getApprovedUserIds(instanceId);
+    if (approved.isEmpty()) {
+      return new HashSet<>(candidates);
+    }
+    Set<String> filtered = new HashSet<>(candidates.size());
+    for (String candidate : candidates) {
+      if (candidate != null && !approved.contains(candidate)) {
+        filtered.add(candidate);
+      }
+    }
+    return filtered;
+  }
 }

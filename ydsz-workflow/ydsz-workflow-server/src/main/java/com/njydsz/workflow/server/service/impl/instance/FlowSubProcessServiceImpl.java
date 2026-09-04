@@ -342,6 +342,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     dto.setInitiatorId(parentInstance.getInitiatorId());
     dto.setInitiatorName(parentInstance.getInitiatorName());
     dto.setTenantId(parentInstance.getTenantId());
-    dto.setVariables(variables == null ? new HashMap<>(16) 
-}
+    dto.setVariables(variables == null ? new HashMap<>(16) : variables);
+    return dto;
+  }
 }
