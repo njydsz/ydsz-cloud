@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository.event;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.cronjob.domain.event.JobEvent;
 
 /**
  * 事件存储 Repository 接口（P3-1 Event Sourcing）。
