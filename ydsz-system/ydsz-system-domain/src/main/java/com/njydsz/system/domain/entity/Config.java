@@ -43,7 +43,6 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
  * @author ydsz-team
  * @since 26.09.01
  * @see com.njydsz.system.domain.enums.ConfigValueType 值类型枚举
- * @see com.njydsz.system.server.service.ConfigService 配置业务逻辑
  */
 @Data
 @SuperBuilder

@@ -1,5 +1,6 @@
 package com.njydsz.literule.domain.dto;
 
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,7 +33,7 @@ import com.njydsz.literule.domain.Rule;
  * <p><b>评级映射（grades）</b>：可选，按分数区间映射自定义评级（如 A/B/C/D）， 若配置则覆盖 redThreshold/yellowThreshold 的三级映射。
  *
  * <p>持久化于 {@code ydsz_rule_scorecard}（见 V048），由 {@code ScorecardConfigProvider} SPI 加载， 通过 {@link
- * com.njydsz.literule.server.impl.ScorecardRule#from(ScorecardDefinitionDTO,
+ * ScorecardRule#from(ScorecardDefinitionDTO,
  * com.njydsz.literule.domain.expression.ExpressionEngine)} 转换为可执行规则。
  *
  * <p>JSON 示例（复杂评分卡）：

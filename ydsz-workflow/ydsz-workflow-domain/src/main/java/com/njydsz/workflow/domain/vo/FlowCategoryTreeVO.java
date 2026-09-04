@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.vo;
 
+import com.njydsz.workflow.domain.service.impl;
+
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,7 +10,7 @@ import lombok.Data;
 /**
  * 流程分类树形 VO，用于前端设计器左侧导航树渲染。
  *
- * <p>由 {@link com.njydsz.workflow.server.service.impl.FlowCategoryServiceImpl#tree(String)} 使用 {@link
+ * <p>由 {@link impl.FlowCategoryServiceImpl#tree(String)} 使用 {@link
  * com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 构建，自动填充 {@code level}/{@code path} 元数据。
  *
  * <p>与 {@link FlowCategoryVO} 的区别：

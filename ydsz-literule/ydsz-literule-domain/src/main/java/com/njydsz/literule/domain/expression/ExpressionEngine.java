@@ -1,12 +1,14 @@
 package com.njydsz.literule.domain.expression;
 
+import com.njydsz.literule.domain.engine.liteexpr;
+
 import java.util.List;
 
 
 /**
  * 表达式求值器接口
  *
- * <p>抽象表达式引擎，默认提供 {@link com.njydsz.literule.server.engine.liteexpr.LiteExprEngine}。
+ * <p>抽象表达式引擎，默认提供 {@link liteexpr.LiteExprEngine}。
  *
  * @since 26.09.01
  * @author ydsz-team
@@ -48,7 +50,7 @@ public interface ExpressionEngine {
    * <p>与 {@link #validate(String)} 不同，本方法返回结构化的错误信息， 包含错误类型、错误位置、错误描述，供前端表达式编辑器渲染。
    *
    * <p>默认实现仅调用 {@link #validate(String)} 返回简单结果； 具体实现类（如 {@link
-   * com.njydsz.literule.server.engine.liteexpr.LiteExprEngine}）应 override 本方法提供详细错误信息。
+   * liteexpr.LiteExprEngine}）应 override 本方法提供详细错误信息。
    *
    * @param expression 表达式字符串
    * @return 校验结果

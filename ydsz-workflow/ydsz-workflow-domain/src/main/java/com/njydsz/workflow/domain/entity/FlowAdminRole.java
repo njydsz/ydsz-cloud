@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.guard.FlowAdminGuard;
+
 import java.io.Serial;
 import java.time.LocalDateTime;
 
@@ -43,7 +45,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.server.guard.FlowAdminGuard 流程管理员权限校验
+ * @see FlowAdminGuard 流程管理员权限校验
  * @see com.njydsz.workflow.domain.enums.FlowRoleCode 流程角色编码枚举
  */
 @Data

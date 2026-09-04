@@ -52,6 +52,13 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+        <!-- MapStruct（LiteruleWebConverter 使用 @Mapper 注解；
+             该转换器依赖 server 层类型（ApprovalRecord/RuleVersion 等），无法移至 domain 层，
+             故 server 层局部声明 MapStruct 依赖作为 YDIZ-DDD-004 的特例） -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>

@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.system.domain.entity.DictType;
+
 /**
  * 字典类型 VO（视图对象）
  *
@@ -31,7 +33,7 @@ import lombok.experimental.SuperBuilder;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.system.infra.entity.DictType 字典类型实体
+ * @see DictType 字典类型实体
  * @see DictItemVO 字典项 VO
  */
 @Data

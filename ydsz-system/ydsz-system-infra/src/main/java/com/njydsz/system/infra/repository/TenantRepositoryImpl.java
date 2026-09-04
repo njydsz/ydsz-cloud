@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.TenantDTO;
+import com.njydsz.system.domain.entity.Tenant;
 import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.repository.TenantRepository;
-import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.entity.Tenant;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.infra.mapper.TenantMapper;
 

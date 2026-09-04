@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.domain.converter;
 
+import com.njydsz.userinfo.domain.entity.OAuth2Application;
+
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -41,7 +43,7 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "updatedAt", source = "updatedAt")
   @Mapping(target = "createdBy", source = "createdBy")
-  com.njydsz.userinfo.domain.oauth2.OAuth2Application entityToDomain(com.njydsz.userinfo.infra.entity.OAuth2Application entity);
+  com.njydsz.userinfo.domain.oauth2.OAuth2Application entityToDomain(OAuth2Application entity);
 
   /**
    * 应用领域模型 → 实体。
@@ -66,5 +68,5 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
-  com.njydsz.userinfo.infra.entity.OAuth2Application domainToEntity(com.njydsz.userinfo.domain.oauth2.OAuth2Application domain);
+  OAuth2Application domainToEntity(com.njydsz.userinfo.domain.oauth2.OAuth2Application domain);
 }

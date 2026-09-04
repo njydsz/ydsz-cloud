@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.scheduler.FlowTimerScheduler;
+
 import java.io.Serial;
 import java.time.LocalDateTime;
 
@@ -51,7 +53,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @author ydsz-team
  * @since 26.09.01
  * @see FlowInstance 流程实例
- * @see com.njydsz.workflow.server.scheduler.FlowTimerScheduler 定时器调度器
+ * @see FlowTimerScheduler 定时器调度器
  */
 @Data
 @SuperBuilder

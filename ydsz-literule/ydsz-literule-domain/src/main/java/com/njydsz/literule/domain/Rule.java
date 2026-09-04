@@ -15,7 +15,6 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  * @since 26.09.01
  */
 public interface Rule {
-
   /** 默认优先级（数值越小优先级越高） */
   int DEFAULT_PRIORITY = 100;
 

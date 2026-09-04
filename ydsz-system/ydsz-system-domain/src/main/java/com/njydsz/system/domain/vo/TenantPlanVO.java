@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.system.domain.entity.TenantPlan;
+
 /**
  * 租户套餐 VO（视图对象）
  *
@@ -21,7 +23,7 @@ import lombok.experimental.SuperBuilder;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.system.infra.entity.TenantPlan 套餐实体
+ * @see TenantPlan 套餐实体
  */
 @Data
 @SuperBuilder

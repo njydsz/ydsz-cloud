@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
+import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.query.AppInfoPageQuery;
 import com.njydsz.system.domain.repository.AppInfoRepository;
-import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
 

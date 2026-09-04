@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.scheduler.FlowDelegateScheduler;
+
 import java.io.Serial;
 import java.time.LocalDateTime;
 
@@ -56,7 +58,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.server.scheduler.FlowDelegateScheduler 委派扫描调度器
+ * @see FlowDelegateScheduler 委派扫描调度器
  */
 @Data
 @SuperBuilder

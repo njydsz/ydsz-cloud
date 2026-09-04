@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.service.FlowCcService;
+
 import java.io.Serial;
 import java.time.LocalDateTime;
 
@@ -46,7 +48,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @author ydsz-team
  * @since 26.09.01
  * @see FlowRunTask 流程待办（需要办理动作）
- * @see com.njydsz.workflow.server.service.FlowCcService 抄送服务
+ * @see FlowCcService 抄送服务
  */
 @Data
 @SuperBuilder

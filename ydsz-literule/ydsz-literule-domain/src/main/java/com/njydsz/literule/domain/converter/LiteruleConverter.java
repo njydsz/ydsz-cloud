@@ -3,36 +3,67 @@ package com.njydsz.literule.domain.converter;
 import java.util.List;
 
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.dto.DecisionTableDTO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.dto.RuleVersionDTO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.DecisionTable;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.RuleABPolicy;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.RuleABRollback;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.RuleChainGraph;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.RuleDependency;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.RuleExecutionTrace;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.RulePack;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.RuleTemplate;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.entity.RuleVersionHistory;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleResultVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 
 /**
  * literule 模块统一转换器门面。
@@ -171,13 +202,13 @@ public class LiteruleConverter {
   /**
    * 将规则定义持久化实体转换为视图对象。
    *
-   * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(com.njydsz.literule.infra.entity.RuleDefinition)}，
+   * <p>门面方法，实际映射委托给 {@link RuleCoreConverter#entityToVO(RuleDefinition)}，
    * 条件表达式与动作定义原样带出。
    *
    * @param entity 规则定义持久化实体（含条件表达式、动作与生效时间窗），为 {@code null} 时返回 {@code null}
    * @return 规则定义视图对象；入参为 {@code null} 时返回 {@code null}
    */
-  public RuleDefinitionVO entityToVO(com.njydsz.literule.infra.entity.RuleDefinition entity) {
+  public RuleDefinitionVO entityToVO(RuleDefinition entity) {
     return core.entityToVO(entity);
   }
 
@@ -190,7 +221,7 @@ public class LiteruleConverter {
    * @return 规则定义视图对象列表，顺序与入参一致
    */
   public List<RuleDefinitionVO> ruleDefinitionListToVO(
-      List<com.njydsz.literule.infra.entity.RuleDefinition> entities) {
+      List<RuleDefinition> entities) {
     return core.ruleDefinitionListToVO(entities);
   }
 
@@ -225,7 +256,7 @@ public class LiteruleConverter {
   /**
    * 将规则执行轨迹实体转换为视图对象。
    *
-   * <p>门面方法，实际映射委托给 {@link RuleSupportConverter#entityToVO(com.njydsz.literule.infra.entity.RuleExecutionTrace)}。
+   * <p>门面方法，实际映射委托给 {@link RuleSupportConverter#entityToVO(RuleExecutionTrace)}。
    * 事实快照与结果快照为 JSON 字段，转换时整体透传。
    *
    * @param entity 执行轨迹实体（含 traceId、条件求值结果与耗时），为 {@code null} 时返回 {@code null}
@@ -252,7 +283,7 @@ public class LiteruleConverter {
   /**
    * 将规则集持久化实体转换为视图对象。
    *
-   * <p>门面方法，实际映射委托给 {@link RuleSupportConverter#entityToVO(com.njydsz.literule.infra.entity.RulePack)}。
+   * <p>门面方法，实际映射委托给 {@link RuleSupportConverter#entityToVO(RulePack)}。
    * 标签与规则编码列表在库中以 JSON 字符串存储，转换时不做拆分。
    *
    * @param entity 规则集实体（含集编码、版本号与规则快照），为 {@code null} 时返回 {@code null}

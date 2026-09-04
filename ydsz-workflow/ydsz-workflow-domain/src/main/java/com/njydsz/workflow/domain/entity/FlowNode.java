@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.engine.AssignmentResolver;
+
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -71,7 +73,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @since 26.09.01
  * @see FlowDefinition 流程定义
  * @see com.njydsz.workflow.domain.enums.FlowNodeType 节点类型枚举
- * @see com.njydsz.workflow.server.engine.AssignmentResolver 办理人解析器
+ * @see AssignmentResolver 办理人解析器
  */
 @Data
 @SuperBuilder

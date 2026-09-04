@@ -1,5 +1,6 @@
 package com.njydsz.literule.domain.dto;
 
+
 import java.io.Serializable;
 
 import lombok.AllArgsConstructor;
@@ -21,7 +22,7 @@ import com.njydsz.literule.domain.Rule;
  *
  * <p>持久化于 {@code ydsz_rule_decision_tree}（见 V048，root_node 字段存储 JSON）， 由 {@code
  * DecisionTreeConfigProvider} SPI 加载， 通过 {@link
- * com.njydsz.literule.server.impl.DecisionTreeRule#from(DecisionTreeDefinitionDTO,
+ * DecisionTreeRule#from(DecisionTreeDefinitionDTO,
  * com.njydsz.literule.domain.expression.ExpressionEngine)} 转换为可执行规则。
  *
  * <p>JSON 示例：

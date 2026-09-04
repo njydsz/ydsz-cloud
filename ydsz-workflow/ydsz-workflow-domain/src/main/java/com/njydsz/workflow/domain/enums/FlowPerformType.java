@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.enums;
 
+import com.njydsz.workflow.domain.service.impl;
+
 /**
  * 会签类型枚举
  *
@@ -28,8 +30,8 @@ package com.njydsz.workflow.domain.enums;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.server.service.impl.CountersignStrategy 会签策略接口
- * @see com.njydsz.workflow.server.service.impl.strategy.WeightedCountersignStrategy 票签策略实现
+ * @see impl.CountersignStrategy 会签策略接口
+ * @see impl.strategy.WeightedCountersignStrategy 票签策略实现
  */
 public enum FlowPerformType {
 

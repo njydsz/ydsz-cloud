@@ -16,12 +16,33 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
+import com.njydsz.workflow.domain.entity.FlowHisInstance;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
 import com.njydsz.workflow.domain.event.FlowDomainEvent;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
+import com.njydsz.workflow.domain.entity.FlowHisInstance;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
 import com.njydsz.workflow.domain.event.FlowInstanceResumedEvent;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
+import com.njydsz.workflow.domain.entity.FlowHisInstance;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
 import com.njydsz.workflow.domain.event.FlowInstanceRolledBackEvent;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
+import com.njydsz.workflow.domain.entity.FlowHisInstance;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
 import com.njydsz.workflow.domain.event.FlowInstanceSuspendedEvent;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
+import com.njydsz.workflow.domain.entity.FlowHisInstance;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
+import com.njydsz.workflow.domain.entity.FlowHisInstance;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
 import com.njydsz.workflow.domain.statemachine.FlowInstanceStateMachine;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
+import com.njydsz.workflow.domain.entity.FlowHisInstance;
+import com.njydsz.workflow.domain.facade.YdszWorkflowFacade;
 
 /**
  * 流程实例实体
@@ -59,8 +80,8 @@ import com.njydsz.workflow.domain.statemachine.FlowInstanceStateMachine;
  * @author ydsz-team
  * @since 26.09.01
  * @see com.njydsz.workflow.domain.enums.FlowInstanceStatus 实例状态枚举
- * @see com.njydsz.workflow.infra.entity.FlowHisInstance 历史实例实体
- * @see com.njydsz.workflow.server.facade.YdszWorkflowFacade 流程引擎门面
+ * @see FlowHisInstance 历史实例实体
+ * @see YdszWorkflowFacade 流程引擎门面
  */
 @Data
 @SuperBuilder

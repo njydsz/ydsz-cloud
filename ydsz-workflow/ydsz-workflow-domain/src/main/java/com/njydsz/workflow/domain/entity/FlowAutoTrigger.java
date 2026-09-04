@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.listener.FlowAutoTriggerListener;
+
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -45,7 +47,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @author ydsz-team
  * @since 26.09.01
  * @see FlowInstance 流程实例
- * @see com.njydsz.workflow.server.listener.FlowAutoTriggerListener 自动触发监听器
+ * @see FlowAutoTriggerListener 自动触发监听器
  */
 @Data
 @SuperBuilder

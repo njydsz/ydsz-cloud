@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.service.FlowDefinitionService;
+
 import java.io.Serial;
 import java.time.LocalDateTime;
 
@@ -56,7 +58,7 @@ import com.njydsz.common.json.annotation.JsonView;
  * @since 26.09.01
  * @see FlowInstance 流程实例
  * @see FlowNode 流程节点
- * @see com.njydsz.workflow.server.service.FlowDefinitionService 流程定义 Service
+ * @see FlowDefinitionService 流程定义 Service
  */
 @Data
 @SuperBuilder

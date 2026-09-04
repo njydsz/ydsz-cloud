@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.vo;
 
+import com.njydsz.workflow.domain.entity.FlowDefinition;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -9,7 +11,7 @@ import lombok.Data;
 /**
  * 流程定义视图对象
  *
- * <p>用于 Controller 层返回流程定义数据，对应实体 {@link com.njydsz.workflow.infra.entity.FlowDefinition}。
+ * <p>用于 Controller 层返回流程定义数据，对应实体 {@link FlowDefinition}。
  *
  * @author ydsz-team
  * @since 26.09.01

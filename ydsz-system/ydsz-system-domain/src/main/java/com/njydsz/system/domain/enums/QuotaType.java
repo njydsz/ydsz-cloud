@@ -6,7 +6,7 @@ import lombok.Getter;
  * 租户配额类型枚举
  *
  * <p>定义 SaaS 多租户体系下支持的配额维度。每个配额维度对应一个资源上限， 由 {@link com.njydsz.system.domain.entity.TenantPlan#getQuotaJson()} 存储，
- * 运行时由 {@link com.njydsz.system.server.service.TenantQuotaService} 校验。
+ * 运行时由 Server 层 TenantQuotaService 校验。
  *
  * <p><b>配额维度：</b>
  *

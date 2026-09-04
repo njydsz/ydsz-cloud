@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.domain.vo;
 
+import com.njydsz.userinfo.domain.service.impl;
+
 import java.util.List;
 
 import lombok.Data;
@@ -7,7 +9,7 @@ import lombok.Data;
 /**
  * 公司树形 VO，用于前端集团-子公司组织架构树渲染。
  *
- * <p>由 {@link com.njydsz.userinfo.server.service.impl.CompanyServiceImpl#tree()} 使用 {@link
+ * <p>由 {@link impl.CompanyServiceImpl#tree()} 使用 {@link
  * com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 构建，自动填充 {@code level}/{@code path} 元数据。
  *
  * <p>与 {@link CompanyVO} 的区别：

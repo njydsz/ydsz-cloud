@@ -29,7 +29,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @author ydsz-team
  * @since 26.09.01
  * @see DictItem 字典项实体（字典两级体系下层）
- * @see com.njydsz.system.server.service.DictVersionService 字典版本管理
+ * @see DictVersionService 字典版本管理
  */
 @Data
 @SuperBuilder

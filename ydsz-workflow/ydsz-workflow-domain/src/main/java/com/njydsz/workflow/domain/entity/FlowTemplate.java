@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.service.FlowTemplateService;
+
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -47,7 +49,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @author ydsz-team
  * @since 26.09.01
  * @see FlowDefinition 流程定义
- * @see com.njydsz.workflow.server.service.FlowTemplateService 模板服务
+ * @see FlowTemplateService 模板服务
  */
 @Data
 @SuperBuilder

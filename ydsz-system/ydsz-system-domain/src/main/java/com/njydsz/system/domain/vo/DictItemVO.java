@@ -4,6 +4,8 @@ import java.util.List;
 
 import lombok.Data;
 
+import com.njydsz.system.domain.entity.DictItem;
+
 /**
  * 字典项 VO（视图对象）
  *
@@ -41,7 +43,7 @@ import lombok.Data;
  * @since 26.09.01
  * @since 26.09.01 由继承 {@code ydsz-common-domain} 的 {@code TreeNode} 基类改为纯 POJO，使用 {@code TreeBuilder.buildSimple()}
  *               构建树形结构，消除业务 VO 与框架基类的耦合
- * @see com.njydsz.system.infra.entity.DictItem 字典项实体
+ * @see DictItem 字典项实体
  * @see DictTypeVO 字典类型 VO
  * @see com.njydsz.common.domain.tree.TreeBuilder 通用树构建器
  */

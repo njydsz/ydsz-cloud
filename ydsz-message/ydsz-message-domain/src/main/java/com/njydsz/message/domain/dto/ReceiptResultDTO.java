@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto;
 
+import com.njydsz.message.domain.channel.MessageChannel;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +10,7 @@ import lombok.NoArgsConstructor;
 /**
  * 主动拉取的回执结果（P2-9）。
  *
- * <p>由 {@link com.njydsz.message.server.channel.MessageChannel#queryReceipt} 返回，
+ * <p>由 {@link MessageChannel#queryReceipt} 返回，
  * 描述从服务商侧查询到的最新回执状态。{@code ReceiptPuller} 拿到此结果后会联动更新 {@code MsgLog.receiptStatus} 与 {@code
  * MsgLog.receiptAt}。
  *

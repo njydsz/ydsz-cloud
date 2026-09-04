@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.enums;
 
+import com.njydsz.workflow.domain.entity.FlowInstance;
+
 
 /**
  * 流程实例状态枚举
@@ -33,7 +35,7 @@ package com.njydsz.workflow.domain.enums;
  * @author ydsz-team
  * @since 26.09.01
  * @see FlowTaskStatus 任务级状态枚举
- * @see com.njydsz.workflow.infra.entity.FlowInstance 流程实例实体
+ * @see FlowInstance 流程实例实体
  */
 public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
 

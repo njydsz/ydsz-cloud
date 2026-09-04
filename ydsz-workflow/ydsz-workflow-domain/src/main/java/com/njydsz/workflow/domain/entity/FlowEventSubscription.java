@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.service.FlowEventService;
+
 import java.io.Serial;
 import java.time.LocalDateTime;
 
@@ -51,7 +53,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @author ydsz-team
  * @since 26.09.01
  * @see FlowInstance 流程实例
- * @see com.njydsz.workflow.server.service.FlowEventService 事件服务
+ * @see FlowEventService 事件服务
  */
 @Data
 @SuperBuilder

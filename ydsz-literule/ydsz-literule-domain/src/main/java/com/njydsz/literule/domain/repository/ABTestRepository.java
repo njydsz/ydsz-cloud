@@ -3,13 +3,15 @@ package com.njydsz.literule.domain.repository;
 import java.util.List;
 
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
+import com.njydsz.literule.domain.config.DefaultABTestRepository;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
+import com.njydsz.literule.domain.config.DefaultABTestRepository;
 
 /**
  * A/B 测试策略与回滚历史仓库接口（DDD domain 层）
  *
  * <p>定义 A/B 测试自动回滚策略与回滚历史的持久化操作。 默认由 server 层提供内存实现（{@code
- * com.njydsz.literule.server.config.DefaultABTestRepository}）， 消费方可提供自定义实现（如基于 MyBatis 的数据库存储）以替代默认存储。
+ * DefaultABTestRepository}）， 消费方可提供自定义实现（如基于 MyBatis 的数据库存储）以替代默认存储。
  *
  * @author ydsz-team
  * @since 26.09.01

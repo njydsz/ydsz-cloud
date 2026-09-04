@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.domain.entity;
 
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -17,7 +18,7 @@ import lombok.Setter;
  *
  * <p>调用方通过 {@link com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository}
  * 写入事件（在业务事务内），再由
- * {@link com.njydsz.cronjob.server.core.outbox.OutboxPublisher} 异步扫描并发布。
+ * {@link outbox.OutboxPublisher} 异步扫描并发布。
  *
  * @author ydsz-team
  * @since 26.09.01

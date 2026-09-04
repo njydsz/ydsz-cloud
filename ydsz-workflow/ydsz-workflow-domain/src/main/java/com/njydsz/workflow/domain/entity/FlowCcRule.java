@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.resolver.FlowCcRuleResolver;
+
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -46,7 +48,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @author ydsz-team
  * @since 26.09.01
  * @see FlowCc 流程抄送（具体实例）
- * @see com.njydsz.workflow.server.resolver.FlowCcRuleResolver 抄送规则解析器
+ * @see FlowCcRuleResolver 抄送规则解析器
  */
 @Data
 @SuperBuilder

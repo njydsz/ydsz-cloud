@@ -4,12 +4,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.entity.Config;
+
 /**
  * 系统配置 VO（视图对象）
  *
  * <p>对应 {@code ydsz_sys_config} 表的展示视图，是「系统配置中心」列表 / 详情接口的响应载体。
- * 由 {@link com.njydsz.system.infra.converter.SystemConverter} 从 {@link
- * com.njydsz.system.infra.entity.Config} 实体转换而来。
+ * 由 {@link SystemConverter} 从 {@link
+ * Config} 实体转换而来。
  *
  * <p><b>字段语义：</b>
  *
@@ -37,7 +40,7 @@ import lombok.experimental.SuperBuilder;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.system.infra.entity.Config 系统配置实体
+ * @see Config 系统配置实体
  * @see com.njydsz.system.domain.dto.ConfigDTO 配置输入 DTO
  */
 @Data

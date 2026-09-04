@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.domain.repository.outbox;
 
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * <p>定义事件写入、查询、状态变更的契约。实现层位于 infra 模块，保证事件写入可与业务操作共用同一事务。
  *
  * <p>调用方通过 {@link #save(OutboxEventVO)} 写入事件（在业务事务内），再由
- * {@link com.njydsz.cronjob.server.core.outbox.OutboxPublisher} 异步扫描并发布。
+ * {@link outbox.OutboxPublisher} 异步扫描并发布。
  *
  * <p>所有方法返回领域 VO（{@link OutboxEventVO}），禁止泄露 infra 实体。
  *

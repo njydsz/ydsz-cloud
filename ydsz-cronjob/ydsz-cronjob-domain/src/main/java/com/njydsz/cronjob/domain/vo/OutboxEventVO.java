@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.domain.vo;
 
+import com.njydsz.cronjob.domain.entity.OutboxEvent;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -9,7 +11,7 @@ import lombok.Data;
 /**
  * Outbox 事件视图对象。
  *
- * <p>领域层 VO，对应 infra 实体 {@link com.njydsz.cronjob.infra.entity.OutboxEvent}。
+ * <p>领域层 VO，对应 infra 实体 {@link OutboxEvent}。
  *
  * @author ydsz-team
  * @since 26.09.01

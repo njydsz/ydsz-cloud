@@ -1,5 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
+import com.njydsz.workflow.domain.service.FlowAttachmentService;
+
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -46,7 +48,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.server.service.FlowAttachmentService 附件服务
+ * @see FlowAttachmentService 附件服务
  * @see com.njydsz.common.file.storage.IFileStorage 文件存储抽象
  */
 @Data

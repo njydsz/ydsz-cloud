@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.domain.config;
 
+import com.njydsz.userinfo.domain.config.AesMfaSecretEncryptor;
+
 /**
  * MFA 密钥加密器（策略接口）。
  *
@@ -9,7 +11,7 @@ package com.njydsz.userinfo.domain.config;
  *
  * <ul>
  *   <li>明文存储（{@link PlainMfaSecretEncryptor}）仅用于开发/测试环境</li>
- *   <li>生产环境必须使用 AES-256-GCM 加密实现（{@link com.njydsz.userinfo.infra.config.AesMfaSecretEncryptor}）</li>
+ *   <li>生产环境必须使用 AES-256-GCM 加密实现（{@link AesMfaSecretEncryptor}）</li>
  * </ul>
  *
  * <p><b>线程安全：</b>实现类必须无状态，可多线程并发调用。
