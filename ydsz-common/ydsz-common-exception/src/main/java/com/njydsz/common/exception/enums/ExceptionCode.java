@@ -5,14 +5,15 @@ import com.njydsz.common.core.code.ResultCode;
 /**
  * 异常码接口 — 业务异常语义扩展。
  *
- * <p>继承 {@link ResultCode} 协议层三要素（code / key / msg）， 增加 HTTP 状态码、错误分类等异常层语义。i18n 解析由 core 模块统一处理。
+ * <p>继承 {@link ResultCode} 协议层三要素（code / key / msg）， 增加 HTTP 状态码、错误分类、异常级别、可恢复性等异常层语义。
+ * i18n 解析由 core 模块统一处理。
  *
  * <p><b>继承体系：</b>
  *
  * <pre>
  *   ResultCode（协议层：code + key + msg）
  *     ↑
- *   ExceptionCode（异常层扩展：+ httpStatus + category）
+ *   ExceptionCode（异常层扩展：+ httpStatus + category + level + retryable）
  *     ↑ 全部业务模块 *ExceptionCode 枚举
  * </pre>
  *
@@ -21,10 +22,11 @@ import com.njydsz.common.core.code.ResultCode;
  * <pre>{@code
  * @YdszExceptionCode(module = "workflow", description = "工作流")
  * public enum WorkflowExceptionCode implements ExceptionCode {
- *     TEMPLATE_NOT_FOUND("workflow.template.not.found", 404),
+ *     TEMPLATE_NOT_FOUND("workflow.template.not.found", 404, ExceptionLevel.ERROR),
  *     ;
  *     private final String key;
  *     private final int httpStatus;
+ *     private final ExceptionLevel level;
  *     // ...
  * }
  * }</pre>
@@ -135,5 +137,30 @@ public interface ExceptionCode extends ResultCode {
    */
   default int retryAfterSeconds() {
     return 0;
+  }
+
+  // ======================== 异常级别（驱动前端差异化展示与监控告警） ========================
+
+  /**
+   * 异常级别 — 驱动前端错误提示方式和监控告警等级。
+   *
+   * <ul>
+   *   <li>{@link ExceptionLevel#INFO} — 静默处理，不展示 toast（前端忽略）</li>
+   *   <li>{@link ExceptionLevel#WARN} — 轻量 toast 提示（auto-close 3s）</li>
+   *   <li>{@link ExceptionLevel#ERROR} — toast 提示，需用户点击关闭（默认值）</li>
+   *   <li>{@link ExceptionLevel#FATAL} — 弹窗提示，阻断用户当前操作</li>
+   * </ul>
+   *
+   * <p>默认返回 {@link ExceptionLevel#ERROR}。建议资源类异常（NOT_FOUND / DUPLICATE）显式声明级别以匹配 HTTP 语义：
+   * <ul>
+   *   <li>资源不存在（404）→ WARN（页面路由导向而非告警）</li>
+   *   <li>业务冲突（409）→ ERROR</li>
+   *   <li>参数非法（400）→ WARN（前端拦截为主）</li>
+   * </ul>
+   *
+   * @return 异常级别
+   */
+  default ExceptionLevel getLevel() {
+    return ExceptionLevel.ERROR;
   }
 }

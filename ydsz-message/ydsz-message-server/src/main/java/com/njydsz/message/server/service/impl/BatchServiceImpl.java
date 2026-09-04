@@ -3,6 +3,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -133,6 +134,24 @@ public class BatchServiceImpl implements BatchService {
   }
 
   @Override
+  public void executeBatch(String batchId) {
+    MsgBatchQuery query = new MsgBatchQuery();
+    query.setBatchId(batchId);
+    MsgBatchVO batch = msgBatchRepository.findOne(query).orElse(null);
+    if (batch == null) {
+      log.warn("[Batch] executeBatch 批次不存在: batchId={}", batchId);
+      return;
+    }
+    List<MessageRequest> requests = parsePayload(batch.getPayload());
+    if (requests.isEmpty()) {
+      log.warn("[Batch] executeBatch payload 为空: batchId={}", batchId);
+      updateBatchStatus(batchId, "FAILED", "payload 为空");
+      return;
+    }
+    doExecuteBatch(batchId, requests, true);
+  }
+
+  @Override
   public BatchProgressDTO getProgress(String batchId) {
     if (!StringUtils.hasText(batchId)) {
       throw SysException.builder()
@@ -202,18 +221,53 @@ public class BatchServiceImpl implements BatchService {
    * @param payload 批次 payload JSON（序列化的请求列表）
    * @return 反序列化后的请求列表，解析失败返回空列表
    */
+  @SuppressWarnings("unchecked")
   private List<MessageRequest> parsePayload(String payload) {
     if (!StringUtils.hasText(payload)) {
       return new ArrayList<>(0);
-}
+    }
     try {
       List<MessageRequest> requests =
-          YdszJson.fromJson(payload, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+          (List<MessageRequest>) YdszJson.fromJson(payload, List.class, MessageRequest.class);
       return requests != null ? requests : new ArrayList<>(0);
     } catch (Exception e) {
       log.warn("[Batch] payload 解析失败: {}", e.getMessage(), e);
       return new ArrayList<>(0);
     }
+  }
+
+  /**
+   * 构建请求列表。
+   *
+   * <p>优先使用显式传入的 requests 列表；否则使用 receiverList + 统一模板参数展开。
+   *
+   * @param dto 批量发送请求
+   * @return 消息请求列表
+   */
+  private List<MessageRequest> buildRequests(BatchSendRequestDTO dto) {
+    if (dto == null) {
+      return new ArrayList<>(0);
+    }
+    // 优先使用显式请求列表
+    if (dto.getRequests() != null && !dto.getRequests().isEmpty()) {
+      return dto.getRequests();
+    }
+    // receiverList 模式：用统一模板+参数展开
+    if (dto.getReceiverList() == null || dto.getReceiverList().isEmpty()) {
+      return new ArrayList<>(0);
+    }
+    List<MessageRequest> requests = new ArrayList<>(dto.getReceiverList().size());
+    for (String receiver : dto.getReceiverList()) {
+      MessageRequest req = new MessageRequest();
+      req.setMessageId(UUID.randomUUID().toString());
+      req.setChannel(dto.getChannel());
+      req.setReceiver(receiver);
+      req.setTemplateCode(dto.getTemplateCode());
+      req.setParams(dto.getParams());
+      req.setBizType(dto.getBizType());
+      requests.add(req);
+    }
+    return requests;
   }
 
   private void doExecuteBatch(String batchId, List<MessageRequest> requests, boolean incremental) {

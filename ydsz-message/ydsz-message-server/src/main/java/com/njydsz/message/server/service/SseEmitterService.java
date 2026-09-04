@@ -1,8 +1,10 @@
 package com.njydsz.message.server.service;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -105,7 +107,8 @@ public class SseEmitterService {
   public SseEmitter subscribe(
       String batchId, long timeoutMs, Object initialSnapshot, String lastEventId) {
     SseEmitter emitter = new SseEmitter(timeoutMs);
-    SseEmitterSubscription subscription = new SseEmitterSubscription(batchId, emitter);
+    String subscriptionId = UUID.randomUUID().toString();
+    SseEmitterSubscription subscription = new SseEmitterSubscription(subscriptionId, batchId, emitter, lastEventId);
     subscriptions.computeIfAbsent(batchId, k -> new CopyOnWriteArrayList<>()).add(subscription);
 
     // P3-1: Last-Event-ID 断线重连 —— 检测并播放缺失的事件
@@ -120,7 +123,10 @@ public class SseEmitterService {
         for (SseEventEntry entry : missedEvents) {
           try {
             emitter.send(
-                SseEmitter.event().id(entry.eventId).name(entry.eventName).data(entry.eventData));
+                SseEmitter.event()
+                    .id(String.valueOf(entry.getEventId()))
+                    .name(entry.getEventType())
+                    .data(entry.getData()));
           } catch (IllegalStateException | IOException e) {
             log.debug("[SSE] 重连回放失败: batchId={} err={}", batchId, e.getMessage());
             break;
@@ -175,5 +181,123 @@ public class SseEmitterService {
     recordEvent(batchId, eventIdStr, "progress", eventData);
 
     List<SseEmitterSubscription> deadSubs = new ArrayList<>(16);
-}
+    for (SseEmitterSubscription sub : subs) {
+      try {
+        sub.getEmitter().send(
+            SseEmitter.event().id(eventIdStr).name("progress").data(eventData));
+      } catch (IllegalStateException | IOException e) {
+        log.debug("[SSE] 发送失败,移除订阅: batchId={} subId={} err={}",
+            batchId, sub.getSubscriptionId(), e.getMessage());
+        deadSubs.add(sub);
+      }
+    }
+    if (!deadSubs.isEmpty()) {
+      subs.removeAll(deadSubs);
+    }
+  }
+
+  /**
+   * 移除指定订阅。
+   *
+   * @param subscription 待移除的订阅
+   */
+  private void removeSubscription(SseEmitterSubscription subscription) {
+    List<SseEmitterSubscription> subs = subscriptions.get(subscription.getBatchId());
+    if (subs != null) {
+      subs.remove(subscription);
+    }
+  }
+
+  /**
+   * 注册清理回调（连接完成或超时时移除订阅）。
+   *
+   * @param batchId 批次 ID
+   * @param subscription 订阅信息
+   */
+  private void registerCleanupHandlers(String batchId, SseEmitterSubscription subscription) {
+    SseEmitter emitter = subscription.getEmitter();
+    emitter.onCompletion(() -> {
+      log.debug("[SSE] 连接完成: batchId={} subId={}", batchId, subscription.getSubscriptionId());
+      removeSubscription(subscription);
+    });
+    emitter.onTimeout(() -> {
+      log.debug("[SSE] 连接超时: batchId={} subId={}", batchId, subscription.getSubscriptionId());
+      removeSubscription(subscription);
+      emitter.complete();
+    });
+    emitter.onError(e -> {
+      log.debug("[SSE] 连接错误: batchId={} subId={} err={}",
+          batchId, subscription.getSubscriptionId(), e.getMessage());
+      removeSubscription(subscription);
+    });
+  }
+
+  /**
+   * 获取批次下一个递增事件 ID。
+   *
+   * @param batchId 批次 ID
+   * @return 事件 ID
+   */
+  private long nextEventId(String batchId) {
+    return eventIdGenerators.computeIfAbsent(batchId, k -> new AtomicLong(0)).incrementAndGet();
+  }
+
+  /**
+   * 记录事件到日志（环形缓冲区，超过上限时丢弃最旧条目）。
+   *
+   * @param batchId 批次 ID
+   * @param eventIdStr 事件 ID 字符串
+   * @param eventType 事件类型
+   * @param eventData 事件数据
+   */
+  private void recordEvent(String batchId, String eventIdStr, String eventType, Object eventData) {
+    long eventId = Long.parseLong(eventIdStr);
+    SseEventEntry entry = new SseEventEntry(eventId, batchId, eventType, eventData);
+    List<SseEventEntry> log = eventLogs.computeIfAbsent(batchId, k -> new CopyOnWriteArrayList<>());
+    synchronized (log) {
+      log.add(entry);
+      if (log.size() > EVENT_LOG_SIZE) {
+        log.remove(0);
+      }
+    }
+  }
+
+  /**
+   * 获取 lastEventId 之后缺失的事件列表。
+   *
+   * @param batchId 批次 ID
+   * @param lastEventId 客户端最后收到的事件 ID
+   * @return 缺失的事件列表，若 lastEventId 已过期则返回空列表
+   */
+  private List<SseEventEntry> getMissedEvents(String batchId, String lastEventId) {
+    List<SseEventEntry> log = eventLogs.get(batchId);
+    if (log == null || log.isEmpty()) {
+      return new ArrayList<>(0);
+    }
+    long lastId;
+    try {
+      lastId = Long.parseLong(lastEventId);
+    } catch (NumberFormatException e) {
+      return new ArrayList<>(0);
+    }
+    List<SseEventEntry> missed = new ArrayList<>();
+    for (SseEventEntry entry : log) {
+      if (entry.getEventId() > lastId) {
+        missed.add(entry);
+      }
+    }
+    // 如果找不到比 lastEventId 更新的事件（已被环形缓冲区覆盖），返回空列表
+    return missed;
+  }
+
+  /**
+   * 获取指定批次的当前订阅数量。
+   *
+   * @param batchId 批次 ID
+   * @return 订阅数量
+   */
+  public int getSubscriptionCount(String batchId) {
+    List<SseEmitterSubscription> subs = subscriptions.get(batchId);
+    return subs == null ? 0 : subs.size();
+  }
 }

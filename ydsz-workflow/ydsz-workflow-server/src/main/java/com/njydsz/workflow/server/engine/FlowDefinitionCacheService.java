@@ -1,4 +1,5 @@
 package com.njydsz.workflow.server.engine;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -272,8 +273,53 @@ public class FlowDefinitionCacheService {
     }
 
     Map<String, List<FlowSkipVO>> skipsBySource = new HashMap<>(skips.size());
+    Map<String, List<FlowSkipVO>> skipsByTarget = new HashMap<>(skips.size());
     for (FlowSkipVO skip : skips) {
       String sourceRef = extractSourceRef(skip);
       if (sourceRef != null) {
-        skipsBySource.computeIfAbsent(sourceRef, k -> new ArrayList<>(8))
-}
+        skipsBySource.computeIfAbsent(sourceRef, k -> new ArrayList<>(8)).add(skip);
+      }
+      if (skip.getNextNodeCode() != null) {
+        skipsByTarget
+            .computeIfAbsent(skip.getNextNodeCode(), k -> new ArrayList<>(8))
+            .add(skip);
+      }
+    }
+
+    FlowDefinitionMetadata metadata = new FlowDefinitionMetadata();
+    metadata.setNodes(nodes);
+    metadata.setSkips(skips);
+    metadata.setNodeByCode(nodeByCode);
+    metadata.setSkipsBySource(skipsBySource);
+    metadata.setSkipsByTarget(skipsByTarget);
+    return metadata;
+  }
+
+  /**
+   * 流程定义元数据（含节点与跳转的索引）。
+   *
+   * <p>一次性加载后缓存，供节点/跳转多维度 O(1) 查询。
+   */
+  @Getter
+  @Setter
+  public static class FlowDefinitionMetadata {
+    private List<FlowNodeVO> nodes;
+    private List<FlowSkipVO> skips;
+    private Map<String, FlowNodeVO> nodeByCode;
+    private Map<String, List<FlowSkipVO>> skipsBySource;
+    private Map<String, List<FlowSkipVO>> skipsByTarget;
+  }
+
+  /**
+   * 从缓存 key 中提取 definitionId（格式：tenantId:definitionId）。
+   *
+   * @param cacheKey 缓存 key
+   * @return definitionId
+   */
+  private String extractDefinitionId(String cacheKey) {
+    if (cacheKey == null) {
+      return null;
+    }
+    int colonIdx = cacheKey.lastIndexOf(':');
+    return colonIdx >= 0 ? cacheKey.substring(colonIdx + 1) : cacheKey;
+  }

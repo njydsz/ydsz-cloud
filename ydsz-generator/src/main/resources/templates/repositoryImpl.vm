@@ -10,13 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.system.domain.converter.${table.converterName};
-import com.njydsz.system.domain.dto.${table.dtoName};
-import com.njydsz.system.domain.entity.${table.entityName};
-import com.njydsz.system.domain.query.${table.queryName};
-import com.njydsz.system.domain.repository.${table.repositoryName};
-import com.njydsz.system.domain.vo.${table.voName};
-import com.njydsz.system.infra.mapper.${table.entityName}Mapper;
+import ${package}.domain.converter.${table.converterName};
+import ${package}.domain.dto.${table.dtoName};
+import ${package}.domain.entity.${table.entityName};
+import ${package}.domain.query.${table.queryName};
+import ${package}.domain.repository.${table.repositoryName};
+import ${package}.domain.vo.${table.voName};
+import ${package}.infra.mapper.${table.entityName}Mapper;
 
 /**
  * ${table.tableComment}仓储实现（Infra 层）。

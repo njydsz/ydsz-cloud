@@ -1,12 +1,15 @@
 package com.njydsz.generator.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
@@ -20,6 +23,8 @@ import com.njydsz.generator.service.CodeGeneratorService;
  * <ul>
  *   <li>{@code POST /api/v1/generate} — 为指定表生成代码</li>
  *   <li>{@code POST /api/v1/generate/all} — 为全部已配置表生成代码</li>
+ *   <li>{@code GET /api/v1/generate/preview} — 预览单表代码（不写文件）</li>
+ *   <li>{@code GET /api/v1/generate/templates} — 列出全部可用模板</li>
  * </ul>
  *
  * @author ydsz-team
@@ -56,6 +61,31 @@ public class GeneratorController {
     log.info("触发全量代码生成");
     List<String> files = generatorService.generateAllConfigured();
     return YdszResponse.success(files);
+  }
+
+  /**
+   * 预览单张表代码（不写文件）。
+   *
+   * @param tableName 表名（如 {@code ydsz_sys_tenant}）
+   * @return 模板名 → 渲染后内容的映射
+   */
+  @GetMapping("/preview")
+  public YdszResponse<Map<String, String>> preview(@RequestParam String tableName) {
+    log.info("预览代码生成: tableName={}", tableName);
+    Map<String, String> preview = generatorService.previewForTable(tableName);
+    return YdszResponse.success(preview);
+  }
+
+  /**
+   * 列出全部可用模板。
+   *
+   * @return 模板名称列表
+   */
+  @GetMapping("/templates")
+  public YdszResponse<List<String>> listTemplates() {
+    log.info("查询可用模板列表");
+    List<String> templates = generatorService.listTemplateNames();
+    return YdszResponse.success(templates);
   }
 
   /**

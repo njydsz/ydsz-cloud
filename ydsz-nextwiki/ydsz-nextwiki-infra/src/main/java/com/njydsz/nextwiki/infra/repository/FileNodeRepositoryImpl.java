@@ -283,4 +283,8 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   public List<FileNodeVO> findDescendantsByPage(String folderPath, int offset, int limit) {
     if (folderPath == null || folderPath.isEmpty()) {
       return new ArrayList<>(0);
+    }
+    List<FileNode> list = fileNodeMapper.selectDescendantsByPage(folderPath, offset, limit);
+    return list == null ? Collections.emptyList() : converter.fileNodeListToVO(list);
+  }
 }

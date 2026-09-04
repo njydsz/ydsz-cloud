@@ -13,7 +13,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.message.server.service.MessageService;
+import com.njydsz.message.server.service.core.MessageService;
 
 /**
  * 内部 API Controller（服务间 Feign 调用）
@@ -64,8 +64,8 @@ public class InternalMessageApiController {
   public YdszResponse<String> sendMessage(@RequestBody MessageRequest request) {
     MessageResult result = messageService.send(request);
     if (result.isSuccess()) {
-      return YdszResponse.success(result.getMessageId());
+      return YdszResponse.success(result.getTraceId());
     }
-    return YdszResponse.error(result.getErrorCode(), result.getErrorMessage());
+    return YdszResponse.error(result.getErrorCode(), result.getUserMessage());
   }
 }

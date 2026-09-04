@@ -1,0 +1,93 @@
+package ${package}.api;
+
+import java.util.List;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
+import ${package}.domain.dto.${table.dtoName};
+import ${package}.domain.query.${table.queryName};
+import ${package}.domain.vo.${table.voName};
+
+/**
+ * ${table.tableComment} FeignClient 远程调用接口
+ *
+ * <p>供其他微服务通过 OpenFeign 远程调用本模块的 CRUD 能力。
+ *
+ * <p><b> FeignClient 约定：</b>
+ * <ul>
+ *   <li>name = "${module}-service" — 目标 Spring Boot 应用名</li>
+ *   <li>path = "${table.apiPath}" — 与 Controller @RequestMapping 路径一致</li>
+ *   <li>contextId = "${table.entityName}Client" — 避免同名 Bean 冲突</li>
+ * </ul>
+ *
+ * <p><b>依赖方向：</b>遵循 YDIZ-ARCH-001，api 层只依赖 domain 层的 DTO/Query/VO（{@code ${package}.domain.*}），不依赖 infra/server/web 层。
+ *
+ * @author ${author}
+ * @since ${date}
+ * @see ${package}.web.controller.${table.controllerName}
+ */
+@FeignClient(
+    name = "${module}-service",
+    path = "${table.apiPath}",
+    contextId = "${table.entityName}Client",
+    fallbackFactory = ${table.entityName}ClientFallbackFactory.class
+)
+public interface ${table.entityName}FeignClient {
+
+  /**
+   * 按 ID 查询。
+   *
+   * @param id 主键
+   * @return 视图对象
+   */
+  @GetMapping("/{id}")
+  YdszResponse<${table.voName}> getById(@PathVariable("id") String id);
+
+  /**
+   * 分页查询。
+   *
+   * @param pageNum 页码
+   * @param pageSize 每页大小
+   * @return 分页结果
+   */
+  @GetMapping("/page")
+  YdszResponse<PageResponse<List<${table.voName}>>> page(
+      @RequestParam("pageNum") Integer pageNum,
+      @RequestParam("pageSize") Integer pageSize);
+
+  /**
+   * 创建。
+   *
+   * @param dto 数据传输对象
+   * @return 新建 ID
+   */
+  @PostMapping
+  YdszResponse<String> save(@RequestBody ${table.dtoName} dto);
+
+  /**
+   * 更新。
+   *
+   * @param dto 数据传输对象
+   * @return 是否成功
+   */
+  @PutMapping
+  YdszResponse<Boolean> update(@RequestBody ${table.dtoName} dto);
+
+  /**
+   * 删除。
+   *
+   * @param id 主键
+   * @return 是否成功
+   */
+  @DeleteMapping("/{id}")
+  YdszResponse<Boolean> remove(@PathVariable("id") String id);
+}
