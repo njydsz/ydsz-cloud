@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 网盘知识库枚举集合

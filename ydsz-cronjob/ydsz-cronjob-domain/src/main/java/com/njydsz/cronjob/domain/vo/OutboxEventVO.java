@@ -1,12 +1,12 @@
 package com.njydsz.cronjob.domain.vo;
 
-import com.njydsz.cronjob.domain.entity.OutboxEvent;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
+
+import com.njydsz.cronjob.domain.entity.OutboxEvent;
 
 /**
  * Outbox 事件视图对象。

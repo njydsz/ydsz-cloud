@@ -10,11 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgRouteRule;
 import com.njydsz.message.domain.query.MsgRouteRuleQuery;
 import com.njydsz.message.domain.repository.MsgRouteRuleRepository;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
-import com.njydsz.message.domain.converter.MessageConverter;
-import com.njydsz.message.domain.entity.MsgRouteRule;
 import com.njydsz.message.infra.mapper.config.MsgRouteRuleMapper;
 
 /**

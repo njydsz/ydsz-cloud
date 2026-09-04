@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.entity;
 
-import com.njydsz.workflow.domain.service.FlowTemplateService;
-
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableName;

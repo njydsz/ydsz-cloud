@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 import org.springframework.boot.health.contributor.HealthIndicator;
   // CHECKSTYLE.ON: RegexpSinglelineJava
 

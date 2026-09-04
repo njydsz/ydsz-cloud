@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.entity;
 
-import com.njydsz.workflow.domain.scheduler.FlowArchiveScheduler;
-
 import java.io.Serial;
 import java.time.LocalDateTime;
 

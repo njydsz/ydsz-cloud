@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.cronjob.domain.vo.AuditLogVO;
 
 /**
  * 审计日志 Repository 接口（P1-14 操作审计视图）。

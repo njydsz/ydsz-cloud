@@ -11,13 +11,13 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
+import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
 import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
-import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
 
 /**

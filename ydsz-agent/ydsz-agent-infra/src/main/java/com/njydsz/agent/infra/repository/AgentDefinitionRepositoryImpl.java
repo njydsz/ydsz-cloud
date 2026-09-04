@@ -7,11 +7,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.agent.domain.converter.AgentConverter;
 import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
+import com.njydsz.agent.domain.entity.AgentDefinition;
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
-import com.njydsz.agent.domain.converter.AgentConverter;
-import com.njydsz.agent.domain.entity.AgentDefinition;
 import com.njydsz.agent.infra.mapper.AgentDefinitionMapper;
 
 /**

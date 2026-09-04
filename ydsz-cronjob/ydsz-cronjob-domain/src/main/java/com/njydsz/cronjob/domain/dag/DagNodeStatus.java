@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.domain.dag;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * DAG 节点状态枚举

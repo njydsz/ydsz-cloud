@@ -10,12 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.userinfo.domain.converter.UserInfoOrgConverter;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
+import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
-import com.njydsz.userinfo.domain.converter.UserInfoOrgConverter;
-import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 
 /**

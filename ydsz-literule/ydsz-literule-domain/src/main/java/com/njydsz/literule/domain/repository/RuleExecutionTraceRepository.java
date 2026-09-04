@@ -2,6 +2,8 @@ package com.njydsz.literule.domain.repository;
 
 import java.util.List;
 
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
+
 
 /**
  * 规则执行轨迹 Repository（domain 层契约）。

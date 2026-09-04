@@ -1,12 +1,12 @@
 package com.njydsz.workflow.domain.vo;
 
-import com.njydsz.workflow.domain.entity.FlowDefinition;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
+
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 
 /**
  * 流程定义视图对象

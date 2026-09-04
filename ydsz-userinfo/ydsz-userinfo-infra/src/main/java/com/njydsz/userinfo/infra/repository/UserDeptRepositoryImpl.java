@@ -8,11 +8,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.userinfo.domain.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
+import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.repository.UserDeptRepository;
 import com.njydsz.userinfo.domain.vo.UserDeptVO;
-import com.njydsz.userinfo.domain.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 
 /**

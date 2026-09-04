@@ -1,10 +1,10 @@
 package com.njydsz.message.domain.dto;
 
-import com.njydsz.message.domain.channel.MessageChannel;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.message.domain.channel.MessageChannel;
 
 
 /**

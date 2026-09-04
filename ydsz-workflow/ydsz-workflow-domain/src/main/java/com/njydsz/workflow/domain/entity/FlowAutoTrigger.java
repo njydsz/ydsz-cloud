@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.entity;
 
-import com.njydsz.workflow.domain.listener.FlowAutoTriggerListener;
-
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableField;

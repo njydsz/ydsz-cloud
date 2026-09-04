@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.enums.FlowPerformType;
 
 /**
  * 会签配置值对象。

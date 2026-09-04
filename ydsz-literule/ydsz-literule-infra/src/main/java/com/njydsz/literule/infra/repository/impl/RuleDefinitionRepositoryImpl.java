@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
-import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.entity.RuleDefinition;
+import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 
 /**

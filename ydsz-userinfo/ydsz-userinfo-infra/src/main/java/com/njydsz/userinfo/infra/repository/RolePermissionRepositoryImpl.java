@@ -8,11 +8,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.userinfo.domain.converter.UserInfoAuthConverter;
 import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
+import com.njydsz.userinfo.domain.entity.RolePermission;
 import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
 import com.njydsz.userinfo.domain.vo.RolePermissionVO;
-import com.njydsz.userinfo.domain.converter.UserInfoAuthConverter;
-import com.njydsz.userinfo.domain.entity.RolePermission;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 
 /**

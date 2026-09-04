@@ -45,8 +45,8 @@ import com.njydsz.common.jdbc.exception.TenantIsolationException;
 import com.njydsz.common.jdbc.interceptor.JSqlParserHelper;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
+import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 
 /**

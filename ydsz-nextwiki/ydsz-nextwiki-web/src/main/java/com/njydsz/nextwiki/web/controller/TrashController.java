@@ -20,10 +20,10 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
 import com.njydsz.nextwiki.server.service.TrashApplicationService;
 

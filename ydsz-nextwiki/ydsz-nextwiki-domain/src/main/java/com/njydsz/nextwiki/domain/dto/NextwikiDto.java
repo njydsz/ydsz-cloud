@@ -13,6 +13,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.common.domain.query.PageQuery;
+
 
 /**
  * 网盘知识库 API DTO 集合

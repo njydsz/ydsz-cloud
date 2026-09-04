@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgOffline;
 import com.njydsz.message.domain.query.MsgOfflineQuery;
 import com.njydsz.message.domain.repository.MsgOfflineRepository;
 import com.njydsz.message.domain.vo.MsgOfflineVO;
-import com.njydsz.message.domain.converter.MessageConverter;
-import com.njydsz.message.domain.entity.MsgOffline;
 import com.njydsz.message.infra.mapper.config.MsgOfflineMapper;
 
 /**

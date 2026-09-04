@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import com.njydsz.workflow.domain.service.impl;
-
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;

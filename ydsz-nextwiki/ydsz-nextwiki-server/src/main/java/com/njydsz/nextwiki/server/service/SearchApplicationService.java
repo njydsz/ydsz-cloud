@@ -11,8 +11,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchFilter.Operator;
+import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;

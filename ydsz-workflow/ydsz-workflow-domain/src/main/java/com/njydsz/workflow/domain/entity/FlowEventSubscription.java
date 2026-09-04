@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.entity;
 
-import com.njydsz.workflow.domain.service.FlowEventService;
-
 import java.io.Serial;
 import java.time.LocalDateTime;
 

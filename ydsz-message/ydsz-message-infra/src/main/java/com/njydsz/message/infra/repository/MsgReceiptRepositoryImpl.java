@@ -6,11 +6,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgReceipt;
 import com.njydsz.message.domain.query.MsgReceiptQuery;
 import com.njydsz.message.domain.repository.MsgReceiptRepository;
 import com.njydsz.message.domain.vo.MsgReceiptVO;
-import com.njydsz.message.domain.converter.MessageConverter;
-import com.njydsz.message.domain.entity.MsgReceipt;
 import com.njydsz.message.infra.mapper.receipt.MsgReceiptMapper;
 
 /**

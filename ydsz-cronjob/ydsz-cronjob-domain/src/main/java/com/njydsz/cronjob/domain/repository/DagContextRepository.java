@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.vo.JobDagContextVO;
 
 /**
  * DAG 实例节点上下文 Repository（domain 层契约，P0-13 优化）。

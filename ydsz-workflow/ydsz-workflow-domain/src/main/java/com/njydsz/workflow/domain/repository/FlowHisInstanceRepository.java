@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.workflow.domain.vo.FlowHisInstanceVO;
+
 
 /**
  * 历史实例仓储接口（domain 层契约）。

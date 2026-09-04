@@ -10,11 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgAggregate;
 import com.njydsz.message.domain.query.MsgAggregateQuery;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
-import com.njydsz.message.domain.converter.MessageConverter;
-import com.njydsz.message.domain.entity.MsgAggregate;
 import com.njydsz.message.infra.mapper.batch.MsgAggregateMapper;
 
 /**

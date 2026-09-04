@@ -6,14 +6,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.agent.server.prompt.PromptEvaluationService;
 import com.njydsz.agent.server.prompt.PromptEvaluationService.PromptComparisonResult;
 import com.njydsz.agent.server.prompt.PromptEvaluationService.PromptEvaluationResult;
+import com.njydsz.agent.server.prompt.PromptEvaluationService;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -21,7 +22,6 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Prompt 模板评估 REST API Controller。

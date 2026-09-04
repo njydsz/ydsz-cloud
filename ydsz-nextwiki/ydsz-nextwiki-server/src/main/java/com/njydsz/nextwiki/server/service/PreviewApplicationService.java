@@ -24,11 +24,11 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 文档预览应用服务

@@ -9,11 +9,11 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.agent.domain.converter.AgentConverter;
 import com.njydsz.agent.domain.dto.AgentApprovalDTO;
+import com.njydsz.agent.domain.entity.AgentApproval;
 import com.njydsz.agent.domain.repository.AgentApprovalRepository;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
-import com.njydsz.agent.domain.converter.AgentConverter;
-import com.njydsz.agent.domain.entity.AgentApproval;
 import com.njydsz.agent.infra.mapper.AgentApprovalMapper;
 
 /**

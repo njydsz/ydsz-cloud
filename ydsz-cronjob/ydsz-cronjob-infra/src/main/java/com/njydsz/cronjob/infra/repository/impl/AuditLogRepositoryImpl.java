@@ -7,9 +7,9 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.cronjob.domain.entity.job.SysAuditLog;
 import com.njydsz.cronjob.domain.repository.AuditLogRepository;
 import com.njydsz.cronjob.domain.vo.AuditLogVO;
-import com.njydsz.cronjob.domain.entity.job.SysAuditLog;
 import com.njydsz.cronjob.infra.mapper.job.SysAuditLogMapper;
 
 /**

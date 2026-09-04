@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.entity;
 
-import com.njydsz.workflow.domain.service.FlowDefinitionService;
-
 import java.io.Serial;
 import java.time.LocalDateTime;
 
@@ -14,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.json.annotation.JsonView;
+import com.njydsz.workflow.domain.vo.FlowViewsVO;
 
 /**
  * 流程定义实体

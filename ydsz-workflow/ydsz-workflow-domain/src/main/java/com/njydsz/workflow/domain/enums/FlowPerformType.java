@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.enums;
 
-import com.njydsz.workflow.domain.service.impl;
-
 /**
  * 会签类型枚举
  *

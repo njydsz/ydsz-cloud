@@ -1,13 +1,13 @@
 package com.njydsz.workflow.domain.vo;
 
-import com.njydsz.workflow.domain.entity.FlowRunTask;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.Data;
+
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 
 /**
  * 流程任务视图对象

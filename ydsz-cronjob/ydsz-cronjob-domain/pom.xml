@@ -28,6 +28,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
+        <!-- ydsz-common-jdbc（MpBaseEntity / MpBaseIdEntity 基类，Domain Entity 继承） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
         <!-- ydsz-common-exception（错误码枚举实现 ExceptionCode 接口） -->
         <dependency>
             <groupId>com.njydsz</groupId>

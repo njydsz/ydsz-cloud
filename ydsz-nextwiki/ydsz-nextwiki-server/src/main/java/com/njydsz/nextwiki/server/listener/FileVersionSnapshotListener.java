@@ -9,13 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.event.FileVersionSnapshotEvent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 文件版本快照事件监听器 — 在主写事务提交后异步创建文件版本记录。

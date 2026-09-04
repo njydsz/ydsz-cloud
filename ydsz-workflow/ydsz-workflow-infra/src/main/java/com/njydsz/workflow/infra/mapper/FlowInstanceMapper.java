@@ -8,8 +8,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 
 /**
  * 流程实例 Mapper

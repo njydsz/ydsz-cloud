@@ -6,8 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.TenantPageQuery;
@@ -46,6 +48,9 @@ public class TenantServiceImpl implements TenantService {
   /** 租户仓储 */
   private final TenantRepository tenantRepository;
 
+  /** 多租户配置属性 */
+  private final TenantProperties tenantProperties;
+
   /**
    * 按 ID 查询租户
    *
@@ -68,6 +73,19 @@ public class TenantServiceImpl implements TenantService {
   @Override
   public PageResponse<List<TenantVO>> page(TenantPageQuery query) {
     return tenantRepository.findByPage(query);
+  }
+
+  /**
+   * 查询当前用户可访问的租户列表（前端租户切换器专用）。
+   *
+   * <p>超级管理员查看全部已启用租户；普通租户管理员仅可查看自身租户。
+   */
+  @Override
+  public List<TenantVO> listAccessibleTenants() {
+    String currentTenantId = AuthContextUtils.getTenantId();
+    boolean isSuperAdmin = tenantProperties.getSuperTenantId().equals(currentTenantId);
+    log.debug("查询可访问租户: currentTenantId={}, isSuperAdmin={}", currentTenantId, isSuperAdmin);
+    return tenantRepository.findByAccessible(isSuperAdmin, currentTenantId);
   }
 
   /**

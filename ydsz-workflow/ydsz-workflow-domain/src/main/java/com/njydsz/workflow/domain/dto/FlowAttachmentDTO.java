@@ -1,12 +1,12 @@
 package com.njydsz.workflow.domain.dto;
 
-import com.njydsz.workflow.domain.entity.FlowAttachment;
-
 import java.io.Serial;
 import java.io.Serializable;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import com.njydsz.workflow.domain.entity.FlowAttachment;
 
 /**
  * 自建工作流引擎 - 审批附件 DTO

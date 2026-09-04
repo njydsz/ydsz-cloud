@@ -12,8 +12,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.cronjob.server.annotation.TenantQuotaCheck;
 import com.njydsz.cronjob.server.annotation.TenantQuotaCheck.QuotaType;
+import com.njydsz.cronjob.server.annotation.TenantQuotaCheck;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 
 /**

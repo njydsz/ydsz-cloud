@@ -44,6 +44,18 @@ public interface TenantRepository {
   PageResponse<List<TenantVO>> findByPage(TenantPageQuery query);
 
   /**
+   * 查询当前用户可访问的租户列表。
+   *
+   * <p>当 {@code includeAll} 为 {@code true} 时返回全部已启用租户（超级管理员场景）；
+   * 否则仅返回 {@code tenantId} 对应的单条租户数据（普通租户管理员场景）。
+   *
+   * @param includeAll 是否包含全部租户（忽略 tenantId 过滤）
+   * @param tenantId 当前租户 ID（includeAll 为 false 时生效）
+   * @return 租户 VO 列表
+   */
+  List<TenantVO> findByAccessible(boolean includeAll, String tenantId);
+
+  /**
    * 按条件统计租户数量。
    *
    * @param query 查询条件

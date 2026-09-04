@@ -1,7 +1,5 @@
 package com.njydsz.literule.domain.entity;
 
-import com.njydsz.literule.domain.expression.ExpressionValidationService;
-
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

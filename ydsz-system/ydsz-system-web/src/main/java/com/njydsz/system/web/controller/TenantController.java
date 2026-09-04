@@ -61,6 +61,21 @@ public class TenantController {
   private final TenantService service;
 
   /**
+   * 查询当前用户可访问的租户列表（前端租户切换器专用）
+   *
+   * <p>超级管理员返回全部已启用租户；普通租户管理员仅返回自身租户。
+   * 该接口对全部已认证用户开放，无需特定权限码。
+   *
+   * @return 可访问租户列表
+   */
+  @Operation(summary = "查询当前用户可访问的租户列表")
+  @AuthApiPermission
+  @GetMapping("/accessible")
+  public YdszResponse<List<TenantVO>> listAccessible() {
+    return YdszResponse.success(service.listAccessibleTenants());
+  }
+
+  /**
    * 分页查询租户列表
    *
    * <p>支持按租户名称模糊搜索和状态精确过滤。

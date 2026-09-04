@@ -1,5 +1,6 @@
 package com.njydsz.message.domain.enums.template;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 模板审核状态枚举。

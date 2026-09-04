@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import com.njydsz.common.domain.query.PageQuery;
+
 
 /**
  * 抄送查询参数。

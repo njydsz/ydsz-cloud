@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.userinfo.server.auth.LdapOrgSyncService;
 import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
+import com.njydsz.userinfo.server.auth.LdapOrgSyncService;
 
 /**
  * LDAP/AD 组织架构同步管理端 API。

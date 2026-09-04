@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 import com.njydsz.nextwiki.server.service.SearchApplicationService;
 
 /**

@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
 
+import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 
 /**
  * 用户最近访问仓储接口

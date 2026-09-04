@@ -34,6 +34,7 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
@@ -47,7 +48,6 @@ import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 分片上传应用服务

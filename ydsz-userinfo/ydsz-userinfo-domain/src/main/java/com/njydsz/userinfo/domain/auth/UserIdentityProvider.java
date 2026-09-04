@@ -2,7 +2,6 @@ package com.njydsz.userinfo.domain.auth;
 
 import java.util.Map;
 
-
 import com.njydsz.userinfo.domain.enums.IdentityProviderType;
 
 

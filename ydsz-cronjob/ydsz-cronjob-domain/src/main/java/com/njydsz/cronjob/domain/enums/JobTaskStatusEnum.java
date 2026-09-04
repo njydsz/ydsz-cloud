@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 子任务执行状态枚举。

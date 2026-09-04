@@ -9,9 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-  // CHECKSTYLE.ON: RegexpSinglelineJava
 
 import com.njydsz.common.util.api.Experimental;
 import com.njydsz.common.util.security.DigestUtils;

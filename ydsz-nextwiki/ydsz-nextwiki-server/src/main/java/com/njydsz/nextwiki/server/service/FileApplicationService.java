@@ -41,8 +41,10 @@ import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
+import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -59,11 +61,9 @@ import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
-import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 文件应用服务

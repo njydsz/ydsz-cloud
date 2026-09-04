@@ -40,6 +40,8 @@ import com.njydsz.system.infra.mapper.TenantMapper;
 @RequiredArgsConstructor
 public class TenantRepositoryImpl implements TenantRepository {
 
+  private static final String STATUS_ENABLED = "ENABLED";
+
   private final TenantMapper tenantMapper;
 
   private final SystemConverter converter;
@@ -63,6 +65,20 @@ public class TenantRepositoryImpl implements TenantRepository {
     IPage<Tenant> result = tenantMapper.selectPage(page, wrapper);
     List<TenantVO> vos = converter.tenantListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
+  }
+
+  @Override
+  public List<TenantVO> findByAccessible(boolean includeAll, String tenantId) {
+    LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
+    // 仅查询已启用且未删除的租户
+    wrapper.eq(Tenant::getStatus, STATUS_ENABLED);
+    // 非超级管理员仅可查看自身租户
+    if (!includeAll && tenantId != null && !tenantId.isBlank()) {
+      wrapper.eq(Tenant::getId, tenantId);
+    }
+    wrapper.orderByDesc(Tenant::getCreatedAt);
+    List<Tenant> entities = tenantMapper.selectList(wrapper);
+    return converter.tenantListToVO(entities);
   }
 
   @Override

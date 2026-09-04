@@ -6,8 +6,6 @@ import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
 
-
-
 /**
  * 租户 Service 接口
  *
@@ -18,6 +16,7 @@ import com.njydsz.system.domain.vo.TenantVO;
  * <ul>
  *   <li><b>CRUD</b>：{@link #getById} / {@link #save} / {@link #updateById} / {@link #removeById}
  *   <li><b>分页查询</b>：{@link #page} — 管理后台「租户管理」列表
+ *   <li><b>可访问租户</b>：{@link #listAccessibleTenants} — 前端租户切换器数据源
  *   <li><b>唯一性校验</b>：{@link #existsByTenantCode} — 创建 / 更新前检查租户编码唯一性
  * </ul>
  *
@@ -46,6 +45,15 @@ public interface TenantService {
    * @return 分页结果
    */
   PageResponse<List<TenantVO>> page(TenantPageQuery query);
+
+  /**
+   * 查询当前用户可访问的租户列表（前端租户切换器专用）
+   *
+   * <p>超级管理员（{@code tenantId == superTenantId}）可查看全部已启用租户；普通租户管理员仅可查看自身租户。
+   *
+   * @return 可访问租户列表（仅含 id / tenantCode / tenantName）
+   */
+  List<TenantVO> listAccessibleTenants();
 
   /**
    * 创建租户
