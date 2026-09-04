@@ -2,9 +2,8 @@ package com.njydsz.cronjob.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
-
-
 
 /**
  * 告警日志 Repository（domain 层契约）。
