@@ -1,0 +1,54 @@
+#* velocity 隐式全局变量与宏定义 *#
+#* @vtlvariable name="table" type="com.njydsz.generator.model.TableInfo" *#
+#* @vtlvariable name="config" type="com.njydsz.generator.config.GeneratorProperties.ModuleGroupConfig" *#
+#* @vtlvariable name="text" type="com.njydsz.generator.tool.VelocityTextTool" *#
+#* @vtlvariable name="date" type="com.njydsz.generator.tool.VelocityDateTool" *#
+
+## 包名后缀设置宏
+#macro(setPackageSuffix $suffix)
+  #set($packageSuffix = ".${suffix}")
+#end
+
+## 类名后缀设置宏
+#macro(setTableSuffix $suffix)
+  #set($classSuffix = "${suffix}")
+#end
+
+## 保存文件路径宏
+#macro(setSavePath $dir $fileName)
+  #set($filePath = "${dir}/${fileName}")
+#end
+
+## 首字母小写
+#macro(firstLowerCase $str)
+  #if($str && $str.length() > 0)
+    #set($first = $str.substring(0, 1).toLowerCase())
+    #set($rest = $str.substring(1))
+    ${first}${rest}
+  #end
+#end
+
+## 下划线转驼峰
+#macro(camelCase $name)
+  #if($name)
+    #set($result = "")
+    #set($underline = $name.indexOf('_'))
+    #if($underline == -1)
+      #set($result = $name)
+    #else
+      #set($parts = $name.split('_'))
+      #set($first = true)
+      #foreach($part in $parts)
+        #if($first)
+          #set($result = "${result}${part.toLowerCase()}")
+          #set($first = false)
+        #else
+          #set($upper = $part.substring(0, 1).toUpperCase())
+          #set($lower = $part.substring(1).toLowerCase())
+          #set($result = "${result}${upper}${lower}")
+        #end
+      #end
+    #end
+    ${result}
+  #end
+#end
