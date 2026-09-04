@@ -323,3 +323,25 @@ public class FlowDefinitionCacheService {
     int colonIdx = cacheKey.lastIndexOf(':');
     return colonIdx >= 0 ? cacheKey.substring(colonIdx + 1) : cacheKey;
   }
+
+  /**
+   * 构建缓存 key（格式：tenantId:definitionId）。
+   *
+   * @param definitionId 流程定义 ID
+   * @return 缓存 key
+   */
+  private String buildCacheKey(String definitionId) {
+    String tenantId = TenantContextHolder.getTenantId();
+    return (tenantId == null ? "default" : tenantId) + ":" + definitionId;
+  }
+
+  /**
+   * 从 FlowSkipVO 提取源节点编码（委托 FlowSkipVO#getSourceRef）。
+   *
+   * @param skip 跳转规则
+   * @return 源节点编码
+   */
+  private String extractSourceRef(FlowSkipVO skip) {
+    return skip == null ? null : skip.getSourceRef();
+  }
+}

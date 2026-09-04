@@ -135,4 +135,12 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
       return new HashMap<>(0);
     }
   }
+
+  @Override
+  protected FlowInstanceVO saveInstance(FlowInstanceVO instance) {
+    if (instance == null) {
+      return null;
+    }
+    return instanceRepository.save(instance);
+  }
 }

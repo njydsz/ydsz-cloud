@@ -271,4 +271,55 @@ public final class NextwikiConverter {
     dto.setCreatedBy(vo.getCreatedBy());
     return dto;
   }
+
+  // ==================== FileAcl 转换 ====================
+
+  public FileAclVO entityToVO(FileAcl entity) {
+    if (entity == null) {
+      return null;
+    }
+    return FileAclVO.builder()
+        .id(entity.getId())
+        .fileNodeId(entity.getFileNodeId())
+        .granteeType(entity.getGranteeType())
+        .granteeId(entity.getGranteeId())
+        .permissionMask(entity.getPermissionMask())
+        .inherited(entity.getInherited())
+        .owner(entity.getOwner())
+        .createdBy(entity.getCreatedBy())
+        .createdAt(entity.getCreatedAt())
+        .updatedBy(entity.getUpdatedBy())
+        .updatedAt(entity.getUpdatedAt())
+        .build();
+  }
+
+  public FileAcl dtoToEntity(FileAclDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    return FileAcl.builder()
+        .id(dto.getId())
+        .fileNodeId(dto.getFileNodeId())
+        .granteeType(dto.getGranteeType())
+        .granteeId(dto.getGranteeId())
+        .permissionMask(dto.getPermissionMask())
+        .inherited(dto.getInherited())
+        .owner(dto.getOwner())
+        .createdBy(dto.getCreatedBy())
+        .build();
+  }
+
+  public List<FileAclVO> fileAclListToVO(List<FileAcl> entities) {
+    if (entities == null || entities.isEmpty()) {
+      return List.of();
+    }
+    return entities.stream().map(this::entityToVO).collect(Collectors.toList());
+  }
+
+  public List<FileAcl> fileAclDtosToEntities(List<FileAclDTO> dtos) {
+    if (dtos == null || dtos.isEmpty()) {
+      return List.of();
+    }
+    return dtos.stream().map(this::dtoToEntity).collect(Collectors.toList());
+  }
 }
