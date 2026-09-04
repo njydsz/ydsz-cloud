@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
 
 /**
  * 每日统计 Repository（domain 层契约）。

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**

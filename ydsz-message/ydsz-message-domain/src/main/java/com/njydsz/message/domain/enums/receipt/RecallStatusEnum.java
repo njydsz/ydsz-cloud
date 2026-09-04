@@ -1,6 +1,5 @@
 package com.njydsz.message.domain.enums.receipt;
 
-import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 消息撤回状态枚举

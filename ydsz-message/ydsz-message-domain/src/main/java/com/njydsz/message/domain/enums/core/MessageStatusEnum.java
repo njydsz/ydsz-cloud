@@ -1,6 +1,5 @@
 package com.njydsz.message.domain.enums.core;
 
-import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 消息发送状态枚举。

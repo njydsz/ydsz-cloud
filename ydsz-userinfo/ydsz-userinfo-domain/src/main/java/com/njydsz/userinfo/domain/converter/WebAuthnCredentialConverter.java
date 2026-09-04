@@ -4,8 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 import com.njydsz.userinfo.domain.entity.WebAuthnCredential;
+import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 
 /**
  * WebAuthn 凭证 MapStruct 转换器（P1-2 统一 Converter 策略）。

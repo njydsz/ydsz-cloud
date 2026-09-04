@@ -3,7 +3,6 @@ package com.njydsz.cronjob.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.cronjob.domain.vo.JobWebhookRetryVO;
 
 /**
  * WebHook 重试补偿 Repository（domain 层契约，P1-3 Webhook 投递保障）。

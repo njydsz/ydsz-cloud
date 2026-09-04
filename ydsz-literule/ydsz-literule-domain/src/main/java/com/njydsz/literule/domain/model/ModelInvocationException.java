@@ -1,7 +1,6 @@
 package com.njydsz.literule.domain.model;
 
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 
 /**
  * 模型调用异常（基础设施层异常）

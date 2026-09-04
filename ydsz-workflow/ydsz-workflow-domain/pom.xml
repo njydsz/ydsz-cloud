@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -12,9 +12,21 @@
     <name>ydsz-workflow-domain</name>
     <description>Domain Layer</description>
     <dependencies>
+
+        <!-- mybatis-plus-annotation: @TableName/@TableField（Domain Entity 使用 ORM 注解） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!-- ydsz-common-jdbc（MpBaseEntity 基类 + @TableName 等 MyBatis Plus 注解） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
         </dependency>
         <!-- ydsz-common-exception（错误码枚举实现 ExceptionCode 接口） -->
         <dependency>

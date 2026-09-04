@@ -1,6 +1,5 @@
 package com.njydsz.literule.domain.service;
 
-import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 
 /**
  * 决策表 Excel 导入导出服务接口（领域层）

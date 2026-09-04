@@ -3,7 +3,6 @@ package com.njydsz.agent.domain.tool;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.agent.domain.model.ToolDefinition;
 
 /**
  * 工具注册条目（内部数据结构）

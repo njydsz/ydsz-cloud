@@ -2,11 +2,20 @@ package com.njydsz.literule.domain.converter;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
+import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.dto.RuleVersionDTO;
+import com.njydsz.literule.domain.entity.DecisionTable;
+import com.njydsz.literule.domain.entity.RuleABPolicy;
+import com.njydsz.literule.domain.entity.RuleABRollback;
+import com.njydsz.literule.domain.entity.RuleChainGraph;
+import com.njydsz.literule.domain.entity.RuleDependency;
+import com.njydsz.literule.domain.entity.RuleExecutionTrace;
+import com.njydsz.literule.domain.entity.RulePack;
+import com.njydsz.literule.domain.entity.RuleTemplate;
+import com.njydsz.literule.domain.entity.RuleVersionHistory;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
@@ -24,15 +33,6 @@ import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
-import com.njydsz.literule.domain.entity.DecisionTable;
-import com.njydsz.literule.domain.entity.RuleABPolicy;
-import com.njydsz.literule.domain.entity.RuleABRollback;
-import com.njydsz.literule.domain.entity.RuleChainGraph;
-import com.njydsz.literule.domain.entity.RuleDependency;
-import com.njydsz.literule.domain.entity.RuleExecutionTrace;
-import com.njydsz.literule.domain.entity.RulePack;
-import com.njydsz.literule.domain.entity.RuleTemplate;
-import com.njydsz.literule.domain.entity.RuleVersionHistory;
 
 /**
  * literule 模块统一转换器门面。

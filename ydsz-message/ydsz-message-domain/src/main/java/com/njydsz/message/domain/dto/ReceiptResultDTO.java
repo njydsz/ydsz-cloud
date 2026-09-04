@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 
 /**
  * 主动拉取的回执结果（P2-9）。

@@ -4,8 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.vo.SocialClientVO;
 import com.njydsz.userinfo.domain.entity.SocialClient;
+import com.njydsz.userinfo.domain.vo.SocialClientVO;
 
 /**
  * 社交平台客户端配置 MapStruct 转换器（P1-1）。

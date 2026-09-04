@@ -1,6 +1,5 @@
 package com.njydsz.workflow.domain.enums;
 
-import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 工作流任务状态枚举

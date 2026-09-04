@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 社交平台客户端配置分页查询参数（P1-1）。

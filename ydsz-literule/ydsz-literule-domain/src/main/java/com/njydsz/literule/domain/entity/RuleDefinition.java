@@ -11,7 +11,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.literule.domain.enums.RuleStatusEnum;
 
 /**
  * LiteRule 规则定义

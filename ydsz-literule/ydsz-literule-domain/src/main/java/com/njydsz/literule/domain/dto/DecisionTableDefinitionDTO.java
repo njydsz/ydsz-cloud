@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.literule.domain.enums.HitPolicy;
 
 /**
  * 决策表定义（DMN 风格）

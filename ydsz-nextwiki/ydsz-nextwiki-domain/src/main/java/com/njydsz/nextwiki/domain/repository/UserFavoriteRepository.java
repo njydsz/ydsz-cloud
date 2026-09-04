@@ -2,7 +2,6 @@ package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
 
-import com.njydsz.nextwiki.domain.dto.UserFavoriteDTO;
 
 /**
  * 用户收藏夹仓储接口

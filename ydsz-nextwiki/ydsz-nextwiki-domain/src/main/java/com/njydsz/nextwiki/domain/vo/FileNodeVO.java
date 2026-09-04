@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 
 /**
  * 文件节点聚合根 VO

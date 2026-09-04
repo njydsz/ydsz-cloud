@@ -8,6 +8,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
@@ -17,7 +18,6 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
-import com.njydsz.literule.domain.entity.RuleDefinition;
 
 /**
  * 规则核心转换器（P2-2 拆分）

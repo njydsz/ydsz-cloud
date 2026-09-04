@@ -3,8 +3,8 @@ package com.njydsz.userinfo.domain.converter;
 import org.mapstruct.Mapper;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.domain.entity.SamlIdpConfig;
+import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 
 /**
  * SAML IdP 配置 MapStruct 转换器（P2-1）。

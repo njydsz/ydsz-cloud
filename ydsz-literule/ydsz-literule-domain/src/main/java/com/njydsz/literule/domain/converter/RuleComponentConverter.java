@@ -5,16 +5,16 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-import com.njydsz.literule.domain.vo.DecisionTableVO;
-import com.njydsz.literule.domain.vo.RuleABPolicyVO;
-import com.njydsz.literule.domain.vo.RuleABRollbackVO;
-import com.njydsz.literule.domain.vo.RuleChainGraphVO;
-import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.entity.DecisionTable;
 import com.njydsz.literule.domain.entity.RuleABPolicy;
 import com.njydsz.literule.domain.entity.RuleABRollback;
 import com.njydsz.literule.domain.entity.RuleChainGraph;
 import com.njydsz.literule.domain.entity.RuleTemplate;
+import com.njydsz.literule.domain.vo.DecisionTableVO;
+import com.njydsz.literule.domain.vo.RuleABPolicyVO;
+import com.njydsz.literule.domain.vo.RuleABRollbackVO;
+import com.njydsz.literule.domain.vo.RuleChainGraphVO;
+import com.njydsz.literule.domain.vo.RuleTemplateVO;
 
 /**
  * 规则组件转换器（P2-2 拆分）

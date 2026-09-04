@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.literule.domain.enums.RuleEnvironment;
 
 /**
  * 规则评估上下文

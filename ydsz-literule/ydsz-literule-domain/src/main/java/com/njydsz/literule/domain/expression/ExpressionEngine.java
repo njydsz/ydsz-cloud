@@ -2,7 +2,6 @@ package com.njydsz.literule.domain.expression;
 
 import java.util.List;
 
-import com.njydsz.literule.domain.vo.RuleContextVO;
 
 /**
  * 表达式求值器接口

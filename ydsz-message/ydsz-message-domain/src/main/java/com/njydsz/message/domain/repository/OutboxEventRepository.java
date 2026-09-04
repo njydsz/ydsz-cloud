@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.message.domain.event.OutboxEvent;
 
 /**
  * Outbox 事件仓储接口（domain 层契约）。

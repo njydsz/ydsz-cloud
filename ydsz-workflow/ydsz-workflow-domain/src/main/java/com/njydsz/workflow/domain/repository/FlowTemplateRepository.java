@@ -3,7 +3,6 @@ package com.njydsz.workflow.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.workflow.domain.vo.FlowTemplateVO;
 
 /**
  * 流程模板仓储接口（domain 层契约）。

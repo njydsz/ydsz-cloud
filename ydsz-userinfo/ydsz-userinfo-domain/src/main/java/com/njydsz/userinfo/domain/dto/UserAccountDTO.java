@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 
 /**
  * 用户账号统一 DTO（P1-1 CUD 入参）。

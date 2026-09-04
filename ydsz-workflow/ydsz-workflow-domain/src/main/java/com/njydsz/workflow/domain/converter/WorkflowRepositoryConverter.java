@@ -8,8 +8,8 @@ import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 
 /**
  * 流程实例仓储专用 MapStruct 转换器（Infra 层）。

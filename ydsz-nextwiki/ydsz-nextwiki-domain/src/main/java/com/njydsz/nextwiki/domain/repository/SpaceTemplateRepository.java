@@ -3,7 +3,6 @@ package com.njydsz.nextwiki.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
 
 /**
  * 空间模板仓储接口

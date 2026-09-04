@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.gateway;
 
-import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
 
 /**

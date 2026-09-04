@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 
 /**
  * WebAuthn 凭证仓储接口

@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.enums.FlowSlaAction;
 
 /**
  * SLA 超时配置值对象。

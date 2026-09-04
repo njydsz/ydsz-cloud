@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 /**
  * 任务执行日志 Repository（domain 层契约）。

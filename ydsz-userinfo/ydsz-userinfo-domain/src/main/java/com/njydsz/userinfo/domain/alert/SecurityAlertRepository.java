@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 
 /**
  * 安全告警仓储接口（领域契约层）。

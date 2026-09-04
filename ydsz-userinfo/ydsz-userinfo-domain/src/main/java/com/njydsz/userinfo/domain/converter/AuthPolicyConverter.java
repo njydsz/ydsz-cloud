@@ -3,8 +3,8 @@ package com.njydsz.userinfo.domain.converter;
 import org.mapstruct.Mapper;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
 import com.njydsz.userinfo.domain.entity.AuthPolicy;
+import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
 
 /**
  * 认证策略 MapStruct 转换器（P3-1）。

@@ -1,6 +1,5 @@
 package com.njydsz.message.domain.enums.config;
 
-import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 订阅状态枚举。

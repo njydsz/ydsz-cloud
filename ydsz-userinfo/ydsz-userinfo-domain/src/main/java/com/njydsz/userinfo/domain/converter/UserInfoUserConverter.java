@@ -13,6 +13,13 @@ import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
 import com.njydsz.userinfo.domain.dto.UserPasswordHistoryDTO;
 import com.njydsz.userinfo.domain.dto.UserPostDTO;
 import com.njydsz.userinfo.domain.dto.UserRoleDTO;
+import com.njydsz.userinfo.domain.entity.SocialAccount;
+import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.domain.entity.UserDept;
+import com.njydsz.userinfo.domain.entity.UserLoginHistory;
+import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
+import com.njydsz.userinfo.domain.entity.UserPost;
+import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
@@ -22,13 +29,6 @@ import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.domain.vo.UserPasswordHistoryVO;
 import com.njydsz.userinfo.domain.vo.UserPostVO;
 import com.njydsz.userinfo.domain.vo.UserRoleVO;
-import com.njydsz.userinfo.domain.entity.SocialAccount;
-import com.njydsz.userinfo.domain.entity.UserAccount;
-import com.njydsz.userinfo.domain.entity.UserDept;
-import com.njydsz.userinfo.domain.entity.UserLoginHistory;
-import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
-import com.njydsz.userinfo.domain.entity.UserPost;
-import com.njydsz.userinfo.domain.entity.UserRole;
 
 /**
  * 用户领域 MapStruct 转换器。

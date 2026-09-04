@@ -3,7 +3,6 @@ package com.njydsz.userinfo.domain.enums;
 import java.util.Arrays;
 import java.util.List;
 
-import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 用户生命周期状态枚举。

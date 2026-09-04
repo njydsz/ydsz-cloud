@@ -1,7 +1,6 @@
 package com.njydsz.workflow.domain.enums;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 
 /**
  * 流程节点类型

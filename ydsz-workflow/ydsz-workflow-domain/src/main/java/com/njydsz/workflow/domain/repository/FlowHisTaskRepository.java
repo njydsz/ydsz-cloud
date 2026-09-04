@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 
 /**
  * 历史任务仓储接口（domain 层契约）。

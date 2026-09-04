@@ -13,13 +13,6 @@ import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
 import com.njydsz.agent.domain.dto.PromptVersionDTO;
 import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
-import com.njydsz.agent.domain.vo.AgentApprovalVO;
-import com.njydsz.agent.domain.vo.AgentDefinitionVO;
-import com.njydsz.agent.domain.vo.AgentTraceStepVO;
-import com.njydsz.agent.domain.vo.AgentTraceVO;
-import com.njydsz.agent.domain.vo.PromptTemplateVO;
-import com.njydsz.agent.domain.vo.PromptVersionVO;
-import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
 import com.njydsz.agent.domain.entity.AgentApproval;
 import com.njydsz.agent.domain.entity.AgentDefinition;
 import com.njydsz.agent.domain.entity.AgentTrace;
@@ -27,6 +20,13 @@ import com.njydsz.agent.domain.entity.AgentTraceStep;
 import com.njydsz.agent.domain.entity.PromptTemplate;
 import com.njydsz.agent.domain.entity.PromptVersion;
 import com.njydsz.agent.domain.entity.TokenUsageRecord;
+import com.njydsz.agent.domain.vo.AgentApprovalVO;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
+import com.njydsz.agent.domain.vo.AgentTraceStepVO;
+import com.njydsz.agent.domain.vo.AgentTraceVO;
+import com.njydsz.agent.domain.vo.PromptTemplateVO;
+import com.njydsz.agent.domain.vo.PromptVersionVO;
+import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
 
 /**
  * agent 模块统一 MapStruct 转换器。
