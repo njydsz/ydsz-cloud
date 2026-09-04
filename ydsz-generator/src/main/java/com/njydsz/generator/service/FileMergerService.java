@@ -39,9 +39,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class FileMergerService {
 
-  /** 自动生成的区域标记 */
+  /** 自动生成的区域标记 - 开始 */
   private static final String GENERATED_START = "// --- GENERATED CODE START ---";
+  /** 自动生成的区域标记 - 结束 */
   private static final String GENERATED_END = "// --- GENERATED CODE END ---";
+  /** 默认初始容量 */
+  private static final int DEFAULT_INITIAL_CAPACITY = 4;
 
   /**
    * 处理文件冲突。
@@ -164,7 +167,7 @@ public class FileMergerService {
   }
 
   private List<String> extractUserCustomSections(String content) {
-    List<String> customSections = new ArrayList<>(4);
+    List<String> customSections = new ArrayList<>(DEFAULT_INITIAL_CAPACITY);
     String[] lines = content.split("\n");
     boolean inGenerated = false;
     StringBuilder section = new StringBuilder();
@@ -232,8 +235,11 @@ public class FileMergerService {
    * @since 26.09.04
    */
   public enum DiffLineType {
+    /** 未变更 */
     UNCHANGED,
+    /** 新增 */
     ADDED,
+    /** 删除 */
     DELETED
   }
 

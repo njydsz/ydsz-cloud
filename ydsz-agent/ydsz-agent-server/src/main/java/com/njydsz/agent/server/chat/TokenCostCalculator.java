@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.chat;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -74,8 +75,8 @@ public class TokenCostCalculator {
         }
       }
     }
-    double charRatio = properties.getMemory().getTokenCharRatio();
-    int estimatedPromptTokens = Math.max(1, (int) Math.ceil(totalChars / charRatio));
+    BigDecimal charRatio = properties.getMemory().getTokenCharRatio();
+    int estimatedPromptTokens = Math.max(1, (int) Math.ceil(totalChars / charRatio.doubleValue()));
     double unitPrice = resolveUnitPrice(request.getModel());
     return CostEstimate.estimate(
         estimatedPromptTokens, request.getMaxTokens(), request.getModel(), unitPrice);
