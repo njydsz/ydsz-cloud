@@ -90,7 +90,7 @@ public class RedissonLeaderElector implements LeaderElector {
   private final Map<String, String> heldLockValues = new ConcurrentHashMap<>();
 
   /** 可重入分布式锁（由 LockStrategy 工厂创建的缓存实例，全局唯一） */
-  private final DistributedLocker distributedLocker;
+  private DistributedLocker distributedLocker;
 
   /** P1-F4: 当前节点持有的 Leader 任期号（role -> epoch，随抢占/重新抢占更新） */
   private final Map<String, Long> heldEpochs = new ConcurrentHashMap<>();

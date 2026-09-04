@@ -1,0 +1,57 @@
+package ${package}.server.service;
+
+import java.util.List;
+
+import com.njydsz.common.core.response.PageResponse;
+import ${package}.domain.dto.${table.dtoName};
+import ${package}.domain.query.${table.queryName};
+import ${package}.domain.vo.${table.voName};
+
+/**
+ * ${table.tableComment} Service 接口
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+public interface ${table.serviceName} {
+
+  /**
+   * 按 ID 查询。
+   *
+   * @param id 主键
+   * @return VO；不存在返回 {@code null}
+   */
+  ${table.voName} getById(String id);
+
+  /**
+   * 分页查询。
+   *
+   * @param query 分页查询参数
+   * @return 分页结果
+   */
+  PageResponse<List<${table.voName}>> page(${table.queryName} query);
+
+  /**
+   * 创建。
+   *
+   * @param dto DTO
+   * @return 新建 ID
+   */
+  String save(${table.dtoName} dto);
+
+  /**
+   * 更新。
+   *
+   * @param dto DTO
+   * @return 是否成功
+   */
+  boolean updateById(${table.dtoName} dto);
+
+  /**
+   * 删除（逻辑删除）。
+   *
+   * @param id 主键
+   * @return 是否成功
+   */
+  boolean removeById(String id);
+}

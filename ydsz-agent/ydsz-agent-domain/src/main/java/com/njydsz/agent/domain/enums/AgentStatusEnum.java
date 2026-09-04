@@ -1,5 +1,6 @@
 package com.njydsz.agent.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * Agent 定义状态枚举。

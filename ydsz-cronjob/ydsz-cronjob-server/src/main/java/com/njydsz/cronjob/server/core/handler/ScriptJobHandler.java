@@ -392,4 +392,80 @@ public class ScriptJobHandler implements JobHandler {
       return exitCode == 0 && (errorMessage == null || errorMessage.isEmpty());
     }
   }
+
+  /**
+   * 解析参数列表（从 JSON ArrayNode 转换为 List<String>）。
+   *
+   * @param arrayNode JSON 数组节点
+   * @return 字符串参数列表
+   */
+  private List<String> parseArgs(com.njydsz.common.json.tree.ArrayNode arrayNode) {
+    if (arrayNode == null || arrayNode.isEmpty()) {
+      return new ArrayList<>(0);
+    }
+    List<String> args = new ArrayList<>(arrayNode.size());
+    for (int i = 0; i < arrayNode.size(); i++) {
+      args.add(arrayNode.get(i).asText());
+    }
+    return args;
+  }
+
+  /**
+   * 异步读取流内容。
+   *
+   * @param inputStream 输入流
+   * @param output 输出 StringBuilder
+   * @param isStdout 是否为标准输出
+   * @param jobLogger 任务日志记录器（可为 null）
+   * @return 执行读取的线程
+   */
+  private Thread readStreamAsync(
+      java.io.InputStream inputStream,
+      StringBuilder output,
+      boolean isStdout,
+      JobLogger jobLogger) {
+    Thread thread = new Thread(
+        () -> {
+          try (java.io.BufferedReader reader =
+              new java.io.BufferedReader(
+                  new java.io.InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+              synchronized (output) {
+                output.append(line).append(System.lineSeparator());
+              }
+              if (jobLogger != null) {
+                if (isStdout) {
+                  jobLogger.info(line);
+                } else {
+                  jobLogger.error(line);
+                }
+              }
+            }
+          } catch (IOException e) {
+            log.debug("[ScriptJobHandler] 读取{}流异常: {}", isStdout ? "stdout" : "stderr", e.getMessage());
+          }
+        },
+        isStdout ? "script-stdout-reader" : "script-stderr-reader");
+    thread.setDaemon(true);
+    thread.start();
+    return thread;
+  }
+
+  /**
+   * 截断字符串（超过 2000 字符时截断并追加省略标记）。
+   *
+   * @param text 原始字符串
+   * @return 截断后的字符串
+   */
+  private String truncate(String text) {
+    if (text == null) {
+      return "";
+    }
+    int maxLength = 2000;
+    if (text.length() <= maxLength) {
+      return text;
+    }
+    return text.substring(0, maxLength) + "...(truncated)";
+  }
 }

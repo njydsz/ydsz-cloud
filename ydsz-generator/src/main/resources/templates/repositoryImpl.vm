@@ -1,0 +1,79 @@
+package ${package}.infra.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.converter.${table.converterName};
+import com.njydsz.system.domain.dto.${table.dtoName};
+import com.njydsz.system.domain.entity.${table.entityName};
+import com.njydsz.system.domain.query.${table.queryName};
+import com.njydsz.system.domain.repository.${table.repositoryName};
+import com.njydsz.system.domain.vo.${table.voName};
+import com.njydsz.system.infra.mapper.${table.entityName}Mapper;
+
+/**
+ * ${table.tableComment}仓储实现（Infra 层）。
+ *
+ * <p>实现 {@link ${table.repositoryName}} 接口，封装 ${table.entityName}Mapper 数据访问细节。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Repository
+@RequiredArgsConstructor
+public class ${table.repositoryName}Impl implements ${table.repositoryName} {
+
+  private final ${table.entityName}Mapper mapper;
+
+  private final ${table.converterName} converter;
+
+  @Override
+  public Optional<${table.voName}> findById(String id) {
+    return Optional.ofNullable(mapper.selectById(id)).map(converter::entityToVO);
+  }
+
+  @Override
+  public PageResponse<List<${table.voName}>> findByPage(${table.queryName} query) {
+    Page<${table.entityName}> page = new Page<>(query.getPageNum(), query.getPageSize());
+    LambdaQueryWrapper<${table.entityName}> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByDesc(${table.entityName}::getCreatedAt);
+    IPage<${table.entityName}> result = mapper.selectPage(page, wrapper);
+    List<${table.voName}> vos = converter.toList(result.getRecords());
+    return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
+  }
+
+  @Override
+  public long countByCondition(${table.queryName} query) {
+    LambdaQueryWrapper<${table.entityName}> wrapper = new LambdaQueryWrapper<>();
+    Long count = mapper.selectCount(wrapper);
+    return count != null ? count : 0L;
+  }
+
+  @Override
+  public boolean insert(${table.dtoName} dto) {
+    ${table.entityName} entity = converter.dtoToEntity(dto);
+    boolean success = mapper.insert(entity) > 0;
+    if (success && entity.getId() != null) {
+      dto.setId(entity.getId());
+    }
+    return success;
+  }
+
+  @Override
+  public boolean updateById(${table.dtoName} dto) {
+    ${table.entityName} entity = converter.dtoToEntityWithId(dto);
+    return mapper.updateById(entity) > 0;
+  }
+
+  @Override
+  public boolean deleteById(String id) {
+    return mapper.deleteById(id) > 0;
+  }
+}

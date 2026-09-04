@@ -29,7 +29,7 @@ import com.njydsz.workflow.domain.entity.FlowComment;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowComment 评论实体
+ * @see com.njydsz.workflow.domain.entity.FlowComment 评论实体
  * @see com.njydsz.workflow.server.service.FlowCommentService 评论 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

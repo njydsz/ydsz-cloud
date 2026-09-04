@@ -33,7 +33,7 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowInstance 流程实例实体
+ * @see com.njydsz.workflow.domain.entity.FlowInstance 流程实例实体
  * @see com.njydsz.workflow.server.service.FlowInstanceService 流程实例 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

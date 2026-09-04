@@ -29,7 +29,7 @@ import com.njydsz.workflow.domain.entity.FlowTemplate;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowTemplate 流程模板实体
+ * @see com.njydsz.workflow.domain.entity.FlowTemplate 流程模板实体
  * @see com.njydsz.workflow.server.service.FlowTemplateService 流程模板 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

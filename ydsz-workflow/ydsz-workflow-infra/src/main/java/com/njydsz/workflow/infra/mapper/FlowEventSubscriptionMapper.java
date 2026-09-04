@@ -29,7 +29,7 @@ import com.njydsz.workflow.domain.entity.FlowEventSubscription;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowEventSubscription 事件订阅实体
+ * @see com.njydsz.workflow.domain.entity.FlowEventSubscription 事件订阅实体
  * @see com.njydsz.workflow.server.service.FlowEventService 事件 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

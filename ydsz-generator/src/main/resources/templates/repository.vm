@@ -1,0 +1,77 @@
+package ${package}.domain.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import com.njydsz.common.core.response.PageResponse;
+import ${package}.domain.dto.${table.dtoName};
+import ${package}.domain.query.${table.queryName};
+import ${package}.domain.vo.${table.voName};
+
+/**
+ * ${table.tableComment}仓储接口（domain 层契约）。
+ *
+ * <p>定义${table.tableComment!}域的数据访问能力，Infra 层负责实现。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
+ *   <li>返回领域 VO（${table.voName}），非 DTO / infra 实体
+ *   <li>CUD 入参使用领域 DTO（${table.dtoName}），禁止接受 infra 实体
+ *   <li>查询入参使用领域 Query（${table.queryName}）或具体字段
+ * </ul>
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+public interface ${table.repositoryName} {
+
+  /**
+   * 根据主键查询。
+   *
+   * @param id 主键
+   * @return VO；不存在返回 {@code Optional.empty()}
+   */
+  Optional<${table.voName}> findById(String id);
+
+  /**
+   * 分页查询。
+   *
+   * @param query 分页查询参数
+   * @return 分页结果（VO 分页）
+   */
+  PageResponse<List<${table.voName}>> findByPage(${table.queryName} query);
+
+  /**
+   * 按条件统计数量。
+   *
+   * @param query 查询条件
+   * @return 数量
+   */
+  long countByCondition(${table.queryName} query);
+
+  /**
+   * 插入。
+   *
+   * @param dto DTO
+   * @return 插入成功返回 {@code true}
+   */
+  boolean insert(${table.dtoName} dto);
+
+  /**
+   * 更新。
+   *
+   * @param dto DTO
+   * @return 更新成功返回 {@code true}
+   */
+  boolean updateById(${table.dtoName} dto);
+
+  /**
+   * 逻辑删除。
+   *
+   * @param id 主键
+   * @return 删除成功返回 {@code true}
+   */
+  boolean deleteById(String id);
+}

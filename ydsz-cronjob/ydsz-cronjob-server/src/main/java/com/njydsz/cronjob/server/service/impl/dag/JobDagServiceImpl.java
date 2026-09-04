@@ -1,4 +1,5 @@
 package com.njydsz.cronjob.server.service.impl.dag;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ import com.njydsz.cronjob.server.core.dag.DagFailureStrategy;
 import com.njydsz.cronjob.server.core.dag.DagInstanceExecutor;
 import com.njydsz.cronjob.server.core.dag.DagNode;
 import com.njydsz.cronjob.server.core.dag.DagParser;
+import com.njydsz.cronjob.server.core.scheduler.NextFireTimeCalculator;
 import com.njydsz.cronjob.server.service.dag.JobDagService;
 
 /**
@@ -77,6 +79,9 @@ public class JobDagServiceImpl implements JobDagService {
 
   /** DAG 解析器（环检测） */
   private final DagParser dagParser;
+
+  /** 下次触发时间计算器 */
+  private final NextFireTimeCalculator nextFireTimeCalculator;
 
   /**
    * DAG 实例执行器（延迟注入）。
@@ -491,5 +496,31 @@ public class JobDagServiceImpl implements JobDagService {
       adj.computeIfAbsent(edge.from(), k -> new ArrayList<>(ADJACENCY_CAPACITY)).add(edge.to());
     }
     return adj;
+  }
+
+  /**
+   * 校验 CRON 触发类型必须提供 cronExpression。
+   *
+   * @param triggerType 触发类型（MANUAL/CRON/DEPENDENCY）
+   * @param cronExpression CRON 表达式
+   * @throws SysException 当触发类型为 CRON 但未提供 cronExpression 时抛出
+   */
+  private void validateCronExpression(String triggerType, String cronExpression) {
+    if ("CRON".equals(triggerType) && !StringUtils.hasText(cronExpression)) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .key("error.cronjob.msg_cron_expression_required")
+          .build();
+    }
+  }
+
+  /**
+   * 计算下次触发时间（CRON 模式）。
+   *
+   * @param cronExpression CRON 表达式
+   * @return 下次触发时间
+   */
+  private LocalDateTime nextFireTime(String cronExpression) {
+    return nextFireTimeCalculator.calculate(cronExpression, "Asia/Shanghai");
   }
 }

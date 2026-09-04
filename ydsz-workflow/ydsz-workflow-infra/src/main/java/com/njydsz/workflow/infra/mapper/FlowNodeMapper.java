@@ -28,7 +28,7 @@ import com.njydsz.workflow.domain.entity.FlowNode;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowNode 流程节点实体
+ * @see com.njydsz.workflow.domain.entity.FlowNode 流程节点实体
  * @see com.njydsz.workflow.server.service.FlowNodeService 流程节点 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

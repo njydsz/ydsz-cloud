@@ -25,7 +25,7 @@ import com.njydsz.workflow.domain.entity.FlowQuickComment;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowQuickComment 常用语实体
+ * @see com.njydsz.workflow.domain.entity.FlowQuickComment 常用语实体
  * @see com.njydsz.workflow.server.service.FlowCommentService 评论服务（含常用语能力）
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

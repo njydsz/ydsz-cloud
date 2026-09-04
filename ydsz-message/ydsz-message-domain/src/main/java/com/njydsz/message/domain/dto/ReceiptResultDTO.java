@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
+import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 
 
 /**

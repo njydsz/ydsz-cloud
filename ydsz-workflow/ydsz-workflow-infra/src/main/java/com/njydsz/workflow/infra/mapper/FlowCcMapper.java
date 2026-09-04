@@ -29,7 +29,7 @@ import com.njydsz.workflow.domain.entity.FlowCc;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowCc 抄送实体
+ * @see com.njydsz.workflow.domain.entity.FlowCc 抄送实体
  * @see com.njydsz.workflow.server.service.FlowCcService 抄送 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

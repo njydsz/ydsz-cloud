@@ -31,7 +31,7 @@ import com.njydsz.workflow.domain.entity.FlowHisTask;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
  * @see com.njydsz.workflow.server.service.FlowTaskHistoryService 已办 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

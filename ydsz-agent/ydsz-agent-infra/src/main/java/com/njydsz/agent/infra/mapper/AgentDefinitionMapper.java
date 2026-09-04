@@ -24,7 +24,7 @@ import com.njydsz.agent.domain.entity.AgentDefinition;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.agent.infra.entity.AgentDefinition Agent 定义实体
+ * @see com.njydsz.agent.domain.entity.AgentDefinition Agent 定义实体
  * @see com.njydsz.agent.server.service.AgentDefinitionService Agent Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.gateway;
 
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 
 /**
  * LLM 调用异常

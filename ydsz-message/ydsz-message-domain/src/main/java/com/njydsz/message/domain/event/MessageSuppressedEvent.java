@@ -2,6 +2,7 @@ package com.njydsz.message.domain.event;
 
 import java.io.Serial;
 
+import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 
 /**
  * 消息被抑制领域事件。

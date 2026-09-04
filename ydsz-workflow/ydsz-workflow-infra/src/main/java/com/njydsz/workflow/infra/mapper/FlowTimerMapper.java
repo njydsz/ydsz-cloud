@@ -30,7 +30,7 @@ import com.njydsz.workflow.domain.entity.FlowTimer;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowTimer 定时器实体
+ * @see com.njydsz.workflow.domain.entity.FlowTimer 定时器实体
  * @see com.njydsz.workflow.server.scheduler.FlowTimerScheduler 定时器调度器
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

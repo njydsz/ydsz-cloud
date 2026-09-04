@@ -8,6 +8,7 @@ import lombok.Data;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.safe.annotation.Xss;
+import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 
 /**
  * 消息发送 DTO — 统一发送端点 {@code POST /send} 的请求体。

@@ -1,8 +1,9 @@
 package com.njydsz.agent.domain.json;
 
-import com.njydsz.common.json.serializer.JsonSerializer;
-import com.njydsz.common.json.writer.JSONWriter;
 
+import com.njydsz.common.json.serializer.JsonSerializer;
+import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.common.json.writer.JSONWriter;
 /**
  * {@link TokenUsage} 的 YdszJson 自定义序列化器（JsonModule SPI 落地）。
  *

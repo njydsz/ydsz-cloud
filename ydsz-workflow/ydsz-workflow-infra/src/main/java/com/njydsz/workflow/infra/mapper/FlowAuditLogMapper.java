@@ -29,7 +29,7 @@ import com.njydsz.workflow.domain.entity.FlowAuditLog;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.workflow.infra.entity.FlowAuditLog 审计日志实体
+ * @see com.njydsz.workflow.domain.entity.FlowAuditLog 审计日志实体
  * @see com.njydsz.workflow.server.service.FlowAuditService 审计 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
