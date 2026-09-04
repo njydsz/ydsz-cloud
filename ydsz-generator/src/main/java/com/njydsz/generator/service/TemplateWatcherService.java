@@ -9,13 +9,14 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 模板文件热加载监听服务。
@@ -35,7 +36,7 @@ public class TemplateWatcherService implements ApplicationRunner {
 
   private static final String DEFAULT_TEMPLATE_DIR = "classpath:/templates";
 
-  private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+  private final ExecutorService executorService = ExecutorUtils.newSingleThreadExecutor("tpl-watcher-");
 
   @Override
   public void run(ApplicationArguments args) {

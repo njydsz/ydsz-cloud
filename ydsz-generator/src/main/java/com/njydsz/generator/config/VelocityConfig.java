@@ -28,7 +28,7 @@ public class VelocityConfig {
     engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
     engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
     engine.setProperty(RuntimeConstants.INPUT_ENCODING, "UTF-8");
-    engine.setProperty(RuntimeConstants.OUTPUT_ENCODING, "UTF-8");
+    engine.setProperty("output.encoding", "UTF-8");
     engine.init();
     return engine;
   }

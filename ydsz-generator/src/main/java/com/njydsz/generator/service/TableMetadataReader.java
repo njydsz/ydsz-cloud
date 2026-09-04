@@ -3,9 +3,9 @@ package com.njydsz.generator.service;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.sql.DataSource;
 
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.generator.config.GeneratorProperties;
-import com.njydsz.generator.config.GeneratorProperties.ModuleGroupConfig;
 import com.njydsz.generator.model.ColumnMetadata;
 import com.njydsz.generator.model.EnumDefinition;
 import com.njydsz.generator.model.TableMetadata;
@@ -36,6 +35,12 @@ public class TableMetadataReader {
 
   private static final String[] TABLE_TYPES = {"TABLE"};
 
+  /** 列表默认初始容量: 元数据列 */
+  private static final int DEFAULT_COLUMNS_CAPACITY = 32;
+
+  /** 列表默认初始容量: 枚举定义 */
+  private static final int DEFAULT_ENUM_CAPACITY = 4;
+
   private final DataSource dataSource;
 
   private final GeneratorProperties properties;
@@ -53,14 +58,16 @@ public class TableMetadataReader {
     // 1. 解析表名 -> 各类名称
     parseNames(tableName, metadata);
 
+    // 声明在 try 外部，以便后续步骤引用
+    List<ColumnMetadata> allColumns = new ArrayList<>(DEFAULT_COLUMNS_CAPACITY);
+    List<ColumnMetadata> bizColumns = new ArrayList<>(DEFAULT_COLUMNS_CAPACITY);
+
     try (Connection conn = dataSource.getConnection()) {
       DatabaseMetaData dbMeta = conn.getMetaData();
       String catalog = conn.getCatalog();
       String schema = conn.getSchema();
 
       // 2. 读取列信息
-      List<ColumnMetadata> allColumns = new ArrayList<>(32);
-      List<ColumnMetadata> bizColumns = new ArrayList<>(32);
       try (ResultSet rs = dbMeta.getColumns(catalog, schema, tableName, "%")) {
         while (rs.next()) {
           ColumnMetadata col = mapColumn(rs);
@@ -150,7 +157,7 @@ public class TableMetadataReader {
     metadata.setPermissionPrefix(moduleName + ":" + moduleRaw.replace('_', '-'));
   }
 
-  private ColumnMetadata mapColumn(ResultSet rs) throws java.sql.SQLException {
+  private ColumnMetadata mapColumn(ResultSet rs) throws SQLException {
     String columnName = rs.getString("COLUMN_NAME");
     int jdbcType = rs.getInt("DATA_TYPE");
     String jdbcTypeName = rs.getString("TYPE_NAME");
@@ -260,7 +267,7 @@ public class TableMetadataReader {
    * @return 枚举定义列表
    */
   private static List<EnumDefinition> parseEnumDefinitions(List<ColumnMetadata> columns) {
-    List<EnumDefinition> enums = new ArrayList<>(4);
+    List<EnumDefinition> enums = new ArrayList<>(DEFAULT_ENUM_CAPACITY);
     for (ColumnMetadata col : columns) {
       String enumRaw = col.getEnumValues();
       if (enumRaw == null || enumRaw.isBlank()) {

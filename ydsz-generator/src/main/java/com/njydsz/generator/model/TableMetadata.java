@@ -3,7 +3,6 @@ package com.njydsz.generator.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.njydsz.generator.model.EnumDefinition;
 import lombok.Data;
 
 /**

@@ -143,7 +143,21 @@ public class CodeGeneratorService {
     String entity = table.getEntityName();
     String moduleName = config.getModuleName();
 
-    // 1. domain/entity
+    // 分层生成：domain 层 + infra/server/web/api 层
+    generateDomainFiles(generated, config, entity, moduleName, rendered);
+    generateInfraServerWebFiles(generated, config, entity, moduleName, rendered);
+    generateApiFiles(generated, config, entity, rendered);
+
+    generated.removeIf(path -> path == null || path.isBlank());
+    log.info("表 {} 生成完成，共 {} 个文件", table.getTableName(), generated.size());
+    return generated;
+  }
+
+  /**
+   * 生成 domain 层代码（entity / dto / vo / query / repository）。
+   */
+  private void generateDomainFiles(List<String> generated, ModuleGroupConfig config, String entity,
+      String moduleName, Map<String, String> rendered) {
     if (config.isGenerateEntity()) {
       generated.add(writeFile("entity.vm", resolvePath(moduleName, "domain/entity", entity + ".java"),
           rendered));
@@ -151,10 +165,11 @@ public class CodeGeneratorService {
     if (config.isGenerateModel()) {
       addModelFiles(generated, config, entity, rendered);
     }
-    // 3. domain/repository
     if (config.isGenerateRepository()) {
       generated.add(writeFile("repository.vm",
           resolvePath(moduleName, "domain/repository", entity + "Repository.java"), rendered));
+      generated.add(writeFile("repositoryImpl.vm",
+          resolvePath(moduleName, "infra/repository", entity + "RepositoryImpl.java"), rendered));
     }
     if (config.isGenerateConverter()) {
       addConverterFile(generated, config, moduleName, rendered);
@@ -163,10 +178,13 @@ public class CodeGeneratorService {
       generated.add(writeFile("mapper.vm", resolvePath(moduleName, "infra/mapper", entity + "Mapper.java"),
           rendered));
     }
-    if (config.isGenerateRepository()) {
-      generated.add(writeFile("repositoryImpl.vm",
-          resolvePath(moduleName, "infra/repository", entity + "RepositoryImpl.java"), rendered));
-    }
+  }
+
+  /**
+   * 生成 infra/server/web 层代码。
+   */
+  private void generateInfraServerWebFiles(List<String> generated, ModuleGroupConfig config,
+      String entity, String moduleName, Map<String, String> rendered) {
     if (config.isGenerateService()) {
       addServiceFiles(generated, config, entity, rendered);
     }
@@ -174,13 +192,16 @@ public class CodeGeneratorService {
       generated.add(writeFile("controller.vm",
           resolvePath(moduleName, "web/controller", entity + "Controller.java"), rendered));
     }
+  }
+
+  /**
+   * 生成 api 层代码（feign / assembler / fallbackFactory）。
+   */
+  private void generateApiFiles(List<String> generated, ModuleGroupConfig config, String entity,
+      Map<String, String> rendered) {
     if (config.isGenerateFeign()) {
       addFeignFiles(generated, config, entity, rendered);
     }
-
-    generated.removeIf(path -> path == null || path.isBlank());
-    log.info("表 {} 生成完成，共 {} 个文件", table.getTableName(), generated.size());
-    return generated;
   }
 
   private void addModelFiles(List<String> generated, ModuleGroupConfig config, String entity,

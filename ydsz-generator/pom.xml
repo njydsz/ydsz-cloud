@@ -42,6 +42,11 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-core</artifactId>
     </dependency>
+    <!-- 统一线程池管理（替代 Executors 创建单线程池） -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-thread</artifactId>
+    </dependency>
   </dependencies>
 
 </project>
