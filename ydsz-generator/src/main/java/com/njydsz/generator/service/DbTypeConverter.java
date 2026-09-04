@@ -1,24 +1,30 @@
 package com.njydsz.generator.service;
 
-import java.math.BigDecimal;
 import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.njydsz.generator.config.DatabaseDialect;
 
 /**
  * 数据库 JDBC 类型 → Java 类型映射器。
  *
- * <p>将 JDBC {@link java.sql.Types} 的整型码映射到对应 Java 类型的短名和全名，用于代码生成的字段类型渲染。
+ * <p>将 JDBC {@link java.sql.Types} 的整型码或 JDBC 类型名映射到对应 Java 类型的短名和全名，
+ * 用于代码生成的字段类型渲染。
+ *
+ * <p>支持多数据库方言：通过 {@link DatabaseDialect} 根据 JDBC URL 自动识别数据库类型，
+ * 并使用对应的类型映射规则。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 public final class DbTypeConverter {
 
-  /** jdbcType -> [shortType, fullType] */
+  /** jdbcType -> [shortType, fullType]（通用映射，适用于所有数据库） */
   private static final Map<Integer, String[]> TYPE_MAP = new HashMap<>(32);
+
+  /** 当前激活的数据库方言 */
+  private static volatile DatabaseDialect currentDialect = DatabaseDialect.POSTGRESQL;
 
   static {
     // String 类
@@ -54,6 +60,24 @@ public final class DbTypeConverter {
   }
 
   /**
+   * 根据 JDBC URL 设置当前数据库方言。
+   *
+   * @param jdbcUrl - JDBC 连接 URL
+   */
+  public static void setDialectByUrl(String jdbcUrl) {
+    currentDialect = DatabaseDialect.fromJdbcUrl(jdbcUrl);
+  }
+
+  /**
+   * 获取当前激活的数据库方言。
+   *
+   * @return 当前方言
+   */
+  public static DatabaseDialect getCurrentDialect() {
+    return currentDialect;
+  }
+
+  /**
    * 将 JDBC 类型码映射为 Java 短类型名。
    *
    * <p>未识别的类型统一降级为 {@code String}（与 {@code varchar} 兼容），确保生成不中断。
@@ -75,6 +99,28 @@ public final class DbTypeConverter {
   public static String toJavaType(int jdbcType) {
     String[] pair = TYPE_MAP.get(jdbcType);
     return pair != null ? pair[1] : "java.lang.String";
+  }
+
+  /**
+   * 根据数据库方言的 JDBC 类型名解析 Java 短类型名。
+   *
+   * <p>用于处理数据库特有的类型名（如 PostgreSQL 的 {@code int4/int8/bool}，MySQL 的 {@code datetime/tinyint}）。
+   *
+   * @param jdbcTypeName - JDBC 类型名（如 {@code int4}、{@code varchar2}）
+   * @return Java 短类型名
+   */
+  public static String toJavaShortTypeByName(String jdbcTypeName) {
+    return currentDialect.resolveJavaType(jdbcTypeName)[0];
+  }
+
+  /**
+   * 根据数据库方言的 JDBC 类型名解析 Java 全限定类型名。
+   *
+   * @param jdbcTypeName - JDBC 类型名
+   * @return Java 全限定类型名
+   */
+  public static String toJavaTypeByName(String jdbcTypeName) {
+    return currentDialect.resolveJavaType(jdbcTypeName)[1];
   }
 
   /**
