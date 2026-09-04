@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.SocialAccount;
+import com.njydsz.userinfo.domain.entity.SocialAccount;
 
 /**
  * 社交账号绑定 Mapper 接口。

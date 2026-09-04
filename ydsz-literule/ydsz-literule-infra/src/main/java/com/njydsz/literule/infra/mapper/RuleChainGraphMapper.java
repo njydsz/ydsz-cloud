@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleChainGraph;
+import com.njydsz.literule.domain.entity.RuleChainGraph;
 
 /**
  * 规则链 Mapper

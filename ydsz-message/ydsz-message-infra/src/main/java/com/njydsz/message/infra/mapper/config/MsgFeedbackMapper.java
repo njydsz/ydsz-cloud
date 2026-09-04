@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgFeedback;
+import com.njydsz.message.domain.entity.MsgFeedback;
 
 /**
  * 消息用户反馈 Mapper

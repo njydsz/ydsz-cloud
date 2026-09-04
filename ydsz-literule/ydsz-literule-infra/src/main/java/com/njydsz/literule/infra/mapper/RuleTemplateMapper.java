@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleTemplate;
+import com.njydsz.literule.domain.entity.RuleTemplate;
 
 /**
  * 规则模板 Mapper

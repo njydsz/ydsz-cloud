@@ -4,7 +4,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.system.infra.entity.AppInfo;
+import com.njydsz.system.domain.entity.AppInfo;
 
 
 

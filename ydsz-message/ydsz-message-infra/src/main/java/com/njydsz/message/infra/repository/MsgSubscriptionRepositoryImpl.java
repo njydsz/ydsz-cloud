@@ -14,8 +14,8 @@ import com.njydsz.common.domain.query.OrderItem;
 import com.njydsz.message.domain.query.MsgSubscriptionQuery;
 import com.njydsz.message.domain.repository.MsgSubscriptionRepository;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgSubscription;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgSubscription;
 import com.njydsz.message.infra.mapper.config.MsgSubscriptionMapper;
 
 /**

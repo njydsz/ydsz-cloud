@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowNode;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 
 /**

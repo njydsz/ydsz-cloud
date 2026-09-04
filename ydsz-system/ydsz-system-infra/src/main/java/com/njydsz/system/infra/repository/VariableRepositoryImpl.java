@@ -13,8 +13,8 @@ import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.repository.VariableRepository;
 import com.njydsz.system.domain.vo.VariableVO;
-import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.Variable;
+import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.infra.mapper.VariableMapper;
 
 

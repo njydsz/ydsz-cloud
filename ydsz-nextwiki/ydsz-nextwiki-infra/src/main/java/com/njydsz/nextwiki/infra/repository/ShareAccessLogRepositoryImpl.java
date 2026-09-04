@@ -11,8 +11,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
 import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
 import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.ShareAccessLog;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
 import com.njydsz.nextwiki.infra.mapper.ShareAccessLogMapper;
 
 /**

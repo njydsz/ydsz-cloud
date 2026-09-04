@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.message.domain.query.MsgVariableSourceQuery;
 import com.njydsz.message.domain.repository.MsgVariableSourceRepository;
 import com.njydsz.message.domain.vo.MsgVariableSourceVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgVariableSource;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgVariableSource;
 import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
 
 /**

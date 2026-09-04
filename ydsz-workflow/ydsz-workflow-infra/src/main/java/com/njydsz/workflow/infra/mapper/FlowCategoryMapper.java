@@ -3,7 +3,7 @@ package com.njydsz.workflow.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.workflow.infra.entity.FlowCategory;
+import com.njydsz.workflow.domain.entity.FlowCategory;
 
 /**
  * 流程分类 Mapper

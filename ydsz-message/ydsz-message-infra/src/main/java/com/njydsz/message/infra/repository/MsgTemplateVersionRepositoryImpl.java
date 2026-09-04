@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.message.domain.query.MsgTemplateVersionQuery;
 import com.njydsz.message.domain.repository.MsgTemplateVersionRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgTemplateVersion;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgTemplateVersion;
 import com.njydsz.message.infra.mapper.template.MsgTemplateVersionMapper;
 
 /**

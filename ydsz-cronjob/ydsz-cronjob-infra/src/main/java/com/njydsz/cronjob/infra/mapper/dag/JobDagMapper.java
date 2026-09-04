@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.cronjob.infra.entity.dag.JobDag;
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
 
 /**
  * 任务 DAG Mapper

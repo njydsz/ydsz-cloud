@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.ShareLink;
+import com.njydsz.nextwiki.domain.entity.ShareLink;
 
 /**
  * 分享链接 Mapper

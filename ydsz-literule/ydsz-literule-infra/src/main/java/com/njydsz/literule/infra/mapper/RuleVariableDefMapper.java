@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.literule.infra.entity.RuleVariableDef;
+import com.njydsz.literule.domain.entity.RuleVariableDef;
 
 /**
  * 规则变量定义 Mapper

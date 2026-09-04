@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.Space;
+import com.njydsz.nextwiki.domain.entity.Space;
 
 /**
  * 知识库空间 Mapper

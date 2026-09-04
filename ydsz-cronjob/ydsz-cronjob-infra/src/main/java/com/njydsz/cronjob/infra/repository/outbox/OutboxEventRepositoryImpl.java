@@ -8,8 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.cronjob.domain.repository.outbox.OutboxEventRepository;
 import com.njydsz.cronjob.domain.vo.OutboxEventVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.infra.entity.OutboxEvent;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.entity.OutboxEvent;
 import com.njydsz.cronjob.infra.mapper.outbox.OutboxEventMapper;
 
 /**

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
 import com.njydsz.nextwiki.domain.repository.SpaceTemplateRepository;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.SpaceTemplate;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.SpaceTemplate;
 import com.njydsz.nextwiki.infra.mapper.SpaceTemplateMapper;
 
 /**

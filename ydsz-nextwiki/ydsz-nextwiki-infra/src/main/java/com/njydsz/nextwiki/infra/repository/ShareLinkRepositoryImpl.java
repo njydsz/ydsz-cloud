@@ -11,8 +11,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.ShareLink;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.ShareLink;
 import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
 
 /**

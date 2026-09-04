@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.UserRecentVO;
-import com.njydsz.nextwiki.server.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 用户最近访问应用服务

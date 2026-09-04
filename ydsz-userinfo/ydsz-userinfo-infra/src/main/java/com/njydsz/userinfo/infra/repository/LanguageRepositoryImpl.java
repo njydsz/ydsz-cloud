@@ -13,8 +13,8 @@ import com.njydsz.userinfo.domain.dto.LanguageDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.repository.LanguageRepository;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
-import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
-import com.njydsz.userinfo.infra.entity.Language;
+import com.njydsz.userinfo.domain.converter.UserInfoAuthConverter;
+import com.njydsz.userinfo.domain.entity.Language;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 
 /**

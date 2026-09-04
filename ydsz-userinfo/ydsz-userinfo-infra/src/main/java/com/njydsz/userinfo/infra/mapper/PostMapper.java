@@ -3,7 +3,7 @@ package com.njydsz.userinfo.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.infra.entity.Post;
+import com.njydsz.userinfo.domain.entity.Post;
 
 /**
  * 岗位 Mapper 接口

@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.repository.FlowAttachmentRepository;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAttachment;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowAttachment;
 import com.njydsz.workflow.infra.mapper.FlowAttachmentMapper;
 
 /**

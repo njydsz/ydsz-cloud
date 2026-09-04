@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.domain.oauth2.OAuth2ApplicationRepository;
-import com.njydsz.userinfo.infra.converter.OAuth2ApplicationConverter;
+import com.njydsz.userinfo.domain.converter.OAuth2ApplicationConverter;
 import com.njydsz.userinfo.infra.mapper.OAuth2ApplicationMapper;
 
 /**

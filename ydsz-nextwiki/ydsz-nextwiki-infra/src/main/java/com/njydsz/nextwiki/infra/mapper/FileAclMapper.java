@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.FileAcl;
+import com.njydsz.nextwiki.domain.entity.FileAcl;
 
 /**
  * 文件权限 ACL Mapper

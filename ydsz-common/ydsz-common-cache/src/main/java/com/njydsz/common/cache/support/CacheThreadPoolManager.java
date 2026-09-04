@@ -2,17 +2,16 @@ package com.njydsz.common.cache.support;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 缓存线程池统一管理器 — 集中管理缓存相关的所有线程池
@@ -27,8 +26,8 @@ import org.springframework.beans.factory.DisposableBean;
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
  *
- * <p>线程池创建使用标准 JDK API（{@link ThreadPoolExecutor} / {@link ScheduledThreadPoolExecutor}），
- * 不依赖 ydsz-common-thread 模块，保持 L1 工具层零内部依赖。
+ * <p>线程池创建通过 {@link ExecutorUtils}（ydsz-common-thread 编程式工厂）统一管理，
+ * 符合《云顶编码规范》15.4.1 节禁止直接 new 线程池实例的约束。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -119,15 +118,13 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 创建定时调度线程池。
    *
-   * <p>使用标准 JDK {@link ScheduledThreadPoolExecutor} 创建，线程名前缀为 {@code cache-sched-}，
-   * 拒绝策略为 CallerRunsPolicy（调用方线程兜底）。
+   * <p>通过 {@link ExecutorUtils#newScheduledThreadPool(int, String)} 创建，
+   * 线程名前缀为 {@code cache-sched-}，拒绝策略为 CallerRunsPolicy（调用方线程兜底）。
    */
   private ScheduledExecutorService createScheduledPool(String name, int coreSize) {
     ScheduledThreadPoolExecutor executor =
-        new ScheduledThreadPoolExecutor(
-            coreSize,
-            createThreadFactory("cache-sched-" + name),
-            new ThreadPoolExecutor.CallerRunsPolicy());
+        (ScheduledThreadPoolExecutor)
+            ExecutorUtils.newScheduledThreadPool(coreSize, "cache-sched-" + name);
     // 取消后自动移除，避免内存泄漏
     executor.setRemoveOnCancelPolicy(true);
     LOG.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
@@ -137,20 +134,21 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 创建缓存专用线程池。
    *
-   * <p>使用标准 JDK {@link ThreadPoolExecutor} 创建，线程名前缀为 {@code cache-}，
-   * 拒绝策略为 warn 日志（不抛异常，不阻塞调用方）。
+   * <p>通过 {@link ExecutorUtils#builder()} 创建，线程名前缀为 {@code cache-}，
+   * 队列容量 1024，拒绝策略为 warn 日志（不抛异常，不阻塞调用方）。
    */
   private ExecutorService createPool(String name, int coreSize, int maxSize) {
-    RejectedExecutionHandler handler = (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name);
     ThreadPoolExecutor executor =
-        new ThreadPoolExecutor(
-            coreSize,
-            maxSize,
-            60L,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1024),
-            createThreadFactory("cache-" + name),
-            handler);
+        ExecutorUtils.builder()
+            .corePoolSize(coreSize)
+            .maxPoolSize(maxSize)
+            .keepAliveTime(60L, TimeUnit.SECONDS)
+            .queueCapacity(1024)
+            .queueType(ExecutorUtils.BlockingQueueType.LINKED)
+            .threadNamePrefix("cache-" + name)
+            .rejectedHandler(
+                (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name))
+            .build();
 
     LOG.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;
@@ -236,24 +234,4 @@ public class CacheThreadPoolManager implements DisposableBean {
     LOG.info("缓存线程池已关闭: {}", name);
   }
 
-  /**
-   * 创建带统一前缀的线程工厂。
-   *
-   * <p>内联实现，替代原 ydsz-common-thread {@code ExecutorUtils.createThreadFactory} 的能力，
-   * 保持 L1 工具层零内部依赖。
-   *
-   * @param threadNamePrefix 线程名前缀
-   * @return 线程工厂
-   */
-  private static ThreadFactory createThreadFactory(String threadNamePrefix) {
-    AtomicInteger threadNumber = new AtomicInteger(1);
-    return r -> {
-      Thread thread = new Thread(r);
-      thread.setName(threadNamePrefix + "-" + threadNumber.getAndIncrement());
-      thread.setDaemon(false);
-      thread.setUncaughtExceptionHandler(
-          (t, e) -> LOG.error("Uncaught exception in cache thread {}", t.getName(), e));
-      return thread;
-    };
-  }
 }

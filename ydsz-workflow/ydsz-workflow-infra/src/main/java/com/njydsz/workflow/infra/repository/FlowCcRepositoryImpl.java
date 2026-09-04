@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.repository.FlowCcRepository;
 import com.njydsz.workflow.domain.vo.FlowCcVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowCc;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowCc;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
 
 /**

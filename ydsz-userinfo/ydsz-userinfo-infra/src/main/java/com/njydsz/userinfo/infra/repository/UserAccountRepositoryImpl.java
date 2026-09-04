@@ -23,8 +23,8 @@ import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.entity.UserAccount;
+import com.njydsz.userinfo.domain.converter.UserInfoUserConverter;
+import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 
 /**

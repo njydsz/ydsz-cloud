@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.workflow.infra.entity.FlowAttachment;
+import com.njydsz.workflow.domain.entity.FlowAttachment;
 
 /**
  * 自建工作流引擎 - 审批附件 Mapper

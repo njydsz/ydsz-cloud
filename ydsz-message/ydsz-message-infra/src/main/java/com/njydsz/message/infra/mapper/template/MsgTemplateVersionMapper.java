@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.template;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgTemplateVersion;
+import com.njydsz.message.domain.entity.MsgTemplateVersion;
 
 /**
  * 消息模板版本历史 Mapper

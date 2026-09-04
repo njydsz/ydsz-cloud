@@ -13,8 +13,8 @@ import com.njydsz.userinfo.domain.dto.SocialClientDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.repository.SocialClientRepository;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
-import com.njydsz.userinfo.infra.converter.SocialClientConverter;
-import com.njydsz.userinfo.infra.entity.SocialClient;
+import com.njydsz.userinfo.domain.converter.SocialClientConverter;
+import com.njydsz.userinfo.domain.entity.SocialClient;
 import com.njydsz.userinfo.infra.mapper.SocialClientMapper;
 
 /**

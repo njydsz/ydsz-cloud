@@ -12,9 +12,9 @@ import com.njydsz.nextwiki.domain.dto.TagDTO;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.vo.FileTagVO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileTag;
-import com.njydsz.nextwiki.infra.entity.Tag;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.FileTag;
+import com.njydsz.nextwiki.domain.entity.Tag;
 import com.njydsz.nextwiki.infra.mapper.TagMapper;
 
 /**

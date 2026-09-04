@@ -10,9 +10,9 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowCategory;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowCategory;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 

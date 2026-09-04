@@ -13,8 +13,8 @@ import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.query.FileVersionQuery;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileVersion;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.FileVersion;
 import com.njydsz.nextwiki.infra.mapper.FileVersionMapper;
 
 /**

@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
-import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.TenantPlanMenu;
+import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.entity.TenantPlanMenu;
 import com.njydsz.system.infra.mapper.TenantPlanMenuMapper;
 
 

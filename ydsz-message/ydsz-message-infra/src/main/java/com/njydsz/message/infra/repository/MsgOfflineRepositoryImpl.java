@@ -12,8 +12,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.query.MsgOfflineQuery;
 import com.njydsz.message.domain.repository.MsgOfflineRepository;
 import com.njydsz.message.domain.vo.MsgOfflineVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgOffline;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgOffline;
 import com.njydsz.message.infra.mapper.config.MsgOfflineMapper;
 
 /**

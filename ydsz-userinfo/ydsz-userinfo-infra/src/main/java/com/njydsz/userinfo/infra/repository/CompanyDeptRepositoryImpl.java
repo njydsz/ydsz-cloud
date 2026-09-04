@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
 import com.njydsz.userinfo.domain.repository.CompanyDeptRepository;
 import com.njydsz.userinfo.domain.vo.CompanyDeptVO;
-import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
-import com.njydsz.userinfo.infra.entity.CompanyDept;
+import com.njydsz.userinfo.domain.converter.UserInfoOrgConverter;
+import com.njydsz.userinfo.domain.entity.CompanyDept;
 import com.njydsz.userinfo.infra.mapper.CompanyDeptMapper;
 
 /**

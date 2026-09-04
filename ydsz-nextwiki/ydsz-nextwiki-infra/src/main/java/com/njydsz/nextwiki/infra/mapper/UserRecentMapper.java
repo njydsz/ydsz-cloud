@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.UserRecent;
+import com.njydsz.nextwiki.domain.entity.UserRecent;
 
 /**
  * 用户最近访问 Mapper

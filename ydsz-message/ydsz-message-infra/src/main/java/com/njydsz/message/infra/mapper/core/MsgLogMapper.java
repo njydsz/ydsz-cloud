@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.message.infra.entity.MsgLog;
+import com.njydsz.message.domain.entity.MsgLog;
 
 /**
  * 消息发送日志 Mapper

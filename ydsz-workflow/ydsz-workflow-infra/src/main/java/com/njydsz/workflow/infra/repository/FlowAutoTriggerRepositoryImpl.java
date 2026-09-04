@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.repository.FlowAutoTriggerRepository;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAutoTrigger;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
 import com.njydsz.workflow.infra.mapper.FlowAutoTriggerMapper;
 
 /**

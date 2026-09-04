@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowEventSubscription;
+import com.njydsz.workflow.domain.entity.FlowEventSubscription;
 
 /**
  * 工作流事件订阅 Mapper

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleDefinition;
+import com.njydsz.literule.domain.entity.RuleDefinition;
 
 /**
  * 规则定义 Mapper

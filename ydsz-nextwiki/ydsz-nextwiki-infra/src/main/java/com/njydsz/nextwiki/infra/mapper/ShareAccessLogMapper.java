@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.ShareAccessLog;
+import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
 
 /**
  * 分享访问日志 Mapper。

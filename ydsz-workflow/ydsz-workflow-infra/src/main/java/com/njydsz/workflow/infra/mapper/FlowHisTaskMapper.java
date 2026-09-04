@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowHisTask;
+import com.njydsz.workflow.domain.entity.FlowHisTask;
 
 /**
  * 历史任务 Mapper

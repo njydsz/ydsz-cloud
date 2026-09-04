@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.FileComment;
+import com.njydsz.nextwiki.domain.entity.FileComment;
 
 /**
  * 文件评论 Mapper

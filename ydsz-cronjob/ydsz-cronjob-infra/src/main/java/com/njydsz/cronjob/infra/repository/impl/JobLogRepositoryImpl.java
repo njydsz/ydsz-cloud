@@ -13,8 +13,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.infra.entity.log.JobLog;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 
 /**

@@ -47,7 +47,7 @@ import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
-import com.njydsz.nextwiki.server.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 分片上传应用服务

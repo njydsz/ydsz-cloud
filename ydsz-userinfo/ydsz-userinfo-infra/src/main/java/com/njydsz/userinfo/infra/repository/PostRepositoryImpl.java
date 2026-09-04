@@ -14,8 +14,8 @@ import com.njydsz.userinfo.domain.dto.PostDTO;
 import com.njydsz.userinfo.domain.query.PostPageQuery;
 import com.njydsz.userinfo.domain.repository.PostRepository;
 import com.njydsz.userinfo.domain.vo.PostVO;
-import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
-import com.njydsz.userinfo.infra.entity.Post;
+import com.njydsz.userinfo.domain.converter.UserInfoOrgConverter;
+import com.njydsz.userinfo.domain.entity.Post;
 import com.njydsz.userinfo.infra.mapper.PostMapper;
 
 /**

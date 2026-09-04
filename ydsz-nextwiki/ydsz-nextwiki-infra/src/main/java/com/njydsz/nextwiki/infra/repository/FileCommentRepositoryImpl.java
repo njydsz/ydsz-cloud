@@ -11,8 +11,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
 import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileComment;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.FileComment;
 import com.njydsz.nextwiki.infra.mapper.FileCommentMapper;
 
 /**

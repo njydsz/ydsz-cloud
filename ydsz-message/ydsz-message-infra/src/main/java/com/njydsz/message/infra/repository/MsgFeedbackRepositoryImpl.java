@@ -13,8 +13,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.query.MsgFeedbackQuery;
 import com.njydsz.message.domain.repository.MsgFeedbackRepository;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgFeedback;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgFeedback;
 import com.njydsz.message.infra.mapper.config.MsgFeedbackMapper;
 
 /**

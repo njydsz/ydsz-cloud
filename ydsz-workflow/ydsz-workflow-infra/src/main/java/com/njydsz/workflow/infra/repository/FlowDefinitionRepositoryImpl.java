@@ -12,8 +12,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowDefinition;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 
 /**

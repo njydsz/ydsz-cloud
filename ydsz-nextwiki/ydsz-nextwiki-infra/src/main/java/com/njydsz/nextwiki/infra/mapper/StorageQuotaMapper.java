@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.StorageQuota;
+import com.njydsz.nextwiki.domain.entity.StorageQuota;
 
 /**
  * 存储配额 Mapper

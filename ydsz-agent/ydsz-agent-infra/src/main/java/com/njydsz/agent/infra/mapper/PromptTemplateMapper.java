@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.infra.entity.PromptTemplate;
+import com.njydsz.agent.domain.entity.PromptTemplate;
 
 /**
  * Prompt 模板 Mapper

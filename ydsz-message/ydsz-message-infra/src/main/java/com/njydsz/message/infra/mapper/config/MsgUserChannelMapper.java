@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgUserChannel;
+import com.njydsz.message.domain.entity.MsgUserChannel;
 
 /**
  * 用户通道绑定 Mapper

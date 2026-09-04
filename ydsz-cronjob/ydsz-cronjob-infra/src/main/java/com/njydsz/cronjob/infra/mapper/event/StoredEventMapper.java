@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.infra.entity.event.StoredEvent;
+import com.njydsz.cronjob.domain.entity.event.StoredEvent;
 
 /**
  * 存储事件 Mapper（P3-1 Event Sourcing）。

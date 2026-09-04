@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.UserFavoriteDTO;
 import com.njydsz.nextwiki.domain.repository.UserFavoriteRepository;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.UserFavorite;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.UserFavorite;
 import com.njydsz.nextwiki.infra.mapper.UserFavoriteMapper;
 
 /**

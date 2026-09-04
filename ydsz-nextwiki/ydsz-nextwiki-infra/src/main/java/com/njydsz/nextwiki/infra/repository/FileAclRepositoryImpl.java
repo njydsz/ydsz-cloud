@@ -11,8 +11,8 @@ import com.njydsz.nextwiki.domain.dto.FileAclDTO;
 import com.njydsz.nextwiki.domain.query.FileAclQuery;
 import com.njydsz.nextwiki.domain.repository.FileAclRepository;
 import com.njydsz.nextwiki.domain.vo.FileAclVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileAcl;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.infra.mapper.FileAclMapper;
 
 /**

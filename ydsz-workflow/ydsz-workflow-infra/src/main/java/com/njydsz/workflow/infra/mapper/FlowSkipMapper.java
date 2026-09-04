@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowSkip;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 
 /**
  * 节点跳转 Mapper

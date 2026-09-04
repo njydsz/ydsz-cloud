@@ -15,7 +15,7 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.UserFavoriteRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.UserFavoriteVO;
-import com.njydsz.nextwiki.server.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 用户收藏夹应用服务

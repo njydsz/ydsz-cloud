@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 
 /**
  * 任务告警规则 Mapper

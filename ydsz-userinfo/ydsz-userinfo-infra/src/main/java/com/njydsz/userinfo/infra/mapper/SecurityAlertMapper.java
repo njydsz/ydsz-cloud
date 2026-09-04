@@ -3,7 +3,7 @@ package com.njydsz.userinfo.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.infra.entity.SecurityAlert;
+import com.njydsz.userinfo.domain.entity.SecurityAlert;
 
 /**
  * 安全告警 Mapper 接口。

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.system.infra.entity.Tenant;
+import com.njydsz.system.domain.entity.Tenant;
 
 
 

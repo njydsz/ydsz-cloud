@@ -19,7 +19,7 @@ import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
-import com.njydsz.literule.server.converter.LiteruleWebConverter;
+import com.njydsz.literule.domain.converter.LiteruleWebConverter;
 
 /**
  * 内部 API Controller（服务间 Feign 调用）

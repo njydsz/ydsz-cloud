@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.message.domain.dto.MsgCanaryDTO;
 import com.njydsz.message.domain.repository.MsgCanaryRepository;
 import com.njydsz.message.domain.vo.MsgCanaryVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgCanary;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgCanary;
 import com.njydsz.message.infra.mapper.MsgCanaryMapper;
 
 /**

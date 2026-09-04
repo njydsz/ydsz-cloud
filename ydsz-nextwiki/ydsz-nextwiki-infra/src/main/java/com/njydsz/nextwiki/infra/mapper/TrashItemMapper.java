@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.TrashItem;
+import com.njydsz.nextwiki.domain.entity.TrashItem;
 
 /**
  * 回收站 Mapper

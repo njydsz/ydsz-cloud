@@ -12,8 +12,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.userinfo.domain.repository.WebAuthnCredentialRepository;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
-import com.njydsz.userinfo.infra.converter.WebAuthnCredentialConverter;
-import com.njydsz.userinfo.infra.entity.WebAuthnCredential;
+import com.njydsz.userinfo.domain.converter.WebAuthnCredentialConverter;
+import com.njydsz.userinfo.domain.entity.WebAuthnCredential;
 import com.njydsz.userinfo.infra.mapper.WebAuthnCredentialMapper;
 
 /**

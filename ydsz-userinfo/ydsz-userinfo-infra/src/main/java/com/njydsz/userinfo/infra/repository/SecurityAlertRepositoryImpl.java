@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
-import com.njydsz.userinfo.infra.converter.SecurityAlertConverter;
+import com.njydsz.userinfo.domain.converter.SecurityAlertConverter;
 import com.njydsz.userinfo.infra.mapper.SecurityAlertMapper;
 
 /**

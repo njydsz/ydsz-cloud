@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
-import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.TokenUsageRecord;
+import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.entity.TokenUsageRecord;
 import com.njydsz.agent.infra.mapper.TokenUsageRecordMapper;
 
 /**

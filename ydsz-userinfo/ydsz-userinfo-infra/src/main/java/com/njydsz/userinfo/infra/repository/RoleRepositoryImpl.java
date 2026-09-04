@@ -16,8 +16,8 @@ import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.vo.RoleVO;
-import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
-import com.njydsz.userinfo.infra.entity.Role;
+import com.njydsz.userinfo.domain.converter.UserInfoAuthConverter;
+import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 
 /**

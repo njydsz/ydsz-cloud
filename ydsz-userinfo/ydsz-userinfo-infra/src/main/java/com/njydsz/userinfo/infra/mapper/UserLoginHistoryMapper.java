@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.UserLoginHistory;
+import com.njydsz.userinfo.domain.entity.UserLoginHistory;
 
 /**
  * 用户登录历史 Mapper 接口

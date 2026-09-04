@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.userinfo.infra.entity.UserRole;
+import com.njydsz.userinfo.domain.entity.UserRole;
 
 /**
  * 用户-角色关联表 Mapper

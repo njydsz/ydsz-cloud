@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.repository.FlowAdminRoleRepository;
 import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowAdminRole;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowAdminRole;
 import com.njydsz.workflow.infra.mapper.FlowAdminRoleMapper;
 
 /**

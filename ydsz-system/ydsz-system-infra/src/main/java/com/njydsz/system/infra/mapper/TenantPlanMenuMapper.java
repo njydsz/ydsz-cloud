@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.system.infra.entity.TenantPlanMenu;
+import com.njydsz.system.domain.entity.TenantPlanMenu;
 
 
 

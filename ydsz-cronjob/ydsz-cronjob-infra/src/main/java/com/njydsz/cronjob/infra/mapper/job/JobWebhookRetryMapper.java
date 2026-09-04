@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.cronjob.infra.entity.job.JobWebhookRetry;
+import com.njydsz.cronjob.domain.entity.job.JobWebhookRetry;
 
 /**
  * WebHook 重试补偿记录 Mapper（ydsz_job_webhook_retry 表）。

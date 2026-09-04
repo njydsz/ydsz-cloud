@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.userinfo.domain.dto.SocialAccountDTO;
 import com.njydsz.userinfo.domain.repository.SocialAccountRepository;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
-import com.njydsz.userinfo.infra.converter.UserInfoUserConverter;
-import com.njydsz.userinfo.infra.entity.SocialAccount;
+import com.njydsz.userinfo.domain.converter.UserInfoUserConverter;
+import com.njydsz.userinfo.domain.entity.SocialAccount;
 import com.njydsz.userinfo.infra.mapper.SocialAccountMapper;
 
 /**

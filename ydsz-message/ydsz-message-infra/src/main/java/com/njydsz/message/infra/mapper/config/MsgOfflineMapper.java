@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.message.infra.entity.MsgOffline;
+import com.njydsz.message.domain.entity.MsgOffline;
 
 /**
  * P0-3: 离线消息持久化 Mapper

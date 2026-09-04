@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.infra.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 
 /**
  * 任务日志大字段 Mapper

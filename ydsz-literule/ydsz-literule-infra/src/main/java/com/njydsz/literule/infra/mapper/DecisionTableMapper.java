@@ -3,7 +3,7 @@ package com.njydsz.literule.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.literule.infra.entity.DecisionTable;
+import com.njydsz.literule.domain.entity.DecisionTable;
 
 /**
  * 决策表 Mapper

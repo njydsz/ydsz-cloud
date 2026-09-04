@@ -14,8 +14,8 @@ import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.repository.MenuRepository;
 import com.njydsz.userinfo.domain.vo.MenuVO;
-import com.njydsz.userinfo.infra.converter.UserInfoAuthConverter;
-import com.njydsz.userinfo.infra.entity.Menu;
+import com.njydsz.userinfo.domain.converter.UserInfoAuthConverter;
+import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
 
 /**

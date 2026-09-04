@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.literule.infra.entity.RuleVersionHistory;
+import com.njydsz.literule.domain.entity.RuleVersionHistory;
 
 /**
  * 规则版本历史 Mapper

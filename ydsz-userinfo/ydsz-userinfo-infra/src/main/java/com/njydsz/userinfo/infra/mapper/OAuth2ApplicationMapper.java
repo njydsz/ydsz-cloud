@@ -3,7 +3,7 @@ package com.njydsz.userinfo.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.userinfo.infra.entity.OAuth2Application;
+import com.njydsz.userinfo.domain.entity.OAuth2Application;
 
 /**
  * OAuth2 应用 Mapper 接口。

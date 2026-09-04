@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.cronjob.domain.repository.JobHistoryRepository;
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.infra.entity.job.JobHistory;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.entity.job.JobHistory;
 import com.njydsz.cronjob.infra.mapper.job.JobHistoryMapper;
 
 /**

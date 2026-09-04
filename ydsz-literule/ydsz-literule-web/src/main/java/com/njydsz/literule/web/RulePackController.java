@@ -30,7 +30,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.server.converter.LiteruleWebConverter;
+import com.njydsz.literule.domain.converter.LiteruleWebConverter;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
 import com.njydsz.literule.domain.vo.PackUpdateInfoVO;

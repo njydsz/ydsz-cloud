@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowAutoTrigger;
+import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
 
 /**
  * 流程自动触发规则 Mapper

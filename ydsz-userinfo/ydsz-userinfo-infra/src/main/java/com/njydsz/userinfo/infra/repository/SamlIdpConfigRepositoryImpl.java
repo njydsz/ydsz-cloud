@@ -12,8 +12,8 @@ import com.njydsz.userinfo.domain.dto.SamlIdpDTO;
 import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.repository.SamlIdpConfigRepository;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
-import com.njydsz.userinfo.infra.converter.SamlIdpConfigConverter;
-import com.njydsz.userinfo.infra.entity.SamlIdpConfig;
+import com.njydsz.userinfo.domain.converter.SamlIdpConfigConverter;
+import com.njydsz.userinfo.domain.entity.SamlIdpConfig;
 import com.njydsz.userinfo.infra.mapper.SamlIdpConfigMapper;
 
 /**

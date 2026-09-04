@@ -20,7 +20,7 @@ import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
-import com.njydsz.nextwiki.server.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 文件夹复制服务。

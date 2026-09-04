@@ -16,8 +16,8 @@ import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
 import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.SearchIndex;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
 
 /**

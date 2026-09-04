@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.infra.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
 
 /**

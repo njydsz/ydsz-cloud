@@ -10,8 +10,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.FileTag;
-import com.njydsz.nextwiki.infra.entity.Tag;
+import com.njydsz.nextwiki.domain.entity.FileTag;
+import com.njydsz.nextwiki.domain.entity.Tag;
 
 /**
  * 标签 Mapper

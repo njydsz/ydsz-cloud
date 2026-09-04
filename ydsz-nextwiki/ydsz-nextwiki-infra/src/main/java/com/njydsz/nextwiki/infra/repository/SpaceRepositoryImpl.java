@@ -15,8 +15,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.repository.SpaceRepository;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.Space;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.Space;
 import com.njydsz.nextwiki.infra.mapper.SpaceMapper;
 
 /**

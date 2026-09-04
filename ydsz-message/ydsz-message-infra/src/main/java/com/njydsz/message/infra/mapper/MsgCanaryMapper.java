@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgCanary;
+import com.njydsz.message.domain.entity.MsgCanary;
 
 /**
  * 灰度实验 Mapper

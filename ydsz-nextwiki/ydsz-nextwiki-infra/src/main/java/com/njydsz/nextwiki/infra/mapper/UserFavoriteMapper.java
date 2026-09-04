@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.UserFavorite;
+import com.njydsz.nextwiki.domain.entity.UserFavorite;
 
 /**
  * 用户收藏夹 Mapper

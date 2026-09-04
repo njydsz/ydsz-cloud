@@ -20,8 +20,8 @@ import com.njydsz.nextwiki.domain.query.FileNodeQuery;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.FileStatVO;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.FileNode;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
 
 /**

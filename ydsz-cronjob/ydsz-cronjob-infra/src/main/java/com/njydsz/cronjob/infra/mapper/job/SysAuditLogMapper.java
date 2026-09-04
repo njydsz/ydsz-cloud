@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.infra.entity.job.SysAuditLog;
+import com.njydsz.cronjob.domain.entity.job.SysAuditLog;
 
 /**
  * 操作审计日志 Mapper（P1-14 操作审计视图）。

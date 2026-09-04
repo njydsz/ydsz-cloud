@@ -3,7 +3,7 @@ package com.njydsz.literule.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.literule.infra.entity.RuleABRollback;
+import com.njydsz.literule.domain.entity.RuleABRollback;
 
 /**
  * 规则 A/B 回滚记录 Mapper

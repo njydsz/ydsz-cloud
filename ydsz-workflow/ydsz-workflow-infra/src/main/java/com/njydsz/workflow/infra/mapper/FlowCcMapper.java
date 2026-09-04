@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowCc;
+import com.njydsz.workflow.domain.entity.FlowCc;
 
 /**
  * 流程抄送 Mapper

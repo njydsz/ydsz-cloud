@@ -19,7 +19,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.server.converter.LiteruleWebConverter;
+import com.njydsz.literule.domain.converter.LiteruleWebConverter;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.server.spi.RuleTemplateProvider;

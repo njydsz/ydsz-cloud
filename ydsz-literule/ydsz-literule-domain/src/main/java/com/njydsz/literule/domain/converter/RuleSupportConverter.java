@@ -1,0 +1,90 @@
+package com.njydsz.literule.domain.converter;
+
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
+import com.njydsz.literule.domain.dto.DecisionTableDTO;
+import com.njydsz.literule.domain.dto.RuleABPolicyDTO;
+import com.njydsz.literule.domain.dto.RuleVersionDTO;
+import com.njydsz.literule.domain.vo.RuleDependencyVO;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
+import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.domain.vo.RuleVersionVO;
+import com.njydsz.literule.domain.entity.DecisionTable;
+import com.njydsz.literule.domain.entity.RuleABPolicy;
+import com.njydsz.literule.domain.entity.RuleDependency;
+import com.njydsz.literule.domain.entity.RuleExecutionTrace;
+import com.njydsz.literule.domain.entity.RulePack;
+import com.njydsz.literule.domain.entity.RuleVersionHistory;
+
+/**
+ * 规则支撑转换器（P2-2 拆分）
+ *
+ * <p>承载规则依赖、执行轨迹、规则包、测试用例、版本历史等支撑实体的 Entity ↔ VO 以及 DTO → Entity 转换。
+ *
+ * @author ydsz-team
+ * @since 26.09.01
+ */
+@Mapper
+public interface RuleSupportConverter {
+
+  /** MapStruct 单例实例 */
+  RuleSupportConverter INSTANCE = Mappers.getMapper(RuleSupportConverter.class);
+
+  // ===== RuleDependency =====
+  RuleDependencyVO entityToVO(RuleDependency entity);
+
+  List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependency> entities);
+
+  // ===== RuleExecutionTrace =====
+  RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity);
+
+  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities);
+
+  // ===== RulePack =====
+  RulePackVO entityToVO(RulePack entity);
+
+  List<RulePackVO> rulePackListToVO(List<RulePack> entities);
+
+  // ===== RuleVersionHistory → RuleVersionVO =====
+  @Mapping(target = "id", source = "id")
+  @Mapping(target = "ruleCode", source = "ruleCode")
+  @Mapping(target = "version", source = "version")
+  @Mapping(target = "definitionJson", source = "definitionJson")
+  @Mapping(target = "changeDesc", source = "changeDesc")
+  @Mapping(target = "operator", source = "operator")
+  @Mapping(target = "createdAt", ignore = true)
+  RuleVersionVO ruleVersionHistoryToVO(RuleVersionHistory entity);
+
+  List<RuleVersionVO> ruleVersionListToVO(List<RuleVersionHistory> entities);
+
+  // ===== RuleVersionDTO → RuleVersionHistory =====
+  @Mapping(target = "id", ignore = true)
+  RuleVersionHistory postDtoToEntity(RuleVersionDTO dto);
+
+  // ===== DecisionTable PostDTO → Entity =====
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  DecisionTable postDtoToEntity(DecisionTableDTO dto);
+
+  // ===== RuleABPolicy PutDTO → Entity =====
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "lastEvaluatedAt", ignore = true)
+  @Mapping(target = "lastRollbackAt", ignore = true)
+  RuleABPolicy putDtoToEntity(RuleABPolicyDTO dto);
+}

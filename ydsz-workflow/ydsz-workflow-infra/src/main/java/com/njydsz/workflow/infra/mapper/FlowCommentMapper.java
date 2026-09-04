@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.workflow.infra.entity.FlowComment;
+import com.njydsz.workflow.domain.entity.FlowComment;
 
 /**
  * P2-2 流程评论 Mapper

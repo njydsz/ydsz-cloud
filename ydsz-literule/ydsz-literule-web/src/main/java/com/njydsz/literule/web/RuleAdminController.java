@@ -33,7 +33,7 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.server.converter.LiteruleWebConverter;
+import com.njydsz.literule.domain.converter.LiteruleWebConverter;
 import com.njydsz.literule.domain.dto.ExpressionValidateDTO;
 import com.njydsz.literule.domain.dto.RuleABTestDTO;
 import com.njydsz.literule.domain.RuleEngine;

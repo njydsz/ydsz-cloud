@@ -3,7 +3,7 @@ package com.njydsz.workflow.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.workflow.infra.entity.FlowQuickComment;
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 
 /**
  * 审批常用语 Mapper

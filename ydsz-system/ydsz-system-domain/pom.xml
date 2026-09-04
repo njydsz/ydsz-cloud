@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-system-domain</artifactId>
     <name>ydsz-system-domain</name>
-    <description>Domain Layer - Entity/DTO/VO/Query/Enum/Converter</description>
+    <description>Domain Layer - Entity/DTO/VO/Query/Enum/Converter/Converter</description>
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>

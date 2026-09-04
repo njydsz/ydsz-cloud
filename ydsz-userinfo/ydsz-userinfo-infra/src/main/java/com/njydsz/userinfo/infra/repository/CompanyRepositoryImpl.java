@@ -14,8 +14,8 @@ import com.njydsz.userinfo.domain.dto.CompanyDTO;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.repository.CompanyRepository;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
-import com.njydsz.userinfo.infra.converter.UserInfoOrgConverter;
-import com.njydsz.userinfo.infra.entity.Company;
+import com.njydsz.userinfo.domain.converter.UserInfoOrgConverter;
+import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 
 /**

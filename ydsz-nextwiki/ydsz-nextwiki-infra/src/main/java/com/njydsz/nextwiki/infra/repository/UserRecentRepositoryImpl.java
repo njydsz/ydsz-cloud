@@ -11,8 +11,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
-import com.njydsz.nextwiki.infra.converter.NextwikiConverter;
-import com.njydsz.nextwiki.infra.entity.UserRecent;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.entity.UserRecent;
 import com.njydsz.nextwiki.infra.mapper.UserRecentMapper;
 
 /**

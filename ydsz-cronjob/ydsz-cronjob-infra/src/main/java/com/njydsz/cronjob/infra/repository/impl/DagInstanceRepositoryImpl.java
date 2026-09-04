@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.cronjob.domain.repository.DagInstanceRepository;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
-import com.njydsz.cronjob.infra.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 
 /**

@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.nextwiki.infra.entity.SpaceTemplate;
+import com.njydsz.nextwiki.domain.entity.SpaceTemplate;
 
 /**
  * 空间模板 Mapper

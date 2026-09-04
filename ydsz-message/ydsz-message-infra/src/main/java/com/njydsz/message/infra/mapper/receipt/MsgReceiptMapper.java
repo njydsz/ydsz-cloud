@@ -3,7 +3,7 @@ package com.njydsz.message.infra.mapper.receipt;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.message.infra.entity.MsgReceipt;
+import com.njydsz.message.domain.entity.MsgReceipt;
 
 /**
  * 消息回执 Mapper

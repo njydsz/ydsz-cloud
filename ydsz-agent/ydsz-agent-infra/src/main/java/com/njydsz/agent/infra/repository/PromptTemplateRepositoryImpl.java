@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
 import com.njydsz.agent.domain.repository.PromptTemplateRepository;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
-import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.PromptTemplate;
+import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.entity.PromptTemplate;
 import com.njydsz.agent.infra.mapper.PromptTemplateMapper;
 
 /**

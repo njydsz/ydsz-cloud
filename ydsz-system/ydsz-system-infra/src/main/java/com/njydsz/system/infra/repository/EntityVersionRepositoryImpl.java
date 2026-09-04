@@ -13,8 +13,8 @@ import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.repository.EntityVersionRepository;
 import com.njydsz.system.domain.vo.EntityVersionVO;
-import com.njydsz.system.infra.converter.SystemConverter;
-import com.njydsz.system.infra.entity.EntityVersion;
+import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.entity.EntityVersion;
 import com.njydsz.system.infra.mapper.EntityVersionMapper;
 
 

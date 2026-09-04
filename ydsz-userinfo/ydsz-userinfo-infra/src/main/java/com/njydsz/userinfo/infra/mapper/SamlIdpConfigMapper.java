@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.SamlIdpConfig;
+import com.njydsz.userinfo.domain.entity.SamlIdpConfig;
 
 /**
  * SAML 身份提供者配置 Mapper 接口（P2-1）。

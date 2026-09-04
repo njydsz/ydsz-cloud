@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.SocialClient;
+import com.njydsz.userinfo.domain.entity.SocialClient;
 
 /**
  * 社交平台客户端配置 Mapper 接口（P1-1）。

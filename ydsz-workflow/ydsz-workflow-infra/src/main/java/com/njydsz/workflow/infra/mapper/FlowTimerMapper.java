@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowTimer;
+import com.njydsz.workflow.domain.entity.FlowTimer;
 
 /**
  * 工作流定时器 Mapper

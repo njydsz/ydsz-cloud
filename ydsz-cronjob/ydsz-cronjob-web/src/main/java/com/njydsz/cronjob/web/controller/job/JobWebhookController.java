@@ -33,7 +33,7 @@ import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
-import com.njydsz.cronjob.infra.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
 
 /**

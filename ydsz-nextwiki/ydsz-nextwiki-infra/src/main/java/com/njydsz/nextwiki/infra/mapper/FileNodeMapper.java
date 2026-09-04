@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.njydsz.nextwiki.domain.vo.FileStatVO;
-import com.njydsz.nextwiki.infra.entity.FileNode;
+import com.njydsz.nextwiki.domain.entity.FileNode;
 
 /**
  * 文件节点 Mapper

@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.userinfo.infra.entity.AuthPolicy;
+import com.njydsz.userinfo.domain.entity.AuthPolicy;
 
 /**
  * 认证策略 Mapper 接口（P3-1）。

@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.vo.AgentTraceStepVO;
-import com.njydsz.agent.infra.converter.AgentConverter;
-import com.njydsz.agent.infra.entity.AgentTraceStep;
+import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.entity.AgentTraceStep;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 
 /**

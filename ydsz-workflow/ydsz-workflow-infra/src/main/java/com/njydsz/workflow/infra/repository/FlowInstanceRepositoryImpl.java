@@ -14,8 +14,8 @@ import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.infra.converter.WorkflowRepositoryConverter;
-import com.njydsz.workflow.infra.entity.FlowInstance;
+import com.njydsz.workflow.domain.converter.WorkflowRepositoryConverter;
+import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 
 /**

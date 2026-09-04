@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.njydsz.nextwiki.domain.query.SearchQuery;
-import com.njydsz.nextwiki.infra.entity.SearchIndex;
+import com.njydsz.nextwiki.domain.entity.SearchIndex;
 
 /**
  * 搜索索引 Mapper

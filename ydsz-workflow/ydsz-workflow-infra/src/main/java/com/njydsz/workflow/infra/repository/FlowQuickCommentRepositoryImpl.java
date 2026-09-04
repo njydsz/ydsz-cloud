@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.repository.FlowQuickCommentRepository;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
-import com.njydsz.workflow.infra.converter.WorkflowConverter;
-import com.njydsz.workflow.infra.entity.FlowQuickComment;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.infra.mapper.FlowQuickCommentMapper;
 
 /**

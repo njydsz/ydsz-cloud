@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.nextwiki.infra.entity.FileVersion;
+import com.njydsz.nextwiki.domain.entity.FileVersion;
 
 /**
  * 文件版本 Mapper

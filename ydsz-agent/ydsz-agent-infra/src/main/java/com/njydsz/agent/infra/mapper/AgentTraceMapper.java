@@ -3,7 +3,7 @@ package com.njydsz.agent.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.agent.infra.entity.AgentTrace;
+import com.njydsz.agent.domain.entity.AgentTrace;
 
 /**
  * Agent 执行链路 Mapper

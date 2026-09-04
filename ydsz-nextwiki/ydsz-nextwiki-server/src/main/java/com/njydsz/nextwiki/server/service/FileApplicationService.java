@@ -63,7 +63,7 @@ import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
-import com.njydsz.nextwiki.server.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
 
 /**
  * 文件应用服务

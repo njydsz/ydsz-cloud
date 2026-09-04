@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.cronjob.infra.entity.dag.JobDagContext;
+import com.njydsz.cronjob.domain.entity.dag.JobDagContext;
 
 /**
  * DAG 实例节点上下文 Mapper（ydsz_job_dag_context 表）。

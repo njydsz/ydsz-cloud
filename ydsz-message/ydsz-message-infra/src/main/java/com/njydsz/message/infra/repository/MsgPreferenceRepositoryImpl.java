@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.message.domain.query.MsgPreferenceQuery;
 import com.njydsz.message.domain.repository.MsgPreferenceRepository;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
-import com.njydsz.message.infra.converter.MessageConverter;
-import com.njydsz.message.infra.entity.MsgPreference;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.entity.MsgPreference;
 import com.njydsz.message.infra.mapper.config.MsgPreferenceMapper;
 
 /**
