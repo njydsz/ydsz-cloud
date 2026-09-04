@@ -1,0 +1,43 @@
+# 代码生成器数据源配置
+spring:
+  application:
+    name: ydsz-generator
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ydsz_cloud
+    username: ydsz
+    password: ydsz123
+    driver-class-name: org.postgresql.Driver
+  # 禁用 Web 相关自动配置（代码生成器不需要 Web 服务时）
+  main:
+    web-application-type: servlet
+
+# 代码生成器配置
+ydsz:
+  generator:
+    # 目标模块名（如 system、userinfo）
+    module-name: system
+    # 目标包名前缀
+    package-name: com.njydsz.system
+    # 表名前缀（实体类名去除该前缀）
+    table-prefix: "ydsz_"
+    # 需要生成代码的表名列表
+    table-names:
+      - ydsz_sys_tenant
+    # 输出目录（生成代码的目标路径，建议指向对应微服务模块根目录）
+    output-dir: "D:/Code/open/ydsz-cloud"
+    # 作者（用于 Javadoc）
+    author: ydsz-team
+    # 各层生成开关
+    generate-entity: true
+    generate-repository: true
+    generate-service: true
+    generate-controller: true
+    generate-model: true
+
+server:
+  port: 9010
+
+logging:
+  level:
+    root: INFO
+    com.njydsz.generator: DEBUG

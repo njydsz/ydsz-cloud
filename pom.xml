@@ -21,6 +21,7 @@
     <modules>
         <module>ydsz-common</module>
         <module>ydsz-gateway</module>
+        <module>ydsz-generator</module>
         <module>ydsz-system</module>
         <module>ydsz-userinfo</module>
         <module>ydsz-cronjob</module>
