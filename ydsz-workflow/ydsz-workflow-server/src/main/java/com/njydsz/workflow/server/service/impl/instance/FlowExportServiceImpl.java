@@ -271,5 +271,106 @@ public class FlowExportServiceImpl implements FlowExportService {
             "</body>", "<script>window.onload=function(){window.print();}</script></body>");
 
     Map<String, Object> result = new LinkedHashMap<>(16);
+    result.put("html", printHtml);
+    result.put("instanceId", instanceId);
+    result.put("exportAt", LocalDateTime.now().format(FMT));
+    return result;
+  }
+
+  /**
+   * 加载流程实例，不存在时抛异常。
+   *
+   * @param instanceId 实例 ID
+   * @return 流程实例
+   */
+  private FlowInstanceVO loadInstance(String instanceId) {
+    if (!StringUtils.hasText(instanceId)) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("实例 ID 不能为空")
+          .build();
+    }
+    return instanceRepository
+        .findById(instanceId)
+        .orElseThrow(() -> SysException.builder()
+            .resultCode(YdszResultCode.NOT_FOUND)
+            .key("error.workflow.instance.not.found")
+            .params(instanceId)
+            .build());
+  }
+
+  /**
+   * 加载流程实例的审批历史。
+   *
+   * @param instanceId 实例 ID
+   * @return 历史任务列表（按完成时间排序）
+   */
+  private List<FlowHisTaskVO> loadHistory(String instanceId) {
+    if (!StringUtils.hasText(instanceId)) {
+      return new ArrayList<>(0);
+    }
+    List<FlowHisTaskVO> history = hisTaskRepository.findByInstanceId(instanceId);
+    if (history == null || history.size() <= MAX_EXPORT_ROWS) {
+      return history != null ? history : new ArrayList<>(0);
+    }
+    return history.subList(0, MAX_EXPORT_ROWS);
+  }
+
+  /**
+   * 将 variable JSON 解析为 Map，空值返回空 Map。
+   *
+   * @param variable variable JSON 字符串
+   * @return 解析后的 Map
+   */
+  private Map<String, Object> parseVariables(String variable) {
+    if (!StringUtils.hasText(variable)) {
+      return new LinkedHashMap<>(0);
+    }
+    try {
+      Map<String, Object> map = YdszJson.parseMap(variable);
+      return map != null ? map : new LinkedHashMap<>(0);
+    } catch (Exception e) {
+      log.warn("[Flow] 解析 variable JSON 失败: err={}", e.getMessage());
+      return new LinkedHashMap<>(0);
+    }
+  }
+
+  /**
+   * HTML 特殊字符转义。
+   *
+   * @param text 原始文本
+   * @return 转义后文本
+   */
+  private String escapeHtml(String text) {
+    if (text == null) {
+      return "";
+    }
+    return text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&#39;");
+  }
+
+  /**
+   * 格式化耗时（毫秒 → 可读文本）。
+   *
+   * @param durationMs 毫秒数
+   * @return 格式化文本，如 "1小时23分" / "5分钟" / "30秒"
+   */
+  private String formatDuration(long durationMs) {
+    if (durationMs < 0) {
+      return "0秒";
+    }
+    if (durationMs < MILLIS_PER_MINUTE) {
+      return Math.max(1, durationMs / 1000) + "秒";
+    }
+    if (durationMs < MILLIS_PER_HOUR) {
+      return (durationMs / MILLIS_PER_MINUTE) + "分钟";
+    }
+    long hours = durationMs / MILLIS_PER_HOUR;
+    long minutes = (durationMs % MILLIS_PER_HOUR) / MILLIS_PER_MINUTE;
+    return minutes > 0 ? hours + "小时" + minutes + "分" : hours + "小时";
+  }
 }
 }

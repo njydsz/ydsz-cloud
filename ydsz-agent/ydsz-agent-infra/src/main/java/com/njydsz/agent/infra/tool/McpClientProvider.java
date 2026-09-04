@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.tool;
 
 import java.util.List;
 
-import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.domain.config.AgentProperties;
 
 /**
  * MCP Client 提供者接口
