@@ -2,6 +2,7 @@ package com.njydsz.cronjob.domain.repository;
 
 import java.util.Optional;
 
+import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 
 /**
  * 租户配额 Repository（domain 层契约）。
