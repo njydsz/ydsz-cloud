@@ -1,10 +1,10 @@
 package com.njydsz.userinfo.domain.vo;
 
-import com.njydsz.userinfo.domain.service.impl;
-
 import java.util.List;
 
 import lombok.Data;
+
+import com.njydsz.userinfo.domain.service.impl;
 
 /**
  * 公司树形 VO，用于前端集团-子公司组织架构树渲染。

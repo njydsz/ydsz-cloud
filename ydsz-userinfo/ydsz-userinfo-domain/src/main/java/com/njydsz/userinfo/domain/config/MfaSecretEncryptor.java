@@ -1,7 +1,5 @@
 package com.njydsz.userinfo.domain.config;
 
-import com.njydsz.userinfo.domain.config.AesMfaSecretEncryptor;
-
 /**
  * MFA 密钥加密器（策略接口）。
  *

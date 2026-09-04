@@ -6,8 +6,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
 import com.njydsz.userinfo.domain.dto.CompanyDTO;
+import com.njydsz.userinfo.domain.dto.CompanyDeptDTO;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
 import com.njydsz.userinfo.domain.dto.PostDTO;
 import com.njydsz.userinfo.domain.entity.Company;

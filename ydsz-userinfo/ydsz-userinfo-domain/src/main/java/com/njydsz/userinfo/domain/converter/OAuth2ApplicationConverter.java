@@ -1,12 +1,12 @@
 package com.njydsz.userinfo.domain.converter;
 
-import com.njydsz.userinfo.domain.entity.OAuth2Application;
-
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.userinfo.domain.entity.OAuth2Application;
 
 /**
  * OAuth2 应用 MapStruct 转换器。

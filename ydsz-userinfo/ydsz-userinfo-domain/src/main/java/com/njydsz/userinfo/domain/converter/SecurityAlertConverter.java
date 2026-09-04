@@ -1,10 +1,10 @@
 package com.njydsz.userinfo.domain.converter;
 
-import com.njydsz.userinfo.domain.entity.SecurityAlert;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.userinfo.domain.entity.SecurityAlert;
 
 /**
  * 安全告警 MapStruct 转换器。
