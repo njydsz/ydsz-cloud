@@ -1,5 +1,7 @@
 package com.njydsz.common.audit.core;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +64,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
   private static final long WARN_LOG_THROTTLE_MS = 10_000L;
 
   /** 队列使用率告警阈值（80%），超过则健康检查降级 */
-  private static final double QUEUE_USAGE_WARN_THRESHOLD = 0.8;
+  private static final BigDecimal QUEUE_USAGE_WARN_THRESHOLD = new BigDecimal("0.8");
 
   /** 异步缓冲队列，有界队列支持背压控制 */
   private final BlockingQueue<AuditLog> queue;
@@ -220,12 +222,12 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     long elapsed = now - lastWarnLogTime;
     if (elapsed >= WARN_LOG_THROTTLE_MS || warnCount <= 5) {
       lastWarnLogTime = now;
-      double usageRatio = getQueueUsageRatio();
+      BigDecimal usageRatio = getQueueUsageRatio();
       LOG.error(
           "【异步审计记录器】队列已满! 容量={}, 当前={}, 使用率={}%, 策略={}, 累计触发={}",
           asyncProps.getExecutorQueueCapacity(),
           queue.size(),
-          String.format("%.1f", usageRatio * 100),
+          String.format("%.1f", usageRatio.multiply(new BigDecimal("100"))),
           strategy,
           warnCount);
     }
@@ -236,12 +238,13 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
    *
    * @return 使用率，范围 [0.0, 1.0]
    */
-  public double getQueueUsageRatio() {
+  public BigDecimal getQueueUsageRatio() {
     int capacity = asyncProps.getExecutorQueueCapacity();
     if (capacity <= 0) {
-      return 0.0;
+      return BigDecimal.ZERO;
     }
-    return (double) queue.size() / capacity;
+    return BigDecimal.valueOf(queue.size())
+        .divide(BigDecimal.valueOf(capacity), 4, RoundingMode.HALF_UP);
   }
 
   /**

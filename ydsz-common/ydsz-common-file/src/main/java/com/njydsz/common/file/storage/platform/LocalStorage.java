@@ -152,11 +152,15 @@ public class LocalStorage extends AbstractFileStorage {
       if (!Files.exists(file)) {
         throw new BusinessException(FileExceptionCode.FILE_NOT_FOUND);
       }
-      InputStream rawStream = Files.newInputStream(file);
+      final InputStream rawStream = Files.newInputStream(file);
       if (offset != null && offset >= 0) {
         long skipped = rawStream.skip(offset);
         if (skipped < offset) {
-          rawStream.close();
+          try {
+            rawStream.close();
+          } catch (IOException ignored) {
+            // suppress close exception
+          }
           throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
       }
