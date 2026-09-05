@@ -1,0 +1,66 @@
+package com.njydsz.generator.repository.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.generator.converter.GeneratorConverter;
+import com.njydsz.generator.entity.GenHistory;
+import com.njydsz.generator.mapper.GenHistoryMapper;
+import com.njydsz.generator.po.GenHistoryPO;
+import com.njydsz.generator.repository.GenHistoryRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * 代码生成任务历史 Repository 实现。
+ *
+ * @author ydsz-team
+ * @since 26.09.05
+ */
+@Slf4j
+@Repository
+@RequiredArgsConstructor
+public class GenHistoryRepositoryImpl implements GenHistoryRepository {
+
+  private final GenHistoryMapper mapper;
+  private final GeneratorConverter converter;
+
+  @Override
+  public GenHistory save(final GenHistory history) {
+    if (history.getId() == null) {
+      mapper.insert(converter.toPO(history));
+    } else {
+      mapper.updateById(converter.toPO(history));
+    }
+    log.info("保存生成任务 id={} status={}", history.getId(), history.getStatus());
+    return history;
+  }
+
+  @Override
+  public Optional<GenHistory> findById(final Long id) {
+    return Optional.ofNullable(mapper.selectById(id)).map(converter::toEntity);
+  }
+
+  @Override
+  public List<GenHistory> findRecent(final int limit) {
+    return converter.toHistoryEntityList(mapper.selectRecent(limit));
+  }
+
+  @Override
+  public List<GenHistory> findByStatus(final String status) {
+    return converter.toHistoryEntityList(mapper.selectByStatus(status));
+  }
+
+  @Override
+  public void deleteById(final Long id) {
+    mapper.deleteById(id);
+    log.info("删除任务记录 id={}", id);
+  }
+
+  @Override
+  public long count() {
+    return mapper.selectCount(null);
+  }
+}

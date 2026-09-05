@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.generator.mapper.GenTableMetaMapper">
+
+  <resultMap id="BaseResultMap" type="com.njydsz.generator.po.GenTableMetaPO">
+    <id     column="id"            property="id"/>
+    <result column="datasource_id" property="datasourceId"/>
+    <result column="table_name"    property="tableName"/>
+    <result column="comment"       property="comment"/>
+    <result column="alias_name"    property="aliasName"/>
+    <result column="module_name"   property="moduleName"/>
+    <result column="cached_at"     property="cachedAt"/>
+  </resultMap>
+
+  <select id="selectByDatasourceIdAndTableName" resultMap="BaseResultMap">
+    SELECT * FROM gen_table_meta
+    WHERE datasource_id = #{datasourceId} AND table_name = #{tableName}
+    LIMIT 1
+  </select>
+
+</mapper>

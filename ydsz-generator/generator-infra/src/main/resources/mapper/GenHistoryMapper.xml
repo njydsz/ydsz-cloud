@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.generator.mapper.GenHistoryMapper">
+
+  <resultMap id="BaseResultMap" type="com.njydsz.generator.po.GenHistoryPO">
+    <id     column="id"                property="id"/>
+    <result column="module_name"       property="moduleName"/>
+    <result column="datasource_id"     property="datasourceId"/>
+    <result column="template_group_id" property="templateGroupId"/>
+    <result column="table_count"       property="tableCount"/>
+    <result column="file_count"        property="fileCount"/>
+    <result column="status"            property="status"/>
+    <result column="triggered_by"      property="triggeredBy"/>
+    <result column="started_at"        property="startedAt"/>
+    <result column="finished_at"       property="finishedAt"/>
+    <result column="error_message"     property="errorMessage"/>
+    <result column="gen_params"        property="genParams"/>
+  </resultMap>
+
+  <select id="selectRecent" resultMap="BaseResultMap">
+    SELECT * FROM gen_history
+    ORDER BY id DESC
+    LIMIT #{limit}
+  </select>
+
+  <select id="selectByStatus" resultMap="BaseResultMap">
+    SELECT * FROM gen_history
+    WHERE status = #{status}
+    ORDER BY id DESC
+  </select>
+
+</mapper>
