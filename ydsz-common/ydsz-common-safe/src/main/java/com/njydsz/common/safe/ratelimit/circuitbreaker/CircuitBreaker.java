@@ -54,14 +54,14 @@ public class CircuitBreaker {
   private final Map<String, io.github.resilience4j.circuitbreaker.CircuitBreaker> breakers =
       new ConcurrentHashMap<>();
 
-  private final CircuitBreakerConfig config;
+  private final BreakerConfig config;
 
-  public CircuitBreaker(CircuitBreakerConfig config) {
+  public CircuitBreaker(BreakerConfig config) {
     this.config = config;
   }
 
   public CircuitBreaker() {
-    this(CircuitBreakerConfig.defaults());
+    this(BreakerConfig.defaults());
   }
 
   /**
@@ -154,9 +154,9 @@ public class CircuitBreaker {
 
   /** 由本类配置构建底层 Resilience4j 熔断器。 */
   private static io.github.resilience4j.circuitbreaker.CircuitBreaker newEngineBreaker(
-      CircuitBreakerConfig config, String resource) {
+      BreakerConfig config, String resource) {
     String prefix = config.getName() == null ? "ratelimit" : config.getName();
-    CircuitBreakerConfig engineConfig = config.toEngineConfig();
+    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig engineConfig = config.toEngineConfig();
     return CircuitBreakerRegistry.of(engineConfig)
         .circuitBreaker(prefix + "-" + resource);
   }
@@ -209,7 +209,7 @@ public class CircuitBreaker {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class CircuitBreakerConfig {
+  public static class BreakerConfig {
     /** 失败率阈值（0-1） */
     @Builder.Default private double failureRateThreshold = 0.5;
 
@@ -245,12 +245,12 @@ public class CircuitBreaker {
      *
      * @return 默认配置实例
      */
-    public static CircuitBreakerConfig defaults() {
-      return new CircuitBreakerConfig();
+    public static BreakerConfig defaults() {
+      return new BreakerConfig();
     }
 
     /** 转换为 Resilience4j 配置（阈值 0-1 → 百分比）。 */
-    CircuitBreakerConfig toEngineConfig() {
+    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toEngineConfig() {
       return CircuitBreakerConfig.custom()
           .failureRateThreshold((float) (this.failureRateThreshold * 100))
           .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))

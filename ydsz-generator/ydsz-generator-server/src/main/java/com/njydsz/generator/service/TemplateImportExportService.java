@@ -102,7 +102,7 @@ public class TemplateImportExportService {
     groupRepository.findById(targetGroupId)
         .orElseThrow(() -> new IllegalArgumentException("目标分组不存在: " + targetGroupId));
 
-    List<GenTemplate> toSave = new ArrayList<>(templates.size());
+    List<GenTemplate> toSave = new ArrayList<>(64);
     try (ZipInputStream zis = new ZipInputStream(
         new ByteArrayInputStream(zipData), StandardCharsets.UTF_8)) {
       ZipEntry entry;

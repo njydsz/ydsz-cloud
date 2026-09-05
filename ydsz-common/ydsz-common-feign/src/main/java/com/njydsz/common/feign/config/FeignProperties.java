@@ -6,6 +6,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import java.math.BigDecimal;
+
 import feign.Logger;
 import lombok.Getter;
 import lombok.Setter;
@@ -223,10 +225,10 @@ public class FeignProperties {
     private int stateTtlSeconds = 3600;
 
     /** 失败率阈值（百分比），达到该值触发熔断，默认 50 */
-    private float failureRateThreshold = 50;
+    private BigDecimal failureRateThreshold = new BigDecimal("50");
 
     /** 慢调用率阈值（百分比），默认 80 */
-    private float slowCallRateThreshold = 80;
+    private BigDecimal slowCallRateThreshold = new BigDecimal("80");
 
     /** 慢调用时长阈值（毫秒），默认 3000 */
     private long slowCallDurationMs = 3000;

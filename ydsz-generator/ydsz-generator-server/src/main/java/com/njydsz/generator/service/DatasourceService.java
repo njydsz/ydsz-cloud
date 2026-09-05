@@ -63,7 +63,10 @@ public class DatasourceService {
    */
   public boolean testConnection(GenDatasource datasource) {
     try {
-      Class.forName(datasource.getDialect().getDriverClass());
+      String driverClass = datasource.getDialect() != null
+          ? DbDialectEnum.valueOf(datasource.getDialect()).getDriverClass()
+          : DbDialectEnum.fromUrl(datasource.getJdbcUrl()).getDriverClass();
+      Class.forName(driverClass);
       try (Connection conn = DriverManager.getConnection(
           datasource.getJdbcUrl(), datasource.getUsername(), datasource.getPassword())) {
         return conn != null && !conn.isClosed();
@@ -84,7 +87,7 @@ public class DatasourceService {
   public GenDatasource create(GenDatasource datasource) {
     datasource.setId(null);
     if (datasource.getDialect() == null) {
-      datasource.setDialect(DbDialectEnum.fromUrl(datasource.getJdbcUrl()));
+      datasource.setDialect(DbDialectEnum.fromUrl(datasource.getJdbcUrl()).getDialect());
     }
     return datasourceRepository.save(datasource);
   }
@@ -98,7 +101,7 @@ public class DatasourceService {
   @Transactional(rollbackFor = Exception.class)
   public GenDatasource update(GenDatasource datasource) {
     if (datasource.getDialect() == null) {
-      datasource.setDialect(DbDialectEnum.fromUrl(datasource.getJdbcUrl()));
+      datasource.setDialect(DbDialectEnum.fromUrl(datasource.getJdbcUrl()).getDialect());
     }
     return datasourceRepository.save(datasource);
   }

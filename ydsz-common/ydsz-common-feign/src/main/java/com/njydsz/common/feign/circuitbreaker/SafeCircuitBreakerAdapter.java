@@ -118,8 +118,8 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
           // 熔断参数从配置读取（ydsz.feign.circuit-breaker.*），不再硬编码，支持按环境调优
           FeignProperties.CircuitBreaker cbConfig = properties.getCircuitBreaker();
           return CircuitBreakerConfig.custom()
-              .failureRateThreshold(cbConfig.getFailureRateThreshold())
-              .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold())
+              .failureRateThreshold(cbConfig.getFailureRateThreshold().floatValue())
+              .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold().floatValue())
               .slowCallDurationThreshold(Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
               .waitDurationInOpenState(Duration.ofMillis(cbConfig.getWaitDurationMs()))
               .minimumNumberOfCalls(cbConfig.getMinimumNumberOfCalls())

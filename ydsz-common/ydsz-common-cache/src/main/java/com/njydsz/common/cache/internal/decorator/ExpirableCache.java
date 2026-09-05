@@ -20,6 +20,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
+import java.math.BigDecimal;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -107,7 +108,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   private final ScheduledFuture<?> cleanupFuture;
 
   /** TTL 抖动比例（防雪崩），在原始 TTL 上加减 ±jitterRatio 的随机偏移 */
-  private final double jitterRatio;
+  private final BigDecimal jitterRatio;
 
   /** 命中计数 */
   private final LongAdder hitCount = new LongAdder();
@@ -185,7 +186,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     this.expireAfterWriteNanos = expireAfterWriteNanos;
     this.expireAfterAccessNanos = expireAfterAccessNanos;
     this.expiry = expiry;
-    this.jitterRatio = Math.max(0, Math.min(1, jitterRatio));
+    this.jitterRatio = BigDecimal.valueOf(jitterRatio).max(BigDecimal.ZERO).min(BigDecimal.ONE);
     // 桶大小固定 1 秒（见字段 Javadoc）
     this.bucketSizeNanos = TimeUnit.SECONDS.toNanos(1);
     // 注册淘汰监听器，防止 expirationMap 内存泄漏
@@ -208,12 +209,15 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
 
   /** 计算 TTL 抖动后的实际过期时间（防雪崩） */
   private long applyJitter(long ttlNanos) {
-    if (jitterRatio <= 0 || ttlNanos <= 0) {
+    if (jitterRatio.compareTo(BigDecimal.ZERO) <= 0 || ttlNanos <= 0) {
       return ttlNanos;
     }
     // 在 [1 - jitterRatio, 1 + jitterRatio] 范围内随机
-    double factor = 1.0 + (ThreadLocalRandom.current().nextDouble() * 2 - 1) * jitterRatio;
-    return Math.max(1, (long) (ttlNanos * factor));
+    BigDecimal random = BigDecimal.valueOf(ThreadLocalRandom.current().nextDouble());
+    BigDecimal offset =
+        random.multiply(new BigDecimal("2")).subtract(BigDecimal.ONE).multiply(jitterRatio);
+    BigDecimal factor = BigDecimal.ONE.add(offset);
+    return Math.max(1L, BigDecimal.valueOf(ttlNanos).multiply(factor).longValue());
   }
 
   /** 将 key 添加到对应过期时间的桶中 */
