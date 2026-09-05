@@ -53,7 +53,12 @@ public class TableMetadataService {
   @Transactional(rollbackFor = Exception.class)
   public List<GenTableMeta> refreshTables(GenDatasource datasource) {
     log.info("刷新数据源表元数据 name={}", datasource.getName());
-    List<String> tableNames = fetchTableNames(datasource);
+    List<String> tableNames;
+    try {
+      tableNames = fetchTableNames(datasource);
+    } catch (Exception e) {
+      throw new RuntimeException("刷新表元数据失败: " + e.getMessage(), e);
+    }
     List<GenTableMeta> result = new ArrayList<>();
 
     // 删除旧缓存
@@ -84,7 +89,12 @@ public class TableMetadataService {
    */
   @Transactional(rollbackFor = Exception.class)
   public List<GenColumnMeta> refreshColumns(GenDatasource datasource, GenTableMeta tableMeta) {
-    List<GenColumnMeta> columns = fetchColumns(datasource, tableMeta.getTableName());
+    List<GenColumnMeta> columns;
+    try {
+      columns = fetchColumns(datasource, tableMeta.getTableName());
+    } catch (Exception e) {
+      throw new RuntimeException("刷新列元数据失败: " + e.getMessage(), e);
+    }
     // 删除旧列数据
     columnMetaRepository.deleteByTableMetaId(tableMeta.getId());
     // 插入新列数据

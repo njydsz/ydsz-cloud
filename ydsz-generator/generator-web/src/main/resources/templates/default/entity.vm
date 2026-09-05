@@ -1,0 +1,52 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($hasDateTime = false)
+#set($hasDecimal = false)
+#foreach($col in $table.columns)
+#if($col.javaType == "LocalDateTime" || $col.javaType == "LocalDate" || $col.javaType == "Date")
+#set($hasDateTime = true)
+#elseif($col.javaType == "BigDecimal")
+#set($hasDecimal = true)
+#end
+#end
+package ${package}.domain.entity;
+
+#if($hasDateTime)
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+#end
+#if($hasDecimal)
+import java.math.BigDecimal;
+#end
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+
+/**
+ * ${table.comment}实体
+ *
+ * <p>对应数据库表 ${table.tableName}。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@TableName("${table.tableName}")
+public class ${entityName} extends MpBaseEntity<String> {
+
+#foreach($col in $table.columns)
+#if($col.comment && $col.comment != "")
+    /** ${col.comment} */
+#end
+    private ${col.javaType} ${col.javaFieldName};
+#end
+}
