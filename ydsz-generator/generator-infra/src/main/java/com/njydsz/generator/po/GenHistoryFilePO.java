@@ -14,7 +14,7 @@ import lombok.Data;
  * @since 26.09.05
  */
 @Data
-@TableName("gen_history_file")
+@TableName("ydsz_gen_history_file")
 public class GenHistoryFilePO {
 
   /** 主键 ID。 */

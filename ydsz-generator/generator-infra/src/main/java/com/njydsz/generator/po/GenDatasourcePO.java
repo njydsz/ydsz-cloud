@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * @since 26.09.05
  */
 @Data
-@TableName("gen_datasource")
+@TableName("ydsz_gen_datasource")
 public class GenDatasourcePO {
 
   /** 主键 ID。 */

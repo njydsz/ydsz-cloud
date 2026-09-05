@@ -13,7 +13,7 @@
   </resultMap>
 
   <select id="selectByDatasourceIdAndTableName" resultMap="BaseResultMap">
-    SELECT * FROM gen_table_meta
+    SELECT * FROM ydsz_gen_table_meta
     WHERE datasource_id = #{datasourceId} AND table_name = #{tableName}
     LIMIT 1
   </select>

@@ -14,7 +14,7 @@ import lombok.Data;
  * @since 26.09.05
  */
 @Data
-@TableName("gen_column_meta")
+@TableName("ydsz_gen_column_meta")
 public class GenColumnMetaPO {
 
   /** 主键 ID。 */

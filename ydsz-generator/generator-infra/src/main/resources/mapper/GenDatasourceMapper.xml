@@ -16,11 +16,11 @@
   </resultMap>
 
   <select id="findByIsDefaultTrue" resultMap="BaseResultMap">
-    SELECT * FROM gen_datasource WHERE is_default = 1 LIMIT 1
+    SELECT * FROM ydsz_gen_datasource WHERE is_default = 1 LIMIT 1
   </select>
 
   <select id="findByName" resultMap="BaseResultMap">
-    SELECT * FROM gen_datasource WHERE name = #{name} LIMIT 1
+    SELECT * FROM ydsz_gen_datasource WHERE name = #{name} LIMIT 1
   </select>
 
 </mapper>

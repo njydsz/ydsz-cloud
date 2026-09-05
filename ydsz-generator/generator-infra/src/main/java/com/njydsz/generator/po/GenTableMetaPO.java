@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * @since 26.09.05
  */
 @Data
-@TableName("gen_table_meta")
+@TableName("ydsz_gen_table_meta")
 public class GenTableMetaPO {
 
   /** 主键 ID。 */

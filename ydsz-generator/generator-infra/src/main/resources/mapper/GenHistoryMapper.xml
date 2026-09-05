@@ -18,13 +18,13 @@
   </resultMap>
 
   <select id="selectRecent" resultMap="BaseResultMap">
-    SELECT * FROM gen_history
+    SELECT * FROM ydsz_gen_history
     ORDER BY id DESC
     LIMIT #{limit}
   </select>
 
   <select id="selectByStatus" resultMap="BaseResultMap">
-    SELECT * FROM gen_history
+    SELECT * FROM ydsz_gen_history
     WHERE status = #{status}
     ORDER BY id DESC
   </select>

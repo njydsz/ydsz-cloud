@@ -20,7 +20,7 @@
   </resultMap>
 
   <select id="selectByTableMetaIdOrderByIdAsc" resultMap="BaseResultMap">
-    SELECT * FROM gen_column_meta
+    SELECT * FROM ydsz_gen_column_meta
     WHERE table_meta_id = #{tableMetaId}
     ORDER BY id ASC
   </select>

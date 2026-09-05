@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * @since 26.09.05
  */
 @Data
-@TableName("gen_template")
+@TableName("ydsz_gen_template")
 public class GenTemplatePO {
 
   /** 主键 ID。 */
