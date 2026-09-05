@@ -1,8 +1,9 @@
 package com.njydsz.generator.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.generator.po.GenHistoryFilePO;
 import org.apache.ibatis.annotations.Mapper;
+
+import com.njydsz.generator.po.GenHistoryFilePO;
 
 /**
  * 生成历史文件明细 MyBatis-Plus Mapper。

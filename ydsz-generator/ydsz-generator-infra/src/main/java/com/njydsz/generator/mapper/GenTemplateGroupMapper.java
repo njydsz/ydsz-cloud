@@ -1,8 +1,9 @@
 package com.njydsz.generator.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.generator.po.GenTemplateGroupPO;
 import org.apache.ibatis.annotations.Mapper;
+
+import com.njydsz.generator.po.GenTemplateGroupPO;
 
 /**
  * 模板分组 MyBatis-Plus Mapper。

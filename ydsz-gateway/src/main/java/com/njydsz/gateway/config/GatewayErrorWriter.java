@@ -47,7 +47,27 @@ public final class GatewayErrorWriter {
   }
 
   /**
-   * 写出统一错误响应。
+   * 写出统一错误响应（自动从 exchange 获取或生成 traceId）。
+   *
+   * <p>响应未提交时输出 JSON 错误体；已提交则直接完成（避免重复写响应导致的 IllegalStateException）。 此重载方法自动从请求头获取 {@code X-Trace-Id}，无需调用方手动传递。
+   *
+   * @param exchange 服务器 Web 交换上下文
+   * @param httpStatus HTTP 状态码
+   * @param errorCode 网关业务错误码枚举
+   * @param message 错误消息（i18n key 或具体文案）
+   * @return 写出完成信号 Mono
+   */
+  public static Mono<Void> write(
+      ServerWebExchange exchange,
+      HttpStatus httpStatus,
+      GatewayErrorCode errorCode,
+      String message) {
+    String traceId = exchange.getRequest().getHeaders().getFirst(HEADER_TRACE_ID);
+    return write(exchange, httpStatus, errorCode, message, traceId);
+  }
+
+  /**
+   * 写出统一错误响应（显式指定 traceId）。
    *
    * <p>响应未提交时输出 JSON 错误体；已提交则直接完成（避免重复写响应导致的 IllegalStateException）。
    *
