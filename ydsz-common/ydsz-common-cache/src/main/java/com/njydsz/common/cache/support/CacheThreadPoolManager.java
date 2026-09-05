@@ -2,16 +2,18 @@ package com.njydsz.common.cache.support;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-
-import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 缓存线程池统一管理器 — 集中管理缓存相关的所有线程池
@@ -26,8 +28,8 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
  *
- * <p>线程池创建通过 {@link ExecutorUtils}（ydsz-common-thread 编程式工厂）统一管理，
- * 符合《云顶编码规范》15.4.1 节禁止直接 new 线程池实例的约束。
+ * <p>线程池基于 JDK {@link ThreadPoolExecutor} / {@link ScheduledThreadPoolExecutor} 纯 API 创建，
+ * 符合《云顶编码规范》L1 工具纯度原则（禁止依赖高层模块）与 YDIZ-CONC-001 统一管理要求。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -80,6 +82,9 @@ public class CacheThreadPoolManager implements DisposableBean {
   private static final int DEFAULT_POOL_SIZE =
       Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
 
+  /** 默认队列容量 */
+  private static final int DEFAULT_QUEUE_CAPACITY = 1024;
+
   /**
    * 创建或获取指定名称的线程池
    *
@@ -118,13 +123,17 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 创建定时调度线程池。
    *
-   * <p>通过 {@link ExecutorUtils#newScheduledThreadPool(int, String)} 创建，
+   * <p>基于 JDK {@link ScheduledThreadPoolExecutor} 创建，
    * 线程名前缀为 {@code cache-sched-}，拒绝策略为 CallerRunsPolicy（调用方线程兜底）。
+   *
+   * @param name 线程池名称（用于线程标识）
+   * @param coreSize 核心线程数
+   * @return 调度线程池实例
    */
   private ScheduledExecutorService createScheduledPool(String name, int coreSize) {
     ScheduledThreadPoolExecutor executor =
-        (ScheduledThreadPoolExecutor)
-            ExecutorUtils.newScheduledThreadPool(coreSize, "cache-sched-" + name);
+        new ScheduledThreadPoolExecutor(coreSize, createThreadFactory("cache-sched-" + name));
+    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
     // 取消后自动移除，避免内存泄漏
     executor.setRemoveOnCancelPolicy(true);
     LOG.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
@@ -134,24 +143,56 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 创建缓存专用线程池。
    *
-   * <p>通过 {@link ExecutorUtils#builder()} 创建，线程名前缀为 {@code cache-}，
+   * <p>基于 JDK {@link ThreadPoolExecutor} 创建，线程名前缀为 {@code cache-}，
    * 队列容量 1024，拒绝策略为 warn 日志（不抛异常，不阻塞调用方）。
+   *
+   * @param name 线程池名称（用于线程标识）
+   * @param coreSize 核心线程数
+   * @param maxSize 最大线程数
+   * @return 线程池实例
    */
   private ExecutorService createPool(String name, int coreSize, int maxSize) {
     ThreadPoolExecutor executor =
-        ExecutorUtils.builder()
-            .corePoolSize(coreSize)
-            .maxPoolSize(maxSize)
-            .keepAliveTime(60L, TimeUnit.SECONDS)
-            .queueCapacity(1024)
-            .queueType(ExecutorUtils.BlockingQueueType.LINKED)
-            .threadNamePrefix("cache-" + name)
-            .rejectedHandler(
-                (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name))
-            .build();
+        new ThreadPoolExecutor(
+            coreSize,
+            maxSize,
+            60L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY),
+            createThreadFactory("cache-" + name),
+            createWarnRejectedHandler(name));
 
     LOG.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;
+  }
+
+  /**
+   * 创建线程工厂，为线程分配可识别的名称前缀。
+   *
+   * @param prefix 线程名前缀
+   * @return 线程工厂实例
+   */
+  private static ThreadFactory createThreadFactory(String prefix) {
+    return new ThreadFactory() {
+      private final AtomicInteger counter = new AtomicInteger(1);
+
+      @Override
+      public Thread newThread(Runnable r) {
+        Thread t = new Thread(r, prefix + "-" + counter.getAndIncrement());
+        t.setDaemon(true);
+        return t;
+      }
+    };
+  }
+
+  /**
+   * 创建告警式拒绝处理器—记录 warn 日志而非抛异常，避免阻塞调用方。
+   *
+   * @param poolName 线程池名称
+   * @return 拒绝处理器实例
+   */
+  private static RejectedExecutionHandler createWarnRejectedHandler(String poolName) {
+    return (r, executor) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", poolName);
   }
 
   /**

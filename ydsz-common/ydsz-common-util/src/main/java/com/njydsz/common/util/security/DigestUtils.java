@@ -184,6 +184,46 @@ public final class DigestUtils {
   }
 
   /**
+   * 计算 MD5 散列。
+   *
+   * <p>⚠️ <b>安全提示：MD5 不推荐用于安全敏感场景</b>（密码存储、数字签名等），
+   * 仅适用于内容指纹、文件校验等非安全场景。安全场景请使用 {@link #sha256(byte[])}。
+   *
+   * @param input 输入字节数组
+   * @return MD5 摘要字节数组
+   */
+  public static byte[] md5(byte[] input) {
+    return digestIterativeRaw(input, "MD5", null, 1);
+  }
+
+  /**
+   * 计算 MD5 散列（Hex 格式）。
+   *
+   * <p>⚠️ <b>安全提示：MD5 不推荐用于安全敏感场景</b>，仅适用于内容指纹、文件校验等非安全场景。
+   *
+   * @param input 输入字节数组
+   * @return 十六进制 MD5 字符串
+   */
+  public static String md5Hex(byte[] input) {
+    return HexFormat.of().formatHex(md5(input));
+  }
+
+  /**
+   * 计算字符串的 MD5 散列（Hex 格式，UTF-8 编码）。
+   *
+   * <p>⚠️ <b>安全提示：MD5 不推荐用于安全敏感场景</b>，仅适用于内容指纹、文件校验等非安全场景。
+   *
+   * @param input 输入字符串（UTF-8 编码）
+   * @return 十六进制 MD5 字符串；输入为 null 时返回 null
+   */
+  public static String md5Hex(String input) {
+    if (input == null) {
+      return null;
+    }
+    return md5Hex(input.getBytes(StandardCharsets.UTF_8));
+  }
+
+  /**
    * 计算 SHA-256 散列
    *
    * @param input 输入

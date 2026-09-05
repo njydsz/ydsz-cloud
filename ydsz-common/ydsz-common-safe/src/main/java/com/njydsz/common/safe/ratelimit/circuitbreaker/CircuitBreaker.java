@@ -5,6 +5,9 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,6 +40,9 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
  *
  * <p>每个资源标识对应一个独立的底层 Resilience4j 熔断器实例，
  * 由 Resilience4j 提供滑动窗口统计、状态自动流转、半开探测与事件总线能力。
+ *
+ * <p>本类的类名同为 CircuitBreaker，与 Resilience4j 的 CircuitBreaker 同名冲突，
+ * 故底层 Resilience4j CircuitBreaker 使用 FQN（全限定名）引用，其余类均已改为显式 import。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -91,7 +97,7 @@ public class CircuitBreaker {
           .timestamp(Instant.now())
           .reason("circuit breaker pass")
           .build();
-    } catch (io.github.resilience4j.circuitbreaker.CallNotPermittedException ex) {
+    } catch (CallNotPermittedException ex) {
       return blockedDecision(resource, "circuit breaker open: " + ex.getMessage());
     } catch (Exception ex) {
       return blockedDecision(resource, "circuit breaker failure: " + ex.getMessage());
@@ -150,8 +156,8 @@ public class CircuitBreaker {
   private static io.github.resilience4j.circuitbreaker.CircuitBreaker newEngineBreaker(
       CircuitBreakerConfig config, String resource) {
     String prefix = config.getName() == null ? "ratelimit" : config.getName();
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig engineConfig = config.toEngineConfig();
-    return io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.of(engineConfig)
+    CircuitBreakerConfig engineConfig = config.toEngineConfig();
+    return CircuitBreakerRegistry.of(engineConfig)
         .circuitBreaker(prefix + "-" + resource);
   }
 
@@ -169,7 +175,7 @@ public class CircuitBreaker {
   /**
    * 熔断器三态。
    *
-   * <p>CLOSED 正常调用并统计失败率；OPEN 直接拒绝；HALF_OPEN 放行少量探测请求， 成功则回退 CLOSED，失败则重回 OPEN。
+   * <p>CLOSED 正常调用并统计失败率；OPEN 直接拒绝；HALF_OPEN 放行少量探测请求，成功则回退 CLOSED，失败则重回 OPEN。
    */
   public enum State {
     /** 关闭态：正常调用，统计失败率。 */
@@ -183,7 +189,7 @@ public class CircuitBreaker {
   /**
    * 熔断器保护的调用回调。
    *
-   * <p>由调用方实现，承载实际的下游调用逻辑；回调抛出异常将被熔断器计为一次失败， 并据此触发熔断状态流转。
+   * <p>由调用方实现，承载实际的下游调用逻辑；回调抛出异常将被熔断器计为一次失败，并据此触发熔断状态流转。
    *
    * @param <T> 调用返回类型
    */
@@ -234,8 +240,8 @@ public class CircuitBreaker {
     /**
      * 创建采用默认参数的熔断器配置。
      *
-     * <p>默认策略：失败率阈值 50%、慢调用率阈值 100%、最小调用数 10、滑动窗口 100（COUNT_BASED）、 OPEN 等待 10s、半开探测数 10。等价于无参构造
-     * {@link CircuitBreaker#CircuitBreaker()} 所引用配置。
+     * <p>默认策略：失败率阈值 50%、慢调用率阈值 100%、最小调用数 10、滑动窗口 100（COUNT_BASED）、OPEN 等待 10s、半开探测数 10。
+     * 等价于无参构造 {@link CircuitBreaker#CircuitBreaker()} 所引用配置。
      *
      * @return 默认配置实例
      */
@@ -244,8 +250,8 @@ public class CircuitBreaker {
     }
 
     /** 转换为 Resilience4j 配置（阈值 0-1 → 百分比）。 */
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toEngineConfig() {
-      return io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+    CircuitBreakerConfig toEngineConfig() {
+      return CircuitBreakerConfig.custom()
           .failureRateThreshold((float) (this.failureRateThreshold * 100))
           .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))
           .slowCallDurationThreshold(Duration.ofMillis(this.slowCallDurationThresholdMillis))
@@ -255,8 +261,8 @@ public class CircuitBreaker {
           .slidingWindowSize(this.slidingWindowSize)
           .slidingWindowType(
               SlidingWindowType.COUNT_BASED.equals(this.slidingWindowType)
-                  ? io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
-                  : io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+                  ? CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
+                  : CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
           .build();
     }
   }
@@ -264,7 +270,7 @@ public class CircuitBreaker {
   /**
    * 滑动窗口统计类型。
    *
-   * <p>决定失败率/慢调用率统计窗口的划分方式： TIME_BASED 按时间窗口统计，COUNT_BASED 按调用次数窗口统计。
+   * <p>决定失败率/慢调用率统计窗口的划分方式：TIME_BASED 按时间窗口统计，COUNT_BASED 按调用次数窗口统计。
    */
   public enum SlidingWindowType {
     /** 基于时间的滑动窗口。 */

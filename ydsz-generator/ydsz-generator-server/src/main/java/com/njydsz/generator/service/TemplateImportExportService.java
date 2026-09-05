@@ -131,7 +131,7 @@ public class TemplateImportExportService {
             .fileName(fileName)
             .description("导入模板: " + fileName)
             .content(content)
-            .isFolder(false)
+            .folder(false)
             .parentPath(extractParentPath(fileName))
             .version(1)
             .hash(md5(content))

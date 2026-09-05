@@ -19,6 +19,10 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-util</artifactId>
+    </dependency>
     <!-- mybatis-plus-annotation: Domain Entity 使用 @TableId/@TableName -->
     <dependency>
       <groupId>com.baomidou</groupId>

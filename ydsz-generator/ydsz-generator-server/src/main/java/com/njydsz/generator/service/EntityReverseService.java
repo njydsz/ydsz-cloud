@@ -1,6 +1,7 @@
 package com.njydsz.generator.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -26,8 +27,9 @@ import java.util.regex.Pattern;
 @Service
 public class EntityReverseService {
 
-  /** 默认作者。 */
-  private static final String DEFAULT_AUTHOR = "ydsz-generator";
+  /** 默认作者（来自配置）。 */
+  @Value("${generator.default-author:ydsz-generator}")
+  private String defaultAuthor;
   /** 类名正则。 */
   private static final Pattern CLASS_NAME_PATTERN =
       Pattern.compile("public\\s+(?:class|record)\\s+(\\w+)");
