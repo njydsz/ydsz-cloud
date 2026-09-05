@@ -1,4 +1,5 @@
 package com.njydsz.common.sentry.config;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +99,7 @@ public class SentryProperties {
     /** 失败率阈值 */
     @Min(value = 0, message = "失败率阈值不能小于 0")
     @Max(value = 1, message = "失败率阈值不能大于 1")
-    private double failureRateThreshold = 0.3;
+    private BigDecimal failureRateThreshold = new BigDecimal("0.3");
 
     /** 滑动窗口大小 */
     @Min(value = 1, message = "滑动窗口大小不能小于 1")
@@ -278,13 +279,13 @@ public class SentryProperties {
     /** 采样率（0.0 ~ 1.0） */
     @Min(value = 0, message = "采样率不能小于 0")
     @Max(value = 1, message = "采样率不能大于 1")
-    private double samplerRatio = 0.1;
+    private BigDecimal samplerRatio = new BigDecimal("0.1");
 
     /** 服务级采样率覆盖（service name -> ratio） */
-    private Map<String, Double> samplerServiceRatios = new HashMap<>(16);
+    private Map<String, BigDecimal> samplerServiceRatios = new HashMap<>(16);
 
     /** 灰度标签采样率（gray tag -> ratio） */
-    private Map<String, Double> samplerGrayTagRatios = new HashMap<>(16);
+    private Map<String, BigDecimal> samplerGrayTagRatios = new HashMap<>(16);
 
     /** 健康检查路径前缀（不采样） */
     private List<String> healthCheckPaths = List.of("/actuator", "/health", "/metrics");
@@ -355,12 +356,12 @@ public class SentryProperties {
     private long decisionWaitMillis = 5000;
 
     /** 根操作名采样率覆盖 */
-    private Map<String, Double> rootSpanNameRatios = new HashMap<>(16);
+    private Map<String, BigDecimal> rootSpanNameRatios = new HashMap<>(16);
 
     /** 总采样率（未命中规则时的概率采样） */
     @Min(value = 0, message = "总采样率不能小于 0")
     @Max(value = 1, message = "总采样率不能大于 1")
-    private double recordRatio = 0.05;
+    private BigDecimal recordRatio = new BigDecimal("0.05");
 
     /** 是否 100% 采集错误 Span（HTTP 5xx / OTel StatusCode.ERROR） */
     private boolean errorStatus = true;
@@ -419,7 +420,7 @@ public class SentryProperties {
     /** SLA 目标可用率（0.0 ~ 1.0，如 0.999 表示 99.9%） */
     @Min(value = 0, message = "SLA 可用率不能小于 0")
     @Max(value = 1, message = "SLA 可用率不能大于 1")
-    private double availabilityTarget = 0.999;
+    private BigDecimal availabilityTarget = new BigDecimal("0.999");
 
     /** P99 延迟目标（毫秒） */
     @Min(value = 100, message = "P99 延迟目标不能小于 100ms")

@@ -3,6 +3,7 @@ package com.njydsz.generator.service;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;
+import com.njydsz.generator.enums.DbDialectEnum;
 import com.njydsz.generator.repository.GenColumnMetaRepository;
 import com.njydsz.generator.repository.GenTableMetaRepository;
 import com.njydsz.common.util.string.StringUtils;
@@ -138,7 +139,10 @@ public class TableMetadataService {
 
   private List<String> fetchTableNames(GenDatasource datasource) throws Exception {
     List<String> tables = new ArrayList<>(64);
-    Class.forName(datasource.getDialect().getDriverClass());
+    String driverClass = datasource.getDialect() != null
+        ? DbDialectEnum.valueOf(datasource.getDialect()).getDriverClass()
+        : DbDialectEnum.fromUrl(datasource.getJdbcUrl()).getDriverClass();
+    Class.forName(driverClass);
     try (Connection conn = DriverManager.getConnection(
         datasource.getJdbcUrl(), datasource.getUsername(), datasource.getPassword())) {
       DatabaseMetaData metaData = conn.getMetaData();
@@ -171,7 +175,10 @@ public class TableMetadataService {
   private List<GenColumnMeta> fetchColumns(GenDatasource datasource, String tableName)
       throws Exception {
     List<GenColumnMeta> columns = new ArrayList<>(64);
-    Class.forName(datasource.getDialect().getDriverClass());
+    String driverClass = datasource.getDialect() != null
+        ? DbDialectEnum.valueOf(datasource.getDialect()).getDriverClass()
+        : DbDialectEnum.fromUrl(datasource.getJdbcUrl()).getDriverClass();
+    Class.forName(driverClass);
     try (Connection conn = DriverManager.getConnection(
         datasource.getJdbcUrl(), datasource.getUsername(), datasource.getPassword())) {
       DatabaseMetaData metaData = conn.getMetaData();

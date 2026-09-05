@@ -1,5 +1,6 @@
 package com.njydsz.common.sentry.domain;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class AlertEvent {
   @Builder.Default private Instant firedAt = Instant.now();
 
   /** 触发值 */
-  private double value;
+  private BigDecimal value;
 
   /** Runbook URL */
   private String runbookUrl;

@@ -1,5 +1,6 @@
 package com.njydsz.common.sentry.domain;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ public class SlaDefinition {
   private long thresholdMillis = 500;
 
   /** SLA 目标（0.0~1.0，如 0.99 表示 99%） */
-  private double target = 0.99;
+  private BigDecimal target = new BigDecimal("0.99");
 
   /** 评估窗口（秒） */
   private long evaluationWindowSeconds = 300;

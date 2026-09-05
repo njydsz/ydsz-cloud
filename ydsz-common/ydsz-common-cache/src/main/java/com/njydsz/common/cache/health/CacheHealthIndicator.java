@@ -1,5 +1,7 @@
 package com.njydsz.common.cache.health;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,10 +47,10 @@ public class CacheHealthIndicator {
   }
 
   /** 告警阈值：命中率低于此值时状态为 WARN（默认 0.3） */
-  private double hitRateWarnThreshold = 0.3;
+  private BigDecimal hitRateWarnThreshold = new BigDecimal("0.3");
 
   /** 告警阈值：容量使用率高于此值时状态为 WARN（默认 0.9） */
-  private double capacityWarnThreshold = 0.9;
+  private BigDecimal capacityWarnThreshold = new BigDecimal("0.9");
 
   /** 命中率检查的最小访问样本数（低于此数量不判断命中率，默认 100） */
   private long minSampleSize = 100;
@@ -83,8 +85,9 @@ public class CacheHealthIndicator {
    * @param hitRateWarnThreshold 阈值（0.0 ~ 1.0），默认 0.3
    * @throws IllegalArgumentException 当阈值不在 (0, 1] 范围内时抛出
    */
-  public void setHitRateWarnThreshold(double hitRateWarnThreshold) {
-    if (hitRateWarnThreshold <= 0 || hitRateWarnThreshold > 1.0) {
+  public void setHitRateWarnThreshold(BigDecimal hitRateWarnThreshold) {
+    if (hitRateWarnThreshold.compareTo(BigDecimal.ZERO) <= 0
+        || hitRateWarnThreshold.compareTo(BigDecimal.ONE) > 0) {
       throw new IllegalArgumentException(
           "hitRateWarnThreshold 必须在 (0, 1] 范围内: " + hitRateWarnThreshold);
     }
@@ -99,8 +102,9 @@ public class CacheHealthIndicator {
    * @param capacityWarnThreshold 阈值（0.0 ~ 1.0），默认 0.9
    * @throws IllegalArgumentException 当阈值不在 (0, 1] 范围内时抛出
    */
-  public void setCapacityWarnThreshold(double capacityWarnThreshold) {
-    if (capacityWarnThreshold <= 0 || capacityWarnThreshold > 1.0) {
+  public void setCapacityWarnThreshold(BigDecimal capacityWarnThreshold) {
+    if (capacityWarnThreshold.compareTo(BigDecimal.ZERO) <= 0
+        || capacityWarnThreshold.compareTo(BigDecimal.ONE) > 0) {
       throw new IllegalArgumentException(
           "capacityWarnThreshold 必须在 (0, 1] 范围内: " + capacityWarnThreshold);
     }
@@ -165,7 +169,7 @@ public class CacheHealthIndicator {
     Status status = Status.UP;
 
     long size = cache.estimatedSize();
-    double hitRate = cache.getHitRate();
+    BigDecimal hitRate = BigDecimal.valueOf(cache.getHitRate());
     CacheStats stats = cache.getStats();
 
     details.put("size", size);
@@ -175,9 +179,12 @@ public class CacheHealthIndicator {
 
     // 命中率检查（访问量达到最小样本数才判断，避免冷启动误报）
     long totalAccess = stats.getHitCount() + stats.getMissCount();
-    if (totalAccess > minSampleSize && hitRate < hitRateWarnThreshold) {
+    if (totalAccess > minSampleSize && hitRate.compareTo(hitRateWarnThreshold) < 0) {
       status = Status.WARN;
-      details.put("warning", "低命中率: " + String.format("%.2f%%", hitRate * 100));
+      details.put(
+          "warning",
+          "低命中率: "
+              + String.format("%.2f%%", hitRate.multiply(new BigDecimal("100"))));
     }
 
     // 容量检查（仅在有 maxSize 信息时）
@@ -188,12 +195,18 @@ public class CacheHealthIndicator {
         OptionalLong maxOpt = eviction.getMaximum();
         if (maxOpt.isPresent() && maxOpt.getAsLong() > 0) {
           long maxSize = maxOpt.getAsLong();
-          double usage = (double) size / maxSize;
+          BigDecimal usage =
+              BigDecimal.valueOf(size)
+                  .divide(BigDecimal.valueOf(maxSize), 4, RoundingMode.HALF_UP);
           details.put("maxSize", maxSize);
-          details.put("usage", String.format("%.2f%%", usage * 100));
-          if (usage > capacityWarnThreshold) {
+          details.put("usage", String.format("%.2f%%", usage.multiply(new BigDecimal("100"))));;
+          if (usage.compareTo(capacityWarnThreshold) > 0) {
             status = Status.WARN;
-            details.put("warning", "高容量使用率: " + String.format("%.2f%%", usage * 100));
+            details.put(
+                "warning",
+                "高容量使用率: "
+                    + String.format("%.2f%%", usage.multiply(new BigDecimal("100"))));
+          }
           }
         }
       }

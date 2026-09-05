@@ -467,15 +467,15 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
     // 内容源抽象：小文件走内存缓冲（多次复用高效），大文件落盘临时文件（避免 OOM）。
     // 后续秒传校验、病毒扫描、对象存储上传复用同一内容源，避免重复读取 IO。
-    FileContentSource contentSource = null;
+    FileContentSource contentSource;
     try {
-      try {
-        contentSource = bufferFileContent(file);
-      } catch (IOException e) {
-        log.error("[Storage] failed to buffer file content, object={}", resolvedObjectName, e);
-        throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
-      }
+      contentSource = bufferFileContent(file);
+    } catch (IOException e) {
+      log.error("[Storage] failed to buffer file content, object={}", resolvedObjectName, e);
+      throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+    }
 
+    try (contentSource) {
       // P0-1: File dedup check — 基于已缓冲的内容计算秒传 hash，不重新读取上传流
       String dedupHash = null;
       if (fileDedupService != null) {
@@ -596,10 +596,6 @@ public abstract class AbstractFileStorage implements IFileStorage {
         throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
       } finally {
         releaseConcurrencyLock(resolvedObjectName, lockToken);
-      }
-    } finally {
-      if (contentSource != null) {
-        contentSource.close();
       }
     }
   }
