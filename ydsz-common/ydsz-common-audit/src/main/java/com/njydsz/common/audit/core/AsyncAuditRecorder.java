@@ -337,16 +337,18 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
    */
   @Override
   public HealthInfo health() {
-    double usageRatio = getQueueUsageRatio();
+    BigDecimal usageRatio = getQueueUsageRatio();
     long queueFullCount = getQueueFullWarnCount();
 
     HealthInfo info =
         HealthInfo.up()
             .withDetail("queueSize", getQueueSize())
-            .withDetail("queueUsageRatio", String.format("%.1f%%", usageRatio * 100))
+            .withDetail(
+                "queueUsageRatio",
+                String.format("%.1f%%", usageRatio.multiply(new BigDecimal("100"))))
             .withDetail("queueFullCount", queueFullCount);
 
-    if (usageRatio > QUEUE_USAGE_WARN_THRESHOLD) {
+    if (usageRatio.compareTo(QUEUE_USAGE_WARN_THRESHOLD) > 0) {
       return HealthInfo.down(info.getDetails()).withDetail("error", "队列使用率超过80%，审计日志可能被丢弃");
     }
     if (queueFullCount > 0) {

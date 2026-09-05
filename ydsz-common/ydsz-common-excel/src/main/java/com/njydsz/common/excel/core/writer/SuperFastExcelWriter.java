@@ -302,8 +302,7 @@ public class SuperFastExcelWriter {
   }
 
   private void writeXlsxToStream(OutputStream os, List<?> list) throws Exception {
-    ZipOutputStream zipOut = new ZipOutputStream(os);
-    try {
+    try (ZipOutputStream zipOut = new ZipOutputStream(os)) {
       zipOut.setLevel(getExcelConfig().getCompressionLevel());
 
       zipOut.putNextEntry(new ZipEntry("[Content_Types].xml"));
@@ -356,13 +355,6 @@ public class SuperFastExcelWriter {
       zipOut.closeEntry();
 
       zipOut.finish();
-    } catch (Exception e) {
-      try {
-        zipOut.close();
-      } catch (Exception ignored) {
-        // best effort
-      }
-      throw e;
     }
   }
 

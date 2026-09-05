@@ -1,5 +1,6 @@
 package com.njydsz.common.sentry.config;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -129,7 +130,8 @@ public class MetricsAutoConfiguration {
     CircuitBreakerConfig config =
         CircuitBreakerConfig.custom()
             // SentryProperties 阈值为 0-1 比例，换算为 Resilience4j 百分比语义
-            .failureRateThreshold((float) (cb.getFailureRateThreshold() * 100))
+            .failureRateThreshold(
+                cb.getFailureRateThreshold().multiply(BigDecimal.valueOf(100)).floatValue())
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
             .slidingWindowSize(cb.getSlidingWindowSize())
             .waitDurationInOpenState(Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))
@@ -182,7 +184,8 @@ public class MetricsAutoConfiguration {
   /** 构建通道熔断配置（SentryProperties 0-1 比例 → Resilience4j 百分比）。 */
   private static CircuitBreakerConfig buildChannelConfig(SentryProperties.CircuitBreakerConfig cb) {
     return CircuitBreakerConfig.custom()
-        .failureRateThreshold((float) (cb.getFailureRateThreshold() * 100))
+        .failureRateThreshold(
+            cb.getFailureRateThreshold().multiply(BigDecimal.valueOf(100)).floatValue())
         .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
         .slidingWindowSize(cb.getSlidingWindowSize())
         .waitDurationInOpenState(Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))

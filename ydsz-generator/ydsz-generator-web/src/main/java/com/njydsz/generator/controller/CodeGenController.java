@@ -108,6 +108,6 @@ public class CodeGenController {
   @ExceptionHandler(Exception.class)
   public YdszResponse<Void> handleException(Exception ex) {
     log.error("Generator 接口未捕获异常: {}", ex.getMessage(), ex);
-    return YdszResponse.fail(500, "生成失败: " + ex.getMessage());
+    return YdszResponse.error("500", "生成失败: " + ex.getMessage());
   }
 }

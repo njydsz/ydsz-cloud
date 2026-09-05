@@ -1,5 +1,7 @@
 package com.njydsz.common.lock.scheduler;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,7 +62,7 @@ public class LockWatchDog {
   private static final int DEFAULT_MAX_RENEW_TIMES = 100;
 
   /** 泄漏告警阈值（续期次数占最大限制的比例） */
-  private static final double LEAK_WARNING_RATIO = 0.8;
+  private static final BigDecimal LEAK_WARNING_RATIO = new BigDecimal("0.8");
 
   /** 泄漏检测间隔（毫秒） */
   private static final long LEAK_DETECT_INTERVAL_MS = 60_000L;
@@ -367,7 +369,11 @@ public class LockWatchDog {
       return;
     }
     int maxRenewTimesLocal = maxRenewTimes;
-    int warningThreshold = (int) (maxRenewTimesLocal * LEAK_WARNING_RATIO);
+    int warningThreshold =
+        BigDecimal.valueOf(maxRenewTimesLocal)
+            .multiply(LEAK_WARNING_RATIO)
+            .setScale(0, RoundingMode.DOWN)
+            .intValue();
     for (Map.Entry<String, WatchTask> entry : activeTasksSnapshot.entrySet()) {
       String lockKey = entry.getKey();
       WatchTask task = entry.getValue();

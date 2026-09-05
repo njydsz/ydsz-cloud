@@ -1,5 +1,6 @@
 package com.njydsz.common.sentry.tracing.otel;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,11 +73,11 @@ public final class OtelSamplers {
    * @param ratio 采样比例（0.0~1.0）
    * @return 比例采样器
    */
-  public static Sampler ratio(double ratio) {
-    if (ratio < 0.0 || ratio > 1.0) {
+  public static Sampler ratio(BigDecimal ratio) {
+    if (ratio.compareTo(BigDecimal.ZERO) < 0 || ratio.compareTo(BigDecimal.ONE) > 0) {
       throw new IllegalArgumentException("ratio must be in [0.0, 1.0], got: " + ratio);
     }
-    return Sampler.traceIdRatioBased(ratio);
+    return Sampler.traceIdRatioBased(ratio.doubleValue());
   }
 
   /**
@@ -86,8 +87,8 @@ public final class OtelSamplers {
    * @param ratio 无父 Span 时的采样率（0-1）
    * @return 父级采样器实例
    */
-  public static Sampler parentBased(double ratio) {
-    return Sampler.parentBased(Sampler.traceIdRatioBased(ratio));
+  public static Sampler parentBased(BigDecimal ratio) {
+    return Sampler.parentBased(Sampler.traceIdRatioBased(ratio.doubleValue()));
   }
 
   /**
@@ -121,13 +122,13 @@ public final class OtelSamplers {
   @Builder
   public static class CompositeConfig {
     /** 默认采样率 */
-    @Builder.Default private double defaultRatio = 0.1;
+    @Builder.Default private BigDecimal defaultRatio = new BigDecimal("0.1");
 
     /** 服务名 → 采样率 */
-    @Builder.Default private Map<String, Double> serviceRatios = new HashMap<>(16);
+    @Builder.Default private Map<String, BigDecimal> serviceRatios = new HashMap<>(16);
 
     /** 灰度标签 → 采样率（命中该 tag 的请求按此采样率） */
-    @Builder.Default private Map<String, Double> grayTagRatios = new HashMap<>(16);
+    @Builder.Default private Map<String, BigDecimal> grayTagRatios = new HashMap<>(16);
 
     /** 健康检查路径前缀（这些路径不采样） */
     @Builder.Default
@@ -187,7 +188,7 @@ public final class OtelSamplers {
       // 3) 灰度标签命中：按灰度采样率
       String grayTag = attributes.get(OtelSemConv.REMI_GRAY_TAG);
       if (grayTag != null) {
-        Double ratio = config.getGrayTagRatios().get(grayTag);
+        BigDecimal ratio = config.getGrayTagRatios().get(grayTag);
         if (ratio != null) {
           return ratioBasedDecision(traceId, ratio);
         }
@@ -196,7 +197,7 @@ public final class OtelSamplers {
       // 4) 服务名命中：按服务采样率
       String service = attributes.get(OtelSemConv.SERVICE_NAME);
       if (service != null) {
-        Double ratio = config.getServiceRatios().get(service);
+        BigDecimal ratio = config.getServiceRatios().get(service);
         if (ratio != null) {
           return ratioBasedDecision(traceId, ratio);
         }
@@ -216,14 +217,14 @@ public final class OtelSamplers {
     }
 
     /** 基于 traceId 哈希的固定比例采样（同一条 trace 的所有 Span 决策一致） */
-    private SamplingResult ratioBasedDecision(String traceId, double ratio) {
-      if (ratio >= 1.0) {
+    private SamplingResult ratioBasedDecision(String traceId, BigDecimal ratio) {
+      if (ratio.compareTo(BigDecimal.ONE) >= 0) {
         return SamplingResult.recordAndSample();
       }
-      if (ratio <= 0.0) {
+      if (ratio.compareTo(BigDecimal.ZERO) <= 0) {
         return SamplingResult.drop();
       }
-      long threshold = (long) (ratio * Long.MAX_VALUE);
+      long threshold = BigDecimal.valueOf(Long.MAX_VALUE).multiply(ratio).longValue();
       long hash = Math.abs(traceId.hashCode());
       if (hash < threshold) {
         return SamplingResult.recordAndSample();
