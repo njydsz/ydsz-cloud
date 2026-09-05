@@ -88,7 +88,7 @@ public class RuntimeController {
     public YdszResponse<RuntimeSession> getSession(@PathVariable String executionId) {
         return runtimeManagementService.getSession(executionId)
                 .map(YdszResponse::success)
-                .orElse(YdszResponse.fail(
+                .orElse(YdszResponse.error(
                         YdszResultCode.NOT_FOUND,
                         "会话不存在: " + executionId));
     }
@@ -119,7 +119,7 @@ public class RuntimeController {
         if (result) {
             return YdszResponse.success(true);
         }
-        return YdszResponse.fail(
+        return YdszResponse.error(
                 YdszResultCode.BIZ_ERROR,
                 "强制回收失败，会话不存在或已结束: " + executionId);
     }

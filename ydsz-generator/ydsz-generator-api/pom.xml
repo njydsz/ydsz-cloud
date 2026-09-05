@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.njydsz</groupId>
+    <artifactId>ydsz-generator</artifactId>
+    <version>26.09.01-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>ydsz-generator-api</artifactId>
+  <name>ydsz-generator-api</name>
+  <description>代码生成器 Feign 契约层 — GeneratorFeignClient + DTO + Fallback</description>
+
+  <dependencies>
+    <!-- DDD: api 依赖 domain 获取 DTO/Query/VO -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-generator-domain</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- Feign 契约（纯接口，不引入 Spring Cloud 启动依赖） -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-feign</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-core</artifactId>
+      <version>13.5</version>
+      <optional>true</optional>
+    </dependency>
+    <!-- 统一响应 -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-core</artifactId>
+    </dependency>
+    <!-- MapStruct -->
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+      <version>1.6.3</version>
+    </dependency>
+    <!-- Lombok -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <!-- Swagger -->
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>1.6.14</version>
+    </dependency>
+  </dependencies>
+
+</project>

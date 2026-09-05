@@ -18,8 +18,10 @@
   <modules>
     <module>ydsz-generator-domain</module>
     <module>ydsz-generator-infra</module>
+    <module>ydsz-generator-api</module>
     <module>ydsz-generator-server</module>
     <module>ydsz-generator-web</module>
+    <module>ydsz-generator-app</module>
   </modules>
 
   <properties>
@@ -36,6 +38,11 @@
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-generator-infra</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-generator-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
