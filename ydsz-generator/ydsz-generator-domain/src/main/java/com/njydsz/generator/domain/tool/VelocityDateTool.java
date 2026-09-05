@@ -4,18 +4,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.njydsz.common.util.date.DateUtils;
+
 /**
  * Velocity 日期工具对象（模板中通过 {@code $dateTool} 调用）。
  *
  * <p>提供日期格式化辅助方法，用于代码生成模板中的日期输出。
+ * 复用 {@link com.njydsz.common.util.date.DateUtils} 中预定义的线程安全共享格式化器，
+ * 避免每次调用都创建新的 {@link DateTimeFormatter} 实例。
  *
  * @author ydsz-team
  * @since 26.09.05
  */
 public class VelocityDateTool {
-
-  private static final String DEFAULT_PATTERN = "yyyy-MM-dd HH:mm:ss";
-  private static final String DATE_PATTERN = "yyyy-MM-dd";
 
   /**
    * 获取当前日期时间字符串（默认格式 yyyy-MM-dd HH:mm:ss）。
@@ -23,7 +24,7 @@ public class VelocityDateTool {
    * @return 当前日期时间字符串
    */
   public String now() {
-    return LocalDateTime.now().format(DateTimeFormatter.ofPattern(DEFAULT_PATTERN));
+    return DateUtils.now();
   }
 
   /**
@@ -32,7 +33,7 @@ public class VelocityDateTool {
    * @return 当前日期字符串
    */
   public String today() {
-    return LocalDate.now().format(DateTimeFormatter.ofPattern(DATE_PATTERN));
+    return DateUtils.today();
   }
 
   /**
@@ -42,10 +43,7 @@ public class VelocityDateTool {
    * @return 格式化后的字符串
    */
   public String format(String pattern) {
-    if (pattern == null || pattern.isEmpty()) {
-      return now();
-    }
-    return LocalDateTime.now().format(DateTimeFormatter.ofPattern(pattern));
+    return DateUtils.formatNow(pattern);
   }
 
   /**
@@ -59,7 +57,7 @@ public class VelocityDateTool {
     if (dateTime == null) {
       return "";
     }
-    String p = pattern != null ? pattern : DEFAULT_PATTERN;
+    String p = pattern != null ? pattern : DateUtils.DEFAULT_DATE_TIME_PATTERN;
     return dateTime.format(DateTimeFormatter.ofPattern(p));
   }
 

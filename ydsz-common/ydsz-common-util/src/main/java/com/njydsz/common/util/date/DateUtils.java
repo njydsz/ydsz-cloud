@@ -61,6 +61,47 @@ public final class DateUtils {
         "DateUtils is a utility class and cannot be instantiated");
   }
 
+  // ==================== 便捷当前时间 ====================
+
+  /**
+   * 获取当前日期时间字符串（默认格式 yyyy-MM-dd HH:mm:ss）。
+   *
+   * <p>线程安全，内部复用共享 {@link #DEFAULT_DATE_TIME_FORMATTER}。
+   *
+   * @return 当前日期时间格式化字符串
+   */
+  public static String now() {
+    return LocalDateTime.now().format(DEFAULT_DATE_TIME_FORMATTER);
+  }
+
+  /**
+   * 获取当前日期字符串（默认格式 yyyy-MM-dd）。
+   *
+   * <p>线程安全，内部复用共享 {@link #DEFAULT_DATE_FORMATTER}。
+   *
+   * @return 当前日期格式化字符串
+   */
+  public static String today() {
+    return LocalDate.now().format(DEFAULT_DATE_FORMATTER);
+  }
+
+  /**
+   * 使用指定模式格式化当前日期时间。
+   *
+   * <p>与 {@link #formatLocalDateTime(LocalDateTime, String)} 语义一致，
+   * 只是入参固定为 {@code LocalDateTime.now()}，常用于日志和文件名后缀。
+   *
+   * @param pattern 日期时间格式模式（如 yyyy-MM-dd_HH-mm）；null 或空时使用默认格式
+   * @return 格式化后的字符串
+   */
+  public static String formatNow(String pattern) {
+    if (pattern == null || pattern.isEmpty()) {
+      return now();
+    }
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+    return LocalDateTime.now().format(formatter);
+  }
+
   // ==================== 闰年判断 ====================
 
   /**

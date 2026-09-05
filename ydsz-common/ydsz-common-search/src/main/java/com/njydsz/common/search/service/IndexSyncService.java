@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -104,17 +105,18 @@ public class IndexSyncService {
   /**
    * 创建默认索引同步线程池。
    *
+   * <p>兜底线程池：仅在外部未注入线程池时使用，生产环境由 {@code ydsz.thread.pools.*} 统一管理。
+   * 通过 {@link ExecutorUtils} 编程式工厂创建，符合 YDIZ-CONC-001 规范。
+   *
    * @param properties 搜索配置
    * @return 默认索引同步线程池
    */
   public static ThreadPoolTaskExecutor createDefaultIndexSyncExecutor(SearchProperties properties) {
     int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
-        // CHECKSTYLE.OFF: RegexpSinglelineJava
-    // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
+    int maxSize = Math.max(4, properties.getIndex().getThreadPoolSize() * 2);
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    // CHECKSTYLE.ON: RegexpSinglelineJava
     executor.setCorePoolSize(coreSize);
-    executor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
+    executor.setMaxPoolSize(maxSize);
     executor.setQueueCapacity(512);
     executor.setThreadNamePrefix("ydsz-index-sync-");
     executor.setWaitForTasksToCompleteOnShutdown(true);

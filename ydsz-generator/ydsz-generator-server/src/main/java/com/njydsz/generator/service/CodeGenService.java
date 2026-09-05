@@ -29,6 +29,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 代码生成编排服务（Domain Service）。
@@ -190,42 +195,78 @@ public class CodeGenService {
   }
 
   /**
-   * 批量生成多个表。
+   * 批量生成多个表（并行执行）。
    *
-   * @param datasourceId   数据源 ID
-   * @param templateGroupId 模板分组 ID
-   * @param tableNames     表名列表
-   * @param outputDir      输出目录
-   * @param conflictStrategy 冲突策略
-   * @param triggeredBy    触发人
+   * <p>使用独立短生命周期线程池并发处理多张表，线程数 = min(表数, CPU 核数)。
+   * 池在方法退出前等待所有任务完成。任一表的生成失败不影响其他表，
+   * 失败计数会被汇总到返回的 {@link GenResultVO} 中。
+   *
+   * @param datasourceId      数据源 ID
+   * @param templateGroupId   模板分组 ID
+   * @param tableNames        表名列表
+   * @param outputDir         输出目录
+   * @param conflictStrategy  冲突策略
+   * @param triggeredBy       触发人
    * @return 生成结果汇总
    */
   public GenResultVO generateBatch(
       Long datasourceId, Long templateGroupId, List<String> tableNames,
       String outputDir, ConflictStrategyEnum conflictStrategy, String triggeredBy) {
 
-    int totalSuccess = 0;
-    int totalSkip = 0;
-    int totalFail = 0;
-    Long firstHistoryId = null;
+    int poolSize = Math.max(1, Math.min(tableNames.size(),
+        Runtime.getRuntime().availableProcessors()));
+    log.info("批量生成开始 count={} poolSize={}", tableNames.size(), poolSize);
 
-    for (String tableName : tableNames) {
-      GenResultVO r = generate(datasourceId, templateGroupId, tableName,
-          outputDir, conflictStrategy, triggeredBy);
-      if (firstHistoryId == null) {
-        firstHistoryId = r.getHistoryId();
+    ExecutorService pool = ExecutorUtils.newFixedThreadPool(poolSize);
+    AtomicInteger totalSuccess = new AtomicInteger();
+    AtomicInteger totalSkip = new AtomicInteger();
+    AtomicInteger totalFail = new AtomicInteger();
+    Long[] firstHistoryId = new Long[1];
+
+    try {
+      List<java.util.concurrent.Future<?>> futures = new ArrayList<>(tableNames.size());
+      for (String tableName : tableNames) {
+        futures.add(pool.submit(() -> {
+          try {
+            GenResultVO r = generate(datasourceId, templateGroupId, tableName,
+                outputDir, conflictStrategy, triggeredBy);
+            synchronized (firstHistoryId) {
+              if (firstHistoryId[0] == null) {
+                firstHistoryId[0] = r.getHistoryId();
+              }
+            }
+            if (r.getSuccessCount() != null) {
+              totalSuccess.addAndGet(r.getSuccessCount());
+            }
+            if (r.getSkipCount() != null) {
+              totalSkip.addAndGet(r.getSkipCount());
+            }
+            if (r.getFailCount() != null) {
+              totalFail.addAndGet(r.getFailCount());
+            }
+          } catch (Exception e) {
+            log.error("批量生成单表失败 table={} err={}", tableName, e.getMessage());
+            totalFail.incrementAndGet();
+          }
+        }));
       }
-      totalSuccess += (r.getSuccessCount() != null ? r.getSuccessCount() : 0);
-      totalSkip += (r.getSkipCount() != null ? r.getSkipCount() : 0);
-      totalFail += (r.getFailCount() != null ? r.getFailCount() : 0);
+
+      for (java.util.concurrent.Future<?> f : futures) {
+        f.get(5, TimeUnit.MINUTES);
+      }
+    } catch (Exception e) {
+      log.error("批量生成失败: {}", e.getMessage(), e);
+      totalFail.incrementAndGet();
+    } finally {
+      ExecutorUtils.shutdownGracefully(pool, 30, TimeUnit.SECONDS);
     }
 
     return GenResultVO.builder()
-        .historyId(firstHistoryId)
-        .fileCount(totalSuccess + totalSkip + totalFail)
-        .successCount(totalSuccess)
-        .skipCount(totalSkip)
-        .failCount(totalFail)
+        .historyId(firstHistoryId[0])
+        .fileCount(totalSuccess.get() + totalSkip.get() + totalFail.get())
+        .successCount(totalSuccess.get())
+        .skipCount(totalSkip.get())
+        .failCount(totalFail.get())
         .build();
   }
 
