@@ -4,24 +4,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.search.config.SearchProperties;
-import com.njydsz.common.search.core.IndexDocument;
-import com.njydsz.common.search.core.IndexOperation;
-import com.njydsz.common.search.core.IndexStrategy;
-import com.njydsz.common.search.core.SearchEngineRegistry;
-import com.njydsz.common.search.metrics.SearchMetrics;
-import com.njydsz.common.search.provider.ProviderTypeBridge;
-import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.common.search.provider.SearchProviderRegistry;
-import com.njydsz.common.search.sync.PersistentDeadLetterQueue;
 
 /**
  * 索引同步服务接口。
@@ -38,7 +29,7 @@ public class IndexSyncService {
   private final SearchProviderRegistry providerRegistry;
   private final SearchProperties properties;
   private final SearchMetrics metrics;
-  private final ThreadPoolTaskExecutor executorService;
+  private final ExecutorService executorService;
 
   private static final int MAX_DLQ_SIZE = 10000;
   private final ConcurrentLinkedQueue<IndexOperation> deadLetterQueue =
@@ -64,7 +55,7 @@ public class IndexSyncService {
       SearchProviderRegistry providerRegistry,
       SearchProperties properties,
       SearchMetrics metrics,
-      ThreadPoolTaskExecutor executorService) {
+      ExecutorService executorService) {
     this.engineRegistry = engineRegistry;
     this.providerRegistry = providerRegistry;
     this.properties = properties;
@@ -90,7 +81,7 @@ public class IndexSyncService {
         providerRegistry,
         properties,
         metrics,
-        createDefaultIndexSyncExecutor(properties));
+        createDefaultIndexSyncExecutorInternal(properties));
   }
 
   /**
@@ -103,40 +94,66 @@ public class IndexSyncService {
   }
 
   /**
-   * 创建默认索引同步线程池。
+   * 创建默认索引同步线程池（返回 Spring ThreadPoolTaskExecutor 以支持生命周期管理）。
    *
    * <p>兜底线程池：仅在外部未注入线程池时使用，生产环境由 {@code ydsz.thread.pools.*} 统一管理。
-   * 通过 {@link ExecutorUtils} 编程式工厂创建，符合 YDIZ-CONC-001 规范。
+   * 底层通过 {@link ExecutorUtils} 编程式工厂构建 ThreadPoolExecutor，YDIZ-CONC-001 合规。
    *
    * @param properties 搜索配置
-   * @return 默认索引同步线程池
+   * @return Spring 线程池适配器
    */
   public static ThreadPoolTaskExecutor createDefaultIndexSyncExecutor(SearchProperties properties) {
     int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
     int maxSize = Math.max(4, properties.getIndex().getThreadPoolSize() * 2);
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(coreSize);
-    executor.setMaxPoolSize(maxSize);
-    executor.setQueueCapacity(512);
-    executor.setThreadNamePrefix("ydsz-index-sync-");
-    executor.setWaitForTasksToCompleteOnShutdown(true);
-    executor.setAwaitTerminationSeconds(5);
-    executor.initialize();
-    return executor;
+    // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
+    ThreadPoolExecutor executor = createDefaultIndexSyncExecutorInternal(properties);
+    // 适配器：将 JDK ThreadPoolExecutor 包装为 Spring ThreadPoolTaskExecutor 以获取生命周期管理
+    ThreadPoolTaskExecutor adapter = new ThreadPoolTaskExecutor();
+    adapter.setCorePoolSize(coreSize);
+    adapter.setMaxPoolSize(maxSize);
+    adapter.setQueueCapacity(512);
+    adapter.setThreadNamePrefix("ydsz-index-sync-");
+    adapter.setWaitForTasksToCompleteOnShutdown(true);
+    adapter.setAwaitTerminationSeconds(5);
+    adapter.setThreadPoolExecutor(executor);
+    adapter.afterPropertiesSet();
+    return adapter;
+  }
+
+  /**
+   * 内部兜底线程池创建方法（基于 ydsz-common-thread ExecutorUtils 编程式工厂）。
+   *
+   * @param properties 搜索配置
+   * @return JDK ThreadPoolExecutor
+   */
+  private static ThreadPoolExecutor createDefaultIndexSyncExecutorInternal(
+      SearchProperties properties) {
+    int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
+    int maxSize = Math.max(4, properties.getIndex().getThreadPoolSize() * 2);
+    return ExecutorUtils.builder()
+        .corePoolSize(coreSize)
+        .maxPoolSize(maxSize)
+        .keepAliveTime(60L, TimeUnit.SECONDS)
+        .queueCapacity(512)
+        .queueType(ExecutorUtils.BlockingQueueType.LINKED)
+        .threadNamePrefix("ydsz-index-sync-")
+        .rejectedHandler(
+            (r, exec) -> log.warn("索引同步线程池队列已满，拒绝任务: pool=index-sync"))
+        .build();
   }
 
   /**
    * 同步处理一条索引变更操作（UPSERT / DELETE / BULK）。
    *
-   * <p><b>失败重试</b>：内部按 {@code ydsz.search.index.max-retries} 重试， 退避间隔为 {@code retryIntervalMs *
-   * (第几次重试)} 的线性递增； 重试耗尽后操作进入内存死信队列（上限 10000 条，满则<b>静默丢弃</b>）， 可由 {@link #retryDeadLetterQueue()}
-   * 补偿。
+   * <p><b>失败重试</b>：内部按 {@code ydsz.search.index.max-retries} 重试，退避间隔为 {@code retryIntervalMs *
+   * (第几次重试)} 的线性递增；重试耗尽后操作进入内存死信队列（上限 10000 条，满则<b>静默丢弃</b>），可由
+   * {@link #retryDeadLetterQueue()} 补偿。
    *
-   * <p><b>不抛异常</b>：所有失败都被吞掉并转为指标与日志， 保证索引同步失败不会回滚上游业务事务。也正因如此， 索引与数据库之间是<b>最终一致</b>而非强一致。
+   * <p><b>不抛异常</b>：所有失败都被吞掉并转为指标与日志，保证索引同步失败不会回滚上游业务事务。也正因如此，索引与数据库之间是<b>最终一致</b>而非强一致。
    *
-   * <p>字段缺失的操作会被静默跳过（如 UPSERT 无 document、DELETE 缺 type/id）。 主引擎不支持索引能力时直接返回。
+   * <p>字段缺失的操作会被静默跳过（如 UPSERT 无 document、DELETE 缺 type/id）。主引擎不支持索引能力时直接返回。
    *
-   * <p>本方法在调用线程内同步执行（含重试期间的 sleep）， 若在业务事务中调用会延长事务持有时间，建议改用异步入口。
+   * <p>本方法在调用线程内同步执行（含重试期间的 sleep），若在业务事务中调用会延长事务持有时间，建议改用异步入口。
    *
    * @param operation 索引变更操作；为 {@code null} 时直接返回
    */
@@ -186,10 +203,10 @@ public class IndexSyncService {
   /**
    * 异步索引单个实体，立即返回不阻塞业务线程。
    *
-   * <p>适合在业务事务提交后触发。注意任务在独立线程池执行， <b>脱离了调用方的事务与 ThreadLocal 上下文</b>（如租户、Locale），
+   * <p>适合在业务事务提交后触发。注意任务在独立线程池执行，<b>脱离了调用方的事务与 ThreadLocal 上下文</b>（如租户、Locale），
    * 实体到文档的转换若依赖上下文需自行透传。
    *
-   * <p><b>无重试</b>：与 {@link #handleOperation} 不同，本方法失败后 仅记 error 日志与失败指标，<b>不重试也不进死信队列</b>，
+   * <p><b>无重试</b>：与 {@link #handleOperation} 不同，本方法失败后仅记 error 日志与失败指标，<b>不重试也不进死信队列</b>，
    * 对一致性要求高的场景请走 {@link #handleOperation}。
    *
    * <p>线程池队列容量 512，堆积超限会触发拒绝策略。
@@ -218,7 +235,7 @@ public class IndexSyncService {
   /**
    * 异步删除单个索引文档，立即返回不阻塞业务线程。
    *
-   * <p>与 {@link #indexAsync} 同样<b>无重试、不进死信队列</b>， 失败仅记 error 日志与失败指标。删除失败会导致已删除的业务数据
+   * <p>与 {@link #indexAsync} 同样<b>无重试、不进死信队列</b>，失败仅记 error 日志与失败指标。删除失败会导致已删除的业务数据
    * 仍能被搜索到（脏数据），必要时需通过全量重建纠正。
    *
    * <p>主引擎不支持索引能力时静默跳过。
@@ -247,10 +264,10 @@ public class IndexSyncService {
   /**
    * 从数据源全量回灌索引，按 provider 逐类型、按 {@code rebuildBatchSize} 分批 bulk 写入。
    *
-   * <p>采用 UPSERT 语义，<b>只写不删</b>：数据库中已删除的记录不会从索引中清除， 需要彻底清理请使用 {@code
+   * <p>采用 UPSERT 语义，<b>只写不删</b>：数据库中已删除的记录不会从索引中清除，需要彻底清理请使用 {@code
    * IndexRebuildService.rebuildAll}（会先清空索引）。
    *
-   * <p><b>容错</b>：单个 provider 重建失败只记 error 日志并继续下一个， 单条实体加载失败只记 warn 并跳过，因此本方法几乎不抛异常，
+   * <p><b>容错</b>：单个 provider 重建失败只记 error 日志并继续下一个，单条实体加载失败只记 warn 并跳过，因此本方法几乎不抛异常，
    * 返回值可能小于数据源实际记录数，调用方应比对预期数量判断是否成功。
    *
    * <p>同步阻塞执行，耗时与数据量成正比，禁止在请求线程中直接调用。
@@ -266,7 +283,7 @@ public class IndexSyncService {
         providerRegistry.getProviders(type != null ? List.of(type) : Collections.emptyList());
     for (SearchProvider<?> provider : providers) {
       try {
-        rebuildProvider(ProviderTypeBridge.cast(provider), tenantId, total);
+        rebuildProvider(provider, tenantId, total);
       } catch (Exception e) {
         log.error("[IndexSync] Provider {} 重建失败", provider.getType(), e);
       }
@@ -278,7 +295,7 @@ public class IndexSyncService {
   /**
    * 获取死信队列快照（同步失败的索引操作）。
    *
-   * <p>返回副本而非原队列引用，调用方修改不会影响内部状态； 死信操作可通过 {@link #replayDeadLetters()} 重放补偿。
+   * <p>返回副本而非原队列引用，调用方修改不会影响内部状态；死信操作可通过 {@link #replayDeadLetters()} 重放补偿。
    *
    * @return 死信操作的副本列表；无死信时返回空列表
    */
@@ -289,9 +306,9 @@ public class IndexSyncService {
   /**
    * 重放死信队列中的失败索引操作，用于故障恢复后的补偿。
    *
-   * <p>处理顺序：先重放持久化 DB 中的死信（按创建顺序），再重放内存队列。 DB 重放使用 SELECT FOR UPDATE SKIP LOCKED 保证多实例不冲突。
+   * <p>处理顺序：先重放持久化 DB 中的死信（按创建顺序），再重放内存队列。DB 重放使用 SELECT FOR UPDATE SKIP LOCKED 保证多实例不冲突。
    *
-   * <p>DB 死信重放成功时更新状态为 RESOLVED，失败时递增 retry_count， 重试超过 5 次标记为 DISCARDED（需人工介入）。
+   * <p>DB 死信重放成功时更新状态为 RESOLVED，失败时递增 retry_count，重试超过 5 次标记为 DISCARDED（需人工介入）。
    */
   public void retryDeadLetterQueue() {
     // P6-14: 重放持久化 DB 死信
@@ -369,13 +386,20 @@ public class IndexSyncService {
   /**
    * 关闭索引同步线程池，由容器在 Bean 销毁阶段调用。
    *
-   * <p>线程池配置 {@code waitForTasksToCompleteOnShutdown=true} 且等待 5 秒， 会尽量让队列中的索引任务执行完毕，最多阻塞约 5 秒；
-   * 超时未完成的任务被中断，其变更将丢失（死信队列同为内存结构，一并丢失）。
+   * <p>底层委托 JDK ThreadPoolExecutor 的 shutdown 流程，会尽量等待正在执行的任务完成；超时未完成的任务由 shutdownNow 中断。
    *
    * <p>重复调用是安全的（幂等）。
    */
   public void shutdown() {
     executorService.shutdown();
+    try {
+      if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+        executorService.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      executorService.shutdownNow();
+      Thread.currentThread().interrupt();
+    }
     log.info("[IndexSync] 线程池已关闭");
   }
 
@@ -448,5 +472,14 @@ public class IndexSyncService {
         total.addAndGet(documents.size());
       }
     }
+  }
+
+  /**
+   * 暴露死信队列用于测试验证（仅限测试使用）。
+   *
+   * @return 死信队列引用（非空但可变）
+   */
+  ConcurrentLinkedQueue<IndexOperation> getDeadLetterQueueInternal() {
+    return deadLetterQueue;
   }
 }

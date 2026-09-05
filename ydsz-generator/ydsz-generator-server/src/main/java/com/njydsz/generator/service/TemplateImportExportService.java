@@ -6,6 +6,7 @@ import com.njydsz.generator.enums.TemplateFileTypeEnum;
 import com.njydsz.generator.repository.GenTemplateGroupRepository;
 import com.njydsz.generator.repository.GenTemplateRepository;
 import com.njydsz.generator.vo.TemplateZipVO;
+import com.njydsz.common.util.security.DigestUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -181,16 +181,6 @@ public class TemplateImportExportService {
   }
 
   private String md5(String content) {
-    try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] digest = md.digest(content.getBytes(StandardCharsets.UTF_8));
-      StringBuilder sb = new StringBuilder();
-      for (byte b : digest) {
-        sb.append(String.format("%02x", b));
-      }
-      return sb.toString();
-    } catch (Exception e) {
-      return "";
-    }
+    return DigestUtils.md5Hex(content);
   }
 }

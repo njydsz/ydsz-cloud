@@ -7,11 +7,13 @@ import com.njydsz.generator.vo.CodePreviewVO;
 import com.njydsz.generator.vo.GenResultVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 
@@ -90,7 +92,22 @@ public class CodeGenController {
       @RequestParam String outputDir,
       @RequestParam(defaultValue = "SKIP") ConflictStrategyEnum conflictStrategy,
       @RequestParam(defaultValue = "system") String triggeredBy) {
-    // TODO: 获取表列表后批量调用 generate
-    throw new UnsupportedOperationException("待实现：全量生成");
+    return YdszResponse.success(
+        codeGenService.generateAll(datasourceId, templateGroupId, outputDir,
+            conflictStrategy, triggeredBy));
+  }
+
+  /**
+   * 控制器级别兜底异常处理。
+   *
+   * <p>任何未捕获异常都返回 500 + 错误信息，保持响应结构一致。
+   *
+   * @param ex 未捕获异常
+   * @return 失败响应
+   */
+  @ExceptionHandler(Exception.class)
+  public YdszResponse<Void> handleException(Exception ex) {
+    log.error("Generator 接口未捕获异常: {}", ex.getMessage(), ex);
+    return YdszResponse.fail(500, "生成失败: " + ex.getMessage());
   }
 }

@@ -30,8 +30,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
 
@@ -195,6 +197,33 @@ public class CodeGenService {
   }
 
   /**
+   * 批量生成数据源下全表。
+   *
+   * <p>读取数据源缓存的全部表元数据，然后并行调用 {@link #generateBatch(Long, Long, List, String, ConflictStrategyEnum, String)}。
+   *
+   * @param datasourceId      数据源 ID
+   * @param templateGroupId   模板分组 ID
+   * @param outputDir         输出目录
+   * @param conflictStrategy  冲突策略
+   * @param triggeredBy       触发人
+   * @return 生成结果汇总
+   */
+  public GenResultVO generateAll(
+      Long datasourceId, Long templateGroupId, String outputDir,
+      ConflictStrategyEnum conflictStrategy, String triggeredBy) {
+    GenDatasource ds = datasourceService.getById(datasourceId);
+    List<GenTableMeta> tables = tableMetadataService.listCachedTables(datasourceId);
+    if (tables == null || tables.isEmpty()) {
+      tables = tableMetadataService.refreshTables(ds);
+    }
+    List<String> tableNames = tables.stream()
+        .map(GenTableMeta::getTableName)
+        .collect(Collectors.toList());
+    return generateBatch(datasourceId, templateGroupId, tableNames,
+        outputDir, conflictStrategy, triggeredBy);
+  }
+
+  /**
    * 批量生成多个表（并行执行）。
    *
    * <p>使用独立短生命周期线程池并发处理多张表，线程数 = min(表数, CPU 核数)。
@@ -224,7 +253,7 @@ public class CodeGenService {
     Long[] firstHistoryId = new Long[1];
 
     try {
-      List<java.util.concurrent.Future<?>> futures = new ArrayList<>(tableNames.size());
+      List<Future<?>> futures = new ArrayList<>(tableNames.size());
       for (String tableName : tableNames) {
         futures.add(pool.submit(() -> {
           try {
@@ -251,7 +280,7 @@ public class CodeGenService {
         }));
       }
 
-      for (java.util.concurrent.Future<?> f : futures) {
+      for (Future<?> f : futures) {
         f.get(5, TimeUnit.MINUTES);
       }
     } catch (Exception e) {

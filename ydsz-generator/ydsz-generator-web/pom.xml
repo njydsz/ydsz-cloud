@@ -22,11 +22,7 @@
     </dependency>
     <dependency>
       <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-auth</artifactId>
+      <artifactId>ydsz-common-exception</artifactId>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

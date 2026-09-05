@@ -2,13 +2,13 @@ package com.njydsz.common.search.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
-import com.njydsz.common.search.core.IndexStrategy;
-import com.njydsz.common.search.core.SearchEngineRegistry;
-import com.njydsz.common.search.provider.SearchProviderRegistry;
 
 /**
  * 索引重建服务接口。
@@ -29,7 +29,7 @@ public class IndexRebuildService {
   private volatile int progress = 0;
   private volatile int total = 0;
 
-  private final ThreadPoolTaskExecutor rebuildExecutor;
+  private final ExecutorService rebuildExecutor;
 
   /**
    * 创建索引重建服务（使用默认单线程线程池）。
@@ -42,7 +42,7 @@ public class IndexRebuildService {
       IndexSyncService indexSyncService,
       SearchEngineRegistry engineRegistry,
       SearchProviderRegistry providerRegistry) {
-    this(indexSyncService, engineRegistry, providerRegistry, createDefaultRebuildExecutor());
+    this(indexSyncService, engineRegistry, providerRegistry, createDefaultRebuildExecutorInternal());
   }
 
   /**
@@ -57,7 +57,7 @@ public class IndexRebuildService {
       IndexSyncService indexSyncService,
       SearchEngineRegistry engineRegistry,
       SearchProviderRegistry providerRegistry,
-      ThreadPoolTaskExecutor rebuildExecutor) {
+      ExecutorService rebuildExecutor) {
     this.indexSyncService = indexSyncService;
     this.engineRegistry = engineRegistry;
     this.providerRegistry = providerRegistry;
@@ -65,37 +65,57 @@ public class IndexRebuildService {
   }
 
   /**
-   * 创建默认索引重建线程池（单线程，串行重建保证一致性）。
+   * 创建默认索引重建线程池（返回 Spring ThreadPoolTaskExecutor 以支持生命周期管理）。
    *
-   * <p>命名符合云顶编码规范 15.4.4 约定：ydsz-{module}-{biz}-。
+   * <p>单线程，串行重建保证一致性。底层通过 {@link ExecutorUtils} 编程式工厂构建 ThreadPoolExecutor，
+   * YDIZ-CONC-001 合规。兜底线程池：仅在外部未注入时使用，生产环境由 {@code ydsz.thread.pools.*} 统一管理。
    *
-   * @return 默认重建线程池
+   * @return Spring 线程池适配器
    */
   public static ThreadPoolTaskExecutor createDefaultRebuildExecutor() {
-        // CHECKSTYLE.OFF: RegexpSinglelineJava
     // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    // CHECKSTYLE.ON: RegexpSinglelineJava
-    executor.setCorePoolSize(1);
-    executor.setMaxPoolSize(1);
-    executor.setQueueCapacity(1);
-    executor.setThreadNamePrefix("ydsz-index-rebuild-");
-    executor.setDaemon(true);
-    executor.setWaitForTasksToCompleteOnShutdown(false);
-    executor.initialize();
-    return executor;
+    ThreadPoolExecutor executor = createDefaultRebuildExecutorInternal();
+    // 适配器：将 JDK ThreadPoolExecutor 包装为 Spring ThreadPoolTaskExecutor 以获取生命周期管理
+    ThreadPoolTaskExecutor adapter = new ThreadPoolTaskExecutor();
+    adapter.setCorePoolSize(1);
+    adapter.setMaxPoolSize(1);
+    adapter.setQueueCapacity(1);
+    adapter.setThreadNamePrefix("ydsz-index-rebuild-");
+    adapter.setDaemon(true);
+    adapter.setWaitForTasksToCompleteOnShutdown(false);
+    adapter.setThreadPoolExecutor(executor);
+    adapter.afterPropertiesSet();
+    return adapter;
+  }
+
+  /**
+   * 内部兜底线程池创建方法（基于 ydsz-common-thread ExecutorUtils 编程式工厂）。
+   *
+   * @return JDK ThreadPoolExecutor
+   */
+  private static ThreadPoolExecutor createDefaultRebuildExecutorInternal() {
+    return ExecutorUtils.builder()
+        .corePoolSize(1)
+        .maxPoolSize(1)
+        .keepAliveTime(60L, TimeUnit.SECONDS)
+        .queueCapacity(1)
+        .queueType(ExecutorUtils.BlockingQueueType.LINKED)
+        .threadNamePrefix("ydsz-index-rebuild-")
+        .rejectedHandler(
+            (r, exec) -> log.warn("索引重建线程池队列已满，拒绝任务"))
+        .build();
   }
 
   /**
    * 同步执行全量索引重建：先清空目标索引，再从数据源全量回灌。
    *
-   * <p><b>危险操作</b>：会先调用 {@code deleteAllIndices} 物理清空索引， 从清空到回灌完成之间搜索结果为空，属于有损重建，
+   * <p><b>危险操作</b>：会先调用 {@code deleteAllIndices} 物理清空索引，从清空到回灌完成之间搜索结果为空，属于有损重建，
    * 只应在维护窗口或数据量较小的场景使用。
    *
-   * <p><b>并发控制</b>：通过 {@code rebuilding} 标志位做单实例互斥， 已有重建在执行时立即返回 -1。该标志为普通 volatile 变量，
+   * <p><b>并发控制</b>：通过 {@code rebuilding} 标志位做单实例互斥，已有重建在执行时立即返回 -1。该标志为普通 volatile 变量，
    * <b>不是</b>严格的 CAS 锁，也<b>不跨节点</b>生效，集群环境需由调用方保证只有一个节点触发。
    *
-   * <p>本方法在调用线程内同步阻塞直至完成，耗时与数据量成正比， 不要在 HTTP 请求线程中直接调用，应改用 {@link #rebuildAllAsync(String,
+   * <p>本方法在调用线程内同步阻塞直至完成，耗时与数据量成正比，不要在 HTTP 请求线程中直接调用，应改用 {@link #rebuildAllAsync(String,
    * String)}。
    *
    * @param type 实体类型；为 {@code null} 或空白表示重建全部已注册类型
@@ -137,12 +157,10 @@ public class IndexRebuildService {
   /**
    * 异步触发全量索引重建，立即返回不阻塞调用线程。
    *
-   * <p>提交到专用的单线程池（核心/最大均为 1、队列容量 1、守护线程）， 因此最多只有 1 个任务在跑 + 1 个排队，再多的提交会触发线程池拒绝策略。 进度可通过 {@code
-   * isRebuilding()} 与 {@code getProgressPercent()} 轮询。
+   * <p>提交到专用的单线程池（核心/最大均为 1、队列容量 1），因此最多只有 1 个任务在跑 + 1 个排队，再多的提交会触发线程池拒绝策略。
+   * 进度可通过 {@code isRebuilding()} 与 {@code getProgressPercent()} 轮询。
    *
-   * <p>任务内部已捕获所有异常并记 error 日志，失败不会向外传播， 调用方无法通过返回值感知结果，需依赖进度查询接口或日志告警。
-   *
-   * <p>注意线程池配置了 {@code waitForTasksToCompleteOnShutdown=false}， 应用关闭时未完成的重建会被直接中断，可能留下部分索引，需重跑。
+   * <p>任务内部已捕获所有异常并记 error 日志，失败不会向外传播，调用方无法通过返回值感知结果，需依赖进度查询接口或日志告警。
    *
    * @param type 实体类型；为 {@code null} 或空白表示重建全部已注册类型
    * @param tenantId 租户 ID；为 {@code null} 表示重建全租户数据
@@ -161,9 +179,9 @@ public class IndexRebuildService {
   /**
    * 蓝绿索引重建
    *
-   * <p>先将新数据索引到"绿色"索引（不影响当前搜索）， 索引完成后原子切换到新索引，删除旧索引。
+   * <p>先将新数据索引到"绿色"索引（不影响当前搜索），索引完成后原子切换到新索引，删除旧索引。
    *
-   * <p>当前实现：先全量重建新索引数据，然后删除旧索引。 真正的双表蓝绿切换需要引擎层支持（PG 可用 shadow 表，ES 可用 alias）。
+   * <p>当前实现：先全量重建新索引数据，然后删除旧索引。真正的双表蓝绿切换需要引擎层支持（PG 可用 shadow 表，ES 可用 alias）。
    *
    * @param type 实体类型
    * @param tenantId 租户 ID
@@ -253,13 +271,20 @@ public class IndexRebuildService {
   /**
    * 关闭重建线程池，由容器在 Bean 销毁阶段调用。
    *
-   * <p>线程池设置了 {@code waitForTasksToCompleteOnShutdown=false}， 因此本方法<b>不等待</b>在途重建任务完成即返回；
-   * 被中断的重建会留下不完整索引，应用重启后需重新触发重建。
+   * <p>底层委托 JDK ThreadPoolExecutor 的 shutdown 流程；建议由应用层统一管理关闭时机，避免在途重建任务被中断。
    *
    * <p>重复调用是安全的（幂等）。
    */
   public void shutdown() {
     rebuildExecutor.shutdown();
+    try {
+      if (!rebuildExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+        rebuildExecutor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      rebuildExecutor.shutdownNow();
+      Thread.currentThread().interrupt();
+    }
     log.info("[IndexRebuild] 重建线程池已关闭");
   }
 }

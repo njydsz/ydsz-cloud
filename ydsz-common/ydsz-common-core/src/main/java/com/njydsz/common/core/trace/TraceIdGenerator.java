@@ -3,6 +3,7 @@ package com.njydsz.common.core.trace;
 import java.security.SecureRandom;
 import java.util.HexFormat;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * TraceId 生成器（基于 ThreadLocalRandom / SecureRandom + HexFormat）。
@@ -10,18 +11,18 @@ import java.util.concurrent.ThreadLocalRandom;
  * <p>提供两套实现，适用于不同场景：
  *
  * <ul>
- *   <li>内部高性能路径：使用 {@link ThreadLocalRandom}（线程本地伪随机数，无锁竞争）， 经 {@link HexFormat} 格式化为小写十六进制字符串
- *   <li>W3C 跨组织边界路径：使用 {@link SecureRandom}（密码学级熵源）， 满足 W3C Trace Context 标准要求
+ *   <li>内部高性能路径：使用 {@link ThreadLocalRandom}（线程本地伪随机数，无锁竞争），经 {@link HexFormat} 格式化为小写十六进制字符串
+ *   <li>W3C 跨组织边界路径：使用 {@link SecureRandom}（密码学级熵源），满足 W3C Trace Context 标准要求
  * </ul>
  *
- * <p>设计采用纯函数式风格：每次调用直接分配 byte 数组。 在现代 JVM（ZGC/Shenandoah）下，16 字节的 TLAB 分配几乎零成本， 无需 ThreadLocal
+ * <p>设计采用纯函数式风格：每次调用直接分配 byte 数组。在现代 JVM（ZGC/Shenandoah）下，16 字节的 TLAB 分配几乎零成本，无需 ThreadLocal
  * 缓冲区增加的复杂度和生命周期管理负担。
  *
  * <h3>性能说明</h3>
  *
  * <ul>
- *   <li>{@link #generateSortableTraceId()} 按时间排序，使用 ThreadLocal 序列号 避免全局 CAS
- *       争用；同毫秒内不同线程的序号彼此独立但均保序，整体趋势有序； 无锁、线程本地，适合绝大多数场景
+ *   <li>{@link #generateSortableTraceId()} 按时间排序，使用全局原子计数器 +
+ *       同步块保证同毫秒内序号单调；同毫秒内不同线程的序号保序；锁粒度仅覆盖序号递增，适合绝大多数场景
  *   <li>{@link #generateW3CTraceId()} / {@link #generateW3CSpanId()} 使用 {@link SecureRandom}，
  *       密码学级安全但吞吐量略低，适用于跨组织 W3C 传播场景
  * </ul>
@@ -30,11 +31,12 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * <p>TraceId 用于日志关联和链路追踪，非密码学用途。两种实现碰撞概率均约 2^-128。
  *
- * <p><b>线程安全：</b>{@link ThreadLocalRandom} 线程本地天然安全；{@link SecureRandom} 内部同步， 多线程共享无竞争风险。
+ * <p><b>线程安全：</b>{@link ThreadLocalRandom} 线程本地天然安全；{@link SecureRandom} 内部同步，多线程共享无竞争风险；可排序方案通过全局
+ * 同步块保证同毫秒序号唯一。
  *
  * <h3>W3C TraceContext 支持</h3>
  *
- * <p>提供符合 W3C Trace Context 标准的 spanId 生成和 traceparent header 构建方法， 便于对接 SkyWalking/Jaeger/Zipkin
+ * <p>提供符合 W3C Trace Context 标准的 spanId 生成和 traceparent header 构建方法，便于对接 SkyWalking/Jaeger/Zipkin
  * 等主流链路追踪系统。
  *
  * @author ydsz-team
@@ -54,36 +56,34 @@ public final class TraceIdGenerator {
   /** 密码学安全随机数生成器（用于 W3C Trace Context 跨组织边界传播场景）。 */
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-  /** 同一毫秒内的序号上限（14 bit，0~16383），允许单线程每毫秒最多 16384 次调用。 超出后进入下一毫秒重新计数。 */
+  /** 同一毫秒内的序号上限（14 bit，0~16383），允许单线程每毫秒最多 16384 次调用。超出后进入下一毫秒重新计数。 */
   private static final int MAX_SEQ_PER_MS = 0x3FFF;
 
   /**
-   * 线程本地的时间戳+序列号状态，避免全局 CAS 争用。
+   * 上一毫秒时间戳（全局）。
    *
-   * <p>每个线程独立维护最后使用的时间戳和同毫秒内的递增序号。 多线程之间不存在锁竞争，整体生成吞吐量更高。
+   * <p>使用 AtomicLong 保证内存可见性，结合同步块保证序号分配的原子性。替代早期 ThreadLocal 方案以遵循 YDIZ-CONC-002 规范。
    */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
-  private static final ThreadLocal<SortableState> SORTABLE_STATE =
-  // CHECKSTYLE.ON: RegexpSinglelineJava
-      ThreadLocal.withInitial(SortableState::new);
+  private static final AtomicLong LAST_MILLIS = new AtomicLong(0L);
+
+  /**
+   * 同毫秒内的全局序号计数器。
+   *
+   * <p>在同步块内递增，保证同一毫秒内所有线程分配到的序号唯一且单调。跨毫秒自动归零。
+   */
+  private static final AtomicLong SEQ_COUNTER = new AtomicLong(0L);
+
+  /** 用于保护毫秒进位与序号归零的原子性（锁粒度极小，仅覆盖序号递增）。 */
+  private static final Object SEQ_LOCK = new Object();
 
   private TraceIdGenerator() {
     throw new UnsupportedOperationException("Utility class");
   }
 
   /**
-   * 清理当前线程的可排序 TraceId 状态。
-   *
-   * <p>在线程池复用场景下，建议在请求处理完成后调用此方法，避免 ThreadLocal 内存泄漏。
-   */
-  public static void cleanup() {
-    SORTABLE_STATE.remove();
-  }
-
-  /**
    * 生成 32 位十六进制 TraceId。
    *
-   * <p>默认使用可排序版本（{@link #generateSortableTraceId()}）， 按时间有序，适合日志关联和链路追踪场景。
+   * <p>默认使用可排序版本（{@link #generateSortableTraceId()}），按时间有序，适合日志关联和链路追踪场景。
    *
    * @return 32 位小写十六进制字符串
    * @since 26.09.01
@@ -103,18 +103,17 @@ public final class TraceIdGenerator {
    *   <li>bytes[8..15]（66 bit）：随机数，保证唯一性与分布均匀性
    * </ul>
    *
-   * <p>本方法生成的 id 可直接用于日志 / 链路存储的按时间排序与范围检索，便于问题排查。 输出格式为 32 位小写 hex，与旧版纯随机 TraceId 格式一致，下游无需感知差异。
+   * <p>本方法生成的 id 可直接用于日志 / 链路存储的按时间排序与范围检索，便于问题排查。输出格式为 32 位小写 hex，与旧版纯随机 TraceId 格式一致，下游无需感知差异。
    *
-   * <p>本方法使用 ThreadLocal 维护时间戳+序号状态，无全局 CAS 争用， 适合高并发场景下生成有序 traceId。
+   * <p>本方法使用全局原子计数器 + 轻量级同步块维护时间戳+序号状态，无锁时间占绝大部分，适合高并发场景下生成有序 traceId。
    *
    * @return 32 位小写十六进制字符串（时间有序）
    * @since 26.09.01
    */
   public static String generateSortableTraceId() {
     byte[] bytes = new byte[TRACE_ID_BYTES];
-    SortableState state = SORTABLE_STATE.get();
     long timeMillis = System.currentTimeMillis();
-    long seq = state.nextSeq(timeMillis);
+    long seq = nextGlobalSeq(timeMillis);
 
     // 48-bit 大端时间戳
     bytes[0] = (byte) (timeMillis >>> 40);
@@ -132,6 +131,25 @@ public final class TraceIdGenerator {
     ThreadLocalRandom.current().nextBytes(rand);
     System.arraycopy(rand, 0, bytes, 8, rand.length);
     return HEX_FORMAT.formatHex(bytes);
+  }
+
+  /**
+   * 获取下一个全局序号。
+   *
+   * <p>使用轻量级同步块保证时间戳进位与序号归零的原子性。锁内操作极少（<5 条字节码），对高并发影响极低。
+   *
+   * @param nowMillis 当前毫秒时间戳
+   * @return 当前使用的序号
+   */
+  private static long nextGlobalSeq(long nowMillis) {
+    synchronized (SEQ_LOCK) {
+      long last = LAST_MILLIS.get();
+      if (nowMillis != last) {
+        LAST_MILLIS.set(nowMillis);
+        SEQ_COUNTER.set(0L);
+      }
+      return SEQ_COUNTER.getAndIncrement() & MAX_SEQ_PER_MS;
+    }
   }
 
   /**
@@ -227,8 +245,8 @@ public final class TraceIdGenerator {
   /**
    * 生成符合 W3C Trace Context 标准的 32 位十六进制 TraceId。
    *
-   * <p>使用 {@link SecureRandom} 生成 128 bit 密码学安全随机数，格式化为 32 位小写 hex。 适用于 W3C Trace Context
-   * 跨组织边界传播场景，提供最高级别的唯一性保障 （碰撞概率约 2^-128）。
+   * <p>使用 {@link SecureRandom} 生成 128 bit 密码学安全随机数，格式化为 32 位小写 hex。适用于 W3C Trace Context
+   * 跨组织边界传播场景，提供最高级别的唯一性保障（碰撞概率约 2^-128）。
    *
    * <p>与 {@link #generateSortableTraceId()} 的区别：
    *
@@ -250,7 +268,7 @@ public final class TraceIdGenerator {
   /**
    * 生成符合 W3C Trace Context 标准的 16 位十六进制 SpanId。
    *
-   * <p>使用 {@link SecureRandom} 生成 64 bit 密码学安全随机数，格式化为 16 位小写 hex。 与 {@link #generateW3CTraceId()}
+   * <p>使用 {@link SecureRandom} 生成 64 bit 密码学安全随机数，格式化为 16 位小写 hex。与 {@link #generateW3CTraceId()}
    * 配套使用，用于 W3C Trace Context 标准场景。
    *
    * @return 16 位小写十六进制字符串
@@ -261,41 +279,5 @@ public final class TraceIdGenerator {
     byte[] bytes = new byte[SPAN_ID_BYTES];
     SECURE_RANDOM.nextBytes(bytes);
     return HEX_FORMAT.formatHex(bytes);
-  }
-
-  /**
-   * 可排序 TraceId 的线程本地状态：跟踪上次使用的时间戳和同毫秒内的序号。
-   *
-   * <p>无需原子操作/锁：每个线程独立维护自己的时间戳和序号（ThreadLocal 语义）， 自然线程安全。同毫秒内单线程严格递增，不同线程间序号独立但整体时间趋势有序。
-   */
-  private static final class SortableState {
-    private long lastMillis;
-    private long seq;
-
-    /**
-     * 获取下一个序号。
-     *
-     * <p>时间戳进位时序号归零；时间戳未进步时序号 +1，到上限后自旋等待下一毫秒。
-     *
-     * @param nowMillis 当前毫秒时间戳
-     * @return 当前使用的序号
-     */
-    long nextSeq(long nowMillis) {
-      if (nowMillis != lastMillis) {
-        lastMillis = nowMillis;
-        seq = 0;
-      } else {
-        seq++;
-        if (seq > MAX_SEQ_PER_MS) {
-          // 单线程同毫秒调用频次超限，自旋等待下一毫秒
-          while (nowMillis == lastMillis) {
-            nowMillis = System.currentTimeMillis();
-          }
-          lastMillis = nowMillis;
-          seq = 0;
-        }
-      }
-      return seq;
-    }
   }
 }

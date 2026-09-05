@@ -60,6 +60,12 @@
     <suppress files="ydsz-common-cache[\\/]src[\\/]main[\\/]"
               checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
 
+    <!-- common-cache：CacheThreadPoolManager 为缓存线程池统一管理器（封装 ThreadPoolExecutor / ScheduledThreadPoolExecutor，
+         禁止业务模块直接创建线程池，与 ydsz-common-thread 豁免对齐），RegexpSinglelineJava 线程池直检豁免 -->
+    <suppress files="ydsz-common-cache[\\/]src[\\/]main[\\/]"
+              checks="RegexpSinglelineJava"
+              message=".*禁止直接创建线程池实例.*"/>
+
     <!-- common-redis：基础数据层（序列化/连接池等算法密集型实现） -->
     <suppress files="ydsz-common-redis[\\/]src[\\/]main[\\/]"
               checks="MagicNumber|CyclomaticComplexity|MethodLength|NestedIfDepth|ParameterNumber|IllegalThrows"/>
