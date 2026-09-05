@@ -1,8 +1,8 @@
 package com.njydsz.generator.repository;
 
-import com.njydsz.generator.entity.GenColumnMeta;
-
 import java.util.List;
+
+import com.njydsz.generator.entity.GenColumnMeta;
 
 /**
  * 列元数据 Repository 接口。

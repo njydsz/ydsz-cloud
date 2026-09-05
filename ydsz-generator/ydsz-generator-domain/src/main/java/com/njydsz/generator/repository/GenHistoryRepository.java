@@ -1,9 +1,9 @@
 package com.njydsz.generator.repository;
 
-import com.njydsz.generator.entity.GenHistory;
-
 import java.util.List;
 import java.util.Optional;
+
+import com.njydsz.generator.entity.GenHistory;
 
 /**
  * 代码生成任务历史 Repository 接口。

@@ -38,23 +38,11 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-core</artifactId>
     </dependency>
-    <!-- MapStruct -->
-    <dependency>
-      <groupId>org.mapstruct</groupId>
-      <artifactId>mapstruct</artifactId>
-      <version>1.6.3</version>
-    </dependency>
     <!-- Lombok -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
-    </dependency>
-    <!-- Swagger -->
-    <dependency>
-      <groupId>io.swagger</groupId>
-      <artifactId>swagger-annotations</artifactId>
-      <version>1.6.14</version>
     </dependency>
   </dependencies>
 

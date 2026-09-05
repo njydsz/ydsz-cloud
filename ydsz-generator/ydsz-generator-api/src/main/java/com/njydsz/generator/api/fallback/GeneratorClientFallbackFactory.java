@@ -2,9 +2,12 @@ package com.njydsz.generator.api.fallback;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.api.GeneratorFeignClient;
-import com.njydsz.generator.api.dto.CodeGenRequestDTO;
-import com.njydsz.generator.api.dto.CodeGenResultDTO;
-import com.njydsz.generator.api.dto.TableMetaDTO;
+import com.njydsz.generator.entity.GenColumnMeta;
+import com.njydsz.generator.entity.GenDatasource;
+import com.njydsz.generator.entity.GenHistory;
+import com.njydsz.generator.entity.GenTableMeta;
+import com.njydsz.generator.entity.GenTemplateGroup;
+import com.njydsz.generator.vo.CodePreviewVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -29,48 +32,75 @@ public class GeneratorClientFallbackFactory implements FallbackFactory<Generator
   /** {@inheritDoc} */
   @Override
   public GeneratorFeignClient create(Throwable cause) {
-    log.error("GeneratorFeignClient 远程调用降级: {}", cause.getMessage());
+    log.warn("GeneratorFeignClient 远程调用降级: {}", cause.getMessage());
     return new GeneratorFeignClient() {
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<List<Object>> listDatasources() {
+      public YdszResponse<List<GenDatasource>> listDatasources() {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<Object> getDefaultDatasource() {
+      public YdszResponse<GenDatasource> getDefaultDatasource() {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<List<TableMetaDTO>> listTables(Long datasourceId) {
+      public YdszResponse<Boolean> testDatasource(GenDatasource datasource) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<List<TableMetaDTO>> refreshTables(Long datasourceId) {
+      public YdszResponse<List<GenTemplateGroup>> listGroups() {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<List<CodeGenResultDTO>> preview(CodeGenRequestDTO request) {
+      public YdszResponse<Void> activateGroup(Long groupId) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<Object> generate(CodeGenRequestDTO request) {
+      public YdszResponse<List<GenTableMeta>> listTables(Long datasourceId) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<List<Object>> listHistory(int limit) {
+      public YdszResponse<List<GenTableMeta>> refreshTables(Long datasourceId) {
+        return YdszResponse.error("代码生成服务暂不可用");
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public YdszResponse<List<GenColumnMeta>> getColumns(Long tableMetaId) {
+        return YdszResponse.error("代码生成服务暂不可用");
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public YdszResponse<List<CodePreviewVO>> preview(
+          Long datasourceId, Long templateGroupId, String tableName) {
+        return YdszResponse.error("代码生成服务暂不可用");
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public YdszResponse<String> generate(
+          Long datasourceId, Long templateGroupId, String tableName,
+          String outputDir, String conflictStrategy, String triggeredBy) {
+        return YdszResponse.error("代码生成服务暂不可用");
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public YdszResponse<List<GenHistory>> listHistory(int limit) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 

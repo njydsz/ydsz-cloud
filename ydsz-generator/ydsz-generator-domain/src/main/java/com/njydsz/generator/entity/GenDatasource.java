@@ -1,12 +1,13 @@
 package com.njydsz.generator.entity;
 
-import com.njydsz.generator.enums.DbDialectEnum;
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import com.njydsz.generator.enums.DbDialectEnum;
 
 /**
  * 代码生成器数据源配置实体。

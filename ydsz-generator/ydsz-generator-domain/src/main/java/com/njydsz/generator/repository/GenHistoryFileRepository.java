@@ -1,8 +1,8 @@
 package com.njydsz.generator.repository;
 
-import com.njydsz.generator.entity.GenHistoryFile;
-
 import java.util.List;
+
+import com.njydsz.generator.entity.GenHistoryFile;
 
 /**
  * 生成历史文件明细 Repository 接口。

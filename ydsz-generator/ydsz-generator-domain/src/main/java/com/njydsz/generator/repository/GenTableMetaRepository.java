@@ -1,9 +1,9 @@
 package com.njydsz.generator.repository;
 
-import com.njydsz.generator.entity.GenTableMeta;
-
 import java.util.List;
 import java.util.Optional;
+
+import com.njydsz.generator.entity.GenTableMeta;
 
 /**
  * 表元数据 Repository 接口。

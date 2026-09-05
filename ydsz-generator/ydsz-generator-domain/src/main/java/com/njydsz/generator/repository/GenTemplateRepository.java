@@ -1,9 +1,9 @@
 package com.njydsz.generator.repository;
 
-import com.njydsz.generator.entity.GenTemplate;
-
 import java.util.List;
 import java.util.Optional;
+
+import com.njydsz.generator.entity.GenTemplate;
 
 /**
  * 模板 Repository 接口。

@@ -1,12 +1,13 @@
 package com.njydsz.generator.vo;
 
-import com.njydsz.generator.entity.GenColumnMeta;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import com.njydsz.generator.entity.GenColumnMeta;
 
 /**
  * 表预览 VO（前端表选择展示）。

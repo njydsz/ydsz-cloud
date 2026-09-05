@@ -1,9 +1,9 @@
 package com.njydsz.generator.repository;
 
-import com.njydsz.generator.entity.GenDatasource;
-
 import java.util.List;
 import java.util.Optional;
+
+import com.njydsz.generator.entity.GenDatasource;
 
 /**
  * 数据源配置 Repository 接口。
