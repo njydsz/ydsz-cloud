@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.generator.tool.VelocityDateTool;
-import com.njydsz.generator.tool.VelocityTextTool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.VelocityContext;
@@ -24,6 +22,8 @@ import org.springframework.stereotype.Service;
 import com.njydsz.generator.config.GeneratorProperties;
 import com.njydsz.generator.config.GeneratorProperties.ModuleGroupConfig;
 import com.njydsz.generator.model.TableMetadata;
+import com.njydsz.generator.tool.VelocityDateTool;
+import com.njydsz.generator.tool.VelocityTextTool;
 
 /**
  * 代码生成器核心服务 — 基于数据库表元数据 → 模板渲染 → 文件输出。
@@ -326,6 +326,7 @@ public class CodeGeneratorService {
     ModuleGroupConfig config = properties.resolveEffectiveConfig();
     Map<String, Object> ctx = new HashMap<>(CONTEXT_MAP_SIZE);
     ctx.put("table", table);
+    ctx.put("config", config);
     ctx.put("module", config.getModuleName());
     ctx.put("package", config.getPackageName());
     ctx.put("author", config.getAuthor());
@@ -336,6 +337,9 @@ public class CodeGeneratorService {
     ctx.put("serverPackage", config.getPackageName() + ".server");
     ctx.put("webPackage", config.getPackageName() + ".web");
     ctx.put("apiPackage", config.getPackageName() + ".api");
+    // 全局工具对象
+    ctx.put("text", new VelocityTextTool());
+    ctx.put("dateTool", new VelocityDateTool());
     return ctx;
   }
 

@@ -3,6 +3,7 @@ package com.njydsz.generator.controller;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.generator.config.GeneratorProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +38,8 @@ import com.njydsz.generator.service.CodeGeneratorService;
 public class GeneratorController {
 
   private final CodeGeneratorService generatorService;
+
+  private final GeneratorProperties generatorProperties;
 
   /**
    * 为指定表生成代码。
@@ -86,6 +89,30 @@ public class GeneratorController {
     log.info("查询可用模板列表");
     List<String> templates = generatorService.listTemplateNames();
     return YdszResponse.success(templates);
+  }
+
+  /**
+   * 列出全部已注册的模板分组。
+   *
+   * @return 模板分组名称列表
+   */
+  @GetMapping("/template-groups")
+  public YdszResponse<List<String>> listTemplateGroups() {
+    log.info("查询模板分组列表");
+    List<String> groups = generatorProperties.listTemplateGroups();
+    return YdszResponse.success(groups);
+  }
+
+  /**
+   * 查询当前生效的配置摘要。
+   *
+   * @return 当前配置（不含敏感信息）
+   */
+  @GetMapping("/config")
+  public YdszResponse<Map<String, Object>> currentConfig() {
+    log.info("查询当前生成器配置");
+    Map<String, Object> config = generatorProperties.toConfigSummary();
+    return YdszResponse.success(config);
   }
 
   /**
