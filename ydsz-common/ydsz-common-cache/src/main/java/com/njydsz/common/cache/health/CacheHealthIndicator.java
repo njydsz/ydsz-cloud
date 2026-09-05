@@ -199,14 +199,13 @@ public class CacheHealthIndicator {
               BigDecimal.valueOf(size)
                   .divide(BigDecimal.valueOf(maxSize), 4, RoundingMode.HALF_UP);
           details.put("maxSize", maxSize);
-          details.put("usage", String.format("%.2f%%", usage.multiply(new BigDecimal("100"))));;
+          details.put("usage", String.format("%.2f%%", usage.multiply(new BigDecimal("100"))));
           if (usage.compareTo(capacityWarnThreshold) > 0) {
             status = Status.WARN;
             details.put(
                 "warning",
                 "高容量使用率: "
                     + String.format("%.2f%%", usage.multiply(new BigDecimal("100"))));
-          }
           }
         }
       }

@@ -1,5 +1,7 @@
 package com.njydsz.common.sentry.tracing.otel;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -54,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SpanEvaluationProcessor implements SpanProcessor {
 
   /** 总采样率（0.0 ~ 1.0），防止配额耗尽 */
-  private final double recordRatio;
+  private final BigDecimal recordRatio;
 
   /** 总请求计数器（用于配额计算） */
   private final AtomicLong totalCount = new AtomicLong(0);
@@ -73,8 +75,8 @@ public class SpanEvaluationProcessor implements SpanProcessor {
    * @param recordRatio 参数
    * @param rules 参数
  */
-  public SpanEvaluationProcessor(double recordRatio, List<SamplingRule> rules) {
-    if (recordRatio < 0.0 || recordRatio > 1.0) {
+  public SpanEvaluationProcessor(BigDecimal recordRatio, List<SamplingRule> rules) {
+    if (recordRatio.compareTo(BigDecimal.ZERO) < 0 || recordRatio.compareTo(BigDecimal.ONE) > 0) {
       throw new IllegalArgumentException("recordRatio must be in [0.0, 1.0], got: " + recordRatio);
     }
     this.recordRatio = recordRatio;
@@ -149,8 +151,10 @@ public class SpanEvaluationProcessor implements SpanProcessor {
     if (current == 0) {
       return Decision.DROP;
     }
-    double ratio = (double) recordedCount.get() / current;
-    if (ratio < recordRatio) {
+    BigDecimal ratio =
+        BigDecimal.valueOf(recordedCount.get())
+            .divide(BigDecimal.valueOf(current), MathContext.DECIMAL64);
+    if (ratio.compareTo(recordRatio) < 0) {
       return Decision.RECORD;
     }
     return Decision.DROP;
@@ -201,9 +205,12 @@ public class SpanEvaluationProcessor implements SpanProcessor {
    * get actual ratio。
    * @return 结果
    */
-  public double getActualRatio() {
+  public BigDecimal getActualRatio() {
     long t = totalCount.get();
-    return t == 0 ? 0.0 : (double) recordedCount.get() / t;
+    return t == 0
+        ? BigDecimal.ZERO
+        : BigDecimal.valueOf(recordedCount.get())
+            .divide(BigDecimal.valueOf(t), MathContext.DECIMAL64);
   }
 
   @Override
