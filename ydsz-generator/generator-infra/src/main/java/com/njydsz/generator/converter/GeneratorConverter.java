@@ -41,7 +41,7 @@ public interface GeneratorConverter {
   // ── 数据源 ──
 
   /**
-   * PO 转 Entity（枚举映射）。
+   * PO 转 Entity（枚举自动转换：String dialect → DbDialectEnum）。
    *
    * @param po 持久化对象
    * @return 领域实体
@@ -50,13 +50,21 @@ public interface GeneratorConverter {
   GenDatasource toEntity(GenDatasourcePO po);
 
   /**
-   * Entity 转 PO（枚举映射）。
+   * Entity 转 PO（枚举自动转换：DbDialectEnum → String）。
    *
    * @param entity 领域实体
    * @return 持久化对象
    */
   @Mapping(target = "dialect", source = "dialect", qualifiedByName = "dbDialectToString")
   GenDatasourcePO toPO(GenDatasource entity);
+
+  /**
+   * PO 列表转 Entity 列表。
+   *
+   * @param list PO 列表
+   * @return Entity 列表
+   */
+  List<GenDatasource> toDatasourceEntityList(List<GenDatasourcePO> list);
 
   // ── 模板分组 ──
 
