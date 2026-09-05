@@ -2,20 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.generator.mapper.GenColumnMetaMapper">
 
-  <resultMap id="BaseResultMap" type="com.njydsz.generator.po.GenColumnMetaPO">
+  <resultMap id="BaseResultMap" type="com.njydsz.generator.entity.GenColumnMeta">
     <id     column="id"                  property="id"/>
     <result column="table_meta_id"       property="tableMetaId"/>
     <result column="column_name"         property="columnName"/>
     <result column="data_type"           property="dataType"/>
     <result column="column_size"         property="columnSize"/>
     <result column="nullable"            property="nullable"/>
-    <result column="is_pk"               property="isPk"/>
+    <result column="is_pk"               property="pk"/>
     <result column="comment"             property="comment"/>
     <result column="override_java_type"  property="overrideJavaType"/>
     <result column="override_field_name" property="overrideFieldName"/>
-    <result column="skip_dto"            property="skipDto"/>
-    <result column="skip_vo"             property="skipVo"/>
-    <result column="skip_query"          property="skipQuery"/>
+    <result column="skip_dto"            property="dtoSkipped"/>
+    <result column="skip_vo"             property="voSkipped"/>
+    <result column="skip_query"          property="querySkipped"/>
     <result column="extra_config"        property="extraConfig"/>
   </resultMap>
 

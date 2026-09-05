@@ -2,20 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.generator.mapper.GenDatasourceMapper">
 
-  <resultMap id="BaseResultMap" type="com.njydsz.generator.po.GenDatasourcePO">
+  <resultMap id="BaseResultMap" type="com.njydsz.generator.entity.GenDatasource">
     <id     column="id"          property="id"/>
     <result column="name"        property="name"/>
     <result column="jdbc_url"    property="jdbcUrl"/>
     <result column="username"    property="username"/>
     <result column="password"    property="password"/>
     <result column="dialect"     property="dialect"/>
-    <result column="is_default"  property="isDefault"/>
+    <result column="is_default"  property="defaultFlag"/>
     <result column="description" property="description"/>
     <result column="created_at"  property="createdAt"/>
     <result column="updated_at"  property="updatedAt"/>
   </resultMap>
 
-  <select id="findByIsDefaultTrue" resultMap="BaseResultMap">
+  <select id="findByDefaultFlagTrue" resultMap="BaseResultMap">
     SELECT * FROM ydsz_gen_datasource WHERE is_default = 1 LIMIT 1
   </select>
 

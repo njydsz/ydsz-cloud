@@ -28,7 +28,6 @@ import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
-import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
@@ -354,9 +353,8 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
    * @return 完成信号 Mono
    */
   private Mono<Void> forbidden(ServerWebExchange exchange, String errorCode) {
-    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
     return GatewayErrorWriter.write(
-        exchange, HttpStatus.FORBIDDEN, resolveForbiddenErrorCode(errorCode), errorCode, traceId);
+        exchange, HttpStatus.FORBIDDEN, resolveForbiddenErrorCode(errorCode), errorCode);
   }
 
   /**

@@ -109,8 +109,8 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     log.info("[ApiKeyAuth] 已加载 {} 个 API Key（SHA-256 摘要存储）", hashes.size());
   }
 
-    /**
-     * API Key 认证过滤器：为外部系统提供 JWT 之外的备选认证方式。
+  /**
+   * API Key 认证过滤器：为外部系统提供 JWT 之外的备选认证方式。
    *
    * <p>未启用 / 非受保护路径 / 已有 JWT 身份（X-User-Id 存在）时直接放行； 否则从 {@code X-API-Key} 头或 {@code api_key}
    * 查询参数提取并校验， 通过则注入 {@code X-API-Key-User} 标识后放行，缺失 / 无效分别返回 401 / 403。

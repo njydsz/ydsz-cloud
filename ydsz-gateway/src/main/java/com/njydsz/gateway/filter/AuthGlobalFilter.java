@@ -186,7 +186,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     // 提取 Token
     String authHeader = request.getHeaders().getFirst("Authorization");
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-      return unauthorized(exchange, traceId, GatewayErrorCode.UNAUTHORIZED, "error.UNAUTHORIZED");
+      return unauthorized(exchange, GatewayErrorCode.UNAUTHORIZED, "error.UNAUTHORIZED");
     }
     String jwt = authHeader.substring(7);
 
@@ -195,13 +195,13 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         .validateAndParseReactive(jwt)
         .flatMap(userInfo -> {
           if (userInfo == null) {
-            return unauthorized(exchange, traceId, GatewayErrorCode.TOKEN_INVALID, "error.TOKEN_INVALID");
+            return unauthorized(exchange, GatewayErrorCode.TOKEN_INVALID, "error.TOKEN_INVALID");
           }
           // 黑名单检查委托给 ReactiveTokenBlacklistService
           return tokenBlacklistService.isBlacklisted(jwt).flatMap(blacklisted -> {
             if (Boolean.TRUE.equals(blacklisted)) {
               cachedJwtValidator.invalidate(jwt);
-              return unauthorized(exchange, traceId, GatewayErrorCode.TOKEN_EXPIRED, "error.TOKEN_EXPIRED");
+              return unauthorized(exchange, GatewayErrorCode.TOKEN_EXPIRED, "error.TOKEN_EXPIRED");
             }
 
             String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
@@ -264,27 +264,24 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
    * @return 完成信号 Mono
    */
   private Mono<Void> rejectPathTraversal(ServerWebExchange exchange) {
-    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
     return GatewayErrorWriter.write(
         exchange,
         HttpStatus.BAD_REQUEST,
         GatewayErrorCode.PATH_TRAVERSAL,
-        GatewayErrorCode.PATH_TRAVERSAL.getMessageKey(),
-        traceId);
+        GatewayErrorCode.PATH_TRAVERSAL.getMessageKey());
   }
 
   /**
    * 返回 401 未授权响应（P0-D1：统一错误响应写出器）。
    *
    * @param exchange 服务器 Web 交换上下文
-   * @param traceId 链路追踪 ID
    * @param errorCode 认证错误码
    * @param msg 错误消息（i18n key）
    * @return 完成信号 Mono
    */
   private Mono<Void> unauthorized(
-      ServerWebExchange exchange, String traceId, GatewayErrorCode errorCode, String msg) {
-    return GatewayErrorWriter.write(exchange, HttpStatus.UNAUTHORIZED, errorCode, msg, traceId);
+      ServerWebExchange exchange, GatewayErrorCode errorCode, String msg) {
+    return GatewayErrorWriter.write(exchange, HttpStatus.UNAUTHORIZED, errorCode, msg);
   }
 
   /**

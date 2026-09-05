@@ -163,7 +163,7 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
     String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
     String traceId = request.getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
     String clientIp = extractClientIp(request);
-    String userAgent = request.getHeaders().getFirst("User-Agent");
+    String userAgent = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_AGENT);
     String tenantId = request.getHeaders().getFirst(DataPermissionHeaderConstants.X_TENANT_ID);
 
     // User-Agent 截断

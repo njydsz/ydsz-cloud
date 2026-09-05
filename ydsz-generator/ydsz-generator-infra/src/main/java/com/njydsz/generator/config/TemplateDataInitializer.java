@@ -1,10 +1,12 @@
 package com.njydsz.generator.config;
 
-import com.njydsz.generator.entity.GenTemplate;
-import com.njydsz.generator.entity.GenTemplateGroup;
-import com.njydsz.generator.enums.TemplateFileTypeEnum;
-import com.njydsz.generator.repository.GenTemplateGroupRepository;
-import com.njydsz.generator.repository.GenTemplateRepository;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -14,11 +16,11 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.njydsz.generator.entity.GenTemplate;
+import com.njydsz.generator.entity.GenTemplateGroup;
+import com.njydsz.generator.enums.TemplateFileTypeEnum;
+import com.njydsz.generator.repository.GenTemplateGroupRepository;
+import com.njydsz.generator.repository.GenTemplateRepository;
 
 /**
  * 模板数据初始化器。
@@ -79,12 +81,12 @@ public class TemplateDataInitializer {
             .fileName(fileName)
             .description("系统内置模板: " + fileName)
             .content(content)
-            .isFolder(false)
+            .folder(false)
             .parentPath(extractParentPath(fileName))
             .version(1)
             .hash(md5(content))
-            .isActive(true)
-            .fileType(fileType)
+            .active(true)
+            .fileType(fileType.getCode())
             .createdAt(LocalDateTime.now())
             .updatedAt(LocalDateTime.now())
             .build();
@@ -120,7 +122,7 @@ public class TemplateDataInitializer {
     return lastSlash > 0 ? fileName.substring(0, lastSlash + 1) : "";
   }
 
-  private String readContent(Resource resource) throws Exception {
+  private String readContent(Resource resource) throws IOException {
     try (InputStream is = resource.getInputStream()) {
       return new String(is.readAllBytes(), StandardCharsets.UTF_8);
     }

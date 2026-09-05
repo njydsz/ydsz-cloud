@@ -77,8 +77,8 @@ public class TemplateService {
   public GenTemplate create(GenTemplate template) {
     template.setId(null);
     template.setVersion(1);
-    if (template.getIsActive() == null) {
-      template.setIsActive(true);
+    if (template.getActive() == null) {
+      template.setActive(true);
     }
     return templateRepository.save(template);
   }

@@ -29,38 +29,32 @@ public final class GatewayConstants {
   }
 
   /** 链路追踪 ID 请求头（委托 {@link HeaderConstants#TRACE_ID_HEADER}） */
-  /** HEADER_TRACE_ID 常量 */
   public static final String HEADER_TRACE_ID = HeaderConstants.TRACE_ID_HEADER;
 
   /** 用户 ID 请求头（委托 {@link AuthHeaderConstants#X_USER_ID}） */
-  /** HEADER_USER_ID 常量 */
   public static final String HEADER_USER_ID = AuthHeaderConstants.X_USER_ID;
 
   /** 用户名请求头（委托 {@link AuthHeaderConstants#X_USERNAME}） */
-  /** HEADER_USERNAME 常量 */
   public static final String HEADER_USERNAME = AuthHeaderConstants.X_USERNAME;
 
   /** 用户角色请求头（CSV）（委托 {@link AuthHeaderConstants#X_USER_ROLES}） */
-  /** HEADER_USER_ROLES 常量 */
   public static final String HEADER_USER_ROLES = AuthHeaderConstants.X_USER_ROLES;
 
   /** 用户权限请求头（CSV）（委托 {@link AuthHeaderConstants#X_USER_PERMISSIONS}） */
-  /** HEADER_USER_PERMISSIONS 常量 */
   public static final String HEADER_USER_PERMISSIONS = AuthHeaderConstants.X_USER_PERMISSIONS;
 
   /** 内部头签名请求头（委托 {@link InternalSignatureHeaderConstants#X_INTERNAL_SIG}） */
-  /** HEADER_INTERNAL_SIG 常量 */
   public static final String HEADER_INTERNAL_SIG = InternalSignatureHeaderConstants.X_INTERNAL_SIG;
 
   /** 租户 ID 请求头（委托 {@link DataPermissionHeaderConstants#X_TENANT_ID}） */
-  /** HEADER_TENANT_ID 常量 */
   public static final String HEADER_TENANT_ID = DataPermissionHeaderConstants.X_TENANT_ID;
 
   /** 应用 ID 请求头（客户端/接入方标识，用于应用级限流与审计） */
-  /** HEADER_APP_ID 常量 */
   public static final String HEADER_APP_ID = "X-App-Id";
 
+  /** User-Agent 请求头（客户端浏览器/设备标识，用于访问日志与审计） */
+  public static final String HEADER_USER_AGENT = "User-Agent";
+
   /** 请求唯一标识请求头（委托 {@link HeaderConstants#X_REQUEST_ID}） */
-  /** HEADER_REQUEST_ID 常量 */
   public static final String HEADER_REQUEST_ID = HeaderConstants.X_REQUEST_ID;
 }

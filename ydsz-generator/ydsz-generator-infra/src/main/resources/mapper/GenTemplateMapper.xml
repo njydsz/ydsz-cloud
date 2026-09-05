@@ -2,17 +2,17 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.generator.mapper.GenTemplateMapper">
 
-  <resultMap id="BaseResultMap" type="com.njydsz.generator.po.GenTemplatePO">
+  <resultMap id="BaseResultMap" type="com.njydsz.generator.entity.GenTemplate">
     <id     column="id"          property="id"/>
     <result column="group_id"    property="groupId"/>
     <result column="file_name"   property="fileName"/>
     <result column="description" property="description"/>
     <result column="content"     property="content"/>
-    <result column="is_folder"   property="isFolder"/>
+    <result column="is_folder"   property="folder"/>
     <result column="parent_path" property="parentPath"/>
     <result column="version"     property="version"/>
     <result column="hash"        property="hash"/>
-    <result column="is_active"   property="isActive"/>
+    <result column="is_active"   property="active"/>
     <result column="file_type"   property="fileType"/>
     <result column="created_at"  property="createdAt"/>
     <result column="updated_at"  property="updatedAt"/>

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.generator.mapper.GenHistoryMapper">
 
-  <resultMap id="BaseResultMap" type="com.njydsz.generator.po.GenHistoryPO">
+  <resultMap id="BaseResultMap" type="com.njydsz.generator.entity.GenHistory">
     <id     column="id"                property="id"/>
     <result column="module_name"       property="moduleName"/>
     <result column="datasource_id"     property="datasourceId"/>

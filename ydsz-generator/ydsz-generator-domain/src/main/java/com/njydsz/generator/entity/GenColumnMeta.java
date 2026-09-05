@@ -1,14 +1,17 @@
 package com.njydsz.generator.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 列元数据缓存实体（含人工覆盖配置）。
+ * 列元数据领域实体。
  *
- * <p>存储每个字段的原始数据库属性 + 用户自定义的类型/名称/跳过规则覆盖。
+ * <p>对应 ydsz_gen_column_meta 表。
  *
  * @author ydsz-team
  * @since 26.09.05
@@ -17,34 +20,36 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TableName("ydsz_gen_column_meta")
 public class GenColumnMeta {
 
-  /** 记录 ID。 */
+  /** 主键 ID。 */
+  @TableId(type = IdType.AUTO)
   private Long id;
-  /** 所属表元数据 ID。 */
+  /** 所属表 ID。 */
   private Long tableMetaId;
-  /** 物理列名。 */
+  /** 列名。 */
   private String columnName;
-  /** 物理数据类型。 */
+  /** 数据类型。 */
   private String dataType;
   /** 字段长度。 */
   private Integer columnSize;
   /** 是否可为空。 */
   private Boolean nullable;
-  /** 是否为主键。 */
-  private Boolean isPk;
+  /** 是否主键。 */
+  private Boolean pk;
   /** 字段注释。 */
   private String comment;
-  /** 人工覆盖 Java 类型（为空则使用自动映射）。 */
+  /** 覆盖 Java 类型。 */
   private String overrideJavaType;
-  /** 人工覆盖字段名（为空则使用自动命名）。 */
+  /** 覆盖字段名。 */
   private String overrideFieldName;
-  /** 是否在 DTO 中跳过。 */
-  private Boolean skipDto;
-  /** 是否在 VO 中跳过。 */
-  private Boolean skipVo;
-  /** 是否在 Query 中跳过。 */
-  private Boolean skipQuery;
-  /** 扩展配置 JSON（枚举值、校验规则等）。 */
+  /** DTO 跳过标记。 */
+  private Boolean dtoSkipped;
+  /** VO 跳过标记。 */
+  private Boolean voSkipped;
+  /** Query 跳过标记。 */
+  private Boolean querySkipped;
+  /** 扩展配置 JSON。 */
   private String extraConfig;
 }

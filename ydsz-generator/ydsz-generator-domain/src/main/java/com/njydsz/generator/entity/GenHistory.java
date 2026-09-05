@@ -2,17 +2,18 @@ package com.njydsz.generator.entity;
 
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.generator.enums.GenStatusEnum;
-
 /**
- * 代码生成任务/历史实体。
+ * 代码生成任务/历史领域实体。
  *
- * <p>记录一次完整代码生成任务的元信息（关联 N 个 GenHistoryFile）。
+ * <p>对应 ydsz_gen_history 表，记录一次完整代码生成任务的元信息。
  *
  * @author ydsz-team
  * @since 26.09.05
@@ -21,9 +22,11 @@ import com.njydsz.generator.enums.GenStatusEnum;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TableName("ydsz_gen_history")
 public class GenHistory {
 
   /** 任务 ID。 */
+  @TableId(type = IdType.AUTO)
   private Long id;
   /** 模块名称。 */
   private String moduleName;
@@ -35,8 +38,8 @@ public class GenHistory {
   private Integer tableCount;
   /** 生成文件总数。 */
   private Integer fileCount;
-  /** 任务执行状态。 */
-  private GenStatusEnum status;
+  /** 任务执行状态码（RUNNING/SUCCESS/PARTIAL/FAILED）。 */
+  private String status;
   /** 触发人。 */
   private String triggeredBy;
   /** 开始时间。 */

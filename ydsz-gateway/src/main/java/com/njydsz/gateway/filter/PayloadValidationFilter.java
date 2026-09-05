@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
@@ -127,13 +126,11 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
   /** 返回 4xx 请求体校验失败响应（P0-D1：统一错误响应写出器）。 */
   private Mono<Void> rejectPayload(
       ServerWebExchange exchange, GatewayErrorCode errorCode, String message) {
-    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
-
     log.warn(
         "[PayloadValidation] 请求体校验失败 path={} reason={}",
         exchange.getRequest().getURI().getPath(),
         message);
-    return GatewayErrorWriter.write(exchange, HttpStatus.BAD_REQUEST, errorCode, message, traceId);
+    return GatewayErrorWriter.write(exchange, HttpStatus.BAD_REQUEST, errorCode, message);
   }
 
   /**

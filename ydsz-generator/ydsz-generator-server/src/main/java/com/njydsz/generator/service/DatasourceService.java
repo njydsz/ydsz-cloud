@@ -42,7 +42,7 @@ public class DatasourceService {
    * @return Optional 数据源
    */
   public GenDatasource getDefault() {
-    return datasourceRepository.findByIsDefaultTrue().orElse(null);
+    return datasourceRepository.findByDefaultFlagTrue().orElse(null);
   }
 
   /**

@@ -2,17 +2,18 @@ package com.njydsz.generator.entity;
 
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.generator.enums.TemplateFileTypeEnum;
-
 /**
- * 代码生成器模板实体。
+ * 代码生成器模板领域实体。
  *
- * <p>存储 Velocity 模板文件内容，支持在线编辑与版本管理。
+ * <p>对应 ydsz_gen_template 表，存储 Velocity 模板文件内容。
  *
  * @author ydsz-team
  * @since 26.09.05
@@ -21,9 +22,11 @@ import com.njydsz.generator.enums.TemplateFileTypeEnum;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TableName("ydsz_gen_template")
 public class GenTemplate {
 
   /** 模板 ID。 */
+  @TableId(type = IdType.AUTO)
   private Long id;
   /** 所属模板分组 ID。 */
   private Long groupId;
@@ -34,7 +37,7 @@ public class GenTemplate {
   /** 模板内容（Velocity 语法）。 */
   private String content;
   /** 是否为虚拟文件夹标记。 */
-  private Boolean isFolder;
+  private Boolean folder;
   /** 父路径（如 vue/ 表示前端子目录）。 */
   private String parentPath;
   /** 当前版本号。 */
@@ -42,9 +45,9 @@ public class GenTemplate {
   /** 内容 MD5 哈希（版本对比）。 */
   private String hash;
   /** 是否启用。 */
-  private Boolean isActive;
-  /** 模板类型。 */
-  private TemplateFileTypeEnum fileType;
+  private Boolean active;
+  /** 模板类型码（BACKEND/FRONTEND，对应 TemplateFileTypeEnum.code）。 */
+  private String fileType;
   /** 创建时间。 */
   private LocalDateTime createdAt;
   /** 更新时间。 */

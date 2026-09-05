@@ -116,7 +116,7 @@ public class CodeGenService {
         .templateGroupId(templateGroupId)
         .tableCount(1)
         .fileCount(0)
-        .status(GenStatusEnum.RUNNING)
+        .status(GenStatusEnum.RUNNING.getCode())
         .triggeredBy(triggeredBy)
         .startedAt(LocalDateTime.now())
         .build();
@@ -161,13 +161,13 @@ public class CodeGenService {
       }
 
       history.setFileCount(successCount + skipCount);
-      history.setStatus(failCount > 0
+      history.setStatus((failCount > 0
           ? (successCount > 0 ? GenStatusEnum.PARTIAL : GenStatusEnum.FAILED)
-          : GenStatusEnum.SUCCESS);
+          : GenStatusEnum.SUCCESS).getCode());
       history.setFinishedAt(LocalDateTime.now());
     } catch (Exception e) {
       log.error("代码生成失败 table={} err={}", tableName, e.getMessage(), e);
-      history.setStatus(GenStatusEnum.FAILED);
+      history.setStatus(GenStatusEnum.FAILED.getCode());
       history.setErrorMessage(e.getMessage());
       history.setFinishedAt(LocalDateTime.now());
       failCount++;

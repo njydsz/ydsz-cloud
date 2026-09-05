@@ -3,7 +3,7 @@ package com.njydsz.generator.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.generator.po.GenHistoryFilePO;
+import com.njydsz.generator.entity.GenHistoryFile;
 
 /**
  * 生成历史文件明细 MyBatis-Plus Mapper。
@@ -12,5 +12,5 @@ import com.njydsz.generator.po.GenHistoryFilePO;
  * @since 26.09.05
  */
 @Mapper
-public interface GenHistoryFileMapper extends BaseMapper<GenHistoryFilePO> {
+public interface GenHistoryFileMapper extends BaseMapper<GenHistoryFile> {
 }

@@ -2,6 +2,7 @@ package com.njydsz.generator.service;
 
 import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
+import com.njydsz.generator.enums.TemplateFileTypeEnum;
 import com.njydsz.generator.repository.GenTemplateGroupRepository;
 import com.njydsz.generator.repository.GenTemplateRepository;
 import com.njydsz.generator.vo.TemplateZipVO;
@@ -134,10 +135,10 @@ public class TemplateImportExportService {
             .parentPath(extractParentPath(fileName))
             .version(1)
             .hash(md5(content))
-            .isActive(true)
+            .active(true)
             .fileType(fileName.startsWith("vue/")
-                ? com.njydsz.generator.enums.TemplateFileTypeEnum.FRONTEND
-                : com.njydsz.generator.enums.TemplateFileTypeEnum.BACKEND)
+                ? TemplateFileTypeEnum.FRONTEND.getCode()
+                : TemplateFileTypeEnum.BACKEND.getCode())
             .build();
         toSave.add(template);
         zis.closeEntry();

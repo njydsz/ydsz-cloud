@@ -12,7 +12,7 @@
 
   <artifactId>ydsz-generator-infra</artifactId>
   <name>ydsz-generator-infra</name>
-  <description>代码生成器基础设施层 — Repository 实现、Mapper、PO、Converter</description>
+  <description>代码生成器基础设施层 — Repository 实现、Mapper</description>
 
   <dependencies>
     <dependency>
@@ -32,11 +32,6 @@
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.mapstruct</groupId>
-      <artifactId>mapstruct</artifactId>
-      <version>1.6.3</version>
     </dependency>
   </dependencies>
 

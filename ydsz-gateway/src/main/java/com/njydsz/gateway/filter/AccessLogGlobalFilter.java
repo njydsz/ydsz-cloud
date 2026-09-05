@@ -220,7 +220,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     // 4xx/5xx 错误响应附加 query 和 User-Agent 用于排查
     if (status >= 400) {
       String query = sanitizeQuery(request);
-      String userAgent = request.getHeaders().getFirst("User-Agent");
+      String userAgent = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_AGENT);
       if (userAgent != null && userAgent.length() > MAX_UA_LENGTH) {
         userAgent = userAgent.substring(0, MAX_UA_LENGTH) + "...";
       }

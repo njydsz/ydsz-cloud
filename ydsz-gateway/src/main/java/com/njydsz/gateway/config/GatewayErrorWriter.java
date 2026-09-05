@@ -62,7 +62,7 @@ public final class GatewayErrorWriter {
       HttpStatus httpStatus,
       GatewayErrorCode errorCode,
       String message) {
-    String traceId = exchange.getRequest().getHeaders().getFirst(HEADER_TRACE_ID);
+    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
     return write(exchange, httpStatus, errorCode, message, traceId);
   }
 

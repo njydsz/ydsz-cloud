@@ -1,9 +1,12 @@
 package com.njydsz.gateway.filter;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -119,6 +122,12 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
   @Value("${ydsz.gateway.websocket.allowed-origins:}")
   private String allowedOriginsConfig;
 
+  /** 精确匹配的 Origin 集合（无通配符），O(1) 查找。 */
+  private volatile Set<String> exactOrigins = Set.of();
+
+  /** 预编译的通配符 Origin Pattern 列表（含 * 的条目），启动时一次性编译。 */
+  private volatile List<Pattern> wildcardPatterns = List.of();
+
   /**
    * WebSocket 独立认证过滤器：处理升级握手中的 Token 校验与内部头注入。
    *
@@ -223,9 +232,56 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * P0-4: 校验 WebSocket Origin 是否在允许列表中
+   * 启动时预编译允许的 Origin 列表。
    *
-   * <p>WebSocket 不受 SOP 约束，必须显式校验 Origin 防止跨域劫持。
+   * <p>将配置分为两类：精确匹配（无通配符）存入 {@link Set} 实现 O(1) 查找；通配符匹配（含 {@code *}）预编译为 {@link Pattern}
+   * 避免每次请求重复拼接正则。配置文件中仍以逗号分隔的字符串形式书写，启动时一次性解析。
+   */
+  @PostConstruct
+  private void initCompiledOrigins() {
+    if (allowedOriginsConfig == null || allowedOriginsConfig.isBlank()) {
+      this.exactOrigins = Set.of();
+      this.wildcardPatterns = List.of();
+      return;
+    }
+
+    Set<String> exact = new HashSet<>(8);
+    List<Pattern> wildcards = new ArrayList<>(4);
+
+    for (String item : allowedOriginsConfig.split(",")) {
+      String trimmed = item.trim();
+      if (trimmed.isEmpty()) {
+        continue;
+      }
+      if (trimmed.equals("*")) {
+        // 全通配符：单独 Pattern 匹配任意
+        wildcards.add(Pattern.compile(".*"));
+      } else if (trimmed.contains("*")) {
+        // 通配符匹配：按 * 分段，逐段 quote 转义后用 .* 替换
+        String[] parts = trimmed.split("\\*", -1);
+        StringBuilder regex = new StringBuilder(trimmed.length() * 2);
+        for (int i = 0; i < parts.length; i++) {
+          if (i > 0) {
+            regex.append(".*");
+          }
+          regex.append(Pattern.quote(parts[i]));
+        }
+        wildcards.add(Pattern.compile(regex.toString()));
+      } else {
+        exact.add(trimmed);
+      }
+    }
+
+    this.exactOrigins = Set.copyOf(exact);
+    this.wildcardPatterns = List.copyOf(wildcards);
+    log.info("[WsAuth] Origin 校验已初始化：精确匹配 {} 条，通配符 {} 条",
+        exact.size(), wildcards.size());
+  }
+
+  /**
+   * P0-4: 校验 WebSocket Origin 是否在允许列表中。
+   *
+   * <p>WebSocket 不受 SOP 约束，必须显式校验 Origin 防止跨域劫持。 先查精确匹配集合（O(1)），失败再遍历预编译的通配符 Pattern。
    *
    * @param request 服务器 HTTP 请求
    * @return true=Origin 合法或未配置允许列表（dev 模式放行）；false=Origin 非法
@@ -243,56 +299,17 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
       return true;
     }
 
-    Set<String> allowed = parseAllowedOrigins(allowedOriginsConfig);
-    for (String allowedOrigin : allowed) {
-      if (matchesOrigin(origin, allowedOrigin)) {
+    // 精确匹配（O(1)）
+    if (exactOrigins.contains(origin)) {
+      return true;
+    }
+    // 通配符匹配（预编译 Pattern，避免每次拼接正则）
+    for (Pattern pattern : wildcardPatterns) {
+      if (pattern.matcher(origin).matches()) {
         return true;
       }
     }
     return false;
-  }
-
-  /**
-   * 解析允许的 Origin 列表（逗号分隔）
-   *
-   * @param config 原始配置字符串
-   * @return Origin 集合
-   */
-  private Set<String> parseAllowedOrigins(String config) {
-    return Set.of(config.split(",")).stream()
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toSet());
-  }
-
-  /**
-   * Origin 匹配（支持通配符 *）
-   *
-   * <p>安全实现：使用 {@link java.util.regex.Pattern#quote} 转义非通配符部分，
-   * 避免正则注入攻击（如 allowed 中含 {@code + ? ( ) [ ]} 等正则元字符时被错误解析）。
-   *
-   * @param origin 客户端 Origin
-   * @param allowed 配置的允许 Origin（可含 *）
-   * @return true=匹配
-   */
-  private boolean matchesOrigin(String origin, String allowed) {
-    if (allowed.equals("*")) {
-      return true;
-    }
-    // 通配符匹配（如 https://*.example.com）— 安全转义避免正则注入
-    if (allowed.contains("*")) {
-      // 按 * 分段，逐段 quote 转义后用 .* 替换通配符
-      String[] parts = allowed.split("\\*", -1);
-      StringBuilder regex = new StringBuilder();
-      for (int i = 0; i < parts.length; i++) {
-        if (i > 0) {
-          regex.append(".*");
-        }
-        regex.append(Pattern.quote(parts[i]));
-      }
-      return origin.matches(regex.toString());
-    }
-    return allowed.equals(origin);
   }
 
   /**
@@ -348,9 +365,7 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
    */
   private Mono<Void> rejectWebSocket(
       ServerWebExchange exchange, HttpStatus status, GatewayErrorCode errorCode) {
-    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
-    return GatewayErrorWriter.write(
-        exchange, status, errorCode, errorCode.getMessageKey(), traceId);
+    return GatewayErrorWriter.write(exchange, status, errorCode, errorCode.getMessageKey());
   }
 
   /**
