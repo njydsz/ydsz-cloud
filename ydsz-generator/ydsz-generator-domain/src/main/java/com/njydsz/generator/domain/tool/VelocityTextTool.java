@@ -1,9 +1,12 @@
 package com.njydsz.generator.domain.tool;
 
+import com.njydsz.common.util.string.StringUtils;
+
 /**
  * Velocity 文本工具对象（模板中通过 {@code $text} 调用）。
  *
  * <p>提供字符串转换辅助方法，用于代码生成模板中的命名转换与格式化操作。
+ * 底层实现委托给 {@link com.njydsz.common.util.string.StringUtils}，避免重复造轮子。
  *
  * @author ydsz-team
  * @since 26.09.05
@@ -17,22 +20,7 @@ public class VelocityTextTool {
    * @return 驼峰命名字符串（如 userName）
    */
   public String camelCase(String input) {
-    if (input == null || input.isEmpty()) {
-      return input;
-    }
-    StringBuilder sb = new StringBuilder();
-    boolean nextUpper = false;
-    for (char c : input.toCharArray()) {
-      if (c == '_') {
-        nextUpper = true;
-      } else if (nextUpper) {
-        sb.append(Character.toUpperCase(c));
-        nextUpper = false;
-      } else {
-        sb.append(Character.toLowerCase(c));
-      }
-    }
-    return sb.toString();
+    return StringUtils.toCamelCase(input);
   }
 
   /**
@@ -42,11 +30,11 @@ public class VelocityTextTool {
    * @return PascalCase 字符串（如 UserName）
    */
   public String pascalCase(String input) {
-    String camel = camelCase(input);
-    if (camel == null || camel.isEmpty()) {
-      return camel;
+    if (input == null || input.isEmpty()) {
+      return input;
     }
-    return Character.toUpperCase(camel.charAt(0)) + camel.substring(1);
+    String camel = StringUtils.toCamelCase(input);
+    return camel.isEmpty() ? camel : Character.toUpperCase(camel.charAt(0)) + camel.substring(1);
   }
 
   /**
@@ -118,7 +106,7 @@ public class VelocityTextTool {
   /**
    * 字符串重复。
    *
-   * @param input 输入字符串
+   * @param input  输入字符串
    * @param times 重复次数
    * @return 重复后的字符串
    */
@@ -141,10 +129,7 @@ public class VelocityTextTool {
    * @return 移除前缀后的字符串
    */
   public String removePrefix(String input, String prefix) {
-    if (input == null || prefix == null) {
-      return input;
-    }
-    return input.startsWith(prefix) ? input.substring(prefix.length()) : input;
+    return StringUtils.removeStart(input, prefix);
   }
 
   /**

@@ -7,6 +7,7 @@ import com.njydsz.generator.entity.GenTemplateGroup;
 import com.njydsz.generator.domain.tool.VelocityDateTool;
 import com.njydsz.generator.domain.tool.VelocityTextTool;
 import com.njydsz.generator.enums.ConflictStrategyEnum;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.generator.vo.CodePreviewVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.VelocityContext;
@@ -14,8 +15,6 @@ import org.apache.velocity.app.VelocityEngine;
 import org.springframework.stereotype.Component;
 
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -142,17 +141,6 @@ public class CodeGenEngine {
    * @return MD5 哈希字符串
    */
   public String computeHash(String content) {
-    try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] digest = md.digest(content.getBytes(StandardCharsets.UTF_8));
-      StringBuilder sb = new StringBuilder();
-      for (byte b : digest) {
-        sb.append(String.format("%02x", b));
-      }
-      return sb.toString();
-    } catch (Exception e) {
-      log.warn("计算 MD5 失败: {}", e.getMessage());
-      return "";
-    }
+    return DigestUtils.md5Hex(content);
   }
 }

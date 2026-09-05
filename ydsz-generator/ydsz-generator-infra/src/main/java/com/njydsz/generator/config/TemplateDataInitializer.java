@@ -3,9 +3,10 @@ package com.njydsz.generator.config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.njydsz.common.util.security.DigestUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -129,16 +130,6 @@ public class TemplateDataInitializer {
   }
 
   private String md5(String content) {
-    try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] digest = md.digest(content.getBytes(StandardCharsets.UTF_8));
-      StringBuilder sb = new StringBuilder();
-      for (byte b : digest) {
-        sb.append(String.format("%02x", b));
-      }
-      return sb.toString();
-    } catch (Exception e) {
-      return "";
-    }
+    return DigestUtils.md5Hex(content);
   }
 }

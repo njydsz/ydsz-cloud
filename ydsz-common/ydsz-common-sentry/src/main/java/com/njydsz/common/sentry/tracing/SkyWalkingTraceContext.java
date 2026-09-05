@@ -36,8 +36,9 @@ public class SkyWalkingTraceContext implements TraceContext {
    */
   public String getTraceId() {
     try {
-      return org.apache.skywalking.apm.toolkit.trace.TraceContext
-          .traceId(); // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
+      // SkyWalking TraceContext 使用 FQN 原因：本类实现了 com.njydsz.common.sentry.spi.TraceContext，
+      // 若直接 import org.apache.skywalking.apm.toolkit.trace.TraceContext 将产生同名歧义
+      return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId();
     } catch (Exception e) {
       return null;
     }
@@ -56,8 +57,8 @@ public class SkyWalkingTraceContext implements TraceContext {
   public String getSpanId() {
     try {
       return String.valueOf(
-          org.apache.skywalking.apm.toolkit.trace.TraceContext
-              .spanId()); // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
+          // 同 getTraceId()，SkyWalking TraceContext 使用 FQN 避免与本类实现的接口同名
+          org.apache.skywalking.apm.toolkit.trace.TraceContext.spanId());
     } catch (Exception e) {
       return null;
     }
@@ -75,8 +76,8 @@ public class SkyWalkingTraceContext implements TraceContext {
    */
   public String getSegmentId() {
     try {
-      return org.apache.skywalking.apm.toolkit.trace.TraceContext
-          .segmentId(); // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
+      // 同 getTraceId()，SkyWalking TraceContext 使用 FQN 避免与本类实现的接口同名
+      return org.apache.skywalking.apm.toolkit.trace.TraceContext.segmentId();
     } catch (Exception e) {
       return null;
     }

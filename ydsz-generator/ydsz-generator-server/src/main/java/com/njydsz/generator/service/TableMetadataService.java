@@ -5,6 +5,7 @@ import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;
 import com.njydsz.generator.repository.GenColumnMetaRepository;
 import com.njydsz.generator.repository.GenTableMetaRepository;
+import com.njydsz.common.util.string.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -69,7 +70,7 @@ public class TableMetadataService {
           .datasourceId(datasource.getId())
           .tableName(tableName)
           .comment(fetchTableComment(datasource, tableName))
-          .aliasName(toCamelCase(tableName))
+          .aliasName(StringUtils.toCamelCase(tableName))
           .moduleName(extractModule(tableName))
           .cachedAt(LocalDateTime.now())
           .build();
@@ -209,31 +210,12 @@ public class TableMetadataService {
   // 辅助方法
   // ════════════════════════════════════════════════════════════
 
-  private String toCamelCase(String name) {
-    if (name == null || !name.contains("_")) {
-      return name;
-    }
-    String[] parts = name.split("_");
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < parts.length; i++) {
-      if (parts[i].isEmpty()) {
-        continue;
-      }
-      if (i == 0) {
-        sb.append(parts[i].toLowerCase());
-      } else {
-        sb.append(Character.toUpperCase(parts[i].charAt(0)));
-        if (parts[i].length() > 1) {
-          sb.append(parts[i].substring(1).toLowerCase());
-        }
-      }
-    }
-    return sb.toString();
-  }
-
   private String extractModule(String tableName) {
-    // 去掉前缀 t_ 或 tab_，取第一个单词作为模块名
-    String cleaned = tableName.replaceAll("^[tT]_|^[tT]ab_", "");
+    // 去掉前缀 t_ / T_ / tab_ / TAB_，取第一个下划线前的分段作为模块名
+    String cleaned = StringUtils.removeStart(tableName, "t_");
+    cleaned = StringUtils.removeStart(cleaned, "T_");
+    cleaned = StringUtils.removeStart(cleaned, "tab_");
+    cleaned = StringUtils.removeStart(cleaned, "TAB_");
     int idx = cleaned.indexOf('_');
     return idx > 0 ? cleaned.substring(0, idx) : cleaned;
   }

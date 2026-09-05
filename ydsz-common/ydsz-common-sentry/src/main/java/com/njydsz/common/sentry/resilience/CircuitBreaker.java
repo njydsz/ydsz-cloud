@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 熔断降级保护器（基于 Resilience4j）。
  *
- * <p>底层委托 Resilience4j {@link io.github.resilience4j.circuitbreaker.CircuitBreaker}，
- * 提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
+ * <p>底层委托 Resilience4j CircuitBreaker，提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
+ *
+ * <p>本类的类名同为 CircuitBreaker，与 Resilience4j 的 CircuitBreaker 同名冲突，
+ * 故底层 Resilience4j CircuitBreaker 使用 FQN（全限定名）引用，其余类均已改为显式 import。
  *
  * <p>状态流转：
  *
@@ -47,6 +50,9 @@ public class CircuitBreaker {
     HALF_OPEN
   }
 
+  private static final io.github.resilience4j.circuitbreaker.CircuitBreaker NOOP_DELEGATE =
+      io.github.resilience4j.circuitbreaker.CircuitBreaker.ofDefaults("noop");
+
   private final String name;
   private final io.github.resilience4j.circuitbreaker.CircuitBreaker delegate;
 
@@ -74,8 +80,7 @@ public class CircuitBreaker {
             .permittedNumberOfCallsInHalfOpenState(1)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .build();
-    this.delegate = io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.of(config)
-        .circuitBreaker(name);
+    this.delegate = CircuitBreakerRegistry.of(config).circuitBreaker(name);
 
     log.info(
         "[Sentry] CircuitBreaker '{}' 初始化完成: threshold={}, window={}s, halfOpenAfter={}ms",
@@ -101,9 +106,9 @@ public class CircuitBreaker {
     log.info("[Sentry] CircuitBreaker '{}' 初始化完成（共享 Registry）", name);
   }
 
-  private CircuitBreaker() {
-    this.name = null;
-    this.delegate = null;
+  private CircuitBreaker(String name, boolean noop) {
+    this.name = name;
+    this.delegate = noop ? NOOP_DELEGATE : null;
   }
 
   /**
@@ -130,9 +135,12 @@ public class CircuitBreaker {
    * @return 操作结果（业务成功时返回业务结果，失败或熔断时返回降级结果）
    */
   public <T> T execute(Supplier<T> operation, Supplier<T> fallback) {
-    // Try.ofSupplier 处理 CallNotPermittedException（熔断中）走 fallback
-    return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier(delegate, operation)
-        .get();
+    try {
+      return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier(delegate, operation)
+          .get();
+    } catch (CallNotPermittedException e) {
+      return fallback.get();
+    }
   }
 
   /**
@@ -145,7 +153,7 @@ public class CircuitBreaker {
     try {
       io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateRunnable(delegate, operation)
           .run();
-    } catch (io.github.resilience4j.circuitbreaker.CallNotPermittedException e) {
+    } catch (CallNotPermittedException e) {
       fallback.run();
     }
   }

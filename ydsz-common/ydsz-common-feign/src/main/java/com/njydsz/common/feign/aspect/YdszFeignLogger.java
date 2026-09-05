@@ -1,4 +1,5 @@
 package com.njydsz.common.feign.aspect;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -9,6 +10,8 @@ import java.util.regex.Pattern;
 import feign.Logger;
 import feign.Request;
 import feign.Response;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * YdszFeign 日志增强处理器。
@@ -31,7 +34,7 @@ import feign.Response;
  */
 public class YdszFeignLogger extends Logger {
 
-  private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger("com.njydsz.feign");
+  private static final Logger LOG = LoggerFactory.getLogger("com.njydsz.feign");
 
   /** Feign 日志级别 */
   private volatile Logger.Level logLevel = Logger.Level.BASIC;

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,6 +252,6 @@ public final class SqlAuditJsonLogger {
     if (exception == null) {
       return null;
     }
-    return org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(exception);
+    return ExceptionUtils.getStackTrace(exception);
   }
 }
