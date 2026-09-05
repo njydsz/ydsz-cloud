@@ -1,0 +1,44 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($enumName = ${entityName})
+#set($hasEnum = false)
+#foreach($col in $table.columns)
+#if($col.enumValues && $col.enumValues.size() > 0)
+#set($hasEnum = true)
+#end
+#end
+
+#if($hasEnum)
+#foreach($col in $table.columns)
+#if($col.enumValues && $col.enumValues.size() > 0)
+#set($enumClassName = $text.textFirstUpper($text.textCamelCase($col.javaFieldName)) + "Enum")
+
+package ${package}.domain.enums;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+/**
+ * ${col.comment}枚举。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Getter
+@AllArgsConstructor
+public enum ${enumClassName} {
+
+#foreach($ev in $col.enumValues)
+  /** ${ev.label} */
+  ${ev.code}("${ev.code}", "${ev.label}")#if($foreach.hasNext),
+  #else;
+
+#end
+  /** 枚举码。 */
+  private final String code;
+  /** 显示标签。 */
+  private final String label;
+}
+#end
+#end
+#end

@@ -1,5 +1,6 @@
 package com.njydsz.literule.server.core;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -203,7 +204,7 @@ public class RuleLifecycleService {
     }
 
     // 按置信度降序排列
-    suggestions.sort((a, b) -> Double.compare(b.getConfidence(), a.getConfidence()));
+    suggestions.sort((a, b) -> b.getConfidence().compareTo(a.getConfidence()));
     log.info("[Lifecycle] 退役检测完成：扫描 {} 条规则，发现 {} 条退役候选", allRules.size(), suggestions.size());
     return suggestions;
   }
@@ -356,11 +357,11 @@ public class RuleLifecycleService {
         .totalEvaluations(evaluations)
         .totalTriggered(triggered)
         .totalErrors(errors)
-        .triggerRate(triggerRate)
-        .errorRate(errorRate)
+        .triggerRate(BigDecimal.valueOf(triggerRate))
+        .errorRate(BigDecimal.valueOf(errorRate))
         .recommendedActions(actions)
         .suggestedAt(LocalDateTime.now())
-        .confidence(confidence)
+        .confidence(BigDecimal.valueOf(confidence))
         .build();
   }
 

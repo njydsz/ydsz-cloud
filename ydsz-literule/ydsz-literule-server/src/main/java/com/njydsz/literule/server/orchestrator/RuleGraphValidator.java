@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 /**
  * 规则链画布图验证器（P0-1）
  *
@@ -168,11 +171,44 @@ public final class RuleGraphValidator {
   }
 
   /**
+   * 判断验证问题列表是否整体有效（无任何 ERROR 级别问题）
+   *
+   * <p>仅当存在 {@link Level#ERROR} 级别问题时视为无效（不可执行）。
+   * WARN 级别问题不影响有效性，仅作提醒。
+   *
+   * @param issues 验证问题列表
+   * @return true 表示有效（无 ERROR 级别问题），false 表示无效
+   */
+  public static boolean isValid(List<GraphValidationIssue> issues) {
+    if (issues == null || issues.isEmpty()) {
+      return true;
+    }
+    for (GraphValidationIssue issue : issues) {
+      if (issue.getLevel() == Level.ERROR) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * 验证问题严重级别枚举
+   */
+  public enum Level {
+    /** 警告（不影响执行） */
+    WARN,
+    /** 错误（阻断执行） */
+    ERROR
+  }
+
+  /**
    * 图验证问题描述
    *
    * @since 26.09.01
    * @author ydsz-team
    */
+  @Data
+  @AllArgsConstructor
   public static class GraphValidationIssue implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -186,22 +222,11 @@ public final class RuleGraphValidator {
     /** 相关节点/边 ID（可能为 null） */
     private final String relatedId;
 
+    /** 问题严重级别 */
+    private Level level;
+
     public GraphValidationIssue(String code, String message, String relatedId) {
-      this.code = code;
-      this.message = message;
-      this.relatedId = relatedId;
-    }
-
-    public String getCode() {
-      return code;
-    }
-
-    public String getMessage() {
-      return message;
-    }
-
-    public String getRelatedId() {
-      return relatedId;
+      this(code, message, relatedId, Level.ERROR);
     }
   }
 }

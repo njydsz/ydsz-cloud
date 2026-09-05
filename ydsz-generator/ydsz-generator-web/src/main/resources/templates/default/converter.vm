@@ -1,0 +1,59 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+package ${package}.server.converter;
+
+import ${package}.domain.dto.${entityName}Dto;
+import ${package}.domain.entity.${entityName};
+import ${package}.domain.vo.${entityName}Vo;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
+
+import java.util.List;
+
+/**
+ * ${table.comment}对象转换器（MapStruct）。
+ *
+ * <p>负责 DTO ↔ Entity ↔ VO 双向转换。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface ${entityName}Converter {
+
+  /**
+   * DTO → Entity。
+   *
+   * @param dto 传输对象
+   * @return 实体
+   */
+  ${entityName} toEntity(${entityName}Dto dto);
+
+  /**
+   * Entity → DTO。
+   *
+   * @param entity 实体
+   * @return 传输对象
+   */
+  ${entityName}Dto toDto(${entityName} entity);
+
+  /**
+   * Entity → VO。
+   *
+   * @param entity 实体
+   * @return 视图对象
+   */
+  ${entityName}Vo toVo(${entityName} entity);
+
+  /**
+   * Entity List → VO List。
+   *
+   * @param list 实体列表
+   * @return 视图对象列表
+   */
+  #set($lt = "<")
+  List${lt}${entityName}Vo> toVoList(List${lt}${entityName}> list);
+}

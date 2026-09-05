@@ -74,5 +74,91 @@ public class RuleConflictDetector {
    */
   public List<RuleConflict> detect(RuleDefinitionDTO newDefinition) {
     List<RuleConflict> conflicts = new ArrayList<>(16);
-}
+    if (newDefinition == null || newDefinition.getCode() == null) {
+      return conflicts;
+    }
+    List<RuleDefinitionDTO> existingRules = configProvider.loadAllRules();
+    String newExpr = normalizeExpression(newDefinition.getConditionExpression());
+    String newMutex = newDefinition.getMutexGroup();
+    for (RuleDefinitionDTO existing : existingRules) {
+      if (existing == null || existing.getCode() == null) {
+        continue;
+      }
+      if (existing.getCode().equals(newDefinition.getCode())) {
+        continue; // skip self (update scenario)
+      }
+      if (newMutex != null && newMutex.equals(existing.getMutexGroup())) {
+        continue; // mutex group rules don't conflict
+      }
+      String existingExpr = normalizeExpression(existing.getConditionExpression());
+      // Identical condition
+      if (newExpr != null && !newExpr.isEmpty() && newExpr.equals(existingExpr)) {
+        if (newDefinition.getDefaultSeverity() != null
+            && !newDefinition.getDefaultSeverity().equals(existing.getDefaultSeverity())) {
+          conflicts.add(RuleConflict.builder()
+              .type(RuleConflict.Type.CONTRADICTORY_SEVERITY)
+              .level(RuleConflict.Level.ERROR)
+              .newRuleCode(newDefinition.getCode())
+              .conflictingRuleCode(existing.getCode())
+              .description("条件表达式相同但严重度不同: " + existingExpr)
+              .build());
+        } else {
+          conflicts.add(RuleConflict.builder()
+              .type(RuleConflict.Type.IDENTICAL_CONDITION)
+              .level(RuleConflict.Level.WARN)
+              .newRuleCode(newDefinition.getCode())
+              .conflictingRuleCode(existing.getCode())
+              .description("条件表达式完全相同（可能重复定义）: " + existingExpr)
+              .build());
+        }
+      } else if (existing.getName() != null
+          && existing.getName().equals(newDefinition.getName())
+          && existing.getCategory() != null
+          && existing.getCategory().equals(newDefinition.getCategory())) {
+        conflicts.add(RuleConflict.builder()
+            .type(RuleConflict.Type.NAME_COLLISION)
+            .level(RuleConflict.Level.WARN)
+            .newRuleCode(newDefinition.getCode())
+            .conflictingRuleCode(existing.getCode())
+            .description("同类别下名称相同: " + existing.getName())
+            .build());
+      }
+    }
+    return conflicts;
+  }
+
+  /**
+   * 归一化表达式用于比较（去除空白、统一逻辑运算符、统一大小写、翻转反向比较）
+   *
+   * @param expression 条件表达式
+   * @return 归一化后的表达式
+   */
+  private String normalizeExpression(String expression) {
+    if (expression == null || expression.isBlank()) {
+      return "";
+    }
+    String normalized = expression
+        .replaceAll("\\s+", "")
+        .replace("and", "&&")
+        .replace("or", "||")
+        .replace("not", "!")
+        .toLowerCase();
+    // 翻转反向比较： "3 < x" → "x > 3"
+    Matcher revMatcher = REVERSE_COMPARISON_PATTERN.matcher(normalized);
+    if (revMatcher.matches() && revMatcher.groupCount() >= CMP_GROUP_RIGHT) {
+      String number = revMatcher.group(1);
+      String op = revMatcher.group(2);
+      String var = revMatcher.group(CMP_GROUP_RIGHT);
+      // 反转比较方向
+      String flippedOp = switch (op) {
+        case ">" -> "<";
+        case ">=" -> "<=";
+        case "<" -> ">";
+        case "<=" -> ">=";
+        default -> op; // == and != are symmetric
+      };
+      normalized = var + flippedOp + number;
+    }
+    return normalized;
+  }
 }

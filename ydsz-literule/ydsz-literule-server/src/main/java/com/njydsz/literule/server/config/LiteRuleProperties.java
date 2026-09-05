@@ -846,5 +846,60 @@ public class LiteRuleProperties {
 
     /** 追加的危险方法名（如 exec / connect / delete） */
     private List<String> forbiddenMethods = new ArrayList<>(4);
-}
+
+    /** 追加的根类黑名单（如 java.net.Socket） */
+    private List<String> forbiddenRoots = new ArrayList<>(4);
+
+    /** 追加的允许函数白名单 */
+    private List<String> allowedFunctions = new ArrayList<>(4);
+  }
+
+  /**
+   * CEP（复杂事件处理）配置
+   *
+   * <p>控制 CEP 引擎的异步投递与队列参数。
+   *
+   * @since 26.09.01
+   */
+  @Data
+  public static class CepConfig {
+
+    /** 是否启用异步投递（万级 TPS 场景） */
+    private boolean asyncEnabled = false;
+
+    /** 异步队列容量 */
+    private int asyncQueueCapacity = 10_000;
+
+    /** 异步刷盘间隔（毫秒） */
+    private long asyncFlushIntervalMs = 1000L;
+
+    /** 是否启用 CEP 事件持久化 */
+    private boolean persistenceEnabled = false;
+  }
+
+  /**
+   * 依赖注入拓展配置
+   *
+   * <p>控制引擎对外置依赖的注入行为。
+   *
+   * @since 26.09.01
+   */
+  @Data
+  public static class InjectionConfig {
+
+    /** 是否自动注入所有 FactProvider 实现 */
+    private boolean autoDiscoverFactProviders = true;
+
+    /** 是否自动注入所有 ActionHandler 实现 */
+    private boolean autoDiscoverActionHandlers = true;
+
+    /** 是否允许覆盖内置组件 */
+    private boolean allowOverrideBuiltin = false;
+
+    /** 注入线程池大小，默认 CPU 核数 */
+    private int poolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
+
+    /** 注入线程池空闲保活时间（秒），默认 60 */
+    private long keepAliveSeconds = DEFAULT_KEEP_ALIVE_SECONDS;
+  }
 }

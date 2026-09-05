@@ -1,0 +1,61 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+#set($pkCol = null)
+#foreach($col in $table.columns)
+#if($col.isPk)
+#set($pkCol = $col)
+#end
+#end
+#foreach($col in $table.columns)
+#if($col.auditField)
+#set($hasParent = true)
+#end
+#end
+
+package ${package}.domain.dto;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import javax.validation.constraints.NotBlank;
+#if($hasParent)
+import com.njydsz.common.util.constant.ValidGroup;
+#end
+
+/**
+ * ${table.comment}传输对象（DTO）。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@ApiModel("${table.comment}传输对象")
+public class ${entityName}Dto {
+
+#foreach($col in $table.columns)
+#if(!$col.auditField)
+#if($col.comment)
+  /** ${col.comment} */
+#else
+  /** ${col.javaFieldName} */
+#end
+  @ApiModelProperty("${col.comment}")
+#if($col.isPk)
+  @NotBlank(groups = ValidGroup.Update.class, message = "${col.comment}不能为空")
+#end
+  private ${col.javaType} ${col.javaFieldName};
+#else
+#if($col.isPk)
+  /** ${col.comment}（引用基类字段） */
+  @ApiModelProperty("${col.comment}")
+  private ${col.javaType} ${col.javaFieldName};
+#end
+#end
+#end
+}

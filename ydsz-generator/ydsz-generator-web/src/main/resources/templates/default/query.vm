@@ -1,0 +1,41 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+#set($pkCol = null)
+#foreach($col in $table.columns)
+#if($col.isPk)
+#set($pkCol = $col)
+#end
+#end
+
+package ${package}.domain.query;
+
+import com.njydsz.common.core.page.PageQuery;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * ${table.comment}查询对象。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ApiModel("${table.comment}查询对象")
+public class ${entityName}Query extends PageQuery {
+
+#foreach($col in $ table.columns)
+#if(!$col.skipQuery)
+#if($col.comment)
+  /** ${col.comment} */
+#else
+  /** ${col.javaFieldName} */
+#end
+  @ApiModelProperty("${col.comment}")
+  private ${col.javaType} ${col.javaFieldName};
+#end
+#end
+}

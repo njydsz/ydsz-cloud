@@ -1,0 +1,55 @@
+#parse("../../velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+/**
+ * ${table.comment} API（前端调用封装）。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+
+import request from '@/utils/request'
+import type { PageResult, ${entityName}Dto, ${entityName}Vo } from '@/types/${lowerName}'
+
+/**
+ * 分页查询。
+ */
+export function page${entityName}(params: Partial<${entityName}Dto>): Promise<PageResult<${entityName}Vo>> {
+  return request({
+    url: '/${lowerName}/page',
+    method: 'post',
+    data: params,
+  })
+}
+
+/**
+ * 新增。
+ */
+export function create${entityName}(data: Partial<${entityName}Dto>): Promise<boolean> {
+  return request({
+    url: '/${lowerName}',
+    method: 'post',
+    data,
+  })
+}
+
+/**
+ * 更新。
+ */
+export function update${entityName}(data: Partial<${entityName}Dto>): Promise<boolean> {
+  return request({
+    url: '/${lowerName}',
+    method: 'put',
+    data,
+  })
+}
+
+/**
+ * 删除。
+ */
+export function delete${entityName}(id: string): Promise<boolean> {
+  return request({
+    url: `/${lowerName}/${id}`,
+    method: 'delete',
+  })
+}

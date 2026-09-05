@@ -1,0 +1,39 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+package ${package}.server.assembler;
+
+import ${package}.domain.dto.${entityName}Dto;
+import ${package}.domain.entity.${entityName};
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
+
+/**
+ * ${table.comment} DTO ↔ Entity 汇编器（MapStruct）。
+ *
+ * <p>在 web 层用于请求参数到领域对象的装配/反向转换。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface ${entityName}Assembler {
+
+  /**
+   * Entity → DTO。
+   *
+   * @param entity 领域实体
+   * @return 传输对象
+   */
+  ${entityName}Dto toDto(${entityName} entity);
+
+  /**
+   * DTO → Entity。
+   *
+   * @param dto 传输对象
+   * @return 领域实体
+   */
+  ${entityName} toEntity(${entityName}Dto dto);
+}

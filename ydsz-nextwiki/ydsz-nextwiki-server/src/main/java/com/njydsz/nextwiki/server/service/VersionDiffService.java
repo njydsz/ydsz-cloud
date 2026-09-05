@@ -112,5 +112,92 @@ public class VersionDiffService {
   /** 按行分割文本 */
   private List<String> splitLines(String content) {
     List<String> lines = new ArrayList<>(16);
-}
+    if (content == null || content.isEmpty()) {
+      return lines;
+    }
+    String[] split = content.split("\\r?\\n", -1);
+    for (String line : split) {
+      lines.add(line);
+    }
+    return lines;
+  }
+
+  /**
+   * 计算基于 LCS 的行级 diff
+   *
+   * @param oldLines 旧版本行列表
+   * @param newLines 新版本行列表
+   * @return diff 条目列表
+   */
+  private List<DiffEntry> computeLcsDiff(List<String> oldLines, List<String> newLines) {
+    int m = oldLines.size();
+    int n = newLines.size();
+    int[][] dp = new int[m + 1][n + 1];
+    for (int i = 1; i <= m; i++) {
+      for (int j = 1; j <= n; j++) {
+        if (Objects.equals(oldLines.get(i - 1), newLines.get(j - 1))) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+    List<DiffEntry> entries = new ArrayList<>(16);
+    int i = m;
+    int j = n;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && Objects.equals(oldLines.get(i - 1), newLines.get(j - 1))) {
+        entries.add(0, DiffEntry.builder().type(DiffType.UNCHANGED).lineContent(oldLines.get(i - 1)).oldLineNumber(i).newLineNumber(j).build());
+        i--;
+        j--;
+      } else if (j > 0 && (i == 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+        entries.add(0, DiffEntry.builder().type(DiffType.ADD).lineContent(newLines.get(j - 1)).oldLineNumber(i == 0 ? 0 : i).newLineNumber(j).build());
+        j--;
+      } else if (i > 0) {
+        entries.add(0, DiffEntry.builder().type(DiffType.DELETE).lineContent(oldLines.get(i - 1)).oldLineNumber(i).newLineNumber(j == 0 ? 0 : j).build());
+        i--;
+      }
+    }
+    return entries;
+  }
+
+  /** diff 条目类型枚举 */
+  public enum DiffType {
+    /** 新增行 */
+    ADD,
+    /** 删除行 */
+    DELETE,
+    /** 未变更行 */
+    UNCHANGED
+  }
+
+  /** diff 条目（单行变更记录） */
+  @Data
+  @Builder
+  public static class DiffEntry {
+    /** 变更类型 */
+    private DiffType type;
+    /** 行内容 */
+    private String lineContent;
+    /** 旧版本行号（0 表示不存在） */
+    private int oldLineNumber;
+    /** 新版本行号（0 表示不存在） */
+    private int newLineNumber;
+  }
+
+  /** diff 结果（版本对比的完整结果） */
+  @Data
+  @Builder
+  public static class DiffResult {
+    /** diff 条目列表 */
+    private List<DiffEntry> entries;
+    /** 旧版本总行数 */
+    private int oldLineCount;
+    /** 新版本总行数 */
+    private int newLineCount;
+    /** 新增行数 */
+    private int additions;
+    /** 删除行数 */
+    private int deletions;
+  }
 }

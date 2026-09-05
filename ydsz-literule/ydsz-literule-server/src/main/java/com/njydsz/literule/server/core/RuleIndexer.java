@@ -453,4 +453,26 @@ public class RuleIndexer {
   public boolean isIndexEnabled() {
     return indexEnabled;
   }
+
+  /**
+   * 判断是否存在倒排索引（P1-2 二级索引）
+   *
+   * @return true 表示倒排索引非空
+   */
+  public boolean hasFieldIndex() {
+    return indexEnabled && !fieldToRules.isEmpty();
+  }
+
+  /**
+   * 按 facts 字段进行二级过滤（P1-2 增强）
+   *
+   * <p>{@code filterByFacts} 是 {@link #filterByFactKeys(List, Set)} 的别名，语义更清晰。
+   *
+   * @param candidates 候选规则列表
+   * @param factKeys   facts 中存在的字段名集合
+   * @return 过滤后的候选规则列表
+   */
+  public List<Rule> filterByFacts(List<Rule> candidates, Set<String> factKeys) {
+    return filterByFactKeys(candidates, factKeys);
+  }
 }

@@ -278,7 +278,7 @@ public class RuleAdminService {
     def.setReviewedBy(vo.getReviewedBy());
     def.setReviewedAt(vo.getReviewedAt());
     def.setReviewComment(vo.getReviewComment());
-    def.setCanaryRatio(vo.getCanaryRatio() != null ? vo.getCanaryRatio() : BigDecimal.ZERO);
+    def.setCanaryRatio(vo.getCanaryRatio() != null ? BigDecimal.valueOf(vo.getCanaryRatio()) : BigDecimal.ZERO);
     def.setCanaryConditionExpression(vo.getCanaryConditionExpression());
     def.setCanarySeverityExpression(vo.getCanarySeverityExpression());
     return def;

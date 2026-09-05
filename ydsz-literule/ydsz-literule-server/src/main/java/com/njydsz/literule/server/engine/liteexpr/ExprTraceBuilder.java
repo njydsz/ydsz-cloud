@@ -3,6 +3,13 @@ package com.njydsz.literule.server.engine.liteexpr;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.literule.server.engine.liteexpr.BinaryOpNode;
+import com.njydsz.literule.server.engine.liteexpr.ExprNode;
+import com.njydsz.literule.server.engine.liteexpr.FunctionCallNode;
+import com.njydsz.literule.server.engine.liteexpr.MemberAccessNode;
+import com.njydsz.literule.server.engine.liteexpr.TernaryNode;
+import com.njydsz.literule.server.engine.liteexpr.UnaryOpNode;
+
 /**
  * LiteExpr 表达式执行追踪树构建器
  *
@@ -244,5 +251,182 @@ public class ExprTraceBuilder {
    */
   public boolean isActive() {
     return !stack.isEmpty();
+  }
+
+  /**
+   * 构建并返回根追踪节点（在求值完成后调用）
+   *
+   * @param ast     AST 根节点
+   * @param result  最终求值结果
+   * @return 追踪树根节点
+   */
+  public TraceNode buildRoot(ExprNode ast, Object result) {
+    if (rootNodes.isEmpty()) {
+      return TraceNode.of("ROOT", ast != null ? ast.exprText() : "", result);
+    }
+    TraceNode root = rootNodes.get(rootNodes.size() - 1);
+    // 用最终结果更新根节点
+    return new TraceNode(
+        root.type(), root.expression(), root.operator(), root.value(),
+        result, root.shortCircuited(), root.elapsedNanos(),
+        root.children(), root.error());
+  }
+
+  /**
+   * 记录变量节点
+   *
+   * @param name  变量名
+   * @param value 变量值
+   */
+  public void recordVariable(String name, Object value) {
+    if (stack.isEmpty()) {
+      beginRoot("VARIABLE", name);
+    }
+    TraceNode leaf = TraceNode.leaf("VARIABLE", name, value);
+    addToCurrent(leaf);
+    endCurrent(value);
+  }
+
+  /**
+   * 记录逻辑运算节点
+   *
+   * @param op            运算符（&& / ||）
+   * @param result        求值结果
+   * @param shortCircuited 是否短路
+   * @param node          AST 节点
+   */
+  public void recordLogical(String op, boolean result, boolean shortCircuited, BinaryOpNode node) {
+    String expr = node != null ? node.exprText() : op;
+    TraceNode traceNode = new TraceNode(
+        "LOGICAL", expr, op, null, result, shortCircuited, 0,
+        new ArrayList<>(4), null);
+    if (stack.isEmpty()) {
+      rootNodes.add(traceNode);
+    } else {
+      addToCurrent(traceNode);
+    }
+  }
+
+  /**
+   * 记录二元运算节点
+   *
+   * @param op      运算符
+   * @param leftVal 左操作数
+   * @param rightVal 右操作数
+   * @param result  求值结果
+   * @param node    AST 节点
+   */
+  public void recordBinary(String op, Object leftVal, Object rightVal, Object result, BinaryOpNode node) {
+    String expr = node != null ? node.exprText() : op;
+    TraceNode traceNode = new TraceNode(
+        "BINARY_OP", expr, op, List.of(leftVal, rightVal), result, false, 0,
+        new ArrayList<>(4), null);
+    if (stack.isEmpty()) {
+      rootNodes.add(traceNode);
+    } else {
+      addToCurrent(traceNode);
+    }
+  }
+
+  /**
+   * 记录一元运算节点
+   *
+   * @param op      运算符
+   * @param operand 操作数
+   * @param result  求值结果
+   * @param node    AST 节点
+   */
+  public void recordUnary(String op, Object operand, Object result, UnaryOpNode node) {
+    String expr = node != null ? node.exprText() : op;
+    TraceNode traceNode = new TraceNode(
+        "UNARY_OP", expr, op, operand, result, false, 0,
+        new ArrayList<>(4), null);
+    if (stack.isEmpty()) {
+      rootNodes.add(traceNode);
+    } else {
+      addToCurrent(traceNode);
+    }
+  }
+
+  /**
+   * 记录三元条件节点
+   *
+   * @param cond   条件结果
+   * @param result 求值结果
+   * @param node   AST 节点
+   */
+  public void recordTernary(boolean cond, Object result, TernaryNode node) {
+    String expr = node != null ? node.exprText() : "?:";
+    TraceNode traceNode = new TraceNode(
+        "TERNARY", expr, "?:", cond, result, false, 0,
+        new ArrayList<>(4), null);
+    if (stack.isEmpty()) {
+      rootNodes.add(traceNode);
+    } else {
+      addToCurrent(traceNode);
+    }
+  }
+
+  /**
+   * 记录函数调用节点
+   *
+   * @param funcName 函数名
+   * @param args     参数值数组
+   * @param result   返回值
+   * @param node     AST 节点
+   */
+  public void recordFunctionCall(String funcName, Object[] args, Object result, FunctionCallNode node) {
+    String expr = node != null ? node.exprText() : funcName + "(...)";
+    String argsStr = args != null ? java.util.Arrays.toString(args) : "[]";
+    TraceNode traceNode = new TraceNode(
+        "FUNCTION_CALL", expr, funcName, argsStr, result, false, 0,
+        new ArrayList<>(4), null);
+    if (stack.isEmpty()) {
+      rootNodes.add(traceNode);
+    } else {
+      addToCurrent(traceNode);
+    }
+  }
+
+  /**
+   * 记录属性访问节点
+   *
+   * @param target 目标对象
+   * @param member 属性名
+   * @param result 属性值
+   * @param node   AST 节点
+   */
+  public void recordMemberAccess(Object target, String member, Object result, MemberAccessNode node) {
+    String expr = node != null ? node.exprText() : "." + member;
+    TraceNode traceNode = new TraceNode(
+        "MEMBER_ACCESS", expr, member, target, result, false, 0,
+        new ArrayList<>(4), null);
+    if (stack.isEmpty()) {
+      rootNodes.add(traceNode);
+    } else {
+      addToCurrent(traceNode);
+    }
+  }
+
+  /**
+   * 将追踪节点添加到当前栈顶节点的子节点列表中
+   */
+  private void addToCurrent(TraceNode child) {
+    if (stack.isEmpty()) {
+      rootNodes.add(child);
+      return;
+    }
+    int lastIdx = stack.size() - 1;
+    TraceNode current = stack.get(lastIdx);
+    List<TraceNode> newChildren = new ArrayList<>(current.children());
+    newChildren.add(child);
+    TraceNode updated = new TraceNode(
+        current.type(), current.expression(), current.operator(), current.value(),
+        current.result(), current.shortCircuited(), current.elapsedNanos(),
+        newChildren, current.error());
+    stack.set(lastIdx, updated);
+    if (stack.size() == 1) {
+      rootNodes.set(rootNodes.size() - 1, updated);
+    }
   }
 }

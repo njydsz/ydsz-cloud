@@ -81,6 +81,9 @@ public class ParallelRuleEvaluator {
   /** 线程池任务队列容量 */
   private static final int QUEUE_CAPACITY = 1024;
 
+  /** 线程池默认空闲保活时间（秒） */
+  private static final int DEFAULT_KEEP_ALIVE_SECONDS = 60;
+
   /** 默认线程池大小 */
   private static final int DEFAULT_POOL_SIZE =
       Math.max(2, Runtime.getRuntime().availableProcessors());
@@ -191,5 +194,131 @@ public class ParallelRuleEvaluator {
 
     // 合并结果
     List<RuleResultVO> allResults = new ArrayList<>(16);
-}
+    for (CompletableFuture<List<RuleResultVO>> future : futures) {
+      try {
+        allResults.addAll(future.get());
+      } catch (Exception e) {
+        log.warn("[ParallelEval] 分组评估结果获取异常: {}", e.getMessage());
+      }
+    }
+    allResults.sort(Comparator.comparingInt(RuleResultVO::getSeverityWeight).reversed());
+    return allResults;
+  }
+
+  /**
+   * 串行评估规则
+   *
+   * @param candidateRules 候选规则列表
+   * @param context        规则上下文
+   * @param evaluator      单规则评估函数
+   * @return 评估结果列表
+   */
+  public List<RuleResultVO> evaluateSequential(
+      List<Rule> candidateRules, RuleContextVO context, RuleEvaluator evaluator) {
+    List<RuleResultVO> results = new ArrayList<>(16);
+    Set<String> triggeredGroups = new HashSet<>(16);
+    for (Rule rule : candidateRules) {
+      // 互斥组短路
+      String mutexGroup = rule.getMutexGroup();
+      if (mutexGroup != null && !mutexGroup.isBlank() && triggeredGroups.contains(mutexGroup)) {
+        continue;
+      }
+      try {
+        RuleResultVO result = evaluator.evaluate(rule, context);
+        if (result.isTriggered()) {
+          results.add(result);
+          if (mutexGroup != null && !mutexGroup.isBlank()) {
+            triggeredGroups.add(mutexGroup);
+          }
+        }
+      } catch (Exception e) {
+        log.warn("[ParallelEval] 单规则评估异常: ruleCode={}, err={}", rule.getCode(), e.getMessage());
+      }
+    }
+    return results;
+  }
+
+  /**
+   * 按互斥组分组
+   *
+   * @param rules 规则列表
+   * @return 分组结果（key 为 mutexGroup 或独立规则编码）
+   */
+  public Map<String, List<Rule>> groupByMutex(List<Rule> rules) {
+    Map<String, List<Rule>> groups = new LinkedHashMap<>(rules.size());
+    int independentIdx = 0;
+    for (Rule rule : rules) {
+      String mutexGroup = rule.getMutexGroup();
+      if (mutexGroup != null && !mutexGroup.isBlank()) {
+        groups.computeIfAbsent(mutexGroup, k -> new ArrayList<>(4)).add(rule);
+      } else {
+        // 独立规则各自成组
+        groups.computeIfAbsent("__independent_" + (++independentIdx), k -> new ArrayList<>(1)).add(rule);
+      }
+    }
+    return groups;
+  }
+
+  /**
+   * 评估单个互斥组（组内串行，首条命中后同组跳过）
+   *
+   * @param groupRules 组内规则列表
+   * @param context    规则上下文
+   * @param evaluator  单规则评估函数
+   * @return 评估结果列表
+   */
+  public List<RuleResultVO> evaluateGroup(
+      List<Rule> groupRules, RuleContextVO context, RuleEvaluator evaluator) {
+    List<RuleResultVO> results = new ArrayList<>(4);
+    for (Rule rule : groupRules) {
+      try {
+        RuleResultVO result = evaluator.evaluate(rule, context);
+        if (result.isTriggered()) {
+          results.add(result);
+          // 互斥组内首条命中后跳过同组后续规则
+          if (rule.getMutexGroup() != null && !rule.getMutexGroup().isBlank()) {
+            break;
+          }
+        }
+      } catch (Exception e) {
+        log.warn("[ParallelEval] 分组评估单规则异常: ruleCode={}, err={}", rule.getCode(), e.getMessage());
+      }
+    }
+    return results;
+  }
+
+  /**
+   * 创建线程池
+   *
+   * @param poolSize 线程池大小
+   * @return Executor 实例
+   */
+  public Executor createExecutor(int poolSize) {
+    return ExecutorUtils.builder()
+        .corePoolSize(poolSize)
+        .maxPoolSize(poolSize)
+        .keepAliveTime(DEFAULT_KEEP_ALIVE_SECONDS, TimeUnit.SECONDS)
+        .queueCapacity(QUEUE_CAPACITY)
+        .threadNamePrefix("literule-parallel-")
+        .daemon(true)
+        .build();
+  }
+
+  /**
+   * 关闭并行评估器（仅当使用内部线程池时执行）
+   */
+  public void shutdown() {
+    if (internalExecutor && executor instanceof ExecutorService svc) {
+      try {
+        svc.shutdown();
+        if (!svc.awaitTermination(AWAIT_TERMINATION_SECONDS, TimeUnit.SECONDS)) {
+          svc.shutdownNow();
+        }
+        log.info("[ParallelEval] 规则并行评估器已关闭");
+      } catch (Exception e) {
+        log.warn("[ParallelEval] 并行评估器关闭异常: {}", e.getMessage());
+        svc.shutdownNow();
+      }
+    }
+  }
 }

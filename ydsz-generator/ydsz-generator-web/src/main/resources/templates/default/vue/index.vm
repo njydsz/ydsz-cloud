@@ -1,0 +1,70 @@
+#parse("../../velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+<template>
+  <div class="${lowerName}-container">
+    <!-- 搜索栏 -->
+    <el-form :model="queryForm" inline>
+#foreach($col in $table.columns)
+#if(!$col.skipQuery && $col.isPk != true)
+      <el-form-item label="${col.comment}">
+        <el-input v-model="queryForm.${col.javaFieldName}" placeholder="请输入${col.comment}" clearable />
+      </el-form-item>
+#end
+#end
+      <el-form-item>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
+        <el-button @click="handleReset">重置</el-button>
+        <el-button type="success" @click="handleAdd">新增</el-button>
+      </el-form-item>
+    </el-form>
+
+    <!-- 数据表格 -->
+    <el-table :data="tableData" border stripe>
+      <el-table-column type="index" label="序号" width="60" />
+#foreach($col in $table.columns)
+      <el-table-column prop="${col.javaFieldName}" label="${col.comment}" />
+#end
+      <el-table-column label="操作" width="200">
+        <template #default="{ row }">
+          <el-button size="small" @click="handleEdit(row)">编辑</el-button>
+          <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <el-pagination v-model:current-page="queryForm.pageNum" v-model:page-size="queryForm.pageSize"
+      :total="total" @current-change="loadData" @size-change="loadData" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { page${entityName}, delete${entityName} } from '@/api/${lowerName}'
+import type { ${entityName}Dto } from '@/types/${lowerName}'
+
+const queryForm = reactive<Partial<${entityName}Dto>>({ pageNum: 1, pageSize: 10 })
+const tableData = ref<Record<string, unknown>[]>([])
+const total = ref(0)
+
+async function loadData() {
+  const res = await page${entityName}(queryForm)
+  tableData.value = res.records
+  total.value = res.total
+}
+
+function handleSearch() { loadData() }
+function handleReset() { Object.assign(queryForm, { pageNum: 1, pageSize: 10 }); loadData() }
+function handleAdd() { /* TODO: 弹层新增 */ }
+function handleEdit(_row: Record<string, unknown>) { /* TODO: 弹层编辑 */ }
+async function handleDelete(row: Record<string, unknown>) {
+  await ElMessageBox.confirm('确认删除？', '提示')
+  await delete${entityName}(row.id as string)
+  ElMessage.success('删除成功')
+  loadData()
+}
+
+onMounted(loadData)
+</script>

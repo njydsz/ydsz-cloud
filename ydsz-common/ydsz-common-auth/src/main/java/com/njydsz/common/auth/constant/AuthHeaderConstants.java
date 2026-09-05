@@ -32,6 +32,9 @@ public final class AuthHeaderConstants {
   /** 用户名 HTTP 头。由网关在认证后写入。 */
   public static final String X_USERNAME = "X-Username";
 
+  /** 用户名 HTTP 头（别名，兼容 nextwiki/fileComment 等模块）。 */
+  public static final String X_USER_NAME = "X-User-Name";
+
   /** 用户角色集合 HTTP 头（CSV）。逗号分隔的角色编码列表。 */
   public static final String X_USER_ROLES = "X-User-Roles";
 

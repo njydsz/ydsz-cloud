@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.response.YdszResponse;
-import com.njydsz.common.web.constants.AuthHeaderConstants;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.server.service.SpaceApplicationService;

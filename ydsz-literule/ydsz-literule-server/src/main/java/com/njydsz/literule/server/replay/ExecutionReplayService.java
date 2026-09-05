@@ -1,5 +1,6 @@
 package com.njydsz.literule.server.replay;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -307,7 +308,7 @@ public class ExecutionReplayService {
     versionDef.setReviewedBy(versionVO.getReviewedBy());
     versionDef.setReviewedAt(versionVO.getReviewedAt());
     versionDef.setReviewComment(versionVO.getReviewComment());
-    versionDef.setCanaryRatio(versionVO.getCanaryRatio());
+    versionDef.setCanaryRatio(versionVO.getCanaryRatio() != null ? BigDecimal.valueOf(versionVO.getCanaryRatio()) : null);
     versionDef.setCanaryConditions(
         versionVO.getCanaryConditions() == null || versionVO.getCanaryConditions().isEmpty()
             ? Collections.emptyList()

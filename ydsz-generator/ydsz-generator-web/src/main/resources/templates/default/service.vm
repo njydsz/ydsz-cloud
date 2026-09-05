@@ -1,0 +1,42 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+package ${package}.domain.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.pagehelper.PageInfo;
+import ${package}.domain.entity.${entityName};
+import ${package}.domain.query.${entityName}Query;
+
+/**
+ * ${table.comment}领域服务接口。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+public interface ${entityName}Service extends IService<${entityName}> {
+
+  /**
+   * 按查询条件分页。
+   *
+   * @param query 查询条件
+   * @return 分页结果
+   */
+  PageInfo<${entityName}> page(${entityName}Query query);
+
+  /**
+   * 创建实体。
+   *
+   * @param entity 实体
+   * @return 保存后的实体
+   */
+  ${entityName} create(${entityName} entity);
+
+  /**
+   * 更新实体。
+   *
+   * @param entity 实体
+   * @return 更新后的实体
+   */
+  ${entityName} update(${entityName} entity);
+}

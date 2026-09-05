@@ -556,6 +556,28 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- DDD 子模块：generator -->
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-generator-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-generator-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-generator-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-generator-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- MyBatis-Plus (Spring Boot 4 专用 starter) -->
             <dependency>
                 <groupId>com.baomidou</groupId>

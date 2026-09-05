@@ -16,10 +16,10 @@
   <description>代码生成器聚合 BOM — 基于数据库表结构自动生成 DDD 分层 CRUD 代码</description>
 
   <modules>
-    <module>generator-domain</module>
-    <module>generator-infra</module>
-    <module>generator-server</module>
-    <module>generator-web</module>
+    <module>ydsz-generator-domain</module>
+    <module>ydsz-generator-infra</module>
+    <module>ydsz-generator-server</module>
+    <module>ydsz-generator-web</module>
   </modules>
 
   <properties>
@@ -30,17 +30,17 @@
     <dependencies>
       <dependency>
         <groupId>com.njydsz</groupId>
-        <artifactId>generator-domain</artifactId>
+        <artifactId>ydsz-generator-domain</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
-        <artifactId>generator-infra</artifactId>
+        <artifactId>ydsz-generator-infra</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
-        <artifactId>generator-server</artifactId>
+        <artifactId>ydsz-generator-server</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>

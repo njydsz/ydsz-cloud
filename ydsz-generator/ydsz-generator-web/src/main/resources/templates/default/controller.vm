@@ -1,0 +1,76 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+#set($hasDto = false)
+#set($hasVo = false)
+#foreach($col in $table.columns)
+#if($col.javaType == "LocalDateTime" || $col.javaType == "LocalDate" || $col.javaType == "Date")
+#import("java.time.LocalDateTime")
+#import("java.time.LocalDate")
+#elseif($col.javaType == "BigDecimal")
+#import("java.math.BigDecimal")
+#end
+#end
+package ${package}.domain;
+
+import com.njydsz.common.core.response.YdszResponse;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.List;
+
+/**
+ * ${table.comment} REST 控制器。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Api(tags = "${table.comment}接口")
+@RestController
+@RequestMapping("/api/v1/${lowerName}")
+@RequiredArgsConstructor
+public class ${entityName}Controller {
+
+  // TODO: 注入领域服务
+  // private final ${entityName}Service ${lowerName}Service;
+
+  /**
+   * 分页查询。
+   */
+  @ApiOperation("分页查询")
+  @PostMapping("/page")
+  public YdszResponse<com.njydsz.common.core.page.TableDataInfo<${entityName}>> page(
+      @RequestBody ${entityName}Query query) {
+    return YdszResponse.success(null);
+  }
+
+  /**
+   * 新增。
+   */
+  @ApiOperation("新增")
+  @PostMapping
+  public YdszResponse<Boolean> create(@Valid @RequestBody ${entityName}Dto dto) {
+    return YdszResponse.success(true);
+  }
+
+  /**
+   * 修改。
+   */
+  @ApiOperation("修改")
+  @PutMapping
+  public YdszResponse<Boolean> update(@Valid @RequestBody ${entityName}Dto dto) {
+    return YdszResponse.success(true);
+  }
+
+  /**
+   * 删除。
+   */
+  @ApiOperation("删除")
+  @DeleteMapping("/{id}")
+  public YdszResponse<Boolean> delete(@PathVariable("id") String id) {
+    return YdszResponse.success(true);
+  }
+}

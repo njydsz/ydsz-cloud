@@ -1,0 +1,19 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+package ${package}.infra.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import ${package}.domain.entity.${entityName};
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * ${table.comment} MyBatis-Plus Mapper 接口。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Mapper
+public interface ${entityName}Mapper extends BaseMapper<${entityName}> {
+  // 自定义 SQL：在 ${entityName}Mapper.xml 中声明
+}

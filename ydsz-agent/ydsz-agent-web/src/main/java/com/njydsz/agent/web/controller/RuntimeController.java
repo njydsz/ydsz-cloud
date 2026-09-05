@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.runtime.RuntimeSession;
 import com.njydsz.agent.server.runtime.RuntimeManagementService;
-import com.njydsz.common.core.response.ResponseCode;
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 
 /**
@@ -89,7 +89,7 @@ public class RuntimeController {
         return runtimeManagementService.getSession(executionId)
                 .map(YdszResponse::success)
                 .orElse(YdszResponse.fail(
-                        ResponseCode.NOT_FOUND,
+                        YdszResultCode.NOT_FOUND,
                         "会话不存在: " + executionId));
     }
 
@@ -120,7 +120,7 @@ public class RuntimeController {
             return YdszResponse.success(true);
         }
         return YdszResponse.fail(
-                ResponseCode.BUSINESS_ERROR,
+                YdszResultCode.BIZ_ERROR,
                 "强制回收失败，会话不存在或已结束: " + executionId);
     }
 }

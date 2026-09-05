@@ -125,4 +125,15 @@ public interface LiteruleWebConverter {
 
     /** 表达式校验结果（api.expr）→ VO */
     ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity);
+
+    // ===== 同类型透传映射（Web 层引用需要） =====
+
+    /** RulePackVO 透传 */
+    RulePackVO entityToVO(RulePackVO entity);
+
+    /** RuleEngineStatsVO 透传 */
+    RuleEngineStatsVO entityToVO(RuleEngineStatsVO entity);
+
+    /** RuleResultVO 透传 */
+    RuleResultVO entityToVO(RuleResultVO entity);
 }

@@ -129,7 +129,7 @@ public final class RuleDslExporter {
         .title(def.getTitleTemplate())
         .descriptionTemplate(def.getDescriptionTemplate())
         // 灰度配置
-        .canaryRatio(def.getCanaryRatio())
+        .canaryRatio(def.getCanaryRatio() != null ? def.getCanaryRatio().doubleValue() : null)
         .canaryConditions(def.getCanaryConditions())
         .canaryConditionExpression(def.getCanaryConditionExpression())
         .canarySeverityExpression(def.getCanarySeverityExpression())

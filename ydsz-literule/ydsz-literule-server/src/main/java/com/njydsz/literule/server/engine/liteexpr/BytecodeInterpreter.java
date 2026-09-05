@@ -103,7 +103,7 @@ public class BytecodeInterpreter {
           int nameIdx = readU16(code, ip);
           ip += 2;
           Object varNameObj = constants.get(nameIdx);
-          String varName = ((BytecodeCompiler.VarName) varNameObj).name();
+          String varName = (String) varNameObj;
           push(stack, sp++, variables.get(varName));
         }
         case ADD -> {
@@ -211,7 +211,7 @@ public class BytecodeInterpreter {
           int nameIdx = readU16(code, ip);
           ip += 2;
           int argCount = code[ip++] & BytecodeCompiler.BYTE_MASK;
-          String funcName = ((BytecodeCompiler.VarName) constants.get(nameIdx)).name();
+          String funcName = (String) constants.get(nameIdx);
           Object[] args = new Object[argCount];
           for (int i = argCount - 1; i >= 0; i--) {
             args[i] = pop(stack, --sp);
@@ -223,7 +223,7 @@ public class BytecodeInterpreter {
           int nameIdx = readU16(code, ip);
           ip += 2;
           Object obj = pop(stack, --sp);
-          String member = ((BytecodeCompiler.VarName) constants.get(nameIdx)).name();
+          String member = (String) constants.get(nameIdx);
           push(stack, sp++, getMember(obj, member));
         }
         case GET_INDEX -> {

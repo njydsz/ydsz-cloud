@@ -1,0 +1,44 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+#foreach($col in $table.columns)
+#if($col.isPk)
+#set($pkCol = $col)
+#set($pkType = $col.javaType)
+#end
+#end
+
+package ${package}.api;
+
+import com.njydsz.common.core.response.YdszResponse;
+import ${package}.domain.vo.${entityName}Vo;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * ${table.comment} Feign 远程调用接口（API 契约）。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@FeignClient(name = "${module}-service", contextId = "${entityName}ApiClient",
+    path = "/api/v1/${lowerName}", fallbackFactory = ${entityName}ClientFallbackFactory.class)
+@Api(tags = "${table.comment}远程调用接口")
+public interface ${entityName}ApiClient {
+
+  /**
+   * 分页查询。
+   */
+  @ApiOperation("分页查询")
+  @PostMapping("/page")
+  YdszResponse<${entityName}Vo> page(@RequestBody ${entityName}Query query);
+
+  /**
+   * 根据 ID 查找。
+   */
+  @ApiOperation("根据 ID 查找")
+  @GetMapping("/{id}")
+  YdszResponse<${entityName}Vo> getById(@PathVariable("${pkCol.javaFieldName}") ${pkType} id);
+}

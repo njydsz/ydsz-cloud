@@ -1,5 +1,6 @@
 package com.njydsz.literule.server.core;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,8 @@ public class RuleCanaryRouter {
    * @return true=进入候选桶；false=走主版本
    */
   public boolean shouldRouteToCanary(RuleDefinitionDTO definition, RuleContextVO context) {
-    if (definition == null || definition.getCanaryRatio() <= 0) {
+    if (definition == null || definition.getCanaryRatio() == null
+        || definition.getCanaryRatio().compareTo(BigDecimal.ZERO) <= 0) {
       return false;
     }
 
@@ -86,7 +88,8 @@ public class RuleCanaryRouter {
     }
 
     // 2. 比例分桶：基于 traceId 哈希 + 随机扰动，保证稳定且均匀
-    double ratio = Math.min(1.0, Math.max(0.0, definition.getCanaryRatio()));
+    double ratio = definition.getCanaryRatio().doubleValue();
+    ratio = Math.min(1.0, Math.max(0.0, ratio));
     String traceId = context.getTraceId();
     int hash = traceId == null ? (int) RandomUtils.randomLong() : traceId.hashCode();
     double bucket = ((hash & HASH_POSITIVE_MASK) % 10000) / 10000.0;

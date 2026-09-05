@@ -1,0 +1,33 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+package ${package}.domain.vo;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Builder;
+
+import java.time.LocalDateTime;
+
+/**
+ * ${table.comment}视图对象（VO）。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@ApiModel("${table.comment}视图对象")
+public class ${entityName}Vo {
+
+#foreach($col in $table.columns)
+#if(!$col.auditField)
+  /** ${col.comment} */
+  @ApiModelProperty("${col.comment}")
+  private ${col.javaType} ${col.javaFieldName};
+#end
+#end
+}
