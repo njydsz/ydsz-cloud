@@ -193,13 +193,13 @@ public class DocProperties {
     private String basePath = "/**";
 
     /** 需要排除的路径 */
-    private List<String> excludePaths = new ArrayList<>();
+    private List<String> excludePaths = new ArrayList<>(16);
 
     /** 扫描的包路径列表（支持多包扫描） */
-    private List<String> packages = new ArrayList<>();
+    private List<String> packages = new ArrayList<>(16);
 
     /** 匹配的路径模式列表（支持多路径匹配） */
-    private List<String> paths = new ArrayList<>();
+    private List<String> paths = new ArrayList<>(16);
   }
 
   /** 导出配置 */

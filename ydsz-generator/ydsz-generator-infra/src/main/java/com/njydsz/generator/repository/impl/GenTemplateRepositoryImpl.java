@@ -49,7 +49,10 @@ public class GenTemplateRepositoryImpl implements GenTemplateRepository {
 
   @Override
   public Optional<GenTemplate> findByGroupIdAndFileName(final Long groupId, final String fileName) {
-    return mapper.selectByGroupIdAndFileName(groupId, fileName);
+    LambdaQueryWrapper<GenTemplate> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(GenTemplate::getGroupId, groupId)
+        .eq(GenTemplate::getFileName, fileName);
+    return Optional.ofNullable(mapper.selectOne(wrapper));
   }
 
   @Override

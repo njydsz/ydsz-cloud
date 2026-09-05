@@ -49,7 +49,10 @@ public class GenColumnMetaRepositoryImpl implements GenColumnMetaRepository {
 
   @Override
   public List<GenColumnMeta> findByTableMetaIdOrderByIdAsc(final Long tableMetaId) {
-    return mapper.selectByTableMetaIdOrderByIdAsc(tableMetaId);
+    LambdaQueryWrapper<GenColumnMeta> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(GenColumnMeta::getTableMetaId, tableMetaId)
+        .orderByAsc(GenColumnMeta::getId);
+    return mapper.selectList(wrapper);
   }
 
   @Override

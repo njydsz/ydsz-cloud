@@ -42,8 +42,8 @@ public class WebMetrics {
 
   private final MeterRegistry meterRegistry;
 
-  private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
-  private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>(16);
+  private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>(16);
   private final AtomicLong totalAuthRequests = new AtomicLong(0);
   private final AtomicLong totalAuthFailures = new AtomicLong(0);
   private final AtomicLong totalRateLimitRejected = new AtomicLong(0);

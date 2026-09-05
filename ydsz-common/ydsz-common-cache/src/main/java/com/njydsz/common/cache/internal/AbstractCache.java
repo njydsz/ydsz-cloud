@@ -82,7 +82,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
    * getIfPresent} 读取，避免 unchecked cast。 失败语义：用户函数异常时信号异常完成，异常传播给全部等待者（守卫不做递归重试）。
    */
   private final ConcurrentHashMap<Object, CompletableFuture<Object>> atomicSignals =
-      new ConcurrentHashMap<>();
+      new ConcurrentHashMap<>(16);
 
   /**
    * 添加删除监听器。
@@ -491,7 +491,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
    * 异步单飞 Future 映射（key -> 进行中的加载 Future），与同步信号 {@code atomicSignals} 分离。
    */
   private final ConcurrentHashMap<Object, CompletableFuture<Object>> asyncLoadingFutures =
-      new ConcurrentHashMap<>();
+      new ConcurrentHashMap<>(16);
 
   /**
    * 信号 Future 的类型安全转换（Future 实际承载的即为 V 实例）。

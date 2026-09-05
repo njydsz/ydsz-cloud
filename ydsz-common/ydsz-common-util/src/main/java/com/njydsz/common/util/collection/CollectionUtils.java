@@ -309,9 +309,9 @@ public final class CollectionUtils {
   @SafeVarargs
   public static <T> List<T> concatIterables(Iterable<? extends T>... iterables) {
     if (iterables == null || iterables.length == 0) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
-    List<T> result = new ArrayList<>();
+    List<T> result = new ArrayList<>(16);
     for (Iterable<? extends T> iterable : iterables) {
       if (iterable != null) {
         for (T item : iterable) {
@@ -399,7 +399,7 @@ public final class CollectionUtils {
       throw new IllegalArgumentException("batchSize must be >= 1, got " + batchSize);
     }
     if (isEmpty(source)) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
     List<List<T>> result = new ArrayList<>((source.size() + batchSize - 1) / batchSize);
     List<T> currentBatch = new ArrayList<>(batchSize);
@@ -437,7 +437,7 @@ public final class CollectionUtils {
    */
   public static <T> List<T> distinct(Collection<T> source) {
     if (isEmpty(source)) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
     return new ArrayList<>(new LinkedHashSet<>(source));
   }
@@ -463,9 +463,9 @@ public final class CollectionUtils {
       Collection<T> source, Function<? super T, ? extends K> keyMapper) {
     Objects.requireNonNull(keyMapper, "keyMapper must not be null");
     if (isEmpty(source)) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
-    Set<K> seen = new LinkedHashSet<>();
+    Set<K> seen = new LinkedHashSet<>(16);
     List<T> result = new ArrayList<>(source.size());
     for (T item : source) {
       if (seen.add(keyMapper.apply(item))) {

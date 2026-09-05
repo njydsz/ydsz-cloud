@@ -3,6 +3,7 @@ package com.njydsz.generator.repository.impl;
 import java.util.List;
 import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -44,12 +45,18 @@ public class GenHistoryRepositoryImpl implements GenHistoryRepository {
 
   @Override
   public List<GenHistory> findRecent(final int limit) {
-    return mapper.selectRecent(limit);
+    LambdaQueryWrapper<GenHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByDesc(GenHistory::getStartedAt)
+        .last("LIMIT " + limit);
+    return mapper.selectList(wrapper);
   }
 
   @Override
   public List<GenHistory> findByStatus(final String status) {
-    return mapper.selectByStatus(status);
+    LambdaQueryWrapper<GenHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(GenHistory::getStatus, status)
+        .orderByDesc(GenHistory::getStartedAt);
+    return mapper.selectList(wrapper);
   }
 
   @Override

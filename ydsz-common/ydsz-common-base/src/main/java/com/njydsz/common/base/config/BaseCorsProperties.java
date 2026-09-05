@@ -90,7 +90,7 @@ public abstract class BaseCorsProperties {
   private String pathPattern = "/**";
 
   /** 暴露给客户端的响应头列表 */
-  private List<String> exposedHeaders = new ArrayList<>();
+  private List<String> exposedHeaders = new ArrayList<>(16);
 
   /** 过滤器注册顺序（值越小优先级越高） */
   private int order = 0;
@@ -104,7 +104,7 @@ public abstract class BaseCorsProperties {
    * @return 警告信息列表，为空表示配置安全
    */
   public List<String> validateSecurity() {
-    List<String> warnings = new ArrayList<>();
+    List<String> warnings = new ArrayList<>(16);
 
     if (!enabled) {
       return warnings;

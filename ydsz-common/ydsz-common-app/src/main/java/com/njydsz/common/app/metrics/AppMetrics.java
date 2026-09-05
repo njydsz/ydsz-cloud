@@ -45,10 +45,10 @@ public class AppMetrics implements AuthMetrics {
   private static final String USER_TYPE_APP = "app";
 
   /** Counter 缓存，避免每次调用重复创建 Builder 对象 */
-  private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>(16);
 
   /** Timer 缓存，避免每次调用重复创建 Builder 对象 */
-  private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>(16);
 
   private final MeterRegistry meterRegistry;
 

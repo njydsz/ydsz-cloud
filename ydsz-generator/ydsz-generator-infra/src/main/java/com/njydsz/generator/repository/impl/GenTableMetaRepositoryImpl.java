@@ -52,7 +52,10 @@ public class GenTableMetaRepositoryImpl implements GenTableMetaRepository {
   @Override
   public Optional<GenTableMeta> findByDatasourceIdAndTableName(final Long datasourceId,
                                                                final String tableName) {
-    return mapper.selectByDatasourceIdAndTableName(datasourceId, tableName);
+    LambdaQueryWrapper<GenTableMeta> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(GenTableMeta::getDatasourceId, datasourceId)
+        .eq(GenTableMeta::getTableName, tableName);
+    return Optional.ofNullable(mapper.selectOne(wrapper));
   }
 
   @Override

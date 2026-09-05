@@ -344,7 +344,7 @@ public final class TenantContext {
    */
   public static final class Builder {
     private final String tenantId;
-    private final Map<String, Object> fields = new HashMap<>();
+    private final Map<String, Object> fields = new HashMap<>(16);
 
     Builder(String tenantId) {
       this.tenantId = tenantId;
