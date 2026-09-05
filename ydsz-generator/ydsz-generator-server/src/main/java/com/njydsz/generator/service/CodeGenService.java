@@ -17,6 +17,7 @@ import com.njydsz.generator.vo.GenResultVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -54,10 +55,13 @@ public class CodeGenService {
   private final GenHistoryRepository historyRepository;
   private final GenHistoryFileRepository historyFileRepository;
 
-  /** 默认作者。 */
-  private static final String DEFAULT_AUTHOR = "ydsz-generator";
-  /** 默认基础包。 */
-  private static final String DEFAULT_BASE_PACKAGE = "com.njydsz";
+  /** 默认作者（来自配置）。 */
+  @Value("${generator.default-author:ydsz-generator}")
+  private String defaultAuthor;
+
+  /** 默认基础包（来自配置）。 */
+  @Value("${generator.default-package:com.njydsz}")
+  private String defaultBasePackage;
 
   /**
    * 预览指定表的生成结果（不写文件）。
@@ -77,10 +81,10 @@ public class CodeGenService {
     }
     List<GenTemplate> templates = templateService.listByGroup(templateGroupId);
 
-    List<CodePreviewVO> previews = new ArrayList<>();
+    List<CodePreviewVO> previews = new ArrayList<>(templates.size());
     Map<String, Object> tableCtx = codeGenEngine.buildTableContext(columns);
     Map<String, Object> context = codeGenEngine.buildContext(
-        tableMeta.getModuleName(), DEFAULT_BASE_PACKAGE, DEFAULT_AUTHOR,
+        tableMeta.getModuleName(), defaultBasePackage, defaultAuthor,
         tableCtx, new HashMap<>());
 
     for (GenTemplate tpl : templates) {
@@ -125,7 +129,7 @@ public class CodeGenService {
     int successCount = 0;
     int skipCount = 0;
     int failCount = 0;
-    List<GenHistoryFile> historyFiles = new ArrayList<>();
+    List<GenHistoryFile> historyFiles = new ArrayList<>(8);
 
     try {
       GenDatasource ds = datasourceService.getById(datasourceId);
@@ -135,7 +139,7 @@ public class CodeGenService {
 
       Map<String, Object> tableCtx = codeGenEngine.buildTableContext(columns);
       Map<String, Object> context = codeGenEngine.buildContext(
-          tableMeta.getModuleName(), DEFAULT_BASE_PACKAGE, DEFAULT_AUTHOR,
+          tableMeta.getModuleName(), defaultBasePackage, defaultAuthor,
           tableCtx, new HashMap<>());
 
       for (GenTemplate tpl : templates) {
@@ -174,7 +178,7 @@ public class CodeGenService {
     }
 
     historyRepository.save(history);
-    historyFileRepository.saveAll(historyFiles);
+    historyFileRepository.batchSave(historyFiles);
 
     return GenResultVO.builder()
         .historyId(history.getId())

@@ -14,6 +14,7 @@
 package ${package}.domain;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.core.page.TableDataInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +43,7 @@ public class ${entityName}Controller {
    */
   @ApiOperation("分页查询")
   @PostMapping("/page")
-  public YdszResponse<com.njydsz.common.core.page.TableDataInfo<${entityName}>> page(
+  public YdszResponse<TableDataInfo<${entityName}>> page(
       @RequestBody ${entityName}Query query) {
     return YdszResponse.success(null);
   }

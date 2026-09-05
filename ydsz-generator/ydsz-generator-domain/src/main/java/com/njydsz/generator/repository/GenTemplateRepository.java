@@ -47,12 +47,12 @@ public interface GenTemplateRepository {
   List<GenTemplate> findByGroupIdOrderByFileNameAsc(Long groupId);
 
   /**
-   * 批量保存。
+   * 批量持久化模板集合。
    *
    * @param templates 实体集合
    * @return 保存后的实体集合
    */
-  List<GenTemplate> saveAll(List<GenTemplate> templates);
+  List<GenTemplate> batchSave(List<GenTemplate> templates);
 
   /**
    * 删除模板。

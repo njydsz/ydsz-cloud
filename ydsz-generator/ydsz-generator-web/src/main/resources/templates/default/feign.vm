@@ -2,7 +2,7 @@
 #set($entityName = $text.textFirstUpper($table.aliasName))
 #set($lowerName = $text.textFirstLower($entityName))
 #foreach($col in $table.columns)
-#if($col.isPk)
+#if($col.pk)
 #set($pkCol = $col)
 #set($pkType = $col.javaType)
 #end

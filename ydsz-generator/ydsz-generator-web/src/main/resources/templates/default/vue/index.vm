@@ -6,7 +6,7 @@
     <!-- 搜索栏 -->
     <el-form :model="queryForm" inline>
 #foreach($col in $table.columns)
-#if(!$col.skipQuery && $col.isPk != true)
+#if(!$col.querySkipped && $col.pk != true)
       <el-form-item label="${col.comment}">
         <el-input v-model="queryForm.${col.javaFieldName}" placeholder="请输入${col.comment}" clearable />
       </el-form-item>

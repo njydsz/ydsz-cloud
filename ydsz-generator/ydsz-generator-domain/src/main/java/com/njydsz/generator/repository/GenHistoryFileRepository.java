@@ -21,12 +21,12 @@ public interface GenHistoryFileRepository {
   GenHistoryFile save(GenHistoryFile file);
 
   /**
-   * 批量保存。
+   * 批量持久化文件明细。
    *
    * @param files 实体集合
    * @return 保存后的实体集合
    */
-  List<GenHistoryFile> saveAll(List<GenHistoryFile> files);
+  List<GenHistoryFile> batchSave(List<GenHistoryFile> files);
 
   /**
    * 查询任务全部文件明细。

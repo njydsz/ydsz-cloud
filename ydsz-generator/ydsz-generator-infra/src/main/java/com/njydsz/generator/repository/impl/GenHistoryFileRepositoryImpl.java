@@ -33,7 +33,7 @@ public class GenHistoryFileRepositoryImpl implements GenHistoryFileRepository {
   }
 
   @Override
-  public List<GenHistoryFile> saveAll(final List<GenHistoryFile> files) {
+  public List<GenHistoryFile> batchSave(final List<GenHistoryFile> files) {
     files.forEach(mapper::insert);
     return files;
   }

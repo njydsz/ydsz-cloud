@@ -37,7 +37,7 @@ public class GenColumnMetaRepositoryImpl implements GenColumnMetaRepository {
   }
 
   @Override
-  public List<GenColumnMeta> saveAll(final List<GenColumnMeta> columns) {
+  public List<GenColumnMeta> batchSave(final List<GenColumnMeta> columns) {
     columns.forEach(mapper::insert);
     return columns;
   }

@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 实体类反向生成服务。
@@ -26,6 +28,15 @@ public class EntityReverseService {
 
   /** 默认作者。 */
   private static final String DEFAULT_AUTHOR = "ydsz-generator";
+  /** 类名正则。 */
+  private static final Pattern CLASS_NAME_PATTERN =
+      Pattern.compile("public\\s+(?:class|record)\\s+(\\w+)");
+  /** 包名正则。 */
+  private static final Pattern PACKAGE_PATTERN =
+      Pattern.compile("package\\s+([\\w.]+)\\s*;");
+  /** 字段正则。 */
+  private static final Pattern FIELD_PATTERN =
+      Pattern.compile("private\\s+(\\w+(?:<[^>]+>)?)\\s+(\\w+)\\s*;");
 
   /**
    * 从指定 .java 源文件反向生成分析报告。
@@ -66,11 +77,11 @@ public class EntityReverseService {
     if (!dir.exists() || !dir.isDirectory()) {
       throw new IllegalArgumentException("无效目录: " + sourceDirPath);
     }
-    List<String> results = new ArrayList<>();
     File[] javaFiles = dir.listFiles((d, name) -> name.endsWith(".java"));
     if (javaFiles == null) {
-      return results;
+      return new ArrayList<>();
     }
+    List<String> results = new ArrayList<>(javaFiles.length);
     for (File f : javaFiles) {
       try {
         results.add(reverseGenerate(f.getAbsolutePath(), templateGroupId, outputDir));
@@ -86,24 +97,18 @@ public class EntityReverseService {
   // ════════════════════════════════════════════════════════════
 
   private String extractClassName(String source) {
-    java.util.regex.Pattern p = java.util.regex.Pattern.compile(
-        "public\\s+(?:class|record)\\s+(\\w+)");
-    java.util.regex.Matcher m = p.matcher(source);
+    Matcher m = CLASS_NAME_PATTERN.matcher(source);
     return m.find() ? m.group(1) : "";
   }
 
   private String extractPackageName(String source) {
-    java.util.regex.Pattern p = java.util.regex.Pattern.compile(
-        "package\\s+([\\w.]+)\\s*;");
-    java.util.regex.Matcher m = p.matcher(source);
+    Matcher m = PACKAGE_PATTERN.matcher(source);
     return m.find() ? m.group(1) : "";
   }
 
   private List<FieldInfo> extractFields(String source) {
-    List<FieldInfo> fields = new ArrayList<>();
-    java.util.regex.Pattern p = java.util.regex.Pattern.compile(
-        "private\\s+(\\w+(?:<[^>]+>)?)\\s+(\\w+)\\s*;");
-    java.util.regex.Matcher m = p.matcher(source);
+    List<FieldInfo> fields = new ArrayList<>(16);
+    Matcher m = FIELD_PATTERN.matcher(source);
     while (m.find()) {
       String type = m.group(1);
       String name = m.group(2);

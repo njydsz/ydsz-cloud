@@ -59,7 +59,7 @@ public class TableMetadataService {
     } catch (Exception e) {
       throw new RuntimeException("刷新表元数据失败: " + e.getMessage(), e);
     }
-    List<GenTableMeta> result = new ArrayList<>();
+    List<GenTableMeta> result = new ArrayList<>(tableNames.size());
 
     // 删除旧缓存
     tableMetaRepository.deleteByDatasourceId(datasource.getId());
@@ -136,7 +136,7 @@ public class TableMetadataService {
   // ════════════════════════════════════════════════════════════
 
   private List<String> fetchTableNames(GenDatasource datasource) throws Exception {
-    List<String> tables = new ArrayList<>();
+    List<String> tables = new ArrayList<>(64);
     Class.forName(datasource.getDialect().getDriverClass());
     try (Connection conn = DriverManager.getConnection(
         datasource.getJdbcUrl(), datasource.getUsername(), datasource.getPassword())) {
@@ -169,14 +169,14 @@ public class TableMetadataService {
 
   private List<GenColumnMeta> fetchColumns(GenDatasource datasource, String tableName)
       throws Exception {
-    List<GenColumnMeta> columns = new ArrayList<>();
+    List<GenColumnMeta> columns = new ArrayList<>(64);
     Class.forName(datasource.getDialect().getDriverClass());
     try (Connection conn = DriverManager.getConnection(
         datasource.getJdbcUrl(), datasource.getUsername(), datasource.getPassword())) {
       DatabaseMetaData metaData = conn.getMetaData();
 
       // 主键
-      List<String> pks = new ArrayList<>();
+      List<String> pks = new ArrayList<>(8);
       try (ResultSet pkRs = metaData.getPrimaryKeys(conn.getCatalog(), null, tableName)) {
         while (pkRs.next()) {
           pks.add(pkRs.getString("COLUMN_NAME"));
@@ -192,11 +192,11 @@ public class TableMetadataService {
               .dataType(rs.getString("TYPE_NAME"))
               .columnSize(rs.getInt("COLUMN_SIZE"))
               .nullable(rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable)
-              .isPk(pks.contains(colName))
+              .pk(pks.contains(colName))
               .comment(rs.getString("REMARKS"))
-              .skipDto(false)
-              .skipVo(false)
-              .skipQuery(false)
+              .dtoSkipped(false)
+              .voSkipped(false)
+              .querySkipped(false)
               .build();
           columns.add(col);
         }

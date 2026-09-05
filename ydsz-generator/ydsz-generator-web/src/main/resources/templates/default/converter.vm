@@ -1,7 +1,7 @@
 #parse("velocity_implicit.vm")
 #set($entityName = $text.textFirstUpper($table.aliasName))
 #set($lowerName = $text.textFirstLower($entityName))
-package ${package}.server.converter;
+package ${package}.domain.converter;
 
 import ${package}.domain.dto.${entityName}Dto;
 import ${package}.domain.entity.${entityName};

@@ -62,7 +62,7 @@ public class GenTemplateRepositoryImpl implements GenTemplateRepository {
   }
 
   @Override
-  public List<GenTemplate> saveAll(final List<GenTemplate> templates) {
+  public List<GenTemplate> batchSave(final List<GenTemplate> templates) {
     templates.forEach(mapper::insert);
     log.info("批量保存模板 count={}", templates.size());
     return templates;

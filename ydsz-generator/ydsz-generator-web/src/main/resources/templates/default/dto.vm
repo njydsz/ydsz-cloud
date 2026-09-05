@@ -3,7 +3,7 @@
 #set($lowerName = $text.textFirstLower($entityName))
 #set($pkCol = null)
 #foreach($col in $table.columns)
-#if($col.isPk)
+#if($col.pk)
 #set($pkCol = $col)
 #end
 #end
@@ -46,12 +46,12 @@ public class ${entityName}Dto {
   /** ${col.javaFieldName} */
 #end
   @ApiModelProperty("${col.comment}")
-#if($col.isPk)
+#if($col.pk)
   @NotBlank(groups = ValidGroup.Update.class, message = "${col.comment}不能为空")
 #end
   private ${col.javaType} ${col.javaFieldName};
 #else
-#if($col.isPk)
+#if($col.pk)
   /** ${col.comment}（引用基类字段） */
   @ApiModelProperty("${col.comment}")
   private ${col.javaType} ${col.javaFieldName};

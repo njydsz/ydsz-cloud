@@ -77,7 +77,7 @@ public class CodeGenEngine {
    * @return 表格上下文映射
    */
   public Map<String, Object> buildTableContext(List<GenColumnMeta> columns) {
-    Map<String, Object> table = new HashMap<>();
+    Map<String, Object> table = new HashMap<>(16);
     table.put("columns", columns);
     table.put("allColumns", columns);
     return table;

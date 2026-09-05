@@ -102,7 +102,7 @@ public class TemplateImportExportService {
     groupRepository.findById(targetGroupId)
         .orElseThrow(() -> new IllegalArgumentException("目标分组不存在: " + targetGroupId));
 
-    List<GenTemplate> toSave = new ArrayList<>();
+    List<GenTemplate> toSave = new ArrayList<>(templates.size());
     try (ZipInputStream zis = new ZipInputStream(
         new ByteArrayInputStream(zipData), StandardCharsets.UTF_8)) {
       ZipEntry entry;
@@ -148,7 +148,7 @@ public class TemplateImportExportService {
       throw new RuntimeException("导入模板失败: " + e.getMessage(), e);
     }
 
-    templateRepository.saveAll(toSave);
+    templateRepository.batchSave(toSave);
     log.info("导入模板完成 groupId={} count={}", targetGroupId, toSave.size());
     return toSave.size();
   }

@@ -21,12 +21,12 @@ public interface GenColumnMetaRepository {
   GenColumnMeta save(GenColumnMeta columnMeta);
 
   /**
-   * 批量保存。
+   * 批量持久化列元数据。
    *
    * @param columns 实体集合
    * @return 保存后的实体集合
    */
-  List<GenColumnMeta> saveAll(List<GenColumnMeta> columns);
+  List<GenColumnMeta> batchSave(List<GenColumnMeta> columns);
 
   /**
    * 根据 ID 查询。

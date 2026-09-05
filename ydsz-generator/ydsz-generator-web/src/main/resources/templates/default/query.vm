@@ -3,7 +3,7 @@
 #set($lowerName = $text.textFirstLower($entityName))
 #set($pkCol = null)
 #foreach($col in $table.columns)
-#if($col.isPk)
+#if($col.pk)
 #set($pkCol = $col)
 #end
 #end
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public class ${entityName}Query extends PageQuery {
 
 #foreach($col in $ table.columns)
-#if(!$col.skipQuery)
+#if(!$col.querySkipped)
 #if($col.comment)
   /** ${col.comment} */
 #else
