@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.dto.ApprovalRecordDTO;
@@ -43,6 +44,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  * @since 26.09.01
  */
 @Slf4j
+@Service
 public class RuleApprovalService {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;

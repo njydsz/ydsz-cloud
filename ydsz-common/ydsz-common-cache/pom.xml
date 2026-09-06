@@ -81,14 +81,11 @@
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
-    <!-- ydsz-common-tenant（TenantContextHolder 租户上下文，运行时由 CacheKeyBuilderInitializer 注入） -->
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-tenant</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-      <optional>true</optional>
-    </dependency>
+    <!--
+        注意：ydsz-common-cache 不依赖 ydsz-common-tenant。
+        CacheConstants 中提及的 TenantContextHolder 仅在 Javadoc 注释中，无编译期耦合。
+        若引入 tenant 会形成 jdbc → cache → tenant → jdbc 循环依赖，违反 YDIZ-ARCH-001。
+    -->
   </dependencies>
 
 </project>

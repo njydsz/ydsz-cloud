@@ -2,12 +2,16 @@ package com.njydsz.workflow.server.config;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.listener.PatternTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.feign.assembler.NameAssembler;
@@ -16,6 +20,7 @@ import com.njydsz.workflow.domain.gateway.NameServiceClient;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.server.health.FlowHealthIndicator;
+import com.njydsz.workflow.server.message.FlowMessageListener;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowGroupResolver;
 import com.njydsz.workflow.server.service.impl.integration.NameServiceClientAdapter;
@@ -112,4 +117,27 @@ public class FlowAutoConfiguration {
   // P0-1: flowQueueExecutor 线程池已迁移到 ydsz-common-thread 统一管理
   // 配置项: ydsz.thread.pools.flowQueue.* (见 application.yml)
   // Bean 名称: flowQueueExecutor（key + "Executor"）
+
+  /**
+   * Redis 消息监听容器 Bean。
+   *
+   * <p>注册 FlowMessageListener 订阅流程事件频道，使跨服务 Redis Pub/Sub 消息能被当前服务接收并处理。
+   * 订阅频道模式：{@code flow:message:*}（匹配所有 flow:message: 前缀的频道）。
+   *
+   * @param connectionFactory Redis 连接工厂
+   * @param flowMessageListener 流程消息监听器
+   * @return Redis 消息监听容器
+   */
+  @Bean
+  @ConditionalOnMissingBean(RedisMessageListenerContainer.class)
+  @ConditionalOnBean(FlowMessageListener.class)
+  public RedisMessageListenerContainer redisMessageListenerContainer(
+      RedisConnectionFactory connectionFactory,
+      FlowMessageListener flowMessageListener) {
+    RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+    container.setConnectionFactory(connectionFactory);
+    // 订阅 flow:message:* 频道模式
+    container.addMessageListener(flowMessageListener, new PatternTopic("flow:message:*"));
+    return container;
+  }
 }

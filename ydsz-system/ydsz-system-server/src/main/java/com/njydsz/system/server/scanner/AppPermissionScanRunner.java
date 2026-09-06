@@ -3,6 +3,7 @@ package com.njydsz.system.server.scanner;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.system.server.service.ApiPermissionService;
 
@@ -23,6 +24,7 @@ import com.njydsz.system.server.service.ApiPermissionService;
  */
 @Slf4j
 @Order(100)
+@Component
 public class AppPermissionScanRunner implements CommandLineRunner {
 
   private final ApiPermissionService apiPermissionService;

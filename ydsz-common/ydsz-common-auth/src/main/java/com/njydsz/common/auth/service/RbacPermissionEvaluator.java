@@ -12,6 +12,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.annotation.AuthMenuPermission;
@@ -77,6 +78,10 @@ public class RbacPermissionEvaluator {
 
   /** 缓存 Key 生成策略，默认为 DefaultCacheKeyStrategy */
   private CacheKeyStrategy cacheKeyStrategy = new DefaultCacheKeyStrategy();
+
+  /** 权限降级提供者（可选）：Redis 不可用时回退到 DB 加载基础权限。为 null 时跳过 DB 回退。 */
+  @Autowired(required = false)
+  private PermissionFallbackProvider fallbackProvider;
 
   /** 标记 Redis 是否可用，供 AuthConfiguration 的健康检查更新。 */
   private volatile boolean redisAvailable = true;
@@ -427,6 +432,25 @@ public class RbacPermissionEvaluator {
           redisAvailable,
           properties.getFallbackPolicy(),
           e.getMessage());
+    }
+
+    // Redis 和本地缓存均未命中时，尝试 DB 回退
+    if (menu.isEmpty() && button.isEmpty() && api.isEmpty() && fallbackProvider != null) {
+      log.warn("[RbacPermissionEvaluator] Redis 权限为空，尝试从 DB 回退加载基础权限");
+      try {
+        for (String roleCode : roleCodes) {
+          Set<String> fallbackApis = fallbackProvider.getRoleApiCodes(roleCode, tenantId);
+          if (fallbackApis != null && !fallbackApis.isEmpty()) {
+            api.addAll(fallbackApis);
+            log.info(
+                "[RbacPermissionEvaluator] DB 回退加载角色权限成功: roleCode={}, apiCount={}",
+                roleCode,
+                fallbackApis.size());
+          }
+        }
+      } catch (Exception e) {
+        log.warn("[RbacPermissionEvaluator] DB 回退加载权限失败: {}", e.getMessage());
+      }
     }
 
     RolePermissions result =
