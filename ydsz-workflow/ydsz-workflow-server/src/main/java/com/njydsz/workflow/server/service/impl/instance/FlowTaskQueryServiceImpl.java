@@ -77,6 +77,9 @@ public class FlowTaskQueryServiceImpl {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;
 
+    /** 多归属人（角色/部门）最小批量集合容量 */
+    private static final int MIN_MULTI_ASSIGNEE_CAPACITY = 8;
+
 
     /** 默认分页大小 */
   private static final int DEFAULT_PAGE_SIZE = 20;
@@ -190,7 +193,7 @@ private static final int MAX_PAGE_SIZE = 100;
     }
     // 3. ROLE/DEPT 匹配 — P1-9: 批量 IN 查询替代循环中的 N 次单条查询
     int estimatedSize = (roleCodes != null ? roleCodes.size() : 0) + (deptIds != null ? deptIds.size() : 0);
-    Collection<String> multiAssignees = new ArrayList<>(Math.max(estimatedSize, 8));
+    Collection<String> multiAssignees = new ArrayList<>(Math.max(estimatedSize, MIN_MULTI_ASSIGNEE_CAPACITY));
     if (roleCodes != null) {
       multiAssignees.addAll(roleCodes);
     }

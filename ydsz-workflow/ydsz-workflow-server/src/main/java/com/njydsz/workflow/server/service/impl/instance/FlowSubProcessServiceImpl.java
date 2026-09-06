@@ -481,7 +481,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
       return new HashMap<>(0);
     }
     String parentId = child.getParentInstanceId();
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY);
     // 先放入父流程变量
     if (parentId != null) {
       Map<String, Object> parentVars = instanceService.getVariables(parentId);
