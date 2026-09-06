@@ -19,9 +19,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+        <!--ydsz-common-domain（DataPermissionHeaderConstants/DataPermissionContext/DataScopeContextHolder）-->
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-tenant</artifactId>
+            <artifactId>ydsz-common-domain</artifactId>
         </dependency>
         <!--ydsz-common-util-->
         <dependency>
@@ -48,6 +49,17 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-lock</artifactId>
             <optional>true</optional>
+        </dependency>
+        <!-- ydsz-common-redis（optional, Redis 模式下行级/列级/用户信息服务；classpath 缺失时降级为本地缓存） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- JSON 模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
         </dependency>
         <!--servlet-->
         <dependency>
@@ -141,26 +153,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-        </dependency>
-
-        <!-- Redis 模块 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-        </dependency>
-
-        <!-- JSON 模块 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-        <!--
-            ydsz-common-jdbc：AuthRowPermissionAspect / AuthColPermissionAspect / ParsedAuthHeaders
-            使用 DataPermissionConstants、DataPermissionContext、DataScopeContextHolder 等权限常量与上下文
-        -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-jdbc</artifactId>
         </dependency>
     </dependencies>
 </project>

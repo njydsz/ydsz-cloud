@@ -45,13 +45,13 @@ public class NotificationServiceImpl implements NotificationService {
   /** 站内通知 Repository */
   private final MsgNotificationRepository msgNotificationRepository;
 
-  /** 实时推送服务（WebSocket / 离线缓存） */
+    /** 实时推送服务（WebSocket / 离线缓存） */
   private final RealtimePushService realtimePushService;
 
   /** P2-18: 站内通知全文搜索索引 */
   private final NotificationSearchService notificationSearchService;
 
-    /** 消息撤回服务 */
+  /** 消息撤回服务 */
   private final RecallService recallService;
 
   /** P2-6: 全局配置（读取 markAllReadBatchSize） */

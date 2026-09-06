@@ -127,7 +127,7 @@ public final class FieldMeta {
   public final String jsonName;
 
   /** 是否是基本类型 */
-  public final boolean isPrimitive;
+  public final boolean primitive;
 
   /** 序列化优先级 */
   public final int ordinal;
@@ -255,7 +255,7 @@ public final class FieldMeta {
     this.name = field.getName();
     this.type = field.getType();
     this.jsonName = jsonName;
-    this.isPrimitive = type.isPrimitive();
+    this.primitive = type.isPrimitive();
     this.ordinal = ordinal;
 
     // 从 @JsonFormat 注解获取格式
