@@ -20,6 +20,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
  * @since 26.09.01
  */
 @Data
+@SuppressWarnings("unchecked") // @SuperBuilder 与泛型继承（MpBaseEntity<String>）产生的 unchecked 警告，同 MpBaseIdEntity 无法在源码层面修复
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

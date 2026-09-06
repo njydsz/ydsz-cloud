@@ -40,6 +40,11 @@ public interface RuleSupportConverter {
   List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependency> entities);
 
   // ===== RuleExecutionTrace =====
+  // RuleExecutionTrace 继承 MpBaseIdEntity（仅含 id），不含审计字段；VO 中 4 个审计字段在此忽略由调用方按需填充
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   RuleExecutionTraceVO entityToVO(RuleExecutionTrace entity);
 
   List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTrace> entities);

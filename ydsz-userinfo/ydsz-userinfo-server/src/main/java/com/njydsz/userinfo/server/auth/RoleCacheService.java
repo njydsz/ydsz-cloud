@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.repository.UserRoleRepository;
@@ -21,7 +21,7 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
  * <p>负责用户 → 角色列表的加载与缓存（Redis，TTL 10 分钟），角色分配变更时主动失效。 从 {@link AuthServiceImpl}
  * 拆分（P0-5），聚焦「角色加载与缓存一致性」单一职责。
  *
- * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → Hash{roles: List&lt;Role&gt;}
+ * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → String（List&lt;RoleVO&gt; 的 JSON 序列化）
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -41,7 +41,6 @@ public class RoleCacheService {
 
   private final UserRoleRepository userRoleRepository;
   private final RoleRepository roleRepository;
-  private final RedisHashOps redisHashOps;
   private final RedisStringOps redisStringOps;
   private final UserInfoMetrics userInfoMetrics;
   private final UserInfoProperties properties;
@@ -53,14 +52,17 @@ public class RoleCacheService {
    * @return 用户持有的有效角色列表，无角色时返回空列表
    */
   public List<RoleVO> loadUserRoles(String userId) {
-    // 1. 尝试从 Redis 缓存读取
+    // 1. 尝试从 Redis 缓存读取（JSON 字符串反序列化为 List<RoleVO>）
     String cacheKey = USER_ROLES_KEY_PREFIX + userId;
     try {
-      List<RoleVO> cachedRoles = redisHashOps.hGet(cacheKey, "roles", List.class);
-      if (cachedRoles != null && !cachedRoles.isEmpty()) {
-        log.debug("User roles cache hit: userId={}", userId);
-        userInfoMetrics.recordCacheResult("roles_cache_total", "hit");
-        return cachedRoles;
+      String cachedJson = redisStringOps.get(cacheKey, String.class);
+      if (cachedJson != null && !cachedJson.isEmpty()) {
+        List<RoleVO> cachedRoles = YdszJson.parseArray(cachedJson, RoleVO.class);
+        if (!cachedRoles.isEmpty()) {
+          log.debug("User roles cache hit: userId={}", userId);
+          userInfoMetrics.recordCacheResult("roles_cache_total", "hit");
+          return cachedRoles;
+        }
       }
     } catch (Exception e) {
       log.warn("Failed to read user roles cache: userId={}, error={}", userId, e.getMessage(), e);
@@ -70,11 +72,11 @@ public class RoleCacheService {
     userInfoMetrics.recordCacheResult("roles_cache_total", "miss");
     List<RoleVO> roles = loadUserRolesFromDb(userId);
 
-    // 3. 写入 Redis 缓存
+    // 3. 写入 Redis 缓存（List<RoleVO> 序列化为 JSON 字符串）
     if (!roles.isEmpty()) {
       try {
-        redisHashOps.hSet(cacheKey, "roles", roles);
-        redisStringOps.expire(cacheKey, Duration.ofSeconds(USER_ROLES_CACHE_TTL));
+        String json = YdszJson.toJson(roles);
+        redisStringOps.set(cacheKey, json, Duration.ofSeconds(USER_ROLES_CACHE_TTL));
         log.debug("User roles cached: userId={}, count={}", userId, roles.size());
       } catch (Exception e) {
         log.warn("Failed to cache user roles: userId={}, error={}", userId, e.getMessage(), e);

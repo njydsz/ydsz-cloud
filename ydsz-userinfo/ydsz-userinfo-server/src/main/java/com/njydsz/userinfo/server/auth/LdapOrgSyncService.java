@@ -11,11 +11,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.naming.directory.Attributes;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.query.LdapQueryBuilder;
@@ -92,7 +90,7 @@ public class LdapOrgSyncService {
   private final UserDomainEventPublisher eventPublisher;
 
   /** LDAP 模板（延迟初始化，从 LdapProperties 构建） */
-  @Getter private LdapTemplate ldapTemplate;
+  private LdapTemplate ldapTemplate;
 
   /**
    * LDAP 部门值对象。
@@ -375,16 +373,19 @@ public class LdapOrgSyncService {
       LdapTemplate template = getLdapTemplate();
 
       List<LdapDepartment> departments = template.search(
-          LdapQueryBuilder.query().base(base).filter(filter),
-          (AttributesMapper<LdapDepartment>) attrs -> {
-            String dn = getAttributeValue(attrs, "distinguishedName");
-            if (dn == null) {
-              dn = getAttributeValue(attrs, "dn");
-            }
-            String ou = getAttributeValue(attrs, "ou");
-            String description = getAttributeValue(attrs, "description");
-            return new LdapDepartment(dn, ou, description);
-          });
+              LdapQueryBuilder.query().base(base).filter(filter))
+          .map(
+              entry -> {
+                Attributes attrs = entry.getAttributes();
+                String dn = getAttributeValue(attrs, "distinguishedName");
+                if (dn == null) {
+                  dn = getAttributeValue(attrs, "dn");
+                }
+                String ou = getAttributeValue(attrs, "ou");
+                String description = getAttributeValue(attrs, "description");
+                return new LdapDepartment(dn, ou, description);
+              })
+          .toList();
 
       log.info("LDAP department search returned {} entries", departments.size());
       return departments;
@@ -418,18 +419,21 @@ public class LdapOrgSyncService {
       String deptAttr = attrMap.getOrDefault("department", "departmentName");
 
       List<LdapUser> users = template.search(
-          LdapQueryBuilder.query().base(base).filter(filter),
-          (AttributesMapper<LdapUser>) attrs -> {
-            String dn = getAttributeValue(attrs, "distinguishedName");
-            if (dn == null) {
-              dn = getAttributeValue(attrs, "dn");
-            }
-            String username = getAttributeValue(attrs, usernameAttr);
-            String realName = getAttributeValue(attrs, realNameAttr);
-            String email = getAttributeValue(attrs, emailAttr);
-            String departmentName = getAttributeValue(attrs, deptAttr);
-            return new LdapUser(dn, username, realName, email, departmentName);
-          });
+              LdapQueryBuilder.query().base(base).filter(filter))
+          .map(
+              entry -> {
+                Attributes attrs = entry.getAttributes();
+                String dn = getAttributeValue(attrs, "distinguishedName");
+                if (dn == null) {
+                  dn = getAttributeValue(attrs, "dn");
+                }
+                String username = getAttributeValue(attrs, usernameAttr);
+                String realName = getAttributeValue(attrs, realNameAttr);
+                String email = getAttributeValue(attrs, emailAttr);
+                String departmentName = getAttributeValue(attrs, deptAttr);
+                return new LdapUser(dn, username, realName, email, departmentName);
+              })
+          .toList();
 
       log.info("LDAP user search returned {} entries", users.size());
       return users;

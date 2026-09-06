@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
@@ -42,6 +43,7 @@ public class CategoryTreeNode extends TreeNode<CategoryTreeNode, String> impleme
   private int ruleCount;
 
   /** 该分类下的责任人列表 */
+  @Builder.Default
   private List<String> owners = new ArrayList<>(COLLECTION_CAPACITY_4);
 
   /** 是否根节点（true=顶层分类，用于前端高亮展示） */

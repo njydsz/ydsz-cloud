@@ -3,6 +3,8 @@ package com.njydsz.message.server.consumer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,7 +21,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 基于 BloomFilter + Redis 的消息去重前置过滤器。
@@ -93,7 +94,14 @@ public class BloomFilterDeduplicator {
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava - BloomFilter 窗口翻转调度器，单线程固定
   private final ScheduledExecutorService scheduler =
-      ExecutorUtils.newScheduledThreadPool(1, "message-bloom-rotator");
+      new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+          Thread t = new Thread(r, "message-bloom-rotator");
+          t.setDaemon(true);
+          return t;
+        }
+      });
   // CHECKSTYLE.ON: RegexpSinglelineJava
 
   /** 预期最大消息数/窗口 */

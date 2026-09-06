@@ -78,6 +78,7 @@ public interface AgentConverter {
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -93,6 +94,7 @@ public interface AgentConverter {
    * @return 数据库实体
    */
   @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -226,6 +228,7 @@ public interface AgentConverter {
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -241,6 +244,7 @@ public interface AgentConverter {
    * @return 数据库实体
    */
   @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -275,6 +279,7 @@ public interface AgentConverter {
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -309,6 +314,7 @@ public interface AgentConverter {
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)

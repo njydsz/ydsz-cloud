@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 流程图视图对象。
@@ -38,6 +39,7 @@ public class FlowDiagramVO implements Serializable {
    * <p>继承 FlowNodeVO 的所有字段，额外增加 active 标记用于前端高亮。
    */
   @Data
+  @EqualsAndHashCode(callSuper = false)
   public static class DiagramNodeVO extends FlowNodeVO implements Serializable {
 
     @Serial private static final long serialVersionUID = 1L;

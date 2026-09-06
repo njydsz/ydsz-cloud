@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -222,12 +223,15 @@ public class ChannelScoreCalculator {
   @Builder
   public static class ScoreConfig {
     /** 成功率权重（默认 0.5） */
+    @Default
     private double successWeight = SUCCESS_WEIGHT;
 
     /** 成本权重（默认 0.3） */
+    @Default
     private double costWeight = COST_WEIGHT;
 
     /** 用户打开率权重（默认 0.2） */
+    @Default
     private double openWeight = OPEN_WEIGHT;
   }
 }

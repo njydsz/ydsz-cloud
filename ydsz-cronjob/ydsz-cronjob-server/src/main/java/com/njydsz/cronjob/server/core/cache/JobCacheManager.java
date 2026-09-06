@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.server.core.cache;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
@@ -61,6 +62,9 @@ public class JobCacheManager {
   /** L2 Redis 缓存 TTL（分钟） */
   private static final long L2_TTL_MINUTES = 30;
 
+  /** L2 Redis 缓存 TTL（Duration 形式，Spring Data Redis 4.x API） */
+  private static final Duration L2_TTL = Duration.ofMinutes(L2_TTL_MINUTES);
+
   /** null 值占位（防穿透） */
   private static final JobVO NULL_PLACEHOLDER = new JobVO();
 
@@ -68,12 +72,11 @@ public class JobCacheManager {
 
   /** L1 本地缓存（window-TinyLFU，线程安全） */
   private final Cache<String, JobVO> l1Cache =
-      (Cache<String, JobVO>) (Cache<?, ?>)
-          YdszCache.newBuilder()
-              .maximumSize(L1_MAXIMUM_SIZE)
-              .expireAfterWrite(10, TimeUnit.MINUTES)
-              .recordStats()
-              .build();
+      YdszCache.<String, JobVO>newBuilder()
+          .maximumSize(L1_MAXIMUM_SIZE)
+          .expireAfterWrite(10, TimeUnit.MINUTES)
+          .recordStats()
+          .build();
 
   /**
    * 获取 Job（多级缓存读取）。
@@ -132,11 +135,10 @@ public class JobCacheManager {
   public void put(String jobKey, JobVO value) {
     String l2Key = L2_KEY_PREFIX + jobKey;
     try {
-      if (value == null) {
-        redisTemplate.opsForValue().set(l2Key, YdszJson.toJson(NULL_PLACEHOLDER), L2_TTL_MINUTES, TimeUnit.MINUTES);
-      } else {
-        redisTemplate.opsForValue().set(l2Key, YdszJson.toJson(value), L2_TTL_MINUTES, TimeUnit.MINUTES);
-      }
+      redisTemplate.opsForValue().set(
+          l2Key,
+          YdszJson.toJson(value != null ? value : NULL_PLACEHOLDER),
+          L2_TTL);
     } catch (Exception e) {
       log.warn("[JobCache] L2 写入异常: jobKey={} reason={}", jobKey, e.getMessage());
     }
