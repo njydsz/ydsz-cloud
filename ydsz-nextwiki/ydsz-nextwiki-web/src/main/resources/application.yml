@@ -49,6 +49,10 @@ nextwiki:
     signed-url-expire-seconds: 3600
   wopi:
     editor-url: ${WOPI_EDITOR_URL:}
+  # P1-2: Netty TCP 推送通道（协作编辑实时同步）
+  tcp-push:
+    enabled: false
+    port: 9124
 
 # 统一线程池配置（ydsz-common-thread）
 ydsz:
