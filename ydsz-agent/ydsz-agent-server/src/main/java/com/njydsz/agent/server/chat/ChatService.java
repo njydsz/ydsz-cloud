@@ -24,7 +24,7 @@ import com.njydsz.agent.server.event.AgentEventPublisher;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.quota.TenantQuotaService;
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**

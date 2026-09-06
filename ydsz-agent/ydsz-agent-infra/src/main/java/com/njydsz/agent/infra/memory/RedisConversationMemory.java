@@ -16,7 +16,7 @@ import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 
 /**
  * Redis 对话记忆实现

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.message.domain.dto.RichMediaContentDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.filter.SensitiveWordFilter;

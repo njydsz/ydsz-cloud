@@ -24,7 +24,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;

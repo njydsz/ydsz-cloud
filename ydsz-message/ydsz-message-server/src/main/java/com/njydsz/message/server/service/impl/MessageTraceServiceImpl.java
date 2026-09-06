@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.domain.query.MsgTraceQuery;
 import com.njydsz.message.domain.repository.MsgTraceRepository;

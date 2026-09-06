@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 
 /**
  * 内存向量存储（测试/降级用）
