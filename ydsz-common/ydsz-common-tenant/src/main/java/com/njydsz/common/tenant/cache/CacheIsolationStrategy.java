@@ -1,7 +1,7 @@
 package com.njydsz.common.tenant.cache;
 
-import com.njydsz.common.tenant.TenantContext;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContext;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 
 /**
  * 租户缓存隔离策略枚举。
