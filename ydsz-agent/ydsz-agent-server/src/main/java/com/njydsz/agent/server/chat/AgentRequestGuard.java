@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 
 /**
  * Agent 请求守卫：幂等去重 + 限流
@@ -138,3 +138,4 @@ public class AgentRequestGuard {
     stringOps.del(key);
   }
 }
+

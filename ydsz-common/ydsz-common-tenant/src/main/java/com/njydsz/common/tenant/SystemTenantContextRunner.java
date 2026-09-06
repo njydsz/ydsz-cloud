@@ -2,6 +2,8 @@ package com.njydsz.common.tenant;
 
 import java.util.concurrent.Callable;
 
+import com.njydsz.common.core.context.TenantContext;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 

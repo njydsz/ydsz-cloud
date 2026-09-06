@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.trace.MessageTracer;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
 import com.njydsz.message.domain.query.MsgReceiptQuery;
 import com.njydsz.message.domain.repository.MsgReceiptRepository;
@@ -101,3 +101,4 @@ public class ReceiptServiceImpl implements ReceiptService {
     return msgReceiptRepository.findList(query);
   }
 }
+

@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.ReceiptResultDTO;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -191,3 +191,4 @@ public class SmsChannel implements MessageChannel {
     return null;
   }
 }
+

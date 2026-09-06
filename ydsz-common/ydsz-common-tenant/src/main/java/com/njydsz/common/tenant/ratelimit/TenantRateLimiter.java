@@ -2,8 +2,8 @@ package com.njydsz.common.tenant.ratelimit;
 
 import java.time.Duration;
 
-import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.redis.service.RedisRateLimiter;
 
 /**
  * 租户级限流门面。

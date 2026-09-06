@@ -17,7 +17,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
@@ -126,3 +126,4 @@ public class MessageArchiveController {
         pageSize));
   }
 }
+

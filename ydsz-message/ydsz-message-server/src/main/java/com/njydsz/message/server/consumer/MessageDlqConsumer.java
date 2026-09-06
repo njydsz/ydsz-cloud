@@ -16,7 +16,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.trace.MessageTracer;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
@@ -164,3 +164,4 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
     return result.orElse(null);
   }
 }
+

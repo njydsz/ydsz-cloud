@@ -12,7 +12,7 @@ import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.tool.ToolExecutionException;
 import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 
 /**
  * Text2SQL 工具实现（注册到 ToolRegistry）。
@@ -96,3 +96,4 @@ public class Text2SQLTool implements ToolExecutor {
             parametersSchema));
   }
 }
+

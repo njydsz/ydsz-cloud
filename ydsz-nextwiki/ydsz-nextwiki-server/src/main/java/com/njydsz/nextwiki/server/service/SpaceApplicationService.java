@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
@@ -425,3 +425,4 @@ public class SpaceApplicationService {
     return "owner".equals(role) || "admin".equals(role) || "editor".equals(role) || "viewer".equals(role);
   }
 }
+

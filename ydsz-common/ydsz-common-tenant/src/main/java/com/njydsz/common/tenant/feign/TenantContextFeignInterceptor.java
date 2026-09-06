@@ -8,8 +8,8 @@ import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContext;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 
 /**
@@ -104,4 +104,5 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
     return sb.toString();
   }
 }
+
 

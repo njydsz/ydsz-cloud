@@ -14,7 +14,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.TemplateAuditDTO;
@@ -450,3 +450,4 @@ public class TemplateServiceImpl implements TemplateService {
     }
   }
 }
+

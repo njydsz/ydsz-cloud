@@ -3,7 +3,7 @@ package com.njydsz.common.tenant.config;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 
 /**
  * 租户级配置隔离。

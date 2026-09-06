@@ -12,7 +12,7 @@ import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 
 /**
  * PostgreSQL pgvector 向量存储实现
@@ -304,3 +304,4 @@ public class PgVectorStore implements VectorStore {
     return sb.toString();
   }
 }
+

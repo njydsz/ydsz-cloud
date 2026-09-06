@@ -4,7 +4,7 @@ import jakarta.annotation.PostConstruct;
 
 import com.njydsz.common.cache.support.CacheKeyBuilder;
 import com.njydsz.common.cache.support.TenantIdResolver;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 
 /**
  * 初始化 CacheKeyBuilder 的租户 ID 解析器。

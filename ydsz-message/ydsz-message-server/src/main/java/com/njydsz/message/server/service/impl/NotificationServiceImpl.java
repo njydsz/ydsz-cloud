@@ -18,7 +18,7 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
@@ -335,3 +335,4 @@ public class NotificationServiceImpl implements NotificationService {
     return n;
   }
 }
+

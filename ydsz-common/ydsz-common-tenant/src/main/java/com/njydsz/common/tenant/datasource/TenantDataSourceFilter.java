@@ -9,7 +9,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 
 /**
  * ISOLATE_DB 模式 Web 过滤器。
