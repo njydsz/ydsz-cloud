@@ -9,6 +9,9 @@ import com.googlecode.aviator.AviatorEvaluatorInstance;
 import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
+
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -80,6 +83,43 @@ public class FlowServiceNodeExecutor {
    * ConcurrentHashMap）。
    */
   private final AviatorEvaluatorInstance aviatorInstance;
+
+  /**
+   * 推送通知给节点办理人（WS 通知）
+   *
+   * <p>当节点 ext 包含 {@code wsNotify = true} 时，向相关用户推送流程待办通知。
+   *
+   * @param node 当前节点
+   * @param assigneeIds 办理人 ID 列表
+   */
+  public void notifyUsers(FlowNodeVO node, List<String> assigneeIds) {
+    if (node == null || assigneeIds == null || assigneeIds.isEmpty()) {
+      return;
+    }
+    if (!isWsNotifyEnabled(node)) {
+      return;
+    }
+    log.info("[Flow-Service] WS通知: node={} assignees={}", node.getNodeCode(), assigneeIds);
+    // TODO: 实际项目中注入 FlowTodoCountPushService 执行推送
+    // 保留接口扩展点
+  }
+
+  /**
+   * 判断节点是否启用 WS 通知
+   *
+   * @param node 节点 VO
+   * @return true=启用
+   */
+  private boolean isWsNotifyEnabled(FlowNodeVO node) {
+    Object val = node.getExtMap().get("wsNotify");
+    if (val == null) {
+      return false;
+    }
+    if (val instanceof Boolean b) {
+      return b;
+    }
+    return Boolean.parseBoolean(String.valueOf(val));
+  }
 
   /**
    * 构造器：构建带超时的 RestTemplate，并初始化 Aviator 沙箱实例。

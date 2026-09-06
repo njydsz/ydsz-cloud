@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
@@ -315,9 +314,9 @@ public class FlowDefinitionCacheService {
   }
 
   /**
-   * 从缓存 key 中提取 definitionId（格式：tenantId:definitionId）。
+   * 从缓存 key 中提取 definitionId（取最后一个 {@code ':'} 之后的内容）。
    *
-   * @param cacheKey 缓存 key
+   * @param cacheKey 缓存 key（格式：ydsz:{tenantId}:workflow:def:meta:{definitionId}）
    * @return definitionId
    */
   private String extractDefinitionId(String cacheKey) {

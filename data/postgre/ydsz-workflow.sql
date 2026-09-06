@@ -1598,3 +1598,49 @@ EXECUTE FUNCTION fn_ydsz_flow_audit_log_set_updated_at();
 -- SELECT instance_id, node_code, assignee_id, iter_var, COUNT(1)
 --   FROM ydsz_flow_run_task
 --  GROUP BY 1, 2, 3, 4 HAVING COUNT(1) > 1;
+
+-- ============================================================================
+-- BPMN 核心功能补齐（2026-09-06）：定时器 + 消息事件订阅
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 定时器表（支持超时自动转办/催办）
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
+    id                       VARCHAR(32),
+    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    instance_id              VARCHAR(32)              NOT NULL,
+    node_id                  VARCHAR(64)              NOT NULL,
+    task_id                  VARCHAR(32)              DEFAULT NULL,
+    timer_type               VARCHAR(32)              NOT NULL,
+    fire_at                   TIMESTAMP                NOT NULL,
+    repeat_count              INTEGER                  NOT NULL DEFAULT 0,
+    repeat_interval           INTEGER                  NOT NULL DEFAULT 0,
+    status                    VARCHAR(16)              NOT NULL DEFAULT 'PENDING',
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ydsz_flow_timer PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_fire_at ON ydsz_flow_timer (fire_at, status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_instance ON ydsz_flow_timer (instance_id, status);
+
+-- ----------------------------------------------------------------------------
+-- 消息事件订阅表
+-- ----------------------------------------------------------------------------
+-- 说明：流程节点可订阅消息主题，外部系统发布消息触发流程继续
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
+    id                       VARCHAR(32),
+    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    definition_id            VARCHAR(32)              NOT NULL,
+    node_id                  VARCHAR(64)              NOT NULL,
+    event_type               VARCHAR(32)              NOT NULL,
+    message_name             VARCHAR(128)             DEFAULT NULL,
+    correlation_key          VARCHAR(512)             DEFAULT NULL,
+    status                    VARCHAR(16)              NOT NULL DEFAULT 'ACTIVE',
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ydsz_flow_event_subscription PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_sub_event ON ydsz_flow_event_subscription (event_type, message_name, status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_sub_definition ON ydsz_flow_event_subscription (definition_id, status);

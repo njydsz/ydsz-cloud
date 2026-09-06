@@ -1,6 +1,5 @@
 package com.njydsz.workflow.server.message;
 
-import java.util.List;
 import java.util.Map;
 
 /**

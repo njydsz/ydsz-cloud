@@ -355,6 +355,28 @@ public interface FlowTaskService {
       String targetUserName);
 
   /**
+   * 超时自动通过 — 定时任务调用，标记超时自动审批
+   *
+   * @param dto 任务操作参数（userId 为 SYSTEM_TIMEOUT）
+   */
+  void timeoutAutoPass(FlowTaskOperateDTO dto);
+
+  /**
+   * 超时自动转办 — 定时任务调用，将超时任务转交管理员
+   *
+   * @param dto 任务操作参数（含 targetUserId）
+   */
+  void timeoutTransfer(FlowTaskOperateDTO dto);
+
+  /**
+   * 超时催办 — 定时任务调用，发送催办通知
+   *
+   * @param instanceId 流程实例 ID
+   * @param nodeCode 节点编码
+   */
+  void timeoutRemind(String instanceId, String nodeCode);
+
+  /**
    * P1-4: 批量催办 — 对多个实例逐一执行 urge，单个失败不影响其他。
    *
    * @param instanceIds 实例 ID 列表

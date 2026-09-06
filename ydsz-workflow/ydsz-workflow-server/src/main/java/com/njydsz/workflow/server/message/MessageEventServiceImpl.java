@@ -1,7 +1,5 @@
 package com.njydsz.workflow.server.message;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -10,9 +8,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.event.FlowMessageEvent;
 import com.njydsz.workflow.domain.event.DomainEventPublisher;
-import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
+import com.njydsz.workflow.domain.event.FlowMessageEvent;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 
 /**
@@ -37,6 +34,9 @@ public class MessageEventServiceImpl implements MessageEventService {
 
   /** Redis Pub/Sub 通道前缀 */
   private static final String CHANNEL_PREFIX = "flow:message:";
+
+  /** JSON 构建初始缓冲区大小 */
+  private static final int JSON_BUFFER_SIZE = 64;
 
   private final FlowEventSubscriptionService eventSubscriptionService;
 
@@ -111,7 +111,7 @@ public class MessageEventServiceImpl implements MessageEventService {
    * @return JSON 字符串
    */
   private String buildMessageJson(String messageName, Map<String, Object> correlationKeys) {
-    StringBuilder sb = new StringBuilder(64);
+    StringBuilder sb = new StringBuilder(JSON_BUFFER_SIZE);
     sb.append("{\"messageName\":\"").append(messageName).append("\"");
     if (correlationKeys != null && !correlationKeys.isEmpty()) {
       sb.append(",\"correlationKeys\":").append(YdszJson.toJson(correlationKeys));

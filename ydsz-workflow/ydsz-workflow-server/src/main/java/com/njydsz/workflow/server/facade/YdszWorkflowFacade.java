@@ -33,6 +33,9 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowReplayStepVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.domain.vo.FlowTimelineVO;
+import com.njydsz.workflow.server.dto.BatchOperationResult;
+import com.njydsz.workflow.server.dto.TaskApprovalDTO;
+import com.njydsz.workflow.server.dto.TaskRejectionDTO;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -260,6 +263,52 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   @Override
   public void batchPassTasks(List<String> taskIds, String userId, String comment) {
     taskService.batchPass(taskIds, userId, comment);
+  }
+
+  @Override
+  public BatchOperationResult batchPassWithValidation(List<TaskApprovalDTO> approvals) {
+    if (approvals == null || approvals.isEmpty()) {
+      return BatchOperationResult.success(0, 0);
+    }
+    String userId = AuthContextUtils.getUserId();
+    // 批量通过：先收集 taskIds 再统一调用 batchPass
+    List<String> taskIds = approvals.stream()
+        .filter(a -> a.getTaskId() != null)
+        .map(TaskApprovalDTO::getTaskId)
+        .distinct()
+        .toList();
+    String comment = approvals.stream()
+        .map(TaskApprovalDTO::getComment)
+        .filter(c -> c != null && !c.isBlank())
+        .findFirst()
+        .orElse(null);
+    taskService.batchPass(taskIds, userId, comment);
+    return BatchOperationResult.success(approvals.size(), taskIds.size());
+  }
+
+  @Override
+  public BatchOperationResult batchRejectWithReason(List<TaskRejectionDTO> rejections) {
+    if (rejections == null || rejections.isEmpty()) {
+      return BatchOperationResult.success(0, 0);
+    }
+    String userId = AuthContextUtils.getUserId();
+    String comment = rejections.stream()
+        .map(TaskRejectionDTO::getReason)
+        .filter(r -> r != null && !r.isBlank())
+        .findFirst()
+        .orElse(null);
+    String targetNodeCode = rejections.stream()
+        .map(TaskRejectionDTO::getTargetNodeCode)
+        .filter(t -> t != null && !t.isBlank())
+        .findFirst()
+        .orElse(null);
+    List<String> taskIds = rejections.stream()
+        .filter(r -> r.getTaskId() != null)
+        .map(TaskRejectionDTO::getTaskId)
+        .distinct()
+        .toList();
+    taskService.batchReject(taskIds, userId, comment, targetNodeCode);
+    return BatchOperationResult.success(rejections.size(), taskIds.size());
   }
 
   /**

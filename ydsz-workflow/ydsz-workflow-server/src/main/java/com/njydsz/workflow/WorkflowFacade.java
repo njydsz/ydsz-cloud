@@ -13,6 +13,9 @@ import com.njydsz.workflow.domain.vo.FlowBatchUrgeResultVO;
 import com.njydsz.workflow.domain.vo.FlowDiagramVO;
 import com.njydsz.workflow.domain.vo.FlowReplayStepVO;
 import com.njydsz.workflow.domain.vo.FlowTimelineVO;
+import com.njydsz.workflow.server.dto.BatchOperationResult;
+import com.njydsz.workflow.server.dto.TaskApprovalDTO;
+import com.njydsz.workflow.server.dto.TaskRejectionDTO;
 
 /**
  * 自建工作流引擎 — 业务侧统一入口 Facade
@@ -281,6 +284,25 @@ public interface WorkflowFacade {
    * @param comment 审批意见
    */
   void batchPassTasks(List<String> taskIds, String userId, String comment);
+
+  /**
+   * 批量通过（含权限预校验） — 批量通过时先全部校验权限，再原子性通过
+   *
+   * <p>与 {@link #batchPassTasks} 的区别：在操作前先对所有任务进行权限校验，
+   * 如果任一任务校验失败立即返回错误信息，不会执行任何通过操作。
+   *
+   * @param approvals 批量通过参数列表（含任务 ID 和审批意见）
+   * @return 批量操作结果（含成功/失败计数和失败详情）
+   */
+  BatchOperationResult batchPassWithValidation(List<TaskApprovalDTO> approvals);
+
+  /**
+   * 批量驳回（含统一驳回原因） — 批量驳回时支持统一驳回原因
+   *
+   * @param rejections 批量驳回参数列表（含任务 ID、驳回原因、驳回目标节点）
+   * @return 批量操作结果（含成功/失败计数和失败详情）
+   */
+  BatchOperationResult batchRejectWithReason(List<TaskRejectionDTO> rejections);
 
   /**
    * 批量驳回 — 对多个任务逐一执行 reject，@Transactional 保证原子性。
