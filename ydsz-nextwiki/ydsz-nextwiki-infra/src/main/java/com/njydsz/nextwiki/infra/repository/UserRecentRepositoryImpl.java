@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 import com.njydsz.nextwiki.domain.entity.UserRecent;
 import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
@@ -33,7 +33,7 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
 
   private final UserRecentMapper userRecentMapper;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-  private final NextwikiConverter nextwikiConverter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public int saveOrUpdate(UserRecentDTO dto) {
@@ -50,7 +50,7 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
     if (dto.getAccessedAt() == null) {
       dto.setAccessedAt(LocalDateTime.now());
     }
-    UserRecent entity = nextwikiConverter.toUserRecent(dto);
+    UserRecent entity = mapper.userRecentToEntity(dto);
     int inserted = userRecentMapper.insert(entity);
 
     // 清理超出容量限制的旧记录
@@ -66,7 +66,7 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
     List<UserRecent> entities =
         userRecentMapper.selectByUserIdOrderByAccessedAt(userId, tenantId, limit);
     return entities.stream()
-        .map(nextwikiConverter::toUserRecentDTO)
+        .map(mapper::userRecentToDTO)
         .collect(Collectors.toList());
   }
 
@@ -76,7 +76,7 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
     List<UserRecent> entities =
         userRecentMapper.selectByUserIdWithPage(userId, tenantId, offset, limit);
     return entities.stream()
-        .map(nextwikiConverter::toUserRecentDTO)
+        .map(mapper::userRecentToDTO)
         .collect(Collectors.toList());
   }
 

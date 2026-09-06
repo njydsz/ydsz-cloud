@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.entity.TrashItem;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
@@ -22,8 +22,8 @@ import com.njydsz.nextwiki.infra.mapper.TrashItemMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -36,16 +36,16 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final TrashItemMapper trashItemMapper;
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public TrashItemVO save(TrashItemDTO dto) {
-    TrashItem entity = converter.dtoToEntity(dto);
+    TrashItem entity = mapper.trashItemToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     trashItemMapper.insert(entity);
-    return converter.entityToVO(entity);
+    return mapper.trashItemToVO(entity);
   }
 
   @Override
@@ -53,7 +53,7 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
     if (dtos == null || dtos.isEmpty()) {
       return 0;
     }
-    List<TrashItem> entities = converter.trashItemDtosToEntities(dtos);
+    List<TrashItem> entities = mapper.trashItemListToEntity(dtos);
     int count = 0;
     for (TrashItem entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
@@ -67,28 +67,28 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
 
   @Override
   public Optional<TrashItemVO> findById(String id) {
-    return Optional.ofNullable(trashItemMapper.selectById(id)).map(converter::entityToVO);
+    return Optional.ofNullable(trashItemMapper.selectById(id)).map(mapper::trashItemToVO);
   }
 
   @Override
   public Optional<TrashItemVO> findByFileNodeId(String fileNodeId) {
     return Optional.ofNullable(trashItemMapper.findByFileNodeId(fileNodeId))
-        .map(converter::entityToVO);
+        .map(mapper::trashItemToVO);
   }
 
   @Override
   public List<TrashItemVO> findActiveTrash(String userId) {
-    return converter.trashItemListToVO(trashItemMapper.findActiveTrash(userId));
+    return mapper.trashItemListToVO(trashItemMapper.findActiveTrash(userId));
   }
 
   @Override
   public List<TrashItemVO> findExpiredItems(int limit) {
-    return converter.trashItemListToVO(trashItemMapper.findExpiredItems(limit));
+    return mapper.trashItemListToVO(trashItemMapper.findExpiredItems(limit));
   }
 
   @Override
   public void update(TrashItemDTO dto) {
-    TrashItem entity = converter.dtoToEntityWithId(dto);
+    TrashItem entity = mapper.trashItemToEntity(dto);
     trashItemMapper.updateById(entity);
   }
 

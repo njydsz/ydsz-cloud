@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.TagDTO;
 import com.njydsz.nextwiki.domain.entity.FileTag;
 import com.njydsz.nextwiki.domain.entity.Tag;
@@ -24,8 +24,8 @@ import com.njydsz.nextwiki.infra.mapper.TagMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -38,31 +38,31 @@ public class TagRepositoryImpl implements TagRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final TagMapper tagMapper;
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public TagVO save(TagDTO dto) {
-    Tag entity = converter.dtoToEntity(dto);
+    Tag entity = mapper.tagToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     tagMapper.insert(entity);
-    return converter.entityToVO(entity);
+    return mapper.tagToVO(entity);
   }
 
   @Override
   public Optional<TagVO> findById(String id) {
-    return Optional.ofNullable(tagMapper.selectById(id)).map(converter::entityToVO);
+    return Optional.ofNullable(tagMapper.selectById(id)).map(mapper::tagToVO);
   }
 
   @Override
   public Optional<TagVO> findByName(String name) {
-    return Optional.ofNullable(tagMapper.selectByName(name)).map(converter::entityToVO);
+    return Optional.ofNullable(tagMapper.selectByName(name)).map(mapper::tagToVO);
   }
 
   @Override
   public List<TagVO> findByFileNodeId(String fileNodeId) {
-    return converter.tagListToVO(tagMapper.selectByFileNodeId(fileNodeId));
+    return mapper.tagListToVO(tagMapper.selectByFileNodeId(fileNodeId));
   }
 
   @Override
@@ -88,7 +88,7 @@ public class TagRepositoryImpl implements TagRepository {
 
   @Override
   public List<FileTagVO> findFileTagsByFileNodeId(String fileNodeId) {
-    return converter.fileTagListToVO(tagMapper.selectFileTagsByFileNodeId(fileNodeId));
+    return mapper.fileTagListToVO(tagMapper.selectFileTagsByFileNodeId(fileNodeId));
   }
 
   @Override

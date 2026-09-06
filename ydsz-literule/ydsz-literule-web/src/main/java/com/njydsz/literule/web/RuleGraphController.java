@@ -33,6 +33,8 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.StringVO;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
+
+import jakarta.annotation.Resource;
 import com.njydsz.literule.server.orchestrator.RuleChainGraph;
 import com.njydsz.literule.server.orchestrator.RuleGraphValidator;
 import com.njydsz.literule.server.spi.GraphExecutionProvider;
@@ -79,6 +81,10 @@ public class RuleGraphController {
   /** 表达式校验服务 */
   private final ExpressionValidationService expressionValidationService;
 
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
+
   /**
    * 查询规则的画布
    *
@@ -91,7 +97,7 @@ public class RuleGraphController {
   @GetMapping("/{ruleCode}/graph")
   public YdszResponse<RuleChainGraphVO> getChainGraph(@PathVariable String ruleCode) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANCE.entityToVO(ruleChainGraphProvider.getByRuleCode(ruleCode)));
+        literuleWebConverter.entityToVO(ruleChainGraphProvider.getByRuleCode(ruleCode)));
   }
 
   /**
@@ -189,7 +195,7 @@ public class RuleGraphController {
   public YdszResponse<ExpressionPreviewResultVO> previewExpression(
       @RequestParam String expression, @RequestBody Map<String, Object> facts) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANCE.entityToVO(
+        literuleWebConverter.entityToVO(
             expressionValidationService.previewEvaluate(expression, facts)));
   }
 
@@ -215,7 +221,7 @@ public class RuleGraphController {
     try {
       List<RuleResultVO> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
       return YdszResponse.success(
-          results.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
+          results.stream().map(literuleWebConverter::entityToVO).toList());
     } catch (IllegalArgumentException e) {
       log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
       return YdszResponse.error(e.getMessage());
@@ -259,6 +265,6 @@ public class RuleGraphController {
                         || engine.equalsIgnoreCase(f.getSupportedEngines()))
             .toList();
     return YdszResponse.success(
-        filtered.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
+        filtered.stream().map(literuleWebConverter::entityToVO).toList());
   }
 }

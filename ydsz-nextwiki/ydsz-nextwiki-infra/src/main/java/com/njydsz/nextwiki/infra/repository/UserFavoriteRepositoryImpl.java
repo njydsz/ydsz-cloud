@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.UserFavoriteDTO;
 import com.njydsz.nextwiki.domain.entity.UserFavorite;
 import com.njydsz.nextwiki.domain.repository.UserFavoriteRepository;
@@ -29,14 +29,14 @@ public class UserFavoriteRepositoryImpl implements UserFavoriteRepository {
 
   private final UserFavoriteMapper userFavoriteMapper;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-  private final NextwikiConverter nextwikiConverter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public int save(UserFavoriteDTO dto) {
     if (dto.getId() == null || dto.getId().isEmpty()) {
       dto.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    UserFavorite entity = nextwikiConverter.toUserFavorite(dto);
+    UserFavorite entity = mapper.userFavoriteToEntity(dto);
     return userFavoriteMapper.insert(entity);
   }
 
@@ -51,7 +51,7 @@ public class UserFavoriteRepositoryImpl implements UserFavoriteRepository {
     List<UserFavorite> entities =
         userFavoriteMapper.selectByUserId(userId, tenantId);
     return entities.stream()
-        .map(nextwikiConverter::toUserFavoriteDTO)
+        .map(mapper::userFavoriteToDTO)
         .collect(Collectors.toList());
   }
 
@@ -61,7 +61,7 @@ public class UserFavoriteRepositoryImpl implements UserFavoriteRepository {
     List<UserFavorite> entities =
         userFavoriteMapper.selectByUserIdWithPage(userId, tenantId, offset, limit);
     return entities.stream()
-        .map(nextwikiConverter::toUserFavoriteDTO)
+        .map(mapper::userFavoriteToDTO)
         .collect(Collectors.toList());
   }
 
