@@ -74,7 +74,7 @@ public class JobLogVO implements Serializable {
   private Integer shardTotal;
 
   /** 慢任务标记（0=非慢 / 1=慢） */
-  private Integer isSlow;
+  private Integer slow;
 
   /** 慢任务阈值快照（毫秒） */
   private Long slowThresholdMs;

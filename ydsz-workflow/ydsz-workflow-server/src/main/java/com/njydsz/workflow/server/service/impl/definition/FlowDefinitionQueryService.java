@@ -194,7 +194,7 @@ public class FlowDefinitionQueryService {
       map.put("id", v.getId());
       map.put("version", v.getFlowVersion());
       map.put("flowName", v.getFlowName());
-      map.put("isPublish", v.getIsPublish());
+      map.put("publishStatus", v.getPublishStatus());
       map.put("activityStatus", v.getActivityStatus());
       map.put("category", v.getCategory());
       map.put("description", v.getDescription());

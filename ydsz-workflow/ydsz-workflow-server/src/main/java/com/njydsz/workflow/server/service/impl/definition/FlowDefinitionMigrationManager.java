@@ -116,7 +116,7 @@ public class FlowDefinitionMigrationManager {
    * 导入流程定义
    *
    * <p>解析 {@link #exportDefinition} 产出的 JSON 字符串，构造 {@link FlowDeployProcessDTO} 后
-   * 委托 {@link FlowDefinitionDeployManager#deploy} 创建为草稿（{@code isPublish=0}）。
+   * 委托 {@link FlowDefinitionDeployManager#deploy} 创建为草稿（{@code publishStatus=0}）。
    *
    * @param json 流程定义 JSON 字符串
    * @param tenantId 目标租户 ID

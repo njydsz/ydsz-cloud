@@ -1,5 +1,6 @@
 package com.njydsz.agent.infra.trace;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -65,7 +66,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
       Object input,
       Object output,
       long durationMs) {
-    recordStep(traceId, stepType, content, input, output, durationMs, 0.0);
+    recordStep(traceId, stepType, content, input, output, durationMs, BigDecimal.ZERO);
   }
 
   @Override
@@ -76,7 +77,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
       Object input,
       Object output,
       long durationMs,
-      double cost) {
+      BigDecimal cost) {
     List<TraceStep> steps = traces.get(traceId);
     if (steps == null) {
       steps = new ArrayList<>(COLLECTION_CAPACITY);

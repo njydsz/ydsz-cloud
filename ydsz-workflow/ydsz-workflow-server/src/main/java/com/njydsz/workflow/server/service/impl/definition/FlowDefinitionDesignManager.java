@@ -136,7 +136,7 @@ public class FlowDefinitionDesignManager {
   /**
    * 更新流程定义（草稿编辑）
    *
-   * <p>仅允许编辑未发布（{@code isPublish=0}）的定义。支持元数据更新 + 节点/跳转全量替换。
+   * <p>仅允许编辑未发布（{@code publishStatus=0}）的定义。支持元数据更新 + 节点/跳转全量替换。
    *
    * @param definitionId 流程定义 ID（必须未发布）
    * @param dto 更新参数 DTO

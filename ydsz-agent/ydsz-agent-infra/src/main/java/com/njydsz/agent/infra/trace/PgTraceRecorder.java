@@ -1,5 +1,6 @@
 package com.njydsz.agent.infra.trace;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,7 @@ public class PgTraceRecorder implements TraceRecorder {
       Object input,
       Object output,
       long durationMs) {
-    recordStep(traceId, stepType, content, input, output, durationMs, 0.0);
+    recordStep(traceId, stepType, content, input, output, durationMs, BigDecimal.ZERO);
   }
 
   @Override
@@ -97,7 +98,7 @@ public class PgTraceRecorder implements TraceRecorder {
       Object input,
       Object output,
       long durationMs,
-      double cost) {
+      BigDecimal cost) {
     int nextIndex =
         stepIndexes.computeIfAbsent(traceId, k -> new AtomicInteger(0)).getAndIncrement();
     String inputJson = truncateJson(toJsonString(input));
@@ -213,7 +214,7 @@ public class PgTraceRecorder implements TraceRecorder {
         step.getInputJson(),
         step.getOutputJson(),
         step.getDurationMs() != null ? step.getDurationMs() : 0L,
-        step.getCost() != null ? step.getCost() : 0.0,
+        step.getCost() != null ? step.getCost() : BigDecimal.ZERO,
         LocalDateTime.now());
   }
 }

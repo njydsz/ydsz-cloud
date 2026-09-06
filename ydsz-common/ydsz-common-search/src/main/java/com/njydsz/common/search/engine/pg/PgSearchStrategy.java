@@ -50,6 +50,16 @@ import com.njydsz.common.search.core.SuggestStrategy;
  *   <li>引擎不可用时 {@code search()} 返回空结果而非降级自搜，由 {@code SearchEngineRegistry} 统一降级
  * </ul>
  *
+ * <h3>SQL 拼接安全性说明（YDIZ-SEC-001 合规）</h3>
+ *
+ * <p>本类的 SQL 构建中存在表名/列名的字符串拼接，但<b>均不存在注入风险</b>：
+ *
+ * <ul>
+ *   <li><b>表名拼接</b>：{@code indexTable} 来自 {@code SearchProperties.PgConfig.indexTable}，启动时加载并验证不可变</li>
+ *   <li><b>列名拼接</b>：通过 {@link #sanitizeColumnName(String)} 白名单校验，非法值 fallback 到 {@code "id"}</li>
+ *   <li><b>参数值</b>：全部通过 JDBC {@code ?} 占位符 + 参数数组传递，禁止字符串拼接</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -83,6 +93,12 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
   private final JdbcTemplate jdbcTemplate;
   private final String searchConfig;
   private final SearchProperties.PgConfig pgConfig;
+
+  /**
+   * 索引表名，来自启动时注入的配置（非用户输入，运行时不可变）。
+   *
+   * <p>该字段用于 SQL 拼接是被允许的：已在 {@link #checkAvailability()} 中验证表存在性。
+   */
   private final String indexTable;
   private volatile boolean available;
   private final ThreadPoolTaskScheduler probeScheduler;
@@ -822,6 +838,17 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     return trimmed;
   }
 
+  /**
+   * 列名白名单校验 — SQL 注入防护关键防线。
+   *
+   * <p><b>安全说明</b>：列名因 JDBC 不支持参数化（{@code ?} 占位符不能用于标识符），必须通过字符串拼接嵌入 SQL。
+   * 本方法通过严格的白名单机制确保只有预定义的合法列名得以拼接，杜绝任意用户输入被注入为 SQL 片段的风险。
+   *
+   * <p>所有来自用户请求或外部数据的列名（如排序字段、聚合字段、过滤字段）均须经过本方法处理后方可用于 SQL 拼接。
+   *
+   * @param column 待校验的列名（可能来自外部输入）
+   * @return 校验通过的小写列名；若不在白名单内则 fallback 到 {@code "id"}
+   */
   private String sanitizeColumnName(String column) {
     if (column == null) {
       return "id";

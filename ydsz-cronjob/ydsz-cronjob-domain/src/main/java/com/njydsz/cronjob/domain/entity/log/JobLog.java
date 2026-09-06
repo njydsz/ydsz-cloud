@@ -103,7 +103,7 @@ public class JobLog extends MpBaseIdEntity<String> {
    *
    * <p>由 {@code SlowTaskDetector} 在任务执行完成后根据 {@code slow_threshold_ms} 判定并标记。
    */
-  private Integer isSlow;
+  private Integer slow;
 
   /**
    * 慢任务阈值快照（毫秒）。
