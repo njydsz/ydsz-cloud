@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
 import com.njydsz.nextwiki.domain.entity.SpaceTemplate;
 import com.njydsz.nextwiki.domain.repository.SpaceTemplateRepository;
@@ -28,34 +28,34 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
 
   private final SpaceTemplateMapper spaceTemplateMapper;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-  private final NextwikiConverter nextwikiConverter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public int save(SpaceTemplateDTO dto) {
     if (dto.getId() == null || dto.getId().isEmpty()) {
       dto.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    SpaceTemplate entity = nextwikiConverter.toSpaceTemplate(dto);
+    SpaceTemplate entity = mapper.spaceTemplateToEntity(dto);
     return spaceTemplateMapper.insert(entity);
   }
 
   @Override
   public int update(SpaceTemplateDTO dto) {
-    SpaceTemplate entity = nextwikiConverter.toSpaceTemplate(dto);
+    SpaceTemplate entity = mapper.spaceTemplateToEntity(dto);
     return spaceTemplateMapper.updateById(entity);
   }
 
   @Override
   public Optional<SpaceTemplateDTO> findById(String id) {
     SpaceTemplate entity = spaceTemplateMapper.selectById(id);
-    return Optional.ofNullable(entity).map(nextwikiConverter::toSpaceTemplateDTO);
+    return Optional.ofNullable(entity).map(mapper::spaceTemplateToDTO);
   }
 
   @Override
   public List<SpaceTemplateDTO> findAvailableTemplates(String tenantId, String category) {
     List<SpaceTemplate> entities = spaceTemplateMapper.selectAvailableTemplates(tenantId, category);
     return entities.stream()
-        .map(nextwikiConverter::toSpaceTemplateDTO)
+        .map(mapper::spaceTemplateToDTO)
         .collect(Collectors.toList());
   }
 
@@ -63,7 +63,7 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
   public List<SpaceTemplateDTO> findWithPage(String tenantId, String category, int offset, int limit) {
     List<SpaceTemplate> entities = spaceTemplateMapper.selectWithPage(tenantId, category, offset, limit);
     return entities.stream()
-        .map(nextwikiConverter::toSpaceTemplateDTO)
+        .map(mapper::spaceTemplateToDTO)
         .collect(Collectors.toList());
   }
 

@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.entity.SpaceMember;
 import com.njydsz.nextwiki.domain.repository.SpaceMemberRepository;
@@ -28,14 +28,14 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
 
   private final SpaceMemberMapper spaceMemberMapper;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-  private final NextwikiConverter nextwikiConverter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public int save(SpaceMemberDTO dto) {
     if (dto.getId() == null || dto.getId().isEmpty()) {
       dto.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    SpaceMember entity = nextwikiConverter.toSpaceMember(dto);
+    SpaceMember entity = mapper.spaceMemberToEntity(dto);
     return spaceMemberMapper.insert(entity);
   }
 
@@ -52,14 +52,14 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
   @Override
   public Optional<SpaceMemberDTO> findBySpaceIdAndUserId(String spaceId, String userId) {
     SpaceMember entity = spaceMemberMapper.selectBySpaceIdAndUserId(spaceId, userId);
-    return Optional.ofNullable(entity).map(nextwikiConverter::toSpaceMemberDTO);
+    return Optional.ofNullable(entity).map(mapper::spaceMemberToDTO);
   }
 
   @Override
   public List<SpaceMemberDTO> findBySpaceId(String spaceId) {
     List<SpaceMember> entities = spaceMemberMapper.selectBySpaceId(spaceId);
     return entities.stream()
-        .map(nextwikiConverter::toSpaceMemberDTO)
+        .map(mapper::spaceMemberToDTO)
         .collect(Collectors.toList());
   }
 
@@ -67,7 +67,7 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
   public List<SpaceMemberDTO> findByUserId(String userId) {
     List<SpaceMember> entities = spaceMemberMapper.selectByUserId(userId);
     return entities.stream()
-        .map(nextwikiConverter::toSpaceMemberDTO)
+        .map(mapper::spaceMemberToDTO)
         .collect(Collectors.toList());
   }
 

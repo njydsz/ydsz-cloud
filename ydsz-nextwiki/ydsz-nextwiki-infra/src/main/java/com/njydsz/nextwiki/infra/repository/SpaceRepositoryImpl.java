@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.entity.Space;
 import com.njydsz.nextwiki.domain.repository.SpaceRepository;
@@ -26,8 +26,8 @@ import com.njydsz.nextwiki.infra.mapper.SpaceMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -45,46 +45,46 @@ public class SpaceRepositoryImpl implements SpaceRepository {
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
   /** DTO/VO/DO 转换器（实体与视图对象之间的映射） */
-  private final NextwikiConverter nextwikiConverter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public int save(SpaceDTO dto) {
     if (dto.getId() == null || dto.getId().isEmpty()) {
       dto.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
-    Space entity = nextwikiConverter.toSpace(dto);
+    Space entity = mapper.spaceToEntity(dto);
     return spaceMapper.insert(entity);
   }
 
   @Override
   public int update(SpaceDTO dto) {
-    Space entity = nextwikiConverter.toSpace(dto);
+    Space entity = mapper.spaceToEntity(dto);
     return spaceMapper.updateById(entity);
   }
 
   @Override
   public Optional<SpaceVO> findById(String id) {
     Space entity = spaceMapper.selectById(id);
-    return Optional.ofNullable(entity).map(nextwikiConverter::entityToVO);
+    return Optional.ofNullable(entity).map(mapper::spaceToVO);
   }
 
   @Override
   public Optional<SpaceVO> findByTenantIdAndName(String tenantId, String name) {
     Space entity = spaceMapper.selectByTenantIdAndName(tenantId, name);
-    return Optional.ofNullable(entity).map(nextwikiConverter::entityToVO);
+    return Optional.ofNullable(entity).map(mapper::spaceToVO);
   }
 
   @Override
   public List<SpaceVO> findByTenantId(String tenantId) {
     List<Space> entities = spaceMapper.selectByTenantId(tenantId);
-    return nextwikiConverter.spaceListToVO(entities);
+    return mapper.spaceListToVO(entities);
   }
 
   @Override
   public PageResponse<List<SpaceVO>> findByTenantIdWithPage(String tenantId, int offset, int limit) {
     Page<Space> pageParam = new Page<>(offset / limit + 1, limit);
     IPage<Space> result = spaceMapper.selectByTenantIdWithPage(pageParam, tenantId, offset, limit);
-    List<SpaceVO> vos = nextwikiConverter.spaceListToVO(result.getRecords());
+    List<SpaceVO> vos = mapper.spaceListToVO(result.getRecords());
     Page<SpaceVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);
     return PageResponses.success(voPage);

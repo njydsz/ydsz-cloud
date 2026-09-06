@@ -24,6 +24,8 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.RuleTemplateProvider;
 
+import jakarta.annotation.Resource;
+
 /**
  * 规则模板市场 Controller
  *
@@ -52,6 +54,10 @@ public class RuleTemplateController {
 
   /** 规则模板服务（SPI，由 project 模块提供实现） */
   private final RuleTemplateProvider ruleTemplateProvider;
+
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
 
   /**
    * 查询全部规则模板
@@ -104,7 +110,7 @@ public class RuleTemplateController {
       @PathVariable String templateCode,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANCE.entityToVO(
+        literuleWebConverter.entityToVO(
             ruleTemplateProvider.importTemplate(templateCode, operator)));
   }
 }
