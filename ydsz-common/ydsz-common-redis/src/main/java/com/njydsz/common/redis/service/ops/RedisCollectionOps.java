@@ -1,5 +1,6 @@
 package com.njydsz.common.redis.service.ops;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -674,17 +675,18 @@ public class RedisCollectionOps {
    * @param score 分数
    * @return true-添加成功
    */
-  public boolean zAdd(String key, Object value, double score) {
-    if (key == null || value == null) {
+  public boolean zAdd(String key, Object value, BigDecimal score) {
+    if (key == null || value == null || score == null) {
       return false;
     }
     String formattedKey = formatKey(key);
+    double scoreVal = score.doubleValue();
     try {
       return metricsCollector != null
           ? metricsCollector.recordOperation(
               "zAdd",
-              () -> Boolean.TRUE.equals(redisTemplate.opsForZSet().add(formattedKey, value, score)))
-          : Boolean.TRUE.equals(redisTemplate.opsForZSet().add(formattedKey, value, score));
+              () -> Boolean.TRUE.equals(redisTemplate.opsForZSet().add(formattedKey, value, scoreVal)))
+          : Boolean.TRUE.equals(redisTemplate.opsForZSet().add(formattedKey, value, scoreVal));
     } catch (Exception e) {
       recordError("zAdd", e);
       log.error("【Redis】ZADD 操作失败 | key={} | score={} | error={}", key, score, e);
@@ -751,15 +753,17 @@ public class RedisCollectionOps {
    * @param max 最大分数
    * @return 成员数量
    */
-  public long zCount(String key, double min, double max) {
-    if (key == null) {
+  public long zCount(String key, BigDecimal min, BigDecimal max) {
+    if (key == null || min == null || max == null) {
       return 0;
     }
     String formattedKey = formatKey(key);
+    double minVal = min.doubleValue();
+    double maxVal = max.doubleValue();
     try {
       Supplier<Long> op =
           () -> {
-            Long count = redisTemplate.opsForZSet().count(formattedKey, min, max);
+            Long count = redisTemplate.opsForZSet().count(formattedKey, minVal, maxVal);
             return count != null ? count : 0;
           };
       return metricsCollector != null ? metricsCollector.recordOperation("zCount", op) : op.get();
@@ -847,15 +851,17 @@ public class RedisCollectionOps {
    * @param <T> 成员类型
    * @return 成员集合
    */
-  public <T> Set<T> zRangeByScore(String key, double min, double max, Class<T> clazz) {
-    if (key == null) {
+  public <T> Set<T> zRangeByScore(String key, BigDecimal min, BigDecimal max, Class<T> clazz) {
+    if (key == null || min == null || max == null) {
       return Collections.emptySet();
     }
     String formattedKey = formatKey(key);
+    double minVal = min.doubleValue();
+    double maxVal = max.doubleValue();
     try {
       Supplier<Set<T>> op =
           () -> {
-            Set<Object> result = redisTemplate.opsForZSet().rangeByScore(formattedKey, min, max);
+            Set<Object> result = redisTemplate.opsForZSet().rangeByScore(formattedKey, minVal, maxVal);
             if (result == null) {
               return Collections.emptySet();
             }

@@ -41,9 +41,6 @@ public class CodeGenEngine {
   /** Velocity 模板引擎。 */
   private final VelocityEngine velocityEngine;
 
-  /** 默认冲突策略。 */
-  private static final ConflictStrategyEnum DEFAULT_CONFLICT = ConflictStrategyEnum.SKIP;
-
   /** 渲染 Writer 初始缓冲区大小（字符）。 */
   private static final int WRITER_BUFFER_SIZE = 4096;
   /** 表上下文初始容量。 */

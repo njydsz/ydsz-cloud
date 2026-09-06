@@ -1,5 +1,6 @@
 package com.njydsz.common.lock.controller;
 
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -95,8 +96,8 @@ public class LockAdminController {
     metrics.put("acquireSuccessCount", lockMetrics.getAcquireSuccessCount());
     metrics.put("acquireFailCount", lockMetrics.getAcquireFailCount());
     metrics.put("releaseCount", lockMetrics.getReleaseCount());
-    metrics.put("averageWaitTimeMs", String.format("%.2f", lockMetrics.getAverageWaitTimeMillis()));
-    metrics.put("averageHoldTimeMs", String.format("%.2f", lockMetrics.getAverageHoldTimeMillis()));
+    metrics.put("averageWaitTimeMs", lockMetrics.getAverageWaitTimeMillis().setScale(2, RoundingMode.HALF_UP).toPlainString());
+    metrics.put("averageHoldTimeMs", lockMetrics.getAverageHoldTimeMillis().setScale(2, RoundingMode.HALF_UP).toPlainString());
     metrics.put("competitionCount", lockMetrics.getCompetitionCount());
     metrics.put("activeLocks", lockMetrics.getActiveLocks());
     metrics.put("lockTimeoutCount", lockMetrics.getLockTimeoutCount());

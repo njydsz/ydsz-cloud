@@ -1,5 +1,6 @@
 package com.njydsz.common.redis.service.ops;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -67,11 +68,13 @@ public class RedisGeoOps {
    * @param latitude 纬度
    * @return true-添加成功
    */
-  public boolean geoAdd(String key, Object member, double longitude, double latitude) {
-    if (key == null || member == null) {
+  public boolean geoAdd(String key, Object member, BigDecimal longitude, BigDecimal latitude) {
+    if (key == null || member == null || longitude == null || latitude == null) {
       return false;
     }
     String formattedKey = formatKey(key);
+    double lng = longitude.doubleValue();
+    double lat = latitude.doubleValue();
     try {
       return metricsCollector != null
           ? metricsCollector.recordOperation(
@@ -80,13 +83,13 @@ public class RedisGeoOps {
                 Long result =
                     redisTemplate
                         .opsForGeo()
-                        .add(formattedKey, new Point(longitude, latitude), member);
+                        .add(formattedKey, new Point(lng, lat), member);
                 return result != null && result > 0;
               })
           : Optional.ofNullable(
                   redisTemplate
                       .opsForGeo()
-                      .add(formattedKey, new Point(longitude, latitude), member))
+                      .add(formattedKey, new Point(lng, lat), member))
               .map(r -> r > 0)
               .orElse(false);
     } catch (Exception e) {
@@ -168,18 +171,21 @@ public class RedisGeoOps {
    * @return 成员列表
    */
   public GeoResults<RedisGeoCommands.GeoLocation<Object>> geoRadius(
-      String key, double longitude, double latitude, double radius, Metrics unit) {
-    if (key == null) {
+      String key, BigDecimal longitude, BigDecimal latitude, BigDecimal radius, Metrics unit) {
+    if (key == null || longitude == null || latitude == null || radius == null) {
       return null;
     }
     String formattedKey = formatKey(key);
+    double lng = longitude.doubleValue();
+    double lat = latitude.doubleValue();
+    double rds = radius.doubleValue();
     try {
       return metricsCollector != null
           ? metricsCollector.recordOperation(
               "geoRadius",
               () -> {
                 Circle circle =
-                    new Circle(new Point(longitude, latitude), new Distance(radius, unit));
+                    new Circle(new Point(lng, lat), new Distance(rds, unit));
                 RedisGeoCommands.GeoRadiusCommandArgs args =
                     RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
                         .includeDistance()
@@ -191,7 +197,7 @@ public class RedisGeoOps {
               .opsForGeo()
               .radius(
                   formattedKey,
-                  new Circle(new Point(longitude, latitude), new Distance(radius, unit)),
+                  new Circle(new Point(lng, lat), new Distance(rds, unit)),
                   RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
                       .includeDistance()
                       .includeCoordinates()

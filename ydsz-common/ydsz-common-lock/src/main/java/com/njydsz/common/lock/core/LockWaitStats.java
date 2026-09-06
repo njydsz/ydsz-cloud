@@ -1,5 +1,7 @@
 package com.njydsz.common.lock.core;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -67,9 +69,11 @@ public class LockWaitStats {
    *
    * @return 平均等待耗时，无记录时返回 0
    */
-  public double getAverageWaitMillis() {
+  public BigDecimal getAverageWaitMillis() {
     long count = totalWaitCount.sum();
-    return count == 0 ? 0.0 : (double) totalWaitMillis.sum() / count;
+    return count == 0 ? BigDecimal.ZERO
+        : BigDecimal.valueOf(totalWaitMillis.sum())
+            .divide(BigDecimal.valueOf(count), 4, RoundingMode.HALF_UP);
   }
 
   /**
@@ -77,9 +81,11 @@ public class LockWaitStats {
    *
    * @return 超时率（0.0 ~ 1.0），无记录时返回 0
    */
-  public double getTimeoutRate() {
+  public BigDecimal getTimeoutRate() {
     long count = totalWaitCount.sum();
-    return count == 0 ? 0.0 : (double) totalTimeoutCount.sum() / count;
+    return count == 0 ? BigDecimal.ZERO
+        : BigDecimal.valueOf(totalTimeoutCount.sum())
+            .divide(BigDecimal.valueOf(count), 4, RoundingMode.HALF_UP);
   }
 
   /**
@@ -87,9 +93,11 @@ public class LockWaitStats {
    *
    * @return 成功场景下的平均等待耗时，无记录时返回 0
    */
-  public double getAverageSuccessWaitMillis() {
+  public BigDecimal getAverageSuccessWaitMillis() {
     long successCount = totalSuccessCount.sum();
-    return successCount == 0 ? 0.0 : (double) totalSuccessWaitMillis.sum() / successCount;
+    return successCount == 0 ? BigDecimal.ZERO
+        : BigDecimal.valueOf(totalSuccessWaitMillis.sum())
+            .divide(BigDecimal.valueOf(successCount), 4, RoundingMode.HALF_UP);
   }
 
   /** 重置所有统计数据 */
