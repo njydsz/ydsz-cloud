@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
@@ -50,7 +49,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @see com.njydsz.workflow.domain.enums.FlowSignType 加签类型枚举
  */
 @Data
-@SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_user")

@@ -10,7 +10,7 @@ import com.njydsz.common.json.reader.JSONReader;
 /**
  * {@link TokenUsage} 的 YdszJson 自定义反序列化器（验证 P1-1 反序列化引擎修复）。
  *
- * <p>通过 {@link JSONReader#readRawValue()} 捕获完整对象 JSON 后委托 {@link YdszJson#toObject(String, Class)}，
+ * <p>通过 {@link JSONReader#readRawValue()} 捕获完整对象 JSON 后委托 {@link YdszJson#parseMap(String)}，
  * 避免手写 token 级解析的脆弱性。构造 {@link TokenUsage} 时 {@code totalTokens} 由其构造函数自动求和。
  *
  * @author ydsz-team
@@ -21,7 +21,7 @@ public class TokenUsageDeserializer implements JsonDeserializer<TokenUsage> {
   @Override
   public TokenUsage deserialize(JSONReader in) {
     String raw = in.readRawValue();
-    Map<String, Object> m = YdszJson.fromJson(raw, Map.class);
+    Map<String, Object> m = YdszJson.parseMap(raw);
     int prompt = asInt(m.get("prompt_tokens"));
     int completion = asInt(m.get("completion_tokens"));
     return new TokenUsage(prompt, completion);

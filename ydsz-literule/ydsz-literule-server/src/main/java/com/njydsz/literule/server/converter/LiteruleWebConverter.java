@@ -105,6 +105,12 @@ public interface LiteruleWebConverter {
     ExpressionPreviewResultVO entityToVO(ExpressionPreviewResult entity);
 
     // ===== RuleABPolicyDTO → RuleABPolicyVO =====
+    @Mapping(target = "lastEvaluatedAt", ignore = true)
+    @Mapping(target = "lastRollbackAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     RuleABPolicyVO putDtoToVO(RuleABPolicyDTO dto);
 
     // ===== RuleDefinitionDTO (api) → RuleDefinitionVO =====
@@ -115,9 +121,18 @@ public interface LiteruleWebConverter {
     @Mapping(target = "effectiveFrom", ignore = true)
     @Mapping(target = "effectiveTo", ignore = true)
     @Mapping(target = "reviewedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     RuleDefinitionVO entityToVO(RuleDefinitionDTO entity);
 
     // ===== DecisionTableDefinitionDTO (api) → DecisionTableDefinitionVO =====
+    @Mapping(target = "name", ignore = true)
+    @Mapping(target = "label", ignore = true)
+    @Mapping(target = "type", ignore = true)
+    @Mapping(target = "conditions", ignore = true)
+    @Mapping(target = "actions", ignore = true)
     DecisionTableDefinitionVO entityToVO(DecisionTableDefinitionDTO entity);
 
     // ===== ExpressionFunctionDef (api.expr) → ExpressionFunctionDefVO =====

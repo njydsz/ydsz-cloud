@@ -386,13 +386,19 @@ public class BytecodeInterpreter {
     if (b == null) {
       return 1;
     }
-    if (a instanceof Comparable && b instanceof Comparable) {
-      try {
-        return ((Comparable) a).compareTo(b);
-      } catch (ClassCastException e) {
-        return a.toString().compareTo(b.toString());
-      }
+    // 数值比较（统一转为 BigDecimal，确保整数/浮点/BigDecimal 全类型可比）
+    if (a instanceof Number na && b instanceof Number nb) {
+      return toBigDecimal(na).compareTo(toBigDecimal(nb));
     }
+    // 布尔比较（true > false，符合算术惯例）
+    if (a instanceof Boolean ba && b instanceof Boolean bb) {
+      return Boolean.compare(ba, bb);
+    }
+    // 字符串比较
+    if (a instanceof String sa && b instanceof String sb) {
+      return sa.compareTo(sb);
+    }
+    // 跨类型回退到字符串字典序（保证全序关系）
     return a.toString().compareTo(b.toString());
   }
 

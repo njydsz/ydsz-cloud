@@ -379,11 +379,6 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-nextwiki-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-agent-api</artifactId>
                 <version>${project.version}</version>
             </dependency>

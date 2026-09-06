@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.ldap.core.ContextMapper;
+import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.query.LdapQueryBuilder;
@@ -26,8 +27,8 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.userinfo.domain.dto.DepartmentDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
@@ -263,7 +264,7 @@ public class LdapOrgSyncService {
           createDTO.setDeptName(ldapDept.ou());
           createDTO.setDescription(ldapDept.description());
           createDTO.setParentId(parentId);
-          createDTO.setStatus(EnableStatusEnum.ENABLED.name());
+          createDTO.setStatus(UserLifecycleStatusEnum.ENABLED.name());
           DepartmentVO vo = departmentRepository.save(createDTO);
           dnToDeptId.put(ldapDept.dn(), vo.getId());
           created++;
@@ -375,7 +376,8 @@ public class LdapOrgSyncService {
 
       List<LdapDepartment> departments = template.search(
           LdapQueryBuilder.query().base(base).filter(filter),
-          (ContextMapper<LdapDepartment>) ctx -> {
+          (ContextMapper<LdapDepartment>) (Object entry) -> {
+            DirContextOperations ctx = (DirContextOperations) entry;
             Attributes attrs = ctx.getAttributes();
             String dn = getAttributeValue(attrs, "distinguishedName");
             if (dn == null) {
@@ -418,21 +420,20 @@ public class LdapOrgSyncService {
       String deptAttr = attrMap.getOrDefault("department", "departmentName");
 
       List<LdapUser> users = template.search(
-              LdapQueryBuilder.query().base(base).filter(filter))
-          .map(
-              entry -> {
-                Attributes attrs = entry.getAttributes();
-                String dn = getAttributeValue(attrs, "distinguishedName");
-                if (dn == null) {
-                  dn = getAttributeValue(attrs, "dn");
-                }
-                String username = getAttributeValue(attrs, usernameAttr);
-                String realName = getAttributeValue(attrs, realNameAttr);
-                String email = getAttributeValue(attrs, emailAttr);
-                String departmentName = getAttributeValue(attrs, deptAttr);
-                return new LdapUser(dn, username, realName, email, departmentName);
-              })
-          .toList();
+          LdapQueryBuilder.query().base(base).filter(filter),
+          (ContextMapper<LdapUser>) (Object entry) -> {
+            DirContextOperations ctx = (DirContextOperations) entry;
+            Attributes attrs = ctx.getAttributes();
+            String dn = getAttributeValue(attrs, "distinguishedName");
+            if (dn == null) {
+              dn = getAttributeValue(attrs, "dn");
+            }
+            String username = getAttributeValue(attrs, usernameAttr);
+            String realName = getAttributeValue(attrs, realNameAttr);
+            String email = getAttributeValue(attrs, emailAttr);
+            String departmentName = getAttributeValue(attrs, deptAttr);
+            return new LdapUser(dn, username, realName, email, departmentName);
+          });
 
       log.info("LDAP user search returned {} entries", users.size());
       return users;
@@ -456,7 +457,7 @@ public class LdapOrgSyncService {
     dto.setRealName(ldapUser.realName());
     dto.setEmail(ldapUser.email());
     dto.setUserType("REGULAR");
-    dto.setStatus(EnableStatusEnum.ENABLED);
+    dto.setStatus(UserLifecycleStatusEnum.ENABLED);
     // LDAP 用户密码由 LDAP 管理，此处设置随机占位密码（用户通过 LDAP 认证）
     dto.setPassword(generatePlaceholderPassword());
     return dto;

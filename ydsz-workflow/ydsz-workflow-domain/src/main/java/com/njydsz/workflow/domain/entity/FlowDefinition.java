@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.json.annotation.JsonView;
@@ -60,7 +59,6 @@ import com.njydsz.workflow.domain.vo.FlowViewsVO;
  * @see FlowDefinitionService 流程定义 Service
  */
 @Data
-@SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_definition")

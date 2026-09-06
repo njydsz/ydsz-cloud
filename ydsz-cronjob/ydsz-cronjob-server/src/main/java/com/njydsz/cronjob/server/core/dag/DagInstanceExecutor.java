@@ -1213,7 +1213,15 @@ public class DagInstanceExecutor {
     }
     ObjectNode parsed = parseContextJson(instance.getContextJson());
     Object ctxValue = parsed.asValue();
-    Map<String, Object> result = ctxValue instanceof Map ? Map.class.cast(ctxValue) : new LinkedHashMap<>(COLLECTION_CAPACITY);
-    return result;
+    if (ctxValue instanceof Map<?, ?> rawMap) {
+      Map<String, Object> result = new LinkedHashMap<>(rawMap.size());
+      rawMap.forEach((k, v) -> {
+        if (k instanceof String ks) {
+          result.put(ks, v);
+        }
+      });
+      return result;
+    }
+    return new LinkedHashMap<>(COLLECTION_CAPACITY);
   }
 }

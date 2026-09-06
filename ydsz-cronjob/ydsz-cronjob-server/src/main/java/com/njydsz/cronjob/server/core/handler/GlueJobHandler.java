@@ -232,15 +232,15 @@ public class GlueJobHandler implements JobHandler {
             "com.njydsz.cronjob.domain.job.JobHandler",
             "com.njydsz.cronjob.domain.job.JobExecutionContext",
             "com.njydsz.cronjob.domain.job.ProcessResult");
-    customizer.setImportsWhitelist(importsWhitelist);
+    customizer.setAllowedImports(importsWhitelist);
 
     // Star 导入白名单：仅允许安全包
-    customizer.setStarImportsWhitelist(List.of("java.util", "java.time", "java.math"));
+    customizer.setAllowedStarImports(List.of("java.util", "java.time", "java.math"));
     // CHECKSTYLE.ON: RegexpSinglelineJava
 
     // 静态导入白名单
     // CHECKSTYLE.OFF: RegexpSinglelineJava - 静态导入白名单为字符串字面量
-    customizer.setStaticImportsWhitelist(
+    customizer.setAllowedStaticImports(
         List.of("java.lang.Math", "java.util.Collections", "java.util.Arrays"));
     // CHECKSTYLE.ON: RegexpSinglelineJava
 

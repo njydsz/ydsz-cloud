@@ -14,7 +14,6 @@ import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
 import com.njydsz.common.safe.encrypt.EncryptField;
 import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 import com.njydsz.userinfo.domain.enums.BanType;
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.vo.BanInfoVO;
 
@@ -33,8 +32,8 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
  * </ul>
  *
  * <p><b>状态字段说明：</b>DB 列使用整数（0=禁用, 1=启用，历史遗留），通过 {@link IntegerStringTypeHandler} 自动转换为 String。
- * 业务代码通过 {@link #getStatusEnum()} / {@link #setStatusEnum(EnableStatusEnum)} 使用枚举类型，
- * {@link EnableStatusEnum#parse(String)} 兼容两种格式。
+ * 业务代码通过 {@link #getStatusEnum()} / {@link #setStatusEnum(UserLifecycleStatusEnum)} 使用枚举类型，
+ * {@link UserLifecycleStatusEnum#parse(String)} 兼容两种格式。
  *
  * <p><b>审批人展开支持：</b>
  *
@@ -90,7 +89,7 @@ public class UserAccount extends MpBaseEntity<String> {
   /**
    * 账号状态（DB 整数列 0/1，通过 {@link IntegerStringTypeHandler} 自动转换为 String）。
    *
-   * <p>业务代码建议通过 {@link #getStatusEnum()} / {@link #setStatusEnum(EnableStatusEnum)} 使用枚举类型。
+   * <p>业务代码建议通过 {@link #getStatusEnum()} / {@link #setStatusEnum(UserLifecycleStatusEnum)} 使用枚举类型。
    */
   @TableField(value = "status", typeHandler = IntegerStringTypeHandler.class)
   private String status;
@@ -146,8 +145,8 @@ public class UserAccount extends MpBaseEntity<String> {
    *
    * @return 状态枚举，无法解析时返回 null
    */
-  public EnableStatusEnum getStatusEnum() {
-    return EnableStatusEnum.parse(this.status);
+  public UserLifecycleStatusEnum getStatusEnum() {
+    return UserLifecycleStatusEnum.parse(this.status);
   }
 
   /**
@@ -155,11 +154,11 @@ public class UserAccount extends MpBaseEntity<String> {
    *
    * @param statusEnum 状态枚举，为 null 时清除状态
    */
-  public void setStatusEnum(EnableStatusEnum statusEnum) {
+  public void setStatusEnum(UserLifecycleStatusEnum statusEnum) {
     if (statusEnum == null) {
       this.status = null;
     } else {
-      this.status = statusEnum == EnableStatusEnum.ENABLED ? "1" : "0";
+      this.status = statusEnum == UserLifecycleStatusEnum.ENABLED ? "1" : "0";
     }
   }
 
@@ -317,13 +316,13 @@ public class UserAccount extends MpBaseEntity<String> {
   /**
    * 启用账号。
    *
-   * <p>将状态设为 {@link EnableStatusEnum#ENABLED}，清除锁定信息。
+   * <p>将状态设为 {@link UserLifecycleStatusEnum#ENABLED}，清除锁定信息。
    *
    * @deprecated 使用 {@link #activate()} 替代，提供更严格的状态流转校验
    */
   @Deprecated
   public void enable() {
-    setStatusEnum(EnableStatusEnum.ENABLED);
+    setStatusEnum(UserLifecycleStatusEnum.ENABLED);
     this.lockedUntil = null;
     this.loginFailCount = 0;
   }
@@ -331,7 +330,7 @@ public class UserAccount extends MpBaseEntity<String> {
   /**
    * 禁用账号（→ DISABLED）。
    *
-   * <p>将状态设为 {@link EnableStatusEnum#DISABLED} 或 {@link UserLifecycleStatusEnum#DISABLED}。
+   * <p>将状态设为 {@link UserLifecycleStatusEnum#DISABLED}。
    * 支持从 ENABLED 或 SUSPENDED 状态流转。
    *
    * @throws IllegalStateException 当前状态不允许禁用时抛出
@@ -415,7 +414,7 @@ public class UserAccount extends MpBaseEntity<String> {
    */
   @Deprecated
   public boolean canAuthenticate() {
-    return getStatusEnum() == EnableStatusEnum.ENABLED && !isLocked();
+    return getStatusEnum() == UserLifecycleStatusEnum.ENABLED && !isLocked();
   }
 
   /**

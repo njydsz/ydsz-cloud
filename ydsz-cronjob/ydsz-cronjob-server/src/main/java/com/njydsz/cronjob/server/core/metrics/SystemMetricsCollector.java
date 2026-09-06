@@ -79,8 +79,8 @@ public class SystemMetricsCollector {
     try {
       OperatingSystemMXBean osBean =
           (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-      long total = osBean.getTotalPhysicalMemorySize();
-      long free = osBean.getFreePhysicalMemorySize();
+      long total = osBean.getTotalMemorySize();
+      long free = osBean.getFreeMemorySize();
       if (total <= 0 || free < 0) {
         return DEFAULT_METRIC_VALUE;
       }

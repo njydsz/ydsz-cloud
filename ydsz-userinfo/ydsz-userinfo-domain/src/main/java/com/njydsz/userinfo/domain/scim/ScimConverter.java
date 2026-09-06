@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
@@ -193,9 +193,9 @@ public final class ScimConverter {
    */
   private static void applyActiveStatus(UserAccountDTO dto, Boolean active) {
     if (Boolean.FALSE.equals(active)) {
-      dto.setStatus(EnableStatusEnum.DISABLED);
+      dto.setStatus(UserLifecycleStatusEnum.DISABLED);
     } else {
-      dto.setStatus(EnableStatusEnum.ENABLED);
+      dto.setStatus(UserLifecycleStatusEnum.ENABLED);
     }
   }
 
@@ -219,9 +219,9 @@ public final class ScimConverter {
     dto.setEmail(resolveFirstEmail(scimUser));
     dto.setPhone(resolveFirstPhone(scimUser));
     if (Boolean.FALSE.equals(scimUser.getActive())) {
-      dto.setStatus(EnableStatusEnum.DISABLED);
+      dto.setStatus(UserLifecycleStatusEnum.DISABLED);
     } else if (Boolean.TRUE.equals(scimUser.getActive())) {
-      dto.setStatus(EnableStatusEnum.ENABLED);
+      dto.setStatus(UserLifecycleStatusEnum.ENABLED);
     }
 
     return dto;

@@ -16,8 +16,8 @@ import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
 import com.njydsz.userinfo.domain.dto.SelfRegisterDTO;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -257,7 +257,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     createDTO.setRealName(dto.getRealName());
     createDTO.setPhone(dto.getPhone());
     createDTO.setEmail(dto.getEmail());
-    createDTO.setStatus(EnableStatusEnum.ENABLED);
+    createDTO.setStatus(UserLifecycleStatusEnum.ENABLED);
     createDTO.setTenantId(DEFAULT_TENANT_ID);
     return createDTO;
   }

@@ -1,5 +1,6 @@
 package com.njydsz.agent.domain.json;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.njydsz.agent.domain.model.ToolCall;
@@ -21,21 +22,35 @@ public class ToolCallDeserializer implements JsonDeserializer<ToolCall> {
   @Override
   public ToolCall deserialize(JSONReader in) {
     String raw = in.readRawValue();
-    Map<String, Object> m = YdszJson.fromJsonToMap(raw, String.class, Object.class);
+    Map<String, Object> m = YdszJson.parseMap(raw);
     String id = (String) m.get("id");
     Object functionObj = m.get("function");
-    Map<String, Object> function = functionObj instanceof Map ? Map.class.cast(functionObj) : null;
+    Map<String, Object> function = toTypedMap(functionObj);
     String name = function != null ? (String) function.get("name") : null;
     Object argsRaw = function != null ? function.get("arguments") : null;
     Map<String, Object> arguments;
-    if (argsRaw instanceof String) {
-      arguments = YdszJson.fromJson((String) argsRaw, Map.class);
-    } else if (argsRaw instanceof Map) {
-      Map<String, Object> castArgs = Map.class.cast(argsRaw);
-      arguments = castArgs;
+    if (argsRaw instanceof String s) {
+      arguments = YdszJson.parseMap(s);
     } else {
-      arguments = Map.of();
+      arguments = toTypedMap(argsRaw);
     }
     return new ToolCall(id, name, arguments);
+  }
+
+  /**
+   * 将原始 Map 转为类型化 Map（JSON 对象键恒为 String，值恒为 Object，转换安全）。
+   *
+   * @param raw 原始对象
+   * @return 类型化 Map，raw 不是 Map 时返回空 Map
+   */
+  private static Map<String, Object> toTypedMap(Object raw) {
+    if (raw instanceof Map<?, ?> rawMap) {
+      Map<String, Object> result = new LinkedHashMap<>(rawMap.size());
+      for (Map.Entry<?, ?> e : rawMap.entrySet()) {
+        result.put((String) e.getKey(), e.getValue());
+      }
+      return result;
+    }
+    return Map.of();
   }
 }

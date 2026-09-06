@@ -25,8 +25,8 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserRoleDTO;
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -159,7 +159,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     // 设置默认值
     if (dto.getStatus() == null) {
-      dto.setStatus(EnableStatusEnum.ENABLED);
+      dto.setStatus(UserLifecycleStatusEnum.ENABLED);
     }
     if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
       dto.setTenantId("1");
@@ -569,7 +569,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (existingMap.size() != distinctIds.size()) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
-    int affected = userAccountRepository.batchUpdateStatus(distinctIds, EnableStatusEnum.ENABLED);
+    int affected = userAccountRepository.batchUpdateStatus(distinctIds, UserLifecycleStatusEnum.ENABLED);
     if (affected > 0) {
       for (UserAccountVO vo : existingMap.values()) {
         vo.setStatus(1);
@@ -603,7 +603,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (existingMap.size() != distinctIds.size()) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
-    int affected = userAccountRepository.batchUpdateStatus(distinctIds, EnableStatusEnum.DISABLED);
+    int affected = userAccountRepository.batchUpdateStatus(distinctIds, UserLifecycleStatusEnum.DISABLED);
     if (affected > 0) {
       for (UserAccountVO vo : existingMap.values()) {
         vo.setStatus(0);
