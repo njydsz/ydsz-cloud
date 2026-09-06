@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.entity.FileVersion;
 import com.njydsz.nextwiki.domain.query.FileVersionQuery;
@@ -24,8 +24,8 @@ import com.njydsz.nextwiki.infra.mapper.FileVersionMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -41,27 +41,27 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final FileVersionMapper fileVersionMapper;
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public FileVersionVO save(FileVersionDTO dto) {
-    FileVersion entity = converter.dtoToEntity(dto);
+    FileVersion entity = mapper.fileVersionToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     fileVersionMapper.insert(entity);
-    return converter.entityToVO(entity);
+    return mapper.fileVersionToVO(entity);
   }
 
   @Override
   public void update(FileVersionDTO dto) {
-    FileVersion entity = converter.dtoToEntityWithId(dto);
+    FileVersion entity = mapper.fileVersionToEntity(dto);
     fileVersionMapper.updateById(entity);
   }
 
   @Override
   public List<FileVersionVO> findByFileNodeId(String fileNodeId) {
-    return converter.fileVersionListToVO(fileVersionMapper.selectByFileNodeId(fileNodeId));
+    return mapper.fileVersionListToVO(fileVersionMapper.selectByFileNodeId(fileNodeId));
   }
 
   @Override
@@ -69,13 +69,13 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
     return Optional.ofNullable(
             fileVersionMapper.selectByVersion(
                 query.getFileNodeId(), query.getVersionNumber()))
-        .map(converter::entityToVO);
+        .map(mapper::fileVersionToVO);
   }
 
   @Override
   public Optional<FileVersionVO> findActiveVersion(String fileNodeId) {
     return Optional.ofNullable(fileVersionMapper.selectActiveVersion(fileNodeId))
-        .map(converter::entityToVO);
+        .map(mapper::fileVersionToVO);
   }
 
   @Override
@@ -123,6 +123,6 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
 
   @Override
   public List<FileVersionVO> findOldestVersions(String fileNodeId, int limit) {
-    return converter.fileVersionListToVO(fileVersionMapper.selectOldestVersions(fileNodeId, limit));
+    return mapper.fileVersionListToVO(fileVersionMapper.selectOldestVersions(fileNodeId, limit));
   }
 }

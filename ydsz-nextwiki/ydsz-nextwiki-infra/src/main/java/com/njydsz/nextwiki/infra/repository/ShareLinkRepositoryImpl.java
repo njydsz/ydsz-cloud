@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.entity.ShareLink;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
@@ -22,8 +22,8 @@ import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -41,42 +41,42 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
   private final ShareLinkMapper shareLinkMapper;
 
   /** DTO/VO/DO 转换器（实体与视图对象之间的映射） */
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public ShareLinkVO save(ShareLinkDTO dto) {
-    ShareLink entity = converter.dtoToEntity(dto);
+    ShareLink entity = mapper.shareLinkToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     shareLinkMapper.insert(entity);
-    return converter.entityToVO(entity);
+    return mapper.shareLinkToVO(entity);
   }
 
   @Override
   public Optional<ShareLinkVO> findById(String id) {
-    return Optional.ofNullable(shareLinkMapper.selectById(id)).map(converter::entityToVO);
+    return Optional.ofNullable(shareLinkMapper.selectById(id)).map(mapper::shareLinkToVO);
   }
 
   @Override
   public Optional<ShareLinkVO> findByShareCode(String shareCode) {
     return Optional.ofNullable(shareLinkMapper.selectByShareCode(shareCode))
-        .map(converter::entityToVO);
+        .map(mapper::shareLinkToVO);
   }
 
   @Override
   public List<ShareLinkVO> findByFileNodeId(String fileNodeId) {
-    return converter.shareLinkListToVO(shareLinkMapper.selectByFileNodeId(fileNodeId));
+    return mapper.shareLinkListToVO(shareLinkMapper.selectByFileNodeId(fileNodeId));
   }
 
   @Override
   public List<ShareLinkVO> findActiveSharesByUserId(String userId) {
-    return converter.shareLinkListToVO(shareLinkMapper.selectActiveSharesByUserId(userId));
+    return mapper.shareLinkListToVO(shareLinkMapper.selectActiveSharesByUserId(userId));
   }
 
   @Override
   public void update(ShareLinkDTO dto) {
-    ShareLink entity = converter.dtoToEntityWithId(dto);
+    ShareLink entity = mapper.shareLinkToEntity(dto);
     shareLinkMapper.updateById(entity);
   }
 
@@ -92,6 +92,6 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
 
   @Override
   public List<ShareLinkVO> findExpiringShares(int withinHours) {
-    return converter.shareLinkListToVO(shareLinkMapper.selectExpiringShares(withinHours));
+    return mapper.shareLinkListToVO(shareLinkMapper.selectExpiringShares(withinHours));
   }
 }

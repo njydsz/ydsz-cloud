@@ -17,7 +17,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.query.FileNodeQuery;
@@ -33,8 +33,8 @@ import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -52,16 +52,16 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   private final FileNodeMapper fileNodeMapper;
 
   /** DTO/VO/DO 转换器（实体与视图对象之间的映射） */
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public Optional<FileNodeVO> findById(String id) {
-    return Optional.ofNullable(fileNodeMapper.selectById(id)).map(converter::entityToVO);
+    return Optional.ofNullable(fileNodeMapper.selectById(id)).map(mapper::fileNodeToVO);
   }
 
   @Override
   public List<FileNodeVO> findChildren(String parentId) {
-    return converter.fileNodeListToVO(
+    return mapper.fileNodeListToVO(
         fileNodeMapper.selectChildren(parentId, TenantContextHolder.getTenantId()));
   }
 
@@ -76,7 +76,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
             query.getSortBy(),
             query.getSortDir(),
             TenantContextHolder.getTenantId());
-    List<FileNodeVO> vos = converter.fileNodeListToVO(result.getRecords());
+    List<FileNodeVO> vos = mapper.fileNodeListToVO(result.getRecords());
     Page<FileNodeVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);
     return PageResponses.success(voPage);
@@ -84,7 +84,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public List<FileNodeVO> findByPathPrefix(String pathPrefix) {
-    return converter.fileNodeListToVO(
+    return mapper.fileNodeListToVO(
         fileNodeMapper.selectByPathPrefix(pathPrefix, TenantContextHolder.getTenantId()));
   }
 
@@ -103,12 +103,12 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public FileNodeVO save(FileNodeDTO dto) {
-    FileNode entity = converter.dtoToEntity(dto);
+    FileNode entity = mapper.fileNodeToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     fileNodeMapper.insert(entity);
-    return converter.entityToVO(entity);
+    return mapper.fileNodeToVO(entity);
   }
 
   @Override
@@ -116,7 +116,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     if (dtos == null || dtos.isEmpty()) {
       return 0;
     }
-    List<FileNode> entities = converter.fileNodeDtosToEntities(dtos);
+    List<FileNode> entities = mapper.fileNodeListToEntity(dtos);
     LocalDateTime now = LocalDateTime.now();
     String tenantId = TenantContextHolder.getTenantId();
     for (FileNode entity : entities) {
@@ -148,7 +148,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public void update(FileNodeDTO dto) {
-    FileNode entity = converter.dtoToEntityWithId(dto);
+    FileNode entity = mapper.fileNodeToEntity(dto);
     if (entity.getRevision() == null) {
       fileNodeMapper.updateById(entity);
       return;
@@ -178,7 +178,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public List<FileNodeVO> findByIds(List<String> ids) {
-    return converter.fileNodeListToVO(fileNodeMapper.selectBatchIds(ids));
+    return mapper.fileNodeListToVO(fileNodeMapper.selectBatchIds(ids));
   }
 
   @Override
@@ -221,7 +221,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public List<FileNodeVO> findTopLargeFilesByUser(String userId, int limit) {
-    return converter.fileNodeListToVO(fileNodeMapper.findTopLargeFilesByUser(userId, limit));
+    return mapper.fileNodeListToVO(fileNodeMapper.findTopLargeFilesByUser(userId, limit));
   }
 
   @Override
@@ -233,7 +233,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   public FileNodeVO findOrCreateRoot(String userId) {
     FileNode root = fileNodeMapper.selectRootByUser(userId, TenantContextHolder.getTenantId());
     if (root != null) {
-      return converter.entityToVO(root);
+      return mapper.fileNodeToVO(root);
     }
 
     root =
@@ -261,7 +261,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
     fileNodeMapper.insert(root);
     log.info("[FileNodeRepositoryImpl] 创建用户根目录: userId={}, rootId={}", userId, root.getId());
-    return converter.entityToVO(root);
+    return mapper.fileNodeToVO(root);
   }
 
   @Override
@@ -271,12 +271,12 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     }
     return Optional.ofNullable(
             fileNodeMapper.findByFileHash(fileHash, TenantContextHolder.getTenantId()))
-        .map(converter::entityToVO);
+        .map(mapper::fileNodeToVO);
   }
 
   @Override
   public List<FileNodeVO> findByNameAndParent(String name, String parentId, String createdBy) {
-    return converter.fileNodeListToVO(
+    return mapper.fileNodeListToVO(
         fileNodeMapper.findByNameAndParent(
             name, parentId, createdBy, TenantContextHolder.getTenantId()));
   }
@@ -289,7 +289,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     List<FileNode> list =
         fileNodeMapper.selectDescendantsByPage(
             folderPath, offset, limit, TenantContextHolder.getTenantId());
-    return list == null ? Collections.emptyList() : converter.fileNodeListToVO(list);
+    return list == null ? Collections.emptyList() : mapper.fileNodeListToVO(list);
   }
 
   @Override
@@ -309,7 +309,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     if (folder == null || folder.getPath() == null) {
       return new ArrayList<>(0);
     }
-    return converter.fileNodeListToVO(
+    return mapper.fileNodeListToVO(
         fileNodeMapper.selectAllDescendantsByPath(folder.getPath(), TenantContextHolder.getTenantId()));
   }
 
@@ -319,7 +319,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     if (excludeSuffixes != null && !excludeSuffixes.isEmpty()) {
       excludeSuffixesList = List.of(excludeSuffixes.split(","));
     }
-    return converter.fileNodeListToVO(
+    return mapper.fileNodeListToVO(
         fileNodeMapper.selectColdCandidates(threshold, excludeSuffixes, excludeSuffixesList, limit));
   }
 
@@ -332,7 +332,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   public PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit) {
     Page<FileNode> pageParam = new Page<>(offset / limit + 1, limit);
     IPage<FileNode> result = fileNodeMapper.selectAllWithPage(pageParam);
-    List<FileNodeVO> vos = converter.fileNodeListToVO(result.getRecords());
+    List<FileNodeVO> vos = mapper.fileNodeListToVO(result.getRecords());
     Page<FileNodeVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);
     return PageResponses.success(voPage);

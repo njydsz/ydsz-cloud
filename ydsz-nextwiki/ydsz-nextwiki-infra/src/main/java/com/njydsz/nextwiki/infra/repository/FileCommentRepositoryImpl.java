@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
 import com.njydsz.nextwiki.domain.entity.FileComment;
 import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
@@ -22,8 +22,8 @@ import com.njydsz.nextwiki.infra.mapper.FileCommentMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -36,36 +36,36 @@ public class FileCommentRepositoryImpl implements FileCommentRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final FileCommentMapper fileCommentMapper;
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public FileCommentVO save(FileCommentDTO dto) {
-    FileComment entity = converter.dtoToEntity(dto);
+    FileComment entity = mapper.fileCommentToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     fileCommentMapper.insertFileComment(entity);
-    return converter.entityToVO(entity);
+    return mapper.fileCommentToVO(entity);
   }
 
   @Override
   public Optional<FileCommentVO> findById(String id) {
-    return Optional.ofNullable(fileCommentMapper.selectFileCommentById(id)).map(converter::entityToVO);
+    return Optional.ofNullable(fileCommentMapper.selectFileCommentById(id)).map(mapper::fileCommentToVO);
   }
 
   @Override
   public List<FileCommentVO> findByFileNodeId(String fileNodeId) {
-    return converter.fileCommentListToVO(fileCommentMapper.selectFileCommentsByFileNodeId(fileNodeId));
+    return mapper.fileCommentListToVO(fileCommentMapper.selectFileCommentsByFileNodeId(fileNodeId));
   }
 
   @Override
   public List<FileCommentVO> findReplies(String parentCommentId) {
-    return converter.fileCommentListToVO(fileCommentMapper.selectFileCommentReplies(parentCommentId));
+    return mapper.fileCommentListToVO(fileCommentMapper.selectFileCommentReplies(parentCommentId));
   }
 
   @Override
   public void update(FileCommentDTO dto) {
-    FileComment entity = converter.dtoToEntityWithId(dto);
+    FileComment entity = mapper.fileCommentToEntity(dto);
     fileCommentMapper.updateFileComment(entity);
   }
 

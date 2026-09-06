@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.query.SearchIndexQuery;
@@ -27,8 +27,8 @@ import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -46,11 +46,11 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
   private static final int DEFAULT_PAGE_SIZE = 20;
 
   private final SearchIndexMapper searchIndexMapper;
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public void upsert(SearchIndexDTO dto) {
-    SearchIndex entity = converter.dtoToEntity(dto);
+    SearchIndex entity = mapper.searchIndexToEntity(dto);
     searchIndexMapper.upsert(entity);
   }
 
@@ -62,7 +62,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
   @Override
   public Optional<SearchIndexVO> findByFileNodeId(String fileNodeId) {
     return Optional.ofNullable(searchIndexMapper.selectByFileNodeId(fileNodeId))
-        .map(converter::entityToVO);
+        .map(mapper::searchIndexToVO);
   }
 
   @Override
@@ -76,7 +76,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
     IPage<SearchIndex> result =
         searchIndexMapper.searchPage(
             pageParam, query.getKeyword(), query.getCreatedBy(), query.getScope());
-    List<SearchIndexVO> vos = converter.searchIndexListToVO(result.getRecords());
+    List<SearchIndexVO> vos = mapper.searchIndexListToVO(result.getRecords());
     Page<SearchIndexVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);
     return PageResponses.success(voPage);
@@ -89,7 +89,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
         query.getPageSize() != null ? query.getPageSize() : DEFAULT_PAGE_SIZE);
     IPage<SearchIndex> result =
         searchIndexMapper.searchAdvanced(pageParam, query);
-    List<SearchIndexVO> vos = converter.searchIndexListToVO(result.getRecords());
+    List<SearchIndexVO> vos = mapper.searchIndexListToVO(result.getRecords());
     Page<SearchIndexVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);
     return PageResponses.success(voPage);

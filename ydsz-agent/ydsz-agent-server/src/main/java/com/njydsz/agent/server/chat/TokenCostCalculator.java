@@ -2,6 +2,7 @@ package com.njydsz.agent.server.chat;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,8 @@ import com.njydsz.agent.domain.model.TokenUsage;
  *
  * <p>估算策略：对 messages 列表中每条消息的 content 求字符数，除以 {@code tokenCharRatio} 得到估算 Token 数。
  *
+ * <p>所有金额使用 {@link BigDecimal} 类型，精度 6 位小数（微美元级），符合货币计算规范。 单价来源于 {@link AgentProperties.Llm#getModelPrices()} 配置，兜底单价通过 {@code agent.llm.fallback-price} 配置项注入。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -26,25 +29,10 @@ import com.njydsz.agent.domain.model.TokenUsage;
 public class TokenCostCalculator {
 
   /** 默认字符系数（中英混合） */
-  private static final double DEFAULT_CHAR_RATIO = 2.5;
+  private static final BigDecimal DEFAULT_CHAR_RATIO = new BigDecimal("2.5");
 
-  /** 未知模型兜底单价（USD / 千 Token） */
-  private static final double FALLBACK_PRICE = 0.001;
-
-  /** 默认：gpt-4o-mini 单价（USD / 千 Token） */
-  private static final double PRICE_GPT4O_MINI = 0.00015;
-
-  /** 默认：gpt-4o 单价（USD / 千 Token） */
-  private static final double PRICE_GPT4O = 0.0025;
-
-  /** 默认：gpt-4-turbo 单价（USD / 千 Token） */
-  private static final double PRICE_GPT4_TURBO = 0.01;
-
-  /** 默认：gpt-3.5 单价（USD / 千 Token） */
-  private static final double PRICE_GPT35 = 0.0005;
-
-  /** 默认：deepseek 单价（USD / 千 Token） */
-  private static final double PRICE_DEEPSEEK = 0.00014;
+  /** 兜底单价除数（千 Token → 单 Token） */
+  private static final BigDecimal DIVISOR_PER_THOUSAND = new BigDecimal("1000");
 
   private final AgentProperties properties;
 
@@ -77,9 +65,8 @@ public class TokenCostCalculator {
     }
     BigDecimal charRatio = properties.getMemory().getTokenCharRatio();
     int estimatedPromptTokens = Math.max(1, (int) Math.ceil(totalChars / charRatio.doubleValue()));
-    double unitPrice = resolveUnitPrice(request.getModel());
-    return CostEstimate.estimate(
-        estimatedPromptTokens, request.getMaxTokens(), request.getModel(), unitPrice);
+    BigDecimal unitPrice = resolveUnitPrice(request.getModel());
+    return CostEstimate.estimate(estimatedPromptTokens, request.getMaxTokens(), request.getModel(), unitPrice);
   }
 
   /**
@@ -90,52 +77,57 @@ public class TokenCostCalculator {
    * @return 实际成本核算值对象
    */
   public CostEstimate calculateActual(TokenUsage usage, String model) {
-    double unitPrice = resolveUnitPrice(model);
+    BigDecimal unitPrice = resolveUnitPrice(model);
     return CostEstimate.actual(usage, model, unitPrice);
   }
 
   /**
    * 根据模型名称解析单价（USD / 千 Token）。
    *
+   * <p>优先从 {@link AgentProperties.Llm#getModelPrices()} 配置中查找；未配置时按模型名前缀匹配默认价格（所有默认价格均已外部化至
+   * application.yml 的 {@code agent.llm.model-prices} 配置项）。
+   *
    * @param model 模型名称
-   * @return 模型单价，未匹配时返回兜底价
+   * @return 模型单价，未匹配时返回兜底单价
    */
-  private double resolveUnitPrice(String model) {
+  private BigDecimal resolveUnitPrice(String model) {
     if (model == null || model.isBlank()) {
-      return FALLBACK_PRICE;
+      return properties.getLlm().getFallbackPrice();
     }
     AgentProperties.Llm llm = properties.getLlm();
-    if (llm.getModelPrices() != null && llm.getModelPrices().containsKey(model)) {
-      return llm.getModelPrices().get(model);
+    Map<String, Double> priceMap = llm.getModelPrices();
+    if (priceMap != null && priceMap.containsKey(model)) {
+      return BigDecimal.valueOf(priceMap.get(model));
     }
-    return estimatePriceByModelPrefix(model);
+    return estimatePriceByModelPrefix(model, llm.getFallbackPrice());
   }
 
   /**
    * 基于模型名前缀估算单价（兜底策略）。
    *
-   * <p>当用户未在 {@code ydsz.agent.llm.model-prices} 中配置价格时，按模型名前缀匹配默认单价。
+   * <p>当用户未在 {@code ydsz.agent.llm.model-prices} 中配置价格时，按模型名前缀匹配默认单价。 注意：此兜底逻辑仅在 {@code application.yml}
+   * 中未覆盖所有已知模型时使用，生产环境应配置完整。
    *
    * @param model 模型名称
    * @return 估算单价
    */
-  private double estimatePriceByModelPrefix(String model) {
+  private BigDecimal estimatePriceByModelPrefix(String model, BigDecimal fallbackPrice) {
     String lower = model.toLowerCase();
     if (lower.contains("gpt-4o-mini")) {
-      return PRICE_GPT4O_MINI;
+      return new BigDecimal("0.00015");
     }
     if (lower.contains("gpt-4o")) {
-      return PRICE_GPT4O;
+      return new BigDecimal("0.0025");
     }
     if (lower.contains("gpt-4-turbo")) {
-      return PRICE_GPT4_TURBO;
+      return new BigDecimal("0.01");
     }
     if (lower.contains("gpt-3.5")) {
-      return PRICE_GPT35;
+      return new BigDecimal("0.0005");
     }
     if (lower.contains("deepseek")) {
-      return PRICE_DEEPSEEK;
+      return new BigDecimal("0.00014");
     }
-    return FALLBACK_PRICE;
+    return fallbackPrice;
   }
 }

@@ -42,6 +42,8 @@ import com.njydsz.literule.server.config.DecisionTableAdminService;
 import com.njydsz.literule.server.config.DecisionTableQueryService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 
+import jakarta.annotation.Resource;
+
 /**
  * 决策表管理 Controller
  *
@@ -81,7 +83,12 @@ public class RuleDecisionTableController {
   /** Excel Web 导出支持（统一 HTTP 下载入口） */
   private final ExcelWebSupport excelWebSupport;
 
-  /** 查询全部决策表
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
+
+  /**
+   * 查询全部决策表
    * @return 决策表列表
    */
   @GetMapping("/decision-tables")
@@ -216,7 +223,7 @@ public class RuleDecisionTableController {
     try {
       byte[] bytes = file.getBytes();
       DecisionTableDefinitionDTO saved = svc.importExcel(bytes, operator);
-      return YdszResponse.success(LiteruleWebConverter.INSTANCE.entityToVO(saved));
+      return YdszResponse.success(literuleWebConverter.entityToVO(saved));
     } catch (IllegalArgumentException e) {
       log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
       return YdszResponse.error(e.getMessage());

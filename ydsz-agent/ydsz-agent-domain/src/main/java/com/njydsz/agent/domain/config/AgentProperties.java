@@ -106,6 +106,9 @@ public class AgentProperties {
     /** 模型单价映射（模型名 -> USD/千 Token） */
     private Map<String, Double> modelPrices = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
+    /** 未知模型兜底单价（USD/千 Token），未配置的模型使用此价格 */
+    private BigDecimal fallbackPrice = new BigDecimal("0.001");
+
     /** 多 Provider 配置 */
     private Map<String, ProviderConfig> providers = new LinkedHashMap<>(COLLECTION_CAPACITY);
   }

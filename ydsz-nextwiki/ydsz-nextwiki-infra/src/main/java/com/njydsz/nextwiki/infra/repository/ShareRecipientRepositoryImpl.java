@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.ShareRecipientDTO;
 import com.njydsz.nextwiki.domain.entity.ShareRecipient;
 import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
@@ -21,8 +21,8 @@ import com.njydsz.nextwiki.infra.mapper.ShareRecipientMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -35,14 +35,14 @@ public class ShareRecipientRepositoryImpl implements ShareRecipientRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final ShareRecipientMapper shareRecipientMapper;
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public void saveBatch(List<ShareRecipientDTO> dtos) {
     if (dtos == null || dtos.isEmpty()) {
       return;
     }
-    List<ShareRecipient> entities = converter.shareRecipientDtosToEntities(dtos);
+    List<ShareRecipient> entities = mapper.shareRecipientListToEntity(dtos);
     for (ShareRecipient entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
         entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
@@ -53,12 +53,12 @@ public class ShareRecipientRepositoryImpl implements ShareRecipientRepository {
 
   @Override
   public List<ShareRecipientVO> findByShareId(String shareId) {
-    return converter.shareRecipientListToVO(shareRecipientMapper.selectByShareId(shareId));
+    return mapper.shareRecipientListToVO(shareRecipientMapper.selectByShareId(shareId));
   }
 
   @Override
   public List<ShareRecipientVO> findByRecipientId(String recipientId) {
-    return converter.shareRecipientListToVO(
+    return mapper.shareRecipientListToVO(
         shareRecipientMapper.selectByRecipientId(recipientId));
   }
 

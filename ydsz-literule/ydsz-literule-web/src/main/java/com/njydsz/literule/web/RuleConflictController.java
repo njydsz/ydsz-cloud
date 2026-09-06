@@ -15,6 +15,8 @@ import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
 
+import jakarta.annotation.Resource;
+
 /**
  * 规则冲突检测 Controller
  *
@@ -39,6 +41,10 @@ public class RuleConflictController {
   /** 规则冲突检测器（SPI，由 project 模块提供实现） */
   private final RuleConflictDetectorProvider ruleConflictDetectorProvider;
 
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
+
   /**
    * 检测规则冲突
    *
@@ -48,7 +54,7 @@ public class RuleConflictController {
   public YdszResponse<List<RuleConflictInfoVO>> detectConflicts() {
     return YdszResponse.success(
         ruleConflictDetectorProvider.detectConflicts().stream()
-            .map(LiteruleWebConverter.INSTANCE::entityToVO)
+            .map(literuleWebConverter::entityToVO)
             .toList());
   }
 }

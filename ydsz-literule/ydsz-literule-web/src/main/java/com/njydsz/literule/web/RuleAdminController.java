@@ -129,7 +129,7 @@ public class RuleAdminController {
     PageResponse<List<RuleDefinitionDTO>> page =
         ruleAdminService.pageRuleDefinitions(pageQuery);
     List<RuleDefinitionVO> records =
-        page.getData().stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList();
+        page.getData().stream().map(literuleWebConverter::entityToVO).toList();
     return PageResponse.success(
         page.getTotal(), page.getPageNum(), page.getPageSize(), records);
   }
@@ -146,7 +146,7 @@ public class RuleAdminController {
   @GetMapping("/{ruleCode}")
   public YdszResponse<RuleDefinitionVO> get(@PathVariable String ruleCode) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANCE.entityToVO(ruleAdminService.getByCode(ruleCode)));
+        literuleWebConverter.entityToVO(ruleAdminService.getByCode(ruleCode)));
   }
 
   /**
@@ -175,7 +175,7 @@ public class RuleAdminController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
       @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANCE.entityToVO(
+        literuleWebConverter.entityToVO(
             ruleAdminService.save(definition, operator, changeDesc)));
   }
 
@@ -257,7 +257,7 @@ public class RuleAdminController {
       RuleDefinitionDTO oldDef = YdszJson.fromJson(oldV.getDefinitionJson(), RuleDefinitionDTO.class);
       RuleDefinitionDTO newDef = YdszJson.fromJson(newV.getDefinitionJson(), RuleDefinitionDTO.class);
       return YdszResponse.success(
-          LiteruleWebConverter.INSTANCE.entityToVO(ruleVersionDiffService.diff(oldDef, newDef)));
+          literuleWebConverter.entityToVO(ruleVersionDiffService.diff(oldDef, newDef)));
     } catch (Exception e) {
       log.error(
           "[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}",
@@ -319,7 +319,7 @@ public class RuleAdminController {
       @RequestParam(required = false) String ruleCode, @RequestBody Map<String, Object> facts) {
     return YdszResponse.success(
         ruleAdminService.dryRun(ruleCode, facts).stream()
-            .map(LiteruleWebConverter.INSTANCE::entityToVO)
+            .map(literuleWebConverter::entityToVO)
             .toList());
   }
 
@@ -378,7 +378,7 @@ public class RuleAdminController {
             ? results
             : results.stream().filter(r -> ruleCode.equals(r.getRuleCode())).toList();
     return YdszResponse.success(
-        filtered.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
+        filtered.stream().map(literuleWebConverter::entityToVO).toList());
   }
 
   /**
@@ -451,7 +451,7 @@ public class RuleAdminController {
         result = expressionValidationService.validateCondition(expression);
         break;
     }
-    return YdszResponse.success(LiteruleWebConverter.INSTANCE.entityToVO(result));
+    return YdszResponse.success(literuleWebConverter.entityToVO(result));
   }
 
   /**
@@ -510,6 +510,6 @@ public class RuleAdminController {
    */
   @GetMapping("/stats")
   public YdszResponse<RuleEngineStatsVO> stats() {
-    return YdszResponse.success(LiteruleWebConverter.INSTANCE.entityToVO(ruleEngine.getStats()));
+    return YdszResponse.success(literuleWebConverter.entityToVO(ruleEngine.getStats()));
   }
 }

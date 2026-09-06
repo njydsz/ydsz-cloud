@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
 import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
 import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
@@ -22,8 +22,8 @@ import com.njydsz.nextwiki.infra.mapper.ShareAccessLogMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -36,21 +36,21 @@ public class ShareAccessLogRepositoryImpl implements ShareAccessLogRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final ShareAccessLogMapper shareAccessLogMapper;
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public ShareAccessLogVO save(ShareAccessLogDTO dto) {
-    ShareAccessLog entity = converter.dtoToEntity(dto);
+    ShareAccessLog entity = mapper.shareAccessLogToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     shareAccessLogMapper.insert(entity);
-    return converter.entityToVO(entity);
+    return mapper.shareAccessLogToVO(entity);
   }
 
   @Override
   public List<ShareAccessLogVO> findByShareId(String shareId, int limit) {
-    return converter.shareAccessLogListToVO(shareAccessLogMapper.selectByShareId(shareId, limit));
+    return mapper.shareAccessLogListToVO(shareAccessLogMapper.selectByShareId(shareId, limit));
   }
 
   @Override

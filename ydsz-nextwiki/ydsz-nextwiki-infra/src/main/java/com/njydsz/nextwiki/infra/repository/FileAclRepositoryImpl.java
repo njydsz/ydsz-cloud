@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileAclDTO;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.query.FileAclQuery;
@@ -22,8 +22,8 @@ import com.njydsz.nextwiki.infra.mapper.FileAclMapper;
  *
  * <ul>
  *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
- *   <li>通过 {@link NextwikiConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link NextwikiConverter} 转换为 DO 后执行数据库操作
+ * <li>通过 {@link NextwikiStructMapper} 将 DO 转换为 VO 后返回
+ *   <li>CUD 入参 DTO 通过 {@link NextwikiStructMapper} 转换为 DO 后执行数据库操作
  * </ul>
  *
  * @author ydsz-team
@@ -36,28 +36,28 @@ public class FileAclRepositoryImpl implements FileAclRepository {
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final FileAclMapper fileAclMapper;
-  private final NextwikiConverter converter;
+  private final NextwikiStructMapper mapper;
 
   @Override
   public FileAclVO save(FileAclDTO dto) {
-    FileAcl entity = converter.dtoToEntity(dto);
+    FileAcl entity = mapper.fileAclToEntity(dto);
     if (entity.getId() == null || entity.getId().isEmpty()) {
       entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
     fileAclMapper.insert(entity);
-    return converter.entityToVO(entity);
+    return mapper.fileAclToVO(entity);
   }
 
   @Override
   public List<FileAclVO> findByFileNodeId(String fileNodeId) {
-    return converter.fileAclListToVO(fileAclMapper.selectByFileNodeId(fileNodeId));
+    return mapper.fileAclListToVO(fileAclMapper.selectByFileNodeId(fileNodeId));
   }
 
   @Override
   public List<FileAclVO> findByFileNodeIdAndGrantee(FileAclQuery query) {
     // 语义为"查询用户对文件的有效权限"（含用户/角色/租户维度），
     // 对应 Mapper 的 selectEffectivePermissions（构建修复：原误调用 3 参数的精确匹配查询）
-    return converter.fileAclListToVO(
+    return mapper.fileAclListToVO(
         fileAclMapper.selectEffectivePermissions(
             query.getFileNodeId(), query.getUserId(), query.getRoleIds()));
   }
@@ -69,7 +69,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
 
   @Override
   public List<FileAclVO> findEffectivePermissions(FileAclQuery query) {
-    return converter.fileAclListToVO(
+    return mapper.fileAclListToVO(
         fileAclMapper.selectEffectivePermissions(
             query.getFileNodeId(),
             query.getUserId(),
@@ -81,7 +81,7 @@ public class FileAclRepositoryImpl implements FileAclRepository {
     if (dtos == null || dtos.isEmpty()) {
       return;
     }
-    List<FileAcl> entities = converter.fileAclDtosToEntities(dtos);
+    List<FileAcl> entities = mapper.fileAclListToEntity(dtos);
     for (FileAcl entity : entities) {
       if (entity.getId() == null || entity.getId().isEmpty()) {
         entity.setId(String.valueOf(snowflakeIdGenerator.nextId()));

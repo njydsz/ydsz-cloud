@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+    云顶编码规范 - Checkstyle 检查配置
+    Ydsz Cloud Coding Standards - Checkstyle Configuration
+
+    规范版本：26.09.01（对齐《云顶编码规范》26.09.01）
+    基线规范：阿里巴巴 Java 开发手册（泰山版） + Google Java Style Guide + Effective Java + 美团编码规约
+
+    检查维度：
+    1. Import 导入规范（禁止行内全限定名、禁止通配符、排序、禁止非法 import）
+    2. 命名规范（类名、方法名、变量名、常量名、包名）
+    3. 代码复杂度（方法行数、圈复杂度、嵌套层级、参数个数）
+    4. 格式检查（行宽、Tab、大括号、空格）
+    5. OOP 规约（禁止过时方法、Finalizer、equals/hashCode、@Override）
+    6. 日期时间（禁止 SimpleDateFormat 作为字段）
+    7. 文件级检查（UTF-8、行尾换行）
+    8. 并发规约（线程池创建禁止、ThreadLocal 清理）
+    9. 安全规约（BigDecimal 构造、浮点数比较）
+    10. common 模块能力复用（JSON/线程池/缓存等统一入口）
+
+    v3.2 更新说明（对齐编码规范 v2.16，新增 Javadoc 增强检查）：
+    - 新增：公共常量（public static final 字段）必须有 Javadoc 检查 — 编码规范 10.4 节
+    - 新增：枚举类型必须有类级别 Javadoc 检查 — 编码规范 10.10 节
+    - 新增：Javadoc `<p>` 标签格式检查（`<p>` 前需空行）— 编码规范 10.2 节
+    - 优化：JavadocType 增加对枚举类型的 Javadoc 强制检查
+
+    v3.0 更新说明（对齐编码规范 v2.14）：
+    - 新增：行内全限定名（FQN）检测 — 编码规范 5.1 节核心红线
+    - 新增：BigDecimal(double) 构造检测 — 编码规范 6.6 节
+    - 新增：集合初始化容量检测 — 编码规范 9.1 节
+    - 新增：静态方法通过实例调用检测 — 编码规范 6.1 节
+    - 新增：@Override 注解强制检测 — 编码规范 5.5 节
+    - 新增：空 catch 块检测 — 编码规范 11.2 节
+    - 新增：ThreadLocal 字段检测（需 finally remove）— 编码规范 15.1 节
+    - 新增：RedundantModifier 检测 — 编码规范 6.7 节
+    - 新增：Sealed 类修饰符检测（Java 21+）
+    - 优化：import 分组规则与编码规范 5.3 节完全对齐
+    - 优化：IllegalImport 扩展至更多禁止直接 import 的第三方库
+    - 优化：正则表达式简化，提升检查性能
+    - 优化：错误消息增加规范章节引用
+
+    使用方式：
+    - Maven: mvn checkstyle:check
+    - IDE: 安装 Checkstyle 插件并导入本配置文件
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- ============================================ -->
+    <!-- 1. 文件级检查（File-level Checks）            -->
+    <!-- ============================================ -->
+
+    <!-- 单行最大宽度：140 字符 -->
+    <module name="LineLength">
+        <property name="max" value="140"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
+
+    <!-- 源文件最大行数：2000 行 -->
+    <module name="FileLength">
+        <property name="max" value="2000"/>
+    </module>
+
+    <!-- 禁止使用 Tab 字符，必须使用空格缩进 -->
+    <module name="FileTabCharacter"/>
+
+    <!-- 文件末尾必须保留一个空行 -->
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf"/>
+    </module>
+
+    <!-- 能力提供者模块豁免：common-excel/docs/file/netty/seata 允许直接 import 对应 SDK -->
+    <!-- 豁免清单见同目录 checkstyle-suppressions.xml（v3.3 恢复 SuppressionFilter：
+         此前因 checkstyle 全局 skip 误判「0 违规」而移除，恢复后豁免仅限能力提供者
+         模块的合法 SDK 使用与自研引擎（common-json/common-excel）的算法类规则，
+         业务模块与红线规则（JSON/POI/Caffeine/FQN/命名/Javadoc/NeedBraces）不受影响。） -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
+        <property name="optional" value="false"/>
+    </module>
+
+    <!-- ============================================ -->
+    <!-- 2. Import 导入规范（Import Conventions）      -->
+    <!-- ============================================ -->
+
+    <module name="TreeWalker">
+        <!-- 精确豁免机制：代码内通过 `// CHECKSTYLE.OFF: CheckName` / `// CHECKSTYLE.ON: CheckName`
+             对极少数规范例外（如 Executors.newVirtualThreadPerTaskExecutor）做显式豁免。
+             豁免必须附注释说明原因，禁止滥用。 -->
+        <module name="SuppressionCommentFilter">
+            <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
+            <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
+            <property name="checkFormat" value="$1"/>
+        </module>
+
+        <!-- 禁止通配符 import（import xxx.*） -->
+        <module name="AvoidStarImport"/>
+
+        <!-- 禁止未使用的 import -->
+        <module name="UnusedImports"/>
+
+        <!-- 禁止冗余的 import -->
+        <module name="RedundantImport"/>
+
+        <!-- import 分组与排序（与《云顶编码规范》5.3 节对齐，4 组）：
+             第 1 组：java.* / javax.*
+             第 2 组：第三方库（org.* / jakarta.* / lombok 等，按字母序）
+             第 3 组：公司内部包（com.njydsz.*）
+             第 4 组：静态导入
+             组间以空行分隔 -->
+        <module name="CustomImportOrder">
+            <property name="customImportOrderRules"
+                      value="STANDARD_JAVA_PACKAGE###THIRD_PARTY_PACKAGE###SPECIAL_IMPORTS###STATIC"/>
+            <property name="specialImportsRegExp" value="^com\.njydsz\."/>
+            <property name="sortImportsInGroupAlphabetically" value="true"/>
+            <property name="separateLineBetweenGroups" value="true"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 2.1 禁止 import 的第三方库（common 模块能力复用） -->
+        <!-- ============================================ -->
+
+        <!-- 禁止 import 第三方 JSON 库（统一使用 ydsz-common-json） -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs"
+                      value="com.fasterxml.jackson,com.alibaba.fastjson,com.alibaba.fastjson2,com.google.gson,org.json"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import 原生缓存库（统一使用 ydsz-common-cache） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses"
+                      value="com.github.benmanes.caffeine.cache.Cache,
+                             com.github.benmanes.caffeine.cache.Caffeine,
+                             com.google.common.cache.Cache,
+                             com.google.common.cache.CacheBuilder"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Apache POI（统一使用 ydsz-common-excel） -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="org.apache.poi"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Tika/PDFBox（统一使用 ydsz-common-docs） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses"
+                      value="org.apache.tika.Tika,
+                             org.apache.tika.metadata.Metadata,
+                             org.apache.tika.parser.AutoDetectParser,
+                             org.apache.pdfbox.pdmodel.PDDocument,
+                             org.apache.pdfbox.text.PDFTextStripper"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Seata 原生 API（统一使用 ydsz-common-seata） -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="org.apache.seata"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Netty 原生 API（统一使用 ydsz-common-netty） -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="io.netty"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Minio/OSS 原生 SDK（统一使用 ydsz-common-file） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses"
+                      value="io.minio.MinioClient,
+                             io.minio.GetObjectArgs,
+                             io.minio.PutObjectArgs,
+                             com.aliyun.oss.OSS,
+                             com.aliyun.oss.OSSClientBuilder,
+                             com.amazonaws.services.s3.AmazonS3,
+                             com.amazonaws.services.s3.AmazonS3ClientBuilder,
+                             com.obs.services.ObsClient,
+                             com.qcloud.cos.COSClient"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import SimpleDateFormat（线程不安全，推荐 DateTimeFormatter） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses" value="java.text.SimpleDateFormat"/>
+            <property name="regexp" value="false"/>
+            <message key="import.illegal"
+                     value="SimpleDateFormat 线程不安全，请使用 java.time.format.DateTimeFormatter 替代。参考：云顶编码规范 7.1 节"/>
+        </module>
+
+        <!-- 禁止 import Executors（推荐通过 ydsz-common-thread 统一管理） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses" value="java.util.concurrent.Executors"/>
+            <property name="regexp" value="false"/>
+            <message key="import.illegal"
+                     value="禁止直接使用 Executors 创建线程池（无界队列风险），请使用 ydsz-common-thread 统一管理。参考：云顶编码规范 15.4 节"/>
+        </module>
+
+        <!-- 禁止 import Caffeine Cache（统一使用 ydsz-common-cache） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses"
+                      value="org.ehcache.Cache,
+                             org.ehcache.CacheManager,
+                             org.ehcache.config.builders.CacheConfigurationBuilder"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 2.2 代码体全限定名（FQN）检测 — 编码规范 5.1 节核心红线 -->
+        <!-- ============================================ -->
+
+        <!-- 检测代码体中使用的全限定类名（行内 FQN） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="^\s*(?!import\b|package\b|[a-zA-Z_$][a-zA-Z0-9_$]*\s*\.\s*[a-zA-Z_$]|//|/\*|\*|&lt;[^&gt;]+&gt;|System\.getProperty\(|getName\(\)\s*\.|\.class\b).*\b(java\.(util|time|math|io|sql|nio|lang|net|security|text|beans)|javafx\.|org\.springframework\.|com\.google\.common\.|com\.fasterxml\.jackson\.|com\.alibaba\.fastjson).*\b"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="【强制-行内FQN】代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。违规示例：java.time.LocalDateTime、java.math.BigDecimal、java.util.List。参考：云顶编码规范 5.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 3. 命名规范（Naming Conventions）            -->
+        <!-- ============================================ -->
+
+        <!-- 类名：UpperCamelCase，必须遵从驼峰形式 -->
+        <module name="TypeName">
+            <property name="format" value="^[A-Z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 方法名：lowerCamelCase -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 成员变量名：lowerCamelCase -->
+        <module name="MemberName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 局部变量名：lowerCamelCase -->
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <property name="tokens" value="VARIABLE_DEF"/>
+        </module>
+
+        <!-- 静态非 final 变量名：lowerCamelCase -->
+        <module name="StaticVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 常量名：UPPER_SNAKE_CASE -->
+        <module name="ConstantName">
+            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+        </module>
+
+        <!-- 参数名：lowerCamelCase -->
+        <module name="ParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 包名：全小写，点分隔 -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+        </module>
+
+        <!-- 抽象类：Abstract 或 Base 开头 -->
+        <module name="AbstractClassName">
+            <property name="ignoreName" value="true"/>
+            <property name="format" value="^Abstract.*$|^Base.*$"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 4. 代码复杂度（Complexity）                   -->
+        <!-- ============================================ -->
+
+        <!-- 方法最大行数：80 行 -->
+        <module name="MethodLength">
+            <property name="max" value="80"/>
+        </module>
+
+        <!-- 单方法最大参数个数：5 个 -->
+        <module name="ParameterNumber">
+            <property name="max" value="5"/>
+            <property name="tokens" value="METHOD_DEF"/>
+        </module>
+
+        <!-- 圈复杂度：10 -->
+        <module name="CyclomaticComplexity">
+            <property name="max" value="10"/>
+            <property name="switchBlockAsSingleDecisionPoint" value="true"/>
+        </module>
+
+        <!-- if-else 嵌套最大深度：3 层 -->
+        <module name="NestedIfDepth">
+            <property name="max" value="3"/>
+        </module>
+
+        <!-- for 循环嵌套最大深度：3 层 -->
+        <module name="NestedForDepth">
+            <property name="max" value="3"/>
+        </module>
+
+        <!-- try 嵌套最大深度：3 层 -->
+        <module name="NestedTryDepth">
+            <property name="max" value="3"/>
+        </module>
+
+        <!-- 单行只能有一条语句 -->
+        <module name="OneStatementPerLine"/>
+
+        <!-- 禁止多变量声明（每行只声明一个变量） -->
+        <module name="MultipleVariableDeclarations"/>
+
+        <!-- ============================================ -->
+        <!-- 5. 格式与空格（Formatting & Whitespace）      -->
+        <!-- ============================================ -->
+
+        <!-- 左大括号必须在方法/类声明后同一行（K&R 风格） -->
+        <module name="LeftCurly">
+            <property name="option" value="eol"/>
+            <property name="tokens"
+                      value="CLASS_DEF, INTERFACE_DEF, METHOD_DEF, CTOR_DEF,
+                             LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, LITERAL_WHILE,
+                             LITERAL_DO, LITERAL_SWITCH, LITERAL_TRY, LITERAL_CATCH,
+                             STATIC_INIT, ANNOTATION_DEF, ENUM_DEF"/>
+        </module>
+
+        <!-- 右大括号：与后续 else/catch/finally 同行（option=same，与《云顶编码规范》4.1 节一致） -->
+        <module name="RightCurly">
+            <property name="option" value="same"/>
+            <property name="tokens" value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE"/>
+        </module>
+
+        <!-- 必须使用大括号（即使只有一行语句） -->
+        <module name="NeedBraces"/>
+
+        <!-- 保留字（if/for/while/switch/do）与括号之间必须有空格 -->
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
+        </module>
+
+        <!-- 运算符、括号、分号周围空格规范（使用 checkstyle 默认 token 集合） -->
+        <module name="WhitespaceAround">
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="allowEmptyTypes" value="true"/>
+            <property name="allowEmptyLoops" value="true"/>
+            <property name="allowEmptyLambdas" value="true"/>
+            <property name="ignoreEnhancedForColon" value="false"/>
+        </module>
+
+        <!-- 注释双斜线与内容之间有且仅有一个空格 -->
+        <module name="SingleSpaceSeparator"/>
+
+        <!-- ============================================ -->
+        <!-- 6. OOP 规约（OOP Conventions）               -->
+        <!-- ============================================ -->
+
+        <!-- 禁止覆盖 finalize() 方法 -->
+        <module name="NoFinalizer"/>
+
+        <!-- 禁止抛出 RuntimeException / Exception（Throwable 豁免：AOP 切面方法必须 throws Throwable 以透传 joinPoint.proceed() 异常） -->
+        <module name="IllegalThrows">
+            <property name="illegalClassNames"
+                      value="java.lang.RuntimeException, java.lang.Exception"/>
+            <message key="illegal.throw"
+                     value="禁止直接抛出 RuntimeException/Exception，请使用自定义业务异常。参考：云顶编码规范 11 章"/>
+        </module>
+
+        <!-- 说明：BigDecimal 误用拦截不采用 IllegalType——该规则检查的是"类型使用"（变量/返回类型/参数），
+             会误伤规范 6.3 明确鼓励的 BigDecimal 返回类型/变量；真正要拦的 new BigDecimal(double) 已由
+             下方第 17 节 RegexpSinglelineJava 精确覆盖。 -->
+
+        <!-- 禁止实例化工具类（私有构造方法） -->
+        <module name="HideUtilityClassConstructor"/>
+
+        <!-- 覆盖 equals 必须同时覆盖 hashCode -->
+        <module name="EqualsHashCode"/>
+
+        <!-- 重写方法必须标注 @Override -->
+        <module name="MissingOverride"/>
+
+        <!-- 禁止冗余修饰符（接口方法上的 public/abstract、final 类上的 final 方法等） -->
+        <module name="RedundantModifier"/>
+
+        <!-- ============================================ -->
+        <!-- 7. 日期时间（Date & Time）                   -->
+        <!-- ============================================ -->
+
+        <!-- 禁止 SimpleDateFormat 作为实例字段或静态字段（线程不安全） -->
+        <module name="IllegalType">
+            <property name="illegalClassNames" value="java.text.SimpleDateFormat"/>
+            <message key="illegal.type"
+                     value="SimpleDateFormat 线程不安全，请使用 java.time.format.DateTimeFormatter 替代。参考：云顶编码规范 7.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 8. 并发规约（Concurrency）                   -->
+        <!-- ============================================ -->
+
+        <!-- 禁止直接 new ThreadPoolExecutor / ThreadPoolTaskExecutor（必须通过 ydsz-common-thread 配置）
+             豁免：ydsz-common-thread 模块本身、方法内短生命周期临时池（需 CHECKSTYLE.OFF 注释说明） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="new\s+ThreadPoolExecutor\s*\(|new\s+ThreadPoolTaskExecutor\s*\(|new\s+ScheduledThreadPoolExecutor\s*\("/>
+            <property name="ignoreComments" value="false"/>
+            <property name="message"
+                      value="禁止直接创建线程池实例，必须通过 ysz.thread.pools.* 配置使用 ydsz-common-thread 统一管理。参考：云顶编码规范 15.4.1 节"/>
+        </module>
+
+        <!-- 禁止 new Random()（推荐 ThreadLocalRandom） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="new\s+Random\s*\(\s*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                     value="推荐使用 ThreadLocalRandom.current() 替代 new Random() 以提高并发性能。参考：云顶编码规范 15 章"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 9. 安全规约（Security）                      -->
+        <!-- ============================================ -->
+
+        <!-- long 赋值必须使用大写 L -->
+        <module name="UpperEll">
+            <message key="upperEll"
+                     value="long/Long 赋值必须使用大写 L（如 2L），小写 l 易与数字 1 混淆。参考：云顶编码规范 3.2 节"/>
+        </module>
+
+        <!-- 魔法数检查（局部变量中出现的数字常量，排除 0, 1, -1, 2, 100 等常用值） -->
+        <module name="MagicNumber">
+            <property name="ignoreNumbers" value="-1, 0, 1, 2, 10, 100, 1000, 10000, 0.1, 0.01"/>
+            <property name="ignoreAnnotation" value="true"/>
+            <property name="ignoreHashCodeMethod" value="true"/>
+            <message key="magic.number"
+                     value="魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 10. 异常处理（Exception Handling）            -->
+        <!-- ============================================ -->
+
+        <!-- 禁止空 catch 块（吞异常） -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="^(e|ex|exception|ignore|ignored)$"/>
+            <message key="catch.block.empty"
+                     value="禁止空 catch 块（吞异常），至少记录日志或抛出业务异常。参考：云顶编码规范 11.2 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 11. 集合规约（Collection Conventions）        -->
+        <!-- ============================================ -->
+
+        <!-- 禁止在 for 循环中修改循环变量 -->
+        <module name="ModifiedControlVariable"/>
+
+        <!-- ============================================ -->
+        <!-- 12. Switch 规约                              -->
+        <!-- ============================================ -->
+
+        <!-- 禁止在 switch 中缺少 default 分支 -->
+        <module name="MissingSwitchDefault"/>
+
+        <!-- switch case fall-through 禁止（必须 break/return/throw/continue） -->
+        <module name="FallThrough">
+            <property name="reliefPattern" value="继续执行到下一个 case|fall through|no break"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 13. Javadoc 注释规范（Javadoc Conventions）   -->
+        <!-- ============================================ -->
+
+        <!-- 类和接口必须有 Javadoc（@author/@since 由《云顶编码规范》10.1 节约定，不强制 @version） -->
+        <module name="JavadocType">
+            <property name="scope" value="public"/>
+            <property name="authorFormat" value="\S+"/>
+        </module>
+
+        <!-- 枚举类型必须有类级别 Javadoc（编码规范 10.10 节） -->
+        <module name="JavadocType">
+            <property name="scope" value="public"/>
+            <property name="tokens" value="ENUM_DEF"/>
+            <property name="authorFormat" value="\S+"/>
+        </module>
+
+        <!-- 公共常量（public static final 字段）必须有 Javadoc（编码规范 10.4 节） -->
+        <module name="JavadocVariable">
+            <property name="scope" value="public"/>
+        </module>
+
+        <!-- 公共方法必须有 Javadoc（checkstyle 9.x 中 scope 属性已移除，改用 accessModifiers 显式限定 public） -->
+        <module name="JavadocMethod">
+            <property name="accessModifiers" value="public"/>
+            <property name="allowedAnnotations" value="Override, Test, BeforeEach, AfterEach, BeforeAll, AfterAll, Bean, MockitoBean, Param, QueryParam, PathVariable, RequestBody, Valid, PostConstruct, PreDestroy"/>
+            <property name="allowMissingParamTags" value="false"/>
+            <property name="allowMissingReturnTag" value="false"/>
+        </module>
+
+        <!-- Javadoc 格式和段落规范（中文 Javadoc 不强制首句句号，仅检查空 Javadoc） -->
+        <module name="JavadocStyle">
+            <property name="scope" value="public"/>
+            <property name="checkFirstSentence" value="false"/>
+            <property name="checkEmptyJavadoc" value="true"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 14. ydsz-common-lock 幂等键命名规范           -->
+        <!-- ============================================ -->
+
+        <!-- @Idempotent 键名正则校验：静态键（非 SpEL）需匹配 {namespace}:{domain}:{resource}:{action} 格式，不以 :lock 结尾 -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="@Idempotent\s*\(\s*key\s*=&quot;(?!.*\#)(?!.*\$\{)(?!ydsz:)(?![a-z]+:[\w]+:[\w]+:[\w]+&quot;)(?![a-z]+:[\w]+:[\w]+:[\w]+:[\w]+&quot;)[^&quot;]+&quot;"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="@Idempotent 键名不符合命名规范：应使用 `ydsz:{domain}:{resource}:{action}` 格式（如 ydsz:workflow:attachment:delete），禁止 :lock 后缀与缩写类名。参考 common-lock README「命名规范」章节"/>
+        </module>
+
+        <!-- 禁止 @Idempotent 键名以 :lock 结尾（SpEL 表达式豁免） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="@Idempotent\s*\(\s*key\s*=&quot;(?!.*\#)(?!.*\$\{)[^&quot;]*:lock\s*&quot;"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="@Idempotent 键名禁止以 `:lock` 结尾，`@Idempotent` 本身已表达幂等锁语义，后缀冗余。参考 common-lock README「命名规范」章节"/>
+        </module>
+
+        <!-- 禁止 @Idempotent 键名包含 Controller 类名（应使用领域资源名） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="@Idempotent\s*\(\s*key\s*=&quot;(?!.*\#)(?!.*\$\{)[^&quot;]*Controller[^&quot;]*&quot;"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="@Idempotent 键名禁止包含 `Controller` 类名，应使用领域资源名（如 `attachment` 而非 `FlowAttachmentController`）。参考 common-lock README「命名规范」章节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 15. 静态方法调用规范（编码规范 6.1 节）       -->
+        <!-- ============================================ -->
+
+        <!-- 说明：静态方法调用检测已移除——原正则 \.\s*(sleep|currentTimeMillis|...)\s*\(\s*\) 无法区分
+             类名调用（如 System.currentTimeMillis()，合法）与实例调用，产生大量误报（全项目约 259 条）。
+             javac -Xlint:static 已提供等价检查，故移除此 Regexp 规则。 -->
+
+        <!-- ============================================ -->
+        <!-- 16. 集合初始化容量规范（编码规范 9.1 节）     -->
+        <!-- ============================================ -->
+
+        <!-- 检测无初始容量的 ArrayList/HashMap/HashSet 构造 -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="new\s+ArrayList\s*\(\s*\)|new\s+HashMap\s*\(\s*\)|new\s+HashSet\s*\(\s*\)|new\s+LinkedHashMap\s*\(\s*\)|new\s+LinkedHashSet\s*\(\s*\)|new\s+ConcurrentHashMap\s*\(\s*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="集合初始化时必须指定初始容量（已知大小时），避免频繁扩容。参考：云顶编码规范 9.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 17. BigDecimal 构造规范（编码规范 6.6 节）    -->
+        <!-- ============================================ -->
+
+        <!-- 禁止 new BigDecimal(double/Float) 构造 -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="new\s+BigDecimal\s*\(\s*\d+\.\d+[fFdD]?\s*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="禁止 new BigDecimal(double/Float) 构造方法（精度丢失），推荐 new BigDecimal(String) 或 BigDecimal.valueOf()。参考：云顶编码规范 6.6 节"/>
+        </module>
+
+        <!-- 说明：接口冗余修饰符检测已移除——原正则 \b(public|abstract) 会误匹配所有 public 方法（含普通类方法），
+             产生大量误报；接口冗余 public/abstract 已由上文第 6 节 RedundantModifier 规则正确覆盖。 -->
+
+        <!-- ============================================ -->
+        <!-- 18. ThreadLocal 字段检测（编码规范 15.1 节）  -->
+        <!-- ============================================ -->
+
+        <!-- 检测 ThreadLocal 字段（提醒需在 finally 中 remove） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="ThreadLocal\s*&lt;[^&gt;]+\&gt;\s+\w+\s*="/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="ThreadLocal 字段必须在 finally 块中调用 remove() 清理，避免内存泄漏。参考：云顶编码规范 15.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 19. 日志规范（编码规范 7 章）                 -->
+        <!-- ============================================ -->
+
+        <!-- 禁止日志字符串拼接（应使用占位符 {}） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="log\.(info|warn|error|debug|trace)\s*\(\s*&quot;[^&quot;]*&quot;\s*\+"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="日志输出必须使用占位符 {}，禁止字符串拼接。参考：云顶编码规范 7.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 20. 其他规范（Miscellaneous）                -->
+        <!-- ============================================ -->
+
+        <!-- 禁止 System.out.println / System.err.println -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="System\.(out|err)\.(println|print)\s*\("/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="禁止使用 System.out/err 输出，必须使用日志框架（SLF4J + Logback）。参考：云顶编码规范 7 章"/>
+        </module>
+
+        <!-- 禁止 e.printStackTrace() -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="e\.printStackTrace\s*\(\s*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="禁止使用 e.printStackTrace()，必须使用日志框架记录异常。参考：云顶编码规范 7 章"/>
+        </module>
+
+        <!-- 禁止 == 比较 BigDecimal -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="BigDecimal\s+\w+\s*=\s*[^;]+;\s*\w+\s*==\s*\w+"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="BigDecimal 比较必须使用 equals() 或 compareTo()，禁止使用 ==。参考：云顶编码规范 6.2 节"/>
+        </module>
+
+    </module>
+</module>

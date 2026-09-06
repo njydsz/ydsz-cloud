@@ -13,11 +13,10 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-import jakarta.annotation.Resource;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -131,7 +130,7 @@ public class CodeGenService {
     Map<String, Object> tableCtx = codeGenEngine.buildTableContext(columns);
     Map<String, Object> context = codeGenEngine.buildContext(
         tableMeta.getModuleName(), defaultBasePackage, defaultAuthor,
-        tableCtx, new HashMap<>());
+        tableCtx, new HashMap<>(templates.size()));
 
     for (GenTemplate tpl : templates) {
       previews.add(codeGenEngine.preview(tpl, context));
@@ -344,7 +343,7 @@ public class CodeGenService {
     Map<String, Object> tableCtx = codeGenEngine.buildTableContext(columns);
     Map<String, Object> context = codeGenEngine.buildContext(
         tableMeta.getModuleName(), defaultBasePackage, defaultAuthor,
-        tableCtx, new HashMap<>());
+        tableCtx, new HashMap<>(templates.size()));
 
     int successCount = 0;
     int skipCount = 0;
