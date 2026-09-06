@@ -8,13 +8,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient.AgentExecutionResult;
 import com.njydsz.workflow.domain.vo.AiAgentNodeConfigVO;
@@ -53,18 +51,18 @@ import com.njydsz.workflow.server.engine.impl.FlowVariableReplacer;
  * <p>借鉴 Flowlong 的「AI 审批」概念，将 AI Agent 作为流程节点执行器，
  * 实现自然语言驱动的审批决策自动化。
  *
+ * <p><b>P0-1 线程池统一：</b>使用 {@link InternalExecutorFactory} 创建命名化、可观测的线程池，
+ * 纳入 {@code ThreadPoolRegistry} 统一监控。
+ *
  * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
 @Component
 public class FlowAiAgentNodeExecutor {
+
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
-
-
-  /** AI Agent 执行使用的线程池名称 */
-  private static final String THREAD_POOL_NAME = "flow-ai-agent-executor";
 
   /** 重试基础延迟（毫秒，指数退避起点） */
   private static final long RETRY_BASE_DELAY_MS = 1000L;
@@ -72,14 +70,11 @@ public class FlowAiAgentNodeExecutor {
   /** 重试最大延迟（毫秒，指数退避上限） */
   private static final long RETRY_MAX_DELAY_MS = 5000L;
 
-  /** 兜底线程池核心线程数 */
-  private static final int FALLBACK_POOL_CORE_SIZE = 2;
+  /** AI Agent 执行线程池核心线程数 */
+  private static final int EXECUTOR_CORE_SIZE = 2;
 
-  /** 兜底线程池最大线程数 */
-  private static final int FALLBACK_POOL_MAX_SIZE = 4;
-
-  /** 兜底线程池队列容量 */
-  private static final int FALLBACK_POOL_QUEUE_CAPACITY = 256;
+  /** AI Agent 执行线程池队列容量 */
+  private static final int EXECUTOR_QUEUE_CAPACITY = 256;
 
   /** 提示词模板变量替换器 */
   private final FlowVariableReplacer variableReplacer;
@@ -87,46 +82,22 @@ public class FlowAiAgentNodeExecutor {
   /** AI Agent 服务客户端 */
   private final AgentServiceClient agentServiceClient;
 
-  /** common-thread 声明式线程池（P0-5：ydsz.thread.pools.flow-ai-agent-executor，可选依赖安全降级） */
-  private final ObjectProvider<ThreadPoolTaskExecutor> executorProvider;
+  /** AI Agent 执行线程池（P0-1：由 InternalExecutorFactory 统一管理，纳入 ThreadPoolRegistry） */
+  private final ExecutorService aiAgentExecutor;
 
   /**
-   * 构造器注入依赖。
+   * 构造器注入依赖并初始化线程池。
    *
    * @param variableReplacer 变量替换器
    * @param agentServiceClient AI Agent 服务客户端
-   * @param executorProvider 声明式线程池提供者（按名匹配 ydsz-flow-ai-agent-executor）
    */
   public FlowAiAgentNodeExecutor(FlowVariableReplacer variableReplacer,
-      AgentServiceClient agentServiceClient,
-      ObjectProvider<ThreadPoolTaskExecutor> executorProvider) {
+      AgentServiceClient agentServiceClient) {
     this.variableReplacer = variableReplacer;
     this.agentServiceClient = agentServiceClient;
-    this.executorProvider = executorProvider;
+    this.aiAgentExecutor = InternalExecutorFactory.newFixedThreadPool(
+        "workflow-ai-agent", EXECUTOR_CORE_SIZE, EXECUTOR_QUEUE_CAPACITY);
     log.info("[Flow-AI-Agent] AI 审批节点执行器已初始化");
-  }
-
-  /**
-   * 获取 Agent 执行线程池。
-   *
-   * <p>优先使用 common-thread 声明式线程池（云顶规范 16.4，按线程名前缀匹配），
-   * 未配置时经 {@link ExecutorUtils} 工厂创建模块级兜底池（common-thread 授权场景）。
-   *
-   * @return AI Agent 执行线程池
-   */
-  private ExecutorService resolveExecutor() {
-    for (ThreadPoolTaskExecutor candidate : executorProvider) {
-      String prefix = candidate.getThreadNamePrefix();
-      if (prefix != null && prefix.contains(THREAD_POOL_NAME)) {
-        return candidate.getThreadPoolExecutor();
-      }
-    }
-    return ExecutorUtils.builder()
-        .corePoolSize(FALLBACK_POOL_CORE_SIZE)
-        .maxPoolSize(FALLBACK_POOL_MAX_SIZE)
-        .queueCapacity(FALLBACK_POOL_QUEUE_CAPACITY)
-        .threadNamePrefix(THREAD_POOL_NAME + "-")
-        .build();
   }
 
   /**
@@ -224,7 +195,7 @@ public class FlowAiAgentNodeExecutor {
     // 使用 CompletableFuture + 线程池实现超时控制
     CompletableFuture<AgentExecutionResult> future = CompletableFuture.supplyAsync(
         () -> agentServiceClient.execute(config.getAgentId(), prompt, context, config.getTimeoutMs()),
-        resolveExecutor());
+        aiAgentExecutor);
 
     try {
       return future.get(config.getTimeoutMs(), TimeUnit.MILLISECONDS);

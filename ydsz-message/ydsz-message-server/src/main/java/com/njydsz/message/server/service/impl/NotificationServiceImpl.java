@@ -35,8 +35,8 @@ public class NotificationServiceImpl implements NotificationService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
-  /** 最大轮询次数（安全护栏） */
-    private static final int MAX_ROUNDS = 200;
+    /** 最大轮询次数（安全护栏） */
+  private static final int MAX_ROUNDS = 200;
 
   /** P3-6: 批量 insert 单批最大条数（ydsz_msg_notification 28 列，500 条 ≈ 1.4 万参数，远低于 PG 65535 上限） */
   private static final int INSERT_BATCH_SIZE = 500;

@@ -3,7 +3,7 @@ package com.njydsz.gateway.config;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.constant.InternalSignatureHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
+import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
 
 /**
  * 网关层内部常量定义。
