@@ -41,7 +41,7 @@ import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
@@ -128,6 +128,9 @@ public class FileApplicationService {
 
   /** 缓存服务（文件详情、目录列表、配额用量 Redis 缓存） */
   private final NextwikiCacheService cacheService;
+
+  /** MapStruct 转换器（替代 NextwikiConverter） */
+  private final NextwikiStructMapper mapper;
 
   /** 编程式事务模板（用于精确控制事务边界，将IO操作移出事务） */
   private TransactionTemplate transactionTemplate;

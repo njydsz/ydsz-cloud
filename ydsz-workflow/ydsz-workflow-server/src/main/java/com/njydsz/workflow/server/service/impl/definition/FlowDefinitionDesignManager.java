@@ -160,7 +160,7 @@ public class FlowDefinitionDesignManager {
           .message("流程定义不存在: " + definitionId)
           .build();
     }
-    if (def.getIsPublish() != null && def.getIsPublish() == 1) {
+    if (def.getPublishStatus() != null && def.getPublishStatus() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("已发布的流程定义不可编辑，请创建新版本: " + definitionId)
@@ -309,7 +309,7 @@ public class FlowDefinitionDesignManager {
           .message("流程定义不存在: " + definitionId)
           .build();
     }
-    if (def.getIsPublish() != null && def.getIsPublish() == 1) {
+    if (def.getPublishStatus() != null && def.getPublishStatus() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .message("已发布的流程定义不可编辑，请先创建新版本")
