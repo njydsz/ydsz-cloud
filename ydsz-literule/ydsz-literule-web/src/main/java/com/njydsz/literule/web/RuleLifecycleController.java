@@ -42,6 +42,8 @@ import com.njydsz.literule.server.approval.RuleApprovalService;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 
+import jakarta.annotation.Resource;
+
 /**
  * 规则生命周期 Controller
  *

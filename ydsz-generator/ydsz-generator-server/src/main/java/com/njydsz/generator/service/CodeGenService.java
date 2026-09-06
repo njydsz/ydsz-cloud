@@ -16,8 +16,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,7 +97,8 @@ public class CodeGenService {
       TableMetadataService tableMetadataService,
       CodeGenEngine codeGenEngine,
       GenHistoryRepository historyRepository,
-      @Resource(name = "codeGenExecutor") ExecutorService codeGenExecutor,
+      @Autowired
+  @Qualifier("codeGenExecutor") ExecutorService codeGenExecutor,
       GenHistoryFileRepository historyFileRepository) {
     this.datasourceService = datasourceService;
     this.templateGroupService = templateGroupService;
