@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +19,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 基于 BloomFilter + Redis 的消息去重前置过滤器。

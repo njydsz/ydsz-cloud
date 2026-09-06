@@ -13,8 +13,8 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.JsonMapper;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.channel.ChannelRouter;
