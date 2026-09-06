@@ -22,6 +22,8 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.annotation.SecondaryAuth;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
@@ -128,9 +130,12 @@ public class RoleController {
    *
    * <p>{@code builtIn=true} 的内置角色由系统初始化时创建，<b>不允许</b>通过本接口创建。
    *
+   * <p><b>需要二次身份验证：</b>创建角色属于极敏感操作，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param dto 角色创建 DTO（roleCode / roleName / description / dataScope 等）
    * @return 新创建的角色 ID
    */
+  @SecondaryAuth(scene = "role:write", level = SensitiveLevel.CRITICAL, value = "创建角色")
   @Audit(
       module = "角色管理",
       type = AuditType.OPERATION,
@@ -152,9 +157,12 @@ public class RoleController {
    * <p>业务流程：使用 {@code BeanUpdateUtil.copyNonNull} 动态复制非 null 字段， <b>忽略 builtIn 字段</b>（不允许通过 API
    * 变更内置角色标识）。
    *
+   * <p><b>需要二次身份验证：</b>更新角色属于极敏感操作，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param dto 角色更新 DTO（必须包含 ID）
    * @return 是否成功
    */
+  @SecondaryAuth(scene = "role:write", level = SensitiveLevel.CRITICAL, value = "更新角色")
   @Audit(
       module = "角色管理",
       type = AuditType.OPERATION,
@@ -182,9 +190,12 @@ public class RoleController {
    *
    * <p>删除时同时清除角色-权限关联记录（中间表）。
    *
+   * <p><b>需要二次身份验证：</b>删除角色属于极敏感操作，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param id 角色 ID
    * @return 是否成功
    */
+  @SecondaryAuth(scene = "role:write", level = SensitiveLevel.CRITICAL, value = "删除角色")
   @Audit(
       module = "角色管理",
       type = AuditType.OPERATION,
@@ -205,10 +216,13 @@ public class RoleController {
    *
    * <p><b>覆盖式</b>分配：先清空旧的权限关联，再批量插入新关联（避免 N+1 循环）。 业务方传入<b>完整</b>的权限 ID 列表，而非增量。
    *
+   * <p><b>需要二次身份验证：</b>分配角色权限属于极敏感操作，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param roleId 角色 ID
    * @param dto 分配权限 DTO（permissionIds 列表）
    * @return 是否成功
    */
+  @SecondaryAuth(scene = "role:write", level = SensitiveLevel.CRITICAL, value = "分配角色权限")
   @Audit(
       module = "角色管理",
       type = AuditType.OPERATION,

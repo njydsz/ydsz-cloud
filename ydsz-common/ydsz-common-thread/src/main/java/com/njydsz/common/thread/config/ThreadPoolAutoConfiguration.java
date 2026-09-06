@@ -19,7 +19,6 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.AvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -149,11 +148,10 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
-  @ConditionalOnBean(MeterRegistry.class)
   @ConditionalOnMissingBean(ThreadPoolRegistryMetrics.class)
   public ThreadPoolRegistryMetrics threadPoolRegistryMetrics(
       ObjectProvider<MeterRegistry> meterRegistryProvider) {
-    ThreadPoolRegistryMetrics binder = new ThreadPoolRegistryMetrics(new ThreadPoolRegistry());
+    ThreadPoolRegistryMetrics binder = new ThreadPoolRegistryMetrics();
     MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
     if (meterRegistry != null) {
       binder.bindTo(meterRegistry);
@@ -176,14 +174,11 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   @ConditionalOnClass(Endpoint.class)
-  @ConditionalOnBean(
-      value = org.springframework.boot.actuate.endpoint.annotation.Endpoint.class,
-      name = "endpointRegistry")
   @AvailableEndpoint(ThreadPoolMetricsEndpoint.class)
   @ConditionalOnMissingBean(ThreadPoolMetricsEndpoint.class)
   public ThreadPoolMetricsEndpoint threadPoolMetricsEndpoint() {
     LOG.info("[ydsz-thread] 注册 Actuator 端点: /actuator/threadpools");
-    return new ThreadPoolMetricsEndpoint(new ThreadPoolRegistry());
+    return new ThreadPoolMetricsEndpoint();
   }
 
   /**

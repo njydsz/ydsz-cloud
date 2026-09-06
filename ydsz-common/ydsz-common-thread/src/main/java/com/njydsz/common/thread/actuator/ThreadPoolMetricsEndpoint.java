@@ -1,10 +1,9 @@
 package com.njydsz.common.thread.actuator;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
-import org.springframework.boot.actuator.endpoint.annotation.ReadOperation;
+import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -54,17 +53,6 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 @Endpoint(id = "threadpools")
 public class ThreadPoolMetricsEndpoint {
 
-  private final ThreadPoolRegistry registry;
-
-  /**
-   * 构造线程池指标端点。
-   *
-   * @param registry 线程池注册中心
-   */
-  public ThreadPoolMetricsEndpoint(ThreadPoolRegistry registry) {
-    this.registry = registry;
-  }
-
   /**
    * 读取所有线程池的指标快照。
    *
@@ -72,7 +60,8 @@ public class ThreadPoolMetricsEndpoint {
    */
   @ReadOperation
   public ThreadPoolMetricsResponse listThreadPools() {
-    List<ThreadPoolRegistry.ThreadPoolMetricsSnapshot> snapshots = registry.snapshotMetrics();
+    List<ThreadPoolRegistry.ThreadPoolMetricsSnapshot> snapshots =
+        ThreadPoolRegistry.snapshotMetrics();
     return new ThreadPoolMetricsResponse(snapshots, snapshots.size());
   }
 
@@ -85,7 +74,7 @@ public class ThreadPoolMetricsEndpoint {
   @ReadOperation
   @Nullable
   public ThreadPoolRegistry.ThreadPoolMetricsSnapshot getThreadPool(@Selector String poolName) {
-    return registry.snapshotMetrics(poolName);
+    return ThreadPoolRegistry.snapshotMetrics(poolName);
   }
 
   /**
@@ -95,8 +84,7 @@ public class ThreadPoolMetricsEndpoint {
    * @param totalCount 线程池总数
    */
   public record ThreadPoolMetricsResponse(
-      @NonNull List<ThreadPoolRegistry.ThreadPoolMetricsSnapshot> threadPools,
-      int totalCount) {
+      @NonNull List<ThreadPoolRegistry.ThreadPoolMetricsSnapshot> threadPools, int totalCount) {
 
     public List<ThreadPoolRegistry.ThreadPoolMetricsSnapshot> getThreadPools() {
       return threadPools;

@@ -6,7 +6,6 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.thread.registry.ThreadPoolRegistry;
@@ -39,7 +38,6 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * @since 26.09.01
  */
 @Slf4j
-@RequiredArgsConstructor
 public class ThreadPoolRegistryMetrics implements MeterBinder {
 
   /** 注册中心指标前缀。 */
@@ -48,12 +46,10 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
   /** 注册中心指标汇总前缀。 */
   public static final String METRIC_COUNT_NAME = "ydsz.registry.executor.count";
 
-  private final ThreadPoolRegistry registry;
-
   @Override
   public void bindTo(MeterRegistry registry) {
     // 汇总指标：当前注册中心管理的线程池数量
-    Gauge.builder(METRIC_COUNT_NAME, this.registry, ThreadPoolRegistry::size)
+    Gauge.builder(METRIC_COUNT_NAME, ThreadPoolExecutor.class, e -> ThreadPoolRegistry.size())
         .description("当前 ThreadPoolRegistry 管理的线程池总数")
         .register(registry);
 
@@ -63,7 +59,7 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
 
     log.info(
         "[ThreadPoolRegistryMetrics] Micrometer 指标绑定完成，当前注册线程池 {} 个",
-        this.registry.size());
+        ThreadPoolRegistry.size());
   }
 
   /**
@@ -73,7 +69,7 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
    * 后续新注册的线程池需通过 {@link #refreshMetrics(MeterRegistry)} 方法重新绑定。
    */
   private void registerDynamicGauges(MeterRegistry registry) {
-    this.registry.getAll().forEach(this::registerPoolGauges);
+    ThreadPoolRegistry.getAll().forEach(this::registerPoolGauges);
   }
 
   /**

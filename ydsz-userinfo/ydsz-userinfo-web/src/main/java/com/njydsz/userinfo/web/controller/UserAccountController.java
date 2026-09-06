@@ -27,7 +27,9 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AssignRolesDTO;
@@ -196,9 +198,12 @@ public class UserAccountController {
    *
    * <p>删除为<b>软删除</b>（{@code deleted=1}），保留历史数据便于审计追溯， 同步触发 ES 索引删除。
    *
+   * <p><b>需要二次身份验证：</b>删除用户账户属于极敏感操作，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param id 用户 ID
    * @return 是否成功
    */
+  @SecondaryAuth(scene = "user:delete", level = SensitiveLevel.CRITICAL, value = "删除用户账户")
   @Audit(
       module = "用户管理",
       type = AuditType.OPERATION,
@@ -411,9 +416,12 @@ public class UserAccountController {
    *
    * <p>幂等保护 5 秒；限流 30 QPS；写审计日志。
    *
+   * <p><b>需要二次身份验证：</b>批量删除用户属于极敏感批量操作，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param dto 批量操作 DTO（ids 列表）
    * @return 成功删除的用户数量
    */
+  @SecondaryAuth(scene = "batch:delete", level = SensitiveLevel.CRITICAL, value = "批量删除用户")
   @Audit(
       module = "用户管理",
       type = AuditType.OPERATION,
@@ -461,6 +469,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'批量禁用用户: ' + #dto.ids.size() + ' 个'")
+  @SecondaryAuth(scene = "batch:delete", level = SensitiveLevel.CRITICAL, value = "批量禁用用户")
   @SensitiveOperation("批量禁用用户")
   @Idempotent(key = "ydsz:userinfo:user:batchDisable", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccount.batchDisable", threshold = 30)
@@ -574,6 +583,7 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'用户离职: ' + #userId")
+  @SecondaryAuth(scene = "user:delete", level = SensitiveLevel.CRITICAL, value = "账号离职处理（终态操作）")
   @SensitiveOperation("用户离职")
   @Idempotent(key = "ydsz:userinfo:user:resign", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.UserAccount.resign", threshold = 5)
