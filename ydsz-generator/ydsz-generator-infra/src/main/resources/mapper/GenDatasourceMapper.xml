@@ -16,11 +16,15 @@
   </resultMap>
 
   <select id="findByDefaultFlagTrue" resultMap="BaseResultMap">
-    SELECT * FROM ydsz_gen_datasource WHERE is_default = 1 LIMIT 1
+    SELECT id, name, jdbc_url, username, password, dialect, is_default,
+           description, created_at, updated_at
+    FROM ydsz_gen_datasource WHERE is_default = 1 LIMIT 1
   </select>
 
   <select id="findByName" resultMap="BaseResultMap">
-    SELECT * FROM ydsz_gen_datasource WHERE name = #{name} LIMIT 1
+    SELECT id, name, jdbc_url, username, password, dialect, is_default,
+           description, created_at, updated_at
+    FROM ydsz_gen_datasource WHERE name = #{name} LIMIT 1
   </select>
 
 </mapper>

@@ -1,5 +1,7 @@
 package com.njydsz.common.lock.metrics;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
@@ -238,9 +240,11 @@ public class LockMetrics {
    *
    * @return 平均等待时间
    */
-  public double getAverageWaitTimeMillis() {
+  public BigDecimal getAverageWaitTimeMillis() {
     long count = acquireSuccessCount.sum();
-    return count == 0 ? 0 : (double) totalWaitTimeMillis.get() / count;
+    return count == 0 ? BigDecimal.ZERO
+        : BigDecimal.valueOf(totalWaitTimeMillis.get())
+            .divide(BigDecimal.valueOf(count), 4, RoundingMode.HALF_UP);
   }
 
   /**
@@ -248,9 +252,11 @@ public class LockMetrics {
    *
    * @return 平均持有时间
    */
-  public double getAverageHoldTimeMillis() {
+  public BigDecimal getAverageHoldTimeMillis() {
     long count = releaseCount.sum();
-    return count == 0 ? 0 : (double) totalHoldTimeMillis.get() / count;
+    return count == 0 ? BigDecimal.ZERO
+        : BigDecimal.valueOf(totalHoldTimeMillis.get())
+            .divide(BigDecimal.valueOf(count), 4, RoundingMode.HALF_UP);
   }
 
   /**
@@ -302,7 +308,7 @@ public class LockMetrics {
   public String toString() {
     return String.format(
         "LockMetrics{success=%d, fail=%d, release=%d, competition=%d, active=%d, "
-            + "timeout=%d, renew=%d, idempotent=%d, avgWait=%.1fms, avgHold=%.1fms}",
+            + "timeout=%d, renew=%d, idempotent=%d, avgWait=%sms, avgHold=%sms}",
         getAcquireSuccessCount(),
         getAcquireFailCount(),
         getReleaseCount(),
@@ -311,7 +317,7 @@ public class LockMetrics {
         getLockTimeoutCount(),
         getWatchdogRenewCount(),
         getIdempotentHitCount(),
-        getAverageWaitTimeMillis(),
-        getAverageHoldTimeMillis());
+        getAverageWaitTimeMillis().setScale(1, RoundingMode.HALF_UP),
+        getAverageHoldTimeMillis().setScale(1, RoundingMode.HALF_UP));
   }
 }

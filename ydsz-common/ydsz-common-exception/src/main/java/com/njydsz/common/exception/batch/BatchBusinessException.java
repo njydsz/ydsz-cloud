@@ -1,5 +1,7 @@
 package com.njydsz.common.exception.batch;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -109,12 +111,14 @@ public class BatchBusinessException extends BusinessException {
    *
    * @return 成功率（0-100）
    */
-  public double getSuccessRate() {
+  public BigDecimal getSuccessRate() {
     int total = successItems.size() + failureItems.size();
     if (total == 0) {
-      return 0;
+      return BigDecimal.ZERO;
     }
-    return (double) successItems.size() / total * 100;
+    return BigDecimal.valueOf(successItems.size())
+        .divide(BigDecimal.valueOf(total), 4, RoundingMode.HALF_UP)
+        .multiply(BigDecimal.valueOf(100));
   }
 
   /**
@@ -190,6 +194,6 @@ public class BatchBusinessException extends BusinessException {
   public String getSummary() {
     return MessageFormat.format(
         "Batch completed: {0} success, {1} failure, rate={2}%",
-        successItems.size(), failureItems.size(), String.format("%.1f", getSuccessRate()));
+        successItems.size(), failureItems.size(), getSuccessRate().setScale(1, RoundingMode.HALF_UP));
   }
 }

@@ -30,11 +30,7 @@ public class GenTableMetaRepositoryImpl implements GenTableMetaRepository {
 
   @Override
   public GenTableMeta save(final GenTableMeta tableMeta) {
-    if (tableMeta.getId() == null) {
-      tableMeta.setCachedAt(LocalDateTime.now());
-    } else {
-      tableMeta.setCachedAt(LocalDateTime.now());
-    }
+    tableMeta.setCachedAt(LocalDateTime.now());
     if (tableMeta.getId() == null) {
       mapper.insert(tableMeta);
     } else {
