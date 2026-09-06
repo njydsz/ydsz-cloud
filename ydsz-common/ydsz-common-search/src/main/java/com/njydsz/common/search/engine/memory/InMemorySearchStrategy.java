@@ -1,6 +1,5 @@
 package com.njydsz.common.search.engine.memory;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,7 +79,7 @@ public class InMemorySearchStrategy implements SearchStrategy, IndexStrategy, Su
                           .path(doc.getPath())
                           .status(doc.getStatus())
                           .tags(doc.getTags())
-                          .score(BigDecimal.ONE)
+                          .score(1.0f)
                           .build();
                   if (request.isHighlight() && doc.getTitle() != null) {
                     hit.setHighlight(

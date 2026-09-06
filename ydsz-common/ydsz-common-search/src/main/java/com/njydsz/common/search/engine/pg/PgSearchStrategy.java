@@ -573,7 +573,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
    * @return base64 编码的游标字符串，分数为 null 时返回 null
    */
   private String buildCursor(SearchHit lastHit, String sortField) {
-    if (lastHit == null || lastHit.getScore().compareTo(BigDecimal.ZERO) <= 0) {
+    if (lastHit == null || lastHit.getScore() <= 0) {
       return null;
     }
     String cursorValue = lastHit.getScore() + ":" + lastHit.getId();
@@ -832,7 +832,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
               .subtitle(rs.getString("subtitle"))
               .snippet(rs.getString("snippet"))
               .status(rs.getString("status"))
-              .score(BigDecimal.valueOf(rs.getFloat("rank")))
+              .score(rs.getFloat("rank"))
               .build();
       try {
         hit.setPath(rs.getString("path"));
