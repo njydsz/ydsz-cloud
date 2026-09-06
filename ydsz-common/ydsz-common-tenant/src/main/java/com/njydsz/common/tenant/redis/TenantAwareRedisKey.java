@@ -1,7 +1,7 @@
 package com.njydsz.common.tenant.redis;
 
 import com.njydsz.common.tenant.TenantContext;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 
 /**
  * 租户感知的 Redis Key 构建器。
@@ -53,3 +53,4 @@ public final class TenantAwareRedisKey {
     return PREFIX_TEMPLATE.replace("{tenantId}", context.getTenantId()) + key;
   }
 }
+

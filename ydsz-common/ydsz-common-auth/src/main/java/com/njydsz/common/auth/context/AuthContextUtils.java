@@ -9,7 +9,7 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.LoginUser;
 import com.njydsz.common.tenant.TenantContext;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 
 /**
  * 认证上下文便捷访问工具类。
@@ -272,3 +272,4 @@ public final class AuthContextUtils {
     RequestContext.clear();
   }
 }
+

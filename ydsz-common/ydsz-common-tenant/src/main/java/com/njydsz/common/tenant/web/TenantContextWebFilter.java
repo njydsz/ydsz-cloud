@@ -20,7 +20,7 @@ import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.model.CurrentUser;
 import com.njydsz.common.tenant.TenantContext;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.feign.TenantHeaderContract;
@@ -284,3 +284,4 @@ public class TenantContextWebFilter implements Filter {
     return false;
   }
 }
+

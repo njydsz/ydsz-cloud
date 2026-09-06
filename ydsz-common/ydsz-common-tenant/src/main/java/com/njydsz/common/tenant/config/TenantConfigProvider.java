@@ -3,7 +3,7 @@ package com.njydsz.common.tenant.config;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 
 /**
  * 租户级配置隔离。
@@ -119,3 +119,4 @@ public class TenantConfigProvider {
     overridesCache.remove(tenantId);
   }
 }
+

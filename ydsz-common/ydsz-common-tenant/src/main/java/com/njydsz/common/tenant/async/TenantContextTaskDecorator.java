@@ -2,11 +2,11 @@ package com.njydsz.common.tenant.async;
 
 import java.util.Map;
 
+import com.njydsz.common.core.tenant.TenantContext;
 import org.springframework.core.task.TaskDecorator;
 
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.tenant.TenantContext;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 
 /**
@@ -64,3 +64,4 @@ public class TenantContextTaskDecorator implements TaskDecorator {
     };
   }
 }
+

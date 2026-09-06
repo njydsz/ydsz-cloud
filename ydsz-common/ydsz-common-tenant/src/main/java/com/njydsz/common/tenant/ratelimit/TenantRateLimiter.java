@@ -3,7 +3,7 @@ package com.njydsz.common.tenant.ratelimit;
 import java.time.Duration;
 
 import com.njydsz.common.redis.service.RedisRateLimiter;
-import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.core.tenant.TenantContextHolder;
 
 /**
  * 租户级限流门面。
@@ -161,3 +161,4 @@ public class TenantRateLimiter {
     return tenantId != null ? "tenant:" + tenantId + ":" + ruleName : ruleName;
   }
 }
+
