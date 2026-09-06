@@ -38,6 +38,10 @@ import lombok.Data;
  * @author ydsz-team
  */
 public final class RuleGraphValidator {
+
+  /** 预估根节点数量初始容量（通常只有 1 个根节点，预留少量空间）。 */
+  private static final int EXPECTED_ROOT_NODE_CAPACITY = 4;
+
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
@@ -143,7 +147,7 @@ public final class RuleGraphValidator {
     }
 
     // 4. 根节点检测：必须有且仅有一个根节点
-    List<String> rootNodeIds = new ArrayList<>(4);
+    List<String> rootNodeIds = new ArrayList<>(EXPECTED_ROOT_NODE_CAPACITY);
     for (ChainNodeDTO node : nodes) {
       if ("CHAIN".equals(node.getNodeType())
           && (node.getParentNodeId() == null || node.getParentNodeId().isBlank())) {
