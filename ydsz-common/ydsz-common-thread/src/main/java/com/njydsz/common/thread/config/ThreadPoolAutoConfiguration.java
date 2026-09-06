@@ -5,16 +5,22 @@ import java.util.Map;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.AvailableEndpoint;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -23,8 +29,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Role;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.thread.actuator.ThreadPoolMetricsEndpoint;
 import com.njydsz.common.thread.metrics.MeteredRejectedHandler;
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
+import com.njydsz.common.thread.metrics.ThreadPoolRegistryMetrics;
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 
 /**
  * 统一线程池自动配置。
@@ -83,8 +92,9 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   public void afterSingletonsInstantiated() {
     if (applicationContext != null) {
       LOG.info(
-          "[ydsz-thread] 自动配置完成，已管理平台线程池: {}",
-          applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class).keySet());
+          "[ydsz-thread] 自动配置完成，已管理平台线程池: {}，ThreadPoolRegistry 已注册: {} 个",
+          applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class).keySet(),
+          ThreadPoolRegistry.size());
     }
   }
 
@@ -120,6 +130,60 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
       return Collections.emptyMap();
     }
     return applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
+  }
+
+  // ==================== P2-2: 线程池注册中心 & 指标端点 ====================
+
+  /**
+   * P2-2: 线程池注册中心 Micrometer 指标绑定器。
+   *
+   * <p>将 {@link ThreadPoolRegistry} 中所有已注册线程池的实时指标（core/max/active/pool.size/queue.size/completed）
+   * 绑定到 Micrometer，使得 Prometheus / Grafana 等监控系统可以采集到线程池运行状态。
+   *
+   * <p>仅在 MeterRegistry 和 Micrometer 存在于 classpath 时注册。
+   *
+   * @param meterRegistryProvider Micrometer MeterRegistry 提供者（可选）
+   * @return ThreadPoolRegistryMetrics 指标绑定器
+   * @since 26.09.01
+   */
+  @Bean
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+  @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
+  @ConditionalOnBean(MeterRegistry.class)
+  @ConditionalOnMissingBean(ThreadPoolRegistryMetrics.class)
+  public ThreadPoolRegistryMetrics threadPoolRegistryMetrics(
+      ObjectProvider<MeterRegistry> meterRegistryProvider) {
+    ThreadPoolRegistryMetrics binder = new ThreadPoolRegistryMetrics(new ThreadPoolRegistry());
+    MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
+    if (meterRegistry != null) {
+      binder.bindTo(meterRegistry);
+      LOG.info("[ydsz-thread] ThreadPoolRegistry 指标已绑定到 MeterRegistry");
+    }
+    return binder;
+  }
+
+  /**
+   * P2-2: 线程池 Actuator 端点。
+   *
+   * <p>暴露 {@code /actuator/threadpools} 端点，供运维人员通过 HTTP 查看线程池实时指标。
+   * 支持 {@code GET /actuator/threadpools} 和 {@code GET /actuator/threadpools/{poolName}}。
+   *
+   * <p>仅在 Spring Boot Actuator 和端点基础设施存在时注册。
+   *
+   * @return ThreadPoolMetricsEndpoint 实例
+   * @since 26.09.01
+   */
+  @Bean
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+  @ConditionalOnClass(Endpoint.class)
+  @ConditionalOnBean(
+      value = org.springframework.boot.actuate.endpoint.annotation.Endpoint.class,
+      name = "endpointRegistry")
+  @AvailableEndpoint(ThreadPoolMetricsEndpoint.class)
+  @ConditionalOnMissingBean(ThreadPoolMetricsEndpoint.class)
+  public ThreadPoolMetricsEndpoint threadPoolMetricsEndpoint() {
+    LOG.info("[ydsz-thread] 注册 Actuator 端点: /actuator/threadpools");
+    return new ThreadPoolMetricsEndpoint(new ThreadPoolRegistry());
   }
 
   /**

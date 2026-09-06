@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -98,6 +99,7 @@ public final class InternalExecutorFactory {
         new ThreadPoolExecutor.CallerRunsPolicy());
     log.info("[InternalExecutorFactory] 创建固定线程池 [{}] (threads={}, queue={})",
         poolName, nThreads, queueCapacity);
+    ThreadPoolRegistry.register(poolName, executor);
     return executor;
   }
 
@@ -117,6 +119,7 @@ public final class InternalExecutorFactory {
         new ThreadPoolExecutor.CallerRunsPolicy());
     executor.setRemoveOnCancelPolicy(true);
     log.info("[InternalExecutorFactory] 创建定时线程池 [{}] (core={})", poolName, corePoolSize);
+    ThreadPoolRegistry.register(poolName, executor);
     return executor;
   }
 
@@ -148,6 +151,7 @@ public final class InternalExecutorFactory {
         createThreadFactory(poolName),
         new ThreadPoolExecutor.CallerRunsPolicy());
     log.info("[InternalExecutorFactory] 创建缓存线程池 [{}] (max={})", poolName, DEFAULT_MAX_POOL_SIZE);
+    ThreadPoolRegistry.register(poolName, executor);
     return executor;
   }
 
@@ -168,6 +172,7 @@ public final class InternalExecutorFactory {
         createThreadFactory(poolName),
         new ThreadPoolExecutor.CallerRunsPolicy());
     log.info("[InternalExecutorFactory] 创建 CPU 密集型线程池 [{}] (cores={})", poolName, corePoolSize);
+    ThreadPoolRegistry.register(poolName, executor);
     return executor;
   }
 
@@ -225,6 +230,7 @@ public final class InternalExecutorFactory {
         handler);
     log.info("[InternalExecutorFactory] 创建自定义线程池 [{}] (core={}, max={})",
         poolName, corePoolSize, maximumPoolSize);
+    ThreadPoolRegistry.register(poolName, executor);
     return executor;
   }
 

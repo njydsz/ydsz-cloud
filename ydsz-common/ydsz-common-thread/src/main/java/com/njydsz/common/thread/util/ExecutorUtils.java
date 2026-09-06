@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.alibaba.ttl.TtlCallable;
 import com.alibaba.ttl.TtlRunnable;
 import com.alibaba.ttl.threadpool.TtlExecutors;
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import lombok.extern.slf4j.Slf4j;
 
   // CHECKSTYLE.OFF: LineLength — Javadoc HTML 表格行，不可拆行
@@ -159,6 +160,23 @@ public final class ExecutorUtils {
       BlockingQueue<Runnable> queue = createQueue(queueType, queueCapacity);
       return new ThreadPoolExecutor(
           corePoolSize, maximumPoolSize, keepAliveTime, unit, queue, tf, handler);
+    }
+
+    /**
+     * 构建并自动注册到 {@link ThreadPoolRegistry}。
+     *
+     * <p>线程名前缀作为注册名称。适用于需要使用全局统一监控/指标采集的场景。
+     *
+     * @return 构建完成的 ThreadPoolExecutor 实例
+     * @since 26.09.01
+     */
+    public ThreadPoolExecutor buildAndRegister() {
+      ThreadPoolExecutor executor = build();
+      String name = (threadNamePrefix != null && !threadNamePrefix.isEmpty())
+          ? threadNamePrefix.substring(THREAD_NAME_PREFIX.length())
+          : "pool-" + POOL_NUMBER.get();
+      ThreadPoolRegistry.register(name, executor);
+      return executor;
     }
 
     private static BlockingQueue<Runnable> createQueue(BlockingQueueType type, int capacity) {
@@ -542,6 +560,32 @@ public final class ExecutorUtils {
         workQueue,
         createThreadFactory(threadNamePrefix),
         handler);
+  }
+
+  /**
+   * 创建自定义线程池并注册到 {@link ThreadPoolRegistry}。
+   *
+   * <p>在 {@link #newCustomThreadPool} 基础上增加全局注册能力，
+   * 使线程池能够被 {@link ThreadPoolRegistry#snapshotMetrics()} 采集指标。
+   *
+   * @param registerName 注册到 ThreadPoolRegistry 的名称
+   * @return 线程池实例
+   * @since 26.09.01
+   */
+  public static ThreadPoolExecutor newCustomThreadPoolAndRegister(
+      String registerName,
+      int corePoolSize,
+      int maximumPoolSize,
+      long keepAliveTime,
+      TimeUnit unit,
+      BlockingQueue<Runnable> workQueue,
+      String threadNamePrefix,
+      RejectedExecutionHandler handler) {
+    ThreadPoolExecutor executor = newCustomThreadPool(
+        corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
+        threadNamePrefix, handler);
+    ThreadPoolRegistry.register(registerName, executor);
+    return executor;
   }
 
   /**

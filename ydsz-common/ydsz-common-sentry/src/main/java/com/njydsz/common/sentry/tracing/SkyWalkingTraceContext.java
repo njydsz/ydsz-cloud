@@ -1,7 +1,6 @@
 package com.njydsz.common.sentry.tracing;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.skywalking.apm.toolkit.trace.ActiveSpan;
 
 import com.njydsz.common.sentry.spi.TraceContext;
 

@@ -22,6 +22,7 @@ import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
 import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
 import com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics;
 import com.njydsz.common.thread.metrics.TimedTaskDecorator;
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 
 /**
  * 线程池执行器工厂。
@@ -114,6 +115,13 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
     applyTaskDecorators(executor, name, config);
 
     executor.initialize();
+
+    // P2-2: 注册到全局 ThreadPoolRegistry，供指标快照和 Actuator 端点采集
+    try {
+      ThreadPoolRegistry.register(name, executor.getThreadPoolExecutor());
+    } catch (Exception e) {
+      LOG.warn("ydsz-thread: 线程池 [{}] 注册到 ThreadPoolRegistry 失败: {}", name, e.getMessage());
+    }
     return executor;
   }
 
