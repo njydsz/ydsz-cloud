@@ -1,11 +1,11 @@
 package com.njydsz.system.domain.vo;
 
-import com.njydsz.common.excel.api.result.ExcelImportResult;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.excel.api.result.ExcelImportResult;
 
 /**
  * 导入结果 VO（系统模块）。
