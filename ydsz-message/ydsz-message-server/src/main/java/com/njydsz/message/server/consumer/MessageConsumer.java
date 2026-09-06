@@ -18,13 +18,13 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
-import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;

@@ -6,9 +6,9 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.enums.MessageExceptionCode;

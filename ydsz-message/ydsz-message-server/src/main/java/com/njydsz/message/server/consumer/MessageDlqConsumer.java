@@ -11,11 +11,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
-import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;

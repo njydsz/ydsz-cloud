@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,6 +47,9 @@ import com.njydsz.message.server.reactive.ReactiveSseRegistry;
 @RequiredArgsConstructor
 public class ReactiveNotificationController {
 
+    /** 心跳间隔（秒），用于防止代理超时。 */
+    private static final long HEARTBEAT_INTERVAL_SECONDS = 15L;
+
     /** 响应式事件注册表 */
     private final ReactiveSseRegistry reactiveSseRegistry;
 
@@ -71,7 +75,7 @@ public class ReactiveNotificationController {
         log.info("[ReactiveSSE] 用户 {} 建立响应式 SSE 连接", userId);
 
         // 心跳流：每 15 秒发送 comment 事件防代理超时
-        Flux<ServerSentEvent<ReactiveEvent>> heartbeat = Flux.interval(Duration.ofSeconds(15))
+        Flux<ServerSentEvent<ReactiveEvent>> heartbeat = Flux.interval(Duration.ofSeconds(HEARTBEAT_INTERVAL_SECONDS))
                 .map(i -> ServerSentEvent.<ReactiveEvent>builder()
                         .comment("heartbeat-" + i)
                         .build());
@@ -118,7 +122,7 @@ public class ReactiveNotificationController {
             event.setEventId(UUID.randomUUID().toString());
         }
         if (event.getTimestamp() == null) {
-            event.setTimestamp(java.time.Instant.now());
+            event.setTimestamp(Instant.now());
         }
         if (event.getEventType() == null || event.getEventType().isBlank()) {
             event.setEventType("notification");

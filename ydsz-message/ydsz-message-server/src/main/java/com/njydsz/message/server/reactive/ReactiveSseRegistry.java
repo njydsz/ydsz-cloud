@@ -14,7 +14,7 @@ import reactor.core.publisher.Sinks;
  *
  * <h3>设计要点</h3>
  * <ul>
- *   <li>使用 {@link Sinks#multicast()} 实现多播，所有订阅者共享同一事件流</li>
+ *   <li>使用 {@link Sinks#many()}.multicast() 实现多播，所有订阅者共享同一事件流</li>
  *   <li>背压策略：BUFFER（缓冲最多 256 条未消费事件，避免生产者阻塞）</li>
  *   <li>终端操作 {@link Sinks.Many#tryEmitNext} 返回 {@link Sinks.EmitResult} 指示成功 / 失败原因</li>
  * </ul>
@@ -41,7 +41,7 @@ public class ReactiveSseRegistry {
 
     /** 多播事件管道 */
     private final Sinks.Many<ReactiveEvent> eventSink =
-            Sinks.multicast().onBackpressureBuffer(BUFFER_SIZE, false);
+            Sinks.many().multicast().onBackpressureBuffer(BUFFER_SIZE, false);
 
     /**
      * 获取原始事件管道（用于订阅）。
