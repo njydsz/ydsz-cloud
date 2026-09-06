@@ -51,7 +51,8 @@ public class CircuitBreaker {
   }
 
   private static final io.github.resilience4j.circuitbreaker.CircuitBreaker NOOP_DELEGATE =
-      io.github.resilience4j.circuitbreaker.CircuitBreaker.ofDefaults("noop");
+      io.github.resilience4j.circuitbreaker.CircuitBreaker.ofDefaults(
+          "noop");
 
   private final String name;
   private final io.github.resilience4j.circuitbreaker.CircuitBreaker delegate;
@@ -136,8 +137,8 @@ public class CircuitBreaker {
    */
   public <T> T execute(Supplier<T> operation, Supplier<T> fallback) {
     try {
-      return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier(delegate, operation)
-          .get();
+      return io.github.resilience4j.circuitbreaker.CircuitBreaker
+          .decorateSupplier(delegate, operation).get();
     } catch (CallNotPermittedException e) {
       return fallback.get();
     }
@@ -151,8 +152,8 @@ public class CircuitBreaker {
    */
   public void execute(Runnable operation, Runnable fallback) {
     try {
-      io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateRunnable(delegate, operation)
-          .run();
+      io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateRunnable(
+          delegate, operation).run();
     } catch (CallNotPermittedException e) {
       fallback.run();
     }
@@ -164,8 +165,10 @@ public class CircuitBreaker {
    * @return {@code true} 允许执行；{@code false} 应走降级
    */
   public boolean canExecute() {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker.State state = delegate.getState();
-    return state != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
+    io.github.resilience4j.circuitbreaker.CircuitBreaker.State state =
+        delegate.getState();
+    return state != io.github.resilience4j.circuitbreaker.CircuitBreaker
+        .State.OPEN;
   }
 
   /**
