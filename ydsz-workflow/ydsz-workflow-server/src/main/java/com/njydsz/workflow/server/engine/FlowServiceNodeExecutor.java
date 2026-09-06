@@ -24,6 +24,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.safe.ssrf.HttpConnectionValidator;
+import com.njydsz.common.safe.ssrf.SsrfHttpRequestInterceptor;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
@@ -120,16 +122,20 @@ public class FlowServiceNodeExecutor {
   }
 
   /**
-   * 构造器：构建带超时的 RestTemplate，并初始化 Aviator 沙箱实例。
+   * 构造器：构建带超时和 SSRF 防护的 RestTemplate，并初始化 Aviator 沙箱实例。
    *
    * <p>使用 {@link SimpleClientHttpRequestFactory} 配置超时，替代 Spring Boot 4.x 中已移除的
-   * {@code RestTemplateBuilder}。
+   * {@code RestTemplateBuilder}。同时手动添加 {@link SsrfHttpRequestInterceptor} 实现 SSRF 防护，
+   * 因为此 RestTemplate 直接通过 {@code new} 创建，不经过 Spring 容器，无法被 {@code RestTemplateCustomizer}
+   * 自动定制。
    */
   public FlowServiceNodeExecutor() {
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
     factory.setConnectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS));
     factory.setReadTimeout(Duration.ofSeconds(READ_TIMEOUT_SECONDS));
     this.restTemplate = new RestTemplate(factory);
+    // P0-2: 手动添加 SSRF 拦截器（直接 new 的 RestTemplate 不经过 Spring 容器）
+    this.restTemplate.getInterceptors().add(new SsrfHttpRequestInterceptor());
     this.aviatorInstance = AviatorEvaluator.newInstance();
     // 浮点数解析为 Decimal，避免精度丢失
     this.aviatorInstance.setOption(Options.ALWAYS_PARSE_FLOATING_POINT_NUMBER_INTO_DECIMAL, true);
@@ -206,6 +212,17 @@ public class FlowServiceNodeExecutor {
     if (!StringUtils.hasText(url) || "null".equals(url)) {
       log.warn("[Flow-Service] HTTP 服务节点未配置 url，标记为失败: node={}", node.getNodeCode());
       return new ServiceExecutionResult(false, "HTTP 服务节点未配置 url");
+    }
+    // P0-2: SSRF 校验 — 拦截内网地址、元数据服务等敏感目标
+    try {
+      HttpConnectionValidator.getDefault().validate(url);
+    } catch (HttpConnectionValidator.SsrfBlockedException e) {
+      log.warn(
+          "[Flow-Service] HTTP 目标地址被 SSRF 防护拦截: node={} url={} reason={}",
+          node.getNodeCode(),
+          url,
+          e.getMessage());
+      throw e;
     }
     String method = FlowNodeExt.getServiceMethod(node.getExt());
 

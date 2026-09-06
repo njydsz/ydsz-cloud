@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.json.spring.boot.JsonAutoConfiguration;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -50,6 +51,8 @@ import com.njydsz.common.safe.metrics.SafeMetrics;
 import com.njydsz.common.safe.password.PasswordStrengthValidator;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
 import com.njydsz.common.safe.sensitive.SensitiveDataProperties;
+import com.njydsz.common.safe.ssrf.HttpConnectionValidator;
+import com.njydsz.common.safe.ssrf.SsrfHttpRequestInterceptor;
 
 /**
  * 安全模块自动配置
@@ -594,5 +597,53 @@ public class SafeConfiguration {
     registrationBean.addUrlPatterns("/*");
     registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
     return registrationBean;
+  }
+
+  // ======================== P0-2: SSRF 防护 ========================
+
+  /**
+   * 注册全局 RestTemplate SSRF 防护定制器（P0-2）
+   *
+   * <p>对所有通过 Spring 容器创建的 {@link RestTemplate} Bean 自动添加 {@link SsrfHttpRequestInterceptor}，
+   * 实现出站 HTTP 请求的 SSRF 防护全覆盖。防护规则由 {@link HttpConnectionValidator} 提供：
+   *
+   * <ul>
+   *   <li>阻止内网 IP 段（10.0.0.0/8、172.16.0.0/12、192.168.0.0/16 等）
+   *   <li>阻止链路本地地址（169.254.0.0/16）和实例元数据服务（169.254.169.254）
+   *   <li>阻止 IPv6 本地地址（::1、fc00::/7、fe80::/10）
+   *   <li>支持域名白名单 / 黑名单模式
+   * </ul>
+   *
+   * <p><b>适用范围：</b>ydsz-nextwiki（LLM API 调用）、ydsz-workflow（HTTP 服务节点、Agent 服务调用）、
+   * ydsz-agent（LLM/Embedding 调用）、ydsz-common-web（Webhook 投递）等模块中所有通过 {@code RestTemplate}
+   * 发出的请求，以及外部系统直接获取的 {@code RestTemplate} Bean。
+   *
+   * <p><b>不适用范围：</b>直接通过 {@code new RestTemplate()} 创建的实例（如 ydsz-workflow 的 {@code
+   * FlowServiceNodeExecutor}），需在创建时手动添加拦截器。
+   *
+   * @param validator SSRF 校验器实例
+   * @return RestTemplate 定制器
+   */
+  @Bean
+  @ConditionalOnMissingBean(name = "ssrfRestTemplateCustomizer")
+  @ConditionalOnBean(HttpConnectionValidator.class)
+  public RestTemplateCustomizer ssrfRestTemplateCustomizer(HttpConnectionValidator validator) {
+    LOG.info("注册全局 RestTemplate SSRF 防护定制器");
+    return restTemplate -> restTemplate.getInterceptors().add(new SsrfHttpRequestInterceptor(validator));
+  }
+
+  /**
+   * 注册全局 SSRF 防护校验器（P0-2）
+   *
+   * <p>提供统一的 {@link HttpConnectionValidator} 实例，供 {@link #ssrfRestTemplateCustomizer} 和
+   * 各业务模块手动校验使用。验证器采用懒加载单例模式，启动时初始化默认配置。
+   *
+   * @return HttpConnectionValidator 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(HttpConnectionValidator.class)
+  public HttpConnectionValidator httpConnectionValidator() {
+    LOG.info("注册 SSRF 防护校验器");
+    return HttpConnectionValidator.getDefault();
   }
 }
