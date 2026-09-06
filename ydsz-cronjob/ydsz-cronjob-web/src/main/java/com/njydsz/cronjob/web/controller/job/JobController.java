@@ -34,6 +34,8 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.safe.annotation.SecondaryAuth;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
@@ -182,9 +184,12 @@ public class JobController {
    *
    * <p>逐个软删除并注销调度器，返回成功处理的数量（跳过不存在的 ID）。 单次批量上限 100 条，超过会抛业务异常。
    *
+   * <p><b>需要二次身份验证：</b>批量删除定时任务属于极敏感批量操作，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param dto 批量操作请求（含任务 ID 列表）
    * @return 成功处理数量
    */
+  @SecondaryAuth(scene = "batch:delete", level = SensitiveLevel.CRITICAL, value = "批量删除定时任务")
   @Operation(summary = "批量删除任务")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
   @Idempotent(key = "ydsz:cronjob:JobController:batchDelete:lock", ttlSeconds = 5)

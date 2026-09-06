@@ -50,11 +50,11 @@ public class CircuitBreaker {
     HALF_OPEN
   }
 
-  private static final io.github.resilience4j.circuitbreaker.CircuitBreaker NOOP_DELEGATE =
-      io.github.resilience4j.circuitbreaker.CircuitBreaker.ofDefaults("noop");
+  private static final io.github.resilience4j.circuitbreaker.CircuitBreaker NOOP_DELEGATE = // FQN-OK: name conflict with Resilience4j CircuitBreaker
+      io.github.resilience4j.circuitbreaker.CircuitBreaker.ofDefaults("noop"); // FQN-OK: name conflict with Resilience4j CircuitBreaker
 
   private final String name;
-  private final io.github.resilience4j.circuitbreaker.CircuitBreaker delegate;
+  private final io.github.resilience4j.circuitbreaker.CircuitBreaker delegate; // FQN-OK: name conflict with Resilience4j CircuitBreaker
 
   /**
    * 构造熔断器（按秒时间窗）。
@@ -136,7 +136,7 @@ public class CircuitBreaker {
    */
   public <T> T execute(Supplier<T> operation, Supplier<T> fallback) {
     try {
-      return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier(delegate, operation)
+      return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier(delegate, operation) // FQN-OK: name conflict with Resilience4j CircuitBreaker
           .get();
     } catch (CallNotPermittedException e) {
       return fallback.get();
@@ -151,7 +151,7 @@ public class CircuitBreaker {
    */
   public void execute(Runnable operation, Runnable fallback) {
     try {
-      io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateRunnable(delegate, operation)
+      io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateRunnable(delegate, operation) // FQN-OK: name conflict with Resilience4j CircuitBreaker
           .run();
     } catch (CallNotPermittedException e) {
       fallback.run();
@@ -164,8 +164,8 @@ public class CircuitBreaker {
    * @return {@code true} 允许执行；{@code false} 应走降级
    */
   public boolean canExecute() {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker.State state = delegate.getState();
-    return state != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
+    io.github.resilience4j.circuitbreaker.CircuitBreaker.State state = delegate.getState(); // FQN-OK: name conflict with Resilience4j CircuitBreaker
+    return state != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN; // FQN-OK: name conflict with Resilience4j CircuitBreaker
   }
 
   /**
@@ -237,7 +237,7 @@ public class CircuitBreaker {
    *
    * @return Resilience4j CircuitBreaker 实例
    */
-  public io.github.resilience4j.circuitbreaker.CircuitBreaker getDelegate() {
+  public io.github.resilience4j.circuitbreaker.CircuitBreaker getDelegate() { // FQN-OK: name conflict with Resilience4j CircuitBreaker
     return delegate;
   }
 }
