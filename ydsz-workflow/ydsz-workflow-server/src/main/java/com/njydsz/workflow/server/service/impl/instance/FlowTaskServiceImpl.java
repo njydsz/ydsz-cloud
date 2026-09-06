@@ -555,4 +555,21 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
     }
     return slaService.processOverdue(task);
   }
+
+  // ============================== 超时处理（定时任务调用） ==============================
+
+  @Override
+  public void timeoutAutoPass(FlowTaskOperateDTO dto) {
+    completeService.pass(dto);
+  }
+
+  @Override
+  public void timeoutTransfer(FlowTaskOperateDTO dto) {
+    completeService.transfer(dto);
+  }
+
+  @Override
+  public void timeoutRemind(String instanceId, String nodeCode) {
+    completeService.urgeByNode(instanceId, nodeCode, "SYSTEM_TIMEOUT", "系统超时自动催办");
+  }
 }

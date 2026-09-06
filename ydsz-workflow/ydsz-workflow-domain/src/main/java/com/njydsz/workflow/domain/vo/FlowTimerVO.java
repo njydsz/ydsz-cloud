@@ -31,6 +31,8 @@ public class FlowTimerVO implements Serializable {
   private LocalDateTime firedAt;
   private String cancelReason;
   private String providerTraceId;
+  /** 定时器关联的任务 ID（兼容新表 task_id 字段） */
+  private String taskId;
   /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
   private String tenantId;
   private String createdBy;

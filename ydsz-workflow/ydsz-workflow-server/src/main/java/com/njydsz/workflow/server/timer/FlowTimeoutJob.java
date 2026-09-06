@@ -135,10 +135,10 @@ public class FlowTimeoutJob {
     // 从定时器表的节点配置中解析超时策略
     FlowTimeoutStrategy strategy = resolveStrategy(timer);
     log.info(
-        "[Flow-TimeoutJob] 处理超时: timerId={} taskId={} nodeId={} strategy={}",
+        "[Flow-TimeoutJob] 处理超时: timerId={} taskId={} nodeCode={} strategy={}",
         timer.getId(),
         taskId,
-        timer.getNodeId(),
+        timer.getNodeCode(),
         strategy.getCode());
 
     // 委托处理器执行超时策略

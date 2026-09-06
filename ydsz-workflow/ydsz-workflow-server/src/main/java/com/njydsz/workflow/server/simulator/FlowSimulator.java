@@ -197,7 +197,8 @@ public class FlowSimulator {
     ctx.addStep(new SimulationStep(ctx.getStepCount(), nextNodeCode,
         nextNode.getNodeName(), nodeTypeName, stepDetail, skip.getSkipCondition()));
 
-    // 递归推进（除了结束节点和子流程节点）    Integer nextType = nextNode.getNodeType();
+    // 递归推进（除了结束节点和子流程节点）
+    Integer nextType = nextNode.getNodeType();
     if (nextType != null && nextType != FlowNodeType.END.getCode()
         && nextType != FlowNodeType.SUBPROCESS.getCode()) {
       simulateFromNode(ctx, nextNode);
