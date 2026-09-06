@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.condition.PathPatternsRequestCondition;
-import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.pattern.PathPattern;
@@ -64,9 +63,6 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
 
   /** 默认状态：启用 */
   private static final String DEFAULT_STATUS = ApiPermissionStatus.ENABLED.getCode();
-
-  /** URL 模式列表初始容量（多数接口仅有 1-2 个路径模式） */
-  private static final int URL_PATTERNS_INITIAL_CAPACITY = 8;
 
   private final ApiPermissionRepository apiPermissionRepository;
   private final SystemConverter converter;
@@ -257,22 +253,20 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
   /**
    * 从 RequestMappingInfo 中提取 URL 模式列表。
    *
+   * <p>使用 Spring 6.x 推荐的 {@link PathPatternsRequestCondition} API，
+   * 不再回退已过时的 {@code PatternsRequestCondition}。
+   *
    * @param mappingInfo 请求映射信息
-   * @return URL 模式字符串列表
+   * @return URL 模式字符串列表；无路径条件时返回空列表
    */
   private List<String> extractUrlPatterns(RequestMappingInfo mappingInfo) {
     PathPatternsRequestCondition pathPatternsCondition = mappingInfo.getPathPatternsCondition();
-    if (pathPatternsCondition != null) {
-      Collection<PathPattern> rawPatterns = pathPatternsCondition.getPatterns();
-      List<String> patterns = new ArrayList<>(rawPatterns.size());
-      rawPatterns.forEach(p -> patterns.add(p.getPatternString()));
-      return patterns;
+    if (pathPatternsCondition == null) {
+      return new ArrayList<>(0);
     }
-    List<String> patterns = new ArrayList<>(URL_PATTERNS_INITIAL_CAPACITY);
-    PatternsRequestCondition patternsCondition = mappingInfo.getPatternsCondition();
-    if (patternsCondition != null) {
-      patterns.addAll(patternsCondition.getPatterns());
-    }
+    Collection<PathPattern> rawPatterns = pathPatternsCondition.getPatterns();
+    List<String> patterns = new ArrayList<>(rawPatterns.size());
+    rawPatterns.forEach(p -> patterns.add(p.getPatternString()));
     return patterns;
   }
 

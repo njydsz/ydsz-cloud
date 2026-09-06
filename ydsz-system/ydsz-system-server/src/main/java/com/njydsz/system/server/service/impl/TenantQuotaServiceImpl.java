@@ -133,7 +133,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
    */
   private Integer parseQuotaLimit(String quotaJson, QuotaType quotaType) {
     try {
-      Map<String, Object> quotaMap = YdszJson.fromJson(quotaJson, Map.class);
+      Map<String, Object> quotaMap = YdszJson.parseMap(quotaJson);
       if (quotaMap == null) {
         return null;
       }

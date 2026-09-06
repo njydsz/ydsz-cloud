@@ -1,7 +1,6 @@
 package com.njydsz.message.infra.identity;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-
 import org.springframework.stereotype.Component;
 
 import com.njydsz.message.domain.identity.IdGenerator;
