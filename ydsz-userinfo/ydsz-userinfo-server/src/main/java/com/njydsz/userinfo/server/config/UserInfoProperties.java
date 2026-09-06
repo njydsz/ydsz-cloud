@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.config;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -168,7 +169,7 @@ public class UserInfoProperties {
   private int bcryptStrength = DEFAULT_BCRYPT_STRENGTH;
 
   /** OAuth2 客户端注册表（clientId → 客户端配置）。 */
-  private Map<String, OAuth2Client> oauth2Clients = new HashMap<>();
+  private Map<String, OAuth2Client> oauth2Clients = new HashMap<>(16);
 
   /** 密码历史记录保留条数。 */
   private int passwordHistoryCount = DEFAULT_PASSWORD_HISTORY_COUNT;
@@ -234,7 +235,7 @@ public class UserInfoProperties {
    *       api: -1
    * </pre>
    */
-  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>();
+  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>(8);
 
   /**
    * 获取指定设备类型的最大会话数。
@@ -380,5 +381,23 @@ public class UserInfoProperties {
     }
     OAuth2Client client = oauth2Clients.get(clientId);
     return client != null && clientSecret.equals(client.getClientSecret());
+  }
+
+  /**
+   * 返回 OAuth2 客户端注册表的不可变视图。
+   *
+   * @return 不可变的 OAuth2 客户端映射表
+   */
+  public Map<String, OAuth2Client> getOauth2Clients() {
+    return Collections.unmodifiableMap(oauth2Clients);
+  }
+
+  /**
+   * 返回分端会话限制配置的不可变视图。
+   *
+   * @return 不可变的分端会话限制映射表
+   */
+  public Map<String, Integer> getMaxSessionsPerDeviceType() {
+    return Collections.unmodifiableMap(maxSessionsPerDeviceType);
   }
 }
