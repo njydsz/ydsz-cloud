@@ -1,13 +1,13 @@
 package com.njydsz.userinfo.domain.dto;
 
-import com.njydsz.common.excel.api.result.ExcelImportResult;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.excel.api.result.ExcelImportResult;
 
 /**
  * 用户批量导入结果 DTO。

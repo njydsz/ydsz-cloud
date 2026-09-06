@@ -3,10 +3,10 @@ package com.njydsz.common.excel.api.result;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Excel 导入结果基类（P1-5：公共能力下沉）。
@@ -25,9 +25,8 @@ import lombok.NoArgsConstructor;
  * @since 26.09.06
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
 public class ExcelImportResult {
 
   /** 导入总数 */
