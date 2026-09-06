@@ -1,4 +1,4 @@
-package com.njydsz.common.tenant;
+package com.njydsz.common.core.tenant;
 
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.ContextKey;
@@ -7,41 +7,32 @@ import com.njydsz.common.core.context.RequestContext;
 /**
  * 租户上下文持有者 — 全模块唯一的类型安全读写入口。
  *
- * <p>基于 {@link ContextKey} 提供编译期类型保证，统一替代以下双路径：
+ * <p>基于 {@link ContextKey} 提供编译期类型保证，统一替代旧双路径。
  *
- * <ul>
- *   <li>_object path_：{@code RequestContext.put(KEY_TENANT_CONTEXT, ctx)} + {@code (TenantContext)
- *       RequestContext.get(KEY_TENANT_CONTEXT)}
- *   <li>_string path_：{@code RequestContext.setTenantId(id)} / {@code RequestContext.getTenantId()}
- * </ul>
+ * <p><b>迁移说明：</b>P2-3 从 {@code com.njydsz.common.tenant.TenantContextHolder} 下沉至 common-core，
+ * 以打破 common-cache ↔ common-tenant 的循环依赖。原有包路径保留废弃转发声明，现有 import 仍可用。
  *
- * <p><b>唯一写入口：</b>{@link #set(TenantContext)} 同时向 RequestContext 注入 {@link
- * BizContextKeys#KEY_TENANT_CONTEXT}（主路径）并同步 {@code tenantId} 字符串（兼容 {@code
- * RequestContext.bridgeToMdc()} 等已存在读取方）。
+ * <p><b>唯一写入口：</b>{@link #set(TenantContext)}。
  *
- * <p><b>唯一读入口：</b>{@link #get()}、{@link #getTenantId()}、{@link #isSuperAdmin()}、 {@link
- * #isSkipIsolation()} 等，全部从 {@link BizContextKeys#KEY_TENANT_CONTEXT} 派生。
+ * <p><b>读入口：</b>{@link #get()}、{@link #getTenantId()}、{@link #isSuperAdmin()}、{@link #isSkipIsolation()}。
  *
- * <p><b>生命周期：</b>请求结束时必须调用 {@link #clear()}，推荐 try-with-resources 或 Filter/Interceptor 的 finally 块。
+ * <p><b>生命周期：</b>请求结束时必须调用 {@link #clear()}。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
-public final class TenantContextHolder {
+public class TenantContextHolder {
 
-  /** 类型安全键，避免字符串字面量散落 + 编译期类型保证。 */
+  /** 类型安全键 */
+  @SuppressWarnings("java:S1075")
   public static final ContextKey<TenantContext> KEY =
       ContextKey.of(BizContextKeys.KEY_TENANT_CONTEXT, TenantContext.class);
 
-  private TenantContextHolder() {
-    throw new UnsupportedOperationException("Utility class");
-  }
+  /** 保护构造器允许 common-tenant 子类转发 */
+  protected TenantContextHolder() {}
 
   /**
    * 设置租户上下文（唯一写入口）。
-   *
-   * <p>仅向 RequestContext 注入 {@link BizContextKeys#KEY_TENANT_CONTEXT}， 所有读取方应通过 {@link #get()} 或
-   * {@link #getTenantId()} 获取。
    *
    * @param context 租户上下文，传入 {@code null} 等同于 {@link #clear()}
    */
@@ -55,8 +46,6 @@ public final class TenantContextHolder {
 
   /**
    * 获取租户上下文（类型安全，无需强转）。
-   *
-   * <p>由于 {@link ContextKey#cast(Object)} 是包私有方法，此处通过 {@link ContextKey#type()} 做运行时类型检查后强转。
    *
    * @return 当前租户上下文，不存在返回 {@code null}
    */
@@ -87,7 +76,7 @@ public final class TenantContextHolder {
   /**
    * 当前租户是否跳过隔离。
    *
-   * @return true=跳过隔离（登录/注册等公开接口）
+   * @return true=跳过隔离
    */
   public static boolean isSkipIsolation() {
     TenantContext ctx = get();
@@ -97,7 +86,7 @@ public final class TenantContextHolder {
   /**
    * 当前租户是否为超级管理员。
    *
-   * @return true=超级管理员（可跨租户操作）
+   * @return true=超级管理员
    */
   public static boolean isSuperAdmin() {
     TenantContext ctx = get();

@@ -116,13 +116,6 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
-        <!-- SkyWalking Trace（可选） -->
-        <dependency>
-            <groupId>org.apache.skywalking</groupId>
-            <artifactId>apm-toolkit-trace</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
         <!-- Swagger annotations -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
