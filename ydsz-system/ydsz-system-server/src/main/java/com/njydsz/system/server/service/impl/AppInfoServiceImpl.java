@@ -3,7 +3,6 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +17,7 @@ import com.njydsz.system.domain.query.AppInfoPageQuery;
 import com.njydsz.system.domain.repository.AppInfoRepository;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.server.metrics.SystemMetrics;
+import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.service.AppInfoService;
 
 
@@ -114,23 +114,14 @@ public class AppInfoServiceImpl implements AppInfoService {
   /** Redis String 操作组件（用于校验缓存 + 失败锁定） */
   private final RedisStringOps redisStringOps;
 
+  /** 系统配置属性（动态读取，配置热重载后由 Spring 自动刷新） */
+  private final SystemProperties systemProperties;
+
   /** 校验缓存键前缀（命中后跳过 BCrypt） */
   private static final String VALIDATE_CACHE_PREFIX = "ydsz:system:app:validate:";
 
   /** 失败计数键前缀（连续失败锁定） */
   private static final String FAIL_COUNT_PREFIX = "ydsz:system:app:fail:";
-
-  /** 校验缓存 TTL（秒），默认 5 分钟，可通过 ydzs.system.app.validate-cache-ttl 配置覆盖 */
-  @Value("${ydsz.system.app.validate-cache-ttl:300}")
-  private long validateCacheTtlSeconds;
-
-  /** 连续失败锁定阈值，默认 5 次，可通过 ydzs.system.app.max-fail-count 配置覆盖 */
-  @Value("${ydsz.system.app.max-fail-count:5}")
-  private int maxFailCount;
-
-  /** 失败锁定 TTL（秒），默认 30 分钟，可通过 ydzs.system.app.fail-lock-ttl 配置覆盖 */
-  @Value("${ydsz.system.app.fail-lock-ttl:1800}")
-  private long failLockTtlSeconds;
 
   /**
    * 根据主键查询应用（不走缓存，直接走 DB）
@@ -208,7 +199,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     boolean matched = passwordEncoder.matches(appSecret, app.getAppSecret());
     if (matched) {
       // 校验成功：缓存结果、重置失败计数
-      redisStringOps.set(cacheKey, "true", validateCacheTtlSeconds);
+      redisStringOps.set(cacheKey, "true", systemProperties.getApp().getValidateCacheTtlSeconds());
       redisStringOps.del(failKey);
       metrics.recordAppValidateSuccess();
     } else {
@@ -231,9 +222,9 @@ public class AppInfoServiceImpl implements AppInfoService {
     }
     try {
       int failCount = Integer.parseInt(failCountStr);
-      if (failCount >= maxFailCount) {
+      if (failCount >= systemProperties.getApp().getMaxFailCount()) {
         log.warn(
-            "应用校验锁定中: appKey={}, 连续失败次数={}, 锁定 {}s", appKey, failCount, failLockTtlSeconds);
+            "应用校验锁定中: appKey={}, 连续失败次数={}, 锁定 {}s", appKey, failCount, systemProperties.getApp().getFailLockTtlSeconds());
         return true;
       }
     } catch (NumberFormatException ignored) {
@@ -263,9 +254,9 @@ public class AppInfoServiceImpl implements AppInfoService {
    */
   private void handleValidateFail(String appKey, String failKey, String reason) {
     long count = redisStringOps.incr(failKey, 1);
-    redisStringOps.expire(failKey, failLockTtlSeconds);
+    redisStringOps.expire(failKey, systemProperties.getApp().getFailLockTtlSeconds());
     metrics.recordAppValidateFail();
-    log.warn("应用校验失败: appKey={}, {}, 连续失败次数={}/{}", appKey, reason, count, maxFailCount);
+    log.warn("应用校验失败: appKey={}, {}, 连续失败次数={}/{}", appKey, reason, count, systemProperties.getApp().getMaxFailCount());
   }
 
   /**
