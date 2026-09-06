@@ -1,0 +1,28 @@
+# =====================================================================
+#  YDSZ API 网关服务 application 配置
+#  --------------------------------------------------------------------
+#  本文件为 SkyWalking 链路追踪 + 日志 traceId 的专用配置
+#  公共配置（datasource / redis / mybatis-plus）由 Nacos ydsz-common.yaml 提供
+# =====================================================================
+
+logging:
+  pattern:
+    # SkyWalking traceId 支持：Agent 注入时自动填充 X{traceId}，未启用时为空
+    level: "%5p [%X{traceId:-},%X{spanId:-}]"
+
+# SkyWalking 链路追踪（通过 Java Agent 方式启用，无需修改业务代码）
+# 启动示例：java -javaagent:/path/to/skywalking-agent.jar \
+#   -Dskywalking.agent.service_name=ydsz-gateway \
+#   -Dskywalking.collector.backend_service=localhost:11800 \
+#   -jar ydsz-gateway.jar
+#
+# Agent 配置优先级：-Dskywalking.xxx > agent/config/agent.config > 默认值
+# 以下为可选的 Spring 属性占位（实际由 agent.config 控制）
+skywalking:
+  agent:
+    service_name: ${spring.application.name}
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}
+  plugin:
+    toolikt:
+      # 禁用不需要的 toolit-kit 插件（如有冲突时取消注释）
+      # activate: false

@@ -160,3 +160,18 @@ ydsz:
       audit-delete: true
       log-parameters: true
       max-parameter-length: 500
+
+logging:
+  pattern:
+    # SkyWalking traceId 支持：Agent 注入时自动填充 X{traceId}，未启用时为空
+    level: "%5p [%X{traceId:-},%X{spanId:-}]"
+
+# SkyWalking 链路追踪（通过 Java Agent 方式启用，无需修改业务代码）
+# 启动示例：java -javaagent:/path/to/skywalking-agent.jar \
+#   -Dskywalking.agent.service_name=ydsz-literule \
+#   -Dskywalking.collector.backend_service=localhost:11800 \
+#   -jar ydsz-literule.jar
+skywalking:
+  agent:
+    service_name: ${spring.application.name}
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}
