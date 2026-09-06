@@ -65,6 +65,9 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
   /** 默认状态：启用 */
   private static final String DEFAULT_STATUS = ApiPermissionStatus.ENABLED.getCode();
 
+  /** URL 模式列表初始容量（多数接口仅有 1-2 个路径模式） */
+  private static final int URL_PATTERNS_INITIAL_CAPACITY = 8;
+
   private final ApiPermissionRepository apiPermissionRepository;
   private final SystemConverter converter;
   private final List<RequestMappingHandlerMapping> handlerMappings;
@@ -265,7 +268,7 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
       rawPatterns.forEach(p -> patterns.add(p.getPatternString()));
       return patterns;
     }
-    List<String> patterns = new ArrayList<>(8);
+    List<String> patterns = new ArrayList<>(URL_PATTERNS_INITIAL_CAPACITY);
     PatternsRequestCondition patternsCondition = mappingInfo.getPatternsCondition();
     if (patternsCondition != null) {
       patterns.addAll(patternsCondition.getPatterns());

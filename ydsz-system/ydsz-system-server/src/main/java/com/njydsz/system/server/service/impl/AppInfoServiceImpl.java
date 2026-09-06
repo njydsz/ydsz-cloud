@@ -16,8 +16,8 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.AppInfoPageQuery;
 import com.njydsz.system.domain.repository.AppInfoRepository;
 import com.njydsz.system.domain.vo.AppInfoVO;
-import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.config.SystemProperties;
+import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.AppInfoService;
 
 

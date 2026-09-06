@@ -2,6 +2,7 @@ package com.njydsz.system.server.config.hotreload;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
@@ -88,7 +89,7 @@ public class SystemConfigChangeListener implements ConfigChangeListener {
    */
   private void handleCacheTtlChange(String key) {
     if (key.contains("config.")) {
-     	evictCacheByName(CacheConstants.SYSTEM_CONFIG_CACHE, "配置");
+      evictCacheByName(CacheConstants.SYSTEM_CONFIG_CACHE, "配置");
     } else if (key.contains("dict.")) {
       evictCacheByName(CacheConstants.SYSTEM_DICT_ITEM_CACHE, "字典");
     } else if (key.contains("variable.")) {
@@ -103,7 +104,7 @@ public class SystemConfigChangeListener implements ConfigChangeListener {
    * @param cacheLabel 缓存中文标签（用于日志）
    */
   private void evictCacheByName(String cacheName, String cacheLabel) {
-    org.springframework.cache.Cache cache = cacheManager.getCache(cacheName);
+    Cache cache = cacheManager.getCache(cacheName);
     if (cache != null) {
       cache.clear();
       log.info("[System] {} 缓存 TTL 变更，已清理 {} 缓存", cacheLabel, cacheName);

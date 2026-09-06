@@ -95,29 +95,26 @@ public class SystemProperties {
   /** 应用密钥配置。 */
   @Data
   public static class App {
+    /** 默认应用密钥校验缓存 TTL（秒）：5 分钟 */
+    private static final long DEFAULT_VALIDATE_CACHE_TTL_SECONDS = 5L * 60L;
+
+    /** 默认连续失败锁定阈值（次） */
+    private static final int DEFAULT_MAX_FAIL_COUNT = 5;
+
+    /** 默认失败锁定 TTL（秒）：30 分钟 */
+    private static final long DEFAULT_FAIL_LOCK_TTL_SECONDS = 30L * 60L;
+
     /** BCrypt 加密强度（4-31）。 */
     private int bcryptStrength = 10;
 
-    /**
-     * 应用密钥校验缓存 TTL（秒）。
-     *
-     * <p>校验成功后缓存结果，命中缓存跳过 BCrypt 校验。默认 300 秒（5 分钟）。
-     */
-    private long validateCacheTtlSeconds = 300L;
+    /** 应用密钥校验缓存 TTL（秒），校验成功后缓存结果跳过 BCrypt 校验。 */
+    private long validateCacheTtlSeconds = DEFAULT_VALIDATE_CACHE_TTL_SECONDS;
 
-    /**
-     * 连续失败锁定阈值。
-     *
-     * <p>连续校验失败达到该次数后，在 {@link #failLockTtlSeconds} 时间内拒绝所有校验请求。默认 5 次。
-     */
-    private int maxFailCount = 5;
+    /** 连续失败锁定阈值（次），达到该次数后在锁定时间内拒绝所有校验请求。 */
+    private int maxFailCount = DEFAULT_MAX_FAIL_COUNT;
 
-    /**
-     * 失败锁定 TTL（秒）。
-     *
-     * <p>连续失败达到阈值后的锁定时长，期间所有校验请求直接拒绝。默认 1800 秒（30 分钟）。
-     */
-    private long failLockTtlSeconds = 1800L;
+    /** 失败锁定 TTL（秒），期间所有校验请求直接拒绝。 */
+    private long failLockTtlSeconds = DEFAULT_FAIL_LOCK_TTL_SECONDS;
   }
 
   /** 缓存配置。 */
