@@ -3,8 +3,10 @@ package com.njydsz.generator.repository.impl;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.generator.entity.GenColumnMeta;
@@ -15,16 +17,32 @@ import com.njydsz.generator.repository.GenColumnMetaRepository;
  * 列元数据 Repository 实现。
  *
  * <p>基于 MyBatis-Plus BaseMapper，直接使用 domain Entity 作为持久化实体。
+ * 批量插入通过 SqlSession BATCH 模式执行，减少 DB round-trips。
  *
  * @author ydsz-team
  * @since 26.09.05
  */
 @Slf4j
 @Repository
-@RequiredArgsConstructor
 public class GenColumnMetaRepositoryImpl implements GenColumnMetaRepository {
 
+  private static final int BATCH_FLUSH_SIZE = 100;
+
   private final GenColumnMetaMapper mapper;
+  private final SqlSessionFactory sqlSessionFactory;
+
+  /**
+   * 构造器。
+   *
+   * @param mapper           列元数据 Mapper
+   * @param sqlSessionFactory MyBatis SqlSession 工厂（用于批量模式）
+   */
+  public GenColumnMetaRepositoryImpl(
+      GenColumnMetaMapper mapper,
+      SqlSessionFactory sqlSessionFactory) {
+    this.mapper = mapper;
+    this.sqlSessionFactory = sqlSessionFactory;
+  }
 
   @Override
   public GenColumnMeta save(final GenColumnMeta columnMeta) {
@@ -38,7 +56,24 @@ public class GenColumnMetaRepositoryImpl implements GenColumnMetaRepository {
 
   @Override
   public List<GenColumnMeta> batchSave(final List<GenColumnMeta> columns) {
-    columns.forEach(mapper::insert);
+    if (columns == null || columns.isEmpty()) {
+      return columns;
+    }
+    long start = System.currentTimeMillis();
+    try (SqlSession batchSession = sqlSessionFactory.openSession(ExecutorType.BATCH)) {
+      GenColumnMetaMapper batchMapper = batchSession.getMapper(GenColumnMetaMapper.class);
+      int count = 0;
+      for (GenColumnMeta column : columns) {
+        batchMapper.insert(column);
+        count++;
+        if (count % BATCH_FLUSH_SIZE == 0) {
+          batchSession.flushStatements();
+        }
+      }
+      batchSession.commit();
+      log.info("批量保存列元数据 count={} cost={}ms",
+          columns.size(), System.currentTimeMillis() - start);
+    }
     return columns;
   }
 

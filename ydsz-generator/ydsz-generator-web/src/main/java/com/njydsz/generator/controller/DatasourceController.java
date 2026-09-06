@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.service.DatasourceService;
+import com.njydsz.generator.vo.GenDatasourceRespVO;
 
 /**
  * 数据源管理 REST 控制器。
@@ -33,21 +34,21 @@ public class DatasourceController {
   /**
    * 查询全部数据源。
    *
-   * @return 数据源列表
+   * @return 数据源列表（不含敏感字段 password）
    */
   @GetMapping
-  public YdszResponse<List<GenDatasource>> list() {
-    return YdszResponse.success(datasourceService.listAll());
+  public YdszResponse<List<GenDatasourceRespVO>> list() {
+    return YdszResponse.success(datasourceService.listAllVO());
   }
 
   /**
    * 获取默认数据源。
    *
-   * @return 默认数据源
+   * @return 默认数据源（不含敏感字段 password）
    */
   @GetMapping("/default")
-  public YdszResponse<GenDatasource> getDefault() {
-    return YdszResponse.success(datasourceService.getDefault());
+  public YdszResponse<GenDatasourceRespVO> getDefault() {
+    return YdszResponse.success(datasourceService.getDefaultVO());
   }
 
   /**
