@@ -97,6 +97,27 @@ public class SystemProperties {
   public static class App {
     /** BCrypt 加密强度（4-31）。 */
     private int bcryptStrength = 10;
+
+    /**
+     * 应用密钥校验缓存 TTL（秒）。
+     *
+     * <p>校验成功后缓存结果，命中缓存跳过 BCrypt 校验。默认 300 秒（5 分钟）。
+     */
+    private long validateCacheTtlSeconds = 300L;
+
+    /**
+     * 连续失败锁定阈值。
+     *
+     * <p>连续校验失败达到该次数后，在 {@link #failLockTtlSeconds} 时间内拒绝所有校验请求。默认 5 次。
+     */
+    private int maxFailCount = 5;
+
+    /**
+     * 失败锁定 TTL（秒）。
+     *
+     * <p>连续失败达到阈值后的锁定时长，期间所有校验请求直接拒绝。默认 1800 秒（30 分钟）。
+     */
+    private long failLockTtlSeconds = 1800L;
   }
 
   /** 缓存配置。 */
