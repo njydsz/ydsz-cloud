@@ -2,7 +2,7 @@ package com.njydsz.common.tenant.ratelimit;
 
 import java.time.Duration;
 
-import com.njydsz.common.core.tenant.TenantContextHolder;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 
 /**

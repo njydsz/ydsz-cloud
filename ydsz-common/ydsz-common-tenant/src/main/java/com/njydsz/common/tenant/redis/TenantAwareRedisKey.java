@@ -1,7 +1,8 @@
 package com.njydsz.common.tenant.redis;
 
-import com.njydsz.common.core.tenant.TenantContext;
-import com.njydsz.common.core.tenant.TenantContextHolder;
+
+import com.njydsz.common.core.context.TenantContext;
+import com.njydsz.common.core.context.TenantContextHolder;
 
 /**
  * 租户感知的 Redis Key 构建器。

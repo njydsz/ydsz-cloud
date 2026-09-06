@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.njydsz.common.core.context.TenantContext;
+import com.njydsz.common.core.context.TenantContextHolder;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,8 +21,6 @@ import org.slf4j.MDC;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.model.CurrentUser;
-import com.njydsz.common.core.tenant.TenantContext;
-import com.njydsz.common.core.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.feign.TenantHeaderContract;
