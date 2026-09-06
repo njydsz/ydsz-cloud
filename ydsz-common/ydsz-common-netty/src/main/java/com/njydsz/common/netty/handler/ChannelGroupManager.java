@@ -67,6 +67,25 @@ public class ChannelGroupManager {
   }
 
   /**
+   * 从指定业务分组移除 Channel（P1-2：支持取消订阅空间）。
+   *
+   * <p>仅从指定业务分组移除，不影响全局组和其他业务分组。 移除后若分组为空则自动清理。
+   *
+   * @param groupKey 分组 key
+   * @param channel Netty Channel
+   */
+  public void removeFromGroup(String groupKey, Channel channel) {
+    ChannelGroup group = businessGroups.get(groupKey);
+    if (group != null) {
+      group.remove(channel);
+      if (group.isEmpty()) {
+        businessGroups.remove(groupKey);
+      }
+      log.debug("[Netty-ChannelGroup] Channel 离开分组: groupKey={}, id={}", groupKey, channel.id());
+    }
+  }
+
+  /**
    * 向全局所有 Channel 广播消息。
    *
    * @param message 消息

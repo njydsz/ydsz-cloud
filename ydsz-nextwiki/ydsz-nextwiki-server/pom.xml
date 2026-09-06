@@ -68,6 +68,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-socket</artifactId>
         </dependency>
+        <!-- P1-2: Netty TCP 长连接推送通道（NextwikiTcpPushChannel 协作编辑实时同步） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-netty</artifactId>
+        </dependency>
         <!-- dynamic-datasource（@DS 注解，common-jdbc 中标记为 optional） -->
         <dependency>
             <groupId>com.baomidou</groupId>
