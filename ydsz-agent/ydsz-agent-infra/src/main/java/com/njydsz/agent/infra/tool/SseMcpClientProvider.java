@@ -234,6 +234,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @param response JSON-RPC 响应字符串
    * @return 工具描述符列表
    */
+  // MCP SDK 通过 YdszJson.parseMap() 返回 Map<?, ?>，泛型擦除导致编译期无法验证 Map<String, Object> 强转
   @SuppressWarnings("unchecked")
   private List<McpToolAdapter.McpToolDescriptor> parseToolList(String response) {
     List<McpToolAdapter.McpToolDescriptor> tools = new ArrayList<>(0);
@@ -274,6 +275,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @param response JSON-RPC 响应字符串
    * @return 工具结果内容文本
    */
+  // MCP SDK 通过 YdszJson.parseMap() 返回 Map<?, ?>，泛型擦除导致编译期无法验证 Map<String, Object> 强转
   @SuppressWarnings("unchecked")
   private String extractToolResult(String response) {
     try {
