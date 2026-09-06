@@ -14,6 +14,7 @@ import javax.naming.directory.Attributes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.ldap.core.ContextMapper;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.query.LdapQueryBuilder;
@@ -373,19 +374,17 @@ public class LdapOrgSyncService {
       LdapTemplate template = getLdapTemplate();
 
       List<LdapDepartment> departments = template.search(
-              LdapQueryBuilder.query().base(base).filter(filter))
-          .map(
-              entry -> {
-                Attributes attrs = entry.getAttributes();
-                String dn = getAttributeValue(attrs, "distinguishedName");
-                if (dn == null) {
-                  dn = getAttributeValue(attrs, "dn");
-                }
-                String ou = getAttributeValue(attrs, "ou");
-                String description = getAttributeValue(attrs, "description");
-                return new LdapDepartment(dn, ou, description);
-              })
-          .toList();
+          LdapQueryBuilder.query().base(base).filter(filter),
+          (ContextMapper<LdapDepartment>) ctx -> {
+            Attributes attrs = ctx.getAttributes();
+            String dn = getAttributeValue(attrs, "distinguishedName");
+            if (dn == null) {
+              dn = getAttributeValue(attrs, "dn");
+            }
+            String ou = getAttributeValue(attrs, "ou");
+            String description = getAttributeValue(attrs, "description");
+            return new LdapDepartment(dn, ou, description);
+          });
 
       log.info("LDAP department search returned {} entries", departments.size());
       return departments;

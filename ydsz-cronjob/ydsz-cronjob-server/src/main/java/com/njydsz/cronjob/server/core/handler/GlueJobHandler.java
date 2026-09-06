@@ -245,7 +245,7 @@ public class GlueJobHandler implements JobHandler {
     // CHECKSTYLE.ON: RegexpSinglelineJava
 
     // 接收者黑名单：禁止在危险类型上调用方法
-    customizer.setReceiversBlackList(
+    customizer.setDisallowedReceivers(
         List.of(
             System.class.getName(),
             Runtime.class.getName(),

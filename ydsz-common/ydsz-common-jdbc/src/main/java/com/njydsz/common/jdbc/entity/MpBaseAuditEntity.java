@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -28,6 +29,7 @@ import com.njydsz.common.json.annotation.JsonFormat;
  */
 @Data
 @SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class MpBaseAuditEntity<T extends Serializable> extends MpBaseIdEntity<T> {

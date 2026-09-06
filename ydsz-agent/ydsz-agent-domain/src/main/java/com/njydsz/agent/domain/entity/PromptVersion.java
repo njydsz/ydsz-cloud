@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
@@ -18,7 +17,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @author ydsz-team
  * @since 26.09.01
  */@Data
-@SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_prompt_version")

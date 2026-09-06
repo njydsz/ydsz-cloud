@@ -168,6 +168,7 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
   @Builder
   public static class EnrichmentConfig {
     /** 是否启用 */
+    @Builder.Default
     private boolean enabled = true;
 
     /** 来源：mdc / request-context / env */
