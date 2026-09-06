@@ -29,6 +29,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.annotation.SecondaryAuth;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.ConfigBatchDTO;
 import com.njydsz.system.domain.dto.ConfigDTO;
@@ -158,9 +160,12 @@ public class ConfigController {
    *
    * <p>更新后会自动失效 Redis 缓存，并通过 {@code ConfigChangeEvent} 广播变更， 业务方可通过订阅事件感知配置变更。
    *
+   * <p><b>需要二次身份验证：</b>修改系统配置属于极敏感操作，配置变更可能影响全系统行为，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param dto 配置 DTO（命令入参，必须包含 ID）
    * @return 是否成功
    */
+  @SecondaryAuth(scene = "config:write", level = SensitiveLevel.CRITICAL, value = "修改系统配置")
   @Audit(
       module = "系统配置",
       type = AuditType.OPERATION,
@@ -185,9 +190,12 @@ public class ConfigController {
    * <p>删除后会精准失效单 key / 分组 / 公开配置缓存，并发布 {@code CONFIG_CHANGED} 变更事件。
    * 业务方如依赖某配置项，删除前应由调用方自行确认无引用（本服务不维护跨模块引用关系）。
    *
+   * <p><b>需要二次身份验证：</b>删除系统配置属于极敏感操作，可能导致依赖该配置的业务功能异常，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param id 配置 ID
    * @return 是否成功
    */
+  @SecondaryAuth(scene = "config:write", level = SensitiveLevel.CRITICAL, value = "删除系统配置")
   @Audit(
       module = "系统配置",
       type = AuditType.OPERATION,

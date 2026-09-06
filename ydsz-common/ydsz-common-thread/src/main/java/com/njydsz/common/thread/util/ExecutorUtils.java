@@ -172,11 +172,37 @@ public final class ExecutorUtils {
      */
     public ThreadPoolExecutor buildAndRegister() {
       ThreadPoolExecutor executor = build();
-      String name = (threadNamePrefix != null && !threadNamePrefix.isEmpty())
-          ? threadNamePrefix.substring(THREAD_NAME_PREFIX.length())
-          : "pool-" + POOL_NUMBER.get();
+      String name = resolveRegistryName();
       ThreadPoolRegistry.register(name, executor);
       return executor;
+    }
+
+    /**
+     * 根据 threadNamePrefix 解析注册到 ThreadPoolRegistry 的名称。
+     *
+     * <p>规则：
+     *
+     * <ul>
+     *   <li>若设置了 threadNamePrefix，使用该名称（去除首尾连字符）作为注册名
+     *   <li>若未设置，使用 "pool-N" 格式自动生成
+     * </ul>
+     *
+     * @return 注册到 ThreadPoolRegistry 的名称
+     */
+    private String resolveRegistryName() {
+      if (threadNamePrefix != null && !threadNamePrefix.isEmpty()) {
+        // threadNamePrefix 由 createThreadFactory 自动追加 THREAD_PREFIX 前缀
+        // 注册名仅取用户指定的轻量名称，去除首尾连字符
+        String name = threadNamePrefix;
+        if (name.startsWith(THREAD_NAME_PREFIX)) {
+          name = name.substring(THREAD_NAME_PREFIX.length());
+        }
+        name = name.replaceAll("\\-$", "");
+        if (!name.isEmpty()) {
+          return name;
+        }
+      }
+      return "pool-" + POOL_NUMBER.get();
     }
 
     private static BlockingQueue<Runnable> createQueue(BlockingQueueType type, int capacity) {

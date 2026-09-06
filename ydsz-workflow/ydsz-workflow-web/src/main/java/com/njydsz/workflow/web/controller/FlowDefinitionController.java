@@ -31,6 +31,8 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.safe.annotation.SecondaryAuth;
+import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
@@ -193,9 +195,12 @@ public class FlowDefinitionController {
   /**
    * 废弃流程定义
    *
+   * <p><b>需要二次身份验证：</b>废弃流程定义属于极敏感操作，可能导致在途流程实例无法正常流转，需管理员输入当前登录密码确认身份后方可执行。
+   *
    * @param id 流程定义 ID
    * @return 统一响应结果
    */
+  @SecondaryAuth(scene = "flow:delete", level = SensitiveLevel.CRITICAL, value = "废弃流程定义")
   @Idempotent(key = "ydsz:workflow:definition:deprecate", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinition.deprecate", threshold = 50)
   @PostMapping("/definition/{id}/deprecate")

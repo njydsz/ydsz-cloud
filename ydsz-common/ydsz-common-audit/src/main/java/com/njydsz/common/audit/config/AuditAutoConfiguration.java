@@ -162,6 +162,7 @@ public class AuditAutoConfiguration {
     int queueCapacity = properties.getAsync().getQueueCapacity();
     // 使用 common-thread ExecutorUtils 创建符合云顶规范 15.4 的线程池
     // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
+    // P2-2: 通过 buildAndRegister() 自动注册到 ThreadPoolRegistry
     ThreadPoolExecutor executor =
         ExecutorUtils.builder()
             .corePoolSize(corePoolSize)
@@ -169,9 +170,9 @@ public class AuditAutoConfiguration {
             .queueCapacity(queueCapacity)
             .threadNamePrefix("ydsz-audit-async-")
             .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
-            .build();
+            .buildAndRegister();
     LOG.info(
-        "初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy=CallerRunsPolicy",
+        "初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy=CallerRunsPolicy (已注册到 ThreadPoolRegistry)",
         corePoolSize,
         maxPoolSize,
         queueCapacity);
