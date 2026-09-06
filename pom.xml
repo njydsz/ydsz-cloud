@@ -114,6 +114,8 @@
 
         <!-- Aviator 表达式引擎（工作流条件表达式求值） -->
         <aviator.version>5.4.3</aviator.version>
+        <!-- SkyWalking 分布式链路追踪（P2-1 集成） -->
+        <skywalking.version>9.3.0</skywalking.version>
         </properties>
 
     <dependencyManagement>
@@ -1002,6 +1004,26 @@
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-config</artifactId>
                 <version>${prometheus.version}</version>
+            </dependency>
+
+            <!-- ==================== SkyWalking 分布式链路追踪（P2-1 集成） ==================== -->
+            <!-- apm-toolkit-micrometer-1.8: SkyWalking 指标桥接 Micrometer（启用 Prometheus/Actuator 端点可见 trace 维度指标） -->
+            <dependency>
+                <groupId>org.apache.skywalking</groupId>
+                <artifactId>apm-toolkit-micrometer-1.8</artifactId>
+                <version>${skywalking.version}</version>
+            </dependency>
+            <!-- apm-toolkit-logback-1.x: SkyWalking traceId 自动写入 Logback MDC（%X{traceId:-} 输出到日志） -->
+            <dependency>
+                <groupId>org.apache.skywalking</groupId>
+                <artifactId>apm-toolkit-logback-1.x</artifactId>
+                <version>${skywalking.version}</version>
+            </dependency>
+            <!-- apm-toolkit-trace: 编程式 TraceContext 访问（手动创建 Span / 获取 traceId） -->
+            <dependency>
+                <groupId>org.apache.skywalking</groupId>
+                <artifactId>apm-toolkit-trace</artifactId>
+                <version>${skywalking.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

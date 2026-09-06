@@ -103,7 +103,7 @@ public class CacheWarmer {
       // 按 configKey 预热单条值缓存（使用默认租户，与运行时 CacheKeyBuilder 生成的 key 一致）
       for (ConfigVO config : configs) {
         try {
-          String valueKey = "value:default:" + config.getConfigKey();
+          String valueKey = cacheKeyBuilder.configValue(config.getConfigKey());
           configCache.put(valueKey, config.getConfigValue());
         } catch (Exception e) {
           log.debug("[CacheWarmer] 预热单条配置失败: {}/{}", config.getConfigGroup(), config.getConfigKey());
@@ -140,12 +140,12 @@ public class CacheWarmer {
       Map<String, List<DictItemVO>> groupedItems = dictItems.stream()
           .collect(
               Collectors.groupingBy(
-                  item -> "default:" + item.getTypeCode(),
+                  DictItemVO::getTypeCode,
                   Collectors.filtering(Objects::nonNull, Collectors.toList())));
 
       for (Map.Entry<String, List<DictItemVO>> entry : groupedItems.entrySet()) {
         try {
-          String listKey = "list:" + entry.getKey();
+          String listKey = cacheKeyBuilder.dictList(entry.getKey());
           dictCache.put(listKey, entry.getValue());
         } catch (Exception e) {
           log.debug("[CacheWarmer] 预热字典列表失败: key={}", entry.getKey());

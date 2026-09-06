@@ -56,6 +56,29 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!--
+            P2-1: SkyWalking 分布式链路追踪集成（agent-web 智能体服务，含 SSE 流式输出）
+              - apm-toolkit-micrometer-1.8: 指标桥接 Micrometer，暴露 trace 维度指标
+              - apm-toolkit-logback-1.x: traceId 自动写入 Logback MDC
+              - apm-toolkit-trace: 编程式 TraceContext 访问（手动 Span / traceId）
+
+            注：SkyWalking Agent（-javaagent）在部署阶段挂载，本处引入 SDK Toolkit 依赖。
+            Agent 自动拦截 SSE/HTTP/Feign/MyBatis-Plus 等下游调用并建立调用链。
+            SSE 流式响应场景下 trace 贯穿整个流生命周期。
+        -->
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-micrometer-1.8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-logback-1.x</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-trace</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>

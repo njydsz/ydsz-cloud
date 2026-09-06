@@ -142,7 +142,7 @@ public class DictServiceImpl implements DictService {
   @Override
   @CacheEvict(
       value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
-      key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
+      key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   @Transactional(rollbackFor = Exception.class)
   public String save(DictTypeDTO dto) {
     checkDuplicateTypeCode(dto);
@@ -170,7 +170,7 @@ public class DictServiceImpl implements DictService {
   @Override
   @CacheEvict(
       value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
-      key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
+      key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(DictTypeDTO dto) {
     checkDuplicateTypeCode(dto);
@@ -195,7 +195,7 @@ public class DictServiceImpl implements DictService {
   @Override
   @CacheEvict(
       value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
-      key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
+      key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     DictTypeVO vo = dictRepository.findTypeById(id).orElse(null);
@@ -256,7 +256,7 @@ public class DictServiceImpl implements DictService {
   @Override
   @Cacheable(
       value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
-      key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
+      key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   public List<DictTypeVO> listAll() {
     return dictRepository.findAllTypes();
   }

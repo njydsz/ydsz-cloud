@@ -1,1 +1,2 @@
 com.njydsz.common.core.config.CoreAutoConfiguration
+com.njydsz.common.core.config.SkyWalkingAutoConfiguration

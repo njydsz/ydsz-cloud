@@ -1,14 +1,14 @@
 package com.njydsz.system.server.cache;
+
 import org.springframework.stereotype.Component;
-
-import com.njydsz.common.tenant.TenantContextHolder;
-
-
 
 /**
  * 缓存键构造器（Spring Cache SpEL 调用入口）。
  *
  * <p>为系统模块的 {@code @Cacheable} / {@code @CacheEvict} SpEL 表达式提供租户感知的缓存键生成能力。
+ *
+ * <p><b>统一格式（P2-3）：</b>所有 key 均通过 {@code CacheKeyBuilder.build(module, entity, id)} 构建，
+ * 格式为 {@code ydsz:{tenantId}:{module}:{entity}:{id}}。
  *
  * <p>使用方式（SpEL）：
  *
@@ -20,80 +20,81 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * public String getConfigValue(String configKey) { ... }
  * }</pre>
  *
- * <p>所有生成的键均包含租户命名空间前缀，格式 {@code {prefix}:{tenantId}:{key}}。
- *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Component("cacheKeyBuilder")
 public final class CacheKeyBuilder {
 
-  private static final String DEFAULT_TENANT = "default";
+  /** 系统模块标识 */
+  private static final String MODULE = "system";
 
   private CacheKeyBuilder() {}
+
+  // ============================== 系统配置缓存 key ==============================
 
   /**
    * 生成「按配置键查询」缓存键。
    *
    * @param configKey 配置键
-   * @return 格式：{@code value:{tenantId}:{configKey}}
+   * @return 格式：{@code ydsz:{tenantId}:system:config:value:{configKey}}
    */
   public String configValue(String configKey) {
-    return "value:" + currentTenant() + ":" + configKey;
+    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "config:value", configKey);
   }
 
   /**
    * 生成「按配置分组查询」缓存键。
    *
    * @param configGroup 配置分组
-   * @return 格式：{@code group:{tenantId}:{configGroup}}
+   * @return 格式：{@code ydsz:{tenantId}:system:config:group:{configGroup}}
    */
   public String configGroup(String configGroup) {
-    return "group:" + currentTenant() + ":" + configGroup;
+    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "config:group", configGroup);
   }
 
   /**
    * 生成「公开配置查询」缓存键。
    *
-   * @return 格式：{@code public:{tenantId}}
+   * @return 格式：{@code ydsz:{tenantId}:system:config:public}
    */
   public String configPublic() {
-    return "public:" + currentTenant();
+    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "config:public", "");
   }
+
+  // ============================== 字典项缓存 key ==============================
 
   /**
    * 生成「按类型+编码查询字典项」缓存键。
    *
    * @param typeCode 字典类型编码
    * @param itemCode 字典项编码
-   * @return 格式：{@code item:{tenantId}:{typeCode}:{itemCode}}
+   * @return 格式：{@code ydsz:{tenantId}:system:dict:item:{typeCode}:{itemCode}}
    */
   public String dictItem(String typeCode, String itemCode) {
-    return "item:" + currentTenant() + ":" + typeCode + ":" + itemCode;
+    return com.njydsz.common.cache.support.CacheKeyBuilder.buildPattern(
+        MODULE, "dict:item", typeCode, itemCode);
   }
 
   /**
    * 生成「按类型查询字典列表」缓存键。
    *
    * @param typeCode 字典类型编码
-   * @return 格式：{@code list:{tenantId}:{typeCode}}
+   * @return 格式：{@code ydsz:{tenantId}:system:dict:items:{typeCode}}
    */
   public String dictList(String typeCode) {
-    return "list:" + currentTenant() + ":" + typeCode;
+    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "dict:items", typeCode);
   }
+
+  // ============================== 系统变量缓存 key ==============================
 
   /**
    * 生成「按变量键查询」缓存键。
    *
    * @param variableKey 变量键
-   * @return 格式：{@code {tenantId}:{variableKey}}
+   * @return 格式：{@code ydsz:{tenantId}:system:variable:{variableKey}}
    */
   public String variable(String variableKey) {
-    return currentTenant() + ":" + variableKey;
-  }
-
-  private static String currentTenant() {
-    String tenantId = TenantContextHolder.getTenantId();
-    return tenantId != null && !tenantId.isBlank() ? tenantId : DEFAULT_TENANT;
+    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "variable", variableKey);
   }
 }

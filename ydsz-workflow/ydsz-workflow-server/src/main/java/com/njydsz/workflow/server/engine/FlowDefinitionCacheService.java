@@ -329,14 +329,14 @@ public class FlowDefinitionCacheService {
   }
 
   /**
-   * 构建缓存 key（格式：tenantId:definitionId）。
+   * 构建缓存 key（格式：ydsz:{tenantId}:workflow:def:meta:{definitionId}）。
    *
    * @param definitionId 流程定义 ID
    * @return 缓存 key
    */
   private String buildCacheKey(String definitionId) {
-    String tenantId = TenantContextHolder.getTenantId();
-    return (tenantId == null ? "default" : tenantId) + ":" + definitionId;
+    return com.njydsz.common.cache.support.CacheKeyBuilder.build(
+        "workflow", "def:meta", definitionId);
   }
 
   /**

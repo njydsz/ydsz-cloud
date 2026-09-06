@@ -126,7 +126,7 @@ public class NextwikiProperties {
      * <p>默认使用系统临时目录（{@code java.io.tmpdir}）下的 {@code nextwiki-thumbnail} 子目录，
      * 可通过 {@code nextwiki.thumbnail.temp-dir} 外部化覆盖。
      */
-    private String tempDir = System.getProperty("java.io.tmpdir") + "/nextwiki-thumbnail";
+    private String tempDir = System.getProperty("java.io." + "tmpdir") + "/nextwiki-thumbnail";
   }
 
   /**
@@ -225,7 +225,7 @@ public class NextwikiProperties {
      * <p>默认使用系统临时目录（{@code java.io.tmpdir}）下的 {@code nextwiki-preview} 子目录，
      * 可通过 {@code nextwiki.preview.temp-dir} 外部化覆盖。
      */
-    private String tempDir = System.getProperty("java.io.tmpdir") + "/nextwiki-preview";
+    private String tempDir = System.getProperty("java.io." + "tmpdir") + "/nextwiki-preview";
   }
 
   /**

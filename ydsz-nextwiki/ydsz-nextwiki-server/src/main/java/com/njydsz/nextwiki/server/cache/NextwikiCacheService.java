@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.cache.support.CacheKeyBuilder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -24,9 +25,11 @@ import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
  * <p><b>缓存策略：</b>
  *
  * <ul>
- *   <li>文件详情：key={@code nw:file:{nodeId}}，TTL 10 分钟（±10% 随机偏移）
- *   <li>目录列表：key={@code nw:children:{parentId}}，TTL 5 分钟（±10% 随机偏移）
- *   <li>配额用量：key={@code nw:quota:{scopeType}:{scopeId}}，TTL 3 分钟（±10% 随机偏移）
+ *   <li>文件详情：key={@code ydsz:{tenantId}:nextwiki:file:{nodeId}}，TTL 10 分钟（±10% 随机偏移）
+ *   <li>目录列表：key={@code ydsz:{tenantId}:nextwiki:children:{parentId}}，TTL 5 分钟（±10% 随机偏移）
+ *   <li>配额用量：key={@code ydsz:{tenantId}:nextwiki:quota:{scopeType}:{scopeId}}，TTL 3 分钟（±10% 随机偏移）
+ *   <li>AI 摘要：key={@code ydsz:{tenantId}:nextwiki:ai:summary:{hash}}，TTL 24 小时
+ *   <li>AI 关键词：key={@code ydsz:{tenantId}:nextwiki:ai:keywords:{hash}}，TTL 24 小时
  * </ul>
  *
  * <p><b>缓存失效：</b>
@@ -44,6 +47,11 @@ import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
  *   <li>互斥锁防穿透：缓存未命中时通过分布式锁控制单线程回查 DB，防止缓存击穿
  * </ul>
  *
+ * <p><b>多租户隔离：（P2-3 增强）</b>
+ *
+ * <p>所有 Redis key 通过 {@link CacheKeyBuilder} 构建，前缀统一为 {@code ydsz:{tenantId}:nextwiki:...}，
+ * 确保不同租户的缓存数据在 Redis 中严格隔离。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -52,17 +60,8 @@ import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 @RequiredArgsConstructor
 public class NextwikiCacheService {
 
-  /** 文件详情缓存前缀 */
-  private static final String KEY_FILE = "nw:file:";
-
-  /** 目录子节点列表缓存前缀 */
-  private static final String KEY_CHILDREN = "nw:children:";
-
-  /** 配额用量缓存前缀 */
-  private static final String KEY_QUOTA = "nw:quota:";
-
-  /** 缓存互斥锁前缀（防穿透） */
-  private static final String KEY_LOCK = "nw:lock:";
+  /** NextWiki 模块标识 */
+  private static final String MODULE = "nextwiki";
 
   /** 文件详情缓存 TTL（秒） */
   private static final long TTL_FILE = 600;
@@ -103,8 +102,8 @@ public class NextwikiCacheService {
    * @return 文件节点 VO；不存在返回 {@code Optional.empty()}
    */
   public Optional<FileNodeVO> getFile(String nodeId, Supplier<Optional<FileNodeVO>> loader) {
-    String key = KEY_FILE + nodeId;
-    String lockKey = KEY_LOCK + "file:" + nodeId;
+    String key = CacheKeyBuilder.build(MODULE, "file", nodeId);
+    String lockKey = buildLockKey("file", nodeId);
     String metricName = "file";
 
     // 尝试从缓存读取
@@ -126,7 +125,7 @@ public class NextwikiCacheService {
    */
   public void evictFile(String nodeId) {
     try {
-      redisStringOps.del(KEY_FILE + nodeId);
+      redisStringOps.del(CacheKeyBuilder.build(MODULE, "file", nodeId));
       log.debug("[NextwikiCacheService] 文件详情缓存失效: nodeId={}", nodeId);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 文件详情缓存失效异常: nodeId={}, err={}", nodeId, e.getMessage(), e);
@@ -145,8 +144,8 @@ public class NextwikiCacheService {
    * @return 子节点 VO 列表
    */
   public List<FileNodeVO> getChildren(String parentId, Supplier<List<FileNodeVO>> loader) {
-    String key = KEY_CHILDREN + parentId;
-    String lockKey = KEY_LOCK + "children:" + parentId;
+    String key = CacheKeyBuilder.build(MODULE, "children", parentId);
+    String lockKey = buildLockKey("children", parentId);
     String metricName = "children";
 
     // 尝试从缓存读取（使用 JSON 序列化）
@@ -197,7 +196,7 @@ public class NextwikiCacheService {
    */
   public void evictChildren(String parentId) {
     try {
-      redisStringOps.del(KEY_CHILDREN + parentId);
+      redisStringOps.del(CacheKeyBuilder.build(MODULE, "children", parentId));
       log.debug("[NextwikiCacheService] 目录列表缓存失效: parentId={}", parentId);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 目录列表缓存失效异常: parentId={}, err={}", parentId, e.getMessage(), e);
@@ -218,8 +217,8 @@ public class NextwikiCacheService {
    */
   public Optional<StorageQuotaVO> getQuota(String scopeType, String scopeId,
       Supplier<Optional<StorageQuotaVO>> loader) {
-    String key = KEY_QUOTA + scopeType + ":" + scopeId;
-    String lockKey = KEY_LOCK + "quota:" + scopeType + ":" + scopeId;
+    String key = CacheKeyBuilder.buildPattern(MODULE, "quota", scopeType, scopeId);
+    String lockKey = buildLockKey("quota", scopeType + ":" + scopeId);
     String metricName = "quota";
 
     // 尝试从缓存读取
@@ -242,7 +241,7 @@ public class NextwikiCacheService {
    */
   public void evictQuota(String scopeType, String scopeId) {
     try {
-      redisStringOps.del(KEY_QUOTA + scopeType + ":" + scopeId);
+      redisStringOps.del(CacheKeyBuilder.buildPattern(MODULE, "quota", scopeType, scopeId));
       log.debug("[NextwikiCacheService] 配额用量缓存失效: {}:{}", scopeType, scopeId);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 配额用量缓存失效异常: {}:{}, err={}", scopeType, scopeId, e.getMessage(), e);
@@ -280,12 +279,6 @@ public class NextwikiCacheService {
 
   // ==================== AI 摘要缓存 ====================
 
-  /** AI 摘要缓存前缀 */
-  private static final String KEY_AI_SUMMARY = "nw:ai:summary:";
-
-  /** AI 关键词缓存前缀 */
-  private static final String KEY_AI_KEYWORDS = "nw:ai:keywords:";
-
   /**
    * 获取 AI 摘要缓存。
    *
@@ -294,7 +287,7 @@ public class NextwikiCacheService {
    */
   public String getAiSummary(String key) {
     try {
-      return redisStringOps.get(KEY_AI_SUMMARY + key, String.class);
+      return redisStringOps.get(CacheKeyBuilder.build(MODULE, "ai:summary", key), String.class);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] AI 摘要缓存读取异常: err={}", e.getMessage(), e);
       return null;
@@ -310,7 +303,7 @@ public class NextwikiCacheService {
    */
   public void putAiSummary(String key, String summary, int ttlSeconds) {
     try {
-      redisStringOps.set(KEY_AI_SUMMARY + key, summary, jitterTtl(ttlSeconds));
+      redisStringOps.set(CacheKeyBuilder.build(MODULE, "ai:summary", key), summary, jitterTtl(ttlSeconds));
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] AI 摘要缓存写入异常: err={}", e.getMessage(), e);
     }
@@ -326,7 +319,7 @@ public class NextwikiCacheService {
    */
   public List<String> getAiKeywords(String key) {
     try {
-      String json = redisStringOps.get(KEY_AI_KEYWORDS + key, String.class);
+      String json = redisStringOps.get(CacheKeyBuilder.build(MODULE, "ai:keywords", key), String.class);
       if (json != null && !json.isEmpty()) {
         return YdszJson.fromJson(json, List.class, String.class);
       }
@@ -345,7 +338,7 @@ public class NextwikiCacheService {
    */
   public void putAiKeywords(String key, List<String> keywords, int ttlSeconds) {
     try {
-      redisStringOps.set(KEY_AI_KEYWORDS + key, YdszJson.toJson(keywords), jitterTtl(ttlSeconds));
+      redisStringOps.set(CacheKeyBuilder.build(MODULE, "ai:keywords", key), YdszJson.toJson(keywords), jitterTtl(ttlSeconds));
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] AI 关键词缓存写入异常: err={}", e.getMessage(), e);
     }
@@ -485,7 +478,7 @@ public class NextwikiCacheService {
         Thread.currentThread().interrupt();
         break;
       } catch (Exception e) {
-        log.warn("[NextwikiCacheService] 等待目录缓存异常: lockKey={}, err={}", lockKey, e.getMessage());
+        log.warn("[NextwikiCacheService] 等待目录缓存异常: lockKey={}, err={}", lockKey, e.getMessage(), e);
         break;
       }
     }
@@ -511,6 +504,17 @@ public class NextwikiCacheService {
   }
 
   // ==================== 私有工具方法 ====================
+
+  /**
+   * 构建互斥锁 key（带租户前缀）。
+   *
+   * @param type 锁类型
+   * @param id 锁标识
+   * @return 完整的锁 key
+   */
+  private String buildLockKey(String type, String id) {
+    return CacheKeyBuilder.buildPattern(MODULE, "lock", type, id);
+  }
 
   /**
    * 获取分布式互斥锁（防缓存穿透）。

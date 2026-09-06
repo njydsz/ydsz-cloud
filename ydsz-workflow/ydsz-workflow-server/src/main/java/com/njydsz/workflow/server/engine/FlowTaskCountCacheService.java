@@ -4,27 +4,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.cache.support.CacheKeyBuilder;
+
 /**
  * 任务计数 Redis 缓存服务。
  *
  * <p>P1: 使用 Redis INCR/DECR 实时维护待办任务数，避免每次查询都打 DB COUNT。
  * 适用于「我的待办」角标、首页待办数等高频查询场景。
  *
- * <p><b>缓存策略：</b>
+ * <p><b>缓存策略（P2-3 租户隔离增强）：</b>
  *
  * <ul>
- *   <li>key 格式：{@code flow:task:count:{userId}}（个人待办数）
- *   <li>key 格式：{@code flow:task:count:total}（全局待办数）
- *   <li>维护方式：任务创建时 INCR、任务完成/取消时 DECR
- *   <li>TTL：永久（通过 DECR 归零后自动删除）
+ *   <li>key 格式：{@code ydsz:{tenantId}:workflow:task:count:{userId}}（个人待办数）</li>
+ *   <li>key 格式：{@code ydsz:workflow:task:count:total}（全局待办数，不区分租户）</li>
+ *   <li>维护方式：任务创建时 INCR、任务完成/取消时 DECR</li>
+ *   <li>TTL：永久（通过 DECR 归零后自动删除）</li>
  * </ul>
  *
  * <p><b>数据一致性：</b>
  *
  * <ul>
- *   <li>最终一致性：Redis 计数与 DB 存在短暂不一致（通常 < 1s）
- *   <li>兜底校验：定时任务每小时全量校对一次（从 DB 重新 COUNT 并覆盖 Redis）
- *   <li>启动预热：应用启动时从 DB 加载初始值
+ *   <li>最终一致性：Redis 计数与 DB 存在短暂不一致（通常 < 1s）</li>
+ *   <li>兜底校验：定时任务每小时全量校对一次（从 DB 重新 COUNT 并覆盖 Redis）</li>
+ *   <li>启动预热：应用启动时从 DB 加载初始值</li>
  * </ul>
  *
  * @since 26.09.01
@@ -34,16 +36,26 @@ import org.springframework.stereotype.Component;
 @Component
 public class FlowTaskCountCacheService {
 
-  /** 个人待办计数 key 前缀 */
-  private static final String KEY_USER_PENDING = "flow:task:count:";
+  /** 模块标识 */
+  private static final String MODULE = "workflow";
 
-  /** 全局待办计数 key */
-  private static final String KEY_TOTAL_PENDING = "flow:task:count:total";
+  /** 全局待办计数 key（全局共享，不区分租户） */
+  private static final String KEY_TOTAL_PENDING = "ydsz:workflow:task:count:total";
 
   private final StringRedisTemplate redisTemplate;
 
   public FlowTaskCountCacheService(StringRedisTemplate redisTemplate) {
     this.redisTemplate = redisTemplate;
+  }
+
+  /**
+   * 构建指定用户的个人待办计数 key。
+   *
+   * @param userId 用户 ID
+   * @return 租户隔离的 key，如 {@code ydsz:acme:workflow:task:count:U10086}
+   */
+  private String buildUserKey(String userId) {
+    return CacheKeyBuilder.build(MODULE, "task:count", userId);
   }
 
   /**
@@ -59,7 +71,7 @@ public class FlowTaskCountCacheService {
       return 0;
     }
     try {
-      Long count = redisTemplate.opsForValue().increment(KEY_USER_PENDING + userId);
+      Long count = redisTemplate.opsForValue().increment(buildUserKey(userId));
       redisTemplate.opsForValue().increment(KEY_TOTAL_PENDING);
       return count != null ? count : 0;
     } catch (Exception e) {
@@ -81,11 +93,11 @@ public class FlowTaskCountCacheService {
       return 0;
     }
     try {
-      Long count = redisTemplate.opsForValue().decrement(KEY_USER_PENDING + userId);
+      Long count = redisTemplate.opsForValue().decrement(buildUserKey(userId));
       redisTemplate.opsForValue().decrement(KEY_TOTAL_PENDING);
       // 归零后删除 key，避免长期占用内存
       if (count != null && count <= 0) {
-        redisTemplate.delete(KEY_USER_PENDING + userId);
+        redisTemplate.delete(buildUserKey(userId));
       }
       return count != null ? Math.max(0, count) : 0;
     } catch (Exception e) {
@@ -105,8 +117,8 @@ public class FlowTaskCountCacheService {
       return 0;
     }
     try {
-      Long count = redisTemplate.opsForValue().get(KEY_USER_PENDING + userId) != null
-          ? Long.parseLong(redisTemplate.opsForValue().get(KEY_USER_PENDING + userId))
+      Long count = redisTemplate.opsForValue().get(buildUserKey(userId)) != null
+          ? Long.parseLong(redisTemplate.opsForValue().get(buildUserKey(userId)))
           : 0L;
       return count != null ? count : 0;
     } catch (Exception e) {
@@ -142,9 +154,9 @@ public class FlowTaskCountCacheService {
     }
     try {
       if (count <= 0) {
-        redisTemplate.delete(KEY_USER_PENDING + userId);
+        redisTemplate.delete(buildUserKey(userId));
       } else {
-        redisTemplate.opsForValue().set(KEY_USER_PENDING + userId, String.valueOf(count));
+        redisTemplate.opsForValue().set(buildUserKey(userId), String.valueOf(count));
       }
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] SET 失败 userId={}: {}", userId, e.getMessage());
@@ -161,7 +173,7 @@ public class FlowTaskCountCacheService {
       return;
     }
     try {
-      redisTemplate.delete(KEY_USER_PENDING + userId);
+      redisTemplate.delete(buildUserKey(userId));
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] DELETE 失败 userId={}: {}", userId, e.getMessage());
     }

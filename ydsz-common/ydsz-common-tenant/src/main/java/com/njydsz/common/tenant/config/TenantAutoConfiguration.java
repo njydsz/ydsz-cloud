@@ -31,6 +31,7 @@ import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
 import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
+import com.njydsz.common.tenant.cache.CacheKeyBuilderInitializer;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.tenant.ratelimit.TenantRateLimiter;
 import com.njydsz.common.tenant.validation.TenantIndexValidator;
@@ -392,5 +393,19 @@ public class TenantAutoConfiguration {
     registration.addUrlPatterns("/*");
     registration.setName("tenantDataSourceFilter");
     return registration;
+  }
+
+  /**
+   * 初始化 CacheKeyBuilder 的租户 ID 解析器。
+   *
+   * <p>将 {@link com.njydsz.common.tenant.TenantContextHolder} 注册到
+   * {@link com.njydsz.common.cache.support.CacheKeyBuilder}，使缓存键自动包含租户前缀。
+   *
+   * @return CacheKeyBuilder 初始化器
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public CacheKeyBuilderInitializer cacheKeyBuilderInitializer() {
+    return new CacheKeyBuilderInitializer();
   }
 }

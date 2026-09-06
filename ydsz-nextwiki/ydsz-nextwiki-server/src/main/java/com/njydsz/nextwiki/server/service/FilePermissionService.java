@@ -150,7 +150,7 @@ public class FilePermissionService {
   /**
    * 查询用户对文件节点的有效 ACL 列表（结果缓存）。
    *
-   * <p>缓存名 {@code nextwiki:file:acl}，key 为 {@code fileNodeId:userId}。 当 ACL 发生变更（授予/撤销）时，由
+   * <p>缓存名 {@code nextwiki:file:acl}，key 为 {@code ydsz:{tenantId}:nextwiki:file:acl:{fileNodeId}:{userId}}。 当 ACL 发生变更（授予/撤销）时，由
    * {@link #grantPermission} 通过 {@code @CacheEvict(allEntries = true)} 清除。
    *
    * @param fileNodeId 文件节点 ID
@@ -159,7 +159,7 @@ public class FilePermissionService {
    */
   @Cacheable(
       cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE,
-      key = "#fileNodeId + ':' + #userId",
+      key = "@nextwikiCacheKeyBuilder.fileAcl(#fileNodeId, #userId)",
       condition = "#userId != null")
   public List<FileAclVO> getEffectiveAcls(String fileNodeId, String userId) {
     return fileAclRepository.findEffectivePermissions(

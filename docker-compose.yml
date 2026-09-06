@@ -1,0 +1,182 @@
+version: '3.8'
+
+# ============================================================================
+# ydsz-cloud 微服务 docker-compose 部署编排
+#
+# 包含 SkyWalking Agent 部署说明（P2-1 集成）
+#
+# 启动命令：
+#   仅启动 SkyWalking：
+#     docker-compose up -d skywalking-oap skywalking-ui
+#
+#   启动全部服务（含微服务）：
+#     docker-compose up -d
+#
+#   前置条件：
+#     1. 下载 SkyWalking Agent 包并解压到 /opt/skywalking/agent 目录
+#        wget https://archive.apache.org/dist/skywalking-java/9.3.0/apache-skywalking-java-agent-9.3.0.tgz
+#        tar -xzf apache-skywalking-java-agent-9.3.0.tgz -C /opt/skywalking/
+#        mv /opt/skywalking/apache-skywalking-java-agent-9.3.0 /opt/skywalking/agent
+#     2. 确保 agent 目录包含 skywalking-agent.jar（ls /opt/skywalking/agent/）
+# ============================================================================
+
+services:
+
+  # ==================== SkyWalking OAP Server ====================
+  skywalking-oap:
+    image: apache/skywalking-oap-server:9.3.0
+    container_name: skywalking-oap
+    restart: always
+    ports:
+      - "11800:11800"   # gRPC 收集端口（Agent 上报 trace 数据）
+      - "12800:12800"   # REST API 端口（UI 查询 + 健康检查）
+    environment:
+      # 存储后端：H2（开发/测试）| elasticsearch（生产）
+      SW_STORAGE: h2
+      # Java 堆内存配置
+      JAVA_HEAP_OPTS: "-Xms512m -Xmx512m"
+      # 采样率覆盖（可选，默认全量）
+      SW_TRACE_SAMPLE_RATE: 10000
+    volumes:
+      - ./docs/deployment/skywalking-config:/skywalking/config
+    networks:
+      - ydsz-net
+
+  # ==================== SkyWalking UI ====================
+  skywalking-ui:
+    image: apache/skywalking-ui:9.3.0
+    container_name: skywalking-ui
+    restart: always
+    ports:
+      - "8089:8080"     # UI 端口（映射到宿主机 8089，避免与常见 8080 冲突）
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+    depends_on:
+      - skywalking-oap
+    networks:
+      - ydsz-net
+
+  # ==================== API Gateway ====================
+  # SkyWalking Agent 部署说明（生产环境）
+  # -----------------------------------------
+  # 启动 Java 应用时需要添加以下 JVM 参数：
+  #   -javaagent:/opt/skywalking/agent/skywalking-agent.jar
+  #   -Dskywalking.agent.service_name=ydsz-gateway
+  #   -Dskywalking.collector.backend_service=skywalking-oap:11800
+  #
+  # 对应环境变量（推荐生产环境使用环境变量方式）：
+  #   SW_AGENT_NAME=ydsz-gateway
+  #   SW_AGENT_COLLECTOR_BACKEND_SERVICES=skywalking-oap:11800
+  ydsz-gateway:
+    image: ydsz-gateway:latest
+    container_name: ydsz-gateway
+    restart: always
+    ports:
+      - "9000:9000"
+    environment:
+      # --- 业务环境变量 ---
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: nacos:8848
+      # --- SkyWalking Agent 环境变量（P2-1 集成） ---
+      # 服务名称：标识本服务在 SkyWalking UI 中的显示名
+      SW_AGENT_NAME: ydsz-gateway
+      # OAP Server 地址：Agent 上报 trace 数据的目标地址
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
+      # 采样率（每 3 秒采样 N 条；-1 表示全量采样）
+      SW_AGENT_SAMPLE: -1
+      # 忽略静态资源端点（避免健康检查/静态资源产生噪音 trace）
+      SW_AGENT_IGNORE_SUFFIX: ".jpg,.js,.css,.png,.html,.htm,.svg,.ico,.woff,.woff2,.ttf,.eot"
+      # 启用 Logback MDC traceId 自动注入
+      SW_AGENT_LOG_MDC_ENABLE: "true"
+      # JVM 启动参数（含 Agent 挂载）
+      # 注意：JAVA_OPTS 需由 entrypoint 脚本或 Spring Boot 启动脚本消费
+      JAVA_OPTS: "-javaagent:/opt/skywalking/agent/skywalking-agent.jar -Dskywalking.agent.service_name=ydsz-gateway -Dskywalking.collector.backend_service=skywalking-oap:11800"
+    volumes:
+      # 挂载 SkyWalking Agent 目录（宿主机路径需提前准备好 agent 包）
+      - /opt/skywalking/agent:/opt/skywalking/agent:ro
+    depends_on:
+      - skywalking-oap
+    networks:
+      - ydsz-net
+
+  # ==================== System 系统管理 ====================
+  # SkyWalking Agent 部署说明（生产环境）
+  # -----------------------------------------
+  # 启动 Java 应用时需要添加以下 JVM 参数：
+  #   -javaagent:/opt/skywalking/agent/skywalking-agent.jar
+  #   -Dskywalking.agent.service_name=ydsz-system
+  #   -Dskywalking.collector.backend_service=skywalking-oap:11800
+  #
+  # 对应环境变量（推荐）：
+  #   SW_AGENT_NAME=ydsz-system
+  #   SW_AGENT_COLLECTOR_BACKEND_SERVICES=skywalking-oap:11800
+  ydsz-system:
+    image: ydsz-system:latest
+    container_name: ydsz-system
+    restart: always
+    ports:
+      - "9001:9001"
+    environment:
+      # --- 业务环境变量 ---
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: nacos:8848
+      # --- SkyWalking Agent 环境变量（P2-1 集成） ---
+      SW_AGENT_NAME: ydsz-system
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
+      SW_AGENT_SAMPLE: -1
+      SW_AGENT_IGNORE_SUFFIX: ".jpg,.js,.css,.png,.html,.htm,.svg,.ico,.woff,.woff2,.ttf,.eot"
+      SW_AGENT_LOG_MDC_ENABLE: "true"
+      # JVM 启动参数（含 Agent 挂载）
+      JAVA_OPTS: "-javaagent:/opt/skywalking/agent/skywalking-agent.jar -Dskywalking.agent.service_name=ydsz-system -Dskywalking.collector.backend_service=skywalking-oap:11800"
+    volumes:
+      - /opt/skywalking/agent:/opt/skywalking/agent:ro
+    depends_on:
+      - skywalking-oap
+    networks:
+      - ydsz-net
+
+  # ==================== Agent 智能体 ====================
+  # SkyWalking Agent 部署说明（生产环境）
+  # -----------------------------------------
+  # 启动 Java 应用时需要添加以下 JVM 参数：
+  #   -javaagent:/opt/skywalking/agent/skywalking-agent.jar
+  #   -Dskywalking.agent.service_name=ydsz-agent
+  #   -Dskywalking.collector.backend_service=skywalking-oap:11800
+  #
+  # 对应环境变量（推荐）：
+  #   SW_AGENT_NAME=ydsz-agent
+  #   SW_AGENT_COLLECTOR_BACKEND_SERVICES=skywalking-oap:11800
+  #
+  # 注意：ydsz-agent 提供 SSE 流式输出能力，SkyWalking trace 贯穿整个 SSE 生命周期。
+  ydsz-agent:
+    image: ydsz-agent:latest
+    container_name: ydsz-agent
+    restart: always
+    ports:
+      - "9008:9008"
+    environment:
+      # --- 业务环境变量 ---
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: nacos:8848
+      # --- SkyWalking Agent 环境变量（P2-1 集成） ---
+      SW_AGENT_NAME: ydsz-agent
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
+      SW_AGENT_SAMPLE: -1
+      SW_AGENT_IGNORE_SUFFIX: ".jpg,.js,.css,.png,.html,.htm,.svg,.ico,.woff,.woff2,.ttf,.eot"
+      SW_AGENT_LOG_MDC_ENABLE: "true"
+      # JVM 启动参数（含 Agent 挂载）
+      JAVA_OPTS: "-javaagent:/opt/skywalking/agent/skywalking-agent.jar -Dskywalking.agent.service_name=ydsz-agent -Dskywalking.collector.backend_service=skywalking-oap:11800"
+    volumes:
+      - /opt/skywalking/agent:/opt/skywalking/agent:ro
+    depends_on:
+      - skywalking-oap
+    networks:
+      - ydsz-net
+
+# ==================== 网络配置 ====================
+networks:
+  ydsz-net:
+    driver: bridge

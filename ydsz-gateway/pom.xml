@@ -152,6 +152,23 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
+
+        <!--
+            P2-1: SkyWalking 分布式链路追踪集成（gateway 网关层 trace 入口）
+              - apm-toolkit-micrometer-1.8: 指标桥接 Micrometer，暴露 trace 维度指标
+              - apm-toolkit-logback-1.x: traceId 自动写入 Logback MDC
+
+            注：SkyWalking Agent（-javaagent）在部署阶段挂载，本处仅引入 SDK Toolkit 依赖。
+            网关为 WebFlux（响应式栈），Agent 的 reactor 插件自动拦截 WebClient/WebFlux 调用。
+        -->
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-micrometer-1.8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-logback-1.x</artifactId>
+        </dependency>
 </dependencies>
 
     <build>
