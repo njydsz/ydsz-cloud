@@ -29,6 +29,7 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
@@ -103,6 +104,17 @@ public class SearchAutoConfiguration {
   @ConditionalOnClass({DataSource.class, JdbcTemplate.class})
   static class PgEngineConfiguration {
 
+    @Bean
+    @ConditionalOnMissingBean(name = "pgSearchProbeScheduler")
+    public ThreadPoolTaskScheduler pgSearchProbeScheduler() {
+      ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+      scheduler.setPoolSize(1);
+      scheduler.setThreadNamePrefix("pg-search-probe-");
+      scheduler.setDaemon(true);
+      scheduler.setWaitForTasksToCompleteOnShutdown(false);
+      return scheduler;
+    }
+
     /**
      * 创建 PostgreSQL 全文检索策略。
      *
@@ -126,7 +138,7 @@ public class SearchAutoConfiguration {
         log.warn("[SearchAutoConfig] DataSource 不可用，PG 引擎降级");
         return new InMemorySearchStrategy();
       }
-      return new PgSearchStrategy(ds, properties.getPg());
+      return new PgSearchStrategy(new JdbcTemplate(ds), properties.getPg(), pgSearchProbeScheduler());
     }
   }
 

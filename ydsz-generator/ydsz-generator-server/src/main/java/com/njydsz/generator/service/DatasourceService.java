@@ -9,9 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.generator.converter.DatasourceConverter;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.enums.DbDialectEnum;
 import com.njydsz.generator.repository.GenDatasourceRepository;
+import com.njydsz.generator.vo.GenDatasourceRespVO;
 
 /**
  * 数据源领域服务。
@@ -29,21 +31,23 @@ public class DatasourceService {
   private final GenDatasourceRepository datasourceRepository;
 
   /**
-   * 查询全部数据源。
+   * 查询全部数据源（响应 VO，不含敏感字段）。
    *
-   * @return 数据源列表
+   * @return 数据源 VO 列表
    */
-  public List<GenDatasource> listAll() {
-    return datasourceRepository.findAll();
+  public List<GenDatasourceRespVO> listAllVO() {
+    return DatasourceConverter.toRespVOList(datasourceRepository.findAll());
   }
 
   /**
-   * 查询默认数据源。
+   * 查询默认数据源（响应 VO，不含敏感字段）。
    *
-   * @return Optional 数据源
+   * @return 数据源 VO
    */
-  public GenDatasource getDefault() {
-    return datasourceRepository.findByDefaultFlagTrue().orElse(null);
+  public GenDatasourceRespVO getDefaultVO() {
+    return datasourceRepository.findByDefaultFlagTrue()
+        .map(DatasourceConverter::toRespVO)
+        .orElse(null);
   }
 
   /**
