@@ -21,7 +21,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
  * <p><b>充血模型能力：</b>
  *
  * <ul>
- *   <li>{@link #isPublicConfig()} — 判断是否公开配置
+ *   <li>{@link #publicConfig()} — 判断是否公开配置
  *   <li>{@link #validateValueType()} — 校验值类型合法性
  *   <li>{@link #getTypedValue()} — 根据值类型转换为对应 Java 类型
  *   <li>{@link #ensureDefault()} — 确保配置值存在，否则使用默认值
@@ -31,7 +31,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
  * <p><b>典型使用场景：</b>
  *
  * <ul>
- *   <li>功能开关（feature flag）：通过 {@code configGroup=feature} + {@code isPublic=1} 让前端感知
+ *   <li>功能开关（feature flag）：通过 {@code configGroup=feature} + {@code publicFlag=true} 让前端感知
  *   <li>限流阈值：运行时调整接口限流参数，无需发版
  *   <li>第三方服务地址：密钥/地址变更不需重新部署
  *   <li>UI 文案：前端展示文本、错误提示等可由配置动态下发
@@ -69,8 +69,8 @@ public class Config extends MpBaseEntity<String> {
   /** 配置描述 */
   private String description;
 
-  /** 是否公开配置（1=公开，前端可查；0=私有，仅后端可查） */
-  private Integer isPublic;
+  /** 是否公开配置（true=公开，前端可查；false=私有，仅后端可查） */
+  private Boolean publicFlag;
 
   /** 排序序号 */
   private Integer sortOrder;
@@ -82,8 +82,8 @@ public class Config extends MpBaseEntity<String> {
    *
    * @return true 为公开配置
    */
-  public boolean isPublicConfig() {
-    return Integer.valueOf(1).equals(isPublic);
+  public boolean publicConfig() {
+    return Boolean.TRUE.equals(publicFlag);
   }
 
   /**

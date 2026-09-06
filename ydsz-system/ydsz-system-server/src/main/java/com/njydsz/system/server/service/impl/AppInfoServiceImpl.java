@@ -237,7 +237,8 @@ public class AppInfoServiceImpl implements AppInfoService {
         return true;
       }
     } catch (NumberFormatException ignored) {
-      // 解析失败时放行，由后续 BCrypt 兜底校验
+      // 缓存值非数字（旧格式/缓存污染）时放行，由后续 BCrypt 兜底校验
+      log.debug("应用校验锁定 - 失败计数缓存值非数字，按未锁定处理: appKey={}, value={}", appKey, failCountStr);
     }
     return false;
   }

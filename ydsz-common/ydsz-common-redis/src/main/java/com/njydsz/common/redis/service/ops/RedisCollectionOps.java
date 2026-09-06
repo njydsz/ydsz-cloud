@@ -887,16 +887,18 @@ public class RedisCollectionOps {
    * @return 成员-分数对集合
    */
   public Set<ZSetOperations.TypedTuple<Object>> zRangeByScoreWithScores(
-      String key, double min, double max) {
-    if (key == null) {
+      String key, BigDecimal min, BigDecimal max) {
+    if (key == null || min == null || max == null) {
       return Collections.emptySet();
     }
     String formattedKey = formatKey(key);
+    double minVal = min.doubleValue();
+    double maxVal = max.doubleValue();
     try {
       Supplier<Set<ZSetOperations.TypedTuple<Object>>> op =
           () -> {
             Set<ZSetOperations.TypedTuple<Object>> result =
-                redisTemplate.opsForZSet().rangeByScoreWithScores(formattedKey, min, max);
+                redisTemplate.opsForZSet().rangeByScoreWithScores(formattedKey, minVal, maxVal);
             return result != null ? result : Collections.emptySet();
           };
       return metricsCollector != null
@@ -969,16 +971,18 @@ public class RedisCollectionOps {
    * @param value 成员
    * @return 分数，不存在返回 null
    */
-  public Double zScore(String key, Object value) {
+  public BigDecimal zScore(String key, Object value) {
     if (key == null || value == null) {
       return null;
     }
     String formattedKey = formatKey(key);
     try {
-      return metricsCollector != null
-          ? metricsCollector.recordOperation(
-              "zScore", () -> redisTemplate.opsForZSet().score(formattedKey, value))
-          : redisTemplate.opsForZSet().score(formattedKey, value);
+      Double scoreResult =
+          metricsCollector != null
+              ? metricsCollector.recordOperation(
+                  "zScore", () -> redisTemplate.opsForZSet().score(formattedKey, value))
+              : redisTemplate.opsForZSet().score(formattedKey, value);
+      return scoreResult != null ? BigDecimal.valueOf(scoreResult) : null;
     } catch (Exception e) {
       recordError("zScore", e);
       log.error("【Redis】ZSCORE 操作失败 | key={} | error={}", key, e);
@@ -1054,15 +1058,17 @@ public class RedisCollectionOps {
    * @param max 最大分数
    * @return 移除的数量
    */
-  public long zRemoveRangeByScore(String key, double min, double max) {
-    if (key == null) {
+  public long zRemoveRangeByScore(String key, BigDecimal min, BigDecimal max) {
+    if (key == null || min == null || max == null) {
       return 0;
     }
     String formattedKey = formatKey(key);
+    double minVal = min.doubleValue();
+    double maxVal = max.doubleValue();
     try {
       Supplier<Long> op =
           () -> {
-            Long count = redisTemplate.opsForZSet().removeRangeByScore(formattedKey, min, max);
+            Long count = redisTemplate.opsForZSet().removeRangeByScore(formattedKey, minVal, maxVal);
             return count != null ? count : 0;
           };
       return metricsCollector != null

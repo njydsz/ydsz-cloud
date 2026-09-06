@@ -17,7 +17,6 @@ import com.njydsz.generator.domain.tool.VelocityDateTool;
 import com.njydsz.generator.domain.tool.VelocityTextTool;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenTemplate;
-import com.njydsz.generator.enums.ConflictStrategyEnum;
 import com.njydsz.generator.vo.CodePreviewVO;
 
 /**

@@ -44,9 +44,9 @@ public class ConfigExcelVO {
   @ExcelProperty(value = "配置描述", order = 6, width = 40)
   private String description;
 
-  /** 是否公开（0=私有，1=公开） */
+  /** 是否公开（true=公开，false=私有） */
   @ExcelProperty(value = "是否公开", order = 7, width = 10)
-  private Integer isPublic;
+  private Boolean publicFlag;
 
   /** 排序序号 */
   @ExcelProperty(value = "排序序号", order = 8, width = 10)

@@ -1,5 +1,6 @@
 package com.njydsz.common.redis.service.ops;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -391,26 +392,35 @@ public class RedisHashOps {
    * @param delta 增量
    * @return 递增后的值
    */
-  public double hIncrByFloat(String key, String item, double delta) {
-    if (key == null || item == null) {
+  public BigDecimal hIncrByFloat(String key, String item, BigDecimal delta) {
+    if (key == null || item == null || delta == null) {
       throw new IllegalArgumentException("键和字段名不能为空");
     }
     String formattedKey = formatKey(key);
+    double deltaVal = delta.doubleValue();
     try {
-      return metricsCollector != null
-          ? metricsCollector.recordOperation(
-              "hIncrByFloat",
-              () -> {
-                Double result = redisTemplate.opsForHash().increment(formattedKey, item, delta);
-                return result != null ? result : 0.0;
-              })
-          : Optional.ofNullable(redisTemplate.opsForHash().increment(formattedKey, item, delta))
-              .orElse(0.0);
+      if (metricsCollector != null) {
+        Double result =
+            metricsCollector.recordOperation(
+                "hIncrByFloat",
+                () -> {
+                  Double incrResult =
+                      redisTemplate.opsForHash().increment(formattedKey, item, deltaVal);
+                  return incrResult != null ? incrResult : 0.0;
+                });
+        return result != null ? BigDecimal.valueOf(result) : BigDecimal.ZERO;
+      } else {
+        Double result =
+            Optional.ofNullable(
+                    redisTemplate.opsForHash().increment(formattedKey, item, deltaVal))
+                .orElse(0.0);
+        return BigDecimal.valueOf(result);
+      }
     } catch (Exception e) {
       recordError("hIncrByFloat", e);
       log.error(
           "【Redis】HINCRBYFLOAT 操作失败 | key={} | item={} | delta={} | error={}", key, item, delta, e);
-      return 0.0;
+      return BigDecimal.ZERO;
     }
   }
 
