@@ -28,7 +28,8 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p><b>双层缓存架构（P1-10）</b>：
  *
  * <ul>
- *   <li>L1（YdszCache 本地缓存）：进程内高速缓存，最大 200 条，写入后 5 分钟过期。热点 key 亚毫秒级命中，避免 Redis 网络开销
+ *   <li>L1（YdszCache 本地缓存）：进程内高速缓存，最大条目数与写入过期时间可通过 {@code ydsz.agent.cache.l1-max-size} 和
+ *       {@code ydsz.agent.cache.l1-expire-minutes} 配置覆盖（{@literal YDIZ-ENG-002}）
  *   <li>L2（Redis 分布式缓存）：跨进程共享，支持 TTL 过期与 LRU 容量控制（ZSET 索引：命中刷新 score，超容量淘汰最旧条目）
  *   <li>读取策略：L1 → L2，L2 命中后回填 L1；写入策略：同时写入 L1 和 L2
  * </ul>
@@ -55,11 +56,11 @@ public class SemanticLlmCache {
   /** 超容量后一次性多淘汰的条目数（避免每次写入都触发淘汰） */
   private static final int EVICT_MARGIN = 10;
 
-  /** L1 本地缓存最大条目数 */
-  private static final int L1_MAX_SIZE = 200;
+  /** L1 本地缓存最大条目数（由构造器注入，可通过 ydsz.agent.cache.l1-max-size 配置覆盖） */
+  private final int l1MaxSize;
 
-  /** L1 本地缓存写入后过期时间（分钟） */
-  private static final int L1_EXPIRE_MINUTES = 5;
+  /** L1 本地缓存写入后过期时间（分钟）（由构造器注入，可通过 ydsz.agent.cache.l1-expire-minutes 配置覆盖） */
+  private final int l1ExpireMinutes;
 
   /** 日志中缓存 key 的截断长度 */
   private static final int LOG_KEY_TRUNCATE_LENGTH = 16;
@@ -74,15 +75,22 @@ public class SemanticLlmCache {
   /** L1 本地缓存（YdszCache） — 进程内高速缓存，降低热点 key 的 Redis 网络开销 */
   private final Cache<String, CachedLlmResponse> l1Cache;
 
-  public SemanticLlmCache(StringRedisTemplate redisTemplate, Duration ttl, int maxCacheSize) {
+  public SemanticLlmCache(
+      StringRedisTemplate redisTemplate,
+      Duration ttl,
+      int maxCacheSize,
+      int l1MaxSize,
+      int l1ExpireMinutes) {
     this.redisTemplate = redisTemplate;
     this.ttl = ttl;
     this.maxCacheSize = maxCacheSize;
+    this.l1MaxSize = l1MaxSize;
+    this.l1ExpireMinutes = l1ExpireMinutes;
     this.l1Cache =
         YdszCache.<String, CachedLlmResponse>newBuilder()
             .name(CACHE_NAME)
-            .maximumSize(L1_MAX_SIZE)
-            .expireAfterWrite(L1_EXPIRE_MINUTES, TimeUnit.MINUTES)
+            .maximumSize(l1MaxSize)
+            .expireAfterWrite(l1ExpireMinutes, TimeUnit.MINUTES)
             .recordStats()
             .build();
   }

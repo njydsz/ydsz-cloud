@@ -155,11 +155,15 @@ public class AgentAutoConfiguration {
             new SemanticLlmCache(
                 redisTemplate,
                 Duration.ofMinutes(properties.getCache().getTtlMinutes()),
-                properties.getCache().getMaxSize());
+                properties.getCache().getMaxSize(),
+                properties.getCache().getL1MaxSize(),
+                properties.getCache().getL1ExpireMinutes());
         log.info(
-            "[Agent] LLM 语义缓存已启用, ttl={}min, maxSize={}",
+            "[Agent] LLM 语义缓存已启用, L2 ttl={}min, L2 maxSize={}, L1 maxSize={}, L1 expire={}min",
             properties.getCache().getTtlMinutes(),
-            properties.getCache().getMaxSize());
+            properties.getCache().getMaxSize(),
+            properties.getCache().getL1MaxSize(),
+            properties.getCache().getL1ExpireMinutes());
         return new CachedLlmClient(router, cache, agentMetrics);
       }
       log.warn("[Agent] 语义缓存配置为开启但 RedisTemplate 不可用，跳过缓存");

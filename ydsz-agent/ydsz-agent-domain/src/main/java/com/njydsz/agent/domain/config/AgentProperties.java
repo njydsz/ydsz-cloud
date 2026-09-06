@@ -334,6 +334,12 @@ public class AgentProperties {
 
     /** 缓存类型: caffeine / redis */
     private String type = "caffeine";
+
+    /** L1 本地缓存最大条目数 */
+    private int l1MaxSize = 200;
+
+    /** L1 本地缓存写入后过期时间（分钟） */
+    private int l1ExpireMinutes = 5;
   }
 
   // ========================= Prompt 模板配置 =========================

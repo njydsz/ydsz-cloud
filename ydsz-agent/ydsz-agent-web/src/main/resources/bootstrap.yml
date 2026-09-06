@@ -68,8 +68,17 @@ ydsz:
       - com.njydsz.agent.domain.model.ToolCall
       - com.njydsz.agent.domain.model.ToolDefinition
       - com.njydsz.agent.domain.model.TokenUsage
+  # P1-1: LLM 语义缓存配置（YDIZ-ENG-002 — TTL/容量已外部化，禁止硬编码）
   agent:
     enabled: true
+    cache:
+      enabled: ${AGENT_CACHE_ENABLED:false}
+      type: caffeine
+      ttl-minutes: 60
+      max-size: 1000
+      similarity-threshold: 0.95
+      l1-max-size: ${AGENT_CACHE_L1_MAX_SIZE:200}
+      l1-expire-minutes: ${AGENT_CACHE_L1_EXPIRE_MINUTES:5}
     llm:
       default-provider: ${LLM_PROVIDER:default}
       default-model: ${LLM_MODEL:default-model}
