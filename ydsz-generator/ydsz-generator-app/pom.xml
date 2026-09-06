@@ -21,12 +21,6 @@
       <artifactId>ydsz-generator-server</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!-- DDD: api 契约层 -->
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-generator-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <!-- Spring Boot Starter -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
