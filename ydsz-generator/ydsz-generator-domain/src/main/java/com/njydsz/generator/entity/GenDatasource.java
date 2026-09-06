@@ -26,8 +26,6 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "password")
-@EqualsAndHashCode(exclude = "password")
 @TableName("ydsz_gen_datasource")
 public class GenDatasource {
 

@@ -6,12 +6,12 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.entity.OAuth2Application;
+import com.njydsz.userinfo.domain.entity.OAuth2ApplicationEntity;
 
 /**
  * OAuth2 应用 MapStruct 转换器。
  *
- * <p>提供 OAuth2Application ↔ OAuth2Application 的转换方法。
+ * <p>提供 OAuth2ApplicationEntity ↔ OAuth2Application 的转换方法。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -43,7 +43,7 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "updatedAt", source = "updatedAt")
   @Mapping(target = "createdBy", source = "createdBy")
-  com.njydsz.userinfo.domain.oauth2.OAuth2Application entityToDomain(OAuth2Application entity);
+  com.njydsz.userinfo.domain.oauth2.OAuth2Application entityToDomain(OAuth2ApplicationEntity entity);
 
   /**
    * 应用领域模型 → 实体。
@@ -68,5 +68,5 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
-  OAuth2Application domainToEntity(com.njydsz.userinfo.domain.oauth2.OAuth2Application domain);
+  OAuth2ApplicationEntity domainToEntity(com.njydsz.userinfo.domain.oauth2.OAuth2Application domain);
 }

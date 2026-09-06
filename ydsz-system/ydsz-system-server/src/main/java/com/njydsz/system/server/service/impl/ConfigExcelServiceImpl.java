@@ -226,7 +226,7 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     vo.setValueType(excelRow.getValueType());
     vo.setDefaultValue(excelRow.getDefaultValue());
     vo.setDescription(excelRow.getDescription());
-    vo.setIsPublic(excelRow.getIsPublic());
+    vo.setPublicFlag(excelRow.getPublicFlag());
     vo.setSortOrder(excelRow.getSortOrder());
     vo.setStatus(excelRow.getStatus());
     return vo;
@@ -288,7 +288,7 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     dto.setValueType(vo.getValueType());
     dto.setDefaultValue(vo.getDefaultValue());
     dto.setDescription(vo.getDescription());
-    dto.setIsPublic(vo.getIsPublic());
+    dto.setPublicFlag(vo.getPublicFlag());
     dto.setSortOrder(vo.getSortOrder());
     dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return dto;
@@ -308,7 +308,7 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     excelVO.setValueType(vo.getValueType());
     excelVO.setDefaultValue(vo.getDefaultValue());
     excelVO.setDescription(vo.getDescription());
-    excelVO.setIsPublic(vo.getIsPublic());
+    excelVO.setPublicFlag(vo.getPublicFlag());
     excelVO.setSortOrder(vo.getSortOrder());
     excelVO.setStatus(vo.getStatus());
     return excelVO;

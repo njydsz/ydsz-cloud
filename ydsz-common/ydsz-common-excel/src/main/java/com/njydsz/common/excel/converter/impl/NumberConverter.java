@@ -1,5 +1,6 @@
 package com.njydsz.common.excel.converter.impl;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.slf4j.Logger;
@@ -47,11 +48,11 @@ public class NumberConverter implements CellValueConverter {
     }
 
     if (rawValue instanceof Double) {
-      return convertFromNumeric((Double) rawValue, targetType);
+      return convertFromBigDecimal(BigDecimal.valueOf((Double) rawValue), targetType);
     }
 
     if (rawValue instanceof Long) {
-      return convertFromNumeric(((Long) rawValue).doubleValue(), targetType);
+      return convertFromBigDecimal(BigDecimal.valueOf((Long) rawValue), targetType);
     }
 
     if (rawValue instanceof String) {
@@ -87,27 +88,27 @@ public class NumberConverter implements CellValueConverter {
     return null;
   }
 
-  private Object convertFromNumeric(double numValue, Class<?> targetType) {
+  private Object convertFromBigDecimal(BigDecimal numValue, Class<?> targetType) {
     if (targetType == Double.class || targetType == double.class) {
-      return numValue;
+      return numValue.doubleValue();
     }
     if (targetType == Integer.class || targetType == int.class) {
-      return Integer.valueOf((int) Math.round(numValue));
+      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).intValue();
     }
     if (targetType == Long.class || targetType == long.class) {
-      return Long.valueOf(Math.round(numValue));
+      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).longValue();
     }
     if (targetType == Float.class || targetType == float.class) {
-      return (float) numValue;
+      return numValue.floatValue();
     }
     if (targetType == Short.class || targetType == short.class) {
-      return (short) numValue;
+      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).shortValue();
     }
     if (targetType == Byte.class || targetType == byte.class) {
-      return (byte) numValue;
+      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).byteValue();
     }
     if (targetType == BigInteger.class) {
-      return BigInteger.valueOf(Math.round(numValue));
+      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).toBigInteger();
     }
     return numValue;
   }
@@ -124,10 +125,10 @@ public class NumberConverter implements CellValueConverter {
         return Long.valueOf(str);
       }
       if (targetType == Double.class || targetType == double.class) {
-        return Double.valueOf(str);
+        return new BigDecimal(str).doubleValue();
       }
       if (targetType == Float.class || targetType == float.class) {
-        return Float.valueOf(str);
+        return new BigDecimal(str).floatValue();
       }
       if (targetType == Short.class || targetType == short.class) {
         return Short.valueOf(str);

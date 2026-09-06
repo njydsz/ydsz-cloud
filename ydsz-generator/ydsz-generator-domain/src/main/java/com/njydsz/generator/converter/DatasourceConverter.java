@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.lang.Nullable;
-
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.vo.GenDatasourceRespVO;
 
@@ -31,8 +29,7 @@ public final class DatasourceConverter {
    * @param entity 领域实体（可为 null）
    * @return 响应 VO，输入为 null 时返回 null
    */
-  @Nullable
-  public static GenDatasourceRespVO toRespVO(@Nullable GenDatasource entity) {
+  public static GenDatasourceRespVO toRespVO(GenDatasource entity) {
     if (entity == null) {
       return null;
     }
@@ -52,10 +49,10 @@ public final class DatasourceConverter {
   /**
    * 批量转换领域实体为响应 VO 列表。
    *
-   * @param entities 领域实体列表（可为 null）
-   * @return 响应 VO 列表，输入为 null 时返回空列表
+   * @param entities 领域实体列表（可为 null 或空）
+   * @return 响应 VO 列表，输入为 null 或空时返回空列表
    */
-  public static List<GenDatasourceRespVO> toRespVOList(@Nullable List<GenDatasource> entities) {
+  public static List<GenDatasourceRespVO> toRespVOList(List<GenDatasource> entities) {
     if (entities == null || entities.isEmpty()) {
       return Collections.emptyList();
     }

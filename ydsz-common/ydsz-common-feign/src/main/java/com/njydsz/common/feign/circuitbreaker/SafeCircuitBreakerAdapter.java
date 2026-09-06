@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.circuitbreaker;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -76,8 +77,8 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
     CircuitBreaker.Metrics metrics = getOrCreate(serviceName).getMetrics();
     return new CircuitBreakerMetrics() {
       @Override
-      public float getFailureRate() {
-        return metrics.getFailureRate();
+      public BigDecimal getFailureRate() {
+        return new BigDecimal(Float.toString(metrics.getFailureRate()));
       }
 
       @Override

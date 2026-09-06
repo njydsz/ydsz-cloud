@@ -278,7 +278,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     dto.setValueType(vo.getValueType());
     dto.setDefaultValue(vo.getDefaultValue());
     dto.setDescription(vo.getDescription());
-    dto.setIsPublic(vo.getIsPublic());
+    dto.setPublicFlag(vo.getPublicFlag());
     dto.setSortOrder(vo.getSortOrder());
     dto.setId(IdGenerator.nextIdStr());
     dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
