@@ -68,8 +68,9 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
    * <p>从 {@link ThreadPoolRegistry#getAll()} 遍历所有线程池，为每个创建一组 Gauge。
    * 后续新注册的线程池需通过 {@link #refreshMetrics(MeterRegistry)} 方法重新绑定。
    */
-  private void registerDynamicGauges(MeterRegistry registry) {
-    ThreadPoolRegistry.getAll().forEach(this::registerPoolGauges);
+  private void registerDynamicGauges(MeterRegistry meterRegistry) {
+    ThreadPoolRegistry.getAll().forEach(
+        (name, executor) -> registerPoolGauges(name, executor, meterRegistry));
   }
 
   /**
@@ -77,29 +78,31 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
    *
    * @param poolName 线程池名称
    * @param executor 线程池执行器
+   * @param meterRegistry Micrometer MeterRegistry
    */
-  private void registerPoolGauges(String poolName, ThreadPoolExecutor executor) {
+  private void registerPoolGauges(
+      String poolName, ThreadPoolExecutor executor, MeterRegistry meterRegistry) {
     Tags tags = Tags.of("pool.name", poolName);
 
     Gauge.builder(METRIC_PREFIX + ".core", executor, ThreadPoolExecutor::getCorePoolSize)
         .tags(tags)
         .description("线程池核心线程数")
-        .register(registry);
+        .register(meterRegistry);
 
     Gauge.builder(METRIC_PREFIX + ".max", executor, ThreadPoolExecutor::getMaximumPoolSize)
         .tags(tags)
         .description("线程池最大线程数")
-        .register(registry);
+        .register(meterRegistry);
 
     Gauge.builder(METRIC_PREFIX + ".active", executor, ThreadPoolExecutor::getActiveCount)
         .tags(tags)
         .description("当前活跃线程数")
-        .register(registry);
+        .register(meterRegistry);
 
     Gauge.builder(METRIC_PREFIX + ".pool.size", executor, ThreadPoolExecutor::getPoolSize)
         .tags(tags)
         .description("线程池当前大小")
-        .register(registry);
+        .register(meterRegistry);
 
     Gauge.builder(
             METRIC_PREFIX + ".queue.size",
@@ -107,7 +110,7 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
             e -> e.getQueue() != null ? e.getQueue().size() : 0)
         .tags(tags)
         .description("工作队列当前长度")
-        .register(registry);
+        .register(meterRegistry);
 
     Gauge.builder(
             METRIC_PREFIX + ".queue.capacity",
@@ -120,22 +123,22 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
             })
         .tags(tags)
         .description("工作队列总容量")
-        .register(registry);
+        .register(meterRegistry);
 
     Gauge.builder(
             METRIC_PREFIX + ".completed", executor, ThreadPoolExecutor::getCompletedTaskCount)
         .tags(tags)
         .description("累计完成任务数")
-        .register(registry);
+        .register(meterRegistry);
 
     Gauge.builder(METRIC_PREFIX + ".largest", executor, ThreadPoolExecutor::getLargestPoolSize)
         .tags(tags)
         .description("历史最大线程池大小")
-        .register(registry);
+        .register(meterRegistry);
 
     Gauge.builder(METRIC_PREFIX + ".task.count", executor, ThreadPoolExecutor::getTaskCount)
         .tags(tags)
         .description("累计任务总数（含队列中待执行）")
-        .register(registry);
+        .register(meterRegistry);
   }
 }
