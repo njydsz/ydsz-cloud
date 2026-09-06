@@ -79,10 +79,11 @@
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>
         </dependency>
-        <!-- MapStruct（Domain 层 Converter 使用 @Mapper 注解） -->
+        <!-- MapStruct（Domain 层 Converter 使用 @Mapper 注解，provided scope 与各模块保持一致） -->
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
