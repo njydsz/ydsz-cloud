@@ -48,7 +48,7 @@ public class FlowSimulationController {
   public YdszResponse<SimulationResult> runSimulation(
       @Parameter(description = "模拟请求", required = true)
       @RequestBody SimulationRequest request) {
-    return YdszResponse.ok(simulationService.simulate(
+    return YdszResponse.success(simulationService.simulate(
         request.getDefinitionId(), request.getVariables()));
   }
 

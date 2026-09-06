@@ -1,5 +1,6 @@
 package com.njydsz.workflow.web.controller;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,9 +46,11 @@ public class MessageEventController {
   public YdszResponse<String> publish(
       @Parameter(description = "发布消息请求", required = true)
       @RequestBody PublishMessageRequest request) {
+    Map<String, Object> keys = request.getCorrelationKeys() != null
+        ? new HashMap<>(request.getCorrelationKeys()) : null;
     int count = messageEventService.publishMessageEvent(
-        request.getMessageName(), request.getCorrelationKeys());
-    return YdszResponse.ok("唤醒了 " + count + " 个等待节点");
+        request.getMessageName(), keys);
+    return YdszResponse.success("唤醒了 " + count + " 个等待节点");
   }
 
   /**
