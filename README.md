@@ -22,10 +22,11 @@
 
 ## 关联仓库
 
-| 平台 | 前端仓库 |
-| ---- | -------- |
-| Gitee | https://gitee.com/njydsz/ydsz-micro |
-| GitHub | https://github.com/njydsz/ydsz-micro |
+| 平台     | 前端仓库 |
+|----------| -------- |
+| Gitee    | https://gitee.com/njydsz/ydsz-micro |
+| GitHub   | https://github.com/njydsz/ydsz-micro |
+| 官方文档 | https://www.yuque.com/marvin-lee/ydsz-org |
 
 ---
 
@@ -43,9 +44,9 @@
 
 ## 系统架构
 
-请求统一经 `ydsz-gateway`（:9000，WebFlux 反应式）进入，按 Nacos 动态路由分发至各业务微服务；所有服务共享 `ydsz-common` 公共底座（L1-L6 分层），统一对接 PostgreSQL / Redis / Nacos / RocketMQ / MinIO 等中间件。
+YDSZ 是一套前后端分离的全栈微服务架构。前端 [ydsz-micro](https://gitee.com/njydsz/ydsz-micro) 采用 pnpm + turbo monorepo，以自研 micro-kernel 微前端内核（manifest + 原生 ESM dynamic import + importmap，ADR-001 明确否决 qiankun）整合 8 个 Vue 3 子应用，并基于后端 OpenAPI 契约自动生成类型安全 SDK 与错误码，用 CI 漂移门禁守住前后端边界。后端 [ydsz-cloud](https://gitee.com/njydsz/ydsz-cloud) 基于 JDK 21 + Spring Boot 4.1.0，由 ydsz-gateway（12 个全局过滤器、Nacos 动态路由）统一入口，按六层 DDD 同构拆分 8 个业务服务，共享 30 个 ydsz-common 公共子模块，底层依托 Nacos、PostgreSQL、Redis、RocketMQ 与 MinIO，并以 SkyWalking、ELK 与 Prometheus/Grafana 构建可观测体系。
 
-![Ydsz Cloud 架构图](docs/architecture.svg)
+![Ydsz Cloud 架构图](docs/ydsz-architecture.png)
 
 ### 服务端口规划
 
