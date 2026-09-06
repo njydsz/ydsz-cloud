@@ -52,7 +52,8 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 public class CircuitBreaker {
 
   /** 资源 → 底层 Resilience4j 熔断器实例 */
-  private final Map<String, io.github.resilience4j.circuitbreaker.CircuitBreaker> breakers = // FQN-OK: name conflict with Resilience4j CircuitBreaker
+  // FQN-OK: name conflict with Resilience4j CircuitBreaker
+  private final Map<String, io.github.resilience4j.circuitbreaker.CircuitBreaker> breakers =
       new ConcurrentHashMap<>();
 
   private final BreakerConfig config;
@@ -74,7 +75,8 @@ public class CircuitBreaker {
    * @return 限流决策（含执行结果或拒绝原因）
    */
   public <T> RateLimitDecision tryAcquire(String resource, CircuitBreakerCallback<T> callback) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource); // FQN-OK: name conflict with Resilience4j CircuitBreaker
+    // FQN-OK: name conflict with Resilience4j CircuitBreaker
+    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
     try {
       T result =
           io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier( // FQN-OK: name conflict with Resilience4j CircuitBreaker
@@ -141,7 +143,8 @@ public class CircuitBreaker {
    * @return 熔断器状态（未创建时返回 CLOSED）
    */
   public State getState(String resource) {
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = breakers.get(resource); // FQN-OK: name conflict with Resilience4j CircuitBreaker
+    // FQN-OK: name conflict with Resilience4j CircuitBreaker
+    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = breakers.get(resource);
     if (cb == null) {
       return State.CLOSED;
     }
@@ -149,15 +152,18 @@ public class CircuitBreaker {
   }
 
   /** 获取或创建指定资源的 Resilience4j 熔断器实例。 */
-  private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreate(String resource) { // FQN-OK: name conflict with Resilience4j CircuitBreaker
+  // FQN-OK: name conflict with Resilience4j CircuitBreaker
+  private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreate(String resource) {
     return breakers.computeIfAbsent(resource, key -> newEngineBreaker(config, key));
   }
 
   /** 由本类配置构建底层 Resilience4j 熔断器。 */
-  private static io.github.resilience4j.circuitbreaker.CircuitBreaker newEngineBreaker( // FQN-OK: name conflict with Resilience4j CircuitBreaker
+  // FQN-OK: name conflict with Resilience4j CircuitBreaker
+  private static io.github.resilience4j.circuitbreaker.CircuitBreaker newEngineBreaker(
       BreakerConfig config, String resource) {
     String prefix = config.getName() == null ? "ratelimit" : config.getName();
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig engineConfig = config.toEngineConfig(); // FQN-OK: name conflict with Resilience4j CircuitBreaker Config
+    // FQN-OK: name conflict with Resilience4j CircuitBreaker Config
+    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig engineConfig = config.toEngineConfig();
     return CircuitBreakerRegistry.of(engineConfig)
         .circuitBreaker(prefix + "-" + resource);
   }
@@ -250,8 +256,9 @@ public class CircuitBreaker {
       return new BreakerConfig();
     }
 
-    /** 转换为 Resilience4j 配置（阈值 0-1 → 百分比）。 */
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toEngineConfig() { // FQN-OK: name conflict with Resilience4j CircuitBreaker Config
+  /** 转换为 Resilience4j 配置（阈值 0-1 → 百分比）。 */
+  // FQN-OK: name conflict with Resilience4j CircuitBreaker Config
+  io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toEngineConfig() {
       return CircuitBreakerConfig.custom()
           .failureRateThreshold(this.failureRateThreshold.multiply(new BigDecimal("100")).floatValue())
           .slowCallRateThreshold(this.slowCallRateThreshold.multiply(new BigDecimal("100")).floatValue())
