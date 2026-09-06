@@ -13,7 +13,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
+import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
 
 /**
  * 多租户配置属性。

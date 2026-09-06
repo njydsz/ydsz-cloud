@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -36,6 +37,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
@@ -298,11 +300,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   public void initScheduler() {
     ThreadPoolTaskScheduler s = new ThreadPoolTaskScheduler();
     s.setPoolSize(cronjobProperties.getSchedulerPoolSize());
-    s.setThreadNamePrefix("ydsz-job-");
+    s.setThreadNamePrefix("ydsz-cronjob-scheduler-");
     s.setWaitForTasksToCompleteOnShutdown(true);
     s.setAwaitTerminationSeconds(cronjobProperties.getSchedulerAwaitTerminationSeconds());
+    s.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
     s.initialize();
     this.taskScheduler = s;
+    // P0-2: 注册至 ThreadPoolRegistry 统一监控
+    ThreadPoolRegistry.register("cronjob-scheduler", s.getScheduledThreadPoolExecutor());
     log.info("[Cronjob] 任务调度器初始化完成, poolSize={}", cronjobProperties.getSchedulerPoolSize());
   }
 

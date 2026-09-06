@@ -17,7 +17,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.audit.event.GatewayAuditEventBridge;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
+import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
