@@ -1,5 +1,6 @@
 package com.njydsz.common.search.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -24,6 +25,9 @@ import com.njydsz.common.search.config.SearchProperties;
 @RequiredArgsConstructor
 public class BusinessRanker {
 
+  /** 运算精度（小数位数） */
+  private static final int SCALE = 10;
+
   private final SearchProperties properties;
 
   /**
@@ -40,79 +44,80 @@ public class BusinessRanker {
 
     String keyword = request.getKeyword() != null ? request.getKeyword().trim().toLowerCase() : "";
 
-    hits.forEach(hit -> hit.setScore((float) calculateScore(hit, keyword)));
+    hits.forEach(hit -> hit.setScore(calculateScore(hit, keyword)));
 
-    hits.sort(Comparator.comparingDouble(SearchHit::getScore).reversed());
+    hits.sort(Comparator.comparing(SearchHit::getScore).reversed());
     return hits;
   }
 
-  private double calculateScore(SearchHit hit, String keyword) {
-    double score = hit.getScore() > 0 ? hit.getScore() : 0.0;
+  private BigDecimal calculateScore(SearchHit hit, String keyword) {
+    BigDecimal score =
+        hit.getScore().compareTo(BigDecimal.ZERO) > 0 ? hit.getScore() : BigDecimal.ZERO;
 
     if (!keyword.isBlank() && hit.getTitle() != null) {
       String titleLower = hit.getTitle().toLowerCase();
       if (titleLower.equals(keyword)) {
-        score += 10.0;
+        score = score.add(BigDecimal.TEN);
       } else if (titleLower.startsWith(keyword)) {
-        score += 5.0;
+        score = score.add(BigDecimal.valueOf(5));
       } else if (titleLower.contains(keyword)) {
-        score += 3.0;
+        score = score.add(BigDecimal.valueOf(3));
       }
     }
 
     if (hit.getTags() != null && !keyword.isBlank()) {
       for (String tag : hit.getTags()) {
         if (tag != null && tag.toLowerCase().contains(keyword)) {
-          score += 2.0;
+          score = score.add(BigDecimal.valueOf(2));
           break;
         }
       }
     }
 
-    score += getTimeBoost(hit);
-    score += getTypeBoost(hit.getType());
+    score = score.add(getTimeBoost(hit));
+    score = score.add(getTypeBoost(hit.getType()));
 
     return score;
   }
 
-  private double getTimeBoost(SearchHit hit) {
+  private BigDecimal getTimeBoost(SearchHit hit) {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime createdAt = parseDateTime(hit.getCreatedAt());
     LocalDateTime updatedAt = parseDateTime(hit.getUpdatedAt());
 
-    double boost = 0.0;
+    BigDecimal boost = BigDecimal.ZERO;
     if (updatedAt != null) {
       long days = ChronoUnit.DAYS.between(updatedAt, now);
       if (days <= 1) {
-        boost += 3.0;
+        boost = boost.add(BigDecimal.valueOf(3));
       } else if (days <= 7) {
-        boost += 1.5;
+        boost = boost.add(BigDecimal.valueOf(1.5));
       } else if (days <= 30) {
-        boost += 0.5;
+        boost = boost.add(BigDecimal.valueOf(0.5));
       }
     } else if (createdAt != null) {
       long days = ChronoUnit.DAYS.between(createdAt, now);
       if (days <= 1) {
-        boost += 2.0;
+        boost = boost.add(BigDecimal.valueOf(2));
       } else if (days <= 7) {
-        boost += 1.0;
+        boost = boost.add(BigDecimal.ONE);
       } else if (days <= 30) {
-        boost += 0.3;
+        boost = boost.add(BigDecimal.valueOf(0.3));
       }
     }
     return boost;
   }
 
-  private double getTypeBoost(String type) {
+  private BigDecimal getTypeBoost(String type) {
     if (type == null) {
-      return 0.0;
+      return BigDecimal.ZERO;
     }
     return switch (type) {
-      case "project" -> 2.0;
-      case "wiki" -> 1.0;
-      case "user" -> 0.5;
-      case "config" -> 0.3;
-      default -> 0.0;
+      case "project" -> BigDecimal.valueOf(2);
+      case "wiki" -> BigDecimal.ONE;
+      case "user" -> BigDecimal.valueOf(0.5);
+      case "config" -> BigDecimal.valueOf(0.3);
+      default -> BigDecimal.ZERO;
     };
   }
 

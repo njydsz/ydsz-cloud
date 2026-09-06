@@ -43,6 +43,9 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  */
 @Slf4j
 public class LiteExprEngine implements ExpressionEngine {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 表达式函数缓存容量（日志展示） */
   private static final int CACHE_CAPACITY = 512;
@@ -276,7 +279,7 @@ public class LiteExprEngine implements ExpressionEngine {
           .errorColumn(e.getColumn())
           .expression(expression)
           .parseTimeMs(elapsed)
-          .referencedVariables(new ArrayList<>(16))
+          .referencedVariables(new ArrayList<>(COLLECTION_CAPACITY))
           .build();
     } catch (Exception e) {
       long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
@@ -363,7 +366,7 @@ public class LiteExprEngine implements ExpressionEngine {
 
   @Override
   public List<ExpressionFunctionDef> registeredFunctionDefs() {
-    List<ExpressionFunctionDef> defs = new ArrayList<>(16);
+    List<ExpressionFunctionDef> defs = new ArrayList<>(COLLECTION_CAPACITY);
     for (String name : functionRegistry.listFunctionNames()) {
       String sig = functionRegistry.getSignature(name);
       String desc = functionRegistry.getDescription(name);
@@ -455,7 +458,7 @@ public class LiteExprEngine implements ExpressionEngine {
           default -> ExpressionTraceNode.NodeType.ROOT;
         };
 
-    List<ExpressionTraceNode> children = new ArrayList<>(16);
+    List<ExpressionTraceNode> children = new ArrayList<>(COLLECTION_CAPACITY);
     if (trace.children() != null) {
       for (ExprTraceBuilder.TraceNode child : trace.children()) {
         children.add(convertTraceTree(child, child.expression(), null, 0));

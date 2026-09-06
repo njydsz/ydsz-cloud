@@ -39,6 +39,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  */
 @Slf4j
 public class SseExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** SSE 超时时间（毫秒）：2 分钟，避免长连接占用 Web 容器资源 */
   private static final long SSE_TIMEOUT = 120_000L;
@@ -153,7 +156,7 @@ public class SseExecutor {
       return;
     }
     try {
-      Map<String, Object> data = new LinkedHashMap<>(16);
+      Map<String, Object> data = new LinkedHashMap<>(COLLECTION_CAPACITY);
       data.put("content", "");
       data.put("finished", true);
       emitter.send(SseEmitter.event().data(data).name("done"));
@@ -168,7 +171,7 @@ public class SseExecutor {
       return;
     }
     try {
-      Map<String, Object> data = new LinkedHashMap<>(16);
+      Map<String, Object> data = new LinkedHashMap<>(COLLECTION_CAPACITY);
       data.put("error", e.getMessage() != null ? e.getMessage() : "未知错误");
       data.put("finished", true);
       emitter.send(SseEmitter.event().data(data).name("error"));
@@ -246,7 +249,7 @@ public class SseExecutor {
      * @return 事件数据 Map
      */
     public Map<String, Object> toMap() {
-      Map<String, Object> map = new LinkedHashMap<>(16);
+      Map<String, Object> map = new LinkedHashMap<>(COLLECTION_CAPACITY);
       map.put("content", content != null ? content : "");
       map.put("finished", finished);
       if (finishReason != null) {

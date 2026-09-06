@@ -60,6 +60,12 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  */
 @Slf4j
 public class FileRuleSource implements RuleConfigProvider {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_4 = 4;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   private static final String CLASSPATH_PREFIX = "classpath:";
   private static final String FILE_PREFIX = "file:";
@@ -71,7 +77,7 @@ public class FileRuleSource implements RuleConfigProvider {
   private volatile List<RuleDefinitionDTO> cachedRules = Collections.emptyList();
 
   /** 变更监听器列表 */
-  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>(4);
+  private final List<Consumer<List<RuleDefinitionDTO>>> listeners = new ArrayList<>(COLLECTION_CAPACITY_4);
 
   /** 文件监听线程池（watchEnabled=true 时启动） */
   private ExecutorService watchThread;
@@ -187,7 +193,7 @@ public class FileRuleSource implements RuleConfigProvider {
    * @return 规则定义列表
    */
   private List<RuleDefinitionDTO> loadFromLocation(String location) throws IOException {
-    List<RuleDsl> dsls = new ArrayList<>(16);
+    List<RuleDsl> dsls = new ArrayList<>(COLLECTION_CAPACITY_16);
     if (location.startsWith(CLASSPATH_PREFIX)) {
       String path = location.substring(CLASSPATH_PREFIX.length());
       dsls.addAll(loadFromClasspath(path));
@@ -199,7 +205,7 @@ public class FileRuleSource implements RuleConfigProvider {
       dsls.addAll(loadFromClasspath(location));
     }
     // 合并全部 DSL 的规则定义
-    List<RuleDefinitionDTO> rules = new ArrayList<>(16);
+    List<RuleDefinitionDTO> rules = new ArrayList<>(COLLECTION_CAPACITY_16);
     for (RuleDsl dsl : dsls) {
       if (dsl == null || dsl.getRules() == null) {
         continue;
@@ -221,7 +227,7 @@ public class FileRuleSource implements RuleConfigProvider {
    * @return DSL 列表
    */
   private List<RuleDsl> loadFromClasspath(String path) throws IOException {
-    List<RuleDsl> dsls = new ArrayList<>(16);
+    List<RuleDsl> dsls = new ArrayList<>(COLLECTION_CAPACITY_16);
     ClassLoader cl = getClass().getClassLoader();
     // 尝试作为目录加载全部规则文件
     URL dirUrl = cl.getResource(path);
@@ -263,7 +269,7 @@ public class FileRuleSource implements RuleConfigProvider {
    * @return DSL 列表
    */
   private List<RuleDsl> loadFromFilesystem(String path) throws IOException {
-    List<RuleDsl> dsls = new ArrayList<>(16);
+    List<RuleDsl> dsls = new ArrayList<>(COLLECTION_CAPACITY_16);
     Path fsPath = Paths.get(path);
     if (!Files.exists(fsPath)) {
       log.warn("[FileRuleSource] 文件系统路径不存在: {}", path);

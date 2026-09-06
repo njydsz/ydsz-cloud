@@ -43,6 +43,9 @@ import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 @Slf4j
 @Service
 public class DraftInstanceService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 流程实例仓储 */
   private final FlowInstanceRepository instanceRepository;
@@ -113,7 +116,7 @@ public class DraftInstanceService {
     // 保存草稿数据到 variables
     Map<String, Object> variables = dto.getDraftData();
     if (variables == null) {
-      variables = new HashMap<>(16);
+      variables = new HashMap<>(COLLECTION_CAPACITY);
     }
     variables.put("_draft", true);
     variables.put("_draftSavedAt", LocalDateTime.now().toString());
@@ -175,7 +178,7 @@ public class DraftInstanceService {
     // 更新草稿数据（variable 字段为 JSON 字符串，经 YdszJson 反序列化后合并）
     Map<String, Object> variables = dto.getDraftData();
     if (variables == null) {
-      variables = new HashMap<>(16);
+      variables = new HashMap<>(COLLECTION_CAPACITY);
     }
     if (draft.getVariable() != null && !draft.getVariable().isBlank()) {
       variables.putAll(YdszJson.parseMap(draft.getVariable()));
@@ -231,7 +234,7 @@ public class DraftInstanceService {
       Map<String, Object> variables =
           draft.getVariable() != null && !draft.getVariable().isBlank()
               ? YdszJson.parseMap(draft.getVariable())
-              : new HashMap<>(16);
+              : new HashMap<>(COLLECTION_CAPACITY);
       variables.putAll(draftData);
       variables.put("_draft", false);
       variables.put("_draftSubmittedAt", LocalDateTime.now().toString());

@@ -31,6 +31,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RollbackPreviewVO implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private static final long serialVersionUID = 1L;
 
@@ -62,7 +65,7 @@ public class RollbackPreviewVO implements Serializable {
   private String rollbackBlockedReason;
 
   /** 字段差异列表 */
-  @Builder.Default private List<FieldDiff> diffs = new ArrayList<>(16);
+  @Builder.Default private List<FieldDiff> diffs = new ArrayList<>(COLLECTION_CAPACITY);
 
   /**
    * 获取差异数量。

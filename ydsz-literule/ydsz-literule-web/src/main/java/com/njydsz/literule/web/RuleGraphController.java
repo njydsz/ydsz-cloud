@@ -25,13 +25,13 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.StringVO;
+import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.orchestrator.RuleChainGraph;
 import com.njydsz.literule.server.orchestrator.RuleGraphValidator;
@@ -66,6 +66,9 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 @Validated
 @Tag(name = "规则链画布", description = "规则链画布编辑、校验、Dry-run 与表达式函数市场")
 public class RuleGraphController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 规则链图服务（SPI，由 project 模块提供实现） */
   private final RuleChainGraphProvider ruleChainGraphProvider;
@@ -121,7 +124,7 @@ public class RuleGraphController {
     }
     // 2. 保存
     RuleChainGraph saved = ruleChainGraphProvider.save(ruleCode, graph, operator);
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("valid", true);
     result.put("issues", issues);
     result.put("graph", saved);

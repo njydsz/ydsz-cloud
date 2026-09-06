@@ -47,6 +47,9 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  */
 @Slf4j
 public class CEPEngine implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   @Serial private static final long serialVersionUID = 1L;
 
@@ -217,7 +220,7 @@ public class CEPEngine implements Serializable {
             .matchedEvents(events)
             .hitAt(Instant.now())
             .metric(metric)
-            .context(new HashMap<>(16))
+            .context(new HashMap<>(COLLECTION_CAPACITY))
             .build();
     if (trigger != null) {
       hit.getContext().put("partitionKey", trigger.getPartitionKey());
@@ -243,7 +246,7 @@ public class CEPEngine implements Serializable {
   private boolean evaluateFilter(String filter, CEPEvent event) {
     try {
       // 包装事件到 context：$event
-      Map<String, Object> ctx = new HashMap<>(16);
+      Map<String, Object> ctx = new HashMap<>(COLLECTION_CAPACITY);
       ctx.put("event", event);
       ctx.put("type", event.getType());
       ctx.put("partitionKey", event.getPartitionKey());

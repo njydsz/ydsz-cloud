@@ -53,6 +53,9 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  * @author ydsz-team
  */
 public class RulePermissionChecker {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 权限编码段分隔符 */
   private static final String SEGMENT_SEPARATOR = ":";
@@ -163,7 +166,7 @@ public class RulePermissionChecker {
     if (ruleCodes == null || ruleCodes.isEmpty()) {
       return Collections.emptyList();
     }
-    List<String> unauthorized = new ArrayList<>(16);
+    List<String> unauthorized = new ArrayList<>(COLLECTION_CAPACITY);
     for (String code : ruleCodes) {
       if (!hasPermissionForRule(permission, code, operator)) {
         unauthorized.add(code);

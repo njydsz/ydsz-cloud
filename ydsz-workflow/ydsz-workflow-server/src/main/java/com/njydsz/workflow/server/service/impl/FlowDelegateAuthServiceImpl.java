@@ -98,6 +98,9 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
 @Service
 @RequiredArgsConstructor
 public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 默认分页大小 */
   private static final int DEFAULT_PAGE_SIZE = 20;
@@ -569,7 +572,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     if (tenantId == null || ownerUserId == null) {
       return ownerUserId;
     }
-    Set<String> visited = new HashSet<>(16);
+    Set<String> visited = new HashSet<>(COLLECTION_CAPACITY);
     visited.add(ownerUserId);
     String currentUserId = ownerUserId;
     int depth = 0;

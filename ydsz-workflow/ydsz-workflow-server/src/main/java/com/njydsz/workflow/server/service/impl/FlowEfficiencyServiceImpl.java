@@ -118,6 +118,12 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   /** 历史任务仓储（domain 层契约），提供基础 CRUD 与聚合统计方法 */
   private final FlowHisTaskRepository hisTaskRepository;
@@ -362,17 +368,17 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       String gran = (interval == null || interval.isBlank()) ? "DAY" : interval.toUpperCase();
 
       // 按粒度分组
-      Map<String, List<FlowHisTaskVO>> grouped = new LinkedHashMap<>(16);
+      Map<String, List<FlowHisTaskVO>> grouped = new LinkedHashMap<>(COLLECTION_CAPACITY_16);
       for (FlowHisTaskVO task : records) {
         if (task.getFinishAt() == null) {
           continue;
         }
         String label = formatTimeLabel(task.getFinishAt(), gran);
-        grouped.computeIfAbsent(label, k -> new ArrayList<>(8)).add(task);
+        grouped.computeIfAbsent(label, k -> new ArrayList<>(COLLECTION_CAPACITY_8)).add(task);
       }
 
       // 聚合输出
-      List<FlowTrendVO> result = new ArrayList<>(16);
+      List<FlowTrendVO> result = new ArrayList<>(COLLECTION_CAPACITY_16);
       for (Map.Entry<String, List<FlowHisTaskVO>> entry : grouped.entrySet()) {
         List<FlowHisTaskVO> tasks = entry.getValue();
         FlowTrendVO vo = new FlowTrendVO();
@@ -492,7 +498,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     int effectiveStuckHours = stuckHours > 0 ? stuckHours : DEFAULT_STUCK_HOURS;
     int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : DEFAULT_LONG_RUNNING_DAYS;
 
-    List<FlowAnomalyVO> anomalies = new ArrayList<>(16);
+    List<FlowAnomalyVO> anomalies = new ArrayList<>(COLLECTION_CAPACITY_16);
 
     // 1. 卡单任务（优先级最高）
     try {
@@ -546,7 +552,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     LocalDateTime now = LocalDateTime.now();
-    List<FlowAnomalyVO> result = new ArrayList<>(16);
+    List<FlowAnomalyVO> result = new ArrayList<>(COLLECTION_CAPACITY_16);
     for (FlowRunTaskVO task : stuckTasks) {
       long hours =
           task.getCreatedAt() != null
@@ -591,7 +597,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                 Collectors.groupingBy(
                     FlowHisTaskVO::getNodeCode, LinkedHashMap::new, Collectors.toList()));
 
-    List<FlowAnomalyVO> result = new ArrayList<>(16);
+    List<FlowAnomalyVO> result = new ArrayList<>(COLLECTION_CAPACITY_16);
     for (Map.Entry<String, List<FlowHisTaskVO>> entry : byNode.entrySet()) {
       List<FlowHisTaskVO> tasks = entry.getValue();
       int total = tasks.size();
@@ -660,14 +666,14 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     LocalDateTime now = LocalDateTime.now();
-    List<Map<String, Object>> result = new ArrayList<>(16);
+    List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY_16);
     for (FlowInstanceVO instance : longRunningInstances) {
       long days =
           instance.getStartAt() != null
               ? Duration.between(instance.getStartAt(), now).toDays()
               : effectiveLongRunningDays;
 
-      Map<String, Object> anomaly = new LinkedHashMap<>(16);
+      Map<String, Object> anomaly = new LinkedHashMap<>(COLLECTION_CAPACITY_16);
       anomaly.put("type", "LONG_RUNNING");
       anomaly.put("instanceId", instance.getId());
       anomaly.put("flowCode", instance.getFlowCode());
@@ -739,7 +745,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
    */
   @Override
   public Map<String, Object> healthScore(String tenantId, String startTime, String endTime) {
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY_16);
     try {
       // 复用效率统计
       FlowEfficiencyStatsVO stats = efficiencyStats(tenantId, startTime, endTime);
@@ -753,7 +759,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       int anomalyCount = anomalies != null ? anomalies.size() : 0;
 
       // 计算扣分明细
-      Map<String, Object> deductions = new LinkedHashMap<>(16);
+      Map<String, Object> deductions = new LinkedHashMap<>(COLLECTION_CAPACITY_16);
 
       // 1. 超期率扣分（最高 30）
       double overdueDeduction = Math.min(MAX_OVERDUE_DEDUCTION, overdueRate * MAX_OVERDUE_DEDUCTION);

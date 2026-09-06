@@ -2,7 +2,6 @@ package com.njydsz.agent.domain.rag;
 
 import java.util.List;
 
-
 /**
  * Embedding 客户端接口
  *

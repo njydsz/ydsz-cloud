@@ -42,6 +42,9 @@ import com.njydsz.message.server.config.ChannelProperties;
 @Component
 @RequiredArgsConstructor
 public class DingTalkWorkNotificationChannel implements MessageChannel {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** Token 安全余量（秒） */
   private static final long TOKEN_SAFETY_MARGIN_SECONDS = 300;
 
@@ -193,21 +196,21 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
       }
     }
 
-    Map<String, Object> msg = new HashMap<>(16);
+    Map<String, Object> msg = new HashMap<>(COLLECTION_CAPACITY);
     if ("markdown".equals(msgType)) {
       msg.put("msgtype", "markdown");
-      Map<String, Object> markdown = new HashMap<>(16);
+      Map<String, Object> markdown = new HashMap<>(COLLECTION_CAPACITY);
       markdown.put("title", subject);
       markdown.put("text", content);
       msg.put("markdown", markdown);
     } else {
       msg.put("msgtype", "text");
-      Map<String, Object> text = new HashMap<>(16);
+      Map<String, Object> text = new HashMap<>(COLLECTION_CAPACITY);
       text.put("content", content);
       msg.put("text", text);
     }
 
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("agent_id", agentId);
     payload.put("userid_list", receiver);
     payload.put("msg", msg);

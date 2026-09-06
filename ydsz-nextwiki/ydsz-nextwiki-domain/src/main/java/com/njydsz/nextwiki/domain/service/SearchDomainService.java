@@ -45,6 +45,9 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
 @Slf4j
 @RequiredArgsConstructor
 public class SearchDomainService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 前缀命中评分权重 */
   private static final float SCORE_PREFIX_MATCH = 0.8f;
@@ -97,7 +100,7 @@ public class SearchDomainService {
         page,
         pageSize);
 
-    List<SearchResultVO.SearchHitVO> hits = new ArrayList<>(16);
+    List<SearchResultVO.SearchHitVO> hits = new ArrayList<>(COLLECTION_CAPACITY);
     for (SearchIndexVO index : indices) {
       float score = calculateScore(index, keyword);
       hits.add(

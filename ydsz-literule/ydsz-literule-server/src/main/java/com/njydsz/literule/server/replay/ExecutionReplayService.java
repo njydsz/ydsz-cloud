@@ -76,6 +76,9 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  */
 @Slf4j
 public class ExecutionReplayService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final RuleAdminService ruleAdminService;
   private final TraceRecorder traceRecorder;
@@ -171,7 +174,7 @@ public class ExecutionReplayService {
       return BatchReplayResult.empty();
     }
 
-    List<ReplayDiffEntry> diffs = new ArrayList<>(16);
+    List<ReplayDiffEntry> diffs = new ArrayList<>(COLLECTION_CAPACITY);
     int consistentCount = 0;
     int diffCount = 0;
     int skippedCount = 0;
@@ -342,7 +345,7 @@ public class ExecutionReplayService {
     ReplayDiff diffVsHistory = computeDiff(historicalTriggered, versionTriggered);
     ReplayDiff diffVsCurrent = computeDiff(versionTriggered, currentTriggered);
 
-    Map<String, Object> extra = new LinkedHashMap<>(16);
+    Map<String, Object> extra = new LinkedHashMap<>(COLLECTION_CAPACITY);
     extra.put("versionDef", versionDef);
     extra.put("versionResult", versionResult);
     extra.put("diffVsCurrent", diffVsCurrent);

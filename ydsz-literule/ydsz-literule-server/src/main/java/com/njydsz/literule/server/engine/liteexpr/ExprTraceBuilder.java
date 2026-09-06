@@ -1,14 +1,8 @@
 package com.njydsz.literule.server.engine.liteexpr;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-import com.njydsz.literule.server.engine.liteexpr.BinaryOpNode;
-import com.njydsz.literule.server.engine.liteexpr.ExprNode;
-import com.njydsz.literule.server.engine.liteexpr.FunctionCallNode;
-import com.njydsz.literule.server.engine.liteexpr.MemberAccessNode;
-import com.njydsz.literule.server.engine.liteexpr.TernaryNode;
-import com.njydsz.literule.server.engine.liteexpr.UnaryOpNode;
 
 /**
  * LiteExpr 表达式执行追踪树构建器
@@ -34,12 +28,18 @@ import com.njydsz.literule.server.engine.liteexpr.UnaryOpNode;
  * @author ydsz-team
  */
 public class ExprTraceBuilder {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_4 = 4;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
 
   /** 根节点栈（支持嵌套表达式构建） */
-  private final List<TraceNode> rootNodes = new ArrayList<>(4);
+  private final List<TraceNode> rootNodes = new ArrayList<>(COLLECTION_CAPACITY_4);
 
   /** 当前正在追加子节点的节点栈 */
-  private final List<TraceNode> stack = new ArrayList<>(8);
+  private final List<TraceNode> stack = new ArrayList<>(COLLECTION_CAPACITY_8);
 
   /**
    * 追踪节点
@@ -74,7 +74,7 @@ public class ExprTraceBuilder {
      * @return 叶子追踪节点实例
      */
     public static TraceNode of(String type, String expression, Object result) {
-      return new TraceNode(type, expression, null, null, result, false, 0, new ArrayList<>(4), null);
+      return new TraceNode(type, expression, null, null, result, false, 0, new ArrayList<>(COLLECTION_CAPACITY_4), null);
     }
 
     /**
@@ -99,7 +99,7 @@ public class ExprTraceBuilder {
      * @return 错误追踪节点实例
      */
     public static TraceNode error(String type, String expression, String error) {
-      return new TraceNode(type, expression, null, null, null, false, 0, new ArrayList<>(4), error);
+      return new TraceNode(type, expression, null, null, null, false, 0, new ArrayList<>(COLLECTION_CAPACITY_4), error);
     }
 
     /**
@@ -123,7 +123,7 @@ public class ExprTraceBuilder {
      * @return 叶子节点
      */
     public static TraceNode leaf(String type, Object value, Object result) {
-      return new TraceNode(type, null, null, value, result, false, 0, new ArrayList<>(4), null);
+      return new TraceNode(type, null, null, value, result, false, 0, new ArrayList<>(COLLECTION_CAPACITY_4), null);
     }
   }
 
@@ -299,7 +299,7 @@ public class ExprTraceBuilder {
     String expr = node != null ? node.exprText() : op;
     TraceNode traceNode = new TraceNode(
         "LOGICAL", expr, op, null, result, shortCircuited, 0,
-        new ArrayList<>(4), null);
+        new ArrayList<>(COLLECTION_CAPACITY_4), null);
     if (stack.isEmpty()) {
       rootNodes.add(traceNode);
     } else {
@@ -320,7 +320,7 @@ public class ExprTraceBuilder {
     String expr = node != null ? node.exprText() : op;
     TraceNode traceNode = new TraceNode(
         "BINARY_OP", expr, op, List.of(leftVal, rightVal), result, false, 0,
-        new ArrayList<>(4), null);
+        new ArrayList<>(COLLECTION_CAPACITY_4), null);
     if (stack.isEmpty()) {
       rootNodes.add(traceNode);
     } else {
@@ -340,7 +340,7 @@ public class ExprTraceBuilder {
     String expr = node != null ? node.exprText() : op;
     TraceNode traceNode = new TraceNode(
         "UNARY_OP", expr, op, operand, result, false, 0,
-        new ArrayList<>(4), null);
+        new ArrayList<>(COLLECTION_CAPACITY_4), null);
     if (stack.isEmpty()) {
       rootNodes.add(traceNode);
     } else {
@@ -359,7 +359,7 @@ public class ExprTraceBuilder {
     String expr = node != null ? node.exprText() : "?:";
     TraceNode traceNode = new TraceNode(
         "TERNARY", expr, "?:", cond, result, false, 0,
-        new ArrayList<>(4), null);
+        new ArrayList<>(COLLECTION_CAPACITY_4), null);
     if (stack.isEmpty()) {
       rootNodes.add(traceNode);
     } else {
@@ -377,10 +377,10 @@ public class ExprTraceBuilder {
    */
   public void recordFunctionCall(String funcName, Object[] args, Object result, FunctionCallNode node) {
     String expr = node != null ? node.exprText() : funcName + "(...)";
-    String argsStr = args != null ? java.util.Arrays.toString(args) : "[]";
+    String argsStr = args != null ? Arrays.toString(args) : "[]";
     TraceNode traceNode = new TraceNode(
         "FUNCTION_CALL", expr, funcName, argsStr, result, false, 0,
-        new ArrayList<>(4), null);
+        new ArrayList<>(COLLECTION_CAPACITY_4), null);
     if (stack.isEmpty()) {
       rootNodes.add(traceNode);
     } else {
@@ -400,7 +400,7 @@ public class ExprTraceBuilder {
     String expr = node != null ? node.exprText() : "." + member;
     TraceNode traceNode = new TraceNode(
         "MEMBER_ACCESS", expr, member, target, result, false, 0,
-        new ArrayList<>(4), null);
+        new ArrayList<>(COLLECTION_CAPACITY_4), null);
     if (stack.isEmpty()) {
       rootNodes.add(traceNode);
     } else {

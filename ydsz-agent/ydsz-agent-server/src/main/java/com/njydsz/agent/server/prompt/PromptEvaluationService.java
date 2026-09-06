@@ -1,20 +1,20 @@
 package com.njydsz.agent.server.prompt;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.agent.domain.config.AgentProperties;
 
 /**
  * Prompt 评估服务
@@ -45,6 +45,15 @@ public class PromptEvaluationService {
 
   /** 估算成本：千补全 Token 单价（USD，GPT-4 级别定价近似） */
   private static final BigDecimal COST_PER_1K_COMPLETION_TOKENS = new BigDecimal("0.002");
+
+  /** 成本估算的 Token 换算基数（每千 Token 计价） */
+  private static final int TOKENS_PER_KILO = 1000;
+
+  /** 成本估算小数精度 */
+  private static final int COST_SCALE = 6;
+
+  /** 成本节省比例小数精度 */
+  private static final int RATE_SCALE = 4;
 
   private final PromptManagementService promptManagementService;
   private final LlmClient llmClient;
@@ -102,7 +111,7 @@ public class PromptEvaluationService {
     BigDecimal estimatedCostUsd = BigDecimal.valueOf(promptTokens)
         .multiply(COST_PER_1K_PROMPT_TOKENS)
         .add(BigDecimal.valueOf(completionTokens).multiply(COST_PER_1K_COMPLETION_TOKENS))
-        .divide(BigDecimal.valueOf(1000), 6, java.math.RoundingMode.HALF_UP);
+        .divide(BigDecimal.valueOf(TOKENS_PER_KILO), COST_SCALE, RoundingMode.HALF_UP);
 
     log.info(
         "[PromptEval] 评估完成: template={}, duration={}ms, tokens={}, cost={}",
@@ -213,7 +222,7 @@ public class PromptEvaluationService {
         return 0;
       }
       return resultA.estimatedCostUsd().subtract(resultB.estimatedCostUsd())
-          .divide(resultA.estimatedCostUsd(), 4, java.math.RoundingMode.HALF_UP).doubleValue();
+          .divide(resultA.estimatedCostUsd(), RATE_SCALE, RoundingMode.HALF_UP).doubleValue();
     }
   }
 }

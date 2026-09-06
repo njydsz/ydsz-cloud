@@ -51,6 +51,9 @@ import com.njydsz.agent.domain.model.ChatResponse;
 @Slf4j
 @Service
 public class JdbcText2SQLService implements Text2SQLService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 结果行数上限 */
   private static final int MAX_RESULT_ROWS = 100;
@@ -270,9 +273,9 @@ public class JdbcText2SQLService implements Text2SQLService {
         for (int i = 1; i <= colCount; i++) {
           columns.add(meta.getColumnLabel(i));
         }
-        List<Map<String, Object>> rows = new ArrayList<>(16);
+        List<Map<String, Object>> rows = new ArrayList<>(COLLECTION_CAPACITY);
         while (rs.next()) {
-          Map<String, Object> row = new LinkedHashMap<>(16);
+          Map<String, Object> row = new LinkedHashMap<>(COLLECTION_CAPACITY);
           for (int i = 1; i <= colCount; i++) {
             row.put(columns.get(i - 1), rs.getObject(i));
           }

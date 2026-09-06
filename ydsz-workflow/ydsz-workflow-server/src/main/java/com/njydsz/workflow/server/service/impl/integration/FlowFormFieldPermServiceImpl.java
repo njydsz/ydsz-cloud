@@ -81,6 +81,9 @@ import com.njydsz.workflow.server.service.FlowFormFieldPermService;
 @Slf4j
 @Service
 public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   // ============================== 权限类型常量 ==============================
 
@@ -106,7 +109,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
       if (raw == null || raw.isEmpty()) {
         return Collections.emptyMap();
       }
-      Map<String, String> perms = new LinkedHashMap<>(16);
+      Map<String, String> perms = new LinkedHashMap<>(COLLECTION_CAPACITY);
       for (Map.Entry<String, Object> entry : raw.entrySet()) {
         if (entry.getValue() != null) {
           perms.put(entry.getKey(), String.valueOf(entry.getValue()).toUpperCase());

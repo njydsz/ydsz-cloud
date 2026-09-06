@@ -1,5 +1,6 @@
 package com.njydsz.common.safe.ratelimit.cluster;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -178,12 +179,12 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
   /** 构造 Lua 脚本参数 */
   private Object[] buildArgs(RateLimitRule rule, RateLimitContext context) {
     long now = Instant.now().toEpochMilli();
-    double rate = rule.getThreshold();
+    BigDecimal rate = rule.getThreshold();
     long capacity =
-        rule.getBurstCapacity() > 0 ? rule.getBurstCapacity() : (long) rule.getThreshold();
-    double cost = 1.0;
+        rule.getBurstCapacity() > 0 ? rule.getBurstCapacity() : rule.getThreshold().longValue();
+    BigDecimal cost = BigDecimal.ONE;
     return new Object[] {
-      String.valueOf(rate), String.valueOf(capacity), String.valueOf(now), String.valueOf(cost)
+      rate.toPlainString(), String.valueOf(capacity), String.valueOf(now), cost.toPlainString()
     };
   }
 
@@ -194,7 +195,7 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
       return fallbackDecision(rule, context, "redis returned null/empty result");
     }
     long passed = toLong(result.get(0));
-    double remaining = toDouble(result.get(1));
+    BigDecimal remaining = toBigDecimal(result.get(1));
     RateLimitResult res = (passed == 1L) ? RateLimitResult.PASS : RateLimitResult.BLOCKED;
     return RateLimitDecision.builder()
         .resource(context.getResource())
@@ -220,7 +221,7 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
         .resource(context.getResource())
         .rule(rule)
         .result(res)
-        .remaining(res == RateLimitResult.PASS ? rule.getThreshold() : 0)
+        .remaining(res == RateLimitResult.PASS ? rule.getThreshold() : BigDecimal.ZERO)
         .threshold(rule.getThreshold())
         .timestamp(Instant.now())
         .reason("cluster limiter fallback: " + reason)
@@ -241,17 +242,17 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
     }
   }
 
-  private static double toDouble(Object o) {
+  private static BigDecimal toBigDecimal(Object o) {
     if (o == null) {
-      return 0.0;
+      return BigDecimal.ZERO;
     }
     if (o instanceof Number n) {
-      return n.doubleValue();
+      return BigDecimal.valueOf(n.doubleValue());
     }
     try {
-      return Double.parseDouble(o.toString());
+      return new BigDecimal(o.toString());
     } catch (NumberFormatException e) {
-      return 0.0;
+      return BigDecimal.ZERO;
     }
   }
 

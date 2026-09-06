@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -15,7 +16,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,6 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，JDK 1.1 起 Date 构造/解析方法标注 @Deprecated，框架需保持兼容
 public final class BeanReader<T> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BeanReader.class);
@@ -553,7 +552,6 @@ public final class BeanReader<T> {
      * @param reader 已定位到值起始的 JSONReader
      * @param obj 目标 Bean 实例，字段值写入其中
      */
-    @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API
     public void readValue(JSONReader reader, Object obj) {
       readValue(reader, obj, 0);
     }
@@ -569,7 +567,6 @@ public final class BeanReader<T> {
      * @param obj 目标 Bean 实例，读取到的值通过反射写入其对应字段
      * @param depth 当前嵌套深度，最外层调用传 {@code 0}，每向下一层递增
      */
-    @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API
     public void readValue(JSONReader reader, Object obj, int depth) {
       try {
         switch (typeCode) {
@@ -726,7 +723,9 @@ public final class BeanReader<T> {
               field.set(obj, parseLocalDate(s, datePattern));
             } else if (fieldType == Date.class) {
               String s = reader.readString();
-              field.set(obj, parseDate(s, datePattern));
+              LocalDateTime ldt = parseLocalDateTime(s, datePattern);
+              // @deprecated 桥接：目标字段为 java.util.Date 类型时，将 LocalDateTime 转为 Date
+              field.set(obj, ldt == null ? null : Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant()));
             } else if (fieldType.isEnum()) {
               String s = reader.readString();
               field.set(obj, parseEnum(fieldType, s));
@@ -820,7 +819,7 @@ public final class BeanReader<T> {
   /**
    * 获取或创建指定 Bean 类型的读取器（全局缓存）。
    *
-   * <p>{@link ConcurrentHashMap#computeIfAbsent} 保证每个 Class 仅被构造一次， 多线程下不会出现重复创建。BeanReader
+   * <p>{@link java.util.concurrent.ConcurrentHashMap#computeIfAbsent} 保证每个 Class 仅被构造一次， 多线程下不会出现重复创建。BeanReader
    * 的构建涉及反射扫描字段、缓存构造函数与 探测 {@code @JsonAnySetter}，开销较大，因此复用缓存对反序列化性能至关重要。
    *
    * @param beanType 目标 Bean 类型，不可为 null（否则抛出 NPE）
@@ -838,7 +837,7 @@ public final class BeanReader<T> {
    *
    * <p>与 {@link #getOrCreate(Class)} 等价，但返回原始 {@code BeanReader<?>}， 适用于调用方仅持有运行时 {@link
    * Class}（无具体泛型参数）的场景，例如 {@link FieldReader#readValue} 解析嵌套对象时按字段类型递归获取读取器。 同样基于进程级 {@link
-   * ConcurrentHashMap} 缓存，保证每类型仅构建一次。
+   * java.util.concurrent.ConcurrentHashMap} 缓存，保证每类型仅构建一次。
    *
    * @param beanType 目标 Bean 类型，不可为 null（否则抛出 NPE）
    * @return 对应类型的 BeanReader，非 null
@@ -910,12 +909,10 @@ public final class BeanReader<T> {
     DateTimeFormatter.ISO_LOCAL_DATE, DateTimeFormatter.ofPattern("yyyy-MM-dd"),
   };
 
-  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，parseDate 内部使用 new Date(long) 已废弃的构造方法
   private static LocalDateTime parseLocalDateTime(String s) {
     return parseLocalDateTime(s, null);
   }
 
-  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，parseDate 内部使用 new Date(long) 已废弃的构造方法
   private static LocalDateTime parseLocalDateTime(String s, String pattern) {
     if (s == null || s.isEmpty()) {
       return null;
@@ -938,12 +935,10 @@ public final class BeanReader<T> {
     return null;
   }
 
-  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，parseDate 内部使用 new Date(long) 已废弃的构造方法
   private static LocalDate parseLocalDate(String s) {
     return parseLocalDate(s, null);
   }
 
-  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，parseDate 内部使用 new Date(long) 已废弃的构造方法
   private static LocalDate parseLocalDate(String s, String pattern) {
     if (s == null || s.isEmpty()) {
       return null;
@@ -965,18 +960,18 @@ public final class BeanReader<T> {
     return null;
   }
 
-  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，方法内部使用 new Date(long) 已废弃的构造方法
-  private static Date parseDate(String s) {
+  private static LocalDateTime parseDate(String s) {
     return parseDate(s, null);
   }
 
-  @SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，方法内部使用 new Date(long) 已废弃的构造方法
-  private static Date parseDate(String s, String pattern) {
+  private static LocalDateTime parseDate(String s, String pattern) {
     if (s == null || s.isEmpty()) {
       return null;
     }
+    // 纯数字解释为 epoch 毫秒（旧时间戳格式兼容）
     try {
-      return new Date(Long.parseLong(s));
+      long epochMilli = Long.parseLong(s);
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMilli), ZoneId.systemDefault());
     } catch (NumberFormatException e) {
       LOGGER.debug("[BeanReader] 日期非数字时间戳格式，继续按字符串解析: value={}", s);
     }
@@ -993,8 +988,7 @@ public final class BeanReader<T> {
     candidates.add(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     for (DateTimeFormatter fmt : candidates) {
       try {
-        LocalDateTime ldt = LocalDateTime.parse(s, fmt);
-        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+        return LocalDateTime.parse(s, fmt);
       } catch (Exception e) {
         LOGGER.debug("[BeanReader] 日期格式匹配失败，继续尝试下一个格式: value={}", s);
       }

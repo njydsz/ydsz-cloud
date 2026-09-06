@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
@@ -511,8 +513,10 @@ public class SheetXmlReader {
     if (isDateStyledNumericCell()) {
       try {
         double serial = Double.parseDouble(actualValue);
+        // POI DateUtil 返回 java.util.Date，桥接为 LocalDateTime 后装载到 SimpleCell
         Date date = DateUtil.getJavaDate(serial, reader.excelConfig().isUse1904Windowing());
-        SimpleCell dateCell = SimpleCell.forDate(actualValue, date);
+        LocalDateTime ldt = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        SimpleCell dateCell = SimpleCell.forDate(actualValue, ldt);
         return colMeta.convertStrategy.convert(dateCell, CellType.NUMERIC);
       } catch (NumberFormatException e) {
         // 非数值内容按原路径处理（异常生成器的坏数据不在此放大）

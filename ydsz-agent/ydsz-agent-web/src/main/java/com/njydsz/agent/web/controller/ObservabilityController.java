@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.agent.server.observability.ObservabilityDashboardService;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.DashboardOverviewDTO;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.ModelUsageDTO;
-import com.njydsz.agent.server.observability.ObservabilityDashboardService;
 import com.njydsz.common.core.response.YdszResponse;
 
 /**
@@ -30,6 +30,9 @@ import com.njydsz.common.core.response.YdszResponse;
 @RestController
 @RequestMapping("/api/v1/agent/observability")
 public class ObservabilityController {
+
+  /** 统计天数上限 */
+  private static final int MAX_QUERY_DAYS = 30;
 
   private final ObservabilityDashboardService dashboardService;
 
@@ -61,7 +64,7 @@ public class ObservabilityController {
   @GetMapping("/model-usage")
   public YdszResponse<List<ModelUsageDTO>> getModelUsage(
       @RequestParam(defaultValue = "7") int days) {
-    int safeDays = Math.min(Math.max(days, 1), 30);
+    int safeDays = Math.min(Math.max(days, 1), MAX_QUERY_DAYS);
     log.info("[Observability-API] 查询模型分布: days={}", safeDays);
     return YdszResponse.success(dashboardService.getModelUsageDistribution(safeDays));
   }

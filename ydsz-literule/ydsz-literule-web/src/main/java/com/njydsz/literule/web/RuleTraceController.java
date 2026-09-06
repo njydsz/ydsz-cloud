@@ -65,6 +65,9 @@ import com.njydsz.literule.server.config.RuleTraceQueryService;
 @Validated
 @Tag(name = "规则执行追踪", description = "执行链路查询、历史回放与变更影响分析")
 public class RuleTraceController {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 变更影响分析查询 trace 记录上限（最多 5000 条） */
   private static final int MAX_TRACE_LIMIT = 5000;
@@ -151,7 +154,7 @@ public class RuleTraceController {
     Set<String> unchanged = new LinkedHashSet<>(currentTriggered);
     unchanged.retainAll(historicalTriggered);
 
-    Map<String, Object> replay = new LinkedHashMap<>(16);
+    Map<String, Object> replay = new LinkedHashMap<>(COLLECTION_CAPACITY);
     replay.put("traceId", traceId);
     replay.put("factsSnapshot", facts);
     replay.put("historicalTraces", traces);
@@ -227,7 +230,7 @@ public class RuleTraceController {
         ruleTraceQueryService.findRecentByRuleCode(ruleCode, limit);
 
     // 逐条回放：用当前规则集重新评估
-    List<Map<String, Object>> diffs = new ArrayList<>(16);
+    List<Map<String, Object>> diffs = new ArrayList<>(COLLECTION_CAPACITY);
     int consistentCount = 0;
     int diffCount = 0;
 
@@ -260,7 +263,7 @@ public class RuleTraceController {
         consistentCount++;
       } else {
         diffCount++;
-        Map<String, Object> diff = new LinkedHashMap<>(16);
+        Map<String, Object> diff = new LinkedHashMap<>(COLLECTION_CAPACITY);
         diff.put("traceId", trace.getTraceId());
         diff.put("ruleCode", trace.getRuleCode());
         diff.put("historicalTriggered", historicalTriggered);
@@ -273,7 +276,7 @@ public class RuleTraceController {
       }
     }
 
-    Map<String, Object> report = new LinkedHashMap<>(16);
+    Map<String, Object> report = new LinkedHashMap<>(COLLECTION_CAPACITY);
     report.put("totalReplayed", traces.size());
     report.put("consistentCount", consistentCount);
     report.put("diffCount", diffCount);
@@ -353,7 +356,7 @@ public class RuleTraceController {
         ruleTraceQueryService.findRecentByRuleCode(ruleCode, limit);
 
     // 逐条用新表达式重新评估
-    List<Map<String, Object>> affectedTraces = new ArrayList<>(16);
+    List<Map<String, Object>> affectedTraces = new ArrayList<>(COLLECTION_CAPACITY);
     int historicalTriggeredCount = 0;
     int newTriggeredCount = 0;
     int addedTriggeredCount = 0;
@@ -402,7 +405,7 @@ public class RuleTraceController {
 
       // 仅记录受影响的 trace（非 unchanged）
       if (!"unchanged".equals(impactType)) {
-        Map<String, Object> affected = new LinkedHashMap<>(16);
+        Map<String, Object> affected = new LinkedHashMap<>(COLLECTION_CAPACITY);
         affected.put("traceId", trace.getTraceId());
         affected.put("historicalTriggered", historicalTriggered);
         affected.put("newTriggered", newTriggered);
@@ -414,7 +417,7 @@ public class RuleTraceController {
       }
     }
 
-    Map<String, Object> report = new LinkedHashMap<>(16);
+    Map<String, Object> report = new LinkedHashMap<>(COLLECTION_CAPACITY);
     report.put("ruleCode", ruleCode);
     report.put("conditionExpression", conditionExpression);
     report.put("totalTraces", traces.size());

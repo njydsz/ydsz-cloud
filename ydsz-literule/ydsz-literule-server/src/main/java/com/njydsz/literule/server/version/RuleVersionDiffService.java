@@ -31,6 +31,9 @@ import com.njydsz.literule.domain.enums.RuleSeverity;
 @Slf4j
 @Service
 public class RuleVersionDiffService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /**
    * 对比两个规则定义
@@ -76,7 +79,7 @@ public class RuleVersionDiffService {
           .build();
     }
 
-    List<RuleVersionDiff.DiffEntry> entries = new ArrayList<>(16);
+    List<RuleVersionDiff.DiffEntry> entries = new ArrayList<>(COLLECTION_CAPACITY);
 
     // 基本信息
     compareField(entries, "code", "规则编码", oldDef.getCode(), newDef.getCode());

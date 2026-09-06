@@ -27,6 +27,9 @@ import com.njydsz.message.domain.vo.MsgLogVO;
 @Component
 @RequiredArgsConstructor
 public class OutboundWebhookService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final WebhookDispatcher webhookDispatcher;
 
@@ -72,7 +75,7 @@ public class OutboundWebhookService {
    * @param logDO 消息日志
    */
   public void fireEvent(String event, MsgLogVO logDO) {
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("event", event);
     payload.put("timestamp", System.currentTimeMillis());
     payload.put("msgId", logDO.getId());

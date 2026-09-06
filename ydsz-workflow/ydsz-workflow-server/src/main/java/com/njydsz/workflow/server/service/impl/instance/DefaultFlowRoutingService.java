@@ -46,6 +46,9 @@ import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
 @Service
 @ConditionalOnMissingBean(DefaultFlowRoutingService.class)
 public class DefaultFlowRoutingService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 卡单判定阈值（小时） */
   private static final int STUCK_HOURS_THRESHOLD = 24;
@@ -125,7 +128,7 @@ public class DefaultFlowRoutingService {
       log.warn("[FlowRoute] 实例不存在，跳过异常检测: instanceId={}", instanceId);
       return Collections.emptyList();
     }
-    List<Map<String, Object>> anomalies = new ArrayList<>(16);
+    List<Map<String, Object>> anomalies = new ArrayList<>(COLLECTION_CAPACITY);
     detectTimeout(instanceId, anomalies);
     detectStuck(instanceId, anomalies);
     detectLoop(instanceId, anomalies);
@@ -155,7 +158,7 @@ public class DefaultFlowRoutingService {
       if (task.getDueAt().isBefore(now)
           && !FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
         long overdueMinutes = Duration.between(task.getDueAt(), now).toMinutes();
-        Map<String, Object> anomaly = new LinkedHashMap<>(16);
+        Map<String, Object> anomaly = new LinkedHashMap<>(COLLECTION_CAPACITY);
         anomaly.put("type", "TIMEOUT");
         anomaly.put("taskId", task.getId());
         anomaly.put("nodeCode", task.getNodeCode());
@@ -193,7 +196,7 @@ public class DefaultFlowRoutingService {
       }
       long hours = Duration.between(createdAt, now).toHours();
       if (hours >= STUCK_HOURS_THRESHOLD) {
-        Map<String, Object> anomaly = new LinkedHashMap<>(16);
+        Map<String, Object> anomaly = new LinkedHashMap<>(COLLECTION_CAPACITY);
         anomaly.put("type", "STUCK");
         anomaly.put("taskId", task.getId());
         anomaly.put("nodeCode", task.getNodeCode());
@@ -230,7 +233,7 @@ public class DefaultFlowRoutingService {
                 .map(FlowAuditLogVO::getNodeName)
                 .findFirst()
                 .orElse(entry.getKey());
-        Map<String, Object> anomaly = new LinkedHashMap<>(16);
+        Map<String, Object> anomaly = new LinkedHashMap<>(COLLECTION_CAPACITY);
         anomaly.put("type", "LOOP");
         anomaly.put("nodeCode", entry.getKey());
         anomaly.put("nodeName", nodeName);

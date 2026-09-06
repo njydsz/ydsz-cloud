@@ -12,7 +12,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
-import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
 
 /**
  * 统一线程池配置属性。
@@ -164,7 +163,7 @@ public class ThreadPoolProperties {
      *
      * <p>默认 {@link ThreadPoolMetrics#DEFAULT_METRIC_PREFIX}。 仅在您想自定义指标名称前缀时设置。
      *
-     * <p>虚拟线程池固定使用 {@link VirtualThreadMetrics#DEFAULT_METRIC_PREFIX} 前缀。
+     * <p>虚拟线程池固定使用 {@link com.njydsz.common.thread.metrics.VirtualThreadMetrics#DEFAULT_METRIC_PREFIX} 前缀。
      *
      * @since 26.09.01
      */

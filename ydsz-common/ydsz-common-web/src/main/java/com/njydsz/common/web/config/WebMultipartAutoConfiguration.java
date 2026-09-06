@@ -11,8 +11,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.servlet.MultipartConfigFactory;
 import org.springframework.boot.servlet.autoconfigure.MultipartAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.util.unit.DataSize;
-
 /**
  * Web 端 Multipart 自动配置
  *
@@ -50,7 +48,7 @@ public class WebMultipartAutoConfiguration {
   /**
    * 注册 MultipartConfigElement，覆盖 Spring Boot 默认的 1MB / 10MB 限制。
    *
-   * <p>使用 {@link MultipartConfigFactory} 创建，便于通过 {@link DataSize} 设置大小。
+   * <p>使用 {@link MultipartConfigFactory} 创建，便于通过 {@link org.springframework.util.unit.DataSize} 设置大小。
    *
    * @param properties multipart 配置属性
    * @return MultipartConfigElement 实例

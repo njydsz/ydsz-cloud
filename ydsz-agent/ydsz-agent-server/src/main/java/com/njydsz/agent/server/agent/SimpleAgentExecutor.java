@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
@@ -19,7 +20,6 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.chat.StreamingPiiMasker;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -33,6 +33,9 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class SimpleAgentExecutor extends AbstractAgentExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   public SimpleAgentExecutor(
       LlmClient llmClient,
@@ -72,7 +75,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
       return buildRejectedResponse("您的输入被安全护栏拒绝");
     }
 
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     String systemPrompt =
         resolveSystemPrompt(
             request,
@@ -139,7 +142,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
       return;
     }
 
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     String systemPrompt =
         resolveSystemPrompt(
             request,

@@ -1,6 +1,5 @@
 package com.njydsz.literule.domain.dto;
 
-
 import java.io.Serializable;
 
 import lombok.AllArgsConstructor;

@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
@@ -24,7 +25,6 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.chat.StreamingPiiMasker;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
@@ -53,6 +53,9 @@ import com.njydsz.common.util.message.MessageUtils;
  */
 @Slf4j
 public class SupervisorAgentExecutor extends AbstractAgentExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 任务分解 Prompt 模板（默认值，可被数据库模板覆盖） */
   private static final String DEFAULT_PLAN_PROMPT_TEMPLATE =
@@ -137,7 +140,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
 
     // 2. 按依赖顺序执行子任务（depends_on 拓扑调度，无依赖者先执行）
     List<String> results = new ArrayList<>(subTasks.size());
-    Map<Integer, String> taskResults = new HashMap<>(16);
+    Map<Integer, String> taskResults = new HashMap<>(COLLECTION_CAPACITY);
     TokenUsage[] totalUsage = {TokenUsage.zero()};
     List<SubTask> pending = new ArrayList<>(subTasks);
     while (!pending.isEmpty()) {
@@ -274,7 +277,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
 
     // 2. 流式执行子任务
     List<String> results = new ArrayList<>(subTasks.size());
-    Map<Integer, String> taskResults = new HashMap<>(16);
+    Map<Integer, String> taskResults = new HashMap<>(COLLECTION_CAPACITY);
     TokenUsage[] totalUsage = {TokenUsage.zero()};
     StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
     List<SubTask> pending = new ArrayList<>(subTasks);
@@ -630,7 +633,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
     if (value == null) {
       return List.of();
     }
-    List<Integer> dependsOn = new ArrayList<>(16);
+    List<Integer> dependsOn = new ArrayList<>(COLLECTION_CAPACITY);
     if (value instanceof List<?> list) {
       for (Object item : list) {
         dependsOn.add(parseTaskId(item));

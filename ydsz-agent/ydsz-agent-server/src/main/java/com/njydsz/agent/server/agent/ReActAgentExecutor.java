@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
@@ -26,7 +27,6 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -54,6 +54,9 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class ReActAgentExecutor extends AbstractAgentExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /**
    * 工具并发执行线程池（JDK 21 虚拟线程，规范豁免场景）。
@@ -112,7 +115,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       return buildRejectedResponse("输入被护栏拒绝");
     }
 
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     messages.add(ChatMessage.system(buildSystemPrompt(request, userInput)));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
@@ -199,7 +202,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       return;
     }
 
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     messages.add(ChatMessage.system(buildSystemPrompt(request, userInput)));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));

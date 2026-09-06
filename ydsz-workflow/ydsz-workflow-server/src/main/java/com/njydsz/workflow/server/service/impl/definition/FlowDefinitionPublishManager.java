@@ -55,6 +55,9 @@ import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 @Slf4j
 @Component
 public class FlowDefinitionPublishManager {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 停用流程时发布的版本号（9 表示停用态） */
   private static final int DEPRECATE_PUBLISH_VERSION = 9;
@@ -289,7 +292,7 @@ public class FlowDefinitionPublishManager {
       migrateDto.setSourceDefinitionId(currentDef.getId());
       migrateDto.setTargetDefinitionId(previousDef.getId());
       migrateDto.setTenantId(tid);
-      Map<String, String> nodeMapping = new HashMap<>(16);
+      Map<String, String> nodeMapping = new HashMap<>(COLLECTION_CAPACITY);
       List<FlowNodeVO> oldNodes = nodeRepository.findByDefinitionId(currentDef.getId());
       List<FlowNodeVO> newNodes = nodeRepository.findByDefinitionId(previousDef.getId());
       Set<String> newNodeCodes =
@@ -310,15 +313,15 @@ public class FlowDefinitionPublishManager {
       log.error("[Flow] 一键回滚实例迁移异常: flowCode={} err={}", flowCode, e.getMessage(), e);
     }
 
-    Map<String, Object> fromInfo = new LinkedHashMap<>(16);
+    Map<String, Object> fromInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
     fromInfo.put("id", currentDef.getId());
     fromInfo.put("flowVersion", currentDef.getFlowVersion());
 
-    Map<String, Object> toInfo = new LinkedHashMap<>(16);
+    Map<String, Object> toInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
     toInfo.put("id", previousDef.getId());
     toInfo.put("flowVersion", previousDef.getFlowVersion());
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("fromDefinition", fromInfo);
     result.put("toDefinition", toInfo);
     result.put("migrationImpact", migrationImpact);
@@ -458,7 +461,7 @@ public class FlowDefinitionPublishManager {
   private List<String> extractStringList(Map<String, Object> root, String key) {
     Object value = root.get(key);
     if (value instanceof List) {
-      List<String> result = new ArrayList<>(16);
+      List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
       for (Object item : (List<?>) value) {
         if (item != null) {
           result.add(String.valueOf(item));

@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.base.config.BaseTraceProperties;
-import com.njydsz.common.web.filter.TraceIdResponseFilter;
 
 /**
  * Web 端请求追踪/日志配置属性
@@ -27,7 +26,7 @@ import com.njydsz.common.web.filter.TraceIdResponseFilter;
  *
  * @author ydsz-team
  * @see BaseTraceProperties
- * @see TraceIdResponseFilter
+ * @see com.njydsz.common.web.filter.TraceIdResponseFilter
  * @since 26.09.01
  */
 @Data

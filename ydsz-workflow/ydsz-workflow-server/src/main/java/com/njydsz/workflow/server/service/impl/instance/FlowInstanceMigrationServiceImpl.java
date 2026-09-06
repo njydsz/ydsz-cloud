@@ -18,8 +18,8 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
-import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO.MigrationDetail;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
+import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO.MigrationDetail;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
@@ -109,6 +109,9 @@ import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 @Service
 @RequiredArgsConstructor
 public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 流程实例仓储，查询/更新待迁移的运行中实例 */
   private final FlowInstanceRepository instanceRepository;
@@ -168,7 +171,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     // 目标节点编码集合，便于快速判断
     Map<String, FlowNodeVO> targetNodeMap =
         targetNodes.stream().collect(Collectors.toMap(FlowNodeVO::getNodeCode, n -> n, (a, b) -> a));
-    Map<String, String> mapping = new LinkedHashMap<>(16);
+    Map<String, String> mapping = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (FlowNodeVO src : sourceNodes) {
       String code = src.getNodeCode();
       if (StringUtils.hasText(code) && targetNodeMap.containsKey(code)) {
@@ -224,7 +227,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
 
     // 查询源定义下所有运行中实例并逐实例迁移
     List<FlowInstanceVO> instances = instanceRepository.findRunningByDefinition(sourceDefId, tenantId);
-    List<MigrationDetail> details = new ArrayList<>(16);
+    List<MigrationDetail> details = new ArrayList<>(COLLECTION_CAPACITY);
     MigrationCounters counters = new MigrationCounters();
 
     for (FlowInstanceVO instance : instances) {

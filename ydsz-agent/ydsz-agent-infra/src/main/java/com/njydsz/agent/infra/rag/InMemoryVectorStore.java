@@ -26,6 +26,9 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 @Slf4j
 public class InMemoryVectorStore implements VectorStore {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 内存存储（线程安全） */
   private final List<TextChunk> store = new CopyOnWriteArrayList<>();
@@ -75,7 +78,7 @@ public class InMemoryVectorStore implements VectorStore {
       return List.of();
     }
     String currentTenant = resolveTenantId();
-    List<ScoredChunk> scored = new ArrayList<>(16);
+    List<ScoredChunk> scored = new ArrayList<>(COLLECTION_CAPACITY);
     for (TextChunk chunk : store) {
       if (!chunk.hasEmbedding()) {
         continue;

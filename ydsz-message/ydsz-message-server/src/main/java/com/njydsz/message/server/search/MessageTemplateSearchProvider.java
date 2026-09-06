@@ -1,5 +1,6 @@
 package com.njydsz.message.server.search;
 
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -8,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.core.IndexDocument;
-import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.core.SearchField;
+import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
@@ -26,10 +27,16 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
 @RequiredArgsConstructor
 public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplateVO> {
   /** 名称搜索权重 */
-  private static final float NAME_WEIGHT = 3.0f;
+  private static final BigDecimal NAME_WEIGHT = new BigDecimal("3.0");
+
+  /** 编码搜索权重 */
+  private static final BigDecimal SUBTITLE_WEIGHT = new BigDecimal("2.0");
 
   /** 内容搜索权重 */
-  private static final float CONTENT_WEIGHT = 0.5f;
+  private static final BigDecimal BODY_WEIGHT = new BigDecimal("1.0");
+
+  /** 状态搜索权重 */
+  private static final BigDecimal STATUS_WEIGHT = new BigDecimal("0.5");
 
 
   private final MsgTemplateRepository msgTemplateRepository;
@@ -86,7 +93,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .name("subtitle")
             .label(MessageUtils.getMessage("message.search.field.code", "模板编码"))
             .type(FieldType.KEYWORD)
-            .weight(2.0f)
+            .weight(SUBTITLE_WEIGHT)
             .searchable(true)
             .highlightable(true)
             .build(),
@@ -94,14 +101,14 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .name("content")
             .label(MessageUtils.getMessage("message.search.field.content", "模板内容"))
             .type(FieldType.TEXT)
-            .weight(1.0f)
+            .weight(BODY_WEIGHT)
             .searchable(true)
             .build(),
         SearchField.builder()
             .name("status")
             .label(MessageUtils.getMessage("message.search.field.status", "状态"))
             .type(FieldType.KEYWORD)
-            .weight(CONTENT_WEIGHT)
+            .weight(STATUS_WEIGHT)
             .searchable(false)
             .aggregatable(true)
             .build());

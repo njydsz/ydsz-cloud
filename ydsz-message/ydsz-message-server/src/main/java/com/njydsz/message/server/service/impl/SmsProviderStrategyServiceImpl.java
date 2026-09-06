@@ -36,6 +36,9 @@ import com.njydsz.message.server.service.core.SmsProviderStrategyService;
 @Service
 @RequiredArgsConstructor
 public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 默认分页大小 */
   private static final int DEFAULT_PAGE_SIZE = 50;
 
@@ -123,7 +126,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
    */
   @Override
   public Map<String, long[]> getProviderStats() {
-    Map<String, long[]> stats = new HashMap<>(16);
+    Map<String, long[]> stats = new HashMap<>(COLLECTION_CAPACITY);
     try {
       String daySuffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
       for (String provider : new String[] {"aliyun", "tencent", "mock"}) {
@@ -212,7 +215,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
 
   /** 解析权重配置（从 {@link MessageProperties.SmsConfig#getWeights()} 读取）。 */
   private Map<String, Integer> parseWeights() {
-    Map<String, Integer> weights = new HashMap<>(16);
+    Map<String, Integer> weights = new HashMap<>(COLLECTION_CAPACITY);
     String weightsConfig = messageProperties.getSms().getWeights();
     if (weightsConfig != null && !weightsConfig.isBlank()) {
       for (String pair : weightsConfig.split(",")) {

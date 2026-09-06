@@ -35,6 +35,9 @@ import com.njydsz.nextwiki.infra.mapper.FileVersionMapper;
 @Repository
 @RequiredArgsConstructor
 public class FileVersionRepositoryImpl implements FileVersionRepository {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final FileVersionMapper fileVersionMapper;
@@ -95,7 +98,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
       return 0;
     }
 
-    List<String> ids = new ArrayList<>(16);
+    List<String> ids = new ArrayList<>(COLLECTION_CAPACITY);
     for (FileVersion v : excessVersions) {
       ids.add(v.getId());
     }

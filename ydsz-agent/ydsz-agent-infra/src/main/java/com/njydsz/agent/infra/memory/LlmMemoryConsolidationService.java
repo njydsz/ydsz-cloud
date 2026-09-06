@@ -38,6 +38,9 @@ import com.njydsz.agent.domain.model.ChatResponse;
 @Slf4j
 @Component
 public class LlmMemoryConsolidationService implements MemoryConsolidationService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     private static final int MIN_CONVERSATION_MESSAGES = 4;
     private static final int MAX_FACTS_PER_EXTRACTION = 10;
@@ -171,7 +174,7 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
      */
     private List<MemoryExtractedFact> parseExtractedFacts(String response, String tenantId,
                                                           Conversation conversation) {
-        List<MemoryExtractedFact> facts = new ArrayList<>(16);
+        List<MemoryExtractedFact> facts = new ArrayList<>(COLLECTION_CAPACITY);
         Matcher matcher = FACT_PATTERN.matcher(response);
 
         int count = 0;

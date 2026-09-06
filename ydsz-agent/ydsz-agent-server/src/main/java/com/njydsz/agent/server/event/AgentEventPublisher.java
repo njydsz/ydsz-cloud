@@ -23,6 +23,9 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 @Slf4j
 @Component
 public class AgentEventPublisher {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 事件发布门面（可选依赖，未引入 common-event 时安全降级，符合云顶规范 27.4.1） */
   private final ObjectProvider<DomainEventPublisher> publisherProvider;
@@ -51,7 +54,7 @@ public class AgentEventPublisher {
    */
   public void publishExecutionStarted(
       String executionId, String tenantId, String userId, String agentType, String model) {
-    Map<String, Object> metadata = new HashMap<>(16);
+    Map<String, Object> metadata = new HashMap<>(COLLECTION_CAPACITY);
     metadata.put("tenantId", tenantId);
     metadata.put("userId", userId);
     metadata.put("agentType", agentType);
@@ -81,7 +84,7 @@ public class AgentEventPublisher {
       long durationMs,
       int totalTokens,
       double costUsd) {
-    Map<String, Object> metadata = new HashMap<>(16);
+    Map<String, Object> metadata = new HashMap<>(COLLECTION_CAPACITY);
     metadata.put("tenantId", tenantId);
     metadata.put("agentType", agentType);
     metadata.put("model", model);
@@ -111,7 +114,7 @@ public class AgentEventPublisher {
       String model,
       long durationMs,
       String errorMessage) {
-    Map<String, Object> metadata = new HashMap<>(16);
+    Map<String, Object> metadata = new HashMap<>(COLLECTION_CAPACITY);
     metadata.put("tenantId", tenantId);
     metadata.put("agentType", agentType);
     metadata.put("model", model);
@@ -133,7 +136,7 @@ public class AgentEventPublisher {
    */
   public void publishConversationCreated(
       String conversationId, String tenantId, String model, double costUsd) {
-    Map<String, Object> metadata = new HashMap<>(16);
+    Map<String, Object> metadata = new HashMap<>(COLLECTION_CAPACITY);
     metadata.put("tenantId", tenantId);
     metadata.put("model", model);
     metadata.put("costUsd", String.valueOf(costUsd));

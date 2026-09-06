@@ -13,7 +13,6 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.filter.BaseAuthFilter;
 import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.model.AuthInfo;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.common.web.auth.AuthHandlerFactory;
@@ -26,7 +25,7 @@ import com.njydsz.common.web.metrics.WebMetrics;
  *
  * <ul>
  *   <li>解析请求头中的认证信息（Token、用户ID、租户ID、数据权限维度等）
- *   <li>将认证上下文写入 {@link RequestContext}，供下游链路使用
+ *   <li>将认证上下文写入 {@link com.njydsz.common.core.context.RequestContext}，供下游链路使用
  *   <li>支持请求路径白名单过滤，无需认证即可访问
  *   <li>认证成功/失败埋点到 {@link WebMetrics}（可选依赖）
  * </ul>
@@ -43,7 +42,7 @@ import com.njydsz.common.web.metrics.WebMetrics;
  * @author ydsz-team
  * @see AuthHandlerFactory
  * @see AuthHandler
- * @see RequestContext
+ * @see com.njydsz.common.core.context.RequestContext
  * @see WebMetrics
  * @since 26.09.01
  */

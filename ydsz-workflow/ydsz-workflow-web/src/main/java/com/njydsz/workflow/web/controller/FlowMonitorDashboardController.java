@@ -61,6 +61,9 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @RequiredArgsConstructor
 @Validated
 public class FlowMonitorDashboardController {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 卡单检测阈值（小时） */
   private static final int STUCK_HOURS_THRESHOLD = 24;
@@ -219,7 +222,7 @@ public class FlowMonitorDashboardController {
     List<Map<String, Object>> result = new ArrayList<>(topN);
     if (rows != null) {
       for (Map<String, Object> row : rows) {
-        Map<String, Object> item = new LinkedHashMap<>(16);
+        Map<String, Object> item = new LinkedHashMap<>(COLLECTION_CAPACITY);
         try {
           item.put("userId", Long.parseLong(String.valueOf(row.get("assigneeId"))));
         } catch (NumberFormatException e) {
@@ -264,7 +267,7 @@ public class FlowMonitorDashboardController {
     List<Map<String, Object>> result = new ArrayList<>(LIST_INIT_CAPACITY_32);
     if (rows != null) {
       for (Map<String, Object> row : rows) {
-        Map<String, Object> item = new LinkedHashMap<>(16);
+        Map<String, Object> item = new LinkedHashMap<>(COLLECTION_CAPACITY);
         item.put("flowCode", row.get("flowCode"));
         item.put(
             "flowName", row.get("flowName") == null ? row.get("flowCode") : row.get("flowName"));
@@ -289,13 +292,13 @@ public class FlowMonitorDashboardController {
   @Operation(summary = "监控仪表盘聚合数据（首屏一次加载）")
   public YdszResponse<Map<String, Object>> monitorDashboard() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    Map<String, Object> dashboard = new LinkedHashMap<>(16);
+    Map<String, Object> dashboard = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
     try {
       dashboard.put("overview", buildOverview(tenantId));
     } catch (Exception e) {
       log.warn("[Dashboard] overview 聚合失败: {}", e.getMessage());
-      dashboard.put("overview", new LinkedHashMap<>(16));
+      dashboard.put("overview", new LinkedHashMap<>(COLLECTION_CAPACITY));
     }
 
     try {
@@ -327,14 +330,14 @@ public class FlowMonitorDashboardController {
       dashboard.put("efficiency", efficiencyService.efficiencyStats(tenantId, null, null));
     } catch (Exception e) {
       log.warn("[Dashboard] efficiency 查询失败: {}", e.getMessage());
-      dashboard.put("efficiency", new LinkedHashMap<>(16));
+      dashboard.put("efficiency", new LinkedHashMap<>(COLLECTION_CAPACITY));
     }
 
     try {
       dashboard.put("healthScore", efficiencyService.healthScore(tenantId, null, null));
     } catch (Exception e) {
       log.warn("[Dashboard] healthScore 查询失败: {}", e.getMessage());
-      dashboard.put("healthScore", new LinkedHashMap<>(16));
+      dashboard.put("healthScore", new LinkedHashMap<>(COLLECTION_CAPACITY));
     }
 
     return YdszResponse.success(dashboard);
@@ -491,7 +494,7 @@ public class FlowMonitorDashboardController {
    */
   private Map<String, Object> mapAnomaly(FlowAnomalyVO a) {
     String type = a.getType() != null ? a.getType() : "UNKNOWN";
-    Map<String, Object> item = new LinkedHashMap<>(16);
+    Map<String, Object> item = new LinkedHashMap<>(COLLECTION_CAPACITY);
     String anomalyType;
     switch (type) {
       case "STUCK" -> anomalyType = "STUCK";
@@ -558,7 +561,7 @@ public class FlowMonitorDashboardController {
    * @return 概览统计数据 Map
    */
   private Map<String, Object> buildOverview(String tenantId) {
-    Map<String, Object> overview = new LinkedHashMap<>(16);
+    Map<String, Object> overview = new LinkedHashMap<>(COLLECTION_CAPACITY);
     long running = 0;
     try {
       List<Map<String, Object>> statusCounts = instanceService.selectCountGroupByStatus(tenantId);
@@ -626,7 +629,7 @@ public class FlowMonitorDashboardController {
     List<Map<String, Object>> completedCounts =
         instanceService.selectDailyCompletedCount(tenantId, startDt, endDt);
 
-    Map<String, long[]> byDate = new LinkedHashMap<>(16);
+    Map<String, long[]> byDate = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (int i = 0; i < effectiveDays; i++) {
       byDate.put(start.plusDays(i).toString(), new long[] {0, 0});
     }
@@ -649,7 +652,7 @@ public class FlowMonitorDashboardController {
 
     List<Map<String, Object>> result = new ArrayList<>(effectiveDays);
     for (Map.Entry<String, long[]> entry : byDate.entrySet()) {
-      Map<String, Object> row = new LinkedHashMap<>(16);
+      Map<String, Object> row = new LinkedHashMap<>(COLLECTION_CAPACITY);
       row.put("date", entry.getKey());
       row.put("newCount", entry.getValue()[0]);
       row.put("completedCount", entry.getValue()[1]);

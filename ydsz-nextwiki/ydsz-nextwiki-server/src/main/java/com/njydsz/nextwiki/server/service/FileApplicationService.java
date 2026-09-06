@@ -85,6 +85,9 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @Service
 @RequiredArgsConstructor
 public class FileApplicationService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 每兆字节数（字节） */
   private static final long BYTES_PER_MB = 1024 * 1024;
@@ -619,7 +622,7 @@ public class FileApplicationService {
 
     // 批量查询节点，避免 N 次单条查询
     List<FileNodeVO> nodes = fileNodeRepository.findByIds(nodeIds);
-    Map<String, FileNodeVO> nodeMap = new HashMap<>(16);
+    Map<String, FileNodeVO> nodeMap = new HashMap<>(COLLECTION_CAPACITY);
     for (FileNodeVO node : nodes) {
       nodeMap.put(node.getId(), node);
     }
@@ -643,7 +646,7 @@ public class FileApplicationService {
 
     // 等待所有任务完成并收集结果
     int success = 0;
-    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>(16);
+    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>(COLLECTION_CAPACITY);
     for (int i = 0; i < futures.size(); i++) {
       try {
         String error = futures.get(i).get();
@@ -695,7 +698,7 @@ public class FileApplicationService {
 
     // 等待所有任务完成并收集结果
     int success = 0;
-    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>(16);
+    List<BatchResultDTO.FailedItem> failedItems = new ArrayList<>(COLLECTION_CAPACITY);
     for (int i = 0; i < futures.size(); i++) {
       try {
         String error = futures.get(i).get();

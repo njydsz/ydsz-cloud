@@ -15,10 +15,10 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.workflow.domain.gateway.AgentServiceClient.AgentExecutionResult;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
-import com.njydsz.workflow.domain.vo.AiAgentNodeConfigVO.FallbackStrategy;
+import com.njydsz.workflow.domain.gateway.AgentServiceClient.AgentExecutionResult;
 import com.njydsz.workflow.domain.vo.AiAgentNodeConfigVO;
+import com.njydsz.workflow.domain.vo.AiAgentNodeConfigVO.FallbackStrategy;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.server.engine.impl.FlowVariableReplacer;
 
@@ -59,6 +59,9 @@ import com.njydsz.workflow.server.engine.impl.FlowVariableReplacer;
 @Slf4j
 @Component
 public class FlowAiAgentNodeExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** AI Agent 执行使用的线程池名称 */
   private static final String THREAD_POOL_NAME = "flow-ai-agent-executor";
@@ -314,7 +317,7 @@ public class FlowAiAgentNodeExecutor {
    */
   private Map<String, Object> buildContext(String instanceId, String nodeCode,
       Map<String, Object> variables) {
-    Map<String, Object> context = new HashMap<>(16);
+    Map<String, Object> context = new HashMap<>(COLLECTION_CAPACITY);
     if (variables != null) {
       context.putAll(variables);
     }

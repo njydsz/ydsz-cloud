@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.search;
 
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,16 +51,16 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
   private final UserAccountRepository userAccountRepository;
 
   /** 真实姓名搜索权重（最高优先级）。 */
-  private static final float WEIGHT_TITLE = 3.0f;
+  private static final BigDecimal WEIGHT_TITLE = new BigDecimal("3.0");
 
   /** 用户名搜索权重。 */
-  private static final float WEIGHT_SUBTITLE = 2.0f;
+  private static final BigDecimal WEIGHT_SUBTITLE = new BigDecimal("2.0");
 
   /** 联系方式搜索权重。 */
-  private static final float WEIGHT_CONTENT = 1.0f;
+  private static final BigDecimal WEIGHT_CONTENT = new BigDecimal("1.0");
 
   /** 低优先级字段搜索权重（状态/类型聚合）。 */
-  private static final float WEIGHT_LOW = 0.5f;
+  private static final BigDecimal WEIGHT_LOW = new BigDecimal("0.5");
 
   @Override
   public String getType() {

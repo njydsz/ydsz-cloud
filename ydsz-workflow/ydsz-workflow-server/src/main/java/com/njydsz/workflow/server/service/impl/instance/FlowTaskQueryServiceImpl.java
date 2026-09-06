@@ -29,6 +29,7 @@ import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+
 /**
  * 待办任务 — 查询类 Service 实现
  *
@@ -73,6 +74,9 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 @DS(DataSourceConstants.SLAVE)
 @Transactional(readOnly = true)
 public class FlowTaskQueryServiceImpl {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 默认分页大小 */
   private static final int DEFAULT_PAGE_SIZE = 20;
@@ -211,7 +215,7 @@ private static final int MAX_PAGE_SIZE = 100;
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.selectDoneByAssignee(assigneeId, tid);
-    List<FlowRunTaskVO> result = new ArrayList<>(16);
+    List<FlowRunTaskVO> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowHisTaskVO his : hisTasks) {
       result.add(hisTaskVoToRunTaskVo(his));
     }
@@ -286,7 +290,7 @@ private static final int MAX_PAGE_SIZE = 100;
     int offset = computeSafeOffset(safePage, safeSize);
     List<FlowHisTaskVO> hisTasks =
         hisTaskRepository.selectDoneByAssigneePage(assigneeId, tid, offset, safeSize);
-    List<FlowRunTaskVO> list = new ArrayList<>(16);
+    List<FlowRunTaskVO> list = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowHisTaskVO his : hisTasks) {
       list.add(hisTaskVoToRunTaskVo(his));
     }
@@ -323,7 +327,7 @@ private static final int MAX_PAGE_SIZE = 100;
     List<FlowHisTaskVO> hisTasks =
         hisTaskRepository.selectDonePage(
             assigneeId, businessType, flowCode, startTime, endTime, tid, offset, safeSize);
-    List<FlowRunTaskVO> list = new ArrayList<>(16);
+    List<FlowRunTaskVO> list = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowHisTaskVO his : hisTasks) {
       list.add(hisTaskVoToRunTaskVo(his));
     }
@@ -499,7 +503,7 @@ private static final int MAX_PAGE_SIZE = 100;
 
   /** 将审计日志 VO 转换为加签视图 Map */
   private Map<String, Object> toCountersignMap(FlowAuditLogVO log) {
-    Map<String, Object> vo = new LinkedHashMap<>(16);
+    Map<String, Object> vo = new LinkedHashMap<>(COLLECTION_CAPACITY);
     vo.put("id", log.getId());
     vo.put("instanceId", log.getInstanceId());
     vo.put("taskId", log.getTaskId());

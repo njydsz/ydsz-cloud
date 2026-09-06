@@ -3,7 +3,6 @@ package com.njydsz.common.auth.service;
 import java.util.Map;
 
 import com.njydsz.common.auth.model.UserInfo;
-import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
 
 /**
  * RBAC 用户信息加载器接口。
@@ -24,7 +23,7 @@ import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
  * // 默认实现：基于 Redis
  * &#64;Bean
  * public RbacUserInfoService rbacUserInfoService(RedisStringOps redisStringOps) {
- *     return new RedisRbacUserInfoService(redisStringOps);
+ *     return new com.njydsz.common.auth.service.impl.RedisRbacUserInfoService(redisStringOps);
  * }
  *
  * // 自定义实现：来自数据库
@@ -36,7 +35,7 @@ import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see RedisRbacUserInfoService
+ * @see com.njydsz.common.auth.service.impl.RedisRbacUserInfoService
  * @see UserInfo
  */
 public interface RbacUserInfoService {

@@ -1,5 +1,7 @@
 package com.njydsz.common.auth.listener;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,6 +40,10 @@ public class PermissionKeyspaceNotificationListener {
   private static final Logger LOG =
       LoggerFactory.getLogger(PermissionKeyspaceNotificationListener.class);
 
+  /** role 相关 key 的编译正则缓存（key 为完整正则字符串，复用相同前缀的已编译模式） */
+  private static final ConcurrentMap<String, Pattern> ROLE_KEY_PATTERN_CACHE =
+      new ConcurrentHashMap<>(8);
+
   /** 匹配 role 相关 key 的正则，提取 roleCode。 支持自定义 key 前缀模式，默认匹配 ydsz-auth:role-* 格式。 */
   private final Pattern roleKeyPattern;
 
@@ -52,9 +58,10 @@ public class PermissionKeyspaceNotificationListener {
     this.permissionEvaluator = permissionEvaluator;
     String prefix = (keyPrefix != null && !keyPrefix.isEmpty()) ? keyPrefix : "ydsz-auth:role";
     // 动态构建正则：匹配 prefix-(?:menu|api|row|col):roleCode
-    // 转义 prefix 中的特殊字符
+    // 转义 prefix 中的特殊字符，然后从缓存获取或编译
     String escapedPrefix = Pattern.quote(prefix);
-    this.roleKeyPattern = Pattern.compile(escapedPrefix + "-(?:menu|api|row|col):([^:]+)");
+    String regex = escapedPrefix + "-(?:menu|api|row|col):([^:]+)";
+    this.roleKeyPattern = ROLE_KEY_PATTERN_CACHE.computeIfAbsent(regex, Pattern::compile);
   }
 
   /**

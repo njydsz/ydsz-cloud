@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.ExecutionPlan;
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
@@ -22,7 +23,6 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -46,6 +46,9 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   // 解析 LLM 返回的编号步骤列表：匹配行首「数字 + 分隔符(.、)、])」+ 步骤描述
   private static final Pattern STEP_PATTERN = Pattern.compile("(?m)^\\s*(\\d+)[.、)\\]]\\s*(.+)");
@@ -109,7 +112,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
     log.info("[Plan-Execute] 计划生成: steps={}", plan.getSteps().size());
 
     plan.markExecuting();
-    List<String> stepResults = new ArrayList<>(16);
+    List<String> stepResults = new ArrayList<>(COLLECTION_CAPACITY);
     TokenUsage totalUsage = TokenUsage.zero();
     // 最大重规划次数 2：单步连续失败后允许重试生成剩余步骤两次，超过则抛出原始异常
     int maxReplans = 2;
@@ -291,7 +294,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
     log.info("[Plan-Execute-Stream] 计划生成: steps={}", plan.getSteps().size());
 
     plan.markExecuting();
-    List<String> stepResults = new ArrayList<>(16);
+    List<String> stepResults = new ArrayList<>(COLLECTION_CAPACITY);
     TokenUsage totalUsage = TokenUsage.zero();
     int maxReplans = 2;
     int replanCount = 0;
@@ -525,7 +528,7 @@ public class PlanExecuteAgentExecutor extends AbstractAgentExecutor {
   }
 
   private ExecutionPlan parsePlan(String goal, String planText) {
-    List<ExecutionPlan.PlanStep> steps = new ArrayList<>(16);
+    List<ExecutionPlan.PlanStep> steps = new ArrayList<>(COLLECTION_CAPACITY);
     Matcher matcher = STEP_PATTERN.matcher(planText);
     int index = 0;
     while (matcher.find()) {

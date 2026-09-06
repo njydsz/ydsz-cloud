@@ -42,6 +42,8 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
   private final ArrayList<Integer> patchList = new ArrayList<>(8);
 
   /**
+   * 构造字节码编译器。
+   *
    * @param sourceExpression 源表达式文本（调试用）
    */
   public BytecodeCompiler(String sourceExpression) {
@@ -106,7 +108,7 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
     // 普通二元运算
     node.left().accept(this);
     node.right().accept(this);
-    emitOpcode(switch (node.operator()) {
+    BytecodeOpcode opcode = switch (node.operator()) {
       case "+", "plus" -> BytecodeOpcode.ADD;
       case "-", "minus" -> BytecodeOpcode.SUB;
       case "*", "multiply" -> BytecodeOpcode.MUL;
@@ -119,7 +121,8 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
       case "==" -> BytecodeOpcode.CMP_EQ;
       case "!=" -> BytecodeOpcode.CMP_NE;
       default -> throw new RuntimeException("未知运算符: " + node.operator());
-    });
+    };
+    emitOpcode(opcode);
     return null;
   }
 

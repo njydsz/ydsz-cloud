@@ -1,6 +1,7 @@
 package com.njydsz.agent.server.rag;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * Token 估算工具
@@ -40,7 +41,7 @@ public final class TokenEstimator {
       return 0;
     }
     return Math.max(1,
-        new BigDecimal(text.length()).divide(tokenCharRatio, 0, java.math.RoundingMode.CEILING).intValue());
+        new BigDecimal(text.length()).divide(tokenCharRatio, 0, RoundingMode.CEILING).intValue());
   }
 
   /**

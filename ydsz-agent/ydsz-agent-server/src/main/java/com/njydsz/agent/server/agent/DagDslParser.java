@@ -44,6 +44,9 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @Component
 @RequiredArgsConstructor
 public class DagDslParser {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -68,7 +71,7 @@ public class DagDslParser {
       throw new IllegalArgumentException("DSL 缺少 nodes 定义");
     }
 
-    Map<String, AgentDag.Node> nodes = new HashMap<>(16);
+    Map<String, AgentDag.Node> nodes = new HashMap<>(COLLECTION_CAPACITY);
     for (Map.Entry<?, ?> entry : nodesYaml.entrySet()) {
       String nodeId = String.valueOf(entry.getKey());
       Object nodeDefRaw = entry.getValue();
@@ -83,7 +86,7 @@ public class DagDslParser {
       nodes.put(nodeId, new AgentDag.Node(nodeId, agentType, prompt, inputFrom, config));
     }
 
-    Map<String, List<String>> edges = new HashMap<>(16);
+    Map<String, List<String>> edges = new HashMap<>(COLLECTION_CAPACITY);
     if (edgesRaw instanceof Map<?, ?> edgesYaml) {
       for (Map.Entry<?, ?> entry : edgesYaml.entrySet()) {
         String nodeId = String.valueOf(entry.getKey());

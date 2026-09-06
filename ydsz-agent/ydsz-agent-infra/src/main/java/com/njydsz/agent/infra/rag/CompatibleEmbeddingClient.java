@@ -24,6 +24,9 @@ import com.njydsz.common.json.tree.ObjectNode;
  */
 @Slf4j
 public class CompatibleEmbeddingClient implements EmbeddingClient {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认向量维度 */
   private static final int DEFAULT_EMBEDDING_DIMENSION = 1536;
@@ -63,7 +66,7 @@ public class CompatibleEmbeddingClient implements EmbeddingClient {
 
   @Override
   public List<List<Float>> embedBatch(List<String> texts) {
-    Map<String, Object> body = new HashMap<>(16);
+    Map<String, Object> body = new HashMap<>(COLLECTION_CAPACITY);
     body.put("model", model);
     body.put("input", texts);
     body.put("dimensions", dimension);

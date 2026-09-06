@@ -39,6 +39,9 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
 @Slf4j
 @Component
 public class BatchProgressNotifier {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** WebSocket 推送模板（可选依赖，未引入时降级为 no-op） */
   private final ObjectProvider<RealtimePushTemplate> pushTemplateProvider;
@@ -64,7 +67,7 @@ public class BatchProgressNotifier {
    * @param totalCount 待处理总数
    */
   public void notifyTaskStarted(String userId, String taskId, String taskType, int totalCount) {
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("taskId", taskId);
     payload.put("taskType", taskType);
     payload.put("status", "RUNNING");
@@ -96,7 +99,7 @@ public class BatchProgressNotifier {
 
     double progress = totalCount > 0 ? (double) processedCount / totalCount * 100 : 0;
 
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("taskId", taskId);
     payload.put("taskType", taskType);
     payload.put("status", "RUNNING");
@@ -127,7 +130,7 @@ public class BatchProgressNotifier {
       int successCount,
       int failCount) {
 
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("taskId", taskId);
     payload.put("taskType", taskType);
     payload.put("status", "COMPLETED");
@@ -152,7 +155,7 @@ public class BatchProgressNotifier {
   public void notifyTaskFailed(
       String userId, String taskId, String taskType, String errorMessage) {
 
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("taskId", taskId);
     payload.put("taskType", taskType);
     payload.put("status", "FAILED");

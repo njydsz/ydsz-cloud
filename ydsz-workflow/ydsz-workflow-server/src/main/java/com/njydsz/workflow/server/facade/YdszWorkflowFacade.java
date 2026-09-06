@@ -54,6 +54,9 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @Component
 @RequiredArgsConstructor
 public class YdszWorkflowFacade implements WorkflowFacade {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 列表初始容量：时间线 / 步骤明细等场景（32） */
   private static final int LIST_INIT_CAPACITY_32 = 32;
@@ -302,7 +305,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     }
     String currentNodeCode = instance.getCurrentNodeCode();
     // 在每个 node 上标注 active: true/false（currentNodeCode 匹配则为 active）
-    List<FlowDiagramVO.DiagramNodeVO> nodes = new ArrayList<>(16);
+    List<FlowDiagramVO.DiagramNodeVO> nodes = new ArrayList<>(COLLECTION_CAPACITY);
     if (detail.getNodes() != null) {
       for (FlowNodeVO n : detail.getNodes()) {
         FlowDiagramVO.DiagramNodeVO diagramNode = new FlowDiagramVO.DiagramNodeVO();

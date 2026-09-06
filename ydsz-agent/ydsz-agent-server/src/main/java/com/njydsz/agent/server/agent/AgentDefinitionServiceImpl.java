@@ -25,6 +25,9 @@ import com.njydsz.common.json.YdszJson;
 @Service
 @RequiredArgsConstructor
 public class AgentDefinitionServiceImpl implements AgentDefinitionService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认模型温度：在创造性与稳定性之间取平衡 */
   private static final double DEFAULT_TEMPERATURE = 0.7;
@@ -132,7 +135,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
     if (vo == null) {
       return null;
     }
-    List<String> tools = new ArrayList<>(16);
+    List<String> tools = new ArrayList<>(COLLECTION_CAPACITY);
     if (vo.getToolNames() != null && !vo.getToolNames().isBlank()) {
       List<Object> parsed = YdszJson.parseArray(vo.getToolNames());
       for (Object t : parsed) {

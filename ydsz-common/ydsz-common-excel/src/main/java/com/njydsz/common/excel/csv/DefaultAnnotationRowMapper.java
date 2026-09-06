@@ -2,6 +2,7 @@ package com.njydsz.common.excel.csv;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -236,7 +237,9 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
       return LocalTime.parse(value, formatterFor(dateFormat, DateTimeFormatter.ISO_LOCAL_TIME));
     }
     if (targetType == Date.class) {
-      return convertDate(value, dateFormat);
+      LocalDateTime ldt = convertDate(value, dateFormat);
+      // @deprecated 桥接：CSV 列目标类型为 java.util.Date 时，将 LocalDateTime 转为 Date
+      return ldt == null ? null : Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
     }
     // 兜底：原样返回字符串
     return value;
@@ -245,15 +248,16 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
   /**
    * Date 字段转换：依次尝试 dateFormat（或默认 yyyy-MM-dd HH:mm:ss）解析； 仅纯数字字符串按 epoch
    * 毫秒解释；其余格式错误抛出携带原始值的异常（不再静默产出 1970 附近的错误数据）。
+   *
+   * @return 解析后的 LocalDateTime
    */
-  private static Date convertDate(String value, String dateFormat) {
+  private static LocalDateTime convertDate(String value, String dateFormat) {
     DateTimeFormatter formatter = formatterFor(dateFormat, DATE_TIME_FORMATTER);
     try {
-      LocalDateTime ldt = LocalDateTime.parse(value, formatter);
-      return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+      return LocalDateTime.parse(value, formatter);
     } catch (Exception ex) {
       if (value.chars().allMatch(Character::isDigit)) {
-        return new Date(Long.parseLong(value));
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(value)), ZoneId.systemDefault());
       }
       throw new IllegalArgumentException(
           "无法将 \"" + value + "\" 解析为 Date（dateFormat=" + (dateFormat.isEmpty() ? "默认" : dateFormat) + "）", ex);
@@ -284,9 +288,9 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
       return ((LocalTime) value).format(
           formatterFor(dateFormat, DateTimeFormatter.ISO_LOCAL_TIME));
     }
-    if (value instanceof Date) {
+    if (value instanceof Date d) {
       return formatterFor(dateFormat, DATE_TIME_FORMATTER)
-          .format(((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+          .format(d.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
     }
     return value.toString();
   }

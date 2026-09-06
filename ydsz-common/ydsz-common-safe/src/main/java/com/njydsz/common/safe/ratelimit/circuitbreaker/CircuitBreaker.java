@@ -1,5 +1,6 @@
 package com.njydsz.common.safe.ratelimit.circuitbreaker;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -92,8 +93,8 @@ public class CircuitBreaker {
       return RateLimitDecision.builder()
           .resource(resource)
           .result(RateLimitResult.PASS)
-          .remaining(1)
-          .threshold(1)
+          .remaining(BigDecimal.ONE)
+          .threshold(BigDecimal.ONE)
           .timestamp(Instant.now())
           .reason("circuit breaker pass")
           .build();
@@ -108,8 +109,8 @@ public class CircuitBreaker {
     return RateLimitDecision.builder()
         .resource(resource)
         .result(RateLimitResult.BLOCKED)
-        .remaining(0)
-        .threshold(1)
+        .remaining(BigDecimal.ZERO)
+        .threshold(BigDecimal.ONE)
         .timestamp(Instant.now())
         .reason(reason)
         .build();
@@ -211,10 +212,10 @@ public class CircuitBreaker {
   @AllArgsConstructor
   public static class BreakerConfig {
     /** 失败率阈值（0-1） */
-    @Builder.Default private double failureRateThreshold = 0.5;
+    @Builder.Default private BigDecimal failureRateThreshold = new BigDecimal("0.5");
 
     /** 慢调用率阈值（0-1） */
-    @Builder.Default private double slowCallRateThreshold = 1.0;
+    @Builder.Default private BigDecimal slowCallRateThreshold = new BigDecimal("1.0");
 
     /** 慢调用阈值（毫秒） */
     @Builder.Default private long slowCallDurationThresholdMillis = 1000;
@@ -252,8 +253,8 @@ public class CircuitBreaker {
     /** 转换为 Resilience4j 配置（阈值 0-1 → 百分比）。 */
     io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toEngineConfig() {
       return CircuitBreakerConfig.custom()
-          .failureRateThreshold((float) (this.failureRateThreshold * 100))
-          .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))
+          .failureRateThreshold(this.failureRateThreshold.multiply(new BigDecimal("100")).floatValue())
+          .slowCallRateThreshold(this.slowCallRateThreshold.multiply(new BigDecimal("100")).floatValue())
           .slowCallDurationThreshold(Duration.ofMillis(this.slowCallDurationThresholdMillis))
           .minimumNumberOfCalls(this.minimumNumberOfCalls)
           .waitDurationInOpenState(this.waitDurationInOpenState)

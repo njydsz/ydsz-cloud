@@ -34,7 +34,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.RuleEngine;
-import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.domain.dto.ExpressionValidateDTO;
 import com.njydsz.literule.domain.dto.RuleABTestDTO;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
@@ -50,6 +49,7 @@ import com.njydsz.literule.domain.vo.RuleVersionDiffVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.config.ABTestService;
 import com.njydsz.literule.server.config.RuleAdminService;
+import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
 
@@ -89,6 +89,9 @@ import com.njydsz.literule.server.version.RuleVersionDiffService;
 @Validated
 @Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、规则集市场")
 public class RuleAdminController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
@@ -401,7 +404,7 @@ public class RuleAdminController {
   public YdszResponse<ExpressionEngine.TraceResult> traceExpression(
       @RequestBody Map<String, Object> request) {
     String expression = (String) request.get("expression");
-    Map<String, Object> facts = new HashMap<>(16);
+    Map<String, Object> facts = new HashMap<>(COLLECTION_CAPACITY);
     Object raw = request.get("facts");
     if (raw instanceof Map<?, ?> rawMap) {
       rawMap.forEach((k, v) -> facts.put(String.valueOf(k), v));

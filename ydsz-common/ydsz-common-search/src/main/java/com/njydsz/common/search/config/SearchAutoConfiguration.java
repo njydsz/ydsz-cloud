@@ -224,7 +224,7 @@ public class SearchAutoConfiguration {
    */
   @Bean("indexSyncExecutor")
   @ConditionalOnMissingBean(name = "indexSyncExecutor")
-  public ThreadPoolTaskExecutor indexSyncExecutor(
+  public ExecutorService indexSyncExecutor(
       SearchProperties properties,
       ObjectProvider<InternalExecutorFactory> factoryProvider) {
     InternalExecutorFactory factory = factoryProvider.getIfAvailable();
@@ -265,21 +265,19 @@ public class SearchAutoConfiguration {
    *
    * @param properties 搜索配置
    * @param factory 线程池统一工厂
-   * @return 适配后的 ThreadPoolTaskExecutor
+   * @return 受管的 JDK 线程池
    */
-  private ThreadPoolTaskExecutor createManagedIndexSyncExecutor(
+  private ExecutorService createManagedIndexSyncExecutor(
       SearchProperties properties, InternalExecutorFactory factory) {
     int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
     int maxSize = Math.max(4, coreSize * 2);
-    ExecutorService internal =
-        InternalExecutorFactory.newCustomThreadPool(
-            "indexSyncExecutor",
-            coreSize,
-            maxSize,
-            60L,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(512));
-    return DelegatingTaskExecutor.wrap(internal);
+    return InternalExecutorFactory.newCustomThreadPool(
+        "indexSyncExecutor",
+        coreSize,
+        maxSize,
+        60L,
+        TimeUnit.SECONDS,
+        new LinkedBlockingQueue<>(512));
   }
 
   // ==================== 核心服务装配 ====================
@@ -484,7 +482,7 @@ public class SearchAutoConfiguration {
       SearchProviderRegistry providerRegistry,
       SearchProperties properties,
       SearchMetrics searchMetrics,
-      ThreadPoolTaskExecutor indexSyncExecutor,
+      ExecutorService indexSyncExecutor,
       ObjectProvider<PersistentDeadLetterQueue> persistentDlqProvider) {
     indexSyncServiceInstance =
         new IndexSyncService(
@@ -506,7 +504,7 @@ public class SearchAutoConfiguration {
    */
   @Bean("indexRebuildExecutor")
   @ConditionalOnMissingBean(name = "indexRebuildExecutor")
-  public ThreadPoolTaskExecutor indexRebuildExecutor() {
+  public ExecutorService indexRebuildExecutor() {
     return IndexRebuildService.createDefaultRebuildExecutor();
   }
 
@@ -526,7 +524,7 @@ public class SearchAutoConfiguration {
       IndexSyncService indexSyncService,
       SearchEngineRegistry engineRegistry,
       SearchProviderRegistry providerRegistry,
-      ThreadPoolTaskExecutor indexRebuildExecutor) {
+      ExecutorService indexRebuildExecutor) {
     return new IndexRebuildService(
         indexSyncService, engineRegistry, providerRegistry, indexRebuildExecutor);
   }

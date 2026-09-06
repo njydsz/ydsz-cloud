@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.DagCheckpointStore;
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -52,7 +53,6 @@ import com.njydsz.agent.infra.tool.McpToolAdapter;
 import com.njydsz.agent.infra.tool.SseMcpClientProvider;
 import com.njydsz.agent.infra.tool.ToolAnnotationScanner;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
-import com.njydsz.agent.infra.trace.PgTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.agent.DagDslParser;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
@@ -60,7 +60,6 @@ import com.njydsz.agent.server.agent.SupervisorAgentExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.GuardrailService;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.server.health.AgentHealthIndicator;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
@@ -91,6 +90,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
     matchIfMissing = true)
 @Slf4j
 public class AgentAutoConfiguration {
+
+  /** 会话记忆列表最大长度的兜底下限 */
+  private static final int MIN_MEMORY_LIST_SIZE = 50;
 
   /**
    * 注册 Agent 领域模型的 JSON 序列化模块。
@@ -181,7 +183,7 @@ public class AgentAutoConfiguration {
       LlmClient llmClient) {
     AgentProperties.Memory memoryConfig = properties.getMemory();
     int maxMessages = memoryConfig.getMaxMessages();
-    int maxListSize = Math.max(maxMessages * 2, 50);
+    int maxListSize = Math.max(maxMessages * 2, MIN_MEMORY_LIST_SIZE);
     RedisConversationMemory redisMemory =
         new RedisConversationMemory(
             stringOps, collectionOps, memoryConfig.getTtlHours(), maxListSize);

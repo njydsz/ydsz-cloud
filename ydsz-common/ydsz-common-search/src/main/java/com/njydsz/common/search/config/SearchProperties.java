@@ -1,5 +1,6 @@
 package com.njydsz.common.search.config;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.validation.constraints.Max;
@@ -97,7 +98,7 @@ public class SearchProperties {
   private int highlightFragmentSize = 120;
 
   /** 模糊匹配最小相似度 */
-  private double fuzzyMinSimilarity = 0.3;
+  private BigDecimal fuzzyMinSimilarity = new BigDecimal("0.3");
 
   // ==================== 通用子配置 ====================
 
@@ -183,10 +184,10 @@ public class SearchProperties {
   /** 字段权重（引擎通用） */
   @Data
   public static class FieldWeights {
-    private double title = 1.0;
-    private double subtitle = 0.7;
-    private double content = 0.4;
-    private double tags = 0.2;
+    private BigDecimal title = new BigDecimal("1.0");
+    private BigDecimal subtitle = new BigDecimal("0.7");
+    private BigDecimal content = new BigDecimal("0.4");
+    private BigDecimal tags = new BigDecimal("0.2");
   }
 
   // ==================== 引擎特定内部类 ====================
@@ -213,6 +214,6 @@ public class SearchProperties {
     private FieldWeights fieldWeights = new FieldWeights();
 
     /** 时间衰减半衰期（天），0 表示不衰减 */
-    private double timeDecayDays = 0;
+    private BigDecimal timeDecayDays = new BigDecimal("0");
   }
 }

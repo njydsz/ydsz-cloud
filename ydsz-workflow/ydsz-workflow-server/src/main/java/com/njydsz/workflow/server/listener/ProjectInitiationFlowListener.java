@@ -56,6 +56,9 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
 @Component("projectInitiationFlowListener")
 @RequiredArgsConstructor
 public class ProjectInitiationFlowListener implements FlowEventListener {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** Map 初始容量：小集合（8） */
   private static final int MAP_INIT_CAPACITY_8 = 8;
@@ -503,7 +506,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>(16);
+      Map<String, Object> data = new HashMap<>(COLLECTION_CAPACITY);
       data.put("title", title);
       data.put("content", content);
       data.put("taskId", taskId);

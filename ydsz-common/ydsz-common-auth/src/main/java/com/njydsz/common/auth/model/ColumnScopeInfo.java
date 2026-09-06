@@ -6,9 +6,6 @@ import java.util.Set;
 
 import lombok.Getter;
 
-import com.njydsz.common.auth.annotation.AuthColPermission;
-import com.njydsz.common.auth.service.ColumnPermissionResolver;
-
 /**
  * 列权限信息载体。
  *
@@ -28,8 +25,8 @@ import com.njydsz.common.auth.service.ColumnPermissionResolver;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see AuthColPermission
- * @see ColumnPermissionResolver
+ * @see com.njydsz.common.auth.annotation.AuthColPermission
+ * @see com.njydsz.common.auth.service.ColumnPermissionResolver
  */
 @Getter
 public class ColumnScopeInfo {

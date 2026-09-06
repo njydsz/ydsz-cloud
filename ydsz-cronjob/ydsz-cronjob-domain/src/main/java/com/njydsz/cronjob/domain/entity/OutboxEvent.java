@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.domain.entity;
 
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;

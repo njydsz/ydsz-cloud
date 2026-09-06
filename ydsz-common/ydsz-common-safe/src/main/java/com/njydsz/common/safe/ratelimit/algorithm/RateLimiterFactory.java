@@ -1,12 +1,11 @@
 package com.njydsz.common.safe.ratelimit.algorithm;
 
-import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 
 /**
  * 限流器工厂
  *
- * <p>根据 {@link RateLimitAlgorithm} 创建对应的 {@link RateLimiter} 实现。
+ * <p>根据 {@link com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm} 创建对应的 {@link RateLimiter} 实现。
  *
  * @author ydsz-team
  * @since 26.09.01

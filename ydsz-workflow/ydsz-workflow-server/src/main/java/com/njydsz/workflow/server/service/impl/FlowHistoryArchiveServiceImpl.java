@@ -109,6 +109,9 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 @Service
 @RequiredArgsConstructor
 public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 归档扫描批量大小 */
   private static final int ARCHIVE_BATCH_SIZE = 500;
@@ -154,7 +157,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
       candidates = instanceRepository.findArchiveCandidates(statuses, threshold, batch);
     } catch (Exception e) {
       log.error("[FlowHistoryArchive] 查询历史实例失败: {}", e.getMessage(), e);
-      Map<String, Object> err = new HashMap<>(16);
+      Map<String, Object> err = new HashMap<>(COLLECTION_CAPACITY);
       err.put("ok", false);
       err.put("error", e.getMessage());
       return err;
@@ -162,7 +165,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
     if (candidates == null || candidates.isEmpty()) {
       log.info("[FlowHistoryArchive] 无需归档 days={}", days);
-      Map<String, Object> empty = new LinkedHashMap<>(16);
+      Map<String, Object> empty = new LinkedHashMap<>(COLLECTION_CAPACITY);
       empty.put("ok", true);
       empty.put("archived", 0);
       empty.put("days", days);
@@ -173,7 +176,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     int archived = 0;
     int missing = 0;
     int errors = 0;
-    List<String> archivedIds = new ArrayList<>(16);
+    List<String> archivedIds = new ArrayList<>(COLLECTION_CAPACITY);
 
     for (FlowInstanceVO instance : candidates) {
       if (System.currentTimeMillis() - start > maxMs) {
@@ -217,7 +220,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         errors,
         cost);
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("ok", true);
     result.put("total", candidates.size());
     result.put("archived", archived);
@@ -233,7 +236,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     long start = System.currentTimeMillis();
     int days = resolveInt(purgeDays, history.getPurgeDays());
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("purgeDays", days);
 
     if (!history.isPurgeEnabled()) {
@@ -288,7 +291,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
   @Override
   public Map<String, Object> getArchiveConfig() {
-    Map<String, Object> config = new LinkedHashMap<>(16);
+    Map<String, Object> config = new LinkedHashMap<>(COLLECTION_CAPACITY);
     config.put("archiveEnabled", history.isArchiveEnabled());
     config.put("retentionDays", history.getRetentionDays());
     config.put("batchSize", history.getBatchSize());
@@ -316,7 +319,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     // 1. 校验所有任务都已归档到 his_task
     List<FlowRunTaskVO> tasks = taskRepository.findByInstanceId(instanceId);
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(instanceId);
-    Set<String> archivedTaskIds = new HashSet<>(16);
+    Set<String> archivedTaskIds = new HashSet<>(COLLECTION_CAPACITY);
     if (hisTasks != null) {
       for (FlowHisTaskVO his : hisTasks) {
         if (his.getTaskId() != null) {

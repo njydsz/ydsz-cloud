@@ -1,5 +1,6 @@
 package com.njydsz.common.sentry.alerting;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,7 @@ public class AlertConverger implements AlertPublisher {
   private static final int MAX_SILENCE_MAP_SIZE = 10000;
 
   /** 触发清理的阈值（达到容量的 80%） */
-  private static final double CLEANUP_THRESHOLD_RATIO = 0.8;
+  private static final BigDecimal CLEANUP_THRESHOLD_RATIO = new BigDecimal("0.8");
 
   /** 下游告警发布器 */
   private final AlertPublisher delegate;
@@ -118,7 +119,8 @@ public class AlertConverger implements AlertPublisher {
    * <p>当容量达到阈值的 80% 时，触发批量清理过期条目； 清理后仍超限，则移除最早过期的条目直到容量降至安全水位。
    */
   private void ensureSilenceMapCapacity() {
-    if (silenceMap.size() < MAX_SILENCE_MAP_SIZE * CLEANUP_THRESHOLD_RATIO) {
+    int cleanupThreshold = new BigDecimal(MAX_SILENCE_MAP_SIZE).multiply(CLEANUP_THRESHOLD_RATIO).intValue();
+    if (silenceMap.size() < cleanupThreshold) {
       return;
     }
     // 先清理过期条目

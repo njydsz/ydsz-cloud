@@ -1,4 +1,5 @@
 package com.njydsz.workflow.server.service.impl.i18n;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,10 +22,16 @@ import com.njydsz.workflow.server.service.FlowI18nService;
 @Slf4j
 @Service
 public class FlowI18nServiceImpl implements FlowI18nService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   /** i18n 消息资源：enumType -> enumName -> locale -> description */
   private static final Map<String, Map<String, Map<String, String>>> MESSAGE_RESOURCE =
-      new LinkedHashMap<>(16);
+      new LinkedHashMap<>(COLLECTION_CAPACITY_16);
 
   static {
     // 工作流任务状态
@@ -54,12 +61,17 @@ public class FlowI18nServiceImpl implements FlowI18nService {
 
   /**
    * 注册翻译项。
+   *
+   * @param enumType 枚举类型编码
+   * @param enumName 枚举项名称
+   * @param locale 语言区域编码
+   * @param description 描述文本
    */
   public static void register(
       String enumType, String enumName, String locale, String description) {
         MESSAGE_RESOURCE
-            .computeIfAbsent(enumType, k -> new LinkedHashMap<>(16))
-            .computeIfAbsent(enumName, k -> new LinkedHashMap<>(8))
+            .computeIfAbsent(enumType, k -> new LinkedHashMap<>(COLLECTION_CAPACITY_16))
+            .computeIfAbsent(enumName, k -> new LinkedHashMap<>(COLLECTION_CAPACITY_8))
             .put(locale.toLowerCase(), description);
   }
 

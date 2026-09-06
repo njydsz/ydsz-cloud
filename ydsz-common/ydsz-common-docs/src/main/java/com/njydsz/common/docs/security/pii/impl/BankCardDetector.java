@@ -1,5 +1,6 @@
 package com.njydsz.common.docs.security.pii.impl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class BankCardDetector implements PiiDetector {
               .maskedValue(mask(match.rawValue()))
               .startIndex(match.startIndex())
               .endIndex(match.endIndex())
-              .confidence(0.92)
+              .confidence(BigDecimal.valueOf(0.92))
               .build());
     }
 

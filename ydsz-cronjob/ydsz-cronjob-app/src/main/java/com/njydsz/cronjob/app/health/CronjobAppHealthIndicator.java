@@ -17,10 +17,13 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * @since 26.09.01
  */
 public class CronjobAppHealthIndicator implements HealthIndicator {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   @Override
   public Health health() {
-    Map<String, Object> details = new LinkedHashMap<>(16);
+    Map<String, Object> details = new LinkedHashMap<>(COLLECTION_CAPACITY);
     details.put("module", "cronjob");
     details.put("platform", "app");
     return Health.up().withDetails(details).build();

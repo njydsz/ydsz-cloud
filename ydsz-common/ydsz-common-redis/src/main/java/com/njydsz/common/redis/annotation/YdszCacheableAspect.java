@@ -1,6 +1,7 @@
 package com.njydsz.common.redis.annotation;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +37,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 public class YdszCacheableAspect {
 
   /** 缓存 TTL 随机抖动范围（比例） */
-  private static final double TTL_JITTER_RANGE = 0.1;
+  private static final BigDecimal TTL_JITTER_RANGE = new BigDecimal("0.1");
 
   /** SpEL 表达式解析器（线程安全，复用） */
   private static final ExpressionParser PARSER = new SpelExpressionParser();
@@ -130,7 +131,8 @@ public class YdszCacheableAspect {
   private long applyRandomJitter(long ttl, TimeUnit timeUnit) {
     long ttlSeconds = timeUnit.toSeconds(ttl);
     double jitter =
-        1.0 + ThreadLocalRandom.current().nextDouble(-TTL_JITTER_RANGE, TTL_JITTER_RANGE);
+        1.0 + ThreadLocalRandom.current().nextDouble(
+            -TTL_JITTER_RANGE.doubleValue(), TTL_JITTER_RANGE.doubleValue());
     return Math.max(1, (long) (ttlSeconds * jitter));
   }
 

@@ -1,5 +1,6 @@
 package com.njydsz.common.util.concurrent;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
@@ -50,7 +51,7 @@ import com.njydsz.common.util.api.Experimental;
 public final class RetryUtils {
 
   /** 默认指数退避乘数（每次延迟翻倍）。 */
-  private static final double DEFAULT_MULTIPLIER = 2.0;
+  private static final BigDecimal DEFAULT_MULTIPLIER = new BigDecimal("2.0");
 
   /** 抖动随机数下限（保证 nextLong(0, upper) 的 upper 至少为 1，避免边界崩溃）。 */
   private static final long JITTER_MIN_UPPER_BOUND = 1L;
@@ -155,7 +156,8 @@ public final class RetryUtils {
     Duration initialDelay = config.getInitialDelay();
     Duration maxDelay = config.getMaxDelay();
     Duration maxDuration = config.getMaxDuration();
-    double multiplier = config.getMultiplier() > 0 ? config.getMultiplier() : DEFAULT_MULTIPLIER;
+    BigDecimal multiplier = config.getMultiplier().compareTo(BigDecimal.ZERO) > 0
+        ? config.getMultiplier() : DEFAULT_MULTIPLIER;
     Predicate<Throwable> retryOn = config.getRetryOn() != null ? config.getRetryOn() : e -> true;
     Consumer<Integer> onRetry = config.getOnRetry() != null ? config.getOnRetry() : attempt -> {};
 
@@ -188,7 +190,9 @@ public final class RetryUtils {
               e.getMessage());
           onRetry.accept(attempt + 1);
           sleepQuietly(sleepMs);
-          currentDelayMs = Math.min((long) (currentDelayMs * multiplier), maxDelay.toMillis());
+          currentDelayMs = Math.min(
+              BigDecimal.valueOf(currentDelayMs).multiply(multiplier).longValue(),
+              maxDelay.toMillis());
         } else {
           break;
         }
@@ -234,7 +238,7 @@ public final class RetryUtils {
     @Builder.Default private final Duration maxDelay = Duration.ofSeconds(30);
 
     /** 退避乘数（每次延迟增长倍数），默认 2.0。 */
-    @Builder.Default private final double multiplier = DEFAULT_MULTIPLIER;
+    @Builder.Default private final BigDecimal multiplier = DEFAULT_MULTIPLIER;
 
     /** 重试条件（哪些异常触发重试），默认所有异常。 */
     @Builder.Default private final Predicate<Throwable> retryOn = e -> true;

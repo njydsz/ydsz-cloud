@@ -59,6 +59,9 @@ import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 @RequestMapping("/api/v1/cronjob/queue")
 @RequiredArgsConstructor
 public class JobQueueController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 任务派发器（ObjectProvider 注入，避免循环依赖） */
   private final ObjectProvider<DefaultTaskDispatcher> taskDispatcherProvider;
@@ -80,16 +83,16 @@ public class JobQueueController {
     DefaultTaskDispatcher dispatcher = taskDispatcherProvider.getIfAvailable();
     if (dispatcher == null) {
       log.debug("[JobQueue] TaskDispatcher 不可用，返回空状态");
-      return YdszResponse.success(new HashMap<>(16));
+      return YdszResponse.success(new HashMap<>(COLLECTION_CAPACITY));
     }
     // 2. 获取线程池
     ThreadPoolExecutor pool = dispatcher.getTaskExecutorPool();
     if (pool == null) {
       log.debug("[JobQueue] 线程池未初始化，返回空状态");
-      return YdszResponse.success(new HashMap<>(16));
+      return YdszResponse.success(new HashMap<>(COLLECTION_CAPACITY));
     }
     // 3. 采集线程池实时指标
-    Map<String, Object> status = new HashMap<>(16);
+    Map<String, Object> status = new HashMap<>(COLLECTION_CAPACITY);
     status.put("activeCount", pool.getActiveCount());
     status.put("poolSize", pool.getPoolSize());
     status.put("maximumPoolSize", pool.getMaximumPoolSize());

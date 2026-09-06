@@ -52,6 +52,9 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  */
 @Slf4j
 public class CachedTemplateEngine extends SentryMetricsAdapter implements TemplateEngine {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** if/else 正则 false 分支组 */
   private static final int IF_ELSE_GROUP_FALSE = 3;
 
@@ -198,7 +201,7 @@ public class CachedTemplateEngine extends SentryMetricsAdapter implements Templa
    * @return 编译后的模板 AST 指令列表包装对象
    */
   private TemplateAst compile(String template) {
-    List<TemplateAst.AstInstruction> instructions = new ArrayList<>(16);
+    List<TemplateAst.AstInstruction> instructions = new ArrayList<>(COLLECTION_CAPACITY);
     int pos = 0;
     int len = template.length();
     while (pos < len) {

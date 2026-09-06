@@ -1,5 +1,6 @@
 package com.njydsz.literule.server.search;
 
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -8,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.core.IndexDocument;
-import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.core.SearchField;
+import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
@@ -27,13 +28,16 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
 
     /** 搜索权重：规则名称完全匹配 */
-  private static final float WEIGHT_NAME_MATCH = 3.0f;
+  private static final BigDecimal WEIGHT_NAME_MATCH = new BigDecimal("3.0");
+
+  /** 分类搜索权重 */
+  private static final BigDecimal WEIGHT_SUBTITLE_MATCH = new BigDecimal("2.0");
 
   /** 搜索权重：规则编码匹配 */
-  private static final float WEIGHT_CODE_MATCH = 1.5f;
+  private static final BigDecimal WEIGHT_CODE_MATCH = new BigDecimal("1.5");
 
   /** 搜索权重：规则描述匹配 */
-  private static final float WEIGHT_DESC_MATCH = 0.5f;
+  private static final BigDecimal WEIGHT_DESC_MATCH = new BigDecimal("0.5");
 
   private final RuleDefinitionRepository ruleDefinitionRepository;
 
@@ -89,7 +93,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .name("subtitle")
             .label(MessageUtils.getMessage("literule.search.field.category", "分类"))
             .type(FieldType.KEYWORD)
-            .weight(2.0f)
+            .weight(WEIGHT_SUBTITLE_MATCH)
             .searchable(true)
             .aggregatable(true)
             .build(),

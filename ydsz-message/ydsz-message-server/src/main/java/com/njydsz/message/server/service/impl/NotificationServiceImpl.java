@@ -45,6 +45,9 @@ import com.njydsz.message.server.service.receipt.RecallService;
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 最大轮询次数（安全护栏） */
   private static final int MAX_ROUNDS = 200;
 
@@ -204,7 +207,7 @@ public class NotificationServiceImpl implements NotificationService {
   public PageResponse<List<NotificationGroupVO>> inboxGrouped(String userId, NotificationQueryDTO query) {
     // 查询用户全部通知（按时间倒序），按 message_group 折叠
     PageResponse<List<MsgNotificationVO>> allPage = inbox(userId, query);
-    Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>(16);
+    Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
     for (MsgNotificationVO n : allPage.getData()) {
       String groupKey = n.getMessageGroup();

@@ -123,17 +123,37 @@ public interface LiteruleWebConverter {
     // ===== ExpressionFunctionDef (api.expr) → ExpressionFunctionDefVO =====
     ExpressionFunctionDefVO entityToVO(ExpressionFunctionDef entity);
 
-    /** 表达式校验结果（api.expr）→ VO */
+    /**
+     * 表达式校验结果（api.expr）→ VO
+     *
+     * @param entity 实体对象
+     * @return VO 对象
+     */
     ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity);
 
     // ===== 同类型透传映射（Web 层引用需要） =====
 
-    /** RulePackVO 透传 */
+    /**
+     * RulePackVO 透传
+     *
+     * @param entity VO 对象
+     * @return VO 对象
+     */
     RulePackVO entityToVO(RulePackVO entity);
 
-    /** RuleEngineStatsVO 透传 */
+    /**
+     * RuleEngineStatsVO 透传
+     *
+     * @param entity VO 对象
+     * @return VO 对象
+     */
     RuleEngineStatsVO entityToVO(RuleEngineStatsVO entity);
 
-    /** RuleResultVO 透传 */
+    /**
+     * RuleResultVO 透传
+     *
+     * @param entity VO 对象
+     * @return VO 对象
+     */
     RuleResultVO entityToVO(RuleResultVO entity);
 }

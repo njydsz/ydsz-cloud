@@ -2,6 +2,8 @@ package com.njydsz.common.safe.xss;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,6 +27,13 @@ public class EscapeUtils {
 
   /** 危险的 URL 协议列表，大小写不敏感匹配 */
   private static final String[] DANGEROUS_PROTOCOLS = {"javascript:", "data:", "vbscript:"};
+
+  /** stripTags 允许标签正则缓存上限 */
+  private static final int STRIP_TAGS_CACHE_MAX = 256;
+
+  /** stripTags 允许标签正则缓存（key 为排序后标签的拼接字符串，避免每次调用重复编译） */
+  private static final ConcurrentMap<String, Pattern> STRIP_TAGS_PATTERN_CACHE =
+      new ConcurrentHashMap<>(32);
 
   private static final Pattern[] HTML_PATTERNS = {
     Pattern.compile("&"),
@@ -592,6 +601,27 @@ public class EscapeUtils {
       return stripTags(content);
     }
 
+    // 使用缓存避免每次调用重复编译正则（key 由排序后标签拼接生成）
+    Pattern pattern = stripTagsCachedPattern(allowedTags);
+    Matcher matcher = pattern.matcher(content);
+    return matcher.replaceAll("");
+  }
+
+  /**
+   * 获取 stripTags 允许标签的正则模式（带缓存）。
+   *
+   * <p>以排序后标签拼接串为 key，相同标签集合复用同一个预编译 Pattern。 缓存达到上限时停止新增条目（LRU 不淘汰，避免热点条目被驱逐）。
+   *
+   * @param allowedTags 原始允许标签数组
+   * @return 编译后的正则模式
+   */
+  private static Pattern stripTagsCachedPattern(String[] allowedTags) {
+    String cacheKey = String.join(",", allowedTags);
+    Pattern cached = STRIP_TAGS_PATTERN_CACHE.get(cacheKey);
+    if (cached != null) {
+      return cached;
+    }
+    // 缓存未命中时编译并存入，超出上限则直接返回不缓存
     StringBuilder patternBuilder = new StringBuilder("<(?!(?i)");
     for (int i = 0; i < allowedTags.length; i++) {
       if (i > 0) {
@@ -601,10 +631,11 @@ public class EscapeUtils {
       patternBuilder.append("\\b");
     }
     patternBuilder.append(")[^>]*>");
-
-    Pattern pattern = Pattern.compile(patternBuilder.toString());
-    Matcher matcher = pattern.matcher(content);
-    return matcher.replaceAll("");
+    Pattern compiled = Pattern.compile(patternBuilder.toString());
+    if (STRIP_TAGS_PATTERN_CACHE.size() < STRIP_TAGS_CACHE_MAX) {
+      STRIP_TAGS_PATTERN_CACHE.putIfAbsent(cacheKey, compiled);
+    }
+    return compiled;
   }
 
   /**

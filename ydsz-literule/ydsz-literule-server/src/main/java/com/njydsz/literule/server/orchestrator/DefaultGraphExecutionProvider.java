@@ -44,6 +44,9 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
  */
 @Slf4j
 public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 规则引擎（用于解析画布节点的 Rule 实例） */
   private final RuleEngine ruleEngine;
@@ -157,7 +160,7 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
     if (graph == null) {
       return List.of(ruleCode);
     }
-    List<String> invalid = new ArrayList<>(16);
+    List<String> invalid = new ArrayList<>(COLLECTION_CAPACITY);
     for (ChainNodeDTO node : graph.getNodes()) {
       if (!"SINGLE".equals(node.getNodeType()) || node.getRuleCode() == null) {
         continue;

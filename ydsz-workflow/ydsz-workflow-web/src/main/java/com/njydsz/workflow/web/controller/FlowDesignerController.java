@@ -74,6 +74,9 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
 @RequiredArgsConstructor
 @Validated
 public class FlowDesignerController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 流程定义服务 */
   private final FlowDefinitionService definitionService;
@@ -305,7 +308,7 @@ public class FlowDesignerController {
   @Operation(summary = "获取办理人类型列表（设计器下拉选择）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   public YdszResponse<List<Map<String, String>>> listAssigneeTypes() {
-    List<Map<String, String>> result = new ArrayList<>(16);
+    List<Map<String, String>> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowAssigneeType t : FlowAssigneeType.values()) {
       result.add(Map.of("code", t.name(), "desc", t.getDesc()));
     }
@@ -338,7 +341,7 @@ public class FlowDesignerController {
   @Operation(summary = "获取所有监听器事件类型")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
   public YdszResponse<List<Map<String, String>>> listListenerEventTypes() {
-    List<Map<String, String>> result = new ArrayList<>(16);
+    List<Map<String, String>> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowListenerEventType t : FlowListenerEventType.values()) {
       result.add(Map.of("code", t.getCode(), "desc", t.getDesc()));
     }

@@ -24,6 +24,9 @@ import com.njydsz.workflow.server.engine.FlowEventContext;
 @Slf4j
 @Component
 public class FlowListenerPluginExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final Map<String, FlowListenerPlugin> pluginMap;
 
@@ -34,7 +37,7 @@ public class FlowListenerPluginExecutor {
    * @param plugins Spring 容器中所有 {@link FlowListenerPlugin} 实现列表
    */
   public FlowListenerPluginExecutor(List<FlowListenerPlugin> plugins) {
-    this.pluginMap = new HashMap<>(16);
+    this.pluginMap = new HashMap<>(COLLECTION_CAPACITY);
     for (FlowListenerPlugin plugin : plugins) {
       String name = plugin.getClass().getSimpleName();
       // 首字母小写作为默认 Bean 名称
@@ -63,7 +66,7 @@ public class FlowListenerPluginExecutor {
     if (listenerConfigs == null || listenerConfigs.isEmpty()) {
       return;
     }
-    List<FlowListenerConfig> matched = new ArrayList<>(16);
+    List<FlowListenerConfig> matched = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowListenerConfig config : listenerConfigs) {
       if (config == null || !config.isEnabled()) {
         continue;

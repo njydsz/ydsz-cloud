@@ -72,11 +72,11 @@ public class CacheThreadPoolManager implements DisposableBean {
     instance = manager;
   }
 
-  private final ConcurrentHashMap<String, ExecutorService> pools = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, ExecutorService> pools = new ConcurrentHashMap<>(16);
 
   /** 定时调度线程池映射 */
   private final ConcurrentHashMap<String, ScheduledExecutorService> scheduledPools =
-      new ConcurrentHashMap<>();
+      new ConcurrentHashMap<>(16);
 
   /** 默认线程池大小 */
   private static final int DEFAULT_POOL_SIZE =

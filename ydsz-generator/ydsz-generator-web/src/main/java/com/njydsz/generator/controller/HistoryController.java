@@ -1,9 +1,7 @@
 package com.njydsz.generator.controller;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.generator.entity.GenHistory;
-import com.njydsz.generator.entity.GenHistoryFile;
-import com.njydsz.generator.service.GenHistoryService;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.generator.entity.GenHistory;
+import com.njydsz.generator.entity.GenHistoryFile;
+import com.njydsz.generator.service.GenHistoryService;
 
 /**
  * 代码生成历史 REST 控制器（含回滚）。

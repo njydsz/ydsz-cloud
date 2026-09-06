@@ -50,6 +50,9 @@ import com.njydsz.literule.server.debug.RuleDebugger;
 @Validated
 @Tag(name = "规则断点调试", description = "规则级/表达式节点级断点、调试会话与单步执行")
 public class RuleDebugController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 规则断点调试器（可选，ydsz.literule.debug.enabled=false 时不可用） */
   private final ObjectProvider<RuleDebugger> debuggerProvider;
@@ -115,7 +118,7 @@ public class RuleDebugController {
     String expression = request.get("expression");
     String condition = request.get("condition");
     String breakpointId = debugger.addBreakpoint(ruleCode, nodeType, expression, condition);
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("breakpointId", breakpointId);
     result.put("ruleCode", ruleCode);
     result.put("nodeType", nodeType);
@@ -163,7 +166,7 @@ public class RuleDebugController {
       return YdszResponse.error("ruleCode 不能为空");
     }
     String sessionId = debugger.createSession(ruleCode);
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("sessionId", sessionId);
     result.put("ruleCode", ruleCode);
     return YdszResponse.success(result);
@@ -183,7 +186,7 @@ public class RuleDebugController {
     if (session == null) {
       return YdszResponse.error("会话不存在: " + sessionId);
     }
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("sessionId", session.getSessionId());
     result.put("ruleCode", session.getRuleCode());
     result.put("state", session.getState().name());
@@ -258,7 +261,7 @@ public class RuleDebugController {
         debugger.listSessions().stream()
             .map(
                 s -> {
-                  Map<String, Object> view = new LinkedHashMap<>(16);
+                  Map<String, Object> view = new LinkedHashMap<>(COLLECTION_CAPACITY);
                   view.put("sessionId", s.getSessionId());
                   view.put("ruleCode", s.getRuleCode());
                   view.put("state", s.getState().name());
@@ -273,7 +276,7 @@ public class RuleDebugController {
     return hits.stream()
         .map(
             h -> {
-              Map<String, Object> view = new LinkedHashMap<>(16);
+              Map<String, Object> view = new LinkedHashMap<>(COLLECTION_CAPACITY);
               view.put("breakpointId", h.getBreakpointId());
               view.put("ruleCode", h.getRuleCode());
               view.put("nodeType", h.getNodeType());

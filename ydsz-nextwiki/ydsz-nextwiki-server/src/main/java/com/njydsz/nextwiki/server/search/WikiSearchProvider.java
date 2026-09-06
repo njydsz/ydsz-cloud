@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.server.search;
 
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -9,8 +10,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
-import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.core.SearchField;
+import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.common.util.message.MessageUtils;
@@ -43,19 +44,19 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
 public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
 
   /** 字段权重：标题（最高） */
-  private static final float WEIGHT_TITLE = 3.0f;
+  private static final BigDecimal WEIGHT_TITLE = new BigDecimal("3.0");
 
   /** 字段权重：内容 */
-  private static final float WEIGHT_CONTENT = 2.0f;
+  private static final BigDecimal WEIGHT_CONTENT = new BigDecimal("2.0");
 
   /** 字段权重：作者/备注 */
-  private static final float WEIGHT_AUTHOR = 1.0f;
+  private static final BigDecimal WEIGHT_AUTHOR = new BigDecimal("1.0");
 
   /** 字段权重：标签 */
-  private static final float WEIGHT_TAGS = 1.5f;
+  private static final BigDecimal WEIGHT_TAGS = new BigDecimal("1.5");
 
   /** 字段权重：状态/类型等低权重字段 */
-  private static final float WEIGHT_LOW = 0.5f;
+  private static final BigDecimal WEIGHT_LOW = new BigDecimal("0.5");
 
 
   private final FileNodeRepository fileNodeRepository;

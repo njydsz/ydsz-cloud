@@ -27,6 +27,9 @@ import java.util.Map;
  * @since 26.09.01
  */
 public final class SseEvent {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 增量文本事件 */
   public static final String EVENT_MESSAGE = "message";
@@ -148,7 +151,7 @@ public final class SseEvent {
    * @return SSE 事件
    */
   public static SseEvent done(String finishReason, TokenUsage usage) {
-    Map<String, Object> dataMap = new HashMap<>(16);
+    Map<String, Object> dataMap = new HashMap<>(COLLECTION_CAPACITY);
     dataMap.put("finishReason", finishReason);
     if (usage != null) {
       dataMap.put(

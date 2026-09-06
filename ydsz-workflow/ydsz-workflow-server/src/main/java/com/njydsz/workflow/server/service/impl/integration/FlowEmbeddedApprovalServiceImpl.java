@@ -99,6 +99,12 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @Service
 @RequiredArgsConstructor
 public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   /** 流程实例服务，启动/查询/终止嵌入式审批流程 */
   private final FlowInstanceService instanceService;
@@ -341,7 +347,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
    */
   private List<String> computeActions(
       FlowInstanceVO instance, List<FlowRunTaskVO> pending, String userId) {
-    List<String> actions = new ArrayList<>(8);
+    List<String> actions = new ArrayList<>(COLLECTION_CAPACITY_8);
     if (userId == null) {
       return actions;
     }
@@ -523,7 +529,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
       }
       List<Map<String, Object>> out = new ArrayList<>(his.size());
       for (FlowHisTaskVO t : his) {
-        Map<String, Object> m = new LinkedHashMap<>(16);
+        Map<String, Object> m = new LinkedHashMap<>(COLLECTION_CAPACITY_16);
         m.put("type", "TASK");
         m.put("taskId", t.getId());
         m.put("nodeCode", t.getNodeCode());
@@ -550,7 +556,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
    * 单独拉取，本接口不返回以保持轻量。 仅返回最简的节点信息用于高亮当前节点。
    */
   private Map<String, Object> loadDiagram(FlowInstanceVO instance) {
-    Map<String, Object> light = new LinkedHashMap<>(16);
+    Map<String, Object> light = new LinkedHashMap<>(COLLECTION_CAPACITY_16);
     light.put("currentNodeCode", instance.getCurrentNodeCode());
     light.put("currentNodeName", instance.getCurrentNodeName());
     light.put("flowCode", instance.getFlowCode());

@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.agent.server.prompt.PromptEvaluationService;
 import com.njydsz.agent.server.prompt.PromptEvaluationService.PromptComparisonResult;
 import com.njydsz.agent.server.prompt.PromptEvaluationService.PromptEvaluationResult;
-import com.njydsz.agent.server.prompt.PromptEvaluationService;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -100,14 +100,29 @@ public class PromptController {
     return YdszResponse.success(result);
   }
 
-  /** 单次评估请求 */
+  /**
+   * 单次评估请求
+   *
+   * @param templateCode 模板编码
+   * @param variables 模板变量
+   * @param userMessage 用户消息
+   * @param model 模型编码
+   */
   public record EvaluateRequest(
       @NotBlank(message = "模板编码不能为空") String templateCode,
       Map<String, Object> variables,
       String userMessage,
       String model) {}
 
-  /** 对比评估请求 */
+  /**
+   * 对比评估请求
+   *
+   * @param templateCodeA 模板 A 编码
+   * @param templateCodeB 模板 B 编码
+   * @param variables 模板变量
+   * @param userMessage 用户消息
+   * @param model 模型编码
+   */
   public record CompareRequest(
       @NotBlank(message = "模板 A 编码不能为空") String templateCodeA,
       @NotBlank(message = "模板 B 编码不能为空") String templateCodeB,

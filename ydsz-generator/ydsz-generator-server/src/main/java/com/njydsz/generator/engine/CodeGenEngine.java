@@ -1,25 +1,24 @@
 package com.njydsz.generator.engine;
 
-import com.njydsz.generator.entity.GenColumnMeta;
-import com.njydsz.generator.entity.GenDatasource;
-import com.njydsz.generator.entity.GenTemplate;
-import com.njydsz.generator.entity.GenTemplateGroup;
-import com.njydsz.generator.domain.tool.VelocityDateTool;
-import com.njydsz.generator.domain.tool.VelocityTextTool;
-import com.njydsz.generator.enums.ConflictStrategyEnum;
-import com.njydsz.common.util.security.DigestUtils;
-import com.njydsz.generator.vo.CodePreviewVO;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.springframework.stereotype.Component;
-
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.generator.domain.tool.VelocityDateTool;
+import com.njydsz.generator.domain.tool.VelocityTextTool;
+import com.njydsz.generator.entity.GenColumnMeta;
+import com.njydsz.generator.entity.GenTemplate;
+import com.njydsz.generator.enums.ConflictStrategyEnum;
+import com.njydsz.generator.vo.CodePreviewVO;
 
 /**
  * 代码生成引擎（Velocity 模板渲染 + 全局宏）。
@@ -45,6 +44,13 @@ public class CodeGenEngine {
   /** 默认冲突策略。 */
   private static final ConflictStrategyEnum DEFAULT_CONFLICT = ConflictStrategyEnum.SKIP;
 
+  /** 渲染 Writer 初始缓冲区大小（字符）。 */
+  private static final int WRITER_BUFFER_SIZE = 4096;
+  /** 表上下文初始容量。 */
+  private static final int TABLE_CONTEXT_CAPACITY = 16;
+  /** 全局上下文初始容量。 */
+  private static final int CONTEXT_CAPACITY = 32;
+
   /**
    * 构造器注入 VelocityEngine。
    *
@@ -63,7 +69,7 @@ public class CodeGenEngine {
    */
   public String renderTemplate(GenTemplate template, Map<String, Object> contextData) {
     VelocityContext ctx = new VelocityContext(contextData);
-    StringWriter writer = new StringWriter(4096);
+    StringWriter writer = new StringWriter(WRITER_BUFFER_SIZE);
     String tpl = "#parse(\"velocity_implicit.vm\")\n" + template.getContent();
     velocityEngine.evaluate(ctx, writer, template.getFileName(), tpl);
     return writer.toString();
@@ -76,7 +82,7 @@ public class CodeGenEngine {
    * @return 表格上下文映射
    */
   public Map<String, Object> buildTableContext(List<GenColumnMeta> columns) {
-    Map<String, Object> table = new HashMap<>(16);
+    Map<String, Object> table = new HashMap<>(TABLE_CONTEXT_CAPACITY);
     table.put("columns", columns);
     table.put("allColumns", columns);
     return table;
@@ -95,7 +101,7 @@ public class CodeGenEngine {
   public Map<String, Object> buildContext(
       String moduleName, String basePackage, String author,
       Map<String, Object> table, Map<String, Object> configMap) {
-    Map<String, Object> ctx = new HashMap<>(32);
+    Map<String, Object> ctx = new HashMap<>(CONTEXT_CAPACITY);
     ctx.put("module", moduleName);
     ctx.put("package", basePackage);
     ctx.put("author", author);

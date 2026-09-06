@@ -59,6 +59,9 @@ import com.njydsz.literule.domain.service.DecisionTableExcelService;
 @Slf4j
 @Component
 public class DecisionTableExcelExporter implements DecisionTableExcelService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 元数据行数（HitPolicy/TableCode 等占 2 行） */
   private static final int METADATA_ROWS = 2;
@@ -106,17 +109,17 @@ public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
           nullToEmpty(definition.getActionColumns());
       int totalCols = Math.max(conditionColumns.size() + actionColumns.size(), MIN_TOTAL_COLUMNS);
 
-      List<List<Object>> allRows = new ArrayList<>(16);
+      List<List<Object>> allRows = new ArrayList<>(COLLECTION_CAPACITY);
 
       // 第 1 行：HitPolicy | TableCode | TableName
-      List<Object> metaRow1 = padRow(new ArrayList<>(16), totalCols);
+      List<Object> metaRow1 = padRow(new ArrayList<>(COLLECTION_CAPACITY), totalCols);
       metaRow1.set(0, "HitPolicy: " + hitPolicyName(definition.getHitPolicy()));
       metaRow1.set(1, "TableCode: " + nullToEmpty(definition.getTableCode()));
       metaRow1.set(2, "TableName: " + nullToEmpty(definition.getTableName()));
       allRows.add(metaRow1);
 
       // 第 2 行：Category | Description | Priority | Scope
-      List<Object> metaRow2 = padRow(new ArrayList<>(16), totalCols);
+      List<Object> metaRow2 = padRow(new ArrayList<>(COLLECTION_CAPACITY), totalCols);
       metaRow2.set(0, "Category: " + nullToEmpty(definition.getCategory()));
       metaRow2.set(1, "Description: " + nullToEmpty(definition.getDescription()));
       metaRow2.set(2, "Priority: " + definition.getPriority());
@@ -126,7 +129,7 @@ public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
       allRows.add(metaRow2);
 
       // 第 3 行：列头（C:name / A:name）
-      List<Object> headerRow = padRow(new ArrayList<>(16), totalCols);
+      List<Object> headerRow = padRow(new ArrayList<>(COLLECTION_CAPACITY), totalCols);
       int colIdx = 0;
       for (DecisionTableDefinitionDTO.Column col : conditionColumns) {
         headerRow.set(colIdx, CONDITION_PREFIX + nullToEmpty(col.getName()));
@@ -139,7 +142,7 @@ public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
       allRows.add(headerRow);
 
       // 第 4 行：列显示名（label）
-      List<Object> labelRow = padRow(new ArrayList<>(16), totalCols);
+      List<Object> labelRow = padRow(new ArrayList<>(COLLECTION_CAPACITY), totalCols);
       colIdx = 0;
       for (DecisionTableDefinitionDTO.Column col : conditionColumns) {
         labelRow.set(colIdx, nullToEmpty(col.getLabel()));
@@ -152,7 +155,7 @@ public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
       allRows.add(labelRow);
 
       // 第 5 行：列类型
-      List<Object> typeRow = padRow(new ArrayList<>(16), totalCols);
+      List<Object> typeRow = padRow(new ArrayList<>(COLLECTION_CAPACITY), totalCols);
       colIdx = 0;
       for (DecisionTableDefinitionDTO.Column col : conditionColumns) {
         typeRow.set(colIdx, nullToEmpty(col.getType()));
@@ -173,7 +176,7 @@ public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
       // 默认动作行
       Map<String, Object> defaultActions = definition.getDefaultActions();
       if (defaultActions != null && !defaultActions.isEmpty()) {
-        List<Object> defaultRow = padRow(new ArrayList<>(16), totalCols);
+        List<Object> defaultRow = padRow(new ArrayList<>(COLLECTION_CAPACITY), totalCols);
         defaultRow.set(0, DEFAULT_MARKER);
         int actionStart = conditionColumns.size();
         for (int i = 0; i < actionColumns.size(); i++) {
@@ -222,18 +225,18 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
       }
 
       // 将每行转为 List<String>，同时提取 header 行（row 0）的值
-      List<List<String>> stringRows = new ArrayList<>(16);
+      List<List<String>> stringRows = new ArrayList<>(COLLECTION_CAPACITY);
       List<String> headerValues = null;
       for (Object rawRow : rawRows) {
         if (rawRow instanceof Map) {
           Map<?, ?> map = (Map<?, ?>) rawRow;
           if (headerValues == null) {
-            headerValues = new ArrayList<>(16);
+            headerValues = new ArrayList<>(COLLECTION_CAPACITY);
             for (Object key : map.keySet()) {
               headerValues.add(key == null ? "" : key.toString());
             }
           }
-          List<String> values = new ArrayList<>(16);
+          List<String> values = new ArrayList<>(COLLECTION_CAPACITY);
           for (Object val : map.values()) {
             values.add(val == null ? "" : val.toString());
           }
@@ -250,7 +253,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
       List<String> row4 = stringRows.size() > MAX_STRING_ROWS ? stringRows.get(MAX_STRING_ROWS) : List.of();
 
       // 解析元数据
-      Map<String, String> meta = new LinkedHashMap<>(16);
+      Map<String, String> meta = new LinkedHashMap<>(COLLECTION_CAPACITY);
       parseMetaValues(row0, meta);
       parseMetaValues(row1, meta);
       String tableCode = meta.getOrDefault("TableCode", "");
@@ -271,8 +274,8 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
         throw new IllegalArgumentException("Excel 未定义任何列");
       }
 
-      List<DecisionTableDefinitionDTO.Column> conditionColumns = new ArrayList<>(16);
-      List<DecisionTableDefinitionDTO.Column> actionColumns = new ArrayList<>(16);
+      List<DecisionTableDefinitionDTO.Column> conditionColumns = new ArrayList<>(COLLECTION_CAPACITY);
+      List<DecisionTableDefinitionDTO.Column> actionColumns = new ArrayList<>(COLLECTION_CAPACITY);
       for (int i = 0; i < totalCols; i++) {
         String header = getOrEmpty(row2, i);
         String label = getOrEmpty(row3, i);
@@ -304,8 +307,8 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
       }
 
       // 解析决策行 + 默认动作
-      List<DecisionTableDefinitionDTO.Row> decisionRows = new ArrayList<>(16);
-      Map<String, Object> defaultActions = new LinkedHashMap<>(16);
+      List<DecisionTableDefinitionDTO.Row> decisionRows = new ArrayList<>(COLLECTION_CAPACITY);
+      Map<String, Object> defaultActions = new LinkedHashMap<>(COLLECTION_CAPACITY);
       for (int r = DATA_ROW_START - 1; r < stringRows.size(); r++) {
         List<String> rowValues = stringRows.get(r);
         String firstCell = getOrEmpty(rowValues, 0);
@@ -400,7 +403,7 @@ public byte[] exportTemplate() {
       List<DecisionTableDefinitionDTO.Column> conditionColumns,
       List<DecisionTableDefinitionDTO.Column> actionColumns,
       int totalCols) {
-    List<Object> dataRow = padRow(new ArrayList<>(16), totalCols);
+    List<Object> dataRow = padRow(new ArrayList<>(COLLECTION_CAPACITY), totalCols);
     Map<String, String> conditions = row.getConditions();
     Map<String, Object> actions = row.getActions();
 
@@ -449,8 +452,8 @@ public byte[] exportTemplate() {
       List<String> rowValues,
       List<DecisionTableDefinitionDTO.Column> conditionColumns,
       List<DecisionTableDefinitionDTO.Column> actionColumns) {
-    Map<String, String> conditions = new LinkedHashMap<>(16);
-    Map<String, Object> actions = new LinkedHashMap<>(16);
+    Map<String, String> conditions = new LinkedHashMap<>(COLLECTION_CAPACITY);
+    Map<String, Object> actions = new LinkedHashMap<>(COLLECTION_CAPACITY);
     int colIdx = 0;
 
     for (DecisionTableDefinitionDTO.Column col : conditionColumns) {

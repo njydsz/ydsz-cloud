@@ -53,6 +53,9 @@ import com.njydsz.cronjob.server.core.dag.DagEdge;
 @RequestMapping("/api/v1/cronjob/topology")
 @RequiredArgsConstructor
 public class GlobalTopologyController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 单次查询最大任务数上限 */
   private static final int MAX_TOPOLOGY_JOBS = 500;
 
@@ -109,7 +112,7 @@ public class GlobalTopologyController {
     // 3. 构建节点列表
     List<Map<String, Object>> nodes = new ArrayList<>(TOPOLOGY_LIST_INITIAL_CAPACITY);
     for (JobVO job : jobs) {
-      Map<String, Object> node = new LinkedHashMap<>(16);
+      Map<String, Object> node = new LinkedHashMap<>(COLLECTION_CAPACITY);
       node.put("id", job.getId());
       node.put("jobKey", job.getJobKey());
       node.put("jobName", job.getJobName());
@@ -134,7 +137,7 @@ public class GlobalTopologyController {
       for (DagEdge edge : definition.edges()) {
         // 仅当源和目标任务都存在时才添加边
         if (jobMap.containsKey(edge.from()) && jobMap.containsKey(edge.to())) {
-          Map<String, String> link = new LinkedHashMap<>(16);
+          Map<String, String> link = new LinkedHashMap<>(COLLECTION_CAPACITY);
           link.put("source", jobMap.get(edge.from()).getId());
           link.put("target", jobMap.get(edge.to()).getId());
           links.add(link);
@@ -143,7 +146,7 @@ public class GlobalTopologyController {
     }
 
     // 5. 统计各状态任务数量
-    Map<String, Object> topologyData = new LinkedHashMap<>(16);
+    Map<String, Object> topologyData = new LinkedHashMap<>(COLLECTION_CAPACITY);
     topologyData.put("nodes", nodes);
     topologyData.put("links", links);
     topologyData.put("stats", buildStats(jobs));

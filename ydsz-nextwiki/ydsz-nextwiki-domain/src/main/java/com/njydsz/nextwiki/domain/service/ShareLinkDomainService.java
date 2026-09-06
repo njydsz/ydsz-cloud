@@ -36,6 +36,9 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 @Slf4j
 @RequiredArgsConstructor
 public class ShareLinkDomainService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 提取码随机区间跨度（9000 个候选：1000-9999） */
   private static final int EXTRACT_CODE_RANGE = 9000;
@@ -128,7 +131,7 @@ public class ShareLinkDomainService {
     shareLink.setUpdatedBy(userId);
 
     // 处理定向分享目标用户
-    List<ShareRecipientDTO> recipients = new ArrayList<>(16);
+    List<ShareRecipientDTO> recipients = new ArrayList<>(COLLECTION_CAPACITY);
     if (targetUserIds != null && !targetUserIds.isEmpty()) {
       for (String targetUserId : targetUserIds) {
         ShareRecipientDTO recipient =

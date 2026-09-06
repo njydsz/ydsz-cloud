@@ -49,6 +49,9 @@ import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 @Slf4j
 @Component
 public class FlowDefinitionMigrationManager {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 流程定义仓储 */
   private final FlowDefinitionRepository definitionRepository;
@@ -172,7 +175,7 @@ public class FlowDefinitionMigrationManager {
 
     List<?> nodesJson = MapUtils.getList(root, "nodes");
     if (nodesJson != null && !nodesJson.isEmpty()) {
-      List<FlowDeployProcessDTO.FlowNodeDTO> nodes = new ArrayList<>(16);
+      List<FlowDeployProcessDTO.FlowNodeDTO> nodes = new ArrayList<>(COLLECTION_CAPACITY);
       for (int i = 0; i < nodesJson.size(); i++) {
         Map<String, Object> n = MapUtils.getMapFromList(nodesJson, i);
         FlowDeployProcessDTO.FlowNodeDTO node = new FlowDeployProcessDTO.FlowNodeDTO();
@@ -188,7 +191,7 @@ public class FlowDefinitionMigrationManager {
 
     List<?> skipsJson = MapUtils.getList(root, "skips");
     if (skipsJson != null && !skipsJson.isEmpty()) {
-      List<FlowDeployProcessDTO.FlowSkipDTO> skips = new ArrayList<>(16);
+      List<FlowDeployProcessDTO.FlowSkipDTO> skips = new ArrayList<>(COLLECTION_CAPACITY);
       for (int i = 0; i < skipsJson.size(); i++) {
         Map<String, Object> s = MapUtils.getMapFromList(skipsJson, i);
         FlowDeployProcessDTO.FlowSkipDTO skip = new FlowDeployProcessDTO.FlowSkipDTO();
@@ -310,12 +313,12 @@ public class FlowDefinitionMigrationManager {
 
     List<Map<String, Object>> modifiedNodes = MapUtils.getListOfMaps(nodeChanges, "modified");
 
-    List<Map<String, Object>> stuckInstances = new ArrayList<>(16);
-    List<Map<String, Object>> affectedInstances = new ArrayList<>(16);
+    List<Map<String, Object>> stuckInstances = new ArrayList<>(COLLECTION_CAPACITY);
+    List<Map<String, Object>> affectedInstances = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map<String, Object> node : runningByNode) {
       String nodeCode = String.valueOf(node.get("currentNodeCode"));
       long cnt = ((Number) node.get("cnt")).longValue();
-      Map<String, Object> entry = new LinkedHashMap<>(16);
+      Map<String, Object> entry = new LinkedHashMap<>(COLLECTION_CAPACITY);
       entry.put("nodeCode", nodeCode);
       entry.put("currentNodeName", node.get("currentNodeName"));
       entry.put("instanceCount", cnt);
@@ -349,27 +352,27 @@ public class FlowDefinitionMigrationManager {
             removedNodes,
             modifiedNodes);
 
-    Map<String, Object> oldDefInfo = new LinkedHashMap<>(16);
+    Map<String, Object> oldDefInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
     oldDefInfo.put("id", oldDef.getId());
     oldDefInfo.put("flowCode", oldDef.getFlowCode());
     oldDefInfo.put("flowName", oldDef.getFlowName());
     oldDefInfo.put("flowVersion", oldDef.getFlowVersion());
 
-    Map<String, Object> newDefInfo = new LinkedHashMap<>(16);
+    Map<String, Object> newDefInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
     newDefInfo.put("id", newDef.getId());
     newDefInfo.put("flowCode", newDef.getFlowCode());
     newDefInfo.put("flowName", newDef.getFlowName());
     newDefInfo.put("flowVersion", newDef.getFlowVersion());
 
-    Map<String, Object> runningInstances = new LinkedHashMap<>(16);
+    Map<String, Object> runningInstances = new LinkedHashMap<>(COLLECTION_CAPACITY);
     runningInstances.put("total", runningTotal);
     runningInstances.put("byNode", runningByNode);
 
-    Map<String, Object> impactedInstances = new LinkedHashMap<>(16);
+    Map<String, Object> impactedInstances = new LinkedHashMap<>(COLLECTION_CAPACITY);
     impactedInstances.put("stuckInstances", stuckInstances);
     impactedInstances.put("affectedInstances", affectedInstances);
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("oldDefinition", oldDefInfo);
     result.put("newDefinition", newDefInfo);
     result.put("diff", diff);
@@ -471,7 +474,7 @@ public class FlowDefinitionMigrationManager {
   /** 计算节点差异，返回 {added, removed, modified} Map。 */
   private Map<String, Object> diffNodes(Map<String, FlowNodeVO> nodeMapV1,
       Map<String, FlowNodeVO> nodeMapV2) {
-    List<Map<String, Object>> addedNodes = new ArrayList<>(16);
+    List<Map<String, Object>> addedNodes = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, FlowNodeVO> entry : nodeMapV2.entrySet()) {
       if (!nodeMapV1.containsKey(entry.getKey())) {
         FlowNodeVO n = entry.getValue();
@@ -480,7 +483,7 @@ public class FlowDefinitionMigrationManager {
       }
     }
 
-    List<Map<String, Object>> removedNodes = new ArrayList<>(16);
+    List<Map<String, Object>> removedNodes = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, FlowNodeVO> entry : nodeMapV1.entrySet()) {
       if (!nodeMapV2.containsKey(entry.getKey())) {
         FlowNodeVO n = entry.getValue();
@@ -489,7 +492,7 @@ public class FlowDefinitionMigrationManager {
       }
     }
 
-    List<Map<String, Object>> modifiedNodes = new ArrayList<>(16);
+    List<Map<String, Object>> modifiedNodes = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, FlowNodeVO> entry : nodeMapV1.entrySet()) {
       String code = entry.getKey();
       if (nodeMapV2.containsKey(code)) {
@@ -497,7 +500,7 @@ public class FlowDefinitionMigrationManager {
         FlowNodeVO n2 = nodeMapV2.get(code);
         Map<String, Map<String, Object>> changes = diffNodeFields(n1, n2);
         if (!changes.isEmpty()) {
-          Map<String, Object> modEntry = new LinkedHashMap<>(16);
+          Map<String, Object> modEntry = new LinkedHashMap<>(COLLECTION_CAPACITY);
           modEntry.put("nodeCode", code);
           modEntry.put("changes", changes);
           modifiedNodes.add(modEntry);
@@ -505,7 +508,7 @@ public class FlowDefinitionMigrationManager {
       }
     }
 
-    Map<String, Object> nodeChanges = new LinkedHashMap<>(16);
+    Map<String, Object> nodeChanges = new LinkedHashMap<>(COLLECTION_CAPACITY);
     nodeChanges.put("added", addedNodes);
     nodeChanges.put("removed", removedNodes);
     nodeChanges.put("modified", modifiedNodes);
@@ -514,7 +517,7 @@ public class FlowDefinitionMigrationManager {
 
   /** 逐字段比较两个 FlowNodeVO，返回变更 Map（空 Map 表示无变化）。 */
   private Map<String, Map<String, Object>> diffNodeFields(FlowNodeVO n1, FlowNodeVO n2) {
-    Map<String, Map<String, Object>> changes = new LinkedHashMap<>(16);
+    Map<String, Map<String, Object>> changes = new LinkedHashMap<>(COLLECTION_CAPACITY);
     compareField(changes, "nodeName", n1.getNodeName(), n2.getNodeName());
     compareField(changes, "nodeType", String.valueOf(n1.getNodeType()), String.valueOf(n2.getNodeType()));
     compareField(changes, "permissionFlag", n1.getPermissionFlag(), n2.getPermissionFlag());
@@ -545,21 +548,21 @@ public class FlowDefinitionMigrationManager {
   /** 计算连线差异，返回 {added, removed} Map。 */
   private Map<String, Object> diffSkips(Map<String, FlowSkipVO> skipMapV1,
       Map<String, FlowSkipVO> skipMapV2) {
-    List<Map<String, Object>> addedSkips = new ArrayList<>(16);
+    List<Map<String, Object>> addedSkips = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, FlowSkipVO> entry : skipMapV2.entrySet()) {
       if (!skipMapV1.containsKey(entry.getKey())) {
         addedSkips.add(skipToMap(entry.getValue()));
       }
     }
 
-    List<Map<String, Object>> removedSkips = new ArrayList<>(16);
+    List<Map<String, Object>> removedSkips = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, FlowSkipVO> entry : skipMapV1.entrySet()) {
       if (!skipMapV2.containsKey(entry.getKey())) {
         removedSkips.add(skipToMap(entry.getValue()));
       }
     }
 
-    Map<String, Object> skipChanges = new LinkedHashMap<>(16);
+    Map<String, Object> skipChanges = new LinkedHashMap<>(COLLECTION_CAPACITY);
     skipChanges.put("added", addedSkips);
     skipChanges.put("removed", removedSkips);
     return skipChanges;
@@ -568,7 +571,7 @@ public class FlowDefinitionMigrationManager {
   /** 构建版本差异结果 Map（包含 summary）。 */
   private Map<String, Object> buildDiffResult(Integer version1, Integer version2,
       Map<String, Object> nodeDiff, Map<String, Object> skipDiff) {
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("version1", version1);
     result.put("version2", version2);
     result.put("nodeChanges", nodeDiff);
@@ -580,7 +583,7 @@ public class FlowDefinitionMigrationManager {
     List<Map<String, Object>> addedSkips = MapUtils.getListOfMaps(skipDiff, "added");
     List<Map<String, Object>> removedSkips = MapUtils.getListOfMaps(skipDiff, "removed");
 
-    Map<String, Object> summary = new LinkedHashMap<>(16);
+    Map<String, Object> summary = new LinkedHashMap<>(COLLECTION_CAPACITY);
     summary.put("totalNodeChanges",
         addedNodes.size() + removedNodes.size() + modifiedNodes.size());
     summary.put("totalSkipChanges", addedSkips.size() + removedSkips.size());
@@ -618,7 +621,7 @@ public class FlowDefinitionMigrationManager {
 
   /** 构建连线 key 映射：sourceRef + "->" + nextNodeCode */
   private Map<String, FlowSkipVO> buildSkipKeyMap(List<FlowSkipVO> skips) {
-    Map<String, FlowSkipVO> map = new LinkedHashMap<>(16);
+    Map<String, FlowSkipVO> map = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (FlowSkipVO skip : skips) {
       String key = buildSkipKey(skip);
       if (key != null) {
@@ -661,7 +664,7 @@ public class FlowDefinitionMigrationManager {
         // ignore
       }
     }
-    Map<String, Object> map = new LinkedHashMap<>(16);
+    Map<String, Object> map = new LinkedHashMap<>(COLLECTION_CAPACITY);
     map.put("sourceRef", sourceRef != null ? sourceRef : "");
     map.put("nextNodeCode", skip.getNextNodeCode() != null ? skip.getNextNodeCode() : "");
     map.put("skipName", skip.getSkipName() != null ? skip.getSkipName() : "");
@@ -707,7 +710,7 @@ public class FlowDefinitionMigrationManager {
       List<Map<String, Object>> affectedInstances,
       List<Map<String, Object>> removedNodes,
       List<Map<String, Object>> modifiedNodes) {
-    List<String> recs = new ArrayList<>(16);
+    List<String> recs = new ArrayList<>(COLLECTION_CAPACITY);
 
     switch (riskLevel) {
       case "NONE":

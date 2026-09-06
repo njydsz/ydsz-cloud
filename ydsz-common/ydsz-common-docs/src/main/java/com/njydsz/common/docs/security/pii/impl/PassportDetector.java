@@ -1,5 +1,6 @@
 package com.njydsz.common.docs.security.pii.impl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -61,7 +62,7 @@ public class PassportDetector implements PiiDetector {
               .maskedValue(mask(matched))
               .startIndex(matcher.start())
               .endIndex(matcher.end())
-              .confidence(confidence)
+              .confidence(BigDecimal.valueOf(confidence))
               .build());
     }
 

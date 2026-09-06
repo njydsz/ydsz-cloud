@@ -55,6 +55,9 @@ import com.njydsz.literule.server.config.RuleAdminService;
 @Validated
 @Tag(name = "规则导入导出", description = "规则 JSON/YAML 导入导出与 GitOps 集成")
 public class RuleImportExportController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
@@ -72,7 +75,7 @@ public class RuleImportExportController {
         rules.stream()
             .map(
                 r -> {
-                  Map<String, Object> map = new LinkedHashMap<>(16);
+                  Map<String, Object> map = new LinkedHashMap<>(COLLECTION_CAPACITY);
                   map.put("code", r.getCode());
                   map.put("name", r.getName());
                   map.put("category", r.getCategory());
@@ -92,7 +95,7 @@ public class RuleImportExportController {
                   return map;
                 })
             .collect(Collectors.toList());
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("exportTime", LocalDateTime.now().toString());
     result.put("ruleCount", rules.size());
     result.put("rules", exportData);
@@ -208,7 +211,7 @@ public class RuleImportExportController {
         skipped++;
       }
     }
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("imported", imported);
     result.put("skipped", skipped);
     return YdszResponse.success(result);

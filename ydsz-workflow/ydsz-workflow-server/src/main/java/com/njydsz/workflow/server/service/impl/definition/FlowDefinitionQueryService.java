@@ -53,6 +53,9 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
 @Slf4j
 @Component
 public class FlowDefinitionQueryService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 流程定义仓储 */
   private final FlowDefinitionRepository definitionRepository;
@@ -155,7 +158,7 @@ public class FlowDefinitionQueryService {
     }
     List<FlowNodeVO> nodes = nodeRepository.findByDefinitionId(definitionId);
     List<FlowSkipVO> skips = skipRepository.findByDefinitionId(definitionId);
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY);
     result.put("definition", definition);
     result.put("nodes", nodes);
     result.put("skips", skips);
@@ -187,7 +190,7 @@ public class FlowDefinitionQueryService {
         definitionRepository.findByFlowCodeAndTenantId(def.getFlowCode(), tenantId);
     List<Map<String, Object>> result = new ArrayList<>(versions.size());
     for (FlowDefinitionVO v : versions) {
-      Map<String, Object> map = new LinkedHashMap<>(16);
+      Map<String, Object> map = new LinkedHashMap<>(COLLECTION_CAPACITY);
       map.put("id", v.getId());
       map.put("version", v.getFlowVersion());
       map.put("flowName", v.getFlowName());

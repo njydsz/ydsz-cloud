@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -23,7 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * <p><b>设计考量：</b>
  *
  * <ul>
- *   <li>优先级设为 {@link Ordered#HIGHEST_PRECEDENCE}，确保在安全过滤器链中第一个执行
+ *   <li>优先级设为 {@link org.springframework.core.Ordered#HIGHEST_PRECEDENCE}，确保在安全过滤器链中第一个执行
  *   <li>请求体大小限制为 10MB，超过此阈值不缓存（避免大文件上传场景内存溢出）
  *   <li>包装后的请求通过 {@link CachedBodyHttpServletRequestWrapper#getCachedBody()} 提供字节访问
  * </ul>

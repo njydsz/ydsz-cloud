@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.ratelimit.properties;
 
+import java.math.BigDecimal;
+
 import lombok.Data;
 
 /**
@@ -20,7 +22,7 @@ public class HotParamRule {
   private int paramIndex;
 
   /** 阈值 */
-  private double threshold;
+  private BigDecimal threshold;
 
   /** 窗口大小（毫秒） */
   private long windowMillis = 1000L;

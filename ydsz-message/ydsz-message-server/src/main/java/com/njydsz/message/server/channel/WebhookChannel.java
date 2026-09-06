@@ -57,6 +57,9 @@ import com.njydsz.message.server.config.ChannelProperties;
 @Component
 @RequiredArgsConstructor
 public class WebhookChannel implements MessageChannel {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 通道类型 */
   private static final String CHANNEL_TYPE = "WEBHOOK";
@@ -112,7 +115,7 @@ public class WebhookChannel implements MessageChannel {
       log.warn("[WEBHOOK] 未配置 Webhook URL，跳过发送: receiver={}", request.getReceiver());
       return MessageResult.fail(CHANNEL_TYPE, null, "Webhook URL 未配置", "Webhook URL 未配置", null);
     }
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("text", request.getContent() == null ? "" : request.getContent());
     payload.put("title", request.getSubject() == null ? "YDSZ 通知" : request.getSubject());
     // 添加 msgId 供下游去重追踪

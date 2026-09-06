@@ -1,13 +1,15 @@
 package com.njydsz.generator.service;
 
-import com.njydsz.generator.entity.GenTemplate;
-import com.njydsz.generator.repository.GenTemplateRepository;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.njydsz.generator.entity.GenTemplate;
+import com.njydsz.generator.repository.GenTemplateRepository;
 
 /**
  * 模板领域服务。
@@ -43,7 +45,7 @@ public class TemplateService {
   public List<String> listFileNames(Long groupId) {
     return templateRepository.findByGroupIdOrderByFileNameAsc(groupId).stream()
         .map(GenTemplate::getFileName)
-        .collect(java.util.stream.Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   /**
@@ -141,7 +143,7 @@ public class TemplateService {
     return templateRepository.findByGroupIdOrderByFileNameAsc(groupId).stream()
         .filter(t -> t.getFileName().contains(keyword)
             || (t.getDescription() != null && t.getDescription().contains(keyword)))
-        .collect(java.util.stream.Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   /**

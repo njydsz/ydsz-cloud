@@ -48,6 +48,12 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
 @Component
 @RequiredArgsConstructor
 public class FlowAutoUrgeScheduler {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   private final FlowRunTaskRepository runTaskRepository;
   private final FlowInstanceRepository instanceRepository;
@@ -97,9 +103,9 @@ public class FlowAutoUrgeScheduler {
     log.info("[AutoUrge] 发现 {} 个超时待办，开始自动催办", overdueTasks.size());
 
     // 按实例分组，同实例只催办一次
-    Map<String, List<FlowRunTaskVO>> byInstance = new HashMap<>(16);
+    Map<String, List<FlowRunTaskVO>> byInstance = new HashMap<>(COLLECTION_CAPACITY_16);
     for (FlowRunTaskVO task : overdueTasks) {
-      byInstance.computeIfAbsent(task.getInstanceId(), k -> new ArrayList<>(8)).add(task);
+      byInstance.computeIfAbsent(task.getInstanceId(), k -> new ArrayList<>(COLLECTION_CAPACITY_8)).add(task);
     }
 
     int urgedCount = 0;
@@ -136,7 +142,7 @@ public class FlowAutoUrgeScheduler {
     FlowInstanceVO instance = instanceOpt.get();
 
     // 收集被催办人
-    List<String> receiverIds = new ArrayList<>(16);
+    List<String> receiverIds = new ArrayList<>(COLLECTION_CAPACITY_16);
     for (FlowRunTaskVO task : tasks) {
       if (task.getAssigneeId() != null && !receiverIds.contains(task.getAssigneeId())) {
         receiverIds.add(task.getAssigneeId());
@@ -199,7 +205,7 @@ public class FlowAutoUrgeScheduler {
   private void pushImNotification(
       String receiverId, String title, String content, String instanceId) {
     try {
-      Map<String, Object> extra = new HashMap<>(16);
+      Map<String, Object> extra = new HashMap<>(COLLECTION_CAPACITY_16);
       extra.put("bizType", "WORKFLOW_URGE");
       extra.put("level", "URGENT");
       extra.put("instanceId", instanceId);

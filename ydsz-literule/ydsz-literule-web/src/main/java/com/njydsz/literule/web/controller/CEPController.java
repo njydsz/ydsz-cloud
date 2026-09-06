@@ -78,6 +78,12 @@ import com.njydsz.literule.server.cep.CEPPattern;
 @RequiredArgsConstructor
 @Tag(name = "CEP 复杂事件处理", description = "模式管理 / 事件投递 / 命中查询 / 引擎状态")
 public class CEPController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_4 = 4;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   /** CEP 引擎（条件装配，未启用时为空） */
   private final ObjectProvider<CEPEngine> cepEngineProvider;
@@ -88,7 +94,7 @@ public class CEPController {
   /** 最近命中记录（内存暂存，最多 200 条，用于运维查看） */
   private static final int MAX_RECENT_HITS = 200;
 
-  private final List<CEPHit> recentHits = new ArrayList<>(4);
+  private final List<CEPHit> recentHits = new ArrayList<>(COLLECTION_CAPACITY_4);
 
   /**
    * 启动时注册 CEP 命中监听器。
@@ -116,7 +122,7 @@ public class CEPController {
           RuleEngine ruleEngine = ruleEngineProvider.getIfAvailable();
           if (ruleEngine != null && hit.getRuleCode() != null) {
             try {
-              Map<String, Object> facts = new HashMap<>(16);
+              Map<String, Object> facts = new HashMap<>(COLLECTION_CAPACITY_16);
               facts.put("cepHit", hit);
               facts.put("patternId", hit.getPatternId());
               facts.put("ruleCode", hit.getRuleCode());
@@ -246,7 +252,7 @@ public class CEPController {
     CEPEvent event = toEvent(body);
     engine.feed(event);
     int hitsAfter = (int) engine.totalHits();
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY_16);
     result.put("fed", true);
     result.put("triggeredHits", hitsAfter - hitsBefore);
     return YdszResponse.success(result);
@@ -363,7 +369,7 @@ public class CEPController {
     }
     Object attrs = body.get("attributes");
     if (attrs instanceof Map<?, ?> rawMap) {
-      Map<String, Object> typed = new HashMap<>(16);
+      Map<String, Object> typed = new HashMap<>(COLLECTION_CAPACITY_16);
       rawMap.forEach((k, v) -> typed.put(String.valueOf(k), v));
       b.attributes(typed);
     }

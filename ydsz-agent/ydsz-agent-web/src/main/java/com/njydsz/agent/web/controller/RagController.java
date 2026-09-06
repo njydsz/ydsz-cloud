@@ -72,6 +72,9 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RequestMapping("/api/v1/agent/rag")
 public class RagController {
 
+  /** 默认返回条数 */
+  private static final int DEFAULT_TOP_K = 5;
+
   /** RAG 检索服务（封装向量相似度检索 + 引用构建 + 上下文拼装） */
   private final RagService ragService;
 
@@ -144,7 +147,7 @@ public class RagController {
   @PostMapping("/search")
   public YdszResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
     // 参数默认值兜底：topK=5 / minScore=0.7 / includeContext=true
-    int topK = request.getTopK() != null ? request.getTopK() : 5;
+    int topK = request.getTopK() != null ? request.getTopK() : DEFAULT_TOP_K;
     BigDecimal minScore = request.getMinScore() != null
         ? BigDecimal.valueOf(request.getMinScore())
         : new BigDecimal("0.7");

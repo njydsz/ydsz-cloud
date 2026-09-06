@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 
-
 /**
  * 自动触发仓储接口（domain 层契约）。
  *

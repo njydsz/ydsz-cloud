@@ -34,6 +34,9 @@ import com.njydsz.workflow.server.engine.FlowNodeExt;
 @Slf4j
 @Service
 public class FlowCrossNodeDedupService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final FlowRunTaskRepository taskRepository;
 
@@ -88,14 +91,14 @@ public class FlowCrossNodeDedupService {
           taskRepository.findByInstanceId(instanceId).stream()
               .filter(t -> FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()))
               .toList();
-      Set<String> excluded = new HashSet<>(16);
+      Set<String> excluded = new HashSet<>(COLLECTION_CAPACITY);
       for (FlowRunTaskVO t : done) {
         if (t.getAssigneeId() != null && !"SYSTEM_AUTO_PASS".equals(t.getAssigneeName())) {
           excluded.add(t.getAssigneeId());
         }
       }
       int beforeSize = userIds.size();
-      List<String> deduped = new ArrayList<>(16);
+      List<String> deduped = new ArrayList<>(COLLECTION_CAPACITY);
       for (String uid : userIds) {
         if (!excluded.contains(uid)) {
           deduped.add(uid);

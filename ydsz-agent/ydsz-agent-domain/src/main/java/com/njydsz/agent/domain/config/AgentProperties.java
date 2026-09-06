@@ -21,6 +21,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AgentProperties {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 是否启用 Agent 模块 */
   private boolean enabled = true;
@@ -70,6 +73,15 @@ public class AgentProperties {
   @AllArgsConstructor
   public static class Llm {
 
+    /** 默认温度 */
+    private static final double DEFAULT_TEMPERATURE = 0.7;
+
+    /** 默认最大 Token */
+    private static final int DEFAULT_MAX_TOKENS = 2048;
+
+    /** 默认调用超时（秒） */
+    private static final int DEFAULT_TIMEOUT_SECONDS = 60;
+
     /** 默认 Provider */
     private String defaultProvider = "default";
 
@@ -83,19 +95,19 @@ public class AgentProperties {
     private String baseUrl = "";
 
     /** 默认温度 */
-    private double temperature = 0.7;
+    private double temperature = DEFAULT_TEMPERATURE;
 
     /** 默认最大 Token */
-    private int maxTokens = 2048;
+    private int maxTokens = DEFAULT_MAX_TOKENS;
 
     /** 调用超时（秒） */
-    private int timeoutSeconds = 60;
+    private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
 
     /** 模型单价映射（模型名 -> USD/千 Token） */
-    private Map<String, Double> modelPrices = new LinkedHashMap<>(16);
+    private Map<String, Double> modelPrices = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
     /** 多 Provider 配置 */
-    private Map<String, ProviderConfig> providers = new LinkedHashMap<>(16);
+    private Map<String, ProviderConfig> providers = new LinkedHashMap<>(COLLECTION_CAPACITY);
   }
 
   /** 单个 Provider 配置（名称、模型、API 密钥、Base URL 等）。 */
@@ -138,6 +150,16 @@ public class AgentProperties {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Memory {
+
+    /** Redis 过期默认时间（小时） */
+    private static final int DEFAULT_TTL_HOURS = 24;
+
+    /** 摘要压缩默认阈值（消息数） */
+    private static final int DEFAULT_SUMMARY_THRESHOLD = 20;
+
+    /** 摘要压缩默认保留的最近消息数 */
+    private static final int DEFAULT_SUMMARY_KEEP_RECENT = 5;
+
     /** 是否启用记忆 */
     private boolean enabled = true;
 
@@ -151,16 +173,16 @@ public class AgentProperties {
     private String type = "in-memory";
 
     /** Redis 过期时间（小时） */
-    private int ttlHours = 24;
+    private int ttlHours = DEFAULT_TTL_HOURS;
 
     /** 是否启用摘要压缩 */
     private boolean summaryEnabled = false;
 
     /** 摘要压缩阈值（消息数达到该值时触发摘要） */
-    private int summaryThreshold = 20;
+    private int summaryThreshold = DEFAULT_SUMMARY_THRESHOLD;
 
     /** 摘要压缩时保留的最近消息数 */
-    private int summaryKeepRecent = 5;
+    private int summaryKeepRecent = DEFAULT_SUMMARY_KEEP_RECENT;
   }
 
   // ========================= RAG 配置 =========================
@@ -170,17 +192,33 @@ public class AgentProperties {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Rag {
+
+    /** 默认 Top-K 召回数量 */
+    private static final int DEFAULT_TOP_K = 5;
+
+    /** 默认最小相似度阈值 */
+    private static final double DEFAULT_MIN_SCORE = 0.7;
+
+    /** 默认上下文 Token 预算 */
+    private static final int DEFAULT_CONTEXT_TOKEN_BUDGET = 4096;
+
+    /** 默认 Embedding 向量维度 */
+    private static final int DEFAULT_EMBEDDING_DIMENSION = 1536;
+
+    /** 默认文本分块重叠字符数 */
+    private static final int DEFAULT_CHUNK_OVERLAP = 200;
+
     /** 是否启用 RAG */
     private boolean enabled = true;
 
     /** 默认 Top-K 召回数量 */
-    private int defaultTopK = 5;
+    private int defaultTopK = DEFAULT_TOP_K;
 
     /** 默认最小相似度阈值 */
-    private double defaultMinScore = 0.7;
+    private double defaultMinScore = DEFAULT_MIN_SCORE;
 
     /** 上下文 Token 预算 */
-    private int contextTokenBudget = 4096;
+    private int contextTokenBudget = DEFAULT_CONTEXT_TOKEN_BUDGET;
 
     /** 向量数据库类型: in-memory / pgvector */
     private String vectorStore = "in-memory";
@@ -195,13 +233,13 @@ public class AgentProperties {
     private String embeddingBaseUrl = "";
 
     /** Embedding 向量维度 */
-    private int dimension = 1536;
+    private int dimension = DEFAULT_EMBEDDING_DIMENSION;
 
     /** 文本分块大小 */
     private int chunkSize = 1000;
 
     /** 文本分块重叠字符数 */
-    private int chunkOverlap = 200;
+    private int chunkOverlap = DEFAULT_CHUNK_OVERLAP;
 
     /** 是否启用租户隔离 */
     private boolean tenantIsolation = false;
@@ -272,17 +310,24 @@ public class AgentProperties {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Cache {
+
+    /** 默认缓存 TTL（分钟） */
+    private static final int DEFAULT_TTL_MINUTES = 60;
+
+    /** 默认缓存相似度阈值 */
+    private static final double DEFAULT_SIMILARITY_THRESHOLD = 0.95;
+
     /** 是否启用语义缓存 */
     private boolean enabled = false;
 
     /** 缓存 TTL（分钟） */
-    private int ttlMinutes = 60;
+    private int ttlMinutes = DEFAULT_TTL_MINUTES;
 
     /** 最大缓存条目数 */
     private int maxSize = 1000;
 
     /** 缓存相似度阈值 */
-    private double similarityThreshold = 0.95;
+    private double similarityThreshold = DEFAULT_SIMILARITY_THRESHOLD;
 
     /** 缓存类型: caffeine / redis */
     private String type = "caffeine";
@@ -327,6 +372,10 @@ public class AgentProperties {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Guardrail {
+
+    /** 默认每分钟最大请求数 */
+    private static final int DEFAULT_MAX_REQUESTS_PER_MINUTE = 60;
+
     /** 是否启用护栏 */
     private boolean enabled = true;
 
@@ -340,7 +389,7 @@ public class AgentProperties {
     private boolean piiMaskingEnabled = true;
 
     /** 每分钟最大请求数 */
-    private int maxRequestsPerMinute = 60;
+    private int maxRequestsPerMinute = DEFAULT_MAX_REQUESTS_PER_MINUTE;
 
     /** 拒绝时的提示消息 */
     private String rejectionMessage = "请求被安全护栏拒绝";
@@ -353,17 +402,27 @@ public class AgentProperties {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Tool {
+
+    /** 默认单次工具调用超时（毫秒） */
+    private static final int DEFAULT_TIMEOUT_MS = 30000;
+
+    /** 默认单次工具调用超时（秒） */
+    private static final int DEFAULT_TIMEOUT_SECONDS = 30;
+
+    /** 默认最大工具调用深度 */
+    private static final int DEFAULT_MAX_DEPTH = 5;
+
     /** 是否启用工具调用 */
     private boolean enabled = true;
 
     /** 单次工具调用超时（毫秒） */
-    private int timeoutMs = 30000;
+    private int timeoutMs = DEFAULT_TIMEOUT_MS;
 
     /** 单次工具调用超时（秒） */
-    private int timeoutSeconds = 30;
+    private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
 
     /** 最大工具调用深度 */
-    private int maxDepth = 5;
+    private int maxDepth = DEFAULT_MAX_DEPTH;
 
     /** 是否启用并行工具调用 */
     private boolean parallelEnabled = false;
@@ -379,17 +438,24 @@ public class AgentProperties {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Quota {
+
+    /** 默认每日 Token 限额 */
+    private static final long DEFAULT_DAILY_TOKEN_LIMIT = 1000000L;
+
+    /** 默认告警阈值（0.0-1.0，达到配额的百分比时告警） */
+    private static final double DEFAULT_ALERT_THRESHOLD = 0.8;
+
     /** 是否启用配额控制 */
     private boolean enabled = true;
 
     /** 每日 Token 限额 */
-    private long dailyTokenLimit = 1000000;
+    private long dailyTokenLimit = DEFAULT_DAILY_TOKEN_LIMIT;
 
     /** 每月预算（USD） */
     private double monthlyBudgetUsd = 100.0;
 
     /** 告警阈值（0.0-1.0，达到配额的百分比时告警） */
-    private double alertThreshold = 0.8;
+    private double alertThreshold = DEFAULT_ALERT_THRESHOLD;
   }
 
   // ========================= 记忆整合配置 =========================
@@ -399,6 +465,10 @@ public class AgentProperties {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class MemoryConsolidation {
+
+    /** 默认每批处理对话数 */
+    private static final int DEFAULT_BATCH_SIZE = 50;
+
     /** 是否启用记忆整合 */
     private boolean enabled = false;
 
@@ -406,7 +476,7 @@ public class AgentProperties {
     private boolean dreamingEnabled = false;
 
     /** 每批处理对话数 */
-    private int batchSize = 50;
+    private int batchSize = DEFAULT_BATCH_SIZE;
 
     /** Cron 表达式 */
     private String cron = "0 30 2 * * ?";

@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -20,7 +20,6 @@ import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.server.event.AgentEventPublisher;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
@@ -54,6 +53,9 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @Service
 @Slf4j
 public class ChatService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -745,7 +747,7 @@ public class ChatService {
 
   private List<ChatMessage> buildMessages(
       String conversationId, String userMessage, String systemPrompt) {
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     String prompt = systemPrompt != null ? systemPrompt : getDefaultSystemPrompt();
     messages.add(ChatMessage.system(prompt));
     List<ChatMessage> history =
@@ -768,7 +770,7 @@ public class ChatService {
    */
   private List<ChatMessage> buildMessages(
       String conversationId, MessageContent multimodalContent, String systemPrompt) {
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     String prompt = systemPrompt != null ? systemPrompt : getDefaultSystemPrompt();
     messages.add(ChatMessage.system(prompt));
     List<ChatMessage> history =

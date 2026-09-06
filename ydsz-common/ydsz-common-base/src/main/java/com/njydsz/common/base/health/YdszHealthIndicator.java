@@ -3,6 +3,8 @@ package com.njydsz.common.base.health;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -40,10 +42,10 @@ public class YdszHealthIndicator implements HealthIndicator {
   private static final int PERCENTAGE_FACTOR = 100;
 
   /** 百分比计算精度因子（保留两位小数） */
-  private static final double PERCENTAGE_PRECISION = 100.0;
+  private static final BigDecimal PERCENTAGE_PRECISION = new BigDecimal("100.0");
 
   /** OOM 风险阈值：堆内存使用率超过此百分比判定为 DOWN */
-  private static final double OOM_RISK_THRESHOLD_PERCENT = 95.0;
+  private static final BigDecimal OOM_RISK_THRESHOLD_PERCENT = new BigDecimal("95.0");
 
   /** 期望的时区 ID，从配置 {@code ydsz.base.timezone} 读取，默认 {@code Asia/Shanghai} */
   private final String expectedTimezone;
@@ -97,7 +99,7 @@ public class YdszHealthIndicator implements HealthIndicator {
     }
 
     // JVM 堆内存使用概况
-    double heapUsagePercent = collectHeapMemoryDetails(details);
+    BigDecimal heapUsagePercent = collectHeapMemoryDetails(details);
 
     // 健康状态判定
     boolean healthy =
@@ -117,22 +119,25 @@ public class YdszHealthIndicator implements HealthIndicator {
    * @param details 健康详情映射
    * @return 堆内存使用率百分比
    */
-  private double collectHeapMemoryDetails(Map<String, Object> details) {
+  private BigDecimal collectHeapMemoryDetails(Map<String, Object> details) {
     MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
     MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
     Map<String, Object> memoryDetails = new LinkedHashMap<>(16);
     memoryDetails.put("usedMB", heapUsage.getUsed() / BYTES_PER_MB);
     memoryDetails.put("committedMB", heapUsage.getCommitted() / BYTES_PER_MB);
     memoryDetails.put("maxMB", heapUsage.getMax() / BYTES_PER_MB);
-    double usagePercent =
-        heapUsage.getMax() > 0
-            ? Math.round(
-                    (double) heapUsage.getUsed()
-                        / heapUsage.getMax()
-                        * PERCENTAGE_FACTOR
-                        * PERCENTAGE_PRECISION)
-                / PERCENTAGE_PRECISION
-            : 0.0;
+    BigDecimal usagePercent;
+    if (heapUsage.getMax() > 0) {
+      usagePercent =
+          BigDecimal.valueOf(heapUsage.getUsed())
+              .divide(BigDecimal.valueOf(heapUsage.getMax()), 4, RoundingMode.HALF_UP)
+              .multiply(BigDecimal.valueOf(PERCENTAGE_FACTOR))
+              .multiply(PERCENTAGE_PRECISION)
+              .setScale(0, RoundingMode.HALF_UP)
+              .divide(PERCENTAGE_PRECISION, 2, RoundingMode.HALF_UP);
+    } else {
+      usagePercent = BigDecimal.ZERO;
+    }
     memoryDetails.put("usagePercent", usagePercent);
     details.put("heapMemory", memoryDetails);
     return usagePercent;
@@ -177,8 +182,8 @@ public class YdszHealthIndicator implements HealthIndicator {
    * @param usagePercent 当前堆内存使用率百分比
    * @return 未超过阈值返回 true
    */
-  private boolean checkHeapMemory(Map<String, Object> details, double usagePercent) {
-    if (usagePercent >= OOM_RISK_THRESHOLD_PERCENT) {
+  private boolean checkHeapMemory(Map<String, Object> details, BigDecimal usagePercent) {
+    if (usagePercent.compareTo(OOM_RISK_THRESHOLD_PERCENT) >= 0) {
       details.put("warning", "堆内存使用率超过 95%，存在 OOM 风险");
       return false;
     }

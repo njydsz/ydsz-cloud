@@ -182,7 +182,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
           TreeNode<?, ?> treeNode = (TreeNode<?, ?>) parent;
           List<Object> children = treeNode.getChildren() != null
               ? new ArrayList<>(treeNode.getChildren())
-              : new ArrayList<>();
+              : new ArrayList<>(16);
           children.add(node);
           childrenSetter.accept(parent, (List<T>) (List<?>) children);
         }

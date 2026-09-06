@@ -54,6 +54,9 @@ import com.njydsz.message.server.channel.NotifyChannelStrategyAdapter;
 @Configuration
 @ConditionalOnClass(NotifyChannelStrategy.class)
 public class NotifyChannelBridgeConfiguration implements InitializingBean {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 消息服务通道类型 → common-notify 渠道枚举映射 */
   private static final Map<String, NotifyChannel> CHANNEL_MAP =
@@ -87,7 +90,7 @@ public class NotifyChannelBridgeConfiguration implements InitializingBean {
     }
 
     Map<String, MessageChannel> channels = beanFactory.getBeansOfType(MessageChannel.class);
-    List<NotifyChannelStrategy> registered = new ArrayList<>(16);
+    List<NotifyChannelStrategy> registered = new ArrayList<>(COLLECTION_CAPACITY);
 
     for (Map.Entry<String, MessageChannel> entry : channels.entrySet()) {
       MessageChannel channel = entry.getValue();

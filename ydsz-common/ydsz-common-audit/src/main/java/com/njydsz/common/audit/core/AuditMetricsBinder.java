@@ -81,7 +81,7 @@ public class AuditMetricsBinder implements MeterBinder {
         auditRecorder,
         recorder -> {
           if (recorder instanceof AsyncAuditRecorder asyncRecorder) {
-            return asyncRecorder.getQueueUsageRatio();
+            return asyncRecorder.getQueueUsageRatio().doubleValue();
           }
           return 0.0;
         });

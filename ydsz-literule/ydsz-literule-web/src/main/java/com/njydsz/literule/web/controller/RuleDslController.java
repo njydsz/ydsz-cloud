@@ -73,6 +73,9 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
 @RequiredArgsConstructor
 @Tag(name = "规则DSL校验解析", description = "DSL 校验 / 解析 / 预览")
 public class RuleDslController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final ExpressionEngine evaluator;
 
@@ -107,7 +110,7 @@ public class RuleDslController {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
     }
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     try {
       RuleDsl dsl =
           "json".equalsIgnoreCase(format)
@@ -118,7 +121,7 @@ public class RuleDslController {
       RuleDslParser.validate(dsl);
 
       // 校验表达式语法
-      List<String> errors = new ArrayList<>(16);
+      List<String> errors = new ArrayList<>(COLLECTION_CAPACITY);
       int ruleCount = 0;
       if (dsl.getRules() != null) {
         for (RuleDslEntry entry : dsl.getRules()) {
@@ -216,7 +219,7 @@ public class RuleDslController {
     }
 
     Object factsObj = request.get("facts");
-    Map<String, Object> facts = new LinkedHashMap<>(16);
+    Map<String, Object> facts = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (factsObj instanceof Map<?, ?> fm) {
       for (Map.Entry<?, ?> e : fm.entrySet()) {
         if (e.getKey() != null) {
@@ -236,11 +239,11 @@ public class RuleDslController {
       List<Rule> rules = RuleDslConverter.toRules(dsl, evaluator);
       RuleContextVO context = RuleContextVO.of(facts, "DSL_PREVIEW", "MANUAL");
 
-      List<Map<String, Object>> results = new ArrayList<>(16);
+      List<Map<String, Object>> results = new ArrayList<>(COLLECTION_CAPACITY);
       for (Rule rule : rules) {
         try {
           RuleResultVO result = rule.evaluate(context);
-          Map<String, Object> r = new LinkedHashMap<>(16);
+          Map<String, Object> r = new LinkedHashMap<>(COLLECTION_CAPACITY);
           r.put("ruleCode", result.getRuleCode());
           r.put("triggered", result.isTriggered());
           r.put("severity", result.getSeverity() != null ? RuleSeverity.fromCode(result.getSeverity()).name() : null);
@@ -248,7 +251,7 @@ public class RuleDslController {
           r.put("description", result.getDescription());
           results.add(r);
         } catch (Exception e) {
-          Map<String, Object> r = new LinkedHashMap<>(16);
+          Map<String, Object> r = new LinkedHashMap<>(COLLECTION_CAPACITY);
           r.put("ruleCode", rule.getCode());
           r.put("triggered", false);
           r.put("error", e.getMessage());

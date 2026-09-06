@@ -1,7 +1,6 @@
 package com.njydsz.common.auth.service;
 
 import com.njydsz.common.auth.model.ColumnScopeInfo;
-import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 
 /**
  * 列权限解析器接口。
@@ -20,7 +19,7 @@ import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
  * @author ydsz-team
  * @since 26.09.01
  * @see ColumnScopeInfo
- * @see RedisRoleColumnPermissionResolver
+ * @see com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver
  */
 public interface ColumnPermissionResolver {
 

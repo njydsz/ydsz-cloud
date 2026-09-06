@@ -94,6 +94,9 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
 @Service
 @RequiredArgsConstructor
 public class FlowTimerServiceImpl implements FlowTimerService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 定时器仓储（domain 层契约），管理 ydsz_flow_timer 表 CRUD */
   private final FlowTimerRepository timerRepository;
@@ -409,10 +412,10 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
   private Map<String, Object> parseVariables(String variableJson) {
     if (variableJson == null || variableJson.isBlank()) {
-      return new HashMap<>(16);
+      return new HashMap<>(COLLECTION_CAPACITY);
     }
     Map<String, Object> map = YdszJson.parseMap(variableJson);
-    return map == null ? new HashMap<>(16) : map;
+    return map == null ? new HashMap<>(COLLECTION_CAPACITY) : map;
   }
 
   private String nullSafe(String s) {

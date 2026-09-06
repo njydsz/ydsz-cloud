@@ -21,6 +21,9 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * @since 26.09.01
  */
 public final class Conversation {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final String id;
   private final String userId;
@@ -38,7 +41,7 @@ public final class Conversation {
     this.title = title != null ? title : "新对话";
     this.createdAt = LocalDateTime.now();
     this.updatedAt = this.createdAt;
-    this.messages = new ArrayList<>(16);
+    this.messages = new ArrayList<>(COLLECTION_CAPACITY);
     this.totalUsage = TokenUsage.zero();
   }
 

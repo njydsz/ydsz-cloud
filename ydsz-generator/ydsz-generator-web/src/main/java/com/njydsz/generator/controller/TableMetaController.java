@@ -1,11 +1,7 @@
 package com.njydsz.generator.controller;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.generator.entity.GenColumnMeta;
-import com.njydsz.generator.entity.GenDatasource;
-import com.njydsz.generator.entity.GenTableMeta;
-import com.njydsz.generator.service.DatasourceService;
-import com.njydsz.generator.service.TableMetadataService;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.generator.entity.GenColumnMeta;
+import com.njydsz.generator.entity.GenDatasource;
+import com.njydsz.generator.entity.GenTableMeta;
+import com.njydsz.generator.service.DatasourceService;
+import com.njydsz.generator.service.TableMetadataService;
 
 /**
  * 表元数据管理 REST 控制器。

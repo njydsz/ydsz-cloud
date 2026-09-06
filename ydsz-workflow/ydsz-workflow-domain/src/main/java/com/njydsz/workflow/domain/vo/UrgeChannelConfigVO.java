@@ -35,6 +35,9 @@ import com.njydsz.common.json.YdszJson;
 @Getter
 @ToString
 public class UrgeChannelConfigVO implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 8;
+
 
   @Serial private static final long serialVersionUID = 1L;
 
@@ -139,7 +142,7 @@ public class UrgeChannelConfigVO implements Serializable {
   public List<String> getValidChannels() {
     List<String> valid = List.of(Channel.INAPP, Channel.EMAIL, Channel.WEBHOOK, Channel.SMS,
         Channel.WECOM, Channel.DINGTALK, Channel.FEISHU);
-    List<String> result = new ArrayList<>(8);
+    List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (String ch : urgeChannels) {
       if (valid.contains(ch)) {
         result.add(ch);

@@ -1,12 +1,11 @@
 package com.njydsz.message.domain.dto;
 
-import com.njydsz.common.domain.query.PageQuery;
-
 import java.util.List;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 站内通知分页查询 DTO

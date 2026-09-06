@@ -1,4 +1,5 @@
 package com.njydsz.literule.server.core;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -59,7 +60,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  * <h3>使用示例</h3>
  *
  * <pre>
- * ParallelRuleEvaluator evaluator = new ParallelRuleEvaluator(4);
+ * ParallelRuleEvaluator evaluator = new ParallelRuleEvaluator(COLLECTION_CAPACITY_4);
  *
  * // 引擎评估时调用
  * List&lt;RuleResultVO&gt; results = evaluator.evaluateParallel(candidateRules, context,
@@ -71,6 +72,12 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  */
 @Slf4j
 public class ParallelRuleEvaluator {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY_4 = 4;
+
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY_16 = 16;
+
 
     /** 顺序执行阈值（规则数不超过该值时直接串行执行） */
   private static final int SEQUENTIAL_THRESHOLD = 3;
@@ -193,7 +200,7 @@ public class ParallelRuleEvaluator {
     }
 
     // 合并结果
-    List<RuleResultVO> allResults = new ArrayList<>(16);
+    List<RuleResultVO> allResults = new ArrayList<>(COLLECTION_CAPACITY_16);
     for (CompletableFuture<List<RuleResultVO>> future : futures) {
       try {
         allResults.addAll(future.get());
@@ -215,8 +222,8 @@ public class ParallelRuleEvaluator {
    */
   public List<RuleResultVO> evaluateSequential(
       List<Rule> candidateRules, RuleContextVO context, RuleEvaluator evaluator) {
-    List<RuleResultVO> results = new ArrayList<>(16);
-    Set<String> triggeredGroups = new HashSet<>(16);
+    List<RuleResultVO> results = new ArrayList<>(COLLECTION_CAPACITY_16);
+    Set<String> triggeredGroups = new HashSet<>(COLLECTION_CAPACITY_16);
     for (Rule rule : candidateRules) {
       // 互斥组短路
       String mutexGroup = rule.getMutexGroup();
@@ -250,7 +257,7 @@ public class ParallelRuleEvaluator {
     for (Rule rule : rules) {
       String mutexGroup = rule.getMutexGroup();
       if (mutexGroup != null && !mutexGroup.isBlank()) {
-        groups.computeIfAbsent(mutexGroup, k -> new ArrayList<>(4)).add(rule);
+        groups.computeIfAbsent(mutexGroup, k -> new ArrayList<>(COLLECTION_CAPACITY_4)).add(rule);
       } else {
         // 独立规则各自成组
         groups.computeIfAbsent("__independent_" + (++independentIdx), k -> new ArrayList<>(1)).add(rule);
@@ -269,7 +276,7 @@ public class ParallelRuleEvaluator {
    */
   public List<RuleResultVO> evaluateGroup(
       List<Rule> groupRules, RuleContextVO context, RuleEvaluator evaluator) {
-    List<RuleResultVO> results = new ArrayList<>(4);
+    List<RuleResultVO> results = new ArrayList<>(COLLECTION_CAPACITY_4);
     for (Rule rule : groupRules) {
       try {
         RuleResultVO result = evaluator.evaluate(rule, context);

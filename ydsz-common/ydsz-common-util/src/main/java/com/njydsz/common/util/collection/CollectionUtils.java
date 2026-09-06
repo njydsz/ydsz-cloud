@@ -281,7 +281,7 @@ public final class CollectionUtils {
   @SafeVarargs
   public static <T> List<T> concat(Collection<? extends T>... collections) {
     if (collections == null || collections.length == 0) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
     int totalSize = 0;
     for (Collection<? extends T> coll : collections) {
@@ -339,9 +339,9 @@ public final class CollectionUtils {
    */
   public static <T> List<T> flatten(Collection<? extends Collection<T>> nested) {
     if (isEmpty(nested)) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
-    List<T> result = new ArrayList<>();
+    List<T> result = new ArrayList<>(16);
     for (Collection<T> inner : nested) {
       if (inner != null) {
         result.addAll(inner);
@@ -360,9 +360,9 @@ public final class CollectionUtils {
    */
   public static <T> List<T> flattenIterables(Iterable<? extends Iterable<T>> nested) {
     if (nested == null) {
-      return new ArrayList<>();
+      return new ArrayList<>(0);
     }
-    List<T> result = new ArrayList<>();
+    List<T> result = new ArrayList<>(16);
     for (Iterable<T> inner : nested) {
       if (inner != null) {
         for (T item : inner) {

@@ -35,6 +35,9 @@ import com.njydsz.literule.server.core.RuleMetrics;
 @Slf4j
 @RequiredArgsConstructor
 public class LiteRuleHealthIndicator extends AbstractModuleHealthIndicator {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final DefaultRuleEngine ruleEngine;
   private final CEPEngine cepEngine;
@@ -43,7 +46,7 @@ public class LiteRuleHealthIndicator extends AbstractModuleHealthIndicator {
   protected void doHealthCheck(Health.Builder builder) {
     // 规则引擎核心状态
     try {
-      Map<String, Object> engineDetails = new LinkedHashMap<>(16);
+      Map<String, Object> engineDetails = new LinkedHashMap<>(COLLECTION_CAPACITY);
       engineDetails.put("registeredRules", ruleEngine.getRules().size());
       engineDetails.put("statsEnabled", ruleEngine.isStatsEnabled());
       engineDetails.put("canaryEnabled", ruleEngine.isCanaryEnabled());
@@ -68,7 +71,7 @@ public class LiteRuleHealthIndicator extends AbstractModuleHealthIndicator {
     try {
       RuleCircuitBreaker breaker = ruleEngine.getCircuitBreaker();
       if (breaker != null) {
-        Map<String, Object> breakerDetails = new LinkedHashMap<>(16);
+        Map<String, Object> breakerDetails = new LinkedHashMap<>(COLLECTION_CAPACITY);
         int openCount = 0;
         int halfOpenCount = 0;
         for (Rule rule : ruleEngine.getRules()) {
@@ -90,7 +93,7 @@ public class LiteRuleHealthIndicator extends AbstractModuleHealthIndicator {
     // 异步 Trace 队列
     try {
       if (ruleEngine.getTraceRecorder() instanceof AsyncTraceRecorder asyncRecorder) {
-        Map<String, Object> traceDetails = new LinkedHashMap<>(16);
+        Map<String, Object> traceDetails = new LinkedHashMap<>(COLLECTION_CAPACITY);
         traceDetails.put("queueSize", asyncRecorder.getQueueSize());
         traceDetails.put("queueCapacity", asyncRecorder.getQueueCapacity());
         traceDetails.put("running", asyncRecorder.isRunning());
@@ -107,7 +110,7 @@ public class LiteRuleHealthIndicator extends AbstractModuleHealthIndicator {
     // CEP 引擎状态
     if (cepEngine != null) {
       try {
-        Map<String, Object> cepDetails = new LinkedHashMap<>(16);
+        Map<String, Object> cepDetails = new LinkedHashMap<>(COLLECTION_CAPACITY);
         cepDetails.put("patterns", cepEngine.patternCount());
         cepDetails.put("totalHits", cepEngine.totalHits());
         builder.withDetail("cep", cepDetails);
@@ -122,7 +125,7 @@ public class LiteRuleHealthIndicator extends AbstractModuleHealthIndicator {
     try {
       RuleIndexer indexer = ruleEngine.getRuleIndexer();
       if (indexer != null) {
-        Map<String, Object> indexDetails = new LinkedHashMap<>(16);
+        Map<String, Object> indexDetails = new LinkedHashMap<>(COLLECTION_CAPACITY);
         indexDetails.put("indexEnabled", indexer.isIndexEnabled());
         indexDetails.put("hasFieldIndex", indexer.hasFieldIndex());
         builder.withDetail("indexer", indexDetails);

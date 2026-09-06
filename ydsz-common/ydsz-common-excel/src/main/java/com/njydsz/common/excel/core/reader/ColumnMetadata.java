@@ -169,13 +169,25 @@ public final class ColumnMetadata {
     if (targetType == Timestamp.class) {
       return TYPE_TIMESTAMP;
     }
-    if (Date.class.isAssignableFrom(targetType) && !Date.class.equals(targetType)) {
+    if (isUtilDateSubclass(targetType)) {
       return TYPE_SQL_DATE;
     }
     if (targetType == BigDecimal.class) {
       return TYPE_BIG_DECIMAL;
     }
     return TYPE_DEFAULT;
+  }
+
+  /**
+   * 判断目标类型是否为 java.util.Date 的子类（如 java.sql.Date / java.sql.Time），但不包括 java.util.Date 本身。
+   *
+   * @param targetType 目标类型
+   * @return 是子类返回 true
+   */
+  private static boolean isUtilDateSubclass(Class<?> targetType) {
+    return targetType != null
+        && Date.class != targetType
+        && Date.class.isAssignableFrom(targetType);
   }
 
   /** 类型转换策略接口 */
@@ -213,14 +225,16 @@ public final class ColumnMetadata {
           // 为 null，DateUtil.isCellDateFormatted 恒 false——此前数值型日期单元格被当
           // 纯数字读入 Date 字段产生错值）。POI 路径（真实 Cell）不受影响。
           if (cell instanceof SimpleCell) {
-            Date fastDate = ((SimpleCell) cell).getDateCellValue();
-            if (fastDate != null) {
-              return convertDateToTarget(fastDate, targetType);
+            LocalDateTime fastLdt = ((SimpleCell) cell).getLocalDateTimeCellValue();
+            if (fastLdt != null) {
+              return convertDateToTarget(fastLdt, targetType);
             }
           }
           if (DateUtil.isCellDateFormatted(cell)) {
+            // POI getDateCellValue 返回 java.util.Date，桥接为 LocalDateTime 后交付转换链
             Date date = cell.getDateCellValue();
-            return convertDateToTarget(date, targetType);
+            LocalDateTime ldt = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+            return convertDateToTarget(ldt, targetType);
           } else {
             double num = cell.getNumericCellValue();
             return convertNumberToTarget(num, targetType);
@@ -318,17 +332,34 @@ public final class ColumnMetadata {
       return num;
     }
 
-    private static Object convertDateToTarget(Date date, Class<?> targetType) {
+    /**
+     * 判断目标类型是否为 java.util.Date 的子类（如 java.sql.Date / java.sql.Time），但不包括 java.util.Date 本身。
+     *
+     * @param targetType 目标类型
+     * @return 是子类返回 true
+     */
+    private static boolean isUtilDateSubclass(Class<?> targetType) {
+      return targetType != null
+          && Date.class != targetType
+          && Date.class.isAssignableFrom(targetType);
+    }
+
+    private static Object convertDateToTarget(LocalDateTime ldt, Class<?> targetType) {
+      if (ldt == null) {
+        return null;
+      }
       if (targetType == Date.class) {
-        return date;
+        // @deprecated 桥接：目标字段类型为 java.util.Date 时，将 LocalDateTime 转回 Date
+        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
       }
       if (targetType == LocalDateTime.class) {
-        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+        return ldt;
       }
       if (targetType == LocalDate.class) {
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return ldt.toLocalDate();
       }
-      return date;
+      // 默认：返回 LocalDateTime（调用方可按需转换）
+      return ldt;
     }
 
     private static Object convertBooleanToTarget(boolean bool, Class<?> targetType) {

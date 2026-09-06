@@ -100,6 +100,9 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @Service
 @RequiredArgsConstructor
 public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 流程节点仓储（domain 层契约），读取和更新节点 ext 配置 */
   private final FlowNodeRepository nodeRepository;
@@ -138,7 +141,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     Map<String, Object> extJson =
         StringUtils.hasText(node.getExt())
             ? FlowNodeExt.parseSafe(node.getExt())
-            : new LinkedHashMap<>(16);
+            : new LinkedHashMap<>(COLLECTION_CAPACITY);
     // 写入 customButtons
     if (buttons == null || buttons.isEmpty()) {
       extJson.remove("customButtons");
@@ -192,7 +195,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     String targetNodeCode =
         button.get("targetNodeCode") != null ? String.valueOf(button.get("targetNodeCode")) : null;
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("taskId", taskId);
     result.put("buttonCode", buttonCode);
     result.put("action", action);
@@ -299,7 +302,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
       if (buttons == null) {
         return List.of();
       }
-      List<Map<String, Object>> result = new ArrayList<>(16);
+      List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY);
       if (buttons instanceof List<?> list) {
         for (Object item : list) {
           if (item instanceof Map<?, ?> map) {

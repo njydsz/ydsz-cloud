@@ -1,5 +1,6 @@
 package com.njydsz.common.search.engine.pg;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -216,7 +217,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             .append(sanitizeColumnName(request.getSortBy()))
             .append(" ")
             .append(direction);
-      } else if (pgConfig.getTimeDecayDays() > 0) {
+      } else if (pgConfig.getTimeDecayDays().compareTo(BigDecimal.ZERO) > 0) {
         selectSql.append(
             " ORDER BY (rank * EXP(-EXTRACT(EPOCH FROM (NOW() - updated_at_ts)) / 86400.0 / ? "
                 + "* LN(2))) DESC, updated_at DESC");
@@ -572,7 +573,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
    * @return base64 编码的游标字符串，分数为 null 时返回 null
    */
   private String buildCursor(SearchHit lastHit, String sortField) {
-    if (lastHit == null || lastHit.getScore() <= 0) {
+    if (lastHit == null || lastHit.getScore().compareTo(BigDecimal.ZERO) <= 0) {
       return null;
     }
     String cursorValue = lastHit.getScore() + ":" + lastHit.getId();
@@ -831,7 +832,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
               .subtitle(rs.getString("subtitle"))
               .snippet(rs.getString("snippet"))
               .status(rs.getString("status"))
-              .score(rs.getFloat("rank"))
+              .score(BigDecimal.valueOf(rs.getFloat("rank")))
               .build();
       try {
         hit.setPath(rs.getString("path"));

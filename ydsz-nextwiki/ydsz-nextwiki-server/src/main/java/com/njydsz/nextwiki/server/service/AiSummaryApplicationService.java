@@ -56,6 +56,9 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @Slf4j
 @Service
 public class AiSummaryApplicationService implements AiSummaryService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认哈希表初始容量 */
   private static final int DEFAULT_MAP_CAPACITY = 128;
@@ -366,7 +369,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
     }
 
     // 选取 Top-N 句子（按原始顺序排列）
-    List<int[]> ranked = new ArrayList<>(16);
+    List<int[]> ranked = new ArrayList<>(COLLECTION_CAPACITY);
     for (int i = 0; i < n; i++) {
       ranked.add(new int[] {i, (int) (scores[i] * 1000)});
     }
@@ -417,7 +420,7 @@ public class AiSummaryApplicationService implements AiSummaryService {
   private List<String> splitSentences(String content) {
     // 中文句号、英文句号、感叹号、问号、换行（P1-4：复用缓存的正则）
     Matcher matcher = SENTENCE_SPLIT_PATTERN.matcher(content);
-    List<String> sentences = new ArrayList<>(16);
+    List<String> sentences = new ArrayList<>(COLLECTION_CAPACITY);
     while (matcher.find()) {
       String sentence = matcher.group().trim();
       if (sentence.length() >= MIN_SENTENCE_LENGTH) {

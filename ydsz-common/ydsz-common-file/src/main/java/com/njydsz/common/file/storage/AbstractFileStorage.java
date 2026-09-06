@@ -619,7 +619,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
   }
 
   /** 文件内容源抽象：支持多次打开 InputStream 读取同一内容，并在使用结束后释放资源 */
-  private interface FileContentSource {
+  private interface FileContentSource extends AutoCloseable {
 
     /**
      * 打开内容输入流

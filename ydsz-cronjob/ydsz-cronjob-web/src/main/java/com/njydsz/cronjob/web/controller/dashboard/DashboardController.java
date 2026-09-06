@@ -39,6 +39,9 @@ import com.njydsz.cronjob.domain.repository.JobRepository;
 @RequestMapping("/api/v1/cronjob/dashboard")
 @RequiredArgsConstructor
 public class DashboardController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 任务定义 Repository */
   private final JobRepository jobRepository;
@@ -54,10 +57,10 @@ public class DashboardController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/overview")
   public YdszResponse<Map<String, Object>> getOverview() {
-    Map<String, Object> data = new LinkedHashMap<>(16);
+    Map<String, Object> data = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
     // 1. 任务状态分布
-    Map<String, Long> statusDistribution = new LinkedHashMap<>(16);
+    Map<String, Long> statusDistribution = new LinkedHashMap<>(COLLECTION_CAPACITY);
     statusDistribution.put("NORMAL", jobRepository.countByStatus("NORMAL"));
     statusDistribution.put("PAUSED", jobRepository.countByStatus("PAUSED"));
     statusDistribution.put("AUTO_PAUSED", jobRepository.countByStatus("AUTO_PAUSED"));
@@ -66,14 +69,14 @@ public class DashboardController {
 
     // 2. 分组任务数量统计
     List<String> groups = jobRepository.listDistinctGroups();
-    Map<String, Long> groupStats = new LinkedHashMap<>(16);
+    Map<String, Long> groupStats = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (String group : groups) {
       groupStats.put(group, jobRepository.countByGroup(group));
     }
     data.put("groupStats", groupStats);
 
     // 3. 汇总指标
-    Map<String, Object> summary = new LinkedHashMap<>(16);
+    Map<String, Object> summary = new LinkedHashMap<>(COLLECTION_CAPACITY);
     summary.put("total", jobRepository.countAll());
     summary.put("normalCount", jobRepository.countByStatus("NORMAL"));
     summary.put("pausedCount", jobRepository.countByStatus("PAUSED"));

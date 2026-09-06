@@ -1,10 +1,8 @@
 package com.njydsz.agent.domain.json;
 
-
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.agent.domain.model.ChatRequest;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.serializer.JsonSerializer;
-
 import com.njydsz.common.json.writer.JSONWriter;
 
 /**

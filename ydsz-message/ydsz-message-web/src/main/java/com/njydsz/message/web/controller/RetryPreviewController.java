@@ -35,6 +35,9 @@ import com.njydsz.message.server.service.retry.RetryPreviewService;
 @RequestMapping("/api/v1/message/retry")
 @RequiredArgsConstructor
 public class RetryPreviewController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final RetryPreviewService retryPreviewService;
 
@@ -81,9 +84,9 @@ public class RetryPreviewController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/presets")
   public YdszResponse<Map<String, Object>> listPresets() {
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (RetryPreset preset : RetryPreset.values()) {
-      Map<String, Object> info = new LinkedHashMap<>(16);
+      Map<String, Object> info = new LinkedHashMap<>(COLLECTION_CAPACITY);
       info.put("code", preset.getCode());
       info.put("displayName", preset.getDisplayName());
       info.put("maxRetryCount", preset.getMaxRetryCount());

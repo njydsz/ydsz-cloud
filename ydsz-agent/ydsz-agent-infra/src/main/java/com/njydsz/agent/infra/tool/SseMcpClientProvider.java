@@ -1,4 +1,5 @@
 package com.njydsz.agent.infra.tool;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,8 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -32,6 +33,15 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class SseMcpClientProvider implements McpClientProvider {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_4 = 4;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
+  /** MCP 请求默认超时（毫秒） */
+  private static final int DEFAULT_TIMEOUT_MILLIS = 30000;
+
 
   /** 会话缓存 TTL（毫秒），超过后需重新建立 MCP 会话 */
   private static final long SESSION_TTL_MILLIS = 30 * 60 * 1000L;
@@ -88,7 +98,7 @@ public class SseMcpClientProvider implements McpClientProvider {
   public String callTool(AgentProperties.ServerInfo server, String toolName, String arguments) {
     try {
       String sessionId = initSession(server);
-      Map<String, Object> params = new HashMap<>(4);
+      Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
       params.put("name", toolName);
       params.put("arguments", parseArguments(arguments));
       String response = sendRequest(server, sessionId, "tools/call", params);
@@ -116,7 +126,7 @@ public class SseMcpClientProvider implements McpClientProvider {
       return cached.sessionId();
     }
     try {
-      Map<String, Object> params = new HashMap<>(4);
+      Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
       params.put("protocolVersion", "2024-11-05");
       params.put("capabilities", Map.of());
       params.put("clientInfo", Map.of("name", "ydsz-agent", "version", "26.09.01"));
@@ -152,7 +162,7 @@ public class SseMcpClientProvider implements McpClientProvider {
       AgentProperties.ServerInfo server, String sessionId, String method,
       Map<String, Object> params) {
     try {
-      Map<String, Object> body = new HashMap<>(8);
+      Map<String, Object> body = new HashMap<>(COLLECTION_CAPACITY_8);
       body.put("jsonrpc", "2.0");
       body.put("id", IdGenerator.nextIdStr());
       body.put("method", method);
@@ -163,7 +173,7 @@ public class SseMcpClientProvider implements McpClientProvider {
               .uri(URI.create(server.getUrl()))
               .header("Content-Type", MIME_APPLICATION_JSON)
               .header("Accept", MIME_APPLICATION_JSON + ", text/event-stream")
-              .timeout(Duration.ofMillis(server.getTimeout() != null ? server.getTimeout() : 30000))
+              .timeout(Duration.ofMillis(server.getTimeout() != null ? server.getTimeout() : DEFAULT_TIMEOUT_MILLIS))
               .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
       if (sessionId != null) {
         requestBuilder.header("Mcp-Session-Id", sessionId);

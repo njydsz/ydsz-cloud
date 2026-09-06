@@ -44,6 +44,9 @@ import com.njydsz.message.server.config.MessageProperties;
     havingValue = "alipay",
     matchIfMissing = false)
 public class AlipayMiniChannel implements MessageChannel {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private static final String CHANNEL_TYPE = "ALIPAY_MINI";
 
@@ -82,7 +85,7 @@ public class AlipayMiniChannel implements MessageChannel {
 
     try {
       // 构造支付宝开放平台请求参数
-      Map<String, String> bizContent = new HashMap<>(16);
+      Map<String, String> bizContent = new HashMap<>(COLLECTION_CAPACITY);
       bizContent.put("to_user_id", request.getReceiver());
       bizContent.put(
           "template_id", request.getTemplateCode() != null ? request.getTemplateCode() : "");
@@ -90,7 +93,7 @@ public class AlipayMiniChannel implements MessageChannel {
 
       // 构造模板数据
       if (request.getParams() != null) {
-        Map<String, String> data = new HashMap<>(16);
+        Map<String, String> data = new HashMap<>(COLLECTION_CAPACITY);
         for (Map.Entry<String, Object> entry : request.getParams().entrySet()) {
           data.put(
               entry.getKey(), entry.getValue() == null ? "" : String.valueOf(entry.getValue()));
@@ -98,7 +101,7 @@ public class AlipayMiniChannel implements MessageChannel {
         bizContent.put("data", YdszJson.toJson(data));
       }
 
-      Map<String, Object> params = new HashMap<>(16);
+      Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
       params.put("method", "alipay.open.app.mini.templatemessage.send");
       params.put("app_id", config.getAppId());
       params.put("charset", "UTF-8");

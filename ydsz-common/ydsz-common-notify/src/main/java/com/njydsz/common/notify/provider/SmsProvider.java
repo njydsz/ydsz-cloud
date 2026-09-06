@@ -1,5 +1,6 @@
 package com.njydsz.common.notify.provider;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -126,7 +127,7 @@ public interface SmsProvider {
 
     private final long remainingCount;
     private final String currency;
-    private final double remainingAmount;
+    private final BigDecimal remainingAmount;
 
     /**
      * 构造余额信息
@@ -135,7 +136,7 @@ public interface SmsProvider {
      * @param currency 币种
      * @param remainingAmount 剩余金额
      */
-    public SmsBalance(long remainingCount, String currency, double remainingAmount) {
+    public SmsBalance(long remainingCount, String currency, BigDecimal remainingAmount) {
       this.remainingCount = remainingCount;
       this.currency = currency;
       this.remainingAmount = remainingAmount;
@@ -149,7 +150,7 @@ public interface SmsProvider {
       return currency;
     }
 
-    public double getRemainingAmount() {
+    public BigDecimal getRemainingAmount() {
       return remainingAmount;
     }
   }

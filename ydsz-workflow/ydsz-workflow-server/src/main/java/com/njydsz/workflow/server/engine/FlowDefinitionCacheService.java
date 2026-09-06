@@ -1,4 +1,5 @@
 package com.njydsz.workflow.server.engine;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +44,9 @@ import com.njydsz.workflow.server.config.FlowProperties;
 @Slf4j
 @Component
 public class FlowDefinitionCacheService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
 
 
   private final FlowNodeRepository flowNodeRepository;
@@ -277,11 +281,11 @@ public class FlowDefinitionCacheService {
     for (FlowSkipVO skip : skips) {
       String sourceRef = extractSourceRef(skip);
       if (sourceRef != null) {
-        skipsBySource.computeIfAbsent(sourceRef, k -> new ArrayList<>(8)).add(skip);
+        skipsBySource.computeIfAbsent(sourceRef, k -> new ArrayList<>(COLLECTION_CAPACITY_8)).add(skip);
       }
       if (skip.getNextNodeCode() != null) {
         skipsByTarget
-            .computeIfAbsent(skip.getNextNodeCode(), k -> new ArrayList<>(8))
+            .computeIfAbsent(skip.getNextNodeCode(), k -> new ArrayList<>(COLLECTION_CAPACITY_8))
             .add(skip);
       }
     }

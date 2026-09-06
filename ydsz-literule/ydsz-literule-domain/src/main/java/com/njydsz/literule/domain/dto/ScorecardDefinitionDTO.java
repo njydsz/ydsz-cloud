@@ -1,6 +1,5 @@
 package com.njydsz.literule.domain.dto;
 
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;

@@ -30,14 +30,14 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
 import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.server.benchmark.RuleStressTestService;
-import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
+import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.RulePackProvider;
+import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 
 /**
  * 规则集市场 Controller
@@ -66,6 +66,9 @@ import com.njydsz.literule.server.spi.RulePackProvider;
 @Validated
 @Tag(name = "规则集市场", description = "规则集发布、安装、版本管理与压测")
 public class RulePackController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 规则包服务（SPI，由 project 模块提供实现） */
   private final RulePackProvider rulePackProvider;
@@ -305,12 +308,12 @@ public class RulePackController {
     if (ruleCode != null && ruleCode.isBlank()) {
       ruleCode = null;
     }
-    List<Map<String, Object>> factsList = new ArrayList<>(16);
+    List<Map<String, Object>> factsList = new ArrayList<>(COLLECTION_CAPACITY);
     Object rawList = request.get("factsList");
     if (rawList instanceof List<?> list) {
       for (Object item : list) {
         if (item instanceof Map<?, ?> rawMap) {
-          Map<String, Object> facts = new HashMap<>(16);
+          Map<String, Object> facts = new HashMap<>(COLLECTION_CAPACITY);
           rawMap.forEach((k, v) -> facts.put(String.valueOf(k), v));
           factsList.add(facts);
         }
@@ -378,7 +381,7 @@ public class RulePackController {
     if (packCodes == null || packCodes.isEmpty()) {
       return YdszResponse.success(List.of());
     }
-    List<InstallResult> results = new ArrayList<>(16);
+    List<InstallResult> results = new ArrayList<>(COLLECTION_CAPACITY);
     for (String packCode : packCodes) {
       try {
         results.add(rulePackProvider.install(packCode, null, operator));

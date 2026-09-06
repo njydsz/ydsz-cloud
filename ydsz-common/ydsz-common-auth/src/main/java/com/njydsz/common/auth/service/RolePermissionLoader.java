@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.njydsz.common.auth.model.RolePermissions;
-import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
 
 /**
  * 角色权限加载器接口。
@@ -27,7 +26,7 @@ import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
  * // 默认实现：基于 Redis
  * &#64;Bean
  * public RolePermissionLoader rolePermissionLoader(RedisStringOps redisStringOps) {
- *     return new RedisRolePermissionLoader(redisStringOps);
+ *     return new com.njydsz.common.auth.service.impl.RedisRolePermissionLoader(redisStringOps);
  * }
  *
  * // 自定义实现：来自数据库
@@ -40,7 +39,7 @@ import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
  * @author ydsz-team
  * @since 26.09.01
  * @see RolePermissions
- * @see RedisRolePermissionLoader
+ * @see com.njydsz.common.auth.service.impl.RedisRolePermissionLoader
  */
 public interface RolePermissionLoader {
 

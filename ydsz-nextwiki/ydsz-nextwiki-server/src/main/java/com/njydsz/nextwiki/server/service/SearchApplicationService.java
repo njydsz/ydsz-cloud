@@ -11,8 +11,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.search.api.SearchFilter.Operator;
 import com.njydsz.common.search.api.SearchFilter;
+import com.njydsz.common.search.api.SearchFilter.Operator;
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
@@ -63,6 +63,9 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
 @Service
 @RequiredArgsConstructor
 public class SearchApplicationService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final SearchDomainService searchDomainService;
   private final SearchIndexRepository searchIndexRepository;
@@ -99,7 +102,7 @@ public class SearchApplicationService {
 
     SearchResultVO result;
     if (registry != null && unifiedSearch != null && registry.isPrimaryAvailable()) {
-      result = searchViaEngine(unifiedSearch, keyword, userId, page, pageSize, new ArrayList<>(16));
+      result = searchViaEngine(unifiedSearch, keyword, userId, page, pageSize, new ArrayList<>(COLLECTION_CAPACITY));
     } else {
       log.info("[SearchApplicationService] 搜索引擎不可用，降级 DB LIKE: keyword={}", keyword);
       result = searchViaDatabase(keyword, scope, page, pageSize);
@@ -346,7 +349,7 @@ public class SearchApplicationService {
             .pageSize(pageSize)
             .userId(userId)
             .highlight(true)
-            .filters(filters != null ? filters : new ArrayList<>(16))
+            .filters(filters != null ? filters : new ArrayList<>(COLLECTION_CAPACITY))
             .build();
 
     try {
@@ -417,7 +420,7 @@ public class SearchApplicationService {
       Long minSize,
       Long maxSize,
       List<String> tags) {
-    List<SearchFilter> filters = new ArrayList<>(16);
+    List<SearchFilter> filters = new ArrayList<>(COLLECTION_CAPACITY);
 
     // 文件类型筛选（suffix IN）
     if (fileTypes != null && !fileTypes.isEmpty()) {
@@ -546,7 +549,7 @@ public class SearchApplicationService {
   private SearchResultVO searchViaEngineAdvanced(
       UnifiedSearchService unifiedSearch, SearchQuery searchQuery, String userId) {
     // 将高级语法转换为引擎的 SearchFilter 列表
-    List<SearchFilter> filters = new ArrayList<>(16);
+    List<SearchFilter> filters = new ArrayList<>(COLLECTION_CAPACITY);
 
     // suffix 字段限定 → IN 过滤
     if (searchQuery.getFieldQueries() != null) {

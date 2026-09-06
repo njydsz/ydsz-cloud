@@ -6,9 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.njydsz.common.auth.model.ColumnScopeAware;
-import com.njydsz.common.auth.model.ColumnScopeInfo;
-
 /**
  * 列级数据权限校验与过滤注解。
  *
@@ -19,7 +16,7 @@ import com.njydsz.common.auth.model.ColumnScopeInfo;
  * <ol>
  *   <li>切面拦截标注了本注解的方法
  *   <li>从请求上下文解析当前用户的列权限规则（来自 Redis role-col-key）
- *   <li>将列权限信息注入到方法参数（支持 {@link ColumnScopeAware} 或 Map）
+ *   <li>将列权限信息注入到方法参数（支持 {@link com.njydsz.common.auth.model.ColumnScopeAware} 或 Map）
  *   <li>方法执行完成后，对返回值中的对象字段进行过滤（无权限字段置为 null）
  *   <li>同时将列权限规则以 header 形式透传给下游服务（如 SQL 拦截器）
  * </ol>
@@ -61,8 +58,8 @@ import com.njydsz.common.auth.model.ColumnScopeInfo;
  * </pre>
  *
  * @since 26.09.01
- * @see ColumnScopeInfo
- * @see ColumnScopeAware
+ * @see com.njydsz.common.auth.model.ColumnScopeInfo
+ * @see com.njydsz.common.auth.model.ColumnScopeAware
  * @author ydsz-team
  */
 @Inherited
@@ -104,7 +101,7 @@ public @interface AuthColPermission {
   /**
    * 目标方法参数名称。
    *
-   * <p>用于精确指定需要注入列权限信息的参数名称。 若方法中存在多个可注入参数（实现 {@link ColumnScopeAware} 或 Map）， 通过此属性定位目标参数。
+   * <p>用于精确指定需要注入列权限信息的参数名称。 若方法中存在多个可注入参数（实现 {@link com.njydsz.common.auth.model.ColumnScopeAware} 或 Map）， 通过此属性定位目标参数。
    *
    * @return 方法参数名称
    */

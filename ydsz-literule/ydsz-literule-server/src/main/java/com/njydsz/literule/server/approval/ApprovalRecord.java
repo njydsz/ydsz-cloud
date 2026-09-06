@@ -1,4 +1,5 @@
 package com.njydsz.literule.server.approval;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,6 +34,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApprovalRecord implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_4 = 4;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   private static final long serialVersionUID = 1L;
 
@@ -77,11 +84,11 @@ public class ApprovalRecord implements Serializable {
 
   /** 审批日志列表 */
   @Builder.Default
-  private List<ApprovalLog> logs = new ArrayList<>(16);
+  private List<ApprovalLog> logs = new ArrayList<>(COLLECTION_CAPACITY_16);
 
   /** 当前级别已审批通过的审批人列表（COUNTERSIGN/SEQUENCE 场景使用） */
   @Builder.Default
-  private List<String> currentLevelApprovedApprovers = new ArrayList<>(4);
+  private List<String> currentLevelApprovedApprovers = new ArrayList<>(COLLECTION_CAPACITY_4);
 
   /**
    * 追加审批日志
@@ -90,7 +97,7 @@ public class ApprovalRecord implements Serializable {
    */
   public void appendLog(ApprovalLog log) {
     if (logs == null) {
-      logs = new ArrayList<>(16);
+      logs = new ArrayList<>(COLLECTION_CAPACITY_16);
     }
     logs.add(log);
   }
@@ -101,7 +108,7 @@ public class ApprovalRecord implements Serializable {
    * @return 已审批通过的审批人列表
    */
   public List<String> getCurrentLevelApprovedApprovers() {
-    List<String> approvers = new ArrayList<>(4);
+    List<String> approvers = new ArrayList<>(COLLECTION_CAPACITY_4);
     if (logs != null) {
       for (ApprovalLog log : logs) {
         if (log.getLevel() == currentLevel && ApprovalLog.ACTION_APPROVE.equals(log.getAction())) {
@@ -119,7 +126,7 @@ public class ApprovalRecord implements Serializable {
    * @return 已审批通过的审批人列表
    */
   public List<String> currentLevelApprovedApprovers(int level) {
-    List<String> approvers = new ArrayList<>(4);
+    List<String> approvers = new ArrayList<>(COLLECTION_CAPACITY_4);
     if (logs != null) {
       for (ApprovalLog log : logs) {
         if (log.getLevel() == level && ApprovalLog.ACTION_APPROVE.equals(log.getAction())) {

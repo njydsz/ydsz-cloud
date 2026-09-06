@@ -1,5 +1,6 @@
 package com.njydsz.common.search.api;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,7 +81,7 @@ public class SearchRequest implements Serializable {
 
   /** 模糊匹配最小相似度 */
   @Schema(description = "模糊匹配最小相似度")
-  private double fuzzyMinSimilarity;
+  private BigDecimal fuzzyMinSimilarity;
 
   /** 过滤条件列表（跨字段 AND，同字段内 OR） */
   @Schema(description = "过滤条件列表")

@@ -1,4 +1,5 @@
 package com.njydsz.literule.server.config;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +22,12 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "ydsz.literule")
 public class LiteRuleProperties {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_4 = 4;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   /** 默认追踪队列容量 */
   private static final int DEFAULT_TRACE_QUEUE_CAPACITY = 5000;
@@ -603,7 +610,7 @@ public class LiteRuleProperties {
      * <p>key 为模型字段名（无需 "model." 前缀），value 为数值/字符串/布尔。 未配置时使用 MockModelInputProvider
      * 默认值（modelScore=0.75, predictProbability=0.05）。
      */
-    private Map<String, Object> mockOutputs = new LinkedHashMap<>(16);
+    private Map<String, Object> mockOutputs = new LinkedHashMap<>(COLLECTION_CAPACITY_16);
   }
 
   /**
@@ -845,13 +852,13 @@ public class LiteRuleProperties {
   public static class SandboxPolicyConfig {
 
     /** 追加的危险方法名（如 exec / connect / delete） */
-    private List<String> forbiddenMethods = new ArrayList<>(4);
+    private List<String> forbiddenMethods = new ArrayList<>(COLLECTION_CAPACITY_4);
 
     /** 追加的根类黑名单（如 java.net.Socket） */
-    private List<String> forbiddenRoots = new ArrayList<>(4);
+    private List<String> forbiddenRoots = new ArrayList<>(COLLECTION_CAPACITY_4);
 
     /** 追加的允许函数白名单 */
-    private List<String> allowedFunctions = new ArrayList<>(4);
+    private List<String> allowedFunctions = new ArrayList<>(COLLECTION_CAPACITY_4);
   }
 
   /**

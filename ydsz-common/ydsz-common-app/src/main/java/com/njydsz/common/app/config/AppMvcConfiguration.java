@@ -26,9 +26,7 @@ import com.njydsz.common.app.health.AppHealthIndicator;
 import com.njydsz.common.app.interceptor.AppRequestLogInterceptor;
 import com.njydsz.common.app.metrics.AppMetrics;
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
-import com.njydsz.common.auth.handler.AbstractAuthHandler;
 import com.njydsz.common.auth.handler.AuthHandler;
-import com.njydsz.common.auth.metrics.AuthMetrics;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
@@ -124,7 +122,7 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
   /**
    * 创建 App 端默认认证处理器 Bean
    *
-   * <p>业务方可通过提供自定义 {@link AbstractAuthHandler} 子类覆盖此默认实现。
+   * <p>业务方可通过提供自定义 {@link com.njydsz.common.auth.handler.AbstractAuthHandler} 子类覆盖此默认实现。
    *
    * @return AppAuthHandler 实例
    */
@@ -138,7 +136,7 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
    * 创建 App 端鉴权过滤器 Bean
    *
    * <p>认证指标采集器通过 {@link ObjectProvider} 注入，避免与 {@code AuthMetricsCollector} （同样实现 {@link
-   * AuthMetrics} 接口）产生 bean 歧义。App 端始终使用 {@link AppMetrics} 作为指标实现。
+   * com.njydsz.common.auth.metrics.AuthMetrics} 接口）产生 bean 歧义。App 端始终使用 {@link AppMetrics} 作为指标实现。
    *
    * @param appAuthHandler App 端认证处理器
    * @param authFilterConfiguration 通用鉴权过滤器配置

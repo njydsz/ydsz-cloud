@@ -71,6 +71,9 @@ import com.njydsz.workflow.server.service.FlowTimerService;
 @Slf4j
 @Component
 public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** P3-1: 管理员重审权限编码 */
   private static final String PERM_INSTANCE_REOPEN = "workflow:instance:reopen";
@@ -381,7 +384,7 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     // 7. 记录重审元信息到 variable JSON
     try {
       Map<String, Object> vars = parseVariables(instance.getVariable());
-      Map<String, Object> reopenInfo = new LinkedHashMap<>(16);
+      Map<String, Object> reopenInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
       reopenInfo.put("operatorId", operatorId);
       reopenInfo.put("reason", reason);
       reopenInfo.put("reopenedAt", now.toString());
@@ -485,7 +488,7 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     Map<String, Object> variables = getVariables(instanceId);
     String taskId = taskService.createTask(instanceId, appendedNode, variables);
 
-    Map<String, Object> appendedInfo = new HashMap<>(16);
+    Map<String, Object> appendedInfo = new HashMap<>(COLLECTION_CAPACITY);
     appendedInfo.put("nodeCode", appendedNodeCode);
     appendedInfo.put("nodeName", nodeName);
     appendedInfo.put("assigneeType", assigneeType);
@@ -495,11 +498,11 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     appendedInfo.put("createdAt", LocalDateTime.now().toString());
 
     Map<String, Object> vars = getVariables(instanceId);
-    List<Map<String, Object>> appendedNodes = new ArrayList<>(16);
+    List<Map<String, Object>> appendedNodes = new ArrayList<>(COLLECTION_CAPACITY);
     Object existing = vars.get("appendedNodes");
     if (existing instanceof List<?> list) {
       for (Object item : list) {
-        if (item instanceof Map<?,?> itemMap) {
+        if (item instanceof Map<?, ?> itemMap) {
           @SuppressWarnings("unchecked")
           Map<String, Object> casted = (Map<String, Object>) itemMap;
           appendedNodes.add(new LinkedHashMap<>(casted));

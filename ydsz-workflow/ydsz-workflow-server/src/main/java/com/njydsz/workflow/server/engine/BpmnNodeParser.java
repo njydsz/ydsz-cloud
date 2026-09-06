@@ -29,6 +29,9 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 @Component
 @RequiredArgsConstructor
 public class BpmnNodeParser {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final BpmnElementHelper bpmnElementHelper;
 
@@ -294,7 +297,7 @@ public class BpmnNodeParser {
       switch (local.toLowerCase()) {
         case "timereventdefinition" -> {
           hasTimer = true;
-          Map<String, Object> timer = new HashMap<>(16);
+          Map<String, Object> timer = new HashMap<>(COLLECTION_CAPACITY);
           Element timeCycle = bpmnElementHelper.findChild(e, "timeCycle");
           Element timeDate = bpmnElementHelper.findChild(e, "timeDate");
           Element timeDuration = bpmnElementHelper.findChild(e, "timeDuration");
@@ -375,7 +378,7 @@ public class BpmnNodeParser {
         local = e.getNodeName();
       }
       // 收集所有自定义属性为键值对
-      Map<String, String> attrs = new HashMap<>(16);
+      Map<String, String> attrs = new HashMap<>(COLLECTION_CAPACITY);
       if (e.hasAttributes()) {
         var attrMap = e.getAttributes();
         for (int j = 0; j < attrMap.getLength(); j++) {

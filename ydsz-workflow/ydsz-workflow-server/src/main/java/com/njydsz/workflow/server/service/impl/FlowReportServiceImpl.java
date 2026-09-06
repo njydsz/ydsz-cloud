@@ -103,6 +103,9 @@ import com.njydsz.workflow.server.service.FlowReportService;
 @Service
 @RequiredArgsConstructor
 public class FlowReportServiceImpl implements FlowReportService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 报表 TOP 审批人数量 */
   private static final int TOP_APPROVERS = 5;
@@ -162,7 +165,7 @@ public class FlowReportServiceImpl implements FlowReportService {
     // 上周一 00:00
     LocalDateTime startTime = now.minusWeeks(1).with(DayOfWeek.MONDAY).with(LocalTime.MIN);
 
-    Map<String, Object> report = new LinkedHashMap<>(16);
+    Map<String, Object> report = new LinkedHashMap<>(COLLECTION_CAPACITY);
     report.put("reportType", "WEEKLY");
     report.put("period", startTime.toLocalDate() + " ~ " + endTime.toLocalDate());
     report.put("generatedAt", now);
@@ -203,7 +206,7 @@ public class FlowReportServiceImpl implements FlowReportService {
     LocalDateTime startTime = now.minusMonths(1).withDayOfMonth(1).with(LocalTime.MIN);
     LocalDateTime endTime = now.withDayOfMonth(1).minusDays(1).with(LocalTime.MAX);
 
-    Map<String, Object> report = new LinkedHashMap<>(16);
+    Map<String, Object> report = new LinkedHashMap<>(COLLECTION_CAPACITY);
     report.put("reportType", "MONTHLY");
     report.put("period", startTime.toLocalDate() + " ~ " + endTime.toLocalDate());
     report.put("generatedAt", now);

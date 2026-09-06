@@ -8,8 +8,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.excel.core.config.ExcelConfig;
-
 /**
  * 公式注入防护工具类
  *
@@ -33,7 +31,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see ExcelConfig#isFormulaInjectionProtection()
+ * @see com.njydsz.common.excel.core.config.ExcelConfig#isFormulaInjectionProtection()
  */
 public final class FormulaInjectionGuard {
 

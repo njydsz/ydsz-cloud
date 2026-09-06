@@ -43,6 +43,9 @@ import com.njydsz.message.server.config.ChannelProperties;
 @Component
 @RequiredArgsConstructor
 public class WeComAppChannel implements MessageChannel {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** Token 安全余量（秒） */
   private static final long TOKEN_SAFETY_MARGIN_SECONDS = 300;
 
@@ -191,17 +194,17 @@ public class WeComAppChannel implements MessageChannel {
       }
     }
 
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("touser", receiver);
     payload.put("msgtype", msgType);
     payload.put("agentid", agentId);
 
     if ("markdown".equals(msgType)) {
-      Map<String, Object> markdown = new HashMap<>(16);
+      Map<String, Object> markdown = new HashMap<>(COLLECTION_CAPACITY);
       markdown.put("content", content);
       payload.put("markdown", markdown);
     } else if ("textcard".equals(msgType)) {
-      Map<String, Object> textcard = new HashMap<>(16);
+      Map<String, Object> textcard = new HashMap<>(COLLECTION_CAPACITY);
       textcard.put("title", subject);
       textcard.put("description", content);
       textcard.put(
@@ -209,7 +212,7 @@ public class WeComAppChannel implements MessageChannel {
           request.getParams() != null ? request.getParams().getOrDefault("actionUrl", "") : "");
       payload.put("textcard", textcard);
     } else {
-      Map<String, Object> text = new HashMap<>(16);
+      Map<String, Object> text = new HashMap<>(COLLECTION_CAPACITY);
       text.put("content", content);
       payload.put("text", text);
     }

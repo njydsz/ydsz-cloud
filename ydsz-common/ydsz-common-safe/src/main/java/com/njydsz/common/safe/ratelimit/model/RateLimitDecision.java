@@ -1,6 +1,7 @@
 package com.njydsz.common.safe.ratelimit.model;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import lombok.AllArgsConstructor;
@@ -39,10 +40,10 @@ public class RateLimitDecision implements Serializable {
   private RateLimitRule rule;
 
   /** 剩余配额 */
-  private double remaining;
+  private BigDecimal remaining;
 
   /** 限流阈值 */
-  private double threshold;
+  private BigDecimal threshold;
 
   /** 等待时间（毫秒），0 表示无等待 */
   private long waitTimeMillis;

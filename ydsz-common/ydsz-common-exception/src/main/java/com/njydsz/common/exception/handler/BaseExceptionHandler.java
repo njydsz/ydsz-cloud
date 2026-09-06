@@ -28,7 +28,6 @@ import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -46,7 +45,7 @@ import com.njydsz.common.exception.util.ExceptionDesensitizer;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see BusinessException
+ * @see com.njydsz.common.exception.custom.BusinessException
  * @see YdszResponse
  * @see ProblemDetail
  */

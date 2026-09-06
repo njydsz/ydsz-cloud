@@ -72,6 +72,9 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  */
 @Slf4j
 public class RuleLifecycleService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 日期时间格式 */
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
@@ -187,9 +190,9 @@ public class RuleLifecycleService {
     Map<String, RuleEngineStatsVO.RuleStat> perRuleStats =
         stats != null && stats.getPerRuleStats() != null
             ? stats.getPerRuleStats()
-            : new HashMap<>(16);
+            : new HashMap<>(COLLECTION_CAPACITY);
 
-    List<RetirementSuggestionVO> suggestions = new ArrayList<>(16);
+    List<RetirementSuggestionVO> suggestions = new ArrayList<>(COLLECTION_CAPACITY);
     for (RuleDefinitionDTO rule : allRules) {
       // 已归档规则跳过
       RuleStatus status = RuleStatus.fromCode(rule.getStatus());
@@ -232,7 +235,7 @@ public class RuleLifecycleService {
     Map<String, RuleEngineStatsVO.RuleStat> perRuleStats =
         stats != null && stats.getPerRuleStats() != null
             ? stats.getPerRuleStats()
-            : new HashMap<>(16);
+            : new HashMap<>(COLLECTION_CAPACITY);
 
     return analyzeRule(rule, perRuleStats.get(ruleCode));
   }
@@ -380,7 +383,7 @@ public class RuleLifecycleService {
   /** 构建建议操作列表 */
   private List<String> buildRecommendedActions(
       RetirementSuggestionVO.Reason reason, RuleDefinitionDTO rule) {
-    List<String> actions = new ArrayList<>(16);
+    List<String> actions = new ArrayList<>(COLLECTION_CAPACITY);
     switch (reason) {
       case DORMANT -> {
         actions.add("检查规则条件表达式是否与当前业务场景匹配");
@@ -519,7 +522,7 @@ public class RuleLifecycleService {
 
   /** 从 JSON 字符串中提取字段值（简化实现） */
   private Map<String, String> extractJsonFields(String json) {
-    Map<String, String> fields = new LinkedHashMap<>(16);
+    Map<String, String> fields = new LinkedHashMap<>(COLLECTION_CAPACITY);
     // 简化实现：逐个提取 "key":"value" 或 "key":value
     String[] keys = {
       "name",
@@ -608,7 +611,7 @@ public class RuleLifecycleService {
   /** 生成字段差异列表 */
   private List<RollbackPreviewVO.FieldDiff> generateDiffs(
       RuleDefinitionDTO current, RuleDefinitionDTO target) {
-    List<RollbackPreviewVO.FieldDiff> diffs = new ArrayList<>(16);
+    List<RollbackPreviewVO.FieldDiff> diffs = new ArrayList<>(COLLECTION_CAPACITY);
     compareField(diffs, "name", "规则名称", current.getName(), target.getName());
     compareField(diffs, "description", "描述", current.getDescription(), target.getDescription());
     compareField(
@@ -776,7 +779,7 @@ public class RuleLifecycleService {
    * @return 退役结果（ruleCode → 成功/失败信息）
    */
   public Map<String, String> bulkRetire(List<String> ruleCodes, String operator, String reason) {
-    Map<String, String> results = new LinkedHashMap<>(16);
+    Map<String, String> results = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (ruleCodes == null || ruleCodes.isEmpty()) {
       return results;
     }
@@ -809,7 +812,7 @@ public class RuleLifecycleService {
    */
   public Map<String, Integer> getLifecycleSummary() {
     List<RuleDefinitionDTO> allRules = configProvider.loadAllRules();
-    Map<String, Integer> summary = new LinkedHashMap<>(16);
+    Map<String, Integer> summary = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
     // 初始化所有状态
     for (RuleStatus status : RuleStatus.values()) {

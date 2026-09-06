@@ -64,6 +64,9 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @Service
 @RequiredArgsConstructor
 public class FlowTaskServiceImpl implements FlowTaskService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 查询子服务，处理待办/已办/详情/统计等只读查询 */
   private final FlowTaskQueryServiceImpl queryService;
@@ -512,7 +515,7 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
     if (todos == null || todos.isEmpty()) {
       return 0;
     }
-    List<String> taskIds = new ArrayList<>(16);
+    List<String> taskIds = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowRunTaskVO task : todos) {
       taskIds.add(task.getId());
     }
@@ -522,8 +525,8 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   @Override
   public List<Map<String, Object>> overdueStats(String flowCode, LocalDateTime startTime, LocalDateTime endTime) {
-    List<Map<String, Object>> result = new ArrayList<>(16);
-    Map<String, Object> stats = new LinkedHashMap<>(16);
+    List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY);
+    Map<String, Object> stats = new LinkedHashMap<>(COLLECTION_CAPACITY);
     stats.put("flowCode", flowCode);
     stats.put("overdueCount", queryService.countOverdue(flowCode, null));
     result.add(stats);

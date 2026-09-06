@@ -1,5 +1,6 @@
 package com.njydsz.common.safe.ratelimit.decorator;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,8 +66,8 @@ public class RateLimitResponseDecorator {
       response.setHeader("Retry-After", String.valueOf(waitSeconds));
 
       // X-RateLimit-Limit：总阈值
-      if (decision.getThreshold() > 0) {
-        response.setHeader("X-RateLimit-Limit", String.valueOf((int) decision.getThreshold()));
+      if (decision.getThreshold().compareTo(BigDecimal.ZERO) > 0) {
+        response.setHeader("X-RateLimit-Limit", String.valueOf(decision.getThreshold().intValue()));
       }
 
       // X-RateLimit-Remaining：剩余配额（限流时为 0）
@@ -95,11 +96,11 @@ public class RateLimitResponseDecorator {
       return;
     }
 
-    try {
-      if (decision.getThreshold() > 0) {
-        response.setHeader("X-RateLimit-Limit", String.valueOf((int) decision.getThreshold()));
+      try {
+      if (decision.getThreshold().compareTo(BigDecimal.ZERO) > 0) {
+        response.setHeader("X-RateLimit-Limit", String.valueOf(decision.getThreshold().intValue()));
         response.setHeader(
-            "X-RateLimit-Remaining", String.valueOf(Math.max(0, decision.getRemaining())));
+            "X-RateLimit-Remaining", String.valueOf(BigDecimal.ZERO.max(decision.getRemaining()).intValue()));
       }
     } catch (Exception e) {
       LOG.debug("设置限流通过响应头失败: {}", e.getMessage());

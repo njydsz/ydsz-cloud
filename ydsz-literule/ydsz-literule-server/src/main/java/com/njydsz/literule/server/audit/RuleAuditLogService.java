@@ -57,6 +57,9 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  */
 @Slf4j
 public class RuleAuditLogService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final AuditLogStore store;
 
@@ -382,7 +385,7 @@ public class RuleAuditLogService {
     if (def == null) {
       return Collections.emptyMap();
     }
-    Map<String, Object> snapshot = new LinkedHashMap<>(16);
+    Map<String, Object> snapshot = new LinkedHashMap<>(COLLECTION_CAPACITY);
     snapshot.put("code", def.getCode());
     snapshot.put("name", def.getName());
     snapshot.put("conditionExpression", def.getConditionExpression());
@@ -403,7 +406,7 @@ public class RuleAuditLogService {
   }
 
   private Map<String, FieldDiff> computeFieldDiff(RuleDefinitionDTO oldDef, RuleDefinitionDTO newDef) {
-    Map<String, FieldDiff> diffs = new LinkedHashMap<>(16);
+    Map<String, FieldDiff> diffs = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (oldDef == null || newDef == null) {
       return diffs;
     }

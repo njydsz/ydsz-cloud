@@ -50,6 +50,9 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
 @RequiredArgsConstructor
 @Validated
 public class JobTaskController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 子任务 Repository（DDD 分层：Controller 通过 Repository 接口查询子任务） */
   private final JobTaskRepository jobTaskRepository;
@@ -115,7 +118,7 @@ public class JobTaskController {
     int running = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.RUNNING.name());
     int success = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.SUCCESS.name());
     int failed = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.FAILED.name());
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY);
     result.put("total", total);
     result.put("pending", pending);
     result.put("running", running);

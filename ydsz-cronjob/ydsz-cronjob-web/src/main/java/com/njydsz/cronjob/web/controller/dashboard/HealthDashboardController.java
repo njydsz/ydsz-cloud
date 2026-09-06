@@ -58,6 +58,9 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequestMapping("/api/v1/cronjob/dashboard/health")
 @RequiredArgsConstructor
 public class HealthDashboardController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** Map 初始容量：16 */
   private static final int MAP_CAPACITY_16 = 16;
@@ -127,7 +130,7 @@ public class HealthDashboardController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping
   public YdszResponse<Map<String, Object>> getHealth() {
-    Map<String, Object> health = new LinkedHashMap<>(16);
+    Map<String, Object> health = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
     // 1. 基本信息
     health.put("timestamp", LocalDateTime.now().toString());

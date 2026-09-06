@@ -6,14 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.rag.Retriever;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
@@ -41,6 +40,9 @@ import com.njydsz.common.docs.service.DocumentService;
 @Slf4j
 @Service
 public class RagService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认返回 Top-5 召回；过小覆盖不足、过大引入噪声并增加上下文长度 */
   private static final int DEFAULT_TOP_K = 5;
@@ -190,7 +192,7 @@ public class RagService {
    * @return 引用摘要列表
    */
   public List<Citation> getCitations(List<TextChunk> chunks) {
-    List<Citation> citations = new ArrayList<>(16);
+    List<Citation> citations = new ArrayList<>(COLLECTION_CAPACITY);
     if (chunks == null) {
       return citations;
     }

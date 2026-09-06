@@ -87,6 +87,9 @@ import com.njydsz.workflow.server.service.FlowTimerService;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractFlowInstanceLifecycle {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认允许回滚的最大天数 */
   protected static final int DEFAULT_ROLLBACK_DAYS = 7;
@@ -497,7 +500,7 @@ public abstract class AbstractFlowInstanceLifecycle {
 
     try {
       Map<String, Object> vars = parseVariables(instance.getVariable());
-      Map<String, Object> rollbackInfo = new LinkedHashMap<>(16);
+      Map<String, Object> rollbackInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
       rollbackInfo.put("operatorId", operatorId);
       rollbackInfo.put("reason", reason);
       rollbackInfo.put("rolledBackAt", now.toString());
@@ -556,7 +559,7 @@ public abstract class AbstractFlowInstanceLifecycle {
 
     Map<String, Object> merged = getVariables(instanceId);
     if (merged == null) {
-      merged = new HashMap<>(16);
+      merged = new HashMap<>(COLLECTION_CAPACITY);
     }
     if (variables != null && !variables.isEmpty()) {
       merged.putAll(variables);
@@ -818,7 +821,7 @@ public abstract class AbstractFlowInstanceLifecycle {
 
   protected String buildInstanceVariables(FlowStartProcessDTO dto) {
     Map<String, Object> mergedVars =
-        dto.getVariables() == null ? new HashMap<>(16) : new HashMap<>(dto.getVariables());
+        dto.getVariables() == null ? new HashMap<>(COLLECTION_CAPACITY) : new HashMap<>(dto.getVariables());
     if (dto.getNodeAssignees() != null && !dto.getNodeAssignees().isEmpty()) {
       for (Map.Entry<String, List<Long>> entry : dto.getNodeAssignees().entrySet()) {
         mergedVars.put("_selfSelect_" + entry.getKey(), entry.getValue());
@@ -889,7 +892,7 @@ public abstract class AbstractFlowInstanceLifecycle {
 
   protected void validateTargetNodeRecallable(String instanceId, String targetNodeCode) {
     List<Map<String, Object>> recallable = hisTaskRepository.listPassedNodes(instanceId);
-    Set<String> recallableCodes = new HashSet<>(16);
+    Set<String> recallableCodes = new HashSet<>(COLLECTION_CAPACITY);
     if (recallable != null) {
       for (Map<String, Object> n : recallable) {
         Object code = n.get("nodeCode");
@@ -956,7 +959,7 @@ public abstract class AbstractFlowInstanceLifecycle {
 
     Map<String, Object> merged = getVariables(instanceId);
     if (merged == null) {
-      merged = new HashMap<>(16);
+      merged = new HashMap<>(COLLECTION_CAPACITY);
     }
     if (variables != null && !variables.isEmpty()) {
       merged.putAll(variables);

@@ -6,13 +6,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.njydsz.common.auth.model.DataScopeAware;
-import com.njydsz.common.auth.model.DataScopeInfo;
-
 /**
  * 行级数据权限校验与注入注解。
  *
- * <p>用于控制接口方法的数据权限范围，会将当前用户可访问的数据范围注入到方法参数中。 与 {@link DataScopeAware} 或 Map 类型参数配合使用，
+ * <p>用于控制接口方法的数据权限范围，会将当前用户可访问的数据范围注入到方法参数中。 与 {@link com.njydsz.common.auth.model.DataScopeAware} 或 Map 类型参数配合使用，
  * 实现行级数据权限的动态过滤。
  *
  * <p><b>工作原理：</b>
@@ -21,7 +18,7 @@ import com.njydsz.common.auth.model.DataScopeInfo;
  *   <li>切面拦截标注了本注解的方法
  *   <li>从请求上下文解析当前用户的行级数据权限（来自 Redis role-row-key）
  *   <li>根据用户角色合并多角色的数据权限范围
- *   <li>将数据权限信息 {@link DataScopeInfo} 注入到方法参数
+ *   <li>将数据权限信息 {@link com.njydsz.common.auth.model.DataScopeInfo} 注入到方法参数
  *   <li>同时将数据范围信息以 header 形式透传给下游服务（如 SQL 拦截器）
  * </ol>
  *
@@ -40,14 +37,14 @@ import com.njydsz.common.auth.model.DataScopeInfo;
  * <p><b>使用示例：</b>
  *
  * <pre>
- * // 方式一：自动注入到实现 DataScopeAware 接口的参数
+ * // 方式一：自动注入到实现 com.njydsz.common.auth.model.DataScopeAware 接口的参数
  * &#64;AuthRowPermission
  * public PageResponse&lt;UserVO&gt; queryUsers(UserQuery query) {
  *     // query 对象已自动注入 DataScopeInfo
  *     return userService.queryWithScope(query);
  * }
  *
- * // 方式二：注入到 Map 类型参数
+ * // 方式二：注入到 Map 类型参数 (com.njydsz.common.auth.model.DataScopeInfo)
  * &#64;AuthRowPermission(mapKey = "rowPermission")
  * public PageResponse&lt;UserVO&gt; queryUsers(Map&lt;String, Object&gt; params) {
  *     // params["rowPermission"] 已注入 DataScopeInfo
@@ -75,8 +72,8 @@ import com.njydsz.common.auth.model.DataScopeInfo;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see DataScopeInfo
- * @see DataScopeAware
+ * @see com.njydsz.common.auth.model.DataScopeInfo
+ * @see com.njydsz.common.auth.model.DataScopeAware
  * @see com.njydsz.common.domain.constant.DataScopeConstants
  */
 @Inherited
@@ -110,7 +107,7 @@ public @interface AuthRowPermission {
   /**
    * 目标方法参数名称。
    *
-   * <p>用于精确指定需要注入数据权限信息的参数名称。 若方法中存在多个可注入参数（实现 {@link DataScopeAware} 或 Map）， 通过此属性定位目标参数。
+   * <p>用于精确指定需要注入数据权限信息的参数名称。 若方法中存在多个可注入参数（实现 {@link com.njydsz.common.auth.model.DataScopeAware} 或 Map）， 通过此属性定位目标参数。
    *
    * @return 方法参数名称
    */

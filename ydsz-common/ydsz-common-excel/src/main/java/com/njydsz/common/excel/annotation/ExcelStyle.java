@@ -6,8 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.njydsz.common.excel.core.ExcelWriter;
-
 /**
  * Excel样式注解 - 用于自定义单元格样式
  *
@@ -30,7 +28,7 @@ import com.njydsz.common.excel.core.ExcelWriter;
  * @author ydsz-team
 
  * @version 26.09.01
- * @see ExcelWriter
+ * @see com.njydsz.common.excel.core.ExcelWriter
  * @since 26.09.01
  */
 @Target(ElementType.FIELD)

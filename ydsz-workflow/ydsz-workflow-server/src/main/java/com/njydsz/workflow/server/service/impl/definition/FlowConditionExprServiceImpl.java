@@ -95,6 +95,9 @@ import com.njydsz.workflow.server.service.FlowConditionExprService;
 @Service
 @RequiredArgsConstructor
 public class FlowConditionExprServiceImpl implements FlowConditionExprService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 流程节点仓储（domain 层契约），管理 ydsz_flow_node 表 CRUD */
   private final FlowNodeRepository nodeRepository;
@@ -104,7 +107,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
    *
    * <p>Key 为前端下拉选择的<b>结构化操作符</b>，Value 为 Aviator 原生符号。 新增操作符只需在此 Map 中新增一行即可，无需修改业务逻辑。
    */
-  private static final Map<String, String> OPERATOR_MAP = new LinkedHashMap<>(16);
+  private static final Map<String, String> OPERATOR_MAP = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
   static {
     OPERATOR_MAP.put("EQ", "==");
@@ -162,7 +165,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         return "";
       }
 
-      List<String> parts = new ArrayList<>(16);
+      List<String> parts = new ArrayList<>(COLLECTION_CAPACITY);
       for (Map<String, Object> group : groups) {
         String part = buildGroupExpr(group);
         if (part != null) {
@@ -199,7 +202,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
       return "{}";
     }
     try {
-      Map<String, Object> result = new LinkedHashMap<>(16);
+      Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
       String logic = "AND";
       String expr = expression.trim();
 
@@ -214,7 +217,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
       // 拆分条件项
       String separator = "AND".equals(logic) ? "&&" : "\\|\\|";
       String[] parts = expr.split(separator);
-      List<Map<String, Object>> groups = new ArrayList<>(16);
+      List<Map<String, Object>> groups = new ArrayList<>(COLLECTION_CAPACITY);
 
       for (String part : parts) {
         Map<String, Object> group = parseSingleExpr(part.trim());
@@ -246,7 +249,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
    */
   @Override
   public Map<String, Object> validateExpression(String expression, String engine) {
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (expression == null || expression.isBlank()) {
       result.put("valid", false);
       result.put("error", "表达式不能为空");
@@ -300,9 +303,9 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
    */
   @Override
   public List<Map<String, String>> getOperators() {
-    List<Map<String, String>> result = new ArrayList<>(16);
+    List<Map<String, String>> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, String> entry : OPERATOR_MAP.entrySet()) {
-      Map<String, String> op = new LinkedHashMap<>(16);
+      Map<String, String> op = new LinkedHashMap<>(COLLECTION_CAPACITY);
       op.put("code", entry.getKey());
       op.put("aviator", entry.getValue());
       result.add(op);
@@ -453,7 +456,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
       if (idx > 0) {
         String field = expr.substring(0, idx).trim();
         String value = expr.substring(idx + op.length() + 2).trim();
-        Map<String, Object> group = new LinkedHashMap<>(16);
+        Map<String, Object> group = new LinkedHashMap<>(COLLECTION_CAPACITY);
         group.put("field", field);
         group.put("operator", entry.getKey());
         group.put("value", unquote(value));
@@ -530,7 +533,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     if (definitionId == null || definitionId.isBlank()) {
       return List.of();
     }
-    List<Map<String, String>> result = new ArrayList<>(16);
+    List<Map<String, String>> result = new ArrayList<>(COLLECTION_CAPACITY);
 
     // 1. 添加系统内置变量
     result.add(
@@ -616,7 +619,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
   @Override
   public Map<String, Object> previewExpression(
       String expression, Map<String, Object> variables, String engine) {
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (expression == null || expression.isBlank()) {
       result.put("result", false);
       result.put("error", "表达式不能为空");
@@ -653,7 +656,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
    */
   @Override
   public List<Map<String, String>> getConditionTemplates() {
-    List<Map<String, String>> templates = new ArrayList<>(16);
+    List<Map<String, String>> templates = new ArrayList<>(COLLECTION_CAPACITY);
 
     templates.add(
         buildTemplate(
@@ -772,7 +775,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         String placeholder = (String) fieldMap.get("placeholder");
 
         if (fieldKey != null && !fieldKey.isBlank()) {
-          Map<String, String> varInfo = new LinkedHashMap<>(16);
+          Map<String, String> varInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
           varInfo.put("fieldKey", fieldKey);
           varInfo.put("label", label != null ? label : fieldKey);
           varInfo.put("fieldType", fieldType != null ? fieldType : "STRING");
@@ -790,7 +793,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             String subLabel = (String) subFieldMap.get("label");
             String subFieldType = (String) subFieldMap.get("fieldType");
             if (subFieldKey != null && !subFieldKey.isBlank()) {
-              Map<String, String> varInfo = new LinkedHashMap<>(16);
+              Map<String, String> varInfo = new LinkedHashMap<>(COLLECTION_CAPACITY);
               varInfo.put("fieldKey", fieldKey + "." + subFieldKey);
               varInfo.put(
                   "label",
@@ -822,7 +825,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
    */
   private Map<String, String> buildTemplate(
       String id, String name, String description, String templateJson) {
-    Map<String, String> template = new LinkedHashMap<>(16);
+    Map<String, String> template = new LinkedHashMap<>(COLLECTION_CAPACITY);
     template.put("id", id);
     template.put("name", name);
     template.put("description", description);

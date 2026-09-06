@@ -38,6 +38,9 @@ import lombok.Data;
  * @author ydsz-team
  */
 public final class RuleGraphValidator {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private RuleGraphValidator() {}
 
@@ -48,7 +51,7 @@ public final class RuleGraphValidator {
    * @return 问题列表；为空表示无问题
    */
   public static List<GraphValidationIssue> validate(RuleChainGraph graph) {
-    List<GraphValidationIssue> issues = new ArrayList<>(16);
+    List<GraphValidationIssue> issues = new ArrayList<>(COLLECTION_CAPACITY);
     if (graph == null) {
       issues.add(new GraphValidationIssue("GRAPH_NULL", "画布图对象为空", null));
       return issues;

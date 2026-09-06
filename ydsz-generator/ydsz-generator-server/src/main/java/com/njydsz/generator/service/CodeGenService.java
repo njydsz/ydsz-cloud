@@ -1,25 +1,6 @@
 package com.njydsz.generator.service;
 
-import com.njydsz.generator.entity.GenColumnMeta;
-import com.njydsz.generator.entity.GenDatasource;
-import com.njydsz.generator.entity.GenHistory;
-import com.njydsz.generator.entity.GenHistoryFile;
-import com.njydsz.generator.entity.GenTableMeta;
-import com.njydsz.generator.entity.GenTemplate;
-import com.njydsz.generator.entity.GenTemplateGroup;
-import com.njydsz.generator.engine.CodeGenEngine;
-import com.njydsz.generator.enums.ConflictStrategyEnum;
-import com.njydsz.generator.enums.GenStatusEnum;
-import com.njydsz.generator.repository.GenHistoryFileRepository;
-import com.njydsz.generator.repository.GenHistoryRepository;
-import com.njydsz.generator.vo.CodePreviewVO;
-import com.njydsz.generator.vo.GenResultVO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.transaction.annotation.Transactional;
-
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,7 +16,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.generator.engine.CodeGenEngine;
+import com.njydsz.generator.entity.GenColumnMeta;
+import com.njydsz.generator.entity.GenDatasource;
+import com.njydsz.generator.entity.GenHistory;
+import com.njydsz.generator.entity.GenHistoryFile;
+import com.njydsz.generator.entity.GenTableMeta;
+import com.njydsz.generator.entity.GenTemplate;
+import com.njydsz.generator.enums.ConflictStrategyEnum;
+import com.njydsz.generator.enums.GenStatusEnum;
+import com.njydsz.generator.query.GenCodeGenerateQuery;
+import com.njydsz.generator.repository.GenHistoryFileRepository;
+import com.njydsz.generator.repository.GenHistoryRepository;
+import com.njydsz.generator.vo.CodePreviewVO;
+import com.njydsz.generator.vo.GenResultVO;
 
 /**
  * 代码生成编排服务（Domain Service）。
@@ -43,7 +44,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * <p>串联 TableMeta → Template → Engine → History 全链路，核心职责：
  * <ul>
  *   <li>{@link #preview} — 预览不写入</li>
- *   <li>{@link #generate} — 正式生成（带历史记录 + 冲突策略）</li>
+ *   <li>{@link #generate(GenCodeGenerateQuery)} — 正式生成（带历史记录 + 冲突策略）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -53,6 +54,13 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 @Service
 @RequiredArgsConstructor
 public class CodeGenService {
+
+  /** 历史文件列表初始容量。 */
+  private static final int HISTORY_FILE_LIST_CAPACITY = 8;
+  /** 批量生成单表任务最长等待时间（分钟）。 */
+  private static final long PER_TABLE_TIMEOUT_MINUTES = 5L;
+  /** 批量生成线程池优雅关闭等待时间（秒）。 */
+  private static final long POOL_SHUTDOWN_SECONDS = 30L;
 
   private final DatasourceService datasourceService;
   private final TemplateGroupService templateGroupService;
@@ -103,81 +111,35 @@ public class CodeGenService {
   /**
    * 正式生成代码到指定目录。
    *
-   * @param datasourceId   数据源 ID
-   * @param templateGroupId 模板分组 ID
-   * @param tableName      表名
-   * @param outputDir      输出目录
-   * @param conflictStrategy 冲突策略
-   * @param triggeredBy    触发人
+   * @param query 生成请求（数据源、模板分组、表名、输出目录、冲突策略、触发人）
    * @return 生成结果
    */
   @Transactional(rollbackFor = Exception.class)
-  public GenResultVO generate(
-      Long datasourceId, Long templateGroupId, String tableName,
-      String outputDir, ConflictStrategyEnum conflictStrategy, String triggeredBy) {
-
-    if (conflictStrategy == null) {
-      conflictStrategy = ConflictStrategyEnum.SKIP;
-    }
-
-    // 创建历史记录
-    GenHistory history = GenHistory.builder()
-        .moduleName(tableName)
-        .datasourceId(datasourceId)
-        .templateGroupId(templateGroupId)
-        .tableCount(1)
-        .fileCount(0)
-        .status(GenStatusEnum.RUNNING.getCode())
-        .triggeredBy(triggeredBy)
-        .startedAt(LocalDateTime.now())
-        .build();
-    history = historyRepository.save(history);
+  public GenResultVO generate(GenCodeGenerateQuery query) {
+    String triggeredBy = query.getTriggeredBy() == null
+        ? "system" : query.getTriggeredBy();
+    ConflictStrategyEnum strategy = resolveStrategy(query.getConflictStrategy());
+    GenHistory history = createHistory(
+        query.getDatasourceId(), query.getTemplateGroupId(),
+        query.getTableName(), triggeredBy);
 
     int successCount = 0;
     int skipCount = 0;
     int failCount = 0;
-    List<GenHistoryFile> historyFiles = new ArrayList<>(8);
+    List<GenHistoryFile> historyFiles =
+        new ArrayList<>(HISTORY_FILE_LIST_CAPACITY);
 
     try {
-      GenDatasource ds = datasourceService.getById(datasourceId);
-      GenTableMeta tableMeta = tableMetadataService.getOrRefresh(ds, tableName);
-      List<GenColumnMeta> columns = tableMetadataService.refreshColumns(ds, tableMeta);
-      List<GenTemplate> templates = templateService.listByGroup(templateGroupId);
-
-      Map<String, Object> tableCtx = codeGenEngine.buildTableContext(columns);
-      Map<String, Object> context = codeGenEngine.buildContext(
-          tableMeta.getModuleName(), defaultBasePackage, defaultAuthor,
-          tableCtx, new HashMap<>());
-
-      for (GenTemplate tpl : templates) {
-        String content = codeGenEngine.renderTemplate(tpl, context);
-        String filePath = outputDir + "/" + resolveOutputPath(tpl, tableMeta);
-        String hash = codeGenEngine.computeHash(content);
-        String action = writeFile(filePath, content, conflictStrategy);
-
-        GenHistoryFile hf = GenHistoryFile.builder()
-            .historyId(history.getId())
-            .filePath(filePath)
-            .originalBackupPath(null)
-            .fileHash(hash)
-            .action(action)
-            .build();
-        historyFiles.add(hf);
-
-        if ("CREATED".equals(action) || "UPDATED".equals(action)) {
-          successCount++;
-        } else {
-          skipCount++;
-        }
-      }
-
+      WriteStats stats = renderAndWrite(history, query, strategy, historyFiles);
+      successCount = stats.successCount();
+      skipCount = stats.skipCount();
       history.setFileCount(successCount + skipCount);
       history.setStatus((failCount > 0
           ? (successCount > 0 ? GenStatusEnum.PARTIAL : GenStatusEnum.FAILED)
           : GenStatusEnum.SUCCESS).getCode());
       history.setFinishedAt(LocalDateTime.now());
     } catch (Exception e) {
-      log.error("代码生成失败 table={} err={}", tableName, e.getMessage(), e);
+      log.error("代码生成失败 table={} err={}", query.getTableName(), e.getMessage(), e);
       history.setStatus(GenStatusEnum.FAILED.getCode());
       history.setErrorMessage(e.getMessage());
       history.setFinishedAt(LocalDateTime.now());
@@ -199,7 +161,8 @@ public class CodeGenService {
   /**
    * 批量生成数据源下全表。
    *
-   * <p>读取数据源缓存的全部表元数据，然后并行调用 {@link #generateBatch(Long, Long, List, String, ConflictStrategyEnum, String)}。
+   * <p>读取数据源缓存的全部表元数据，然后并行调用
+   * {@link #generateBatch(GenCodeGenerateQuery, List)}。
    *
    * @param datasourceId      数据源 ID
    * @param templateGroupId   模板分组 ID
@@ -219,8 +182,14 @@ public class CodeGenService {
     List<String> tableNames = tables.stream()
         .map(GenTableMeta::getTableName)
         .collect(Collectors.toList());
-    return generateBatch(datasourceId, templateGroupId, tableNames,
-        outputDir, conflictStrategy, triggeredBy);
+    GenCodeGenerateQuery query = GenCodeGenerateQuery.builder()
+        .datasourceId(datasourceId)
+        .templateGroupId(templateGroupId)
+        .outputDir(outputDir)
+        .conflictStrategy(conflictStrategy == null ? null : conflictStrategy.name())
+        .triggeredBy(triggeredBy)
+        .build();
+    return generateBatch(query, tableNames);
   }
 
   /**
@@ -230,17 +199,11 @@ public class CodeGenService {
    * 池在方法退出前等待所有任务完成。任一表的生成失败不影响其他表，
    * 失败计数会被汇总到返回的 {@link GenResultVO} 中。
    *
-   * @param datasourceId      数据源 ID
-   * @param templateGroupId   模板分组 ID
-   * @param tableNames        表名列表
-   * @param outputDir         输出目录
-   * @param conflictStrategy  冲突策略
-   * @param triggeredBy       触发人
+   * @param query      基础生成参数（数据源、模板分组、输出目录、冲突策略、触发人）
+   * @param tableNames 表名列表
    * @return 生成结果汇总
    */
-  public GenResultVO generateBatch(
-      Long datasourceId, Long templateGroupId, List<String> tableNames,
-      String outputDir, ConflictStrategyEnum conflictStrategy, String triggeredBy) {
+  public GenResultVO generateBatch(GenCodeGenerateQuery query, List<String> tableNames) {
 
     int poolSize = Math.max(1, Math.min(tableNames.size(),
         Runtime.getRuntime().availableProcessors()));
@@ -257,8 +220,15 @@ public class CodeGenService {
       for (String tableName : tableNames) {
         futures.add(pool.submit(() -> {
           try {
-            GenResultVO r = generate(datasourceId, templateGroupId, tableName,
-                outputDir, conflictStrategy, triggeredBy);
+            GenCodeGenerateQuery tableQuery = GenCodeGenerateQuery.builder()
+                .datasourceId(query.getDatasourceId())
+                .templateGroupId(query.getTemplateGroupId())
+                .tableName(tableName)
+                .outputDir(query.getOutputDir())
+                .conflictStrategy(query.getConflictStrategy())
+                .triggeredBy(query.getTriggeredBy())
+                .build();
+            GenResultVO r = generate(tableQuery);
             synchronized (firstHistoryId) {
               if (firstHistoryId[0] == null) {
                 firstHistoryId[0] = r.getHistoryId();
@@ -281,13 +251,13 @@ public class CodeGenService {
       }
 
       for (Future<?> f : futures) {
-        f.get(5, TimeUnit.MINUTES);
+        f.get(PER_TABLE_TIMEOUT_MINUTES, TimeUnit.MINUTES);
       }
     } catch (Exception e) {
       log.error("批量生成失败: {}", e.getMessage(), e);
       totalFail.incrementAndGet();
     } finally {
-      ExecutorUtils.shutdownGracefully(pool, 30, TimeUnit.SECONDS);
+      ExecutorUtils.shutdownGracefully(pool, POOL_SHUTDOWN_SECONDS, TimeUnit.SECONDS);
     }
 
     return GenResultVO.builder()
@@ -297,6 +267,89 @@ public class CodeGenService {
         .skipCount(totalSkip.get())
         .failCount(totalFail.get())
         .build();
+  }
+
+  /**
+   * 创建并保存生成历史记录（运行中状态）。
+   *
+   * @param datasourceId    数据源 ID
+   * @param templateGroupId 模板分组 ID
+   * @param tableName       表名
+   * @param triggeredBy     触发人
+   * @return 已持久化的历史记录
+   */
+  private GenHistory createHistory(
+      Long datasourceId, Long templateGroupId, String tableName, String triggeredBy) {
+    GenHistory history = GenHistory.builder()
+        .moduleName(tableName)
+        .datasourceId(datasourceId)
+        .templateGroupId(templateGroupId)
+        .tableCount(1)
+        .fileCount(0)
+        .status(GenStatusEnum.RUNNING.getCode())
+        .triggeredBy(triggeredBy)
+        .startedAt(LocalDateTime.now())
+        .build();
+    return historyRepository.save(history);
+  }
+
+  /**
+   * 渲染并写入单表全部模板文件（不更新历史状态）。
+   *
+   * @param history      本次生成历史
+   * @param query        生成请求
+   * @param strategy     冲突策略
+   * @param historyFiles 文件明细收集列表
+   * @return 成功/跳过统计
+   * @throws IOException 文件写入失败
+   */
+  private WriteStats renderAndWrite(
+      GenHistory history, GenCodeGenerateQuery query,
+      ConflictStrategyEnum strategy, List<GenHistoryFile> historyFiles) throws IOException {
+    GenDatasource ds = datasourceService.getById(query.getDatasourceId());
+    GenTableMeta tableMeta = tableMetadataService.getOrRefresh(ds, query.getTableName());
+    List<GenColumnMeta> columns = tableMetadataService.refreshColumns(ds, tableMeta);
+    List<GenTemplate> templates = templateService.listByGroup(query.getTemplateGroupId());
+
+    Map<String, Object> tableCtx = codeGenEngine.buildTableContext(columns);
+    Map<String, Object> context = codeGenEngine.buildContext(
+        tableMeta.getModuleName(), defaultBasePackage, defaultAuthor,
+        tableCtx, new HashMap<>());
+
+    int successCount = 0;
+    int skipCount = 0;
+    for (GenTemplate tpl : templates) {
+      String content = codeGenEngine.renderTemplate(tpl, context);
+      String filePath = query.getOutputDir() + "/" + resolveOutputPath(tpl, tableMeta);
+      String hash = codeGenEngine.computeHash(content);
+      String action = writeFile(filePath, content, strategy);
+
+      GenHistoryFile hf = GenHistoryFile.builder()
+          .historyId(history.getId())
+          .filePath(filePath)
+          .originalBackupPath(null)
+          .fileHash(hash)
+          .action(action)
+          .build();
+      historyFiles.add(hf);
+
+      if ("CREATED".equals(action) || "UPDATED".equals(action)) {
+        successCount++;
+      } else {
+        skipCount++;
+      }
+    }
+    return new WriteStats(successCount, skipCount);
+  }
+
+  /**
+   * 解析冲突策略字符串（空值默认 SKIP）。
+   *
+   * @param strategy 策略字符串
+   * @return 冲突策略枚举
+   */
+  private ConflictStrategyEnum resolveStrategy(String strategy) {
+    return strategy == null ? ConflictStrategyEnum.SKIP : ConflictStrategyEnum.valueOf(strategy);
   }
 
   private String resolveOutputPath(GenTemplate tpl, GenTableMeta tableMeta) {
@@ -310,7 +363,7 @@ public class CodeGenService {
   }
 
   private String writeFile(String filePath, String content, ConflictStrategyEnum strategy)
-      throws Exception {
+      throws IOException {
     Path path = Paths.get(filePath);
     Files.createDirectories(path.getParent());
 
@@ -336,5 +389,9 @@ public class CodeGenService {
       Files.writeString(path, content, StandardCharsets.UTF_8);
       return "CREATED";
     }
+  }
+
+  /** 单表文件写入统计（成功数/跳过数）。 */
+  private record WriteStats(int successCount, int skipCount) {
   }
 }

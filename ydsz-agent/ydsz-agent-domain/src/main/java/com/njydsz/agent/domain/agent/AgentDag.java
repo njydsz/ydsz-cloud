@@ -23,6 +23,9 @@ import java.util.Set;
  * @since 26.09.01
  */
 public final class AgentDag implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private static final long serialVersionUID = 1L;
 
@@ -96,11 +99,11 @@ public final class AgentDag implements Serializable {
    * @return 根节点列表
    */
   public List<Node> getRootNodes() {
-    Set<String> hasIncoming = new HashSet<>(16);
+    Set<String> hasIncoming = new HashSet<>(COLLECTION_CAPACITY);
     for (List<String> deps : edges.values()) {
       hasIncoming.addAll(deps);
     }
-    List<Node> roots = new ArrayList<>(16);
+    List<Node> roots = new ArrayList<>(COLLECTION_CAPACITY);
     for (String nodeId : nodes.keySet()) {
       // 不在任何边依赖集合中的节点入度为 0，无前置依赖、可立即调度执行
       if (!hasIncoming.contains(nodeId)) {
@@ -118,7 +121,7 @@ public final class AgentDag implements Serializable {
    */
   public List<Node> getDependencies(String nodeId) {
     List<String> depIds = edges.getOrDefault(nodeId, List.of());
-    List<Node> deps = new ArrayList<>(16);
+    List<Node> deps = new ArrayList<>(COLLECTION_CAPACITY);
     for (String depId : depIds) {
       Node dep = nodes.get(depId);
       // 依赖 ID 在节点表中缺失时静默跳过，避免 DAG 定义不一致导致 NPE

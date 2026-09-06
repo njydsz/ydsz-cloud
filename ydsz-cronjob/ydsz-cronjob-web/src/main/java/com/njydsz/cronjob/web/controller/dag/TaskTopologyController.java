@@ -74,6 +74,9 @@ import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 @RequestMapping("/api/v1/cronjob/topology")
 @RequiredArgsConstructor
 public class TaskTopologyController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 最近日志条数 */
   private static final int RECENT_LOG_LIMIT = 20;
 
@@ -136,7 +139,7 @@ public class TaskTopologyController {
         dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
 
     // 4. 组装拓扑数据（使用 LinkedHashMap 保持 key 顺序）
-    Map<String, Object> topology = new LinkedHashMap<>(16);
+    Map<String, Object> topology = new LinkedHashMap<>(COLLECTION_CAPACITY);
     topology.put("dagDefinition", definition);
     topology.put("dagInstance", instance);
     topology.put("nodeInstances", nodeInstances);
@@ -184,8 +187,8 @@ public class TaskTopologyController {
     // 3. 查询节点实例并构建状态映射（通过 Repository 返回 VO 列表）
     List<JobDagNodeInstanceVO> nodeInstances =
         dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
-    Map<String, String> statusMap = new HashMap<>(16);
-    Map<String, Long> durationMap = new HashMap<>(16);
+    Map<String, String> statusMap = new HashMap<>(COLLECTION_CAPACITY);
+    Map<String, Long> durationMap = new HashMap<>(COLLECTION_CAPACITY);
     for (JobDagNodeInstanceVO ni : nodeInstances) {
       if (ni.getJobKey() != null && ni.getNodeStatus() != null) {
         statusMap.put(ni.getJobKey(), ni.getNodeStatus());

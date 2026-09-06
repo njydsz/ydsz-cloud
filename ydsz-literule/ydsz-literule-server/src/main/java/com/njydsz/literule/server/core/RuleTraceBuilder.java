@@ -17,6 +17,9 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  * @author ydsz-team
  */
 public class RuleTraceBuilder {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /**
    * 构建执行轨迹记录
@@ -35,7 +38,7 @@ public class RuleTraceBuilder {
     String conditionResult =
         result != null && result.getThreshold() != null ? result.getThreshold() : null;
 
-    Map<String, Object> resultSnapshot = new LinkedHashMap<>(16);
+    Map<String, Object> resultSnapshot = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (result != null) {
       resultSnapshot.put("triggered", result.isTriggered());
       resultSnapshot.put("severity", severity);

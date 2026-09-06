@@ -88,6 +88,9 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @RequiredArgsConstructor
 @Validated
 public class JobController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 任务调度服务 */
   private final JobService jobService;
@@ -153,11 +156,11 @@ public class JobController {
   @GetMapping("/cron/validate")
   public YdszResponse<Map<String, Object>> validateCron(
       @RequestParam String expr, @RequestParam(defaultValue = "5") int count) {
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY);
     try {
       CronExpression cron = CronExpression.parse(expr);
       result.put("valid", true);
-      List<String> nextFireTimes = new ArrayList<>(16);
+      List<String> nextFireTimes = new ArrayList<>(COLLECTION_CAPACITY);
       LocalDateTime now = LocalDateTime.now();
       for (int i = 0; i < count; i++) {
         now = cron.next(now);

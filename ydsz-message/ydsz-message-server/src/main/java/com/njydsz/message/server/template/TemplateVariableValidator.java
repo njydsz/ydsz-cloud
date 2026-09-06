@@ -30,6 +30,9 @@ import com.njydsz.common.json.YdszJson;
 @Slf4j
 @Component
 public class TemplateVariableValidator {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /**
    * 解析变量定义 JSON 为列表。
@@ -69,7 +72,7 @@ public class TemplateVariableValidator {
     if (varDefs == null || varDefs.isEmpty()) {
       return;
     }
-    List<String> errors = new ArrayList<>(16);
+    List<String> errors = new ArrayList<>(COLLECTION_CAPACITY);
 
     for (TemplateVariableDef def : varDefs) {
       String name = def.getName();

@@ -1,5 +1,7 @@
 package com.njydsz.common.queue.rate;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -34,14 +36,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ConsumerRateLimiter {
 
+  /** 运算精度（小数位数） */
+  private static final int SCALE = 10;
+
+  /** BigDecimal 常量 1 */
+  private static final BigDecimal ONE = BigDecimal.ONE;
+
+  /** 纳秒到秒的纳秒数（BigDecimal） */
+  private static final BigDecimal NANOS_PER_SECOND = new BigDecimal(TimeUnit.SECONDS.toNanos(1));
+
   /** 限流速率（每秒令牌数） */
-  private final double permitsPerSecond;
+  private final BigDecimal permitsPerSecond;
 
   /** 桶容量（最大令牌数） */
-  private final double maxTokens;
+  private final BigDecimal maxTokens;
 
   /** 当前令牌数 */
-  private double tokens;
+  private BigDecimal tokens;
 
   /** 上次补充令牌的时间戳（纳秒） */
   private long lastRefillTime;
@@ -59,15 +70,15 @@ public class ConsumerRateLimiter {
    */
   public ConsumerRateLimiter(int permitsPerSecond) {
     if (permitsPerSecond <= 0) {
-      this.permitsPerSecond = 0;
-      this.maxTokens = 0;
-      this.tokens = 0;
+      this.permitsPerSecond = BigDecimal.ZERO;
+      this.maxTokens = BigDecimal.ZERO;
+      this.tokens = BigDecimal.ZERO;
       this.enabled = false;
     } else {
-      this.permitsPerSecond = permitsPerSecond;
+      this.permitsPerSecond = BigDecimal.valueOf(permitsPerSecond);
       // 桶容量 = 每秒速率，允许短时间内的突发
-      this.maxTokens = permitsPerSecond;
-      this.tokens = maxTokens;
+      this.maxTokens = this.permitsPerSecond;
+      this.tokens = this.maxTokens;
       this.lastRefillTime = System.nanoTime();
       this.enabled = true;
     }
@@ -88,13 +99,18 @@ public class ConsumerRateLimiter {
     try {
       while (true) {
         refillTokens();
-        if (tokens >= 1.0) {
-          tokens -= 1.0;
+        if (tokens.compareTo(ONE) >= 0) {
+          tokens = tokens.subtract(ONE);
           return;
         }
         // 计算需要等待的时间
-        double deficit = 1.0 - tokens;
-        long waitNanos = (long) (deficit / permitsPerSecond * TimeUnit.SECONDS.toNanos(1));
+        BigDecimal deficit = ONE.subtract(tokens);
+        long waitNanos =
+            deficit
+                .divide(permitsPerSecond, SCALE, RoundingMode.HALF_UP)
+                .multiply(NANOS_PER_SECOND)
+                .setScale(0, RoundingMode.CEILING)
+                .longValue();
         if (waitNanos <= 0) {
           waitNanos = 1;
         }
@@ -135,8 +151,8 @@ public class ConsumerRateLimiter {
     lock.lock();
     try {
       refillTokens();
-      if (tokens >= 1.0) {
-        tokens -= 1.0;
+      if (tokens.compareTo(ONE) >= 0) {
+        tokens = tokens.subtract(ONE);
         return true;
       }
       return false;
@@ -153,9 +169,14 @@ public class ConsumerRateLimiter {
   private void refillTokens() {
     long now = System.nanoTime();
     long elapsedNanos = now - lastRefillTime;
-    double tokensToAdd = elapsedNanos * permitsPerSecond / TimeUnit.SECONDS.toNanos(1);
-    if (tokensToAdd > 0) {
-      tokens = Math.min(maxTokens, tokens + tokensToAdd);
+    if (elapsedNanos <= 0) {
+      return;
+    }
+    BigDecimal elapsedSeconds =
+        BigDecimal.valueOf(elapsedNanos).divide(NANOS_PER_SECOND, SCALE, RoundingMode.HALF_UP);
+    BigDecimal tokensToAdd = elapsedSeconds.multiply(permitsPerSecond);
+    if (tokensToAdd.compareTo(BigDecimal.ZERO) > 0) {
+      tokens = maxTokens.min(tokens.add(tokensToAdd));
       lastRefillTime = now;
     }
   }
@@ -165,7 +186,7 @@ public class ConsumerRateLimiter {
    *
    * @return 可用令牌数
    */
-  public double getAvailableTokens() {
+  public BigDecimal getAvailableTokens() {
     lock.lock();
     try {
       refillTokens();
@@ -180,7 +201,7 @@ public class ConsumerRateLimiter {
    *
    * @return 每秒令牌数
    */
-  public double getPermitsPerSecond() {
+  public BigDecimal getPermitsPerSecond() {
     return permitsPerSecond;
   }
 

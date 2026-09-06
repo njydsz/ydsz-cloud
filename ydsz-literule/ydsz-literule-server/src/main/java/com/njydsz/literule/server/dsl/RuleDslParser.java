@@ -51,6 +51,9 @@ import com.njydsz.common.json.YdszJson;
  */
 @Slf4j
 public final class RuleDslParser {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** YAML 集合别名数量上限（防 billion-laughs 别名炸弹） */
   private static final int YAML_MAX_ALIASES = 50;
@@ -337,7 +340,7 @@ public final class RuleDslParser {
     b.columnBuckets(asListOfMaps(map.get("column_buckets")));
     Object cellsObj = map.get("cells");
     if (cellsObj instanceof Map<?, ?> cm) {
-      Map<String, Map<String, Object>> cells = new LinkedHashMap<>(16);
+      Map<String, Map<String, Object>> cells = new LinkedHashMap<>(COLLECTION_CAPACITY);
       for (Map.Entry<?, ?> e : cm.entrySet()) {
         if (e.getKey() != null && e.getValue() instanceof Map<?, ?> vm) {
           cells.put(String.valueOf(e.getKey()), asStringMap(vm));
@@ -348,7 +351,7 @@ public final class RuleDslParser {
     // canary_conditions
     Object canaryCondsObj = map.get("canary_conditions");
     if (canaryCondsObj instanceof List<?> cl) {
-      List<String> conds = new ArrayList<>(16);
+      List<String> conds = new ArrayList<>(COLLECTION_CAPACITY);
       for (Object c : cl) {
         if (c != null) {
           conds.add(String.valueOf(c));
@@ -425,7 +428,7 @@ public final class RuleDslParser {
     // branches（ELIF/SWITCH 使用）
     Object branchesObj = map.get("branches");
     if (branchesObj instanceof Map<?, ?> bm) {
-      Map<String, String> branches = new LinkedHashMap<>(16);
+      Map<String, String> branches = new LinkedHashMap<>(COLLECTION_CAPACITY);
       for (Map.Entry<?, ?> e : bm.entrySet()) {
         if (e.getKey() != null && e.getValue() != null) {
           branches.put(String.valueOf(e.getKey()), String.valueOf(e.getValue()));

@@ -10,8 +10,7 @@ import java.util.regex.Pattern;
 import feign.Logger;
 import feign.Request;
 import feign.Response;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * YdszFeign 日志增强处理器。
@@ -32,9 +31,8 @@ import org.slf4j.Logger;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Slf4j(topic = "com.njydsz.feign")
 public class YdszFeignLogger extends Logger {
-
-  private static final Logger LOG = LoggerFactory.getLogger("com.njydsz.feign");
 
   /** Feign 日志级别 */
   private volatile Logger.Level logLevel = Logger.Level.BASIC;
@@ -77,15 +75,15 @@ public class YdszFeignLogger extends Logger {
 
   @Override
   protected void log(String configKey, String format, Object... args) {
-    if (LOG.isDebugEnabled()) {
+    if (log.isDebugEnabled()) {
       String masked = maskSensitive(String.format(format, args));
-      LOG.debug("[Feign#{}] {}", truncateConfigKey(configKey), masked);
+      log.debug("[Feign#{}] {}", truncateConfigKey(configKey), masked);
     }
   }
 
   @Override
   protected void logRequest(String configKey, Logger.Level logLevel, Request request) {
-    if (!LOG.isDebugEnabled()) {
+    if (!log.isDebugEnabled()) {
       return;
     }
     StringBuilder sb = new StringBuilder(128);
@@ -106,14 +104,14 @@ public class YdszFeignLogger extends Logger {
       sb.append("\n[Body]\n  ").append(maskSensitive(body));
     }
 
-    LOG.debug("[Feign#{}] {}", truncateConfigKey(configKey), sb);
+    log.debug("[Feign#{}] {}", truncateConfigKey(configKey), sb);
   }
 
   @Override
   protected Response logAndRebufferResponse(
           String configKey, Logger.Level logLevel,
           Response response, long elapsedTime) throws IOException {
-    if (!LOG.isDebugEnabled()) {
+    if (!log.isDebugEnabled()) {
       return response;
     }
     StringBuilder sb = new StringBuilder(128);
@@ -137,14 +135,14 @@ public class YdszFeignLogger extends Logger {
       bodyResponse = response.toBuilder().body(bodyData).build();
     }
 
-    LOG.debug("[Feign#{}] {}", truncateConfigKey(configKey), sb);
+    log.debug("[Feign#{}] {}", truncateConfigKey(configKey), sb);
     return bodyResponse;
   }
 
   @Override
   protected IOException logIOException(
           String configKey, Logger.Level logLevel, IOException ioe, long elapsedTime) {
-    LOG.warn("[Feign#{}] <-- ERROR {} after {}ms: {}",
+    log.warn("[Feign#{}] <-- ERROR {} after {}ms: {}",
             truncateConfigKey(configKey), ioe.getClass().getSimpleName(),
             elapsedTime, ioe.getMessage());
     return ioe;

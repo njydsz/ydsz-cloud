@@ -32,6 +32,9 @@ import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
 @Service
 @RequiredArgsConstructor
 public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 推荐评分权重：用户历史使用频率 */
   private static final double WEIGHT_USER_COUNT = 0.5;
@@ -46,7 +49,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
   private final FlowInstanceRepository instanceRepository;
 
   /** 业务类型到模板分类的映射 */
-  private static final Map<String, String> BUSINESS_CATEGORY_MAP = new LinkedHashMap<>(16);
+  private static final Map<String, String> BUSINESS_CATEGORY_MAP = new LinkedHashMap<>(COLLECTION_CAPACITY);
 
   static {
     BUSINESS_CATEGORY_MAP.put("LEAVE", "HR");
@@ -78,7 +81,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     }
 
     // 2. 获取用户历史发起记录
-    Map<String, Integer> userFlowCount = new LinkedHashMap<>(16);
+    Map<String, Integer> userFlowCount = new LinkedHashMap<>(COLLECTION_CAPACITY);
     try {
       List<FlowInstanceVO> instances = instanceRepository.selectByInitiator(userId, null);
       if (instances != null) {
@@ -99,7 +102,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             .max()
             .orElse(1);
 
-    List<Map<String, Object>> scored = new ArrayList<>(16);
+    List<Map<String, Object>> scored = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowTemplateVO template : allTemplates) {
       double score = 0.0;
       String reason = "";
@@ -124,7 +127,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
       // 基础分（权重 0.2）：所有模板都有
       score += BASE_SCORE_BONUS;
 
-      Map<String, Object> item = new LinkedHashMap<>(16);
+      Map<String, Object> item = new LinkedHashMap<>(COLLECTION_CAPACITY);
       item.put("templateCode", template.getTemplateCode());
       item.put("templateName", template.getTemplateName());
       item.put("category", template.getCategory());
@@ -176,9 +179,9 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             .limit(limit)
             .collect(Collectors.toList());
 
-    List<Map<String, Object>> result = new ArrayList<>(16);
+    List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (FlowTemplateVO template : sorted) {
-      Map<String, Object> item = new LinkedHashMap<>(16);
+      Map<String, Object> item = new LinkedHashMap<>(COLLECTION_CAPACITY);
       item.put("templateCode", template.getTemplateCode());
       item.put("templateName", template.getTemplateName());
       item.put("category", template.getCategory());

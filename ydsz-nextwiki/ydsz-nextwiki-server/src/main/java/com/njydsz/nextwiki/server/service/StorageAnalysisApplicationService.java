@@ -39,6 +39,9 @@ import com.njydsz.nextwiki.domain.vo.FileStatVO;
 @Service
 @RequiredArgsConstructor
 public class StorageAnalysisApplicationService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final FileNodeRepository fileNodeRepository;
   private final StorageQuotaRepository quotaRepository;
@@ -82,7 +85,7 @@ public class StorageAnalysisApplicationService {
    */
   public Map<String, TypeStats> statsByType(String userId) {
     List<FileStatVO> stats = fileNodeRepository.statsBySuffixAndUser(userId);
-    Map<String, TypeStats> result = new HashMap<>(16);
+    Map<String, TypeStats> result = new HashMap<>(COLLECTION_CAPACITY);
 
     long grandTotal = stats.stream().mapToLong(FileStatVO::getTotalSize).sum();
 

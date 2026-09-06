@@ -56,6 +56,9 @@ import com.njydsz.common.permission.PermissionCodes;
 @RequiredArgsConstructor
 @Tag(name = "Agent 元数据查询", description = "可用模型 / 已注册工具元数据查询")
 public class AgentMetadataController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -74,7 +77,7 @@ public class AgentMetadataController {
   @GetMapping("/models")
   @Operation(summary = "获取可用模型列表", description = "返回当前 Agent 支持的 LLM Provider 列表")
   public YdszResponse<List<Map<String, Object>>> models() {
-    List<Map<String, Object>> result = new ArrayList<>(16);
+    List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY);
     if (llmClient instanceof LlmClientRouter router) {
       for (String provider : router.getAvailableProviders()) {
         result.add(Map.of("provider", provider, "available", true));

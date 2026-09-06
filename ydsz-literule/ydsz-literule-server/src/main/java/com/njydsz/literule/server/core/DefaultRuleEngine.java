@@ -62,6 +62,9 @@ import com.njydsz.literule.server.spi.TraceRecorder;
  */
 @Slf4j
 public class DefaultRuleEngine implements RuleEngine, StatsRecorderVO {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 默认并行执行阈值 */
   private static final int DEFAULT_PARALLEL_THRESHOLD = 50;
@@ -384,7 +387,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
     List<Rule> candidateRules =
         indexer.isIndexEnabled()
             ? indexer.findCandidates(
-                contextTenantId, contextEnvironment, scenario, new HashSet<>(16))
+                contextTenantId, contextEnvironment, scenario, new HashSet<>(COLLECTION_CAPACITY))
             : ruleRegistry.getRules();
 
     // P1-2：倒排索引第二层过滤，按 facts 字段进一步缩小候选集
@@ -398,10 +401,10 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
 
   /** 评估状态封装（评估过程中的可变状态） */
   private static class EvaluationState {
-    final List<RuleResultVO> triggered = new ArrayList<>(16);
+    final List<RuleResultVO> triggered = new ArrayList<>(COLLECTION_CAPACITY);
 
     /** 互斥组：记录本次评估中已命中的互斥组 */
-    final Set<String> triggeredGroups = new HashSet<>(16);
+    final Set<String> triggeredGroups = new HashSet<>(COLLECTION_CAPACITY);
 
     int evaluatedCount = 0;
   }
@@ -635,7 +638,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
       return context;
     }
     // 扁平 key（"model.score"）转换为嵌套结构（{"model": {"score": ...}}）
-    Map<String, Object> nestedModel = new LinkedHashMap<>(16);
+    Map<String, Object> nestedModel = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, Object> entry : modelOutputs.entrySet()) {
       String key = entry.getKey();
       if (key.startsWith(ModelInputRegistry.MODEL_KEY_PREFIX)) {
@@ -724,7 +727,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   private List<RuleResultVO> doDryRun(RuleContextVO context, Integer limit, RuleSeverity minSeverity) {
     // P0-2 动态事实采集 + P3-1 模型融合：dry-run 同样注入（并行优化）
     context = injectDataInParallel(context);
-    List<RuleResultVO> all = new ArrayList<>(16);
+    List<RuleResultVO> all = new ArrayList<>(COLLECTION_CAPACITY);
     String contextTenantId = context.getTenantId();
     String contextEnvironment = context.getEnvironment();
     // 短路计数：已命中且满足严重度要求的规则数量

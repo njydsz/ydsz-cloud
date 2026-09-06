@@ -47,6 +47,9 @@ import com.njydsz.message.server.template.TemplateEngine;
 @Service
 @RequiredArgsConstructor
 public class AggregateServiceImpl implements AggregateService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 锁等待时间（秒） */
   private static final int LOCK_WAIT_SECONDS = 3;
 
@@ -218,7 +221,7 @@ public class AggregateServiceImpl implements AggregateService {
     batch.setBatchStatus(AggregateBatchStatusEnum.SENDING.name());
     try {
       // 渲染摘要内容：优先按 bizType 查找摘要模板 DIGEST_{group},回退默认模板
-      Map<String, Object> params = new HashMap<>(16);
+      Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
       params.put("count", batch.getMessageCount());
       params.put("group", batch.getAggregateGroup());
       String digestTemplate = loadDigestTemplate(batch);

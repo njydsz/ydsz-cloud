@@ -45,6 +45,9 @@ import com.njydsz.message.domain.vo.MsgOfflineVO;
 @Service
 @RequiredArgsConstructor
 public class OfflineMessageService implements OfflineMessageStore {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 离线消息保留天数 */
   private static final int OFFLINE_TTL_DAYS = 30;
 
@@ -92,7 +95,7 @@ public class OfflineMessageService implements OfflineMessageStore {
     if (userId == null) {
       return List.of();
     }
-    List<String> result = new ArrayList<>(16);
+    List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
 
     // 先从数据库拉取持久化的离线消息
     try {

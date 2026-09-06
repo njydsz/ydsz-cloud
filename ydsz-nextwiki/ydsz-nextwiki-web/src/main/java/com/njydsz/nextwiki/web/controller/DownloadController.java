@@ -37,9 +37,9 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
+import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.DownloadContext;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownloadContext;
-import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 
 /**
  * 文件下载 REST API Controller。
@@ -104,6 +104,12 @@ import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 @Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链、Range 断点续传")
 public class DownloadController {
 
+  /** HTTP Range 头 "bytes=" 前缀长度 */
+  private static final int RANGE_PREFIX_LENGTH = 6;
+
+  /** 下载缓冲区大小（8KB） */
+  private static final int BUFFER_SIZE = 8192;
+
   /** 下载应用服务（封装下载上下文准备、签名 URL 生成、限流等） */
   private final DownloadApplicationService downloadApplicationService;
 
@@ -167,7 +173,9 @@ public class DownloadController {
   private void downloadFolderRecursive(
       FileNodeVO folder, ZipOutputStream zos, String userId, String basePath) {
     List<FileNodeVO> children = fileNodeRepository.findChildren(folder.getId());
-    if (children == null) return;
+    if (children == null) {
+      return;
+    }
 
     IFileStorage storage = downloadApplicationService.resolveStorageForDownload();
 
@@ -271,7 +279,7 @@ public class DownloadController {
   private void handleRangeDownload(
       IFileStorage storage, FileNodeVO node, String rangeHeader, HttpServletResponse response) {
     long fileSize = node.getSize() != null ? node.getSize() : 0;
-    String rangeValue = rangeHeader.substring(6); // strip "bytes="
+    String rangeValue = rangeHeader.substring(RANGE_PREFIX_LENGTH); // strip "bytes="
     String[] parts = rangeValue.split("-");
     long start = 0;
     long end = fileSize - 1;
@@ -304,7 +312,7 @@ public class DownloadController {
       // 使用循环跳过确保大文件 Range 下载不丢字节
       skipFully(is, start);
       long remaining = contentLength;
-      byte[] buffer = new byte[8192];
+      byte[] buffer = new byte[BUFFER_SIZE];
       while (remaining > 0) {
         int toRead = (int) Math.min(buffer.length, remaining);
         int read = is.read(buffer, 0, toRead);

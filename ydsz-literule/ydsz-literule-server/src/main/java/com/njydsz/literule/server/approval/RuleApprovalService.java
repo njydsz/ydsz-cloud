@@ -44,6 +44,9 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  */
 @Slf4j
 public class RuleApprovalService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 三级审批对应的审查等级（3） */
   private static final int LEVEL_3_REVIEW = 3;
@@ -265,8 +268,8 @@ public class RuleApprovalService {
               .flowCode(flow.getFlowCode())
               .currentLevel(1)
               .currentStatus(ApprovalRecord.STATUS_PENDING)
-              .currentLevelApprovedApprovers(new ArrayList<>(16))
-              .logs(new ArrayList<>(16))
+              .currentLevelApprovedApprovers(new ArrayList<>(COLLECTION_CAPACITY))
+              .logs(new ArrayList<>(COLLECTION_CAPACITY))
               .createdAt(LocalDateTime.now())
               .updatedAt(LocalDateTime.now())
               .build();
@@ -646,7 +649,7 @@ public class RuleApprovalService {
    */
   public List<ApprovalRecord> listPendingApprovals(String approver) {
     requireNonBlank(approver, "approver");
-    List<ApprovalRecord> result = new ArrayList<>(16);
+    List<ApprovalRecord> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (ApprovalRecord record : recordStore.values()) {
       if (!ApprovalRecord.STATUS_PENDING.equals(record.getCurrentStatus())
           && !ApprovalRecord.STATUS_DELEGATED.equals(record.getCurrentStatus())) {

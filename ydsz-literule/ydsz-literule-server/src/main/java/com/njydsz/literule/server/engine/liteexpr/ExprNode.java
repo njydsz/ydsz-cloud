@@ -231,6 +231,9 @@ record FunctionCallNode(String functionName, List<ExprNode> arguments, int line,
  * @param member 属性名
  */
 record MemberAccessNode(ExprNode target, String member, int line, int column) implements ExprNode {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   @Override
   public <R> R accept(ExprNodeVisitor<R> visitor) {
     return visitor.visitMemberAccess(this);
@@ -243,7 +246,7 @@ record MemberAccessNode(ExprNode target, String member, int line, int column) im
 
   /** 提取完整的属性链（如 a.b.c → ["a", "b", "c"]） */
   public List<String> memberChain() {
-    ArrayList<String> chain = new ArrayList<>(16);
+    ArrayList<String> chain = new ArrayList<>(COLLECTION_CAPACITY);
     ExprNode current = this;
     while (current instanceof MemberAccessNode man) {
       chain.add(0, man.member());

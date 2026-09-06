@@ -1,5 +1,11 @@
 package com.njydsz.generator.api.fallback;
 
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.api.GeneratorFeignClient;
 import com.njydsz.generator.entity.GenColumnMeta;
@@ -7,13 +13,8 @@ import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenHistory;
 import com.njydsz.generator.entity.GenTableMeta;
 import com.njydsz.generator.entity.GenTemplateGroup;
+import com.njydsz.generator.query.GenCodeGenerateQuery;
 import com.njydsz.generator.vo.CodePreviewVO;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * 代码生成器 Feign 降级工厂。
@@ -92,9 +93,7 @@ public class GeneratorClientFallbackFactory implements FallbackFactory<Generator
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<String> generate(
-          Long datasourceId, Long templateGroupId, String tableName,
-          String outputDir, String conflictStrategy, String triggeredBy) {
+      public YdszResponse<String> generate(GenCodeGenerateQuery query) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 

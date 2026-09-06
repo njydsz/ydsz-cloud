@@ -37,6 +37,9 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "ydsz.message")
 public class MessageProperties {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认aggregateScanIntervalMs值（可被配置文件覆盖） */
   private static final long DEFAULT_AGGREGATE_SCAN_INTERVAL_MS = 60000L;
@@ -284,7 +287,7 @@ public class MessageProperties {
 
     private static Map<String, BigDecimal> defaultUnitPrices() {
       // 使用 LinkedHashMap 保持插入顺序,使成本看板输出顺序稳定且可测试
-      Map<String, BigDecimal> m = new LinkedHashMap<>(16);
+      Map<String, BigDecimal> m = new LinkedHashMap<>(COLLECTION_CAPACITY);
       m.put("SMS", new BigDecimal("0.0450"));
       m.put("EMAIL", new BigDecimal("0.0010"));
       m.put("PUSH", new BigDecimal("0.0001"));

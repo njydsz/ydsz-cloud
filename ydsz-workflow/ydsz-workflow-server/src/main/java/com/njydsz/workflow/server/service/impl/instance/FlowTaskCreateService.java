@@ -145,6 +145,9 @@ import com.njydsz.workflow.server.service.instance.ServiceNodeExecuteService;
 @Service
 @RequiredArgsConstructor
 public class FlowTaskCreateService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** P0-1: 审批人为空统一默认 FALLBACK（最保守：转交管理员人工处理） */
   private static final String DEFAULT_EMPTY_STRATEGY = "FALLBACK";
@@ -961,7 +964,7 @@ public class FlowTaskCreateService {
     Map<String, Object> config = parseExtConfig(ext);
     Object weights = config.get("userWeights");
     if (weights instanceof Map<?, ?> m) {
-      Map<String, Integer> result = new HashMap<>(16);
+      Map<String, Integer> result = new HashMap<>(COLLECTION_CAPACITY);
       for (Map.Entry<?, ?> e : m.entrySet()) {
         if (e.getValue() instanceof Number n) {
           result.put(String.valueOf(e.getKey()), n.intValue());
@@ -1007,8 +1010,8 @@ public class FlowTaskCreateService {
       if (leaders == null || leaders.isEmpty()) {
         return Collections.emptyList();
       }
-      List<String> result = new ArrayList<>(16);
-      Set<String> seen = new HashSet<>(16);
+      List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
+      Set<String> seen = new HashSet<>(COLLECTION_CAPACITY);
       for (Long uid : leaders) {
         String s = String.valueOf(uid);
         String stopAtUserId = (String) extConfig.get("stopAtUserId");
@@ -1322,8 +1325,8 @@ public class FlowTaskCreateService {
     if (resolved == null) {
       return Collections.emptyList();
     }
-    List<String> result = new ArrayList<>(16);
-    Set<String> seen = new HashSet<>(16);
+    List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
+    Set<String> seen = new HashSet<>(COLLECTION_CAPACITY);
     for (String token : resolved.split(",")) {
       expandTokenToAssignees(token.trim(), node, variables, result, seen);
     }
@@ -1463,7 +1466,7 @@ public class FlowTaskCreateService {
     if (value == null) {
       return Collections.emptyList();
     }
-    List<String> result = new ArrayList<>(16);
+    List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
     if (value instanceof List<?> list) {
       for (Object item : list) {
         if (item == null) {

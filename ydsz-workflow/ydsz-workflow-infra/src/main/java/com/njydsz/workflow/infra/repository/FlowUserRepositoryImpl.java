@@ -36,6 +36,9 @@ import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 @Repository
 @RequiredArgsConstructor
 public class FlowUserRepositoryImpl implements FlowUserRepository {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final FlowUserMapper userMapper;
 
@@ -101,7 +104,7 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
 
   @Override
   public int deleteByInstanceAndNodeAndUser(String instanceId, String nodeCode, String userId) {
-    Map<String, Object> deleteMap = new HashMap<>(16);
+    Map<String, Object> deleteMap = new HashMap<>(COLLECTION_CAPACITY);
     deleteMap.put("instance_id", instanceId);
     deleteMap.put("node_code", nodeCode);
     deleteMap.put("user_id", userId);

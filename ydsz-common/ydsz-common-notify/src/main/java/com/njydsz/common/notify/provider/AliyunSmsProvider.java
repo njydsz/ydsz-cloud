@@ -1,5 +1,6 @@
 package com.njydsz.common.notify.provider;
 
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -162,7 +163,7 @@ public class AliyunSmsProvider implements SmsProvider {
   public SmsBalance queryBalance() {
     // 阿里云短信服务未提供公开余额查询 API，返回 -1 表示不支持，避免伪造数据
     LOG.warn("阿里云短信服务不提供公开余额查询接口，queryBalance 返回 -1（不支持）");
-    return new SmsBalance(-1, "CNY", 0);
+    return new SmsBalance(-1, "CNY", BigDecimal.ZERO);
   }
 
   /**

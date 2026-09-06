@@ -2,6 +2,7 @@ package com.njydsz.common.docs.watermark;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
@@ -37,16 +38,16 @@ import com.njydsz.common.docs.exception.DocumentExceptionCode;
 public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
 
   /** 水印字体大小 */
-  private static final float WATERMARK_FONT_SIZE = 20F;
+  private static final BigDecimal WATERMARK_FONT_SIZE = new BigDecimal("20");
 
   /** 水印颜色 RGB 分量（浅灰） */
   private static final int WATERMARK_COLOR_RGB = 200;
 
   /** 水印起始 X 偏移 */
-  private static final float WATERMARK_X_OFFSET = 100F;
+  private static final BigDecimal WATERMARK_X_OFFSET = new BigDecimal("100");
 
   /** 水印起始 Y 偏移系数（相对页面高度） */
-  private static final float WATERMARK_Y_RATIO = 3F;
+  private static final BigDecimal WATERMARK_Y_RATIO = new BigDecimal("3");
 
   /**
    * 为 PDF 文档叠加文字水印。
@@ -93,11 +94,11 @@ public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
     try (PDPageContentStream contentStream =
         new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true)) {
       contentStream.setFont(
-          new PDType1Font(Standard14Fonts.FontName.HELVETICA), WATERMARK_FONT_SIZE);
+          new PDType1Font(Standard14Fonts.FontName.HELVETICA), WATERMARK_FONT_SIZE.floatValue());
       float pageSize = page.getMediaBox().getHeight();
       contentStream.setNonStrokingColor(WATERMARK_COLOR_RGB, WATERMARK_COLOR_RGB, WATERMARK_COLOR_RGB);
       contentStream.beginText();
-      contentStream.newLineAtOffset(WATERMARK_X_OFFSET, pageSize / WATERMARK_Y_RATIO);
+      contentStream.newLineAtOffset(WATERMARK_X_OFFSET.floatValue(), pageSize / WATERMARK_Y_RATIO.floatValue());
       contentStream.showText(watermarkText);
       contentStream.endText();
     }

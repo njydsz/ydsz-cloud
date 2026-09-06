@@ -1,21 +1,23 @@
 package com.njydsz.generator.controller;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.generator.enums.ConflictStrategyEnum;
-import com.njydsz.generator.service.CodeGenService;
-import com.njydsz.generator.vo.CodePreviewVO;
-import com.njydsz.generator.vo.GenResultVO;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.List;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.generator.enums.ConflictStrategyEnum;
+import com.njydsz.generator.query.GenCodeGenerateQuery;
+import com.njydsz.generator.service.CodeGenService;
+import com.njydsz.generator.vo.CodePreviewVO;
+import com.njydsz.generator.vo.GenResultVO;
 
 /**
  * 代码生成 REST 控制器。
@@ -52,27 +54,15 @@ public class CodeGenController {
   /**
    * 正式生成代码到指定目录。
    *
-   * @param datasourceId      数据源 ID
-   * @param templateGroupId   模板分组 ID
-   * @param tableName         表名
-   * @param outputDir         输出目录
-   * @param conflictStrategy  冲突策略（SKIP/OVERRIDE/MERGE）
-   * @param triggeredBy       触发人
+   * @param query 生成参数（数据源、模板分组、表名、输出目录、冲突策略、触发人）
    * @return 生成结果
    */
   @PostMapping("/generate")
-  public YdszResponse<GenResultVO> generate(
-      @RequestParam Long datasourceId,
-      @RequestParam Long templateGroupId,
-      @RequestParam String tableName,
-      @RequestParam String outputDir,
-      @RequestParam(defaultValue = "SKIP") ConflictStrategyEnum conflictStrategy,
-      @RequestParam(defaultValue = "system") String triggeredBy) {
+  public YdszResponse<GenResultVO> generate(@RequestBody GenCodeGenerateQuery query) {
     log.info("生成代码 ds={} group={} table={} dir={} strategy={}",
-        datasourceId, templateGroupId, tableName, outputDir, conflictStrategy);
-    return YdszResponse.success(
-        codeGenService.generate(datasourceId, templateGroupId, tableName,
-            outputDir, conflictStrategy, triggeredBy));
+        query.getDatasourceId(), query.getTemplateGroupId(), query.getTableName(),
+        query.getOutputDir(), query.getConflictStrategy());
+    return YdszResponse.success(codeGenService.generate(query));
   }
 
   /**

@@ -7,14 +7,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.njydsz.common.audit.aspect.AuditAspect;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 审计日志方法标记注解
  *
- * <p>标记在 Controller / Service 方法上，配合 {@link AuditAspect} 完成对方法调用的全链路审计记录。注解本身只声明元数据，真正拦截由 AOP 完成。
+ * <p>标记在 Controller / Service 方法上，配合 {@link com.njydsz.common.audit.aspect.AuditAspect} 完成对方法调用的全链路审计记录。注解本身只声明元数据，真正拦截由 AOP 完成。
  *
  * <p><b>使用示例：</b>
  *
@@ -41,7 +40,7 @@ import com.njydsz.common.audit.enums.AuditType;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see AuditAspect
+ * @see com.njydsz.common.audit.aspect.AuditAspect
  * @see AuditType
  * @see AuditAction
  */

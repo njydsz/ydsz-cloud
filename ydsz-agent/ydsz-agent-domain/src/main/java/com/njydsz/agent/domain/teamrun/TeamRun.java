@@ -15,6 +15,9 @@ import java.util.Map;
  * @since 26.09.01
  */
 public final class TeamRun {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     private final String teamRunId;
     private final String tenantId;
@@ -161,7 +164,7 @@ public final class TeamRun {
      * @return 新的 TeamRun 实例
      */
     public TeamRun withUpdatedMember(String memberId, TeamRunMember newMember) {
-        List<TeamRunMember> newMembers = new ArrayList<>(16);
+        List<TeamRunMember> newMembers = new ArrayList<>(COLLECTION_CAPACITY);
         for (TeamRunMember m : this.members) {
             if (m.getMemberId().equals(memberId)) {
                 newMembers.add(newMember);

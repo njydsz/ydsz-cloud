@@ -1,11 +1,9 @@
 package com.njydsz.common.safe.alert;
 
-import java.util.ServiceLoader;
-
 /**
  * 安全事件告警监听器 SPI 接口
  *
- * <p>通过 {@link ServiceLoader} 加载所有实现，接收安全事件回调。
+ * <p>通过 {@link java.util.ServiceLoader} 加载所有实现，接收安全事件回调。
  *
  * @author ydsz-team
  * @since 26.09.01

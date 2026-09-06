@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
@@ -20,7 +21,6 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.chat.StreamingPiiMasker;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.util.id.IdGenerator;
@@ -35,6 +35,9 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class RagAgentExecutor extends AbstractAgentExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** RAG 检索服务（向量检索 + 全文检索 + RRF 融合） */
   private final RagService ragService;
@@ -93,7 +96,7 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
         ragDuration);
 
     String systemPrompt = buildSystemPrompt(request, ragContext);
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     messages.add(ChatMessage.system(systemPrompt));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
@@ -171,7 +174,7 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
         ragDuration);
 
     String systemPrompt = buildSystemPrompt(request, ragContext);
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     messages.add(ChatMessage.system(systemPrompt));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));

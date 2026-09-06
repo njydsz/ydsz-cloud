@@ -88,17 +88,17 @@ public final class InternalHeaderSigner {
   /**
    * 恒定时间比较（防计时攻击）。
    *
-   * @param a 字符串 A
-   * @param b 字符串 B
+   * @param left  待比较字符串
+   * @param right 待比较字符串
    * @return true=完全相等；false=不相等
    */
-  private static boolean slowEquals(String a, String b) {
-    if (a == null || b == null || a.length() != b.length()) {
+  private static boolean slowEquals(String left, String right) {
+    if (left == null || right == null || left.length() != right.length()) {
       return false;
     }
     int diff = 0;
-    for (int i = 0; i < a.length(); i++) {
-      diff |= a.charAt(i) ^ b.charAt(i);
+    for (int i = 0; i < left.length(); i++) {
+      diff |= left.charAt(i) ^ right.charAt(i);
     }
     return diff == 0;
   }

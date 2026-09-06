@@ -265,9 +265,9 @@ public class FlowDefinitionDesignManager {
     Map<String, Object> result = new LinkedHashMap<>(detail);
     List<FlowSkipVO> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkipVO.class);
     if (skips != null) {
-      List<Map<String, Object>> edges = new ArrayList<>(16);
+      List<Map<String, Object>> edges = new ArrayList<>(DEFAULT_COLLECTION_CAPACITY);
       for (FlowSkipVO skip : skips) {
-        Map<String, Object> edge = new LinkedHashMap<>(16);
+        Map<String, Object> edge = new LinkedHashMap<>(DEFAULT_COLLECTION_CAPACITY);
         edge.put("id", skip.getId());
         String source = null;
         if (StringUtils.hasText(skip.getExt())) {
@@ -601,7 +601,7 @@ public class FlowDefinitionDesignManager {
       return null;
     }
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(DEFAULT_COLLECTION_CAPACITY);
     boolean locked = StringUtils.hasText(def.getLockedBy());
     boolean expired = false;
     if (locked && def.getLockedAt() != null) {

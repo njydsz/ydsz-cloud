@@ -52,6 +52,9 @@ import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 @Slf4j
 @Service
 public class FlowAutoApproveService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final FlowTaskCoreService flowTaskCoreService;
   private final FlowServiceNodeExecutor serviceNodeExecutor;
@@ -134,7 +137,7 @@ public class FlowAutoApproveService {
    */
   private Map<String, Object> buildAutoApproveContext(
       FlowInstanceVO instance, FlowRunTaskVO task, FlowNodeVO node, Map<String, Object> variables) {
-    Map<String, Object> env = new HashMap<>(16);
+    Map<String, Object> env = new HashMap<>(COLLECTION_CAPACITY);
     if (variables != null) {
       env.putAll(variables);
     }

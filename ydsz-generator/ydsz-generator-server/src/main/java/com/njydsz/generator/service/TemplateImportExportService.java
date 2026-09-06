@@ -1,17 +1,5 @@
 package com.njydsz.generator.service;
 
-import com.njydsz.generator.entity.GenTemplate;
-import com.njydsz.generator.entity.GenTemplateGroup;
-import com.njydsz.generator.enums.TemplateFileTypeEnum;
-import com.njydsz.generator.repository.GenTemplateGroupRepository;
-import com.njydsz.generator.repository.GenTemplateRepository;
-import com.njydsz.generator.vo.TemplateZipVO;
-import com.njydsz.common.util.security.DigestUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +10,19 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.generator.entity.GenTemplate;
+import com.njydsz.generator.entity.GenTemplateGroup;
+import com.njydsz.generator.enums.TemplateFileTypeEnum;
+import com.njydsz.generator.repository.GenTemplateGroupRepository;
+import com.njydsz.generator.repository.GenTemplateRepository;
+import com.njydsz.generator.vo.TemplateZipVO;
 
 /**
  * 模板导入导出领域服务。
@@ -44,6 +45,10 @@ public class TemplateImportExportService {
   private static final String MANIFEST_ENTRY = "manifest.json";
   /** 模板目录前缀。 */
   private static final String TEMPLATE_PREFIX = "templates/";
+  /** 导入模板列表初始容量。 */
+  private static final int IMPORT_LIST_CAPACITY = 64;
+  /** 清单 StringBuilder 初始容量。 */
+  private static final int MANIFEST_BUILDER_CAPACITY = 512;
 
   /**
    * 导出分组全部模板为 zip 字节。
@@ -102,7 +107,7 @@ public class TemplateImportExportService {
     groupRepository.findById(targetGroupId)
         .orElseThrow(() -> new IllegalArgumentException("目标分组不存在: " + targetGroupId));
 
-    List<GenTemplate> toSave = new ArrayList<>(64);
+    List<GenTemplate> toSave = new ArrayList<>(IMPORT_LIST_CAPACITY);
     try (ZipInputStream zis = new ZipInputStream(
         new ByteArrayInputStream(zipData), StandardCharsets.UTF_8)) {
       ZipEntry entry;
@@ -154,7 +159,7 @@ public class TemplateImportExportService {
   }
 
   private String buildManifest(GenTemplateGroup group, List<GenTemplate> templates) {
-    StringBuilder sb = new StringBuilder(512);
+    StringBuilder sb = new StringBuilder(MANIFEST_BUILDER_CAPACITY);
     sb.append("{\n");
     sb.append("  \"groupName\": \"").append(group.getName()).append("\",\n");
     sb.append("  \"description\": \"").append(

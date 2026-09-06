@@ -1,19 +1,20 @@
 package com.njydsz.generator.service;
 
-import com.njydsz.generator.entity.GenHistory;
-import com.njydsz.generator.entity.GenHistoryFile;
-import com.njydsz.generator.repository.GenHistoryFileRepository;
-import com.njydsz.generator.repository.GenHistoryRepository;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import com.njydsz.generator.entity.GenHistory;
+import com.njydsz.generator.entity.GenHistoryFile;
+import com.njydsz.generator.repository.GenHistoryFileRepository;
+import com.njydsz.generator.repository.GenHistoryRepository;
 
 /**
  * 代码生成历史领域服务（含回滚能力）。
@@ -94,7 +95,7 @@ public class GenHistoryService {
             if (file.getOriginalBackupPath() != null) {
               Path backupPath = Paths.get(file.getOriginalBackupPath());
               if (Files.exists(backupPath)) {
-                Files.copy(backupPath, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(backupPath, filePath, StandardCopyOption.REPLACE_EXISTING);
                 restored++;
                 log.info("回滚恢复文件 {}", file.getFilePath());
               }

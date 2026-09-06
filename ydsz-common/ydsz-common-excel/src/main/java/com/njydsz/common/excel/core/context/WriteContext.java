@@ -3,7 +3,6 @@ package com.njydsz.common.excel.core.context;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 
 /**
@@ -11,7 +10,7 @@ import com.njydsz.common.excel.core.metadata.WriteMetadata;
  *
  * <p>记录当前写入的位置信息和元数据,用于追踪写入进度。 主要在写入处理器回调和内部状态管理时使用。
  *
- * @see ExcelWriter
+ * @see com.njydsz.common.excel.core.ExcelWriter
  * @see WriteHandler
  * @author ydsz-team
  * @since 26.09.01

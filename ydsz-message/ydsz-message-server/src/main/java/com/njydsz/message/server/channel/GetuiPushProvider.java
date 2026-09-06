@@ -40,6 +40,9 @@ import com.njydsz.message.server.config.MessageProperties;
 @Component
 @ConditionalOnProperty(prefix = "ydsz.message.push", name = "provider", havingValue = "getui")
 public class GetuiPushProvider implements PushProvider {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** Token 有效小时数 */
   private static final long TOKEN_VALID_HOURS = 23;
 
@@ -111,7 +114,7 @@ public class GetuiPushProvider implements PushProvider {
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
       headers.set("token", token);
-      Map<String, Object> body = new HashMap<>(16);
+      Map<String, Object> body = new HashMap<>(COLLECTION_CAPACITY);
       body.put("request_id", String.valueOf(snowflakeIdGenerator.nextId()));
       body.put("audience", Map.of("cid", new String[] {cid}));
       String title = StringUtils.hasText(request.getSubject()) ? request.getSubject() : "通知";
@@ -176,7 +179,7 @@ public class GetuiPushProvider implements PushProvider {
       String timestamp = String.valueOf(System.currentTimeMillis());
       String sign = GetuiPushSigner.sign(config.getAppKey(), timestamp, config.getMasterSecret());
       String url = config.getBaseUrl() + "/v2/" + config.getAppId() + "/auth";
-      Map<String, Object> body = new HashMap<>(16);
+      Map<String, Object> body = new HashMap<>(COLLECTION_CAPACITY);
       body.put("sign", sign);
       body.put("timestamp", timestamp);
       body.put("appkey", config.getAppKey());

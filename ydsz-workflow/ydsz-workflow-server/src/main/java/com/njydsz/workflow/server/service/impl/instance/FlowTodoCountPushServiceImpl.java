@@ -29,6 +29,9 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 @Service
 @RequiredArgsConstructor
 public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 运行时任务仓储，统计用户当前待办数 */
   private final FlowRunTaskRepository taskRepository;
@@ -58,7 +61,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
     try {
       long count = taskRepository.countPendingByAssignee(userId);
-      Map<String, Object> data = new HashMap<>(16);
+      Map<String, Object> data = new HashMap<>(COLLECTION_CAPACITY);
       data.put("userId", userId);
       data.put("todoCount", count);
       data.put("timestamp", System.currentTimeMillis());
@@ -84,7 +87,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>(16);
+      Map<String, Object> data = new HashMap<>(COLLECTION_CAPACITY);
       data.put("userId", userId);
       data.put("taskId", task.getId());
       data.put("taskTitle", task.getTitle());
@@ -113,7 +116,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>(16);
+      Map<String, Object> data = new HashMap<>(COLLECTION_CAPACITY);
       data.put("userId", operatorUserId);
       data.put("taskId", task.getId());
       data.put("instanceId", task.getInstanceId());
@@ -138,7 +141,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
       return;
     }
     try {
-      Map<String, Object> data = new HashMap<>(16);
+      Map<String, Object> data = new HashMap<>(COLLECTION_CAPACITY);
       data.put("userId", operatorUserId);
       data.put("taskId", task.getId());
       data.put("instanceId", task.getInstanceId());
@@ -177,7 +180,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
     try {
       long count = taskRepository.countPendingByAssignee(userId);
-      Map<String, Object> data = new HashMap<>(16);
+      Map<String, Object> data = new HashMap<>(COLLECTION_CAPACITY);
       data.put("userId", userId);
       data.put("todoCount", count);
       data.put("timestamp", System.currentTimeMillis());

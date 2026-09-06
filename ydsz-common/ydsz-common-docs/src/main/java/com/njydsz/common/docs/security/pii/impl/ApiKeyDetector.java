@@ -1,5 +1,6 @@
 package com.njydsz.common.docs.security.pii.impl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -67,7 +68,7 @@ public class ApiKeyDetector implements PiiDetector {
               .maskedValue(mask(kvMatcher.group(0)))
               .startIndex(kvMatcher.start())
               .endIndex(kvMatcher.end())
-              .confidence(0.9)
+              .confidence(BigDecimal.valueOf(0.9))
               .build());
     }
 
@@ -80,7 +81,7 @@ public class ApiKeyDetector implements PiiDetector {
               .maskedValue(mask(bearerMatcher.group(0)))
               .startIndex(bearerMatcher.start())
               .endIndex(bearerMatcher.end())
-              .confidence(0.85)
+              .confidence(BigDecimal.valueOf(0.85))
               .build());
     }
 
@@ -93,7 +94,7 @@ public class ApiKeyDetector implements PiiDetector {
               .maskedValue(mask(awsMatcher.group()))
               .startIndex(awsMatcher.start())
               .endIndex(awsMatcher.end())
-              .confidence(0.95)
+              .confidence(BigDecimal.valueOf(0.95))
               .build());
     }
 
@@ -106,7 +107,7 @@ public class ApiKeyDetector implements PiiDetector {
               .maskedValue(mask(jwtMatcher.group()))
               .startIndex(jwtMatcher.start())
               .endIndex(jwtMatcher.end())
-              .confidence(0.8)
+              .confidence(BigDecimal.valueOf(0.8))
               .build());
     }
 

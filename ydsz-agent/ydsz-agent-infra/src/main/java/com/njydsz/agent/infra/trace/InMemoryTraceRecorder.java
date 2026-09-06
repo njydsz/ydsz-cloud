@@ -24,6 +24,9 @@ import com.njydsz.common.json.YdszJson;
  */
 @Slf4j
 public class InMemoryTraceRecorder implements TraceRecorder {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 最大链路存储数 */
   private static final int MAX_TRACES = 1000;
@@ -47,7 +50,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   public String startTrace(String conversationId, String agentId) {
     evictExpiredTraces();
     String traceId = TraceIdGenerator.generateSortableTraceId();
-    traces.put(traceId, new ArrayList<>(16));
+    traces.put(traceId, new ArrayList<>(COLLECTION_CAPACITY));
     traceStatus.put(traceId, "RUNNING");
     traceMetas.put(traceId, new RecordedTraceMeta(traceId, conversationId, agentId, LocalDateTime.now()));
     log.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
@@ -76,7 +79,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
       double cost) {
     List<TraceStep> steps = traces.get(traceId);
     if (steps == null) {
-      steps = new ArrayList<>(16);
+      steps = new ArrayList<>(COLLECTION_CAPACITY);
       traces.put(traceId, steps);
     }
     int index = steps.size();

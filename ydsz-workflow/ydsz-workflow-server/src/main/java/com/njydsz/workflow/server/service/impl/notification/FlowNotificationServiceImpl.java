@@ -116,6 +116,9 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
 @Service
 @RequiredArgsConstructor
 public class FlowNotificationServiceImpl implements FlowNotificationService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** Map 初始容量：小集合（4） */
   private static final int MAP_INIT_CAPACITY_4 = 4;
@@ -337,7 +340,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
    * @param extra 扩展参数（含 bizType/bizId 等）
    */
   private void sendInApp(String userId, String title, String content, Map<String, Object> extra) {
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     if (extra != null) {
       payload.putAll(extra);
     }
@@ -372,7 +375,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
    * @param extra 扩展参数（含 receiver 等）
    */
   private void sendEmail(String userId, String title, String content, Map<String, Object> extra) {
-    Map<String, Object> payload = new HashMap<>(16);
+    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     if (extra != null) {
       payload.putAll(extra);
     }
@@ -424,7 +427,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     request.setContent(content);
     request.setBizType(extra == null ? null : asString(extra.get("bizType")));
     request.setBizId(extra == null ? null : asString(extra.get("bizId")));
-    Map<String, Object> params = new HashMap<>(16);
+    Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
     if (extra != null) {
       params.putAll(extra);
     }

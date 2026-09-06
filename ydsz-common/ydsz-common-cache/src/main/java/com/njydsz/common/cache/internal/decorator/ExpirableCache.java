@@ -1,5 +1,6 @@
 package com.njydsz.common.cache.internal.decorator;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,7 +21,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
-import java.math.BigDecimal;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -162,7 +162,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
         expireAfterAccessNanos,
         expiry,
         cleanupIntervalSeconds,
-        0.1);
+        new BigDecimal("0.1"));
   }
 
   /**
@@ -181,12 +181,12 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
       long expireAfterAccessNanos,
       Expiry<? super K, ? super V> expiry,
       long cleanupIntervalSeconds,
-      double jitterRatio) {
+      BigDecimal jitterRatio) {
     this.delegate = delegate;
     this.expireAfterWriteNanos = expireAfterWriteNanos;
     this.expireAfterAccessNanos = expireAfterAccessNanos;
     this.expiry = expiry;
-    this.jitterRatio = BigDecimal.valueOf(jitterRatio).max(BigDecimal.ZERO).min(BigDecimal.ONE);
+    this.jitterRatio = jitterRatio.max(BigDecimal.ZERO).min(BigDecimal.ONE);
     // 桶大小固定 1 秒（见字段 Javadoc）
     this.bucketSizeNanos = TimeUnit.SECONDS.toNanos(1);
     // 注册淘汰监听器，防止 expirationMap 内存泄漏

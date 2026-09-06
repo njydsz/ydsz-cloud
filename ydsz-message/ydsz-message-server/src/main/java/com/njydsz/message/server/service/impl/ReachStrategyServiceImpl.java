@@ -38,6 +38,9 @@ import com.njydsz.message.server.service.core.ReachStrategyService;
 @Service
 @RequiredArgsConstructor
 public class ReachStrategyServiceImpl implements ReachStrategyService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 默认活跃度得分 */
   private static final double DEFAULT_ACTIVITY_SCORE = 0.5;
 
@@ -124,7 +127,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
         profile.setClickRate(Double.parseDouble(clickRateStr));
       }
       // 解析通道活跃度
-      Map<String, Integer> scores = new HashMap<>(16);
+      Map<String, Integer> scores = new HashMap<>(COLLECTION_CAPACITY);
       for (Map.Entry<String, String> e : raw.entrySet()) {
         String key = e.getKey();
         if (key.startsWith("score:")) {

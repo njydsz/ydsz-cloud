@@ -32,11 +32,11 @@ import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageContent;
-import com.njydsz.agent.server.agent.AgentFacade.BatchChatItem;
 import com.njydsz.agent.server.agent.AgentFacade;
+import com.njydsz.agent.server.agent.AgentFacade.BatchChatItem;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
-import com.njydsz.agent.server.chat.SseExecutor.SseChunk;
 import com.njydsz.agent.server.chat.SseExecutor;
+import com.njydsz.agent.server.chat.SseExecutor.SseChunk;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -101,6 +101,9 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RequiredArgsConstructor
 @Tag(name = "Agent 统一入口", description = "Agent 执行 / 对话 / 历史")
 public class AgentController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** Agent 应用门面（解耦 Controller 与内部服务） */
   private final AgentFacade agentFacade;
@@ -438,7 +441,7 @@ public class AgentController {
   @Operation(summary = "获取对话历史")
   public YdszResponse<List<Map<String, Object>>> history(@RequestParam String conversationId) {
     List<ChatMessage> messages = agentFacade.getHistory(conversationId);
-    List<Map<String, Object>> result = new ArrayList<>(16);
+    List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (ChatMessage msg : messages) {
       result.add(
           Map.of(
@@ -458,6 +461,7 @@ public class AgentController {
    * 清除指定 conversationId 的对话历史。
    *
    * @param conversationId 会话 ID
+   * @param requestId 幂等请求 ID
    * @return 统一响应结果
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)

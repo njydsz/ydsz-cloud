@@ -6,9 +6,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import com.njydsz.common.search.core.IndexStrategy;
+import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.provider.SearchProviderRegistry;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 索引重建服务接口。
@@ -65,27 +68,16 @@ public class IndexRebuildService {
   }
 
   /**
-   * 创建默认索引重建线程池（返回 Spring ThreadPoolTaskExecutor 以支持生命周期管理）。
+   * 创建默认索引重建线程池。
    *
    * <p>单线程，串行重建保证一致性。底层通过 {@link ExecutorUtils} 编程式工厂构建 ThreadPoolExecutor，
    * YDIZ-CONC-001 合规。兜底线程池：仅在外部未注入时使用，生产环境由 {@code ydsz.thread.pools.*} 统一管理。
    *
-   * @return Spring 线程池适配器
+   * @return JDK 线程池
    */
-  public static ThreadPoolTaskExecutor createDefaultRebuildExecutor() {
+  public static ThreadPoolExecutor createDefaultRebuildExecutor() {
     // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
-    ThreadPoolExecutor executor = createDefaultRebuildExecutorInternal();
-    // 适配器：将 JDK ThreadPoolExecutor 包装为 Spring ThreadPoolTaskExecutor 以获取生命周期管理
-    ThreadPoolTaskExecutor adapter = new ThreadPoolTaskExecutor();
-    adapter.setCorePoolSize(1);
-    adapter.setMaxPoolSize(1);
-    adapter.setQueueCapacity(1);
-    adapter.setThreadNamePrefix("ydsz-index-rebuild-");
-    adapter.setDaemon(true);
-    adapter.setWaitForTasksToCompleteOnShutdown(false);
-    adapter.setThreadPoolExecutor(executor);
-    adapter.afterPropertiesSet();
-    return adapter;
+    return createDefaultRebuildExecutorInternal();
   }
 
   /**

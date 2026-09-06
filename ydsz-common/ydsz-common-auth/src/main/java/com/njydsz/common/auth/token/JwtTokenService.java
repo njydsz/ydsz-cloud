@@ -82,6 +82,12 @@ public class JwtTokenService implements TokenService {
   private static final String TOKEN_TYPE_REFRESH = "refresh";
   private static final String TOKEN_TYPE_ID = "id_token";
 
+  /** JWT Claims 缓存最大条目数 */
+  private static final long DEFAULT_CLAIMS_CACHE_MAX_SIZE = 100_000L;
+
+  /** JWT Claims 缓存过期时间（分钟） */
+  private static final long DEFAULT_CLAIMS_CACHE_TTL_MINUTES = 5L;
+
   private final TokenProperties tokenProperties;
   private final SecretKey secretKey;
   private final TokenBlacklistService tokenBlacklistService;
@@ -117,8 +123,8 @@ public class JwtTokenService implements TokenService {
     this.claimsCache =
         YdszCache.<String, Claims>newBuilder()
             .name("auth:jwt-claims")
-            .maximumSize(100_000)
-            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(DEFAULT_CLAIMS_CACHE_MAX_SIZE)
+            .expireAfterWrite(DEFAULT_CLAIMS_CACHE_TTL_MINUTES, TimeUnit.MINUTES)
             .build();
   }
 

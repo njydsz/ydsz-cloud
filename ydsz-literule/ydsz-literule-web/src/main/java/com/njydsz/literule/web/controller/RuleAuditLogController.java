@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
-import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
+import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
 
 /**
  * 规则审计日志查询接口（P3-5）
@@ -47,6 +47,9 @@ import com.njydsz.literule.server.audit.RuleAuditLogService;
 @ConditionalOnBean(RuleAuditLogService.class)
 @Tag(name = "规则审计日志", description = "P3-5 规则操作审计日志查询 API")
 public class RuleAuditLogController {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 审计日志查询默认条数 */
   private static final int DEFAULT_LIMIT = 50;
@@ -190,7 +193,7 @@ public class RuleAuditLogController {
     vo.setBeforeSnapshot(e.getBeforeSnapshot());
     vo.setAfterSnapshot(e.getAfterSnapshot());
     if (e.getFieldDiffs() != null) {
-      Map<String, Object> diffs = new LinkedHashMap<>(16);
+      Map<String, Object> diffs = new LinkedHashMap<>(COLLECTION_CAPACITY);
       e.getFieldDiffs().forEach(diffs::put);
       vo.setFieldDiffs(diffs);
     }

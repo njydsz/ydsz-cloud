@@ -1,4 +1,5 @@
 package com.njydsz.workflow.server.service.impl.instance;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -86,6 +87,9 @@ import com.njydsz.workflow.server.service.FlowExportService;
 @Service
 @RequiredArgsConstructor
 public class FlowExportServiceImpl implements FlowExportService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** HTML 导出缓冲区初始容量 */
   private static final int HTML_BUFFER_CAPACITY = 4096;
@@ -270,7 +274,7 @@ public class FlowExportServiceImpl implements FlowExportService {
         html.replace(
             "</body>", "<script>window.onload=function(){window.print();}</script></body>");
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("html", printHtml);
     result.put("instanceId", instanceId);
     result.put("exportAt", LocalDateTime.now().format(FMT));

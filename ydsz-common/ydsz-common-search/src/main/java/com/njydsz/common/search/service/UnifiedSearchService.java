@@ -479,7 +479,7 @@ public class UnifiedSearchService {
       total += resp.getTotal();
     }
 
-    allHits.sort(Comparator.comparingDouble((SearchHit h) -> -h.getScore()));
+    allHits.sort(Comparator.comparing(SearchHit::getScore).reversed());
     int fromIndex = Math.min(request.getOffset(), allHits.size());
     int toIndex = Math.min(fromIndex + request.getPageSize(), allHits.size());
 

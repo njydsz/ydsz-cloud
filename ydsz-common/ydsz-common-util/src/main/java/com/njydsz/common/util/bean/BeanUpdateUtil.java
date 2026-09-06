@@ -10,7 +10,6 @@ import java.util.Set;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.beans.BeansException;
 
 /**
  * Bean 动态更新工具类。
@@ -64,7 +63,7 @@ public final class BeanUpdateUtil {
    * @param ignoreProperties 额外固定忽略的属性名（如 "id"、"builtIn"），可为空
    * @param <T> 目标对象类型
    * @return 传入的 target 对象（便于链式调用）
-   * @throws BeansException 如果属性访问失败
+   * @throws org.springframework.beans.BeansException 如果属性访问失败
    */
   public static <T> T copyNonNull(Object source, T target, String... ignoreProperties) {
     if (source == null) {

@@ -4,15 +4,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.thread.util.ExecutorUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.search.config.SearchProperties;
+import com.njydsz.common.search.core.IndexDocument;
+import com.njydsz.common.search.core.IndexOperation;
+import com.njydsz.common.search.core.IndexStrategy;
+import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.metrics.SearchMetrics;
+import com.njydsz.common.search.provider.SearchProvider;
+import com.njydsz.common.search.provider.SearchProviderRegistry;
+import com.njydsz.common.search.sync.PersistentDeadLetterQueue;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 索引同步服务接口。
@@ -94,30 +104,17 @@ public class IndexSyncService {
   }
 
   /**
-   * 创建默认索引同步线程池（返回 Spring ThreadPoolTaskExecutor 以支持生命周期管理）。
+   * 创建默认索引同步线程池。
    *
    * <p>兜底线程池：仅在外部未注入线程池时使用，生产环境由 {@code ydsz.thread.pools.*} 统一管理。
    * 底层通过 {@link ExecutorUtils} 编程式工厂构建 ThreadPoolExecutor，YDIZ-CONC-001 合规。
    *
    * @param properties 搜索配置
-   * @return Spring 线程池适配器
+   * @return JDK 线程池
    */
-  public static ThreadPoolTaskExecutor createDefaultIndexSyncExecutor(SearchProperties properties) {
-    int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
-    int maxSize = Math.max(4, properties.getIndex().getThreadPoolSize() * 2);
+  public static ThreadPoolExecutor createDefaultIndexSyncExecutor(SearchProperties properties) {
     // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
-    ThreadPoolExecutor executor = createDefaultIndexSyncExecutorInternal(properties);
-    // 适配器：将 JDK ThreadPoolExecutor 包装为 Spring ThreadPoolTaskExecutor 以获取生命周期管理
-    ThreadPoolTaskExecutor adapter = new ThreadPoolTaskExecutor();
-    adapter.setCorePoolSize(coreSize);
-    adapter.setMaxPoolSize(maxSize);
-    adapter.setQueueCapacity(512);
-    adapter.setThreadNamePrefix("ydsz-index-sync-");
-    adapter.setWaitForTasksToCompleteOnShutdown(true);
-    adapter.setAwaitTerminationSeconds(5);
-    adapter.setThreadPoolExecutor(executor);
-    adapter.afterPropertiesSet();
-    return adapter;
+    return createDefaultIndexSyncExecutorInternal(properties);
   }
 
   /**

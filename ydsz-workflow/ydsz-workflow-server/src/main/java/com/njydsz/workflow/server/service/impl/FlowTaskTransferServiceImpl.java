@@ -40,6 +40,9 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskOperateService;
 @Service
 @RequiredArgsConstructor
 public class FlowTaskTransferServiceImpl implements FlowTaskTransferService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 运行时任务仓储，查询待办任务 */
   private final FlowRunTaskRepository taskRepository;
@@ -209,7 +212,7 @@ public class FlowTaskTransferServiceImpl implements FlowTaskTransferService {
       dto.setInitiatorId(managerId);
 
       // 设置流程变量
-      Map<String, Object> variables = new HashMap<>(16);
+      Map<String, Object> variables = new HashMap<>(COLLECTION_CAPACITY);
       variables.put("projectId", projectId);
       variables.put("projectName", projectName);
       variables.put("managerId", managerId);

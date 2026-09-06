@@ -36,6 +36,9 @@ import com.njydsz.common.util.id.IdGenerator;
 @AllArgsConstructor
 @Slf4j
 public class CEPEvent implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   @Serial private static final long serialVersionUID = 1L;
 
@@ -52,7 +55,7 @@ public class CEPEvent implements Serializable {
   @Builder.Default private String partitionKey = "default";
 
   /** 事件属性 */
-  @Builder.Default private Map<String, Object> attributes = new HashMap<>(16);
+  @Builder.Default private Map<String, Object> attributes = new HashMap<>(COLLECTION_CAPACITY);
 
   /** 获取属性值（缺失时返回 null）
    * @param key 属性键名
@@ -89,7 +92,7 @@ public class CEPEvent implements Serializable {
    */
   public CEPEvent withAttr(String key, Object value) {
     if (attributes == null) {
-      attributes = new HashMap<>(16);
+      attributes = new HashMap<>(COLLECTION_CAPACITY);
     }
     attributes.put(key, value);
     return this;

@@ -28,6 +28,9 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 @Slf4j
 @Component
 public class BpmnElementHelper {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** BPMN 扩展属性命名空间 */
   public static final String BPMN_EXT_NS = "http://ydsz.org/bpmn";
@@ -153,7 +156,7 @@ public class BpmnElementHelper {
    * @return ext 属性对应的 Map（非 null）
    */
   public Map<String, Object> readOrInitExt(FlowNodeVO node) {
-    Map<String, Object> map = new HashMap<>(16);
+    Map<String, Object> map = new HashMap<>(COLLECTION_CAPACITY);
     String ext = node.getExt();
     if (ext != null && !ext.isBlank() && !"{}".equals(ext.trim())) {
       try {

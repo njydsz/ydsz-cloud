@@ -1,5 +1,7 @@
 package com.njydsz.common.search.core;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +32,7 @@ public class SearchField {
   @Builder.Default private FieldType type = FieldType.TEXT;
 
   /** 权重（影响相关性排序，默认 1.0） */
-  @Builder.Default private float weight = 1.0f;
+  @Builder.Default private BigDecimal weight = new BigDecimal("1.0");
 
   /** 是否参与搜索 */
   @Builder.Default private boolean searchable = true;

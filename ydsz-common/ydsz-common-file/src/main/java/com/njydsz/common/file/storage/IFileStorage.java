@@ -16,14 +16,6 @@ import com.njydsz.common.file.domain.ListObjectsResult;
 import com.njydsz.common.file.domain.ObjectMetadata;
 import com.njydsz.common.file.domain.PolicyResult;
 import com.njydsz.common.file.domain.UploadCheckpoint;
-import com.njydsz.common.file.storage.platform.CosStorage;
-import com.njydsz.common.file.storage.platform.LocalStorage;
-import com.njydsz.common.file.storage.platform.MinioStorage;
-import com.njydsz.common.file.storage.platform.ObsStorage;
-import com.njydsz.common.file.storage.platform.OssStorage;
-import com.njydsz.common.file.storage.platform.QiniuStorage;
-import com.njydsz.common.file.storage.platform.S3Storage;
-
 /**
  * 文件存储统一抽象接口
  *
@@ -49,13 +41,13 @@ import com.njydsz.common.file.storage.platform.S3Storage;
  * @author ydsz-team
  * @since 26.09.01
  * @see IFileStorageProvider
- * @see LocalStorage
- * @see MinioStorage
- * @see S3Storage
- * @see OssStorage
- * @see CosStorage
- * @see QiniuStorage
- * @see ObsStorage
+ * @see com.njydsz.common.file.storage.platform.LocalStorage
+ * @see com.njydsz.common.file.storage.platform.MinioStorage
+ * @see com.njydsz.common.file.storage.platform.S3Storage
+ * @see com.njydsz.common.file.storage.platform.OssStorage
+ * @see com.njydsz.common.file.storage.platform.CosStorage
+ * @see com.njydsz.common.file.storage.platform.QiniuStorage
+ * @see com.njydsz.common.file.storage.platform.ObsStorage
  */
 public interface IFileStorage {
 

@@ -7,9 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.lock.annotation.RepeatSubmit;
-import com.njydsz.common.lock.spi.CurrentUserIdResolver;
-
 /**
  * 表单重复提交 Token 服务
  *
@@ -27,11 +24,11 @@ import com.njydsz.common.lock.spi.CurrentUserIdResolver;
  * <p><b>Redis Key 格式：</b> {@code ydsz:repeat:token:{userId}:{token}}
  *
  * <p><b>循环依赖修复（C2-1）：</b> 本类不再直接依赖 {@code ydsz-common-auth} 的 {@code AuthContextUtils}，改为通过 {@link
- * CurrentUserIdResolver} SPI 接口注入， 由上层业务模块（如 ydsz-common-auth）提供实现。
+ * com.njydsz.common.lock.spi.CurrentUserIdResolver} SPI 接口注入， 由上层业务模块（如 ydsz-common-auth）提供实现。
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see RepeatSubmit
+ * @see com.njydsz.common.lock.annotation.RepeatSubmit
  */
 @Slf4j
 public class RepeatSubmitTokenService {

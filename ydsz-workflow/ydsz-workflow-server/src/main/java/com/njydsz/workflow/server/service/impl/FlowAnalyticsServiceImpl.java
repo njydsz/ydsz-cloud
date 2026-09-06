@@ -99,6 +99,9 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
 @Service
 @RequiredArgsConstructor
 public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 历史任务仓储（domain 层契约），提供基础 CRUD 与聚合统计方法 */
   private final FlowHisTaskRepository hisTaskRepository;
@@ -114,7 +117,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     // P1-5: 使用单 SQL 聚合查询替代多次 COUNT（5 次 → 1 次）
     Map<String, Object> hisStats = hisTaskRepository.selectOverviewStats(tid, startTime, endTime);
     if (hisStats == null) {
-      hisStats = new LinkedHashMap<>(16);
+      hisStats = new LinkedHashMap<>(COLLECTION_CAPACITY);
     }
 
     long totalHis = toLong(hisStats.get("totalTasks"));

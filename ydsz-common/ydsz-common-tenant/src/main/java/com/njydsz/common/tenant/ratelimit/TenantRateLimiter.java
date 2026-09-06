@@ -2,7 +2,6 @@ package com.njydsz.common.tenant.ratelimit;
 
 import java.time.Duration;
 
-import com.njydsz.common.jdbc.exception.TenantIsolationException;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.tenant.TenantContextHolder;
 
@@ -20,7 +19,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  *   <li><b>令牌桶</b>：支持突发流量，按速率持续补充令牌，适用于流量整形
  * </ul>
  *
- * <p>所有限流方法均返回 boolean，调用方根据返回值决定是否抛出异常。 建议统一使用 {@link TenantIsolationException} 表示租户级访问受限，
+ * <p>所有限流方法均返回 boolean，调用方根据返回值决定是否抛出异常。 建议统一使用 {@link com.njydsz.common.jdbc.exception.TenantIsolationException} 表示租户级访问受限，
  * 与模块异常体系保持一致。
  *
  * <p><b>使用示例：</b>

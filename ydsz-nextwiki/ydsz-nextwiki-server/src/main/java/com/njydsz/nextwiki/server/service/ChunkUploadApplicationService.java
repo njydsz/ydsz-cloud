@@ -69,6 +69,9 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @Slf4j
 @Service
 public class ChunkUploadApplicationService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 每兆字节数（字节） */
   private static final long BYTES_PER_MB = 1024 * 1024;
@@ -512,7 +515,7 @@ public class ChunkUploadApplicationService {
   public Set<Integer> getUploadedChunks(String uploadId) {
     Set<String> uploaded = collectionOps.sMembers(KEY_UPLOADED_CHUNKS + uploadId, String.class);
     if (uploaded == null) {
-      return new HashSet<>(16);
+      return new HashSet<>(COLLECTION_CAPACITY);
     }
     return uploaded.stream().map(Integer::parseInt).collect(Collectors.toSet());
   }

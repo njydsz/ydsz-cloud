@@ -1,6 +1,7 @@
 package com.njydsz.common.safe.ratelimit.aop;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -147,7 +148,7 @@ public class RateLimitAspect {
             .algorithm(annotation.algorithm())
             .dimension(annotation.dimension())
             .mode(annotation.mode())
-            .threshold(annotation.threshold())
+            .threshold(BigDecimal.valueOf(annotation.threshold()))
             .window(Duration.ofMillis(annotation.windowMillis()))
             .burstCapacity(annotation.burstCapacity())
             .queueTimeout(Duration.ofMillis(annotation.queueTimeoutMillis()))

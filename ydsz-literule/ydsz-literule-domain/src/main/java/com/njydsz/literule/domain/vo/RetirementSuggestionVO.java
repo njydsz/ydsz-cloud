@@ -33,6 +33,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RetirementSuggestionVO implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private static final long serialVersionUID = 1L;
 
@@ -70,7 +73,7 @@ public class RetirementSuggestionVO implements Serializable {
   private BigDecimal errorRate;
 
   /** 建议操作 */
-  @Builder.Default private List<String> recommendedActions = new ArrayList<>(16);
+  @Builder.Default private List<String> recommendedActions = new ArrayList<>(COLLECTION_CAPACITY);
 
   /** 建议生成时间 */
   private LocalDateTime suggestedAt;

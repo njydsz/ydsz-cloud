@@ -4,9 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -84,8 +82,6 @@ public final class UltraFastCellWriter {
       cell.setCellValue(n.doubleValue());
     } else if (value instanceof Boolean b) {
       cell.setCellValue(b);
-    } else if (value instanceof Date d) {
-      cell.setCellValue(formatDate(d, dateFormat));
     } else if (value instanceof LocalDateTime ldt) {
       cell.setCellValue(formatLocalDateTime(ldt, dateFormat));
     } else if (value instanceof LocalDate ld) {
@@ -113,20 +109,6 @@ public final class UltraFastCellWriter {
       return excelConfig.sanitizeForXlsx(value);
     }
     return value;
-  }
-
-  /**
-   * 格式化Date - 使用全局缓存
-   *
-   * @author ydsz-team
-
-   * @version 26.09.01
-   */
-  private String formatDate(Date date, String pattern) {
-    String fmt = pattern != null ? pattern : "yyyy-MM-dd HH:mm:ss";
-    DateTimeFormatter formatter =
-        GLOBAL_DATETIME_CACHE.computeIfAbsent(fmt, DateTimeFormatter::ofPattern);
-    return date.toInstant().atZone(ZoneId.systemDefault()).format(formatter);
   }
 
   /** 格式化LocalDateTime - 使用全局缓存 */

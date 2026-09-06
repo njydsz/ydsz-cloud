@@ -42,6 +42,12 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  */
 @Slf4j
 public class RuleDebugger {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
 
   /** 全局单例（供热路径零侵入访问；Spring 容器销毁时置空） */
   private static volatile RuleDebugger instance;
@@ -144,7 +150,7 @@ public class RuleDebugger {
             .condition(condition)
             .enabled(true)
             .build();
-    breakpoints.computeIfAbsent(ruleCode, k -> new ArrayList<>(8)).add(bp);
+    breakpoints.computeIfAbsent(ruleCode, k -> new ArrayList<>(COLLECTION_CAPACITY_8)).add(bp);
     log.info(
         "[LiteRule-Debug] 新增断点: id={}, ruleCode={}, nodeType={}, expr={}",
         bp.getId(),
@@ -224,7 +230,7 @@ public class RuleDebugger {
    * @return 只读快照
    */
   public List<Breakpoint> listBreakpoints() {
-    List<Breakpoint> result = new ArrayList<>(16);
+    List<Breakpoint> result = new ArrayList<>(COLLECTION_CAPACITY_16);
     breakpoints.values().forEach(result::addAll);
     return List.copyOf(result);
   }

@@ -1,6 +1,7 @@
 package com.njydsz.common.safe.ratelimit.model;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Duration;
 
 import lombok.AllArgsConstructor;
@@ -55,7 +56,7 @@ public class RateLimitRule implements Serializable {
   @Builder.Default private RateLimitMode mode = RateLimitMode.LOCAL;
 
   /** 阈值（每秒请求数 / 并发数 / 令牌数） */
-  @Builder.Default private double threshold = 100.0;
+  @Builder.Default private BigDecimal threshold = new BigDecimal("100.0");
 
   /** 限流统计窗口（默认 1 秒） */
   @Builder.Default private Duration window = Duration.ofSeconds(1);
@@ -102,7 +103,7 @@ public class RateLimitRule implements Serializable {
     if (resource == null || resource.trim().isEmpty()) {
       throw new IllegalArgumentException("resource cannot be null or empty");
     }
-    if (threshold <= 0) {
+    if (threshold.compareTo(BigDecimal.ZERO) <= 0) {
       throw new IllegalArgumentException("threshold must be positive, got: " + threshold);
     }
     if (window == null || window.isNegative() || window.isZero()) {

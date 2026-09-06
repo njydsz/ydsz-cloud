@@ -3,7 +3,6 @@ package com.njydsz.agent.domain.memory;
 import java.util.List;
 
 import com.njydsz.agent.domain.conversation.Conversation;
-import com.njydsz.agent.domain.memory.MemoryExtractedFact;
 
 /**
  * 记忆整合服务网关接口。

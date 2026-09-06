@@ -46,6 +46,9 @@ import com.njydsz.common.json.YdszJson;
  */
 @Slf4j
 public class ToolAnnotationScanner implements BeanPostProcessor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
@@ -116,7 +119,7 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
 
   /** 从方法参数构建 JSON Schema */
   private Map<String, Object> buildParametersSchema(Method method) {
-    Map<String, Object> properties = new HashMap<>(16);
+    Map<String, Object> properties = new HashMap<>(COLLECTION_CAPACITY);
     Parameter[] parameters = method.getParameters();
     for (int i = 0; i < parameters.length; i++) {
       Parameter param = parameters[i];
@@ -130,14 +133,14 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
         required = paramAnnotation.required();
       }
 
-      Map<String, Object> paramSchema = new HashMap<>(16);
+      Map<String, Object> paramSchema = new HashMap<>(COLLECTION_CAPACITY);
       paramSchema.put("type", mapJavaTypeToJsonType(param.getType()));
       paramSchema.put("description", paramDesc);
       paramSchema.put("required", required);
       properties.put(paramName, paramSchema);
     }
 
-    Map<String, Object> schema = new HashMap<>(16);
+    Map<String, Object> schema = new HashMap<>(COLLECTION_CAPACITY);
     schema.put("type", "object");
     schema.put("properties", properties);
     return schema;

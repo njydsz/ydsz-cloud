@@ -55,6 +55,9 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 @Slf4j
 @Builder
 public class ScorecardRule implements Rule {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
@@ -164,7 +167,7 @@ public class ScorecardRule implements Rule {
     long start = System.nanoTime();
     try {
       double totalScore = baseScore;
-      List<String> hitDetails = new ArrayList<>(16);
+      List<String> hitDetails = new ArrayList<>(COLLECTION_CAPACITY);
 
       for (ScoreFactor factor : factors) {
         try {

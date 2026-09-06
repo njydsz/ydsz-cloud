@@ -427,16 +427,16 @@ public final class DigestUtils {
    *
    * <p>使用 {@link MessageDigest#isEqual(byte[], byte[])} 进行恒定时间比较， 防止攻击者通过比较耗时推断字符串差异位置。
    *
-   * @param a 字符串 a
-   * @param b 字符串 b
+   * @param left  待比较字符串
+   * @param right 待比较字符串
    * @return 相等返回 true
    */
-  public static boolean constantTimeEquals(String a, String b) {
-    if (a == null || b == null) {
-      return a == null && b == null;
+  public static boolean constantTimeEquals(String left, String right) {
+    if (left == null || right == null) {
+      return left == null && right == null;
     }
-    byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
-    byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
+    byte[] aBytes = left.getBytes(StandardCharsets.UTF_8);
+    byte[] bBytes = right.getBytes(StandardCharsets.UTF_8);
     return MessageDigest.isEqual(aBytes, bBytes);
   }
 

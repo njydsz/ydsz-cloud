@@ -25,6 +25,9 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
 @Component
 @RequiredArgsConstructor
 public class BpmnSkipParser {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final BpmnElementHelper bpmnElementHelper;
 
@@ -43,7 +46,7 @@ public class BpmnSkipParser {
     String targetRef = elem.getAttribute("targetRef");
     // A9: sourceNodeCode 独立列存储源节点编码（替代 ext JSON 中的 sourceRef）
     skip.setSourceNodeCode(sourceRef);
-    Map<String, Object> ext = new HashMap<>(16);
+    Map<String, Object> ext = new HashMap<>(COLLECTION_CAPACITY);
     ext.put("sourceRef", sourceRef);
     ext.put("targetRef", targetRef);
     ext.put("sequenceFlowId", elem.getAttribute("id"));

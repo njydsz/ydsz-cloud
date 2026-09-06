@@ -3,8 +3,6 @@ package com.njydsz.common.web.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import com.njydsz.common.web.filter.ContentCachingFilter;
-
 /**
  * Web 端请求体缓存配置属性
  *
@@ -20,7 +18,7 @@ import com.njydsz.common.web.filter.ContentCachingFilter;
  * }</pre>
  *
  * @author ydsz-team
- * @see ContentCachingFilter
+ * @see com.njydsz.common.web.filter.ContentCachingFilter
  * @since 26.09.01
  */
 @Data

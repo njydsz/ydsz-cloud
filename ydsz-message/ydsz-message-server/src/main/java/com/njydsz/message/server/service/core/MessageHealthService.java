@@ -36,6 +36,9 @@ import com.njydsz.message.server.config.MessageProperties;
 @Service
 @RequiredArgsConstructor
 public class MessageHealthService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 计算精度 */
   private static final int SCALE = 4;
 
@@ -84,7 +87,7 @@ public class MessageHealthService {
    * @return 通道健康状态列表
    */
   public List<ChannelHealthVO> getChannelHealths() {
-    List<ChannelHealthVO> result = new ArrayList<>(16);
+    List<ChannelHealthVO> result = new ArrayList<>(COLLECTION_CAPACITY);
     Map<String, CircuitBreaker> breakerCache = channelRouter.getBreakerCache();
     Map<String, Boolean> channelEnabled = messageProperties.getChannelEnabled();
 

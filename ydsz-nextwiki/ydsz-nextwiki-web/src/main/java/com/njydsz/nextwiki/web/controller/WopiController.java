@@ -108,7 +108,14 @@ public class WopiController {
   @Autowired(required = false)
   private IFileStorageProvider fileStorageProvider;
 
-  /** CheckFileInfo — 获取文件元信息 */
+  /**
+   * CheckFileInfo — 获取文件元信息
+   *
+   * @param fileId 文件 ID
+   * @param userId 用户 ID
+   * @param authToken WOPI 认证令牌
+   * @return 文件元信息响应
+   */
   @GetMapping("/files/{fileId}")
   @Operation(summary = "WOPI CheckFileInfo", description = "返回文件元信息供在线编辑器使用")
   public WopiCheckFileInfoResponse checkFileInfo(
@@ -141,7 +148,13 @@ public class WopiController {
         .build();
   }
 
-  /** GetFile — 获取文件内容 */
+  /**
+   * GetFile — 获取文件内容
+   *
+   * @param fileId 文件 ID
+   * @param authToken WOPI 认证令牌
+   * @return 文件原始内容
+   */
   @GetMapping("/files/{fileId}/contents")
   @Operation(summary = "WOPI GetFile", description = "返回文件原始内容")
   public byte[] getFileContents(
@@ -171,7 +184,16 @@ public class WopiController {
     }
   }
 
-  /** PutFile — 保存文件内容 */
+  /**
+   * PutFile — 保存文件内容
+   *
+   * @param fileId 文件 ID
+   * @param userId 用户 ID
+   * @param authToken WOPI 认证令牌
+   * @param lockId 锁 ID
+   * @param content 文件内容
+   * @return 保存结果响应
+   */
   @Idempotent(key = "ydsz:nextwiki:WopiController:putFileContents:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/contents")
   @Operation(summary = "WOPI PutFile", description = "接收编辑器保存的文件内容")
@@ -225,7 +247,15 @@ public class WopiController {
     }
   }
 
-  /** LockFile — 锁定文件 */
+  /**
+   * LockFile — 锁定文件
+   *
+   * @param fileId 文件 ID
+   * @param lockId 锁 ID
+   * @param userId 用户 ID
+   * @param authToken WOPI 认证令牌
+   * @return 锁定结果响应
+   */
   @Idempotent(key = "ydsz:nextwiki:WopiController:lockFile:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/lock")
   @Operation(summary = "WOPI Lock", description = "锁定文件防止并发编辑")
@@ -251,7 +281,14 @@ public class WopiController {
     return WopiPutFileResponse.ok();
   }
 
-  /** UnlockFile — 解锁文件 */
+  /**
+   * UnlockFile — 解锁文件
+   *
+   * @param fileId 文件 ID
+   * @param lockId 锁 ID
+   * @param authToken WOPI 认证令牌
+   * @return 解锁结果响应
+   */
   @Idempotent(key = "ydsz:nextwiki:WopiController:unlockFile:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/unlock")
   @Operation(summary = "WOPI Unlock", description = "解锁文件")

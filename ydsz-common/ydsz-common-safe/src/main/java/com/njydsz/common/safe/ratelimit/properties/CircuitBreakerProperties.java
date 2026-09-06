@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.ratelimit.properties;
 
+import java.math.BigDecimal;
+
 import lombok.Data;
 
 /**
@@ -39,7 +41,7 @@ public class CircuitBreakerProperties {
    *
    * <p>当失败率达到此百分比时触发熔断。 默认 50（即 50%）。
    */
-  private double failureRateThreshold = 50.0;
+  private BigDecimal failureRateThreshold = new BigDecimal("50.0");
 
   /**
    * 最小调用数

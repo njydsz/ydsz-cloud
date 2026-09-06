@@ -23,13 +23,13 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.agent.DagCheckpoint;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
+import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.gateway.DagCheckpointStore;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -65,6 +65,9 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class DagOrchestrationExecutor implements AgentExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** variables 中携带 DAG YAML 定义时使用的键 */
   private static final String VARIABLE_DSL_KEY = "dsl";
@@ -395,7 +398,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    * @return 循环体节点 ID 集合
    */
   private static Set<String> collectLoopBodyNodeIds(AgentDag dag) {
-    Set<String> loopBodyNodeIds = new HashSet<>(16);
+    Set<String> loopBodyNodeIds = new HashSet<>(COLLECTION_CAPACITY);
     for (AgentDag.Node node : dag.getNodes().values()) {
       String nodeType = (String) node.getConfig().getOrDefault("nodeType", "AGENT");
       if ("LOOP".equalsIgnoreCase(nodeType)) {
@@ -642,8 +645,8 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    */
   private List<String> topologicalSort(AgentDag dag) {
     List<String> result = new ArrayList<>(dag.getNodes().size());
-    Set<String> visited = new HashSet<>(16);
-    Set<String> visiting = new HashSet<>(16);
+    Set<String> visited = new HashSet<>(COLLECTION_CAPACITY);
+    Set<String> visiting = new HashSet<>(COLLECTION_CAPACITY);
     for (String nodeId : dag.getNodes().keySet()) {
       topologicalVisit(dag, nodeId, visited, visiting, result);
     }

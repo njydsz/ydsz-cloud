@@ -97,6 +97,9 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 @Service
 @RequiredArgsConstructor
 public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** BPMN 节点类型码：结束事件 */
   private static final int NODE_TYPE_END = 6;
@@ -422,13 +425,13 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
   private Map<String, Object> parseVariables(String variableJson) {
     if (!StringUtils.hasText(variableJson)) {
-      return new HashMap<>(16);
+      return new HashMap<>(COLLECTION_CAPACITY);
     }
     try {
       Map<String, Object> m = YdszJson.parseMap(variableJson);
-      return m != null ? m : new HashMap<>(16);
+      return m != null ? m : new HashMap<>(COLLECTION_CAPACITY);
     } catch (Exception e) {
-      return new HashMap<>(16);
+      return new HashMap<>(COLLECTION_CAPACITY);
     }
   }
 }

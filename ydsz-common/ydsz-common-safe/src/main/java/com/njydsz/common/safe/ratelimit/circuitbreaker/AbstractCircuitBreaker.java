@@ -1,5 +1,6 @@
 package com.njydsz.common.safe.ratelimit.circuitbreaker;
 
+import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -32,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  *     @Override
  *     protected boolean evaluateThreshold() {
- *         return failures.get() >= config.getFailureThreshold();
+ *         return failures.get() >= config.getFailureThreshold().intValue();
  *     }
  *
  *     @Override
@@ -274,7 +275,7 @@ public abstract class AbstractCircuitBreaker {
     private final String name;
 
     /** 失败阈值（含义由子类解释：连续失败次数或失败率阈值） */
-    private final double failureThreshold;
+    private final BigDecimal failureThreshold;
 
     /** OPEN 状态持续时间（毫秒），到期后允许进入 HALF_OPEN */
     private final long halfOpenAfterMillis;
@@ -292,7 +293,7 @@ public abstract class AbstractCircuitBreaker {
      */
     public Config(
         String name,
-        double failureThreshold,
+        BigDecimal failureThreshold,
         long halfOpenAfterMillis,
         int permittedHalfOpenCalls) {
       this.name = name;

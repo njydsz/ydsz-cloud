@@ -29,6 +29,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class RetryPreviewService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 每毫秒纳秒数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
@@ -54,7 +57,7 @@ public class RetryPreviewService {
    * @return 每个预设对应的时间线
    */
   public Map<String, Map<String, Object>> previewAllPresets() {
-    Map<String, Map<String, Object>> result = new HashMap<>(16);
+    Map<String, Map<String, Object>> result = new HashMap<>(COLLECTION_CAPACITY);
     for (RetryPreset preset : RetryPreset.values()) {
       result.put(preset.getCode(), previewRetrySchedule(preset));
     }
@@ -62,7 +65,7 @@ public class RetryPreviewService {
   }
 
   private Map<String, Object> previewRetrySchedule(RetryPreset preset) {
-    Map<String, Object> preview = new HashMap<>(16);
+    Map<String, Object> preview = new HashMap<>(COLLECTION_CAPACITY);
     preview.put("preset", preset.getCode());
     preview.put("displayName", preset.getDisplayName());
     preview.put("maxRetryCount", preset.getMaxRetryCount());
@@ -70,7 +73,7 @@ public class RetryPreviewService {
     preview.put("backoffMultiplier", preset.getBackoffMultiplier());
     preview.put("maxBackoffMs", preset.getMaxBackoffMs());
 
-    List<Map<String, Object>> timeline = new ArrayList<>(16);
+    List<Map<String, Object>> timeline = new ArrayList<>(COLLECTION_CAPACITY);
     long cumulativeMs = 0L;
     LocalDateTime baseTime = LocalDateTime.now();
 
@@ -79,7 +82,7 @@ public class RetryPreviewService {
       cumulativeMs += backoffMs;
       LocalDateTime triggerAt = baseTime.plusNanos(backoffMs * NANOS_PER_MILLI);
 
-      Map<String, Object> entry = new HashMap<>(16);
+      Map<String, Object> entry = new HashMap<>(COLLECTION_CAPACITY);
       entry.put("retryIndex", retry + 1); // 第 N 次重试（从 1 开始）
       entry.put("backoffMs", backoffMs);
       entry.put("backoffSeconds", String.format("%.1f", backoffMs / 1000.0));

@@ -51,6 +51,9 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 @Service
 @RequiredArgsConstructor
 public class FlowTaskRejectService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 运行时任务仓储，查询/更新任务状态 */
   private final FlowRunTaskRepository taskRepository;
@@ -221,7 +224,7 @@ public class FlowTaskRejectService {
         return null;
       }
       // 沿 PASS 出边找下游第一个 APPROVAL 节点
-      String found = findFirstApprovalNode(definitionId, startNode.getNodeCode(), new HashSet<>(16));
+      String found = findFirstApprovalNode(definitionId, startNode.getNodeCode(), new HashSet<>(COLLECTION_CAPACITY));
       return found != null ? found : startNode.getNodeCode();
     } catch (Exception e) {
       log.warn("[Flow] 解析开始节点下游失败: definitionId={} err={}", definitionId, e.getMessage());

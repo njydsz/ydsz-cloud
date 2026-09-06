@@ -1,5 +1,7 @@
 package com.njydsz.common.docs.domain;
 
+import java.math.BigDecimal;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -41,7 +43,7 @@ public class PiiFinding {
   private Integer pageNumber;
 
   /** 置信度（0-1） */
-  private double confidence;
+  private BigDecimal confidence;
 
   /** 文档格式，用于定位模型选择 */
   private DocumentFormat documentFormat;
@@ -67,16 +69,16 @@ public class PiiFinding {
     private int pageIndex;
 
     /** 页面内 X 坐标（PDF）或段落索引（DOCX） */
-    private double x;
+    private BigDecimal x;
 
     /** 页面内 Y 坐标（PDF）或字符偏移（DOCX） */
-    private double y;
+    private BigDecimal y;
 
     /** 区域宽度（PDF）或段落数（DOCX） */
-    private double width;
+    private BigDecimal width;
 
     /** 区域高度（PDF）或字符长度（DOCX） */
-    private double height;
+    private BigDecimal height;
 
     /** 行号（Excel，从 0 开始） */
     private Integer row;

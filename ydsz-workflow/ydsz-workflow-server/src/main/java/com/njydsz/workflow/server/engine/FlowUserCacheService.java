@@ -40,6 +40,9 @@ import com.njydsz.workflow.server.config.FlowProperties;
 @Slf4j
 @Component
 public class FlowUserCacheService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 用户名称缓存 key 前缀 */
   private static final String KEY_USER_NAME = "userName:";
@@ -107,7 +110,7 @@ public class FlowUserCacheService {
       return Collections.emptyMap();
     }
     Map<String, String> result = new HashMap<>(userIds.size());
-    List<String> missedIds = new ArrayList<>(16);
+    List<String> missedIds = new ArrayList<>(COLLECTION_CAPACITY);
 
     // 1. 批量查缓存
     for (String userId : userIds) {

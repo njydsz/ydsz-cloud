@@ -1,9 +1,7 @@
 package com.njydsz.literule.server.config;
+
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
-import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
@@ -51,6 +48,9 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 @Slf4j
 @RequiredArgsConstructor
 public class RuleConflictDetector {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 比较表达式正则捕获组：右侧操作数 */
   private static final int CMP_GROUP_RIGHT = 3;
@@ -73,7 +73,7 @@ public class RuleConflictDetector {
    * @return 冲突列表；无冲突返回空列表
    */
   public List<RuleConflict> detect(RuleDefinitionDTO newDefinition) {
-    List<RuleConflict> conflicts = new ArrayList<>(16);
+    List<RuleConflict> conflicts = new ArrayList<>(COLLECTION_CAPACITY);
     if (newDefinition == null || newDefinition.getCode() == null) {
       return conflicts;
     }

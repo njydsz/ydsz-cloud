@@ -31,6 +31,9 @@ import com.njydsz.message.infra.mapper.OutboxEventMapper;
 @Repository
 @RequiredArgsConstructor
 public class OutboxEventRepositoryImpl implements OutboxEventRepository {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final OutboxEventMapper outboxEventMapper;
 
@@ -83,7 +86,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   @Override
   public Map<String, Long> countByStatus() {
     List<Map<String, Object>> rows = outboxEventMapper.countGroupByStatus();
-    Map<String, Long> result = new HashMap<>(16);
+    Map<String, Long> result = new HashMap<>(COLLECTION_CAPACITY);
     for (Map<String, Object> row : rows) {
       String status = (String) row.get("status");
       Long count = ((Number) row.get("count")).longValue();

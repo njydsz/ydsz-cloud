@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
+import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -35,6 +35,9 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  */
 @Slf4j
 public class CostAnalysisService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /**
    * 用量记录异步写入线程池（JDK 21 虚拟线程，规范豁免场景）。
@@ -173,7 +176,7 @@ public class CostAnalysisService {
   public Map<String, ModelCostStats> getStatsByModel(LocalDateTime start, LocalDateTime end) {
     List<TokenUsageRecordVO> records =
         tokenUsageRecordRepository.findByCreatedAtRange(start, end);
-    Map<String, MutableCostStats> agg = new LinkedHashMap<>(16);
+    Map<String, MutableCostStats> agg = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (TokenUsageRecordVO record : records) {
       String model = record.getModelName() != null ? record.getModelName() : "unknown";
       MutableCostStats stats = agg.computeIfAbsent(model, k -> new MutableCostStats());
@@ -184,7 +187,7 @@ public class CostAnalysisService {
       stats.totalCostUsd +=
           record.getTotalTokens() * priceConfig.getPrice(record.getModelName()) / 1000.0;
     }
-    Map<String, ModelCostStats> result = new LinkedHashMap<>(16);
+    Map<String, ModelCostStats> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     agg.forEach(
         (model, stats) ->
             result.put(

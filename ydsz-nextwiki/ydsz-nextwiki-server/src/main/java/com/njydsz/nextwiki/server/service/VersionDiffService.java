@@ -1,4 +1,5 @@
 package com.njydsz.nextwiki.server.service;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,6 +31,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class VersionDiffService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 单次对比最大文件大小（字节）：1MB */
   private static final long MAX_DIFF_SIZE = 1024 * 1024;
@@ -111,7 +115,7 @@ public class VersionDiffService {
 
   /** 按行分割文本 */
   private List<String> splitLines(String content) {
-    List<String> lines = new ArrayList<>(16);
+    List<String> lines = new ArrayList<>(COLLECTION_CAPACITY);
     if (content == null || content.isEmpty()) {
       return lines;
     }
@@ -142,19 +146,40 @@ public class VersionDiffService {
         }
       }
     }
-    List<DiffEntry> entries = new ArrayList<>(16);
+    List<DiffEntry> entries = new ArrayList<>(COLLECTION_CAPACITY);
     int i = m;
     int j = n;
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0 && Objects.equals(oldLines.get(i - 1), newLines.get(j - 1))) {
-        entries.add(0, DiffEntry.builder().type(DiffType.UNCHANGED).lineContent(oldLines.get(i - 1)).oldLineNumber(i).newLineNumber(j).build());
+        entries.add(
+            0,
+            DiffEntry.builder()
+                .type(DiffType.UNCHANGED)
+                .lineContent(oldLines.get(i - 1))
+                .oldLineNumber(i)
+                .newLineNumber(j)
+                .build());
         i--;
         j--;
       } else if (j > 0 && (i == 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-        entries.add(0, DiffEntry.builder().type(DiffType.ADD).lineContent(newLines.get(j - 1)).oldLineNumber(i == 0 ? 0 : i).newLineNumber(j).build());
+        entries.add(
+            0,
+            DiffEntry.builder()
+                .type(DiffType.ADD)
+                .lineContent(newLines.get(j - 1))
+                .oldLineNumber(i == 0 ? 0 : i)
+                .newLineNumber(j)
+                .build());
         j--;
       } else if (i > 0) {
-        entries.add(0, DiffEntry.builder().type(DiffType.DELETE).lineContent(oldLines.get(i - 1)).oldLineNumber(i).newLineNumber(j == 0 ? 0 : j).build());
+        entries.add(
+            0,
+            DiffEntry.builder()
+                .type(DiffType.DELETE)
+                .lineContent(oldLines.get(i - 1))
+                .oldLineNumber(i)
+                .newLineNumber(j == 0 ? 0 : j)
+                .build());
         i--;
       }
     }

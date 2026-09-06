@@ -13,12 +13,12 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
-import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageContent;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.chat.ChatService;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
@@ -43,6 +43,12 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 @Service
 @RequiredArgsConstructor
 public class AgentFacadeImpl implements AgentFacade {
+
+  /** 默认温度参数 */
+  private static final double DEFAULT_TEMPERATURE = 0.7;
+
+  /** 默认最大 Token 数 */
+  private static final int DEFAULT_MAX_TOKENS = 2048;
 
   /** 简单对话服务（单轮 LLM 调用） */
   private final ChatService chatService;
@@ -206,8 +212,8 @@ public class AgentFacadeImpl implements AgentFacade {
         type,
         vo.getSystemPrompt(),
         toolNames,
-        vo.getTemperature() != null ? vo.getTemperature() : 0.7,
-        vo.getMaxTokens() != null ? vo.getMaxTokens() : 2048,
+        vo.getTemperature() != null ? vo.getTemperature() : DEFAULT_TEMPERATURE,
+        vo.getMaxTokens() != null ? vo.getMaxTokens() : DEFAULT_MAX_TOKENS,
         10,
         null);
   }

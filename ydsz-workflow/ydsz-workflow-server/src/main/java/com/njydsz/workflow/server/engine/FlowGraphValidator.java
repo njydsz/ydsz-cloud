@@ -39,6 +39,9 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
 @Slf4j
 @Component
 public class FlowGraphValidator {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /**
    * 校验流程定义图结构
@@ -138,8 +141,8 @@ public class FlowGraphValidator {
     Map<String, List<String>> outEdges = new HashMap<>(nodeMap.size());
     Map<String, List<String>> inEdges = new HashMap<>(nodeMap.size());
     for (String code : nodeMap.keySet()) {
-      outEdges.put(code, new ArrayList<>(16));
-      inEdges.put(code, new ArrayList<>(16));
+      outEdges.put(code, new ArrayList<>(COLLECTION_CAPACITY));
+      inEdges.put(code, new ArrayList<>(COLLECTION_CAPACITY));
     }
 
     int validSkipCount = 0;

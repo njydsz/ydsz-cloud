@@ -57,6 +57,9 @@ import com.njydsz.literule.domain.enums.RuleStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RuleChainGraph implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private static final long serialVersionUID = 1L;
 
@@ -86,10 +89,10 @@ public class RuleChainGraph implements Serializable {
   @Builder.Default private String status = "DRAFT";
 
   /** 节点列表 */
-  @Builder.Default private List<ChainNodeDTO> nodes = new ArrayList<>(16);
+  @Builder.Default private List<ChainNodeDTO> nodes = new ArrayList<>(COLLECTION_CAPACITY);
 
   /** 连线列表 */
-  @Builder.Default private List<ChainEdgeDTO> edges = new ArrayList<>(16);
+  @Builder.Default private List<ChainEdgeDTO> edges = new ArrayList<>(COLLECTION_CAPACITY);
 
   /** 画布视口（前端缩放和平移状态） */
   private Viewport viewport;

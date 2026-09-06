@@ -4,7 +4,6 @@ import java.util.Map;
 
 import com.njydsz.literule.domain.vo.RuleContextVO;
 
-
 /**
  * 模型输入提供者 SPI（P3-1 规则+模型融合）
  *

@@ -35,6 +35,9 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  * @author ydsz-team
  */
 public interface CompiledCondition {
+    /** 集合初始容量 */
+    int COLLECTION_CAPACITY = 16;
+
 
     /** CompiledCondition 日志记录器 */
     Logger LOG = LoggerFactory.getLogger(CompiledCondition.class);
@@ -194,7 +197,7 @@ public interface CompiledCondition {
     private final Set<String> values;
 
     EnumCondition(String expr) {
-      this.values = new HashSet<>(16);
+      this.values = new HashSet<>(COLLECTION_CAPACITY);
       for (String part : expr.split("\\|")) {
         values.add(part.trim());
       }

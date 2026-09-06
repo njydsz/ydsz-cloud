@@ -200,7 +200,7 @@ public final class MapUtils {
    */
   public static <T> List<T> safeCastList(Object obj, Class<T> element) {
     if (!(obj instanceof List<?> raw)) {
-      return new ArrayList<>();
+      return new ArrayList<>(16);
     }
     List<T> result = new ArrayList<>(raw.size());
     for (Object item : raw) {

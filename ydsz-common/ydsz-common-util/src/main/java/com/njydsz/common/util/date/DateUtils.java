@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
@@ -271,7 +270,7 @@ public final class DateUtils {
    * @param pattern 日期格式模式（如 yyyy-MM-dd），不能为 null
    * @return 解析后的 LocalDate
    * @throws NullPointerException 如果任一参数为 null
-   * @throws DateTimeParseException 如果文本无法按指定模式解析
+   * @throws java.time.format.DateTimeParseException 如果文本无法按指定模式解析
    */
   public static LocalDate parseLocalDate(String text, String pattern) {
     Objects.requireNonNull(text, "text must not be null");
@@ -301,7 +300,7 @@ public final class DateUtils {
    * @param text 待解析文本，不能为 null
    * @return 解析后的 LocalDateTime
    * @throws NullPointerException 如果 text 为 null
-   * @throws DateTimeParseException 如果文本格式不符合 ISO 标准
+   * @throws java.time.format.DateTimeParseException 如果文本格式不符合 ISO 标准
    */
   public static LocalDateTime parseLocalDateTime(String text) {
     Objects.requireNonNull(text, "text must not be null");

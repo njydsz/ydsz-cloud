@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerType;
-import com.njydsz.agent.server.trigger.TriggerManagementService.TriggerManagementException;
 import com.njydsz.agent.server.trigger.TriggerManagementService;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;

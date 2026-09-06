@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.ratelimit.core;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -108,9 +110,11 @@ public class RateLimitManager {
     if (!cbEnabled) {
       return null;
     }
-    CircuitBreaker.CircuitBreakerConfig config =
-        CircuitBreaker.CircuitBreakerConfig.builder()
-            .failureRateThreshold(properties.getCircuitBreaker().getFailureRateThreshold() / 100.0)
+    CircuitBreaker.BreakerConfig config =
+        CircuitBreaker.BreakerConfig.builder()
+            .failureRateThreshold(
+                properties.getCircuitBreaker().getFailureRateThreshold()
+                    .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP))
             .minimumNumberOfCalls(properties.getCircuitBreaker().getMinimumNumberOfCalls())
             .waitDurationInOpenState(
                 Duration.ofSeconds(properties.getCircuitBreaker().getWaitDurationSeconds()))
@@ -198,8 +202,8 @@ public class RateLimitManager {
     return RateLimitDecision.builder()
         .resource(context.getResource())
         .result(RateLimitResult.PASS)
-        .remaining(Double.MAX_VALUE)
-        .threshold(-1)
+        .remaining(BigDecimal.valueOf(Long.MAX_VALUE))
+        .threshold(BigDecimal.ONE.negate())
         .timestamp(Instant.now())
         .reason(reason)
         .build();
@@ -213,7 +217,7 @@ public class RateLimitManager {
           .resource(context.getResource())
           .rule(rule)
           .result(RateLimitResult.BLOCKED)
-          .remaining(0)
+          .remaining(BigDecimal.ZERO)
           .timestamp(Instant.now())
           .reason("error fallback: " + ex.getMessage())
           .build();

@@ -37,6 +37,9 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 @Slf4j
 public class HybridRetriever implements Retriever {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** RRF 平滑常数 */
   private static final int RRF_K = 60;
@@ -132,7 +135,7 @@ public class HybridRetriever implements Retriever {
 
   private List<TextChunk> rrfFuse(
       List<TextChunk> vectorResults, List<TextChunk> fullTextResults, int topK) {
-    Map<String, RrfEntry> entryMap = new HashMap<>(16);
+    Map<String, RrfEntry> entryMap = new HashMap<>(COLLECTION_CAPACITY);
 
     for (int i = 0; i < vectorResults.size(); i++) {
       TextChunk chunk = vectorResults.get(i);
@@ -175,7 +178,7 @@ public class HybridRetriever implements Retriever {
                   + TABLE_NAME
                   + " "
                   + "WHERE deleted = false AND content ILIKE ? ");
-      List<Object> params = new ArrayList<>(16);
+      List<Object> params = new ArrayList<>(COLLECTION_CAPACITY);
       String pattern = "%" + query.replace("%", "\\%").replace("_", "\\_") + "%";
       params.add(pattern);
       // 多租户：全文检索走 JdbcTemplate，需显式追加租户过滤，避免跨租户召回

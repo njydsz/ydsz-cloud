@@ -1,5 +1,6 @@
 package com.njydsz.common.notify.core;
 
+import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -58,13 +59,13 @@ public class NotifyCircuitBreaker extends AbstractCircuitBreaker {
    * @param recoveryTimeoutMs 恢复等待时间（毫秒）
    */
   public NotifyCircuitBreaker(NotifyChannel channel, int failureThreshold, long recoveryTimeoutMs) {
-    super(new Config("notify-" + channel.getName(), failureThreshold, recoveryTimeoutMs, 1));
+    super(new Config("notify-" + channel.getName(), BigDecimal.valueOf(failureThreshold), recoveryTimeoutMs, 1));
     this.channel = channel;
   }
 
   @Override
   protected boolean evaluateThreshold() {
-    return consecutiveFailures.get() >= (int) config.getFailureThreshold();
+    return consecutiveFailures.get() >= config.getFailureThreshold().intValue();
   }
 
   @Override
@@ -76,7 +77,7 @@ public class NotifyCircuitBreaker extends AbstractCircuitBreaker {
   @Override
   protected void onFailureRecord() {
     int failures = consecutiveFailures.incrementAndGet();
-    if (failures >= (int) config.getFailureThreshold()) {
+    if (failures >= config.getFailureThreshold().intValue()) {
       LOG.warn("[NotifyCircuitBreaker] 渠道[{}]连续失败 {} 次达到阈值", channel.getName(), failures);
     }
   }

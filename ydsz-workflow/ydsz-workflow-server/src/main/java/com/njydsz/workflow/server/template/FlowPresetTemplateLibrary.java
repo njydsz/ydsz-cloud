@@ -31,6 +31,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class FlowPresetTemplateLibrary {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 节点画布 Y 坐标（横向流程图中所有节点位于同一纵行） */
   private static final int NODE_Y_TOP = 100;
@@ -324,7 +327,7 @@ public class FlowPresetTemplateLibrary {
 
   private Map<String, Object> buildNode(
       String code, String name, String type, String permissionFlag, int x, int y) {
-    Map<String, Object> node = new LinkedHashMap<>(16);
+    Map<String, Object> node = new LinkedHashMap<>(COLLECTION_CAPACITY);
     node.put("nodeCode", code);
     node.put("nodeName", name);
     node.put("nodeType", type);
@@ -336,7 +339,7 @@ public class FlowPresetTemplateLibrary {
   }
 
   private Map<String, Object> buildSkip(String source, String target, String skipType) {
-    Map<String, Object> skip = new LinkedHashMap<>(16);
+    Map<String, Object> skip = new LinkedHashMap<>(COLLECTION_CAPACITY);
     skip.put("sourceRef", source);
     skip.put("nextNodeCode", target);
     skip.put("skipType", skipType);

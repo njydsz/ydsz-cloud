@@ -38,6 +38,9 @@ import com.njydsz.literule.server.spi.FactProviderRegistry;
  */
 @Slf4j
 public class FactInjectionService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 模型输入注册表 */
     private final ModelInputRegistry modelInputRegistry;
@@ -188,7 +191,7 @@ public class FactInjectionService {
         }
         if (hasModels) {
             // 扁平 key（"model.score"）转换为嵌套结构（{"model": {"score": ...}}）
-            Map<String, Object> nestedModel = new LinkedHashMap<>(16);
+            Map<String, Object> nestedModel = new LinkedHashMap<>(COLLECTION_CAPACITY);
             for (Map.Entry<String, Object> entry : modelOutputs.entrySet()) {
                 String key = entry.getKey();
                 if (key.startsWith(ModelInputRegistry.MODEL_KEY_PREFIX)) {
@@ -294,7 +297,7 @@ public class FactInjectionService {
             return context;
         }
         // 扁平 key（"model.score"）转换为嵌套结构（{"model": {"score": ...}}）
-        Map<String, Object> nestedModel = new LinkedHashMap<>(16);
+        Map<String, Object> nestedModel = new LinkedHashMap<>(COLLECTION_CAPACITY);
         for (Map.Entry<String, Object> entry : modelOutputs.entrySet()) {
             String key = entry.getKey();
             if (key.startsWith(ModelInputRegistry.MODEL_KEY_PREFIX)) {

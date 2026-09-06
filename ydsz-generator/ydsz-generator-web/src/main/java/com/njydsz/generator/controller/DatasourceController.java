@@ -1,8 +1,7 @@
 package com.njydsz.generator.controller;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.generator.entity.GenDatasource;
-import com.njydsz.generator.service.DatasourceService;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.generator.entity.GenDatasource;
+import com.njydsz.generator.service.DatasourceService;
 
 /**
  * 数据源管理 REST 控制器。

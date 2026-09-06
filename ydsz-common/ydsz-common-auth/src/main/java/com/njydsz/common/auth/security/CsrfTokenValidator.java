@@ -127,13 +127,13 @@ public class CsrfTokenValidator {
   }
 
   /** 恒定时间比较，防止时序攻击。 */
-  private boolean constantTimeEquals(String a, String b) {
-    if (a == null || b == null || a.length() != b.length()) {
+  private boolean constantTimeEquals(String left, String right) {
+    if (left == null || right == null || left.length() != right.length()) {
       return false;
     }
     int result = 0;
-    for (int i = 0; i < a.length(); i++) {
-      result |= a.charAt(i) ^ b.charAt(i);
+    for (int i = 0; i < left.length(); i++) {
+      result |= left.charAt(i) ^ right.charAt(i);
     }
     return result == 0;
   }

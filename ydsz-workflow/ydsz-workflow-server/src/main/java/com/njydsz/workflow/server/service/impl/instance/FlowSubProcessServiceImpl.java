@@ -1,4 +1,5 @@
 package com.njydsz.workflow.server.service.impl.instance;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +26,6 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowEventListener;
-import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
@@ -97,6 +97,12 @@ import com.njydsz.workflow.server.service.FlowSubProcessService;
 @Service
 @RequiredArgsConstructor
 public class FlowSubProcessServiceImpl implements FlowSubProcessService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
+  /** 嵌套深度防御性上限，防止异常数据导致死循环 */
+  private static final int MAX_NESTING_DEPTH_GUARD = 20;
+
 
   /**
    * P2-8 / P3-3.4: 最大子流程嵌套深度（可配置）。
@@ -343,7 +349,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     dto.setInitiatorId(parentInstance.getInitiatorId());
     dto.setInitiatorName(parentInstance.getInitiatorName());
     dto.setTenantId(parentInstance.getTenantId());
-    dto.setVariables(variables == null ? new HashMap<>(16) : variables);
+    dto.setVariables(variables == null ? new HashMap<>(COLLECTION_CAPACITY) : variables);
     return dto;
   }
 
@@ -376,7 +382,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   private int getNestingDepth(String instanceId) {
     int depth = 0;
     String currentId = instanceId;
-    while (currentId != null && depth < 20) {
+    while (currentId != null && depth < MAX_NESTING_DEPTH_GUARD) {
       FlowInstanceVO instance = instanceRepository.findById(currentId).orElse(null);
       if (instance == null || instance.getParentInstanceId() == null) {
         break;

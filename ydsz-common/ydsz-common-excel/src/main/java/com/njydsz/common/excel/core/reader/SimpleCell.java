@@ -44,10 +44,10 @@ public final class SimpleCell implements Cell {
    * 数值型日期单元格的转换结果（深度完善·方案 B）。
    *
    * <p>fast 路径识别到日期样式（styles.xml numFmt 判定）后，将 Excel 序列值按
-   * 1900/1904 窗口转换为 {@link Date} 装载于此；{@link #getDateCellValue()} 与
+   * 1900/1904 窗口转换为 {@link LocalDateTime} 装载于此；{@link #getDateCellValue()} 与
    * {@link #getLocalDateTimeCellValue()} 据此返回真实日期。非日期单元格为 null。
    */
-  private final Date dateValue;
+  private final LocalDateTime dateValue;
 
   /**
    * 创建轻量级单元格
@@ -64,9 +64,9 @@ public final class SimpleCell implements Cell {
    *
    * @param value 单元格原始值（Excel 序列值文本）
    * @param cellType 单元格类型
-   * @param dateValue 日期转换结果；非日期单元格传 null
+   * @param dateValue 日期转换结果（LocalDateTime）；非日期单元格传 null
    */
-  public SimpleCell(String value, CellType cellType, Date dateValue) {
+  public SimpleCell(String value, CellType cellType, LocalDateTime dateValue) {
     this.value = value;
     this.cellType = cellType;
     this.dateValue = dateValue;
@@ -76,10 +76,10 @@ public final class SimpleCell implements Cell {
    * 创建数值型日期单元格。
    *
    * @param rawValue Excel 序列值文本
-   * @param dateValue 按 1900/1904 窗口转换后的日期
+   * @param dateValue 按 1900/1904 窗口转换后的日期（LocalDateTime）
    * @return 装载日期值的轻量单元格
    */
-  public static SimpleCell forDate(String rawValue, Date dateValue) {
+  public static SimpleCell forDate(String rawValue, LocalDateTime dateValue) {
     return new SimpleCell(rawValue, CellType.NUMERIC, dateValue);
   }
 
@@ -126,16 +126,20 @@ public final class SimpleCell implements Cell {
     return Boolean.parseBoolean(value);
   }
 
+  /**
+   * @deprecated 此为 POI Cell 接口桥接适配方法，对外仍暴露 Date。内部已改用 LocalDateTime 存储，推荐使用 {@link #getLocalDateTimeCellValue()}。
+   */
+  @Deprecated
   @Override
   public Date getDateCellValue() {
-    return dateValue;
+    return dateValue == null
+        ? null
+        : Date.from(dateValue.atZone(ZoneId.systemDefault()).toInstant());
   }
 
   @Override
   public LocalDateTime getLocalDateTimeCellValue() {
-    return dateValue == null
-        ? null
-        : LocalDateTime.ofInstant(dateValue.toInstant(), ZoneId.systemDefault());
+    return dateValue;
   }
 
   @Override

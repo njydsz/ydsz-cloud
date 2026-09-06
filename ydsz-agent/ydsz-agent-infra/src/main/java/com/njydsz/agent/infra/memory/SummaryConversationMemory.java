@@ -49,6 +49,9 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  */
 @Slf4j
 public class SummaryConversationMemory implements ConversationMemory {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 摘要前缀 */
   private static final String SUMMARY_PREFIX = "[对话摘要] ";
@@ -189,7 +192,7 @@ public class SummaryConversationMemory implements ConversationMemory {
 
   @Override
   public List<ChatMessage> load(String conversationId, int maxMessages) {
-    List<ChatMessage> messages = new ArrayList<>(16);
+    List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
 
     String summary = loadSummary(conversationId);
     if (summary != null && !summary.isBlank()) {
@@ -220,7 +223,7 @@ public class SummaryConversationMemory implements ConversationMemory {
   @Override
   public List<ChatMessage> loadWithTokenBudget(
       String conversationId, int tokenBudget, double tokenCharRatio) {
-    List<ChatMessage> result = new ArrayList<>(16);
+    List<ChatMessage> result = new ArrayList<>(COLLECTION_CAPACITY);
     // 摘要优先（占用部分预算）
     String summary = loadSummary(conversationId);
     if (summary != null && !summary.isBlank()) {

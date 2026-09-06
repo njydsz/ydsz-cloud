@@ -39,6 +39,9 @@ import com.njydsz.message.server.service.core.MessageStatsService;
 @Service
 @RequiredArgsConstructor
 public class MessageStatsServiceImpl implements MessageStatsService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 统计时间窗口（小时） */
   private static final int STATS_WINDOW_HOURS = 24;
 
@@ -82,7 +85,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
 
-    List<ChannelStatsDTO> result = new ArrayList<>(16);
+    List<ChannelStatsDTO> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (MessageChannelEnum ch : MessageChannelEnum.values()) {
       String channel = ch.name();
       long success =
@@ -265,7 +268,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
             ? costCfg.getUnitPrices()
             : Collections.emptyMap();
 
-    List<CostStatsDTO.ChannelCost> channelCosts = new ArrayList<>(16);
+    List<CostStatsDTO.ChannelCost> channelCosts = new ArrayList<>(COLLECTION_CAPACITY);
     BigDecimal totalCost = BigDecimal.ZERO;
 
     for (Map.Entry<String, BigDecimal> entry : unitPrices.entrySet()) {

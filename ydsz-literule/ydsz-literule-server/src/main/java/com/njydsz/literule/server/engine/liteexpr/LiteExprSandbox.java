@@ -34,6 +34,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author ydsz-team
  */
 public class LiteExprSandbox {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 危险方法名（任意类上调用这些方法即阻断） */
   private static final Set<String> FORBIDDEN_METHODS =
@@ -202,7 +205,7 @@ public class LiteExprSandbox {
     if (cached != null) {
       return cached;
     }
-    List<String> violations = new ArrayList<>(16);
+    List<String> violations = new ArrayList<>(COLLECTION_CAPACITY);
     checkNode(ast, violations);
     SandboxResult result;
     if (violations.isEmpty()) {

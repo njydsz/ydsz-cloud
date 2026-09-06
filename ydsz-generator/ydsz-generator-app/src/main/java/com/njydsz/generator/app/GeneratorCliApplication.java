@@ -1,11 +1,14 @@
 package com.njydsz.generator.app;
 
-import com.njydsz.generator.service.CodeGenService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+
+import com.njydsz.generator.service.CodeGenService;
 
 /**
  * 代码生成器 CLI 应用入口。
@@ -24,6 +27,7 @@ import org.springframework.context.annotation.ComponentScan;
  * @author ydsz-team
  * @since 26.09.05
  */
+@Slf4j
 @SpringBootApplication
 @ComponentScan(basePackages = "com.njydsz.generator")
 public class GeneratorCliApplication implements CommandLineRunner {
@@ -40,19 +44,19 @@ public class GeneratorCliApplication implements CommandLineRunner {
   public static void main(String[] args) {
     SpringApplication app = new SpringApplication(GeneratorCliApplication.class);
     // CLI 模式，不启动 Web 服务
-    app.setWebApplicationType(org.springframework.boot.WebApplicationType.NONE);
+    app.setWebApplicationType(WebApplicationType.NONE);
     app.run(args);
   }
 
   /** {@inheritDoc} */
   @Override
-  public void run(String... args) throws Exception {
-    System.out.println("========================================");
-    System.out.println("  ydzs-generator CLI 代码生成器");
-    System.out.println("========================================");
+  public void run(String... args) {
+    log.info("========================================");
+    log.info("  ydzs-generator CLI 代码生成器");
+    log.info("========================================");
 
     // TODO: 解析命令行参数，调用 CodeGenService 生成
-    System.out.println("提示：请通过 ydsz-generator-web 的 REST API 使用代码生成功能");
-    System.out.println("或扩展此 CLI 以解析参数调用 CodeGenService.generate()");
+    log.info("提示：请通过 ydsz-generator-web 的 REST API 使用代码生成功能");
+    log.info("或扩展此 CLI 以解析参数调用 CodeGenService.generate()");
   }
 }

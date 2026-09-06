@@ -47,6 +47,9 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  */
 @Slf4j
 public class FactProviderRegistry {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 线程池最大线程数 */
   private static final int MAX_POOL_SIZE = 60;
@@ -211,7 +214,7 @@ public class FactProviderRegistry {
             .sorted(Comparator.comparingInt(FactProvider::getOrder))
             .collect(Collectors.toList());
 
-    Map<String, Object> aggregated = new LinkedHashMap<>(16);
+    Map<String, Object> aggregated = new LinkedHashMap<>(COLLECTION_CAPACITY);
     // 构建逐步增强的上下文（前一个 provider 的输出可供后续 provider 读取）
     Map<String, Object> progressiveFacts = new LinkedHashMap<>(context.getFacts());
 

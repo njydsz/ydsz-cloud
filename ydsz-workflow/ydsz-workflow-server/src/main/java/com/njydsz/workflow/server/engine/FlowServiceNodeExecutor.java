@@ -59,6 +59,9 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 @Slf4j
 @Component
 public class FlowServiceNodeExecutor {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
 
   /** HTTP 连接超时时间（秒） */
@@ -141,7 +144,7 @@ public class FlowServiceNodeExecutor {
     }
     try {
       Expression expression = aviatorInstance.compile(expr, true);
-      Map<String, Object> env = new HashMap<>(16);
+      Map<String, Object> env = new HashMap<>(COLLECTION_CAPACITY);
       if (variables != null) {
         env.putAll(variables);
       }
@@ -263,7 +266,7 @@ public class FlowServiceNodeExecutor {
       Expression expression = aviatorInstance.compile(script, true);
 
       // 构建执行环境（传入流程变量）
-      Map<String, Object> env = new HashMap<>(16);
+      Map<String, Object> env = new HashMap<>(COLLECTION_CAPACITY);
       if (variables != null) {
         env.putAll(variables);
       }

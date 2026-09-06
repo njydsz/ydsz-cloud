@@ -1,5 +1,6 @@
 package com.njydsz.common.docs.security.pii.impl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class PhoneDetector implements PiiDetector {
               .maskedValue(mask(match.rawValue()))
               .startIndex(match.startIndex())
               .endIndex(match.endIndex())
-              .confidence(0.95)
+              .confidence(BigDecimal.valueOf(0.95))
               .build());
     }
 

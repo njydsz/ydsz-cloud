@@ -44,6 +44,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @Service
 @RequiredArgsConstructor
 public class FlowAssigneeAvailabilityService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final RedisStringOps redisStringOps;
 
@@ -105,7 +108,7 @@ public class FlowAssigneeAvailabilityService {
    * @return Map 包含：status (IDLE/NORMAL/BUSY/OVERLOADED), todoCount, lastActive
    */
   public Map<String, Object> getAvailability(String userId) {
-    Map<String, Object> result = new HashMap<>(16);
+    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY);
     result.put("userId", userId);
     result.put("date", LocalDate.now().toString());
 
@@ -137,7 +140,7 @@ public class FlowAssigneeAvailabilityService {
    * @return userId → availability Map
    */
   public Map<String, Map<String, Object>> batchGetAvailability(Set<String> userIds) {
-    Map<String, Map<String, Object>> result = new HashMap<>(16);
+    Map<String, Map<String, Object>> result = new HashMap<>(COLLECTION_CAPACITY);
     if (userIds == null || userIds.isEmpty()) {
       return result;
     }

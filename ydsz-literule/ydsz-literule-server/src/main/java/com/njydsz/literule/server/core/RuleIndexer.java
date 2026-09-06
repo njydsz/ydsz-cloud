@@ -2,7 +2,6 @@ package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,6 +38,18 @@ import com.njydsz.literule.domain.enums.RuleEnvironment;
  */
 @Slf4j
 public class RuleIndexer {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_4 = 4;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_8 = 8;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_16 = 16;
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY_32 = 32;
+
 
   /** 索引启用的最小规则数阈值（低于此值不启用索引） */
   private static final int INDEX_THRESHOLD = 200;
@@ -240,7 +251,7 @@ public class RuleIndexer {
     if (scenario == null || "DEFAULT".equals(scenario)) {
       scopedRules = envFilteredRules;
     } else {
-      scopedRules = new ArrayList<>(16);
+      scopedRules = new ArrayList<>(COLLECTION_CAPACITY_16);
       for (Rule rule : envFilteredRules) {
         String scopeVal = rule.getScope();
         if (scopeVal == null || scopeVal.isBlank() || "ALL".equals(scopeVal) || scopeVal.equals(scenario)) {
@@ -309,19 +320,19 @@ public class RuleIndexer {
     String envKey = tenantKey + "|" + env;
 
     // 租户索引
-    tenantIndex.computeIfAbsent(tenantKey, k -> new ArrayList<>(32)).add(rule);
+    tenantIndex.computeIfAbsent(tenantKey, k -> new ArrayList<>(COLLECTION_CAPACITY_32)).add(rule);
     // 环境索引
-    environmentIndex.computeIfAbsent(envKey, k -> new ArrayList<>(32)).add(rule);
+    environmentIndex.computeIfAbsent(envKey, k -> new ArrayList<>(COLLECTION_CAPACITY_32)).add(rule);
     // 场景索引
     String scope = rule.getScope();
     if (scope != null && !scope.isBlank()) {
       String scopeKey = tenantKey + "|" + scope;
-      scopeIndex.computeIfAbsent(scopeKey, k -> new ArrayList<>(16)).add(rule);
+      scopeIndex.computeIfAbsent(scopeKey, k -> new ArrayList<>(COLLECTION_CAPACITY_16)).add(rule);
     }
     // 互斥组索引
     if (rule.getMutexGroup() != null && !rule.getMutexGroup().isBlank()) {
       String mutexKey = tenantKey + "|" + rule.getMutexGroup();
-      mutexGroupIndex.computeIfAbsent(mutexKey, k -> new ArrayList<>(8)).add(rule);
+      mutexGroupIndex.computeIfAbsent(mutexKey, k -> new ArrayList<>(COLLECTION_CAPACITY_8)).add(rule);
     }
 
     // 倒排索引（P1-2）
@@ -346,7 +357,7 @@ public class RuleIndexer {
    * @return 字段名集合
    */
   private Set<String> extractFields(Rule rule) {
-    Set<String> fields = new HashSet<>(8);
+    Set<String> fields = new HashSet<>(COLLECTION_CAPACITY_8);
     RuleDefinitionDTO def = rule.getRuleDefinition();
     if (def == null) {
       return fields;
@@ -388,7 +399,7 @@ public class RuleIndexer {
    * @return "字段|操作符" 集合
    */
   private Set<String> extractFieldOps(Rule rule) {
-    Set<String> fieldOps = new HashSet<>(4);
+    Set<String> fieldOps = new HashSet<>(COLLECTION_CAPACITY_4);
     RuleDefinitionDTO def = rule.getRuleDefinition();
     if (def == null || def.getConditionExpression() == null) {
       return fieldOps;

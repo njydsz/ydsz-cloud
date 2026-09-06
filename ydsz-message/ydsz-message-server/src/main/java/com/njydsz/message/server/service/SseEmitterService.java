@@ -1,6 +1,6 @@
 package com.njydsz.message.server.service;
+
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +41,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Slf4j
 @Service
 public class SseEmitterService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认 SSE 超时时间（5 分钟） */
   private static final long DEFAULT_TIMEOUT_MS = 5 * 60 * 1000L;
@@ -180,7 +183,7 @@ public class SseEmitterService {
     String eventIdStr = String.valueOf(eventId);
     recordEvent(batchId, eventIdStr, "progress", eventData);
 
-    List<SseEmitterSubscription> deadSubs = new ArrayList<>(16);
+    List<SseEmitterSubscription> deadSubs = new ArrayList<>(COLLECTION_CAPACITY);
     for (SseEmitterSubscription sub : subs) {
       try {
         sub.getEmitter().send(

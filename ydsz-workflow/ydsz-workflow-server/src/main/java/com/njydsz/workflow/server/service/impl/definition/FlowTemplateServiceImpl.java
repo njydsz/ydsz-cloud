@@ -106,6 +106,9 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
 @Slf4j
 @Service
 public class FlowTemplateServiceImpl implements FlowTemplateService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 默认排序号：未设置排序的模板置底（999） */
   private static final int DEFAULT_SORT_ORDER = 999;
@@ -948,7 +951,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    * <p>P2-9: 包含版本与继承元信息。
    */
   private Map<String, Object> toSummaryMap(FlowTemplateVO t) {
-    Map<String, Object> map = new LinkedHashMap<>(16);
+    Map<String, Object> map = new LinkedHashMap<>(COLLECTION_CAPACITY);
     map.put("templateCode", t.getTemplateCode());
     map.put("templateName", t.getTemplateName());
     map.put("category", t.getCategory());
@@ -972,7 +975,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
    * <p>P2-9: 包含版本与继承元信息。
    */
   private Map<String, Object> toDetailMap(FlowTemplateVO t) {
-    Map<String, Object> map = new LinkedHashMap<>(16);
+    Map<String, Object> map = new LinkedHashMap<>(COLLECTION_CAPACITY);
     map.put("templateCode", t.getTemplateCode());
     map.put("templateName", t.getTemplateName());
     map.put("category", t.getCategory());

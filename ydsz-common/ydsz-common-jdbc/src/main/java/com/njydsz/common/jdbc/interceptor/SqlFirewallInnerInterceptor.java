@@ -199,9 +199,28 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     if (allowTables.isEmpty()) {
       return false;
     }
-    // 懒加载预编译正则，allowTables 变更后由 setAllowTables 置 null 重新构建
     Pattern pattern = allowedTablesPattern;
     if (pattern == null) {
+      pattern = buildAllowedTablesPattern();
+    }
+    return pattern.matcher(sql).find();
+  }
+
+  /**
+   * 编译表名白名单正则模式（线程安全的懒初始化）。
+   *
+   * <p>使用同步块避免多线程同时进入时重复编译；volatile 字段保证可见性。 编译结果缓存在 {@link #allowedTablesPattern} 中， {@link
+   * #setAllowTables(Set)} 会将其置空以触发下次访问时重新构建。
+   */
+  private Pattern buildAllowedTablesPattern() {
+    Pattern pattern = allowedTablesPattern;
+    if (pattern != null) {
+      return pattern;
+    }
+    synchronized (this) {
+      if (allowedTablesPattern != null) {
+        return allowedTablesPattern;
+      }
       StringBuilder sb = new StringBuilder();
       for (String table : allowTables) {
         if (sb.length() > 0) {
@@ -209,10 +228,10 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
         }
         sb.append(Pattern.quote(table));
       }
-      pattern = Pattern.compile("\\b(" + sb + ")\\b", Pattern.CASE_INSENSITIVE);
-      allowedTablesPattern = pattern;
+      Pattern compiled = Pattern.compile("\\b(" + sb + ")\\b", Pattern.CASE_INSENSITIVE);
+      allowedTablesPattern = compiled;
+      return compiled;
     }
-    return pattern.matcher(sql).find();
   }
 
   /** 拒绝 SQL 执行 */

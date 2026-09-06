@@ -36,6 +36,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpressionTraceNode {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 节点类型 */
   private NodeType nodeType;
@@ -65,7 +68,7 @@ public class ExpressionTraceNode {
   private long elapsedNanos;
 
   /** 子节点（逻辑运算符的左右操作数、函数调用的参数等） */
-  @Builder.Default private List<ExpressionTraceNode> children = new ArrayList<>(16);
+  @Builder.Default private List<ExpressionTraceNode> children = new ArrayList<>(COLLECTION_CAPACITY);
 
   /** 错误信息（求值异常时填充） */
   private String error;

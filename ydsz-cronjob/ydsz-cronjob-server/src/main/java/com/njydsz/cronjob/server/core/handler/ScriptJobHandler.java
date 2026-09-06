@@ -1,6 +1,10 @@
 package com.njydsz.cronjob.server.core.handler;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
@@ -79,6 +84,9 @@ public class ScriptJobHandler implements JobHandler {
 
   /** Bean 名称，dispatcher 在 jobType=SHELL 时路由到此 handler */
   public static final String BEAN_NAME = "scriptJobHandler";
+
+  /** 脚本输出截断的最大字符数 */
+  private static final int MAX_OUTPUT_LENGTH = 2000;
 
   /** 默认超时时间（毫秒），0 表示不限 */
   private static final long DEFAULT_TIMEOUT_MS = 0L;
@@ -399,7 +407,7 @@ public class ScriptJobHandler implements JobHandler {
    * @param arrayNode JSON 数组节点
    * @return 字符串参数列表
    */
-  private List<String> parseArgs(com.njydsz.common.json.tree.ArrayNode arrayNode) {
+  private List<String> parseArgs(ArrayNode arrayNode) {
     if (arrayNode == null || arrayNode.isEmpty()) {
       return new ArrayList<>(0);
     }
@@ -420,15 +428,15 @@ public class ScriptJobHandler implements JobHandler {
    * @return 执行读取的线程
    */
   private Thread readStreamAsync(
-      java.io.InputStream inputStream,
+      InputStream inputStream,
       StringBuilder output,
       boolean isStdout,
       JobLogger jobLogger) {
     Thread thread = new Thread(
         () -> {
-          try (java.io.BufferedReader reader =
-              new java.io.BufferedReader(
-                  new java.io.InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+          try (BufferedReader reader =
+              new BufferedReader(
+                  new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
               synchronized (output) {
@@ -462,7 +470,7 @@ public class ScriptJobHandler implements JobHandler {
     if (text == null) {
       return "";
     }
-    int maxLength = 2000;
+    int maxLength = MAX_OUTPUT_LENGTH;
     if (text.length() <= maxLength) {
       return text;
     }

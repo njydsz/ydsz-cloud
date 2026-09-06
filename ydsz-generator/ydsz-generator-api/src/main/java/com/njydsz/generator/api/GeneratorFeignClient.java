@@ -1,13 +1,7 @@
 package com.njydsz.generator.api;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.generator.api.fallback.GeneratorClientFallbackFactory;
-import com.njydsz.generator.entity.GenColumnMeta;
-import com.njydsz.generator.entity.GenDatasource;
-import com.njydsz.generator.entity.GenHistory;
-import com.njydsz.generator.entity.GenTableMeta;
-import com.njydsz.generator.entity.GenTemplateGroup;
-import com.njydsz.generator.vo.CodePreviewVO;
+import java.util.List;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +9,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.generator.api.fallback.GeneratorClientFallbackFactory;
+import com.njydsz.generator.entity.GenColumnMeta;
+import com.njydsz.generator.entity.GenDatasource;
+import com.njydsz.generator.entity.GenHistory;
+import com.njydsz.generator.entity.GenTableMeta;
+import com.njydsz.generator.entity.GenTemplateGroup;
+import com.njydsz.generator.query.GenCodeGenerateQuery;
+import com.njydsz.generator.vo.CodePreviewVO;
 
 /**
  * 代码生成器 Feign 远程调用接口。
@@ -138,22 +140,11 @@ public interface GeneratorFeignClient {
   /**
    * 正式生成代码。
    *
-   * @param datasourceId      数据源 ID
-   * @param templateGroupId   模板分组 ID
-   * @param tableName         表名
-   * @param outputDir         输出目录
-   * @param conflictStrategy  冲突策略（SKIP/OVERRIDE/MERGE）
-   * @param triggeredBy       触发人
+   * @param query 生成参数（数据源、模板分组、表名、输出目录、冲突策略、触发人）
    * @return 生成结果
    */
   @PostMapping("/code/generate")
-  YdszResponse<String> generate(
-      @RequestParam("datasourceId") Long datasourceId,
-      @RequestParam("templateGroupId") Long templateGroupId,
-      @RequestParam("tableName") String tableName,
-      @RequestParam("outputDir") String outputDir,
-      @RequestParam(value = "conflictStrategy", required = false) String conflictStrategy,
-      @RequestParam(value = "triggeredBy", required = false) String triggeredBy);
+  YdszResponse<String> generate(@RequestBody GenCodeGenerateQuery query);
 
   // ════════════════════════════════════════════════════════════
   // 回滚与历史

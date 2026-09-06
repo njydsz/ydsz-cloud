@@ -60,6 +60,9 @@ import com.njydsz.workflow.server.engine.FlowNodeExt;
 @Component
 @RequiredArgsConstructor
 public class FlowInstanceQueryService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
   private final FlowInstanceRepository instanceRepository;
@@ -171,7 +174,7 @@ public class FlowInstanceQueryService {
     }
     // 排除当前待办节点（撤回到当前节点无意义），转换为强类型 VO
     String currentNodeCode = instance.getCurrentNodeCode();
-    List<FlowRecallableNodeVO> result = new ArrayList<>(16);
+    List<FlowRecallableNodeVO> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map<String, Object> n : passedNodes) {
       Object code = n.get("nodeCode");
       if (code != null && !code.toString().equals(currentNodeCode)) {
@@ -317,7 +320,7 @@ public class FlowInstanceQueryService {
         }
       }
     }
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("instanceId", instanceId);
     result.put("taskId", taskId);
     result.put("nodeCode", nodeCode);

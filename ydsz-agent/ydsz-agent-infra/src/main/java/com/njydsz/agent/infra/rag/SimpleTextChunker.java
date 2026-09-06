@@ -28,6 +28,9 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class SimpleTextChunker implements TextChunker {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 默认分块大小（字符数） */
   private static final int DEFAULT_CHUNK_SIZE = 500;
@@ -64,7 +67,7 @@ public class SimpleTextChunker implements TextChunker {
     if (text == null || text.isBlank()) {
       return List.of();
     }
-    List<TextChunk> chunks = new ArrayList<>(16);
+    List<TextChunk> chunks = new ArrayList<>(COLLECTION_CAPACITY);
     List<String> segments = splitByParagraph(text);
     StringBuilder buffer = new StringBuilder();
     int chunkIndex = 0;
@@ -106,7 +109,7 @@ public class SimpleTextChunker implements TextChunker {
   }
 
   private List<String> splitByParagraph(String text) {
-    List<String> segments = new ArrayList<>(16);
+    List<String> segments = new ArrayList<>(COLLECTION_CAPACITY);
     String[] paragraphs = text.split("\n\n+");
     for (String para : paragraphs) {
       if (para.length() > chunkSize) {

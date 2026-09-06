@@ -32,6 +32,9 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  */
 public class RedisNodeRegistry implements NodeRegistry {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private static final Logger log = LoggerFactory.getLogger(RedisNodeRegistry.class);
 
@@ -111,8 +114,8 @@ public class RedisNodeRegistry implements NodeRegistry {
     try {
       RMap<String, String> map = redissonClient.getMap(NODES_KEY);
       long now = System.currentTimeMillis();
-      List<ClusterNode> alive = new ArrayList<>(16);
-      List<String> deadNodeIds = new ArrayList<>(16);
+      List<ClusterNode> alive = new ArrayList<>(COLLECTION_CAPACITY);
+      List<String> deadNodeIds = new ArrayList<>(COLLECTION_CAPACITY);
 
       for (Map.Entry<String, String> entry : map.entrySet()) {
         try {
@@ -171,7 +174,7 @@ public class RedisNodeRegistry implements NodeRegistry {
     try {
       RMap<String, String> map = redissonClient.getMap(NODES_KEY);
       long now = System.currentTimeMillis();
-      List<String> deadNodeIds = new ArrayList<>(16);
+      List<String> deadNodeIds = new ArrayList<>(COLLECTION_CAPACITY);
 
       for (Map.Entry<String, String> entry : map.entrySet()) {
         try {

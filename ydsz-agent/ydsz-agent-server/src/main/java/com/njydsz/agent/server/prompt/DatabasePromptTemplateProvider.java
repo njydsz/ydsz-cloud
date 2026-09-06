@@ -1,11 +1,9 @@
 package com.njydsz.agent.server.prompt;
 
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
-
 
 /**
  * 基于数据库的 Prompt 模板提供者实现

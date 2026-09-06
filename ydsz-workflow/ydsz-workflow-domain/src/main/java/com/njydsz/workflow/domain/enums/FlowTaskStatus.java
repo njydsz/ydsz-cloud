@@ -3,7 +3,6 @@ package com.njydsz.workflow.domain.enums;
 import com.njydsz.common.domain.enums.BaseStatusEnum;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 
-
 /**
  * 工作流任务状态枚举
  *

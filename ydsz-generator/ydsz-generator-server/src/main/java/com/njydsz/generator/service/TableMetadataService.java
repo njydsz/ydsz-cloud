@@ -1,24 +1,26 @@
 package com.njydsz.generator.service;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;
 import com.njydsz.generator.enums.DbDialectEnum;
 import com.njydsz.generator.repository.GenColumnMetaRepository;
 import com.njydsz.generator.repository.GenTableMetaRepository;
-import com.njydsz.common.util.string.StringUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 表&列元数据领域服务。
@@ -32,6 +34,11 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class TableMetadataService {
+
+  /** 表元数据列表初始容量。 */
+  private static final int TABLE_LIST_CAPACITY = 64;
+  /** 主键列表初始容量。 */
+  private static final int PK_LIST_CAPACITY = 8;
 
   private final GenTableMetaRepository tableMetaRepository;
   private final GenColumnMetaRepository columnMetaRepository;
@@ -137,8 +144,9 @@ public class TableMetadataService {
   // JDBC 原生读取
   // ════════════════════════════════════════════════════════════
 
-  private List<String> fetchTableNames(GenDatasource datasource) throws Exception {
-    List<String> tables = new ArrayList<>(64);
+  private List<String> fetchTableNames(GenDatasource datasource)
+      throws SQLException, ClassNotFoundException {
+    List<String> tables = new ArrayList<>(TABLE_LIST_CAPACITY);
     String driverClass = datasource.getDialect() != null
         ? DbDialectEnum.valueOf(datasource.getDialect()).getDriverClass()
         : DbDialectEnum.fromUrl(datasource.getJdbcUrl()).getDriverClass();
@@ -173,8 +181,8 @@ public class TableMetadataService {
   }
 
   private List<GenColumnMeta> fetchColumns(GenDatasource datasource, String tableName)
-      throws Exception {
-    List<GenColumnMeta> columns = new ArrayList<>(64);
+      throws SQLException, ClassNotFoundException {
+    List<GenColumnMeta> columns = new ArrayList<>(TABLE_LIST_CAPACITY);
     String driverClass = datasource.getDialect() != null
         ? DbDialectEnum.valueOf(datasource.getDialect()).getDriverClass()
         : DbDialectEnum.fromUrl(datasource.getJdbcUrl()).getDriverClass();
@@ -184,7 +192,7 @@ public class TableMetadataService {
       DatabaseMetaData metaData = conn.getMetaData();
 
       // 主键
-      List<String> pks = new ArrayList<>(8);
+      List<String> pks = new ArrayList<>(PK_LIST_CAPACITY);
       try (ResultSet pkRs = metaData.getPrimaryKeys(conn.getCatalog(), null, tableName)) {
         while (pkRs.next()) {
           pks.add(pkRs.getString("COLUMN_NAME"));

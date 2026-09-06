@@ -1,5 +1,6 @@
 package com.njydsz.common.socket.resilience;
 
+import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,7 @@ public class WebSocketCircuitBreaker extends AbstractCircuitBreaker {
    */
   public WebSocketCircuitBreaker(
       String name, double failureRateThreshold, int slidingWindowSize, long halfOpenAfterMillis) {
-    super(new Config(name, failureRateThreshold, halfOpenAfterMillis, 1));
+    super(new Config(name, BigDecimal.valueOf(failureRateThreshold), halfOpenAfterMillis, 1));
     this.slidingWindowSize = slidingWindowSize;
     log.info(
         "[WS-CircuitBreaker] '{}' 初始化: threshold={}, window={}, halfOpenAfter={}ms",
@@ -63,11 +64,12 @@ public class WebSocketCircuitBreaker extends AbstractCircuitBreaker {
       return false;
     }
     int failures = failureCount.get();
-    double rate = (double) failures / total;
+    BigDecimal rate = BigDecimal.valueOf(failures)
+        .divide(BigDecimal.valueOf(total), 10, BigDecimal.ROUND_HALF_UP);
     // 窗口已满，重置统计
     failureCount.set(0);
     totalCount.set(0);
-    return rate >= config.getFailureThreshold();
+    return rate.compareTo(config.getFailureThreshold()) >= 0;
   }
 
   @Override

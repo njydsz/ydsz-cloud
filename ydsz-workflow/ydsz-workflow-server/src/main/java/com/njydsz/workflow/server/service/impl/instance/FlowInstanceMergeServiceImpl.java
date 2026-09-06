@@ -95,6 +95,9 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @Service
 @RequiredArgsConstructor
 public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -178,7 +181,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     }
 
     // 存储合并组元信息
-    Map<String, String> detail = new LinkedHashMap<>(16);
+    Map<String, String> detail = new LinkedHashMap<>(COLLECTION_CAPACITY);
     detail.put("operatorId", operatorId != null ? operatorId : "");
     detail.put("tenantId", tid);
     detail.put("flowCode", flowCodes.iterator().next());
@@ -312,7 +315,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     Map<String, String> detail =
         redisHashOps.hGetAll(MERGE_GROUP_DETAIL_KEY + mergeGroupId, String.class);
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("mergeGroupId", mergeGroupId);
     result.put("instanceIds", new ArrayList<>(instanceIds));
     result.put("instanceCount", instanceIds.size());
@@ -321,11 +324,11 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     result.put("createdAt", detail.get("createdAt"));
 
     // 获取实例摘要
-    List<Map<String, Object>> instanceDetails = new ArrayList<>(16);
+    List<Map<String, Object>> instanceDetails = new ArrayList<>(COLLECTION_CAPACITY);
     for (String instanceId : instanceIds) {
       FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
       if (instance != null) {
-        Map<String, Object> info = new LinkedHashMap<>(16);
+        Map<String, Object> info = new LinkedHashMap<>(COLLECTION_CAPACITY);
         info.put("instanceId", instance.getId());
         info.put("flowName", instance.getFlowName());
         info.put("flowStatus", instance.getFlowStatus());
@@ -363,10 +366,10 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
             .filter(t -> StringUtils.hasText(t.getFlowCode()))
             .collect(Collectors.groupingBy(FlowRunTaskVO::getFlowCode));
 
-    List<Map<String, Object>> result = new ArrayList<>(16);
+    List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, List<FlowRunTaskVO>> entry : grouped.entrySet()) {
       if (entry.getValue().size() >= 2) {
-        Map<String, Object> group = new LinkedHashMap<>(16);
+        Map<String, Object> group = new LinkedHashMap<>(COLLECTION_CAPACITY);
         group.put("flowCode", entry.getKey());
         group.put("flowName", entry.getValue().get(0).getFlowName());
         group.put("taskCount", entry.getValue().size());

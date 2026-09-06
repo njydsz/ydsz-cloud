@@ -42,6 +42,9 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
 @Service
 @RequiredArgsConstructor
 public class MessageRenderService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 带 AST 缓存的模板引擎（YdszCache 实现，变量占位符渲染） */
   private final CachedTemplateEngine cachedTemplateEngine;
@@ -89,7 +92,7 @@ public class MessageRenderService {
       }
       // 变量数据源自动拉取
       if (request.getParams() != null) {
-        Map<String, Object> varCtx = new HashMap<>(16);
+        Map<String, Object> varCtx = new HashMap<>(COLLECTION_CAPACITY);
         if (StringUtils.hasText(request.getBizId())) {
           varCtx.put("bizId", request.getBizId());
         }

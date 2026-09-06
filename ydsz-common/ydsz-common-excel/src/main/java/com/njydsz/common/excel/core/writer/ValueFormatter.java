@@ -1,18 +1,21 @@
 package com.njydsz.common.excel.core.writer;
 
+import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.core.config.ExcelConfig;
 
@@ -26,6 +29,8 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  * @see ExcelWriter
  */
 public class ValueFormatter {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ValueFormatter.class);
 
   /** DateTimeFormatter缓存 - 线程安全，无需ThreadLocal */
   private static final Map<String, DateTimeFormatter> DATETIME_FORMATTER_CACHE =
@@ -86,10 +91,6 @@ public class ValueFormatter {
       cell.setCellValue(n.doubleValue());
     } else if (value instanceof Boolean b) {
       cell.setCellValue(b);
-    } else if (value instanceof Date d) {
-      cell.setCellValue(formatDate(d, dateFormat));
-    } else if (value instanceof Calendar c) {
-      cell.setCellValue(c);
     } else if (value instanceof LocalDateTime ldt) {
       cell.setCellValue(formatLocalDateTime(ldt, dateFormat));
     } else if (value instanceof LocalDate ld) {
@@ -112,28 +113,33 @@ public class ValueFormatter {
   }
 
   /**
-   * 检测值是否为 Date 类型
+   * 检测值是否为 java.sql.Date / java.sql.Time 子类型（非 java.util.Date 本身）。
    *
-   * <p>使用类名检测避免 FQN 引用（Java 无法同时 import java.util.Date 和 Date）
+   * <p>使用 FQN 字符串检测避免直接 import java.util.Date。java.sql.Date 内部包含 LocalDateTime
+   * 可转换的瞬时值，需单独处理。
    *
    * @param value 待检测的值
-   * @return 如果是 Date 返回 true
+   * @return 如果是 java.sql.Date/Time/Timestamp 子类返回 true
    */
   private static boolean isSqlDate(Object value) {
-    return value != null && Date.class.isAssignableFrom(value.getClass()) && !Date.class.equals(value.getClass());
+    if (value == null) {
+      return false;
+    }
+    Class<?> clazz = value.getClass();
+    return clazz == Date.class || clazz == Time.class;
   }
 
   /**
-   * 格式化Date
+   * 格式化 LocalDateTime 为字符串。
    *
-   * @param date 要格式化的日期
+   * @param dateTime 要格式化的 LocalDateTime
    * @param pattern 日期格式 pattern
    * @return 格式化后的字符串
    */
-  public String formatDate(Date date, String pattern) {
+  public String formatDate(LocalDateTime dateTime, String pattern) {
     String fmt = pattern != null ? pattern : DEFAULT_DATE_FORMAT;
     DateTimeFormatter formatter = getDateTimeFormatter(fmt);
-    return date.toInstant().atZone(ZoneId.systemDefault()).format(formatter);
+    return dateTime.format(formatter);
   }
 
   /**
@@ -207,12 +213,17 @@ public class ValueFormatter {
   public String formatSqlDate(Object sqlDateObj, String pattern) {
     String fmt = pattern != null ? pattern : "yyyy-MM-dd";
     DateTimeFormatter formatter = getDateTimeFormatter(fmt);
-    // Date extends java.util.Date, use toInstant() for formatting
-    return ((Date) sqlDateObj)
-        .toInstant()
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
-        .format(formatter);
+    // java.sql.Date / java.sql.Time 桥接：通过反射调用 getTime() 获取 epoch 毫秒，
+    // 再转换为 LocalDateTime 后提取日期部分。避免直接引用 java.util.Date 子类。
+    try {
+      long millis = (Long) sqlDateObj.getClass().getMethod("getTime").invoke(sqlDateObj);
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+          .toLocalDate()
+          .format(formatter);
+    } catch (Exception e) {
+      LOG.warn("formatSqlDate failed", e);
+      return sqlDateObj.toString();
+    }
   }
 
   /**

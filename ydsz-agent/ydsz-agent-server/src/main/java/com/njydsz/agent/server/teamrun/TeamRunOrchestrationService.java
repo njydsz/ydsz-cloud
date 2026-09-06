@@ -39,6 +39,9 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 @Slf4j
 @Service
 public class TeamRunOrchestrationService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     private final TeamRunRepository teamRunRepository;
     private final AgentExecutionService agentExecutionService;
@@ -96,7 +99,7 @@ public class TeamRunOrchestrationService {
                 .title(title)
                 .description(description)
                 .pattern(pattern)
-                .members(new ArrayList<>(16))
+                .members(new ArrayList<>(COLLECTION_CAPACITY))
                 .status(TeamRunStatus.CREATED)
                 .initiatedBy(initiatedBy)
                 .createdAt(now)

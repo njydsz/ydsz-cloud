@@ -48,6 +48,9 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 @Service
 @RequiredArgsConstructor
 public class BatchImportApplicationService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 文件应用服务（单文件上传/创建目录，批量导入的底层委托） */
   private final FileApplicationService fileApplicationService;
@@ -95,7 +98,7 @@ public class BatchImportApplicationService {
       return BatchImportResult.error("批量上传数量超过限制: " + MAX_BATCH_SIZE);
     }
 
-    List<CompletableFuture<FileNodeVO>> futures = new ArrayList<>(16);
+    List<CompletableFuture<FileNodeVO>> futures = new ArrayList<>(COLLECTION_CAPACITY);
     for (MultipartFile file : files) {
       CompletableFuture<FileNodeVO> future =
           CompletableFuture.supplyAsync(
@@ -150,7 +153,7 @@ public class BatchImportApplicationService {
         zipFile.getOriginalFilename(),
         parentId);
 
-    List<FileNodeVO> importedFiles = new ArrayList<>(16);
+    List<FileNodeVO> importedFiles = new ArrayList<>(COLLECTION_CAPACITY);
     int totalCount = 0;
     int failedCount = 0;
     long totalUncompressed = 0;

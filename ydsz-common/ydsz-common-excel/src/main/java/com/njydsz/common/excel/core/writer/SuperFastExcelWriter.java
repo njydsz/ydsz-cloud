@@ -637,11 +637,11 @@ public class SuperFastExcelWriter {
   }
 
   private void writeCellRef(int col) {
-    int c = col;
+    int columnIndex = col;
     int len = 0;
-    while (c >= 0) {
-      cellRefBuffer[len++] = (byte) ('A' + c % 26);
-      c = c / 26 - 1;
+    while (columnIndex >= 0) {
+      cellRefBuffer[len++] = (byte) ('A' + columnIndex % 26);
+      columnIndex = columnIndex / 26 - 1;
     }
     for (int i = len - 1; i >= 0; i--) {
       rowBuffer[rowBufferPos++] = cellRefBuffer[i];

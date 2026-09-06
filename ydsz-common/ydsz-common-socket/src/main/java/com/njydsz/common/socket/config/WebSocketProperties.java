@@ -1,5 +1,6 @@
 package com.njydsz.common.socket.config;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 
@@ -183,7 +184,7 @@ public class WebSocketProperties {
   @Data
   public static class CircuitBreaker {
     /** 失败率阈值（0-1），超过则熔断 */
-    private double failureRateThreshold = 0.5;
+    private BigDecimal failureRateThreshold = new BigDecimal("0.5");
 
     /** 滑动窗口大小 */
     private int slidingWindowSize = 20;

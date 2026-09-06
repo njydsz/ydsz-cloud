@@ -7,7 +7,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.njydsz.common.app.annotation.AppApi;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
 
 /**
@@ -44,7 +43,7 @@ import com.njydsz.common.exception.handler.BaseExceptionHandler;
  * @author ydsz-team
  * @since 26.09.01
  * @see BaseExceptionHandler
- * @see BusinessException
+ * @see com.njydsz.common.exception.custom.BusinessException
  * @see AppApi
  */
 @Slf4j

@@ -25,6 +25,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpressionValidationResult implements Serializable {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private static final long serialVersionUID = 1L;
 
@@ -72,7 +75,7 @@ public class ExpressionValidationResult implements Serializable {
    *
    * <p>用于前端编辑器的"已使用变量"提示，不参与合法性判断。 当 VariableRegistry（P2-4）落地后，这里会替换为"已使用 vs 已定义"对比结果。
    */
-  @Builder.Default private List<String> referencedVariables = new ArrayList<>(16);
+  @Builder.Default private List<String> referencedVariables = new ArrayList<>(COLLECTION_CAPACITY);
 
   /**
    * 快速构造合法结果
@@ -92,7 +95,7 @@ public class ExpressionValidationResult implements Serializable {
         .errorColumn(-1)
         .expression(expression)
         .parseTimeMs(parseTimeMs)
-        .referencedVariables(referencedVariables != null ? referencedVariables : new ArrayList<>(16))
+        .referencedVariables(referencedVariables != null ? referencedVariables : new ArrayList<>(COLLECTION_CAPACITY))
         .build();
   }
 
@@ -115,7 +118,7 @@ public class ExpressionValidationResult implements Serializable {
         .errorColumn(-1)
         .expression(expression)
         .parseTimeMs(parseTimeMs)
-        .referencedVariables(new ArrayList<>(16))
+        .referencedVariables(new ArrayList<>(COLLECTION_CAPACITY))
         .build();
   }
 }

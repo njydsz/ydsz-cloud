@@ -3,9 +3,6 @@ package com.njydsz.common.auth.model;
 import java.util.Collections;
 import java.util.Set;
 
-import com.njydsz.common.auth.service.RbacPermissionEvaluator;
-import com.njydsz.common.auth.service.RolePermissionLoader;
-
 /**
  * 角色权限聚合类。
  *
@@ -22,14 +19,14 @@ import com.njydsz.common.auth.service.RolePermissionLoader;
  * <p><b>使用场景：</b>
  *
  * <ul>
- *   <li>RolePermissionLoader 根据 roleCode 加载单个角色的权限
- *   <li>RbacPermissionEvaluator 合并多角色权限时创建新的 RolePermissions
+ *   <li>com.njydsz.common.auth.service.RolePermissionLoader 根据 roleCode 加载单个角色的权限
+ *   <li>com.njydsz.common.auth.service.RbacPermissionEvaluator 合并多角色权限时创建新的 RolePermissions
  * </ul>
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see RolePermissionLoader
- * @see RbacPermissionEvaluator
+ * @see com.njydsz.common.auth.service.RolePermissionLoader
+ * @see com.njydsz.common.auth.service.RbacPermissionEvaluator
  */
 public final class RolePermissions {
 

@@ -37,6 +37,9 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  */
 @Slf4j
 public class DecisionTableRule implements Rule {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
@@ -78,7 +81,7 @@ public class DecisionTableRule implements Rule {
   public RuleResultVO evaluate(RuleContextVO context) {
     long start = System.nanoTime();
     try {
-      List<DecisionTableDefinitionDTO.Row> matchedRows = new ArrayList<>(16);
+      List<DecisionTableDefinitionDTO.Row> matchedRows = new ArrayList<>(COLLECTION_CAPACITY);
       for (DecisionTableDefinitionDTO.Row row : definition.getRows()) {
         if (row.getConditions() == null || row.getConditions().isEmpty()) {
           matchedRows.add(row);

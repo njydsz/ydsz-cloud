@@ -93,6 +93,9 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 @RequiredArgsConstructor
 @Validated
 public class FlowTaskController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   /** 任务服务 */
   private final FlowTaskService taskService;
@@ -432,7 +435,7 @@ public class FlowTaskController {
   @Operation(summary = "批量驳回任务")
   public YdszResponse<Void> batchReject(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     String userId = AuthContextUtils.getUserId();
-    List<String> taskIds = new ArrayList<>(16);
+    List<String> taskIds = new ArrayList<>(COLLECTION_CAPACITY);
     String comment = null;
     String targetNodeCode = null;
     for (FlowTaskOperateDTO dto : dtos) {
@@ -467,7 +470,7 @@ public class FlowTaskController {
   @Operation(summary = "批量转办任务")
   public YdszResponse<Void> batchTransfer(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     String userId = AuthContextUtils.getUserId();
-    List<String> taskIds = new ArrayList<>(16);
+    List<String> taskIds = new ArrayList<>(COLLECTION_CAPACITY);
     String comment = null;
     String targetUserId = null;
     String targetUserName = null;

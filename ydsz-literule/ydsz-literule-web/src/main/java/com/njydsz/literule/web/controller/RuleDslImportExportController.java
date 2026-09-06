@@ -70,6 +70,9 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
 @RequiredArgsConstructor
 @Tag(name = "规则DSL导入导出", description = "DSL 规则导入 / 导出")
 public class RuleDslImportExportController {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final RuleAdminService ruleAdminService;
 
@@ -109,8 +112,8 @@ public class RuleDslImportExportController {
 
       int successCount = 0;
       int failCount = 0;
-      List<String> errors = new ArrayList<>(16);
-      List<String> importedCodes = new ArrayList<>(16);
+      List<String> errors = new ArrayList<>(COLLECTION_CAPACITY);
+      List<String> importedCodes = new ArrayList<>(COLLECTION_CAPACITY);
 
       if (dsl.getRules() != null) {
         for (RuleDslEntry entry : dsl.getRules()) {
@@ -127,7 +130,7 @@ public class RuleDslImportExportController {
         }
       }
 
-      Map<String, Object> result = new LinkedHashMap<>(16);
+      Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
       result.put("totalRules", dsl.getRules() != null ? dsl.getRules().size() : 0);
       result.put("successCount", successCount);
       result.put("failCount", failCount);
@@ -173,7 +176,7 @@ public class RuleDslImportExportController {
     String yaml =
         RuleDslExporter.exportYaml(allRules, "exported-rules", "导出时间: " + LocalDateTime.now());
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("format", "yaml");
     result.put("ruleCount", allRules.size());
     result.put("content", yaml);
@@ -196,7 +199,7 @@ public class RuleDslImportExportController {
 
     String yaml = RuleDslExporter.exportSingleRule(def);
 
-    Map<String, Object> result = new LinkedHashMap<>(16);
+    Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("format", "yaml");
     result.put("ruleCode", ruleCode);
     result.put("content", yaml);

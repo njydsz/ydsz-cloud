@@ -42,6 +42,9 @@ import com.njydsz.message.server.metric.MessageMetrics;
 @Service
 @RequiredArgsConstructor
 public class MessageSendService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private final ChannelRouter channelRouter;
   private final MsgLogRepository msgLogRepository;
@@ -122,7 +125,7 @@ public class MessageSendService {
     if (matchedRule == null) {
       return Collections.emptyList();
     }
-    List<String> result = new ArrayList<>(16);
+    List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
     String single = matchedRule.getFallbackChannel();
     if (StringUtils.hasText(single) && !single.equalsIgnoreCase(currentChannel)) {
       result.add(single.trim().toUpperCase());

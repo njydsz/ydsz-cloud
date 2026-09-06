@@ -11,7 +11,6 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.AbstractRedisDistributedLock;
-import com.njydsz.common.lock.core.DistributedLocker;
 
 /**
  * Redis 公平分布式锁实现
@@ -32,7 +31,7 @@ import com.njydsz.common.lock.core.DistributedLocker;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see DistributedLocker
+ * @see com.njydsz.common.lock.core.DistributedLocker
  * @see RedisReentrantLock
  */
 @Slf4j

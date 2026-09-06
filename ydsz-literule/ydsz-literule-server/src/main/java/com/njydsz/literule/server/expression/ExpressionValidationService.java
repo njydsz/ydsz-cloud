@@ -36,6 +36,9 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  */
 @Slf4j
 public class ExpressionValidationService {
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
 
     /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
@@ -144,7 +147,7 @@ public class ExpressionValidationService {
     }
 
     // 提取占位符中引用的变量
-    List<String> referencedVars = new ArrayList<>(16);
+    List<String> referencedVars = new ArrayList<>(COLLECTION_CAPACITY);
     Matcher m = TEMPLATE_PLACEHOLDER_PATTERN.matcher(template);
     while (m.find()) {
       String var = m.group(1).trim();
@@ -178,7 +181,7 @@ public class ExpressionValidationService {
     if (referenced == null || referenced.isEmpty()) {
       return base;
     }
-    List<String> undefined = new ArrayList<>(16);
+    List<String> undefined = new ArrayList<>(COLLECTION_CAPACITY);
     for (String var : referenced) {
       if (!variableRegistry.contains(var)) {
         undefined.add(var);
@@ -210,7 +213,7 @@ public class ExpressionValidationService {
    * @return 校验结果列表（与输入顺序一致）
    */
   public Map<String, ExpressionValidationResult> validateBatch(Map<String, String> expressions) {
-    Map<String, ExpressionValidationResult> results = new LinkedHashMap<>(16);
+    Map<String, ExpressionValidationResult> results = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (expressions == null) {
       return results;
     }

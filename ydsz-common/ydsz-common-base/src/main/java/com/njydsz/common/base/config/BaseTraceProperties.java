@@ -1,5 +1,7 @@
 package com.njydsz.common.base.config;
 
+import java.math.BigDecimal;
+
 import lombok.Data;
 
 /**
@@ -95,7 +97,7 @@ public abstract class BaseTraceProperties {
    *
    * <p>取值范围 [0.0, 1.0]，1.0 表示全量记录，0.0 表示不记录。 用于在高并发场景下减少日志输出量。 超出范围的值会被自动修正：&lt;0 取 0，&gt;1 取 1。
    */
-  private double samplingRate = 1.0;
+  private BigDecimal samplingRate = new BigDecimal("1.0");
 
   /**
    * 慢请求阈值（毫秒）
@@ -110,12 +112,12 @@ public abstract class BaseTraceProperties {
    * @return 采样率，范围 [0.0, 1.0]
    */
   public double getSamplingRate() {
-    if (samplingRate < 0.0) {
+    if (samplingRate.compareTo(BigDecimal.ZERO) < 0) {
       return 0.0;
     }
-    if (samplingRate > 1.0) {
+    if (samplingRate.compareTo(BigDecimal.ONE) > 0) {
       return 1.0;
     }
-    return samplingRate;
+    return samplingRate.doubleValue();
   }
 }

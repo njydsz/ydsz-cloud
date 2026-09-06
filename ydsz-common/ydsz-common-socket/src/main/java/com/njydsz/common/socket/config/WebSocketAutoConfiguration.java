@@ -101,7 +101,7 @@ public class WebSocketAutoConfiguration {
     var cb = properties.getCircuitBreaker();
     return new WebSocketCircuitBreaker(
         "WebSocketRedis",
-        cb.getFailureRateThreshold(),
+        cb.getFailureRateThreshold().doubleValue(),
         cb.getSlidingWindowSize(),
         cb.getHalfOpenAfter().toMillis());
   }

@@ -44,6 +44,9 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  * @since 26.09.01
  */
 public class ModelInputRegistry {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ModelInputRegistry.class);
 
@@ -232,7 +235,7 @@ public class ModelInputRegistry {
     if (providers.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, Object> aggregated = new LinkedHashMap<>(16);
+    Map<String, Object> aggregated = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (ModelInputProvider provider : providers) {
       if (!provider.isEnabled()) {
         if (LOGGER.isDebugEnabled()) {

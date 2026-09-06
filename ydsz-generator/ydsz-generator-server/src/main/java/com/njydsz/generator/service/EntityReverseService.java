@@ -1,18 +1,17 @@
 package com.njydsz.generator.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 /**
  * 实体类反向生成服务。
@@ -39,6 +38,10 @@ public class EntityReverseService {
   /** 字段正则。 */
   private static final Pattern FIELD_PATTERN =
       Pattern.compile("private\\s+(\\w+(?:<[^>]+>)?)\\s+(\\w+)\\s*;");
+  /** 字段列表初始容量。 */
+  private static final int FIELD_LIST_CAPACITY = 16;
+  /** 报告 StringBuilder 初始容量。 */
+  private static final int REPORT_BUILDER_CAPACITY = 256;
 
   /**
    * 从指定 .java 源文件反向生成分析报告。
@@ -109,7 +112,7 @@ public class EntityReverseService {
   }
 
   private List<FieldInfo> extractFields(String source) {
-    List<FieldInfo> fields = new ArrayList<>(16);
+    List<FieldInfo> fields = new ArrayList<>(FIELD_LIST_CAPACITY);
     Matcher m = FIELD_PATTERN.matcher(source);
     while (m.find()) {
       String type = m.group(1);
@@ -122,7 +125,7 @@ public class EntityReverseService {
   }
 
   private String buildReport(String className, String packageName, List<FieldInfo> fields) {
-    StringBuilder sb = new StringBuilder(256);
+    StringBuilder sb = new StringBuilder(REPORT_BUILDER_CAPACITY);
     sb.append("反向生成分析报告\n");
     sb.append("========================================\n");
     sb.append(String.format("  类名: %s%n", className));
