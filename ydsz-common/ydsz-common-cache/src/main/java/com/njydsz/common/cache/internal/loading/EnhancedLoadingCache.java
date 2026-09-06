@@ -12,7 +12,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
@@ -88,7 +87,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     return SHARED_EXECUTOR.compareAndSet(null, created) ? created : SHARED_EXECUTOR.get();
   }
 
-  /** 获取共享刷新调度器（懒加载，线程安全） */
+  /** 获取共享刷新调度器（懒加载，线程安全，通过 CacheThreadPoolManager 统一管理） */
   private static ScheduledExecutorService getSharedRefreshScheduler() {
     if (sharedResourcesShutdown) {
       return null;
@@ -97,19 +96,9 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (scheduler != null) {
       return scheduler;
     }
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 缓存刷新共享调度器，单线程固定，守护线程
-    ScheduledThreadPoolExecutor exec =
-        new ScheduledThreadPoolExecutor(
-            1,
-            r -> {
-              Thread t = new Thread(r, "ydsz-cache-shared-refresher");
-              t.setDaemon(true);
-              t.setPriority(Thread.NORM_PRIORITY - 1);
-              return t;
-            });
-    // CHECKSTYLE.ON: RegexpSinglelineJava
-    exec.setRemoveOnCancelPolicy(true);
-    return SHARED_REFRESH_SCHEDULER.compareAndSet(null, exec) ? exec : SHARED_REFRESH_SCHEDULER.get();
+    ScheduledExecutorService created =
+        CacheThreadPoolManager.getInstance().getOrCreateScheduledPool("cache-refresh", 1);
+    return SHARED_REFRESH_SCHEDULER.compareAndSet(null, created) ? created : SHARED_REFRESH_SCHEDULER.get();
   }
 
   /**

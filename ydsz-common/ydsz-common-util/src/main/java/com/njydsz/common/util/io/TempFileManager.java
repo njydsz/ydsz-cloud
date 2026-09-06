@@ -7,8 +7,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -42,8 +41,14 @@ public class TempFileManager implements AutoCloseable {
   /** 本组件创建的所有临时文件路径 → 创建时间（毫秒） */
   private final Map<Path, Long> trackedFiles = new ConcurrentHashMap<>();
 
-  /** 兜底清理调度器（单线程守护线程，不阻碍 JVM 退出） */
-  private final ScheduledExecutorService sweeper;
+  /**
+   * 兜底清理调度器（单线程守护线程，不阻碍 JVM 退出）。
+   *
+   * <p>使用 {@link ScheduledThreadPoolExecutor} 直接创建（非 {@code Executors} 工厂），
+   * 避免 L1 模块对 ydsz-common-thread 的向下依赖；同时单线程 + 守护线程，
+   * 不影响 JVM 正常退出。
+   */
+  private final ScheduledThreadPoolExecutor sweeper;
 
   /** 临时文件保留时长（毫秒），超龄文件由兜底任务清理 */
   private final long retentionMillis;
@@ -69,15 +74,15 @@ public class TempFileManager implements AutoCloseable {
    */
   public TempFileManager(Duration retention, Duration cleanupInterval) {
     this.retentionMillis = retention.toMillis();
-    // CHECKSTYLE.OFF: RegexpSinglelineJava — L1 工具模块禁止向下依赖 ydsz-common-thread，此处为兜底清理调度器（单线程守护线程），属短生命周期内部线程池
     this.sweeper =
-        Executors.newSingleThreadScheduledExecutor(
+        new ScheduledThreadPoolExecutor(
+            1,
             runnable -> {
               Thread thread = new Thread(runnable, "ydsz-tempfile-sweeper");
               thread.setDaemon(true);
               return thread;
             });
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    this.sweeper.setRemoveOnCancelPolicy(true);
     sweeper.scheduleWithFixedDelay(
         this::sweepExpired,
         cleanupInterval.toMillis(),

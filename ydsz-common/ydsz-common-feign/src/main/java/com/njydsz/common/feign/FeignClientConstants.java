@@ -36,6 +36,9 @@ public final class FeignClientConstants {
   /** 用户中心服务 */
   public static final String USERINFO = "ydsz-userinfo";
 
+  /** 知识库服务 */
+  public static final String NEXTWIKI = "ydsz-nextwiki";
+
   // ======================== 系统服务路径常量 ========================
 
   /**
@@ -155,6 +158,20 @@ public final class FeignClientConstants {
   /** 批量查询公司名称路径 */
   public static final String USERINFO_PATH_COMPANY_BATCH_NAMES =
       "/api/internal/company/batch-names";
+
+  // ======================== 知识库服务路径常量 ========================
+
+  /** 空间详情查询路径（内部 Feign 通道） */
+  public static final String NEXTWIKI_PATH_SPACE_GET = "/api/internal/space/get";
+
+  /** 空间批量查询路径（内部 Feign 通道） */
+  public static final String NEXTWIKI_PATH_SPACE_BATCH = "/api/internal/space/batch";
+
+  /** 按租户 ID 查询存储配额路径（内部 Feign 通道） */
+  public static final String NEXTWIKI_PATH_QUOTA_GET = "/api/internal/quota/get-by-tenant";
+
+  /** 按空间 ID 查询存储配额路径（内部 Feign 通道） */
+  public static final String NEXTWIKI_PATH_QUOTA_GET_BY_SPACE = "/api/internal/quota/get-by-space";
 
   // ======================== Feign 降级统一错误码 ========================
 

@@ -31,6 +31,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  *   <li>{@code ydsz_gateway_circuit_breaker_state} — 熔断器状态（0=closed, 1=open, 2=half-open; 按 route 标签区分）
  *   <li>{@code ydsz_gateway_jwt_cache_hit_total} — JWT 缓存命中数（Gauge）
  *   <li>{@code ydsz_gateway_jwt_cache_miss_total} — JWT 缓存未命中数（Gauge）
+ *   <li>{@code ydsz_gateway_ws_rejected_total} — WebSocket 连接被拒绝计数器（dimension 标签：user/ip）
  * </ul>
  *
  * @since 26.09.01
@@ -188,6 +189,17 @@ public class GatewayMetrics extends SentryMetricsAdapter {
       gaugeRef("jwt_cache_miss_total", missCounter, AtomicLong::doubleValue);
       log.info("[GatewayMetrics] JWT 缓存命中/未命中 Prometheus 指标已注册");
     }
+  }
+
+  /**
+   * 增加 WebSocket 连接被拒绝计数。
+   *
+   * <p>当用户维度或 IP 维度的 WebSocket 连接数超限时调用，用于监控 WebSocket 限流触发频率。
+   *
+   * @param dimension 限流维度（"user" 或 "ip"）
+   */
+  public void incrementWsRejected(String dimension) {
+    incrementCounter("ws_rejected_total", "dimension", safe(dimension));
   }
 
 }

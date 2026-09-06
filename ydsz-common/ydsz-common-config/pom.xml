@@ -14,12 +14,6 @@
     </parent>
 
     <dependencies>
-        <!-- core -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-core</artifactId>
-        </dependency>
-
         <!-- spring-context -->
         <dependency>
             <groupId>org.springframework</groupId>

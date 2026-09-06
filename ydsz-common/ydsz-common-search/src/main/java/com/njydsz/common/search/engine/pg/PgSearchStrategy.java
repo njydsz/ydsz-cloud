@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -91,18 +92,41 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
   }
 
   public PgSearchStrategy(JdbcTemplate jdbcTemplate, SearchProperties.PgConfig pgConfig) {
+    this(jdbcTemplate, pgConfig, createDefaultProbeScheduler());
+  }
+
+  /**
+   * 创建 PostgreSQL 全文检索策略（支持外部注入调度器）。
+   *
+   * <p>允许 Spring 容器注入 {@link ThreadPoolTaskScheduler} 实例，实现线程池的统一生命周期管理。
+   *
+   * @param jdbcTemplate JDBC 模板
+   * @param pgConfig PG 引擎配置
+   * @param probeScheduler 探测调度器（外部注入或内部默认创建）
+   */
+  @Autowired
+  public PgSearchStrategy(
+      JdbcTemplate jdbcTemplate,
+      SearchProperties.PgConfig pgConfig,
+      ThreadPoolTaskScheduler probeScheduler) {
     this.jdbcTemplate = jdbcTemplate;
     this.pgConfig = pgConfig;
     this.indexTable = pgConfig.getIndexTable();
     this.searchConfig = detectSearchConfig();
     this.available = checkAvailability();
-    this.probeScheduler = new ThreadPoolTaskScheduler();
-    this.probeScheduler.setPoolSize(1);
-    this.probeScheduler.setThreadNamePrefix("pg-search-probe-");
-    this.probeScheduler.setDaemon(true);
-    this.probeScheduler.setWaitForTasksToCompleteOnShutdown(false);
-    this.probeScheduler.initialize();
+    this.probeScheduler = probeScheduler;
     startRecoveryProbe();
+  }
+
+  /** 创建默认探测调度器（无 Spring 容器时使用）。 */
+  private static ThreadPoolTaskScheduler createDefaultProbeScheduler() {
+    ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+    scheduler.setPoolSize(1);
+    scheduler.setThreadNamePrefix("pg-search-probe-");
+    scheduler.setDaemon(true);
+    scheduler.setWaitForTasksToCompleteOnShutdown(false);
+    scheduler.initialize();
+    return scheduler;
   }
 
   @Override

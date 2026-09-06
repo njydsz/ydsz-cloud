@@ -16,11 +16,11 @@
     <l1.module.skip>false</l1.module.skip>
   </properties>
 
-  <dependencies>
-    <!--common-util（同为 L1 工具层，传递引入 SLF4J 等）-->
+    <dependencies>
+    <!-- SLF4J API（日志门面，L1 模块直接声明，避免内部模块耦合） -->
     <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-util</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     <!-- Spring Context（Cache 接口） -->
     <dependency>

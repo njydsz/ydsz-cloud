@@ -361,6 +361,9 @@ public final class Sm2Utils {
       return cipher.doFinal(content);
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException("SM2 encryption failed", e);
+    } finally {
+      // ThreadLocal 自动清理，避免线程池复用场景内存泄漏（云顶规范 15.1）
+      cleanup();
     }
   }
 
@@ -394,6 +397,9 @@ public final class Sm2Utils {
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException(
           "SM2 decryption failed, ciphertext may be corrupted or wrong key", e);
+    } finally {
+      // ThreadLocal 自动清理，避免线程池复用场景内存泄漏（云顶规范 15.1）
+      cleanup();
     }
   }
 
@@ -431,6 +437,9 @@ public final class Sm2Utils {
       return sig.sign();
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException("SM2 signing failed", e);
+    } finally {
+      // ThreadLocal 自动清理，避免线程池复用场景内存泄漏（云顶规范 15.1）
+      cleanup();
     }
   }
 
@@ -468,6 +477,9 @@ public final class Sm2Utils {
     } catch (GeneralSecurityException e) {
       log.warn("SM2 signature verification failed: {}", e.getMessage());
       return false;
+    } finally {
+      // ThreadLocal 自动清理，避免线程池复用场景内存泄漏（云顶规范 15.1）
+      cleanup();
     }
   }
 

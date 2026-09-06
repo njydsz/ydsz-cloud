@@ -1,6 +1,6 @@
 package com.njydsz.common.excel.exception;
 
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.excel.util.ExcelI18nHelper;
 
 /**
  * Excel 写入异常类
@@ -86,7 +86,7 @@ public class ExcelWriteException extends ExcelException {
    *     上下文参数依次为 {@code filePath}、{@code reason}
    */
   public static ExcelWriteException fileAccessFailed(String filePath, String reason) {
-    String message = MessageUtils.getMessage(
+    String message = ExcelI18nHelper.getMessage(
         "excel.write.fileAccessFailed.detail", new Object[] {reason}, "文件访问失败: " + reason);
     ExcelWriteException ex =
         new ExcelWriteException(ExcelExceptionCode.WRITE_FILE_ACCESS_FAILED, message);
@@ -105,7 +105,7 @@ public class ExcelWriteException extends ExcelException {
    */
   public static ExcelWriteException insufficientSpace(
       String filePath, long requiredSpace, long availableSpace) {
-    String message = MessageUtils.getMessage(
+    String message = ExcelI18nHelper.getMessage(
         "excel.write.insufficientSpace.detail",
         new Object[] {requiredSpace, availableSpace},
         String.format("磁盘空间不足: 所需=%d字节, 可用=%d字节", requiredSpace, availableSpace));
@@ -126,7 +126,7 @@ public class ExcelWriteException extends ExcelException {
    */
   public static ExcelWriteException invalidAnnotation(
       Class<?> clazz, String fieldName, String reason) {
-    String message = MessageUtils.getMessage(
+    String message = ExcelI18nHelper.getMessage(
         "excel.write.annotationError.detail",
         new Object[] {clazz.getSimpleName(), fieldName, reason},
         String.format("注解配置错误 [%s.%s]: %s", clazz.getSimpleName(), fieldName, reason));
@@ -149,7 +149,7 @@ public class ExcelWriteException extends ExcelException {
    */
   public static ExcelWriteException dataWriteFailed(
       int index, String fieldName, Object value, Throwable cause) {
-    String message = MessageUtils.getMessage(
+    String message = ExcelI18nHelper.getMessage(
         "excel.write.dataFailed.detail",
         new Object[] {index, fieldName, value},
         String.format("数据写入失败: 索引=%d, 字段=%s, 值=%s", index, fieldName, value));

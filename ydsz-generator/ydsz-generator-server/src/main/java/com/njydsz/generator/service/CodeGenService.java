@@ -16,13 +16,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.generator.config.GeneratorThreadPoolConfig;
 import com.njydsz.generator.engine.CodeGenEngine;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
@@ -52,15 +52,14 @@ import com.njydsz.generator.vo.GenResultVO;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class CodeGenService {
 
   /** 历史文件列表初始容量。 */
   private static final int HISTORY_FILE_LIST_CAPACITY = 8;
+
   /** 批量生成单表任务最长等待时间（分钟）。 */
-  private static final long PER_TABLE_TIMEOUT_MINUTES = 5L;
-  /** 批量生成线程池优雅关闭等待时间（秒）。 */
-  private static final long POOL_SHUTDOWN_SECONDS = 30L;
+  @Value("${generator.batch-timeout-minutes:5}")
+  private long batchTimeoutMinutes;
 
   private final DatasourceService datasourceService;
   private final TemplateGroupService templateGroupService;
@@ -68,6 +67,7 @@ public class CodeGenService {
   private final TableMetadataService tableMetadataService;
   private final CodeGenEngine codeGenEngine;
   private final GenHistoryRepository historyRepository;
+  private final ExecutorService codeGenExecutor;
   private final GenHistoryFileRepository historyFileRepository;
 
   /** 默认作者（来自配置）。 */
@@ -77,6 +77,37 @@ public class CodeGenService {
   /** 默认基础包（来自配置）。 */
   @Value("${generator.default-package:com.njydsz}")
   private String defaultBasePackage;
+
+  /**
+   * 构造器 — 注入代码生成线程池（声明式 Bean）。
+   *
+   * @param datasourceService     数据源服务
+   * @param templateGroupService  模板分组服务
+   * @param templateService       模板服务
+   * @param tableMetadataService  表元数据服务
+   * @param codeGenEngine         代码生成引擎
+   * @param historyRepository     历史记录仓储
+   * @param codeGenExecutor       代码生成异步任务线程池
+   * @param historyFileRepository 生成文件仓储
+   */
+  public CodeGenService(
+      DatasourceService datasourceService,
+      TemplateGroupService templateGroupService,
+      TemplateService templateService,
+      TableMetadataService tableMetadataService,
+      CodeGenEngine codeGenEngine,
+      GenHistoryRepository historyRepository,
+      @Qualifier(GeneratorThreadPoolConfig.BEAN_CODE_GEN_POOL) ExecutorService codeGenExecutor,
+      GenHistoryFileRepository historyFileRepository) {
+    this.datasourceService = datasourceService;
+    this.templateGroupService = templateGroupService;
+    this.templateService = templateService;
+    this.tableMetadataService = tableMetadataService;
+    this.codeGenEngine = codeGenEngine;
+    this.historyRepository = historyRepository;
+    this.codeGenExecutor = codeGenExecutor;
+    this.historyFileRepository = historyFileRepository;
+  }
 
   /**
    * 预览指定表的生成结果（不写文件）。
@@ -205,20 +236,17 @@ public class CodeGenService {
    */
   public GenResultVO generateBatch(GenCodeGenerateQuery query, List<String> tableNames) {
 
-    int poolSize = Math.max(1, Math.min(tableNames.size(),
-        Runtime.getRuntime().availableProcessors()));
-    log.info("批量生成开始 count={} poolSize={}", tableNames.size(), poolSize);
+    log.info("批量生成开始 count={}", tableNames.size());
 
-    ExecutorService pool = ExecutorUtils.newFixedThreadPool(poolSize);
     AtomicInteger totalSuccess = new AtomicInteger();
     AtomicInteger totalSkip = new AtomicInteger();
     AtomicInteger totalFail = new AtomicInteger();
     Long[] firstHistoryId = new Long[1];
 
+    List<Future<?>> futures = new ArrayList<>(tableNames.size());
     try {
-      List<Future<?>> futures = new ArrayList<>(tableNames.size());
       for (String tableName : tableNames) {
-        futures.add(pool.submit(() -> {
+        futures.add(codeGenExecutor.submit(() -> {
           try {
             GenCodeGenerateQuery tableQuery = GenCodeGenerateQuery.builder()
                 .datasourceId(query.getDatasourceId())
@@ -244,20 +272,22 @@ public class CodeGenService {
               totalFail.addAndGet(r.getFailCount());
             }
           } catch (Exception e) {
-            log.error("批量生成单表失败 table={} err={}", tableName, e.getMessage());
+            log.error("批量生成单表失败 table={} err={}", tableName, e.getMessage(), e);
             totalFail.incrementAndGet();
           }
         }));
       }
 
       for (Future<?> f : futures) {
-        f.get(PER_TABLE_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+        f.get(batchTimeoutMinutes, TimeUnit.MINUTES);
       }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      log.error("批量生成被中断 count={}", tableNames.size(), e);
+      totalFail.incrementAndGet();
     } catch (Exception e) {
       log.error("批量生成失败: {}", e.getMessage(), e);
       totalFail.incrementAndGet();
-    } finally {
-      ExecutorUtils.shutdownGracefully(pool, POOL_SHUTDOWN_SECONDS, TimeUnit.SECONDS);
     }
 
     return GenResultVO.builder()

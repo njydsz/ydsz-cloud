@@ -45,6 +45,16 @@ generator:
   conflict-strategy: SKIP
   # 表前缀（生成类名时去除）
   table-prefix: t_,tab_
+  # 批量生成单表超时（分钟）
+  batch-timeout-minutes: 5
+  # 代码生成异步线程池
+  thread-pool:
+    # 核心线程数（默认 CPU 核数）
+    core-size: 0
+    # 最大线程数（默认 16）
+    max-size: 16
+    # 排队容量
+    queue-capacity: 64
 
 # 日志
 logging:

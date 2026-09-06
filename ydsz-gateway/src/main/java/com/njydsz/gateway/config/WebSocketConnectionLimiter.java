@@ -2,9 +2,12 @@ package com.njydsz.gateway.config;
 
 import java.util.List;
 
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -12,7 +15,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
- * WebSocket 连接数限制器（P2-F4）。
+ * WebSocket 连接数限制器。
  *
  * <p>基于 Redis 原子操作维护全局 WebSocket 连接计数器，防止单用户 / 单 IP 建立过多 WebSocket 连接导致网关资源耗尽：
  *
@@ -37,12 +40,19 @@ import reactor.core.publisher.Mono;
  * ydsz.gateway.websocket.counter-ttl-seconds: 3600
  * </pre>
  *
+ * <h3>观测指标</h3>
+ *
+ * <p>每次 WebSocket 连接被拒绝时递增 {@code ydsz_gateway_ws_rejected_total} Prometheus 指标，
+ * 通过 Grafana 面板监控用户/IP 维度的限流触发频率。
+ *
  * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @ConditionalOnClass(ReactiveStringRedisTemplate.class)
+@ConditionalOnProperty(prefix = "ydsz.gateway.websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSocketConnectionLimiter {
 
   /** 用户维度连接数 Redis 键前缀 */
@@ -50,6 +60,12 @@ public class WebSocketConnectionLimiter {
 
   /** IP 维度连接数 Redis 键前缀 */
   private static final String KEY_PREFIX_IP = "ydsz:ws:connections:ip:";
+
+  /** 限流维度：用户 */
+  private static final String DIMENSION_USER = "user";
+
+  /** 限流维度：IP */
+  private static final String DIMENSION_IP = "ip";
 
   /** Lua 脚本：检查并递增计数器（原子操作） */
   private static final String INCR_WITH_LIMIT_SCRIPT = """
@@ -66,40 +82,29 @@ public class WebSocketConnectionLimiter {
 
   private final ReactiveStringRedisTemplate redisTemplate;
 
+  private final GatewayMetrics gatewayMetrics;
+
   /** 单用户最大 WebSocket 连接数 */
-  private final int maxConnectionsPerUser;
+  @Value("${ydsz.gateway.websocket.max-connections-per-user:5}")
+  private int maxConnectionsPerUser;
 
   /** 单 IP 最大 WebSocket 连接数 */
-  private final int maxConnectionsPerIp;
+  @Value("${ydsz.gateway.websocket.max-connections-per-ip:20}")
+  private int maxConnectionsPerIp;
 
   /** 计数器 TTL（秒） */
-  private final long counterTtlSeconds;
+  @Value("${ydsz.gateway.websocket.counter-ttl-seconds:3600}")
+  private long counterTtlSeconds;
 
   private final RedisScript<Long> incrScript;
 
   /**
-   * 构造 WebSocket 连接限制器。
-   *
-   * @param redisTemplate Redis 响应式模板
-   * @param maxConnectionsPerUser 单用户最大连接数
-   * @param maxConnectionsPerIp 单 IP 最大连接数
-   * @param counterTtlSeconds 计数器 TTL（秒）
+   * 初始化 Lua 脚本。
    */
-  public WebSocketConnectionLimiter(
-      ReactiveStringRedisTemplate redisTemplate,
-      @Value("${ydsz.gateway.websocket.max-connections-per-user:5}")
-          int maxConnectionsPerUser,
-      @Value("${ydsz.gateway.websocket.max-connections-per-ip:20}")
-          int maxConnectionsPerIp,
-      @Value("${ydsz.gateway.websocket.counter-ttl-seconds:3600}")
-          long counterTtlSeconds) {
-    this.redisTemplate = redisTemplate;
-    this.maxConnectionsPerUser = maxConnectionsPerUser;
-    this.maxConnectionsPerIp = maxConnectionsPerIp;
-    this.counterTtlSeconds = counterTtlSeconds;
+  @PostConstruct
+  void initScript() {
     this.incrScript = new DefaultRedisScript<>(INCR_WITH_LIMIT_SCRIPT, Long.class);
-    log.info(
-        "[WsConnectionLimiter] 初始化: maxPerUser={}, maxPerIp={}, ttl={}s",
+    log.info("[WsConnectionLimiter] 初始化: maxPerUser={}, maxPerIp={}, ttl={}s",
         maxConnectionsPerUser, maxConnectionsPerIp, counterTtlSeconds);
   }
 
@@ -174,6 +179,7 @@ public class WebSocketConnectionLimiter {
         .map(result -> {
           if (result != null && result == -1L) {
             log.warn("[WsConnectionLimiter] IP 连接数超限: ip={}, max={}", clientIp, maxConnectionsPerIp);
+            gatewayMetrics.incrementWsRejected(DIMENSION_IP);
             return false;
           }
           return true;
@@ -200,6 +206,7 @@ public class WebSocketConnectionLimiter {
                 // 用户维度超限，回滚 IP 维度计数
                 redisTemplate.opsForValue().decrement(buildIpKey(clientIp)).subscribe();
                 log.warn("[WsConnectionLimiter] 用户连接数超限: userId={}, max={}", userId, maxConnectionsPerUser);
+                gatewayMetrics.incrementWsRejected(DIMENSION_USER);
                 return false;
               }
               return true;

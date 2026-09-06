@@ -8,12 +8,16 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * 数据源配置领域实体。
  *
  * <p>对应 ydsz_gen_datasource 表。
+ * <p>密码字段不会出现在 {@code toString} 和 {@code equals/hashCode} 中，
+ * 防止序列化/比较时意外泄露。
  *
  * @author ydsz-team
  * @since 26.09.05
@@ -22,6 +26,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = "password")
+@EqualsAndHashCode(exclude = "password")
 @TableName("ydsz_gen_datasource")
 public class GenDatasource {
 
@@ -34,7 +40,9 @@ public class GenDatasource {
   private String jdbcUrl;
   /** 用户名。 */
   private String username;
-  /** 密码（加密）。 */
+  /** 密码（加密存储，不序列化到外向响应）。 */
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
   private String password;
   /** 数据库方言。 */
   private String dialect;
