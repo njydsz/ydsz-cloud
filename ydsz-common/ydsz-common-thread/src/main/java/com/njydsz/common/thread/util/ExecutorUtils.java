@@ -596,6 +596,13 @@ public final class ExecutorUtils {
    * 使线程池能够被 {@link ThreadPoolRegistry#snapshotMetrics()} 采集指标。
    *
    * @param registerName 注册到 ThreadPoolRegistry 的名称
+   * @param corePoolSize 核心线程数
+   * @param maximumPoolSize 最大线程数
+   * @param keepAliveTime 空闲线程存活时间
+   * @param unit 时间单位
+   * @param workQueue 工作队列
+   * @param threadNamePrefix 线程名前缀
+   * @param handler 拒绝策略
    * @return 线程池实例
    * @since 26.09.01
    */

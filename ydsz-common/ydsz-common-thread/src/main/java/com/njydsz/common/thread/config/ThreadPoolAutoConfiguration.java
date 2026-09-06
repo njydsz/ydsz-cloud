@@ -16,7 +16,7 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.AvailableEndpoint;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -174,7 +174,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   @ConditionalOnClass(Endpoint.class)
-  @AvailableEndpoint(ThreadPoolMetricsEndpoint.class)
+  @ConditionalOnAvailableEndpoint(ThreadPoolMetricsEndpoint.class)
   @ConditionalOnMissingBean(ThreadPoolMetricsEndpoint.class)
   public ThreadPoolMetricsEndpoint threadPoolMetricsEndpoint() {
     LOG.info("[ydsz-thread] 注册 Actuator 端点: /actuator/threadpools");

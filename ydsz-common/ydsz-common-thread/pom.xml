@@ -41,6 +41,12 @@
             <artifactId>spring-boot-actuator</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- actuator-autoconfigure（@ConditionalOnAvailableEndpoint 条件注解） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator-autoconfigure</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- spring-boot-health (Spring Boot 4.x: health classes moved to health module) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
