@@ -34,7 +34,7 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
@@ -102,6 +102,9 @@ public class ChunkUploadApplicationService {
   @Autowired(required = false)
   private IFileStorageProvider fileStorageProvider;
 
+  /** MapStruct 转换器（替代 NextwikiConverter） */
+  private final NextwikiStructMapper mapper;
+
   /** 单个分片最大大小（默认 10MB） */
   private static final long MAX_CHUNK_SIZE = 10L * 1024 * 1024;
 
@@ -126,7 +129,8 @@ public class ChunkUploadApplicationService {
       ApplicationEventPublisher eventPublisher,
       NextwikiProperties properties,
       SnowflakeIdGenerator snowflakeIdGenerator,
-      PlatformTransactionManager transactionManager) {
+      PlatformTransactionManager transactionManager,
+      NextwikiStructMapper mapper) {
     this.stringOps = stringOps;
     this.collectionOps = collectionOps;
     this.fileNodeRepository = fileNodeRepository;
@@ -139,6 +143,7 @@ public class ChunkUploadApplicationService {
     this.properties = properties;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
     this.transactionManager = transactionManager;
+    this.mapper = mapper;
   }
 
   /**
@@ -373,7 +378,7 @@ public class ChunkUploadApplicationService {
     return transactionTemplate.execute(status -> {
       FileNodeDTO deduped = buildDedupedNode(ctx.session, ctx.dedupExisting, ctx.fileHash, ctx.userId);
       FileNodeVO saved = fileNodeRepository.save(deduped);
-      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
       FileNodeVO savedVO = saved;
       FileVersionDomainService.VersionCreateResult versionResult =
@@ -388,7 +393,7 @@ public class ChunkUploadApplicationService {
               ctx.userId);
       versionRepository.setActiveVersion(saved.getId(), -1);
       versionRepository.save(versionResult.newVersion());
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
       storageQuotaRepository.addUsage("user", ctx.userId, ctx.dedupExisting.getSize(), 1);
       publishUploadEvent(savedVO, ctx.userId);
@@ -433,7 +438,7 @@ public class ChunkUploadApplicationService {
               .build();
 
       FileNodeVO saved = fileNodeRepository.save(newNode);
-      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
       FileNodeVO savedVO = saved;
       FileVersionDomainService.VersionCreateResult versionResult =
@@ -448,7 +453,7 @@ public class ChunkUploadApplicationService {
               ctx.userId);
       versionRepository.setActiveVersion(saved.getId(), -1);
       versionRepository.save(versionResult.newVersion());
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
       storageQuotaRepository.addUsage("user", ctx.userId, ctx.stored.getSize(), 1);
       publishUploadEvent(savedVO, ctx.userId);
@@ -586,7 +591,7 @@ public class ChunkUploadApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersionDTO> allVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListToDTO(
         versionRepository.findByFileNodeId(fileNodeId));
     List<FileVersionDTO> toDelete = versionDomainService.findVersionsToCleanup(allVersionDTOs);
     for (FileVersionDTO v : toDelete) {

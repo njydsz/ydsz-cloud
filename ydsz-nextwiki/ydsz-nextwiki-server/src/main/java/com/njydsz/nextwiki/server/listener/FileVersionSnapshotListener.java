@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.event.FileVersionSnapshotEvent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
@@ -49,6 +49,9 @@ public class FileVersionSnapshotListener {
   /** 文件版本 Repository */
   private final FileVersionRepository versionRepository;
 
+  /** MapStruct 转换器（替代 NextwikiConverter） */
+  private final NextwikiStructMapper mapper;
+
   /**
    * 事务提交后异步创建文件版本记录。
    *
@@ -73,7 +76,7 @@ public class FileVersionSnapshotListener {
 
       // 查询现有版本列表
       List<FileVersionDTO> existingVersionDTOs =
-          NextwikiConverter.INSTANT.versionListToDTO(
+          mapper.fileVersionListToDTO(
               versionRepository.findByFileNodeId(fileNodeId));
 
       // 领域服务构建版本记录
@@ -91,7 +94,7 @@ public class FileVersionSnapshotListener {
       // 持久化版本记录
       versionRepository.setActiveVersion(fileNodeId, -1);
       versionRepository.save(versionResult.newVersion());
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(versionResult.updatedFileNode()));
 
       // 清理超限旧版本
       cleanupExcessVersions(fileNodeId);
@@ -117,7 +120,7 @@ public class FileVersionSnapshotListener {
    */
   private void cleanupExcessVersions(String fileNodeId) {
     List<FileVersionDTO> allVersionDTOs =
-        NextwikiConverter.INSTANT.versionListToDTO(
+        mapper.fileVersionListToDTO(
             versionRepository.findByFileNodeId(fileNodeId));
     List<FileVersionDTO> toDelete = versionDomainService.findVersionsToCleanup(allVersionDTOs);
     for (FileVersionDTO v : toDelete) {

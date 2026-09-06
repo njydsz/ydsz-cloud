@@ -21,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
@@ -43,6 +43,7 @@ public class ThumbnailApplicationService {
 
   private final FileNodeRepository fileNodeRepository;
   private final NextwikiProperties properties;
+  private final NextwikiStructMapper mapper;
 
   @Autowired(required = false)
   private IFileStorageProvider fileStorageProvider;
@@ -110,7 +111,7 @@ public class ThumbnailApplicationService {
       IFileStorage storage = resolveStorage();
       if (storage == null) {
         node.setThumbnailKey(thumbnailKey);
-        fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+        fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
         return;
       }
 
@@ -138,7 +139,7 @@ public class ThumbnailApplicationService {
         storage.upload(null, thumbnailKey, multipartFile);
 
         node.setThumbnailKey(thumbnailKey);
-        fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+        fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
         log.info("[ThumbnailApplicationService] 缩略图生成并上传完成: fileNodeId={}", fileNodeId);
 
         Files.deleteIfExists(thumbFile);

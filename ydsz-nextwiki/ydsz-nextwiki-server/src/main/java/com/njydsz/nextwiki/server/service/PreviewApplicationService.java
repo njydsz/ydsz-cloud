@@ -24,7 +24,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -58,6 +58,9 @@ public class PreviewApplicationService {
 
   /** NextWiki 全局配置（预览临时目录、LibreOffice 路径、超时等） */
   private final NextwikiProperties properties;
+
+  /** MapStruct 转换器（替代 NextwikiConverter） */
+  private final NextwikiStructMapper mapper;
 
   @Autowired(required = false)
   private IFileStorageProvider fileStorageProvider;
@@ -125,7 +128,7 @@ public class PreviewApplicationService {
       }
     } else if (DIRECT_PREVIEW_SUFFIXES.contains(suffix)) {
       node.setPreviewReady(true);
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
     }
   }
 
@@ -269,7 +272,7 @@ public class PreviewApplicationService {
 
       node.setPreviewReady(true);
       node.setThumbnailKey(previewStorageKey);
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
       log.info("[PreviewApplicationService] Office->PDF 转换完成: fileNodeId={}", node.getId());
     } finally {

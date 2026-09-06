@@ -1,5 +1,8 @@
 package com.njydsz.literule.domain.enums;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
@@ -28,6 +31,9 @@ public enum RuleStatusEnum implements BaseStatusEnum<RuleStatusEnum> {
   /** 已停用（下线，不再参与匹配） */
   DISABLED;
 
+  /** 日志记录器 */
+  private static final Logger LOG = LoggerFactory.getLogger(RuleStatusEnum.class);
+
   /**
    * 解析字符串为枚举值（大小写不敏感，容忍 null）。
    *
@@ -41,6 +47,8 @@ public enum RuleStatusEnum implements BaseStatusEnum<RuleStatusEnum> {
     try {
       return RuleStatusEnum.valueOf(value.toUpperCase());
     } catch (IllegalArgumentException e) {
+      // P1-F1: YDIZ-LOG-001 - 异常必须记录日志
+      LOG.debug("[RuleStatus] 无法解析规则状态: value={}, 返回 null", value);
       return null;
     }
   }

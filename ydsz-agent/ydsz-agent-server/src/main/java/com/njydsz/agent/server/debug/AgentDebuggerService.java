@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.debug;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 public class AgentDebuggerService {
 
   /** 重放默认温度 */
-  private static final double REPLAY_TEMPERATURE = 0.7;
+  private static final BigDecimal REPLAY_TEMPERATURE = new BigDecimal("0.7");
 
   /** 重放默认最大 Token 数 */
   private static final int REPLAY_MAX_TOKENS = 2048;

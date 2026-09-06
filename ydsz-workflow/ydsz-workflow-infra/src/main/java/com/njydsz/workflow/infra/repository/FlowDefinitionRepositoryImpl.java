@@ -152,7 +152,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
             new LambdaQueryWrapper<FlowDefinition>()
                 .eq(FlowDefinition::getFlowCode, flowCode)
                 .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
-                .eq(FlowDefinition::getIsPublish, 1)
+                .eq(FlowDefinition::getPublishStatus, 1)
                 .eq(FlowDefinition::getDeleted, 0)
                 .orderByDesc(FlowDefinition::getCreatedAt)
                 .last("LIMIT 1"))
@@ -169,7 +169,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
                 .eq(FlowDefinition::getCategory, categoryCode)
                 .eq(FlowDefinition::getTenantId, tenantId)
                 .eq(FlowDefinition::getActivityStatus, 1)
-                .eq(FlowDefinition::getIsPublish, 1)
+                .eq(FlowDefinition::getPublishStatus, 1)
                 .eq(FlowDefinition::getDeleted, 0)
                 .orderByDesc(FlowDefinition::getCreatedAt)));
   }
@@ -245,7 +245,7 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
                 .eq(tenantId != null, FlowDefinition::getTenantId, tenantId)
                 .ne(StringUtils.hasText(excludeDefinitionId),
                     FlowDefinition::getId, excludeDefinitionId)
-                .eq(FlowDefinition::getIsPublish, 1)
+                .eq(FlowDefinition::getPublishStatus, 1)
                 .eq(FlowDefinition::getDeleted, 0)
                 .orderByDesc(FlowDefinition::getCreatedAt)
                 .last("LIMIT 1"))

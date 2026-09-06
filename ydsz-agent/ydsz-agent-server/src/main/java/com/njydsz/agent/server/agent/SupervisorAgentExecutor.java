@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.agent;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -679,7 +680,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
             AgentDefinition.Type.valueOf(type),
             request.getSystemPrompt(),
             List.of(),
-            properties.getLlm().getTemperature(),
+            BigDecimal.valueOf(properties.getLlm().getTemperature()),
             properties.getLlm().getMaxTokens(),
             request.getMaxIterations(),
             properties.getLlm().getDefaultModel());

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
@@ -53,6 +53,7 @@ public class ColdDataArchivalService {
   private final FileNodeRepository fileNodeRepository;
   private final NextwikiProperties nextwikiProperties;
   private final IFileStorageProvider fileStorageProvider;
+  private final NextwikiStructMapper mapper;
 
   /**
    * 扫描并归档冷数据。
@@ -137,7 +138,7 @@ public class ColdDataArchivalService {
       storage.changeStorageClass(file.getBucketName(), file.getStorageKey(), "STANDARD");
       // 更新元数据标记
       file.setStorageClass("STANDARD");
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(file));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(file));
       log.info("[ColdDataArchival] 解冻请求已提交: fileNodeId={}, name={}", file.getId(), file.getName());
       return true;
     } catch (UnsupportedOperationException e) {
@@ -172,7 +173,7 @@ public class ColdDataArchivalService {
       storage.changeStorageClass(file.getBucketName(), file.getStorageKey(), storageClass);
       // 标记文件为已归档
       file.setStorageClass(storageClass);
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(file));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(file));
       log.info("[ColdDataArchival] 归档文件: fileNodeId={}, name={}, -> {}", file.getId(),
           file.getName(), storageClass);
     } catch (UnsupportedOperationException e) {

@@ -96,6 +96,12 @@ public class UserInfoProperties {
   /** 默认alertPasswordSprayThreshold值（可被配置文件覆盖） */
   private static final int DEFAULT_ALERT_PASSWORD_SPRAY_THRESHOLD = 5;
 
+  /** OAuth2 客户端注册表默认初始容量。 */
+  private static final int OAUTH2_CLIENTS_MAP_CAPACITY = 16;
+
+  /** 分端会话限制配置默认初始容量。 */
+  private static final int MAX_SESSIONS_PER_DEVICE_MAP_CAPACITY = 8;
+
   /** 默认 access_token 有效期：2 小时（7200 秒）。 */
   private static final long DEFAULT_TOKEN_TTL_SECONDS = 7200;
 
@@ -169,7 +175,7 @@ public class UserInfoProperties {
   private int bcryptStrength = DEFAULT_BCRYPT_STRENGTH;
 
   /** OAuth2 客户端注册表（clientId → 客户端配置）。 */
-  private Map<String, OAuth2Client> oauth2Clients = new HashMap<>(16);
+  private Map<String, OAuth2Client> oauth2Clients = new HashMap<>(OAUTH2_CLIENTS_MAP_CAPACITY);
 
   /** 密码历史记录保留条数。 */
   private int passwordHistoryCount = DEFAULT_PASSWORD_HISTORY_COUNT;
@@ -235,7 +241,7 @@ public class UserInfoProperties {
    *       api: -1
    * </pre>
    */
-  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>(8);
+  private Map<String, Integer> maxSessionsPerDeviceType = new HashMap<>(MAX_SESSIONS_PER_DEVICE_MAP_CAPACITY);
 
   /**
    * 获取指定设备类型的最大会话数。

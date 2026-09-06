@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.agent;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -469,7 +470,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
         resolveNodeAgentType(node.getAgentType()),
         node.getPrompt(),
         List.of(),
-        properties.getLlm().getTemperature(),
+        BigDecimal.valueOf(properties.getLlm().getTemperature()),
         properties.getLlm().getMaxTokens(),
         getNodeMaxIterations(node),
         null);

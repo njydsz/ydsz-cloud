@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.server.job;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.TrashItemDTO;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
@@ -32,7 +33,7 @@ public class NextwikiScheduledJobs {
   private final TrashDomainService trashDomainService;
   private final TrashItemRepository trashItemRepository;
   private final SearchApplicationService searchApplicationService;
-  private final NextwikiConverter nextwikiConverter;
+  private final NextwikiStructMapper mapper;
 
   /** 每天凌晨 2 点清理过期回收站条目 */
   @Scheduled(cron = "0 0 2 * * ?")
@@ -40,7 +41,9 @@ public class NextwikiScheduledJobs {
   public void cleanupExpiredTrash() {
     log.info("[NextwikiScheduledJobs] 开始清理过期回收站条目");
     List<TrashItemVO> expiredVOs = trashItemRepository.findExpiredItems(100);
-    List<TrashItemDTO> expiredDTOs = nextwikiConverter.trashItemListToDTO(expiredVOs);
+    List<TrashItemDTO> expiredDTOs = expiredVOs.stream()
+        .map(mapper::trashItemVOToDTO)
+        .collect(Collectors.toList());
     int cleaned = trashDomainService.cleanupExpiredItems(expiredDTOs, SystemConstants.SYSTEM_USER_ID);
     log.info("[NextwikiScheduledJobs] 清理完成: count={}", cleaned);
   }

@@ -128,6 +128,22 @@ public interface NextwikiStructMapper {
    */
   List<FileNodeDTO> fileNodeListVOToDTO(List<FileNodeVO> vos);
 
+  /**
+   * 将 {@link FileNodeDTO} 直接转换为 {@link FileNodeVO}（DTO → VO 一步到位）。
+   *
+   * @param dto 文件节点 DTO
+   * @return 文件节点 VO；入参为 {@code null} 时返回 {@code null}
+   */
+  FileNodeVO fileNodeDTOtoVO(FileNodeDTO dto);
+
+  /**
+   * 将 {@link FileNodeDTO} 列表直接批量转换为 {@link FileNodeVO} 列表。
+   *
+   * @param dtos 文件节点 DTO 列表
+   * @return 文件节点 VO 列表；入参为 {@code null} 或空时返回空列表
+   */
+  List<FileNodeVO> fileNodeListDTOtoVO(List<FileNodeDTO> dtos);
+
   // ==================== FileVersion 转换 ====================
 
   FileVersionVO fileVersionToVO(FileVersion entity);
@@ -142,6 +158,22 @@ public interface NextwikiStructMapper {
 
   List<FileVersionDTO> fileVersionListVOToDTO(List<FileVersionVO> vos);
 
+  /**
+   * 将 {@link FileVersionDTO} 直接转换为 {@link FileVersionVO}（DTO → VO 一步到位）。
+   *
+   * @param dto 文件版本 DTO
+   * @return 文件版本 VO；入参为 {@code null} 时返回 {@code null}
+   */
+  FileVersionVO fileVersionDTOtoVO(FileVersionDTO dto);
+
+  /**
+   * 将 {@link FileVersion} 实体列表批量转换为 {@link FileVersionDTO} 列表。
+   *
+   * @param entities 文件版本实体列表（如 {@code versionRepository.findByFileNodeId(...)} 返回值）
+   * @return 文件版本 DTO 列表；入参为 {@code null} 或空时返回空列表
+   */
+  List<FileVersionDTO> fileVersionListToDTO(List<FileVersion> entities);
+
   // ==================== FileComment 转换 ====================
 
   FileCommentVO fileCommentToVO(FileComment entity);
@@ -155,6 +187,14 @@ public interface NextwikiStructMapper {
   // ==================== SearchIndex 转换 ====================
 
   SearchIndexVO searchIndexToVO(SearchIndex entity);
+
+  /**
+   * 将 {@link SearchIndex} 实体直接转换为 {@link SearchIndexDTO}（Entity → DTO 一步到位）。
+   *
+   * @param entity 搜索索引实体
+   * @return 搜索索引 DTO；入参为 {@code null} 时返回 {@code null}
+   */
+  SearchIndexDTO searchIndexToDTO(SearchIndex entity);
 
   List<SearchIndexVO> searchIndexListToVO(List<SearchIndex> entities);
 
