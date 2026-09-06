@@ -85,5 +85,11 @@
             <artifactId>mapstruct</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- P1-5: common-excel（UserImportResultDTO 继承 ExcelImportResult 基类） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

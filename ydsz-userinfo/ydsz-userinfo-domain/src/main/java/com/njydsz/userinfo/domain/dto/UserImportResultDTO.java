@@ -1,38 +1,35 @@
 package com.njydsz.userinfo.domain.dto;
 
+import com.njydsz.common.excel.api.result.ExcelImportResult;
+
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 /**
- * 用户批量导入结果 DTO
+ * 用户批量导入结果 DTO。
  *
- * <p>封装批量导入的执行结果，包含成功数、失败数、失败明细等详细信息。
+ * <p>封装批量导入的执行结果，继承通用 {@link ExcelImportResult} 基类。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserImportResultDTO {
-
-  /** 导入总数 */
-  private int totalCount;
-
-  /** 成功导入数 */
-  private int successCount;
-
-  /** 失败数 */
-  private int failCount;
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class UserImportResultDTO extends ExcelImportResult {
 
   /** 失败明细列表（行号 + 原因） */
   private String failDetails;
 
   /**
-   * 创建成功结果
+   * 创建导入结果（兼容原有静态工厂）。
    *
    * @param totalCount 总数
    * @param successCount 成功数

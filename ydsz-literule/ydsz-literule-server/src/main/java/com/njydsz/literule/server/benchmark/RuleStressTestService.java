@@ -14,7 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 
@@ -109,9 +109,7 @@ public class RuleStressTestService {
    */
   private StressTestResult runInternal(
       String ruleCode, List<Map<String, Object>> factsList, int threads, int iterations) {
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 压测服务需要短生命周期并发线程池，经 common-thread ExecutorUtils 创建
-    ExecutorService executor = ExecutorUtils.newFixedThreadPool(threads, "literule-stress");
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    ExecutorService executor = InternalExecutorFactory.newFixedThreadPool("literule-stress", threads);
     try {
       int perThread = Math.max(1, iterations / threads);
       int remainder = iterations % threads;

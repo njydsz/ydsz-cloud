@@ -23,6 +23,11 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  *   <li>{@code audit.write.latency} (Timer) — 批量写入延迟
  * </ul>
  *
+ * <p><b>YDIZ-COMMON-005 豁免说明</b>：本文件位于 {@code ydzs-common-audit} 基础设施层（L5），
+ * 负责为平台提供统一审计指标注册能力。业务模块不应直接注入 {@code MeterRegistry}，而应通过
+ * 本模块暴露的 {@link com.njydsz.common.audit.core.AuditRecorder} 写入审计数据，由本模块统一收集指标。
+ * 本模块自身作为基础设施实现，必须直接使用 {@link MeterBinder} 契约注册指标。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

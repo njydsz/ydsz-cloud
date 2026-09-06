@@ -24,6 +24,11 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-thread</artifactId>
     </dependency>
+    <!-- P2-4: common-json（TemplateImportExportService 构建 manifest JSON 使用 YdszJson，避免字段含特殊字符破坏结构） -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-json</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity-engine-core</artifactId>

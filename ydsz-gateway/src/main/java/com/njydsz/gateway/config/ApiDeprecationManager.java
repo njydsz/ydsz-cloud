@@ -140,7 +140,7 @@ public class ApiDeprecationManager {
       return Collections.emptyList();
     }
 
-    List<DeprecatedApiConfig> matched = new ArrayList<>();
+    List<DeprecatedApiConfig> matched = new ArrayList<>(entries.size());
     for (DeprecationProperties.DeprecatedApiEntry entry : entries) {
       String entryPath = entry.getPath();
       if (entryPath != null && !entryPath.isBlank() && path.startsWith(entryPath)) {
@@ -157,7 +157,7 @@ public class ApiDeprecationManager {
    * @return 响应头 Map
    */
   private Map<String, String> buildHeaders(DeprecatedApiConfig config) {
-    HashMap<String, String> headers = new HashMap<>();
+    HashMap<String, String> headers = new HashMap<>(8);
 
     // Deprecation 头（RFC 9745）：@since 格式
     if (config.since != null && !config.since.isBlank()) {

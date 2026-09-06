@@ -143,7 +143,7 @@ public final class RuleGraphValidator {
     }
 
     // 4. 根节点检测：必须有且仅有一个根节点
-    List<String> rootNodeIds = new ArrayList<>();
+    List<String> rootNodeIds = new ArrayList<>(4);
     for (ChainNodeDTO node : nodes) {
       if ("CHAIN".equals(node.getNodeType())
           && (node.getParentNodeId() == null || node.getParentNodeId().isBlank())) {

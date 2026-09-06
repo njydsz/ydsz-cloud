@@ -247,7 +247,7 @@ public class FlowSimulator {
     }
 
     // 网关节点：按条件表达式筛选
-    List<FlowSkipVO> matched = new ArrayList<>();
+    List<FlowSkipVO> matched = new ArrayList<>(allSkips.size());
     boolean hasCondition = false;
     for (FlowSkipVO skip : allSkips) {
       String cond = skip.getSkipCondition();

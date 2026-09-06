@@ -189,7 +189,8 @@ private static final int MAX_PAGE_SIZE = 100;
       }
     }
     // 3. ROLE/DEPT 匹配 — P1-9: 批量 IN 查询替代循环中的 N 次单条查询
-    Collection<String> multiAssignees = new ArrayList<>();
+    int estimatedSize = (roleCodes != null ? roleCodes.size() : 0) + (deptIds != null ? deptIds.size() : 0);
+    Collection<String> multiAssignees = new ArrayList<>(Math.max(estimatedSize, 8));
     if (roleCodes != null) {
       multiAssignees.addAll(roleCodes);
     }

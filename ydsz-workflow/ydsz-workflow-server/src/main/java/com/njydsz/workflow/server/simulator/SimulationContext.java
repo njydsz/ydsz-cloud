@@ -33,13 +33,13 @@ public class SimulationContext implements Serializable {
   private String currentNodeCode;
 
   /** 已访问节点列表（按访问顺序） */
-  private final List<String> visitedNodes = new ArrayList<>();
+  private final List<String> visitedNodes = new ArrayList<>(16);
 
   /** 模拟步骤序列 */
-  private final List<SimulationStep> steps = new ArrayList<>();
+  private final List<SimulationStep> steps = new ArrayList<>(16);
 
   /** 警告信息（如条件永远不满足） */
-  private final List<String> warnings = new ArrayList<>();
+  private final List<String> warnings = new ArrayList<>(8);
 
   /** 当前模拟步数 */
   private int stepCount = 0;

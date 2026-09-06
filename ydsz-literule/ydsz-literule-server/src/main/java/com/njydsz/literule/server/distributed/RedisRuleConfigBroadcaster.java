@@ -32,6 +32,10 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  *   {"sourceNodeId":"hostA:1234","event":{"ruleCode":"R001","changeType":"UPDATE","operator":"admin"}}
  * </pre>
  *
+ * <p><b>Redisson 使用说明</b>：本文件使用 Redisson {@code RTopic} 作为 Redis Pub/Sub 的消息通道，
+ * 属于<b>发布订阅</b>场景，非分布式锁用途，不违反 {@code YDIZ-COMMON-006}（该规则仅约束 {@code RLock} 直用）。
+ * 豁免原因：{@code RTopic} 是跨实例配置同步的核心通道，{@code ydsz-common-redis} 当前未提供 Pub/Sub 封装。
+ *
  * @since 26.09.01
  * @author ydsz-team
  */

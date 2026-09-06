@@ -39,7 +39,7 @@ public class DeprecationProperties {
   private boolean enabled = true;
 
   /** 已弃用 API 配置列表 */
-  private List<DeprecatedApiEntry> apis = new ArrayList<>();
+  private List<DeprecatedApiEntry> apis = new ArrayList<>(8);
 
   /** 单条弃用 API 配置项 */
   @Data

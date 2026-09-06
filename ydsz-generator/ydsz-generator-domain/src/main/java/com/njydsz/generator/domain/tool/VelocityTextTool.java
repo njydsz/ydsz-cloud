@@ -64,24 +64,13 @@ public class VelocityTextTool {
   }
 
   /**
-   * 驼峰转下划线。
+   * 驼峰转下划线（委托 common-util {@link StringUtils#toUnderScoreCase}）。
    *
    * @param input 驼峰命名字符串（如 userName）
    * @return 下划线命名字符串（如 user_name）
    */
   public String snakeCase(String input) {
-    if (input == null || input.isEmpty()) {
-      return input;
-    }
-    StringBuilder sb = new StringBuilder();
-    for (char c : input.toCharArray()) {
-      if (Character.isUpperCase(c)) {
-        sb.append('_').append(Character.toLowerCase(c));
-      } else {
-        sb.append(c);
-      }
-    }
-    return sb.toString();
+    return StringUtils.toUnderScoreCase(input);
   }
 
   /**

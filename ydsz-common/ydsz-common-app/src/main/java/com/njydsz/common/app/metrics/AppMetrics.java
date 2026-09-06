@@ -30,6 +30,11 @@ import com.njydsz.common.auth.metrics.AuthMetrics;
  *
  * <p><b>注意：</b>请求处理耗时由 Spring MVC 内置的 {@code http.server.requests} 指标覆盖， 本类不再重复采集，避免 URI 标签基数爆炸问题。
  *
+ * <p><b>YDIZ-COMMON-005 豁免说明</b>：本文件位于 {@code ydzs-common-app} 基础设施层（L6），
+ * 负责为平台提供统一的 App 端指标采集契约实现。业务模块不应直接注入 {@code MeterRegistry}，而应通过
+ * 本模块暴露的 {@link AuthMetrics} 记录业务指标，由本模块统一注册到 Micrometer。
+ * 本模块自身作为基础设施实现，必须直接使用 {@link MeterRegistry} 注册指标。
+ *
  * @author ydsz-team
  * @since 26.09.01
  * @see AuthMetrics

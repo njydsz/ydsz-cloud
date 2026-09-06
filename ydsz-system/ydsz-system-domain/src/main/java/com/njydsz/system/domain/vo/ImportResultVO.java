@@ -1,36 +1,25 @@
 package com.njydsz.system.domain.vo;
 
-import java.util.List;
+import com.njydsz.common.excel.api.result.ExcelImportResult;
 
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 /**
- * 导入结果 VO
+ * 导入结果 VO（系统模块）。
  *
- * <p>封装 Excel 导入的结果统计信息。
+ * <p>封装 Excel 导入的结果统计信息，继承通用 {@link ExcelImportResult} 基类。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Data
-@Builder
-public class ImportResultVO {
-
-  /** 总行数 */
-  private int totalCount;
-
-  /** 成功数 */
-  private int successCount;
-
-  /** 失败数 */
-  private int failCount;
-
-  /** 跳过的行数（重复或无效数据） */
-  private int skipCount;
-
-  /** 错误信息列表 */
-  private List<String> errors;
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class ImportResultVO extends ExcelImportResult {
 
   /** 导入结果消息 */
   private String message;

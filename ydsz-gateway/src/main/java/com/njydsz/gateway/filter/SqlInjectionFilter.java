@@ -88,10 +88,10 @@ import com.njydsz.gateway.config.SqlInjectionProperties;
 public class SqlInjectionFilter implements GlobalFilter, Ordered {
 
   /** STANDARD 模式规则：覆盖常见 SQL 注入特征 */
-  private static final List<Pattern> STANDARD_PATTERNS = new ArrayList<>();
+  private static final List<Pattern> STANDARD_PATTERNS = new ArrayList<>(16);
 
   /** STRICT 模式规则：在 STANDARD 基础上增加更多规则 */
-  private static final List<Pattern> STRICT_PATTERNS = new ArrayList<>();
+  private static final List<Pattern> STRICT_PATTERNS = new ArrayList<>(16);
 
   // ---- 经典注入模式 ----
   /** 经典恒真注入：' OR '1'='1、' OR 1=1、' OR ''=' */

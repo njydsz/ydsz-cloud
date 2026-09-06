@@ -481,7 +481,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
       return new HashMap<>(0);
     }
     String parentId = child.getParentInstanceId();
-    Map<String, Object> result = new HashMap<>();
+    Map<String, Object> result = new HashMap<>(16);
     // 先放入父流程变量
     if (parentId != null) {
       Map<String, Object> parentVars = instanceService.getVariables(parentId);
@@ -509,8 +509,8 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (parentInstanceId == null) {
       return List.of();
     }
-    List<Map<String, Object>> tree = new ArrayList<>();
     List<FlowInstanceVO> children = instanceRepository.findChildren(parentInstanceId);
+    List<Map<String, Object>> tree = new ArrayList<>(children.size());
     for (FlowInstanceVO child : children) {
       Map<String, Object> node = new LinkedHashMap<>();
       node.put("instanceId", child.getId());

@@ -28,6 +28,10 @@ import com.njydsz.common.json.YdszJson;
  *
  * <p>心跳超时清理采用惰性删除策略：{@link #getAliveNodes()} 时过滤超时节点， 不依赖后台定时任务，降低系统复杂度。
  *
+ * <p><b>Redisson 使用说明</b>：本文件使用 Redisson {@code RMap} 作为 Redis Hash 数据结构的客户端，
+ * 属于<b>缓存/数据结构</b>场景，非分布式锁用途，不违反 {@code YDIZ-COMMON-006}（该规则仅约束 {@code RLock} 直用）。
+ * 豁免原因：{@code RMap} 提供原子性 hash 操作，且 {@code ydsz-common-redis} 当前未提供对应封装。
+ *
  * @since 26.09.01
  * @author ydsz-team
  */

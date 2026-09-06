@@ -283,7 +283,7 @@ public class SseEmitterService {
     } catch (NumberFormatException e) {
       return new ArrayList<>(0);
     }
-    List<SseEventEntry> missed = new ArrayList<>();
+    List<SseEventEntry> missed = new ArrayList<>(log.size());
     for (SseEventEntry entry : log) {
       if (entry.getEventId() > lastId) {
         missed.add(entry);

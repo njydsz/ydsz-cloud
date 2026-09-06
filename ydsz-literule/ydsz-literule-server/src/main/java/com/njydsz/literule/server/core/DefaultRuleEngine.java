@@ -20,7 +20,7 @@ import org.slf4j.MDC;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.RuleEngine;
@@ -190,9 +190,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   private static ExecutorService createDefaultInjectionExecutor() {
     int poolSize =
         Math.max(DEFAULT_MIN_POOL_SIZE, Runtime.getRuntime().availableProcessors() * DEFAULT_POOL_MULTIPLIER);
-    // CHECKSTYLE.OFF: RegexpSinglelineJava - 规则注入默认线程池，线程数由 CPU 核数动态计算，守护线程
-    ExecutorService executor = ExecutorUtils.newFixedThreadPool(poolSize, "literule-injection");
-    // CHECKSTYLE.ON: RegexpSinglelineJava
+    ExecutorService executor = InternalExecutorFactory.newFixedThreadPool("literule-injection", poolSize);
     return executor;
   }
 

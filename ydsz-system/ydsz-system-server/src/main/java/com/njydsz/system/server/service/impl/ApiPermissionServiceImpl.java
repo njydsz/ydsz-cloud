@@ -1,6 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.mvc.condition.PathPatternsRequestConditio
 import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.web.util.pattern.PathPattern;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
@@ -256,12 +258,14 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
    * @return URL 模式字符串列表
    */
   private List<String> extractUrlPatterns(RequestMappingInfo mappingInfo) {
-    List<String> patterns = new ArrayList<>();
     PathPatternsRequestCondition pathPatternsCondition = mappingInfo.getPathPatternsCondition();
     if (pathPatternsCondition != null) {
-      pathPatternsCondition.getPatterns().forEach(p -> patterns.add(p.getPatternString()));
+      Collection<PathPattern> rawPatterns = pathPatternsCondition.getPatterns();
+      List<String> patterns = new ArrayList<>(rawPatterns.size());
+      rawPatterns.forEach(p -> patterns.add(p.getPatternString()));
       return patterns;
     }
+    List<String> patterns = new ArrayList<>(8);
     PatternsRequestCondition patternsCondition = mappingInfo.getPatternsCondition();
     if (patternsCondition != null) {
       patterns.addAll(patternsCondition.getPatterns());

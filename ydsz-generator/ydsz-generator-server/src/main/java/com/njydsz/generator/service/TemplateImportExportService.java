@@ -6,7 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
@@ -158,26 +161,31 @@ public class TemplateImportExportService {
     return toSave.size();
   }
 
+  /**
+   * 构建导出清单 JSON（P2-4：委托 common-json YdszJson 序列化，避免字段含特殊字符破坏结构）。
+   *
+   * @param group     模板分组
+   * @param templates 模板列表
+   * @return JSON 格式清单
+   */
   private String buildManifest(GenTemplateGroup group, List<GenTemplate> templates) {
-    StringBuilder sb = new StringBuilder(MANIFEST_BUILDER_CAPACITY);
-    sb.append("{\n");
-    sb.append("  \"groupName\": \"").append(group.getName()).append("\",\n");
-    sb.append("  \"description\": \"").append(
-        group.getDescription() == null ? "" : group.getDescription()).append("\",\n");
-    sb.append("  \"exportTime\": \"").append(LocalDateTime.now()).append("\",\n");
-    sb.append("  \"templateCount\": ").append(templates.size()).append(",\n");
-    sb.append("  \"templates\": [\n");
-    for (int i = 0; i < templates.size(); i++) {
-      GenTemplate t = templates.get(i);
-      sb.append("    {\"fileName\": \"").append(t.getFileName())
-          .append("\", \"hash\": \"").append(t.getHash()).append("\"}");
-      if (i < templates.size() - 1) {
-        sb.append(",");
-      }
-      sb.append("\n");
+    Map<String, Object> manifest = new LinkedHashMap<>(8);
+    manifest.put("groupName", group.getName());
+    manifest.put("description", group.getDescription() == null ? "" : group.getDescription());
+    manifest.put("exportTime", LocalDateTime.now()
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+    manifest.put("templateCount", templates.size());
+
+    List<Map<String, String>> templateInfos = new ArrayList<>(templates.size());
+    for (GenTemplate t : templates) {
+      Map<String, String> info = new LinkedHashMap<>(4);
+      info.put("fileName", t.getFileName());
+      info.put("hash", t.getHash());
+      templateInfos.add(info);
     }
-    sb.append("  ]\n}");
-    return sb.toString();
+    manifest.put("templates", templateInfos);
+
+    return YdszJson.stringify(manifest);
   }
 
   private String extractParentPath(String fileName) {

@@ -21,7 +21,7 @@ public interface MsgOfflineMapper extends BaseMapper<MsgOffline> {
   /**
    * P3-6: 批量插入离线消息（XML foreach 单条 INSERT VALUES (...), (...)）。
    *
-   * <p>调用方需在传入前用 {@code IdWorker.getIdStr()} 预生成 ID 赋给每个 entity， 以保证批量 insert 后能拿到主键。
+   * <p>调用方需在传入前用 {@code IdGenerator.nextId()} 预生成 ID 赋给每个 entity， 以保证批量 insert 后能拿到主键。
    *
    * @param list 离线消息实体列表
    * @return 影响行数

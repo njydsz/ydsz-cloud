@@ -73,9 +73,10 @@ public abstract class AbstractModuleCacheKeyBuilder {
    * @return 拼接后的缓存键
    */
   protected String buildKeyPattern(String entity, String... segments) {
-    String[] fullSegments = new String[segments.length + 1];
-    fullSegments[0] = entity;
-    System.arraycopy(segments, 0, fullSegments, 1, segments.length);
-    return CacheKeyBuilder.buildPattern(module, fullSegments);
+    String[] fullSegments = new String[segments.length + 2];
+    fullSegments[0] = module;
+    fullSegments[1] = entity;
+    System.arraycopy(segments, 0, fullSegments, 2, segments.length);
+    return CacheKeyBuilder.buildPattern(fullSegments);
   }
 }

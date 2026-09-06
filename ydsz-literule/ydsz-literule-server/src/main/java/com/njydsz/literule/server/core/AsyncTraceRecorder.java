@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.server.spi.TraceRecorder;
 
@@ -58,7 +58,7 @@ public class AsyncTraceRecorder implements TraceRecorder {
     this.queue = new LinkedBlockingQueue<>(queueCapacity);
     this.batchSize = batchSize;
     this.flushIntervalMs = flushIntervalMs;
-    this.worker = ExecutorUtils.newSingleThreadExecutor("literule-trace-writer");
+    this.worker = InternalExecutorFactory.newFixedThreadPool("literule-trace-writer", 1);
     this.worker.submit(this::flushLoop);
     log.info(
         "[LiteRule-Trace] 异步轨迹记录器已启动: queueCapacity={}, batchSize={}, flushIntervalMs={}",

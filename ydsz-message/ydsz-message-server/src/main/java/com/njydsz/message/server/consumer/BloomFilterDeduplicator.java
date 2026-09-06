@@ -3,14 +3,13 @@ package com.njydsz.message.server.consumer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -86,23 +85,9 @@ public class BloomFilterDeduplicator {
   private final AtomicReference<BloomFilter<String>> previousFilter =
       new AtomicReference<>();
 
-  /**
-   * 窗口翻转调度器（单线程，守护线程）。
-   *
-   * <p>CHECKSTYLE.OFF 原因：BloomFilter 窗口翻转需要独立调度线程，避免与消费者线程竞争；
-   * 线程数固定为1，不随负载增长。
-   */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava - BloomFilter 窗口翻转调度器，单线程固定
+  /** 窗口翻转调度器（单线程，守护线程，由 InternalExecutorFactory 统一管理） */
   private final ScheduledExecutorService scheduler =
-      new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-          Thread t = new Thread(r, "message-bloom-rotator");
-          t.setDaemon(true);
-          return t;
-        }
-      });
-  // CHECKSTYLE.ON: RegexpSinglelineJava
+      InternalExecutorFactory.newSingleThreadScheduledPool("message-bloom-rotator");
 
   /** 预期最大消息数/窗口 */
   @Value("${ydsz.message.consumer.bloom-filter-capacity:1000000}")

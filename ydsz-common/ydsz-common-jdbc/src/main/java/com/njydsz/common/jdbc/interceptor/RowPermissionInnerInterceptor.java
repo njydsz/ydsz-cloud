@@ -27,9 +27,9 @@ import net.sf.jsqlparser.statement.update.Update;
 import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.njydsz.common.core.constant.DataScopeConstants;
+import com.njydsz.common.domain.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
-import com.njydsz.common.domain.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.util.string.StringUtils;
 
