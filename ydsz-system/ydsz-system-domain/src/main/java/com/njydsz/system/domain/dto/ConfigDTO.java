@@ -27,7 +27,7 @@ import com.njydsz.common.safe.annotation.Xss;
  *   <li>{@code configValue} — 配置值
  *   <li>{@code valueType} — 值类型: STRING/NUMBER/BOOLEAN/JSON
  *   <li>{@code defaultValue} — 默认值（配置未设置时使用）
- *   <li>{@code isPublic} — 是否对前端公开: 1 公开 / 0 仅后端
+ *   <li>{@code publicFlag} — 是否对前端公开: true 公开 / false 仅后端
  *   <li>{@code sortOrder} — 排序序号
  *   <li>{@code status} — 启用状态: ENABLED/DISABLED
  * </ul>
@@ -65,7 +65,7 @@ public class ConfigDTO {
   @Xss(message = "配置项说明包含非法内容")
   private String description;
 
-  private Integer isPublic;
+  private Boolean publicFlag;
 
   private Integer sortOrder;
 

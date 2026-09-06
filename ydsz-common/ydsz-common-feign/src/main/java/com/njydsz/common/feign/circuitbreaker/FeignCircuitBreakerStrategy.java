@@ -1,5 +1,7 @@
 package com.njydsz.common.feign.circuitbreaker;
 
+import java.math.BigDecimal;
+
 /**
  * Feign 熔断器策略接口。
  *
@@ -31,9 +33,9 @@ public interface FeignCircuitBreakerStrategy {
     /**
      * 获取失败率（百分比）。
      *
-     * @return 失败率（0-100）
+     * @return 失败率（0-100），使用 BigDecimal 避免浮点精度丢失
      */
-    float getFailureRate();
+    BigDecimal getFailureRate();
 
     /**
      * 获取总调用次数。

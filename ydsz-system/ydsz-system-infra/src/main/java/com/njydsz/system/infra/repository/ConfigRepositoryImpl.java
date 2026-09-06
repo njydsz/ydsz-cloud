@@ -47,7 +47,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   private static final int NOT_DELETED = 0;
 
   /** 公开配置标志：公开 */
-  private static final int PUBLIC_CONFIG = 1;
+  private static final boolean PUBLIC_CONFIG = true;
 
   private final ConfigMapper configMapper;
 
@@ -83,7 +83,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   public List<ConfigVO> findPublicEnabled() {
     return converter.configListToVO(configMapper.selectList(
         new LambdaQueryWrapper<Config>()
-            .eq(Config::getIsPublic, PUBLIC_CONFIG)
+            .eq(Config::getPublicFlag, PUBLIC_CONFIG)
             .eq(Config::getStatus, STATUS_ENABLED)
             .orderByAsc(Config::getSortOrder)));
   }

@@ -21,7 +21,7 @@
         <foreach collection="items" item="item" separator=",">
             (
                 #{item.id}, #{item.configGroup}, #{item.configKey}, #{item.configValue}, #{item.valueType},
-                #{item.defaultValue}, #{item.description}, #{item.isPublic}, #{item.sortOrder},
+                #{item.defaultValue}, #{item.description}, #{item.publicFlag}, #{item.sortOrder},
                 #{item.status}, #{item.tenantId}, #{item.deleted}, #{item.revision},
                 #{item.createdAt}, #{item.createdBy}, #{item.updatedAt}, #{item.updatedBy}
             )

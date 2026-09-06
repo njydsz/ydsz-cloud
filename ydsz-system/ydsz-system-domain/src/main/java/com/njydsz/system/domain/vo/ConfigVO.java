@@ -20,7 +20,7 @@ import com.njydsz.system.domain.entity.Config;
  *   <li>{@code configValue} — 配置值，序列化时按 {@code valueType} 转换： {@code STRING} 原样输出；{@code NUMBER /
  *       BOOLEAN / JSON} 解析为对应类型
  *   <li>{@code defaultValue} — 默认值（{@code configValue} 为空时回退）
- *   <li>{@code isPublic} — 是否对前端公开：{@code 1} 公开 / {@code 0} 仅后端； 前端「公开配置」接口仅返回 {@code isPublic=1}
+ *   <li>{@code publicFlag} — 是否对前端公开：{@code true} 公开 / {@code false} 仅后端； 前端「公开配置」接口仅返回 {@code publicFlag=true}
  *       的项
  * </ul>
  *
@@ -62,7 +62,7 @@ public class ConfigVO {
 
   private String description;
 
-  private Integer isPublic;
+  private Boolean publicFlag;
 
   private Integer sortOrder;
 
