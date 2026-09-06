@@ -39,6 +39,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.sentry.sla.SlaMetric;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.RefreshRequest;
@@ -186,6 +187,7 @@ public class AuthController {
       content = "'用户登录: ' + #request.username")
   @RateLimit(resource = "userinfo.auth.login", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:AuthController:login:lock", ttlSeconds = 5)
+  @SlaMetric(name = "userinfo.auth.login", description = "用户登录", thresholdMillis = 300, slaTarget = 0.995)
   @PostMapping("/login")
   @Operation(summary = "用户登录", description = "账号密码登录，返回 access_token 和 refresh_token")
   public YdszResponse<LoginVO> login(
