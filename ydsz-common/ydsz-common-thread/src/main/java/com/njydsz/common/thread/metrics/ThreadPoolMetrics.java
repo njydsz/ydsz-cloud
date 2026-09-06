@@ -1,5 +1,7 @@
 package com.njydsz.common.thread.metrics;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -139,12 +141,14 @@ public class ThreadPoolMetrics implements MeterBinder {
 
       Gauge.builder(
               metricPrefix + ".queue.usage",
-              executor,
-              e -> {
-                int queueSize = e.getQueue() != null ? e.getQueue().size() : 0;
-                int remaining = e.getQueue() != null ? e.getQueue().remainingCapacity() : 0;
+              () -> {
+                int queueSize = executor.getQueue() != null ? executor.getQueue().size() : 0;
+                int remaining = executor.getQueue() != null ? executor.getQueue().remainingCapacity() : 0;
                 int total = queueSize + remaining;
-                return total > 0 ? (double) queueSize / total : 0.0;
+                return total > 0
+                    ? BigDecimal.valueOf(queueSize)
+                        .divide(BigDecimal.valueOf(total), 4, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
               })
           .tags(Tags.concat(tags, "pool.name", poolName))
           .description("工作队列使用率（0.0 - 1.0）")

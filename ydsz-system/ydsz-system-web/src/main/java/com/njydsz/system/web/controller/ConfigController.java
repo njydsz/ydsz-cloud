@@ -132,7 +132,7 @@ public class ConfigController {
    * <p>创建后会自动失效 Redis 缓存（{@code ydsz:system:ConfigController:save:lock}）， 并通过 {@code
    * ConfigChangeEvent} 广播变更。
    *
-   * @param dto 配置 DTO（命令入参，含 configKey / configValue / configGroup / valueType / isPublic）
+   * @param dto 配置 DTO（命令入参，含 configKey / configValue / configGroup / valueType / publicFlag）
    * @return 新创建的配置 ID
    */
   @Audit(
@@ -282,7 +282,7 @@ public class ConfigController {
   /**
    * 查询所有公开配置
    *
-   * <p>返回 {@code isPublic=true} 的全部配置项，<b>无需鉴权</b>，用于前端「公开配置」接口。
+   * <p>返回 {@code publicFlag=true} 的全部配置项，<b>无需鉴权</b>，用于前端「公开配置」接口。
    *
    * <p>公开配置仅包含前端可读、客户端可见的运行参数（如功能开关、UI 主题、登录页配置等）， 严禁将密钥、连接地址等敏感配置标记为公开。
    *

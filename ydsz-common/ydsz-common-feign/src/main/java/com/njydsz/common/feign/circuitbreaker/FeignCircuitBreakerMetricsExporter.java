@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.circuitbreaker;
 
+import java.math.BigDecimal;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -80,19 +81,19 @@ public class FeignCircuitBreakerMetricsExporter {
             () -> {
               FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
               if (strategy == null) {
-                return -1.0;
+                return -1;
               }
               FeignCircuitBreakerStrategy.CircuitBreakerState state =
                   strategy.getState(serviceName);
               return state == FeignCircuitBreakerStrategy.CircuitBreakerState.CLOSED
-                  ? 0.0
+                  ? 0
                   : state == FeignCircuitBreakerStrategy.CircuitBreakerState.OPEN
-                      ? 1.0
+                      ? 1
                       : state == FeignCircuitBreakerStrategy.CircuitBreakerState.HALF_OPEN
-                          ? 2.0
+                          ? 2
                           : state == FeignCircuitBreakerStrategy.CircuitBreakerState.FORCED_OPEN
-                              ? 3.0
-                              : -1.0;
+                              ? 3
+                              : -1;
             })
         .tag(TAG_SERVICE, serviceName)
         .description("Circuit breaker state: 0=CLOSED, 1=OPEN, 2=HALF_OPEN, 3=FORCED_OPEN")
@@ -102,7 +103,7 @@ public class FeignCircuitBreakerMetricsExporter {
             PREFIX + ".failure.rate",
             () -> {
               FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
-              return strategy != null ? strategy.getMetrics(serviceName).getFailureRate() : 0.0;
+              return strategy != null ? strategy.getMetrics(serviceName).getFailureRate() : BigDecimal.ZERO;
             })
         .tag(TAG_SERVICE, serviceName)
         .description("Failure rate percentage")
@@ -113,8 +114,8 @@ public class FeignCircuitBreakerMetricsExporter {
             () -> {
               FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
               return strategy != null
-                  ? (double) strategy.getMetrics(serviceName).getTotalCalls()
-                  : 0.0;
+                  ? strategy.getMetrics(serviceName).getTotalCalls()
+                  : 0;
             })
         .tag(TAG_SERVICE, serviceName)
         .description("Total call count")
@@ -125,8 +126,8 @@ public class FeignCircuitBreakerMetricsExporter {
             () -> {
               FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
               return strategy != null
-                  ? (double) strategy.getMetrics(serviceName).getSuccessfulCalls()
-                  : 0.0;
+                  ? strategy.getMetrics(serviceName).getSuccessfulCalls()
+                  : 0;
             })
         .tag(TAG_SERVICE, serviceName)
         .description("Successful call count")
@@ -137,8 +138,8 @@ public class FeignCircuitBreakerMetricsExporter {
             () -> {
               FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
               return strategy != null
-                  ? (double) strategy.getMetrics(serviceName).getFailedCalls()
-                  : 0.0;
+                  ? strategy.getMetrics(serviceName).getFailedCalls()
+                  : 0;
             })
         .tag(TAG_SERVICE, serviceName)
         .description("Failed call count")
@@ -149,8 +150,8 @@ public class FeignCircuitBreakerMetricsExporter {
             () -> {
               FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
               return strategy != null
-                  ? (double) strategy.getMetrics(serviceName).getSlowCalls()
-                  : 0.0;
+                  ? strategy.getMetrics(serviceName).getSlowCalls()
+                  : 0;
             })
         .tag(TAG_SERVICE, serviceName)
         .description("Slow call count")
@@ -161,8 +162,8 @@ public class FeignCircuitBreakerMetricsExporter {
             () -> {
               FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
               return strategy != null
-                  ? (double) strategy.getMetrics(serviceName).getAverageDuration()
-                  : 0.0;
+                  ? strategy.getMetrics(serviceName).getAverageDuration()
+                  : 0;
             })
         .tag(TAG_SERVICE, serviceName)
         .description("Average call duration in milliseconds")

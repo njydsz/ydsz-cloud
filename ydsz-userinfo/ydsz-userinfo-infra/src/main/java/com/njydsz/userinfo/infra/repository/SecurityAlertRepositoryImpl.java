@@ -10,8 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
 import com.njydsz.userinfo.domain.converter.SecurityAlertConverter;
+import com.njydsz.userinfo.domain.entity.SecurityAlertEntity;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.infra.mapper.SecurityAlertMapper;
 
@@ -19,8 +21,6 @@ import com.njydsz.userinfo.infra.mapper.SecurityAlertMapper;
  * 安全告警 Repository 实现。
  *
  * <p>基于 MyBatis-Plus 实现 domain 层 {@link SecurityAlertRepository} 接口。
- * 因 domain 聚合 {@code SecurityAlert} 与 infra 实体 {@code SecurityAlert} 同名冲突，
- * 依据规范 5.4 节，两者均以行内 FQN 引用并附 FQN-OK 注释。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -33,9 +33,8 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   private final SecurityAlertConverter converter;
 
   @Override
-  public com.njydsz.userinfo.domain.alert.SecurityAlert save( // FQN-OK: name conflict with SecurityAlert
-      com.njydsz.userinfo.domain.alert.SecurityAlert alert) { // FQN-OK: name conflict with SecurityAlert
-    com.njydsz.userinfo.domain.entity.SecurityAlert entity = converter.domainToEntity(alert); // FQN-OK: name conflict with SecurityAlert
+  public SecurityAlert save(SecurityAlert alert) {
+    SecurityAlertEntity entity = converter.domainToEntity(alert);
     if (alert.id() == null) {
       securityAlertMapper.insert(entity);
     } else {
@@ -45,39 +44,32 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   }
 
   @Override
-  public Optional<com.njydsz.userinfo.domain.alert.SecurityAlert> findById(String id) { // FQN-OK: name conflict with SecurityAlert
-    com.njydsz.userinfo.domain.entity.SecurityAlert entity = securityAlertMapper.selectById(id); // FQN-OK: name conflict with SecurityAlert
+  public Optional<SecurityAlert> findById(String id) {
+    SecurityAlertEntity entity = securityAlertMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToDomain);
   }
 
   @Override
-  public PageResponse<List<com.njydsz.userinfo.domain.alert.SecurityAlert>> page( // FQN-OK: name conflict with SecurityAlert
-      SecurityAlertPageQuery query) {
+  public PageResponse<List<SecurityAlert>> page(SecurityAlertPageQuery query) {
     int pageNum = query.getPageNum();
     int pageSize = query.getPageSize();
-    Page<com.njydsz.userinfo.domain.entity.SecurityAlert> page = new Page<>(pageNum, pageSize); // FQN-OK: name conflict with SecurityAlert
-    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.SecurityAlert> wrapper = // FQN-OK: name conflict with SecurityAlert
-        new LambdaQueryWrapper<>();
+    Page<SecurityAlertEntity> page = new Page<>(pageNum, pageSize);
+    LambdaQueryWrapper<SecurityAlertEntity> wrapper = new LambdaQueryWrapper<>();
     if (query.getAlertStatus() != null) {
-      wrapper.eq(com.njydsz.userinfo.domain.entity.SecurityAlert::getStatus, // FQN-OK: name conflict with SecurityAlert
-          query.getAlertStatus().name());
+      wrapper.eq(SecurityAlertEntity::getStatus, query.getAlertStatus().name());
     }
     if (query.getRiskLevel() != null) {
-      wrapper.eq(com.njydsz.userinfo.domain.entity.SecurityAlert::getRiskLevel, // FQN-OK: name conflict with SecurityAlert
-          query.getRiskLevel().name());
+      wrapper.eq(SecurityAlertEntity::getRiskLevel, query.getRiskLevel().name());
     }
     if (query.effectiveStartTime() != null) {
-      wrapper.ge(com.njydsz.userinfo.domain.entity.SecurityAlert::getCreatedAt, // FQN-OK: name conflict with SecurityAlert
-          query.effectiveStartTime());
+      wrapper.ge(SecurityAlertEntity::getCreatedAt, query.effectiveStartTime());
     }
     if (query.effectiveEndTime() != null) {
-      wrapper.le(com.njydsz.userinfo.domain.entity.SecurityAlert::getCreatedAt, // FQN-OK: name conflict with SecurityAlert
-          query.effectiveEndTime());
+      wrapper.le(SecurityAlertEntity::getCreatedAt, query.effectiveEndTime());
     }
-    wrapper.orderByDesc(com.njydsz.userinfo.domain.entity.SecurityAlert::getCreatedAt); // FQN-OK: name conflict with SecurityAlert
-    Page<com.njydsz.userinfo.domain.entity.SecurityAlert> result = // FQN-OK: name conflict with SecurityAlert
-        securityAlertMapper.selectPage(page, wrapper);
-    List<com.njydsz.userinfo.domain.alert.SecurityAlert> alerts = result.getRecords().stream() // FQN-OK: name conflict with SecurityAlert
+    wrapper.orderByDesc(SecurityAlertEntity::getCreatedAt);
+    Page<SecurityAlertEntity> result = securityAlertMapper.selectPage(page, wrapper);
+    List<SecurityAlert> alerts = result.getRecords().stream()
         .map(converter::entityToDomain)
         .toList();
     return PageResponse.success(
@@ -89,21 +81,20 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
 
   @Override
   public long countRecentAlerts(
-      com.njydsz.userinfo.domain.alert.SecurityAlert.AlertType alertType, // FQN-OK: name conflict with SecurityAlert
+      SecurityAlert.AlertType alertType,
       String userId,
       String sourceIp,
       LocalDateTime since) {
-    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.SecurityAlert> wrapper = // FQN-OK: name conflict with SecurityAlert
-        new LambdaQueryWrapper<>();
-    wrapper.eq(com.njydsz.userinfo.domain.entity.SecurityAlert::getAlertType, alertType.name()); // FQN-OK: name conflict with SecurityAlert
+    LambdaQueryWrapper<SecurityAlertEntity> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SecurityAlertEntity::getAlertType, alertType.name());
     if (userId != null) {
-      wrapper.eq(com.njydsz.userinfo.domain.entity.SecurityAlert::getUserId, userId); // FQN-OK: name conflict with SecurityAlert
+      wrapper.eq(SecurityAlertEntity::getUserId, userId);
     }
     if (sourceIp != null) {
-      wrapper.eq(com.njydsz.userinfo.domain.entity.SecurityAlert::getSourceIp, sourceIp); // FQN-OK: name conflict with SecurityAlert
+      wrapper.eq(SecurityAlertEntity::getSourceIp, sourceIp);
     }
     if (since != null) {
-      wrapper.ge(com.njydsz.userinfo.domain.entity.SecurityAlert::getCreatedAt, since); // FQN-OK: name conflict with SecurityAlert
+      wrapper.ge(SecurityAlertEntity::getCreatedAt, since);
     }
     return securityAlertMapper.selectCount(wrapper);
   }
@@ -111,9 +102,9 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   @Override
   public boolean updateStatus(
       String id,
-      com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus status, // FQN-OK: name conflict with SecurityAlert
+      SecurityAlert.AlertStatus status,
       String handlerNote) {
-    var entity = new com.njydsz.userinfo.domain.entity.SecurityAlert(); // FQN-OK: name conflict with SecurityAlert
+    SecurityAlertEntity entity = new SecurityAlertEntity();
     entity.setId(id);
     entity.setStatus(status.name());
     entity.setHandledAt(LocalDateTime.now());
@@ -122,21 +113,15 @@ public class SecurityAlertRepositoryImpl implements SecurityAlertRepository {
   }
 
   @Override
-  public List<com.njydsz.userinfo.domain.alert.SecurityAlert> findPendingAlerts( // FQN-OK: name conflict with SecurityAlert
-      com.njydsz.userinfo.domain.alert.SecurityAlert.RiskLevel riskLevel, int limit) { // FQN-OK: name conflict with SecurityAlert
-    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.SecurityAlert> wrapper = // FQN-OK: name conflict with SecurityAlert
-        new LambdaQueryWrapper<>();
-    wrapper.eq(
-        com.njydsz.userinfo.domain.entity.SecurityAlert::getStatus, // FQN-OK: name conflict with SecurityAlert
-        com.njydsz.userinfo.domain.alert.SecurityAlert.AlertStatus.PENDING.name()); // FQN-OK: name conflict with SecurityAlert
+  public List<SecurityAlert> findPendingAlerts(SecurityAlert.RiskLevel riskLevel, int limit) {
+    LambdaQueryWrapper<SecurityAlertEntity> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(SecurityAlertEntity::getStatus, SecurityAlert.AlertStatus.PENDING.name());
     if (riskLevel != null) {
-      // FQN-OK: name conflict with SecurityAlert
-    wrapper.eq(com.njydsz.userinfo.domain.entity.SecurityAlert::getRiskLevel, riskLevel.name());
+      wrapper.eq(SecurityAlertEntity::getRiskLevel, riskLevel.name());
     }
-    wrapper.orderByDesc(com.njydsz.userinfo.domain.entity.SecurityAlert::getCreatedAt); // FQN-OK: name conflict with SecurityAlert
+    wrapper.orderByDesc(SecurityAlertEntity::getCreatedAt);
     wrapper.last("LIMIT " + limit);
-    List<com.njydsz.userinfo.domain.entity.SecurityAlert> entities = // FQN-OK: name conflict with SecurityAlert
-        securityAlertMapper.selectList(wrapper);
+    List<SecurityAlertEntity> entities = securityAlertMapper.selectList(wrapper);
     return entities.stream()
         .map(converter::entityToDomain)
         .toList();

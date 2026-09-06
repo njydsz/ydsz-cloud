@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.converter.OAuth2ApplicationConverter;
+import com.njydsz.userinfo.domain.entity.OAuth2ApplicationEntity;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.domain.oauth2.OAuth2ApplicationRepository;
 import com.njydsz.userinfo.infra.mapper.OAuth2ApplicationMapper;
@@ -31,8 +32,7 @@ public class OAuth2ApplicationRepositoryImpl implements OAuth2ApplicationReposit
 
   @Override
   public OAuth2Application save(OAuth2Application application) {
-    // FQN-OK: name conflict with OAuth2Application
-    com.njydsz.userinfo.domain.entity.OAuth2Application entity = converter.domainToEntity(application);
+    OAuth2ApplicationEntity entity = converter.domainToEntity(application);
     if (application.id() == null) {
       oauth2ApplicationMapper.insert(entity);
     } else {
@@ -43,40 +43,37 @@ public class OAuth2ApplicationRepositoryImpl implements OAuth2ApplicationReposit
 
   @Override
   public Optional<OAuth2Application> findById(String id) {
-    // FQN-OK: name conflict with OAuth2Application
-    com.njydsz.userinfo.domain.entity.OAuth2Application entity = oauth2ApplicationMapper.selectById(id);
+    OAuth2ApplicationEntity entity = oauth2ApplicationMapper.selectById(id);
     return Optional.ofNullable(entity).map(converter::entityToDomain);
   }
 
   @Override
-  // FQN-OK: name conflict with OAuth2Application
   public Optional<OAuth2Application> findByClientId(String clientId) {
-    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.OAuth2Application> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(com.njydsz.userinfo.domain.entity.OAuth2Application::getClientId, clientId);
-    com.njydsz.userinfo.domain.entity.OAuth2Application entity = oauth2ApplicationMapper.selectOne(wrapper);
+    LambdaQueryWrapper<OAuth2ApplicationEntity> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(OAuth2ApplicationEntity::getClientId, clientId);
+    OAuth2ApplicationEntity entity = oauth2ApplicationMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToDomain);
   }
 
   @Override
-  // FQN-OK: name conflict with OAuth2Application
   public PageResponse<List<OAuth2Application>> page(
       OAuth2Application.ApplicationStatus status,
       String keyword,
       int pageNum,
       int pageSize) {
-    Page<com.njydsz.userinfo.domain.entity.OAuth2Application> page = new Page<>(pageNum, pageSize);
-    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.OAuth2Application> wrapper = new LambdaQueryWrapper<>();
+    Page<OAuth2ApplicationEntity> page = new Page<>(pageNum, pageSize);
+    LambdaQueryWrapper<OAuth2ApplicationEntity> wrapper = new LambdaQueryWrapper<>();
     if (status != null) {
-      wrapper.eq(com.njydsz.userinfo.domain.entity.OAuth2Application::getStatus, status.name());
+      wrapper.eq(OAuth2ApplicationEntity::getStatus, status.name());
     }
     if (keyword != null && !keyword.isBlank()) {
-      wrapper.and(w -> w.like(com.njydsz.userinfo.domain.entity.OAuth2Application::getClientId, keyword)
+      wrapper.and(w -> w.like(OAuth2ApplicationEntity::getClientId, keyword)
           .or()
-          .like(com.njydsz.userinfo.domain.entity.OAuth2Application::getClientName, keyword));
+          .like(OAuth2ApplicationEntity::getClientName, keyword));
     }
-    wrapper.orderByDesc(com.njydsz.userinfo.domain.entity.OAuth2Application::getCreatedAt);
-    Page<com.njydsz.userinfo.domain.entity.OAuth2Application> result = oauth2ApplicationMapper.selectPage(page, wrapper);
-    List<com.njydsz.userinfo.domain.oauth2.OAuth2Application> applications = result.getRecords().stream()
+    wrapper.orderByDesc(OAuth2ApplicationEntity::getCreatedAt);
+    Page<OAuth2ApplicationEntity> result = oauth2ApplicationMapper.selectPage(page, wrapper);
+    List<OAuth2Application> applications = result.getRecords().stream()
         .map(converter::entityToDomain)
         .toList();
     return PageResponse.success(
@@ -87,15 +84,13 @@ public class OAuth2ApplicationRepositoryImpl implements OAuth2ApplicationReposit
   }
 
   @Override
-  // FQN-OK: name conflict with OAuth2Application
   public List<OAuth2Application> findAllEnabled() {
-    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.OAuth2Application> wrapper = new LambdaQueryWrapper<>();
+    LambdaQueryWrapper<OAuth2ApplicationEntity> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(
-        com.njydsz.userinfo.domain.entity.OAuth2Application::getStatus,
-        com.njydsz.userinfo.domain.oauth2.OAuth2Application.ApplicationStatus.ENABLED
-            .name());
-    wrapper.orderByAsc(com.njydsz.userinfo.domain.entity.OAuth2Application::getCreatedAt);
-    List<com.njydsz.userinfo.domain.entity.OAuth2Application> entities = oauth2ApplicationMapper.selectList(wrapper);
+        OAuth2ApplicationEntity::getStatus,
+        OAuth2Application.ApplicationStatus.ENABLED.name());
+    wrapper.orderByAsc(OAuth2ApplicationEntity::getCreatedAt);
+    List<OAuth2ApplicationEntity> entities = oauth2ApplicationMapper.selectList(wrapper);
     return entities.stream()
         .map(converter::entityToDomain)
         .toList();
@@ -108,8 +103,8 @@ public class OAuth2ApplicationRepositoryImpl implements OAuth2ApplicationReposit
 
   @Override
   public boolean existsByClientId(String clientId) {
-    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.OAuth2Application> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(com.njydsz.userinfo.domain.entity.OAuth2Application::getClientId, clientId);
+    LambdaQueryWrapper<OAuth2ApplicationEntity> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(OAuth2ApplicationEntity::getClientId, clientId);
     return oauth2ApplicationMapper.selectCount(wrapper) > 0;
   }
 }

@@ -1,5 +1,7 @@
 package com.njydsz.common.excel.api.result;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -49,7 +51,7 @@ import java.util.function.Function;
  * // 方式4: 获取统计信息
  * log.info("总行数: {}", result.getTotalRows());
  * log.info("读取耗时: {}ms", result.getElapsedTime());
- * log.info("读取速度: {} 行/秒", result.getRowsPerSecond());
+ * log.info("读取速度: {} 行/秒", result.getRowsPerSecond().toPlainString());
  * }</pre>
  *
  * @param <T> 泛型参数,表示读取的数据类型
@@ -267,11 +269,13 @@ public class ExcelReadResult<T> {
    *
    * @return 读取速度,如果耗时为0则返回0
    */
-  public double getRowsPerSecond() {
+  public BigDecimal getRowsPerSecond() {
     if (elapsedTime <= 0) {
-      return 0;
+      return BigDecimal.ZERO;
     }
-    return (double) totalRows / elapsedTime * 1000;
+    return BigDecimal.valueOf(totalRows)
+        .divide(BigDecimal.valueOf(elapsedTime), 4, RoundingMode.HALF_UP)
+        .multiply(BigDecimal.valueOf(1000));
   }
 
   // ==================== Builder ====================

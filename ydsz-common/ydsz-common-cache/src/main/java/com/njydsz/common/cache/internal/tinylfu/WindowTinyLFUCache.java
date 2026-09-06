@@ -89,7 +89,7 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     this.totalCount = 0;
     this.shiftThreshold = Math.max(maxCapacity, 1000);
     this.resetThreshold = Math.max(1, this.shiftThreshold / RESET_CHUNKS);
-    this.maxWindowSize = Math.max(1, (int) (maxCapacity * 0.01));
+    this.maxWindowSize = Math.max(1, maxCapacity / 100);
     LOG.info(
         "Window-TinyLFU 缓存已创建（Caffeine 架构，并发安全增强，周期性衰减机制），maxCapacity={}, maxWindowSize={}, shiftThreshold={}",
         maxCapacity,
@@ -257,7 +257,7 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     node.queue = 2;
     addFirst(protectedHead, node);
     long pSize = protectedSize.incrementAndGet();
-    if (pSize > maxSize * 0.80) {
+    if (pSize * 100 > maxSize * 80) {
       Node<K, V> demoted = removeLast(protectedHead);
       if (demoted != null) {
         demoted.queue = 1;
@@ -568,7 +568,7 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
                 }
                 int oldMaxSize = maxSize;
                 maxSize = (int) maximumSize;
-                maxWindowSize = Math.max(1, (int) (maximumSize * 0.01));
+                maxWindowSize = (int) Math.max(1L, maximumSize / 100);
                 LOG.info(
                     "WindowTinyLFUCache 最大容量调整: {} -> {}", oldMaxSize, maxSize);
                 if (maximumSize < oldMaxSize) {
