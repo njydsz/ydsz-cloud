@@ -13,8 +13,6 @@ import com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import com.njydsz.common.core.context.TenantContext;
-import com.njydsz.common.core.context.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
@@ -43,6 +41,8 @@ import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.core.context.TenantContext;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.jdbc.exception.TenantIsolationException;
 import com.njydsz.common.jdbc.interceptor.JSqlParserHelper;
 import com.njydsz.common.tenant.config.TenantProperties;

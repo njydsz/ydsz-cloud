@@ -4,12 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.core.context.TenantContext;
-import com.njydsz.common.core.context.TenantContextHolder;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.core.context.TenantContext;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 
 /**

@@ -4,9 +4,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.message.server.reactive.ReactiveEvent;
-import com.njydsz.message.server.reactive.ReactiveSseRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -19,6 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.message.server.reactive.ReactiveEvent;
+import com.njydsz.message.server.reactive.ReactiveSseRegistry;
 
 /**
  * WebFlux 响应式推送试点 — 使用 Flux 实现服务端事件流（SSE）。
