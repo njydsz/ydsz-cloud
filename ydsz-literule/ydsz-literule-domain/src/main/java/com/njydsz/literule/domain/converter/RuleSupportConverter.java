@@ -72,6 +72,7 @@ public interface RuleSupportConverter {
 
   // ===== DecisionTable PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)

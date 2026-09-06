@@ -112,5 +112,4 @@ ydsz:
     payload-validation:
       enabled: true
       max-body-size-mb: 10
-      max-json-depth: 50
       strict-content-type: true

@@ -111,8 +111,8 @@ public class TemplateDataInitializer {
       if (idx > 0) {
         return fullPath.substring(idx + ("/templates/" + groupName + "/").length());
       }
-    } catch (Exception e) {
-      // fallback to filename only
+    } catch (final IOException e) {
+      log.warn("URI 解析异常，保留原始文件名: {}, 原因: {}", uri, e.getMessage());
     }
     return uri;
   }

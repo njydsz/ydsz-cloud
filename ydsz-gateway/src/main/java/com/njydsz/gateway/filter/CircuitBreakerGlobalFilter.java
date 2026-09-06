@@ -33,7 +33,7 @@ import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.PathGuard;
 
 /**
- * 网关全局熔断过滤器（P0-A2，基于 Resilience4j）。
+ * 网关全局熔断过滤器（基于 Resilience4j）。
  *
  * <p>按路由 ID 维护独立熔断器，对下游调用失败率超阈值时快速失败并返回 503，
  * 防止下游服务雪崩时网关被拖垮：
@@ -187,7 +187,7 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 构建熔断配置（P0-A2：可通过 {@code ydsz.gateway.circuit-breaker.*} 覆盖）。
+   * 构建熔断配置（可通过 {@code ydsz.gateway.circuit-breaker.*} 覆盖）。
    *
    * @return 熔断器配置
    */

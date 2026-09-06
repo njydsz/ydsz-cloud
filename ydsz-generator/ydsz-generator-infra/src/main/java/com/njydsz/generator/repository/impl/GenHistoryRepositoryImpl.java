@@ -25,6 +25,9 @@ import com.njydsz.generator.repository.GenHistoryRepository;
 @RequiredArgsConstructor
 public class GenHistoryRepositoryImpl implements GenHistoryRepository {
 
+  /** 单次查询最大记录数限制，防止分页参数过载。 */
+  private static final int MAX_QUERY_LIMIT = 100;
+
   private final GenHistoryMapper mapper;
 
   @Override
@@ -45,9 +48,10 @@ public class GenHistoryRepositoryImpl implements GenHistoryRepository {
 
   @Override
   public List<GenHistory> findRecent(final int limit) {
+    int safeLimit = Math.min(Math.max(limit, 1), MAX_QUERY_LIMIT);
     LambdaQueryWrapper<GenHistory> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(GenHistory::getStartedAt)
-        .last("LIMIT " + limit);
+        .last("LIMIT " + safeLimit);
     return mapper.selectList(wrapper);
   }
 

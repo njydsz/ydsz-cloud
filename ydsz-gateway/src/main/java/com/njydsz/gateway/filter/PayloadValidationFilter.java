@@ -28,10 +28,9 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  *   <li>Content-Type 严格校验（POST/PUT/PATCH 必须指定 Content-Type）
  * </ul>
  *
- * <p><b>职责边界（P0-B2）：</b>网关层<b>仅</b>做传输层防护（大小 + Content-Type 预检），
+ * <p><b>职责边界：</b>网关层<b>仅</b>做传输层防护（大小 + Content-Type 预检），
  * 不做 JSON 内容级校验——读取并缓存全量请求体做深度/Schema 校验会引入额外内存拷贝与性能损耗。
- * JSON 嵌套深度、字段校验由下游服务解析器负责（其本身就具备递归深度保护）。历史配置项
- * {@code max-json-depth} 为死配置，已移除。
+ * JSON 嵌套深度、字段校验由下游服务解析器负责（其本身就具备递归深度保护）。
  *
  * <p><b>与 default-filter RequestSize 的分工：</b>{@code spring.cloud.gateway.default-filters}
  * 中的 {@code RequestSize} 对全部请求（含 GET）做传输层上限拦截；本过滤器仅对 POST/PUT/PATCH
