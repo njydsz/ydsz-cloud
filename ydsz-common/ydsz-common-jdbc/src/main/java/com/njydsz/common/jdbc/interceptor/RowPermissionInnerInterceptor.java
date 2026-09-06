@@ -288,6 +288,9 @@ public class RowPermissionInnerInterceptor extends DataPermissionInnerIntercepto
     if (DataScopeConstants.REGION.equals(scope)) {
       return in(table, config.getRegionColumn(), context.getRegionIds());
     }
+    if (DataScopeConstants.SPACE.equals(scope)) {
+      return in(table, config.getSpaceColumn(), context.getSpaceIds());
+    }
     if (DataScopeConstants.GROUP.equals(scope)) {
       return in(table, config.getCompanyColumn(), context.getCompanyIds());
     }
@@ -300,6 +303,7 @@ public class RowPermissionInnerInterceptor extends DataPermissionInnerIntercepto
     out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
     out = and(out, in(table, config.getProjectColumn(), context.getProjectIds()));
     out = and(out, in(table, config.getRegionColumn(), context.getRegionIds()));
+    out = and(out, in(table, config.getSpaceColumn(), context.getSpaceIds()));
     return out;
   }
 

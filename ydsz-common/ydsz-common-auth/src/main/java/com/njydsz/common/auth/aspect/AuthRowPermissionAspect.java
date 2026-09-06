@@ -189,6 +189,10 @@ public class AuthRowPermissionAspect {
         info.getProjectIds() != null ? new HashSet<>(info.getProjectIds()) : new HashSet<>(16));
     context.setRegionIds(
         info.getRegionIds() != null ? new HashSet<>(info.getRegionIds()) : new HashSet<>(16));
+    // P1-3：透传空间ID（来自 DataScopeInfo.extendAttrs 或专用字段）
+    if (info.getSpaceIds() != null) {
+      context.setSpaceIds(new HashSet<>(info.getSpaceIds()));
+    }
     return context;
   }
 
@@ -230,6 +234,7 @@ public class AuthRowPermissionAspect {
         || (!safeIsEmpty(info.getDeptIds()))
         || (!safeIsEmpty(info.getProjectIds()))
         || (!safeIsEmpty(info.getRegionIds()))
+        || (!safeIsEmpty(info.getSpaceIds()))
         || info.hasCustomSqlCondition();
   }
 

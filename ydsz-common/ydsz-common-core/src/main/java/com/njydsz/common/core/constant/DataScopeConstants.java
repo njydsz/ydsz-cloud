@@ -38,6 +38,9 @@ public final class DataScopeConstants {
   /** 用户维度编码 */
   public static final String USER = "user";
 
+  /** 空间维度编码（P1-3：NextWiki / 工作流等业务模块的空间隔离） */
+  public static final String SPACE = "space";
+
   /** 自定义维度编码 */
   public static final String CUSTOM = "custom";
 
@@ -62,6 +65,9 @@ public final class DataScopeConstants {
   /** 用户维度列名 */
   public static final String COLUMN_USER = "user_id";
 
+  /** 空间维度列名 */
+  public static final String COLUMN_SPACE = "space_id";
+
   /** 所有标准维度编码集合（不含 CUSTOM） */
   private static final Map<String, String> CODE_MAP = new ConcurrentHashMap<>();
 
@@ -73,6 +79,7 @@ public final class DataScopeConstants {
     CODE_MAP.put(DEPT, COLUMN_DEPT);
     CODE_MAP.put(REGION, COLUMN_REGION);
     CODE_MAP.put(USER, COLUMN_USER);
+    CODE_MAP.put(SPACE, COLUMN_SPACE);
     CODE_MAP.put(CUSTOM, null);
   }
 

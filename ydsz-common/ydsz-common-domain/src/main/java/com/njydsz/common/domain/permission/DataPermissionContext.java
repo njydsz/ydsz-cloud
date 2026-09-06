@@ -42,6 +42,9 @@ public class DataPermissionContext {
   /** 区域ID集合 */
   private Set<String> regionIds = new HashSet<>(16);
 
+  /** 空间ID集合（P1-3：空间维度隔离，用于 NextWiki 文件空间 / 工作流空间等场景） */
+  private Set<String> spaceIds = new HashSet<>(4);
+
   /** 列可见规则（key=表名，value=允许查询的列名集合），用于 SELECT 列过滤 */
   private Map<String, Set<String>> visibleColumnsByTable = new HashMap<>(16);
 
@@ -73,6 +76,35 @@ public class DataPermissionContext {
         && (companyIds == null || companyIds.isEmpty())
         && (deptIds == null || deptIds.isEmpty())
         && (projectIds == null || projectIds.isEmpty())
-        && (regionIds == null || regionIds.isEmpty());
+        && (regionIds == null || regionIds.isEmpty())
+        && (spaceIds == null || spaceIds.isEmpty());
+  }
+
+  /**
+   * 创建仅包含空间ID的数据权限上下文（P1-3：供 NextWiki / 工作流等模块便捷构建空间隔离上下文）。
+   *
+   * @param spaceId 当前空间ID
+   * @return 仅包含 spaceId 的上下文
+   */
+  public static DataPermissionContext ofSpaceId(String spaceId) {
+    DataPermissionContext context = new DataPermissionContext();
+    if (spaceId != null && !spaceId.isBlank()) {
+      context.getSpaceIds().add(spaceId);
+    }
+    return context;
+  }
+
+  /**
+   * 创建包含多个空间ID的数据权限上下文。
+   *
+   * @param spaceIds 当前用户可访问的空间ID集合
+   * @return 包含 spaceIds 的上下文
+   */
+  public static DataPermissionContext ofSpaceIds(Set<String> spaceIds) {
+    DataPermissionContext context = new DataPermissionContext();
+    if (spaceIds != null) {
+      context.setSpaceIds(new HashSet<>(spaceIds));
+    }
+    return context;
   }
 }

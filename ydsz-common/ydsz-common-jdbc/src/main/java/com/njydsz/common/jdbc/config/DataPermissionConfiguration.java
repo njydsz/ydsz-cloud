@@ -58,4 +58,7 @@ public class DataPermissionConfiguration {
 
   /** 区域列名，对应数据权限维度 REGION */
   private String regionColumn = "region_id";
+
+  /** 空间列名（P1-3：对应数据权限维度 SPACE），用于 NextWiki 文件空间隔离 */
+  private String spaceColumn = "space_id";
 }

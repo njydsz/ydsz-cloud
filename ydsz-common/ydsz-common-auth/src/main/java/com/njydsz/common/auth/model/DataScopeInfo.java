@@ -1,6 +1,7 @@
 package com.njydsz.common.auth.model;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -59,6 +60,9 @@ public class DataScopeInfo {
   /** 可访问区域 ID 集合；构造时包装为不可变集合，永不为 {@code null}。 */
   private final Set<String> regionIds;
 
+  /** 可访问空间ID集合（P1-3：NextWiki 文件空间 / 工作流空间等业务隔离）；构造时包装为不可变集合。 */
+  private final Set<String> spaceIds;
+
   /** 直接给定的自定义 SQL 条件片段（已拼接），优先级高于模板生成结果。 */
   private final String customSqlCondition;
 
@@ -74,6 +78,7 @@ public class DataScopeInfo {
         deptIds,
         Collections.emptySet(),
         Collections.emptySet(),
+        Collections.emptySet(),
         null,
         null);
   }
@@ -84,7 +89,7 @@ public class DataScopeInfo {
       Set<String> deptIds,
       Set<String> projectIds,
       Set<String> regionIds) {
-    this(scope, null, null, companyIds, deptIds, projectIds, regionIds, null, null);
+    this(scope, null, null, companyIds, deptIds, projectIds, regionIds, Collections.emptySet(), null, null);
   }
 
   public DataScopeInfo(
@@ -95,7 +100,7 @@ public class DataScopeInfo {
       Set<String> deptIds,
       Set<String> projectIds,
       Set<String> regionIds) {
-    this(scope, tenantId, userId, companyIds, deptIds, projectIds, regionIds, null, null);
+    this(scope, tenantId, userId, companyIds, deptIds, projectIds, regionIds, Collections.emptySet(), null, null);
   }
 
   public DataScopeInfo(
@@ -115,6 +120,7 @@ public class DataScopeInfo {
         deptIds,
         projectIds,
         regionIds,
+        Collections.emptySet(),
         customSqlCondition,
         null);
   }
@@ -129,6 +135,34 @@ public class DataScopeInfo {
       Set<String> regionIds,
       String customSqlCondition,
       String customSqlConditionTemplate) {
+    this(scope, tenantId, userId, companyIds, deptIds, projectIds, regionIds, Collections.emptySet(), customSqlCondition, customSqlConditionTemplate);
+  }
+
+  /**
+   * 主构造器（P1-3 新增 spaceIds 参数）。
+   *
+   * @param scope 数据权限范围类型
+   * @param tenantId 租户 ID
+   * @param userId 用户 ID
+   * @param companyIds 公司 ID 集合
+   * @param deptIds 部门 ID 集合
+   * @param projectIds 项目 ID 集合
+   * @param regionIds 区域 ID 集合
+   * @param spaceIds 空间 ID 集合（P1-3）
+   * @param customSqlCondition 自定义 SQL 条件
+   * @param customSqlConditionTemplate 自定义 SQL 条件模板
+   */
+  private DataScopeInfo(
+      String scope,
+      String tenantId,
+      String userId,
+      Set<String> companyIds,
+      Set<String> deptIds,
+      Set<String> projectIds,
+      Set<String> regionIds,
+      Set<String> spaceIds,
+      String customSqlCondition,
+      String customSqlConditionTemplate) {
     this.scope = scope;
     this.tenantId = tenantId;
     this.userId = userId;
@@ -139,8 +173,28 @@ public class DataScopeInfo {
         projectIds != null ? Collections.unmodifiableSet(projectIds) : Collections.emptySet();
     this.regionIds =
         regionIds != null ? Collections.unmodifiableSet(regionIds) : Collections.emptySet();
+    this.spaceIds =
+        spaceIds != null ? Collections.unmodifiableSet(new HashSet<>(spaceIds)) : Collections.emptySet();
     this.customSqlCondition = customSqlCondition;
     this.customSqlConditionTemplate = customSqlConditionTemplate;
+  }
+
+  /**
+   * 创建包含空间ID的数据权限实例（P1-3：供 NextWiki / 工作流等模块使用）。
+   *
+   * @param spaceId 当前空间 ID
+   * @return 仅包含自定义 scope + spaceIds 的实例
+   */
+  public static DataScopeInfo ofSpaceId(String spaceId) {
+    Set<String> ids = new HashSet<>(2);
+    if (spaceId != null && !spaceId.isBlank()) {
+      ids.add(spaceId);
+    }
+    return new DataScopeInfo(
+        DataScopeConstants.SPACE,
+        null, null, Collections.emptySet(), Collections.emptySet(),
+        Collections.emptySet(), Collections.emptySet(), ids,
+        null, null);
   }
 
   /**
@@ -218,6 +272,7 @@ public class DataScopeInfo {
     result = result.replace("{{deptIds}}", sanitizeSqlSet(deptIds));
     result = result.replace("{{projectIds}}", sanitizeSqlSet(projectIds));
     result = result.replace("{{regionIds}}", sanitizeSqlSet(regionIds));
+    result = result.replace("{{spaceIds}}", sanitizeSqlSet(spaceIds));
     return result;
   }
 
@@ -259,6 +314,7 @@ public class DataScopeInfo {
         .deptIds(deptIds)
         .projectIds(projectIds)
         .regionIds(regionIds)
+        .spaceIds(spaceIds)
         .customSqlCondition(customSqlCondition)
         .customSqlConditionTemplate(customSqlConditionTemplate);
   }
@@ -287,6 +343,7 @@ public class DataScopeInfo {
     private Set<String> deptIds;
     private Set<String> projectIds;
     private Set<String> regionIds;
+    private Set<String> spaceIds;
     private String customSqlCondition;
     private String customSqlConditionTemplate;
 
@@ -370,6 +427,17 @@ public class DataScopeInfo {
     }
 
     /**
+     * 设置可访问空间 ID 集合（P1-3：空间维度数据权限）。
+     *
+     * @param spaceIds 空间 ID 集合；传 {@code null} 等价于空集合
+     * @return 当前 Builder，便于链式调用
+     */
+    public Builder spaceIds(Set<String> spaceIds) {
+      this.spaceIds = spaceIds;
+      return this;
+    }
+
+    /**
      * 设置已拼接好的自定义 SQL 条件片段。
      *
      * <p><b>安全提示</b>：本字段会直接参与 SQL 拼接， 优先级高于 {@link #customSqlConditionTemplate(String)} 的解析结果。
@@ -413,6 +481,7 @@ public class DataScopeInfo {
           deptIds,
           projectIds,
           regionIds,
+          spaceIds,
           customSqlCondition,
           customSqlConditionTemplate);
     }

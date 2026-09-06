@@ -161,6 +161,11 @@ public class TemplateImportExportService {
     return toSave.size();
   }
 
+  /** 清单 Map 初始容量（groupName/description/exportTime/templateCount/templates 共 6 项 + 预留）。 */
+  private static final int MANIFEST_MAP_INITIAL_CAPACITY = 8;
+  /** 模板信息 Map 初始容量（fileName/hash 共 2 项 × 2 负载系数）。 */
+  private static final int TEMPLATE_INFO_MAP_INITIAL_CAPACITY = 4;
+
   /**
    * 构建导出清单 JSON（P2-4：委托 common-json YdszJson 序列化，避免字段含特殊字符破坏结构）。
    *
@@ -169,7 +174,7 @@ public class TemplateImportExportService {
    * @return JSON 格式清单
    */
   private String buildManifest(GenTemplateGroup group, List<GenTemplate> templates) {
-    Map<String, Object> manifest = new LinkedHashMap<>(8);
+    Map<String, Object> manifest = new LinkedHashMap<>(MANIFEST_MAP_INITIAL_CAPACITY);
     manifest.put("groupName", group.getName());
     manifest.put("description", group.getDescription() == null ? "" : group.getDescription());
     manifest.put("exportTime", LocalDateTime.now()
@@ -178,14 +183,14 @@ public class TemplateImportExportService {
 
     List<Map<String, String>> templateInfos = new ArrayList<>(templates.size());
     for (GenTemplate t : templates) {
-      Map<String, String> info = new LinkedHashMap<>(4);
+      Map<String, String> info = new LinkedHashMap<>(TEMPLATE_INFO_MAP_INITIAL_CAPACITY);
       info.put("fileName", t.getFileName());
       info.put("hash", t.getHash());
       templateInfos.add(info);
     }
     manifest.put("templates", templateInfos);
 
-    return YdszJson.stringify(manifest);
+    return YdszJson.toJson(manifest);
   }
 
   private String extractParentPath(String fileName) {
