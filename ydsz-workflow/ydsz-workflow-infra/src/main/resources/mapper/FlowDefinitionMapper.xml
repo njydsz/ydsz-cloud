@@ -12,7 +12,7 @@
         <result column="form_custom" property="formCustom"/>
         <result column="form_path" property="formPath"/>
         <result column="activity_status" property="activityStatus"/>
-        <result column="is_publish" property="isPublish"/>
+        <result column="is_publish" property="publishStatus"/>
         <result column="listener_type" property="listenerType"/>
         <result column="listener_path" property="listenerPath"/>
         <result column="ext" property="ext"/>
@@ -67,7 +67,7 @@
 
     <update id="publish">
         UPDATE ydsz_flow_definition
-        SET is_publish = #{isPublish},
+        SET is_publish = #{publishStatus},
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}

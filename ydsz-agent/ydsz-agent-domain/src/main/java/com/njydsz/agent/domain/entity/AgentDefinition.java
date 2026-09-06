@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
+import java.math.BigDecimal;
+
 /**
  * Agent 定义（映射 ydsz_agt_definition 表）
  *
@@ -16,7 +18,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 26.09.01
- */@Data
+ */
+@Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_definition")
@@ -43,8 +46,8 @@ public class AgentDefinition extends MpBaseEntity<String> {
   /** 工具名称列表 JSON（["tool1","tool2"]） */
   private String toolNames;
 
-  /** 温度参数 */
-  private Double temperature;
+  /** 温度参数（LLM 采样温度，范围 0~2） */
+  private BigDecimal temperature;
 
   /** 最大生成 Token 数 */
   private Integer maxTokens;

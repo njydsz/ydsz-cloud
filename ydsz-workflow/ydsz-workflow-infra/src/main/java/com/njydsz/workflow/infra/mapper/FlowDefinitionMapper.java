@@ -64,10 +64,10 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
    * 发布（更新 is_publish）
    *
    * @param id 流程定义 ID
-   * @param isPublish 发布状态（1 发布/9 取消发布）
+   * @param publishStatus 发布状态（1 发布/9 取消发布）
    * @return 受影响行数
    */
-  int publish(@Param("id") String id, @Param("isPublish") Integer isPublish);
+  int publish(@Param("id") String id, @Param("publishStatus") Integer publishStatus);
 
   /**
    * P2-27: 失效同 flowCode 的其他已发布版本（is_publish 置 9）

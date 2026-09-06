@@ -1,5 +1,7 @@
 package com.njydsz.common.excel.util;
 
+import java.lang.reflect.Method;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +36,7 @@ public final class ExcelI18nHelper {
   public static String getMessage(String key, Object[] params, String defaultMessage) {
     try {
       Class<?> clazz = Class.forName(MESSAGE_UTILS_CLASS);
-      java.lang.reflect.Method method =
+      Method method =
           clazz.getMethod(GET_MESSAGE_METHOD, String.class, Object[].class, String.class);
       return (String) method.invoke(null, key, params, defaultMessage);
     } catch (ClassNotFoundException e) {

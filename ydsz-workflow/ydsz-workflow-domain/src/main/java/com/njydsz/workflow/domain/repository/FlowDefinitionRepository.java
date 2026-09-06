@@ -145,7 +145,7 @@ public interface FlowDefinitionRepository {
   /**
    * 根据流程编码查询最新已发布版本定义（P0-5 草稿提交场景）。
    *
-   * <p>仅返回 {@code isPublish = 1 AND deleted = 0} 的最新版本，用于校验草稿对应的流程已可正式发起。
+   * <p>仅返回 {@code publishStatus = 1 AND deleted = 0} 的最新版本，用于校验草稿对应的流程已可正式发起。
    *
    * @param flowCode 流程编码
    * @param tenantId 租户 ID
@@ -156,7 +156,7 @@ public interface FlowDefinitionRepository {
   /**
    * 按分类查询已启用的流程定义列表。
    *
-   * <p>返回 {@code category = ? AND activityStatus = 1 AND isPublish = 1 AND deleted = 0} 的定义列表，
+   * <p>返回 {@code category = ? AND activityStatus = 1 AND publishStatus = 1 AND deleted = 0} 的定义列表，
    * 按创建时间倒序排列。用于流程发起页按分类展示可发起的流程。
    *
    * @param categoryCode 流程分类编码
@@ -200,17 +200,17 @@ public interface FlowDefinitionRepository {
   int casUnlock(String definitionId, String userId, Integer revision);
 
   /**
-   * 发布流程定义（更新 isPublish 状态）。
+   * 发布流程定义（更新 publishStatus 状态）。
    *
    * @param definitionId 流程定义 ID
-   * @param isPublish 目标发布状态（1=已发布，9=已废弃）
+   * @param publishStatus 目标发布状态（1=已发布，9=已废弃）
    */
-  void publish(String definitionId, int isPublish);
+  void publish(String definitionId, int publishStatus);
 
   /**
    * 按流程编码批量失效已发布版本（切换激活版本用）。
    *
-   * <p>将指定 flowCode 下除 targetDefinitionId 外的所有已发布版本置为 isPublish=0。
+   * <p>将指定 flowCode 下除 targetDefinitionId 外的所有已发布版本置为 publishStatus=0。
    *
    * @param flowCode 流程编码
    * @param targetDefinitionId 目标定义 ID（排除在外）

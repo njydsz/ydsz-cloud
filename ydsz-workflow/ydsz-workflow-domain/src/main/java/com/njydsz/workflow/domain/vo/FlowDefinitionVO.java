@@ -49,7 +49,7 @@ public class FlowDefinitionVO implements Serializable {
   private Integer activityStatus;
 
   /** 发布状态（0=未发布 / 1=已发布 / 9=失效） */
-  private Integer isPublish;
+  private Integer publishStatus;
 
   /** 监听器类型 */
   private String listenerType;

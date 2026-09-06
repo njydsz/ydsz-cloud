@@ -218,8 +218,8 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   @Override
-  public void publish(String definitionId, int isPublish) {
-    definitionMapper.publish(definitionId, isPublish);
+  public void publish(String definitionId, int publishStatus) {
+    definitionMapper.publish(definitionId, publishStatus);
   }
 
   @Override

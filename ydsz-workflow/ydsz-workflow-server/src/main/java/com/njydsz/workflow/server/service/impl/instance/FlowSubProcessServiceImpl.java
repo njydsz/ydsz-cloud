@@ -503,6 +503,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   }
 
   @Override
+  // YDIZ-WARN-001 例外#3：递归调用返回泛型集合，编译期无法验证类型安全
   @SuppressWarnings("unchecked")
   public List<Map<String, Object>> listSubProcessTree(String parentInstanceId) {
     if (parentInstanceId == null) {

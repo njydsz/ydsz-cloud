@@ -2,6 +2,7 @@ package com.njydsz.common.excel.converter.impl;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,22 +94,22 @@ public class NumberConverter implements CellValueConverter {
       return numValue.doubleValue();
     }
     if (targetType == Integer.class || targetType == int.class) {
-      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).intValue();
+      return numValue.setScale(0, RoundingMode.HALF_UP).intValue();
     }
     if (targetType == Long.class || targetType == long.class) {
-      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).longValue();
+      return numValue.setScale(0, RoundingMode.HALF_UP).longValue();
     }
     if (targetType == Float.class || targetType == float.class) {
       return numValue.floatValue();
     }
     if (targetType == Short.class || targetType == short.class) {
-      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).shortValue();
+      return numValue.setScale(0, RoundingMode.HALF_UP).shortValue();
     }
     if (targetType == Byte.class || targetType == byte.class) {
-      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).byteValue();
+      return numValue.setScale(0, RoundingMode.HALF_UP).byteValue();
     }
     if (targetType == BigInteger.class) {
-      return numValue.setScale(0, java.math.RoundingMode.HALF_UP).toBigInteger();
+      return numValue.setScale(0, RoundingMode.HALF_UP).toBigInteger();
     }
     return numValue;
   }

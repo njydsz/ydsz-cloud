@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 /**
  * Agent 执行链路步骤（映射 ydsz_agt_trace_step 表）
  *
@@ -44,6 +46,6 @@ public class AgentTraceStep {
   /** 耗时（毫秒） */
   private Long durationMs;
 
-  /** Token 成本（ USD，精确到 6 位小数；非 LLM 调用步骤为 0） */
-  private Double cost;
+  /** Token 成本（USD，精确到 6 位小数；非 LLM 调用步骤为 0） */
+  private BigDecimal cost;
 }

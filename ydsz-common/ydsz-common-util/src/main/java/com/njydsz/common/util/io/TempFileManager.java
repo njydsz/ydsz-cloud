@@ -74,6 +74,8 @@ public class TempFileManager implements AutoCloseable {
    */
   public TempFileManager(Duration retention, Duration cleanupInterval) {
     this.retentionMillis = retention.toMillis();
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — L1 工具模块禁止向下依赖 ydsz-common-thread（避免架构层级
+    // 反向依赖），此处为单线程守护线程池（短生命周期，不阻碍 JVM 退出），符合云顶编码规范 15.4.1 节豁免条款
     this.sweeper =
         new ScheduledThreadPoolExecutor(
             1,
@@ -82,6 +84,7 @@ public class TempFileManager implements AutoCloseable {
               thread.setDaemon(true);
               return thread;
             });
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     this.sweeper.setRemoveOnCancelPolicy(true);
     sweeper.scheduleWithFixedDelay(
         this::sweepExpired,

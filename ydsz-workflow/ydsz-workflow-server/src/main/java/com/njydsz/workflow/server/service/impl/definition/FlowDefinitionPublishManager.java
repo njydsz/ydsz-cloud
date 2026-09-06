@@ -114,7 +114,7 @@ public class FlowDefinitionPublishManager {
   /**
    * 发布流程定义（带强制标志）
    *
-   * <p>将 {@code ydsz_flow_definition.isPublish=0 → 1}，并清理本地 + Redis 集群缓存。
+   * <p>将 {@code ydsz_flow_definition.publishStatus=0 → 1}，并清理本地 + Redis 集群缓存。
    * 发布前通过 {@link #checkPublishCompatibility} 评估与同 {@code flowCode} 激活版本的差异。
    *
    * @param definitionId 流程定义 ID
@@ -146,7 +146,7 @@ public class FlowDefinitionPublishManager {
   /**
    * 停用流程定义
    *
-   * <p>将 {@code isPublish} 置为 {@code 9}（已废弃），并清理本地 + 集群缓存。
+   * <p>将 {@code publishStatus} 置为 {@code 9}（已废弃），并清理本地 + 集群缓存。
    * 停用后流程定义将无法被新实例引用，但已有实例不受影响。
    *
    * @param definitionId 流程定义 ID
@@ -163,7 +163,7 @@ public class FlowDefinitionPublishManager {
   /**
    * 切换激活版本
    *
-   * <p>将同 {@code flowCode} 的其他已发布版本置为 {@code isPublish=0}，目标版本置为 {@code isPublish=1}。
+   * <p>将同 {@code flowCode} 的其他已发布版本置为 {@code publishStatus=0}，目标版本置为 {@code publishStatus=1}。
    *
    * @param flowCode 流程编码
    * @param definitionId 目标定义 ID

@@ -26,8 +26,8 @@ import com.njydsz.workflow.domain.vo.FlowViewsVO;
  *   <li>{@code flowVersion}：流程版本号（{@code v1} / {@code v2}），支持版本灰度发布
  *   <li>{@code modelValue}：设计器模型（{@code CLASSICS} 经典 / {@code MIMIC} 仿钉钉）
  *   <li>{@code formCustom}：审批表单是否自定义（{@code Y/N}）
- *   <li>{@code activityStatus}：激活状态（{@code 0} 挂起 / {@code 1} 激活）
- *   <li>{@code isPublish}：发布状态（{@code 0} 未发布 / {@code 1} 已发布 / {@code 9} 失效）
+   * <li>{@code activityStatus}：激活状态（{@code 0} 挂起 / {@code 1} 激活）
+   * <li>{@code publishStatus}：发布状态（{@code 0} 未发布 / {@code 1} 已发布 / {@code 9} 失效）
  *   <li>{@code listenerType} / {@code listenerPath}：流程监听器配置（Spring Bean 路径）
  *   <li>{@code ext}：扩展字段 JSON（业务侧自定义元数据）
  * </ul>
@@ -134,7 +134,7 @@ public class FlowDefinition extends MpBaseEntity<String> {
    */
   @TableField("is_publish")
   @JsonView(FlowViewsVO.Summary.class)
-  private Integer isPublish;
+  private Integer publishStatus;
 
   /**
    * 监听器类型。

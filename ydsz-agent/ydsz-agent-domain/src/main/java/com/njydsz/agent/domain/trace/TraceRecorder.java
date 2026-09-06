@@ -1,5 +1,6 @@
 package com.njydsz.agent.domain.trace;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public interface TraceRecorder {
   /**
    * 记录一个执行步骤（含成本）。
    *
-   * <p>P2 增强：增加 cost 参数，用于在链路中直接体现每次 LLM 调用的 Token 成本， 便于按步骤分析成本分布。非 LLM 调用步骤传入 0 即可。
+   * <p>P2 增强：增加 cost 参数，用于在链路中直接体现每次 LLM 调用的 Token 成本， 便于按步骤分析成本分布。非 LLM 调用步骤传入 {@link BigDecimal#ZERO} 即可。
    *
    * @param traceId 链路 ID
    * @param stepType 步骤类型（LLM_CALL / TOOL_CALL / THOUGHT / OBSERVATION）
@@ -63,7 +64,7 @@ public interface TraceRecorder {
       Object input,
       Object output,
       long durationMs,
-      double cost);
+      BigDecimal cost);
 
   /**
    * 结束执行链路
@@ -135,7 +136,7 @@ public interface TraceRecorder {
     private final long durationMs;
 
     /** Token 成本（USD，精确到 6 位小数；非 LLM 调用步骤为 0） */
-    private final double cost;
+    private final BigDecimal cost;
 
     /** 创建时间 */
     private final LocalDateTime createdAt;
@@ -149,7 +150,7 @@ public interface TraceRecorder {
         Object output,
         long durationMs,
         LocalDateTime createdAt) {
-      this(traceId, stepIndex, stepType, content, input, output, durationMs, 0.0, createdAt);
+      this(traceId, stepIndex, stepType, content, input, output, durationMs, BigDecimal.ZERO, createdAt);
     }
 
     public TraceStep(
@@ -160,7 +161,7 @@ public interface TraceRecorder {
         Object input,
         Object output,
         long durationMs,
-        double cost,
+        BigDecimal cost,
         LocalDateTime createdAt) {
       this.traceId = traceId;
       this.stepIndex = stepIndex;
@@ -201,7 +202,7 @@ public interface TraceRecorder {
       return durationMs;
     }
 
-    public double getCost() {
+    public BigDecimal getCost() {
       return cost;
     }
 
