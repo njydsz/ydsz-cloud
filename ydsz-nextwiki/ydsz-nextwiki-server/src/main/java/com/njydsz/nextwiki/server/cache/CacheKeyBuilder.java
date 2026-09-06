@@ -2,6 +2,8 @@ package com.njydsz.nextwiki.server.cache;
 
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.cache.support.AbstractModuleCacheKeyBuilder;
+
 /**
  * NextWiki 缓存键构造器（Spring Cache SpEL 调用入口）。
  *
@@ -13,11 +15,17 @@ import org.springframework.stereotype.Component;
  * @since 26.09.01
  */
 @Component("nextwikiCacheKeyBuilder")
-public final class CacheKeyBuilder {
+public class CacheKeyBuilder extends AbstractModuleCacheKeyBuilder {
 
+  /** NextWiki 模块标识 */
   private static final String MODULE = "nextwiki";
 
-  private CacheKeyBuilder() {}
+  /**
+   * 构造 NextWiki 模块缓存键构造器。
+   */
+  public CacheKeyBuilder() {
+    super(MODULE);
+  }
 
   /**
    * 生成文件 ACL 缓存键。
@@ -27,7 +35,6 @@ public final class CacheKeyBuilder {
    * @return 格式：{@code ydsz:{tenantId}:nextwiki:file:acl:{fileNodeId}:{userId}}
    */
   public String fileAcl(String fileNodeId, String userId) {
-    return com.njydsz.common.cache.support.CacheKeyBuilder.buildPattern(
-        MODULE, "file:acl", fileNodeId, userId);
+    return buildKeyPattern("file:acl", fileNodeId, userId);
   }
 }

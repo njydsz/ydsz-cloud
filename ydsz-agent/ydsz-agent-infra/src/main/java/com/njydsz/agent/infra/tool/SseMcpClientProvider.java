@@ -235,7 +235,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @return 工具描述符列表
    */
   // MCP SDK 通过 YdszJson.parseMap() 返回 Map<?, ?>，泛型擦除导致编译期无法验证 Map<String, Object> 强转
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // 泛型擦除：YdszJson.parseMap() 返回 Map<?, ?> 无法在编译期验证 Map<String, Object> 强转
   private List<McpToolAdapter.McpToolDescriptor> parseToolList(String response) {
     List<McpToolAdapter.McpToolDescriptor> tools = new ArrayList<>(0);
     try {
@@ -276,7 +276,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @return 工具结果内容文本
    */
   // MCP SDK 通过 YdszJson.parseMap() 返回 Map<?, ?>，泛型擦除导致编译期无法验证 Map<String, Object> 强转
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // 泛型擦除：YdszJson.parseMap() 返回 Map<?, ?> 无法在编译期验证 Map<String, Object> 强转
   private String extractToolResult(String response) {
     try {
       Map<String, Object> map = YdszJson.parseMap(response);

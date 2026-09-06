@@ -2,12 +2,14 @@ package com.njydsz.system.server.cache;
 
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.cache.support.AbstractModuleCacheKeyBuilder;
+
 /**
  * 缓存键构造器（Spring Cache SpEL 调用入口）。
  *
  * <p>为系统模块的 {@code @Cacheable} / {@code @CacheEvict} SpEL 表达式提供租户感知的缓存键生成能力。
  *
- * <p><b>统一格式（P2-3）：</b>所有 key 均通过 {@code CacheKeyBuilder.build(module, entity, id)} 构建，
+ * <p><b>统一格式（P2-3）：</b>所有 key 均通过 {@code AbstractModuleCacheKeyBuilder.buildKey} 构建，
  * 格式为 {@code ydsz:{tenantId}:{module}:{entity}:{id}}。
  *
  * <p>使用方式（SpEL）：
@@ -24,12 +26,17 @@ import org.springframework.stereotype.Component;
  * @since 26.09.01
  */
 @Component("cacheKeyBuilder")
-public final class CacheKeyBuilder {
+public class CacheKeyBuilder extends AbstractModuleCacheKeyBuilder {
 
   /** 系统模块标识 */
   private static final String MODULE = "system";
 
-  private CacheKeyBuilder() {}
+  /**
+   * 构造系统模块缓存键构造器。
+   */
+  public CacheKeyBuilder() {
+    super(MODULE);
+  }
 
   // ============================== 系统配置缓存 key ==============================
 
@@ -40,7 +47,7 @@ public final class CacheKeyBuilder {
    * @return 格式：{@code ydsz:{tenantId}:system:config:value:{configKey}}
    */
   public String configValue(String configKey) {
-    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "config:value", configKey);
+    return buildKey("config:value", configKey);
   }
 
   /**
@@ -50,7 +57,7 @@ public final class CacheKeyBuilder {
    * @return 格式：{@code ydsz:{tenantId}:system:config:group:{configGroup}}
    */
   public String configGroup(String configGroup) {
-    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "config:group", configGroup);
+    return buildKey("config:group", configGroup);
   }
 
   /**
@@ -59,7 +66,7 @@ public final class CacheKeyBuilder {
    * @return 格式：{@code ydsz:{tenantId}:system:config:public}
    */
   public String configPublic() {
-    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "config:public", "");
+    return buildKey("config:public", "");
   }
 
   // ============================== 字典项缓存 key ==============================
@@ -72,8 +79,7 @@ public final class CacheKeyBuilder {
    * @return 格式：{@code ydsz:{tenantId}:system:dict:item:{typeCode}:{itemCode}}
    */
   public String dictItem(String typeCode, String itemCode) {
-    return com.njydsz.common.cache.support.CacheKeyBuilder.buildPattern(
-        MODULE, "dict:item", typeCode, itemCode);
+    return buildKeyPattern("dict:item", typeCode, itemCode);
   }
 
   /**
@@ -83,7 +89,7 @@ public final class CacheKeyBuilder {
    * @return 格式：{@code ydsz:{tenantId}:system:dict:items:{typeCode}}
    */
   public String dictList(String typeCode) {
-    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "dict:items", typeCode);
+    return buildKey("dict:items", typeCode);
   }
 
   // ============================== 系统变量缓存 key ==============================
@@ -95,6 +101,6 @@ public final class CacheKeyBuilder {
    * @return 格式：{@code ydsz:{tenantId}:system:variable:{variableKey}}
    */
   public String variable(String variableKey) {
-    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "variable", variableKey);
+    return buildKey("variable", variableKey);
   }
 }

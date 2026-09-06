@@ -17,7 +17,7 @@ import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
-import com.njydsz.common.jdbc.permission.DataPermissionContext;
+import com.njydsz.common.domain.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 
 /**
