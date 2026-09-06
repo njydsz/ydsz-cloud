@@ -67,6 +67,69 @@ public final class GatewayErrorWriter {
   }
 
   /**
+   * 写出已完全下线（Gone）的错误响应。
+   *
+   * <p>用于客户端请求已被彻底移除的 API 阶段（Sunset 后）。当前本任务仅实现弃用警告（200 + Header），
+   * 不做拒绝。此方法留作 Sunset 阶段升级时使用。
+   *
+   * <p>响应格式（410 Gone）：
+   *
+   * <pre>
+   *   HTTP/1.1 410 Gone
+   *   Content-Type: application/json
+   *   X-Trace-Id: &lt;traceId&gt;
+   *   Sunset: &lt;RFC 1123 日期&gt;
+   *   Link: &lt;replacement&gt;; rel="successor-version"
+   *
+   *   {
+   *     "code": "41000",
+   *     "message": "&lt;message&gt;",
+   *     "traceId": "&lt;traceId&gt;",
+   *     ...
+   *   }
+   * </pre>
+   *
+   * <p>当前阶段方法保留但不调用（deprecated APIs 仍返回 200 + Deprecation 头），当 Sunset
+   * 日期到来时切换至此方法即可。
+   *
+   * @param exchange 服务器 Web 交换上下文
+   * @param message 错误消息（如 "此 API 已于 2026-12-31 永久下线，请迁移至 v2"）
+   * @param removalDate RFC 1123 HTTP-Date 格式的正式下线日期
+   * @param successorPath 替代版本的完整路径（如 /api/v2/message/send）
+   * @return 写出完成信号 Mono
+   */
+  public static Mono<Void> writeApiGone(
+      ServerWebExchange exchange,
+      String message,
+      String removalDate,
+      String successorPath) {
+    ServerHttpResponse response = exchange.getResponse();
+    if (response.isCommitted()) {
+      return response.setComplete();
+    }
+
+    String traceId =
+        exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+    String finalTraceId =
+        (traceId == null || traceId.isBlank())
+            ? TraceIdGenerator.generateSortableTraceId()
+            : traceId;
+
+    // 构建 Sunset + Link 头
+    if (removalDate != null && !removalDate.isBlank()) {
+      response.getHeaders().add("Sunset", removalDate);
+    }
+    if (successorPath != null && !successorPath.isBlank()) {
+      response
+          .getHeaders()
+          .add(HttpHeaders.LINK, "<" + successorPath + ">; rel=\"successor-version\"");
+    }
+
+    // 使用标准错误输出写出 410 响应
+    return write(exchange, HttpStatus.GONE, GatewayErrorCode.SERVICE_UNAVAILABLE, message, finalTraceId);
+  }
+
+  /**
    * 写出统一错误响应（显式指定 traceId）。
    *
    * <p>响应未提交时输出 JSON 错误体；已提交则直接完成（避免重复写响应导致的 IllegalStateException）。

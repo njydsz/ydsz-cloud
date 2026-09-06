@@ -88,6 +88,14 @@ public interface NextwikiStructMapper {
    */
   FileTagVO fileTagToVO(FileTag entity);
 
+  /**
+   * 将 {@link FileTag} 实体列表转换为 {@link FileTagVO} 列表。
+   *
+   * @param entities 文件标签实体列表
+   * @return 文件标签 VO 列表
+   */
+  List<FileTagVO> fileTagListToVO(List<FileTag> entities);
+
   // ==================== FileNode 转换 ====================
 
   /**

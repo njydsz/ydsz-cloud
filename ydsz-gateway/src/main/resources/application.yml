@@ -10,6 +10,30 @@ logging:
     # SkyWalking traceId 支持：Agent 注入时自动填充 X{traceId}，未启用时为空
     level: "%5p [%X{traceId:-},%X{spanId:-}]"
 
+# ---------------------------------------------------------------------
+#  API 弃用警告系统（P3-7 增强）
+# ---------------------------------------------------------------------
+#  当请求路径匹配 ydsz.gateway.deprecation.apis 中的配置时，在响应中
+#  注入 Deprecation / Sunset / Link / X-API-Deprecation-Message 系列头。
+#
+#  配置示例：
+#    ydsz:
+#      gateway:
+#        deprecation:
+#          enabled: true
+#          apis:
+#            - path: /api/v1/message/send
+#              since: "v1"
+#              replacement: "v2"
+#              removalDate: "2026-12-31"
+#              message: "请使用 /api/v2/message/send 替代"
+# ---------------------------------------------------------------------
+ydsz:
+  gateway:
+    deprecation:
+      enabled: true
+      apis: []
+
 # SkyWalking 链路追踪（通过 Java Agent 方式启用，无需修改业务代码）
 # 启动示例：java -javaagent:/path/to/skywalking-agent.jar \
 #   -Dskywalking.agent.service_name=ydsz-gateway \

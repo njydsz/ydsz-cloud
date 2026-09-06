@@ -22,6 +22,9 @@ import com.njydsz.nextwiki.domain.vo.SpaceVO;
 @Slf4j
 public class SpaceDomainService {
 
+  /** 使用率计算精度（小数点后位数）。 */
+  private static final int USAGE_RATE_SCALE = 4;
+
   /**
    * 校验空间名称是否合法（纯领域逻辑）。
    *
@@ -85,7 +88,7 @@ public class SpaceDomainService {
       return BigDecimal.ZERO;
     }
     return BigDecimal.valueOf(usedSize)
-        .divide(BigDecimal.valueOf(totalSize), 4, RoundingMode.HALF_UP)
+        .divide(BigDecimal.valueOf(totalSize), USAGE_RATE_SCALE, RoundingMode.HALF_UP)
         .min(BigDecimal.ONE);
   }
 }

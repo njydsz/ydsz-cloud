@@ -26,7 +26,8 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
  */
 @Slf4j
 @Configuration
-@EnableConfigurationProperties({CorsProperties.class, SqlInjectionProperties.class})
+@EnableConfigurationProperties(
+    {CorsProperties.class, SqlInjectionProperties.class, DeprecationProperties.class})
 public class GatewayFilterConfig {
 
   /** 凭据模式下禁止的通配符标记 */

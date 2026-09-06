@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import com.njydsz.gateway.config.ApiDeprecationManager;
 import com.njydsz.gateway.config.ApiVersionProperties;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 
@@ -82,6 +83,9 @@ public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
 
   private final ApiVersionProperties properties;
 
+  /** API 弃用管理器 */
+  private final ApiDeprecationManager deprecationManager;
+
   /**
    * P3-7: 注入 API 版本响应头和弃用信息。
    *
@@ -94,6 +98,19 @@ public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
    */
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    // 注册响应提交前的 Hook：注入 Deprecation 路径弃用头
+    exchange
+        .getResponse()
+        .beforeCommit(
+            () -> {
+              try {
+                injectPathDeprecationHeaders(exchange);
+              } catch (Exception e) {
+                log.debug("[ApiDeprecation] 注入弃用响应头失败: {}", e.getMessage());
+              }
+              return Mono.empty();
+            });
+
     return chain
         .filter(exchange)
         .then(
@@ -118,7 +135,7 @@ public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
                       headers.set(HEADER_API_VERSION, version);
                     }
 
-                    // P3-7: 弃用版本处理
+                    // P3-7: 弃用版本处理（基于版本号的弃用配置）
                     injectDeprecationHeaders(headers, version);
                   } catch (Exception e) {
                     // 响应头注入失败不影响主流程
@@ -232,6 +249,41 @@ public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
       return null;
     }
     return version.toLowerCase().trim();
+  }
+
+  /**
+   * 注入基于路径前缀匹配的弃用响应头。
+   *
+   * <p>通过 {@link ApiDeprecationManager} 判断当前请求路径是否在配置的弃用列表中，命中时注入标准 Deprecation
+   * 系列响应头（Deprecation、Sunset、Link、X-API-Deprecation-Message）。
+   *
+   * <p>此方法通过 {@code beforeCommit} 注册，在响应即将提交前执行，保证头信息不被下游覆盖。
+   *
+   * @param exchange 服务器 Web 交换上下文
+   */
+  private void injectPathDeprecationHeaders(ServerWebExchange exchange) {
+    ServerHttpRequest request = exchange.getRequest();
+    String path = request.getURI().getPath();
+
+    if (!deprecationManager.isDeprecated(path)) {
+      return;
+    }
+
+    ServerHttpResponse response = exchange.getResponse();
+    HttpHeaders headers = response.getHeaders();
+
+    Map<String, String> deprecationHeaders = deprecationManager.getDeprecationHeaders(path);
+    if (deprecationHeaders == null || deprecationHeaders.isEmpty()) {
+      return;
+    }
+
+    // 仅设置还未存在的头，避免覆盖版本级别弃用头
+    deprecationHeaders.forEach(
+        (key, value) -> {
+          if (!headers.containsHeader(key)) {
+            headers.set(key, value);
+          }
+        });
   }
 
   /**
