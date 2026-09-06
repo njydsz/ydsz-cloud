@@ -49,6 +49,9 @@ public class TriggerEvaluationService {
     /** 递归深度跟踪：executionId -> 深度 */
     private final ConcurrentHashMap<String, AtomicInteger> recursionDepthMap = new ConcurrentHashMap<>();
 
+    /** 正则表达式编译缓存（pattern 字符串 → 编译后的 Pattern），避免每次匹配重复编译 */
+    private final ConcurrentHashMap<String, Pattern> patternCache = new ConcurrentHashMap<>(16);
+
     /** 最大递归深度 */
     private static final int MAX_RECURSION_DEPTH = 3;
 
@@ -215,7 +218,8 @@ public class TriggerEvaluationService {
             return false;
         }
         try {
-            return Pattern.compile(pattern).matcher(input).find();
+            Pattern compiled = patternCache.computeIfAbsent(pattern, Pattern::compile);
+            return compiled.matcher(input).find();
         } catch (PatternSyntaxException e) {
             log.warn("[Trigger] 无效的正则表达式: triggerId={}, pattern={}",
                     trigger.getTriggerId(), pattern);

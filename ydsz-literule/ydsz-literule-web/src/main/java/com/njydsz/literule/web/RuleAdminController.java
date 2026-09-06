@@ -51,6 +51,8 @@ import com.njydsz.literule.server.config.ABTestService;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
+
+import jakarta.annotation.Resource;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
 
 /**
@@ -107,6 +109,10 @@ public class RuleAdminController {
 
   /** 版本 Diff 服务 */
   private final RuleVersionDiffService ruleVersionDiffService;
+
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
 
   /**
    * 分页查询规则定义（P1-2 分页标准化）
