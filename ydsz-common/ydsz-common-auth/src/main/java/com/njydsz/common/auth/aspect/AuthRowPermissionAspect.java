@@ -28,9 +28,9 @@ import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
-import com.njydsz.common.jdbc.permission.DataPermissionContext;
-import com.njydsz.common.jdbc.permission.DataScopeContextHolder;
+import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
+import com.njydsz.common.domain.permission.DataPermissionContext;
+import com.njydsz.common.domain.holder.DataScopeContextHolder;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

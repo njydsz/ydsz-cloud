@@ -5,20 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
-
-import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.message.domain.identity.IdGenerator;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
@@ -64,11 +51,14 @@ public class NotificationServiceImpl implements NotificationService {
   /** P2-18: 站内通知全文搜索索引 */
   private final NotificationSearchService notificationSearchService;
 
-  /** 消息撤回服务 */
+    /** 消息撤回服务 */
   private final RecallService recallService;
 
   /** P2-6: 全局配置（读取 markAllReadBatchSize） */
   private final MessageProperties messageProperties;
+
+  /** ID 生成器（封装 Snowflake，避免 server 层直依赖 IdWorker） */
+  private final IdGenerator idGenerator;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -84,7 +74,7 @@ public class NotificationServiceImpl implements NotificationService {
     List<MsgNotificationVO> entities = new ArrayList<>(receiverIds.size());
     for (String rid : receiverIds) {
       MsgNotificationVO entity = buildEntity(dto, rid);
-      entity.setId(IdWorker.getIdStr());
+      entity.setId(idGenerator.nextId());
       entities.add(entity);
     }
     // 分批批量 insert（防止单条 SQL 参数超过 PG 65535 上限）

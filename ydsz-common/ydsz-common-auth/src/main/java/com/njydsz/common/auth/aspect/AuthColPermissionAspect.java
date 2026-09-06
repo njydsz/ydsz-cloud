@@ -44,7 +44,7 @@ import com.njydsz.common.auth.model.ColumnScopeInfo;
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
+import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
