@@ -46,6 +46,14 @@ ydsz:
         thread-name-prefix: flow-queue-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 10
+      # P2-2: auditExecutor — 工作流审计异步处理（@Async("auditExecutor")）
+      auditExecutor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: ydsz-flow-audit-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
   # P1-1: 分布式事务配置（当前未启用，TC 地址未配置时禁用，避免运行时降级 LOCAL 模式的反模式）
   # 如需启用，请配置 seata.enabled=true 并提供完整的 TC 客户端配置（vgroup-mapping / grouplist）
   seata:

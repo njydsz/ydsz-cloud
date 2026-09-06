@@ -23,6 +23,14 @@ ydsz:
         thread-name-prefix: ydsz-job-dispatch-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 15
+      # P2-2: auditExecutor — 调度审计异步处理（@Async("auditExecutor")）
+      auditExecutor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: ydsz-job-audit-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
   # P0-1: YdszJson ASM 预热（DAG 编解码/任务调度高频序列化 Bean）
   json:
     enabled: true

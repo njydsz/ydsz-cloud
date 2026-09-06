@@ -17,6 +17,19 @@ logging:
 #   -jar ydsz-message.jar
 #
 # Agent 配置优先级：-Dskywalking.xxx > agent/config/agent.config > 默认值
+# P2-2: 线程池配置 — 消息批次异步处理（@Async("messageBatchExecutor")）
+ydsz:
+  thread:
+    enabled: true
+    pools:
+      messageBatch:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydsz-msg-batch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+
 skywalking:
   agent:
     service_name: ${spring.application.name}

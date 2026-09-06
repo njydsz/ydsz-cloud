@@ -25,8 +25,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.alibaba.ttl.TtlCallable;
 import com.alibaba.ttl.TtlRunnable;
 import com.alibaba.ttl.threadpool.TtlExecutors;
-import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 
   // CHECKSTYLE.OFF: LineLength — Javadoc HTML 表格行，不可拆行
 /**

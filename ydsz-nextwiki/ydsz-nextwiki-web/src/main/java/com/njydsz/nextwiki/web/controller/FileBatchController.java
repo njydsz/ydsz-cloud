@@ -111,10 +111,13 @@ public class FileBatchController {
    *
    * <p>返回每条的处理结果（成功/失败原因），由前端根据 {@link FileApplicationService.BatchResultDTO} 展示。
    *
+   * <p><b>需要二次身份验证：</b>批量删除文件属于极敏感批量操作，需用户输入当前登录密码确认身份后方可执行。
+   *
    * @param nodeIds 节点 ID 列表
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为批量处理结果（successCount / failCount / failures）
    */
+  @SecondaryAuth(scene = "batch:delete", level = SensitiveLevel.CRITICAL, value = "批量删除文件")
   @Audit(
       module = "文件管理",
       type = AuditType.FILE,
@@ -228,10 +231,13 @@ public class FileBatchController {
    *
    * <p>适用于大批量操作（{@code nodeIds.size() > 10}），通过 task ID 轮询执行结果。
    *
+   * <p><b>需要二次身份验证：</b>异步批量删除文件属于极敏感批量操作，需用户输入当前登录密码确认身份后方可执行。
+   *
    * @param nodeIds 节点 ID 列表
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为任务 ID
    */
+  @SecondaryAuth(scene = "batch:delete", level = SensitiveLevel.CRITICAL, value = "异步批量删除文件")
   @Audit(
       module = "文件管理",
       type = AuditType.FILE,

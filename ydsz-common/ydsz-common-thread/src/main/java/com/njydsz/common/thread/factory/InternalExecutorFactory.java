@@ -13,8 +13,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 
 /**
  * Common 内部模块轻量线程池工厂。
