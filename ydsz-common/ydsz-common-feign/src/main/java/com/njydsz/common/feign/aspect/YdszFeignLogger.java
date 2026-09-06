@@ -2,9 +2,9 @@ package com.njydsz.common.feign.aspect;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import feign.Logger;
@@ -57,8 +57,9 @@ public class YdszFeignLogger extends Logger {
    * 预编译的 JSON 格式脱敏正则，缓存每个敏感字段对应的 Pattern，避免每次调用时重复编译。
    *
    * <p>惰性初始化：首次访问某个敏感字段时才编译对应的 Pattern。
+   * 使用 {@link ConcurrentHashMap} 保证并发安全（多线程同时调用 maskSensitive 时不会导致 LinkedHashMap 结构损坏）。
    */
-  private static final Map<String, Pattern> JSON_PATTERNS = new LinkedHashMap<>(16);
+  private static final Map<String, Pattern> JSON_PATTERNS = new ConcurrentHashMap<>(16);
 
   /** 用于匹配敏感字段在 JSON 中的值（字符串值） */
   private static final String JSON_VALUE_PATTERN_TEMPLATE = "(\"%s\"\\s*:\\s*\")[^\"]*(\")";

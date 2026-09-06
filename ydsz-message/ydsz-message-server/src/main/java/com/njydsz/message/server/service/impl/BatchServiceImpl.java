@@ -217,7 +217,7 @@ public class BatchServiceImpl implements BatchService {
    * @param payload 批次 payload JSON（序列化的请求列表）
    * @return 反序列化后的请求列表，解析失败返回空列表
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // 泛型擦除导致 List.class→List<MessageRequest> 编译期无法验证，无法在源码层面修复
   private List<MessageRequest> parsePayload(String payload) {
     if (!StringUtils.hasText(payload)) {
       return new ArrayList<>(0);

@@ -145,7 +145,7 @@ public class AuditAspect {
       servletRequestAttributes =
           (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     } catch (Exception ignored) {
-      // 非 Web 环境或请求上下文不可用时忽略
+      LOG.debug("获取 ServletRequestAttributes 失败（非 Web 环境或上下文不可用）", ignored);
     }
     final ServletRequestAttributes capturedRequestAttributes = servletRequestAttributes;
 
@@ -190,7 +190,7 @@ public class AuditAspect {
             try {
               RequestContextHolder.setRequestAttributes(requestAttributes, true);
             } catch (Exception ignored) {
-              // 请求属性不可设置时忽略
+              LOG.debug("设置请求属性失败（请求属性不可设置时忽略）", ignored);
             }
           }
           try {

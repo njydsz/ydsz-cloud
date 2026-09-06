@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.queue.metrics.QueueMetrics;
 
 /**
@@ -41,6 +44,8 @@ import com.njydsz.common.queue.metrics.QueueMetrics;
  * @since 26.09.01
  */
 public class QueueManager {
+
+  private static final Logger LOG = LoggerFactory.getLogger(QueueManager.class);
 
   private final Map<String, QueueEntry> queueRegistry = new ConcurrentHashMap<>();
   private final Map<String, QueueMetrics> metricsRegistry = new ConcurrentHashMap<>();
@@ -166,7 +171,7 @@ public class QueueManager {
           invokeClose(queue);
         }
       } catch (Exception e) {
-        // 忽略关闭异常，继续关闭下一个
+        LOG.debug("关闭队列异常（继续关闭下一个）", e);
       }
     }
     queueRegistry.clear();
@@ -202,7 +207,7 @@ public class QueueManager {
     try {
       closeable.close();
     } catch (Exception e) {
-      // 关闭异常忽略，继续关闭下一个
+      LOG.debug("关闭队列资源异常（继续关闭下一个）", e);
     }
   }
 }

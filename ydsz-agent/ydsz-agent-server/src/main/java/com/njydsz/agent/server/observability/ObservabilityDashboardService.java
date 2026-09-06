@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.observability;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +21,8 @@ import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
  *   <li>{@link AgentRuntimeMetrics} — 会话活跃度、执行耗时、TTFT
  *   <li>{@link CostAnalysisService} — Token 成本统计
  * </ul>
+ *
+ * <p>所有金额使用 {@link BigDecimal} 类型，精度 6 位小数（微美元级），符合货币计算规范。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -50,10 +53,10 @@ public class ObservabilityDashboardService {
     Map<String, CostAnalysisService.ModelCostStats> todayCostByModel =
         costAnalysisService.getStatsByModel(today.atStartOfDay(), today.plusDays(1).atStartOfDay());
 
-    double totalCostUsd =
+    BigDecimal totalCostUsd =
         todayCostByModel.values().stream()
-            .mapToDouble(CostAnalysisService.ModelCostStats::totalCostUsd)
-            .sum();
+            .map(CostAnalysisService.ModelCostStats::totalCostUsd)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
     long totalTokens =
         todayCostByModel.values().stream()
             .mapToLong(CostAnalysisService.ModelCostStats::totalTokens)
@@ -104,7 +107,7 @@ public class ObservabilityDashboardService {
    */
   public record DashboardOverviewDTO(
       LocalDateTime timestamp,
-      double todayCostUsd,
+      BigDecimal todayCostUsd,
       long todayTotalTokens,
       Map<String, CostAnalysisService.ModelCostStats> costByModel,
       int activeConversations,
@@ -118,5 +121,5 @@ public class ObservabilityDashboardService {
    * @param costUsd 总成本（USD）
    * @param callCount 调用次数
    */
-  public record ModelUsageDTO(String modelName, long tokens, double costUsd, long callCount) {}
+  public record ModelUsageDTO(String modelName, long tokens, BigDecimal costUsd, long callCount) {}
 }

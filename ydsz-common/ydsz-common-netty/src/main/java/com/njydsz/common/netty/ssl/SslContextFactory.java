@@ -171,8 +171,15 @@ public class SslContextFactory {
   /**
    * 打开输入流（支持 classpath: 前缀）。
    *
+   * <p><b>资源管理约定</b>：本方法返回的 {@link InputStream} 由<b>调用方负责关闭</b>。 调用方应使用 try-with-resources 确保流被正确关闭，例如：
+   * <pre>{@code
+   * try (InputStream is = openStream(path)) {
+   *   // 使用 is
+   * }
+   * }</pre>
+   *
    * @param path 资源路径
-   * @return InputStream
+   * @return InputStream，调用方负责关闭
    * @throws NettyException 资源不存在或打开失败时抛出
    */
   private static InputStream openStream(String path) {

@@ -11,16 +11,19 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
- * Outbox 事件数据库实体（Infra 层）。
+ * Outbox 事件数据库实体。
  *
  * <p>对应 {@code ydsz_msg_outbox} 表，用于实现事务性 Outbox 模式。
+ *
+ * <p>命名加 {@code Entity} 后缀以与领域事件 {@code domain.event.OutboxEvent} 区分，
+ * 确保 infra 层 Repository 实现可以同时 import 两者而无谓名称冲突。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Data
 @TableName("ydsz_msg_outbox")
-public class OutboxEvent implements Serializable {
+public class OutboxEventEntity implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;

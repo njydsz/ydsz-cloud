@@ -159,7 +159,7 @@ public class LocalStorage extends AbstractFileStorage {
           try {
             rawStream.close();
           } catch (IOException ignored) {
-            // suppress close exception
+            log.debug("关闭文件流异常（seek 不足后清理，已忽略）", ignored);
           }
           throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }

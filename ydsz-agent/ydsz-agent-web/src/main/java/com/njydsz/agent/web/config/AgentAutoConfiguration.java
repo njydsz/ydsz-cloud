@@ -1,9 +1,11 @@
 package com.njydsz.agent.web.config;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -363,10 +365,17 @@ public class AgentAutoConfiguration {
   @ConditionalOnMissingBean(CostAnalysisService.class)
   public CostAnalysisService costAnalysisService(
       TokenUsageRecordRepository tokenUsageRecordRepository, AgentProperties properties) {
-    Map<String, Double> prices = properties.getLlm().getModelPrices();
-    return prices != null && !prices.isEmpty()
-        ? new CostAnalysisService(tokenUsageRecordRepository, prices)
-        : new CostAnalysisService(tokenUsageRecordRepository);
+    Map<String, Double> rawPrices = properties.getLlm().getModelPrices();
+    if (rawPrices != null && !rawPrices.isEmpty()) {
+      // 将 Map<String, Double> 转换为 Map<String, BigDecimal>，避免浮点精度丢失
+      Map<String, BigDecimal> prices =
+          rawPrices.entrySet().stream()
+              .collect(
+                  Collectors.toMap(
+                      Map.Entry::getKey, e -> BigDecimal.valueOf(e.getValue()), (v1, v2) -> v1));
+      return new CostAnalysisService(tokenUsageRecordRepository, prices);
+    }
+    return new CostAnalysisService(tokenUsageRecordRepository);
   }
 
   /**

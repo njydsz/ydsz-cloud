@@ -208,8 +208,15 @@ public class SearchTextProcessor {
    *
    * <p>支持 {@code classpath:} 前缀和普通文件系统路径。
    *
+   * <p><b>资源管理约定</b>：本方法返回的 {@link InputStream} 由<b>调用方负责关闭</b>。 建议使用 try-with-resources 包裹调用，例如：
+   * <pre>{@code
+   * try (InputStream is = openDictionary(path)) {
+   *   // 使用 is
+   * }
+   * }</pre>
+   *
    * @param path 文件路径
-   * @return 输入流，未找到返回 {@code null}
+   * @return 输入流，未找到或路径为空时返回 {@code null}
    */
   private InputStream openDictionary(String path) throws IOException {
     if (path == null || path.isEmpty()) {

@@ -26,6 +26,8 @@ import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.RuleCategoryProvider;
 
+import jakarta.annotation.Resource;
+
 /**
  * 规则目录树 Controller
  *
@@ -58,6 +60,10 @@ public class RuleCategoryController {
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
 
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
+
   /**
    * 获取规则目录树
    *
@@ -67,7 +73,7 @@ public class RuleCategoryController {
   @GetMapping("/category-tree")
   public YdszResponse<CategoryNodeVO> categoryTree() {
     return YdszResponse.success(
-        LiteruleWebConverter.INSTANCE.entityToVO(ruleCategoryProvider.buildTree()));
+        literuleWebConverter.entityToVO(ruleCategoryProvider.buildTree()));
   }
 
   /**
@@ -81,7 +87,7 @@ public class RuleCategoryController {
       @RequestParam(value = "path", required = false) String path) {
     return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream()
-            .map(LiteruleWebConverter.INSTANCE::entityToVO)
+            .map(literuleWebConverter::entityToVO)
             .toList());
   }
 
@@ -94,7 +100,7 @@ public class RuleCategoryController {
       @RequestParam(value = "owner") String owner) {
     return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByOwner(owner).stream()
-            .map(LiteruleWebConverter.INSTANCE::entityToVO)
+            .map(literuleWebConverter::entityToVO)
             .toList());
   }
 

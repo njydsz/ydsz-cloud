@@ -12,6 +12,9 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.listener.RemovalListener;
@@ -63,6 +66,8 @@ import com.njydsz.common.cache.support.CacheWriter;
  * @since 26.09.01
  */
 public class WriteThroughCache<K, V> implements Cache<K, V> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(WriteThroughCache.class);
 
   /** 底层缓存 */
   private final Cache<K, V> delegate;
@@ -456,7 +461,7 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     try {
       listener.onRemoval(key, value, cause);
     } catch (Exception e) {
-      // 忽略监听器异常
+      LOG.debug("监听器执行异常，已忽略", e);
     }
   }
 

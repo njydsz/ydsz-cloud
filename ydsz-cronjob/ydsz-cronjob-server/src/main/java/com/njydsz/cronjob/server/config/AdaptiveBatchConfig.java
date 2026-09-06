@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.server.config;
 
+import java.math.BigDecimal;
+
 import lombok.Data;
 
 /**
@@ -28,13 +30,13 @@ public class AdaptiveBatchConfig {
   private static final int DEFAULT_MAX_BATCH_SIZE = 1000;
 
   /** 默认cpuThreshold值（可被配置文件覆盖） */
-  private static final double DEFAULT_CPU_THRESHOLD = 70.0;
+  private static final BigDecimal DEFAULT_CPU_THRESHOLD = new BigDecimal("70.0");
 
   /** 默认memThreshold值（可被配置文件覆盖） */
-  private static final double DEFAULT_MEM_THRESHOLD = 80.0;
+  private static final BigDecimal DEFAULT_MEM_THRESHOLD = new BigDecimal("80.0");
 
   /** 默认poolActiveThreshold值（可被配置文件覆盖） */
-  private static final double DEFAULT_POOL_ACTIVE_THRESHOLD = 80.0;
+  private static final BigDecimal DEFAULT_POOL_ACTIVE_THRESHOLD = new BigDecimal("80.0");
 
   /** 默认evalIntervalSeconds值（可被配置文件覆盖） */
   private static final int DEFAULT_EVAL_INTERVAL_SECONDS = 10;
@@ -49,13 +51,13 @@ public class AdaptiveBatchConfig {
   private int maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
 
   /** CPU 使用率阈值（百分比），超过此值开始缩减批量 */
-  private double cpuThreshold = DEFAULT_CPU_THRESHOLD;
+  private BigDecimal cpuThreshold = DEFAULT_CPU_THRESHOLD;
 
   /** 内存使用率阈值（百分比），超过此值开始缩减批量 */
-  private double memThreshold = DEFAULT_MEM_THRESHOLD;
+  private BigDecimal memThreshold = DEFAULT_MEM_THRESHOLD;
 
   /** 线程池活跃度阈值（百分比，activeThreads/maxThreads），超过此值开始缩减批量 */
-  private double poolActiveThreshold = DEFAULT_POOL_ACTIVE_THRESHOLD;
+  private BigDecimal poolActiveThreshold = DEFAULT_POOL_ACTIVE_THRESHOLD;
 
   /** 负载评估间隔（秒，默认 10s） */
   private int evalIntervalSeconds = DEFAULT_EVAL_INTERVAL_SECONDS;

@@ -3,6 +3,7 @@ package com.njydsz.message.server.channel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -250,7 +251,7 @@ public class FeishuChannel implements MessageChannel {
    * <p>签名算法：HMAC-SHA256(timestamp + "\n" + secret, secret) → Base64。 timestamp 为秒级。
    *
    * @param secret 加签密钥
-   * @return 含 timestamp 与 sign 的 Map
+   * @return 含 timestamp 与 sign 的 Map；加签异常时返回空 Map
    */
   Map<String, String> appendSign(String secret) {
     try {
@@ -267,7 +268,7 @@ public class FeishuChannel implements MessageChannel {
       return result;
     } catch (Exception e) {
       log.error("[FEISHU] 加签失败,放弃发送: {}", e.getMessage(), e);
-      return null;
+      return Collections.emptyMap();
     }
   }
 }

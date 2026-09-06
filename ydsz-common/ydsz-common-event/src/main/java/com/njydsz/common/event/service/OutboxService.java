@@ -275,7 +275,7 @@ public class OutboxService {
     try {
       return RequestContext.getTenantId();
     } catch (NoClassDefFoundError | Exception e) {
-      // RequestContext 不可用时返回 null
+      LOG.debug("RequestContext 不可用，tenantId 返回 null", e);
       return null;
     }
   }
@@ -295,7 +295,7 @@ public class OutboxService {
         return traceId;
       }
     } catch (NoClassDefFoundError | Exception ignored) {
-      // RequestContext 不可用
+      LOG.debug("RequestContext 不可用，降级从 MDC 获取 traceId", ignored);
     }
     // 从 MDC 获取
     try {
@@ -304,7 +304,7 @@ public class OutboxService {
         return mdcTraceId;
       }
     } catch (Exception ignored) {
-      // MDC 不可用
+      LOG.debug("MDC 不可用，traceId 返回 null", ignored);
     }
     return null;
   }

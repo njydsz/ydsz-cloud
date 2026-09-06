@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.message.domain.entity.OutboxEvent;
+import com.njydsz.message.domain.entity.OutboxEventEntity;
 
 /**
  * Outbox 事件 MyBatis Mapper。
@@ -18,7 +18,7 @@ import com.njydsz.message.domain.entity.OutboxEvent;
  * @since 26.09.01
  */
 @Mapper
-public interface OutboxEventMapper extends BaseMapper<OutboxEvent> {
+public interface OutboxEventMapper extends BaseMapper<OutboxEventEntity> {
 
   /**
    * 按状态统计事件数量。

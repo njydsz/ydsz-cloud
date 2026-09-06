@@ -69,6 +69,13 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
   private static final String ENGINE_NAME = "pg";
   private static final String DEFAULT_SEARCH_CONFIG = "search_zh";
   private static final String FALLBACK_SEARCH_CONFIG = "simple";
+
+  /** 降级恢复探测间隔（30 秒）。 */
+  private static final Duration RECOVERY_PROBE_INTERVAL = Duration.ofSeconds(30);
+
+  /** 批量索引时每批次的大小。 */
+  private static final int BATCH_INDEX_SIZE = 100;
+
   private static final Set<String> ALLOWED_COLUMNS =
       Set.of(
           "id",
@@ -405,9 +412,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             + " updated_at = EXCLUDED.updated_at, searchable_text = EXCLUDED.searchable_text,"
             + " metadata = EXCLUDED.metadata, updated_at_ts = NOW()";
 
-    int batchSize = 100;
-    for (int i = 0; i < documents.size(); i += batchSize) {
-      int end = Math.min(i + batchSize, documents.size());
+    for (int i = 0; i < documents.size(); i += BATCH_INDEX_SIZE) {
+      int end = Math.min(i + BATCH_INDEX_SIZE, documents.size());
       List<IndexDocument> batch = documents.subList(i, end);
       try {
         jdbcTemplate.batchUpdate(
@@ -688,7 +694,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             }
           }
         },
-        Duration.ofSeconds(30));
+        RECOVERY_PROBE_INTERVAL);
   }
 
   private String detectSearchConfig() {

@@ -47,6 +47,9 @@ import com.njydsz.common.queue.service.IMessagePublisher;
 @Slf4j
 public class KafkaMessagePublisher implements IMessagePublisher {
 
+  /** Producer 关闭时的最大等待时间（5 秒），超时后强制 shutdownNow。 */
+  private static final Duration CLOSE_TIMEOUT = Duration.ofSeconds(5);
+
   private final KafkaProducer<String, String> producer;
   private final String topic;
   private volatile boolean closed = false;
@@ -257,7 +260,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
       try {
         if (producer != null) {
           producer.flush();
-          producer.close(Duration.ofSeconds(5));
+          producer.close(CLOSE_TIMEOUT);
           log.info("[Kafka] 发布者已关闭，topic={}", topic);
         }
       } catch (Exception e) {

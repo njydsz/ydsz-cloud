@@ -56,6 +56,18 @@ generator:
     # 排队容量
     queue-capacity: 64
 
+# 统一线程池配置（ydsz-common-thread）
+ydsz:
+  thread:
+    pools:
+      code-gen:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 64
+        thread-name-prefix: code-gen-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+
 # 日志
 logging:
   level:

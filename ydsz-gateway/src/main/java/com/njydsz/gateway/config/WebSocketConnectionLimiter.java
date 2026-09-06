@@ -96,7 +96,7 @@ public class WebSocketConnectionLimiter {
   @Value("${ydsz.gateway.websocket.counter-ttl-seconds:3600}")
   private long counterTtlSeconds;
 
-  private final RedisScript<Long> incrScript;
+  private RedisScript<Long> incrScript;
 
   /**
    * 初始化 Lua 脚本。

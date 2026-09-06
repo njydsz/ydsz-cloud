@@ -3,6 +3,8 @@ package com.njydsz.cronjob.server.metrics;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -57,22 +59,31 @@ import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 @Component("cronjobMetrics")
 public class CronjobMetrics extends SentryMetricsAdapter {
   /** CPU 高负载权重 */
-  private static final double CPU_WEIGHT_HIGH = 0.5;
+  private static final BigDecimal CPU_WEIGHT_HIGH = new BigDecimal("0.5");
 
   /** CPU 正常权重 */
-  private static final double CPU_WEIGHT_LOW = 0.4;
+  private static final BigDecimal CPU_WEIGHT_LOW = new BigDecimal("0.4");
 
   /** 内存高负载权重 */
-  private static final double MEM_WEIGHT_HIGH = 0.4;
+  private static final BigDecimal MEM_WEIGHT_HIGH = new BigDecimal("0.4");
 
   /** 内存正常权重 */
-  private static final double MEM_WEIGHT_LOW = 0.3;
+  private static final BigDecimal MEM_WEIGHT_LOW = new BigDecimal("0.3");
 
   /** 线程池高负载权重 */
-  private static final double POOL_WEIGHT_HIGH = 0.4;
+  private static final BigDecimal POOL_WEIGHT_HIGH = new BigDecimal("0.4");
 
   /** 线程池正常权重 */
-  private static final double POOL_WEIGHT_LOW = 0.3;
+  private static final BigDecimal POOL_WEIGHT_LOW = new BigDecimal("0.3");
+
+  /** 百分比常量（100） */
+  private static final BigDecimal HUNDRED = new BigDecimal("100");
+
+  /** BigDecimal 比较用的 1.0 */
+  private static final BigDecimal ONE = new BigDecimal("1");
+
+  /** BigDecimal 除法运算精度（小数位数） */
+  private static final int BIG_DECIMAL_SCALE = 4;
 
 
   /** P1-2: 运行中任务数计数器（Redis 维护，替代 DB 查询） */
@@ -453,17 +464,17 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   @Scheduled(fixedDelayString = "#{${ydsz.cronjob.adaptive-batch.eval-interval-seconds:10} * 1000}")
   public void collectSystemLoadMetrics() {
     try {
-      double cpuUsage = getCpuUsage();
-      double memUsage = getMemUsage();
-      double poolActive = poolActivePct.get();
-      double score = calculateLoadScore(cpuUsage, memUsage, poolActive);
-      systemLoadScore.set((long) (score * 1000));
+      BigDecimal cpuUsage = getCpuUsage();
+      BigDecimal memUsage = getMemUsage();
+      BigDecimal poolActive = BigDecimal.valueOf(poolActivePct.get());
+      BigDecimal score = calculateLoadScore(cpuUsage, memUsage, poolActive);
+      systemLoadScore.set(score.multiply(new BigDecimal("1000")).longValue());
       cachedSystemLoadScore = systemLoadScore.get();
       log.debug(
           "[CronjobMetrics] 系统负载采集: cpu={}%, mem={}%, pool={}%",
-          String.format("%.1f", cpuUsage),
-          String.format("%.1f", memUsage),
-          String.format("%.1f", poolActive));
+          cpuUsage.setScale(1, RoundingMode.HALF_UP).toPlainString(),
+          memUsage.setScale(1, RoundingMode.HALF_UP).toPlainString(),
+          poolActive.setScale(1, RoundingMode.HALF_UP).toPlainString());
     } catch (Exception e) {
       log.warn("[CronjobMetrics] 系统负载采集异常: {}", e.getMessage());
     }
@@ -474,30 +485,32 @@ public class CronjobMetrics extends SentryMetricsAdapter {
    *
    * <p>使用 {@link com.sun.management.OperatingSystemMXBean#getCpuLoad()}，返回 -1 时回退为 0。
    */
-  private double getCpuUsage() {
+  private BigDecimal getCpuUsage() {
     try {
       if (osMXBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
         // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
         double load = sunOs.getCpuLoad();
-        return load >= 0 ? load * 100 : 0;
+        return load >= 0 ? BigDecimal.valueOf(load).multiply(HUNDRED) : BigDecimal.ZERO;
       }
-    } catch (Exception ignored) {
-      // 降级处理
+    } catch (Exception e) {
+      log.warn("CPU 采集异常，降级处理", e);
     }
-    return 0;
+    return BigDecimal.ZERO;
   }
 
   /** 获取堆内存使用率（百分比，0-100）。 */
-  private double getMemUsage() {
+  private BigDecimal getMemUsage() {
     try {
       long used = memoryMXBean.getHeapMemoryUsage().getUsed();
       long max = memoryMXBean.getHeapMemoryUsage().getMax();
       if (max <= 0) {
-        return 0;
+        return BigDecimal.ZERO;
       }
-      return (double) used / max * 100;
-    } catch (Exception ignored) {
-      return 0;
+      return BigDecimal.valueOf(used).divide(BigDecimal.valueOf(max), BIG_DECIMAL_SCALE,
+          RoundingMode.HALF_UP).multiply(HUNDRED);
+    } catch (Exception e) {
+      log.warn("内存采集异常，降级处理", e);
+      return BigDecimal.ZERO;
     }
   }
 
@@ -506,16 +519,23 @@ public class CronjobMetrics extends SentryMetricsAdapter {
    *
    * <p>当任一指标超过对应阈值时，该项权重放大；均未超过时，按基线权重计算。
    */
-  private double calculateLoadScore(double cpuUsage, double memUsage, double poolActive) {
+  private BigDecimal calculateLoadScore(BigDecimal cpuUsage, BigDecimal memUsage,
+      BigDecimal poolActive) {
     AdaptiveBatchConfig config = cronjobProperties.getAdaptiveBatch();
-    double cpuScore = Math.min(1.0, cpuUsage / 100.0);
-    double memScore = Math.min(1.0, memUsage / 100.0);
-    double poolScore = Math.min(1.0, poolActive / 100.0);
-    double cpuWeight = cpuUsage > config.getCpuThreshold() ? CPU_WEIGHT_HIGH : CPU_WEIGHT_LOW;
-    double memWeight = memUsage > config.getMemThreshold() ? MEM_WEIGHT_HIGH : MEM_WEIGHT_LOW;
-    double poolWeight = poolActive > config.getPoolActiveThreshold() ? POOL_WEIGHT_HIGH : POOL_WEIGHT_LOW;
-    double totalWeight = cpuWeight + memWeight + poolWeight;
-    return (cpuScore * cpuWeight + memScore * memWeight + poolScore * poolWeight) / totalWeight;
+    BigDecimal cpuScore = ONE.min(cpuUsage.divide(HUNDRED, BIG_DECIMAL_SCALE, RoundingMode.HALF_UP));
+    BigDecimal memScore = ONE.min(memUsage.divide(HUNDRED, BIG_DECIMAL_SCALE, RoundingMode.HALF_UP));
+    BigDecimal poolScore = ONE.min(poolActive.divide(HUNDRED, BIG_DECIMAL_SCALE, RoundingMode.HALF_UP));
+    BigDecimal cpuWeight =
+        cpuUsage.compareTo(config.getCpuThreshold()) > 0 ? CPU_WEIGHT_HIGH : CPU_WEIGHT_LOW;
+    BigDecimal memWeight =
+        memUsage.compareTo(config.getMemThreshold()) > 0 ? MEM_WEIGHT_HIGH : MEM_WEIGHT_LOW;
+    BigDecimal poolWeight =
+        poolActive.compareTo(config.getPoolActiveThreshold()) > 0 ? POOL_WEIGHT_HIGH
+            : POOL_WEIGHT_LOW;
+    BigDecimal totalWeight = cpuWeight.add(memWeight).add(poolWeight);
+    return cpuScore.multiply(cpuWeight).add(memScore.multiply(memWeight))
+        .add(poolScore.multiply(poolWeight))
+        .divide(totalWeight, BIG_DECIMAL_SCALE, RoundingMode.HALF_UP);
   }
 
   // ===========================================

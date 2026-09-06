@@ -1,5 +1,7 @@
 package com.njydsz.agent.server.analytics;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -30,6 +32,8 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  *   <li>{@link #calculateTotalCost} — 计算日期范围内总成本
  * </ul>
  *
+ * <p>所有金额使用 {@link BigDecimal} 类型，精度 6 位小数（微美元级），符合货币计算规范。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -38,6 +42,11 @@ public class CostAnalysisService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** 金额保留小数位 */
+  private static final int PRICE_SCALE = 6;
+
+  /** Token 单价换算除数（千 Token → 单 Token） */
+  private static final BigDecimal DIVISOR_PER_THOUSAND = new BigDecimal("1000");
 
   /**
    * 用量记录异步写入线程池（JDK 21 虚拟线程，规范豁免场景）。
@@ -68,7 +77,8 @@ public class CostAnalysisService {
   }
 
   public CostAnalysisService(
-      TokenUsageRecordRepository tokenUsageRecordRepository, Map<String, Double> modelPrices) {
+      TokenUsageRecordRepository tokenUsageRecordRepository,
+      Map<String, BigDecimal> modelPrices) {
     this.tokenUsageRecordRepository = tokenUsageRecordRepository;
     this.priceConfig = new ModelPriceConfig(modelPrices);
   }
@@ -130,14 +140,16 @@ public class CostAnalysisService {
     long prompt = records.stream().mapToLong(TokenUsageRecordVO::getPromptTokens).sum();
     long completion = records.stream().mapToLong(TokenUsageRecordVO::getCompletionTokens).sum();
     long total = records.stream().mapToLong(TokenUsageRecordVO::getTotalTokens).sum();
-    double cost =
+    BigDecimal cost =
         records.stream()
-            .mapToDouble(
+            .map(
                 r -> {
-                  double price = priceConfig.getPrice(r.getModelName());
-                  return r.getTotalTokens() * price / 1000.0;
+                  BigDecimal price = priceConfig.getPrice(r.getModelName());
+                  return BigDecimal.valueOf(r.getTotalTokens())
+                      .multiply(price)
+                      .divide(DIVISOR_PER_THOUSAND, PRICE_SCALE, RoundingMode.HALF_UP);
                 })
-            .sum();
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
     return new ModelUsageStats(prompt, completion, total, cost, records.size());
   }
 
@@ -147,7 +159,7 @@ public class CostAnalysisService {
    * @param model 模型名称
    * @return 单价；未配置时返回兜底单价 0.001
    */
-  public double getModelPrice(String model) {
+  public BigDecimal getModelPrice(String model) {
     return priceConfig.getPrice(model);
   }
 
@@ -158,7 +170,7 @@ public class CostAnalysisService {
    * @param end 结束日期（含）
    * @return 总成本（USD）
    */
-  public double calculateTotalCost(LocalDate start, LocalDate end) {
+  public BigDecimal calculateTotalCost(LocalDate start, LocalDate end) {
     ModelUsageStats stats = getStatsByModel(start, end);
     return stats.cost();
   }
@@ -184,8 +196,12 @@ public class CostAnalysisService {
       stats.completionTokens += record.getCompletionTokens();
       stats.totalTokens += record.getTotalTokens();
       stats.callCount++;
-      stats.totalCostUsd +=
-          record.getTotalTokens() * priceConfig.getPrice(record.getModelName()) / 1000.0;
+      BigDecimal price = priceConfig.getPrice(record.getModelName());
+      BigDecimal stepCost =
+          BigDecimal.valueOf(record.getTotalTokens())
+              .multiply(price)
+              .divide(DIVISOR_PER_THOUSAND, PRICE_SCALE, RoundingMode.HALF_UP);
+      stats.totalCostUsd = stats.totalCostUsd.add(stepCost);
     }
     Map<String, ModelCostStats> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     agg.forEach(
@@ -214,7 +230,7 @@ public class CostAnalysisService {
       long promptTokens,
       long completionTokens,
       long totalTokens,
-      double totalCostUsd,
+      BigDecimal totalCostUsd,
       long callCount) {}
 
   /** 可变统计累加器（仅用于 {@link #getStatsByModel(LocalDateTime, LocalDateTime)} 内部聚合）。 */
@@ -222,7 +238,7 @@ public class CostAnalysisService {
     private long promptTokens;
     private long completionTokens;
     private long totalTokens;
-    private double totalCostUsd;
+    private BigDecimal totalCostUsd = BigDecimal.ZERO;
     private long callCount;
   }
 
@@ -239,7 +255,7 @@ public class CostAnalysisService {
       long promptTokens,
       long completionTokens,
       long totalTokens,
-      double cost,
+      BigDecimal cost,
       long requestCount) {}
 
   /**
@@ -250,30 +266,30 @@ public class CostAnalysisService {
   public static class ModelPriceConfig {
 
     /** 未知模型兜底单价（USD / 千 Token） */
-    private static final double FALLBACK_PRICE = 0.001;
+    private static final BigDecimal FALLBACK_PRICE = new BigDecimal("0.001");
 
     /** 默认：gpt-4o 单价（USD / 千 Token） */
-    private static final double DEFAULT_GPT4O = 0.0025;
+    private static final BigDecimal DEFAULT_GPT4O = new BigDecimal("0.0025");
 
     /** 默认：gpt-4o-mini 单价（USD / 千 Token） */
-    private static final double DEFAULT_GPT4O_MINI = 0.00015;
+    private static final BigDecimal DEFAULT_GPT4O_MINI = new BigDecimal("0.00015");
 
     /** 默认：gpt-4-turbo 单价（USD / 千 Token） */
-    private static final double DEFAULT_GPT4_TURBO = 0.01;
+    private static final BigDecimal DEFAULT_GPT4_TURBO = new BigDecimal("0.01");
 
     /** 默认：gpt-3.5-turbo 单价（USD / 千 Token） */
-    private static final double DEFAULT_GPT35_TURBO = 0.0005;
+    private static final BigDecimal DEFAULT_GPT35_TURBO = new BigDecimal("0.0005");
 
     /** 默认：deepseek-chat 单价（USD / 千 Token） */
-    private static final double DEFAULT_DEEPSEEK = 0.00014;
+    private static final BigDecimal DEFAULT_DEEPSEEK = new BigDecimal("0.00014");
 
     /** 默认价格表初始容量 */
     private static final int DEFAULT_PRICE_MAP_CAPACITY = 5;
 
-    private final Map<String, Double> prices;
+    private final Map<String, BigDecimal> prices;
 
     public ModelPriceConfig() {
-      Map<String, Double> defaultPrices = new LinkedHashMap<>(DEFAULT_PRICE_MAP_CAPACITY);
+      Map<String, BigDecimal> defaultPrices = new LinkedHashMap<>(DEFAULT_PRICE_MAP_CAPACITY);
       // 注意：子串匹配场景下必须"长键优先"，gpt-4o-mini 需排在 gpt-4o 之前，否则会被错误命中
       defaultPrices.put("gpt-4o-mini", DEFAULT_GPT4O_MINI);
       defaultPrices.put("gpt-4o", DEFAULT_GPT4O);
@@ -283,18 +299,23 @@ public class CostAnalysisService {
       this.prices = defaultPrices;
     }
 
-    public ModelPriceConfig(Map<String, Double> customPrices) {
+    public ModelPriceConfig(Map<String, BigDecimal> customPrices) {
       if (customPrices != null && !customPrices.isEmpty()) {
         // 拷贝为 LinkedHashMap 保序，并在插入时按"键长度降序"排序，保证子串匹配时最长键优先
-        this.prices = customPrices.entrySet().stream()
-            .sorted(Map.Entry.<String, Double>comparingByKey(
-                    (k1, k2) -> Integer.compare(k2.length(), k1.length()))
-                .thenComparing(Map.Entry.comparingByKey()))
-            .collect(
-                Collectors.toMap(
-                    Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
+        this.prices =
+            customPrices.entrySet().stream()
+                .sorted(
+                    Map.Entry.<String, BigDecimal>comparingByKey(
+                            (k1, k2) -> Integer.compare(k2.length(), k1.length()))
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .collect(
+                    Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (v1, v2) -> v1,
+                        LinkedHashMap::new));
       } else {
-        Map<String, Double> defaultPrices = new LinkedHashMap<>(DEFAULT_PRICE_MAP_CAPACITY);
+        Map<String, BigDecimal> defaultPrices = new LinkedHashMap<>(DEFAULT_PRICE_MAP_CAPACITY);
         defaultPrices.put("gpt-4o-mini", DEFAULT_GPT4O_MINI);
         defaultPrices.put("gpt-4o", DEFAULT_GPT4O);
         defaultPrices.put("gpt-4-turbo", DEFAULT_GPT4_TURBO);
@@ -318,7 +339,7 @@ public class CostAnalysisService {
      * @param model 模型名称，允许为 {@code null} 或空白
      * @return 单价（USD / 千 Token），恒大于 0
      */
-    public double getPrice(String model) {
+    public BigDecimal getPrice(String model) {
       if (model == null || model.isBlank()) {
         return FALLBACK_PRICE;
       }

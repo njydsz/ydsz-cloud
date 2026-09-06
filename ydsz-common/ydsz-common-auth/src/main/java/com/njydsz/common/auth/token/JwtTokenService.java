@@ -2,6 +2,7 @@ package com.njydsz.common.auth.token;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+// jwt 库 API 强约束 java.util.Date（jjwt 0.12 暂不支持 Instant）
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;

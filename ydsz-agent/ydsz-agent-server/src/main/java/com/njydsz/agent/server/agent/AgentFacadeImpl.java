@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.agent;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -45,7 +46,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 public class AgentFacadeImpl implements AgentFacade {
 
   /** 默认温度参数 */
-  private static final double DEFAULT_TEMPERATURE = 0.7;
+  private static final BigDecimal DEFAULT_TEMPERATURE = new BigDecimal("0.7");
 
   /** 默认最大 Token 数 */
   private static final int DEFAULT_MAX_TOKENS = 2048;

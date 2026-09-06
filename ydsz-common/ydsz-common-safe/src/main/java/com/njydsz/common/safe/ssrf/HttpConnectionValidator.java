@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -241,6 +242,9 @@ public final class HttpConnectionValidator {
 
     private List<Pattern> blockedDomainPatterns;
 
+    /** 域名模式编译缓存（domain 字符串 → Pattern），避免重复编译。 */
+    private final ConcurrentHashMap<String, Pattern> domainPatternCache = new ConcurrentHashMap<>();
+
     public SsrfProperties() {
       compilePatterns();
     }
@@ -285,8 +289,10 @@ public final class HttpConnectionValidator {
     }
 
     private Pattern domainToRegex(String domain) {
-      String regex = domain.replace(".", "\\.").replace("*", ".*");
-      return Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+      return domainPatternCache.computeIfAbsent(domain, d -> {
+        String regex = d.replace(".", "\\.").replace("*", ".*");
+        return Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+      });
     }
   }
 

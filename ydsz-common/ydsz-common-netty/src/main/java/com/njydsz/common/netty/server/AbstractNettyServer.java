@@ -442,7 +442,7 @@ public abstract class AbstractNettyServer {
       try {
         return ((InetSocketAddress) serverChannel.localAddress()).getPort();
       } catch (ClassCastException | NullPointerException ignored) {
-        // 降级返回配置端口
+        log.debug("[Netty] 获取监听端口失败（降级返回配置端口）: {}", ignored.getMessage());
       }
     }
     return port;

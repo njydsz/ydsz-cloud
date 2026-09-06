@@ -25,6 +25,14 @@ import com.njydsz.common.core.response.YdszResponse;
  *
  * <p><b>分表支持：</b>当启用分表时，查询会自动根据时间范围路由到对应分表， 跨分表查询使用 UNION ALL 合并结果。
  *
+ * <p><b>SQL 注入防护策略（YDIZ-SEC-001 合规）</b>
+ *
+ * <ul>
+ *   <li>表名通过白名单正则 {@code ^[a-zA-Z_][a-zA-Z0-9_]{0,63}$} 校验（JDBC 不支持表名参数化）</li>
+ *   <li>WHERE 条件全部使用 {@code column = ?} 参数化绑定，禁止拼接用户输入</li>
+ *   <li>ORDER BY / LIMIT / OFFSET 子句使用类常量或 int 原生类型拼接，不接受外部字符串</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -35,11 +43,20 @@ public class DefaultAuditQueryService implements AuditQueryService {
   /** 默认基础表名 */
   private static final String DEFAULT_BASE_TABLE_NAME = "sys_audit_log";
 
-  /** 表名白名单正则：仅允许字母、数字、下划线 */
-  private static final Pattern TABLE_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+  /** 表名白名单正则：仅允许字母、数字、下划线，最大长度 64 字符 */
+  private static final Pattern TABLE_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$");
 
   /** 默认查询时间范围（月） */
   private static final int DEFAULT_QUERY_RANGE_MONTHS = 12;
+
+  /** 默认排序子句（固定写法，不使用用户输入） */
+  private static final String DEFAULT_ORDER_BY = " ORDER BY operation_time DESC";
+
+  /** LIMIT/OFFSET 句式模板（参数为 int 类型，无注入风险） */
+  private static final String LIMIT_OFFSET_TEMPLATE = " LIMIT %d OFFSET %d";
+
+  /** 单条限制子句 */
+  private static final String LIMIT_1 = " LIMIT 1";
 
   /** JDBC 模板，用于执行数据库查询 */
   private final JdbcTemplate jdbcTemplate;
@@ -79,8 +96,11 @@ public class DefaultAuditQueryService implements AuditQueryService {
   /**
    * 校验表名合法性，防止 SQL 注入
    *
+   * <p>表名必须匹配正则 {@code ^[a-zA-Z_][a-zA-Z0-9_]{0,63}$}，即仅允许字母、数字、下划线，
+   * 最大长度 64 字符，且不能以数字开头。
+   *
    * @param tableName 表名
-   * @throws IllegalArgumentException 如果表名不合法
+   * @throws IllegalArgumentException 如果表名不合法或超过最大长度
    */
   private void validateTableName(String tableName) {
     if (tableName == null || tableName.isEmpty()) {
@@ -381,11 +401,13 @@ public class DefaultAuditQueryService implements AuditQueryService {
   /** 构建 SELECT SQL（带分页） */
   private String buildSelectSqlWithLimit(
       String tableName, String condition, int limit, int offset) {
+    int safeLimit = Math.max(0, limit);
+    int safeOffset = Math.max(0, offset);
     String sql = "SELECT * FROM " + tableName;
     if (condition != null && !condition.isEmpty()) {
       sql += " WHERE " + condition;
     }
-    sql += " ORDER BY operation_time DESC LIMIT " + limit + " OFFSET " + offset;
+    sql += DEFAULT_ORDER_BY + String.format(LIMIT_OFFSET_TEMPLATE, safeLimit, safeOffset);
     return sql;
   }
 
@@ -510,14 +532,14 @@ public class DefaultAuditQueryService implements AuditQueryService {
       String table = tables.iterator().next();
       validateTableName(table);
       // whereClause built from hardcoded fragments (column = ?) — safe from SQL injection
+      int safeLimit = Math.max(0, limit);
+      int safeOffset = Math.max(0, offset);
       return "SELECT * FROM "
           + table
           + " WHERE "
           + whereClause
-          + " ORDER BY operation_time DESC LIMIT "
-          + limit
-          + " OFFSET "
-          + offset;
+          + DEFAULT_ORDER_BY
+          + String.format(LIMIT_OFFSET_TEMPLATE, safeLimit, safeOffset);
     }
     StringBuilder sql = new StringBuilder();
     sql.append("SELECT * FROM (");
@@ -531,10 +553,9 @@ public class DefaultAuditQueryService implements AuditQueryService {
       sql.append("SELECT * FROM ").append(table).append(" WHERE ").append(whereClause);
       idx++;
     }
-    sql.append(") AS combined ORDER BY operation_time DESC LIMIT ")
-        .append(limit)
-        .append(" OFFSET ")
-        .append(offset);
+    sql.append(") AS combined ")
+        .append(DEFAULT_ORDER_BY)
+        .append(String.format(LIMIT_OFFSET_TEMPLATE, Math.max(0, limit), Math.max(0, offset)));
     return sql.toString();
   }
 

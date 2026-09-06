@@ -34,6 +34,9 @@ public class DagParser {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** 反向邻接表子列表初始容量 */
+  private static final int REVERSE_ADJ_INNER_CAPACITY = 4;
+
 
   /**
    * 拓扑排序（Kahn 算法）。
@@ -139,7 +142,7 @@ public class DagParser {
     if (start == null || adj == null || !adj.containsKey(start)) {
       return Collections.emptyList();
     }
-    List<String> descendants = new ArrayList<>();
+    List<String> descendants = new ArrayList<>(COLLECTION_CAPACITY);
     Deque<String> queue = new ArrayDeque<>();
     queue.add(start);
     Set<String> visited = new HashSet<>();
@@ -174,13 +177,14 @@ public class DagParser {
     Map<String, List<String>> reverseAdj = new HashMap<>(COLLECTION_CAPACITY);
     for (Map.Entry<String, List<String>> entry : adj.entrySet()) {
       for (String child : entry.getValue()) {
-        reverseAdj.computeIfAbsent(child, k -> new ArrayList<>()).add(entry.getKey());
+        reverseAdj.computeIfAbsent(child, k -> new ArrayList<>(REVERSE_ADJ_INNER_CAPACITY))
+            .add(entry.getKey());
       }
     }
     if (!reverseAdj.containsKey(start)) {
       return Collections.emptyList();
     }
-    List<String> ancestors = new ArrayList<>();
+    List<String> ancestors = new ArrayList<>(COLLECTION_CAPACITY);
     Deque<String> queue = new ArrayDeque<>();
     queue.add(start);
     Set<String> visited = new HashSet<>();

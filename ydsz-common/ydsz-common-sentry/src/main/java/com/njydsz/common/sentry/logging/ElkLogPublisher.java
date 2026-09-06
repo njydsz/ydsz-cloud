@@ -158,7 +158,7 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
       try {
         socket.close();
       } catch (Exception ignored) {
-        // quiet close
+        log.debug("[Sentry] ELK TCP socket 静默关闭异常（已忽略）", ignored);
       }
       tcpSocket = null;
     }

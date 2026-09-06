@@ -29,6 +29,8 @@ import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
 
+import jakarta.annotation.Resource;
+
 /**
  * AB Test 自动回滚 Controller
  *
@@ -60,6 +62,10 @@ public class RuleABPolicyController {
   /** A/B 测试自动回滚服务（SPI，由 project 模块提供实现） */
   private final ABTestAutoRollbackProvider abTestAutoRollbackProvider;
 
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
+
     /** 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
    * @param ruleCode 规则唯一编码
    * @return AB Test 自动回滚策略信息
@@ -87,7 +93,7 @@ public class RuleABPolicyController {
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleABPolicyDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-    RuleABPolicyVO policy = LiteruleWebConverter.INSTANCE.putDtoToVO(dto);
+    RuleABPolicyVO policy = literuleWebConverter.putDtoToVO(dto);
     policy.setRuleCode(ruleCode);
     abTestAutoRollbackProvider.savePolicy(policy, operator);
     return YdszResponse.success();

@@ -139,7 +139,7 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
         span.setAttribute(OtelSemConv.REMI_USER_ID, userId.toString());
       }
     } catch (ClassNotFoundException e) {
-      // common-core 不存在时静默忽略
+      log.debug("[Sentry] common-core 不存在，跳过 RequestContext 反射注入: {}", e.getMessage());
     } catch (Exception e) {
       log.debug("[Sentry] RequestContext 反射注入失败: {}", e.getMessage());
     }

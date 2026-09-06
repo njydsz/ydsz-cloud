@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.agent;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
 
 
   /** 默认模型温度：在创造性与稳定性之间取平衡 */
-  private static final double DEFAULT_TEMPERATURE = 0.7;
+  private static final BigDecimal DEFAULT_TEMPERATURE = new BigDecimal("0.7");
 
   /** 单次对话最大 Token 默认值，避免单请求占用过多额度 */
   private static final int DEFAULT_MAX_TOKENS = 2048;
@@ -143,7 +144,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
       }
     }
     // 模型温度默认值：在创造性与稳定性之间取平衡，缺省时使用
-    double temperature = vo.getTemperature() != null ? vo.getTemperature() : DEFAULT_TEMPERATURE;
+    BigDecimal temperature = vo.getTemperature() != null ? vo.getTemperature() : DEFAULT_TEMPERATURE;
     // 单次对话最大 Token 默认值，缺省时使用，避免单请求占用过多额度
     int maxTokens = vo.getMaxTokens() != null ? vo.getMaxTokens() : DEFAULT_MAX_TOKENS;
     // 从 modelConfig JSON 中提取 modelId（如果有）

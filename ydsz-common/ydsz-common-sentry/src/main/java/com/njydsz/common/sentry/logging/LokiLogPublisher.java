@@ -176,7 +176,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
                 return true;
               }
             } catch (Exception e) {
-              // retry
+              log.warn("[Sentry] Loki HTTP 推送失败（attempt {}）: {}", attempt, e.getMessage());
             }
             if (attempt < maxRetryAttempts) {
               try {

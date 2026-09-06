@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.agent;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,7 +52,7 @@ public final class AgentDefinition implements Serializable {
   private final Type type;
   private final String systemPrompt;
   private final List<String> toolNames;
-  private final double temperature;
+  private final BigDecimal temperature;
   private final int maxTokens;
   private final int maxIterations;
   private final String modelId;
@@ -63,7 +64,7 @@ public final class AgentDefinition implements Serializable {
       Type type,
       String systemPrompt,
       List<String> toolNames,
-      double temperature,
+      BigDecimal temperature,
       int maxTokens,
       int maxIterations,
       String modelId) {
@@ -105,7 +106,7 @@ public final class AgentDefinition implements Serializable {
     return toolNames;
   }
 
-  public double getTemperature() {
+  public BigDecimal getTemperature() {
     return temperature;
   }
 

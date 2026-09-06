@@ -21,6 +21,8 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 
+import jakarta.annotation.Resource;
+
 /**
  * 内部 API Controller（服务间 Feign 调用）
  *
@@ -57,6 +59,10 @@ public class InternalLiteruleApiController {
   private final RuleAdminService ruleAdminService;
   private final RuleEngine ruleEngine;
 
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
+
   /**
    * 规则评估（dry-run 仿真模式，不记录统计、不发布事件、不触发动作分发）
    *
@@ -76,7 +82,7 @@ public class InternalLiteruleApiController {
       @RequestBody Map<String, Object> facts) {
     return YdszResponse.success(
         ruleAdminService.dryRun(ruleCode, facts).stream()
-            .map(LiteruleWebConverter.INSTANCE::entityToVO)
+            .map(literuleWebConverter::entityToVO)
             .toList());
   }
 
@@ -105,6 +111,6 @@ public class InternalLiteruleApiController {
             ? results
             : results.stream().filter(r -> ruleCode.equals(r.getRuleCode())).toList();
     return YdszResponse.success(
-        filtered.stream().map(LiteruleWebConverter.INSTANCE::entityToVO).toList());
+        filtered.stream().map(literuleWebConverter::entityToVO).toList());
   }
 }

@@ -2,6 +2,7 @@ package com.njydsz.agent.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -45,8 +46,8 @@ public class AgentDefinitionVO implements Serializable {
   /** 工具名称列表 JSON */
   private String toolNames;
 
-  /** 温度参数 */
-  private Double temperature;
+  /** 温度参数（LLM 采样温度，范围 0~2） */
+  private BigDecimal temperature;
 
   /** 最大生成 Token 数 */
   private Integer maxTokens;

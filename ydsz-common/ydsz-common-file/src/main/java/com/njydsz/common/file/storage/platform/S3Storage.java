@@ -99,6 +99,9 @@ import com.njydsz.common.util.string.StringUtils;
 @Slf4j
 public class S3Storage extends AbstractFileStorage {
 
+  /** 预签名私有 URL 的默认有效期（1 小时）。 */
+  private static final Duration DEFAULT_PRESIGNED_URL_EXPIRY = Duration.ofHours(1);
+
   /** S3 客户端 */
   private final S3Client s3Client;
 
@@ -378,7 +381,7 @@ public class S3Storage extends AbstractFileStorage {
           GetObjectRequest.builder().bucket(bucketName).key(objectName).build();
       GetObjectPresignRequest presignRequest =
           GetObjectPresignRequest.builder()
-              .signatureDuration(Duration.ofHours(1))
+              .signatureDuration(DEFAULT_PRESIGNED_URL_EXPIRY)
               .getObjectRequest(getObjectRequest)
               .build();
       PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);

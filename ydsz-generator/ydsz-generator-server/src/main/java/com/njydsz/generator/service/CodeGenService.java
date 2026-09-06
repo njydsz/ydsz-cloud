@@ -13,16 +13,16 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.annotation.Resource;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.generator.config.GeneratorThreadPoolConfig;
 import com.njydsz.generator.engine.CodeGenEngine;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
@@ -97,7 +97,7 @@ public class CodeGenService {
       TableMetadataService tableMetadataService,
       CodeGenEngine codeGenEngine,
       GenHistoryRepository historyRepository,
-      @Qualifier(GeneratorThreadPoolConfig.BEAN_CODE_GEN_POOL) ExecutorService codeGenExecutor,
+      @Resource(name = "codeGenExecutor") ExecutorService codeGenExecutor,
       GenHistoryFileRepository historyFileRepository) {
     this.datasourceService = datasourceService;
     this.templateGroupService = templateGroupService;

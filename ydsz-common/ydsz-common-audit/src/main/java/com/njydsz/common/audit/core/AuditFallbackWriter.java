@@ -37,7 +37,7 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 26.09.01
  */
-public class AuditFallbackWriter {
+public class AuditFallbackWriter implements AutoCloseable {
 
   private static final Logger LOG = LoggerFactory.getLogger(AuditFallbackWriter.class);
 
