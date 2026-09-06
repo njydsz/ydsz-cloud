@@ -71,6 +71,6 @@ public class UserPasswordHistoryRepositoryImpl implements UserPasswordHistoryRep
 
   @Override
   public int deleteByIds(Collection<String> ids) {
-    return userPasswordHistoryMapper.deleteBatchIds(ids);
+    return userPasswordHistoryMapper.deleteByIds(ids);
   }
 }

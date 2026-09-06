@@ -78,7 +78,7 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
 
   @Override
   public List<DepartmentVO> listByIds(Collection<String> ids) {
-    List<Department> entities = departmentMapper.selectBatchIds(ids);
+    List<Department> entities = departmentMapper.selectByIds(ids);
     return converter.departmentListToVO(entities);
   }
 

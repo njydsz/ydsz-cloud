@@ -70,7 +70,7 @@ public class PostRepositoryImpl implements PostRepository {
 
   @Override
   public List<PostVO> listByIds(Collection<String> ids) {
-    List<Post> entities = postMapper.selectBatchIds(ids);
+    List<Post> entities = postMapper.selectByIds(ids);
     return converter.postListToVO(entities);
   }
 

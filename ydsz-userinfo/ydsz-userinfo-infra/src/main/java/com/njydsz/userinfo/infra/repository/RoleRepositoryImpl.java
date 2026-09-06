@@ -52,7 +52,7 @@ public class RoleRepositoryImpl implements RoleRepository {
 
   @Override
   public List<RoleVO> findByIds(Collection<String> ids) {
-    List<Role> entities = roleMapper.selectBatchIds(ids);
+    List<Role> entities = roleMapper.selectByIds(ids);
     return converter.roleListToVO(entities);
   }
 
@@ -61,7 +61,7 @@ public class RoleRepositoryImpl implements RoleRepository {
     if (ids == null || ids.isEmpty()) {
       return Collections.emptyList();
     }
-    List<Role> list = roleMapper.selectBatchIds(ids);
+    List<Role> list = roleMapper.selectByIds(ids);
     return list.stream().map(converter::entityToVO).collect(Collectors.toList());
   }
 

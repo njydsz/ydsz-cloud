@@ -70,7 +70,7 @@ public class CompanyRepositoryImpl implements CompanyRepository {
 
   @Override
   public List<CompanyVO> listByIds(Collection<String> ids) {
-    List<Company> entities = companyMapper.selectBatchIds(ids);
+    List<Company> entities = companyMapper.selectByIds(ids);
     return converter.companyListToVO(entities);
   }
 

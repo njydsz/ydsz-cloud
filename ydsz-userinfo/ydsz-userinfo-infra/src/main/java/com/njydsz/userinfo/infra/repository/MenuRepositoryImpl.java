@@ -42,7 +42,7 @@ public class MenuRepositoryImpl implements MenuRepository {
 
   @Override
   public List<MenuVO> findByIds(Collection<String> ids) {
-    List<Menu> entities = menuMapper.selectBatchIds(ids);
+    List<Menu> entities = menuMapper.selectByIds(ids);
     return converter.menuListToVO(entities);
   }
 

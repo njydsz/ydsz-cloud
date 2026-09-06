@@ -18,7 +18,6 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.entity.UserAccount;
-import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
@@ -117,7 +116,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   @Override
   public List<UserAccountVO> listByIds(Collection<String> ids) {
-    List<UserAccount> entities = userAccountMapper.selectBatchIds(ids);
+    List<UserAccount> entities = userAccountMapper.selectByIds(ids);
     return converter.userAccountListToVO(entities);
   }
 
@@ -157,12 +156,12 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public int batchUpdateStatus(Collection<String> ids, EnableStatusEnum status) {
+  public int batchUpdateStatus(Collection<String> ids, UserLifecycleStatusEnum status) {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
     List<String> idList = new ArrayList<>(ids);
-    if (status == EnableStatusEnum.ENABLED) {
+    if (status == UserLifecycleStatusEnum.ENABLED) {
       return userAccountMapper.batchEnableByIds(idList);
     }
     return userAccountMapper.batchDisableByIds(idList);
