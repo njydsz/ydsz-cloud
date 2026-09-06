@@ -25,6 +25,7 @@ import com.njydsz.nextwiki.domain.dto.UserRecentDTO;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.entity.FileComment;
 import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.entity.FileTag;
 import com.njydsz.nextwiki.domain.entity.FileVersion;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
@@ -41,6 +42,7 @@ import com.njydsz.nextwiki.domain.entity.UserRecent;
 import com.njydsz.nextwiki.domain.vo.FileAclVO;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.domain.vo.FileTagVO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.domain.vo.SearchIndexVO;
 import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
@@ -50,8 +52,6 @@ import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.domain.vo.TagVO;
 import com.njydsz.nextwiki.domain.vo.TrashItemVO;
-import com.njydsz.nextwiki.domain.vo.UserFavoriteVO;
-import com.njydsz.nextwiki.domain.vo.UserRecentVO;
 
 /**
  * NextWiki 统一 MapStruct 转换器。
@@ -77,6 +77,16 @@ public interface NextwikiStructMapper {
 
   /** 静态备用实例（与 {@code @Autowired} 注入互斥，仅用于非 Spring 上下文）。 */
   NextwikiStructMapper INSTANCE = Mappers.getMapper(NextwikiStructMapper.class);
+
+  // ==================== FileTag 转换 ====================
+
+  /**
+   * 将 {@link FileTag} 实体转换为 {@link FileTagVO}。
+   *
+   * @param entity 文件标签实体
+   * @return 文件标签 VO；入参为 {@code null} 时返回 {@code null}
+   */
+  FileTagVO fileTagToVO(FileTag entity);
 
   // ==================== FileNode 转换 ====================
 

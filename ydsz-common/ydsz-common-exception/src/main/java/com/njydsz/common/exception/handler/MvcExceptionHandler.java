@@ -270,7 +270,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         CoreExceptionCode.INVALID_REQUEST_FORMAT.getKey(),
         message,
         HttpStatus.BAD_REQUEST.value(),
-        request.getRequestURI());
+        request.getRequestURI(),
+        CoreExceptionCode.INVALID_REQUEST_FORMAT.getLevel());
   }
 
   /**
@@ -384,7 +385,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         CoreExceptionCode.FILE_SIZE_EXCEEDED.getKey(),
         message,
         HttpStatus.CONTENT_TOO_LARGE.value(),
-        request.getRequestURI());
+        request.getRequestURI(),
+        CoreExceptionCode.FILE_SIZE_EXCEEDED.getLevel());
   }
 
   /**
@@ -408,7 +410,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         CoreExceptionCode.RESOURCE_NOT_FOUND.getKey(),
         message,
         HttpStatus.NOT_FOUND.value(),
-        request.getRequestURI());
+        request.getRequestURI(),
+        CoreExceptionCode.RESOURCE_NOT_FOUND.getLevel());
   }
 
   /**
@@ -435,7 +438,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(),
         message,
         HttpStatus.BAD_REQUEST.value(),
-        request.getRequestURI());
+        request.getRequestURI(),
+        CoreExceptionCode.ILLEGAL_ARGUMENT.getLevel());
   }
 
   /**

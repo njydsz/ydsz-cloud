@@ -57,6 +57,7 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
   "code",
   "msg",
+  "level",
   "data",
   "traceId",
   "requestId",
@@ -97,6 +98,22 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
 
   /** 返回信息 */
   @Setter private String msg;
+
+  /**
+   * 异常级别。
+   *
+   * <p>取值来自 {@link com.njydsz.common.exception.enums.ExceptionLevel} 枚举的 name：
+   *
+   * <ul>
+   *   <li>INFO — 静默处理，不展示 toast
+   *   <li>WARN — 轻量 toast 提示（auto-close 3s）
+   *   <li>ERROR — toast 提示，需用户点击关闭
+   *   <li>FATAL — 弹窗提示，阻断用户当前操作
+   * </ul>
+   *
+   * <p>成功响应不需要级别，为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 控制）。
+   */
+  private String level;
 
   /**
    * 返回数据

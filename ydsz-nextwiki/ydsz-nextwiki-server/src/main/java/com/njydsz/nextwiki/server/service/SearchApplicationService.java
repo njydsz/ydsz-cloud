@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -519,7 +520,7 @@ public class SearchApplicationService {
         .path(hit.getSubtitle())
         .nodeType(FileNodeVO.TYPE_FILE)
         .highlight(hit.getHighlight() != null ? hit.getHighlight() : hit.getSnippet())
-        .score(hit.getScore())
+        .score(BigDecimal.valueOf(hit.getScore()))
         .tags(hit.getTags())
         .updatedAt(hit.getUpdatedAt())
         .build();

@@ -9,6 +9,7 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -433,7 +434,7 @@ public final class SensitiveDataProcessor {
         || SIMPLE_TYPES.contains(clazz)
         || Number.class.isAssignableFrom(clazz)
         || Temporal.class.isAssignableFrom(clazz)
-        || java.util.Date.class.isAssignableFrom(clazz);
+        || Date.class.isAssignableFrom(clazz);
   }
 
   /**

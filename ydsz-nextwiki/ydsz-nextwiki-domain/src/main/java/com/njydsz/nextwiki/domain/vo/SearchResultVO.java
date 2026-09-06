@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.domain.vo;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -65,7 +66,7 @@ public class SearchResultVO implements Serializable {
     private String highlight;
 
     @Schema(description = "匹配分数")
-    private Float score;
+    private BigDecimal score;
 
     @Schema(description = "标签列表")
     private List<String> tags;

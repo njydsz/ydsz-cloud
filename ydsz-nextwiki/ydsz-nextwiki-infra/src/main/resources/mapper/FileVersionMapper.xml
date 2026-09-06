@@ -24,18 +24,21 @@
     </resultMap>
 
     <select id="selectByFileNodeId" resultMap="FileVersionResult">
-        SELECT * FROM ydsz_wiki_file_version
+        SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        FROM ydsz_wiki_file_version
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
         ORDER BY version_number DESC
     </select>
 
     <select id="selectByVersion" resultMap="FileVersionResult">
-        SELECT * FROM ydsz_wiki_file_version
+        SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        FROM ydsz_wiki_file_version
         WHERE file_node_id = #{fileNodeId} AND version_number = #{versionNumber} AND deleted = 0
     </select>
 
     <select id="selectActiveVersion" resultMap="FileVersionResult">
-        SELECT * FROM ydsz_wiki_file_version
+        SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        FROM ydsz_wiki_file_version
         WHERE file_node_id = #{fileNodeId} AND is_active = TRUE AND deleted = 0
         LIMIT 1
     </select>
@@ -46,7 +49,8 @@
     </select>
 
     <select id="selectOldestVersions" resultMap="FileVersionResult">
-        SELECT * FROM ydsz_wiki_file_version
+        SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        FROM ydsz_wiki_file_version
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
         ORDER BY version_number ASC
         LIMIT #{limit}

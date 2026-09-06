@@ -3,6 +3,7 @@ package com.njydsz.literule.web;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -14,8 +15,6 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
-
-import jakarta.annotation.Resource;
 
 /**
  * 规则冲突检测 Controller

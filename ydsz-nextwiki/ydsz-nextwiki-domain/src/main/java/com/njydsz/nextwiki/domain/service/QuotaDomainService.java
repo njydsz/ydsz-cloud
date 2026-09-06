@@ -1,5 +1,8 @@
 package com.njydsz.nextwiki.domain.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -101,7 +104,11 @@ public class QuotaDomainService {
 
     long capacity = quota.getQuotaLimit();
     long used = quota.getQuotaUsed() != null ? quota.getQuotaUsed() : 0L;
-    double ratio = (double) used / capacity * 100;
-    return ratio >= percentage;
+    // 使用 BigDecimal 精确计算使用百分比，避免浮点精度丢失（精度 2 位，四舍五入）
+    BigDecimal ratio =
+        BigDecimal.valueOf(used)
+            .multiply(BigDecimal.valueOf(100))
+            .divide(BigDecimal.valueOf(capacity), 2, RoundingMode.HALF_UP);
+    return ratio.compareTo(BigDecimal.valueOf(percentage)) >= 0;
   }
 }

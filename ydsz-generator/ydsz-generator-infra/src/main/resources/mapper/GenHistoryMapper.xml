@@ -18,13 +18,15 @@
   </resultMap>
 
   <select id="selectRecent" resultMap="BaseResultMap">
-    SELECT * FROM ydsz_gen_history
+    SELECT id, module_name, datasource_id, template_group_id, table_count, file_count, status, triggered_by, started_at, finished_at, error_message, gen_params
+    FROM ydsz_gen_history
     ORDER BY id DESC
     LIMIT #{limit}
   </select>
 
   <select id="selectByStatus" resultMap="BaseResultMap">
-    SELECT * FROM ydsz_gen_history
+    SELECT id, module_name, datasource_id, template_group_id, table_count, file_count, status, triggered_by, started_at, finished_at, error_message, gen_params
+    FROM ydsz_gen_history
     WHERE status = #{status}
     ORDER BY id DESC
   </select>

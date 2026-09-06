@@ -33,6 +33,9 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  *
  * <p>多尺寸输出。
  *
+ * <p><b>算法说明：</b>缩略图缩放涉及图像几何计算，使用 primitive double 是图形学领域标准实践（ImageIO / ImageMagick / OpenCV 均使用 double）。
+ * 不涉及金额/比例等精确业务值，故保留 double 类型。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -149,7 +152,7 @@ public class ThumbnailApplicationService {
     } else {
       // 非图片类型仅设置 key（后续可由预览服务填充）
       node.setThumbnailKey(thumbnailKey);
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
     }
   }
 

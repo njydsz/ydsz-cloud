@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.domain.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -72,14 +74,18 @@ public class SpaceDomainService {
   /**
    * 计算空间使用率（纯领域逻辑）。
    *
+   * <p>使用 BigDecimal 精确计算百分比（位数 4，四舍五入），避免浮点精度丢失。
+   *
    * @param usedSize 已用空间（字节）
    * @param totalSize 总空间（字节）
-   * @return 使用率（0.0 - 1.0）
+   * @return 使用率（0 -1 之间，小数点后 4 位）
    */
-  public double calculateUsageRate(long usedSize, long totalSize) {
+  public BigDecimal calculateUsageRate(long usedSize, long totalSize) {
     if (totalSize <= 0) {
-      return 0.0;
+      return BigDecimal.ZERO;
     }
-    return Math.min(1.0, (double) usedSize / totalSize);
+    return BigDecimal.valueOf(usedSize)
+        .divide(BigDecimal.valueOf(totalSize), 4, RoundingMode.HALF_UP)
+        .min(BigDecimal.ONE);
   }
 }

@@ -1,26 +1,29 @@
 /**
- * Agent 模块 API 层，定义对外暴露的 DTO 与 RPC 接口.
+ * Agent 模块 API 层（契约与 Feign 客户端）.
  *
- * <p>本模块作为 Agent 子系统的 API 契约层，定义了所有跨模块、跨服务调用所用的数据传输对象（DTO）
- * 与 Feign/HTTP 接口签名。上层消费方（如前端 BFF、其他微服务）仅依赖本模块的 API 包即可发起对 Agent 能力
- * 的调用，无需引入业务实现依赖，符合 hexagonal 架构的端口-适配器设计原则。</p>
+ * <h3>当前设计决策</h3>
+ * <p>Agent 子系统当前以独立微服务形态对外暴露 REST 端点，前端通过网关直接消费，
+ * 暂无其他后端模块依赖 Agent 的 RPC 场景。因此本模块暂不定义 FeignClient 接口，
+ * 仅作为契约层预留，便于未来跨服务调用场景引入 Feign 客户端时保持架构一致。</p>
  *
- * <p>主要 DTO 覆盖以下场景：</p>
+ * <h3>跨模块调用路径</h3>
  * <ul>
- *   <li>{@code ChatRequestDTO} / {@code ChatResponseDTO} -- 单次对话的请求与响应模型</li>
- *   <li>{@code BatchChatRequestDTO} / {@code BatchChatResponseDTO} -- 批量对话场景下的聚合请求与响应</li>
- *   <li>{@code RagQueryDTO} -- RAG 检索查询请求，携带检索参数与过滤条件</li>
- *   <li>{@code DocumentIngestDTO} -- 文档摄入请求，描述待入库文档的元数据与内容引用</li>
- *   <li>{@code AgentExecutionRequestDTO} / {@code DagExecutionDTO} -- Agent 执行与 DAG 运行请求</li>
- *   <li>{@code PromptTemplateDTO} -- Prompt 模板数据传输对象</li>
+ *   <li>前端 BFF --{@literal >} Gateway --{@literal >} agent-web：HTTP REST 直调</li>
+ *   <li>其他后端模块 --{@literal >} 暂未引入 Feign 依赖，按需启用</li>
  * </ul>
  *
- * <h3>API 设计原则</h3>
+ * <h3>未来演进</h3>
+ * <p>当其他模块需要通过 Feign 调用 Agent 能力时：</p>
+ * <ol>
+ *   <li>在本模块新建 {@code client} 子包，定义 {@code @FeignClient} 接口</li>
+ *   <li>创建 {@code fallback} 子包，提供降级实现</li>
+ *   <li>引入 {@code ydsz-agent-domain} 依赖，复用 {@code dto/vo} 定义</li>
+ * </ol>
  *
+ * <h3>模块依赖约束</h3>
  * <ul>
- *   <li>所有 DTO 不可变，使用记录式（record）或 final 字段设计</li>
- *   <li>入参 DTO 与出参 DTO 严格分离，避免读写职责混淆</li>
- *   <li>Feign fallback 接口位于 {@code fallback} 子包，保障远程调用降级路径</li>
+ *   <li>本模块仅依赖 {@code ydsz-agent-domain} + {@code ydsz-common-feign}（按需）</li>
+ *   <li>禁止引入 infra / server / web 层依赖</li>
  * </ul>
  *
  * @author ydsz-team

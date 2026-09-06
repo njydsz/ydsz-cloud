@@ -67,6 +67,22 @@ public class ExceptionInfo implements Serializable {
   /** HTTP 状态码 */
   private int httpStatus;
 
+  /**
+   * 异常级别。
+   *
+   * <p>取值来自 {@link com.njydsz.common.exception.enums.ExceptionLevel} 枚举的 name：
+   *
+   * <ul>
+   *   <li>INFO — 静默处理，不展示 toast
+   *   <li>WARN — 轻量 toast 提示（auto-close 3s）
+   *   <li>ERROR — toast 提示，需用户点击关闭
+   *   <li>FATAL — 弹窗提示，阻断用户当前操作
+   * </ul>
+   *
+   * <p>为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 语义控制）。
+   */
+  private String level;
+
   /** 默认构造函数，初始化时间戳为当前时间 */
   public ExceptionInfo() {
     this.timestamp = LocalDateTime.now();
@@ -136,6 +152,10 @@ public class ExceptionInfo implements Serializable {
     this.httpStatus = httpStatus;
   }
 
+  public void setLevel(String level) {
+    this.level = level;
+  }
+
   public void setDetails(Map<String, Object> details) {
     this.details = details;
   }
@@ -196,6 +216,7 @@ public class ExceptionInfo implements Serializable {
     private String path;
     private String traceId;
     private int httpStatus;
+    private String level;
 
     /**
      * 设置业务错误码。
@@ -308,6 +329,17 @@ public class ExceptionInfo implements Serializable {
     }
 
     /**
+     * 设置异常级别。
+     *
+     * @param level 异常级别字符串，如 "INFO"/"WARN"/"ERROR"/"FATAL"；允许为 {@code null}
+     * @return 当前构建器，便于链式调用
+     */
+    public Builder level(String level) {
+      this.level = level;
+      return this;
+    }
+
+    /**
      * 构建异常信息对象。
      *
      * @return 已填充全部 Builder 字段的 ExceptionInfo 实例
@@ -321,6 +353,7 @@ public class ExceptionInfo implements Serializable {
       info.setPath(path);
       info.setTraceId(traceId);
       info.setHttpStatus(httpStatus);
+      info.setLevel(level);
       return info;
     }
   }

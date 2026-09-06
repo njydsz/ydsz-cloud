@@ -7,6 +7,7 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,8 +38,6 @@ import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.server.benchmark.RuleStressTestService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.RulePackProvider;
-
-import jakarta.annotation.Resource;
 import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 
 /**

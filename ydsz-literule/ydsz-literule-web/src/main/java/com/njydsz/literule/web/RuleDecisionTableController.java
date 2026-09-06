@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +42,6 @@ import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.server.config.DecisionTableAdminService;
 import com.njydsz.literule.server.config.DecisionTableQueryService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
-
-import jakarta.annotation.Resource;
 
 /**
  * 决策表管理 Controller

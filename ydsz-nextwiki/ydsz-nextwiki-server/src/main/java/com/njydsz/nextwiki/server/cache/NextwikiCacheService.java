@@ -319,8 +319,10 @@ public class NextwikiCacheService {
   /**
    * 获取 AI 关键词缓存。
    *
+   * <p>返回永远不会是 {@code null}（违反规范时返回空列表，符合 YDIZ-COLL-002）。
+   *
    * @param key 缓存键（通常为内容哈希）
-   * @return 缓存的关键词列表；不存在返回 {@code null}
+   * @return 缓存的关键词列表；不存在或异常时返回空集合
    */
   public List<String> getAiKeywords(String key) {
     try {
@@ -331,7 +333,7 @@ public class NextwikiCacheService {
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] AI 关键词缓存读取异常: err={}", e.getMessage(), e);
     }
-    return null;
+    return Collections.emptyList();
   }
 
   /**

@@ -19,7 +19,8 @@
   </resultMap>
 
   <select id="selectByGroupIdAndFileName" resultMap="BaseResultMap">
-    SELECT * FROM ydsz_gen_template
+    SELECT id, group_id, file_name, description, content, is_folder, parent_path, version, hash, is_active, file_type, created_at, updated_at
+    FROM ydsz_gen_template
     WHERE group_id = #{groupId} AND file_name = #{fileName} AND is_active = 1
     LIMIT 1
   </select>

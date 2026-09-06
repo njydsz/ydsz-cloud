@@ -120,8 +120,13 @@ public class NextwikiProperties {
   /** 缩略图配置。 */
   @Data
   public static class ThumbnailConfig {
-    /** 缩略图临时目录 */
-    private String tempDir = "/tmp/nextwiki-thumbnail";
+    /**
+     * 缩略图临时目录。
+     *
+     * <p>默认使用系统临时目录（{@code java.io.tmpdir}）下的 {@code nextwiki-thumbnail} 子目录，
+     * 可通过 {@code nextwiki.thumbnail.temp-dir} 外部化覆盖。
+     */
+    private String tempDir = System.getProperty("java.io.tmpdir") + "/nextwiki-thumbnail";
   }
 
   /**
@@ -214,8 +219,13 @@ public class NextwikiProperties {
     /** LibreOffice 可执行文件路径 */
     private String libreofficePath = "soffice";
 
-    /** 预览临时目录 */
-    private String tempDir = "/tmp/nextwiki-preview";
+    /**
+     * 预览临时目录。
+     *
+     * <p>默认使用系统临时目录（{@code java.io.tmpdir}）下的 {@code nextwiki-preview} 子目录，
+     * 可通过 {@code nextwiki.preview.temp-dir} 外部化覆盖。
+     */
+    private String tempDir = System.getProperty("java.io.tmpdir") + "/nextwiki-preview";
   }
 
   /**

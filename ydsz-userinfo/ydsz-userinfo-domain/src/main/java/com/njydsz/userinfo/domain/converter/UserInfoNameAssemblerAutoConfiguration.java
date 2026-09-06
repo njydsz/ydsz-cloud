@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.api.assembler;
+package com.njydsz.userinfo.domain.converter;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

@@ -28,6 +28,10 @@ import com.njydsz.common.docs.watermark.PdfWatermarkApplier;
  *
  * <p>在文件下载/预览时动态叠加水印（用户名 + 时间），防止截屏/拍照泄露。
  *
+ * <p><b>算法说明：</b>水印透明度（alpha 0.0~1.0）和旋转角度（~360°）涉及图形渲染计算，
+ * 使用 primitive float/double 是图形学领域标准实践（AWT / OpenCV / ImageMagick 均使用此类类型）。
+ * 不涉及金额/比例等精确业务值，故保留 float/double 类型。
+ *
  * <p><b>支持的文件类型：</b>
  *
  * <ul>

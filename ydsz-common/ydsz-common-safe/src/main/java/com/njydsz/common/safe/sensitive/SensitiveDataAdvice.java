@@ -5,6 +5,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.temporal.Temporal;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -270,7 +271,7 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
         || Number.class.isAssignableFrom(clazz)
         || clazz == Boolean.class
         || clazz == Character.class
-        || java.util.Date.class.isAssignableFrom(clazz)
+        || Date.class.isAssignableFrom(clazz)
         || Temporal.class.isAssignableFrom(clazz);
   }
 }

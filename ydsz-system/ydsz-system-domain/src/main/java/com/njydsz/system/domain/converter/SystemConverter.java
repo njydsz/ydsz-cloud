@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.system.domain.dto.ApiPermissionDTO;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.DictItemDTO;
@@ -15,6 +16,7 @@ import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.dto.VariableDTO;
+import com.njydsz.system.domain.entity.ApiPermission;
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.entity.DictItem;
@@ -24,6 +26,7 @@ import com.njydsz.system.domain.entity.Tenant;
 import com.njydsz.system.domain.entity.TenantPlan;
 import com.njydsz.system.domain.entity.TenantPlanMenu;
 import com.njydsz.system.domain.entity.Variable;
+import com.njydsz.system.domain.vo.ApiPermissionVO;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -66,6 +69,7 @@ import com.njydsz.system.domain.vo.VariableVO;
  * <p><b>覆盖范围（8 大实体 / 16 个方法）：</b>
  *
  * <ul>
+ *   <li>{@link ApiPermission} → {@link ApiPermissionVO}
  *   <li>{@link AppInfo} → {@link AppInfoVO}
  *   <li>{@link Config} → {@link ConfigVO}
  *   <li>{@link DictItem} → {@link DictItemVO}
@@ -89,6 +93,83 @@ public interface SystemConverter {
 
   /** 单例实例 */
   SystemConverter INSTANT = Mappers.getMapper(SystemConverter.class);
+
+  // ===== ApiPermission =====
+
+  /**
+   * 接口权限实体 → 接口权限 VO。
+   *
+   * @param entity 接口权限实体
+   * @return 接口权限 VO
+   */
+  ApiPermissionVO apiPermissionToVO(ApiPermission entity);
+
+  /**
+   * 接口权限实体列表 → 接口权限 VO 列表。
+   *
+   * @param entities 接口权限实体列表
+   * @return 接口权限 VO 列表
+   */
+  List<ApiPermissionVO> apiPermissionListToVO(List<ApiPermission> entities);
+
+  /**
+   * 接口权限 DTO → 接口权限实体（不含 ID，用于创建）。
+   *
+   * @param dto 接口权限 DTO
+   * @return 接口权限实体
+   */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  ApiPermission apiPermissionDtoToEntity(ApiPermissionDTO dto);
+
+  /**
+   * 接口权限 DTO（含 ID）→ 接口权限实体（用于更新）。
+   *
+   * @param dto 接口权限 DTO（含 id）
+   * @return 接口权限实体（含 id）
+   */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  ApiPermission apiPermissionDtoToEntityWithId(ApiPermissionDTO dto);
+
+  /**
+   * 接口权限 DTO 列表 → 接口权限实体列表。
+   *
+   * @param dtos 接口权限 DTO 列表
+   * @return 接口权限实体列表
+   */
+  @IterableMapping(qualifiedByName = "apiPermissionDtoToEntity")
+  List<ApiPermission> apiPermissionDtosToEntities(List<ApiPermissionDTO> dtos);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Named("apiPermissionDtoToEntity")
+  ApiPermission apiPermissionDtoToEntityInternal(ApiPermissionDTO dto);
+
+  /**
+   * 接口权限 VO → 接口权限 DTO。
+   *
+   * @param vo 接口权限 VO
+   * @return 接口权限 DTO
+   */
+  ApiPermissionDTO voToApiPermissionDto(ApiPermissionVO vo);
 
   // ===== AppInfo =====
 

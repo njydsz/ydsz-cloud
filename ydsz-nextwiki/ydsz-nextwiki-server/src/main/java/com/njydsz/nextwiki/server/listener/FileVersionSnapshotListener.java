@@ -49,7 +49,7 @@ public class FileVersionSnapshotListener {
   /** 文件版本 Repository */
   private final FileVersionRepository versionRepository;
 
-  /** MapStruct 转换器（替代 NextwikiConverter） */
+  /** MapStruct 统一转换器 */
   private final NextwikiStructMapper mapper;
 
   /**

@@ -24,7 +24,8 @@
     </resultMap>
 
     <select id="selectByShareId" resultMap="ShareAccessLogResult">
-        SELECT * FROM ydsz_wiki_share_access_log
+        SELECT id, share_id, share_code, file_node_id, visitor_id, visitor_name, visitor_ip, user_agent, access_type, access_status, fail_reason, created_at, created_by, updated_at, updated_by, revision, deleted
+        FROM ydsz_wiki_share_access_log
         WHERE share_id = #{shareId} AND deleted = 0
         ORDER BY created_at DESC
         LIMIT #{limit}

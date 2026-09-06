@@ -515,3 +515,64 @@ CREATE TRIGGER trg_ydsz_sys_entity_version_updated_at
 BEFORE UPDATE ON ydsz_sys_entity_version
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_sys_entity_version_set_updated_at();
+
+-- ============================================================================
+-- 接口权限注册表（启动时由 AppPermissionScanRunner 自动扫描 @AuthApiPermission 注解注册）
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS ydsz_sys_api_permission (
+    id                       VARCHAR(32),
+    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    api_code                 VARCHAR(128)             NOT NULL,
+    api_name                 VARCHAR(256)             DEFAULT NULL,
+    http_method              VARCHAR(10)              DEFAULT NULL,
+    url_pattern              VARCHAR(512)             DEFAULT NULL,
+    controller_class         VARCHAR(512)             DEFAULT NULL,
+    method_name              VARCHAR(128)             DEFAULT NULL,
+    description              VARCHAR(512)             DEFAULT NULL,
+    status                   VARCHAR(32)              DEFAULT 'ENABLED',
+    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ydsz_sys_api_permission PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_sys_api_permission_tenant_api UNIQUE (tenant_id, api_code)
+);
+
+COMMENT ON TABLE ydsz_sys_api_permission IS '接口权限注册表';
+COMMENT ON COLUMN ydsz_sys_api_permission.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_sys_api_permission.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_sys_api_permission.api_code IS '权限码（如 sys:config:list）';
+COMMENT ON COLUMN ydsz_sys_api_permission.api_name IS '接口名称/描述';
+COMMENT ON COLUMN ydsz_sys_api_permission.http_method IS 'HTTP 方法';
+COMMENT ON COLUMN ydsz_sys_api_permission.url_pattern IS 'URL 模式';
+COMMENT ON COLUMN ydsz_sys_api_permission.controller_class IS 'Controller 完全限定名';
+COMMENT ON COLUMN ydsz_sys_api_permission.method_name IS '方法名';
+COMMENT ON COLUMN ydsz_sys_api_permission.description IS '接口描述';
+COMMENT ON COLUMN ydsz_sys_api_permission.status IS '状态: ENABLED/DISABLED';
+COMMENT ON COLUMN ydsz_sys_api_permission.deleted IS '逻辑删除: 0=未删除, 1=已删除';
+COMMENT ON COLUMN ydsz_sys_api_permission.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_sys_api_permission.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_sys_api_permission.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_sys_api_permission.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_sys_api_permission.updated_at IS '更新时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_api_permission_tenant_deleted ON ydsz_sys_api_permission (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_api_permission_api_code ON ydsz_sys_api_permission (api_code);
+
+-- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
+CREATE OR REPLACE FUNCTION fn_ydsz_sys_api_permission_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_ydsz_sys_api_permission_updated_at ON ydsz_sys_api_permission;
+CREATE TRIGGER trg_ydsz_sys_api_permission_updated_at
+BEFORE UPDATE ON ydsz_sys_api_permission
+FOR EACH ROW
+EXECUTE FUNCTION fn_ydsz_sys_api_permission_set_updated_at();

@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +92,13 @@ public class StorageAnalysisApplicationService {
     long grandTotal = stats.stream().mapToLong(FileStatVO::getTotalSize).sum();
 
     for (FileStatVO stat : stats) {
-      double percentage = grandTotal > 0 ? (double) stat.getTotalSize() / grandTotal * 100 : 0.0;
+      // 使用 BigDecimal 精确计算存储占比百分比（YDIZ-OOP-003：禁止使用 double/float）
+      BigDecimal percentage =
+          grandTotal > 0
+              ? BigDecimal.valueOf(stat.getTotalSize())
+                  .multiply(BigDecimal.valueOf(100))
+                  .divide(BigDecimal.valueOf(grandTotal), 2, RoundingMode.HALF_UP)
+              : BigDecimal.ZERO;
       String key = stat.getSuffix() != null ? stat.getSuffix() : "unknown";
       result.put(
           key,
@@ -98,7 +106,7 @@ public class StorageAnalysisApplicationService {
               .suffix(key)
               .fileCount(stat.getFileCount())
               .totalSize(stat.getTotalSize())
-              .percentage(Math.round(percentage * 100.0) / 100.0)
+              .percentage(percentage.doubleValue())
               .build());
     }
 

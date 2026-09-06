@@ -1,8 +1,6 @@
 package com.njydsz.literule.server.converter;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
@@ -346,11 +344,8 @@ public class LiteruleWebConverter {
     vo.setRollbackAction(dto.getRollbackAction());
     vo.setErrorRateThreshold(dto.getErrorRateThreshold());
     vo.setMinSampleSize(dto.getMinSampleSize());
-    vo.setEvaluationWindowMinutes(dto.getEvaluationWindowMinutes());
-    vo.setTrafficRatio(dto.getTrafficRatio());
-    vo.setCooldownMinutes(dto.getCooldownMinutes());
+    vo.setCheckWindowMinutes(dto.getCheckWindowMinutes());
     vo.setNotifyChannels(dto.getNotifyChannels());
-    vo.setStatus(dto.getStatus());
     return vo;
   }
 

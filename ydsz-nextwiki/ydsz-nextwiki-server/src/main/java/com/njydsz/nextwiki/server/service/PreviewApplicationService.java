@@ -59,7 +59,7 @@ public class PreviewApplicationService {
   /** NextWiki 全局配置（预览临时目录、LibreOffice 路径、超时等） */
   private final NextwikiProperties properties;
 
-  /** MapStruct 转换器（替代 NextwikiConverter） */
+  /** MapStruct 统一转换器 */
   private final NextwikiStructMapper mapper;
 
   @Autowired(required = false)
@@ -320,7 +320,7 @@ public class PreviewApplicationService {
     // ThumbnailApplicationService 会下载原图、缩放、上传到存储、更新 thumbnailKey
     // 此处仅标记预览就绪（图片可直接预览）
     node.setPreviewReady(true);
-    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
     log.info(
         "[PreviewApplicationService] 图片预览就绪（缩略图由 ThumbnailApplicationService 异步生成）: fileNodeId={}",
         node.getId());

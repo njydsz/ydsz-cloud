@@ -59,6 +59,21 @@
             <artifactId>ydsz-common-util</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- ydsz-common-feign（UserInfoNameAssembler 实现 NameAssembler 接口 + NameAssemblerProperties 配置） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
+        <!-- ydsz-common-redis（UserInfoNameAssembler L2 缓存 RedisStringOps） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
+        <!-- ydsz-common-cache（UserInfoNameAssembler L1 本地缓存 Cache/CacheBuilder） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
+        </dependency>
         <!-- swagger-annotations-jakarta: @Schema 注解（RefreshRequest 等 DTO 使用） -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>

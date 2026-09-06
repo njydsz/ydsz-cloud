@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +34,6 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.StringVO;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
-
-import jakarta.annotation.Resource;
 import com.njydsz.literule.server.orchestrator.RuleChainGraph;
 import com.njydsz.literule.server.orchestrator.RuleGraphValidator;
 import com.njydsz.literule.server.spi.GraphExecutionProvider;

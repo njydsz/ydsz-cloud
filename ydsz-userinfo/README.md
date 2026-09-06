@@ -42,12 +42,11 @@
 ```
 ydsz-userinfo/
 ├── pom.xml
-├── ydsz-userinfo-api/                 # API 层：Feign Client + Fallback + Assembler
+├── ydsz-userinfo-api/                 # API 层：Feign Client + Fallback
 │   └── src/main/java/com/njydsz/userinfo/api/
 │       ├── client/                    # OrgQueryClient（15 个方法）
-│       ├── fallback/                  # Feign 降级实现
-│       └── assembler/                 # UserInfoNameAssembler（跨模块 VO 富化）
-├── ydsz-userinfo-domain/              # 领域层：Repository 接口 + DTO + VO + Query + Event + Enum
+│       └── fallback/                  # Feign 降级实现
+├── ydsz-userinfo-domain/              # 领域层：Repository 接口 + DTO + VO + Query + Event + Enum + Converter/Assembler
 │   └── src/main/java/com/njydsz/userinfo/domain/
 │       ├── repository/                # Repository 接口（19 个，DDD 仓储契约，返回 VO）
 │       ├── dto/                       # 数据传输对象（33 个，含 LoginDTO / UserAccountDTO / ChangePasswordDTO 等）
@@ -62,7 +61,8 @@ ydsz-userinfo/
 │       ├── config/                    # MfaSecretEncryptor / SocialAuthProperties
 │       ├── oauth2/                    # OAuth2Application + OAuth2ApplicationRepository
 │       ├── scim/                      # SCIM 2.0 协议对象（ScimUser / ScimPatchOp / ScimListResponse 等）
-│       └── social/                    # SocialAuthProvider / SocialUserInfo / SocialAccessToken
+│       ├── social/                    # SocialAuthProvider / SocialUserInfo / SocialAccessToken
+│       └── converter/                 # UserInfoNameAssembler（跨模块 VO 富化） + 域对象 MapStruct 转换
 ├── ydsz-userinfo-infra/               # 基础设施层：Mapper + Repository 实现 + 实体 DO + Converter + Social
 │   └── src/main/java/com/njydsz/userinfo/infra/
 │       ├── entity/                    # 持久化实体 DO（21 个，DO 后缀，对应 ydsz_* 表）
@@ -249,7 +249,7 @@ ydsz-userinfo/
 | `OrgQueryClient` | `batchPostNames(postIds)` | `YdszResponse<Map<String, String>>` |
 | `OrgQueryClient` | `batchCompanyNames(companyIds)` | `YdszResponse<Map<String, String>>` |
 
-> `UserInfoNameAssembler`（`ydsz-userinfo-api`）通过 `OrgQueryClient` 批量名称富化接口，在一次 Feign 往返中解析 ID → 名称映射，避免 N+1 调用。
+> `UserInfoNameAssembler`（`ydsz-userinfo-domain/converter`）通过 `OrgQueryClient` 批量名称富化接口，在一次 Feign 往返中解析 ID → 名称映射，避免 N+1 调用。
 
 ## 启动顺序
 

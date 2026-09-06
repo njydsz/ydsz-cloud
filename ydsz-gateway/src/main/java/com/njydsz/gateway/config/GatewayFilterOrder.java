@@ -17,6 +17,7 @@ import org.springframework.core.Ordered;
  *   1   AccessLogGlobalFilter     访问日志
  *   3   IpAccessControlFilter     IP 访问控制（黑名单 + 白名单）
  *   4   PayloadValidationFilter   请求体校验
+ *   5   SqlInjectionFilter        SQL 注入检测
  *   8   WebSocketAuthFilter       WebSocket 认证
  *   10  AuthGlobalFilter          主鉴权 + 内部头注入
  *   15  ApiKeyAuthFilter          API Key 认证
@@ -40,6 +41,8 @@ public enum GatewayFilterOrder {
   IP_ACCESS_CONTROL(3),
   /** 请求体安全校验过滤器 */
   PAYLOAD_VALIDATION(4),
+  /** SQL 注入检测过滤器 */
+  SQL_INJECTION(5),
   /** WebSocket 认证过滤器 */
   WEBSOCKET_AUTH(8),
   /** 主鉴权过滤器 */

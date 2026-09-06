@@ -102,7 +102,7 @@ public class ChunkUploadApplicationService {
   @Autowired(required = false)
   private IFileStorageProvider fileStorageProvider;
 
-  /** MapStruct 转换器（替代 NextwikiConverter） */
+  /** MapStruct 统一转换器 */
   private final NextwikiStructMapper mapper;
 
   /** 单个分片最大大小（默认 10MB） */

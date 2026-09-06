@@ -320,6 +320,9 @@ public class AiSummaryApplicationService implements AiSummaryService {
    *   <li>迭代计算句子权重（PageRank 思想）
    *   <li>选取权重最高的 N 个句子作为摘要
    * </ol>
+   *
+   * <p><b>算法说明：</b>本方法使用 TextRank/TF-IDF 等科学计算算法，计算过程中使用 primitive double 是业界标准做法。
+   * 由于不涉及金额/比例等精确业务值，使用 BigDecimal 会显著损害性能与可读性，故保留 double 类型。
    */
   private String generateSummaryByTextRank(String content) {
     List<String> sentences = splitSentences(content);
@@ -447,7 +450,12 @@ public class AiSummaryApplicationService implements AiSummaryService {
     return words;
   }
 
-  /** 计算两个句子集合的相似度（Jaccard 系数） */
+  /**
+   * 计算两个句子集合的相似度（Jaccard 系数）。
+   *
+   * <p><b>算法说明：</b>本方法使用 TextRank/TF-IDF 等科学计算算法，计算过程中使用 primitive double 是业界标准做法。
+   * 由于不涉及金额/比例等精确业务值，使用 BigDecimal 会显著损害性能与可读性，故保留 double 类型。
+   */
   private double calculateSimilarity(Set<String> set1, Set<String> set2) {
     if (set1.isEmpty() || set2.isEmpty()) {
       return 0;

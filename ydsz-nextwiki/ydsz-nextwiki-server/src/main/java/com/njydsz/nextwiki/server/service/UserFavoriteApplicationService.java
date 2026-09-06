@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.UserFavoriteDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.UserFavoriteRepository;
@@ -34,7 +34,7 @@ public class UserFavoriteApplicationService {
 
   private final UserFavoriteRepository userFavoriteRepository;
   private final FileApplicationService fileApplicationService;
-  private final NextwikiConverter nextwikiConverter;
+  private final NextwikiStructMapper mapper;
 
   /** 默认查询数量限制 */
   private static final int DEFAULT_LIMIT = 50;

@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.domain.service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,14 +50,26 @@ public class SearchDomainService {
   private static final int COLLECTION_CAPACITY = 16;
 
 
-  /** 前缀命中评分权重 */
-  private static final float SCORE_PREFIX_MATCH = 0.8f;
+  /**
+   * 前缀命中评分权重
+   *
+   * <p>使用 BigDecimal 精确表达 0.8 的评分权重，避免浮点表示误差。
+   */
+  private static final BigDecimal SCORE_PREFIX_MATCH = new BigDecimal("0.8");
 
-  /** 包含命中评分权重 */
-  private static final float SCORE_CONTAINS_MATCH = 0.6f;
+  /**
+   * 包含命中评分权重
+   *
+   * <p>使用 BigDecimal 精确表达 0.6 的评分权重，避免浮点表示误差。
+   */
+  private static final BigDecimal SCORE_CONTAINS_MATCH = new BigDecimal("0.6");
 
-  /** 路径包含命中评分权重 */
-  private static final float SCORE_PATH_CONTAINS = 0.3f;
+  /**
+   * 路径包含命中评分权重
+   *
+   * <p>使用 BigDecimal 精确表达 0.3 的评分权重，避免浮点表示误差。
+   */
+  private static final BigDecimal SCORE_PATH_CONTAINS = new BigDecimal("0.3");
 
   /** 高亮片段上下文字符数（命中位置前后各取值） */
   private static final int HIGHLIGHT_CONTEXT_CHARS = 20;
@@ -102,7 +115,7 @@ public class SearchDomainService {
 
     List<SearchResultVO.SearchHitVO> hits = new ArrayList<>(COLLECTION_CAPACITY);
     for (SearchIndexVO index : indices) {
-      float score = calculateScore(index, keyword);
+      BigDecimal score = calculateScore(index, keyword);
       hits.add(
           SearchResultVO.SearchHitVO.builder()
               .fileNodeId(index.getFileNodeId())
@@ -185,16 +198,24 @@ public class SearchDomainService {
 
   // ==================== 私有方法 ====================
 
-  /** 计算搜索得分（0-1 之间，越高越相关） */
-  private float calculateScore(SearchIndexVO index, String keyword) {
+  /**
+   * 计算搜索得分（0-1 之间，越高越相关）。
+   *
+   * <p>使用 BigDecimal 精确表达评分，避免浮点表示误差影响排序准确性。
+   *
+   * @param index 搜索索引 VO
+   * @param keyword 用户输入的搜索关键词
+   * @return 精确评分（0-1 之间）
+   */
+  private BigDecimal calculateScore(SearchIndexVO index, String keyword) {
     if (keyword == null || keyword.isEmpty()) {
-      return 1.0f;
+      return BigDecimal.ONE;
     }
     String name = index.getName() != null ? index.getName().toLowerCase() : "";
     String lowerKeyword = keyword.toLowerCase();
 
     if (name.equals(lowerKeyword)) {
-      return 1.0f;
+      return BigDecimal.ONE;
     }
     if (name.startsWith(lowerKeyword)) {
       return SCORE_PREFIX_MATCH;
@@ -208,7 +229,7 @@ public class SearchDomainService {
       return SCORE_PATH_CONTAINS;
     }
 
-    return 0.1f;
+    return new BigDecimal("0.1");
   }
 
   /** 构建高亮片段（基于文件名匹配关键词的位置） */

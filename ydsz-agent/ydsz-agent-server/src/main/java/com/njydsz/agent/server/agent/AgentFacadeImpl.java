@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,9 @@ public class AgentFacadeImpl implements AgentFacade {
 
   /** 默认最大 Token 数 */
   private static final int DEFAULT_MAX_TOKENS = 2048;
+
+  /** 批量对话总超时（秒）：单条 LLM 调用通常 < 30s，批量 60s 足够覆盖大多数异常场景 */
+  private static final long BATCH_CHAT_TOTAL_TIMEOUT_SECONDS = 60L;
 
   /** 简单对话服务（单轮 LLM 调用） */
   private final ChatService chatService;
@@ -106,8 +110,10 @@ public class AgentFacadeImpl implements AgentFacade {
         futures.add(CompletableFuture.supplyAsync(() -> executeSingleItem(item), executor));
       }
 
-      // 阻塞等待所有任务完成（或失败）
-      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+      // 阻塞等待所有任务完成（带超时），避免单任务 Hang 住整个批量调用
+      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+          .orTimeout(BATCH_CHAT_TOTAL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+          .join();
 
       // 按原始顺序收集结果
       List<BatchChatResult.BatchResultItem> results = new ArrayList<>(items.size());

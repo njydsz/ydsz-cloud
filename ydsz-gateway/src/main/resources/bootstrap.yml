@@ -78,3 +78,17 @@ ydsz:
         queue-capacity: 1024
         thread-name-prefix: nacos-route-listener-
         reject-policy: CALLER_RUNS
+  gateway:
+    filter:
+      sql-injection: true
+    sql-injection:
+      enabled: true
+      mode: STANDARD
+      auto-block: true
+      auto-block-threshold: 3
+      auto-block-ttl-seconds: 3600
+      whitelist-param-names:
+        - tenantId
+        - page
+        - size
+        - sort

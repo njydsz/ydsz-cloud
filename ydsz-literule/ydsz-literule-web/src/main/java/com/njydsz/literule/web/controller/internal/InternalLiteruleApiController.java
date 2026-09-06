@@ -3,6 +3,7 @@ package com.njydsz.literule.web.controller.internal;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +21,6 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
-
-import jakarta.annotation.Resource;
 
 /**
  * 内部 API Controller（服务间 Feign 调用）

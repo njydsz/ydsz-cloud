@@ -382,6 +382,9 @@ public abstract class BaseExceptionHandler {
       info.setKey(ex.getKey());
       info.setMessage(ex.getMessage());
       info.setHttpStatus(ex.getHttpStatus());
+      if (ex.getLevel() != null) {
+        info.setLevel(ex.getLevel().name());
+      }
       if (includeExceptionInfo()) {
         Map<String, Object> details = new LinkedHashMap<>(16);
         details.put("stackTrace", getStackTraceString(throwable));
@@ -394,8 +397,9 @@ public abstract class BaseExceptionHandler {
       info.setCode(CoreExceptionCode.INTERNAL_ERROR.getCode());
       info.setMessage(getRootCauseMessage(throwable));
       info.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+      info.setLevel(ExceptionLevel.ERROR.name());
       if (includeExceptionInfo()) {
-        info.setDetails(Map.of("stackTrace", getStackTraceString(throwable)));
+       info.setDetails(Map.of("stackTrace", getStackTraceString(throwable)));
       }
     }
 
@@ -452,6 +456,13 @@ public abstract class BaseExceptionHandler {
     problem.setProperty("requestId", requestId != null ? requestId : traceId);
     problem.setProperty("timestamp", Instant.now().toString());
 
+    // 透传异常级别
+    String levelName = ExceptionLevel.ERROR.name();
+    if (throwable instanceof AbstractYdszException ex && ex.getLevel() != null) {
+      levelName = ex.getLevel().name();
+    }
+    problem.setProperty("level", levelName);
+
     // 自动注入 OpenTelemetry traceId/spanId（当 OTel 可用时）
     injectOtelTraceContext(problem);
 
@@ -497,12 +508,31 @@ public abstract class BaseExceptionHandler {
    * @return 统一错误响应
    */
   protected static <T> YdszResponse<T> errorResponse(String code, String msg, T data) {
-    return YdszResponse.<T>builder()
+    return errorResponse(code, msg, data, ExceptionLevel.ERROR);
+  }
+
+  /**
+   * 构建统一错误响应（{@link YdszResponse} 格式，兼容 {@code YdszResponse.error(code, msg, data)} 旧语义）。
+   *
+   * <p>ydsz-common-core 精简后移除了三参数 {@code error} 静态方法， 此处统一通过 {@link YdszResponse#builder()} 构建，保持各
+   * handler 输出结构一致。
+   *
+   * @param code 错误码
+   * @param msg 错误消息
+   * @param data 附加数据（可为 null，由 {@code @JsonInclude(NON_NULL)} 决定是否序列化）
+   * @param level 异常级别（不可为 null）
+   * @return 统一错误响应
+   */
+  protected static <T> YdszResponse<T> errorResponse(
+      String code, String msg, T data, ExceptionLevel level) {
+    YdszResponse<T> response = YdszResponse.<T>builder()
         .code(code)
         .msg(msg)
         .data(data)
         .timestamp(System.currentTimeMillis())
         .build();
+    response.setLevel(level != null ? level.name() : null);
+    return response;
   }
 
   /**
@@ -542,12 +572,17 @@ public abstract class BaseExceptionHandler {
     ExceptionInfo info = buildExceptionInfo(throwable, path, traceId);
     if (throwable instanceof AbstractYdszException) {
       AbstractYdszException ex = (AbstractYdszException) throwable;
-      return errorResponse(ex.getCode(), ex.getMessage(), includeExceptionInfo() ? info : null);
+      return errorResponse(
+          ex.getCode(),
+          ex.getMessage(),
+          includeExceptionInfo() ? info : null,
+          ex.getLevel() != null ? ex.getLevel() : ExceptionLevel.ERROR);
     }
     return errorResponse(
         CoreExceptionCode.INTERNAL_ERROR.getCode(),
         info.getMessage(),
-        includeExceptionInfo() ? info : null);
+        includeExceptionInfo() ? info : null,
+        ExceptionLevel.ERROR);
   }
 
   /**
@@ -631,12 +666,39 @@ public abstract class BaseExceptionHandler {
    */
   protected YdszResponse<?> buildStandardErrorResponse(
       String code, String key, String message, int httpStatus, String path) {
+    return buildStandardErrorResponse(code, key, message, httpStatus, path, ExceptionLevel.ERROR);
+  }
+
+  /**
+   * 构建标准错误响应（统一 {@link ExceptionInfo} + {@link YdszResponse} 组合）。
+   *
+   * <p>消除各处理器中重复的"new ExceptionInfo → setPath → errorResponse"三步模板。 开发/测试环境自动填充详细信息（path），生产环境仅返回
+   * code + message。
+   *
+   * @param code 错误码字符串
+   * @param key i18n 消息键（可为 null）
+   * @param message 已解析的错误消息
+   * @param httpStatus HTTP 状态码
+   * @param path 请求路径
+   * @param level 异常级别
+   * @return 统一 YdszResponse
+   */
+  protected YdszResponse<?> buildStandardErrorResponse(
+      String code,
+      String key,
+      String message,
+      int httpStatus,
+      String path,
+      ExceptionLevel level) {
     if (!includeExceptionInfo()) {
-      return errorResponse(code, message, null);
+      return errorResponse(code, message, null, level);
     }
     ExceptionInfo info = new ExceptionInfo(code, key, message, httpStatus);
     info.setPath(path);
-    return errorResponse(code, message, info);
+    if (level != null) {
+      info.setLevel(level.name());
+    }
+    return errorResponse(code, message, info, level);
   }
 
   /**
@@ -656,7 +718,7 @@ public abstract class BaseExceptionHandler {
       String code, String key, String message, int httpStatus, String path) {
     ExceptionInfo info = new ExceptionInfo(code, key, message, httpStatus);
     info.setPath(path);
-    return errorResponse(code, message, info);
+    return errorResponse(code, message, info, ExceptionLevel.ERROR);
   }
 
   /**
@@ -678,9 +740,16 @@ public abstract class BaseExceptionHandler {
     log.error("{}校验异常 | 路径: {} | 消息: {}", getLogPrefix(), path, message, throwable);
     recordMetrics(throwable);
 
+    ExceptionLevel level = errorCode.getLevel();
+    if (!includeExceptionInfo()) {
+      return errorResponse(errorCode.getCode(), message, null, level);
+    }
     ExceptionInfo info =
         new ExceptionInfo(errorCode.getCode(), errorCode.getKey(), message, httpStatus);
     info.setPath(path);
-    return errorResponse(errorCode.getCode(), message, includeExceptionInfo() ? info : null);
+    if (level != null) {
+      info.setLevel(level.name());
+    }
+    return errorResponse(errorCode.getCode(), message, info, level);
   }
 }

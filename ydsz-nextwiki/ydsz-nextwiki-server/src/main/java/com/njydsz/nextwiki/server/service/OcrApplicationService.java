@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.server.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -199,6 +200,6 @@ public class OcrApplicationService {
     private int height;
 
     /** 识别置信度（0~1，tesseract 当前未回填，默认 0） */
-    private float confidence;
+    private BigDecimal confidence;
   }
 }

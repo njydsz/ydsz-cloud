@@ -25,22 +25,22 @@
     </resultMap>
 
     <select id="selectByName" resultMap="TagResult">
-        SELECT * FROM ydsz_wiki_tag WHERE name = #{name} AND deleted = 0
+        SELECT id, name, color, type, usage_count, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id FROM ydsz_wiki_tag WHERE name = #{name} AND deleted = 0
     </select>
 
     <select id="selectAll" resultMap="TagResult">
-        SELECT * FROM ydsz_wiki_tag WHERE deleted = 0 ORDER BY usage_count DESC, name ASC
+        SELECT id, name, color, type, usage_count, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id FROM ydsz_wiki_tag WHERE deleted = 0 ORDER BY usage_count DESC, name ASC
     </select>
 
     <select id="selectByFileNodeId" resultMap="TagResult">
-        SELECT t.* FROM ydsz_wiki_tag t
+        SELECT t.id, t.name, t.color, t.type, t.usage_count, t.status, t.created_by, t.created_at, t.updated_by, t.updated_at, t.revision, t.deleted, t.tenant_id FROM ydsz_wiki_tag t
         INNER JOIN ydsz_wiki_file_tag ft ON t.id = ft.tag_id
         WHERE ft.file_node_id = #{fileNodeId} AND t.deleted = 0 AND ft.deleted = 0
         ORDER BY t.name ASC
     </select>
 
     <select id="selectFileTagsByFileNodeId" resultMap="FileTagResult">
-        SELECT * FROM ydsz_wiki_file_tag WHERE file_node_id = #{fileNodeId} AND deleted = 0
+        SELECT id, file_node_id, tag_id, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id FROM ydsz_wiki_file_tag WHERE file_node_id = #{fileNodeId} AND deleted = 0
     </select>
 
 </mapper>

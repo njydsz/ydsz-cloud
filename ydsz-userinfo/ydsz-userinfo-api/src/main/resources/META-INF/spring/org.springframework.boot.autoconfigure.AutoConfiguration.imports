@@ -1,1 +1,1 @@
-com.njydsz.userinfo.api.assembler.UserInfoNameAssemblerAutoConfiguration
+com.njydsz.userinfo.domain.converter.UserInfoNameAssemblerAutoConfiguration

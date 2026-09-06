@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
@@ -33,7 +33,7 @@ public class ShareExpiryReminderTask {
 
   private final ShareLinkDomainService shareLinkDomainService;
   private final ShareLinkRepository shareLinkRepository;
-  private final NextwikiConverter nextwikiConverter;
+  private final NextwikiStructMapper mapper;
 
   /**
    * 扫描即将到期的分享链接并触发提醒。
@@ -51,7 +51,7 @@ public class ShareExpiryReminderTask {
       }
 
       // 转换为 DTO 并调用领域服务过滤（仅 Active 状态 + 未发送提醒）
-      List<ShareLinkDTO> expiringDTOs = nextwikiConverter.shareLinkListToDTO(expiringVOs);
+      List<ShareLinkDTO> expiringDTOs = mapper.shareLinkListVOToDTO(expiringVOs);
       List<ShareLinkDTO> toRemind = shareLinkDomainService.findExpiringShares(expiringDTOs, EXPIRY_REMINDER_HOURS);
 
       if (toRemind.isEmpty()) {

@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.server.websocket;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,7 +99,13 @@ public class BatchProgressNotifier {
       int processedCount,
       String currentItem) {
 
-    double progress = totalCount > 0 ? (double) processedCount / totalCount * 100 : 0;
+    // 使用 BigDecimal 精确计算进度的百分比（YDIZ-OOP-003：禁止使用 double/float）
+    BigDecimal progress =
+        totalCount > 0
+            ? BigDecimal.valueOf(processedCount)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP)
+            : BigDecimal.ZERO;
 
     Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("taskId", taskId);
@@ -105,7 +113,7 @@ public class BatchProgressNotifier {
     payload.put("status", "RUNNING");
     payload.put("totalCount", totalCount);
     payload.put("processedCount", processedCount);
-    payload.put("progress", Math.min(progress, 100.0));
+    payload.put("progress", Math.min(progress.doubleValue(), 100.0));
     payload.put("currentItem", currentItem);
     payload.put("message", String.format("已处理 %d/%d", processedCount, totalCount));
 

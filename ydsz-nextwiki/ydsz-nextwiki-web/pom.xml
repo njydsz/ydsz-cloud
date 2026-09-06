@@ -35,8 +35,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
+        <!--
+          ydsz-common-auth: explicit declaration for direct usage (@AuthApiPermission 注解)
+          符合 YDIZ-ARCH-001 — import 某模块的类则该模块必须显式出现在本模块 pom.xml
+        -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
 
-        <!-- P1-1: 审计模块（@EnableYdszAudit + @Audit AOP 切面） -->
+        <!-- 审计模块（@EnableYdszAudit + @Audit AOP 切面） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>

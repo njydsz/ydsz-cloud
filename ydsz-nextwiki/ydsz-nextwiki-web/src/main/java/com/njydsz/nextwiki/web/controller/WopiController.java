@@ -28,7 +28,7 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -100,6 +100,8 @@ public class WopiController {
 
   /** 文件节点仓储（用于查询/更新文件） */
   private final FileNodeRepository fileNodeRepository;
+
+  private final NextwikiStructMapper mapper;
 
   /** NextWiki 全局配置 */
   private final NextwikiProperties properties;
@@ -237,7 +239,7 @@ public class WopiController {
       node.setSize((long) content.length);
       node.setUpdatedBy(userId);
       node.setUpdatedAt(LocalDateTime.now());
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
       log.info("[WopiController] PutFile 成功: fileId={}, size={}", fileId, content.length);
       return WopiPutFileResponse.ok();
@@ -276,7 +278,7 @@ public class WopiController {
     node.setStatus("locked");
     node.setUpdatedBy(userId);
     node.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
     return WopiPutFileResponse.ok();
   }
@@ -306,7 +308,7 @@ public class WopiController {
     }
 
     node.setStatus("active");
-    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
     return WopiPutFileResponse.ok();
   }

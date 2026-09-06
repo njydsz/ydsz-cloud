@@ -20,7 +20,8 @@
   </resultMap>
 
   <select id="selectByTableMetaIdOrderByIdAsc" resultMap="BaseResultMap">
-    SELECT * FROM ydsz_gen_column_meta
+    SELECT id, table_meta_id, column_name, data_type, column_size, nullable, is_pk, comment, override_java_type, override_field_name, skip_dto, skip_vo, skip_query, extra_config
+    FROM ydsz_gen_column_meta
     WHERE table_meta_id = #{tableMetaId}
     ORDER BY id ASC
   </select>

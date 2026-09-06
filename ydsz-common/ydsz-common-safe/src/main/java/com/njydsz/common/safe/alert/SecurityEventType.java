@@ -30,5 +30,8 @@ public enum SecurityEventType {
   SIGNATURE_INVALID,
 
   /** 密码强度不足 */
-  WEAK_PASSWORD
+  WEAK_PASSWORD,
+
+  /** SQL 注入检测 */
+  SQL_INJECTION
 }

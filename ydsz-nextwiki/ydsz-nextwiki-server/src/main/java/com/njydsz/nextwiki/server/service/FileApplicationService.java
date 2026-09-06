@@ -129,7 +129,7 @@ public class FileApplicationService {
   /** 缓存服务（文件详情、目录列表、配额用量 Redis 缓存） */
   private final NextwikiCacheService cacheService;
 
-  /** MapStruct 转换器（替代 NextwikiConverter） */
+  /** MapStruct 统一转换器 */
   private final NextwikiStructMapper mapper;
 
   /** 编程式事务模板（用于精确控制事务边界，将IO操作移出事务） */
@@ -420,7 +420,7 @@ public class FileApplicationService {
     FileNodeVO parent = resolveParentNode(parentId, userId);
     List<FileNodeVO> siblings = fileNodeRepository.findChildren(parent.getId());
     FileNodeVO folder = folderDomainService.createFolder(parent, siblings, sanitizedName, userId);
-    FileNodeVO saved = fileNodeRepository.save(NextwikiConverter.INSTANT.toDTO(folder));
+    FileNodeVO saved = fileNodeRepository.save(mapper.fileNodeVOToDTO(folder));
 
     // 失效缓存：父目录子节点列表
     cacheService.evictChildren(parent.getId());
@@ -496,7 +496,7 @@ public class FileApplicationService {
       FileNodeVO targetParent = resolveParentNode(targetParentId, userId);
       List<FileNodeVO> targetSiblings = fileNodeRepository.findChildren(targetParent.getId());
       FileNodeVO movedNode = folderDomainService.move(node, targetParent, targetSiblings, userId);
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(movedNode));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(movedNode));
 
       // 失效缓存：文件详情 + 原父目录 + 新父目录
       cacheService.evictFile(nodeId);
@@ -534,7 +534,7 @@ public class FileApplicationService {
           .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
       FileNodeVO parent = resolveParentNode(node.getParentId(), userId);
       FileNodeVO renamedNode = folderDomainService.rename(node, parent, sanitizeFileName(newName), userId);
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(renamedNode));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(renamedNode));
 
       // 失效缓存：文件详情 + 父目录子节点列表
       cacheService.evictFileAndParent(nodeId, node.getParentId());
@@ -785,7 +785,7 @@ public class FileApplicationService {
 
     // 文件创建版本引用
     if (source.isFile()) {
-      List<FileVersionDTO> existingVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
@@ -799,7 +799,7 @@ public class FileApplicationService {
               userId);
       versionRepository.setActiveVersion(saved.getId(), -1);
       versionRepository.save(versionResult.newVersion());
-      fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(versionResult.updatedFileNode()));
+      fileNodeRepository.update(mapper.fileNodeVOToDTO(versionResult.updatedFileNode()));
       cleanupExcessVersions(saved.getId());
       if (source.getSize() != null) {
         storageQuotaRepository.addUsage("user", userId, source.getSize(), 1);
@@ -903,9 +903,9 @@ public class FileApplicationService {
     FileNodeVO node = fileNodeRepository.findById(nodeId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
 
-    FileVersionDTO targetDTO = NextwikiConverter.INSTANT.versionToDTO(
+    FileVersionDTO targetDTO = mapper.fileVersionVOToDTO(
         versionRepository.findByFileNodeIdAndVersion(nodeId, targetVersion).orElse(null));
-    List<FileVersionDTO> allVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListToDTO(
         versionRepository.findByFileNodeId(nodeId));
 
     FileVersionDomainService.VersionRollbackResult result =
@@ -913,7 +913,7 @@ public class FileApplicationService {
 
     versionRepository.setActiveVersion(nodeId, -1);
     versionRepository.save(result.newVersion());
-    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(result.updatedFileNode()));
+    fileNodeRepository.update(mapper.fileNodeVOToDTO(result.updatedFileNode()));
 
     // 发布回滚事件
     eventPublisher.publishEvent(
@@ -976,7 +976,7 @@ public class FileApplicationService {
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
     node.setStarred(node.getStarred() == null || !node.getStarred());
     node.setUpdatedBy(userId);
-    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
     // 失效缓存：文件详情
     cacheService.evictFile(nodeId);
@@ -1072,7 +1072,7 @@ public class FileApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersionDTO> allVersionDTOs = NextwikiConverter.INSTANT.versionListToDTO(
+    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListToDTO(
         versionRepository.findByFileNodeId(fileNodeId));
     List<FileVersionDTO> toDelete = versionDomainService.findVersionsToCleanup(allVersionDTOs);
     for (FileVersionDTO v : toDelete) {

@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -46,8 +46,8 @@ public class SpaceApplicationService {
   /** 空间领域服务（名称校验、排序等业务规则） */
   private final SpaceDomainService spaceDomainService;
 
-  /** DTO/VO 转换器 */
-  private final NextwikiConverter nextwikiConverter;
+  /** MapStruct 统一转换器 */
+  private final NextwikiStructMapper mapper;
 
   /** 默认查询数量限制 */
   private static final int DEFAULT_LIMIT = 50;

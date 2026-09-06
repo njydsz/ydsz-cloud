@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.system.infra.mapper.ApiPermissionMapper">
+
+    <!-- 批量插入接口权限（跳过唯一键冲突，保证幂等注册） -->
+    <insert id="insertBatchSkipExisting" parameterType="java.util.List">
+        INSERT INTO ydsz_sys_api_permission (
+            id, tenant_id, api_code, api_name, http_method, url_pattern,
+            controller_class, method_name, description, status,
+            deleted, revision, created_by, created_at, updated_by, updated_at
+        ) VALUES
+        <foreach collection="items" item="item" separator=",">
+        (
+            #{item.id}, #{item.tenantId}, #{item.apiCode}, #{item.apiName},
+            #{item.httpMethod}, #{item.urlPattern}, #{item.controllerClass},
+            #{item.methodName}, #{item.description}, #{item.status},
+            #{item.deleted}, #{item.revision}, #{item.createdBy},
+            #{item.createdAt}, #{item.updatedBy}, #{item.updatedAt}
+        )
+        </foreach>
+        ON CONFLICT (tenant_id, api_code) DO NOTHING
+    </insert>
+
+</mapper>

@@ -23,7 +23,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.domain.converter.NextwikiConverter;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -98,6 +98,8 @@ public class FileLockController {
   /** 文件节点仓储（用于查询/更新文件状态） */
   private final FileNodeRepository fileNodeRepository;
 
+  private final NextwikiStructMapper mapper;
+
   /** 文件权限服务（封装读写权限校验） */
   private final FilePermissionService permissionService;
 
@@ -136,7 +138,7 @@ public class FileLockController {
     node.setStatus("locked");
     node.setUpdatedBy(userId);
     node.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
     log.info("[FileLockController] 锁定文件: nodeId={}, userId={}", nodeId, userId);
     return YdszResponse.success();
@@ -174,7 +176,7 @@ public class FileLockController {
     node.setStatus("active");
     node.setUpdatedBy(userId);
     node.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(NextwikiConverter.INSTANT.toDTO(node));
+    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
     log.info("[FileLockController] 解锁文件: nodeId={}, userId={}", nodeId, userId);
     return YdszResponse.success();

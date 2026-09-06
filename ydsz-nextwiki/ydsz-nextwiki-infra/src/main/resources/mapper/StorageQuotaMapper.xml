@@ -21,7 +21,8 @@
     </resultMap>
 
     <select id="selectByScope" resultMap="StorageQuotaResult">
-        SELECT * FROM ydsz_wiki_storage_quota
+        SELECT id, scope_type, scope_id, quota_limit, quota_used, file_count_limit, file_count_used, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        FROM ydsz_wiki_storage_quota
         WHERE scope_type = #{scopeType} AND scope_id = #{scopeId} AND deleted = 0
         LIMIT 1
     </select>

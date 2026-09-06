@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.api.assembler;
+package com.njydsz.userinfo.domain.converter;
 
 import java.util.ArrayList;
 import java.util.Collection;

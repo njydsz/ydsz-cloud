@@ -3,6 +3,7 @@ package com.njydsz.literule.web;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +29,6 @@ import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
-
-import jakarta.annotation.Resource;
 
 /**
  * AB Test 自动回滚 Controller

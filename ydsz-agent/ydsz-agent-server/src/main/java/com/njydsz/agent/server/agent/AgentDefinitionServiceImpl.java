@@ -78,7 +78,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    * @throws IllegalArgumentException 当 agentCode 已存在时抛出
    */
   @Override
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public AgentDefinitionVO create(AgentDefinitionDTO dto) {
     // 唯一性校验
     AgentDefinitionVO existing = getByCode(dto.getAgentCode());
@@ -97,7 +97,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    * @throws IllegalArgumentException 当 Agent 不存在或已删除时抛出
    */
   @Override
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public AgentDefinitionVO update(AgentDefinitionDTO dto) {
     AgentDefinitionVO existing = agentDefinitionRepository.findById(dto.getId()).orElse(null);
     if (existing == null) {
@@ -117,7 +117,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    * @return true=删除成功（影响行数 > 0）
    */
   @Override
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     return agentDefinitionRepository.deleteById(id);
   }
