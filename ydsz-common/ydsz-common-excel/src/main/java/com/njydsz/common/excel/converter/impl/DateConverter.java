@@ -73,17 +73,14 @@ public class DateConverter implements CellValueConverter {
    *
    * @param ldt 本地日期时间
    * @return 对应 Date 实例
-   * @deprecated 此为 POI/旧字段桥接适配方法，仅在需要对 Date 目标类型兼容时使用
    */
-  @Deprecated
   private static Date ldtToDate(LocalDateTime ldt) {
     return ldt == null ? null : Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
   }
 
   /**
-   * @deprecated 返回值为 Date（桥接），内部使用 LocalDateTime 计算。推荐使用 java.time.* API 直接获取 LocalDateTime。
+   * 将日期字符串解析为 Date。
    */
-  @Deprecated
   private Date parseDateString(String dateStr) {
     if (dateStr == null || dateStr.isEmpty()) {
       return null;

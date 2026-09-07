@@ -254,85 +254,6 @@ public class FlowNodeVO implements Serializable {
     return val == null ? null : String.valueOf(val);
   }
 
-  // ==================== 兼容方法（委托给值对象） ====================
-
-  /**
-   * 获取服务节点类型（HTTP / SCRIPT / AUTO_PASS）。
-   *
-   * @return 服务类型，默认 AUTO_PASS
-   * @deprecated 使用 {@link #getServiceNodeConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getServiceType() {
-    return getServiceNodeConfig().getServiceType().name();
-  }
-
-  /**
-   * 获取服务节点 HTTP 调用地址。
-   *
-   * @return URL，未配置时返回空字符串
-   * @deprecated 使用 {@link #getServiceNodeConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getServiceUrl() {
-    return getServiceNodeConfig().getUrl();
-  }
-
-  /**
-   * 获取服务节点 HTTP 方法。
-   *
-   * @return HTTP 方法，默认 GET
-   * @deprecated 使用 {@link #getServiceNodeConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getServiceMethod() {
-    return getServiceNodeConfig().getMethod();
-  }
-
-  /**
-   * 获取服务节点脚本内容（SCRIPT 类型使用）。
-   *
-   * @return 脚本内容，未配置时返回空字符串
-   * @deprecated 使用 {@link #getServiceNodeConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getServiceScript() {
-    return getServiceNodeConfig().getScript();
-  }
-
-  /**
-   * 获取审批人为空时的兜底策略（AUTO_PASS / TRANSFER_ADMIN / ASSIGN_SPECIFIED）。
-   *
-   * @return 兜底策略，默认 AUTO_PASS
-   * @deprecated 使用 {@link #getAssigneeConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getEmptyStrategy() {
-    return getAssigneeConfig().getEmptyStrategy().name();
-  }
-
-  /**
-   * 获取兜底策略中的管理员用户 ID。
-   *
-   * @return 管理员用户 ID，默认 "1"
-   * @deprecated 使用 {@link #getAssigneeConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getAdminUserId() {
-    return getAssigneeConfig().getAdminUserId();
-  }
-
-  /**
-   * 获取兜底策略中的指定用户 ID。
-   *
-   * @return 指定用户 ID，默认 "1"
-   * @deprecated 使用 {@link #getAssigneeConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getSpecifiedUserId() {
-    return getAssigneeConfig().getSpecifiedUserId();
-  }
-
   // ==================== 自动去重 ====================
 
   /**
@@ -419,42 +340,6 @@ public class FlowNodeVO implements Serializable {
     } catch (NumberFormatException e) {
       return DEFAULT_PRIORITY;
     }
-  }
-
-  // ==================== 兼容方法（委托给 SLA 值对象） ====================
-
-  /**
-   * 获取超时升级用户 ID。
-   *
-   * @return 升级用户 ID，未配置时返回空字符串
-   * @deprecated 使用 {@link #getSlaConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getEscalateUser() {
-    return getSlaConfig().getEscalateUserId();
-  }
-
-  /**
-   * 获取超时策略（REMIND / ESCALATE / AUTO_PASS / AUTO_REJECT）。
-   *
-   * @return 超时策略，默认 REMIND
-   * @deprecated 使用 {@link #getSlaConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public String getTimeoutStrategy() {
-    return getSlaConfig().getAction().name();
-  }
-
-  /**
-   * 获取超时时间（分钟）。
-   *
-   * @return 超时分钟数，默认 120
-   * @deprecated 使用 {@link #getSlaConfig()} 获取类型安全值对象
-   */
-  @Deprecated
-  public int getTimeoutMinutes() {
-    return getSlaConfig().getTimeoutMinutes() > 0 ? getSlaConfig().getTimeoutMinutes()
-        : DEFAULT_TIMEOUT_MINUTES;
   }
 
   // ==================== 事件订阅 ====================

@@ -95,19 +95,6 @@ public class VerifyCodeService {
   }
 
   /**
-   * 发送验证码（手机专用，兼容旧版调用）。
-   *
-   * @param type 类型：REGISTER / FORGOT_PASSWORD
-   * @param phone 目标手机号
-   * @throws BusinessException 发送过于频繁时抛出
-   * @deprecated 使用 {@link #sendCode(String, String, String)} 替代
-   */
-  @Deprecated
-  public void sendCode(String type, String phone) {
-    sendCode(type, TARGET_TYPE_PHONE, phone);
-  }
-
-  /**
    * 校验验证码是否正确（校验后无论成功与否均清除）。
    *
    * @param type 类型：REGISTER / FORGOT_PASSWORD / UNLOCK
@@ -136,20 +123,6 @@ public class VerifyCodeService {
       log.warn("校验验证码异常: type={}, target={}, error={}", type, target, e.getMessage());
       return false;
     }
-  }
-
-  /**
-   * 校验验证码是否正确（手机专用，兼容旧版调用）。
-   *
-   * @param type 类型：REGISTER / FORGOT_PASSWORD
-   * @param phone 手机号
-   * @param code 待校验的验证码
-   * @return true 验证通过；false 验证失败
-   * @deprecated 使用 {@link #verifyCode(String, String, String)} 替代
-   */
-  @Deprecated
-  public boolean verifyCodeForPhone(String type, String phone, String code) {
-    return verifyCode(type, phone, code);
   }
 
   /**

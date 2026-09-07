@@ -314,20 +314,6 @@ public class UserAccount extends MpBaseEntity<String> {
   }
 
   /**
-   * 启用账号。
-   *
-   * <p>将状态设为 {@link UserLifecycleStatusEnum#ENABLED}，清除锁定信息。
-   *
-   * @deprecated 使用 {@link #activate()} 替代，提供更严格的状态流转校验
-   */
-  @Deprecated
-  public void enable() {
-    setStatusEnum(UserLifecycleStatusEnum.ENABLED);
-    this.lockedUntil = null;
-    this.loginFailCount = 0;
-  }
-
-  /**
    * 禁用账号（→ DISABLED）。
    *
    * <p>将状态设为 {@link UserLifecycleStatusEnum#DISABLED}。
@@ -401,20 +387,6 @@ public class UserAccount extends MpBaseEntity<String> {
    */
   public boolean canLogin() {
     return getLifecycleStatus() == UserLifecycleStatusEnum.ENABLED && !isLocked();
-  }
-
-  /**
-   * 判断当前是否允许认证（登录）。
-   *
-   * <p>前置条件：账号存在、已启用、未锁定。
-   *
-   * <p><b>已废弃：</b>使用 {@link #canLogin()} 替代，语义更清晰。
-   *
-   * @return true 表示允许尝试认证
-   */
-  @Deprecated
-  public boolean canAuthenticate() {
-    return getStatusEnum() == UserLifecycleStatusEnum.ENABLED && !isLocked();
   }
 
   /**
