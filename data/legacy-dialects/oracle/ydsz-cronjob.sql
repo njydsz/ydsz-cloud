@@ -733,7 +733,7 @@ CREATE TABLE ydsz_job_log (
     exec_thread_id           NUMBER(19)               DEFAULT NULL,
     shard_index              NUMBER(10)               DEFAULT NULL,
     shard_total              NUMBER(10)               DEFAULT NULL,
-    is_slow                  NUMBER(1)                NOT NULL DEFAULT 0,
+    slow                       NUMBER(1)                NOT NULL DEFAULT 0,
     slow_threshold_ms        NUMBER(19)               DEFAULT NULL,
     queue_time               TIMESTAMP                DEFAULT NULL,
     dispatch_time            TIMESTAMP                DEFAULT NULL,
@@ -763,7 +763,7 @@ COMMENT ON COLUMN ydsz_job_log.exec_node_id IS '执行节点 ID（hostname:port�
 COMMENT ON COLUMN ydsz_job_log.exec_thread_id IS '执行线程 ID（用于超时强制中断时定位执行线程）';
 COMMENT ON COLUMN ydsz_job_log.shard_index IS '分片索引（非分片任务为 NULL；分片任务为 0-based 索引）';
 COMMENT ON COLUMN ydsz_job_log.shard_total IS '分片总数（非分片任务为 NULL）';
-COMMENT ON COLUMN ydsz_job_log.is_slow IS '慢任务标记（0=非慢 / 1=慢）';
+COMMENT ON COLUMN ydsz_job_log.slow IS '慢任务标记（0=非慢 / 1=慢）';
 COMMENT ON COLUMN ydsz_job_log.slow_threshold_ms IS '慢任务阈值快照（毫秒，NULL=未配置慢任务检测）';
 COMMENT ON COLUMN ydsz_job_log.queue_time IS '入队时间（任务被 JobScanner 扫描到并入队的时刻）';
 COMMENT ON COLUMN ydsz_job_log.dispatch_time IS '派发时间（任务被 Dispatcher 从队列取出并派发的时刻）';

@@ -731,7 +731,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     exec_thread_id           BIGINT                   DEFAULT NULL,
     shard_index              INTEGER                  DEFAULT NULL,
     shard_total              INTEGER                  DEFAULT NULL,
-    is_slow                  SMALLINT                 NOT NULL DEFAULT 0,
+    slow                   SMALLINT                 NOT NULL DEFAULT 0,
     slow_threshold_ms        BIGINT                   DEFAULT NULL,
     queue_time               TIMESTAMP                DEFAULT NULL,
     dispatch_time            TIMESTAMP                DEFAULT NULL,
@@ -761,7 +761,7 @@ COMMENT ON COLUMN ydsz_job_log.exec_node_id IS '执行节点 ID（hostname:port�
 COMMENT ON COLUMN ydsz_job_log.exec_thread_id IS '执行线程 ID（用于超时强制中断时定位执行线程）';
 COMMENT ON COLUMN ydsz_job_log.shard_index IS '分片索引（非分片任务为 NULL；分片任务为 0-based 索引）';
 COMMENT ON COLUMN ydsz_job_log.shard_total IS '分片总数（非分片任务为 NULL）';
-COMMENT ON COLUMN ydsz_job_log.is_slow IS '慢任务标记（0=非慢 / 1=慢）';
+COMMENT ON COLUMN ydsz_job_log.slow IS '慢任务标记（0=非慢 / 1=慢）';
 COMMENT ON COLUMN ydsz_job_log.slow_threshold_ms IS '慢任务阈值快照（毫秒，NULL=未配置慢任务检测）';
 COMMENT ON COLUMN ydsz_job_log.queue_time IS '入队时间（任务被 JobScanner 扫描到并入队的时刻）';
 COMMENT ON COLUMN ydsz_job_log.dispatch_time IS '派发时间（任务被 Dispatcher 从队列取出并派发的时刻）';
@@ -906,6 +906,109 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_outbox_jo_status_retry ON ydsz_job_outbo
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_outbox_jo_status_created ON ydsz_job_outbox (status, create_time);
 
 -- ============================================================================
+-- 20. DAG 节点执行上下文表（单次写入，避免行锁竞争）
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
+    id                       VARCHAR(32)              NOT NULL,
+    dag_instance_id          VARCHAR(32)              NOT NULL,
+    node_key                 VARCHAR(128)             NOT NULL,
+    result_json              TEXT                     DEFAULT NULL,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ydsz_job_dag_context PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_job_dag_context_inst_node UNIQUE (dag_instance_id, node_key)
+);
+
+COMMENT ON TABLE ydsz_job_dag_context IS 'DAG 节点执行上下文表';
+COMMENT ON COLUMN ydsz_job_dag_context.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_job_dag_context.dag_instance_id IS 'DAG 实例 ID（关联 ydsz_job_dag_instance.id）';
+COMMENT ON COLUMN ydsz_job_dag_context.node_key IS '节点 KEY（唯一标识 DAG 中的一个节点）';
+COMMENT ON COLUMN ydsz_job_dag_context.result_json IS '节点执行结果 JSON（单次写入，避免行锁竞争）';
+COMMENT ON COLUMN ydsz_job_dag_context.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_job_dag_context.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_dag_context.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_job_dag_context.updated_at IS '最后更新时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_context_instance ON ydsz_job_dag_context (dag_instance_id);
+
+-- ============================================================================
+-- 21. 事件溯源表
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS ydsz_event_store (
+    id                       VARCHAR(32)              NOT NULL,
+    aggregate_type           VARCHAR(64)              NOT NULL,
+    aggregate_id             VARCHAR(32)              NOT NULL,
+    event_type               VARCHAR(128)             NOT NULL,
+    payload                  TEXT                     DEFAULT NULL,
+    operator                 VARCHAR(64)              DEFAULT NULL,
+    occurred_at              TIMESTAMP                NOT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ydsz_event_store PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE ydsz_event_store IS '事件溯源表（Event Store）';
+COMMENT ON COLUMN ydsz_event_store.id IS '事件 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_event_store.aggregate_type IS '聚合根类型（如 job、dag_definition）';
+COMMENT ON COLUMN ydsz_event_store.aggregate_id IS '聚合根 ID';
+COMMENT ON COLUMN ydsz_event_store.event_type IS '事件类型（如 JOB_CREATED）';
+COMMENT ON COLUMN ydsz_event_store.payload IS '事件负载 JSON';
+COMMENT ON COLUMN ydsz_event_store.operator IS '操作人';
+COMMENT ON COLUMN ydsz_event_store.occurred_at IS '事件发生时间';
+COMMENT ON COLUMN ydsz_event_store.created_at IS '记录写入时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_event_store_aggregate ON ydsz_event_store (aggregate_type, aggregate_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_event_store_occurred ON ydsz_event_store (occurred_at);
+
+-- ============================================================================
+-- 22. WebHook 重试队列表
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
+    id                       VARCHAR(32)              NOT NULL,
+    webhook_id               VARCHAR(32)              NOT NULL,
+    event_type               VARCHAR(128)             NOT NULL,
+    job_key                  VARCHAR(64)              DEFAULT NULL,
+    log_id                   VARCHAR(32)              DEFAULT NULL,
+    callback_url             VARCHAR(1024)            NOT NULL,
+    http_method              VARCHAR(10)              NOT NULL DEFAULT 'POST',
+    headers                  JSONB                    DEFAULT NULL,
+    webhook_secret           VARCHAR(256)             DEFAULT NULL,
+    payload_json             TEXT                     NOT NULL,
+    retry_count              INTEGER                  NOT NULL DEFAULT 0,
+    max_retries              INTEGER                  NOT NULL DEFAULT 5,
+    next_retry_time          TIMESTAMP                DEFAULT NULL,
+    retry_status             VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
+    last_error               TEXT                     DEFAULT NULL,
+    last_retry_time          TIMESTAMP                DEFAULT NULL,
+    CONSTRAINT pk_ydsz_job_webhook_retry PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE ydsz_job_webhook_retry IS 'WebHook 重试队列表';
+COMMENT ON COLUMN ydsz_job_webhook_retry.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_job_webhook_retry.webhook_id IS 'WebHook 订阅 ID（关联 ydsz_job_webhook.id）';
+COMMENT ON COLUMN ydsz_job_webhook_retry.event_type IS '事件类型';
+COMMENT ON COLUMN ydsz_job_webhook_retry.job_key IS '任务 KEY';
+COMMENT ON COLUMN ydsz_job_webhook_retry.log_id IS '任务执行日志 ID（可选）';
+COMMENT ON COLUMN ydsz_job_webhook_retry.callback_url IS '请求 URL';
+COMMENT ON COLUMN ydsz_job_webhook_retry.http_method IS '请求方法: POST/PUT';
+COMMENT ON COLUMN ydsz_job_webhook_retry.headers IS '请求头 JSON';
+COMMENT ON COLUMN ydsz_job_webhook_retry.webhook_secret IS '密钥（用于签名验证）';
+COMMENT ON COLUMN ydsz_job_webhook_retry.payload_json IS '请求体 JSON';
+COMMENT ON COLUMN ydsz_job_webhook_retry.retry_count IS '当前重试次数（从 0 开始）';
+COMMENT ON COLUMN ydsz_job_webhook_retry.max_retries IS '最大重试次数（默认 5）';
+COMMENT ON COLUMN ydsz_job_webhook_retry.next_retry_time IS '下次重试时间';
+COMMENT ON COLUMN ydsz_job_webhook_retry.retry_status IS '状态: PENDING/SUCCESS/DEAD';
+COMMENT ON COLUMN ydsz_job_webhook_retry.last_error IS '最后错误信息';
+COMMENT ON COLUMN ydsz_job_webhook_retry.last_retry_time IS '最后重试时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_retry_status ON ydsz_job_webhook_retry (retry_status, next_retry_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_retry_webhook ON ydsz_job_webhook_retry (webhook_id);
+
+-- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
 -- ============================================================================
 
@@ -917,6 +1020,13 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- 自动更新 updated_at（ydsz_job_dag_context 表）
+DROP TRIGGER IF EXISTS trg_ydsz_job_dag_context_updated_at ON ydsz_job_dag_context;
+CREATE TRIGGER trg_ydsz_job_dag_context_updated_at
+BEFORE UPDATE ON ydsz_job_dag_context
+FOR EACH ROW
+EXECUTE FUNCTION fn_ydsz_job_set_updated_at();
 
 DROP TRIGGER IF EXISTS trg_ydsz_job_updated_at ON ydsz_job_main;
 CREATE TRIGGER trg_ydsz_job_updated_at

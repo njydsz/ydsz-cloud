@@ -564,8 +564,8 @@ CREATE TABLE ydsz_wiki_space_template (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     category                 VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'general',
     icon_url                 VARCHAR2(1024 CHAR)      DEFAULT NULL,
-    is_system                NUMBER(1)                NOT NULL DEFAULT 0,
-    is_public                NUMBER(1)                NOT NULL DEFAULT 1,
+    system_flag             NUMBER(1)                NOT NULL DEFAULT 0,
+    public_access           NUMBER(1)                NOT NULL DEFAULT 1,
     structure_json           CLOB                     NOT NULL CONSTRAINT ck_ydsz_wiki_space_template_structure_json CHECK (structure_json IS JSON),
     sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
     usage_count              NUMBER(10)               NOT NULL DEFAULT 0,
@@ -584,8 +584,8 @@ COMMENT ON COLUMN ydsz_wiki_space_template.name IS '模板名称';
 COMMENT ON COLUMN ydsz_wiki_space_template.description IS '模板描述';
 COMMENT ON COLUMN ydsz_wiki_space_template.category IS '模板分类：general / project / meeting / knowledge';
 COMMENT ON COLUMN ydsz_wiki_space_template.icon_url IS '模板图标 URL';
-COMMENT ON COLUMN ydsz_wiki_space_template.is_system IS '是否为系统内置模板（不可删除）';
-COMMENT ON COLUMN ydsz_wiki_space_template.is_public IS '是否公开（所有租户可见）';
+COMMENT ON COLUMN ydsz_wiki_space_template.system_flag IS '是否为系统内置模板（不可删除）';
+COMMENT ON COLUMN ydsz_wiki_space_template.public_access IS '是否公开（所有租户可见）';
 COMMENT ON COLUMN ydsz_wiki_space_template.structure_json IS '模板结构 JSON（定义目录树、初始页面、权限配置等）';
 COMMENT ON COLUMN ydsz_wiki_space_template.sort_order IS '排序序号';
 COMMENT ON COLUMN ydsz_wiki_space_template.usage_count IS '使用次数';
@@ -596,7 +596,7 @@ COMMENT ON COLUMN ydsz_wiki_space_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space_template.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_space_template_tenant_category ON ydsz_wiki_space_template (tenant_id, category);
-CREATE INDEX idx_ydsz_wiki_space_template_system ON ydsz_wiki_space_template (is_system, is_public);
+CREATE INDEX idx_ydsz_wiki_space_template_system_public ON ydsz_wiki_space_template (system_flag, public_access);
 CREATE INDEX idx_ydsz_wiki_space_template_tenant_deleted ON ydsz_wiki_space_template (tenant_id, deleted);
 
 CREATE TABLE ydsz_wiki_trash_item (

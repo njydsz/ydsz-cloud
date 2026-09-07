@@ -349,8 +349,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     description     VARCHAR(512)    DEFAULT NULL COMMENT '模板描述',
     category        VARCHAR(32)     NOT NULL DEFAULT 'general' COMMENT '模板分类：general / project / meeting / knowledge',
     icon_url        VARCHAR(1024)   DEFAULT NULL COMMENT '模板图标 URL',
-    is_system       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统内置模板（不可删除）',
-    is_public       TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否公开（所有租户可见）',
+    system_flag     TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统内置模板（不可删除）',
+    public_access   TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否公开（所有租户可见）',
     structure_json  JSON            NOT NULL COMMENT '模板结构 JSON（定义目录树、初始页面、权限配置等）',
     sort_order      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     usage_count     INT             NOT NULL DEFAULT 0 COMMENT '使用次数',
@@ -361,7 +361,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_ydsz_wiki_space_template_tenant_category (tenant_id, category),
-    INDEX idx_ydsz_wiki_space_template_system (is_system, is_public),
+    INDEX idx_ydsz_wiki_space_template_system_public (system_flag, public_access),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间模板（预定义可复用的空间结构模板）';
 

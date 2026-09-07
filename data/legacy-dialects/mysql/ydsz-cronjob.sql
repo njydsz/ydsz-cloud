@@ -451,7 +451,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     exec_thread_id        BIGINT          DEFAULT NULL COMMENT '执行线程 ID（用于超时强制中断时定位执行线程）',
     shard_index           INT             DEFAULT NULL COMMENT '分片索引（非分片任务为 NULL；分片任务为 0-based 索引）',
     shard_total           INT             DEFAULT NULL COMMENT '分片总数（非分片任务为 NULL）',
-    is_slow               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '慢任务标记（0=非慢 / 1=慢）',
+    slow                   TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '慢任务标记（0=非慢 / 1=慢）',
     slow_threshold_ms     BIGINT          DEFAULT NULL COMMENT '慢任务阈值快照（毫秒，NULL=未配置慢任务检测）',
     queue_time            DATETIME        DEFAULT NULL COMMENT '入队时间（任务被 JobScanner 扫描到并入队的时刻）',
     dispatch_time         DATETIME        DEFAULT NULL COMMENT '派发时间（任务被 Dispatcher 从队列取出并派发的时刻）',

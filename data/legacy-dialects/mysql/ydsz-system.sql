@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     value_type      VARCHAR(32)     NOT NULL COMMENT '值类型（STRING/NUMBER/BOOLEAN/JSON）',
     default_value   TEXT            DEFAULT NULL COMMENT '默认值（配置未设置时使用）',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '配置描述',
-    is_public       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）',
+    public_flag    TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）',
     sort_order      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',

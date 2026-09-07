@@ -18,7 +18,7 @@
 
 ## 项目简介
 
-**Ydsz Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.0.8**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 六层分层架构（`api` / `domain` / `infra` / `server` / `app` / `web`），内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎等企业级全业务场景。
+**Ydsz Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.0.8**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 六层分层架构（`api` / `domain` / `infra` / `server` / `app` / `web`），内置 **11 大核心模块**（1 网关 + 9 微服务 + 1 代码生成器 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎、代码生成等企业级全业务场景。
 
 ## 关联仓库
 
@@ -44,7 +44,7 @@
 
 ## 系统架构
 
-YDSZ 是一套前后端分离的全栈微服务架构。前端 [ydsz-micro](https://gitee.com/njydsz/ydsz-micro) 采用 pnpm + turbo monorepo，以自研 micro-kernel 微前端内核（manifest + 原生 ESM dynamic import + importmap，ADR-001 明确否决 qiankun）整合 8 个 Vue 3 子应用，并基于后端 OpenAPI 契约自动生成类型安全 SDK 与错误码，用 CI 漂移门禁守住前后端边界。后端 [ydsz-cloud](https://gitee.com/njydsz/ydsz-cloud) 基于 JDK 21 + Spring Boot 4.1.0，由 ydsz-gateway（12 个全局过滤器、Nacos 动态路由）统一入口，按六层 DDD 同构拆分 8 个业务服务，共享 30 个 ydsz-common 公共子模块，底层依托 Nacos、PostgreSQL、Redis、RocketMQ 与 MinIO，并以 SkyWalking、ELK 与 Prometheus/Grafana 构建可观测体系。
+YDSZ 是一套前后端分离的全栈微服务架构。前端 [ydsz-micro](https://gitee.com/njydsz/ydsz-micro) 采用 pnpm + turbo monorepo，以自研 micro-kernel 微前端内核（manifest + 原生 ESM dynamic import + importmap，ADR-001 明确否决 qiankun）整合 8 个 Vue 3 子应用，并基于后端 OpenAPI 契约自动生成类型安全 SDK 与错误码，用 CI 漂移门禁守住前后端边界。后端 [ydsz-cloud](https://gitee.com/njydsz/ydsz-cloud) 基于 JDK 21 + Spring Boot 4.0.8，由 ydsz-gateway（12 个全局过滤器、Nacos 动态路由）统一入口，按六层 DDD 同构拆分 8 个业务服务，共享 30 个 ydsz-common 公共子模块，底层依托 Nacos、PostgreSQL、Redis、RocketMQ 与 MinIO，并以 SkyWalking、ELK 与 Prometheus/Grafana 构建可观测体系。
 
 ![Ydsz Cloud 架构图](docs/ydsz-architecture.png)
 
@@ -64,6 +64,7 @@ YDSZ 是一套前后端分离的全栈微服务架构。前端 [ydsz-micro](http
 | 9007 | ydsz-literule | ydsz-literule-web | 规则引擎微服务 |
 | 9008 | ydsz-agent | ydsz-agent-web | AI 智能体服务 |
 | 8081 | ydsz-nextwiki | ydsz-nextwiki-app | 网盘移动端入口 |
+| 9090 | ydsz-generator | ydsz-generator-web | 代码生成器（context-path: `/gen`） |
 
 > 端口号取自各模块 `bootstrap.yml` / `application.yml`，为默认开发配置，生产环境应通过 Nacos `ydsz-{service}-{env}.yaml` 覆盖。
 
@@ -73,36 +74,38 @@ YDSZ 是一套前后端分离的全栈微服务架构。前端 [ydsz-micro](http
 
 ```
 ydsz-cloud/
-├── ydsz-common/              # 🧱 公共能力底座（30 子模块，L1-L6 分层，不独立部署）
-│   ├── ydsz-common-json      # L1：高性能 JSON 引擎（ASM / SIMD）
-│   ├── ydsz-common-util      # L1：30+ 工具类（加密 / IP / 雪花ID）
-│   ├── ydsz-common-cache     # L1：多策略本地缓存（W-TinyLFU）
-│   ├── ydsz-common-excel     # L1：高性能 Excel 读写
-│   ├── ydsz-common-core      # L2：统一响应 / TraceId / 特性开关
-│   ├── ydsz-common-domain    # L3：DDD 基类 / 领域事件
-│   ├── ydsz-common-exception # L3：统一异常 / RFC 7807 ProblemDetail
-│   ├── ydsz-common-jdbc      # L4：MyBatis-Plus 增强 / 行权限
-│   ├── ydsz-common-redis     # L4：Redis 操作封装（9 类 ops）
-│   ├── ydsz-common-lock      # L4：分布式锁（可重入/公平/联锁/读写/信号量）/ 幂等
-│   ├── ydsz-common-thread    # L4：共享线程池
-│   ├── ydsz-common-tenant    # L4：多租户隔离
-│   ├── ydsz-common-auth      # L5：JWT / RBAC / TOTP 2FA
-│   ├── ydsz-common-safe      # L5：脱敏 / XSS / 限流 / CSRF
-│   ├── ydsz-common-feign     # L5：OpenFeign + Resilience4j 熔断
-│   ├── ydsz-common-audit     # L5：操作日志 / 审计
-│   ├── ydsz-common-notify    # L5：6 种通知渠道抽象
-│   ├── ydsz-common-queue     # L5：6 种 MQ 抽象（Stream/Kafka/Rocket/List/PubSub/Rabbit）
-│   ├── ydsz-common-event     # L5：事务性 Outbox
-│   ├── ydsz-common-config    # L5：配置变更桥接
-│   ├── ydsz-common-socket    # L5：WebSocket 集群广播
-│   ├── ydsz-common-netty     # L5：TCP 通信
-│   ├── ydsz-common-file      # L5：7 种存储平台 / 分片 / 秒传
-│   ├── ydsz-common-docs      # L5：8 种文档解析 / OCR
-│   ├── ydsz-common-search    # L5：统一搜索（PG 全文检索 / 内存）
-│   ├── ydsz-common-sentry    # L5：统一监控告警
-│   ├── ydsz-common-base      # L6：HTTP 公共基座
-│   ├── ydsz-common-app       # L6：移动端 App 基座（API 签名）
-│   └── ydsz-common-web       # L6：PC Web 基座（Spring Security）
+├── ydsz-common/              # 🧱 公共能力底座（29 子模块，L1-L6 分层，不独立部署）
+│   ├── ydsz-common-json      # L1：高性能 JSON 引擎（零外部依赖，自研 ASM/SIMD 优化）
+│   ├── ydsz-common-util      # L1：工具类（加密/哈希/IP/雪花ID/Bean映射/密码强度）
+│   ├── ydsz-common-cache     # L1：多策略本地缓存（W-TinyLFU / Striped / 防穿透击穿雪崩）
+│   ├── ydsz-common-excel     # L1：高性能 Excel 双引擎（零 POI 快速路径 + POI 兼容路径 + ASM 字段访问 + FormulaInjectionGuard）
+│   ├── ydsz-common-core      # L2：统一响应 YdszResponse / PageResponse / TraceId / RequestContext / 特性开关
+│   ├── ydsz-common-domain    # L3：DDD 基类（PageQuery + 深度分页防护） / 树形结构 / 类型安全 TypedId
+│   ├── ydsz-common-exception # L3：统一异常 AbstractYdszException / RFC 7807 ProblemDetail / 错误码体系 / i18n
+│   ├── ydsz-common-jdbc      # L4：MyBatis-Plus 增强（行权限/列权限/SQL 防火墙/SQL 追踪 + 慢 SQL 审计 + 指纹归一化）
+│   ├── ydsz-common-redis     # L4：Redis 9 类 Ops 封装 + 限流（固定/滑动/令牌桶） + 租户级 Key 前缀
+│   ├── ydsz-common-lock      # L4：分布式锁（可重入/公平/联锁/读写/信号量） / 幂等 / 防重提交 / 分布式调度
+│   ├── ydsz-common-thread    # L4：共享线程池（配置化/热更新/虚拟线程/Micrometer 指标/优雅关闭）
+│   ├── ydsz-common-tenant    # L4：多租户上下文（SINGLE/MULTI/ISOLATE_DB/SCHEMA） + 全链路传播 + Redis Key 隔离
+│   ├── ydsz-common-auth      # L5：RBAC 权限评估 + JWT Token + 列权限脱敏 + Token 黑名单 BloomFilter + CSRF + OIDC
+│   ├── ydsz-common-safe      # L5：XSS 防护（Filter/Converter 双模式） + CSRF + 限流（令牌桶 11 维度 + 熔断） + 字段加密 + 敏感信息脱敏（18 种 SensitiveType） + SSRF + 二级认证 + 安全事件自动响应
+│   ├── ydsz-common-feign     # L5：OpenFeign 统一增强（W3C 透传 + Micrometer + Resilience4j 熔断 + Bulkhead + GZIP + NameAssembler SPI）
+│   ├── ydsz-common-audit     # L5：声明式 AOP 审计（@Audit） + 异步落库（批量写入） + 分表策略 + 跨分表查询
+│   ├── ydsz-common-notify    # L5：6 种通知渠道（邮件/短信/企微/钉钉/飞书/站内信 Provider 策略模式） + 事务性发布 + DKIM 签名
+│   ├── ydsz-common-queue     # L5：6 种 MQ 引擎（Redis Stream/Kafka/RocketMQ/List/Pub-Sub/RabbitMQ） + 死信 + 消费者限流
+│   ├── ydsz-common-event     # L5：事务性 Outbox 模式 + 后台轮询器 + 指数退避重试 + 死信管理
+│   ├── ydsz-common-config    # L5：Jasypt 增强层 + 配置变更桥接（ConfigChangeListener SPI）
+│   ├── ydsz-common-socket    # L5：WebSocket STOMP + 集群广播（Redis Pub/Sub + 在线用户 + 离线补偿 + 心跳保活 + 熔断）
+│   ├── ydsz-common-netty     # L5：TCP Server/Client 抽象 + LengthField 编解码 + SSL/TLS 双向认证 + Epoll/KQueue 自适应
+│   ├── ydsz-common-file      # L5：7 种存储平台（Local/OSS/MinIO/S3/COS/OBS/Qiniu） + 分片上传 + 秒传 + Magic Number 校验
+│   ├── ydsz-common-docs      # L5：8 种格式解析（PDF/Word/Excel/PPT/HTML/Markdown/TXT/CSV via Tika+POI+PDFBox） + PII 检测 + 安全扫描
+│   ├── ydsz-common-search    # L5：SPI 多引擎搜索（PG tsvector + zhparser 中文分词 + 内存降级） + 索引同步 + 搜索建议 + 业务重排
+│   ├── ydsz-common-sentry    # L5：指标采集（Micrometer + 内存降级） + 日志发布（ELK/Loki/双发） + SLA 框架 + 告警收敛 + 熔断
+│   ├── ydsz-common-base      # L6：MVC 配置抽象基类 + CORS/时区/安全头/TraceId/OpenAPI
+│   ├── ydsz-common-app       # L6：移动端 App 基座（API 签名 + AppAuthFilter + 请求追踪）
+│   └── ydsz-common-web       # L6：PC Web 基座（全局响应包装 + 请求日志拦截 + 认证体系）
+│
+├── ydsz-generator/           # 🔧 代码生成器 :9090（Velocity 模板引擎，一键 DDD 分层 CRUD 代码生成）
 │
 ├── ydsz-gateway/             # 🚪 API 网关 :9000（WebFlux 反应式）
 ├── ydsz-system/              # ⚙️ 系统基础服务 :9001（参数 / 字典 / 多租户）
@@ -128,6 +131,7 @@ ydsz-cloud/
 | **ydsz-cronjob** | Leader 选举 · 多分区调度 · Cron + 固定频率 + 固定延迟 + API 触发 · 分片广播 · 故障转移 · DAG 编排 · 胶水代码编辑 · 异常自愈 |
 | **ydsz-literule** | 6 种规则类型 · 自研 LiteExpr 引擎（AST + 沙箱） · 热加载 · 版本 Diff + 回滚 · Dry-Run 仿真 · A/B 测试 · 规则包/市场 · CEP 引擎 |
 | **ydsz-agent** | 6 种 Agent 执行器 · LLM Provider 抽象 · 同步/流式对话（SSE） · RAG · DAG 编排 · Tool Calling / MCP 工具 · 安全护栏（PII + Prompt 注入检测） |
+| **ydsz-generator** | 数据库逆向工程 · Velocity 模板引擎一键生成 DDD 分层 CRUD 代码（Entity/Mapper/Service/Controller/DTO/VO/Query/Converter/Assembler/Enum/Feign/Vue 前端 16 种产物） · 数据源管理 · 模板管理 · 导入导出 · 历史回溯 |
 
 ---
 
@@ -186,7 +190,7 @@ cd ydsz-gateway
 mvn spring-boot:run
 
 # 启动各业务服务
-cd ../ydsz-userinfo/ydsz-userinfo-web && mvn spring-boot:run
+cd ../../ydsz-userinfo/ydsz-userinfo-web && mvn spring-boot:run
 cd ../../ydsz-system/ydsz-system-web && mvn spring-boot:run
 cd ../../ydsz-nextwiki/ydsz-nextwiki-web && mvn spring-boot:run
 cd ../../ydsz-message/ydsz-message-web && mvn spring-boot:run
@@ -194,6 +198,7 @@ cd ../../ydsz-workflow/ydsz-workflow-web && mvn spring-boot:run
 cd ../../ydsz-cronjob/ydsz-cronjob-web && mvn spring-boot:run
 cd ../../ydsz-literule/ydsz-literule-web && mvn spring-boot:run
 cd ../../ydsz-agent/ydsz-agent-web && mvn spring-boot:run
+cd ../../ydsz-generator/ydsz-generator-web && mvn spring-boot:run
 ```
 
 启动完成后，访问 API 文档：
@@ -214,9 +219,9 @@ ydsz-{module}/
 ├── ydsz-{module}-domain/            # 领域层：Entity + VO + Repository 接口
 ├── ydsz-{module}-infra/             # 基础设施层：Repository 实现 + 外部集成
 ├── ydsz-{module}-server/            # 应用服务层：Service + 事务编排
-├── ydsz-{module}-api/               # API 层：Feign Client + DTO
 ├── ydsz-{module}-app/               # App 层：Controller + 启动类 + 配置
-└── ydsz-{module}-web/               # Web 层：Controller + 启动类 + 配置
+├── ydsz-{module}-web/               # Web 层：Controller + 启动类 + 配置
+└── ydsz-{module}-api/                # API 层：Feign Client
 ```
 
 **依赖方向**：`web/app → server → domain ← infra`，`api` 层独立对外。

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_datasource (
     username            VARCHAR(128)    NOT NULL COMMENT '数据库用户名',
     password            VARCHAR(512)    NOT NULL COMMENT '数据库密码（AES 加密存储）',
     dialect             VARCHAR(32)     NOT NULL DEFAULT 'MYSQL' COMMENT '数据库方言（MYSQL/POSTGRESQL/ORACLE）',
-    is_default          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为默认数据源（0=否 1=是）',
+    default_flag       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为默认数据源（0=否 1=是）',
     description         VARCHAR(255)    DEFAULT NULL COMMENT '数据源描述',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -37,9 +37,9 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template_group (
     id                  BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
     name                VARCHAR(64)     NOT NULL COMMENT '分组名（唯一标识，如 default、mybatis-plus）',
     description         VARCHAR(255)    DEFAULT NULL COMMENT '分组描述',
-    is_system           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统分组（0=否 1=是，系统分组不可删除）',
+    system             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统分组（0=否 1=是，系统分组不可删除）',
     sort_order          INT             NOT NULL DEFAULT 0 COMMENT '排序序号（升序）',
-    is_active           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否激活为当前使用分组（0=否 1=是）',
+    active             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否激活为当前使用分组（0=否 1=是）',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
@@ -57,11 +57,11 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template (
     file_name           VARCHAR(128)    NOT NULL COMMENT '文件名（如 entity.vm、vue/api.vm）',
     description         VARCHAR(255)    DEFAULT NULL COMMENT '模板用途描述',
     content             MEDIUMTEXT      NOT NULL COMMENT '模板内容（Velocity 语法）',
-    is_folder           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为虚拟文件夹标记（0=否 1=是）',
+    folder             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为虚拟文件夹标记（0=否 1=是）',
     parent_path         VARCHAR(512)    NOT NULL DEFAULT '' COMMENT '父路径（如 vue/ 表示前端子目录）',
     version             INT             NOT NULL DEFAULT 1 COMMENT '当前版本号',
     hash                CHAR(32)        DEFAULT NULL COMMENT '内容 MD5 哈希（版本对比用）',
-    is_active           TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（0=否 1=是）',
+    active             TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（0=否 1=是）',
     file_type           VARCHAR(16)     NOT NULL DEFAULT 'BACKEND' COMMENT '模板类型（BACKEND/FRONTEND）',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -144,13 +144,13 @@ CREATE TABLE IF NOT EXISTS ydzs_gen_column_meta (
     data_type           VARCHAR(64)     NOT NULL COMMENT '物理数据类型',
     column_size         INT             DEFAULT NULL COMMENT '字段长度',
     nullable            TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否可为空（0=否 1=是）',
-    is_pk               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为主键（0=否 1=是）',
+    pk                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为主键（0=否 1=是）',
     comment             VARCHAR(255)    DEFAULT NULL COMMENT '字段注释',
     override_java_type  VARCHAR(64)     DEFAULT NULL COMMENT '人工覆盖 Java 类型（为空则使用自动映射）',
     override_field_name VARCHAR(64)     DEFAULT NULL COMMENT '人工覆盖字段名（为空则使用自动命名）',
-    skip_dto            TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否在 DTO 中跳过（0=否 1=是）',
-    skip_vo             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否在 VO 中跳过（0=否 1=是）',
-    skip_query          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否在 Query 中跳过（0=否 1=是）',
+    dto_skipped        TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否在 DTO 中跳过（0=否 1=是）',
+    vo_skipped          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否在 VO 中跳过（0=否 1=是）',
+    query_skipped       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否在 Query 中跳过（0=否 1=是）',
     extra_config        JSON            DEFAULT NULL COMMENT '扩展配置 JSON（枚举值、校验规则等）',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_gen_column_meta_table_column (table_meta_id, column_name),
@@ -164,11 +164,11 @@ CREATE TABLE IF NOT EXISTS ydzs_gen_column_meta (
 -- ============================================================================
 
 -- 默认 DDD 模板分组
-INSERT INTO ydsz_gen_template_group (name, description, is_system, sort_order, is_active)
+INSERT INTO ydsz_gen_template_group (name, description, system, sort_order, active)
 VALUES ('default', '标准 DDD 分层模板（entity/service/controller/repository...）', 1, 1, 1)
-ON DUPLICATE KEY UPDATE is_system = 1;
+ON DUPLICATE KEY UPDATE system = system;
 
 -- Mybatis-Plus 模板分组（预留）
-INSERT INTO ydsz_gen_template_group (name, description, is_system, sort_order, is_active)
+INSERT INTO ydsz_gen_template_group (name, description, system, sort_order, active)
 VALUES ('mybatis-plus', 'Mybatis-Plus 增强版模板（含 Wrapper/通用 Service）', 1, 2, 0)
-ON DUPLICATE KEY UPDATE is_system = 1;
+ON DUPLICATE KEY UPDATE system = system;

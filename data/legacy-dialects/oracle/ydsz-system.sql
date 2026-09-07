@@ -225,7 +225,7 @@ CREATE TABLE ydsz_sys_config (
     value_type               VARCHAR2(32 CHAR)        NOT NULL,
     default_value            CLOB                     DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    is_public                NUMBER(1)                NOT NULL DEFAULT 0,
+    public_flag             NUMBER(1)                NOT NULL DEFAULT 0,
     sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
@@ -247,7 +247,7 @@ COMMENT ON COLUMN ydsz_sys_config.config_value IS '配置值';
 COMMENT ON COLUMN ydsz_sys_config.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
 COMMENT ON COLUMN ydsz_sys_config.default_value IS '默认值（配置未设置时使用）';
 COMMENT ON COLUMN ydsz_sys_config.description IS '配置描述';
-COMMENT ON COLUMN ydsz_sys_config.is_public IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
+COMMENT ON COLUMN ydsz_sys_config.public_flag IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
 COMMENT ON COLUMN ydsz_sys_config.sort_order IS '排序序号';
 COMMENT ON COLUMN ydsz_sys_config.status IS '状态标识';
 COMMENT ON COLUMN ydsz_sys_config.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
