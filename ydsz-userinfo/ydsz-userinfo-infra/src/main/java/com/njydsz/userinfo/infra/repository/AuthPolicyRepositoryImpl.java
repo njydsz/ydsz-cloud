@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.converter.AuthPolicyConverter;
+import com.njydsz.userinfo.infra.converter.AuthPolicyConverter;
 import com.njydsz.userinfo.domain.dto.AuthPolicyDTO;
 import com.njydsz.userinfo.domain.entity.AuthPolicy;
 import com.njydsz.userinfo.domain.query.AuthPolicyPageQuery;
