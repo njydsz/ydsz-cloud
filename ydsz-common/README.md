@@ -14,7 +14,7 @@
 
 ## L1-L6 分层架构
 
-本模块按 DDD 分层组织 **30 个子模块**（L1-L6），依赖方向严格自下而上（上层依赖下层，不可反向）：
+本模块按 DDD 分层组织 **29 个子模块**（L1-L6），依赖方向严格自下而上（上层依赖下层，不可反向）：
 
 ```
 L1 工具模块层  → ydsz-common-json, ydsz-common-util, ydsz-common-cache, ydsz-common-excel
@@ -24,17 +24,15 @@ L4 基础数据层  → ydsz-common-jdbc, ydsz-common-redis, ydsz-common-lock,
                  ydsz-common-thread, ydsz-common-tenant
 L5 业务服务层  → ydsz-common-auth, ydsz-common-safe, ydsz-common-feign,
                  ydsz-common-audit, ydsz-common-notify, ydsz-common-queue,
-                 ydsz-common-event, ydsz-common-config, ydsz-common-seata,
+                 ydsz-common-event, ydsz-common-config,
                  ydsz-common-socket, ydsz-common-netty, ydsz-common-file,
                  ydsz-common-docs, ydsz-common-search, ydsz-common-sentry
-L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
+L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app, ydsz-common-api
 ```
 
 > 层级划分以 `ydsz-common/pom.xml` 的 `<modules>` 声明与编码规范 §22.2 表格为生效口径（L1 工具层 = json/util/cache/excel 四个 utility 模块，`common-core` 为 L2）。
 >
 > **口径校准（2026-08 已完成）**：历史版本曾存在规范 §22.2 与 pom 注释的层级标注差异（core 标 L1、util/json 标 L2）。规范 §22.2 表格已按 pom 构建机制校准，当前以 **规范 §22.2 表格 = pom `<modules>` 声明 = `enforce-l1-purity` 构建期检查** 三方一致的口径为准，无遗留差异。
->
-> **`ydsz-common-metrics` 为占位条目**：该坐标仅出现在 `ydsz-common/pom.xml` 的 `dependencyManagement` 中，无对应子模块目录、也无任何消费者，并非真实子模块。common 实际为 **30 个真实子模块**。
 
 ### 子模块职责速查
 
@@ -62,7 +60,6 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 | L5 | [common-queue](ydsz-common-queue/README.md) | 6 种 MQ（Redis Stream/List/PubSub + Kafka/RocketMQ/RabbitMQ）、死信队列、消息轨迹、去重 |
 | L5 | [common-event](ydsz-common-event/README.md) | 事务性 Outbox 模式、可靠事件投递、Outbox 处理器、健康检查 |
 | L5 | [common-config](ydsz-common-config/README.md) | 配置变更桥接（底层加解密由 jasypt-spring-boot-starter 承担）、配置健康检查 |
-| L5 | [common-seata](ydsz-common-seata/README.md) | Seata 分布式事务集成（AT/TCC/SAGA 模式）、XID 传播 |
 | L5 | [common-socket](ydsz-common-socket/README.md) | WebSocket 实时推送、集群广播、离线消息存储、认证拦截、消息限流 |
 | L5 | [common-netty](ydsz-common-netty/README.md) | Netty TCP Server/Client 抽象、断线重连、心跳检测、SSL/TLS、LengthField 编解码 |
 | L5 | [common-file](ydsz-common-file/README.md) | 7 种存储平台、分片上传、断点续传、文件去重（秒传）、文件类型安全检测 |
@@ -72,12 +69,13 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 | L6 | [common-base](ydsz-common-base/README.md) | HTTP 公共基座（CORS/时区/I18n/安全头/TraceId/请求日志/全局响应包装/OpenAPI） |
 | L6 | [common-web](ydsz-common-web/README.md) | **PC Web 端基座**（继承 base，叠加 Spring Security 异常处理 + WebAuthFilter/Session 无状态） |
 | L6 | [common-app](ydsz-common-app/README.md) | **移动端 App 基座**（默认构建包含；暂无可消费方） |
+| L6 | [common-api](ydsz-common-api/README.md) | **Feign 客户端契约包**（仅含接口 + Assembler + fallback，无实现） |
 
 > **注意**：`common-web` 与 `common-app` 是两个**平行**的应用层入口，分别面向 PC Web 服务和移动端 App。后端微服务统一使用 `common-web`，`common-app` 仅用于未来移动端项目。
 
 ## 自动配置机制
 
-所有 30 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
+所有 29 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
 
 各服务的启动类通过 `@SpringBootApplication(scanBasePackages = {"com.njydsz.{service}", "com.njydsz.common"})` 扫描 common 包，激活自动配置。
 
@@ -200,10 +198,6 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-search | `ContentIndexer` | 内容索引器 | `@ConditionalOnMissingBean` |
 | common-event | `EventPublishGateway` **SPI** | 事件投递网关（RocketMQ / Noop） | `@ConditionalOnMissingBean` |
 | common-config | `ConfigChangeListener` **SPI** | 配置变更回调（Spring Cloud RefreshEvent） | `ObjectProvider<List<ConfigChangeListener>>` |
-| common-seata | `TccTransactionLogStore` | TCC 事务日志存储（内存/Redis/DB） | `@ConditionalOnMissingBean` |
-| common-seata | `XidPropagator` | XID 跨服务传播 | `@ConditionalOnMissingBean` |
-| common-seata | `DistributedTransactionManager` | 分布式事务管理器（AT/TCC/Local） | `@ConditionalOnMissingBean` |
-| common-seata | `TccAction<T>` **SPI** | TCC Try/Confirm/Cancel 动作 | `@Component` |
 | common-sentry | `MetricsCollector` **SPI** | 指标采集（Micrometer/其他） | `@ConditionalOnMissingBean` |
 | common-sentry | `AlertPublisher` **SPI** | 告警发布（PagerDuty/企微/IM） | `@ConditionalOnMissingBean` |
 | common-sentry | `LogPublisher` **SPI** | 日志发布（ELK/Loki/Kafka） | `@ConditionalOnMissingBean` |
@@ -306,7 +300,6 @@ ydsz-common/
 ├── ydsz-common-queue/    # L5 业务服务层（MQ 抽象）
 ├── ydsz-common-event/    # L5 业务服务层（事务性 Outbox）
 ├── ydsz-common-config/   # L5 业务服务层（配置变更桥接）
-├── ydsz-common-seata/    # L5 业务服务层（Seata 分布式事务）
 ├── ydsz-common-socket/   # L5 业务服务层（WebSocket 实时推送）
 ├── ydsz-common-netty/    # L5 业务服务层（Netty TCP 通信）
 ├── ydsz-common-file/     # L5 业务服务层（多存储平台/分片上传）
@@ -315,13 +308,14 @@ ydsz-common/
 ├── ydsz-common-sentry/   # L5 业务服务层（统一系统指标监控）
 ├── ydsz-common-base/     # L6 应用层（HTTP 公共基座）
 ├── ydsz-common-web/      # L6 应用层（PC Web 端基座）
-└── ydsz-common-app/      # L6 应用层（移动端 App 基座）
+├── ydsz-common-app/      # L6 应用层（移动端 App 基座）
+└── ydsz-common-api/      # L6 应用层（Feign 契约包）
 ```
 
 ## 构建
 
 ```bash
-# 仅构建 common 模块（含所有 30 个子模块）
+# 仅构建 common 模块（含所有 29 个子模块）
 cd ydsz-cloud
 mvn -pl ydsz-common -am clean install
 
