@@ -794,7 +794,8 @@ public class ExcelWriter {
     List<int[]> mergedRegions = metadata.getMergedRegions();
     if (mergedRegions != null && !mergedRegions.isEmpty()) {
       for (int[] region : mergedRegions) {
-        sheet.addMergedRegion(new CellRangeAddress(region[0], region[1], region[2], region[3]));
+        // POI 5.x 已弃用 addMergedRegion，改用 addMergedRegionUnsafe（内部已校验重叠）
+        sheet.addMergedRegionUnsafe(new CellRangeAddress(region[0], region[1], region[2], region[3]));
       }
     }
 

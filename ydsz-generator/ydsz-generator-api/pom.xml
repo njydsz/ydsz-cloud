@@ -44,6 +44,12 @@
       <artifactId>lombok</artifactId>
       <optional>true</optional>
     </dependency>
+    <!-- mybatis-plus-annotation: Entity @TableId/@TableName 编译时注解（provided 与 domain 一致，运行时由 server 层提供） -->
+    <dependency>
+      <groupId>com.baomidou</groupId>
+      <artifactId>mybatis-plus-annotation</artifactId>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
 </project>

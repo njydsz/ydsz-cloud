@@ -114,6 +114,8 @@
 
         <!-- Aviator 表达式引擎（工作流条件表达式求值） -->
         <aviator.version>5.4.3</aviator.version>
+        <!-- Javassist（覆盖 reflections 传递依赖的旧版本 3.21.0-GA，消除 Maven effective model 解析告警） -->
+        <javassist.version>3.30-GA</javassist.version>
         </properties>
 
     <dependencyManagement>
@@ -910,6 +912,13 @@
                 <groupId>com.google.errorprone</groupId>
                 <artifactId>error_prone_annotations</artifactId>
                 <version>${errorprone.version}</version>
+            </dependency>
+
+            <!-- Javassist（覆盖 reflections 传递依赖的旧版本 3.21.0-GA，消除 Maven effective model 解析告警） -->
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>${javassist.version}</version>
             </dependency>
 
             <!-- ==================== 版本收敛治理 ==================== -->

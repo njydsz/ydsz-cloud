@@ -46,6 +46,10 @@ public interface RuleCoreConverter {
   @Mapping(target = "effectiveFrom", ignore = true)
   @Mapping(target = "effectiveTo", ignore = true)
   @Mapping(target = "reviewedAt", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   RuleDefinitionVO entityToVO(RuleDefinitionDTO entity);
 
   // ===== RuleResultVO (api) → RuleResultVO =====

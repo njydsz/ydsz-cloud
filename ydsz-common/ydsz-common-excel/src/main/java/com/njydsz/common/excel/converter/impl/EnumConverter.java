@@ -1,5 +1,7 @@
 package com.njydsz.common.excel.converter.impl;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,8 +51,15 @@ public class EnumConverter implements CellValueConverter {
     }
 
     try {
-      return Enum.valueOf(targetType.asSubclass(Enum.class), strValue);
-    } catch (IllegalArgumentException e) {
+      // 反射调用枚举的 valueOf(String) 静态方法，避免 asSubclass(Enum.class) 返回
+      // Class<? extends Enum> 与 Enum.valueOf 要求的 Class<T extends Enum<T>> 不匹配产生的 unchecked 转换
+      Method valueOfMethod = targetType.getMethod("valueOf", String.class);
+      return valueOfMethod.invoke(null, strValue);
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      // targetType 已由 supports() 确保是枚举类型，理论上不会到达此处
+      return null;
+    } catch (InvocationTargetException e) {
+      // valueOf 找不到匹配名时抛 IllegalArgumentException，包装在 InvocationTargetException 内
       return null;
     }
   }
