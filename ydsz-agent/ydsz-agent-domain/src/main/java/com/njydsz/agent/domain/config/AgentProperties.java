@@ -293,6 +293,13 @@ public class AgentProperties {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Text2Sql {
+
+    /** 默认增强链路最大召回表数量 */
+    private static final int DEFAULT_SCHEMA_RECALL_MAX_TABLES = 5;
+
+    /** 默认一致性分数阈值 */
+    private static final double DEFAULT_CONSISTENCY_THRESHOLD = 0.7;
+
     /** 是否启用 Text2SQL */
     private boolean enabled = true;
 
@@ -310,6 +317,24 @@ public class AgentProperties {
 
     /** 数据库密码 */
     private String password;
+
+    /** 是否启用增强链路（Schema 召回 + 可行性评估 + 语义一致性） */
+    private boolean enhanced = false;
+
+    /** 是否启用 Schema 智能召回 */
+    private boolean schemaRecallEnabled = true;
+
+    /** 最大召回表数量 */
+    private int schemaRecallMaxTables = DEFAULT_SCHEMA_RECALL_MAX_TABLES;
+
+    /** 是否启用可行性评估 */
+    private boolean feasibilityCheckEnabled = true;
+
+    /** 是否启用语义一致性校验 */
+    private boolean consistencyCheckEnabled = true;
+
+    /** 一致性分数阈值，低于此值拒绝 SQL */
+    private double consistencyThreshold = DEFAULT_CONSISTENCY_THRESHOLD;
   }
 
   // ========================= 缓存配置 =========================

@@ -35,6 +35,8 @@ import com.njydsz.agent.domain.repository.AgentTraceRepository;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.agent.domain.text2sql.SchemaRecallService;
+import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
@@ -50,6 +52,8 @@ import com.njydsz.agent.infra.rag.IdentityReranker;
 import com.njydsz.agent.infra.rag.InMemoryVectorStore;
 import com.njydsz.agent.infra.rag.PgVectorStore;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
+import com.njydsz.agent.infra.text2sql.LlmClientBasedSchemaRecallService;
+import com.njydsz.agent.infra.text2sql.LlmClientBasedSemanticConsistencyChecker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
 import com.njydsz.agent.infra.tool.McpToolAdapter;
 import com.njydsz.agent.infra.tool.SseMcpClientProvider;
@@ -570,5 +574,43 @@ public class AgentAutoConfiguration {
         traceRecorderProvider,
         costAnalysisServiceProvider,
         agentMetricsProvider);
+  }
+
+  /**
+   * 装配基于 LLM 的 Schema 召回服务。
+   *
+   * @param llmClient 模型客户端
+   * @param properties Agent 配置
+   * @return Schema 召回服务
+   */
+  @Bean
+  @ConditionalOnMissingBean(SchemaRecallService.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.text2sql",
+      name = "schema-recall-enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public SchemaRecallService schemaRecallService(LlmClient llmClient, AgentProperties properties) {
+    return new LlmClientBasedSchemaRecallService(llmClient, properties.getLlm().getDefaultModel());
+  }
+
+  /**
+   * 装配基于 LLM 的语义一致性校验服务。
+   *
+   * @param llmClient 模型客户端
+   * @param properties Agent 配置
+   * @return 语义一致性校验服务
+   */
+  @Bean
+  @ConditionalOnMissingBean(SemanticConsistencyChecker.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.text2sql",
+      name = "consistency-check-enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public SemanticConsistencyChecker semanticConsistencyChecker(
+      LlmClient llmClient, AgentProperties properties) {
+    return new LlmClientBasedSemanticConsistencyChecker(
+        llmClient, properties.getLlm().getDefaultModel());
   }
 }

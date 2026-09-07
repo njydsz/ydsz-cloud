@@ -3,6 +3,8 @@ package com.njydsz.agent.domain.gateway;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.agent.domain.text2sql.Text2SQLEnhancedResult;
+
 /**
  * Text2SQL 服务接口（领域网关）
  *
@@ -31,6 +33,30 @@ public interface Text2SQLService {
    * @throws Text2SQLException SQL 生成或执行失败
    */
   Text2SQLResult query(String naturalLanguageQuery, String tenantId) throws Text2SQLException;
+
+  /**
+   * 通过增强链路（Schema 召回 → 可行性评估 → SQL 生成 → 语义一致性 → 执行）执行查询。
+   *
+   * <p>默认实现委托 {@link #query(String, String)} 返回降级结果，增强实现应重写此方法。
+   *
+   * @param naturalLanguageQuery 自然语言查询
+   * @param tenantId 租户 ID（用于数据隔离）
+   * @return 增强结果（含诊断信息）
+   * @throws Text2SQLException SQL 生成或执行失败
+   */
+  default Text2SQLEnhancedResult queryEnhanced(String naturalLanguageQuery, String tenantId)
+      throws Text2SQLException {
+    Text2SQLResult base = query(naturalLanguageQuery, tenantId);
+    return new Text2SQLEnhancedResult(
+        base.columns(),
+        base.rows(),
+        base.rowCount(),
+        base.generatedSql(),
+        base.executionTimeMs(),
+        null,
+        null,
+        null);
+  }
 
   /**
    * Text2SQL 查询结果值对象。
