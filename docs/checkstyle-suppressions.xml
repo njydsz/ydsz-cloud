@@ -124,6 +124,10 @@
          属能力提供者抽象类的必要边界暴露，红线规则其余项保留 -->
     <suppress files="TcpPushChannel\.java" checks="IllegalImport"/>
 
+    <!-- agent CompatibleLlmClient：使用 Reactor Netty HttpClient 配置连接超时（ChannelOption.CONNECT_TIMEOUT_MILLIS），
+         属能力提供者抽象层的必要边界暴露，与 TcpPushChannel 豁免口径对齐，红线规则其余项保留 -->
+    <suppress files="CompatibleLlmClient\.java" checks="IllegalImport"/>
+
     <!-- workflow 算法密集/示例字符串密集文件：条件表达式引擎（JSON 示例）、委托授权/模板/效率分析
          等业务实现包含不可拆行的长字符串字面量与规则表，LineLength 豁免，其余红线规则保留 -->
     <suppress files="FlowConditionExprServiceImpl\.java|FlowDelegateAuthServiceImpl\.java|FlowTemplateServiceImpl\.java|FlowTaskCoreService\.java|FlowInstanceMigrationServiceImpl\.java|FlowEfficiencyServiceImpl\.java|DefaultFlowRoutingService\.java|FlowEmbeddedApprovalServiceImpl\.java|ProjectInitiationFlowListener\.java|FlowTaskPassService\.java|FlowTaskOperateService\.java|FlowTaskCreateService\.java|FlowSlaServiceImpl\.java|FlowExportServiceImpl\.java|FlowEventSubscriptionServiceImpl\.java|FlowDefinitionDesignManager\.java"
