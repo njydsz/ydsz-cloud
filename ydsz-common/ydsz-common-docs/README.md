@@ -1,8 +1,8 @@
 # ydsz-common-docs
 
-> 文档解析与安全扫描框架（L5 业务服务层）
+> 文档解析与安全扫描框架（L5 业务服务层）— 8 格式解析 MIME 检测 + PII 敏感信息检测(7 类) + PDF/宏/JS 安全扫描 + 文本清洗/分块/归一化管道 + OCR 引擎 + PDF 水印
 
-提供 8 种格式解析（PDF / Word / Excel / PPT / HTML / Markdown / TXT / CSV）、预处理 Pipeline、安全扫描（宏 / PDF JS）、PII 检测（7 种敏感信息）、OCR 集成能力，是 YDSZ 项目文档内容处理的统一基座。
+提供 8 种格式解析（PDF / Word / Excel / PPT / HTML / Markdown / TXT / CSV）、MIME 类型检测、预处理 Pipeline、安全扫描（宏 / PDF JS）、PII 检测（7 类敏感信息）、OCR 集成、PDF 水印等开箱即用能力，是 YDSZ 项目文档内容处理的统一基座。
 
 ## 模块定位
 
@@ -10,25 +10,9 @@
 |---|---|
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供多格式文档解析、安全扫描、PII 检测等基础能力 |
-| **依赖** | 直接依赖 common-core、common-util、common-exception、common-json、tika-core、ydsz-common-excel、ydsz-common-safe；可选依赖 pdfbox、pdfbox-io、poi-ooxml、jsoup、commons-csv、spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api |
+| **作用** | 提供多格式文档解析、安全扫描、PII 检测、OCR、水印等基础能力 |
+| **依赖** | common-core、common-util、common-exception、common-json、tika-core、ydsz-common-excel、ydsz-common-safe；可选依赖 pdfbox、pdfbox-io、poi-ooxml、jsoup、commons-csv、spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api |
 | **版本** | 2.0.1 |
-
-## 26.09.01 变更摘要
-
-本次重构对标过度设计评估结论，核心变更：
-
-- **删除** `DocumentSummarizer`：摘要/关键词/分类不属于 common 层职责，业务方应接入 LLM 服务
-- **删除** `WatermarkProvider` / `TextWatermarkProvider`：仅有 SPI 定义无内置实现，属于 YAGNI 反模式
-- **删除** `DocumentRedactor` / `TextRedactor`：脱敏逻辑过于简单，不应占据 common 模块位置
-- **简化** Composite 模式：`PiiDetectorComposite` 和 `DocumentSecurityScannerComposite` 逻辑内联到 `DocumentService`
-- **统一** 临时文件管理：复用 `ydsz-common-util` 的 `TempFileManager` 集中管理
-- **精简** 配置项：从 16 项缩减为 10 项，业务特定参数下沉到业务模块
-- **消除** 代码重复：`DocumentConverter` 优先委托已注册 Parser，仅保留 Excel 降级实现
-- **增强** `PiiFinding`：增加二进制定位模型（`BinaryLocation`）支持 PDF/DOCX/XLSX 场景
-- **新增** `ParseProfile` 枚举：约束输出轮廓，调用方可按需选择结构化程度
-- **新增** PDF 流式解析：`PdfDocumentParser#parseStreaming` 支持大文件增量处理
-- **重构** `AsyncDocumentParser`：线程池改为 Spring 注入，移除手写 `@PreDestroy`
 
 ## 核心能力
 
@@ -95,12 +79,20 @@
 | `OcrEngine` | OCR 引擎枚举（Tesseract / 云 OCR） |
 | `OcrProvider` | OCR 服务实现（页面渲染 + 识别回调） |
 
-### 6. 文档服务门面
+### 6. PDF 水印
+
+| 类 | 说明 |
+|---|---|
+| `PdfWatermarkApplier` | PDF 水印应用器（接口） |
+| `PdfBoxWatermarkApplier` | 基于 PDFBox 的 PDF 水印实现 |
+
+### 7. 文档服务门面
 
 | 类 | 说明 |
 |---|---|
 | `DocumentService` | 文档处理统一服务门面，整合解析 / 预处理 / 安全扫描 / PII 检测能力 |
 | `AsyncDocumentParser` | 异步文档解析器，基于 Spring 托管的线程池 |
+| `DocumentConverter` | 文档格式转换（优先委托已注册 Parser，保留降级实现） |
 
 `DocumentService` 核心方法：
 
@@ -115,7 +107,7 @@
 | `ocrScan(InputStream, String, OcrEngine)` | OCR 识别 |
 | `parseWithSecurityCheck(...)` | 解析 + 安全扫描一体化（高风险可阻止） |
 
-### 7. 领域模型
+### 8. 领域模型
 
 | 类 | 说明 |
 |---|---|
@@ -127,19 +119,26 @@
 | `DocumentMetadata` | 元数据（标题 / 作者 / 页数 / 创建时间 / 修改时间） |
 | `ParseOptions` | 解析选项（页码范围 / 输出轮廓 / 是否提取图片 / 最大文件大小） |
 
-### 8. 异常处理
+### 9. 异常处理
 
 | 类 | 说明 |
 |---|---|
 | `DocumentException` | 文档处理统一异常（继承 `AbstractYdszException`），携带 `DocumentExceptionCode` 错误码 |
 | `DocumentExceptionCode` | 文档异常错误码枚举（PARSE_ERROR / UNSUPPORTED_FORMAT / FILE_TOO_LARGE / SECURITY_HIGH_RISK / OCR_ERROR 等） |
 
-### 9. 监控与健康检查
+### 10. 监控与健康检查
 
 | 类 | 说明 |
 |---|---|
 | `DocsMetrics` | Micrometer 指标采集（解析耗时 / 安全扫描 / PII 检测计数） |
 | `DocsHealthIndicator` | 健康检查（暴露已注册解析器、PII 检测器、异步队列状态） |
+
+### 11. 配置
+
+| 类 | 说明 |
+|---|---|
+| `DocsProperties` | 文档处理配置属性（`ydsz.docs.*`） |
+| `DocsAutoConfiguration` | Spring Boot 自动配置（`ydsz.docs.enabled=true` 时激活） |
 
 > 临时文件管理复用 `ydsz-common-util` 的 `TempFileManager`（跟踪 / 清理 / ShutdownHook 兜底），本模块不重复实现。
 
@@ -322,16 +321,6 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 });
 ```
 
-## 已接入模块清单
-
-| 模块 | 接入能力 | 接入方式 | 依赖声明 | 接入时间 |
-|------|---------|---------|---------|---------|
-| ydsz-nextwiki | 文档解析（PDF/Office/HTML → 纯文本提取） | 注入 `DocumentService#parseAndPreprocess` | 显式声明 | 26.09.01 |
-| ydsz-agent | 文档解析 + RAG 知识库摄入 | 注入 `DocumentService` + `DocumentIngestionService` | 显式声明 | 26.09.01 |
-| ydsz-message | PII 脱敏（日志打印场景） | `SensitiveUtil#scanAndMask`（common-safe 传递） | 传递引入 | 26.09.01 |
-
-> **幽灵依赖检查**：本表用于 Pre-PR 审查时核对。`pom.xml` 中声明了 `ydsz-common-docs` 但无任何 Java 代码引用该模块的，视为幽灵依赖，需移除声明。
-
 ## SPI 扩展点
 
 | SPI 接口 | 用途 | 实现方 |
@@ -341,12 +330,20 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 | `DocumentSecurityScanner` | 安全扫描器，业务可扩展新的安全检测项 | 框架内置宏检测 + PDF JS 检测 |
 | `PiiDetector` | PII 检测器，业务可扩展新的敏感信息识别 | 框架内置 7 种 PII 检测器 |
 | `OcrEngine` | OCR 引擎枚举 | 业务模块实现 |
+| `PdfWatermarkApplier` | PDF 水印应用器，业务可实现自定义水印策略 | 框架内置 PDFBox 实现 |
+| `DocumentConverter` | 文档格式转换器，业务可扩展自定义转换 | 框架内置委托式实现 |
 
 ## 健康检查
 
 | 端点 | 说明 | 触发条件 |
 |---|---|---|
 | `/actuator/health/docs` | 文档处理模块健康检查 | `spring-boot-health` 在类路径，`ydsz.docs.enabled=true` |
+
+## 自动配置类
+
+| 类 | 说明 |
+|---|---|
+| `DocsAutoConfiguration` | 主自动配置，注册 DocumentParserRegistry / DocumentService / AsyncDocumentParser / DocsMetrics / DocsHealthIndicator 等 Bean |
 
 ## 注意事项
 
@@ -363,7 +360,7 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 
 - **26.09.01**（2026-08-17）：
   - 更新依赖说明：标注 `ydsz-common-excel` / `ydsz-common-safe` 为直接依赖，添加 `pdfbox-io`（optional）、`jakarta.validation-api`（optional）
-  - 补全 `DocumentationException` / `DocumentationExceptionCode` 异常处理文档
+  - 补全 `DocumentException` / `DocumentExceptionCode` 异常处理文档
   - 修正 `ExcelDocumentParser` 依赖为 `ydsz-common-excel`（统一 Excel 引擎），`PdfDocumentParser` 标注 `pdfbox-io` 可选
-- **26.09.01**（2026-08-16）：基于过度设计评估全面重构，详见 [26.09.01 变更摘要](#v200-变更摘要)
+- **26.09.01**（2026-08-16）：基于过度设计评估全面重构
 - **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
