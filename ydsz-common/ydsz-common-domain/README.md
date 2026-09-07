@@ -1,6 +1,8 @@
 # ydsz-common-domain
 
-> YDSZ DDD 领域模型基类库（L3 基础服务层）— 分页查询、领域事件注册、状态枚举契约、树构建器、类型安全 ID
+> 领域基础组件（L3 基础服务层）— 分页查询 / 树形结构 / 类型化 ID / 规约模式
+
+提供分页查询对象（`PageQuery` / `BaseQuery`）、树形结构构建器（`TreeBuilder` / `TreeNode`）、强类型 ID（`TypedId`）、数据权限上下文、规约模式（`Specification`）等 DDD 领域基础组件，是所有业务模块领域层的统一基座。
 
 ## 模块定位
 
@@ -8,171 +10,165 @@
 |---|---|
 | **层级** | L3 基础服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 分页查询、领域事件、状态枚举、树构建、类型安全 ID |
-| **依赖** | common-core、common-json；Jakarta Validation、Spring Context |
-| **版本** | 1.10.0 |
-
-## 源文件清单
-
-```
-com/njydsz/common/domain/
-├── config/
-│   ├── DomainAutoConfiguration.java    # Spring Boot 自动装配入口
-│   └── DomainProperties.java           # 深度分页阈值等配置
-├── enums/
-│   └── BaseStatusEnum.java             # 状态枚举统一抽象
-├── identity/
-│   └── TypedId.java                    # 编译期类型安全 ID
-├── query/
-│   ├── BaseQuery.java                  # 查询基类（searchKey/status/时间范围）
-│   ├── PageQuery.java                  # 分页查询（参数承载 + 排序 + 偏移量计算）
-│   ├── PageQueryRiskAssessor.java      # 深度分页风险评估器（纯函数）
-│   ├── OrderItem.java                  # 结构化排序项 record
-│   ├── DeepPaginationRisk.java         # 深度分页风险等级枚举（SAFE/WARN/REJECT）
-│   └── DeepPaginationException.java    # 深度分页拒绝异常
-├── tree/
-│   ├── TreeNode.java                   # 树节点基类（递归泛型）
-│   └── TreeBuilder.java                # 树构建器（O(n)，HashMap 索引）
-└── .gitkeep                            # validation 包已清理
-```
-
-> 说明：`BaseEntity` / `EventRegistry` / `TypeEnum` / `SliceQuery` / `SliceResult` / `CursorDirection` 6 个类当前**不存在**（历史规划中的领域实体基类与游标分页 API 未落地），实际共 12 个类。
-
-## API 生命周期状态
-
-| 类 | 状态 | 说明 |
-|---|---|---|
-| `PageQuery` | ✅ ACTIVE | 主力分页查询，全业务模块使用 |
-| `PageQueryRiskAssessor` | ✅ ACTIVE | 深度分页风险评估器（纯函数工具），承担原 PageQuery.assessPaginationRisk 职责 |
-| `BaseQuery` | ✅ ACTIVE | 查询基类 |
-| `OrderItem` | ✅ ACTIVE | 结构化排序项 |
-| `TreeBuilder` / `TreeNode` | ✅ ACTIVE | O(n) 树构建 |
-| `DeepPaginationRisk` | ✅ ACTIVE | 深度分页风险评估枚举 |
-| `DeepPaginationException` | ✅ ACTIVE | 深度分页拒绝异常 |
-| `DomainProperties` | ✅ ACTIVE | 领域配置 |
-| `BaseStatusEnum` | ✅ ACTIVE | 状态枚举统一抽象 |
-| `DomainAutoConfiguration` | ✅ ACTIVE | Spring Boot 自动装配入口 |
-| `TypedId<T>` | 🔬 ADVANCED | 编译期类型安全 ID，需业务方主动落地 |
+| **作用** | 提供分页查询、树形结构、强类型 ID、数据权限上下文、规约模式等 DDD 基础组件 |
+| **依赖** | ydsz-common-json、ydsz-common-core、lombok、jakarta.validation-api、spring-context |
+| **版本** | 1.2.0 |
 
 ## 核心能力
 
-### 1. 分页查询（query 包）
+### 1. 分页查询
 
-```java
-// 标准分页
-PageQuery query = PageQuery.builder()
-        .pageNum(1).pageSize(20)
-        .addDescOrder("created_at")
-        .build();
+| 类 | 说明 |
+|---|---|
+| `PageQuery` | 分页查询对象（pageNum / pageSize / sortBy / sortOrder / @Max 防深度分页） |
+| `BaseQuery` | 查询基类（继承 PageQuery，业务 Query 可扩展） |
+| `OrderItem` | 排序字段项（field / direction（ASC/DESC）） |
+| `PageQueryRiskAssessor` | 深度分页风险评估器（当 pageSize > 阈值时记录 WARN 日志） |
+| `DeepPaginationException` | 深度分页异常（超过 maxDepth 时抛出） |
+| `DeepPaginationRisk` | 深度分页风险记录（pageNum / maxDepth / recommend 信息） |
 
-// 深度分页风险评估（委托 PageQueryRiskAssessor）
-DeepPaginationRisk risk = query.assessPaginationRisk();
-if (risk == DeepPaginationRisk.WARN) {
-    log.warn("建议使用游标分页");
-}
-```
+**配置分页**：
 
-或使用 Assessor 直接评估（适用于拦截器层）：
-
-```java
-DeepPaginationRisk risk = PageQueryRiskAssessor.assess(query);
-```
-
-### 2. 深度分页防护链路
-
-```text
-PageQueryRiskAssessor.assess(query)   # 业务层/拦截层评估（纯函数）
-    ↓
-SafeQueryInnerInterceptor (common-jdbc) # MyBatis 执行层自动拦截
-    ├─ offset >= warnThreshold  → WARN 日志
-    └─ offset >= rejectThreshold → 抛 DeepPaginationException
-```
-
-**配置项：**
 ```yaml
 ydsz:
   domain:
     page:
-      cursor-warning-threshold: 10000     # 超过此值打 WARN
-      cursor-reject-threshold: 50000      # 超过此值抛异常
+      default-page-size: 20
+      max-page-size: 500
+      risk-assessor-enabled: true
+      max-depth: 100
 ```
 
-**异常处理：** `DeepPaginationException` 由全局异常处理器（`BaseGlobalResponseAdvice`）转换为标准错误响应。
+### 2. 树形结构
 
-### 3. 状态枚举契约（enums 包）
+| 类 | 说明 |
+|---|---|
+| `TreeNode` | 树节点接口（getId / getParentId / getChildren / setChildren / getOrder） |
+| `TreeBuilder` | 树构建器（List<T> → 嵌套树，O(n) 复杂度，使用 Map 索引） |
+
+**使用示例**：
 
 ```java
-public enum OrderStatus implements BaseStatusEnum<OrderStatus> {
-    CREATED, PAID, SHIPPED, COMPLETED, CANCELLED;
+@Data
+ public class MenuDTO implements TreeNode<Long> {
+     private Long id;
+     private Long parentId;
+     private String name;
+     private Integer order;
+     private List<MenuDTO> children;
 
+     @Override public Long getId() { return id; }
+     @Override public Long getParentId() { return parentId; }
+     @Override public List<MenuDTO> getChildren() { return children; }
+     @Override public void setChildren(List<MenuDTO> children) { this.children = children; }
+     @Override public Integer getOrder() { return order; }
+ }
+
+ // 构建树
+ List<MenuDTO> menuTree = TreeBuilder.build(rootNodes, allNodes);
+ // 空安全
+ List<MenuDTO> safeTree = TreeBuilder.buildSafely(list);
+```
+
+### 3. 强类型 ID
+
+| 类 | 说明 |
+|---|---|
+| `TypedId` | 类型化 ID 抽象类（value / type），避免 Long ID 跨域混用 |
+
+**使用示例**：
+
+```java
+public class UserId extends TypedId {
+    public UserId(Long value) { super(value); }
+}
+
+public class OrderId extends TypedId {
+    public OrderId(Long value) { super(value); }
+}
+
+// 编译期类型安全，不会把 OrderId 当 UserId 传
+public UserDetail loadUser(UserId userId) { ... }
+```
+
+### 4. 数据权限上下文
+
+| 类 | 说明 |
+|---|---|
+| `DataPermissionContext` | 数据权限上下文（当前用户的数据范围：deptIds / projectIds / companyIds） |
+| `DataScopeContextHolder` | 数据权限上下文持有器（ThreadLocal） |
+| `DataPermissionHeaderConstants` | 数据权限相关 Header 常量（X-Data-Scope-*） |
+
+### 5. 规约模式
+
+| 类 | 说明 |
+|---|---|
+| `Specification<T>` | 规约接口（业务规则组合，用于复杂查询条件构建） |
+
+**规约组合**：
+
+```java
+public class ActiveUserSpec implements Specification<User> {
     @Override
-    public Set<OrderStatus> getAllowedTransitions() {
-        return switch (this) {
-            case CREATED -> Set.of(PAID, CANCELLED);
-            case PAID -> Set.of(SHIPPED, CANCELLED);
-            case SHIPPED -> Set.of(COMPLETED);
-            default -> Set.of();
-        };
+    public boolean isSatisfiedBy(User user) {
+        return user.getStatus() == UserStatus.ACTIVE;
     }
 }
+
+// 组合规约
+Specification<User> spec = new ActiveUserSpec().and(new InDeptSpec(deptId));
+List<User> filtered = users.stream().filter(spec::isSatisfiedBy).toList();
 ```
 
-### 4. 树形结构（tree 包）
+## 接入方式
 
-```java
-List<MenuDO> menus = menuMapper.selectAll();
-List<TreeNode<MenuDO, Long>> roots = new TreeBuilder<>(0L, menus).build();
+### 1. POM 引入依赖
+
+```xml
+<dependency>
+    <groupId>com.njydsz</groupId>
+    <artifactId>ydsz-common-domain</artifactId>
+</dependency>
 ```
 
-VO 类无需继承 TreeNode（推荐）：
-
-```java
-List<MenuVO> tree = TreeBuilder.buildSimple(
-        flatList,
-        MenuVO::getId,
-        MenuVO::getParentId,
-        MenuVO::setChildren,
-        MenuVO::getSort);
-```
-
-### 5. 类型安全 ID（identity 包）
-
-```java
-public record TypedId<T>(Long value) implements Comparable<TypedId<T>> {
-    public TypedId { if (value == null || value <= 0) throw ...; }
-}
-
-// 使用：编译期区分 ProjectId / UserId / OrderId
-public class Project { private TypedId<Project> id; }
-```
-
-> 说明：本模块未提供 `BaseEntity` / `EventRegistry` 领域实体基类（历史规划未落地）；领域实体基类统一使用 `ydsz-common-jdbc` 的 `MpBaseEntity`，领域事件由 `ydsz-common-event` 的 `DomainEvent` / `DomainEventPublisher` 提供。
-
-## 自动装配
-
-模块通过 `spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册：
-
-```
-com.njydsz.common.domain.config.DomainAutoConfiguration
-```
-
-启用条件：无（无条件自动装配）。
-
-通过配置关闭：
+### 2. 配置属性
 
 ```yaml
 ydsz:
   domain:
-    enabled: false   # 关闭领域模块自动装配（默认 true）
-```
-
-## 配置项
-
-```yaml
-ydsz:
-  domain:
-    enabled: true                               # 启用领域模块（默认 true）
     page:
-      cursor-warning-threshold: 10000           # 深度分页警告阈值（0 表示关闭）
-      cursor-reject-threshold: 50000            # 深度分页拒绝阈值（0 表示关闭）
+      default-page-size: 20
+      max-page-size: 500
+      risk-assessor-enabled: true
+      max-depth: 100
+    data-permission:
+      enabled: true
+      cache-ttl-seconds: 300
 ```
+
+## SPI 扩展点
+
+| SPI 接口 | 用途 | 注册方式 |
+|---|---|---|
+| `Specification<T>` **SPI** | 业务规约（可组合业务规则） | `@Component` |
+| `Repository` **SPI** | DDD 聚合根仓储接口 | `@Component` |
+| `TreeNodeProvider` **SPI** | 树节点懒加载（大数据量时使用） | `@Component` |
+
+## 自动配置类
+
+| 类 | 触发条件 |
+|---|---|
+| `DomainAutoConfiguration` | `ydsz-common-domain` 在 classpath（始终激活，绑定 DomainProperties） |
+
+## 注意事项
+
+1. **深度分页保护**：默认 pageSize 上限 500；翻页深度超过 `max-depth`（默认 100）时评估器写入 WARN 日志。
+2. **树构建性能**：`TreeBuilder.build` 使用 Map 索引 O(n)，避免嵌套循环；超大数据集请使用 `TreeNodeProvider` SPI 懒加载。
+3. **TypedId 序列化**：Jackson 序列化时自动转为 value（Long），反自动包装为对应 TypedId 子类。
+4. **DataScopeContextHolder**：每次请求后由 TenantInterceptor / WebFilter 清理，避免跨请求污染。
+
+## 变更记录
+
+- **1.2.0**（2026-09-07）：PageQuery 深度分页风险评估器集成 `max-depth` 默认 100；TreeNode 新增 `buildSafely` 空安全方法；DataPermissionContext 拆分为 Header 常量。
+- **1.1.0**（2026-08-20）：新增 TypedId 类型化 ID 体系；新增 DataPermissionContext / DataScopeContextHolder 数据权限上下文。
+- **1.0.0**（2026-08-02）：初始版本（PageQuery / BaseQuery / TreeBuilder / TreeNode / Specification）。

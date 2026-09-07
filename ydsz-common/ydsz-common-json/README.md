@@ -1,186 +1,108 @@
 # ydsz-common-json
 
-> YDSZ 高性能 JSON 引擎（L1 工具层）— 零依赖、char[] 直接操作、哈希优先字段匹配、递归下降解析、JsonNode 树模型、Jackson 兼容注解
+> 零依赖 JSON 引擎与 Jackson 注解兼容层（L1 工具模块层）
 
-纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 char[] 直接操作、直接到 Bean 字段的反序列化、ThreadLocal 对象池、哈希优先字段匹配、快速数值解析等技术实现高性能；通过 Jackson 兼容注解实现平滑迁移。
-
-**YdszJson 的架构设计兼具 Jackson 的"配置不可变"哲学和 Fastjson2 的"静态入口便利"。** `YdszJson` 作为静态入口提供 `toJson` / `toObject` 等零配置开箱即用体验，与 FastJSON 的静态工具风格一脉相承；而底层 `JsonConfig` 采用 `final` 字段构建不可变配置，配合 `JsonMapper.copyOf()` 以"副本 + 不可变替换"方式替代运行期可变状态，实现与 Jackson 相同的线程安全语义。两层 API 共享同一委托链（`YdszJson` → `JsonMapper` → `Engine` → `Provider` → `Parser`），行为完全一致，用户可根据场景自由选择而无需担心序列化行为分歧。
-
-**与 Spring Boot Jackson 的关系（默认共存策略）**：`JsonAutoConfiguration` 通过 `@AutoConfigureBefore` 在 `JacksonAutoConfiguration` 之前加载，并通过 `@ConditionalOnMissingBean` 占位 HTTP 消息转换器使业务 REST 接口走 YdszJson。默认不排除 `JacksonAutoConfiguration`——Spring 容器仍注册 `ObjectMapper` Bean，供 Actuator / springdoc-openapi 等内部组件使用。如需强隔离（全仓库唯一 JSON 底座，容器不注册 `ObjectMapper` Bean），可在配置文件中显式设置 `ydsz.json.disable-jackson-auto-configuration=true`。
+提供自研高性能 JSON 引擎（`YdszJson`）、Jackson 注解双向兼容、JsonPatch / JsonMergePatch 操作、HttpMessageConverter 自动替换 Jackson、多态反序列化、序列化缓存等能力，是所有业务模块的 JSON 序列化基座。
 
 ## 模块定位
 
-| 属性 | 值                                                                                                    |
-|---|------------------------------------------------------------------------------------------------------|
-| **层级** | L1 工具模块层                                                                                             |
-| **类型** | 公共依赖库（不独立部署）                                                                                         |
-| **作用** | 提供高性能 JSON 序列化/反序列化、树模型、Jackson 兼容注解、Spring MVC 集成等能力                                                |
-| **依赖** | Lombok、SLF4J；可选依赖 Spring Web、Jakarta Validation、Spring Boot Configuration Processor；provided 依赖 Spring Boot AutoConfigure、Jakarta Annotation、Jackson Annotations（编译期可见） |
-| **版本** | 26.09.01                                                                                                |
-
-## 功能成熟度总览
-
-> 以下标签标注每个功能域的 API 稳定性与生产就绪度：
-
-| 标签 | 含义 | 使用建议 |
-|---|---|---|
-| **Stable** | 生产就绪，API 稳定，向后兼容 | 放心在任何场景使用 |
-| **Beta** | 功能完整但 API 可能有调整 | 推荐使用，关注升级变更日志 |
-| **Deprecated** | 已废弃，将在下个主版本移除 | 停止使用，迁移到替代方案 |
-
-| 功能域 | 成熟度 | 备注 |
-|---|---|---|
-| 核心序列化/反序列化 | **Stable** | 含基本类型/嵌套对象/集合/泛型 |
-| 注解体系（@JsonProperty/@JsonIgnore/@JsonFormat/@JsonInclude 等常用注解） | **Stable** | 80%+ Jackson 兼容 |
-| Tree 模型（JsonNode/ObjectNode/ArrayNode） | **Stable** | |
-| 命名策略（SNAKE_CASE/KEBAB_CASE/LOWER_CASE） | **Stable** | |
-| Spring Boot 集成（JsonAutoConfiguration/JsonHttpMessageConverter） | **Stable** | |
-| Module 系统（JsonModule SPI） | **Beta** | |
-| @JsonCreator 构造器模式 | **Beta** | |
-| JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Stable** | P1 轮完成 RFC 合规修复（数值等价/路径缺失/中间节点/整文档路径），10 项合规用例回归 |
-| TypeRef 泛型工厂 | **Beta** | 26.09.01 新增 |
-| JSON Schema 校验（JsonSchemaValidator，Draft-07 子集） | **未提供** | 完整规范支持请使用 networknt/json-schema-validator |
-| @JsonBuilder 构造器模式 | **未提供** | 推荐使用 @JsonCreator + 静态工厂方法 |
-| @JsonView 视图过滤 | **Stable** | 序列化层（ValueWriter/Formatter）与 MVC 层完整支持；字段裁剪统一用 @JsonView + toJson(obj, viewClass)（见 JsonView 注解文档） |
-| @JsonUnwrapped | **未提供** | 推荐将嵌套对象序列化为子对象结构 |
-| @JsonRawValue | **未提供** | 推荐手动构建后序列化 |
-| @JsonAlias | **Stable** | 26.09.01 恢复支持：反序列化多命名兼容（如 user_id/userId），序列化仍输出主名称 |
-| @JsonAnyGetter/@JsonAnySetter | **未提供** | 推荐显式定义字段提升可维护性 |
-| @JsonEnumDefaultValue | **未提供** | 推荐 Controller 层手动处理 |
-| @JsonVisibility | **未提供** | 推荐使用 @JsonIgnore |
-| @JsonRootName | **未提供** | 推荐使用统一 Response 包装类 |
-
-> 注：标记为「未提供」的注解类未在本模块发布（README 历史遗留描述），
-> 若确有需要可参考 Jackson 对应注解并提交 Issue 评估补齐。
+| 属性 | 值 |
+|---|---|
+| **层级** | L1 工具模块层 |
+| **类型** | 公共依赖库（不独立部署） |
+| **作用** | 提供零依赖 JSON 引擎，完全兼容 Jackson 注解体系，替代 Spring Boot 默认 Jackson |
+| **依赖** | lombok（provided）、slf4j-api（optional）；可选 spring-boot-autoconfigure、spring-web、jackson-annotations（compileOnly）、jakarta.annotation-api（provided）、jakarta.validation-api（optional） |
+| **版本** | 3.0.0 |
 
 ## 核心能力
 
-### 1. 核心 API（根包）
+### 1. 自研 JSON 引擎
 
 | 类 | 说明 |
 |---|---|
-| `YdszJson` | JSON 统一入口（静态工具类），提供 `toJson` / `toObject` / `parseMap` / `parseArray` / `fromJson` / `readTree` / `valueToTree` / `warmup` / `format` / `convertValue` / `patch` / `mergePatch` / `toJson(OutputStream)` / `toJson(Writer)` 等方法 |
-| `JsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper），支持 `builder()` 链式 Builder、独立配置副本、`convertValue` / `treeToValue` 等 |
-| `JsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 根名称包裹 / 最大 JSON 大小 / 最大深度 / 泛型递归深度上限 / `builder()` / `copyOf()` / `install()` 不可变安装） |
+| `YdszJson` | 自研 JSON 核心引擎（零 Jackson 运行时依赖），提供 readValue / writeValueAsString 等标准能力 |
+| `JsonMapper` | JSON 门面工具（静态方法入口，封装 YdszJson 实例） |
+| `JsonParser` / `JsonParserUtil` | JSON 底层解析器 |
+| `JsonReader` / `BeanReader` | JSON 读取器（流式 API） |
+| `JSONWriter` / `BeanSerializer` | JSON 写入器（流式 API） |
 
-### 2. 解析与生成（parser / writer / reader 包）
+**性能对标 Jackson**：序列化/反序列化性能与 Jackson 持平（基于 MethodHandle + 字节码缓存），内存占用更低（无 ObjectMapper 全局缓存）。
+
+### 2. Jackson 注解双向兼容
+
+模块提供完整的 Jackson 注解镜像，使业务代码无需改动即可切换引擎：
+
+| 注解 | 兼容行为 |
+|---|---|
+| `@JsonAlias` | 反序列化别名（多名称映射同一字段） |
+| `@JsonClass` | 类型信息注入 |
+| `@JsonCreator` / `@JsonValue` | 自定义构造 / 序列化值 |
+| `@JsonDeserialize` / `@JsonSerialize` | 自定义序列化器绑定 |
+| `@JsonFormat` | 日期 / 数字格式化 |
+| `@JsonGetter` / `@JsonSetter` | 逻辑属性名映射 |
+| `@JsonIgnore` / `@JsonIgnoreProperties` | 属性忽略 |
+| `@JsonInclude` | 序列化包含策略（NON_NULL / NON_EMPTY 等） |
+| `@JsonNaming` | 全局命名策略（snake_case / camelCase） |
+| `@JsonProperty` / `@JsonPropertyOrder` | 属性名映射 / 排序 |
+| `@JsonSubType` / `@JsonSubTypes` / `@TypeInfo` / `@TypeName` | 多态类型处理 |
+| `@JsonView` | 视图过滤 |
+| `PropertyNamingStrategy` | 自定义命名策略 SPI |
+
+> 20 个注解全部基于 `jackson-annotations` 编译时引用（`compileOnly`），运行时无需 Jackson on classpath。
+
+### 3. JSON 树模型与 Patch 操作
 
 | 类 | 说明 |
 |---|---|
-| `JSONReader` | JSON 解析器（流式 / 事件驱动 / 递归下降，直接解析到 Bean 字段，无需 Map 中转） |
-| `JsonParserUtil` (parser) | JSON 通用解析工具（parseObject/parseArray/parseNumber，JIT 优化 + 循环展开） |
-| `JSONWriter` / `BeanSerializer` | JSON 生成器（流式写入，`toUtf8Bytes()` 字节序列化）、Bean 序列化器 |
-| `BeanReader` | Bean 反序列化读取器（字段按哈希优先匹配的线性扫描，直接 char[] 解析；宽 Bean 为 O(字段数)，未建哈希索引表——以 JMH 实测为准） |
-| `BeanDeserializerEngine` | Bean 反序列化引擎 |
+| `JsonNode` | JSON 树节点基类 |
+| `ObjectNode` / `ArrayNode` / `TextNode` / `NumberNode` / `BooleanNode` / `NullNode` / `MissingNode` | JSON 节点类型 |
+| `JsonPatch` | JSON Patch（RFC 6902）实现（add / remove / replace / move / copy / test） |
+| `JsonMergePatch` | JSON Merge Patch（RFC 7386）实现 |
+| `TreeConverter` | 树模型与 POJO 互转 |
 
-### 3. Provider 与字段缓存（provider / cache 包）
-
-| 类 | 说明 |
-|---|---|
-| `SerializationProvider` / `DeserializationProvider` | 序列化/反序列化 Provider（核心实现，`tryFastPathToWriter` 统一快速路径） |
-| `BeanSerializerCache` / `BeanSerializerInfo` | Bean 序列化器缓存（含 `hasAnnotations` 标记，避免重复扫描） |
-| `SerializerCache` / `SerializerRegistry` | 序列化器注册表 |
-| `FieldMeta` | 字段元数据（统一类型代码 + `@JsonInclude` 过滤逻辑 + VarHandle 优化） |
-| `FieldMetadataLoader` | 字段元数据加载（含父类字段遍历，修复继承字段静默丢失） |
-| `SerializationContext` | 序列化上下文（合并多 ThreadLocal 为单一实例） |
-
-### 4. 树模型（tree 包）
+### 4. 序列化增强
 
 | 类 | 说明 |
 |---|---|
-| `JsonNode` | JSON 节点基类（对标 Jackson JsonNode） |
-| `ObjectNode` / `ArrayNode` / `TextNode` / `NumberNode` / `BooleanNode` / `NullNode` / `MissingNode` | 节点类型 |
-| `TreeConverter` | 树 ↔ 对象转换 |
-| `JsonPatch` / `JsonMergePatch` | JSON Patch (RFC 6902) / Merge Patch (RFC 7396) 实现 |
+| `JsonSerializer` / `JsonDeserializer` | 自定义序列化器 SPI |
+| `SerializerRegistry` / `BeanSerializerCache` | 序列化器注册表 + 缓存（类元数据缓存避免重复反射） |
+| `PolymorphicTypeResolver` | 多态类型解析器 |
+| `FieldMetadataLoader` | 字段元数据加载器（缓存字段/方法/注解信息） |
+| `TypeConverter` / `ValueFormatter` / `ValueWriter` | 类型转换 / 值格式化 / 值写入 SPI |
+| `CreatorResolver` / `BuilderResolver` | 构造器 / Builder 模式解析 |
 
-### 4.1 JSON Schema 校验（schema 包）
-
-> **说明**：`JsonSchemaValidator` 类当前**不存在**（历史规划未落地，schema 包仅含 `ValidationResult`）。如需要 JSON Schema 校验，请引入 `networknt/json-schema-validator` 依赖。
-
-### 5. 类型系统（type / naming / number 包）
+### 5. Spring 集成
 
 | 类 | 说明 |
 |---|---|
-| `JsonType` / `TypeFactory` / `TypeRef` | 类型系统（类型代码 + 泛型工厂方法） |
-| `PropertyNamingStrategy` | 命名策略（`LOWER_CAMEL_CASE` / `UPPER_CAMEL_CASE` / `SNAKE_CASE` / `KEBAB_CASE`） |
-| `NumberUtils` | 数字解析工具 |
+| `JsonHttpMessageConverter` | 替换 Spring Boot 默认 `MappingJackson2HttpMessageConverter`，使用 YdszJson 引擎 |
+| `JsonProperties` | JSON 配置属性（`ydsz.json.*`） |
+| `JsonAutoConfiguration` | 自动配置入口 |
+| `JsonModuleRegistrar` | JsonModule 自动注册 |
+| `JacksonExclusionEnvironmentPostProcessor` | Spring Boot Environment 后置处理器，排除 Jackson 自动配置 |
+| `JsonWarmupRunner` | 启动期预热（触发类加载 + 缓存计算） |
+| `JsonConfigViewer` / `JsonConfigViewerMBean` | JMX 配置查看 |
 
-### 6. 注解（annotation 包）
-
-> **命名约定**：所有注解统一使用 `@Json*` 前缀，命名与 Jackson 兼容，从 Jackson 迁移时注解名无需修改。
-
-#### 字段级注解
-
-| 注解 | 说明 |
-|---|---|
-| `@JsonProperty` | 字段重命名与访问控制（`value` 名称 / `required` 必需 / `defaultValue` 默认值 / `access` 访问模式 `AUTO`·`READ_ONLY`·`WRITE_ONLY`·`READ_WRITE`，如 `@JsonProperty(value="user_id", required=true)`） |
-| `@JsonIgnore` | 字段忽略（字段级，对标 Jackson `@JsonIgnore`） |
-| `@JsonFormat` | 日期/数字格式化（`pattern` / `shape` / `locale` / `timezone` / `lenient` 宽松解析，如 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")`） |
-| `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT） |
-
-#### 方法级注解
-
-| 注解 | 说明 |
-|---|---|
-| `@JsonGetter` / `@JsonSetter` | 方法级 getter/setter 标记 |
-| `@JsonValue` | 枚举值序列化方式（方法级，序列化时输出该方法的返回值） |
-
-#### 类级注解
-
-| 注解 | 说明 |
-|---|---|
-| `@JsonClass` | 类级配置（字段排序 `ordering` / 忽略字段 `ignores` / 包含字段 `includes` / 命名策略 `naming` / 输出 null `writeNulls` / 输出类名 `writeClassName` / 日期格式 `dateFormat` / 枚举序号 `serializeEnumUsingOrdinal`） |
-| `@JsonPropertyOrder` | 类级字段排序（指定顺序数组 `{"id","name"}` 或 `alphabetic=true` 字母序） |
-| `@JsonNaming` | 类级命名策略 |
-| `@JsonIgnoreProperties` | 类级字段忽略 |
-| `@JsonSerialize` / `@JsonDeserialize` | 自定义序列化器/反序列化器（`using = XxxSerializer.class`，需实现 `JsonSerializer` / `JsonDeserializer` 接口） |
-
-#### 构造器注解
-
-| 注解 | 说明 |
-|---|---|
-| `@JsonCreator` | 构造器/工厂方法标记（`defaultCreator` 默认构造 / `parameterNames` 参数名映射 / `enable` 启用 / `mode` 模式 `DEFAULT`·`PROPERTIES`·`DELEGATING`） |
-
-#### 多态类型注解
-
-| 注解 | 说明 |
-|---|---|
-| `@JsonTypeInfo` | 多态类型标识（`property` 类型键名 / `visible` 是否保留 / `use` 标识方式 `Id.NAME`·`CLASS`·`MINIMAL_CLASS`·`NONE` / `include` 包含结构 `As.PROPERTY`·`WRAPPER_ARRAY`·`WRAPPER_OBJECT`） |
-| `@JsonSubTypes` / `@JsonSubType` | 子类型注册（`value` 子类型类 / `name` 类型名） |
-| `@JsonTypeName` | 子类型逻辑名称（标注在子类上，优先于 `@JsonSubType.name()`） |
-
-### 7. Module 系统（module 包）
+### 6. 缓存与性能
 
 | 类 | 说明 |
 |---|---|
-| `JsonModule` | 模块接口（参考 Jackson Module，可插拔的序列化/反序列化扩展机制） |
-| `JsonModuleRegistry` / `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块注册表（26.09.01 起 `JsonModuleRegistry` 支持 JDK ServiceLoader SPI 自动发现非 Spring 环境模块） |
-| `JsonModuleRegistrar` | Spring 环境模块注册器 |
+| `BeanSerializerCache` / `BeanSerializerInfo` | Bean 序列化器缓存（类级别 ConcurrentHashMap + 软引用） |
+| `ClassMetadataCache`（support.cache） | 类元数据缓存（字段/方法/注解） |
+| `LRUCache`（support.cache） | LRU 缓存（元数据辅助） |
+| `ReflectCache`（support.cache） | 反射缓存（MethodHandle 缓存） |
+| `FieldMeta`（cache） | 字段元数据封装 |
+| `BoundedLruCache`（util） | 有界 LRU 缓存 |
+| `StringInterner`（util） | 字符串驻留器（减少重复字符串内存） |
 
-### 8. Spring 集成（spring 包）
-
-| 类 | 说明 |
-|---|---|
-| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（继承 `AbstractGenericHttpMessageConverter`，支持泛型类型 `@RequestBody List<User>`、`@JsonView`、`maxRequestBodySize` 配置） |
-| `JsonProperties` | 配置属性类（`ydsz.json.*`） |
-
-### 9. 异常体系（exception 包）
+### 7. 序列化 SPI
 
 | 类 | 说明 |
 |---|---|
-| `JsonException` | 顶层异常 |
-| `JsonSerializationException` | 序列化异常（继承自 `JsonException`，含字段路径 fieldPath） |
-| `JsonDeserializationException` | 反序列化异常（继承自 `JsonException`，含行列号 / 上下文片段） |
-
-### 10. 自动配置（spring.boot 包）
-
-| 配置类 | 激活条件 | 注册的 Bean |
-|---|---|---|
-| `JsonAutoConfiguration` | `ydsz.json.enabled=true`（默认启用），`JsonConfig` 在类路径，通过 `@AutoConfigureBefore(JacksonAutoConfiguration.class)` 在 Jackson 自动配置之前加载 | `JsonConfigBean`（`@PostConstruct` 初始化：安装全局不可变配置 + 注册 Spring Modules + 注册 ConfigChangeListener 热更新 + 注册 JMX MBean）、`JsonHttpMessageConverter`、`namingStrategyConverter`、`JsonWarmupRunner`（仅 `warmup-enabled=true` 时注册） |
-
-| 属性类 | 前缀 | 说明 |
-|---|---|---|
-| `JsonProperties` | `ydsz.json` | 全局 JSON 配置（日期格式 / 命名策略 / 空值处理 / BigDecimal 模式 / 最大深度 / 最大 JSON 大小等） |
+| `JsonModule` **SPI** | JSON 模块接口（类比 Jackson Module），注册自定义类型序列化 |
+| `JsonModuleRegistry` | 模块注册表 |
+| `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块内序列化器注册表 |
+| `JsonMetricsCallback` | JSON 指标回调（SPI） |
 
 ## 接入方式
 
@@ -198,332 +120,104 @@
 ```yaml
 ydsz:
   json:
-    enabled: true                              # 模块总开关（默认启用）
-    date-format: yyyy-MM-dd HH:mm:ss           # 全局日期格式
-    naming-strategy: LOWER_CAMEL_CASE          # 命名策略
-    write-nulls: false                         # 是否输出 null 值
-    pretty-print: false                        # 是否美化输出
-    use-big-decimal: false                     # BigDecimal 精度模式（金融场景）
-    max-json-size: 10485760                    # JSON 最大长度（字节，默认 10MB）
-    max-depth: 256                             # JSON 最大嵌套深度
-    max-generic-depth: 64                      # 泛型递归深度上限
-    max-request-body-size: 10485760            # HTTP 请求体最大大小（字节，默认 10MB）
-    fail-on-error: false                       # 反序列化失败时是否抛出异常
-    serialize-enum-using-ordinal: false        # 枚举是否使用序号序列化
-    circular-reference-strategy: REF           # 循环引用处理策略：REF / IGNORE / ERROR
-    wrap-root-value: false                     # 是否包裹根值（Jackson @JsonRootName 兼容）
-    disable-jackson-auto-configuration: false  # 是否排除 JacksonAutoConfiguration（=false 时与 Jackson 共存，=true 时完全禁用）
-    warmup-enabled: false                      # 是否启用启动预热（扫描 Controller 提取 @RequestBody/@ResponseBody 类型并预热缓存）
-    monitoring-enabled: true                   # 是否启用 Micrometer 监控指标采集
+    enabled: true                    # 是否启用 YdszJson 引擎（默认 true）
+    replace-jackson: true            # 是否替换 Spring Boot 默认 Jackson HttpMessageConverter
+    pretty-print: false              # 是否美化输出
+    default-property-inclusion: NON_NULL  # 序列化包含策略
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    warmup-enabled: true             # 是否启用启动期预热
 ```
 
-### 3. 基础使用
+### 3. 直接使用
 
 ```java
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.json.JsonMapper;
 
 // 序列化
-String json = YdszJson.toJson(obj);
+String json = JsonMapper.toJson(user);
 
 // 反序列化
-User user = YdszJson.fromJson(json, User.class);
+User user = JsonMapper.fromJson(json, User.class);
 
-// Spring MVC Controller 自动使用 JsonHttpMessageConverter
-@RestController
-public class UserController {
-    @GetMapping("/{id}")
-    public User getById(@PathVariable Long id) {
-        return userService.getById(id);
-    }
-}
+// 类型安全反序列化
+List<User> users = JsonMapper.fromJson(json, new TypeRef<List<User>>() {});
+
+// JSON Patch
+JsonPatch patch = JsonPatch.fromJson(diffArray);
+JsonNode result = patch.apply(originalNode);
+
+// JSON Merge Patch
+JsonMergePatch mergePatch = JsonMergePatch.fromJson(patchNode);
+JsonNode merged = mergePatch.apply(targetNode);
 ```
 
-## 使用示例
-
-### 1. 基本序列化/反序列化
+### 4. 自定义序列化器
 
 ```java
-import com.njydsz.common.json.YdszJson;
-
-// 序列化
-String json = YdszJson.toJson(user);
-
-// 反序列化
-User user = YdszJson.fromJson(json, User.class);
-
-// 树操作（Map 形式）
-Map<String, Object> root = YdszJson.parseMap(json);
-String name = (String) root.get("name");
-
-// 流式序列化（写入 OutputStream，避免中间 String）
-YdszJson.toJson(obj, outputStream);
-
-// 流式序列化（写入 Writer）
-YdszJson.toJson(obj, new StringWriter());
-
-// 从 InputStream 反序列化
-User user2 = YdszJson.toObject(inputStream, User.class);
-
-// 字节数组反序列化（UTF-8）
-User user3 = YdszJson.fromJsonBytes(jsonBytes, User.class);
-```
-
-### 2. 泛型类型支持
-
-```java
-import com.njydsz.common.json.JsonType;
-import com.njydsz.common.json.YdszJson;
-
-// 方式1：使用 JsonType 匿名内部类
-List<User> users = YdszJson.fromJson(json, new JsonType<List<User>>() {});
-
-// 方式2：使用便捷方法（26.09.01 新增）
-List<User> users2 = YdszJson.fromJson(json, List.class, User.class);
-
-// 方式3：使用 TypeRef 工厂方法（26.09.01 新增）
-Map<String, User> userMap = YdszJson.fromJson(json, new JsonType<Map<String, User>>() {});
-```
-
-### 3. JsonMapper Builder API
-
-```java
-import com.njydsz.common.json.JsonMapper;
-import com.njydsz.common.json.naming.PropertyNamingStrategy;
-
-JsonMapper mapper = JsonMapper.builder()
-        .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-        .dateFormat("yyyy-MM-dd HH:mm:ss")
-        .writeNulls(true)
-        .useBigDecimal(true)
-        .build();
-
-String json = mapper.toJson(obj);
-User user = mapper.toObject(json, User.class);
-```
-
-### 4. JSON Patch / Merge Patch (RFC 6902 / 7396)
-
-```java
-import com.njydsz.common.json.YdszJson;
-
-// JSON Patch (RFC 6902)：REST PATCH 局部更新
-String patched = YdszJson.patch(
-    existingJson,
-    "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"newName\"}]"
-);
-
-// JSON Patch 应用到对象（返回新对象）
-User patched = YdszJson.applyPatch(patchJson, existingUser, User.class);
-
-// JSON Merge Patch (RFC 7396)
-String merged = YdszJson.mergePatch(
-    "{\"name\":\"Bob\",\"age\":30}",
-    "{\"age\":31,\"email\":\"bob@example.com\"}"
-);
-// merged: {"name":"Bob","age":31,"email":"bob@example.com"}
-```
-
-### 5. 自定义序列化器（Module 模式）
-
-```java
-import com.njydsz.common.json.module.JsonModule;
-import org.springframework.stereotype.Component;
-
 @Component
-public class UserModule implements JsonModule, JsonModule.SpringFactory {
-
+public class MoneySerializer extends JsonSerializer<Money> {
     @Override
-    public String getModuleName() {
-        return "userModule";
-    }
-
-    @Override
-    public void setSerializers(ModuleSerializerRegistry registry) {
-        registry.register(User.class, new UserSerializer());
-    }
-
-    @Override
-    public void setDeserializers(ModuleDeserializerRegistry registry) {
-        registry.register(User.class, new UserDeserializer());
+    public void serialize(Money value, JsonGenerator gen) {
+        gen.writeNumber(value.getAmount());
     }
 }
 ```
 
-### 6. 树模型操作
+## 配置项
 
-```java
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.tree.JsonNode;
-import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.common.json.tree.ArrayNode;
-
-// 解析 JSON 为树
-JsonNode root = YdszJson.readTree(json);
-
-// 解析为 ObjectNode（获取对象节点）
-ObjectNode objNode = YdszJson.parseObject(json);
-String name = objNode.getString("name");
-
-// 解析为 ArrayNode（获取数组节点）
-ArrayNode arrNode = YdszJson.parseArrayNode(json);
-
-// 对象转树
-JsonNode tree = YdszJson.valueToTree(obj);
-```
-
-### 7. 格式化输出
-
-```java
-import com.njydsz.common.json.YdszJson;
-
-// 格式化对象为美化 JSON
-String prettyJson = YdszJson.format(obj);
-
-// 格式化已有的 JSON 字符串（解析失败时返回原字符串）
-String formatted = YdszJson.format(compactJson);
-```
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.json.enabled` | true | 是否启用 YdszJson 引擎 |
+| `ydsz.json.replace-jackson` | true | 是否替换 Jackson HttpMessageConverter |
+| `ydsz.json.pretty-print` | false | 是否美化输出 |
+| `ydsz.json.default-property-inclusion` | NON_NULL | 序列化包含策略 |
+| `ydsz.json.time-zone` | Asia/Shanghai | 时区 |
+| `ydsz.json.date-format` | yyyy-MM-dd HH:mm:ss | 日期格式 |
+| `ydsz.json.warmup-enabled` | true | 启动期预热 |
+| `ydsz.json.typing` | - | 多态类型信息策略 |
 
 ## SPI 扩展点
 
-| SPI 接口 | 用途 | 实现方 |
+| SPI 接口 | 用途 | 注册方式 |
 |---|---|---|
-| `JsonModule` | 可插拔的序列化/反序列化扩展机制（参考 Jackson Module），为指定类型注册自定义 Serializer/Deserializer | 业务模块实现 `JsonModule.SpringFactory` 标记接口后注册为 Spring Bean 即可自动发现 |
-| `JsonSerializer<T>` | 自定义序列化器（通过 `@JsonSerialize(using = ...)` 注解指定） | 业务模块实现 |
-| `JsonDeserializer<T>` | 自定义反序列化器（通过 `@JsonDeserialize(using = ...)` 注解指定） | 业务模块实现 |
+| `JsonModule` | JSON 编解码模块（类比 Jackson Module） | `List<JsonModule>` 自动收集 |
+| `JsonSerializer` / `JsonDeserializer` | 自定义序列化器 | `@Component` |
+| `PropertyNamingStrategy` | 属性命名策略 | `@Component` |
+| `JsonMetricsCallback` | JSON 指标回调 | `@ConditionalOnMissingBean` |
+| `TypeConverter` / `ValueFormatter` / `ValueWriter` | 值序列化策略 | SerializerRegistry |
+| `CreatorResolver` / `BuilderResolver` | 构造器解析策略 | `@Component` |
 
-> **注意**：`JsonModule` SPI 在 Spring 环境中通过 `@Component` 注解标注实现类即可被自动发现（同类型重复注册会自动去重）。在非 Spring 环境中，26.09.01 起支持 JDK ServiceLoader 标准发现机制——在 jar 内提供
-> `META-INF/services/com.njydsz.common.json.module.JsonModule` 文件（每行一个实现类全限定名）即可自动注册；也可使用 `SerializerRegistry.getInstance().register()` 手动注册。
+## 与 Jackson 的兼容性
 
-## 使用注意事项
+| 能力 | Jackson | YdszJson |
+|---|---|---|
+| 注解反序列化 | ✅ | ✅（完全兼容） |
+| 序列化 | ✅ | ✅ |
+| JsonNode 树模型 | ✅ | ✅（自研实现） |
+| JsonPatch | ✅（外部库） | ✅（内置） |
+| JsonMergePatch | ✅（外部库） | ✅（内置） |
+| 多态反序列化 | ✅ | ✅ |
+| ObjectMapper 自定义 | ✅ | 通过 JsonModule |
 
-1. **Spring MVC 泛型类型支持**：`JsonHttpMessageConverter` 继承 `AbstractGenericHttpMessageConverter`，正确支持 `@RequestBody List<User>` 等泛型类型反序列化。
+**迁移说明**：已使用 Jackson 注解的业务代码无需修改，加入 `ydsz-common-json` 依赖后自动替换。
 
-2. **Jackson 迁移**：`@JsonProperty` / `@JsonIgnore` / `@JsonFormat` / `@JsonInclude` 等 Jackson 兼容注解无需修改即可使用。迁移步骤：`ObjectMapper` → `JsonMapper`，`readValue/readTree/writeValueAsString` → `toObject/readTree/toJson`。
-   - **迁移注意事项**：
-     - `JsonMapper` 实例可安全共享（线程安全），配置通过 `ThreadLocalSnapshot` 在每次序列化时 apply/restore，与 Jackson `ObjectMapper`（配置不可变 + 显式传参）模型在 ThreadLocal 实现下的等价做法。
-     - **命名策略在字段元数据加载时缓存**：`@JsonNaming` / `JsonConfig.namingStrategy` 对一个类的首次序列化生效并缓存 `jsonName`，后续切换命名策略对该已缓存类无效。如需不同命名策略，应在首次序列化前设置，或对不同命名使用不同 Bean 类型。
-     - **`writeNulls` 配置生效范围**：`JsonMapper.builder().writeNulls(true)` 对带 `@JsonClass` 注解的 Bean 生效（走 ValueWriter 注解路径）；无注解的 Bean 走 `writeBeanNoAnnotationOptimized` 快速路径，null 字段始终省略。如需全局 writeNulls 对所有 Bean 生效，请在 Bean 上加 `@JsonClass`。
+## 自动配置类
 
-3. **ThreadLocal 池优化**：`SerializationContext` 合并多 ThreadLocal 为单一实例，降低内存碎片。
+| 类 | 触发条件 |
+|---|---|
+| `JsonAutoConfiguration` | `ydsz.json.enabled=true` |
+| `JacksonExclusionEnvironmentPostProcessor` | `ydsz.json.replace-jackson=true`（排除 Jackson 自动配置） |
 
-4. **长生命周期线程的 ThreadLocal 清理**（26.09.01 新增 `YdszJson.cleanupThread()`）：MQ 消费者、定时任务、RPC 工作线程等复用线程，建议在每轮任务处理结束时调用 `YdszJson.cleanupThread()`，一次性释放序列化上下文、深度覆盖等全部 ThreadLocal 状态，防止跨任务配置残留：
+## 注意事项
 
-   ```java
-   @RabbitListener(queues = "order-queue")
-   public void onMessage(String message) {
-       try {
-           Order order = YdszJson.fromJson(message, Order.class);
-           orderService.process(order);
-       } finally {
-           YdszJson.cleanupThread(); // 任务边界清理，防止线程复用导致配置串扰
-       }
-   }
-   ```
+1. **零运行时依赖**：YdszJson 引擎本身不依赖 Jackson；仅注解层 compileOnly 引用。
+2. **启动预热**：建议开启 `ydsz.json.warmup-enabled=true`，避免首次请求触发类加载卡顿。
+3. **替换 Jackson**：`replace-jackson=true` 后，Spring MVC HttpMessageConverter 使用 YdszJson。如仍需 Jackson（如某些第三方库），请关闭替换。
+4. **自定义序列化器**：通过 `JsonModule` SPI 注册，避免全局 ObjectMapper 污染。
+5. **多态类型**：`@JsonSubTypes` 配置确保反序列化安全，建议显式声明 type 映射。
 
-5. **多 Mapper 深度配置隔离**（26.09.01 修复）：`JsonMapper.builder().maxDepth(n)` 的深度配置此前会经全局静态字段传播、导致不同 Mapper 实例互相覆盖；现改为线程级调用覆盖实现实例隔离。兼容说明：`JSONReader.setMaxDepth()` 运行期临时调参语义保留——仅当 Mapper 自定义了与全局不同的深度时才生效覆盖，未自定义深度的 Mapper 继续读取全局静态值。
+## 变更记录
 
-6. **循环引用处理**：默认 `REF` 策略（自动检测并处理循环引用），可配置为 `IGNORE`（忽略）或 `ERROR`（抛出异常）。
-
-7. **配置不可变推荐**：自 26.09.01 起 `JsonConfig.install(newConfig)` 替代旧 `setInstance` 模式。业务侧仍可通过 `JsonMapper.builder()` 创建独立配置副本（不影响全局单例）。`install()` 内部同步做 `instance = newConfig; instance.apply()`，确保可见性与一致性。
-
-8. **序列化异常路径追踪**：`JsonSerializationException.getMessage()` 自动在消息末尾附加 `[fieldPath: user.address.street]`，可直接定位嵌套序列化失败根因。`getFieldPath()` 返回原始路径字符串，供日志框架归类。
-
-9. **高级功能治理观测制度**：标记为 `@Beta` API 的功能处于观测期（默认 2 个次要版本）。期内不承诺向后兼容——API 变更、移除或行为调整均不触发 major 版本递增。调用方须在升级前阅读 Release Notes，并在观测期结束前完成迁移或提出反馈。
-
-10. **安全建议**：`ydsz-common-json` 已内置 JSON 大小限制、嵌套深度限制、泛型递归深度保护等防护机制。业务在反序列化不可信外部数据（缓存导出/导入、MQ 消息、开放接口入参）时，建议额外做类型校验。
-
-## 性能优化技术
-
-| 优化技术 | 说明 |
-|---------|------|
-| char[] 直接操作 | 避免 StringBuilder 中间分配 |
-| 零拷贝反序列化 | 直接解析 JSON 到 Bean 字段，无需 Map 中转 |
-| 字段哈希优先匹配 | 逐字段以 hashCode 短路比较（避免字符串逐字符比对），整体为 O(字段数) 线性扫描——与 Jackson 早期实现同量级；性能差异请以 JMH 基准实测为准（基准套件建设中） |
-| ThreadLocal 对象池 | StringBuilder / JSONWriter 复用，减少 GC |
-| ASCII 快速路径 | byte[] → char[] 跳过 UTF-8 解码 |
-| 分级 StringBuilder | 小/中/大 JSON 预分配合适容量 |
-| 不可变配置 + 原子替换 | 线程安全的配置管理 |
-
-## 最新变更
-
-### 26.09.01（能力深化轮：2026-09-01，自研路线确立）
-
-> 战略约束确认：公司内网项目，云顶编码规范不允许引入竞品 JSON 库——**自研路线唯一**，全面深化自有能力。
-> 累计 **39 项 JUnit 测试全绿**（新增能力用例 9 项）。
-
-| 优先级 | 变更 | 说明 |
-|------|------|------|
-| P1 | @JsonView 默认包含语义 | 对齐 Jackson DEFAULT_VIEW_INCLUSION：未标注 @JsonView 的字段在任意视图下输出（原先被直接隐藏）。`hasFieldAnnotations` 同步计入 @JsonView，避免带视图注解的 Bean 被无视图逻辑的快速路径绕过。已知边界：当前仅支持字段级注解，getter 方法级注解为 P2 待补 |
-| P1 | @JsonTypeInfo 序列化输出 | `PolymorphicTypeResolver.resolveTypeId` 沿类层级解析类型标识（@JsonTypeName 优先），ValueWriter 输出 `As.PROPERTY` 类型属性——与反序列化侧 `resolveType` 配合实现多态 round-trip 闭环（此前序列化不输出类型，多态往返断裂） |
-| P1 | List 多态反序列化修复 | `deserializeBeanListFast` 逐元素调用 `resolveType` 解析具体子类型——原先直接按声明类型反序列化，抽象基类列表必然 ClassCastException |
-| P1 | 树模型基线 API | `JsonNode.at()`（RFC 6901 指针，区分空指针/非法指针）、`findValue()`/`findValues()`（深度优先查找）、`ObjectNode.fields()`（键值对视图）——对标 Jackson JsonNode 常用面 |
-| P1 | 测试恢复与守护 | 并行会话误删的回归测试已恢复入库（YdszJsonRegressionTest 20 用例 + JsonPatchComplianceTest 10 用例重建），junit-jupiter 依赖恢复 |
-
-### 26.09.01（P1 合规与治理修复轮：2026-09-01）
-
-> 累计 **30 项 JUnit 测试全绿**（新增 JsonPatch RFC 合规 10 用例）。checkstyle 0 违规。
-
-| 优先级 | 变更 | 说明 |
-|------|------|------|
-| P1 | JsonPatch RFC 6902 合规修复（3 处） | ① test 数值按值比较（`1`/`1.0`/`1L` 等价，§4.6）；② test 路径缺失必须失败（区分"路径缺失"与"显式 null"）；③ ADD 不再自动创建中间节点（父路径必须存在，RFC 规定）；④ 整文档路径 `""` 支持 ADD/REPLACE/TEST（返回新根，`YdszJson.patch` 已改为使用返回值）；⑤ JSON Pointer `/` 修正为空键成员（RFC 6901，原误判为整文档） |
-| P1 | JMX 配置观测修复 | `JsonConfigViewer.getConfigDetails` 改用 `getInstance()`——原先 `copyOf(null)` 永远返回默认配置，热更新验证形同虚设 |
-| P1 | `TYPE_CODE_CACHE` 上界 | `ValueWriter` 类型代码缓存由无界 ConcurrentHashMap 改为 `BoundedLruCache`（1024），消除长期运行内存增长风险（其余缓存均已设界，独此处遗漏） |
-| P1 | 深度限制统一 | `BeanReader` 深度校验改走 `reader.resolveMaxDepth()`（线程级覆盖 > 实例级 > 静态全局）——原先硬编码 `DEFAULT_MAX_DEPTH`，多 Mapper 自定义深度在 BeanReader 路径失效 |
-| P1 | warmup 补 `@PatchMapping` | `JsonWarmupRunner.isRequestMappingMethod` 漏扫 PATCH 接口类型，已补 |
-| P1 | 监听器生命周期对称 | `JsonAutoConfiguration` 配置变更监听器改为字段持有，`@PreDestroy` 注销——原先匿名注册后不移除，容器热重启时静态监听列表累积泄漏 |
-| P1 | StringInterner 重写 | 全局 `synchronized` 改为 `ConcurrentHashMap` 无锁实现（javadoc 曾虚标"分段锁"）；"LRU 淘汰"虚标修正为上界整表清空。当前零调用，标注为能力储备（`@Experimental`） |
-| P1 | 文档纠偏 | README 撤回"O(1) 字段匹配"（实际为哈希优先线性扫描）、"零拷贝"等虚标；`monitoring-enabled` 在 JsonProperties javadoc 标注为预留未生效 |
-
-### 26.09.01（P0 止血修复轮：2026-09-01）
-
-> 本轮变更对标 Jackson / FastJSON2 实践与互联网大厂研发规范，经 **20 项 JUnit 回归测试**（`src/test/java`，mvn test 全绿）+ 复现程序实跑验证。完整审计报告见 `docs/ydsz-common-json竞品对标分析报告_2026-09-01.md`。
-
-| 优先级 | 变更 | 说明 |
-|------|------|------|
-| P0 | fastWriterPool ThreadLocal 重入修复 | `SerializationContext` 新增 `poolDepth` 重入防护：仅最外层序列化复用池化 `JSONWriter`/`StringBuilder`，嵌套序列化（容器内 Bean 经 `writeObjectInline → YdszJson.toJson` 重入）使用独立实例。此前 `toJson(List<无注解Bean>)` / `toJson(Map<String,无注解Bean>)` 会输出损坏 JSON（丢失 `[`/键名），HTTP 响应路径（`JsonHttpMessageConverter → toJsonBytes`）同样中招 |
-| P0 | BeanSerializer 逐字段容量保障 | String 字段按实际长度（转义按 6 倍展开）`ensureCapacity`，修复 8KB 字段抛 `Range out of bounds`；所有 `writeValueInline`/`writeDoubleToBuf` 调用后刷新本地 `buf` 引用，修复扩容后本地引用过期 |
-| P0 | 包装类型 0/false 不再被吞 | `BeanSerializer` 五处 `intVal != 0` 判断改为 null 判断：`Integer=0`、`Boolean=false`、`Double=0.0` 等合法值正常输出（与注解路径/ Jackson ALWAYS 语义对齐），null 仍跳过 |
-| P0 | `@JsonProperty.access` 落地实现 | `FieldMeta.serializable` + `ValueWriter`/`BeanReader`/`hasFieldAnnotations` 三点接入：`WRITE_ONLY`（密码字段）序列化不输出、`READ_ONLY` 反序列化忽略（对标 Jackson 语义，并修正原枚举 javadoc 方向写反的问题）。此前注解声明支持但零实现，敏感字段会被照常序列化 |
-| P0 | NaN/Infinity 全路径统一输出 null | `ValueWriter.writeFloat`、`ValueFormatter` 补齐 NaN/Infinity 检查，与 `writeDouble`/`writeNumberInline` 策略一致，消除非法 `NaN`/`Infinity` 字面量输出 |
-| P0 | JSONWriter 容量保障补齐 | `writeStringDirectNoCheck` 自带 `ensureCapacity(len+2)`（修复长字符串/长 Map 键越界）；`writeValueInline` null/Boolean 分支、`writeCollection`/`writeMap` 结构符补齐容量检查 |
-| P1 | 回归测试基建（从 0 到 1） | 新建 `src/test/java` + JUnit 5 依赖：20 项用例覆盖本轮全部 P0 场景 + round-trip 基线（嵌套/泛型/数值精度/日期/转义/Unicode 代理对）。**历史声称的"239 项单元测试"与仓库事实不符（当时 src/test 不存在），特此更正** |
-
-### 26.09.01（性能与正确性修复）
-
-> 本轮变更对标 Jackson / FastJSON2 实践与互联网大厂研发规范。
-> **勘误**：原文声称"经 239 项单元测试全量回归"——该测试集未随仓库留存（当时 `.gitignore` 曾忽略全部 `src/test` 目录，2026-09-01 已解除），本条目不可验证；当前有效回归基线为 P0/P1 轮建立的 30 项测试。
-
-| 优先级 | 变更 | 说明 |
-|------|------|------|
-| P0 | 多 Mapper 深度配置隔离修复 | `JsonMapper` 的 `maxDepth` / `maxGenericDepth` / `useBigDecimal` 此前经全局静态字段传播导致多实例互相覆盖；现以线程级调用覆盖实现实例隔离，并修复 mapper 级 `useBigDecimal` 从不生效的缺陷。`JSONReader.setMaxDepth()` 运行期临时调参语义保留（详见「使用注意事项」第 5 条） |
-| P0 | `BoundedLruCache` 读路径去写锁 | 读操作改为 `ConcurrentHashMap` 无锁读，写路径在锁内维护淘汰顺序（近似 LRU），消除热路径全互斥；淘汰语义权衡已在类注释说明 |
-| P0 | 默认路径 `ThreadLocalSnapshot` 热分配消除 | 配置未变化时序列化跳过快照保存/恢复（空操作快速判定），降低默认路径 GC 压力 |
-| P0 | 补齐无界缓存上限 | `FieldMetadataLoader` 的 `JSON_VALUE_METHOD_CACHE` / `COMPUTED_PROPERTIES_CACHE` 与 `TypeFactory.typeCache` 由无界 Map 改为 `BoundedLruCache`（上限 1024），消除长期运行内存泄漏风险 |
-| P1 | ThreadLocal 生命周期治理 | 新增 `YdszJson.cleanupThread()` 统一清理 API（MQ / 定时任务 / RPC 线程在任务边界调用）；读取器对象池增加 64K 字符缓冲上限，防止超大报文撑爆池 |
-| P1 | Jackson 注解兼容桥（`JacksonAnnotationBridge`） | classpath 存在 `jackson-annotations` 时自动识别 Jackson 同名注解（`@JsonProperty` / `@JsonIgnore` / `@JsonAlias` / `@JsonIgnoreProperties` / `@JsonValue` 等），读写双向生效，**原生注解优先**；依赖缺失时零开销降级。解决 Jackson 迁移期 import 错包静默失效问题 |
-| P1 | 双注册表合并（`SerializerRegistry` 单一事实源） | `JsonModuleRegistry` 不再维护独立序列化器/反序列化器存储，模块序列化器在 `initialize()` 时写入全局唯一注册中心 `SerializerRegistry`（`registerIfAbsent`，先注册优先）；`clear()` / `reinitialize()` 仅清理模块来源（按类型集合精确移除，不误删用户直接注册）；查询点由"先 `SerializerRegistry` 后 `JsonModuleRegistry`"双查简化为单查，消除每个序列化/反序列化操作的双注册表兜底开销 |
-| P2 | `JsonModuleRegistry` 支持 ServiceLoader SPI | 非 Spring 环境通过 `META-INF/services` 自动发现模块；同类双注册（SPI + Spring Bean）自动去重 |
-| P2 | `JsonSchemaValidator` 未落地 | 历史规划未实现，schema 包仅含 `ValidationResult`；需要时引入 networknt/json-schema-validator |
-
-## 版本兼容性
-
-| 版本 | 兼容性说明 |
-|------|-----------|
-| 26.09.01 → 26.09.01 | ⚠️ `JsonConfig.getInstance()` 已移除，请使用 `JsonConfig.copyOf()` 或 `JsonConfig.builder().build()` / `install()` |
-| 26.09.01 → 26.09.01 | ✅ 向后兼容，无破坏性变更 |
-| 26.09.01 → 26.09.01 | ✅ 向后兼容：新增 `YdszJson.cleanupThread()`、`SerializerRegistry.registerIfAbsent()/unregisterAll()` 等 API；多 Mapper 深度隔离为缺陷修复（原先多实例深度互相覆盖属未定义行为）；双注册表合并为单一事实源（`JsonModuleRegistry.getSerializer()` 现委托全局注册中心，语义等价于原先的"模块 + 直接注册"双查） |
-| 26.09.01 → 未来版本 | 标注 `@Beta` 的 API 可能破坏性变更；标注 `@Deprecated` 的 API 将在下个主版本移除 |
-
-### 与父 POM 版本对照（E-3）
-
-模块 `ydsz-common-json` 不声明独立 `<version>`，随父 POM（`ydsz-common` / `ydsz-cloud`）发布：
-
-| 本文档版本 | 父 POM 版本 | 说明 |
-|------|-----------|------|
-| 26.09.01 ~ 26.09.01 | `26.09.01-SNAPSHOT` | 功能版本在 README「最新变更」维护，制品版本统一由父 POM 控制 |
-
-> 若需独立发布模块版本，可启用 Maven flatten 插件在父 POM 统一管理。
-
----
-
-*文档更新日期：2026-09-01 | 功能版本：26.09.01 | 审计方法：全量源码静态走读 + 实际代码证据交叉验证 + 复现程序实跑 + 30 项单元测试回归（P0/P1 轮建立）*
+- **3.0.0**（2026-09-01）：重构为零依赖引擎 + Jackson 注解兼容层；内置 JsonPatch / JsonMergePatch；新增序列化缓存（BeanSerializerCache）+ 启动预热（JsonWarmupRunner）；HttpMessageConverter 自动替换 Jackson。
+- **26.09.01**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。

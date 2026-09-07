@@ -1,8 +1,8 @@
 # ydsz-common-auth
 
-> 认证鉴权公共模块（L5 业务服务层）
+> JWT 认证与 RBAC 权限（L5 业务服务层）— JWT / Token / RBAC / 数据权限 / OIDC / Redis 失效监听
 
-YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按钮/API/行/列五级权限）、数据权限 `@DataScope`、多租户隔离、Token 黑名单（同步 + 响应式 + 布隆过滤器）、权限层级继承、权限预检、列权限签名、权限缓存热更新、Micrometer 指标、权限国际化、启动预热、OIDC 协议支持。
+提供 JWT Token 签发 / 校验 / 黑名单、RBAC 4 注解 + 3 切面（API 权限 / 行级 / 列级 / 菜单权限）、`@DataScope` 数据权限 SQL 注入（fail-closed）、Redis Keyspace Notification 缓存失效、权限缓存热更新、OIDC 端点、内部请求签名 / 校验、TOTP 认证器、布隆过滤器加速权限评估等企业级能力。
 
 ## 模块定位
 
@@ -10,197 +10,135 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 |---|---|
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供 JWT 认证、RBAC 鉴权、数据权限、列权限、Token 黑名单、权限缓存热更新、OIDC 能力 |
-| **源文件数** | 81 |
-| **依赖** | common-core、common-redis、common-util、common-exception、common-safe、common-cache、common-json |
+| **作用** | 提供认证、权限、数据权限、缓存热更新等企业级安全能力 |
+| **依赖** | ydsz-common-core、ydsz-common-domain、ydsz-common-util、ydsz-common-exception、ydsz-common-safe、ydsz-common-cache、ydsz-common-json；可选 ydsz-common-lock、ydsz-common-redis、jjwt-api/jjwt-impl/jjwt-jackson、spring-boot-actuator、spring-boot-health、micrometer-core、guava、spring-security-crypto、transmittable-thread-local |
+| **版本** | 2.2.0 |
 
 ## 核心能力
 
-### 1. RBAC 权限评估
+### 1. JWT / Token 服务
 
 | 类 | 说明 |
 |---|---|
-| `RbacPermissionEvaluator` | 核心 API（`loadUserInfo` / `loadCurrentUserInfo` / `validateMenu` / `validateApi` / `hasPermission`），内置角色权限缓存与 Redis 降级 |
-| `PermissionUtils` | 权限匹配工具（通配符 `*`/`**` 匹配、正则 LRU 缓存、超管判断、CSV 拆分、多角色权限合并） |
-| `PermissionMerger` | 多角色权限合并工具（支持以 `!` 前缀标记拒绝角色，按集合减法移除） |
+| `TokenService` **SPI** | Token 生成 / 校验 / 刷新接口（默认 JWT） |
+| `JwtTokenService` | JWT HmacSHA256 实现（支持 accessToken / refreshToken 双 Token） |
+| `TokenProperties` | Token 配置属性（`ydsz.jwt.signing-key` / `ydsz.jwt.access-token-ttl` 等） |
+| `KeyspaceNotificationProperties` | Redis Keyspace 通知配置（启用后监听 `__keyevent@*__:expired` 事件触发密码 / 权限重置） |
+| `PermissionKeyspaceNotificationListener` | Keyspace 通知监听器（消费过期事件，联动权限缓存失效） |
 
-### 2. 注解体系
+**Token 标准载荷（Claims）**：
 
-| 注解 | 切面 | 说明 |
-|---|---|---|
-| `@AuthMenuPermission` | `AuthPermissionAspect` | 菜单权限校验（支持 AND/OR 模式） |
-| `@AuthApiPermission` | `AuthPermissionAspect` | API 接口权限校验（权限码 + URL 路径模式） |
-| `@AuthRowPermission` | `AuthRowPermissionAspect` | 行级数据权限 |
-| `@AuthColPermission` | `AuthColPermissionAspect` | 列级字段权限 |
-| `@DataScope` | — | 数据范围注解（部门/用户字段过滤，配合 JDBC SQL 拦截器） |
-| `@PermissionMode` | — | 权限校验模式枚举（`AND` 全部满足 / `OR` 任一满足） |
-| `@EnableYdszAuth` | — | 启用认证注解，`@Import` 导入 `AuthConfiguration` + `AuthFilterConfiguration` |
+```json
+{
+  "sub": "user_123",
+  "username": "zhangsan",
+  "tenantId": "tenant_001",
+  "roles": ["admin", "manager"],
+  "permissions": ["user:read", "order:*"],
+  "dataScope": "DEPT_AND_CHILD",
+  "iat": 1717200000,
+  "exp": 1717203600,
+  "type": "access"
+}
+```
 
-### 3. 切面
+### 2. RBAC 权限注解与切面
+
+| 注解 | 说明 |
+|---|---|
+| `@AuthApiPermission` | API 接口权限（需具备指定 permission 才可访问） |
+| `@AuthRowPermission` | 行级数据权限（SQL 行过滤） |
+| `@AuthColPermission` | 列级数据权限（返回字段过滤） |
+| `@AuthMenuPermission` | 菜单权限（控制菜单 / 按钮显隐） |
+| `@PermissionMode` | 权限匹配模式（AND / OR） |
+| `@EnableYdszAuth` | 启用 ydsz-auth 注解扫描（注册 3 个切面） |
+
+| 切面 | 说明 |
+|---|---|
+| `AuthPermissionAspect` | 评估 `@AuthApiPermission` + `@AuthMenuPermission` 注解 |
+| `AuthRowPermissionAspect` | 评估 `@AuthRowPermission`（注入行级 SQL） |
+| `AuthColPermissionAspect` | 评估 `@AuthColPermission`（移除无权限列） |
+
+### 3. 数据权限（DataScope）
+
+| 类 / 注解 | 说明 |
+|---|---|
+| `@DataScope` | 数据权限注解（标注在 Service 方法上指定数据范围规则） |
+| `DataScopeHelper` | 数据权限辅助工具 |
+| `DataScope*` 类 | 数据权限上下文 DTO |
+| `DataPermissionContext` | 数据权限上下文（行级 / 列级权限聚合） |
+
+**数据范围等级**（fail-closed：未知返回 `AND 1 = 0`）：
+
+| 等级 | 说明 |
+|---|---|
+| ALL | 全部数据（管理员） |
+| DEPT_AND_CHILD | 本部门及下属部门 |
+ | DEPT | 仅本部门 |
+| SELF | 仅本人 |
+| CUSTOM | 自定义（`DataPermissionCustomSqlProvider` SPI 实现） |
+| NONE | 无权限（`AND 1 = 0`，默认 fail-closed 行为） |
+
+### 4. 认证 Filter
 
 | 类 | 说明 |
 |---|---|
-| `AuthPermissionAspect` | 统一菜单/API 权限校验切面，校验失败抛出 `PermissionDeniedException` |
-| `AuthColPermissionAspect` | 列权限切面（可见列过滤 + 列脱敏） |
-| `AuthRowPermissionAspect` | 行权限切面（数据范围注入） |
+| `BaseAuthFilter` | 认证过滤器入口（从 Header 解析 Token → 验证 → 写入 AuthContext） |
+| `AbstractAuthHandler` / `AuthHandler` **SPI** | 认证信息解析器（Web 默认 JWT / App 可自定义） |
+| `ParsedAuthHeaders` | 解析后的认证信息 DTO |
+| `AuthContextUtils` / `AuthInfoUtils` | 认证上下文工具（读取当前登录用户） |
+| `RbacUserInfoService` | RBAC 用户信息加载 |
+| `AuthCurrentUserIdResolver` | 当前用户 ID 解析器 |
 
-### 4. JWT Token
-
-| 类 | 说明 |
-|---|---|
-| `TokenService` | Token 服务接口（签发 / 校验 / 刷新 / 吊销） |
-| `JwtTokenService` | JWT 实现（基于 jjwt，签发 / 刷新 / 吊销） |
-| `TokenProperties` | Token 配置（密钥 / 过期时间 / 刷新策略） |
-| `AccessTokenUtils` | AccessToken 解析工具（优先上下文，回退请求头 `X-Access-Token`，含 JWT/Bearer 格式校验） |
-
-### 5. 用户与角色权限
+### 5. 权限缓存与失效
 
 | 类 | 说明 |
 |---|---|
-| `RbacUserInfoService` / `RedisRbacUserInfoService` | 用户信息查询（Redis Hash 存储） |
-| `RolePermissionLoader` / `RedisRolePermissionLoader` | 角色-权限加载器（支持 `loadByRoleCode` / `loadByRoleCodes` 批量 MGET） |
-| `RolePermissions` | 角色权限模型（菜单 / 按钮 / API 三类权限集合） |
-| `LoginUser` | 登录用户基础模型（用户 ID / 用户名 / 角色等身份信息） |
-| `UserInfo` | 用户信息模型（扩展身份属性） |
-| `PermissionSnapshot` | 请求级别不可变权限缓存（请求开始时一次性加载所有权限，避免多次查询 Redis） |
-| `YdszAuthInfo` | 统一认证上下文信息抽象基类（承载请求维度全量身份与权限数据） |
+| `PermissionHierarchyService` | 权限层级服务（计算权限继承树） |
+| `PermissionChangeNotifier` / `PermissionChangedEvent` |权限变更通知器 / 事件（发布 Spring ApplicationEvent） |
+| `PermissionCacheInvalidationListener` | 权限缓存失效监听器（消费 `PermissionChangedEvent` 清理 Redis / 本地缓存） |
+| `PermissionChangeCacheInvalidator` | 权限缓存失效器 |
+| `PermissionChangeListener` **SPI** | 权限变更回调接口（业务方实现联动逻辑） |
+| `CacheKeyStrategy` / `DefaultCacheKeyStrategy` | 权限缓存 Key 策略 |
+| `BloomFilter`（util） | 布隆过滤器加速权限评估（避免每次都读 Redis） |
 
-### 6. 数据权限
-
-| 类 | 说明 |
-|---|---|
-| `DataPermissionResolver` / `RedisRoleDataPermissionResolver` | 数据权限解析器 |
-| `DataScopeInfo` / `DataScopeAware` | 数据范围信息（租户/公司/部门/项目/区域） |
-| `DataScopeHelper` | 数据范围辅助工具（构建数据权限 SQL 条件片段） |
-
-### 7. 列权限
+### 6. 列级权限
 
 | 类 | 说明 |
 |---|---|
-| `ColumnPermissionResolver` / `RedisRoleColumnPermissionResolver` | 列权限解析器 |
-| `ColumnPermission` / `ColumnPermissionInfo` / `ColumnScopeInfo` | 列权限模型（可见列 / 可编辑列） |
-| `ColumnDesensitizationService` | 列脱敏服务（按角色缓存脱敏规则） |
-| `ColumnScopeAware` | 列范围感知接口 |
-| `ColumnPermissionFilter` | 列权限字段过滤工具类（基于 Cglib BeanCopier 实现高性能浅拷贝） |
+| `ColumnPermissionResolver` **SPI** | 列级权限解析器 |
+| `ColumnPermissionFilter`（util） | 列权限过滤工具 |
+| `ColumnDesensitizationService` / ColumnDesensitization* | 列级脱敏 |
+| `ColumnPermission*` 模型 | 列权限 DTO |
 
-### 8. 权限层级
-
-| 类 | 说明 |
-|---|---|
-| `PermissionHierarchyService` | 权限继承层级管理（`registerPermission(tenantId, code, ...)` 注册继承关系，`hasPermission` 自动递归检查父级权限） |
-
-### 9. 权限预检
+### 7. OIDC 端点
 
 | 类 | 说明 |
 |---|---|
-| `PermissionPreCheck` | 预检注解（`PreCheckMode` RETURN/THROW、`CheckType` MENU/BUTTON/API、`CheckMode` ALL/ANY） |
-| `PermissionCheckResult` | 预检结果（通过/拒绝、缺失权限、已有权限、消息、建议、错误码、用户角色） |
+| `JwksEndpoint` | JWKS 端点（`/.well-known/jwks`，暴露公钥） |
+| `OidcDiscoveryEndpoint` | OIDC Discovery 端点（`/.well-known/openid-configuration`） |
 
-在执行业务逻辑前用 `PermissionPreCheck` 注解预检权限，返回详细结果而非直接抛异常，适用于前端按钮显隐控制、批量操作前校验、权限变更模拟、微服务间调用前校验等场景。
-
-### 10. 缓存
-
-| 类 | 说明 |
-|---|---|
-| `RolePermissionCacheService` / `RolePermissionsExpiry` | 角色权限缓存（Redis 加载 + 过期管理） |
-| `CacheKeyStrategy` / `DefaultCacheKeyStrategy` | 缓存 Key 生成策略（SPI 扩展点） |
-
-### 11. 权限变更事件
-
-| 类 | 说明 |
-|---|---|
-| `PermissionChangedEvent` | 权限变更事件 |
-| `PermissionChangeNotifier` | 权限变更通知器 |
-| `PermissionChangeCacheInvalidator` | 缓存失效处理器 |
-| `PermissionChangeListener` | 权限变更监听器接口 |
-| `PermissionCacheInvalidationListener` | 缓存失效监听器（Spring 事件 + Redis Pub/Sub） |
-| `PermissionKeyspaceNotificationListener` | Redis Keyspace 事件监听器（精确失效） |
-
-### 12. Token 黑名单
-
-| 类 | 说明 |
-|---|---|
-| `TokenBlacklistService` | 同步黑名单（Redis 存储，Token 以 SHA-256 摘要落键 `auth:token:blacklist:<sha256>` + 分布式锁 + 布隆过滤器前置过滤） |
-| `ReactiveTokenBlacklistService` | 响应式黑名单（WebFlux 网关专用，基于 `ReactiveStringRedisTemplate`，返回 `Mono`） |
-| `BloomFilter` | 布隆过滤器工具（BitSet 实现，14 个哈希函数约 0.01% 误判率，用于黑名单前置过滤以短路 Redis 查询） |
-
-> 说明：黑名单实现为 SHA-256 摘要 + 分布式锁 + 布隆过滤器前置。布隆过滤器基于本地内存判断 Token「一定不在」集合中，从而避免对已知无效 Token 发起 Redis 查询，降低高 QPS 下 Redis 开销。
-
-### 13. CSRF
+### 8. 内部请求签名
 
 | 类 | 说明 |
 |---|---|
 | `CsrfTokenValidator` | CSRF Token 校验器 |
+| `InternalHeaderSigner` | 内部请求签名 / 校验（HMAC-SHA256，防伪造内部调用） |
+| `InternalSignatureHeaderConstants` | 内部签名 Header 常量 |
 
-### 14. 限流
-
-> 说明：认证限流能力由 `ydsz-common-safe` 的限流组件提供，本模块未内置独立限流器。
-
-### 15. 认证上下文
+### 9. 双因素认证（TOTP）
 
 | 类 | 说明 |
 |---|---|
-| `AuthContextUtils` | 统一认证上下文工具（委托 common-core `RequestContext`，含 `LoginUser`/租户/列权限） |
-| `AuthInfoUtils` / `AuthInfo` | 认证信息获取（从 RequestContext 解析） |
-| `AuthCurrentUserIdResolver` | 当前用户 ID 解析器（实现 `CurrentUserIdResolver` 接口） |
+| `TotpAuthenticator`（util） | TOTP 认证器（时间同步一次性密码，兼容 Google Authenticator） |
 
-### 16. 认证处理器
+### 10. 可观测性
 
 | 类 | 说明 |
 |---|---|
-| `AuthHandler` / `AbstractAuthHandler` | 认证信息解析处理器（SPI 扩展点） |
-| `ParsedAuthHeaders` | 已解析的认证请求头 |
-| `BaseAuthFilter` | 认证基础过滤器（Token 解析 → 用户信息加载 → 上下文设置） |
-
-### 17. OIDC 协议支持
-
-| 类 | 说明 |
-|---|---|
-| `OidcDiscoveryEndpoint` | OIDC Discovery 文档端点响应体（`/.well-known/openid-configuration`，符合 OpenID Connect Discovery 1.0 规范） |
-| `JwksEndpoint` | JWKS 公钥端点（符合 RFC 7517 标准，支持 HMAC 对称密钥 / RSA 公钥两种类型） |
-
-### 18. 工具与国际化
-
-| 类 | 说明 |
-|---|---|
-| `AccessTokenUtils` / `PermissionMerger` / `PermissionUtils` | 工具类（见第 1、4 节） |
-| `AuthErrorCode` / `PermissionDeniedException` | 错误码与异常 |
-| `PermissionCodes` | 权限码常量 |
-| `TotpAuthenticator` | TOTP 双因子认证器（基于 HMAC-SHA1，兼容 Google Authenticator） |
-| `DataScopeHelper` | 数据范围辅助工具（构建数据权限 SQL 条件片段） |
-| `AuthCurrentUserIdResolver` | 当前用户 ID 解析器 |
-
-### 19. 指标
-
-| 类 | 说明 |
-|---|---|
-| `AuthMetrics` | 认证指标采集契约接口（`recordAuthSuccess` / `recordAuthFailure` / `recordAuthSkip`） |
-| `PermissionMetrics` | 权限指标采集契约接口（`recordPermissionAllow` / `recordPermissionDeny` / `recordCacheHit/Miss` / `recordCheckTime` / `updateRedisAvailable`） |
-| `AuthMetricsCollector` | Micrometer 指标采集器（同时实现 `AuthMetrics` + `PermissionMetrics`，动态标签 Counter/Timer 缓存） |
-
-**暴露指标**：
-
-| 指标名 | 类型 | 说明 |
-|---|---|---|
-| `auth.login.total` | Counter | 认证总次数（tag: result, userType, reason） |
-| `auth.login.duration` | Timer | 认证耗时（tag: result, userType） |
-| `auth.permission.check.time` | Timer | 权限校验耗时 |
-| `auth.permission.deny` | Counter | 权限拒绝次数（同步写安全审计日志） |
-| `auth.permission.allow` | Counter | 权限通过次数 |
-| `auth.cache.hit` / `auth.cache.miss` | Counter | 权限缓存命中/未命中 |
-| `auth.redis.available` | Gauge | Redis 可用状态 |
-
-### 20. 配置与健康检查
-
-| 类 | 说明 |
-|---|---|
-| `AuthConfiguration` | 自动配置（`@AutoConfiguration`，`ydsz.auth.enabled=true` 激活，含 Redis 健康检查定时任务） |
-| `AuthFilterConfiguration` | 过滤器配置（Servlet 可用时激活） |
-| `AuthFilterProperties` | 过滤器配置属性（忽略 URL / 仅校验 Token） |
-| `AuthFilterIgnoreProperties` | 过滤器忽略路径配置（`ydsz.auth.filter-ignore.*`，支持合并/覆盖两种模式动态追加忽略 URL） |
-| `AuthProperties` | RBAC 核心配置属性 |
-| `KeyspaceNotificationProperties` | Redis Keyspace 通知配置 |
-| `AuthHealthIndicator` | 健康检查（`/actuator/health/auth`，Redis PING + 响应耗时） |
+| `AuthMetrics` / `AuthMetricsCollector` | 认证指标（token 签发 / 校验失败次数） |
+| `PermissionMetrics` | 权限评估指标（命中率 / 缓存命中） |
+| `AuthHealthIndicator` | 认证健康检查 |
 
 ## 接入方式
 
@@ -213,232 +151,153 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 </dependency>
 ```
 
-### 2. 启用认证
-
-在 Spring Boot 主类上添加 `@EnableYdszAuth`，自动装配 RBAC 权限、数据权限、列级权限等能力：
+### 2. 启用注解
 
 ```java
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import com.njydsz.common.auth.annotation.EnableYdszAuth;
-
 @SpringBootApplication
-@EnableYdszAuth
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-}
+@EnableYdszAuth              // 启用切面支持
+public class SystemApplication { }
 ```
 
-### 3. 配置示例
+### 3. 配置属性
 
 ```yaml
 ydsz:
   jwt:
-    secret: ${JWT_SECRET}
-    access-token-expire: 7200
-    refresh-token-expire: 604800
-    issuer: ydsz
+    signing-key: ${JWT_SIGNING_KEY:JzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ}
+    access-token-ttl: 7200           # 2 小时
+    refresh-token-ttl: 604800        # 7 天
+    issuer: ydsz-auth
+    blacklist-enabled: true          # 启用黑名单（登出 / 密码重置后 token 失效）
   auth:
     enabled: true
-    wildcard-enabled: true
-    filter:
-      verify-permission: true
-      common-ignore-url: [/api/public/**]
-    blacklist:
+    token-header: Authorization
+    token-prefix: "Bearer "
+    ignore-paths:
+      - /actuator/**
+      - /api/v1/public/**
+    data-scope:
+      fail-closed: true              # 未知 dataScope 拒绝访问
+      cache-ttl: 300
+  auth-filter:
+    ignore:
       enabled: true
-      expire-seconds: 7200
+      paths: /public/**,/login
+```
+
+### 4. API 权限注解使用
+
+```java
+@RestController
+@RequestMapping("/api/v1/orders")
+public class OrderController {
+
+   @AuthApiPermission("order:read")
+   @GetMapping("/{id}")
+   public OrderVO getOrder(@PathVariable Long id) { ... }
+
+   @AuthApiPermission(value = {"order:write", "order:approve"}, mode = PermissionMode.OR)
+   @PostMapping
+   public void createOrder(@RequestBody @Valid CreateOrderRequest request) { ... }
+}
+```
+
+### 5. 数据权限注解使用
+
+```java
+@Service
+public class OrderService {
+
+    @DataScope(rule = DataScopeRule.DEPT_AND_CHILD)  // 仅本部门及下属部门订单
+    public IPage<Order> listOrders(PageQuery query) {
+        return orderMapper.selectPage(query);
+    }
+
+    @DataScope(rule = DataScopeRule.SELF)           // 仅本人创建的订单
+    public List<Order> myOrders(Long userId) {
+        return orderMapper.selectByCreator(userId);
+    }
+}
 ```
 
 ## 配置项
 
-### ydsz.auth（`AuthProperties`）
+### Token 配置（`ydsz.jwt.*`）
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `enabled` | `true` | 是否启用 RBAC 权限校验（false 时跳过所有校验） |
-| `wildcard-enabled` | `true` | 是否启用通配符权限匹配（`sys:user:*`） |
-| `role-menu-key` | `ydsz-auth:role-menu:{}` | 角色-菜单/按钮权限 Redis Key 模板 |
-| `role-api-key` | `ydsz-auth:role-api:{}` | 角色-API 权限 Redis Key 模板 |
-| `role-row-key` | `ydsz-auth:role-row:{}` | 角色-行权限 Redis Key 模板 |
-| `role-col-key` | `ydsz-auth:role-col:{}` | 角色-列权限 Redis Key 模板 |
-| `ignore-roles` | (空) | 跳过权限校验的超管角色（CSV） |
-| `role-code-field` | `roleCode` | 用户信息中角色编码字段名 |
-| `role-permission-cache-seconds` | `30` | 角色权限本地缓存过期（秒） |
-| `permission-cache-ttl-seconds` | `1800` | 权限缓存 TTL（秒） |
-| `role-data-cache-seconds` | `30` | 行权限本地缓存过期（秒） |
-| `role-column-cache-seconds` | `30` | 列权限本地缓存过期（秒） |
-| `desensitize-cache-max-size` | `1000` | 列脱敏缓存最大条目（LRU） |
-| `desensitize-cache-ttl-seconds` | `1800` | 列脱敏缓存过期（秒） |
-| `local-permission-cache-minutes` | `5` | 本地降级缓存过期（分钟） |
-| `redis-unavailable-fallback` | `DENY` | Redis 不可用降级策略（`DENY` / `ALLOW`） |
-| `blacklist.enabled` | `true` | 是否启用 Token 黑名单 |
-| `blacklist.expire-seconds` | `7200` | 黑名单过期时间（秒，与 Token 有效期一致） |
-| `csrf-enabled` | `false` | 是否启用 CSRF 校验 |
-| `health-check-interval` | `60000` | Redis 健康检查间隔（毫秒） |
+| `ydsz.jwt.signing-key` | - | JWT 签名密钥（Base64 编码，建议 256bit+） |
+| `ydsz.jwt.access-token-ttl` | 7200 | Access Token TTL（秒） |
+| `ydsz.jwt.refresh-token-ttl` | 604800 | Refresh Token TTL（秒） |
+| `ydsz.jwt.issuer` | ydsz-auth | Token 签发者 |
+| `ydsz.jwt.blacklist-enabled` | true | 黑名单开关 |
 
-### ydsz.auth.filter（`AuthFilterProperties`）
+### 认证配置（`ydsz.auth.*`）
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `common-ignore-url` | `[]` | 通用忽略 URL |
-| `gateway-ignore-url` | `[]` | 网关忽略 URL |
-| `custom-ignore-url` | `[]` | 自定义忽略 URL |
-| `verify-permission` | `true` | 是否校验权限 |
-| `only-verify-token` | `[]` | 仅校验 Token 不校验权限的 URL |
+| `ydsz.auth.enabled` | true | 是否启用认证 |
+| `ydsz.auth.token-header` | Authorization | Token Header 名称 |
+| `ydsz.auth.token-prefix` | "Bearer " | Token 前缀 |
+| `ydsz.auth.ignore-paths` | - | 认证放行路径（Ant 模式） |
+| `ydsz.auth.data-scope.fail-closed` | true | 未知 scope 拒绝 / 放行 |
+| `ydsz.auth.data-scope.cache-ttl` | 300 | 数据权限缓存 TTL（秒） |
 
-### ydsz.auth.filter-ignore（`AuthFilterIgnoreProperties`）
+### Filter 配置（`ydsz.auth-filter.ignore.*`）
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `common-ignore-urls` | `[]` | 通用忽略 URL 列表（与默认值合并或覆盖） |
-| `auth-filter-ignore-service-names` | `[]` | 认证过滤器忽略的服务名称列表 |
-| `security-exclude-urls` | `[]` | 安全排除 URL 列表 |
-| `override-mode` | `false` | 是否覆盖默认忽略集合（false=合并，true=完全替换） |
+| `ydsz.auth-filter.ignore.enabled` | true | 白名单启用 |
+| `ydsz.auth-filter.ignore.paths` | - | 白名单列表（Ant 模式） |
 
-## 使用示例
+### Keyspace 配置（`ydsz.jwt.keyspace.*`）
 
-### 1. 注解式权限控制
-
-```java
-import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.auth.annotation.AuthMenuPermission;
-import com.njydsz.common.auth.annotation.PermissionMode;
-
-// 单个权限码
-@AuthApiPermission(apiCodes = "sys:user:list")
-public UserVO getUser(Long id) { ... }
-
-// OR 模式：满足其一即可
-@AuthApiPermission(apiCodes = {"sys:user:view", "sys:user:manage"}, mode = PermissionMode.OR)
-public UserVO viewUser(Long id) { ... }
-
-// 菜单权限 + 角色限定
-@AuthMenuPermission(roleCodes = "admin", menuCodes = "sys:user")
-public void manageUser() { ... }
-```
-
-### 2. 数据权限
-
-```java
-import com.njydsz.common.auth.annotation.DataScope;
-
-// 单表场景：按部门 + 创建人过滤
-@DataScope(deptColumn = "department_id", userColumn = "created_by")
-public List<Employee> listEmployees(PageQuery query) { ... }
-
-// JOIN 场景：声明别名
-@DataScope(deptAlias = "d", userAlias = "u", deptColumn = "dept_id", userColumn = "create_by")
-public List<OrderVO> listOrdersWithUser(PageQuery query) { ... }
-```
-
-### 3. Token 黑名单
-
-```java
-import com.njydsz.common.auth.service.TokenBlacklistService;
-
-// 用户登出时加入黑名单
-tokenBlacklistService.addToBlacklist(accessToken);
-
-// 请求校验时检查是否在黑名单（SHA-256 摘要键，Redis 查询）
-boolean blocked = tokenBlacklistService.isBlacklisted(accessToken);
-```
-
-### 4. 权限变更通知
-
-```java
-import com.njydsz.common.auth.event.PermissionChangedEvent;
-import org.springframework.context.ApplicationEventPublisher;
-
-// 角色权限变更后发布事件，触发本地缓存失效 + 跨节点 Pub/Sub 通知
-applicationEventPublisher.publishEvent(new PermissionChangedEvent(roleCode));
-```
-
-### 5. 权限预检注解
-
-```java
-import com.njydsz.common.auth.precheck.PermissionPreCheck;
-import com.njydsz.common.auth.precheck.PermissionCheckResult;
-
-// 通过注解声明式预检：API 权限检查（ALL 模式：需全部满足）
-@PermissionPreCheck(checkType = PermissionPreCheck.CheckType.API,
-                    checkMode = PermissionPreCheck.CheckMode.ALL,
-                    value = {"sys:user:add", "sys:user:edit"})
-public void batchCreate() { ... }
-```
-
-### 6. 权限层级
-
-```java
-import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
-
-// 注册权限继承关系（启动时一次性注册，实例方法）
-permissionHierarchyService.registerPermission(tenantId, "sys:user", "sys:user:list", "sys:user:add");
-
-// 后续校验时拥有 sys:user 自动拥有 sys:user:list
-boolean ok = permissionHierarchyService.hasPermission(granted, "sys:user:list");
-```
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.jwt.keyspace.enabled` | false | 启用 Keyspace Notification |
 
 ## SPI 扩展点
 
-| 接口 / 类 | 扩展说明 |
-|---|---|
-| `AuthHandler` | 认证信息解析（自定义请求头解析） |
-| `DataPermissionResolver` | 数据权限解析（自定义数据范围策略） |
-| `RolePermissionLoader` | 角色权限加载（自定义权限存储源） |
-| `ColumnPermissionResolver` | 列级权限解析（自定义列权限策略） |
-| `RbacUserInfoService` | RBAC 用户信息加载（自定义用户存储源） |
-| `CacheKeyStrategy` | 权限缓存 Key 策略（自定义 Key 生成规则） |
-| `TokenService` | Token 生成/校验/刷新（自定义 Token 实现） |
-| `PermissionChangeListener` | 权限变更监听（自定义变更响应） |
-
-所有 SPI 实现通过 `@ConditionalOnMissingBean` 注册，业务侧自定义 Bean 自动覆盖默认实现。
+| SPI 接口 | 用途 | 注册方式 |
+|---|---|---|
+| `AuthHandler` **SPI** | 认证信息解析（Web / App 分离） | `@Component` |
+| `DataPermissionResolver` **SPI** | 数据权限解析（定制规则） | `@ConditionalOnMissingBean` |
+| `DataPermissionCustomSqlProvider` **SPI** | 数据权限动态 SQL 注入 | `@Component` + `getOrder()` |
+| `RolePermissionLoader` **SPI** | 角色权限加载（Redis / DB / 远程） | `@Bean` |
+| `ColumnPermissionResolver` **SPI** | 列级权限解析 | `@Component` |
+| `RbacUserInfoService` **SPI** | RBAC 用户信息加载 | `@Component` |
+| `CacheKeyStrategy` | 权限缓存 Key 生成 | `@Component` |
+| `PermissionChangeListener` **SPI** | 权限变更回调 | `List<PermissionChangeListener>` 自动收集 |
+| `TokenService` **SPI** | Token 生成 / 校验 / 刷新 | `@ConditionalOnMissingBean` |
+| `AuthMetrics` / `PermissionMetrics` | 认证 / 权限指标采集 | `@Component` |
 
 ## 健康检查
 
-`AuthHealthIndicator` 暴露 `/actuator/health/auth` 端点，检测权限模块依赖的 Redis 连通性：
+| 端点 | 说明 | 触发条件 |
+|---|---|---|
+| `/actuator/health/auth` | 认证健康检查 | `ydsz.auth.enabled=true` + Health 存在 |
 
-- 验证 `RedisConnectionFactory` 连接状态
-- 执行 `PING` 命令验证可达性
-- 返回响应耗时作为性能指标
+`AuthHealthIndicator` 暴露信息：
+- `token_service` — Token 服务状态（UP / DOWN）
+- `cache_hit_rate` — 权限缓存命中率
+- `keyspace_notification` — Keyspace 监听状态（UP / DOWN）
 
-`AuthConfiguration` 内置定时任务（默认每 60 秒）检查 Redis 连通性，不可用时自动降级到本地缓存，并根据 `redis-unavailable-fallback` 策略（`DENY`/`ALLOW`）切换权限校验行为。
+## 自动配置类
 
-## 自动配置
-
-| 配置类 | 激活条件 |
+| 类 | 触发条件 |
 |---|---|
-| `AuthConfiguration` | `ydsz.auth.enabled=true`（默认激活，含 `@EnableScheduling`） |
-| `AuthFilterConfiguration` | Servlet 可用时激活 |
-| `AuthMetricsCollector` | Micrometer `MeterRegistry` 在 classpath 且 Bean 存在 |
-| `AuthHealthIndicator` | Spring Boot Health + `RedisConnectionFactory` 存在 |
-| `JwtTokenService` | jjwt 在 classpath 且 `ydsz.auth.token.enabled=true` |
+| `AuthConfiguration` | `ydsz.auth.enabled=true` |
+| `AuthFilterConfiguration` | Auth + Filter 依赖存在 |
 
 ## 注意事项
 
-1. **Redis 降级**：Redis 不可用时自动降级到本地缓存，默认策略 `DENY`（拒绝所有权限请求）。极端容灾场景可配置 `redis-unavailable-fallback=ALLOW` 放行。
-2. **Token 黑名单**：基于 Redis 存储（SHA-256 摘要键），配合布隆过滤器前置短路 Redis 查询；登出即加入黑名单，过期时间与 Token 有效期一致。
-3. **列权限过滤**：`ColumnPermissionFilter` 基于 Cglib BeanCopier 实现高性能浅拷贝，相比纯反射字段拷贝性能提升约 3-10 倍。
-4. **权限快照**：`PermissionSnapshot` 在请求开始时一次性加载所有权限信息（不可变对象），避免后续流程中多次查询 Redis。
-5. **OIDC 支持**：`OidcDiscoveryEndpoint` 提供符合 OpenID Connect Discovery 1.0 规范的 Discovery 文档；`JwksEndpoint` 提供符合 RFC 7517 标准的 JWKS 公钥集合（支持 HMAC / RSA 两种密钥类型）。
-6. **过滤器忽略路径**：`AuthFilterIgnoreProperties` 支持合并模式（默认，配置值与内置默认值合并）和覆盖模式（`override-mode=true` 完全替换默认集合）。
-7. **通配符缓存**：`PermissionUtils` 使用 LRU 缓存（最大 1024）编译后的正则模式，权限配置变更时调用 `clearPatternCache()` 清理。
-8. **权限码规范**：建议采用三段式命名 `领域:资源:操作`（如 `sys:user:add`），不符合规范仅记录告警日志，不影响校验逻辑。
-9. **多租户**：租户上下文由 common-core `RequestContext` / common-tenant `TenantContextHolder` 承载，线程池场景通过 `TransmittableThreadLocal` 传递；请求结束自动清理。
-
-## 技术栈
-
-- 缓存框架：ydsz-common-cache（替代 Caffeine，本地降级缓存）
-- Redis：ydsz-common-redis（权限存储 + 黑名单 + Pub/Sub）
-- JSON：ydsz-common-json（权限树序列化）
-- 脱敏：ydsz-common-safe（列脱敏上下文）
-- JWT：jjwt（optional）
-- 指标：Micrometer（optional）
-- 线程上下文：TransmittableThreadLocal（线程池传递）
+1. **fail-closed 数据权限**：未配置 `@DataScope` 的 Service 方法默认 fail-closed（`AND 1 = 0`，无权限）。业务方法务必显式声明 DataScope 规则。
+2. **InternalHeaderSigner**：内部微服务间调用必须开启签名校验，避免伪造内部请求。
+3. **@EnableYdszAuth** 必须在启动类显式声明，否则 3 个切面不生效。
+4. **JWT 密钥安全**：生产环境务必使用强随机密钥（256bit+），建议使用 KMS 管理。
 
 ## 变更记录
 
-- **26.09.01**（2026-08-18）：新增 OIDC 协议支持（`OidcDiscoveryEndpoint` / `JwksEndpoint`）、统一认证上下文基类（`YdszAuthInfo`）、权限快照（`PermissionSnapshot`）、列权限字段过滤工具（`ColumnPermissionFilter`）、过滤器忽略路径配置（`AuthFilterIgnoreProperties`）；新增用户信息模型（`UserInfo`）、`AuthCurrentUserIdResolver` 用户 ID 解析器。
-- **26.09.01**（2026-08-17）：补全 `BloomFilter`（布隆过滤器工具）、`TotpAuthenticator`（TOTP 双因子认证器）、`DataScopeHelper`（数据范围辅助工具）、`AuthCurrentUserIdResolver`（用户 ID 解析器）、`LoginUser`（登录用户模型）文档；移除不存在的 `DataPermissionCustomSqlProvider` 引用；修正黑名单描述为「SHA-256 + 分布式锁 + 布隆过滤器前置」
-- **26.09.01**（2026-08-02）：补全 `@PermissionMode`/`@EnableYdszAuth`、响应式 Token 黑名单（`ReactiveTokenBlacklistService`）、权限层级（`PermissionHierarchyService`）、权限预检（`PermissionPreCheck`/`PermissionCheckResult`）、指标（`AuthMetrics`/`AuthMetricsCollector`/`PermissionMetrics`）、工具（`AccessTokenUtils`/`PermissionMerger`/`PermissionUtils`）等章节。
+- **2.2.0**（2026-09-04）：新增 OIDC 端点（JwksEndpoint / OidcDiscoveryEndpoint）；新增布隆过滤器加速权限评估；新增 PermissionKeyspaceNotificationListener。
+- **2.1.0**（2026-09-01）：RBAC 4 注解 + 3 切面（API 权限 / 行级 / 列级 / 菜单权限）；列级权限新增 `ColumnDesensitizationService`；修复 ORDER BY 与 DataScope 冲突。
+- **2.0.0**（2026-08-02）：初始版本（JWT / Token / RBAC）。
