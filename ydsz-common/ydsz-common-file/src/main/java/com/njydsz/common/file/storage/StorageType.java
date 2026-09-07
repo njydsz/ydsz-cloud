@@ -47,6 +47,9 @@ public final class StorageType {
   /** 华为云 OBS 存储 */
   public static final String HUAWEI_OBS = "huawei-obs";
 
+  /** RustFS 分布式对象存储（S3 兼容协议） */
+  public static final String RUSTFS = "rustfs";
+
   /** 工具类构造器，禁止实例化 */
   private StorageType() {
     throw new UnsupportedOperationException("StorageType 是常量类，禁止实例化");

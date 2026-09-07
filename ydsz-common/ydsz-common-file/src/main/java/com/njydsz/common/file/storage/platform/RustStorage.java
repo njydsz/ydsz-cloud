@@ -1,0 +1,700 @@
+package com.njydsz.common.file.storage.platform;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.ListPartsRequest;
+import software.amazon.awssdk.services.s3.model.ListPartsResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.Part;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.config.FileProperties;
+import com.njydsz.common.file.config.FileUploadProperties;
+import com.njydsz.common.file.constant.FileConstant;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
+import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.file.domain.ObjectMetadata;
+import com.njydsz.common.file.domain.PolicyResult;
+import com.njydsz.common.file.exception.FileExceptionCode;
+import com.njydsz.common.file.storage.AbstractFileStorage;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.string.StringUtils;
+
+/**
+ * RustFS 分布式对象存储实现（S3 兼容协议）。
+ *
+ * <p>继承 {@link AbstractFileStorage}，将操作翻译为 AWS S3 SDK v2 的原生 API 调用。 RustFS 是完全兼容 S3 协议的分布式对象存储，
+ * 因此本实现可通过 endpointOverride 指向 RustFS 服务端点，复用 S3 SDK 的全部能力。
+ *
+ * <h3>分片上传协议</h3>
+ *
+ * <p>使用 S3 原生 multipart upload 协议，完整支持分片上传生命周期：
+ *
+ * <ol>
+ *   <li>{@code CreateMultipartUpload}：初始化分片上传，获取 uploadId
+ *   <li>{@code UploadPart}：上传单个分片，返回 ETag
+ *   <li>{@code ListParts}：列出已上传的分片及 ETag
+ *   <li>{@code CompleteMultipartUpload}：合并所有分片为最终对象
+ *   <li>{@code AbortMultipartUpload}：取消上传并清理已上传分片
+ * </ol>
+ *
+ * <h3>预签名 URL</h3>
+ *
+ * <p>通过 {@link S3Presigner} 生成预签名下载 URL，支持自定义过期时间。
+ *
+ * <h3>RustFS 适配说明</h3>
+ *
+ * <p>配置示例：
+ * <pre>{@code
+ * file:
+ *   storage:
+ *     type: rustfs
+ *   endpoint: http://rustfs-service:9000
+ *   access-key: your-access-key
+ *   secret-key: your-secret-key
+ *   bucket: your-bucket-name
+ *   region: us-east-1
+ * }</pre>
+ *
+ * @author ydsz-team
+ * @since 26.09.07
+ * @see AbstractFileStorage
+ * @see S3Client
+ * @see S3Presigner
+ * @see <a href="https://rustfs.com/">RustFS 官网</a>
+ */
+@Slf4j
+public class RustStorage extends AbstractFileStorage {
+
+  /** 预签名私有 URL 的默认有效期（1 小时）。 */
+  private static final Duration DEFAULT_PRESIGNED_URL_EXPIRY = Duration.ofHours(1);
+
+  /** S3 客户端 */
+  private final S3Client s3Client;
+
+  /** S3 预签名器 */
+  private final S3Presigner s3Presigner;
+
+  /** 存储桶名称 */
+  private final String bucket;
+
+  /** AWS 区域 */
+  private final String region;
+
+  /** AWS SecretKey（用于生成上传策略签名） */
+  private final String secretKey;
+
+  /**
+   * 构建 RustFS 客户端与签名器
+   *
+   * <p>完全复用 AWS S3 SDK v2，通过 endpointOverride 指向 RustFS 服务端点。
+   *
+   * @param config 存储配置
+   */
+  public RustStorage(FileProperties config) {
+    this(config, null);
+  }
+
+  /**
+   * 构建 RustFS 客户端与签名器
+   *
+   * <p>完全复用 AWS S3 SDK v2，通过 endpointOverride 指向 RustFS 服务端点。
+   *
+   * @param config 存储配置
+   * @param uploadProps 分片上传配置
+   */
+  public RustStorage(FileProperties config, FileUploadProperties uploadProps) {
+    super(config, uploadProps);
+    try {
+      String accessKey = config.getAccessKey();
+      String secretKey = config.getSecretKey();
+      String endpoint = config.getEndpoint();
+      this.bucket = config.getBucket();
+
+      if (StringUtils.isNotBlank(config.getRegion())) {
+        this.region = config.getRegion();
+      } else {
+        if (endpoint != null && endpoint.contains(".")) {
+          String[] parts = endpoint.split("\\.");
+          if (parts.length >= 2) {
+            this.region = parts[1];
+          } else {
+            throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
+          }
+        } else {
+          throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
+        }
+      }
+
+      AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
+      this.secretKey = secretKey;
+
+      S3ClientBuilder builder =
+          S3Client.builder()
+              .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
+              .region(Region.of(region))
+              .overrideConfiguration(
+                  ClientOverrideConfiguration.builder()
+                      .apiCallAttemptTimeout(Duration.ofMillis(config.getConnectionTimeout()))
+                      .apiCallTimeout(Duration.ofMillis(config.getSocketTimeout()))
+                      .build());
+
+      if (StringUtils.isNotBlank(endpoint)) {
+        builder.endpointOverride(URI.create(endpoint));
+        builder.serviceConfiguration(
+            S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .chunkedEncodingEnabled(false)
+                .build());
+      }
+
+      this.s3Client = builder.build();
+
+      S3Presigner.Builder presignerBuilder =
+          S3Presigner.builder()
+              .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
+              .region(Region.of(region));
+
+      if (StringUtils.isNotBlank(endpoint)) {
+        presignerBuilder.endpointOverride(URI.create(endpoint));
+      }
+
+      this.s3Presigner = presignerBuilder.build();
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("[RustFS] S3Client build failed: {}", e.getMessage());
+      throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
+    }
+  }
+
+  @Override
+  protected boolean doBucketExists(String bucketName) {
+    try {
+      HeadBucketRequest request = HeadBucketRequest.builder().bucket(bucketName).build();
+      s3Client.headBucket(request);
+      return true;
+    } catch (NoSuchKeyException e) {
+      return false;
+    } catch (S3Exception e) {
+      if (e.statusCode() == 404) {
+        return false;
+      }
+      log.error(
+          "[RustFS] bucketExists failed, bucket={}, code={}, message={}",
+          bucketName,
+          e.statusCode(),
+          e.getMessage());
+      return false;
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] bucketExists unexpected error, bucket={}, message={}", bucketName, e.getMessage());
+      return false;
+    }
+  }
+
+  @Override
+  protected void doMakeBucket(String bucketName) {
+    try {
+      if (!doBucketExists(bucketName)) {
+        CreateBucketRequest request = CreateBucketRequest.builder().bucket(bucketName).build();
+        s3Client.createBucket(request);
+        log.info("[RustFS] make Bucket success bucketName:{}", bucketName);
+      }
+    } catch (Exception e) {
+      log.error("[RustFS] make Bucket failed, bucket={}, message={}", bucketName, e.getMessage());
+      throw new BusinessException(FileExceptionCode.BUCKET_ERROR);
+    }
+  }
+
+  @Override
+  protected boolean doFolderExists(String bucketName, String folderName) {
+    try {
+      String key =
+          folderName.endsWith(FileConstant.DIR_SPLIT)
+              ? folderName
+              : folderName + FileConstant.DIR_SPLIT;
+      HeadObjectRequest request = HeadObjectRequest.builder().bucket(bucketName).key(key).build();
+      s3Client.headObject(request);
+      return true;
+    } catch (NoSuchKeyException e) {
+      return false;
+    } catch (S3Exception e) {
+      if (e.statusCode() == 404) {
+        return false;
+      }
+      log.debug(
+          "[RustFS] folderExist failed, bucket={}, folder={}, code={}, message={}",
+          bucketName,
+          folderName,
+          e.statusCode(),
+          e.getMessage());
+      return false;
+    } catch (Exception e) {
+      log.debug(
+          "[RustFS] folderExist unexpected error, bucket={}, folder={}, message={}",
+          bucketName,
+          folderName,
+          e.getMessage());
+      return false;
+    }
+  }
+
+  @Override
+  protected void doMakeFolder(String bucketName, String folderName) {
+    try {
+      String key =
+          folderName.endsWith(FileConstant.DIR_SPLIT)
+              ? folderName
+              : folderName + FileConstant.DIR_SPLIT;
+      if (!doFolderExists(bucketName, key)) {
+        InputStream emptyStream = new ByteArrayInputStream(new byte[] {});
+        PutObjectRequest request = PutObjectRequest.builder().bucket(bucketName).key(key).build();
+        s3Client.putObject(request, RequestBody.fromInputStream(emptyStream, 0));
+        log.info("[RustFS] make Folder success folderName:{}", key);
+      }
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] make Folder failed, bucket={}, folder={}, message={}",
+          bucketName,
+          folderName,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
+    }
+  }
+
+  @Override
+  protected void doPutObject(
+      String bucketName,
+      String objectName,
+      InputStream inputStream,
+      long size,
+      String contentType) {
+    try {
+      PutObjectRequest request =
+          PutObjectRequest.builder()
+              .bucket(bucketName)
+              .key(objectName)
+              .contentLength(size)
+              .contentType(contentType)
+              .build();
+      s3Client.putObject(request, RequestBody.fromInputStream(inputStream, size));
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] doPutObject failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+    }
+  }
+
+  @Override
+  protected InputStream doGetObject(
+      String bucketName, String objectName, Long offset, Long length) {
+    try {
+      GetObjectRequest.Builder requestBuilder =
+          GetObjectRequest.builder().bucket(bucketName).key(objectName);
+      if (offset != null && offset >= 0 && length != null && length > 0) {
+        requestBuilder.range("bytes=" + offset + "-" + (offset + length - 1));
+      }
+      ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(requestBuilder.build());
+      return s3Object;
+    } catch (NoSuchKeyException e) {
+      throw new BusinessException(FileExceptionCode.FILE_NOT_FOUND);
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] doGetObject failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
+    }
+  }
+
+  @Override
+  protected void doRemoveObject(String bucketName, String objectName) {
+    try {
+      DeleteObjectRequest request =
+          DeleteObjectRequest.builder().bucket(bucketName).key(objectName).build();
+      s3Client.deleteObject(request);
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] doRemoveObject failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
+    }
+  }
+
+  @Override
+  protected String buildObjectUrl(String bucketName, String objectName) {
+    if (StringUtils.isNotBlank(endpoint)) {
+      String cleanEndpoint =
+          endpoint.endsWith("/") ? endpoint.substring(0, endpoint.length() - 1) : endpoint;
+      String endpointWithoutProtocol = cleanEndpoint.replace("http://", "").replace("https://", "");
+      String protocol = cleanEndpoint.startsWith("http://") ? "http://" : "https://";
+      return protocol + endpointWithoutProtocol + "/" + bucketName + "/" + objectName;
+    } else {
+      return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, objectName);
+    }
+  }
+
+  @Override
+  protected String buildPrivateUrl(String bucketName, String objectName) {
+    try {
+      GetObjectRequest getObjectRequest =
+          GetObjectRequest.builder().bucket(bucketName).key(objectName).build();
+      GetObjectPresignRequest presignRequest =
+          GetObjectPresignRequest.builder()
+              .signatureDuration(DEFAULT_PRESIGNED_URL_EXPIRY)
+              .getObjectRequest(getObjectRequest)
+              .build();
+      PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+      return presignedRequest.url().toString();
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] generate private url failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      return "";
+    }
+  }
+
+  @Override
+  protected ChunkedUploadResult doInitiateMultipartUpload(String bucketName, String objectName) {
+    try {
+      CreateMultipartUploadRequest request =
+          CreateMultipartUploadRequest.builder().bucket(bucketName).key(objectName).build();
+      CreateMultipartUploadResponse response = s3Client.createMultipartUpload(request);
+      String uploadId = response.uploadId();
+      log.info("[RustFS] chunked upload initiated, bucket={}, object={}", bucketName, objectName);
+      return new ChunkedUploadResult(objectName, bucketName, uploadId, 0, 0);
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] doInitiateMultipartUpload failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
+  }
+
+  @Override
+  protected void doUploadPart(
+      String bucketName,
+      String chunkObjectName,
+      String uploadId,
+      int partNumber,
+      InputStream inputStream,
+      long size) {
+    try {
+      UploadPartRequest request =
+          UploadPartRequest.builder()
+              .bucket(bucketName)
+              .key(chunkObjectName)
+              .uploadId(uploadId)
+              .partNumber(partNumber)
+              .contentLength(size)
+              .build();
+      s3Client.uploadPart(request, RequestBody.fromInputStream(inputStream, size));
+      log.info(
+          "[RustFS] chunk uploaded, bucket={}, chunk={}, part={}",
+          bucketName,
+          chunkObjectName,
+          partNumber);
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] doUploadPart failed, bucket={}, chunk={}, part={}, message={}",
+          bucketName,
+          chunkObjectName,
+          partNumber,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
+  }
+
+  @Override
+  protected void doCompleteMultipartUpload(
+      String bucketName, String objectName, String uploadId, List<Integer> partNumbers) {
+    try {
+      ListPartsResponse listPartsResponse =
+          s3Client.listParts(
+              ListPartsRequest.builder()
+                  .bucket(bucketName)
+                  .key(objectName)
+                  .uploadId(uploadId)
+                  .build());
+      Map<Integer, Part> uploadedPartMap = new HashMap<>(16);
+      for (Part uploadedPart : listPartsResponse.parts()) {
+        uploadedPartMap.put(uploadedPart.partNumber(), uploadedPart);
+      }
+      List<CompletedPart> completedParts = new ArrayList<>(16);
+      for (Integer partNumber : partNumbers) {
+        Part uploadedPart = uploadedPartMap.get(partNumber);
+        if (uploadedPart == null || StringUtils.isBlank(uploadedPart.eTag())) {
+          throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+        }
+        completedParts.add(
+            CompletedPart.builder().partNumber(partNumber).eTag(uploadedPart.eTag()).build());
+      }
+      completedParts.sort(Comparator.comparingInt(CompletedPart::partNumber));
+      CompleteMultipartUploadRequest request =
+          CompleteMultipartUploadRequest.builder()
+              .bucket(bucketName)
+              .key(objectName)
+              .uploadId(uploadId)
+              .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
+              .build();
+      s3Client.completeMultipartUpload(request);
+      log.info(
+          "[RustFS] chunked upload completed, bucket={}, object={}, parts={}",
+          bucketName,
+          objectName,
+          completedParts.size());
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
+  }
+
+  @Override
+  protected void doAbortMultipartUpload(String bucketName, String objectName, String uploadId) {
+    try {
+      AbortMultipartUploadRequest abortRequest =
+          AbortMultipartUploadRequest.builder()
+              .bucket(bucketName)
+              .key(objectName)
+              .uploadId(uploadId)
+              .build();
+      s3Client.abortMultipartUpload(abortRequest);
+    } catch (Exception e) {
+      log.warn(
+          "[RustFS] abort multipart upload failed, bucket={}, object={}, uploadId={}, message={}",
+          bucketName,
+          objectName,
+          uploadId,
+          e.getMessage());
+    }
+  }
+
+  @Override
+  protected List<PartInfo> listParts(String bucketName, String objectName, String uploadId) {
+    List<PartInfo> parts = new ArrayList<>(16);
+    try {
+      ListPartsResponse listPartsResponse =
+          s3Client.listParts(
+              ListPartsRequest.builder()
+                  .bucket(bucketName)
+                  .key(objectName)
+                  .uploadId(uploadId)
+                  .build());
+      for (Part part : listPartsResponse.parts()) {
+        parts.add(new PartInfo(part.partNumber(), part.eTag(), part.size()));
+      }
+    } catch (Exception e) {
+      log.warn("[RustFS] listParts failed, object={}, message={}", objectName, e.getMessage());
+    }
+    return parts;
+  }
+
+  @Override
+  protected String normalizeObjectKey(String objectKey) {
+    if (objectKey.startsWith("/")) {
+      return objectKey.substring(1);
+    }
+    return objectKey;
+  }
+
+  @Override
+  protected ObjectMetadata doGetMetadata(String bucketName, String objectName) {
+    try {
+      HeadObjectRequest request =
+          HeadObjectRequest.builder().bucket(bucketName).key(objectName).build();
+      HeadObjectResponse response = s3Client.headObject(request);
+      ObjectMetadata metadata = new ObjectMetadata();
+      metadata.setObjectName(objectName);
+      metadata.setBucketName(bucketName);
+      metadata.setSize(response.contentLength());
+      metadata.setContentType(response.contentType());
+      metadata.setETag(response.eTag());
+      metadata.setLastModified(
+          response.lastModified() != null
+              ? LocalDateTime.ofInstant(response.lastModified(), ZoneId.systemDefault())
+              : null);
+      metadata.setDirectory(false);
+      return metadata;
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] doGetMetadata failed, bucket={}, object={}, message={}",
+          bucketName,
+          objectName,
+          e.getMessage());
+      return null;
+    }
+  }
+
+  @Override
+  protected ListObjectsResult doListObjects(
+      String bucketName, String prefix, String cursor, int maxKeys) {
+    List<ObjectMetadata> objects = new ArrayList<>(16);
+    try {
+      ListObjectsV2Request.Builder requestBuilder =
+          ListObjectsV2Request.builder().bucket(bucketName).maxKeys(maxKeys + 1);
+      if (prefix != null && !prefix.isEmpty()) {
+        requestBuilder.prefix(prefix);
+      }
+      if (cursor != null && !cursor.isEmpty()) {
+        requestBuilder.continuationToken(cursor);
+      }
+      ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build());
+      boolean hasMore = response.isTruncated();
+      String nextCursor = response.nextContinuationToken();
+      for (S3Object s3Object : response.contents()) {
+        if (objects.size() < maxKeys) {
+          ObjectMetadata om = new ObjectMetadata();
+          om.setObjectName(s3Object.key());
+          om.setBucketName(bucketName);
+          om.setSize(s3Object.size());
+          om.setLastModified(
+              s3Object.lastModified() != null
+                  ? LocalDateTime.ofInstant(s3Object.lastModified(), ZoneId.systemDefault())
+                  : null);
+          om.setETag(s3Object.eTag());
+          om.setDirectory(false);
+          objects.add(om);
+        }
+      }
+      ListObjectsResult result = new ListObjectsResult();
+      result.setObjects(objects);
+      result.setHasMore(hasMore);
+      result.setNextCursor(nextCursor);
+      result.setObjectCount(objects.size());
+      return result;
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] doListObjects failed, bucket={}, prefix={}, message={}",
+          bucketName,
+          prefix,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
+    }
+  }
+
+  @Override
+  public PolicyResult generateUploadPolicy(
+      String bucketName, String objectNamePrefix, Integer expires) {
+    try {
+      String resolvedBucket = resolveBucketName(bucketName);
+      String resolvedPrefix = objectNamePrefix != null ? objectNamePrefix : "";
+      int expirySeconds =
+          expires != null
+              ? expires
+              : (fileProperties.getTemporarySignatureExpiry() != null
+                  ? fileProperties.getTemporarySignatureExpiry()
+                  : 3600);
+
+      Instant expirationInstant = Instant.now().plusSeconds(expirySeconds);
+      String expirationStr = DateTimeFormatter.ISO_INSTANT.format(expirationInstant);
+
+      Map<String, Object> policyMap =
+          Map.of(
+              "expiration",
+              expirationStr,
+              "conditions",
+              List.of(
+                  List.of("starts-with", "$key", resolvedPrefix),
+                  Map.of("bucket", resolvedBucket)));
+      String policyJson = YdszJson.toJson(policyMap);
+
+      String policyBase64 =
+          Base64.getEncoder().encodeToString(policyJson.getBytes(StandardCharsets.UTF_8));
+
+      Mac mac = Mac.getInstance("HmacSHA256");
+      mac.init(new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+      byte[] signatureBytes = mac.doFinal(policyBase64.getBytes(StandardCharsets.UTF_8));
+      String signature = Base64.getEncoder().encodeToString(signatureBytes);
+
+      String resolvedEndpoint = endpoint;
+      if (StringUtils.isBlank(resolvedEndpoint)) {
+        resolvedEndpoint = String.format("https://%s.s3.%s.amazonaws.com", resolvedBucket, region);
+      }
+
+      PolicyResult result = new PolicyResult();
+      result.setAccessKeyId(fileProperties.getAccessKey());
+      result.setPolicy(policyBase64);
+      result.setSignature(signature);
+      result.setBucket(resolvedBucket);
+      result.setObjectKeyPrefix(resolvedPrefix);
+      result.setExpiration(expirationStr);
+      result.setRegion(region);
+      result.setEndpoint(resolvedEndpoint);
+      return result;
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error(
+          "[RustFS] generateUploadPolicy failed, bucket={}, prefix={}, message={}",
+          bucketName,
+          objectNamePrefix,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+    }
+  }
+}

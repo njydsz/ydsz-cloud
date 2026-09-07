@@ -19,6 +19,7 @@ import com.njydsz.common.file.storage.platform.MinioStorage;
 import com.njydsz.common.file.storage.platform.ObsStorage;
 import com.njydsz.common.file.storage.platform.OssStorage;
 import com.njydsz.common.file.storage.platform.QiniuStorage;
+import com.njydsz.common.file.storage.platform.RustStorage;
 import com.njydsz.common.file.storage.platform.S3Storage;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.VirusScanner;
@@ -323,6 +324,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
       case "s3":
       case "aws-s3":
         storage = new S3Storage(serverProperties, fileUploadProperties);
+        break;
+      case "rustfs":
+        storage = new RustStorage(serverProperties, fileUploadProperties);
         break;
       case "oss":
       case "aliyun":
