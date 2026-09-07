@@ -3,6 +3,7 @@ package com.njydsz.agent.server.memory;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.conversation.Conversation;
@@ -10,6 +11,7 @@ import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.memory.MemoryConsolidationService;
 import com.njydsz.agent.domain.memory.MemoryExtractedFact;
 import com.njydsz.agent.domain.model.ChatMessage;
+import com.njydsz.agent.domain.profile.UserProfileService;
 
 /**
  * 对话记忆整合应用服务。
@@ -33,10 +35,15 @@ public class ConversationMemoryConsolidationService {
     private final ConversationMemory conversationMemory;
     private final MemoryConsolidationService memoryConsolidationService;
 
+    /** 用户画像服务（可选，仅画像启用时注入） */
+    private final ObjectProvider<UserProfileService> userProfileServiceProvider;
+
     public ConversationMemoryConsolidationService(ConversationMemory conversationMemory,
-                                                  MemoryConsolidationService memoryConsolidationService) {
+                                                  MemoryConsolidationService memoryConsolidationService,
+                                                  ObjectProvider<UserProfileService> userProfileServiceProvider) {
         this.conversationMemory = conversationMemory;
         this.memoryConsolidationService = memoryConsolidationService;
+        this.userProfileServiceProvider = userProfileServiceProvider;
     }
 
     /**
@@ -78,10 +85,49 @@ public class ConversationMemoryConsolidationService {
             int saved = memoryConsolidationService.persistFacts(facts);
             log.info("记忆整合完成: conversationId={}, extracted={}, saved={}",
                     conversationId, facts.size(), saved);
+
+            // 记忆整合完成后，触发用户画像刷新
+            triggerProfileRefresh(facts);
+
             return saved;
         } catch (Exception e) {
             log.warn("记忆整合异常: conversationId={}, error={}", conversationId, e.getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * 触发用户画像刷新。
+     *
+     * <p>在记忆整合提取到事实后，按更新事实中的 userId 分组，
+     * 调用 UserProfileService.refreshFromMemory 更新用户画像。
+     * 若画像服务未启用或未注入，则静默跳过。</p>
+     *
+     * @param facts 本次提取的记忆事实列表
+     */
+    private void triggerProfileRefresh(List<MemoryExtractedFact> facts) {
+        if (facts == null || facts.isEmpty()) {
+            return;
+        }
+        UserProfileService profileService = userProfileServiceProvider.getIfAvailable();
+        if (profileService == null) {
+            return;
+        }
+        try {
+            // 按 userId 分组事实，逐用户刷新画像
+            java.util.Map<String, List<MemoryExtractedFact>> grouped = new java.util.HashMap<>();
+            for (MemoryExtractedFact fact : facts) {
+                String userId = fact.getUserId();
+                if (userId != null) {
+                    grouped.computeIfAbsent(userId, k -> new java.util.ArrayList<>()).add(fact);
+                }
+            }
+            for (var entry : grouped.entrySet()) {
+                profileService.refreshFromMemory(entry.getKey(), entry.getValue());
+            }
+            log.debug("画像触发完成: factGroups={}", grouped.size());
+        } catch (Exception e) {
+            log.warn("画像刷新触发失败（不影响记忆整合）: error={}", e.getMessage());
         }
     }
 

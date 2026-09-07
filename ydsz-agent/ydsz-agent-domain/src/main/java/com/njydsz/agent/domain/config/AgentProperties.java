@@ -50,6 +50,9 @@ public class AgentProperties {
   /** MCP 配置 */
   private Mcp mcp = new Mcp();
 
+  /** MCP Server 配置（ydsz-agent 自身作为 MCP Server 暴露能力） */
+  private McpServer mcpServer = new McpServer();
+
   /** Text2SQL 配置 */
   private Text2Sql text2sql = new Text2Sql();
 
@@ -70,6 +73,9 @@ public class AgentProperties {
 
   /** 记忆整合配置 */
   private MemoryConsolidation memoryConsolidation = new MemoryConsolidation();
+
+  /** 用户画像配置 */
+  private ProfileConfig profile = new ProfileConfig();
 
   // ========================= LLM 配置 =========================
 
@@ -192,7 +198,16 @@ public class AgentProperties {
 
     /** 摘要压缩时保留的最近消息数 */
     private int summaryKeepRecent = DEFAULT_SUMMARY_KEEP_RECENT;
+
+    /** 画像中保留的 Top 领域数 */
+    private int profileTopDomains = DEFAULT_PROFILE_TOP_DOMAINS;
+
+    /** 是否用 LLM 做画像分析（更准但贵） */
+    private boolean llmAnalysisEnabled = false;
   }
+
+  /** 画像配置默认值：保留的 Top 领域数 */
+  private static final int DEFAULT_PROFILE_TOP_DOMAINS = 5;
 
   // ========================= RAG 配置 =========================
 
@@ -267,6 +282,8 @@ public class AgentProperties {
     private List<ServerInfo> servers;
     /** 默认超时时间（毫秒） */
     private Integer defaultTimeout;
+    /** 是否同时作为 MCP Server 暴露自身能力（供外部 Claude Desktop / Cursor 等调用） */
+    private boolean serverEnabled = false;
   }
 
   /** MCP Server 连接配置 */
@@ -284,6 +301,24 @@ public class AgentProperties {
     private Integer timeout;
     /** 是否启用（默认 true） */
     private boolean enabled = true;
+  }
+
+  // ========================= MCP Server 配置（ydsz-agent 自身暴露） =========================
+
+  /**
+   * ydsz-agent 作为 MCP Server 向外暴露自身能力时的配置
+   *
+   * <p>控制 MCP Server 端的名称、版本等信息。当 {@link Mcp#serverEnabled} 为 {@code true} 时生效，
+   * 外部 MCP Client（Claude Desktop、Cursor 等）可通过 HTTP+SSE 协议连接并调用 ydsz-agent 的核心能力。
+   */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class McpServer {
+    /** MCP Server 名称（initialize 响应中返回） */
+    private String serverName = "ydsz-agent";
+    /** MCP Server 语义版本号 */
+    private String serverVersion = "26.09.07";
   }
 
   // ========================= Text2SQL 配置 =========================
@@ -520,5 +555,23 @@ public class AgentProperties {
 
     /** Cron 表达式 */
     private String cron = "0 30 2 * * ?";
+  }
+
+  // ========================= 用户画像配置 =========================
+
+  /** 用户画像（UserProfile）配置 */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class ProfileConfig {
+
+    /** 默认自动分析交互阈值（多少次交互后自动分析画像） */
+    private static final int DEFAULT_INTERACTION_THRESHOLD = 5;
+
+    /** 是否启用用户画像 */
+    private boolean enabled = false;
+
+    /** 多少次交互后才自动分析画像 */
+    private int interactionThreshold = DEFAULT_INTERACTION_THRESHOLD;
   }
 }

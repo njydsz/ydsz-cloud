@@ -27,6 +27,8 @@ import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.json.AgentJsonModule;
+import com.njydsz.agent.domain.profile.UserProfileRepository;
+import com.njydsz.agent.domain.profile.UserProfileService;
 import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunker;
@@ -46,6 +48,8 @@ import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.infra.llm.SemanticLlmCache;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.memory.SummaryConversationMemory;
+import com.njydsz.agent.infra.profile.UserProfileMapper;
+import com.njydsz.agent.infra.profile.UserProfileRepositoryImpl;
 import com.njydsz.agent.infra.rag.CompatibleEmbeddingClient;
 import com.njydsz.agent.infra.rag.HybridRetriever;
 import com.njydsz.agent.infra.rag.IdentityReranker;
@@ -69,6 +73,8 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.health.AgentHealthIndicator;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
+import com.njydsz.agent.server.profile.LlmProfileAnalyzer;
+import com.njydsz.agent.server.profile.UserProfileServiceImpl;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
@@ -612,5 +618,67 @@ public class AgentAutoConfiguration {
       LlmClient llmClient, AgentProperties properties) {
     return new LlmClientBasedSemanticConsistencyChecker(
         llmClient, properties.getLlm().getDefaultModel());
+  }
+
+  // ========================= 用户画像 Bean 注册 =========================
+
+  /**
+   * 装配用户画像 Repository 实现。
+   *
+   * @param userProfileMapper 用户画像 Mapper
+   * @return 用户画像 Repository
+   */
+  @Bean
+  @ConditionalOnMissingBean(UserProfileRepository.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.profile",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public UserProfileRepository userProfileRepository(UserProfileMapper userProfileMapper) {
+    return new UserProfileRepositoryImpl(userProfileMapper);
+  }
+
+  /**
+   * 装配 LLM 画像分析器（可选组件）。
+   *
+   * <p>仅在启用 LLM 分析模式时创建，其他时间为 null。</p>
+   *
+   * @param llmClient 模型客户端
+   * @param properties Agent 配置
+   * @return LLM 画像分析器；未启用时返回 null
+   */
+  @Bean
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.memory",
+      name = "llm-analysis-enabled",
+      havingValue = "true")
+  public LlmProfileAnalyzer llmProfileAnalyzer(LlmClient llmClient, AgentProperties properties) {
+    return new LlmProfileAnalyzer(llmClient, properties.getLlm().getDefaultModel());
+  }
+
+  /**
+   * 装配用户画像服务。
+   *
+   * @param userProfileRepository 画像 Repository
+   * @param properties Agent 配置
+   * @param llmProfileAnalyzer LLM 分析器（可选）
+   * @return 用户画像服务
+   */
+  @Bean
+  @ConditionalOnMissingBean(UserProfileService.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.profile",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public UserProfileService userProfileService(
+      UserProfileRepository userProfileRepository,
+      AgentProperties properties,
+      ObjectProvider<LlmProfileAnalyzer> llmProfileAnalyzer) {
+    return new UserProfileServiceImpl(
+        userProfileRepository,
+        properties,
+        llmProfileAnalyzer.getIfAvailable());
   }
 }
