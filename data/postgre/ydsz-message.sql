@@ -352,7 +352,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
     target_channel           VARCHAR(32)              NOT NULL,
     fallback_channel         VARCHAR(32)              DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
-    sort_order               INTEGER                  DEFAULT NULL,
+    sort               INTEGER                  DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
@@ -376,7 +376,7 @@ COMMENT ON COLUMN ydsz_msg_route_rule.condition_expr IS '路由条件（SpEL 表
 COMMENT ON COLUMN ydsz_msg_route_rule.target_channel IS '命中后目标通道';
 COMMENT ON COLUMN ydsz_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道';
 COMMENT ON COLUMN ydsz_msg_route_rule.description IS '描述说明';
-COMMENT ON COLUMN ydsz_msg_route_rule.sort_order IS '排序序号';
+COMMENT ON COLUMN ydsz_msg_route_rule.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_msg_route_rule.status IS '状态标识';
 COMMENT ON COLUMN ydsz_msg_route_rule.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_route_rule.revision IS '乐观锁版本号';

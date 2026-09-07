@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     bpmn_xml                 TEXT                    ,
     form_path                VARCHAR(1024)            DEFAULT NULL,
     use_count                INTEGER                  NOT NULL DEFAULT 0,
-    sort_order               INTEGER                  NOT NULL DEFAULT 0,
+    sort               INTEGER                  NOT NULL DEFAULT 0,
     parent_template_id       VARCHAR(32)              DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
     version_label            VARCHAR(32)              DEFAULT NULL,
@@ -180,7 +180,7 @@ COMMENT ON COLUMN ydsz_flow_template.icon IS '图标路径（前端展示用）'
 COMMENT ON COLUMN ydsz_flow_template.bpmn_xml IS 'BPMN 2.0 XML 流程定义（<bpmn:definitions>...</bpmn:definitions>）';
 COMMENT ON COLUMN ydsz_flow_template.form_path IS '默认表单路径（导入后默认关联的审批表单）';
 COMMENT ON COLUMN ydsz_flow_template.use_count IS '使用次数（被导入到流程定义的累计计数，用于热门度排序）';
-COMMENT ON COLUMN ydsz_flow_template.sort_order IS '排序权重（越大越靠前，模板市场首页展示用）';
+COMMENT ON COLUMN ydsz_flow_template.sort IS '排序权重（越大越靠前，模板市场首页展示用）';
 COMMENT ON COLUMN ydsz_flow_template.parent_template_id IS '父模板 ID（跨模板继承关系，STANDALONE 时为 NULL）';
 COMMENT ON COLUMN ydsz_flow_template.version IS '模板版本号（从 1 开始单调递增，同一 templateCode 下唯一）';
 COMMENT ON COLUMN ydsz_flow_template.version_label IS '版本标签（如 26.09.01 / 26.09.01-rc1，可选可读标识）';
@@ -315,7 +315,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
     condition_expression     VARCHAR(512)             DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     enabled                  INTEGER                  NOT NULL DEFAULT 1,
-    sort_order               INTEGER                  NOT NULL DEFAULT 0,
+    sort               INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
     deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
@@ -334,7 +334,7 @@ COMMENT ON COLUMN ydsz_flow_auto_trigger.target_flow_code IS '目标流程编码
 COMMENT ON COLUMN ydsz_flow_auto_trigger.condition_expression IS '条件表达式（Aviator 语法，为空则无条件触发）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.description IS '规则描述（说明触发场景与业务背景）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.enabled IS '是否启用（0=禁用，1=启用）';
-COMMENT ON COLUMN ydsz_flow_auto_trigger.sort_order IS '排序权重（升序执行）';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.sort IS '排序权重（升序执行）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.status IS '状态标识';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.revision IS '乐观锁版本号';

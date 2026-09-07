@@ -143,7 +143,7 @@ CREATE TABLE ydsz_org_department (
     dept_name                VARCHAR2(128 CHAR)       NOT NULL,
     dept_code                VARCHAR2(64 CHAR)        NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     leader_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
@@ -163,7 +163,7 @@ COMMENT ON COLUMN ydsz_org_department.parent_id IS '父部门 ID（根节点为 
 COMMENT ON COLUMN ydsz_org_department.dept_name IS '部门名称（前端展示）';
 COMMENT ON COLUMN ydsz_org_department.dept_code IS '部门编码（业务侧引用，全局唯一，建议格式 DEPT_XXX）';
 COMMENT ON COLUMN ydsz_org_department.description IS '部门描述（说明部门职责与归属）';
-COMMENT ON COLUMN ydsz_org_department.sort_order IS '同级排序序号（升序）';
+COMMENT ON COLUMN ydsz_org_department.sort IS '同级排序序号（升序）';
 COMMENT ON COLUMN ydsz_org_department.leader_id IS '部门负责人用户 ID（关联 ydsz_acct_user.id，支持 leader: 审批人展开）';
 COMMENT ON COLUMN ydsz_org_department.status IS '启用状态（ENABLED/DISABLED，禁用后部门下用户无法被分配新角色）';
 COMMENT ON COLUMN ydsz_org_department.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
@@ -183,7 +183,7 @@ CREATE TABLE ydsz_rbac_role (
     role_code                VARCHAR2(64 CHAR)        NOT NULL,
     role_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     built_in                 NUMBER(1)                NOT NULL DEFAULT 0,
     data_scope               VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
@@ -203,7 +203,7 @@ COMMENT ON COLUMN ydsz_rbac_role.tenant_id IS '租户 ID（多租户隔离，"0"
 COMMENT ON COLUMN ydsz_rbac_role.role_code IS '角色编码（业务侧引用，全局唯一，建议格式 ROLE_XXX）';
 COMMENT ON COLUMN ydsz_rbac_role.role_name IS '角色名称（前端展示）';
 COMMENT ON COLUMN ydsz_rbac_role.description IS '角色描述（说明该角色的业务定位与适用场景）';
-COMMENT ON COLUMN ydsz_rbac_role.sort_order IS '同级排序序号（升序）';
+COMMENT ON COLUMN ydsz_rbac_role.sort IS '同级排序序号（升序）';
 COMMENT ON COLUMN ydsz_rbac_role.built_in IS '是否内置角色（1=内置，禁止删除/修改编码，如 SUPER_ADMIN/TENANT_ADMIN/AUDITOR/GUEST）';
 COMMENT ON COLUMN ydsz_rbac_role.data_scope IS '数据权限范围（ALL/DEPT_AND_CHILD/DEPT/SELF/CUSTOM）';
 COMMENT ON COLUMN ydsz_rbac_role.status IS '启用状态（ENABLED/DISABLED，禁用后拥有该角色的用户暂时无法访问系统）';
@@ -226,7 +226,7 @@ CREATE TABLE ydsz_rbac_menu (
     path                     VARCHAR2(255 CHAR)       DEFAULT NULL,
     component                VARCHAR2(255 CHAR)       DEFAULT NULL,
     icon                     VARCHAR2(128 CHAR)       DEFAULT NULL,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     permission_code          VARCHAR2(128 CHAR)       DEFAULT NULL,
     visible                  NUMBER(1)                NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
@@ -250,7 +250,7 @@ COMMENT ON COLUMN ydsz_rbac_menu.menu_type IS '菜单类型（DIR=目录/MENU=�
 COMMENT ON COLUMN ydsz_rbac_menu.path IS '前端路由路径（menuType=MENU 时使用）';
 COMMENT ON COLUMN ydsz_rbac_menu.component IS '前端组件路径（menuType=MENU 时使用，如 system/user/index）';
 COMMENT ON COLUMN ydsz_rbac_menu.icon IS '菜单图标（Iconify/Element Plus 图标名）';
-COMMENT ON COLUMN ydsz_rbac_menu.sort_order IS '同级排序序号（升序）';
+COMMENT ON COLUMN ydsz_rbac_menu.sort IS '同级排序序号（升序）';
 COMMENT ON COLUMN ydsz_rbac_menu.permission_code IS '权限码（如 system:user:create，被后端 @AuthApiPermission 引用）';
 COMMENT ON COLUMN ydsz_rbac_menu.visible IS '是否前端可见（1=可见，0=隐藏但仍参与鉴权）';
 COMMENT ON COLUMN ydsz_rbac_menu.status IS '启用状态（ENABLED/DISABLED）';
@@ -271,7 +271,7 @@ CREATE TABLE ydsz_rbac_post (
     post_name                VARCHAR2(128 CHAR)       NOT NULL,
     post_code                VARCHAR2(64 CHAR)        NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
@@ -289,7 +289,7 @@ COMMENT ON COLUMN ydsz_rbac_post.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_rbac_post.post_name IS '岗位名称（前端展示，如「项目经理」「后端开发工程师」）';
 COMMENT ON COLUMN ydsz_rbac_post.post_code IS '岗位编码（业务侧引用，全局唯一，如 PM/DEV/QA/SA）';
 COMMENT ON COLUMN ydsz_rbac_post.description IS '岗位描述（说明岗位的工作职责与任职要求）';
-COMMENT ON COLUMN ydsz_rbac_post.sort_order IS '同级排序序号（升序）';
+COMMENT ON COLUMN ydsz_rbac_post.sort IS '同级排序序号（升序）';
 COMMENT ON COLUMN ydsz_rbac_post.status IS '启用状态（ENABLED/DISABLED，禁用后岗位不可再被分配给新用户）';
 COMMENT ON COLUMN ydsz_rbac_post.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rbac_post.revision IS '乐观锁版本号';
@@ -306,7 +306,7 @@ CREATE TABLE ydsz_acct_user_language (
     language_code            VARCHAR2(32 CHAR)        NOT NULL,
     language_name            VARCHAR2(128 CHAR)       NOT NULL,
     is_default               NUMBER(1)                NOT NULL DEFAULT 0,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
@@ -324,7 +324,7 @@ COMMENT ON COLUMN ydsz_acct_user_language.tenant_id IS '租户 ID（多租户隔
 COMMENT ON COLUMN ydsz_acct_user_language.language_code IS '语言编码（ISO 639-1 + 区域码，如 zh-CN/en-US/ja-JP/zh-TW）';
 COMMENT ON COLUMN ydsz_acct_user_language.language_name IS '语言名称（前端展示，如「简体中文」「English」）';
 COMMENT ON COLUMN ydsz_acct_user_language.is_default IS '是否默认语言（1=是，0=否，系统全局仅允许 1 个默认语言）';
-COMMENT ON COLUMN ydsz_acct_user_language.sort_order IS '排序序号（升序，决定语言切换器展示顺序）';
+COMMENT ON COLUMN ydsz_acct_user_language.sort IS '排序序号（升序，决定语言切换器展示顺序）';
 COMMENT ON COLUMN ydsz_acct_user_language.status IS '启用状态（ENABLED/DISABLED，禁用后前端语言切换器隐藏该选项）';
 COMMENT ON COLUMN ydsz_acct_user_language.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_acct_user_language.revision IS '乐观锁版本号';
@@ -609,7 +609,7 @@ CREATE TABLE ydsz_auth_social_client (
     scope                    VARCHAR2(256 CHAR)       DEFAULT NULL,
     redirect_uri             VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(16 CHAR)        NOT NULL DEFAULT 'ENABLED',
-    sort_order               NUMBER(10)               DEFAULT 100,
+    sort               NUMBER(10)               DEFAULT 100,
     remark                   VARCHAR2(256 CHAR)       DEFAULT NULL,
     tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
@@ -631,7 +631,7 @@ COMMENT ON COLUMN ydsz_auth_social_client.app_secret IS '应用密钥（BCrypt �
 COMMENT ON COLUMN ydsz_auth_social_client.scope IS 'OAuth2 授权范围（scope）';
 COMMENT ON COLUMN ydsz_auth_social_client.redirect_uri IS '授权回调地址（redirectUri）';
 COMMENT ON COLUMN ydsz_auth_social_client.status IS '状态：ENABLED/DISABLED';
-COMMENT ON COLUMN ydsz_auth_social_client.sort_order IS '排序权重（越小越靠前）';
+COMMENT ON COLUMN ydsz_auth_social_client.sort IS '排序权重（越小越靠前）';
 COMMENT ON COLUMN ydsz_auth_social_client.remark IS '备注说明';
 COMMENT ON COLUMN ydsz_auth_social_client.tenant_id IS '租户 ID';
 COMMENT ON COLUMN ydsz_auth_social_client.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
@@ -653,7 +653,7 @@ CREATE TABLE ydsz_idp_saml_config (
     email_attribute          VARCHAR2(64 CHAR)        DEFAULT 'email',
     display_name_attribute   VARCHAR2(64 CHAR)        DEFAULT 'displayName',
     status                   VARCHAR2(16 CHAR)        NOT NULL DEFAULT 'ENABLED',
-    sort_order               NUMBER(10)               DEFAULT 100,
+    sort               NUMBER(10)               DEFAULT 100,
     remark                   VARCHAR2(256 CHAR)       DEFAULT NULL,
     tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
@@ -675,7 +675,7 @@ COMMENT ON COLUMN ydsz_idp_saml_config.certificate IS 'IdP 公钥证书（PEM �
 COMMENT ON COLUMN ydsz_idp_saml_config.email_attribute IS '用户邮箱对应的 SAML Attribute 名称';
 COMMENT ON COLUMN ydsz_idp_saml_config.display_name_attribute IS '用户显示名称对应的 SAML Attribute 名称';
 COMMENT ON COLUMN ydsz_idp_saml_config.status IS '状态：ENABLED/DISABLED';
-COMMENT ON COLUMN ydsz_idp_saml_config.sort_order IS '排序权重（越小越靠前）';
+COMMENT ON COLUMN ydsz_idp_saml_config.sort IS '排序权重（越小越靠前）';
 COMMENT ON COLUMN ydsz_idp_saml_config.remark IS '备注说明';
 COMMENT ON COLUMN ydsz_idp_saml_config.tenant_id IS '租户 ID';
 COMMENT ON COLUMN ydsz_idp_saml_config.deleted IS '逻辑删除标记（0=未删除，1=已删除）';

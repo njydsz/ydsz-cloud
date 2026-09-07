@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
     target_channel    VARCHAR(32)   NOT NULL COMMENT '命中后目标通道',
     fallback_channel  VARCHAR(32)   DEFAULT NULL COMMENT '目标通道发送失败时降级通道',
     description       VARCHAR(512)  DEFAULT NULL COMMENT '描述说明',
-    sort_order        INT           DEFAULT NULL COMMENT '排序序号',
+    sort        INT           DEFAULT NULL COMMENT '排序序号',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
     deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
