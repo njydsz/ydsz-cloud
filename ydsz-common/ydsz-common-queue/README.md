@@ -1,8 +1,8 @@
 # ydsz-common-queue
 
-> 统一消息队列框架（L5 业务服务层）
+> 多引擎消息队列抽象模块（L5 业务服务层）— Redis(Kafka/RocketMQ/RabbitMQ) 多引擎 + 死信队列 + 延迟消息 + 消息去重 + 消费者组均衡
 
-提供 MQ 引擎适配（Redis Stream / Kafka / RocketMQ）、死信队列、消费者限流、消息去重、批量操作、顺序消息能力，是 YDSZ 项目消息中间件接入的统一基座。
+提供统一的消息队列抽象层，屏蔽底层消息引擎差异。通过 SPI 机制支持 Redis（Stream/List/PubSub）、Kafka、RocketMQ、RabbitMQ、ActiveMQ 等多种引擎，统一的生产者/消费者 API。内置死信队列（DLQ）与自动重试调度、延迟消息发送、消息去重（内容指纹）、消费者限速、消费者组再均衡监听、消息压缩、健康检查、可观测性指标等企业级能力。
 
 ## 模块定位
 
@@ -10,97 +10,116 @@
 |---|---|
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供多 MQ 引擎统一抽象、死信重试、消息去重、消费者线程管理等能力 |
-| **依赖** | common-core、common-util、common-exception、common-redis、common-json；可选依赖 jedis、kafka-clients、rocketmq-client、amqp-client、spring-boot-starter-actuator、spring-boot-health、micrometer-core、spring-boot-configuration-processor |
-| **版本** | 1.1.0 |
+| **作用** | 提供多引擎消息队列统一抽象，屏蔽底层差异，集成死信/延迟/去重/限速/压缩等能力 |
+| **依赖** | common-core、common-util、common-redis（可选）、common-thread、common-json；可选依赖 jedis、kafka-clients、rocketmq-spring-boot-starter、spring-rabbit、spring-boot-health、micrometer-core、spring-boot-actuator |
+| **版本** | 26.09.01-SNAPSHOT |
 
 ## 核心能力
 
-### 1. 统一抽象层
+### 1. 队列引擎抽象层
 
 | 类 | 说明 |
 |---|---|
-| `IMessageQueue` | 消息队列接口，定义 `createPublisher` / `createSubscriber` / `close` 标准操作 |
-| `IMessageQueueProvider` | 队列提供者接口，按 `QueueType` 创建队列实例 |
-| `IMessagePublisher` | 发布者接口，支持 `publish(String)` / `publish(QueueMessage)` / `publishBatch(List)` / `close()` |
-| `IMessageSubscriber` | 订阅者接口，支持同步 `subscribe()` 与异步 `subscribeAsync(handler)` / `stop()` / `isRunning()` |
-| `IMessageHandler` | 消息处理器函数式接口 |
-| `MessagePublisherHelper` | 发布者辅助工具，提供 `publishSequential` / `publishDelayed` 等组合操作 |
-| `MessageSubscriberHelper` | 订阅者辅助工具，提供 `subscribeMessage` / `subscribeOnce` 等组合操作 |
-| `AbstractMessageQueue` | 抽象消息队列基类，封装通用属性与生命周期 |
-| `MessageQueueFactory` | 队列工厂实现，按类型创建队列、追踪已创建实例、统一 `close()` 优雅关闭 |
-| `QueueType` | 队列类型枚举：`STREAM`（推荐） / `KAFKA`（推荐） / `ROCKET` / `LIST` / `PUBSUB` / `RABBIT` |
-| `QueueMessage` | 统一消息模型，含 body / headers / traceId / retryCount / messageGroupKey |
-| `@EnableQueue` | 启用注解，`@Import(QueueConfiguration.class)` |
+| `IMessageQueue` | 队列核心接口，定义 `publish` / `subscribe` / `acknowledge` 等统一操作 |
+| `AbstractMessageQueue` | 抽象基类，封装通用逻辑（消息序列化、压缩、死信处理、去重等），具体引擎继承此类 |
+| `IMessageQueueProvider` | 队列提供者 SPI，根据 `QueueType` 创建对应引擎实例 |
+| `MessageQueueFactory` | 默认 Provider 实现，根据 `QueueType` 创建 Stream/List/PubSub/Kafka/RocketMQ/RabbitMQ 实例 |
+| `QueueManager` | 队列管理器，注册 / 查询 / 移除队列实例及对应监控指标 |
+| `QueueType` | 队列引擎类型枚举：`STREAM`（Redis Stream，默认）、`KAFKA`、`ROCKET`（RocketMQ）、`PUBSUB`、`LIST`（已废弃）、`RABBIT`（RabbitMQ）、`ACTIVE`（ActiveMQ） |
 
-> `QueueType` 枚举说明：
-> - `STREAM`（推荐）：Redis Stream，支持消费组 + ACK + PEL + 死信队列，是 List 的升级版
-> - `KAFKA`（推荐）：高吞吐量分布式消息系统
-> - `ROCKET`：支持事务消息和顺序消息
-> - `LIST`：建议使用 `STREAM` 替代
-> - `PUBSUB`：建议使用 `STREAM` 替代
-> - `RABBIT`：建议使用 `KAFKA` 或 `ROCKET` 替代
+各引擎实现：
 
-### 2. MQ 引擎适配（推荐）
+| 引擎 | 生产类 | 消费类 | 说明 |
+|---|---|---|---|
+| Redis Stream | `RedisStreamPublisher` | `RedisStreamSubscriber` | Redis 5.0+ Stream，支持消费者组和 ACK |
+| Redis List | `RedisListPublisher` | `RedisListSubscriber` | 基于 List + BLPOP，简单队列 |
+| Redis Pub/Sub | `RedisPubSubPublisher` | `RedisPubSubSubscriber` | 发布订阅模型（无持久化） |
+| Kafka | `KafkaMessagePublisher` | `KafkaMessageSubscriber` | 依赖 kafka-clients |
+| RocketMQ | `RocketMQPublisher` | `RocketMQSubscriber` | 依赖 RocketMQ Spring |
+| RabbitMQ | `RabbitMQPublisher` | `RabbitMQSubscriber` | 依赖 spring-rabbit |
+| ActiveMQ | `ActiveMQPublisher` | `ActiveMQSubscriber` | 依赖 ActiveMQ Spring |
 
-| 类 | 引擎 | 说明 |
-|---|---|---|
-| `RedisStreamMQ` | Redis Stream（推荐） | Redis 5.0+ Stream（消费者组 + ACK + PEL + 死信队列） |
-| `KafkaMQ` | Apache Kafka（推荐） | Kafka Producer / Consumer（分区并行 + 高吞吐） |
-| `RocketMQ` | Apache RocketMQ | RocketMQ Producer / Consumer（事务消息 + 18 级延迟） |
-
-### 3. MQ 引擎适配（完整支持）
-
-| 类 | 引擎 | 说明 |
-|---|---|---|
-| `RedisListMQ` | Redis List | List + BLPOP 阻塞队列（FIFO），功能简单，无消息确认/死信等高级特性 |
-| `RedisPubSubMQ` | Redis Pub-Sub | 发布订阅（广播模式，无持久化），适合实时通知场景 |
-| `RabbitMQ` | RabbitMQ | RabbitMQ Producer / Consumer（AMQP 路由） |
-
-### 4. 订阅者装饰器
+### 2. 消息模型
 
 | 类 | 说明 |
 |---|---|
-| `DedupAwareSubscriber` | 幂等去重装饰器，自动跳过重复消息 |
+| `QueueMessage` | 统一消息模型（含 messageId、topic、payload、headers、timestamp、retryCount、delayMillis 等字段） |
+| `MessageProperties` | 消息属性扩展（headers map） |
+| `QueueMessageBuilder` | 消息构建器（fluent API） |
+| `QueueMessageHandler` | 消费端消息处理器接口 |
+| `IMessagePublisher` | 统一生产者接口 |
+| `IMessageSubscriber` | 统一消费者接口 |
 
-### 5. 死信队列
-
-| 类 | 说明 |
-|---|---|
-| `DeadLetterQueueService` | 死信队列服务接口 |
-| `DeadLetterQueueServiceImpl` | Redis 实现的死信队列 |
-| `NoOpDeadLetterQueueService` | 空操作降级实现（Redis 不可用时） |
-| `DeadLetterRetryScheduler` | 死信重试定时调度器（启用 `dead-letter-retry-enabled=true` 时注册，带抖动延迟） |
-
-### 6. 消息去重
+### 3. 死信队列（DLQ）
 
 | 类 | 说明 |
 |---|---|
-| `MessageDeduplicator` | 内存去重器，原子 `checkAndMark` 操作（分布式场景应使用 ydsz-common-redis 的 `RedisMessageDeduplicator`） |
-| `DedupAwareSubscriber` | 幂等去重订阅者装饰器 |
-| `DedupCleanupScheduler` | 去重记录定时清理调度器（仅当 `MessageDeduplicator` Bean 存在时注册） |
+| `DeadLetterQueueService` | 死信队列服务接口，定义 `sendToDLQ` / `retryFromDLQ` / `listDLQ` 操作 |
+| `DeadLetterQueueServiceImpl` | 基于 Redis 的实现：将消费失败/重试耗尽的消息发送到 DLQ，支持手动重试 |
+| `NoOpDeadLetterQueueService` | 空操作实现，Redis 不可用时降级 |
+| `DeadLetterRetryScheduler` | 自动重试调度器，定时扫描 DLQ 中带重试标记的消息，使用带抖动的延迟策略避免惊群 |
 
-### 7. 消费者管理
+死信流转：消息消费失败 → 重试（最多 N 次）→ 超过重试次数后写入 DLQ → 运维人员通过 API 手动重试或自动调度器按退避策略重试。
 
-| 类 | 说明 |
-|---|---|
-| `ConsumerRateLimiter` | 消费者限流器（令牌桶，`consumerRateLimitPerSecond=0` 表示不限流） |
-| `ConsumerThreadGuard` | 消费者线程保护，自动恢复崩溃线程 |
-
-### 8. 自动配置与可观测性
+### 4. 延迟消息
 
 | 类 | 说明 |
 |---|---|
-| `QueueConfiguration` | 自动配置（`@EnableScheduling`，`@ConditionalOnProperty("ydsz.queue.enabled")`），注册 `queueConsumerExecutor` 线程池、`QueueManager`、`IMessageQueueProvider`、`DeadLetterQueueService`、`DeadLetterRetryScheduler`、`MessageDeduplicator`、`DedupCleanupScheduler`、`QueueHealthIndicator`、`QueueEndpoint`、`QueueMetricsBinder` |
-| `QueueMetrics` | 消息指标采集（发送数 / 消费数 / 延迟 / 错误率） |
-| `QueueHealthIndicator` | 健康检查：Redis 类型执行 PING，非 Redis 类型 TCP 端口探测 |
-| `QueueEndpoint` | Actuator 端点 `/actuator/queues`，查询 QueueManager 中的队列实例运行状态 |
-| `QueueMetricsBinder` | Micrometer 指标桥接器，将 `QueueManager` 中所有队列的指标暴露为 Prometheus 指标 |
-| `QueueManager` | 队列管理器，统一注册/查询/移除队列实例及其指标 |
-| `SerializerFactory` | 消息序列化工厂 |
-| `ProtobufMessageSerializer` | Protobuf 序列化器（按需使用） |
-| `JsonMessageSerializer` | JSON 序列化器 |
-| `DeadLetterQueueServiceImpl` | Redis 实现的死信队列 |
+| `DelayedMessageSender` | 延迟消息发送器接口 |
+| `TimerBasedDelayedMessageSender` | 基于时间轮的延迟发送实现，支持指定延迟时间后投递 |
+| `DelaySpec` | 延迟规格定义（含 delayMillis、maxDelay、unit 字段） |
+
+### 5. 消息去重
+
+| 类 | 说明 |
+|---|---|
+| `MessageDeduplicator` | 内存消息去重器，基于内容指纹 + 滑动时间窗拦截重复消息 |
+| `RedisMessageDeduplicator` | 基于 Redis 的分布式去重实现（依赖 `ydsz-common-redis` 的 Redis 组件） |
+| `DedupCleanupScheduler` | 去重记录定时清理调度器，定期清理窗口外的指纹记录 |
+| `DedupAwareSubscriber` | 去重感知消费者装饰器，在消息处理前检查指纹 |
+
+### 6. 消费者治理
+
+| 类 | 说明 |
+|---|---|
+| `ConsumerGroupRebalanceListener` | 消费者组再均衡监听器接口，监听分区/队列的重新分配事件 |
+| `RebalanceMonitor` | 再均衡监控器，跟踪消费者组成员变化与分区分配历史 |
+| `ConsumerGroupEvent` | 再均衡事件类型枚举：`ASSIGNED` / `REVOKED` / `RESET` |
+| `ConsumerRateLimiter` | 消费者限速器，按滑动窗口控制每秒消费速率，保护下游服务 |
+| `ConsumerThreadGuard` | 消费者线程守卫，监控消费线程健康状态，异常时自动重建 |
+
+### 7. 消息序列化与压缩
+
+| 类 | 说明 |
+|---|---|
+| `MessageSerializer` | 消息序列化接口 |
+| `JsonMessageSerializer` | JSON 默认实现（基于 YdszJson） |
+| `ProtobufMessageSerializer` | Protobuf 实现，高密度场景可选 |
+| `MessageCompressor` | 消息压缩接口，支持 gzip / snappy 等算法 |
+| `SerializerFactory` | 序列化器工厂，根据配置选择序列化策略 |
+
+### 8. 消息追踪
+
+| 类 | 说明 |
+|---|---|
+| `MessageTrace` | 消息追踪上下文，记录消息全链路节点（生产→投递→消费→ACK） |
+| `MessageTracer` | 追踪器接口，定义上下文传播方法 |
+
+### 9. 可观测性
+
+| 类 | 说明 |
+|---|---|
+| `QueueMetrics` | 队列度量信息（发送/消费 TPS、延迟、重试次数、积压等） |
+| `QueueMetricsBinder` | Micrometer 指标桥接器，将 QueueManager 中所有队列指标暴露到 Prometheus |
+| `QueueHealthIndicator` | 健康检查指示器 |
+| `QueueEndpoint` | Actuator 自定义端点（ID: `queues`），暴露所有队列运行状态 |
+
+### 10. 自动配置
+
+| 类 | 说明 |
+|---|---|
+| `QueueConfiguration` | 自动配置类，注册 QueueManager / MessageQueueFactory / DeadLetterQueueService / 去重器 / 健康检查 / 端点 / 指标桥接器 |
+| `EnableQueue` | 开关注解，在启动类上标注即可启用 |
 
 ## 接入方式
 
@@ -113,266 +132,267 @@
 </dependency>
 ```
 
-按需引入 MQ 引擎依赖：
-
-```xml
-<!-- Kafka -->
-<dependency>
-    <groupId>org.apache.kafka</groupId>
-    <artifactId>kafka-clients</artifactId>
-</dependency>
-
-<!-- RocketMQ -->
-<dependency>
-    <groupId>org.apache.rocketmq</groupId>
-    <artifactId>rocketmq-client</artifactId>
-</dependency>
-
-<!-- RabbitMQ -->
-<dependency>
-    <groupId>com.rabbitmq</groupId>
-    <artifactId>amqp-client</artifactId>
-</dependency>
-```
-
 ### 2. 配置启用
 
 ```yaml
+# application.yml
+spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
 ydsz:
   queue:
     enabled: true
-    type: STREAM               # STREAM / KAFKA / ROCKET （推荐）
-    host: 127.0.0.1
-    port: 6379
+    type: STREAM          # STREAM / KAFKA / ROCKET / RABBIT / ACTIVE
     stream-group: ydsz-group
-    stream-consumer: ydsz-consumer
+    stream-consumer: consumer-1
+    stream-batch-size: 10
+    stream-retry-max: 3
 ```
 
-### 3. 注入并使用
+### 3. 使用示例 - 生产消息
 
 ```java
-import com.njydsz.common.queue.queue.IMessageQueueProvider;
-import com.njydsz.common.queue.enums.QueueType;
-import com.njydsz.common.queue.service.IMessagePublisher;
-import com.njydsz.common.queue.service.IMessageSubscriber;
+@Autowired
+private IMessageQueueProvider queueProvider;
 
-@Service
-public class OrderMessageService {
+IMessageQueue queue = queueProvider.getQueue("order-events");
 
-    private final IMessageQueueProvider messageQueueProvider;
-    private IMessageQueue queue;
-    private IMessagePublisher publisher;
-    private IMessageSubscriber subscriber;
+// 发送普通消息
+queue.publish(QueueMessageBuilder.builder()
+    .payload(orderEvent)
+    .header("eventType", "order.created")
+    .build());
 
-    public OrderMessageService(IMessageQueueProvider messageQueueProvider) {
-        this.messageQueueProvider = messageQueueProvider;
-    }
+// 发送延迟消息
+queue.publish(QueueMessageBuilder.builder()
+    .payload(delayedEvent)
+    .delay(DelaySpec.ofSeconds(30))
+    .build());
+```
+
+### 4. 使用示例 - 消费消息
+
+```java
+@Component
+public class OrderEventConsumer implements QueueMessageHandler {
 
     @PostConstruct
     public void init() {
-        this.queue = messageQueueProvider.createMessageQueue(QueueType.STREAM);
-        this.publisher = queue.createPublisher("order-topic");
-        this.subscriber = queue.createSubscriber("order-topic");
+        IMessageQueue queue = queueProvider.getQueue("order-events");
+        queue.subscribe("order-events", this);
     }
 
-    public void publish(String payload) {
-        publisher.publish(payload);
-    }
-
-    public void startConsuming() {
-        subscriber.subscribeAsync(message -> {
-            processOrder(message);
-        });
-    }
-
-    @PreDestroy
-    public void cleanup() {
-        if (queue != null) {
-            queue.close();
-        }
+    @Override
+    public void handle(QueueMessage message) {
+        OrderEvent event = message.getPayload(OrderEvent.class);
+        // 业务处理...
+        // 处理失败抛异常 → 框架自动重试 → 重试耗尽 → 写入 DLQ
     }
 }
 ```
 
+### 5. 使用示例 - 死信队列手动重试
+
+```java
+@Autowired
+private DeadLetterQueueService dlqService;
+
+// 查询死信列表
+List<QueueMessage> dlqMessages = dlqService.listDLQ("order-events");
+
+// 手动重试单条
+dlqService.retryFromDLQ("order-events", dlqMessages.get(0).getMessageId());
+```
+
 ## 配置项
+
+### QueueProperties（`ydsz.queue.*`）
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `ydsz.queue.enabled` | true | 是否启用消息队列模块 |
-| `ydsz.queue.type` | - | 队列类型（STREAM / KAFKA / ROCKET / LIST / PUBSUB / RABBIT） |
-| `ydsz.queue.host` | 127.0.0.1 | MQ 服务器地址 |
-| `ydsz.queue.port` | 6379 | MQ 服务器端口 |
-| `ydsz.queue.username` | - | 用户名 |
-| `ydsz.queue.password` | - | 密码 |
-| `ydsz.queue.timeout` | 5000 | 连接超时（毫秒） |
-| `ydsz.queue.list-block-timeout-seconds` | 5 | List 队列阻塞超时（秒） |
-| `ydsz.queue.stream-group` | group-1 | Stream 消费者组 |
-| `ydsz.queue.stream-consumer` | consumer-1 | Stream 消费者名称 |
-| `ydsz.queue.stream-retry-max` | 3 | Stream 重试最大次数 |
-| `ydsz.queue.stream-block-millis` | 2000 | Stream 阻塞时间（毫秒） |
-| `ydsz.queue.stream-batch-size` | 10 | Stream 批量拉取大小 |
+| `ydsz.queue.enabled` | `true` | 是否启用消息队列模块 |
+| `ydsz.queue.type` | - | 队列引擎类型（STREAM / KAFKA / ROCKET / RABBIT / ACTIVE） |
+| `ydsz.queue.host` | `127.0.0.1` | 服务器地址 |
+| `ydsz.queue.port` | `6379` | 服务器端口 |
+| `ydsz.queue.password` | - | 连接密码 |
+| `ydsz.queue.timeout` | `3000` | 连接超时（毫秒） |
+| `ydsz.queue.stream-group` | `group-1` | Redis Stream 消费者组名 |
+| `ydsz.queue.stream-consumer` | `consumer-1` | Redis Stream 消费者名 |
+| `ydsz.queue.stream-retry-max` | `3` | Stream 消费失败最大重试次数 |
+| `ydsz.queue.stream-block-millis` | `2000` | Stream 阻塞读取时间（毫秒） |
+| `ydsz.queue.stream-batch-size` | `10` | Stream 批量拉取大小 |
 | `ydsz.queue.stream-dead-letter-suffix` | `:dlq` | Stream 死信队列后缀 |
-| `ydsz.queue.consumer-rate-limit-per-second` | 0 | 消费者限流速率（0=不限流） |
-| `ydsz.queue.consumer-executor.core-size` | 2 | 消费者线程池核心线程数 |
-| `ydsz.queue.consumer-executor.max-size` | 16 | 消费者线程池最大线程数 |
-| `ydsz.queue.consumer-executor.queue-capacity` | 256 | 任务队列容量 |
-| `ydsz.queue.consumer-executor.thread-name-prefix` | `ydsz-queue-consumer-` | 线程名前缀 |
-| `ydsz.queue.consumer-executor.await-termination-seconds` | 30 | 优雅停机等待秒数 |
-| `ydsz.queue.dead-letter-retry-enabled` | true | 死信队列自动重试开关 |
-| `ydsz.queue.dead-letter-max-retries` | 3 | 死信最大重试次数 |
-| `ydsz.queue.dead-letter-retry-interval` | 60000 | 死信重试间隔（毫秒） |
-| `ydsz.queue.dead-letter-retry-jitter-percent` | 30 | 死信重试抖动百分比（避免多实例同时扫描） |
-| `ydsz.queue.dedup-enabled` | false | 是否启用消息去重 |
-| `ydsz.queue.dedup-window-millis` | 300000 | 去重时间窗口（毫秒，默认 5 分钟） |
+| `ydsz.queue.consumer-rate-limit-per-second` | `0` | 消费者限流速率（每秒消息数，0=不限流） |
+| `ydsz.queue.consumer-executor-core-size` | `2` | 异步消费者线程池核心线程数 |
+| `ydsz.queue.consumer-executor-max-size` | `16` | 异步消费者线程池最大线程数 |
+| `ydsz.queue.consumer-executor-queue-capacity` | `256` | 异步消费者线程池任务队列容量 |
 
 ## 使用示例
 
-### 1. 发送消息
+### 1. 完整消息收发示例
 
 ```java
-import com.njydsz.common.queue.domain.QueueMessage;
-import com.njydsz.common.queue.service.MessagePublisherHelper;
+// 配置
+ydsz:
+  queue:
+    type: STREAM
+    stream-group: order-service
+    stream-consumer: order-consumer-1
+    stream-batch-size: 20
 
-// 基本发送
-publisher.publish("Hello World");
+// 生产者
+@Service
+public class OrderEventPublisher {
+    @Autowired private IMessageQueueProvider provider;
+    public void publishOrderCreated(Order order) {
+        IMessageQueue queue = provider.getQueue("order-events");
+        queue.publish(QueueMessageBuilder.builder()
+            .payload(new OrderCreatedEvent(order))
+            .header("source", "order-service")
+            .build());
+    }
+}
 
-// 发送 QueueMessage（自动序列化）
-QueueMessage message = QueueMessage.of("order data");
-message.addHeader("type", "order");
-publisher.publish(message);
+// 消费者
+@Component
+public class InventoryUpdateConsumer implements QueueMessageHandler {
+    @Autowired private IMessageQueueProvider provider;
 
-// 顺序消息（相同 groupKey 路由到同一分区）
-QueueMessage seqMsg = QueueMessage.of("order step 1");
-seqMsg.setMessageGroupKey("order-123");
-MessagePublisherHelper.publishSequential(publisher, seqMsg);
+    @PostConstruct
+    public void start() {
+        IMessageQueue queue = provider.getQueue("order-events");
+        queue.subscribe("order-events", this);
+    }
 
-// 批量发送
-publisher.publishBatch(List.of(msg1, msg2, msg3));
-
-// 延迟消息（通过 Helper 调用）
-MessagePublisherHelper.publishDelayed(publisher, message, 60000);
+    @Override
+    public void handle(QueueMessage message) {
+        OrderCreatedEvent event = message.getPayload(OrderCreatedEvent.class);
+        inventoryService.updateStock(event.getProductId(), event.getQuantity());
+    }
+}
 ```
 
-### 2. 消费消息
+### 2. 延迟消息
 
 ```java
-import com.njydsz.common.queue.service.MessageSubscriberHelper;
-
-// 同步消费
-String payload = subscriber.subscribe();
-
-// 异步消费（推荐）
-subscriber.subscribeAsync(message -> {
-    processOrder(message);
-});
-
-// 一次性消费（通过 Helper）
-String traceId = MessageSubscriberHelper.subscribeOnce(subscriber, message -> {
-    log.info("处理消息: {}", message.getBody());
-});
+// 30 秒后投递（订单超时取消场景）
+queue.publish(QueueMessageBuilder.builder()
+    .payload(new OrderTimeoutCheckEvent(orderId))
+    .delay(DelaySpec.ofSeconds(30))
+    .build());
 ```
 
-### 3. 幂等去重装饰器
+### 3. Kafka 引擎
 
-```java
-import com.njydsz.common.queue.dedup.MessageDeduplicator;
-import com.njydsz.common.queue.dedup.DedupAwareSubscriber;
-
-MessageDeduplicator dedup = new MessageDeduplicator(300000);
-IMessageSubscriber dedupSubscriber = new DedupAwareSubscriber(rawSubscriber, dedup);
-dedupSubscriber.subscribeAsync(handler);
+```xml
+<!-- 引入 Kafka 依赖 -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+</dependency>
 ```
 
-## 接口精简说明
+```yaml
+ydsz:
+  queue:
+    type: KAFKA
+    host: kafka-broker
+    port: 9092
+```
 
-从 26.09.01 起，`IMessagePublisher` 和 `IMessageSubscriber` 接口进行了精简：
+### 4. Actuator 端点查询
 
-**IMessagePublisher（10 → 4 方法）**
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,queues
+```
 
-保留：
-- `publish(String)` — 发布字符串消息
-- `publish(QueueMessage)` — 发布结构化消息
-- `publishBatch(List<QueueMessage>)` — 批量发布
-- `close()` — 关闭发布者
-
-迁移到 `MessagePublisherHelper`：
-- `publishSequential(publisher, message)` — 发布顺序消息
-- `publishDelayed(publisher, message, delay)` — 发布延迟消息
-
-**IMessageSubscriber（10 → 4 方法）**
-
-保留：
-- `subscribe()` — 同步订阅
-- `subscribeAsync(handler)` — 异步订阅
-- `stop()` — 停止订阅
-- `isRunning()` — 运行状态
-
-迁移到 `MessageSubscriberHelper`：
-- `subscribeMessage(subscriber)` — 同步消费并反序列化
-- `subscribeOnce(subscriber, handler)` — 单次消费
+访问 `/actuator/queues` 获取队列运行状态（TPS、积压、重试率等）。
 
 ## SPI 扩展点
 
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
-| `IMessageQueue` | 消息队列抽象，业务可自定义新 MQ 引擎实现 | 框架内置实现 |
-| `IMessageQueueProvider` | 队列提供者，可替换默认 `MessageQueueFactory` | 框架内置 |
-| `IMessagePublisher` | 发布者接口，可自定义装饰器 | 框架内置 |
-| `IMessageSubscriber` | 订阅者接口，可自定义装饰器 | 框架内置 |
-| `IMessageHandler` | 消息处理器函数式接口 | 业务模块实现 |
-| `DeadLetterQueueService` | 死信队列服务 SPI | 框架内置 Redis 实现 + NoOp 降级 |
-| `MessageDeduplicator` | 内存去重器 | 框架内置 |
+| `IMessageQueueProvider` | 自定义队列引擎适配（如 Pulsar / NATS），替换默认 `MessageQueueFactory` | 业务模块实现 |
+| `IMessageQueue` | 自定义队列实现，扩展新的队列类型 | 业务模块实现 |
+| `MessageSerializer` | 自定义序列化协议（如 Avro / MessagePack），替换默认 JSON | 业务模块实现 |
+| `MessageCompressor` | 自定义压缩算法（如 LZ4 / Zstd），替换默认 Gzip | 业务模块实现 |
+| `ConsumerGroupRebalanceListener` | 自定义再均衡策略，监听分区/队列分配变化 | 业务模块实现 |
+| `DeadLetterQueueService` | 自定义死信实现（如持久化到数据库），替换默认 Redis 实现 | 业务模块实现 |
+| `QueueMessageHandler` | 消费者端消息处理器，订阅并处理消息 | 业务模块实现 |
 
 ## 健康检查
 
 | 端点 | 说明 | 触发条件 |
 |---|---|---|
-| `/actuator/health/queue` | 消息队列健康检查 | `spring-boot-health` 在类路径，`ydsz.queue.enabled=true` |
-| `/actuator/queues` | 队列实例状态查询（JSON） | `spring-boot-actuator` 在类路径 |
+| `/actuator/health/queue` | 消息队列健康检查（连接状态、消费者线程、队列积压、重试率、DLQ 深度等） | `spring-boot-health` 在 classpath + `QueueHealthIndicator` Bean 存在 |
 
-## 废弃功能清单
+`QueueHealthIndicator` 暴露信息：
 
-以下引擎在 `QueueType` 枚举的 javadoc 中已标注废弃提示，建议优先使用推荐引擎：
-
-| 废弃项 | 替代方案 |
+| 字段 | 说明 |
 |---|---|
-| `LIST`（Redis List） | `STREAM`（Redis Stream） |
-| `PUBSUB`（Redis Pub-Sub） | `STREAM`（Redis Stream） |
-| `RABBIT`（RabbitMQ） | `KAFKA` 或 `ROCKET` |
+| `engine` | 当前队列引擎类型（STREAM / KAFKA / ROCKET 等） |
+| `connected` | 连接状态（true / false） |
+| `consumerThreadAlive` | 消费线程运行状态 |
+| `queueDepth` | 各主题当前积压量 |
+| `dlqDepth` | 死信队列深度 |
+| `retryRate` | 消息重试率 |
+| `compressEnabled` | 消息压缩是否启用 |
+| `dedupEnabled` | 消息去重是否启用 |
+| `status` | 综合健康状态（UP / DEGRADED / DOWN） |
 
-## 已移除功能
+降级判定：
 
-以下功能在过度设计评估后已移除，如需类似能力推荐使用标准库替代：
+- 连接断开 → DOWN
+- 消费线程全部死亡 → DOWN
+- DLQ 深度 > 1000 → DEGRADED
+- 重试率 > 20% → DEGRADED
+- 队列积压 > 10000 → DEGRADED
 
-| 已移除项 | 替代方案 |
+## 自动配置类
+
+| 类 | 说明 |
 |---|---|
-| `CircuitBreakerPublisher` / `QueueCircuitBreaker` | Resilience4j CircuitBreaker |
-| `MessageTraceAspect` | OpenTelemetry / Spring Cloud Sleuth |
-| `MultiMQTopology` | Nacos / Spring Cloud Config |
-| `JsonSchemaValidator`（配置校验） | Spring Boot `@Validated` + JSR-303 |
+| `QueueConfiguration` | 核心自动配置，条件：`ydsz.queue.enabled=true`；注册 QueueManager / 线程池 / Provider / DLQ / 健康检查 / 端点 / 指标桥接器 |
+| `EnableQueue` | 开关注解，在启动类上标注启用模块注册（可省略，模块默认启用） |
 
-> 注意：`MessageTracer` / `MessageCompressor` / `QueueManager` / `QueueMetricsBinder` 4 个组件**仍然存在**（保留实现），未在本次移除清单中。
+装配条件：
+
+| Bean | 条件 |
+|---|---|
+| `QueueManager` | 无自定义 |
+| `MessageQueueFactory` | 无自定义 `IMessageQueueProvider` |
+| `DeadLetterQueueServiceImpl` | RedisTemplate 可用 + 无自定义 |
+| `NoOpDeadLetterQueueService` | RedisTemplate 不可用 + 无自定义 |
+| `DeadLetterRetryScheduler` | DLQ 可用 + `deadLetterRetryEnabled=true`（默认启用） |
+| `MessageDeduplicator` | `dedupEnabled=true` + 无自定义 |
+| `QueueHealthIndicator` | spring-boot-health 在 classpath + 无自定义 |
+| `QueueEndpoint` | spring-boot-actuator 在 classpath |
+| `QueueMetricsBinder` | Micrometer 在 classpath + QueueManager 存在 |
+| `queueConsumerExecutor` | 无同名 Bean |
 
 ## 注意事项
 
-1. **Redis 连接**：`common-redis` 现在是必需依赖，所有 Redis 类型队列均依赖 Redis 连接。非 Redis 类型（Kafka、RocketMQ、RabbitMQ）不受影响。
-2. **Redis 连接复用**：优先使用 `ydsz-common-redis` 的 `RedisTemplate` 复用连接池，不可用时回退到 `QueueProperties` 中的连接配置自建 JedisPool。
-3. **死信队列降级**：Redis 不可用时返回 `NoOpDeadLetterQueueService`，死信功能静默失效。
-4. **顺序消息**：仅 Kafka / RocketMQ 原生支持分区顺序；Redis Stream 通过 `messageGroupKey` 在客户端模拟。
-5. **延迟消息**：仅 RocketMQ 原生支持 18 级延迟；其他引擎调用 `publishDelayed` 等同于立即发送。
-6. **Payload 限制**：`QueueMessage.fromPayload` 限制最大 16MB。
-7. **优雅停机**：消费者线程池由 Spring 管理，`await-termination-seconds=30` 等待积压消息处理。
-8. **死信重试抖动**：`dead-letter-retry-jitter-percent` 避免多实例同时扫描死信队列造成惊群，建议生产环境保持 30% 默认值。
-
-## 故障排查
-
-```yaml
-logging:
-  level:
-    com.njydsz.common.queue: DEBUG
-```
+1. **引擎按需引入**：模块声明各引擎依赖为 `optional`，仅在使用对应引擎时才引入相关 jar。如使用 Kafka 需引入 `kafka-clients`；RocketMQ 需引入 `rocketmq-spring-boot-starter`。
+2. **Redis 连接复用**：`MessageQueueFactory` 优先使用 `ydsz-common-redis` 的 `RedisTemplate` 复用连接；未引入时回退到 `QueueProperties` 自建 JedisPool。
+3. **消费幂等性**：消息引擎存在「至少一次」投递语义，消费端业务逻辑必须保证幂等。建议启用 `dedupEnabled` 利用指纹去重 + 业务层幂等双重保障。
+4. **死信队列依赖 Redis**：`DeadLetterQueueServiceImpl` 基于 Redis 实现，Redis 不可用时降级为 `NoOpDeadLetterQueueService`（消息直接丢弃）。生产环境务必引入 `ydsz-common-redis`。
+5. **消费者线程池治理**：`queueConsumerExecutor` 为兜底线程池，生产环境推荐通过 `ydsz-common-thread` 配置：线程池统一管理（监控、热更新、上下文传播）。
+6. **Stream 消费者组需预创建**：Redis Stream 使用前需确保消费者组已创建（可通过 `XGROUP CREATE` 或首次消费时自动创建）。
+7. **延迟消息精度**：`TimerBasedDelayedMessageSender` 基于时间轮实现，实际投递时间可能有 ±1 秒抖动，不适用于毫秒级精确定时。
+8. **消息压缩阈值**：仅当 payload 消息体大小超过阈值时触发压缩（由 `MessageCompressor` 配置），避免小消息压缩后反而增大的开销。
+9. **限速器单位**：`consumerRateLimitPerSecond=0` 表示不限流。设置过低会导致消费延迟增加，需根据下游承压能力调整。
+10. **去重窗口一致性**：`dedupWindowMillis` 决定消息指纹保留时长（默认 60s），窗口内重复消息被拦截；窗口外同一业务消息可重新投递，需根据业务幂等窗口合理配置。
 
 ## 变更记录
 
-- **26.09.01**（2026-08-16）：接口精简（IMessagePublisher/Subscriber 10→4 方法）；移除过度设计组件（熔断器、消息轨迹、自动压缩等）；`common-redis` 升为必需依赖；新增 `dead-letter-retry-jitter-percent`（抖动延迟）、`dedup-enabled`（去重开关）、`dedup-window-millis`（去重窗口）配置项；新增 `QueueEndpoint` Actuator 端点、`QueueMetricsBinder` Micrometer 桥接；`@EnableScheduling` 移至 `QueueConfiguration`
-- **26.09.01**（2026-08-02）：初始版本
+- **26.09.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
+- **26.09.01**（2026-08-25）：新增 `ConsumerRateLimiter`（消费者限速）、`ConsumerThreadGuard`（消费线程守卫）、`RebalanceMonitor`（再均衡监控）；新增 DelayedMessageSender / TimerBasedDelayedMessageSender 延迟消息组件；新增 ActiveMQ 引擎适配（ActiveMQPublisher / ActiveMQSubscriber）。
+- **26.09.01**（2026-08-15）：架构重构为子模块分包（config / domain / enums / service / queue / mq / health / metrics / actuator / trace / dedup / delayed / compress / serializer / recovery / rate / group / retry / scheduler / constant / annotation / manager），拆分为 20+ 子包。
+- **26.09.01**（2026-08-02）：初始版本，提供 StreamMQ / ListMQ / PubSubMQ 三种 Redis 引擎 + 死信队列 + 基础生产和消费 API。

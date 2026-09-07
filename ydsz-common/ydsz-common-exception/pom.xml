@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common</artifactId>
-        <version>26.09.01</version>
+        <version>26.09.01-SNAPSHOT</version>
     </parent>
 
 

@@ -1,8 +1,8 @@
 # ydsz-common-socket
 
-> WebSocket 实时推送公共模块（L5 业务服务层）
+> WebSocket 实时推送公共模块（L5 业务服务层）— STOMP 协议 + Redis 集群广播 + 在线会话管理 + 离线消息补偿 + 死信/重试队列 + 熔断降级 + 实时推送
 
-提供 WebSocket 集群广播（Redis Pub/Sub）、离线消息补偿、在线用户管理、JWT 握手鉴权、消息限流、实时推送模板、熔断降级、心跳保活、消息重试与死信队列、审计日志、分布式 traceId 跨节点传播、Micrometer 指标采集与 Actuator 健康检查等开箱即用能力，是所有业务模块实时推送的统一基座。
+提供 WebSocket STOMP 端点自动注册、Redis Pub/Sub 集群广播、在线用户管理（多端策略）、离线消息补偿、JWT 握手鉴权、消息速率限制、实时推送模板、熔断降级、心跳保活、消息重试与死信队列、审计日志、链路追踪 MDC 跨节点传播、Micrometer 指标采集与 Actuator 健康检查等开箱即用能力，是所有业务模块实时推送的统一基座。
 
 ## 模块定位
 
@@ -23,7 +23,7 @@
 | `WebSocketAutoConfiguration` | 主自动配置类，`@EnableScheduling` 开启心跳与重试刷新定时任务，按依赖顺序注册全部 Bean |
 | `WebSocketClusterAutoConfiguration` | 集群自动配置类（`ydsz.websocket.cluster.enabled=true` 时激活），注册 `WebSocketClusterPublisher` / `WebSocketClusterSubscriber` / `RedisMessageListenerContainer` |
 | `WebSocketConfigurer` | 实现 `WebSocketMessageBrokerConfigurer`，注册 STOMP 端点、SimpleBroker（`/topic` / `/queue`）、应用前缀 `/app`、消息大小限制、发送超时、入站通道拦截器 |
-| `WebSocketProperties` | 配置属性（`ydsz.websocket.*`），含端点、心跳、消息大小、集群、离线、限流、熔断、重试、连接限制 9 个子配置 |
+| `WebSocketProperties` | 配置属性（`ydsz.websocket.*`），含端点、心跳、消息大小、集群、离线、限流、熔断、重试、连接限制、多端策略、认证 9 个子配置 |
 | `WebSocketConstants` | 常量定义（Redis key 前缀、推送类型等） |
 
 ### 2. 集群广播（Redis Pub/Sub）
@@ -42,6 +42,8 @@
 | `WebSocketSessionEventListener` | Session 事件监听器（上下线、离线补偿、心跳注册、自定义 `WebSocketConnectionListener` 回调） |
 | `MultiDevicePolicy` | 多端登录策略枚举（ALLOW_ALL / MUTEX / NEW_REPLACE_OLD） |
 | `WebSocketConnectionListener` | 连接生命周期监听器 SPI（详见 SPI 扩展点章节） |
+| `LocalSessionRegistry` | 本地 Session 注册表，管理当前节点所有活跃 WebSocket Session，支持按 userId 查询 |
+| `SessionWebSocketHandlerDecoratorFactory` | Session WebSocket Handler 装饰器工厂，用于扩展默认 Session 行为（如添加自定义握手拦截） |
 
 > **多端策略说明**：`WebSocketSessionEventListener.enforceMultiDevicePolicy` 已实现 `ALLOW_ALL` / `MUTEX` / `NEW_REPLACE_OLD` 三种策略，通过 `ydsz.websocket.multi-device.*` 配置（policy 默认 `ALLOW_ALL`、max-sessions-per-user 默认 5）控制，无需业务方自实现。
 
@@ -58,6 +60,8 @@
 |---|---|
 | `RealtimePushTemplate` | 统一推送接口：单播（带/不带优先级）、广播、主题推送、带 TTL 推送、离线补偿推送、刷新重试队列 |
 | `DefaultRealtimePushTemplate` | 默认实现，推送流程：过滤器链 → 序列化 → 注入 traceId → 集群广播 → 失败降级本地推送 → 本地失败入重试队列 → 审计 + 指标 |
+| `PushContext` | 推送上下文实体 |
+| `PushResult` | 推送结果实体 |
 
 ### 6. 安全与限流
 
@@ -99,16 +103,9 @@
 | `MessagePriority` | 消息优先级枚举（URGENT=1 / HIGH=2 / NORMAL=3 / LOW=4） |
 | `StompMessageInterceptor` | STOMP 入站通道拦截器（`ChannelInterceptor`），CONNECT 注入 traceId + SEND 限流 + 审计日志 |
 
-### 11. 在线用户管理（补充）
-
-| 类 | 说明 |
-|---|---|
-| `LocalSessionRegistry` | 本地 Session 注册表，管理当前节点所有活跃 WebSocket Session，支持按 userId 查询 |
-| `SessionWebSocketHandlerDecoratorFactory` | Session WebSocket Handler 装饰器工厂，用于扩展默认 Session 行为（如添加自定义握手拦截） |
-
 > **消息压缩建议**：推荐使用 WebSocket 协议层 permessage-deflate（RFC 7692）压缩，无需应用层 GZIP+Base64 编码。可在 `WebSocketConfigurer` 中通过 `setAllowedNativeHeaders` 或在反向代理层启用。
 
-### 12. 可观测性
+### 11. 可观测性
 
 | 类 | 说明 |
 |---|---|
@@ -186,9 +183,6 @@ public class NotificationService {
 | `ydsz.websocket.message-size-limit` | `65536`（64KB） | 最大消息大小（字节） |
 | `ydsz.websocket.send-timeout-ms` | `5000`（5s） | 消息发送超时（毫秒） |
 | `ydsz.websocket.session-ttl-seconds` | `3600`（1h） | Session TTL（秒），心跳未续期时自动清理 |
-| `ydsz.websocket.heartbeat.server-interval` | `10000`（10s） | 服务端心跳间隔（毫秒） |
-| `ydsz.websocket.heartbeat.client-interval` | `10000`（10s） | 客户端心跳间隔（毫秒） |
-| `ydsz.websocket.heartbeat.stale-session-timeout` | `60000`（60s） | 僵尸 Session 超时阈值（毫秒） |
 
 ### `ydsz.websocket.cluster.*`
 
@@ -239,8 +233,17 @@ public class NotificationService {
 | `ydsz.websocket.connection-limit.max-global-connections` | `10000` | 全局最大连接数 |
 | `ydsz.websocket.connection-limit.max-per-user-connections` | `5` | 每用户最大连接数 |
 
+### `ydsz.websocket.multi-device.*`
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
 | `ydsz.websocket.multi-device.policy` | `ALLOW_ALL` | 多端登录策略（ALLOW_ALL / MUTEX / NEW_REPLACE_OLD） |
 | `ydsz.websocket.multi-device.max-sessions-per-user` | `5` | 每用户最大会话数 |
+
+### `ydsz.websocket.auth.*`
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
 | `ydsz.websocket.auth.gateway-secret` | （空） | 网关透传认证密钥 |
 | `ydsz.websocket.auth.trusted-ips` | （空） | 可信 IP 列表 |
 
@@ -387,8 +390,16 @@ public class ProtobufMessageSerializer implements MessageSerializer {
 | `onlineUserService` | 在线用户服务后端（`redis-backed` 或 `no-op (Redis unavailable)`） |
 
 健康检查判定逻辑：
+
 - 探测过程抛异常 → **DOWN**（详情中带 error 字段）
 - 其他情况 → **UP**
+
+## 自动配置类
+
+| 类 | 说明 |
+|---|---|
+| `WebSocketAutoConfiguration` | 主自动配置类（`@EnableScheduling`），按顺序注册所有 Bean（在线用户、session 集群、重试队列、限流、推送模板、心跳、健康检查等） |
+| `WebSocketClusterAutoConfiguration` | 集群广播配置（`ydsz.websocket.cluster.enabled=true` 时激活），注册 `WebSocketClusterPublisher` / `WebSocketClusterSubscriber` |
 
 ## 注意事项
 
@@ -401,7 +412,7 @@ public class ProtobufMessageSerializer implements MessageSerializer {
 7. **认证拦截器依赖**：`WebSocketAuthInterceptor` 仅在 `TokenService`（来自 common-auth）在 classpath 时才注册；未引入 common-auth 时跳过认证。
 8. **多端登录策略**：`WebSocketSessionEventListener` 已实现 `ALLOW_ALL` / `MUTEX` / `NEW_REPLACE_OLD` 三种策略，通过 `ydsz.websocket.multi-device.*` 配置控制。
 9. **`@EnableScheduling` 副作用**：本模块自动配置类已标注 `@EnableScheduling`，若业务模块也标注，Spring 会自动去重，无副作用。
-10. **消息压缩推荐**：推荐使用 WebSocket 协议层 permessage-deflate（RFC 7692）压缩消息，无需应用层 GZIP+Base64 编码。可在反向代理层（如 Nginx）启用 `WebSocket` 压缩。
+10. **消息压缩推荐**：推荐使用 WebSocket 协议层 permessage-deflate（RFC 7692）压缩消息，无需应用层 GZIP+Base64 编码。可在反向代理层（如 Nginx）启用 WebSocket 压缩。
 
 ## 变更记录
 

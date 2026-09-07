@@ -41,7 +41,7 @@ public interface GenDatasourceRepository {
    *
    * @return Optional 实体
    */
-  Optional<GenDatasource> findByDefaultFlagTrue();
+  Optional<GenDatasource> findByDefaultTrue();
 
   /**
    * 根据名称查询。

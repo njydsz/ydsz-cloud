@@ -1,6 +1,6 @@
 # ydsz-common-search
 
-> 统一搜索服务框架（L5 业务服务层）— 策略模式多引擎抽象 + 索引同步 + 搜索建议 + 业务重排 + 质量分析
+> 统一搜索服务框架（L5 业务服务层）— 策略模式多引擎抽象 + PG tsvector/zhparser 中文搜索 + 内存引擎 SPI + 索引同步/重建 + 搜索建议 + 聚合分面 + 零结果处理
 
 基于**策略模式**封装统一搜索能力，通过 SPI 抽象屏蔽底层引擎差异，默认提供 PostgreSQL tsvector（zhparser 中文分词）与内存引擎两种实现，并支持通过独立 Starter 扩展其他引擎。提供主引擎 + 降级链、Provider 业务接入、索引同步事件桥接、搜索建议、业务重排、搜索分析与质量追踪等完整能力，是所有业务模块全文检索的统一基座。
 
@@ -82,7 +82,7 @@
 | `SearchAnalyticsService` | 搜索分析服务 — 热门词 / 零结果词（Redis Sorted Set）、每日搜索量（Redis Hash），Redis 不可用时降级到内存（上限 1000，LRU 淘汰） |
 | `SearchQualityTracker` | 搜索质量追踪器 — MRR（平均倒数排名）、CTR（点击率）、零结果率、平均延迟，Redis + 内存双写降级，`QualityReport`（record） |
 | `SearchPipeline` | 文本处理管道（Filter 链模式：Normalizer → StopWord → Synonym → ChineseToken → Pinyin），每步可配置启用/禁用 |
-| `ZeroResultHandler` | 零结果引导处理器，返回“您是不是要找”、“热门搜索”、“去掉筛选条件”建议 |
+| `ZeroResultHandler` | 零结果引导处理器，返回"您是不是要找"、"热门搜索"、"去掉筛选条件"建议 |
 | `PersistentDeadLetterQueue` | 基于 PostgreSQL 的持久化死信队列（`ydsz_com_search_dead_letter` 表），数据源不可用时回退到纯内存模式 |
 | `AdvancedQueryParser` | 高级查询解析器，支持 AND/OR/NOT 逻辑组合、引号短语、字段限定等复杂检索表达式 |
 | `ChineseTokenizer` | 中文分词器（jieba/ICU/简单空格策略可选） |
@@ -104,6 +104,13 @@
 | `SearchFilter` | 过滤条件（field / values / operator：EQ/NE/IN/NOT_IN/GT/LT/GTE/LTE/BETWEEN） |
 | `SearchAggregation` | 聚合分面结果（field / label / buckets：key/count） |
 | `SearchSuggestion` | 搜索建议（type：AUTOCOMPLETE/DID_YOU_MEAN，suggestions，originalInput） |
+
+### 10. 配置
+
+| 类 | 说明 |
+|---|---|
+| `SearchProperties` | 搜索配置属性（`ydsz.search.*`） |
+| `SearchAutoConfiguration` | Spring Boot 自动配置（`ydsz.search.enabled=true` 时激活） |
 
 ## 接入方式
 
@@ -364,6 +371,7 @@ public void repairIfNeeded(String tenantId) {
 | `SuggestStrategy` | 搜索建议策略 — 支持自动补全的引擎实现 | PG 引擎实现 |
 | `SearchProvider<T>` | 业务数据提供者 — 将业务实体注册到统一搜索 | 各业务模块实现（如 ProjectSearchProvider / WikiSearchProvider） |
 | `ContentExtractor` | 文档内容提取 — 解析文件正文填充索引 | 业务模块实现（如 PDF/Word/Excel 解析器），无实现时仅索引元数据 |
+| `EngineStarterConfigurer` | 独立 Starter 引擎扩展入口 | 各引擎 Starter 模块实现 |
 
 ## 健康检查
 
@@ -382,6 +390,12 @@ public void repairIfNeeded(String tenantId) {
 | `indexFailureRate` | 索引操作失败率（百分比字符串） |
 
 健康状态：主引擎可用返回 `UP`，不可用或未配置引擎返回 `DOWN`。
+
+## 自动配置类
+
+| 类 | 说明 |
+|---|---|
+| `SearchAutoConfiguration` | 主自动配置（`ydsz.search.enabled=true` 时激活），根据 `primary` 装配引擎 Bean，注册 `UnifiedSearchService` / `IndexSyncService` / `IndexRebuildService` / `SuggestionService` / `SearchHealthIndicator` 等 22+ 个 Bean |
 
 ## 注意事项
 

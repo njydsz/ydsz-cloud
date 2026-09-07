@@ -1,20 +1,81 @@
 # ydsz-common-event
 
-YDSZ 通用事件模块——事务性 Outbox 模式，保障领域事件在微服务架构中的可靠投递。
+> Outbox 事务消息模式（L5 业务服务层）— JDBC 落库保障可靠性 + RocketMQ 投递（可降级 Noop）+ 指数退避重试
 
-## 模块概述
+提供基于 Outbox 模式的领域事件可靠投递能力：业务方法在同一数据库事务中将领域事件写入 outbox 表，`OutboxProcessor` 后台轮询 through outbox 表并向 RocketMQ 投递；投递成功标记为 SENT 并清理；投递失败按指数退避算法重新调度。当 RocketMQ 不可用时，降级为 `NoopEventPublishGateway`（生产环境应配置 `failOnNoop=true` 阻止启动），保障消息不丢。配套健康检查与运维管理服务。
 
-基于 Transactional Outbox 模式实现，核心能力：
+## 模块定位
 
-- 事务内事件写入（业务写操作与 Outbox 消息写入同一数据库事务）
-- 后台轮询器异步投递到 RocketMQ
-- 指数退避重试 + 死信管理
-- 多实例并发安全（原子 claim）
-- Micrometer 指标 + Actuator 健康检查
+| 属性 | 值 |
+|---|---|
+| **层级** | L5 业务服务层 |
+| **类型** | 公共依赖库（不独立部署） |
+| **作用** | 提供基于 Outbox 模式的领域事件可靠投递能力，保障数据库事务与消息投递的最终一致性 |
+| **依赖** | common-core、common-exception、common-util、common-json、common-thread、common-domain；spring-jdbc、spring-tx；可选依赖 rocketmq-spring-boot-starter、spring-boot-health、micrometer-core、spring-data-commons（Page/Pageable） |
+| **版本** | 26.09.01-SNAPSHOT |
 
-## 快速开始
+## 核心能力
 
-### Maven 依赖
+### 1. Outbox 写入
+
+| 类 | 说明 |
+|---|---|
+| `OutboxService` | Outbox 业务写入服务，提供 `save(DomainEvent)` 方法，在当前事务中插入 outbox 记录，保障事件落库与业务操作的原子性 |
+| `OutboxRepository` | Outbox 数据访问层，操作 `ydsz_com_outbox` 表，支持分页查询、状态计数（带缓存 TTL）、CAS 状态更新 |
+| `OutboxMessage` | Outbox 消息实体（含 id、aggregateId、eventType、payload、status、retryCount、nextRetryAt 等字段） |
+| `OutboxStatus` | 状态枚举：`PENDING`（待投递）、`PROCESSING`（投递中）、`SENT`（已投递）、`FAILED`（失败） |
+
+### 2. Outbox 后台处理器
+
+| 类 | 说明 |
+|---|---|
+| `OutboxProcessor` | 后台轮询处理器，按 `pollIntervalSeconds` 间隔扫描 PENDING + 到期的 FAILED 记录，批量拉取后调用 `EventPublishGateway` 投递，使用 CAS（乐观锁）防止并发重复投递；支持多 worker 线程并行投递 |
+
+投递流程：
+
+1. 按 batchSize 拉取 PENDING 状态消息（优先）+ 已到重试时间的 FAILED 消息
+2. 每条消息 CAS 更新为 PROCESSING 状态（防止并发 worker 重复锁定）
+3. 调用 `EventPublishGateway.publish()` 投递到 MQ
+4. 成功 → 标记 SENT + 触发清理；失败 → 计算退避时间，更新 retryCount + nextRetryAt
+
+### 3. 投递网关
+
+| 类 | 说明 |
+|---|---|
+| `EventPublishGateway` | 投递网关接口，定义 `publish(OutboxMessage)` 方法 |
+| `RocketMqEventPublishGateway` | RocketMQ 实现，使用 `RocketMQTemplate` 同步发送消息到 `ydsz-outbox-events` topic |
+| `NoopEventPublishGateway` | 空操作实现，仅记录日志不实际投递。RocketMQ 不可用时降级兜底 |
+
+网关优先级：
+
+1. 容器中已有的 `EventPublishGateway` Bean（业务模块自定义）
+2. `RocketMqGatewayConfiguration`（嵌套配置类）在 `RocketMQTemplate` 存在时自动注册
+3. 降级为 `NoopEventPublishGateway`
+
+### 4. 领域事件 SPI
+
+| 类 | 说明 |
+|---|---|
+| `DomainEvent` | 领域事件接口，业务模块实现，提供 `aggregateId()` / `eventType()` / `occurredAt()` |
+| `DomainEventPublisher` | 领域事件发布器，将领域事件通过 Spring `ApplicationEventPublisher` 发布到 Outbox 链路 |
+| `DomainEventTypes` | 领域事件类型常量注册中心，业务模块声明自定义事件类型 |
+
+### 5. 运维管理
+
+| 类 | 说明 |
+|---|---|
+| `OutboxAdminService` | Outbox 运维管理服务，提供按 aggregateId/eventType 查询、手动重试、标记 SENT/FAILED 等运维操作 |
+
+### 6. 自动配置
+
+| 类 | 说明 |
+|---|---|
+| `EventAutoConfiguration` | 自动配置类，提供 `@PostConstruct` 网关校验（`failOnNoop=true` + Noop 时阻止启动）和 `@PreDestroy` 优雅停机 |
+| `EventAutoConfiguration.RocketMqGatewayConfiguration` | 嵌套配置类，`RocketMQTemplate` 存在时注册 `RocketMqEventPublishGateway`，使用嵌套 `@Configuration` 确保条件注解正确生效 |
+
+## 接入方式
+
+### 1. POM 引入依赖
 
 ```xml
 <dependency>
@@ -23,347 +84,211 @@ YDSZ 通用事件模块——事务性 Outbox 模式，保障领域事件在微�
 </dependency>
 ```
 
-### 基本使用
+### 2. 数据库建表
 
-```java
-@Service
-@RequiredArgsConstructor
-public class OrderService {
-    private final OutboxService outboxService;
-
-    @Transactional
-    public void createOrder(OrderCreateDTO dto) {
-        Order order = orderMapper.insert(dto);
-
-        // 同一事务写入 Outbox
-        outboxService.appendToOutbox(OutboxMessage.builder()
-                .aggregateType("Order")
-                .aggregateId(order.getId())
-                .eventType("OrderCreated")
-                .payload(YdszJson.toJson(order)));
-    }
-}
-
-// 订阅跨模块事件
-@Component
-public class OrderEventListener {
-    @Async
-    @EventListener
-    public void onOrderCreated(OutboxMessage message) {
-        // 处理订单创建事件
-    }
-}
+```sql
+CREATE TABLE ydsz_com_outbox (
+    id              VARCHAR(64)   PRIMARY KEY,
+    aggregate_id    VARCHAR(128)  NOT NULL,
+    aggregate_type  VARCHAR(128),
+    event_type      VARCHAR(256)  NOT NULL,
+    payload         TEXT          NOT NULL,
+    status          VARCHAR(16)   NOT NULL DEFAULT 'PENDING',
+    retry_count     INT           NOT NULL DEFAULT 0,
+    next_retry_at   TIMESTAMP,
+    idempotency_key VARCHAR(128),
+    created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sent_at         TIMESTAMP,
+    error_message   VARCHAR(2000),
+    INDEX idx_status_next_retry (status, next_retry_at),
+    INDEX idx_aggregate (aggregate_id),
+    INDEX idx_event_type (event_type)
+);
 ```
 
-### 数据库初始化
-
-根据数据库类型选择 DDL 脚本：
-
-| 数据库 | DDL 文件 |
-|--------|----------|
-| PostgreSQL 16+ | `src/main/resources/db/outbox_postgresql.sql` |
-| MySQL 8.0+ | `src/main/resources/db/outbox_mysql.sql` |
-
-## 配置参考
+### 3. 配置启用
 
 ```yaml
 ydsz:
   event:
     outbox:
-      enabled: true                    # 是否启用（默认 true）
-      table-name: ydsz_com_outbox         # Outbox 表名
-      poll-interval-seconds: 5        # 轮询间隔（秒）
-      batch-size: 100                 # 每批最大条数
-      max-retries: 5                  # 默认最大重试次数
-      base-backoff-seconds: 10        # 基础退避秒数
-      max-backoff-seconds: 3600       # 最大退避秒数（1 小时）
-      sent-retention-days: 7          # 已投递消息保留天数
-      auto-cleanup: true              # 是否启用自动清理
-      cleanup-interval-hours: 6       # 清理间隔（小时）
-      max-payload-size-bytes: 4194304 # 消息 payload 最大字节数（4MB）
-      stale-processing-threshold-minutes: 5  # PROCESSING 超时阈值（分钟）
-      worker-threads: 1               # 投递工作线程数
-      await-termination-seconds: 10   # 优雅关闭等待超时（秒）
-      fail-on-noop: true              # 检测到 Noop 网关时是否启动失败
-      status-count-cache-seconds: 5   # 队列深度统计缓存时间（秒）
+      enabled: true
+      fail-on-noop: true    # 生产环境必须 true，防止无 MQ 时消息丢失
 ```
 
-详见 [运维手册](src/main/resources/db/OUTBOX_README.md)（含 Grafana 面板配置、故障排查、Actuator 健康检查）。
-
----
-
-## 编码规范
-
-本文档定义模块的编码规范，确保代码一致性和可维护性。
-
-### 1. Javadoc 规范
-
-#### 类级 Javadoc
-
-所有公开类必须包含类级 Javadoc：
+### 4. 发布领域事件
 
 ```java
-/**
- * 类的简要描述
- *
- * <p>详细说明（可选）
- *
- * @author ydsz-team
- * @since 26.09.01
- */
-```
+// 在业务 Service 方法中（同一事务内）
+@Service
+@Transactional
+public class OrderService {
 
-#### 方法级 Javadoc
+    @Autowired
+    private OutboxService outboxService;
 
-所有 public/protected 方法必须包含：
-- 方法描述（一句话）
-- `@param` 每个参数说明
-- `@return` 返回值说明（非 void 方法）
-- `@throws` 所有受检异常说明
-- `@since` 版本号（新增方法）
+    public void createOrder(Order order) {
+        // 1. 业务写库
+        orderRepository.save(order);
 
-#### 字段注释
+        // 2. 发布领域事件（同一事务内写入 outbox 表）
+        outboxService.save(new OrderCreatedEvent(order));
+    }
+}
 
-- `private static final` 常量：必须注释说明用途
-- 实例字段：使用 `/** */` 注释
-
----
-
-### 2. 日志规范
-
-#### 日志级别
-
-| 级别 | 使用场景 |
-|------|----------|
-| TRACE | 开发调试（生产不输出） |
-| DEBUG | 关键分支、重要状态变更 |
-| INFO | 启动/停止、重要业务流程 |
-| WARN | 降级、可恢复异常 |
-| ERROR | 不可恢复异常、系统错误 |
-
-#### 占位符格式
-
-使用 SLF4J `{}` 占位符，**禁止字符串拼接**：
-
-```java
-// 正确
-log.info("Outbox message appended: id={}, type={}, aggregate={}/{}",
-        message.getId(), message.getEventType(),
-        message.getAggregateType(), message.getAggregateId());
-
-// 错误
-log.info("Outbox message appended: id=" + message.getId());
-```
-
-#### 日志语言
-
-- 日志消息：英文或中英混合（确保 Sentry 等系统可搜索）
-- 异常信息：使用 `e.getMessage()`，不强制翻译
-- 上下文 ID：总是包含业务 ID（如 messageId, eventType）
-
----
-
-### 3. Import 规范
-
-遵循 Java import 三段式分隔：
-
-```java
-// 1. Java 标准库
-import java.time.Instant;
-import java.util.List;
-
-// 2. 第三方库
-import org.slf4j.Logger;
-import org.springframework.context.ApplicationEventPublisher;
-
-// 3. 项目内部
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.config.EventProperties;
-```
-
-- 三段之间空一行分隔
-- 不使用 `import *`
-- 按字母顺序排列
-
----
-
-### 4. 线程池命名
-
-符合云顶编码规范 15.4.4，使用 `ydsz-{module}-{biz}-` 前缀：
-
-```java
-// 调度线程（单线程）
-Thread t = new Thread(r, "ydsz-outbox-scheduler");
-
-// 投递线程
-Thread t = new Thread(r, "ydsz-outbox-worker");
-```
-
----
-
-### 5. 异常处理规范
-
-#### 异常分类
-
-| 类型 | 处理方式 |
-|------|----------|
-| 可恢复异常（网络超时、连接拒绝） | WARN 日志 + 依赖重试 |
-| 不可恢复异常（序列化失败、配置错误） | ERROR 日志 + 快速失败 |
-
-#### 异常抛出
-
-```java
-// IllegalArgumentException（参数错误）
-throw new IllegalArgumentException(
-        "Outbox payload size " + size + " exceeds maximum " + maxSize);
-
-// IllegalStateException（配置错误）
-throw new IllegalStateException(
-        "NoopEventPublishGateway is in use and fail-on-noop=true");
-```
-
-#### 异常捕获
-
-捕获异常时记录上下文：
-
-```java
-} catch (Exception e) {
-    log.warn("Publish failed (recoverable), message will be retried: id={}, err={}",
-            message.getId(), e.getMessage());
+// 事件定义
+public record OrderCreatedEvent(Order order) implements DomainEvent {
+    @Override public String aggregateId() { return order.getId().toString(); }
+    @Override public String eventType() { return "order.created"; }
+    @Override public Instant occurredAt() { return Instant.now(); }
 }
 ```
 
----
+## 配置项
 
-### 6. 方法设计规范
+### EventProperties（`ydsz.event.outbox.*`）
 
-- 单个方法不超过 50 行（不含注释），超过时拆分为私有方法
-- 超过 5 个参数时，使用 Builder 模式或 DTO
-- 查询方法返回空集合而非 null（`List.of()` / `Map.of()`）
-- 布尔返回值命名：`can`, `has`, `should`, `exists`
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.event.outbox.enabled` | `true` | 是否启用 Outbox 模式 |
+| `ydsz.event.outbox.table-name` | `ydsz_com_outbox` | Outbox 表名 |
+| `ydsz.event.outbox.poll-interval-seconds` | `5` | 后台轮询间隔（秒） |
+| `ydsz.event.outbox.batch-size` | `100` | 每批最大条数 |
+| `ydsz.event.outbox.max-retries` | `5` | 默认最大重试次数 |
+| `ydsz.event.outbox.base-backoff-seconds` | `10` | 基础退避秒数（指数退避=base*2^retryCount） |
+| `ydsz.event.outbox.max-backoff-seconds` | `3600` | 最大退避秒数（退避上限） |
+| `ydsz.event.outbox.sent-retention-days` | `7` | 已投递消息保留天数（0=不清理） |
+| `ydsz.event.outbox.auto-cleanup` | `true` | 是否自动清理已投递消息 |
+| `ydsz.event.outbox.cleanup-interval-hours` | `6` | 清理间隔（小时） |
+| `ydsz.event.outbox.max-payload-size-bytes` | `4194304` (4MB) | 消息 payload 最大字节数 |
+| `ydsz.event.outbox.stale-processing-threshold-minutes` | `5` | PROCESSING 状态超时阈值（分钟），超时后回收为 PENDING |
+| `ydsz.event.outbox.worker-threads` | `1` | 投递工作线程数 |
+| `ydsz.event.outbox.await-termination-seconds` | `10` | 优雅关闭等待超时（秒） |
+| `ydsz.event.outbox.fail-on-noop` | `true` | 无 EventPublishGateway 实现时是否阻止启动 |
+| `ydsz.event.outbox.status-count-cache-seconds` | `5` | 队列深度统计缓存时间（秒） |
 
----
+## 使用示例
 
-### 7. 测试规范
-
-#### 命名
-
-- 测试类：`{被测类名}Test`
-- 测试方法：`{方法名}_{场景}_{预期行为}`
+### 1. 基本领域事件发布
 
 ```java
-void appendToOutbox_withOversizedPayload_shouldThrowException()
-void processBatch_whenMaxRetriesReached_shouldBeDeadLetter()
+outboxService.save(
+    DomainEventBuilder.builder()
+        .aggregateId(order.getId().toString())
+        .aggregateType("Order")
+        .eventType("order.paid")
+        .payload(YdszJson.toJson(order))
+        .build()
+);
 ```
 
-#### 结构
+### 2. 业务模块集成 DomainEventPublisher
 
-遵循 Arrange-Act-Assert 模式，使用空行分隔三个阶段。
-
-#### 覆盖要求
-
-- 核心业务逻辑：100% 分支覆盖
-- 异常路径：每个 `throw` 有对应测试
-- 边界条件：null、空集合、极值
-
----
-
-### 8. 安全规范
-
-- SQL 注入：必须使用 `NamedParameterJdbcTemplate` 参数化查询，**禁止**拼接 SQL 字符串
-- 日志脱敏：日志中**禁止**输出密码、Token、密钥
-
----
-
-## 架构说明
-
-### 核心组件
-
-| 组件 | 说明 |
-|------|------|
-| `OutboxService` | 事件写入入口，事务内写 Outbox 表 |
-| `OutboxProcessor` | 后台轮询器，扫描 PENDING 消息并投递 |
-| `EventPublishGateway` | 投递网关 SPI（RocketMQ / Noop 实现） |
-| `OutboxRepository` | 数据访问层，JDBC 操作 |
-| `OutboxAdminService` | 死信运维管理 |
-
-### 状态流转
-
-```
-PENDING → PROCESSING → SENT
-   ↑          │
-   └──────────┘ (投递失败，指数退避重试)
-   │
-   └──→ DEAD_LETTER (超过最大重试次数)
+```java
+// 在领域层使用
+domainEventPublisher.publish(new CustomerSignedEvent(customer));
+// 事件监听器在同一事务中将事件写入 outbox 表
 ```
 
-### 时序图
+### 3. 运维管理 - 手动重试
 
-```
-业务代码                OutboxService            数据库              OutboxProcessor         MQ
-   │                       │                      │                      │                    │
-   │── @Transactional ───▶│                      │                      │                    │
-   │   appendToOutbox()    │                      │                      │                    │
-   │                       │── INSERT Outbox ────▶│                      │                    │
-   │                       │                      │                      │                    │
-   │   事务提交            │                      │                      │                    │
-   │                       │── afterCommit() ──────────────────────────▶│                    │
-   │                       │                      │                      │── SELECT PENDING ─▶│
-   │                       │                      │                      │── UPDATE PROCESSING▶│
-   │                       │                      │                      │── publish() ───────▶│
-   │                       │                      │                      │── UPDATE SENT ─────▶│
+```java
+@Autowired
+private OutboxAdminService adminService;
+
+// 按 aggregateId 查询
+List<OutboxMessage> messages = adminService.findByAggregateId("order-123");
+
+// 手动重试单条
+adminService.retry(messageId);
 ```
 
----
+### 4. 集成 RocketMQ
 
-## 监控
+```xml
+<!-- 业务模块 pom.xml 额外引入 -->
+<dependency>
+    <groupId>org.apache.rocketmq</groupId>
+    <artifactId>rocketmq-spring-boot-starter</artifactId>
+</dependency>
+```
 
-### Micrometer 指标
+```yaml
+# 业务模块 application.yml
+rocketmq:
+  name-server: 127.0.0.1:9876
+  producer:
+    group: ydsz-outbox-producer
+```
 
-| 指标名 | 类型 | 说明 |
-|--------|------|------|
-| `ydsz.outbox.publish.success` | Counter | 投递成功次数 |
-| `ydsz.outbox.publish.failure` | Counter | 投递失败次数 |
-| `ydsz.outbox.dead_letter` | Counter | 进入死信的次数 |
-| `ydsz.outbox.publish.single.duration` | Timer | 单条投递耗时 |
-| `ydsz.outbox.publish.batch.duration` | Timer | 批量投递耗时 |
-| `ydsz.outbox.queue.size` | Gauge | 队列深度（按 status 标签区分） |
+## SPI 扩展点
 
-### Actuator 健康检查
+| SPI 接口 | 用途 | 实现方 |
+|---|---|---|
+| `EventPublishGateway` | 自定义投递网关（如 Kafka / RabbitMQ / gRPC 投递），替换默认 RocketMQ 实现 | 业务模块实现并注册为 Bean |
+| `DomainEvent` | 领域事件接口，业务模块定义各自领域事件类型 | 业务模块实现 |
+| `DomainEventPublisher` | 领域事件发布器 SPI，自定义发布策略（如事务同步、延迟发布等） | 业务模块实现 |
 
-访问 `GET /actuator/health/outbox` 获取健康状态（详见 [运维手册](src/main/resources/db/OUTBOX_README.md)）。
+## 健康检查
 
----
+| 端点 | 说明 | 触发条件 |
+|---|---|---|
+| `/actuator/health/outbox` | Outbox 健康检查（队列深度、积压率、投递成功率、平均投递延迟等） | `spring-boot-health` 在 classpath + `OutboxRepository` Bean 存在 |
 
-## 版本变更
+`OutboxHealthIndicator` 暴露信息：
 
-### 26.09.01 (2026-08-16)
+| 字段 | 说明 |
+|---|---|
+| `pendingCount` | PENDING 状态积压量 |
+| `processingCount` | 投递中的消息量 |
+| `failedCount` | FAILED 状态消息量 |
+| `staleProcessingCount` | PROCESSING 超时（> threshold）的消息量 |
+| `publishSuccessRate` | 最近窗口投递成功率 |
+| `avgPublishLatencyMs` | 平均投递延迟（毫秒） |
+| `status` | 健康状态（UP / DEGRADED / DOWN） |
 
-**精简重构：去除过度设计，聚焦核心 Outbox 模式**
+降级判定：
 
-- **移除 JSON Schema 校验框架**：删除 `JsonSchemaRegistry`、`JsonSchemaValidator` 等 5 个 SPI 类（原框架无实际实现，属于幽灵 SPI）
-- **移除同步投递模式**：删除 `doSyncPublish`、`registerSyncPublishCallback`、`isRecoverableException` 等方法及相关配置（与 Outbox 异步本质冲突）
-- **EventProperties 配置瘦身**：从 25+ 个字段精简至 16 个核心配置，移除未验证/占位配置项
-- **DatabaseDialect 枚举移除**：所有数据库方言生成相同 SQL（`LIMIT ?`），删除抽象层
-- **OutboxMessage 字段精简**：移除 `headers`、`schemaVersion`、`contentType`、`priority` 字段及 `OutboxMessageDraft` 类
-- **DomainEvent 精简**：移除 `Serializable` 接口和 `Clock` 参数
-- **DDL 简化**：同步移除对应列定义和索引条件
-- **新增**：`await-termination-seconds` 配置支持优雅关闭超时自定义
+- PENDING 积压量 > 10,000 → DEGRADED
+- 投递成功率 < 95% → DEGRADED
+- PROCESSING 超时率 > 10% → DEGRADED
+- 数据库连接异常 / 投递网关根本不可用 → DOWN
 
----
+## 自动配置类
 
-## 附录：常用缩写
+| 类 | 说明 |
+|---|---|
+| `EventAutoConfiguration` | 核心自动配置，条件：`JdbcTemplate` Bean 存在 + `ydsz.event.outbox.enabled=true` |
+| `EventAutoConfiguration.RocketMqGatewayConfiguration` | 嵌套配置类，条件：`RocketMQTemplate` 在 classpath 且 Bean 存在时注册 |
 
-| 缩写 | 含义 |
-|------|------|
-| MQ | Message Queue（消息队列） |
-| CAS | Compare-And-Set |
-| SPI | Service Provider Interface |
-| DDL | Data Definition Language |
-| Outbox | 事务性发件箱 |
+装配条件：
 
----
+| Bean | 条件 |
+|---|---|
+| `OutboxRepository` | 无自定义 + `JdbcTemplate` 存在（由外部条件保证） |
+| `OutboxService` | 无自定义 + `OutboxRepository` 存在 |
+| `RocketMqEventPublishGateway` | 无自定义 `EventPublishGateway` + `RocketMQTemplate` 在 classpath 且 Bean 存在 |
+| `NoopEventPublishGateway` | 无自定义 `EventPublishGateway` + `RocketMQTemplate` 不可用 |
+| `OutboxProcessor` | 始终创建（构造时确定网关引用），initMethod=start |
+| `OutboxHealthIndicator` | spring-boot-health 在 classpath |
+| `OutboxAdminService` | 无自定义 |
 
-## 许可证
+## 注意事项
 
-MIT License
+1. **fail-on-noop 必须开启**：生产环境必须保持 `failOnNoop=true`，防止 RocketMQ 不可用时 Outbox 处理器静默降级为 Noop，导致消息堆积且无告警。
+2. **指数退避有上限**：`baseBackoff * 2^retryCount` 超过 `maxBackoffSeconds` 时取上限值，避免重试间隔无限增长导致消息长时间无法重试。
+3. **索引必须创建**：`idx_status_next_retry` 复合索引是轮询查询的性能核心，未创建会导致全表扫描。
+4. **事务一致性保证**：`outboxService.save()` 必须在业务方法的同一事务中调用（`@Transactional`），确保业务数据与 outbox 消息同时提交或同时回滚。
+5. **PROCESSING 超时回收**：投递过程中应用崩溃会导致消息卡在 PROCESSING 状态，`stale-threshold-minutes` 参数控制超时回收阈值，超时后回收为 PENDING 重新投递。
+6. **清理任务有延迟**：`auto-cleanup=true` 默认每 6 小时执行一次，可能有最多数小时的 SENT 记录残留，非实时清理不影响投递语义。
+7. **多个 worker 需防并发**：`worker-threads > 1` 时通过 CAS 更新 PROCESSING 状态防止并发重复投递，但不可跨 JVM，分布式场景需额外分布式锁。
+8. **payload 大小限制**：`maxPayloadSizeBytes=4MB`，超过限制的事件在写入阶段抛出异常；大消息建议只传引用 ID，消费端通过 ID 查询详情。
+9. **网关覆盖优先级**：业务模块自定义 `EventPublishGateway` Bean 优先于所有内置实现；自定义 Bean 注册时应使用 `@ConditionalOnMissingBean` 避免覆盖。
+10. **优雅停机有超时**：`awaitTerminationSeconds=10`，停机时 OutboxProcessor 最多等待 10 秒让正在投递的消息完成，超时后强制中断，投递中的消息将保持 PROCESSING 状态等待下次启动回收。
+
+## 变更记录
+
+- **26.09.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
+- **26.09.01**（2026-08-20）：移除 JSON Schema 校验框架和同步投递模式的自动配置，精简职责；移除已废弃的 `EventStore` 接口支持，统一使用 `DomainEventPublisher`；将 `RocketMqGatewayConfiguration` 由独立顶层配置类改为嵌套配置类，修复 `@Import` 导致条件注解失效问题。
+- **26.09.01**（2026-08-02）：初始版本，提供 OutboxService + OutboxProcessor + RocketMqEventPublishGateway + NoopEventPublishGateway。

@@ -55,9 +55,9 @@ public class GenDatasourceRepositoryImpl implements GenDatasourceRepository {
   }
 
   @Override
-  public Optional<GenDatasource> findByDefaultFlagTrue() {
+  public Optional<GenDatasource> findByDefaultTrue() {
     LambdaQueryWrapper<GenDatasource> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(GenDatasource::getDefaultFlag, true).last("LIMIT 1");
+    wrapper.eq(GenDatasource::getDefault, true).last("LIMIT 1");
     return Optional.ofNullable(mapper.selectOne(wrapper));
   }
 

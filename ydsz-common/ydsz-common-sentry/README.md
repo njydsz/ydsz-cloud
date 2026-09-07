@@ -1,6 +1,6 @@
 # ydsz-common-sentry
 
-> 错误监控与可观测性模块（L5 业务服务层）— 指标 / 日志 / 链路追踪 / SLA / 告警统一抽象
+> 统一可观测性平台（L5 业务服务层）— OpenTelemetry 深度集成 + SkyWalking 兼容 + 双路日志(ELK+Loki) + Micrometer 指标 + SLA 框架切面 + 告警收敛降噪 + 熔断降级
 
 统一可观测性抽象，封装指标采集（Micrometer / 内存降级）、日志发布（ELK / Loki / 双发 + 异步有界队列 + 令牌桶限流）、链路追踪（SkyWalking / OpenTelemetry / MDC 降级）、SLA 框架（`@SlaMetric` 注解 + AOP）、告警收敛（时间窗口 + 去重 + 静默期 + IM 通知）、熔断降级保护，是所有业务模块可观测性的统一基座。
 
@@ -73,7 +73,6 @@
 | `SlaMetricAspect` | AOP 切面，拦截 `@SlaMetric` 方法，自动采集执行耗时并判断 SLA 违反 |
 | `SlaStep` | SLA 步骤定义 |
 | `SlaDefinition` | SLA 定义实体 |
-| `SlaMetric`（指标） | SLA 相关 Micrometer 指标 |
 
 ### 5. 告警收敛
 
@@ -90,7 +89,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `CircuitBreaker` | 统一熔断器，26.09.01 起委托 Resilience4j 实现（原 v1.x 自实现 AtomicReference + CAS 状态机已替换）；状态 CLOSED → OPEN → HALF_OPEN → CLOSED |
+| `CircuitBreaker` | 统一熔断器，26.09.01 起委托 Resilience4j 实现；状态 CLOSED → OPEN → HALF_OPEN → CLOSED |
 
 状态机：
 
@@ -114,7 +113,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `SentryAutoConfiguration` | Spring Boot 自动配置，`ydsz.sentry.enabled=true`（默认）时装配；`@EnableScheduling` 启用定时任务；内嵌 `MicrometerMetricsConfiguration` 等子配置 |
+| `SentryAutoConfiguration` | Spring Boot 自动配置，`ydsz.sentry.enabled=true`（默认）时装配；`@EnableScheduling` 启用定时任务；内嵌 `MetricsAutoConfiguration` 等子配置 |
 | `MetricsAutoConfiguration` | 指标采集自动配置，注册 `MicrometerMetricsCollector` / `InMemoryMetricsCollector` / `SystemMetricsCollector` |
 | `LoggingAutoConfiguration` | 日志发布自动配置，按 `primary` 选择 ELK / Loki / Dual / Async 方案 |
 | `TracingAutoConfiguration` | 链路追踪自动配置，按 `primary` 选择 SkyWalking / OpenTelemetry / Default MDC |
@@ -124,8 +123,10 @@
 | `SelfMonitorAutoConfiguration` | 自监控自动配置，周期性上报 Sentry 各组件可用性指标到 MetricsCollector |
 | `HealthIndicatorAutoConfiguration` | 健康检查自动配置，注册 `SentryHealthIndicator` + `SystemResourceHealthIndicator` |
 | `SentryMetricsAdapter` | Micrometer ↔ Sentry 指标适配器，将 Sentry 内部指标桥接到 Micrometer 体系 |
-| `SentryProperties` | 配置属性（`ydsz.sentry.*`） |
 | `SentryInfoContributor` | Actuator Info 贡献器，在 `/actuator/info` 暴露 Sentry 模块信息 |
+| `SentryProperties` | 配置属性（`ydsz.sentry.*`） |
+| `SentryObservation` | Sentry 可观测门面（Bean 模式） |
+| `SentryService` | 统一服务门面 |
 
 ## 接入方式
 
@@ -246,25 +247,15 @@ public class SearchService {
 | `ydsz.sentry.tracing.otel.service-instance-id` | - | 服务实例 ID（不填则随机生成雪花 ID） |
 | `ydsz.sentry.tracing.otel.sampler` | `parent-based` | 采样器（always-on / always-off / ratio / parent-based / composite） |
 | `ydsz.sentry.tracing.otel.sampler-ratio` | 0.1 | 采样率（0.0 ~ 1.0） |
-| `ydsz.sentry.tracing.otel.sampler-service-ratios` | - | 服务级采样率覆盖（service name -> ratio） |
-| `ydsz.sentry.tracing.otel.sampler-gray-tag-ratios` | - | 灰度标签采样率（gray tag -> ratio） |
 | `ydsz.sentry.tracing.otel.health-check-paths` | `[/actuator, /health, /metrics]` | 健康检查路径前缀（不采样） |
 | `ydsz.sentry.tracing.otel.enrichment-enabled` | true | 是否启用 Span 属性自动注入 |
-| `ydsz.sentry.tracing.otel.enrichment-sources` | `[mdc]` | 自动注入来源列表 |
 | `ydsz.sentry.tracing.otel.tail-sampling.enabled` | true | 是否启用尾部采样 |
 | `ydsz.sentry.tracing.otel.tail-sampling.record-ratio` | 0.05 | 总采样率（未命中规则时） |
 | `ydsz.sentry.tracing.otel.tail-sampling.error-status` | true | 是否 100% 采集错误 Span |
 | `ydsz.sentry.tracing.otel.tail-sampling.slow-threshold-millis` | 3000 | 慢请求阈值（毫秒，>0 时 100% 采集） |
-| `ydsz.sentry.tracing.otel.tail-sampling.error-code-prefixes` | `[A0, B0, C0]` | 错误码前缀（命中前缀的 100% 采集） |
-| `ydsz.sentry.tracing.otel.tail-sampling.gray-tags` | - | 灰度标签列表（命中即 100% 采集） |
-| `ydsz.sentry.tracing.otel.tail-sampling.pressure-traffic` | true | 是否 100% 采集压测流量 |
 | `ydsz.sentry.tracing.otel.error-event.enabled` | true | 是否启用错误事件发布 |
-| `ydsz.sentry.tracing.otel.error-event.slow-threshold-millis` | 3000 | 慢 Span 阈值（毫秒） |
 | `ydsz.sentry.tracing.otel.batch.max-queue-size` | 2048 | 队列大小 |
 | `ydsz.sentry.tracing.otel.batch.max-export-batch-size` | 512 | 批量导出大小 |
-| `ydsz.sentry.tracing.otel.batch.schedule-delay-millis` | 5000 | 调度延迟（毫秒） |
-| `ydsz.sentry.tracing.otel.batch.exporter-timeout-millis` | 30000 | 导出超时（毫秒） |
-| `ydsz.sentry.tracing.otel.resource-attributes` | - | 资源自定义属性 |
 | `ydsz.sentry.alerting.enabled` | true | 是否启用告警 |
 | `ydsz.sentry.alerting.silence-period-millis` | 300000 | 静默期（毫秒） |
 | `ydsz.sentry.alerting.log-alerts` | true | 是否记录告警日志 |
@@ -353,7 +344,6 @@ ydsz:
           record-ratio: 0.05
           error-status: true        # 错误 100% 采集
           slow-threshold-millis: 3000  # 慢请求 100% 采集
-          gray-tags: [gray-canary]    # 灰度标签 100% 采集
           pressure-traffic: true       # 压测流量 100% 采集
 ```
 
@@ -371,8 +361,6 @@ ydsz:
       loki:
         enabled: true
         url: http://loki:3100
-      dual:
-        fail-on-all-error: false   # 所有发布器都失败才算失败
       async:
         enabled: true
         queue-capacity: 8192
@@ -385,7 +373,7 @@ ydsz:
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
 | `MetricsCollector` | 统一指标采集（Counter / Gauge / Timer / Histogram） | 框架内置 `MicrometerMetricsCollector`、`InMemoryMetricsCollector`；业务可扩展 |
-| `LogPublisher` | 日志发布（单条 / 批量） | 框架内置 `ElkLogPublisher`、`LokiLogPublisher`、`DualLogPublisher`、`AsyncLogPublisher`；业务可扩展 |
+| `LogPublisher` | 日志发布（单条 / 批量） | 框架内置 `ElkLogPublisher`、`LokiLogPublisher`、`DualLogPublisher`、`AsyncLogPublisher`、`NoOpLogPublisher`；业务可扩展 |
 | `TraceContext` | 链路追踪上下文（TraceId / SpanId / tag） | 框架内置 `SkyWalkingTraceContext`、`OpenTelemetryTraceContext`、`DefaultTraceContext`；业务可扩展 |
 | `AlertPublisher` | 告警发布（经收敛后发布） | 框架内置 `DefaultAlertPublisher`；业务可扩展 |
 | `SlaCollector` | SLA 指标采集 | 框架内置 `DefaultSlaCollector`；业务可扩展 |
@@ -396,6 +384,7 @@ ydsz:
 |---|---|---|
 | `/actuator/health/sentry` | Sentry 模块整体健康检查 | `spring-boot-health` 在 classpath 且 `ydsz.sentry.enabled=true` |
 | `/actuator/health/system` | 系统资源健康检查 | `SystemMetricsCollector` Bean 存在 |
+| `/actuator/info` | Sentry 模块信息贡献 | `SentryInfoContributor` 自动注册 |
 
 `SentryHealthIndicator` 暴露信息：
 
@@ -413,10 +402,7 @@ ydsz:
 | `tracing.tracer` | 链路追踪系统名称 |
 | `tracing.tracing` | 当前是否在追踪链路中 |
 
-状态判定规则：
-
-- 任一组件 `isAvailable()=false` → DOWN
-- 其他情况 → UP
+状态判定规则：任一组件 `isAvailable()=false` → DOWN，其他情况 → UP。
 
 `SystemResourceHealthIndicator` 暴露信息：
 
@@ -431,6 +417,20 @@ ydsz:
 
 状态判定规则：内存使用率 > 90% → DOWN，否则 UP。
 
+## 自动配置类
+
+| 类 | 说明 |
+|---|---|
+| `SentryAutoConfiguration` | 主自动配置（`@EnableScheduling`），装配核心 SentryObservation 门面与全部子配置 |
+| `MetricsAutoConfiguration` | 指标采集配置，注册 Micrometer + 内存 + 系统指标采集器 |
+| `LoggingAutoConfiguration` | 日志发布配置，按 primary 选择ELK/Loki/Dual/Async 方案 |
+| `TracingAutoConfiguration` | 链路追踪配置，按 primary 选择 SkyWalking/OTel/MDC |
+| `OtelAutoConfiguration` | OpenTelemetry SDK 配置（`ydsz.sentry.tracing.otel.enabled=true` 时激活） |
+| `AlertingAutoConfiguration` | 告警收敛配置，注册 AlertConverger + DefaultAlertPublisher |
+| `SlaAutoConfiguration` | SLA 配置，注册 DefaultSlaCollector + SlaMetricAspect |
+| `SelfMonitorAutoConfiguration` | 自监控配置，周期性上报 Sentry 各组件可用性指标 |
+| `HealthIndicatorAutoConfiguration` | 健康检查配置，注册 SentryHealthIndicator + SystemResourceHealthIndicator |
+
 ## 注意事项
 
 1. **Micrometer 可选**：`MicrometerMetricsCollector` 需 classpath 中存在 `MeterRegistry`，不可用时自动降级为 `InMemoryMetricsCollector`，业务无感知但指标不持久化。
@@ -439,7 +439,7 @@ ydsz:
 4. **告警静默期**：`silence-period-millis` 控制相同告警的最小间隔，避免告警风暴；收敛由 `AlertConverger` 实现（时间窗口 + 去重）。
 5. **OTel SDK 默认不启用**：`ydsz.sentry.tracing.otel.enabled=false`（默认），仅当显式启用时才初始化 OTel SDK；未启用时仅注册 `OpenTelemetryTraceContext` 但不导出 Span。
 6. **Span 评估需 OTel SDK**：`tail-sampling.enabled=true` 依赖 `OtelSdkBuilder` 初始化的 `SpanEvaluationProcessor`，未启用 OTel SDK 时评估配置无效。
-7. **NotifyAlertHandler 可选**：`NotifyAlertHandler` 需 classpath 中存在 `common-notify` 的 `NotifyService`，未引入时告警仅记录日志不发送 IM 通知。
+7. **NotifyAlertHandler 可选**：需 classpath 中存在 `common-notify` 的 `NotifyService`，未引入时告警仅记录日志不发送 IM 通知。
 8. **SlaMetricAspect 需 AOP**：`@SlaMetric` 注解需 classpath 中存在 AspectJ Weaver，未引入时注解不生效。
 9. **CircuitBreaker CAS 安全**：HALF_OPEN 状态下使用 AtomicInteger 保证仅单个探测请求通过，避免并发探测导致状态混乱。
 

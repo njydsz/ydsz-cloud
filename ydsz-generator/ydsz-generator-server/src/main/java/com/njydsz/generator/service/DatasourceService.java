@@ -45,7 +45,7 @@ public class DatasourceService {
    * @return 数据源 VO
    */
   public GenDatasourceRespVO getDefaultVO() {
-    return datasourceRepository.findByDefaultFlagTrue()
+    return datasourceRepository.findByDefaultTrue()
         .map(DatasourceConverter::toRespVO)
         .orElse(null);
   }
