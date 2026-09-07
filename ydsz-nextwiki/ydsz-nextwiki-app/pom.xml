@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-nextwiki</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.09.01</version>
     </parent>
     <artifactId>ydsz-nextwiki-app</artifactId>
     <name>ydsz-nextwiki-app</name>

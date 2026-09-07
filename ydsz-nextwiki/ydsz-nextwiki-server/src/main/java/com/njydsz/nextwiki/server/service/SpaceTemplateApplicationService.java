@@ -85,7 +85,7 @@ public class SpaceTemplateApplicationService {
         .system(false)
         .publicAccess(false)
         .structureJson(structureJson)
-        .sortOrder(0)
+        .sort(0)
         .usageCount(0)
         .createdBy(userId)
         .updatedBy(userId)

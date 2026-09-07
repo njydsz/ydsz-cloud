@@ -35,7 +35,7 @@ public interface SocialClientRepository {
   List<SocialClientVO> findByPage(SocialClientPageQuery query);
 
   /**
-   * 查询所有已启用的平台配置（按 sort_order 升序）。
+   * 查询所有已启用的平台配置（按 sort 升序）。
    *
    * @return 已启用的配置 VO 列表
    */

@@ -71,7 +71,7 @@ public interface DictItemService {
    * <p>典型用法：前端下拉框 / 单选框数据源。命中 Redis 缓存时延迟 < 1ms。
    *
    * @param typeCode 字典类型编码
-   * @return 字典项列表（按 {@code sortOrder} 升序）
+   * @return 字典项列表（按 {@code sort} 升序）
    */
   List<DictItemVO> listEnabledByTypeCode(String typeCode);
 

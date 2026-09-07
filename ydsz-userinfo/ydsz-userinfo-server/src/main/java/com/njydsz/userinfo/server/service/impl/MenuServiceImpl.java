@@ -30,7 +30,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  *
  * <ul>
  *   <li>菜单 CRUD（含 {@code parentId} 树形关联）
- *   <li>菜单全量列表查询（按 {@code sortOrder} 倒序，前端表格展示）
+ *   <li>菜单全量列表查询（按 {@code sort} 倒序，前端表格展示）
  *   <li>菜单树形结构查询（递归构建父子关系）
  *   <li>删除前置校验（有子菜单时禁止删除，避免悬挂引用）
  *   <li>变更后触发权限缓存失效
@@ -72,7 +72,7 @@ public class MenuServiceImpl implements MenuService {
   /**
    * {@inheritDoc}
    *
-   * @return 全部未删除菜单列表（按 sortOrder 降序）
+   * @return 全部未删除菜单列表（按 sort 降序）
    */
   @Override
   public List<MenuVO> list() {
@@ -179,7 +179,7 @@ public class MenuServiceImpl implements MenuService {
               vo.setPath(menuVO.getPath());
               vo.setComponent(menuVO.getComponent());
               vo.setIcon(menuVO.getIcon());
-              vo.setSortOrder(menuVO.getSortOrder());
+              vo.setsort(menuVO.getsort());
               vo.setPermissionCode(menuVO.getPermissionCode());
               vo.setVisible(menuVO.getVisible());
               vo.setStatus(menuVO.getStatus());
@@ -192,6 +192,6 @@ public class MenuServiceImpl implements MenuService {
         MenuTreeVO::getId,
         MenuTreeVO::getParentId,
         MenuTreeVO::setChildren,
-        MenuTreeVO::getSortOrder);
+        MenuTreeVO::getsort);
   }
 }

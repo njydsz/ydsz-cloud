@@ -128,7 +128,7 @@ public interface DictRepository {
    * 查询指定父节点下的所有子字典项。
    *
    * @param parentId 父字典项 ID
-   * @return 子字典项 VO 列表（按 sortOrder 升序）
+   * @return 子字典项 VO 列表（按 sort 升序）
    */
   List<DictItemVO> findItemsByParentId(String parentId);
 
@@ -136,7 +136,7 @@ public interface DictRepository {
    * 按类型编码查询所有字典项（含全部状态，用于树形构建）。
    *
    * @param typeCode 字典类型编码
-   * @return 字典项 VO 列表（按 sortOrder 升序）
+   * @return 字典项 VO 列表（按 sort 升序）
    */
   List<DictItemVO> findItemsByTypeCode(String typeCode);
 

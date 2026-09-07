@@ -103,7 +103,7 @@ import com.njydsz.system.server.vo.DictItemExcelVO;
  * // 管理后台新增字典项（自动创建版本快照）
  * String id = dictItemService.save(DictItemVO.builder()
  *     .typeCode("user_status").itemCode("RESIGNED")
- *     .itemValue("离职").sortOrder(40).build());
+ *     .itemValue("离职").sort(40).build());
  * }</pre>
  *
  * @author ydsz-team
@@ -182,18 +182,18 @@ public class DictItemServiceImpl implements DictItemService {
   /**
    * 按 typeCode 查询所有启用状态的字典项列表（走缓存）
    *
-   * <p>典型调用方：前端下拉框、级联选择器数据源。 仅返回 {@code status='ENABLED'} 的字典项，按 {@code sortOrder} 升序。
+   * <p>典型调用方：前端下拉框、级联选择器数据源。 仅返回 {@code status='ENABLED'} 的字典项，按 {@code sort} 升序。
    *
    * <p><b>性能说明：</b>
    *
    * <ul>
-   *   <li>索引：{@code (tenant_id, type_code, status, sort_order)}
+   *   <li>索引：{@code (tenant_id, type_code, status, sort)}
    *   <li>单 typeCode 字典项一般 < 100 条，单次查询 < 5ms
    *   <li>缓存命中后 1ms 内返回
    * </ul>
    *
    * @param typeCode 字典类型编码
-   * @return 启用状态的字典项列表（按 sortOrder 升序），无数据时返回空列表
+   * @return 启用状态的字典项列表（按 sort 升序），无数据时返回空列表
    */
   @Override
   @Cacheable(
@@ -218,7 +218,7 @@ public class DictItemServiceImpl implements DictItemService {
    * <p>本方法<b>不走缓存</b>，由调用方按需缓存；树形结构变化频次低，建议调用方做本地缓存。
    *
    * @param parentId 父字典项 ID（{@code ydsz_sys_dict_item.parent_id}）
-   * @return 子字典项列表（按 sortOrder 升序），无子节点返回空列表
+   * @return 子字典项列表（按 sort 升序），无子节点返回空列表
    */
   @Override
   public List<DictItemVO> listChildren(String parentId) {
@@ -246,7 +246,7 @@ public class DictItemServiceImpl implements DictItemService {
         DictItemVO::getId,
         DictItemVO::getParentId,
         DictItemVO::setChildren,
-        DictItemVO::getSortOrder);
+        DictItemVO::getsort);
   }
 
   /**
@@ -584,7 +584,7 @@ public class DictItemServiceImpl implements DictItemService {
     vo.setTypeCode(excelRow.getTypeCode());
     vo.setItemCode(excelRow.getItemCode());
     vo.setItemValue(excelRow.getItemValue());
-    vo.setSortOrder(excelRow.getSortOrder());
+    vo.setsort(excelRow.getsort());
     vo.setParentId(excelRow.getParentId());
     vo.setDescription(excelRow.getDescription());
     vo.setStatus(excelRow.getStatus());
@@ -602,7 +602,7 @@ public class DictItemServiceImpl implements DictItemService {
     vo.setTypeCode(item.getTypeCode());
     vo.setItemCode(item.getItemCode());
     vo.setItemValue(item.getItemValue());
-    vo.setSortOrder(item.getSortOrder());
+    vo.setsort(item.getsort());
     vo.setParentId(item.getParentId());
     vo.setDescription(item.getDescription());
     vo.setStatus(item.getStatus());
@@ -652,7 +652,7 @@ public class DictItemServiceImpl implements DictItemService {
     dto.setTypeCode(vo.getTypeCode());
     dto.setItemCode(vo.getItemCode());
     dto.setItemValue(vo.getItemValue());
-    dto.setSortOrder(vo.getSortOrder());
+    dto.setsort(vo.getsort());
     dto.setDescription(vo.getDescription());
     dto.setExtJson(vo.getExtJson());
     dto.setStatus(vo.getStatus());

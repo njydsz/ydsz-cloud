@@ -52,7 +52,7 @@ public class SpaceDTO implements Serializable {
   private String visibility;
 
   @Schema(description = "排序序号")
-  private Integer sortOrder;
+  private Integer sort;
 
   @Schema(description = "成员数量")
   private Integer memberCount;

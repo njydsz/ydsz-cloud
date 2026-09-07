@@ -18,7 +18,7 @@ import com.njydsz.common.safe.annotation.Xss;
  *
  * <ul>
  *   <li>{@code planCode} — 套餐编码，全局唯一标识
- *   <li>{@code sortOrder} — 排序号（升序，影响前端套餐选择器顺序）
+ *   <li>{@code sort} — 排序号（升序，影响前端套餐选择器顺序）
  * </ul>
  *
  * @author ydsz-team
@@ -45,7 +45,7 @@ public class TenantPlanDTO {
   @Xss(message = "描述包含非法内容")
   private String description;
 
-  private Integer sortOrder;
+  private Integer sort;
 
   @Size(max = 2048, message = "配额配置长度不能超过2048")
   @Xss(message = "配额配置包含非法内容")

@@ -73,7 +73,7 @@ public class Config extends MpBaseEntity<String> {
     private Boolean public;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 
   // ==================== 充血领域方法 ====================
 

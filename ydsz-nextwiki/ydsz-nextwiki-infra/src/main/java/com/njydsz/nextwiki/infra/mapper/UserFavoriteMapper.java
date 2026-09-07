@@ -71,7 +71,7 @@ public interface UserFavoriteMapper extends BaseMapper<UserFavorite> {
    * @param tenantId 租户ID
    * @return 最大排序号（无记录时返回 0）
    */
-  int selectMaxSortOrder(@Param("userId") String userId, @Param("tenantId") String tenantId);
+  int selectMaxsort(@Param("userId") String userId, @Param("tenantId") String tenantId);
 
   /**
    * 检查节点是否已被用户收藏。
@@ -103,14 +103,14 @@ public interface UserFavoriteMapper extends BaseMapper<UserFavorite> {
    *
    * @param userId 用户ID
    * @param nodeId 节点ID
-   * @param sortOrder 新排序号
+   * @param sort 新排序号
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_user_favorite SET sort_order = #{sortOrder}, updated_at = NOW() "
+      "UPDATE nw_user_favorite SET sort = #{sort}, updated_at = NOW() "
           + "WHERE user_id = #{userId} AND node_id = #{nodeId}")
-  int updateSortOrder(
+  int updatesort(
       @Param("userId") String userId,
       @Param("nodeId") String nodeId,
-      @Param("sortOrder") int sortOrder);
+      @Param("sort") int sort);
 }

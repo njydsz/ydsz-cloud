@@ -12,7 +12,7 @@
     <result column="owner_id" property="ownerId"/>
     <result column="status" property="status"/>
     <result column="visibility" property="visibility"/>
-    <result column="sort_order" property="sortOrder"/>
+    <result column="sort" property="sort"/>
     <result column="member_count" property="memberCount"/>
     <result column="node_count" property="nodeCount"/>
     <result column="quota_limit" property="quotaLimit"/>
@@ -27,7 +27,7 @@
 
   <sql id="Base_Column_List">
     id, name, description, icon_url, cover_url, tenant_id, owner_id, status, visibility,
-    sort_order, member_count, node_count, quota_limit, quota_used,
+    sort, member_count, node_count, quota_limit, quota_used,
     created_at, created_by, updated_at, updated_by, deleted, deleted_time
   </sql>
 
@@ -36,7 +36,7 @@
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_space
     WHERE tenant_id = #{tenantId} AND deleted = FALSE
-    ORDER BY sort_order ASC, created_at DESC
+    ORDER BY sort ASC, created_at DESC
   </select>
 
   <!-- 分页查询租户下的空间列表 -->
@@ -44,7 +44,7 @@
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_space
     WHERE tenant_id = #{tenantId} AND deleted = FALSE
-    ORDER BY sort_order ASC, created_at DESC
+    ORDER BY sort ASC, created_at DESC
   </select>
 
   <!-- 根据租户ID和名称查询空间 -->

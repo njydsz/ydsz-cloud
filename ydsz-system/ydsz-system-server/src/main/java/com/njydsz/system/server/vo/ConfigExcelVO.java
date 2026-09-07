@@ -50,7 +50,7 @@ public class ConfigExcelVO {
 
   /** 排序序号 */
   @ExcelProperty(value = "排序序号", order = 8, width = 10)
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 状态（ENABLED/DISABLED） */
   @ExcelProperty(value = "状态", order = 9, width = 12)

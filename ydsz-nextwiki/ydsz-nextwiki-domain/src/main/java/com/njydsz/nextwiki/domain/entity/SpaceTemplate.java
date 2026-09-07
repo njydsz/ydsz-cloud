@@ -71,7 +71,7 @@ public class SpaceTemplate implements Serializable {
   private String structureJson;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 使用次数 */
   private Integer usageCount;

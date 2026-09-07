@@ -57,7 +57,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  * <ul>
  *   <li>{@link #assignPermissions} 使用批量插入（{@code rolePermissionRepository.batchInsert}）避免 N+1
  *   <li>{@link #batchNamesByIds} 使用单条 {@code IN} 查询，单次往返
- *   <li>分页与列表查询均按 {@code sortOrder} 升序，匹配前端展示顺序
+ *   <li>分页与列表查询均按 {@code sort} 升序，匹配前端展示顺序
  * </ul>
  *
  * @author ydsz-team
@@ -113,7 +113,7 @@ public class RoleServiceImpl implements RoleService {
   /**
    * {@inheritDoc}
    *
-   * <p>支持按 roleCode/roleName 模糊匹配、status 精确匹配过滤，结果按 sortOrder 升序。
+   * <p>支持按 roleCode/roleName 模糊匹配、status 精确匹配过滤，结果按 sort 升序。
    */
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
@@ -124,7 +124,7 @@ public class RoleServiceImpl implements RoleService {
   /**
    * {@inheritDoc}
    *
-   * @return 全部未删除角色列表（按 sortOrder 升序）
+   * @return 全部未删除角色列表（按 sort 升序）
    */
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")

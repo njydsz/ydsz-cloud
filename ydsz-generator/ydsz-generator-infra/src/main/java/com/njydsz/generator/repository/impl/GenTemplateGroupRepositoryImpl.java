@@ -55,9 +55,9 @@ public class GenTemplateGroupRepositoryImpl implements GenTemplateGroupRepositor
   }
 
   @Override
-  public List<GenTemplateGroup> findAllByOrderBySortOrderAsc() {
+  public List<GenTemplateGroup> findAllByOrderBysortAsc() {
     LambdaQueryWrapper<GenTemplateGroup> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByAsc(GenTemplateGroup::getSortOrder);
+    wrapper.orderByAsc(GenTemplateGroup::getsort);
     return mapper.selectList(wrapper);
   }
 

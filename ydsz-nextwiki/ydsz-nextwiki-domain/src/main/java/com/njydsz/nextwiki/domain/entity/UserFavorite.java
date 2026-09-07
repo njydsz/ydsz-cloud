@@ -44,7 +44,7 @@ public class UserFavorite implements Serializable {
   private String tenantId;
 
   /** 排序序号（值越小越靠前） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 创建时间 */
   private LocalDateTime createdAt;

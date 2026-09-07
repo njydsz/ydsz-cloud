@@ -61,7 +61,7 @@ public class SocialClientDTO {
   private String status;
 
   /** 排序权重 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 备注说明 */
   @Size(max = 500, message = "备注长度不能超过 500 个字符")

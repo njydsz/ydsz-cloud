@@ -54,7 +54,7 @@ public class DepartmentController {
    *
    * <p>返回全量部门 VO（不构建树形结构），适用于需要扁平数据 + 客户端自行构建树的场景。
    *
-   * <p>按 {@code sort_order} 升序、{@code id} 升序排列。
+   * <p>按 {@code sort} 升序、{@code id} 升序排列。
    *
    * @return 全部未删除部门列表
    */
@@ -102,7 +102,7 @@ public class DepartmentController {
    *
    * <p>创建根部门时 {@code parentId} 应传 {@code "0"}（约定值）。
    *
-   * @param dto 部门创建 DTO（deptCode / deptName / parentId / sortOrder / status）
+   * @param dto 部门创建 DTO（deptCode / deptName / parentId / sort / status）
    * @return 新创建的部门 ID
    */
   @RateLimit(resource = "userinfo.Department.create", threshold = 50)

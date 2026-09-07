@@ -33,7 +33,7 @@ public interface SocialClientConverter {
   @Mapping(target = "scope", source = "scope")
   @Mapping(target = "redirectUri", source = "redirectUri")
   @Mapping(target = "status", source = "status")
-  @Mapping(target = "sortOrder", source = "sortOrder")
+  @Mapping(target = "sort", source = "sort")
   @Mapping(target = "remark", source = "remark")
   @Mapping(target = "createdAt", source = "createdAt")
   @Mapping(target = "updatedAt", source = "updatedAt")

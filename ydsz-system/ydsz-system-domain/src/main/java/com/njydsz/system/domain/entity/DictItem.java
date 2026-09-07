@@ -20,7 +20,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code typeCode}：所属字典类型编码（逻辑外键，对应 {@code ydsz_sys_dict_type.type_code}）
  *   <li>{@code itemCode}：字典项编码（同 typeCode 内唯一）
  *   <li>{@code itemValue}：字典项真实值（业务代码引用的值，如 {@code "PAID"}）
- *   <li>{@code sortOrder}：展示排序序号
+ *   <li>{@code sort}：展示排序序号
  *   <li>{@code parentId}：父级字典项 ID，支持树形字典（如行政区划）
  *   <li>{@code extJson}：扩展属性 JSONB 字符串，承载自定义属性（如色值、图标）
  * </ul>
@@ -51,7 +51,7 @@ public class DictItem extends MpBaseEntity<String> {
   private String itemValue;
 
   /** 展示排序序号（升序） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 父级字典项 ID，支持树形字典（如行政区划、组织架构） */
   private String parentId;

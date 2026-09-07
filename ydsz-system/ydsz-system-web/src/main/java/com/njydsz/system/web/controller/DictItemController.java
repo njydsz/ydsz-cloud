@@ -79,7 +79,7 @@ public class DictItemController {
   /**
    * 分页查询字典项
    *
-   * <p>支持按 typeCode / itemCode / status 多维过滤，结果按 {@code sort_order} 升序、{@code id} 升序排列。
+   * <p>支持按 typeCode / itemCode / status 多维过滤，结果按 {@code sort} 升序、{@code id} 升序排列。
    *
    * <p>典型场景：字典管理后台列表展示。
    *
@@ -128,7 +128,7 @@ public class DictItemController {
   /**
    * 按 typeCode 查询启用的字典项列表
    *
-   * <p>返回指定 typeCode 下所有 {@code status=ENABLED} 的字典项，按 {@code sort_order} 升序排列。
+   * <p>返回指定 typeCode 下所有 {@code status=ENABLED} 的字典项，按 {@code sort} 升序排列。
    *
    * <p>典型场景：前端下拉框、单选按钮组、级联选择等数据源；强烈推荐业务方使用此接口， 而非自行分页过滤全量数据。
    *
@@ -149,7 +149,7 @@ public class DictItemController {
    * <p>典型场景：级联选择器（{@code el-cascader}）数据源。
    *
    * @param parentId 父字典项 ID
-   * @return 子字典项列表（按 sort_order 升序）
+   * @return 子字典项列表（按 sort 升序）
    */
   @Operation(summary = "按父级 ID 查询子字典项列表（树形字典）")
   @GetMapping("/children/{parentId}")
@@ -181,7 +181,7 @@ public class DictItemController {
    * <p>创建后自动创建字典版本快照（{@code ydsz_dict_version}），用于变更回滚。 业务方需保证 {@code (typeCode, itemCode)}
    * 组合唯一，否则返回业务异常。
    *
-   * @param dto 字典项 DTO（命令入参，含 typeCode / itemCode / itemLabel / sortOrder / status / parentId）
+   * @param dto 字典项 DTO（命令入参，含 typeCode / itemCode / itemLabel / sort / status / parentId）
    * @return 新创建的字典项 ID
    */
   @Audit(

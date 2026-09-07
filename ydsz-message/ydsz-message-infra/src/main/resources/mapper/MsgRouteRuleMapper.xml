@@ -14,7 +14,7 @@
         <result column="fallback_channel" property="fallbackChannel"/>
         <result column="status" property="status"/>
         <result column="description" property="description"/>
-        <result column="sort_order" property="sortOrder"/>
+        <result column="sort" property="sort"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
@@ -25,7 +25,7 @@
 
     <sql id="Base_Column_List">
         id, rule_code, rule_name, biz_type, channel, priority, condition_expr, target_channel,
-        fallback_channel, status, description, sort_order,
+        fallback_channel, status, description, sort,
         created_by, created_at, updated_by, updated_at, deleted, tenant_id
     </sql>
 

@@ -31,7 +31,7 @@ public class TemplateGroupService {
    * @return 分组列表
    */
   public List<GenTemplateGroup> listAll() {
-    return groupRepository.findAllByOrderBySortOrderAsc();
+    return groupRepository.findAllByOrderBysortAsc();
   }
 
   /**
@@ -63,8 +63,8 @@ public class TemplateGroupService {
   public GenTemplateGroup create(GenTemplateGroup group) {
     group.setId(null);
     group.setSystem(false);
-    if (group.getSortOrder() == null) {
-      group.setSortOrder(0);
+    if (group.getsort() == null) {
+      group.setsort(0);
     }
     return groupRepository.save(group);
   }
@@ -87,7 +87,7 @@ public class TemplateGroupService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void activate(Long id) {
-    List<GenTemplateGroup> all = groupRepository.findAllByOrderBySortOrderAsc();
+    List<GenTemplateGroup> all = groupRepository.findAllByOrderBysortAsc();
     for (GenTemplateGroup g : all) {
       g.setActive(g.getId().equals(id));
       groupRepository.save(g);

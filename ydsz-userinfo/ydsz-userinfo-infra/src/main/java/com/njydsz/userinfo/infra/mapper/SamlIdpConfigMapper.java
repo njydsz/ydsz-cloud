@@ -35,10 +35,10 @@ public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfig> {
   SamlIdpConfig selectByEntityId(String entityId);
 
   /**
-   * 查询所有已启用的 IdP 配置（按 sort_order 升序）。
+   * 查询所有已启用的 IdP 配置（按 sort 升序）。
    *
    * @return 已启用的 IdP 配置列表
    */
-  @Select("SELECT * FROM ydsz_idp_saml_config WHERE status = 'ENABLED' AND deleted = 0 ORDER BY sort_order ASC")
+  @Select("SELECT * FROM ydsz_idp_saml_config WHERE status = 'ENABLED' AND deleted = 0 ORDER BY sort ASC")
   List<SamlIdpConfig> selectEnabledConfigs();
 }

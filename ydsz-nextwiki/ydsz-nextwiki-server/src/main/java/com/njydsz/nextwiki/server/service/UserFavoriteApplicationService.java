@@ -64,7 +64,7 @@ public class UserFavoriteApplicationService {
     }
 
     // 计算新排序号（排到最后）
-    int maxSort = userFavoriteRepository.findMaxSortOrder(userId, tenantId);
+    int maxSort = userFavoriteRepository.findMaxsort(userId, tenantId);
     int newSort = maxSort + 1;
 
     // 保存收藏记录
@@ -72,7 +72,7 @@ public class UserFavoriteApplicationService {
         .userId(userId)
         .nodeId(nodeId)
         .tenantId(tenantId)
-        .sortOrder(newSort)
+        .sort(newSort)
         .createdBy(userId)
         .updatedBy(userId)
         .build();
@@ -152,7 +152,7 @@ public class UserFavoriteApplicationService {
             .path(node.getPath())
             .thumbnailKey(node.getThumbnailKey())
             .starred(node.getStarred())
-            .sortOrder(fav.getSortOrder())
+            .sort(fav.getsort())
             .favoritedAt(fav.getCreatedAt())
             .updatedAt(node.getUpdatedAt())
             .build());
@@ -167,11 +167,11 @@ public class UserFavoriteApplicationService {
    *
    * @param userId 用户ID
    * @param nodeId 节点ID
-   * @param newSortOrder 新排序号
+   * @param newsort 新排序号
    * @return 是否成功更新
    */
   @Transactional(rollbackFor = Exception.class)
-  public boolean updateSortOrder(String userId, String nodeId, int newSortOrder) {
+  public boolean updatesort(String userId, String nodeId, int newsort) {
     String tenantId = TenantContextHolder.getTenantId();
 
     // 校验收藏存在
@@ -180,8 +180,8 @@ public class UserFavoriteApplicationService {
           .data("nodeId", nodeId);
     }
 
-    int updated = userFavoriteRepository.updateSortOrder(userId, nodeId, newSortOrder);
-    log.info("[UserFavoriteApplicationService] 更新收藏排序: nodeId={}, newSort={}", nodeId, newSortOrder);
+    int updated = userFavoriteRepository.updatesort(userId, nodeId, newsort);
+    log.info("[UserFavoriteApplicationService] 更新收藏排序: nodeId={}, newSort={}", nodeId, newsort);
     return updated > 0;
   }
 

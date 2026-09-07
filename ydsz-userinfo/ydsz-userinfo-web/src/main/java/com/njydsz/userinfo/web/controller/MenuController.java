@@ -81,7 +81,7 @@ public class MenuController {
   /**
    * 查询全部菜单列表（扁平结构）
    *
-   * <p>返回全量菜单 VO（不构建树形结构），按 {@code sortOrder} 升序排列。
+   * <p>返回全量菜单 VO（不构建树形结构），按 {@code sort} 升序排列。
    *
    * <p>适用于需要扁平数据 + 客户端自行构建树的场景。
    *

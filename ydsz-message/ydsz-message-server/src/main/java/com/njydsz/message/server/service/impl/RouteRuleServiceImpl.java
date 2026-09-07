@@ -147,8 +147,8 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     if (dto.getDescription() != null) {
       vo.setDescription(dto.getDescription());
     }
-    if (dto.getSortOrder() != null) {
-      vo.setSortOrder(dto.getSortOrder());
+    if (dto.getsort() != null) {
+      vo.setsort(dto.getsort());
     }
     msgRouteRuleRepository.update(vo);
     evictCache();
@@ -196,7 +196,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   /**
    * 分页查询路由规则。
    *
-   * <p>按 {@code sortOrder} 升序、{@code createdAt} 降序分页；页码/页大小缺失时取默认值， 页大小受 {@code PageConstants}
+   * <p>按 {@code sort} 升序、{@code createdAt} 降序分页；页码/页大小缺失时取默认值， 页大小受 {@code PageConstants}
    * 上限保护，防止一次拉取过多。
    *
    * @param query 分页参数（可为 null，使用默认值）
@@ -212,7 +212,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   }
 
   /**
-   * 查询所有启用的路由规则（按 priority/sortOrder 缓存）。
+   * 查询所有启用的路由规则（按 priority/sort 缓存）。
    *
    * <p>直接读取内存缓存的已启用规则列表，供 {@link #match} 匹配使用，避免每次匹配都查库。
    *
@@ -327,7 +327,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     vo.setFallbackChannel(dto.getFallbackChannel());
     vo.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "ENABLED");
     vo.setDescription(dto.getDescription());
-    vo.setSortOrder(dto.getSortOrder() == null ? 100 : dto.getSortOrder());
+    vo.setsort(dto.getsort() == null ? 100 : dto.getsort());
     return vo;
   }
 }

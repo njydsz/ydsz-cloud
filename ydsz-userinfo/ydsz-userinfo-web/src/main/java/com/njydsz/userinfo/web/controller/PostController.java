@@ -36,7 +36,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * <p><b>核心能力：</b>
  *
  * <ul>
- *   <li>岗位分页/列表查询（按 {@code sortOrder} 倒序）
+ *   <li>岗位分页/列表查询（按 {@code sort} 倒序）
  *   <li>岗位 CRUD（含 {@code postCode} 唯一性校验）
  *   <li>岗位删除校验（有用户关联时禁止删除）
  * </ul>
@@ -70,7 +70,7 @@ public class PostController {
   /**
    * 查询全部岗位列表（不翻页）
    *
-   * <p>按 {@code sortOrder} 倒序、{@code id} 升序排列。
+   * <p>按 {@code sort} 倒序、{@code id} 升序排列。
    *
    * <p>典型场景：用户编辑页的「岗位」下拉选择器、岗位多选框。
    *
@@ -105,7 +105,7 @@ public class PostController {
    *
    * <p>创建后通过 {@code NameAssembler} 富化字段可立即被其它模块引用。
    *
-   * @param dto 岗位创建 DTO（postCode / postName / sortOrder / status）
+   * @param dto 岗位创建 DTO（postCode / postName / sort / status）
    * @return 新创建的岗位 ID
    */
   @Audit(

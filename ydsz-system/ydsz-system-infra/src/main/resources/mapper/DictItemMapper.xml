@@ -13,13 +13,13 @@
     -->
     <insert id="insertBatch" parameterType="java.util.List">
         INSERT INTO ydsz_sys_dict_item (
-            id, type_code, item_code, item_value, sort_order,
+            id, type_code, item_code, item_value, sort,
             parent_id, description, ext_json, status,
             tenant_id, deleted, created_at, created_by
         ) VALUES
         <foreach collection="items" item="item" separator=",">
             (
-                #{item.id}, #{item.typeCode}, #{item.itemCode}, #{item.itemValue}, #{item.sortOrder},
+                #{item.id}, #{item.typeCode}, #{item.itemCode}, #{item.itemValue}, #{item.sort},
                 #{item.parentId}, #{item.description}, #{item.extJson}, #{item.status},
                 #{item.tenantId}, #{item.deleted}, #{item.createdAt}, #{item.createdBy}
             )

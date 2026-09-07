@@ -44,7 +44,7 @@ public interface ConfigRepository {
   Optional<ConfigVO> findByKeyIgnoreStatus(String configKey);
 
   /**
-   * 按分组查询启用状态配置（按 sortOrder 升序）。
+   * 按分组查询启用状态配置（按 sort 升序）。
    *
    * @param configGroup 配置分组
    * @return 启用配置 VO 列表
@@ -52,7 +52,7 @@ public interface ConfigRepository {
   List<ConfigVO> findEnabledByGroup(String configGroup);
 
   /**
-   * 查询全部公开配置（按 sortOrder 升序）。
+   * 查询全部公开配置（按 sort 升序）。
    *
    * @return 公开配置 VO 列表
    */

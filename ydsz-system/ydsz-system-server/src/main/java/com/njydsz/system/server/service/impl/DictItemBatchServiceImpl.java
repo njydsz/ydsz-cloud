@@ -232,7 +232,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     dto.setTypeCode(vo.getTypeCode());
     dto.setItemCode(vo.getItemCode());
     dto.setItemValue(vo.getItemValue());
-    dto.setSortOrder(vo.getSortOrder());
+    dto.setsort(vo.getsort());
     dto.setParentId(vo.getParentId());
     dto.setDescription(vo.getDescription());
     dto.setExtJson(vo.getExtJson());

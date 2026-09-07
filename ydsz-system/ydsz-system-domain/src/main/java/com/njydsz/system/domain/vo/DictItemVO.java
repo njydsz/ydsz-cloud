@@ -22,7 +22,7 @@ import com.njydsz.system.domain.entity.DictItem;
  *   <li>{@code itemCode} — 字典项编码（业务存储值，{@code <el-option :value="...">}）
  *   <li>{@code itemValue} — 字典项展示值（前端展示文本）
  *   <li>{@code parentId} — 父级 ID（{@code 0} = 根），支持「省 / 市 / 区县」三级级联
- *   <li>{@code sortOrder} — 同类型内排序号（升序），直接作为 TreeBuilder 排序字段
+ *   <li>{@code sort} — 同类型内排序号（升序），直接作为 TreeBuilder 排序字段
  *   <li>{@code extJson} — 扩展属性 JSON（如地区码、颜色值、图标等），前端按需解析
  * </ul>
  *
@@ -72,7 +72,7 @@ public class DictItemVO {
   private String itemValue;
 
   /** 排序号（同类型内升序），直接作为 TreeBuilder 排序字段 */
-  private Integer sortOrder;
+  private Integer sort;
 
   private String description;
 

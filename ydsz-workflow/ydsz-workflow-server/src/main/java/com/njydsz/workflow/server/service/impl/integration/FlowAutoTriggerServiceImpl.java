@@ -317,7 +317,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     trigger.setTargetFlowCode(targetFlowCode);
     trigger.setConditionExpression(conditionExpression);
     trigger.setEnabled(1);
-    trigger.setSortOrder(0);
+    trigger.setsort(0);
     autoTriggerRepository.save(trigger);
     log.info(
         "[FlowAutoTrigger] 注册触发规则: id={} source={} target={}",

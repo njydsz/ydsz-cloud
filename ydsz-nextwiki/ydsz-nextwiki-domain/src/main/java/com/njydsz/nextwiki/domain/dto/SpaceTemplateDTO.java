@@ -50,7 +50,7 @@ public class SpaceTemplateDTO implements Serializable {
   private String structureJson;
 
   @Schema(description = "排序序号")
-  private Integer sortOrder;
+  private Integer sort;
 
   @Schema(description = "使用次数")
   private Integer usageCount;

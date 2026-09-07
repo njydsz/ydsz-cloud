@@ -38,11 +38,11 @@ public interface GenTemplateGroupRepository {
   Optional<GenTemplateGroup> findByName(String name);
 
   /**
-   * 查询全部分组（按 sortOrder 升序）。
+   * 查询全部分组（按 sort 升序）。
    *
    * @return 分组列表
    */
-  List<GenTemplateGroup> findAllByOrderBySortOrderAsc();
+  List<GenTemplateGroup> findAllByOrderBysortAsc();
 
   /**
    * 查询当前激活分组。

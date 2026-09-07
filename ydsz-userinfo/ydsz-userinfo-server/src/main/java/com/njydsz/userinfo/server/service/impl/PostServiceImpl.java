@@ -29,7 +29,7 @@ import com.njydsz.userinfo.server.service.PostService;
  *
  * <ul>
  *   <li>岗位 CRUD（含 {@code postCode} 唯一性校验）
- *   <li>岗位全量列表查询（按 {@code sortOrder} 倒序）
+ *   <li>岗位全量列表查询（按 {@code sort} 倒序）
  *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）
  * </ul>
  *
@@ -65,7 +65,7 @@ public class PostServiceImpl implements PostService {
   /**
    * {@inheritDoc}
    *
-   * @return 全部未删除岗位列表（按 sortOrder 降序）
+   * @return 全部未删除岗位列表（按 sort 降序）
    */
   @Override
   public List<PostVO> list() {

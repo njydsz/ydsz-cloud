@@ -64,7 +64,7 @@ public class ConfigVO {
 
   private Boolean public;
 
-  private Integer sortOrder;
+  private Integer sort;
 
   private String status;
 }

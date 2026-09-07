@@ -71,7 +71,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(tenantId != null, FlowTemplate::getTenantId, tenantId)
                 .eq(FlowTemplate::getDeleted, 0)
-                .orderByAsc(FlowTemplate::getSortOrder)));
+                .orderByAsc(FlowTemplate::getsort)));
   }
 
   @Override
@@ -81,7 +81,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(FlowTemplate::getCategory, categoryId)
                 .eq(FlowTemplate::getDeleted, 0)
-                .orderByAsc(FlowTemplate::getSortOrder)));
+                .orderByAsc(FlowTemplate::getsort)));
   }
 
   @Override
@@ -133,7 +133,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
                 .eq(category != null && !category.isEmpty(), FlowTemplate::getCategory, category)
                 .eq(FlowTemplate::getIsLatest, 1)
                 .eq(FlowTemplate::getDeleted, 0)
-                .orderByAsc(FlowTemplate::getSortOrder)));
+                .orderByAsc(FlowTemplate::getsort)));
   }
 
   @Override

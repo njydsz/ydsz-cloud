@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.entity.Menu;
  *   <li>{@code uk_menu_code} — 菜单编码唯一索引
  *   <li>{@code uk_permission_code} — 权限码唯一索引
  *   <li>{@code idx_parent_id} — 父级 ID 索引（树形查询）
- *   <li>{@code idx_sort_order} — 排序字段索引（按 sortOrder 升序）
+ *   <li>{@code idx_sort} — 排序字段索引（按 sort 升序）
  * </ul>
  *
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件。

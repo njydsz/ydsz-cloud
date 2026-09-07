@@ -16,7 +16,7 @@ import com.njydsz.userinfo.domain.vo.PostVO;
  *
  * <ul>
  *   <li>岗位 CRUD
- *   <li>岗位全量列表查询（按 {@code sortOrder} 升序）
+ *   <li>岗位全量列表查询（按 {@code sort} 升序）
  *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）
  * </ul>
  *
@@ -47,7 +47,7 @@ public interface PostService {
   PostVO getById(String id);
 
   /**
-   * 查询全部岗位列表（按 {@code sortOrder} 升序）。
+   * 查询全部岗位列表（按 {@code sort} 升序）。
    *
    * @return 岗位 VO 列表
    */

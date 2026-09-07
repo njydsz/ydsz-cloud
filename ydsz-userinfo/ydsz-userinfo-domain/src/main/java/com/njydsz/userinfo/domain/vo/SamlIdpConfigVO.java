@@ -52,7 +52,7 @@ public class SamlIdpConfigVO {
   private String status;
 
   /** 排序权重 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 备注说明 */
   private String remark;

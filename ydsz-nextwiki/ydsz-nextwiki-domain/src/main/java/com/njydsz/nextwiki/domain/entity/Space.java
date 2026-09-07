@@ -77,7 +77,7 @@ public class Space implements Serializable {
   private String visibility;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 成员数量 */
   private Integer memberCount;

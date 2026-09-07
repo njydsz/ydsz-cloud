@@ -22,7 +22,7 @@ import com.njydsz.system.domain.entity.DictItem;
  *
  * <ul>
  *   <li>{@link #selectByTypeAndCode} — 按 {@code (typeCode, itemCode)} 单条查询（已过滤启用 + 未删除）
- *   <li>{@link #listEnabledByTypeCode} — 按 {@code typeCode} 批量查询（按 sort_order 升序）
+ *   <li>{@link #listEnabledByTypeCode} — 按 {@code typeCode} 批量查询（按 sort 升序）
  * </ul>
  *
  * <p><b>租户隔离：</b>所有查询自动由 MyBatis 拦截器注入 {@code tenant_id} 过滤条件。
@@ -61,11 +61,11 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
    * <p>前端下拉框核心数据源；命中 {@code idx_type_code} 索引。
    *
    * @param typeCode 字典类型编码
-   * @return 字典项列表（按 {@code sort_order} 升序）
+   * @return 字典项列表（按 {@code sort} 升序）
    */
   @Select(
       "SELECT * FROM ydsz_sys_dict_item WHERE type_code = #{typeCode} AND deleted = 0 AND status = 'ENABLED' "
-          + "ORDER BY sort_order ASC")
+          + "ORDER BY sort ASC")
   List<DictItem> listEnabledByTypeCode(@Param("typeCode") String typeCode);
 
   /**

@@ -20,7 +20,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code parentId}：父部门 ID，支持无限级树形（{@code "0"} = 根部门）
  *   <li>{@code deptCode}：部门编码（业务侧引用，全局唯一）
  *   <li>{@code leaderId}：部门负责人用户 ID，支持 {@code leader:xxx} 审批人展开
- *   <li>{@code sortOrder}：同级排序序号（升序）
+ *   <li>{@code sort}：同级排序序号（升序）
  * </ul>
  *
  * <p><b>树形查询：</b>前端通过 {@code /api/v1/Department/tree} 接口获取整棵部门树（递归构建）。
@@ -56,7 +56,7 @@ public class Department extends MpBaseEntity<String> {
   private String description;
 
   /** 同级排序序号（升序） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /**
    * 启用状态（{@code "ENABLED"} / {@code "DISABLED"}）

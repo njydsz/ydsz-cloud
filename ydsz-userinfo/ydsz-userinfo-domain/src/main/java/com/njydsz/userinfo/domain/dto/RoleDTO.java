@@ -53,7 +53,7 @@ public class RoleDTO implements Serializable {
   private String description;
 
   /** 同级排序序号（升序） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 数据权限范围（ALL / DEPT_AND_CHILD / DEPT / SELF / CUSTOM） */
   @Xss(message = "dataScope包含非法内容")

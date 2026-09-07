@@ -48,17 +48,17 @@ public class FlowPresetTemplateLibrary {
   /** 节点画布 X 坐标：第 5 列（结束节点） */
   private static final int NODE_X_COL_5 = 900;
   /** 模板排序号：请假审批 */
-  private static final int SORT_ORDER_LEAVE = 1;
+  private static final int sort_LEAVE = 1;
   /** 模板排序号：费用报销 */
-  private static final int SORT_ORDER_EXPENSE = 2;
+  private static final int sort_EXPENSE = 2;
   /** 模板排序号：采购申请 */
-  private static final int SORT_ORDER_PURCHASE = 3;
+  private static final int sort_PURCHASE = 3;
   /** 模板排序号：出差申请 */
-  private static final int SORT_ORDER_TRIP = 4;
+  private static final int sort_TRIP = 4;
   /** 模板排序号：用印申请 */
-  private static final int SORT_ORDER_SEAL = 5;
+  private static final int sort_SEAL = 5;
   /** 模板排序号：项目立项 */
-  private static final int SORT_ORDER_PROJECT = 6;
+  private static final int sort_PROJECT = 6;
 
   private final List<FlowTemplateDefinition> templates = new ArrayList<>(10);
 
@@ -122,7 +122,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("请假审批");
     tpl.setCategory("HR");
     tpl.setDescription("员工请假审批流程：发起人提交 → 直属上级审批 → HR备案");
-    tpl.setSortOrder(SORT_ORDER_LEAVE);
+    tpl.setsort(sort_LEAVE);
     tpl.setUseCase("适用于事假、病假、年假、调休等各类请假申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("人事", "请假", "考勤"));
@@ -156,7 +156,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("费用报销");
     tpl.setCategory("FINANCE");
     tpl.setDescription("费用报销审批流程：发起人 → 直属上级 → 财务审批 → 出纳付款");
-    tpl.setSortOrder(SORT_ORDER_EXPENSE);
+    tpl.setsort(sort_EXPENSE);
     tpl.setUseCase("适用于差旅费、招待费、办公费等各类费用报销");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("财务", "报销", "费用"));
@@ -192,7 +192,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("采购申请");
     tpl.setCategory("FINANCE");
     tpl.setDescription("采购申请审批流程：发起人 → 部门负责人 → 采购审批 → 财务审批");
-    tpl.setSortOrder(SORT_ORDER_PURCHASE);
+    tpl.setsort(sort_PURCHASE);
     tpl.setUseCase("适用于物资采购、服务采购等各类采购申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("财务", "采购", "物资"));
@@ -229,7 +229,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("出差申请");
     tpl.setCategory("HR");
     tpl.setDescription("出差申请审批流程：发起人 → 直属上级 → HR审批");
-    tpl.setSortOrder(SORT_ORDER_TRIP);
+    tpl.setsort(sort_TRIP);
     tpl.setUseCase("适用于国内/国际出差申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("人事", "出差", "差旅"));
@@ -263,7 +263,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("用印申请");
     tpl.setCategory("ADMIN");
     tpl.setDescription("用印申请审批流程：发起人 → 直属上级 → 行政审批");
-    tpl.setSortOrder(SORT_ORDER_SEAL);
+    tpl.setsort(sort_SEAL);
     tpl.setUseCase("适用于公章、合同章、财务章等各类印章使用申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("行政", "用印", "印章"));
@@ -297,7 +297,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("项目立项");
     tpl.setCategory("PROJECT");
     tpl.setDescription("项目立项审批流程：发起人 → 部门负责人 → 项目总监 → 总经理审批");
-    tpl.setSortOrder(SORT_ORDER_PROJECT);
+    tpl.setsort(sort_PROJECT);
     tpl.setUseCase("适用于各类项目立项申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("项目", "立项", "审批"));

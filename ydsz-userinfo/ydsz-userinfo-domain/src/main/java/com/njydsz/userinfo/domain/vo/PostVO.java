@@ -14,7 +14,7 @@ import lombok.Data;
  *   <li>{@code postCode} — 岗位编码（全局唯一，如 PM/DEV/QA/SA），支持 position: 审批人展开</li>
  *   <li>{@code postName} — 岗位名称（如"产品经理"、"开发工程师"）</li>
  *   <li>{@code description} — 岗位描述</li>
- *   <li>{@code sortOrder} — 排序序号（越小越靠前）</li>
+ *   <li>{@code sort} — 排序序号（越小越靠前）</li>
  *   <li>{@code status} — 状态（ENABLE-启用、DISABLE-禁用）</li>
  * </ul>
  *
@@ -37,7 +37,7 @@ public class PostVO {
   private String description;
 
   /** 排序序号，越小越靠前 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 状态：ENABLE-启用、DISABLE-禁用 */
   private String status;

@@ -71,8 +71,8 @@ public class UserFavoriteRepositoryImpl implements UserFavoriteRepository {
   }
 
   @Override
-  public int findMaxSortOrder(String userId, String tenantId) {
-    return userFavoriteMapper.selectMaxSortOrder(userId, tenantId);
+  public int findMaxsort(String userId, String tenantId) {
+    return userFavoriteMapper.selectMaxsort(userId, tenantId);
   }
 
   @Override
@@ -81,7 +81,7 @@ public class UserFavoriteRepositoryImpl implements UserFavoriteRepository {
   }
 
   @Override
-  public int updateSortOrder(String userId, String nodeId, int sortOrder) {
-    return userFavoriteMapper.updateSortOrder(userId, nodeId, sortOrder);
+  public int updatesort(String userId, String nodeId, int sort) {
+    return userFavoriteMapper.updatesort(userId, nodeId, sort);
   }
 }

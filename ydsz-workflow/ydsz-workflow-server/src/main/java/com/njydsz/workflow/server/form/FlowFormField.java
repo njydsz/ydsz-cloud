@@ -59,7 +59,7 @@ public class FlowFormField implements Serializable {
   private Integer span;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 帮助文字 */
   private String helpText;

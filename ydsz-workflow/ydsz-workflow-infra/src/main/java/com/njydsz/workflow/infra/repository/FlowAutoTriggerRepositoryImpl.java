@@ -104,7 +104,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
         autoTriggerMapper.selectList(
             new LambdaQueryWrapper<FlowAutoTrigger>()
                 .eq(FlowAutoTrigger::getDeleted, 0)
-                .orderByAsc(FlowAutoTrigger::getSortOrder)
+                .orderByAsc(FlowAutoTrigger::getsort)
                 .orderByAsc(FlowAutoTrigger::getId)));
   }
 }

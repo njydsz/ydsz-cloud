@@ -19,7 +19,7 @@ import com.njydsz.userinfo.domain.entity.Language;
  * <ul>
  *   <li>{@code uk_language_code} — 语言编码唯一索引（如 {@code zh-CN} / {@code en-US}）
  *   <li>{@code idx_is_default} — 默认语言唯一索引（数据库层保证唯一）
- *   <li>{@code idx_sort_order} — 排序字段索引
+ *   <li>{@code idx_sort} — 排序字段索引
  * </ul>
  *
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件。

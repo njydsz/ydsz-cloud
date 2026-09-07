@@ -83,7 +83,7 @@ public class RoleController {
   /**
    * 分页查询角色列表
    *
-   * <p>支持按 roleCode / roleName 模糊匹配 + status 精确匹配，结果按 {@code sortOrder} 升序排列。
+   * <p>支持按 roleCode / roleName 模糊匹配 + status 精确匹配，结果按 {@code sort} 升序排列。
    *
    * <p>结果集启用 {@code @DataScope} 自动追加部门过滤。
    *
@@ -99,7 +99,7 @@ public class RoleController {
   /**
    * 查询全部角色列表（不翻页）
    *
-   * <p>按 sortOrder 升序排列，适用于角色下拉框、单选按钮组等场景。
+   * <p>按 sort 升序排列，适用于角色下拉框、单选按钮组等场景。
    *
    * @return 全部未删除角色列表
    */

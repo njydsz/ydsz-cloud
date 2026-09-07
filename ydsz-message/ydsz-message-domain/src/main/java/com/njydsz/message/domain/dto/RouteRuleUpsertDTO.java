@@ -44,5 +44,5 @@ public class RouteRuleUpsertDTO {
   @Xss private String description;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 }

@@ -21,7 +21,7 @@ import com.njydsz.common.safe.annotation.Xss;
  *   <li>{@code itemCode} — 字典项编码
  *   <li>{@code itemValue} — 字典项展示值
  *   <li>{@code parentId} — 父级 ID
- *   <li>{@code sortOrder} — 排序号
+ *   <li>{@code sort} — 排序号
  *   <li>{@code description} — 字典项业务说明
  *   <li>{@code extJson} — 扩展属性 JSON
  *   <li>{@code status} — 启用状态: ENABLED/DISABLED
@@ -54,7 +54,7 @@ public class DictItemDTO {
   @Xss(message = "字典项展示值包含非法内容")
   private String itemValue;
 
-  private Integer sortOrder;
+  private Integer sort;
 
   @Xss(message = "字典项业务说明包含非法内容")
   private String description;

@@ -130,7 +130,7 @@ public interface ConfigService {
    * 一级缓存（5min TTL）。
    *
    * @param configGroup 配置分组
-   * @return 配置列表（按 {@code sortOrder} 升序）
+   * @return 配置列表（按 {@code sort} 升序）
    */
   List<ConfigVO> getConfigsByGroup(String configGroup);
 

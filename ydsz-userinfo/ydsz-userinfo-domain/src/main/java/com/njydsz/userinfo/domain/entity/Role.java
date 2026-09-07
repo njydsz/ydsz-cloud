@@ -68,7 +68,7 @@ public class Role extends MpBaseEntity<String> {
   private String description;
 
   /** 同级排序序号（升序） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /**
    * 启用状态（{@code "ENABLED"} / {@code "DISABLED"}）

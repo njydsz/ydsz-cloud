@@ -45,7 +45,7 @@ public class FlowTemplateDefinition implements Serializable {
   private String iconUrl;
 
   /** 模板排序权重（越小越靠前） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 适用场景说明 */
   private String useCase;

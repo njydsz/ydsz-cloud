@@ -47,7 +47,7 @@ public class UserFavoriteVO implements Serializable {
   private String thumbnailKey;
 
   @Schema(description = "排序序号")
-  private Integer sortOrder;
+  private Integer sort;
 
   @Schema(description = "是否星标")
   private Boolean starred;

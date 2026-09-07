@@ -28,7 +28,7 @@ import com.njydsz.common.safe.annotation.Xss;
  *   <li>{@code valueType} — 值类型: STRING/NUMBER/BOOLEAN/JSON
  *   <li>{@code defaultValue} — 默认值（配置未设置时使用）
  *   <li>{@code public} — 是否对前端公开: true 公开 / false 仅后端
- *   <li>{@code sortOrder} — 排序序号
+ *   <li>{@code sort} — 排序序号
  *   <li>{@code status} — 启用状态: ENABLED/DISABLED
  * </ul>
  *
@@ -67,7 +67,7 @@ public class ConfigDTO {
 
   private Boolean public;
 
-  private Integer sortOrder;
+  private Integer sort;
 
   private String status;
 }

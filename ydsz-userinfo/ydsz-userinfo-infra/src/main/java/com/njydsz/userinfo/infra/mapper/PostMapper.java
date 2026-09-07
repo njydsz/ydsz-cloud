@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.entity.Post;
  *
  * <ul>
  *   <li>{@code uk_post_code} — 岗位编码唯一索引（{@code postCode} 变更会影响所有引用该岗位的工作流节点）
- *   <li>{@code idx_sort_order} — 排序字段索引（按 {@code sortOrder} 倒序）
+ *   <li>{@code idx_sort} — 排序字段索引（按 {@code sort} 倒序）
  * </ul>
  *
  * <p><b>与其它模块的关联：</b>岗位编码（{@code postCode}）被工作流审批人展开（{@code position:xxx}）使用， 是流程节点配置的关键依赖。

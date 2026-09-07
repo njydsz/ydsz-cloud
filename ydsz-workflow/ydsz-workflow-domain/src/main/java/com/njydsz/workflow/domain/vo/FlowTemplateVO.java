@@ -26,7 +26,7 @@ public class FlowTemplateVO implements Serializable {
   private String bpmnXml;
   private String formPath;
   private Integer useCount;
-  private Integer sortOrder;
+  private Integer sort;
   private String parentTemplateId;
   private Integer version;
   private String versionLabel;

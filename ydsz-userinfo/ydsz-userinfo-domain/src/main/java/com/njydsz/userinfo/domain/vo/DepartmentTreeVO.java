@@ -35,7 +35,7 @@ public class DepartmentTreeVO {
   private String deptPath;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 状态：ENABLE-启用、DISABLE-禁用 */
   private String status;

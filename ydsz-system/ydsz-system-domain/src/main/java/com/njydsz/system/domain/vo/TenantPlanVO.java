@@ -15,7 +15,7 @@ import com.njydsz.system.domain.entity.TenantPlan;
  *
  * <ul>
  *   <li>{@code planCode} — 套餐编码，全局唯一标识
- *   <li>{@code sortOrder} — 排序号（升序，影响前端套餐选择器顺序）
+ *   <li>{@code sort} — 排序号（升序，影响前端套餐选择器顺序）
  * </ul>
  *
  * <p><b>注意：</b>本类为视图对象，不包含输入校验逻辑。输入校验由 {@link
@@ -38,7 +38,7 @@ public class TenantPlanVO {
 
   private String description;
 
-  private Integer sortOrder;
+  private Integer sort;
 
   private String quotaJson;
 

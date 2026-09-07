@@ -160,7 +160,7 @@ public interface FlowTemplateService {
    * <ul>
    *   <li>读取父模板（最新版本）的 BPMN XML、表单路径等核心内容
    *   <li>在子模板的 template_code 下创建新版本（旧版本降级为 is_latest=0）
-   *   <li>保留子模板的 templateCode / templateName / category / sortOrder 不变
+   *   <li>保留子模板的 templateCode / templateName / category / sort 不变
    *   <li>同步后的新版本 inherit_type 仍为 INHERIT，parent_template_id 仍指向父模板
    * </ul>
    *

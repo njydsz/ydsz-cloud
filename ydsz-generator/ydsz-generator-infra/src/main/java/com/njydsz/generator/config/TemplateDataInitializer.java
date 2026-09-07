@@ -51,7 +51,7 @@ public class TemplateDataInitializer {
   @EventListener(ApplicationReadyEvent.class)
   public void onApplicationReady() {
     log.info("[TemplateDataInitializer] 检查模板数据是否需要初始化...");
-    List<GenTemplateGroup> groups = groupRepository.findAllByOrderBySortOrderAsc();
+    List<GenTemplateGroup> groups = groupRepository.findAllByOrderBysortAsc();
     for (GenTemplateGroup group : groups) {
       syncGroupTemplates(group);
     }

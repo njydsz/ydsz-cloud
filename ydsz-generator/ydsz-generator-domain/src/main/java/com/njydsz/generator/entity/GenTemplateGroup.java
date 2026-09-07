@@ -37,7 +37,7 @@ public class GenTemplateGroup {
   /** 是否为系统分组（系统分组不可删除）。 */
   private Boolean system;
   /** 排序序号（升序）。 */
-  private Integer sortOrder;
+  private Integer sort;
   /** 是否激活为当前使用分组。 */
   private Boolean active;
   /** 创建时间。 */

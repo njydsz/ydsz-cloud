@@ -50,7 +50,7 @@ public class LanguageDTO implements Serializable {
   private Integer isDefault;
 
   /** 排序序号（升序，决定语言切换器展示顺序） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 启用状态（{@code "ENABLED"} / {@code "DISABLED"}） */
   @Xss(message = "status包含非法内容")

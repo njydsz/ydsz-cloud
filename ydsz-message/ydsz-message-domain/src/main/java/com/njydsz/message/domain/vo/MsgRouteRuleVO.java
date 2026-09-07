@@ -50,7 +50,7 @@ public class MsgRouteRuleVO implements Serializable {
   private String description;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 状态（ENABLED/DISABLED） */
   private String status;

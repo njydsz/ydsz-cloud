@@ -45,7 +45,7 @@ public class SamlIdpConfigService {
   }
 
   /**
-   * 查询所有已启用的 IdP 配置（按 sortOrder 升序）。
+   * 查询所有已启用的 IdP 配置（按 sort 升序）。
    *
    * @return 已启用的 IdP 配置列表
    */

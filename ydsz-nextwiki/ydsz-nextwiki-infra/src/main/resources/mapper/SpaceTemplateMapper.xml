@@ -9,10 +9,10 @@
     <result column="category" property="category"/>
     <result column="icon_url" property="iconUrl"/>
     <result column="tenant_id" property="tenantId"/>
-    <result column="is_system" property="systemFlag"/>
+    <result column="is_system" property="system"/>
     <result column="is_public" property="publicAccess"/>
     <result column="structure_json" property="structureJson"/>
-    <result column="sort_order" property="sortOrder"/>
+    <result column="sort" property="sort"/>
     <result column="usage_count" property="usageCount"/>
     <result column="created_at" property="createdAt"/>
     <result column="created_by" property="createdBy"/>
@@ -23,7 +23,7 @@
 
   <sql id="Base_Column_List">
     id, name, description, category, icon_url, tenant_id, is_system, is_public,
-    structure_json, sort_order, usage_count, created_at, created_by, updated_at, updated_by, deleted
+    structure_json, sort, usage_count, created_at, created_by, updated_at, updated_by, deleted
   </sql>
 
   <!-- 查询可用模板（系统公开模板 + 租户自定义模板，按排序号升序） -->
@@ -37,7 +37,7 @@
         (tenant_id = #{tenantId})
       )
       AND (#{category} IS NULL OR category = #{category})
-    ORDER BY sort_order ASC, usage_count DESC
+    ORDER BY sort ASC, usage_count DESC
   </select>
 
   <!-- 分页查询模板列表 -->
@@ -51,7 +51,7 @@
         (tenant_id = #{tenantId})
       )
       AND (#{category} IS NULL OR category = #{category})
-    ORDER BY sort_order ASC, usage_count DESC
+    ORDER BY sort ASC, usage_count DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
 

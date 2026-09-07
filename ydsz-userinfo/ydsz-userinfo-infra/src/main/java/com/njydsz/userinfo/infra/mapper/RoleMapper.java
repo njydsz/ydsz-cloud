@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.entity.Role;
  *
  * <ul>
  *   <li>{@code uk_role_code} — 角色编码唯一索引
- *   <li>{@code idx_sort_order} — 排序字段索引
+ *   <li>{@code idx_sort} — 排序字段索引
  *   <li>{@code idx_data_scope} — 数据权限范围索引（ALL/本部门/本部门及子部门/本人）
  * </ul>
  *

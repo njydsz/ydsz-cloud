@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-nextwiki</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.09.01</version>
     </parent>
     <artifactId>ydsz-nextwiki-domain</artifactId>
     <name>ydsz-nextwiki-domain</name>

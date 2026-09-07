@@ -12,7 +12,7 @@
         <result column="bpmn_xml" property="bpmnXml"/>
         <result column="form_path" property="formPath"/>
         <result column="use_count" property="useCount"/>
-        <result column="sort_order" property="sortOrder"/>
+        <result column="sort" property="sort"/>
         <!-- P2-9: 模板继承与版本化字段 -->
         <result column="parent_template_id" property="parentTemplateId"/>
         <result column="version" property="version"/>
@@ -23,7 +23,7 @@
 
     <sql id="Base_Column_List">
         id, template_code, template_name, category, description, icon, bpmn_xml,
-        form_path, use_count, sort_order,
+        form_path, use_count, sort,
         parent_template_id, version, version_label, inherit_type, is_latest
     </sql>
 
@@ -36,7 +36,7 @@
         <if test="category != null and category != ''">
             AND category = #{category}
         </if>
-        ORDER BY sort_order ASC, id ASC
+        ORDER BY sort ASC, id ASC
     </select>
 
     <!-- P2-9: selectByTemplateCode 仅返回 is_latest=1 的最新版本 -->
@@ -72,7 +72,7 @@
         WHERE parent_template_id = #{parentTemplateId}
           AND deleted = 0
           AND is_latest = 1
-        ORDER BY sort_order ASC, id ASC
+        ORDER BY sort ASC, id ASC
     </select>
 
     <!-- P2-9: 将指定 template_code 的所有版本标记为非最新 -->

@@ -81,7 +81,7 @@ public class FlowTemplate extends MpBaseEntity<String> {
   private Integer useCount;
 
   /** 排序权重（越大越靠前，模板市场首页展示用） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 父模板 ID（跨模板继承关系，{@code STANDALONE} 时为 {@code null}） */
   private String parentTemplateId;

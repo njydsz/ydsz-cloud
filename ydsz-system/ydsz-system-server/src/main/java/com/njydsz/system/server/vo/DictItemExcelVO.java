@@ -34,7 +34,7 @@ public class DictItemExcelVO {
 
   /** 排序序号 */
   @ExcelProperty(value = "排序序号", order = 4, width = 10)
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 父级 ID（树形字典使用） */
   @ExcelProperty(value = "父级ID", order = 5, width = 20)

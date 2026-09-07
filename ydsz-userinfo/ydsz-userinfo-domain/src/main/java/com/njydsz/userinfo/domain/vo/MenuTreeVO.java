@@ -40,7 +40,7 @@ public class MenuTreeVO {
   private String icon;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 权限标识 */
   private String permissionCode;

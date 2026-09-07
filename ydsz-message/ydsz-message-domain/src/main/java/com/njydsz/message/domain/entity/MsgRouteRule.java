@@ -52,5 +52,5 @@ public class MsgRouteRule extends MpBaseEntity<String> {
   private String description;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 }

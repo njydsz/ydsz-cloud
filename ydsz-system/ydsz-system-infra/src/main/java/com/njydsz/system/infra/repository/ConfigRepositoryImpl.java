@@ -76,7 +76,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
         new LambdaQueryWrapper<Config>()
             .eq(Config::getConfigGroup, configGroup)
             .eq(Config::getStatus, STATUS_ENABLED)
-            .orderByAsc(Config::getSortOrder)));
+            .orderByAsc(Config::getsort)));
   }
 
   @Override
@@ -85,7 +85,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
         new LambdaQueryWrapper<Config>()
             .eq(Config::getPublicFlag, PUBLIC_CONFIG)
             .eq(Config::getStatus, STATUS_ENABLED)
-            .orderByAsc(Config::getSortOrder)));
+            .orderByAsc(Config::getsort)));
   }
 
   @Override
@@ -189,9 +189,9 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Config::getDeleted, NOT_DELETED);
     if (configGroup != null && !configGroup.isBlank()) {
-      wrapper.eq(Config::getConfigGroup, configGroup).orderByAsc(Config::getSortOrder);
+      wrapper.eq(Config::getConfigGroup, configGroup).orderByAsc(Config::getsort);
     } else {
-      wrapper.orderByAsc(Config::getConfigGroup, Config::getSortOrder);
+      wrapper.orderByAsc(Config::getConfigGroup, Config::getsort);
     }
     return converter.configListToVO(configMapper.selectList(wrapper));
   }

@@ -85,7 +85,7 @@ public interface DictService {
    *
    * <p>用于「字典类型选择器」下拉框数据源；走本地 Caffeine 缓存（5min TTL）。
    *
-   * @return 字典类型列表（按 {@code sortOrder} 升序）
+   * @return 字典类型列表（按 {@code sort} 升序）
    */
   List<DictTypeVO> listAll();
 }

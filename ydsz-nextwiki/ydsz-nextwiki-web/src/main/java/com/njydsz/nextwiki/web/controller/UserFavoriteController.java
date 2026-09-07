@@ -113,17 +113,17 @@ public class UserFavoriteController {
    * 更新收藏排序号。
    *
    * @param nodeId 节点 ID
-   * @param sortOrder 新排序号
+   * @param sort 新排序号
    * @param userId 当前用户 ID
    * @return 是否成功更新
    */
   @PostMapping("/{nodeId}/sort")
-  public YdszResponse<Boolean> updateSortOrder(
+  public YdszResponse<Boolean> updatesort(
       @PathVariable String nodeId,
-      @RequestParam int sortOrder,
+      @RequestParam int sort,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    boolean result = userFavoriteApplicationService.updateSortOrder(userId, nodeId, sortOrder);
+    boolean result = userFavoriteApplicationService.updatesort(userId, nodeId, sort);
     return YdszResponse.success(result);
   }
 

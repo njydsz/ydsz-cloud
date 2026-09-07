@@ -111,7 +111,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
 
     /** 默认排序号：未设置排序的模板置底（999） */
-  private static final int DEFAULT_SORT_ORDER = 999;
+  private static final int DEFAULT_sort = 999;
 
   /** 流程名称后缀最大长度（30 字符，防止超长后缀导致名称超限） */
   private static final int MAX_NAME_SUFFIX_LENGTH = 30;
@@ -414,7 +414,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         template.setBpmnXml(bpmnXml);
         template.setFormPath(definition.getFormPath());
         template.setUseCount(0);
-        template.setSortOrder(existing.getSortOrder() != null ? existing.getSortOrder() : DEFAULT_SORT_ORDER);
+        template.setsort(existing.getsort() != null ? existing.getsort() : DEFAULT_sort);
         // P2-9: 版本化字段 — 沿用 inherit_type 与 parent_template_id 保持继承关系连续
         template.setVersion(newVersion);
         template.setVersionLabel("v" + newVersion + ".0");
@@ -439,7 +439,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         template.setBpmnXml(bpmnXml);
         template.setFormPath(definition.getFormPath());
         template.setUseCount(0);
-        template.setSortOrder(DEFAULT_SORT_ORDER);
+        template.setsort(DEFAULT_sort);
         // P2-9: 版本化字段
         template.setVersion(1);
         template.setVersionLabel("26.09.01");
@@ -617,7 +617,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newVer.setBpmnXml(source.getBpmnXml());
       newVer.setFormPath(source.getFormPath());
       newVer.setUseCount(0);
-      newVer.setSortOrder(source.getSortOrder());
+      newVer.setsort(source.getsort());
       // 沿用继承关系
       newVer.setParentTemplateId(source.getParentTemplateId());
       newVer.setVersion(newVersion);
@@ -759,7 +759,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newTemplate.setBpmnXml(source.getBpmnXml());
       newTemplate.setFormPath(source.getFormPath());
       newTemplate.setUseCount(0);
-      newTemplate.setSortOrder(source.getSortOrder() != null ? source.getSortOrder() : DEFAULT_SORT_ORDER);
+      newTemplate.setsort(source.getsort() != null ? source.getsort() : DEFAULT_sort);
       // P2-9: 继承关系字段
       newTemplate.setParentTemplateId(source.getId());
       newTemplate.setVersion(1);
@@ -913,7 +913,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newVer.setBpmnXml(parent.getBpmnXml());
       newVer.setFormPath(parent.getFormPath());
       newVer.setUseCount(0);
-      newVer.setSortOrder(child.getSortOrder());
+      newVer.setsort(child.getsort());
       // 保持继承关系
       newVer.setParentTemplateId(parentId);
       newVer.setVersion(newVersion);
@@ -959,7 +959,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     map.put("icon", t.getIcon());
     map.put("formPath", t.getFormPath());
     map.put("useCount", t.getUseCount());
-    map.put("sortOrder", t.getSortOrder());
+    map.put("sort", t.getsort());
     // P2-9: 版本与继承元信息
     map.put("parentTemplateId", t.getParentTemplateId());
     map.put("version", t.getVersion());
@@ -983,7 +983,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     map.put("icon", t.getIcon());
     map.put("formPath", t.getFormPath());
     map.put("useCount", t.getUseCount());
-    map.put("sortOrder", t.getSortOrder());
+    map.put("sort", t.getsort());
     // P2-9: 版本与继承元信息
     map.put("parentTemplateId", t.getParentTemplateId());
     map.put("version", t.getVersion());

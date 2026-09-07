@@ -37,7 +37,7 @@ public class UserFavoriteDTO implements Serializable {
   private String tenantId;
 
   @Schema(description = "排序序号")
-  private Integer sortOrder;
+  private Integer sort;
 
   @Schema(description = "创建时间")
   private LocalDateTime createdAt;

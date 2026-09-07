@@ -18,7 +18,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <ul>
  *   <li>{@code languageCode}：语言编码（ISO 639-1，如 {@code zh-CN} / {@code en-US}）
  *   <li>{@code isDefault}：是否默认语言（{@code 1=是}，系统全局仅允许 1 个默认语言）
- *   <li>{@code sortOrder}：语言切换器中的展示顺序
+ *   <li>{@code sort}：语言切换器中的展示顺序
  * </ul>
  *
  * <p><b>默认语言唯一性：</b>系统全局仅允许 1 个默认语言，由 Service 层事务保证。 修改默认语言时，应在事务内同时取消旧默认、设置新默认。
@@ -62,7 +62,7 @@ public class Language extends MpBaseEntity<String> {
   private Integer isDefault;
 
   /** 排序序号（升序，决定语言切换器展示顺序） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /**
    * 启用状态（{@code "ENABLED"} / {@code "DISABLED"}）

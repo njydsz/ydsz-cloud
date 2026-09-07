@@ -105,7 +105,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
       wrapper.eq("status", query.getStatus());
     }
     wrapper.eq("deleted", 0);
-    wrapper.orderByAsc("sort_order");
+    wrapper.orderByAsc("sort");
     IPage<MsgRouteRule> entityPage = msgRouteRuleMapper.selectPage(page, wrapper);
     List<MsgRouteRuleVO> vos = converter.routeRuleListToVO(entityPage.getRecords());
     return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
@@ -148,7 +148,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     entity.setTargetChannel(vo.getTargetChannel());
     entity.setFallbackChannel(vo.getFallbackChannel());
     entity.setDescription(vo.getDescription());
-    entity.setSortOrder(vo.getSortOrder());
+    entity.setsort(vo.getsort());
     entity.setStatus(vo.getStatus());
     return entity;
   }

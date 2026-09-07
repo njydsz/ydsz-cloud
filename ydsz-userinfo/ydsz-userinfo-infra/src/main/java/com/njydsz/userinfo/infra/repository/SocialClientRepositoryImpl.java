@@ -45,7 +45,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
             SocialClient::getPlatformName, query.getPlatformName())
         .eq(query.getStatus() != null && !query.getStatus().isBlank(),
             SocialClient::getStatus, query.getStatus())
-        .orderByAsc(SocialClient::getSortOrder);
+        .orderByAsc(SocialClient::getsort);
 
     List<SocialClient> entities = mapper.selectList(wrapper);
     return entities.stream()
@@ -104,8 +104,8 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
     if (dto.getStatus() != null) {
       existing.setStatus(dto.getStatus());
     }
-    if (dto.getSortOrder() != null) {
-      existing.setSortOrder(dto.getSortOrder());
+    if (dto.getsort() != null) {
+      existing.setsort(dto.getsort());
     }
     if (dto.getRemark() != null) {
       existing.setRemark(dto.getRemark());
@@ -130,7 +130,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
     entity.setScope(dto.getScope());
     entity.setRedirectUri(dto.getRedirectUri());
     entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-    entity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 100);
+    entity.setsort(dto.getsort() != null ? dto.getsort() : 100);
     entity.setRemark(dto.getRemark());
     mapper.insert(entity);
     log.info("社交平台客户端配置已创建: platform={}", dto.getPlatform());

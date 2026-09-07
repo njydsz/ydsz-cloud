@@ -14,7 +14,7 @@ import lombok.Data;
  *   <li>{@code languageCode} — 语言编码（如 zh-CN、en-US、ja-JP）</li>
  *   <li>{@code languageName} — 语言名称（如"简体中文"、"English"）</li>
  *   <li>{@code isDefault} — 是否默认语言（1=是、0=否，用户未指定语言偏好时回退）</li>
- *   <li>{@code sortOrder} — 排序序号（越小越靠前）</li>
+ *   <li>{@code sort} — 排序序号（越小越靠前）</li>
  *   <li>{@code status} — 状态（ENABLE-启用、DISABLE-禁用）</li>
  * </ul>
  *
@@ -37,7 +37,7 @@ public class LanguageVO {
   private Integer isDefault;
 
   /** 排序序号 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 状态：ENABLE-启用、DISABLE-禁用 */
   private String status;

@@ -26,11 +26,11 @@ import com.njydsz.userinfo.domain.entity.SocialClient;
 public interface SocialClientMapper extends BaseMapper<SocialClient> {
 
   /**
-   * 查询所有已启用的平台配置（按 sort_order 升序）。
+   * 查询所有已启用的平台配置（按 sort 升序）。
    *
    * @return 已启用的平台配置列表
    */
-  @Select("SELECT * FROM ydsz_auth_social_client WHERE status = 'ENABLED' AND deleted = 0 ORDER BY sort_order ASC")
+  @Select("SELECT * FROM ydsz_auth_social_client WHERE status = 'ENABLED' AND deleted = 0 ORDER BY sort ASC")
   List<SocialClient> selectEnabledClients();
 
   /**

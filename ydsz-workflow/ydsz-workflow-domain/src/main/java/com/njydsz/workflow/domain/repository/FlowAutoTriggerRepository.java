@@ -87,7 +87,7 @@ public interface FlowAutoTriggerRepository {
   void deleteBySourceFlowCode(String sourceFlowCode);
 
   /**
-   * 查询所有触发规则（按 sortOrder 升序、id 升序）。
+   * 查询所有触发规则（按 sort 升序、id 升序）。
    *
    * @return 全部触发规则 VO 列表
    */

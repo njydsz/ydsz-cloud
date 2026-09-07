@@ -37,7 +37,7 @@ import com.njydsz.workflow.domain.entity.FlowTemplate;
 public interface FlowTemplateMapper extends BaseMapper<FlowTemplate> {
 
   /**
-   * 按分类查询模板列表（按 sort_order 升序）
+   * 按分类查询模板列表（按 sort 升序）
    *
    * <p>P2-9: 仅返回 {@code is_latest=1} 的最新版本。
    *

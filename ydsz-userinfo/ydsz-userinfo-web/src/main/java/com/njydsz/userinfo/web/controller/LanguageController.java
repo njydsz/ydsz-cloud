@@ -38,7 +38,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * <p><b>核心能力：</b>
  *
  * <ul>
- *   <li>语言分页/列表查询（按 {@code sortOrder} 升序）
+ *   <li>语言分页/列表查询（按 {@code sort} 升序）
  *   <li>语言 CRUD（含 {@code languageCode} 唯一性校验）
  *   <li>默认语言唯一性管理（系统全局仅 1 个默认语言，事务内自动取消旧默认）
  * </ul>
@@ -79,7 +79,7 @@ public class LanguageController {
   /**
    * 分页查询语言
    *
-   * <p>支持按 {@code languageCode / languageName} 模糊匹配 + {@code status} 精确匹配过滤， 默认按 {@code sortOrder}
+   * <p>支持按 {@code languageCode / languageName} 模糊匹配 + {@code status} 精确匹配过滤， 默认按 {@code sort}
    * 升序、{@code id} 升序排列。
    *
    * @param query 分页查询条件（pageNum / pageSize / languageCode / languageName / status）
@@ -106,7 +106,7 @@ public class LanguageController {
   /**
    * 查询全部语言列表（不翻页）
    *
-   * <p>前端 i18n 切换器数据源，按 {@code sortOrder} 升序排列。
+   * <p>前端 i18n 切换器数据源，按 {@code sort} 升序排列。
    *
    * <p>建议业务方客户端缓存（变更频率极低）。
    *
@@ -127,7 +127,7 @@ public class LanguageController {
    *
    * <p>若 {@code isDefault=true}，事务内自动取消其他语言的默认标识（保证系统全局仅 1 个默认语言）。
    *
-   * @param dto 语言创建 DTO（languageCode / languageName / isDefault / sortOrder / status）
+   * @param dto 语言创建 DTO（languageCode / languageName / isDefault / sort / status）
    * @return 新创建的语言 ID
    */
   @Audit(

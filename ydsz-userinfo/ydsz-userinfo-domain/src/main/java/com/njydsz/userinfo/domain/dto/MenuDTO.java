@@ -64,7 +64,7 @@ public class MenuDTO implements Serializable {
   private String icon;
 
   /** 同级排序序号（升序） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 权限码（{@code "system:user:create"} 格式） */
   @Size(max = 100, message = "权限编码长度不能超过 100 个字符")

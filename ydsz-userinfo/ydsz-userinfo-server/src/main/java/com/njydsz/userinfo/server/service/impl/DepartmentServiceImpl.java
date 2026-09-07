@@ -116,7 +116,7 @@ public class DepartmentServiceImpl implements DepartmentService {
   /**
    * {@inheritDoc}
    *
-   * @return 全部未删除部门列表（按 sortOrder 降序）
+   * @return 全部未删除部门列表（按 sort 降序）
    */
   @Override
   public List<DepartmentVO> list() {
@@ -272,7 +272,7 @@ public class DepartmentServiceImpl implements DepartmentService {
           treeVO.setParentId(vo.getParentId());
           treeVO.setDeptName(vo.getDeptName());
           treeVO.setDeptCode(vo.getDeptCode());
-          treeVO.setSortOrder(vo.getSortOrder());
+          treeVO.setsort(vo.getsort());
           treeVO.setStatus(vo.getStatus());
           return treeVO;
         })
@@ -283,7 +283,7 @@ public class DepartmentServiceImpl implements DepartmentService {
             DepartmentTreeVO::getId,
             DepartmentTreeVO::getParentId,
             DepartmentTreeVO::setChildren,
-            DepartmentTreeVO::getSortOrder);
+            DepartmentTreeVO::getsort);
 
     // 4. 写入多级缓存（异步异常不影响业务）
     try {

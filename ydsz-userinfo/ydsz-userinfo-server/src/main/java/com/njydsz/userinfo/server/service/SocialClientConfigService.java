@@ -53,7 +53,7 @@ public class SocialClientConfigService {
   private static final int CAPACITY = 16;
 
   /** YAML 配置默认排序值（排在 DB 配置之后） */
-  private static final int YAML_CONFIG_SORT_ORDER = 999;
+  private static final int YAML_CONFIG_sort = 999;
 
 
   private final SocialClientRepository socialClientRepository;
@@ -95,7 +95,7 @@ public class SocialClientConfigService {
           vo.setScope(entry.getValue().getScope());
           vo.setRedirectUri(entry.getValue().getRedirectUri());
           vo.setStatus("ENABLED");
-          vo.setSortOrder(YAML_CONFIG_SORT_ORDER); // YAML 配置排在 DB 配置后面
+          vo.setsort(YAML_CONFIG_sort); // YAML 配置排在 DB 配置后面
           vo.setRemark("YAML 静态配置");
           merged.add(vo);
         }

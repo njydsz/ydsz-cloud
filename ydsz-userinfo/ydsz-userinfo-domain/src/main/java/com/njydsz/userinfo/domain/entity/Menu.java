@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code permissionCode}：权限码（{@code "system:user:create"} 格式，被后端 {@code @AuthApiPermission}
  *       引用）
  *   <li>{@code visible}：是否前端可见（0=隐藏但仍参与鉴权，1=可见）
- *   <li>{@code sortOrder}：同级排序序号（升序）
+ *   <li>{@code sort}：同级排序序号（升序）
  * </ul>
  *
  * <p><b>典型使用：</b>
@@ -72,7 +72,7 @@ public class Menu extends MpBaseEntity<String> {
   private String icon;
 
   /** 同级排序序号（升序） */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 权限码（{@code "system:user:create"} 格式，被后端 {@code @AuthApiPermission} 引用） */
   private String permissionCode;

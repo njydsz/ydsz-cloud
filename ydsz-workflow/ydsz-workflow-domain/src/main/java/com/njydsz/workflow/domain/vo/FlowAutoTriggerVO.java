@@ -23,7 +23,7 @@ public class FlowAutoTriggerVO implements Serializable {
   private String conditionExpression;
   private String description;
   private Integer enabled;
-  private Integer sortOrder;
+  private Integer sort;
   private String createdBy;
   private LocalDateTime createdAt;
   private String updatedBy;

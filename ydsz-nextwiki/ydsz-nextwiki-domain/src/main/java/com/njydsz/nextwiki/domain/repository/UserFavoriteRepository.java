@@ -67,7 +67,7 @@ public interface UserFavoriteRepository {
    * @param tenantId 租户ID
    * @return 最大排序号（无记录时返回 0）
    */
-  int findMaxSortOrder(String userId, String tenantId);
+  int findMaxsort(String userId, String tenantId);
 
   /**
    * 检查节点是否已被用户收藏。
@@ -84,8 +84,8 @@ public interface UserFavoriteRepository {
    *
    * @param userId 用户ID
    * @param nodeId 节点ID
-   * @param sortOrder 新排序号
+   * @param sort 新排序号
    * @return 受影响行数
    */
-  int updateSortOrder(String userId, String nodeId, int sortOrder);
+  int updatesort(String userId, String nodeId, int sort);
 }

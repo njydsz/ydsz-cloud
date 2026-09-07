@@ -126,7 +126,7 @@ public class InternalApiController {
   /**
    * 查询部门列表（扁平结构）
    *
-   * <p>返回全量部门 VO（不构建树形结构），按 {@code sort_order} 升序排列。
+   * <p>返回全量部门 VO（不构建树形结构），按 {@code sort} 升序排列。
    *
    * @return 部门列表
    */

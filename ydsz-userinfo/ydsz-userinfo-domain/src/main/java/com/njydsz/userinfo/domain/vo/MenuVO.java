@@ -38,7 +38,7 @@ public class MenuVO {
   private String icon;
 
   /** 排序序号，越小越靠前 */
-  private Integer sortOrder;
+  private Integer sort;
 
   /** 权限标识，用于按钮级权限控制 */
   private String permissionCode;

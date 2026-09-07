@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.entity.Department;
  *   <li>{@code uk_dept_code} — 部门编码唯一索引
  *   <li>{@code idx_parent_id} — 父级 ID 索引（树形查询）
  *   <li>{@code idx_leader_id} — 部门负责人 ID 索引（供工作流 {@code dept:xxx} 审批人展开调用）
- *   <li>{@code idx_sort_order} — 排序字段索引
+ *   <li>{@code idx_sort} — 排序字段索引
  * </ul>
  *
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件。

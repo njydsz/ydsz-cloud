@@ -76,7 +76,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   /**
    * 查询全部启用套餐
    *
-   * <p>按 {@code sortOrder} 升序返回，供租户注册页「选择套餐」下拉使用。
+   * <p>按 {@code sort} 升序返回，供租户注册页「选择套餐」下拉使用。
    *
    * @return 套餐列表
    */
