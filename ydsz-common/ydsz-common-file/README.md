@@ -1,6 +1,6 @@
 # ydsz-common-file
 
-> 统一文件存储公共模块（L5 业务服务层）
+> 统一文件存储公共模块（L5 业务服务层）— 7 种存储(Local/MinIO/OSS/COS/OBS/Qiniu/S3) 统一接口 + 分片上传 + 断点续传 + 秒传 + 文件类型检测 + 病毒扫描 SPI
 
 提供 7 种存储平台（Local / OSS / MinIO / S3 / COS / OBS / Qiniu）的统一抽象、分片上传、断点续传、文件去重（秒传）、Magic Number 文件类型校验、病毒扫描接口、生命周期管理、上传并发保护、指数退避重试、Micrometer 指标采集与 Actuator 健康检查等开箱即用能力，是所有业务模块文件存取的统一基座。
 
@@ -123,6 +123,7 @@
 | `FileProperties` | 文件存储主配置属性（`ydsz.file.*`） |
 | `FileUploadProperties` | 分片上传配置属性（`ydsz.file.upload.*`） |
 | `FileLifecycleProperties` | 生命周期配置属性（`ydsz.file.lifecycle.*`） |
+| `FileConstant` | 文件模块常量定义 |
 
 ## 接入方式
 
@@ -498,6 +499,13 @@ public class CephStorageRegisterConfig {
 - 存储调用抛异常 → **DOWN**（详情中带 error 字段）
 - 其他情况 → **UP**
 
+## 自动配置类
+
+| 类 | 说明 |
+|---|---|
+| `FileConfiguration` | Spring Boot 自动配置入口（`@ConditionalOnProperty`), 注册全部文件存储 Bean |
+| `FileScheduler` | 定时任务调度器（`@EnableScheduling`），按 `ydsz.file.multipart-cleanup-interval-ms`（默认 3600000ms/1h）定时清理过期分片上下文；独立于 `FileConfiguration`，避免在 `@EnableScheduling` 缺失时阻塞启动 |
+
 ## 注意事项
 
 1. **生产环境必须替换 NoOpVirusScanner**：默认装配的 `NoOpVirusScanner` 仅返回 CLEAN 占位，不真正扫描病毒。生产环境必须实现 `VirusScanner` 接口注册为 Spring Bean，否则存在安全风险。
@@ -511,7 +519,7 @@ public class CephStorageRegisterConfig {
 9. **生命周期清理 dry-run**：生产环境首次启用建议 `dry-run=true` 试运行，确认清理范围后再切换为 `false`。
 10. **`generateUploadPolicy` 与 `generatePresignedUploadUrl` 不是所有存储后端都支持**：默认抛 `UnsupportedOperationException`，各云存储实现类按需覆盖。
 11. **分片 MD5 校验默认关闭**：启用 `ydsz.file.upload.chunk-md5-check=true` 会增加内存与 CPU 开销，建议仅在高一致性场景启用。启用后流式累积 MD5 仅缓存 `MessageDigest` 状态（约 128 字节），不缓存原始分片数据，避免 OOM。
-12. **`@EnableScheduling` 独立于 `FileSchedule`**：`FileScheduler` 持有 `@EnableScheduling`，与 `FileConfiguration` 分离。引入本模块后 `FileScheduler` 自动开启 Spring 调度，按 `ydsz.file.multipart-cleanup-interval-ms`（默认 3600000ms）清理过期分片上下文。若业务模块已有 `@EnableScheduling`，Spring 会自动去重，无副作用。
+12. **`@EnableScheduling` 独立于 `FileScheduler`**：`FileScheduler` 持有 `@EnableScheduling`，与 `FileConfiguration` 分离。引入本模块后 `FileScheduler` 自动开启 Spring 调度，按 `ydsz.file.multipart-cleanup-interval-ms`（默认 3600000ms）清理过期分片上下文。若业务模块已有 `@EnableScheduling`，Spring 会自动去重，无副作用。
 13. **`memoryBufferThreshold` 控制上传缓冲行为**：小于阈值时使用字节缓冲（全部在内存），大于时切换到磁盘临时文件上传，避免大文件 OOM。可通过 `ydsz.file.memory-buffer-threshold` 调整（默认 16MB）。
 
 ## 指标监控与 Grafana 看板
