@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.nextwiki.domain.vo.UserRecentVO;
 import com.njydsz.nextwiki.server.service.UserRecentApplicationService;
 

@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.dto.AgentApprovalDTO;
 import com.njydsz.agent.domain.repository.AgentApprovalRepository;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**

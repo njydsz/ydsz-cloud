@@ -11,8 +11,8 @@ import com.njydsz.agent.domain.gateway.Text2SQLService;
 import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.tool.ToolExecutionException;
 import com.njydsz.agent.domain.tool.ToolExecutor;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * Text2SQL 工具实现（注册到 ToolRegistry）。

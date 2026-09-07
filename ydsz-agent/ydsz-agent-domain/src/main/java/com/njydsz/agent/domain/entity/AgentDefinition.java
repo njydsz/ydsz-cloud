@@ -1,13 +1,13 @@
 package com.njydsz.agent.domain.entity;
 
+import java.math.BigDecimal;
+
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
-
-import java.math.BigDecimal;
 
 /**
  * Agent 定义（映射 ydsz_agt_definition 表）

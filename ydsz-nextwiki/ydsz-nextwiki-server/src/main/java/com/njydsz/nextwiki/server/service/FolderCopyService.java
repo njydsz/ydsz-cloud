@@ -255,7 +255,7 @@ public class FolderCopyService {
       FileNodeDTO newNode = newNodes.get(i);
       FileNodeVO source = batchSourceNodes.get(i);
       if (source.isFile()) {
-        List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListToDTO(
+        List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListVOToDTO(
             versionRepository.findByFileNodeId(newNode.getId()));
         // 将DTO转换为VO用于版本创建
         FileNodeVO newNodeVO = mapper.fileNodeDTOtoVO(newNode);

@@ -24,6 +24,12 @@ public class AgentProperties {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** L1 本地缓存默认最大条目数 */
+  private static final int DEFAULT_L1_MAX_SIZE = 200;
+
+  /** L1 本地缓存默认写入后过期时间（分钟） */
+  private static final int DEFAULT_L1_EXPIRE_MINUTES = 5;
+
 
   /** 是否启用 Agent 模块 */
   private boolean enabled = true;
@@ -336,10 +342,10 @@ public class AgentProperties {
     private String type = "caffeine";
 
     /** L1 本地缓存最大条目数 */
-    private int l1MaxSize = 200;
+    private int l1MaxSize = DEFAULT_L1_MAX_SIZE;
 
     /** L1 本地缓存写入后过期时间（分钟） */
-    private int l1ExpireMinutes = 5;
+    private int l1ExpireMinutes = DEFAULT_L1_EXPIRE_MINUTES;
   }
 
   // ========================= Prompt 模板配置 =========================

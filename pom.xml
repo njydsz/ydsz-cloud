@@ -115,7 +115,7 @@
         <!-- Aviator 表达式引擎（工作流条件表达式求值） -->
         <aviator.version>5.4.3</aviator.version>
         <!-- Javassist（覆盖 reflections 传递依赖的旧版本 3.21.0-GA，消除 Maven effective model 解析告警） -->
-        <javassist.version>3.30-GA</javassist.version>
+        <javassist.version>3.30.0-GA</javassist.version>
         </properties>
 
     <dependencyManagement>

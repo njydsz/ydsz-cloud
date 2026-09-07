@@ -1,12 +1,12 @@
 package com.njydsz.agent.domain.entity;
 
+import java.math.BigDecimal;
+
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 /**
  * Agent 执行链路步骤（映射 ydsz_agt_trace_step 表）

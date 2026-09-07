@@ -378,7 +378,7 @@ public class ChunkUploadApplicationService {
     return transactionTemplate.execute(status -> {
       FileNodeDTO deduped = buildDedupedNode(ctx.session, ctx.dedupExisting, ctx.fileHash, ctx.userId);
       FileNodeVO saved = fileNodeRepository.save(deduped);
-      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListToDTO(
+      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListVOToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
       FileNodeVO savedVO = saved;
       FileVersionDomainService.VersionCreateResult versionResult =
@@ -438,7 +438,7 @@ public class ChunkUploadApplicationService {
               .build();
 
       FileNodeVO saved = fileNodeRepository.save(newNode);
-      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListToDTO(
+      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListVOToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
       FileNodeVO savedVO = saved;
       FileVersionDomainService.VersionCreateResult versionResult =
@@ -591,7 +591,7 @@ public class ChunkUploadApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListToDTO(
+    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListVOToDTO(
         versionRepository.findByFileNodeId(fileNodeId));
     List<FileVersionDTO> toDelete = versionDomainService.findVersionsToCleanup(allVersionDTOs);
     for (FileVersionDTO v : toDelete) {

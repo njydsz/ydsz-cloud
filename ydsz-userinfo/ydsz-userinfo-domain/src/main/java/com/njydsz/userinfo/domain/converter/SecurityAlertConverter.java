@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.infra.converter;
+package com.njydsz.userinfo.domain.converter;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

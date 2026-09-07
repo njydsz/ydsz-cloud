@@ -11,8 +11,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * PostgreSQL pgvector 向量存储实现

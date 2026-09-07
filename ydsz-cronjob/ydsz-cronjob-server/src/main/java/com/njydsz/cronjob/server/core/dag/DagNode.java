@@ -249,9 +249,6 @@ public record DagNode(
     TASK,
     /** P1-1: 条件分支节点：根据 SpEL 表达式结果选择分支 */
     CONDITION,
-    /** 已废弃：循环节点（26.09.01 移除，反序列化时降级为 TASK） */
-    @Deprecated
-    LOOP,
     /** P1-1: 并行网关节点：Fork/Join 并行执行 */
     PARALLEL_GATEWAY,
     /** P1-5: 子工作流节点：嵌套触发另一个 DAG 工作流 */

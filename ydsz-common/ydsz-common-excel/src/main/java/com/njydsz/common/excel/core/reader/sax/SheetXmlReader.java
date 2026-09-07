@@ -112,6 +112,7 @@ public class SheetXmlReader {
    * @param is Sheet XML 输入流
    * @throws IOException 读取异常
    */
+  @SuppressWarnings("unchecked") // List<ReadListener<?>> → ReadListener<Object> 属泛型擦除，YDIZ-WARN-001 豁免 #3
   void parse(InputStream is) throws IOException {
     byte[] data = readAllBytesDirect(is);
     int pos = 0;

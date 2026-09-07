@@ -76,7 +76,7 @@ public class FileVersionSnapshotListener {
 
       // 查询现有版本列表
       List<FileVersionDTO> existingVersionDTOs =
-          mapper.fileVersionListToDTO(
+          mapper.fileVersionListVOToDTO(
               versionRepository.findByFileNodeId(fileNodeId));
 
       // 领域服务构建版本记录
@@ -120,7 +120,7 @@ public class FileVersionSnapshotListener {
    */
   private void cleanupExcessVersions(String fileNodeId) {
     List<FileVersionDTO> allVersionDTOs =
-        mapper.fileVersionListToDTO(
+        mapper.fileVersionListVOToDTO(
             versionRepository.findByFileNodeId(fileNodeId));
     List<FileVersionDTO> toDelete = versionDomainService.findVersionsToCleanup(allVersionDTOs);
     for (FileVersionDTO v : toDelete) {

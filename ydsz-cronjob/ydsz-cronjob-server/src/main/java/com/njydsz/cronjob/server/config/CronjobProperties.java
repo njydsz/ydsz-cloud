@@ -174,10 +174,6 @@ public class CronjobProperties {
     return node;
   }
 
-  /** SpEL 表达式缓存配置（已废弃，26.09.01 移除） */
-  @Deprecated
-  private SpelConfig spel = new SpelConfig();
-
   /**
    * 校验并规整化 TTL 值。
    *

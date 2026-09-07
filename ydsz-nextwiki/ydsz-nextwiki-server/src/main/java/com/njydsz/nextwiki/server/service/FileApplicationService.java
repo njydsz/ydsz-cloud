@@ -785,7 +785,7 @@ public class FileApplicationService {
 
     // 文件创建版本引用
     if (source.isFile()) {
-      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListToDTO(
+      List<FileVersionDTO> existingVersionDTOs = mapper.fileVersionListVOToDTO(
           versionRepository.findByFileNodeId(saved.getId()));
       FileVersionDomainService.VersionCreateResult versionResult =
           versionDomainService.createVersion(
@@ -905,7 +905,7 @@ public class FileApplicationService {
 
     FileVersionDTO targetDTO = mapper.fileVersionVOToDTO(
         versionRepository.findByFileNodeIdAndVersion(nodeId, targetVersion).orElse(null));
-    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListToDTO(
+    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListVOToDTO(
         versionRepository.findByFileNodeId(nodeId));
 
     FileVersionDomainService.VersionRollbackResult result =
@@ -1072,7 +1072,7 @@ public class FileApplicationService {
 
   /** 清理超出保留数量的旧版本 */
   private void cleanupExcessVersions(String fileNodeId) {
-    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListToDTO(
+    List<FileVersionDTO> allVersionDTOs = mapper.fileVersionListVOToDTO(
         versionRepository.findByFileNodeId(fileNodeId));
     List<FileVersionDTO> toDelete = versionDomainService.findVersionsToCleanup(allVersionDTOs);
     for (FileVersionDTO v : toDelete) {
