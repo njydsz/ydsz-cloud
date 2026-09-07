@@ -43,5 +43,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+        <!-- OpenTelemetry API（optional：不在 classpath 时降级为 NoopAgentSpanExporter） -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <version>1.42.1</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

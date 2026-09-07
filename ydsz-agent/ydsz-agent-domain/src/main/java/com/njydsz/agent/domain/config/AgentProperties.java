@@ -77,6 +77,9 @@ public class AgentProperties {
   /** 用户画像配置 */
   private ProfileConfig profile = new ProfileConfig();
 
+  /** 可观测性配置（OpenTelemetry） */
+  private Otel otel = new Otel();
+
   // ========================= LLM 配置 =========================
 
   /** LLM 相关配置组（默认 Provider、模型、密钥、价格等）。 */
@@ -573,5 +576,31 @@ public class AgentProperties {
 
     /** 多少次交互后才自动分析画像 */
     private int interactionThreshold = DEFAULT_INTERACTION_THRESHOLD;
+  }
+
+  // ========================= 可观测性（OpenTelemetry）配置 =========================
+
+  /**
+   * 可观测性配置（OpenTelemetry 集成）
+   *
+   * <p>控制 Agent 链路是否能输出到 OpenTelemetry Collector。
+   * 当应用引入 OTel SDK 且本配置开启时，{@link io.opentelemetry.api.OpenTelemetry} Bean
+   * 会由 Spring Boot Actuator 自动装配（或用户自定义），链路级/步骤级 Span 会被导出。
+   *
+   * <p>OTel 依赖为可选依赖（{@code <optional>true</optional>}），用户需在业务工程 pom 中显式引入方可生效。
+   *
+   * @author ydsz-team
+   * @since 26.09.07
+   */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Otel {
+
+    /** 是否启用 OTel Span 导出 */
+    private boolean enabled = false;
+
+    /** OTel 服务名称（resource attribute service.name） */
+    private String serviceName = "ydsz-agent";
   }
 }

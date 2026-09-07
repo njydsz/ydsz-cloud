@@ -39,6 +39,7 @@ import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.text2sql.SchemaRecallService;
 import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
+import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
@@ -59,6 +60,7 @@ import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSchemaRecallService;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSemanticConsistencyChecker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
+import com.njydsz.agent.infra.trace.ExportingTraceRecorder;
 import com.njydsz.agent.infra.tool.McpToolAdapter;
 import com.njydsz.agent.infra.tool.SseMcpClientProvider;
 import com.njydsz.agent.infra.tool.ToolAnnotationScanner;
@@ -247,22 +249,37 @@ public class AgentAutoConfiguration {
   }
 
   /**
-   * 装配执行链路记录器。
+   * 装配执行链路记录器（带 Span 导出装饰）。
+   *
+   * <p>当 {@link AgentSpanExporter} Bean 存在时（由 {@code AgentOtelAutoConfiguration} 注册 OTel 导出器或空操作导出器），
+   * 将底层链路记录器（PG/Memory）包装在 {@link ExportingTraceRecorder} 中，
+   * 使每次 startTrace/recordStep/endTrace 时同步向可观测性后端传输 Span。
    *
    * @param traceRepository 链路主表 Repository
    * @param traceStepRepository 链路步骤表 Repository
-   * @return 链路记录器
+   * @param spanExporterProvider Span 导出器（可能不存在）
+   * @return 链路记录器（已包装导出逻辑）
    */
   @Bean
   @ConditionalOnMissingBean(TraceRecorder.class)
   public TraceRecorder traceRecorder(
-      AgentTraceRepository traceRepository, AgentTraceStepRepository traceStepRepository) {
+      AgentTraceRepository traceRepository,
+      AgentTraceStepRepository traceStepRepository,
+      ObjectProvider<AgentSpanExporter> spanExporterProvider) {
+    TraceRecorder inner;
     if (traceRepository != null && traceStepRepository != null) {
+      inner = traceRepository.createTraceRecorder(traceStepRepository);
       log.info("[Agent] 使用数据库链路记录器 PgTraceRecorder");
-      return traceRepository.createTraceRecorder(traceStepRepository);
+    } else {
+      inner = new InMemoryTraceRecorder();
+      log.info("[Agent] 降级使用内存链路记录器 InMemoryTraceRecorder");
     }
-    log.info("[Agent] 降级使用内存链路记录器 InMemoryTraceRecorder");
-    return new InMemoryTraceRecorder();
+    AgentSpanExporter exporter = spanExporterProvider.getIfAvailable();
+    if (exporter != null) {
+      log.info("[Agent] 链路记录器已包装 Span 导出: {}", exporter.getClass().getSimpleName());
+      return new ExportingTraceRecorder(inner, exporter);
+    }
+    return inner;
   }
 
   /**
