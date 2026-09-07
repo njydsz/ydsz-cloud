@@ -82,7 +82,7 @@ public class SpaceTemplateApplicationService {
         .description(description)
         .category(category != null ? category : "general")
         .tenantId(tenantId)
-        .systemFlag(false)
+        .system(false)
         .publicAccess(false)
         .structureJson(structureJson)
         .sortOrder(0)
@@ -118,7 +118,7 @@ public class SpaceTemplateApplicationService {
             .data("templateId", templateId));
 
     // 系统模板不允许修改
-    if (Boolean.TRUE.equals(dto.getSystemFlag())) {
+    if (Boolean.TRUE.equals(dto.getsystem())) {
       throw BusinessException.of(NextwikiExceptionCode.TEMPLATE_SYSTEM_NOT_EDITABLE);
     }
 
@@ -156,7 +156,7 @@ public class SpaceTemplateApplicationService {
             .data("templateId", templateId));
 
     // 系统模板不允许删除
-    if (Boolean.TRUE.equals(dto.getSystemFlag())) {
+    if (Boolean.TRUE.equals(dto.getsystem())) {
       throw BusinessException.of(NextwikiExceptionCode.TEMPLATE_SYSTEM_NOT_DELETABLE);
     }
 

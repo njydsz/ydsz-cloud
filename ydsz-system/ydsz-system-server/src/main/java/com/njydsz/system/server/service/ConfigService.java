@@ -135,7 +135,7 @@ public interface ConfigService {
   List<ConfigVO> getConfigsByGroup(String configGroup);
 
   /**
-   * 查询所有公开配置（{@code publicFlag=true}）
+   * 查询所有公开配置（{@code public=true}）
    *
    * <p>供前端「公开配置」接口（{@code /api/v1/system/config/public}）使用， 包含 feature flag、限流阈值、UI 文案等前端可见配置。
    *

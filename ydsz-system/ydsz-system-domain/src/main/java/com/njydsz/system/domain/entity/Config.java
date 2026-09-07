@@ -31,7 +31,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
  * <p><b>典型使用场景：</b>
  *
  * <ul>
- *   <li>功能开关（feature flag）：通过 {@code configGroup=feature} + {@code publicFlag=true} 让前端感知
+ *   <li>功能开关（feature flag）：通过 {@code configGroup=feature} + {@code public=true} 让前端感知
  *   <li>限流阈值：运行时调整接口限流参数，无需发版
  *   <li>第三方服务地址：密钥/地址变更不需重新部署
  *   <li>UI 文案：前端展示文本、错误提示等可由配置动态下发
@@ -70,7 +70,7 @@ public class Config extends MpBaseEntity<String> {
   private String description;
 
   /** 是否公开配置（true=公开，前端可查；false=私有，仅后端可查） */
-  private Boolean publicFlag;
+    private Boolean public;
 
   /** 排序序号 */
   private Integer sortOrder;
@@ -83,7 +83,7 @@ public class Config extends MpBaseEntity<String> {
    * @return true 为公开配置
    */
   public boolean publicConfig() {
-    return Boolean.TRUE.equals(publicFlag);
+    return Boolean.TRUE.equals(public);
   }
 
   /**

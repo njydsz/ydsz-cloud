@@ -62,7 +62,7 @@ public class SpaceTemplate implements Serializable {
   private String tenantId;
 
   /** 是否为系统内置模板（不可删除） */
-  private Boolean systemFlag;
+    private Boolean system;
 
   /** 是否公开（所有租户可见） */
   private Boolean publicAccess;
