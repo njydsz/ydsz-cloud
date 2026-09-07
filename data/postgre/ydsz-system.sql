@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
     plan_code                VARCHAR(64)              NOT NULL,
     plan_name                VARCHAR(128)             NOT NULL,
     description              TEXT                     DEFAULT NULL,
-    sort_order               INTEGER                  NOT NULL DEFAULT 0,
+    sort               INTEGER                  NOT NULL DEFAULT 0,
     quota_json               JSONB                    DEFAULT NULL,
     feature_json             JSONB                    DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
@@ -95,7 +95,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan.tenant_id IS '租户 ID（多租户隔离
 COMMENT ON COLUMN ydsz_sys_tenant_plan.plan_code IS '套餐编码（唯一标识，如 TRIAL/STANDARD/ENTERPRISE）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.plan_name IS '套餐名称（展示用，如「试用版」「企业版」）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.description IS '套餐描述（包含价格、功能清单、配额上限）';
-COMMENT ON COLUMN ydsz_sys_tenant_plan.sort_order IS '排序号（升序，影响前端套餐选择器顺序）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.sort IS '排序号（升序，影响前端套餐选择器顺序）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.quota_json IS '资源配额 JSON（如 {"maxUsers":50,"maxProjects":10,"storageGb":100}）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.feature_json IS '功能开关 JSON（如 {"workflow":true,"dataAnalytics":false}）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.status IS '状态标识';
@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     type_code                VARCHAR(64)              NOT NULL,
     item_code                VARCHAR(64)              NOT NULL,
     item_value               VARCHAR(128)             NOT NULL,
-    sort_order               INTEGER                  NOT NULL DEFAULT 0,
+    sort               INTEGER                  NOT NULL DEFAULT 0,
     parent_id                VARCHAR(32)              DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     ext_json                 JSONB                    DEFAULT NULL,
@@ -199,7 +199,7 @@ COMMENT ON COLUMN ydsz_sys_dict_item.tenant_id IS '租户 ID（多租户隔离�
 COMMENT ON COLUMN ydsz_sys_dict_item.type_code IS '所属字典类型编码（逻辑外键 → ydsz_sys_dict_type.type_code）';
 COMMENT ON COLUMN ydsz_sys_dict_item.item_code IS '字典项编码（同 typeCode 内唯一）';
 COMMENT ON COLUMN ydsz_sys_dict_item.item_value IS '字典项真实值（业务代码引用的枚举值，如 "PAID"）';
-COMMENT ON COLUMN ydsz_sys_dict_item.sort_order IS '展示排序序号（升序）';
+COMMENT ON COLUMN ydsz_sys_dict_item.sort IS '展示排序序号（升序）';
 COMMENT ON COLUMN ydsz_sys_dict_item.parent_id IS '父级字典项 ID（支持树形字典，如行政区划）';
 COMMENT ON COLUMN ydsz_sys_dict_item.description IS '字典项描述';
 COMMENT ON COLUMN ydsz_sys_dict_item.ext_json IS '扩展属性 JSON（承载自定义属性，如色值、图标、URL 等）';
@@ -223,8 +223,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     value_type               VARCHAR(32)              NOT NULL,
     default_value            TEXT                     DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
-    public_flag              SMALLINT                 NOT NULL DEFAULT 0,
-    sort_order               INTEGER                  NOT NULL DEFAULT 0,
+    public                   SMALLINT                 NOT NULL DEFAULT 0,
+    sort               INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
     deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
@@ -245,8 +245,8 @@ COMMENT ON COLUMN ydsz_sys_config.config_value IS '配置值';
 COMMENT ON COLUMN ydsz_sys_config.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
 COMMENT ON COLUMN ydsz_sys_config.default_value IS '默认值（配置未设置时使用）';
 COMMENT ON COLUMN ydsz_sys_config.description IS '配置描述';
-COMMENT ON COLUMN ydsz_sys_config.public_flag IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
-COMMENT ON COLUMN ydsz_sys_config.sort_order IS '排序序号';
+COMMENT ON COLUMN ydsz_sys_config.public IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
+COMMENT ON COLUMN ydsz_sys_config.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_sys_config.status IS '状态标识';
 COMMENT ON COLUMN ydsz_sys_config.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_config.revision IS '乐观锁版本号';
@@ -584,38 +584,38 @@ EXECUTE FUNCTION fn_ydsz_sys_api_permission_set_updated_at();
 -- ----------------------------------------------------------------------------
 -- 1. 默认租户套餐
 -- ----------------------------------------------------------------------------
-INSERT INTO ydsz_sys_tenant_plan (id, plan_code, plan_name, description, sort_order, quota_json, feature_json, status, deleted, revision)
+INSERT INTO ydsz_sys_tenant_plan (id, plan_code, plan_name, description, sort, quota_json, feature_json, status, deleted, revision)
 VALUES ('plan_trial_001', 'TRIAL', '试用版', '30 天试用，基础功能体验', 1, '{"maxUsers":3,"maxProjects":2,"storageGb":1}', '{"workflow":false,"dataAnalytics":false}', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_tenant_plan (id, plan_code, plan_name, description, sort_order, quota_json, feature_json, status, deleted, revision)
+INSERT INTO ydsz_sys_tenant_plan (id, plan_code, plan_name, description, sort, quota_json, feature_json, status, deleted, revision)
 VALUES ('plan_std_001', 'STANDARD', '标准版', '中小团队标准配置，含工作流引擎', 2, '{"maxUsers":50,"maxProjects":20,"storageGb":50}', '{"workflow":true,"dataAnalytics":false}', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_tenant_plan (id, plan_code, plan_name, description, sort_order, quota_json, feature_json, status, deleted, revision)
+INSERT INTO ydsz_sys_tenant_plan (id, plan_code, plan_name, description, sort, quota_json, feature_json, status, deleted, revision)
 VALUES ('plan_ent_001', 'ENTERPRISE', '企业版', '大型企业级套餐，全功能无限制', 3, '{"maxUsers":null,"maxProjects":null,"storageGb":500}', '{"workflow":true,"dataAnalytics":true}', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
 -- ----------------------------------------------------------------------------
 -- 2. 系统配置默认值 (config_group='SYSTEM')
 -- ----------------------------------------------------------------------------
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public_flag, sort_order, status, deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, deleted, revision)
 VALUES ('cfg_sys_001', 'SYSTEM', 'app.name', '云顶数据中台', 'STRING', '云顶数据中台', '系统显示名称', 1, 1, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public_flag, sort_order, status, deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, deleted, revision)
 VALUES ('cfg_sys_002', 'SYSTEM', 'app.logoUrl', '/assets/logo.png', 'STRING', '/assets/logo.png', '系统 Logo 地址', 1, 2, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public_flag, sort_order, status, deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, deleted, revision)
 VALUES ('cfg_sys_003', 'SYSTEM', 'i18n.defaultLanguage', 'zh-CN', 'STRING', 'zh-CN', '默认语言编码', 1, 3, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public_flag, sort_order, status, deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, deleted, revision)
 VALUES ('cfg_sys_004', 'SYSTEM', 'security.passwordMinLength', '8', 'NUMBER', '8', '密码最小长度', 0, 10, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public_flag, sort_order, status, deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, deleted, revision)
 VALUES ('cfg_sys_005', 'SYSTEM', 'security.maxLoginFailCount', '5', 'NUMBER', '5', '最大连续登录失败次数', 0, 11, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
@@ -642,35 +642,35 @@ ON CONFLICT DO NOTHING;
 -- 4. 字典项初始化
 -- ----------------------------------------------------------------------------
 -- EXCEPTION_LEVEL 字典项
-INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort_order, description, status, deleted, revision)
+INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort, description, status, deleted, revision)
 VALUES ('dict_item_001', 'EXCEPTION_LEVEL', 'INFO', '提示', 1, '信息级别，业务可忽略', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort_order, description, status, deleted, revision)
+INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort, description, status, deleted, revision)
 VALUES ('dict_item_002', 'EXCEPTION_LEVEL', 'WARN', '警告', 2, '警告级别，需关注但非阻断', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort_order, description, status, deleted, revision)
+INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort, description, status, deleted, revision)
 VALUES ('dict_item_003', 'EXCEPTION_LEVEL', 'ERROR', '错误', 3, '错误级别，阻断业务流程', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort_order, description, status, deleted, revision)
+INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort, description, status, deleted, revision)
 VALUES ('dict_item_004', 'EXCEPTION_LEVEL', 'CRITICAL', '致命', 4, '致命级别，需立即处理', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
 -- CONFIG_VALUE_TYPE 字典项
-INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort_order, description, status, deleted, revision)
+INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort, description, status, deleted, revision)
 VALUES ('dict_item_010', 'CONFIG_VALUE_TYPE', 'STRING', '字符串', 1, '普通字符串', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort_order, description, status, deleted, revision)
+INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort, description, status, deleted, revision)
 VALUES ('dict_item_011', 'CONFIG_VALUE_TYPE', 'NUMBER', '数字', 2, '数值型', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort_order, description, status, deleted, revision)
+INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort, description, status, deleted, revision)
 VALUES ('dict_item_012', 'CONFIG_VALUE_TYPE', 'BOOLEAN', '布尔值', 3, 'true/false', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort_order, description, status, deleted, revision)
+INSERT INTO ydsz_sys_dict_item (id, type_code, item_code, item_value, sort, description, status, deleted, revision)
 VALUES ('dict_item_013', 'CONFIG_VALUE_TYPE', 'JSON', 'JSON', 4, '结构化 JSON', 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;

@@ -299,7 +299,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
     owner_id        VARCHAR(64)     NOT NULL COMMENT '空间所有者（创建者）',
     status          VARCHAR(32)     NOT NULL DEFAULT 'active' COMMENT '空间状态：active / archived / deleted',
     visibility      VARCHAR(32)     NOT NULL DEFAULT 'private' COMMENT '可见性：private / organization / public',
-    sort_order      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
+    sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     member_count    INT             NOT NULL DEFAULT 1 COMMENT '成员数量',
     node_count      INT             NOT NULL DEFAULT 0 COMMENT '节点数量（文件/目录总数）',
     quota_limit     BIGINT          DEFAULT NULL COMMENT '空间独立配额（字节，NULL 表示使用租户配额）',
@@ -312,7 +312,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_wiki_space_tenant_name (tenant_id, name),
-    INDEX idx_ydsz_wiki_space_tenant_sort (tenant_id, sort_order),
+    INDEX idx_ydsz_wiki_space_tenant_sort (tenant_id, sort),
     INDEX idx_ydsz_wiki_space_owner (owner_id),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库空间（空间管理聚合根，文件节点的顶级容器）';
@@ -349,10 +349,10 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     description     VARCHAR(512)    DEFAULT NULL COMMENT '模板描述',
     category        VARCHAR(32)     NOT NULL DEFAULT 'general' COMMENT '模板分类：general / project / meeting / knowledge',
     icon_url        VARCHAR(1024)   DEFAULT NULL COMMENT '模板图标 URL',
-    system_flag     TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统内置模板（不可删除）',
+    system          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统内置模板（不可删除）',
     public_access   TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否公开（所有租户可见）',
     structure_json  JSON            NOT NULL COMMENT '模板结构 JSON（定义目录树、初始页面、权限配置等）',
-    sort_order      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
+    sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     usage_count     INT             NOT NULL DEFAULT 0 COMMENT '使用次数',
     deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -361,7 +361,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_ydsz_wiki_space_template_tenant_category (tenant_id, category),
-    INDEX idx_ydsz_wiki_space_template_system_public (system_flag, public_access),
+    INDEX idx_ydsz_wiki_space_template_system_public (system, public_access),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间模板（预定义可复用的空间结构模板）';
 
@@ -428,7 +428,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
     node_id         VARCHAR(64)     NOT NULL COMMENT '收藏的文件/目录节点ID',
-    sort_order      INT             NOT NULL DEFAULT 0 COMMENT '排序序号（值越小越靠前）',
+    sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号（值越小越靠前）',
     deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     deleted_time    DATETIME        DEFAULT NULL COMMENT '删除时间',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -437,7 +437,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_wiki_user_favorite_user_node (user_id, node_id),
-    INDEX idx_ydsz_wiki_user_favorite_user_sort (user_id, sort_order),
+    INDEX idx_ydsz_wiki_user_favorite_user_sort (user_id, sort),
     INDEX idx_tenant_deleted (tenant_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
 

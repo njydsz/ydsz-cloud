@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_datasource (
     username                 VARCHAR(128)             NOT NULL,
     password                 VARCHAR(512)             NOT NULL,
     dialect                  VARCHAR(32)              NOT NULL DEFAULT 'POSTGRESQL',
-    default_flag             SMALLINT                 NOT NULL DEFAULT 0,
+    default                  SMALLINT                 NOT NULL DEFAULT 0,
     description              VARCHAR(255)             DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -42,7 +42,7 @@ COMMENT ON COLUMN ydsz_gen_datasource.jdbc_url IS 'JDBC URL';
 COMMENT ON COLUMN ydsz_gen_datasource.username IS '数据库用户名';
 COMMENT ON COLUMN ydsz_gen_datasource.password IS '数据库密码（AES 加密存储）';
 COMMENT ON COLUMN ydsz_gen_datasource.dialect IS '数据库方言（POSTGRESQL/MYSQL/ORACLE）';
-COMMENT ON COLUMN ydsz_gen_datasource.default_flag IS '是否为默认数据源（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_datasource.default IS '是否为默认数据源（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_datasource.description IS '数据源描述';
 COMMENT ON COLUMN ydsz_gen_datasource.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_gen_datasource.updated_at IS '更新时间';
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template_group (
     name                     VARCHAR(64)              NOT NULL,
     description              VARCHAR(255)             DEFAULT NULL,
     system                   SMALLINT                 NOT NULL DEFAULT 0,
-    sort_order               INTEGER                  NOT NULL DEFAULT 0,
+    sort               INTEGER                  NOT NULL DEFAULT 0,
     active                   SMALLINT                 NOT NULL DEFAULT 1,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -70,7 +70,7 @@ COMMENT ON COLUMN ydsz_gen_template_group.id IS '主键 ID';
 COMMENT ON COLUMN ydsz_gen_template_group.name IS '分组名（唯一标识，如 default、mybatis-plus）';
 COMMENT ON COLUMN ydsz_gen_template_group.description IS '分组描述';
 COMMENT ON COLUMN ydsz_gen_template_group.system IS '是否为系统分组（0=否 1=是，系统分组不可删除）';
-COMMENT ON COLUMN ydsz_gen_template_group.sort_order IS '排序序号（升序）';
+COMMENT ON COLUMN ydsz_gen_template_group.sort IS '排序序号（升序）';
 COMMENT ON COLUMN ydsz_gen_template_group.active IS '是否激活为当前使用分组（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_template_group.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_gen_template_group.updated_at IS '更新时间';
@@ -259,11 +259,11 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_gen_column_meta_table ON ydsz_gen_column_met
 -- 8. 初始化数据（模板分组）
 -- ============================================================================
 
-INSERT INTO ydsz_gen_template_group (name, description, system, sort_order, active)
+INSERT INTO ydsz_gen_template_group (name, description, system, sort, active)
 VALUES ('default', '标准 DDD 分层模板（entity/service/controller/repository...）', 1, 1, 1)
 ON CONFLICT (name) DO UPDATE SET system = system;
 
-INSERT INTO ydsz_gen_template_group (name, description, system, sort_order, active)
+INSERT INTO ydsz_gen_template_group (name, description, system, sort, active)
 VALUES ('mybatis-plus', 'Mybatis-Plus 增强版模板（含 Wrapper/通用 Service）', 1, 2, 0)
 ON CONFLICT (name) DO UPDATE SET system = system;
 

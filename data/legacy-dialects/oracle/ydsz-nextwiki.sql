@@ -483,7 +483,7 @@ CREATE TABLE ydsz_wiki_space (
     owner_id                 VARCHAR2(64 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'active',
     visibility               VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'private',
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     member_count             NUMBER(10)               NOT NULL DEFAULT 1,
     node_count               NUMBER(10)               NOT NULL DEFAULT 0,
     quota_limit              NUMBER(19)               DEFAULT NULL,
@@ -508,7 +508,7 @@ COMMENT ON COLUMN ydsz_wiki_space.cover_url IS '空间封面 URL';
 COMMENT ON COLUMN ydsz_wiki_space.owner_id IS '空间所有者（创建者）';
 COMMENT ON COLUMN ydsz_wiki_space.status IS '空间状态：active / archived / deleted';
 COMMENT ON COLUMN ydsz_wiki_space.visibility IS '可见性：private / organization / public';
-COMMENT ON COLUMN ydsz_wiki_space.sort_order IS '排序序号';
+COMMENT ON COLUMN ydsz_wiki_space.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_wiki_space.member_count IS '成员数量';
 COMMENT ON COLUMN ydsz_wiki_space.node_count IS '节点数量（文件/目录总数）';
 COMMENT ON COLUMN ydsz_wiki_space.quota_limit IS '空间独立配额（字节，NULL 表示使用租户配额）';
@@ -520,7 +520,7 @@ COMMENT ON COLUMN ydsz_wiki_space.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_space.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_wiki_space_tenant_sort ON ydsz_wiki_space (tenant_id, sort_order);
+CREATE INDEX idx_ydsz_wiki_space_tenant_sort ON ydsz_wiki_space (tenant_id, sort);
 CREATE INDEX idx_ydsz_wiki_space_owner ON ydsz_wiki_space (owner_id);
 CREATE INDEX idx_ydsz_wiki_space_tenant_deleted ON ydsz_wiki_space (tenant_id, deleted);
 
@@ -564,10 +564,10 @@ CREATE TABLE ydsz_wiki_space_template (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     category                 VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'general',
     icon_url                 VARCHAR2(1024 CHAR)      DEFAULT NULL,
-    system_flag             NUMBER(1)                NOT NULL DEFAULT 0,
+    system                   NUMBER(1)                NOT NULL DEFAULT 0,
     public_access           NUMBER(1)                NOT NULL DEFAULT 1,
     structure_json           CLOB                     NOT NULL CONSTRAINT ck_ydsz_wiki_space_template_structure_json CHECK (structure_json IS JSON),
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     usage_count              NUMBER(10)               NOT NULL DEFAULT 0,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -584,10 +584,10 @@ COMMENT ON COLUMN ydsz_wiki_space_template.name IS '模板名称';
 COMMENT ON COLUMN ydsz_wiki_space_template.description IS '模板描述';
 COMMENT ON COLUMN ydsz_wiki_space_template.category IS '模板分类：general / project / meeting / knowledge';
 COMMENT ON COLUMN ydsz_wiki_space_template.icon_url IS '模板图标 URL';
-COMMENT ON COLUMN ydsz_wiki_space_template.system_flag IS '是否为系统内置模板（不可删除）';
+COMMENT ON COLUMN ydsz_wiki_space_template.system IS '是否为系统内置模板（不可删除）';
 COMMENT ON COLUMN ydsz_wiki_space_template.public_access IS '是否公开（所有租户可见）';
 COMMENT ON COLUMN ydsz_wiki_space_template.structure_json IS '模板结构 JSON（定义目录树、初始页面、权限配置等）';
-COMMENT ON COLUMN ydsz_wiki_space_template.sort_order IS '排序序号';
+COMMENT ON COLUMN ydsz_wiki_space_template.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_wiki_space_template.usage_count IS '使用次数';
 COMMENT ON COLUMN ydsz_wiki_space_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_space_template.created_at IS '创建时间';
@@ -596,7 +596,7 @@ COMMENT ON COLUMN ydsz_wiki_space_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space_template.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_space_template_tenant_category ON ydsz_wiki_space_template (tenant_id, category);
-CREATE INDEX idx_ydsz_wiki_space_template_system_public ON ydsz_wiki_space_template (system_flag, public_access);
+CREATE INDEX idx_ydsz_wiki_space_template_system_public ON ydsz_wiki_space_template (system, public_access);
 CREATE INDEX idx_ydsz_wiki_space_template_tenant_deleted ON ydsz_wiki_space_template (tenant_id, deleted);
 
 CREATE TABLE ydsz_wiki_trash_item (
@@ -694,7 +694,7 @@ CREATE TABLE ydsz_wiki_user_favorite (
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     deleted_time             TIMESTAMP                DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -710,7 +710,7 @@ COMMENT ON COLUMN ydsz_wiki_user_favorite.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.user_id IS '用户ID';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.node_id IS '收藏的文件/目录节点ID';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.sort_order IS '排序序号（值越小越靠前）';
+COMMENT ON COLUMN ydsz_wiki_user_favorite.sort IS '排序序号（值越小越靠前）';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.deleted_time IS '删除时间';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.created_at IS '创建时间';
@@ -718,7 +718,7 @@ COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_wiki_user_favorite_user_sort ON ydsz_wiki_user_favorite (user_id, sort_order);
+CREATE INDEX idx_ydsz_wiki_user_favorite_user_sort ON ydsz_wiki_user_favorite (user_id, sort);
 CREATE INDEX idx_ydsz_wiki_user_favorite_tenant_deleted ON ydsz_wiki_user_favorite (tenant_id, deleted);
 
 CREATE TABLE ydsz_wiki_user_recent (

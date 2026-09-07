@@ -77,7 +77,7 @@ CREATE TABLE ydsz_sys_tenant_plan (
     plan_code                VARCHAR2(64 CHAR)        NOT NULL,
     plan_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              CLOB                     DEFAULT NULL,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     quota_json               CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_tenant_plan_quota_json CHECK (quota_json IS JSON),
     feature_json             CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_tenant_plan_feature_json CHECK (feature_json IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -97,7 +97,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan.tenant_id IS '租户 ID（多租户隔离
 COMMENT ON COLUMN ydsz_sys_tenant_plan.plan_code IS '套餐编码（唯一标识，如 TRIAL/STANDARD/ENTERPRISE）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.plan_name IS '套餐名称（展示用，如「试用版」「企业版」）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.description IS '套餐描述（包含价格、功能清单、配额上限）';
-COMMENT ON COLUMN ydsz_sys_tenant_plan.sort_order IS '排序号（升序，影响前端套餐选择器顺序）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.sort IS '排序号（升序，影响前端套餐选择器顺序）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.quota_json IS '资源配额 JSON（如 {"maxUsers":50,"maxProjects":10,"storageGb":100}）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.feature_json IS '功能开关 JSON（如 {"workflow":true,"dataAnalytics":false}）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.status IS '状态标识';
@@ -180,7 +180,7 @@ CREATE TABLE ydsz_sys_dict_item (
     type_code                VARCHAR2(64 CHAR)        NOT NULL,
     item_code                VARCHAR2(64 CHAR)        NOT NULL,
     item_value               VARCHAR2(128 CHAR)       NOT NULL,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     parent_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     ext_json                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_dict_item_ext_json CHECK (ext_json IS JSON),
@@ -201,7 +201,7 @@ COMMENT ON COLUMN ydsz_sys_dict_item.tenant_id IS '租户 ID（多租户隔离�
 COMMENT ON COLUMN ydsz_sys_dict_item.type_code IS '所属字典类型编码（逻辑外键 → ydsz_sys_dict_type.type_code）';
 COMMENT ON COLUMN ydsz_sys_dict_item.item_code IS '字典项编码（同 typeCode 内唯一）';
 COMMENT ON COLUMN ydsz_sys_dict_item.item_value IS '字典项真实值（业务代码引用的枚举值，如 "PAID"）';
-COMMENT ON COLUMN ydsz_sys_dict_item.sort_order IS '展示排序序号（升序）';
+COMMENT ON COLUMN ydsz_sys_dict_item.sort IS '展示排序序号（升序）';
 COMMENT ON COLUMN ydsz_sys_dict_item.parent_id IS '父级字典项 ID（支持树形字典，如行政区划）';
 COMMENT ON COLUMN ydsz_sys_dict_item.description IS '字典项描述';
 COMMENT ON COLUMN ydsz_sys_dict_item.ext_json IS '扩展属性 JSON（承载自定义属性，如色值、图标、URL 等）';
@@ -225,8 +225,8 @@ CREATE TABLE ydsz_sys_config (
     value_type               VARCHAR2(32 CHAR)        NOT NULL,
     default_value            CLOB                     DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    public_flag             NUMBER(1)                NOT NULL DEFAULT 0,
-    sort_order               NUMBER(10)               NOT NULL DEFAULT 0,
+    public                   NUMBER(1)                NOT NULL DEFAULT 0,
+    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
@@ -247,8 +247,8 @@ COMMENT ON COLUMN ydsz_sys_config.config_value IS '配置值';
 COMMENT ON COLUMN ydsz_sys_config.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
 COMMENT ON COLUMN ydsz_sys_config.default_value IS '默认值（配置未设置时使用）';
 COMMENT ON COLUMN ydsz_sys_config.description IS '配置描述';
-COMMENT ON COLUMN ydsz_sys_config.public_flag IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
-COMMENT ON COLUMN ydsz_sys_config.sort_order IS '排序序号';
+COMMENT ON COLUMN ydsz_sys_config.public IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
+COMMENT ON COLUMN ydsz_sys_config.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_sys_config.status IS '状态标识';
 COMMENT ON COLUMN ydsz_sys_config.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_config.revision IS '乐观锁版本号';
