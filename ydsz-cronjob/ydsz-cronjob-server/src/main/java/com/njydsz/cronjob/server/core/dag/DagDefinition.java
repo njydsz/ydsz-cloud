@@ -18,7 +18,6 @@ import java.util.Objects;
  *     {"jobKey":"a","jobId":"1","label":"抽取","x":100,"y":200,"paramsJson":"{}"},
  *     {"jobKey":"b","jobId":"2","label":"清洗","x":300,"y":200},
  *     {"jobKey":"c","jobId":null,"label":"条件","nodeType":"CONDITION","conditionExpression":"${a.result=='success'}"},
- *     {"jobKey":"d","jobId":null,"label":"循环","nodeType":"LOOP","loopCount":3},
  *     {"jobKey":"e","jobId":null,"label":"并行","nodeType":"PARALLEL_GATEWAY","parallelBranches":2}
  *   ],
  *   "edges": [

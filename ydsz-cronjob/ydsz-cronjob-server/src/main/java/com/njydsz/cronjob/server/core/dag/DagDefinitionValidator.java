@@ -301,8 +301,7 @@ public class DagDefinitionValidator {
           }
         }
         default -> {
-          // LOOP 已废弃，resolveNodeType() 已降级为 TASK，
-          // 此分支理论上不会到达，保留作为防御性编程
+          // resolveNodeType() 已无 LOOP 分支，此分支理论上不会到达，保留作为防御性编程
         }
       }
     }

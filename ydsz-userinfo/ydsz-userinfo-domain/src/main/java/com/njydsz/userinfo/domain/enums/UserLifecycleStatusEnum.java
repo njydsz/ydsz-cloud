@@ -9,7 +9,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
 /**
  * 用户生命周期状态枚举。
  *
- * <p>定义用户从注册到离职的完整生命周期状态机，替代旧版 {@link EnableStatusEnum} 的简单启用/停用二元模型。
+ * <p>定义用户从注册到离职的完整生命周期状态机。
  *
  * <p><b>状态流转规则：</b>
  *
@@ -31,11 +31,8 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  *
  * <p><b>存储格式：</b>DB 列使用整数（0=禁用, 1=启用，历史遗留），新状态使用枚举名字符串存储。 通过 {@link IntegerStringTypeHandler} 自动转换。
  *
- * <p><b>向后兼容：</b>{@link EnableStatusEnum} 保留为兼容层，新代码应使用本类。
- *
  * @author ydsz-team
  * @since 26.09.01
- * @see EnableStatusEnum
  * @see BaseStatusEnum
  */
 public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatusEnum> {

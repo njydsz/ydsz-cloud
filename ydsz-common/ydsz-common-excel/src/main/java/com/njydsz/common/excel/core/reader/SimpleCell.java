@@ -127,9 +127,13 @@ public final class SimpleCell implements Cell {
   }
 
   /**
-   * @deprecated 此为 POI Cell 接口桥接适配方法，对外仍暴露 Date。内部已改用 LocalDateTime 存储，推荐使用 {@link #getLocalDateTimeCellValue()}。
+   * 获取单元格日期值（Date 类型，桥接旧版 API 调用方）。
+   *
+   * <p>内部已改用 LocalDateTime 存储，此方法为兼容旧版调用方而保留。
+   * 新代码推荐使用 {@link #getLocalDateTimeCellValue()} 获取 LocalDateTime 值。
+   *
+   * @return 对应的 Date 实例，非日期单元格返回 null
    */
-  @Deprecated
   @Override
   public Date getDateCellValue() {
     return dateValue == null
@@ -145,9 +149,8 @@ public final class SimpleCell implements Cell {
   /**
    * 轻量单元格的类型不可变（由构造时确定），此方法为空实现。
    *
-   * <p>POI 5.x 已弃用 {@code setCellType}，此处仅作接口桥接的空实现。
+   * <p>POI 5.x 已弃用 {@code setCellType}，此处仅作接口桥接的空实现（实现 Cell 接口契约）。
    */
-  @Deprecated
   @Override
   public void setCellType(CellType cellType) {}
 
