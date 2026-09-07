@@ -16,6 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * @author ydsz-team
  * @since 26.09.01
  */
+@SuppressWarnings("unchecked") // @SuperBuilder 与泛型继承（MpBaseIdEntity<String>）产生的 unchecked 警告，同 MpBaseIdEntity 无法在源码层面修复
 @Data
 @SuperBuilder
 @NoArgsConstructor

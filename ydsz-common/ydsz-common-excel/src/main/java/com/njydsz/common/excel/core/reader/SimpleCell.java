@@ -142,6 +142,12 @@ public final class SimpleCell implements Cell {
     return dateValue;
   }
 
+  /**
+   * 轻量单元格的类型不可变（由构造时确定），此方法为空实现。
+   *
+   * <p>POI 5.x 已弃用 {@code setCellType}，此处仅作接口桥接的空实现。
+   */
+  @Deprecated
   @Override
   public void setCellType(CellType cellType) {}
 

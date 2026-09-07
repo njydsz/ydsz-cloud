@@ -1401,10 +1401,7 @@ public class ExcelWriter {
             firstException = closeException;
           }
         }
-        if (wbToClose instanceof SXSSFWorkbook) {
-          SXSSFWorkbook sxssf = (SXSSFWorkbook) wbToClose;
-          sxssf.dispose();
-        }
+        // POI 5.x close() 已自动清理 SXSSFWorkbook 临时文件，无需显式 dispose()（已弃用）
         workbook = null; // 防止重复关闭/使用；close() 幂等
       }
       // 无论成功失败均标记完成：workbook 已关闭（或已写出），重复 finish 无意义且有害

@@ -69,6 +69,12 @@ public interface RuleCoreConverter {
   RulePackVO entityToVO(RulePackVO entity);
 
   // ===== DecisionTableDefinitionDTO (api) → DecisionTableDefinitionVO =====
+  // VO 含 name/label/type/conditions/actions 属于 Row/Column 嵌套结构，DTO 顶层无对应源属性
+  @Mapping(target = "name", ignore = true)
+  @Mapping(target = "label", ignore = true)
+  @Mapping(target = "type", ignore = true)
+  @Mapping(target = "conditions", ignore = true)
+  @Mapping(target = "actions", ignore = true)
   DecisionTableDefinitionVO entityToVO(DecisionTableDefinitionDTO entity);
 
   // ===== ExpressionValidationResult (api.expr) → ExpressionValidationResultVO =====

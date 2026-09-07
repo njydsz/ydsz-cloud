@@ -86,6 +86,7 @@ public interface RuleSupportConverter {
   @Mapping(target = "deleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)

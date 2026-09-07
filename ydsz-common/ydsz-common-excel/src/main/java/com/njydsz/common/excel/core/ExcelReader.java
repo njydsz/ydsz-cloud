@@ -679,6 +679,7 @@ public class ExcelReader {
    * @param sheet 要解析的Sheet对象
    * @throws IOException IO异常
    */
+  @SuppressWarnings("unchecked") // List<ReadListener<?>> → ReadListener<Object> 属泛型擦除，YDIZ-WARN-001 豁免 #3
   private void parseSheet(Sheet sheet) throws IOException {
     int headRowNumber = metadata.getHeadRowNumber();
     // P0 修复：headRowNumber 语义为 1-based 表头行号（1=第一行是表头，数据从第 2 行起）。
@@ -746,7 +747,8 @@ public class ExcelReader {
         } catch (Exception ve) {
           LOG.warn("Data validation failed, row={}", rowIndex, ve);
           for (int i = 0; i < listenerCount; i++) {
-            ((ReadListener) listeners.get(i)).onError(context, ve);
+            // 泛型擦除无法验证 List<ReadListener<?>> → ReadListener 的还原，YDIZ-WARN-001 豁免 #3
+            ((ReadListener<Object>) listeners.get(i)).onError(context, ve);
           }
           continue;
         }
@@ -793,6 +795,7 @@ public class ExcelReader {
    *
    * <p>读取完成后调用（无论是否发生异常）， 用于资源清理和统计汇总。
    */
+  @SuppressWarnings("unchecked") // List<ReadListener<?>> → ReadListener<Object> 属泛型擦除，YDIZ-WARN-001 豁免 #3
   private void notifyEnd() {
     // Flush remaining batch data
     if (batchBuffer != null && !batchBuffer.isEmpty()) {
@@ -814,6 +817,7 @@ public class ExcelReader {
    * @param current 当前已处理行号
    * @param total 总行数（若未知则为 -1）
    */
+  @SuppressWarnings("unchecked") // List<ReadListener<?>> → ReadListener<Object> 属泛型擦除，YDIZ-WARN-001 豁免 #3
   private void notifyProgress(int current, int total) {
     for (ReadListener<?> listener : listeners) {
       try {
