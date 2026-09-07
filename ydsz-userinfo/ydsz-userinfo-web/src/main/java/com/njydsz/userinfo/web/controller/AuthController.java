@@ -45,12 +45,14 @@ import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.RefreshRequest;
 import com.njydsz.userinfo.domain.dto.SecondaryAuthRequest;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
+import com.njydsz.userinfo.domain.dto.WebAuthnSecondaryAuthDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.server.aspect.SecondaryAuthAspect;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.auth.SecondaryAuthService;
+import com.njydsz.userinfo.server.auth.WebAuthnService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
@@ -108,6 +110,9 @@ public class AuthController {
 
   /** P0-2: 场景化二级认证服务 */
   private final SecondaryAuthService secondaryAuthService;
+
+  /** P0-2: WebAuthn 通行钥二级认证服务 */
+  private final WebAuthnService webAuthnService;
 
   /** P2-6: 可信代理配置（决定是否信任转发头） */
   private final UserInfoProperties properties;
@@ -522,6 +527,82 @@ public class AuthController {
     Map<String, Object> result = new HashMap<>(MAP_CAPACITY);
     result.put("scene", request.getScene());
     result.put("level", level.name());
+    result.put("ttlSeconds", effectiveTtl.getSeconds());
+    return YdszResponse.success(result);
+  }
+
+  /**
+   * 获取 WebAuthn 二级认证挑战码（P0-2 双通道）。
+   *
+   * <p>为当前登录用户生成 WebAuthn 认证挑战码，用于通行钥二级认证流程。
+   * 前端获取挑战码后调用 {@code navigator.credentials.get()} 完成通行钥断言，
+   * 然后将断言结果提交到 {@code /secondary-auth/webauthn} 完成二级认证。
+   *
+   * <p>适用于已绑定 Passkey 希望在敏感操作时使用通行钥（而非密码）进行二次认证的场景。
+   *
+   * @param scene 场景标识（可选，默认 "secondary_auth"）
+   * @return WebAuthn 认证选项（含 challenge、allowCredentials、timeout）
+   */
+  @GetMapping("/secondary-auth/webauthn/challenge")
+  @Operation(summary = "获取 WebAuthn 二级认证挑战码", description = "为通行钥二级认证流程生成 WebAuthn 挑战码")
+  public YdszResponse<Map<String, Object>> getWebAuthnChallenge(
+      @RequestParam(required = false, defaultValue = "secondary_auth") String scene) {
+    String userId = RequestContext.getUserId();
+    if (userId == null || userId.isBlank()) {
+      throw new BusinessException(UserInfoExceptionCode.SECONDARY_AUTH_REQUIRED);
+    }
+    Map<String, Object> options = webAuthnService.generateAuthenticationOptions(userId);
+    // 将场景标识存入返回结果，供前端在提交断言时回传
+    options.put("scene", scene);
+    return YdszResponse.success(options);
+  }
+
+  /**
+   * WebAuthn 通行钥二级认证（P0-2 双通道）。
+   *
+   * <p>验证当前登录用户的 WebAuthn 通行钥断言，通过后写入场景化 Redis 安全标记。
+   * 与 {@code /secondary-auth}（密码通道）互斥等效，前端可任选一种方式完成二级认证。
+   *
+   * <p><b>流程：</b>
+   *
+   * <ol>
+   *   <li>前端调用 {@code /secondary-auth/webauthn/challenge} 获取挑战码</li>
+   *   <li>浏览器调用 {@code navigator.credentials.get()} 完成通行钥断言</li>
+   *   <li>前端将断言结果提交到此端点，后端验证签名并写入安全标记</li>
+   * </ol>
+   *
+   * @param request WebAuthn 二级认证请求（含场景、挑战码、断言结果）
+   * @return 认证结果（含实际生效的 TTL）
+   */
+  @Audit(
+      module = "认证管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'WebAuthn 通行钥二级认证: scene=' + #request.scene")
+  @RateLimit(resource = "userinfo.auth.secondaryAuthWebAuthn", threshold = 10)
+  @PostMapping("/secondary-auth/webauthn")
+  @Operation(
+      summary = "WebAuthn 通行钥二级认证",
+      description = "使用通行钥完成二级认证，验证通过后写入场景化安全标记")
+  public YdszResponse<Map<String, Object>> webAuthnSecondaryAuth(
+      @RequestBody @Valid WebAuthnSecondaryAuthDTO request) {
+    // 计算实际生效 TTL
+    int ttlSeconds = request.getTtlSeconds() != null ? request.getTtlSeconds() : DEFAULT_SECONDARY_AUTH_TTL;
+    Duration effectiveTtl = Duration.ofSeconds(ttlSeconds);
+
+    // 验证通行钥断言并开启安全操作模式
+    secondaryAuthService.openSafeWithWebAuthn(
+        request.getScene(),
+        request.getChallenge(),
+        request.getCredentialId(),
+        request.getClientDataJSON(),
+        request.getAuthenticatorData(),
+        request.getSignature(),
+        effectiveTtl);
+
+    Map<String, Object> result = new HashMap<>(MAP_CAPACITY);
+    result.put("scene", request.getScene());
+    result.put("channel", "webauthn");
     result.put("ttlSeconds", effectiveTtl.getSeconds());
     return YdszResponse.success(result);
   }

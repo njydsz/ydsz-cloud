@@ -78,6 +78,7 @@ public class SecondaryAuthService {
   private final UserAccountRepository userAccountRepository;
   private final PasswordEncoder passwordEncoder;
   private final RedisStringOps redisStringOps;
+  private final WebAuthnService webAuthnService;
 
   /**
    * 开启安全操作模式（编程式 API）。
@@ -209,6 +210,69 @@ public class SecondaryAuthService {
     } finally {
       closeSafe(scene);
     }
+  }
+
+  /**
+   * 开启安全操作模式（WebAuthn 通行钥验证）。
+   *
+   * <p>通过 WebAuthn 通行钥断言验证用户身份，通过后写入场景化 Redis 安全标记。
+   * 适用于已绑定 Passkey 的用户在敏感操作时使用通行钥进行二次认证（无需输入密码）。
+   *
+   * @param scene 场景标识（如 "password_change", "role_assign"）
+   * @param challenge WebAuthn 挑战码
+   * @param credentialId 凭证 ID（Base64URL）
+   * @param clientDataJSON 客户端数据（Base64URL）
+   * @param authenticatorData 认证器数据（Base64URL）
+   * @param signature 签名（Base64URL）
+   * @param ttl 安全标记有效期
+   * @throws BusinessException WebAuthn 验证失败或未登录时抛出
+   */
+  public void openSafeWithWebAuthn(
+      String scene,
+      String challenge,
+      String credentialId,
+      String clientDataJSON,
+      String authenticatorData,
+      String signature,
+      Duration ttl) {
+    String userId = RequestContext.getUserId();
+    if (userId == null || userId.isBlank()) {
+      throw new BusinessException(UserInfoExceptionCode.SECONDARY_AUTH_REQUIRED);
+    }
+
+    // 验证当前登录用户与 WebAuthn 凭证所有者一致
+    String credentialOwnerId = webAuthnService.verifyAuthenticationResponse(
+        challenge, credentialId, clientDataJSON, authenticatorData, signature);
+    if (!userId.equals(credentialOwnerId)) {
+      log.warn("WebAuthn 凭证所有者与当前登录用户不一致: userId={}, credentialOwnerId={}",
+          userId, credentialOwnerId);
+      throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_CREDENTIAL_NOT_BELONG_TO_USER);
+    }
+
+    String key = buildKey(scene, userId);
+    redisStringOps.set(key, SAFE_VALUE, ttl);
+    log.info("安全操作模式已开启（WebAuthn）: userId={}, scene={}, ttl={}", userId, scene, ttl);
+  }
+
+  /**
+   * 开启安全操作模式（WebAuthn，默认 5 分钟 TTL）。
+   *
+   * @param scene 场景标识
+   * @param challenge WebAuthn 挑战码
+   * @param credentialId 凭证 ID
+   * @param clientDataJSON 客户端数据
+   * @param authenticatorData 认证器数据
+   * @param signature 签名
+   */
+  public void openSafeWithWebAuthn(
+      String scene,
+      String challenge,
+      String credentialId,
+      String clientDataJSON,
+      String authenticatorData,
+      String signature) {
+    openSafeWithWebAuthn(scene, challenge, credentialId, clientDataJSON,
+        authenticatorData, signature, DEFAULT_TTL);
   }
 
   /**

@@ -317,7 +317,19 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** WebAuthn 凭证不属于当前用户 */
   WEBAUTHN_CREDENTIAL_NOT_BELONG_TO_USER("B39009", "userinfo.webauthn.credential.not.belong.to.user"),
   /** WebAuthn 凭证数已达上限 */
-  WEBAUTHN_CREDENTIAL_LIMIT_REACHED("B39010", "userinfo.webauthn.credential.limit.reached");
+  WEBAUTHN_CREDENTIAL_LIMIT_REACHED("B39010", "userinfo.webauthn.credential.limit.reached"),
+
+  // ==================== B40xxx API Key 授权体系（P1-2） ====================
+  /** API Key 无效 */
+  API_KEY_INVALID("B40001", "userinfo.apikey.invalid", 401),
+  /** API Key 已过期 */
+  API_KEY_EXPIRED("B40002", "userinfo.apikey.expired", 401),
+  /** API Key 已被禁用 */
+  API_KEY_DISABLED("B40003", "userinfo.apikey.disabled", 403),
+  /** 超出 API Key 最大数量限制 */
+  API_KEY_LIMIT_EXCEEDED("B40004", "userinfo.apikey.limit.exceeded", 400),
+  /** API Key 不存在 */
+  API_KEY_NOT_FOUND("B40005", "userinfo.apikey.not.found", 404);
 
   /** 默认 HTTP 状态码：参数错误 */
   private static final int DEFAULT_HTTP_STATUS = 400;

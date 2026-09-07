@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
  * 用户生命周期自动化定时任务。
@@ -52,6 +54,7 @@ public class UserLifecycleTask {
   private final UserAccountRepository userAccountRepository;
   private final SessionManager sessionManager;
   private final RedisStringOps redisStringOps;
+  private final UserDomainEventPublisher eventPublisher;
 
   /**
    * 定时处理用户生命周期状态流转。
@@ -104,6 +107,8 @@ public class UserLifecycleTask {
             userId, null, null, null, "SYSTEM_CRON");
         if (updated > 0) {
           count++;
+          // 发布解封事件，供下游（审计/通知/风控）订阅
+          publishUnbanEvent(userId);
         }
       }
 
@@ -155,6 +160,24 @@ public class UserLifecycleTask {
     } catch (Exception e) {
       log.warn("Failed to process expired locks: {}", e.getMessage(), e);
       return 0;
+    }
+  }
+
+  /**
+   * 发布账号自动解封事件。
+   *
+   * <p>当临时封禁到期自动解封时调用，发布 {@code AccountUnbannedEvent} 事件供下游订阅。
+   *
+   * @param userId 被解封的用户 ID
+   */
+  private void publishUnbanEvent(String userId) {
+    try {
+      userAccountRepository.findById(userId).ifPresent(userVO ->
+          eventPublisher.publishAccountUnbanned(
+              userId, userVO.getUsername(), "SYSTEM_CRON"));
+    } catch (Exception e) {
+      // 事件发布失败不影响主流程（解封已成功持久化）
+      log.warn("Failed to publish unban event for user: {}, error={}", userId, e.getMessage());
     }
   }
 

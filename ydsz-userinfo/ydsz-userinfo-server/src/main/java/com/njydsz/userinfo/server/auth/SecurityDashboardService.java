@@ -16,12 +16,15 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
+import com.njydsz.userinfo.domain.vo.DeviceDistributionVO;
 import com.njydsz.userinfo.domain.vo.LoginFailDistributionVO;
 import com.njydsz.userinfo.domain.vo.LoginSuccessRateVO;
 import com.njydsz.userinfo.domain.vo.MfaCoverageVO;
 import com.njydsz.userinfo.domain.vo.RiskLevelDistributionVO;
 import com.njydsz.userinfo.domain.vo.SecurityDashboardVO;
 import com.njydsz.userinfo.domain.vo.SecurityEventVO;
+import com.njydsz.userinfo.domain.vo.SessionActivityVO;
+import com.njydsz.userinfo.domain.vo.SessionTrendVO;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 
@@ -37,6 +40,7 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
  *   <li>MFA覆盖率统计：平台用户MFA启用比例</li>
  *   <li>风险等级分布：按风险等级聚合用户数量</li>
  *   <li>最近安全事件：异常登录、账号锁定等安全事件</li>
+ *   <li><b>会话大盘（P2-2）：</b>会话活跃度概览、趋势、设备分布、异常会话检测</li>
  * </ul>
  *
  * <p><b>数据策略：</b>
@@ -98,6 +102,7 @@ public class SecurityDashboardService {
   private final UserLoginHistoryRepository userLoginHistoryRepository;
   private final RedisStringOps redisStringOps;
   private final UserInfoMetrics userInfoMetrics;
+  private final SessionActivityService sessionActivityService;
 
   /**
    * 获取完整仪表盘数据。
@@ -312,6 +317,48 @@ public class SecurityDashboardService {
     }
 
     return events;
+  }
+
+  // ==================== 会话大盘（P2-2 实时会话聚合） ====================
+
+  /**
+   * 获取会话活跃度概览（P2-2 会话大盘核心数据）。
+   *
+   * <p>整合 {@link SessionActivityService#getActivityOverview()} 数据，为大盘提供实时会话指标。
+   *
+   * @return 会话活跃度概览
+   */
+  public SessionActivityVO getSessionActivityOverview() {
+    return sessionActivityService.getActivityOverview();
+  }
+
+  /**
+   * 获取会话趋势数据（P2-2 按日维度聚合）。
+   *
+   * @param start 起始日期
+   * @param end 结束日期
+   * @return 会话趋势列表
+   */
+  public List<SessionTrendVO> getSessionTrend(LocalDate start, LocalDate end) {
+    return sessionActivityService.getSessionTrend(start, end);
+  }
+
+  /**
+   * 获取设备分布数据（P2-2 按设备类型聚合）。
+   *
+   * @return 设备分布列表
+   */
+  public List<DeviceDistributionVO> getDeviceDistribution() {
+    return sessionActivityService.getDeviceDistribution();
+  }
+
+  /**
+   * 检测异常会话（P2-2 多地登录、异常活跃、会话过期）。
+   *
+   * @return 异常会话列表
+   */
+  public List<com.njydsz.userinfo.domain.vo.AnomalySessionVO> detectAnomalySessions() {
+    return sessionActivityService.detectAnomalySessions();
   }
 
   // ==================== 私有辅助方法 ====================
