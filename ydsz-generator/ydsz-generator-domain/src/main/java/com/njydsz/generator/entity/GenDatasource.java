@@ -3,6 +3,7 @@ package com.njydsz.generator.entity;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -45,7 +46,8 @@ public class GenDatasource {
   /** 数据库方言。 */
   private String dialect;
   /** 是否默认数据源。 */
-    private Boolean default;
+  @TableField("is_default")
+  private Boolean isDefault;
   /** 描述。 */
   private String description;
   /** 创建时间。 */

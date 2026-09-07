@@ -32,7 +32,7 @@ public class GenDatasourceRespVO {
   /** 数据库方言。 */
   private String dialect;
   /** 是否默认数据源。 */
-  private Boolean default;
+  private Boolean isDefault;
   /** 描述。 */
   private String description;
   /** 创建时间。 */

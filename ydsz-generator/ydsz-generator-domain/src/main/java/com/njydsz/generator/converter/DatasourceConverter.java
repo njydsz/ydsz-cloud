@@ -39,7 +39,7 @@ public final class DatasourceConverter {
         .jdbcUrl(entity.getJdbcUrl())
         .username(entity.getUsername())
         .dialect(entity.getDialect())
-        .default(entity.getdefault())
+        .isDefault(entity.getIsDefault())
         .description(entity.getDescription())
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getUpdatedAt())
