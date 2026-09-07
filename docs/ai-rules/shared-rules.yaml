@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.03"
-  source: "docs/云顶编码规范.md v1.0.6"
-  last_synced: "2026-09-03"
-  last_updated: "2026-09-03（新增 YDIZ-ARCH-001 架构层级依赖方向规则：高层→低层单向依赖，禁止反向依赖，P0 阻断级）"
-  total_rules: 48
+  version: "26.09.07"
+  source: "docs/云顶编码规范.md v1.0.7"
+  last_synced: "2026-09-07"
+  last_updated: "2026-09-07（新增 YDIZ-OOP-006 P0 布尔字段不得加 _flag 后缀；新增 YDIZ-DB-001 P0 排序字段 sort_order → sort）"
+  total_rules: 50
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -235,8 +235,57 @@ rules:
     fix: "添加 @Override 注解"
     source: "编码规范附录 D 第 17 项"
 
+  - id: "YDIZ-OOP-006"
+    category: "oop"
+    severity: "P0"
+    title: "【强制】布尔字段去掉 is 前缀后不得添加 _flag 后缀"
+    description: |
+      布尔类型字段在去掉 `is` 前缀后，必须直接使用后缀词，**严禁添加 `_flag`** 等其他后缀。
+      此规则同时约束 Java 字段名和数据库列名。
+
+      **正确转换示例**：
+      - `is_default` → `default`
+      - `is_active` → `active`
+      - `is_system` → `system`
+      - `is_public` → `public`
+      - `is_deleted` → `deleted`
+      - `is_folder` → `folder`
+    pattern: "private Boolean defaultFlag; 或 private Boolean activeFlag;"
+    fix: "去掉 is 前缀后直接使用后缀词，不得加 _flag：defaultFlag → default"
+    example_bad: |
+      ❌ private Boolean defaultFlag;
+      ❌ private Boolean activeFlag;
+      ❌ private Boolean systemFlag;
+    example_good: |
+      ✅ private Boolean default;
+      ✅ private Boolean active;
+      ✅ private Boolean system;
+    source: "编码规范 6.5 节"
+
   # ============================================
-  # 五、异常与日志（3 条）
+  # 五、数据库命名规范（1 条，P0）
+  # ============================================
+  - id: "YDIZ-DB-001"
+    category: "database"
+    severity: "P0"
+    title: "【强制】排序字段统一命名为 sort，禁用 sort_order"
+    description: |
+      数据库中表示"排序序号"的字段统一命名为 `sort`，Java 实体字段也命名为 `sort`。
+      **禁止使用** `sort_order`（数据库）或 `sortOrder`（Java）命名。
+
+      **适用范围**：所有业务表中的排序字段（升序排列用的整型序号）。
+    pattern: "sort_order INTEGER 或 private Integer sortOrder;"
+    fix: "将 sort_order 改为 sort（数据库列），sortOrder 改为 sort（Java 字段）"
+    example_bad: |
+      ❌ sort_order INT NOT NULL DEFAULT 0
+      ❌ @TableField(\"sort_order\") private Integer sortOrder;
+    example_good: |
+      ✅ sort INT NOT NULL DEFAULT 0
+      ✅ @TableField(\"sort\") private Integer sort;
+    source: "编码规范 6.12 节"
+
+  # ============================================
+  # 七、异常与日志（3 条）
   # ============================================
   - id: "YDIZ-LOG-001"
     category: "logging"
@@ -268,7 +317,7 @@ rules:
     source: "编码规范附录 D 第 15/16 项"
 
   # ============================================
-  # 六、日期时间（2 条）
+  # 七、日期时间（2 条）
   # ============================================
   - id: "YDIZ-DATE-001"
     category: "datetime"
@@ -291,7 +340,7 @@ rules:
     source: "编码规范 7.2 节"
 
   # ============================================
-  # 七、集合与数据结构（2 条）
+  # 八、集合与数据结构（2 条）
   # ============================================
   - id: "YDIZ-COLL-001"
     category: "collection"
@@ -312,7 +361,7 @@ rules:
     source: "编码规范 9.2 节"
 
   # ============================================
-  # 八、DDD 分层架构（6 条，全部 P0）
+  # 九、DDD 分层架构（6 条，全部 P0）
   # ============================================
   - id: "YDIZ-DDD-001"
     category: "ddd"
@@ -462,7 +511,7 @@ rules:
     source: "编码规范附录 D 第 24 项"
 
   # ============================================
-  # 九、并发规范（3 条）
+  # 十、并发规范（3 条）
   # ============================================
   - id: "YDIZ-CONC-001"
     category: "concurrency"
