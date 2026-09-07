@@ -115,6 +115,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
         </dependency>
-
+        <!-- mapstruct (provided): 注入 domain 层 NextwikiStructMapper（@Mapper 接口），编译期需解析 ReportingPolicy 枚举值 -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
