@@ -1,8 +1,8 @@
 # ydsz-common-netty
 
-> Netty 网络通信框架（L5 业务服务层）
+> Netty 网络通信框架（L5 业务服务层）— TCP Server/Client 抽象 + LengthField/JSON 双编解码 + SSL/TLS + Epoll 原生传输 + 断线重连 + 流量监控 + 连接数限制
 
-提供 TCP Server/Client 抽象、断线重连、心跳空闲检测、SSL/TLS、LengthField 编解码、EventLoop 池管理、Channel 组管理、Epoll/KQueue 原生传输、连接控制、流量整形、Micrometer 指标监控、Actuator 端点、健康检查能力，是 YDSZ 项目网络通信的统一基座。
+提供 TCP Server/Client 抽象基类、LengthField 拆包粘包处理、JSON 消息编解码、SSL/TLS 双向认证、Epoll/KQueue 原生传输自动检测、断线重连（指数退避）、心跳空闲检测、连接数限制、流量监控与整形、Micrometer 指标采集、Actuator 端点与健康检查等开箱即用能力，是 YDSZ 项目所有 TCP 通信的统一基座。
 
 ## 模块定位
 
@@ -10,7 +10,7 @@
 |---|---|
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供 TCP Server/Client 抽象、编解码、SSL/TLS、断线重连、连接控制、流量整形、指标监控等能力 |
+| **作用** | 提供 TCP Server/Client 抽象、编解码、SSL/TLS、断线重连、连接控制、流量监控等能力 |
 | **依赖** | common-core、common-util、common-exception、common-json、netty-all；provided 依赖 spring-boot-autoconfigure、micrometer-core；可选依赖 spring-boot-actuator、spring-boot-health、spring-boot-configuration-processor |
 | **版本** | 2.0.0 |
 
@@ -37,7 +37,7 @@
 
 ```
 +--------+------------------+
-| Length  | Payload          |
+| Length | Payload          |
 | 4 bytes | Length bytes     |
 +--------+------------------+
 ```
@@ -59,7 +59,7 @@
 | `ChannelEventListener` | Channel 事件监听器 SPI 接口，业务侧实现订阅 Channel 生命周期事件 |
 | `NettyPipelineDiagnostics` | Pipeline 诊断工具，运行时打印 Handler 链结构与事件传播路径，辅助排查 Handler 顺序问题 |
 
-> 说明：`@MessageHandler` 注解 / `MessageDispatcher` 分发器已在 26.09.01 **移除**（26.09.01 起标注 Deprecated，无活跃消费者）。消息处理统一使用 `SimpleChannelInboundHandler` 推荐模式。
+> 说明：`@MessageHandler` 注解 / `MessageDispatcher` 分发器已在 26.09.01 **移除**。消息处理统一使用 `SimpleChannelInboundHandler` + switch 策略模式。
 
 ### 5. SSL/TLS
 
@@ -67,27 +67,27 @@
 |---|---|
 | `SslContextFactory` | SSL Context 工厂，证书加载 + 双向认证（server/client 上下文分离） |
 
-### 5.1 异常处理
+### 6. 异常处理
 
 | 类 | 说明 |
 |---|---|
 | `NettyException` | Netty 模块统一异常，封装 Server/Client/SSL/Transport 各层错误，错误码 B01055 |
 
-### 6. 连接控制
+### 7. 连接控制
 
 | 类 | 说明 |
 |---|---|
 | `ConnectionLimitHandler` | 连接限制 Handler，超过 `ydsz.netty.connection-control.max-connections` 时拒绝新连接（0 表示不限制） |
 | `ConnectionMetrics` | 连接级指标采集，与 `NettyChannelMetrics` 协作提供更细粒度的连接维度监控 |
 
-### 7. 线程池与传输
+### 8. 线程池与传输
 
 | 类 | 说明 |
 |---|---|
 | `NettyEventLoopPool` | EventLoop 线程池管理，支持共享/隔离模式、引用计数、优雅关闭 await |
 | `NativeTransportDetector` | 原生传输检测器，自动检测 Epoll（Linux）/ KQueue（macOS），不匹配时降级到 NIO |
 
-### 8. 可观测性
+### 9. 可观测性
 
 | 类 | 说明 |
 |---|---|
@@ -95,7 +95,7 @@
 | `NettyHealthIndicator` | Spring Boot Actuator 健康检查 |
 | `NettyActuatorEndpoint` | Actuator 端点 `/netty`，运行时查询 Server 状态、EventLoop 引用计数、Channel 列表 |
 
-### 9. 配置
+### 10. 配置
 
 | 类 | 说明 |
 |---|---|
@@ -247,8 +247,6 @@ public class MyTcpClient extends AbstractNettyClient {
 | `ydsz.netty.traffic-shaping.check-interval-ms` | 1000 | 检查间隔（毫秒） |
 | `ydsz.netty.traffic-shaping.global` | false | 是否全局流量整形（true=限制整个 Server 总带宽） |
 
-> 说明：`ydsz.netty.dispatcher.enabled`（MessageDispatcher 注解扫描）配置**不存在**（分发器已移除）。
-
 ## 使用示例
 
 ### 1. 消息处理推荐模式
@@ -276,10 +274,6 @@ public class MyBusinessHandler extends SimpleChannelInboundHandler<MyMessage> {
     private void handleOrder(ChannelHandlerContext ctx, MyMessage msg) { ... }
 }
 ```
-
-**适用场景：** 消息类型固定、业务逻辑集中在同一 Handler 内。性能最优（无反射/MethodHandle 开销），代码可读性高。
-
-> 说明：`@MessageHandler` 注解分发模式已移除，请使用上述 `SimpleChannelInboundHandler` + switch 策略模式。
 
 ### 2. Channel 事件监听
 
@@ -330,9 +324,6 @@ ydsz:
       enabled: true
       key-store: classpath:server-keystore.p12
       key-store-password: changeit
-      key-store-type: PKCS12
-      trust-store: classpath:server-truststore.p12
-      trust-store-password: changeit
       need-client-auth: true       # 双向认证
 ```
 
@@ -345,7 +336,6 @@ ydsz:
       enabled: true
       write-limit: 1048576         # 1 MB/s 写限速
       read-limit: 1048576          # 1 MB/s 读限速
-      check-interval-ms: 1000
       global: true                 # 限制整个 Server 总带宽
 ```
 
@@ -356,7 +346,6 @@ ydsz:
 | `AbstractNettyServer` | TCP Server 抽象基类，业务继承实现自定义 Pipeline | 业务模块实现 |
 | `AbstractNettyClient` | TCP Client 抽象基类，业务继承实现自定义 Pipeline | 业务模块实现 |
 | `ChannelEventListener` | Channel 事件监听器，业务实现订阅连接/断开/异常事件 | 业务模块实现 |
-| `JsonMessageCodec<T>` | JSON 消息编解码器，业务可扩展自定义编解码 | 框架内置 JSON 实现 |
 
 ## 健康检查
 
@@ -387,6 +376,12 @@ ydsz:
 | `ydsz.netty.messages.sent` | Counter | 消息发送数 |
 | `ydsz.netty.reconnect.attempts` | Counter | 重连尝试次数 |
 | `ydsz.netty.reconnect.successes` | Counter | 重连成功次数 |
+
+## 自动配置类
+
+| 类 | 说明 |
+|---|---|
+| `NettyAutoConfiguration` | 主自动配置类，扫描 classpath 中所有 `AbstractNettyServer` / `AbstractNettyClient` Bean，注入 metrics + eventLoopPool；通过 `BeanPostProcessor` 自动装配 |
 
 ## 注意事项
 
