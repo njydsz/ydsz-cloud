@@ -16,8 +16,8 @@ meta:
   version: "26.09.07"
   source: "docs/云顶编码规范.md v1.0.7"
   last_synced: "2026-09-07"
-  last_updated: "2026-09-07（新增 YDIZ-OOP-006 P0 布尔字段不得加 _flag 后缀；新增 YDIZ-DB-001 P0 排序字段 sort_order → sort）"
-  total_rules: 50
+  last_updated: "2026-09-07（YDIZ-OOP-004 删除；YDIZ-OOP-006 改为 P0 强制布尔字段带 is 前缀：数据库 is_xxx ↔ Java isXxx）"
+  total_rules: 49
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -215,17 +215,6 @@ rules:
     example_good: "BigDecimal price = new BigDecimal(\"19.99\");"
     source: "编码规范 6.3 节、6.4 节、6.6 节"
 
-  - id: "YDIZ-OOP-004"
-    category: "oop"
-    severity: "P1"
-    title: "POJO 类布尔属性禁止加 is 前缀"
-    description: "POJO 类中布尔类型的变量不要加 is 前缀，否则部分框架解析会引起序列化错误。"
-    pattern: "private Boolean isDeleted;"
-    fix: "去掉 is 前缀"
-    example_bad: "private Boolean isDeleted;"
-    example_good: "private Boolean deleted;"
-    source: "编码规范 6.5 节"
-
   - id: "YDIZ-OOP-005"
     category: "oop"
     severity: "P2"
@@ -238,28 +227,31 @@ rules:
   - id: "YDIZ-OOP-006"
     category: "oop"
     severity: "P0"
-    title: "【强制】布尔字段去掉 is 前缀后不得添加 _flag 后缀"
+    title: "【强制】布尔字段必须带 is 前缀"
     description: |
-      布尔类型字段在去掉 `is` 前缀后，必须直接使用后缀词，**严禁添加 `_flag`** 等其他后缀。
+      数据库布尔字段和 Java 布尔字段映射**必须统一使用 `is_xxx` / `isXxx` 前缀**。
       此规则同时约束 Java 字段名和数据库列名。
 
-      **正确转换示例**：
-      - `is_default` → `default`
-      - `is_active` → `active`
-      - `is_system` → `system`
-      - `is_public` → `public`
-      - `is_deleted` → `deleted`
-      - `is_folder` → `folder`
-    pattern: "private Boolean defaultFlag; 或 private Boolean activeFlag;"
-    fix: "去掉 is 前缀后直接使用后缀词，不得加 _flag：defaultFlag → default"
+      **强制命名规范**：
+      - 数据库列名：`is_default`、`is_active`、`is_system`、`is_public`、`is_deleted`、`is_folder`
+      - Java 字段名：`isDefault`、`isActive`、`isSystem`、`isPublic`、`isDeleted`、`isFolder`
+      - Getter 方法：`getIsDefault()`、`getIsActive()` 等
+
+      **禁止的命名**：
+      - 不带 `is` 前缀的布尔字段（如 `default`、`active`、`deleted`）
+      - `_flag` 后缀（如 `default_flag` / `defaultFlag`、`active_flag` / `activeFlag`）
+    pattern: "private Boolean deleted; 或 private Boolean default; 或 private Boolean xxxFlag;"
+    fix: "Java 字段改为 isXxx；数据库列改为 is_xxx；xxxFlag 一律改为 isXxx"
     example_bad: |
-      ❌ private Boolean defaultFlag;
-      ❌ private Boolean activeFlag;
-      ❌ private Boolean systemFlag;
+      ❌ private Boolean default;         // 缺少 is 前缀
+      ❌ private Boolean deleted;         // 缺少 is 前缀
+      ❌ private Boolean activeFlag;      // 使用 _flag 后缀
+      ❌ private Boolean systemFlag;      // 使用 _flag 后缀
     example_good: |
-      ✅ private Boolean default;
-      ✅ private Boolean active;
-      ✅ private Boolean system;
+      ✅ private Boolean isDefault;       // 数据库列: is_default
+      ✅ private Boolean isDeleted;       // 数据库列: is_deleted
+      ✅ private Boolean isActive;        // 数据库列: is_active
+      ✅ private Boolean isSystem;        // 数据库列: is_system
     source: "编码规范 6.5 节"
 
   # ============================================
@@ -799,7 +791,7 @@ stats:
   encoding: 1
   import: 5
   naming: 4
-  oop: 5
+  oop: 4
   logging: 3
   datetime: 2
   collection: 2
@@ -811,4 +803,4 @@ stats:
   architecture: 1
   engineering: 3
   warnings: 1
-  total: 48
+  total: 47

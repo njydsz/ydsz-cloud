@@ -80,6 +80,9 @@ public class AgentProperties {
   /** 可观测性配置（OpenTelemetry） */
   private Otel otel = new Otel();
 
+  /** 代码执行配置 */
+  private CodeExecution codeExecution = new CodeExecution();
+
   // ========================= LLM 配置 =========================
 
   /** LLM 相关配置组（默认 Provider、模型、密钥、价格等）。 */
@@ -602,5 +605,70 @@ public class AgentProperties {
 
     /** OTel 服务名称（resource attribute service.name） */
     private String serviceName = "ydsz-agent";
+  }
+
+  // ========================= 代码执行配置 =========================
+
+  /**
+   * 代码执行（Python 沙箱）配置。
+   *
+   * <p>控制在沙箱环境中安全执行 Python 代码块的相关参数，包括执行模式、超时、输出限制、
+   * 模块白名单和 Docker 沙箱资源限制。
+   *
+   * <p>执行模式：
+   *
+   * <ul>
+   *   <li>docker — 通过 Docker 容器隔离执行（推荐生产环境）</li>
+   *   <li>local — 通过本地 ProcessBuilder 执行（开发 / 降级场景）</li>
+   * </ul>
+   *
+   * @author ydsz-team
+   * @since 26.09.07
+   */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class CodeExecution {
+
+    /** 默认执行超时（秒） */
+    private static final int DEFAULT_TIMEOUT_SECONDS = 30;
+
+    /** 默认输出最大长度 */
+    private static final int DEFAULT_MAX_OUTPUT_LENGTH = 5000;
+
+    /** 默认 Docker 内存限制 */
+    private static final String DEFAULT_DOCKER_MEMORY_LIMIT = "128m";
+
+    /** 默认 Docker CPU 限制 */
+    private static final String DEFAULT_DOCKER_CPU_LIMIT = "0.5";
+
+    /** 是否启用代码执行 */
+    private boolean enabled = false;
+
+    /** 执行模式: docker / local */
+    private String mode = "docker";
+
+    /** 执行超时（秒） */
+    private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
+
+    /** 输出最大长度（字符数） */
+    private int maxOutputLength = DEFAULT_MAX_OUTPUT_LENGTH;
+
+    /** Python 解释器路径（local 模式使用） */
+    private String pythonPath = "python3";
+
+    /** 允许使用的模块白名单 */
+    private List<String> allowedModules = List.of(
+        "json", "math", "statistics", "itertools", "collections",
+        "datetime", "functools", "operator", "re", "string");
+
+    /** Docker 镜像名称 */
+    private String dockerImage = "python:3.12-alpine";
+
+    /** Docker 内存限制 */
+    private String dockerMemoryLimit = DEFAULT_DOCKER_MEMORY_LIMIT;
+
+    /** Docker CPU 限制 */
+    private String dockerCpuLimit = DEFAULT_DOCKER_CPU_LIMIT;
   }
 }

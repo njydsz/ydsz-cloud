@@ -39,8 +39,10 @@ import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.text2sql.SchemaRecallService;
 import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
+import com.njydsz.agent.domain.code.CodeExecutionService;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.infra.code.NoopCodeExecutionService;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.llm.CachedLlmClient;
@@ -697,5 +699,24 @@ public class AgentAutoConfiguration {
         userProfileRepository,
         properties,
         llmProfileAnalyzer.getIfAvailable());
+  }
+
+  // ========================= 代码执行（Python 沙箱）Bean 注册 =========================
+
+  /**
+   * 装配代码执行服务（兜底无操作实现）。
+   *
+   * <p>当 mode 为 docker 或 local 时，具体的沙箱实现组件（{@code DockerSandboxCodeExecutionService}
+   * 或 {@code LocalSandboxCodeExecutionService}）会通过自身的 {@code @ConditionalOnProperty}
+   * 自动注册，本 Bean 不会创建。仅当两者均未启用（无匹配实现）时，注册无操作兜底，
+   * 保证依赖注入不报错且 {@link CodeExecutionService#isAvailable()} 返回 false。
+   *
+   * @param properties Agent 配置
+   * @return 无操作代码执行服务
+   */
+  @Bean
+  @ConditionalOnMissingBean(CodeExecutionService.class)
+  public CodeExecutionService noopCodeExecutionService(AgentProperties properties) {
+    return new NoopCodeExecutionService(properties.getCodeExecution().getAllowedModules());
   }
 }
