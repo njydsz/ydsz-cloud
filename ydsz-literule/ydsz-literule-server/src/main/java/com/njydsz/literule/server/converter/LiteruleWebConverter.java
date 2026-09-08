@@ -340,7 +340,7 @@ public class LiteruleWebConverter {
     RuleABPolicyVO vo = new RuleABPolicyVO();
     vo.setId(dto.getId());
     vo.setRuleCode(dto.getRuleCode());
-    vo.setAutoRollbackEnabled(dto.getAutoRollbackEnabled());
+    vo.setIsAutoRollbackEnabled(dto.isAutoRollbackEnabled());
     vo.setRollbackAction(dto.getRollbackAction());
     vo.setErrorRateThreshold(dto.getErrorRateThreshold());
     vo.setMinSampleSize(dto.getMinSampleSize());

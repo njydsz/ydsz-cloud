@@ -42,7 +42,7 @@ public class RuleExecutionTraceVO implements Serializable {
   private String scenario;
 
   /** 是否命中触发 */
-  private Boolean triggered;
+  private Boolean isTriggered;
 
   /** 命中严重级别（HIGH/MEDIUM/LOW/INFO） */
   private String severity;
@@ -80,6 +80,6 @@ public class RuleExecutionTraceVO implements Serializable {
    * @return 如果命中触发返回 true，否则返回 false
    */
   public boolean isTriggered() {
-    return Boolean.TRUE.equals(triggered);
+    return Boolean.TRUE.equals(isTriggered);
   }
 }

@@ -124,7 +124,7 @@ public class RuleCanaryRouter {
         .priority(original.getPriority())
         .isEnabled(true)
         .scope(original.getScope())
-        .drilldownAvailable(original.isDrilldownAvailable())
+        .isDrilldownAvailable(original.isDrilldownAvailable())
         .version(original.getVersion())
         .status("PUBLISHED")
         .build();
@@ -151,7 +151,7 @@ public class RuleCanaryRouter {
       result =
           RuleResultVO.builder()
               .ruleCode(original.getCode())
-              .triggered(false)
+              .isTriggered(false)
               .description("灰度候选版本评估异常: " + e.getMessage())
               .build();
     }

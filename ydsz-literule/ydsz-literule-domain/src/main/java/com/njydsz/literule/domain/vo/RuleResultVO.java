@@ -59,7 +59,7 @@ public class RuleResultVO {
   private LocalDateTime triggeredAt;
 
   /** 是否支持下钻查看命中详情 */
-  private Boolean drilldownAvailable;
+  private Boolean isDrilldownAvailable;
 
   /** 评估耗时（毫秒） */
   private long elapsedMs;
@@ -101,7 +101,7 @@ public class RuleResultVO {
     result.setThreshold(this.threshold);
     result.setScope(this.scope);
     result.setTriggeredAt(this.triggeredAt);
-    result.setDrilldownAvailable(this.drilldownAvailable);
+    result.setIsDrilldownAvailable(this.isDrilldownAvailable);
     result.setElapsedMs(this.elapsedMs);
     result.setCanaryBucket(this.canaryBucket);
     result.setCanary(this.canary);

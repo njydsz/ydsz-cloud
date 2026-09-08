@@ -138,7 +138,7 @@ public class RuleTraceController {
     // 构建历史触发规则编码集合
     Set<String> historicalTriggered =
         traces.stream()
-            .filter(t -> Boolean.TRUE.equals(t.getTriggered()))
+            .filter(t -> Boolean.TRUE.equals(t.isTriggered()))
             .map(RuleExecutionTraceVO::getRuleCode)
             .collect(Collectors.toSet());
 
@@ -250,8 +250,8 @@ public class RuleTraceController {
               .findFirst()
               .orElse(null);
 
-      boolean historicalTriggered = Boolean.TRUE.equals(trace.getTriggered());
-      boolean currentTriggered = currentResult != null && currentResult.isTriggered();
+boolean historicalTriggered = Boolean.TRUE.equals(trace.isTriggered());
+    boolean currentTriggered = currentResult != null && currentResult.isTriggered();
       String historicalSeverity = trace.getSeverity();
       String currentSeverity =
           currentResult != null && currentResult.getSeverity() != null && RuleSeverity.fromCode(currentResult.getSeverity()) != null
@@ -375,8 +375,8 @@ public class RuleTraceController {
           ruleAdminService.evaluateWithExpression(
               ruleCode, conditionExpression, severityExpression, defaultSeverity, facts);
 
-      boolean historicalTriggered = Boolean.TRUE.equals(trace.getTriggered());
-      boolean newTriggered = newResult.isTriggered();
+boolean historicalTriggered = Boolean.TRUE.equals(trace.isTriggered());
+    boolean newTriggered = newResult.isTriggered();
       String historicalSeverity = trace.getSeverity();
       String newSeverity = newResult.getSeverity() != null
               && RuleSeverity.fromCode(newResult.getSeverity()) != null

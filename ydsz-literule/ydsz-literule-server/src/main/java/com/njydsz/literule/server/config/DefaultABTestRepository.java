@@ -43,8 +43,8 @@ public class DefaultABTestRepository implements ABTestRepository {
     }
     RuleABPolicyVO merged = new RuleABPolicyVO();
     merged.setRuleCode(policy.getRuleCode());
-    merged.setAutoRollbackEnabled(
-        policy.getAutoRollbackEnabled() != null && policy.getAutoRollbackEnabled());
+    merged.setIsAutoRollbackEnabled(
+        policy.isAutoRollbackEnabled() != null && policy.isAutoRollbackEnabled());
     merged.setRollbackAction(policy.getRollbackAction());
     merged.setErrorRateThreshold(policy.getErrorRateThreshold());
     merged.setMinSampleSize(policy.getMinSampleSize());

@@ -105,7 +105,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
     // 无配置时返回默认策略（关闭状态）
     RuleABPolicyVO defaults = new RuleABPolicyVO();
     defaults.setRuleCode(ruleCode);
-    defaults.setAutoRollbackEnabled(false);
+    defaults.setIsAutoRollbackEnabled(false);
     defaults.setErrorRateThreshold(DEFAULT_ERROR_RATE_THRESHOLD);
     defaults.setMinSampleSize(DEFAULT_MIN_SAMPLE_SIZE);
     defaults.setCheckWindowMinutes(DEFAULT_CHECK_WINDOW_MINUTES);
@@ -116,7 +116,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
   public void savePolicy(RuleABPolicyVO policy, String operator) {
     repository.savePolicy(policy, operator);
     log.info("[LiteRule-ABTest] A/B 回滚策略已保存: ruleCode={}, autoRollbackEnabled={}, operator={}",
-        policy.getRuleCode(), policy.getAutoRollbackEnabled(), operator);
+        policy.getRuleCode(), policy.isAutoRollbackEnabled(), operator);
   }
 
   @Override
@@ -127,7 +127,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
   @Override
   public boolean evaluateOne(String ruleCode) {
     RuleABPolicyVO policy = repository.findPolicy(ruleCode);
-    if (policy == null || !Boolean.TRUE.equals(policy.getAutoRollbackEnabled())) {
+    if (policy == null || !Boolean.TRUE.equals(policy.isAutoRollbackEnabled())) {
       return false;
     }
     if (traceRepository == null) {
@@ -209,7 +209,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
     RuleABRollbackVO record = new RuleABRollbackVO();
     record.setRuleCode(ruleCode);
     record.setTriggerReason(reason);
-    record.setFromCanary(Boolean.FALSE);
+    record.setIsFromCanary(Boolean.FALSE);
     record.setOperator(operator);
     record.setNotifyStatus("SKIPPED");
     record.setCreatedAt(LocalDateTime.now());

@@ -187,7 +187,7 @@ public class ExpressionRule implements Rule {
             .ruleCode(getCode())
             .ruleName(getName())
             .category(getCategory())
-            .triggered(false)
+            .isTriggered(false)
             .triggeredAt(LocalDateTime.now())
             .elapsedMs(elapsedMs(start))
             .build();
@@ -204,21 +204,21 @@ public class ExpressionRule implements Rule {
           .ruleCode(getCode())
           .ruleName(getName())
           .category(getCategory())
-          .triggered(true)
+          .isTriggered(true)
           .severity(severity.getCode())
           .title(title)
           .description(description)
           .scope(definition.getScope())
           .threshold(definition.getConditionExpression())
           .triggeredAt(LocalDateTime.now())
-          .drilldownAvailable(definition.isDrilldownAvailable())
+          .isDrilldownAvailable(definition.isDrilldownAvailable())
           .elapsedMs(elapsedMs(start))
           .build();
     } catch (Exception e) {
       log.warn("[LiteRule] 表达式规则 {} 评估异常: {}", getCode(), e.getMessage());
       return RuleResultVO.builder()
           .ruleCode(getCode())
-          .triggered(false)
+          .isTriggered(false)
           .triggeredAt(LocalDateTime.now())
           .elapsedMs(elapsedMs(start))
           .build();

@@ -109,7 +109,7 @@ public class DecisionTableRule implements Rule {
               .ruleCode(getCode())
               .ruleName(getName())
               .category(getCategory())
-              .triggered(false)
+              .isTriggered(false)
               .triggeredAt(LocalDateTime.now())
               .elapsedMs(elapsedMs(start))
               .build();
@@ -130,7 +130,7 @@ public class DecisionTableRule implements Rule {
             .ruleCode(getCode())
             .ruleName(getName())
             .category(getCategory())
-            .triggered(false)
+            .isTriggered(false)
             .description("决策表 UNIQUE 策略命中多行: " + matchedRows.size())
             .triggeredAt(LocalDateTime.now())
             .elapsedMs(elapsedMs(start))
@@ -176,9 +176,9 @@ public class DecisionTableRule implements Rule {
     } catch (Exception e) {
       log.warn("[LiteRule-DecisionTable] 决策表 {} 评估异常: {}", getCode(), e.getMessage());
       return RuleResultVO.builder()
-          .ruleCode(getCode())
-          .triggered(false)
-          .description("评估异常: " + e.getMessage())
+        .ruleCode(getCode())
+        .isTriggered(false)
+        .description("评估异常: " + e.getMessage())
           .triggeredAt(LocalDateTime.now())
           .elapsedMs(elapsedMs(start))
           .build();
@@ -215,14 +215,14 @@ public class DecisionTableRule implements Rule {
         .ruleCode(getCode())
         .ruleName(getName())
         .category(getCategory())
-        .triggered(true)
+        .isTriggered(true)
         .severity(severity.getCode())
         .title(title)
         .description(description)
         .currentValue(currentValue)
         .scope(definition.getScope())
         .triggeredAt(LocalDateTime.now())
-        .drilldownAvailable(true)
+        .isDrilldownAvailable(true)
         .elapsedMs(elapsedMs(startNano))
         .build();
   }
