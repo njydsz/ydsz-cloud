@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -21,7 +20,6 @@ import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
 import com.njydsz.common.lock.aspect.IdempotentAspect;
 import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
-import com.njydsz.common.lock.controller.RepeatSubmitTokenController;
 import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.lock.core.LockWaitTimePolicy;
@@ -336,23 +334,6 @@ public class DistributedLockAutoConfiguration {
   public RepeatSubmitTokenService repeatSubmitTokenService(
       StringRedisTemplate stringRedisTemplate) {
     return new RepeatSubmitTokenService(stringRedisTemplate);
-  }
-
-  /**
-   * 创建表单重复提交 Token 控制器 Bean
-   *
-   * <p>提供获取防重复提交 Token 的 REST 接口。
-   *
-   * @param tokenService Token 服务
-   * @param userIdResolver 当前用户 ID 解析器（由业务层提供实现）
-   * @return RepeatSubmitTokenController 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-  public RepeatSubmitTokenController repeatSubmitTokenController(
-      RepeatSubmitTokenService tokenService, ObjectProvider<CurrentUserIdResolver> userIdResolver) {
-    return new RepeatSubmitTokenController(tokenService, userIdResolver.getIfAvailable());
   }
 
   /**

@@ -12,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.enums.IdentityProviderType;
-import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.userinfo.domain.provision.ProvisionException;
@@ -123,25 +120,24 @@ public class ProvisionOrchestrator {
   /**
    * 单条外部用户记录的写入逻辑（新增或更新）。
    *
+   * <p>通过 username 查找现有用户。不存在则创建（使用随机占位密码），
+   * 存在则更新非空的 realName/email/phone 字段。
+   *
    * @param record 外部用户记录
    * @return 写入结果类型
    */
   private ProvisionWriteResult upsertUser(ProvisionRecord record) {
-    // 查找是否已存在（通过 externalId + IdentityProviderType 区别）
-    // 简化实现：用 username + remark=externalId 匹配
-    // 生产实现建议：在 ydsz_acct_user 表增加 external_source + external_id 字段做唯一索引
-    UserAccountVO existing = userAccountRepository.findByUsername(record.username());
+    UserAccountVO existing = userAccountRepository.findByUsername(record.username()).orElse(null);
 
     if (existing == null) {
-      // 新增用户
+      // 新增用户（随机占位密码；外部用户通常通过 OAuth/LDAP/etc 登录）
       UserAccountDTO dto = new UserAccountDTO();
       dto.setUsername(record.username());
       dto.setRealName(record.realName());
       dto.setEmail(record.email());
       dto.setPhone(record.phone());
-      dto.setStatus(UserLifecycleStatusEnum.ACTIVE.getCode());
-      dto.setIdentityProvider(IdentityProviderType.SOCIAL.getCode());
-      // 注：随机初始密码，用户不可用此密码登录，仅供账号创建完整性
+      dto.setStatus(UserLifecycleStatusEnum.ENABLED);
+      // 使用 UUID 片段 + BCrypt 作为占位密码（用户不可通过此密码登录）
       dto.setPassword(generateRandomPassword());
 
       userAccountRepository.save(dto);
@@ -169,7 +165,7 @@ public class ProvisionOrchestrator {
     }
 
     if (hasUpdate) {
-      userAccountRepository.updateById(updateDto);
+      userAccountRepository.save(updateDto);
       log.debug("Provision 更新用户: username={}, externalId={}", record.username(),
           record.externalId());
       return ProvisionWriteResult.UPDATED;
