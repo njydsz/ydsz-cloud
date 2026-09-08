@@ -127,7 +127,7 @@ public class PreviewApplicationService {
         log.error("[PreviewApplicationService] 图片缩略图生成失败: fileNodeId={}", fileNodeId, e);
       }
     } else if (DIRECT_PREVIEW_SUFFIXES.contains(suffix)) {
-      node.setPreviewReady(true);
+      node.setIsPreviewReady(true);
       fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
     }
   }
@@ -270,7 +270,7 @@ public class PreviewApplicationService {
             previewStorageKey);
       }
 
-      node.setPreviewReady(true);
+      node.setIsPreviewReady(true);
       node.setThumbnailKey(previewStorageKey);
       fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
@@ -319,7 +319,7 @@ public class PreviewApplicationService {
     // P0-R4: 直接委托 ThumbnailApplicationService，不再重复实现
     // ThumbnailApplicationService 会下载原图、缩放、上传到存储、更新 thumbnailKey
     // 此处仅标记预览就绪（图片可直接预览）
-    node.setPreviewReady(true);
+    node.setIsPreviewReady(true);
     fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
     log.info(
         "[PreviewApplicationService] 图片预览就绪（缩略图由 ThumbnailApplicationService 异步生成）: fileNodeId={}",

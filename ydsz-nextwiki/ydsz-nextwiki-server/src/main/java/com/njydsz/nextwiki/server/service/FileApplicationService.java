@@ -769,8 +769,8 @@ public class FileApplicationService {
             .currentVersion(source.getCurrentVersion())
             .fileHash(source.getFileHash())
             .thumbnailKey(source.getThumbnailKey())
-            .previewReady(source.getPreviewReady())
-            .starred(false)
+.isPreviewReady(source.getIsPreviewReady())
+.isStarred(false)
             .shareStatus("private")
             .createdBy(userId)
             .updatedBy(userId)
@@ -974,7 +974,7 @@ public class FileApplicationService {
   public void toggleStar(String nodeId, String userId) {
     FileNodeVO node = fileNodeRepository.findById(nodeId)
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
-    node.setStarred(node.getStarred() == null || !node.getStarred());
+    node.setIsStarred(node.getIsStarred() == null || !node.getIsStarred());
     node.setUpdatedBy(userId);
     fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
 
@@ -982,9 +982,9 @@ public class FileApplicationService {
     cacheService.evictFile(nodeId);
 
     log.info(
-        "[FileApplicationService] 切换星标: nodeId={}, starred={}, userId={}",
+        "[FileApplicationService] 切换星标: nodeId={}, isStarred={}, userId={}",
         nodeId,
-        node.getStarred(),
+        node.getIsStarred(),
         userId);
   }
 
@@ -1227,42 +1227,42 @@ public class FileApplicationService {
         .sort(0)
         .currentVersion(0)
         .fileHash(fileHash)
-        .previewReady(false)
-        .starred(false)
-        .shareStatus("private")
-        .createdBy(userId)
-        .updatedBy(userId)
-        .build();
-  }
+.isPreviewReady(false)
+.isStarred(false)
+.shareStatus("private")
+.createdBy(userId)
+.updatedBy(userId)
+.build();
+}
 
-  /** 构建秒传去重的文件节点（引用已有存储对象，跳过上传） */
-  private FileNodeDTO buildDedupedFileNode(
-      String parentId,
-      String name,
-      String suffix,
-      FileNodeVO existing,
-      String fileHash,
-      String path,
-      int level,
-      String userId) {
-    return FileNodeDTO.builder()
-        .id(String.valueOf(snowflakeIdGenerator.nextId()))
-        .parentId(parentId)
-        .name(name)
-        .nodeType(FileNodeVO.TYPE_FILE)
-        .suffix(suffix)
-        .size(existing.getSize())
-        .storageKey(existing.getStorageKey())
-        .bucketName(existing.getBucketName())
-        .mimeType(existing.getMimeType())
-        .path(path)
-        .level(level)
-        .sort(0)
-        .currentVersion(0)
-        .fileHash(fileHash)
-        .thumbnailKey(existing.getThumbnailKey())
-        .previewReady(existing.getPreviewReady())
-        .starred(false)
+/** 构建秒传去重的文件节点（引用已有存储对象，跳过上传） */
+private FileNodeDTO buildDedupedFileNode(
+    String parentId,
+    String name,
+    String suffix,
+    FileNodeVO existing,
+    String fileHash,
+    String path,
+    int level,
+    String userId) {
+  return FileNodeDTO.builder()
+      .id(String.valueOf(snowflakeIdGenerator.nextId()))
+      .parentId(parentId)
+      .name(name)
+      .nodeType(FileNodeVO.TYPE_FILE)
+      .suffix(suffix)
+      .size(existing.getSize())
+      .storageKey(existing.getStorageKey())
+      .bucketName(existing.getBucketName())
+      .mimeType(existing.getMimeType())
+      .path(path)
+      .level(level)
+      .sort(0)
+      .currentVersion(0)
+      .fileHash(fileHash)
+      .thumbnailKey(existing.getThumbnailKey())
+      .isPreviewReady(existing.getIsPreviewReady())
+      .isStarred(false)
         .shareStatus("private")
         .createdBy(userId)
         .updatedBy(userId)

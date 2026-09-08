@@ -56,6 +56,6 @@ public class StorageQuotaVO implements Serializable {
   @Schema(description = "乐观锁版本号")
   private Integer revision;
 
-  @Schema(description = "删除标记（0=正常，1=已删除）")
-  private Integer deleted;
+  @Schema(description = "删除标记（false=正常，true=已删除）")
+  private Boolean isDeleted;
 }
