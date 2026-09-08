@@ -32,7 +32,7 @@ public class AgentProperties {
 
 
   /** 是否启用 Agent 模块 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 默认系统提示词 */
   private String defaultSystemPrompt =
@@ -164,7 +164,7 @@ public class AgentProperties {
     private Integer timeoutSeconds;
 
     /** 是否启用 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
   }
 
   // ========================= 记忆配置 =========================
@@ -185,7 +185,7 @@ public class AgentProperties {
     private static final int DEFAULT_SUMMARY_KEEP_RECENT = 5;
 
     /** 是否启用记忆 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** Token 字符比例估算系数（中英混合） */
     private BigDecimal tokenCharRatio = new BigDecimal("2.5");
@@ -200,7 +200,7 @@ public class AgentProperties {
     private int ttlHours = DEFAULT_TTL_HOURS;
 
     /** 是否启用摘要压缩 */
-    private boolean summaryEnabled = false;
+    private boolean isSummaryEnabled = false;
 
     /** 摘要压缩阈值（消息数达到该值时触发摘要） */
     private int summaryThreshold = DEFAULT_SUMMARY_THRESHOLD;
@@ -212,7 +212,7 @@ public class AgentProperties {
     private int profileTopDomains = DEFAULT_PROFILE_TOP_DOMAINS;
 
     /** 是否用 LLM 做画像分析（更准但贵） */
-    private boolean llmAnalysisEnabled = false;
+    private boolean isLlmAnalysisEnabled = false;
   }
 
   /** 画像配置默认值：保留的 Top 领域数 */
@@ -242,7 +242,7 @@ public class AgentProperties {
     private static final int DEFAULT_CHUNK_OVERLAP = 200;
 
     /** 是否启用 RAG */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 默认 Top-K 召回数量 */
     private int defaultTopK = DEFAULT_TOP_K;
@@ -275,7 +275,7 @@ public class AgentProperties {
     private int chunkOverlap = DEFAULT_CHUNK_OVERLAP;
 
     /** 是否启用租户隔离 */
-    private boolean tenantIsolation = false;
+    private boolean isTenantIsolation = false;
   }
 
   // ========================= MCP 配置 =========================
@@ -286,13 +286,13 @@ public class AgentProperties {
   @AllArgsConstructor
   public static class Mcp {
     /** 是否启用 MCP */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
     /** MCP Server 列表 */
     private List<ServerInfo> servers;
     /** 默认超时时间（毫秒） */
     private Integer defaultTimeout;
     /** 是否同时作为 MCP Server 暴露自身能力（供外部 Claude Desktop / Cursor 等调用） */
-    private boolean serverEnabled = false;
+    private boolean isServerEnabled = false;
   }
 
   /** MCP Server 连接配置 */
@@ -309,7 +309,7 @@ public class AgentProperties {
     /** 超时时间（毫秒） */
     private Integer timeout;
     /** 是否启用（默认 true） */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
   }
 
   // ========================= MCP Server 配置（ydsz-agent 自身暴露） =========================
@@ -345,7 +345,7 @@ public class AgentProperties {
     private static final double DEFAULT_CONSISTENCY_THRESHOLD = 0.7;
 
     /** 是否启用 Text2SQL */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 最大返回行数 */
     private int maxRows = 100;
@@ -363,19 +363,19 @@ public class AgentProperties {
     private String password;
 
     /** 是否启用增强链路（Schema 召回 + 可行性评估 + 语义一致性） */
-    private boolean enhanced = false;
+    private boolean isEnhanced = false;
 
     /** 是否启用 Schema 智能召回 */
-    private boolean schemaRecallEnabled = true;
+    private boolean isSchemaRecallEnabled = true;
 
     /** 最大召回表数量 */
     private int schemaRecallMaxTables = DEFAULT_SCHEMA_RECALL_MAX_TABLES;
 
     /** 是否启用可行性评估 */
-    private boolean feasibilityCheckEnabled = true;
+    private boolean isFeasibilityCheckEnabled = true;
 
     /** 是否启用语义一致性校验 */
-    private boolean consistencyCheckEnabled = true;
+    private boolean isConsistencyCheckEnabled = true;
 
     /** 一致性分数阈值，低于此值拒绝 SQL */
     private double consistencyThreshold = DEFAULT_CONSISTENCY_THRESHOLD;
@@ -396,7 +396,7 @@ public class AgentProperties {
     private static final double DEFAULT_SIMILARITY_THRESHOLD = 0.95;
 
     /** 是否启用语义缓存 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 缓存 TTL（分钟） */
     private int ttlMinutes = DEFAULT_TTL_MINUTES;
@@ -425,7 +425,7 @@ public class AgentProperties {
   @AllArgsConstructor
   public static class PromptTemplate {
     /** 是否启用 Prompt 模板 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 默认系统 Prompt 模板编码 */
     private String defaultSystemCode = "DEFAULT_SYSTEM";
@@ -461,16 +461,16 @@ public class AgentProperties {
     private static final int DEFAULT_MAX_REQUESTS_PER_MINUTE = 60;
 
     /** 是否启用护栏 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 是否启用输入护栏（Prompt 注入检测） */
-    private boolean inputGuardrailEnabled = true;
+    private boolean isInputGuardrailEnabled = true;
 
     /** 是否启用输出护栏（内容审核） */
-    private boolean outputGuardrailEnabled = true;
+    private boolean isOutputGuardrailEnabled = true;
 
     /** PII 脱敏启用 */
-    private boolean piiMaskingEnabled = true;
+    private boolean isPiiMaskingEnabled = true;
 
     /** 每分钟最大请求数 */
     private int maxRequestsPerMinute = DEFAULT_MAX_REQUESTS_PER_MINUTE;
@@ -497,7 +497,7 @@ public class AgentProperties {
     private static final int DEFAULT_MAX_DEPTH = 5;
 
     /** 是否启用工具调用 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 单次工具调用超时（毫秒） */
     private int timeoutMs = DEFAULT_TIMEOUT_MS;
@@ -509,10 +509,10 @@ public class AgentProperties {
     private int maxDepth = DEFAULT_MAX_DEPTH;
 
     /** 是否启用并行工具调用 */
-    private boolean parallelEnabled = false;
+    private boolean isParallelEnabled = false;
 
     /** 工具执行失败时是否快速失败 */
-    private boolean failFast = true;
+    private boolean isFailFast = true;
   }
 
   // ========================= 配额配置 =========================
@@ -530,7 +530,7 @@ public class AgentProperties {
     private static final double DEFAULT_ALERT_THRESHOLD = 0.8;
 
     /** 是否启用配额控制 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 每日 Token 限额 */
     private long dailyTokenLimit = DEFAULT_DAILY_TOKEN_LIMIT;
@@ -554,10 +554,10 @@ public class AgentProperties {
     private static final int DEFAULT_BATCH_SIZE = 50;
 
     /** 是否启用记忆整合 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 是否启用 Dreaming 定时整合 */
-    private boolean dreamingEnabled = false;
+    private boolean isDreamingEnabled = false;
 
     /** 每批处理对话数 */
     private int batchSize = DEFAULT_BATCH_SIZE;
@@ -578,7 +578,7 @@ public class AgentProperties {
     private static final int DEFAULT_INTERACTION_THRESHOLD = 5;
 
     /** 是否启用用户画像 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 多少次交互后才自动分析画像 */
     private int interactionThreshold = DEFAULT_INTERACTION_THRESHOLD;
@@ -604,7 +604,7 @@ public class AgentProperties {
   public static class Otel {
 
     /** 是否启用 OTel Span 导出 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** OTel 服务名称（resource attribute service.name） */
     private String serviceName = "ydsz-agent";
@@ -646,7 +646,7 @@ public class AgentProperties {
     private static final String DEFAULT_DOCKER_CPU_LIMIT = "0.5";
 
     /** 是否启用代码执行 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 执行模式: docker / local */
     private String mode = "docker";
@@ -692,7 +692,7 @@ public class AgentProperties {
   public static class Insight {
 
     /** 是否启用洞察报告生成功能 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 报告生成使用的 LLM 模型 */
     private String model = "gpt-4";
