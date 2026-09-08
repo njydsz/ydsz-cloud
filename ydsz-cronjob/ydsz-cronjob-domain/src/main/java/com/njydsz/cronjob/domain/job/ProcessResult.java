@@ -12,7 +12,7 @@ import lombok.Data;
 public class ProcessResult {
 
   /** 是否成功 */
-  private boolean success;
+  private boolean isSuccess;
 
   /** 结果数据（JSON 字符串） */
   private String result;
@@ -22,11 +22,11 @@ public class ProcessResult {
 
   // 显式编写 getter/setter 以避免 Lombok 处理差异
   public boolean isSuccess() {
-    return success;
+    return isSuccess;
   }
 
-  public void setSuccess(boolean success) {
-    this.success = success;
+  public void setSuccess(boolean isSuccess) {
+    this.isSuccess = isSuccess;
   }
 
   public String getResult() {

@@ -59,9 +59,9 @@ public class RollbackPreviewVO implements Serializable {
   private LocalDateTime targetVersionCreatedAt;
 
   /** 是否允许回滚 */
-  private boolean rollbackAllowed;
+  private boolean isRollbackAllowed;
 
-  /** 不允许回滚的原因（rollbackAllowed=false 时填写） */
+  /** 不允许回滚的原因（isRollbackAllowed=false 时填写） */
   private String rollbackBlockedReason;
 
   /** 字段差异列表 */

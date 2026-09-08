@@ -472,7 +472,7 @@ public class LiteExprEngine implements ExpressionEngine {
         .result(result != null ? result : trace.result())
         .variableName(trace.type().equals("VARIABLE") ? trace.expression() : null)
         .variableValue(trace.type().equals("VARIABLE") ? trace.result() : null)
-        .shortCircuited(trace.shortCircuited())
+        .isShortCircuited(trace.isShortCircuited())
         .elapsedNanos(elapsedNanos > 0 ? elapsedNanos : trace.elapsedNanos())
         .children(children)
         .error(trace.error())

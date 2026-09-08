@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine;
+﻿package com.njydsz.workflow.server.engine;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -44,6 +44,12 @@ public class FlowTaskCountCacheService {
 
   private final StringRedisTemplate redisTemplate;
 
+  
+  /**
+   * 构造任务计数缓存服务。
+   *
+   * @param redisTemplate Redis 模板
+   */
   public FlowTaskCountCacheService(StringRedisTemplate redisTemplate) {
     this.redisTemplate = redisTemplate;
   }

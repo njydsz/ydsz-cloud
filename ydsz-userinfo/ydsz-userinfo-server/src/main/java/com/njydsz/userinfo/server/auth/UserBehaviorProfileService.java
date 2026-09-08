@@ -2,20 +2,18 @@ package com.njydsz.userinfo.server.auth;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * 用户行为画像服务（P1-1 UEBA 自适应风险引擎）。
@@ -71,6 +69,12 @@ public class UserBehaviorProfileService {
   /** 基线稳定所需的最小登录次数 */
   private static final int BASELINE_STABLE_THRESHOLD = 10;
 
+  /** 设备指纹基础长度（UA 前 N 字符） */
+  private static final int DEVICE_FINGERPRINT_BASE_LENGTH = 64;
+
+  /** 新用户免报阈值（登录次数低于此值不产生偏离告警） */
+  private static final int NEW_USER_GRACE_THRESHOLD = 3;
+
   /** 常用时段记录窗口：记录最近 30 天的登录小时分布 */
   private static final int HOUR_DISTRIBUTION_SIZE = 24;
 
@@ -91,6 +95,9 @@ public class UserBehaviorProfileService {
 
   /** 设备偏离权重（0-100）：设备不在已知集合时增加的额外风险分比例 */
   private static final int DEVICE_DEVIATION_WEIGHT = 15;
+
+  /** 行为偏离因子列表初始容量 */
+  private static final int BEHAVIOR_FACTORS_INITIAL_CAPACITY = 4;
 
   private final RedisStringOps redisStringOps;
   private final RedisHashOps redisHashOps;
@@ -136,10 +143,9 @@ public class UserBehaviorProfileService {
       }
 
       // 5. 刷新 TTL
-      redisStringOps.expire(profileKey, PROFILE_TTL_SECONDS, TimeUnit.SECONDS);
-      redisStringOps.expire(KNOWN_IPS_KEY_PREFIX + userId, PROFILE_TTL_SECONDS, TimeUnit.SECONDS);
-      redisStringOps.expire(KNOWN_DEVICES_KEY_PREFIX + userId, PROFILE_TTL_SECONDS,
-          TimeUnit.SECONDS);
+      redisStringOps.expire(profileKey, PROFILE_TTL_SECONDS);
+      redisStringOps.expire(KNOWN_IPS_KEY_PREFIX + userId, PROFILE_TTL_SECONDS);
+      redisStringOps.expire(KNOWN_DEVICES_KEY_PREFIX + userId, PROFILE_TTL_SECONDS);
 
     } catch (Exception e) {
       log.warn("记录行为基线失败: userId={}, error={}", userId, e.getMessage());
@@ -158,14 +164,14 @@ public class UserBehaviorProfileService {
    */
   public BehaviorDeviationResult evaluateBehaviorDeviation(String userId, String loginIp,
       String userAgent) {
-    List<String> factors = new ArrayList<>(4);
+    List<String> factors = new ArrayList<>(BEHAVIOR_FACTORS_INITIAL_CAPACITY);
     int totalDeviation = 0;
 
     // 基线稳定度检查
     long totalLogins = getTotalLogins(userId);
     if (totalLogins < BASELINE_STABLE_THRESHOLD) {
       // 基线构建期，降低偏离评分要求（避免误报新用户）
-      if (totalLogins < 3) {
+      if (totalLogins < NEW_USER_GRACE_THRESHOLD) {
         return new BehaviorDeviationResult(0, factors, false);
       }
     }
@@ -205,7 +211,7 @@ public class UserBehaviorProfileService {
   public Map<String, String> getBehaviorSummary(String userId) {
     String profileKey = PROFILE_KEY_PREFIX + userId;
     Map<String, String> all = redisHashOps.hGetAll(profileKey, String.class);
-    Map<String, String> ips = redisCollectionOps.sMembers(KNOWN_IPS_KEY_PREFIX + userId, String.class);
+    Set<String> ips = redisCollectionOps.sMembers(KNOWN_IPS_KEY_PREFIX + userId, String.class);
     Map<String, String> result = new HashMap<>(all);
     result.put("knownIpCount", String.valueOf(ips.size()));
     return result;
@@ -237,7 +243,7 @@ public class UserBehaviorProfileService {
     String profileKey = PROFILE_KEY_PREFIX + userId;
     // 使用位图标记常用小时：每位为 1 表示对应小时有过登录
     try {
-      String current = redisHashOps.get(profileKey, "hourBitmap");
+      String current = redisHashOps.hGet(profileKey, "hourBitmap", String.class);
       long bitmap = current != null ? Long.parseLong(current) : 0L;
       bitmap |= (1L << hour);
       redisHashOps.hSet(profileKey, "hourBitmap", String.valueOf(bitmap));
@@ -337,8 +343,9 @@ public class UserBehaviorProfileService {
     if (userAgent == null || userAgent.isBlank()) {
       return null;
     }
-    // 简化：取 UA 的前 64 字符作为指纹基础
-    return userAgent.length() > 64 ? userAgent.substring(0, 64) : userAgent;
+    return userAgent.length() > DEVICE_FINGERPRINT_BASE_LENGTH
+        ? userAgent.substring(0, DEVICE_FINGERPRINT_BASE_LENGTH)
+        : userAgent;
   }
 
   /**

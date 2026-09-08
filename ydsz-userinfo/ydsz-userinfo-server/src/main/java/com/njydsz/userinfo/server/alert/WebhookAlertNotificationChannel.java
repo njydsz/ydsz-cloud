@@ -1,7 +1,10 @@
 package com.njydsz.userinfo.server.alert;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 
 /**
@@ -44,6 +46,15 @@ public class WebhookAlertNotificationChannel implements AlertNotificationChannel
   /** 请求超时时间（毫秒） */
   private static final int TIMEOUT_MS = 5000;
 
+  /** 毫秒转换秒的除数 */
+  private static final long MILLISECONDS_PER_SECOND = 1000L;
+
+  /** Webhook 载荷初始容量 */
+  private static final int PAYLOAD_INITIAL_CAPACITY = 8;
+
+  /** 消息体内 markdown 对象初始容量 */
+  private static final int MARKDOWN_INITIAL_CAPACITY = 4;
+
   @Value("${ydsz.userinfo.alert.webhook.url:}")
   private String webhookUrl;
 
@@ -72,7 +83,7 @@ public class WebhookAlertNotificationChannel implements AlertNotificationChannel
       headers.setContentType(MediaType.APPLICATION_JSON);
       // 如有签名密钥，添加 HMAC 签名头
       if (signingSecret != null && !signingSecret.isBlank()) {
-        String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
+        String timestamp = String.valueOf(System.currentTimeMillis() / MILLISECONDS_PER_SECOND);
         headers.set("X-Sign-Timestamp", timestamp);
         headers.set("X-Sign", generateHmacSign(timestamp));
       }
@@ -105,7 +116,7 @@ public class WebhookAlertNotificationChannel implements AlertNotificationChannel
    * @return 载荷 Map
    */
   private Map<String, Object> buildPayload(SecurityAlert alert) {
-    Map<String, Object> payload = new HashMap<>(8);
+    Map<String, Object> payload = new HashMap<>(PAYLOAD_INITIAL_CAPACITY);
 
     // 企业微信 bot markdown 格式
     String riskLevelColor = switch (alert.riskLevel().name()) {
@@ -135,7 +146,7 @@ public class WebhookAlertNotificationChannel implements AlertNotificationChannel
         alert.createdAt()
     );
 
-    Map<String, Object> markdown = new HashMap<>(4);
+    Map<String, Object> markdown = new HashMap<>(MARKDOWN_INITIAL_CAPACITY);
     markdown.put("content", markdownContent);
 
     payload.put("msgtype", "markdown");
@@ -153,11 +164,11 @@ public class WebhookAlertNotificationChannel implements AlertNotificationChannel
   private String generateHmacSign(String timestamp) {
     try {
       String data = timestamp + "\n" + signingSecret;
-      javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-      mac.init(new javax.crypto.spec.SecretKeySpec(
+      Mac mac = Mac.getInstance("HmacSHA256");
+      mac.init(new SecretKeySpec(
           signingSecret.getBytes(), "HmacSHA256"));
       byte[] hash = mac.doFinal(data.getBytes());
-      return java.util.Base64.getEncoder().encodeToString(hash);
+      return Base64.getEncoder().encodeToString(hash);
     } catch (Exception e) {
       log.warn("生成 HMAC 签名失败: {}", e.getMessage());
       return "";

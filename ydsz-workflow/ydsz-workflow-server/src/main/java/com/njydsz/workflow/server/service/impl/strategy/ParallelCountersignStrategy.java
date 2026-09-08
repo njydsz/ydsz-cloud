@@ -64,7 +64,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
         .ifPresent(fresh -> task.setApproveFinished(fresh.getApproveFinished()));
     // P2-1: 支持穿越时空补录审批
     LocalDateTime effectiveTime =
-        Boolean.TRUE.equals(dto.getBackdated()) ? dto.getEffectiveTime() : null;
+        Boolean.TRUE.equals(dto.getIsBackdated()) ? dto.getEffectiveTime() : null;
     archiveService.completeAndArchive(task, dto.getComment(), effectiveTime);
   }
 

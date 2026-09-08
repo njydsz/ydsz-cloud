@@ -32,5 +32,5 @@ public class ScimPhone {
 
   /** 是否为主要电话号码。 */
   @JsonProperty("primary")
-  private Boolean primary;
+  private Boolean isPrimary;
 }

@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.instance;
+﻿package com.njydsz.workflow.web.controller.instance;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -153,6 +153,11 @@ public class FlowAdvancedController {
       content = "'sendWeekly'")
   @Operation(summary = "P2-4: 推送周报")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+  /** 发送周报统计：向管理员推送本周流程处理情况汇总。
+   *
+   * @return 发送是否成功
+   */
+  
   public YdszResponse<Boolean> sendWeekly() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(reportService.sendWeeklyReport(tenantId));
@@ -179,6 +184,11 @@ public class FlowAdvancedController {
       content = "'sendMonthly'")
   @Operation(summary = "P2-4: 推送月报")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+  /** 发送月报统计：向管理员推送本月流程处理情况汇总。
+   *
+   * @return 发送是否成功
+   */
+  
   public YdszResponse<Boolean> sendMonthly() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     return YdszResponse.success(reportService.sendMonthlyReport(tenantId));
@@ -210,6 +220,11 @@ public class FlowAdvancedController {
       content = "'merge'")
   @Operation(summary = "P2-5: 合并多个流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  /** 合并多个流程实例：将多个并行实例合并为主线继续流转。
+   *
+   * @param instanceIds 待合并的流程实例 ID 列表
+   * @return 合并后保留的主线实例
+   */
   public YdszResponse<StringVO> merge(@RequestParam List<String> instanceIds) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
@@ -480,6 +495,11 @@ public class FlowAdvancedController {
       action = AuditAction.GRANT,
       content = "'autoForward'")
   @Operation(summary = "按代理授权规则自动转发已有待办")
+  /** 启用自动转发：基于已有委派配置自动处理待办。
+   *
+   * @param authId 委派规则 ID
+   * @return 自动转发的任务数量
+   */
   public YdszResponse<Integer> autoForward(@RequestParam String authId) {
     return YdszResponse.success(offlineAutoForwardService.autoForwardByAuth(authId));
   }

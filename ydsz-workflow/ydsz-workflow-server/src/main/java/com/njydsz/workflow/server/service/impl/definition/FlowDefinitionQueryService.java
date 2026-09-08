@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.definition;
+﻿package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -91,7 +91,15 @@ public class FlowDefinitionQueryService {
       value = CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
       key = "#flowCode + ':' + #version + ':' + #tenantId",
       unless = "#result == null")
-  public FlowDefinitionVO getPublished(String flowCode, String version, String tenantId) {
+  /**
+   * 查询指定流程编码 + 版本的已发布流程定义。
+   *
+   * @param flowCode 流程编码
+   * @param version 流程版本
+   * @param tenantId 租户 ID
+   * @return 已发布流程定义 VO，不存在返回 null
+   */
+    public FlowDefinitionVO getPublished(String flowCode, String version, String tenantId) {
     if (!StringUtils.hasText(version)) {
       version = "1.0";
     }
@@ -116,7 +124,14 @@ public class FlowDefinitionQueryService {
       value = CacheConstants.FLOW_DEF_LATEST_CACHE,
       key = "#flowCode + ':' + #tenantId",
       unless = "#result == null")
-  public FlowDefinitionVO getLatestByCode(String flowCode, String tenantId) {
+  /**
+   * 查询指定流程编码的最新版本流程定义。
+   *
+   * @param flowCode 流程编码
+   * @param tenantId 租户 ID
+   * @return 最新流程定义 VO，不存在返回 null
+   */
+    public FlowDefinitionVO getLatestByCode(String flowCode, String tenantId) {
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
     return definitionRepository
         .findLatestByCode(flowCode, tid)

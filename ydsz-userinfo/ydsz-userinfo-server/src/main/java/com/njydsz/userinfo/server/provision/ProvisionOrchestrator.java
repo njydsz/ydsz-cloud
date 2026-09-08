@@ -1,14 +1,12 @@
 package com.njydsz.userinfo.server.provision;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +33,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  *   <li>收集同步统计和错误信息</li>
  * </ul>
  *
- * <p><b>注意：</b>本编排器为轻量实现，处理简单的「外部用户 → 本地用户」映射。
+ * <p><b>注意：</b>本编排器为轻量实现，处理简单的「外部用户 -> 本地用户」映射。
  * 对于 LDAP 的组织架构层级同步（部门树的完整同步），仍由 {@code LdapOrgSyncService} 负责。
  * 本编排器仅处理平铺的用户记录导入。
  *
@@ -49,6 +47,12 @@ public class ProvisionOrchestrator {
 
   /** 错误详情最大保留条数 */
   private static final int MAX_ERRORS = 100;
+
+  /** 错误列表初始容量 */
+  private static final int INITIAL_ERRORS_CAPACITY = 16;
+
+  /** 随机占位密码截取长度 */
+  private static final int PASSWORD_RANDOM_LENGTH = 16;
 
   private final UserAccountRepository userAccountRepository;
 
@@ -66,7 +70,7 @@ public class ProvisionOrchestrator {
     long startTime = System.currentTimeMillis();
     String connectorType = connector.getConnectorType();
 
-    List<String> errors = new ArrayList<>(16);
+    List<String> errors = new ArrayList<>(INITIAL_ERRORS_CAPACITY);
     int created = 0;
     int updated = 0;
     int failed = 0;
@@ -95,6 +99,7 @@ public class ProvisionOrchestrator {
           case CREATED -> created++;
           case UPDATED -> updated++;
           case UNCHANGED -> { /* 跳过计数 */ }
+          default -> { /* 未来扩展保险 */ }
         }
       } catch (Exception e) {
         failed++;
@@ -181,9 +186,9 @@ public class ProvisionOrchestrator {
    */
   private String generateRandomPassword() {
     // 使用 UUID 前 16 位作为随机占位密码，BCrypt 编码后存储
-    String randomPart = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16);
-    return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()
-        .encode("Init@" + randomPart);
+    String randomPart = UUID.randomUUID().toString().replace("-", "")
+        .substring(0, PASSWORD_RANDOM_LENGTH);
+    return new BCryptPasswordEncoder().encode("Init@" + randomPart);
   }
 
   /**

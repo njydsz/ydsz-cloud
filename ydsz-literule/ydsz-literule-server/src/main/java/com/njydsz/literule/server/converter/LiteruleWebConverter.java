@@ -317,7 +317,7 @@ public class LiteruleWebConverter {
     vo.setExpression(entity.getExpression());
     vo.setValue(entity.getValue());
     vo.setJavaType(entity.getJavaType());
-    vo.setBooleanValue(entity.getBooleanValue());
+    vo.setIsBooleanValue(entity.getBooleanValue());
     vo.setElapsedMs(entity.getElapsedMs());
     vo.setError(entity.getError());
     return vo;

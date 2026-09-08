@@ -23,7 +23,7 @@ public class CategoryNodeVO {
   private int depth;
 
   /** 是否根节点（true=顶层分类） */
-  private boolean root;
+  private boolean isRoot;
 
   /** 该分类下的规则数量（含下级或仅本级，取决于聚合口径） */
   private int ruleCount;

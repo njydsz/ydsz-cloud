@@ -32,5 +32,5 @@ public class ScimEmail {
 
   /** 是否为主邮箱。 */
   @JsonProperty("primary")
-  private Boolean primary;
+  private Boolean isPrimary;
 }

@@ -32,7 +32,7 @@ public class ChannelHealthVO implements Serializable {
 
   /** 通道是否启用 */
   @Schema(description = "是否启用", example = "true")
-  private boolean enabled;
+  private boolean isEnabled;
 
   /** 熔断器状态：CLOSED / OPEN / HALF_OPEN */
   @Schema(description = "熔断器状态", example = "CLOSED")

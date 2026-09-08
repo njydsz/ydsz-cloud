@@ -471,7 +471,7 @@ public class MessageServiceImpl implements MessageService {
     BatchSendRequestDTO dto = new BatchSendRequestDTO();
     dto.setBatchId(batchId);
     dto.setRequests(batch);
-    dto.setAsync(true);
+    dto.setIsAsync(true);
     MsgBatchVO msgBatch = batchService.submitBatch(dto);
     // 异步模式下返回初始进度（实际处理在后台线程池执行）
     BatchSendResultDTO result = new BatchSendResultDTO(batchId, msgBatch.getTotal(), 0, 0, 0);

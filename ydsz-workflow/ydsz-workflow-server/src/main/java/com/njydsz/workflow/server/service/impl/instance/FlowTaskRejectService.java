@@ -131,7 +131,7 @@ public class FlowTaskRejectService {
     Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());
 
     // P1-2: 退回到发起人 — 解析 startNode 下游第一个节点作为退回目标
-    if (Boolean.TRUE.equals(dto.getRejectToInitiator())) {
+    if (Boolean.TRUE.equals(dto.getIsRejectToInitiator())) {
       String initiatorNodeCode = resolveInitiatorNodeCode(instance.getDefinitionId());
       if (initiatorNodeCode != null) {
         dto.setTargetNodeCode(initiatorNodeCode);

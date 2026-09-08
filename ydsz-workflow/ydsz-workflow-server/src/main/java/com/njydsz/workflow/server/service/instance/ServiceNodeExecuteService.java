@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.instance;
+﻿package com.njydsz.workflow.server.service.instance;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -305,20 +305,31 @@ public class ServiceNodeExecuteService {
     private final FlowNodeVO node;
     private final Map<String, Object> variables;
 
+    
+    /**
+     * 构造服务节点推进上下文。
+     *
+     * @param instance 当前流程实例
+     * @param node 当前节点
+     * @param variables 当前流程变量
+     */
     public AdvanceContext(FlowInstanceVO instance, FlowNodeVO node, Map<String, Object> variables) {
       this.instance = instance;
       this.node = node;
       this.variables = variables;
     }
 
+    /** @return 当前流程实例。 */
     public FlowInstanceVO getInstance() {
       return instance;
     }
 
+    /** @return 当前节点。 */
     public FlowNodeVO getNode() {
       return node;
     }
 
+    /** @return 当前流程变量。 */
     public Map<String, Object> getVariables() {
       return variables;
     }

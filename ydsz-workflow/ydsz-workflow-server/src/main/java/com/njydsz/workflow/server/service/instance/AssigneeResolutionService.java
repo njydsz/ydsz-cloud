@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.instance;
+﻿package com.njydsz.workflow.server.service.instance;
 
 import java.util.Map;
 
@@ -41,6 +41,12 @@ public class AssigneeResolutionService {
   /** 变量策略，解析节点 permissionFlag 中的表达式 */
   private final DefaultFlowVariableStrategy variableStrategy;
 
+  
+  /**
+   * 构造办理人解析服务。
+   *
+   * @param variableStrategy 变量解析策略
+   */
   public AssigneeResolutionService(DefaultFlowVariableStrategy variableStrategy) {
     this.variableStrategy = variableStrategy;
   }

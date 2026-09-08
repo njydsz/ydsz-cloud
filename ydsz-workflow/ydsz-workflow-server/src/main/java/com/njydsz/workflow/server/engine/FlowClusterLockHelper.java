@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine;
+﻿package com.njydsz.workflow.server.engine;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -36,6 +36,12 @@ public class FlowClusterLockHelper {
 
   private final DistributedLocker distributedLocker;
 
+  
+  /**
+   * 构造集群锁助手。
+   *
+   * @param lockStrategyProvider 锁策略提供器
+   */
   public FlowClusterLockHelper(ObjectProvider<LockStrategy> lockStrategyProvider) {
     LockStrategy lockStrategy = lockStrategyProvider.getIfAvailable();
     if (lockStrategy == null) {

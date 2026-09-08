@@ -37,7 +37,7 @@ public class BloomFilterStatsVO implements Serializable {
 
   /** 当前窗口是否为主窗口（true=活跃写入窗口） */
   @Schema(description = "当前窗口是否为主窗口", example = "true")
-  private boolean primary;
+  private boolean isPrimary;
 
   /** 当前窗口已运行秒数 */
   @Schema(description = "当前窗口已运行秒数", example = "35")

@@ -26,5 +26,5 @@ public class MsgUserChannelQuery extends PageQuery {
   @Xss private String status;
 
   /** 是否优先查询主绑定（isPrimary=1） */
-  private boolean primaryFirst;
+  private boolean isPrimaryFirst;
 }

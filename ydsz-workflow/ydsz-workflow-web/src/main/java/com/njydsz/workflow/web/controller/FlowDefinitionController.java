@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.definition;
+﻿package com.njydsz.workflow.web.controller.definition;
 
 import java.io.IOException;
 import java.util.List;
@@ -136,6 +136,12 @@ public class FlowDefinitionController {
       content = "'deploy'")
   @Operation(summary = "部署流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
+  /** 部署流程定义：上传 BPMN XML + 表单配置，创建新流程定义。
+   *
+   * @param dto 部署参数（BPMN XML / flowCode / formConfig 等）
+   * @return 新建的流程定义 ID
+   */
+  
   public YdszResponse<String> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
     String id = definitionService.deploy(dto);
     return YdszResponse.success(id);
@@ -213,6 +219,11 @@ public class FlowDefinitionController {
       content = "'deprecate'")
   @Operation(summary = "废弃流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
+  /** 停用流程定义：将指定定义标记为失效状态（不可再发起）。
+   *
+   * @param id 流程定义 ID
+   */
+  
   public YdszResponse<Void> deprecate(@PathVariable String id) {
     definitionService.deprecate(id);
     return YdszResponse.success();
@@ -327,6 +338,11 @@ public class FlowDefinitionController {
       content = "'enable'")
   @Operation(summary = "启用流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
+  /** 启用流程定义：将已停用的定义恢复为激活状态。
+   *
+   * @param id 流程定义 ID
+   */
+  
   public YdszResponse<Void> enable(@PathVariable String id) {
     definitionService.enable(id);
     return YdszResponse.success();
@@ -348,6 +364,11 @@ public class FlowDefinitionController {
       content = "'disable'")
   @Operation(summary = "停用流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
+  /** 禁用流程定义：临时禁用，不可发起新实例。
+   *
+   * @param id 流程定义 ID
+   */
+  
   public YdszResponse<Void> disable(@PathVariable String id) {
     definitionService.disable(id);
     return YdszResponse.success();
@@ -610,6 +631,11 @@ public class FlowDefinitionController {
       content = "'slaScan'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "手动触发 SLA 扫描")
+  /** SLA 扫描：扫描所有超期待办任务，触发超时动作。
+   *
+   * @return 本次触发的超期任务数
+   */
+  
   public YdszResponse<Integer> slaScan() {
     int processed = slaService.scanAndProcess();
     return YdszResponse.success(processed);
@@ -631,6 +657,12 @@ public class FlowDefinitionController {
       content = "'slaProcess'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "手动触发单条任务的 SLA 处理")
+  /** 处理单个任务 SLA：执行超时策略（自动通过 / 转办 / 催办）。
+   *
+   * @param taskId 任务 ID
+   * @return 是否触发了超时动作
+   */
+  
   public YdszResponse<Boolean> slaProcess(@PathVariable String taskId) {
     Boolean ok = taskService.slaProcessByTaskId(taskId);
     if (ok == null) {
@@ -656,6 +688,12 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'buildExpression'")
   @Operation(summary = "结构化条件 JSON → 表达式字符串")
+  /** 构建条件表达式：将前端条件面板转换为可执行表达式。
+   *
+   * @param body 条件面板配置
+   * @return 生成的高阶表达式字符串
+   */
+  
   public YdszResponse<String> buildExpression(@RequestBody Map<String, String> body) {
     String conditionJson = body.get("conditionJson");
     String engine = body.getOrDefault("engine", "AVIATOR");
@@ -677,6 +715,12 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'parseExpression'")
   @Operation(summary = "表达式字符串 → 结构化条件 JSON")
+  /** 解析条件表达式：将可执行表达式反向解析为前端条件面板配置。
+   *
+   * @param body 原始条件表达式
+   * @return 前端条件面板配置 JSON
+   */
+  
   public YdszResponse<String> parseExpression(@RequestBody Map<String, String> body) {
     String expression = body.get("expression");
     String engine = body.getOrDefault("engine", "AVIATOR");

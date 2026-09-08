@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.integration;
+﻿package com.njydsz.workflow.web.controller.integration;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -138,6 +138,11 @@ public class FlowEmbeddedApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'quickAction'")
+  /** 嵌入式审批快捷操作：业务面板中直接通过 / 驳回 / 转办任务。
+   *
+   * @param dto 操作参数（taskId / action / comment）
+   */
+  
   public YdszResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
     LoginUser u = AuthContextUtils.getCurrentOrNull();
     if (dto.getUserId() == null && u != null) {

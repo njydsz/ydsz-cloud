@@ -45,6 +45,9 @@ public class JdbcProvisionProperties {
   /** 集合初始容量 */
   private static final int CAPACITY = 16;
 
+  /** 默认分页大小（全量拉取时每次查询的 LIMIT） */
+  private static final int DEFAULT_BATCH_SIZE = 500;
+
 
   /** 是否启用 JDBC 供给连接器。 */
   private boolean enabled = false;
@@ -92,5 +95,5 @@ public class JdbcProvisionProperties {
   private String activeIndicator = "1";
 
   /** 分页大小（全量拉取时每次查询的 LIMIT）。 */
-  private int batchSize = 500;
+  private int batchSize = DEFAULT_BATCH_SIZE;
 }

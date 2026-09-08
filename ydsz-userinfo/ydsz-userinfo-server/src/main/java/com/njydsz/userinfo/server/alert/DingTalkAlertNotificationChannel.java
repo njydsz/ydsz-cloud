@@ -1,7 +1,12 @@
 package com.njydsz.userinfo.server.alert;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +44,18 @@ public class DingTalkAlertNotificationChannel implements AlertNotificationChanne
 
   /** 渠道名称 */
   private static final String CHANNEL_NAME = "DINGTALK";
+
+  /** 消息载荷初始容量 */
+  private static final int PAYLOAD_INITIAL_CAPACITY = 8;
+
+  /** 消息体内 markdown 对象初始容量 */
+  private static final int MARKDOWN_INITIAL_CAPACITY = 4;
+
+  /** HMAC 签名算法 */
+  private static final String HMAC_ALGORITHM = "HmacSHA256";
+
+  /** URL 编码字符集名称 */
+  private static final String URL_ENCODING_CHARSET = StandardCharsets.UTF_8.name();
 
   @Value("${ydsz.userinfo.alert.dingtalk.webhook-url:}")
   private String webhookUrl;
@@ -102,13 +119,13 @@ public class DingTalkAlertNotificationChannel implements AlertNotificationChanne
       long timestamp = System.currentTimeMillis();
       String stringToSign = timestamp + "\n" + signingSecret;
 
-      javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-      mac.init(new javax.crypto.spec.SecretKeySpec(
-          signingSecret.getBytes(), "HmacSHA256"));
-      byte[] signData = mac.doFinal(stringToSign.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-      String sign = java.net.URLEncoder.encode(
-          java.util.Base64.getEncoder().encodeToString(signData),
-          "UTF-8");
+      Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+      mac.init(new SecretKeySpec(
+          signingSecret.getBytes(), HMAC_ALGORITHM));
+      byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
+      String sign = URLEncoder.encode(
+          Base64.getEncoder().encodeToString(signData),
+          URL_ENCODING_CHARSET);
 
       return webhookUrl + "&timestamp=" + timestamp + "&sign=" + sign;
     } catch (Exception e) {
@@ -124,7 +141,7 @@ public class DingTalkAlertNotificationChannel implements AlertNotificationChanne
    * @return 载荷 Map
    */
   private Map<String, Object> buildPayload(SecurityAlert alert) {
-    Map<String, Object> payload = new HashMap<>(8);
+    Map<String, Object> payload = new HashMap<>(PAYLOAD_INITIAL_CAPACITY);
 
     // 钉钉 markdown 消息
     String riskEmoji = switch (alert.riskLevel().name()) {
@@ -155,7 +172,7 @@ public class DingTalkAlertNotificationChannel implements AlertNotificationChanne
         alert.createdAt()
     );
 
-    Map<String, Object> markdown = new HashMap<>(4);
+    Map<String, Object> markdown = new HashMap<>(MARKDOWN_INITIAL_CAPACITY);
     markdown.put("title", "安全告警: " + alert.title());
     markdown.put("text", markdownContent);
 

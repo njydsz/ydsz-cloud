@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.simulator;
+﻿package com.njydsz.workflow.server.simulator;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -53,6 +53,13 @@ public class SimulationContext implements Serializable {
   /** 结束节点编码 */
   private String endNode;
 
+  
+  /**
+   * 构造模拟执行上下文。
+   *
+   * @param definitionId 流程定义 ID
+   * @param variables 初始流程变量
+   */
   public SimulationContext(String definitionId, Map<String, Object> variables) {
     this.definitionId = definitionId;
     this.variables = variables != null ? new HashMap<>(variables) : new HashMap<>();

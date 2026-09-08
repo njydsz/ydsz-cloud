@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.definition;
+﻿package com.njydsz.workflow.server.service.impl.definition;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -107,6 +107,12 @@ public class FlowDefinitionPublishManager {
   @CacheEvict(
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
+  /**
+   * 发布流程定义（生效指定版本）。
+   *
+   * @param definitionId 流程定义 ID
+   */
+  
   public void publish(String definitionId) {
     publish(definitionId, false);
   }
@@ -124,6 +130,13 @@ public class FlowDefinitionPublishManager {
   @CacheEvict(
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
+  /**
+   * 发布流程定义（可强制发布）。
+   *
+   * @param definitionId 流程定义 ID
+   * @param force 是否强制发布（跳过状态校验）
+   */
+  
   public void publish(String definitionId, boolean force) {
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
     if (def == null) {
@@ -154,6 +167,12 @@ public class FlowDefinitionPublishManager {
   @CacheEvict(
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
+  /**
+   * 停用流程定义（标记为失效状态）。
+   *
+   * @param definitionId 流程定义 ID
+   */
+  
   public void deprecate(String definitionId) {
     definitionRepository.publish(definitionId, DEPRECATE_PUBLISH_VERSION);
     flowDefinitionCacheService.evict(definitionId);
@@ -174,6 +193,14 @@ public class FlowDefinitionPublishManager {
   @CacheEvict(
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
+  /**
+   * 切换流程的激活版本（同 flowCode 下不同版本切换）。
+   *
+   * @param flowCode 流程编码
+   * @param definitionId 目标激活的流程定义 ID
+   * @param tenantId 租户 ID
+   */
+  
   public void switchActiveVersion(String flowCode, String definitionId, String tenantId) {
     if (!StringUtils.hasText(flowCode)) {
       throw SysException.builder()
@@ -240,6 +267,14 @@ public class FlowDefinitionPublishManager {
   @CacheEvict(
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
+  /**
+   * 回滚流程定义（恢复上一激活版本）。
+   *
+   * @param flowCode 流程编码
+   * @param tenantId 租户 ID
+   * @return 回滚结果（含回滚前后的 definitionId）
+   */
+  
   public Map<String, Object> rollbackDefinition(String flowCode, String tenantId) {
     if (!StringUtils.hasText(flowCode)) {
       throw SysException.builder()

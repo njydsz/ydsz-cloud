@@ -120,7 +120,7 @@ public class BatchServiceImpl implements BatchService {
         dto.getChannel());
 
     // 异步执行
-    boolean async = dto.getAsync() == null || dto.getAsync();
+    boolean async = dto.getIsAsync() == null || dto.getIsAsync();
     if (async) {
       executeBatchAsync(batchId, requests);
     } else {

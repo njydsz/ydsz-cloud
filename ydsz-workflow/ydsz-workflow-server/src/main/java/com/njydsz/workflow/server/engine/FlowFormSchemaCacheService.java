@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine;
+﻿package com.njydsz.workflow.server.engine;
 
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +45,13 @@ public class FlowFormSchemaCacheService {
   /** 表单 Schema 缓存：nodeExtHashCode → FlowFormSchema */
   private final Cache<String, FlowFormSchema> schemaCache;
 
+  
+  /**
+   * 构造表单 Schema 缓存服务。
+   *
+   * @param formValidator 表单校验器
+   * @param properties 工作流配置属性
+   */
   public FlowFormSchemaCacheService(FlowFormValidator formValidator, FlowProperties properties) {
     this.formValidator = formValidator;
     this.schemaCache =

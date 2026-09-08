@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine.impl;
+﻿package com.njydsz.workflow.server.engine.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -97,7 +97,8 @@ public class DefaultFlowAdvancer {
     this.lifecycleManager = lifecycleManager;
   }
 
-  public FlowInstanceService getInstanceService() {
+  /** @return 流程实例服务。 */
+    public FlowInstanceService getInstanceService() {
     return instanceService;
   }
 
@@ -127,7 +128,14 @@ public class DefaultFlowAdvancer {
       waitTime = 5,
       leaseTime = 60,
       message = "流程正在处理中，请稍后重试")
-  public FlowInstanceViewDTO start(String instanceId) {
+  /**
+   * 启动指定实例：加载开始节点、推进到下一节点列表、返回实例视图。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 启动后的实例视图
+   * @throws SysException 实例不存在或开始节点缺失
+   */
+    public FlowInstanceViewDTO start(String instanceId) {
     FlowInstanceVO instance = instanceService.getById(instanceId);
     if (instance == null) {
       throw SysException.builder()
@@ -603,7 +611,14 @@ public class DefaultFlowAdvancer {
     return variableStrategy.evaluate(condition, variables);
   }
 
-  public String resolveRejectTarget(String definitionId, String currentNodeCode) {
+  /**
+   * 解析退回目标节点编码（按退回策略反查上一节点）。
+   *
+   * @param definitionId 流程定义 ID
+   * @param currentNodeCode 当前节点编码
+   * @return 退回目标节点编码
+   */
+    public String resolveRejectTarget(String definitionId, String currentNodeCode) {
     List<FlowSkipVO> incoming =
         flowDefinitionCacheService.getSkipsByNextNode(definitionId, currentNodeCode);
     if (!incoming.isEmpty()) {

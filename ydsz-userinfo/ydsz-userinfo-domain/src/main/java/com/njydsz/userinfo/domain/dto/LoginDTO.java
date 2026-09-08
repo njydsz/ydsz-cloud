@@ -68,5 +68,5 @@ public class LoginDTO implements Serializable {
    * <p>开启后每次访问自动续期 Token TTL（滑动过期），关闭浏览器则按原 Cookie 有效期失效。
    * 开启时服务端会签发 Remember-Me Cookie（存储加密后的用户 ID）。
    */
-  private boolean rememberMe;
+  private boolean isRememberMe;
 }

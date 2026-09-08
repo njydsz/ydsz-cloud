@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine;
+﻿package com.njydsz.workflow.server.engine;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,6 +58,13 @@ public class FlowUserCacheService {
   /** 用户名称缓存：userId → userName */
   private final Cache<String, String> userNameCache;
 
+  
+  /**
+   * 构造用户缓存服务。
+   *
+   * @param nameServiceClient 名称查询网关客户端
+   * @param properties 工作流配置属性
+   */
   public FlowUserCacheService(NameServiceClient nameServiceClient, FlowProperties properties) {
     this.nameServiceClient = nameServiceClient;
     this.userNameCache =

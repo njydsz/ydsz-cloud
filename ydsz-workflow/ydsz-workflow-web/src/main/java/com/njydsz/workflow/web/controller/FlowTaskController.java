@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.instance;
+﻿package com.njydsz.workflow.web.controller.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -154,6 +154,11 @@ public class FlowTaskController {
       content = "'claim'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "签收任务")
+  /** 签收任务：多人会签时当前用户认领该任务成为办理人。
+   *
+   * @param taskId 任务 ID
+   */
+  
   public YdszResponse<Void> claim(@RequestParam String taskId) {
     workflowFacade.claimTask(taskId, AuthContextUtils.getUserId());
     return YdszResponse.success();
@@ -212,6 +217,11 @@ public class FlowTaskController {
       content = "'reject'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "驳回任务")
+  /** 驳回任务：拒绝当前审批，按退回策略回退到上一节点。
+   *
+   * @param dto 驳回参数（含 taskId / comment / variables）
+   */
+  
   public YdszResponse<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -252,6 +262,11 @@ public class FlowTaskController {
       content = "'transfer'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "转办任务")
+  /** 转办任务：将当前任务转给其他人办理。
+   *
+   * @param dto 转办参数（含 taskId / transferTarget / comment）
+   */
+  
   public YdszResponse<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -275,6 +290,11 @@ public class FlowTaskController {
       content = "'delegate'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "委派任务")
+  /** 委派任务：将当前任务委托给其他人临时代办，完成后回到原办理人。
+   *
+   * @param dto 委派参数（含 taskId / delegateTarget / comment）
+   */
+  
   public YdszResponse<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -298,6 +318,11 @@ public class FlowTaskController {
       content = "'countersignBefore'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "前加签")
+  /** 前加签：在当前节点之前追加审批人，被加签人通过后才流转到当前节点。
+   *
+   * @param dto 加签参数（含 taskId / countersignUser / comment）
+   */
+  
   public YdszResponse<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -321,6 +346,11 @@ public class FlowTaskController {
       content = "'countersignAfter'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "后加签")
+  /** 后加签：在当前节点之后追加审批人，当前节点通过后流转到被加签人。
+   *
+   * @param dto 加签参数（含 taskId / countersignUser / comment）
+   */
+  
   public YdszResponse<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -344,6 +374,11 @@ public class FlowTaskController {
       content = "'countersignParallel'")
   @Operation(summary = "并加签（与原审批人并行审批）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  /** 并加签：在当前节点并行追加审批人，各加签人独立审批。
+   *
+   * @param dto 加签参数（含 taskId / countersignUser / comment）
+   */
+  
   public YdszResponse<Void> countersignParallel(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -367,6 +402,11 @@ public class FlowTaskController {
       content = "'jump'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
   @Operation(summary = "管理员强制跳转任务")
+  /** 管理员强转跳转：将任务强制流转到流程定义中任意节点。
+   *
+   * @param dto 跳转参数（含 taskId / targetNodeCode）
+   */
+  
   public YdszResponse<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -390,6 +430,11 @@ public class FlowTaskController {
       content = "'freeJump'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
   @Operation(summary = "办理人自由流跳转任务")
+  /** 自由流跳转：将任务跳转到已审批过的历史节点。
+   *
+   * @param dto 跳转参数（含 taskId / targetNodeCode / comment）
+   */
+  
   public YdszResponse<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -415,6 +460,11 @@ public class FlowTaskController {
       content = "'batchPass'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "批量通过任务")
+  /** 批量通过：管理员批量通过多个待办任务。
+   *
+   * @param taskIds 任务 ID 列表
+   */
+  
   public YdszResponse<Void> batchPass(@RequestBody List<String> taskIds) {
         workflowFacade.batchPassTasks(taskIds, AuthContextUtils.getUserId(), null);
     return YdszResponse.success();
@@ -435,6 +485,11 @@ public class FlowTaskController {
       content = "'batchReject'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "批量驳回任务")
+  /** 批量驳回：管理员批量驳回多个待办任务。
+   *
+   * @param dtos 驳回参数列表（含 taskId / comment）
+   */
+  
   public YdszResponse<Void> batchReject(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     String userId = AuthContextUtils.getUserId();
     List<String> taskIds = new ArrayList<>(COLLECTION_CAPACITY);
@@ -470,6 +525,11 @@ public class FlowTaskController {
       content = "'batchTransfer'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "批量转办任务")
+  /** 批量转办：管理员批量将多个待办任务转给指定用户。
+   *
+   * @param dtos 转办参数列表（含 taskId / transferTarget）
+   */
+  
   public YdszResponse<Void> batchTransfer(@Valid @RequestBody List<FlowTaskOperateDTO> dtos) {
     String userId = AuthContextUtils.getUserId();
     List<String> taskIds = new ArrayList<>(COLLECTION_CAPACITY);
@@ -533,6 +593,11 @@ public class FlowTaskController {
       content = "'passAll'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "一键通过全部待办")
+  /** 一键通过：通过当前用户所有待办任务。
+   *
+   * @return 通过的任务数量
+   */
+  
   public YdszResponse<Integer> passAll() {
     return YdszResponse.success(
         taskService.passAll(AuthContextUtils.getUserId(), AuthContextUtils.getUsername()));
@@ -714,6 +779,11 @@ public class FlowTaskController {
       content = "'countersignRemove'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "减签（移除会签审批人）")
+  /** 取消加签：移除已加签但未审批的人。
+   *
+   * @param dto 取消加签参数（含 taskId / countersignId）
+   */
+  
   public YdszResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -736,6 +806,11 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'markRead'")
   @Operation(summary = "标记任务已阅")
+  /** 标记已读：标记单个任务已读。
+   *
+   * @param taskId 任务 ID
+   */
+  
   public YdszResponse<Void> markRead(@PathVariable String taskId) {
     String userId = AuthContextUtils.getUserId();
     taskService.markRead(taskId, userId);
@@ -758,6 +833,11 @@ public class FlowTaskController {
       content = "'communicate'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "添加沟通评论")
+  /** 沟通任务：向其他办理人发送沟通消息。
+   *
+   * @param dto 沟通参数（含 taskId / targetUserId）
+   */
+  
   public YdszResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -781,6 +861,11 @@ public class FlowTaskController {
       content = "'saveDraft'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "暂存待审（保存审批意见草稿）")
+  /** 保存草稿：保存当前任务审批意见草稿（不提交）。
+   *
+   * @param dto 草稿参数（含 taskId / comment / variables）
+   */
+  
   public YdszResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -804,6 +889,11 @@ public class FlowTaskController {
       content = "'addApprover'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "追加处理人")
+  /** 加签（自由选人）：在流程中临时追加审批人。
+   *
+   * @param dto 加签参数（含 taskId / addUserId）
+   */
+  
   public YdszResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
     dto.setUserId(AuthContextUtils.getUserId());
     dto.setUserName(AuthContextUtils.getUsername());
@@ -871,6 +961,11 @@ public class FlowTaskController {
       content = "'activateTask'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   @Operation(summary = "任务激活")
+  /** 激活任务：恢复已挂起的任务到待办状态。
+   *
+   * @param taskId 任务 ID
+   */
+  
   public YdszResponse<Void> activateTask(@PathVariable String taskId) {
     workflowFacade.activateTask(taskId, AuthContextUtils.getUserId());
     return YdszResponse.success();
@@ -914,6 +1009,11 @@ public class FlowTaskController {
       action = AuditAction.CREATE,
       content = "'pushMyTodoCount'")
   @Operation(summary = "手动触发推送当前用户待办数到WebSocket")
+  /** 推送待办数：通过 WebSocket 向当前用户推送待办任务数量。
+   *
+   * @return 推送是否成功
+   */
+  
   public YdszResponse<Boolean> pushMyTodoCount() {
     String userId = AuthContextUtils.getUserId();
     if (userId == null) {

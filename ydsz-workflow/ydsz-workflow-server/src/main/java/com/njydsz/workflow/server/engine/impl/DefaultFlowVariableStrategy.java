@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine.impl;
+﻿package com.njydsz.workflow.server.engine.impl;
 
 import java.util.Collections;
 import java.util.Map;
@@ -98,7 +98,14 @@ public class DefaultFlowVariableStrategy {
     this.assigneeResolverLegacy = assigneeResolverLegacy;
   }
 
-  public boolean evaluate(String condition, Map<String, Object> variables) {
+  /**
+   * 评估条件表达式。
+   *
+   * @param condition 条件表达式字符串
+   * @param variables 流程变量上下文
+   * @return 条件是否成立
+   */
+    public boolean evaluate(String condition, Map<String, Object> variables) {
     if (condition == null || condition.isBlank()) {
       return true;
     }
@@ -135,7 +142,14 @@ public class DefaultFlowVariableStrategy {
     return expressionEvaluatorLegacy.evaluateLegacy(condition, variables);
   }
 
-  public String resolveAssignee(String expression, Map<String, Object> variables) {
+  /**
+   * 解析办理人表达式，返回目标用户 ID。
+   *
+   * @param expression 办理人表达式
+   * @param variables 流程变量上下文
+   * @return 办理人用户 ID
+   */
+    public String resolveAssignee(String expression, Map<String, Object> variables) {
     if (expression == null || expression.isBlank()) {
       return null;
     }

@@ -49,7 +49,7 @@ public class SocialAuthProperties {
   private static final int PROVIDERS_CAPACITY = 16;
 
   /** 社交认证全局开关（默认 false，需显式开启）。 */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 各平台配置（key 为平台标识，如 enterprise_wechat/dingtalk/feishu）。 */
   private Map<String, ProviderConfig> providers = new HashMap<>(PROVIDERS_CAPACITY);

@@ -19,7 +19,7 @@ public class FlowRollbackResultVO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 是否回滚成功 */
-  private Boolean success;
+  private Boolean isSuccess;
 
   /** 结果描述信息 */
   private String message;

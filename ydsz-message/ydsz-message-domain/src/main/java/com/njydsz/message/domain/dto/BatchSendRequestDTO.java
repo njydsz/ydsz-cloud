@@ -48,7 +48,7 @@ public class BatchSendRequestDTO {
   private List<String> receiverList;
 
   /** 是否异步发送（默认 true；false 时同步返回结果） */
-  private Boolean async = true;
+  private Boolean isAsync = true;
 
   /** 触发发送的用户 ID */
   @Xss private String senderId;

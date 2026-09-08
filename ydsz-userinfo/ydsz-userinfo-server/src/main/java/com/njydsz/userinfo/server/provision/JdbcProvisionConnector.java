@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.server.provision;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,6 +51,9 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
 
   /** 默认批量大小 */
   private static final int DEFAULT_BATCH_SIZE = 500;
+
+  /** 扩展属性 Map 初始容量 */
+  private static final int ATTRIBUTES_MAP_CAPACITY = 8;
 
   private final JdbcTemplate jdbcTemplate;
   private final JdbcProvisionProperties properties;
@@ -261,9 +265,9 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
    * @return 扩展属性 Map
    */
   private Map<String, String> extractAttributes(ResultSet rs) {
-    Map<String, String> attributes = new HashMap<>(8);
+    Map<String, String> attributes = new HashMap<>(ATTRIBUTES_MAP_CAPACITY);
     try {
-      java.sql.ResultSetMetaData metaData = rs.getMetaData();
+      ResultSetMetaData metaData = rs.getMetaData();
       int columnCount = metaData.getColumnCount();
       for (int i = 1; i <= columnCount; i++) {
         String columnLabel = metaData.getColumnLabel(i);

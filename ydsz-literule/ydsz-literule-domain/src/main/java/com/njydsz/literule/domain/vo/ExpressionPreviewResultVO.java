@@ -23,7 +23,7 @@ public class ExpressionPreviewResultVO {
   private String javaType;
 
   /** 布尔型求值结果（条件表达式的真假判定） */
-  private Boolean booleanValue;
+  private Boolean isBooleanValue;
 
   /** 求值耗时（毫秒，用于性能评估） */
   private long elapsedMs;

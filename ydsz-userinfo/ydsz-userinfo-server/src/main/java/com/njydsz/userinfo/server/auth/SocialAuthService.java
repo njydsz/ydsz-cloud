@@ -21,8 +21,6 @@ import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 import com.njydsz.userinfo.domain.social.SocialUserInfo;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * 社交认证服务编排实现。
  *

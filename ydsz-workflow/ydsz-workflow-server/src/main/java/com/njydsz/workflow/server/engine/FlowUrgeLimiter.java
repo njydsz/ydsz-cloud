@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine;
+﻿package com.njydsz.workflow.server.engine;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -41,6 +41,12 @@ public class FlowUrgeLimiter {
 
   private final RedisRateLimiter rateLimiter;
 
+  
+  /**
+   * 构造催办限流器。
+   *
+   * @param rateLimiterProvider Redis 限流器提供器
+   */
   public FlowUrgeLimiter(ObjectProvider<RedisRateLimiter> rateLimiterProvider) {
     this.rateLimiter = rateLimiterProvider.getIfAvailable();
     if (this.rateLimiter == null) {

@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.instance;
+﻿package com.njydsz.workflow.server.service.instance;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -237,18 +237,22 @@ public class AiAgentNodeExecuteService {
       this.skipType = skipType;
     }
 
+    /** @return 当前流程实例。 */
     public FlowInstanceVO getInstance() {
       return instance;
     }
 
+    /** @return 当前节点。 */
     public FlowNodeVO getNode() {
       return node;
     }
 
+    /** @return 当前流程变量。 */
     public Map<String, Object> getVariables() {
       return variables;
     }
 
+    /** @return 推进类型（SKIP / NO_SKIP / CONDITIONAL）。 */
     public String getSkipType() {
       return skipType;
     }

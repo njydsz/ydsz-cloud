@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.template;
+﻿package com.njydsz.workflow.server.template;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -62,6 +62,8 @@ public class FlowPresetTemplateLibrary {
 
   private final List<FlowTemplateDefinition> templates = new ArrayList<>(10);
 
+  
+  /** 默认构造，初始化内置模板库。 */
   public FlowPresetTemplateLibrary() {
     templates.add(buildLeaveTemplate());
     templates.add(buildExpenseReimbursementTemplate());

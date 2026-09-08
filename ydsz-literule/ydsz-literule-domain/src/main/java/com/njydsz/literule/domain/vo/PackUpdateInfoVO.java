@@ -28,7 +28,7 @@ public class PackUpdateInfoVO {
   private String latestVersion;
 
   /** 是否存在可更新版本（true=有新版可升级） */
-  private boolean hasUpdate;
+  private boolean isHasUpdate;
 
   /** 安装时间 */
   private LocalDateTime installedAt;

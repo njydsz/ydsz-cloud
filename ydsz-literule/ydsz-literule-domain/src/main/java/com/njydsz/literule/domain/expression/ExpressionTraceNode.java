@@ -62,7 +62,7 @@ public class ExpressionTraceNode {
   private Object result;
 
   /** 是否短路（AND 的右侧被跳过 / OR 的右侧被跳过） */
-  private boolean shortCircuited;
+  private boolean isShortCircuited;
 
   /** 执行耗时（纳秒） */
   private long elapsedNanos;

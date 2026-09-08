@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.definition;
+﻿package com.njydsz.workflow.server.service.impl.definition;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -146,7 +146,13 @@ public class FlowDefinitionDeployManager {
   @CacheEvict(
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
-  public String deploy(FlowDeployProcessDTO dto) {
+  /**
+   * 部署流程定义（创建 BPMN 解析 + 入库 + 发布）。
+   *
+   * @param dto 部署参数（BPMN XML / 流程编码 / 表单配置等）
+   * @return 新创建的流程定义 ID
+   */
+    public String deploy(FlowDeployProcessDTO dto) {
     validateDeployParams(dto);
     String version = StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0";
     String tenantId = dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();

@@ -39,7 +39,7 @@ public class OrCountersignStrategy implements CountersignStrategy {
   public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     // 完成 + 归档（P2-1: 支持穿越时空补录审批）
     LocalDateTime effectiveTime =
-        Boolean.TRUE.equals(dto.getBackdated()) ? dto.getEffectiveTime() : null;
+        Boolean.TRUE.equals(dto.getIsBackdated()) ? dto.getEffectiveTime() : null;
     archiveService.completeAndArchive(task, dto.getComment(), effectiveTime);
   }
 

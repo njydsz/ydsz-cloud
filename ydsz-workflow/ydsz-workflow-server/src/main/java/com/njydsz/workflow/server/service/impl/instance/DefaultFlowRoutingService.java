@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -81,7 +81,14 @@ public class DefaultFlowRoutingService {
 
   // ============================== 路由评估 ==============================
 
-  public String evaluateRoute(String conditionExpression, Map<String, Object> variables) {
+  /**
+   * 评估路由表达式，返回命中的下一节点编码。
+   *
+   * @param conditionExpression 路由条件表达式
+   * @param variables 流程变量
+   * @return 命中的下一节点编码，无命中返回 null
+   */
+    public String evaluateRoute(String conditionExpression, Map<String, Object> variables) {
     if (conditionExpression == null || conditionExpression.isBlank()) {
       log.debug("[FlowRoute] 路由表达式为空，返回 null");
       return null;
@@ -101,7 +108,14 @@ public class DefaultFlowRoutingService {
     }
   }
 
-  public boolean evaluateCondition(String conditionExpression, Map<String, Object> variables) {
+  /**
+   * 评估条件表达式，返回布尔结果。
+   *
+   * @param conditionExpression 条件表达式
+   * @param variables 流程变量
+   * @return 条件是否成立
+   */
+    public boolean evaluateCondition(String conditionExpression, Map<String, Object> variables) {
     if (conditionExpression == null || conditionExpression.isBlank()) {
       return true;
     }
@@ -119,7 +133,13 @@ public class DefaultFlowRoutingService {
   // ============================== 异常检测 ==============================
 
   @Transactional(readOnly = true)
-  public List<Map<String, Object>> detectAnomalies(String instanceId) {
+  /**
+   * 检测流程实例的异常节点（长时间停滞节点等）。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 异常节点列表
+   */
+    public List<Map<String, Object>> detectAnomalies(String instanceId) {
     if (instanceId == null) {
       return Collections.emptyList();
     }
@@ -139,7 +159,13 @@ public class DefaultFlowRoutingService {
   }
 
   @Transactional(readOnly = true)
-  public boolean isAnomaly(String instanceId) {
+  /**
+   * 判断流程实例是否存在异常（与 {@link #detectAnomalies} 配合使用）。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 是否存在异常
+   */
+    public boolean isAnomaly(String instanceId) {
     return !detectAnomalies(instanceId).isEmpty();
   }
 

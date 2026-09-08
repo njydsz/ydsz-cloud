@@ -1,4 +1,4 @@
-package com.njydsz.workflow.domain.event;
+﻿package com.njydsz.workflow.domain.event;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
@@ -30,6 +30,12 @@ public abstract class FlowDomainEvent {
   /** 事件发生时间 */
   private final LocalDateTime occurredAt;
 
+  
+  /**
+   * 构造领域事件。
+   *
+   * @param source 事件源（通常为发布事件的聚合）
+   */
   protected FlowDomainEvent(Object source) {
     this.source = source;
     this.occurredAt = LocalDateTime.now();

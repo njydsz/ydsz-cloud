@@ -212,7 +212,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
    */
   private InstanceMigrationResultDTO doMigrate(InstanceMigrationDTO dto, boolean forceDry) {
     validateMigrationParams(dto);
-    boolean dryRun = Boolean.TRUE.equals(dto.getDryRun()) || forceDry;
+    boolean dryRun = Boolean.TRUE.equals(dto.getIsDryRun()) || forceDry;
     String sourceDefId = dto.getSourceDefinitionId();
     String targetDefId = dto.getTargetDefinitionId();
     String tenantId = dto.getTenantId() != null ? dto.getTenantId() : AuthContextUtils.getTenantIdOrDefault();

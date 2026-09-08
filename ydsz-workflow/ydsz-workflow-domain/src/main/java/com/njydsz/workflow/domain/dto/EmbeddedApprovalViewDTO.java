@@ -29,7 +29,7 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
  *   "history": [ ...审批轨迹时间线... ],
  *   "myRole": "INITIATOR/APPROVER/OBSERVER",
  *   "actions": [ "PASS","REJECT","TRANSFER","WITHDRAW","URGE" ],
- *   "canRecall": true
+ *   "isCanRecall": true
  * }
  * </pre>
  *
@@ -69,10 +69,10 @@ public class EmbeddedApprovalViewDTO implements Serializable {
   private List<String> actions;
 
   /** 是否可撤回（仅发起人 + 流程运行中） */
-  private boolean canRecall;
+  private boolean isCanRecall;
 
   /** 流程是否已结束 */
-  private boolean finished;
+  private boolean isFinished;
 
   /** 友好提示（如"未发起流程"/"流程已结束"） */
   private String message;
@@ -120,6 +120,6 @@ public class EmbeddedApprovalViewDTO implements Serializable {
     private LocalDateTime dueAt;
 
     /** 是否当前用户可操作 */
-    private boolean mine;
+    private boolean isMine;
   }
 }

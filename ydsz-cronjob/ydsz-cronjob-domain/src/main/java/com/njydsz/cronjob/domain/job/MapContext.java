@@ -36,7 +36,7 @@ public class MapContext {
   private String taskParams;
 
   /** 是否为 Root 任务 */
-  private boolean root;
+  private boolean isRoot;
 
   /** 子任务列表（初始容量 64，减少 MapReduce 大量子任务场景下的扩容开销） */
   private List<MapTask> subTasks = new ArrayList<>(INITIAL_CAPACITY);
@@ -86,11 +86,11 @@ public class MapContext {
   }
 
   public boolean isRoot() {
-    return root;
+    return isRoot;
   }
 
-  public void setRoot(boolean root) {
-    this.root = root;
+  public void setRoot(boolean isRoot) {
+    this.isRoot = isRoot;
   }
 
   public List<MapTask> getSubTasks() {

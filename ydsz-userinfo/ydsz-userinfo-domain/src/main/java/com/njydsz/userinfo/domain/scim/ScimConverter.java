@@ -90,7 +90,7 @@ public final class ScimConverter {
   private static void applyEmail(ScimUser.ScimUserBuilder builder, String email) {
     if (email != null && !email.isEmpty()) {
       builder.emails(Collections.singletonList(
-          ScimEmail.builder().value(email).primary(true).build()));
+          ScimEmail.builder().value(email).isPrimary(true).build()));
     }
   }
 
@@ -98,7 +98,7 @@ public final class ScimConverter {
   private static void applyPhone(ScimUser.ScimUserBuilder builder, String phone) {
     if (phone != null && !phone.isEmpty()) {
       builder.phoneNumbers(Collections.singletonList(
-          ScimPhone.builder().value(phone).primary(true).build()));
+          ScimPhone.builder().value(phone).isPrimary(true).build()));
     }
   }
 
@@ -166,7 +166,7 @@ public final class ScimConverter {
       return null;
     }
     return scimUser.getEmails().stream()
-        .filter(e -> Boolean.TRUE.equals(e.getPrimary()))
+        .filter(e -> Boolean.TRUE.equals(e.getIsPrimary()))
         .findFirst()
         .map(ScimEmail::getValue)
         .orElse(scimUser.getEmails().get(0).getValue());

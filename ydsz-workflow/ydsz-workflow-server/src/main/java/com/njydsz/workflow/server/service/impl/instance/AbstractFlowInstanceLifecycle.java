@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -753,6 +753,12 @@ public abstract class AbstractFlowInstanceLifecycle {
 
   // ============================== 私有辅助方法 ==============================
 
+  /**
+   * 校验发起流程参数（必填字段 / 业务规则）。
+   *
+   * @param dto 发起参数
+   * @throws SysException 参数不合法
+   */
   protected void validateStartParams(FlowStartProcessDTO dto) {
     if (dto == null
         || !StringUtils.hasText(dto.getFlowCode())
@@ -780,6 +786,13 @@ public abstract class AbstractFlowInstanceLifecycle {
     return existing;
   }
 
+  /**
+   * 查找指定流程编码的已发布流程定义。
+   *
+   * @param dto 发起参数
+   * @param tenantId 租户 ID
+   * @return 已发布的流程定义 VO
+   */
   protected FlowDefinitionVO findPublishedDefinition(FlowStartProcessDTO dto, String tenantId) {
     FlowDefinitionVO def =
         definitionService.getPublished(
@@ -796,6 +809,13 @@ public abstract class AbstractFlowInstanceLifecycle {
     return def;
   }
 
+  /**
+   * 根据发起参数和流程定义构建流程实例 DTO。
+   *
+   * @param dto 发起参数
+   * @param def 流程定义 VO
+   * @return 流程实例 DTO
+   */
   protected FlowInstanceDTO buildInstanceDto(FlowStartProcessDTO dto, FlowDefinitionVO def) {
     FlowInstanceDTO instanceDto = new FlowInstanceDTO();
     instanceDto.setFlowCode(def.getFlowCode());
@@ -819,6 +839,12 @@ public abstract class AbstractFlowInstanceLifecycle {
     return instanceDto;
   }
 
+  /**
+   * 构建流程实例变量 JSON（从发起参数中提取变量）。
+   *
+   * @param dto 发起参数
+   * @return 变量的 JSON 字符串
+   */
   protected String buildInstanceVariables(FlowStartProcessDTO dto) {
     Map<String, Object> mergedVars =
         dto.getVariables() == null ? new HashMap<>(COLLECTION_CAPACITY) : new HashMap<>(dto.getVariables());
@@ -830,6 +856,12 @@ public abstract class AbstractFlowInstanceLifecycle {
     return mergedVars.isEmpty() ? null : YdszJson.toJson(mergedVars);
   }
 
+  /**
+   * 记录用户自选的发起变量（用于审计追溯）。
+   *
+   * @param instanceId 流程实例 ID
+   * @param variables 用户自选变量
+   */
   protected void logSelfSelectVariables(String instanceId, Map<String, Object> variables) {
     if (variables == null) {
       return;
@@ -845,6 +877,13 @@ public abstract class AbstractFlowInstanceLifecycle {
     }
   }
 
+  /**
+   * 持久化终止原因到流程实例变量。
+   *
+   * @param instanceId 流程实例 ID
+   * @param var 变量名
+   * @param reason 终止原因
+   */
   protected void persistTerminateReason(String instanceId, String var, String reason) {
     if (StringUtils.hasText(reason)) {
       try {
@@ -858,6 +897,13 @@ public abstract class AbstractFlowInstanceLifecycle {
     }
   }
 
+  /**
+   * 校验撤回权限：只有发起人在特定阶段可撤回。
+   *
+   * @param instance 流程实例
+   * @param initiatorId 当前用户 ID（应等于发起人）
+   * @throws SysException 无撤回权限
+   */
   protected void validateRecallPermission(FlowInstanceVO instance, String initiatorId) {
     if (!instance.getInitiatorId().equals(initiatorId)) {
       throw SysException.builder()
@@ -873,6 +919,12 @@ public abstract class AbstractFlowInstanceLifecycle {
     }
   }
 
+  /**
+   * 撤回前校验：确认实例所有下一节点任务均为待办状态（PENDING）。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 下一节点待办任务列表
+   */
   protected List<FlowRunTaskVO> validateNextTasksAllPending(String instanceId) {
     List<FlowRunTaskVO> pendingTasks = taskRepository.findPendingByInstance(instanceId);
     boolean anyProcessed =
@@ -890,6 +942,13 @@ public abstract class AbstractFlowInstanceLifecycle {
     return pendingTasks;
   }
 
+  /**
+   * 校验目标节点是否可撤回（排除已开始处理的节点）。
+   *
+   * @param instanceId 流程实例 ID
+   * @param targetNodeCode 目标节点编码
+   * @throws SysException 节点不可撤回
+   */
   protected void validateTargetNodeRecallable(String instanceId, String targetNodeCode) {
     List<Map<String, Object>> recallable = hisTaskRepository.listPassedNodes(instanceId);
     Set<String> recallableCodes = new HashSet<>(COLLECTION_CAPACITY);
@@ -929,6 +988,11 @@ public abstract class AbstractFlowInstanceLifecycle {
     }
   }
 
+  /**
+   * 触发撤回事件：通知下游系统流程已被撤回。
+   *
+   * @param instance 流程实例
+   */
   protected void fireRecallEvents(FlowInstanceVO instance) {
     if (flowMetrics != null) {
       flowMetrics.incInstance(instance.getFlowCode(), "recalled");
@@ -1003,6 +1067,13 @@ public abstract class AbstractFlowInstanceLifecycle {
     return newInstanceId;
   }
 
+  /**
+   * 查询流程实例，不存在则抛出 NOT_FOUND 异常。
+   *
+   * @param id 流程实例 ID
+   * @return 流程实例 VO
+   * @throws SysException 实例不存在
+   */
   protected FlowInstanceVO getByIdOrThrow(String id) {
     FlowInstanceVO instance = instanceRepository.findById(id).orElse(null);
     if (instance == null) {
@@ -1052,6 +1123,12 @@ public abstract class AbstractFlowInstanceLifecycle {
           e.getMessage());
     }
   }
+  /** 解析定时器延迟时间（字符串如 24h / 2d 转为 Duration）。
+   *
+   * @param timer 定时器配置 Map
+   * @return 解析后的延迟时间
+   */
+  
 
   protected Duration parseTimerDelay(Map<?, ?> timer) {
     Object duration = timer.get("duration");
@@ -1087,6 +1164,12 @@ public abstract class AbstractFlowInstanceLifecycle {
     }
     return null;
   }
+  /** 解析节点 ext JSON 为 Map。
+   *
+   * @param node 流程节点 VO
+   * @return ext 字段解析后的 Map
+   */
+  
 
   protected Map<String, Object> parseExtMap(FlowNodeVO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1099,6 +1182,13 @@ public abstract class AbstractFlowInstanceLifecycle {
       return Collections.emptyMap();
     }
   }
+  /** 解析边界定时器对应的任务 ID（节点 + 实例维度）。
+   *
+   * @param node 边界事件所在节点
+   * @param instanceId 流程实例 ID
+   * @return 对应任务 ID
+   */
+  
 
   protected String resolveBoundaryTaskId(FlowNodeVO node, String instanceId) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1121,6 +1211,12 @@ public abstract class AbstractFlowInstanceLifecycle {
       return null;
     }
   }
+  /** 判断节点是否为子流程调用节点（callActivity）。
+   *
+   * @param node 流程节点 VO
+   * @return 是否子流程节点
+   */
+  
 
   protected boolean isCallActivity(FlowNodeVO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1137,10 +1233,22 @@ public abstract class AbstractFlowInstanceLifecycle {
       return false;
     }
   }
+  /** 触发流程事件：通知所有已注册的 FlowEventListener。
+   *
+   * @param action 事件消费者
+   */
+  
 
   protected void fireEvent(Consumer<FlowEventListener> action) {
     flowTaskSupport.fireEvent(action, null);
   }
+  /** 发布领域事件到事件总线。
+   *
+   * @param eventType 事件类型
+   * @param instanceId 流程实例 ID
+   * @param taskId 任务 ID
+   */
+  
 
   protected void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
     flowTaskSupport.publishWorkflowEvent(eventType, instanceId, taskId);
@@ -1175,6 +1283,12 @@ public abstract class AbstractFlowInstanceLifecycle {
     }
     return ctx;
   }
+  /** 将流程实例 VO 转换为 DTO（字段映射）。
+   *
+   * @param vo 流程实例 VO
+   * @return 流程实例 DTO
+   */
+  
 
   protected static FlowInstanceDTO toDto(FlowInstanceVO vo) {
     FlowInstanceDTO dto = new FlowInstanceDTO();

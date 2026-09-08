@@ -229,7 +229,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     vo.setDownloadUrl(downloadUrl);
     vo.setPreviewable(!"UNSUPPORTED".equals(previewType) && StringUtils.hasText(previewUrl));
     log.debug(
-        "[Flow] 附件预览: attachmentId={} type={} previewable={}",
+        "[Flow] 附件预览: attachmentId={} type={} isPreviewable={}",
         attachmentId,
         previewType,
         vo.isPreviewable());

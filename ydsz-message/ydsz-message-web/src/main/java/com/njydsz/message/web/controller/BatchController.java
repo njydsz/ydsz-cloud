@@ -47,7 +47,7 @@ import com.njydsz.message.server.service.batch.BatchService;
  *       progressPercent）
  * </ul>
  *
- * <p><b>同步 vs 异步：</b>由 {@code BatchSendRequestDTO.async} 控制（默认 true 异步）：
+ * <p><b>同步 vs 异步：</b>由 {@code BatchSendRequestDTO.isAsync} 控制（默认 true 异步）：
  *
  * <ul>
  *   <li><b>异步</b>（推荐）：立即返回 batchId，由 {@code BatchSendExecutor} 线程池逐条处理；适合大批量
@@ -102,8 +102,8 @@ public class BatchController {
   /**
    * 异步批量发送消息。
    *
-   * <p>支持 receiverList 模式（统一模板+接收人列表）。 异步模式（async=true，默认）立即返回 batchId，后台处理；
-   * 同步模式（async=false）阻塞等待全部发送完成后返回。
+   * <p>支持 receiverList 模式（统一模板+接收人列表）。 异步模式（isAsync=true，默认）立即返回 batchId，后台处理；
+   * 同步模式（isAsync=false）阻塞等待全部发送完成后返回。
    *
    * @param dto 批量发送请求
    * @return 批次实体（含 batchId 与初始状态）

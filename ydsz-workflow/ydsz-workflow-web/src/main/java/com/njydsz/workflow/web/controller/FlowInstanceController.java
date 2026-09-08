@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.instance;
+﻿package com.njydsz.workflow.web.controller.instance;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -135,6 +135,12 @@ public class FlowInstanceController {
   @PostMapping("/instance/start")
   @Operation(summary = "启动流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
+  /** 发起流程：基于流程定义创建新的流程实例。
+   *
+   * @param dto 发起流程参数（flowCode / businessId / variables 等）
+   * @return 新创建的流程实例 ID
+   */
+  
   public YdszResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
     return YdszResponse.success(workflowFacade.startProcess(dto));
   }
@@ -177,6 +183,12 @@ public class FlowInstanceController {
   @PostMapping("/instance/draft/save")
   @Operation(summary = "保存流程草稿")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
+  /** 保存草稿：保存流程发起草稿（可后续提交）。
+   *
+   * @param dto 草稿参数
+   * @return 草稿 ID
+   */
+  
   public YdszResponse<String> saveDraft(@Valid @RequestBody FlowSaveDraftDTO dto) {
     return YdszResponse.success(draftInstanceService.saveDraft(dto));
   }
@@ -198,6 +210,12 @@ public class FlowInstanceController {
   @PostMapping("/instance/draft/submit")
   @Operation(summary = "提交流程草稿")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
+  /** 提交草稿：将保存的流程草稿正式提交发起。
+   *
+   * @param dto 提交参数
+   * @return 新创建的流程实例 ID
+   */
+  
   public YdszResponse<String> submitDraft(@Valid @RequestBody FlowSubmitDraftDTO dto) {
     return YdszResponse.success(
         draftInstanceService.submitDraft(dto.getInstanceId(), dto.getDraftData(), dto.getOperatorId()));
@@ -220,6 +238,11 @@ public class FlowInstanceController {
   @PostMapping("/instance/{id}/draft/cancel")
   @Operation(summary = "取消流程草稿")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+  /** 取消草稿：删除已保存的流程发起草稿。
+   *
+   * @param id 草稿 ID
+   */
+  
   public YdszResponse<Void> cancelDraft(@PathVariable String id) {
     draftInstanceService.cancelDraft(id);
     return YdszResponse.success();
@@ -277,6 +300,11 @@ public class FlowInstanceController {
       content = "'suspend'")
   @Operation(summary = "挂起流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+  /** 挂起流程实例：暂停流程执行，挂起所有待办任务。
+   *
+   * @param id 流程实例 ID
+   */
+  
   public YdszResponse<Void> suspend(@PathVariable String id) {
     workflowFacade.suspendProcess(id);
     return YdszResponse.success();
@@ -298,6 +326,11 @@ public class FlowInstanceController {
       content = "'activate'")
   @Operation(summary = "激活流程实例")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+  /** 激活流程实例：恢复已挂起的流程，重新启动待办任务。
+   *
+   * @param id 流程实例 ID
+   */
+  
   public YdszResponse<Void> activate(@PathVariable String id) {
     workflowFacade.activateProcess(id);
     return YdszResponse.success();
@@ -739,6 +772,11 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'createTrigger'")
+  /** 创建自动触发规则：配置某流程完成后自动发起另一流程。
+   *
+   * @param dto 触发规则参数（sourceFlowCode / targetFlowCode 等）
+   */
+  
   public YdszResponse<Void> createTrigger(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
     String sourceFlowCode = dto.getSourceFlowCode();
     String targetFlowCode = dto.getTargetFlowCode();
@@ -766,6 +804,11 @@ public class FlowInstanceController {
       type = AuditType.OPERATION,
       action = AuditAction.DELETE,
       content = "'deleteTrigger'")
+  /** 删除自动触发规则。
+   *
+   * @param id 触发规则 ID
+   */
+  
   public YdszResponse<Void> deleteTrigger(@PathVariable String id) {
     autoTriggerService.deleteById(id);
     return YdszResponse.success();

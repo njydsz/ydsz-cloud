@@ -40,5 +40,5 @@ public class InstanceMigrationDTO implements Serializable {
    *
    * <p>true 表示仅模拟迁移并返回报告，不实际更新数据库； false 或 null 表示执行实际迁移。
    */
-  private Boolean dryRun;
+  private Boolean isDryRun;
 }

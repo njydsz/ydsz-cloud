@@ -284,6 +284,11 @@ public class FlowTaskCoreService {
     pushTaskCompleted(task, flowMetrics, dto);
   }
 
+  /**
+   * 驳回任务：标记任务为 REJECTED、归档到历史、按退回策略回退到上一节点或发起人。
+   *
+   * @param dto 任务操作参数（taskId / userId / comment / rejectToInitiator 等）
+   */
   @Transactional(rollbackFor = Exception.class)
   public void reject(FlowTaskOperateDTO dto) {
     FlowRunTaskVO task = support.getTaskOrThrow(dto.getTaskId());
@@ -491,7 +496,7 @@ public class FlowTaskCoreService {
    * @param instance 流程实例 VO
    */
   private void resolveRejectToInitiator(FlowTaskOperateDTO dto, FlowInstanceVO instance) {
-    if (Boolean.TRUE.equals(dto.getRejectToInitiator())) {
+    if (Boolean.TRUE.equals(dto.getIsRejectToInitiator())) {
       String initiatorNodeCode = resolveInitiatorNodeCode(instance.getDefinitionId());
       if (initiatorNodeCode != null) {
         dto.setTargetNodeCode(initiatorNodeCode);

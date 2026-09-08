@@ -123,7 +123,7 @@ public class OpsController {
     BloomFilterStatsVO vo = BloomFilterStatsVO.builder()
         .expectedInsertions(bloomFilterDeduplicator.getExpectedInsertions())
         .fpp(bloomFilterDeduplicator.getFalsePositiveProbability())
-        .primary(true)
+        .isPrimary(true)
         .windowAgeSeconds(bloomFilterDeduplicator.getWindowAgeSeconds())
         .build();
     return YdszResponse.success(vo);

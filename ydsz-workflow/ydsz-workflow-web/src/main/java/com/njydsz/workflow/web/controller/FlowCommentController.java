@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.notification;
+﻿package com.njydsz.workflow.web.controller.notification;
 
 import java.util.List;
 
@@ -102,6 +102,12 @@ public class FlowCommentController {
       content = "'addComment'")
   @Operation(summary = "发表评论/回复")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  /** 发表评论 / 回复：向指定任务或实例添加审批评论。
+   *
+   * @param dto 评论参数（taskId / content / parentId 等）
+   * @return 新评论 ID
+   */
+  
   public YdszResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
     String userId = AuthContextUtils.getUserId();
     String userName = AuthContextUtils.getUsername();
@@ -163,6 +169,12 @@ public class FlowCommentController {
       content = "'deleteComment'")
   @Operation(summary = "删除评论（仅本人）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
+  /** 删除评论：软删除指定的评论或回复。
+   *
+   * @param commentId 评论 ID
+   * @return 删除结果
+   */
+  
   public YdszResponse<Boolean> deleteComment(@PathVariable String commentId) {
     String userId = AuthContextUtils.getUserId();
     return YdszResponse.success(commentService.deleteComment(commentId, userId));
@@ -198,6 +210,12 @@ public class FlowCommentController {
       action = AuditAction.CREATE,
       content = "'createQuickComment'")
   @Operation(summary = "新增常用语")
+  /** 创建常用语：新增一条自定义快捷评论。
+   *
+   * @param dto 常用语参数（content / scope）
+   * @return 新常用语 ID
+   */
+  
   public YdszResponse<String> createQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = TenantContextHolder.getTenantId();
@@ -219,6 +237,11 @@ public class FlowCommentController {
       action = AuditAction.UPDATE,
       content = "'updateQuickComment'")
   @Operation(summary = "编辑常用语")
+  /** 更新常用语：修改已有快捷评论的内容。
+   *
+   * @param dto 常用语参数（id / content）
+   */
+  
   public YdszResponse<Void> updateQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
     String userId = AuthContextUtils.getUserId();
     commentService.updateQuickComment(dto, userId);
@@ -240,6 +263,11 @@ public class FlowCommentController {
       action = AuditAction.DELETE,
       content = "'deleteQuickComment'")
   @Operation(summary = "删除常用语")
+  /** 删除常用语：删除指定的快捷评论。
+   *
+   * @param id 常用语 ID
+   */
+  
   public YdszResponse<Void> deleteQuickComment(@PathVariable String id) {
     String userId = AuthContextUtils.getUserId();
     commentService.deleteQuickComment(id, userId);
@@ -263,6 +291,11 @@ public class FlowCommentController {
       action = AuditAction.CREATE,
       content = "'incrementUseCount'")
   @Operation(summary = "增加使用次数（审批时调用）")
+  /** 增加常用语使用次数（前端埋点用）。
+   *
+   * @param id 常用语 ID
+   */
+  
   public YdszResponse<Void> incrementUseCount(@PathVariable String id) {
     commentService.incrementQuickCommentUseCount(id);
     return YdszResponse.success();

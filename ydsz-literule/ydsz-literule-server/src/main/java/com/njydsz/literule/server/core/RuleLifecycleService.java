@@ -425,7 +425,7 @@ public class RuleLifecycleService {
       return RollbackPreviewVO.builder()
           .ruleCode(ruleCode)
           .targetVersion(version)
-          .rollbackAllowed(false)
+          .isRollbackAllowed(false)
           .rollbackBlockedReason("版本仓库未配置，不支持回滚预览")
           .build();
     }
@@ -435,7 +435,7 @@ public class RuleLifecycleService {
       return RollbackPreviewVO.builder()
           .ruleCode(ruleCode)
           .targetVersion(version)
-          .rollbackAllowed(false)
+          .isRollbackAllowed(false)
           .rollbackBlockedReason("规则不存在: " + ruleCode)
           .build();
     }
@@ -450,7 +450,7 @@ public class RuleLifecycleService {
           .ruleCode(ruleCode)
           .currentVersion(current.getVersion())
           .targetVersion(version)
-          .rollbackAllowed(false)
+          .isRollbackAllowed(false)
           .rollbackBlockedReason("目标版本不存在: v" + version)
           .build();
     }
@@ -478,7 +478,7 @@ public class RuleLifecycleService {
         .targetVersionOperator(targetVersion.getOperator())
         .targetVersionChangeDesc(targetVersion.getChangeDesc())
         .targetVersionCreatedAt(targetVersion.getCreatedAt())
-        .rollbackAllowed(allowed)
+        .isRollbackAllowed(allowed)
         .rollbackBlockedReason(blockedReason)
         .diffs(diffs)
         .build();

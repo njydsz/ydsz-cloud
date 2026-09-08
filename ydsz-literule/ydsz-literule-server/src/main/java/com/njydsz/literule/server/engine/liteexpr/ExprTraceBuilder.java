@@ -49,7 +49,7 @@ public class ExprTraceBuilder {
    * @param operator      运算符（二元运算时非空）
    * @param value         求值前的操作数值
    * @param result        求值结果
-   * @param shortCircuited 是否短路
+   * @param isShortCircuited 是否短路
    * @param elapsedNanos  节点耗时（纳秒）
    * @param children      子节点列表
    * @param error         错误信息（出错时非空）
@@ -60,7 +60,7 @@ public class ExprTraceBuilder {
       String operator,
       Object value,
       Object result,
-      boolean shortCircuited,
+      boolean isShortCircuited,
       long elapsedNanos,
       List<TraceNode> children,
       String error) {
@@ -111,7 +111,7 @@ public class ExprTraceBuilder {
     public TraceNode withChild(TraceNode child) {
       List<TraceNode> newChildren = new ArrayList<>(this.children);
       newChildren.add(child);
-      return new TraceNode(type, expression, operator, value, result, shortCircuited, elapsedNanos, newChildren, error);
+      return new TraceNode(type, expression, operator, value, result, isShortCircuited, elapsedNanos, newChildren, error);
     }
 
     /**
@@ -180,7 +180,7 @@ public class ExprTraceBuilder {
         current.operator(),
         current.value(),
         result,
-        current.shortCircuited(),
+        current.isShortCircuited(),
         current.elapsedNanos(),
         current.children(),
         current.error());
@@ -197,7 +197,7 @@ public class ExprTraceBuilder {
       }
       TraceNode updatedParent = new TraceNode(
           parent.type(), parent.expression(), parent.operator(), parent.value(),
-          parent.result(), parent.shortCircuited(), parent.elapsedNanos(),
+          parent.result(), parent.isShortCircuited(), parent.elapsedNanos(),
           newChildren, parent.error());
       stack.set(parentIdx, updatedParent);
       if (stack.size() == 1) {
@@ -268,7 +268,7 @@ public class ExprTraceBuilder {
     // 用最终结果更新根节点
     return new TraceNode(
         root.type(), root.expression(), root.operator(), root.value(),
-        result, root.shortCircuited(), root.elapsedNanos(),
+        result, root.isShortCircuited(), root.elapsedNanos(),
         root.children(), root.error());
   }
 
@@ -292,13 +292,13 @@ public class ExprTraceBuilder {
    *
    * @param op            运算符（&& / ||）
    * @param result        求值结果
-   * @param shortCircuited 是否短路
+   * @param isShortCircuited 是否短路
    * @param node          AST 节点
    */
-  public void recordLogical(String op, boolean result, boolean shortCircuited, BinaryOpNode node) {
+  public void recordLogical(String op, boolean result, boolean isShortCircuited, BinaryOpNode node) {
     String expr = node != null ? node.exprText() : op;
     TraceNode traceNode = new TraceNode(
-        "LOGICAL", expr, op, null, result, shortCircuited, 0,
+        "LOGICAL", expr, op, null, result, isShortCircuited, 0,
         new ArrayList<>(COLLECTION_CAPACITY_4), null);
     if (stack.isEmpty()) {
       rootNodes.add(traceNode);
@@ -422,7 +422,7 @@ public class ExprTraceBuilder {
     newChildren.add(child);
     TraceNode updated = new TraceNode(
         current.type(), current.expression(), current.operator(), current.value(),
-        current.result(), current.shortCircuited(), current.elapsedNanos(),
+        current.result(), current.isShortCircuited(), current.elapsedNanos(),
         newChildren, current.error());
     stack.set(lastIdx, updated);
     if (stack.size() == 1) {

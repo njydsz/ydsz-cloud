@@ -80,7 +80,7 @@ public class FlowTaskOperateDTO implements Serializable {
    * <p>为 true 时优先于 {@link #targetNodeCode} / {@link #targetNodeCodes}； 为 false 或 null
    * 时走原有退回逻辑（向后兼容）。
    */
-  private Boolean rejectToInitiator;
+  private Boolean isRejectToInitiator;
 
   /**
    * GAP-P2-9: 自由流（JUMP）运行时指定目标节点办理人列表
@@ -111,12 +111,12 @@ public class FlowTaskOperateDTO implements Serializable {
    * <p>当为 {@code true} 时，表示该审批是"补录"的，可将任务完成时间向前追溯至 {@link #effectiveTime}。
    * {@code null} 或 {@code false} 表示即时审批，按当前系统时间处理。
    */
-  private Boolean backdated;
+  private Boolean isBackdated;
 
   /**
    * P2-1: 补录生效时间。
    *
-   * <p>当 {@link #backdated} 为 {@code true} 时，该字段指定补录的目标时间（过去时间）。
+   * <p>当 {@link #isBackdated} 为 {@code true} 时，该字段指定补录的目标时间（过去时间）。
    * 引擎将在归档时将此任务的 {@code effectiveTime} 设置为该值，影响后续查询排序。
    * 为空则使用当前系统时间作为生效时间。
    */

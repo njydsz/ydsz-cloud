@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller;
+﻿package com.njydsz.workflow.web.controller;
 
 import java.util.List;
 
@@ -58,6 +58,12 @@ public class FlowDelegateAuthController {
       content = "'createDelegateAuth'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
   @Operation(summary = "创建长期授权委派")
+  /** 创建委派代理：设置用户在一定时间范围内的待办自动委托规则。
+   *
+   * @param dto 委派参数（delegatorId / delegateeId / scopeType / startTime / endTime）
+   * @return 新委派规则 ID
+   */
+  
   public YdszResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthPostDTO dto) {
     var auth = delegateAuthService.postDtoToVO(dto);
     if (auth.getOwnerUserId() == null) {
@@ -83,6 +89,11 @@ public class FlowDelegateAuthController {
       content = "'revokeDelegateAuth'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
   @Operation(summary = "撤回授权")
+  /** 撤销委派代理：移除指定的委托规则。
+   *
+   * @param id 委派规则 ID
+   */
+  
   public YdszResponse<Void> revokeDelegateAuth(@PathVariable String id) {
     String ownerId = AuthContextUtils.getUserId();
     delegateAuthService.revoke(id, ownerId);

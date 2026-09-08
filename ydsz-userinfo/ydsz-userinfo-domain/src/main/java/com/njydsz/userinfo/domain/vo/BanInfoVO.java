@@ -31,7 +31,7 @@ public class BanInfoVO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 当前是否处于封禁状态 */
-  private boolean banned;
+  private boolean isBanned;
 
   /** 封禁类型（TEMPORARY/PERMANENT），未封禁时为 null */
   private String banType;

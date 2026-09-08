@@ -84,7 +84,7 @@ public class BatchResultDTO<T> {
     private T item;
 
     /** 是否成功 */
-    private boolean success;
+    private boolean isSuccess;
 
     /** 失败原因（成功时为 null） */
     private String error;
@@ -97,10 +97,10 @@ public class BatchResultDTO<T> {
     this.item = item;
   }
     public boolean isSuccess() {
-    return success;
+    return isSuccess;
   }
-    public void setSuccess(boolean success) {
-    this.success = success;
+    public void setSuccess(boolean isSuccess) {
+    this.isSuccess = isSuccess;
   }
     public String getError() {
     return error;

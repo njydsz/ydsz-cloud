@@ -48,5 +48,5 @@ public class FlowAttachmentPreviewDTO implements Serializable {
   private String downloadUrl;
 
   /** 是否支持在线预览（false 时前端应引导下载） */
-  private boolean previewable;
+  private boolean isPreviewable;
 }

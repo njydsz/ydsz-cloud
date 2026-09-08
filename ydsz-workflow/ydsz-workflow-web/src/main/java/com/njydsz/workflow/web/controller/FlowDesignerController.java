@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.definition;
+﻿package com.njydsz.workflow.web.controller.definition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -162,6 +162,12 @@ public class FlowDesignerController {
       content = "'lockDefinition'")
   @Operation(summary = "加锁流程定义（设计器协同编辑）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  /** 锁定流程设计：防止多人同时编辑同一流程定义。
+   *
+   * @param id 流程定义 ID
+   * @return 锁定是否成功
+   */
+  
   public YdszResponse<Boolean> lockDefinition(@PathVariable String id) {
     String userId = AuthContextUtils.getUserId();
     return YdszResponse.success(definitionService.lockDefinition(id, userId));
@@ -185,6 +191,12 @@ public class FlowDesignerController {
       content = "'unlockDefinition'")
   @Operation(summary = "解锁流程定义（设计器协同编辑）")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+  /** 解锁流程设计：释放锁，允许他人编辑。
+   *
+   * @param id 流程定义 ID
+   * @return 解锁是否成功
+   */
+  
   public YdszResponse<Boolean> unlockDefinition(@PathVariable String id) {
     String userId = AuthContextUtils.getUserId();
     return YdszResponse.success(definitionService.unlockDefinition(id, userId));

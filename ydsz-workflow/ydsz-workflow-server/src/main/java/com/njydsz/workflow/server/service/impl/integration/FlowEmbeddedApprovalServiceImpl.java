@@ -151,8 +151,8 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           .history(Collections.emptyList())
           .myRole(ROLE_OBSERVER)
           .actions(List.of("SUBMIT"))
-          .canRecall(false)
-          .finished(false)
+          .isCanRecall(false)
+          .isFinished(false)
           .message("未发起流程")
           .build();
     }
@@ -204,8 +204,8 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         .history(history)
         .myRole(myRole)
         .actions(actions)
-        .canRecall(canRecall)
-        .finished(finished)
+        .isCanRecall(canRecall)
+        .isFinished(finished)
         .message(finished ? "流程已结束" : "流程进行中")
         .build();
   }
@@ -516,7 +516,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
               .taskStatus(t.getTaskStatus())
               .createAt(t.getCreatedAt())
               .dueAt(t.getDueAt())
-              .mine(isMine(t, userId))
+              .isMine(isMine(t, userId))
               .build());
     }
     return out;

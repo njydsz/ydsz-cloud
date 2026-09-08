@@ -68,7 +68,7 @@ public class RuleResultVO {
   private String canaryBucket;
 
   /** 是否灰度 */
-  private boolean canary;
+  private boolean isCanary;
 
   /** 收集的子结果 */
   private List<RuleResultVO> collectedResults;
@@ -104,7 +104,7 @@ public class RuleResultVO {
     result.setIsDrilldownAvailable(this.isDrilldownAvailable);
     result.setElapsedMs(this.elapsedMs);
     result.setCanaryBucket(this.canaryBucket);
-    result.setCanary(this.canary);
+    result.setCanary(this.isCanary);
     return result;
   }
 

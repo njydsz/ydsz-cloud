@@ -66,5 +66,5 @@ public class MessageLogQueryDTO extends PageQuery {
   @Xss private String searchAfterId;
 
   /** 是否启用 searchAfter 游标分页（true 时优先使用游标分页，忽略 pageNum） */
-  private Boolean useSearchAfter;
+  private Boolean isUseSearchAfter;
 }

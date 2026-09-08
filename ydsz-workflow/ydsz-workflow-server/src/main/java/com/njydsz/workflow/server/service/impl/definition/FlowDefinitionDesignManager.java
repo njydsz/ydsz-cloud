@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.definition;
+﻿package com.njydsz.workflow.server.service.impl.definition;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -146,7 +146,13 @@ public class FlowDefinitionDesignManager {
   @CacheEvict(
       value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
-  public void updateDefinition(String definitionId, FlowDeployProcessDTO dto) {
+  /**
+   * 更新流程设计（修改 BPMN / 节点配置后保存草稿）。
+   *
+   * @param definitionId 流程定义 ID
+   * @param dto 更新参数（含 BPMN XML / 节点 / 跳转）
+   */
+    public void updateDefinition(String definitionId, FlowDeployProcessDTO dto) {
     if (definitionId == null || dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)

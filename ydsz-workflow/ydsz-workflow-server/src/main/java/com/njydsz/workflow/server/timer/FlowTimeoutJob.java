@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.timer;
+﻿package com.njydsz.workflow.server.timer;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,6 +57,9 @@ public class FlowTimeoutJob {
       waitTime = 0,
       leaseTime = 120,
       message = "超时处理任务正在其他节点执行")
+  /**
+   * 处理超时任务：扫描到期定时器、触发超时动作（自动通过 / 转办 / 催办）。
+   */
   public void processTimeouts() {
     try {
       doProcessTimeouts();

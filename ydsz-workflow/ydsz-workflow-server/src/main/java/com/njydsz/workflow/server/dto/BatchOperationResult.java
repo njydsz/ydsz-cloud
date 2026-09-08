@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.dto;
+﻿package com.njydsz.workflow.server.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -83,6 +83,13 @@ public class BatchOperationResult implements Serializable {
     /** 失败原因 */
     private String reason;
 
+    
+    /**
+     * 构造批量失败明细。
+     *
+     * @param taskId 失败的任务 ID
+     * @param reason 失败原因
+     */
     public FailureDetail(String taskId, String reason) {
       this.taskId = taskId;
       this.reason = reason;

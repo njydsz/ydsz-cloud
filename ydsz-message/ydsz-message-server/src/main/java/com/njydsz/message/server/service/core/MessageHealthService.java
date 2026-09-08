@@ -106,7 +106,7 @@ public class MessageHealthService {
 
       result.add(ChannelHealthVO.builder()
           .channel(channel)
-          .enabled(enabled)
+          .isEnabled(enabled)
           .circuitBreakerState(breaker.getState().name())
           .failureCount(failureCount)
           .totalCount(totalCount)
