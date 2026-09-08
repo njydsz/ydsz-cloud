@@ -19,6 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.permission.PermissionCodes;
@@ -111,7 +112,7 @@ public class UserinfoSearchController {
             .page(query.getPage())
             .pageSize(query.getPageSize())
             .userId(request.getHeader(AuthHeaderConstants.X_USER_ID))
-            .tenantId(request.getHeader(DataPermissionHeaderConstants.X_TENANT_ID))
+            .tenantId(TenantContextHolder.getCurrentTenantId())
             .roles(parseRolesHeader(request.getHeader(AuthHeaderConstants.X_USER_ROLES)))
             .deptId(request.getHeader(USER_DEPT_HEADER))
             .admin("true".equalsIgnoreCase(request.getHeader(USER_ADMIN_HEADER)))

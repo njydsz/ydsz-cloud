@@ -15,13 +15,15 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.exception.handler.BaseExceptionHandler;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 
 /**
  * 消息中心模块全局异常处理器。
  *
- * <p>拦截消息模块抛出的 {@link SysException} / {@link BusinessException}，当异常码为 {@link
+ * <p>继承 {@link BaseExceptionHandler}，复用全局异常体系的指标采集、事件发布、脱敏等能力。
+ * 拦截消息模块抛出的 {@link SysException} / {@link BusinessException}，当异常码为 {@link
  * MessageExceptionCode} 时，构造分层错误消息（userMessage / developerMessage / retryAfter）写入
  * {@link MessageResult}，返回 {@code YdszResponse<MessageResult>} 供前端解析。
  *
@@ -46,7 +48,26 @@ import com.njydsz.message.domain.enums.MessageExceptionCode;
 @Slf4j
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
-public class MessageExceptionHandler {
+public class MessageExceptionHandler extends BaseExceptionHandler {
+
+  /**
+   * 构造器 — 注入 Spring 环境对象。
+   *
+   * @param environment Spring 环境
+   */
+  protected MessageExceptionHandler(org.springframework.core.env.Environment environment) {
+    super(environment);
+  }
+
+  /**
+   * 获取日志前缀。
+   *
+   * @return 日志前缀字符串
+   */
+  @Override
+  protected String getLogPrefix() {
+    return "[MessageHandler]";
+  }
 
   /**
    * 处理消息模块的业务异常 / 系统异常。
@@ -75,7 +96,8 @@ public class MessageExceptionHandler {
     Integer retryAfter = messageCode.retryAfterSeconds();
 
     log.error(
-        "[MessageHandler] 消息业务异常 | 路径: {} | 错误码: {} | userMessage: {} | developerMessage: {} | retryAfter: {}s",
+        "{} 消息业务异常 | 路径: {} | 错误码: {} | userMessage: {} | developerMessage: {} | retryAfter: {}s",
+        getLogPrefix(),
         request.getRequestURI(),
         messageCode.getCode(),
         userMessage,
@@ -83,22 +105,26 @@ public class MessageExceptionHandler {
         retryAfter,
         e);
 
+    // 记录异常指标
+    recordMetrics(e);
+
     // 设置 HTTP 状态码
     response.setStatus(e.getHttpStatus());
 
     // 可恢复异常添加 Retry-After 响应头，引导客户端合理重试
-    if (retryAfter != null && retryAfter > 0) {
-      response.setHeader("Retry-After", String.valueOf(retryAfter));
-    }
+    addRetryAfterHeader(response, e);
 
     // 构造分层 MessageResult 响应
     MessageResult result =
         MessageResult.fail(
             messageCode.getCode(), userMessage, developerMessage, retryAfter);
 
-    YdszResponse<MessageResult> responseBody = YdszResponse.success(result);
-    responseBody.setMsg(userMessage);
-    return responseBody;
+    // 使用错误码 + 分层数据构造返回，保持错误语义
+    return YdszResponse.<MessageResult>builder()
+        .code(messageCode.getCode())
+        .msg(userMessage)
+        .data(result)
+        .build();
   }
 
   /**

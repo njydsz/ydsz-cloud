@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.config.ExecutorConfig;
 
@@ -57,6 +58,9 @@ public class TenantAwareExecutorPool {
 
 
   private final CronjobProperties cronjobProperties;
+
+  /** 租户上下文装饰器（自动传播租户到异步线程） */
+  private final TenantContextTaskDecorator taskDecorator;
 
   /** 固定分桶池数组 */
   private ExecutorService[] buckets;
@@ -133,11 +137,11 @@ public class TenantAwareExecutorPool {
    * 创建一个分桶线程池。
    *
    * <p><b>注意：</b>此处分桶池按租户/分组哈希隔离，池数量固定（由 {@code executor.isolation-buckets} 控制），
-   * 不属于无限创建场景。如需统一管理可配置 {@code ydsz.thread.pools.cronjobTenant} 并通过
-   * 外部注入替换此方法逻辑。
+   * 不属于无限创建场景。为支持租户上下文透传，池内任务在提交前会被
+   * {@link TenantContextTaskDecorator} 装饰。
    *
    * @param bucketIndex 分桶索引（用于线程命名）
-   * @return 新建的线程池
+   * @return 新建的线程池（携带租户装饰）
    */
   private ExecutorService createBucketPool(int bucketIndex) {
     ExecutorConfig execConfig = cronjobProperties.getExecutor();
@@ -154,9 +158,10 @@ public class TenantAwareExecutorPool {
             .threadNamePrefix("job-tenant-bucket-" + bucketIndex + "-")
             .daemon(true)
             .build();
+    // P0-FIX：用 TaskDecorator 包装池，异步任务自动获取租户上下文
     log.debug("[TenantAwarePool] 创建分桶池: index={} core={} max={} queue={}",
-        bucketCount, corePoolSize, maxPoolSize, queueCapacity);
-    return pool;
+        bucketIndex, corePoolSize, maxPoolSize, queueCapacity);
+    return new TenantDecoratedExecutorService(pool, taskDecorator);
   }
 
   /**

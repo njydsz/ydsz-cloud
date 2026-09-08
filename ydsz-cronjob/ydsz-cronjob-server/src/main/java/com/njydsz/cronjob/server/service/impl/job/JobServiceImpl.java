@@ -37,6 +37,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
+import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
@@ -94,6 +95,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
 
   /** 调度配置属性（P0-4: 锁 TTL 等可配置项） */
   private final CronjobProperties cronjobProperties;
+
+  /** 租户上下文装饰器（自动传播租户到异步线程） */
+  private final TenantContextTaskDecorator tenantContextTaskDecorator;
 
   /** 任务锁管理器（委托 ydsz-common-lock 公共模块，复用 WatchDog / 指标等能力） */
   private final JobLockManager jobLockManager;
@@ -304,6 +308,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     s.setWaitForTasksToCompleteOnShutdown(true);
     s.setAwaitTerminationSeconds(cronjobProperties.getSchedulerAwaitTerminationSeconds());
     s.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+    // P0-FIX: 注入租户上下文装饰器，定时任务异步执行时自动传播租户上下文
+    s.setTaskDecorator(tenantContextTaskDecorator);
     s.initialize();
     this.taskScheduler = s;
     // P0-2: 注册至 ThreadPoolRegistry 统一监控
