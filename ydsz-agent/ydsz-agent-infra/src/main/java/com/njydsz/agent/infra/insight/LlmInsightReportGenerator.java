@@ -131,7 +131,7 @@ public class LlmInsightReportGenerator implements InsightReportGenerator {
     sb.append("=== 数据分析结果（JSON 格式）===\n").append(dataJson).append("\n\n");
     sb.append("=== 输出格式要求 ===\n");
     sb.append("以 JSON 数组输出，每一项结构：{\"type\":\"章节类型\",\"title\":\"章节标题\",");
-    sb.append("\"content\":\"章节正文\",\"dataJson\":\"可选的结构化数据JSON字符串\",\"sortOrder\":序号}\n");
+    sb.append("\"content\":\"章节正文\",\"dataJson\":\"可选的结构化数据JSON字符串\",\"sort\":序号}\n");
     sb.append("要求：\n");
     sb.append("1. 仅输出 JSON，不要包含 markdown 代码块标记\n");
     sb.append("2. 每个章节的 content 使用简洁中文，不超过 200 字\n");
@@ -160,7 +160,7 @@ public class LlmInsightReportGenerator implements InsightReportGenerator {
     List<InsightSection> sections = new ArrayList<>(8);
 
     Matcher sectionMatcher = SECTION_PATTERN.matcher(jsonBlock);
-    int sortOrder = 0;
+    int sort = 0;
     while (sectionMatcher.find()) {
       try {
         String sectionJson = sectionMatcher.group();
@@ -180,7 +180,7 @@ public class LlmInsightReportGenerator implements InsightReportGenerator {
             title != null ? title : "数据发现",
             content != null ? content : "",
             dataJson != null ? dataJson : "{}",
-            sortOrder++));
+            sort++));
       } catch (Exception e) {
         log.debug("[Insight] 单个章节解析失败: {}", e.getMessage());
       }

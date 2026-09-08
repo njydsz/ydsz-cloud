@@ -6,7 +6,7 @@ import java.util.Set;
  * 洞察报告章节值对象（不可变 record）。
  *
  * <p>描述 BI 洞察报告中的一个结构化章节，每个章节有独立的类型、标题、内容和可选的结构化数据
- * （如图表数据 JSON）。章节按 {@code sortOrder} 排序后组成完整报告。
+ * （如图表数据 JSON）。章节按 {@code sort} 排序后组成完整报告。
  *
  * <p>支持类型：
  * <ul>
@@ -26,7 +26,7 @@ public record InsightSection(
     String title,
     String content,
     String dataJson,
-    int sortOrder) {
+    int sort) {
 
   /** 允许的章节类型集合 */
   private static final Set<String> VALID_TYPES = Set.of(
@@ -39,7 +39,7 @@ public record InsightSection(
    * @param title 章节标题
    * @param content 章节内容（Markdown 或纯文本）
    * @param dataJson 结构化数据 JSON（可选）
-   * @param sortOrder 排序序号
+   * @param sort 排序序号
    */
   public InsightSection {
     if (sectionType == null || sectionType.isBlank()) {
@@ -57,8 +57,8 @@ public record InsightSection(
     if (dataJson == null) {
       dataJson = "{}";
     }
-    if (sortOrder < 0) {
-      sortOrder = 0;
+    if (sort < 0) {
+      sort = 0;
     }
   }
 }

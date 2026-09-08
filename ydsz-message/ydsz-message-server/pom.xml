@@ -80,10 +80,15 @@
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
         <!--
-            P0-FIX: 删除 spring-boot-starter-mail 直接依赖。
-            EmailChannel 改为委托 ydsz-common-notify 的 EmailNotifySender 发邮件，
-            底层 JavaMailSender 由 common-notify 统一装配（YDIZ-NOTIFY 规范）。
+            P0-FIX（保留 spring-boot-starter-mail）：EmailChannel 已改为委托
+            ydsz-common-notify 的 EmailNotifySender（@ConditionalOnClass 需邮件类在 classpath）。
+            本依赖保留的原因：EmailChannel 需要 EmailNotifySender Bean 可用（Bean 创建条件是
+            JavaMailSender.class 在 classpath 上）。业务代码不再直接 import 邮件 API。
         -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.rocketmq</groupId>
             <artifactId>rocketmq-spring-boot-starter</artifactId>
