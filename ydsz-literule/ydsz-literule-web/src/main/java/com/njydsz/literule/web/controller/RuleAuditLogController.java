@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
@@ -40,6 +41,7 @@ import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/api/literule/audit")

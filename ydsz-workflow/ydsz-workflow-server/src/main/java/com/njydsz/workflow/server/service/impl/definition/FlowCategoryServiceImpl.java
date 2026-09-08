@@ -235,7 +235,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .build();
     }
     FlowCategoryVO existing = categoryRepository.findById(dto.getId()).orElse(null);
-    if (existing == null || existing.getIsDeleted() == 1) {
+    if (existing == null || Boolean.TRUE.equals(existing.getIsDeleted())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.category.not.found")
@@ -289,7 +289,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Transactional(rollbackFor = Exception.class)
   public void delete(String id) {
     FlowCategoryVO existing = categoryRepository.findById(id).orElse(null);
-    if (existing == null || existing.getIsDeleted() == 1) {
+    if (existing == null || Boolean.TRUE.equals(existing.getIsDeleted())) {
       return;
     }
     // 校验是否有子分类
@@ -308,11 +308,11 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
           .message("error.workflow.msg_category_has_definitions")
           .build();
     }
-    existing.setIsDeleted(1);
+    existing.setIsDeleted(true);
     // 使用显式字段映射替代 BeanUtils.copyProperties（编码规范禁止反射式拷贝）
     FlowCategoryDTO deleteDto = new FlowCategoryDTO();
     deleteDto.setId(existing.getId());
-    deleteDto.setIsDeleted(1);
+    deleteDto.setIsDeleted(true);
     categoryRepository.update(deleteDto);
   }
 

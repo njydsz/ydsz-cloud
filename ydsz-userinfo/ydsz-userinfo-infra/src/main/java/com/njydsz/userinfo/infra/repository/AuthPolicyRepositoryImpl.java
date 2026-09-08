@@ -45,7 +45,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
   @Override
   public List<AuthPolicyVO> findByPage(AuthPolicyPageQuery query) {
     LambdaQueryWrapper<AuthPolicy> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(AuthPolicy::getDeleted, false)
+    wrapper.eq(AuthPolicy::getIsDeleted, false)
         .like(query.getName() != null && !query.getName().isBlank(),
             AuthPolicy::getName, query.getName())
         .orderByAsc(AuthPolicy::getTenantId);
@@ -156,7 +156,7 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
     String tid = (tenantId == null || tenantId.isBlank()) ? null : tenantId;
     AuthPolicy entity = mapper.selectByTenantId(tid);
     if (entity != null) {
-      entity.setDeleted(1);
+      entity.setIsDeleted(1);
       mapper.updateById(entity);
       log.info("认证策略已删除: tenantId={}", tenantId);
     }

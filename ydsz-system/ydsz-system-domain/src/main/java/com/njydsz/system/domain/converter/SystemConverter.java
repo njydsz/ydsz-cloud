@@ -119,7 +119,7 @@ public interface SystemConverter {
    * @return 接口权限实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -134,7 +134,7 @@ public interface SystemConverter {
    * @param dto 接口权限 DTO（含 id）
    * @return 接口权限实体（含 id）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -153,7 +153,7 @@ public interface SystemConverter {
   List<ApiPermission> apiPermissionDtosToEntities(List<ApiPermissionDTO> dtos);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -200,7 +200,7 @@ public interface SystemConverter {
    * @return 应用信息实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -217,7 +217,7 @@ public interface SystemConverter {
    * @param dto 应用信息 DTO（含 id）
    * @return 应用信息实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -261,7 +261,7 @@ public interface SystemConverter {
    * @return 系统配置实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -286,7 +286,7 @@ public interface SystemConverter {
    * @param dto 系统配置 DTO（含 id）
    * @return 系统配置实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -305,7 +305,7 @@ public interface SystemConverter {
   List<Config> configDtosToEntities(List<ConfigDTO> dtos);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -345,7 +345,7 @@ public interface SystemConverter {
    * @return 字典项实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -362,7 +362,7 @@ public interface SystemConverter {
    * @param dto 字典项 DTO（含 id）
    * @return 字典项实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -381,7 +381,7 @@ public interface SystemConverter {
   List<DictItem> dictItemDtosToEntities(List<DictItemDTO> dtos);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -418,7 +418,7 @@ public interface SystemConverter {
    * @return 字典类型实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -435,7 +435,7 @@ public interface SystemConverter {
    * @param dto 字典类型 DTO（含 id）
    * @return 字典类型实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -471,7 +471,7 @@ public interface SystemConverter {
    * @return 实体版本实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -509,7 +509,7 @@ public interface SystemConverter {
    * @return 租户实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -526,7 +526,7 @@ public interface SystemConverter {
    * @param dto 租户 DTO（含 id）
    * @return 租户实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -562,7 +562,7 @@ public interface SystemConverter {
    * @return 套餐实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -579,7 +579,7 @@ public interface SystemConverter {
    * @param dto 套餐 DTO（含 id）
    * @return 套餐实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -616,7 +616,7 @@ public interface SystemConverter {
    * @return 套餐-菜单关联实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -654,7 +654,7 @@ public interface SystemConverter {
    * @return 系统变量实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -671,7 +671,7 @@ public interface SystemConverter {
    * @param dto 系统变量 DTO（含 id）
    * @return 系统变量实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)

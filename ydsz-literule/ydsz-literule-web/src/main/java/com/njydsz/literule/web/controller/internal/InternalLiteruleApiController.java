@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -48,6 +49,7 @@ import com.njydsz.literule.server.converter.LiteruleWebConverter;
  * @since 26.09.01
  * @see com.njydsz.literule.api.client.LiteRuleClient Feign Client 接口
  */
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/api/internal")

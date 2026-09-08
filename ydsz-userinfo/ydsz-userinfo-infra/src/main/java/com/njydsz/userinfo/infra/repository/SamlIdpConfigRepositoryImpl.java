@@ -44,7 +44,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
   @Override
   public List<SamlIdpConfigVO> findByPage(SamlIdpPageQuery query) {
     LambdaQueryWrapper<SamlIdpConfig> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SamlIdpConfig::getDeleted, false)
+    wrapper.eq(SamlIdpConfig::getIsDeleted, false)
         .like(query.getName() != null && !query.getName().isBlank(),
             SamlIdpConfig::getName, query.getName())
         .eq(query.getStatus() != null && !query.getStatus().isBlank(),
@@ -137,10 +137,10 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
   public void deleteByEntityId(String entityId) {
     LambdaQueryWrapper<SamlIdpConfig> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(SamlIdpConfig::getEntityId, entityId)
-        .eq(SamlIdpConfig::getDeleted, false);
+        .eq(SamlIdpConfig::getIsDeleted, false);
     SamlIdpConfig entity = mapper.selectOne(wrapper);
     if (entity != null) {
-      entity.setDeleted(1);
+      entity.setIsDeleted(1);
       mapper.updateById(entity);
       log.info("SAML IdP 配置已删除: entityId={}", entityId);
     }
