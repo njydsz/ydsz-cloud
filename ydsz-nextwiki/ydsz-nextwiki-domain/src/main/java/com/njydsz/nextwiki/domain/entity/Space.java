@@ -1,15 +1,16 @@
 package com.njydsz.nextwiki.domain.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import java.time.LocalDateTime;
 
 /**
  * 知识库空间持久化实体
@@ -26,10 +27,9 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_wiki_space")
-public class Space implements Serializable {
-
-  private static final long serialVersionUID = 1L;
+public class Space extends MpBaseAuditEntity<String> {
 
   /** 状态：活跃 */
   public static final String STATUS_ACTIVE = "active";
@@ -49,7 +49,7 @@ public class Space implements Serializable {
   /** 可见性：公开 */
   public static final String VISIBILITY_PUBLIC = "public";
 
-  /** 主键ID（分布式雪花ID） */
+  /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.INPUT)
   private String id;
 
@@ -91,18 +91,6 @@ public class Space implements Serializable {
 
   /** 已使用配额（字节） */
   private Long quotaUsed;
-
-  /** 创建时间 */
-  private LocalDateTime createdAt;
-
-  /** 创建人 */
-  private String createdBy;
-
-  /** 更新时间 */
-  private LocalDateTime updatedAt;
-
-  /** 更新人 */
-  private String updatedBy;
 
   /** 逻辑删除标识 */
   @TableLogic

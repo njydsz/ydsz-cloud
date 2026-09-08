@@ -1,15 +1,16 @@
 package com.njydsz.nextwiki.domain.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import java.time.LocalDateTime;
 
 /**
  * 用户收藏夹持久化实体
@@ -26,12 +27,11 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_wiki_user_favorite")
-public class UserFavorite implements Serializable {
+public class UserFavorite extends MpBaseAuditEntity<String> {
 
-  private static final long serialVersionUID = 1L;
-
-  /** 主键ID（分布式雪花ID） */
+  /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.INPUT)
   private String id;
 
@@ -46,18 +46,6 @@ public class UserFavorite implements Serializable {
 
   /** 排序序号（值越小越靠前） */
   private Integer sort;
-
-  /** 创建时间 */
-  private LocalDateTime createdAt;
-
-  /** 创建人 */
-  private String createdBy;
-
-  /** 更新时间 */
-  private LocalDateTime updatedAt;
-
-  /** 更新人 */
-  private String updatedBy;
 
   /** 逻辑删除标识 */
   @TableLogic

@@ -1,0 +1,30 @@
+# =====================================================================
+#  YDSZ · Gateway · Resilience4j 限流增强配置（可选Profile）
+#  --------------------------------------------------------------------
+#  通过 spring.profiles.include 引入或在 Nacos shared-configs 中引用。
+#  提供基于 Spring Cloud Gateway 内置 RequestRateLimiter 的全局令牌桶限流，
+#  与已有的 Redis Lua 脚本限流（RateLimitFilter）互补：
+#    - RateLimitFilter：IP + 用户 二维度令牌桶（细粒度）
+#    - RequestRateLimiter：基于 RedisRateLimiter 的全局统一限流（粗粒度兜底）
+# =====================================================================
+
+spring:
+  cloud:
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: ${ydsz.gateway.rate-limiter.replenish-rate:100}
+            redis-rate-limiter.burstCapacity: ${ydsz.gateway.rate-limiter.burst-capacity:200}
+            key-resolver: "#{@userKeyResolver}"
+
+# =====================================================================
+#  限流配置属性（由 GatewayRateLimiterProperties 读取）
+# =====================================================================
+ydsz:
+  gateway:
+    rate-limiter:
+      enabled: false
+      replenish-rate: 100
+      burst-capacity: 200
+      key-type: USER

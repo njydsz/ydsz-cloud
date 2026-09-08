@@ -221,6 +221,42 @@
       "type": "java.lang.Boolean",
       "description": "是否启用 SLA 框架。",
       "defaultValue": true
+    },
+    {
+      "name": "ydsz.sentry.otel.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 OTel SDK 自动装配（构建 SdkTracerProvider + Tracer Bean）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.sentry.otel.service-name",
+      "type": "java.lang.String",
+      "description": "OTel 服务名（默认取 spring.application.name）。",
+      "defaultValue": "${spring.application.name}"
+    },
+    {
+      "name": "ydsz.sentry.otel.endpoint",
+      "type": "java.lang.String",
+      "description": "OTLP 导出端点（gRPC 默认 4317，HTTP 默认 4318）。",
+      "defaultValue": "http://localhost:4317"
+    },
+    {
+      "name": "ydsz.sentry.otel.protocol",
+      "type": "java.lang.String",
+      "description": "OTLP 导出协议：grpc / http/protobuf。",
+      "defaultValue": "grpc"
+    },
+    {
+      "name": "ydsz.sentry.otel.sampler-ratio",
+      "type": "java.lang.Double",
+      "description": "采样比例（0.0 ~ 1.0），基于 TraceId 哈希的固定比例采样。",
+      "defaultValue": 0.1
+    },
+    {
+      "name": "ydsz.sentry.otel.propagation-format",
+      "type": "java.lang.String",
+      "description": "上下文传播格式：w3c（TraceContext）/ b3。",
+      "defaultValue": "w3c"
     }
   ]
 }

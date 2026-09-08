@@ -1,13 +1,12 @@
 package com.njydsz.nextwiki.domain.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -26,10 +25,9 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_wiki_space_template")
-public class SpaceTemplate implements Serializable {
-
-  private static final long serialVersionUID = 1L;
+public class SpaceTemplate extends MpBaseAuditEntity<String> {
 
   /** 分类：通用 */
   public static final String CATEGORY_GENERAL = "general";
@@ -43,7 +41,7 @@ public class SpaceTemplate implements Serializable {
   /** 分类：知识库 */
   public static final String CATEGORY_KNOWLEDGE = "knowledge";
 
-  /** 主键ID（分布式雪花ID） */
+  /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.INPUT)
   private String id;
 
@@ -63,7 +61,7 @@ public class SpaceTemplate implements Serializable {
   private String tenantId;
 
   /** 是否为系统内置模板（不可删除） */
-    private Boolean isSystem;
+  private Boolean isSystem;
 
   /** 是否公开（所有租户可见） */
   private Boolean isPublicAccess;
@@ -76,18 +74,6 @@ public class SpaceTemplate implements Serializable {
 
   /** 使用次数 */
   private Integer usageCount;
-
-  /** 创建时间 */
-  private LocalDateTime createdAt;
-
-  /** 创建人 */
-  private String createdBy;
-
-  /** 更新时间 */
-  private LocalDateTime updatedAt;
-
-  /** 更新人 */
-  private String updatedBy;
 
   /** 逻辑删除标识 */
   @TableLogic
