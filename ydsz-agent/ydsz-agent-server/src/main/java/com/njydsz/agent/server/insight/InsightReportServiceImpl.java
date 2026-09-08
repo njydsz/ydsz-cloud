@@ -19,8 +19,8 @@ import com.njydsz.agent.domain.insight.InsightReportResult;
 import com.njydsz.agent.domain.insight.InsightReportService;
 import com.njydsz.agent.domain.insight.InsightReportStatus;
 import com.njydsz.agent.domain.insight.InsightSection;
-import com.njydsz.agent.infra.insight.HtmlReportRenderer;
-import com.njydsz.agent.infra.insight.LlmInsightReportGenerator;
+import com.njydsz.agent.domain.insight.InsightReportGenerator;
+import com.njydsz.agent.domain.insight.ReportRenderer;
 
 /**
  * 洞察报告服务实现。
@@ -52,10 +52,10 @@ public class InsightReportServiceImpl implements InsightReportService {
   private final InsightReportRepository reportRepository;
 
   /** LLM 报告内容生成器 */
-  private final LlmInsightReportGenerator generator;
+  private final InsightReportGenerator generator;
 
   /** HTML 报告渲染器 */
-  private final HtmlReportRenderer renderer;
+  private final ReportRenderer renderer;
 
   /** 渲染初始容量 */
   private static final int COLLECTION_CAPACITY = 8;
@@ -69,8 +69,8 @@ public class InsightReportServiceImpl implements InsightReportService {
    */
   public InsightReportServiceImpl(
       InsightReportRepository reportRepository,
-      LlmInsightReportGenerator generator,
-      HtmlReportRenderer renderer) {
+      InsightReportGenerator generator,
+      ReportRenderer renderer) {
     this.reportRepository = reportRepository;
     this.generator = generator;
     this.renderer = renderer;

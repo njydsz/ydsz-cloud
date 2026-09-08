@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.insight.InsightReport;
 import com.njydsz.agent.domain.insight.InsightSection;
+import com.njydsz.agent.domain.insight.ReportRenderer;
 
 /**
  * HTML 格式洞察报告渲染器。
@@ -26,7 +27,7 @@ import com.njydsz.agent.domain.insight.InsightSection;
  */
 @Slf4j
 @Component
-public class HtmlReportRenderer {
+public class HtmlReportRenderer implements ReportRenderer {
 
   /** HTML 模板初始容量（字节估算） */
   private static final int HTML_INIT_CAPACITY = 2048;

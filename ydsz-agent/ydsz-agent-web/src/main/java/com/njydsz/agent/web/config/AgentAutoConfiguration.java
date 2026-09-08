@@ -42,10 +42,10 @@ import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
 import com.njydsz.agent.domain.code.CodeExecutionService;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.domain.insight.InsightReportGenerator;
 import com.njydsz.agent.domain.insight.InsightReportRepository;
 import com.njydsz.agent.domain.insight.InsightReportService;
-import com.njydsz.agent.infra.insight.HtmlReportRenderer;
-import com.njydsz.agent.infra.insight.LlmInsightReportGenerator;
+import com.njydsz.agent.domain.insight.ReportRenderer;
 import com.njydsz.agent.infra.mapper.InsightReportMapper;
 import com.njydsz.agent.infra.repository.InsightReportRepositoryImpl;
 import com.njydsz.agent.server.insight.InsightReportServiceImpl;
@@ -735,15 +735,15 @@ public class AgentAutoConfiguration {
    * @return 报告章节生成器
    */
   @Bean
-  @ConditionalOnMissingBean(LlmInsightReportGenerator.class)
+  @ConditionalOnMissingBean(InsightReportGenerator.class)
   @ConditionalOnProperty(
       prefix = "ydsz.agent.insight",
       name = "enabled",
       havingValue = "true",
       matchIfMissing = false)
-  public LlmInsightReportGenerator llmInsightReportGenerator(
+  public InsightReportGenerator insightReportGenerator(
       LlmClient llmClient, AgentProperties properties) {
-    return new LlmInsightReportGenerator(
+    return new com.njydsz.agent.infra.insight.LlmInsightReportGenerator(
         llmClient,
         properties.getInsight().getModel(),
         properties.getInsight().getMaxSections());
@@ -755,22 +755,22 @@ public class AgentAutoConfiguration {
    * @return HTML 渲染器
    */
   @Bean
-  @ConditionalOnMissingBean(HtmlReportRenderer.class)
+  @ConditionalOnMissingBean(ReportRenderer.class)
   @ConditionalOnProperty(
       prefix = "ydsz.agent.insight",
       name = "enabled",
       havingValue = "true",
       matchIfMissing = false)
-  public HtmlReportRenderer htmlReportRenderer() {
-    return new HtmlReportRenderer();
+  public ReportRenderer htmlReportRenderer() {
+    return new com.njydsz.agent.infra.insight.HtmlReportRenderer();
   }
 
   /**
    * 装配洞察报告服务实现。
    *
    * @param reportRepository 报告仓储
-   * @param generator LLM 章节生成器
-   * @param renderer HTML 渲染器
+   * @param generator LLM 章节生成器（domain 接口）
+   * @param renderer HTML 渲染器（domain 接口）
    * @return 洞察报告服务
    */
   @Bean
@@ -782,8 +782,8 @@ public class AgentAutoConfiguration {
       matchIfMissing = false)
   public InsightReportService insightReportService(
       InsightReportRepository reportRepository,
-      LlmInsightReportGenerator generator,
-      HtmlReportRenderer renderer) {
+      InsightReportGenerator generator,
+      ReportRenderer renderer) {
     return new InsightReportServiceImpl(reportRepository, generator, renderer);
   }
 

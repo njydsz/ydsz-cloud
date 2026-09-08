@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.insight.InsightReportGenerator;
 import com.njydsz.agent.domain.insight.InsightReportRequest;
 import com.njydsz.agent.domain.insight.InsightSection;
 import com.njydsz.agent.domain.model.ChatMessage;
@@ -34,7 +35,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
  */
 @Slf4j
 @Component
-public class LlmInsightReportGenerator {
+public class LlmInsightReportGenerator implements InsightReportGenerator {
 
   /** 允许的章节类型白名单（用于过滤 LLM 返回中的非法类型） */
   private static final Set<String> VALID_SECTION_TYPES = Set.of(
