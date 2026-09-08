@@ -6,6 +6,7 @@ import java.util.Set;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.userinfo.domain.dto.LoginDTO;
+import com.njydsz.userinfo.domain.vo.CurrentUserInfoVO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 
 /**
@@ -89,4 +90,27 @@ public interface AuthService {
    * @return 活跃 accessToken 集合，无会话时返回空集合
    */
   Set<String> listActiveSessions(String userId);
+
+  /**
+   * 查询当前登录用户信息（{@code GET /api/auth/userinfo} 数据源）。
+   *
+   * <p>对齐前端 {@code BasicUserInfo} 契约：{@code roles} 为角色编码数组，
+   * 供前端权限路由判断使用。
+   *
+   * @param userId 用户 ID（来自认证上下文）
+   * @return 当前用户信息 VO
+   * @throws BusinessException 用户不存在时抛出
+   */
+  CurrentUserInfoVO getCurrentUserInfo(String userId);
+
+  /**
+   * 查询当前用户的按钮级权限码集合（{@code GET /api/auth/codes} 数据源）。
+   *
+   * <p>聚合用户全部角色的菜单权限码与按钮权限码并集，供前端
+   * {@code hasAccessByCodes} 做按钮级权限控制。
+   *
+   * @param userId 用户 ID（来自认证上下文）
+   * @return 权限码集合；用户无角色或无权限时返回空集合
+   */
+  Set<String> getAccessCodes(String userId);
 }

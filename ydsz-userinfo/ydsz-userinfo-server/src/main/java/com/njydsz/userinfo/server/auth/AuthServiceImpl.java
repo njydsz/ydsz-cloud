@@ -3,6 +3,7 @@ package com.njydsz.userinfo.server.auth;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,9 +24,11 @@ import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.vo.CurrentUserInfoVO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
@@ -86,6 +89,7 @@ public class AuthServiceImpl implements AuthService {
   private final CrossDomainTokenService crossDomainTokenService;
   private final CrossDomainSsoProperties ssoProperties;
   private final RememberMeService rememberMeService;
+  private final DbRolePermissionLoader rolePermissionLoader;
 
   /**
    * {@inheritDoc}
@@ -546,6 +550,61 @@ public class AuthServiceImpl implements AuthService {
     userAccountRepository.resetLoginSuccess(user.getId(), loginIp);
     loginAttemptCounterService.markDeviceSeen(
         user.getId(), userAgent, properties.getRiskWindowSeconds());
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>用户详情取自 {@link UserAccountRepository}，角色编码取自 {@link RoleCacheService}
+   * （带 Redis 缓存）。用户不存在时抛出 {@code USER_NOT_FOUND} 业务异常。
+   */
+  @Override
+  public CurrentUserInfoVO getCurrentUserInfo(String userId) {
+    UserAccountVO user = userAccountRepository.findById(userId)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND));
+    List<RoleVO> roles = roleCacheService.loadUserRoles(userId);
+
+    CurrentUserInfoVO vo = new CurrentUserInfoVO();
+    vo.setUserId(user.getId());
+    vo.setUsername(user.getUsername());
+    vo.setRealName(user.getRealName());
+    vo.setAvatar(user.getAvatar());
+    vo.setTenantId(user.getTenantId());
+    vo.setRoles(roles.stream()
+        .map(RoleVO::getRoleCode)
+        .filter(code -> code != null && !code.isBlank())
+        .distinct()
+        .collect(Collectors.toList()));
+    return vo;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>聚合逻辑：用户全部角色（{@link RoleCacheService}）→ 逐角色加载权限集合
+   * （{@link DbRolePermissionLoader}，带 Redis 缓存）→ 取「菜单 + 按钮」权限码并集。
+   * 接口权限码（API）仅用于后端 {@code @AuthApiPermission} 鉴权，不下发前端。
+   */
+  @Override
+  public Set<String> getAccessCodes(String userId) {
+    List<RoleVO> roles = roleCacheService.loadUserRoles(userId);
+    if (roles.isEmpty()) {
+      return Set.of();
+    }
+    Set<String> roleCodes = roles.stream()
+        .map(RoleVO::getRoleCode)
+        .filter(code -> code != null && !code.isBlank())
+        .collect(Collectors.toSet());
+    if (roleCodes.isEmpty()) {
+      return Set.of();
+    }
+
+    Set<String> codes = new HashSet<>();
+    rolePermissionLoader.loadByRoleCodes(roleCodes).values().forEach(permissions -> {
+      codes.addAll(permissions.getMenuPermissions());
+      codes.addAll(permissions.getButtonPermissions());
+    });
+    return codes;
   }
 
   /**

@@ -32,6 +32,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  *   <li>菜单 CRUD（含 {@code parentId} 树形关联）
  *   <li>菜单全量列表查询（按 {@code sort} 倒序，前端表格展示）
  *   <li>菜单树形结构查询（递归构建父子关系）
+ *   <li>按角色构建前端动态路由树（{@code /api/menu/routes} 数据源）
  *   <li>删除前置校验（有子菜单时禁止删除，避免悬挂引用）
  *   <li>变更后触发权限缓存失效
  * </ul>
@@ -49,8 +50,29 @@ import com.njydsz.userinfo.server.service.MenuService;
 @RequiredArgsConstructor
 public class MenuServiceImpl implements MenuService {
 
+  /** 启用状态 */
+  private static final String STATUS_ENABLED = "ENABLED";
+
+  /** 权限点类型：按钮（不参与路由树） */
+  private static final String MENU_TYPE_BUTTON = "BUTTON";
+
+  /** 权限点类型：接口（不参与路由树） */
+  private static final String MENU_TYPE_API = "API";
+
+  /** 根节点父 ID 约定值 */
+  private static final String ROOT_PARENT_ID = "0";
+
+  /** Map 初始容量 */
+  private static final int CAPACITY = 16;
+
   /** 菜单 Repository */
   private final MenuRepository menuRepository;
+
+  /** 角色 Repository（角色编码 → 角色 ID 解析） */
+  private final RoleRepository roleRepository;
+
+  /** 角色-权限关联 Repository（角色 ID → 菜单权限 ID 列表） */
+  private final RolePermissionRepository rolePermissionRepository;
 
   /** 权限变更事件发布器（common-auth，通知 Gateway 等节点刷新权限缓存） */
   private final PermissionChangeNotifier permissionChangeNotifier;
@@ -193,5 +215,134 @@ public class MenuServiceImpl implements MenuService {
         MenuTreeVO::getParentId,
         MenuTreeVO::setChildren,
         MenuTreeVO::getSort);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>处理流程：角色编码解析为角色 ID → 汇总各角色的菜单权限 ID 并集 →
+   * 查询菜单详情并过滤（启用中、排除 BUTTON/API 权限点）→ 按 {@code parentId} 递归构建路由树。
+   *
+   * <p>角色编码不存在或未分配任何菜单时返回空列表，不抛异常（前端回退静态路由）。
+   */
+  @Override
+  public List<MenuRouteVO> routesForRoles(Collection<String> roleCodes) {
+    if (roleCodes == null || roleCodes.isEmpty()) {
+      return List.of();
+    }
+    Set<String> permissionIds = collectPermissionIds(roleCodes);
+    if (permissionIds.isEmpty()) {
+      return List.of();
+    }
+
+    List<MenuVO> menus =
+        menuRepository.findByIds(permissionIds).stream()
+            .filter(menu -> STATUS_ENABLED.equals(menu.getStatus()))
+            .filter(
+                menu ->
+                    !MENU_TYPE_BUTTON.equals(menu.getMenuType())
+                        && !MENU_TYPE_API.equals(menu.getMenuType()))
+            .collect(Collectors.toList());
+    if (menus.isEmpty()) {
+      return List.of();
+    }
+    return buildRouteTree(menus);
+  }
+
+  /**
+   * 汇总角色编码集合对应的菜单权限 ID 并集。
+   *
+   * @param roleCodes 角色编码集合
+   * @return 菜单权限 ID 并集（可能为空）
+   */
+  private Set<String> collectPermissionIds(Collection<String> roleCodes) {
+    Set<String> permissionIds = new HashSet<>(CAPACITY);
+    for (String roleCode : roleCodes) {
+      if (roleCode == null || roleCode.isBlank()) {
+        continue;
+      }
+      roleRepository
+          .findByRoleCode(roleCode.trim())
+          .ifPresent(
+              role ->
+                  permissionIds.addAll(
+                      rolePermissionRepository.findPermissionIdsByRoleId(role.getId())));
+    }
+    return permissionIds;
+  }
+
+  /**
+   * 将扁平菜单列表构建为路由树。
+   *
+   * <p>按 {@code parentId} 分组索引，从根节点（{@code parentId} 为空或 {@code "0"}）递归展开，
+   * 同层节点按 {@code sort} 升序排列（空值排最后）。
+   *
+   * @param menus 已过滤的菜单列表（启用中的目录/菜单节点）
+   * @return 路由树根节点列表
+   */
+  private List<MenuRouteVO> buildRouteTree(List<MenuVO> menus) {
+    Map<String, List<MenuVO>> childrenIndex =
+        menus.stream()
+            .collect(
+                Collectors.groupingBy(
+                    menu -> normalizeParentId(menu.getParentId()), LinkedHashMap::new,
+                    Collectors.toList()));
+    List<MenuVO> roots =
+        childrenIndex.getOrDefault(ROOT_PARENT_ID, List.of()).stream()
+            .sorted(bySortAsc())
+            .collect(Collectors.toList());
+    List<MenuRouteVO> routeTree = new ArrayList<>(roots.size());
+    for (MenuVO root : roots) {
+      routeTree.add(toRoute(root, childrenIndex));
+    }
+    return routeTree;
+  }
+
+  /** 归一化父 ID：空值视为根节点约定值 {@code "0"}。 */
+  private String normalizeParentId(String parentId) {
+    return (parentId == null || parentId.isBlank()) ? ROOT_PARENT_ID : parentId;
+  }
+
+  /** 菜单按 {@code sort} 升序比较器（空值排最后）。 */
+  private Comparator<MenuVO> bySortAsc() {
+    return Comparator.comparing(
+        MenuVO::getSort, Comparator.nullsLast(Comparator.naturalOrder()));
+  }
+
+  /**
+   * 递归转换菜单节点为路由 VO。
+   *
+   * @param menu 当前菜单
+   * @param childrenIndex 按 {@code parentId} 分组的子菜单索引
+   * @return 路由 VO（含递归子节点）
+   */
+  private MenuRouteVO toRoute(MenuVO menu, Map<String, List<MenuVO>> childrenIndex) {
+    MenuRouteVO route = new MenuRouteVO();
+    route.setName(
+        (menu.getMenuCode() == null || menu.getMenuCode().isBlank())
+            ? "menu-" + menu.getId()
+            : menu.getMenuCode());
+    route.setPath(menu.getPath());
+    route.setComponent(menu.getComponent());
+
+    MenuRouteVO.Meta meta = new MenuRouteVO.Meta();
+    meta.setTitle(menu.getMenuName());
+    meta.setIcon(menu.getIcon());
+    meta.setOrder(menu.getSort());
+    meta.setHideInMenu(menu.getVisible() != null && menu.getVisible() == 0);
+    route.setMeta(meta);
+
+    List<MenuVO> children =
+        childrenIndex.getOrDefault(menu.getId(), List.of()).stream()
+            .sorted(bySortAsc())
+            .collect(Collectors.toList());
+    if (!children.isEmpty()) {
+      List<MenuRouteVO> childRoutes = new ArrayList<>(children.size());
+      for (MenuVO child : children) {
+        childRoutes.add(toRoute(child, childrenIndex));
+      }
+      route.setChildren(childRoutes);
+    }
+    return route;
   }
 }

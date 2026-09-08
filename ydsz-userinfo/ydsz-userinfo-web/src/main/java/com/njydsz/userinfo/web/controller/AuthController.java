@@ -29,6 +29,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
@@ -47,6 +48,7 @@ import com.njydsz.userinfo.domain.dto.SecondaryAuthRequest;
 import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 import com.njydsz.userinfo.domain.dto.WebAuthnSecondaryAuthDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.vo.CurrentUserInfoVO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.server.aspect.SecondaryAuthAspect;
 import com.njydsz.userinfo.server.auth.AuthService;
@@ -58,7 +60,8 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 /**
  * 认证 Controller
  *
- * <p>提供用户登录、登出、刷新 Token 等基础认证端点。 是整个用户中心服务的对外认证入口，被各业务系统通过 Feign 远程调用（{@code AuthServiceClient}）。
+ * <p>提供用户登录、登出、刷新 Token 等基础认证端点，以及当前用户信息/按钮级权限码查询
+ * （{@code /userinfo}、{@code /codes}，登录后首屏链路数据源）。 是整个用户中心服务的对外认证入口，被各业务系统通过 Feign 远程调用（{@code AuthServiceClient}）。
  *
  * <p><b>接口路径：</b>{@code /api/auth}
  *
@@ -204,6 +207,40 @@ public class AuthController {
     request.setUserAgent(servletRequest.getHeader("User-Agent"));
     LoginVO result = authService.login(request, servletResponse);
     return YdszResponse.success(result);
+  }
+
+  /**
+   * 查询当前登录用户信息
+   *
+   * <p>供前端登录后拉取用户资料（昵称/头像/角色列表），对齐前端 {@code BasicUserInfo} 契约。
+   * 需携带有效 access_token（由网关透传认证上下文）。
+   *
+   * <p>限流 100 QPS：登录后首屏与子应用初始化均会调用，读缓存为主，放开阈值。
+   *
+   * @return 当前用户信息（userId / username / realName / avatar / roles / tenantId）
+   */
+  @RateLimit(resource = "userinfo.auth.currentUserInfo", threshold = 100)
+  @GetMapping("/userinfo")
+  @Operation(summary = "查询当前登录用户信息", description = "返回当前 token 对应的用户资料与角色编码列表")
+  public YdszResponse<CurrentUserInfoVO> getUserInfo() {
+    return YdszResponse.success(authService.getCurrentUserInfo(SecurityUtils.getCurrentUserId()));
+  }
+
+  /**
+   * 查询当前用户按钮级权限码集合
+   *
+   * <p>聚合用户全部角色的菜单权限码与按钮权限码并集，供前端按钮级权限控制
+   * （{@code hasAccessByCodes} / {@code v-access} 指令）消费。
+   *
+   * <p>限流 100 QPS：与 {@code /userinfo} 同属登录后首屏链路，读缓存为主。
+   *
+   * @return 权限码集合（如 {@code system:user:create}）
+   */
+  @RateLimit(resource = "userinfo.auth.accessCodes", threshold = 100)
+  @GetMapping("/codes")
+  @Operation(summary = "查询当前用户按钮级权限码", description = "返回当前用户全部角色的菜单+按钮权限码并集")
+  public YdszResponse<Set<String>> getAccessCodes() {
+    return YdszResponse.success(authService.getAccessCodes(SecurityUtils.getCurrentUserId()));
   }
 
   /**

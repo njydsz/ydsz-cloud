@@ -19,13 +19,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
+import com.njydsz.userinfo.domain.vo.MenuRouteVO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
+import com.njydsz.userinfo.server.auth.RoleCacheService;
 import com.njydsz.userinfo.server.service.MenuService;
 
 /**
@@ -79,6 +83,9 @@ import com.njydsz.userinfo.server.service.MenuService;
 public class MenuController {
 
   private final MenuService service;
+
+  /** 用户角色缓存服务（当前用户角色解析） */
+  private final RoleCacheService roleCacheService;
 
   /**
    * 查询全部菜单列表（扁平结构）
