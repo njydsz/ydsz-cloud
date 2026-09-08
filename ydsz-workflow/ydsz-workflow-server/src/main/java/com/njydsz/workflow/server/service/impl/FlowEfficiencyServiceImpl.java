@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl;
+﻿package com.njydsz.workflow.server.service.impl;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -206,6 +206,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /** 健康评分：评级 FAIR 阈值 */
   private static final int SCORE_LEVEL_FAIR = 60;
 
+  /** {@inheritDoc} */
   @Override
   public FlowEfficiencyStatsVO efficiencyStats(String tenantId, String startTime, String endTime) {
     FlowEfficiencyStatsVO result = new FlowEfficiencyStatsVO();
@@ -276,6 +277,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowBottleneckVO> bottleneckRanking(String tenantId, String flowCode, int limit) {
     try {
@@ -308,6 +310,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowApproverEfficiencyVO> approverRanking(
       String tenantId, String startTime, String endTime, int limit) {
@@ -356,6 +359,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowTrendVO> approvalTrend(
       String tenantId, String interval, String startTime, String endTime) {
@@ -491,6 +495,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
   // ============================== 异常检测 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowAnomalyVO> detectAnomalies(
       String tenantId, int limit, int stuckHours, int longRunningDays) {
@@ -539,6 +544,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     return anomalies;
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowAnomalyVO> detectStuckTasks(String tenantId, int limit, int stuckHours) {
     int effectiveLimit = limit > 0 ? limit : DEFAULT_ANOMALY_LIMIT;
@@ -582,6 +588,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     return result;
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowAnomalyVO> detectHighRejectionNodes(String tenantId) {
     List<FlowHisTaskVO> recentTasks = hisTaskRepository.selectRecentByTenant(tenantId, HIGH_REJECTION_SAMPLE_SIZE);
@@ -652,6 +659,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     return result;
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> detectLongRunningInstances(
       String tenantId, int limit, int longRunningDays) {
@@ -831,12 +839,14 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
   // ============================== 监控聚合查询（供 Controller 层使用，避免 DO 泄漏） ==============================
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectApproverEfficiency(
       String tenantId, LocalDateTime start, LocalDateTime end, int limit) {
     return hisTaskRepository.selectApproverEfficiency(tenantId, start, end, limit);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectFlowEfficiencyComparison(
       String tenantId, LocalDateTime start, LocalDateTime end) {

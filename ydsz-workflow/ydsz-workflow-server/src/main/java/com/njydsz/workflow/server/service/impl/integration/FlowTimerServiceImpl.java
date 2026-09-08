@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.integration;
+﻿package com.njydsz.workflow.server.service.impl.integration;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -118,6 +118,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
   /** 单次扫描上限，避免大表全表扫描 */
   private static final int SCAN_BATCH_SIZE = 200;
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
@@ -161,6 +162,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     return timer.getId();
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String scheduleBoundary(
@@ -201,6 +203,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     return timer.getId();
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean fire(FlowTimerVO timer) {
@@ -332,6 +335,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public int scanAndFire() {
     try {
@@ -359,6 +363,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public int cancelByTask(String taskId) {
     if (taskId == null) {
@@ -368,6 +373,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     return 1;
   }
 
+  /** {@inheritDoc} */
   @Override
   public int cancelByInstance(String instanceId, String reason) {
     if (instanceId == null) {
@@ -376,12 +382,14 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     return timerRepository.cancelByInstance(instanceId, reason == null ? "实例结束" : reason);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public List<FlowTimerVO> listByInstance(String instanceId) {
     return timerRepository.findByInstanceOrderByCreatedAtDesc(instanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public long countPending(String instanceId) {

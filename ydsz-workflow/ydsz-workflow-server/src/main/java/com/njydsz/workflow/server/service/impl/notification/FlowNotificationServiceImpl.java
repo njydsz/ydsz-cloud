@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.notification;
+﻿package com.njydsz.workflow.server.service.impl.notification;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -138,6 +138,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
   /** P1-5: 敏感字段脱敏器（原 FlowNotificationHelper 功能合并） */
   private final FlowSensitiveMasker sensitiveMasker;
 
+  /** {@inheritDoc} */
   @Override
   public void notifyTaskCreated(
       String instanceId, String taskId, String assigneeId, String assigneeName) {
@@ -167,6 +168,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void notifyUrge(
       String instanceId, String taskId, List<String> assigneeIds, String comment) {
@@ -201,6 +203,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void notifyCc(String instanceId, String nodeCode, List<Long> ccUserIds, String title) {
     try {
@@ -229,6 +232,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void notifyInstanceCompleted(String instanceId, String initiatorId) {
     try {
@@ -251,6 +255,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void notifyInstanceRejected(String instanceId, String initiatorId, String reason) {
     try {
@@ -281,6 +286,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void notifySlaTimeout(String instanceId, String taskId, String assigneeId, String action) {
     try {
@@ -312,6 +318,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void send(
       String channel, String userId, String title, String content, Map<String, Object> extra) {
@@ -455,6 +462,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
   // ============================== P1-5: 带脱敏的便捷通知（原 FlowNotificationHelper 合并）
   // ==============================
 
+  /** {@inheritDoc} */
   @Override
   public void notify(
       String channel, String userId, String title, String content, String bizType, String level) {
@@ -477,6 +485,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void notifyBatch(
       String channel,

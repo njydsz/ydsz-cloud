@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -126,17 +126,20 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
   private final FlowRunTaskRepository taskRepository;
 
 
+  /** {@inheritDoc} */
   @Override
   public InstanceMigrationResultDTO migrate(InstanceMigrationDTO dto) {
     return doMigrate(dto, false);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public InstanceMigrationResultDTO previewMigration(InstanceMigrationDTO dto) {
     return doMigrate(dto, true);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public List<String> findRunningInstances(String definitionId, String tenantId) {
@@ -154,6 +157,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     return instances.stream().map(i -> String.valueOf(i.getId())).collect(Collectors.toList());
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public Map<String, String> autoMapNodes(Long sourceDefId, Long targetDefId) {

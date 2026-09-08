@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -85,6 +85,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   // ============================== 创建任务 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public String createTask(String instanceId, FlowNodeVO node, Map<String, Object> variables) {
     return completeService.createTask(instanceId, node, variables);
@@ -92,6 +93,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   // ============================== 详情查询 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public FlowRunTaskVO getById(String taskId) {
     return queryService.getById(taskId);
@@ -159,11 +161,13 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   // ============================== 取消 / 催办 / 跳转 / 超时 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public void cancelByInstance(String instanceId, String taskStatus) {
     completeService.cancelByInstance(instanceId, taskStatus);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<String> urge(String instanceId, String operatorId, String comment) {
     return completeService.urge(instanceId, operatorId, comment);
@@ -195,6 +199,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     completeService.jump(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void timeoutTask(String taskId, String reason) {
     completeService.timeoutTask(taskId, reason);
@@ -202,22 +207,26 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
   // ============================== 待办 / 已办 / 实例列表 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> listPendingByInstance(String instanceId) {
     return queryService.listPendingByInstance(instanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> listTodoByAssignee(String assigneeId, String tenantId) {
     return queryService.listTodoByAssignee(assigneeId, tenantId);
   }
 
+/** {@inheritDoc} */
 @Override
 public PageResponse<List<FlowRunTaskVO>> listTodoByAssigneePage(
     String assigneeId, String tenantId, int page, int size) {
 return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
 }
 
+/** {@inheritDoc} */
 @Override
 public List<FlowRunTaskVO> listTodoByAssigneeCursor(
     String assigneeId,
@@ -229,17 +238,20 @@ public List<FlowRunTaskVO> listTodoByAssigneeCursor(
 return queryService.listTodoByAssigneeCursor(assigneeId, tenantId, lastPriority, lastCreatedAt, lastId, limit);
 }
 
+/** {@inheritDoc} */
 @Override
 public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId) {
     return queryService.listDoneByAssignee(assigneeId, tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public PageResponse<List<FlowRunTaskVO>> listDoneByAssigneePage(
       String assigneeId, String tenantId, int page, int size) {
     return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> listTodoByUser(
       String userId, List<String> roleCodes, List<String> deptIds, String tenantId) {
@@ -344,16 +356,19 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   // ============================== 已阅 / 沟通 / 暂存 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public void markRead(String taskId, String userId) {
     signService.markRead(taskId, userId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void communicate(FlowTaskOperateDTO dto) {
     signService.communicate(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void saveDraft(FlowTaskOperateDTO dto) {
     signService.saveDraft(dto);
@@ -361,6 +376,7 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   // ============================== 批量审批 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public void batchPass(List<String> taskIds, String userId, String comment) {
     batchService.batchPass(taskIds, userId, comment);
@@ -414,31 +430,37 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   // ============================== 视图转换 / 统计 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskVO task) {
     return queryService.toView(task);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> nodeDurationStats(String flowCode, String tenantId) {
     return queryService.nodeDurationStats(flowCode, tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> listOverdue(String assigneeId, String tenantId, int limit) {
     return queryService.listOverdue(assigneeId, tenantId, limit);
   }
 
+  /** {@inheritDoc} */
   @Override
   public long countOverdue(String assigneeId, String tenantId) {
     return queryService.countOverdue(assigneeId, tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public long countPending(String tenantId) {
     return queryService.countPending(tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public PageResponse<List<FlowRunTaskVO>> listDoneByAssigneePageMulti(
       String assigneeId,
@@ -455,17 +477,20 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   // ============================== VO 查询方法实现 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public String getTaskInstanceId(String taskId) {
     FlowRunTaskVO task = queryService.getById(taskId);
     return task != null ? task.getInstanceId() : null;
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> listPassedNodes(String instanceId) {
     return queryService.listPassedNodes(instanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public PageResponse<List<FlowRunTaskVO>> pageTodoVO(
       String userId, String tenantId, String flowCode, String businessType,
@@ -473,6 +498,7 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
     return queryService.listTodoByAssigneePage(userId, tenantId, page, size);
   }
 
+  /** {@inheritDoc} */
   @Override
   public PageResponse<List<FlowRunTaskVO>> pageDoneVO(
       String userId, String tenantId, String flowCode, String businessType,
@@ -480,6 +506,7 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
     return queryService.listDoneByAssigneePage(userId, tenantId, page, size);
   }
 
+  /** {@inheritDoc} */
   @Override
   public PageResponse<List<FlowRunTaskVO>> pageDoneSearchVO(
       String userId, String tenantId, String flowCode, String businessType,
@@ -488,27 +515,32 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
         userId, businessType, flowCode, startTime, endTime, tenantId, page, size);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> listOverdueVO(String userId, String tenantId, int limit) {
     return queryService.listOverdue(userId, tenantId, limit);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> listCountersignByInstance(String instanceId) {
     return queryService.listCountersignByInstance(instanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public PageResponse<List<Map<String, Object>>> pageCountersignByInstance(
       String instanceId, int pageNo, int pageSize) {
     return queryService.pageCountersignByInstance(instanceId, pageNo, pageSize);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> listCountersignByTask(String taskId) {
     return queryService.listCountersignByTask(taskId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public int passAll(String userId, String userName) {
     List<FlowRunTaskVO> todos = queryService.listTodoByAssignee(userId, null);
@@ -523,6 +555,7 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
     return taskIds.size();
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> overdueStats(String flowCode, LocalDateTime startTime, LocalDateTime endTime) {
     List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY);
@@ -535,11 +568,13 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   // ============================== 监控聚合查询 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectOverdueTopN(String tenantId, int limit) {
     return queryService.selectOverdueTopN(tenantId, limit);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectWorkloadByAssignee(String tenantId, int limit) {
     return queryService.selectWorkloadByAssignee(tenantId, limit);
@@ -547,6 +582,7 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   // ============================== SLA 处理 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public Boolean slaProcessByTaskId(String taskId) {
     FlowRunTaskVO task = queryService.getById(taskId);
@@ -558,16 +594,19 @@ public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId
 
   // ============================== 超时处理（定时任务调用） ==============================
 
+  /** {@inheritDoc} */
   @Override
   public void timeoutAutoPass(FlowTaskOperateDTO dto) {
     completeService.pass(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void timeoutTransfer(FlowTaskOperateDTO dto) {
     completeService.transfer(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void timeoutRemind(String instanceId, String nodeCode) {
     completeService.urgeByNode(instanceId, nodeCode, "SYSTEM_TIMEOUT", "系统超时自动催办");

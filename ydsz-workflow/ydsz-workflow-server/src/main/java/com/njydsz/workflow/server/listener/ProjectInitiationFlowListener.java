@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.listener;
+﻿package com.njydsz.workflow.server.listener;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -88,6 +88,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
   /** P0-7: 工作流 MQ 发布者（发布立项状态联动事件） */
   private final FlowQueuePublisher queuePublisher;
 
+  /** {@inheritDoc} */
   @Override
   public void onInstanceStart(String instanceId, Map<String, Object> variables) {
     log.info(
@@ -102,6 +103,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onTaskCreated(String taskId) {
     // P0-1: 给当前办理人发送待办通知
@@ -127,6 +129,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     pushImNotification(assigneeId, title, content, taskId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onTaskCompleted(String taskId, String action, Map<String, Object> variables) {
     log.info("[FlowListener] 立项任务完成: taskId={} action={}", taskId, action);
@@ -134,6 +137,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     // 此处仅记录任务级审计日志，避免重复触达。
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onInstanceCompleted(String instanceId) {
     log.info("[FlowListener] 立项流程完成: instanceId={}", instanceId);
@@ -174,6 +178,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onInstanceRejected(String instanceId, String reason) {
     log.info("[FlowListener] 立项流程驳回: instanceId={} reason={}", instanceId, reason);
@@ -217,6 +222,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onError(String instanceId, Throwable t) {
     log.error("[FlowListener][ALERT] 立项流程异常: instanceId={}", instanceId, t);
@@ -254,6 +260,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
 
   // ============================== P0-1: 关键事件通知触发 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public void onTaskUrged(String instanceId, String taskId) {
     // P0-1: 催办通知：实例级催办推送给所有当前待办办理人
@@ -276,6 +283,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     notificationService.notifyBatch("INAPP", receivers, title, content, "WORKFLOW_URGE", "URGENT");
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onInstanceTerminated(String instanceId, String reason) {
     // P0-1: 终止通知：通知发起人
@@ -300,6 +308,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         "WARN");
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onInstanceRecalled(String instanceId, String initiatorId) {
     // P0-1: 撤回通知：通知所有当前待办办理人
@@ -323,6 +332,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         "INAPP", receivers, title, content, "WORKFLOW_RECALLED", "WARN");
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onTaskTransferred(String taskId, String fromUserId, String toUserId) {
     // P0-1: 转办通知：通知新办理人
@@ -345,6 +355,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         "INFO");
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onTaskDelegated(String taskId, String fromUserId, String toUserId) {
     // P0-1: 委派通知：通知被委派人
@@ -367,6 +378,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         "INFO");
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onTaskTimeout(String taskId, String instanceId) {
     // P0-1: 超时通知：通知当前办理人

@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.definition;
+﻿package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -66,6 +66,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     BUSINESS_CATEGORY_MAP.put("ASSET", "ADMIN");
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public List<Map<String, Object>> recommendTemplates(String userId, String tenantId, int topN) {
@@ -145,6 +146,7 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
     return scored.subList(0, Math.min(limit, scored.size()));
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public List<Map<String, Object>> recommendByBusinessType(

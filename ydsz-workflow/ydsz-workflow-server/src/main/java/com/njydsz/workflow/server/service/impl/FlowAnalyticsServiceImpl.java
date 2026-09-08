@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl;
+﻿package com.njydsz.workflow.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -109,6 +109,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
   /** 运行时任务仓储（domain 层契约），提供基础 CRUD 与统计方法 */
   private final FlowRunTaskRepository runTaskRepository;
 
+  /** {@inheritDoc} */
   @Override
   public FlowAnalyticsOverviewVO overview(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
@@ -141,6 +142,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     return result;
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowApproverEfficiencyVO> approverEfficiency(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId, int limit) {
@@ -161,6 +163,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     }).toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowEfficiencyComparisonVO> flowEfficiencyComparison(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
@@ -182,6 +185,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     }).toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowNodeDurationVO> nodeDurationStats(String flowCode, String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
@@ -202,6 +206,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     }).toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowTrendVO> approvalTrend(
       LocalDateTime startTime, LocalDateTime endTime, String tenantId, String granularity) {
@@ -274,4 +279,3 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     }
   }
 }
-

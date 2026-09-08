@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.strategy;
+﻿package com.njydsz.workflow.server.service.impl.strategy;
 
 import java.time.LocalDateTime;
 
@@ -28,11 +28,13 @@ public class OrCountersignStrategy implements CountersignStrategy {
   /** 任务归档服务，或签通过后完成 + 归档到历史表 */
   private final FlowTaskArchiveService archiveService;
 
+  /** {@inheritDoc} */
   @Override
   public FlowPerformType supportedType() {
     return FlowPerformType.OR;
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     // 完成 + 归档（P2-1: 支持穿越时空补录审批）
@@ -41,6 +43,7 @@ public class OrCountersignStrategy implements CountersignStrategy {
     archiveService.completeAndArchive(task, dto.getComment(), effectiveTime);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean shouldAdvance(FlowRunTaskVO task) {
     // OR 模式：一人通过即推进

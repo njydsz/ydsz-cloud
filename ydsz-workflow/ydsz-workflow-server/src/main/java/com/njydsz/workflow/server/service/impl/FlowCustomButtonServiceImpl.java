@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl;
+﻿package com.njydsz.workflow.server.service.impl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -116,6 +116,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
   /** 流程任务服务，按钮动作（通过/驳回/转办/委派）的执行入口 */
   private final FlowTaskService taskService;
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> getCustomButtons(String definitionId, String nodeCode) {
     FlowNodeVO node = definitionCacheService.getNodeByCode(definitionId, nodeCode);
@@ -125,6 +126,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     return parseCustomButtons(node.getExt());
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void saveCustomButtons(
@@ -159,6 +161,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         buttons == null ? 0 : buttons.size());
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public Map<String, Object> executeButton(

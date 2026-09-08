@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -142,16 +142,19 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
 
   // ============================== 子类策略实现 ==============================
 
+  /** {@inheritDoc} */
   @Override
   protected Map<String, Object> parseVariables(String variable) {
     return variableManager.parseVariables(variable);
   }
 
+  /** {@inheritDoc} */
   @Override
   protected Map<String, Object> getVariables(String instanceId) {
     return variableManager.getVariables(instanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   protected FlowInstanceVO saveInstance(FlowInstanceVO instance) {
     return instanceRepository.save(toDto(instance));

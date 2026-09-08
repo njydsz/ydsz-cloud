@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -133,6 +133,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   /** Spring 事件发布器（可能为 null） */
   private final ApplicationEventPublisher eventPublisher;
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String startSubProcess(
@@ -213,6 +214,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     return childId;
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void onSubProcessCompleted(String childInstanceId) {
@@ -282,6 +284,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     publishWorkflowEvent("SUBPROCESS_COMPLETED", childInstanceId, parentId);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void onSubProcessTerminated(String childInstanceId, String reason, boolean terminal) {
@@ -325,6 +328,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public List<FlowInstanceVO> listChildren(String parentInstanceId) {
@@ -334,6 +338,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     return instanceRepository.findChildren(parentInstanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowStartProcessDTO buildSubProcessStartDTO(
       FlowInstanceVO parentInstance, String subFlowCode, Map<String, Object> variables) {
@@ -469,6 +474,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     publishWorkflowEvent("SUBPROCESS_STARTED", instanceId, null);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public Map<String, Object> getSubProcessContext(String childInstanceId) {
@@ -502,6 +508,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     return result;
   }
 
+  /** {@inheritDoc} */
   @Override
   // YDIZ-WARN-001 允许保留：泛型擦除，递归调用返回泛型集合编译期无法验证
   @SuppressWarnings("unchecked")

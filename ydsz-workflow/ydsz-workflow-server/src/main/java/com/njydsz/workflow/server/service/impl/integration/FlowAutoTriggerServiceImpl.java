@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.integration;
+﻿package com.njydsz.workflow.server.service.impl.integration;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -97,6 +97,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   // ============================== 核心：实例完成时触发 ==============================
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void onInstanceCompleted(String instanceId) {
@@ -308,6 +309,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
   // ============================== 规则管理 ==============================
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void registerTrigger(
@@ -326,6 +328,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
         targetFlowCode);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void removeTrigger(String sourceFlowCode) {
@@ -333,12 +336,14 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     log.info("[FlowAutoTrigger] 移除触发规则: sourceFlowCode={}", sourceFlowCode);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public List<FlowAutoTriggerVO> listAll() {
     return autoTriggerRepository.findAllOrderBySort();
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteById(String id) {
@@ -346,6 +351,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     log.info("[FlowAutoTrigger] 删除触发规则: id={}", id);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean toggleEnabled(String id) {

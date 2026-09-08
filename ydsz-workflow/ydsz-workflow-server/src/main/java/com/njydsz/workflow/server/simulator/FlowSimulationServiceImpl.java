@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.simulator;
+﻿package com.njydsz.workflow.server.simulator;
 
 import java.util.Map;
 
@@ -23,6 +23,7 @@ public class FlowSimulationServiceImpl implements FlowSimulationService {
 
   private final FlowSimulator flowSimulator;
 
+  /** {@inheritDoc} */
   @Override
   public SimulationResult simulate(String definitionId, Map<String, Object> variables) {
     log.info("[Flow-Simulate] 开始模拟: definitionId={} variables={}", definitionId, variables);

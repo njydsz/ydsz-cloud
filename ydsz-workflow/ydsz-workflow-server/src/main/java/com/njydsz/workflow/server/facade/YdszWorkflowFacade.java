@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.facade;
+﻿package com.njydsz.workflow.server.facade;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -80,12 +80,14 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /** P2-22: 流程图查询需要查询流程定义详情 */
   private final FlowDefinitionService definitionService;
 
+  /** {@inheritDoc} */
   @Override
   public String startProcess(FlowStartProcessDTO dto) {
     String id = instanceService.start(dto);
     return id == null ? null : String.valueOf(id);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowInstanceViewDTO getByBusiness(String businessType, String businessId) {
     FlowInstanceVO instance = instanceService.getByBusiness(businessType, businessId);
@@ -97,46 +99,55 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         instance, currentTasks.stream().map(taskService::toView).toList());
   }
 
+  /** {@inheritDoc} */
   @Override
   public void completeTask(FlowTaskOperateDTO dto) {
     taskService.pass(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void claimTask(String taskId, String userId) {
     taskService.claim(taskId, userId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void transferTask(FlowTaskOperateDTO dto) {
     taskService.transfer(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void delegateTask(FlowTaskOperateDTO dto) {
     taskService.delegate(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void rejectTask(FlowTaskOperateDTO dto) {
     taskService.reject(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void terminateProcess(String processInstanceId, String reason) {
     instanceService.terminate(processInstanceId, reason);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void suspendProcess(String processInstanceId) {
     instanceService.suspend(processInstanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void activateProcess(String processInstanceId) {
     instanceService.activate(processInstanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> listTodoTasks(String userId, int page, int size) {
     // P2-17: 真分页（SQL LIMIT/OFFSET）
@@ -147,6 +158,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return list.stream().map(this::toMap).toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> listDoneTasks(String userId, int page, int size) {
     // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskRepository）
@@ -191,11 +203,13 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void countersignBeforeTask(FlowTaskOperateDTO dto) {
     taskService.countersignBefore(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void countersignAfterTask(FlowTaskOperateDTO dto) {
     taskService.countersignAfter(dto);
@@ -211,22 +225,26 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     taskService.countersignParallel(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<String> urgeTask(String instanceId, String operatorId, String comment) {
     return taskService.urge(instanceId, operatorId, comment);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<String> urgeNodeTask(
       String instanceId, String nodeCode, String operatorId, String comment) {
     return taskService.urgeByNode(instanceId, nodeCode, operatorId, comment);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean recallProcess(String processInstanceId, String initiatorId) {
     return instanceService.recall(processInstanceId, initiatorId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowAuditTrailVO> listAuditTrail(String processInstanceId) {
     String instanceId = processInstanceId;
@@ -235,6 +253,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return logs.stream().map(this::toAuditTrailVO).toList();
   }
 
+  /** {@inheritDoc} */
   @Override
   public String engineType() {
     return "YDSZ";
@@ -242,6 +261,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   // ============================== P2-20: 任务详情查询 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> getTaskDetail(String taskId) {
     // P2-20: 调用 taskService.getById 获取任务，再用 toView 转换为视图
@@ -255,16 +275,19 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   // ============================== P2-25: 自由跳转 / P2-26: 批量审批 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public void jumpTask(FlowTaskOperateDTO dto) {
     taskService.jump(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void batchPassTasks(List<String> taskIds, String userId, String comment) {
     taskService.batchPass(taskIds, userId, comment);
   }
 
+  /** {@inheritDoc} */
   @Override
   public BatchOperationResult batchPassWithValidation(List<TaskApprovalDTO> approvals) {
     if (approvals == null || approvals.isEmpty()) {
@@ -286,6 +309,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return BatchOperationResult.success(approvals.size(), taskIds.size());
   }
 
+  /** {@inheritDoc} */
   @Override
   public BatchOperationResult batchRejectWithReason(List<TaskRejectionDTO> rejections) {
     if (rejections == null || rejections.isEmpty()) {
@@ -818,31 +842,37 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   // ======================== P0-03: 暂存待审 / 追加处理人 / 减签 / 已阅 / 沟通 ========================
 
+  /** {@inheritDoc} */
   @Override
   public void saveDraft(FlowTaskOperateDTO dto) {
     taskService.saveDraft(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void addApprover(FlowTaskOperateDTO dto) {
     taskService.addApprover(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void countersignRemoveTask(FlowTaskOperateDTO dto) {
     taskService.countersignRemove(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void markReadTask(String taskId, String userId) {
     taskService.markRead(taskId, userId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void communicateTask(FlowTaskOperateDTO dto) {
     taskService.communicate(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public String resubmitProcess(
       String instanceId,
@@ -853,6 +883,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return instanceService.resubmit(instanceId, initiatorId, variables, comment, redoMode);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void batchReject(List<FlowTaskOperateDTO> dtos) {
     if (dtos == null || dtos.isEmpty()) {
@@ -868,6 +899,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     taskService.batchReject(taskIds, userId, comment, targetNodeCode);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void batchTransfer(List<FlowTaskOperateDTO> dtos) {
     if (dtos == null || dtos.isEmpty()) {
@@ -884,6 +916,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     taskService.batchTransfer(taskIds, userId, comment, targetUserId, targetUserName);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowBatchUrgeResultVO batchUrge(
       List<String> instanceIds, String operatorId, String comment) {
@@ -896,11 +929,13 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     return result;
   }
 
+  /** {@inheritDoc} */
   @Override
   public void suspendTask(String taskId, String operatorId, String reason) {
     taskService.suspendTask(taskId, operatorId, reason);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void activateTask(String taskId, String operatorId) {
     taskService.activateTask(taskId, operatorId);

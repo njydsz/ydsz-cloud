@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl;
+﻿package com.njydsz.workflow.server.service.impl;
 
 import java.util.List;
 import java.util.Map;
@@ -85,41 +85,49 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     this.migrationManager = migrationManager;
   }
 
+  /** {@inheritDoc} */
   @Override
   public String deploy(FlowDeployProcessDTO dto) {
     return deployManager.deploy(dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void publish(String definitionId) {
     publishManager.publish(definitionId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void publish(String definitionId, boolean force) {
     publishManager.publish(definitionId, force);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void deprecate(String definitionId) {
     publishManager.deprecate(definitionId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowDefinitionVO getPublished(String flowCode, String version, String tenantId) {
     return queryService.getPublished(flowCode, version, tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowDefinitionVO getLatestByCode(String flowCode, String tenantId) {
     return queryService.getLatestByCode(flowCode, tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowDefinitionVO> page(int pageNo, int pageSize, String category, String flowCode) {
     return queryService.page(pageNo, pageSize, category, flowCode);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowDefinitionDetailVO getDetail(String definitionId) {
     Map<String, Object> map = queryService.getDetail(definitionId);
@@ -129,71 +137,85 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     return YdszJson.convertValue(map, FlowDefinitionDetailVO.class);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void switchActiveVersion(String flowCode, String definitionId, String tenantId) {
     publishManager.switchActiveVersion(flowCode, definitionId, tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void enable(String definitionId) {
     publishManager.enable(definitionId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void disable(String definitionId) {
     publishManager.disable(definitionId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void updateNodeCoordinate(String definitionId, String nodeCode, String coordinate) {
     designManager.updateNodeCoordinate(definitionId, nodeCode, coordinate);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void updateDefinition(String definitionId, FlowDeployProcessDTO dto) {
     designManager.updateDefinition(definitionId, dto);
   }
 
+  /** {@inheritDoc} */
   @Override
   public String exportDefinition(String definitionId) {
     return migrationManager.exportDefinition(definitionId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public String importDefinition(String json, String tenantId) {
     return migrationManager.importDefinition(json, tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> getDesignerData(String definitionId) {
     return designManager.getDesignerData(definitionId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void saveDesignerData(String definitionId, Map<String, Object> designerData) {
     designManager.saveDesignerData(definitionId, designerData);
   }
 
+  /** {@inheritDoc} */
   @Override
   public String getFormConfig(String definitionId, String nodeCode) {
     return designManager.getFormConfig(definitionId, nodeCode);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void saveFormConfig(String definitionId, String nodeCode, String formFieldsConfig) {
     designManager.saveFormConfig(definitionId, nodeCode, formFieldsConfig);
   }
 
+  /** {@inheritDoc} */
   @Override
   public String getSlaConfig(String definitionId, String nodeCode) {
     return designManager.getSlaConfig(definitionId, nodeCode);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void saveSlaConfig(String definitionId, String nodeCode, String slaConfig) {
     designManager.saveSlaConfig(definitionId, nodeCode, slaConfig);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowDefinitionVersionVO> listVersions(String definitionId) {
     List<Map<String, Object>> list = queryService.listVersions(definitionId);
@@ -204,6 +226,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         new JsonType<List<FlowDefinitionVersionVO>>() {});
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowDefinitionDiffVO diffVersions(String definitionId, Integer version1, Integer version2) {
     Map<String, Object> map = migrationManager.diffVersions(definitionId, version1, version2);
@@ -213,6 +236,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     return YdszJson.convertValue(map, FlowDefinitionDiffVO.class);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowBatchDeployResultVO batchDeployFromZip(byte[] zipBytes, String tenantId) {
     Map<String, Object> map = deployManager.batchDeployFromZip(zipBytes, tenantId);
@@ -222,21 +246,25 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     return YdszJson.convertValue(map, FlowBatchDeployResultVO.class);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean lockDefinition(String definitionId, String userId) {
     return designManager.lockDefinition(definitionId, userId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean unlockDefinition(String definitionId, String userId) {
     return designManager.unlockDefinition(definitionId, userId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> getLockStatus(String definitionId) {
     return designManager.getLockStatus(definitionId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowMigrationImpactVO analyzeMigrationImpact(String oldDefinitionId, String newDefinitionId) {
     Map<String, Object> map = migrationManager.analyzeMigrationImpact(oldDefinitionId, newDefinitionId);
@@ -246,6 +274,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     return YdszJson.convertValue(map, FlowMigrationImpactVO.class);
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowRollbackResultVO rollbackDefinition(String flowCode, String tenantId) {
     Map<String, Object> map = publishManager.rollbackDefinition(flowCode, tenantId);

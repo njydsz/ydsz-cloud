@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.health;
+﻿package com.njydsz.workflow.server.health;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -53,6 +53,7 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
     this.redisServiceProvider = redisServiceProvider;
   }
 
+  /** {@inheritDoc} */
   @Override
   protected void doHealthCheck(Health.Builder builder) {
     // Redis 可选

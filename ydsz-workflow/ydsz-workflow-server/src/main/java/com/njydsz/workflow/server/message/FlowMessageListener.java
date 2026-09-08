@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.message;
+﻿package com.njydsz.workflow.server.message;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -36,6 +36,7 @@ public class FlowMessageListener implements MessageListener {
 
   private final FlowEventSubscriptionService eventSubscriptionService;
 
+  /** {@inheritDoc} */
   @Override
   public void onMessage(Message message, byte[] pattern) {
     if (message == null || message.getBody() == null) {

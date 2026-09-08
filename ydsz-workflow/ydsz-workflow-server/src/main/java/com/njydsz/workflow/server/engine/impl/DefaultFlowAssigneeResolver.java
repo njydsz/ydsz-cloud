@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine.impl;
+﻿package com.njydsz.workflow.server.engine.impl;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +23,7 @@ import com.njydsz.workflow.domain.gateway.FlowAssigneeResolver;
 @ConditionalOnMissingBean(FlowAssigneeResolver.class)
 public class DefaultFlowAssigneeResolver implements FlowAssigneeResolver {
 
+  /** {@inheritDoc} */
   @Override
   public List<Long> expandUsers(String permissionFlag, Map<String, Object> variables) {
     log.debug(

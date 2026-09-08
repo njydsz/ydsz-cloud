@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service;
+﻿package com.njydsz.workflow.server.service;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +35,7 @@ public interface FlowGroupResolver {
    * 默认实现：将分组编码直接作为单个办理人 ID 返回（降级兼容）。
    */
   class DefaultFlowGroupResolver implements FlowGroupResolver {
+    /** {@inheritDoc} */
     @Override
     public List<String> resolveGroupMembers(String groupCode, String tenantId) {
       return groupCode != null && !groupCode.isBlank()

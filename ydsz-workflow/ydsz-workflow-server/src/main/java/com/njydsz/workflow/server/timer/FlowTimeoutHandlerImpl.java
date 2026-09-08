@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.timer;
+﻿package com.njydsz.workflow.server.timer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +40,7 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
   /** 审计日志仓储，记录超时审计 */
   private final FlowAuditLogRepository auditLogRepository;
 
+  /** {@inheritDoc} */
   @Override
   public String handleTimeout(FlowRunTaskVO task, FlowTimeoutStrategy strategy) {
     if (task == null || strategy == null) {

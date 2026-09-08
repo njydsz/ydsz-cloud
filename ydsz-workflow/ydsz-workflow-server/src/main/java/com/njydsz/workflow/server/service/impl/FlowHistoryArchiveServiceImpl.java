@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl;
+﻿package com.njydsz.workflow.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -131,6 +131,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   /** 历史归档配置属性，控制保留天数/批大小/最大耗时等 */
   private final FlowProperties.History history;
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> archive(Integer retentionDays, Integer batchSize, Long maxProcessMs) {
     long start = System.currentTimeMillis();
@@ -231,6 +232,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     return result;
   }
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> purge(Integer purgeDays) {
     long start = System.currentTimeMillis();
@@ -289,6 +291,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     return result;
   }
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> getArchiveConfig() {
     Map<String, Object> config = new LinkedHashMap<>(COLLECTION_CAPACITY);

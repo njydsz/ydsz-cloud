@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.integration;
+﻿package com.njydsz.workflow.server.service.impl.integration;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -119,6 +119,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
   /** 流程推进引擎，事件触发后推进流程 */
   private final DefaultFlowAdvancer advancer;
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String createSubscription(
@@ -174,6 +175,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     return subscription.getId();
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public int correlateMessage(
@@ -216,6 +218,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     return triggered;
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public int throwError(String tenantId, String instanceId, String errorCode, String payload) {
@@ -254,6 +257,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     return triggered;
   }
 
+  /** {@inheritDoc} */
   @Override
   public int cancelByTask(String boundaryTaskId, String reason) {
     if (boundaryTaskId == null) {
@@ -262,6 +266,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     return subscriptionRepository.cancelByTask(boundaryTaskId, reason);
   }
 
+  /** {@inheritDoc} */
   @Override
   public int cancelByInstance(String instanceId, String reason) {
     if (instanceId == null) {
@@ -270,6 +275,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     return subscriptionRepository.cancelByInstance(instanceId, reason);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public List<FlowEventSubscriptionVO> listByInstance(String instanceId) {
@@ -292,6 +298,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     return listByInstance(instanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean isEventCatchNode(FlowNodeVO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {

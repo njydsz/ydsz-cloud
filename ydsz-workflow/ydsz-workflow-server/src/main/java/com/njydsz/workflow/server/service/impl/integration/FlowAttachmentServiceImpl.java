@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.integration;
+﻿package com.njydsz.workflow.server.service.impl.integration;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -115,6 +115,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
   private static final Set<String> OFFICE_EXTS =
       Set.of("doc", "docx", "xls", "xlsx", "ppt", "pptx", "wps", "et", "dps");
 
+  /** {@inheritDoc} */
   @Override
   public void saveBatch(
       String instanceId,
@@ -167,12 +168,14 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<FlowAttachmentVO> listByTask(String taskId) {
     return attachmentRepository.findByTaskId(taskId);
   }
 
+  /** {@inheritDoc} */
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<FlowAttachmentVO> listByInstance(String instanceId) {
@@ -199,6 +202,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public FlowAttachmentPreviewDTO previewAttachment(String attachmentId) {
     FlowAttachmentVO attachment = attachmentRepository.findById(attachmentId).orElse(null);

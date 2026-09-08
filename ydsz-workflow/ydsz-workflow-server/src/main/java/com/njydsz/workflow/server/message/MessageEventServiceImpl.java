@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.message;
+﻿package com.njydsz.workflow.server.message;
 
 import java.util.Map;
 
@@ -44,6 +44,7 @@ public class MessageEventServiceImpl implements MessageEventService {
 
   private final RedisTemplate<String, String> redisTemplate;
 
+  /** {@inheritDoc} */
   @Override
   public int publishMessageEvent(String messageName, Map<String, Object> correlationKeys) {
     if (messageName == null || messageName.isBlank()) {
@@ -80,6 +81,7 @@ public class MessageEventServiceImpl implements MessageEventService {
     return triggered;
   }
 
+  /** {@inheritDoc} */
   @Override
   public String subscribeMessage(String nodeId, String messageName) {
     log.info("[Flow-MessageEvent] 节点订阅消息: nodeId={} messageName={}", nodeId, messageName);
@@ -88,6 +90,7 @@ public class MessageEventServiceImpl implements MessageEventService {
     return null;
   }
 
+  /** {@inheritDoc} */
   @Override
   public int handleMessageEvent(String messageName, Map<String, Object> correlationKeys) {
     if (messageName == null || messageName.isBlank()) {

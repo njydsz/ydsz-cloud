@@ -1,4 +1,4 @@
-package com.njydsz.workflow.api.fallback;
+﻿package com.njydsz.workflow.api.fallback;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -23,20 +23,24 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 @Component
 public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowServiceClient> {
 
+  /** {@inheritDoc} */
   @Override
   public WorkflowServiceClient create(Throwable cause) {
     log.warn("[Feign] workflow 服务降级: {}", cause == null ? "?" : cause.getMessage());
     return new WorkflowServiceClient() {
+      /** {@inheritDoc} */
       @Override
       public YdszResponse<String> startProcess(FlowStartProcessDTO dto) {
         return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
       }
 
+      /** {@inheritDoc} */
       @Override
       public YdszResponse<FlowInstanceVO> getByBusiness(String businessType, String businessId) {
         return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
       }
 
+      /** {@inheritDoc} */
       @Override
       public YdszResponse<Void> terminate(String processInstanceId, String reason) {
         return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");

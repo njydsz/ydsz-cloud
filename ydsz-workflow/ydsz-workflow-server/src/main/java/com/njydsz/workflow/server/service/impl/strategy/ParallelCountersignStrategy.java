@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.strategy;
+﻿package com.njydsz.workflow.server.service.impl.strategy;
 
 import java.time.LocalDateTime;
 
@@ -39,11 +39,13 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
   /** 任务归档服务，会签全部通过后完成 + 归档到历史表 */
   private final FlowTaskArchiveService archiveService;
 
+  /** {@inheritDoc} */
   @Override
   public FlowPerformType supportedType() {
     return FlowPerformType.PARALLEL;
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     // GAP-A1: 数据库侧原子自增 + 饱和守卫（approve_finished < approve_count），
@@ -66,6 +68,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
     archiveService.completeAndArchive(task, dto.getComment(), effectiveTime);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean shouldAdvance(FlowRunTaskVO task) {
     int finished = task.getApproveFinished() == null ? 0 : task.getApproveFinished();

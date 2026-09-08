@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl;
+﻿package com.njydsz.workflow.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -116,6 +116,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
   /** 审计员角色编码：可查看所有流程的审计数据 */
   public static final String ROLE_AUDITOR = "FLOW_AUDITOR";
 
+  /** {@inheritDoc} */
   @Override
   public boolean hasRole(String userId, String roleCode) {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(roleCode)) {
@@ -127,11 +128,13 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     return role != null && isRoleValid(role);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean isAdmin(String userId) {
     return hasRole(userId, ROLE_ADMIN);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean canManageFlow(String userId, String flowCode) {
     // ADMIN 可管理所有流程
@@ -143,16 +146,19 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     return hasRole(userId, ROLE_DESIGNER);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean canDesignFlow(String userId, String flowCode) {
     return isAdmin(userId) || hasRole(userId, ROLE_DESIGNER);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean canAudit(String userId) {
     return isAdmin(userId) || hasRole(userId, ROLE_AUDITOR) || hasRole(userId, ROLE_DESIGNER);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<String> listUserRoles(String userId) {
     if (!StringUtils.hasText(userId)) {
@@ -167,6 +173,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
         .collect(Collectors.toList());
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void grantRole(String userId, String roleCode, String tenantId) {
@@ -202,6 +209,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     log.info("[FlowAdmin] 授予角色: userId={} role={} tenantId={}", userId, roleCode, tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void revokeRole(String userId, String roleCode) {
@@ -238,4 +246,3 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     return true;
   }
 }
-

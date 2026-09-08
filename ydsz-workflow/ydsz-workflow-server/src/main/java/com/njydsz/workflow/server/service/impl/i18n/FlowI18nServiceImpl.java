@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.i18n;
+﻿package com.njydsz.workflow.server.service.impl.i18n;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -75,6 +75,7 @@ public class FlowI18nServiceImpl implements FlowI18nService {
             .put(locale.toLowerCase(), description);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, String>> getEnumDescriptions(String enumType, String locale) {
     if (enumType == null || locale == null) {
@@ -96,6 +97,7 @@ public class FlowI18nServiceImpl implements FlowI18nService {
     return result;
   }
 
+  /** {@inheritDoc} */
   @Override
   public String getEnumDescription(String enumType, String enumName, String locale) {
     if (enumType == null || enumName == null) {
@@ -114,6 +116,7 @@ public class FlowI18nServiceImpl implements FlowI18nService {
     return desc != null ? desc : enumName;
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, String>> getSupportedLocales() {
     List<Map<String, String>> locales = new ArrayList<>(2);

@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.search;
+﻿package com.njydsz.workflow.server.search;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -31,11 +31,13 @@ public class WorkflowSearchProvider implements SearchProvider<FlowTemplateVO> {
 
   private final FlowTemplateRepository flowTemplateRepository;
 
+  /** {@inheritDoc} */
   @Override
   public String getType() {
     return "workflow";
   }
 
+  /** {@inheritDoc} */
   @Override
   public IndexDocument toIndexDocument(FlowTemplateVO vo) {
     if (vo == null || vo.getId() == null) {

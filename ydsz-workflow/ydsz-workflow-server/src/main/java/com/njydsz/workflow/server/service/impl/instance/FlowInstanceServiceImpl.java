@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -423,28 +423,33 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
   // ============================== 监控聚合查询 ==============================
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectCountGroupByStatus(String tenantId) {
     return queryService.selectCountGroupByStatus(tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> selectTodayCount(String tenantId) {
     return queryService.selectTodayCount(tenantId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectDailyNewCount(
       String tenantId, LocalDateTime start, LocalDateTime end) {
     return queryService.selectDailyNewCount(tenantId, start, end);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectDailyCompletedCount(
       String tenantId, LocalDateTime start, LocalDateTime end) {
     return queryService.selectDailyCompletedCount(tenantId, start, end);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectFlowTypeDistribution(
       String tenantId, LocalDateTime start, LocalDateTime end) {

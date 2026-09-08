@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.strategy;
+﻿package com.njydsz.workflow.server.service.impl.strategy;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -65,11 +65,13 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
   /** 计算精度（小数位） */
   private static final int SCALE = 4;
 
+  /** {@inheritDoc} */
   @Override
   public FlowPerformType supportedType() {
     return FlowPerformType.WEIGHTED;
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onUserPassed(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     // GAP-A1: 数据库侧原子累加，确保并发投票时每个合法权重的加和精确无丢失
@@ -92,6 +94,7 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
     archiveService.completeAndArchive(task, dto.getComment(), effectiveTime);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean shouldAdvance(FlowRunTaskVO task) {
     int approved = task.getApproveWeight() == null ? 0 : task.getApproveWeight();
@@ -120,6 +123,7 @@ public class WeightedCountersignStrategy implements CountersignStrategy {
     return canAdvance;
   }
 
+  /** {@inheritDoc} */
   @Override
   public void onAdvance(FlowRunTaskVO task, FlowTaskOperateDTO dto) {
     int approved = task.getApproveWeight() == null ? 0 : task.getApproveWeight();

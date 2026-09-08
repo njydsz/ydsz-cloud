@@ -35,6 +35,12 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final NextwikiStructMapper mapper;
 
+  /**
+   * 保存或更新最近访问记录（已存在则刷新访问时间）。
+   *
+   * @param dto 最近访问数据传输对象
+   * @return 更新记录数
+   */
   @Override
   public int saveOrUpdate(UserRecentDTO dto) {
     // 更新已有记录的访问时间
@@ -60,6 +66,14 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
     return inserted;
   }
 
+  /**
+   * 按用户 ID 分页查询最近访问列表（按访问时间倒序）。
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @param limit 返回数量限制
+   * @return 最近访问 DTO 列表
+   */
   @Override
   public List<UserRecentDTO> findByUserIdOrderByAccessedAt(
       String userId, String tenantId, int limit) {
@@ -70,6 +84,15 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
         .collect(Collectors.toList());
   }
 
+  /**
+   * 按用户 ID 分页查询最近访问列表。
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @param offset 分页偏移量
+   * @param limit 每页条数
+   * @return 最近访问 DTO 列表
+   */
   @Override
   public List<UserRecentDTO> findByUserIdWithPage(
       String userId, String tenantId, int offset, int limit) {
@@ -80,16 +103,38 @@ public class UserRecentRepositoryImpl implements UserRecentRepository {
         .collect(Collectors.toList());
   }
 
+  /**
+   * 统计用户最近访问记录数。
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @return 访问记录数量
+   */
   @Override
   public int countByUserId(String userId, String tenantId) {
     return userRecentMapper.countByUserId(userId, tenantId);
   }
 
+  /**
+   * 删除超出容量限制的最早访问记录（LRU 淘汰策略）。
+   *
+   * @param userId 用户 ID
+   * @param tenantId 租户 ID
+   * @param keepCount 保留的最大记录数
+   * @return 实际删除的记录数
+   */
   @Override
   public int deleteEarliestRecords(String userId, String tenantId, int keepCount) {
     return userRecentMapper.deleteEarliestRecords(userId, tenantId, keepCount);
   }
 
+  /**
+   * 删除指定的最近访问记录。
+   *
+   * @param userId 用户 ID
+   * @param nodeId 文件节点 ID
+   * @return 更新记录数
+   */
   @Override
   public int deleteByUserIdAndNodeId(String userId, String nodeId) {
     return userRecentMapper.deleteByUserIdAndNodeId(userId, nodeId);

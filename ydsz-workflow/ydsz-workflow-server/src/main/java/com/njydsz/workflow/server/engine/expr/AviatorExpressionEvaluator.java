@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine.expr;
+﻿package com.njydsz.workflow.server.engine.expr;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,6 +77,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
         MAX_EXPRESSION_LENGTH);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean evalBoolean(String expression, Map<String, Object> variables) {
     if (expression == null || expression.isBlank()) {
@@ -97,6 +98,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public Object eval(String expression, Map<String, Object> variables) {
     if (expression == null || expression.isBlank()) {

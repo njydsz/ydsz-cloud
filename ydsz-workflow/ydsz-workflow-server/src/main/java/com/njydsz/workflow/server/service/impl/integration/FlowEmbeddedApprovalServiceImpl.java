@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.integration;
+﻿package com.njydsz.workflow.server.service.impl.integration;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -124,6 +124,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
   /** 操作人角色：观察者（无操作权限） */
   private static final String ROLE_OBSERVER = "OBSERVER";
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
   public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, String userId) {
@@ -209,6 +210,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         .build();
   }
 
+  /** {@inheritDoc} */
   @Override
   public void quickAction(EmbeddedApprovalActionDTO dto) {
     if (dto == null) {

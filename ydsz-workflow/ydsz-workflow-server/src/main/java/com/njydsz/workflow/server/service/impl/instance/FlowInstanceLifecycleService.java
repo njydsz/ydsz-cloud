@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -115,6 +115,7 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
 
   // ============================== 子类策略实现 ==============================
 
+  /** {@inheritDoc} */
   @Override
   protected Map<String, Object> parseVariables(String variable) {
     if (!StringUtils.hasText(variable)) {
@@ -129,6 +130,7 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   protected Map<String, Object> getVariables(String instanceId) {
     if (!StringUtils.hasText(instanceId)) {
@@ -147,6 +149,7 @@ public class FlowInstanceLifecycleService extends AbstractFlowInstanceLifecycle 
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   protected FlowInstanceVO saveInstance(FlowInstanceVO instance) {
     if (instance == null) {

@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -108,6 +108,7 @@ public class FlowExportServiceImpl implements FlowExportService {
 
   private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+  /** {@inheritDoc} */
   @Override
   public String exportHtml(String instanceId, String userId, String userName) {
     FlowInstanceVO instance = loadInstance(instanceId);
@@ -266,6 +267,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append("</div>");
   }
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> exportForPrint(String instanceId, String userId, String userName) {
     String html = exportHtml(instanceId, userId, userName);

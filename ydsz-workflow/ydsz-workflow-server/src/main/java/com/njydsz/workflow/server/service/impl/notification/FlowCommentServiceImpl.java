@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.notification;
+﻿package com.njydsz.workflow.server.service.impl.notification;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -115,6 +115,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   private static final Pattern MENTION_PATTERN =
       Pattern.compile("@\\{([a-zA-Z0-9_-]+)\\}|@([a-zA-Z0-9_-]+)");
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String addComment(
@@ -218,21 +219,25 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     return comment.getId();
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> listByInstance(String tenantId, String instanceId) {
     return commentRepository.findByInstanceAndTenant(tenantId, instanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> listRootComments(String tenantId, String instanceId) {
     return commentRepository.findRootCommentsByTenant(tenantId, instanceId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> listReplies(String parentCommentId) {
     return commentRepository.findReplies(parentCommentId);
   }
 
+  /** {@inheritDoc} */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean deleteComment(String commentId, String userId) {
@@ -456,4 +461,3 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     }
   }
 }
-

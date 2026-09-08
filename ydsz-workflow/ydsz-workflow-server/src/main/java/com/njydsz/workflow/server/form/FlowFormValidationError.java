@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.form;
+﻿package com.njydsz.workflow.server.form;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -40,6 +40,7 @@ public class FlowFormValidationError implements Serializable {
     return code;
   }
 
+  /** {@inheritDoc} */
   @Override
   public String toString() {
     return fieldKey + ": " + message + " (" + code + ")";

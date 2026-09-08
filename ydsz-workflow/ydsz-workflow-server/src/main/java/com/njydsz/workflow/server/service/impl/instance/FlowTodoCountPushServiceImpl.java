@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +54,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
   /** P2-7 (GAP-42): 推送消息类型：心跳保活（网关层定时驱动，确认连接存活 + 刷新待办数） */
   public static final String TYPE_HEARTBEAT = "HEARTBEAT";
 
+  /** {@inheritDoc} */
   @Override
   public void pushTodoCount(String userId) {
     if (userId == null) {
@@ -72,11 +73,13 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void pushTodoCountSafe(String userId) {
     pushTodoCount(userId);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void pushTaskAssigned(FlowRunTaskVO task) {
     if (task == null) {
@@ -110,6 +113,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void pushTaskCompleted(FlowRunTaskVO task, String operatorUserId) {
     if (task == null) {
@@ -135,6 +139,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void pushTaskRejected(FlowRunTaskVO task, String operatorUserId, String reason) {
     if (task == null) {

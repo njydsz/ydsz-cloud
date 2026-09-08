@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.integration;
+﻿package com.njydsz.workflow.server.service.impl.integration;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -99,6 +99,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
   /** 权限类型：必填（用户必须填写该字段） */
   public static final String PERM_REQUIRED = "REQUIRED";
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, String> parseFieldPerms(String formFieldsConfig) {
     if (!StringUtils.hasText(formFieldsConfig)) {
@@ -122,6 +123,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public void validateFieldPerms(
       Map<String, String> fieldPerms,
@@ -183,6 +185,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> applyFieldPerms(
       Map<String, String> fieldPerms, Map<String, Object> variables) {
