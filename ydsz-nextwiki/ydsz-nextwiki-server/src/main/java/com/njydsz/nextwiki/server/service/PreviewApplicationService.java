@@ -41,7 +41,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  *   <li>从存储下载原文件到临时目录
  *   <li>调用 LibreOffice headless 模式转换为 PDF
  *   <li>上传 PDF 到存储（预览副本，存储键: wiki/preview/{nodeId}.pdf）
- *   <li>更新 FileNodeVO 的 previewReady 和 previewStorageKey
+ *   <li>更新 FileNodeVO 的 isPreviewReady 和 previewStorageKey
  *   <li>图片类型直接生成缩略图并上传到存储
  * </ol>
  *
