@@ -27,7 +27,8 @@ import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
+// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
+@SuppressWarnings("unchecked")
 @Data
 @SuperBuilder
 @NoArgsConstructor

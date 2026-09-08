@@ -16,7 +16,8 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SuppressWarnings("unchecked") // @SuperBuilder 与泛型继承（MpBaseIdEntity<String>）产生的 unchecked 警告，同 MpBaseIdEntity 无法在源码层面修复
+// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 与泛型继承产生 unchecked 警告
+@SuppressWarnings("unchecked")
 @Data
 @SuperBuilder
 @NoArgsConstructor
