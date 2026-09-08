@@ -72,7 +72,9 @@ import com.njydsz.common.lock.scheduler.LockWatchDog.WatchTask;
 @Slf4j
 @Endpoint(id = "lock")
 @ConditionalOnBean({LockMetrics.class, LockWatchDog.class})
+// CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解 name 属性），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+// CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnProperty(prefix = "ydsz.lock", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class LockAdminEndpoint {
 
